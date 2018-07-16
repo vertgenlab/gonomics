@@ -1,7 +1,7 @@
 package align
 
 import (
-	"github.com/craiglowe/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
 )
 

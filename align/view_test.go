@@ -1,7 +1,7 @@
 package align
 
 import (
-	"github.com/craiglowe/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 )
 

@@ -1,7 +1,7 @@
 package align
 
 import (
-	"github.com/craiglowe/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func ungappedRegionScore(alpha []dna.Base, alphaStart int64, beta []dna.Base, betaStart int64, length int64, scores [][]int64) int64 {

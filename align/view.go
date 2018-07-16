@@ -3,8 +3,8 @@ package align
 import (
 	"bytes"
 	"fmt"
-	"github.com/craiglowe/gonomics/common"
-	"github.com/craiglowe/gonomics/dna"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func colTypeToRune(a colType) rune {

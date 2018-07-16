@@ -1,8 +1,8 @@
 package align
 
 import (
-	"github.com/craiglowe/gonomics/common"
-	"github.com/craiglowe/gonomics/dna"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []cigar) {

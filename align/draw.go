@@ -2,9 +2,9 @@ package align
 
 import (
 	"fmt"
-	"github.com/craiglowe/gonomics/dna"
-	"github.com/craiglowe/gonomics/fasta"
-	"github.com/craiglowe/gonomics/sketch"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/sketch"
 	"image"
 	"image/color"
 	"image/draw"
