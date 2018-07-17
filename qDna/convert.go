@@ -1,8 +1,8 @@
 package qDna
 
 import (
-	"github.com/craiglowe/gonomics/dna"
-	"github.com/craiglowe/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func fromBase(b dna.Base) *QBase {

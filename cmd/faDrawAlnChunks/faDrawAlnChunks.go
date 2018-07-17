@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/craiglowe/gonomics/align"
-	"github.com/craiglowe/gonomics/common"
-	"github.com/craiglowe/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
 	"image/png"
 	"log"
 	"os"

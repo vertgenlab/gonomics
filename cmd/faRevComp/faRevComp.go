@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/craiglowe/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
