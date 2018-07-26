@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
