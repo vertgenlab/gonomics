@@ -24,3 +24,20 @@ func ReverseComplementAll(records []Fasta) {
 		ReverseComplement(&records[idx])
 	}
 }
+
+func DivideFasta(fa *Fasta, n int) []*Fasta {
+	var answer []*Fasta
+	leftover := len(fa.Seq) % n
+	for i := 0; i < len(fa.Seq)-leftover; i += n {
+		answer = append(answer, &Fasta{Name: fmt.Sprintf("%s_%d", fa.Name, i), Seq: fa.Seq[i : i+n]})
+	}
+	return answer
+}
+
+func DivideFastaAll(fa []*Fasta, n int) [][]*Fasta {
+	var answer [][]*Fasta
+	for index, _ := range fa {
+		answer = append(answer, DivideFasta(fa[index], n))
+	}
+	return answer
+}
