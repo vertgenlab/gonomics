@@ -46,6 +46,39 @@ func Read(filename string) ([]Fasta, error) {
 	return answer, scanner.Err()
 }
 
+func ReadNew(filename string) ([]*Fasta, error) {
+	var line string
+	var currSeq []dna.Base
+	var answer []*Fasta
+	var seqIdx int64 = -1
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line = scanner.Text()
+		switch {
+		case strings.HasPrefix(line, "#"):
+			// comment line in fasta file
+		case strings.HasPrefix(line, ">"):
+			tmp := Fasta{Name: line[1:len(line)]}
+			answer = append(answer, &tmp)
+			seqIdx++
+		default:
+			currSeq, err = dna.StringToBases(line)
+			if err != nil {
+				log.Fatal(err)
+			}
+			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
+		}
+	}
+	return answer, scanner.Err()
+}
+
 func WriteToFileHandle(file *os.File, records []Fasta, lineLength int) error {
 	var err error
 	for _, rec := range records {
