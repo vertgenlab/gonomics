@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-func fromBase(b dna.Base) *QBase {
+func FromBase(b dna.Base) *QBase {
 	var curr QBase
 	switch b {
 	case dna.A:
@@ -27,9 +27,17 @@ func fromBase(b dna.Base) *QBase {
 func FromDna(in []dna.Base) []*QBase {
 	answer := make([]*QBase, len(in))
 	for i, _ := range in {
-		answer[i] = fromBase(in[i])
+		answer[i] = FromBase(in[i])
 	}
 	return answer
+}
+
+//Convert Bases straight to QFrag --added by eric
+func FromDnaToQFrag(in []dna.Base, s string) *QFrag {
+	loc := Location{Assembly: "", Chr: s, Start: 0, End: 0}
+	answer := QFrag{Seq: FromDna(in), From: []*Location{&loc}, Fwd: nil, Rev: nil}
+	return &answer
+
 }
 
 func FromFasta(in *fasta.Fasta) *QFrag {
@@ -66,7 +74,7 @@ func mostLikelySeq(in []*QBase) []dna.Base {
 	return answer
 }
 
-func toFasta(in *QFrag) *fasta.Fasta {
+func ToFasta(in *QFrag) *fasta.Fasta {
 	var name string = ""
 	if in.From != nil && in.From[0] != nil {
 		name = in.From[0].Chr
@@ -74,12 +82,14 @@ func toFasta(in *QFrag) *fasta.Fasta {
 	return &fasta.Fasta{Name: name, Seq: mostLikelySeq(in.Seq)}
 }
 
+
+
 // TODO: This should be improved, but is only used
 // for testing right now.  Does not follow links
 func toFastaList(in []*QFrag) []*fasta.Fasta {
 	answer := make([]*fasta.Fasta, len(in))
 	for i, _ := range in {
-		answer[i] = toFasta(in[i])
+		answer[i] = ToFasta(in[i])
 	}
 	return answer
 }

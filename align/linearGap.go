@@ -5,12 +5,12 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []cigar) {
+func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	m := make([][]int64, len(alpha)+1)
-	trace := make([][]colType, len(alpha)+1)
+	trace := make([][]ColType, len(alpha)+1)
 	for idx := range m {
 		m[idx] = make([]int64, len(beta)+1)
-		trace[idx] = make([]colType, len(beta)+1)
+		trace[idx] = make([]ColType, len(beta)+1)
 	}
 
 	var i, j, routeIdx int
@@ -30,15 +30,15 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 		}
 	}
 
-	route := make([]cigar, 1)
+	route := make([]Cigar, 1)
 	for i, j, routeIdx = len(trace)-1, len(trace[0])-1, 0; i > 0 || j > 0; {
-		if route[routeIdx].runLength == 0 {
-			route[routeIdx].runLength = 1
-			route[routeIdx].op = trace[i][j]
-		} else if route[routeIdx].op == trace[i][j] {
-			route[routeIdx].runLength += 1
+		if route[routeIdx].RunLength == 0 {
+			route[routeIdx].RunLength = 1
+			route[routeIdx].Op = trace[i][j]
+		} else if route[routeIdx].Op == trace[i][j] {
+			route[routeIdx].RunLength += 1
 		} else {
-			route = append(route, cigar{runLength: 1, op: trace[i][j]})
+			route = append(route, Cigar{RunLength: 1, Op: trace[i][j]})
 			routeIdx++
 		}
 		switch trace[i][j] {

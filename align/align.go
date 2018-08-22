@@ -8,17 +8,17 @@ var veryNegNum int64 = math.MinInt64 / 2
 
 // these are relative to the first seq.
 // e.g. colI is an insertion in the second seq, relative to the first
-type colType uint8
+type ColType uint8
 
 const (
-	colM colType = 0
-	colI colType = 1
-	colD colType = 2
+	ColM ColType = 0
+	ColI ColType = 1
+	ColD ColType = 2
 )
 
-type cigar struct {
-	runLength int64
-	op        colType
+type Cigar struct {
+	RunLength int64
+	Op        ColType
 }
 
 // O=400 E=30
@@ -67,26 +67,26 @@ var StrictScoreMatrix = [][]int64{
 }
 */
 
-func tripleMaxTrace(a int64, b int64, c int64) (int64, colType) {
+func tripleMaxTrace(a int64, b int64, c int64) (int64, ColType) {
 	if a >= b && a >= c {
-		return a, colM
+		return a, ColM
 	} else if b >= c {
-		return b, colI
+		return b, ColI
 	} else {
-		return c, colD
+		return c, ColD
 	}
 }
 
-func reverseCigar(alpha []cigar) {
+func reverseCigar(alpha []Cigar) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
 		alpha[i], alpha[j] = alpha[j], alpha[i]
 	}
 }
 
-func countAlignmentColumns(route []cigar) int64 {
+func countAlignmentColumns(route []Cigar) int64 {
 	var count int64 = 0
 	for i, _ := range route {
-		count += route[i].runLength
+		count += route[i].RunLength
 	}
 	return count
 }

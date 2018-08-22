@@ -7,13 +7,13 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-func colTypeToRune(a colType) rune {
+func colTypeToRune(a ColType) rune {
 	switch a {
-	case colM:
+	case ColM:
 		return 'M'
-	case colI:
+	case ColI:
 		return 'I'
-	case colD:
+	case ColD:
 		return 'D'
 	default:
 		common.Exit(fmt.Sprintf("Error: unexpected value when converting colType to rune %d", a))
@@ -21,31 +21,31 @@ func colTypeToRune(a colType) rune {
 	}
 }
 
-func printCigar(operations []cigar) string {
+func printCigar(operations []Cigar) string {
 	var buffer bytes.Buffer
 	for _, curr := range operations {
-		buffer.WriteString(fmt.Sprintf("%d", curr.runLength))
-		buffer.WriteRune(colTypeToRune(curr.op))
+		buffer.WriteString(fmt.Sprintf("%d", curr.RunLength))
+		buffer.WriteRune(colTypeToRune(curr.Op))
 	}
 	return buffer.String()
 }
 
-func View(alpha []dna.Base, beta []dna.Base, operations []cigar) string {
+func View(alpha []dna.Base, beta []dna.Base, operations []Cigar) string {
 	var seqOne, seqTwo bytes.Buffer
 	var i, j int
 	var count int64
 	for _, operation := range operations {
-		for count = 0; count < operation.runLength; count++ {
-			switch operation.op {
-			case colM:
+		for count = 0; count < operation.RunLength; count++ {
+			switch operation.Op {
+			case ColM:
 				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
 				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
 				i, j = i+1, j+1
-			case colI:
+			case ColI:
 				seqOne.WriteRune('-')
 				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
 				j++
-			case colD:
+			case ColD:
 				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
 				seqTwo.WriteRune('-')
 				i++

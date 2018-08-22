@@ -9,44 +9,44 @@ import (
 
 // the data structure is a 3d slice where the first index is 0,1,2 and represents
 // the match, gap in x (first seq), and gap in y (second seq).
-func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][][]int64, [][][]colType) {
+func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][][]int64, [][][]ColType) {
 	m := make([][][]int64, 3)
-	trace := make([][][]colType, 3)
+	trace := make([][][]ColType, 3)
 	for k, _ := range m {
 		m[k] = make([][]int64, firstSeqLen+1)
-		trace[k] = make([][]colType, firstSeqLen+1)
+		trace[k] = make([][]ColType, firstSeqLen+1)
 		for i, _ := range m[0] {
 			m[k][i] = make([]int64, secondSeqLen+1)
-			trace[k][i] = make([]colType, secondSeqLen+1)
+			trace[k][i] = make([]ColType, secondSeqLen+1)
 		}
 	}
 	return m, trace
 }
 
-func affineTrace(m [][][]int64, trace [][][]colType) (int64, []cigar) {
-	route := make([]cigar, 1)
+func affineTrace(m [][][]int64, trace [][][]ColType) (int64, []Cigar) {
+	route := make([]Cigar, 1)
 	lastI := len(m[0]) - 1
 	lastJ := len(m[0][0]) - 1
 	maxScore, k := tripleMaxTrace(m[0][lastI][lastJ], m[1][lastI][lastJ], m[2][lastI][lastJ])
 	for i, j, routeIdx := lastI, lastJ, 0; i > 0 || j > 0; {
-		if route[routeIdx].runLength == 0 {
-			route[routeIdx].runLength = 1
-			route[routeIdx].op = k
-		} else if route[routeIdx].op == k {
-			route[routeIdx].runLength += 1
+		if route[routeIdx].RunLength == 0 {
+			route[routeIdx].RunLength = 1
+			route[routeIdx].Op = k
+		} else if route[routeIdx].Op == k {
+			route[routeIdx].RunLength += 1
 		} else {
-			route = append(route, cigar{runLength: 1, op: k})
+			route = append(route, Cigar{RunLength: 1, Op: k})
 			routeIdx++
 		}
 		switch k {
-		case colM:
+		case ColM:
 			k = trace[k][i][j]
 			i--
 			j--
-		case colI:
+		case ColI:
 			k = trace[k][i][j]
 			j--
-		case colD:
+		case ColD:
 			k = trace[k][i][j]
 			i--
 		default:
@@ -57,13 +57,13 @@ func affineTrace(m [][][]int64, trace [][][]colType) (int64, []cigar) {
 	return maxScore, route
 }
 
-func expandCigarRunLength(route []cigar, chunkSize int64) {
+func expandCigarRunLength(route []Cigar, chunkSize int64) {
 	for i, _ := range route {
-		route[i].runLength *= chunkSize
+		route[i].RunLength *= chunkSize
 	}
 }
 
-func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []cigar) {
+func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha), len(beta))
 	for i, _ := range m[0] {
 		for j, _ := range m[0][0] {
@@ -74,13 +74,13 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 			} else if i == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = gapExtend + m[1][i][j-1]
-				trace[1][i][j] = colI /*new*/
+				trace[1][i][j] = ColI /*new*/
 				m[2][i][j] = veryNegNum
 			} else if j == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = veryNegNum
 				m[2][i][j] = gapExtend + m[2][i-1][j]
-				trace[2][i][j] = colD /*new*/
+				trace[2][i][j] = ColD /*new*/
 			} else {
 				m[0][i][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+m[0][i-1][j-1], scores[alpha[i-1]][beta[j-1]]+m[1][i-1][j-1], scores[alpha[i-1]][beta[j-1]]+m[2][i-1][j-1])
 				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i][j-1], gapExtend+m[1][i][j-1], gapOpen+gapExtend+m[2][i][j-1])
@@ -93,7 +93,7 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 	return maxScore, route
 }
 
-func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []cigar) {
+func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha)), int64(len(beta))
 	if alphaSize%chunkSize != 0 {
 		common.Exit(fmt.Sprintf("Error: the first sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(alpha), alphaSize, chunkSize))
@@ -116,13 +116,13 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 			} else if i == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = gapExtend*chunkSize + m[1][i][j-1]
-				trace[1][i][j] = colI
+				trace[1][i][j] = ColI
 				m[2][i][j] = veryNegNum
 			} else if j == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = veryNegNum
 				m[2][i][j] = gapExtend*chunkSize + m[2][i-1][j]
-				trace[2][i][j] = colD
+				trace[2][i][j] = ColD
 			} else {
 				chunkScore = ungappedRegionScore(alpha, int64(i-1)*chunkSize, beta, int64(j-1)*chunkSize, chunkSize, scores)
 				m[0][i][j], trace[0][i][j] = tripleMaxTrace(chunkScore+m[0][i-1][j-1], chunkScore+m[1][i-1][j-1], chunkScore+m[2][i-1][j-1])
@@ -138,7 +138,7 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 	return maxScore, route
 }
 
-func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []cigar) {
+func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha[0].Seq), len(beta[0].Seq))
 
 	for i, _ := range m[0] {
@@ -150,13 +150,13 @@ func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64
 			} else if i == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = gapExtend + m[1][i][j-1]
-				trace[1][i][j] = colI
+				trace[1][i][j] = ColI
 				m[2][i][j] = veryNegNum
 			} else if j == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = veryNegNum
 				m[2][i][j] = gapExtend + m[2][i-1][j]
-				trace[2][i][j] = colD
+				trace[2][i][j] = ColD
 			} else {
 				m[0][i][j], trace[0][i][j] = tripleMaxTrace(scoreColumnMatch(alpha, beta, i-1, j-1, scores)+m[0][i-1][j-1], scoreColumnMatch(alpha, beta, i-1, j-1, scores)+m[1][i-1][j-1], scoreColumnMatch(alpha, beta, i-1, j-1, scores)+m[2][i-1][j-1])
 				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i][j-1], gapExtend+m[1][i][j-1], gapOpen+gapExtend+m[2][i][j-1])
@@ -169,7 +169,7 @@ func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64
 	return maxScore, route
 }
 
-func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []cigar) {
+func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha[0].Seq)), int64(len(beta[0].Seq))
 	if alphaSize%chunkSize != 0 {
 		common.Exit(fmt.Sprintf("Error: the first subalignment has a length of %d, when it should be a multiple of %d\n", alphaSize, chunkSize))
@@ -192,13 +192,13 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 			} else if i == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = gapExtend*chunkSize + m[1][i][j-1]
-				trace[1][i][j] = colI
+				trace[1][i][j] = ColI
 				m[2][i][j] = veryNegNum
 			} else if j == 0 {
 				m[0][i][j] = veryNegNum
 				m[1][i][j] = veryNegNum
 				m[2][i][j] = gapExtend*chunkSize + m[2][i-1][j]
-				trace[2][i][j] = colD
+				trace[2][i][j] = ColD
 			} else {
 				chunkScore = ungappedRegionColumnScore(alpha, (i-1)*int(chunkSize), beta, (j-1)*int(chunkSize), int(chunkSize), scores)
 				m[0][i][j], trace[0][i][j] = tripleMaxTrace(chunkScore+m[0][i-1][j-1], chunkScore+m[1][i-1][j-1], chunkScore+m[2][i-1][j-1])
