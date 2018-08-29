@@ -7,24 +7,24 @@ import (
 	"math"
 )
 
-func fastaListToIndividualGroups(records []fasta.Fasta) [][]fasta.Fasta {
+func fastaListToIndividualGroups(records []*fasta.Fasta) [][]fasta.Fasta {
 	answer := make([][]fasta.Fasta, len(records))
 	for i, _ := range answer {
 		answer[i] = make([]fasta.Fasta, 1)
-		answer[i][0] = records[i]
+		answer[i][0] = *records[i]
 	}
 	return answer
 }
 
-func mergeFastaGroups(groups [][]fasta.Fasta, x int, y int, route []cigar) [][]fasta.Fasta {
+func mergeFastaGroups(groups [][]fasta.Fasta, x int, y int, route []Cigar) [][]fasta.Fasta {
 	groups[x] = mergeMultipleAlignments(groups[x], groups[y], route)
 	groups[y] = groups[len(groups)-1]
 	groups = groups[:len(groups)-1]
 	return groups
 }
 
-func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) (bestX int, bestY int, bestScore int64, bestRoute []cigar) {
-	var route []cigar
+func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) (bestX int, bestY int, bestScore int64, bestRoute []Cigar) {
+	var route []Cigar
 	var score int64
 	bestScore = math.MinInt64
 	for x := 0; x < len(groups)-1; x++ {
@@ -38,8 +38,8 @@ func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64,
 	return bestX, bestY, bestScore, bestRoute
 }
 
-func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) (bestX int, bestY int, bestScore int64, bestRoute []cigar) {
-	var route []cigar
+func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) (bestX int, bestY int, bestScore int64, bestRoute []Cigar) {
+	var route []Cigar
 	var score int64
 	bestScore = math.MinInt64
 	for x := 0; x < len(groups)-1; x++ {
@@ -53,7 +53,7 @@ func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen i
 	return bestX, bestY, bestScore, bestRoute
 }
 
-func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) []fasta.Fasta {
+func AllSeqAffine(records []*fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {
 		x, y, _, route := nearestGroups(groups, scoreMatrix, gapOpen, gapExtend)
@@ -62,7 +62,8 @@ func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, g
 	return groups[0]
 }
 
-func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) []fasta.Fasta {
+//align sequences
+func AllSeqAffineChunk(records []*fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {
 		x, y, score, route := nearestGroupsChunk(groups, scoreMatrix, gapOpen, gapExtend, chunkSize)
@@ -95,7 +96,7 @@ func ungappedRegionColumnScore(alpha []fasta.Fasta, alphaStart int, beta []fasta
 	return answer
 }
 
-func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []cigar) []fasta.Fasta {
+func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []Cigar) []fasta.Fasta {
 	answer := make([]fasta.Fasta, len(alpha)+len(beta))
 	totalCols := countAlignmentColumns(route)
 
@@ -109,28 +110,28 @@ func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []ci
 
 	var alphaCol, betaCol, ansCol int = 0, 0, 0
 	for i, _ := range route {
-		for j := 0; j < int(route[i].runLength); j++ {
+		for j := 0; j < int(route[i].RunLength); j++ {
 			for k, _ := range answer {
 				if k < len(alpha) {
-					if route[i].op == colM || route[i].op == colD {
+					if route[i].Op == ColM || route[i].Op == ColD {
 						answer[k].Seq[ansCol] = alpha[k].Seq[alphaCol]
 					} else {
 						answer[k].Seq[ansCol] = dna.Gap
 					}
 				} else {
-					if route[i].op == colM || route[i].op == colI {
+					if route[i].Op == ColM || route[i].Op == ColI {
 						answer[k].Seq[ansCol] = beta[k-len(alpha)].Seq[betaCol]
 					} else {
 						answer[k].Seq[ansCol] = dna.Gap
 					}
 				}
 			}
-			switch route[i].op {
-			case colM:
+			switch route[i].Op {
+			case ColM:
 				alphaCol, betaCol, ansCol = alphaCol+1, betaCol+1, ansCol+1
-			case colI:
+			case ColI:
 				betaCol, ansCol = betaCol+1, ansCol+1
-			case colD:
+			case ColD:
 				alphaCol, ansCol = alphaCol+1, ansCol+1
 			}
 		}
