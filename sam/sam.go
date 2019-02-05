@@ -5,9 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"strings"
 	"os"
-	//will eventually import align package for 
+	"strconv"
+	"strings"
+	//will eventually import align package for
 	//"github.com/vertgenlab/gonomics/align"
 )
 
@@ -29,43 +30,44 @@ func main() {
 	}
 	samFile := flag.Arg(0)
 	//out, _ := ReadIn(samFile)
-	ReadIn(samFile)
-//	for i := range out {
-//		fmt.Println(out[i])
-//	}
+	align, _ := ReadIn(samFile)
+
+	for i := range align {
+		fmt.Println(align[i].bitFlag)
+	}
+	fmt.Println(len(align))
 }
+
 type Sam struct {
-	Header []string
-	Alignment  []metaData
+	Header    []string
+	Alignment []metaData
 }
 
 type metaData struct {
 	//query template name
-	qName string
+	qName   string
 	bitFlag int64
 	refName string
 	currPos string
 	//mapping quality
 	qMap int64
 	// will change to align.Cigar
-	cigar string
-	rNext string
-	posNext int64
-	tmpLen int64
-	seq string
+	cigar    string
+	rNext    string
+	posNext  int64
+	tmpLen   int64
+	seq      string
 	qualBase string
-
-
 }
 
-
-func ReadIn(filename string) ([]*string, error){
-//func ReadIn(filename string) ([]*Sam, error){
+func ReadIn(filename string) ([]*metaData, error) {
+	//func ReadIn(filename string) ([]*Sam, error){
 	//var answer []*Sam
 	var tmpHeader []*string
 	//where should i put the star?
 	//var tmpAlign []string
 	//var tmpAlign []*string
+	var answer []*metaData
 	var line string
 	file, err := os.Open(filename)
 	if err != nil {
@@ -83,8 +85,14 @@ func ReadIn(filename string) ([]*string, error){
 		} else {
 			//still need to convert string to int64
 			colData := strings.Split(line, "\t")
-			metaData{qName: colData[0], bitFrag: fmt.Sprint("%v",colData[1]), refName: colData[2], currPos: colData[3], qMap: fmt.Sprint("%v",colData[4]), cigar: colData[5], rNext: colData[6], posNext: fmt.Sprint("%v",colData[7]), tmpLen: fmt.Sprint("%v",colData[8]), seq: colData[9], qualBase[10]}
-			fmt.Println(colData[4])
+
+			bf, _ := strconv.ParseInt(colData[1], 10, 64)
+			qf, _ := strconv.ParseInt(colData[4], 10, 64)
+			pn, _ := strconv.ParseInt(colData[7], 10, 64)
+			tl, _ := strconv.ParseInt(colData[8], 10, 64)
+
+			linebyline := metaData{qName: colData[0], bitFlag: bf, refName: colData[2], currPos: colData[3], qMap: qf, cigar: colData[5], rNext: colData[6], posNext: pn, tmpLen: tl, seq: colData[9], qualBase: colData[10]}
+			answer = append(answer, &linebyline)
 			//testing to see if reading in is working
 			//for i :=0; i < len(tmpAlign); i++ {
 			//	fmt.Println(tmpAlign[i], "\n")
@@ -92,5 +100,5 @@ func ReadIn(filename string) ([]*string, error){
 		}
 	}
 	//return answer, scanner.Err()
-	return tmpHeader, scanner.Err()
+	return answer, scanner.Err()
 }
