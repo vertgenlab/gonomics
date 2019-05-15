@@ -33,14 +33,16 @@ func main() {
 	align, _ := ReadIn(samFile)
 
 	for i := range align {
-		fmt.Println(align[i].bitFlag)
+			fmt.Println(align[i].Alignment.seq)
+			fmt.Println(len(align[i].Alignment.seq))
+		
 	}
 	fmt.Println(len(align))
 }
 
 type Sam struct {
-	Header    []string
-	Alignment []metaData
+	Header    []*string
+	Alignment *metaData
 }
 
 type metaData struct {
@@ -60,14 +62,13 @@ type metaData struct {
 	qualBase string
 }
 
-func ReadIn(filename string) ([]*metaData, error) {
+func ReadIn(filename string) ([]*Sam, error) {
 	//func ReadIn(filename string) ([]*Sam, error){
 	//var answer []*Sam
 	var tmpHeader []*string
 	//where should i put the star?
-	//var tmpAlign []string
-	//var tmpAlign []*string
-	var answer []*metaData
+
+	var answer []*Sam
 	var line string
 	file, err := os.Open(filename)
 	if err != nil {
@@ -78,7 +79,7 @@ func ReadIn(filename string) ([]*metaData, error) {
 
 	for scanner.Scan() {
 		line = scanner.Text()
-		if strings.Contains(line, "@") {
+		if strings.HasPrefix(line, "@") {
 			tmpHeader = append(tmpHeader, &line)
 			//for debugging
 			//fmt.Println(line)
@@ -92,13 +93,12 @@ func ReadIn(filename string) ([]*metaData, error) {
 			tl, _ := strconv.ParseInt(colData[8], 10, 64)
 
 			linebyline := metaData{qName: colData[0], bitFlag: bf, refName: colData[2], currPos: colData[3], qMap: qf, cigar: colData[5], rNext: colData[6], posNext: pn, tmpLen: tl, seq: colData[9], qualBase: colData[10]}
-			answer = append(answer, &linebyline)
-			//testing to see if reading in is working
-			//for i :=0; i < len(tmpAlign); i++ {
-			//	fmt.Println(tmpAlign[i], "\n")
-			//}
+			currSam := Sam{Header: tmpHeader, Alignment: &linebyline}
+			fmt.Println(currSam)
+			answer = append(answer, &currSam)
+
 		}
 	}
-	//return answer, scanner.Err()
+
 	return answer, scanner.Err()
 }
