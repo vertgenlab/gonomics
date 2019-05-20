@@ -3,16 +3,16 @@ package axt
 import (
 	"bufio"
 	//"flag"
-	//"fmt"
+	"fmt"
 	"sort"
 	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"io/ioutil"
-	"io"
 )
 
 type Axt struct {
@@ -26,6 +26,8 @@ type Axt struct {
 	AligningEnd   int64
 	Strand        string
 	BlastzScore   int64
+	//RefSeq 		  string
+	//QuerySeq      string
 }
 
 func ReadIn(filename string) ([]*Axt, error) {
@@ -42,38 +44,51 @@ func ReadIn(filename string) ([]*Axt, error) {
 	}
 	var err2 error
 	var rline []byte
-	for ;err2 != io.EOF; rline, _, err2 = reader.ReadLine()  {
+	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
 		line = string(rline[:])
 		data := strings.Split(line, " ")
 		//fmt.Println("there is data here")
+		//header data:
 
-		switch {
-		case strings.HasPrefix(line, "#"):
-			//don't do anything
-			//fmt.Println("found #")
-		case len(data) == 1:
-			//these lines are sequences, and we are not recording them
-			//fmt.Println("found sequences")
-		case len(line) == 0:
-			//blank line
-			//fmt.Println("found blank")
-		case len(data) == 9:
-			//fmt.Println("found header line")
-			an, _ := strconv.ParseInt(data[0], 10, 64)
-			rs, _ := strconv.ParseInt(data[2], 10, 64)
-			re, _ := strconv.ParseInt(data[3], 10, 64)
-			as, _ := strconv.ParseInt(data[5], 10, 64)
-			ae, _ := strconv.ParseInt(data[6], 10, 64)
-			bs, _ := strconv.ParseInt(data[8], 10, 64)
+		var an int64
+		var rs int64
+		var re int64
+		var as int64
+		var ae int64
+		var bs int64
+		if strings.HasPrefix(line, "#") {
+			fmt.Println("# header here")
+
+		}
+		if len(data) == 9 {
+			fmt.Println(data)
+			an, _ = strconv.ParseInt(data[0], 10, 64)
+			rs, _ = strconv.ParseInt(data[2], 10, 64)
+			re, _ = strconv.ParseInt(data[3], 10, 64)
+			as, _ = strconv.ParseInt(data[5], 10, 64)
+			ae, _ = strconv.ParseInt(data[6], 10, 64)
+			bs, _ = strconv.ParseInt(data[8], 10, 64)
 			curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs}
 			answer = append(answer, curr)
-		default:
-			//fmt.Println("unexpected line")
+		} 
+		if strings.HasPrefix(line, "A") || strings.HasPrefix(line, "T") || strings.HasPrefix(line, "C") || strings.HasPrefix(line, "G") {
+			fmt.Println(len(line))
 		}
+		
+		
+
 	}
 	return answer, nil
 }
 
+func SeqTruth(axtLine []string) int {
+	if len(axtLine) == 0 && strings.Compare(axtLine[0], "") == 0 {
+		return 0
+	} else {
+		return -1
+	}
+}
+/*
 func ReadDictionary(filename string, ref map[string]int) ([]*Axt, error) {
 	var answer []*Axt
 	var curr *Axt
@@ -88,7 +103,7 @@ func ReadDictionary(filename string, ref map[string]int) ([]*Axt, error) {
 	}
 	var err2 error
 	var rline []byte
-	for ;err2 != io.EOF; rline, _, err2 = reader.ReadLine()  {
+	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
 		line = string(rline[:])
 		data := strings.Split(line, " ")
 		switch {
@@ -96,6 +111,7 @@ func ReadDictionary(filename string, ref map[string]int) ([]*Axt, error) {
 			//don't do anything
 		case len(data) == 1:
 			//these lines are sequences, and we are not recording them
+			//fmt.Println(line)
 		case len(line) == 0:
 			//blank line
 			//fmt.Println("found blank")
@@ -115,15 +131,92 @@ func ReadDictionary(filename string, ref map[string]int) ([]*Axt, error) {
 				answer = append(answer, curr)
 			} else {
 				curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs}
-				answer = append(answer, curr)		
+				answer = append(answer, curr)
 			}
-
 
 		}
 	}
 	return answer, nil
-
 }
+*/
+
+
+/*
+func ReadNew(filename string) ([]*Axt, error) {
+	var answer []*Axt
+	var curr *Axt
+	var line string
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	reader := bufio.NewReader(file)
+	if err != nil {
+		return nil, err
+	}
+	var rline1 []byte
+	var rline2 []byte
+	var rline3 []byte
+	var errorLine1 error
+	rline1, _, errorLine1 = reader.ReadLine()
+	if errorLine1 != io.EOF {
+		break
+	}
+	data := strings.Split(line, " ")
+	line = string(rline[:])
+
+	var errorLine2 error
+	rline2, _, errorLine2 = reader.ReadLine()
+	line = string(rline[:])
+
+	if errorLine2 error != io.EOF {
+		break
+	}
+	var errorLine3 error
+	rline3, _, errorLine3 = reader.ReadLine()
+	line = string(rline[:])
+
+	if errorLine3 != io.EOF {
+		break
+	}
+
+	for ;err2 != io.EOF; rline, _, err2 = reader.ReadLine()  {
+		line = string(rline[:])
+		data := strings.Split(line, " ")
+		//fmt.Println("there is data here")
+
+		switch {
+		case strings.HasPrefix(line, "#"):
+			//don't do anything
+			//fmt.Println("found #")
+		case strings.Compare(line, "") == 0:
+			fmt.Println("Blank found")
+		case len(data) == 1:
+			fmt.Println(data)
+			//these lines are sequences, and we are not recording them
+			//fmt.Println("found sequences")
+		case SeqTruth(data) == 0:
+			fmt.Println("blank")
+			//blank line
+			//fmt.Println("found blank")
+		case len(data) == 9:
+			//fmt.Println("found header line")
+			an, _ := strconv.ParseInt(data[0], 10, 64)
+			rs, _ := strconv.ParseInt(data[2], 10, 64)
+			re, _ := strconv.ParseInt(data[3], 10, 64)
+			as, _ := strconv.ParseInt(data[5], 10, 64)
+			ae, _ := strconv.ParseInt(data[6], 10, 64)
+			bs, _ := strconv.ParseInt(data[8], 10, 64)
+			curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs}
+			answer = append(answer, curr)
+		default:
+			//fmt.Println("unexpected line")
+		}
+	}
+	return answer, nil
+} */
+
+
 
 func FishMap(ref []*fasta.Fasta) map[string]int {
 	m := make(map[string]int)
@@ -138,8 +231,6 @@ func FishMap(ref []*fasta.Fasta) map[string]int {
 	}
 	return m
 }
-
-
 
 func AutomateMergeAxt(files []string) []*Axt {
 	var answer []*Axt
@@ -253,7 +344,7 @@ func SearchBlastz(query []*Axt) []*Axt {
 func GrepAxtChr(axtFile []*Axt, chr string) []*Axt {
 	var answer []*Axt
 	var curr *Axt
-	for i := 0; i < len(axtFile); i ++ {
+	for i := 0; i < len(axtFile); i++ {
 		if CompareName(axtFile[i].RefName, chr) == 0 {
 			curr = axtFile[i]
 			answer = append(answer, curr)
@@ -299,7 +390,7 @@ func AddUnalignedContigs(sorted []*fasta.Fasta, draftUn []*fasta.Fasta) []*fasta
 	return answer
 }
 
-//Takes in a sorted fasta (subset) and the entire set and sorts out the unalained 
+//Takes in a sorted fasta (subset) and the entire set and sorts out the unalained
 func UnmatchedContigs(sorted []*fasta.Fasta, draftUn []*fasta.Fasta) []*fasta.Fasta {
 	var answer []*fasta.Fasta
 	var curr *fasta.Fasta
