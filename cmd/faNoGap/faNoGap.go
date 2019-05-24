@@ -16,7 +16,7 @@ func faNoGap(inFile string, outFile string) {
 
 	beds := fasta.UngappedRegionsAll(records)
 
-	bed.Write(outFile, beds)
+	bed.Write(outFile, beds, 3)
 }
 
 func usage() {
