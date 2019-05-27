@@ -7,6 +7,7 @@ import (
 	"sort"
 	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"io/ioutil"
 	"log"
@@ -26,8 +27,8 @@ type Axt struct {
 	AligningEnd   int64
 	Strand        string
 	BlastzScore   int64
-	//RefSeq 		  string
-	//QuerySeq      string
+	RefSeq        string
+	QuerySeq      string
 }
 
 func ReadIn(filename string) ([]*Axt, error) {
@@ -44,51 +45,196 @@ func ReadIn(filename string) ([]*Axt, error) {
 	}
 	var err2 error
 	var rline []byte
-	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
+	var prefix bool
+	rline, prefix, err2 = reader.ReadLine()
+	for ; err2 != io.EOF; rline, prefix, err2 = reader.ReadLine() {
 		line = string(rline[:])
-		data := strings.Split(line, " ")
-		//fmt.Println("there is data here")
 		//header data:
-
+		for strings.HasPrefix(line, "#") {
+			rline, prefix, err2 = reader.ReadLine()
+			line = string(rline[:])
+		}
+		data := strings.Split(line, " ")
 		var an int64
 		var rs int64
 		var re int64
 		var as int64
 		var ae int64
 		var bs int64
-		if strings.HasPrefix(line, "#") {
-			fmt.Println("# header here")
+		var seq1 string
+		var seq2 string
 
+		if len(data) != 9 {
+			fmt.Println("something went wrong")
 		}
-		if len(data) == 9 {
-			fmt.Println(data)
-			an, _ = strconv.ParseInt(data[0], 10, 64)
-			rs, _ = strconv.ParseInt(data[2], 10, 64)
-			re, _ = strconv.ParseInt(data[3], 10, 64)
-			as, _ = strconv.ParseInt(data[5], 10, 64)
-			ae, _ = strconv.ParseInt(data[6], 10, 64)
-			bs, _ = strconv.ParseInt(data[8], 10, 64)
-			curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs}
-			answer = append(answer, curr)
-		} 
-		if strings.HasPrefix(line, "A") || strings.HasPrefix(line, "T") || strings.HasPrefix(line, "C") || strings.HasPrefix(line, "G") {
-			fmt.Println(len(line))
-		}
-		
-		
+		an, _ = strconv.ParseInt(data[0], 10, 64)
+		rs, _ = strconv.ParseInt(data[2], 10, 64)
+		re, _ = strconv.ParseInt(data[3], 10, 64)
+		as, _ = strconv.ParseInt(data[5], 10, 64)
+		ae, _ = strconv.ParseInt(data[6], 10, 64)
+		bs, _ = strconv.ParseInt(data[8], 10, 64)
 
+		rline, prefix, err2 = reader.ReadLine()
+		seq1 = string(rline[:])
+		for prefix != false {
+			rline, prefix, err2 = reader.ReadLine()
+			if err2 != nil {
+				log.Fatal(err2)
+			}
+			seq1 += string(rline[:])
+		}
+
+		rline, prefix, err2 = reader.ReadLine()
+		seq2 = string(rline[:])
+		for prefix != false {
+			rline, prefix, err2 = reader.ReadLine()
+			if err2 != nil {
+				log.Fatal(err2)
+			}
+			line = string(rline[:])
+			seq2 += line
+		}
+		if len(seq1) != len(seq2) {
+			fmt.Println("Sequences are not the same length")
+			log.Fatal(err2)
+		}
+
+		rline, prefix, err2 = reader.ReadLine()
+		blank := string(rline[:])
+		if len(blank) != 0 {
+			fmt.Println("not a blank line")
+		}
+		curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs, RefSeq: seq1, QuerySeq: seq2}
+		answer = append(answer, curr)
 	}
 	return answer, nil
 }
 
-func SeqTruth(axtLine []string) int {
-	if len(axtLine) == 0 && strings.Compare(axtLine[0], "") == 0 {
-		return 0
-	} else {
-		return -1
+func AxtToSnp(axtFile *Axt) []*vcf.Snp {
+	var answer []*vcf.Snp
+	var curr *vcf.Snp
+	rCount := axtFile.RefStart - 1
+	qCount := axtFile.AligningStart - 1
+	//rLastMatch := rCount
+	//qLastMatch := qCount
+	for i := 0; i < len(axtFile.RefSeq); i++ {
+		if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i])), "-") != 0 && strings.Compare(strings.ToUpper(string(axtFile.QuerySeq[i])), "-") != 0 {
+			rCount++
+			qCount++
+			//snp mismatch
+			if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i])), strings.ToUpper(string(axtFile.QuerySeq[i]))) != 0 {
+				curr = &vcf.Snp{RefName: axtFile.RefName, RefPos: rCount, RefSub: strings.ToUpper(string(axtFile.RefSeq[i])), QueryName: axtFile.AligningName, QueryPos: qCount, QuerySub: strings.ToUpper(string(axtFile.QuerySeq[i]))}
+				answer = append(answer, curr)
+			}
+		}
+		//deletion in reference
+		if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i])), "-") == 0 {
+			qCount++
+			curr = &vcf.Snp{RefName: axtFile.RefName, RefPos: rCount, RefSub: strings.ToUpper(string(axtFile.RefSeq[i])), QueryName: axtFile.AligningName, QueryPos: qCount, QuerySub: strings.ToUpper(string(axtFile.QuerySeq[i]))}
+			answer = append(answer, curr)
+		}
+		//insertion in reference
+		if strings.Compare(strings.ToUpper(string(axtFile.QuerySeq[i])), "-") == 0 {
+			rCount++
+			curr = &vcf.Snp{RefName: axtFile.RefName, RefPos: rCount, RefSub: strings.ToUpper(string(axtFile.RefSeq[i])), QueryName: axtFile.AligningName, QueryPos: qCount, QuerySub: strings.ToUpper(string(axtFile.QuerySeq[i]))}
+			answer = append(answer, curr)
+			
+		}
 	}
+	return answer	
 }
-/*
+
+func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
+	var answer []*vcf.Vcf
+	var curr *vcf.Vcf
+	rCount := axtFile.RefStart - 1
+	qCount := axtFile.AligningStart - 1
+	
+	//rLastMatch := rCount
+	//qLastMatch := qCount
+	for i := 0; i < len(axtFile.RefSeq); i++ {
+		var infoTag string
+		if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i])), "-") != 0 && strings.Compare(strings.ToUpper(string(axtFile.QuerySeq[i])), "-") != 0 {
+			rCount++
+			qCount++
+			//snp mismatch
+			if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i])), strings.ToUpper(string(axtFile.QuerySeq[i]))) != 0 {
+				infoTag = "POS=" + strconv.FormatInt(qCount, 10)
+				curr = &vcf.Vcf{Chr: axtFile.RefName, Pos: rCount, Id: axtFile.AligningName, Ref: strings.ToUpper(string(axtFile.RefSeq[i])), Alt: strings.ToUpper(string(axtFile.QuerySeq[i])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=SNP", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+				//fmt.Println(snps[i].RefSub, snps[i].QuerySub)
+				answer = append(answer, curr)
+			}
+		}
+		//insertion in VCF record
+		if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i])), "-") == 0 {
+			var altTmp string
+			qCount++
+			//var refTmp string
+			altTmp = strings.ToUpper(string(axtFile.RefSeq[i-1]))
+			for j := 0; j < len(axtFile.RefSeq); j++ {
+				if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i+j])), "-") == 0 && strings.Compare(strings.ToUpper(string(axtFile.QuerySeq[i+j])), "-") != 0 {
+					
+					altTmp = altTmp + strings.ToUpper(string(axtFile.QuerySeq[i+j]))
+				} else {
+					curr = &vcf.Vcf{Chr: axtFile.RefName, Pos: rCount, Id: axtFile.AligningName, Ref: strings.ToUpper(string(axtFile.RefSeq[i-1])), Alt: altTmp, Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=INS", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+					answer = append(answer, curr)
+					i = i + j
+					break
+				}
+			}
+		}
+		//deleteion vcf record
+		if strings.Compare(strings.ToUpper(string(axtFile.QuerySeq[i])), "-") == 0 {
+			//var refTmp string
+			var altTmp string
+			rCount++
+			altTmp = strings.ToUpper(string(axtFile.RefSeq[i]))
+			for j := 0; j < len(axtFile.RefSeq); j++ {
+				if strings.Compare(strings.ToUpper(string(axtFile.RefSeq[i+j])), "-") != 0 && strings.Compare(strings.ToUpper(string(axtFile.QuerySeq[i+j])), "-") == 0 {
+					rCount++
+					altTmp = altTmp + strings.ToUpper(string(axtFile.RefSeq[i+j]))
+				} else {
+					curr = &vcf.Vcf{Chr: axtFile.RefName, Pos: rCount, Id: axtFile.AligningName, Ref: altTmp, Alt: strings.ToUpper(string(axtFile.RefSeq[i])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=DEL", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+					answer = append(answer, curr)
+					//rCount = rCount + int64(j)
+					i = i + j
+					break
+				}
+
+			//altTmp = strings.ToUpper(string(axtFile.RefSeq[rCount])) + strings.ToUpper(string(axtFile.QuerySeq[qCount]))
+			
+			
+		}
+	}
+	
+	}
+	return answer
+}
+
+func CallSnpsToVcf(axtList []*Axt) []*vcf.Vcf {
+	var answer []*vcf.Vcf
+	var curr []*vcf.Vcf
+	for i := 0; i < len(axtList); i++ {
+		curr = AxtToVcf(axtList[i])
+		for _, j := range curr {
+			answer = append(answer, j)
+		}
+	}
+	return answer
+}
+
+func CallSnps(axtList []*Axt) []*vcf.Snp {
+	var answer []*vcf.Snp
+	var curr []*vcf.Snp
+	for i := 0; i < len(axtList); i++ {
+		curr = AxtToSnp(axtList[i])
+		for _, j := range curr {
+			answer = append(answer, j)
+		}
+	}
+	return answer
+}
+
 func ReadDictionary(filename string, ref map[string]int) ([]*Axt, error) {
 	var answer []*Axt
 	var curr *Axt
@@ -103,120 +249,80 @@ func ReadDictionary(filename string, ref map[string]int) ([]*Axt, error) {
 	}
 	var err2 error
 	var rline []byte
-	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
+	var prefix bool
+	rline, prefix, err2 = reader.ReadLine()
+	for ; err2 != io.EOF; rline, prefix, err2 = reader.ReadLine() {
 		line = string(rline[:])
+		//header data:
+		for strings.HasPrefix(line, "#") {
+			rline, prefix, err2 = reader.ReadLine()
+			line = string(rline[:])
+		}
 		data := strings.Split(line, " ")
-		switch {
-		case strings.HasPrefix(line, "#"):
-			//don't do anything
-		case len(data) == 1:
-			//these lines are sequences, and we are not recording them
-			//fmt.Println(line)
-		case len(line) == 0:
-			//blank line
-			//fmt.Println("found blank")
-		case len(data) == 9:
-			an, _ := strconv.ParseInt(data[0], 10, 64)
-			rs, _ := strconv.ParseInt(data[2], 10, 64)
-			re, _ := strconv.ParseInt(data[3], 10, 64)
-			as, _ := strconv.ParseInt(data[5], 10, 64)
-			ae, _ := strconv.ParseInt(data[6], 10, 64)
-			bs, _ := strconv.ParseInt(data[8], 10, 64)
+		var an int64
+		var rs int64
+		var re int64
+		var as int64
+		var ae int64
+		var bs int64
+		var seq1 string
+		var seq2 string
 
-			if strings.Compare(data[7], "-") == 0 {
-				refLength := int64(ref[data[1]])
-				startIndexConvert := refLength - rs + 1
-				endIndexConvert := refLength - re + 1
-				curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: startIndexConvert, AligningEnd: endIndexConvert, Strand: data[7], BlastzScore: bs}
-				answer = append(answer, curr)
-			} else {
-				curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs}
-				answer = append(answer, curr)
+		if len(data) != 9 {
+			fmt.Println("something went wrong")
+		}
+		an, _ = strconv.ParseInt(data[0], 10, 64)
+		rs, _ = strconv.ParseInt(data[2], 10, 64)
+		re, _ = strconv.ParseInt(data[3], 10, 64)
+		as, _ = strconv.ParseInt(data[5], 10, 64)
+		ae, _ = strconv.ParseInt(data[6], 10, 64)
+		bs, _ = strconv.ParseInt(data[8], 10, 64)
+
+		rline, prefix, err2 = reader.ReadLine()
+		seq1 = string(rline[:])
+		for prefix != false {
+			rline, prefix, err2 = reader.ReadLine()
+			if err2 != nil {
+				log.Fatal(err2)
 			}
+			seq1 += string(rline[:])
+		}
 
+		rline, prefix, err2 = reader.ReadLine()
+		seq2 = string(rline[:])
+		for prefix != false {
+			rline, prefix, err2 = reader.ReadLine()
+			if err2 != nil {
+				log.Fatal(err2)
+			}
+			line = string(rline[:])
+			seq2 += line
+		}
+
+		if len(seq1) != len(seq2) {
+			fmt.Println("Sequences are not the same length")
+			log.Fatal(err2)
+		}
+
+		rline, prefix, err2 = reader.ReadLine()
+		blank := string(rline[:])
+		if len(blank) != 0 {
+			fmt.Println("not a blank line")
+		}
+
+		if strings.Compare(data[7], "-") == 0 {
+			refLength := int64(ref[data[1]])
+			startIndexConvert := refLength - rs + 1
+			endIndexConvert := refLength - re + 1
+			curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: startIndexConvert, AligningEnd: endIndexConvert, Strand: "+", BlastzScore: bs, RefSeq: seq1, QuerySeq: seq2}
+			answer = append(answer, curr)
+		} else {
+			curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs, RefSeq: seq1, QuerySeq: seq2}
+			answer = append(answer, curr)
 		}
 	}
 	return answer, nil
 }
-*/
-
-
-/*
-func ReadNew(filename string) ([]*Axt, error) {
-	var answer []*Axt
-	var curr *Axt
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil, err
-	}
-	var rline1 []byte
-	var rline2 []byte
-	var rline3 []byte
-	var errorLine1 error
-	rline1, _, errorLine1 = reader.ReadLine()
-	if errorLine1 != io.EOF {
-		break
-	}
-	data := strings.Split(line, " ")
-	line = string(rline[:])
-
-	var errorLine2 error
-	rline2, _, errorLine2 = reader.ReadLine()
-	line = string(rline[:])
-
-	if errorLine2 error != io.EOF {
-		break
-	}
-	var errorLine3 error
-	rline3, _, errorLine3 = reader.ReadLine()
-	line = string(rline[:])
-
-	if errorLine3 != io.EOF {
-		break
-	}
-
-	for ;err2 != io.EOF; rline, _, err2 = reader.ReadLine()  {
-		line = string(rline[:])
-		data := strings.Split(line, " ")
-		//fmt.Println("there is data here")
-
-		switch {
-		case strings.HasPrefix(line, "#"):
-			//don't do anything
-			//fmt.Println("found #")
-		case strings.Compare(line, "") == 0:
-			fmt.Println("Blank found")
-		case len(data) == 1:
-			fmt.Println(data)
-			//these lines are sequences, and we are not recording them
-			//fmt.Println("found sequences")
-		case SeqTruth(data) == 0:
-			fmt.Println("blank")
-			//blank line
-			//fmt.Println("found blank")
-		case len(data) == 9:
-			//fmt.Println("found header line")
-			an, _ := strconv.ParseInt(data[0], 10, 64)
-			rs, _ := strconv.ParseInt(data[2], 10, 64)
-			re, _ := strconv.ParseInt(data[3], 10, 64)
-			as, _ := strconv.ParseInt(data[5], 10, 64)
-			ae, _ := strconv.ParseInt(data[6], 10, 64)
-			bs, _ := strconv.ParseInt(data[8], 10, 64)
-			curr = &Axt{AlignNumber: an, RefName: data[1], RefStart: rs, RefEnd: re, AligningName: data[4], AligningStart: as, AligningEnd: ae, Strand: data[7], BlastzScore: bs}
-			answer = append(answer, curr)
-		default:
-			//fmt.Println("unexpected line")
-		}
-	}
-	return answer, nil
-} */
-
-
 
 func FishMap(ref []*fasta.Fasta) map[string]int {
 	m := make(map[string]int)
@@ -413,3 +519,11 @@ func UnmatchedContigs(sorted []*fasta.Fasta, draftUn []*fasta.Fasta) []*fasta.Fa
 	}
 	return answer
 }
+
+func PrintAxt(input []*Axt) {
+	for i := range input {
+		//fmt.Printf("%v\t%s\t%v\t%v\t%s\t%v\t%v\t%s\t%v\n",input[i].AlignNumber, input[i].RefName, input[i].RefStart, input[i].RefEnd, input[i].AligningName, input[i].AligningStart, input[i].AligningEnd, input[i].Strand, input[i].BlastzScore)
+		fmt.Println(input[i].AlignNumber, input[i].RefName, input[i].RefStart, input[i].RefEnd, input[i].AligningName, input[i].AligningStart, input[i].AligningEnd, input[i].Strand, input[i].BlastzScore)
+	}
+}
+
