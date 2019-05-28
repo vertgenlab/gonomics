@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/craiglowe/vertgenlab/common"
-	"github.com/craiglowe/vertgenlab/fasta"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"os"
 )
