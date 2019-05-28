@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-var b1 Bed = Bed{Name: "chr1", Start: 100, End: 200}
-var b2 Bed = Bed{Name: "chr2", Start: 400, End: 900}
-var b3 Bed = Bed{Name: "chr3", Start: 945, End: 1000}
+var b1 Bed = Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200}
+var b2 Bed = Bed{Chrom: "chr2", ChromStart: 400, ChromEnd: 900}
+var b3 Bed = Bed{Chrom: "chr3", ChromStart: 945, ChromEnd: 1000}
 var beds []*Bed = []*Bed{&b1, &b2, &b3}
 
 var readWriteTests = []struct {
@@ -33,7 +33,7 @@ func TestWriteAndRead(t *testing.T) {
 	var actual []*Bed
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"
-		err := Write(tempFile, test.data)
+		err := Write(tempFile, test.data, 3)
 		if err != nil {
 			t.Errorf("Error writing %s as a temp bed file", tempFile)
 		}
@@ -42,7 +42,7 @@ func TestWriteAndRead(t *testing.T) {
 			t.Errorf("Reading %s gave an error", test.filename)
 		}
 		if !AllAreEqual(test.data, actual) {
-			t.Errorf("The %s file was not read correctly.", test.filename)
+			t.Errorf("The %s file was not written and read correctly.", test.filename)
 		}
 		err = os.Remove(tempFile)
 		if err != nil {

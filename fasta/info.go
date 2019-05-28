@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-func UngappedRegions(fa *Fasta) []bed.Bed {
-	var answer []bed.Bed
+func UngappedRegions(fa *Fasta) []*bed.Bed {
+	var answer []*bed.Bed
 	var inRegion bool = false
 	var startIndex = 0
 	for index, _ := range fa.Seq {
@@ -14,21 +14,21 @@ func UngappedRegions(fa *Fasta) []bed.Bed {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
-			answer = append(answer, bed.Bed{Name: fa.Name, Start: startIndex, End: index})
+			answer = append(answer, &bed.Bed{Chrom: fa.Name, ChromStart: int64(startIndex), ChromEnd: int64(index)})
 			inRegion = false
 		}
 
 	}
 	if inRegion == true {
-		answer = append(answer, bed.Bed{Name: fa.Name, Start: startIndex, End: len(fa.Seq)})
+		answer = append(answer, &bed.Bed{Chrom: fa.Name, ChromStart: int64(startIndex), ChromEnd: int64(len(fa.Seq))})
 	}
 	return answer
 }
 
-func UngappedRegionsAll(records []Fasta) []bed.Bed {
-	var b []bed.Bed
+func UngappedRegionsAll(records []Fasta) []*bed.Bed {
+	var answer []*bed.Bed
 	for idx, _ := range records {
-		b = append(b, UngappedRegions(&records[idx])...)
+		answer = append(answer, UngappedRegions(&records[idx])...)
 	}
-	return b
+	return answer
 }
