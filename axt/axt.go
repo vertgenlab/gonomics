@@ -1,11 +1,11 @@
 package axt
 
 import (
+	"log"
 	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -29,27 +29,28 @@ type Axt struct {
 func Read(filename string) []*Axt {
 	var answer []*Axt
 	var header, rSeq, qSeq, blank string
-	var err, hErr, rErr, qErr, bErr, startErr, endErr error
+	var err, startErr, endErr error
+	var hDone, rDone, qDone, bDone bool
 	var words []string
 
 	file := common.MustOpen(filename)
 	defer file.Close()
 	reader := bufio.NewReader(file)
 
-	for header, hErr = common.NextRealLine(reader); hErr == nil; header, hErr = common.NextRealLine(reader) {
-		rSeq, rErr = common.NextRealLine(reader)
-		qSeq, qErr = common.NextRealLine(reader)
-		blank, bErr = common.NextRealLine(reader)
-		if rErr == io.EOF || qErr == io.EOF || bErr == io.EOF {
-			common.Exit(fmt.Sprintf("Error: lines in %s, must be a multiple of four\n", filename))
+	for header, hDone = common.NextRealLine(reader); !hDone; header, hDone = common.NextRealLine(reader) {
+		rSeq, rDone = common.NextRealLine(reader)
+		qSeq, qDone = common.NextRealLine(reader)
+		blank, bDone = common.NextRealLine(reader)
+		if rDone || qDone || bDone {
+			log.Fatalf("Error: lines in %s, must be a multiple of four\n", filename)
 		}
 		if blank != "" {
-			common.Exit(fmt.Sprintf("Error: every fourth line in %s should be blank\n", filename))
+			log.Fatalf("Error: every fourth line in %s should be blank\n", filename)
 		}
 
 		words = strings.Split(header, " ")
 		if len(words) != 9 {
-			common.Exit(fmt.Sprintf("Error: sequences in %s should be the same length\n", header))
+			log.Fatalf("Error: sequences in %s should be the same length\n", header)
 		}
 
 		curr := Axt{}
@@ -57,13 +58,13 @@ func Read(filename string) []*Axt {
 		curr.RStart, startErr = strconv.ParseInt(words[2], 10, 64)
 		curr.REnd, endErr = strconv.ParseInt(words[3], 10, 64)
 		if startErr != nil || endErr != nil {
-			common.Exit(fmt.Sprintf("Error: trouble parsing reference start and end in %s\n", header))
+			log.Fatalf("Error: trouble parsing reference start and end in %s\n", header)
 		}
 		curr.QName = words[4]
 		curr.QStart, startErr = strconv.ParseInt(words[5], 10, 64)
 		curr.QEnd, endErr = strconv.ParseInt(words[6], 10, 64)
 		if startErr != nil || endErr != nil {
-			common.Exit(fmt.Sprintf("Error: trouble parsing query start and end in %s\n", header))
+			log.Fatalf("Error: trouble parsing query start and end in %s\n", header)
 		}
 		switch words[7] {
 		case "+":
@@ -71,11 +72,11 @@ func Read(filename string) []*Axt {
 		case "-":
 			curr.QStrandPos = false
 		default:
-			common.Exit(fmt.Sprintf("Error: did not recognize strand in %s\n", header))
+			log.Fatalf("Error: did not recognize strand in %s\n", header)
 		}
 		curr.Score, err = strconv.ParseInt(words[8], 10, 64)
 		if err != nil {
-			common.Exit(fmt.Sprintf("Error: trouble parsing the score in %s\n", header))
+			log.Fatalf("Error: trouble parsing the score in %s\n", header)
 		}
 		curr.RSeq, err = dna.StringToBases(rSeq)
 		common.ExitIfError(err)
@@ -83,9 +84,6 @@ func Read(filename string) []*Axt {
 		common.ExitIfError(err)
 
 		answer = append(answer, &curr)
-	}
-	if hErr != io.EOF {
-		common.ExitIfError(hErr)
 	}
 	return answer
 }
