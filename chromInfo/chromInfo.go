@@ -2,8 +2,9 @@ package chromSizes
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 	"strings"
 )
 
@@ -19,15 +20,15 @@ func ReadToSlice(filename string) []*ChromInfo {
 	var count int64
 	var doneReading bool
 
-	file := common.MustOpen(filename)
+	file := fileio.MustOpen(filename)
 	defer file.Close()
 	reader := bufio.NewReader(file)
 
 	count = 0
-	for line, doneReading = common.NextRealLine(reader); !doneReading; line, doneReading = common.NextRealLine(reader) {
+	for line, doneReading = fileio.NextRealLine(reader); !doneReading; line, doneReading = fileio.NextRealLine(reader) {
 		words := strings.Fields(line)
 		if len(words) != 2 {
-			common.ExitIfError(fmt.Errorf("Error: expecting 2 columns, but got %d on line:%s\n", len(words), line))
+			log.Fatalf("Error: expecting 2 columns, but got %d on line:%s\n", len(words), line)
 		}
 		size := common.StringToInt64(words[1])
 		curr := ChromInfo{Name: words[0], Size: size, Order: count}
@@ -43,15 +44,15 @@ func ReadToMap(filename string) map[string]*ChromInfo {
 	var count int64
 	var doneReading bool
 
-	file := common.MustOpen(filename)
+	file := fileio.MustOpen(filename)
 	defer file.Close()
 	reader := bufio.NewReader(file)
 
 	count = 0
-	for line, doneReading = common.NextRealLine(reader); !doneReading; line, doneReading = common.NextRealLine(reader) {
+	for line, doneReading = fileio.NextRealLine(reader); !doneReading; line, doneReading = fileio.NextRealLine(reader) {
 		words := strings.Fields(line)
 		if len(words) != 2 {
-			common.ExitIfError(fmt.Errorf("Error: expecting 2 columns, but got %d on line:%s\n", len(words), line))
+			log.Fatalf("Error: expecting 2 columns, but got %d on line:%s\n", len(words), line)
 		}
 		size := common.StringToInt64(words[1])
 		curr := ChromInfo{Name: words[0], Size: size, Order: count}

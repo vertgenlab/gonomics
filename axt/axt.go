@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strconv"
 	"strings"
@@ -33,14 +34,14 @@ func Read(filename string) []*Axt {
 	var hDone, rDone, qDone, bDone bool
 	var words []string
 
-	file := common.MustOpen(filename)
+	file := fileio.MustOpen(filename)
 	defer file.Close()
 	reader := bufio.NewReader(file)
 
-	for header, hDone = common.NextRealLine(reader); !hDone; header, hDone = common.NextRealLine(reader) {
-		rSeq, rDone = common.NextRealLine(reader)
-		qSeq, qDone = common.NextRealLine(reader)
-		blank, bDone = common.NextRealLine(reader)
+	for header, hDone = fileio.NextRealLine(reader); !hDone; header, hDone = fileio.NextRealLine(reader) {
+		rSeq, rDone = fileio.NextRealLine(reader)
+		qSeq, qDone = fileio.NextRealLine(reader)
+		blank, bDone = fileio.NextRealLine(reader)
 		if rDone || qDone || bDone {
 			log.Fatalf("Error: lines in %s, must be a multiple of four\n", filename)
 		}
@@ -78,39 +79,25 @@ func Read(filename string) []*Axt {
 		if err != nil {
 			log.Fatalf("Error: trouble parsing the score in %s\n", header)
 		}
-		curr.RSeq, err = dna.StringToBases(rSeq)
-		common.ExitIfError(err)
-		curr.QSeq, err = dna.StringToBases(qSeq)
-		common.ExitIfError(err)
+		curr.RSeq = dna.StringToBases(rSeq)
+		curr.QSeq = dna.StringToBases(qSeq)
 
 		answer = append(answer, &curr)
 	}
 	return answer
 }
 
-func WriteToFileHandle(file *os.File, input *Axt, alnNumber int) error {
-	var strand rune
-	if input.QStrandPos {
-		strand = '+'
-	} else {
-		strand = '-'
-	}
+func WriteToFileHandle(file *os.File, input *Axt, alnNumber int) {
+	strand := common.StrandToRune(input.QStrandPos)
 	_, err := fmt.Fprintf(file, "%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", alnNumber, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, strand, input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
-	return err
+	common.ExitIfError(err)
 }
 
-func Write(filename string, data []*Axt) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
+func Write(filename string, data []*Axt) {
+	file := fileio.MustCreate(filename)
 	defer file.Close()
 
 	for i, _ := range data {
-		err = WriteToFileHandle(file, data[i], i)
-		if err != nil {
-			return err
-		}
+		WriteToFileHandle(file, data[i], i)
 	}
-	return err
 }

@@ -9,9 +9,9 @@ func AppendToName(record *Fasta, addition string) {
 	record.Name = fmt.Sprintf("%s%s", record.Name, addition)
 }
 
-func AppendToNameAll(records []Fasta, addition string) {
+func AppendToNameAll(records []*Fasta, addition string) {
 	for idx, _ := range records {
-		AppendToName(&records[idx], addition)
+		AppendToName(records[idx], addition)
 	}
 }
 
@@ -19,9 +19,9 @@ func ReverseComplement(record *Fasta) {
 	dna.ReverseComplement(record.Seq)
 }
 
-func ReverseComplementAll(records []Fasta) {
+func ReverseComplementAll(records []*Fasta) {
 	for idx, _ := range records {
-		ReverseComplement(&records[idx])
+		ReverseComplement(records[idx])
 	}
 }
 
