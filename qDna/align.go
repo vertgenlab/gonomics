@@ -26,6 +26,7 @@ func PairwiseAverage(alpha *QFrag, beta *QFrag) *QFrag {
 	return answer
 }
 
+/*
 func UngappedAlign(alpha []*QBase, beta []*QBase, alphaOffset int, betaOffset int, scoreMatrix [][]float64) float64 {
 
-}
+}*/
