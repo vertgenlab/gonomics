@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	//"github.com/vertgenlab/gonomics/align"
 )
 
 type Sam struct {

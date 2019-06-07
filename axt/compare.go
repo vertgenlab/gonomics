@@ -32,7 +32,6 @@ func CompareRCoord(alpha *Axt, beta *Axt) int {
 	return 0
 }
 
-
 func CompareRName(alpha *Axt, beta *Axt) int {
 	return strings.Compare(alpha.RName, beta.RName)
 }
@@ -65,6 +64,5 @@ func SortByRNameCoord(axts []*Axt) {
 }
 
 func SortByScore(axts []*Axt) {
-        sort.Slice(axts, func(i, j int) bool { return CompareScore(axts[i], axts[j]) == -1 })
+	sort.Slice(axts, func(i, j int) bool { return CompareScore(axts[i], axts[j]) == -1 })
 }
-

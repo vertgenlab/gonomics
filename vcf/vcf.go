@@ -76,7 +76,7 @@ func ReadIn(filename string) ([]*Vcf, error) {
 	}
 	return answer, nil
 }
-
+/*
 func MummerToVcf(mummer []*Snp, reference map[string][]dna.Base) []*Vcf {
 	var answer []*Vcf
 	var curr *Vcf
@@ -106,7 +106,7 @@ func MummerToVcf(mummer []*Snp, reference map[string][]dna.Base) []*Vcf {
 		}
 	}
 	return answer
-}
+}*/
 
 func SnpTruth(s *Snp) int {
 	if strings.Compare(s.RefSub, s.QuerySub) != 0 && strings.Compare(s.RefSub, ".") != 0 && strings.Compare(s.QuerySub, ".") != 0 {

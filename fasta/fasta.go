@@ -3,8 +3,9 @@ package fasta
 import (
 	"bufio"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strings"
 )
@@ -14,104 +15,56 @@ type Fasta struct {
 	Seq  []dna.Base
 }
 
-func Read(filename string) ([]Fasta, error) {
-	var line string
-	var currSeq []dna.Base
-	var answer []Fasta
-	var seqIdx int64 = -1
-
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line = scanner.Text()
-		switch {
-		case strings.HasPrefix(line, "#"):
-			// comment line in fasta file
-		case strings.HasPrefix(line, ">"):
-			answer = append(answer, Fasta{Name: line[1:len(line)]})
-			seqIdx++
-		default:
-			currSeq, err = dna.StringToBases(line)
-			if err != nil {
-				log.Fatal(err)
-			}
-			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
-		}
-	}
-	return answer, scanner.Err()
-}
-
-func ReadNew(filename string) ([]*Fasta, error) {
+func Read(filename string) []*Fasta {
 	var line string
 	var currSeq []dna.Base
 	var answer []*Fasta
 	var seqIdx int64 = -1
+	var doneReading bool = false
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+	file := fileio.MustOpen(filename)
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
+	reader := bufio.NewReader(file)
 
-	for scanner.Scan() {
-		line = scanner.Text()
-		switch {
-		case strings.HasPrefix(line, "#"):
-			// comment line in fasta file
-		case strings.HasPrefix(line, ">"):
+	for line, doneReading = fileio.NextRealLine(reader); !doneReading; line, doneReading = fileio.NextRealLine(reader) {
+		if strings.HasPrefix(line, ">") {
 			tmp := Fasta{Name: line[1:len(line)]}
 			answer = append(answer, &tmp)
 			seqIdx++
-		default:
-			currSeq, err = dna.StringToBases(line)
-			if err != nil {
-				log.Fatal(err)
-			}
+		} else {
+			currSeq = dna.StringToBases(line)
 			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
 		}
 	}
-	return answer, scanner.Err()
+	return answer
 }
 
-func WriteToFileHandle(file *os.File, records []Fasta, lineLength int) error {
+func WriteToFileHandle(file *os.File, records []*Fasta, lineLength int) {
 	var err error
 	for _, rec := range records {
 		_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
+		common.ExitIfError(err)
 		for i := 0; i < len(rec.Seq); i += lineLength {
 			if i+lineLength > len(rec.Seq) {
 				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:]))
-				if err != nil {
-					return err
-				}
+				common.ExitIfError(err)
 			} else {
 				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:i+lineLength]))
-				if err != nil {
-					return err
-				}
+				common.ExitIfError(err)
 			}
 		}
 	}
-	return nil
 }
 
-func Write(filename string, records []Fasta) error {
+func Write(filename string, records []*Fasta) {
 	lineLength := 50
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
+	file := fileio.MustCreate(filename)
 	defer file.Close()
 
-	return WriteToFileHandle(file, records, lineLength)
+	WriteToFileHandle(file, records, lineLength)
 }
 
-func WriteGroups(filename string, groups [][]Fasta) error {
+func WriteGroups(filename string, groups [][]*Fasta) error {
 	lineLength := 50
 	file, err := os.Create(filename)
 	if err != nil {
@@ -120,14 +73,9 @@ func WriteGroups(filename string, groups [][]Fasta) error {
 	defer file.Close()
 
 	for i, _ := range groups {
-		err := WriteToFileHandle(file, groups[i], lineLength)
-		if err != nil {
-			return err
-		}
+		WriteToFileHandle(file, groups[i], lineLength)
 		_, err = fmt.Fprint(file, "\n")
-		if err != nil {
-			return err
-		}
+		common.ExitIfError(err)
 	}
 	return nil
 }

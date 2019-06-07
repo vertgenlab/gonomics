@@ -2,37 +2,37 @@ package dna
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"unicode/utf8"
 )
 
-func runeToBase(r rune) (Base, error) {
+func runeToBase(r rune) Base {
 	switch r {
 	case 'A':
-		return A, nil
+		return A
 	case 'C':
-		return C, nil
+		return C
 	case 'G':
-		return G, nil
+		return G
 	case 'T':
-		return T, nil
+		return T
 	case 'N':
-		return N, nil
+		return N
 	case 'a':
-		return a, nil
+		return a
 	case 'c':
-		return c, nil
+		return c
 	case 'g':
-		return g, nil
+		return g
 	case 't':
-		return t, nil
+		return t
 	case 'n':
-		return n, nil
+		return n
 	case '-':
-		return Gap, nil
+		return Gap
 	default:
-		return N, fmt.Errorf("dna: unexpected character in dna %r", r)
+		log.Fatalf("Error: unexpected character in dna %c\n", r)
+		return N
 	}
 }
 
@@ -61,22 +61,22 @@ func BaseToRune(base Base) rune {
 	case Gap:
 		return '-'
 	default:
-		log.Fatal(fmt.Errorf("dna: unexpected value in dna Base when converting to rune %u", base))
+		log.Fatalf("Error: unexpected value in dna Base when converting to rune\n")
 		return 'N'
 	}
 }
 
-func StringToBases(s string) ([]Base, error) {
+func BaseToString(b Base) string {
+	return string(BaseToRune(b))
+}
+
+func StringToBases(s string) []Base {
 	answer := make([]Base, utf8.RuneCountInString(s))
-	var err error
 
 	for index, runeValue := range s {
-		answer[index], err = runeToBase(runeValue)
-		if err != nil {
-			return nil, err
-		}
+		answer[index] = runeToBase(runeValue)
 	}
-	return answer, nil
+	return answer
 }
 
 func BasesToString(bases []Base) string {
