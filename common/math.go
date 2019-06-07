@@ -1,14 +1,22 @@
 package common
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 )
+
+func StringToFloat64(s string) float64 {
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a float64\n", s)
+	}
+	return n
+}
 
 func StringToInt64(s string) int64 {
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		ExitIfError(fmt.Errorf("Error: trouble converting %s to an int64\n", s))
+		log.Fatalf("Error: trouble converting %s to an int64\n", s)
 	}
 	return n
 }

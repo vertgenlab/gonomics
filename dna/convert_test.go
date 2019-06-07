@@ -18,8 +18,8 @@ var equalStringsAndBases = []struct {
 
 func TestStringToBases(t *testing.T) {
 	for _, test := range equalStringsAndBases {
-		actual, err := StringToBases(test.characters)
-		if CompareSeqsCaseSensitive(actual, test.bases) != 0 || err != nil {
+		actual := StringToBases(test.characters)
+		if CompareSeqsCaseSensitive(actual, test.bases) != 0 {
 			t.Errorf("StringToBases(%s): expected %v, actual %v", test.characters, test.bases, actual)
 		}
 	}

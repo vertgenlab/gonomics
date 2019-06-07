@@ -5,17 +5,17 @@ import (
 	"testing"
 )
 
-var seqTwoA, _ = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
-var seqTwoB, _ = dna.StringToBases("acgtACGTACGT")
-var seqTwoC, _ = dna.StringToBases("ACGTACGTACGTT")
+var seqTwoA = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
+var seqTwoB = dna.StringToBases("acgtACGTACGT")
+var seqTwoC = dna.StringToBases("ACGTACGTACGTT")
 var allEqualTests = []struct {
-	dataOne  []Fasta
-	dataTwo  []Fasta
+	dataOne  []*Fasta
+	dataTwo  []*Fasta
 	expected bool
 }{
-	{[]Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, true},
-	{[]Fasta{{"apple", seqTwoA}, {"bananaa", seqTwoB}, {"carrot", seqTwoC}}, []Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, false},
-	{[]Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoB}}, false},
+	{[]*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, true},
+	{[]*Fasta{{"apple", seqTwoA}, {"bananaa", seqTwoB}, {"carrot", seqTwoC}}, []*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, false},
+	{[]*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoB}}, false},
 }
 
 func TestAllEqual(t *testing.T) {
@@ -28,12 +28,12 @@ func TestAllEqual(t *testing.T) {
 }
 
 var sortNameTests = []struct {
-	input    []Fasta
-	expected []Fasta
+	input    []*Fasta
+	expected []*Fasta
 }{
-	{[]Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}},
-	{[]Fasta{{"banana", seqTwoB}, {"apple", seqTwoA}, {"carrot", seqTwoC}}, []Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}},
-	{[]Fasta{{"carrot", seqTwoC}, {"apple", seqTwoA}, {"banana", seqTwoB}}, []Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}},
+	{[]*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}},
+	{[]*Fasta{{"banana", seqTwoB}, {"apple", seqTwoA}, {"carrot", seqTwoC}}, []*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}},
+	{[]*Fasta{{"carrot", seqTwoC}, {"apple", seqTwoA}, {"banana", seqTwoB}}, []*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}},
 }
 
 func TestSortName(t *testing.T) {
@@ -46,12 +46,12 @@ func TestSortName(t *testing.T) {
 }
 
 var sortSeqTests = []struct {
-	input    []Fasta
-	expected []Fasta
+	input    []*Fasta
+	expected []*Fasta
 }{
-	{[]Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []Fasta{{"banana", seqTwoB}, {"carrot", seqTwoC}, {"apple", seqTwoA}}},
-	{[]Fasta{{"banana", seqTwoB}, {"apple", seqTwoA}, {"carrot", seqTwoC}}, []Fasta{{"banana", seqTwoB}, {"carrot", seqTwoC}, {"apple", seqTwoA}}},
-	{[]Fasta{{"carrot", seqTwoC}, {"apple", seqTwoA}, {"banana", seqTwoB}}, []Fasta{{"banana", seqTwoB}, {"carrot", seqTwoC}, {"apple", seqTwoA}}},
+	{[]*Fasta{{"apple", seqTwoA}, {"banana", seqTwoB}, {"carrot", seqTwoC}}, []*Fasta{{"banana", seqTwoB}, {"carrot", seqTwoC}, {"apple", seqTwoA}}},
+	{[]*Fasta{{"banana", seqTwoB}, {"apple", seqTwoA}, {"carrot", seqTwoC}}, []*Fasta{{"banana", seqTwoB}, {"carrot", seqTwoC}, {"apple", seqTwoA}}},
+	{[]*Fasta{{"carrot", seqTwoC}, {"apple", seqTwoA}, {"banana", seqTwoB}}, []*Fasta{{"banana", seqTwoB}, {"carrot", seqTwoC}, {"apple", seqTwoA}}},
 }
 
 func TestSortSeq(t *testing.T) {

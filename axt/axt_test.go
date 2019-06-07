@@ -1,7 +1,7 @@
 package axt
 
 import (
-	//"os"
+	"os"
 	"testing"
 )
 
@@ -22,13 +22,10 @@ func TestWriteAndRead(t *testing.T) {
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"
 		actual = Read(test.filename)
-		err := Write(tempFile, actual)
-		if err != nil {
-			t.Errorf("Writing %s gave an error", tempFile)
-		}
-		/*err = os.Remove(tempFile)
+		Write(tempFile, actual)
+		err := os.Remove(tempFile)
 		if err != nil {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
-		}*/
+		}
 	}
 }

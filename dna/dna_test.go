@@ -11,10 +11,7 @@ var dnaStrings = []string{
 
 func TestDnaToFromString(t *testing.T) {
 	for _, input := range dnaStrings {
-		bases, err := StringToBases(input)
-		if err != nil {
-			t.Errorf("Converting %s to bases gave an error. %s", input, err)
-		}
+		bases := StringToBases(input)
 		answer := BasesToString(bases)
 		if input != answer {
 			t.Errorf("Converting %s to bases and back gave %s", input, answer)
