@@ -1,12 +1,12 @@
 package axt
 
 import (
+	"log"
 	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"os"
 	"strconv"
 	"strings"
