@@ -36,7 +36,9 @@ func Read(filename string) ([]Wig, error) {
 		if lineFields[0] == "variableStep" {
 			log.Fatal("Package wig is not compatible with variableStep wigs")
 		} else if lineFields[0] == "fixedStep" {
-			answer = append(answer, currentWig) //write last completed wig to outlist
+			if (len(answer) != 0){
+				answer = append(answer, currentWig) //write last completed wig to outlist
+			}
 
 			var lineFields []string = strings.Fields(line)
 			if len(lineFields) != 4 {
@@ -44,16 +46,12 @@ func Read(filename string) ([]Wig, error) {
 			}
 
 			currentWig.StepType = "fixedStep"
-
 			var chromList []string = strings.Split(lineFields[1], "=")
 			currentWig.Chrom = chromList[1]
-
 			var startList []string = strings.Split(lineFields[2], "=")
 			currentWig.Start, err = strconv.ParseFloat(startList[1], 64)
-
 			var stepList []string = strings.Split(lineFields[3], "=")
 			currentWig.Step, err = strconv.ParseFloat(stepList[1], 64)
-
 		} else {
 			valueFloat, _ := strconv.ParseFloat(line, 64)
 			//if err != nil {
@@ -62,7 +60,19 @@ func Read(filename string) ([]Wig, error) {
 			currentWig.Values = append(currentWig.Values, valueFloat)
 		}
 	}
+	answer = append(answer, currentWig)
 	return answer, scanner.Err()
+}
+
+func PrintFirst(rec []Wig) {
+	if len(rec) == 0 {
+		fmt.Println("Empty Wig")
+	} else {fmt.Printf("StepType=%s Chrom=%s Start=%v Step=%v\n", rec[0].StepType, rec[0].Chrom,
+		rec[0].Start, rec[0].Step)
+		for i := range rec[0].Values {
+			fmt.Println(rec[0].Values[i])
+		}
+	}
 }
 
 func Write(filename string, rec []Wig) {
@@ -81,7 +91,7 @@ func WriteToFileHandle(file *os.File, rec []Wig) error {
 		_, err = fmt.Fprintf(file, "%s chrom=%s start=%v step=%v\n", rec[i].StepType, rec[i].Chrom,
 			rec[i].Start, rec[i].Step)
 		for j := range rec[i].Values {
-			_, err = fmt.Fprintf(file, "%d\n", rec[i].Values[j])
+			_, err = fmt.Fprintf(file, "%v\n", rec[i].Values[j])
 		}
 	}
 	return err
