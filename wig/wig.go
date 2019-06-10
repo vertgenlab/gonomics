@@ -5,27 +5,32 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+	"io"
 	"strings"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/common"
 )
 
 type Wig struct {
 	StepType string
 	Chrom    string
-	Start    float64
-	Step     float64
-	Values   []float64
+	Start    int64
+	Step     int64
+	Values   []*WigValue//{position, score}
 }
 
-func Read(filename string) ([]Wig, error) {
-	var answer []Wig
-	var line string
-	var currentWig Wig
+type WigValue struct {
+	Position int64
+	Value float64
+}
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+func Read(filename string) ([]*Wig) {
+	var answer []*Wig
+	var line string
+	var currentWig *Wig
+
+	file := fileio.MustOpen(filename)
+	
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 
@@ -33,66 +38,95 @@ func Read(filename string) ([]Wig, error) {
 		line = scanner.Text()
 		var lineFields []string = strings.Fields(line)
 
-		if lineFields[0] == "variableStep" {
+		if (strings.HasPrefix(line, "#")) {
+		} else if lineFields[0] == "variableStep" {
 			log.Fatal("Package wig is not compatible with variableStep wigs")
 		} else if lineFields[0] == "fixedStep" {
-			if (len(answer) != 0){
-				answer = append(answer, currentWig) //write last completed wig to outlist
-			}
-
-			var lineFields []string = strings.Fields(line)
 			if len(lineFields) != 4 {
 				log.Fatalf("Invalid number of arguments, expecting 4, received %d\n", len(lineFields))
 			}
-
-			currentWig.StepType = "fixedStep"
+			currentWig = new(Wig)
+			answer = append(answer, currentWig)
+			
+			var lineFields []string = strings.Fields(line)
 			var chromList []string = strings.Split(lineFields[1], "=")
 			currentWig.Chrom = chromList[1]
 			var startList []string = strings.Split(lineFields[2], "=")
-			currentWig.Start, err = strconv.ParseFloat(startList[1], 64)
+			currentWig.Start = common.StringToInt64(startList[1])
 			var stepList []string = strings.Split(lineFields[3], "=")
-			currentWig.Step, err = strconv.ParseFloat(stepList[1], 64)
+			currentWig.Step = common.StringToInt64(stepList[1])
+			currentWig.StepType = "fixedStep"
+			
 		} else {
-			valueFloat, _ := strconv.ParseFloat(line, 64)
-			//if err != nil {
-			//	return err
-			//}
-			currentWig.Values = append(currentWig.Values, valueFloat)
+			//check length = 2 inputs is variable, 1 is fixed
+			var lineFields []string = strings.Fields(line)
+			currentValue := new(WigValue)
+			
+			if len(lineFields) == 1 {
+				//fixedStep
+				currentValue.Value = common.StringToFloat64(lineFields[0])
+				currentValue.Position = currentWig.Start + int64(len(currentWig.Values))*currentWig.Step
+			} else if len(lineFields) == 2 {
+				//variableStep
+				currentValue.Position = common.StringToInt64(lineFields[0])
+				currentValue.Value = common.StringToFloat64(lineFields[1])
+			}
+
+			currentWig.Values = append(currentWig.Values, currentValue)
 		}
 	}
-	answer = append(answer, currentWig)
-	return answer, scanner.Err()
+	if scanner.Err() != io.EOF {
+		common.ExitIfError(scanner.Err())
+	}
+	return answer
 }
 
-func PrintFirst(rec []Wig) {
+func PrintFirst(rec []*Wig) {
 	if len(rec) == 0 {
 		fmt.Println("Empty Wig")
 	} else {fmt.Printf("StepType=%s Chrom=%s Start=%v Step=%v\n", rec[0].StepType, rec[0].Chrom,
 		rec[0].Start, rec[0].Step)
-		for i := range rec[0].Values {
-			fmt.Println(rec[0].Values[i])
+		if rec[0].StepType == "fixedStep" {
+			for i := range rec[0].Values {
+				fmt.Println(rec[0].Values[i].Value)
+			}
+		} else if rec[0].StepType == "variableStep" {
+			for i := range rec[0].Values {
+				fmt.Printf("%d, %f", rec[0].Values[i].Position, rec[0].Values[i].Value)
+			}
 		}
 	}
 }
 
-func Write(filename string, rec []Wig) {
-	file, err := os.Create(filename)
-		if err != nil{
-			log.Fatal(err)
-		}
+func Write(filename string, rec []*Wig) {
+	file := fileio.MustCreate(filename)
 	defer file.Close()
-
-	WriteToFileHandle(file, rec)
+	for i := range rec {
+		WriteToFileHandle(file, rec[i])
+	}
 }
 
-func WriteToFileHandle(file *os.File, rec []Wig) error {
+func WriteToFileHandle(file *os.File, rec *Wig) {
 	var err error
-	for i := range rec {
-		_, err = fmt.Fprintf(file, "%s chrom=%s start=%v step=%v\n", rec[i].StepType, rec[i].Chrom,
-			rec[i].Start, rec[i].Step)
-		for j := range rec[i].Values {
-			_, err = fmt.Fprintf(file, "%v\n", rec[i].Values[j])
+	
+	
+	if rec.StepType == "fixedStep" {
+		_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
+			rec.Start, rec.Step)
+		} else if rec.StepType == "variableStep" {
+			_, err = fmt.Fprintf(file, "%s chrom=%s", rec.StepType, rec.Chrom)
+			common.ExitIfError(err)
 		}
+
+	for j := range rec.Values {
+
+		if rec.StepType == "fixedStep" {
+			_, err = fmt.Fprintf(file, "%f\n", rec.Values[j].Value)
+			common.ExitIfError(err)
+		} else if rec.StepType == "variableStep" {
+			_, err = fmt.Fprintf(file, "%d\t%f\n", rec.Values[j].Position, rec.Values[j].Value)
+			common.ExitIfError(err)
+		}
+			
 	}
-	return err
 }
