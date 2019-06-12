@@ -39,12 +39,21 @@ func Read(filename string) ([]*Wig) {
 		var lineFields []string = strings.Fields(line)
 
 		if (strings.HasPrefix(line, "#")) {
+			//do nothing, comment line in wig
 		} else if lineFields[0] == "variableStep" {
-			log.Fatal("Package wig is not compatible with variableStep wigs")
+			currentWig = new(Wig)
+			answer = append(answer, currentWig)
+			currentWig.StepType = "variableStep"
+
+			var lineFields []string = strings.Fields(line)
+			var chromList []string = strings.Split(lineFields[1], "=")
+			currentWig.Chrom = chromList[1]
+
 		} else if lineFields[0] == "fixedStep" {
 			if len(lineFields) != 4 {
 				log.Fatalf("Invalid number of arguments, expecting 4, received %d\n", len(lineFields))
 			}
+
 			currentWig = new(Wig)
 			answer = append(answer, currentWig)
 			
