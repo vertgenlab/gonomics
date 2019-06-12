@@ -1,7 +1,6 @@
 package dna
 
-import (
-)
+import ()
 
 type Base byte
 
@@ -23,9 +22,8 @@ const (
 
 func CreateAllGaps(numGaps int64) []Base {
 	answer := make([]Base, numGaps)
-        for i := 0; i < len(answer); i++ {
-                answer[i] = Gap
-        }
-        return answer
+	for i := 0; i < len(answer); i++ {
+		answer[i] = Gap
+	}
+	return answer
 }
-

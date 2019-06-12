@@ -25,10 +25,10 @@ func UngappedRegions(fa *Fasta) []*bed.Bed {
 	return answer
 }
 
-func UngappedRegionsAll(records []Fasta) []*bed.Bed {
+func UngappedRegionsAll(records []*Fasta) []*bed.Bed {
 	var answer []*bed.Bed
 	for idx, _ := range records {
-		answer = append(answer, UngappedRegions(&records[idx])...)
+		answer = append(answer, UngappedRegions(records[idx])...)
 	}
 	return answer
 }

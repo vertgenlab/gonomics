@@ -6,10 +6,10 @@ import (
 )
 
 var toFastaTests = []struct {
-	inputMaf string
-	inputFa string
+	inputMaf     string
+	inputFa      string
 	inputSpecies []string
-	expected string
+	expected     string
 }{
 	{"testdata/toFastaTest.maf", "testdata/toFastaTest.fa", []string{"hg38", "panPan2", "panTro6", "gorGor5", "ponAbe3"}, "testdata/toFastaTest.mfa"},
 }

@@ -7,45 +7,45 @@ import (
 )
 
 func ToUpper(b Base) Base {
-        if b == Gap {
-                return b
-        } else if b > N {
-                return b - 5
-        } else {
-                return b
-        }
+	if b == Gap {
+		return b
+	} else if b > N {
+		return b - 5
+	} else {
+		return b
+	}
 }
 
 func ToLower(b Base) Base {
-        if b == Gap {
-                return b
-        } else if b < a {
-                return b + 5
-        } else {
-                return b
-        }
+	if b == Gap {
+		return b
+	} else if b < a {
+		return b + 5
+	} else {
+		return b
+	}
 }
 
 // start is closed, end is open, both are zero-based
 func RangeToUpper(bases []Base, start int, end int) {
-        for i := start; i < end; i++ {
-                bases[i] = ToUpper(bases[i])
-        }
+	for i := start; i < end; i++ {
+		bases[i] = ToUpper(bases[i])
+	}
 }
 
 // start is closed, end is open, both are zero-based
 func RangeToLower(bases []Base, start int, end int) {
-        for i := start; i < end; i++ {
-                bases[i] = ToLower(bases[i])
-        }
+	for i := start; i < end; i++ {
+		bases[i] = ToLower(bases[i])
+	}
 }
 
 func AllToUpper(bases []Base) {
-        RangeToUpper(bases, 0, len(bases))
+	RangeToUpper(bases, 0, len(bases))
 }
 
 func AllToLower(bases []Base) {
-        RangeToLower(bases, 0, len(bases))
+	RangeToLower(bases, 0, len(bases))
 }
 
 func complement(b Base) Base {

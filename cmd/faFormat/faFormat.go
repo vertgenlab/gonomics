@@ -3,22 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
 )
 
 func faFormat(inFile string, outFile string, lineLength int) {
-	records, err := fasta.Read(inFile)
-	common.ExitIfError(err)
+	records := fasta.Read(inFile)
 
-	file, err := os.Create(outFile)
-	common.ExitIfError(err)
+	file := fileio.MustCreate(outFile)
 	defer file.Close()
 
-	err = fasta.WriteToFileHandle(file, records, lineLength)
-	common.ExitIfError(err)
+	fasta.WriteToFileHandle(file, records, lineLength)
 }
 
 func usage() {

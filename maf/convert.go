@@ -40,6 +40,17 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 	//now replace what is in each fasta record for the maf interval
 	for i := 0; i < len(aln); i++ {
 		speciesBlock = FindSpeciesBeforeDot(m, aln[i].Name)
+		if i == 0 {
+			if dna.CompareSeqsIgnoreCaseAndGaps(speciesBlock.SLine.Seq, aln[i].Seq[replaceStart:replaceEnd]) != 0 {
+				log.Fatalf("Error: reference sequence in maf does not match that in the fasta\n" +
+					"%s\n" +
+					"%s\n" +
+					"%d %d\n",
+					dna.BasesToString(speciesBlock.SLine.Seq),
+					dna.BasesToString(aln[i].Seq[replaceStart:replaceEnd]),
+					replaceStart, replaceEnd)
+			}
+		}
 		if speciesBlock == nil || speciesBlock.SLine == nil {
 			aln[i].Seq = dna.Replace(aln[i].Seq, replaceStart, replaceEnd, dna.CreateAllGaps(replaceAlnLength))
 		} else {
@@ -60,4 +71,3 @@ func ToFasta(m []*Maf, ref *fasta.Fasta, species []string) []*fasta.Fasta {
 	}
 	return aln
 }
-

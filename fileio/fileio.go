@@ -92,3 +92,14 @@ func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }
 
+func Read(filename string) []string {
+	var answer []string
+	file := MustOpen(filename)
+        defer file.Close()
+        reader := bufio.NewReader(file)
+        for line, doneReading := NextRealLine(reader); !doneReading; line, doneReading = NextRealLine(reader) {
+		answer = append(answer, line)
+	}
+	return answer
+}
+

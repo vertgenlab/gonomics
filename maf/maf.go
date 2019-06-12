@@ -174,13 +174,13 @@ func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 
 // returns nil if not found
 func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
-        for i := 0; i < len(m.Species); i++ {
+	for i := 0; i < len(m.Species); i++ {
 		currAssembly, _ := srcToAssemblyAndChrom(m.Species[i].Src)
-                if currAssembly == assembly {
-                        return m.Species[i]
-                }
-        }
-        return nil
+		if currAssembly == assembly {
+			return m.Species[i]
+		}
+	}
+	return nil
 }
 
 // would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line
