@@ -9,10 +9,7 @@ import (
 )
 
 func faNoGap(inFile string, outFile string) {
-	records, err := fasta.Read(inFile)
-	if err != nil {
-		log.Fatal(err)
-	}
+	records := fasta.Read(inFile)
 
 	beds := fasta.UngappedRegionsAll(records)
 

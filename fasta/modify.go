@@ -41,3 +41,14 @@ func DivideFastaAll(fa []*Fasta, n int) [][]*Fasta {
 	}
 	return answer
 }
+
+func ToUpper(fa *Fasta) {
+	dna.AllToUpper(fa.Seq)
+}
+
+func AllToUpper(records []*Fasta) {
+	for i:=0; i < len(records); i++ {
+		ToUpper(records[i])
+	}
+}
+

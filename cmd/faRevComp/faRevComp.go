@@ -8,10 +8,7 @@ import (
 )
 
 func faRevComp(inFile string, outFile string, keepName bool) {
-	records, err := fasta.Read(inFile)
-	if err != nil {
-		log.Fatal(err)
-	}
+	records := fasta.Read(inFile)
 
 	fasta.ReverseComplementAll(records)
 

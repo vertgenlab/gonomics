@@ -79,3 +79,9 @@ func WriteGroups(filename string, groups [][]*Fasta) error {
 	}
 	return nil
 }
+
+func CreateAllGaps(name string, numGaps int64) *Fasta {
+        answer := Fasta{Name: name, Seq: dna.CreateAllGaps(numGaps)}
+        return &answer
+}
+
