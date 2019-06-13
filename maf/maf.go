@@ -50,6 +50,20 @@ type Maf struct {
 	Species []*MafSpecies
 }
 
+func srcToAssemblyAndChrom(src string) (string, string) {
+	dots := strings.Count(src, ".")
+	switch dots {
+	case 0:
+		return src, ""
+	case 1:
+		parts := strings.Split(src, ".")
+		return parts[0], parts[1]
+	default:
+		log.Fatalf("Error: too many dots within maf src: %s\n", src)
+		return "", ""
+	}
+}
+
 func parseMafALine(line string) *Maf {
 	if !strings.HasPrefix(line, "a") {
 		log.Fatalf("Error: the following line should have an 'a' as the first letter: %s\n", line)
@@ -149,9 +163,20 @@ func parseMafELine(line string) *MafELine {
 }
 
 // returns nil if not found
-func FindSpecies(m *Maf, src string) *MafSpecies {
+func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].Src == src {
+			return m.Species[i]
+		}
+	}
+	return nil
+}
+
+// returns nil if not found
+func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
+	for i := 0; i < len(m.Species); i++ {
+		currAssembly, _ := srcToAssemblyAndChrom(m.Species[i].Src)
+		if currAssembly == assembly {
 			return m.Species[i]
 		}
 	}
@@ -161,7 +186,7 @@ func FindSpecies(m *Maf, src string) *MafSpecies {
 // would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line
 func Read(filename string) []*Maf {
 	var answer []*Maf
-	var line string
+	var line, prevLine string
 	var doneReading bool = false
 	var words []string
 	var curr *Maf
@@ -182,7 +207,7 @@ func Read(filename string) []*Maf {
 				log.Fatalf("Error: did not find an 'a' line before this, 'sie' line: %s\n", line)
 			}
 			words = strings.Fields(line)
-			currSpecies = FindSpecies(curr, words[1])
+			currSpecies = FindSpeciesExactMatch(curr, words[1])
 			if currSpecies == nil {
 				currSpecies = &MafSpecies{Src: words[1]}
 				curr.Species = append(curr.Species, currSpecies)
@@ -211,6 +236,10 @@ func Read(filename string) []*Maf {
 		} else {
 			log.Fatalf("Unexpected format in maf file on line: %s\n", line)
 		}
+		prevLine = line
+	}
+	if prevLine != "" {
+		log.Fatalf("Error: maf should have a blank line as the last non-comment line, but found this at end: %s\n", prevLine)
 	}
 	return answer
 }
