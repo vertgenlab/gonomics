@@ -1,4 +1,4 @@
-package chromSizes
+package chromInfo
 
 import (
 	"bufio"
