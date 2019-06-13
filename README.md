@@ -4,4 +4,5 @@ Authors:
 * Craig Lowe
 * Eric Au
 * Sophie Campione
+* Riley Mangan
 

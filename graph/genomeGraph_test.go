@@ -1,35 +1,47 @@
-package main
+package graph
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
-	"log"
-	"strings"
+	"os"
 	"testing"
+	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
-var seq1, _ = dna.StringToBases("ATGTGCAAA")
-var seq2, _ = dna.StringToBases("ACCGTACGT")
-var sliceFasta = []*fasta.Fasta{{"dna_seq", seq1}, {"anotherSequence", seq2}}
-var g = NewGraph()
-var gg = NewGraph()
+var readWriteTests = []struct {
+	filename string // input
+}{
+	{"testdata/dev.gg"},
+}
 
-func TestAdd(t *testing.T) {
-	records, err := fasta.ReadNew("test.fa")
-	if err != nil {
-		log.Fatal(err)
+func TestRead(t *testing.T) {
+	for _, test := range readWriteTests {
+		_ = Read(test.filename)
 	}
-	a := fasta.DivideFastaAll(sliceFasta, 3)
-	b := fasta.DivideFastaAll(records, 3)
-	g = FillGraph(a)
-	gg = FillGraph(b)
-	g.String()
-	gg.String()
-	if strings.Compare(string(g.String()), string(gg.String())) != 0 {
-		fmt.Println("Fasta files are not equal")
-	} else {
-		fmt.Println(g.String())
-	}
+}
 
+func TestAxtToGraph(t *testing.T) {
+	axtAlign := axt.Read("testdata/test.axt")
+	vcfAxt := axt.CallSnpsToVcf(axtAlign)
+	ref := fasta.Read("testdata/test.fa")
+	g := RefernceToGraph(vcfAxt, ref, NewGraph())
+	Write("temp.gg", g)
+	gsw := Read("temp.gg")
+	PrintGraph(gsw)
+	err := os.Remove("temp.gg")
+		if err != nil {
+			t.Errorf("Deleting temp file %s gave an error.", "temp.gg")
+		}
+}
+
+func TestWriteAndRead(t *testing.T) {
+	var actual *GenomeGraph
+	for _, test := range readWriteTests {
+		tempFile := test.filename + ".tmp"
+		actual = Read(test.filename)
+		Write(tempFile, actual)
+		err := os.Remove(tempFile)
+		if err != nil {
+			t.Errorf("Deleting temp file %s gave an error.", tempFile)
+		}
+	}
 }
