@@ -1,17 +1,17 @@
 package vcf
 
 import (
-	"os"
-	"io"
-	"fmt"
 	"bufio"
-	"time"
+	"fmt"
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"io"
+	"os"
 	"strconv"
 	"strings"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/chromInfo"
+	"time"
 )
 
 type Vcf struct {
@@ -73,16 +73,16 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 
 	for i := 0; i < len(fastaRecord); i++ {
 		var curr []*Vcf
-		for j :=0; j < len(vcfRecord); j++ {
+		for j := 0; j < len(vcfRecord); j++ {
 			var pointer *Vcf
-			if strings.Compare(fastaRecord[i].Name, vcfRecord[j].Chr ) == 0 {
+			if strings.Compare(fastaRecord[i].Name, vcfRecord[j].Chr) == 0 {
 				pointer = vcfRecord[j]
 				curr = append(curr, pointer)
 			}
 		}
 		Sort(curr)
 		answer = append(answer, curr)
-	}	
+	}
 	return answer
 }
 
@@ -117,53 +117,53 @@ func PrintHeader(header []string) {
 	}
 }
 
-func ChromSizeHeader(chrom []*chromInfo.ChromInfo) []string{
+func ChromSizeHeader(chrom []*chromInfo.ChromInfo) []string {
 	var header []string
 	var line string
 	t := time.Now()
-	header = append(header, "##fileformat=VCFv4.2\n" +
-		"##fileDate=" + t.Format("20060102") + "\n" +
-		"##source=github.com/vertgenlab/gonomics\n" +
+	header = append(header, "##fileformat=VCFv4.2\n"+
+		"##fileDate="+t.Format("20060102")+"\n"+
+		"##source=github.com/vertgenlab/gonomics\n"+
 		"##reference=gasAcu1")
 	for i := 0; i < len(chrom); i++ {
 		line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
 		header = append(header, line)
 	}
-	header = append(header, "##phasing=none\n" +
-		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n" + 
-		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">" +
-		"##INFO=<ID=QUERY,Number=1,Type=String,Description=\"Name of read/contig aligned\">" +
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
-		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n" +
-		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n" +
-		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n" +
-		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n" +
-		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n" +
-		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n" +
-		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n" +
+	header = append(header, "##phasing=none\n"+
+		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
+		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
+		"##INFO=<ID=QUERY,Number=1,Type=String,Description=\"Name of read/contig aligned\">"+
+		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
+		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
+		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
+		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n"+
+		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n"+
+		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
+		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
+		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
 		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Unknown")
 	return header
 }
 
-func BasicHeader() []string{
+func BasicHeader() []string {
 	var header []string
 	t := time.Now()
-	header = append(header, "##fileformat=VCFv4.2\n" +
-		"##fileDate=" + t.Format("20060102") + "\n" +
-		"##source=github.com/vertgenlab/gonomics\n" +
+	header = append(header, "##fileformat=VCFv4.2\n"+
+		"##fileDate="+t.Format("20060102")+"\n"+
+		"##source=github.com/vertgenlab/gonomics\n"+
 		"##reference=gasAcu1")
-	header = append(header, "##phasing=none\n" +
-		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n" + 
-		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">" +
-		"##INFO=<ID=QUERY,Number=1,Type=String,Description=\"Name of read/contig aligned\">" +
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n" +
-		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n" +
-		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n" +
-		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n" +
-		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n" +
-		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n" +
-		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n" +
-		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n" +
+	header = append(header, "##phasing=none\n"+
+		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
+		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
+		"##INFO=<ID=QUERY,Number=1,Type=String,Description=\"Name of read/contig aligned\">"+
+		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
+		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
+		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
+		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n"+
+		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n"+
+		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
+		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
+		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
 		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Unknown")
 
 	return header

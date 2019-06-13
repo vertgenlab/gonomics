@@ -90,8 +90,6 @@ func ToFasta(in *QFrag) *fasta.Fasta {
 	return &fasta.Fasta{Name: name, Seq: mostLikelySeq(in.Seq)}
 }
 
-
-
 // TODO: This should be improved, but is only used
 // for testing right now.  Does not follow links
 func toFastaList(in []*QFrag) []*fasta.Fasta {

@@ -12,7 +12,7 @@ type NoGapAln struct {
 }
 
 func PairwiseAverage(alpha *QFrag, beta *QFrag, start int64, end int64, name string) *QFrag {
-	
+
 	answer := &QFrag{Seq: nil, From: []*Location{&Location{Assembly: "", Chr: name, Start: start, End: end}}, Fwd: nil, Rev: nil}
 	//Max or min, haven't decided if it's necessary.
 	//Just trying to handle a potential error when sequences are uneven
@@ -26,6 +26,7 @@ func PairwiseAverage(alpha *QFrag, beta *QFrag, start int64, end int64, name str
 	}
 	return answer
 }
+
 /*
 func UngappedAlign(alpha []*QBase, beta []*QBase, alphaOffset int, betaOffset int, scoreMatrix [][]float64) float64 {
 

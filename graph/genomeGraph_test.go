@@ -1,10 +1,10 @@
 package graph
 
 import (
-	"os"
-	"testing"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
+	"os"
+	"testing"
 )
 
 var readWriteTests = []struct {
@@ -28,9 +28,9 @@ func TestAxtToGraph(t *testing.T) {
 	gsw := Read("temp.gg")
 	PrintGraph(gsw)
 	err := os.Remove("temp.gg")
-		if err != nil {
-			t.Errorf("Deleting temp file %s gave an error.", "temp.gg")
-		}
+	if err != nil {
+		t.Errorf("Deleting temp file %s gave an error.", "temp.gg")
+	}
 }
 
 func TestWriteAndRead(t *testing.T) {

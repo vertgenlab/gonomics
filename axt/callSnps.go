@@ -10,16 +10,16 @@ import (
 func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 	var curr *vcf.Vcf
-	rCount := axtFile.RStart - 1 
+	rCount := axtFile.RStart - 1
 	qCount := axtFile.QStart - 1
 	for i := 0; i < len(axtFile.RSeq); i++ {
-
 		var infoTag string
 		if axtFile.RSeq[i] != dna.Gap && axtFile.QSeq[i] != dna.Gap {
 			rCount++
 			qCount++
 			//snp mismatch
-			if strings.Compare(dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))) != 0 {
+			if axtFile.RSeq[i] != axtFile.QSeq[i] {
+				//if strings.Compare(dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))) != 0 {
 				infoTag = "POS=" + strconv.FormatInt(qCount, 10)
 				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=SNP", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
 				//fmt.Println(snps[i].RefSub, snps[i].QuerySub)

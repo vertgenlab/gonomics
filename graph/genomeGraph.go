@@ -1,19 +1,19 @@
 package graph
 
 import (
-	"io"
-	"os"
-	"fmt"
-	"log"
-	"sync"
 	"bufio"
-	"strings"
-	"strconv"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/qDna"
-	"github.com/vertgenlab/gonomics/fasta"
+	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/qDna"
+	"github.com/vertgenlab/gonomics/vcf"
+	"io"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type Node struct {
