@@ -16,7 +16,7 @@ func maxBedUnique (infile string, outfile string) {
 
 	for i := 0; i < len(records); i++ {
 		if goingUp {
-			if bed.Overlap(currentMax, records[i]) {
+			if overlap(currentMax, records[i]) {
 				if (currentMax.Score < records[i].Score) {
                                 currentMax = records[i]
 				}
@@ -34,6 +34,15 @@ func maxBedUnique (infile string, outfile string) {
 
 	outlist = append(outlist, currentMax)
 	bed.Write(outfile, outlist, 5) //third input species field number
+}
+
+func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
+	if bed1.Chrom != bed2.Chrom {
+		return false
+	} else if bed1.ChromEnd < bed2.ChromStart || bed2.ChromEnd < bed1.ChromStart {
+		return false
+	}
+	return true
 }
 
 func usage() {

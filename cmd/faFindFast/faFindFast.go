@@ -9,12 +9,9 @@ import (
 	"log"
 )
 
-func faFindFast(inFile string, outFile string, windowSize int) {
-	records, err := fasta.Read(inFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func faFindFast(inFile string, outFile string, windowSize int, chromName *string) {
+	records := fasta.Read(inFile)
+	
 	if len(records) != 2 {
 		log.Fatalf("Wrong number of sequences, expecting two, found %d.\n", len(records))
 	}
@@ -26,33 +23,50 @@ func faFindFast(inFile string, outFile string, windowSize int) {
 	diff := countTotalDifference(records[0], records[1])
 	fmt.Printf("I found %d total differences.\n", diff)
 
-	bedList := windowDifference(windowSize, records[0], records[1])
+	bedList := windowDifference(windowSize, records[0], records[1], chromName)
 	bed.Write(outFile, bedList, 5)
 }
 
-func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta) []*bed.Bed {
+func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name *string) []*bed.Bed {
 
 	var bedList []*bed.Bed
+	var referenceCounter = 0
+	var reachedEnd bool = false
+	var diff int = 0
 
-	for i := 0; i < (len(seq1.Seq) - (windowSize - 1)); i++ {
-		current := bed.Bed{Chrom: seq1.Name, ChromStart: int64(i), ChromEnd: int64(i + windowSize), Name: fmt.Sprintf("%d", i), Score: 0}
-		current.Score = int64(countWindowDifference(seq1, seq2, i, windowSize))
-		bedList = append(bedList, &current)
+	for alignmentCounter := 0; reachedEnd == false; alignmentCounter++ {
+		if alignmentCounter % 1000000 == 0 {
+			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
+		}
+		
+		if seq1.Seq[alignmentCounter] != dna.Gap {
+			diff, reachedEnd = countWindowDifference(seq1, seq2, alignmentCounter, windowSize)
+			if !reachedEnd{
+				current := bed.Bed{Chrom: *name, ChromStart: int64(referenceCounter),
+					ChromEnd: int64(referenceCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+				bedList = append(bedList, &current)
+				referenceCounter++
+			}
+		}
 	}
 
 	return bedList
 }
 
-func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) int {
+func countWindowDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize int) (int, bool) {
 	diff := 0
+	baseCount := 0
 	var seq1Indel bool = false
 	var seq2Indel bool = false
+	var reachedEnd bool = false
+	var i int = 0
 
-	for i := start; i < (start + windowSize); i++ {
+	for i = start; baseCount < windowSize && i < len(seq1.Seq); i++ {
 		if seq1.Seq[i] == seq2.Seq[i] {
 			if seq1.Seq[i] != dna.Gap {
 				seq1Indel = false
 				seq2Indel = false
+				baseCount++
 			}
 		} else if seq1.Seq[i] == dna.Gap {
 			seq2Indel = false
@@ -61,6 +75,7 @@ func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, window
 				diff++
 			}
 		} else if seq2.Seq[i] == dna.Gap {
+			baseCount++
 			seq1Indel = false
 			if !seq2Indel {
 				seq2Indel = true
@@ -69,15 +84,20 @@ func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, window
 		} else if seq1.Seq[i] != seq2.Seq[i] {
 			seq1Indel = false
 			seq2Indel = false
+			baseCount++
 			diff++
 		} else {
 			log.Fatalf("Something went horribly wrong.")
 		}
 	}
-	return diff
+
+	if baseCount != windowSize {
+		reachedEnd = true
+	}
+	return diff, reachedEnd
 }
 
-func countTotalDifference(seq1 fasta.Fasta, seq2 fasta.Fasta) int {
+func countTotalDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta) int {
 	diff := 0
 	var seq1Indel bool = false
 	var seq2Indel bool = false
@@ -128,6 +148,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var windowSize *int = flag.Int("windowSize", 1000, "Specify the window size")
+	var chromName *string = flag.String("chrom", "", "Specify the chrom name")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -141,5 +162,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFindFast(inFile, outFile, *windowSize)
+	faFindFast(inFile, outFile, *windowSize, chromName)
 }
