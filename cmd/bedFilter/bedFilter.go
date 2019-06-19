@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"log"
 )
 
 func bedFilter(infile string, outfile string, threshold *int64) {
 	var records []*bed.Bed = bed.Read(infile)
 	var outlist []*bed.Bed
 
-	for i := 0 ; i < len(records); i++ {
+	for i := 0; i < len(records); i++ {
 		if records[i].Score >= *threshold {
 			outlist = append(outlist, records[i])
 		}
@@ -21,12 +21,12 @@ func bedFilter(infile string, outfile string, threshold *int64) {
 }
 
 func usage() {
-        fmt.Print(
-                "bedFilter - removes bed entries below a specified threshold score.\n" +
-                        "Usage:\n" +
-                        "bedFilter input.bed output.bed\n" +
-                        "options:\n")
-        flag.PrintDefaults()
+	fmt.Print(
+		"bedFilter - removes bed entries below a specified threshold score.\n" +
+		"Usage:\n" +
+		"bedFilter input.bed output.bed\n" +
+		"options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
