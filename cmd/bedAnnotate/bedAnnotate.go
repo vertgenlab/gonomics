@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"log"
 )
 
-func bedAnnotate(in string, rec string, outfile string, field *int){
+func bedAnnotate(in string, rec string, outfile string, field *int) {
 	var records []*bed.Bed = bed.Read(rec)
 	var infile []*bed.Bed = bed.Read(in)
 
@@ -23,9 +23,9 @@ func bedAnnotate(in string, rec string, outfile string, field *int){
 func usage() {
 	fmt.Print(
 		"bedAnnotate - Appends a field from bed2 into overlapping segments of bed1\n" +
-            "Usage:\n" +
-            "bedAnnotate bed1.bed records.bed output.bed\n" +
-            "options:\n")
+			"Usage:\n" +
+			"bedAnnotate bed1.bed records.bed output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
