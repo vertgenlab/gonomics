@@ -48,9 +48,9 @@ func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
 func usage() {
         fmt.Print(
                 "maxBedUnique\n" +
-                        "Usage:\n" +
-                        "maxBedUnique input.bed output.bed\n" +
-                        "options:\n")
+                    "Usage:\n" +
+                    "maxBedUnique input.bed output.bed\n" +
+                    "options:\n")
         flag.PrintDefaults()
 }
 
