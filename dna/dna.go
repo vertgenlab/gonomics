@@ -18,6 +18,7 @@ const (
 	t   Base = 8
 	n   Base = 9
 	Gap Base = 10
+	Dot Base = 11
 )
 
 func CreateAllGaps(numGaps int64) []Base {

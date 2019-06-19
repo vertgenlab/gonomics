@@ -7,7 +7,7 @@ import (
 )
 
 func ToUpper(b Base) Base {
-	if b == Gap {
+	if b == Gap || b == Dot {
 		return b
 	} else if b > N {
 		return b - 5
@@ -17,7 +17,7 @@ func ToUpper(b Base) Base {
 }
 
 func ToLower(b Base) Base {
-	if b == Gap {
+	if b == Gap || b == Dot {
 		return b
 	} else if b < a {
 		return b + 5
@@ -72,6 +72,8 @@ func complement(b Base) Base {
 		return n
 	case Gap:
 		return Gap
+	case Dot:
+		return Dot
 	default:
 		common.ExitIfError(fmt.Errorf("Error: trying to reverse complement an unexpected base %d", b))
 		return N

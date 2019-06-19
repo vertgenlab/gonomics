@@ -17,6 +17,7 @@ type Bed struct {
 	Name       string
 	Score      int64
 	Strand     bool
+	Annotation []string //long form for extra fields
 }
 
 func BedToString(bunk *Bed, fields int) string {
@@ -29,8 +30,14 @@ func BedToString(bunk *Bed, fields int) string {
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score)
 	case 6:
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, common.StrandToRune(bunk.Strand))
+	case 7:
+		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, common.StrandToRune(bunk.Strand))
+		for i := 0; i < len(bunk.Annotation); i++ {
+			out = fmt.Sprintf("%s\t%s",out, bunk.Annotation[i])
+		}
+		return out
 	default:
-		log.Fatalf("Error: expecting a request to print 3 to 6 bed fields, but got: %d\n", fields)
+		log.Fatalf("Error: expecting a request to print 3 to 7 bed fields, but got: %d\n", fields)
 	}
 	return ""
 }

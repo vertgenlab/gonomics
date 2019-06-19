@@ -2,6 +2,8 @@ package fasta
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"github.com/vertgenlab/gonomics/dna"
 )
 
@@ -13,6 +15,25 @@ func AppendToNameAll(records []*Fasta, addition string) {
 	for idx, _ := range records {
 		AppendToName(records[idx], addition)
 	}
+}
+
+func Remove(slice []*Fasta, i int) []*Fasta {
+	if i < 0 || i >= len(slice) {
+		log.Fatalf("Index out of range")
+	}
+    return append(slice[:i], slice[i+1:]...)
+}
+
+func FilterName(records []*Fasta, name string) []*Fasta {
+	for i := 0; i < len(records); {
+		fmt.Printf("i: %d. len: %d\n", i, len(records))
+		if strings.Compare(records[i].Name, name) != 0 {
+			records = Remove(records, i)
+		} else {
+			i++
+		}
+	}
+	return records
 }
 
 func ReverseComplement(record *Fasta) {
