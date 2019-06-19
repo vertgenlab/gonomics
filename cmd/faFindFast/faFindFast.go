@@ -11,7 +11,7 @@ import (
 
 func faFindFast(inFile string, outFile string, windowSize int, chromName *string) {
 	records := fasta.Read(inFile)
-	
+
 	if len(records) != 2 {
 		log.Fatalf("Wrong number of sequences, expecting two, found %d.\n", len(records))
 	}
@@ -35,13 +35,13 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 	var diff int = 0
 
 	for alignmentCounter := 0; reachedEnd == false; alignmentCounter++ {
-		if alignmentCounter % 1000000 == 0 {
+		if alignmentCounter%1000000 == 0 {
 			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}
-		
+
 		if seq1.Seq[alignmentCounter] != dna.Gap {
 			diff, reachedEnd = countWindowDifference(seq1, seq2, alignmentCounter, windowSize)
-			if !reachedEnd{
+			if !reachedEnd {
 				current := bed.Bed{Chrom: *name, ChromStart: int64(referenceCounter),
 					ChromEnd: int64(referenceCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
 				bedList = append(bedList, &current)

@@ -1,20 +1,19 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"fmt"
-	"log"
-	"github.com/vertgenlab/gonomics/common"
 	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
+	"log"
 )
 
 func bedMerge(infile string, outfile string) {
 	var records []*bed.Bed = bed.Read(infile)
-	var outlist []*bed.Bed 
+	var outlist []*bed.Bed
 	var currentMax *bed.Bed = records[0]
 
 	//assumes sorted bed
-
 
 	for i := 0; i < len(records); i++ {
 		if overlap(currentMax, records[i]) {
@@ -42,11 +41,11 @@ func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
 
 func usage() {
 	fmt.Print(
-                "bedMerge - Combines overlapping bed entries, keeping max score.\n" +
-                        "Usage:\n" +
-                        "bedMerge input.bed output.bed\n" +
-                        "options:\n")
-        flag.PrintDefaults()
+		"bedMerge - Combines overlapping bed entries, keeping max score. Must be sorted.\n" +
+			"Usage:\n" +
+			"bedMerge input.bed output.bed\n" +
+			"options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
