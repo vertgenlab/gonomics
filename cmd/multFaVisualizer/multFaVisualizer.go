@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/common"
+	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"strconv"
-	"flag"
 	"unicode/utf8"
 )
 
@@ -18,7 +18,7 @@ func multFaVisualizer(infile string, start int64, end int64) {
 
 	var stop int
 	records := fasta.Read(infile)
-	
+
 	for i := 1; i < len(records); i++ {
 		for j := 0; j < len(records[0].Seq); j++ {
 			if records[i].Seq[j] == records[0].Seq[j] {
@@ -28,13 +28,13 @@ func multFaVisualizer(infile string, start int64, end int64) {
 	}
 	long := calculateLongestName(records)
 
-var refCounter int64 = 0
-var startCounter int64 = 0
-var endCounter int64 = 0
+	var refCounter int64 = 0
+	var startCounter int64 = 0
+	var endCounter int64 = 0
 
 	for t := 0; refCounter < start; t++ {
 		startCounter++
-		if t == len(records[0].Seq){
+		if t == len(records[0].Seq) {
 			log.Fatalf("Ran out of chromosome")
 		} else if records[0].Seq[t] != dna.Gap {
 			refCounter++
@@ -43,7 +43,7 @@ var endCounter int64 = 0
 
 	fmt.Printf("Start: %d. refCounter: %d. alignCounter: %d\n", start, refCounter, startCounter)
 
-refCounter = 0
+	refCounter = 0
 	for n := 0; refCounter < end; n++ {
 		endCounter++
 		if n == len(records[0].Seq) {
@@ -64,13 +64,12 @@ refCounter = 0
 
 }
 
-
 func calculateLongestName(f []*fasta.Fasta) int {
 	var ans int = 0
 	var temp int
-	for i :=0; i < len(f); i++ {
+	for i := 0; i < len(f); i++ {
 		temp = utf8.RuneCountInString(f[i].Name)
-		if temp > ans{
+		if temp > ans {
 			ans = temp
 		}
 	}
@@ -78,12 +77,12 @@ func calculateLongestName(f []*fasta.Fasta) int {
 }
 
 func usage() {
-        fmt.Print(
-                "multFaVisualizer - Provides human-readable multiple alignment from a given .\n" +
-                        "Usage:\n" +
-                        "bedFilter mult.fa start end\n" +
-                        "options:\n")
-        flag.PrintDefaults()
+	fmt.Print(
+		"multFaVisualizer - Provides human-readable multiple alignment from a given .\n" +
+			"Usage:\n" +
+			"bedFilter mult.fa start end\n" +
+			"options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
