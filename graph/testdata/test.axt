@@ -1,0 +1,29 @@
+# lastz.v1.04.00 --output=chrM_gasacu1.axt --format=axt --scores=humanChimpMatrix.txt O=600 E=150 
+#
+# hsp_threshold      = 3000
+# gapped_threshold   = 3000
+# x_drop             = 900
+# y_drop             = 45600
+# gap_open_penalty   = 600
+# gap_extend_penalty = 150
+#        A    C    G    T
+#   A   90 -330 -236 -356
+#   C -330  100 -318 -236
+#   G -236 -318  100 -330
+#   T -356 -236 -330   90
+0 chrI 1 19 tig00010677_pilon 1 19 - 976972
+G---GC---TGCTAGCGTTTTT---ATA
+ACTTGCGTATGCT-----TTTTATGA-A
+
+0 chrII 1 19 tig00010677_pilon 1 19 - 976972
+G---GC---TGCTAGCGTTTTT---ATA
+ACTTGCGTATGCT-----TTTTATGA-A
+
+0 chrIII 1 19 tig00010677_pilon 1 19 - 976972
+G---GC---TGCTAGCGTTTTT---ATA
+ACTTGCGTATGCT-----TTTTATGA-A
+
+0 chrIV 1 19 tig00010677_pilon 1 19 - 976972
+G---GC---TGCTAGCGTTTTT---ATA
+ACTTGCGTATGCT-----TTTTATGA-T
+
