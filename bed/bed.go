@@ -70,9 +70,6 @@ func Read(filename string) []*Bed {
 	for line, doneReading = fileio.NextRealLine(reader); !doneReading; line, doneReading = fileio.NextRealLine(reader) {
 		words := strings.Split(line, "\t")
 
-		if len(words) < 3 || len(words) > 6 {
-			log.Fatalf("Error: all lines in bed file should have 3 to 6 columns, but only %d were found in %s", len(words), line)
-		}
 		startNum = common.StringToInt64(words[1])
 		endNum = common.StringToInt64(words[2])
 
@@ -86,6 +83,12 @@ func Read(filename string) []*Bed {
 		if len(words) >= 6 {
 			current.Strand = common.StringToStrand(words[5])
 		}
+		if len(words) >= 7 {
+			for i := 6; i < len(words); i++ {
+				current.Annotation = append(current.Annotation, words[i])
+			}
+		}
+
 		answer = append(answer, &current)
 
 	}

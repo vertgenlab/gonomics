@@ -13,11 +13,13 @@ func bedAnnotate(in string, rec string, outfile string, field *int) {
 
 	for i := 0; i < len(infile); i++ {
 		for j := 0; j < len(records); j++ {
-			if overlap(infile[i], records[j]) {
+			if overlap(infile[i], records[j]) && !contains(infile[i].Annotation, records[j].Name) {
 				infile[i].Annotation = append(infile[i].Annotation, records[j].Name)
 			}
 		}
 	}
+
+	bed.Write(outfile, infile, 7)
 }
 
 func usage() {
@@ -36,6 +38,15 @@ func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
 		return false
 	}
 	return true
+}
+
+func contains(s []string, e string) bool {
+    for _, a := range s {
+        if a == e {
+            return true
+        }
+    }
+    return false
 }
 
 func main() {
