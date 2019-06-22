@@ -2,9 +2,9 @@ package align
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 )
 
 // the data structure is a 3d slice where the first index is 0,1,2 and represents
@@ -50,7 +50,7 @@ func affineTrace(m [][][]int64, trace [][][]ColType) (int64, []Cigar) {
 			k = trace[k][i][j]
 			i--
 		default:
-			common.Exit("Error: unexpected traceback")
+			log.Fatalf("Error: unexpected traceback")
 		}
 	}
 	reverseCigar(route)
@@ -96,10 +96,10 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha)), int64(len(beta))
 	if alphaSize%chunkSize != 0 {
-		common.Exit(fmt.Sprintf("Error: the first sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(alpha), alphaSize, chunkSize))
+		log.Fatalf(fmt.Sprintf("Error: the first sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(alpha), alphaSize, chunkSize))
 	}
 	if betaSize%chunkSize != 0 {
-		common.Exit(fmt.Sprintf("Error: the second sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(beta), betaSize, chunkSize))
+		log.Fatalf(fmt.Sprintf("Error: the second sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(beta), betaSize, chunkSize))
 	}
 	alphaChunks := alphaSize / chunkSize
 	betaChunks := betaSize / chunkSize
@@ -138,7 +138,7 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 	return maxScore, route
 }
 
-func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
+func multipleAffineGap(alpha []*fasta.Fasta, beta []*fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha[0].Seq), len(beta[0].Seq))
 
 	for i, _ := range m[0] {
@@ -169,13 +169,13 @@ func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64
 	return maxScore, route
 }
 
-func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
+func multipleAffineGapChunk(alpha []*fasta.Fasta, beta []*fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha[0].Seq)), int64(len(beta[0].Seq))
 	if alphaSize%chunkSize != 0 {
-		common.Exit(fmt.Sprintf("Error: the first subalignment has a length of %d, when it should be a multiple of %d\n", alphaSize, chunkSize))
+		log.Fatalf(fmt.Sprintf("Error: the first subalignment has a length of %d, when it should be a multiple of %d\n", alphaSize, chunkSize))
 	}
 	if betaSize%chunkSize != 0 {
-		common.Exit(fmt.Sprintf("Error: the second subalignment has a length of %d, when it should be a multiple of %d\n", betaSize, chunkSize))
+		log.Fatalf(fmt.Sprintf("Error: the second subalignment has a length of %d, when it should be a multiple of %d\n", betaSize, chunkSize))
 	}
 	alphaChunks := alphaSize / chunkSize
 	betaChunks := betaSize / chunkSize
@@ -214,7 +214,7 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 	return maxScore, route
 }
 
-func scoreAffineAln(alpha fasta.Fasta, beta fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, error) {
+func scoreAffineAln(alpha *fasta.Fasta, beta *fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, error) {
 	if len(alpha.Seq) != len(beta.Seq) {
 		return 0, fmt.Errorf("Error: alignment being scored has sequences of unequal length: %d, %d\n", len(alpha.Seq), len(beta.Seq))
 	}

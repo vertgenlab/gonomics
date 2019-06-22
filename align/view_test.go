@@ -23,8 +23,8 @@ var alignTests = []struct {
 
 func TestConstGap(t *testing.T) {
 	for _, test := range alignTests {
-		basesOne, _ := dna.StringToBases(test.seqOne)
-		basesTwo, _ := dna.StringToBases(test.seqTwo)
+		basesOne := dna.StringToBases(test.seqOne)
+		basesTwo := dna.StringToBases(test.seqTwo)
 		_, cigar := ConstGap(basesOne, basesTwo, DefaultScoreMatrix, -430)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
