@@ -1,18 +1,7 @@
 package axt
 
 import (
-	//"bufio"
-	//"flag"
-	//"fmt"
 	"sort"
-	//"github.com/vertgenlab/gonomics/dna"
-	//"github.com/vertgenlab/gonomics/fasta"
-	//"github.com/vertgenlab/gonomics/vcf"
-	//"io"
-	//"io/ioutil"
-	//"log"
-	//"os"
-	//"strconv"
 	"strings"
 )
 
@@ -65,4 +54,65 @@ func SortByRNameCoord(axts []*Axt) {
 
 func SortByScore(axts []*Axt) {
 	sort.Slice(axts, func(i, j int) bool { return CompareScore(axts[i], axts[j]) == -1 })
+}
+
+func isEqual(alpha *Axt, beta *Axt) bool {
+	if strings.Compare(alpha.RName, beta.RName) != 0 {
+		return false
+	}
+	if alpha.RStart != beta.RStart {
+		return false
+	}
+	if alpha.REnd != beta.REnd {
+		return false
+	}
+	if strings.Compare(alpha.QName, beta.QName) != 0 {
+		return false
+	}
+	if alpha.QStart != beta.QStart {
+		return false
+	}
+	if alpha.QEnd != beta.QEnd {
+		return false
+	}
+	if alpha.QStrandPos != beta.QStrandPos {
+		return false
+	}
+	if alpha.Score != beta.Score {
+		return false
+	}
+	if len(alpha.RSeq) != len(beta.RSeq) {
+		return false
+	}
+	if len(alpha.RSeq) == len(beta.RSeq) {
+		for i := 0; i < len(alpha.RSeq); i++ {
+			if alpha.RSeq[i] != beta.RSeq[i] {
+				return false
+			}
+		}
+	}
+	if len(alpha.QSeq) != len(beta.QSeq) {
+		return false
+	}
+	if len(alpha.QSeq) == len(beta.QSeq) {
+		for j := 0; j < len(alpha.QSeq); j++ {
+			if alpha.QSeq[j] != beta.QSeq[j] {
+				return false
+			}
+		}
+	}
+	return true
+
+}
+
+func AllEqual(alpha []*Axt, beta []*Axt) bool {
+	if len(alpha) != len(beta) {
+		return false
+	}
+	for i := 0; i < len(alpha); i++ {
+		if !isEqual(alpha[i], beta[i]) {
+			return false
+		}
+	}
+	return true
 }

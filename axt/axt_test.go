@@ -1,6 +1,7 @@
 package axt
 
 import (
+	"log"
 	"os"
 	"testing"
 )
@@ -23,6 +24,10 @@ func TestWriteAndRead(t *testing.T) {
 		tempFile := test.filename + ".tmp"
 		actual = Read(test.filename)
 		Write(tempFile, actual)
+		if !AllEqual(Read(tempFile), Read("testdata/chrM_gasacu1.axt")) {
+			log.Fatalf("Axt files are not the same")
+		}
+
 		err := os.Remove(tempFile)
 		if err != nil {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)

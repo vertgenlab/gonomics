@@ -1,17 +1,17 @@
 package vcf
 
-import (
-	"bufio"
-	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
+import (	
 	"io"
 	"os"
+	"fmt"
+	"time"
+	"bufio"
 	"strconv"
 	"strings"
-	"time"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/chromInfo"
 )
 
 type Vcf struct {
