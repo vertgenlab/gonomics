@@ -1,6 +1,7 @@
 package sam
 
 import (
+	"os"
 	"testing"
 )
 
@@ -33,9 +34,10 @@ func TestReadAndWrite(t *testing.T) {
 		/*if !AllAreEqual(test.data, actual) {
 			t.Errorf("The %s file was not read correctly.", test.filename)
 		}
+		*/
 		err = os.Remove(tempFile)
 		if err != nil {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
-		}*/
+		}
 	}
 }

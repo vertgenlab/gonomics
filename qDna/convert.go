@@ -40,6 +40,14 @@ func FromDnaToQFrag(in []dna.Base, s string) *QFrag {
 
 }
 
+//Convert Bases straight to QFrag --added by eric
+func QFragCoord(in []dna.Base, s string, start int64, end int64) *QFrag {
+	loc := Location{Assembly: "", Chr: s, Start: start, End: end}
+	answer := QFrag{Seq: FromDna(in), From: []*Location{&loc}, Fwd: nil, Rev: nil}
+	return &answer
+
+}
+
 func FromFasta(in *fasta.Fasta) *QFrag {
 	loc := Location{Assembly: "", Chr: in.Name, Start: 0, End: 0}
 	answer := QFrag{Seq: FromDna(in.Seq), From: []*Location{&loc}, Fwd: nil, Rev: nil}
@@ -81,8 +89,6 @@ func ToFasta(in *QFrag) *fasta.Fasta {
 	}
 	return &fasta.Fasta{Name: name, Seq: mostLikelySeq(in.Seq)}
 }
-
-
 
 // TODO: This should be improved, but is only used
 // for testing right now.  Does not follow links
