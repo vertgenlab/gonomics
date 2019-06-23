@@ -104,41 +104,6 @@ func isThereABase(records []*fasta.Fasta, j int) bool {
 	return false
 }
 
-/*
-func whichBase(records []*fasta.Fasta, j int) dna.Base {
-	if human.Seq[j] == dna.N {
-			Ncount++
-			outputBase = human.Seq[j]
-		} else if human.Seq[j] == chimp.Seq[j] && human.Seq[j] == bonobo.Seq[j] {
-			outputBase = human.Seq[j]
-			allMatch++
-		} else if (human.Seq[j] == chimp.Seq[j] || human.Seq[j] == bonobo.Seq[j]) && human.Seq[j] != dna.Gap {
-			outputBase = human.Seq[j]
-			humanMatchChimporBonobo++
-		} else if (chimp.Seq[j] == bonobo.Seq[j] && 
-			(chimp.Seq[j] == gorilla.Seq[j] || chimp.Seq[j] == orangutan.Seq[j])) 
-				&& (chimp.Seq[j] != dna.N && chimp.Seq[j] != dna.Gap){
-				outputBase = chimp.Seq[j]
-				humanChange++
-		} else if (human.Seq[j] == gorilla.Seq[j] || chimp.Seq[j] == gorilla.Seq[j] || bonobo.Seq[j] == gorilla.Seq[j]) 
-						&& (gorilla.Seq[j] != dna.N && gorilla.Seq[j] != dna.Gap) {
-			outputBase = gorilla.Seq[j]
-			gorillaVote++
-		} else if (human.Seq[j] == orangutan.Seq[j] || chimp.Seq[j] == orangutan.Seq[j] || bonobo.Seq[j] == orangutan.Seq[j] || gorilla.Seq[j] == orangutan.Seq[j] 
-				 && (orangutan.Seq[j] != dna.N && orangutan.Seq[j] != dna.Gap) {
-			outputBase = orangutan.Seq[j])
-			orangutanVote++
-		} else {
-			if human.Seq[j] != dna.Gap {
-				outputBase = human.Seq[j]
-			} else {
-				outputBase = dna.N
-			}
-			messyBase++
-		}
-}
-*/
-
 func usage() {
 	fmt.Print(
 		"quickPrimateRecon - Returns maximum likelihood sequence from an HBCGO primate alignment\n" +
