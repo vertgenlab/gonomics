@@ -24,7 +24,9 @@ func TestWriteAndRead(t *testing.T) {
 		tempFile := test.filename + ".tmp"
 		actual = Read(test.filename)
 		Write(tempFile, actual)
-
+		if !AllEqual(Read(tempFile), Read("testdata/test.vcf")) {
+			t.Errorf("VCF files are not the same")
+		}
 		err := os.Remove(tempFile)
 		if err != nil {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
