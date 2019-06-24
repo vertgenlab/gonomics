@@ -1,8 +1,8 @@
 package align
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 )
 
 func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
@@ -49,7 +49,7 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 		case 2:
 			i -= 1
 		default:
-			common.Exit("Error: unexpected traceback")
+			log.Fatalf("Error: unexpected traceback")
 		}
 	}
 	reverseCigar(route)

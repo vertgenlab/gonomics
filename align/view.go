@@ -3,8 +3,8 @@ package align
 import (
 	"bytes"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 )
 
 func colTypeToRune(a ColType) rune {
@@ -16,7 +16,7 @@ func colTypeToRune(a ColType) rune {
 	case ColD:
 		return 'D'
 	default:
-		common.Exit(fmt.Sprintf("Error: unexpected value when converting colType to rune %d", a))
+		log.Fatalf(fmt.Sprintf("Error: unexpected value when converting colType to rune %d", a))
 		return '?'
 	}
 }

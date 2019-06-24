@@ -15,18 +15,14 @@ var multiAlignTests = []struct {
 
 func TestMultiAlignGap(t *testing.T) {
 	for _, test := range multiAlignTests {
-		input, err := fasta.Read(test.input)
-		if err != nil {
-			t.Errorf("Reading %s gave an error", test.input)
-		}
+		input := fasta.Read(test.input)
 
-		expected, err := fasta.Read(test.expected)
-		if err != nil {
-			t.Errorf("Reading %s gave an error", test.expected)
-		}
+		expected := fasta.Read(test.expected)
 
 		aligned := AllSeqAffine(input, DefaultScoreMatrix, -400, -30)
 		alignedChunk := AllSeqAffineChunk(input, DefaultScoreMatrix, -400, -30, 2)
+
+		//fasta.Write("testdata/multiAlignTest.tmp", aligned)
 
 		if !fasta.AllAreEqualIgnoreOrder(aligned, expected) {
 			fasta.Write("testdata/multiAlignTest.tmp", aligned)
@@ -37,5 +33,6 @@ func TestMultiAlignGap(t *testing.T) {
 			fasta.Write("testdata/multiAlignTest.tmp", alignedChunk)
 			t.Errorf("Alignment not as expected: testdata/multiAlignTest.tmp does not equal %s", test.expected)
 		}
+
 	}
 }

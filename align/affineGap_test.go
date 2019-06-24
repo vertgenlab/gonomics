@@ -44,8 +44,8 @@ var affineScoreTests = []struct {
 
 func TestAffineGap(t *testing.T) {
 	for _, test := range affineAlignTests {
-		basesOne, _ := dna.StringToBases(test.seqOne)
-		basesTwo, _ := dna.StringToBases(test.seqTwo)
+		basesOne := dna.StringToBases(test.seqOne)
+		basesTwo := dna.StringToBases(test.seqTwo)
 		_, cigar := AffineGap(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
@@ -56,8 +56,8 @@ func TestAffineGap(t *testing.T) {
 
 func TestAffineGapChunk(t *testing.T) {
 	for _, test := range affineAlignChunkTests {
-		basesOne, _ := dna.StringToBases(test.seqOne)
-		basesTwo, _ := dna.StringToBases(test.seqTwo)
+		basesOne := dna.StringToBases(test.seqOne)
+		basesTwo := dna.StringToBases(test.seqTwo)
 		_, cigar := AffineGapChunk(basesOne, basesTwo, DefaultScoreMatrix, -400, -30, 3)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
@@ -68,10 +68,10 @@ func TestAffineGapChunk(t *testing.T) {
 
 func TestAffineGapMulti(t *testing.T) {
 	for _, test := range affineAlignTests {
-		basesOne, _ := dna.StringToBases(test.seqOne)
-		basesTwo, _ := dna.StringToBases(test.seqTwo)
-		one := []fasta.Fasta{{Name: "one", Seq: basesOne}}
-		two := []fasta.Fasta{{Name: "two", Seq: basesTwo}}
+		basesOne := dna.StringToBases(test.seqOne)
+		basesTwo := dna.StringToBases(test.seqTwo)
+		one := []*fasta.Fasta{{Name: "one", Seq: basesOne}}
+		two := []*fasta.Fasta{{Name: "two", Seq: basesTwo}}
 		_, cigar := multipleAffineGap(one, two, DefaultScoreMatrix, -400, -30)
 		answer := mergeMultipleAlignments(one, two, cigar)
 		pretty := fmt.Sprintf("%s\n%s\n", dna.BasesToString(answer[0].Seq), dna.BasesToString(answer[1].Seq))
@@ -83,8 +83,8 @@ func TestAffineGapMulti(t *testing.T) {
 
 func TestAffineScore(t *testing.T) {
 	for _, test := range affineScoreTests {
-		aln, err := fasta.Read(test.filename)
-		common.ExitIfError(err)
+		aln := fasta.Read(test.filename)
+		//common.ExitIfError(err)
 		score, err := scoreAffineAln(aln[0], aln[1], DefaultScoreMatrix, -10, -1)
 		common.ExitIfError(err)
 		fmt.Printf("Score of alignment in %s is: %d\n", test.filename, score)
