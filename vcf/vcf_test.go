@@ -1,7 +1,6 @@
 package vcf
 
 import (
-	"log"
 	"os"
 	"testing"
 )
@@ -26,7 +25,7 @@ func TestWriteAndRead(t *testing.T) {
 		actual = Read(test.filename)
 		Write(tempFile, actual)
 		if !AllEqual(Read(tempFile), Read("testdata/test.vcf")) {
-			log.Fatalf("VCF files are not the same")
+			t.Errorf("VCF files are not the same")
 		}
 		err := os.Remove(tempFile)
 		if err != nil {
