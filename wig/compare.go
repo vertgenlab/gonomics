@@ -24,13 +24,10 @@ func isEqual(alpha *Wig, beta *Wig) bool {
 			}
 			if alpha.Values[i].Value != beta.Values[i].Value {
 				return false
-			} else {
-				return true
 			}
 		}
 	}
 	return true
-
 }
 
 func AllEqual(alpha []*Wig, beta []*Wig) bool {

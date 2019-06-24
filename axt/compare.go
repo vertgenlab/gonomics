@@ -84,25 +84,20 @@ func isEqual(alpha *Axt, beta *Axt) bool {
 	if len(alpha.RSeq) != len(beta.RSeq) {
 		return false
 	}
-	if len(alpha.RSeq) == len(beta.RSeq) {
-		for i := 0; i < len(alpha.RSeq); i++ {
-			if alpha.RSeq[i] != beta.RSeq[i] {
-				return false
-			}
+	for i := 0; i < len(alpha.RSeq); i++ {
+		if alpha.RSeq[i] != beta.RSeq[i] {
+			return false
 		}
 	}
 	if len(alpha.QSeq) != len(beta.QSeq) {
 		return false
 	}
-	if len(alpha.QSeq) == len(beta.QSeq) {
-		for j := 0; j < len(alpha.QSeq); j++ {
-			if alpha.QSeq[j] != beta.QSeq[j] {
-				return false
-			}
+	for j := 0; j < len(alpha.QSeq); j++ {
+		if alpha.QSeq[j] != beta.QSeq[j] {
+			return false
 		}
 	}
 	return true
-
 }
 
 func AllEqual(alpha []*Axt, beta []*Axt) bool {

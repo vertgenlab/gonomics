@@ -1,9 +1,6 @@
 package wig
 
 import (
-	//"flag"
-	//"fmt"
-	"log"
 	"os"
 	"testing"
 )
@@ -28,7 +25,7 @@ func TestWriteAndRead(t *testing.T) {
 		Write(tempFile, actual)
 
 		if !AllEqual(Read(tempFile), Read("testdata/in_test.wig")) {
-			log.Fatalf("Read and write Wig files were not the same")
+			t.Errorf("Read and write Wig files were not the same")
 		}
 		err := os.Remove(tempFile)
 		if err != nil {
