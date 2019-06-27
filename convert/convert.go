@@ -44,14 +44,31 @@ func SamToBed(s *sam.Sam) []*bed.Bed {
 }
 
 func BedToWig(b []*bed.Bed, reference []*chromInfo.ChromInfo) []*wig.Wig {
-	var wigSlice []*wig.Wig
+	wigSlice := make([]*wig.Wig, len(reference))
+	var chromIndex int
 
-	for i := 0; i < len(b); i++ {
-
+	//generate Wig skeleton from reference
+	for i := 0; i < len(reference); i++ {
+		currentWig := wig.Wig{StepType: "Fixed", Chrom: reference[i].Name, Start: 0, Step: 1}
+		currentWig.Values = make([]*wig.WigValue, len(reference))
+		wigSlice = append(wigSlice, &currentWig)
 	}
 
-
+	for j := 0; j < len(b); j++ {
+		chromIndex = GetWigChromIndex(b[j].Chrom, wigSlice)
+		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
+			wigSlice[chromIndex].Values[k].Value++
+		}
+	}
 	return wigSlice
 }
 
-
+func GetWigChromIndex(s string, wigSlice []*wig.Wig) int {
+	for i := 0; i < len(wigSlice); i++ {
+		if s == wigSlice[i].Chrom {
+			return i
+		}
+	}
+	log.Fatalf("Bed Chromosome, %s, not in reference genome.", s)
+	return -1
+}

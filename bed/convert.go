@@ -1,8 +1,9 @@
 package bed
+//moved to convert package
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sam"
 	"log"
 )
 
@@ -23,3 +24,4 @@ func SliceToFasta(b []*Bed, ref []*fasta.Fasta) []*fasta.Fasta {
 	}
 	return outlist
 }
+*/
