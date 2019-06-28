@@ -11,6 +11,26 @@ type Cigar struct {
 	Op        rune
 }
 
+func NumInsertions(input []*Cigar) int64 {
+	var count int64
+	for i := 0; i < len(input); i++ {
+		if !ConsumesReference(input[i].Op) && ConsumesQuery(input[i].Op) {
+			count = count + input[i].RunLength
+		}
+	}
+	return count
+}
+
+func NumDeletions(input []*Cigar) int64 {
+	var count int64
+	for i := 0; i < len(input); i++ {
+		if ConsumesReference(input[i].Op) && !ConsumesQuery(input[i].Op) {
+			count = count + input[i].RunLength
+		}
+	}
+	return count
+}
+
 func ToString(c []*Cigar) string {
 	var output string = ""
 
