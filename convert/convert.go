@@ -5,9 +5,11 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/wig"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"log"
+	"fmt"
 )
 
 func singleBedToFasta(b *bed.Bed, ref []*fasta.Fasta) *fasta.Fasta {
@@ -29,15 +31,14 @@ func BedToFasta(b []*bed.Bed, ref []*fasta.Fasta) []*fasta.Fasta {
 }
 
 func SamToBed(s *sam.Sam) []*bed.Bed {
-	outlist := make([]*bed.Bed, len(s.Aln))
+	var outlist []*bed.Bed
 	var current *bed.Bed
 
 	for i := 0; i < len(s.Aln); i++ {
-		current.Chrom = s.Aln[i].RName
-		current.ChromStart = s.Aln[i].Pos - 1
-		current.ChromEnd = s.Aln[i].Pos + cigar.ReferenceLength(s.Aln[i].Cigar)
-		current.Name = s.Aln[i].QName
-		outlist[i] = current
+		if !(s.Aln[i].Cigar[0].Op == '*') {
+			current = &bed.Bed{Chrom: s.Aln[i].RName,ChromStart: s.Aln[i].Pos - 1, ChromEnd: s.Aln[i].Pos + cigar.ReferenceLength(s.Aln[i].Cigar), Name: s.Aln[i].QName}
+			outlist = append(outlist, current)
+		}
 	}
 
 	return outlist
@@ -52,46 +53,54 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 	//add output to bedlist
 } */
 
-func SamToBedFrag(s *sam.Sam, fragLength int64) []*bed.Bed {
-	outlist := make([]*bed.Bed, len(s.Aln))
+func SamToBedFrag(s *sam.Sam, fragLength int64, reference map[string]*chromInfo.ChromInfo) []*bed.Bed {
+	var outlist []*bed.Bed
 	var current *bed.Bed
 
-	for i := 0; i < len(s.Aln); i++ {
-		current.Chrom = s.Aln[i].RName
-		current.Name = s.Aln[i].QName
-
-		if sam.IsPosStrand(s.Aln[i]) {
-			current.ChromStart = s.Aln[i].Pos - 1
-			current.ChromEnd = s.Aln[i].Pos + fragLength - cigar.NumInsertions(s.Aln[i].Cigar) + cigar.NumDeletions(s.Aln[i].Cigar)
-			current.Strand = true
-		} else {
-			current.ChromEnd = s.Aln[i].Pos + cigar.ReferenceLength(s.Aln[i].Cigar)
-			current.Strand = false
-			current.ChromStart = current.ChromEnd - (fragLength - cigar.NumInsertions(s.Aln[i].Cigar) + cigar.NumDeletions(s.Aln[i].Cigar))
+	for i := 0; i < len(s.Aln); i++ {		
+		if !(s.Aln[i].Cigar[0].Op == '*') {
+			current = &bed.Bed{Chrom: s.Aln[i].RName, Name: s.Aln[i].QName}
+			if sam.IsPosStrand(s.Aln[i]) {
+				current.ChromStart = s.Aln[i].Pos - 1
+				current.ChromEnd = common.MinInt64(current.ChromStart + fragLength - cigar.NumInsertions(s.Aln[i].Cigar) + cigar.NumDeletions(s.Aln[i].Cigar), reference[current.Chrom].Size)
+				current.Strand = true
+			} else {
+				current.ChromEnd = s.Aln[i].Pos - 1 + cigar.ReferenceLength(s.Aln[i].Cigar)
+				current.Strand = false
+				current.ChromStart = common.MaxInt64(current.ChromEnd - (fragLength - cigar.NumInsertions(s.Aln[i].Cigar) + cigar.NumDeletions(s.Aln[i].Cigar)), 0)
+			}
+			outlist = append(outlist, current)
 		}
-		outlist[i] = current
 	}
 
 	return outlist
 }
 
 
-func BedToWig(b []*bed.Bed, reference []*chromInfo.ChromInfo) []*wig.Wig {
+func BedToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
-
+	var i int = 0
+	var x int64 = 0
 	//generate Wig skeleton from reference
-	for i := 0; i < len(reference); i++ {
-		currentWig := wig.Wig{StepType: "Fixed", Chrom: reference[i].Name, Start: 0, Step: 1}
-		currentWig.Values = make([]*wig.WigValue, reference[i].Size)
+	for _, v := range reference {
+		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 0, Step: 1}
+		currentWig.Values = make([]*wig.WigValue, v.Size)
+		for x = 0; x < v.Size; x++ {
+			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
+		}
 		wigSlice[i] = &currentWig
+		i++
 	}
 
 	for j := 0; j < len(b); j++ {
 		chromIndex = GetWigChromIndex(b[j].Chrom, wigSlice)
+		fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
+			//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
 			wigSlice[chromIndex].Values[k].Value++
 		}
+		//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 	}
 	return wigSlice
 }

@@ -13,6 +13,9 @@ type Cigar struct {
 
 func NumInsertions(input []*Cigar) int64 {
 	var count int64
+	if input[0].Op == '*' {
+		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+	}
 	for i := 0; i < len(input); i++ {
 		if !ConsumesReference(input[i].Op) && ConsumesQuery(input[i].Op) {
 			count = count + input[i].RunLength
@@ -23,6 +26,9 @@ func NumInsertions(input []*Cigar) int64 {
 
 func NumDeletions(input []*Cigar) int64 {
 	var count int64
+	if input[0].Op == '*' {
+		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+	}
 	for i := 0; i < len(input); i++ {
 		if ConsumesReference(input[i].Op) && !ConsumesQuery(input[i].Op) {
 			count = count + input[i].RunLength
@@ -33,8 +39,11 @@ func NumDeletions(input []*Cigar) int64 {
 
 func ToString(c []*Cigar) string {
 	var output string = ""
-
 	for _, v := range c {
+		if v.Op == '*' {
+			output = "*"
+			break
+		}
 		output = output + fmt.Sprintf("%v%c", v.RunLength, v.Op)
 	}
 	return output
@@ -43,7 +52,6 @@ func ToString(c []*Cigar) string {
 func FromString(input string) []*Cigar {
 	var output []*Cigar
 	var currentNumber string
-
 	for _, v := range input {
 		if RuneIsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)	
@@ -51,6 +59,10 @@ func FromString(input string) []*Cigar {
 			currentCigar := Cigar{RunLength: common.StringToInt64(currentNumber), Op: v}
 			output = append(output, &currentCigar)
 			currentNumber = ""
+		} else if v == '*' {
+			currentCigar := Cigar{RunLength: 0, Op: v}
+			output = append(output, &currentCigar)
+			break
 		} else {
 			log.Fatalf("Invalid character: %c", v)
 		}
@@ -64,6 +76,9 @@ func FromString(input string) []*Cigar {
 
 func ReferenceLength(c []*Cigar) int64 {
 	var ans int64
+	if c[0].Op == '*' {
+		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+	}
 	for _, v := range c {
 		if ConsumesReference(v.Op) {
 			ans = ans + v.RunLength
@@ -74,6 +89,9 @@ func ReferenceLength(c []*Cigar) int64 {
 
 func QueryLength(c []*Cigar) int64 {
 	var ans int64
+	if c[0].Op == '*' {
+		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+	}
 	for _, v := range c {
 		if ConsumesQuery(v.Op) {
 			ans = ans + v.RunLength

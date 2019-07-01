@@ -11,10 +11,10 @@ import (
 	"log"
 )
 
-func samToWig(infile string, reference string, outfile string, paired *bool, fragLength *int64) {
-	fmt.Printf("Paired: %b\n", paired)
-	fmt.Printf("fragLength: %v\n", fragLength)
-	if *paired && *fragLength != int64(-1) {
+func samToWig(infile string, reference string, outfile string, paired bool, fragLength int64) {
+	fmt.Printf("Paired: %t\n", paired)
+	fmt.Printf("fragLength: %d\n", fragLength)
+	if paired && fragLength != int64(-1) {
 		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
 	}
 
@@ -23,19 +23,19 @@ func samToWig(infile string, reference string, outfile string, paired *bool, fra
 		log.Fatal(err)
 	}
 
-	ref := chromInfo.ReadToSlice(reference)
+	ref := chromInfo.ReadToMap(reference)
 
 	var outBed []*bed.Bed
 	var outWig []*wig.Wig
 
-	if *fragLength != int64(-1) {
-		outBed = convert.SamToBedFrag(records, *fragLength)
+	if fragLength != int64(-1) {
+		outBed = convert.SamToBedFrag(records, fragLength, ref)
 	} else {
 		outBed = convert.SamToBed(records)
 	}
 
 	outWig = convert.BedToWig(outBed, ref)
-
+	fmt.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
 }
 
@@ -50,7 +50,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 3
-	var paired *bool = flag.Bool("windowSize", false, "Specifies paired end reads")
+	var paired *bool = flag.Bool("paired", false, "Specifies paired end reads")
 	var fragLength *int64 = flag.Int64("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
 
 	flag.Usage = usage
@@ -67,5 +67,5 @@ func main() {
 	reference := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	samToWig(inFile, reference, outFile, paired, fragLength)
+	samToWig(inFile, reference, outFile, *paired, *fragLength)
 }

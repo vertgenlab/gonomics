@@ -24,7 +24,7 @@ func bedMaxWig(infile string, database string, chromsize string, outfile string)
 	var m int64
 
 	for i = 0; i < int64(len(sizes)); i++ {
-		chromSlice = wig.WigToSlice(data, sizes[i].Size, sizes[i].Name)
+		chromSlice = WigChromToSlice(data, sizes[i].Size, sizes[i].Name)
 		for k :=0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
@@ -45,6 +45,19 @@ func bedMaxWig(infile string, database string, chromsize string, outfile string)
 		}
 	}
 	bed.Write(outfile, outlist, 7)
+}
+
+func WigChromToSlice(w []*wig.Wig, size int64, chrom string) []float64 {
+	output := make([]float64, size)
+	for _, v := range w {
+		if v.Chrom == chrom {
+			for i := 0; i < len(output); i++ {
+				output[i] = v.Values[i].Value
+			}
+		}
+	}
+
+	return output
 }
 
 func sliceRangeAverage(w []float64, start int64, end int64) float64 {

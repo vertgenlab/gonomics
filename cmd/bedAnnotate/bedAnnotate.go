@@ -7,14 +7,14 @@ import (
 	"log"
 )
 
-func bedAnnotate(in string, rec string, outfile string, field *int) {
+func bedAnnotate(in string, rec string, outfile string, field *int, prefix string) {
 	var records []*bed.Bed = bed.Read(rec)
 	var infile []*bed.Bed = bed.Read(in)
 
 	for i := 0; i < len(infile); i++ {
 		for j := 0; j < len(records); j++ {
-			if overlap(infile[i], records[j]) && !contains(infile[i].Annotation, records[j].Name) {
-				infile[i].Annotation = append(infile[i].Annotation, records[j].Name)
+			if overlap(infile[i], records[j]) && !contains(infile[i].Annotation, prefix + records[j].Name) {
+				infile[i].Annotation = append(infile[i].Annotation, prefix + records[j].Name)
 			}
 		}
 	}
@@ -25,9 +25,9 @@ func bedAnnotate(in string, rec string, outfile string, field *int) {
 func usage() {
 	fmt.Print(
 		"bedAnnotate - Appends a field from bed2 into overlapping segments of bed1\n" +
-			"Usage:\n" +
-			"bedAnnotate bed1.bed records.bed output.bed\n" +
-			"options:\n")
+		"Usage:\n" +
+		"bedAnnotate bed1.bed records.bed output.bed\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -52,6 +52,7 @@ func contains(s []string, e string) bool {
 func main() {
 	var expectedNumArgs int = 3
 	var field *int = flag.Int("field", 6, "Specifies the bed field to add annotation")
+	var prefix *string = flag.String("prefix", "", "Adds a prefix to the annotation value")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -66,5 +67,5 @@ func main() {
 	records := flag.Arg(1)
 	outfile := flag.Arg(2)
 
-	bedAnnotate(infile, records, outfile, field)
+	bedAnnotate(infile, records, outfile, field, *prefix)
 }
