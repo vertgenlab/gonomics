@@ -11,7 +11,7 @@ import (
 func faFormat(inFile string, outFile string, lineLength int) {
 	records := fasta.Read(inFile)
 
-	file := fileio.MustCreate(outFile)
+	file := fileio.EasyCreate(outFile)
 	defer file.Close()
 
 	fasta.WriteToFileHandle(file, records, lineLength)
