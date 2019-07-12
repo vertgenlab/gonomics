@@ -34,7 +34,7 @@ func samToWig(infile string, reference string, outfile string, paired bool, frag
 		outBed = convert.SamToBed(records)
 	}
 
-	outWig = convert.BedToWig(outBed, ref)
+	outWig = convert.BedReadsToWig(outBed, ref)
 	fmt.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
 }
