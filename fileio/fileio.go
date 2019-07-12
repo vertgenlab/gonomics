@@ -1,18 +1,18 @@
 package fileio
 
 import (
-	"fmt"
 	"bufio"
+	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"io"
 	"os"
 	"strings"
-	"github.com/vertgenlab/gonomics/common"
 )
 
 func MustCreate(filename string) *os.File {
-        file, err := os.Create(filename)
-        common.ExitIfError(err)
-        return file
+	file, err := os.Create(filename)
+	common.ExitIfError(err)
+	return file
 }
 
 func MustOpen(filename string) *os.File {
@@ -68,7 +68,7 @@ func equal(a string, b string, commentsMatter bool) bool {
 	for !fileADone && !fileBDone {
 		if commentsMatter {
 			lineA, fileADone = NextLine(readerA)
-                        lineB, fileBDone = NextLine(readerB)
+			lineB, fileBDone = NextLine(readerB)
 		} else {
 			lineA, fileADone = NextRealLine(readerA)
 			lineB, fileBDone = NextRealLine(readerB)
@@ -95,11 +95,10 @@ func AreEqual(a string, b string) bool {
 func Read(filename string) []string {
 	var answer []string
 	file := MustOpen(filename)
-        defer file.Close()
-        reader := bufio.NewReader(file)
-        for line, doneReading := NextRealLine(reader); !doneReading; line, doneReading = NextRealLine(reader) {
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	for line, doneReading := NextRealLine(reader); !doneReading; line, doneReading = NextRealLine(reader) {
 		answer = append(answer, line)
 	}
 	return answer
 }
-

@@ -2,9 +2,9 @@ package fasta
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
-	"github.com/vertgenlab/gonomics/dna"
 )
 
 func AppendToName(record *Fasta, addition string) {
@@ -21,7 +21,7 @@ func Remove(slice []*Fasta, i int) []*Fasta {
 	if i < 0 || i >= len(slice) {
 		log.Fatalf("Index out of range")
 	}
-    return append(slice[:i], slice[i+1:]...)
+	return append(slice[:i], slice[i+1:]...)
 }
 
 func FilterName(records []*Fasta, name string) []*Fasta {
@@ -68,8 +68,7 @@ func ToUpper(fa *Fasta) {
 }
 
 func AllToUpper(records []*Fasta) {
-	for i:=0; i < len(records); i++ {
+	for i := 0; i < len(records); i++ {
 		ToUpper(records[i])
 	}
 }
-
