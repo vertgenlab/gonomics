@@ -1,13 +1,13 @@
-package main 
+package main
 
 import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/convert"
-	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/wig"
 	"log"
 )
 
@@ -42,9 +42,9 @@ func samToWig(infile string, reference string, outfile string, paired bool, frag
 func usage() {
 	fmt.Print(
 		"samToWig - Converts sam to wig\n" +
-		"Usage:\n" +
-		" samToWig input.sam reference.chrom.sizes output.wig\n" +
-		"options:\n")
+			"Usage:\n" +
+			" samToWig input.sam reference.chrom.sizes output.wig\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

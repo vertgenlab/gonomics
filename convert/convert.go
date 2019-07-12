@@ -76,15 +76,46 @@ func SamToBedFrag(s *sam.Sam, fragLength int64, reference map[string]*chromInfo.
 	return outlist
 }
 
+func BedScoreToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+	wigSlice := make([]*wig.Wig, len(reference))
+	var chromIndex int
+	var midpoint int
+	var x int64 = 0
+	var i int = 0
 
-func BedToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+	//generate Wig skeleton from reference
+	for _, v := range reference {
+		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
+		currentWig.Values = make([]*wig.WigValue, v.Size)
+		for x = 0; x < v.Size; x++ {
+			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
+		}
+		wigSlice[i] = &currentWig
+		i++
+	}
+	fmt.Println("Completed wig skeleton, looping through bed.")
+
+	//loop through bed
+	for i := 0; i < len(b); i++ {
+		chromIndex = getWigChromIndex(b[i].Chrom, wigSlice)
+		midpoint = bedMidpoint(b[i])
+		if wigSlice[chromIndex].Values[midpoint].Value != 0 {
+			log.Fatalf("Multiple scores for one position.")
+		}
+		wigSlice[chromIndex].Values[midpoint].Value = float64(b[i].Score)
+	}
+	return wigSlice
+}
+
+
+func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
 	var i int = 0
 	var x int64 = 0
 	//generate Wig skeleton from reference
 	for _, v := range reference {
-		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 0, Step: 1}
+		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
 		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
@@ -94,7 +125,7 @@ func BedToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wi
 	}
 
 	for j := 0; j < len(b); j++ {
-		chromIndex = GetWigChromIndex(b[j].Chrom, wigSlice)
+		chromIndex = getWigChromIndex(b[j].Chrom, wigSlice)
 		fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
 			//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
@@ -105,7 +136,11 @@ func BedToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wi
 	return wigSlice
 }
 
-func GetWigChromIndex(s string, wigSlice []*wig.Wig) int {
+func bedMidpoint(b *bed.Bed) int {
+	return int(b.ChromEnd - b.ChromStart) / 2
+}
+
+func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
 	for i := 0; i < len(wigSlice); i++ {
 		if s == wigSlice[i].Chrom {
 			return i
