@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"io"
+	"log"
 	"os"
 	"strings"
 )
@@ -30,10 +31,14 @@ func NextLine(reader *bufio.Reader) (string, bool) {
 	if err != nil && err != io.EOF {
 		common.ExitIfError(err)
 	}
-	line = strings.TrimSuffix(line, "\n")
 	if err == io.EOF {
-		return line, true
+		if line != "" {
+			log.Fatalf("Error: last line of file didn't end with a newline character: %s\n", line)
+		} else {
+			return "", true
+		}
 	}
+	line = strings.TrimSuffix(line, "\n")
 	return line, false
 }
 
@@ -47,10 +52,14 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	if err != nil && err != io.EOF {
 		common.ExitIfError(err)
 	}
-	line = strings.TrimSuffix(line, "\n")
 	if err == io.EOF {
-		return line, true
+		if line != "" {
+			log.Fatalf("Error: last line of file didn't end with a newline character: %s\n", line)
+		} else {
+			return "", true
+		}
 	}
+	line = strings.TrimSuffix(line, "\n")
 	return line, false
 }
 
