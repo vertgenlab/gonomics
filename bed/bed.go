@@ -1,12 +1,11 @@
 package bed
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
+	"io"
 	"strings"
 )
 
@@ -42,7 +41,7 @@ func BedToString(bunk *Bed, fields int) string {
 	return ""
 }
 
-func WriteToFileHandle(file *os.File, records []*Bed, fields int) {
+func WriteToFileHandle(file io.Writer, records []*Bed, fields int) {
 	var err error
 	for _, rec := range records {
 		_, err = fmt.Fprintf(file, "%s\n", BedToString(rec, fields))
@@ -51,7 +50,7 @@ func WriteToFileHandle(file *os.File, records []*Bed, fields int) {
 }
 
 func Write(filename string, records []*Bed, fields int) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	WriteToFileHandle(file, records, fields)
@@ -63,11 +62,11 @@ func Read(filename string) []*Bed {
 	var startNum, endNum int64
 	var doneReading bool = false
 
-	file := fileio.MustOpen(filename)
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	reader := bufio.NewReader(file)
+	//reader := bufio.NewReader(file)
 
-	for line, doneReading = fileio.NextRealLine(reader); !doneReading; line, doneReading = fileio.NextRealLine(reader) {
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
 
 		startNum = common.StringToInt64(words[1])
