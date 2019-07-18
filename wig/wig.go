@@ -1,13 +1,11 @@
 package wig
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"os"
 	"strings"
 )
 
@@ -28,14 +26,13 @@ func Read(filename string) []*Wig {
 	var answer []*Wig
 	var line string
 	var currentWig *Wig
+	var doneReading bool = false
 
-	file := fileio.MustOpen(filename)
+	file := fileio.EasyOpen(filename)
 
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
 
-	for scanner.Scan() {
-		line = scanner.Text()
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		var lineFields []string = strings.Fields(line)
 
 		if strings.HasPrefix(line, "#") {
@@ -84,9 +81,6 @@ func Read(filename string) []*Wig {
 			currentWig.Values = append(currentWig.Values, currentValue)
 		}
 	}
-	if scanner.Err() != io.EOF {
-		common.ExitIfError(scanner.Err())
-	}
 	return answer
 }
 
@@ -109,7 +103,7 @@ func PrintFirst(rec []*Wig) {
 }
 
 func Write(filename string, rec []*Wig) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	for i := range rec {
 		log.Printf("Printing wig object: %d\n", i)
@@ -117,7 +111,7 @@ func Write(filename string, rec []*Wig) {
 	}
 }
 
-func WriteToFileHandle(file *os.File, rec *Wig) {
+func WriteToFileHandle(file io.Writer, rec *Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
 		fmt.Println("Printing header")
