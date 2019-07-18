@@ -33,7 +33,7 @@ func BedToString(bunk *Bed, fields int) string {
 	case 7:
 		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, common.StrandToRune(bunk.Strand))
 		for i := 0; i < len(bunk.Annotation); i++ {
-			out = fmt.Sprintf("%s\t%s",out, bunk.Annotation[i])
+			out = fmt.Sprintf("%s\t%s", out, bunk.Annotation[i])
 		}
 		return out
 	default:

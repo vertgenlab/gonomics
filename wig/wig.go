@@ -112,7 +112,7 @@ func Write(filename string, rec []*Wig) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for i := range rec {
-		fmt.Printf("Printing wig object: %d\n", i)
+		log.Printf("Printing wig object: %d\n", i)
 		WriteToFileHandle(file, rec[i])
 	}
 }

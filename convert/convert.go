@@ -137,7 +137,7 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 }
 
 func bedMidpoint(b *bed.Bed) int {
-	return int(b.ChromEnd - b.ChromStart) / 2
+	return int(b.ChromEnd + b.ChromStart) / 2
 }
 
 func getWigChromIndex(s string, wigSlice []*wig.Wig) int {

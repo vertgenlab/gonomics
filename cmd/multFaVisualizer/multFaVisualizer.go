@@ -40,6 +40,7 @@ func multFaVisualizer(infile string, start int64, end int64) {
 			refCounter++
 		}
 	}
+	chromStart := refCounter
 
 	fmt.Printf("Start: %d. refCounter: %d. alignCounter: %d\n", start, refCounter, startCounter)
 
@@ -54,15 +55,16 @@ func multFaVisualizer(infile string, start int64, end int64) {
 	}
 
 	for k := startCounter; k < endCounter; k = k + 100 {
-		fmt.Printf("Position: %d\n", k)
+		fmt.Printf("Position: %d\n", chromStart)
+		stop = int(common.MinInt64(endCounter, k+100))
 		for m := 0; m < len(records); m++ {
-			stop = common.Min(len(records[0].Seq), int(k+100))
 			fmt.Printf("|%-*s| %s\n", long, records[m].Name, dna.BasesToString(records[m].Seq[k:stop]))
 		}
 		fmt.Printf("\n\n")
+		chromStart = chromStart + 100 - int64(dna.CountGaps(records[0].Seq[k:stop]))
 	}
-
 }
+
 
 func calculateLongestName(f []*fasta.Fasta) int {
 	var ans int = 0
@@ -79,9 +81,9 @@ func calculateLongestName(f []*fasta.Fasta) int {
 func usage() {
 	fmt.Print(
 		"multFaVisualizer - Provides human-readable multiple alignment from a given .\n" +
-			"Usage:\n" +
-			"bedFilter mult.fa start end\n" +
-			"options:\n")
+		"Usage:\n" +
+		"multFaVisualizer mult.fa start end\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 

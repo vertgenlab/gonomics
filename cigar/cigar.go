@@ -4,6 +4,7 @@ import(
 	"log"
 	"github.com/vertgenlab/gonomics/common"
 	"fmt"
+	"unicode"
 )
 
 type Cigar struct {
@@ -53,7 +54,7 @@ func FromString(input string) []*Cigar {
 	var output []*Cigar
 	var currentNumber string
 	for _, v := range input {
-		if RuneIsDigit(v) {
+		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)	
 		} else if RuneIsValidCharacter(v) {
 			currentCigar := Cigar{RunLength: common.StringToInt64(currentNumber), Op: v}
@@ -61,8 +62,7 @@ func FromString(input string) []*Cigar {
 			currentNumber = ""
 		} else if v == '*' {
 			currentCigar := Cigar{RunLength: 0, Op: v}
-			output = append(output, &currentCigar)
-			break
+			return append(output, &currentCigar)
 		} else {
 			log.Fatalf("Invalid character: %c", v)
 		}
@@ -100,6 +100,7 @@ func QueryLength(c []*Cigar) int64 {
 	return ans
 }
 
+/*
 func RuneIsDigit(r rune) bool {
 	switch r {
 	case '0':
@@ -125,6 +126,7 @@ func RuneIsDigit(r rune) bool {
 	}
 	return false
 }
+*/
 
 func RuneIsValidCharacter(r rune) bool {
 	switch r {
