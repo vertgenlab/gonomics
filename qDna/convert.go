@@ -3,6 +3,8 @@ package qDna
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
+	"log"
 )
 
 func FromBase(b dna.Base) *QBase {
@@ -37,7 +39,6 @@ func FromDnaToQFrag(in []dna.Base, s string) *QFrag {
 	loc := Location{Assembly: "", Chr: s, Start: 0, End: 0}
 	answer := QFrag{Seq: FromDna(in), From: []*Location{&loc}, Fwd: nil, Rev: nil}
 	return &answer
-
 }
 
 //Convert Bases straight to QFrag --added by eric
@@ -45,7 +46,6 @@ func QFragCoord(in []dna.Base, s string, start int64, end int64) *QFrag {
 	loc := Location{Assembly: "", Chr: s, Start: start, End: end}
 	answer := QFrag{Seq: FromDna(in), From: []*Location{&loc}, Fwd: nil, Rev: nil}
 	return &answer
-
 }
 
 func FromFasta(in *fasta.Fasta) *QFrag {
@@ -96,6 +96,57 @@ func toFastaList(in []*QFrag) []*fasta.Fasta {
 	answer := make([]*fasta.Fasta, len(in))
 	for i, _ := range in {
 		answer[i] = ToFasta(in[i])
+	}
+	return answer
+}
+
+func FromFastq(fq *fastq.Fastq) []*QBase {
+	answer := FromBaseCalls(fq.Seq, fastq.ErrorRate(fq.Qual))
+	return answer
+}
+
+func FromBaseCall(b dna.Base, err float64) *QBase {
+	var curr QBase
+	var e float64
+	var probA float64
+	var probC float64
+	var probG float64
+	var probT float64
+
+	switch b {
+
+	case dna.A:
+		probA = 1 - err
+		e = err / 3
+		curr = QBase{A: probA, C: e, G: e, T: e}
+	case dna.C:
+		probC = 1 - err
+		e = err / 3
+		curr = QBase{A: e, C: probC, G: e, T: e}
+	case dna.G:
+		probG = 1 - err
+		e = err / 3
+		curr = QBase{A: e, C: e, G: probG, T: e}
+	case dna.T:
+		probT = 1 - err
+		e = err / 3
+		curr = QBase{A: e, C: e, G: e, T: probT}
+	case dna.N:
+		curr = QBase{A: 0.25, C: 0.25, G: 0.25, T: 0.25}
+	default:
+		log.Fatalf("Error, fastq records should not contain a gap")
+	}
+	return &curr
+}
+
+func FromBaseCalls(in []dna.Base, err []float64) []*QBase {
+	//answer := make([]*QBase, len(in))
+	if len(in) != len(err) {
+		log.Fatalf("Number of bases do not match the number of quality scores")
+	}
+	var answer []*QBase = make([]*QBase, len(in))
+	for i := 0; i < len(in); i++ {
+		answer[i] = FromBaseCall(in[i], err[i])
 	}
 	return answer
 }
