@@ -15,7 +15,7 @@ func bedScoreToWig(infile string, reference string, outfile string) {
 	ref := chromInfo.ReadToMap(reference)
 
 	outWig := convert.BedScoreToWig(rec, ref)
-	fmt.Println("Writing the outfile.")
+	log.Println("Writing the outfile.")
 	wig.Write(outfile, outWig)
 }
 

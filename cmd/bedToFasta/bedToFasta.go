@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 )
 
 func bedToFasta(fastaFile string, bedFile string, outfile string) {
@@ -19,9 +19,9 @@ func bedToFasta(fastaFile string, bedFile string, outfile string) {
 func usage() {
 	fmt.Print(
 		"bedToFasta - Combines overlapping bed entries, keeping max score. Must be sorted.\n" +
-		"Usage:\n" +
-		"bedToFasta reference.fa intput.bed output.fa\n" +
-		"options:\n")
+			"Usage:\n" +
+			"bedToFasta reference.fa intput.bed output.fa\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

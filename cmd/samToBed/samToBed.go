@@ -1,34 +1,34 @@
-package main 
+package main
 
 import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/sam"
 	"log"
 )
 
-func samToBed(infile string, outfile string, paired *bool, fragLength *int64) {
-	fmt.Printf("Paired: %b\n", paired)
-	fmt.Printf("fragLength: %v\n", fragLength)
+func samToBed(infile string, reference string, outfile string, paired bool, fragLength int64) {
+	log.Printf("Paired: %b\n", paired)
+	log.Printf("fragLength: %v\n", fragLength)
 
-	if *paired && *fragLength != int64(-1) {
+	if paired && fragLength != int64(-1) {
 		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
 	}
-
+	ref := chromInfo.ReadToMap(reference)
 	records, err := sam.Read(infile)
-	if err != nil {
-		log.Fatal(err)
-	}
+	common.ExitIfError(err)
 	var outBed []*bed.Bed
 
-/* TODO: Write paired command 
+	/* TODO: Write paired command
 	if paired {
 		outBed = convert.SamToBedPaired(records)
 	} else*/
-	if *fragLength != int64(-1) {
-		outBed = convert.SamToBedFrag(records, *fragLength)
+	if fragLength != int64(-1) {
+		outBed = convert.SamToBedFrag(records, fragLength, ref)
 	} else {
 		outBed = convert.SamToBed(records)
 	}
@@ -39,14 +39,14 @@ func samToBed(infile string, outfile string, paired *bool, fragLength *int64) {
 func usage() {
 	fmt.Print(
 		"samToBed - Converts sam to bed\n" +
-		"Usage:\n" +
-		" samToBed input.sam output.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			" samToBed input.sam reference.chrom.sizes output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 2
+	var expectedNumArgs int = 3
 	var paired *bool = flag.Bool("windowSize", false, "Specifies paired end reads")
 	var fragLength *int64 = flag.Int64("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
 
@@ -61,7 +61,8 @@ func main() {
 	}
 
 	inFile := flag.Arg(0)
-	outFile := flag.Arg(1)
+	reference := flag.Arg(1)
+	outFile := flag.Arg(2)
 
-	samToBed(inFile, outFile, paired, fragLength)
+	samToBed(inFile, reference, outFile, *paired, *fragLength)
 }

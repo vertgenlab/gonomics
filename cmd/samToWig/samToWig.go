@@ -6,23 +6,21 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 )
 
 func samToWig(infile string, reference string, outfile string, paired bool, fragLength int64) {
-	fmt.Printf("Paired: %t\n", paired)
-	fmt.Printf("fragLength: %d\n", fragLength)
+	log.Printf("Paired: %t\n", paired)
+	log.Printf("fragLength: %d\n", fragLength)
 	if paired && fragLength != int64(-1) {
 		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
 	}
 
 	records, err := sam.Read(infile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	common.ExitIfError(err)
 	ref := chromInfo.ReadToMap(reference)
 
 	var outBed []*bed.Bed
@@ -35,16 +33,16 @@ func samToWig(infile string, reference string, outfile string, paired bool, frag
 	}
 
 	outWig = convert.BedReadsToWig(outBed, ref)
-	fmt.Printf("Length of outWig: %d", len(outWig))
+	log.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
 }
 
 func usage() {
 	fmt.Print(
 		"samToWig - Converts sam to wig\n" +
-			"Usage:\n" +
-			" samToWig input.sam reference.chrom.sizes output.wig\n" +
-			"options:\n")
+		"Usage:\n" +
+		" samToWig input.sam reference.chrom.sizes output.wig\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 

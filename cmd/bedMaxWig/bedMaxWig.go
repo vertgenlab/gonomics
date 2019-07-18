@@ -10,10 +10,10 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 )
 
-func bedMaxWig(infile string, database string, chromsize string, outfile string) {
+func bedMaxWig(infile string, database string, chromsizeFile string, outfile string, windowSize int64) {
 	var records []*bed.Bed = bed.Read(infile)
 	var data []*wig.Wig = wig.Read(database)
-	var sizes []*chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsize)
+	var sizes []*chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
 	var outlist []*bed.Bed
 	var currentBed *bed.Bed = records[0]
 	var chromSlice []float64
@@ -29,17 +29,17 @@ func bedMaxWig(infile string, database string, chromsize string, outfile string)
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
 				recordLength = records[k].ChromEnd - records[k].ChromStart
-				if recordLength < 200 {
+				if recordLength <= windowSize {
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", sliceRangeAverage(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
-					continue
+				} else {
+					currentMax = 0
+					for m = 0; m < (recordLength-windowSize+1); m++ {
+						currentStart = records[k].ChromStart + int64(m)
+						currentMax = common.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart + windowSize))
+					}
+					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", currentMax))
+					
 				}
-
-				currentMax = 0
-				for m = 0; m < (recordLength-200); m++ {
-					currentStart = records[k].ChromStart + int64(m)
-					currentMax = common.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart + 200))
-				}
-				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", currentMax))
 				outlist = append(outlist, currentBed)
 			}
 		}
@@ -82,6 +82,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
+	var windowSize *int64 = flag.Int64("windowSize", 200, "Specify the window size")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -97,5 +98,5 @@ func main() {
 	chromsize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	bedMaxWig(infile, database, chromsize, outfile)
+	bedMaxWig(infile, database, chromsize, outfile, *windowSize)
 }

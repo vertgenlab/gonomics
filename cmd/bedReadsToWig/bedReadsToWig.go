@@ -21,9 +21,9 @@ func bedReadsToWig(infile string, reference string, outfile string) {
 func usage() {
 	fmt.Print(
 		"bedReadsToWig - Converts bed reads to wig\n" +
-			"Usage:\n" +
-			"bedReadsToWig input.bed reference.chrom.sizes output.wig\n" +
-			"options:\n")
+		"Usage:\n" +
+		"bedReadsToWig input.bed reference.chrom.sizes output.wig\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 

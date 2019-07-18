@@ -53,6 +53,11 @@ func ToString(c []*Cigar) string {
 func FromString(input string) []*Cigar {
 	var output []*Cigar
 	var currentNumber string
+	if input == "*" || input == "**" {
+		currentCigar := Cigar{RunLength: 0, Op: '*'}
+		return append(output, &currentCigar)
+	}
+
 	for _, v := range input {
 		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)	
@@ -60,9 +65,6 @@ func FromString(input string) []*Cigar {
 			currentCigar := Cigar{RunLength: common.StringToInt64(currentNumber), Op: v}
 			output = append(output, &currentCigar)
 			currentNumber = ""
-		} else if v == '*' {
-			currentCigar := Cigar{RunLength: 0, Op: v}
-			return append(output, &currentCigar)
 		} else {
 			log.Fatalf("Invalid character: %c", v)
 		}

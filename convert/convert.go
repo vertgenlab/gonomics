@@ -93,7 +93,8 @@ func BedScoreToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 		wigSlice[i] = &currentWig
 		i++
 	}
-	fmt.Println("Completed wig skeleton, looping through bed.")
+	
+	log.Println("Completed wig skeleton, looping through bed.")
 
 	//loop through bed
 	for i := 0; i < len(b); i++ {
