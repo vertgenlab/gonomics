@@ -1,14 +1,13 @@
 package qDna
 
 import (
-	
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/align"
-	"testing"
 	"fmt"
+	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
+	"testing"
 )
-
 
 var convertTests = []struct {
 	filename string // input
@@ -18,10 +17,10 @@ var convertTests = []struct {
 
 var bases = dna.StringToBases("ATGCGCG")
 var testFasta = "testdata/seq.fa"
-var printTest = QFrag{Seq:FromDna(bases), From:nil, Fwd:nil, Rev:nil }
+var printTest = QFrag{Seq: FromDna(bases), From: nil, Fwd: nil, Rev: nil}
 
 func TestPrint(t *testing.T) {
-	printFasta:= fasta.Read(testFasta)
+	printFasta := fasta.Read(testFasta)
 	//fmt.Println(printFasta)
 	seq1 := FromFasta(printFasta[0])
 	seq2 := FromFasta(printFasta[1])
@@ -41,8 +40,18 @@ func TestPrint(t *testing.T) {
 	//blastz, alignment2 := AffineGap(seq1.Seq, seq2.Seq, HumanChimpTwoScoreMatrix, 600, 150)
 	//fmt.Println(blastz, alignment2)
 	//fmt.Println(align.View(mostLikelySeq(seq1.Seq), mostLikelySeq(seq2.Seq), alignment2))
-	
+
 }
+
+func TestAlign(t *testing.T) {
+	fastaFile := FromFastaSlice(fasta.Read("testdata/multiCHr_test.fa"))
+	fastq := fastq.Read("testdata/test.fastq")
+	samTest := GSW(fastaFile, fastq)
+	for i := 0; i < len(samTest); i++ {
+		fmt.Println(samTest[i])
+	}
+}
+
 func TestConvert(t *testing.T) {
 	for _, test := range convertTests {
 		actual := fasta.Read(test.filename)
@@ -51,10 +60,11 @@ func TestConvert(t *testing.T) {
 		if !fasta.AllAreEqual(qfragOutput, actual) {
 			t.Errorf("The %s file did not convert properly.", test.filename)
 		}
-	//a := &QBase{A: 1, C: 0, G: 0, T: 0}
-	//b := &QBase{A: 0, C: 1, G: 0, T: 0}
-	//fmt.Println(QDnaScore(a, b, HumanChimpTwoScoreMatrix))
-	//fmt.Println("DONE")
+
+		//a := &QBase{A: 1, C: 0, G: 0, T: 0}
+		//b := &QBase{A: 0, C: 1, G: 0, T: 0}
+		//fmt.Println(QDnaScore(a, b, HumanChimpTwoScoreMatrix))
+		//fmt.Println("DONE")
 	}
-	
+
 }

@@ -1,6 +1,6 @@
 package qDna
 
-import(
+import (
 	"log"
 	//"math"
 	"github.com/vertgenlab/gonomics/align"
@@ -58,8 +58,6 @@ func ConstGap(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen float64)
 	return m[len(m)-1][len(m[0])-1], route
 }
 
-
-
 func AffineGap(alpha []*QBase, beta []*QBase, scores [][]float64, gapOpen float64, gapExtend float64) (float64, []align.Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha), len(beta))
 	for i, _ := range m[0] {
@@ -83,7 +81,7 @@ func AffineGap(alpha []*QBase, beta []*QBase, scores [][]float64, gapOpen float6
 				m[2][i][j] = gapExtend + m[2][i-1][j]
 				trace[2][i][j] = align.ColD
 			} else {
-				m[0][i][j], trace[0][i][j] = tripleMaxTrace(QDnaScore(alpha[i-1], beta[j-1], scores) + m[0][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores) + m[1][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores)+m[2][i-1][j-1])
+				m[0][i][j], trace[0][i][j] = tripleMaxTrace(QDnaScore(alpha[i-1], beta[j-1], scores)+m[0][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores)+m[1][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores)+m[2][i-1][j-1])
 				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i][j-1], gapExtend+m[1][i][j-1], gapOpen+gapExtend+m[2][i][j-1])
 				m[2][i][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i-1][j], gapOpen+gapExtend+m[1][i-1][j], gapExtend+m[2][i-1][j])
 			}
@@ -141,7 +139,6 @@ func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][][]float64
 	}
 	return m, trace
 }
-
 
 func tripleMaxTrace(a float64, b float64, c float64) (float64, align.ColType) {
 	if a >= b && a >= c {

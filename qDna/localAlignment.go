@@ -1,7 +1,7 @@
 package qDna
 
-import( 
-	"fmt"
+import (
+	//"fmt"
 	"log"
 	//"math"
 	"github.com/vertgenlab/gonomics/align"
@@ -22,10 +22,10 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 	m[0][0] = 0
 	var i, j, routeIdx int64
 	//setting up the first rows and columns
-	for i = 0; i <  int64(len(m)); i++ {
-		m [i][0] = 0
+	for i = 0; i < int64(len(m)); i++ {
+		m[i][0] = 0
 	}
-	for j = 0; j < int64(len(m[0])); j ++ {
+	for j = 0; j < int64(len(m[0])); j++ {
 		m[0][j] = 0
 	}
 	//seting up the rest of the matrix
@@ -42,7 +42,7 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 				m[i][j] = 0
 			}
 		}
-		
+
 	}
 	route := make([]align.Cigar, 1)
 	var minI, minJ int64
@@ -74,12 +74,12 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 	}
 
 	reverseCigar(route)
-	for x := 0; x < len(m); x++ {
-		for y := 0; y < len(m[0]); y ++ {
-			fmt.Print(m[x][y], ", ")
-		}
-		fmt.Println("")
-	}
+	//for x := 0; x < len(m); x++ {
+	//	for y := 0; y < len(m[0]); y ++ {
+	//		fmt.Print(m[x][y], ", ")
+	//	}
+	//	fmt.Println("")
+	//}
 	//fmt.Println(align.View(mostLikelySeq(alpha), mostLikelySeq(beta), maxI))
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
@@ -107,7 +107,7 @@ func AffineGapSW(alpha []*QBase, beta []*QBase, scores [][]float64, gapOpen floa
 				m[2][i][j] = gapExtend + m[2][i-1][j]
 				trace[2][i][j] = align.ColD
 			} else {
-				m[0][i][j], trace[0][i][j] = tripleMaxTrace(QDnaScore(alpha[i-1], beta[j-1], scores) + m[0][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores) + m[1][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores)+m[2][i-1][j-1])
+				m[0][i][j], trace[0][i][j] = tripleMaxTrace(QDnaScore(alpha[i-1], beta[j-1], scores)+m[0][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores)+m[1][i-1][j-1], QDnaScore(alpha[i-1], beta[j-1], scores)+m[2][i-1][j-1])
 				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i][j-1], gapExtend+m[1][i][j-1], gapOpen+gapExtend+m[2][i][j-1])
 				m[2][i][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i-1][j], gapOpen+gapExtend+m[1][i-1][j], gapExtend+m[2][i-1][j])
 			}
