@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"github.com/vertgenlab/gonomics/cigar"
 	"strconv"
 	"strings"
 )
@@ -31,7 +32,7 @@ type SamAln struct {
 	RName string
 	Pos   int64
 	MapQ  int64  // mapping quality
-	Cigar string // will change to align.Cigar
+	Cigar []*cigar.Cigar
 	RNext string
 	PNext int64
 	TLen  int64
@@ -114,7 +115,7 @@ func processAlignmentLine(line string) *SamAln {
 	if err != nil {
 		log.Fatal(err)
 	}
-	curr.Cigar = words[5]
+	curr.Cigar = cigar.FromString(words[5])
 	curr.RNext = words[6]
 	curr.PNext, err = strconv.ParseInt(words[7], 10, 64)
 	if err != nil {
@@ -174,9 +175,9 @@ func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
 func WriteAlnToFileHandle(file *os.File, aln *SamAln) error {
 	var err error
 	if aln.Extra == "" {
-		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, aln.Cigar, aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual)
+		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual)
 	} else {
-		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, aln.Cigar, aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual, aln.Extra)
+		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual, aln.Extra)
 	}
 	return err
 }

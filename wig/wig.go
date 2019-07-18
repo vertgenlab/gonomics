@@ -112,19 +112,23 @@ func Write(filename string, rec []*Wig) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for i := range rec {
+		log.Printf("Printing wig object: %d\n", i)
 		WriteToFileHandle(file, rec[i])
 	}
 }
 
 func WriteToFileHandle(file *os.File, rec *Wig) {
 	var err error
-
 	if rec.StepType == "fixedStep" {
+		fmt.Println("Printing header")
 		_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
 			rec.Start, rec.Step)
+		common.ExitIfError(err)
 	} else if rec.StepType == "variableStep" {
 		_, err = fmt.Fprintf(file, "%s chrom=%s", rec.StepType, rec.Chrom)
 		common.ExitIfError(err)
+	} else {
+		log.Fatalf("Invalid step type for wig.")
 	}
 
 	for j := range rec.Values {

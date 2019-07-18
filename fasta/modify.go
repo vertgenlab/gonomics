@@ -24,6 +24,13 @@ func Remove(slice []*Fasta, i int) []*Fasta {
 	return append(slice[:i], slice[i+1:]...)
 }
 
+func RemoveGaps(records []*Fasta) []*Fasta {
+	for i := 0 ; i < len(records); i++ {
+		records[i].Seq = dna.RemoveGaps(records[i].Seq)
+	}
+	return records
+}
+
 func FilterName(records []*Fasta, name string) []*Fasta {
 	for i := 0; i < len(records); {
 		fmt.Printf("i: %d. len: %d\n", i, len(records))

@@ -70,6 +70,10 @@ func BaseToRune(base Base) rune {
 	}
 }
 
+func Extract(rec []Base, start int64, end int64) []Base {
+	return rec[start:end]
+}
+
 func BaseToString(b Base) string {
 	return string(BaseToRune(b))
 }
