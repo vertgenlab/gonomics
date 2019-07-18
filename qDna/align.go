@@ -35,6 +35,31 @@ func QDnaScore(alpha *QBase, beta *QBase, scoreMatrix [][]float64) float64 {
 	return sum
 }
 
+func QDnaFasterScore(alpha *QBase, beta *QBase, scoreMatrix [][]float64) float64 {
+	var sum float64 = 0
+	//Running loop one by one to see if memory alocation speeds up calculations
+	sum += alpha.A * beta.A * scoreMatrix[0][0]
+	sum += alpha.A * beta.C * scoreMatrix[0][1]
+	sum += alpha.A * beta.G * scoreMatrix[0][2]
+	sum += alpha.A * beta.T * scoreMatrix[0][3]
+
+	sum += alpha.C * beta.A * scoreMatrix[1][0]
+	sum += alpha.C * beta.C * scoreMatrix[1][1]
+	sum += alpha.C * beta.G * scoreMatrix[1][2]
+	sum += alpha.C * beta.T * scoreMatrix[1][3]
+
+	sum += alpha.G * beta.A * scoreMatrix[2][0]
+	sum += alpha.G * beta.C * scoreMatrix[2][1]
+	sum += alpha.G * beta.G * scoreMatrix[2][2]
+	sum += alpha.G * beta.T * scoreMatrix[2][3]
+
+	sum += alpha.T * beta.A * scoreMatrix[3][0]
+	sum += alpha.T * beta.C * scoreMatrix[3][1]
+	sum += alpha.T * beta.G * scoreMatrix[3][2]
+	sum += alpha.T * beta.T * scoreMatrix[3][3]
+	return sum
+}
+
 func PairwiseAverage(alpha *QFrag, beta *QFrag, start int64, end int64, name string) *QFrag {
 
 	answer := &QFrag{Seq: nil, From: []*Location{&Location{Assembly: "", Chr: name, Start: start, End: end}}, Fwd: nil, Rev: nil}

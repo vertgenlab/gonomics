@@ -131,10 +131,10 @@ func FromBaseCall(b dna.Base, err float64) *QBase {
 		probT = 1 - err
 		e = err / 3
 		curr = QBase{A: e, C: e, G: e, T: probT}
-	case dna.N, dna.Gap:
+	case dna.N:
 		curr = QBase{A: 0.25, C: 0.25, G: 0.25, T: 0.25}
 	default:
-		curr = QBase{A: 0.25, C: 0.25, G: 0.25, T: 0.25}
+		log.Fatalf("Error, fastq records should not contain a gap")
 	}
 	return &curr
 }
@@ -144,9 +144,9 @@ func FromBaseCalls(in []dna.Base, err []float64) []*QBase {
 	if len(in) != len(err) {
 		log.Fatalf("Number of bases do not match the number of quality scores")
 	}
-	var answer []*QBase
+	var answer []*QBase = make([]*QBase, len(in))
 	for i := 0; i < len(in); i++ {
-		answer = append(answer, FromBaseCall(in[i], err[i]))
+		answer[i] = FromBaseCall(in[i], err[i])
 	}
 	return answer
 }

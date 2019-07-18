@@ -43,10 +43,8 @@ func Read(filename string) []*Fastq {
 		if plus != "+" {
 			log.Fatalf("Error: every fourth line in %s should be blank\n", filename)
 		}
-
 		sName = line[1:len(line)]
 		sequence = dna.StringToBases(lineSeq)
-
 		qPhred = []rune(tmpPhred)
 		curr = Fastq{Name: sName, Seq: sequence, Qual: qPhred}
 		answer = append(answer, &curr)

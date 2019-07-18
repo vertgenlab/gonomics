@@ -9,7 +9,7 @@ import (
 func ReverseComplementFastq(record *Fastq) *Fastq {
 	var answer *Fastq = record
 	dna.ReverseComplement(answer.Seq)
-	swapQualRecord(answer.Qual)
+	reverseQualRecord(answer.Qual)
 	return answer
 
 }
@@ -26,12 +26,11 @@ func swapQual(alpha rune, beta rune) (rune, rune) {
 	return beta, alpha
 }
 
-func swapQualRecord(qualScore []rune) {
+func reverseQualRecord(qualScore []rune) {
 	for i, j := 0, len(qualScore)-1; i <= j; i, j = i+1, j-1 {
 		qualScore[i], qualScore[j] = swapQual(qualScore[i], qualScore[j])
 	}
 }
-
 
 /*
 func FromFastq(fq *Fastq) []*qDna.QBase {

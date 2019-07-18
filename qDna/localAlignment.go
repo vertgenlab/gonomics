@@ -19,8 +19,8 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 	var currMax float64
 	var maxI int64
 	var maxJ int64
-	m[0][0] = 0
 	var i, j, routeIdx int64
+
 	//setting up the first rows and columns
 	for i = 0; i < int64(len(m)); i++ {
 		m[i][0] = 0
@@ -42,7 +42,6 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 				m[i][j] = 0
 			}
 		}
-
 	}
 	route := make([]align.Cigar, 1)
 	var minI, minJ int64
@@ -84,6 +83,7 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
 
+/*
 func AffineGapSW(alpha []*QBase, beta []*QBase, scores [][]float64, gapOpen float64, gapExtend float64) (float64, []align.Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha), len(beta))
 	for i, _ := range m[0] {
@@ -116,4 +116,4 @@ func AffineGapSW(alpha []*QBase, beta []*QBase, scores [][]float64, gapOpen floa
 	maxScore, route := affineTrace(m, trace)
 
 	return maxScore, route
-}
+}*/

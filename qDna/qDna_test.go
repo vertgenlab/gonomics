@@ -1,10 +1,10 @@
 package qDna
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/align"
+	//"fmt"
+	//"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"testing"
 )
@@ -19,6 +19,7 @@ var bases = dna.StringToBases("ATGCGCG")
 var testFasta = "testdata/seq.fa"
 var printTest = QFrag{Seq: FromDna(bases), From: nil, Fwd: nil, Rev: nil}
 
+/*
 func TestPrint(t *testing.T) {
 	printFasta := fasta.Read(testFasta)
 	//fmt.Println(printFasta)
@@ -41,8 +42,8 @@ func TestPrint(t *testing.T) {
 	//fmt.Println(blastz, alignment2)
 	//fmt.Println(align.View(mostLikelySeq(seq1.Seq), mostLikelySeq(seq2.Seq), alignment2))
 
-}
-
+}*/
+/*
 func TestAlign(t *testing.T) {
 	fastaFile := FromFastaSlice(fasta.Read("testdata/multiCHr_test.fa"))
 	fastq := fastq.Read("testdata/test.fastq")
@@ -50,8 +51,19 @@ func TestAlign(t *testing.T) {
 	for i := 0; i < len(samTest); i++ {
 		fmt.Println(samTest[i])
 	}
+}*/
+
+func TestQDnaScoreLoop(t *testing.T) {
+	_ = fastq.Read("testdata/CL12-3_16w_L001_R1.fastq.gz.sorted.nodups.mapped.R1.fastq")
+	//var testScore float64
+	//for i:= 0; i < len(fq[0].Seq); i++ {
+	//	testScore += QDnaFasterScore(FromFastq(fq[0])[i], FromFastq(fq[0])[i], HumanChimpTwoScoreMatrix)
+	//}
+	//fmt.Println(testScore)
+
 }
 
+/*
 func TestConvert(t *testing.T) {
 	for _, test := range convertTests {
 		actual := fasta.Read(test.filename)
@@ -67,4 +79,4 @@ func TestConvert(t *testing.T) {
 		//fmt.Println("DONE")
 	}
 
-}
+}*/
