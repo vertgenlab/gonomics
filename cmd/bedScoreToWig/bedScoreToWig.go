@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/wig"
@@ -11,10 +10,8 @@ import (
 )
 
 func bedScoreToWig(infile string, reference string, outfile string) {
-	rec := bed.Read(infile)
 	ref := chromInfo.ReadToMap(reference)
-
-	outWig := convert.BedScoreToWig(rec, ref)
+	outWig := convert.BedScoreToWig(infile, ref)
 	log.Println("Writing the outfile.")
 	wig.Write(outfile, outWig)
 }

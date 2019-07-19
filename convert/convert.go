@@ -8,7 +8,9 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"strings"
 	"fmt"
 )
 
@@ -76,12 +78,15 @@ func SamToBedFrag(s *sam.Sam, fragLength int64, reference map[string]*chromInfo.
 	return outlist
 }
 
-func BedScoreToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
+	var line string
 	var chromIndex int
 	var midpoint int
-	var x int64 = 0
+	var startNum, endNum, x int64
 	var i int = 0
+	var doneReading bool = false
+	var current *bed.Bed
 
 	//generate Wig skeleton from reference
 	for _, v := range reference {
@@ -96,14 +101,27 @@ func BedScoreToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 	
 	log.Println("Completed wig skeleton, looping through bed.")
 
-	//loop through bed
-	for i := 0; i < len(b); i++ {
-		chromIndex = getWigChromIndex(b[i].Chrom, wigSlice)
-		midpoint = bedMidpoint(b[i])
+	//loop through bed line at a time
+	file := fileio.EasyOpen(infile)
+	defer file.Close()
+
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		words := strings.Split(line, "\t")
+		startNum = common.StringToInt64(words[1])
+		endNum = common.StringToInt64(words[2])
+		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+		if len(words) >= 4 {
+			current.Name = words[3]
+		}
+		if len(words) >= 5 {
+			current.Score = common.StringToInt64(words[4])
+		}
+		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
+		midpoint = bedMidpoint(current)
 		if wigSlice[chromIndex].Values[midpoint].Value != 0 {
 			log.Fatalf("Multiple scores for one position.")
 		}
-		wigSlice[chromIndex].Values[midpoint].Value = float64(b[i].Score)
+		wigSlice[chromIndex].Values[midpoint].Value = float64(current.Score)
 	}
 	return wigSlice
 }
