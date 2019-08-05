@@ -25,7 +25,7 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 
 	//first deal with reference species to get replace coordinates
 	fastaRefName := aln[0].Name
-	mafRefAssembly, mafRefChrom := srcToAssemblyAndChrom(m.Species[0].Src)
+	mafRefAssembly, mafRefChrom := SrcToAssemblyAndChrom(m.Species[0].Src)
 	if mafRefAssembly != fastaRefName && mafRefChrom != fastaRefName {
 		log.Fatalf("Error: name of reference/first species in maf block is %s, yet name of first species in fasta is %s\n", m.Species[0].Src, fastaRefName)
 	}
