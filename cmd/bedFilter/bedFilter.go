@@ -10,7 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 )
 
-func bedFilter(infile string, outfile string, threshold *int64) {
+func bedFilter(infile string, outfile string, threshold int64) {
 	var outlist []*bed.Bed
 	var line string
 	var startNum, endNum int64
@@ -23,13 +23,13 @@ func bedFilter(infile string, outfile string, threshold *int64) {
 		words := strings.Split(line, "\t")
 		startNum = common.StringToInt64(words[1])
 		endNum = common.StringToInt64(words[2])
-		if common.StringToInt64(words[4]) >= *threshold {
+		if common.StringToInt64(words[4]) >= threshold {
 			current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[1], Score: common.StringToInt64(words[4])}
 			outlist = append(outlist, current)
 		}
-	bed.Write(outfile, outlist, 5)
+	
 	}
-
+	bed.Write(outfile, outlist, 5)
 	/* Old version, memory expensive
 
 	var records []*bed.Bed = bed.Read(infile)
@@ -70,5 +70,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	bedFilter(infile, outfile, threshold)
+	bedFilter(infile, outfile, *threshold)
 }
