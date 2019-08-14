@@ -50,7 +50,7 @@ type Maf struct {
 	Species []*MafSpecies
 }
 
-func srcToAssemblyAndChrom(src string) (string, string) {
+func SrcToAssemblyAndChrom(src string) (string, string) {
 	dots := strings.Count(src, ".")
 	switch dots {
 	case 0:
@@ -175,7 +175,7 @@ func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 // returns nil if not found
 func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
-		currAssembly, _ := srcToAssemblyAndChrom(m.Species[i].Src)
+		currAssembly, _ := SrcToAssemblyAndChrom(m.Species[i].Src)
 		if currAssembly == assembly {
 			return m.Species[i]
 		}
