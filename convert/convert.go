@@ -1,17 +1,17 @@
-package convert 
+package convert
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sam"
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/wig"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"strings"
-	"fmt"
 )
 
 func singleBedToFasta(b *bed.Bed, ref []*fasta.Fasta) *fasta.Fasta {
@@ -32,18 +32,12 @@ func BedToFasta(b []*bed.Bed, ref []*fasta.Fasta) []*fasta.Fasta {
 	return outlist
 }
 
-func SamToBed(s *sam.Sam) []*bed.Bed {
-	var outlist []*bed.Bed
-	var current *bed.Bed
-
-	for i := 0; i < len(s.Aln); i++ {
-		if !(s.Aln[i].Cigar[0].Op == '*') {
-			current = &bed.Bed{Chrom: s.Aln[i].RName,ChromStart: s.Aln[i].Pos - 1, ChromEnd: s.Aln[i].Pos + cigar.ReferenceLength(s.Aln[i].Cigar), Name: s.Aln[i].QName}
-			outlist = append(outlist, current)
-		}
+func SamToBed(s *sam.SamAln) *bed.Bed {
+	if s.Cigar[0].Op == '*' {
+		return nil
+	} else {
+		return &bed.Bed{Chrom: s.RName, ChromStart: s.Pos - 1, ChromEnd: s.Pos + cigar.ReferenceLength(s.Cigar), Name: s.QName}
 	}
-
-	return outlist
 }
 
 /* TODO: Write Sam to Bed conversion for paired reads.
@@ -55,27 +49,24 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 	//add output to bedlist
 } */
 
-func SamToBedFrag(s *sam.Sam, fragLength int64, reference map[string]*chromInfo.ChromInfo) []*bed.Bed {
-	var outlist []*bed.Bed
-	var current *bed.Bed
+func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromInfo.ChromInfo) *bed.Bed {
+	var answer *bed.Bed
 
-	for i := 0; i < len(s.Aln); i++ {		
-		if !(s.Aln[i].Cigar[0].Op == '*') {
-			current = &bed.Bed{Chrom: s.Aln[i].RName, Name: s.Aln[i].QName}
-			if sam.IsPosStrand(s.Aln[i]) {
-				current.ChromStart = s.Aln[i].Pos - 1
-				current.ChromEnd = common.MinInt64(current.ChromStart + fragLength - cigar.NumInsertions(s.Aln[i].Cigar) + cigar.NumDeletions(s.Aln[i].Cigar), reference[current.Chrom].Size)
-				current.Strand = true
-			} else {
-				current.ChromEnd = s.Aln[i].Pos - 1 + cigar.ReferenceLength(s.Aln[i].Cigar)
-				current.Strand = false
-				current.ChromStart = common.MaxInt64(current.ChromEnd - (fragLength - cigar.NumInsertions(s.Aln[i].Cigar) + cigar.NumDeletions(s.Aln[i].Cigar)), 0)
-			}
-			outlist = append(outlist, current)
+	if s.Cigar[0].Op == '*' {
+		return nil
+	} else {
+		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
+		if sam.IsPosStrand(s) {
+			answer.ChromStart = s.Pos - 1
+			answer.ChromEnd = common.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
+			answer.Strand = true
+		} else {
+			answer.ChromEnd = s.Pos - 1 + cigar.ReferenceLength(s.Cigar)
+			answer.Strand = false
+			answer.ChromStart = common.MaxInt64(answer.ChromEnd-(fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar)), 0)
 		}
+		return answer
 	}
-
-	return outlist
 }
 
 func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
@@ -98,7 +89,7 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 		wigSlice[i] = &currentWig
 		i++
 	}
-	
+
 	log.Println("Completed wig skeleton, looping through bed.")
 
 	//loop through bed line at a time
@@ -125,7 +116,6 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	}
 	return wigSlice
 }
-
 
 func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
@@ -156,7 +146,7 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 }
 
 func bedMidpoint(b *bed.Bed) int {
-	return int(b.ChromEnd + b.ChromStart) / 2
+	return int(b.ChromEnd+b.ChromStart) / 2
 }
 
 func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
