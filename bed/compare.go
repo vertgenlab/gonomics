@@ -1,9 +1,9 @@
 package bed
 
 import (
-	"strings"
-	"sort"
 	"github.com/vertgenlab/gonomics/common"
+	"sort"
+	"strings"
 )
 
 func Sort(bedFile []*Bed) {
@@ -17,7 +17,7 @@ func MergeBeds(bedFile []*Bed) []*Bed {
 			i++
 		} else {
 			bedFile[i].ChromStart, bedFile[i].ChromEnd = common.MinInt64(bedFile[i].ChromStart, bedFile[i+1].ChromStart), common.MaxInt64(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)
-			for j := i+1; j < len(bedFile)-1; j++ {
+			for j := i + 1; j < len(bedFile)-1; j++ {
 				bedFile[j] = bedFile[j+1]
 			}
 			bedFile = bedFile[:len(bedFile)-1]

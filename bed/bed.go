@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"io"
+	"log"
 	"strings"
 )
 

@@ -1,15 +1,15 @@
 package qDna
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/sam"
 	"reflect"
 	"runtime"
-	"fmt"
 	"sync"
 )
 
@@ -47,7 +47,7 @@ func QDnaFasterScore(alpha *QBase, beta *QBase, scoreMatrix [][]float64) float64
 	//Running loop one by one to see if memory alocation speeds up calculations
 	sum += float64(alpha.A) * float64(beta.A) * scoreMatrix[0][0]
 	sum += float64(alpha.A) * float64(beta.C) * scoreMatrix[0][1]
-	sum += float64(alpha.A)* float64(beta.G) * scoreMatrix[0][2]
+	sum += float64(alpha.A) * float64(beta.G) * scoreMatrix[0][2]
 	sum += float64(alpha.A) * float64(beta.T) * scoreMatrix[0][3]
 
 	sum += float64(alpha.C) * float64(beta.A) * scoreMatrix[1][0]
@@ -192,8 +192,6 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 		}
 	}
 
-
-	
 	seedBeds = nil
 	var x, y int
 	for x = 0; i < len(reverseFastq.Seq)-seed; x++ {
@@ -212,11 +210,10 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 			//seedBeds = append(seedBeds, &bed.Bed{Chrom: m[putTogether(read.Seq[i:i+seed])][j].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true})
 		}
 	}
-	
+
 	seedBeds = bed.MergeBeds(seedBeds)
 	bed.Sort(seedBeds)
-	
-	
+
 	for z := 0; z < len(seedBeds); z++ {
 		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(chrSize[seedBeds[z].Chrom], reverseQBase, HumanChimpTwoScoreMatrix, -600)
 		if score > bestScore {
@@ -234,7 +231,7 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 	//case if could not find seed for either reverse or positive stand do smithwaterman on both forward and reverse
 	var unGappedMinJ, unGappedMaxJ int64
 	if bestScore == 0 {
-	var chr int
+		var chr int
 		for chr = 0; chr < len(ref); chr++ {
 			unGappedScore, unGappedMinJ, unGappedMaxJ, _, _ = UngappedAlign(ref[chr].Seq, currRead, HumanChimpTwoScoreMatrix)
 			//fmt.Printf("%d %d\n", unGappedMinJ, unGappedMaxJ)
@@ -288,12 +285,12 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 			}
 		}
 	}
-	
-		//seedBeds = bed.MergeBeds(seedBeds)
 
-		//bed.Sort(seedBeds)
-		//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(chrSize[seedBeds[i].Chrom], currRead, HumanChimpTwoScoreMatrix, -600)
-	
+	//seedBeds = bed.MergeBeds(seedBeds)
+
+	//bed.Sort(seedBeds)
+	//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(chrSize[seedBeds[i].Chrom], currRead, HumanChimpTwoScoreMatrix, -600)
+
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
@@ -468,7 +465,6 @@ func GSW(ref []*QFrag, reads []*fastq.Fastq) []*sam.SamAln {
 
 	return answer
 }
-
 
 /*
 func unGapSw(alpha *QFrag, beta *fastq.Fastq, scoreMatrix [][]float64) *sam.SamAln {

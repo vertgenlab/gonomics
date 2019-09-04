@@ -1,15 +1,15 @@
 package qDna
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
-	"strings"
-	"bufio"
 	"math"
 	"os"
+	"strings"
 )
 
 type ChrDict struct {

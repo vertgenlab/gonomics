@@ -32,7 +32,7 @@ func TestIndexing(t *testing.T) {
 	var bases2 = dna.StringToBases("ATG")
 	loc := Location{Assembly: "", Chr: "chrI", Start: 0, End: 0}
 	var testFrags []*QFrag
-	testFrag := &QFrag{Seq: FromDna(bases), From: []*Location{&loc}, Fwd: nil,  Rev: nil}
+	testFrag := &QFrag{Seq: FromDna(bases), From: []*Location{&loc}, Fwd: nil, Rev: nil}
 	testFrags = append(testFrags, testFrag)
 	loc2 := Location{Assembly: "", Chr: "chrII", Start: 0, End: 0}
 	testFrag2 := &QFrag{Seq: FromDna(bases2), From: []*Location{&loc2}, Fwd: nil, Rev: nil}

@@ -27,4 +27,3 @@ type Location struct {
 	Start    int64
 	End      int64
 }
-
