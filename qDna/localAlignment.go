@@ -9,7 +9,6 @@ import (
 )
 
 func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen float64) (float64, []align.Cigar, int64, int64, int64, int64) {
-
 	m := make([][]float64, len(alpha)+1)
 	trace := make([][]align.ColType, len(alpha)+1)
 	for idx := range m {
@@ -71,15 +70,8 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 		minI = i
 		minJ = j
 	}
-
 	reverseCigar(route)
-	//for x := 0; x < len(m); x++ {
-	//	for y := 0; y < len(m[0]); y ++ {
-	//		fmt.Print(m[x][y], ", ")
-	//	}
-	//	fmt.Println("")
-	//}
-	//fmt.Println(align.View(mostLikelySeq(alpha), mostLikelySeq(beta), maxI))
+	//fmt.Println(align.LocalView(mostLikelySeq(alpha), mostLikelySeq(beta), route, maxI))
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
 

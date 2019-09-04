@@ -18,7 +18,7 @@ type Fastq struct {
 
 func Read(filename string) []*Fastq {
 	var answer []*Fastq
-	var curr Fastq
+	var curr *Fastq
 	var line string
 	var doneName bool = false
 	var doneSeq, donePlus, donePhred bool
@@ -46,20 +46,20 @@ func Read(filename string) []*Fastq {
 		sName = line[1:len(line)]
 		sequence = dna.StringToBases(lineSeq)
 		qPhred = []rune(tmpPhred)
-		curr = Fastq{Name: sName, Seq: sequence, Qual: qPhred}
-		answer = append(answer, &curr)
+		curr = &Fastq{Name: sName, Seq: sequence, Qual: qPhred}
+		answer = append(answer, curr)
 	}
 	return answer
 }
 
-func PhredToPError(ascii rune) float64 {
+func PhredToPError(ascii rune) float32 {
 	q := float64(ascii) - 33
 	p := math.Pow(10, -q/10)
-	return p
+	return float32(p)
 }
 
-func ErrorRate(ASCII []rune) []float64 {
-	var answer []float64
+func ErrorRate(ASCII []rune) []float32 {
+	var answer []float32
 	for i := 0; i < len(ASCII); i++ {
 		answer = append(answer, PhredToPError(ASCII[i]))
 	}
