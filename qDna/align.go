@@ -129,7 +129,7 @@ func GSW2(ref []*QFrag, reads []*fastq.Fastq) []*sam.SamAln {
 	return answer
 }
 
-func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c chan *sam.SamAln) {
+func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]int64, c chan *sam.SamAln) {
 	defer wg.Done()
 	var maxScore float64 = 0
 	//m := indexRef(ref, seed)
@@ -153,18 +153,22 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 	var currBed bed.Bed
 	var bStart, bEnd int64
 	var i, j int
+	var nodeID, pos int64
 	for i = 0; i < len(read.Seq)-seed; i++ {
-		for j = 0; j < len(m[putTogether(read.Seq[i:i+seed])]); j++ {
+		for j = 0; j < len(m[putTogether(read.Seq, i, i+seed)]); j++ {
 			//build bed slice for positions to start smith-waterman
-			bStart = m[putTogether(read.Seq[i:i+seed])][j].Coord - extension
+			nodeID, pos = ReturnIdPos(m[putTogether(read.Seq, i, i+seed)][j])
+			//fmt.Println(m[putTogether(read.Seq, i, i+seed)],"NodeID: ", nodeID, "position: ", pos)
+			bStart = pos - extension
 			if bStart < 0 {
 				bStart = 0
 			}
-			bEnd = m[putTogether(read.Seq[i:i+seed])][j].Coord + extension
-			if bEnd > int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr])) {
-				bEnd = int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr]))
+			bEnd = pos + extension
+			//if bEnd > int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr])) {
+			if bEnd > int64(len(ref[nodeID].Seq)) {
+				bEnd = int64(len(ref[nodeID].Seq))
 			}
-			currBed = bed.Bed{Chrom: m[putTogether(read.Seq[i:i+seed])][j].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true}
+			currBed = bed.Bed{Chrom: ref[nodeID].From[0].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true}
 			seedBeds = append(seedBeds, &currBed)
 			//seedBeds = append(seedBeds, &bed.Bed{Chrom: m[putTogether(read.Seq[i:i+seed])][j].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true})
 		}
@@ -195,17 +199,21 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 	seedBeds = nil
 	var x, y int
 	for x = 0; i < len(reverseFastq.Seq)-seed; x++ {
-		for y = 0; y < len(m[putTogether(reverseFastq.Seq[x:x+seed])]); y++ {
+		for y = 0; y < len(m[putTogether(reverseFastq.Seq, x, x+seed)]); y++ {
 			//build bed slice for positions to start smith-waterman
-			bStart = m[putTogether(reverseFastq.Seq[x:x+seed])][y].Coord - extension
+
+			bStart = pos - extension
+
+			nodeID, pos = ReturnIdPos(m[putTogether(reverseFastq.Seq, x, x+seed)][y])
+			bStart = pos - extension
 			if bStart < 0 {
 				bStart = 0
 			}
-			bEnd = m[putTogether(reverseFastq.Seq[x:x+seed])][j].Coord + extension
-			if bEnd > int64(len(chrSize[m[putTogether(reverseFastq.Seq[x:x+seed])][y].Chr])) {
-				bEnd = int64(len(chrSize[m[putTogether(reverseFastq.Seq[x:x+seed])][y].Chr]))
+			bEnd = pos + extension
+			if bEnd > int64(len(ref[nodeID].Seq)) {
+				bEnd = int64(len(ref[nodeID].Seq))
 			}
-			currBed = bed.Bed{Chrom: m[putTogether(reverseFastq.Seq[x:x+seed])][y].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true}
+			currBed = bed.Bed{Chrom: ref[nodeID].From[0].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true}
 			seedBeds = append(seedBeds, &currBed)
 			//seedBeds = append(seedBeds, &bed.Bed{Chrom: m[putTogether(read.Seq[i:i+seed])][j].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true})
 		}
@@ -295,7 +303,7 @@ func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]ChrDict, c
 		currBest.Flag = 4
 	}
 
-	fmt.Println(read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
+	fmt.Println(currBest.RName, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
 	c <- &currBest
 }
 
