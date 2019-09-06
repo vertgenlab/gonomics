@@ -20,20 +20,16 @@ var bases = dna.StringToBases("ATGATGG")
 var testFasta = "testdata/seq.fa"
 var printTest = QFrag{Seq: FromDna(bases), From: nil, Fwd: nil, Rev: nil}
 
-func TestIndex(t *testing.T) {
-	fastaFile := FromFastaSlice(fasta.Read("testdata/chrM.fa"))
-	indexFile := IndexRefSlidingWindow(fastaFile, 20)
-	Write("testdata/chrM_map.ham5", indexFile)
-
-}
-
 func TestAlign(t *testing.T) {
 	fastaFile := FromFastaSlice(fasta.Read("testdata/chrM.fa"))
 	fastq := fastq.Read("testdata/CL13_chrM.200.fastq")
+	indexFile := IndexRefSlidingWindow(fastaFile, 20)
+	Write("testdata/chrM_map.ham5", indexFile)
+	ham5 := Read("testdata/chrM_map.ham5")
 
 	fmt.Println("Sam 200: ")
 	start1 := time.Now()
-	sam := GSW2(fastaFile, fastq)
+	sam := GSW(fastaFile, fastq, ham5)
 	t1 := time.Since(start1)
 
 	//for j := 0; j < len(sam); j++ {

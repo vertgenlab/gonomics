@@ -87,10 +87,9 @@ func Read(filename string) map[int64][]int64 {
 	file, _ := os.Open(filename)
 	defer file.Close()
 	reader := bufio.NewReader(file)
-
 	var err error
 	var line string
-	//var currNode *Node
+
 	var words []byte
 	for ; err != io.EOF; words, _, err = reader.ReadLine() {
 		line = string(words[:])
@@ -98,8 +97,7 @@ func Read(filename string) map[int64][]int64 {
 		for i := 1; i < len(data)-1; i++ {
 			answer[common.StringToInt64(data[0])] = append(answer[common.StringToInt64(data[0])], common.StringToInt64(data[i+1]))
 		}
-		fmt.Println(data)
-
+		//fmt.Println(data)
 	}
 	return answer
 }

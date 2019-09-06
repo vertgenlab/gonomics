@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/fasta"
 	"strconv"
 	"strings"
 )
@@ -197,6 +198,18 @@ func Write(filename string, data *Sam) error {
 		}
 	}
 	return err
+}
+
+func AlignmentHeader(ref []*fasta.Fasta) *SamHeader{
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.3\tSO:unsorted")
+	var words string
+	for i := 0; i < len(ref); i++ {
+		words = "@SQ\t" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		header.Text = append(header.Text, words)
+		header.ChromInfo = append(header.ChromInfo, &ChromSize{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
+	}
+	return &header
 }
 
 /*
