@@ -3,11 +3,11 @@ package sam
 import (
 	"bufio"
 	"fmt"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/fasta"
 	"io"
 	"log"
 	"os"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/fasta"
 	"strconv"
 	"strings"
 )
@@ -32,7 +32,7 @@ type SamAln struct {
 	Flag  int64
 	RName string
 	Pos   int64
-	MapQ  int64  // mapping quality
+	MapQ  int64 // mapping quality
 	Cigar []*cigar.Cigar
 	RNext string
 	PNext int64
@@ -200,7 +200,7 @@ func Write(filename string, data *Sam) error {
 	return err
 }
 
-func AlignmentHeader(ref []*fasta.Fasta) *SamHeader{
+func AlignmentHeader(ref []*fasta.Fasta) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.3\tSO:unsorted")
 	var words string

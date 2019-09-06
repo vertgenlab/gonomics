@@ -35,7 +35,6 @@ func main() {
 
 	//Read in index file
 
-
 	samAlignment := qDna.GSW(qDna.FromFastaSlice(ref), fq, qDna.Read(flag.Arg(2)))
 	t1 := time.Now()
 	header := sam.AlignmentHeader(ref)
