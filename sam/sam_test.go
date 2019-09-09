@@ -2,13 +2,25 @@ package sam
 
 import (
 	"os"
+	"fmt"
 	"testing"
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var readWriteTests = []struct {
 	filename string // input
 }{
 	{"testdata/test.sam"},
+}
+
+
+func TestASE(t *testing.T) {
+	faIdx := chromInfo.ReadToMap("testdata/test.sizes")
+	samFile, _ := Read("testdata/f1hybrid.sam")
+	vcfFile := vcf.Read("testdata/snps.vcf")
+	fw, mw := SnpSort(samFile.Aln, vcfFile, faIdx)
+	fmt.Println("freshwater sams: ", len(fw), "marine sams: ", len(mw))
 }
 
 func TestRead(t *testing.T) {
@@ -41,3 +53,4 @@ func TestReadAndWrite(t *testing.T) {
 		}
 	}
 }
+
