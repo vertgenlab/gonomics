@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -41,11 +41,15 @@ func BedToString(bunk *Bed, fields int) string {
 	return ""
 }
 
-func WriteToFileHandle(file io.Writer, records []*Bed, fields int) {
+func WriteToFileHandle(file io.Writer, rec *Bed, fields int) {
 	var err error
+	_, err = fmt.Fprintf(file, "%s\n", BedToString(rec, fields))
+	common.ExitIfError(err)
+}
+
+func WriteSliceToFileHandle(file io.Writer, records []*Bed, fields int) {
 	for _, rec := range records {
-		_, err = fmt.Fprintf(file, "%s\n", BedToString(rec, fields))
-		common.ExitIfError(err)
+		WriteToFileHandle(file, rec, fields)
 	}
 }
 
@@ -53,7 +57,7 @@ func Write(filename string, records []*Bed, fields int) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
-	WriteToFileHandle(file, records, fields)
+	WriteSliceToFileHandle(file, records, fields)
 }
 
 func Read(filename string) []*Bed {
