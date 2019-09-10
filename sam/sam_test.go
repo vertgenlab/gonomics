@@ -1,11 +1,11 @@
 package sam
 
 import (
-	"os"
 	"fmt"
-	"testing"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/vcf"
+	"os"
+	"testing"
 )
 
 var readWriteTests = []struct {
@@ -13,7 +13,6 @@ var readWriteTests = []struct {
 }{
 	{"testdata/test.sam"},
 }
-
 
 func TestASE(t *testing.T) {
 	faIdx := chromInfo.ReadToMap("testdata/test.sizes")
@@ -53,4 +52,3 @@ func TestReadAndWrite(t *testing.T) {
 		}
 	}
 }
-
