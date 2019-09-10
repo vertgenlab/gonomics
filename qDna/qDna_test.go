@@ -1,12 +1,13 @@
 package qDna
 
 import (
-	//"fmt"
+	"fmt"
 	//"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/dna"
-	//"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"testing"
+	"time"
 )
 
 var convertTests = []struct {
@@ -15,9 +16,30 @@ var convertTests = []struct {
 	{"testdata/seq.fa"},
 }
 
-var bases = dna.StringToBases("ATGCGCG")
+var bases = dna.StringToBases("ATGATGG")
 var testFasta = "testdata/seq.fa"
 var printTest = QFrag{Seq: FromDna(bases), From: nil, Fwd: nil, Rev: nil}
+
+func TestAlign(t *testing.T) {
+	fastaFile := FromFastaSlice(fasta.Read("testdata/chrM.fa"))
+	fastq := fastq.Read("testdata/CL13_chrM.200.fastq")
+	indexFile := IndexRefSlidingWindow(fastaFile, 20)
+	Write("testdata/chrM_map.ham5", indexFile)
+	ham5 := Read("testdata/chrM_map.ham5")
+
+	fmt.Println("Sam 200: ")
+	start1 := time.Now()
+	sam := GSW(fastaFile, fastq, ham5)
+	t1 := time.Since(start1)
+
+	//for j := 0; j < len(sam); j++ {
+	fmt.Println(sam[0])
+	//}
+	fmt.Println("GSW Aligner v2\nfaster.better,stronger: ", t1)
+	fmt.Println("Number of reads: ", len(fastq))
+	fmt.Println("Number of sam records: ", len(sam))
+
+}
 
 /*
 func TestPrint(t *testing.T) {
@@ -41,42 +63,5 @@ func TestPrint(t *testing.T) {
 	//blastz, alignment2 := AffineGap(seq1.Seq, seq2.Seq, HumanChimpTwoScoreMatrix, 600, 150)
 	//fmt.Println(blastz, alignment2)
 	//fmt.Println(align.View(mostLikelySeq(seq1.Seq), mostLikelySeq(seq2.Seq), alignment2))
-
-}*/
-/*
-func TestAlign(t *testing.T) {
-	fastaFile := FromFastaSlice(fasta.Read("testdata/multiCHr_test.fa"))
-	fastq := fastq.Read("testdata/test.fastq")
-	samTest := GSW(fastaFile, fastq)
-	for i := 0; i < len(samTest); i++ {
-		fmt.Println(samTest[i])
-	}
-}*/
-
-func TestQDnaScoreLoop(t *testing.T) {
-	_ = fastq.Read("testdata/CL12-3_16w_L001_R1.fastq.gz.sorted.nodups.mapped.R1.fastq")
-	//var testScore float64
-	//for i:= 0; i < len(fq[0].Seq); i++ {
-	//	testScore += QDnaFasterScore(FromFastq(fq[0])[i], FromFastq(fq[0])[i], HumanChimpTwoScoreMatrix)
-	//}
-	//fmt.Println(testScore)
-
-}
-
-/*
-func TestConvert(t *testing.T) {
-	for _, test := range convertTests {
-		actual := fasta.Read(test.filename)
-		qfrag := FromFastaSlice(actual)
-		qfragOutput := toFastaList(qfrag)
-		if !fasta.AllAreEqual(qfragOutput, actual) {
-			t.Errorf("The %s file did not convert properly.", test.filename)
-		}
-
-		//a := &QBase{A: 1, C: 0, G: 0, T: 0}
-		//b := &QBase{A: 0, C: 1, G: 0, T: 0}
-		//fmt.Println(QDnaScore(a, b, HumanChimpTwoScoreMatrix))
-		//fmt.Println("DONE")
-	}
 
 }*/

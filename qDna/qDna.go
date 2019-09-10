@@ -3,10 +3,10 @@ package qDna
 import ()
 
 type QBase struct {
-	A float64
-	C float64
-	G float64
-	T float64
+	A float32
+	C float32
+	G float32
+	T float32
 }
 
 type QFrag struct {
@@ -17,7 +17,7 @@ type QFrag struct {
 }
 
 type QAdj struct {
-	Prob float64
+	Prob float32
 	Next *QFrag
 }
 

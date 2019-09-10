@@ -1,11 +1,16 @@
 package qDna
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"reflect"
+	"runtime"
+	"sync"
 )
 
 type NoGapAln struct {
@@ -13,6 +18,8 @@ type NoGapAln struct {
 	End   int
 	Score float64
 }
+
+var wg sync.WaitGroup
 
 //aligner name gsw, graph smith-waterman
 // O=600 E=150
@@ -38,25 +45,25 @@ func QDnaScore(alpha *QBase, beta *QBase, scoreMatrix [][]float64) float64 {
 func QDnaFasterScore(alpha *QBase, beta *QBase, scoreMatrix [][]float64) float64 {
 	var sum float64 = 0
 	//Running loop one by one to see if memory alocation speeds up calculations
-	sum += alpha.A * beta.A * scoreMatrix[0][0]
-	sum += alpha.A * beta.C * scoreMatrix[0][1]
-	sum += alpha.A * beta.G * scoreMatrix[0][2]
-	sum += alpha.A * beta.T * scoreMatrix[0][3]
+	sum += float64(alpha.A) * float64(beta.A) * scoreMatrix[0][0]
+	sum += float64(alpha.A) * float64(beta.C) * scoreMatrix[0][1]
+	sum += float64(alpha.A) * float64(beta.G) * scoreMatrix[0][2]
+	sum += float64(alpha.A) * float64(beta.T) * scoreMatrix[0][3]
 
-	sum += alpha.C * beta.A * scoreMatrix[1][0]
-	sum += alpha.C * beta.C * scoreMatrix[1][1]
-	sum += alpha.C * beta.G * scoreMatrix[1][2]
-	sum += alpha.C * beta.T * scoreMatrix[1][3]
+	sum += float64(alpha.C) * float64(beta.A) * scoreMatrix[1][0]
+	sum += float64(alpha.C) * float64(beta.C) * scoreMatrix[1][1]
+	sum += float64(alpha.C) * float64(beta.G) * scoreMatrix[1][2]
+	sum += float64(alpha.C) * float64(beta.T) * scoreMatrix[1][3]
 
-	sum += alpha.G * beta.A * scoreMatrix[2][0]
-	sum += alpha.G * beta.C * scoreMatrix[2][1]
-	sum += alpha.G * beta.G * scoreMatrix[2][2]
-	sum += alpha.G * beta.T * scoreMatrix[2][3]
+	sum += float64(alpha.G) * float64(beta.A) * scoreMatrix[2][0]
+	sum += float64(alpha.G) * float64(beta.C) * scoreMatrix[2][1]
+	sum += float64(alpha.G) * float64(beta.G) * scoreMatrix[2][2]
+	sum += float64(alpha.G) * float64(beta.T) * scoreMatrix[2][3]
 
-	sum += alpha.T * beta.A * scoreMatrix[3][0]
-	sum += alpha.T * beta.C * scoreMatrix[3][1]
-	sum += alpha.T * beta.G * scoreMatrix[3][2]
-	sum += alpha.T * beta.T * scoreMatrix[3][3]
+	sum += float64(alpha.T) * float64(beta.A) * scoreMatrix[3][0]
+	sum += float64(alpha.T) * float64(beta.C) * scoreMatrix[3][1]
+	sum += float64(alpha.T) * float64(beta.G) * scoreMatrix[3][2]
+	sum += float64(alpha.T) * float64(beta.T) * scoreMatrix[3][3]
 	return sum
 }
 
@@ -102,67 +109,200 @@ func UngappedQueryLen(cig []align.Cigar) int64 {
 	return reds
 }
 
-func GSW(ref []*QFrag, reads []*fastq.Fastq) []*sam.SamAln {
+func GSW(ref []*QFrag, reads []*fastq.Fastq, m map[int64][]int64) []*sam.SamAln {
 	var answer []*sam.SamAln = make([]*sam.SamAln, len(reads))
-	var reverseRead []*QBase
-	//var query []*qDna.QBase
-	//var reverse []*qDna.QBase
-	var score float64
-	var alignment []align.Cigar
-	var lowRef, lowQuery, highQuery int64
-	var reverseFastq *fastq.Fastq
+	c := make(chan *sam.SamAln)
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var bestScore float64 = 0
-	//var minI, minJ, maxJ int64
-	//var qualBase []rune
-	//var sequence string
-	//var flag int64
+	//var wg sync.WaitGroup
+	wg.Add(len(reads))
 	var i, j int
-	var currRead []*QBase
+	//m := IndexRefSlidingWindow(ref, 20)
 	for i = 0; i < len(reads); i++ {
-		currRead = FromFastq(reads[i])
-		reverseFastq = fastq.ReverseComplementFastq(reads[i])
-		reverseRead = FromFastq(reverseFastq)
-
-		var currBest sam.SamAln = sam.SamAln{QName: reads[i].Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: "", RNext: "*", PNext: 0, TLen: 0, Seq: "", Qual: "", Extra: ""}
-		bestScore = 0
-		for j = 0; j < len(ref); j++ {
-
-			//query := FromDna(reads[j].Seq, ErrorRate(reads[j].Qual))
-
-			score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[j].Seq, currRead, HumanChimpTwoScoreMatrix, -600)
-			if score > bestScore {
-				bestScore = score
-
-				currBest.Flag = 0
-				currBest.RName = ref[j].From[0].Chr
-				currBest.Pos = lowRef
-				currBest.MapQ = 255
-				currBest.Cigar = align.PrintCigar(alignment)
-				currBest.Seq = dna.BasesToString(reads[i].Seq[lowQuery:highQuery])
-				currBest.Qual = string(reads[i].Qual[lowQuery:highQuery])
-
-			}
-			score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[j].Seq, reverseRead, HumanChimpTwoScoreMatrix, -600)
-			if score > bestScore {
-				bestScore = score
-
-				currBest.Flag = 16
-				currBest.RName = ref[j].From[0].Chr
-				currBest.Pos = lowRef
-				currBest.MapQ = 255
-				currBest.Cigar = align.PrintCigar(alignment)
-				currBest.Seq = dna.BasesToString(reverseFastq.Seq[lowQuery:highQuery])
-				currBest.Qual = string(reverseFastq.Qual[lowQuery:highQuery])
-
-			}
-			answer[i] = &currBest
-			//answer = append(answer, &sam.SamAln{QName: qName, Flag: flag, RName: readName, Pos: minI, MapQ: mappingQ, Cigar: reds, RNext: rNext, PNext: pNext, TLen: tlen, Seq: sequence, Qual: string(qualBase), Extra: ""})
-		}
+		//go gsw(ref, reads[i], c)
+		go warrior(ref, reads[i], 20, m, c)
 	}
+	for j = 0; j < len(reads); j++ {
+		answer[j] = <-c
+	}
+	wg.Wait()
 	return answer
 }
 
-/*
-func UngappedAlign(alpha []*QBase, beta []*QBase, alphaOffset int, betaOffset int, scoreMatrix [][]float64) float64 {
-}*/
+func warrior(ref []*QFrag, read *fastq.Fastq, seed int, m map[int64][]int64, c chan *sam.SamAln) {
+	defer wg.Done()
+	var maxScore float64 = 0
+	//m := indexRef(ref, seed)
+	var seedBeds []*bed.Bed
+	//var revSeedBeds []*bed.Bed
+	//var foundSeed bool = false
+	chrSize := ChromMap(ref)
+	var extension int64 = int64(maxScore/600) + int64(len(read.Seq))
+
+	//calculate max scopre for smith-waterman
+	currRead := FromFastq(read)
+	//Reverse strand
+	reverseFastq := fastq.ReverseComplementFastq(read)
+	reverseQBase := FromFastq(reverseFastq)
+
+	for base := 0; base < len(currRead); base++ {
+		maxScore += QDnaFasterScore(currRead[base], currRead[base], HumanChimpTwoScoreMatrix)
+	}
+
+	var bestScore float64 = 0
+	var currBed bed.Bed
+	var bStart, bEnd int64
+	var i, j int
+	var nodeID, pos int64
+	for i = 0; i < len(read.Seq)-seed; i++ {
+		for j = 0; j < len(m[putTogether(read.Seq, i, i+seed)]); j++ {
+			//build bed slice for positions to start smith-waterman
+			nodeID, pos = ReturnIdPos(m[putTogether(read.Seq, i, i+seed)][j])
+			//fmt.Println(m[putTogether(read.Seq, i, i+seed)],"NodeID: ", nodeID, "position: ", pos)
+			bStart = pos - extension
+			if bStart < 0 {
+				bStart = 0
+			}
+			bEnd = pos + extension
+			//if bEnd > int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr])) {
+			if bEnd > int64(len(ref[nodeID].Seq)) {
+				bEnd = int64(len(ref[nodeID].Seq))
+			}
+			currBed = bed.Bed{Chrom: ref[nodeID].From[0].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true}
+			seedBeds = append(seedBeds, &currBed)
+			//seedBeds = append(seedBeds, &bed.Bed{Chrom: m[putTogether(read.Seq[i:i+seed])][j].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true})
+		}
+	}
+
+	bed.Sort(seedBeds)
+	seedBeds = bed.MergeBeds(seedBeds)
+
+	var score, unGappedScore float64
+	var alignment []align.Cigar
+	var lowRef, lowQuery, highQuery int64
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: "", Qual: "", Extra: ""}
+
+	for k := 0; i < len(seedBeds); k++ {
+		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(chrSize[seedBeds[k].Chrom], currRead, HumanChimpTwoScoreMatrix, -600)
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 0
+			currBest.RName = seedBeds[k].Chrom
+			currBest.Pos = lowRef + seedBeds[k].ChromStart
+
+			currBest.Cigar = cigar.FromString(align.PrintCigar(alignment))
+			currBest.Seq = dna.BasesToString(mostLikelySeq(currRead[lowQuery:highQuery]))
+			currBest.Qual = string(read.Qual[lowQuery:highQuery])
+		}
+	}
+
+	seedBeds = nil
+	var x, y int
+	for x = 0; i < len(reverseFastq.Seq)-seed; x++ {
+		for y = 0; y < len(m[putTogether(reverseFastq.Seq, x, x+seed)]); y++ {
+			//build bed slice for positions to start smith-waterman
+
+			bStart = pos - extension
+
+			nodeID, pos = ReturnIdPos(m[putTogether(reverseFastq.Seq, x, x+seed)][y])
+			bStart = pos - extension
+			if bStart < 0 {
+				bStart = 0
+			}
+			bEnd = pos + extension
+			if bEnd > int64(len(ref[nodeID].Seq)) {
+				bEnd = int64(len(ref[nodeID].Seq))
+			}
+			currBed = bed.Bed{Chrom: ref[nodeID].From[0].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true}
+			seedBeds = append(seedBeds, &currBed)
+			//seedBeds = append(seedBeds, &bed.Bed{Chrom: m[putTogether(read.Seq[i:i+seed])][j].Chr, ChromStart: bStart, ChromEnd: bEnd, Strand: true})
+		}
+	}
+
+	seedBeds = bed.MergeBeds(seedBeds)
+	bed.Sort(seedBeds)
+
+	for z := 0; z < len(seedBeds); z++ {
+		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(chrSize[seedBeds[z].Chrom], reverseQBase, HumanChimpTwoScoreMatrix, -600)
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 16
+			currBest.RName = seedBeds[i].Chrom
+			currBest.Pos = lowRef + seedBeds[z].ChromStart
+
+			currBest.Cigar = cigar.FromString(align.PrintCigar(alignment))
+			currBest.Seq = dna.BasesToString(mostLikelySeq(reverseQBase[lowQuery:highQuery]))
+			currBest.Qual = string(reverseFastq.Qual[lowQuery:highQuery])
+		}
+	}
+
+	//case if could not find seed for either reverse or positive stand do smithwaterman on both forward and reverse
+	var unGappedMinJ, unGappedMaxJ int64
+	if bestScore == 0 {
+		var chr int
+		for chr = 0; chr < len(ref); chr++ {
+			unGappedScore, unGappedMinJ, unGappedMaxJ, _, _ = UngappedAlign(ref[chr].Seq, currRead, HumanChimpTwoScoreMatrix)
+			//fmt.Printf("%d %d\n", unGappedMinJ, unGappedMaxJ)
+			extension = int64(unGappedScore / 600)
+			unGappedMinJ = unGappedMinJ - extension
+			if unGappedMinJ < 0 {
+				unGappedMinJ = 0
+			}
+			unGappedMaxJ = unGappedMaxJ + extension
+			if unGappedMaxJ > int64(len(ref[chr].Seq)) {
+				unGappedMaxJ = int64(len(ref[chr].Seq))
+			}
+
+			//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[j].Seq[unGappedMinJ:unGappedMaxJ], currRead, HumanChimpTwoScoreMatrix, -600)
+			score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[chr].Seq[unGappedMinJ:unGappedMaxJ], currRead, HumanChimpTwoScoreMatrix, -600)
+			if score > bestScore {
+				bestScore = score
+				currBest.Flag = 0
+				currBest.RName = ref[chr].From[0].Chr
+				currBest.Pos = lowRef + unGappedMinJ
+
+				currBest.Cigar = cigar.FromString(align.PrintCigar(alignment))
+				currBest.Seq = dna.BasesToString(mostLikelySeq(currRead[lowQuery:highQuery]))
+				currBest.Qual = string(read.Qual[lowQuery:highQuery])
+			}
+		}
+		for chr = 0; chr < len(ref); chr++ {
+			unGappedScore, unGappedMinJ, unGappedMaxJ, _, _ = UngappedAlign(ref[chr].Seq, reverseQBase, HumanChimpTwoScoreMatrix)
+			extension = int64(unGappedScore / 600)
+			unGappedMinJ = unGappedMinJ - extension
+			if unGappedMinJ < 0 {
+				unGappedMinJ = 0
+			}
+			unGappedMaxJ = unGappedMaxJ + extension
+			if unGappedMaxJ > int64(len(ref[chr].Seq)) {
+				unGappedMaxJ = int64(len(ref[chr].Seq))
+			}
+
+			score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[chr].Seq[unGappedMinJ:unGappedMaxJ], reverseQBase, HumanChimpTwoScoreMatrix, -600)
+			//fmt.Println("Gsw v1 negative score: ", score)
+			//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[chr].Seq, reverseQBase, HumanChimpTwoScoreMatrix, -600)
+			if score > bestScore {
+				bestScore = score
+				currBest.Flag = 16
+				currBest.RName = ref[chr].From[0].Chr
+				currBest.Pos = lowRef + unGappedMinJ
+
+				currBest.Cigar = cigar.FromString(align.PrintCigar(alignment))
+				currBest.Seq = dna.BasesToString(mostLikelySeq(reverseQBase[lowQuery:highQuery]))
+				currBest.Qual = string(reverseFastq.Qual[lowQuery:highQuery])
+			}
+		}
+	}
+
+	//seedBeds = bed.MergeBeds(seedBeds)
+
+	//bed.Sort(seedBeds)
+	//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(chrSize[seedBeds[i].Chrom], currRead, HumanChimpTwoScoreMatrix, -600)
+
+	if bestScore < 1200 {
+		currBest.Flag = 4
+	}
+
+	fmt.Println(currBest.RName, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
+	c <- &currBest
+}

@@ -105,13 +105,13 @@ func FromFastq(fq *fastq.Fastq) []*QBase {
 	return answer
 }
 
-func FromBaseCall(b dna.Base, err float64) *QBase {
+func FromBaseCall(b dna.Base, err float32) *QBase {
 	var curr QBase
-	var e float64
-	var probA float64
-	var probC float64
-	var probG float64
-	var probT float64
+	var e float32
+	var probA float32
+	var probC float32
+	var probG float32
+	var probT float32
 
 	switch b {
 
@@ -139,7 +139,7 @@ func FromBaseCall(b dna.Base, err float64) *QBase {
 	return &curr
 }
 
-func FromBaseCalls(in []dna.Base, err []float64) []*QBase {
+func FromBaseCalls(in []dna.Base, err []float32) []*QBase {
 	//answer := make([]*QBase, len(in))
 	if len(in) != len(err) {
 		log.Fatalf("Number of bases do not match the number of quality scores")
