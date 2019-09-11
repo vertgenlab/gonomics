@@ -46,6 +46,7 @@ func SamToBed(s *sam.Sam) []*bed.Bed {
 	return outlist
 }
 
+
 /* TODO: Write Sam to Bed conversion for paired reads.
 
 func SamToBedPaired(s *sam.Sam) []*bed.Bed {
@@ -121,7 +122,59 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 		if wigSlice[chromIndex].Values[midpoint].Value != 0 {
 			log.Fatalf("Multiple scores for one position.")
 		}
+
 		wigSlice[chromIndex].Values[midpoint].Value = float64(current.Score)
+
+	}
+	return wigSlice
+}
+
+func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+	wigSlice := make([]*wig.Wig, len(reference))
+	var line string
+	var chromIndex int
+	var midpoint int
+	var startNum, endNum, x int64
+	var i int = 0
+	var doneReading bool = false
+	var current *bed.Bed
+
+	//generate Wig skeleton from reference
+	for _, v := range reference {
+		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
+		currentWig.Values = make([]*wig.WigValue, v.Size)
+		for x = 0; x < v.Size; x++ {
+			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
+		}
+		wigSlice[i] = &currentWig
+		i++
+	}
+	
+	log.Println("Completed wig skeleton, looping through bed.")
+
+	//loop through bed line at a time
+	file := fileio.EasyOpen(infile)
+	defer file.Close()
+
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		words := strings.Split(line, "\t")
+		startNum = common.StringToInt64(words[1])
+		endNum = common.StringToInt64(words[2])
+		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+		if len(words) >= 4 {
+			current.Name = words[3]
+		}
+		if len(words) >= 5 {
+			current.Score = common.StringToInt64(words[4])
+		}
+		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
+		if wigSlice[chromIndex].Values[midpoint].Value != 0 {
+			log.Fatalf("Multiple scores for one position.")
+		}
+		for k := current.ChromStart; k < current.ChromEnd; k++ {
+			//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
+			wigSlice[chromIndex].Values[k+1].Value = float64(current.Score)
+		}
 	}
 	return wigSlice
 }

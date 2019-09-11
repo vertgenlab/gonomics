@@ -1,13 +1,12 @@
 package maf
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
+	"io"
 	"strings"
 	"unicode/utf8"
 )
@@ -192,11 +191,10 @@ func Read(filename string) []*Maf {
 	var curr *Maf
 	var currSpecies *MafSpecies
 
-	file := fileio.MustOpen(filename)
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	reader := bufio.NewReader(file)
 
-	for line, doneReading = fileio.NextRealLine(reader); !doneReading; line, doneReading = fileio.NextRealLine(reader) {
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, "a") {
 			if curr != nil {
 				log.Fatalf("Error: no blank line before another 'a' line at line: %s\n", line)
@@ -294,7 +292,7 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 	return srcLen, startLen, sizeLen, srcSizeLen
 }
 
-func WriteToFileHandle(file *os.File, m *Maf) {
+func WriteToFileHandle(file io.Writer, m *Maf) {
 	_, err := fmt.Fprintf(file, "a score=%.1f\n", m.Score)
 	common.ExitIfError(err)
 	srcChars, startChars, sizeChars, srcSizeChars := calculateFieldSizes(m)
@@ -323,7 +321,7 @@ func WriteToFileHandle(file *os.File, m *Maf) {
 func Write(filename string, data []*Maf) {
 	var err error
 
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	_, err = fmt.Fprint(file, "##maf version=1\n")

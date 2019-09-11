@@ -130,6 +130,10 @@ func RuneIsDigit(r rune) bool {
 }
 */
 
+func CigarConsumesReference(c Cigar) bool {
+	return ConsumesReference(c.Op)
+}
+
 func RuneIsValidCharacter(r rune) bool {
 	switch r {
 	case 'M':
