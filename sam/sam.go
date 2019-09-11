@@ -1,12 +1,12 @@
 package sam
 
 import (
-	"bufio"
 	"fmt"
-	"io"
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
-	"github.com/vertgenlab/gonomics/cigar"
 	"strconv"
 	"strings"
 )
@@ -16,14 +16,9 @@ type Sam struct {
 	Aln    []*SamAln
 }
 
-type ChromSize struct {
-	Name string
-	Size int64
-}
-
 type SamHeader struct {
-	Text      []string
-	ChromInfo []*ChromSize
+	Text   []string
+	Chroms []*chromInfo.ChromInfo
 }
 
 type SamAln struct {
@@ -31,7 +26,7 @@ type SamAln struct {
 	Flag  int64
 	RName string
 	Pos   int64
-	MapQ  int64  // mapping quality
+	MapQ  int64 // mapping quality
 	Cigar []*cigar.Cigar
 	RNext string
 	PNext int64
@@ -51,11 +46,13 @@ func samToVcf(alignment[]*Sam) {
 
 func processHeaderLine(header *SamHeader, line string) {
 	var err error
+	var chrCount int64 = 0
 
 	header.Text = append(header.Text, line)
 
 	if strings.HasPrefix(line, "@SQ") && strings.Contains(line, "SN:") && strings.Contains(line, "LN:") {
-		curr := ChromSize{Name: "", Size: 0}
+		curr := chromInfo.ChromInfo{Name: "", Size: 0, Order: chrCount}
+		chrCount++
 		words := strings.Fields(line)
 		for i := 1; i < len(words); i++ {
 			elements := strings.Split(words[i], ":")
@@ -72,22 +69,18 @@ func processHeaderLine(header *SamHeader, line string) {
 		if curr.Name == "" || curr.Size == 0 {
 			log.Fatal(fmt.Errorf("Thought I would get a name and non-zero size on this line: %s\n", line))
 		}
-		header.ChromInfo = append(header.ChromInfo, &curr)
+		header.Chroms = append(header.Chroms, &curr)
 	}
 }
 
-func ReadHeader(reader *bufio.Reader) *SamHeader {
+func ReadHeader(er *fileio.EasyReader) *SamHeader {
 	var line string
 	var err error
 	var nextBytes []byte
 	var header SamHeader
 
-	for nextBytes, err = reader.Peek(1); nextBytes[0] == '@' && err == nil; nextBytes, err = reader.Peek(1) {
-		line, err = reader.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
-		}
-		line = strings.TrimSuffix(line, "\n")
+	for nextBytes, err = er.Peek(1); nextBytes[0] == '@' && err == nil; nextBytes, err = er.Peek(1) {
+		line, _ = fileio.EasyNextLine(er)
 		processHeaderLine(&header, line)
 	}
 	return &header
@@ -133,30 +126,30 @@ func processAlignmentLine(line string) *SamAln {
 	return &curr
 }
 
-func ReadAlignments(reader *bufio.Reader) []*SamAln {
-	var line string
-	var err error
-	var answer []*SamAln
-	for line, err = reader.ReadString('\n'); err == nil; line, err = reader.ReadString('\n') {
-		line = strings.TrimSuffix(line, "\n")
-		answer = append(answer, processAlignmentLine(line))
+func NextAlignment(reader *fileio.EasyReader) (*SamAln, bool) {
+	line, done := fileio.EasyNextLine(reader)
+	if done {
+		return nil, true
 	}
-	if err != io.EOF {
-		log.Fatal(err)
+	return processAlignmentLine(line), false
+}
+
+func ReadAlignments(er *fileio.EasyReader) []*SamAln {
+	var line string
+	var done bool
+	var answer []*SamAln
+	for line, done = fileio.EasyNextLine(er); !done; line, done = fileio.EasyNextLine(er) {
+		answer = append(answer, processAlignmentLine(line))
 	}
 	return answer
 }
 
 func Read(filename string) (*Sam, error) {
-	file, err := os.Open(filename)
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	if err != nil {
-		return nil, err
-	}
-	reader := bufio.NewReader(file)
 
-	header := ReadHeader(reader)
-	alnRecords := ReadAlignments(reader)
+	header := ReadHeader(file)
+	alnRecords := ReadAlignments(file)
 	return &Sam{Header: header, Aln: alnRecords}, nil
 }
 

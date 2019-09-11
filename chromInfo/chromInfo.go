@@ -14,6 +14,15 @@ type ChromInfo struct {
 	Order int64
 }
 
+func SliceToMap(chroms []*ChromInfo) map[string]*ChromInfo {
+	answer := make(map[string]*ChromInfo)
+	for i := 0; i < len(chroms); i++ {
+		curr := ChromInfo{Name: chroms[i].Name, Size: chroms[i].Size, Order: chroms[i].Order}
+		answer[chroms[i].Name] = &curr
+	}
+	return answer
+}
+
 func ReadToSlice(filename string) []*ChromInfo {
 	var line string
 	var answer []*ChromInfo

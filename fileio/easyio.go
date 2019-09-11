@@ -94,3 +94,7 @@ func (ew *EasyWriter) Write(p []byte) (n int, err error) {
 		return ew.internalBuff.Write(p)
 	}
 }
+
+func (er *EasyReader) Peek(n int) ([]byte, error) {
+	return er.BuffReader.Peek(n)
+}
