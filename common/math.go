@@ -21,6 +21,14 @@ func StringToInt64(s string) int64 {
 	return n
 }
 
+func StringToUint64(s string) uint64 {
+        n, err := strconv.ParseUint(s, 10, 64)
+        if err != nil {
+                log.Fatalf("Error: trouble converting %s to a uint64\n", s)
+        }
+        return n
+}
+
 func Max(a int, b int) int {
 	if a >= b {
 		return a
