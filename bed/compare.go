@@ -7,7 +7,7 @@ import (
 )
 
 func Sort(bedFile []*Bed) {
-	sort.Slice(bedFile, func(i, j int) bool { return compareBed(bedFile[i], bedFile[j]) == -1 })
+	sort.Slice(bedFile, func(i, j int) bool { return Compare(bedFile[i], bedFile[j]) == -1 })
 }
 
 func MergeBeds(bedFile []*Bed) []*Bed {
@@ -45,19 +45,6 @@ func Compare(a *Bed, b *Bed) int {
 		return 1
 	}
 	return 0
-}
-
-func compareBed(alpha *Bed, beta *Bed) int {
-	compareStorage := CompareName(alpha.Chrom, beta.Chrom)
-	if compareStorage != 0 {
-		return compareStorage
-	} else {
-		return Compare(alpha, beta)
-	}
-}
-
-func CompareName(alpha string, beta string) int {
-	return strings.Compare(alpha, beta)
 }
 
 func AllAreEqual(a []*Bed, b []*Bed) bool {
