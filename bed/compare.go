@@ -6,15 +6,15 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 )
 
-func Sort(bedFile []*Bed) {
+func SortByCoord(bedFile []*Bed) {
 	sort.Slice(bedFile, func(i, j int) bool { return Compare(bedFile[i], bedFile[j]) == -1 })
 }
 
 func MergeBeds(bedFile []*Bed) []*Bed {
-	Sort(bedFile)
+	SortByCoord(bedFile)
 	var i, j int
 	for i = 0; i < len(bedFile)-1; {
-		if !(common.MaxInt64(bedFile[i].ChromStart, bedFile[i+1].ChromStart) < common.MinInt64(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)) || strings.Compare(bedFile[i].Chrom, bedFile[i+1].Chrom) != 0 {
+		if !Overlap(bedFile[i], bedFile[i+1]) {
 			i++
 		} else {
 			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score = common.MinInt64(bedFile[i].ChromStart, bedFile[i+1].ChromStart), common.MaxInt64(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score
@@ -25,6 +25,14 @@ func MergeBeds(bedFile []*Bed) []*Bed {
 		}
 	}
 	return bedFile
+}
+
+func Overlap(alpha *Bed, beta *Bed) bool {
+	if (common.MaxInt64(alpha.ChromStart, beta.ChromStart) < common.MinInt64(alpha.ChromEnd, beta.ChromEnd)) && strings.Compare(alpha.Chrom, beta.Chrom) == 0 {
+		return true
+	} else {
+		return false
+	}
 }
 
 func Compare(a *Bed, b *Bed) int {
