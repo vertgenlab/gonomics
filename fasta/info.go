@@ -17,7 +17,7 @@ func Extract(f *Fasta, start int64, end int64, name string) *Fasta {
 
 func CountBase(fa *Fasta, b dna.Base) int64 {
 	var answer int64 = 0
-	for i :=0; i < len(fa.Seq); i++ {
+	for i := 0; i < len(fa.Seq); i++ {
 		if fa.Seq[i] == b {
 			answer++
 		}

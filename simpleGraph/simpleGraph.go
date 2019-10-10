@@ -10,8 +10,8 @@ import (
 )
 
 type Node struct {
-	Id int64
-	Seq  []dna.Base
+	Id  int64
+	Seq []dna.Base
 }
 
 /*
@@ -66,4 +66,3 @@ func Write(filename string, records []*Node) {
 
 	WriteToFileHandle(file, records, lineLength)
 }
-

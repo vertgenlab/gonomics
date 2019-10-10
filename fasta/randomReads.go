@@ -1,12 +1,13 @@
 package fasta
 
 import (
-    "math/rand"
-    "strconv"
-    "github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna"
+	"math/rand"
+	"strconv"
 )
+
 func randIntInRange(x int, y int) int {
-    return int(rand.Float64() * float64(y - x)) + x
+	return int(rand.Float64()*float64(y-x)) + x
 }
 
 func RandomSeqGenerator(genome []*Fasta, readLength int, readNumber int) []*Fasta {
@@ -15,15 +16,15 @@ func RandomSeqGenerator(genome []*Fasta, readLength int, readNumber int) []*Fast
 	var start int
 	//var startPos string
 	//var endPos string
-	var chrom int 
+	var chrom int
 	var readName string
 	for i := 0; i < readNumber; {
 		chrom = randIntInRange(0, len(genome))
 		start = randIntInRange(0, len(genome[chrom].Seq)-readLength)
 		readName = genome[chrom].Name + "_" + strconv.Itoa(start) + "_" + strconv.Itoa(start+readLength)
-		
+
 		if CountBase(curr, dna.N) == 0 {
-			answer = append(answer, &Fasta{Name: readName, Seq: genome[chrom].Seq[start:start+readLength]})
+			answer = append(answer, &Fasta{Name: readName, Seq: genome[chrom].Seq[start : start+readLength]})
 			i++
 		}
 	}

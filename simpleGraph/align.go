@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"strconv"
-	"runtime"
-	"sync"
+	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"os"
+	"runtime"
+	"strconv"
+	"sync"
 )
 
 func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
@@ -167,18 +167,18 @@ func MapFastq(ref []*Node, read *fastq.Fastq, seed int, chromPosHash map[uint64]
 func GSW(ref []*Node, m map[uint64][]uint64, fastqFile string, samFile string) {
 	var answer *sam.SamAln
 	header := QFragHeader(ref)
-	
-	outFile, _ := os.Create(samFile+".sam")
+
+	outFile, _ := os.Create(samFile + ".sam")
 	defer outFile.Close()
 
 	sam.WriteHeaderToFileHandle(outFile, header)
 
 	inputCh := make(chan *fastq.Fastq)
 	outputCh := make(chan *sam.SamAln)
-	
+
 	var wg sync.WaitGroup
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	threads := runtime.NumCPU()*50
+	threads := runtime.NumCPU() * 50
 	wg.Add(threads)
 	fmt.Println("Num of threads: ", threads)
 	//var wg sync.WaitGroup
@@ -187,12 +187,12 @@ func GSW(ref []*Node, m map[uint64][]uint64, fastqFile string, samFile string) {
 	file := fileio.EasyOpen(fastqFile)
 	defer file.Close()
 	var done bool
-	
+
 	var fq *fastq.Fastq
 	var countReads int = 0
 	var ok bool
 	var input *fastq.Fastq
-	
+
 	for workers := 0; workers < threads; workers++ {
 		go func() {
 			for {
@@ -210,7 +210,7 @@ func GSW(ref []*Node, m map[uint64][]uint64, fastqFile string, samFile string) {
 	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
 		//go gsw(ref, reads[i], c)
 		countReads++
-		inputCh <-fq
+		inputCh <- fq
 		//wg.Add(1)
 		//go warrior(ref, fq, 20, m, c)
 	}
@@ -294,7 +294,7 @@ func MapReads(ref []*Node, reads []*fasta.Fasta, seed int) []*sam.SamAln {
 		fmt.Println(currBest.RName, "\t", reads[i].Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
 		answer = append(answer, &currBest)
 	}
-	
+
 	return answer
 }
 
@@ -328,14 +328,14 @@ func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar)
 
 func BasicHeader(ref []*Node) *sam.SamHeader {
 	var header sam.SamHeader
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted") 
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
 
 	for i := 0; i < len(ref); i++ {
 		words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: strconv.FormatInt(ref[i].Id, 10), Size: int64(len(ref[i].Seq))})
-		
+
 	}
 	return &header
 }
