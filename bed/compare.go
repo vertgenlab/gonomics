@@ -2,7 +2,30 @@ package bed
 
 import (
 	"strings"
+	"sort"
+	"github.com/vertgenlab/gonomics/common"
 )
+
+func Sort(bedFile []*Bed) {
+	sort.Slice(bedFile, func(i, j int) bool { return compareBed(bedFile[i], bedFile[j]) == -1 })
+}
+
+func MergeBeds(bedFile []*Bed) []*Bed {
+	Sort(bedFile)
+	var i, j int
+	for i = 0; i < len(bedFile)-1; {
+		if !(common.MaxInt64(bedFile[i].ChromStart, bedFile[i+1].ChromStart) < common.MinInt64(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)) || strings.Compare(bedFile[i].Chrom, bedFile[i+1].Chrom) != 0 {
+			i++
+		} else {
+			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score = common.MinInt64(bedFile[i].ChromStart, bedFile[i+1].ChromStart), common.MaxInt64(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score
+			for j = i + 1; j < len(bedFile)-1; j++ {
+				bedFile[j] = bedFile[j+1]
+			}
+			bedFile = bedFile[:len(bedFile)-1]
+		}
+	}
+	return bedFile
+}
 
 func Compare(a *Bed, b *Bed) int {
 	chromComp := strings.Compare(a.Chrom, b.Chrom)
@@ -22,6 +45,19 @@ func Compare(a *Bed, b *Bed) int {
 		return 1
 	}
 	return 0
+}
+
+func compareBed(alpha *Bed, beta *Bed) int {
+	compareStorage := CompareName(alpha.Chrom, beta.Chrom)
+	if compareStorage != 0 {
+		return compareStorage
+	} else {
+		return Compare(alpha, beta)
+	}
+}
+
+func CompareName(alpha string, beta string) int {
+	return strings.Compare(alpha, beta)
 }
 
 func AllAreEqual(a []*Bed, b []*Bed) bool {
