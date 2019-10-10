@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"runtime"
 	"sync"
+	"log"
 	"os"
 )
 
@@ -119,9 +120,9 @@ func MapFastq(ref []*Node, read *fastq.Fastq, seed int, chromPosHash map[uint64]
 	seedBeds = nil
 	//dna.ReverseComplement(read.Seq)
 	reverse := fastq.ReverseComplementFastq(read)
-	for bases = 0; bases < len(reverse.Seq); bases++ {
-		maxScore += HumanChimpTwoScoreMatrix[reverse.Seq[bases]][reverse.Seq[bases]]
-	}
+	//for bases = 0; bases < len(reverse.Seq); bases++ {
+	//	maxScore += HumanChimpTwoScoreMatrix[reverse.Seq[bases]][reverse.Seq[bases]]
+	//}
 	//fmt.Printf("Max Score: %d\n", maxScore)
 	extension = int64(maxScore/600) + int64(len(reverse.Seq))
 	for subRead = 0; subRead < len(reverse.Seq)-seed+1; subRead++ {
@@ -159,7 +160,7 @@ func MapFastq(ref []*Node, read *fastq.Fastq, seed int, chromPosHash map[uint64]
 		currBest.Flag = 4
 		currBest.Cigar = []*cigar.Cigar{&cigar.Cigar{RunLength: 0, Op: '*'}}
 	}
-	fmt.Println(currBest.RName, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
+	log.Println(currBest.RName, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
 	c <- &currBest
 }
 
@@ -325,7 +326,7 @@ func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar)
 	return answer
 }
 
-func QFragHeader(ref []*Node) *sam.SamHeader {
+func BasicHeader(ref []*Node) *sam.SamHeader {
 	var header sam.SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted") 
 	var words string

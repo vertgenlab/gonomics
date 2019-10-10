@@ -1,7 +1,7 @@
 package fastq
 
 import (
-	//"bufio"
+
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -79,39 +79,3 @@ func PrintFastq(fq []*Fastq) {
 		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 	}
 }
-
-/*func Read(filename string) []*Fastq {
-	var answer []*Fastq
-	var curr *Fastq
-	var line string
-	var doneName bool = false
-	var doneSeq, donePlus, donePhred bool
-	var lineSeq, plus, tmpPhred string
-	file := fileio.MustOpen(filename)
-	defer file.Close()
-	reader := bufio.NewReader(file)
-
-	//fastq fields
-	var sName string
-	var sequence []dna.Base
-	var qPhred []rune
-
-	for line, doneName = fileio.NextLine(reader); !doneName; line, doneName = fileio.NextLine(reader) {
-		lineSeq, doneSeq = fileio.NextLine(reader)
-		plus, donePlus = fileio.NextLine(reader)
-		tmpPhred, donePhred = fileio.NextLine(reader)
-
-		if doneSeq || donePlus || donePhred {
-			log.Fatalf("Error: lines in %s, must be a multiple of four\n", filename)
-		}
-		if plus != "+" {
-			log.Fatalf("Error: This line should be a plus sign %s should be blank\n", filename)
-		}
-		sName = line[1:len(line)]
-		sequence = dna.StringToBases(lineSeq)
-		qPhred = []rune(tmpPhred)
-		curr = &Fastq{Name: sName, Seq: sequence, Qual: qPhred}
-		answer = append(answer, curr)
-	}
-	return answer
-}*/
