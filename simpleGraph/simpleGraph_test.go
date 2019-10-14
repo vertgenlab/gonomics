@@ -1,12 +1,13 @@
 package simpleGraph
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
+	"log"
 	"os"
 	"testing"
-	"fmt"
-	"log"
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -45,28 +46,52 @@ func TestWriteAndRead(t *testing.T) {
 }
 
 func TestSeeding(t *testing.T) {
-        var tileSize int = 25
+	var tileSize int = 25
 
-	genome := Read("testdata/bigGenome.sg")
-	reads := fasta.Read("testdata/bigReads.fa")
+	genome := fasta.Read("testdata/bigGenome.sg")
+	//reads := fasta.Read("testdata/bigReads.fa")
 
+	//reads := RandomSeqGenerator(fasta.Read("testdata/bigGenome.sg"), 151, 100)
 	log.Printf("Starting to index genome...\n")
-        chromPosHash := indexGenome(genome, tileSize)
-	log.Printf("Finished indexing!\n")
+	fq := RandomFastqGen(fasta.Read("testdata/bigGenome.sg"), 151, 200)
+	fmt.Printf("Length of generated reads: %d\n", len(fq))
+	ham5 := MkDictionary(genome, tileSize)
+	//WriteDictionary("testdata/genome.ham5", chromPosHash)
+	//ham5 := ReadDictionary("testdata/genome.ham5")
+	//log.Printf("Finished indexing!\n")
+	
+	//fastq.PrintFastq(fq)
+	fastq.Write("testdata/simulated.fastq", fq)
+	//sams := MapReads(genome, fq, 25)
+	GSW(genome, ham5, "testdata/simulated.fastq", "testdata/simulated.sam")
+	//fmt.Println(sams[0])
+	//log.Printf("Starting to map reads...\n")
+	//    for readNumber := 0; readNumber < len(reads); readNumber++ {
+	//            for tileStart := 0; tileStart < len(reads[readNumber].Seq)-tileSize+1; tileStart++ {
+	//                    codedPositions := chromPosHash[dnaToNumber(reads[readNumber].Seq, tileStart, tileStart+tileSize)]
+	//                   if codedPositions == nil {
+	//                            fmt.Printf("readNumber:%d tileStart:%d notfound\n", readNumber, tileStart)
+	//                    }
+	//                    for hitIndex := 0; hitIndex < len(codedPositions); hitIndex++ {
+	//                            chrom, pos := numberToChromAndPos(codedPositions[hitIndex])
+	//                            fmt.Printf("readNumber:%d tileStart:%d chrom:%d pos:%d\n", readNumber, tileStart, chrom, pos)
+	//                    }
+	//           }
+	//    }
+	//log.Printf("Finished mapping reads!\n")
 
-	log.Printf("Starting to map reads...\n")
-        for readNumber := 0; readNumber < len(reads); readNumber++ {
-                for tileStart := 0; tileStart < len(reads[readNumber].Seq)-tileSize+1; tileStart++ {
-                        codedPositions := chromPosHash[dnaToNumber(reads[readNumber].Seq, tileStart, tileStart+tileSize)]
-                        if codedPositions == nil {
-                                fmt.Printf("readNumber:%d tileStart:%d notfound\n", readNumber, tileStart)
-                        }
-                        for hitIndex := 0; hitIndex < len(codedPositions); hitIndex++ {
-                                chrom, pos := numberToChromAndPos(codedPositions[hitIndex])
-                                fmt.Printf("readNumber:%d tileStart:%d chrom:%d pos:%d\n", readNumber, tileStart, chrom, pos)
-                        }
-                }
-        }
-	log.Printf("Finished mapping reads!\n")
+	//log.Printf("Starting to map reads...\n")
+	//   for readNumber := 0; readNumber < len(simReads); readNumber++ {
+	//           for tileStart := 0; tileStart < len(simReads[readNumber].Seq)-tileSize+1; tileStart++ {
+	//                  codedPositions := chromPosHash[dnaToNumber(simReads[readNumber].Seq, tileStart, tileStart+tileSize)]
+	//                  if codedPositions == nil {
+	//                          fmt.Printf("readNumber:%d tileStart:%d notfound\n", readNumber, tileStart)
+	//                  }
+	//                 for hitIndex := 0; hitIndex < len(codedPositions); hitIndex++ {
+	//                         chrom, pos := numberToChromAndPos(codedPositions[hitIndex])
+	//                          fmt.Printf("readNumber:%d tileStart:%d chrom:%d pos:%d\n", readNumber, tileStart, chrom, pos)
+	//                 }
+	//          }
+	//   }
+	//log.Printf("Finished mapping reads!\n")
 }
-

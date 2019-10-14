@@ -77,3 +77,21 @@ func DefineBase(b Base) bool {
 		return false
 	}
 }
+
+func CountBase(seq []Base, b Base) int64 {
+	var answer int64 = 0
+	for i :=0; i < len(seq);i++ {
+		if seq[i] == b {
+			answer++
+		}
+	}
+	return answer
+}
+
+func CompareBase(alpha Base, beta Base) bool {
+	if alpha == beta {
+		return true
+	} else {
+		return false
+	}
+}
