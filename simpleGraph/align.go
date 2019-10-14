@@ -16,10 +16,10 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
+	//"runtime"
 	"strconv"
 	"strings"
-	"sync"
+	//"sync"
 )
 
 func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
@@ -256,6 +256,26 @@ func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, fastqFile string, samFile st
 	wg.Wait()
 }*/
 
+func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, fastqFile string, samFile string) {
+	//var query *fastq.Fastq
+	header := BasicHeader(ref)
+
+	outFile, _ := os.Create(samFile)
+	defer outFile.Close()
+	sam.WriteHeaderToFileHandle(outFile, header)
+	file := fileio.EasyOpen(fastqFile)
+	defer file.Close()
+
+	
+
+	var fq *fastq.Fastq
+	var done bool
+	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
+		MapFastq(ref, fq, 25, m, outFile)
+	}
+	
+}
+
 func MapReads(ref []*Node, reads []*fastq.Fastq, seed int) []*sam.SamAln {
 	chromPosHash := indexGenome(ref, seed)
 	var answer []*sam.SamAln
@@ -374,7 +394,8 @@ func BasicHeader(ref []*fasta.Fasta) *sam.SamHeader {
 	}
 	return &header
 }
-
+//call aligner with goroutines
+/*
 func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, fastqFile string, samFile string) {
 	//var query *fastq.Fastq
 	header := BasicHeader(ref)
@@ -416,4 +437,4 @@ func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, fastqFile string, samFile st
 	
 	//close(c)
 	//wg.Wait()
-}
+}*/
