@@ -1,10 +1,8 @@
 package simpleGraph
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"os"
 	"testing"
@@ -45,53 +43,43 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
-func TestSeeding(t *testing.T) {
-	var tileSize int = 25
+func TestAligning(t *testing.T) {
+	var tileSize int = 30
+	var readLength int = 150
+	var numberOfReads int = 10
+	var mappedRead *sam.SamAln
 
-	genome := fasta.Read("testdata/bigGenome.sg")
-	//reads := fasta.Read("testdata/bigReads.fa")
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read("testdata/bigGenome.sg")
 
-	//reads := RandomSeqGenerator(fasta.Read("testdata/bigGenome.sg"), 151, 100)
-	log.Printf("Starting to index genome...\n")
-	fq := RandomFastqGen(fasta.Read("testdata/bigGenome.sg"), 151, 200)
-	fmt.Printf("Length of generated reads: %d\n", len(fq))
-	ham5 := MkDictionary(genome, tileSize)
-	//WriteDictionary("testdata/genome.ham5", chromPosHash)
-	//ham5 := ReadDictionary("testdata/genome.ham5")
-	//log.Printf("Finished indexing!\n")
-	
-	//fastq.PrintFastq(fq)
-	fastq.Write("testdata/simulated.fastq", fq)
-	//sams := MapReads(genome, fq, 25)
-	GSW(genome, ham5, "testdata/simulated.fastq", "testdata/simulated.sam")
-	//fmt.Println(sams[0])
-	//log.Printf("Starting to map reads...\n")
-	//    for readNumber := 0; readNumber < len(reads); readNumber++ {
-	//            for tileStart := 0; tileStart < len(reads[readNumber].Seq)-tileSize+1; tileStart++ {
-	//                    codedPositions := chromPosHash[dnaToNumber(reads[readNumber].Seq, tileStart, tileStart+tileSize)]
-	//                   if codedPositions == nil {
-	//                            fmt.Printf("readNumber:%d tileStart:%d notfound\n", readNumber, tileStart)
-	//                    }
-	//                    for hitIndex := 0; hitIndex < len(codedPositions); hitIndex++ {
-	//                            chrom, pos := numberToChromAndPos(codedPositions[hitIndex])
-	//                            fmt.Printf("readNumber:%d tileStart:%d chrom:%d pos:%d\n", readNumber, tileStart, chrom, pos)
-	//                    }
-	//           }
-	//    }
-	//log.Printf("Finished mapping reads!\n")
+	log.Printf("Indexing the genome...\n")
+	tiles := indexGenome(genome, tileSize)
 
-	//log.Printf("Starting to map reads...\n")
-	//   for readNumber := 0; readNumber < len(simReads); readNumber++ {
-	//           for tileStart := 0; tileStart < len(simReads[readNumber].Seq)-tileSize+1; tileStart++ {
-	//                  codedPositions := chromPosHash[dnaToNumber(simReads[readNumber].Seq, tileStart, tileStart+tileSize)]
-	//                  if codedPositions == nil {
-	//                          fmt.Printf("readNumber:%d tileStart:%d notfound\n", readNumber, tileStart)
-	//                  }
-	//                 for hitIndex := 0; hitIndex < len(codedPositions); hitIndex++ {
-	//                         chrom, pos := numberToChromAndPos(codedPositions[hitIndex])
-	//                          fmt.Printf("readNumber:%d tileStart:%d chrom:%d pos:%d\n", readNumber, tileStart, chrom, pos)
-	//                 }
-	//          }
-	//   }
-	//log.Printf("Finished mapping reads!\n")
+	log.Printf("Simulating reads...\n")
+	simReads := RandomReads(genome, readLength, numberOfReads)
+
+	log.Printf("Aligning reads...\n")
+	for i := 0; i < len(simReads); i++ {
+		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize)
+		log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+	}
+	log.Printf("Done mapping\n")
+}
+
+func BenchmarkAligning(b *testing.B) {
+	var tileSize int = 30
+	var readLength int = 150
+	var numberOfReads int = 100
+	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
+
+	genome := Read("testdata/bigGenome.sg")
+	tiles := indexGenome(genome, tileSize)
+	simReads := RandomReads(genome, readLength, numberOfReads)
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for i := 0; i < len(simReads); i++ {
+			mappedReads[i] = MapSingleFastq(genome, tiles, simReads[i], tileSize)
+		}
+	}
 }

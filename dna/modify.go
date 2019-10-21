@@ -92,7 +92,7 @@ func ReverseComplement(bases []Base) {
 
 func RemoveGaps(bases []Base) []Base {
 	var ans []Base
-	for i :=0; i<len(bases); i++ {
+	for i := 0; i < len(bases); i++ {
 		if bases[i] != Gap {
 			ans = append(ans, bases[i])
 		}

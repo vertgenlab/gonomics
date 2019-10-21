@@ -24,3 +24,4 @@ func CountBase(fa *Fasta, b dna.Base) int64 {
 	}
 	return answer
 }
+
