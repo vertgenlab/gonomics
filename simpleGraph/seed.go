@@ -1,12 +1,12 @@
 package simpleGraph
 
 import (
-//	"fmt"
-//	"github.com/vertgenlab/gonomics/common"
-//	"github.com/vertgenlab/gonomics/dna"
-//	"github.com/vertgenlab/gonomics/fileio"
-//	"io"
-//	"strings"
+	//"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	//"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/fileio"
+	//"io"
+	//"strings"
 )
 
 type Seed struct {
@@ -15,21 +15,22 @@ type Seed struct {
 	End int64
 	Score int64
 }
-/*
-func overlapSeed(a *Seed, newId, newStart, newEnd) bool {
+
+func overlapSeed(a *Seed, newId int64, newStart int64, newEnd int64) bool {
 	if a.Id == newId && common.MaxInt64(a.Start, newStart) < common.MinInt64(a.End, newEnd) {
 		return true
 	} else {
 		return false
 	}
 }
-
-func addSeed(existing []*Seed, newId, newStart, newEnd) []*Seed {
+/*
+func addSeed(existing []*Seed, newId int64 , newStart int64 , newEnd int64) []*Seed {
+	var answer
 	for i:=0; i < len(existing); i++ {
 		if overlapSeed(existing[i], newId, newStart, newEnd) {
 			existing[i].Start = common.MinInt64(existing[i].Start, newStart)
 			existing[i].End = common.MaxInt64(existing[i].End, newEnd)
 			existing[i].Score++
 		}
-}
-*/
+	}
+}*/

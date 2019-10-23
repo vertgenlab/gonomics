@@ -3,6 +3,7 @@ package simpleGraph
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
+	//"github.com/vertgenlab/gonomics/align"
 	"log"
 	"os"
 	"testing"
@@ -57,19 +58,20 @@ func TestAligning(t *testing.T) {
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome, readLength, numberOfReads)
+	m, trace := swMatrixSetup(10000)
 
 	log.Printf("Aligning reads...\n")
 	for i := 0; i < len(simReads); i++ {
-		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize)
+		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
 		log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 	}
-	log.Printf("Done mapping\n")
+	log.Printf("Done mapping %d reads\n", numberOfReads)
 }
 
 func BenchmarkAligning(b *testing.B) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 100
+	var numberOfReads int = 200
 	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
 
 	genome := Read("testdata/bigGenome.sg")
@@ -77,9 +79,12 @@ func BenchmarkAligning(b *testing.B) {
 	simReads := RandomReads(genome, readLength, numberOfReads)
 
 	b.ResetTimer()
+	m, trace := swMatrixSetup(10000)
+	var i int
 	for n := 0; n < b.N; n++ {
-		for i := 0; i < len(simReads); i++ {
-			mappedReads[i] = MapSingleFastq(genome, tiles, simReads[i], tileSize)
+		for i = 0; i < len(simReads); i++ {
+			mappedReads[i] = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
+			//log.Printf("%s\n", sam.SamAlnToString(mappedReads[i]))
 		}
 	}
 }
