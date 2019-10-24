@@ -61,6 +61,7 @@ func TestAligning(t *testing.T) {
 	m, trace := swMatrixSetup(10000)
 
 	log.Printf("Aligning reads...\n")
+	//var seeds []Seed = make([]Seed, 256)
 	for i := 0; i < len(simReads); i++ {
 		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
 		log.Printf("%s\n", sam.SamAlnToString(mappedRead))
@@ -71,16 +72,19 @@ func TestAligning(t *testing.T) {
 func BenchmarkAligning(b *testing.B) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 200
+	var numberOfReads int = 1000
 	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
 
 	genome := Read("testdata/bigGenome.sg")
 	tiles := indexGenome(genome, tileSize)
 	simReads := RandomReads(genome, readLength, numberOfReads)
-
-	b.ResetTimer()
+	//var seeds []Seed = make([]Seed, 256)
 	m, trace := swMatrixSetup(10000)
+	//var seeds []Seed = make([]Seed, 256)
+	b.ResetTimer()
+	
 	var i int
+
 	for n := 0; n < b.N; n++ {
 		for i = 0; i < len(simReads); i++ {
 			mappedReads[i] = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
