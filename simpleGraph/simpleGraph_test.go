@@ -7,6 +7,12 @@ import (
 	"log"
 	"os"
 	"testing"
+	"runtime"
+	"runtime/pprof"
+	"flag"
+	"fmt"
+
+
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -47,7 +53,7 @@ func TestWriteAndRead(t *testing.T) {
 func TestAligning(t *testing.T) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 10
+	var numberOfReads int = 100
 	var mappedRead *sam.SamAln
 
 	log.Printf("Reading in the genome (simple graph)...\n")
@@ -60,22 +66,55 @@ func TestAligning(t *testing.T) {
 	simReads := RandomReads(genome, readLength, numberOfReads)
 	m, trace := swMatrixSetup(10000)
 
+
+	//code block for program profiling
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+	var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
+	flag.Parse()
+    if *cpuprofile != "" {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal("could not create CPU profile: ", err)
+        }
+        defer f.Close()
+        if err := pprof.StartCPUProfile(f); err != nil {
+            log.Fatal("could not start CPU profile: ", err)
+        }
+        defer pprof.StopCPUProfile()
+    }
+
+
 	log.Printf("Aligning reads...\n")
-	//var seeds []Seed = make([]Seed, 256)
+
 	for i := 0; i < len(simReads); i++ {
 		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
-		log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+		fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
+
 	}
 	log.Printf("Done mapping %d reads\n", numberOfReads)
+
+	//code block for program profiling
+	if *memprofile != "" {
+        f, err := os.Create(*memprofile)
+        if err != nil {
+            log.Fatal("could not create memory profile: ", err)
+        }
+        defer f.Close()
+        runtime.GC() // get up-to-date statistics
+        if err := pprof.WriteHeapProfile(f); err != nil {
+            log.Fatal("could not write memory profile: ", err)
+        }
+    }
 }
 
 func BenchmarkAligning(b *testing.B) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 1000
+	var numberOfReads int = 1
 	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
 
-	genome := Read("testdata/bigGenome.sg")
+	genome := Read("testdata/test.fa")
 	tiles := indexGenome(genome, tileSize)
 	simReads := RandomReads(genome, readLength, numberOfReads)
 	//var seeds []Seed = make([]Seed, 256)

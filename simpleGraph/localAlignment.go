@@ -54,8 +54,9 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 
 	//setting up the first rows and columns
 	//seting up the rest of the matrix
-	//var diagScore, upScore, leftScore float64
+
 	initialZeroMatrix(m, len(alpha), len(beta))
+	
 	for i = 1; i < int64(len(alpha)+1); i++ {
 		for j = 1; j < int64(len(beta)+1); j++ {
 			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
@@ -75,7 +76,6 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	var curr cigar.Cigar
 	var route []*cigar.Cigar
 	route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[maxI][maxJ]})
-
 
 	for i, j, routeIdx = maxI, maxJ, 0; m[i][j] > 0; {
 		if route[routeIdx].RunLength == 0 {
@@ -104,8 +104,7 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 		minJ = j
 	}
 	reverseCigarPointer(route)
-	//SClipCigar(minJ, maxJ, int64(len(beta)), route)
-	//fmt.Println(align.LocalView(mostLikelySeq(alpha), mostLikelySeq(beta), route, maxI))
+	
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
 

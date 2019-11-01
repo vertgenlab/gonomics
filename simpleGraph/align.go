@@ -24,10 +24,12 @@ import (
 
 func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 	answer := make(map[uint64][]uint64)
-	for chromIdx := 0; chromIdx < len(genome); chromIdx++ {
+	var seqCode uint64
+	var chromIdx, pos int
+	for chromIdx = 0; chromIdx < len(genome); chromIdx++ {
 	
-		for pos := 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
-			seqCode := dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
+		for pos = 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
+			seqCode = dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
 			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
 		}
 	}
@@ -45,8 +47,6 @@ func MkDictionary(genome []*fasta.Fasta, seedLen int) map[uint64][]uint64 {
 	}
 	return answer
 }
-
-
 
 func chromAndPosToNumber(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
@@ -165,6 +165,7 @@ func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.F
 			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
 			currBest.Seq = reverse.Seq
 			currBest.Qual = string(read.Qual)
+			//fmt.Printf("alignment:\n%s\n", cigar.LocalView(ref[seeds[i].Id].Seq[seeds[i].Start:seeds[i].End], read.Seq, alignment, highRef))
 		}
 	}
 	//seeds = seeds[0:0]
