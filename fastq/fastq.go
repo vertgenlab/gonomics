@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	//"github.com/vertgenlab/gonomics/qDna"
 	"log"
 	"math"
+	"io"
+	
 )
 
 type Fastq struct {
@@ -78,4 +79,20 @@ func PrintFastq(fq []*Fastq) {
 		quality := string(fq[i].Qual)
 		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 	}
+}
+
+func Write(filename string, records []*Fastq) {
+	file := fileio.EasyCreate(filename)
+	defer file.Close()
+	WriteToFileHandle(file, records)
+}
+
+func WriteToFileHandle(file io.Writer, fq []*Fastq) error {
+	var err error
+	for i := 0; i < len(fq); i++ {
+
+		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Name, dna.BasesToString(fq[i].Seq), "+", string(fq[i].Qual))
+	}
+	
+	return err
 }

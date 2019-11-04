@@ -7,17 +7,38 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
+	"sync"
 )
+
+type SimpleGraph struct {
+	Nodes []*Node
+	Edges map[*Node][]*Edge
+	lock    sync.RWMutex
+}
 
 type Node struct {
 	Id  int64
 	Seq []dna.Base
 }
 
-/*
 type Edge struct {
-	//create later
-}*/
+	Next *Node
+}
+
+func (g *SimpleGraph) AddNode(n *Node) {
+	g.lock.Lock()
+	g.Nodes = append(g.Nodes, n)
+	g.lock.Unlock()
+}
+
+func (g *SimpleGraph) AddEdge(u, v *Node) {
+	g.lock.Lock()
+	if g.Edges == nil {
+		g.Edges = make(map[*Node][]*Edge)
+	}
+	g.Edges[u] = append(g.Edges[u], &Edge{Next: v})
+	g.lock.Unlock()
+}
 
 func Read(filename string) []*Node {
 	var line string
@@ -25,17 +46,20 @@ func Read(filename string) []*Node {
 	var answer []*Node
 	var seqIdx int64 = -1
 	var doneReading bool = false
-
+	var chromIdx int64 = 0
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
-			tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
+			//tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
+			tmp := Node{Id: chromIdx}
 			answer = append(answer, &tmp)
 			seqIdx++
+			chromIdx++
 		} else {
 			currSeq = dna.StringToBases(line)
+			dna.AllToUpper(currSeq)
 			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
 		}
 	}

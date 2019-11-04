@@ -2,11 +2,17 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/sam"
+	//"github.com/vertgenlab/gonomics/align"
+	"log"
 	"os"
 	"testing"
+	"runtime"
+	"runtime/pprof"
+	"flag"
 	"fmt"
-	"log"
+
+
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -44,29 +50,84 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
-func TestSeeding(t *testing.T) {
-        var tileSize int = 25
+func TestAligning(t *testing.T) {
+	var tileSize int = 30
+	var readLength int = 150
+	var numberOfReads int = 100
+	var mappedRead *sam.SamAln
 
+	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/bigGenome.sg")
-	reads := fasta.Read("testdata/bigReads.fa")
 
-	log.Printf("Starting to index genome...\n")
-        chromPosHash := indexGenome(genome, tileSize)
-	log.Printf("Finished indexing!\n")
+	log.Printf("Indexing the genome...\n")
+	tiles := indexGenome(genome, tileSize)
 
-	log.Printf("Starting to map reads...\n")
-        for readNumber := 0; readNumber < len(reads); readNumber++ {
-                for tileStart := 0; tileStart < len(reads[readNumber].Seq)-tileSize+1; tileStart++ {
-                        codedPositions := chromPosHash[dnaToNumber(reads[readNumber].Seq, tileStart, tileStart+tileSize)]
-                        if codedPositions == nil {
-                                fmt.Printf("readNumber:%d tileStart:%d notfound\n", readNumber, tileStart)
-                        }
-                        for hitIndex := 0; hitIndex < len(codedPositions); hitIndex++ {
-                                chrom, pos := numberToChromAndPos(codedPositions[hitIndex])
-                                fmt.Printf("readNumber:%d tileStart:%d chrom:%d pos:%d\n", readNumber, tileStart, chrom, pos)
-                        }
-                }
+	log.Printf("Simulating reads...\n")
+	simReads := RandomReads(genome, readLength, numberOfReads)
+	m, trace := swMatrixSetup(10000)
+
+
+	//code block for program profiling
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+	var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
+	flag.Parse()
+    if *cpuprofile != "" {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal("could not create CPU profile: ", err)
         }
-	log.Printf("Finished mapping reads!\n")
+        defer f.Close()
+        if err := pprof.StartCPUProfile(f); err != nil {
+            log.Fatal("could not start CPU profile: ", err)
+        }
+        defer pprof.StopCPUProfile()
+    }
+
+
+	log.Printf("Aligning reads...\n")
+
+	for i := 0; i < len(simReads); i++ {
+		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
+		fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
+
+	}
+	log.Printf("Done mapping %d reads\n", numberOfReads)
+
+	//code block for program profiling
+	if *memprofile != "" {
+        f, err := os.Create(*memprofile)
+        if err != nil {
+            log.Fatal("could not create memory profile: ", err)
+        }
+        defer f.Close()
+        runtime.GC() // get up-to-date statistics
+        if err := pprof.WriteHeapProfile(f); err != nil {
+            log.Fatal("could not write memory profile: ", err)
+        }
+    }
 }
 
+func BenchmarkAligning(b *testing.B) {
+	var tileSize int = 30
+	var readLength int = 150
+	var numberOfReads int = 1
+	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
+
+	genome := Read("testdata/test.fa")
+	tiles := indexGenome(genome, tileSize)
+	simReads := RandomReads(genome, readLength, numberOfReads)
+	//var seeds []Seed = make([]Seed, 256)
+	m, trace := swMatrixSetup(10000)
+	//var seeds []Seed = make([]Seed, 256)
+	b.ResetTimer()
+	
+	var i int
+
+	for n := 0; n < b.N; n++ {
+		for i = 0; i < len(simReads); i++ {
+			mappedReads[i] = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
+			//log.Printf("%s\n", sam.SamAlnToString(mappedReads[i]))
+		}
+	}
+}

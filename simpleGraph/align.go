@@ -1,8 +1,9 @@
 package simpleGraph
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/vertgenlab/gonomics/align"
+	//"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
@@ -12,17 +13,34 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
+	"io"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 )
 
 func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 	answer := make(map[uint64][]uint64)
+	var seqCode uint64
+	var chromIdx, pos int
+	for chromIdx = 0; chromIdx < len(genome); chromIdx++ {
+	
+		for pos = 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
+			seqCode = dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
+			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
+		}
+	}
+	return answer
+}
+
+func MkDictionary(genome []*fasta.Fasta, seedLen int) map[uint64][]uint64 {
+	answer := make(map[uint64][]uint64)
 	for chromIdx := 0; chromIdx < len(genome); chromIdx++ {
 		for pos := 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
+
 			seqCode := dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
 			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
 		}
@@ -37,11 +55,11 @@ func chromAndPosToNumber(chrom int, start int) uint64 {
 	return answer
 }
 
-func dnaToNumber(dna []dna.Base, start int, end int) uint64 {
-	var answer uint64 = uint64(dna[start])
+func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
+	var answer uint64 = uint64(seq[start])
 	for i := start + 1; i < end; i++ {
 		answer = answer << 2
-		answer = answer | uint64(dna[i])
+		answer = answer | uint64(seq[i])
 	}
 	return answer
 }
@@ -55,247 +73,232 @@ func numberToChromAndPos(code uint64) (int64, int64) {
 	return int64(chromIdx), int64(pos)
 }
 
-func MapFastq(ref []*Node, read *fastq.Fastq, seed int, chromPosHash map[uint64][]uint64, c chan *sam.SamAln) {
-	//chromPosHash := indexGenome(ref, seed)
-	//var answer []*sam.SamAln
-	var seedBeds []*bed.Bed
+func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.Fastq, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
+	
+
+	//var seedBeds []*bed.Bed
+	var seeds []Seed = make([]Seed, 256)
 	var codedPositions []uint64
 	var bStart, bEnd int64
 	var maxScore int64
 	var extension int64
 	var chrom, pos int64
-	//calculate max score
-	var bases, beds int
+	var bases int
+	var i int
 	var subRead, hits int
-
 	var score, bestScore int64 = 0, 0
 	var lowRef, lowQuery, highQuery int64
-	//initial sam alignment pointer
-	var alignment []align.Cigar
-
+	var alignment []*cigar.Cigar
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
-	//seedBeds = nil
+
 	for bases = 0; bases < len(read.Seq); bases++ {
 		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
 	}
-	//fmt.Printf("Max Score: %d\n", maxScore)
 	extension = int64(maxScore/600) + int64(len(read.Seq))
-	for subRead = 0; subRead < len(read.Seq)-seed+1; subRead++ {
 
-		codedPositions = chromPosHash[dnaToNumber(read.Seq, subRead, subRead+seed)]
+	for subRead = 0; subRead < len(read.Seq)-seedLen+1; subRead++ {
+		codedPositions = chromPosHash[dnaToNumber(read.Seq, subRead, subRead+seedLen)]
 		for hits = 0; hits < len(codedPositions); hits++ {
 			chrom, pos = numberToChromAndPos(codedPositions[hits])
-			//fmt.Printf("Chrom: %d Position: %d\n", chrom, pos)
-			//fmt.Printf("Length of hits: %d\n", len(codedPositions))
 			bStart = pos - extension
 			if bStart < 0 {
 				bStart = 0
 			}
 			bEnd = pos + extension
-			//if bEnd > int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr])) {
 			if bEnd > int64(len(ref[chrom].Seq)) {
 				bEnd = int64(len(ref[chrom].Seq))
 			}
-			seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(ref[chrom].Id, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
-			//fmt.Println(bed.Bed{Chrom: strconv.FormatInt(ref[chrom].Id, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
+			//seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(chrom, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
+			seeds = addSeed(seeds, chrom, bStart, bEnd)
 		}
-
 	}
-	seedBeds = bed.MergeBeds(seedBeds)
-	for beds = 0; beds < len(seedBeds); beds++ {
-		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], read.Seq, HumanChimpTwoScoreMatrix, -600)
+	
+	//seedBeds = bed.MergeBeds(seedBeds)
+	//log.Printf("Length of seed beds, %d", len(seedBeds))
+
+	for i = 0;i < len(seeds); i++ {
+		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[seeds[i].Id].Seq[seeds[i].Start:seeds[i].End], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
 		if score > bestScore {
 			bestScore = score
 			currBest.Flag = 0
-			currBest.RName = seedBeds[beds].Chrom
-			//currBest.RName = bestBed.Chrom
-			currBest.Pos = lowRef + seedBeds[beds].ChromStart
-			//currBest.Pos = lowRef+bestBed.ChromStart
-			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), cigar.FromString(align.PrintCigar(alignment)))
+			currBest.RName = fmt.Sprintf("%d", seeds[i].Id)
+			currBest.Pos = lowRef + seeds[i].Start
+			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
 			currBest.Seq = read.Seq
 			currBest.Qual = string(read.Qual)
 		}
 	}
-	//reverse read
-	seedBeds = nil
-	//dna.ReverseComplement(read.Seq)
+	seeds = seeds[0:0]
+	//seedBeds = [0:0]
 	reverse := fastq.ReverseComplementFastq(read)
-	//for bases = 0; bases < len(reverse.Seq); bases++ {
-	//	maxScore += HumanChimpTwoScoreMatrix[reverse.Seq[bases]][reverse.Seq[bases]]
-	//}
-	//fmt.Printf("Max Score: %d\n", maxScore)
 	extension = int64(maxScore/600) + int64(len(reverse.Seq))
-	for subRead = 0; subRead < len(reverse.Seq)-seed+1; subRead++ {
-		codedPositions = chromPosHash[dnaToNumber(reverse.Seq, subRead, subRead+seed)]
+	for subRead = 0; subRead < len(reverse.Seq)-seedLen+1; subRead++ {
+		codedPositions = chromPosHash[dnaToNumber(reverse.Seq, subRead, subRead+seedLen)]
 		for hits = 0; hits < len(codedPositions); hits++ {
 			chrom, pos = numberToChromAndPos(codedPositions[hits])
-			bStart = pos - extension
-			if bStart < 0 {
-				bStart = 0
-			}
-			bEnd = pos + extension
-			//if bEnd > int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr])) {
-			if bEnd > int64(len(ref[chrom].Seq)) {
-				bEnd = int64(len(ref[chrom].Seq))
-			}
-			seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(ref[chrom].Id, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
-		}
-	}
-	seedBeds = bed.MergeBeds(seedBeds)
-	for beds = 0; beds < len(seedBeds); beds++ {
-		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], reverse.Seq, HumanChimpTwoScoreMatrix, -600)
-		if score > bestScore {
-			bestScore = score
-			currBest.Flag = 0
-			currBest.RName = seedBeds[beds].Chrom
-			//currBest.RName = bestBed.Chrom
-			currBest.Pos = lowRef + seedBeds[beds].ChromStart
-			//currBest.Pos = lowRef+bestBed.ChromStart
-			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(reverse.Seq)), cigar.FromString(align.PrintCigar(alignment)))
-			currBest.Seq = reverse.Seq
-			currBest.Qual = string(read.Qual)
-		}
-	}
-	if bestScore < 1200 {
-		currBest.Flag = 4
-		currBest.Cigar = []*cigar.Cigar{&cigar.Cigar{RunLength: 0, Op: '*'}}
-	}
-	log.Println(currBest.RName, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
-	c <- &currBest
-}
-
-func GSW(ref []*Node, m map[uint64][]uint64, fastqFile string, samFile string) {
-	var answer *sam.SamAln
-	header := QFragHeader(ref)
-
-	outFile, _ := os.Create(samFile + ".sam")
-	defer outFile.Close()
-
-	sam.WriteHeaderToFileHandle(outFile, header)
-
-	inputCh := make(chan *fastq.Fastq)
-	outputCh := make(chan *sam.SamAln)
-
-	var wg sync.WaitGroup
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	threads := runtime.NumCPU() * 50
-	wg.Add(threads)
-	fmt.Println("Num of threads: ", threads)
-	//var wg sync.WaitGroup
-	//wg.Add(100)
-	var j int
-	file := fileio.EasyOpen(fastqFile)
-	defer file.Close()
-	var done bool
-
-	var fq *fastq.Fastq
-	var countReads int = 0
-	var ok bool
-	var input *fastq.Fastq
-
-	for workers := 0; workers < threads; workers++ {
-		go func() {
-			for {
-				input, ok = <-inputCh
-				if !ok {
-					wg.Done()
-					return
-				} else {
-					MapFastq(ref, input, 25, m, outputCh)
-				}
-			}
-		}()
-	}
-
-	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
-		//go gsw(ref, reads[i], c)
-		countReads++
-		inputCh <- fq
-		//wg.Add(1)
-		//go warrior(ref, fq, 20, m, c)
-	}
-	close(inputCh)
-	for j = 0; j < countReads; j++ {
-		answer = <-outputCh
-		sam.WriteAlnToFileHandle(outFile, answer)
-	}
-
-	wg.Wait()
-}
-
-func MapReads(ref []*Node, reads []*fasta.Fasta, seed int) []*sam.SamAln {
-	chromPosHash := indexGenome(ref, seed)
-	var answer []*sam.SamAln
-	var seedBeds []*bed.Bed
-	var codedPositions []uint64
-	var bStart, bEnd int64
-	var maxScore int64
-	var extension int64
-	var chrom, pos int64
-	//calculate max score
-	var bases, beds int
-	var subRead, hits int
-
-	var score, bestScore int64 = 0, 0
-	var lowRef, lowQuery, highQuery int64
-	//initial sam alignment pointer
-	var alignment []align.Cigar
-	for i := 0; i < len(reads); i++ {
-		var currBest sam.SamAln = sam.SamAln{QName: reads[i].Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: reads[i].Seq, Qual: "", Extra: ""}
-		seedBeds = nil
-		for bases = 0; bases < len(reads[i].Seq); bases++ {
-			maxScore += HumanChimpTwoScoreMatrix[reads[i].Seq[bases]][reads[i].Seq[bases]]
-		}
-		//fmt.Printf("Max Score: %d\n", maxScore)
-		extension = int64(maxScore/600) + int64(len(reads[i].Seq))
-
-		for subRead = 0; subRead < len(reads[i].Seq)-seed+1; subRead++ {
-
-			codedPositions = chromPosHash[dnaToNumber(reads[i].Seq, subRead, subRead+seed)]
-			for hits = 0; hits < len(codedPositions); hits++ {
-				chrom, pos = numberToChromAndPos(codedPositions[hits])
-				//fmt.Printf("Chrom: %d Position: %d\n", chrom, pos)
-				//fmt.Printf("Length of hits: %d\n", len(codedPositions))
+			if chrom >= int64(len(ref)) {
+				log.Printf("hashing chrom had index out of bounds b/c of Ns")
+			} else {
 				bStart = pos - extension
 				if bStart < 0 {
 					bStart = 0
 				}
 				bEnd = pos + extension
-				//if bEnd > int64(len(chrSize[m[putTogether(read.Seq[i:i+seed])][j].Chr])) {
 				if bEnd > int64(len(ref[chrom].Seq)) {
 					bEnd = int64(len(ref[chrom].Seq))
 				}
-				seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(ref[chrom].Id, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
-				//fmt.Println(bed.Bed{Chrom: strconv.FormatInt(ref[chrom].Id, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
-			}
-
-		}
-		seedBeds = bed.MergeBeds(seedBeds)
-		for beds = 0; beds < len(seedBeds); beds++ {
-			score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], reads[i].Seq, HumanChimpTwoScoreMatrix, -600)
-			if score > bestScore {
-				bestScore = score
-				currBest.Flag = 0
-				currBest.RName = seedBeds[beds].Chrom
-				//currBest.RName = bestBed.Chrom
-				currBest.Pos = lowRef + seedBeds[beds].ChromStart
-				//currBest.Pos = lowRef+bestBed.ChromStart
-				currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(reads[i].Seq)), cigar.FromString(align.PrintCigar(alignment)))
-				currBest.Seq = reads[i].Seq
-				//currBest.Qual = string(read.Qual)
-
+				//seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(chrom, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
+				seeds = addSeed(seeds, chrom, bStart, bEnd)
 			}
 		}
-		//if bestScore < 1200 {
-		//	currBest.Flag = 4
-		//	currBest.Cigar = []*cigar.Cigar{&cigar.Cigar{RunLength: 0, Op: '*'}}
-		//}
-		//fmt.Println(currBest)
-		fmt.Println(currBest.RName, "\t", reads[i].Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
-		answer = append(answer, &currBest)
+	}
+	
+	//seedBeds = bed.MergeBeds(seedBeds)
+	//log.Printf("Length of reverse seed beds, %d", len(seedBeds))
+	for i = 0; i < len(seeds); i++ {
+		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[seeds[i].Id].Seq[seeds[i].Start:seeds[i].End], reverse.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 0
+			currBest.RName = fmt.Sprintf("%d", seeds[i].Id)
+			currBest.Pos = lowRef + seeds[i].Start
+			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
+			currBest.Seq = reverse.Seq
+			currBest.Qual = string(read.Qual)
+			//fmt.Printf("alignment:\n%s\n", cigar.LocalView(ref[seeds[i].Id].Seq[seeds[i].Start:seeds[i].End], read.Seq, alignment, highRef))
+		}
+	}
+	//seeds = seeds[0:0]
+	//log.Println(currBest.RName, "\t", currBest.Pos, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
+	return &currBest
+}
+
+func MapFastq(ref []*fasta.Fasta, read *fastq.Fastq, seedLen int, chromPosHash map[uint64][]uint64, m [][]int64, trace [][]rune, file *os.File) {
+	//func MapFastq(ref []*fasta.Fasta, read *fastq.Fastq, seed int, chromPosHash map[uint64][]uint64, file *os.File) {
+	//defer wg.Done()
+	//chromPosHash := indexGenome(ref, seed)
+	//var answer []*sam.SamAln
+	
+	var seedBeds []*bed.Bed
+	var codedPositions []uint64
+	var bStart, bEnd int64
+	var maxScore int64
+	var extension int64
+	var chrom, pos int64
+	var bases, beds int
+	var subRead, hits int
+
+	var score, bestScore int64 = 0, 0
+	var lowRef, lowQuery, highQuery int64
+	var alignment []*cigar.Cigar
+
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
+
+	for bases = 0; bases < len(read.Seq); bases++ {
+		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
+	}
+	extension = int64(maxScore/600) + int64(len(read.Seq))
+
+	for subRead = 0; subRead < len(read.Seq)-seedLen+1; subRead++ {
+		codedPositions = chromPosHash[dnaToNumber(read.Seq, subRead, subRead+seedLen)]
+		for hits = 0; hits < len(codedPositions); hits++ {
+			chrom, pos = numberToChromAndPos(codedPositions[hits])
+			bStart = pos - extension
+			if bStart < 0 {
+				bStart = 0
+			}
+			bEnd = pos + extension
+			if bEnd > int64(len(ref[chrom].Seq)) {
+				bEnd = int64(len(ref[chrom].Seq))
+			}
+			seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(chrom, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
+		}
+	}
+	seedBeds = bed.MergeBeds(seedBeds)
+	for beds = 0; beds < len(seedBeds); beds++ {
+		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 0
+			currBest.RName = ref[common.StringToInt64(seedBeds[beds].Chrom)].Name
+			currBest.Pos = lowRef + seedBeds[beds].ChromStart
+			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
+			currBest.Seq = read.Seq
+			currBest.Qual = string(read.Qual)
+		}
 	}
 
-	return answer
+	seedBeds = nil
+	reverse := fastq.ReverseComplementFastq(read)
+	extension = int64(maxScore/600) + int64(len(reverse.Seq))
+	for subRead = 0; subRead < len(reverse.Seq)-seedLen+1; subRead++ {
+		codedPositions = chromPosHash[dnaToNumber(reverse.Seq, subRead, subRead+seedLen)]
+		for hits = 0; hits < len(codedPositions); hits++ {
+			chrom, pos = numberToChromAndPos(codedPositions[hits])
+
+			if chrom >= int64(len(ref)) {
+				log.Printf("hashing chrom had index out of bounds b/c of Ns")
+			} else {
+				bStart = pos - extension
+				if bStart < 0 {
+					bStart = 0
+				}
+				bEnd = pos + extension
+				if bEnd > int64(len(ref[chrom].Seq)) {
+					bEnd = int64(len(ref[chrom].Seq))
+				}
+				seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(chrom, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
+			}
+
+		}
+	}
+	seedBeds = bed.MergeBeds(seedBeds)
+	for beds = 0; beds < len(seedBeds); beds++ {
+		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], reverse.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 0
+			currBest.RName = ref[common.StringToInt64(seedBeds[beds].Chrom)].Name
+			currBest.Pos = lowRef + seedBeds[beds].ChromStart
+			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
+			currBest.Seq = reverse.Seq
+			currBest.Qual = string(read.Qual)
+		}
+	}
+	//log.Println(currBest.RName, "\t", currBest.Pos, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
+	//return &currBest
+	log.Println(currBest.RName, "\t", currBest.Pos, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
+	//sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
+	sam.SamAlnToString(&currBest)
+	sam.WriteAlnToFileHandle(file, &currBest)
+	//c <- &currBest
+	//wg.Done()
+}
+
+
+func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
+	//var answer *sam.SamAln
+	header := BasicHeader(ref)
+	wg := new(sync.WaitGroup)
+	outFile, _ := os.Create(samFile)
+	defer outFile.Close()
+
+	sam.WriteHeaderToFileHandle(outFile, header)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	//c := make(chan *sam.SamAln)
+
+	file := fileio.EasyOpen(fastqFile)
+	defer file.Close()
+	var done bool
+
+	var fq *fastq.Fastq
+	//var countReads int = 0
+	mSet, trace := swMatrixSetup(10000)
+	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
+		wg.Add(1)
+		go MapFastq(ref, fq, seedLen, m, mSet, trace, outFile)
+	}
+	wg.Wait()
 }
 
 var HumanChimpTwoScoreMatrix = [][]int64{
@@ -326,16 +329,120 @@ func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar)
 	return answer
 }
 
-func BasicHeader(ref []*Node) *sam.SamHeader {
+func BasicHeader(ref []*fasta.Fasta) *sam.SamHeader {
 	var header sam.SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
 
 	for i := 0; i < len(ref); i++ {
-		words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
 		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: strconv.FormatInt(ref[i].Id, 10), Size: int64(len(ref[i].Seq))})
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 
 	}
 	return &header
 }
+
+func ReadDictionary(filename string) map[uint64][]uint64 {
+	answer := make(map[uint64][]uint64)
+	file, _ := os.Open(filename)
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	var err error
+	var line string
+
+	var words []byte
+	for ; err != io.EOF; words, _, err = reader.ReadLine() {
+		line = string(words[:])
+		data := strings.Split(line, " ")
+		for i := 1; i < len(data); i++ {
+			answer[common.StringToUint64(data[0])] = append(answer[common.StringToUint64(data[0])], common.StringToUint64(data[i]))
+		}
+		//fmt.Println(data)
+	}
+	return answer
+}
+
+func WriteDictToFileHandle(file *os.File, input map[uint64][]uint64) error {
+	var err error
+
+	for i := range input {
+		_, err = fmt.Fprintf(file, "%v", i)
+		for j := range input[i] {
+			_, err = fmt.Fprintf(file, "\t%v", input[i][j])
+			common.ExitIfError(err)
+		}
+		_, err = fmt.Fprintf(file, "\n")
+	}
+	return err
+}
+
+func WriteDictionary(filename string, data map[uint64][]uint64) {
+	//func Write(filename string, data map[int64][]ChrDict) {
+	file := fileio.MustCreate(filename)
+	defer file.Close()
+	WriteDictToFileHandle(file, data)
+	//WriteChromDictToFileHandle(file, data)
+}
+
+//call aligner with goroutines
+/*
+func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
+	fasta.AllToUpper(ref)
+	header := BasicHeader(ref)
+	wg := new(sync.WaitGroup)
+	outFile, _ := os.Create(samFile)
+	defer outFile.Close()
+	sam.WriteHeaderToFileHandle(outFile, header)
+	file := fileio.EasyOpen(fastqFile)
+	defer file.Close()
+
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	//threads := runtime.NumCPU()
+	threads := runtime.NumCPU()
+	tasks := make(chan *fastq.Fastq)
+	mSet, trace := swMatrixSetup(10000)
+	for workers := 0; workers < threads; workers++ {
+		go func(jobNumber int) {
+			defer wg.Done()
+			for {
+				query, ok := <-tasks
+				if !ok {
+					return
+				}
+				MapFastq(ref, query, seedLen, m, mSet, trace, outFile)
+			}
+
+		}(workers)
+	}
+
+	var fq *fastq.Fastq
+	var done bool
+	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
+		wg.Add(1)
+		tasks <- fq
+	}
+	close(tasks)
+	wg.Wait()
+}*/
+
+/*
+func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, fastqFile string, samFile string) {
+	fasta.AllToUpper(ref)
+	header := BasicHeader(ref)
+
+	outFile, _ := os.Create(samFile)
+	defer outFile.Close()
+	sam.WriteHeaderToFileHandle(outFile, header)
+	file := fileio.EasyOpen(fastqFile)
+	defer file.Close()
+
+	var fq *fastq.Fastq
+	mSet, trace := swMatrixSetup(10000)
+	var done bool
+	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
+		MapFastq(ref, fq, 25, m, mSet, trace, outFile)
+	}
+
+}*/
