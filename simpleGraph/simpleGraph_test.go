@@ -22,25 +22,25 @@ var readWriteTests = []struct {
 	filename string // input
 	data     []*Node
 }{
-	{"testdata/testOne.sg", []*Node{{0, seqOneA}, {1, seqOneB}, {2, seqOneC}}},
+	{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA}, {1, "seqOneB", seqOneB}, {2, "seqOneC", seqOneC}}},
 }
 
 func TestRead(t *testing.T) {
 	for _, test := range readWriteTests {
 		actual := Read(test.filename)
-		if !AllAreEqual(test.data, actual) {
+		if !AllAreEqual(test.data, actual.Nodes) {
 			t.Errorf("The %s file was not read correctly.", test.filename)
 		}
 	}
 }
 
 func TestWriteAndRead(t *testing.T) {
-	var actual []*Node
+	//var actual []*Node
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"
 		Write(tempFile, test.data)
-		actual = Read(tempFile)
-		if !AllAreEqual(test.data, actual) {
+		actual := Read(tempFile)
+		if !AllAreEqual(test.data, actual.Nodes) {
 			t.Errorf("The %s file was not read correctly.", test.filename)
 		}
 		err := os.Remove(tempFile)
@@ -53,17 +53,17 @@ func TestWriteAndRead(t *testing.T) {
 func TestAligning(t *testing.T) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 100
+	var numberOfReads int = 10
 	var mappedRead *sam.SamAln
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/bigGenome.sg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := indexGenome(genome, tileSize)
+	tiles := indexGenome(genome.Nodes, tileSize)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome, readLength, numberOfReads)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads)
 	m, trace := swMatrixSetup(10000)
 
 
@@ -88,11 +88,12 @@ func TestAligning(t *testing.T) {
 	log.Printf("Aligning reads...\n")
 
 	for i := 0; i < len(simReads); i++ {
-		mappedRead = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
+		mappedRead = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
 		fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
 
 	}
 	log.Printf("Done mapping %d reads\n", numberOfReads)
+	PrintGraph(genome)
 
 	//code block for program profiling
 	if *memprofile != "" {
@@ -111,12 +112,12 @@ func TestAligning(t *testing.T) {
 func BenchmarkAligning(b *testing.B) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 1
+	var numberOfReads int = 100
 	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
 
-	genome := Read("testdata/test.fa")
-	tiles := indexGenome(genome, tileSize)
-	simReads := RandomReads(genome, readLength, numberOfReads)
+	genome := Read("testdata/bigGenome.sg")
+	tiles := indexGenome(genome.Nodes, tileSize)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads)
 	//var seeds []Seed = make([]Seed, 256)
 	m, trace := swMatrixSetup(10000)
 	//var seeds []Seed = make([]Seed, 256)
@@ -126,7 +127,7 @@ func BenchmarkAligning(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for i = 0; i < len(simReads); i++ {
-			mappedReads[i] = MapSingleFastq(genome, tiles, simReads[i], tileSize, m, trace)
+			mappedReads[i] = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
 			//log.Printf("%s\n", sam.SamAlnToString(mappedReads[i]))
 		}
 	}

@@ -11,60 +11,83 @@ import (
 )
 
 type SimpleGraph struct {
-	Nodes []*Node
-	Edges map[*Node][]*Edge
+	Nodes   []*Node
+	Edges   map[*Node][]*Edge
 	lock    sync.RWMutex
 }
 
 type Node struct {
 	Id  int64
+	Name string
 	Seq []dna.Base
+	//Prev []*Node
+	//Next []*Node
 }
 
 type Edge struct {
+	//Curr *Node
 	Next *Node
+	Prob float64
 }
 
-func (g *SimpleGraph) AddNode(n *Node) {
+func AddNode(g *SimpleGraph, n *Node) {
 	g.lock.Lock()
 	g.Nodes = append(g.Nodes, n)
 	g.lock.Unlock()
 }
 
-func (g *SimpleGraph) AddEdge(u, v *Node) {
+func AddEdge(g *SimpleGraph, u, v *Node, p float64) {
 	g.lock.Lock()
 	if g.Edges == nil {
 		g.Edges = make(map[*Node][]*Edge)
 	}
-	g.Edges[u] = append(g.Edges[u], &Edge{Next: v})
+	g.Edges[u] = append(g.Edges[u], &Edge{Next: v, Prob: p})
+	g.Edges[v] = append(g.Edges[v], &Edge{Next: u, Prob: p})
 	g.lock.Unlock()
 }
 
-func Read(filename string) []*Node {
+//func chaining()
+
+//func Read(filename string) ([]*Node, []string) {
+func Read(filename string) *SimpleGraph {
+	answer := NewGraph()
 	var line string
 	var currSeq []dna.Base
-	var answer []*Node
+	//var answer []*Node
 	var seqIdx int64 = -1
 	var doneReading bool = false
-	var chromIdx int64 = 0
+	//var chromIdx int64 = 0
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
-			//tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
-			tmp := Node{Id: chromIdx}
-			answer = append(answer, &tmp)
 			seqIdx++
-			chromIdx++
+			//tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
+			tmp := Node{Id: seqIdx, Name: line[1:len(line)]}
+			//answer = append(answer, &tmp)
+			AddNode(answer, &tmp)
+			if seqIdx > 0 {
+				AddEdge(answer, answer.Nodes[seqIdx-1], &tmp, 1)
+			}
 		} else {
 			currSeq = dna.StringToBases(line)
 			dna.AllToUpper(currSeq)
-			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
+			answer.Nodes[seqIdx].Seq = append(answer.Nodes[seqIdx].Seq, currSeq...)
 		}
 	}
 	return answer
 }
+
+func NewGraph() *SimpleGraph {
+	graph := new(SimpleGraph)
+	graph.Nodes = make([]*Node, 0)
+	graph.Edges = make(map[*Node][]*Edge, 0)
+	return graph
+}
+/*
+func AddEdgeTmp(u, v *Node) {
+	u.Next, v.Prev = append(u.Next, v), append(v.Prev, u)
+}*/
 
 func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
 	var err error
@@ -80,6 +103,31 @@ func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
 				common.ExitIfError(err)
 			}
 		}
+	}
+}
+
+func PrintGraph(gg *SimpleGraph) {
+	var startBase int64 = 1
+	lineLength := 50
+	var i, j int
+	for i = 0; i < len(gg.Nodes); i++ {
+		fmt.Printf("%s%s\t%v\t%v\n", ">", gg.Nodes[i].Name, startBase, startBase+int64(len(gg.Nodes[i].Seq)))
+		startBase += int64(len(gg.Nodes[i].Seq)) + 1
+		for j = 0; j < len(gg.Nodes[i].Seq);j+=lineLength {
+			if j+lineLength > len(gg.Nodes[i].Seq) {
+				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
+			} else {
+				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
+			}
+		}
+	}
+	for i = 0; i < len(gg.Nodes); i++ {
+		fmt.Printf("%s\t", gg.Nodes[i].Name)
+		near := gg.Edges[gg.Nodes[i]]
+		for j = 0; j < len(near);j++ {
+			fmt.Printf("%s\t", near[j].Next.Name)
+		}
+		fmt.Print("\n")
 	}
 }
 
