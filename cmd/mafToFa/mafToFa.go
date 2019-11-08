@@ -14,7 +14,7 @@ func mafToFa(inMaf string, inFa string, inSpeciesList string, outFa string, noMa
 
 	refFasta := fasta.Read(inFa)
 	if len(refFasta) != 1 {
-		log.Fatalf("Error: expecting input fasta to be a single record, but file has %d records\n", refFasta)
+		log.Fatalf("Error: expecting input fasta to be a single record, but file has %d records\n", len(refFasta))
 	}
 
 	speciesList := fileio.Read(inSpeciesList)
