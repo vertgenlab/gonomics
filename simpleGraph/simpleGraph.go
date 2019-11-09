@@ -125,7 +125,10 @@ func PrintGraph(gg *SimpleGraph) {
 		fmt.Printf("%s\t", gg.Nodes[i].Name)
 		near := gg.Edges[gg.Nodes[i]]
 		for j = 0; j < len(near);j++ {
-			fmt.Printf("%s\t", near[j].Next.Name)
+			if near[j].Next.Id > gg.Nodes[i].Id {
+				fmt.Printf("%s\t", near[j].Next.Name)
+			}
+			
 		}
 		fmt.Print("\n")
 	}
