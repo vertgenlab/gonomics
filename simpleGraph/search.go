@@ -9,38 +9,49 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 )
 
-func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, ext int) {
+func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path string, start int, ext int) {
 	s := make([]dna.Base, len(seq) + len(n.Seq)-start)
+	path = path + n.Name + ":"
 	copy(s[0:len(seq)], seq)
 	copy(s[len(seq):len(seq)+len(n.Seq)-start], n.Seq[start:])
 	if len(s) >= ext {
 		//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
 		fmt.Printf("Sequence: %s\n", dna.BasesToString(s[:ext]))
+		fmt.Printf("Path is: %s\n", path[0:len(path)-1])
 	} else if len(n.Next) == 0 && len(s) < ext {
 		fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
+		fmt.Printf("Path is: %s\n", path[0:len(path)-1])
 	} else {
 		for _, i := range n.Next {
-			GraphTraversalFwd(g, i.Next, s, 0, ext)
+			
+			GraphTraversalFwd(g, i.Next, s, path, 0, ext)
 		}
 	}
 }
 
-func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, start int, ext int) {
+func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, path string, start int, ext int) (string, []dna.Base) {
 	s := make([]dna.Base, len(seq) + start)
 	copy(s[0:start], n.Seq[:start])
+
+
 	copy(s[start:start+len(seq)], seq)
 	if len(s) >= ext {
-		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[len(s)-ext:len(s)]))
-		GraphTraversalFwd(g, n, s[len(s)-ext:len(s)], start, ext)
+		//fmt.Printf("Sequence: %s", dna.BasesToString(s[len(s)-ext:len(s)]))
+		//fmt.Printf("Path is: %s\n", path)
+		//GraphTraversalFwd(g, n, s[len(s)-ext:len(s)], path, start, ext)
+		
 	} else if len(n.Prev) == 0 && len(s) < ext {
-		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
-		GraphTraversalFwd(g, n, s, start, ext)
+		//fmt.Printf("Sequence: %s", dna.BasesToString(s))
+		//fmt.Printf("Path is: %s\n", path)
+		//GraphTraversalFwd(g, n, s, path, start, ext)
 	} else {
 		for _,i := range n.Prev {
 			//fmt.Printf("Previous node: %s\n", dna.BasesToString(i.Next.Seq))
-			ReverseGraphTraversal(g, i.Next, s, len(i.Next.Seq), ext)
+			path = i.Next.Name + ":" + path
+			path, s = ReverseGraphTraversal(g, i.Next, s, path, len(i.Next.Seq), ext)
 		}
 	}
+	return path, s
 }
 
 func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestPath string, ext int, read fastq.Fastq, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64) (*sam.SamAln, int64) {
@@ -62,7 +73,8 @@ func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestP
 			bestScore = score
 			currBest.Flag = 0
 			currBest.RName = bestPath[0:len(bestPath)-1]
-			currBest.Pos = currBest.Pos+lowRef
+			//+1 to convert into one base sam record
+			currBest.Pos = lowRef
 			currBest.Cigar = alignment
 			currBest.Seq = read.Seq
 			currBest.Qual = string(read.Qual)
@@ -74,7 +86,7 @@ func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestP
 			bestScore = score
 			currBest.Flag = 0
 			currBest.RName = bestPath[0:len(bestPath)-1]
-			currBest.Pos = currBest.Pos+lowRef
+			currBest.Pos = lowRef
 			currBest.Cigar = alignment
 			currBest.Seq = read.Seq
 			currBest.Qual = string(read.Qual)

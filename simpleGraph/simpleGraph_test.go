@@ -56,40 +56,58 @@ func TestGraphTraversal(t *testing.T) {
 	var seqTwo = dna.StringToBases("GGA")
 	var seqThree = dna.StringToBases("CCC")
 	var seqFour = dna.StringToBases("TTG")
+	var seqFive = dna.StringToBases("TGT")
 
-	testFastq := fastq.Fastq{Name: "TestSeq", Seq: dna.StringToBases("CCC"), Qual: []rune("JJJ")}
+	testFastq := fastq.Fastq{Name: "TestSeq", Seq: dna.StringToBases("CCCTTG"), Qual: []rune("JJJJJJ")}
 	nA := Node{0, "A", seqOne, nil, nil}
     nB := Node{1, "B", seqTwo, nil, nil}
     nC := Node{3, "C", seqThree, nil, nil}
     nD := Node{4, "D", seqFour, nil, nil}
+    nE := Node{5, "E", seqFive, nil, nil}
 
     AddNode(gg, &nA)
     AddNode(gg, &nB)
     AddNode(gg, &nC)
     AddNode(gg, &nD)
+    AddNode(gg, &nE)
 
     //AddEdge(gg, &nA, &nB, 1)
     //AddEdge(gg, &nB, &nC, 1)
 
     AddEdge(&nA, &nB, 1)
     AddEdge(&nA, &nC, 1)
+    AddEdge(&nA, &nE, 1)
     AddEdge(&nB, &nD, 1)
     AddEdge(&nC, &nD, 1)
+    AddEdge(&nE, &nD, 1)
     var query []dna.Base
+    var path string = ""
     //fmt.Printf("Start node: %s\n", dna.BasesToString(gg.Nodes[3].Seq))
-    //GraphTraversalFwd(gg, gg.Nodes[0], query, 0, 9)
+    path, query = ReverseGraphTraversal(gg, gg.Nodes[0], query, path, 1, 9)
+    GraphTraversalFwd(gg,gg.Nodes[0], query, path, 1, 9)
     m, trace := swMatrixSetup(10000)
     var mappedRead *sam.SamAln =  &sam.SamAln{QName: testFastq.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
     var score int64
-    mappedRead, score = AlignTraversalFwd(gg, gg.Nodes[0], query, 0, "", 9, testFastq, m, trace, mappedRead, score)
+    mappedRead, score = AlignTraversalFwd(gg, gg.Nodes[0], query, 0, "", 11, testFastq, m, trace, mappedRead, score)
     fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
 
+    //log.Printf("Indexing the graphGenome...\n")
+    //ham5 := make(map[uint64][]uint64)
+    //ham5 = GraphTraversalHashMap(gg, gg.Nodes[0], 0, 2, ham5)
+    //for i := 0; i < len(ham5[dnaToNumber(dna.StringToBases("AC"), 0, 2)]); i++ {
+    //	nodeIdx, pos := numberToChromAndPos(ham5[dnaToNumber(dna.StringToBases("AC"), 0, 2)][i])
+    //	fmt.Printf("NodeIdx: %d Position: %d", nodeIdx, pos)
+    //}
+    
+
+   // mappedRead, score = AlignReverseGraphTraversal(gg, gg.Nodes[3], query, 0, "", 9, testFastq, m, trace, mappedRead, score)
+    //fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
 
 func TestAligning(t *testing.T) {
 	var tileSize int = 30
 	var readLength int = 150
-	var numberOfReads int = 10
+	var numberOfReads int = 1
 	var mappedRead *sam.SamAln
 
 	log.Printf("Reading in the genome (simple graph)...\n")
