@@ -3,6 +3,7 @@ package simpleGraph
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/fastq"
 	//"github.com/vertgenlab/gonomics/align"
 	"log"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"runtime/pprof"
 	"flag"
 	"fmt"
-
-
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -22,7 +21,7 @@ var readWriteTests = []struct {
 	filename string // input
 	data     []*Node
 }{
-	{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA}, {1, "seqOneB", seqOneB}, {2, "seqOneC", seqOneC}}},
+	{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA, nil, nil}, {1, "seqOneB", seqOneB, nil, nil}, {2, "seqOneC", seqOneC, nil, nil}}},
 }
 
 func TestRead(t *testing.T) {
@@ -48,6 +47,43 @@ func TestWriteAndRead(t *testing.T) {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
 		}
 	}
+}
+
+func TestGraphTraversal(t *testing.T) {
+	gg := NewGraph()
+
+	var seqOne = dna.StringToBases("ATG")
+	var seqTwo = dna.StringToBases("GGA")
+	var seqThree = dna.StringToBases("CCC")
+	var seqFour = dna.StringToBases("TTG")
+
+	testFastq := fastq.Fastq{Name: "TestSeq", Seq: dna.StringToBases("CCC"), Qual: []rune("JJJ")}
+	nA := Node{0, "A", seqOne, nil, nil}
+    nB := Node{1, "B", seqTwo, nil, nil}
+    nC := Node{3, "C", seqThree, nil, nil}
+    nD := Node{4, "D", seqFour, nil, nil}
+
+    AddNode(gg, &nA)
+    AddNode(gg, &nB)
+    AddNode(gg, &nC)
+    AddNode(gg, &nD)
+
+    //AddEdge(gg, &nA, &nB, 1)
+    //AddEdge(gg, &nB, &nC, 1)
+
+    AddEdge(&nA, &nB, 1)
+    AddEdge(&nA, &nC, 1)
+    AddEdge(&nB, &nD, 1)
+    AddEdge(&nC, &nD, 1)
+    var query []dna.Base
+    //fmt.Printf("Start node: %s\n", dna.BasesToString(gg.Nodes[3].Seq))
+    //GraphTraversalFwd(gg, gg.Nodes[0], query, 0, 9)
+    m, trace := swMatrixSetup(10000)
+    var mappedRead *sam.SamAln =  &sam.SamAln{QName: testFastq.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
+    var score int64
+    mappedRead, score = AlignTraversalFwd(gg, gg.Nodes[0], query, 0, "", 9, testFastq, m, trace, mappedRead, score)
+    fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
+
 }
 
 func TestAligning(t *testing.T) {
@@ -90,10 +126,9 @@ func TestAligning(t *testing.T) {
 	for i := 0; i < len(simReads); i++ {
 		mappedRead = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
 		fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
-
 	}
 	log.Printf("Done mapping %d reads\n", numberOfReads)
-	PrintGraph(genome)
+	//PrintGraph(genome)
 
 	//code block for program profiling
 	if *memprofile != "" {

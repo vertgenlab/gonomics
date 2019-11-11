@@ -7,43 +7,54 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
-	"sync"
+	//"sync"
 )
 
 type SimpleGraph struct {
 	Nodes   []*Node
-	Edges   map[*Node][]*Edge
-	lock    sync.RWMutex
+	//Edges   map[*Node][]*Edge
+	//lock    sync.RWMutex
 }
 
 type Node struct {
 	Id  int64
 	Name string
 	Seq []dna.Base
-	//Prev []*Node
-	//Next []*Node
+	Prev []*Edge
+	Next []*Edge
 }
 
 type Edge struct {
 	//Curr *Node
 	Next *Node
 	Prob float64
+	//Strand bool
 }
 
 func AddNode(g *SimpleGraph, n *Node) {
-	g.lock.Lock()
+	//g.lock.Lock()
 	g.Nodes = append(g.Nodes, n)
-	g.lock.Unlock()
+	//g.lock.Unlock()
 }
+//func AddEdge(u, v *Node, uStrand, vStrand bool, p float64) {
+func AddEdge(u, v *Node, p float64) {
+	//g.lock.Lock()
+	//if g.Edges == nil {
+	//	g.Edges = make(map[*Node][]*Edge)
+	//}
+	//if uStand == true {
+	//	u.Next = append(u.Next, &Edge{Next: v, Prob: p, Strand: vStand})
+	//}
+	//if uStand == false {
+	//	u.Next = append(u.Next, &Edge{Next: v, Prob: p, Strand: uStand})
+	//}
+	//if vStand == true {
 
-func AddEdge(g *SimpleGraph, u, v *Node, p float64) {
-	g.lock.Lock()
-	if g.Edges == nil {
-		g.Edges = make(map[*Node][]*Edge)
-	}
-	g.Edges[u] = append(g.Edges[u], &Edge{Next: v, Prob: p})
-	g.Edges[v] = append(g.Edges[v], &Edge{Next: u, Prob: p})
-	g.lock.Unlock()
+	//}
+	//v.Prev = append(g.Edges[v], &Edge{Next: u, Prob: p, Strand: false})
+	//g.lock.Unlock()
+	u.Next = append(u.Next, &Edge{Next: v, Prob: p})
+	v.Prev = append(v.Prev, &Edge{Next: u, Prob: p})
 }
 
 //func chaining()
@@ -67,7 +78,7 @@ func Read(filename string) *SimpleGraph {
 			//answer = append(answer, &tmp)
 			AddNode(answer, &tmp)
 			if seqIdx > 0 {
-				AddEdge(answer, answer.Nodes[seqIdx-1], &tmp, 1)
+				AddEdge(answer.Nodes[seqIdx-1], &tmp, 1)
 			}
 		} else {
 			currSeq = dna.StringToBases(line)
@@ -81,7 +92,7 @@ func Read(filename string) *SimpleGraph {
 func NewGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
 	graph.Nodes = make([]*Node, 0)
-	graph.Edges = make(map[*Node][]*Edge, 0)
+	//graph.Edges = make(map[*Node][]*Edge, 0)
 	return graph
 }
 /*
@@ -123,11 +134,12 @@ func PrintGraph(gg *SimpleGraph) {
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
 		fmt.Printf("%s\t", gg.Nodes[i].Name)
-		near := gg.Edges[gg.Nodes[i]]
+		//near := gg.Edges[gg.Nodes[i]]
+		near := gg.Nodes[i].Next
 		for j = 0; j < len(near);j++ {
-			if near[j].Next.Id > gg.Nodes[i].Id {
-				fmt.Printf("%s\t", near[j].Next.Name)
-			}
+			
+			fmt.Printf("%s\t", near[j].Next.Name)
+			
 			
 		}
 		fmt.Print("\n")

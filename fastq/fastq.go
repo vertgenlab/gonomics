@@ -1,20 +1,27 @@
 package fastq
 
 import (
-
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"math"
-	"io"
-	
 )
 
 type Fastq struct {
 	Name string
 	Seq  []dna.Base
 	Qual []rune
+}
+
+func Copy(a *Fastq) *Fastq {
+	var answer Fastq = Fastq{}
+	answer.Name = a.Name
+	copy(answer.Seq, a.Seq)
+	copy(answer.Qual, a.Qual)
+	return &answer
 }
 
 func Read(filename string) []*Fastq {
@@ -65,9 +72,9 @@ func PhredToPError(ascii rune) float32 {
 }
 
 func ErrorRate(ASCII []rune) []float32 {
-	var answer []float32
+	var answer []float32 = make([]float32, len(ASCII))
 	for i := 0; i < len(ASCII); i++ {
-		answer = append(answer, PhredToPError(ASCII[i]))
+		answer[i] = PhredToPError(ASCII[i])
 	}
 	return answer
 }
@@ -90,9 +97,8 @@ func Write(filename string, records []*Fastq) {
 func WriteToFileHandle(file io.Writer, fq []*Fastq) error {
 	var err error
 	for i := 0; i < len(fq); i++ {
-
 		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Name, dna.BasesToString(fq[i].Seq), "+", string(fq[i].Qual))
+		common.ExitIfError(err)
 	}
-	
 	return err
 }

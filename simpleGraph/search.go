@@ -3,7 +3,101 @@ package simpleGraph
 import (
 	"sync"
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/cigar"
 )
+
+func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, ext int) {
+	s := make([]dna.Base, len(seq) + len(n.Seq)-start)
+	copy(s[0:len(seq)], seq)
+	copy(s[len(seq):len(seq)+len(n.Seq)-start], n.Seq[start:])
+	if len(s) >= ext {
+		//score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		fmt.Printf("Sequence: %s\n", dna.BasesToString(s[:ext]))
+	} else if len(n.Next) == 0 && len(s) < ext {
+		fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
+	} else {
+		for _, i := range n.Next {
+			GraphTraversalFwd(g, i.Next, s, 0, ext)
+		}
+	}
+}
+
+func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestPath string, ext int, read fastq.Fastq, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64) (*sam.SamAln, int64) {
+	s := make([]dna.Base, len(seq) + len(n.Seq)-start)
+	var score int64 = 0
+	var lowRef int64
+	//var lowRef, lowQuery, highQuery int64
+	var alignment []*cigar.Cigar
+	copy(s[0:len(seq)], seq)
+	copy(s[len(seq):len(seq)+len(n.Seq)-start], n.Seq[start:])
+
+	bestPath += n.Name + ":"
+	
+	if len(s) >= ext {
+		score, alignment, lowRef, _, _, _ = SmithWaterman(s[:ext], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		
+		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[:ext]))
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 0
+			currBest.RName = bestPath[0:len(bestPath)-1]
+			currBest.Pos = currBest.Pos+lowRef
+			currBest.Cigar = alignment
+			currBest.Seq = read.Seq
+			currBest.Qual = string(read.Qual)
+		}
+	} else if len(n.Next) == 0 && len(s) < ext {
+		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
+		score, alignment, lowRef, _, _, _ = SmithWaterman(s, read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		if score > bestScore {
+			bestScore = score
+			currBest.Flag = 0
+			currBest.RName = bestPath[0:len(bestPath)-1]
+			currBest.Pos = currBest.Pos+lowRef
+			currBest.Cigar = alignment
+			currBest.Seq = read.Seq
+			currBest.Qual = string(read.Qual)
+		}
+	} else {
+		for _, i := range n.Next {
+			currBest, bestScore = AlignTraversalFwd(g, i.Next, s, 0, bestPath, ext, read, m, trace, currBest, bestScore)
+		}
+	}
+	return currBest, bestScore
+}
+
+func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, start int, ext int) {
+	s := make([]dna.Base, len(seq) + start)
+	copy(s[0:start], n.Seq[:start])
+	copy(s[start:start+len(seq)], seq)
+	if len(s) >= ext {
+		fmt.Printf("Sequence: %s\n", dna.BasesToString(s[len(s)-ext:len(s)]))
+	} else if len(n.Prev) == 0 && len(s) < ext {
+		fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
+	} else {
+		for _,i := range n.Prev {
+			//fmt.Printf("Previous node: %s\n", dna.BasesToString(i.Next.Seq))
+			ReverseGraphTraversal(g, i.Next, s, len(i.Next.Seq), ext)
+		}
+	}
+}
+/*
+func dfs(gg *SimpleGraph, node *Node, fn func (*Node)) {
+    dfsRecursion(gg, node, map[*Node]bool{}, fn)
+}
+
+func dfsRecursion(gg *SimpleGraph, node *Node, v map[*Node]bool, fn func (*Node)) {
+    v[node] = true
+    fn(node)
+    for _, n := range gg.Edges[node] {
+        if _, ok := v[n.Next]; !ok {
+            dfsRecursion(gg, n.Next, v, fn)
+        }
+    }
+}*/
 
 type Stack struct {
     Nodes []Node
@@ -31,6 +125,13 @@ func Pop(s *Stack) *Node {
 	return &nodes
 }
 
+func (s *Stack) IsEmpty() bool {
+    s.lock.RLock()
+    defer s.lock.RUnlock()
+    return len(s.Nodes) == 0
+}
+
+/*
 func (g *SimpleGraph) DFS(f func(*Node)) {
 	g.lock.RLock()
 	var st Stack
@@ -64,27 +165,4 @@ func (g *SimpleGraph) DFS(f func(*Node)) {
 		}
 	}
 	g.lock.RUnlock()
-}
-
-func (s *Stack) IsEmpty() bool {
-    s.lock.RLock()
-    defer s.lock.RUnlock()
-    return len(s.Nodes) == 0
-}
-
-func dfs(gg *SimpleGraph, node *Node, fn func (*Node)) {
-    dfs_recur(gg, node, map[*Node]bool{}, fn)
-}
-
-func dfs_recur(gg *SimpleGraph, node *Node, v map[*Node]bool, fn func (*Node)) {
-
-	 
-    v[node] = true
-    fn(node)
-    for _, n := range gg.Edges[node] {
-        if _, ok := v[n.Next]; !ok {
-            dfs_recur(gg, n.Next, v, fn)
-            fmt.Println(v)
-        }
-    }
-}
+}*/
