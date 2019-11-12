@@ -14,7 +14,15 @@ func randIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }
 
-func RandomReads(genome []*Node, readLength int, numReads int) []*fastq.Fastq {
+ func mutate(sequence []dna.Base, numChanges int) {
+ 	possibleBases := []dna.Base{0, 1, 2, 3}
+ 	for i := 0; i < numChanges; i++ {
+ 		sequence[randIntInRange(0, len(sequence))] = possibleBases[randIntInRange(0, len(possibleBases))]
+ 	}
+ 	 
+ }
+
+func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.Fastq {
 	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
 	var start int
 	var chromIdx int
@@ -30,9 +38,11 @@ func RandomReads(genome []*Node, readLength int, numReads int) []*fastq.Fastq {
 			readName = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			qual = generateFakeQual(readLength)
 			seq = genome[chromIdx].Seq[start : start+readLength]
+			mutate(seq, numChanges)
 			if !strand {
 				dna.ReverseComplement(seq)
 			}
+
 			answer[i] = &fastq.Fastq{Name: readName, Seq: seq, Qual: qual}
 			i++
 		}

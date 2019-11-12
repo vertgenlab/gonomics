@@ -22,11 +22,12 @@ type Node struct {
 	Seq []dna.Base
 	Prev []*Edge
 	Next []*Edge
+
 }
 
 type Edge struct {
 	//Curr *Node
-	Next *Node
+	Dest *Node
 	Prob float64
 	//Strand bool
 }
@@ -39,22 +40,9 @@ func AddNode(g *SimpleGraph, n *Node) {
 //func AddEdge(u, v *Node, uStrand, vStrand bool, p float64) {
 func AddEdge(u, v *Node, p float64) {
 	//g.lock.Lock()
-	//if g.Edges == nil {
-	//	g.Edges = make(map[*Node][]*Edge)
-	//}
-	//if uStand == true {
-	//	u.Next = append(u.Next, &Edge{Next: v, Prob: p, Strand: vStand})
-	//}
-	//if uStand == false {
-	//	u.Next = append(u.Next, &Edge{Next: v, Prob: p, Strand: uStand})
-	//}
-	//if vStand == true {
-
-	//}
-	//v.Prev = append(g.Edges[v], &Edge{Next: u, Prob: p, Strand: false})
 	//g.lock.Unlock()
-	u.Next = append(u.Next, &Edge{Next: v, Prob: p})
-	v.Prev = append(v.Prev, &Edge{Next: u, Prob: p})
+	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
+	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
 }
 
 //func chaining()
@@ -77,9 +65,9 @@ func Read(filename string) *SimpleGraph {
 			tmp := Node{Id: seqIdx, Name: line[1:len(line)]}
 			//answer = append(answer, &tmp)
 			AddNode(answer, &tmp)
-			if seqIdx > 0 {
-				AddEdge(answer.Nodes[seqIdx-1], &tmp, 1)
-			}
+			//if seqIdx > 0 {
+			//	AddEdge(answer.Nodes[seqIdx-1], &tmp, 1)
+			//}
 		} else {
 			currSeq = dna.StringToBases(line)
 			dna.AllToUpper(currSeq)
@@ -88,6 +76,8 @@ func Read(filename string) *SimpleGraph {
 	}
 	return answer
 }
+
+
 
 func NewGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
@@ -138,7 +128,7 @@ func PrintGraph(gg *SimpleGraph) {
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near);j++ {
 			
-			fmt.Printf("%s\t", near[j].Next.Name)
+			fmt.Printf("%s\t", near[j].Dest.Name)
 			
 			
 		}

@@ -23,8 +23,7 @@ func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path string, sta
 		fmt.Printf("Path is: %s\n", path[0:len(path)-1])
 	} else {
 		for _, i := range n.Next {
-			
-			GraphTraversalFwd(g, i.Next, s, path, 0, ext)
+			GraphTraversalFwd(g, i.Dest, s, path, 0, ext)
 		}
 	}
 }
@@ -32,8 +31,6 @@ func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path string, sta
 func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, path string, start int, ext int) (string, []dna.Base) {
 	s := make([]dna.Base, len(seq) + start)
 	copy(s[0:start], n.Seq[:start])
-
-
 	copy(s[start:start+len(seq)], seq)
 	if len(s) >= ext {
 		//fmt.Printf("Sequence: %s", dna.BasesToString(s[len(s)-ext:len(s)]))
@@ -47,8 +44,8 @@ func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, path string,
 	} else {
 		for _,i := range n.Prev {
 			//fmt.Printf("Previous node: %s\n", dna.BasesToString(i.Next.Seq))
-			path = i.Next.Name + ":" + path
-			path, s = ReverseGraphTraversal(g, i.Next, s, path, len(i.Next.Seq), ext)
+			path = i.Dest.Name + ":" + path
+			path, s = ReverseGraphTraversal(g, i.Dest, s, path, len(i.Dest.Seq), ext)
 		}
 	}
 	return path, s
@@ -93,7 +90,7 @@ func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestP
 		}
 	} else {
 		for _, i := range n.Next {
-			currBest, bestScore = AlignTraversalFwd(g, i.Next, s, 0, bestPath, ext, read, m, trace, currBest, bestScore)
+			currBest, bestScore = AlignTraversalFwd(g, i.Dest, s, 0, bestPath, ext, read, m, trace, currBest, bestScore)
 		}
 	}
 	return currBest, bestScore
@@ -139,7 +136,7 @@ func AlignReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, start i
 	} else {
 		for _,i := range n.Prev {
 			//fmt.Printf("Previous node: %s\n", dna.BasesToString(i.Next.Seq))
-			currBest, bestScore = AlignReverseGraphTraversal(g, i.Next, s, len(i.Next.Seq), bestPath, ext, read, m, trace, currBest, bestScore)
+			currBest, bestScore = AlignReverseGraphTraversal(g, i.Dest, s, len(i.Dest.Seq), bestPath, ext, read, m, trace, currBest, bestScore)
 		}
 	}
 	return currBest, bestScore
