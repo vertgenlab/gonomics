@@ -22,14 +22,11 @@ type Node struct {
 	Seq []dna.Base
 	Prev []*Edge
 	Next []*Edge
-
 }
 
 type Edge struct {
-	//Curr *Node
 	Dest *Node
 	Prob float64
-	//Strand bool
 }
 
 func AddNode(g *SimpleGraph, n *Node) {
@@ -124,13 +121,9 @@ func PrintGraph(gg *SimpleGraph) {
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
 		fmt.Printf("%s\t", gg.Nodes[i].Name)
-		//near := gg.Edges[gg.Nodes[i]]
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near);j++ {
-			
 			fmt.Printf("%s\t", near[j].Dest.Name)
-			
-			
 		}
 		fmt.Print("\n")
 	}
