@@ -3,8 +3,9 @@ package simpleGraph
 import (
 	"sync"
 	"fmt"
+	//"log"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
+	//"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/cigar"
 )
@@ -28,16 +29,16 @@ func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path string, sta
 	}
 }
 
-func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, path string, start int, ext int) (string, []dna.Base) {
+func ReverseGraphTraversal(n *Node, seq []dna.Base, path string, start int, ext int64) (string, []dna.Base) {
 	s := make([]dna.Base, len(seq) + start)
 	copy(s[0:start], n.Seq[:start])
 	copy(s[start:start+len(seq)], seq)
-	if len(s) >= ext {
+	if int64(len(s)) >= ext {
 		//fmt.Printf("Sequence: %s", dna.BasesToString(s[len(s)-ext:len(s)]))
 		//fmt.Printf("Path is: %s\n", path)
 		//GraphTraversalFwd(g, n, s[len(s)-ext:len(s)], path, start, ext)
 		
-	} else if len(n.Prev) == 0 && len(s) < ext {
+	} else if len(n.Prev) == 0 && int64(len(s)) < ext {
 		//fmt.Printf("Sequence: %s", dna.BasesToString(s))
 		//fmt.Printf("Path is: %s\n", path)
 		//GraphTraversalFwd(g, n, s, path, start, ext)
@@ -45,16 +46,16 @@ func ReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, path string,
 		for _,i := range n.Prev {
 			//fmt.Printf("Previous node: %s\n", dna.BasesToString(i.Next.Seq))
 			path = i.Dest.Name + ":" + path
-			path, s = ReverseGraphTraversal(g, i.Dest, s, path, len(i.Dest.Seq), ext)
+			path, s = ReverseGraphTraversal(i.Dest, s, path, len(i.Dest.Seq), ext)
 		}
 	}
 	return path, s
 }
 
-func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestPath string, ext int, read fastq.Fastq, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64) (*sam.SamAln, int64) {
+func AlignTraversalFwd(n *Node, seq []dna.Base, start int, bestPath string, ext int64, read []dna.Base, m [][]int64, trace [][]rune, bestCigar []*cigar.Cigar, bestScore int64) ([]*cigar.Cigar, int64){
 	s := make([]dna.Base, len(seq) + len(n.Seq)-start)
-	var score int64 = 0
-	var lowRef int64
+	var score int64
+	//var bestCigar []*cigar.Cigar = cig
 	//var lowRef, lowQuery, highQuery int64
 	var alignment []*cigar.Cigar
 	copy(s[0:len(seq)], seq)
@@ -62,81 +63,105 @@ func AlignTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestP
 
 	bestPath += n.Name + ":"
 	
-	if len(s) >= ext {
-		score, alignment, lowRef, _, _, _ = SmithWaterman(s[:ext], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+	if int64(len(s)) >= ext {
+		score, alignment, _, _, _, _ = RightLocal(s[:ext], read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		
-		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[:ext]))
+		//score, alignment = NeedlemanWunsch(s[:ext], read, HumanChimpTwoScoreMatrix, -600, m, trace)
+		
 		if score > bestScore {
 			bestScore = score
-			currBest.Flag = 0
-			currBest.RName = bestPath[0:len(bestPath)-1]
-			//+1 to convert into one base sam record
-			currBest.Pos = lowRef
-			currBest.Cigar = alignment
-			currBest.Seq = read.Seq
-			currBest.Qual = string(read.Qual)
+			bestCigar = alignment
+			//log.Println("Entered if statement")
+			//fmt.Printf("Sequence right score found!!!!: %s\n", cigar.ToString(bestCigar))
+			//log.Printf("best score: %v\n", bestScore)
+			//log.Printf("length of read: %v", len(read))
+			//log.Printf("Display alignment:\n%s\n", cigar.View(s[:ext], read, bestCigar))
 		}
-	} else if len(n.Next) == 0 && len(s) < ext {
-		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
-		score, alignment, lowRef, _, _, _ = SmithWaterman(s, read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		//fmt.Printf("Sequence right: %s\n", dna.BasesToString(s[:ext]))
+		
+		return bestCigar, bestScore
+
+	} else if len(n.Next) == 0 && int64(len(s)) < ext {
+		
+		score, alignment, _, _, _, _ = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
+		//score, alignment = NeedlemanWunsch(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		if score > bestScore {
 			bestScore = score
-			currBest.Flag = 0
-			currBest.RName = bestPath[0:len(bestPath)-1]
-			currBest.Pos = lowRef
-			currBest.Cigar = alignment
-			currBest.Seq = read.Seq
-			currBest.Qual = string(read.Qual)
+			bestCigar = alignment
+			//log.Println("Entered if statement")
+			//fmt.Printf("Sequence right score found!!!!: %s\n", cigar.ToString(bestCigar))
+			//log.Printf("best score: %v\n", bestScore)
+			//log.Printf("length of read: %v", len(read))
+			//log.Printf("Display alignment:\n%s\n", cigar.View(s[:ext], read, bestCigar))
 		}
+		//fmt.Printf("Sequence right: %s\n", dna.BasesToString(s))
+		return bestCigar, bestScore
 	} else {
 		for _, i := range n.Next {
-			currBest, bestScore = AlignTraversalFwd(g, i.Dest, s, 0, bestPath, ext, read, m, trace, currBest, bestScore)
+			AlignTraversalFwd(i.Dest, s, 0, bestPath, ext, read, m, trace, bestCigar, bestScore)
 		}
+
 	}
-	return currBest, bestScore
+	return bestCigar, bestScore
 }
 
-func AlignReverseGraphTraversal(g *SimpleGraph, n *Node, seq []dna.Base, start int, bestPath string, ext int, read fastq.Fastq, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64) (*sam.SamAln, int64) {
-	s := make([]dna.Base, len(seq) + start)
-	bestPath += n.Name + ":"
+func AlignReverseGraphTraversal(n *Node, seq []dna.Base, start uint64, bestPath string, ext int64, read []dna.Base, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64) (*sam.SamAln, int64) {
+	s := make([]dna.Base, uint64(len(seq)) + start)
+	
+	if bestPath == "" {
+		bestPath += n.Name
+		} else {
+			bestPath += ":" + n.Name
+		}
 	var score int64 = 0
-	var lowRef int64
+	//var minJ int64
 	//var lowRef, lowQuery, highQuery int64
 	var alignment []*cigar.Cigar
 
 	copy(s[0:start], n.Seq[:start])
-	copy(s[start:start+len(seq)], seq)
-	if len(s) >= ext {
-		fmt.Printf("Sequence: %s\n", dna.BasesToString(s[len(s)-ext:len(s)]))
-		score, alignment, lowRef, _, _, _ = SmithWaterman(s[len(s)-ext:len(s)], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+	copy(s[start:start+uint64(len(seq))], seq)
+	var refStart int64
+	if int64(len(s)) >= ext {
+		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[int64(len(s))-ext:len(s)]))
+		score, alignment, refStart, _, _, _ = LeftLocal(s[int64(len(s))-ext:len(s)], read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		
 		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[:ext]))
 		if score > bestScore {
 			bestScore = score
 			currBest.Flag = 0
-			currBest.RName = bestPath[0:len(bestPath)-1]
-			currBest.Pos = currBest.Pos+lowRef
+			currBest.RName = bestPath[0:len(bestPath)]
+			//log.Printf("Length of s: %d, ext: %d, refStart: %d", len(s), ext, refStart)
+			currBest.Pos = int64(len(s))-ext+refStart
 			currBest.Cigar = alignment
-			currBest.Seq = read.Seq
-			currBest.Qual = string(read.Qual)
+			//fmt.Printf("The best cigar is: %s\n", cigar.ToString(currBest.Cigar))
+			//currBest.Seq = read.Seq
+			//currBest.Qual = string(read.Qual)
+			//log.Printf("Found best score: %d\n", bestScore)
 		}
-	} else if len(n.Prev) == 0 && len(s) < ext {
-		fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
+		return currBest, bestScore
+		
+	} else if len(n.Prev) == 0 && int64(len(s)) < ext {
+		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s))
 
-		score, alignment, lowRef, _, _, _ = SmithWaterman(s, read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		score, alignment, refStart, _, _, _ = LeftLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		if score > bestScore {
 			bestScore = score
 			currBest.Flag = 0
-			currBest.RName = bestPath[0:len(bestPath)-1]
-			currBest.Pos = currBest.Pos+lowRef
+			currBest.RName = bestPath[0:len(bestPath)]
+			currBest.Pos = int64(len(s))-ext+refStart
 			currBest.Cigar = alignment
-			currBest.Seq = read.Seq
-			currBest.Qual = string(read.Qual)
+			//log.Printf("Length of s: %d, ext: %d, minJ: %d", len(s), ext, refStart)
+			//log.Printf("Found best score: %d\n", bestScore)
+			//currBest.Seq = read.Seq
+			//currBest.Qual = string(read.Qual)
+			//fmt.Printf("The best cigar is: %s\n", cigar.ToString(currBest.Cigar))
 		}
+		return currBest, bestScore
 	} else {
 		for _,i := range n.Prev {
+			bestPath = i.Dest.Name + ":" + bestPath
 			//fmt.Printf("Previous node: %s\n", dna.BasesToString(i.Next.Seq))
-			currBest, bestScore = AlignReverseGraphTraversal(g, i.Dest, s, len(i.Dest.Seq), bestPath, ext, read, m, trace, currBest, bestScore)
+			currBest, bestScore = AlignReverseGraphTraversal(i.Dest, s, uint64(len(i.Dest.Seq)), bestPath, ext, read, m, trace, currBest, bestScore)
 		}
 	}
 	return currBest, bestScore
