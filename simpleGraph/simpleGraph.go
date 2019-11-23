@@ -11,15 +11,15 @@ import (
 )
 
 type SimpleGraph struct {
-	Nodes   []*Node
+	Nodes []*Node
 	//Edges   map[*Node][]*Edge
 	//lock    sync.RWMutex
 }
 
 type Node struct {
-	Id  int64
+	Id   int64
 	Name string
-	Seq []dna.Base
+	Seq  []dna.Base
 	Prev []*Edge
 	Next []*Edge
 }
@@ -34,6 +34,7 @@ func AddNode(g *SimpleGraph, n *Node) {
 	g.Nodes = append(g.Nodes, n)
 	//g.lock.Unlock()
 }
+
 //func AddEdge(u, v *Node, uStrand, vStrand bool, p float64) {
 func AddEdge(u, v *Node, p float64) {
 	//g.lock.Lock()
@@ -74,14 +75,13 @@ func Read(filename string) *SimpleGraph {
 	return answer
 }
 
-
-
 func NewGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
 	graph.Nodes = make([]*Node, 0)
 	//graph.Edges = make(map[*Node][]*Edge, 0)
 	return graph
 }
+
 /*
 func AddEdgeTmp(u, v *Node) {
 	u.Next, v.Prev = append(u.Next, v), append(v.Prev, u)
@@ -111,7 +111,7 @@ func PrintGraph(gg *SimpleGraph) {
 	for i = 0; i < len(gg.Nodes); i++ {
 		fmt.Printf("%s%s\t%v\t%v\n", ">", gg.Nodes[i].Name, startBase, startBase+int64(len(gg.Nodes[i].Seq)))
 		startBase += int64(len(gg.Nodes[i].Seq)) + 1
-		for j = 0; j < len(gg.Nodes[i].Seq);j+=lineLength {
+		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
 			if j+lineLength > len(gg.Nodes[i].Seq) {
 				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
 			} else {
@@ -122,7 +122,7 @@ func PrintGraph(gg *SimpleGraph) {
 	for i = 0; i < len(gg.Nodes); i++ {
 		fmt.Printf("%s\t", gg.Nodes[i].Name)
 		near := gg.Nodes[i].Next
-		for j = 0; j < len(near);j++ {
+		for j = 0; j < len(near); j++ {
 			fmt.Printf("%s\t", near[j].Dest.Name)
 		}
 		fmt.Print("\n")

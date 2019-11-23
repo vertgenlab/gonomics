@@ -7,29 +7,29 @@ import (
 )
 
 type Seed struct {
-	Id  int64
+	Id    int64
 	Start int64
-	End int64
+	End   int64
 	//Score int64
 }
 
 type seedDev struct {
-    TargetID uint64
-    TargetStart uint64
-    QueryStart uint64
-    Length uint64
-    PosStrand bool
+	TargetID    uint64
+	TargetStart uint64
+	QueryStart  uint64
+	Length      uint64
+	PosStrand   bool
 }
 
-func addSeed(existing []Seed, newId int64 , newStart int64 , newEnd int64) []Seed {
+func addSeed(existing []Seed, newId int64, newStart int64, newEnd int64) []Seed {
 	//var answer
 	var compareSeed int = -1
-	for i:=0; i < len(existing) && compareSeed < 0; i++ {
+	for i := 0; i < len(existing) && compareSeed < 0; i++ {
 		compareSeed = CompareSeed(existing[i], newId, newStart, newEnd)
-		if  compareSeed < 0 {
+		if compareSeed < 0 {
 			//do nothing
 
-		//	existing = append(existing, Seed{Id: newId, Start: newStart, End: newEnd})
+			//	existing = append(existing, Seed{Id: newId, Start: newStart, End: newEnd})
 		} else if compareSeed == 0 {
 			existing[i].Start = common.MinInt64(existing[i].Start, newStart)
 			existing[i].End = common.MaxInt64(existing[i].End, newEnd)
@@ -51,8 +51,9 @@ func addSeed(existing []Seed, newId int64 , newStart int64 , newEnd int64) []See
 	existing = append(existing, Seed{Id: newId, Start: newStart, End: newEnd})
 	return existing
 }
+
 //compare function
-func CompareSeed(a Seed, newId int64 , newStart int64 , newEnd int64) int {
+func CompareSeed(a Seed, newId int64, newStart int64, newEnd int64) int {
 	if overlapSeed(a, newId, newStart, newEnd) {
 		return 0
 	} else if a.Id < newId || (a.Id == newId && a.Start < newStart) {

@@ -2,8 +2,8 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	//"fmt"
 )
@@ -38,7 +38,7 @@ func swMatrixSetup(size int64) ([][]int64, [][]rune) {
 }
 
 func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
-	for i := 0; i < alphaLen+1;i++ {
+	for i := 0; i < alphaLen+1; i++ {
 		m[i][0] = 0
 	}
 	for j := 0; j < betaLen+1; j++ {
@@ -180,7 +180,7 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 	//seting up the rest of the matrix
 
 	initialZeroMatrix(m, len(alpha), len(beta))
-	
+
 	for i = 1; i < int64(len(alpha)+1); i++ {
 		for j = 1; j < int64(len(beta)+1); j++ {
 			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
@@ -194,8 +194,8 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 			}
 		}
 	}
-	
-	var minI, minJ int64
+
+	var minI, minJ int64 = 0, 0
 	//var refStart int
 	var curr cigar.Cigar
 	var route []*cigar.Cigar
@@ -224,11 +224,11 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 		default:
 			log.Fatalf("Error: unexpected traceback")
 		}
-		minI = i
-		minJ = j
+		maxI = i
+		maxJ = j
 	}
 	//reverseCigarPointer(route)
-	
+
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
 
