@@ -19,4 +19,4 @@ func reverseQualRecord(qualScore []rune) {
 	for i, j := 0, len(qualScore)-1; i <= j; i, j = i+1, j-1 {
 		qualScore[i], qualScore[j] = qualScore[j], qualScore[i]
 	}
-}
+

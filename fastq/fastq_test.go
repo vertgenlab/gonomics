@@ -22,4 +22,3 @@ func TestRead(t *testing.T) {
 			common.ExitIfError(fmt.Errorf("Error: Read,Write,Read was not equal to the Read\n"))
 		}
 	}
-}
