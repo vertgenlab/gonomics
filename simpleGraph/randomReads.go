@@ -14,13 +14,13 @@ func randIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }
 
- func mutate(sequence []dna.Base, numChanges int) {
- 	possibleBases := []dna.Base{0, 1, 2, 3}
- 	for i := 0; i < numChanges; i++ {
- 		sequence[randIntInRange(0, len(sequence))] = possibleBases[randIntInRange(0, len(possibleBases))]
- 	}
- 	 
- }
+func mutate(sequence []dna.Base, numChanges int) {
+	possibleBases := []dna.Base{0, 1, 2, 3}
+	for i := 0; i < numChanges; i++ {
+		sequence[randIntInRange(0, len(sequence))] = possibleBases[randIntInRange(0, len(possibleBases))]
+	}
+
+}
 
 func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.Fastq {
 	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
@@ -75,7 +75,6 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 	}
 	return answer
 }
-
 
 func generateFakeQual(length int) []rune {
 	var answer []rune = make([]rune, length)

@@ -105,12 +105,11 @@ func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
 }
 
 func PrintGraph(gg *SimpleGraph) {
-	var startBase int64 = 1
+
 	lineLength := 50
 	var i, j int
 	for i = 0; i < len(gg.Nodes); i++ {
-		fmt.Printf("%s%s\t%v\t%v\n", ">", gg.Nodes[i].Name, startBase, startBase+int64(len(gg.Nodes[i].Seq)))
-		startBase += int64(len(gg.Nodes[i].Seq)) + 1
+		fmt.Printf("%s%s\n", ">", gg.Nodes[i].Name)
 		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
 			if j+lineLength > len(gg.Nodes[i].Seq) {
 				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
