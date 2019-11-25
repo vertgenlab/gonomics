@@ -1,0 +1,54 @@
+package simpleGraph
+
+import (
+	"bytes"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/sam"
+)
+
+func calcExtension(seq []dna.Base) int64 {
+	var maxScore int64 = 0
+	for bases := 0; bases < len(seq); bases++ {
+		maxScore += HumanChimpTwoScoreMatrix[seq[bases]][seq[bases]]
+	}
+	return maxScore/600 + int64(len(seq))
+}
+
+func LocalView(samLine *sam.SamAln, ref []*Node) string {
+	//var maxI int64
+	//var operations []*Cigar
+	var seqOne, seqTwo bytes.Buffer
+
+	var operations []*cigar.Cigar = samLine.Cigar
+	var i int64 = samLine.Pos - 1
+	var j int64 = 0
+	var count int64
+
+	var alpha []dna.Base = ref[common.StringToInt64(samLine.RName)].Seq
+	var beta []dna.Base = samLine.Seq
+
+	for _, operation := range operations {
+		for count = 0; count < operation.RunLength; count++ {
+			switch operation.Op {
+			case 'M':
+				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
+				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
+				i, j = i+1, j+1
+			case 'I':
+				seqOne.WriteRune('-')
+				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
+				j++
+			case 'D':
+				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
+				seqTwo.WriteRune('-')
+				i++
+			case 'S':
+				seqOne.WriteRune('-')
+				seqTwo.WriteRune('-')
+			}
+		}
+	}
+	return seqOne.String() + "\n" + seqTwo.String() + "\n"
+}
