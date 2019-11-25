@@ -25,7 +25,7 @@ func Remove(slice []*Fasta, i int) []*Fasta {
 }
 
 func RemoveGaps(records []*Fasta) []*Fasta {
-	for i := 0 ; i < len(records); i++ {
+	for i := 0; i < len(records); i++ {
 		records[i].Seq = dna.RemoveGaps(records[i].Seq)
 	}
 	return records

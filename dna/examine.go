@@ -3,6 +3,7 @@ package dna
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"log"
 )
 
 func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount int, aCount int, cCount int, gCount int, tCount int, nCount int, gapCount int) {
@@ -74,6 +75,37 @@ func DefineBase(b Base) bool {
 		return false
 	default:
 		common.ExitIfError(fmt.Errorf("Error: trying to examine unknown base %d", b))
+		return false
+	}
+}
+
+func CountBase(seq []Base, b Base) int64 {
+	var answer int64 = 0
+	for i := 0; i < len(seq); i++ {
+		if seq[i] == b {
+			answer++
+		}
+	}
+	return answer
+}
+
+func CountBaseInterval(seq []Base, b Base, start int64, end int64) int64 {
+	var answer int64 = 0
+	if start < 0 || end > int64(len(seq)) {
+		log.Fatal("Error: %d and %d are out of range for a sequence of length %d\n", start, end, len(seq))
+	}
+	for i := start; i < end; i++ {
+		if seq[i] == b {
+			answer++
+		}
+	}
+	return answer
+}
+
+func CompareBase(alpha Base, beta Base) bool {
+	if alpha == beta {
+		return true
+	} else {
 		return false
 	}
 }

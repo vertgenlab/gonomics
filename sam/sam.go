@@ -5,6 +5,9 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"os"
 	"strconv"
@@ -31,7 +34,8 @@ type SamAln struct {
 	RNext string
 	PNext int64
 	TLen  int64
-	Seq   string
+	//Seq   string
+	Seq []dna.Base
 	Qual  string
 	Extra string
 }
@@ -118,7 +122,7 @@ func processAlignmentLine(line string) *SamAln {
 	if err != nil {
 		log.Fatal(err)
 	}
-	curr.Seq = words[9]
+	curr.Seq = dna.StringToBases(words[9])
 	curr.Qual = words[10]
 	if len(words) > 11 {
 		curr.Extra = words[11]
@@ -158,21 +162,24 @@ func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
 
 	for i, _ := range header.Text {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[i])
-		if err != nil {
-			return err
-		}
+		common.ExitIfError(err)
 	}
 	return nil
 }
 
-func WriteAlnToFileHandle(file *os.File, aln *SamAln) error {
-	var err error
+func SamAlnToString(aln *SamAln) string {
+        var answer string
 	if aln.Extra == "" {
-		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual)
-	} else {
-		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual, aln.Extra)
-	}
-	return err
+                answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)
+        } else {
+                answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
+        }
+        return answer
+}
+
+func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
+	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString)
+	common.ExitIfError(err)
 }
 
 func Write(filename string, data *Sam) error {
@@ -184,12 +191,21 @@ func Write(filename string, data *Sam) error {
 
 	err = WriteHeaderToFileHandle(file, data.Header)
 	for i, _ := range data.Aln {
-		err = WriteAlnToFileHandle(file, data.Aln[i])
-		if err != nil {
-			return err
-		}
+		WriteAlnToFileHandle(file, data.Aln[i])
 	}
 	return err
+}
+
+func AlignmentHeader(ref []*fasta.Fasta) *SamHeader {
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+	for i := 0; i < len(ref); i++ {
+		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		header.Text = append(header.Text, words)
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
+	}
+	return &header
 }
 
 /*
