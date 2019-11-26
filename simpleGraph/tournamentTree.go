@@ -110,14 +110,14 @@ func mergeSeedLists(lastPosition []*SeedDev, currPosition []*SeedBed, currQPos u
 }
 
 // need to handle neg strand
-func findSeedsFast(seedHash [][]*SeedBed, read *fastq.Fastq, seedLen int) []*SeedDev {
+func findSeedsFast(seedHash [][]*SeedBed, read *fastq.Fastq, seedLen int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0
 	var prevHits []*SeedDev = make([]*SeedDev, 0)
 	var allHits []*SeedDev = make([]*SeedDev, 0)
 	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
 		codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
 		currHits := seedHash[codedSeq]
-		noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), true)
+		noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), posStrand)
 		allHits = append(allHits, noMerge...)
 		prevHits = merged
 	}
