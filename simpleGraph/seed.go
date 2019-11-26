@@ -13,13 +13,13 @@ type Seed struct {
 	//Score int64
 }
 
-type seedDev struct {
+/*type seedDev struct {
 	TargetID    uint64
 	TargetStart uint64
 	QueryStart  uint64
 	Length      uint64
 	PosStrand   bool
-}
+}*/
 
 func addSeed(existing []Seed, newId int64, newStart int64, newEnd int64) []Seed {
 	//var answer
