@@ -17,7 +17,7 @@ type SimpleGraph struct {
 }
 
 type Node struct {
-	Id   int64
+	Id   uint32
 	Name string
 	Seq  []dna.Base
 	Prev []*Edge
@@ -60,12 +60,13 @@ func Read(filename string) *SimpleGraph {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
 			//tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
-			tmp := Node{Id: seqIdx, Name: line[1:len(line)]}
+			tmp := Node{Id: uint32(seqIdx), Name: line[1:len(line)]}
 			//answer = append(answer, &tmp)
 			AddNode(answer, &tmp)
 			//if seqIdx > 0 {
 			//	AddEdge(answer.Nodes[seqIdx-1], &tmp, 1)
 			//}
+			
 		} else {
 			currSeq = dna.StringToBases(line)
 			dna.AllToUpper(currSeq)

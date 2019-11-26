@@ -168,7 +168,7 @@ func TestGraphTraversal(t *testing.T) {
 	AddEdge(&nC, &nD, 1)
 	AddEdge(&nE, &nD, 1)
 	var query []dna.Base
-	var path []int64
+	var path []uint32
 	//fmt.Printf("Start node: %s\n", dna.BasesToString(gg.Nodes[3].Seq))
 	path, query = ReverseGraphTraversal(gg.Nodes[1], query, path, 1, 9)
 	reversePath(path)

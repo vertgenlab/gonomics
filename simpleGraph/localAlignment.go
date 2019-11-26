@@ -133,7 +133,7 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 		}
 	}
 	var minI, minJ int64
-	var refStart int
+
 	var curr cigar.Cigar
 	var route []*cigar.Cigar
 	route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[len(alpha)][len(beta)]})
@@ -153,12 +153,10 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 		switch trace[i][j] {
 		case 'M':
 			i, j = i-1, j-1
-			refStart = refStart + 1
 		case 'I':
 			j -= 1
 		case 'D':
 			i -= 1
-			refStart = refStart + 1
 		default:
 			log.Fatalf("Error: unexpected traceback")
 		}
@@ -195,13 +193,13 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 		}
 	}
 
-	var minI, minJ int64 = 0, 0
+	var minI, minJ int64 = 1, 1
 	//var refStart int
 	var curr cigar.Cigar
 	var route []*cigar.Cigar
-	route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[maxI][maxJ]})
+	route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[minI][minJ]})
 	//traceback starts in top corner
-	for i, j, routeIdx = 0, 0, 0; m[i][j] > 0; {
+	for i, j, routeIdx = minI, minJ, 0; m[i][j] > 0; {
 		if route[routeIdx].RunLength == 0 {
 			route[routeIdx].RunLength = 1
 			route[routeIdx].Op = trace[i][j]
