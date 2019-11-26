@@ -2,9 +2,9 @@ package simpleGraph
 
 import (
 	"fmt"
-	"sync"
-	//"log"
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
+	"sync"
 	//"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/sam"
@@ -94,44 +94,38 @@ func PathToString(allPaths []uint32, gg *SimpleGraph) string {
 	return s
 }
 
-func AlignTraversalFwd(n *Node, seq []dna.Base, start int, bestPath []uint32, ext int64, read []dna.Base, m [][]int64, trace [][]rune, bestCigar []*cigar.Cigar, bestScore int64, queryEnd int64) ([]*cigar.Cigar, int64, int64, []uint32) {
-	s := make([]dna.Base, len(seq)+len(n.Seq)-start)
-	bestPath = AddPath(n.Id, bestPath)
-	var score, maxJ int64
-
+func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int64, []uint32) {
+	currentPath = AddPath(n.Id, bestPath)
+        var score, maxJ int64
 	var alignment []*cigar.Cigar
+
+	var s []dna.Base
+	var availableBases int = len(seq)+len(n.Seq)-start
+	var targetLength int = common.Min(availableBases, ext)
+	var basesToTake int = targetLength - len(seq)
+	s = make([]dna.Base, targetLength)
 	copy(s[0:len(seq)], seq)
-	copy(s[len(seq):len(seq)+len(n.Seq)-start], n.Seq[start:])
+	copy(s[len(seq):targetLength], n.Seq[start:start+basesToTake])
 
-	if int64(len(s)) >= ext {
-		score, alignment, _, _, _, maxJ = RightLocal(s[:ext], read, HumanChimpTwoScoreMatrix, -600, m, trace)
-		if score > bestScore {
-			bestScore = score
-			bestCigar = alignment
-			queryEnd = int64(len(read)) + maxJ
-		}
-		return bestCigar, bestScore, queryEnd, bestPath
-
-	} else if len(n.Next) == 0 && int64(len(s)) < ext {
-
+	if availableBases >= ext || len(n.Next)==0 {
 		score, alignment, _, _, _, maxJ = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
-		if score > bestScore {
-			bestScore = score
-			bestCigar = alignment
-			queryEnd = int64(len(read)) + maxJ
-		}
-		return bestCigar, bestScore, queryEnd, bestPath
+		return alignment, score, maxJ, currentPath
 	} else {
+		var bestScore int64 = -1
 		for _, i := range n.Next {
-			//bestPath += i.Dest.Name + ":"
-
-			AlignTraversalFwd(i.Dest, s, 0, bestPath, ext, read, m, trace, bestCigar, bestScore, queryEnd)
+			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, bestPath, ext, read, m, trace)
+			if score > bestScore {
+				bestScore = score
+				bestAlignment = alignment
+				bestQueryEnd = queryEnd
+				bestPath = path
+			}
 		}
+		return bestAlignment, bestScore, bestQueryEnd, bestPath
 	}
-	return bestCigar, bestScore, queryEnd, bestPath
 }
 
-func AlignReverseGraphTraversal(n *Node, seq []dna.Base, start uint64, bestPath []uint32, ext int64, read []dna.Base, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64, queryStart int64) (*sam.SamAln, int64, int64, []uint32) {
+func AlignReverseGraphTraversal(n *Node, seq []dna.Base, start uint64, bestPath []uint32, ext int64, read []dna.Base, m [][]int64, trace [][]rune) (*sam.SamAln, int64, int64, []uint32) {
 	s := make([]dna.Base, uint64(len(seq))+start)
 	//bestPath = AddPath(n.Name, bestPath)
 	//if bestPath == "" {
@@ -148,10 +142,11 @@ func AlignReverseGraphTraversal(n *Node, seq []dna.Base, start uint64, bestPath 
 	copy(s[0:start], n.Seq[:start])
 	copy(s[start:start+uint64(len(seq))], seq)
 	var refStart int64
+	log.Printf("seq1=%s, seq2=%s\n", dna.BasesToString(s[int64(len(s))-ext:len(s)]), dna.BasesToString(read))
 	if int64(len(s)) >= ext {
 		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[int64(len(s))-ext:len(s)]))
 		score, alignment, refStart, _, minJ, _ = LeftLocal(s[int64(len(s))-ext:len(s)], read, HumanChimpTwoScoreMatrix, -600, m, trace)
-
+		log.Printf("cigar=%s\n", cigar.ToString(alignment))
 		//fmt.Printf("Sequence: %s\n", dna.BasesToString(s[:ext]))
 		if score > bestScore {
 			reversePath(bestPath)

@@ -209,9 +209,9 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 		} else {
 			currRead = revCompRead
 		}
-		rightAlignment, rightScore, maxQuery, bestPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], query, int(seeds[i].TargetStart), bestPath, ext, currRead.Seq[seeds[i].QueryStart+1:], m, trace, rightAlignment, rightScore, maxQuery)
+		rightAlignment, rightScore, maxQuery, bestPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], query, int(seeds[i].TargetStart), bestPath, ext, currRead.Seq[seeds[i].QueryStart+1:], m, trace)
 		query = query[0:0]
-		samPointer, score, minQuery, bestPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], query, uint64(seeds[i].TargetStart+1), bestPath, ext, currRead.Seq[:seeds[i].QueryStart+1], m, trace, samPointer, score, minQuery)
+		samPointer, score, minQuery, bestPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], query, uint64(seeds[i].TargetStart+1), bestPath, ext, currRead.Seq[:seeds[i].QueryStart+1], m, trace)
 		//currScore = score + rightScore + MaxScore(currRead.Seq[seeds[i].QueryStart:seeds[i].QueryStart+seeds[i].Length],HumanChimpTwoScoreMatrix)
 		currScore = score + rightScore
 		log.Printf("seedLength=%d, leftAlignment=%s, rightAlignment=%s\n", seeds[i].Length, cigar.ToString(rightAlignment), cigar.ToString(samPointer.Cigar))

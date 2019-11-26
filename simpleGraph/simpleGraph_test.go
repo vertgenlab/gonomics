@@ -53,7 +53,7 @@ func TestWriteAndRead(t *testing.T) {
 func TestAligning(t *testing.T) {
 	var tileSize int = 12
 	var stepSize int = 1
-	var readLength int = 50
+	var readLength int = 100
 	var numberOfReads int = 1
 	var mutations int = 0
 	var mappedRead *sam.SamAln
