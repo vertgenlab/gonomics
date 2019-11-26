@@ -7,7 +7,10 @@ import (
 
 func AddCigar(cigs []*Cigar, newCig *Cigar) []*Cigar {
 	//fmt.Println(cigs[len(cigs)-1])
-	if cigs[len(cigs)-1].Op == newCig.Op {
+	if len(cigs) == 0 {
+		cigs = append(cigs, newCig)
+		return cigs
+	}else if cigs[len(cigs)-1].Op == newCig.Op {
 		cigs[len(cigs)-1].RunLength += newCig.RunLength
 	} else {
 		cigs = append(cigs, newCig)
@@ -18,6 +21,8 @@ func AddCigar(cigs []*Cigar, newCig *Cigar) []*Cigar {
 func CatCigar(cigs []*Cigar, newCigs []*Cigar) []*Cigar {
 	if len(newCigs) == 0 {
 		return cigs
+	} else if len(cigs) == 0 && len(newCigs) > 0 {
+		return newCigs
 	} else if cigs[len(cigs)-1].Op == newCigs[0].Op {
 		cigs[len(cigs)-1].RunLength += newCigs[0].RunLength
 	} else {

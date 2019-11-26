@@ -10,7 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path []int64, start int, ext int) {
+func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path []uint32, start int, ext int) {
 	s := make([]dna.Base, len(seq)+len(n.Seq)-start)
 	path = AddPath(n.Id, path)
 	copy(s[0:len(seq)], seq)
@@ -34,7 +34,7 @@ func GraphTraversalFwd(g *SimpleGraph, n *Node, seq []dna.Base, path []int64, st
 	}
 }
 
-func ReverseGraphTraversal(n *Node, seq []dna.Base, path []int64, start int, ext int64) ([]int64, []dna.Base) {
+func ReverseGraphTraversal(n *Node, seq []dna.Base, path []uint32, start int, ext int64) ([]uint32, []dna.Base) {
 	s := make([]dna.Base, len(seq)+start)
 	copy(s[0:start], n.Seq[:start])
 	copy(s[start:start+len(seq)], seq)
@@ -59,7 +59,7 @@ func ReverseGraphTraversal(n *Node, seq []dna.Base, path []int64, start int, ext
 	return path, s
 }
 
-func AddPath(newPath int64, allPaths []int64) []int64 {
+func AddPath(newPath uint32, allPaths []uint32) []uint32 {
 	if allPaths == nil {
 		allPaths = append(allPaths, newPath)
 	} else if allPaths[len(allPaths)-1] == newPath {
@@ -71,13 +71,13 @@ func AddPath(newPath int64, allPaths []int64) []int64 {
 	return allPaths
 }
 
-func reversePath(alpha []int64) {
+func reversePath(alpha []uint32) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
 		alpha[i], alpha[j] = alpha[j], alpha[i]
 	}
 }
 
-func PathToString(allPaths []int64, gg *SimpleGraph) string {
+func PathToString(allPaths []uint32, gg *SimpleGraph) string {
 	var s string = ""
 	//fmt.Printf("length of paths %d\n", len(allPaths))
 	if allPaths == nil {
@@ -94,7 +94,7 @@ func PathToString(allPaths []int64, gg *SimpleGraph) string {
 	return s
 }
 
-func AlignTraversalFwd(n *Node, seq []dna.Base, start int, bestPath []int64, ext int64, read []dna.Base, m [][]int64, trace [][]rune, bestCigar []*cigar.Cigar, bestScore int64, queryEnd int64) ([]*cigar.Cigar, int64, int64, []int64) {
+func AlignTraversalFwd(n *Node, seq []dna.Base, start int, bestPath []uint32, ext int64, read []dna.Base, m [][]int64, trace [][]rune, bestCigar []*cigar.Cigar, bestScore int64, queryEnd int64) ([]*cigar.Cigar, int64, int64, []uint32) {
 	s := make([]dna.Base, len(seq)+len(n.Seq)-start)
 	bestPath = AddPath(n.Id, bestPath)
 	var score, maxJ int64
@@ -131,7 +131,7 @@ func AlignTraversalFwd(n *Node, seq []dna.Base, start int, bestPath []int64, ext
 	return bestCigar, bestScore, queryEnd, bestPath
 }
 
-func AlignReverseGraphTraversal(n *Node, seq []dna.Base, start uint64, bestPath []int64, ext int64, read []dna.Base, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64, queryStart int64) (*sam.SamAln, int64, int64, []int64) {
+func AlignReverseGraphTraversal(n *Node, seq []dna.Base, start uint64, bestPath []uint32, ext int64, read []dna.Base, m [][]int64, trace [][]rune, currBest *sam.SamAln, bestScore int64, queryStart int64) (*sam.SamAln, int64, int64, []uint32) {
 	s := make([]dna.Base, uint64(len(seq))+start)
 	//bestPath = AddPath(n.Name, bestPath)
 	//if bestPath == "" {

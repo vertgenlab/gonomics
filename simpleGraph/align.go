@@ -23,6 +23,15 @@ import (
 	"sync"
 )
 
+
+var HumanChimpTwoScoreMatrix = [][]int64{
+	{90, -330, -236, -356, -208},
+	{-330, 100, -318, -236, -196},
+	{-236, -318, 100, -330, -196},
+	{-356, -236, -330, 90, -208},
+	{-208, -196, -196, -208, -202},
+}
+
 func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 	answer := make(map[uint64][]uint64)
 	var seqCode uint64
@@ -179,7 +188,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, chromPosHash map[uin
 	var samPointer *sam.SamAln = &sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	var rightAlignment []*cigar.Cigar
 	var maxScore, bestScore, score int64 = 0, 0, 0
-	var bestRightScore, rightScore int64 = 0, 0
+	var rightScore int64 = 0
 	var query []dna.Base
 	for bases := 0; bases < len(read.Seq); bases++ {
 		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
@@ -197,27 +206,30 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, chromPosHash map[uin
 			seeds = append(seeds, seedDev{TargetID: uint64(nodeId), TargetStart: uint64(pos), QueryStart: uint64(subRead), Length: uint64(seedLen), PosStrand: true})
 		}
 	}
-	var bestPath []int64 = nil
+	var bestPath []uint32 = nil
+	var currScore int64
 	for i = 0; i < len(seeds); i++ {
+		currScore = 0
 
-		samPointer, score, minQuery, bestPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetID], query, seeds[i].TargetStart, bestPath, ext, read.Seq[:seeds[i].QueryStart], m, trace, samPointer, score, minQuery)
-		if score > bestScore {
 
-			bestScore = score
-			query = query[0:0]
-			rightAlignment, rightScore, maxQuery, bestPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetID], query, int(seeds[i].TargetStart+seeds[i].Length), bestPath, ext, read.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace, rightAlignment, rightScore, maxQuery)
-			if rightScore > bestRightScore {
-				minQuery = int64(seeds[i].QueryStart) - minQuery
-				currBest.Flag = 0
-				currBest.RName = gg.Nodes[bestPath[0]].Name
-				currBest.Pos = samPointer.Pos
-				currBest.Cigar = samPointer.Cigar
-				currBest.Cigar = cigar.AddCigar(currBest.Cigar, &cigar.Cigar{RunLength: int64(seedLen), Op: 'M'})
-				cigar.CatCigar(currBest.Cigar, rightAlignment)
-				currBest.Cigar = SClipCigar(minQuery, maxQuery+int64(seedLen), int64(len(read.Seq)), currBest.Cigar)
-				currBest.Extra = PathToString(bestPath, gg)
-				bestPath = nil
-			}
+		rightAlignment, rightScore, maxQuery, bestPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetID], query, int(seeds[i].TargetStart), bestPath, ext, read.Seq[seeds[i].QueryStart+1:], m, trace, rightAlignment, rightScore, maxQuery)
+		query = query[0:0]
+		samPointer, score, minQuery, bestPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetID], query, seeds[i].TargetStart+1, bestPath, ext, read.Seq[:seeds[i].QueryStart+1], m, trace, samPointer, score, minQuery)
+		//currScore = score + rightScore + MaxScore(read.Seq[seeds[i].QueryStart:seeds[i].QueryStart+seeds[i].Length],HumanChimpTwoScoreMatrix)
+		currScore = score + rightScore
+		
+		if currScore > bestScore {
+			bestScore = currScore
+			minQuery = int64(seeds[i].QueryStart) - minQuery
+			currBest.Flag = 0
+			currBest.RName = gg.Nodes[bestPath[0]].Name
+			currBest.Pos = samPointer.Pos
+			currBest.Cigar = samPointer.Cigar
+			//currBest.Cigar = cigar.AddCigar(currBest.Cigar, &cigar.Cigar{RunLength: int64(seedLen)-1, Op: 'M'})
+			cigar.CatCigar(currBest.Cigar, rightAlignment)
+			currBest.Cigar = SClipCigar(minQuery, maxQuery+int64(seedLen), int64(len(read.Seq)), currBest.Cigar)
+			currBest.Extra = PathToString(bestPath, gg)
+			bestPath = nil
 		}
 	}
 	//do reverse
@@ -231,22 +243,27 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, chromPosHash map[uin
 		}
 	}
 	for i = 0; i < len(seeds); i++ {
-		samPointer, score, minQuery, bestPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetID], query, seeds[i].TargetStart, bestPath, ext, read.Seq[:seeds[i].QueryStart], m, trace, samPointer, score, minQuery)
-		if score > bestScore {
-			bestScore = score
-			query = query[0:0]
-			rightAlignment, rightScore, maxQuery, bestPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetID], query, int(seeds[i].TargetStart+seeds[i].Length), bestPath, ext, read.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace, rightAlignment, rightScore, maxQuery)
-			if rightScore > bestRightScore {
-				currBest.Flag = 16
-				currBest.RName = gg.Nodes[bestPath[0]].Name
-				currBest.Pos = samPointer.Pos
-				currBest.Cigar = samPointer.Cigar
-				currBest.Cigar = cigar.AddCigar(currBest.Cigar, &cigar.Cigar{RunLength: int64(seedLen), Op: 'M'})
-				cigar.CatCigar(currBest.Cigar, rightAlignment)
-				currBest.Cigar = SClipCigar(int64(seeds[i].QueryStart)-minQuery, maxQuery+int64(seedLen), int64(len(read.Seq)), currBest.Cigar)
-				currBest.Extra = PathToString(bestPath, gg)
-				bestPath = nil
-			}
+		currScore = 0
+
+
+		rightAlignment, rightScore, maxQuery, bestPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetID], query, int(seeds[i].TargetStart), bestPath, ext, read.Seq[seeds[i].QueryStart+1:], m, trace, rightAlignment, rightScore, maxQuery)
+		query = query[0:0]
+		samPointer, score, minQuery, bestPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetID], query, seeds[i].TargetStart+1, bestPath, ext, read.Seq[:seeds[i].QueryStart+1], m, trace, samPointer, score, minQuery)
+		//currScore = score + rightScore + MaxScore(read.Seq[seeds[i].QueryStart:seeds[i].QueryStart+seeds[i].Length],HumanChimpTwoScoreMatrix)
+		currScore = score + rightScore
+		
+		if currScore > bestScore {
+			bestScore = currScore
+			minQuery = int64(seeds[i].QueryStart) - minQuery
+			currBest.Flag = 0
+			currBest.RName = gg.Nodes[bestPath[0]].Name
+			currBest.Pos = samPointer.Pos
+			currBest.Cigar = samPointer.Cigar
+			//currBest.Cigar = cigar.AddCigar(currBest.Cigar, &cigar.Cigar{RunLength: int64(seedLen)-1, Op: 'M'})
+			cigar.CatCigar(currBest.Cigar, rightAlignment)
+			currBest.Cigar = SClipCigar(minQuery, maxQuery+int64(seedLen), int64(len(read.Seq)), currBest.Cigar)
+			currBest.Extra = PathToString(bestPath, gg)
+			bestPath = nil
 		}
 	}
 	return &currBest
@@ -344,6 +361,14 @@ func MapFastq(ref []*fasta.Fasta, read *fastq.Fastq, seedLen int, chromPosHash m
 	//wg.Done()
 }
 
+func MaxScore(seq []dna.Base, scores [][]int64) int64 {
+	var maxScore int64 = 0
+	for i := 0; i < len(seq);i++ {
+		maxScore += scores[seq[i]][seq[i]]
+	}
+	return maxScore
+}
+
 func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
 	//var answer *sam.SamAln
 	header := BasicHeader(ref)
@@ -367,14 +392,6 @@ func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile strin
 		go MapFastq(ref, fq, seedLen, m, mSet, trace, outFile)
 	}
 	wg.Wait()
-}
-
-var HumanChimpTwoScoreMatrix = [][]int64{
-	{90, -330, -236, -356, -208},
-	{-330, 100, -318, -236, -196},
-	{-236, -318, 100, -330, -196},
-	{-356, -236, -330, 90, -208},
-	{-208, -196, -196, -208, -202},
 }
 
 func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
@@ -451,6 +468,8 @@ func WriteDictionary(filename string, data map[uint64][]uint64) {
 	WriteDictToFileHandle(file, data)
 	//WriteChromDictToFileHandle(file, data)
 }
+
+
 
 //call aligner with goroutines
 /*
