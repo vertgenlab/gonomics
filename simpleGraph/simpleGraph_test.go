@@ -51,9 +51,10 @@ func TestWriteAndRead(t *testing.T) {
 }
 
 func TestAligning(t *testing.T) {
-	var tileSize int = 30
-	var readLength int = 150
-	var numberOfReads int = 10
+	var tileSize int = 12
+	var stepSize int = 1
+	var readLength int = 50
+	var numberOfReads int = 1
 	var mutations int = 0
 	var mappedRead *sam.SamAln
 
@@ -61,7 +62,7 @@ func TestAligning(t *testing.T) {
 	genome := Read("testdata/bigGenome.sg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := indexGenome(genome.Nodes, tileSize)
+	tiles := indexGenomeDev(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)

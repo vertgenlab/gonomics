@@ -66,7 +66,7 @@ func Read(filename string) *SimpleGraph {
 			//if seqIdx > 0 {
 			//	AddEdge(answer.Nodes[seqIdx-1], &tmp, 1)
 			//}
-			
+
 		} else {
 			currSeq = dna.StringToBases(line)
 			dna.AllToUpper(currSeq)
