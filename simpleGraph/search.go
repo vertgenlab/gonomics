@@ -131,7 +131,6 @@ func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32,
 	}
 }
 
-// start is zero-based and inclusive.  It is the index of the first base, and then other bases on added on as the index decreases
 func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
 	currentPath = append([]uint32{n.Id}, currentPath...)
 	var bestQueryStart, queryStart, refStart, bestRefStart int
@@ -150,7 +149,7 @@ func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath
 	if availableBases >= ext || len(n.Next) == 0 {
 		//log.Printf("at leaf, about to align, path is:%v\n", currentPath)
 		score, alignment, refStart, _, queryStart, _ = LeftLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
-		return alignment, score, refStart, queryStart, currentPath
+		return alignment, score, refEnd - basesToTake + refStart, queryStart, currentPath
 	} else {
 		bestScore = -1
 		for _, i := range n.Prev {

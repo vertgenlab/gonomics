@@ -226,8 +226,8 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			currRead = revCompRead
 		}
 		seedScore = scoreSeed(seeds[i], currRead)
-		leftAlignment, leftScore, minTarget, _, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+1), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
-		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
+		leftAlignment, leftScore, minTarget, _, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
+		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
 		//log.Printf("seedTStart=%d seedQStart=%d seedLength=%d, leftAlignment=%s, rightAlignment=%s, minQuery=%d, maxQuery=%d\n", seeds[i].TargetStart, seeds[i].QueryStart, seeds[i].Length, cigar.ToString(rightAlignment), cigar.ToString(samPointer.Cigar), minQuery, maxQuery)
 		if currScore > bestScore {
@@ -239,7 +239,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			}
 			bestPath = append(append(leftPath, seeds[i].TargetId), rightPath...)
 			currBest.RName = gg.Nodes[bestPath[0]].Name
-			currBest.Pos = int64(minTarget) // TODO: likely incorrect
+			currBest.Pos = int64(minTarget)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].Length), Op: 'M'}), rightAlignment)
 			//currBest.Cigar = SClipCigar(minQuery, maxQuery+int64(seedLen), int64(len(currRead.Seq)), currBest.Cigar)
 			currBest.Extra = PathToString(bestPath, gg)

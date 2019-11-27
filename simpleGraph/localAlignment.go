@@ -160,7 +160,7 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 			}
 		}
 	}
-	var minI, minJ int
+	var minI, minJ = len(alpha), len(beta)
 
 	var route []*cigar.Cigar
 	//route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[len(alpha)][len(beta)]})
