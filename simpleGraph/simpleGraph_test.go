@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
-	//"math"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -53,8 +52,8 @@ func TestWriteAndRead(t *testing.T) {
 func TestAligning(t *testing.T) {
 	var tileSize int = 12
 	var stepSize int = 1
-	var readLength int = 50
-	var numberOfReads int = 1
+	var readLength int = 100
+	var numberOfReads int = 10
 	var mutations int = 0
 	var mappedRead *sam.SamAln
 
@@ -177,16 +176,20 @@ func TestGraphTraversal(t *testing.T) {
 	GraphTraversalFwd(gg, gg.Nodes[1], query, path, 1, 9)
 
 	var mappedRead *sam.SamAln = &sam.SamAln{QName: testFastq.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
-	var score, qS int64 = 0, 0
+	var alignment []*cigar.Cigar
+	var score int64 = 0
+	var tStart, qStart int
 	var testCig []*cigar.Cigar
 	//var cig []*cigar.Cigar
 	log.Println("Starting the forward alignment...")
-	AlignTraversalFwd(gg.Nodes[1], query, 0, path, 0, testFastq.Seq, m, trace, testCig, score, 0)
+	AlignTraversalFwd(gg.Nodes[1], query, 0, path, 0, testFastq.Seq, m, trace)
 	fmt.Printf("traveral final: %v %d\n", testCig, score)
 	score = 0
-	mappedRead, score, qS, path = AlignReverseGraphTraversal(gg.Nodes[1], query, 0, path, 6, testFastq.Seq, m, trace, mappedRead, score, 0)
+	alignment, score, tStart, qStart, path = AlignReverseGraphTraversal(gg.Nodes[1], query, 0, path, 6, testFastq.Seq, m, trace)
 
-	fmt.Printf("Reverse score: %d query start: %d\n", score, qS)
+	fmt.Printf("Reverse score: %d query start: %d\n", score, qStart)
+	mappedRead.Pos = int64(tStart)
+	mappedRead.Cigar = alignment
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 	PrintGraph(gg)
 

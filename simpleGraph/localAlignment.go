@@ -140,15 +140,15 @@ func tripleMaxTrace(a int64, b int64, c int64) (int64, rune) {
 	}
 }
 
-func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int64, int64, int64, int64) {
+func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	//var currMax int64
 	//var maxI int64
 	//var maxJ int64
-	var i, j, routeIdx int64
+	var i, j, routeIdx int
 	initialZeroMatrix(m, len(alpha), len(beta))
-	for i = 1; i < int64(len(alpha)+1); i++ {
-		for j = 1; j < int64(len(beta)+1); j++ {
+	for i = 1; i < len(alpha)+1; i++ {
+		for j = 1; j < len(beta)+1; j++ {
 			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			/*if m[i][j] > currMax {
 				currMax = m[i][j]
@@ -160,13 +160,13 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 			}
 		}
 	}
-	var minI, minJ int64
+	var minI, minJ = len(alpha), len(beta)
 
 	var route []*cigar.Cigar
 	//route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[len(alpha)][len(beta)]})
 	//traceback starts in top corner
 	//fmt.Println("a little more!")
-	for i, j, routeIdx = int64(len(alpha)), int64(len(beta)), 0; m[i][j] > 0; {
+	for i, j, routeIdx = len(alpha), len(beta), 0; m[i][j] > 0; {
 		//if route[routeIdx].RunLength == 0 {
 		if len(route) == 0 {
 			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
@@ -195,21 +195,21 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 		//log.Printf("cigar in the making=%s\n", cigar.ToString(route))
 	}
 	reverseCigarPointer(route)
-	return m[len(alpha)][len(beta)], route, minI, int64(len(alpha)), minJ, int64(len(beta))
+	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
 }
 
-func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int64, int64, int64, int64) {
+func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var currMax int64
-	var maxI int64
-	var maxJ int64
-	var i, j, routeIdx int64
+	var maxI int
+	var maxJ int
+	var i, j, routeIdx int
 
 	//setting up the first rows and columns
 	//seting up the rest of the matrix
 
-	for i = 0; i < int64(len(alpha)+1); i++ {
-		for j = 0; j < int64(len(beta)+1); j++ {
+	for i = 0; i < len(alpha)+1; i++ {
+		for j = 0; j < len(beta)+1; j++ {
 			if i == 0 && j == 0 {
 				m[i][j] = 0
 			} else if i == 0 {
