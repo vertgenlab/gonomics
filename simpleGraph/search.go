@@ -58,41 +58,6 @@ func ReverseGraphTraversal(n *Node, seq []dna.Base, path []uint32, start int, ex
 	return path, s
 }
 
-func AddPath(newPath uint32, allPaths []uint32) []uint32 {
-	if allPaths == nil {
-		allPaths = append(allPaths, newPath)
-	} else if allPaths[len(allPaths)-1] == newPath {
-		return allPaths
-	} else {
-		allPaths = append(allPaths, newPath)
-	}
-
-	return allPaths
-}
-
-func reversePath(alpha []uint32) {
-	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
-		alpha[i], alpha[j] = alpha[j], alpha[i]
-	}
-}
-
-func PathToString(allPaths []uint32, gg *SimpleGraph) string {
-	var s string = ""
-	//fmt.Printf("length of paths %d\n", len(allPaths))
-	if allPaths == nil {
-		return s
-	} else {
-		s += gg.Nodes[allPaths[0]].Name
-		if len(allPaths) > 1 {
-			for i := 1; i < len(allPaths); i++ {
-				s += ":" + gg.Nodes[allPaths[i]].Name
-			}
-		}
-
-	}
-	return s
-}
-
 func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
 	currentPath = append(currentPath, n.Id)
 	var bestQueryEnd, queryEnd int

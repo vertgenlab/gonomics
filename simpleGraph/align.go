@@ -237,7 +237,8 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			} else {
 				currBest.Flag = 1
 			}
-			bestPath = append(append(leftPath, seeds[i].TargetId), rightPath...)
+			bestPath = CatPaths(AddPath(seeds[i].TargetId, leftPath), rightPath)
+
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].Length), Op: 'M'}), rightAlignment)
