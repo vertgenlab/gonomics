@@ -178,7 +178,7 @@ func SamAlnToString(aln *SamAln) string {
 }
 
 func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
-	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString)
+	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
 	common.ExitIfError(err)
 }
 
