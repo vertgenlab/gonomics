@@ -193,7 +193,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 	//var samPointer *sam.SamAln = &sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	var leftAlignment, rightAlignment []*cigar.Cigar
 	var i, minTarget int
-	//var minQuery int
+	var minQuery int
 	var leftScore, rightScore, seedScore, bestScore int64
 	var leftPath, rightPath, bestPath []uint32
 
@@ -226,7 +226,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			currRead = revCompRead
 		}
 		seedScore = scoreSeed(seeds[i], currRead)
-		leftAlignment, leftScore, minTarget, _, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
+		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
 		//log.Printf("seedTStart=%d seedQStart=%d seedLength=%d, leftAlignment=%s, rightAlignment=%s, minQuery=%d, maxQuery=%d\n", seeds[i].TargetStart, seeds[i].QueryStart, seeds[i].Length, cigar.ToString(rightAlignment), cigar.ToString(samPointer.Cigar), minQuery, maxQuery)
@@ -242,11 +242,30 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].Length), Op: 'M'}), rightAlignment)
-			//currBest.Cigar = SClipCigar(minQuery, maxQuery+int64(seedLen), int64(len(currRead.Seq)), currBest.Cigar)
+			currBest.Cigar = AddSClip(int64(minQuery), int64(len(currRead.Seq)), currBest.Cigar)
 			currBest.Extra = PathToString(bestPath, gg)
 		}
 	}
 	return &currBest
+}
+
+func AddSClip(front int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
+	back := front + cigar.QueryLength(cig)
+	var answer []*cigar.Cigar
+	if front > 0 {
+		answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
+		answer = append(answer, cig...)
+		if back < lengthOfRead {
+			answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
+		}
+	} else if back < lengthOfRead {
+		answer = append(answer, cig...)
+		answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
+	} else {
+		//answer = cig
+		return cig
+	}
+	return answer
 }
 
 func MapFastq(ref []*fasta.Fasta, read *fastq.Fastq, seedLen int, chromPosHash map[uint64][]uint64, m [][]int64, trace [][]rune, file *os.File) {

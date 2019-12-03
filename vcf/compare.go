@@ -60,7 +60,7 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Format, beta.Format) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Unknown, beta.Unknown) != 0 {
+	if strings.Compare(alpha.Sample, beta.Sample) != 0 {
 		return false
 	} else {
 		return true

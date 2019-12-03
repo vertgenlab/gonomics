@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
+	//"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
@@ -44,28 +44,29 @@ func AlleleExpression(samFilename string, fileName string, v []*vcf.Vcf) {
 	sam.WriteHeaderToFileHandle(fresh, header)
 	sam.WriteHeaderToFileHandle(marine, header)
 
-	chroms := chromInfo.SliceToMap(header.Chroms)
+	//chroms := chromInfo.SliceToMap(header.Chroms)
 
-	var aMap = AlleleMap(v, chroms)
+	var aMap = AlleleMap(v)
 
 	var j, fSnpCount, mSnpCount int
-	var currRefPos, currQueryPos, k, faIdx int64
+	var currRefPos, currQueryPos, k int64
 	var ok bool
 	//var numDiscardReads int64
-	var code uint64
+	//var code uint64
+	var loc Location
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 
 		fSnpCount, mSnpCount = 0, 0
-		//convert sam (1-based) to zero base
-		currRefPos = aln.Pos - 1
+		//use 1-based
+		currRefPos = aln.Pos-1
 		currQueryPos = 0
 
-		faIdx = chroms[aln.RName].Order
+		//faIdx = chroms[aln.RName].Order
 
 		for j = 0; j < len(aln.Cigar); j++ {
 			switch aln.Cigar[j].Op {
 			case 'S':
-				currRefPos += aln.Cigar[j].RunLength
+				//currRefPos += aln.Cigar[j].RunLength
 				currQueryPos += aln.Cigar[j].RunLength
 			case 'I':
 				currQueryPos += aln.Cigar[j].RunLength
@@ -73,15 +74,15 @@ func AlleleExpression(samFilename string, fileName string, v []*vcf.Vcf) {
 				currRefPos += aln.Cigar[j].RunLength
 			case 'M':
 				for k = 0; k < aln.Cigar[j].RunLength; k++ {
-					code = chromAndPosToNumber(faIdx, currRefPos+k)
-					_, ok = aMap[code]
+					//code = chromAndPosToNumber(faIdx, currRefPos+k)
+					loc = Location{Chr: aln.RName, Pos: currRefPos+k}
+					_, ok = aMap[loc]
 					if ok {
-						
 						//fmt.Println("Ref: ", dna.BasesToString(fMap[faIdx|currRefPos+k]), "Alt: ", dna.BasesToString(mMap[faIdx|currRefPos+k]))
-						if aln.Seq[currQueryPos+k] == aMap[code].Ref {
+						if aln.Seq[currQueryPos+k] == aMap[loc].Ref {
 							fSnpCount++
 						}
-						if aln.Seq[currQueryPos+k] == aMap[code].Alt {
+						if aln.Seq[currQueryPos+k] == aMap[loc].Alt {
 							mSnpCount++
 						}
 					}
@@ -93,37 +94,35 @@ func AlleleExpression(samFilename string, fileName string, v []*vcf.Vcf) {
 		if fSnpCount > mSnpCount {
 			//fresh = append(fresh, aln)
 			sam.WriteAlnToFileHandle(fresh, aln)
-		} else if mSnpCount > fSnpCount {
+		}
+		if mSnpCount > fSnpCount {
 			//marine = append(marine, aln)
 			sam.WriteAlnToFileHandle(marine, aln)
-		} else {
-			//numDiscardReads++
-			continue
 		}
-
 	}
-
-	//return fresh, marine
 }
 
-func AlleleMap(v []*vcf.Vcf, chromSize map[string]*chromInfo.ChromInfo) map[uint64]Alleles {
+func AlleleMap(v []*vcf.Vcf) map[Location]Alleles {
 	//ref := make(map[int64][]dna.Base)
 	//alt := make(map[int64][]dna.Base)
-	aMap := make(map[uint64]Alleles)
+	aMap := make(map[Location]Alleles)
 	//var curr *vcf.Vcf
 	var refRune, altRune []rune
-	var faIdx int64
-	var code uint64
+	//var faIdx int64
+	var loc Location
 	//var ok bool
 	for i := 0; i < len(v); i++ {
 		curr := v[i]
-		faIdx = chromSize[curr.Chr].Order
+		//faIdx = chromSize[curr.Chr].Order
 		//_, ok = aMap[faIdx|curr.Pos-1]
 		refRune = []rune(curr.Ref)
 		altRune = []rune(curr.Alt)
 		if len(refRune) == 1 && len(altRune) == 1 {
-			code = chromAndPosToNumber(faIdx, curr.Pos-1)
-			aMap[code] = Alleles{Ref: dna.RuneToBase(refRune[0]), Alt: dna.RuneToBase(altRune[0])}
+			if dna.RuneToBase(refRune[0]) != dna.Dot && dna.RuneToBase(altRune[0]) != dna.Dot {
+				//code = chromAndPosToNumber(faIdx, curr.Pos-1)
+				loc = Location{Chr: curr.Chr, Pos: curr.Pos-1}
+				aMap[loc] = Alleles{Ref: dna.RuneToBase(refRune[0]), Alt: dna.RuneToBase(altRune[0])}
+			}
 		} else {
 
 		}
@@ -134,6 +133,11 @@ func AlleleMap(v []*vcf.Vcf, chromSize map[string]*chromInfo.ChromInfo) map[uint
 type Alleles struct {
 	Ref dna.Base
 	Alt dna.Base
+}
+
+type Location struct {
+	Chr string
+	Pos int64
 }
 
 func main() {

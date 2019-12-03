@@ -15,6 +15,9 @@ func TestRead(t *testing.T) {
 	for _, test := range readWriteTests {
 		_ = Read(test.filename)
 		PrintVcf(Read(test.filename))
+		v := ReadFile("testdata/CL12.haplotypecallerTest.vcf")
+		PrintHeader(v.Header.Text)
+		//PrintVcf(v.Vcf)
 	}
 }
 

@@ -54,7 +54,7 @@ func TestAligning(t *testing.T) {
 	var stepSize int = 1
 	var readLength int = 100
 	var numberOfReads int = 10
-	var mutations int = 0
+	var mutations int = 1
 	var mappedRead *sam.SamAln
 
 	log.Printf("Reading in the genome (simple graph)...\n")

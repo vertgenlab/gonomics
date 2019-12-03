@@ -12,19 +12,29 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"log"
 )
 
 type Vcf struct {
-	Chr     string
-	Pos     int64
-	Id      string
-	Ref     string
-	Alt     string
-	Qual    float64
-	Filter  string
-	Info    string
-	Format  string
-	Unknown string
+	Chr    string
+	Pos    int64
+	Id     string
+	Ref    string
+	Alt    string
+	Qual   float64
+	Filter string
+	Info   string
+	Format string
+	Sample string
+}
+
+type VCF struct {
+	Header *VcfHeader
+	Vcf []*Vcf
+}
+
+type VcfHeader struct {
+	Text   []string
 }
 
 func Read(filename string) []*Vcf {
@@ -43,7 +53,7 @@ func Read(filename string) []*Vcf {
 	var rline []byte
 	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
 		line = string(rline[:])
-		data := strings.Split(line, "\t")
+		data := strings.SplitN(line, "\t", 10)
 		//fmt.Println("there is data here")
 		switch {
 		case strings.HasPrefix(line, "#"):
@@ -58,13 +68,81 @@ func Read(filename string) []*Vcf {
 			//fmt.Println("found header line")
 			position, _ := strconv.ParseInt(data[1], 10, 64)
 			//qualFloat, _ := strconv.ParseFloat(data[5], 64)
-			curr = &Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Unknown: data[9]}
+			curr = &Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9]}
 			answer = append(answer, curr)
 		default:
 			//fmt.Println("unexpected line")
 		}
 	}
 	return answer
+}
+
+func processVcfLine(line string) *Vcf {
+	var curr Vcf
+	//var err error
+
+	data := strings.SplitN(line, "\t", 10)
+	if len(data) < 10 {
+		log.Fatal(fmt.Errorf("Was expecting atleast 10 columns per line, but this line did not:%s\n", line))
+	}
+	position, _ := strconv.ParseInt(data[1], 10, 64)
+	curr = Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9]}
+	
+	return &curr
+}
+
+func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
+	line, done := fileio.EasyNextLine(reader)
+	if done {
+		return nil, true
+	}
+	return processVcfLine(line), false
+}
+
+func ReadVcf(er *fileio.EasyReader) []*Vcf {
+	var line string
+	var done bool
+	var answer []*Vcf
+	for line, done = fileio.EasyNextLine(er); !done; line, done = fileio.EasyNextLine(er) {
+		answer = append(answer, processVcfLine(line))
+	}
+	return answer
+}
+
+func ReadFile(filename string) *VCF {
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+
+	header := ReadHeader(file)
+	vcfRecords := ReadVcf(file)
+	return &VCF{Header: header, Vcf: vcfRecords}
+}
+
+func processHeader(header *VcfHeader, line string) {
+	var err error
+
+	if strings.HasPrefix(line, "#") {
+		header.Text = append(header.Text, line)
+	}
+	if err != nil {
+		log.Fatal("There was an error reading the header line")
+	}
+	//if strings.HasPrefix(line, "#CHROM") {
+
+	//}
+}
+
+func ReadHeader(er *fileio.EasyReader) *VcfHeader {
+	var line string
+	var err error
+	var nextBytes []byte
+	var header VcfHeader
+
+	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
+		line, _ = fileio.EasyNextLine(er)
+		processHeader(&header, line)
+	}
+	return &header
 }
 
 //split vcf into slices to deal with different chromosomes
@@ -93,7 +171,7 @@ func WriteVcfToFileHandle(file *os.File, input []*Vcf) error {
 		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	for i := 0; i < len(input); i++ {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Unknown)
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Sample)
 		common.ExitIfError(err)
 	}
 	return err
@@ -107,7 +185,7 @@ func Write(filename string, data []*Vcf) {
 
 func PrintVcf(input []*Vcf) {
 	for i := range input {
-		fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Unknown)
+		fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Sample)
 	}
 }
 
