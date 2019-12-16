@@ -154,6 +154,10 @@ func RuneIsValidCharacter(r rune) bool {
 	return false
 }
 
+func CigarConsumesReference(c Cigar) bool {
+	return ConsumesReference(c.Op)
+}
+
 func ConsumesReference(r rune) bool {
 	switch r {
 	case 'M':
