@@ -1,8 +1,8 @@
-package cigar 
+package cigar
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestFromString(t *testing.T) {

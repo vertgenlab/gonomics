@@ -17,8 +17,7 @@ type Fastq struct {
 }
 
 func Copy(a *Fastq) *Fastq {
-	var answer Fastq = Fastq{}
-	answer.Name = a.Name
+	var answer Fastq = Fastq{Name: a.Name, Seq: make([]dna.Base, len(a.Seq)), Qual: make([]rune, len(a.Qual))}
 	copy(answer.Seq, a.Seq)
 	copy(answer.Qual, a.Qual)
 	return &answer
