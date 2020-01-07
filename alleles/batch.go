@@ -19,7 +19,7 @@ type BatchAlleleCount struct {
 	Del 	int32
 }
 
-// Map structure: map[Chromosome]map[Position][Sample]*AlleleCount
+// Map structure: map[Chromosome]map[Position][Sample]*BatchAlleleCount
 type BatchSampleMap map[string]map[int64][]*BatchAlleleCount
 
 
@@ -30,6 +30,7 @@ func CreateSampleMap(inDirectory string) BatchSampleMap {
 	files, _ := ioutil.ReadDir(inDirectory)
 	var SampleName string
 	var current *BatchAlleleCount
+	var fileCount int = 1
 
 	SampleMap := make(map[string]map[int64][]*BatchAlleleCount)
 
@@ -37,7 +38,9 @@ func CreateSampleMap(inDirectory string) BatchSampleMap {
 
 		SampleName = file.Name()
 		SamplePath := fmt.Sprintf("%s%s", inDirectory, SampleName)
+		fmt.Printf("#\n# File %d\n", fileCount)
 		AlleleCounts := ReadAlleleCounts(SamplePath)
+		fileCount++
 
 		// Loop through input map and deposit info into output map
 		for chrName, chr := range AlleleCounts {

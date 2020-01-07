@@ -265,7 +265,7 @@ func ReadAlleleCounts(inFilename string) SampleMap {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 
 		if progressMeter % 500000 == 0 {
-			fmt.Printf("Read %d Lines\n", progressMeter)
+			fmt.Printf("# Read %d Lines\n", progressMeter)
 		}
 		progressMeter++
 
