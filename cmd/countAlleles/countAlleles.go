@@ -8,22 +8,20 @@ import (
 )
 
 
-func countAlleles(inFile string, outFile string, ref string) {
+func countAlleles(inFile string, outFile string, ref string, coverageThreshold int, minMapQ int) {
 
-	var data []*alleles.AlleleCount
+	var data alleles.SampleMap
 
 	if ref == "" {
-		data = alleles.ExtractAlleles(inFile)
+		usage()
+		fmt.Printf("ERROR: No reference provided\n")
 	} else {
-		data = alleles.ExtractAllelesWholeGenome(inFile, ref)
+		data = alleles.CountAlleles(ref, inFile, int64(minMapQ))
+		alleles.FilterAlleles(data, int32(coverageThreshold))
 	}
 
 
-	if outFile == "stdout" {
-		alleles.WriteVariantsToTerm(data)
-	} else {
-		alleles.WriteVariantsToFile(data, outFile)
-	}
+	alleles.WriteAlleleCounts(data, outFile)
 }
 
 
@@ -39,19 +37,21 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int=1
-	var ref *string = flag.String("ref", "", "Reference sequence in fasta format. If given, this will generate allele counts for all regions in the genome. Can be memory intensive. If no reference is given, only positions present in the sam record are considered.")
-	var outFile *string = flag.String("o", "stdout", "Write output to a file")
+	var ref *string = flag.String("ref", "", "Reference sequence in fasta format.")
+	var outFile *string = flag.String("out", "stdout", "Write output to a file.")
+	var minCoverage *int = flag.Int("cov", 1, "Only report positions with coverage greater than this value")
+	var minMapQ *int = flag.Int("mapQ", 20, "Only include reads with mapping quality greater than this value")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+		log.Fatalf("ERROR: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
 	inFile := flag.Arg(0)
 
-	countAlleles(inFile, *outFile, *ref)
+	countAlleles(inFile, *outFile, *ref, *minCoverage, *minMapQ)
 
 }
