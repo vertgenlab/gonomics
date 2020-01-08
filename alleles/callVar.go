@@ -17,13 +17,14 @@ type VarScore struct {
 	BaseT 	int32
 	Ins 	int32
 	Del 	int32
-	//TODO: remove background values once troubleshooting is done
+	/*
 	BkgdA	int32
 	BkgdC	int32
 	BkgdG	int32
 	BkgdT	int32
 	BkgdIns	int32
 	BkgdDel	int32
+	 */
 	pA 		float64
 	pC 		float64
 	pG 		float64
@@ -35,6 +36,8 @@ type VarScore struct {
 // Map structure: map[Chromosome]map[Position][Sample]*VarScore
 type VarMap map[string]map[int64][]*VarScore
 
+
+// Loops through BatchSampleMap and assigns p values for each putative variant using fishers exact test. Filters on sigThreshold.
 func ScoreVariants (input BatchSampleMap, sigThreshold float64) VarMap {
 
 	fmt.Printf("#\n# Calling Variants\n")
@@ -146,13 +149,14 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) VarMap {
 						BaseT:		alleles[i].BaseT,
 						Ins:		alleles[i].Ins,
 						Del:		alleles[i].Del,
-						//TODO: remove background values once troubleshooting is done
+						/*
 						BkgdA:		alleles[0].BaseA - alleles[i].BaseA,
 						BkgdC:		alleles[0].BaseC - alleles[i].BaseC,
 						BkgdG:		alleles[0].BaseG - alleles[i].BaseG,
 						BkgdT:		alleles[0].BaseT - alleles[i].BaseT,
 						BkgdIns:	alleles[0].Ins - alleles[i].Ins,
 						BkgdDel:	alleles[0].Del - alleles[i].Del,
+						 */
 						pA: 		pA,
 						pC: 		pC,
 						pG: 		pG,
@@ -168,7 +172,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) VarMap {
 	return VariantScores
 }
 
-
+// Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0)
 func Score (a int32, b int32, c int32, d int32) float64 {
 
 	var p float64
@@ -189,7 +193,7 @@ func Score (a int32, b int32, c int32, d int32) float64 {
 	return p
 }
 
-
+// Returns the lowest p value at a given positions (helper for ScoreVariants)
 func MinScore (pA float64, pC float64, pG float64, pT float64, pIns float64, pDel float64) float64 {
 	min := pA
 	if min > pC {min = pC}
@@ -200,7 +204,8 @@ func MinScore (pA float64, pC float64, pG float64, pT float64, pIns float64, pDe
 	return min
 }
 
-
+// Write VarMap to file
+// TODO: enable output in VCF format
 func WriteVarMap (input VarMap, output string) {
 
 	var outFile *os.File
@@ -209,11 +214,10 @@ func WriteVarMap (input VarMap, output string) {
 		fmt.Printf("#Creating Output File\n")
 		outFile, _ = os.Create(output)
 		defer outFile.Close()
-		//TODO: remove background values once troubleshooting is done
-		io.WriteString(outFile, "Sample\tChr\tPos\tRef\tA\tC\tG\tT\tIns\tDel\tBkgdA\tBkgdC\tBkgdG\tBkgdT\tBkgdIns\tBkgdDel\tpA\tpC\tpG\tpT\tpIns\tpDel\n")
+		io.WriteString(outFile, "Sample\tChr\tPos\tRef\tA\tC\tG\tT\tIns\tDel\t"+/*BkgdA\tBkgdC\tBkgdG\tBkgdT\tBkgdIns\tBkgdDel\t*/"pA\tpC\tpG\tpT\tpIns\tpDel\n")
 	} else {
 		fmt.Printf("#No Output Specified. Printing to STDOUT.\n")
-		fmt.Printf("Sample\tChr\tPos\tRef\tA\tC\tG\tT\tIns\tDel\tBkgdA\tBkgdC\tBkgdG\tBkgdT\tBkgdIns\tBkgdDel\tpA\tpC\tpG\tpT\tpIns\tpDel\n")
+		fmt.Printf("Sample\tChr\tPos\tRef\tA\tC\tG\tT\tIns\tDel\t"+/*BkgdA\tBkgdC\tBkgdG\tBkgdT\tBkgdIns\tBkgdDel\t*/"pA\tpC\tpG\tpT\tpIns\tpDel\n")
 	}
 
 	var base string
@@ -252,7 +256,7 @@ func WriteVarMap (input VarMap, output string) {
 
 					// Write to file
 					fmt.Fprintf(outFile,
-						"%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%e\t%e\t%e\t%e\t%e\t%e\n",
+						"%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t"+ /*%d\t%d\t%d\t%d\t%d\t%d\t*/ "%e\t%e\t%e\t%e\t%e\t%e\n",
 						alleles[i].Sample,
 						chrName,
 						pos + 1,
@@ -263,13 +267,14 @@ func WriteVarMap (input VarMap, output string) {
 						alleles[i].BaseT,
 						alleles[i].Ins,
 						alleles[i].Del,
-						//TODO: remove background values once troubleshooting is done
+						/*
 						alleles[i].BkgdA,
 						alleles[i].BkgdC,
 						alleles[i].BkgdG,
 						alleles[i].BkgdT,
 						alleles[i].BkgdIns,
 						alleles[i].BkgdDel,
+						 */
 						alleles[i].pA,
 						alleles[i].pC,
 						alleles[i].pG,
@@ -279,7 +284,7 @@ func WriteVarMap (input VarMap, output string) {
 				} else {
 					// Write to stdout
 					fmt.Printf(
-						"%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+						"%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t"+ /*%d\t%d\t%d\t%d\t%d\t%d\t*/ "%e\t%e\t%e\t%e\t%e\t%e\n",
 						alleles[i].Sample,
 						chrName,
 						pos + 1,
@@ -290,13 +295,14 @@ func WriteVarMap (input VarMap, output string) {
 						alleles[i].BaseT,
 						alleles[i].Ins,
 						alleles[i].Del,
-						//TODO: remove background values once throubleshooting is done
+						/*
 						alleles[i].BkgdA,
 						alleles[i].BkgdC,
 						alleles[i].BkgdG,
 						alleles[i].BkgdT,
 						alleles[i].BkgdIns,
 						alleles[i].BkgdDel,
+						 */
 						alleles[i].pA,
 						alleles[i].pC,
 						alleles[i].pG,

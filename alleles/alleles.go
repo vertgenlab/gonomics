@@ -27,7 +27,7 @@ type AlleleCount struct {
 type SampleMap map[string]map[int64]*AlleleCount
 
 
-
+// Inputs a sam file and loops through while keeping a tally of each base present at each position. Stores in SampleMap
 func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleMap {
 
 	// Read in reference
@@ -154,7 +154,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	return AlleleMatrix
 }
 
-
+// Removes positions with insufficient coverage from the map
 func FilterAlleles(input SampleMap, coverageThreshold int32) SampleMap {
 	for chrName, chr := range input {
 		for pos, alleles := range chr {
@@ -171,7 +171,7 @@ func FilterAlleles(input SampleMap, coverageThreshold int32) SampleMap {
 	return input
 }
 
-
+// Write SampleMap to file
 func WriteAlleleCounts(input SampleMap, output string) {
 
 	var outFile *os.File
@@ -248,7 +248,7 @@ func WriteAlleleCounts(input SampleMap, output string) {
 	}
 }
 
-
+// Reading file from WriteAlleleCounts and store as a SampleMap
 func ReadAlleleCounts(inFilename string) SampleMap {
 	var line string
 	var answer SampleMap
@@ -325,7 +325,7 @@ func ReadAlleleCounts(inFilename string) SampleMap {
 	return answer
 }
 
-
+// Find the allele with with the highest frequency within a subset of 5 alleles (helper for FindMinorAllele)
 func MaxMinorAllele(allele1 int32, allele2 int32, allele3 int32, allele4 int32, allele5 int32) int32 {
 	var minorAllele = allele1
 	if allele2 > minorAllele {minorAllele = allele2}
@@ -335,7 +335,7 @@ func MaxMinorAllele(allele1 int32, allele2 int32, allele3 int32, allele4 int32, 
 	return minorAllele
 }
 
-
+// Find the allele with highest frequency
 func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32{
 	var majorAllele = A
 	if C > majorAllele {majorAllele = C}
@@ -347,7 +347,7 @@ func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) i
 	return majorAllele
 }
 
-
+// Find the allele with the 2nd highest frequency
 func FindMinorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32 {
 
 	majorAllele := FindMajorAllele(A, C, G, T, Ins, Del)

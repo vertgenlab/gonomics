@@ -90,7 +90,7 @@ func CreateSampleMap(inDirectory string) BatchSampleMap {
 	return SampleMap
 }
 
-
+// Write BatchSampleMap to file
 func WriteBatchAlleleCounts(input BatchSampleMap, output string) {
 
 	var outFile *os.File
@@ -111,7 +111,7 @@ func WriteBatchAlleleCounts(input BatchSampleMap, output string) {
 
 	for chrName, chr := range input {
 		for pos, alleles := range chr {
-			//TODO: change i = 0 to i = 1 after troubleshooting so that the write function ignores the background struct
+			// The index for the for loop should be i = 0 to include background struct, and i = 1 to exclude it
 			for i = 0; i < len(alleles); i++ {
 
 			switch alleles[i].Ref {
