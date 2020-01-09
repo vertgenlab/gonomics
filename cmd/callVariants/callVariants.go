@@ -32,8 +32,8 @@ func callVariants(inDirectory string, outFile string, sigThreshold float64) {
 
 func main() {
 	var expectedNumArgs int=1
-	var outFile *string = flag.String("out", "stdout", "Write output to a file")
-	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value")
+	var outFile *string = flag.String("out", "stdout", "Write output to a file\n")
+	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value\n")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
