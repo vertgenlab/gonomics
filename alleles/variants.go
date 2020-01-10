@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 type BatchAlleleCount struct {
@@ -134,6 +135,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 
 	// Initialize a channel to send completed vcf structs through
 	vcfChannel := make(chan *vcf.Vcf)
+	var wg sync.WaitGroup
 
 	// Loop through BatchSampleMap
 	for chrName, chr := range input {
@@ -142,7 +144,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 			//TODO: remove following line
 			//alleles = alleles[0:len(alleles)/10]
 
-			if progressMeter % 10 == 0 {
+			if progressMeter % 1000 == 0 {
 				fmt.Printf("# Processed %d Positions\n", progressMeter)
 			}
 			progressMeter++
@@ -212,10 +214,14 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 				dT = alleles[0].BaseT - alleles[i].BaseT
 
 				// Generate Scores
-				if alleles[i].Ref != dna.A {go score(vcfChannel, a[i-1], b[i-1], cA, dA, afThreshold, alleles[i], "A", 0, chrName, pos, sigThreshold)}
-				if alleles[i].Ref != dna.C {go score(vcfChannel, a[i-1], b[i-1], cC, dC, afThreshold, alleles[i], "C", 0, chrName, pos, sigThreshold)}
-				if alleles[i].Ref != dna.G {go score(vcfChannel, a[i-1], b[i-1], cG, dG, afThreshold, alleles[i], "G", 0, chrName, pos, sigThreshold)}
-				if alleles[i].Ref != dna.T {go score(vcfChannel, a[i-1], b[i-1], cT, dT, afThreshold, alleles[i], "T", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.A {wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cA, dA, afThreshold, alleles[i], "A", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.C {wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cC, dC, afThreshold, alleles[i], "C", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.G {wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cG, dG, afThreshold, alleles[i], "G", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.T {wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cT, dT, afThreshold, alleles[i], "T", 0, chrName, pos, sigThreshold)}
 
 				// Calculate p for each Ins
 				for j = 0; j < len(alleles[i].Ins); j++ {
@@ -227,8 +233,8 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 							break
 						}
 					}
-
-					go score(vcfChannel, a[i-1], b[i-1], cIns, dIns, afThreshold, alleles[i], "Ins", j,  chrName, pos, sigThreshold)
+					wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cIns, dIns, afThreshold, alleles[i], "Ins", j,  chrName, pos, sigThreshold)
 				}
 
 				// Calculate p for each Del
@@ -241,8 +247,8 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 							break
 						}
 					}
-
-					go score(vcfChannel, a[i-1], b[i-1], cDel, dDel, afThreshold, alleles[i], "Del", k,  chrName, pos, sigThreshold)
+					wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cDel, dDel, afThreshold, alleles[i], "Del", k,  chrName, pos, sigThreshold)
 				}
 
 				if runtime.NumGoroutine() % 10000 == 0 {
@@ -252,14 +258,16 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 		}
 	}
 	VariantScores = append(VariantScores, <-vcfChannel)
+	wg.Wait()
 	return VariantScores
 }
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
-func score (vcfChannel chan *vcf.Vcf, a int32, b int32, c int32, d int32, afThreshold float64, inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, sigThreshold float64) {
+func score (wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c int32, d int32, afThreshold float64, inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, sigThreshold float64) {
 
 	var p float64
 	var answer *vcf.Vcf
+	defer wg.Done()
 
 	switch {
 	// If alternate allele is zero then there is no variant and score is 1
