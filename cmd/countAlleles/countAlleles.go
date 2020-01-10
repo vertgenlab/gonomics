@@ -40,10 +40,10 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int=1
-	var ref *string = flag.String("ref", "", "Reference sequence in fasta format.\n")
-	var outFile *string = flag.String("out", "stdout", "Write output to a file.\n")
-	var minCoverage *int = flag.Int("cov", 1, "Only report positions with coverage greater than this value.\n")
-	var minMapQ *int = flag.Int("mapQ", 20, "Only include reads with mapping quality greater than this value.\n")
+	var ref *string = flag.String("ref", "", "Reference sequence in fasta format.")
+	var outFile *string = flag.String("out", "stdout", "Write output to a file.")
+	var minCoverage *int = flag.Int("cov", 1, "Only report positions with coverage greater than this value.")
+	var minMapQ *int = flag.Int("mapQ", 20, "Only include reads with mapping quality greater than this value.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()

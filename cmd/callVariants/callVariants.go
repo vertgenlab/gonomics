@@ -18,10 +18,10 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(inDirectory string, outFile string, sigThreshold float64) {
+func callVariants(inDirectory string, outFile string, sigThreshold float64, afThreshold float64) {
 	fmt.Printf("# Merging Samples\n")
 	SampleMap := alleles.CreateBatchSampleMap(inDirectory)
-	Variants := alleles.ScoreVariants(SampleMap, sigThreshold)
+	Variants := alleles.ScoreVariants(SampleMap, sigThreshold, afThreshold)
 	if outFile == "stdout" {
 		vcf.PrintVcf(Variants)
 	} else {
@@ -32,8 +32,9 @@ func callVariants(inDirectory string, outFile string, sigThreshold float64) {
 
 func main() {
 	var expectedNumArgs int=1
-	var outFile *string = flag.String("out", "stdout", "Write output to a file\n")
-	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value\n")
+	var outFile *string = flag.String("out", "stdout", "Write output to a file")
+	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value")
+	var afThreshold *float64 = flag.Float64("af", 0.01, "Do not output variants with allele frequency less than this value")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -47,6 +48,6 @@ func main() {
 	inDirectory := flag.Arg(0)
 
 
-	callVariants(inDirectory, *outFile, *sigThreshold)
+	callVariants(inDirectory, *outFile, *sigThreshold, *afThreshold)
 
 }

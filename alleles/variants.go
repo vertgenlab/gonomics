@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
+	"strings"
 )
 
 type BatchAlleleCount struct {
@@ -27,6 +28,10 @@ type BatchSampleMap map[string]map[int64][]*BatchAlleleCount
 
 // Input a directory filled with AlleleCount (.ac) files. Merges the files into a nested map (chr->pos->[sample]data)
 func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
+
+	if ! strings.HasSuffix(inDirectory, "/") {
+		inDirectory = inDirectory + "/"
+	}
 
 	files, _ := ioutil.ReadDir(inDirectory)
 	var SampleName string
@@ -118,17 +123,23 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 }
 
 // Call Calculate pValues with fisher's exact test and export in a vcf.Vcf struct with pValue stored in Qual field. Filters on sigThreshold.
-func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
+func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold float64) []*vcf.Vcf {
 
 	fmt.Printf("#\n# Calling Variants\n")
 	var VariantScores []*vcf.Vcf
 	var progressMeter int
+	var cA, cC, cG, cT, cIns, cDel, dA, dC, dG, dT, dIns, dDel int32
+	var pA, pC, pG, pT, pIns, pDel float64
+	var a, b []int32
 
 	// Loop through BatchSampleMap
 	for chrName, chr := range input {
 		for pos, alleles := range chr {
 
-			if progressMeter % 5000 == 0 {
+			//TODO: remove following line
+			//alleles = alleles[0:len(alleles)/10]
+
+			if progressMeter % 1 == 0 {
 				fmt.Printf("# Processed %d Positions\n", progressMeter)
 			}
 			progressMeter++
@@ -152,8 +163,8 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 			// Determine Reference Base
 			// If ref base is unknown then skip
 			var i, j, k, l int
-			var a []int32 = make([]int32, len(alleles)-1)
-			var b []int32 = make([]int32, len(alleles)-1)
+			a = make([]int32, len(alleles)-1)
+			b = make([]int32, len(alleles)-1)
 			switch alleles[0].Ref {
 			// Loop through samples and gather inputs for a and b
 			// For loop starts at index 1 because index zero is the background values
@@ -186,22 +197,22 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 			for i = 1; i < len(alleles); i++ {
 
 				// Retrieve Values for c
-				cA := alleles[i].BaseA
-				cC := alleles[i].BaseC
-				cG := alleles[i].BaseG
-				cT := alleles[i].BaseT
+				cA = alleles[i].BaseA
+				cC = alleles[i].BaseC
+				cG = alleles[i].BaseG
+				cT = alleles[i].BaseT
 
 				// Retrieve Values for d
-				dA := alleles[0].BaseA - alleles[i].BaseA
-				dC := alleles[0].BaseC - alleles[i].BaseC
-				dG := alleles[0].BaseG - alleles[i].BaseG
-				dT := alleles[0].BaseT - alleles[i].BaseT
+				dA = alleles[0].BaseA - alleles[i].BaseA
+				dC = alleles[0].BaseC - alleles[i].BaseC
+				dG = alleles[0].BaseG - alleles[i].BaseG
+				dT = alleles[0].BaseT - alleles[i].BaseT
 
 				// Generate Scores
-				pA := score(a[i-1], b[i-1], cA, dA)
-				pC := score(a[i-1], b[i-1], cC, dC)
-				pG := score(a[i-1], b[i-1], cG, dG)
-				pT := score(a[i-1], b[i-1], cT, dT)
+				pA = score(a[i-1], b[i-1], cA, dA, afThreshold)
+				pC = score(a[i-1], b[i-1], cC, dC, afThreshold)
+				pG = score(a[i-1], b[i-1], cG, dG, afThreshold)
+				pT = score(a[i-1], b[i-1], cT, dT, afThreshold)
 
 				// If any p value is below the significance threshold then create vcf formatted output
 				if pA < sigThreshold {
@@ -219,8 +230,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 
 				// Calculate p for each Ins
 				for j = 0; j < len(alleles[i].Ins); j++ {
-					cIns := alleles[i].Ins[j].Count
-					var dIns int32
+					cIns = alleles[i].Ins[j].Count
 					// Find Ins in the background Ins slice
 					for l = 0; l < len(alleles[0].Ins); l++ {
 						if dna.CompareSeqsIgnoreCase(alleles[i].Ins[j].Alt, alleles[0].Ins[l].Alt) == 0 {
@@ -229,7 +239,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 						}
 					}
 
-					pIns := score(a[i-1], b[i-1], cIns, dIns)
+					pIns = score(a[i-1], b[i-1], cIns, dIns, afThreshold)
 
 					if pIns < sigThreshold {
 						VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "Ins", j,  chrName, pos, pIns, a[i-1], cIns))
@@ -238,8 +248,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 
 				// Calculate p for each Del
 				for k = 0; k < len(alleles[i].Del); k++ {
-					cDel := alleles[i].Del[k].Count
-					var dDel int32
+					cDel = alleles[i].Del[k].Count
 					// Find Del in the background Del slice
 					for l = 0; l < len(alleles[0].Del); l++ {
 						if dna.CompareSeqsIgnoreCase(alleles[i].Del[k].Ref, alleles[0].Del[l].Ref) == 0 {
@@ -248,7 +257,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 						}
 					}
 
-					pDel := score(a[i-1], b[i-1], cDel, dDel)
+					pDel = score(a[i-1], b[i-1], cDel, dDel, afThreshold)
 
 					if pDel < sigThreshold {
 						VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "Del", k,  chrName, pos, pDel, a[i-1], cDel))
@@ -262,7 +271,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64) []*vcf.Vcf {
 }
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0)
-func score (a int32, b int32, c int32, d int32) float64 {
+func score (a int32, b int32, c int32, d int32, afThreshold float64) float64 {
 
 	var p float64
 
@@ -273,6 +282,14 @@ func score (a int32, b int32, c int32, d int32) float64 {
 
 	// If a = b and c = d then it is testing itself and should return 1
 	case a == b && c == d:
+		return 1
+
+	// If the allele frequency of d > c then p is 1
+	case float64(c)/float64(c+a) < float64(d)/float64(d+b):
+		return 1
+
+	// If the allele frequency is less than the threshold then p is noted as 1 so as to be exluded
+	case float64(c)/float64(c+a) < afThreshold:
 		return 1
 
 	// If no exclusion conditions are met, then calculate p value
