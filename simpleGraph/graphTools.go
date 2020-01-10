@@ -78,8 +78,8 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				AddEdge(lastMatch, currMatch, 0.5)
 			}
 			if vcfFlag == 1 {
-				AddEdge(refAllele, currMatch, 0.5)
-				AddEdge(altAllele, currMatch, 0.5)
+				AddEdge(refAllele, currMatch, 1)
+				AddEdge(altAllele, currMatch, 1)
 			}
 			if vcfFlag == 2 || vcfFlag == 3 {
 				AddEdge(prev, currMatch, 1)

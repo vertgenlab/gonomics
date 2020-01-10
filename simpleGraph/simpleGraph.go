@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
-	//"sync"
+
 )
 
 type SimpleGraph struct {
@@ -53,6 +53,12 @@ func Read(filename string) *SimpleGraph {
 	//var answer []*Node
 	var seqIdx int64 = -1
 	var doneReading bool = false
+
+	var words []string
+	var currId uint32
+	var weight float64
+	var nextId uint32
+
 	//var chromIdx int64 = 0
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -60,7 +66,8 @@ func Read(filename string) *SimpleGraph {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
 			//tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
-			tmp := Node{Id: uint32(seqIdx), Name: line[1:len(line)]}
+			name := strings.Split(line, ":")
+			tmp := Node{Id: uint32(seqIdx), Name: name[0][1:len(name[0])]}
 			//answer = append(answer, &tmp)
 			AddNode(answer, &tmp)
 			//if seqIdx > 0 {
@@ -68,9 +75,21 @@ func Read(filename string) *SimpleGraph {
 			//}
 
 		} else {
-			currSeq = dna.StringToBases(line)
-			dna.AllToUpper(currSeq)
-			answer.Nodes[seqIdx].Seq = append(answer.Nodes[seqIdx].Seq, currSeq...)
+			words = strings.Split(line, "\t")
+			if len(words) > 2 {
+				currId = common.StringToUint32(words[1])
+				for i := 2;i < len(words);i+=2 {
+					weight = common.StringToFloat64(words[i])
+					nextId = common.StringToUint32(words[i+1])
+					AddEdge(answer.Nodes[currId], answer.Nodes[nextId], weight)
+				}
+			} else if len(words) == 2 {
+				//catch nodes with out edges going forward, usually end of chrom
+			} else {
+				currSeq = dna.StringToBases(line)
+				dna.AllToUpper(currSeq)
+				answer.Nodes[seqIdx].Seq = append(answer.Nodes[seqIdx].Seq, currSeq...)
+			}
 		}
 	}
 	return answer
@@ -105,34 +124,62 @@ func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
 	}
 }
 
+func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
+	var err error
+	var i, j int
+	for i = 0; i < len(gg.Nodes); i++ {
+		_, err = fmt.Fprintf(file, "%s%s:%v\n", ">", gg.Nodes[i].Name, gg.Nodes[i].Id)
+		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
+			if j+lineLength > len(gg.Nodes[i].Seq) {
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
+				common.ExitIfError(err)
+			} else {
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
+				common.ExitIfError(err)
+			}
+		}
+	}
+	for i = 0; i < len(gg.Nodes); i++ {
+		_, err = fmt.Fprintf(file, "%s\t%d", gg.Nodes[i].Name, gg.Nodes[i].Id)
+		near := gg.Nodes[i].Next
+		for j = 0; j < len(near); j++ {
+			_, err = fmt.Fprintf(file, "\t%v\t%d", near[j].Prob, near[j].Dest.Id)
+			common.ExitIfError(err)
+		}
+		_, err = fmt.Fprintf(file, "\n")
+		common.ExitIfError(err)
+	}
+}
+
 func PrintGraph(gg *SimpleGraph) {
 
 	lineLength := 50
 	var i, j int
 	for i = 0; i < len(gg.Nodes); i++ {
-		fmt.Printf("%s%s\n", ">", gg.Nodes[i].Name)
+		fmt.Printf("%s%s:%v\n", ">", gg.Nodes[i].Name, gg.Nodes[i].Id)
 		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
 			if j+lineLength > len(gg.Nodes[i].Seq) {
 				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
+
 			} else {
 				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
 			}
 		}
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
-		fmt.Printf("%s\t", gg.Nodes[i].Name)
+		fmt.Printf("%s\t%d", gg.Nodes[i].Name, gg.Nodes[i].Id)
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near); j++ {
-			fmt.Printf("%s\t", near[j].Dest.Name)
+			fmt.Printf("\t%v\t%d", near[j].Prob, near[j].Dest.Id)
 		}
 		fmt.Print("\n")
 	}
 }
 
-func Write(filename string, records []*Node) {
+func Write(filename string, sg *SimpleGraph) {
 	lineLength := 50
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
-	WriteToFileHandle(file, records, lineLength)
+	WriteToGraphHandle(file, sg, lineLength)
 }
