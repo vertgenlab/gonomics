@@ -25,7 +25,8 @@ type Vcf struct {
 	Filter string
 	Info   string
 	Format string
-	Sample string
+	//could be a struct
+	Sample []string
 }
 
 type VCF struct {
@@ -53,7 +54,7 @@ func Read(filename string) []*Vcf {
 	var rline []byte
 	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
 		line = string(rline[:])
-		data := strings.SplitN(line, "\t", 10)
+		data := strings.Split(line, "\t")
 		//fmt.Println("there is data here")
 		switch {
 		case strings.HasPrefix(line, "#"):
@@ -68,7 +69,7 @@ func Read(filename string) []*Vcf {
 			//fmt.Println("found header line")
 			position, _ := strconv.ParseInt(data[1], 10, 64)
 			//qualFloat, _ := strconv.ParseFloat(data[5], 64)
-			curr = &Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9]}
+			curr = &Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
 			answer = append(answer, curr)
 		default:
 			//fmt.Println("unexpected line")
@@ -81,12 +82,12 @@ func processVcfLine(line string) *Vcf {
 	var curr Vcf
 	//var err error
 
-	data := strings.SplitN(line, "\t", 10)
+	data := strings.Split(line, "\t")
 	if len(data) < 10 {
 		log.Fatal(fmt.Errorf("Was expecting atleast 10 columns per line, but this line did not:%s\n", line))
 	}
 	position, _ := strconv.ParseInt(data[1], 10, 64)
-	curr = Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9]}
+	curr = Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
 	
 	return &curr
 }
@@ -219,7 +220,7 @@ func ChromSizeHeader(chrom []*chromInfo.ChromInfo) []string {
 		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
-		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Unknown")
+		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Sample")
 	return header
 }
 
@@ -242,7 +243,7 @@ func BasicHeader() []string {
 		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
-		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Unknown")
+		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Sample")
 
 	return header
 }

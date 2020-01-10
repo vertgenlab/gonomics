@@ -3,10 +3,11 @@ package simpleGraph
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/cigar"
+	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"os"
 	"runtime"
@@ -52,9 +53,9 @@ func TestWriteAndRead(t *testing.T) {
 func TestAligning(t *testing.T) {
 	var tileSize int = 12
 	var stepSize int = 1
-	var readLength int = 100
+	var readLength int = 150
 	var numberOfReads int = 10
-	var mutations int = 1
+	var mutations int = 3
 	var mappedRead *sam.SamAln
 
 	log.Printf("Reading in the genome (simple graph)...\n")
@@ -108,15 +109,40 @@ func TestAligning(t *testing.T) {
 	}
 }
 
+func TestVcfGraph(t *testing.T) {
+	smallFasta := fasta.Fasta{Name: "TestSequence", Seq: dna.StringToBases("ATTTAATTTAAAG")}
+	fmt.Printf("Reference sequence is: %s\n", dna.BasesToString(smallFasta.Seq))
+	var vcfTest []*vcf.Vcf
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TAA", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS", Sample: []string{""}})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 4, Id: ".", Ref: "TAA", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=DEL", Sample: []string{""}})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 8, Id: ".", Ref: "T", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP", Sample: []string{""}})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 12, Id: ".", Ref: "A", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP", Sample: []string{""}})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 13, Id: ".", Ref: "G", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP", Sample: []string{""}})
+	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "A", Alt: "ATTTTT", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS", Sample: []string{""}})
+	var sg *SimpleGraph = &SimpleGraph{}
+
+	sg = VcfNodesToGraph(sg, &smallFasta, vcfTest)
+
+	for n := 0; n < len(sg.Nodes); n++ {
+		fmt.Printf("Printing nodes: %d, seq=%s, numOfEdges=%d ", sg.Nodes[n].Id, dna.BasesToString(sg.Nodes[n].Seq), len(sg.Nodes[n].Next))
+		for e := 0; e < len(sg.Nodes[n].Next); e++ {
+			fmt.Printf("-> %v, weight=%v", dna.BasesToString(sg.Nodes[n].Next[e].Dest.Seq), sg.Nodes[n].Next[e].Prob)
+		}
+		fmt.Println("")
+	}
+}
+
 func BenchmarkAligning(b *testing.B) {
-	var tileSize int = 30
+	var tileSize int = 12
+	var stepSize int = 1
 	var readLength int = 150
-	var numberOfReads int = 100
-	var mutations int = 5
+	var numberOfReads int = 50
+	var mutations int = 1
 	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
 
 	genome := Read("testdata/bigGenome.sg")
-	tiles := indexGenome(genome.Nodes, tileSize)
+	//tiles := indexGenome(genome.Nodes, tileSize)
+	tiles := indexGenomeDev(genome.Nodes, tileSize, stepSize)
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	//var seeds []Seed = make([]Seed, 256)
 	m, trace := swMatrixSetup(10000)
@@ -127,13 +153,15 @@ func BenchmarkAligning(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for i = 0; i < len(simReads); i++ {
-			mappedReads[i] = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
-			//log.Printf("%s\n", sam.SamAlnToString(mappedReads[i]))
+			//mappedReads[i] = GraphSmithWaterman(genome, tiles, simReads[i], tileSize, m, trace)
+			mappedReads[i] = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
+			log.Printf("%s\n", sam.SamAlnToString(mappedReads[i]))
 			//mappedReads[i] = localGlobalHybrid(genome, simReads[i], tiles, tileSize, m, trace)
 		}
 	}
 }
 
+/*
 func TestGraphTraversal(t *testing.T) {
 	gg := NewGraph()
 
@@ -193,4 +221,4 @@ func TestGraphTraversal(t *testing.T) {
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 	PrintGraph(gg)
 
-}
+}*/

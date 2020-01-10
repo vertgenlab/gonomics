@@ -79,3 +79,9 @@ func AllToUpper(records []*Fasta) {
 		ToUpper(records[i])
 	}
 }
+
+func ModifyName(records []*Fasta, prefix string) {
+	for idx := 0; idx < len(records); idx++ {
+		records[idx].Name = fmt.Sprintf("%s_%d", prefix, idx)
+	}
+}

@@ -27,7 +27,9 @@ func TestWriteAndRead(t *testing.T) {
 		tempFile := test.filename + ".tmp"
 		actual = Read(test.filename)
 		Write(tempFile, actual)
-		if !AllEqual(Read(tempFile), Read("testdata/test.vcf")) {
+		alpha := ReadFile(tempFile)
+		beta := ReadFile("testdata/test.vcf")
+		if !AllEqual(alpha.Vcf, beta.Vcf) {
 			t.Errorf("VCF files are not the same")
 		}
 		err := os.Remove(tempFile)
