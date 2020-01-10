@@ -84,3 +84,9 @@ func CreateAllGaps(name string, numGaps int64) *Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllGaps(numGaps)}
 	return &answer
 }
+
+func CreateAllNs(name string, numGaps int64) *Fasta {
+	answer := Fasta{Name: name, Seq: dna.CreateAllNs(numGaps)}
+	return &answer
+}
+

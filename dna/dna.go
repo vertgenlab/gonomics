@@ -28,3 +28,11 @@ func CreateAllGaps(numGaps int64) []Base {
 	}
 	return answer
 }
+
+func CreateAllNs(numGaps int64) []Base {
+	answer := make([]Base, numGaps)
+	for i:= 0; i < len(answer); i++ {
+		answer[i] = N
+	}
+	return answer
+}
