@@ -250,15 +250,23 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 					wg.Add(1)
 					go score(&wg, vcfChannel, a[i-1], b[i-1], cDel, dDel, afThreshold, alleles[i], "Del", k,  chrName, pos, sigThreshold)
 				}
-
-				if runtime.NumGoroutine() % 10000 == 0 {
-					fmt.Printf("Number of Goroutines: %d\n", runtime.NumGoroutine())
-				}
 			}
 		}
 	}
-	VariantScores = append(VariantScores, <-vcfChannel)
-	wg.Wait()
+
+	fmt.Println("# Waiting for Goroutines to finish")
+
+	go func() {
+		fmt.Println(runtime.NumGoroutine())
+		wg.Wait()
+		fmt.Println("# Goroutines finished")
+		close(vcfChannel)
+	}()
+
+	for answer := range vcfChannel {
+		VariantScores = append(VariantScores, answer)
+	}
+
 	return VariantScores
 }
 
