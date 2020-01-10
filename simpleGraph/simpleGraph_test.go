@@ -21,13 +21,14 @@ var seqOneC = dna.StringToBases("ACGTACGTACGTT")
 var readWriteTests = []struct {
 	filename string // input
 	//data *SimpleGraph
-	data     []*Node
+	data []*Node
 }{
 	{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA, nil, nil}, {1, "seqOneB", seqOneB, nil, nil}, {2, "seqOneC", seqOneC, nil, nil}}},
 }
+
 /*
 func TestRead(t *testing.T) {
-	for _, test := range readWriteTests { 
+	for _, test := range readWriteTests {
 		actual := Read(test.filename)
 
 		if !AllAreEqual(test.data.Nodes, actual.Nodes) {

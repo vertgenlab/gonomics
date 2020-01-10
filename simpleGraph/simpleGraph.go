@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
-
 )
 
 type SimpleGraph struct {
@@ -78,7 +77,7 @@ func Read(filename string) *SimpleGraph {
 			words = strings.Split(line, "\t")
 			if len(words) > 2 {
 				currId = common.StringToUint32(words[1])
-				for i := 2;i < len(words);i+=2 {
+				for i := 2; i < len(words); i += 2 {
 					weight = common.StringToFloat64(words[i])
 					nextId = common.StringToUint32(words[i+1])
 					AddEdge(answer.Nodes[currId], answer.Nodes[nextId], weight)
