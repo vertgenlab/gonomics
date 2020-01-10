@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
+	"runtime"
 	"strings"
 )
 
@@ -129,8 +130,10 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 	var VariantScores []*vcf.Vcf
 	var progressMeter int
 	var cA, cC, cG, cT, cIns, cDel, dA, dC, dG, dT, dIns, dDel int32
-	var pA, pC, pG, pT, pIns, pDel float64
 	var a, b []int32
+
+	// Initialize a channel to send completed vcf structs through
+	vcfChannel := make(chan *vcf.Vcf)
 
 	// Loop through BatchSampleMap
 	for chrName, chr := range input {
@@ -139,7 +142,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 			//TODO: remove following line
 			//alleles = alleles[0:len(alleles)/10]
 
-			if progressMeter % 1 == 0 {
+			if progressMeter % 10 == 0 {
 				fmt.Printf("# Processed %d Positions\n", progressMeter)
 			}
 			progressMeter++
@@ -208,32 +211,11 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 				dG = alleles[0].BaseG - alleles[i].BaseG
 				dT = alleles[0].BaseT - alleles[i].BaseT
 
-
-				// Initialize a channel to send completed vcf structs through
-				//vcfChannel := make(chan []*vcf.Vcf)
-
-
-
 				// Generate Scores
-				pA, pC, pG, pT = 1, 1, 1, 1
-				if alleles[i].Ref != dna.A {pA = score(a[i-1], b[i-1], cA, dA, afThreshold)}
-				if alleles[i].Ref != dna.C {pC = score(a[i-1], b[i-1], cC, dC, afThreshold)}
-				if alleles[i].Ref != dna.G {pG = score(a[i-1], b[i-1], cG, dG, afThreshold)}
-				if alleles[i].Ref != dna.T {pT = score(a[i-1], b[i-1], cT, dT, afThreshold)}
-
-				// If any p value is below the significance threshold then create vcf formatted output
-				if pA < sigThreshold {
-					VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "A", 0,  chrName, pos, pA, a[i-1], cA))
-				}
-				if pC < sigThreshold {
-					VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "C", 0, chrName, pos, pC, a[i-1], cC))
-				}
-				if pG < sigThreshold {
-					VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "G", 0, chrName, pos, pG, a[i-1], cG))
-				}
-				if pT < sigThreshold {
-					VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "T", 0, chrName, pos, pT, a[i-1], cT))
-				}
+				if alleles[i].Ref != dna.A {go score(vcfChannel, a[i-1], b[i-1], cA, dA, afThreshold, alleles[i], "A", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.C {go score(vcfChannel, a[i-1], b[i-1], cC, dC, afThreshold, alleles[i], "C", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.G {go score(vcfChannel, a[i-1], b[i-1], cG, dG, afThreshold, alleles[i], "G", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.T {go score(vcfChannel, a[i-1], b[i-1], cT, dT, afThreshold, alleles[i], "T", 0, chrName, pos, sigThreshold)}
 
 				// Calculate p for each Ins
 				for j = 0; j < len(alleles[i].Ins); j++ {
@@ -246,11 +228,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 						}
 					}
 
-					pIns = score(a[i-1], b[i-1], cIns, dIns, afThreshold)
-
-					if pIns < sigThreshold {
-						VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "Ins", j,  chrName, pos, pIns, a[i-1], cIns))
-					}
+					go score(vcfChannel, a[i-1], b[i-1], cIns, dIns, afThreshold, alleles[i], "Ins", j,  chrName, pos, sigThreshold)
 				}
 
 				// Calculate p for each Del
@@ -264,83 +242,75 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 						}
 					}
 
-					pDel = score(a[i-1], b[i-1], cDel, dDel, afThreshold)
+					go score(vcfChannel, a[i-1], b[i-1], cDel, dDel, afThreshold, alleles[i], "Del", k,  chrName, pos, sigThreshold)
+				}
 
-					if pDel < sigThreshold {
-						VariantScores = append(VariantScores, batchAlleleCountToVcf(alleles[i], "Del", k,  chrName, pos, pDel, a[i-1], cDel))
-					}
+				if runtime.NumGoroutine() % 10000 == 0 {
+					fmt.Printf("Number of Goroutines: %d\n", runtime.NumGoroutine())
 				}
 			}
 		}
 	}
+	VariantScores = append(VariantScores, <-vcfChannel)
 	return VariantScores
 }
 
-// Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0)
-func score (a int32, b int32, c int32, d int32, afThreshold float64) float64 {
+// Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
+func score (vcfChannel chan *vcf.Vcf, a int32, b int32, c int32, d int32, afThreshold float64, inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, sigThreshold float64) {
 
 	var p float64
-
-	//var qual string
+	var answer *vcf.Vcf
 
 	switch {
 	// If alternate allele is zero then there is no variant and score is 1
 	case c == 0:
-		return 1
+		p = 1
 
 	// If a = b and c = d then it is testing itself and should return 1
 	case a == b && c == d:
-		return 1
+		p = 1
 
 	// If the allele frequency of d > c then p is 1
 	case float64(c)/float64(c+a) < float64(d)/float64(d+b):
-		return 1
+		p = 1
 
 	// If the allele frequency is less than the threshold then p is noted as 1 so as to be exluded
 	case float64(c)/float64(c+a) < afThreshold:
-		return 1
+		p = 1
 
 	// If no exclusion conditions are met, then calculate p value
 	default:
 		p = numbers.FisherExact(int(a), int(b), int(c), int(d), true)
-		//p = 0
-		//qual = fmt.Sprintf("%d:%d:%d:%d", a, b, c, d)
-
 	}
-	return p
-}
-
-// Convert values from map to a vcf.Vcf struct
-func batchAlleleCountToVcf (inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, p float64, refCount int32, altCount int32) *vcf.Vcf {
-	var answer *vcf.Vcf
-
-	answer = &vcf.Vcf{
-		Chr:     chr,
-		Id:      ".",
-		Qual:    p,
-		Filter:  ".",
-		Format:  "Sample:RefCount:AltCount:Cov",
-		Unknown: fmt.Sprintf("%s:%d:%d:%d", inStruct.Sample, refCount, altCount, inStruct.Counts)}
+	if p < sigThreshold {
+		answer = &vcf.Vcf{
+			Chr:     chr,
+			Id:      ".",
+			Qual:    p,
+			Filter:  ".",
+			Format:  "Sample:RefCount:AltCount:Cov",
+			Unknown: fmt.Sprintf("%s:%d:%d:%d", inStruct.Sample, a, c, inStruct.Counts)}
 
 
-	switch altbase {
-	case "A", "C", "G", "T":
-		answer.Pos = pos + 1
-		answer.Info = "."
-		answer.Ref = dna.BaseToString(inStruct.Ref)
-		answer.Alt = altbase
+		switch altbase {
+		case "A", "C", "G", "T":
+			answer.Pos = pos + 1
+			answer.Info = "."
+			answer.Ref = dna.BaseToString(inStruct.Ref)
+			answer.Alt = altbase
 
-	case "Ins":
-		answer.Pos = pos
-		answer.Info = "INS"
-		answer.Ref = dna.BasesToString(inStruct.Ins[indelslicepos].Ref)
-		answer.Alt = dna.BasesToString(inStruct.Ins[indelslicepos].Alt)
+		case "Ins":
+			answer.Pos = pos
+			answer.Info = "INS"
+			answer.Ref = dna.BasesToString(inStruct.Ins[indelslicepos].Ref)
+			answer.Alt = dna.BasesToString(inStruct.Ins[indelslicepos].Alt)
 
-	case "Del":
-		answer.Pos = pos
-		answer.Info = "DEL"
-		answer.Ref = dna.BasesToString(inStruct.Del[indelslicepos].Ref)
-		answer.Alt = dna.BasesToString(inStruct.Del[indelslicepos].Alt)
+		case "Del":
+			answer.Pos = pos
+			answer.Info = "DEL"
+			answer.Ref = dna.BasesToString(inStruct.Del[indelslicepos].Ref)
+			answer.Alt = dna.BasesToString(inStruct.Del[indelslicepos].Alt)
+		}
+		vcfChannel <- answer
 	}
-	return answer
 }
