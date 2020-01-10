@@ -208,11 +208,18 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 				dG = alleles[0].BaseG - alleles[i].BaseG
 				dT = alleles[0].BaseT - alleles[i].BaseT
 
+
+				// Initialize a channel to send completed vcf structs through
+				//vcfChannel := make(chan []*vcf.Vcf)
+
+
+
 				// Generate Scores
-				pA = score(a[i-1], b[i-1], cA, dA, afThreshold)
-				pC = score(a[i-1], b[i-1], cC, dC, afThreshold)
-				pG = score(a[i-1], b[i-1], cG, dG, afThreshold)
-				pT = score(a[i-1], b[i-1], cT, dT, afThreshold)
+				pA, pC, pG, pT = 1, 1, 1, 1
+				if alleles[i].Ref != dna.A {pA = score(a[i-1], b[i-1], cA, dA, afThreshold)}
+				if alleles[i].Ref != dna.C {pC = score(a[i-1], b[i-1], cC, dC, afThreshold)}
+				if alleles[i].Ref != dna.G {pG = score(a[i-1], b[i-1], cG, dG, afThreshold)}
+				if alleles[i].Ref != dna.T {pT = score(a[i-1], b[i-1], cT, dT, afThreshold)}
 
 				// If any p value is below the significance threshold then create vcf formatted output
 				if pA < sigThreshold {
@@ -266,7 +273,6 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 			}
 		}
 	}
-
 	return VariantScores
 }
 
@@ -274,6 +280,8 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 func score (a int32, b int32, c int32, d int32, afThreshold float64) float64 {
 
 	var p float64
+
+	//var qual string
 
 	switch {
 	// If alternate allele is zero then there is no variant and score is 1
@@ -295,6 +303,9 @@ func score (a int32, b int32, c int32, d int32, afThreshold float64) float64 {
 	// If no exclusion conditions are met, then calculate p value
 	default:
 		p = numbers.FisherExact(int(a), int(b), int(c), int(d), true)
+		//p = 0
+		//qual = fmt.Sprintf("%d:%d:%d:%d", a, b, c, d)
+
 	}
 	return p
 }
