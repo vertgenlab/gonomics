@@ -40,9 +40,9 @@ func Read(filename string) []*Vcf {
 		return nil
 	}
 	var err2 error
-	var rline []byte
-	for ; err2 != io.EOF; rline, _, err2 = reader.ReadLine() {
-		line = string(rline[:])
+	//var rline []byte
+	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
+		//line = string(rline[:])
 		data := strings.Split(line, "\t")
 		//fmt.Println("there is data here")
 		switch {
