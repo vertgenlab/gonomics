@@ -3,6 +3,7 @@ package alleles
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
@@ -328,5 +329,47 @@ func score (wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c in
 			answer.Alt = dna.BasesToString(inStruct.Del[indelslicepos].Alt)
 		}
 		vcfChannel <- answer
+	}
+}
+
+// Inputs a vcf file annotated by SnpEff and exports as a csv
+func EffToCSV (inFile string, outFile string) {
+	data := vcf.Read(inFile)
+
+	// Write header to output file
+	output := fileio.MustCreate(outFile)
+	defer output.Close()
+	fmt.Fprintf(output, "Sample,Chr,Pos,Ref,Alt,pVal,Gene,DNA,Protein,RefCount,AltCount,Coverage,Consequence,Prediction,Transcript\n")
+
+	var i int
+	for i = 0; i < len(data); i++ {
+
+		Ukn := strings.Split(data[i].Unknown, ":")
+		Info := strings.Split(data[i].Info, "=")
+
+		if len(Info) < 2 {
+			continue
+		}
+
+		// Eff Example Line: ANN=A|missense_variant|MODERATE|TGFBR3|TGFBR3|transcript|NM_003243.4|protein_coding|13/17|c.2050G>T|p.Asp684Tyr|2565/6467|2050/2556|684/851||
+		Ann := strings.Split(Info[1],"|")
+		Cov := strings.Split(Ukn[3], "\n")
+
+		fmt.Fprintf(output,"%s,%s,%d,%s,%s,%v,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+			Ukn[0], // Sample
+			data[i].Chr, // Chr
+			data[i].Pos, // Pos
+			data[i].Ref, // Ref
+			data[i].Alt, // Alt
+			data[i].Qual, // pVal
+			Ann[3], // Gene
+			Ann[9], // DNA
+			Ann[10], // Protein
+			Ukn[1], // RefCount
+			Ukn[2], // AltCount
+			Cov[0], // Coverage
+			Ann[1], // Consequence
+			Ann[2], // Prediction
+			Ann[6]) // Transcript
 	}
 }
