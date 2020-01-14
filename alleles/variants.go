@@ -355,7 +355,7 @@ func EffToCSV (inFile string, outFile string) {
 		Ann := strings.Split(Info[1],"|")
 		Cov := strings.Split(Ukn[3], "\n")
 
-		fmt.Fprintf(output,"%s,%s,%d,%s,%s,%v,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+		fmt.Fprintf(output,"%s,%s,%d,%s,%s,%.3v,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
 			Ukn[0], // Sample
 			data[i].Chr, // Chr
 			data[i].Pos, // Pos
