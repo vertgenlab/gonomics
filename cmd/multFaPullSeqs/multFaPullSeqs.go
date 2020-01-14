@@ -50,10 +50,11 @@ func multFaPullSeqs(infile string, outfile string, start int64, end int64) {
 
 func usage() {
 	fmt.Print(
-		"multFaPullSeqs - Pull sub-sequence from multiple fasta alignment for each entry.\n" +
-		"Usage:\n" +
-		"multFaPullSeqs mult.fa out.fa start end\n" +
-		"options:\n")
+		"multFaPullSeqs - Pull sub-sequence from multiple fasta alignment for each entry. Uses reference indices, treating the first sequence as the reference.\n" +
+			"Usage:\n" +
+			"multFaPullSeqs mult.fa out.fa start end\n" +
+			"options:\n" +
+			"TODO: Make removeGaps an option.\n")
 	flag.PrintDefaults()
 }
 
