@@ -43,12 +43,11 @@ func quickPrimateRecon(infile string, outfile string) {
 
 	for j := 0; j < len(human.Seq); j++ {
 		outputBase = human.Seq[j]
-
-		if !isThereABase(records, j) {
-			outputBase = dna.Gap
-		} else if human.Seq[j] == dna.N {
+		if human.Seq[j] == dna.N {
 			Ncount++
 			outputBase = human.Seq[j]
+		} else if !isThereABase(records, j) {
+			outputBase = dna.Gap
 		} else if human.Seq[j] == chimp.Seq[j] && human.Seq[j] == bonobo.Seq[j] {
 			outputBase = human.Seq[j]
 			allMatch++

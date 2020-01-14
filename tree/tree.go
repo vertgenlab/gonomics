@@ -5,9 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
+	"log"
+	"os"	
 	"strconv"
 	"strings"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type Tree struct {
@@ -30,6 +32,66 @@ func splittingCommaIndex(input string) int {
 		}
 	}
 	return -1
+}
+
+func ParseDot(input string) *Tree {
+	var line string
+	var root *Tree
+	var doneReading bool = false
+
+	file := fileio.EasyOpen(input)
+	defer file.Close()
+
+	var m map[string]*Tree
+	m = make(map[string]*Tree)
+	var prev *Tree
+	var current *Tree
+	var n int = 0
+
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		fmt.Printf("Line number: %d\n", n)
+		n++
+		prev = nil
+		words := strings.Split(line, " -> ")
+		if len(words) < 2 {
+			if words[0] == "}" {
+				fmt.Println("End Line.\n")
+			} else {
+				wordSpace := strings.Split(words[0], " ")
+				if wordSpace[0] == "digraph" {
+					fmt.Println("header line.\n")
+				} else {
+					log.Fatalf("Invalid line.\n")
+				}
+			}
+		} else {
+			for i := 0; i < len(words); i++ {
+				if _ , ok := m[words[i]]; !ok { //if current is not in the map already
+					current = &Tree{Name: words[i], OnlyTopology: true, BranchLength: 0, Left: nil, Right: nil}
+					if len(m) == 0 { //root check, first entry is root
+						fmt.Println(current.Name)
+						root = current
+					} 	
+					m[words[i]] = current
+				} else {
+					current = m[words[i]]
+				}
+				if prev != nil {
+					if prev.Left != nil {
+						if prev.Right != nil {
+							log.Fatalf("Trees must be binary.")
+						} else {
+							prev.Right = current
+						}
+					} else {
+						prev.Left = current
+					}
+				}
+				prev = current
+			}
+	}
+		}
+	return root
 }
 
 func parseNewick(input string) (*Tree, error) {
