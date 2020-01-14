@@ -13,26 +13,24 @@ import (
 )
 
 type BatchAlleleCount struct {
-	Sample	string
-	Ref		dna.Base
-	Counts 	int32
-	BaseA	int32
-	BaseC 	int32
-	BaseG 	int32
-	BaseT 	int32
-	Ins 	[]Indel
-	Del 	[]Indel
+	Sample string
+	Ref    dna.Base
+	Counts int32
+	BaseA  int32
+	BaseC  int32
+	BaseG  int32
+	BaseT  int32
+	Ins    []Indel
+	Del    []Indel
 }
 
 // Map structure: map[Chromosome]map[Position][Sample]*BatchAlleleCount
 type BatchSampleMap map[string]map[int64][]*BatchAlleleCount
 
-
-
 // Input a directory filled with AlleleCount (.ac) files. Merges the files into a nested map (chr->pos->[sample]data)
 func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 
-	if ! strings.HasSuffix(inDirectory, "/") {
+	if !strings.HasSuffix(inDirectory, "/") {
 		inDirectory = inDirectory + "/"
 	}
 
@@ -60,13 +58,13 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 				_, ok := SampleMap[chrName]
 
 				//if the chromosome is NOT in the matrix, initialize
-				if ! ok {
+				if !ok {
 					SampleMap[chrName] = make(map[int64][]*BatchAlleleCount)
 				}
 
 				// Check if position is in the map, if not then add the background struct
 				_, okk := SampleMap[chrName][pos]
-				if ! okk {
+				if !okk {
 					current = &BatchAlleleCount{"Background", alleles.Ref, 0, 0, 0, 0, 0, make([]Indel, 0), make([]Indel, 0)}
 					SampleMap[chrName][pos] = append(SampleMap[chrName][pos], current)
 				}
@@ -108,8 +106,8 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 
 				current = &BatchAlleleCount{
 					Sample: SampleName,
-					Ref:	alleles.Ref,
-					Counts:	alleles.Counts,
+					Ref:    alleles.Ref,
+					Counts: alleles.Counts,
 					BaseA:  alleles.BaseA,
 					BaseC:  alleles.BaseC,
 					BaseG:  alleles.BaseG,
@@ -126,7 +124,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 }
 
 // Call Calculate pValues with fisher's exact test and export in a vcf.Vcf struct with pValue stored in Qual field. Filters on sigThreshold.
-func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold float64) []*vcf.Vcf {
+func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float64) []*vcf.Vcf {
 
 	fmt.Printf("#\n# Calling Variants\n")
 	var VariantScores []*vcf.Vcf
@@ -145,7 +143,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 			//TODO: remove following line
 			//alleles = alleles[0:len(alleles)/10]
 
-			if progressMeter % 1000 == 0 {
+			if progressMeter%1000 == 0 {
 				fmt.Printf("# Processed %d Positions\n", progressMeter)
 			}
 			progressMeter++
@@ -164,7 +162,6 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 			// b = Background Ref Allele Count - Samples Ref Allele Count
 			// c = Samples Alt Allele Count
 			// d = Background Alt Allele Count - Samples Alt Allele Count
-
 
 			// Determine Reference Base
 			// If ref base is unknown then skip
@@ -215,14 +212,22 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 				dT = alleles[0].BaseT - alleles[i].BaseT
 
 				// Generate Scores
-				if alleles[i].Ref != dna.A {wg.Add(1)
-					go score(&wg, vcfChannel, a[i-1], b[i-1], cA, dA, afThreshold, alleles[i], "A", 0, chrName, pos, sigThreshold)}
-				if alleles[i].Ref != dna.C {wg.Add(1)
-					go score(&wg, vcfChannel, a[i-1], b[i-1], cC, dC, afThreshold, alleles[i], "C", 0, chrName, pos, sigThreshold)}
-				if alleles[i].Ref != dna.G {wg.Add(1)
-					go score(&wg, vcfChannel, a[i-1], b[i-1], cG, dG, afThreshold, alleles[i], "G", 0, chrName, pos, sigThreshold)}
-				if alleles[i].Ref != dna.T {wg.Add(1)
-					go score(&wg, vcfChannel, a[i-1], b[i-1], cT, dT, afThreshold, alleles[i], "T", 0, chrName, pos, sigThreshold)}
+				if alleles[i].Ref != dna.A {
+					wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cA, dA, afThreshold, alleles[i], "A", 0, chrName, pos, sigThreshold)
+				}
+				if alleles[i].Ref != dna.C {
+					wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cC, dC, afThreshold, alleles[i], "C", 0, chrName, pos, sigThreshold)
+				}
+				if alleles[i].Ref != dna.G {
+					wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cG, dG, afThreshold, alleles[i], "G", 0, chrName, pos, sigThreshold)
+				}
+				if alleles[i].Ref != dna.T {
+					wg.Add(1)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cT, dT, afThreshold, alleles[i], "T", 0, chrName, pos, sigThreshold)
+				}
 
 				// Calculate p for each Ins
 				for j = 0; j < len(alleles[i].Ins); j++ {
@@ -235,7 +240,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 						}
 					}
 					wg.Add(1)
-					go score(&wg, vcfChannel, a[i-1], b[i-1], cIns, dIns, afThreshold, alleles[i], "Ins", j,  chrName, pos, sigThreshold)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cIns, dIns, afThreshold, alleles[i], "Ins", j, chrName, pos, sigThreshold)
 				}
 
 				// Calculate p for each Del
@@ -249,7 +254,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 						}
 					}
 					wg.Add(1)
-					go score(&wg, vcfChannel, a[i-1], b[i-1], cDel, dDel, afThreshold, alleles[i], "Del", k,  chrName, pos, sigThreshold)
+					go score(&wg, vcfChannel, a[i-1], b[i-1], cDel, dDel, afThreshold, alleles[i], "Del", k, chrName, pos, sigThreshold)
 				}
 			}
 		}
@@ -272,7 +277,7 @@ func ScoreVariants (input BatchSampleMap, sigThreshold float64, afThreshold floa
 }
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
-func score (wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c int32, d int32, afThreshold float64, inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, sigThreshold float64) {
+func score(wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c int32, d int32, afThreshold float64, inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, sigThreshold float64) {
 
 	var p float64
 	var answer *vcf.Vcf
@@ -308,7 +313,6 @@ func score (wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c in
 			Format:  "Sample:RefCount:AltCount:Cov",
 			Unknown: fmt.Sprintf("%s:%d:%d:%d", inStruct.Sample, a, c, inStruct.Counts)}
 
-
 		switch altbase {
 		case "A", "C", "G", "T":
 			answer.Pos = pos + 1
@@ -333,7 +337,7 @@ func score (wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c in
 }
 
 // Inputs a vcf file annotated by SnpEff and exports as a csv
-func EffToCSV (inFile string, outFile string) {
+func EffToCSV(inFile string, outFile string) {
 	data := vcf.Read(inFile)
 
 	// Write header to output file
@@ -352,24 +356,24 @@ func EffToCSV (inFile string, outFile string) {
 		}
 
 		// Eff Example Line: ANN=A|missense_variant|MODERATE|TGFBR3|TGFBR3|transcript|NM_003243.4|protein_coding|13/17|c.2050G>T|p.Asp684Tyr|2565/6467|2050/2556|684/851||
-		Ann := strings.Split(Info[1],"|")
+		Ann := strings.Split(Info[1], "|")
 		Cov := strings.Split(Ukn[3], "\n")
 
-		fmt.Fprintf(output,"%s,%s,%d,%s,%s,%.3v,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-			Ukn[0], // Sample
-			data[i].Chr, // Chr
-			data[i].Pos, // Pos
-			data[i].Ref, // Ref
-			data[i].Alt, // Alt
+		fmt.Fprintf(output, "%s,%s,%d,%s,%s,%.3v,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+			Ukn[0],       // Sample
+			data[i].Chr,  // Chr
+			data[i].Pos,  // Pos
+			data[i].Ref,  // Ref
+			data[i].Alt,  // Alt
 			data[i].Qual, // pVal
-			Ann[3], // Gene
-			Ann[9], // DNA
-			Ann[10], // Protein
-			Ukn[1], // RefCount
-			Ukn[2], // AltCount
-			Cov[0], // Coverage
-			Ann[1], // Consequence
-			Ann[2], // Prediction
-			Ann[6]) // Transcript
+			Ann[3],       // Gene
+			Ann[9],       // DNA
+			Ann[10],      // Protein
+			Ukn[1],       // RefCount
+			Ukn[2],       // AltCount
+			Cov[0],       // Coverage
+			Ann[1],       // Consequence
+			Ann[2],       // Prediction
+			Ann[6])       // Transcript
 	}
 }

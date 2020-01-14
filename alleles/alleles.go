@@ -13,26 +13,25 @@ import (
 )
 
 type AlleleCount struct {
-	Ref 	dna.Base
-	Counts	int32
-	BaseA	int32
-	BaseC 	int32
-	BaseG 	int32
-	BaseT 	int32
-	Ins 	[]Indel
-	Del 	[]Indel
+	Ref    dna.Base
+	Counts int32
+	BaseA  int32
+	BaseC  int32
+	BaseG  int32
+	BaseT  int32
+	Ins    []Indel
+	Del    []Indel
 }
 
 type Indel struct {
-	Ref 		[]dna.Base
-	Alt 		[]dna.Base
-	RunLength	int32
-	Count 		int32
+	Ref       []dna.Base
+	Alt       []dna.Base
+	RunLength int32
+	Count     int32
 }
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount
 type SampleMap map[string]map[int64]*AlleleCount
-
 
 // Inputs a sam file and loops through while keeping a tally of each base present at each position. Stores in SampleMap
 func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleMap {
@@ -41,7 +40,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	fmt.Printf("#Reading Reference\n")
 	ref := fasta.Read(refFilename)
 	fasta.AllToUpper(ref)
-
 
 	var i, k int32
 	var j int
@@ -65,7 +63,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	var progressMeter int32
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 
-		if progressMeter % 500000 == 0 {
+		if progressMeter%500000 == 0 {
 			fmt.Printf("#Read %d Alignments\n", progressMeter)
 		}
 		progressMeter++
@@ -88,7 +86,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 			_, ok := AlleleMatrix[aln.RName]
 
 			//if the chromosome is NOT in the matrix, initialize
-			if ! ok {
+			if !ok {
 				AlleleMatrix[aln.RName] = make(map[int64]*AlleleCount)
 			}
 
@@ -114,7 +112,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 						_, ok := AlleleMatrix[aln.RName][RefIndex]
 
 						//if the position is NOT in the matrix, add it
-						if ! ok {
+						if !ok {
 							AlleleMatrix[aln.RName][RefIndex] = &AlleleCount{
 								ref[ChrSliceMatch].Seq[RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0), make([]Indel, 0)}
 						}
@@ -141,7 +139,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					if Match == false {
 						var AltBase []dna.Base = make([]dna.Base, 1)
 						AltBase[0] = indelSeq[0]
-						currentIndel = Indel{indelSeq, AltBase, int32(len(indelSeq)-1), 1}
+						currentIndel = Indel{indelSeq, AltBase, int32(len(indelSeq) - 1), 1}
 						AlleleMatrix[aln.RName][OrigRefIndex].Del = append(AlleleMatrix[aln.RName][OrigRefIndex].Del, currentIndel)
 					}
 
@@ -153,11 +151,10 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					_, ok := AlleleMatrix[aln.RName][RefIndex]
 
 					//if the position is NOT in the matrix, add it
-					if ! ok {
+					if !ok {
 						AlleleMatrix[aln.RName][RefIndex] = &AlleleCount{
 							ref[ChrSliceMatch].Seq[RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0), make([]Indel, 0)}
 					}
-
 
 					// Loop through read sequence and keep track of the inserted bases
 					indelSeq = make([]dna.Base, 1)
@@ -169,7 +166,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 						indelSeq = append(indelSeq, currentSeq[SeqIndex])
 						SeqIndex++
 					}
-
 
 					Match = false
 					for j = 0; j < len(AlleleMatrix[aln.RName][RefIndex].Ins); j++ {
@@ -187,9 +183,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 						AlleleMatrix[aln.RName][RefIndex].Ins = append(AlleleMatrix[aln.RName][RefIndex].Ins, currentIndel)
 					}
 
-
 					// Note: Insertions do not contribute to the total counts as the insertion is associated with the previous reference base
-
 
 					//Handle matching pos relative to ref
 				} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
@@ -200,7 +194,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 						_, ok := AlleleMatrix[aln.RName][RefIndex]
 
 						//if the position is NOT in the matrix, add it
-						if ! ok {
+						if !ok {
 							AlleleMatrix[aln.RName][RefIndex] = &AlleleCount{
 								ref[ChrSliceMatch].Seq[RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0), make([]Indel, 0)}
 						}
@@ -244,7 +238,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	var AltSeq string
 
 	for chrName, chr := range input {
-				for pos, alleles := range chr {
+		for pos, alleles := range chr {
 
 			switch alleles.Ref {
 			case dna.A:
@@ -268,77 +262,69 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseA, alleles.Counts)
 
 			current = &vcf.Vcf{
-				Chr:		chrName,
-				Pos: 		pos+1,
-				Id: 		".",
-				Ref: 		base,
-				Alt: 		"A",
-				Qual: 		1,
-				Filter: 	".",
-				Info: 		".",
-				Format:	 	"RefCount:AltCount:Cov",
-				Unknown: 	UknFmt}
+				Chr:     chrName,
+				Pos:     pos + 1,
+				Id:      ".",
+				Ref:     base,
+				Alt:     "A",
+				Qual:    1,
+				Filter:  ".",
+				Info:    ".",
+				Format:  "RefCount:AltCount:Cov",
+				Unknown: UknFmt}
 
 			answer = append(answer, current)
-
-
 
 			// Ref -> C
 			UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseC, alleles.Counts)
 
 			current = &vcf.Vcf{
-				Chr:		chrName,
-				Pos: 		pos+1,
-				Id: 		".",
-				Ref: 		base,
-				Alt: 		"C",
-				Qual: 		1,
-				Filter: 	".",
-				Info: 		".",
-				Format:	 	"RefCount:AltCount:Cov",
-				Unknown: 	UknFmt}
+				Chr:     chrName,
+				Pos:     pos + 1,
+				Id:      ".",
+				Ref:     base,
+				Alt:     "C",
+				Qual:    1,
+				Filter:  ".",
+				Info:    ".",
+				Format:  "RefCount:AltCount:Cov",
+				Unknown: UknFmt}
 
 			answer = append(answer, current)
-
-
 
 			// Ref -> G
 			UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseG, alleles.Counts)
 
 			current = &vcf.Vcf{
-				Chr:		chrName,
-				Pos: 		pos+1,
-				Id: 		".",
-				Ref: 		base,
-				Alt: 		"G",
-				Qual: 		1,
-				Filter: 	".",
-				Info: 		".",
-				Format:	 	"RefCount:AltCount:Cov",
-				Unknown: 	UknFmt}
+				Chr:     chrName,
+				Pos:     pos + 1,
+				Id:      ".",
+				Ref:     base,
+				Alt:     "G",
+				Qual:    1,
+				Filter:  ".",
+				Info:    ".",
+				Format:  "RefCount:AltCount:Cov",
+				Unknown: UknFmt}
 
 			answer = append(answer, current)
-
-
 
 			// Ref -> T
 			UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseT, alleles.Counts)
 
 			current = &vcf.Vcf{
-				Chr:		chrName,
-				Pos: 		pos+1,
-				Id: 		".",
-				Ref: 		base,
-				Alt: 		"T",
-				Qual: 		1,
-				Filter: 	".",
-				Info: 		".",
-				Format:	 	"RefCount:AltCount:Cov",
-				Unknown: 	UknFmt}
+				Chr:     chrName,
+				Pos:     pos + 1,
+				Id:      ".",
+				Ref:     base,
+				Alt:     "T",
+				Qual:    1,
+				Filter:  ".",
+				Info:    ".",
+				Format:  "RefCount:AltCount:Cov",
+				Unknown: UknFmt}
 
 			answer = append(answer, current)
-
-
 
 			// Ref -> Ins
 			for i = 0; i < len(alleles.Ins); i++ {
@@ -348,21 +334,20 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 				AltSeq = dna.BasesToString(alleles.Ins[i].Alt)
 
 				current = &vcf.Vcf{
-					Chr:		chrName,
+					Chr: chrName,
 					// VCF format has insertions assigned to the prior base, so there is no pos + 1
-					Pos: 		pos,
-					Id: 		".",
-					Ref: 		RefSeq,
-					Alt: 		AltSeq,
-					Qual: 		1,
-					Filter: 	".",
-					Info: 		"INS",
-					Format:	 	"RefCount:AltCount:Cov",
-					Unknown: 	UknFmt}
+					Pos:     pos,
+					Id:      ".",
+					Ref:     RefSeq,
+					Alt:     AltSeq,
+					Qual:    1,
+					Filter:  ".",
+					Info:    "INS",
+					Format:  "RefCount:AltCount:Cov",
+					Unknown: UknFmt}
 
 				answer = append(answer, current)
 			}
-
 
 			// Ref -> Del
 			for i = 0; i < len(alleles.Del); i++ {
@@ -372,17 +357,17 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 				AltSeq = dna.BaseToString(alleles.Del[i].Alt[0])
 
 				current = &vcf.Vcf{
-					Chr:		chrName,
+					Chr: chrName,
 					// VCF format has deletions assigned to the prior base, so there is no pos + 1
-					Pos: 		pos,
-					Id: 		".",
-					Ref: 		RefSeq,
-					Alt: 		AltSeq,
-					Qual: 		1,
-					Filter: 	".",
-					Info: 		"DEL",
-					Format:	 	"RefCount:AltCount:Cov",
-					Unknown: 	UknFmt}
+					Pos:     pos,
+					Id:      ".",
+					Ref:     RefSeq,
+					Alt:     AltSeq,
+					Qual:    1,
+					Filter:  ".",
+					Info:    "DEL",
+					Format:  "RefCount:AltCount:Cov",
+					Unknown: UknFmt}
 
 				answer = append(answer, current)
 			}
@@ -399,7 +384,6 @@ func FilterAlleles(input SampleMap, coverageThreshold int32) SampleMap {
 			if alleles.Counts <= coverageThreshold {
 				delete(input[chrName], pos)
 			}
-
 
 		}
 	}
@@ -426,7 +410,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 
-		if progressMeter % 500000 == 0 {
+		if progressMeter%500000 == 0 {
 			fmt.Printf("# Read %d Lines\n", progressMeter)
 		}
 		progressMeter++
@@ -444,7 +428,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 			_, ok := answer[Chr]
 
 			//if the chromosome is NOT in the matrix, initialize
-			if ! ok {
+			if !ok {
 				answer[Chr] = make(map[int64]*AlleleCount)
 			}
 
@@ -463,16 +447,16 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 				// If the position is in the map move along, else initialize
 				// Subtract 1 from Pos for index 0
 				_, okk := answer[Chr][Pos-1]
-				if ! okk {
+				if !okk {
 					answer[Chr][Pos-1] = &AlleleCount{
-						Ref: 	0,
-						Counts:	0,
-						BaseA:	0,
-						BaseC:	0,
-						BaseG: 	0,
-						BaseT: 	0,
-						Ins: 	make([]Indel, 0),
-						Del: 	make([]Indel, 0)}
+						Ref:    0,
+						Counts: 0,
+						BaseA:  0,
+						BaseC:  0,
+						BaseG:  0,
+						BaseT:  0,
+						Ins:    make([]Indel, 0),
+						Del:    make([]Indel, 0)}
 				}
 
 				answer[Chr][Pos-1].Ref = RefSeq[0]
@@ -497,26 +481,26 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 				// If the position is in the map move along, else initialize
 				// VCF stores pos as base prior to indel so subtracting 1 for index 0 is unnecessary
 				_, okk := answer[Chr][Pos]
-				if ! okk {
+				if !okk {
 					answer[Chr][Pos] = &AlleleCount{
-						Ref: 	0,
-						Counts:	0,
-						BaseA:	0,
-						BaseC:	0,
-						BaseG: 	0,
-						BaseT: 	0,
-						Ins: 	make([]Indel, 0),
-						Del: 	make([]Indel, 0)}
+						Ref:    0,
+						Counts: 0,
+						BaseA:  0,
+						BaseC:  0,
+						BaseG:  0,
+						BaseT:  0,
+						Ins:    make([]Indel, 0),
+						Del:    make([]Indel, 0)}
 				}
 
 				// If Ins
 				if len(RefSeq) < len(AltSeq) {
 
 					currentIndel = Indel{
-						Ref:		RefSeq,
-						Alt: 		AltSeq,
-						RunLength:	int32(len(AltSeq[1:])),
-						Count:		int32(AltCount)}
+						Ref:       RefSeq,
+						Alt:       AltSeq,
+						RunLength: int32(len(AltSeq[1:])),
+						Count:     int32(AltCount)}
 
 					answer[Chr][Pos].Ins = append(answer[Chr][Pos].Ins, currentIndel)
 				}
@@ -525,10 +509,10 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 				if len(RefSeq) > len(AltSeq) {
 
 					currentIndel = Indel{
-						Ref:		RefSeq,
-						Alt: 		AltSeq,
-						RunLength:	int32(len(RefSeq[1:])),
-						Count:		int32(AltCount)}
+						Ref:       RefSeq,
+						Alt:       AltSeq,
+						RunLength: int32(len(RefSeq[1:])),
+						Count:     int32(AltCount)}
 
 					answer[Chr][Pos].Del = append(answer[Chr][Pos].Del, currentIndel)
 				}
@@ -541,21 +525,39 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 // Find the allele with with the highest frequency within a subset of 5 alleles (helper for FindMinorAllele)
 func maxMinorAllele(allele1 int32, allele2 int32, allele3 int32, allele4 int32, allele5 int32) int32 {
 	var minorAllele = allele1
-	if allele2 > minorAllele {minorAllele = allele2}
-	if allele3 > minorAllele {minorAllele = allele3}
-	if allele4 > minorAllele {minorAllele = allele4}
-	if allele5 > minorAllele {minorAllele = allele5}
+	if allele2 > minorAllele {
+		minorAllele = allele2
+	}
+	if allele3 > minorAllele {
+		minorAllele = allele3
+	}
+	if allele4 > minorAllele {
+		minorAllele = allele4
+	}
+	if allele5 > minorAllele {
+		minorAllele = allele5
+	}
 	return minorAllele
 }
 
 // Find the allele with highest frequency
-func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32{
+func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32 {
 	var majorAllele = A
-	if C > majorAllele {majorAllele = C}
-	if G > majorAllele {majorAllele = G}
-	if T > majorAllele {majorAllele = T}
-	if Ins > majorAllele {majorAllele = Ins}
-	if Del > majorAllele {majorAllele = Del}
+	if C > majorAllele {
+		majorAllele = C
+	}
+	if G > majorAllele {
+		majorAllele = G
+	}
+	if T > majorAllele {
+		majorAllele = T
+	}
+	if Ins > majorAllele {
+		majorAllele = Ins
+	}
+	if Del > majorAllele {
+		majorAllele = Del
+	}
 
 	return majorAllele
 }
@@ -566,12 +568,24 @@ func FindMinorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) i
 	majorAllele := FindMajorAllele(A, C, G, T, Ins, Del)
 
 	var minorAllele = A
-	if majorAllele == A {minorAllele = maxMinorAllele(C, G, T, Ins, Del)}
-	if majorAllele == C {minorAllele = maxMinorAllele(A, G, T, Ins, Del)}
-	if majorAllele == G {minorAllele = maxMinorAllele(A, C, T, Ins, Del)}
-	if majorAllele == T {minorAllele = maxMinorAllele(A, C, G, Ins, Del)}
-	if majorAllele == Ins {minorAllele = maxMinorAllele(A, C, G, T, Del)}
-	if majorAllele == Del {minorAllele = maxMinorAllele(A, C, G, T, Ins)}
+	if majorAllele == A {
+		minorAllele = maxMinorAllele(C, G, T, Ins, Del)
+	}
+	if majorAllele == C {
+		minorAllele = maxMinorAllele(A, G, T, Ins, Del)
+	}
+	if majorAllele == G {
+		minorAllele = maxMinorAllele(A, C, T, Ins, Del)
+	}
+	if majorAllele == T {
+		minorAllele = maxMinorAllele(A, C, G, Ins, Del)
+	}
+	if majorAllele == Ins {
+		minorAllele = maxMinorAllele(A, C, G, T, Del)
+	}
+	if majorAllele == Del {
+		minorAllele = maxMinorAllele(A, C, G, T, Ins)
+	}
 
 	return minorAllele
 }

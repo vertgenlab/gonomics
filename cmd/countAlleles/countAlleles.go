@@ -8,7 +8,6 @@ import (
 	"log"
 )
 
-
 func countAlleles(inFile string, outFile string, refFile string, coverageThreshold int, minMapQ int) {
 
 	var datavcf []*vcf.Vcf
@@ -24,9 +23,10 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 
 	if outFile == "stdout" {
 		vcf.PrintVcf(datavcf)
-	} else {vcf.Write(outFile, datavcf)}
+	} else {
+		vcf.Write(outFile, datavcf)
+	}
 }
-
 
 func usage() {
 	fmt.Print(
@@ -37,9 +37,8 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-
 func main() {
-	var expectedNumArgs int=1
+	var expectedNumArgs int = 1
 	var ref *string = flag.String("ref", "", "Reference sequence in fasta format.")
 	var outFile *string = flag.String("out", "stdout", "Write output to a file.")
 	var minCoverage *int = flag.Int("cov", 1, "Only report positions with coverage greater than this value.")
