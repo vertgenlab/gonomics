@@ -1,22 +1,22 @@
 package main
 
 import (
-        "flag"
-        "fmt"
-        "log"
-        "strings"
-        "github.com/vertgenlab/gonomics/fileio"
-        "github.com/vertgenlab/gonomics/common"
+	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+	"strings"
 )
 
 type IdeogramPoint struct {
-	Chrom string
+	Chrom    string
 	Position int64
-	Score int64
+	Score    int64
 }
 
 func formatIdeogram(inBed string, outTxt string) {
-	var line string	
+	var line string
 	var doneReading bool = false
 	var startNum, endNum, midpoint int64
 	var chrom string
@@ -24,18 +24,18 @@ func formatIdeogram(inBed string, outTxt string) {
 	var err error
 
 	file := fileio.EasyOpen(inBed)
-    defer file.Close()
+	defer file.Close()
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
 		chrom = words[0]
-        startNum = common.StringToInt64(words[1])
-        endNum = common.StringToInt64(words[2])
-        midpoint = (startNum+endNum) / int64(2)
+		startNum = common.StringToInt64(words[1])
+		endNum = common.StringToInt64(words[2])
+		midpoint = (startNum + endNum) / int64(2)
 
-        outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint-int64(1), Score: int64(1)})
-        outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
-        outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint+int64(1), Score: int64(1)})
+		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint - int64(1), Score: int64(1)})
+		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
+		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint + int64(1), Score: int64(1)})
 	}
 
 	outfile := fileio.EasyCreate(outTxt)
@@ -50,9 +50,9 @@ func formatIdeogram(inBed string, outTxt string) {
 func usage() {
 	fmt.Print(
 		"formatIdeogram - Generates ideogram txt file from a bed.\n" +
-		"Usage:\n" +
-		"formatIdeogram input.bed output.txt\n" +
-		"options:\n")
+			"Usage:\n" +
+			"formatIdeogram input.bed output.txt\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -73,4 +73,3 @@ func main() {
 
 	formatIdeogram(infile, outfile)
 }
-
