@@ -65,7 +65,7 @@ func TestAligning(t *testing.T) {
 	genome := Read("testdata/bigGenome.sg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := indexGenomeDev(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeDev(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
@@ -138,6 +138,7 @@ func TestVcfGraph(t *testing.T) {
 	newSg := Read("testdata/vcfGraphTest.gg")
 
 	PrintGraph(newSg)
+	vcf.Write("anotherTesting.vcf", vcfTest)
 }
 
 func BenchmarkAligning(b *testing.B) {
@@ -150,7 +151,7 @@ func BenchmarkAligning(b *testing.B) {
 
 	genome := Read("testdata/bigGenome.sg")
 	//tiles := indexGenome(genome.Nodes, tileSize)
-	tiles := indexGenomeDev(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeDev(genome.Nodes, tileSize, stepSize)
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	//var seeds []Seed = make([]Seed, 256)
 	m, trace := swMatrixSetup(10000)

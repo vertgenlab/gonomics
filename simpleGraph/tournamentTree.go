@@ -4,6 +4,8 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
+	//"fmt"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 /*
@@ -115,11 +117,15 @@ func findSeedsFast(seedHash [][]*SeedBed, read *fastq.Fastq, seedLen int, posStr
 	var prevHits []*SeedDev = make([]*SeedDev, 0)
 	var allHits []*SeedDev = make([]*SeedDev, 0)
 	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
-		codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
-		currHits := seedHash[codedSeq]
-		noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), posStrand)
-		allHits = append(allHits, noMerge...)
-		prevHits = merged
+		if dna.CountBaseInterval(read.Seq, dna.N, int64(subSeqStart), int64(subSeqStart+seedLen)) == 0 {
+			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
+			//fmt.Printf("Coded seq is:%d, seedLength:%d\n", codedSeq, seedLen)
+			currHits := seedHash[codedSeq]
+			noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), posStrand)
+			allHits = append(allHits, noMerge...)
+			prevHits = merged
+		}
+		
 	}
 	allHits = append(allHits, prevHits...)
 	return allHits

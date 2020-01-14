@@ -167,12 +167,16 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) error {
 	var err error
+	var trim string
 	header := BasicHeader()
 	for h := 0; h < len(header); h++ {
 		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	for i := 0; i < len(input); i++ {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Sample)
+		trim = strings.Join(input[i].Sample, "\t")
+		trim = strings.Trim(trim, "[")
+		trim = strings.Trim(trim, "]")
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, trim)
 		common.ExitIfError(err)
 	}
 	return err
@@ -185,8 +189,12 @@ func Write(filename string, data []*Vcf) {
 }
 
 func PrintVcf(input []*Vcf) {
+	var trim string
 	for i := range input {
-		fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Sample)
+		trim = strings.Join(input[i].Sample, "\t")
+		trim = strings.Trim(trim, "[")
+		trim = strings.Trim(trim, "]")
+		fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, trim)
 	}
 }
 
