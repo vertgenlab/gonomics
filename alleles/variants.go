@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 )
-
+// TODO: look into listing goroutines
 type BatchAlleleCount struct {
 	Sample string
 	Ref    dna.Base

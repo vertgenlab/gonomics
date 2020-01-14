@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 // TODO: for progress meter make it log.Printf instead of fmt.Printf to get timestamps
+// TODO: look into map of struct {chr pos} as key instead of map of maps
+// TODO: in vcf format multiple possible alleles into a single line
 type AlleleCount struct {
 	Ref    dna.Base
 	Counts int32
@@ -382,7 +384,7 @@ func FilterAlleles(input SampleMap, coverageThreshold int32) SampleMap {
 	for chrName, chr := range input {
 		for pos, alleles := range chr {
 
-			if alleles.Counts <= coverageThreshold {
+			if alleles.Counts < coverageThreshold {
 				delete(input[chrName], pos)
 			}
 

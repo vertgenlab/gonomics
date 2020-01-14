@@ -10,15 +10,15 @@ import (
 
 func usage() {
 	fmt.Print(
-		"callVariants - Inputs a directory of allele count files and outputs a concatenated file that can be used as input for variant calling.\n" +
-			"Usage:\n" +
-			" callVariants [options] inputDirectory/ \n" +
-			"options:\n")
+	"callVariants - Inputs a directory of allele count files and outputs a concatenated file that can be used as input for variant calling.\n" +
+		"Usage:\n" +
+		" callVariants [options] inputDirectory/ \n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 
 func callVariants(inDirectory string, outFile string, sigThreshold float64, afThreshold float64) {
-	fmt.Printf("# Merging Samples\n")
+	log.Printf("# Merging Samples\n")
 	SampleMap := alleles.CreateBatchSampleMap(inDirectory)
 	Variants := alleles.ScoreVariants(SampleMap, sigThreshold, afThreshold)
 	if outFile == "stdout" {
