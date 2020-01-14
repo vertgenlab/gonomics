@@ -8,10 +8,11 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 	"strconv"
 	"strings"
 )
-
+// TODO: for progress meter make it log.Printf instead of fmt.Printf to get timestamps
 type AlleleCount struct {
 	Ref    dna.Base
 	Counts int32
@@ -64,23 +65,23 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 
 		if progressMeter%500000 == 0 {
-			fmt.Printf("#Read %d Alignments\n", progressMeter)
+			log.Printf("#Read %d Alignments\n", progressMeter)
 		}
 		progressMeter++
 
+		if aln.Cigar[0].Op != '*' {
 		// If mapping quality is less than the threshold then go to next alignment
 		if aln.MapQ < minMapQ {
 			continue
 		}
 
+		// TODO: look into fasta map so this is unnecessary
 		// Identify the position in reference fasta slice of current chromosome
 		for j = 0; j < len(ref); j++ {
 			if ref[j].Name == aln.RName {
 				ChrSliceMatch = j
 			}
 		}
-
-		if aln.Cigar[0].Op != '*' {
 
 			//if the chromosome has already been added to the matrix, move along
 			_, ok := AlleleMatrix[aln.RName]
