@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func pullFaSeqWithGaps (infile string, outfile string, start int64, end int64) {
+func pullFaSeqWithGaps(infile string, outfile string, start int64, end int64) {
 	if !(start < end) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
@@ -48,9 +48,9 @@ func pullFaSeqWithGaps (infile string, outfile string, start int64, end int64) {
 func usage() {
 	fmt.Print(
 		"multFaPullSeqs - Pull sub-sequence from multiple fasta alignment for each entry, retaining gaps and thus multiple alignment format.\n" +
-		"Usage:\n" +
-		"multFaPullSeqs mult.fa out.fa start end\n" +
-		"options:\n")
+			"Usage:\n" +
+			"multFaPullSeqs mult.fa out.fa start end\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
