@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"flag"
-	"github.com/vertgenlab/gonomics/fasta"
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 )
 
 func faBaseCounts(infile string) {
@@ -40,9 +40,9 @@ func faBaseCounts(infile string) {
 func usage() {
 	fmt.Print(
 		"faBaseCounts - Returns the counts for each base.\n" +
-		"Usage:\n" +
-		" faBaseCounts infile.fa\n" +
-		"options:\n")
+			"Usage:\n" +
+			" faBaseCounts infile.fa\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
