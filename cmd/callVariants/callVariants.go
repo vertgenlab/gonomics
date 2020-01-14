@@ -10,7 +10,7 @@ import (
 
 func usage() {
 	fmt.Print(
-	"callVariants - Inputs a directory of allele count files and outputs a concatenated file that can be used as input for variant calling.\n" +
+		"callVariants - Inputs a directory of allele count files and outputs a concatenated file that can be used as input for variant calling.\n" +
 		"Usage:\n" +
 		" callVariants [options] inputDirectory/ \n" +
 		"options:\n")

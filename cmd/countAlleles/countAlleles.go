@@ -30,7 +30,7 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 
 func usage() {
 	fmt.Print(
-	"countAlleles - Returns a vcf of positions with allele counts filtered by coverage and mapping quality.\n" +
+		"countAlleles - Returns a vcf of positions with allele counts filtered by coverage and mapping quality.\n" +
 		"Usage:\n" +
 		" countAlleles [options] input.sam \n" +
 		"options:\n")
