@@ -40,6 +40,7 @@ func ParseCigar(cig *Cigar) (int64, int64) {
 	return refIdx, altIdx
 }
 
+//TODO: finish riley's voting matrix to handle indels better
 /*
 type Allele struct {
 	//zero based
