@@ -267,6 +267,7 @@ func MaxScore(seq []dna.Base, scores [][]int64) int64 {
 	}
 	return maxScore
 }
+
 /*
 func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
 	//var answer *sam.SamAln
@@ -382,8 +383,6 @@ func WriteDictionary(filename string, data map[uint64][]uint64) {
 	WriteDictToFileHandle(file, data)
 	//WriteChromDictToFileHandle(file, data)
 }
-
-
 
 //call aligner with goroutines
 /*

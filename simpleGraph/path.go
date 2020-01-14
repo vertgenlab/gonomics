@@ -2,7 +2,7 @@ package simpleGraph
 
 import (
 	"fmt"
-	)
+)
 
 func AddPath(newPath uint32, allPaths []uint32) []uint32 {
 	if allPaths == nil {

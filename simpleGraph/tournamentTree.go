@@ -125,7 +125,7 @@ func findSeedsFast(seedHash [][]*SeedBed, read *fastq.Fastq, seedLen int, posStr
 			allHits = append(allHits, noMerge...)
 			prevHits = merged
 		}
-		
+
 	}
 	allHits = append(allHits, prevHits...)
 	return allHits

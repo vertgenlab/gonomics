@@ -3,17 +3,18 @@ package simpleGraph
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
 	//"runtime"
 	//"sync"
 	"os"
 )
-//TODO: add check to make sure reference names in VCF match fasta reference 
+
+//TODO: add check to make sure reference names in VCF match fasta reference
 func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
 	vcfSplit := vcf.VcfSplit(vcfs, ref)
@@ -110,7 +111,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			vcfFlag = 0
 		}
 		if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-			
+
 			if vcfFlag == 0 {
 				currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
 				refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
@@ -274,7 +275,6 @@ func GSWAlignerOne(ref *SimpleGraph, input string, output string) {
 
 	header := NodesHeader(ref.Nodes)
 
-
 	sam.WriteHeaderToFileHandle(outFile, header)
 	file := fileio.EasyOpen(input)
 	defer file.Close()
@@ -290,21 +290,21 @@ func GSWAlignerOne(ref *SimpleGraph, input string, output string) {
 
 	//var mappedRead *sam.SamAln
 	/*
-	for workers := 0; workers < threads; workers++ {
-		go func(jobNumber int) {
-			defer wg.Done()
-			for {
-				query, ok := <-tasks
-				if !ok {
-					return
+		for workers := 0; workers < threads; workers++ {
+			go func(jobNumber int) {
+				defer wg.Done()
+				for {
+					query, ok := <-tasks
+					if !ok {
+						return
+					}
+					mappedRead = GraphSmithWaterman(ref, query, ham5, tileSize, m, trace)
+					sam.WriteAlnToFileHandle(outFile, mappedRead)
+					//MapFastq(ref, query, seedLen, m, mSet, trace, outFile)
 				}
-				mappedRead = GraphSmithWaterman(ref, query, ham5, tileSize, m, trace)
-				sam.WriteAlnToFileHandle(outFile, mappedRead)
-				//MapFastq(ref, query, seedLen, m, mSet, trace, outFile)
-			}
 
-		}(workers)
-	}*/
+			}(workers)
+		}*/
 
 	var fq *fastq.Fastq
 	var done bool
@@ -318,6 +318,7 @@ func GSWAlignerOne(ref *SimpleGraph, input string, output string) {
 	//close(tasks)
 	//wg.Wait()
 }
+
 //Function calls GSW alignment, meant to be used in goroutines, and writes the alignment stgraight to sam file
 func routinesGenomeGraph(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, output *os.File) {
 	var mappedRead *sam.SamAln
