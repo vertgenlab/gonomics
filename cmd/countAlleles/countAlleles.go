@@ -14,12 +14,12 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 
 	if refFile == "" {
 		usage()
-		fmt.Printf("ERROR: No reference provided\n")
-	} else {
-		data := alleles.CountAlleles(refFile, inFile, int64(minMapQ))
-		alleles.FilterAlleles(data, int32(coverageThreshold))
-		datavcf = alleles.AllelesToVcf(data)
+		log.Fatalf("ERROR: No reference provided\n")
 	}
+	data := alleles.CountAlleles(refFile, inFile, int64(minMapQ))
+	alleles.FilterAlleles(data, int32(coverageThreshold))
+	datavcf = alleles.AllelesToVcf(data)
+
 
 	if outFile == "stdout" {
 		vcf.PrintVcf(datavcf)
