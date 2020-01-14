@@ -159,10 +159,6 @@ func main() {
 	//}
 }
 
-func logicTags(tagAxt string, outTag string) {
-
-}
-
 func mkVcf(filename string) []*vcf.Vcf {
 	axtFile := axt.Read(filename)
 	vcfs := axt.CallSnpsToVcf(axtFile)
