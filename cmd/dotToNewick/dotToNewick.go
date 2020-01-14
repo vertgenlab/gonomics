@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/tree"
-	"log"
+	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
-	"flag"
+	"github.com/vertgenlab/gonomics/tree"
+	"log"
 )
 
 func dotToNewick(inFile string, outFile string) {
@@ -18,9 +18,9 @@ func dotToNewick(inFile string, outFile string) {
 func usage() {
 	fmt.Print(
 		"dotToNewick - Generates a newick tree file from an input dot format tree.\n" +
-		"Usage:\n" +
-		"dotToNewick input.dot output.nh\n" +
-		"options:\n")
+			"Usage:\n" +
+			"dotToNewick input.dot output.nh\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
