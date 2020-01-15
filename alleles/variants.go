@@ -72,7 +72,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 				var Match bool = false
 				for j = 0; j < len(SampleMap[Location{loc.Chr, loc.Pos}][0].Indel); j++ {
 					if dna.CompareSeqsIgnoreCase(alleles.Indel[i].Alt, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Alt) == 0 &&
-						dna.CompareSeqsIgnoreCase(alleles.Indel[i].Ref, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Alt) == 0 {
+						dna.CompareSeqsIgnoreCase(alleles.Indel[i].Ref, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Ref) == 0 {
 						SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count = SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count + alleles.Indel[i].Count
 						Match = true
 					}
@@ -100,7 +100,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 }
 
 // Call Calculate pValues with fisher's exact test and export in a vcf.Vcf struct with pValue stored in Qual field. Filters on sigThreshold.
-func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float64) []*vcf.Vcf {
+func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float64, numGoRoutines int) []*vcf.Vcf {
 
 	fmt.Printf("#\n# Calling Variants\n")
 	var VariantScores []*vcf.Vcf
@@ -212,6 +212,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 						break
 					}
 				}
+				fmt.Sprintln("test", cIndel, dIndel)
 				wg.Add(1)
 				go score(&wg, vcfChannel, a[i-1], b[i-1], cIndel, dIndel, afThreshold, alleles[i], "Indel", j, loc.Chr, loc.Pos, sigThreshold)
 			}
@@ -237,7 +238,6 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
 func score(wg *sync.WaitGroup, vcfChannel chan *vcf.Vcf, a int32, b int32, c int32, d int32, afThreshold float64, inStruct *BatchAlleleCount, altbase string, indelslicepos int, chr string, pos int64, sigThreshold float64) {
-
 	var p float64
 	var answer *vcf.Vcf
 	defer wg.Done()
