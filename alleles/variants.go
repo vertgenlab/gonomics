@@ -7,11 +7,12 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
+	"log"
 	"runtime"
 	"strings"
 	"sync"
 )
-// TODO: look into listing goroutines
+// TODO: look into limiting goroutines
 type BatchAlleleCount struct {
 	Sample string
 	Ref    dna.Base
@@ -140,11 +141,8 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 	for chrName, chr := range input {
 		for pos, alleles := range chr {
 
-			//TODO: remove following line
-			//alleles = alleles[0:len(alleles)/10]
-
 			if progressMeter%1000 == 0 {
-				fmt.Printf("# Processed %d Positions\n", progressMeter)
+				log.Printf("# Processed %d Positions\n", progressMeter)
 			}
 			progressMeter++
 

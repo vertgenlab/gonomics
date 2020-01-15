@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 )
-// TODO: for progress meter make it log.Printf instead of fmt.Printf to get timestamps
 // TODO: look into map of struct {chr pos} as key instead of map of maps
 // TODO: in vcf format multiple possible alleles into a single line
 type AlleleCount struct {
@@ -72,6 +71,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 		progressMeter++
 
 		if aln.Cigar[0].Op != '*' {
+
 		// If mapping quality is less than the threshold then go to next alignment
 		if aln.MapQ < minMapQ {
 			continue
@@ -414,7 +414,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 
 		if progressMeter%500000 == 0 {
-			fmt.Printf("# Read %d Lines\n", progressMeter)
+			log.Printf("# Read %d Lines\n", progressMeter)
 		}
 		progressMeter++
 
