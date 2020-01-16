@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/graph"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -42,8 +43,9 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 
 	// Read in reference
 	fmt.Printf("#Reading Reference\n")
-	ref := fasta.Read(refFilename)
-	fasta.AllToUpper(ref)
+	inRef := fasta.Read(refFilename)
+	fasta.AllToUpper(inRef)
+	ref := graph.FastaMap(inRef)
 
 	var i, k int32
 	var j int
@@ -53,7 +55,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	var RefIndex, SeqIndex int64
 	var currentSeq []dna.Base
 	var aln *sam.SamAln
-	var ChrSliceMatch int
 	var currentIndel Indel
 	var indelSeq []dna.Base
 	var OrigRefIndex int64
@@ -85,14 +86,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 		SeqIndex = 0
 		RefIndex = aln.Pos - 1
 
-		// TODO: look into fasta map so this is unnecessary
-		// Identify the position in reference fasta slice of current chromosome
-		for j = 0; j < len(ref); j++ {
-			if ref[j].Name == aln.RName {
-				ChrSliceMatch = j
-			}
-		}
-
 		for i = 0; i < int32(len(aln.Cigar)); i++ {
 			currentSeq = aln.Seq
 
@@ -103,7 +96,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 				indelSeq = make([]dna.Base, 1)
 
 				// First base in indel is the base prior to the indel sequence per VCF standard format
-				indelSeq[0] = ref[ChrSliceMatch].Seq[OrigRefIndex-1]
+				indelSeq[0] = ref[aln.RName][OrigRefIndex-1]
 
 				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
 
@@ -113,11 +106,11 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					// If the position is NOT in the map, initialize
 					if !ok {
 						AlleleMap[Location{aln.RName, RefIndex}] = &AlleleCount{
-							ref[ChrSliceMatch].Seq[RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0)}
+							ref[aln.RName][RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0)}
 					}
 
 					// Keep track of deleted sequence
-					indelSeq = append(indelSeq, ref[ChrSliceMatch].Seq[RefIndex])
+					indelSeq = append(indelSeq, ref[aln.RName][RefIndex])
 
 					AlleleMap[Location{aln.RName,RefIndex}].Counts++
 					RefIndex++
@@ -152,14 +145,14 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 				// If the position is NOT in the map, initialize
 				if !ok {
 					AlleleMap[Location{aln.RName, RefIndex}] = &AlleleCount{
-						ref[ChrSliceMatch].Seq[RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0)}
+						ref[aln.RName][RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0)}
 				}
 
 				// Loop through read sequence and keep track of the inserted bases
 				indelSeq = make([]dna.Base, 1)
 
 				// First base in indel is the base prior to the indel sequence per VCF standard format
-				indelSeq[0] = ref[ChrSliceMatch].Seq[RefIndex-1]
+				indelSeq[0] = ref[aln.RName][RefIndex-1]
 
 				// Keep track of inserted sequence by moving along the read
 				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
@@ -197,7 +190,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					//if the position is NOT in the matrix, add it
 					if !ok {
 						AlleleMap[Location{aln.RName, RefIndex}] = &AlleleCount{
-							ref[ChrSliceMatch].Seq[RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0)}
+							ref[aln.RName][RefIndex], 0, 0, 0, 0, 0, make([]Indel, 0)}
 					}
 
 					switch currentSeq[SeqIndex] {
