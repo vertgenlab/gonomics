@@ -10,44 +10,71 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 )
 
-func bedFilter(infile string, outfile string, threshold int64) {
+func bedFilter(infile string, outfile string, minScore int64, maxScore int64, minLength int64, maxLength int64, minStart int64, maxStart int64, minEnd int64, maxEnd int64, chrom string) {
 	var outlist []*bed.Bed
 	var line string
-	var startNum, endNum int64
+	var startNum, endNum, length int64
 	var doneReading bool = false
+	var pass bool = false
 	var current *bed.Bed
 	file := fileio.EasyOpen(infile)
 	defer file.Close()
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		pass = true
 		words := strings.Split(line, "\t")
 		startNum = common.StringToInt64(words[1])
 		endNum = common.StringToInt64(words[2])
-		if common.StringToInt64(words[4]) >= threshold {
+		length = endNum - startNum
+		if common.StringToInt64(words[4]) < minScore {
+				pass = false
+		} 
+		if maxScore != 0 {
+			if common.StringToInt64(words[4]) > maxScore {
+				pass = false
+			}
+		} 
+		if length < minLength {
+			pass = false
+		} 
+		if maxLength != 0 {
+			if length > maxLength {
+				pass = false
+			}
+		} 
+		if startNum < minStart {
+			pass = false
+		}
+		if maxStart != 0 {
+			if startNum > maxStart {
+				pass = false
+			}
+		} 
+		if endNum < minEnd {
+			pass = false
+		}
+		if maxStart != 0 {
+			if endNum > maxEnd {
+				pass = false
+			}
+		} 
+		if chrom != "" {
+			if words[0] != chrom {
+				pass = false
+			}
+		}
+
+		if pass {
 			current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[1], Score: common.StringToInt64(words[4])}
 			outlist = append(outlist, current)
 		}
-	
 	}
 	bed.Write(outfile, outlist, 5)
-	/* Old version, memory expensive
-
-	var records []*bed.Bed = bed.Read(infile)
-	var outlist []*bed.Bed
-
-	for i := 0; i < len(records); i++ {
-		if records[i].Score >= *threshold {
-			outlist = append(outlist, records[i])
-		}
-	}
-
-	bed.Write(outfile, outlist, 5)
-	*/
 }
 
 func usage() {
 	fmt.Print(
-		"bedFilter - removes bed entries below a specified threshold score.\n" +
+		"bedFilter\n" +
 		"Usage:\n" +
 		"bedFilter input.bed output.bed\n" +
 		"options:\n")
@@ -56,7 +83,16 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var threshold *int64 = flag.Int64("threshold", 0, "Specifies the threshold value")
+	var minScore *int64 = flag.Int64("minScore", 0, "Specifies the minimum score in the fourth field.")
+	var maxScore *int64 = flag.Int64("maxScore", 0, "Specifies the maximum score in the fourth field.")
+	var minLength *int64 = flag.Int64("minLength", 0, "Specifies the minimum length of the region.")
+	var maxLength *int64 = flag.Int64("maxLength", 0, "Specifies the maximum length of the region.")
+	var minStart *int64 = flag.Int64("minStart", 0, "Specifies the minimum starting position of the region.")
+	var maxStart *int64 = flag.Int64("maxStart", 0, "Specifies the maximum starting position of the region.")
+	var minEnd *int64 = flag.Int64("minEnd", 0, "Specifies the minimum ending position of the region.")
+	var maxEnd *int64 = flag.Int64("maxEnd", 0, "Specifies the maximum ending position of the region.")
+	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -70,5 +106,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	bedFilter(infile, outfile, *threshold)
+	bedFilter(infile, outfile, *minScore, *maxScore, *minLength, *maxLength, *minStart, *maxStart, *minEnd, *maxEnd, *chrom)
 }
