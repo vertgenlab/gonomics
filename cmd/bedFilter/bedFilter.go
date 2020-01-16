@@ -26,14 +26,18 @@ func bedFilter(infile string, outfile string, minScore int64, maxScore int64, mi
 		startNum = common.StringToInt64(words[1])
 		endNum = common.StringToInt64(words[2])
 		length = endNum - startNum
-		if common.StringToInt64(words[4]) < minScore {
+		if len(words) > 4{
+			if common.StringToInt64(words[4]) < minScore {
 				pass = false
 		} 
-		if maxScore != 0 {
-			if common.StringToInt64(words[4]) > maxScore {
-				pass = false
-			}
-		} 
+			if maxScore != 0 {
+				if common.StringToInt64(words[4]) > maxScore {
+					pass = false
+				}
+			} 
+
+		}
+		
 		if length < minLength {
 			pass = false
 		} 
