@@ -88,7 +88,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 		progressMeter++
 
 		// If read is unmapped then go to the next alignment
-		if aln.Cigar[0].Op != '*' {
+		if aln.Cigar[0].Op == '*' {
 			continue
 		}
 
