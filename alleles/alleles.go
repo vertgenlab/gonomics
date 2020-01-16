@@ -264,94 +264,45 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			RefCount = 0
 		}
 
-		// Ref -> A
-		UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseA, alleles.Counts)
-
 		current = &vcf.Vcf{
 			Chr:     loc.Chr,
 			Pos:     loc.Pos + 1,
 			Id:      ".",
 			Ref:     base,
-			Alt:     "A",
 			Qual:    1,
 			Filter:  ".",
 			Info:    ".",
-			Format:  "RefCount:AltCount:Cov",
-			Unknown: UknFmt}
+			Format:  "RefCount:AltCount:Cov"}
 
+		// Ref -> A
+		current.Alt = "A"
+		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseA, alleles.Counts)
 		answer = append(answer, current)
 
 		// Ref -> C
-		UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseC, alleles.Counts)
-
-		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:     "C",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount:AltCount:Cov",
-			Unknown: UknFmt}
-
+		current.Alt = "C"
+		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseC, alleles.Counts)
 		answer = append(answer, current)
 
 		// Ref -> G
-		UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseG, alleles.Counts)
-
-		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:     "G",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount:AltCount:Cov",
-			Unknown: UknFmt}
-
+		current.Alt = "G"
+		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseG, alleles.Counts)
 		answer = append(answer, current)
 
 		// Ref -> T
-		UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseT, alleles.Counts)
-
-		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:     "T",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount:AltCount:Cov",
-			Unknown: UknFmt}
-
+		current.Alt = "T"
+		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseT, alleles.Counts)
 		answer = append(answer, current)
 
 		// Ref -> Indel
 		for i = 0; i < len(alleles.Indel); i++ {
-			UknFmt = fmt.Sprintf("%d:%d:%d", RefCount, alleles.Indel[i].Count, alleles.Counts)
-
 			RefSeq = dna.BaseToString(alleles.Indel[i].Ref[0])
 			AltSeq = dna.BasesToString(alleles.Indel[i].Alt)
 
-			current = &vcf.Vcf{
-				Chr: 	loc.Chr,
-				// VCF format has insertions assigned to the prior base, so there is no pos + 1
-				Pos:     loc.Pos,
-				Id:      ".",
-				Ref:     RefSeq,
-				Alt:     AltSeq,
-				Qual:    1,
-				Filter:  ".",
-				Info:    ".",
-				Format:  "RefCount:AltCount:Cov",
-				Unknown: UknFmt}
-
+			current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.Indel[i].Count, alleles.Counts)
+			current.Pos = loc.Pos
+			current.Ref = RefSeq
+			current.Alt = AltSeq
 			answer = append(answer, current)
 		}
 	}
