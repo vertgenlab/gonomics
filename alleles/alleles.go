@@ -237,7 +237,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 	var current *vcf.Vcf
-	var UknFmt string
 	var base string
 	var RefCount int32
 	var i int
