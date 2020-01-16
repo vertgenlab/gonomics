@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/graph"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -38,14 +37,29 @@ type Location struct {
 // Map structure: map[Chromosome]map[Position]*AlleleCount
 type SampleMap map[Location]*AlleleCount
 
+// Temporary function until this is added to the fasta package
+func refToMap(refFilename string) map[string][]dna.Base {
+	inRef := fasta.Read(refFilename)
+	fasta.AllToUpper(inRef)
+	ref := make(map[string][]dna.Base)
+	var curr *fasta.Fasta
+	for i := 0; i < len(inRef); i++ {
+		curr = inRef[i]
+		_, ok := ref[curr.Name]
+		if !ok {
+			ref[curr.Name] = curr.Seq
+		}
+	}
+	return ref
+}
+
 // Inputs a sam file and loops through while keeping a tally of each base present at each position. Stores in SampleMap
 func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleMap {
 
 	// Read in reference
+
 	fmt.Printf("#Reading Reference\n")
-	inRef := fasta.Read(refFilename)
-	fasta.AllToUpper(inRef)
-	ref := graph.FastaMap(inRef)
+	ref := refToMap(refFilename)
 
 	var i, k int32
 	var j int
