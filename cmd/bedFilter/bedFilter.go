@@ -69,7 +69,13 @@ func bedFilter(infile string, outfile string, minScore int64, maxScore int64, mi
 		}
 
 		if pass {
-			current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[1], Score: common.StringToInt64(words[4])}
+			if len(words) == 3 {
+				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+			} else if len(words) == 4 {
+				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[1]}
+			} else {
+				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[1], Score: common.StringToInt64(words[4])}
+			}
 			outlist = append(outlist, current)
 		}
 	}
