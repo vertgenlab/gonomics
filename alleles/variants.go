@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 )
-// TODO: look into limiting goroutines
+
 type BatchAlleleCount struct {
 	Sample 	string
 	Ref    	dna.Base
@@ -23,7 +23,7 @@ type BatchAlleleCount struct {
 	BaseT  	int32
 	Indel  	[]Indel
 }
-//,  indelslicepos int, chr string, pos int64, sigThreshold float64
+
 type ScoreInput struct {
 	a				int32
 	b 				int32
@@ -126,9 +126,14 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 	var wg sync.WaitGroup
 
 	// Start Goroutines
-	wg.Add(numGoRoutines)
+	var threads int
+	if len(input) < numGoRoutines {
+		threads = len(input)
+	} else {threads = numGoRoutines}
+
+	wg.Add(threads)
 	inputChan := make(chan *ScoreInput)
-	for k := 0; k < numGoRoutines; k++ {
+	for k := 0; k < threads; k++ {
 		go func() {
 			for {
 				data, ok := <-inputChan
