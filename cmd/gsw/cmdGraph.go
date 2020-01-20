@@ -17,7 +17,7 @@ func usage() {
 	fmt.Print(
 		"gsw - A genomics toolkit that operates on sequence graphs.\n" +
 			"\nusage:\n" +
-			"\tgsw ref.fa/.gg [options] --vcf/axt file\n" +
+			"\tgsw [options] ref.fa/.gg\n" +
 			"options:\n" +
 			"\t--align input.fastq.gz\n" +
 			"\t\tgraph-smith-waterman alignment algorithm: align sequencing\n\t\tdata to a sequence graph reference\n" +
@@ -29,8 +29,10 @@ func usage() {
 			"\t--out output[.sam/.vcf/.gg]\n" +
 			"\t\t.sam format output from graph alignment\n" +
 			"\t\t.vcf small snp/ins/del from axt to vcf\n" +
-			"\t\t.gg write genome graph to file\n")
-	flag.PrintDefaults()
+			"\t\t.gg write genome graph to file\n" +
+			"\t--test number\n" +
+			"\t\tSimulate n number of reads from given fasta and realigns reads\n")
+	//flag.PrintDefaults()
 }
 
 func main() {
@@ -48,9 +50,9 @@ func main() {
 	var tagAxt *string = flag.String("axt", "", "axt alignment file")
 	var vcfTag *string = flag.String("vcf", "", "vcf file")
 	var outTag *string = flag.String("out", "", "final output, .vcf/.gg/.sam")
-	var alignFlag *string = flag.String("align", "", "in.fastq out.sam")
+	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
 	//var fqFlag *string = flag.String("-fastq", "", "read.fastq")
-
+	//var testSim *int = flag.Int("test", 100, "Simulates n reads from and given fasta reference")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -86,7 +88,7 @@ func main() {
 			}
 		}
 	}
-	if *alignFlag != "" {
+	if *alignFlag == true {
 		if strings.HasSuffix(ref, ".gg") {
 			gg = simpleGraph.Read(ref)
 		}
@@ -99,12 +101,13 @@ func main() {
 			//if usuer provides a .sam as output will write alignment
 			//to that file; otherwise, software will write to STDout
 			if strings.HasSuffix(*outTag, ".sam") {
-				simpleGraph.GSWAlignerOne(gg, reads[1], *outTag)
+				simpleGraph.GSWsBatch(gg, reads[1], *outTag, 5000)
 			}
 		}
 		//if user provides paired end reads, will do alignment on paired end reads
 
 	}
+	//if *testSim != 
 
 	/*
 		var gg *simpleGraph.SimpleGraph
