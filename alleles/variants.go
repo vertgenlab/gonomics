@@ -278,6 +278,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 
 	fmt.Println("# Waiting for Goroutines to finish")
 
+	// Start GoRoutine to monitor for the finish of the wait group then close the output channel
 	go func() {
 		fmt.Println(runtime.NumGoroutine())
 		wg.Wait()
