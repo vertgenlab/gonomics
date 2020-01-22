@@ -1,7 +1,6 @@
 package fasta
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"os"
 	"testing"
@@ -39,13 +38,5 @@ func TestWriteAndRead(t *testing.T) {
 		if err != nil {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
 		}
-	}
-}
-
-func TestModifyingName(t *testing.T) {
-	fa := Read("testdata/testOne.fa")
-	ModifyName(fa, "EA08")
-	for i := 0; i < len(fa); i++ {
-		fmt.Printf("Name of fasta record: %s\n", fa[i].Name)
 	}
 }

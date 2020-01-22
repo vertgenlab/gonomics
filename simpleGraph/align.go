@@ -3,7 +3,6 @@ package simpleGraph
 import (
 	"bufio"
 	"fmt"
-	//"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
@@ -15,10 +14,8 @@ import (
 	"io"
 	"log"
 	"os"
-	//"runtime"
 	"strconv"
 	"strings"
-	//"sync"
 )
 
 var HumanChimpTwoScoreMatrix = [][]int64{
@@ -189,9 +186,9 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 }
 
 func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	//var samPointer *sam.SamAln = &sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
-	var leftAlignment, rightAlignment []*cigar.Cigar
+	leftAlignment, rightAlignment := []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
 	var leftScore, rightScore, seedScore, bestScore int64
@@ -334,7 +331,7 @@ func NodesHeader(ref []*Node) *sam.SamHeader {
 
 	for i := 0; i < len(ref); i++ {
 		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 

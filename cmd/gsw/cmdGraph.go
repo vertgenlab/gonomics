@@ -35,18 +35,11 @@ func usage() {
 	//flag.PrintDefaults()
 }
 
+//WORK IN PROGRESS
 func main() {
-
-	//var i int
-	//var tileSize int = 12
-	//var stepSize int = 1
-
-	//var mappedRead *sam.SamAln
 	var vcfs []*vcf.Vcf
 	var fa []*fasta.Fasta
-
 	var gg *simpleGraph.SimpleGraph
-
 	var tagAxt *string = flag.String("axt", "", "axt alignment file")
 	var vcfTag *string = flag.String("vcf", "", "vcf file")
 	var outTag *string = flag.String("out", "", "final output, .vcf/.gg/.sam")
@@ -58,11 +51,6 @@ func main() {
 	flag.Parse()
 
 	ref := flag.Arg(0)
-
-	/*
-		if *tagAxt == "" && *vcfTag == "" && *outTag == "" && *alignFlag == "" && *fqFlag == "" {
-			flag.Usage()
-		}*/
 
 	if *tagAxt != "" {
 		vcfs = mkVcf(*tagAxt)
@@ -107,59 +95,6 @@ func main() {
 		//if user provides paired end reads, will do alignment on paired end reads
 
 	}
-	//if *testSim != 
-
-	/*
-		var gg *simpleGraph.SimpleGraph
-
-		if *vcfTag != "" {
-			vcfs = vcf.Read(*vcfTag)
-			if strings.HasSuffix(ref, ".fa") || strings.HasPrefix(ref, ".fasta") {
-				fa := fasta.Read(ref)
-				gg = simpleGraph.FaToGenomeGraph(fa, vcfs)
-				//simpleGraph.PrintGraph(gg)
-				if strings.HasSuffix(ref, ".gg") {
-					simpleGraph.Write(*outTag, gg)
-				}
-			}
-		}
-		if *alignFlag != "" {
-			if *tagAxt != "" {
-				fa := fasta.Read(ref)
-				gg = simpleGraph.FaToGenomeGraph(fa, vcfs)
-			}
-
-			//&& *fqFlag != "" && strings.HasSuffix(ref, ".sam")
-			log.Printf("Indexing the genome graph...\n")
-			ham5 := simpleGraph.IndexGenomeDev(gg.Nodes, tileSize, stepSize)
-			if *fqFlag == "" {
-				log.Fatal("alignment setting set, but no fastq file was detected")
-			} else {
-				fq := fastq.Read(*fqFlag)
-				m, trace := simpleGraph.SwMatrixSetup(10000)
-				for i = 0; i < len(fq);i++ {
-					mappedRead = simpleGraph.GraphSmithWaterman(gg, fq[i], ham5, tileSize, m, trace)
-					fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
-				}
-			}
-			/*
-			log.Printf("Aligning reads...\n")
-			var done bool
-			var fq *fastq.Fastq
-
-			outFile, _ := os.Create(*outTag)
-			defer outFile.Close()
-			sam.WriteHeaderToFileHandle(outFile, header)
-			file := fileio.EasyOpen(*fqFlag)
-			defer file.Close()
-
-			mSet, trace := swMatrixSetup(10000)
-
-			for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
-
-			}*/
-
-	//}
 }
 
 func mkVcf(filename string) []*vcf.Vcf {

@@ -6,6 +6,7 @@ import (
 	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"testing"
+	//"sync"
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -53,13 +55,14 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }*/
 
+var tileSize int = 14
+var stepSize int = 13
+var readLength int = 150
+var numberOfReads int = 1000
+var mutations int = 0
+
 func TestAligning(t *testing.T) {
-	var tileSize int = 12
-	var stepSize int = 1
-	var readLength int = 150
-	var numberOfReads int = 10
-	var mutations int = 3
-	var mappedRead *sam.SamAln
+	numberOfReads = 1
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/bigGenome.sg")
@@ -89,12 +92,18 @@ func TestAligning(t *testing.T) {
 	}
 
 	log.Printf("Aligning reads...\n")
-
+	//fastq.Write("testdata/fakeReads.fastq", simReads)
+	//var mappedRead *sam.SamAln
+	//c := make(chan *sam.SamAln)
 	for i := 0; i < len(simReads); i++ {
 		//mappedRead = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
-		mappedRead = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
-		fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
+		go wrapNoChan(genome, simReads[i], tiles, tileSize, m, trace)
+		//fmt.Printf("%s\n", sam.SamAlnToString(<-c))
+		//devGSWsBatch(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace, 400)
+		//mappedRead = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
+		//fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
 	}
+
 	log.Printf("Done mapping %d reads\n", numberOfReads)
 	//PrintGraph(genome)
 
@@ -113,7 +122,7 @@ func TestAligning(t *testing.T) {
 }
 
 func TestVcfGraph(t *testing.T) {
-	smallFasta := fasta.Fasta{Name: "TestSequence", Seq: dna.StringToBases("ATTTAATTTAAAG")}
+	smallFasta := fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("ATTTAATTTAAAG")}
 	fmt.Printf("Reference sequence is: %s\n", dna.BasesToString(smallFasta.Seq))
 	var vcfTest []*vcf.Vcf
 	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TAA", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS", Sample: []string{""}})
@@ -141,34 +150,65 @@ func TestVcfGraph(t *testing.T) {
 	vcf.Write("anotherTesting.vcf", vcfTest)
 }
 
-func BenchmarkAligning(b *testing.B) {
-	var tileSize int = 12
-	var stepSize int = 1
-	var readLength int = 150
-	var numberOfReads int = 50
-	var mutations int = 1
-	var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
-
+func BenchmarkGoRoutines(b *testing.B) {
+	//var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
+	numberOfReads = 10
 	genome := Read("testdata/bigGenome.sg")
 	//tiles := indexGenome(genome.Nodes, tileSize)
 	tiles := IndexGenomeDev(genome.Nodes, tileSize, stepSize)
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	fastq.Write("testdata/fakeReads.fastq", simReads)
 	//var seeds []Seed = make([]Seed, 256)
 	m, trace := swMatrixSetup(10000)
 	//var seeds []Seed = make([]Seed, 256)
 	b.ResetTimer()
 
-	var i int
-
+	c := make(chan *sam.SamAln)
+	//var mappedRead *sam.SamAln
 	for n := 0; n < b.N; n++ {
-		for i = 0; i < len(simReads); i++ {
-			//mappedReads[i] = GraphSmithWaterman(genome, tiles, simReads[i], tileSize, m, trace)
-			mappedReads[i] = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
-			log.Printf("%s\n", sam.SamAlnToString(mappedReads[i]))
-			//mappedReads[i] = localGlobalHybrid(genome, simReads[i], tiles, tileSize, m, trace)
+		for i := 0; i < len(simReads); i++ {
+			go wrap(genome, simReads[i], tiles, tileSize, m, trace, c)
 		}
+		//out, _ := os.Create("simReads.sam")
+		//defer out.Close()
+		//header := NodesHeader(genome.Nodes)
+		//sam.WriteHeaderToFileHandle(out, header)
+		for j := 0; j < len(simReads); j++ {
+			mappedRead := <-c
+			//sam.WriteAlnToFileHandle(out, mappedRead)
+			log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+		}
+		//devGSWsBatch(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace, 400)
+		//noLimitGSW(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace)
 	}
 }
+
+/*
+func BenchmarkAligningNoGoroutines(b *testing.B) {
+	//var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
+	numberOfReads = 10
+	genome := Read("testdata/bigGenome.sg")
+	//tiles := indexGenome(genome.Nodes, tileSize)
+	tiles := IndexGenomeDev(genome.Nodes, tileSize, stepSize)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	fastq.Write("testdata/fakeReads.fastq", simReads)
+	//var seeds []Seed = make([]Seed, 256)
+	m, trace := swMatrixSetup(10000)
+	//var seeds []Seed = make([]Seed, 256)
+	b.ResetTimer()
+
+	//c := make(chan *sam.SamAln)
+	var mappedRead *sam.SamAln
+	for n := 0; n < b.N; n++ {
+		for i := 0; i < len(simReads);i++ {
+			mappedRead = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
+			log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+		}
+
+		//devGSWsBatch(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace, 400)
+		//noLimitGSW(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace)
+	}
+}*/
 
 /*
 func TestGraphTraversal(t *testing.T) {

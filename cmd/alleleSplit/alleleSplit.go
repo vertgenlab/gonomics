@@ -3,31 +3,27 @@ package main
 import (
 	"flag"
 	"fmt"
-	//"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"os"
-	//"strings"
 )
 
 func usage() {
 	fmt.Print(
 		"alleleSplit - a tool that separates a heterozygous sam alignment into different alleles\n" +
-		"1) Takes sam file of aligned reads\n2)Vcf file containing SNPs\n3)Name of output files\n" +
-		"\nusage:\n" +
-		"./alleleSplit [options] input.sam input.vcf output.sam\n" +
-		"\t--ref ref.output\n" +
-		"\t\tname output ref allele sam file\n" +
-		"\t--alt alt.output\n" +
-		"\t\tname output alt allele sam file\n" +
-		"\t--undetermined undetermined.sam\n" +
-		"\t\toutputs third file containing reads discarded from analysis\n")
-	
+			"1) Takes sam file of aligned reads\n2)Vcf file containing SNPs\n3)Name of output files\n\n" +
+			"usage:\n" +
+			"./alleleSplit [options] input.sam input.vcf output.sam\n" +
+			"\t--ref ref.output\n" +
+			"\t\tname output ref allele sam file\n" +
+			"\t--alt alt.output\n" +
+			"\t\tname output alt allele sam file\n" +
+			"\t--undetermined undetermined.sam\n" +
+			"\t\toutputs third file containing reads discarded from analysis\n")
 }
-
 
 type Alleles struct {
 	Ref dna.Base
@@ -45,13 +41,11 @@ func AlleleMap(v []*vcf.Vcf) map[Location]Alleles {
 	var loc Location
 	for i := 0; i < len(v); i++ {
 		curr := v[i]
-		//faIdx = chromSize[curr.Chr].Order
-		//_, ok = aMap[faIdx|curr.Pos-1]
 		refRune = []rune(curr.Ref)
 		altRune = []rune(curr.Alt)
 		if len(refRune) == 1 && len(altRune) == 1 {
 			if dna.RuneToBase(refRune[0]) != dna.Dot && dna.RuneToBase(altRune[0]) != dna.Dot {
-				loc = Location{Chr: curr.Chr, Pos: curr.Pos-1}
+				loc = Location{Chr: curr.Chr, Pos: curr.Pos - 1}
 				aMap[loc] = Alleles{Ref: dna.RuneToBase(refRune[0]), Alt: dna.RuneToBase(altRune[0])}
 			}
 		} else {
@@ -61,7 +55,7 @@ func AlleleMap(v []*vcf.Vcf) map[Location]Alleles {
 	return aMap
 }
 
-func AlleleExpression(samFilename string, v []*vcf.Vcf, fileName string, ref string, alt string) {
+func AlleleExpression(samFilename string, v []*vcf.Vcf, fileName string, ref string, alt string, unFlag bool) {
 	var aln *sam.SamAln = nil
 	var done bool = false
 	//var err error
@@ -75,114 +69,27 @@ func AlleleExpression(samFilename string, v []*vcf.Vcf, fileName string, ref str
 
 	altFile, _ := os.Create(fileName + "_" + alt + "Allele.sam")
 	defer altFile.Close()
-
 	sam.WriteHeaderToFileHandle(refFile, header)
 	sam.WriteHeaderToFileHandle(altFile, header)
-
-	//chroms := chromInfo.SliceToMap(header.Chroms)
-
-	var aMap = AlleleMap(v)
-
-	var j, refCount, altCount int
-	var currRefPos, currQueryPos, k int64
-	var ok bool
-	//var numDiscardReads int64
-	//var code uint64
-	var loc Location
-	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-
-		refCount, altCount = 0, 0
-		//use 1-based
-		currRefPos = aln.Pos-1
-		currQueryPos = 0
-
-		//faIdx = chroms[aln.RName].Order
-
-		for j = 0; j < len(aln.Cigar); j++ {
-			switch aln.Cigar[j].Op {
-			case 'S':
-				//currRefPos += aln.Cigar[j].RunLength
-				currQueryPos += aln.Cigar[j].RunLength
-			case 'I':
-				currQueryPos += aln.Cigar[j].RunLength
-			case 'D':
-				currRefPos += aln.Cigar[j].RunLength
-			case 'M':
-				for k = 0; k < aln.Cigar[j].RunLength; k++ {
-					//code = chromAndPosToNumber(faIdx, currRefPos+k)
-					loc = Location{Chr: aln.RName, Pos: currRefPos+k}
-					_, ok = aMap[loc]
-					if ok {
-						//fmt.Println("Ref: ", dna.BasesToString(fMap[faIdx|currRefPos+k]), "Alt: ", dna.BasesToString(mMap[faIdx|currRefPos+k]))
-						if aln.Seq[currQueryPos+k] == aMap[loc].Ref {
-							refCount++
-						}
-						if aln.Seq[currQueryPos+k] == aMap[loc].Alt {
-							altCount++
-						}
-					}
-				}
-				currRefPos += aln.Cigar[j].RunLength
-				currQueryPos += aln.Cigar[j].RunLength
-			}
-		}
-		if refCount > altCount {
-			//fresh = append(fresh, aln)
-			sam.WriteAlnToFileHandle(refFile, aln)
-		}
-		if altCount > refCount {
-			//marine = append(marine, aln)
-			sam.WriteAlnToFileHandle(altFile, aln)
-		}
+	var un *os.File = nil
+	if unFlag {
+		un, _ := os.Create(fileName + "_undetermined.sam")
+		defer un.Close()
+		sam.WriteHeaderToFileHandle(un, header)
 	}
-}
-
-func Undetermined(samFilename string, v []*vcf.Vcf, fileName string, ref string, alt string) {
-	var aln *sam.SamAln = nil
-	var done bool = false
-	//var err error
-	//sam file to read
-	samFile := fileio.EasyOpen(samFilename)
-	defer samFile.Close()
-	header := sam.ReadHeader(samFile)
-
-	refFile, _ := os.Create(fileName + "_" + ref + "Allele.sam")
-	defer refFile.Close()
-
-	altFile, _ := os.Create(fileName + "_" + alt + "Allele.sam")
-	defer altFile.Close()
-
-	sam.WriteHeaderToFileHandle(refFile, header)
-	sam.WriteHeaderToFileHandle(altFile, header)
-
-
-	un, _ := os.Create(fileName + "_undetermined.sam")
-	defer un.Close()
-	sam.WriteHeaderToFileHandle(un, header)
-
-	//chroms := chromInfo.SliceToMap(header.Chroms)
-
 	var aMap = AlleleMap(v)
 
 	var j, refCount, altCount int
 	var currRefPos, currQueryPos, k int64
 	var ok bool
-	//var numDiscardReads int64
-	//var code uint64
 	var loc Location
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-
 		refCount, altCount = 0, 0
-		//use 1-based
-		currRefPos = aln.Pos-1
+		currRefPos = aln.Pos - 1
 		currQueryPos = 0
-
-		//faIdx = chroms[aln.RName].Order
-
 		for j = 0; j < len(aln.Cigar); j++ {
 			switch aln.Cigar[j].Op {
 			case 'S':
-				//currRefPos += aln.Cigar[j].RunLength
 				currQueryPos += aln.Cigar[j].RunLength
 			case 'I':
 				currQueryPos += aln.Cigar[j].RunLength
@@ -190,11 +97,9 @@ func Undetermined(samFilename string, v []*vcf.Vcf, fileName string, ref string,
 				currRefPos += aln.Cigar[j].RunLength
 			case 'M':
 				for k = 0; k < aln.Cigar[j].RunLength; k++ {
-					//code = chromAndPosToNumber(faIdx, currRefPos+k)
-					loc = Location{Chr: aln.RName, Pos: currRefPos+k}
+					loc = Location{Chr: aln.RName, Pos: currRefPos + k}
 					_, ok = aMap[loc]
 					if ok {
-						//fmt.Println("Ref: ", dna.BasesToString(fMap[faIdx|currRefPos+k]), "Alt: ", dna.BasesToString(mMap[faIdx|currRefPos+k]))
 						if aln.Seq[currQueryPos+k] == aMap[loc].Ref {
 							refCount++
 						}
@@ -208,14 +113,13 @@ func Undetermined(samFilename string, v []*vcf.Vcf, fileName string, ref string,
 			}
 		}
 		if refCount > altCount {
-			//fresh = append(fresh, aln)
 			sam.WriteAlnToFileHandle(refFile, aln)
 		} else if altCount > refCount {
-			//marine = append(marine, aln)
 			sam.WriteAlnToFileHandle(altFile, aln)
-		} else {
-
+		} else if un != nil {
 			sam.WriteAlnToFileHandle(un, aln)
+		} else {
+			//Skip read
 		}
 	}
 }
@@ -224,7 +128,7 @@ func main() {
 	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	
+
 	var refPrefix *string = flag.String("ref", "ref", "name of ref allele")
 	var altPrefix *string = flag.String("alt", "alt", "name of alt allele")
 	var undetermined *bool = flag.Bool("undetermined", false, "undetermined.sam")
@@ -233,10 +137,5 @@ func main() {
 		flag.Usage()
 		log.Fatalf("\n\n./alleleSplit [options] $sam $vcf $name\n\n")
 	}
-	if *undetermined == true {
-		Undetermined(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix)
-	} else {
-		AlleleExpression(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix)
-	}
-	
+	AlleleExpression(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix, *undetermined)
 }
