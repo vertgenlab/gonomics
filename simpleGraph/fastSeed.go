@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"sort"
+	//"fmt"
 )
 
 type SeedBed struct {
@@ -88,12 +89,13 @@ func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 	}
 }
 
-func indexGenomeDev(genome []*Node, seedLen int, seedStep int) [][]*SeedBed {
+func IndexGenomeDev(genome []*Node, seedLen int, seedStep int) [][]*SeedBed {
 	if seedLen < 2 || seedLen > 16 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 16.  Got: %d\n", seedLen)
 	}
 	var sliceSize int
 	sliceSize = 1 << uint(seedLen*2)
+	//fmt.Printf("Slice size is :%d, seedLen=%d\n", sliceSize, seedLen)
 	answer := make([][]*SeedBed, sliceSize)
 	var seqCode uint64
 	var nodeIdx, pos int

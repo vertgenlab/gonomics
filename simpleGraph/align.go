@@ -3,7 +3,6 @@ package simpleGraph
 import (
 	"bufio"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
@@ -15,10 +14,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 var HumanChimpTwoScoreMatrix = [][]int64{
@@ -189,11 +186,11 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 }
 
 func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	//var samPointer *sam.SamAln = &sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
-	var leftAlignment, rightAlignment []*cigar.Cigar
+	leftAlignment, rightAlignment := []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
-	//var minQuery int
+	var minQuery int
 	var leftScore, rightScore, seedScore, bestScore int64
 	var leftPath, rightPath, bestPath []uint32
 
@@ -210,14 +207,6 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 	var revCompSeeds []*SeedDev = findSeedsFast(seedHash, revCompRead, seedLen, false)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
-	/*
-	   var HumanChimpTwoScoreMatrix = [][]int64{
-	           {90, -330, -236, -356, -208},
-	           {-330, 100, -318, -236, -196},
-	           {-236, -318, 100, -330, -196},
-	           {-356, -236, -330, 90, -208},
-	           {-208, -196, -196, -208, -202},
-	   }*/
 
 	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		if seeds[i].PosStrand {
@@ -226,7 +215,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			currRead = revCompRead
 		}
 		seedScore = scoreSeed(seeds[i], currRead)
-		leftAlignment, leftScore, minTarget, _, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
+		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
 		//log.Printf("seedTStart=%d seedQStart=%d seedLength=%d, leftAlignment=%s, rightAlignment=%s, minQuery=%d, maxQuery=%d\n", seeds[i].TargetStart, seeds[i].QueryStart, seeds[i].Length, cigar.ToString(rightAlignment), cigar.ToString(samPointer.Cigar), minQuery, maxQuery)
@@ -242,103 +231,30 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].Length), Op: 'M'}), rightAlignment)
-			//currBest.Cigar = SClipCigar(minQuery, maxQuery+int64(seedLen), int64(len(currRead.Seq)), currBest.Cigar)
+			currBest.Cigar = AddSClip(int64(minQuery), int64(len(currRead.Seq)), currBest.Cigar)
 			currBest.Extra = PathToString(bestPath, gg)
 		}
 	}
 	return &currBest
 }
 
-func MapFastq(ref []*fasta.Fasta, read *fastq.Fastq, seedLen int, chromPosHash map[uint64][]uint64, m [][]int64, trace [][]rune, file *os.File) {
-	//func MapFastq(ref []*fasta.Fasta, read *fastq.Fastq, seed int, chromPosHash map[uint64][]uint64, file *os.File) {
-	//defer wg.Done()
-	//chromPosHash := indexGenome(ref, seed)
-	//var answer []*sam.SamAln
-
-	var seedBeds []*bed.Bed
-	var codedPositions []uint64
-	var bStart, bEnd int64
-	var maxScore int64
-	var extension int64
-	var chrom, pos int64
-	var bases, beds int
-	var subRead, hits int
-
-	var score, bestScore int64 = 0, 0
-	var lowRef, lowQuery, highQuery int64
-	var alignment []*cigar.Cigar
-
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
-	for bases = 0; bases < len(read.Seq); bases++ {
-		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
-	}
-	extension = int64(maxScore/600) + int64(len(read.Seq))
-	for subRead = 0; subRead < len(read.Seq)-seedLen+1; subRead++ {
-		codedPositions = chromPosHash[dnaToNumber(read.Seq, subRead, subRead+seedLen)]
-		for hits = 0; hits < len(codedPositions); hits++ {
-			chrom, pos = numberToChromAndPos(codedPositions[hits])
-			bStart = pos - extension
-			if bStart < 0 {
-				bStart = 0
-			}
-			bEnd = pos + extension
-			if bEnd > int64(len(ref[chrom].Seq)) {
-				bEnd = int64(len(ref[chrom].Seq))
-			}
-			seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(chrom, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
+func AddSClip(front int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
+	back := front + cigar.QueryLength(cig)
+	var answer []*cigar.Cigar
+	if front > 0 {
+		answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
+		answer = append(answer, cig...)
+		if back < lengthOfRead {
+			answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
 		}
+	} else if back < lengthOfRead {
+		answer = append(answer, cig...)
+		answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
+	} else {
+		//answer = cig
+		return cig
 	}
-	seedBeds = bed.MergeBeds(seedBeds)
-	for beds = 0; beds < len(seedBeds); beds++ {
-		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
-		if score > bestScore {
-			bestScore = score
-			currBest.Flag = 0
-			currBest.RName = ref[common.StringToInt64(seedBeds[beds].Chrom)].Name
-			currBest.Pos = lowRef + seedBeds[beds].ChromStart
-			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
-			currBest.Seq = read.Seq
-			currBest.Qual = string(read.Qual)
-		}
-	}
-	seedBeds = nil
-	fastq.ReverseComplement(read)
-	for subRead = 0; subRead < len(read.Seq)-seedLen+1; subRead++ {
-		codedPositions = chromPosHash[dnaToNumber(read.Seq, subRead, subRead+seedLen)]
-		for hits = 0; hits < len(codedPositions); hits++ {
-			chrom, pos = numberToChromAndPos(codedPositions[hits])
-			bStart = pos - extension
-			if bStart < 0 {
-				bStart = 0
-			}
-			bEnd = pos + extension
-			if bEnd > int64(len(ref[chrom].Seq)) {
-				bEnd = int64(len(ref[chrom].Seq))
-			}
-			seedBeds = append(seedBeds, &bed.Bed{Chrom: strconv.FormatInt(chrom, 10), ChromStart: bStart, ChromEnd: bEnd, Score: 1})
-		}
-	}
-	seedBeds = bed.MergeBeds(seedBeds)
-	for beds = 0; beds < len(seedBeds); beds++ {
-		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[common.StringToInt64(seedBeds[beds].Chrom)].Seq[seedBeds[beds].ChromStart:seedBeds[beds].ChromEnd], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
-		if score > bestScore {
-			bestScore = score
-			currBest.Flag = 16
-			currBest.RName = ref[common.StringToInt64(seedBeds[beds].Chrom)].Name
-			currBest.Pos = lowRef + seedBeds[beds].ChromStart
-			currBest.Cigar = SClipCigar(lowQuery, highQuery, int64(len(read.Seq)), alignment)
-			currBest.Seq = read.Seq
-			currBest.Qual = string(read.Qual)
-		}
-	}
-	//log.Println(currBest.RName, "\t", currBest.Pos, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
-	//return &currBest
-	log.Println(currBest.RName, "\t", currBest.Pos, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
-	//sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
-	sam.SamAlnToString(&currBest)
-	sam.WriteAlnToFileHandle(file, &currBest)
-	//c <- &currBest
-	//wg.Done()
+	return answer
 }
 
 func MaxScore(seq []dna.Base, scores [][]int64) int64 {
@@ -349,6 +265,7 @@ func MaxScore(seq []dna.Base, scores [][]int64) int64 {
 	return maxScore
 }
 
+/*
 func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
 	//var answer *sam.SamAln
 	header := BasicHeader(ref)
@@ -372,7 +289,7 @@ func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile strin
 		go MapFastq(ref, fq, seedLen, m, mSet, trace, outFile)
 	}
 	wg.Wait()
-}
+}*/
 
 func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
 	var answer []*cigar.Cigar
@@ -400,6 +317,21 @@ func BasicHeader(ref []*fasta.Fasta) *sam.SamHeader {
 	for i := 0; i < len(ref); i++ {
 		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
 		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		header.Text = append(header.Text, words)
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
+
+	}
+	return &header
+}
+
+func NodesHeader(ref []*Node) *sam.SamHeader {
+	var header sam.SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+
+	for i := 0; i < len(ref); i++ {
+		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 

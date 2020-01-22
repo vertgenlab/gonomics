@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 )
 
-func runeToBase(r rune) Base {
+func RuneToBase(r rune) Base {
 	switch r {
 	case 'A':
 		return A
@@ -82,7 +82,7 @@ func StringToBases(s string) []Base {
 	answer := make([]Base, utf8.RuneCountInString(s))
 
 	for index, runeValue := range s {
-		answer[index] = runeToBase(runeValue)
+		answer[index] = RuneToBase(runeValue)
 	}
 	return answer
 }

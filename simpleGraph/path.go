@@ -1,6 +1,8 @@
 package simpleGraph
 
-import ()
+import (
+	"fmt"
+)
 
 func AddPath(newPath uint32, allPaths []uint32) []uint32 {
 	if allPaths == nil {
@@ -38,10 +40,10 @@ func PathToString(allPaths []uint32, gg *SimpleGraph) string {
 	if allPaths == nil {
 		return s
 	} else {
-		s += gg.Nodes[allPaths[0]].Name
+		s += fmt.Sprint(gg.Nodes[allPaths[0]].Id)
 		if len(allPaths) > 1 {
 			for i := 1; i < len(allPaths); i++ {
-				s += ":" + gg.Nodes[allPaths[i]].Name
+				s += ":" + fmt.Sprint(gg.Nodes[allPaths[i]].Id)
 			}
 		}
 	}

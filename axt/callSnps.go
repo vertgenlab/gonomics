@@ -21,7 +21,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 			if dna.ToUpper(axtFile.RSeq[i]) != dna.ToUpper(axtFile.QSeq[i]) {
 				//if strings.Compare(dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))) != 0 {
 				infoTag = "POS=" + strconv.FormatInt(qCount, 10)
-				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=SNP", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=SNP", Sample: []string{"GT:DP:AD:RO:QR:AO:QA:GL"}}
 				//fmt.Println(snps[i].RefSub, snps[i].QuerySub)
 				answer = append(answer, curr)
 			}
@@ -37,7 +37,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 					altTmp = altTmp + dna.BaseToString(dna.ToUpper(axtFile.QSeq[j]))
 					qCount++
 				} else {
-					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: altTmp, Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=INS", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: altTmp, Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=INS", Sample: []string{"GT:DP:AD:RO:QR:AO:QA:GL"}}
 					answer = append(answer, curr)
 					i = j - 1
 					break
@@ -55,7 +55,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 					altTmp = altTmp + dna.BaseToString(dna.ToUpper(axtFile.RSeq[j]))
 					tempRCount++
 				} else {
-					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: altTmp, Alt: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=DEL", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: altTmp, Alt: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=DEL", Sample: []string{"GT:DP:AD:RO:QR:AO:QA:GL"}}
 					rCount = rCount + int64(tempRCount)
 					answer = append(answer, curr)
 					i = j - 1

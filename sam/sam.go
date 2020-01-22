@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"strconv"
@@ -35,7 +35,7 @@ type SamAln struct {
 	PNext int64
 	TLen  int64
 	//Seq   string
-	Seq []dna.Base
+	Seq   []dna.Base
 	Qual  string
 	Extra string
 }
@@ -168,17 +168,17 @@ func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
 }
 
 func SamAlnToString(aln *SamAln) string {
-        var answer string
+	var answer string
 	if aln.Extra == "" {
-                answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)
-        } else {
-                answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
-        }
-        return answer
+		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)
+	} else {
+		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
+	}
+	return answer
 }
 
 func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
-	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString)
+	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
 	common.ExitIfError(err)
 }
 

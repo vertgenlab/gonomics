@@ -1,6 +1,7 @@
 package fasta
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 )
@@ -23,6 +24,18 @@ func TestReverseComplement(t *testing.T) {
 		ReverseComplementAll(test.input)
 		if !AllAreEqual(test.input, test.expected) {
 			t.Errorf("Expected reverse complement to give %v, but got %v.", test.input, test.expected)
+		}
+	}
+}
+
+func TestChangeName(t *testing.T) {
+	fa := Read("testdata/testOne.fa")
+	newFa := Read("testdata/testOne.fa")
+	ChangePrefix(newFa, "Library")
+	for i := 0; i < len(newFa); i++ {
+		fmt.Printf("Name of fasta record: %s\n", newFa[i].Name)
+		if newFa[i].Name == fa[i].Name {
+			t.Errorf("Fasta record change was not successful")
 		}
 	}
 }
