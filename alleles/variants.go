@@ -315,7 +315,7 @@ func score(input *ScoreInput) *vcf.Vcf{
 	case float64(input.c)/float64(input.c+input.a) < float64(input.d)/float64(input.d+input.b):
 		p = 1
 
-	// If the allele frequency is less than the threshold then p is noted as 1 so as to be exluded
+	// If the allele frequency is less than the threshold then p is noted as 1 so as to be excluded
 	case float64(input.c)/float64(input.c+input.a) < input.afThreshold:
 		p = 1
 
@@ -330,7 +330,7 @@ func score(input *ScoreInput) *vcf.Vcf{
 			Qual:    p,
 			Filter:  ".",
 			Format:  "Sample:RefCount:AltCount:Cov",
-			Unknown: fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts)}
+			Sample: append(answer.Sample, fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts))}
 
 		switch input.altbase {
 		case "A", "C", "G", "T":
@@ -361,7 +361,7 @@ func EffToCSV(inFile string, outFile string) {
 	var i int
 	for i = 0; i < len(data); i++ {
 
-		Ukn := strings.Split(data[i].Unknown, ":")
+		Sample := strings.Split(data[i].Sample[0], ":")
 		Info := strings.Split(data[i].Info, "=")
 
 		if len(Info) < 2 {
@@ -370,10 +370,10 @@ func EffToCSV(inFile string, outFile string) {
 
 		// Eff Example Line: ANN=A|missense_variant|MODERATE|TGFBR3|TGFBR3|transcript|NM_003243.4|protein_coding|13/17|c.2050G>T|p.Asp684Tyr|2565/6467|2050/2556|684/851||
 		Ann := strings.Split(Info[1], "|")
-		Cov := strings.Split(Ukn[3], "\n")
+		Cov := strings.Split(Sample[3], "\n")
 
 		fmt.Fprintf(output, "%s,%s,%d,%s,%s,%.3v,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-			Ukn[0],       // Sample
+			Sample[0],    // Sample
 			data[i].Chr,  // Chr
 			data[i].Pos,  // Pos
 			data[i].Ref,  // Ref
@@ -382,8 +382,8 @@ func EffToCSV(inFile string, outFile string) {
 			Ann[3],       // Gene
 			Ann[9],       // DNA
 			Ann[10],      // Protein
-			Ukn[1],       // RefCount
-			Ukn[2],       // AltCount
+			Sample[1],    // RefCount
+			Sample[2],    // AltCount
 			Cov[0],       // Coverage
 			Ann[1],       // Consequence
 			Ann[2],       // Prediction

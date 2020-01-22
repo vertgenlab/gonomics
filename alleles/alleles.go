@@ -273,22 +273,22 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 
 		// Ref -> A
 		current.Alt = "A"
-		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseA, alleles.Counts)
+		current.Sample = append(current.Sample, fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseA, alleles.Counts))
 		answer = append(answer, current)
 
 		// Ref -> C
 		current.Alt = "C"
-		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseC, alleles.Counts)
+		current.Sample = append(current.Sample, fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseC, alleles.Counts))
 		answer = append(answer, current)
 
 		// Ref -> G
 		current.Alt = "G"
-		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseG, alleles.Counts)
+		current.Sample = append(current.Sample, fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseG, alleles.Counts))
 		answer = append(answer, current)
 
 		// Ref -> T
 		current.Alt = "T"
-		current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseT, alleles.Counts)
+		current.Sample = append(current.Sample, fmt.Sprintf("%d:%d:%d", RefCount, alleles.BaseT, alleles.Counts))
 		answer = append(answer, current)
 
 		// Ref -> Indel
@@ -296,7 +296,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			RefSeq = dna.BaseToString(alleles.Indel[i].Ref[0])
 			AltSeq = dna.BasesToString(alleles.Indel[i].Alt)
 
-			current.Unknown = fmt.Sprintf("%d:%d:%d", RefCount, alleles.Indel[i].Count, alleles.Counts)
+			current.Sample = append(current.Sample, fmt.Sprintf("%d:%d:%d", RefCount, alleles.Indel[i].Count, alleles.Counts))
 			current.Pos = loc.Pos
 			current.Ref = RefSeq
 			current.Alt = AltSeq
