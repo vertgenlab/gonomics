@@ -27,36 +27,23 @@ type Edge struct {
 }
 
 func AddNode(g *SimpleGraph, n *Node) {
-	//g.lock.Lock()
 	g.Nodes = append(g.Nodes, n)
-	//g.lock.Unlock()
 }
 
-//func AddEdge(u, v *Node, uStrand, vStrand bool, p float64) {
 func AddEdge(u, v *Node, p float64) {
-	//g.lock.Lock()
-	//g.lock.Unlock()
 	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
 	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
 }
 
-//func chaining()
-
-//func Read(filename string) ([]*Node, []string) {
 func Read(filename string) *SimpleGraph {
 	answer := NewGraph()
 	var line string
+	var name []string
 	var currSeq []dna.Base
-	//var answer []*Node
 	var seqIdx int64 = -1
 	var doneReading bool = false
-
 	var words []string
-	//var currId uint32
 	var weight float64
-	//var nextId uint32
-
-	//var chromIdx int64 = 0
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
@@ -67,21 +54,19 @@ func Read(filename string) *SimpleGraph {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
-			//tmp := Node{Id: common.StringToInt64(line[1:len(line)])}
-
-			tmp := Node{Id: uint32(seqIdx), Name: line[1:]}
-
+			name = strings.Split(line, ":")
+			tmp := Node{Id: uint32(seqIdx), Name: name[0][1:]}
 			AddNode(answer, &tmp)
-			//after node is added to graph
-			edges[line] = &tmp
-
+			_, ok := edges[line[1:]]
+			if !ok {
+				edges[line[1:]] = &tmp
+			}
 		} else {
-			if strings.Contains(line, ":") && !strings.HasPrefix(line, ">") {
+			if strings.Contains(line, ":") {
 				words = strings.Split(line, "\t")
 				if len(words) > 2 {
 					for i := 1; i < len(words); i += 2 {
 						weight = common.StringToFloat64(words[i])
-						//nextId = common.StringToUint32(words[i+1])
 						AddEdge(edges[words[0]], edges[words[i+1]], weight)
 					}
 				}
@@ -98,14 +83,8 @@ func Read(filename string) *SimpleGraph {
 func NewGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
 	graph.Nodes = make([]*Node, 0)
-	//graph.Edges = make(map[*Node][]*Edge, 0)
 	return graph
 }
-
-/*
-func AddEdgeTmp(u, v *Node) {
-	u.Next, v.Prev = append(u.Next, v), append(v.Prev, u)
-}*/
 
 func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
 	var err error
@@ -140,7 +119,7 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 		}
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name)
+		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name+":"+fmt.Sprint(gg.Nodes[i].Id))
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near); j++ {
 			_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name+":"+fmt.Sprint(near[j].Dest.Id))
@@ -152,7 +131,6 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 }
 
 func PrintGraph(gg *SimpleGraph) {
-
 	lineLength := 50
 	var i, j int
 	var name string
@@ -182,6 +160,5 @@ func Write(filename string, sg *SimpleGraph) {
 	lineLength := 50
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
-
 	WriteToGraphHandle(file, sg, lineLength)
 }
