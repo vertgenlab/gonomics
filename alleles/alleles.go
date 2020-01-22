@@ -55,9 +55,7 @@ func refToMap(refFilename string) map[string][]dna.Base {
 
 // Inputs a sam file and loops through while keeping a tally of each base present at each position. Stores in SampleMap
 func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleMap {
-
 	// Read in reference
-
 	fmt.Printf("#Reading Reference\n")
 	ref := refToMap(refFilename)
 
