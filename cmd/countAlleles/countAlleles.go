@@ -24,6 +24,7 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 	if outFile == "stdout" {
 		vcf.PrintVcf(datavcf)
 	} else {
+		log.Printf("Writing VCF")
 		vcf.Write(outFile, datavcf)
 	}
 }
