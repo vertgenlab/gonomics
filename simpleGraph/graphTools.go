@@ -320,9 +320,9 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 
 }
 
-func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-
+func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, c chan *sam.SamAln) {
 	var mappedRead *sam.SamAln
+	m, trace := swMatrixSetup(10000)
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	c <- mappedRead
 	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
@@ -339,7 +339,7 @@ func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen
 func devGoroutinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
 
 	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, m, trace, c)
+		go wrap(gg, reads[i], seedHash, seedLen, c)
 	}
 	for j := 0; j < len(reads); j++ {
 		log.Printf("%s\n", sam.SamAlnToString(<-c))
@@ -352,7 +352,7 @@ func devGoroutinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash []
 func routinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln, out *os.File, groupSize int) {
 
 	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, m, trace, c)
+		go wrap(gg, reads[i], seedHash, seedLen, c)
 	}
 	for j := 0; j < len(reads); j++ {
 		//log.Printf("%s\n", sam.SamAlnToString(<-c))

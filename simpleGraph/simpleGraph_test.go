@@ -159,7 +159,7 @@ func BenchmarkGoRoutines(b *testing.B) {
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/fakeReads.fastq", simReads)
 	//var seeds []Seed = make([]Seed, 256)
-	m, trace := swMatrixSetup(10000)
+	//m, trace := swMatrixSetup(10000)
 	//var seeds []Seed = make([]Seed, 256)
 	b.ResetTimer()
 
@@ -167,7 +167,7 @@ func BenchmarkGoRoutines(b *testing.B) {
 	//var mappedRead *sam.SamAln
 	for n := 0; n < b.N; n++ {
 		for i := 0; i < len(simReads); i++ {
-			go wrap(genome, simReads[i], tiles, tileSize, m, trace, c)
+			go wrap(genome, simReads[i], tiles, tileSize, c)
 		}
 		//out, _ := os.Create("simReads.sam")
 		//defer out.Close()
