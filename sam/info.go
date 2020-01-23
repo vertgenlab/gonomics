@@ -1,21 +1,54 @@
 package sam
 
-func IsPosStrand(sam *SamAln) bool {
-	return flagIsPosStrand(sam.Flag)
+func flagTestBit(num int64, bit int64) bool {
+	var dummy int64 = bit & num //bitwise AND
+	return dummy == 0
 }
 
-func flagIsPosStrand(num int64) bool {
-	var bit5 int64 = 16
-	var dummy int64 = bit5 & num //bitwise AND
-	return dummy == 0
+func IsPaired(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 1)
 }
 
 func ProperlyAligned(sam *SamAln) bool {
-	return flagIsProperlyAligned(sam.Flag)
+	return flagTestBit(sam.Flag, 2)
 }
 
-func flagIsProperlyAligned(num int64) bool {
-	var bit2 int64 = 2
-	var dummy int64 = bit2 & num //bitwise AND
-	return dummy == 0
+func IsUnmapped(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 4)
+}
+
+func MateIsUnmapped(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 8)
+}
+
+func IsPosStrand(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 16)
+}
+
+func MateIsPosStrand(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 32)
+}
+
+func IsForwardRead(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 64)
+}
+
+func IsReverseRead(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 128)
+}
+
+func IsNotPrimaryAlign(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 265)
+}
+
+func ReadFailsQC(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 512)
+}
+
+func IsDuplicate(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 1024)
+}
+
+func IsSupplementaryAlignment(sam *SamAln) bool {
+	return flagTestBit(sam.Flag, 2048)
 }
