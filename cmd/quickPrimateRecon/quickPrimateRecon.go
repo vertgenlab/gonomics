@@ -46,8 +46,12 @@ func quickPrimateRecon(infile string, outfile string) {
 		if human.Seq[j] == dna.N {
 			Ncount++
 			outputBase = human.Seq[j]
-		} else if !isThereABase(records, j) {
+		} else if humanInsertion(records, j) {
 			outputBase = dna.Gap
+		} else if human.Seq[j] != dna.Gap && (chimp.Seq[j] == dna.Gap && bonobo.Seq[j] == dna.Gap) {
+			outputBase = human.Seq[j]
+		} else if (gorilla.Seq[j] == dna.Gap && orangutan.Seq[j] == dna.Gap) {
+			outputBase = human.Seq[j]
 		} else if human.Seq[j] == chimp.Seq[j] && human.Seq[j] == bonobo.Seq[j] {
 			outputBase = human.Seq[j]
 			allMatch++
@@ -88,16 +92,15 @@ func quickPrimateRecon(infile string, outfile string) {
 	fasta.Write(outfile, outputSlice)
 }
 
-func isThereABase(records []*fasta.Fasta, j int) bool {
+func humanInsertion(records []*fasta.Fasta, j int) bool {
+	//true if the human sequence is the only one present at a position
 	human := records[0]
 	bonobo := records[1]
 	chimp := records[2]
 	orangutan := records[3]
 	gorilla := records[4]
 
-	if (human.Seq[j] != dna.Gap || chimp.Seq[j] != dna.Gap || bonobo.Seq[j] != dna.Gap) && (gorilla.Seq[j] != dna.Gap || orangutan.Seq[j] != dna.Gap) {
-			return true 
-	} else if human.Seq[j] != dna.Gap && (chimp.Seq[j] != dna.Gap || bonobo.Seq[j] != dna.Gap) {
+	if (human.Seq[j] != dna.Gap) && (chimp.Seq[j] == dna.Gap && bonobo.Seq[j] == dna.Gap && gorilla.Seq[j] == dna.Gap && orangutan.Seq[j] == dna.Gap) {
 		return true
 	}
 	return false
