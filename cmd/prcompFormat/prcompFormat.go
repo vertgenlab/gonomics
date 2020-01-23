@@ -3,25 +3,25 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 )
 
 /*
-	The first loop checks each position in the specified range, with the inner loop checking each 
-	species to determine if any species contain a gap or an N at that position or if all of the 
+	The first loop checks each position in the specified range, with the inner loop checking each
+	species to determine if any species contain a gap or an N at that position or if all of the
 	species have the same base at that position. If there are no gaps or Ns and at least one species
 	has an alternative base position, that column of bases is added to the output fasta.
-	
+
 	Next, the output fasta, once constructed, is converted into a binary matrix for input for PCA.
 */
 
 func prcompFormat(infile string, outfile string) {
 	records := fasta.Read(infile)
-	var subFa  = make([]fasta.Fasta, len(records))
+	var subFa = make([]fasta.Fasta, len(records))
 	var allMatch, allValid bool
 	var currentBase dna.Base
 	//fmt.Printf("Len Seq: %d\n", len(records[0].Seq))
@@ -31,7 +31,7 @@ func prcompFormat(infile string, outfile string) {
 	for i := 0; i < len(records); i++ {
 		subFa[i].Name = records[i].Name
 	}
-	
+
 	for i := 0; i < len(records[0].Seq); i++ {
 		//check for gaps, identity, or Ns
 		currentBase = records[0].Seq[i]
@@ -64,7 +64,7 @@ func prcompFormat(infile string, outfile string) {
 
 	//print header
 	var headerstring string = "Sample"
-	for n := 0; n < (4*len(subFa[0].Seq)); n++ {
+	for n := 0; n < (4 * len(subFa[0].Seq)); n++ {
 		headerstring = headerstring + fmt.Sprintf("\tVar_%d", n)
 	}
 
@@ -89,17 +89,17 @@ func prcompFormat(infile string, outfile string) {
 			}
 		}
 		outline = outline + "\n"
-	_, err := fmt.Fprintf(file, "%s", outline)
-	common.ExitIfError(err)
+		_, err := fmt.Fprintf(file, "%s", outline)
+		common.ExitIfError(err)
 	}
 }
 
 func usage() {
 	fmt.Print(
 		"prcompFormat - Generates a binary input matrix for PCA in R.\n" +
-		"Usage:\n" +
-		"prcompFormat infile.fa outfile.tsv\n" +
-		"options:\n")
+			"Usage:\n" +
+			"prcompFormat infile.fa outfile.tsv\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
