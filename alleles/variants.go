@@ -70,6 +70,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 			_, ok := SampleMap[Location{loc.Chr, loc.Pos}]
 			if !ok {
 				current = &BatchAlleleCount{"Background", alleles.Ref, 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 0)}
+				current.Indel[0].Count = make([]int32, 1)
 				SampleMap[Location{loc.Chr, loc.Pos}] = append(SampleMap[Location{loc.Chr, loc.Pos}], current)
 			}
 
