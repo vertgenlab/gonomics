@@ -17,10 +17,10 @@ type BatchAlleleCount struct {
 	Sample 	string
 	Ref    	dna.Base
 	Counts 	int32
-	BaseA  	int32
-	BaseC  	int32
-	BaseG  	int32
-	BaseT  	int32
+	BaseA  	[]int32
+	BaseC  	[]int32
+	BaseG  	[]int32
+	BaseT  	[]int32
 	Indel  	[]Indel
 }
 
@@ -69,15 +69,15 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 			// Check if position is in the map, if not then add the background struct
 			_, ok := SampleMap[Location{loc.Chr, loc.Pos}]
 			if !ok {
-				current = &BatchAlleleCount{"Background", alleles.Ref, 0, 0, 0, 0, 0, make([]Indel, 0)}
+				current = &BatchAlleleCount{"Background", alleles.Ref, 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 0)}
 				SampleMap[Location{loc.Chr, loc.Pos}] = append(SampleMap[Location{loc.Chr, loc.Pos}], current)
 			}
 
 			//add in and increment background as entry zero in batch allele count slice
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseA = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseA + alleles.BaseA
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC + alleles.BaseC
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG + alleles.BaseG
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT + alleles.BaseT
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseA[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseA[0] + alleles.BaseA[0]
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC[0] + alleles.BaseC[0]
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG[0] + alleles.BaseG[0]
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT[0] + alleles.BaseT[0]
 			SampleMap[Location{loc.Chr, loc.Pos}][0].Counts =SampleMap[Location{loc.Chr, loc.Pos}][0].Counts + alleles.Counts
 
 			// Loop through each indel and see if it is already in the background struct, if not then append it
@@ -86,7 +86,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 				for j = 0; j < len(SampleMap[Location{loc.Chr, loc.Pos}][0].Indel); j++ {
 					if dna.CompareSeqsIgnoreCase(alleles.Indel[i].Alt, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Alt) == 0 &&
 						dna.CompareSeqsIgnoreCase(alleles.Indel[i].Ref, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Ref) == 0 {
-						SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count = SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count + alleles.Indel[i].Count
+						SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count[0] + alleles.Indel[i].Count[0]
 						Match = true
 					}
 				}
@@ -182,23 +182,23 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 		// For loop starts at index 1 because index zero is the background values
 		case dna.A:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseA
-				b[i-1] = alleles[0].BaseA - alleles[i].BaseA
+				a[i-1] = alleles[i].BaseA[0]
+				b[i-1] = alleles[0].BaseA[0] - alleles[i].BaseA[0]
 			}
 		case dna.C:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseC
-				b[i-1] = alleles[0].BaseC - alleles[i].BaseC
+				a[i-1] = alleles[i].BaseC[0]
+				b[i-1] = alleles[0].BaseC[0] - alleles[i].BaseC[0]
 			}
 		case dna.G:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseG
-				b[i-1] = alleles[0].BaseG - alleles[i].BaseG
+				a[i-1] = alleles[i].BaseG[0]
+				b[i-1] = alleles[0].BaseG[0] - alleles[i].BaseG[0]
 			}
 		case dna.T:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseT
-				b[i-1] = alleles[0].BaseT - alleles[i].BaseT
+				a[i-1] = alleles[i].BaseT[0]
+				b[i-1] = alleles[0].BaseT[0] - alleles[i].BaseT[0]
 			}
 		default:
 			continue
@@ -209,16 +209,16 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 		for i = 1; i < len(alleles); i++ {
 
 			// Retrieve Values for c
-			cA = alleles[i].BaseA
-			cC = alleles[i].BaseC
-			cG = alleles[i].BaseG
-			cT = alleles[i].BaseT
+			cA = alleles[i].BaseA[0]
+			cC = alleles[i].BaseC[0]
+			cG = alleles[i].BaseG[0]
+			cT = alleles[i].BaseT[0]
 
 			// Retrieve Values for d
-			dA = alleles[0].BaseA - alleles[i].BaseA
-			dC = alleles[0].BaseC - alleles[i].BaseC
-			dG = alleles[0].BaseG - alleles[i].BaseG
-			dT = alleles[0].BaseT - alleles[i].BaseT
+			dA = alleles[0].BaseA[0] - alleles[i].BaseA[0]
+			dC = alleles[0].BaseC[0] - alleles[i].BaseC[0]
+			dG = alleles[0].BaseG[0] - alleles[i].BaseG[0]
+			dT = alleles[0].BaseT[0] - alleles[i].BaseT[0]
 
 			// Generate Scores
 
@@ -231,25 +231,25 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 				sigThreshold: 	sigThreshold,
 				indelslicepos: 	0}
 
-			if alleles[i].Ref != dna.A {
+			if alleles[i].Ref != dna.A && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cA
 				fetInput.d = dA
 				fetInput.altbase = "A"
 				inputChan <- &fetInput
 			}
-			if alleles[i].Ref != dna.C {
+			if alleles[i].Ref != dna.C && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cC
 				fetInput.d = dC
 				fetInput.altbase = "C"
 				inputChan <- &fetInput
 			}
-			if alleles[i].Ref != dna.G {
+			if alleles[i].Ref != dna.G && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cG
 				fetInput.d = dG
 				fetInput.altbase = "G"
 				inputChan <- &fetInput
 			}
-			if alleles[i].Ref != dna.T {
+			if alleles[i].Ref != dna.T && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cT
 				fetInput.d = dT
 				fetInput.altbase = "T"
@@ -258,15 +258,20 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 
 			// Calculate p for each Indel
 			for j = 0; j < len(alleles[i].Indel); j++ {
-				cIndel = alleles[i].Indel[j].Count
+				cIndel = alleles[i].Indel[j].Count[0]
 				// Find Indel in the background Indel slice
 				for l = 0; l < len(alleles[0].Indel); l++ {
 					if dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Alt, alleles[0].Indel[l].Alt) == 0 &&
 						dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Ref, alleles[0].Indel[l].Ref) == 0 {
-						dIndel = alleles[0].Indel[l].Count - alleles[i].Indel[j].Count
+						dIndel = alleles[0].Indel[l].Count[0] - alleles[i].Indel[j].Count[0]
 						break
 					}
 				}
+
+				if passStrandBias(alleles[i].Indel[j].Count[1], alleles[i].Indel[j].Count[2]) == false {
+					continue
+				}
+
 				fetInput.c = cIndel
 				fetInput.d = dIndel
 				fetInput.altbase = "Indel"
@@ -295,6 +300,17 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 	}
 
 	return VariantScores
+}
+
+// Calculates strand bias
+func passStrandBias(alpha int32, beta int32) bool {
+	val := float64(alpha) / float64(alpha+beta)
+
+	if val < 0.95 && val > 0.05 {
+		return true
+	} else {
+		return false
+	}
 }
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
