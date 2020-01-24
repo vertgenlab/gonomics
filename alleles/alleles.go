@@ -18,6 +18,7 @@ type AlleleCount struct {
 	Counts 	int32
 	// Base counts are stored as slice with [0] = Total Count [1] = Forward Reads and [2] = Reverse Reads
 	// Total Count is added for processing unpaired sequencing
+	// TODO: instead of slice of ints, maybe make a second map to store the auxillary information that could be toggled with user inputs
 	BaseA  	[]int32
 	BaseC 	[]int32
 	BaseG 	[]int32
@@ -204,7 +205,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 				}
 
 				if Match == false {
-					currentIndel = Indel{indelSeq[:1], indelSeq, make([]int32, 2)}
+					currentIndel = Indel{indelSeq[:1], indelSeq, make([]int32, 3)}
 					currentIndel.Count[0]++
 					if sam.IsForwardRead(aln) == true {
 						currentIndel.Count[1]++
@@ -286,8 +287,12 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	var RefSeq string
 	var AltSeq string
 
+	var progressMeter int
 	for loc, alleles := range input {
-
+		progressMeter++
+		if progressMeter % 5000000 == 0 {
+			log.Printf("processed %d positions", progressMeter)
+		}
 		switch alleles.Ref {
 		case dna.A:
 			base = "A"
@@ -358,6 +363,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			current.Alt = AltSeq
 			answer = append(answer, current)
 		}
+		delete(input, loc)
 	}
 	return answer
 }

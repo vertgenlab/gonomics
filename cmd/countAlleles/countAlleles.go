@@ -16,8 +16,11 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 		usage()
 		log.Fatalf("ERROR: No reference provided\n")
 	}
+	log.Printf("Counting Alleles")
 	data := alleles.CountAlleles(refFile, inFile, int64(minMapQ))
+	log.Printf("Filtering Alleles")
 	alleles.FilterAlleles(data, int32(coverageThreshold))
+	log.Printf("Converting to VCF")
 	datavcf = alleles.AllelesToVcf(data)
 
 
