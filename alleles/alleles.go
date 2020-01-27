@@ -331,29 +331,30 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			Info:    ".",
 			Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov"}
 
+		var sampleData []string = make([]string, 1)
 		// Ref -> A
 		current.Alt = "A"
-		current.Sample = append(current.Sample, fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseA[0], alleles.BaseA[1], alleles.BaseA[2], alleles.Counts))
+		sampleData[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseA[0], alleles.BaseA[1], alleles.BaseA[2], alleles.Counts)
+		current.Sample = sampleData
 		answer = append(answer, current)
-		current.Sample = nil
 
 		// Ref -> C
 		current.Alt = "C"
-		current.Sample = append(current.Sample, fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseC[0], alleles.BaseC[1], alleles.BaseC[2], alleles.Counts))
+		sampleData[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseC[0], alleles.BaseC[1], alleles.BaseC[2], alleles.Counts)
+		current.Sample = sampleData
 		answer = append(answer, current)
-		current.Sample = nil
 
 		// Ref -> G
 		current.Alt = "G"
-		current.Sample = append(current.Sample, fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseG[0], alleles.BaseG[1], alleles.BaseG[2], alleles.Counts))
+		sampleData[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseG[0], alleles.BaseG[1], alleles.BaseG[2], alleles.Counts)
+		current.Sample = sampleData
 		answer = append(answer, current)
-		current.Sample = nil
 
 		// Ref -> T
 		current.Alt = "T"
-		current.Sample = append(current.Sample, fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseT[0], alleles.BaseT[1], alleles.BaseT[2], alleles.Counts))
+		sampleData[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseT[0], alleles.BaseT[1], alleles.BaseT[2], alleles.Counts)
+		current.Sample = sampleData
 		answer = append(answer, current)
-		current.Sample = nil
 
 		// Ref -> Indel
 		for i = 0; i < len(alleles.Indel); i++ {
@@ -361,7 +362,8 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			RefSeq = dna.BasesToString(alleles.Indel[i].Ref)
 			AltSeq = dna.BasesToString(alleles.Indel[i].Alt)
 
-			current.Sample = append(current.Sample, fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.Indel[i].Count[0], alleles.Indel[i].Count[1], alleles.Indel[i].Count[2], alleles.Counts))
+			sampleData[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.Indel[i].Count[0], alleles.Indel[i].Count[1], alleles.Indel[i].Count[2], alleles.Counts)
+			current.Sample = sampleData
 			current.Pos = loc.Pos
 			current.Ref = RefSeq
 			current.Alt = AltSeq
