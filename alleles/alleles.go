@@ -393,25 +393,29 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		answer = append(answer, current)
 
 		// Ref -> Indel
+		var RefSeq []string = make([]string, len(alleles.Indel))
+		var AltSeq []string = make([]string, len(alleles.Indel))
+		var Sindels [][]string = make([][]string, len(alleles.Indel))
 		for i = 0; i < len(alleles.Indel); i++ {
 
-			IndelRefSeq := dna.BasesToString(alleles.Indel[i].Ref)
-			IndelAltSeq := dna.BasesToString(alleles.Indel[i].Alt)
+			RefSeq[i] = dna.BasesToString(alleles.Indel[i].Ref)
+			AltSeq[i] = dna.BasesToString(alleles.Indel[i].Alt)
 
 			Sindel := make([]string,1)
 			Sindel[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.Indel[i].Count[0], alleles.Indel[i].Count[1], alleles.Indel[i].Count[2], alleles.Counts)
+			Sindels[i] = Sindel
 
 			current = &vcf.Vcf{
 				Chr:     loc.Chr,
 				Pos:     loc.Pos,
 				Id:      ".",
-				Ref:     IndelRefSeq,
-				Alt:	 IndelAltSeq,
+				Ref:     RefSeq[i],
+				Alt:	 AltSeq[i],
 				Qual:    1,
 				Filter:  ".",
 				Info:    ".",
 				Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
-				Sample:	 Sindel}
+				Sample:	 Sindels[i]}
 
 			answer = append(answer, current)
 		}
