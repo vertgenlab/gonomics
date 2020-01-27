@@ -69,7 +69,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 			// Check if position is in the map, if not then add the background struct
 			_, ok := SampleMap[Location{loc.Chr, loc.Pos}]
 			if !ok {
-				current = &BatchAlleleCount{"Background", alleles.Ref, 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 0)}
+				current = &BatchAlleleCount{"Background", alleles.Ref, 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 1)}
 				current.Indel[0].Count = make([]int32, 1)
 				SampleMap[Location{loc.Chr, loc.Pos}] = append(SampleMap[Location{loc.Chr, loc.Pos}], current)
 			}
@@ -79,7 +79,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC[0] + alleles.BaseC[0]
 			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG[0] + alleles.BaseG[0]
 			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT[0] + alleles.BaseT[0]
-			SampleMap[Location{loc.Chr, loc.Pos}][0].Counts =SampleMap[Location{loc.Chr, loc.Pos}][0].Counts + alleles.Counts
+			SampleMap[Location{loc.Chr, loc.Pos}][0].Counts = SampleMap[Location{loc.Chr, loc.Pos}][0].Counts + alleles.Counts
 
 			// Loop through each indel and see if it is already in the background struct, if not then append it
 			for i = 0; i < len(alleles.Indel); i++ {
@@ -316,6 +316,7 @@ func passStrandBias(alpha int32, beta int32) bool {
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
 func score(input *ScoreInput) *vcf.Vcf{
+	fmt.Println(input)
 	var p float64
 	var answer *vcf.Vcf
 
@@ -340,14 +341,18 @@ func score(input *ScoreInput) *vcf.Vcf{
 	default:
 		p = numbers.FisherExact(int(input.a), int(input.b), int(input.c), int(input.d), true)
 	}
+
 	if p < input.sigThreshold {
+		fmt.Println(input)
+		var sampleField []string = make([]string, 0)
+		sampleField = append(sampleField, fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts))
 		answer = &vcf.Vcf{
 			Chr:     input.loc.Chr,
 			Id:      ".",
 			Qual:    p,
 			Filter:  ".",
 			Format:  "Sample:RefCount:AltCount:Cov",
-			Sample: append(answer.Sample, fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts))}
+			Sample: sampleField}
 
 		switch input.altbase {
 		case "A", "C", "G", "T":
