@@ -17,13 +17,12 @@ func faToUpper(inFile string, outFile string) {
 	fasta.Write(outFile, records)
 }
 
-
 func usage() {
 	fmt.Print(
 		"faToUpper - reformat a fasta file in upper case\n" +
-		"Usage:\n" +
-		" faToUpper input.fa output.fa\n" +
-		"options:\n")
+			"Usage:\n" +
+			" faToUpper input.fa output.fa\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

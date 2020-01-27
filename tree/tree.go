@@ -5,11 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"	
+	"os"
 	"strconv"
 	"strings"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type Tree struct {
@@ -66,12 +66,12 @@ func ParseDot(input string) *Tree {
 			}
 		} else {
 			for i := 0; i < len(words); i++ {
-				if _ , ok := m[words[i]]; !ok { //if current is not in the map already
+				if _, ok := m[words[i]]; !ok { //if current is not in the map already
 					current = &Tree{Name: words[i], OnlyTopology: true, BranchLength: 0, Left: nil, Right: nil}
 					if len(m) == 0 { //root check, first entry is root
 						fmt.Println(current.Name)
 						root = current
-					} 	
+					}
 					m[words[i]] = current
 				} else {
 					current = m[words[i]]
@@ -89,8 +89,8 @@ func ParseDot(input string) *Tree {
 				}
 				prev = current
 			}
-	}
 		}
+	}
 	return root
 }
 

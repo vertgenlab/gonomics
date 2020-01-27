@@ -12,26 +12,27 @@ import (
 	"strconv"
 	"strings"
 )
+
 // TODO: in vcf format multiple possible alleles into a single line
 type AlleleCount struct {
-	Ref    	dna.Base
-	Counts 	int32
-	BaseA  	int32
-	BaseC 	int32
-	BaseG 	int32
-	BaseT  	int32
-	Indel	[]Indel
+	Ref    dna.Base
+	Counts int32
+	BaseA  int32
+	BaseC  int32
+	BaseG  int32
+	BaseT  int32
+	Indel  []Indel
 }
 
 type Indel struct {
-	Ref       []dna.Base
-	Alt       []dna.Base
-	Count     int32
+	Ref   []dna.Base
+	Alt   []dna.Base
+	Count int32
 }
 
 type Location struct {
-	Chr 	string
-	Pos 	int64
+	Chr string
+	Pos int64
 }
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount
@@ -124,16 +125,16 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					// Keep track of deleted sequence
 					indelSeq = append(indelSeq, ref[aln.RName][RefIndex])
 
-					AlleleMap[Location{aln.RName,RefIndex}].Counts++
+					AlleleMap[Location{aln.RName, RefIndex}].Counts++
 					RefIndex++
 				}
 
 				Match = false
-				for j = 0; j < len(AlleleMap[Location{aln.RName,OrigRefIndex}].Indel); j++ {
+				for j = 0; j < len(AlleleMap[Location{aln.RName, OrigRefIndex}].Indel); j++ {
 					// If the deletion has already been seen before, increment the existing entry
 					// For a deletion the indelSeq should match the Ref
 					if dna.CompareSeqsIgnoreCase(indelSeq, AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Ref) == 0 &&
-						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Alt) == 0{
+						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Alt) == 0 {
 						AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Count++
 						Match = true
 						break
@@ -262,14 +263,14 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		}
 
 		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount:AltCount:Cov"}
+			Chr:    loc.Chr,
+			Pos:    loc.Pos + 1,
+			Id:     ".",
+			Ref:    base,
+			Qual:   1,
+			Filter: ".",
+			Info:   ".",
+			Format: "RefCount:AltCount:Cov"}
 
 		// Ref -> A
 		current.Alt = "A"
@@ -363,9 +364,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				// If the position is in the map move along, else initialize
 				// Subtract 1 from Pos for index 0
-				_, ok := answer[Location{Chr, Pos-1}]
+				_, ok := answer[Location{Chr, Pos - 1}]
 				if !ok {
-					answer[Location{Chr, Pos-1}] = &AlleleCount{
+					answer[Location{Chr, Pos - 1}] = &AlleleCount{
 						Ref:    0,
 						Counts: 0,
 						BaseA:  0,
@@ -375,18 +376,18 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 						Indel:  make([]Indel, 0)}
 				}
 
-				answer[Location{Chr, Pos-1}].Ref = RefSeq[0]
-				answer[Location{Chr, Pos-1}].Counts = int32(Counts)
+				answer[Location{Chr, Pos - 1}].Ref = RefSeq[0]
+				answer[Location{Chr, Pos - 1}].Counts = int32(Counts)
 
 				switch AltSeq[0] {
 				case dna.A:
-					answer[Location{Chr, Pos-1}].BaseA = int32(AltCount)
+					answer[Location{Chr, Pos - 1}].BaseA = int32(AltCount)
 				case dna.C:
-					answer[Location{Chr, Pos-1}].BaseC = int32(AltCount)
+					answer[Location{Chr, Pos - 1}].BaseC = int32(AltCount)
 				case dna.G:
-					answer[Location{Chr, Pos-1}].BaseG = int32(AltCount)
+					answer[Location{Chr, Pos - 1}].BaseG = int32(AltCount)
 				case dna.T:
-					answer[Location{Chr, Pos-1}].BaseT = int32(AltCount)
+					answer[Location{Chr, Pos - 1}].BaseT = int32(AltCount)
 				}
 
 				// If Indel
@@ -407,9 +408,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 				}
 
 				currentIndel = Indel{
-					Ref:       RefSeq,
-					Alt:       AltSeq,
-					Count:     int32(AltCount)}
+					Ref:   RefSeq,
+					Alt:   AltSeq,
+					Count: int32(AltCount)}
 
 				answer[Location{Chr, Pos}].Indel = append(answer[Location{Chr, Pos}].Indel, currentIndel)
 

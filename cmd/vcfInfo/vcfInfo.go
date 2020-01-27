@@ -1,10 +1,10 @@
-package main 
+package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 )
 
 func vcfInfo(filename string) {
@@ -20,7 +20,7 @@ func vcfInfo(filename string) {
 	v := vcf.Read(filename)
 	fmt.Printf("len: %d", len(v))
 
-	for _ ,current := range v {
+	for _, current := range v {
 		if current.Ref == "A" {
 			switch current.Alt {
 			case "N":
@@ -73,7 +73,7 @@ func vcfInfo(filename string) {
 			case "-":
 				TtoGap++
 			}
-		} else if current.Ref =="N" {
+		} else if current.Ref == "N" {
 			switch current.Alt {
 			case "T":
 				NtoT++
@@ -120,9 +120,9 @@ func vcfInfo(filename string) {
 func usage() {
 	fmt.Print(
 		"vcfInfo - Provides summary statistics on an input VCF file.\n" +
-		"Usage:\n" +
-		"vcfInfo file.vcf\n" +
-		"options:\n")
+			"Usage:\n" +
+			"vcfInfo file.vcf\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

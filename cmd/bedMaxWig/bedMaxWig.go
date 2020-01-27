@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/wig"
+	"log"
 )
 
 func bedMaxWig(infile string, database string, chromsizeFile string, outfile string, windowSize int64) {
@@ -25,7 +25,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 
 	for i = 0; i < int64(len(sizes)); i++ {
 		chromSlice = WigChromToSlice(data, sizes[i].Size, sizes[i].Name)
-		for k :=0; k < len(records); k++ {
+		for k := 0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
 				recordLength = records[k].ChromEnd - records[k].ChromStart
@@ -33,12 +33,12 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", sliceRangeAverage(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
 				} else {
 					currentMax = 0
-					for m = 0; m < (recordLength-windowSize+1); m++ {
+					for m = 0; m < (recordLength - windowSize + 1); m++ {
 						currentStart = records[k].ChromStart + int64(m)
-						currentMax = common.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart + windowSize))
+						currentMax = common.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart+windowSize))
 					}
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", currentMax))
-					
+
 				}
 				outlist = append(outlist, currentBed)
 			}
@@ -74,9 +74,9 @@ func sliceRangeAverage(w []float64, start int64, end int64) float64 {
 func usage() {
 	fmt.Print(
 		"bedMaxWig - Returns annotated bed with max wig score in bed entry range.\n" +
-		"Usage:\n" +
-		"bedMaxWig input.bed database.wig chrom.sizes output.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			"bedMaxWig input.bed database.wig chrom.sizes output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

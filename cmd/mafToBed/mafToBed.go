@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/maf"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/maf"
 	"log"
 )
 
 func mafToBed(mafFile string, outBed string, reference string) {
 	mafRecords := maf.Read(mafFile)
-	var bedList []*bed.Bed 
+	var bedList []*bed.Bed
 
 	for i, _ := range mafRecords {
 		for k, _ := range mafRecords[i].Species {
@@ -29,9 +29,9 @@ func mafToBed(mafFile string, outBed string, reference string) {
 func usage() {
 	fmt.Print(
 		"mafToBed - convert a maf alignment into a bed, where the bed score is the alignment score\n" +
-		"Usage:\n" +
-		" mafToBed mafFile outBed referenceSpeciesName\n" +
-		"options:\n")
+			"Usage:\n" +
+			" mafToBed mafFile outBed referenceSpeciesName\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

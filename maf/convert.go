@@ -42,9 +42,9 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 		speciesBlock = FindSpeciesBeforeDot(m, aln[i].Name)
 		if i == 0 {
 			if dna.CompareSeqsIgnoreCaseAndGaps(speciesBlock.SLine.Seq, aln[i].Seq[replaceStart:replaceEnd]) != 0 {
-				log.Fatalf("Error: reference sequence in maf does not match that in the fasta\n" +
-					"%s\n" +
-					"%s\n" +
+				log.Fatalf("Error: reference sequence in maf does not match that in the fasta\n"+
+					"%s\n"+
+					"%s\n"+
 					"%d %d\n",
 					dna.BasesToString(speciesBlock.SLine.Seq),
 					dna.BasesToString(aln[i].Seq[replaceStart:replaceEnd]),

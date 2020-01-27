@@ -14,27 +14,27 @@ import (
 )
 
 type BatchAlleleCount struct {
-	Sample 	string
-	Ref    	dna.Base
-	Counts 	int32
-	BaseA  	int32
-	BaseC  	int32
-	BaseG  	int32
-	BaseT  	int32
-	Indel  	[]Indel
+	Sample string
+	Ref    dna.Base
+	Counts int32
+	BaseA  int32
+	BaseC  int32
+	BaseG  int32
+	BaseT  int32
+	Indel  []Indel
 }
 
 type ScoreInput struct {
-	a				int32
-	b 				int32
-	c 				int32
-	d 				int32
-	loc 			Location
-	inStruct 		*BatchAlleleCount
-	altbase 		string
-	indelslicepos 	int
-	afThreshold 	float64
-	sigThreshold 	float64
+	a             int32
+	b             int32
+	c             int32
+	d             int32
+	loc           Location
+	inStruct      *BatchAlleleCount
+	altbase       string
+	indelslicepos int
+	afThreshold   float64
+	sigThreshold  float64
 }
 
 // Map structure: map[Chromosome]map[Position][Sample]*BatchAlleleCount
@@ -78,7 +78,7 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC + alleles.BaseC
 			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG + alleles.BaseG
 			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT + alleles.BaseT
-			SampleMap[Location{loc.Chr, loc.Pos}][0].Counts =SampleMap[Location{loc.Chr, loc.Pos}][0].Counts + alleles.Counts
+			SampleMap[Location{loc.Chr, loc.Pos}][0].Counts = SampleMap[Location{loc.Chr, loc.Pos}][0].Counts + alleles.Counts
 
 			// Loop through each indel and see if it is already in the background struct, if not then append it
 			for i = 0; i < len(alleles.Indel); i++ {
@@ -129,7 +129,9 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 	var threads int
 	if len(input) < numGoRoutines {
 		threads = len(input)
-	} else {threads = numGoRoutines}
+	} else {
+		threads = numGoRoutines
+	}
 
 	wg.Add(threads)
 	inputChan := make(chan *ScoreInput)
@@ -142,7 +144,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 					return
 				}
 				answer := score(data)
-				if answer != nil{
+				if answer != nil {
 					vcfChannel <- answer
 				}
 			}
@@ -223,13 +225,13 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 			// Generate Scores
 
 			fetInput := ScoreInput{
-				a: 				a[i-1],
-				b: 				b[i-1],
-				afThreshold:	afThreshold,
-				inStruct: 		alleles[i],
-				loc: 			loc,
-				sigThreshold: 	sigThreshold,
-				indelslicepos: 	0}
+				a:             a[i-1],
+				b:             b[i-1],
+				afThreshold:   afThreshold,
+				inStruct:      alleles[i],
+				loc:           loc,
+				sigThreshold:  sigThreshold,
+				indelslicepos: 0}
 
 			if alleles[i].Ref != dna.A {
 				fetInput.c = cA
@@ -286,7 +288,6 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 		close(vcfChannel)
 	}()
 
-
 	close(inputChan)
 	wg.Wait()
 
@@ -298,7 +299,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 }
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
-func score(input *ScoreInput) *vcf.Vcf{
+func score(input *ScoreInput) *vcf.Vcf {
 	var p float64
 	var answer *vcf.Vcf
 
@@ -325,11 +326,11 @@ func score(input *ScoreInput) *vcf.Vcf{
 	}
 	if p < input.sigThreshold {
 		answer = &vcf.Vcf{
-			Chr:     input.loc.Chr,
-			Id:      ".",
-			Qual:    p,
-			Filter:  ".",
-			Format:  "Sample:RefCount:AltCount:Cov",
+			Chr:    input.loc.Chr,
+			Id:     ".",
+			Qual:   p,
+			Filter: ".",
+			Format: "Sample:RefCount:AltCount:Cov",
 			Sample: append(answer.Sample, fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts))}
 
 		switch input.altbase {
