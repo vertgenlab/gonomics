@@ -189,10 +189,10 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 
 				Match = false
 				for j = 0; j < len(AlleleMap[Location{aln.RName, RefIndex}].Indel); j++ {
-					// If they the inserted sequence matches a previously inserted sequence, then increment the count
+					// If the inserted sequence matches a previously inserted sequence, then increment the count
 					// For an insertion, the indelSeq should match the Alt
 					if dna.CompareSeqsIgnoreCase(indelSeq, AlleleMap[Location{aln.RName, RefIndex}].Indel[j].Alt) == 0 &&
-						dna.CompareSeqsIgnoreCase(indelSeq[1:], AlleleMap[Location{aln.RName, RefIndex}].Indel[j].Ref) == 0 {
+						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[Location{aln.RName, RefIndex}].Indel[j].Ref) == 0 {
 						AlleleMap[Location{aln.RName, RefIndex}].Indel[j].Count[0]++
 						if sam.IsForwardRead(aln) == true {
 							AlleleMap[Location{aln.RName, RefIndex}].Indel[j].Count[1]++
@@ -396,8 +396,8 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		var RefSeq []string = make([]string, len(alleles.Indel))
 		var AltSeq []string = make([]string, len(alleles.Indel))
 		var Sindels [][]string = make([][]string, len(alleles.Indel))
-		for i = 0; i < len(alleles.Indel); i++ {
 
+		for i = 0; i < len(alleles.Indel); i++ {
 			RefSeq[i] = dna.BasesToString(alleles.Indel[i].Ref)
 			AltSeq[i] = dna.BasesToString(alleles.Indel[i].Alt)
 
@@ -416,6 +416,10 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 				Info:    ".",
 				Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
 				Sample:	 Sindels[i]}
+
+			if len(alleles.Indel) > 2 {
+				fmt.Println(*current)
+			}
 
 			answer = append(answer, current)
 		}
