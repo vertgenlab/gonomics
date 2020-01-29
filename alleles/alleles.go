@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 )
+
 // TODO: in vcf format multiple possible alleles into a single line
 type AlleleCount struct {
 	Ref    	dna.Base
@@ -30,11 +31,10 @@ type Indel struct {
 	Ref       []dna.Base
 	Alt       []dna.Base
 	Count     []int32
-}
 
 type Location struct {
-	Chr 	string
-	Pos 	int64
+	Chr string
+	Pos int64
 }
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount
@@ -127,12 +127,12 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					// Keep track of deleted sequence
 					indelSeq = append(indelSeq, ref[aln.RName][RefIndex])
 
-					AlleleMap[Location{aln.RName,RefIndex}].Counts++
+					AlleleMap[Location{aln.RName, RefIndex}].Counts++
 					RefIndex++
 				}
 
 				Match = false
-				for j = 0; j < len(AlleleMap[Location{aln.RName,OrigRefIndex}].Indel); j++ {
+				for j = 0; j < len(AlleleMap[Location{aln.RName, OrigRefIndex}].Indel); j++ {
 					// If the deletion has already been seen before, increment the existing entry
 					// For a deletion the indelSeq should match the Ref
 					if dna.CompareSeqsIgnoreCase(indelSeq, AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Ref) == 0 &&
@@ -143,6 +143,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 						} else if sam.IsReverseRead(aln) == true {
 							AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Count[2]++
 						}
+
 						Match = true
 						break
 					}
@@ -489,9 +490,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				// If the position is in the map move along, else initialize
 				// Subtract 1 from Pos for index 0
-				_, ok := answer[Location{Chr, Pos-1}]
+				_, ok := answer[Location{Chr, Pos - 1}]
 				if !ok {
-					answer[Location{Chr, Pos-1}] = &AlleleCount{
+					answer[Location{Chr, Pos - 1}] = &AlleleCount{
 						Ref:    0,
 						Counts: 0,
 						BaseA:  make([]int32, 3),
@@ -501,8 +502,8 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 						Indel:  make([]Indel, 0)}
 				}
 
-				answer[Location{Chr, Pos-1}].Ref = RefSeq[0]
-				answer[Location{Chr, Pos-1}].Counts = int32(Counts)
+				answer[Location{Chr, Pos - 1}].Ref = RefSeq[0]
+				answer[Location{Chr, Pos - 1}].Counts = int32(Counts)
 
 				Alt = make([]int32, 3)
 				Alt[0] = int32(AltCount)

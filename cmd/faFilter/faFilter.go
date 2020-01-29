@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 )
 
 func faFilter(infile string, outfile string, name string) {

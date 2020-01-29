@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"log"
 )
 
-func maxBedUnique (infile string, outfile string) {
+func maxBedUnique(infile string, outfile string) {
 	var records []*bed.Bed = bed.Read(infile)
 	var outlist []*bed.Bed
 	var currentMax *bed.Bed = records[0]
@@ -17,8 +17,8 @@ func maxBedUnique (infile string, outfile string) {
 	for i := 0; i < len(records); i++ {
 		if goingUp {
 			if overlap(currentMax, records[i]) {
-				if (currentMax.Score < records[i].Score) {
-                                currentMax = records[i]
+				if currentMax.Score < records[i].Score {
+					currentMax = records[i]
 				}
 			} else {
 				outlist = append(outlist, currentMax)
@@ -26,7 +26,7 @@ func maxBedUnique (infile string, outfile string) {
 				goingUp = false
 				currentMin = currentMax
 			}
-		} else if (records[i].Score > currentMin.Score) {
+		} else if records[i].Score > currentMin.Score {
 			goingUp = true
 			currentMax = records[i]
 		}
@@ -46,12 +46,12 @@ func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
 }
 
 func usage() {
-        fmt.Print(
-                "maxBedUnique\n" +
-                    "Usage:\n" +
-                    "maxBedUnique input.bed output.bed\n" +
-                    "options:\n")
-        flag.PrintDefaults()
+	fmt.Print(
+		"maxBedUnique\n" +
+			"Usage:\n" +
+			"maxBedUnique input.bed output.bed\n" +
+			"options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
@@ -60,14 +60,14 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-        if len(flag.Args()) != expectedNumArgs {
-                flag.Usage()
-                log.Fatalf("Error: expecting %d arguments, but got %d\n",
-                        expectedNumArgs, len(flag.Args()))
-        }
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(flag.Args()))
+	}
 
-        inFile := flag.Arg(0)
-        outFile := flag.Arg(1)
+	inFile := flag.Arg(0)
+	outFile := flag.Arg(1)
 
 	maxBedUnique(inFile, outFile)
 }

@@ -67,7 +67,6 @@ func seqsContainN(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize in
 	return false
 }
 
-
 func countWindowDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize int) (int, bool) {
 	diff := 0
 	baseCount := 0

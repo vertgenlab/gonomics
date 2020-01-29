@@ -23,7 +23,6 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 	log.Printf("Converting to VCF")
 	datavcf = alleles.AllelesToVcf(data)
 
-
 	if outFile == "stdout" {
 		vcf.PrintVcf(datavcf)
 	} else {
@@ -35,9 +34,9 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 func usage() {
 	fmt.Print(
 		"countAlleles - Returns a vcf of positions with allele counts filtered by coverage and mapping quality.\n" +
-		"Usage:\n" +
-		" countAlleles [options] input.sam \n" +
-		"options:\n")
+			"Usage:\n" +
+			" countAlleles [options] input.sam \n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
