@@ -201,10 +201,10 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 	ext := int(maxScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsFast(seedHash, read, seedLen, true)
+	var seeds []*SeedDev = findSeedsInSlice(seedHash, read, seedLen, true)
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsFast(seedHash, revCompRead, seedLen, false)
+	var revCompSeeds []*SeedDev = findSeedsInSlice(seedHash, revCompRead, seedLen, false)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
 

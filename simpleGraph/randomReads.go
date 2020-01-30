@@ -40,7 +40,7 @@ func RandomReadOneMutation(genome []*Node, readLength int, mutantPos int) *fastq
 	for !readOk {
 		chromIdx = randIntInRange(0, len(genome))
 		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
-		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, int64(start), int64(start+readLength)) == 0 {
+		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			strand = randIntInRange(0, 2) == 0
 			curr := fastq.Fastq{}
 			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
@@ -67,7 +67,7 @@ func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) [
 		chromIdx = randIntInRange(0, len(genome))
 		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
 		strand = randIntInRange(0, 2) == 0
-		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, int64(start), int64(start+readLength)) == 0 {
+		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			curr := fastq.Fastq{}
 			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
@@ -96,7 +96,7 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 		chromIdx = randIntInRange(0, len(genome))
 		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
 		strand = randIntInRange(0, 2) == 0
-		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, int64(start), int64(start+readLength)) == 0 {
+		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			readName = fmt.Sprintf("%s_%d_%d_%c", genome[chromIdx].Name, start, start+readLength, common.StrandToRune(strand))
 			qual = generateFakeQual(readLength)
 			seq = genome[chromIdx].Seq[start : start+readLength]
