@@ -90,22 +90,22 @@ func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 }
 
 func IndexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
-        if seedLen < 2 || seedLen > 32 {
-                log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
-        }
+	if seedLen < 2 || seedLen > 32 {
+		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
+	}
 	answer := make(map[uint64][]*SeedBed)
-        var seqCode uint64
-        var nodeIdx, pos int
-        for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
-                for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
-                        if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
-                                seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
-                                curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
-                                answer[seqCode] = append(answer[seqCode], &curr)
-                        }
-                }
-        }
-        return answer
+	var seqCode uint64
+	var nodeIdx, pos int
+	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
+		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
+				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
+				curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
+				answer[seqCode] = append(answer[seqCode], &curr)
+			}
+		}
+	}
+	return answer
 }
 
 func IndexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]*SeedBed {

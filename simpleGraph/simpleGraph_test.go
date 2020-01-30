@@ -53,10 +53,10 @@ func TestWriteAndRead(t *testing.T) {
 
 func TestAligning(t *testing.T) {
 	var tileSize int = 13
-        var stepSize int = tileSize-1
-        var readLength int = 150
-        var numberOfReads int = 1
-        var mutations int = 0
+	var stepSize int = tileSize - 1
+	var readLength int = 150
+	var numberOfReads int = 1
+	var mutations int = 0
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/bigGenome.sg")
@@ -145,29 +145,29 @@ func TestVcfGraph(t *testing.T) {
 
 func BenchmarkGoRoutinesMap(b *testing.B) {
 	var tileSize int = 32
-	var stepSize int = tileSize-1
+	var stepSize int = tileSize - 1
 	var readLength int = 150
 	var numberOfReads int = 50
 	var mutations int = 0
 
-        genome := Read("testdata/bigGenome.sg")
-        tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-        simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
-        b.ResetTimer()
+	genome := Read("testdata/bigGenome.sg")
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	b.ResetTimer()
 
-        for n := 0; n < b.N; n++ {
-                for i := 0; i < len(simReads); i++ {
-                        wrapNoChanMap(genome, simReads[i], tiles, tileSize)
-                }
-        }
+	for n := 0; n < b.N; n++ {
+		for i := 0; i < len(simReads); i++ {
+			wrapNoChanMap(genome, simReads[i], tiles, tileSize)
+		}
+	}
 }
 
 func BenchmarkGoRoutinesSlice(b *testing.B) {
 	var tileSize int = 12
-        var stepSize int = tileSize-1
-        var readLength int = 150
-        var numberOfReads int = 50
-        var mutations int = 0
+	var stepSize int = tileSize - 1
+	var readLength int = 150
+	var numberOfReads int = 50
+	var mutations int = 0
 
 	genome := Read("testdata/bigGenome.sg")
 	tiles := IndexGenomeIntoSlice(genome.Nodes, tileSize, stepSize)
