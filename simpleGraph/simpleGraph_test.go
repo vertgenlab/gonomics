@@ -3,18 +3,14 @@ package simpleGraph
 import (
 	"flag"
 	"fmt"
-	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"os"
 	"runtime"
 	"runtime/pprof"
 	"testing"
-	//"sync"
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -55,24 +51,21 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }*/
 
-var tileSize int = 14
-var stepSize int = 13
-var readLength int = 150
-var numberOfReads int = 1000
-var mutations int = 0
-
 func TestAligning(t *testing.T) {
-	numberOfReads = 1
+	var tileSize int = 13
+	var stepSize int = tileSize - 1
+	var readLength int = 150
+	var numberOfReads int = 1
+	var mutations int = 0
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/bigGenome.sg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := IndexGenomeDev(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeIntoSlice(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
-	m, trace := swMatrixSetup(10000)
 
 	//code block for program profiling
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
@@ -97,7 +90,7 @@ func TestAligning(t *testing.T) {
 	//c := make(chan *sam.SamAln)
 	for i := 0; i < len(simReads); i++ {
 		//mappedRead = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
-		go wrapNoChan(genome, simReads[i], tiles, tileSize, m, trace)
+		go wrapNoChan(genome, simReads[i], tiles, tileSize)
 		//fmt.Printf("%s\n", sam.SamAlnToString(<-c))
 		//devGSWsBatch(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace, 400)
 		//mappedRead = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
@@ -150,36 +143,41 @@ func TestVcfGraph(t *testing.T) {
 	vcf.Write("anotherTesting.vcf", vcfTest)
 }
 
-func BenchmarkGoRoutines(b *testing.B) {
-	//var mappedReads []*sam.SamAln = make([]*sam.SamAln, numberOfReads)
-	numberOfReads = 10
+func BenchmarkGoRoutinesMap(b *testing.B) {
+	var tileSize int = 32
+	var stepSize int = tileSize - 1
+	var readLength int = 150
+	var numberOfReads int = 50
+	var mutations int = 0
+
 	genome := Read("testdata/bigGenome.sg")
-	//tiles := indexGenome(genome.Nodes, tileSize)
-	tiles := IndexGenomeDev(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
-	fastq.Write("testdata/fakeReads.fastq", simReads)
-	//var seeds []Seed = make([]Seed, 256)
-	//m, trace := swMatrixSetup(10000)
-	//var seeds []Seed = make([]Seed, 256)
 	b.ResetTimer()
 
-	c := make(chan *sam.SamAln)
-	//var mappedRead *sam.SamAln
 	for n := 0; n < b.N; n++ {
 		for i := 0; i < len(simReads); i++ {
-			go wrap(genome, simReads[i], tiles, tileSize, c)
+			wrapNoChanMap(genome, simReads[i], tiles, tileSize)
 		}
-		//out, _ := os.Create("simReads.sam")
-		//defer out.Close()
-		//header := NodesHeader(genome.Nodes)
-		//sam.WriteHeaderToFileHandle(out, header)
-		for j := 0; j < len(simReads); j++ {
-			mappedRead := <-c
-			//sam.WriteAlnToFileHandle(out, mappedRead)
-			log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+	}
+}
+
+func BenchmarkGoRoutinesSlice(b *testing.B) {
+	var tileSize int = 12
+	var stepSize int = tileSize - 1
+	var readLength int = 150
+	var numberOfReads int = 50
+	var mutations int = 0
+
+	genome := Read("testdata/bigGenome.sg")
+	tiles := IndexGenomeIntoSlice(genome.Nodes, tileSize, stepSize)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		for i := 0; i < len(simReads); i++ {
+			wrapNoChan(genome, simReads[i], tiles, tileSize)
 		}
-		//devGSWsBatch(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace, 400)
-		//noLimitGSW(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace)
 	}
 }
 
