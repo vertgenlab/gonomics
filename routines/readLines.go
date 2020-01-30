@@ -9,7 +9,7 @@ import (
 
 type SamOperation func(*sam.SamAln, interface{}) interface{}
 
-func goReadSam(samFilename string, sendLine chan *sam.SamAln, fileType string) {
+func goReadSam(samFilename string, sendLine chan *sam.SamAln) {
 	samFile := fileio.EasyOpen(samFilename)
 	defer samFile.Close()
 	var done = false
@@ -31,12 +31,12 @@ func goReadSam(samFilename string, sendLine chan *sam.SamAln, fileType string) {
 	close(sendLine)
 }
 
-func ReadByLine(samFilename string, function SamOperation, data1 interface{}, threads int, fileType string) chan interface{}{
+func ReadByLine(samFilename string, function SamOperation, data1 interface{}, threads int) chan interface{}{
 	var wg sync.WaitGroup
 	records := make(chan *sam.SamAln)
 	output := make(chan interface{})
 
-	go goReadSam(samFilename, records, fileType)
+	go goReadSam(samFilename, records)
 
 	for k := 0; k < threads; k++ {
 		wg.Add(1)
@@ -58,10 +58,3 @@ func ReadByLine(samFilename string, function SamOperation, data1 interface{}, th
 	return output
 }
 
-
-
-func ReadPos(read *sam.SamAln, data1 interface{}) interface{} {
-	var data = data1.(*input)
-	data.a = 9
-	return read.Seq
-}
