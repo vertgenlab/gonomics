@@ -9,20 +9,6 @@ import (
 	"sync"
 )
 
-func NextSamLine(reader *fileio.EasyReader) (interface{}, bool) {
-	_, err := reader.Peek(1)
-	if err != io.EOF {sam.ReadHeader(reader)}
-	return sam.NextAlignment(reader)
-}
-
-func NextVcfLine(reader *fileio.EasyReader) (interface{}, bool) {
-	return vcf.NextVcf(reader)
-}
-
-func NextString(reader *fileio.EasyReader) (interface{}, bool) {
-	return fileio.EasyNextLine(reader)
-}
-
 type Operation func(interface{}, interface{}) interface{}
 
 type NextLine func(reader *fileio.EasyReader) (interface{}, bool)
@@ -44,7 +30,7 @@ func goReadFile(filename string, sendLine chan interface{}, fnNext NextLine) {
 	close(sendLine)
 }
 
-func ReadByLine(filename string, dataStructure interface{}, fnWork Operation, fnNext NextLine, threads int) chan interface{} {
+func GoWorkOnLine(filename string, dataStructure interface{}, fnWork Operation, fnNext NextLine, threads int) chan interface{} {
 	var wg sync.WaitGroup
 	records := make(chan interface{})
 	output := make(chan interface{})
@@ -71,3 +57,21 @@ func ReadByLine(filename string, dataStructure interface{}, fnWork Operation, fn
 	return output
 }
 
+func Wait(channel chan interface{}) {
+	for range channel {}
+}
+
+// Wrappers for next line functions
+func NextSamLine(reader *fileio.EasyReader) (interface{}, bool) {
+	_, err := reader.Peek(1)
+	if err != io.EOF {sam.ReadHeader(reader)}
+	return sam.NextAlignment(reader)
+}
+
+func NextVcfLine(reader *fileio.EasyReader) (interface{}, bool) {
+	return vcf.NextVcf(reader)
+}
+
+func NextString(reader *fileio.EasyReader) (interface{}, bool) {
+	return fileio.EasyNextLine(reader)
+}
