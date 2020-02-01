@@ -830,11 +830,12 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 
 func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threads int) SampleMap {
 	//TODO: Remove following 2 lines, only for benchmarking
-	start := time.Now()
 
 	// Read in reference
 	fmt.Printf("#Reading Reference\n")
 	ref := refToMap(refFilename)
+
+	start := time.Now()
 
 	// Initialize empty map of chromosomes to map of positions
 	AlleleMap := sync.Map{}
@@ -843,9 +844,9 @@ func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threa
 	channel := routines.GoWorkOnLine(samFilename, input, goCountAlleles, routines.NextSamLine, threads)
 	routines.Wait(channel)
 
-	answer := safeMapToMap(AlleleMap)
-
 	fmt.Println(time.Since(start))
+
+	answer := safeMapToMap(AlleleMap)
 	return answer
 }
 
