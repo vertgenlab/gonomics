@@ -640,7 +640,7 @@ func getPos(matrix *sync.Map, key Location, ref RefMap) *AlleleCount{
 		BaseT: make([]int32, 3),
 		Indel: make([]Indel, 0)}
 
-	result, a := matrix.LoadOrStore(key, current)
+	result, _ := matrix.LoadOrStore(key, current)
 	currentAlleles := result.(*AlleleCount)
 	return currentAlleles
 }
