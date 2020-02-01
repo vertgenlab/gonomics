@@ -69,7 +69,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 
 	//TODO: Remove following 2 lines, only for benchmarking
 	start := time.Now()
-	defer fmt.Println(time.Since(start))
 
 	var i, k int32
 	var j int
@@ -282,7 +281,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 			}
 		}
 	}
-
+	fmt.Println(time.Since(start))
 	return AlleleMap
 }
 
@@ -832,7 +831,6 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threads int) SampleMap {
 	//TODO: Remove following 2 lines, only for benchmarking
 	start := time.Now()
-	defer fmt.Println(time.Since(start))
 
 	// Read in reference
 	fmt.Printf("#Reading Reference\n")
@@ -846,6 +844,8 @@ func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threa
 	routines.Wait(channel)
 
 	answer := safeMapToMap(AlleleMap)
+
+	fmt.Println(time.Since(start))
 	return answer
 }
 
