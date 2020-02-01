@@ -641,7 +641,6 @@ func getPos(matrix *sync.Map, key Location, ref RefMap) *AlleleCount{
 		Indel: make([]Indel, 0)}
 
 	result, a := matrix.LoadOrStore(key, current)
-	if a {fmt.Println("ENTRY EXISTS")}
 	currentAlleles := result.(*AlleleCount)
 	return currentAlleles
 }
