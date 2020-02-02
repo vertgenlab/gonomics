@@ -1,16 +1,15 @@
 package simpleGraph
 
 import (
-	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"testing"
+	"time"
 )
 
 var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
@@ -51,67 +50,100 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }*/
 
-func TestAligning(t *testing.T) {
-	var tileSize int = 13
+func TestWorkerWithTiming(t *testing.T) {
+	//var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
+	var tileSize int = 32
 	var stepSize int = tileSize - 1
+	var numberOfReads int = 20000
 	var readLength int = 150
-	var numberOfReads int = 1
 	var mutations int = 0
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/bigGenome.sg")
+	genome := Read("testdata/gasAcu1.fa")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := IndexGenomeIntoSlice(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, numberOfReads)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, numberOfReads)
+
+	log.Printf("Simulating reads...\n")
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	alignments := make([]*sam.SamAln, numberOfReads)
+
+	log.Printf("Starting alignment worker...\n")
+	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe)
+
+	log.Printf("Waiting for 10 seconds and then aligning reads...\n")
+	time.Sleep(10 * time.Second)
+
+	start := time.Now()
+	for i := 0; i < numberOfReads; i++ {
+		fastqPipe <- simReads[i]
+	}
+	for j := 0; j < numberOfReads; j++ {
+		alignments[j] = <-samPipe
+	}
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(alignments), duration, float64(len(alignments))/duration.Seconds())
+}
+
+func BenchmarkHippoAln(b *testing.B) {
+	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
+	var tileSize int = 32
+	var stepSize int = tileSize - 1
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read("testdata/gasAcu1.fa")
+
+	log.Printf("Indexing the genome...\n")
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+
+	log.Printf("Aligning reads...\n")
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		start := time.Now()
+		wrapNoChanMap(genome, hippo, tiles, tileSize, stepSize)
+		end := time.Now()
+		duration := end.Sub(start)
+		log.Printf("duration:%s\n", duration)
+	}
+}
+
+func TestAligning(t *testing.T) {
+	var tileSize int = 32
+	var stepSize int = tileSize - 1
+	var readLength int = 150
+	var numberOfReads int = 50
+	var mutations int = 0
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read("testdata/gasAcu1.fa")
+
+	log.Printf("Indexing the genome...\n")
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 
-	//code block for program profiling
-	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-	var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close()
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
-
 	log.Printf("Aligning reads...\n")
-	//fastq.Write("testdata/fakeReads.fastq", simReads)
-	//var mappedRead *sam.SamAln
-	//c := make(chan *sam.SamAln)
+
+	start := time.Now()
 	for i := 0; i < len(simReads); i++ {
-		//mappedRead = MapSingleFastq(genome.Nodes, tiles, simReads[i], tileSize, m, trace)
-		go wrapNoChan(genome, simReads[i], tiles, tileSize)
-		//fmt.Printf("%s\n", sam.SamAlnToString(<-c))
-		//devGSWsBatch(genome, "testdata/fakeReads.fastq", tiles, tileSize, m, trace, 400)
-		//mappedRead = GraphSmithWaterman(genome, simReads[i], tiles, tileSize, m, trace)
-		//fmt.Printf("%s\n", sam.SamAlnToString(mappedRead))
+		before := time.Now()
+		wrapNoChanMap(genome, simReads[i], tiles, tileSize, stepSize)
+		after := time.Now()
+		timeForOne := after.Sub(before)
+		log.Printf("It took %s to map the last read\n", timeForOne)
 	}
+	stop := time.Now()
+	elapsed := stop.Sub(start)
 
-	log.Printf("Done mapping %d reads\n", numberOfReads)
-	//PrintGraph(genome)
-
-	//code block for program profiling
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close()
-		runtime.GC() // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
+	log.Printf("It took %s to map %d reads\n", elapsed, numberOfReads)
 }
 
 func TestVcfGraph(t *testing.T) {
@@ -157,7 +189,7 @@ func BenchmarkGoRoutinesMap(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for i := 0; i < len(simReads); i++ {
-			wrapNoChanMap(genome, simReads[i], tiles, tileSize)
+			wrapNoChanMap(genome, simReads[i], tiles, tileSize, stepSize)
 		}
 	}
 }

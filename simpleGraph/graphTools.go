@@ -8,10 +8,9 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"strings"
-	//"runtime"
-	//"sync"
 	"os"
+	"strings"
+	"time"
 )
 
 //TODO: add check to make sure reference names in VCF match fasta reference
@@ -63,7 +62,7 @@ func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *Simple
 	return sg
 }
 
-func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
+func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
@@ -77,14 +76,19 @@ func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[ui
 	}
 	ext := int(maxScore/600) + len(read.Seq)
 
+	//seedStart := time.Now()
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInMap(seedHash, read, seedLen, true)
+	var seeds []*SeedDev = findSeedsInMap(seedHash, read, seedLen, stepSize, true)
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInMap(seedHash, revCompRead, seedLen, false)
+	var revCompSeeds []*SeedDev = findSeedsInMap(seedHash, revCompRead, seedLen, stepSize, false)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
+	//seedEnd := time.Now()
+	//seedDuration := seedEnd.Sub(seedStart)
+	//log.Printf("Have %d seeds, where best is of length %d, and it took %s\n", len(seeds), seeds[0].Length, seedDuration)
 
+	//swStart := time.Now()
 	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		if seeds[i].PosStrand {
 			currRead = read
@@ -111,6 +115,9 @@ func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[ui
 			currBest.Extra = PathToString(bestPath, gg)
 		}
 	}
+	//swEnd := time.Now()
+	//duration := swEnd.Sub(swStart)
+	//log.Printf("sw took %s\n", duration)
 	return &currBest
 }
 
@@ -369,10 +376,10 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 
 }
 
-func wrapMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, c chan *sam.SamAln) {
+func wrapMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, c chan *sam.SamAln) {
 	var mappedRead *sam.SamAln
 	m, trace := swMatrixSetup(10000)
-	mappedRead = goGraphSmithWatermanMap(ref, r, seedHash, seedLen, m, trace)
+	mappedRead = goGraphSmithWatermanMap(ref, r, seedHash, seedLen, stepSize, m, trace)
 	c <- mappedRead
 	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
@@ -385,11 +392,17 @@ func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, 
 	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
 
-func wrapNoChanMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int) {
+func wrapNoChanMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int) {
 	var mappedRead *sam.SamAln
+	startOne := time.Now()
 	m, trace := swMatrixSetup(10000)
-	mappedRead = goGraphSmithWatermanMap(ref, r, seedHash, seedLen, m, trace)
-	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+	stopOne := time.Now()
+	durationOne := stopOne.Sub(startOne)
+	startTwo := time.Now()
+	mappedRead = goGraphSmithWatermanMap(ref, r, seedHash, seedLen, stepSize, m, trace)
+	stopTwo := time.Now()
+	durationTwo := stopTwo.Sub(startTwo)
+	log.Printf("%s %s %s\n", sam.SamAlnToString(mappedRead), durationOne, durationTwo)
 }
 
 func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int) {

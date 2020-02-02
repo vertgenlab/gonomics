@@ -112,22 +112,25 @@ func mergeSeedLists(lastPosition []*SeedDev, currPosition []*SeedBed, currQPos u
 }
 
 // need to handle neg strand
-func findSeedsInMap(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, posStrand bool) []*SeedDev {
+func findSeedsInMap(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0
 	var prevHits []*SeedDev = make([]*SeedDev, 0)
 	var allHits []*SeedDev = make([]*SeedDev, 0)
-	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
-		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
-			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
-			//fmt.Printf("Coded seq is:%d, seedLength:%d\n", codedSeq, seedLen)
-			currHits := seedHash[codedSeq]
-			noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), posStrand)
-			allHits = append(allHits, noMerge...)
-			prevHits = merged
+	for initOffset := 0; initOffset < stepSize; initOffset++ {
+		for subSeqStart := initOffset; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart += stepSize {
+			if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
+				codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
+				//fmt.Printf("Coded seq is:%d, seedLength:%d\n", codedSeq, seedLen)
+				currHits := seedHash[codedSeq]
+				//log.Printf("At position %d, we found %d hits.\n", subSeqStart, len(currHits))
+				noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), posStrand)
+				allHits = append(allHits, noMerge...)
+				prevHits = merged
+			}
 		}
-
+		allHits = append(allHits, prevHits...)
 	}
-	allHits = append(allHits, prevHits...)
+	//log.Printf("Total of %d hits.\n", len(allHits))
 	return allHits
 }
 
