@@ -30,7 +30,7 @@ func goReadFile(filename string, sendLine chan interface{}, fnNext NextLine) {
 	close(sendLine)
 }
 
-func GoWorkOnLine(filename string, dataStructure interface{}, fnWork Operation, fnNext NextLine, threads int) chan interface{} {
+func GoWorkOnLine(filename string, dataStructure interface{}, fnWork Operation, fnNext NextLine, threads int) (chan interface{}, sync.WaitGroup) {
 	var wg sync.WaitGroup
 	records := make(chan interface{})
 	output := make(chan interface{})
@@ -54,7 +54,7 @@ func GoWorkOnLine(filename string, dataStructure interface{}, fnWork Operation, 
 		close(output)
 	}()
 
-	return output
+	return output, wg
 }
 
 func Wait(channel chan interface{}) {
