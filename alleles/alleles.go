@@ -91,7 +91,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	var progressMeter int32
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 
-		if progressMeter%500000 == 0 {
+		if progressMeter%10000 == 0 {
 			log.Printf("#Read %d Alignments\n", progressMeter)
 		}
 		progressMeter++
@@ -624,41 +624,126 @@ func FindMinorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) i
 
 // Count Alleles with Go Routines
 type GoCountInput struct {
-	matrix	*sync.Map
+	matrix	*SafeMap
 	Ref 	RefMap
 	MapQT	int64
 }
 
-func getPos(matrix *sync.Map, key Location, ref RefMap) *AlleleCount{
-	current := &AlleleCount{
-		Ref: ref[key.Chr][key.Pos],
-		Counts: 0,
-		BaseA: make([]int32, 3),
-		BaseC: make([]int32, 3),
-		BaseG: make([]int32, 3),
-		BaseT: make([]int32, 3),
-		Indel: make([]Indel, 0)}
+type SafeMap struct {
+	m 	SampleMap
+	mux sync.Mutex
+}
 
-	result, _ := matrix.LoadOrStore(key, current)
-	currentAlleles := result.(*AlleleCount)
-	return currentAlleles
+func getPos(matrix *SafeMap, key Location, ref RefMap) {
+	//matrix.mux.Lock()
+	_, ok := matrix.m[key]
+	if !ok {
+		current := &AlleleCount{
+			Ref: ref[key.Chr][key.Pos],
+			Counts: 0,
+			BaseA: make([]int32, 3),
+			BaseC: make([]int32, 3),
+			BaseG: make([]int32, 3),
+			BaseT: make([]int32, 3),
+			Indel: make([]Indel, 0)}
+
+		matrix.m[key] = current
+	}
+	//matrix.mux.Unlock()
+}
+
+func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup) {//, writeMap *SafeMap) {
+	//start := time.Now()
+	//writeMap.mux.Lock()
+	defer wg.Done()
+	writeMap := make(SampleMap)
+// TODO: figure out how to recieve multiple maps without ending up in a deadlock for listening on input
+	for readMap := range input {
+
+		for key, value := range readMap {
+			_, ok := writeMap[key]
+			if !ok {
+				writeMap[key] = value
+			} else {
+				writeMap[key].Counts = writeMap[key].Counts + readMap[key].Counts
+				writeMap[key].BaseA = addSlice(writeMap[key].BaseA, readMap[key].BaseA)
+				writeMap[key].BaseC = addSlice(writeMap[key].BaseC, readMap[key].BaseC)
+				writeMap[key].BaseG = addSlice(writeMap[key].BaseG, readMap[key].BaseG)
+				writeMap[key].BaseT = addSlice(writeMap[key].BaseT, readMap[key].BaseT)
+				addIndels(writeMap[key], readMap[key])
+			}
+		}
+
+	}
+	output <- writeMap
+	//fmt.Println("Write took", time.Since(start))
+	//writeMap.mux.Unlock()
+}
+
+func mergeMaps(a SampleMap, b SampleMap) SampleMap {
+		for key, value := range b {
+			_, ok := a[key]
+			if !ok {
+				a[key] = value
+			} else {
+				a[key].Counts = a[key].Counts + b[key].Counts
+				a[key].BaseA = addSlice(a[key].BaseA, b[key].BaseA)
+				a[key].BaseC = addSlice(a[key].BaseC, b[key].BaseC)
+				a[key].BaseG = addSlice(a[key].BaseG, b[key].BaseG)
+				a[key].BaseT = addSlice(a[key].BaseT, b[key].BaseT)
+				addIndels(a[key], b[key])
+			}
+		}
+	return a
+}
+
+func addIndels(write *AlleleCount, read *AlleleCount) {
+	var Match bool
+	var i, j int
+
+	Match = false
+	for i = 0; i < len(read.Indel); i++ {
+		for j = 0; j < len(write.Indel); j++ {
+			// If the deletion has already been seen before, increment the existing entry
+			// For a deletion the indelSeq should match the Ref
+			if dna.CompareSeqsIgnoreCase(read.Indel[i].Ref, write.Indel[j].Ref) == 0 &&
+				dna.CompareSeqsIgnoreCase(read.Indel[i].Alt, write.Indel[j].Alt) == 0{
+				write.Indel[j].Count = addSlice(write.Indel[j].Count, read.Indel[i].Count)
+				Match = true
+				break
+			}
+		}
+
+		if Match == false {
+			write.Indel = append(write.Indel, read.Indel[i])
+		}
+	}
+}
+
+func addSlice(a []int32, b []int32) []int32{
+	c := make([]int32, len(a))
+	for i := 0; i < len(a); i++ {
+		c[i] = a[i] + b[i]
+	}
+	return c
 }
 
 func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 	aln := samRecord.(*sam.SamAln)
 	data := input.(*GoCountInput)
-	AlleleMap := data.matrix
 	ref := data.Ref
 	minMapQ := data.MapQT
 
+	//start := time.Now()
+
+	answer := make(SampleMap)
+
 	var i, k int32
-	var j int
 	var RefIndex, SeqIndex int64
 	var currentSeq []dna.Base
 	var currentIndel Indel
 	var indelSeq []dna.Base
 	var OrigRefIndex int64
-	var Match bool
 
 	// If read is unmapped then go to the next alignment
 	if aln.Cigar[0].Op == '*' {
@@ -688,51 +773,46 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 
 			for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
 
-				currentAlleles := getPos(AlleleMap, Location{aln.RName, RefIndex}, ref)
+				loc := Location{aln.RName,RefIndex}
+				answer[loc] = &AlleleCount{
+					Ref: ref[aln.RName][RefIndex],
+					Counts: 1,
+					BaseA: make([]int32, 3),
+					BaseC: make([]int32, 3),
+					BaseG: make([]int32, 3),
+					BaseT: make([]int32, 3),
+					Indel: make([]Indel, 0)}
 
 				// Keep track of deleted sequence
 				indelSeq = append(indelSeq, ref[aln.RName][RefIndex])
-				currentAlleles.Counts++
 				RefIndex++
 			}
 
-			currentAlleles := getPos(AlleleMap, Location{aln.RName, OrigRefIndex}, ref)
-			Match = false
-			for j = 0; j < len(currentAlleles.Indel); j++ {
-				// If the deletion has already been seen before, increment the existing entry
-				// For a deletion the indelSeq should match the Ref
-				if dna.CompareSeqsIgnoreCase(indelSeq, currentAlleles.Indel[j].Ref) == 0 &&
-					dna.CompareSeqsIgnoreCase(indelSeq[:1], currentAlleles.Indel[j].Alt) == 0{
-					currentAlleles.Indel[j].Count[0]++
-					if sam.IsForwardRead(aln) == true {
-						currentAlleles.Indel[j].Count[1]++
-					} else if sam.IsReverseRead(aln) == true {
-						currentAlleles.Indel[j].Count[2]++
-					}
-					Match = true
-					break
-				}
+			loc := Location{aln.RName,OrigRefIndex}
+
+			currentIndel = Indel{indelSeq, indelSeq[:1], make([]int32, 3)}
+			currentIndel.Count[0]++
+			if sam.IsForwardRead(aln) == true {
+				currentIndel.Count[1]++
+			} else if sam.IsReverseRead(aln) == false {
+				currentIndel.Count[2]++
 			}
 
-			// If the deletion has not been seen before, then append it to the Del slice
-			// For Alt indelSeq[:1] is used to give me a slice of just the first base in the slice which we defined earlier
-			if Match == false {
-
-				currentIndel = Indel{indelSeq, indelSeq[:1], make([]int32, 3)}
-				currentIndel.Count[0]++
-				if sam.IsForwardRead(aln) == true {
-					currentIndel.Count[1]++
-				} else if sam.IsReverseRead(aln) == false {
-					currentIndel.Count[2]++
-				}
-				currentAlleles.Indel = append(currentAlleles.Indel, currentIndel)
-			}
+			answer[loc].Indel = append(answer[loc].Indel, currentIndel)
 
 			//Handle insertion relative to ref
 			//The base after the inserted sequence is annotated with an Ins read
 		} else if aln.Cigar[i].Op == 'I' {
 
-			currentAlleles := getPos(AlleleMap, Location{aln.RName, RefIndex}, ref)
+			loc := Location{aln.RName,RefIndex}
+			answer[loc] = &AlleleCount{
+				Ref: ref[aln.RName][RefIndex],
+				Counts: 0,
+				BaseA: make([]int32, 3),
+				BaseC: make([]int32, 3),
+				BaseG: make([]int32, 3),
+				BaseT: make([]int32, 3),
+				Indel: make([]Indel, 0)}
 
 			// Loop through read sequence and keep track of the inserted bases
 			indelSeq = make([]dna.Base, 1)
@@ -746,33 +826,15 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 				SeqIndex++
 			}
 
-			Match = false
-			for j = 0; j < len(currentAlleles.Indel); j++ {
-				// If the inserted sequence matches a previously inserted sequence, then increment the count
-				// For an insertion, the indelSeq should match the Alt
-				if dna.CompareSeqsIgnoreCase(indelSeq, currentAlleles.Indel[j].Alt) == 0 &&
-					dna.CompareSeqsIgnoreCase(indelSeq[:1], currentAlleles.Indel[j].Ref) == 0 {
-					currentAlleles.Indel[j].Count[0]++
-					if sam.IsForwardRead(aln) == true {
-						currentAlleles.Indel[j].Count[1]++
-					} else if sam.IsReverseRead(aln) == true {
-						currentAlleles.Indel[j].Count[2]++
-					}
-					Match = true
-					break
-				}
+			currentIndel = Indel{indelSeq[:1], indelSeq, make([]int32, 3)}
+			currentIndel.Count[0]++
+			if sam.IsForwardRead(aln) == true {
+				currentIndel.Count[1]++
+			} else if sam.IsReverseRead(aln) == true {
+				currentIndel.Count[2]++
 			}
 
-			if Match == false {
-				currentIndel = Indel{indelSeq[:1], indelSeq, make([]int32, 3)}
-				currentIndel.Count[0]++
-				if sam.IsForwardRead(aln) == true {
-					currentIndel.Count[1]++
-				} else if sam.IsReverseRead(aln) == true {
-					currentIndel.Count[2]++
-				}
-				currentAlleles.Indel = append(currentAlleles.Indel, currentIndel)
-			}
+			answer[loc].Indel = append(answer[loc].Indel, currentIndel)
 
 			// Note: Insertions do not contribute to the total counts as the insertion is associated with the previous reference base
 
@@ -781,41 +843,49 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 
 			for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
 
-				currentAlleles := getPos(AlleleMap, Location{aln.RName, RefIndex}, ref)
+				loc := Location{aln.RName,RefIndex}
+				answer[loc] = &AlleleCount{
+					Ref: ref[aln.RName][RefIndex],
+					Counts: 0,
+					BaseA: make([]int32, 3),
+					BaseC: make([]int32, 3),
+					BaseG: make([]int32, 3),
+					BaseT: make([]int32, 3),
+					Indel: make([]Indel, 0)}
 
 				switch currentSeq[SeqIndex] {
 				case dna.A:
 					if sam.IsForwardRead(aln) == true {
-						currentAlleles.BaseA[1]++
+						answer[loc].BaseA[1]++
 					} else if sam.IsReverseRead(aln) == true {
-						currentAlleles.BaseA[2]++
+						answer[loc].BaseA[2]++
 					}
-					currentAlleles.BaseA[0]++
-					currentAlleles.Counts++
+					answer[loc].BaseA[0]++
+					answer[loc].Counts++
 				case dna.T:
 					if sam.IsForwardRead(aln) == true {
-						currentAlleles.BaseT[1]++
+						answer[loc].BaseT[1]++
 					} else if sam.IsReverseRead(aln) == true {
-						currentAlleles.BaseT[2]++
+						answer[loc].BaseT[2]++
 					}
-					currentAlleles.BaseT[0]++
-					currentAlleles.Counts++
+					answer[loc].BaseT[0]++
+					answer[loc].Counts++
 				case dna.G:
 					if sam.IsForwardRead(aln) == true {
-						currentAlleles.BaseG[1]++
+						answer[loc].BaseG[1]++
 					} else if sam.IsReverseRead(aln) == true {
-						currentAlleles.BaseG[2]++
+						answer[loc].BaseG[2]++
 					}
-					currentAlleles.BaseG[0]++
-					currentAlleles.Counts++
+					answer[loc].BaseG[0]++
+					answer[loc].Counts++
 				case dna.C:
 					if sam.IsForwardRead(aln) == true {
-						currentAlleles.BaseC[1]++
+						answer[loc].BaseC[1]++
 					} else if sam.IsReverseRead(aln) == true {
-						currentAlleles.BaseC[2]++
+						answer[loc].BaseC[2]++
 					}
-					currentAlleles.BaseC[0]++
-					currentAlleles.Counts++
+					answer[loc].BaseC[0]++
+					answer[loc].Counts++
 				}
 
 				SeqIndex++
@@ -825,7 +895,9 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 			SeqIndex = SeqIndex + aln.Cigar[i].RunLength
 		}
 	}
-	return nil
+	//writeToMap(answer, data.matrix)
+	//fmt.Println("Read took", time.Since(start))
+	return answer
 }
 
 func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threads int) SampleMap {
@@ -838,16 +910,49 @@ func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threa
 	start := time.Now()
 
 	// Initialize empty map of chromosomes to map of positions
-	AlleleMap := sync.Map{}
-	input := &GoCountInput{&AlleleMap, ref, minMapQ}
+	AlleleMap := make(SampleMap)
 
-	channel := routines.GoWorkOnLine(samFilename, input, goCountAlleles, routines.NextSamLine, threads)
-	routines.Wait(channel)
+	input := &GoCountInput{&SafeMap{m: AlleleMap}, ref, minMapQ}
 
-	fmt.Println(time.Since(start))
+	channel, _ := routines.GoWorkOnLine(samFilename, input, goCountAlleles, routines.NextSamLine, threads)
 
-	answer := safeMapToMap(AlleleMap)
-	return answer
+	interMaps := 20
+
+	sendMap := make(chan SampleMap)
+	recieveMap := make(chan SampleMap, interMaps)
+
+	var wg sync.WaitGroup
+	for i := 0; i < interMaps; i++ {
+		wg.Add(1)
+		go writeToMap(sendMap, recieveMap, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(recieveMap)
+	}()
+
+	for j := range channel {
+		if j != nil {
+			data := j.(SampleMap)
+			sendMap <- data
+		}
+	}
+	close(sendMap)
+
+	fmt.Println("Up to Merge", time.Since(start))
+
+	//answer := mergeMaps(<-recieveMap, <-recieveMap)
+	wg.Wait()
+	for k := range recieveMap {
+		AlleleMap = mergeMaps(AlleleMap, k)
+	}
+
+
+	//routines.Wait(channel)
+	fmt.Println("Completely Finished", time.Since(start))
+
+	return AlleleMap
 }
 
 func safeMapToMap(mSafe sync.Map) SampleMap {
