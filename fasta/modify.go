@@ -31,6 +31,21 @@ func RemoveGaps(records []*Fasta) []*Fasta {
 	return records
 }
 
+func RefPosToAlnPos(record *Fasta, RefPos int64) int64 {
+	var AlnPos int64 = 0
+	var refCounter int64 = 0
+
+	for t := 0; refCounter < RefPos; t++ {
+		AlnPos++
+		if t == len(record.Seq) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if record.Seq[t] != dna.Gap {
+			refCounter++
+		}
+	}
+	return AlnPos
+}
+
 func FilterName(records []*Fasta, name string) []*Fasta {
 	for i := 0; i < len(records); {
 		fmt.Printf("i: %d. len: %d\n", i, len(records))

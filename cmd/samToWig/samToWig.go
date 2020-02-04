@@ -6,30 +6,46 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
-	"github.com/vertgenlab/gonomics/common"
+	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
 
-func samToWig(infile string, reference string, outfile string, paired bool, fragLength int64) {
+func samToWig(samFileName string, reference string, outfile string, paired bool, fragLength int64) {
 	log.Printf("Paired: %t\n", paired)
 	log.Printf("fragLength: %d\n", fragLength)
 	if paired && fragLength != int64(-1) {
 		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
 	}
-
-	records, err := sam.Read(infile)
-	common.ExitIfError(err)
+	
 	ref := chromInfo.ReadToMap(reference)
-
+	
+	samFile := fileio.EasyOpen(samFileName)
+	defer samFile.Close()
+	var done bool = false
+	//sam.ReadHeader(samFile)
 	var outBed []*bed.Bed
+	var aln *sam.SamAln
+
+	//records, err := sam.Read(infile)    old version
+	//common.ExitIfError(err)
+	
 	var outWig []*wig.Wig
+	var currentBed *bed.Bed
 
 	if fragLength != int64(-1) {
-		outBed = convert.SamToBedFrag(records, fragLength, ref)
+		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+			outBed = append(outBed, convert.SamToBedFrag(aln, fragLength, ref))
+		}
 	} else {
-		outBed = convert.SamToBed(records)
+		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+			currentBed = convert.SamToBed(aln)
+			if currentBed != nil {
+				outBed = append(outBed, currentBed)
+			}
+		}
 	}
 
 	outWig = convert.BedReadsToWig(outBed, ref)
