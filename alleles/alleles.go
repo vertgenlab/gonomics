@@ -652,12 +652,11 @@ func getPos(matrix *SafeMap, key Location, ref RefMap) {
 	//matrix.mux.Unlock()
 }
 
-func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup) {//, writeMap *SafeMap) {
+func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup) {
 	//start := time.Now()
-	//writeMap.mux.Lock()
 	defer wg.Done()
 	writeMap := make(SampleMap)
-// TODO: figure out how to recieve multiple maps without ending up in a deadlock for listening on input
+
 	for readMap := range input {
 
 		for key, value := range readMap {
@@ -677,7 +676,6 @@ func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup)
 	}
 	output <- writeMap
 	//fmt.Println("Write took", time.Since(start))
-	//writeMap.mux.Unlock()
 }
 
 func mergeMaps(a SampleMap, b SampleMap) SampleMap {
@@ -895,13 +893,11 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 			SeqIndex = SeqIndex + aln.Cigar[i].RunLength
 		}
 	}
-	//writeToMap(answer, data.matrix)
 	//fmt.Println("Read took", time.Since(start))
 	return answer
 }
 
 func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threads int) SampleMap {
-	//TODO: Remove following 2 lines, only for benchmarking
 
 	// Read in reference
 	fmt.Printf("#Reading Reference\n")
@@ -934,15 +930,13 @@ func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threa
 
 	for j := range channel {
 		if j != nil {
-			data := j.(SampleMap)
-			sendMap <- data
+			sendMap <- j.(SampleMap)
 		}
 	}
 	close(sendMap)
 
 	fmt.Println("Up to Merge", time.Since(start))
 
-	//answer := mergeMaps(<-recieveMap, <-recieveMap)
 	wg.Wait()
 	for k := range recieveMap {
 		AlleleMap = mergeMaps(AlleleMap, k)

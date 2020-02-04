@@ -1,6 +1,7 @@
 package routines
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -74,4 +75,35 @@ func NextVcfLine(reader *fileio.EasyReader) (interface{}, bool) {
 
 func NextString(reader *fileio.EasyReader) (interface{}, bool) {
 	return fileio.EasyNextLine(reader)
+}
+
+// Example Function
+func goCountForReads(read interface{}, empty interface{}) interface{} {
+	// Make type assertion on interface input
+	data := read.(*sam.SamAln)
+
+	// Do some work
+	if sam.IsForwardRead(data) {
+		return true
+	} else {
+		return false
+	}
+}
+func GoCountForReads(samFilename string) {
+	var count int = 0
+
+	channel, _ := GoWorkOnLine(samFilename, nil, goCountForReads, NextSamLine, 10)
+
+	// Listen on the output channel
+	for i := range channel {
+		// Declare i (output of goCountAlignedReads) as a type bool
+		if !i.(bool) {
+			// If read is forward, increment count
+			count++
+		}
+	}
+
+	// Once the count is finished, the result can be used
+	// Range automatically closes when no more data is being sent, so there is no need to use the waitgroup output
+	fmt.Println("There are", count, "forward reads")
 }
