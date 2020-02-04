@@ -23,7 +23,7 @@ func goReadFile(filename string, sendLine chan interface{}, fnNext NextLine) {
 	progressMeter := 0
 	for line, done = fnNext(file); done != true; line, done = fnNext(file) {
 		progressMeter++
-		if progressMeter % 10000 == 0 {
+		if progressMeter%10000 == 0 {
 			log.Println("Processed", progressMeter, "Lines")
 		}
 		sendLine <- line
@@ -59,13 +59,16 @@ func GoWorkOnLine(filename string, dataStructure interface{}, fnWork Operation, 
 }
 
 func Wait(channel chan interface{}) {
-	for range channel {}
+	for range channel {
+	}
 }
 
 // Wrappers for next line functions
 func NextSamLine(reader *fileio.EasyReader) (interface{}, bool) {
 	_, err := reader.Peek(1)
-	if err != io.EOF {sam.ReadHeader(reader)}
+	if err != io.EOF {
+		sam.ReadHeader(reader)
+	}
 	return sam.NextAlignment(reader)
 }
 
