@@ -106,11 +106,11 @@ func TestReadsWithTiming(t *testing.T) {
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
-	var numberOfReads int = 10000
+	var numberOfReads int = 60000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 4
+	var numWorkers int = 8
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
@@ -119,14 +119,15 @@ func TestWorkerWithWriting(t *testing.T) {
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.Fastq, 50)
+	fastqPipe := make(chan *fastq.Fastq, 2400)
 
 	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *sam.SamAln, 50)
+	samPipe := make(chan *sam.SamAln, 2400)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
+	start := time.Now()
 	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
 
 	log.Printf("Starting alignment worker...\n")
@@ -136,13 +137,16 @@ func TestWorkerWithWriting(t *testing.T) {
 	}
 
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "testdata/simReads.sam", &writerWaiter)
-
+	//go sam.SamChanToFile(samPipe, "testdata/simReads.sam", &writerWaiter)
+	go sam.SamChanToStdOut(samPipe, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
 	writerWaiter.Wait()
 	log.Printf("Sam writer finished and we are all done\n")
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
 }
 
 func TestWorkerWithTiming(t *testing.T) {

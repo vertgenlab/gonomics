@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -412,38 +411,4 @@ func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen
 	m, trace := swMatrixSetup(10000)
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
-}
-
-func devGoroutinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-
-	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, c)
-	}
-	for j := 0; j < len(reads); j++ {
-		log.Printf("%s\n", sam.SamAlnToString(<-c))
-		//sam.WriteAlnToFileHandle(out, <-c)
-	}
-}
-
-//Function calls GSW alignment, meant to be used in goroutines, and writes the alignment stgraight to sam file
-
-func routinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln, out *os.File, groupSize int) {
-
-	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, c)
-	}
-	for j := 0; j < len(reads); j++ {
-		//log.Printf("%s\n", sam.SamAlnToString(<-c))
-		sam.WriteAlnToFileHandle(out, <-c)
-	}
-	log.Printf("Finish aligning %d reads...\n", groupSize)
-}
-
-func GoroutinesGenomeGraph(gg *SimpleGraph, read chan *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-	var mappedRead *sam.SamAln
-
-	mappedRead = GraphSmithWaterman(gg, <-read, seedHash, seedLen, m, trace)
-	c <- mappedRead
-
-	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }

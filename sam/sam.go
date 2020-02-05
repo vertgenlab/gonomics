@@ -184,6 +184,15 @@ func SamChanToFile(incomingSams <-chan *SamAln, outputFilename string, wg *sync.
 	wg.Done()
 }
 
+func SamChanToStdOut(incomingSams <-chan *SamAln, wg *sync.WaitGroup) {
+	for alignedRead := range incomingSams {
+		log.Printf("%s\n", SamAlnToString(alignedRead))
+		//WriteAlnToFileHandle(file, alignedRead)
+
+	}
+	wg.Done()
+}
+
 func Write(filename string, data *Sam) error {
 	file, err := os.Create(filename)
 	if err != nil {
