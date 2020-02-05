@@ -2,37 +2,10 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
-	//"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 )
-
-/*
-type TournamentNode struct {
-	CurrValue  *SeedDev
-	WaitingValues []*SeedBed
-	QueryStart uint32
-	Left   *tournamentNode
-	Right  *tournamentNode
-}
-
-func buildTree(leaves []*TournamentTree) *TournamentTree {
-	if len(leaves) == 0 {
-		log.Errorf("Error: tree building should not get down to a node of zero leaves\n")
-		return nil
-	} else if len(leaves) == 1 {
-		var first *SeedBed = nil
-		first, leaves[0].WaitingValues = leaves[0].WaitingValues[0], leaves[0].WaitingValues[1:]
-		leaves[0].CurrValue = &SeedDev{TargetId: first.Id, TargetStart: first.Start, QueryStart: leaves[0], Length: first.Length
-		return &leaves[0]
-	} else {
-		midpoint := len(leaves) / 2
-		return &TournamentTree{currValue: nil, waitingValues: []*SeedBed{}, queryStart: 0, left:buildTree(leaves[0:midpoint]), right: buildTree(leaves[midpoint:len(leaves)])}
-	}
-}
-
-*/
 
 func seedBedToSeedDev(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 	if a == nil {
@@ -111,6 +84,22 @@ func mergeSeedLists(lastPosition []*SeedDev, currPosition []*SeedBed, currQPos u
 	return noMerge, merged
 }
 
+func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
+	var codedSeq uint64 = 0
+	var hits []*SeedDev = make([]*SeedDev, 0)
+	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
+		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
+			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
+			currHits := seedHash[codedSeq]
+			for _, value := range currHits {
+				hits = append(hits, seedBedToSeedDev(value, uint32(subSeqStart), posStrand))
+			}
+		}
+	}
+	//log.Printf("Total of %d hits.\n", len(hits))
+	return hits
+}
+
 // need to handle neg strand
 func findSeedsInMap(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0
@@ -129,6 +118,7 @@ func findSeedsInMap(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen i
 			}
 		}
 		allHits = append(allHits, prevHits...)
+		prevHits = prevHits[0:0]
 	}
 	//log.Printf("Total of %d hits.\n", len(allHits))
 	return allHits

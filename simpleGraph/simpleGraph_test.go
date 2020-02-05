@@ -83,8 +83,8 @@ func TestReadsWithTiming(t *testing.T) {
 	log.Printf("Starting alignment worker...\n")
 	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
 
-	log.Printf("Waiting for 10 seconds and then aligning reads...\n")
-	time.Sleep(10 * time.Second)
+	log.Printf("Waiting for 5 seconds and then aligning reads...\n")
+	time.Sleep(5 * time.Second)
 
 	for i := 0; i < numberOfReads; i++ {
 		start := time.Now()
@@ -187,10 +187,12 @@ func TestWorkerWithTiming(t *testing.T) {
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(alignments), duration, float64(len(alignments))/duration.Seconds())
 }
 
-func BenchmarkHippoAln(b *testing.B) {
-	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
+func TestHippoAln(t *testing.T) {
+	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("TGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGAGTGATTTGAAGGTACATGGAATACCACCACGGGAGCAAAGC"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
+	var alignment *sam.SamAln = nil
+	var dummyWaiter sync.WaitGroup
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
@@ -198,15 +200,24 @@ func BenchmarkHippoAln(b *testing.B) {
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
-	log.Printf("Aligning reads...\n")
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		start := time.Now()
-		wrapNoChanMap(genome, hippo, tiles, tileSize, stepSize)
-		end := time.Now()
-		duration := end.Sub(start)
-		log.Printf("duration:%s\n", duration)
-	}
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, 1)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 1)
+
+	log.Printf("Starting alignment worker...\n")
+	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
+
+	log.Printf("Waiting for 5 seconds and then aligning read...\n")
+	time.Sleep(5 * time.Second)
+
+	start := time.Now()
+	fastqPipe <- hippo
+	alignment = <-samPipe
+	end := time.Now()
+	duration := end.Sub(start)
+	log.Printf("duration:%s\t%s\n", duration, dna.BasesToString(alignment.Seq))
 }
 
 func TestAligning(t *testing.T) {
