@@ -245,7 +245,6 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	return &currBest
 }
 
-
 func AddSClip(front int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
 	back := front + cigar.QueryLength(cig)
 	var answer []*cigar.Cigar

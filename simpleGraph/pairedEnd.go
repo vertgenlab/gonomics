@@ -104,7 +104,7 @@ func routineGswReadPair(gg *SimpleGraph, reads []*fastq.PairedEnd, seedHash map[
 	wg.Done()
 }
 
-func alignBatchPairGroup(gg *SimpleGraph, batch [][]*fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int,  workers int, file *os.File, batchNum int, wg *sync.WaitGroup) {
+func alignBatchPairGroup(gg *SimpleGraph, batch [][]*fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, workers int, file *os.File, batchNum int, wg *sync.WaitGroup) {
 	for i := 0; i < len(batch); i++ {
 		wg.Add(1)
 		batchNum++

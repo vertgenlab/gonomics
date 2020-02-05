@@ -1,12 +1,11 @@
 package simpleGraph
 
 import (
-	"strings"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
-
+	"strings"
 )
 
 func checkAlignment(simSam *sam.SamAln) bool {
@@ -16,7 +15,7 @@ func checkAlignment(simSam *sam.SamAln) bool {
 	//var query int64
 	if common.StringToInt64(words[1]) == simSam.Pos {
 		ref, _ = cigar.ParseCigarAll(simSam.Cigar)
-		if simSam.Pos + ref == common.StringToInt64(words[2]) {
+		if simSam.Pos+ref == common.StringToInt64(words[2]) {
 			answer = true
 		}
 	}
@@ -25,7 +24,7 @@ func checkAlignment(simSam *sam.SamAln) bool {
 
 func CheckAnswers(query []*sam.SamAln) {
 	var yes, no int64 = 0, 0
-	for i := 0; i < len(query);i++ {
+	for i := 0; i < len(query); i++ {
 		if checkAlignment(query[i]) {
 			yes++
 			//log.Printf(sam.SamAlnToString(query[i]))

@@ -410,4 +410,3 @@ func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
-

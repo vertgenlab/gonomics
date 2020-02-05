@@ -71,18 +71,17 @@ func PairedEndGen(genome []*Node, readLength int, mutantPos int) *fastq.PairedEn
 		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			strand = randIntInRange(0, 2) == 0
 			curr := fastq.PairedEnd{Fwd: nil, Rev: nil}
-			
+
 			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%c_R1", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Fwd.Seq = make([]dna.Base, readLength)
 			mutatePos(curr.Fwd.Seq, mutantPos)
 
 			copy(curr.Fwd.Seq, genome[chromIdx].Seq[start:start+readLength])
 			curr.Fwd.Qual = generateDiverseFakeQual(readLength)
-			
+
 			curr.Rev = fastq.Copy(curr.Fwd)
 			fastq.ReverseComplement(curr.Rev)
 			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%c_R2", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
-
 
 			if !strand {
 				fastq.ReverseComplement(curr.Fwd)

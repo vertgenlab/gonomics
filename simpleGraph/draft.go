@@ -29,14 +29,12 @@ func GSWsBatch(ref *SimpleGraph, input string, output string, groupSize int) {
 	header := NodesHeader(ref.Nodes)
 	sam.WriteHeaderToFileHandle(samRecords, header)
 
-
-
 	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
 		groups = append(groups, fq)
 		if len(groups) == groupSize {
 			//send off group
 			alignGroups(ref, groups, seedHash, seedLen, stepSize, samRecords)
-		//	groups = make([]*fastq.Fastq, 0, groupSize)
+			//	groups = make([]*fastq.Fastq, 0, groupSize)
 		}
 	}
 	if len(groups) != 0 {
@@ -56,10 +54,10 @@ func alignGroups(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*S
 	//log.Printf("Waiting for 10 seconds and then aligning reads...\n")
 	//time.Sleep(10 * time.Second)
 
-	for i := 0; i < len(reads);i++ {
+	for i := 0; i < len(reads); i++ {
 		fastqPipe <- reads[i]
 	}
-	for j := 0; j < len(reads);j++ {
+	for j := 0; j < len(reads); j++ {
 		alignments[j] = <-samPipe
 		//sam.WriteAlnToFileHandle(file, <-samPipe)
 		//log.Printf("Finished aligning %d reads\n", j)
@@ -70,27 +68,27 @@ func alignGroups(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*S
 	}
 	//var mappedRead *sam.SamAln
 	//for w := 0; w < workers; w++ {
-		//wg.Add(1)
-		//go func(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, input <-chan *fastq.Fastq, output chan<- *sam.SamAln) {
-			//m, trace := swMatrixSetup(10000)
-			//map reads using worker pool
-			//for fq := range input {
-			//	output <- GraphSmithWaterman(gg, fq, seedHash, seedLen, stepSize)
-			//}
+	//wg.Add(1)
+	//go func(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, input <-chan *fastq.Fastq, output chan<- *sam.SamAln) {
+	//m, trace := swMatrixSetup(10000)
+	//map reads using worker pool
+	//for fq := range input {
+	//	output <- GraphSmithWaterman(gg, fq, seedHash, seedLen, stepSize)
+	//}
 
-		//}(gg, reads, seedHash, seedLen, input, output)
+	//}(gg, reads, seedHash, seedLen, input, output)
 	//}
 
 	//for i := 0; i < numJobs; i++ {
-		//send reads off to be aligned
+	//send reads off to be aligned
 	//	input <- reads[i]
 	//}
 	//close(input)
 	//for j := 0; j < numJobs; j++ {
-		//print something here
-		//or write to file
-		
-		//log.Printf("%s\n", sam.SamAlnToString(<-output))
+	//print something here
+	//or write to file
+
+	//log.Printf("%s\n", sam.SamAlnToString(<-output))
 
 	//}
 }
@@ -105,13 +103,13 @@ func routineGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint
 	//go gswWorker(gg, seedHash, seedLen, stepSize, input, output)
 	//var mappedRead *sam.SamAln
 	//for w := 0; w < workers; w++ {
-		//wg.Add(1)
-		
+	//wg.Add(1)
+
 	//	go func(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, input <-chan *fastq.Fastq, output chan<- *sam.SamAln) {
-			//map reads using worker pool
-			
+	//map reads using worker pool
+
 	//		for fq := range input {
-				//m, trace := swMatrixSetup(10000)
+	//m, trace := swMatrixSetup(10000)
 	//			output <- GraphSmithWaterman(gg, fq, seedHash, seedLen, stepSize)
 	//		}
 
