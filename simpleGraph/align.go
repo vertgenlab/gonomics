@@ -185,10 +185,10 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 	return score
 }
 
-func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
-	//var samPointer *sam.SamAln = &sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
-	leftAlignment, rightAlignment := []*cigar.Cigar{}, []*cigar.Cigar{}
+//func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
+func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
 	var leftScore, rightScore, seedScore, bestScore int64
@@ -199,15 +199,20 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
 	}
 	ext := int(maxScore/600) + len(read.Seq)
+	m, trace := SwMatrixSetup(int64(ext + 1))
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInSlice(seedHash, read, seedLen, true)
+	var seeds []*SeedDev = findSeedsInMap(seedHash, read, seedLen, stepSize, true)
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInSlice(seedHash, revCompRead, seedLen, false)
+	var revCompSeeds []*SeedDev = findSeedsInMap(seedHash, revCompRead, seedLen, stepSize, false)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
-
+	//log.Printf("number of seed hits = %d\n", len(seeds))
+	if len(seeds) > 24 {
+		seeds = seeds[:8]
+		//log.Printf("number of seed hits changed: %d\n", len(seeds))
+	}
 	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		if seeds[i].PosStrand {
 			currRead = read
@@ -218,7 +223,6 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
-		//log.Printf("seedTStart=%d seedQStart=%d seedLength=%d, leftAlignment=%s, rightAlignment=%s, minQuery=%d, maxQuery=%d\n", seeds[i].TargetStart, seeds[i].QueryStart, seeds[i].Length, cigar.ToString(rightAlignment), cigar.ToString(samPointer.Cigar), minQuery, maxQuery)
 		if currScore > bestScore {
 			bestScore = currScore
 			if seeds[i].PosStrand {
@@ -227,16 +231,20 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBe
 				currBest.Flag = 1
 			}
 			bestPath = CatPaths(AddPath(seeds[i].TargetId, leftPath), rightPath)
-
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].Length), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(int64(minQuery), int64(len(currRead.Seq)), currBest.Cigar)
-			currBest.Extra = PathToString(bestPath, gg)
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(bestPath, gg)
 		}
+	}
+	if bestScore < 1200 {
+		currBest.Flag = 4
+		currBest.Cigar = []*cigar.Cigar{&cigar.Cigar{RunLength: 0, Op: '*'}}
 	}
 	return &currBest
 }
+
 
 func AddSClip(front int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
 	back := front + cigar.QueryLength(cig)

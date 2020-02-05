@@ -58,6 +58,43 @@ func RandomReadOneMutation(genome []*Node, readLength int, mutantPos int) *fastq
 	return answer
 }
 
+func PairedEndGen(genome []*Node, readLength int, mutantPos int) *fastq.PairedEnd {
+	var answer *fastq.PairedEnd = nil
+	var start int
+	var chromIdx int
+	var strand bool
+	var readOk bool = false
+
+	for !readOk {
+		chromIdx = randIntInRange(0, len(genome))
+		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
+		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
+			strand = randIntInRange(0, 2) == 0
+			curr := fastq.PairedEnd{Fwd: nil, Rev: nil}
+			
+			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%c_R1", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
+			curr.Fwd.Seq = make([]dna.Base, readLength)
+			mutatePos(curr.Fwd.Seq, mutantPos)
+
+			copy(curr.Fwd.Seq, genome[chromIdx].Seq[start:start+readLength])
+			curr.Fwd.Qual = generateDiverseFakeQual(readLength)
+			
+			curr.Rev = fastq.Copy(curr.Fwd)
+			fastq.ReverseComplement(curr.Rev)
+			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%c_R2", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
+
+
+			if !strand {
+				fastq.ReverseComplement(curr.Fwd)
+				fastq.ReverseComplement(curr.Rev)
+			}
+			answer = &curr
+			readOk = true
+		}
+	}
+	return answer
+}
+
 func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.Fastq {
 	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
 	var start int
@@ -72,7 +109,7 @@ func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) [
 			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
 			copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
-			curr.Qual = generateFakeQual(readLength)
+			curr.Qual = generateDiverseFakeQual(readLength)
 			if !strand {
 				dna.ReverseComplement(curr.Seq)
 			}
@@ -98,7 +135,7 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 		strand = randIntInRange(0, 2) == 0
 		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			readName = fmt.Sprintf("%s_%d_%d_%c", genome[chromIdx].Name, start, start+readLength, common.StrandToRune(strand))
-			qual = generateFakeQual(readLength)
+			qual = generateDiverseFakeQual(readLength)
 			seq = genome[chromIdx].Seq[start : start+readLength]
 			if !strand {
 				dna.ReverseComplement(seq)
@@ -106,6 +143,16 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 			answer[i] = &fastq.Fastq{Name: readName, Seq: seq, Qual: qual}
 			i++
 		}
+	}
+	return answer
+}
+
+func generateDiverseFakeQual(length int) []rune {
+	var answer []rune = make([]rune, length)
+	var asci = []rune{'!', '#', '$', '%', '&', '(', ')', '*', '+', '`', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'}
+
+	for i := 0; i < length; i++ {
+		answer[i] = asci[randIntInRange(0, len(asci))]
 	}
 	return answer
 }

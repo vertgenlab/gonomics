@@ -40,6 +40,19 @@ func ParseCigar(cig *Cigar) (int64, int64) {
 	return refIdx, altIdx
 }
 
+func ParseCigarAll(cig []*Cigar) (int64, int64) {
+	var refIdx, altIdx int64 = 0, 0
+	for i := 0; i < len(cig);i++ {
+		if ConsumesReference(cig[i].Op) {
+			refIdx += cig[i].RunLength
+		}
+		if ConsumesQuery(cig[i].Op) {
+			altIdx += cig[i].RunLength
+		}
+	}
+	return refIdx, altIdx
+}
+
 //TODO: finish riley's voting matrix to handle indels better
 /*
 type Allele struct {
