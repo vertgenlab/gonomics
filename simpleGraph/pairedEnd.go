@@ -9,6 +9,14 @@ import (
 	"sync"
 )
 
+func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.PairedSamAln {
+	//m, trace := swMatrixSetup(10000)
+	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: nil, RevSam: nil}
+	mappedPair.FwdSam = GraphSmithWaterman(gg, readPair.Fwd, seedHash, seedLen, stepSize, m, trace)
+	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, m, trace)
+	return &mappedPair
+}
+//TODO: Does not work on graph with edges. Work in progress
 func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output string) {
 
 	var seedLen int = 32
