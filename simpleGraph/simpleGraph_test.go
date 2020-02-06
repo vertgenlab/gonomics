@@ -83,8 +83,8 @@ func TestReadsWithTiming(t *testing.T) {
 	log.Printf("Starting alignment worker...\n")
 	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
 
-	log.Printf("Waiting for 10 seconds and then aligning reads...\n")
-	time.Sleep(10 * time.Second)
+	log.Printf("Waiting for 5 seconds and then aligning reads...\n")
+	time.Sleep(5 * time.Second)
 
 	for i := 0; i < numberOfReads; i++ {
 		start := time.Now()
@@ -106,11 +106,11 @@ func TestReadsWithTiming(t *testing.T) {
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
-	var numberOfReads int = 10000
+	var numberOfReads int = 60000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 4
+	var numWorkers int = 8
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
@@ -119,14 +119,15 @@ func TestWorkerWithWriting(t *testing.T) {
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.Fastq, 50)
+	fastqPipe := make(chan *fastq.Fastq, 2400)
 
 	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *sam.SamAln, 50)
+	samPipe := make(chan *sam.SamAln, 2400)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
+	start := time.Now()
 	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
 
 	log.Printf("Starting alignment worker...\n")
@@ -136,13 +137,16 @@ func TestWorkerWithWriting(t *testing.T) {
 	}
 
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "testdata/simReads.sam", &writerWaiter)
-
+	//go sam.SamChanToFile(samPipe, "testdata/simReads.sam", &writerWaiter)
+	go sam.SamChanToStdOut(samPipe, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
 	writerWaiter.Wait()
 	log.Printf("Sam writer finished and we are all done\n")
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
 }
 
 func TestWorkerWithTiming(t *testing.T) {
@@ -187,10 +191,12 @@ func TestWorkerWithTiming(t *testing.T) {
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(alignments), duration, float64(len(alignments))/duration.Seconds())
 }
 
-func BenchmarkHippoAln(b *testing.B) {
-	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
+func TestHippoAln(t *testing.T) {
+	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("TGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGAGTGATTTGAAGGTACATGGAATACCACCACGGGAGCAAAGC"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
+	var alignment *sam.SamAln = nil
+	var dummyWaiter sync.WaitGroup
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
@@ -198,15 +204,24 @@ func BenchmarkHippoAln(b *testing.B) {
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
-	log.Printf("Aligning reads...\n")
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		start := time.Now()
-		wrapNoChanMap(genome, hippo, tiles, tileSize, stepSize)
-		end := time.Now()
-		duration := end.Sub(start)
-		log.Printf("duration:%s\n", duration)
-	}
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, 1)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 1)
+
+	log.Printf("Starting alignment worker...\n")
+	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
+
+	log.Printf("Waiting for 5 seconds and then aligning read...\n")
+	time.Sleep(5 * time.Second)
+
+	start := time.Now()
+	fastqPipe <- hippo
+	alignment = <-samPipe
+	end := time.Now()
+	duration := end.Sub(start)
+	log.Printf("duration:%s\t%s\n", duration, dna.BasesToString(alignment.Seq))
 }
 
 func TestAligning(t *testing.T) {

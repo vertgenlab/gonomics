@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -78,10 +77,12 @@ func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[ui
 
 	//seedStart := time.Now()
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInMap(seedHash, read, seedLen, stepSize, true)
+	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
+	extendSeedsDev(seeds, gg, read)
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInMap(seedHash, revCompRead, seedLen, stepSize, false)
+	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
+	extendSeedsDev(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
 	//seedEnd := time.Now()
@@ -410,38 +411,4 @@ func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen
 	m, trace := swMatrixSetup(10000)
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
-}
-
-func devGoroutinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-
-	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, c)
-	}
-	for j := 0; j < len(reads); j++ {
-		log.Printf("%s\n", sam.SamAlnToString(<-c))
-		//sam.WriteAlnToFileHandle(out, <-c)
-	}
-}
-
-//Function calls GSW alignment, meant to be used in goroutines, and writes the alignment stgraight to sam file
-
-func routinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln, out *os.File, groupSize int) {
-
-	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, c)
-	}
-	for j := 0; j < len(reads); j++ {
-		//log.Printf("%s\n", sam.SamAlnToString(<-c))
-		sam.WriteAlnToFileHandle(out, <-c)
-	}
-	log.Printf("Finish aligning %d reads...\n", groupSize)
-}
-
-func GoroutinesGenomeGraph(gg *SimpleGraph, read chan *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-	var mappedRead *sam.SamAln
-
-	mappedRead = GraphSmithWaterman(gg, <-read, seedHash, seedLen, m, trace)
-	c <- mappedRead
-
-	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
