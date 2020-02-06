@@ -2,7 +2,7 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"os"
@@ -13,31 +13,37 @@ func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output stri
 
 	var seedLen int = 32
 	var stepSize int = seedLen - 1
+	var numWorkers int = 8
 	log.Printf("Indexing the genome...\n")
 	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	var fq *fastq.PairedEnd
-	//var groups []*fastq.PairedEnd = make([]*fastq.PairedEnd, 0, groupSize)
-	var done bool
-	//fastq input
-	file := fileio.EasyOpen(readOne)
-	defer file.Close()
-
-	file2 := fileio.EasyOpen(readTwo)
-	defer file.Close()
 
 	samRecords, _ := os.Create(output)
 	defer samRecords.Close()
-
 	header := NodesHeader(ref.Nodes)
 	sam.WriteHeaderToFileHandle(samRecords, header)
-	//batchSize := 5
-	//batches := make([][]*fastq.PairedEnd, 0, batchSize)
-	//var batchID int = 0
-	var wg sync.WaitGroup
-	for fq, done = fastq.NextFastqPair(file, file2); !done; fq, done = fastq.NextFastqPair(file, file2) {
 
+	var wgAlign, wgWrite sync.WaitGroup
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.PairedEnd, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.PairedSamAln, 824)
+	go fastq.PairEndToChan(readOne, readTwo, fastqPipe)
+
+	wgAlign.Add(numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		go gswPairEnd(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
 	}
+	wgAlign.Add(1)
 
+	go sam.SamChanPairToFile(samPipe, samRecords, &wgWrite)
+	wgAlign.Wait()
+	close(samPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	wgWrite.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
 }
 
 func routineGswReadPair(gg *SimpleGraph, reads []*fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, workers int, wg *sync.WaitGroup, file *os.File, batchNum int) {

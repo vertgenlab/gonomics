@@ -22,6 +22,22 @@ func ReadPairs(readOne string, readTwo string) []*PairedEnd {
 	return answer
 }
 
+func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
+	var curr *PairedEnd
+	var done bool
+
+	fileOne := fileio.EasyOpen(readOne)
+	defer fileOne.Close()
+
+	fileTwo := fileio.EasyOpen(readTwo)
+	defer fileTwo.Close()
+
+	for curr, done = NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
+		output <- curr
+	}
+	close(output)
+}
+
 func processFastqPair(readOne *Fastq, readTwo *Fastq) *PairedEnd {
 	var curr PairedEnd
 

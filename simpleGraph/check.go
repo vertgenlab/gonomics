@@ -33,6 +33,7 @@ func CheckAnswers(query []*sam.SamAln) {
 			//log.Printf("This did not map:\n%s\n", sam.SamAlnToString(query[i]))
 		}
 	}
-	log.Printf("Total number of reads aligned: %d...\n\tNumber of reads correctly aligned: %d...\n\tNumber of reads mismapped: %d...\n", len(query), yes, no)
-
+	log.Printf("Total number of reads aligned: %d...", len(query))
+	log.Printf("Number of reads correctly aligned: %d...\n", yes)
+	log.Printf("Number of reads mismapped: %d...\n", no)
 }

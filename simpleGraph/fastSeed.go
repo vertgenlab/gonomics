@@ -33,13 +33,13 @@ func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 // TODO: only works for fasta style graphs, no following edges
 func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
-
+	//check to see if begining is at index zero, if so do something like SeedDev.Prev
+	//if newStart < 0
 	for ; newTStart >= 0 && newQStart >= 0 && (gg.Nodes[seed.TargetId].Seq[newTStart] == read.Seq[newQStart]); newTStart, newQStart = newTStart-1, newQStart-1 {
 		seed.TargetStart = uint32(newTStart)
 		seed.QueryStart = uint32(newQStart)
 		seed.Length++
 	}
-
 	for ; int(newTEnd) < len(gg.Nodes[seed.TargetId].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
 		seed.Length++
 	}
