@@ -186,7 +186,7 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 }
 
 //func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int) *sam.SamAln {
+func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
@@ -199,20 +199,22 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
 	}
 	ext := int(maxScore/600) + len(read.Seq)
-	m, trace := SwMatrixSetup(int64(ext + 1))
+	//m, trace := SwMatrixSetup(int64(ext + 1))
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInMap(seedHash, read, seedLen, stepSize, true)
+	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
+	extendSeedsDev(seeds, gg, read)
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInMap(seedHash, revCompRead, seedLen, stepSize, false)
+	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
+	extendSeedsDev(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
 	//log.Printf("number of seed hits = %d\n", len(seeds))
-	if len(seeds) > 24 {
-		seeds = seeds[:8]
-		//log.Printf("number of seed hits changed: %d\n", len(seeds))
-	}
+	//if len(seeds) > 24 {
+	//	seeds = seeds[:8]
+	//log.Printf("number of seed hits changed: %d\n", len(seeds))
+	//}
 	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		if seeds[i].PosStrand {
 			currRead = read

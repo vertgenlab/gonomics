@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -151,10 +152,10 @@ func TestGopher(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*Se
 	for w := 0; w < workers; w++ {
 		//wg.Add(1)
 		go func(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, input <-chan *fastq.Fastq, output chan<- *sam.SamAln) {
-			//m, trace := swMatrixSetup(10000)
+			m, trace := swMatrixSetup(10000)
 			//map reads using worker pool
 			for fq := range input {
-				output <- GraphSmithWaterman(gg, fq, seedHash, stepSize, seedLen)
+				output <- GraphSmithWaterman(gg, fq, seedHash, stepSize, seedLen, m, trace)
 			}
 
 		}(gg, reads, seedHash, seedLen, input, output)
@@ -178,8 +179,8 @@ func TestGroups(gg *SimpleGraph, reads []*fastq.Fastq, seedHash map[uint64][]*Se
 	var mappedReads []*sam.SamAln = make([]*sam.SamAln, len(reads))
 	for i := 0; i < len(reads); i++ {
 		//wrapNoChan(gg, reads[i], seedHash, seedLen)
-		//m, trace := swMatrixSetup(10000)
-		mappedReads[i] = GraphSmithWaterman(gg, reads[i], seedHash, stepSize, seedLen)
+		m, trace := swMatrixSetup(10000)
+		mappedReads[i] = GraphSmithWaterman(gg, reads[i], seedHash, stepSize, seedLen, m, trace)
 	}
 	for j := 0; j < len(mappedReads); j++ {
 		log.Printf("%s\n", sam.SamAlnToString(mappedReads[j]))
@@ -235,4 +236,4 @@ func GSWsBatches(ref *SimpleGraph, input string, output string, groupSize int) {
 		alignBatchGroup(ref, batches, seedHash, seedLen, stepSize, 824, samRecords, batchID, &wg)
 	}
 	//wg.Wait()
-}
+}*/
