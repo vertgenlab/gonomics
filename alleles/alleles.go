@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // TODO: in vcf format multiple possible alleles into a single line
@@ -67,9 +66,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	// Read in reference
 	fmt.Printf("#Reading Reference\n")
 	ref := refToMap(refFilename)
-
-	//TODO: Remove following 2 lines, only for benchmarking
-	start := time.Now()
 
 	var i, k int32
 	var j int
@@ -282,7 +278,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 			}
 		}
 	}
-	fmt.Println(time.Since(start))
 	return AlleleMap
 }
 
@@ -732,8 +727,6 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 	ref := data.Ref
 	minMapQ := data.MapQT
 
-	//start := time.Now()
-
 	answer := make(SampleMap)
 
 	var i, k int32
@@ -893,7 +886,6 @@ func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
 			SeqIndex = SeqIndex + aln.Cigar[i].RunLength
 		}
 	}
-	//fmt.Println("Read took", time.Since(start))
 	return answer
 }
 
@@ -902,8 +894,6 @@ func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threa
 	// Read in reference
 	fmt.Printf("#Reading Reference\n")
 	ref := refToMap(refFilename)
-
-	start := time.Now()
 
 	// Initialize empty map of chromosomes to map of positions
 	AlleleMap := make(SampleMap)
@@ -935,15 +925,10 @@ func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threa
 	}
 	close(sendMap)
 
-	fmt.Println("Up to Merge", time.Since(start))
-
 	wg.Wait()
 	for k := range recieveMap {
 		AlleleMap = mergeMaps(AlleleMap, k)
 	}
-
-	//routines.Wait(channel)
-	fmt.Println("Completely Finished", time.Since(start))
 
 	return AlleleMap
 }
