@@ -21,7 +21,6 @@ type AlleleCount struct {
 	Counts int32
 	// Base counts are stored as slice with [0] = Total Count [1] = Forward Reads and [2] = Reverse Reads
 	// Total Count is added for processing unpaired sequencing
-	// TODO: instead of slice of ints, maybe make a second map to store the auxillary information that could be toggled with user inputs
 	BaseA []int32
 	BaseC []int32
 	BaseG []int32
@@ -649,7 +648,6 @@ func getPos(matrix *SafeMap, key Location, ref RefMap) {
 }
 
 func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup) {
-	//start := time.Now()
 	defer wg.Done()
 	writeMap := make(SampleMap)
 
@@ -671,7 +669,6 @@ func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup)
 
 	}
 	output <- writeMap
-	//fmt.Println("Write took", time.Since(start))
 }
 
 func mergeMaps(a SampleMap, b SampleMap) SampleMap {
