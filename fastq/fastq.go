@@ -31,6 +31,19 @@ func Read(filename string) []*Fastq {
 	return answer
 }
 
+func ReadToChan(filename string, output chan<- *Fastq) {
+	var curr *Fastq
+	var done bool
+
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+
+	for curr, done = NextFastq(file); !done; curr, done = NextFastq(file) {
+		output <- curr
+	}
+	close(output)
+}
+
 func processFastqRecord(line1 string, line2 string, line3 string, line4 string) *Fastq {
 	var curr Fastq
 	if line3 != "+" {

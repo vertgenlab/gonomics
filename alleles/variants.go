@@ -25,16 +25,16 @@ type BatchAlleleCount struct {
 }
 
 type ScoreInput struct {
-	a				int32
-	b 				int32
-	c 				int32
-	d 				int32
-	loc 			Location
-	inStruct 		*BatchAlleleCount
-	altbase 		string
-	indelslicepos 	int
-	afThreshold 	float64
-	sigThreshold 	float64
+	a             int32
+	b             int32
+	c             int32
+	d             int32
+	loc           Location
+	inStruct      *BatchAlleleCount
+	altbase       string
+	indelslicepos int
+	afThreshold   float64
+	sigThreshold  float64
 }
 
 // Map structure: map[Chromosome]map[Position][Sample]*BatchAlleleCount
@@ -130,7 +130,9 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 	var threads int
 	if len(input) < numGoRoutines {
 		threads = len(input)
-	} else {threads = numGoRoutines}
+	} else {
+		threads = numGoRoutines
+	}
 
 	wg.Add(threads)
 	inputChan := make(chan *ScoreInput)
@@ -143,7 +145,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 					return
 				}
 				answer := score(data)
-				if answer != nil{
+				if answer != nil {
 					vcfChannel <- answer
 				}
 			}
@@ -224,13 +226,13 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 			// Generate Scores
 
 			fetInput := ScoreInput{
-				a: 				a[i-1],
-				b: 				b[i-1],
-				afThreshold:	afThreshold,
-				inStruct: 		alleles[i],
-				loc: 			loc,
-				sigThreshold: 	sigThreshold,
-				indelslicepos: 	0}
+				a:             a[i-1],
+				b:             b[i-1],
+				afThreshold:   afThreshold,
+				inStruct:      alleles[i],
+				loc:           loc,
+				sigThreshold:  sigThreshold,
+				indelslicepos: 0}
 
 			if alleles[i].Ref != dna.A && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cA
@@ -292,7 +294,6 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 		close(vcfChannel)
 	}()
 
-
 	close(inputChan)
 	wg.Wait()
 
@@ -315,8 +316,9 @@ func passStrandBias(alpha int32, beta int32) bool {
 }
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
+
 func score(input *ScoreInput) *vcf.Vcf{
-	fmt.Println(input)
+
 	var p float64
 	var answer *vcf.Vcf
 

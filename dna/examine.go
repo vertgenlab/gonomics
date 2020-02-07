@@ -79,20 +79,14 @@ func DefineBase(b Base) bool {
 	}
 }
 
-func CountBase(seq []Base, b Base) int64 {
-	var answer int64 = 0
-	for i := 0; i < len(seq); i++ {
-		if seq[i] == b {
-			answer++
-		}
-	}
-	return answer
+func CountBase(seq []Base, b Base) int {
+	return CountBaseInterval(seq, b, 0, len(seq))
 }
 
-func CountBaseInterval(seq []Base, b Base, start int64, end int64) int64 {
-	var answer int64 = 0
-	if start < 0 || end > int64(len(seq)) {
-		log.Fatal("Error: %d and %d are out of range for a sequence of length %d\n", start, end, len(seq))
+func CountBaseInterval(seq []Base, b Base, start int, end int) int {
+	var answer int = 0
+	if start < 0 || end > len(seq) {
+		log.Fatalf("Error: %d and %d are out of range for a sequence of length %d\n", start, end, len(seq))
 	}
 	for i := start; i < end; i++ {
 		if seq[i] == b {

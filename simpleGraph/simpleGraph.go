@@ -38,7 +38,7 @@ func AddEdge(u, v *Node, p float64) {
 func Read(filename string) *SimpleGraph {
 	answer := NewGraph()
 	var line string
-	var name []string
+	//var name []string
 	var currSeq []dna.Base
 	var seqIdx int64 = -1
 	var doneReading bool = false
@@ -54,15 +54,15 @@ func Read(filename string) *SimpleGraph {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
-			name = strings.Split(line, ":")
-			tmp := Node{Id: uint32(seqIdx), Name: name[0][1:]}
+			//name = strings.Split(line, ":")
+			tmp := Node{Id: uint32(seqIdx), Name: line[1:]}
 			AddNode(answer, &tmp)
 			_, ok := edges[line[1:]]
 			if !ok {
 				edges[line[1:]] = &tmp
 			}
 		} else {
-			if strings.Contains(line, ":") {
+			if strings.Contains(line, "\t") {
 				words = strings.Split(line, "\t")
 				if len(words) > 2 {
 					for i := 1; i < len(words); i += 2 {
@@ -71,9 +71,12 @@ func Read(filename string) *SimpleGraph {
 					}
 				}
 			} else {
-				currSeq = dna.StringToBases(line)
-				dna.AllToUpper(currSeq)
-				answer.Nodes[seqIdx].Seq = append(answer.Nodes[seqIdx].Seq, currSeq...)
+				if !strings.Contains(line, "_") {
+					currSeq = dna.StringToBases(line)
+					dna.AllToUpper(currSeq)
+					answer.Nodes[seqIdx].Seq = append(answer.Nodes[seqIdx].Seq, currSeq...)
+				}
+
 			}
 		}
 	}

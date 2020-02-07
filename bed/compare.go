@@ -1,9 +1,9 @@
 package bed
 
 import (
-	"strings"
-	"sort"
 	"github.com/vertgenlab/gonomics/common"
+	"sort"
+	"strings"
 )
 
 func SortByCoord(bedFile []*Bed) {

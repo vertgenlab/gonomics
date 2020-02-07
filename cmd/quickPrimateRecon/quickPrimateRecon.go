@@ -12,8 +12,8 @@ func quickPrimateRecon(infile string, outfile string) {
 	records := fasta.Read(infile)
 	outputRecord := &fasta.Fasta{Name: "Human_Chimp_Ancestor"}
 
-	var outputBase dna.Base	
-	
+	var outputBase dna.Base
+
 	if len(records) != 5 {
 		log.Fatalf("Wrong number of sequences, expecting five, found %d.\n", len(records))
 	}
@@ -50,7 +50,7 @@ func quickPrimateRecon(infile string, outfile string) {
 			outputBase = dna.Gap
 		} else if human.Seq[j] != dna.Gap && (chimp.Seq[j] == dna.Gap && bonobo.Seq[j] == dna.Gap) {
 			outputBase = human.Seq[j]
-		} else if (gorilla.Seq[j] == dna.Gap && orangutan.Seq[j] == dna.Gap) {
+		} else if gorilla.Seq[j] == dna.Gap && orangutan.Seq[j] == dna.Gap {
 			outputBase = human.Seq[j]
 		} else if human.Seq[j] == chimp.Seq[j] && human.Seq[j] == bonobo.Seq[j] {
 			outputBase = human.Seq[j]
@@ -58,10 +58,10 @@ func quickPrimateRecon(infile string, outfile string) {
 		} else if (human.Seq[j] == chimp.Seq[j] || human.Seq[j] == bonobo.Seq[j]) && human.Seq[j] != dna.Gap {
 			outputBase = human.Seq[j]
 			humanMatchChimporBonobo++
-		} else if (chimp.Seq[j] == bonobo.Seq[j] && (chimp.Seq[j] == gorilla.Seq[j] || chimp.Seq[j] == orangutan.Seq[j])) && (chimp.Seq[j] != dna.N && chimp.Seq[j] != dna.Gap){
-					outputBase = chimp.Seq[j]
-					humanChange++
-		} else if (human.Seq[j] == gorilla.Seq[j] || chimp.Seq[j] == gorilla.Seq[j] || bonobo.Seq[j] == gorilla.Seq[j]) && (gorilla.Seq[j] != dna.N && gorilla.Seq[j] != dna.Gap){
+		} else if (chimp.Seq[j] == bonobo.Seq[j] && (chimp.Seq[j] == gorilla.Seq[j] || chimp.Seq[j] == orangutan.Seq[j])) && (chimp.Seq[j] != dna.N && chimp.Seq[j] != dna.Gap) {
+			outputBase = chimp.Seq[j]
+			humanChange++
+		} else if (human.Seq[j] == gorilla.Seq[j] || chimp.Seq[j] == gorilla.Seq[j] || bonobo.Seq[j] == gorilla.Seq[j]) && (gorilla.Seq[j] != dna.N && gorilla.Seq[j] != dna.Gap) {
 			outputBase = gorilla.Seq[j]
 			gorillaVote++
 		} else if (human.Seq[j] == orangutan.Seq[j] || chimp.Seq[j] == orangutan.Seq[j] || bonobo.Seq[j] == orangutan.Seq[j] || gorilla.Seq[j] == orangutan.Seq[j]) && (orangutan.Seq[j] != dna.N && orangutan.Seq[j] != dna.Gap) {
@@ -87,7 +87,7 @@ func quickPrimateRecon(infile string, outfile string) {
 	outputSlice = append(outputSlice, outputRecord)
 
 	fmt.Printf("Read %v bases, NCount: %v. allMatch: %v. humanMatchChimporBonobo: %v. humanChange: %v. gorillaVote: %v. orangutanVote: %v. messyBase: %v.\n",
-			humanLength, Ncount, allMatch, humanMatchChimporBonobo, humanChange, gorillaVote, orangutanVote, messyBase)
+		humanLength, Ncount, allMatch, humanMatchChimporBonobo, humanChange, gorillaVote, orangutanVote, messyBase)
 
 	fasta.Write(outfile, outputSlice)
 }

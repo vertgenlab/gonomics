@@ -9,9 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
-	//"runtime"
-	//"sync"
-	"os"
+	"time"
 )
 
 //TODO: add check to make sure reference names in VCF match fasta reference
@@ -63,9 +61,69 @@ func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *Simple
 	return sg
 }
 
+func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
+	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
+	var i, minTarget int
+	var minQuery int
+	var leftScore, rightScore, seedScore, bestScore int64
+	var leftPath, rightPath, bestPath []uint32
+
+	var currScore, maxScore int64 = 0, 0
+	for bases := 0; bases < len(read.Seq); bases++ {
+		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
+	}
+	ext := int(maxScore/600) + len(read.Seq)
+
+	//seedStart := time.Now()
+	var currRead *fastq.Fastq = nil
+	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
+	extendSeedsDev(seeds, gg, read)
+	revCompRead := fastq.Copy(read)
+	fastq.ReverseComplement(revCompRead)
+	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
+	extendSeedsDev(revCompSeeds, gg, revCompRead)
+	seeds = append(seeds, revCompSeeds...)
+	SortSeedDevByLen(seeds)
+	//seedEnd := time.Now()
+	//seedDuration := seedEnd.Sub(seedStart)
+	//log.Printf("Have %d seeds, where best is of length %d, and it took %s\n", len(seeds), seeds[0].Length, seedDuration)
+
+	//swStart := time.Now()
+	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+		if seeds[i].PosStrand {
+			currRead = read
+		} else {
+			currRead = revCompRead
+		}
+		seedScore = scoreSeed(seeds[i], currRead)
+		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
+		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
+		currScore = leftScore + seedScore + rightScore
+		if currScore > bestScore {
+			bestScore = currScore
+			if seeds[i].PosStrand {
+				currBest.Flag = 0
+			} else {
+				currBest.Flag = 1
+			}
+			bestPath = CatPaths(AddPath(seeds[i].TargetId, leftPath), rightPath)
+
+			currBest.RName = gg.Nodes[bestPath[0]].Name
+			currBest.Pos = int64(minTarget)
+			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].Length), Op: 'M'}), rightAlignment)
+			currBest.Cigar = AddSClip(int64(minQuery), int64(len(currRead.Seq)), currBest.Cigar)
+			currBest.Extra = PathToString(bestPath, gg)
+		}
+	}
+	//swEnd := time.Now()
+	//duration := swEnd.Sub(swStart)
+	//log.Printf("sw took %s\n", duration)
+	return &currBest
+}
+
 func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
-	//var samPointer *sam.SamAln = &sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
@@ -79,10 +137,10 @@ func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*Seed
 	ext := int(maxScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsFast(seedHash, read, seedLen, true)
+	var seeds []*SeedDev = findSeedsInSlice(seedHash, read, seedLen, true)
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsFast(seedHash, revCompRead, seedLen, false)
+	var revCompSeeds []*SeedDev = findSeedsInSlice(seedHash, revCompRead, seedLen, false)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
 
@@ -96,7 +154,6 @@ func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*Seed
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
-		//log.Printf("seedTStart=%d seedQStart=%d seedLength=%d, leftAlignment=%s, rightAlignment=%s, minQuery=%d, maxQuery=%d\n", seeds[i].TargetStart, seeds[i].QueryStart, seeds[i].Length, cigar.ToString(rightAlignment), cigar.ToString(samPointer.Cigar), minQuery, maxQuery)
 		if currScore > bestScore {
 			bestScore = currScore
 			if seeds[i].PosStrand {
@@ -320,6 +377,14 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 
 }
 
+func wrapMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, c chan *sam.SamAln) {
+	var mappedRead *sam.SamAln
+	m, trace := swMatrixSetup(10000)
+	mappedRead = goGraphSmithWatermanMap(ref, r, seedHash, seedLen, stepSize, m, trace)
+	c <- mappedRead
+	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
+}
+
 func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, c chan *sam.SamAln) {
 	var mappedRead *sam.SamAln
 	m, trace := swMatrixSetup(10000)
@@ -328,44 +393,22 @@ func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, 
 	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
 
-func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) {
-
+func wrapNoChanMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int) {
 	var mappedRead *sam.SamAln
-	mappedRead = GraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
-	//c <- mappedRead
+	startOne := time.Now()
+	m, trace := swMatrixSetup(10000)
+	stopOne := time.Now()
+	durationOne := stopOne.Sub(startOne)
+	startTwo := time.Now()
+	mappedRead = goGraphSmithWatermanMap(ref, r, seedHash, seedLen, stepSize, m, trace)
+	stopTwo := time.Now()
+	durationTwo := stopTwo.Sub(startTwo)
+	log.Printf("%s %s %s\n", sam.SamAlnToString(mappedRead), durationOne, durationTwo)
+}
+
+func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int) {
+	var mappedRead *sam.SamAln
+	m, trace := swMatrixSetup(10000)
+	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
-}
-
-func devGoroutinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-
-	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, c)
-	}
-	for j := 0; j < len(reads); j++ {
-		log.Printf("%s\n", sam.SamAlnToString(<-c))
-		//sam.WriteAlnToFileHandle(out, <-c)
-	}
-}
-
-//Function calls GSW alignment, meant to be used in goroutines, and writes the alignment stgraight to sam file
-
-func routinesGenomeGraph(gg *SimpleGraph, reads []*fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln, out *os.File, groupSize int) {
-
-	for i := 0; i < len(reads); i++ {
-		go wrap(gg, reads[i], seedHash, seedLen, c)
-	}
-	for j := 0; j < len(reads); j++ {
-		//log.Printf("%s\n", sam.SamAlnToString(<-c))
-		sam.WriteAlnToFileHandle(out, <-c)
-	}
-	log.Printf("Finish aligning %d reads...\n", groupSize)
-}
-
-func GoroutinesGenomeGraph(gg *SimpleGraph, read chan *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune, c chan *sam.SamAln) {
-	var mappedRead *sam.SamAln
-
-	mappedRead = GraphSmithWaterman(gg, <-read, seedHash, seedLen, m, trace)
-	c <- mappedRead
-
-	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }

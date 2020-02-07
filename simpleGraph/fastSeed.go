@@ -3,9 +3,9 @@ package simpleGraph
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
-	//"fmt"
 )
 
 type SeedBed struct {
@@ -22,6 +22,27 @@ type SeedDev struct {
 	Length      uint32
 	PosStrand   bool
 	Next        *SeedDev
+}
+
+func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
+	for i := 0; i < len(seeds); i++ {
+		extendSeedDev(seeds[i], gg, read)
+	}
+}
+
+// TODO: only works for fasta style graphs, no following edges
+func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
+	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
+	//check to see if begining is at index zero, if so do something like SeedDev.Prev
+	//if newStart < 0
+	for ; newTStart >= 0 && newQStart >= 0 && (gg.Nodes[seed.TargetId].Seq[newTStart] == read.Seq[newQStart]); newTStart, newQStart = newTStart-1, newQStart-1 {
+		seed.TargetStart = uint32(newTStart)
+		seed.QueryStart = uint32(newQStart)
+		seed.Length++
+	}
+	for ; int(newTEnd) < len(gg.Nodes[seed.TargetId].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
+		seed.Length++
+	}
 }
 
 func printSeedDev(a []*SeedDev) {
@@ -52,28 +73,16 @@ func ReduceIndexCapacity(tiles [][]*SeedBed) {
 	}
 }
 
-/*
-func findSeedsFast(seedHash [][]*SeedBed, read *fastq.Fastq, seedLen int) []*SeedDev {
-        var subSeqStart int = 0
-        var codedPositions [][]*SeedBed = make([][]uint64, 2*(len(read.Seq)-seedLen+1))
-        for subSeqStart = 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
-                codedPositions[subSeqStart] = seedHash[dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)]
-
-        }
-        mergeSeeds(codedPositions, seedLen)
-        return codedPositions
-}*/
-
 func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 	if len(n.Seq) >= seedLen {
-		if dna.CountBaseInterval(n.Seq, dna.N, 0, int64(seedLen)) != 0 {
+		if dna.CountBaseInterval(n.Seq, dna.N, 0, seedLen) != 0 {
 			return []*SeedBed{}
 		} else {
 			curr := SeedBed{Id: n.Id, Start: 0, End: uint32(seedLen)}
 			return []*SeedBed{&curr}
 		}
 	} else {
-		if dna.CountBaseInterval(n.Seq, dna.N, 0, int64(len(n.Seq))) != 0 || len(n.Next) == 0 {
+		if dna.CountBaseInterval(n.Seq, dna.N, 0, len(n.Seq)) != 0 || len(n.Next) == 0 {
 			return []*SeedBed{}
 		} else {
 			answer := make([]*SeedBed, 0)
@@ -89,7 +98,26 @@ func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 	}
 }
 
-func IndexGenomeDev(genome []*Node, seedLen int, seedStep int) [][]*SeedBed {
+func IndexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
+	if seedLen < 2 || seedLen > 32 {
+		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
+	}
+	answer := make(map[uint64][]*SeedBed)
+	var seqCode uint64
+	var nodeIdx, pos int
+	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
+		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
+				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
+				curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
+				answer[seqCode] = append(answer[seqCode], &curr)
+			}
+		}
+	}
+	return answer
+}
+
+func IndexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]*SeedBed {
 	if seedLen < 2 || seedLen > 16 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 16.  Got: %d\n", seedLen)
 	}
@@ -101,7 +129,7 @@ func IndexGenomeDev(genome []*Node, seedLen int, seedStep int) [][]*SeedBed {
 	var nodeIdx, pos int
 	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
 		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
-			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, int64(pos), int64(pos+seedLen)) == 0 {
+			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
 				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
 				curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
 				answer[seqCode] = append(answer[seqCode], &curr)

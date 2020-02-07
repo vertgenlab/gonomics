@@ -22,19 +22,19 @@ func StringToInt64(s string) int64 {
 }
 
 func StringToUint64(s string) uint64 {
-        n, err := strconv.ParseUint(s, 10, 64)
-        if err != nil {
-        	log.Fatalf("Error: trouble converting %s to a uint64\n", s)
-        }
-        return n
+	n, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint64\n", s)
+	}
+	return n
 }
 
 func StringToUint32(s string) uint32 {
-    n, err := strconv.ParseUint(s, 10, 32)
-    if err != nil {
-        log.Fatalf("Error: trouble converting %s to a uint32\n", s)
-    }
-    return uint32(n)
+	n, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint32\n", s)
+	}
+	return uint32(n)
 }
 
 func Max(a int, b int) int {
@@ -46,11 +46,11 @@ func Max(a int, b int) int {
 }
 
 func MaxUint32(a uint32, b uint32) uint32 {
-        if a >= b {
-                return a
-        } else {
-                return b
-        }
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
 }
 
 func MaxInt64(a int64, b int64) int64 {
@@ -78,11 +78,11 @@ func Min(a int, b int) int {
 }
 
 func MinUint32(a uint32, b uint32) uint32 {
-        if a <= b {
-                return a
-        } else {
-                return b
-        }
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
 }
 
 func MinInt64(a int64, b int64) int64 {

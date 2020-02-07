@@ -148,6 +148,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 						} else if sam.IsReverseRead(aln) == true {
 							AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Count[2]++
 						}
+
 						Match = true
 						break
 					}
