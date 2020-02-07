@@ -107,7 +107,7 @@ func TestReadsWithTiming(t *testing.T) {
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
-	var numberOfReads int = 100000
+	var numberOfReads int = 10000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
