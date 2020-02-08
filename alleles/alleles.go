@@ -6,31 +6,33 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/routines"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // TODO: in vcf format multiple possible alleles into a single line
 type AlleleCount struct {
-	Ref    	dna.Base
-	Counts 	int32
+	Ref    dna.Base
+	Counts int32
 	// Base counts are stored as slice with [0] = Total Count [1] = Forward Reads and [2] = Reverse Reads
 	// Total Count is added for processing unpaired sequencing
-	// TODO: instead of slice of ints, maybe make a second map to store the auxillary information that could be toggled with user inputs
-	BaseA  	[]int32
-	BaseC 	[]int32
-	BaseG 	[]int32
-	BaseT  	[]int32
-	Indel	[]Indel
+	BaseA []int32
+	BaseC []int32
+	BaseG []int32
+	BaseT []int32
+	Indel []Indel
 }
 
 type Indel struct {
-	Ref       []dna.Base
-	Alt       []dna.Base
-	Count     []int32
+	Ref   []dna.Base
+	Alt   []dna.Base
+	Count []int32
+}
 
 type Location struct {
 	Chr string
@@ -40,8 +42,10 @@ type Location struct {
 // Map structure: map[Chromosome]map[Position]*AlleleCount
 type SampleMap map[Location]*AlleleCount
 
+type RefMap map[string][]dna.Base
+
 // Temporary function until this is added to the fasta package
-func refToMap(refFilename string) map[string][]dna.Base {
+func refToMap(refFilename string) RefMap {
 	inRef := fasta.Read(refFilename)
 	fasta.AllToUpper(inRef)
 	ref := make(map[string][]dna.Base)
@@ -83,7 +87,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 	var progressMeter int32
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 
-		if progressMeter%500000 == 0 {
+		if progressMeter%10000 == 0 {
 			log.Printf("#Read %d Alignments\n", progressMeter)
 		}
 		progressMeter++
@@ -121,7 +125,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					// If the position is NOT in the map, initialize
 					if !ok {
 						AlleleMap[Location{aln.RName, RefIndex}] = &AlleleCount{
-							ref[aln.RName][RefIndex], 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 0)}
+							Ref: ref[aln.RName][RefIndex], Counts: 0, BaseA: make([]int32, 3), BaseC: make([]int32, 3), BaseG: make([]int32, 3), BaseT: make([]int32, 3), Indel: make([]Indel, 0)}
 					}
 
 					// Keep track of deleted sequence
@@ -136,7 +140,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					// If the deletion has already been seen before, increment the existing entry
 					// For a deletion the indelSeq should match the Ref
 					if dna.CompareSeqsIgnoreCase(indelSeq, AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Ref) == 0 &&
-						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Alt) == 0{
+						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Alt) == 0 {
 						AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Count[0]++
 						if sam.IsForwardRead(aln) == true {
 							AlleleMap[Location{aln.RName, OrigRefIndex}].Indel[j].Count[1]++
@@ -173,7 +177,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 				// If the position is NOT in the map, initialize
 				if !ok {
 					AlleleMap[Location{aln.RName, RefIndex}] = &AlleleCount{
-						ref[aln.RName][RefIndex], 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 0)}
+						Ref: ref[aln.RName][RefIndex], Counts: 0, BaseA: make([]int32, 3), BaseC: make([]int32, 3), BaseG: make([]int32, 3), BaseT: make([]int32, 3), Indel: make([]Indel, 0)}
 				}
 
 				// Loop through read sequence and keep track of the inserted bases
@@ -229,7 +233,7 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 					//if the position is NOT in the matrix, add it
 					if !ok {
 						AlleleMap[Location{aln.RName, RefIndex}] = &AlleleCount{
-							ref[aln.RName][RefIndex], 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 0)}
+							Ref: ref[aln.RName][RefIndex], Counts: 0, BaseA: make([]int32, 3), BaseC: make([]int32, 3), BaseG: make([]int32, 3), BaseT: make([]int32, 3), Indel: make([]Indel, 0)}
 					}
 
 					switch currentSeq[SeqIndex] {
@@ -274,7 +278,6 @@ func CountAlleles(refFilename string, samFilename string, minMapQ int64) SampleM
 			}
 		}
 	}
-
 	return AlleleMap
 }
 
@@ -289,7 +292,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	var progressMeter int
 	for loc, alleles := range input {
 		progressMeter++
-		if progressMeter % 5000000 == 0 {
+		if progressMeter%5000000 == 0 {
 			log.Printf("processed %d positions", progressMeter)
 		}
 		switch alleles.Ref {
@@ -320,76 +323,75 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			RefCountR = 0
 		}
 
-
 		// Ref -> A
-		Sa := make([]string,1)
+		Sa := make([]string, 1)
 		Sa[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseA[0], alleles.BaseA[1], alleles.BaseA[2], alleles.Counts)
 
 		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:	 "A",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Sample:	 Sa}
+			Chr:    loc.Chr,
+			Pos:    loc.Pos + 1,
+			Id:     ".",
+			Ref:    base,
+			Alt:    "A",
+			Qual:   1,
+			Filter: ".",
+			Info:   ".",
+			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
+			Sample: Sa}
 
 		answer = append(answer, current)
 
 		// Ref -> C
-		Sc := make([]string,1)
+		Sc := make([]string, 1)
 		Sc[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseC[0], alleles.BaseC[1], alleles.BaseC[2], alleles.Counts)
 
 		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:	 "C",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Sample:	 Sc}
+			Chr:    loc.Chr,
+			Pos:    loc.Pos + 1,
+			Id:     ".",
+			Ref:    base,
+			Alt:    "C",
+			Qual:   1,
+			Filter: ".",
+			Info:   ".",
+			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
+			Sample: Sc}
 
 		answer = append(answer, current)
 
 		// Ref -> G
-		Sg := make([]string,1)
+		Sg := make([]string, 1)
 		Sg[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseG[0], alleles.BaseG[1], alleles.BaseG[2], alleles.Counts)
 
 		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:	 "G",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Sample:	 Sg}
+			Chr:    loc.Chr,
+			Pos:    loc.Pos + 1,
+			Id:     ".",
+			Ref:    base,
+			Alt:    "G",
+			Qual:   1,
+			Filter: ".",
+			Info:   ".",
+			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
+			Sample: Sg}
 
 		answer = append(answer, current)
 
 		// Ref -> T
-		St := make([]string,1)
+		St := make([]string, 1)
 		St[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseT[0], alleles.BaseT[1], alleles.BaseT[2], alleles.Counts)
 
 		current = &vcf.Vcf{
-			Chr:     loc.Chr,
-			Pos:     loc.Pos + 1,
-			Id:      ".",
-			Ref:     base,
-			Alt:	 "T",
-			Qual:    1,
-			Filter:  ".",
-			Info:    ".",
-			Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Sample:	 St}
+			Chr:    loc.Chr,
+			Pos:    loc.Pos + 1,
+			Id:     ".",
+			Ref:    base,
+			Alt:    "T",
+			Qual:   1,
+			Filter: ".",
+			Info:   ".",
+			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
+			Sample: St}
 
 		answer = append(answer, current)
 
@@ -402,25 +404,21 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			RefSeq[i] = dna.BasesToString(alleles.Indel[i].Ref)
 			AltSeq[i] = dna.BasesToString(alleles.Indel[i].Alt)
 
-			Sindel := make([]string,1)
+			Sindel := make([]string, 1)
 			Sindel[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.Indel[i].Count[0], alleles.Indel[i].Count[1], alleles.Indel[i].Count[2], alleles.Counts)
 			Sindels[i] = Sindel
 
 			current = &vcf.Vcf{
-				Chr:     loc.Chr,
-				Pos:     loc.Pos,
-				Id:      ".",
-				Ref:     RefSeq[i],
-				Alt:	 AltSeq[i],
-				Qual:    1,
-				Filter:  ".",
-				Info:    ".",
-				Format:  "RefCount,For,Rev:AltCount,For,Rev:Cov",
-				Sample:	 Sindels[i]}
-
-			if len(alleles.Indel) > 2 {
-				fmt.Println(*current)
-			}
+				Chr:    loc.Chr,
+				Pos:    loc.Pos,
+				Id:     ".",
+				Ref:    RefSeq[i],
+				Alt:    AltSeq[i],
+				Qual:   1,
+				Filter: ".",
+				Info:   ".",
+				Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
+				Sample: Sindels[i]}
 
 			answer = append(answer, current)
 		}
@@ -512,13 +510,13 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				switch AltSeq[0] {
 				case dna.A:
-					answer[Location{Chr, Pos-1}].BaseA = Alt
+					answer[Location{Chr, Pos - 1}].BaseA = Alt
 				case dna.C:
-					answer[Location{Chr, Pos-1}].BaseC = Alt
+					answer[Location{Chr, Pos - 1}].BaseC = Alt
 				case dna.G:
-					answer[Location{Chr, Pos-1}].BaseG = Alt
+					answer[Location{Chr, Pos - 1}].BaseG = Alt
 				case dna.T:
-					answer[Location{Chr, Pos-1}].BaseT = Alt
+					answer[Location{Chr, Pos - 1}].BaseT = Alt
 				}
 
 				// If Indel
@@ -539,9 +537,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 				}
 
 				currentIndel = Indel{
-					Ref:       RefSeq,
-					Alt:       AltSeq,
-					Count:     Alt}
+					Ref:   RefSeq,
+					Alt:   AltSeq,
+					Count: Alt}
 
 				answer[Location{Chr, Pos}].Indel = append(answer[Location{Chr, Pos}].Indel, currentIndel)
 
@@ -617,4 +615,328 @@ func FindMinorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) i
 	}
 
 	return minorAllele
+}
+
+// Count Alleles with Go Routines
+type GoCountInput struct {
+	matrix *SafeMap
+	Ref    RefMap
+	MapQT  int64
+}
+
+type SafeMap struct {
+	m   SampleMap
+	mux sync.Mutex
+}
+
+func getPos(matrix *SafeMap, key Location, ref RefMap) {
+	//matrix.mux.Lock()
+	_, ok := matrix.m[key]
+	if !ok {
+		current := &AlleleCount{
+			Ref:    ref[key.Chr][key.Pos],
+			Counts: 0,
+			BaseA:  make([]int32, 3),
+			BaseC:  make([]int32, 3),
+			BaseG:  make([]int32, 3),
+			BaseT:  make([]int32, 3),
+			Indel:  make([]Indel, 0)}
+
+		matrix.m[key] = current
+	}
+	//matrix.mux.Unlock()
+}
+
+func writeToMap(input chan SampleMap, output chan SampleMap, wg *sync.WaitGroup) {
+	defer wg.Done()
+	writeMap := make(SampleMap)
+
+	for readMap := range input {
+
+		for key, value := range readMap {
+			_, ok := writeMap[key]
+			if !ok {
+				writeMap[key] = value
+			} else {
+				writeMap[key].Counts = writeMap[key].Counts + readMap[key].Counts
+				writeMap[key].BaseA = addSlice(writeMap[key].BaseA, readMap[key].BaseA)
+				writeMap[key].BaseC = addSlice(writeMap[key].BaseC, readMap[key].BaseC)
+				writeMap[key].BaseG = addSlice(writeMap[key].BaseG, readMap[key].BaseG)
+				writeMap[key].BaseT = addSlice(writeMap[key].BaseT, readMap[key].BaseT)
+				addIndels(writeMap[key], readMap[key])
+			}
+		}
+
+	}
+	output <- writeMap
+}
+
+func mergeMaps(a SampleMap, b SampleMap) SampleMap {
+	for key, value := range b {
+		_, ok := a[key]
+		if !ok {
+			a[key] = value
+		} else {
+			a[key].Counts = a[key].Counts + b[key].Counts
+			a[key].BaseA = addSlice(a[key].BaseA, b[key].BaseA)
+			a[key].BaseC = addSlice(a[key].BaseC, b[key].BaseC)
+			a[key].BaseG = addSlice(a[key].BaseG, b[key].BaseG)
+			a[key].BaseT = addSlice(a[key].BaseT, b[key].BaseT)
+			addIndels(a[key], b[key])
+		}
+	}
+	return a
+}
+
+func addIndels(write *AlleleCount, read *AlleleCount) {
+	var Match bool
+	var i, j int
+
+	Match = false
+	for i = 0; i < len(read.Indel); i++ {
+		for j = 0; j < len(write.Indel); j++ {
+			// If the deletion has already been seen before, increment the existing entry
+			// For a deletion the indelSeq should match the Ref
+			if dna.CompareSeqsIgnoreCase(read.Indel[i].Ref, write.Indel[j].Ref) == 0 &&
+				dna.CompareSeqsIgnoreCase(read.Indel[i].Alt, write.Indel[j].Alt) == 0 {
+				write.Indel[j].Count = addSlice(write.Indel[j].Count, read.Indel[i].Count)
+				Match = true
+				break
+			}
+		}
+
+		if Match == false {
+			write.Indel = append(write.Indel, read.Indel[i])
+		}
+	}
+}
+
+func addSlice(a []int32, b []int32) []int32 {
+	c := make([]int32, len(a))
+	for i := 0; i < len(a); i++ {
+		c[i] = a[i] + b[i]
+	}
+	return c
+}
+
+func goCountAlleles(samRecord interface{}, input interface{}) interface{} {
+	aln := samRecord.(*sam.SamAln)
+	data := input.(*GoCountInput)
+	ref := data.Ref
+	minMapQ := data.MapQT
+
+	answer := make(SampleMap)
+
+	var i, k int32
+	var RefIndex, SeqIndex int64
+	var currentSeq []dna.Base
+	var currentIndel Indel
+	var indelSeq []dna.Base
+	var OrigRefIndex int64
+
+	// If read is unmapped then go to the next alignment
+	if aln.Cigar[0].Op == '*' {
+		return nil
+	}
+
+	// If mapping quality is less than the threshold then go to next alignment
+	if aln.MapQ < minMapQ {
+		return nil
+	}
+
+	SeqIndex = 0
+	RefIndex = aln.Pos - 1
+
+	for i = 0; i < int32(len(aln.Cigar)); i++ {
+		currentSeq = aln.Seq
+
+		//Handle deletion relative to ref
+		//Each position deleted is annotated with counts + 1
+		if aln.Cigar[i].Op == 'D' {
+
+			OrigRefIndex = RefIndex
+			indelSeq = make([]dna.Base, 1)
+
+			// First base in indel is the base prior to the indel sequence per VCF standard format
+			indelSeq[0] = ref[aln.RName][OrigRefIndex-1]
+
+			for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
+
+				loc := Location{aln.RName, RefIndex}
+				answer[loc] = &AlleleCount{
+					Ref:    ref[aln.RName][RefIndex],
+					Counts: 1,
+					BaseA:  make([]int32, 3),
+					BaseC:  make([]int32, 3),
+					BaseG:  make([]int32, 3),
+					BaseT:  make([]int32, 3),
+					Indel:  make([]Indel, 0)}
+
+				// Keep track of deleted sequence
+				indelSeq = append(indelSeq, ref[aln.RName][RefIndex])
+				RefIndex++
+			}
+
+			loc := Location{aln.RName, OrigRefIndex}
+
+			currentIndel = Indel{indelSeq, indelSeq[:1], make([]int32, 3)}
+			currentIndel.Count[0]++
+			if sam.IsForwardRead(aln) == true {
+				currentIndel.Count[1]++
+			} else if sam.IsReverseRead(aln) == false {
+				currentIndel.Count[2]++
+			}
+
+			answer[loc].Indel = append(answer[loc].Indel, currentIndel)
+
+			//Handle insertion relative to ref
+			//The base after the inserted sequence is annotated with an Ins read
+		} else if aln.Cigar[i].Op == 'I' {
+
+			loc := Location{aln.RName, RefIndex}
+			answer[loc] = &AlleleCount{
+				Ref:    ref[aln.RName][RefIndex],
+				Counts: 0,
+				BaseA:  make([]int32, 3),
+				BaseC:  make([]int32, 3),
+				BaseG:  make([]int32, 3),
+				BaseT:  make([]int32, 3),
+				Indel:  make([]Indel, 0)}
+
+			// Loop through read sequence and keep track of the inserted bases
+			indelSeq = make([]dna.Base, 1)
+
+			// First base in indel is the base prior to the indel sequence per VCF standard format
+			indelSeq[0] = ref[aln.RName][RefIndex-1]
+
+			// Keep track of inserted sequence by moving along the read
+			for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
+				indelSeq = append(indelSeq, currentSeq[SeqIndex])
+				SeqIndex++
+			}
+
+			currentIndel = Indel{indelSeq[:1], indelSeq, make([]int32, 3)}
+			currentIndel.Count[0]++
+			if sam.IsForwardRead(aln) == true {
+				currentIndel.Count[1]++
+			} else if sam.IsReverseRead(aln) == true {
+				currentIndel.Count[2]++
+			}
+
+			answer[loc].Indel = append(answer[loc].Indel, currentIndel)
+
+			// Note: Insertions do not contribute to the total counts as the insertion is associated with the previous reference base
+
+			//Handle matching pos relative to ref
+		} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
+
+			for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
+
+				loc := Location{aln.RName, RefIndex}
+				answer[loc] = &AlleleCount{
+					Ref:    ref[aln.RName][RefIndex],
+					Counts: 0,
+					BaseA:  make([]int32, 3),
+					BaseC:  make([]int32, 3),
+					BaseG:  make([]int32, 3),
+					BaseT:  make([]int32, 3),
+					Indel:  make([]Indel, 0)}
+
+				switch currentSeq[SeqIndex] {
+				case dna.A:
+					if sam.IsForwardRead(aln) == true {
+						answer[loc].BaseA[1]++
+					} else if sam.IsReverseRead(aln) == true {
+						answer[loc].BaseA[2]++
+					}
+					answer[loc].BaseA[0]++
+					answer[loc].Counts++
+				case dna.T:
+					if sam.IsForwardRead(aln) == true {
+						answer[loc].BaseT[1]++
+					} else if sam.IsReverseRead(aln) == true {
+						answer[loc].BaseT[2]++
+					}
+					answer[loc].BaseT[0]++
+					answer[loc].Counts++
+				case dna.G:
+					if sam.IsForwardRead(aln) == true {
+						answer[loc].BaseG[1]++
+					} else if sam.IsReverseRead(aln) == true {
+						answer[loc].BaseG[2]++
+					}
+					answer[loc].BaseG[0]++
+					answer[loc].Counts++
+				case dna.C:
+					if sam.IsForwardRead(aln) == true {
+						answer[loc].BaseC[1]++
+					} else if sam.IsReverseRead(aln) == true {
+						answer[loc].BaseC[2]++
+					}
+					answer[loc].BaseC[0]++
+					answer[loc].Counts++
+				}
+
+				SeqIndex++
+				RefIndex++
+			}
+		} else if aln.Cigar[i].Op != 'H' {
+			SeqIndex = SeqIndex + aln.Cigar[i].RunLength
+		}
+	}
+	return answer
+}
+
+func GoCountAlleles(refFilename string, samFilename string, minMapQ int64, threads int) SampleMap {
+
+	// Read in reference
+	fmt.Printf("#Reading Reference\n")
+	ref := refToMap(refFilename)
+
+	// Initialize empty map of chromosomes to map of positions
+	AlleleMap := make(SampleMap)
+
+	input := &GoCountInput{&SafeMap{m: AlleleMap}, ref, minMapQ}
+
+	channel, _ := routines.GoWorkOnLine(samFilename, input, goCountAlleles, routines.NextSamLine, threads)
+
+	interMaps := 20
+
+	sendMap := make(chan SampleMap)
+	recieveMap := make(chan SampleMap, interMaps)
+
+	var wg sync.WaitGroup
+	for i := 0; i < interMaps; i++ {
+		wg.Add(1)
+		go writeToMap(sendMap, recieveMap, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(recieveMap)
+	}()
+
+	for j := range channel {
+		if j != nil {
+			sendMap <- j.(SampleMap)
+		}
+	}
+	close(sendMap)
+
+	wg.Wait()
+	for k := range recieveMap {
+		AlleleMap = mergeMaps(AlleleMap, k)
+	}
+
+	return AlleleMap
+}
+
+func safeMapToMap(mSafe sync.Map) SampleMap {
+	var answer SampleMap
+	answer = make(SampleMap)
+	mSafe.Range(func(key interface{}, value interface{}) bool {
+		answer[key.(Location)] = value.(*AlleleCount)
+		return true
+	})
+	return answer
 }
