@@ -1,6 +1,7 @@
 package alleles
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -8,18 +9,20 @@ import (
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // TestGraph Structure
 //             n2          e0 = 1
-//         e2/    \e3      e1 = 0.05
-//      e1  /  e4  \       e2 = 1
+//         e1/    \e2      e1 = 0.05
+//      e0  /  e3  \       e2 = 1
 //  n0 --- n1 ----- n4     e3 = 0.8
 //          \      /       e4 = 0.15
-//         e5\    /e6      e5 = 1
+//         e4\    /e5      e5 = 1
 //             n3
 //
 //               A
@@ -30,6 +33,7 @@ import (
 //             \    /
 //               T
 
+// Test Functions
 func MakeTestGraph() *simpleGraph.SimpleGraph {
 	graph := simpleGraph.NewGraph()
 
@@ -166,35 +170,152 @@ func MakeTest() (*simpleGraph.SimpleGraph, []*sam.SamAln) {
 	return MakeTestGraph(), MakeTestAln()
 }
 
-
-
-func GetAltNodes(start *simpleGraph.Node) []*simpleGraph.Node {
+// Get random path through graph
+func RandPath(graph *simpleGraph.SimpleGraph) []*simpleGraph.Node {
 	answer := make([]*simpleGraph.Node, 0)
+	rand.Seed(time.Now().UnixNano())
+	var currentNode, nextNode *simpleGraph.Node
 
-	for i := 0; i < len(start.Prev); i++ {
-		for j := 0; j < len(start.Prev[i].Dest.Next); j++ {
-			answer = append(answer, start.Prev[i].Dest.Next[j].Dest)
+	currentNode = graph.Nodes[0]
+	for {
+		answer = append(answer, currentNode)
+
+		if len(currentNode.Next) == 0 {
+			break
+		}
+		nextNode = currentNode.Next[rand.Intn(len(currentNode.Next))].Dest
+		currentNode = nextNode
+	}
+	return answer
+}
+
+// Currently does not make indels that are not in graph
+// TODO: add in functionality for somatic SNVs
+func MakeTestReads(graph *simpleGraph.SimpleGraph, numReads int, readLen int, numSNP int, numSomaticSNV int) []*sam.SamAln {
+	answer := make([]*sam.SamAln, 0)
+	rand.Seed(time.Now().UnixNano())
+
+	var i, j int
+	var possibleSNPids = make([]int, 0)
+	var SNPids = make([]int, 0)
+	fmt.Println(possibleSNPids)
+	// Choose random path through graph
+	basePath := RandPath(graph)
+
+	// Determine which nodes could diverge into a SNP
+	for i = 0; i < len(basePath); i++ {
+		if len(basePath[i].Next) > 1 {
+			possibleSNPids = append(possibleSNPids, i)
 		}
 	}
 
+	// Choose SNPs
+	for i = 0; i < numSNP; i++ {
+		randid := rand.Intn(len(possibleSNPids))
+		var match bool = false
+		for j = 0; j < len(SNPids); j++ {
+			if possibleSNPids[randid] == SNPids[j] {
+				match = true
+				break
+			}
+		}
+		if match == false {
+			SNPids = append(SNPids, possibleSNPids[randid])
+		}
+	}
+
+	// Pick a start node, if it is a snp then choose between two options
+	var current *sam.SamAln
+	for i = 0; i < numReads; i++ {
+		startNodeId := rand.Intn(len(basePath))
+		var altnode *simpleGraph.Node = nil
+
+		for j = 0; j < len(SNPids); j++ {
+			if startNodeId - 1 == SNPids[j] {
+				for {
+					randid := rand.Intn(len(basePath[SNPids[j]].Next))
+					testSNPnode := basePath[SNPids[j]].Next[randid].Dest
+					if testSNPnode != basePath[startNodeId] {
+						altnode = testSNPnode
+						break
+					}
+				}
+				break
+			}
+		}
+		randStart := rand.Intn(2)
+
+		var readPath = make([]*simpleGraph.Node, 0)
+
+		if altnode != nil && randStart == 1 {
+			readPath = append(readPath, altnode)
+		} else {
+			readPath = append(readPath, basePath[startNodeId])
+		}
+		readStartPos := rand.Intn(len(readPath[0].Seq))
+
+		var readSeq = make([]dna.Base, 0)
+		readSeq = append(readSeq, readPath[0].Seq[readStartPos:]...)
+
+		var currNodeId = startNodeId
+		for len(readSeq) < readLen {
+
+			if len(basePath[currNodeId].Next) == 0 {
+				break
+			}
+			// Figure out if current node branches into a SNP
+			altnode = nil
+			for j = 0; j < len(SNPids); j++ {
+				if currNodeId == SNPids[j] {
+					for {
+						testSNPnode := basePath[SNPids[j]].Next[rand.Intn(len(basePath[SNPids[j]].Next))].Dest
+						if testSNPnode != basePath[currNodeId] {
+							altnode = testSNPnode
+							break
+						}
+					}
+					break
+				}
+			}
+
+			currNodeId++
+
+			randStart = rand.Intn(2)
+			if altnode != nil && randStart == 1 {
+				readPath = append(readPath, altnode)
+			} else {
+				readPath = append(readPath, basePath[currNodeId])
+			}
+
+
+			missingSeq := readLen - len(readSeq)
+
+			if len(basePath[currNodeId].Seq) > missingSeq {
+				readSeq = append(readSeq, basePath[currNodeId].Seq[0:missingSeq]...)
+			} else {
+				readSeq = append(readSeq, basePath[currNodeId].Seq...)
+			}
+		}
+
+		var writePath = make([]uint32, 0)
+		for j = 0; j < len(readPath); j++ {
+			writePath = append(writePath, readPath[j].Id)
+		}
+
+		current = &sam.SamAln{}
+		current.RName = readPath[0].Name
+		current.Seq = readSeq
+		current.Pos = int64(readStartPos)
+		current.Extra = simpleGraph.PathToString(writePath, graph)
+
+		answer = append(answer, current)
+
+	}
 	return answer
 }
 
-func normalizePathCount(node *simpleGraph.Node, pathCount uint32, readLength int) float64 {
-	var answer float64
 
-	return answer
-}
-
-func CountAllelesFromGraph(graph *simpleGraph.SimpleGraph, aln []*sam.SamAln) []*vcf.Vcf {
-	var answer []*vcf.Vcf
-
-	return answer
-}
-
-
-
-
+// Practical Functions
 type NodeP struct {
 	Node 	*simpleGraph.Node
 	pVal	float64
