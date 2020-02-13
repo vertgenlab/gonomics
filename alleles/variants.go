@@ -135,7 +135,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 	}
 
 	wg.Add(threads)
-	inputChan := make(chan *ScoreInput)
+	inputChan := make(chan ScoreInput)
 	for k := 0; k < threads; k++ {
 		go func() {
 			for {
@@ -238,25 +238,25 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 				fetInput.c = cA
 				fetInput.d = dA
 				fetInput.altbase = "A"
-				inputChan <- &fetInput
+				inputChan <- fetInput
 			}
 			if alleles[i].Ref != dna.C && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cC
 				fetInput.d = dC
 				fetInput.altbase = "C"
-				inputChan <- &fetInput
+				inputChan <- fetInput
 			}
 			if alleles[i].Ref != dna.G && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cG
 				fetInput.d = dG
 				fetInput.altbase = "G"
-				inputChan <- &fetInput
+				inputChan <- fetInput
 			}
 			if alleles[i].Ref != dna.T && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
 				fetInput.c = cT
 				fetInput.d = dT
 				fetInput.altbase = "T"
-				inputChan <- &fetInput
+				inputChan <- fetInput
 			}
 
 			// Calculate p for each Indel
@@ -279,7 +279,7 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 				fetInput.d = dIndel
 				fetInput.altbase = "Indel"
 				fetInput.indelslicepos = j
-				inputChan <- &fetInput
+				inputChan <- fetInput
 			}
 		}
 	}
@@ -307,7 +307,6 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 // Calculates strand bias
 func passStrandBias(alpha int32, beta int32) bool {
 	val := float64(alpha) / float64(alpha+beta)
-
 	if val < 0.95 && val > 0.05 {
 		return true
 	} else {
@@ -317,8 +316,7 @@ func passStrandBias(alpha int32, beta int32) bool {
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
 
-func score(input *ScoreInput) *vcf.Vcf{
-
+func score(input ScoreInput) *vcf.Vcf{
 	var p float64
 	var answer *vcf.Vcf
 
@@ -345,7 +343,7 @@ func score(input *ScoreInput) *vcf.Vcf{
 	}
 
 	if p < input.sigThreshold {
-		fmt.Println(input)
+
 		var sampleField []string = make([]string, 0)
 		sampleField = append(sampleField, fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts))
 		answer = &vcf.Vcf{

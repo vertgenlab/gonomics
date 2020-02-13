@@ -11,309 +11,10 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
-
-// TestGraph Structure
-//             n2          e0 = 1
-//         e1/    \e2      e1 = 0.05
-//      e0  /  e3  \       e2 = 1
-//  n0 --- n1 ----- n4     e3 = 0.8
-//          \      /       e4 = 0.15
-//         e4\    /e5      e5 = 1
-//             n3
-//
-//               A
-//             /    \
-//            /      \
-//  ATG --- CG ----- TAA
-//            \      /
-//             \    /
-//               T
-
-// Test Functions
-func MakeTestGraph() *simpleGraph.SimpleGraph {
-	graph := simpleGraph.NewGraph()
-
-	var n0, n1, n2, n3, n4 *simpleGraph.Node
-	var e0, e1, e2, e3, e4, e5 *simpleGraph.Edge
-
-	// Make Nodes
-	n0 = &simpleGraph.Node{
-		Id: 	0,
-		Name: 	"n0",
-		Seq:	dna.StringToBases("ATG")}
-
-	n1 = &simpleGraph.Node{
-		Id: 	1,
-		Name: 	"n1",
-		Seq:	dna.StringToBases("CG")}
-
-	n2 = &simpleGraph.Node{
-		Id: 	2,
-		Name: 	"n2",
-		Seq:	dna.StringToBases("A")}
-
-	n3 = &simpleGraph.Node{
-		Id: 	3,
-		Name: 	"n3",
-		Seq:	dna.StringToBases("T")}
-
-	n4 = &simpleGraph.Node{
-		Id: 	4,
-		Name: 	"n4",
-		Seq:	dna.StringToBases("TAA")}
-
-	// Make Edges
-	e0 = &simpleGraph.Edge{
-		Dest: 	n1,
-		Prob: 	1}
-
-	e1 = &simpleGraph.Edge{
-		Dest: 	n2,
-		Prob: 	0.05}
-
-	e2 = &simpleGraph.Edge{
-		Dest: 	n4,
-		Prob: 	1}
-
-	e3 = &simpleGraph.Edge{
-		Dest: 	n4,
-		Prob: 	0.8}
-
-	e4 = &simpleGraph.Edge{
-		Dest: 	n3,
-		Prob: 	0.15}
-
-	e5 = &simpleGraph.Edge{
-		Dest: 	n4,
-		Prob: 	1}
-
-	// Define Paths
-	n0.Next = append(n0.Next, e0)
-	n1.Next = append(n1.Next, e1, e3, e4)
-	n1.Prev = append(n1.Prev, e0)
-	n2.Next = append(n2.Next, e2)
-	n2.Prev = append(n2.Prev, e1)
-	n3.Next = append(n3.Next, e5)
-	n3.Prev = append(n3.Prev, e4)
-	n4.Prev = append(n4.Prev, e2, e3, e5)
-
-	graph.Nodes = append(graph.Nodes, n0, n1, n2, n3, n4)
-
-	return graph
-}
-
-func MakeTestAln() []*sam.SamAln {
-	var reads = make([]*sam.SamAln, 0)
-	var r1, r2, r3, r4, r5, r6, r7, r8, r9, r10 *sam.SamAln
-
-	r1 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("ATGCGTAA"),
-		Extra: 	"0:1:4"}
-
-	r2 = &sam.SamAln{
-		RName: 	"n1",
-		Seq:	dna.StringToBases("CGTAA"),
-		Extra: 	"1:4"}
-
-	r3 = &sam.SamAln{
-		RName: 	"n1",
-		Seq:	dna.StringToBases("CGT"),
-		Extra: 	"1:3"}
-
-	r4 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("ATGCGA"),
-		Extra: 	"0:1:2"}
-
-	r5 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("ATGCGTAA"),
-		Extra: 	"0:1:4"}
-
-	// Mutation in n1
-	r6 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("AAGCGTAA"),
-		Extra: 	"0:1:4"}
-
-	r7 = &sam.SamAln{
-		RName: 	"n4",
-		Seq:	dna.StringToBases("TAA"),
-		Extra: 	"4"}
-
-	r8 = &sam.SamAln{
-		RName: 	"n3",
-		Seq:	dna.StringToBases("A"),
-		Extra: 	"3"}
-
-	// Mutation in n5
-	r9 = &sam.SamAln{
-		RName: 	"n1",
-		Seq:	dna.StringToBases("CGTTAG"),
-		Extra: 	"1:3:4"}
-
-	r10 = &sam.SamAln{
-		RName: 	"n3",
-		Seq:	dna.StringToBases("TTAA"),
-		Extra: 	"3:4"}
-
-	reads = append(reads, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10)
-	return reads
-}
-
-func MakeTest() (*simpleGraph.SimpleGraph, []*sam.SamAln) {
-	return MakeTestGraph(), MakeTestAln()
-}
-
-// Get random path through graph
-func RandPath(graph *simpleGraph.SimpleGraph) []*simpleGraph.Node {
-	answer := make([]*simpleGraph.Node, 0)
-	rand.Seed(time.Now().UnixNano())
-	var currentNode, nextNode *simpleGraph.Node
-
-	currentNode = graph.Nodes[0]
-	for {
-		answer = append(answer, currentNode)
-
-		if len(currentNode.Next) == 0 {
-			break
-		}
-		nextNode = currentNode.Next[rand.Intn(len(currentNode.Next))].Dest
-		currentNode = nextNode
-	}
-	return answer
-}
-
-// Currently does not make indels that are not in graph
-// TODO: add in functionality for somatic SNVs
-func MakeTestReads(graph *simpleGraph.SimpleGraph, numReads int, readLen int, numSNP int, numSomaticSNV int) []*sam.SamAln {
-	answer := make([]*sam.SamAln, 0)
-	rand.Seed(time.Now().UnixNano())
-
-	var i, j int
-	var possibleSNPids = make([]int, 0)
-	var SNPids = make([]int, 0)
-	// Choose random path through graph
-	basePath := RandPath(graph)
-
-	// Determine which nodes could diverge into a SNP
-	for i = 0; i < len(basePath); i++ {
-		if len(basePath[i].Next) > 1 {
-			possibleSNPids = append(possibleSNPids, i)
-		}
-	}
-
-	// Choose SNPs
-	for i = 0; i < numSNP; i++ {
-		randid := rand.Intn(len(possibleSNPids))
-		var match bool = false
-		for j = 0; j < len(SNPids); j++ {
-			if possibleSNPids[randid] == SNPids[j] {
-				match = true
-				break
-			}
-		}
-		if match == false {
-			SNPids = append(SNPids, possibleSNPids[randid])
-		}
-	}
-
-	// Pick a start node, if it is a snp then choose between two options
-	var current *sam.SamAln
-	for i = 0; i < numReads; i++ {
-		startNodeId := rand.Intn(len(basePath))
-		var altnode *simpleGraph.Node = nil
-
-		for j = 0; j < len(SNPids); j++ {
-			if startNodeId - 1 == SNPids[j] {
-				for {
-					randid := rand.Intn(len(basePath[SNPids[j]].Next))
-					testSNPnode := basePath[SNPids[j]].Next[randid].Dest
-					if testSNPnode != basePath[startNodeId] {
-						altnode = testSNPnode
-						break
-					}
-				}
-				break
-			}
-		}
-		randStart := rand.Intn(2)
-
-		var readPath = make([]*simpleGraph.Node, 0)
-
-		if altnode != nil && randStart == 1 {
-			readPath = append(readPath, altnode)
-		} else {
-			readPath = append(readPath, basePath[startNodeId])
-		}
-		readStartPos := rand.Intn(len(readPath[0].Seq))
-
-		var readSeq = make([]dna.Base, 0)
-		readSeq = append(readSeq, readPath[0].Seq[readStartPos:]...)
-
-		var currNodeId = startNodeId
-		for len(readSeq) < readLen {
-
-			if len(basePath[currNodeId].Next) == 0 {
-				break
-			}
-			// Figure out if current node branches into a SNP
-			altnode = nil
-			for j = 0; j < len(SNPids); j++ {
-				if currNodeId == SNPids[j] {
-					for {
-						testSNPnode := basePath[SNPids[j]].Next[rand.Intn(len(basePath[SNPids[j]].Next))].Dest
-						if testSNPnode != basePath[currNodeId] {
-							altnode = testSNPnode
-							break
-						}
-					}
-					break
-				}
-			}
-
-			currNodeId++
-
-			randStart = rand.Intn(2)
-			if altnode != nil && randStart == 1 {
-				readPath = append(readPath, altnode)
-			} else {
-				readPath = append(readPath, basePath[currNodeId])
-			}
-
-
-			missingSeq := readLen - len(readSeq)
-
-			if len(basePath[currNodeId].Seq) > missingSeq {
-				readSeq = append(readSeq, basePath[currNodeId].Seq[0:missingSeq]...)
-			} else {
-				readSeq = append(readSeq, basePath[currNodeId].Seq...)
-			}
-		}
-
-		var writePath = make([]uint32, 0)
-		for j = 0; j < len(readPath); j++ {
-			writePath = append(writePath, readPath[j].Id)
-		}
-		current = &sam.SamAln{}
-		current.RName = readPath[0].Name
-		current.Seq = readSeq
-		current.Pos = int64(readStartPos) + 1
-		current.Extra = simpleGraph.PathToString(writePath, graph)
-		current.Cigar = []*cigar.Cigar{&cigar.Cigar{int64(readLen), 'M'}} // TODO: trouble on this line
-		answer = append(answer, current)
-	}
-	return answer
-}
-
-
 
 // Functions to find vars that exist in graph
 type SampleData struct {
@@ -348,7 +49,7 @@ func addPathToCount(data []uint32, path []uint32) {
 	}
 }
 
-func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string) []uint32 {
+func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int64) []uint32 {
 	answer := make([]uint32, len(graph.Nodes))
 	var done = false
 	var aln *sam.SamAln
@@ -358,12 +59,13 @@ func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string) []uint32 {
 	sam.ReadHeader(samFile)
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+		if aln.MapQ < minMapQ {continue}
 		addPathToCount(answer, StringToPath(aln.Extra))
 	}
 	return answer
 }
 
-func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string) *BatchData {
+func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) *BatchData {
 	var wg sync.WaitGroup
 	receivePathCount := make(chan *SampleData)
 
@@ -378,7 +80,7 @@ func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string) *BatchD
 		// Count Paths for Each Sample in Directory
 		wg.Add(1)
 		go func(filePath string, fileName string) {
-			pathCount := CountPaths(graph, filePath)
+			pathCount := CountPaths(graph, filePath, minMapQ)
 			tmp := &SampleData{fileName, pathCount}
 			receivePathCount <- tmp
 			wg.Done()
@@ -648,7 +350,7 @@ func GraphCountAlleles(graph *simpleGraph.SimpleGraph, samFilename string, minMa
 		readPath := StringToPath(aln.Extra)
 
 		if progressMeter%10000 == 0 {
-			log.Printf("#Read %d Alignments\n", progressMeter)
+			log.Printf("#%s: Read %d Alignments\n", samFilename, progressMeter)
 		}
 		progressMeter++
 
@@ -679,7 +381,13 @@ func GraphCountAlleles(graph *simpleGraph.SimpleGraph, samFilename string, minMa
 				indelSeq = make([]dna.Base, 1)
 
 				// First base in indel is the base prior to the indel sequence per VCF standard format
-				indelSeq[0] = OrigNode.Seq[OrigRefIndex-1]
+				if OrigRefIndex == 0 {
+					prevNodeSeq := graph.Nodes[readPath[currNode - 1]].Seq
+					indelSeq[0] = prevNodeSeq[len(prevNodeSeq) - 1]
+				} else {
+					indelSeq[0] = OrigNode.Seq[OrigRefIndex - 1]
+				}
+
 
 				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
 
@@ -758,7 +466,12 @@ func GraphCountAlleles(graph *simpleGraph.SimpleGraph, samFilename string, minMa
 				indelSeq = make([]dna.Base, 1)
 
 				// First base in indel is the base prior to the indel sequence per VCF standard format
-				indelSeq[0] = ref.Seq[RefIndex-1]
+				if RefIndex == 0 {
+					prevNodeSeq := graph.Nodes[readPath[currNode - 1]].Seq
+					indelSeq[0] = prevNodeSeq[len(prevNodeSeq) - 1]
+				} else {
+					indelSeq[0] = ref.Seq[RefIndex - 1]
+				}
 
 				// Keep track of inserted sequence by moving along the read
 				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
@@ -865,30 +578,322 @@ func GraphCountAlleles(graph *simpleGraph.SimpleGraph, samFilename string, minMa
 	return AlleleMap
 }
 
-func GraphCountAllelesInDir() []GraphSampleMap {
-	answer := make([]GraphSampleMap, 0)
-
-	return answer
-}
-
-func CreateBatchGraphSampleMap() BatchGraphSampleMap {
+func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) BatchGraphSampleMap {
 	answer := make(BatchGraphSampleMap)
 
+	if !strings.HasSuffix(inDirectory, "/") {
+		inDirectory = inDirectory + "/"
+	}
+
+	files, _ := ioutil.ReadDir(inDirectory)
+
+	for _, file := range files {
+		filePath := fmt.Sprintf("%s%s", inDirectory, file.Name())
+		alleleCount := GraphCountAlleles(graph, filePath, minMapQ)
+		appendBGSM(answer, alleleCount, file.Name())
+	}
+
 	return answer
 }
 
-func GraphScoreVariants() {
+func batchAddIndels(write *BatchAlleleCount, read *AlleleCount) {
+	var Match bool
+	var i, j int
 
+	Match = false
+	for i = 0; i < len(read.Indel); i++ {
+		for j = 0; j < len(write.Indel); j++ {
+			// If the deletion has already been seen before, increment the existing entry
+			// For a deletion the indelSeq should match the Ref
+			if dna.CompareSeqsIgnoreCase(read.Indel[i].Ref, write.Indel[j].Ref) == 0 &&
+				dna.CompareSeqsIgnoreCase(read.Indel[i].Alt, write.Indel[j].Alt) == 0 {
+				write.Indel[j].Count = addSlice(write.Indel[j].Count, read.Indel[i].Count)
+				Match = true
+				break
+			}
+		}
+
+		if Match == false {
+			write.Indel = append(write.Indel, read.Indel[i])
+		}
+	}
 }
 
-func GraphScoresToVcf() []*vcf.Vcf {
-	answer := make([]*vcf.Vcf, 0)
+func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName string) BatchGraphSampleMap {
+	for key, value := range InMap {
 
-	return answer
+		_, ok := OutMap[key]
+		if !ok {
+			OutMap[key] = make([]*BatchAlleleCount, 1)
+
+			bkgd := &BatchAlleleCount{
+				Sample:	 	"Background",
+				Ref: 		value.Ref,
+				Counts: 	0,
+				BaseA: 		make([]int32, 3),
+				BaseC: 		make([]int32, 3),
+				BaseG: 		make([]int32, 3),
+				BaseT: 		make([]int32, 3),
+				Indel: 		make([]Indel, 1)}
+
+
+			OutMap[key][0] = bkgd
+		}
+
+		OutMap[key][0].Counts += value.Counts
+		OutMap[key][0].BaseA = addSlice(OutMap[key][0].BaseA, value.BaseA)
+		OutMap[key][0].BaseC = addSlice(OutMap[key][0].BaseC, value.BaseC)
+		OutMap[key][0].BaseG = addSlice(OutMap[key][0].BaseG, value.BaseG)
+		OutMap[key][0].BaseT = addSlice(OutMap[key][0].BaseT, value.BaseT)
+		batchAddIndels(OutMap[key][0], value)
+
+		curr := &BatchAlleleCount{
+			Sample:	 	SampleName,
+			Ref: 		value.Ref,
+			Counts: 	value.Counts,
+			BaseA: 		value.BaseA,
+			BaseC: 		value.BaseC,
+			BaseG: 		value.BaseG,
+			BaseT: 		value.BaseT,
+			Indel: 		value.Indel}
+
+		OutMap[key] = append(OutMap[key], curr)
+	}
+	return OutMap
 }
 
-func FindVarsOutsideGraph(graph *simpleGraph.SimpleGraph, simpleData *BatchData) []*vcf.Vcf {
+func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
+
+	fmt.Printf("#\n# Calling Variants\n")
+	var VariantScores []*vcf.Vcf
+	var progressMeter int
+	var cA, cC, cG, cT, cIndel, dA, dC, dG, dT, dIndel int32
+	var a, b []int32
+
+	// Initialize a buffered channel to send completed vcf structs through
+	vcfChannel := make(chan *vcf.Vcf, len(input))
+	var wg sync.WaitGroup
+
+	// Start Goroutines
+	var threads int
+	if len(input) < numGoRoutines {
+		threads = len(input)
+	} else {
+		threads = numGoRoutines
+	}
+
+	wg.Add(threads)
+	inputChan := make(chan ScoreInput)
+	for k := 0; k < threads; k++ {
+		go func() {
+			for {
+				data, ok := <-inputChan
+				if !ok {
+					wg.Done()
+					return
+				}
+				answer := score(data)
+				if answer != nil {
+					vcfChannel <- answer
+				}
+			}
+		}()
+	}
+
+	// Loop through BatchSampleMap
+	for loc, alleles := range input {
+
+		if progressMeter%1000 == 0 {
+			log.Printf("# Processed %d Positions\n", progressMeter)
+		}
+		progressMeter++
+
+		// Must be at least 2 samples in the slice to generate a batch p value.
+		// A single sample would be len = 2 because the background values are always element 0
+		if len(alleles) <= 2 {
+			continue
+		}
+
+		// Begin gathering parameters for Fishers Exact Test done in the numbers package
+		// test is for the matrix:
+		// [a b]
+		// [c d]
+		// a = Samples Ref Allele Count
+		// b = Background Ref Allele Count - Samples Ref Allele Count
+		// c = Samples Alt Allele Count
+		// d = Background Alt Allele Count - Samples Alt Allele Count
+
+		// Determine Reference Base
+		// If ref base is unknown then skip
+		var i, j, l int
+		a = make([]int32, len(alleles)-1)
+		b = make([]int32, len(alleles)-1)
+		switch alleles[0].Ref {
+		// Loop through samples and gather inputs for a and b
+		// For loop starts at index 1 because index zero is the background values
+		case dna.A:
+			for i = 1; i < len(alleles); i++ {
+				a[i-1] = alleles[i].BaseA[0]
+				b[i-1] = alleles[0].BaseA[0] - alleles[i].BaseA[0]
+			}
+		case dna.C:
+			for i = 1; i < len(alleles); i++ {
+				a[i-1] = alleles[i].BaseC[0]
+				b[i-1] = alleles[0].BaseC[0] - alleles[i].BaseC[0]
+			}
+		case dna.G:
+			for i = 1; i < len(alleles); i++ {
+				a[i-1] = alleles[i].BaseG[0]
+				b[i-1] = alleles[0].BaseG[0] - alleles[i].BaseG[0]
+			}
+		case dna.T:
+			for i = 1; i < len(alleles); i++ {
+				a[i-1] = alleles[i].BaseT[0]
+				b[i-1] = alleles[0].BaseT[0] - alleles[i].BaseT[0]
+			}
+		default:
+			continue
+		}
+
+		// Loop through samples and generate scores
+		// For loop starts at index 1 because index zero is the background values
+		for i = 1; i < len(alleles); i++ {
+
+			// Retrieve Values for c
+			cA = alleles[i].BaseA[0]
+			cC = alleles[i].BaseC[0]
+			cG = alleles[i].BaseG[0]
+			cT = alleles[i].BaseT[0]
+
+			// Retrieve Values for d
+			dA = alleles[0].BaseA[0] - alleles[i].BaseA[0]
+			dC = alleles[0].BaseC[0] - alleles[i].BaseC[0]
+			dG = alleles[0].BaseG[0] - alleles[i].BaseG[0]
+			dT = alleles[0].BaseT[0] - alleles[i].BaseT[0]
+
+			// Generate Scores
+
+			fetInput := ScoreInput{
+				a:             a[i-1],
+				b:             b[i-1],
+				afThreshold:   afThreshold,
+				inStruct:      alleles[i],
+				loc:           Location{loc.Node.Name, loc.Pos},
+				sigThreshold:  sigThreshold,
+				indelslicepos: 0}
+
+			var doesPassStrandBias = true
+
+			if paired == true {
+				doesPassStrandBias = passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2])
+			}
+
+			if alleles[i].Ref != dna.A && doesPassStrandBias {
+				fetInput.c = cA
+				fetInput.d = dA
+				fetInput.altbase = "A"
+				inputChan <- fetInput
+			}
+
+			if paired == true {
+				doesPassStrandBias = passStrandBias(alleles[i].BaseC[1], alleles[i].BaseC[2])
+			}
+
+			if alleles[i].Ref != dna.C && doesPassStrandBias {
+				fetInput.c = cC
+				fetInput.d = dC
+				fetInput.altbase = "C"
+				inputChan <- fetInput
+			}
+
+			if paired == true {
+				doesPassStrandBias = passStrandBias(alleles[i].BaseG[1], alleles[i].BaseG[2])
+			}
+
+			if alleles[i].Ref != dna.G && doesPassStrandBias {
+				fetInput.c = cG
+				fetInput.d = dG
+				fetInput.altbase = "G"
+				inputChan <- fetInput
+			}
+
+			if paired == true {
+				doesPassStrandBias = passStrandBias(alleles[i].BaseT[1], alleles[i].BaseT[2])
+			}
+
+			if alleles[i].Ref != dna.T && doesPassStrandBias {
+				fetInput.c = cT
+				fetInput.d = dT
+				fetInput.altbase = "T"
+				inputChan <- fetInput
+			}
+
+			// Calculate p for each Indel
+			for j = 0; j < len(alleles[i].Indel); j++ {
+				cIndel = alleles[i].Indel[j].Count[0]
+				// Find Indel in the background Indel slice
+				for l = 0; l < len(alleles[0].Indel); l++ {
+					if dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Alt, alleles[0].Indel[l].Alt) == 0 &&
+						dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Ref, alleles[0].Indel[l].Ref) == 0 {
+						dIndel = alleles[0].Indel[l].Count[0] - alleles[i].Indel[j].Count[0]
+						break
+					}
+				}
+
+				if paired == true {
+					if passStrandBias(alleles[i].Indel[j].Count[1], alleles[i].Indel[j].Count[2]) == false {
+						continue
+					}
+				}
+
+				fetInput.c = cIndel
+				fetInput.d = dIndel
+				fetInput.altbase = "Indel"
+				fetInput.indelslicepos = j
+				inputChan <- fetInput
+			}
+		}
+	}
+
+	fmt.Println("# Waiting for Goroutines to finish")
+
+	// Start GoRoutine to monitor for the finish of the wait group then close the output channel
+	go func() {
+		wg.Wait()
+		fmt.Println("# Goroutines finished")
+		close(vcfChannel)
+	}()
+
+	close(inputChan)
+	wg.Wait()
+
+	for answer := range vcfChannel {
+		VariantScores = append(VariantScores, answer)
+	}
+
+	return VariantScores
+}
+
+func FindVarsOutsideGraph(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
 	var answer []*vcf.Vcf
+
+	alleleCount := GraphCountAllelesInDir(graph, inDirectory, minMapQ)
+
+	answer = GraphScoreVariants(alleleCount, minPval, afThreshold, numGoRoutines, paired)
+
+	return answer
+}
+
+
+// Complete wrapper function for vars inside and outside graph
+func GraphVariants(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64, maxPopFreq float64, minReadFreq float64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
+
+	pathCounts := CountPathsInDir(graph, inDirectory, minMapQ)
+
+	VarsInGraph := FindVarsInsideGraph(graph, pathCounts, maxPopFreq, minReadFreq, minPval)
+	VarsOutGraph := FindVarsOutsideGraph(graph, inDirectory, minMapQ, minPval, afThreshold, numGoRoutines, paired)
+
+	answer := append(VarsInGraph, VarsOutGraph...)
 
 	return answer
 }
