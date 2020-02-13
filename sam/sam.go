@@ -45,7 +45,6 @@ func processHeaderLine(header *SamHeader, line string) {
 	var chrCount int64 = 0
 
 	header.Text = append(header.Text, line)
-
 	if strings.HasPrefix(line, "@SQ") && strings.Contains(line, "SN:") && strings.Contains(line, "LN:") {
 		curr := chromInfo.ChromInfo{Name: "", Size: 0, Order: chrCount}
 		chrCount++
@@ -172,13 +171,6 @@ func SamAlnToString(aln *SamAln) string {
 func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
 	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
 	common.ExitIfError(err)
-}
-
-func SamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {
-	for alignedRead := range incomingSams {
-		WriteAlnToFileHandle(file, alignedRead)
-	}
-	wg.Done()
 }
 
 func TestSamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {

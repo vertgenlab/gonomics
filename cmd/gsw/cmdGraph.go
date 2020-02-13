@@ -1,5 +1,6 @@
 package main
 
+//TODO: still a work in progress for the gsw aligning executable
 import (
 	"flag"
 	"fmt"
@@ -10,8 +11,6 @@ import (
 
 	"log"
 	"strings"
-
-
 )
 
 func usage() {
@@ -79,12 +78,12 @@ func main() {
 			}
 		}
 	}
-	if *testSim  > 0 {
+	if *testSim > 0 {
 		gg = simpleGraph.Read("gasAcu1.fa")
 
 		simpleGraph.WriteReadsToFile(gg.Nodes, 150, 10000)
 		//simpleGraph.GenomeDiversitySimulator()
-	
+
 	}
 	if *alignFlag == true {
 		if strings.HasSuffix(ref, ".gg") {
@@ -96,13 +95,12 @@ func main() {
 		//flag args(0) is usually the reference
 		reads := flag.Args()
 		//reads = reads[1:]
-
 		//if user only provides single fastq, aligns single read
 		if len(reads) == 2 {
 			//if usuer provides a .sam as output will write alignment
 			//to that file; otherwise, software will write to STDout
 			if strings.HasSuffix(*outTag, ".sam") {
-				simpleGraph.GSWsBatchDraft(gg, reads[1],  *outTag)
+				simpleGraph.GSWsBatchDraft(gg, reads[1], *outTag)
 			}
 		}
 		if len(reads) == 3 {
@@ -111,7 +109,6 @@ func main() {
 			}
 		}
 		//if user provides paired end reads, will do alignment on paired end reads
-
 	}
 }
 

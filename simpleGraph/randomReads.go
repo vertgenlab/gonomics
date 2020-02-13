@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
-	"log"
 	"math/rand"
 )
 
@@ -17,12 +16,13 @@ func GenomeDiversity(genome []*Node, readLength int, numReads int, numChanges in
 	var strand bool
 	var editGenome int
 	for i := 0; i < numReads; {
+		var size int = randIntInRange(8, 24)
 		chromIdx = randIntInRange(0, len(genome))
 		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
 		strand = randIntInRange(0, 2) == 0
 		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			curr := fastq.Fastq{}
-			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
+			curr.Name = fmt.Sprintf("%d:%d:%d:%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
 			copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
 			curr.Qual = generateDiverseFakeQual(readLength)
@@ -30,17 +30,24 @@ func GenomeDiversity(genome []*Node, readLength int, numReads int, numChanges in
 				dna.ReverseComplement(curr.Seq)
 			}
 			if snpInsDel {
-				editGenome = randIntInRange(0, 8)
-				//snp
-				if editGenome == 0 || editGenome == 1 {
+				location := int64(randIntInRange(2, len(curr.Seq)-24))
+				editGenome = randIntInRange(0, 30)
+				//del
+				if editGenome < 4 {
+
+					dna.Delete(curr.Seq, location, location+int64(size))
+					curr.Name = fmt.Sprintf("%s:del:%dto%d", curr.Name, location, location+int64(size))
+					curr.Seq = append(curr.Seq, genome[chromIdx].Seq[int64(start)+location+int64(size):readLength+size]...)
+					//log.Printf("Size of read with deletions is=%d\n", len(curr.Seq))
+				} else if editGenome < 8 && editGenome > 4 {
+					curr = insertion(curr, 2)
+				} else if editGenome < 8 && editGenome < 24 {
 					mutate(curr.Seq, numChanges)
-				} else if editGenome == 2 {
-					curr = deletions(curr, randIntInRange(0, 3))
-				} else if editGenome == 3 || editGenome == 4 {
-					curr = insertion(curr, randIntInRange(0, 3))
+					mutate(curr.Seq, numChanges)
 				} else {
 					//no mutations
 				}
+
 			}
 			pairEnd := fastq.PairedEnd{}
 			pairEnd = singleToPair(genome, curr)
@@ -94,42 +101,84 @@ func RandomReads(genome []*Node, readLength int, numReads int, numChanges int, s
 	var strand bool
 	var editGenome int
 	//size of insertion or deletion
-	var size int = 5
+	var size int = 0
 	for i := 0; i < numReads; {
+		size = randIntInRange(2, 8)
 		chromIdx = randIntInRange(0, len(genome))
-		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength-size)
+		start = randIntInRange(30, len(genome[chromIdx].Seq)-readLength-size)
 		strand = randIntInRange(0, 2) == 0
+		location := int64(randIntInRange(8, readLength-size))
 		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			curr := fastq.Fastq{}
-			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
+			curr.Name = fmt.Sprintf("%d:%d:%d:%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
+
 			copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
 			curr.Qual = generateFakeQual(readLength)
 			if !strand {
 				dna.ReverseComplement(curr.Seq)
 			}
 			if snpInsDel {
+
 				editGenome = randIntInRange(0, 30)
 				//del
-				if editGenome < 4 {
-					location := int64(randIntInRange(size, len(curr.Seq)-size))
-					dna.Delete(curr.Seq, location, location+int64(size))
-					curr.Name = fmt.Sprintf("%s_del:%dto%d", curr.Name, location, location+int64(size))
-					curr.Seq = append(curr.Seq, genome[chromIdx].Seq[start+readLength:size+start+readLength]...)
+				if editGenome <= 4 {
+					//location := int64(randIntInRange(2+size, readLength-size)-8)
+					deletion := fastq.Fastq{}
+					deletion.Name = fmt.Sprintf("%d:%d:%d:%c:deletion:%dto%d", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand), location, location+int64(size))
+					deletion.Seq = make([]dna.Base, readLength)
+					copy(deletion.Seq, genome[chromIdx].Seq[start:start+readLength+size])
+					//log.Printf("Sequence before deletion at location=%d\n%s\n", location, dna.BasesToString(deletion.Seq)[:10])
+					dna.Delete(deletion.Seq, location, location+int64(size))
+					//log.Printf("%s\nSequence after deletion len=%d\n", dna.BasesToString(deletion.Seq)[:10], len(deletion.Seq))
+					//append(curr.Seq[:location], curr.Seq[location+int64(size):]...)
+
+					curr.Name = deletion.Name
+					curr.Seq = make([]dna.Base, readLength)
+					copy(curr.Seq, deletion.Seq)
+					//log.Printf("Sequence sending off to aligner!=%slen=%d\n", dna.BasesToString(curr.Seq), len(curr.Seq))
+					///curr = deletion
+
+					//curr.Name = fmt.Sprintf("%s_del:%dto%d", curr.Name, location, location+int64(size))
+
 					//log.Printf("Size of read with deletions is=%d\n", len(curr.Seq))
+				} else if editGenome <= 8 && editGenome > 4 {
 
-				} else if editGenome < 8 && editGenome > 4 {
-					curr = insertion(curr, 2)
-				} else if editGenome < 8 && editGenome < 24 {
-					mutate(curr.Seq, numChanges)
-					mutate(curr.Seq, numChanges)
+					possibleBases := []dna.Base{dna.A, dna.C, dna.G, dna.T}
+					extra := make([]dna.Base, size)
+					for base := 0; base < size; base++ {
+						extra = append(extra, possibleBases[randIntInRange(0, len(possibleBases))])
+					}
+
+					insertion := fastq.Fastq{}
+					insertion.Name = fmt.Sprintf("%d:%d:%d:%c:insertion:%dto%d", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand), location, location+int64(size))
+					insertion.Seq = make([]dna.Base, readLength)
+					copy(insertion.Seq, genome[chromIdx].Seq[start:start+readLength-size])
+					//log.Printf("Sequence before insertion at location=%d\n%s\n", location, dna.BasesToString(insertion.Seq)[:10])
+					dna.Insert(insertion.Seq, location, extra)
+					//log.Printf("%s\nSequence after insertion len=%d\n", dna.BasesToString(insertion.Seq)[:10], len(insertion.Seq))
+					//append(curr.Seq[:location], curr.Seq[location+int64(size):]...)
+					curr.Name = insertion.Name
+					curr.Seq = make([]dna.Base, readLength)
+					copy(curr.Seq, insertion.Seq)
+				} else if editGenome > 8 && editGenome <= 24 {
+					snp := fastq.Fastq{}
+					snp.Seq = make([]dna.Base, readLength)
+					copy(snp.Seq, genome[chromIdx].Seq[start:start+readLength])
+					before := snp.Seq[location]
+					newMutatePos(snp.Seq, int(location))
+					name := fmt.Sprintf("%d_%d_%d_SNP:%d:%c_to_%c", genome[chromIdx].Id, start, start+readLength, location, dna.BaseToRune(before), dna.BaseToRune(snp.Seq[location]))
+					location = int64(randIntInRange(8+size, len(snp.Seq)-size))
+					newMutatePos(snp.Seq, int(location))
+					name += fmt.Sprintf("%s_&_SNP:%d:%c_to_%c_%c", snp.Name, location, dna.BaseToRune(before), dna.BaseToRune(snp.Seq[location]), common.StrandToRune(strand))
+					curr.Name = name
+					curr.Seq = make([]dna.Base, readLength)
+					copy(curr.Seq, snp.Seq)
 				} else {
-					//no mutations
-				}
 
+				}
 			}
 			if len(curr.Seq) != readLength {
-				log.Fatalf("incoreect read len %d", len(curr.Seq))
 			}
 			answer[i] = &curr
 			i++
@@ -187,6 +236,16 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 	return answer
 }
 
+func newMutatePos(seq []dna.Base, pos int) {
+	possibleBases := []dna.Base{dna.A, dna.C, dna.G, dna.T}
+	newBase := possibleBases[randIntInRange(0, len(possibleBases))]
+	if newBase != seq[pos] {
+		seq[pos] = newBase
+	} else {
+		newMutatePos(seq, pos)
+	}
+}
+
 func randIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }
@@ -236,8 +295,8 @@ func RandomReadOneMutation(genome []*Node, readLength int, mutantPos int) *fastq
 
 func generateDiverseFakeQual(length int) []rune {
 	var answer []rune = make([]rune, length)
-	var asci = []rune{'!', '#', '$', '%', '&', '(', ')', '*', '+', '`', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'}
-
+	//var asci = []rune{'!', '#', '$', '%', '&', '(', ')', '*', '+', '`', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'}
+	var asci = []rune{'F', ',', 'F', ':'}
 	for i := 0; i < length; i++ {
 		answer[i] = asci[randIntInRange(0, len(asci))]
 	}

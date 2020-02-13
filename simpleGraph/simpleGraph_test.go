@@ -30,7 +30,7 @@ func TestReadsWithTiming(t *testing.T) {
 	//var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 10
+	var numberOfReads int = 1
 	var readLength int = 150
 	var mutations int = 0
 	var dummyWaiter sync.WaitGroup
@@ -42,7 +42,7 @@ func TestReadsWithTiming(t *testing.T) {
 	genome := Read("testdata/gasAcu1.fa")
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, true)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
 
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -82,7 +82,7 @@ func TestReadsWithTiming(t *testing.T) {
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 1000
+	var numberOfReads int = 20000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -127,6 +127,11 @@ func TestWorkerWithWriting(t *testing.T) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+}
+
+/*
+func TestAlignmentSimulator(t *testing.T) {
+	GenomeDiversitySimulator("testdata/gasAcu1.fa")
 }
 
 func TestGenomeDiversity(t *testing.T) {
@@ -183,7 +188,7 @@ func TestGenomeDiversity(t *testing.T) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
-}
+}*/
 
 func TestWorkerWithTiming(t *testing.T) {
 	var tileSize int = 32

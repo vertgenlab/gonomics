@@ -274,3 +274,63 @@ func GSWsBatches(ref *SimpleGraph, input string, output string, groupSize int) {
 	}
 	//wg.Wait()
 }*/
+
+/*
+func GenomeDiversitySimulator(dnaSequence string) {
+	var tileSize int = 32
+	var stepSize int = 31
+	var numberOfReads int = 10000
+	var readLength int = 150
+	var mutations int = 0
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 8
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	referenceGenome := Read(dnaSequence)
+	log.Printf("Simulating %d reads...\n", numberOfReads)
+	simReads := RandomReads(referenceGenome.Nodes, readLength, numberOfReads, mutations, true)
+	//simReads := GenomeDiversity(genome.Nodes, readLength, numberOfReads)
+	fastq.Write("genomeDiversity.fastq", simReads)
+	log.Printf("Writing fastqs to file...\n")
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read(dnaSequence)
+	log.Printf("Indexing the genome...\n")
+	tiles := IndexGenomeIntoMap(referenceGenome.Nodes, tileSize, stepSize)
+	file, _ := os.Create("testdata/genomeDiversity.sam")
+	defer file.Close()
+	header := NodesHeader(genome.Nodes)
+	sam.WriteHeaderToFileHandle(file, header)
+
+	time.Sleep(10 * time.Second)
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 824)
+
+	log.Printf("Waiting for 10 seconds and then aligning reads...\n")
+	time.Sleep(10 * time.Second)
+
+	go fastq.ReadToChan("genomeDiversity.fastq", fastqPipe)
+
+	log.Printf("Starting alignment worker...\n")
+	workerWaiter.Add(numWorkers)
+	start := time.Now()
+	for i := 0; i < numWorkers; i++ {
+		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
+	}
+
+	writerWaiter.Add(1)
+
+	go sam.SamChanToFile(samPipe, file, &writerWaiter)
+
+	workerWaiter.Wait()
+	close(samPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	writerWaiter.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+}*/

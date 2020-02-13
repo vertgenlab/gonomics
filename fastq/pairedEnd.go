@@ -28,7 +28,6 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 
 	fileOne := fileio.EasyOpen(readOne)
 	defer fileOne.Close()
-
 	fileTwo := fileio.EasyOpen(readTwo)
 	defer fileTwo.Close()
 

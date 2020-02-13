@@ -25,14 +25,15 @@ type SeedDev struct {
 	Prev        *SeedDev
 }
 
-func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
+func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	for i := 0; i < len(seeds); i++ {
-		extendSeedDev(seeds[i], gg, read)
+		seeds[i] = extendSeedDev(seeds[i], gg, read)
 	}
+	return seeds
 }
 
 // TODO: only works for fasta style graphs, no following edges
-func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
+func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) *SeedDev {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
 	//check to see if begining is at index zero, if so do something like SeedDev.Prev
 	//if newStart < 0
@@ -44,6 +45,7 @@ func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 	for ; int(newTEnd) < len(gg.Nodes[seed.TargetId].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
 		seed.Length++
 	}
+	return seed
 }
 
 func printSeedDev(a []*SeedDev) {

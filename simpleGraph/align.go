@@ -13,12 +13,11 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 )
 
 func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{RunLength: 0, Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
@@ -31,12 +30,12 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 
 	var currRead *fastq.Fastq = nil
 	var seeds []*SeedDev = findSeedsInGraph(seedHash, read, seedLen, stepSize, true)
-	extendSeedWrap(seeds, gg, read)
+	genomeGraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
 	var revCompSeeds []*SeedDev = findSeedsInGraph(seedHash, revCompRead, seedLen, stepSize, false)
-	extendSeedWrap(revCompSeeds, gg, revCompRead)
+	genomeGraphDictionary(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
 
@@ -63,7 +62,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 			currBest.Pos = int64(minTarget)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
-			currBest.Extra = fmt.Sprintf("BZ:i:%d\t%s", bestScore, "\tGP:Z:"+PathToString(CatPaths(AddPath(seeds[i].TargetId, leftPath), rightPath), gg))
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(AddPath(seeds[i].TargetId, leftPath), rightPath), gg)
 		}
 	}
 	if bestScore < 1200 {
@@ -93,7 +92,6 @@ func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 		}
 		return answer
 	} else {
-
 		return cig
 	}
 
@@ -116,17 +114,14 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 	return score
 }
 
-func BasicHeader(ref []*fasta.Fasta) *sam.SamHeader {
+func BasicHeader(ref []*Node) *sam.SamHeader {
 	var header sam.SamHeader
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-
+	var words string = "@HD\tVN:1.6\tSO:unsorted\n"
 	for i := 0; i < len(ref); i++ {
-		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
+		words += fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d\n", ref[i].Name, ref[i].Id, len(ref[i].Seq))
 	}
+	words += "@PG\tID:gonomics\tPN:GSW\tVN:1.0\n"
+	header.Text = append(header.Text, words)
 	return &header
 }
 
@@ -137,13 +132,12 @@ func NodesHeader(ref []*Node) *sam.SamHeader {
 
 	for i := 0; i < len(ref); i++ {
 		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + fmt.Sprint(len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}
 	return &header
 }
-
 func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 	answer := make(map[uint64][]uint64)
 	var seqCode uint64
@@ -195,34 +189,7 @@ func numberToChromAndPos(code uint64) (int64, int64) {
 	return int64(chromIdx), int64(pos)
 }
 
-/*
-func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
-	//var answer *sam.SamAln
-	header := BasicHeader(ref)
-	wg := new(sync.WaitGroup)
-	outFile, _ := os.Create(samFile)
-	defer outFile.Close()
-
-	sam.WriteHeaderToFileHandle(outFile, header)
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	//c := make(chan *sam.SamAln)
-
-	file := fileio.EasyOpen(fastqFile)
-	defer file.Close()
-	var done bool
-
-	var fq *fastq.Fastq
-	//var countReads int = 0
-	mSet, trace := swMatrixSetup(10000)
-	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
-		wg.Add(1)
-		go MapFastq(ref, fq, seedLen, m, mSet, trace, outFile)
-	}
-	wg.Wait()
-}*/
-
 func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
-
 	var answer []*cigar.Cigar
 	if front > 0 {
 		answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
@@ -234,7 +201,6 @@ func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar)
 		answer = append(answer, cig...)
 		answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
 	} else {
-		//answer = cig
 		return cig
 	}
 	return answer
@@ -247,7 +213,6 @@ func ReadDictionary(filename string) map[uint64][]uint64 {
 	reader := bufio.NewReader(file)
 	var err error
 	var line string
-
 	var words []byte
 	for ; err != io.EOF; words, _, err = reader.ReadLine() {
 		line = string(words[:])
@@ -255,7 +220,6 @@ func ReadDictionary(filename string) map[uint64][]uint64 {
 		for i := 1; i < len(data); i++ {
 			answer[common.StringToUint64(data[0])] = append(answer[common.StringToUint64(data[0])], common.StringToUint64(data[i]))
 		}
-		//fmt.Println(data)
 	}
 	return answer
 }
@@ -281,67 +245,6 @@ func WriteDictionary(filename string, data map[uint64][]uint64) {
 	WriteDictToFileHandle(file, data)
 	//WriteChromDictToFileHandle(file, data)
 }
-
-//call aligner with goroutines
-/*
-func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, seedLen int, fastqFile string, samFile string) {
-	fasta.AllToUpper(ref)
-	header := BasicHeader(ref)
-	wg := new(sync.WaitGroup)
-	outFile, _ := os.Create(samFile)
-	defer outFile.Close()
-	sam.WriteHeaderToFileHandle(outFile, header)
-	file := fileio.EasyOpen(fastqFile)
-	defer file.Close()
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	//threads := runtime.NumCPU()
-	threads := runtime.NumCPU()
-	tasks := make(chan *fastq.Fastq)
-	mSet, trace := swMatrixSetup(10000)
-	for workers := 0; workers < threads; workers++ {
-		go func(jobNumber int) {
-			defer wg.Done()
-			for {
-				query, ok := <-tasks
-				if !ok {
-					return
-				}
-				MapFastq(ref, query, seedLen, m, mSet, trace, outFile)
-			}
-
-		}(workers)
-	}
-
-	var fq *fastq.Fastq
-	var done bool
-	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
-		wg.Add(1)
-		tasks <- fq
-	}
-	close(tasks)
-	wg.Wait()
-}*/
-
-/*
-func GSW(ref []*fasta.Fasta, m map[uint64][]uint64, fastqFile string, samFile string) {
-	fasta.AllToUpper(ref)
-	header := BasicHeader(ref)
-
-	outFile, _ := os.Create(samFile)
-	defer outFile.Close()
-	sam.WriteHeaderToFileHandle(outFile, header)
-	file := fileio.EasyOpen(fastqFile)
-	defer file.Close()
-
-	var fq *fastq.Fastq
-	mSet, trace := swMatrixSetup(10000)
-	var done bool
-	for fq, done = fastq.NextFastq(file); !done; fq, done = fastq.NextFastq(file) {
-		MapFastq(ref, fq, 25, m, mSet, trace, outFile)
-	}
-
-}*/
 
 /*
 func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.Fastq, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
