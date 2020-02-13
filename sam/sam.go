@@ -174,16 +174,20 @@ func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
 	common.ExitIfError(err)
 }
 
-func SamChanToFile(incomingSams <-chan *SamAln, outputFilename string, wg *sync.WaitGroup) {
-	file, err := os.Create(outputFilename)
-	common.ExitIfError(err)
-	defer file.Close()
+func SamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {
 	for alignedRead := range incomingSams {
 		WriteAlnToFileHandle(file, alignedRead)
 	}
 	wg.Done()
 }
 
+func TestSamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {
+
+	for alignedRead := range incomingSams {
+		WriteAlnToFileHandle(file, alignedRead)
+	}
+	wg.Done()
+}
 func SamChanToStdOut(incomingSams <-chan *SamAln, wg *sync.WaitGroup) {
 	for alignedRead := range incomingSams {
 		log.Printf("%s\n", SamAlnToString(alignedRead))

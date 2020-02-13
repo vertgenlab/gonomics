@@ -29,7 +29,7 @@ func CatCigar(cigs []*Cigar, newCigs []*Cigar) []*Cigar {
 	}
 }
 
-func ParseCigar(cig *Cigar) (int64, int64) {
+func CountCigar(cig *Cigar) (int64, int64) {
 	var refIdx, altIdx int64 = 0, 0
 	if ConsumesReference(cig.Op) {
 		refIdx += cig.RunLength
@@ -40,7 +40,7 @@ func ParseCigar(cig *Cigar) (int64, int64) {
 	return refIdx, altIdx
 }
 
-func ParseCigarAll(cig []*Cigar) (int64, int64) {
+func CountIndexCigar(cig []*Cigar) (int64, int64) {
 	var refIdx, altIdx int64 = 0, 0
 	for i := 0; i < len(cig);i++ {
 		if ConsumesReference(cig[i].Op) {
@@ -51,6 +51,18 @@ func ParseCigarAll(cig []*Cigar) (int64, int64) {
 		}
 	}
 	return refIdx, altIdx
+}
+
+func UpdateIndices(ref int64, alt int64, cig *Cigar) {
+	newRef, newAlt := CountCigar(cig)
+	ref+= newRef
+	alt+= newAlt
+}
+
+func UpdateIndexSlice(ref int64, alt int64, cigs []*Cigar) {
+	for _, cig := range cigs {
+		UpdateIndices(ref, alt, cig)
+	}
 }
 
 //TODO: finish riley's voting matrix to handle indels better

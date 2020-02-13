@@ -51,25 +51,20 @@ func Read(filename string) []*Vcf {
 		return nil
 	}
 	var err2 error
-	//var rline []byte
 	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-		//line = string(rline[:])
 		data := strings.Split(line, "\t")
-		//fmt.Println("there is data here")
 		switch {
 		case strings.HasPrefix(line, "#"):
-			//don't do anything
+
 		case len(data) == 1:
-			//these lines are sequences, and we are not recording them
-			//fmt.Println("found sequences")
+
 		case len(line) == 0:
-			//blank line
 
 		case len(data) == 10:
 			curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Qual: common.StringToFloat64(data[5]), Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
 			answer = append(answer, curr)
 		default:
-			//fmt.Println("unexpected line")
+
 		}
 	}
 	return answer
@@ -77,15 +72,12 @@ func Read(filename string) []*Vcf {
 
 func processVcfLine(line string) *Vcf {
 	var curr Vcf
-	//var err error
-
 	data := strings.Split(line, "\t")
 	if len(data) < 10 {
 		log.Fatal(fmt.Errorf("Was expecting atleast 10 columns per line, but this line did not:%s\n", line))
 	}
 	position, _ := strconv.ParseInt(data[1], 10, 64)
 	curr = Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
-
 	return &curr
 }
 

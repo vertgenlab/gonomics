@@ -16,6 +16,7 @@ func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uin
 	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, m, trace)
 	return &mappedPair
 }
+
 //TODO: Does not work on graph with edges. Work in progress
 func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output string) {
 
@@ -23,7 +24,7 @@ func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output stri
 	var stepSize int = seedLen - 1
 	var numWorkers int = 8
 	log.Printf("Indexing the genome...\n")
-	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
+	seedHash := IndexGenomeGraph(ref.Nodes, seedLen, stepSize)
 
 	samRecords, _ := os.Create(output)
 	defer samRecords.Close()
@@ -45,8 +46,8 @@ func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output stri
 		go gswPairEnd(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
 	}
 	wgAlign.Add(1)
-
 	go sam.SamChanPairToFile(samPipe, samRecords, &wgWrite)
+
 	wgAlign.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -71,7 +72,6 @@ func routineGswReadPair(gg *SimpleGraph, reads []*fastq.PairedEnd, seedHash map[
 				//mappedPair = GraphSmithWaterman(gg, fqs.Rev, seedHash, seedLen, stepSize, m, trace)
 				output <- PairedEndAlign(gg, fqs, seedHash, seedLen, stepSize, m, trace)
 			}
-
 		}(gg, reads, seedHash, seedLen, input, output)
 	}
 

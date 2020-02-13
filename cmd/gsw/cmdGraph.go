@@ -7,10 +7,11 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-	//"github.com/vertgenlab/gonomics/sam"
-	//"github.com/vertgenlab/gonomics/fastq"
+
 	"log"
 	"strings"
+
+
 )
 
 func usage() {
@@ -45,13 +46,15 @@ func main() {
 	var outTag *string = flag.String("out", "", "final output, .vcf/.gg/.sam")
 	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
 	//var fqFlag *string = flag.String("-fastq", "", "read.fastq")
-	//var testSim *int = flag.Int("test", 100, "Simulates n reads from and given fasta reference")
+	var testSim *int = flag.Int("test", 0, "Simulates n reads from and given fasta reference")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
 	ref := flag.Arg(0)
-
+	if ref == "" {
+		usage()
+	}
 	if *tagAxt != "" {
 		vcfs = mkVcf(*tagAxt)
 		if *outTag != "" {
@@ -76,8 +79,18 @@ func main() {
 			}
 		}
 	}
+	if *testSim  > 0 {
+		gg = simpleGraph.Read("gasAcu1.fa")
+
+		simpleGraph.WriteReadsToFile(gg.Nodes, 150, 10000)
+		//simpleGraph.GenomeDiversitySimulator()
+	
+	}
 	if *alignFlag == true {
 		if strings.HasSuffix(ref, ".gg") {
+			gg = simpleGraph.Read(ref)
+		}
+		if strings.HasSuffix(ref, ".fa") {
 			gg = simpleGraph.Read(ref)
 		}
 		//flag args(0) is usually the reference
@@ -89,7 +102,12 @@ func main() {
 			//if usuer provides a .sam as output will write alignment
 			//to that file; otherwise, software will write to STDout
 			if strings.HasSuffix(*outTag, ".sam") {
-				simpleGraph.GSWsBatch(gg, reads[1], *outTag, 5000)
+				simpleGraph.GSWsBatchDraft(gg, reads[1],  *outTag)
+			}
+		}
+		if len(reads) == 3 {
+			if strings.HasSuffix(*outTag, ".sam") {
+				simpleGraph.GSWsBatchPair(gg, reads[1], reads[2], *outTag)
 			}
 		}
 		//if user provides paired end reads, will do alignment on paired end reads

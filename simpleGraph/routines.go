@@ -13,7 +13,6 @@ func gswWorker(gg *SimpleGraph, seedHash map[uint64][]*SeedBed, seedLen int, ste
 		//outgoingSams <- goGraphSmithWatermanMap(gg, read, seedHash, seedLen, stepSize, m, trace)
 		outgoingSams <- GraphSmithWaterman(gg, read, seedHash, seedLen, stepSize, m, trace)
 	}
-
 	wg.Done()
 }
 

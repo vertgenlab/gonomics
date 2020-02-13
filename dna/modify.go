@@ -100,6 +100,18 @@ func RemoveGaps(bases []Base) []Base {
 	return ans
 }
 
+func RemoveBase(bases []Base, b Base) []Base {
+	sequence := make([]Base, len(bases))
+	copy(sequence, bases)
+	var ans []Base
+	for i := 0; i < len(sequence); i++ {
+		if sequence[i] != b {
+			ans = append(ans, sequence[i])
+		}
+	}
+	return ans
+}
+
 // all base positions are zero based and left closed, right open
 func Delete(seq []Base, delStart int64, delEnd int64) []Base {
 	if delStart >= delEnd || delStart < 0 || delEnd > int64(len(seq)) {

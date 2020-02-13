@@ -1,9 +1,8 @@
 package simpleGraph
 
-/*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"os"
@@ -11,6 +10,44 @@ import (
 	//"time"
 )
 
+func GSWsBatchDraft(ref *SimpleGraph, readOne string, output string) {
+
+	var seedLen int = 32
+	var stepSize int = seedLen - 1
+	var numWorkers int = 16
+	log.Printf("Indexing the genome...\n")
+	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
+
+	samRecords, _ := os.Create(output)
+	defer samRecords.Close()
+	header := NodesHeader(ref.Nodes)
+	sam.WriteHeaderToFileHandle(samRecords, header)
+
+	var wgAlign, wgWrite sync.WaitGroup
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 824)
+	go fastq.ReadToChan(readOne, fastqPipe)
+
+	wgAlign.Add(numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		go gswWorker(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
+	}
+	wgAlign.Add(1)
+
+	go sam.TestSamChanToFile(samPipe, samRecords, &wgWrite)
+	wgAlign.Wait()
+	close(samPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	wgWrite.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+}
+
+/*
 func GSWsBatch(ref *SimpleGraph, input string, output string, groupSize int) {
 
 	var seedLen int = 30
