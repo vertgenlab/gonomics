@@ -31,9 +31,9 @@ func RemoveGaps(records []*Fasta) []*Fasta {
 	return records
 }
 
-func RefPosToAlnPos(record *Fasta, RefPos int64) int64 {
-	var AlnPos int64 = 0
-	var refCounter int64 = 0
+func RefPosToAlnPos(record *Fasta, RefPos int) int {
+	var AlnPos int = 0
+	var refCounter int = 0
 
 	for t := 0; refCounter < RefPos; t++ {
 		AlnPos++
@@ -56,6 +56,17 @@ func FilterName(records []*Fasta, name string) []*Fasta {
 		}
 	}
 	return records
+}
+
+func FilterRange(records []*Fasta, start int, end int) []*Fasta {
+	c := make([]*Fasta, len(records))
+	length := end - start
+	for i := 0; i < len(records); i++ {
+		c[i] = &Fasta{Name: records[i].Name}
+		c[i].Seq = make([]dna.Base, length)
+		copy(c[i].Seq, records[i].Seq[start:end])
+	}
+	return c
 }
 
 func ReverseComplement(record *Fasta) {
@@ -94,3 +105,33 @@ func AllToUpper(records []*Fasta) {
 		ToUpper(records[i])
 	}
 }
+
+//returns alignment columns with no gaps or lowercase letters
+func DistBase(records []*Fasta) []*Fasta {
+	var subFa = make([]*Fasta, len(records))
+	for i := 0; i < len(records); i++ {
+		subFa[i] = &Fasta{Name: records[i].Name, Seq: make([]dna.Base, 0)}
+	}
+
+	for i := 0; i < len(records[0].Seq); i++ {
+		currentBase := records[0].Seq[i]
+		allValid := true
+		if !(dna.IsLower(currentBase) || currentBase == dna.Gap) {
+			for j := 1; j < len(records); j++ {
+				if records[j].Seq[i] == dna.Gap || dna.IsLower(records[j].Seq[i]) {
+					allValid = false
+				}
+			}
+		} else {
+			allValid = false
+		}
+		if allValid {
+			for k := 0; k < len(records); k++ {
+				subFa[k].Seq = append(subFa[k].Seq, records[k].Seq[i])
+			}
+		}
+	}
+	return subFa
+}
+
+

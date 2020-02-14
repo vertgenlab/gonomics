@@ -37,14 +37,17 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 
 	if fragLength != int64(-1) {
 		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-			outBed = append(outBed, convert.SamToBedFrag(aln, fragLength, ref))
+			currentBed = convert.SamToBedFrag(aln, fragLength, ref)
+		}
+		if currentBed != nil {
+			outBed = append(outBed, currentBed)
 		}
 	} else {
 		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 			currentBed = convert.SamToBed(aln)
-			if currentBed != nil {
-				outBed = append(outBed, currentBed)
-			}
+		}
+		if currentBed != nil {
+			outBed = append(outBed, currentBed)
 		}
 	}
 
@@ -58,6 +61,7 @@ func usage() {
 		"samToWig - Converts sam to wig\n" +
 		"Usage:\n" +
 		" samToWig input.sam reference.chrom.sizes output.wig\n" +
+		" Currently fills in Wig values over deletions.\n" +
 		"options:\n")
 	flag.PrintDefaults()
 }

@@ -149,13 +149,14 @@ func voter(v *voteBase, maxList []dna.Base) dna.Base {
 		return outBase
 	}
 	
-	return maxList[randIntInRange(0, len(maxList))]
+	return maxList[common.RandIntInRange(0, len(maxList))]
 }
 
-func randIntInRange(x int, y int) int {
+/* MOVED TO COMMON/MATH.GO
+func RandIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }
-
+*/
 type voteBase struct {
 	A   int32
 	C   int32
