@@ -101,12 +101,10 @@ func RemoveGaps(bases []Base) []Base {
 }
 
 func RemoveBase(bases []Base, b Base) []Base {
-	sequence := make([]Base, len(bases))
-	copy(sequence, bases)
 	var ans []Base
-	for i := 0; i < len(sequence); i++ {
-		if sequence[i] != b {
-			ans = append(ans, sequence[i])
+	for i := 0; i < len(bases); i++ {
+		if bases[i] != b {
+			ans = append(ans, bases[i])
 		}
 	}
 	return ans
