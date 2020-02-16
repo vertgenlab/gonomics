@@ -52,8 +52,7 @@ func PathToString(allPaths []uint32, gg *SimpleGraph) string {
 //PathToString(CatPaths(CatPaths(reversePath(leftPath), getSeedPath(seeds[i])), rightPath), gg)
 func getSeedPath(seed *SeedDev) []uint32 {
 	var path []uint32
-	AddPath(seed.TargetId, path)
-	for seed.Next != nil {
+	for seed != nil {
 		AddPath(seed.TargetId, path)
 		seed = seed.Next
 	}
