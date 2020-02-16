@@ -27,11 +27,10 @@ func CatPaths(currPaths []uint32, newPaths []uint32) []uint32 {
 	}
 }
 
-func reversePath(alpha []uint32) []uint32 {
+func reversePath(alpha []uint32) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
 		alpha[i], alpha[j] = alpha[j], alpha[i]
 	}
-	return alpha
 }
 
 func PathToString(allPaths []uint32, gg *SimpleGraph) string {
