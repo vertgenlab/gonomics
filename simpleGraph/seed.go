@@ -100,7 +100,6 @@ func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedD
 			}
 		}
 	}
-	graphGenomeHash = append(graphGenomeHash, seed)
 	return graphGenomeHash
 }
 func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
@@ -124,7 +123,7 @@ func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDe
 			}
 		}
 	}
-	graphGenomeHash = append(graphGenomeHash, seed)
+
 	return graphGenomeHash
 }
 
