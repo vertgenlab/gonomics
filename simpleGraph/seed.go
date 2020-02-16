@@ -96,7 +96,7 @@ func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedD
 				for ; int(newTEnd) < len(gg.Nodes[next.Dest.Id].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
 					seed.Length++
 				}
-				graphGenomeHash = extendSeedRight(&nextSeed, gg, read)
+				graphGenomeHash = append(graphGenomeHash, extendSeedRight(&nextSeed, gg, read)...)
 			}
 		}
 	}
@@ -120,7 +120,7 @@ func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDe
 					seed.QueryStart = uint32(newQStart)
 					seed.Length++
 				}
-				graphGenomeHash = extendSeedLeft(&prevSeed, gg, read)
+				graphGenomeHash = append(graphGenomeHash, extendSeedLeft(&prevSeed, gg, read)...)
 			}
 		}
 	}
