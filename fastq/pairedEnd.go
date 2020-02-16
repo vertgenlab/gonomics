@@ -70,6 +70,7 @@ func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd
 }
 
 func WritePairToFileHandle(file io.Writer, file2 io.Writer, fq []*PairedEnd) {
+	var err error
 	for i := 0; i < len(fq); i++ {
 		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Fwd.Name, dna.BasesToString(fq[i].Fwd.Seq), "+", string(fq[i].Fwd.Qual))
 		common.ExitIfError(err)

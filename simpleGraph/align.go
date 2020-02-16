@@ -188,7 +188,7 @@ func numberToChromAndPos(code uint64) (int64, int64) {
 	var pos uint64 = code & rightSideOnes
 	return int64(chromIdx), int64(pos)
 }
-
+/*
 func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
 	var answer []*cigar.Cigar
 	if front > 0 {
@@ -204,7 +204,7 @@ func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar)
 		return cig
 	}
 	return answer
-}
+}*/
 
 func ReadDictionary(filename string) map[uint64][]uint64 {
 	answer := make(map[uint64][]uint64)

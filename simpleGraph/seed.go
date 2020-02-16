@@ -70,7 +70,7 @@ func seedBedToSeed(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 
 func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	var graphGenomeHash []*SeedDev
-	seed = extendSeedDev(seed, gg, read)
+	extendSeedDev(seed, gg, read)
 	rightGraph := extendSeedRight(seed, gg, read)
 	for toTheLeft := 0; toTheLeft < len(rightGraph); toTheLeft++ {
 		graphGenomeHash = append(graphGenomeHash, extendSeedLeft(rightGraph[toTheLeft], gg, read))
