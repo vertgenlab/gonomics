@@ -1,7 +1,7 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
+	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
@@ -135,7 +135,7 @@ func copySeedToHead(seed *SeedDev) *SeedDev {
 	}
 	return copyOfPrev
 }
-
+/*
 func isNextSeedBetter(curr *Seed, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
 	seedLen := int64(FindTotalLengthSeed(curr, curr.Length))
 	seeds := queryLen / (seedLen + 1)
@@ -189,4 +189,4 @@ func FindTotalLengthSeed(seed *Seed, length int32) int32 {
 		FindTotalLengthSeed(seed.Next, length)
 	}
 	return length
-}
+}*/
