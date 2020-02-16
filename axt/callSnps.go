@@ -3,7 +3,6 @@ package axt
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strconv"
 	"strings"
 )
 
@@ -13,15 +12,14 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 	rCount := axtFile.RStart - 1
 	qCount := axtFile.QStart - 1
 	for i := 0; i < len(axtFile.RSeq); i++ {
-		var infoTag string
 		if axtFile.RSeq[i] != dna.Gap && axtFile.QSeq[i] != dna.Gap {
 			rCount++
 			qCount++
 			//snp mismatch
 			if dna.ToUpper(axtFile.RSeq[i]) != dna.ToUpper(axtFile.QSeq[i]) {
 				//if strings.Compare(dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))) != 0 {
-				infoTag = "POS=" + strconv.FormatInt(qCount, 10)
-				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=SNP", Sample: []string{"GT:DP:AD:RO:QR:AO:QA:GL"}}
+				//infoTag = "POS=" + strconv.FormatInt(qCount, 10)
+				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 0, Filter: "", Format: "SVTYPE=SNP", Notes: ""}
 				//fmt.Println(snps[i].RefSub, snps[i].QuerySub)
 				answer = append(answer, curr)
 			}
@@ -37,10 +35,9 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 					altTmp = altTmp + dna.BaseToString(dna.ToUpper(axtFile.QSeq[j]))
 					qCount++
 				} else {
-					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: altTmp, Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=INS", Sample: []string{"GT:DP:AD:RO:QR:AO:QA:GL"}}
+					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: altTmp, Qual: 0, Filter: "", Info: "", Format: "SVTYPE=INS", Notes: ""}
 					answer = append(answer, curr)
 					i = j - 1
-					break
 				}
 			}
 		}
@@ -55,11 +52,11 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 					altTmp = altTmp + dna.BaseToString(dna.ToUpper(axtFile.RSeq[j]))
 					tempRCount++
 				} else {
-					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: altTmp, Alt: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Qual: 0, Filter: "PASS", Info: infoTag, Format: "SVTYPE=DEL", Sample: []string{"GT:DP:AD:RO:QR:AO:QA:GL"}}
+					curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: altTmp, Alt: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Qual: 0, Filter: "", Info: "", Format: "SVTYPE=DEL", Notes: ""}
 					rCount = rCount + int64(tempRCount)
 					answer = append(answer, curr)
 					i = j - 1
-					break
+					//break
 				}
 			}
 		}

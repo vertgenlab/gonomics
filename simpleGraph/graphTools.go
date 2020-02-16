@@ -63,6 +63,7 @@ func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *Simple
 }
 
 func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, idx int64, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (int64, int, *Node, *Node, *Node, *Node, *Node, *Node) {
+	fasta.ToUpper(chr)
 	var dnaSequence []dna.Base
 	var check []dna.Base
 	if chr.Name != v.Chr {

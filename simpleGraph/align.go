@@ -30,12 +30,12 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 
 	var currRead *fastq.Fastq = nil
 	var seeds []*SeedDev = findSeedsInGraph(seedHash, read, seedLen, stepSize, true)
-	genomeGraphDictionary(seeds, gg, read)
+	seeds = genomeGraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
 	var revCompSeeds []*SeedDev = findSeedsInGraph(seedHash, revCompRead, seedLen, stepSize, false)
-	genomeGraphDictionary(revCompSeeds, gg, revCompRead)
+	revCompSeeds = genomeGraphDictionary(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
 

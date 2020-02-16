@@ -57,12 +57,6 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Info, beta.Info) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Format, beta.Format) != 0 {
-		return false
-	}
-	if len(alpha.Sample) != len(beta.Sample) {
-		return false
-	}
 	return true
 }
 

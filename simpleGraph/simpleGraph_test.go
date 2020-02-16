@@ -42,7 +42,7 @@ func TestReadsWithTiming(t *testing.T) {
 	genome := Read("testdata/gasAcu1.fa")
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -101,7 +101,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
 
 	file, _ := os.Create("/dev/stdout")
@@ -211,7 +211,7 @@ func TestWorkerWithTiming(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	alignments := make([]*sam.SamAln, numberOfReads)
 
 	log.Printf("Starting alignment worker...\n")
@@ -280,7 +280,7 @@ func TestAligning(t *testing.T) {
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 
 	log.Printf("Aligning reads...\n")
 
@@ -302,12 +302,12 @@ func TestVcfGraph(t *testing.T) {
 	smallFasta := fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("ATTTAATTTAAAG")}
 	fmt.Printf("Reference sequence is: %s\n", dna.BasesToString(smallFasta.Seq))
 	var vcfTest []*vcf.Vcf
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TAA", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS", Sample: []string{""}})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 4, Id: ".", Ref: "TAA", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=DEL", Sample: []string{""}})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 8, Id: ".", Ref: "T", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP", Sample: []string{""}})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 12, Id: ".", Ref: "A", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP", Sample: []string{""}})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 13, Id: ".", Ref: "G", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP", Sample: []string{""}})
-	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "A", Alt: "ATTTTT", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS", Sample: []string{""}})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TAA", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=INS"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 4, Id: ".", Ref: "TAA", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=DEL"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 8, Id: ".", Ref: "T", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 12, Id: ".", Ref: "A", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 13, Id: ".", Ref: "G", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
+	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "A", Alt: "ATTTTT", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=INS", Sample: []string{""}})
 	var sg *SimpleGraph = NewGraph()
 
 	sg = VcfNodesToGraph(sg, &smallFasta, vcfTest)
@@ -336,7 +336,7 @@ func BenchmarkGoRoutinesMap(b *testing.B) {
 
 	genome := Read("testdata/bigGenome.sg")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
@@ -355,7 +355,7 @@ func BenchmarkGoRoutinesSlice(b *testing.B) {
 
 	genome := Read("testdata/bigGenome.sg")
 	tiles := IndexGenomeIntoSlice(genome.Nodes, tileSize, stepSize)
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations, false)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {

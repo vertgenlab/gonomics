@@ -1,16 +1,13 @@
 package vcf
 
 import (
-	"bufio"
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -26,7 +23,7 @@ type Vcf struct {
 	Filter string
 	Info   string
 	Format string
-	Sample []string
+	Notes  string
 }
 
 type VCF struct {
@@ -38,47 +35,28 @@ type VcfHeader struct {
 	Text []string
 }
 
-func Read(filename string) []*Vcf {
-	var answer []*Vcf
-	var curr *Vcf
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil
-	}
-	var err2 error
-	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-		data := strings.Split(line, "\t")
-		switch {
-		case strings.HasPrefix(line, "#"):
-
-		case len(data) == 1:
-
-		case len(line) == 0:
-
-		case len(data) == 10:
-			curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Qual: common.StringToFloat64(data[5]), Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
-			answer = append(answer, curr)
-		default:
-
-		}
-	}
-	return answer
-}
-
 func processVcfLine(line string) *Vcf {
-	var curr Vcf
-	data := strings.Split(line, "\t")
-	if len(data) < 10 {
-		log.Fatal(fmt.Errorf("Was expecting atleast 10 columns per line, but this line did not:%s\n", line))
+
+	data := Vcf{Chr: "", Pos: 0, Id: "", Ref: "", Alt: "", Qual: 0, Filter: "", Info: "", Format: "", Notes: ""}
+	text := strings.Split(line, "\t")
+	if len(text) < 9 {
+		log.Fatal(fmt.Errorf("Was expecting atleast 8 columns per line, but this line did not:%s\n", line))
 	}
-	position, _ := strconv.ParseInt(data[1], 10, 64)
-	curr = Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
-	return &curr
+	data.Pos = common.StringToInt64(text[1])
+	data.Qual = common.StringToFloat64(text[5])
+
+	data.Chr = text[0]
+	data.Id = text[2]
+	data.Ref = text[3]
+	data.Alt = text[4]
+	data.Filter = text[6]
+	data.Info = text[7]
+	data.Format = text[8]
+	if len(text) > 9 {
+		data.Notes = text[9]
+	}
+
+	return &data
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
@@ -89,7 +67,7 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-func ReadVcf(er *fileio.EasyReader) []*Vcf {
+func Read(er *fileio.EasyReader) []*Vcf {
 	var line string
 	var done bool
 	var answer []*Vcf
@@ -104,7 +82,7 @@ func ReadFile(filename string) *VCF {
 	defer file.Close()
 
 	header := ReadHeader(file)
-	vcfRecords := ReadVcf(file)
+	vcfRecords := Read(file)
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
@@ -152,19 +130,22 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) error {
 	var err error
-	var trim string
-	var chrLen []*chromInfo.ChromInfo = []*chromInfo.ChromInfo{}
-	header := MakeHeader(chrLen)
+
+	//var chrLen []*chromInfo.ChromInfo = []*chromInfo.ChromInfo{}
+	header := MakeHeader()
 	for h := 0; h < len(header); h++ {
 		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	for i := 0; i < len(input); i++ {
-		trim = strings.Join(input[i].Sample, "\t")
-		trim = strings.Trim(trim, "[")
-		trim = strings.Trim(trim, "]")
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, trim)
-		common.ExitIfError(err)
+		if input[i].Notes == "" {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
+
+		} else {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
+		}
+
 	}
+	common.ExitIfError(err)
 	return err
 }
 
@@ -174,14 +155,8 @@ func Write(filename string, data []*Vcf) {
 	WriteVcfToFileHandle(file, data)
 }
 
-func PrintVcf(input []*Vcf) {
-	var trim string
-	for i := range input {
-		trim = strings.Join(input[i].Sample, "\t")
-		trim = strings.Trim(trim, "[")
-		trim = strings.Trim(trim, "]")
-		fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, trim)
-	}
+func PrintVcf(data []*Vcf) {
+	Write("/dev/stdout", data)
 }
 
 func PrintHeader(header []string) {
@@ -190,20 +165,21 @@ func PrintHeader(header []string) {
 	}
 }
 
-func MakeHeader(chrom []*chromInfo.ChromInfo) []string {
+func MakeHeader() []string {
+	//TODO: add logic to add contig length to header of file
 	var header []string
-	var line string
+	//var line string
 	t := time.Now()
 	header = append(header, "##fileformat=VCFv4.2\n"+
 		"##fileDate="+t.Format("20060102")+"\n"+
 		"##source=github.com/vertgenlab/gonomics\n"+
 		"##reference=gasAcu1")
-	if len(chrom) > 0 {
-		for i := 0; i < len(chrom); i++ {
-			line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
-			header = append(header, line)
-		}
-	}
+	//if len(chrom) > 0 {
+	//	for i := 0; i < len(chrom); i++ {
+	//		line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
+	//		header = append(header, line)
+	//}
+	//}
 	header = append(header, "##phasing=none\n"+
 		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+

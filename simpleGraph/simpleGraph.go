@@ -26,15 +26,6 @@ type Edge struct {
 	Prob float64
 }
 
-func AddNode(g *SimpleGraph, n *Node) {
-	g.Nodes = append(g.Nodes, n)
-}
-
-func AddEdge(u, v *Node, p float64) {
-	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
-	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
-}
-
 func Read(filename string) *SimpleGraph {
 	genomeGraph := NewGraph()
 	var line string
@@ -75,6 +66,15 @@ func Read(filename string) *SimpleGraph {
 		}
 	}
 	return genomeGraph
+}
+
+func AddNode(g *SimpleGraph, n *Node) {
+	g.Nodes = append(g.Nodes, n)
+}
+
+func AddEdge(u, v *Node, p float64) {
+	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
+	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
 }
 
 func Write(filename string, sg *SimpleGraph) {

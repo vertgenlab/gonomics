@@ -39,6 +39,12 @@ func Read(filename string) []*Fasta {
 	return answer
 }
 
+func WriteToSplitChr(filename string, records []*Fasta) {
+	for _, rec := range records {
+		Write(filename+rec.Name+".fa", []*Fasta{rec})
+	}
+}
+
 func WriteToFileHandle(file io.Writer, records []*Fasta, lineLength int) {
 	var err error
 	for _, rec := range records {
