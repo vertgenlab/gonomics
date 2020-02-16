@@ -82,28 +82,36 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 //TODO continue working on copying to head
 func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	var graphGenomeHash []*SeedDev
+	
 	var newTEnd, newQEnd int32 = int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
 	if int(newTEnd) == len(gg.Nodes[seed.TargetId].Seq) && int(newQEnd) < len(read.Seq) {
 		var newTStart, newQStart int32
+		var nextCount int = 0
 		for _, next := range gg.Nodes[seed.TargetId].Next {
 			newTEnd = 0
 			newQStart = newQEnd
 			if next.Dest.Seq[newTStart] == read.Seq[newQStart] {
+				nextCount++
 				nextSeed := SeedDev{TargetId: next.Dest.Id, TargetStart: uint32(newTEnd), QueryStart: uint32(seed.QueryStart), Length: 1, PosStrand: seed.PosStrand, Next: nil, Prev: nil}
-				nextSeed.Prev = copySeedToHead(seed)
-				//graphGenomeHash = append(graphGenomeHash, seed)
+				//if nextCount > 1 {
+				//nextSeed.Prev = copySeedToHead(seed)
+				//}
 				newTEnd, newQEnd = newTEnd+int32(nextSeed.Length), newQEnd+int32(nextSeed.Length)
 				for ; int(newTEnd) < len(gg.Nodes[next.Dest.Id].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
 					seed.Length++
 				}
 				graphGenomeHash = append(graphGenomeHash, extendSeedRight(&nextSeed, gg, read)...)
+
 			}
 		}
+	} else {
+		graphGenomeHash = append(graphGenomeHash, seed)
 	}
 	return graphGenomeHash
 }
 func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	var graphGenomeHash []*SeedDev
+	
 	if seed.TargetStart == 0 && seed.QueryStart > 0 {
 		//make a new copy of yourself if prev already exists?
 		var newTStart, newQStart int32
@@ -122,18 +130,21 @@ func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDe
 				graphGenomeHash = append(graphGenomeHash, extendSeedLeft(&prevSeed, gg, read)...)
 			}
 		}
+	} else {
+		graphGenomeHash = append(graphGenomeHash, seed)
 	}
 
 	return graphGenomeHash
 }
 
 func copySeedToHead(seed *SeedDev) *SeedDev {
-	copyOfPrev := &SeedDev{TargetId: seed.Prev.TargetId, TargetStart: seed.Prev.TargetStart, QueryStart: seed.Prev.QueryStart, Length: seed.Prev.Length, PosStrand: seed.Prev.PosStrand, Next: nil, Prev: nil}
-	//var copyOfCurr SeedDev =
-	if seed.Prev != nil {
-		copyOfPrev = copySeedToHead(seed.Prev)
+
+	if seed.Prev == nil {
+		return nil
+	} else {
+		copyOfPrev := &SeedDev{TargetId: seed.Prev.TargetId, TargetStart: seed.Prev.TargetStart, QueryStart: seed.Prev.QueryStart, Length: seed.Prev.Length, PosStrand: seed.Prev.PosStrand, Next: seed, Prev: copySeedToHead(seed.Prev)}	
+		return copyOfPrev
 	}
-	return copyOfPrev
 }
 /*
 func isNextSeedBetter(curr *Seed, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
