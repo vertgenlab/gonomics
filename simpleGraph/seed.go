@@ -37,10 +37,12 @@ func IndexGenomeGraph(genome []*Node, seedLen int, seedStep int) map[uint64][]*S
 }
 
 func genomeGraphDictionary(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
+	var graphGenomeHash []*SeedDev
+
 	for i := 0; i < len(seeds); i++ {
-		extendSeedTogether(seeds[i], gg, read)
+		graphGenomeHash = append(graphGenomeHash, extendSeedTogether(seeds[i], gg, read)...)
 	}
-	return seeds
+	return graphGenomeHash
 }
 
 func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
@@ -73,7 +75,7 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	extendSeedDev(seed, gg, read)
 	rightGraph := extendSeedRight(seed, gg, read)
 	for toTheLeft := 0; toTheLeft < len(rightGraph); toTheLeft++ {
-		graphGenomeHash = append(graphGenomeHash, extendSeedLeft(rightGraph[toTheLeft], gg, read))
+		graphGenomeHash = append(graphGenomeHash, extendSeedLeft(rightGraph[toTheLeft], gg, read)...)
 	}
 	return graphGenomeHash
 }
@@ -101,7 +103,8 @@ func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedD
 	graphGenomeHash = append(graphGenomeHash, seed)
 	return graphGenomeHash
 }
-func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) *SeedDev {
+func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
+	var graphGenomeHash []*SeedDev
 	if seed.TargetStart == 0 && seed.QueryStart > 0 {
 		//make a new copy of yourself if prev already exists?
 		var newTStart, newQStart int32
@@ -117,11 +120,12 @@ func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) *SeedDev 
 					seed.QueryStart = uint32(newQStart)
 					seed.Length++
 				}
-				seed = extendSeedLeft(&prevSeed, gg, read)
+				graphGenomeHash = extendSeedLeft(&prevSeed, gg, read)
 			}
 		}
 	}
-	return seed
+	graphGenomeHash = append(graphGenomeHash, seed)
+	return graphGenomeHash
 }
 
 func copySeedToHead(seed *SeedDev) *SeedDev {
