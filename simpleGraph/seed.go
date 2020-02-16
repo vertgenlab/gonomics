@@ -79,7 +79,7 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	}
 	return graphGenomeHash
 }
-
+//TODO continue working on copying to head
 func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	var graphGenomeHash []*SeedDev
 	var newTEnd, newQEnd int32 = int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
@@ -128,7 +128,7 @@ func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDe
 }
 
 func copySeedToHead(seed *SeedDev) *SeedDev {
-	copyOfPrev := &SeedDev{TargetId: seed.TargetId, TargetStart: seed.TargetStart, QueryStart: seed.QueryStart, Length: seed.Length, PosStrand: seed.PosStrand, Next: seed.Next, Prev: nil}
+	copyOfPrev := &SeedDev{TargetId: seed.Prev.TargetId, TargetStart: seed.Prev.TargetStart, QueryStart: seed.Prev.QueryStart, Length: seed.Prev.Length, PosStrand: seed.Prev.PosStrand, Next: nil, Prev: nil}
 	//var copyOfCurr SeedDev =
 	if seed.Prev != nil {
 		copyOfPrev = copySeedToHead(seed.Prev)
