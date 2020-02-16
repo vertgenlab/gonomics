@@ -2,8 +2,12 @@ package fastq
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
+	//"log"
+	//"strings"
+	"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"io"
 )
 
 type PairedEnd struct {
@@ -28,7 +32,6 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 
 	fileOne := fileio.EasyOpen(readOne)
 	defer fileOne.Close()
-
 	fileTwo := fileio.EasyOpen(readTwo)
 	defer fileTwo.Close()
 
@@ -38,26 +41,22 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	close(output)
 }
 
-func processFastqPair(readOne *Fastq, readTwo *Fastq) *PairedEnd {
-	var curr PairedEnd
-
-	name1 := strings.Split(readOne.Name, " ")
-	name2 := strings.Split(readTwo.Name, " ")
-
-	if name1[0] != name2[0] || (string(name1[1][:1]) != "1" && string(name2[1][:1]) != "2") {
-		log.Fatalf("Error: Names of fastq pair are not the same\n")
-	}
-	curr = PairedEnd{Fwd: readOne, Rev: readTwo}
-	return &curr
-}
-
+//TODO: rewrite logic to catch error
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*PairedEnd, bool) {
+	curr := PairedEnd{Fwd: nil, Rev: nil}
 	fqOne, done1 := NextFastq(reader1)
 	fqTwo, done2 := NextFastq(reader2)
+	//name1 := strings.Split(fqOne.Name, " ")
+	//name2 := strings.Split(fqTwo.Name, " ")
+	//if name1[0] != name2[0] || (string(name1[1][0]) != "1" && string(name2[1][0]) != "2") {
+	//	log.Fatalf("Error: Names of fastq pair are not the same\n")
+	//}
+	curr.Fwd = fqOne
+	curr.Rev = fqTwo
 	if done1 || done2 {
-		return processFastqPair(fqOne, fqTwo), true
+		return &curr, true
 	}
-	return processFastqPair(fqOne, fqTwo), false
+	return &curr, false
 }
 
 func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd {
@@ -68,4 +67,22 @@ func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd
 		answer = append(answer, curr)
 	}
 	return answer
+}
+
+func WritePairToFileHandle(file io.Writer, file2 io.Writer, fq []*PairedEnd) {
+	var err error
+	for i := 0; i < len(fq); i++ {
+		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Fwd.Name, dna.BasesToString(fq[i].Fwd.Seq), "+", string(fq[i].Fwd.Qual))
+		common.ExitIfError(err)
+		_, err = fmt.Fprintf(file2, "%s\n%s\n%s\n%s\n", "@"+fq[i].Rev.Name, dna.BasesToString(fq[i].Rev.Seq), "+", string(fq[i].Rev.Qual))
+		common.ExitIfError(err)
+	}
+}
+
+func WritePair(readOne string, readTwo string, records []*PairedEnd) {
+	file := fileio.EasyCreate(readOne)
+	file2 := fileio.EasyCreate(readTwo)
+	defer file.Close()
+	defer file2.Close()
+	WritePairToFileHandle(file, file2, records)
 }

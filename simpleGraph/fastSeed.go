@@ -22,6 +22,7 @@ type SeedDev struct {
 	Length      uint32
 	PosStrand   bool
 	Next        *SeedDev
+	Prev        *SeedDev
 }
 
 func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
