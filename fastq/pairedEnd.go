@@ -41,6 +41,7 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	close(output)
 }
 
+//TODO: rewrite logic to catch error
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*PairedEnd, bool) {
 	curr := PairedEnd{Fwd: nil, Rev: nil}
 	fqOne, done1 := NextFastq(reader1)
@@ -68,14 +69,14 @@ func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd
 	return answer
 }
 
-func WritePairToFileHandle(file io.Writer, file2 io.Writer, fq []*PairedEnd) error {
+func WritePairToFileHandle(file io.Writer, file2 io.Writer, fq []*PairedEnd) {
 	var err error
 	for i := 0; i < len(fq); i++ {
 		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Fwd.Name, dna.BasesToString(fq[i].Fwd.Seq), "+", string(fq[i].Fwd.Qual))
+		common.ExitIfError(err)
 		_, err = fmt.Fprintf(file2, "%s\n%s\n%s\n%s\n", "@"+fq[i].Rev.Name, dna.BasesToString(fq[i].Rev.Seq), "+", string(fq[i].Rev.Qual))
 		common.ExitIfError(err)
 	}
-	return err
 }
 
 func WritePair(readOne string, readTwo string, records []*PairedEnd) {
