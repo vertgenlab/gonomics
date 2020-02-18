@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/vcf"
 	"math/rand"
 	"testing"
 	"time"
@@ -355,4 +356,6 @@ func TestGraphVariants(t *testing.T) {
 	if answer == nil || len(answer) == 0 {
 		t.Errorf("Problem with GraphVariants")
 	}
+
+	vcf.PrintVcf(answer)
 }

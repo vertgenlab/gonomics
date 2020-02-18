@@ -18,13 +18,15 @@ import (
 
 // Functions to find vars that exist in graph
 type SampleData struct {
-	Sample	string
-	Counts 	[]uint32
+	Sample			string
+	Counts 			[]uint32
+	GenomeCount 	uint32
 }
 
 type BatchData struct {
-	Samples []string
-	Counts 	[][]uint32
+	Samples 		[]string
+	Counts 			[][]uint32
+	GenomeCounts 	[]uint32
 }
 
 type NodeP struct {
@@ -49,7 +51,7 @@ func addPathToCount(data []uint32, path []uint32) {
 	}
 }
 
-func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int64) []uint32 {
+func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int64) ([]uint32, uint32) {
 	answer := make([]uint32, len(graph.Nodes))
 	var done = false
 	var aln *sam.SamAln
@@ -58,11 +60,14 @@ func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int6
 	defer samFile.Close()
 	sam.ReadHeader(samFile)
 
+	var GenomeCounts uint32 = 0
+
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 		if aln.MapQ < minMapQ {continue}
+		GenomeCounts++
 		addPathToCount(answer, StringToPath(aln.Extra))
 	}
-	return answer
+	return answer, GenomeCounts
 }
 
 func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) *BatchData {
@@ -80,8 +85,8 @@ func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ
 		// Count Paths for Each Sample in Directory
 		wg.Add(1)
 		go func(filePath string, fileName string) {
-			pathCount := CountPaths(graph, filePath, minMapQ)
-			tmp := &SampleData{fileName, pathCount}
+			pathCount, genomeCount := CountPaths(graph, filePath, minMapQ)
+			tmp := &SampleData{fileName, pathCount, genomeCount}
 			receivePathCount <- tmp
 			wg.Done()
 		}(filePath, file.Name())
@@ -95,113 +100,66 @@ func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ
 	// Get path counts for each sample
 	pathCounts := make([][]uint32, 0)
 	samples := make([]string, 0)
+	genomeCounts := make([]uint32, 0)
 	for count := range receivePathCount {
 		samples = append(samples, count.Sample)
 		pathCounts = append(pathCounts, count.Counts)
+		genomeCounts = append(genomeCounts, count.GenomeCount)
 	}
 
-	answer := &BatchData{samples, pathCounts}
+	answer := &BatchData{samples, pathCounts, genomeCounts}
 	return answer
-}
-
-func findMajorLocalNode(nodesToCheck []*simpleGraph.Node, pathCounts [][]uint32) *simpleGraph.Node {
-	var answer *simpleGraph.Node
-
-	var i, j, sumCount, maxCount int
-
-	maxCount = 0
-	for i = 0; i < len(nodesToCheck); i++ {
-		sumCount = 0
-		for j = 0; j < len(pathCounts); j++ {
-			sumCount += int(pathCounts[j][nodesToCheck[i].Id])
-		}
-		if sumCount > maxCount {
-			maxCount = sumCount
-			answer = nodesToCheck[i]
-		}
-	}
-
-	if maxCount == 0 {
-		return nil
-	} else {
-		return answer
-	}
-}
-
-func FindMajorLocalNode(start *simpleGraph.Node, pathCounts [][]uint32) (*simpleGraph.Node, *simpleGraph.Edge) {
-	var i int
-	var maxNode, maxPrevNode *simpleGraph.Node
-	var maxEdge *simpleGraph.Edge
-
-	var prevNodes, nextNodes []*simpleGraph.Node
-
-	for i = 0; i < len(start.Prev); i++ {
-		prevNodes = append(prevNodes, start.Prev[i].Dest)
-	}
-
-	for i = 0; i < len(start.Next); i++ {
-		nextNodes = append(nextNodes, start.Next[i].Dest)
-	}
-
-	maxNode = findMajorLocalNode(append(prevNodes, nextNodes...), pathCounts)
-	maxPrevNode = findMajorLocalNode(prevNodes, pathCounts)
-
-
-	for i = 0; i < len(start.Prev); i++ {
-		if start.Prev[i].Dest == maxPrevNode {
-			maxEdge = start.Prev[i]
-			break
-		}
-	}
-
-	if maxNode == nil {
-		return nil, nil
-	} else {
-		return maxNode, maxEdge
-	}
 }
 
 func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph.Node, sampleData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) {
 	defer wg.Done()
 	pathCounts := sampleData.Counts
-
-	majorLocalNode, majorPrevEdge := FindMajorLocalNode(start, pathCounts)
+	genomeCounts := sampleData.GenomeCounts
 
 	// If there were no reads in any adjacent nodes then exit
-	if majorLocalNode == nil {
-		return
-	}
+	// TODO: find some way to determine population frequency and test vs threshold
+	//if majorLocalNode == nil {
+	//	return
+	//}
 
 	// If the prob of entry from the majorLocalNode is > maxPopFreq then exit.
 	// No probabilty for first node in graph
 
 
-	var prob float64
-	if len(start.Prev) > 0 {
-		prob = majorPrevEdge.Prob
-	} else {
-		prob = 1
-	}
+	//var prob float64
+	//if len(start.Prev) > 0 {
+	//	prob = majorPrevEdge.Prob
+	//} else {
+	//	prob = 1
+	//}
+	//
+	//if prob > maxPopFreq {
+	//	return
+	//}
 
-	if prob > maxPopFreq {
-		return
-	}
+
 	// Begin testing on each sample
 	// test is for the matrix:
 	// [a b]
 	// [c d]
-	// a = Samples Ref Path Count
-	// b = Background Ref Path Count - Samples Ref Path Count
+	// a = Samples Genome Count
+	// b = Background Genome Count - Samples Genome Count
 	// c = Samples Alt Path Count
 	// d = Background Alt Path Count - Samples Alt Path Count
 	for i := 0; i < len(pathCounts); i++ {
-		a := int(pathCounts[i][majorLocalNode.Id])
+		a := int(genomeCounts[i])
 		c := int(pathCounts[i][start.Id])
 		var b, d int
-		for j := 0; j < len(pathCounts); j++ {
-			b += int(pathCounts[j][majorLocalNode.Id])
-			d += int(pathCounts[j][start.Id])
+
+		for j := 0; j < len(genomeCounts); j++ {
+			b += int(genomeCounts[i])
+
 		}
+
+		for k := 0; k < len(pathCounts); k++ {
+			d += int(pathCounts[k][start.Id])
+		}
+
 		b = b - a
 		d = d - c
 
