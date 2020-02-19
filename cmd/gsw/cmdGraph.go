@@ -45,7 +45,7 @@ func main() {
 	var outTag *string = flag.String("out", "", "final output, .vcf/.gg/.sam")
 	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
 	//var fqFlag *string = flag.String("-fastq", "", "read.fastq")
-	var testSim *int = flag.Int("test", 0, "Simulates n reads from and given fasta reference")
+	//var testSim *int = flag.Int("test", 0, "Simulates n reads from and given fasta reference")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -78,13 +78,6 @@ func main() {
 			}
 		}
 	}
-	if *testSim > 0 {
-		gg = simpleGraph.Read("gasAcu1.fa")
-
-		simpleGraph.WriteReadsToFile(gg.Nodes, 150, 10000)
-		//simpleGraph.GenomeDiversitySimulator()
-
-	}
 	if *alignFlag == true {
 		if strings.HasSuffix(ref, ".gg") {
 			gg = simpleGraph.Read(ref)
@@ -100,7 +93,7 @@ func main() {
 			//if usuer provides a .sam as output will write alignment
 			//to that file; otherwise, software will write to STDout
 			if strings.HasSuffix(*outTag, ".sam") {
-				simpleGraph.GSWsBatchDraft(gg, reads[1], *outTag)
+				//simpleGraph.GSWsBatchDraft(gg, reads[1], *outTag)
 			}
 		}
 		if len(reads) == 3 {

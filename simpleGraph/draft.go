@@ -1,5 +1,5 @@
 package simpleGraph
-
+/*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	//"github.com/vertgenlab/gonomics/fileio"
@@ -45,7 +45,7 @@ func GSWsBatchDraft(ref *SimpleGraph, readOne string, output string) {
 	log.Printf("Aligners finished and channel closed\n")
 	wgWrite.Wait()
 	log.Printf("Sam writer finished and we are all done\n")
-}
+}*/
 
 /*
 func GSWsBatch(ref *SimpleGraph, input string, output string, groupSize int) {

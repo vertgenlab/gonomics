@@ -2,7 +2,6 @@ package vcf
 
 import (
 	"fmt"
-
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -67,22 +66,26 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-func Read(er *fileio.EasyReader) []*Vcf {
+func Read(filename string) []*Vcf {
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+
 	var line string
 	var done bool
 	var answer []*Vcf
-	for line, done = fileio.EasyNextLine(er); !done; line, done = fileio.EasyNextLine(er) {
+	ReadHeader(file)
+	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		answer = append(answer, processVcfLine(line))
 	}
 	return answer
 }
 
-func ReadFile(filename string) *VCF {
+func ReadVcf(filename string) *VCF {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
 	header := ReadHeader(file)
-	vcfRecords := Read(file)
+	vcfRecords := Read(filename)
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
@@ -192,6 +195,6 @@ func MakeHeader() []string {
 		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
-		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Sample")
+		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
 	return header
 }

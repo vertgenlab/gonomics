@@ -1,8 +1,6 @@
 package vcf
 
 import (
-	//"os"
-	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
 )
 
@@ -17,10 +15,8 @@ func TestWriteAndRead(t *testing.T) {
 	var actual []*Vcf
 	for _, test := range readWriteTests {
 		tempFile := test.filename //+ ".tmp"
-		file := fileio.EasyOpen(tempFile)
-		header := ReadHeader(file)
-		PrintHeader(header.Text)
-		actual = Read(file)
+		
+		actual = Read(tempFile)
 
 		//Write(tempFile, actual)
 		//alpha := ReadFile(tempFile)

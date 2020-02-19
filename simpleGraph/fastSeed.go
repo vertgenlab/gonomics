@@ -47,8 +47,16 @@ func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 }
 
 func printSeedDev(a []*SeedDev) {
+	var totalLen uint32
 	for i, _ := range a {
-		log.Printf("%d\t%d\t%d\t%d\t%t\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].PosStrand)
+		log.Printf("%d\t%d\t%d\t%d\t%t\t%d\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].PosStrand, a[i].Next.TargetId)
+		totalLen = a[i].Length
+		for a[i].Next != nil {
+			totalLen += a[i].Next.Length
+			log.Printf("%d\t%d\t%d\t%d\t%t\t%d\n", a[i].Next.TargetId, a[i].Next.TargetStart, a[i].Next.QueryStart, a[i].Next.Length, a[i].Next.PosStrand, a[i].Next.TargetId)
+			a[i] = a[i].Next
+		}
+		log.Printf("total seed len is: %d\n", totalLen)
 	}
 }
 

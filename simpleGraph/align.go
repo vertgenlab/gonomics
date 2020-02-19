@@ -16,8 +16,8 @@ import (
 	"strings"
 )
 
-func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune, noNs bool) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
@@ -29,12 +29,12 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	extention := int(perfectScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInGraph(seedHash, read, seedLen, stepSize, true)
+	var seeds []*SeedDev = findSeedsInGraph(seedHash, read, seedLen, stepSize, true, noNs)
 	seeds = genomeGraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInGraph(seedHash, revCompRead, seedLen, stepSize, false)
+	var revCompSeeds []*SeedDev = findSeedsInGraph(seedHash, revCompRead, seedLen, stepSize, false, noNs)
 	revCompSeeds = genomeGraphDictionary(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
@@ -248,7 +248,6 @@ func WriteDictionary(filename string, data map[uint64][]uint64) {
 
 /*
 func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.Fastq, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
-
 	//var seedBeds []*bed.Bed
 	var seeds []Seed = make([]Seed, 256)
 	var codedPositions []uint64
@@ -263,12 +262,10 @@ func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.F
 	var lowRef, lowQuery, highQuery int64
 	var alignment []*cigar.Cigar
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, RNext: "*", PNext: 0, TLen: 0, Seq: []dna.Base{}, Qual: "", Extra: ""}
-
 	for bases = 0; bases < len(read.Seq); bases++ {
 		maxScore += HumanChimpTwoScoreMatrix[read.Seq[bases]][read.Seq[bases]]
 	}
 	extension = int64(maxScore/600) + int64(len(read.Seq))
-
 	for subRead = 0; subRead < len(read.Seq)-seedLen+1; subRead++ {
 		codedPositions = chromPosHash[dnaToNumber(read.Seq, subRead, subRead+seedLen)]
 		for hits = 0; hits < len(codedPositions); hits++ {
@@ -285,10 +282,8 @@ func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.F
 			seeds = addSeed(seeds, chrom, bStart, bEnd)
 		}
 	}
-
 	//seedBeds = bed.MergeBeds(seedBeds)
 	//log.Printf("Length of seed beds, %d", len(seedBeds))
-
 	for i = 0; i < len(seeds); i++ {
 		score, alignment, lowRef, _, lowQuery, highQuery = SmithWaterman(ref[seeds[i].Id].Seq[seeds[i].Start:seeds[i].End], read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
 		if score > bestScore {
@@ -325,7 +320,6 @@ func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.F
 			}
 		}
 	}
-
 	//seedBeds = bed.MergeBeds(seedBeds)
 	//log.Printf("Length of reverse seed beds, %d", len(seedBeds))
 	for i = 0; i < len(seeds); i++ {
@@ -341,7 +335,6 @@ func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.F
 			//fmt.Printf("alignment:\n%s\n", cigar.LocalView(ref[seeds[i].Id].Seq[seeds[i].Start:seeds[i].End], read.Seq, alignment, highRef))
 		}
 	}
-
 	//seeds = seeds[0:0]
 	//log.Println(currBest.RName, "\t", currBest.Pos, "\t", read.Name, "\t", bestScore, "\t", cigar.ToString(currBest.Cigar))
 	return &currBest

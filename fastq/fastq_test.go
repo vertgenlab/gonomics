@@ -23,3 +23,10 @@ func TestRead(t *testing.T) {
 		}
 	}
 }
+
+func TestReadPair(t *testing.T) {
+	fqPair := ReadPairs("testdata/simReads_R1.fq", "testdata/simReads_R2.fq")
+	for i := 0; i < len(fqPair); i++ {
+		fmt.Printf("%s\n%s\n", fqPair[i].Fwd.Name, fqPair[i].Rev.Name)
+	}
+}
