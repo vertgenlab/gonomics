@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune, noNs bool) *sam.SamAln {
+func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
@@ -29,12 +29,12 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	extention := int(perfectScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInGraph(seedHash, read, seedLen, stepSize, true, noNs)
+	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
 	seeds = genomeGraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInGraph(seedHash, revCompRead, seedLen, stepSize, false, noNs)
+	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
 	revCompSeeds = genomeGraphDictionary(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedDevByLen(seeds)
@@ -59,7 +59,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 				currBest.Flag = 1
 			}
 			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[seeds[i].TargetId].Name, seeds[i].TargetId)
-			currBest.Pos = int64(minTarget)
+			currBest.Pos = int64(minTarget) + 1
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(AddPath(seeds[i].TargetId, leftPath), rightPath), gg)
@@ -188,6 +188,7 @@ func numberToChromAndPos(code uint64) (int64, int64) {
 	var pos uint64 = code & rightSideOnes
 	return int64(chromIdx), int64(pos)
 }
+
 /*
 func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
 	var answer []*cigar.Cigar

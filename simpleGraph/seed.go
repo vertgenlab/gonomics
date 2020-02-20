@@ -25,12 +25,18 @@ func IndexGenomeGraph(genome []*Node, seedLen int, seedStep int) map[uint64][]*S
 	var seqCode uint64
 	var nodeIdx, pos int
 	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
-		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; {
-			if len(genome[nodeIdx].Seq) - pos < seedLen {
+		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+			if len(genome[nodeIdx].Seq)-pos >= seedLen {
 				if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
 					seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
 					curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
 					answer[seqCode] = append(answer[seqCode], &curr)
+					//if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, common.Min(pos+seedLen, len(genome[nodeIdx].Seq))) == 0 {
+					//	seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
+					//	curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: common.Min(pos+seedLen, len(genome[nodeIdx].Seq)), Next: nil}
+
+					//	answer[seqCode] = append(answer[seqCode], &curr)
+
 				}
 			}
 
@@ -116,7 +122,7 @@ func toTheRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 						answer = append(answer, currSeed)
 					}
 				}
-				
+
 			}
 		}
 	} else {
@@ -129,7 +135,7 @@ func toTheLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, true, false)
 	//var newTStart, newQStart int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1
-	if seed.TargetStart == 0 && seed.QueryStart > 0 {
+	if seed.TargetStart <= 0 && seed.QueryStart > 0 {
 		var depthSeeds []*SeedDev
 		var prevLeft int
 		for _, prev := range gg.Nodes[seed.TargetId].Prev {
@@ -160,6 +166,7 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	}
 	return answer
 }
+
 //TODO continue working on copying to head
 /*
 func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
@@ -182,7 +189,7 @@ func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedD
 					//copySeed = pointToHead(copySeed)
 					//graphGenomeHash = append(graphGenomeHash, copySeed)
 				}
-				
+
 				newTEnd, newQEnd = newTEnd+int32(nextSeed.Length), newQEnd+int32(nextSeed.Length)
 				for ; int(newTEnd) < len(gg.Nodes[next.Dest.Id].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
 					seed.Length++
@@ -197,7 +204,7 @@ func extendSeedRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedD
 	return graphGenomeHash
 }
 func extendSeedLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
-	var graphGenomeHash []*SeedDev	
+	var graphGenomeHash []*SeedDev
 	if seed.TargetStart == 0 && seed.QueryStart > 0 {
 		var newTStart, newQStart int32
 		for _, prev := range gg.Nodes[seed.TargetId].Prev {

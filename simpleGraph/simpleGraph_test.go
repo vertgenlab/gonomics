@@ -34,7 +34,6 @@ func TestWorkerWithWriting(t *testing.T) {
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 4
-	var noNs bool = true
 
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
@@ -53,7 +52,6 @@ func TestWorkerWithWriting(t *testing.T) {
 	fastq.Write("testdata/simReads.fq", simReads)
 
 	header := NodesHeader(genome.Nodes)
-	
 
 	start := time.Now()
 	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
@@ -61,11 +59,11 @@ func TestWorkerWithWriting(t *testing.T) {
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter, noNs)
+		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
 	///dev/stdout
-	go sam.SamChanToFile(samPipe, "testdata/sim.sam", header, &writerWaiter)
+	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -84,7 +82,7 @@ func TestWorkerWithTiming(t *testing.T) {
 	var readLength int = 150
 	var mutations int = 0
 	var dummyWaiter sync.WaitGroup
-	var noNs bool = true
+
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
 
@@ -102,7 +100,7 @@ func TestWorkerWithTiming(t *testing.T) {
 	alignments := make([]*sam.SamAln, numberOfReads)
 
 	log.Printf("Starting alignment worker...\n")
-	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter, noNs)
+	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
 
 	log.Printf("Waiting for 5 seconds and then aligning reads...\n")
 	time.Sleep(5 * time.Second)
@@ -118,7 +116,7 @@ func TestWorkerWithTiming(t *testing.T) {
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(alignments), duration, float64(len(alignments))/duration.Seconds())
 	CheckAnswers(alignments)
-	for k := 0; k < len(alignments);k++ {
+	for k := 0; k < len(alignments); k++ {
 		fmt.Printf("%s\n", LocalView(alignments[k], genome.Nodes))
 	}
 }
@@ -129,7 +127,7 @@ func TestHippoAln(t *testing.T) {
 	var stepSize int = tileSize - 1
 	var alignment *sam.SamAln = nil
 	var dummyWaiter sync.WaitGroup
-	var noNs bool = true
+
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
 
@@ -143,7 +141,7 @@ func TestHippoAln(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 1)
 
 	log.Printf("Starting alignment worker...\n")
-	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter, noNs)
+	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
 
 	log.Printf("Waiting for 5 seconds and then aligning read...\n")
 	time.Sleep(5 * time.Second)
@@ -187,7 +185,6 @@ func TestAligning(t *testing.T) {
 	log.Printf("It took %s to map %d reads\n", elapsed, numberOfReads)
 }
 
-
 func TestReadsWithTiming(t *testing.T) {
 	//var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
 	var tileSize int = 32
@@ -196,7 +193,7 @@ func TestReadsWithTiming(t *testing.T) {
 	var readLength int = 150
 	var mutations int = 0
 	var dummyWaiter sync.WaitGroup
-	var noNs bool = true
+
 	var fastestRead, slowestRead *fastq.Fastq = nil, nil
 	var fastestTime, slowestTime float64 = math.MaxFloat64, 0
 
@@ -219,8 +216,8 @@ func TestReadsWithTiming(t *testing.T) {
 
 	log.Printf("Starting alignment worker...\n")
 
-	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter, noNs)
-	
+	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
+
 	log.Printf("Waiting for 5 seconds and then aligning reads...\n")
 	time.Sleep(5 * time.Second)
 
@@ -244,14 +241,14 @@ func TestReadsWithTiming(t *testing.T) {
 }
 
 func TestVcfGraph(t *testing.T) {
-	smallFasta := fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("ATTTAATTTAAAG")}
+	smallFasta := fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("AGTACCCCATAG")}
 	fmt.Printf("Reference sequence is: %s\n", dna.BasesToString(smallFasta.Seq))
 	var vcfTest []*vcf.Vcf
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TAA", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=INS"})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 4, Id: ".", Ref: "TAA", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=DEL"})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 8, Id: ".", Ref: "T", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 12, Id: ".", Ref: "A", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
-	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 13, Id: ".", Ref: "G", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TAA", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "CCCC", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=DEL"})
+	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 10, Id: ".", Ref: "T", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP"})
+	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 12, Id: ".", Ref: "A", Alt: "C", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
+	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 13, Id: ".", Ref: "G", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=SNP"})
 	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "A", Alt: "ATTTTT", Qual: 0, Filter: "PASS", Info: "", Notes: "SVTYPE=INS", Sample: []string{""}})
 	var sg *SimpleGraph = NewGraph()
 

@@ -2,12 +2,12 @@ package simpleGraph
 
 import (
 	//"fmt"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/cigar"
 	"log"
 	//"math"
 	"os"
@@ -21,11 +21,11 @@ func TestSamToVcf(t *testing.T) {
 	chrI := &Node{Name: "chrI", Seq: dna.StringToBases("ACAAAAAAAAAAAAA")}
 	h := NodesHeader([]*Node{chrI})
 	align1 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 2, MapQ: 255, Cigar: cigar.FromString("1M5S"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("GAAAAA"), Extra: "BZ:i:0"}
-	align2 :=  &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 2, MapQ: 255, Cigar: cigar.FromString("1M5S"),RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("GAAAAA"), Extra: "BZ:i:0"}
+	align2 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 2, MapQ: 255, Cigar: cigar.FromString("1M5S"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("GAAAAA"), Extra: "BZ:i:0"}
 	align3 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 4, MapQ: 255, Cigar: cigar.FromString("4M"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AACT"), Extra: "BZ:i:0"}
-	align4 :=  &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 4, MapQ: 255, Cigar: cigar.FromString("4M"),RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AACT"), Extra: "BZ:i:0"}
-	align5 :=  &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 8, MapQ: 255, Cigar: cigar.FromString("1M7I"),RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AGATGAGT"), Extra: "BZ:i:0"}
-	align6 :=  &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 8, MapQ: 255, Cigar: cigar.FromString("1M7I"),RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AGATGAGT"), Extra: "BZ:i:0"}
+	align4 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 4, MapQ: 255, Cigar: cigar.FromString("4M"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AACT"), Extra: "BZ:i:0"}
+	align5 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 8, MapQ: 255, Cigar: cigar.FromString("1M7I"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AGATGAGT"), Extra: "BZ:i:0"}
+	align6 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 8, MapQ: 255, Cigar: cigar.FromString("1M7I"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AGATGAGT"), Extra: "BZ:i:0"}
 	var testSam []*sam.SamAln = []*sam.SamAln{align1, align2, align3, align4, align5, align6}
 	samTest := &sam.Sam{Header: h, Aln: testSam}
 	sam.Write("testdata/samToVcfTest.sam", samTest)
@@ -34,7 +34,7 @@ func TestSamToVcf(t *testing.T) {
 	votes := samToGenomeNotes("testdata/samToVcfTest.sam", chrITest, 0)
 	log.Printf("Before: %s\n", dna.BasesToString(chrITest.Seq))
 	fa, v := EditGenome("testdata/samToVcfTest.sam", chrITest, 0, votes)
-	
+
 	log.Printf("After:%s\n", dna.BasesToString(fa.Seq))
 	vcf.PrintVcf(v)
 
@@ -48,7 +48,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
-	var noNs bool = true
+
 	log.Printf("Reading in the genome (Simple Graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
 	log.Printf("Simulating reads...\n")
@@ -65,9 +65,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	log.Printf("Making sam channel...\n")
 	samPipe := make(chan *sam.PairedSamAln, 824)
 
-
 	header := NodesHeader(genome.Nodes)
-
 
 	start := time.Now()
 	go fastq.PairEndToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
@@ -75,7 +73,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go gswPairEnd(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter, noNs)
+		go gswPairEnd(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
 	go sam.SamChanPairToFile(samPipe, "/dev/stdout", header, &writerWaiter)
@@ -96,7 +94,7 @@ func TestVcfToGraph(t *testing.T) {
 	var numberOfReads int = 10000
 	var readLength int = 150
 	var mutations int = 1000
-	var noNs bool = true
+
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 4
 	log.Printf("Reading in the genome (fasta)...\n")
@@ -130,7 +128,7 @@ func TestVcfToGraph(t *testing.T) {
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter, noNs)
+		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
 	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)

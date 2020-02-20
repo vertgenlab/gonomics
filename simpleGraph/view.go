@@ -51,5 +51,5 @@ func LocalView(samLine *sam.SamAln, ref []*Node) string {
 			}
 		}
 	}
-	return cigar.ToString(operations)+"\n"+seqOne.String() + "\n" + seqTwo.String() + "\n"
+	return cigar.ToString(operations) + "\n" + seqOne.String() + "\n" + seqTwo.String() + "\n"
 }

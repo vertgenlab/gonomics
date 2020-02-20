@@ -102,9 +102,9 @@ func samToGenomeNotes(samFileName string, chr *fasta.Fasta, chromIdx int) map[ui
 					if i > 0 {
 						seqCode = chromAndPosToNumber(chromIdx, int(RefIndex))
 						votes[seqCode] = append(votes[seqCode], dna.BasesToString(currentSeq[SeqIndex-1:SeqIndex-1+aln.Cigar[i].RunLength]))
-					
+
 					}
-				}else {
+				} else {
 					//log.Printf("Skipped parts of this cigar: %s\n", cigar.ToString(aln.Cigar))
 				}
 				RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
@@ -168,8 +168,8 @@ func EditGenome(samFileName string, chr *fasta.Fasta, chromIdx int, votes map[ui
 					if numGaps > 0 {
 						delSeq := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BasesToString(chr.Seq[base : base+int64(len(concensus))]), Alt: dna.BaseToString(chr.Seq[base]), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=DEL"}
 						vcfs = append(vcfs, &delSeq)
-						editGenome.Seq = dna.Delete(editGenome.Seq, base, base + int64(len(concensus)))
-					} else  {
+						editGenome.Seq = dna.Delete(editGenome.Seq, base, base+int64(len(concensus)))
+					} else {
 						ins := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BaseToString(chr.Seq[base]), Alt: dna.BasesToString(concensus), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=INS"}
 						vcfs = append(vcfs, &ins)
 						editGenome.Seq = dna.Insert(editGenome.Seq, base+1, concensus[1:])

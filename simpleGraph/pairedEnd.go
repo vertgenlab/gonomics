@@ -7,11 +7,11 @@ import (
 	"sync"
 )
 
-func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune, noNs bool) *sam.PairedSamAln {
+func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.PairedSamAln {
 	//m, trace := swMatrixSetup(10000)
 	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: nil, RevSam: nil}
-	mappedPair.FwdSam = GraphSmithWaterman(gg, readPair.Fwd, seedHash, seedLen, stepSize, m, trace, noNs)
-	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, m, trace, noNs)
+	mappedPair.FwdSam = GraphSmithWaterman(gg, readPair.Fwd, seedHash, seedLen, stepSize, m, trace)
+	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, m, trace)
 	return &mappedPair
 }
 
@@ -22,9 +22,8 @@ func GSWsBatchPair(ref *SimpleGraph, seedLen int, stepSize int, noNs bool, readO
 	//var stepSize int = seedLen - 1
 	var numWorkers int = 8
 	log.Printf("Indexing the genome...\n")
-	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
+	seedHash := IndexGenomeGraph(ref.Nodes, seedLen, stepSize)
 	header := NodesHeader(ref.Nodes)
-
 
 	var wgAlign, wgWrite sync.WaitGroup
 
@@ -38,7 +37,7 @@ func GSWsBatchPair(ref *SimpleGraph, seedLen int, stepSize int, noNs bool, readO
 	wgAlign.Add(numWorkers)
 
 	for i := 0; i < numWorkers; i++ {
-		go gswPairEnd(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign, noNs)
+		go gswPairEnd(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
 	}
 	wgAlign.Add(1)
 	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)

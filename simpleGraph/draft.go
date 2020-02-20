@@ -1,4 +1,5 @@
 package simpleGraph
+
 /*
 import (
 	"github.com/vertgenlab/gonomics/fastq"

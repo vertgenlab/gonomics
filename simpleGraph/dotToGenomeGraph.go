@@ -1,12 +1,14 @@
 package simpleGraph
+
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/dna"
-	"strings"
-	"log"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+	"strings"
 )
+
 //TODO: work in progress
 func DotToGraph(input string) *SimpleGraph {
 	var line string
@@ -19,19 +21,19 @@ func DotToGraph(input string) *SimpleGraph {
 	var words []string
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.Contains(line, "digraph" ) {
+		if strings.Contains(line, "digraph") {
 			log.Printf("Header line: digraph\n")
-		} else if !strings.Contains(line, " -> " ) && !strings.Contains(line, "//" ) && !strings.Contains(line, "}" ){
+		} else if !strings.Contains(line, " -> ") && !strings.Contains(line, "//") && !strings.Contains(line, "}") {
 			words = strings.Split(line, " ")
 			AddNode(gg, &Node{Id: nodeId, Name: fmt.Sprint(nodeId)})
-			
+
 			if strings.Contains(line, "label") {
 				workSpace := strings.Split(words[1], "=")
-			//log.Printf("%v\n", strings.Trim(workSpace[1], "]"))
-			gg.Nodes[nodeId].Seq = dna.StringToBases(strings.Trim(workSpace[1], "]"))
+				//log.Printf("%v\n", strings.Trim(workSpace[1], "]"))
+				gg.Nodes[nodeId].Seq = dna.StringToBases(strings.Trim(workSpace[1], "]"))
 			}
 			nodeId++
-		} else if strings.Contains(line, " -> " ) && !strings.Contains(line, "//" ) {
+		} else if strings.Contains(line, " -> ") && !strings.Contains(line, "//") {
 			words = strings.Split(line, "\t")
 			//log.Printf("%v\n", words[1])
 			workSpace := strings.Split(words[1], " -> ")

@@ -36,6 +36,7 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	defer fileTwo.Close()
 
 	for curr, done = NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
+		
 		output <- curr
 	}
 	close(output)

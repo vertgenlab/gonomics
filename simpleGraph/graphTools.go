@@ -60,20 +60,20 @@ func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *Simple
 	return sg
 }
 
-func NodeSplitByNs(sg *SimpleGraph, currMatch *Node, match []dna.Base, index int64, end int64) *Node {
+func NodeSplitByNs(sg *SimpleGraph, currMatch *Node, chr *fasta.Fasta, index int64, end int64) *Node {
 	var inRegion bool = false
 	var start int64 = 0
 	var firstNode bool = true
 	for ; index < end; index++ {
-		if !dna.DefineBase(dna.N) && inRegion == false {
+		if dna.DefineBase(chr.Seq[start]) && inRegion == false {
 			inRegion = true
 			start = index
-		} else if (dna.DefineBase(dna.N)) && inRegion == true && firstNode {
-			currMatch.Seq = match[start:index]
+		} else if !(dna.DefineBase(chr.Seq[start])) && inRegion == true && firstNode {
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: chr.Seq[start:index]}
 			firstNode = false
 			inRegion = false
-		} else if (dna.DefineBase(dna.N)) && inRegion == true && !firstNode {
-			matchSplitByN := &Node{Id: uint32(len(sg.Nodes)), Name: currMatch.Name, Seq: match[start:index]}
+		} else if !(dna.DefineBase(chr.Seq[start])) && inRegion == true && !firstNode {
+			matchSplitByN := &Node{Id: uint32(len(sg.Nodes)), Name: currMatch.Name, Seq: chr.Seq[start:index]}
 			AddNode(sg, matchSplitByN)
 			AddEdge(currMatch, matchSplitByN, 1)
 			inRegion = false
@@ -81,17 +81,22 @@ func NodeSplitByNs(sg *SimpleGraph, currMatch *Node, match []dna.Base, index int
 		}
 	}
 	if inRegion == true {
-		lastMatch := &Node{Id: uint32(len(sg.Nodes)), Name: currMatch.Name, Seq: match[start:end]}
+		lastMatch := &Node{Id: uint32(len(sg.Nodes)), Name: currMatch.Name, Seq: chr.Seq[start:end]}
+
 		AddNode(sg, lastMatch)
 		AddEdge(currMatch, lastMatch, 1)
 		currMatch = lastMatch
 	}
+	if inRegion == true && firstNode {
+		currMatch.Seq = chr.Seq[start:end]
+	}
+	//currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
 	return currMatch
 }
 
 type noNsBed struct {
 	Start int32
-	End int32
+	End   int32
 }
 
 func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, idx int64, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (int64, int, *Node, *Node, *Node, *Node, *Node, *Node) {
@@ -99,29 +104,36 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 		log.Fatalf("Fasta %s does not match vcf name %s", chr.Name, v.Chr)
 	}
 
-	if vcfFlag == -1 && v.Pos == 1 {
+	if vcfFlag == -1 {
+
+		lastMatch = NodeSplitByNs(sg, &Node{Name: chr.Name}, chr, idx, v.Pos-1)
+
 		if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
 			refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 			AddNode(sg, refAllele)
+			AddEdge(lastMatch, refAllele, 0.5)
 			altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
-
+			AddEdge(lastMatch, altAllele, 0.5)
 			AddNode(sg, altAllele)
 			vcfFlag = 1
-			idx++
+			idx = v.Pos - 1
 		}
 		if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
-			AddNode(sg, lastMatch)
-			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)])}
+			//lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name}
+			//AddNode(sg, lastMatch)
+			//lastMatch = NodeSplitByNs(sg, lastMatch, chr.Seq, idx, v.Pos)
+
+			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
 			AddNode(sg, prev)
 			AddEdge(lastMatch, prev, 0.5)
-			idx = v.Pos
+			idx = v.Pos - 1
 			vcfFlag = 2
 		}
 		if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
-			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
-			AddNode(sg, lastMatch)
-			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Ref)])}
+			//lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name}
+			//AddNode(sg, lastMatch)
+			//lastMatch = NodeSplitByNs(sg, lastMatch, chr.Seq, idx, v.Pos)
+			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 			AddNode(sg, prev)
 			AddEdge(lastMatch, prev, 0.5)
 
@@ -131,7 +143,6 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 	} else {
 		if v.Pos-1-idx > 0 {
 			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name}
-			AddNode(sg, currMatch)
 			if lastMatch != nil && vcfFlag != 1 {
 				AddEdge(lastMatch, currMatch, 0.5)
 			}
@@ -143,15 +154,14 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				AddEdge(prev, currMatch, 1)
 			}
 
-			currMatch = NodeSplitByNs(sg, currMatch, chr.Seq, idx, v.Pos)
+			currMatch = NodeSplitByNs(sg, currMatch, chr, idx, v.Pos-1)
 
 			vcfFlag = 0
-
 		}
 		if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
 
 			if vcfFlag == 0 {
-				currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
+				//currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
 				refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 				AddNode(sg, refAllele)
 				altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
@@ -197,7 +207,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			idx = v.Pos
 		}
 		if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)])}
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
 
 			if vcfFlag == 0 {
 				AddNode(sg, curr)
@@ -214,7 +224,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 
 				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 				AddNode(sg, currMatch)
-				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)])}
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
@@ -228,7 +238,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			} else if vcfFlag == 3 {
 				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
 				AddNode(sg, currMatch)
-				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)])}
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
@@ -243,11 +253,11 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			} else {
 				log.Fatal("Flag was not set up correctly")
 			}
-			idx = v.Pos
+			idx = v.Pos - 1
 		}
 		if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
 
-			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)])}
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 
 			if vcfFlag == 0 {
 				AddNode(sg, curr)
@@ -262,7 +272,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 
 				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
 				AddNode(sg, currMatch)
-				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)])}
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
@@ -276,7 +286,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			} else if vcfFlag == 3 {
 				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
 				AddNode(sg, currMatch)
-				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)])}
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
@@ -291,7 +301,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				log.Fatal("Flag was not set up correctly")
 			}
 
-			idx = v.Pos + int64(len(curr.Seq))
+			idx = v.Pos + int64(len(curr.Seq)) - 1
 		}
 		prev = curr
 		lastMatch = currMatch
@@ -325,7 +335,7 @@ func checkSNP(v *vcf.Vcf) bool {
 }
 
 func createINS(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
-	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.RemoveBase(dna.StringToBases(v.Alt[1:len(v.Alt)]), dna.N)}
+	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.RemoveBase(dna.StringToBases(v.Alt), dna.N)}
 	AddNode(sg, &curr)
 	return &curr
 }
