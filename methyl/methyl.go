@@ -28,7 +28,10 @@ func CountCysteine(samFilename string, refFilename string) []*MethylCount {
 	var aln *sam.SamAln
 	var current *MethylCount
 
-	ref := fasta.RefToMap(refFilename)
+	refFasta := fasta.Read(refFilename)
+	fasta.AllToUpper(refFasta)
+
+	ref := fasta.FastaToMap(refFasta)
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 		if aln.Cigar[0].Op == '*' {
