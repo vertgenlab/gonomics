@@ -12,7 +12,7 @@ type MethylCount struct {
 	ReadID 	string
 	Chr 	string
 	Pos 	int
-	CG 		int
+	CG 	int
 	RefCG 	int
 	CHH 	int
 	RefCHH 	int
