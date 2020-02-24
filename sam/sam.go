@@ -40,6 +40,16 @@ type SamAln struct {
 	Extra string
 }
 
+func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
+	file, _ := os.Create(filename)
+	defer file.Close()
+	WriteHeaderToFileHandle(file, header)
+	for alignedRead := range incomingSams {
+		WriteAlnToFileHandle(file, alignedRead)
+	}
+	wg.Done()
+}
+
 func processHeaderLine(header *SamHeader, line string) {
 	var err error
 	var chrCount int64 = 0

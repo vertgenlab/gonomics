@@ -13,9 +13,10 @@ import (
 	//"os"
 	"fmt"
 	"sort"
-	"strings"
+	//"strings"
 )
 
+/*
 func checkAlignment(aln *sam.SamAln) bool {
 	var answer bool = false
 	words := strings.Split(aln.QName, "_")
@@ -32,8 +33,8 @@ func checkAlignment(aln *sam.SamAln) bool {
 		log.Printf("\t%s\t%s\t%d\t%s\t%s\n", cigar.ToString(aln.Cigar), aln.QName, aln.Pos, aln.RName, aln.Extra)
 	}
 	return answer
-}
-
+}*/
+/*
 func CheckAnswers(query []*sam.SamAln) {
 	var yes, no int64 = 0, 0
 	for i := 0; i < len(query); i++ {
@@ -53,7 +54,7 @@ func CheckAnswers(query []*sam.SamAln) {
 type Location struct {
 	Chr string
 	Pos int64
-}
+}*/
 
 //will only look at lines that include chr name
 func TakeNotesGenome(samFileName string, chr *fasta.Fasta) []*vcf.Vcf {

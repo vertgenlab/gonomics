@@ -9,7 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
-	"os"
+	//"os"
 	"sync"
 	"testing"
 	"time"
@@ -104,10 +104,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
 
-	file, _ := os.Create("/dev/stdout")
-	defer file.Close()
-	header := NodesHeader(genome.Nodes)
-	sam.WriteHeaderToFileHandle(file, header)
+	//sam.WriteHeaderToFileHandle(file, header)
 
 	start := time.Now()
 	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
@@ -118,7 +115,8 @@ func TestWorkerWithWriting(t *testing.T) {
 		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, file, &writerWaiter)
+	header := NodesHeader(genome.Nodes)
+	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
