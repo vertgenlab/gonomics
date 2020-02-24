@@ -111,7 +111,7 @@ func TestVcfToGraph(t *testing.T) {
 		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, file, &writerWaiter)
+	go sam.SamChanToFile(samPipe, "samFile.sam", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
