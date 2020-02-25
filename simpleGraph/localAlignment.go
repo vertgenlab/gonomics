@@ -215,7 +215,6 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 	var maxI int
 	var maxJ int
 	var i, j, routeIdx int
-
 	//setting up the first rows and columns
 	//seting up the rest of the matrix
 

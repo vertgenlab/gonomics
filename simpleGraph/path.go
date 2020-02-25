@@ -51,10 +51,12 @@ func PathToString(allPaths []uint32, gg *SimpleGraph) string {
 
 //PathToString(CatPaths(CatPaths(reversePath(leftPath), getSeedPath(seeds[i])), rightPath), gg)
 func getSeedPath(seed *SeedDev) []uint32 {
-	var path []uint32
-	for seed != nil {
-		AddPath(seed.TargetId, path)
-		seed = seed.Next
+	var path []uint32 = []uint32{seed.TargetId}
+	if seed.Next == nil {
+
+		return path
+	} else {
+		path = append(path, getSeedPath(seed.Next)...)
 	}
 	return path
 }

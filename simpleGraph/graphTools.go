@@ -1,18 +1,19 @@
 package simpleGraph
 
 import (
+	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-
 	"log"
 	"strings"
 	"time"
 )
 
+/*
 func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
 	vcfSplit := vcf.VcfSplit(vcfs, ref)
@@ -21,6 +22,8 @@ func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 		log.Fatal("Slice of vcfs do not equal reference length")
 	} else {
 		for i := 0; i < len(ref); i++ {
+			if i > 1 {
+			}
 			gg = VcfNodesToGraph(gg, ref[i], vcfSplit[i])
 		}
 	}
@@ -28,66 +31,83 @@ func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 }
 
 func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
+	fasta.ToUpper(chr)
 	var vcfFlag = -1
-
 	var curr *Node
 	var prev *Node
-	var currMatch *Node = nil
-	var lastMatch *Node = nil
+	var currMatch *Node
+	var lastMatch *Node
 	var refAllele *Node
 	var altAllele *Node
 
 	var idx int64 = 0
-	for i := 0; i < len(vcfs); i++ {
-		idx, vcfFlag, curr, prev, currMatch, lastMatch, refAllele, altAllele = NodesToGraph(sg, chr, vcfFlag, vcfs[i], idx, curr, prev, currMatch, lastMatch, refAllele, altAllele)
+	var i int
+	//var j int
+	for i = 0; i < len(vcfs); i++ {
+		if i > 0 {
+			if vcfs[i-1].Pos == vcfs[i].Pos {
+				log.Printf("Warning: there are two vcf records in %s, postion %d...\n", chr.Name, vcfs[i].Pos)
+				fmt.Printf("%s\t%s\t%d\t%s\t%s\n%s\t%s\t%d\t%s\t%s\n", vcfs[i-1].Format, vcfs[i-1].Chr, vcfs[i-1].Pos, vcfs[i-1].Ref, vcfs[i-1].Alt, vcfs[i].Format, vcfs[i].Chr, vcfs[i].Pos, vcfs[i].Ref, vcfs[i].Alt)
+				//
+				//
+				continue
+			}
+		}
+		idx, vcfFlag, curr, prev, currMatch, lastMatch, refAllele, altAllele = devNodesToGraph(sg, chr, vcfFlag, vcfs[i], idx, curr, prev, currMatch, lastMatch, refAllele, altAllele)
+
 		if idx > int64(len(chr.Seq)) {
 			return sg
 		}
 	}
-	//last node case
-	if int64(len(chr.Seq))-idx != 0 {
-		dnaSequence := dna.RemoveBase(chr.Seq[idx:], dna.N)
-		lastNode := Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dnaSequence}
-		AddNode(sg, &lastNode)
-		if vcfFlag == 1 {
-			AddEdge(refAllele, &lastNode, 1)
-			AddEdge(altAllele, &lastNode, 1)
-		}
-		if vcfFlag == 2 || vcfFlag == 3 {
-			AddEdge(lastMatch, &lastNode, 0.5)
-			AddEdge(prev, &lastNode, 1)
-		}
+	lastNode := &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: chr.Seq[idx:]}
+	AddNode(sg, lastNode)
+	if vcfFlag == 1 {
+		lastNode.Seq = lastNode.Seq[1:]
+		AddEdge(refAllele, lastNode, 1)
+		AddEdge(altAllele, lastNode, 1)
+	} else {
+		AddEdge(lastMatch, lastNode, 0.5)
+		AddEdge(prev, lastNode, 1)
 	}
-
 	return sg
+}*/
+
+func createSNP(sg *SimpleGraph, snp *vcf.Vcf, chr string) (*Node, *Node) {
+	refAllele := &Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(snp.Ref), Next: nil, Prev: nil}
+	altAllele := &Node{Id: uint32(len(sg.Nodes) + 1), Name: chr, Seq: dna.StringToBases(snp.Alt), Next: nil, Prev: nil}
+	AddNode(sg, refAllele)
+	AddNode(sg, altAllele)
+	return refAllele, altAllele
 }
 
+/*
 func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, idx int64, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (int64, int, *Node, *Node, *Node, *Node, *Node, *Node) {
-	fasta.ToUpper(chr)
-	var dnaSequence []dna.Base
-	var check []dna.Base
 	if chr.Name != v.Chr {
 		log.Fatalf("Fasta %s does not match vcf name %s", chr.Name, v.Chr)
 	}
 	if vcfFlag == -1 && v.Pos == 1 {
 		if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-			altAllele, refAllele = createSNP(sg, v, chr.Name)
+			refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+			AddNode(sg, refAllele)
+			altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
+
+			AddNode(sg, altAllele)
 			vcfFlag = 1
 			idx++
 		}
 		if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Ref), dna.N)}
+			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
 			AddNode(sg, lastMatch)
-			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Alt[1:len(v.Alt)]), dna.N)}
+			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)]), Next: nil, Prev: nil}
 			AddNode(sg, prev)
 			AddEdge(lastMatch, prev, 0.5)
 			idx = v.Pos
 			vcfFlag = 2
 		}
 		if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
-			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Alt), dna.N)}
+			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
 			AddNode(sg, lastMatch)
-			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Alt[1:len(v.Ref)]), dna.N)}
+			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Ref)]), Next: nil, Prev: nil}
 			AddNode(sg, prev)
 			AddEdge(lastMatch, prev, 0.5)
 
@@ -96,8 +116,7 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 		}
 	} else {
 		if v.Pos-1-idx > 0 {
-			dnaSequence = dna.RemoveBase(chr.Seq[idx:v.Pos], dna.N)
-			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dnaSequence}
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: chr.Seq[idx:v.Pos], Next: nil, Prev: nil}
 			AddNode(sg, currMatch)
 
 			if lastMatch != nil && vcfFlag != 1 {
@@ -113,47 +132,60 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			vcfFlag = 0
 		}
 		if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-			check = dna.StringToBases(v.Ref + v.Alt)
-			if dna.CountBase(check, dna.N) == 0 {
-				if vcfFlag == 0 {
-					currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
-					altAllele, refAllele = createSNP(sg, v, chr.Name)
 
-					AddEdge(currMatch, refAllele, 0.5)
-					AddEdge(currMatch, altAllele, 0.5)
-				} else if vcfFlag == 1 {
-					curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
-					AddNode(sg, curr)
-					AddEdge(refAllele, curr, 1)
-					refAllele = curr
+			if vcfFlag == 0 {
+				currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
+				refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+				AddNode(sg, refAllele)
+				altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
+				AddNode(sg, altAllele)
 
-					curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
-					AddNode(sg, curr)
-					AddEdge(altAllele, curr, 1)
-					altAllele = curr
-				} else if vcfFlag == 2 {
-					altAllele, refAllele = createSNP(sg, v, chr.Name)
-					AddEdge(lastMatch, refAllele, 0.5)
-					AddEdge(prev, altAllele, 1)
-					curr = refAllele
-				} else if vcfFlag == 3 {
-					altAllele, refAllele = createSNP(sg, v, chr.Name)
-					AddEdge(prev, refAllele, 1)
-					AddEdge(lastMatch, altAllele, 0.5)
-					curr = refAllele
-				} else {
-					log.Fatal("Flag was not set up correctly")
-				}
-				vcfFlag = 1
-				idx = v.Pos
+				AddEdge(currMatch, refAllele, 0.5)
+				AddEdge(currMatch, altAllele, 0.5)
+			} else if vcfFlag == 1 {
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+				AddNode(sg, curr)
+				AddEdge(refAllele, curr, 1)
+				refAllele = curr
+
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
+				AddNode(sg, curr)
+				AddEdge(altAllele, curr, 1)
+				altAllele = curr
+			} else if vcfFlag == 2 {
+
+				refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+				AddNode(sg, refAllele)
+
+				altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
+				AddNode(sg, altAllele)
+
+				AddEdge(lastMatch, refAllele, 0.5)
+				AddEdge(prev, altAllele, 1)
+				curr = refAllele
+
+			} else if vcfFlag == 3 {
+				refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+				AddNode(sg, refAllele)
+				altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
+				AddNode(sg, altAllele)
+
+				AddEdge(prev, refAllele, 1)
+				AddEdge(lastMatch, altAllele, 0.5)
+				curr = refAllele
+			} else {
+				log.Fatal("Flag was not set up correctly")
 			}
+			vcfFlag = 1
+			idx = v.Pos
 		}
 		if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-			dnaSequence = dna.RemoveBase(dna.StringToBases(v.Alt[1:len(v.Alt)]), dna.N)
-			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dnaSequence}
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)]), Next: nil, Prev: nil}
+
 			if vcfFlag == 0 {
 				AddNode(sg, curr)
 				AddEdge(currMatch, curr, 0.5)
+
 				vcfFlag = 2
 			} else if vcfFlag == 1 {
 				AddNode(sg, curr)
@@ -162,12 +194,14 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				//flag as SNP because we still need to connect two nodes to the next match
 				vcfFlag = 1
 			} else if vcfFlag == 2 {
-				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Ref), dna.N)}
+
+				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
 				AddNode(sg, currMatch)
-				curr = createINS(sg, v, chr.Name)
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)]), Next: nil, Prev: nil}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
+
 				if int64(len(chr.Seq))-v.Pos == 0 {
 					AddEdge(currMatch, curr, 1)
 				} else {
@@ -175,17 +209,19 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				}
 				vcfFlag = 2
 			} else if vcfFlag == 3 {
-				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Alt), dna.N)}
+				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
 				AddNode(sg, currMatch)
-				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Ref[1:len(v.Ref)]), dna.N)}
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)]), Next: nil, Prev: nil}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
+
 				if int64(len(chr.Seq))-v.Pos == 0 {
 					AddEdge(currMatch, curr, 1)
 				} else {
 					AddEdge(currMatch, curr, 0.5)
 				}
+
 				vcfFlag = 2
 			} else {
 				log.Fatal("Flag was not set up correctly")
@@ -193,8 +229,9 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			idx = v.Pos
 		}
 		if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
-			dnaSequence = dna.RemoveBase(dna.StringToBases(v.Ref[1:len(v.Ref)]), dna.N)
-			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dnaSequence}
+
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)]), Next: nil, Prev: nil}
+
 			if vcfFlag == 0 {
 				AddNode(sg, curr)
 				AddEdge(currMatch, curr, 0.5)
@@ -205,11 +242,14 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				refAllele = curr
 				vcfFlag = 1
 			} else if vcfFlag == 2 {
-				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Alt), dna.N)}
+
+				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
 				AddNode(sg, currMatch)
-				curr = createDEL(sg, v, chr.Name)
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)]), Next: nil, Prev: nil}
+				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
+
 				if int64(len(chr.Seq))-v.Pos-1 == 0 {
 					AddEdge(currMatch, curr, 1)
 				} else {
@@ -217,9 +257,9 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 				}
 				vcfFlag = 3
 			} else if vcfFlag == 3 {
-				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Ref), dna.N)}
+				currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
 				AddNode(sg, currMatch)
-				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.RemoveBase(dna.StringToBases(v.Alt[1:len(v.Alt)]), dna.N)}
+				curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)]), Next: nil, Prev: nil}
 				AddNode(sg, curr)
 				AddEdge(lastMatch, currMatch, 0.5)
 				AddEdge(prev, currMatch, 1)
@@ -233,6 +273,138 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 			} else {
 				log.Fatal("Flag was not set up correctly")
 			}
+
+			idx = v.Pos + int64(len(curr.Seq))
+		}
+		prev = curr
+		lastMatch = currMatch
+
+	}
+
+	return idx, vcfFlag, curr, prev, currMatch, lastMatch, refAllele, altAllele
+
+}
+
+func devNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, idx int64, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (int64, int, *Node, *Node, *Node, *Node, *Node, *Node) {
+	//fasta.ToUpper(chr)
+	if chr.Name != v.Chr {
+		log.Fatalf("Fasta %s does not match vcf name %s", chr.Name, v.Chr)
+	}
+	if vcfFlag == -1 {
+		if isSNP(v) {
+			altAllele, refAllele = createSNP(sg, v, chr.Name)
+			vcfFlag = 1
+			idx++
+		}
+		if isINS(v) {
+			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+			AddNode(sg, lastMatch)
+			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)]), Next: nil, Prev: nil}
+			AddNode(sg, prev)
+			AddEdge(lastMatch, prev, 0.5)
+			idx = v.Pos
+			vcfFlag = 2
+		}
+		if isDEL(v) {
+			lastMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+			AddNode(sg, lastMatch)
+			prev = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)[1:], Next: nil, Prev: nil}
+			AddNode(sg, prev)
+			AddEdge(lastMatch, prev, 0.5)
+
+			idx = v.Pos + int64(len(prev.Seq)) - 1
+			vcfFlag = 3
+		}
+	} else {
+		if v.Pos-idx > 1 {
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: chr.Seq[idx:v.Pos], Next: nil, Prev: nil}
+			dna.AllToUpper(currMatch.Seq)
+			AddNode(sg, currMatch)
+
+			if lastMatch != nil && vcfFlag != 1 {
+				AddEdge(lastMatch, currMatch, 0.5)
+			}
+			if vcfFlag == 1 {
+				AddEdge(refAllele, currMatch, 1)
+				AddEdge(altAllele, currMatch, 1)
+			}
+			if vcfFlag == 2 || vcfFlag == 3 {
+				AddEdge(prev, currMatch, 1)
+			} //AddEdge(lastMatch, currMatch, 0.5)
+			vcfFlag = 0
+		}
+		if isSNP(v) {
+			if vcfFlag == 0 {
+				currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
+				altAllele, refAllele = createSNP(sg, v, chr.Name)
+				AddEdge(currMatch, refAllele, 0.5)
+				AddEdge(currMatch, altAllele, 0.5)
+			} else if vcfFlag == 1 && (idx+1 == v.Pos) {
+				refAllele.Seq = append(refAllele.Seq, dna.StringToBases(v.Ref)...)
+				altAllele.Seq = append(altAllele.Seq, dna.StringToBases(v.Alt)...)
+			} else if vcfFlag == 2 {
+				refAllele, altAllele = createSNP(sg, v, chr.Name)
+				AddEdge(lastMatch, refAllele, 0.5)
+				AddEdge(prev, altAllele, 1)
+				curr = refAllele
+			} else if vcfFlag == 3 {
+				refAllele, altAllele = createSNP(sg, v, chr.Name)
+				AddEdge(prev, refAllele, 1)
+				AddEdge(lastMatch, altAllele, 0.5)
+				curr = refAllele
+			} else {
+				log.Fatal("Flag was not set up correctly")
+			}
+			vcfFlag = 1
+			idx = v.Pos
+		}
+		if isINS(v) {
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt[1:len(v.Alt)]), Next: nil, Prev: nil}
+			if vcfFlag == 0 {
+				AddNode(sg, curr)
+				AddEdge(currMatch, curr, 0.5)
+			} else {
+				if idx+1 == v.Pos {
+					currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref), Next: nil, Prev: nil}
+					AddNode(sg, currMatch)
+					if vcfFlag == 1 {
+						AddEdge(refAllele, currMatch, 1)
+						AddEdge(altAllele, currMatch, 1)
+					} else {
+						AddEdge(prev, currMatch, 1)
+					}
+				}
+				curr.Id++
+				AddNode(sg, curr)
+				AddEdge(currMatch, curr, 0.5)
+
+			}
+			vcfFlag = 2
+			idx = v.Pos
+		}
+		if isDEL(v) {
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)]), Next: nil, Prev: nil}
+			if vcfFlag == 0 {
+				AddNode(sg, curr)
+				AddEdge(currMatch, curr, 0.5)
+			} else {
+				if idx+1 == v.Pos {
+					//make a new curr match for the one base shared between ttwo genomes
+					//using v.Alt because it is easy to grap that then risk going index out of bound
+					currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt), Next: nil, Prev: nil}
+					AddNode(sg, currMatch)
+					if vcfFlag == 1 {
+						AddEdge(refAllele, currMatch, 1)
+						AddEdge(altAllele, currMatch, 1)
+					} else {
+						AddEdge(prev, currMatch, 0.5)
+					}
+				}
+				curr.Id++
+				AddNode(sg, curr)
+				AddEdge(currMatch, curr, 0.5)
+			}
+			vcfFlag = 3
 			idx = v.Pos + int64(len(curr.Seq))
 		}
 		prev = curr
@@ -241,35 +413,174 @@ func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, id
 	return idx, vcfFlag, curr, prev, currMatch, lastMatch, refAllele, altAllele
 }
 
-func createSNP(sg *SimpleGraph, snp *vcf.Vcf, chr string) (*Node, *Node) {
-	if !checkSNP(snp) {
-		log.Fatal("Error, cannot use this vcf record to create snp Nodes...")
+func NodeSplitByNs(sg *SimpleGraph, currMatch *Node, chr *fasta.Fasta, index int64, end int64) *Node {
+	var inRegion bool = false
+	var start int64 = 0
+	for ; index < end; index++ {
+		if dna.DefineBase(chr.Seq[start]) && inRegion == false {
+			inRegion = false
+			currMatch.Seq = chr.Seq[start:index]
+			start = index
+		} else if dna.DefineBase(chr.Seq[start]) && inRegion == true {
+			newMatch := &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name}
+			AddNode(sg, newMatch)
+			AddEdge(currMatch, newMatch, 1)
+			inRegion = true
+			currMatch = newMatch
+		}
+
 	}
-	refAllele := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(snp.Ref)}
-	AddNode(sg, &refAllele)
-	altAllele := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(snp.Alt)}
-	AddNode(sg, &altAllele)
-	return &refAllele, &altAllele
+
+	//currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
+	return currMatch
 }
 
-func checkSNP(v *vcf.Vcf) bool {
+type noNsBed struct {
+	Start int32
+	End   int32
+}
+
+func findUngap(fa *fasta.Fasta, index int64, end int64) []*noNsBed {
+	var answer []*noNsBed
+	var inRegion bool = false
+	var startIndex int32 = 0
+	for ; index < end; index++ {
+		if dna.DefineBase(fa.Seq[index]) && inRegion == false {
+			inRegion = true
+			startIndex = int32(index)
+		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
+			answer = append(answer, &noNsBed{Start: startIndex, End: int32(index)})
+			inRegion = false
+		}
+
+	}
+	if inRegion == true {
+		answer = append(answer, &noNsBed{Start: int32(startIndex), End: int32(index)})
+	}
+	return answer
+}
+
+func SnpToNodesEdges(sg *SimpleGraph, snp *vcf.Vcf, lastNodeFlag int, chr *fasta.Fasta, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (*Node, *Node) {
+	//Special case if last variant called was a SNP
+	if lastNodeFlag == 1 {
+		refAllele.Seq = append(refAllele.Seq, dna.StringToBases(snp.Ref)...)
+		altAllele.Seq = append(altAllele.Seq, dna.StringToBases(snp.Alt)...)
+		//curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(snp.Ref)}
+		//AddNode(sg, curr)
+		//AddEdge(refAllele, curr, 1)
+		//refAllele = curr
+
+		//curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(snp.Alt)}
+		//AddNode(sg, curr)
+		//AddEdge(altAllele, curr, 1)
+		//altAllele = curr
+	} else {
+		refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(snp.Ref)}
+		AddNode(sg, refAllele)
+		altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(snp.Alt)}
+		AddNode(sg, altAllele)
+		//last node was a match
+		if lastNodeFlag == 0 {
+			AddEdge(currMatch, refAllele, 0.5)
+			AddEdge(currMatch, altAllele, 0.5)
+		} //last node was an insertion
+		if lastNodeFlag == 2 {
+			AddEdge(lastMatch, refAllele, 0.5)
+			AddEdge(prev, altAllele, 1)
+		} //last node was a deletion
+		if lastNodeFlag == 3 {
+			AddEdge(prev, refAllele, 1)
+			AddEdge(lastMatch, altAllele, 0.5)
+		}
+	}
+	return refAllele, altAllele
+}
+
+func InsToNodesEdges(sg *SimpleGraph, ins *vcf.Vcf, vcfFlag int, chr *fasta.Fasta, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (*Node, int) {
+	if vcfFlag == 0 || vcfFlag == 1 {
+		curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(ins.Alt[1:])}
+		AddNode(sg, curr)
+		if vcfFlag == 0 {
+			AddEdge(currMatch, curr, 0.5)
+			vcfFlag = 2
+		} else {
+			//flag as SNP because we still need to connect two nodes to the next match
+			AddEdge(altAllele, curr, 0.5)
+			altAllele = curr
+			vcfFlag = 1
+		}
+	} else if vcfFlag == 2 || vcfFlag == 3 {
+		if vcfFlag == 2 {
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(ins.Ref)}
+			curr = &Node{Id: uint32(len(sg.Nodes) + 1), Name: chr.Name, Seq: dna.StringToBases(ins.Alt[1:])}
+		} else {
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(ins.Alt)}
+			curr = &Node{Id: uint32(len(sg.Nodes) + 1), Name: chr.Name, Seq: dna.StringToBases(ins.Ref[1:])}
+		}
+		AddNode(sg, currMatch)
+		AddNode(sg, curr)
+		AddEdge(lastMatch, currMatch, 0.5)
+		AddEdge(prev, currMatch, 1)
+		if int64(len(chr.Seq))-ins.Pos == 0 {
+			AddEdge(currMatch, curr, 1)
+		} else {
+			AddEdge(currMatch, curr, 0.5)
+		}
+		vcfFlag = 2
+	}
+	return curr, vcfFlag
+}
+
+func DelToNodesEdges(sg *SimpleGraph, del *vcf.Vcf, vcfFlag int, chr *fasta.Fasta, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (*Node, int) {
+	if vcfFlag == 0 || vcfFlag == 1 {
+		curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(del.Ref[1:])}
+		AddNode(sg, curr)
+		if vcfFlag == 0 {
+			AddEdge(currMatch, curr, 0.5)
+			vcfFlag = 3
+		} else {
+			//flag as SNP because we still need to connect two nodes to the next match
+			AddEdge(refAllele, curr, 0.5)
+			altAllele = curr
+			vcfFlag = 1
+		}
+	} else if vcfFlag == 2 || vcfFlag == 3 {
+		if vcfFlag == 2 {
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(del.Alt)}
+			curr = &Node{Id: uint32(len(sg.Nodes) + 1), Name: chr.Name, Seq: dna.StringToBases(del.Ref[1:])}
+		} else {
+			currMatch = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(del.Ref)}
+			curr = &Node{Id: uint32(len(sg.Nodes) + 1), Name: chr.Name, Seq: dna.StringToBases(del.Alt[1:])}
+		}
+		AddNode(sg, currMatch)
+		AddNode(sg, curr)
+		AddEdge(lastMatch, currMatch, 0.5)
+		AddEdge(prev, currMatch, 1)
+		if int64(len(chr.Seq))-del.Pos == 0 {
+			AddEdge(currMatch, curr, 1)
+		} else {
+			AddEdge(currMatch, curr, 0.5)
+		}
+		vcfFlag = 3
+	}
+	return curr, vcfFlag
+}*/
+
+func isSNP(v *vcf.Vcf) bool {
 	var truth bool = false
 	if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-		truth = true
-	}
-	if len(v.Ref) == 1 && len(v.Alt) == 1 {
 		truth = true
 	}
 	return truth
 }
 
 func createINS(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
-	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.RemoveBase(dna.StringToBases(v.Alt[1:len(v.Alt)]), dna.N)}
+	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(v.Alt)}
 	AddNode(sg, &curr)
 	return &curr
 }
 
-func checkINS(v *vcf.Vcf) bool {
+func isINS(v *vcf.Vcf) bool {
 	var truth bool = false
 	if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
 		truth = true
@@ -278,12 +589,12 @@ func checkINS(v *vcf.Vcf) bool {
 }
 
 func createDEL(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
-	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.RemoveBase(dna.StringToBases(v.Ref[1:len(v.Ref)]), dna.N)}
+	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)])}
 	AddNode(sg, &curr)
 	return &curr
 }
 
-func checkDEL(v *vcf.Vcf) bool {
+func isDEL(v *vcf.Vcf) bool {
 	var truth bool = false
 	if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
 		truth = true
@@ -438,3 +749,50 @@ func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
+
+/*
+if vcfFlag == 0 {
+			currMatch.Seq = currMatch.Seq[:len(currMatch.Seq)-1]
+			refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
+			AddNode(sg, refAllele)
+			altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
+			AddNode(sg, altAllele)
+
+			AddEdge(currMatch, refAllele, 0.5)
+			AddEdge(currMatch, altAllele, 0.5)
+			curr = refAllele
+		} else if vcfFlag == 1 {
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
+			AddNode(sg, curr)
+			AddEdge(refAllele, curr, 1)
+			refAllele = curr
+
+			curr = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
+			AddNode(sg, curr)
+			AddEdge(altAllele, curr, 1)
+			altAllele = curr
+		} else if vcfFlag == 2 {
+
+			refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
+			AddNode(sg, refAllele)
+
+			altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
+			AddNode(sg, altAllele)
+
+			AddEdge(lastMatch, refAllele, 0.5)
+			AddEdge(prev, altAllele, 1)
+			curr = refAllele
+
+		} else if vcfFlag == 3 {
+			refAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Ref)}
+			AddNode(sg, refAllele)
+			altAllele = &Node{Id: uint32(len(sg.Nodes)), Name: chr.Name, Seq: dna.StringToBases(v.Alt)}
+			AddNode(sg, altAllele)
+
+			AddEdge(prev, refAllele, 1)
+			AddEdge(lastMatch, altAllele, 0.5)
+			curr = refAllele
+		} else {
+			log.Fatal("Flag was not set up correctly")
+		}
+*/
