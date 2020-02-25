@@ -98,7 +98,7 @@ func FindBiggerMutations(axtFile *Axt) []*vcf.Vcf {
 	log.Printf("\nFound %d differences in this block...\n%s\n", len(answer), AxtInfo(axtFile))
 	return answer
 }*/
-
+/*
 func FindSmallMutations(axtFile *Axt) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 	var curr *vcf.Vcf
@@ -227,7 +227,7 @@ func HaplotypeBlocks(axtFile *Axt) []*vcf.Vcf {
 	}
 	//log.Printf("\nFound %d differences in this block...\n", AxtInfo(axtFile), len(answer))
 	return answer
-}
+}*/
 
 func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 	var answer []*vcf.Vcf
