@@ -45,7 +45,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	//m, trace := SwMatrixSetup(int64(extension+1)
 	var seedScore int64
 
-	for i = 0; i < len(seeds) && isSeedBetter(i, seeds, bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+	for i = 0; i < len(seeds) && seedCouldBeBetter(i, seeds, bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		//log.Printf("seed hit: %d, len=%d\n", i, sumLen(seeds[i]))
 		tailSeed = toTail(seeds[i])
 		if seeds[i].PosStrand {
