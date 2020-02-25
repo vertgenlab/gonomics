@@ -1,10 +1,10 @@
 package simpleGraph
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+/*
 func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
 	vcfSplit := vcf.VcfSplit(vcfs, ref)
@@ -69,7 +70,7 @@ func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *Simple
 		AddEdge(prev, lastNode, 1)
 	}
 	return sg
-}
+}*/
 
 func createSNP(sg *SimpleGraph, snp *vcf.Vcf, chr string) (*Node, *Node) {
 	refAllele := &Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(snp.Ref), Next: nil, Prev: nil}
@@ -79,6 +80,7 @@ func createSNP(sg *SimpleGraph, snp *vcf.Vcf, chr string) (*Node, *Node) {
 	return refAllele, altAllele
 }
 
+/*
 func NodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfFlag int, v *vcf.Vcf, idx int64, curr *Node, prev *Node, currMatch *Node, lastMatch *Node, refAllele *Node, altAllele *Node) (int64, int, *Node, *Node, *Node, *Node, *Node, *Node) {
 	if chr.Name != v.Chr {
 		log.Fatalf("Fasta %s does not match vcf name %s", chr.Name, v.Chr)
@@ -562,7 +564,7 @@ func DelToNodesEdges(sg *SimpleGraph, del *vcf.Vcf, vcfFlag int, chr *fasta.Fast
 		vcfFlag = 3
 	}
 	return curr, vcfFlag
-}
+}*/
 
 func isSNP(v *vcf.Vcf) bool {
 	var truth bool = false
