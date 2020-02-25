@@ -18,7 +18,7 @@ func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uin
 	mappedPair.RevSam.Flag += 128
 	return &mappedPair
 }
-
+/*
 func getTimeToAlign(startTime time.Time, done <-chan bool, numberAligned int, tick time.Ticker) {
 	stopTime := time.Now()
 	duration := stopTime.Sub(startTime)
@@ -51,7 +51,7 @@ func WriteWithTime(incomingSams <-chan *sam.PairedSamAln, filename string, heade
 	done <- true
 	wg.Done()
 }
-
+*/
 //TODO: Does not work on graph with edges. Work in progress
 func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int) {
 
