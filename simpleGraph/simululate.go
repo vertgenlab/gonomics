@@ -13,10 +13,9 @@ import (
 	//"os"
 	"fmt"
 	"sort"
-	//"strings"
+	"strings"
 )
 
-/*
 func checkAlignment(aln *sam.SamAln) bool {
 	var answer bool = false
 	words := strings.Split(aln.QName, "_")
@@ -30,11 +29,11 @@ func checkAlignment(aln *sam.SamAln) bool {
 		if blastScore > 5000 {
 			answer = true
 		}
-		log.Printf("\t%s\t%s\t%d\t%s\t%s\n", cigar.ToString(aln.Cigar), aln.QName, aln.Pos, aln.RName, aln.Extra)
+		//log.Printf("\t%s\t%s\t%d\t%s\t%s\n", cigar.ToString(aln.Cigar), aln.QName, aln.Pos, aln.RName, aln.Extra)
 	}
 	return answer
-}*/
-/*
+}
+
 func CheckAnswers(query []*sam.SamAln) {
 	var yes, no int64 = 0, 0
 	for i := 0; i < len(query); i++ {
@@ -54,10 +53,10 @@ func CheckAnswers(query []*sam.SamAln) {
 type Location struct {
 	Chr string
 	Pos int64
-}*/
+}
 
 //will only look at lines that include chr name
-func TakeNotesGenome(samFileName string, chr *fasta.Fasta) []*vcf.Vcf {
+func samToGenomeNotes(samFileName string, chr *fasta.Fasta, chromIdx int) map[uint64][]string {
 	var i int
 	fasta.ToUpper(chr)
 	samFile := fileio.EasyOpen(samFileName)
@@ -68,8 +67,8 @@ func TakeNotesGenome(samFileName string, chr *fasta.Fasta) []*vcf.Vcf {
 	var aln *sam.SamAln
 	sam.ReadHeader(samFile)
 
-	votes := make(map[int64][]string)
-	//var seqCode uint64
+	votes := make(map[uint64][]string)
+	var seqCode uint64
 
 	//var basesToAdd []dna.Base
 	var progress int
@@ -78,47 +77,56 @@ func TakeNotesGenome(samFileName string, chr *fasta.Fasta) []*vcf.Vcf {
 	//var currLoc Location = Location{Chr: "", Pos: 0}
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 		progress++
-		//currLoc.Chr = aln.RName
+		SeqIndex = 0
+		RefIndex = aln.Pos - 1
 		if aln.Cigar[0].Op != '*' {
-			SeqIndex = 0
-			RefIndex = aln.Pos - 1
 			for i = 0; i < len(aln.Cigar); i++ {
-				//currLoc.Pos = RefIndex
 				currentSeq = aln.Seq
 				if aln.Cigar[i].Op == 'D' {
 					gapSeq := make([]dna.Base, aln.Cigar[i].RunLength)
 					for subSeqIdx = 0; subSeqIdx < aln.Cigar[i].RunLength; subSeqIdx++ {
 						gapSeq[subSeqIdx] = dna.Gap
 					}
-					votes[RefIndex] = append(votes[RefIndex], dna.BasesToString(gapSeq))
-					RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
+					seqCode = chromAndPosToNumber(chromIdx, int(RefIndex))
+					votes[seqCode] = append(votes[seqCode], dna.BasesToString(gapSeq))
+					//RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
 				} else if aln.Cigar[i].Op == 'M' {
 					for subSeqIdx = 0; subSeqIdx < aln.Cigar[i].RunLength; subSeqIdx++ {
-						votes[RefIndex+subSeqIdx] = append(votes[RefIndex+subSeqIdx], dna.BaseToString(currentSeq[SeqIndex]))
+						seqCode = chromAndPosToNumber(chromIdx, int(RefIndex+subSeqIdx))
+						votes[seqCode] = append(votes[seqCode], dna.BaseToString(currentSeq[SeqIndex+subSeqIdx]))
 					}
-					RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
+					//RefIndex++
+					//SeqIndex++
+					//RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
 				} else if aln.Cigar[i].Op == 'I' {
-					votes[RefIndex] = append(votes[RefIndex], dna.BasesToString(currentSeq[SeqIndex:SeqIndex+aln.Cigar[i].RunLength]))
-					RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
+					if i > 0 {
+						seqCode = chromAndPosToNumber(chromIdx, int(RefIndex))
+						votes[seqCode] = append(votes[seqCode], dna.BasesToString(currentSeq[SeqIndex-1:SeqIndex-1+aln.Cigar[i].RunLength]))
+
+					}
 				} else {
-					RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
+					//log.Printf("Skipped parts of this cigar: %s\n", cigar.ToString(aln.Cigar))
 				}
+				RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
 			}
 		}
 	}
 	log.Printf("Finished analyzing %d alignments...", progress)
-
+	return votes
+}
+func toVcf(samFileName string, chr *fasta.Fasta, chromIdx int, votes map[uint64][]string) []*vcf.Vcf {
 	var concensus []dna.Base
-
+	var seqCode uint64
 	var vcfs []*vcf.Vcf
 	var base int64
-
-	for base = int64(len(chr.Seq) - 1); 0 <= base; base-- {
-		_, ok := votes[base]
+	for base = 0; base < int64(len(chr.Seq)); base++ {
+		seqCode = chromAndPosToNumber(chromIdx, int(base))
+		_, ok := votes[seqCode]
 		if ok {
-			concensus = dna.StringToBases(MostOccuringSeq(votes[base]))
-			if len(concensus) <= 1 {
-				if len(concensus) == 1 && concensus[0] != chr.Seq[base] {
+
+			concensus = dna.StringToBases(MostOccuringSeq(votes[seqCode]))
+			if len(concensus) >= 1 {
+				if len(concensus) == 1 && concensus[0] != chr.Seq[seqCode] {
 					snp := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BaseToString(chr.Seq[base]), Alt: dna.BaseToString(concensus[0]), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=SNP"}
 					vcfs = append(vcfs, &snp)
 				}
@@ -127,19 +135,51 @@ func TakeNotesGenome(samFileName string, chr *fasta.Fasta) []*vcf.Vcf {
 					if numGaps > 0 {
 						delSeq := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BasesToString(chr.Seq[base : base+int64(len(concensus))]), Alt: dna.BaseToString(chr.Seq[base]), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=DEL"}
 						vcfs = append(vcfs, &delSeq)
-					}
-					if numGaps == 0 {
-						ins := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BaseToString(chr.Seq[base]), Alt: dna.BasesToString(chr.Seq[base : base+int64(len(concensus))]), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=INS"}
+					} else {
+						ins := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BaseToString(chr.Seq[base]), Alt: dna.BasesToString(concensus), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=INS"}
 						vcfs = append(vcfs, &ins)
 					}
-				} //fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", variant.Chr, variant.Pos, variant.Id, variant.Ref, variant.Alt, variant.Qual, variant.Filter, variant.Info, variant.Notes)
+				}
 			}
 		}
-
-		//variant := vcf.Vcf{Chr: chr.Name, Pos: 0, Id: "", Ref: "", Alt: "", Qual: 0, Filter: "", Info: ""}
-
 	}
 	return vcfs
+}
+
+func EditGenome(samFileName string, chr *fasta.Fasta, chromIdx int, votes map[uint64][]string) (*fasta.Fasta, []*vcf.Vcf) {
+	var editGenome *fasta.Fasta = chr
+	var concensus []dna.Base
+	var seqCode uint64
+	var vcfs []*vcf.Vcf
+	var base int64
+	for base = int64(len(chr.Seq) - 1); 0 <= base; base-- {
+		seqCode = chromAndPosToNumber(chromIdx, int(base))
+		_, ok := votes[seqCode]
+		if ok {
+			concensus = dna.StringToBases(MostOccuringSeq(votes[seqCode]))
+			if len(concensus) >= 1 {
+				if len(concensus) == 1 && concensus[0] != chr.Seq[seqCode] {
+					snp := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BaseToString(chr.Seq[base]), Alt: dna.BaseToString(concensus[0]), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=SNP"}
+					vcfs = append(vcfs, &snp)
+					editGenome.Seq[base] = concensus[0]
+				}
+				if len(concensus) > 1 {
+					numGaps := dna.CountBaseInterval(concensus, dna.Gap, 0, len(concensus))
+					if numGaps > 0 {
+						delSeq := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BasesToString(chr.Seq[base : base+int64(len(concensus))]), Alt: dna.BaseToString(chr.Seq[base]), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=DEL"}
+						vcfs = append(vcfs, &delSeq)
+						editGenome.Seq = dna.Delete(editGenome.Seq, base, base+int64(len(concensus)))
+					} else {
+						ins := vcf.Vcf{Chr: chr.Name, Pos: base + 1, Id: "", Ref: dna.BaseToString(chr.Seq[base]), Alt: dna.BasesToString(concensus), Qual: 0, Filter: "", Info: "", Notes: "SVTYPE=INS"}
+						vcfs = append(vcfs, &ins)
+						editGenome.Seq = dna.Insert(editGenome.Seq, base+1, concensus[1:])
+					}
+				}
+			}
+		}
+	}
+	vcf.Sort(vcfs)
+	return editGenome, vcfs
 }
 
 func SimulateVcfGenomeWide(genome []*fasta.Fasta, numChanges int) []*vcf.Vcf {

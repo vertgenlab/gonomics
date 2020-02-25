@@ -97,7 +97,7 @@ func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) [
 		strand = randIntInRange(0, 2) == 0
 		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			curr := fastq.Fastq{}
-			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
+			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start+1, start+1+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
 			copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
 			curr.Qual = generateDiverseFakeQual(readLength)

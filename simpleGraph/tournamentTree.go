@@ -87,7 +87,7 @@ func mergeSeedLists(lastPosition []*SeedDev, currPosition []*SeedBed, currQPos u
 func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0
 	var hits []*SeedDev = make([]*SeedDev, 0)
-	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
+	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart += 2 {
 		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
 			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
 			currHits := seedHash[codedSeq]

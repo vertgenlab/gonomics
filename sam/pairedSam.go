@@ -13,7 +13,10 @@ type PairedSamAln struct {
 	RevSam *SamAln
 }
 
-func SamChanPairToFile(incomingSams <-chan *PairedSamAln, file *os.File, wg *sync.WaitGroup) {
+func SamChanPairToFile(incomingSams <-chan *PairedSamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
+	file, _ := os.Create(filename)
+	defer file.Close()
+	WriteHeaderToFileHandle(file, header)
 	for alignedRead := range incomingSams {
 		WriteAlnPairToFileHandle(file, alignedRead)
 	}

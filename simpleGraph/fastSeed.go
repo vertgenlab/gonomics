@@ -1,6 +1,7 @@
 package simpleGraph
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -49,6 +50,30 @@ func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 func printSeedDev(a []*SeedDev) {
 	for i, _ := range a {
 		log.Printf("%d\t%d\t%d\t%d\t%t\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].PosStrand)
+	}
+}
+
+//helper functions for debugging seed.Next
+func printSeedDevNext(a *SeedDev) {
+	log.Printf("TargetId=%d\tTargetStart=%d\tQueryStart=%d\tLength=%d\n", a.TargetId, a.TargetStart, a.QueryStart, a.Length)
+	if a.Next == nil {
+		return
+	} else {
+		printSeedDevNext(a.Next)
+	}
+}
+
+func printSeedDevInfo(a []*SeedDev) {
+	var totalLen uint32
+	for i, _ := range a {
+		log.Printf("%d\t%d\t%d\t%d\t%t\t%d\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].PosStrand, a[i].Next.TargetId)
+		totalLen = a[i].Length
+		for a[i].Next != nil {
+			totalLen += a[i].Next.Length
+			log.Printf("%d\t%d\t%d\t%d\t%t\t%d\n", a[i].Next.TargetId, a[i].Next.TargetStart, a[i].Next.QueryStart, a[i].Next.Length, a[i].Next.PosStrand, a[i].Next.TargetId)
+			a[i] = a[i].Next
+		}
+		fmt.Printf("\n")
 	}
 }
 
@@ -143,7 +168,7 @@ func IndexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]*SeedBe
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment
 func seedCouldBeBetter(curr *SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
-	seedLen := int64(curr.Length)
+	seedLen := int64(sumLen(curr))
 	seeds := queryLen / (seedLen + 1)
 	remainder := queryLen % (seedLen + 1)
 

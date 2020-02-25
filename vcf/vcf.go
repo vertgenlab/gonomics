@@ -2,7 +2,6 @@ package vcf
 
 import (
 	"fmt"
-
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -67,22 +66,26 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-func Read(er *fileio.EasyReader) []*Vcf {
+func Read(filename string) []*Vcf {
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+
 	var line string
 	var done bool
 	var answer []*Vcf
-	for line, done = fileio.EasyNextLine(er); !done; line, done = fileio.EasyNextLine(er) {
+	ReadHeader(file)
+	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		answer = append(answer, processVcfLine(line))
 	}
 	return answer
 }
 
-func ReadFile(filename string) *VCF {
+func ReadVcf(filename string) *VCF {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
 	header := ReadHeader(file)
-	vcfRecords := Read(file)
+	vcfRecords := Read(filename)
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
@@ -128,25 +131,35 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteVcfToFileHandle(file *os.File, input []*Vcf) error {
+func WriteHeader(file *os.File, header *VcfHeader) {
 	var err error
-
-	//var chrLen []*chromInfo.ChromInfo = []*chromInfo.ChromInfo{}
-	header := MakeHeader()
-	for h := 0; h < len(header); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header[h])
+	//header := MakeHeader()
+	for h := 0; h < len(header.Text); h++ {
+		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
 	}
+	common.ExitIfError(err)
+}
+
+func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
+	var err error
 	for i := 0; i < len(input); i++ {
 		if input[i].Notes == "" {
 			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
-
 		} else {
 			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
 		}
+		common.ExitIfError(err)
+	}
+}
 
+func WriteVcf(file *os.File, input *Vcf) {
+	var err error
+	if input.Notes == "" {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
+	} else {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format, input.Notes)
 	}
 	common.ExitIfError(err)
-	return err
 }
 
 func Write(filename string, data []*Vcf) {
@@ -157,6 +170,14 @@ func Write(filename string, data []*Vcf) {
 
 func PrintVcf(data []*Vcf) {
 	Write("/dev/stdout", data)
+}
+
+func PrintSingleLine(data *Vcf) {
+	var err error
+	file := fileio.MustCreate("/dev/stdout")
+	defer file.Close()
+	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
+	common.ExitIfError(err)
 }
 
 func PrintHeader(header []string) {
@@ -192,6 +213,6 @@ func MakeHeader() []string {
 		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
-		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Sample")
+		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
 	return header
 }

@@ -2,7 +2,8 @@ package simpleGraph
 
 import (
 	//"fmt"
-	//"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
@@ -15,6 +16,30 @@ import (
 	"time"
 )
 
+func TestSamToVcf(t *testing.T) {
+
+	chrI := &Node{Name: "chrI", Seq: dna.StringToBases("ACAAAAAAAAAAAAA")}
+	h := NodesHeader([]*Node{chrI})
+	align1 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 2, MapQ: 255, Cigar: cigar.FromString("1M5S"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("GAAAAA"), Extra: "BZ:i:0"}
+	align2 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 2, MapQ: 255, Cigar: cigar.FromString("1M5S"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("GAAAAA"), Extra: "BZ:i:0"}
+	align3 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 4, MapQ: 255, Cigar: cigar.FromString("4M"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AACT"), Extra: "BZ:i:0"}
+	align4 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 4, MapQ: 255, Cigar: cigar.FromString("4M"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AACT"), Extra: "BZ:i:0"}
+	align5 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 8, MapQ: 255, Cigar: cigar.FromString("1M7I"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AGATGAGT"), Extra: "BZ:i:0"}
+	align6 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 8, MapQ: 255, Cigar: cigar.FromString("1M7I"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("AGATGAGT"), Extra: "BZ:i:0"}
+	var testSam []*sam.SamAln = []*sam.SamAln{align1, align2, align3, align4, align5, align6}
+	samTest := &sam.Sam{Header: h, Aln: testSam}
+	sam.Write("testdata/samToVcfTest.sam", samTest)
+
+	chrITest := &fasta.Fasta{Name: "chrI", Seq: dna.StringToBases("ACAAAAAAAAAAAAA")}
+	votes := samToGenomeNotes("testdata/samToVcfTest.sam", chrITest, 0)
+	log.Printf("Before: %s\n", dna.BasesToString(chrITest.Seq))
+	fa, v := EditGenome("testdata/samToVcfTest.sam", chrITest, 0, votes)
+
+	log.Printf("After:%s\n", dna.BasesToString(fa.Seq))
+	vcf.PrintVcf(v)
+
+}
+
 func TestAlignPairedEnd(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
@@ -22,7 +47,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 4
+	var numWorkers int = 8
 
 	log.Printf("Reading in the genome (Simple Graph)...\n")
 	genome := Read("testdata/gasAcu1.fa")
@@ -40,10 +65,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	log.Printf("Making sam channel...\n")
 	samPipe := make(chan *sam.PairedSamAln, 824)
 
-	file, _ := os.Create("/dev/stdout")
-	defer file.Close()
 	header := NodesHeader(genome.Nodes)
-	sam.WriteHeaderToFileHandle(file, header)
 
 	start := time.Now()
 	go fastq.PairEndToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
@@ -54,7 +76,7 @@ func TestAlignPairedEnd(t *testing.T) {
 		go gswPairEnd(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
-	go sam.SamChanPairToFile(samPipe, file, &writerWaiter)
+	go sam.SamChanPairToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -63,28 +85,32 @@ func TestAlignPairedEnd(t *testing.T) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	os.Remove("samFile.sam")
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
 }
 
 func TestVcfToGraph(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 10000
+	var numberOfReads int = 30000
 	var readLength int = 150
-	var mutations int = 1000
+	var mutations int = 650
+
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 4
+	var numWorkers int = 8
 	log.Printf("Reading in the genome (fasta)...\n")
 	ref := fasta.Read("testdata/gasAcu1.fa")
+	fasta.AllToUpper(ref)
 	log.Printf("Simulating vcf...\n")
 	vcfFile := SimulateVcfGenomeWide(ref, mutations)
+	vcf.Sort(vcfFile)
 	vcf.PrintVcf(vcfFile)
-	log.Printf("Vcf to genome graph...\n")
-	genome := FaToGenomeGraph(ref, vcfFile)
-	//Write("testdata/vcfGraph.gg", genome)
+	//log.Printf("Vcf to genome graph...\n")
+	genome := VariantGraph(ref, vcfFile)
+	Write("testdata/vcfGraph.gg", genome)
 	log.Printf("Simulating reads...\n")
 	fa := Read("testdata/gasAcu1.fa")
-	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, mutations)
+
+	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, 0)
 
 	fastq.Write("testdata/simReads.fq", simReads)
 
@@ -97,10 +123,7 @@ func TestVcfToGraph(t *testing.T) {
 	log.Printf("Making sam channel...\n")
 	samPipe := make(chan *sam.SamAln, 824)
 
-	file, _ := os.Create("samFile.sam")
-	defer file.Close()
 	header := NodesHeader(genome.Nodes)
-	sam.WriteHeaderToFileHandle(file, header)
 
 	start := time.Now()
 	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
@@ -111,7 +134,7 @@ func TestVcfToGraph(t *testing.T) {
 		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "samFile.sam", header, &writerWaiter)
+	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -119,6 +142,12 @@ func TestVcfToGraph(t *testing.T) {
 	log.Printf("Sam writer finished and we are all done\n")
 	stop := time.Now()
 	duration := stop.Sub(start)
-	os.Remove("samFile.sam")
+	//os.Remove("samFile.sam")
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	aln, _ := sam.Read("testdata/alignToGraph.sam")
+	//for _, aligned := range aln.Aln{
+	//	log.Printf("%s\n", LocalView(aligned, genome.Nodes))
+	//}
+	CheckAnswers(aln.Aln)
+
 }
