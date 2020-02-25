@@ -68,49 +68,6 @@ func Read(filename string) *SimpleGraph {
 	return genomeGraph
 }
 
-/*
-func Read(filename string) *SimpleGraph {
-	genomeGraph := NewGraph()
-	var line string
-	var currSeq []dna.Base
-	var seqIdx int64 = -1
-	var doneReading bool = false
-	var words []string
-	var weight float32
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	//creates map: name points to Node
-	//uses this map to add edges to graph
-	edges := make(map[string]*Node)
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.HasPrefix(line, ">") {
-			seqIdx++
-			//words = strings.Split(line, "_")
-			graphNode := Node{Id: uint32(seqIdx), Name: line[1:], Seq: nil, Next: nil, Prev: nil}
-			AddNode(genomeGraph, &graphNode)
-			_, ok := edges[line[1:]]
-			if !ok {
-				edges[line[1:]] = &graphNode
-			}
-		} else if strings.Contains(line, "\t") {
-			words = strings.Split(line, "\t")
-			if len(words) > 2 {
-				for i := 1; i < len(words); i += 2 {
-					weight = float32(common.StringToFloat64(words[i]))
-					AddEdge(edges[words[0]], edges[words[i+1]], weight)
-				}
-			}
-		} else {
-			if !strings.Contains(line, "_") {
-				currSeq = dna.StringToBases(line)
-				dna.AllToUpper(currSeq)
-				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
-			}
-		}
-	}
-	return genomeGraph
-}*/
-
 func AddNode(g *SimpleGraph, n *Node) {
 	g.Nodes = append(g.Nodes, n)
 }
@@ -118,6 +75,15 @@ func AddNode(g *SimpleGraph, n *Node) {
 func AddEdge(u, v *Node, p float32) {
 	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
 	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
+}
+
+func SetEvenWeights(u *Node) {
+	var edge int
+	var weights float32 = 1/float32(len(u.Next))
+	for edge = 0; edge < len(u.Next); edge++ {
+		u.Next[edge].Prob = weights
+	}
+	//do we care about the prev edges?
 }
 
 func Write(filename string, sg *SimpleGraph) {

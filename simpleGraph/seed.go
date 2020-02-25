@@ -23,11 +23,11 @@ func GraphDictionary(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	for i := 0; i < len(seeds); i++ {
 		hash = append(hash, extendSeedTogether(seeds[i], gg, read)...)
 	}
-	SortBlastz(hash, read)
-	if len(hash) > 248 {
+	//SortBlastz(hash, read)
+	//if len(hash) > 248 {
 		//log.Printf("Length of hash for read:%s is %d\n", read.Name, len(hash))
-		hash = hash[:30]
-	}
+	//	hash = hash[:30]
+	//}
 	return hash
 }
 

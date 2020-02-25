@@ -38,11 +38,13 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
 	revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
 	seeds = append(seeds, revCompSeeds...)
+	SortSeedExtended(seeds)
 	//CompareBlastScore(seeds, read)
 	var tailSeed *SeedDev
 	//, m [][]int64, trace [][]rune
 	//m, trace := SwMatrixSetup(int64(extension+1)
 	var seedScore int64
+
 	for i = 0; i < len(seeds) && isSeedBetter(i, seeds, bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		//log.Printf("seed hit: %d, len=%d\n", i, sumLen(seeds[i]))
 		tailSeed = toTail(seeds[i])

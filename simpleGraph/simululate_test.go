@@ -41,8 +41,8 @@ func TestSamToVcf(t *testing.T) {
 }
 
 func TestAlignPairedEnd(t *testing.T) {
-	var tileSize int = 32
-	var stepSize int = 31
+	var tileSize int = 30
+	var stepSize int = 24
 	var numberOfReads int = 10000
 	var readLength int = 150
 	var mutations int = 0
@@ -91,22 +91,23 @@ func TestAlignPairedEnd(t *testing.T) {
 func TestVcfToGraph(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 30000
+	var numberOfReads int = 20000
 	var readLength int = 150
-	var mutations int = 650
+	//var mutations int = 0
 
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	log.Printf("Reading in the genome (fasta)...\n")
 	ref := fasta.Read("testdata/gasAcu1.fa")
 	fasta.AllToUpper(ref)
-	log.Printf("Simulating vcf...\n")
-	vcfFile := SimulateVcfGenomeWide(ref, mutations)
-	vcf.Sort(vcfFile)
-	vcf.PrintVcf(vcfFile)
+	//log.Printf("Simulating vcf...\n")
+	//vcfFile := SimulateVcfGenomeWide(ref, mutations)
+	//vcf.Sort(vcfFile)
+	//vcf.PrintVcf(vcfFile)
 	//log.Printf("Vcf to genome graph...\n")
-	genome := VariantGraph(ref, vcfFile)
-	Write("testdata/vcfGraph.gg", genome)
+	genome := Read("testdata/gasAcu1-4_snpIndels.gg")
+	//VariantGraph(ref, vcfFile)
+	//Write("testdata/vcfGraph.gg", genome)
 	log.Printf("Simulating reads...\n")
 	fa := Read("testdata/gasAcu1.fa")
 

@@ -1,31 +1,26 @@
 package vcf
 
 import (
-	"log"
+	"github.com/vertgenlab/gonomics/fasta"
 	"strings"
 )
 
-func FilterAxtVcf(vcfs []*Vcf) []*Vcf {
-	if len(vcfs) == 0 {
-		log.Fatalf("Error: vcf file provided is empty...")
-	}
-	Sort(vcfs)
+func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
+	split := VcfSplit(vcfs, fa)
 	var answer []*Vcf
-	for i := 0; i < len(vcfs)-1; {
-		if CompareVcf(vcfs[i], vcfs[i+1]) != 0 {
-			answer = append(answer, vcfs[i])
-			i++
-		} else {
-			//if can merge
-			if vcfs[i].Pos == vcfs[i+1].Pos {
-				if strings.Compare(vcfs[i].Ref, vcfs[i+1].Ref) == 0 || strings.Compare(vcfs[i].Alt, vcfs[i+1].Alt) == 0 {
-					vcfs[i] = mergeSimilarVcf(vcfs[i], vcfs[i+1])
-					answer = append(answer, vcfs[i])
-					i += 2
-				}
+	var i, j int
+	for i = 0; i < len(split); i++ {
+		encountered := make(map[int64]bool)
+		for j = 0; j < len(split[i]); j++ {
+			if encountered[split[i][j].Pos] == true {
+				//do not add
+			} else {
+				encountered[split[i][j].Pos] = true
+				answer = append(answer, split[i][j])
 			}
 		}
 	}
+	Sort(answer)
 	return answer
 }
 
