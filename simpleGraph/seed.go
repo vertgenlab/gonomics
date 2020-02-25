@@ -2,7 +2,7 @@ package simpleGraph
 
 import (
 	//"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
@@ -30,7 +30,7 @@ func GraphDictionary(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	//}
 	return hash
 }
-
+/*
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment
 func isSeedBetter(currIndex int, hash []*SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
@@ -60,7 +60,7 @@ func isSeedBetter(currIndex int, hash []*SeedDev, currBestScore int64, perfectSc
 			return false
 		}
 	}
-}
+}*/
 
 func extendCurrSeed(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq, left bool, right bool) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
@@ -196,7 +196,7 @@ func BlastSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 		return scoreSeed(seed, read) + scoreSeed(seed.Next, read)
 	}
 }
-
+/*
 func IndexGenomeGraph(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
@@ -242,7 +242,7 @@ func CheckSmallerHash(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen
 	}
 	log.Printf("Number of seeds found at 24 %d...\n", len(hits))
 	return hits
-}
+}*/
 
 func seedBedMask(a *SeedBed, currQPos uint32, posStrand bool, numMismatch int) *SeedDev {
 	if a == nil {
@@ -251,7 +251,7 @@ func seedBedMask(a *SeedBed, currQPos uint32, posStrand bool, numMismatch int) *
 		return &SeedDev{TargetId: a.Id, TargetStart: a.Start, QueryStart: currQPos, Length: a.End - a.Start - uint32(numMismatch), PosStrand: posStrand, Next: seedBedMask(a.Next, currQPos+a.End-a.Start-uint32(numMismatch), posStrand, numMismatch)}
 	}
 }
-
+/*
 func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, mask int) []*SeedDev {
 	var codedSeq uint64 = 0
 	var hits []*SeedDev = make([]*SeedDev, 0)
@@ -270,7 +270,7 @@ func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen
 		hits = CheckSmallerHash(seedHash, read, seedLen, mask, posStrand, mask)
 	}
 	return hits
-}
+}*/
 
 func seedBedToSeed(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 	if a == nil {
