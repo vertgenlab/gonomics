@@ -191,6 +191,7 @@ func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
 	return answer
 }
 
+/*
 func maskSeedLen(seq []dna.Base, start int, end int, numMismatch int) []uint64 {
 	var answer []uint64
 	var maskOne uint64 = 1
@@ -205,7 +206,7 @@ func maskSeedLen(seq []dna.Base, start int, end int, numMismatch int) []uint64 {
 	answer = append(answer, dnaToNumber(seq, start, end)^maskTwo)
 	answer = append(answer, dnaToNumber(seq, start, end)^maskThree)
 	return answer
-}
+}*/
 
 func numberToChromAndPos(code uint64) (int64, int64) {
 	var rightSideOnes uint64 = 4294967295
