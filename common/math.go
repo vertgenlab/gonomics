@@ -22,7 +22,39 @@ func StringToInt64(s string) int64 {
 	return n
 }
 
+func StringToUint64(s string) uint64 {
+	n, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint64\n", s)
+	}
+	return n
+}
+
+func StringToUint32(s string) uint32 {
+	n, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint32\n", s)
+	}
+	return uint32(n)
+}
+
 func Max(a int, b int) int {
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func MaxInt32(a int32, b int32) int32 {
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func MaxUint32(a uint32, b uint32) uint32 {
 	if a >= b {
 		return a
 	} else {
@@ -47,6 +79,22 @@ func MaxFloat64(a float64, b float64) float64 {
 }
 
 func Min(a int, b int) int {
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func MinInt32(a int32, b int32) int32 {
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func MinUint32(a uint32, b uint32) uint32 {
 	if a <= b {
 		return a
 	} else {

@@ -5,3 +5,4 @@ Authors:
 * Eric Au
 * Sophie Campione
 * Riley Mangan
+* Daniel Snellings

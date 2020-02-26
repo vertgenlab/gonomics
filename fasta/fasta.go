@@ -39,6 +39,12 @@ func Read(filename string) []*Fasta {
 	return answer
 }
 
+func WriteToSplitChr(filename string, records []*Fasta) {
+	for _, rec := range records {
+		Write(filename+rec.Name+".fa", []*Fasta{rec})
+	}
+}
+
 func WriteToFileHandle(file io.Writer, records []*Fasta, lineLength int) {
 	var err error
 	for _, rec := range records {
@@ -90,3 +96,15 @@ func CreateAllNs(name string, numGaps int64) *Fasta {
 	return &answer
 }
 
+func FastaToMap(fasta []*Fasta) map[string][]dna.Base {
+	answer := make(map[string][]dna.Base)
+	var curr *Fasta
+	for i := 0; i < len(fasta); i++ {
+		curr = fasta[i]
+		_, ok := answer[curr.Name]
+		if !ok {
+			answer[curr.Name] = curr.Seq
+		}
+	}
+	return answer
+}

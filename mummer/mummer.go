@@ -1,11 +1,11 @@
 package mummer
 
 import (
-	"os"
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vergenlab/gonomics/vcf"
-	)
+	"github.com/vertgenlab/gonomics/dna"
+	"os"
+)
 
 type Snp struct {
 	RefName   string
@@ -92,7 +92,6 @@ func MummerSNP(mummerFile string) ([]*Snp, error) {
 	}
 	return answer, nil
 }
-
 
 func SnpTruth(s *Snp) int {
 	if strings.Compare(s.RefSub, s.QuerySub) != 0 && strings.Compare(s.RefSub, ".") != 0 && strings.Compare(s.QuerySub, ".") != 0 {

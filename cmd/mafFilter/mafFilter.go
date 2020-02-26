@@ -23,9 +23,9 @@ func mafFilter(inFile string, outFile string, threshold float64) {
 func usage() {
 	fmt.Print(
 		"mafFilter - Filter a maf file to remove entries below a score threshold\n" +
-		"Usage:\n" +
-		" mafFilter mafFile oufMaf\n" +
-		"options:\n")
+			"Usage:\n" +
+			" mafFilter mafFile oufMaf\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

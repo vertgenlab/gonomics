@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"io"
+	"log"
 	"strings"
 	"unicode/utf8"
 )

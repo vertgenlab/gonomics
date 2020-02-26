@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"github.com/vertgenlab/gonomics/common"
+	"log"
 )
 
 func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount int, aCount int, cCount int, gCount int, tCount int, nCount int, gapCount int) {
@@ -108,6 +109,31 @@ func DefineBase(b Base) bool {
 		return false
 	default:
 		common.ExitIfError(fmt.Errorf("Error: trying to examine unknown base %d", b))
+		return false
+	}
+}
+
+func CountBase(seq []Base, b Base) int {
+	return CountBaseInterval(seq, b, 0, len(seq))
+}
+
+func CountBaseInterval(seq []Base, b Base, start int, end int) int {
+	var answer int = 0
+	if start < 0 || end > len(seq) {
+		log.Fatalf("Error: %d and %d are out of range for a sequence of length %d\n", start, end, len(seq))
+	}
+	for i := start; i < end; i++ {
+		if seq[i] == b {
+			answer++
+		}
+	}
+	return answer
+}
+
+func CompareBase(alpha Base, beta Base) bool {
+	if alpha == beta {
+		return true
+	} else {
 		return false
 	}
 }

@@ -40,7 +40,6 @@ func SamToBed(s *sam.SamAln) *bed.Bed {
 	}
 }
 
-
 /* TODO: Write Sam to Bed conversion for paired reads.
 
 func SamToBedPaired(s *sam.Sam) []*bed.Bed {
@@ -140,7 +139,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 		wigSlice[i] = &currentWig
 		i++
 	}
-	
+
 	log.Println("Completed wig skeleton, looping through bed.")
 
 	//loop through bed line at a time

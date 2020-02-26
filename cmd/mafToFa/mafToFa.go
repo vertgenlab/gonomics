@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/maf"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/maf"
 	"log"
 )
 
@@ -14,7 +14,7 @@ func mafToFa(inMaf string, inFa string, inSpeciesList string, outFa string, noMa
 
 	refFasta := fasta.Read(inFa)
 	if len(refFasta) != 1 {
-		log.Fatalf("Error: expecting input fasta to be a single record, but file has %d records\n", refFasta)
+		log.Fatalf("Error: expecting input fasta to be a single record, but file has %d records\n", len(refFasta))
 	}
 
 	speciesList := fileio.Read(inSpeciesList)
@@ -31,9 +31,9 @@ func mafToFa(inMaf string, inFa string, inSpeciesList string, outFa string, noMa
 func usage() {
 	fmt.Print(
 		"mafToFa - convert a maf alignment into a fasta alignment\n" +
-		"Usage:\n" +
-		" mafToFa input.maf reference.fa species.list output.fa\n" +
-		"options:\n")
+			"Usage:\n" +
+			" mafToFa input.maf reference.fa species.list output.fa\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

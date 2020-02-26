@@ -19,9 +19,9 @@ func bedReplaceChrom(infile string, outfile string, chromName string) {
 func usage() {
 	fmt.Print(
 		"bedReplaceChrom - replaces the Name field of a bed file with input.\n" +
-		"Usage:\n" +
-		"bedFilter input.bed output.bed chromName\n" +
-		"options:\n")
+			"Usage:\n" +
+			"bedFilter input.bed output.bed chromName\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

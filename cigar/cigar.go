@@ -1,9 +1,9 @@
 package cigar
 
-import(
-	"log"
-	"github.com/vertgenlab/gonomics/common"
+import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	"log"
 	"unicode"
 )
 
@@ -60,7 +60,7 @@ func FromString(input string) []*Cigar {
 
 	for _, v := range input {
 		if unicode.IsDigit(v) {
-			currentNumber = currentNumber + fmt.Sprintf("%c", v)	
+			currentNumber = currentNumber + fmt.Sprintf("%c", v)
 		} else if RuneIsValidCharacter(v) {
 			currentCigar := Cigar{RunLength: common.StringToInt64(currentNumber), Op: v}
 			output = append(output, &currentCigar)
@@ -69,10 +69,10 @@ func FromString(input string) []*Cigar {
 			log.Fatalf("Invalid character: %c", v)
 		}
 	}
-/*
-	if RuneIsDigit(v) { //will not work, v is not seen outside loop
-		log.Fatalf("Cigar ended with digit")
-	} */
+	/*
+		if RuneIsDigit(v) { //will not work, v is not seen outside loop
+			log.Fatalf("Cigar ended with digit")
+		} */
 	return output
 }
 
@@ -116,7 +116,7 @@ func RuneIsDigit(r rune) bool {
 	case '4':
 		return true
 	case '5':
-		return true	
+		return true
 	case '6':
 		return true
 	case '7':
@@ -124,15 +124,11 @@ func RuneIsDigit(r rune) bool {
 	case '8':
 		return true
 	case '9':
-		return true		
+		return true
 	}
 	return false
 }
 */
-
-func CigarConsumesReference(c Cigar) bool {
-	return ConsumesReference(c.Op)
-}
 
 func RuneIsValidCharacter(r rune) bool {
 	switch r {
@@ -153,9 +149,13 @@ func RuneIsValidCharacter(r rune) bool {
 	case '=':
 		return true
 	case 'X':
-		return true	
+		return true
 	}
 	return false
+}
+
+func CigarConsumesReference(c Cigar) bool {
+	return ConsumesReference(c.Op)
 }
 
 func ConsumesReference(r rune) bool {
@@ -177,7 +177,7 @@ func ConsumesReference(r rune) bool {
 	case '=':
 		return true
 	case 'X':
-		return true	
+		return true
 	}
 	log.Fatalf("Invalid rune: %c", r)
 	return false
@@ -202,7 +202,7 @@ func ConsumesQuery(r rune) bool {
 	case '=':
 		return true
 	case 'X':
-		return true	
+		return true
 	}
 	log.Fatalf("Invalid rune: %c", r)
 	return false

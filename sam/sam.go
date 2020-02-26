@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Sam struct {
@@ -31,25 +35,26 @@ type SamAln struct {
 	RNext string
 	PNext int64
 	TLen  int64
-	Seq   string
+	Seq   []dna.Base
 	Qual  string
 	Extra string
 }
 
-/*
-func samToVcf(alignment[]*Sam) {
-	var answer []*vcf.Vcf
-	for i := range alignment {
-
+func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
+	file, _ := os.Create(filename)
+	defer file.Close()
+	WriteHeaderToFileHandle(file, header)
+	for alignedRead := range incomingSams {
+		WriteAlnToFileHandle(file, alignedRead)
 	}
-}*/
+	wg.Done()
+}
 
 func processHeaderLine(header *SamHeader, line string) {
 	var err error
 	var chrCount int64 = 0
 
 	header.Text = append(header.Text, line)
-
 	if strings.HasPrefix(line, "@SQ") && strings.Contains(line, "SN:") && strings.Contains(line, "LN:") {
 		curr := chromInfo.ChromInfo{Name: "", Size: 0, Order: chrCount}
 		chrCount++
@@ -118,7 +123,7 @@ func processAlignmentLine(line string) *SamAln {
 	if err != nil {
 		log.Fatal(err)
 	}
-	curr.Seq = words[9]
+	curr.Seq = dna.StringToBases(words[9])
 	curr.Qual = words[10]
 	if len(words) > 11 {
 		curr.Extra = words[11]
@@ -158,21 +163,40 @@ func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
 
 	for i, _ := range header.Text {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[i])
-		if err != nil {
-			return err
-		}
+		common.ExitIfError(err)
 	}
 	return nil
 }
 
-func WriteAlnToFileHandle(file *os.File, aln *SamAln) error {
-	var err error
+func SamAlnToString(aln *SamAln) string {
+	var answer string
 	if aln.Extra == "" {
-		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual)
+		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)
 	} else {
-		_, err = fmt.Fprintf(file, "%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, aln.Seq, aln.Qual, aln.Extra)
+		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
 	}
-	return err
+	return answer
+}
+
+func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
+	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
+	common.ExitIfError(err)
+}
+
+func TestSamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {
+
+	for alignedRead := range incomingSams {
+		WriteAlnToFileHandle(file, alignedRead)
+	}
+	wg.Done()
+}
+func SamChanToStdOut(incomingSams <-chan *SamAln, wg *sync.WaitGroup) {
+	for alignedRead := range incomingSams {
+		log.Printf("%s\n", SamAlnToString(alignedRead))
+		//WriteAlnToFileHandle(file, alignedRead)
+
+	}
+	wg.Done()
 }
 
 func Write(filename string, data *Sam) error {
@@ -184,84 +208,19 @@ func Write(filename string, data *Sam) error {
 
 	err = WriteHeaderToFileHandle(file, data.Header)
 	for i, _ := range data.Aln {
-		err = WriteAlnToFileHandle(file, data.Aln[i])
-		if err != nil {
-			return err
-		}
+		WriteAlnToFileHandle(file, data.Aln[i])
 	}
 	return err
 }
 
-/*
-func Read(filename string) ([]*Sam, error) {
-	var answer []*Sam
-	var curr *Sam
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
+func AlignmentHeader(ref []*fasta.Fasta) *SamHeader {
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+	for i := 0; i < len(ref); i++ {
+		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		header.Text = append(header.Text, words)
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil, err
-	}
-	var err2 error
-	var rline []byte
-	for ;err2 != io.EOF; rline, _, err2 = reader.ReadLine()  {
-		line = string(rline[:])
-
-		if strings.HasPrefix(line, "@") {
-			fmt.Println(line)
-		}
-		data := strings.Split(line, "\t")
-
-		switch {
-		case len(data) == 10:
-			bf, _ := strconv.ParseInt(data[1], 10, 64)
-			qf, _ := strconv.ParseInt(data[4], 10, 64)
-			pn, _ := strconv.ParseInt(data[7], 10, 64)
-			tl, _ := strconv.ParseInt(data[8], 10, 64)
-			//curr = &Sam{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Unknown: data[9]}
-			curr = &Sam{QName: data[0], BitFlag: bf, RefName: data[2], CurrPos: data[3], QMap: qf, Cigar: data[5], RNext: data[6], PosNext: pn, TmpLen: tl, Seq: data[9], QualBase: " "}
-			answer = append(answer, curr)
-
-		case len(data) == 11:
-			bf, _ := strconv.ParseInt(data[1], 10, 64)
-			qf, _ := strconv.ParseInt(data[4], 10, 64)
-			pn, _ := strconv.ParseInt(data[7], 10, 64)
-			tl, _ := strconv.ParseInt(data[8], 10, 64)
-			//curr = &Sam{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Unknown: data[9]}
-			curr = &Sam{QName: data[0], BitFlag: bf, RefName: data[2], CurrPos: data[3], QMap: qf, Cigar: data[5], RNext: data[6], PosNext: pn, TmpLen: tl, Seq: data[9], QualBase: data[10]}
-			answer = append(answer, curr)
-		default:
-			//fmt.Println("unexpected line")
-		}
-	}
-	return answer, nil
+	return &header
 }
-
-
-
-func main() {
-	var expectedNumArgs int = 1
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
-
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-	}
-	samFile := flag.Arg(0)
-	//out, _ := ReadIn(samFile)
-	align, _ := ReadIn(samFile)
-
-	for i := range align {
-			fmt.Println(align[i])
-
-	}
-	//fmt.Println(len(align))
-}
-*/
-//linebyline := metaData{qName: colData[0], bitFlag: bf, refName: colData[2], currPos: colData[3], qMap: qf, cigar: colData[5], rNext: colData[6], posNext: pn, tmpLen: tl, seq: colData[9], qualBase: colData[10]}
-//currSam := Sam{Header: tmpHeader, Alignment: &linebyline}

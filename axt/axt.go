@@ -101,3 +101,9 @@ func Write(filename string, data []*Axt) {
 		WriteToFileHandle(file, data[i], i)
 	}
 }
+
+func AxtInfo(input *Axt) string {
+	var text string = ""
+	text = fmt.Sprintf("%s;%d;%d;%s;%d;%d;%t;%d", input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, input.QStrandPos, input.Score)
+	return text
+}

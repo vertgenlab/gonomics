@@ -69,7 +69,6 @@ func multFaVisualizer(infile string, start int64, end int64, noMask bool, lineLe
 	}
 }
 
-
 func calculateLongestName(f []*fasta.Fasta) int {
 	var ans int = 0
 	var temp int
@@ -85,9 +84,9 @@ func calculateLongestName(f []*fasta.Fasta) int {
 func usage() {
 	fmt.Print(
 		"multFaVisualizer - Provides human-readable multiple alignment from a given .\n" +
-		"Usage:\n" +
-		"multFaVisualizer mult.fa start end\n" +
-		"options:\n")
+			"Usage:\n" +
+			"multFaVisualizer mult.fa start end\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

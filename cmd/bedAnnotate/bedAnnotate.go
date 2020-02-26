@@ -13,8 +13,8 @@ func bedAnnotate(in string, rec string, outfile string, field *int, prefix strin
 
 	for i := 0; i < len(infile); i++ {
 		for j := 0; j < len(records); j++ {
-			if overlap(infile[i], records[j]) && !contains(infile[i].Annotation, prefix + records[j].Name) {
-				infile[i].Annotation = append(infile[i].Annotation, prefix + records[j].Name)
+			if overlap(infile[i], records[j]) && !contains(infile[i].Annotation, prefix+records[j].Name) {
+				infile[i].Annotation = append(infile[i].Annotation, prefix+records[j].Name)
 			}
 		}
 	}
@@ -25,9 +25,9 @@ func bedAnnotate(in string, rec string, outfile string, field *int, prefix strin
 func usage() {
 	fmt.Print(
 		"bedAnnotate - Appends a field from bed2 into overlapping segments of bed1\n" +
-		"Usage:\n" +
-		"bedAnnotate bed1.bed records.bed output.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			"bedAnnotate bed1.bed records.bed output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -41,12 +41,12 @@ func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
 }
 
 func contains(s []string, e string) bool {
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {

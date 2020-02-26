@@ -25,7 +25,7 @@ func Remove(slice []*Fasta, i int) []*Fasta {
 }
 
 func RemoveGaps(records []*Fasta) []*Fasta {
-	for i := 0 ; i < len(records); i++ {
+	for i := 0; i < len(records); i++ {
 		records[i].Seq = dna.RemoveGaps(records[i].Seq)
 	}
 	return records
@@ -144,4 +144,8 @@ func DistColumn(records []*Fasta) []*Fasta {
 	return subFa
 }
 
-
+func ChangePrefix(records []*Fasta, prefix string) {
+	for idx := 0; idx < len(records); idx++ {
+		records[idx].Name = fmt.Sprintf("%s_%d", prefix, idx)
+	}
+}
