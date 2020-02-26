@@ -7,12 +7,34 @@ import (
 	"log"
 )
 
-func faFilter(infile string, outfile string, name string) {
+func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int) {
 	records := fasta.Read(infile)
 	var outlist []*fasta.Fasta
+	var pass bool = true
+
+	if start > end && end != -1 {
+		log.Fatalf("End must be larger than Start.")
+	}
+
+	if refPositions {
+		start = fasta.RefPosToAlnPos(records[0], start)
+		end = fasta.RefPosToAlnPos(records[0], end)
+	}
 
 	for i := 0; i < len(records); i++ {
-		if records[i].Name == name {
+		pass = true
+		if name != "" && records[i].Name != name {
+			pass = false
+		}
+		if notName != "" && records[i].Name == notName {
+			pass = false
+		}
+		if pass {
+			if end == -1 {
+				records[i].Seq = records[i].Seq[start:]
+			} else {
+				records[i].Seq = records[i].Seq[start:end]
+			}
 			outlist = append(outlist, records[i])
 		}
 	}
@@ -21,15 +43,21 @@ func faFilter(infile string, outfile string, name string) {
 
 func usage() {
 	fmt.Print(
-		"faFilter - Returns a filtered fasta with headers matching a given name.\n" +
-			"Usage:\n" +
-			" faFindFast input.fa output.fa name\n" +
-			"options:\n")
+		"faFilter - Returns a filtered fasta based on argument parameters.\n" +
+		"Usage:\n" +
+		" faFindFast input.fa output.fa\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 3
+	var expectedNumArgs int = 2
+	var refPositions *bool = flag.Bool("refPositions", false, "Uses reference positions for range specifications instead of alignment positions.")
+	var start *int = flag.Int("start", 0, "Retains the sequence after this position.")
+	var end *int = flag.Int("end", -1, "Retains the sequence before this position.")
+	var name *string = flag.String("name", "", "Specifies the fasta record name.")
+	var notName *string = flag.String("notName", "", "Returns all fasta records except for this input.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -42,7 +70,6 @@ func main() {
 
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	name := flag.Arg(2)
 
-	faFilter(inFile, outFile, name)
+	faFilter(inFile, outFile, *name, *notName, *refPositions, *start, *end)
 }

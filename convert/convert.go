@@ -36,7 +36,7 @@ func SamToBed(s *sam.SamAln) *bed.Bed {
 	if s.Cigar[0].Op == '*' {
 		return nil
 	} else {
-		return &bed.Bed{Chrom: s.RName, ChromStart: s.Pos - 1, ChromEnd: s.Pos + cigar.ReferenceLength(s.Cigar), Name: s.QName}
+		return &bed.Bed{Chrom: s.RName, ChromStart: s.Pos - 1, ChromEnd: s.Pos -1 + cigar.ReferenceLength(s.Cigar), Name: s.QName}
 	}
 }
 

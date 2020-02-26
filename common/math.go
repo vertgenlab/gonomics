@@ -2,6 +2,7 @@ package common
 
 import (
 	"log"
+	"math/rand"
 	"strconv"
 )
 
@@ -135,4 +136,12 @@ func TripleMin(a int, b int, c int) int {
 	} else {
 		return c
 	}
+}
+
+func RandIntInRange(x int, y int) int {
+	return int(rand.Float64()*float64(y-x)) + x
+}
+
+func RandInt64InRange(x int64, y int64) int64 {
+	return int64(rand.Float64()*float64(y-x)) + x
 }
