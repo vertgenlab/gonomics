@@ -75,6 +75,10 @@ func SamToAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int64) c
 				continue
 			}
 
+			if aln.MapQ < minMapQ {
+				continue
+			}
+
 			for i = 0; i < len(aln.Cigar); i++ {
 				currentSeq = aln.Seq
 
