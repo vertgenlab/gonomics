@@ -106,8 +106,18 @@ func AllToUpper(records []*Fasta) {
 	}
 }
 
+func GetChromIndex(records []*Fasta, name string) int {
+	for i := 0; i < len(records); i++ {
+		if records[i].Name == name {
+			return i
+		}
+	}
+	log.Fatalf("Chromosome name not found in fasta file.\n")
+	return -1
+}
+
 //returns alignment columns with no gaps or lowercase letters
-func DistBase(records []*Fasta) []*Fasta {
+func DistColumn(records []*Fasta) []*Fasta {
 	var subFa = make([]*Fasta, len(records))
 	for i := 0; i < len(records); i++ {
 		subFa[i] = &Fasta{Name: records[i].Name, Seq: make([]dna.Base, 0)}

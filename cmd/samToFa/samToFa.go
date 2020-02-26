@@ -4,23 +4,23 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
-	//"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"os"
-	"math/rand"
+	//"os"
+	//"math/rand"
 )
 
 func samToFa(samFileName string, refFile string, outfile string, vcfFile string) {
-	fmt.Printf("Reading fasta.\n")
+	//fmt.Printf("Reading fasta.\n")
 	ref := fasta.Read(refFile)
 	fasta.AllToUpper(ref)
 
-	fmt.Printf("Initializing voting matrix.\n")
+	//fmt.Printf("Initializing voting matrix.\n")
 	votingMatrix := make(map[string][]*voteBase, len(ref))
 	var i, k int
 	for i = 0; i < len(ref); i++ {
@@ -37,7 +37,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 	var currentSeq []dna.Base
 	var aln *sam.SamAln
 	//var i, k int
-	fmt.Printf("Vote matrix initialized. Looping through sam.\n")
+	//fmt.Printf("Vote matrix initialized. Looping through sam.\n")
 	sam.ReadHeader(samFile)
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
@@ -72,11 +72,11 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 		}
 	}
 
-	outFile, _ := os.Create(vcfFile)
+	outFile := fileio.EasyCreate(vcfFile)
 	defer outFile.Close()
 	fmt.Fprintf(outFile, "%s\n", vcf.BasicHeader())
 	var current dna.Base
-	fmt.Printf("Voting matrix complete, time to vote.\n")
+	//fmt.Printf("Voting matrix complete, time to vote.\n")
 	var maxList []dna.Base
 	for i = 0; i < len(ref); i++ {
 		for k = 0; k < len(ref[i].Seq); k++ {
@@ -89,7 +89,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 			ref[i].Seq[k] = current
 		}
 	}
-	fmt.Printf("Voting complete, writing output file.\n")
+	//fmt.Printf("Voting complete, writing output file.\n")
 	fasta.Write(outfile, ref)
 }
 
