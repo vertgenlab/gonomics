@@ -27,9 +27,7 @@ func SamToAlleles(samFilename string, reference interface{}, minMapQ int64) chan
 	switch reference.(type) {
 	case []*fasta.Fasta:
 		reference := reference.([]*fasta.Fasta)
-		fasta.AllToUpper(reference)
-		ref := fasta.FastaMap(reference)
-		go CountAlleles(answer, &wg, samFile, ref, minMapQ)
+		go CountAlleles(answer, &wg, samFile, reference, minMapQ)
 
 	case *simpleGraph.SimpleGraph:
 		ref := reference.(*simpleGraph.SimpleGraph)
@@ -47,7 +45,7 @@ func SamToAlleles(samFilename string, reference interface{}, minMapQ int64) chan
 	return answer
 }
 
-func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyReader, ref map[string][]dna.Base, minMapQ int64) {
+func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyReader, reference []*fasta.Fasta, minMapQ int64) {
 	defer samFile.Close()
 	var RefIndex, SeqIndex int64
 	var currentSeq []dna.Base
@@ -60,6 +58,9 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 	var Match bool
 	var done bool = false
 	var aln *sam.SamAln
+
+	fasta.AllToUpper(reference)
+	ref := fasta.FastaMap(reference)
 
 	log.Printf("Reading in sam alignments...")
 
