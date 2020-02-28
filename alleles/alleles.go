@@ -10,13 +10,9 @@ import (
 	"strings"
 )
 
-// TODO: in vcf format multiple possible alleles into a single line
 type AlleleCount struct {
 	Ref    dna.Base
-	Pos	   int64
 	Counts int32
-	// Base counts are stored as slice with [0] = Total Count [1] = Forward Reads and [2] = Reverse Reads
-	// Total Count is added for processing unpaired sequencing
 	BaseAF int32
 	BaseCF int32
 	BaseGF int32
@@ -38,6 +34,11 @@ type Indel struct {
 type Location struct {
 	Chr string
 	Pos int64
+}
+
+type Allele struct {
+	Count 		*AlleleCount
+	Location 	*Location
 }
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount
