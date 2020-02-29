@@ -2,7 +2,6 @@ package dna
 
 import (
 	"fmt"
-	"log"
 	"github.com/vertgenlab/gonomics/common"
 	"log"
 )
@@ -69,7 +68,7 @@ func Dist(a []Base, b []Base) int {
 }
 
 func IsLower(b Base) bool {
-	switch b{
+	switch b {
 	case a:
 		return true
 	case g:
