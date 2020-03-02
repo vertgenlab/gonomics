@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strconv"
@@ -36,9 +37,19 @@ type Location struct {
 	Pos int64
 }
 
+type GraphLocation struct {
+	Node 	*simpleGraph.Node
+	Pos 	int64
+}
+
 type Allele struct {
 	Count 		*AlleleCount
 	Location 	*Location
+}
+
+type GraphAllele struct {
+	Count 		*AlleleCount
+	Location	*GraphLocation
 }
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount

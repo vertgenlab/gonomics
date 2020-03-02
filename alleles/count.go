@@ -68,6 +68,19 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 
 		// Send positions that have been passed in the file
 		for i = 0; i < len(runningCount); i++ {
+
+			if runningCount[i].Chr != aln.RName {
+				answer <- &Allele{currAlleles[*runningCount[i]], runningCount[i]}
+				delete(currAlleles, *runningCount[i])
+
+				// Catch instance where every entry in running count is sent
+				// Delete all of runningCount
+				if i == len(runningCount) - 1 {
+					runningCount = nil
+				}
+				continue
+			}
+
 			if runningCount[i].Pos < (aln.Pos - 1) {
 				answer <- &Allele{currAlleles[*runningCount[i]], runningCount[i]}
 				delete(currAlleles, *runningCount[i])
@@ -270,10 +283,9 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 	wg.Done()
 }
 
-// Note that the graph implementation currently does not have base by base memory allocation, so you will need to allocate enough memory to store the entire data structure
 func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyReader, graph *simpleGraph.SimpleGraph, minMapQ int64) {
 	var i, k int32
-	var j, progress int
+	var j, l, progress int
 	defer samFile.Close()
 	var done = false
 	var RefIndex, SeqIndex int64
@@ -285,13 +297,46 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 	var Match bool
 
 	var currAlleles = make(map[GraphLocation]*AlleleCount)
-	//var runningCount = make([]*GraphLocation, 0)
+	var runningCount = make([]*GraphLocation, 0)
 
 	log.Printf("Reading in sam alignments...")
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-
 		readPath := StringToPath(aln.Extra)
+
+		// Send positions that have been passed in the file
+		for l = 0; l < len(runningCount); l++ {
+
+			if runningCount[l].Node.Name != aln.RName {
+				answer <- &Allele{currAlleles[*runningCount[l]], &Location{runningCount[l].Node.Name, runningCount[l].Pos}}
+				delete(currAlleles, *runningCount[l])
+
+				// Catch instance where every entry in running count is sent
+				// Delete all of runningCount
+				if l == len(runningCount) - 1 {
+					runningCount = nil
+				}
+
+				continue
+			}
+
+			if runningCount[l].Pos < (aln.Pos - 1) {
+				answer <- &Allele{currAlleles[*runningCount[l]], &Location{runningCount[l].Node.Name, runningCount[l].Pos}}
+				delete(currAlleles, *runningCount[l])
+
+				// Catch instance where every entry in running count is sent
+				// Delete all of runningCount
+				if l == len(runningCount) - 1 {
+					runningCount = nil
+				}
+
+			} else {
+				// Remove sent values from count
+				runningCount = runningCount[l:]
+				break
+			}
+		}
+
 
 		// If read is unmapped then go to the next alignment
 		if aln.Cigar[0].Op == '*' {
@@ -339,6 +384,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 					if !ok {
 						currAlleles[GraphLocation{ref, RefIndex}] = &AlleleCount{
 							Ref: ref.Seq[RefIndex], Counts: 0, BaseAF: 0, BaseCF: 0, BaseGF: 0, BaseTF: 0, BaseAR: 0, BaseCR: 0, BaseGR: 0, BaseTR: 0, Indel: make([]Indel, 0)}
+						runningCount = append(runningCount, &GraphLocation{graph.Nodes[readPath[currNode]], RefIndex})
 					}
 
 					// Keep track of deleted sequence
@@ -399,6 +445,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 				if !ok {
 					currAlleles[GraphLocation{ref, RefIndex}] = &AlleleCount{
 						Ref: ref.Seq[RefIndex], Counts: 0, BaseAF: 0, BaseCF: 0, BaseGF: 0, BaseTF: 0, BaseAR: 0, BaseCR: 0, BaseGR: 0, BaseTR: 0, Indel: make([]Indel, 0)}
+					runningCount = append(runningCount, &GraphLocation{graph.Nodes[readPath[currNode]], RefIndex})
 				}
 
 				// Loop through read sequence and keep track of the inserted bases
@@ -458,6 +505,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 					if !ok {
 						currAlleles[GraphLocation{ref, RefIndex}] = &AlleleCount{
 							Ref: ref.Seq[RefIndex], Counts: 0, BaseAF: 0, BaseCF: 0, BaseGF: 0, BaseTF: 0, BaseAR: 0, BaseCR: 0, BaseGR: 0, BaseTR: 0, Indel: make([]Indel, 0)}
+						runningCount = append(runningCount, &GraphLocation{graph.Nodes[readPath[currNode]], RefIndex})
 					}
 
 					switch currentSeq[SeqIndex] {
@@ -515,12 +563,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 	wg.Done()
 }
 
-// TODO: remove GraphLocation and StringToPath once graph caller has been merged
-type GraphLocation struct {
-	Node 	*simpleGraph.Node
-	Pos 	int64
-}
-
+// TODO: remove StringToPath once graph caller has been merged
 func StringToPath(input string) []uint32 {
 	answer := make([]uint32, 0)
 	words := strings.Split(input, ":")
