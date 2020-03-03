@@ -168,6 +168,18 @@ func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
 	return nil
 }
 
+func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+
+	for i := 0; i < len(chromSize); i++ {
+		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[i].Name, chromSize[i].Size)
+		header.Text = append(header.Text, words)
+	}
+	return &header
+}
+
 func SamAlnToString(aln *SamAln) string {
 	var answer string
 	if aln.Extra == "" {
@@ -213,12 +225,13 @@ func Write(filename string, data *Sam) error {
 	return err
 }
 
-func AlignmentHeader(ref []*fasta.Fasta) *SamHeader {
+func FastaHeader(ref []*fasta.Fasta) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
+
 	for i := 0; i < len(ref); i++ {
-		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}

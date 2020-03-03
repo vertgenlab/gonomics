@@ -25,11 +25,12 @@ func GraphDictionary(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	}
 	//SortBlastz(hash, read)
 	//if len(hash) > 248 {
-		//log.Printf("Length of hash for read:%s is %d\n", read.Name, len(hash))
+	//log.Printf("Length of hash for read:%s is %d\n", read.Name, len(hash))
 	//	hash = hash[:30]
 	//}
 	return hash
 }
+
 /*
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment
@@ -196,6 +197,7 @@ func BlastSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 		return scoreSeed(seed, read) + scoreSeed(seed.Next, read)
 	}
 }
+
 /*
 func IndexGenomeGraph(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
 	if seedLen < 2 || seedLen > 32 {
@@ -251,6 +253,7 @@ func seedBedMask(a *SeedBed, currQPos uint32, posStrand bool, numMismatch int) *
 		return &SeedDev{TargetId: a.Id, TargetStart: a.Start, QueryStart: currQPos, Length: a.End - a.Start - uint32(numMismatch), PosStrand: posStrand, Next: seedBedMask(a.Next, currQPos+a.End-a.Start-uint32(numMismatch), posStrand, numMismatch)}
 	}
 }
+
 /*
 func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, mask int) []*SeedDev {
 	var codedSeq uint64 = 0

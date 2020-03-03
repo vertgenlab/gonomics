@@ -84,7 +84,7 @@ func TestWorkerWithTiming(t *testing.T) {
 	var stepSize int = tileSize - 1
 	var numberOfReads int = 100
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 2
 	var dummyWaiter sync.WaitGroup
 
 	log.Printf("Reading in the genome (simple graph)...\n")
@@ -119,10 +119,12 @@ func TestWorkerWithTiming(t *testing.T) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(alignments), duration, float64(len(alignments))/duration.Seconds())
-	CheckAnswers(alignments)
+
 	for k := 0; k < len(alignments); k++ {
-		fmt.Printf("%s\n", LocalView(alignments[k], genome.Nodes))
+		//fmt.Printf("%s\n", LocalView(alignments[k], genome.Nodes))
+		fmt.Printf("%s\n", ViewGraphAignment(alignments[k], genome))
 	}
+	CheckAnswers(alignments, genome)
 }
 
 func TestHippoAln(t *testing.T) {
@@ -222,7 +224,7 @@ func TestReadsWithTiming(t *testing.T) {
 	var stepSize int = 31
 	var numberOfReads int = 1000
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 2
 	var dummyWaiter sync.WaitGroup
 
 	var fastestRead, slowestRead *fastq.Fastq = nil, nil
@@ -268,7 +270,7 @@ func TestReadsWithTiming(t *testing.T) {
 		}
 	}
 	log.Printf("Fastest read was (%.4f):\n%s\nSlowest reads was (%.4f):\n%s\n", fastestTime, dna.BasesToString(fastestRead.Seq), slowestTime, dna.BasesToString(slowestRead.Seq))
-	CheckAnswers(alignments)
+	CheckAnswers(alignments, genome)
 }
 
 func TestVcfGraph(t *testing.T) {

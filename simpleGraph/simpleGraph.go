@@ -19,11 +19,18 @@ type Node struct {
 	Seq  []dna.Base
 	Prev []*Edge
 	Next []*Edge
+	Info *Annotation
 }
 
 type Edge struct {
 	Dest *Node
 	Prob float32
+}
+
+type Annotation struct {
+	Allele  uint8
+	Start   uint32
+	Variant uint8
 }
 
 func Read(filename string) *SimpleGraph {
@@ -44,6 +51,9 @@ func Read(filename string) *SimpleGraph {
 			seqIdx++
 			words = strings.Split(line, "_")
 			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:]}
+			if len(words) == 3 {
+				tmp.Info = &Annotation{Start: common.StringToUint32(words[2])}
+			}
 			AddNode(genomeGraph, &tmp)
 			_, ok := edges[line[1:]]
 			if !ok {
@@ -79,7 +89,7 @@ func AddEdge(u, v *Node, p float32) {
 
 func SetEvenWeights(u *Node) {
 	var edge int
-	var weights float32 = 1/float32(len(u.Next))
+	var weights float32 = 1 / float32(len(u.Next))
 	for edge = 0; edge < len(u.Next); edge++ {
 		u.Next[edge].Prob = weights
 	}
@@ -103,28 +113,63 @@ func PrintGraph(gg *SimpleGraph) {
 	Write("/dev/stdout", gg)
 }
 
-func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
+//TODO: thinking about the idea of making a slice of graphs instead of one graph
+/*
+func PrintTestGraphFormat(gg []*SimpleGraph) {
+	//Write("/dev/stdout", gg)
+	lineLength := 50
+	file := fileio.EasyCreate("/dev/stdout")
+	defer file.Close()
+	NodesToFile(file, gg, lineLength)
+	EdgesToFile(file, gg)
+}
+
+func NodesToFile(file io.Writer, genome []*SimpleGraph, lineLength int) {
 	var err error
-	for _, rec := range records {
-		_, err = fmt.Fprintf(file, ">%d\n", rec.Id)
-		common.ExitIfError(err)
-		for i := 0; i < len(rec.Seq); i += lineLength {
-			if i+lineLength > len(rec.Seq) {
-				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:]))
-				common.ExitIfError(err)
-			} else {
-				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:i+lineLength]))
-				common.ExitIfError(err)
+	var i, j, k int
+	for i = 0; i < len(genome); i++ {
+		for j = 0; j < len(genome[i].Nodes); j++ {
+			_, err = fmt.Fprintf(file, "%s\n", ">"+genome[i].Nodes[j].Name)
+			for k = 0; k < len(genome[i].Nodes[j].Seq); k += lineLength {
+				if k+lineLength > len(genome[i].Nodes[j].Seq) {
+					_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(genome[i].Nodes[j].Seq[k:]))
+					common.ExitIfError(err)
+				} else {
+					_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(genome[i].Nodes[j].Seq[k:k+lineLength]))
+					common.ExitIfError(err)
+				}
 			}
 		}
 	}
 }
 
+func EdgesToFile(file io.Writer, genome []*SimpleGraph) {
+	var err error
+	var i, j, k int
+	for i = 0; i < len(genome); i++ {
+		for j = 0; j < len(genome[i].Nodes); j++ {
+			_, err = fmt.Fprintf(file, "%s:%d", genome[i].Nodes[j].Name, genome[i].Nodes[j].Id)
+			near := genome[i].Nodes[j].Next
+			for k = 0; k < len(near); k++ {
+				_, err = fmt.Fprintf(file, "\t%v:%v", near[k].Dest.Id, near[k].Prob)
+				common.ExitIfError(err)
+			}
+		_, err = fmt.Fprintf(file, "\n")
+		common.ExitIfError(err)
+		}
+	}
+}*/
+
 func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	var err error
 	var i, j int
 	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s\n", ">"+gg.Nodes[i].Name+"_"+fmt.Sprint(gg.Nodes[i].Id))
+		if gg.Nodes[i].Info != nil {
+			_, err = fmt.Fprintf(file, ">%s_%d_%d\n", gg.Nodes[i].Name, gg.Nodes[i].Id, gg.Nodes[i].Info.Start)
+		} else {
+			_, err = fmt.Fprintf(file, ">%s_%d\n", gg.Nodes[i].Name, gg.Nodes[i].Id)
+		}
+
 		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
 			if j+lineLength > len(gg.Nodes[i].Seq) {
 				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
@@ -136,10 +181,10 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 		}
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name+"_"+fmt.Sprint(gg.Nodes[i].Id))
+		_, err = fmt.Fprintf(file, "%s_%d_%d", gg.Nodes[i].Name, gg.Nodes[i].Id, gg.Nodes[i].Info.Start)
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near); j++ {
-			_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name+"_"+fmt.Sprint(near[j].Dest.Id))
+			_, err = fmt.Fprintf(file, "\t%v\t%s_%d_%d", near[j].Prob, near[j].Dest.Name, near[j].Dest.Id, near[j].Dest.Info.Start)
 			common.ExitIfError(err)
 		}
 		_, err = fmt.Fprintf(file, "\n")

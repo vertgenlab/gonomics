@@ -41,8 +41,8 @@ func TestSamToVcf(t *testing.T) {
 }
 
 func TestAlignPairedEnd(t *testing.T) {
-	var tileSize int = 30
-	var stepSize int = 24
+	var tileSize int = 32
+	var stepSize int = 31
 	var numberOfReads int = 10000
 	var readLength int = 150
 	var mutations int = 0
@@ -53,7 +53,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	genome := Read("testdata/gasAcu1.fa")
 	log.Printf("Simulating reads...\n")
 
-	simReads := PairedEndRandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomPairedReads(genome.Nodes, readLength, numberOfReads, mutations)
 	log.Printf("length of simulated paired end reads: %d\n", len(simReads))
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	log.Printf("Making fastq channel...\n")
@@ -149,6 +149,6 @@ func TestVcfToGraph(t *testing.T) {
 	//for _, aligned := range aln.Aln{
 	//	log.Printf("%s\n", LocalView(aligned, genome.Nodes))
 	//}
-	CheckAnswers(aln.Aln)
+	CheckAnswers(aln.Aln, genome)
 
 }

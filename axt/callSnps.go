@@ -35,6 +35,32 @@ func AxtVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 	vcf.Write(filename, records)
 }
 
+func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
+	ref := fasta.FastaMap(fa)
+	var records []*vcf.Vcf
+	var refIndex int64 = 0
+	var lastChr string = axtList[0].RName
+	var gap *vcf.Vcf
+	var refSeq []dna.Base
+	for i := 0; i < len(axtList); i++ {
+		if axtList[i].RStart - refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
+			refSeq = ref[axtList[i].RName][refIndex:axtList[i].RStart]
+			dna.AllToUpper(refSeq)
+			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
+			records = append(records, gap)
+		}
+		records = append(records, AxtToVcf(axtList[i])...)
+		refIndex = axtList[i].REnd
+		lastChr = axtList[i].RName
+	}
+	records = vcf.FilterAxtVcf(records, fa)
+
+	//vcfs := vcf.Read(filename)
+	//sorted := fileio.MustCreate(filename + ".sorted.vcf")
+	//vcf.WriteHeader(records, head)
+	vcf.Write(filename, records)
+}
+
 /*
 func FindBiggerMutations(axtFile *Axt) []*vcf.Vcf {
 	var answer []*vcf.Vcf

@@ -23,7 +23,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	var i, minTarget int
 	var minQuery int
 	var leftScore, rightScore, bestScore int64
-	var leftPath, rightPath []uint32
+	var leftPath, rightPath, bestPath []uint32
 
 	var currScore int64 = 0
 	perfectScore := perfectMatch(read)
@@ -37,6 +37,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	fastq.ReverseComplement(revCompRead)
 	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
 	revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
+
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedExtended(seeds)
 	//CompareBlastScore(seeds, read)
@@ -62,6 +63,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 		currScore = leftScore + seedScore + rightScore
 
 		if currScore > bestScore {
+			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath)
 			//log.Printf("Index: %d left=%d, seed=%d, right=%d\n", i, leftScore, seedScore, rightScore)
 			bestScore = currScore
 			if seeds[i].PosStrand {
@@ -69,7 +71,8 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 			} else {
 				currBest.Flag = 16
 			}
-			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[seeds[i].TargetId].Name, seeds[i].TargetId)
+			//currBest.RName = fmt.Sprintf("%s_%d_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id, gg.Nodes[bestPath[0]].Info.Start)
+			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id)
 			currBest.Pos = int64(minTarget) + 1
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
@@ -125,14 +128,18 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 	return score
 }
 
-func BasicHeader(ref []*Node) *sam.SamHeader {
+//TODO: This is the more elegant solution to generate the header, but could not get it to work with samtools...
+func devHeader(ref []*Node) *sam.SamHeader {
 	var header sam.SamHeader
-	var words string = "@HD\tVN:1.6\tSO:unsorted\n"
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+
 	for i := 0; i < len(ref); i++ {
-		words += fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d\n", ref[i].Name, ref[i].Id, len(ref[i].Seq))
+		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
+		header.Text = append(header.Text, words)
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}
-	words += "@PG\tID:gonomics\tPN:GSW\tVN:1.0\n"
-	header.Text = append(header.Text, words)
 	return &header
 }
 
@@ -143,7 +150,9 @@ func NodesHeader(ref []*Node) *sam.SamHeader {
 
 	for i := 0; i < len(ref); i++ {
 		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + fmt.Sprint(len(ref[i].Seq))
+		//words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + fmt.Sprint(len(ref[i].Seq))
+		words = fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d", ref[i].Name, ref[i].Id, len(ref[i].Seq))
+		//words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}
