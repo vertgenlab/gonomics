@@ -3,7 +3,7 @@ package alleles
 import (
 	"testing"
 )
-
+/*
 func TestCountAlleles(t *testing.T) {
 	samplemap := CountAlleles("testdata/human_chrM.fasta", 
 "testdata/human_chrM.sam", 0)
@@ -28,6 +28,8 @@ func TestAllelesToVcf(t *testing.T) {
 		t.Errorf("Problem with AllelesToVcf")
 	}
 }
+
+ */
 
 func TestReadVcfToAlleleCounts(t *testing.T) {
 	samplemap := ReadVcfToAlleleCounts("testdata/human_chrM.vcf")
