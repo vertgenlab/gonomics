@@ -35,7 +35,7 @@ func AxtVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 	vcf.Write(filename, records)
 }
 
-func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
+func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []*fasta.Fasta) {
 	ref := fasta.FastaMap(fa)
 	var records []*vcf.Vcf
 	var refIndex int64 = 0
@@ -46,7 +46,11 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 		if axtList[i].RStart - refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
 			refSeq = ref[axtList[i].RName][refIndex:axtList[i].RStart]
 			dna.AllToUpper(refSeq)
-			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
+			
+			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex+1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
+			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Alt: , Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=INS", Notes: AxtInfo(axtList[i])}
+
+
 			records = append(records, gap)
 		}
 		records = append(records, AxtToVcf(axtList[i])...)
@@ -60,7 +64,42 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 	//vcf.WriteHeader(records, head)
 	vcf.Write(filename, records)
 }
+ 
+func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta, qFa []*fasta.Fasta) {
+	ref := fasta.FastaMap(tFa)
+	query := fasta.FastaMap(qFa)
+	var records []*vcf.Vcf
+	var refIndex int64 = 0
+	var queryIndex int64 = axtList[0].QEnd
+	var lastQuery string = ""
+	var lastChr string = axtList[0].RName
+	var gap *vcf.Vcf
+	var refSeq, altSeq []dna.Base
+	for i := 0; i < len(axtList); i++ {
+		if axtList[i].RStart - refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
+			if axtList[i].QStart - queryIndex > 1 && strings.Compare(lastQuery, axtList[i].QName) == 0 {
+				refSeq = ref[axtList[i].RName][refIndex:axtList[i].RStart]
+				altSeq = query[axtList[i].QName][queryIndex:axtList[i].QStart]
+				dna.AllToUpper(refSeq)
+				dna.AllToUpper(altSeq)
+				gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex+1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BasesToString(altSeq), Qual: 248, Filter: "PASS", Info: ".", Format: "SVTYPE=HAP", Notes: AxtInfo(axtList[i])}
+				records = append(records, gap)
+			}
+			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
+		}
+		records = append(records, AxtToVcf(axtList[i])...)
+		refIndex = axtList[i].REnd-1
+		queryIndex = axtList[i].QEnd-1
+		lastQuery = axtList[i].QName
+		lastChr = axtList[i].RName
+	}
+	records = vcf.FilterAxtVcf(records, tFa)
 
+	//vcfs := vcf.Read(filename)
+	//sorted := fileio.MustCreate(filename + ".sorted.vcf")
+	//vcf.WriteHeader(records, head)
+	vcf.Write(filename, records)
+}
 /*
 func FindBiggerMutations(axtFile *Axt) []*vcf.Vcf {
 	var answer []*vcf.Vcf

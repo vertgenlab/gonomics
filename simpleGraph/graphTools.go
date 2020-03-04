@@ -69,12 +69,9 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	var refAllele, altAllele *Node
 	var prev []*Node = nil
 	var weight float32 = 0
-	var i, j, edge int //, j, edge int
-	//var j int
+	var i, j, edge int
 	var index int64 = 0
-	//for debuging, max index can go up to in the for loop:
-	//var lastPos int64 = int64(len(chr.Seq)) - vcfsChr[len(vcfsChr)-1].Pos - 1
-	//var lastV *vcf.Vcf = *vcf.Vcf{Pos: 0}
+
 	for i = 0; i < len(vcfsChr); i++ {
 		//trivial case
 		if vcfsChr[i].Pos-index > 0 {
@@ -139,7 +136,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			//prev = append(prev, deletion)
 			index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 		}
-		if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 {
+		if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
 			refAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, refAllele)
 			AddEdge(currMatch, refAllele, 1)
