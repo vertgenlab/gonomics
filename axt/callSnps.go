@@ -78,8 +78,8 @@ func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta,
 	for i := 0; i < len(axtList); i++ {
 		if axtList[i].RStart - refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
 			if axtList[i].QStart - queryIndex > 1 && strings.Compare(lastQuery, axtList[i].QName) == 0 {
-				refSeq = ref[axtList[i].RName][refIndex+1:axtList[i].RStart-1]
-				altSeq = query[axtList[i].QName][queryIndex+1:axtList[i].QStart-1]
+				refSeq = ref[axtList[i].RName][refIndex+1:axtList[i].RStart]
+				altSeq = query[axtList[i].QName][queryIndex+1:axtList[i].QStart]
 				dna.AllToUpper(refSeq)
 				dna.AllToUpper(altSeq)
 				gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex+2, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BasesToString(altSeq), Qual: 248, Filter: "PASS", Info: ".", Format: "SVTYPE=HAP", Notes: AxtInfo(axtList[i])}
