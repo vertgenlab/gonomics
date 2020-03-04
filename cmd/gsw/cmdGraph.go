@@ -1,6 +1,5 @@
 package main
 
-//TODO: still a work in progress for the gsw aligning executable
 import (
 	"flag"
 	"fmt"
@@ -8,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-
 	"log"
 	"strings"
 )
@@ -30,8 +28,8 @@ func usage() {
 			"\t\t.sam format output from graph alignment\n" +
 			"\t\t.vcf small snp/ins/del from axt to vcf\n" +
 			"\t\t.gg write genome graph to file\n" +
-			"\t--test number\n" +
-			"\t\tSimulate n number of reads from given fasta and realigns reads\n")
+			"\t--faFormat filename\n" +
+			"\t\tSupply the original fasta to output a sam alignment formated to linear reference\n")
 	//flag.PrintDefaults()
 }
 
@@ -42,10 +40,14 @@ func main() {
 	var gg *simpleGraph.SimpleGraph
 	var tagAxt *string = flag.String("axt", "", "axt alignment file")
 	var vcfTag *string = flag.String("vcf", "", "vcf file")
-	var outTag *string = flag.String("out", "", "final output, .vcf/.gg/.sam")
+	var outTag *string = flag.String("out", "/dev/stdout", "final output, .vcf/.gg/.sam")
+	var faFormat *string = flag.String("faFormat", "", "provide original fasta to output a sam alignment formated to linear reference")
 	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
+	//var cpus int = runtime.GOMAXPROCS(runtime.NumCPU())
+	var threads *int = flag.Int("t", 4, "Number of threads or CPUs to use")
+	var kMerHash *int = flag.Int("k", 32, "Seed length used for indexing the reference genome")
 	//var fqFlag *string = flag.String("-fastq", "", "read.fastq")
-	var testSim *int = flag.Int("test", 0, "Simulates n reads from and given fasta reference")
+	//var testSim *int = flag.Int("test", 100, "Simulates n reads from and given fasta reference")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -55,21 +57,27 @@ func main() {
 		usage()
 	}
 	if *tagAxt != "" {
-		vcfs = mkVcf(*tagAxt)
+		//vcfs = mkVcf(*tagAxt)
+		//v := vcf.FilterVcf(vcfs, false, true, true)
 		if *outTag != "" {
-			if strings.HasSuffix(*outTag, ".vcf") {
-				vcf.Write(*outTag, vcfs)
-			}
+			axtFile := axt.Read(*tagAxt)
+	fa := fasta.Read(ref)
+			axt.AxtVcfToFile(*outTag, axtFile, fa)
+			//axt.AxtToVcfQueryInsertion(*outTag, axtFile, fa, fasta.Read("/data/lowelab/edotau/toGasAcu2RABS/gasAcu2RABS/gasAcu2RABS.fasta"))
 		}
 		if *outTag == "" {
-			vcf.PrintVcf(vcfs)
+			//vcf.PrintVcf(vcfs)
 		}
 	}
 	if *vcfTag != "" {
 		vcfs = vcf.Read(*vcfTag)
+		//vcf.Sort(vcfs)
+		//vcf.Write(*vcfTag+".sorted.vcf", vcfs)
+		//vcfs = vcf.FilterVcf(vcfs, false, true, true)
 		if strings.HasSuffix(ref, ".fa") || strings.HasPrefix(ref, ".fasta") {
 			fa = fasta.Read(ref)
-			gg = simpleGraph.FaToGenomeGraph(fa, vcfs)
+			gg = simpleGraph.VariantGraph(fa, vcfs)
+			//gg = simpleGraph.VariantGraph(fa, vcfs)
 			if strings.HasSuffix(*outTag, ".gg") {
 				simpleGraph.Write(*outTag, gg)
 			}
@@ -77,13 +85,6 @@ func main() {
 				simpleGraph.PrintGraph(gg)
 			}
 		}
-	}
-	if *testSim > 0 {
-		gg = simpleGraph.Read("gasAcu1.fa")
-
-		simpleGraph.WriteReadsToFile(gg.Nodes, 150, 10000)
-		//simpleGraph.GenomeDiversitySimulator()
-
 	}
 	if *alignFlag == true {
 		if strings.HasSuffix(ref, ".gg") {
@@ -95,26 +96,32 @@ func main() {
 		//flag args(0) is usually the reference
 		reads := flag.Args()
 		//reads = reads[1:]
+
 		//if user only provides single fastq, aligns single read
 		if len(reads) == 2 {
 			//if usuer provides a .sam as output will write alignment
 			//to that file; otherwise, software will write to STDout
 			if strings.HasSuffix(*outTag, ".sam") {
-				simpleGraph.GSWsBatchDraft(gg, reads[1], *outTag)
+				//simpleGraph.GSWsBatchPair(gg, 30, 29, reads[1], reads[2], *outTag)
 			}
 		}
 		if len(reads) == 3 {
-			if strings.HasSuffix(*outTag, ".sam") {
-				simpleGraph.GSWsBatchPair(gg, reads[1], reads[2], *outTag)
+			if *faFormat != ""  {
+				fa := simpleGraph.Read(*faFormat)
+				header := simpleGraph.DevHeader(fa.Nodes)
+				simpleGraph.GswAlignFaFormat(gg, reads[1], reads[2], *outTag, *threads, *kMerHash, header)
+			} else {
+				simpleGraph.GSWsBatchPair(gg, reads[1], reads[2], *outTag, *threads, *kMerHash)
 			}
 		}
 		//if user provides paired end reads, will do alignment on paired end reads
+
 	}
 }
-
+/*
 func mkVcf(filename string) []*vcf.Vcf {
 	axtFile := axt.Read(filename)
 	vcfs := axt.CallSnpsToVcf(axtFile)
 	vcf.Sort(vcfs)
 	return vcfs
-}
+}*/

@@ -2,7 +2,6 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -34,16 +33,6 @@ func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) (*SimpleGraph, map[str
 		}
 	}
 	return gg, chrom
-}
-
-func GraphAlignToFaFormat(align *sam.SamAln) {
-	if strings.Compare(align.RName, "*") != 0 {
-		words := strings.Split(align.RName, "_")
-		if len(words) == 3 {
-			align.RName = words[0]
-			align.Pos += common.StringToInt64(words[2])
-		}
-	}
 }
 
 func VariantGraph(reference []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {

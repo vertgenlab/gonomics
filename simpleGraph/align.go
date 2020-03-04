@@ -1,20 +1,12 @@
 package simpleGraph
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
-	"os"
-	"strings"
-	//"log"
 )
 
 func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
@@ -40,14 +32,10 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedExtended(seeds)
-	//CompareBlastScore(seeds, read)
 	var tailSeed *SeedDev
-	//, m [][]int64, trace [][]rune
-	//m, trace := SwMatrixSetup(int64(extension+1)
 	var seedScore int64
 
 	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
-		//log.Printf("seed hit: %d, len=%d\n", i, sumLen(seeds[i]))
 		tailSeed = toTail(seeds[i])
 		if seeds[i].PosStrand {
 			currRead = read
@@ -64,14 +52,12 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 
 		if currScore > bestScore {
 			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath)
-			//log.Printf("Index: %d left=%d, seed=%d, right=%d\n", i, leftScore, seedScore, rightScore)
 			bestScore = currScore
 			if seeds[i].PosStrand {
 				currBest.Flag = 0
 			} else {
 				currBest.Flag = 16
 			}
-			//currBest.RName = fmt.Sprintf("%s_%d_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id, gg.Nodes[bestPath[0]].Info.Start)
 			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id)
 			currBest.Pos = int64(minTarget) + 1
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
@@ -108,7 +94,6 @@ func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 	} else {
 		return cig
 	}
-
 }
 
 //perfect match
@@ -126,21 +111,6 @@ func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
 		score += HumanChimpTwoScoreMatrix[read.Seq[i]][read.Seq[i]]
 	}
 	return score
-}
-
-//TODO: This is the more elegant solution to generate the header, but could not get it to work with samtools...
-func devHeader(ref []*Node) *sam.SamHeader {
-	var header sam.SamHeader
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-
-	for i := 0; i < len(ref); i++ {
-		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
-		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
-	}
-	return &header
 }
 
 func NodesHeader(ref []*Node) *sam.SamHeader {
@@ -172,18 +142,6 @@ func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 	return answer
 }
 
-func MkDictionary(genome []*fasta.Fasta, seedLen int) map[uint64][]uint64 {
-	answer := make(map[uint64][]uint64)
-	for chromIdx := 0; chromIdx < len(genome); chromIdx++ {
-		for pos := 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
-
-			seqCode := dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
-			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
-		}
-	}
-	return answer
-}
-
 func chromAndPosToNumber(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
@@ -200,6 +158,17 @@ func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
 	return answer
 }
 
+func numberToChromAndPos(code uint64) (int64, int64) {
+	var rightSideOnes uint64 = 4294967295
+	var leftSideOnes uint64 = rightSideOnes << 32
+	var chromIdx uint64 = code & leftSideOnes
+	chromIdx = chromIdx >> 32
+	var pos uint64 = code & rightSideOnes
+	return int64(chromIdx), int64(pos)
+}
+
+/*
+
 func maskSeedLen(seq []dna.Base, start int, end int, numMismatch int) []uint64 {
 	var answer []uint64
 	var maskOne uint64 = 1
@@ -214,74 +183,7 @@ func maskSeedLen(seq []dna.Base, start int, end int, numMismatch int) []uint64 {
 	answer = append(answer, dnaToNumber(seq, start, end)^maskTwo)
 	answer = append(answer, dnaToNumber(seq, start, end)^maskThree)
 	return answer
-}
-
-func numberToChromAndPos(code uint64) (int64, int64) {
-	var rightSideOnes uint64 = 4294967295
-	var leftSideOnes uint64 = rightSideOnes << 32
-	var chromIdx uint64 = code & leftSideOnes
-	chromIdx = chromIdx >> 32
-	var pos uint64 = code & rightSideOnes
-	return int64(chromIdx), int64(pos)
-}
-
-/*
-func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
-	var answer []*cigar.Cigar
-	if front > 0 {
-		answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
-		answer = append(answer, cig...)
-		if back < lengthOfRead {
-			answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
-		}
-	} else if back < lengthOfRead {
-		answer = append(answer, cig...)
-		answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
-	} else {
-		return cig
-	}
-	return answer
 }*/
-
-func ReadDictionary(filename string) map[uint64][]uint64 {
-	answer := make(map[uint64][]uint64)
-	file, _ := os.Open(filename)
-	defer file.Close()
-	reader := bufio.NewReader(file)
-	var err error
-	var line string
-	var words []byte
-	for ; err != io.EOF; words, _, err = reader.ReadLine() {
-		line = string(words[:])
-		data := strings.Split(line, " ")
-		for i := 1; i < len(data); i++ {
-			answer[common.StringToUint64(data[0])] = append(answer[common.StringToUint64(data[0])], common.StringToUint64(data[i]))
-		}
-	}
-	return answer
-}
-
-func WriteDictToFileHandle(file *os.File, input map[uint64][]uint64) error {
-	var err error
-
-	for i := range input {
-		_, err = fmt.Fprintf(file, "%v", i)
-		for j := range input[i] {
-			_, err = fmt.Fprintf(file, "\t%v", input[i][j])
-			common.ExitIfError(err)
-		}
-		_, err = fmt.Fprintf(file, "\n")
-	}
-	return err
-}
-
-func WriteDictionary(filename string, data map[uint64][]uint64) {
-	//func Write(filename string, data map[int64][]ChrDict) {
-	file := fileio.MustCreate(filename)
-	defer file.Close()
-	WriteDictToFileHandle(file, data)
-	//WriteChromDictToFileHandle(file, data)
-}
 
 /*
 func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.Fastq, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {

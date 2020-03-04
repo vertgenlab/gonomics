@@ -29,6 +29,20 @@ var readWriteTests = []struct {
 	//{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA, nil, nil}, {1, "seqOneB", seqOneB, nil, nil}, {2, "seqOneC", seqOneC, nil, nil}}},
 }
 
+func TestFaFormat(t *testing.T) {
+	var tileSize int = 32
+	var numberOfReads int = 10000
+	var readLength int = 150
+	var mutations int = 0
+	var numWorkers int = 8
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read("testdata/gasAcu1.fa")
+	simReads := RandomPairedReads(genome.Nodes, readLength, numberOfReads, mutations)
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	header := DevHeader(genome.Nodes)
+	GswAlignFaFormat(genome, "testdata/simReads_R1.fq", "testdata/simReads_R2.fq", "/dev/stdout", numWorkers, tileSize, header)
+}
+
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
