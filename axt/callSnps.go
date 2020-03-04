@@ -50,7 +50,7 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 			records = append(records, gap)
 		}
 		records = append(records, AxtToVcf(axtList[i])...)
-		refIndex = axtList[i].REnd
+		refIndex = axtList[i].REnd-1
 		lastChr = axtList[i].RName
 	}
 	records = vcf.FilterAxtVcf(records, fa)
