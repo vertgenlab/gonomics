@@ -231,7 +231,7 @@ func nodeToVcf(node *NodeP) *vcf.Vcf {
 		Filter: "",
 		Info: 	fmt.Sprintf("Sample:%s, p:%e", node.Sample, node.pVal),
 		Format: "",
-		Sample: []string{}}
+		Notes: ""}
 
 	return answer
 }
@@ -279,263 +279,6 @@ type GraphSampleMap map[GraphLocation]*AlleleCount
 
 type BatchGraphSampleMap map[GraphLocation][]*BatchAlleleCount
 
-type GraphLocation struct {
-	Node 	*simpleGraph.Node
-	Pos 	int64
-}
-
-func GraphCountAlleles(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int64) GraphSampleMap {
-	AlleleMap := make(GraphSampleMap)
-
-	var i, k int32
-	var j int
-	samFile := fileio.EasyOpen(samFilename)
-	defer samFile.Close()
-	var done = false
-	var RefIndex, SeqIndex int64
-	var currentSeq []dna.Base
-	var aln *sam.SamAln
-	var currentIndel Indel
-	var indelSeq []dna.Base
-	var OrigRefIndex int64
-	var Match bool
-
-	sam.ReadHeader(samFile)
-
-	var progressMeter int32
-	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-
-		readPath := StringToPath(aln.Extra)
-
-		if progressMeter%10000 == 0 {
-			log.Printf("#%s: Read %d Alignments\n", samFilename, progressMeter)
-		}
-		progressMeter++
-
-		// If read is unmapped then go to the next alignment
-		if aln.Cigar[0].Op == '*' {
-			continue
-		}
-
-		// If mapping quality is less than the threshold then go to next alignment
-		if aln.MapQ < minMapQ {
-			continue
-		}
-
-		SeqIndex = 0
-		RefIndex = aln.Pos - 1
-
-		currNode := 0
-		ref := graph.Nodes[readPath[currNode]]
-
-		for i = 0; i < int32(len(aln.Cigar)); i++ {
-			currentSeq = aln.Seq
-
-			//Handle deletion relative to ref
-			//Each position deleted is annotated with counts + 1
-			if aln.Cigar[i].Op == 'D' {
-				OrigRefIndex = RefIndex
-				OrigNode := ref
-				indelSeq = make([]dna.Base, 1)
-
-				// First base in indel is the base prior to the indel sequence per VCF standard format
-				if OrigRefIndex == 0 {
-					prevNodeSeq := graph.Nodes[readPath[currNode - 1]].Seq
-					indelSeq[0] = prevNodeSeq[len(prevNodeSeq) - 1]
-				} else {
-					indelSeq[0] = OrigNode.Seq[OrigRefIndex - 1]
-				}
-
-
-				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
-
-					// If the position has already been added to the map, move along
-					_, ok := AlleleMap[GraphLocation{ref, RefIndex}]
-
-					// If the position is NOT in the map, initialize
-					if !ok {
-						AlleleMap[GraphLocation{ref, RefIndex}] = &AlleleCount{
-							Ref: ref.Seq[RefIndex], Counts: 0, BaseA: make([]int32, 3), BaseC: make([]int32, 3), BaseG: make([]int32, 3), BaseT: make([]int32, 3), Indel: make([]Indel, 0)}
-					}
-
-					// Keep track of deleted sequence
-					indelSeq = append(indelSeq, ref.Seq[RefIndex])
-
-					AlleleMap[GraphLocation{ref, RefIndex}].Counts++
-
-					if RefIndex + 1 == int64(len(ref.Seq)) {
-						RefIndex = 0
-						currNode++
-						if currNode + 1 <= len(readPath) {
-							ref = graph.Nodes[readPath[currNode]]
-						} else {break}
-					} else {
-						RefIndex++
-					}
-
-				}
-
-				Match = false
-				for j = 0; j < len(AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel); j++ {
-					// If the deletion has already been seen before, increment the existing entry
-					// For a deletion the indelSeq should match the Ref
-					if dna.CompareSeqsIgnoreCase(indelSeq, AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel[j].Ref) == 0 &&
-						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel[j].Alt) == 0 {
-						AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel[j].Count[0]++
-						if sam.IsForwardRead(aln) == true {
-							AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel[j].Count[1]++
-						} else if sam.IsReverseRead(aln) == true {
-							AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel[j].Count[2]++
-						}
-
-						Match = true
-						break
-					}
-				}
-
-				// If the deletion has not been seen before, then append it to the Del slice
-				// For Alt indelSeq[:1] is used to give me a slice of just the first base in the slice which we defined earlier
-				if Match == false {
-
-					currentIndel = Indel{indelSeq, indelSeq[:1], make([]int32, 3)}
-					currentIndel.Count[0]++
-					if sam.IsForwardRead(aln) == true {
-						currentIndel.Count[1]++
-					} else if sam.IsReverseRead(aln) == false {
-						currentIndel.Count[2]++
-					}
-					AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel = append(AlleleMap[GraphLocation{OrigNode, OrigRefIndex}].Indel, currentIndel)
-				}
-
-				//Handle insertion relative to ref
-				//The base after the inserted sequence is annotated with an Ins read
-			} else if aln.Cigar[i].Op == 'I' {
-
-				// If the position has already been added to the map, move along
-				_, ok := AlleleMap[GraphLocation{ref, RefIndex}]
-
-				// If the position is NOT in the map, initialize
-				if !ok {
-					AlleleMap[GraphLocation{ref, RefIndex}] = &AlleleCount{
-						Ref: ref.Seq[RefIndex], Counts: 0, BaseA: make([]int32, 3), BaseC: make([]int32, 3), BaseG: make([]int32, 3), BaseT: make([]int32, 3), Indel: make([]Indel, 0)}
-				}
-
-				// Loop through read sequence and keep track of the inserted bases
-				indelSeq = make([]dna.Base, 1)
-
-				// First base in indel is the base prior to the indel sequence per VCF standard format
-				if RefIndex == 0 {
-					prevNodeSeq := graph.Nodes[readPath[currNode - 1]].Seq
-					indelSeq[0] = prevNodeSeq[len(prevNodeSeq) - 1]
-				} else {
-					indelSeq[0] = ref.Seq[RefIndex - 1]
-				}
-
-				// Keep track of inserted sequence by moving along the read
-				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
-					indelSeq = append(indelSeq, currentSeq[SeqIndex])
-					SeqIndex++
-				}
-
-				Match = false
-				for j = 0; j < len(AlleleMap[GraphLocation{ref, RefIndex}].Indel); j++ {
-					// If the inserted sequence matches a previously inserted sequence, then increment the count
-					// For an insertion, the indelSeq should match the Alt
-					if dna.CompareSeqsIgnoreCase(indelSeq, AlleleMap[GraphLocation{ref, RefIndex}].Indel[j].Alt) == 0 &&
-						dna.CompareSeqsIgnoreCase(indelSeq[:1], AlleleMap[GraphLocation{ref, RefIndex}].Indel[j].Ref) == 0 {
-						AlleleMap[GraphLocation{ref, RefIndex}].Indel[j].Count[0]++
-						if sam.IsForwardRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].Indel[j].Count[1]++
-						} else if sam.IsReverseRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].Indel[j].Count[2]++
-						}
-						Match = true
-						break
-					}
-				}
-
-				if Match == false {
-					currentIndel = Indel{indelSeq[:1], indelSeq, make([]int32, 3)}
-					currentIndel.Count[0]++
-					if sam.IsForwardRead(aln) == true {
-						currentIndel.Count[1]++
-					} else if sam.IsReverseRead(aln) == true {
-						currentIndel.Count[2]++
-					}
-					AlleleMap[GraphLocation{ref, RefIndex}].Indel = append(AlleleMap[GraphLocation{ref, RefIndex}].Indel, currentIndel)
-				}
-
-				// Note: Insertions do not contribute to the total counts as the insertion is associated with the previous reference base
-
-				//Handle matching pos relative to ref
-			} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
-
-				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
-
-					//if the position has already been added to the matrix, move along
-					_, ok := AlleleMap[GraphLocation{ref, RefIndex}]
-
-					//if the position is NOT in the matrix, add it
-					if !ok {
-						AlleleMap[GraphLocation{ref, RefIndex}] = &AlleleCount{
-							Ref: ref.Seq[RefIndex], Counts: 0, BaseA: make([]int32, 3), BaseC: make([]int32, 3), BaseG: make([]int32, 3), BaseT: make([]int32, 3), Indel: make([]Indel, 0)}
-					}
-
-					switch currentSeq[SeqIndex] {
-					case dna.A:
-						if sam.IsForwardRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseA[1]++
-						} else if sam.IsReverseRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseA[2]++
-						}
-						AlleleMap[GraphLocation{ref, RefIndex}].BaseA[0]++
-						AlleleMap[GraphLocation{ref, RefIndex}].Counts++
-					case dna.T:
-						if sam.IsForwardRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseT[1]++
-						} else if sam.IsReverseRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseT[2]++
-						}
-						AlleleMap[GraphLocation{ref, RefIndex}].BaseT[0]++
-						AlleleMap[GraphLocation{ref, RefIndex}].Counts++
-					case dna.G:
-						if sam.IsForwardRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseG[1]++
-						} else if sam.IsReverseRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseG[2]++
-						}
-						AlleleMap[GraphLocation{ref, RefIndex}].BaseG[0]++
-						AlleleMap[GraphLocation{ref, RefIndex}].Counts++
-					case dna.C:
-						if sam.IsForwardRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseC[1]++
-						} else if sam.IsReverseRead(aln) == true {
-							AlleleMap[GraphLocation{ref, RefIndex}].BaseC[2]++
-						}
-						AlleleMap[GraphLocation{ref, RefIndex}].BaseC[0]++
-						AlleleMap[GraphLocation{ref, RefIndex}].Counts++
-					}
-					SeqIndex++
-					if RefIndex + 1 == int64(len(ref.Seq)) {
-						RefIndex = 0
-						currNode++
-						if currNode + 1 <= len(readPath) {
-							ref = graph.Nodes[readPath[currNode]]
-						} else {break}
-					} else {
-						RefIndex++
-					}
-				}
-			} else if aln.Cigar[i].Op != 'H' {
-				SeqIndex = SeqIndex + aln.Cigar[i].RunLength
-			}
-		}
-	}
-
-
-	return AlleleMap
-}
-
 func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) BatchGraphSampleMap {
 	answer := make(BatchGraphSampleMap)
 
@@ -565,7 +308,8 @@ func batchAddIndels(write *BatchAlleleCount, read *AlleleCount) {
 			// For a deletion the indelSeq should match the Ref
 			if dna.CompareSeqsIgnoreCase(read.Indel[i].Ref, write.Indel[j].Ref) == 0 &&
 				dna.CompareSeqsIgnoreCase(read.Indel[i].Alt, write.Indel[j].Alt) == 0 {
-				write.Indel[j].Count = addSlice(write.Indel[j].Count, read.Indel[i].Count)
+				write.Indel[j].CountF = write.Indel[j].CountF + read.Indel[i].CountF
+				write.Indel[j].CountR = write.Indel[j].CountR + read.Indel[i].CountR
 				Match = true
 				break
 			}
@@ -575,6 +319,14 @@ func batchAddIndels(write *BatchAlleleCount, read *AlleleCount) {
 			write.Indel = append(write.Indel, read.Indel[i])
 		}
 	}
+}
+
+func addSlice(a []int32, b []int32) []int32 {
+	c := make([]int32, len(a))
+	for i := 0; i < len(a); i++ {
+		c[i] = a[i] + b[i]
+	}
+	return c
 }
 
 func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName string) BatchGraphSampleMap {
@@ -588,10 +340,14 @@ func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName str
 				Sample:	 	"Background",
 				Ref: 		value.Ref,
 				Counts: 	0,
-				BaseA: 		make([]int32, 3),
-				BaseC: 		make([]int32, 3),
-				BaseG: 		make([]int32, 3),
-				BaseT: 		make([]int32, 3),
+				BaseAF: 		0,
+				BaseCF: 		0,
+				BaseGF: 		0,
+				BaseTF: 		0,
+				BaseAR: 		0,
+				BaseCR: 		0,
+				BaseGR: 		0,
+				BaseTR: 		0,
 				Indel: 		make([]Indel, 1)}
 
 
@@ -691,23 +447,23 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 		// For loop starts at index 1 because index zero is the background values
 		case dna.A:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseA[0]
-				b[i-1] = alleles[0].BaseA[0] - alleles[i].BaseA[0]
+				a[i-1] = alleles[i].BaseAF + alleles[i].BaseAR
+				b[i-1] = alleles[0].BaseAF + alleles[0].BaseAR - a[i-1]
 			}
 		case dna.C:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseC[0]
-				b[i-1] = alleles[0].BaseC[0] - alleles[i].BaseC[0]
+				a[i-1] = alleles[i].BaseCF + alleles[i].BaseCR
+				b[i-1] = alleles[0].BaseCF + alleles[0].BaseCR - a[i-1]
 			}
 		case dna.G:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseG[0]
-				b[i-1] = alleles[0].BaseG[0] - alleles[i].BaseG[0]
+				a[i-1] = alleles[i].BaseGF + alleles[i].BaseGR
+				b[i-1] = alleles[0].BaseGF + alleles[0].BaseGR - a[i-1]
 			}
 		case dna.T:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseT[0]
-				b[i-1] = alleles[0].BaseT[0] - alleles[i].BaseT[0]
+				a[i-1] = alleles[i].BaseTF + alleles[i].BaseTR
+				b[i-1] = alleles[0].BaseTF + alleles[0].BaseTR - a[i-1]
 			}
 		default:
 			continue
@@ -718,16 +474,16 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 		for i = 1; i < len(alleles); i++ {
 
 			// Retrieve Values for c
-			cA = alleles[i].BaseA[0]
-			cC = alleles[i].BaseC[0]
-			cG = alleles[i].BaseG[0]
-			cT = alleles[i].BaseT[0]
+			cA = alleles[i].BaseAF + alleles[i].BaseAR
+			cC = alleles[i].BaseCF + alleles[i].BaseCR
+			cG = alleles[i].BaseGF + alleles[i].BaseGR
+			cT = alleles[i].BaseTF + alleles[i].BaseTR
 
 			// Retrieve Values for d
-			dA = alleles[0].BaseA[0] - alleles[i].BaseA[0]
-			dC = alleles[0].BaseC[0] - alleles[i].BaseC[0]
-			dG = alleles[0].BaseG[0] - alleles[i].BaseG[0]
-			dT = alleles[0].BaseT[0] - alleles[i].BaseT[0]
+			dA = alleles[0].BaseAF + alleles[i].BaseAR - cA
+			dC = alleles[0].BaseCF + alleles[i].BaseCR - cC
+			dG = alleles[0].BaseGF + alleles[i].BaseGR - cG
+			dT = alleles[0].BaseTF + alleles[i].BaseTR - cT
 
 			// Generate Scores
 
@@ -743,7 +499,7 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 			var doesPassStrandBias = true
 
 			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2])
+				doesPassStrandBias = passStrandBias(alleles[i].BaseAF, alleles[i].BaseAR)
 			}
 
 			if alleles[i].Ref != dna.A && doesPassStrandBias {
@@ -754,7 +510,7 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 			}
 
 			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseC[1], alleles[i].BaseC[2])
+				doesPassStrandBias = passStrandBias(alleles[i].BaseCF, alleles[i].BaseCR)
 			}
 
 			if alleles[i].Ref != dna.C && doesPassStrandBias {
@@ -765,7 +521,7 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 			}
 
 			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseG[1], alleles[i].BaseG[2])
+				doesPassStrandBias = passStrandBias(alleles[i].BaseGF, alleles[i].BaseGR)
 			}
 
 			if alleles[i].Ref != dna.G && doesPassStrandBias {
@@ -776,7 +532,7 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 			}
 
 			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseT[1], alleles[i].BaseT[2])
+				doesPassStrandBias = passStrandBias(alleles[i].BaseTF, alleles[i].BaseTR)
 			}
 
 			if alleles[i].Ref != dna.T && doesPassStrandBias {
@@ -788,18 +544,18 @@ func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThres
 
 			// Calculate p for each Indel
 			for j = 0; j < len(alleles[i].Indel); j++ {
-				cIndel = alleles[i].Indel[j].Count[0]
+				cIndel = alleles[i].Indel[j].CountF + alleles[i].Indel[j].CountR
 				// Find Indel in the background Indel slice
 				for l = 0; l < len(alleles[0].Indel); l++ {
 					if dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Alt, alleles[0].Indel[l].Alt) == 0 &&
 						dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Ref, alleles[0].Indel[l].Ref) == 0 {
-						dIndel = alleles[0].Indel[l].Count[0] - alleles[i].Indel[j].Count[0]
+						dIndel = alleles[0].Indel[l].CountF + alleles[i].Indel[j].CountR - cIndel
 						break
 					}
 				}
 
 				if paired == true {
-					if passStrandBias(alleles[i].Indel[j].Count[1], alleles[i].Indel[j].Count[2]) == false {
+					if passStrandBias(alleles[i].Indel[j].CountF, alleles[i].Indel[j].CountR) == false {
 						continue
 					}
 				}
