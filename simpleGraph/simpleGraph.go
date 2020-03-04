@@ -23,70 +23,84 @@ type Node struct {
 
 type Edge struct {
 	Dest *Node
-	Prob float64
+	Prob float32
+}
+
+func Read(filename string) *SimpleGraph {
+	genomeGraph := NewGraph()
+	var line string
+	var currSeq []dna.Base
+	var seqIdx int64 = -1
+	var doneReading bool = false
+	var words []string
+	var weight float32
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	//creates map: name points to Node
+	//uses this map to add edges to graph
+	edges := make(map[string]*Node)
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		if strings.HasPrefix(line, ">") {
+			seqIdx++
+			words = strings.Split(line, "_")
+			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:]}
+			AddNode(genomeGraph, &tmp)
+			_, ok := edges[line[1:]]
+			if !ok {
+				edges[line[1:]] = &tmp
+			}
+		} else if strings.Contains(line, "\t") {
+			words = strings.Split(line, "\t")
+			if len(words) > 2 {
+				for i := 1; i < len(words); i += 2 {
+					weight = float32(common.StringToFloat64(words[i]))
+					AddEdge(edges[words[0]], edges[words[i+1]], weight)
+				}
+			}
+		} else {
+			if !strings.Contains(line, "_") {
+				currSeq = dna.StringToBases(line)
+				dna.AllToUpper(currSeq)
+				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
+			}
+		}
+	}
+	return genomeGraph
 }
 
 func AddNode(g *SimpleGraph, n *Node) {
 	g.Nodes = append(g.Nodes, n)
 }
 
-func AddEdge(u, v *Node, p float64) {
+func AddEdge(u, v *Node, p float32) {
 	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
 	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
 }
 
-func Read(filename string) *SimpleGraph {
-	answer := NewGraph()
-	var line string
-	//var name []string
-	var currSeq []dna.Base
-	var seqIdx int64 = -1
-	var doneReading bool = false
-	var words []string
-	var weight float64
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	//creates map: name points to Node
-	//uses this map to add edges to graph
-	edges := make(map[string]*Node)
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.HasPrefix(line, ">") {
-			seqIdx++
-			//name = strings.Split(line, ":")
-			tmp := Node{Id: uint32(seqIdx), Name: line[1:]}
-			AddNode(answer, &tmp)
-			_, ok := edges[line[1:]]
-			if !ok {
-				edges[line[1:]] = &tmp
-			}
-		} else {
-			if strings.Contains(line, "\t") {
-				words = strings.Split(line, "\t")
-				if len(words) > 2 {
-					for i := 1; i < len(words); i += 2 {
-						weight = common.StringToFloat64(words[i])
-						AddEdge(edges[words[0]], edges[words[i+1]], weight)
-					}
-				}
-			} else {
-				if !strings.Contains(line, "_") {
-					currSeq = dna.StringToBases(line)
-					dna.AllToUpper(currSeq)
-					answer.Nodes[seqIdx].Seq = append(answer.Nodes[seqIdx].Seq, currSeq...)
-				}
-
-			}
-		}
+func SetEvenWeights(u *Node) {
+	var edge int
+	var weights float32 = 1/float32(len(u.Next))
+	for edge = 0; edge < len(u.Next); edge++ {
+		u.Next[edge].Prob = weights
 	}
-	return answer
+	//do we care about the prev edges?
+}
+
+func Write(filename string, sg *SimpleGraph) {
+	lineLength := 50
+	file := fileio.EasyCreate(filename)
+	defer file.Close()
+	WriteToGraphHandle(file, sg, lineLength)
 }
 
 func NewGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
 	graph.Nodes = make([]*Node, 0)
 	return graph
+}
+
+func PrintGraph(gg *SimpleGraph) {
+	Write("/dev/stdout", gg)
 }
 
 func WriteToFileHandle(file io.Writer, records []*Node, lineLength int) {
@@ -110,7 +124,7 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	var err error
 	var i, j int
 	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s\n", ">"+gg.Nodes[i].Name+":"+fmt.Sprint(gg.Nodes[i].Id))
+		_, err = fmt.Fprintf(file, "%s\n", ">"+gg.Nodes[i].Name+"_"+fmt.Sprint(gg.Nodes[i].Id))
 		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
 			if j+lineLength > len(gg.Nodes[i].Seq) {
 				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
@@ -122,10 +136,10 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 		}
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name+":"+fmt.Sprint(gg.Nodes[i].Id))
+		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name+"_"+fmt.Sprint(gg.Nodes[i].Id))
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near); j++ {
-			_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name+":"+fmt.Sprint(near[j].Dest.Id))
+			_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name+"_"+fmt.Sprint(near[j].Dest.Id))
 			common.ExitIfError(err)
 		}
 		_, err = fmt.Fprintf(file, "\n")
@@ -133,35 +147,29 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	}
 }
 
-func PrintGraph(gg *SimpleGraph) {
-	lineLength := 50
+func WriteToGraphCoordinates(file io.Writer, gg *SimpleGraph, lineLength int) {
+	var err error
 	var i, j int
-	var name string
 	for i = 0; i < len(gg.Nodes); i++ {
-		name = ">" + gg.Nodes[i].Name + ":" + fmt.Sprint(gg.Nodes[i].Id)
-		fmt.Printf("%s\n", name)
+		_, err = fmt.Fprintf(file, "%s\n", ">"+gg.Nodes[i].Name)
 		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
 			if j+lineLength > len(gg.Nodes[i].Seq) {
-				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
-
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
+				common.ExitIfError(err)
 			} else {
-				fmt.Printf("%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
+				common.ExitIfError(err)
 			}
 		}
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
-		fmt.Printf("%s", gg.Nodes[i].Name+":"+fmt.Sprint(gg.Nodes[i].Id))
+		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name)
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near); j++ {
-			fmt.Printf("\t%v\t%s", near[j].Prob, near[j].Dest.Name+":"+fmt.Sprint(near[j].Dest.Id))
+			_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name)
+			common.ExitIfError(err)
 		}
-		fmt.Print("\n")
+		_, err = fmt.Fprintf(file, "\n")
+		common.ExitIfError(err)
 	}
-}
-
-func Write(filename string, sg *SimpleGraph) {
-	lineLength := 50
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	WriteToGraphHandle(file, sg, lineLength)
 }

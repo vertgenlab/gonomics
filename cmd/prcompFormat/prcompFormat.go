@@ -21,6 +21,7 @@ import (
 
 func prcompFormat(infile string, outfile string) {
 	records := fasta.Read(infile)
+	fasta.AllToUpper(records)
 	var subFa = make([]fasta.Fasta, len(records))
 	var allMatch, allValid bool
 	var currentBase dna.Base

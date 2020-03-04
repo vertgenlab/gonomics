@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
+	"strings"
 )
 
 func calcExtension(seq []dna.Base) int64 {
@@ -25,8 +26,8 @@ func LocalView(samLine *sam.SamAln, ref []*Node) string {
 	var i int64 = samLine.Pos - 1
 	var j int64 = 0
 	var count int64
-
-	var alpha []dna.Base = ref[common.StringToInt64(samLine.RName)].Seq
+	words := strings.Split(samLine.RName, "_")
+	var alpha []dna.Base = ref[common.StringToInt64(words[1])].Seq
 	var beta []dna.Base = samLine.Seq
 
 	for _, operation := range operations {
@@ -50,5 +51,5 @@ func LocalView(samLine *sam.SamAln, ref []*Node) string {
 			}
 		}
 	}
-	return seqOne.String() + "\n" + seqTwo.String() + "\n"
+	return cigar.ToString(operations) + "\n" + seqOne.String() + "\n" + seqTwo.String() + "\n"
 }

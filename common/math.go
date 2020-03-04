@@ -2,6 +2,7 @@ package common
 
 import (
 	"log"
+	"math/rand"
 	"strconv"
 )
 
@@ -45,6 +46,14 @@ func Max(a int, b int) int {
 	}
 }
 
+func MaxInt32(a int32, b int32) int32 {
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
+}
+
 func MaxUint32(a uint32, b uint32) uint32 {
 	if a >= b {
 		return a
@@ -70,6 +79,14 @@ func MaxFloat64(a float64, b float64) float64 {
 }
 
 func Min(a int, b int) int {
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func MinInt32(a int32, b int32) int32 {
 	if a <= b {
 		return a
 	} else {
@@ -119,4 +136,12 @@ func TripleMin(a int, b int, c int) int {
 	} else {
 		return c
 	}
+}
+
+func RandIntInRange(x int, y int) int {
+	return int(rand.Float64()*float64(y-x)) + x
+}
+
+func RandInt64InRange(x int64, y int64) int64 {
+	return int64(rand.Float64()*float64(y-x)) + x
 }

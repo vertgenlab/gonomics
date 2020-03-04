@@ -49,6 +49,39 @@ func CountGaps(seq []Base) int {
 	return gapCount
 }
 
+func BaseDist(a Base, b Base) int {
+	if a == b {
+		return 0
+	}
+	return 1
+}
+
+func Dist(a []Base, b []Base) int {
+	if len(a) != len(b) {
+		log.Fatalf("Seqs must have the same length to calculate distance.\n")
+	}
+	var sum int = 0
+	for i := 0; i < len(a); i++ {
+		sum = sum + BaseDist(a[i], b[i])
+	}
+	return sum
+}
+
+func IsLower(b Base) bool {
+	switch b {
+	case a:
+		return true
+	case g:
+		return true
+	case c:
+		return true
+	case t:
+		return true
+	default:
+		return false
+	}
+}
+
 func DefineBase(b Base) bool {
 	switch b {
 	case A:

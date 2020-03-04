@@ -17,10 +17,14 @@ type BatchAlleleCount struct {
 	Sample 	string
 	Ref    	dna.Base
 	Counts 	int32
-	BaseA  	[]int32
-	BaseC  	[]int32
-	BaseG  	[]int32
-	BaseT  	[]int32
+	BaseAF  int32
+	BaseCF  int32
+	BaseGF  int32
+	BaseTF  int32
+	BaseAR  int32
+	BaseCR  int32
+	BaseGR  int32
+	BaseTR  int32
 	Indel  	[]Indel
 }
 
@@ -69,16 +73,21 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 			// Check if position is in the map, if not then add the background struct
 			_, ok := SampleMap[Location{loc.Chr, loc.Pos}]
 			if !ok {
-				current = &BatchAlleleCount{"Background", alleles.Ref, 0, make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]int32, 3), make([]Indel, 1)}
-				current.Indel[0].Count = make([]int32, 1)
+				current = &BatchAlleleCount{"Background", alleles.Ref, 0, 0, 0, 0, 0, 0, 0, 0, 0, make([]Indel, 1)}
+				current.Indel[0].CountF = 0
+				current.Indel[0].CountR = 0
 				SampleMap[Location{loc.Chr, loc.Pos}] = append(SampleMap[Location{loc.Chr, loc.Pos}], current)
 			}
 
 			//add in and increment background as entry zero in batch allele count slice
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseA[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseA[0] + alleles.BaseA[0]
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseC[0] + alleles.BaseC[0]
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseG[0] + alleles.BaseG[0]
-			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseT[0] + alleles.BaseT[0]
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseAF = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseAF + alleles.BaseAF
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseCF = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseCF + alleles.BaseCF
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseGF = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseGF + alleles.BaseGF
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseTF = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseTF + alleles.BaseTF
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseAR = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseAR + alleles.BaseAR
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseCR = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseCR + alleles.BaseCR
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseGR = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseGR + alleles.BaseGR
+			SampleMap[Location{loc.Chr, loc.Pos}][0].BaseTR = SampleMap[Location{loc.Chr, loc.Pos}][0].BaseTR + alleles.BaseTR
 			SampleMap[Location{loc.Chr, loc.Pos}][0].Counts = SampleMap[Location{loc.Chr, loc.Pos}][0].Counts + alleles.Counts
 
 			// Loop through each indel and see if it is already in the background struct, if not then append it
@@ -87,7 +96,8 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 				for j = 0; j < len(SampleMap[Location{loc.Chr, loc.Pos}][0].Indel); j++ {
 					if dna.CompareSeqsIgnoreCase(alleles.Indel[i].Alt, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Alt) == 0 &&
 						dna.CompareSeqsIgnoreCase(alleles.Indel[i].Ref, SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Ref) == 0 {
-						SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count[0] = SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].Count[0] + alleles.Indel[i].Count[0]
+						SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].CountF = SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].CountF + alleles.Indel[i].CountF
+						SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].CountR = SampleMap[Location{loc.Chr, loc.Pos}][0].Indel[j].CountR + alleles.Indel[i].CountR
 						Match = true
 					}
 				}
@@ -100,10 +110,14 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 				Sample: SampleName,
 				Ref:    alleles.Ref,
 				Counts: alleles.Counts,
-				BaseA:  alleles.BaseA,
-				BaseC:  alleles.BaseC,
-				BaseG:  alleles.BaseG,
-				BaseT:  alleles.BaseT,
+				BaseAF:  alleles.BaseAF,
+				BaseCF:  alleles.BaseCF,
+				BaseGF:  alleles.BaseGF,
+				BaseTF:  alleles.BaseTF,
+				BaseAR:  alleles.BaseAR,
+				BaseCR:  alleles.BaseCR,
+				BaseGR:  alleles.BaseGR,
+				BaseTR:  alleles.BaseTR,
 				Indel:  alleles.Indel}
 
 			SampleMap[Location{loc.Chr, loc.Pos}] = append(SampleMap[Location{loc.Chr, loc.Pos}], current)
@@ -185,23 +199,23 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 		// For loop starts at index 1 because index zero is the background values
 		case dna.A:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseA[0]
-				b[i-1] = alleles[0].BaseA[0] - alleles[i].BaseA[0]
+				a[i-1] = alleles[i].BaseAF + alleles[i].BaseAR
+				b[i-1] = (alleles[0].BaseAF + alleles[0].BaseAR) - (alleles[i].BaseAF + alleles[i].BaseAR)
 			}
 		case dna.C:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseC[0]
-				b[i-1] = alleles[0].BaseC[0] - alleles[i].BaseC[0]
+				a[i-1] = alleles[i].BaseCF + alleles[i].BaseCR
+				b[i-1] = (alleles[0].BaseCF + alleles[0].BaseCR) - (alleles[i].BaseCF + alleles[i].BaseCR)
 			}
 		case dna.G:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseG[0]
-				b[i-1] = alleles[0].BaseG[0] - alleles[i].BaseG[0]
+				a[i-1] = alleles[i].BaseGF + alleles[i].BaseGR
+				b[i-1] = (alleles[0].BaseGF + alleles[0].BaseGR) - (alleles[i].BaseGF + alleles[i].BaseGR)
 			}
 		case dna.T:
 			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseT[0]
-				b[i-1] = alleles[0].BaseT[0] - alleles[i].BaseT[0]
+				a[i-1] = alleles[i].BaseTF + alleles[i].BaseTR
+				b[i-1] = (alleles[0].BaseTF + alleles[0].BaseTR) - (alleles[i].BaseTF + alleles[i].BaseTR)
 			}
 		default:
 			continue
@@ -212,16 +226,16 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 		for i = 1; i < len(alleles); i++ {
 
 			// Retrieve Values for c
-			cA = alleles[i].BaseA[0]
-			cC = alleles[i].BaseC[0]
-			cG = alleles[i].BaseG[0]
-			cT = alleles[i].BaseT[0]
+			cA = alleles[i].BaseAF + alleles[i].BaseAR
+			cC = alleles[i].BaseCF + alleles[i].BaseCR
+			cG = alleles[i].BaseGF + alleles[i].BaseGR
+			cT = alleles[i].BaseTF + alleles[i].BaseTR
 
 			// Retrieve Values for d
-			dA = alleles[0].BaseA[0] - alleles[i].BaseA[0]
-			dC = alleles[0].BaseC[0] - alleles[i].BaseC[0]
-			dG = alleles[0].BaseG[0] - alleles[i].BaseG[0]
-			dT = alleles[0].BaseT[0] - alleles[i].BaseT[0]
+			dA = (alleles[0].BaseAF + alleles[0].BaseAR) - (alleles[i].BaseAF + alleles[i].BaseAR)
+			dC = (alleles[0].BaseCF + alleles[0].BaseCR) - (alleles[i].BaseCF + alleles[i].BaseCR)
+			dG = (alleles[0].BaseGF + alleles[0].BaseGR) - (alleles[i].BaseGF + alleles[i].BaseGR)
+			dT = (alleles[0].BaseTF + alleles[0].BaseTR) - (alleles[i].BaseTF + alleles[i].BaseTR)
 
 			// Generate Scores
 
@@ -234,25 +248,25 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 				sigThreshold:  sigThreshold,
 				indelslicepos: 0}
 
-			if alleles[i].Ref != dna.A && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
+			if alleles[i].Ref != dna.A && passStrandBias(alleles[i].BaseAF, alleles[i].BaseAR) {
 				fetInput.c = cA
 				fetInput.d = dA
 				fetInput.altbase = "A"
 				inputChan <- fetInput
 			}
-			if alleles[i].Ref != dna.C && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
+			if alleles[i].Ref != dna.C && passStrandBias(alleles[i].BaseCF, alleles[i].BaseCR) {
 				fetInput.c = cC
 				fetInput.d = dC
 				fetInput.altbase = "C"
 				inputChan <- fetInput
 			}
-			if alleles[i].Ref != dna.G && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
+			if alleles[i].Ref != dna.G && passStrandBias(alleles[i].BaseGF, alleles[i].BaseGR) {
 				fetInput.c = cG
 				fetInput.d = dG
 				fetInput.altbase = "G"
 				inputChan <- fetInput
 			}
-			if alleles[i].Ref != dna.T && passStrandBias(alleles[i].BaseA[1], alleles[i].BaseA[2]) {
+			if alleles[i].Ref != dna.T && passStrandBias(alleles[i].BaseTF, alleles[i].BaseTR) {
 				fetInput.c = cT
 				fetInput.d = dT
 				fetInput.altbase = "T"
@@ -261,17 +275,17 @@ func ScoreVariants(input BatchSampleMap, sigThreshold float64, afThreshold float
 
 			// Calculate p for each Indel
 			for j = 0; j < len(alleles[i].Indel); j++ {
-				cIndel = alleles[i].Indel[j].Count[0]
+				cIndel = alleles[i].Indel[j].CountF + alleles[i].Indel[j].CountR
 				// Find Indel in the background Indel slice
 				for l = 0; l < len(alleles[0].Indel); l++ {
 					if dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Alt, alleles[0].Indel[l].Alt) == 0 &&
 						dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Ref, alleles[0].Indel[l].Ref) == 0 {
-						dIndel = alleles[0].Indel[l].Count[0] - alleles[i].Indel[j].Count[0]
+						dIndel = (alleles[0].Indel[l].CountF + alleles[0].Indel[l].CountR) - (alleles[i].Indel[j].CountF + alleles[i].Indel[j].CountR)
 						break
 					}
 				}
 
-				if passStrandBias(alleles[i].Indel[j].Count[1], alleles[i].Indel[j].Count[2]) == false {
+				if passStrandBias(alleles[i].Indel[j].CountF, alleles[i].Indel[j].CountR) == false {
 					continue
 				}
 
@@ -352,7 +366,7 @@ func score(input ScoreInput) *vcf.Vcf{
 			Qual:    p,
 			Filter:  ".",
 			Format:  "Sample:RefCount:AltCount:Cov",
-			Sample: sampleField}
+			Notes: sampleField[0]}
 
 		switch input.altbase {
 		case "A", "C", "G", "T":
@@ -383,7 +397,7 @@ func EffToCSV(inFile string, outFile string) {
 	var i int
 	for i = 0; i < len(data); i++ {
 
-		Sample := strings.Split(data[i].Sample[0], ":")
+		Sample := strings.Split(data[i].Notes, ":")
 		Info := strings.Split(data[i].Info, "=")
 
 		if len(Info) < 2 {
@@ -412,3 +426,5 @@ func EffToCSV(inFile string, outFile string) {
 			Ann[6])       // Transcript
 	}
 }
+
+

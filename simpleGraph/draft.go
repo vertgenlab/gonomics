@@ -3,7 +3,7 @@ package simpleGraph
 /*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"os"
@@ -11,6 +11,44 @@ import (
 	//"time"
 )
 
+func GSWsBatchDraft(ref *SimpleGraph, readOne string, output string) {
+
+	var seedLen int = 32
+	var stepSize int = seedLen - 1
+	var numWorkers int = 16
+	log.Printf("Indexing the genome...\n")
+	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
+
+	samRecords, _ := os.Create(output)
+	defer samRecords.Close()
+	header := NodesHeader(ref.Nodes)
+	sam.WriteHeaderToFileHandle(samRecords, header)
+
+	var wgAlign, wgWrite sync.WaitGroup
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 824)
+	go fastq.ReadToChan(readOne, fastqPipe)
+
+	wgAlign.Add(numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		go gswWorker(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
+	}
+	wgAlign.Add(1)
+
+	go sam.TestSamChanToFile(samPipe, samRecords, &wgWrite)
+	wgAlign.Wait()
+	close(samPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	wgWrite.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+}*/
+
+/*
 func GSWsBatch(ref *SimpleGraph, input string, output string, groupSize int) {
 
 	var seedLen int = 30
@@ -236,4 +274,64 @@ func GSWsBatches(ref *SimpleGraph, input string, output string, groupSize int) {
 		alignBatchGroup(ref, batches, seedHash, seedLen, stepSize, 824, samRecords, batchID, &wg)
 	}
 	//wg.Wait()
+}*/
+
+/*
+func GenomeDiversitySimulator(dnaSequence string) {
+	var tileSize int = 32
+	var stepSize int = 31
+	var numberOfReads int = 10000
+	var readLength int = 150
+	var mutations int = 0
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 8
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	referenceGenome := Read(dnaSequence)
+	log.Printf("Simulating %d reads...\n", numberOfReads)
+	simReads := RandomReads(referenceGenome.Nodes, readLength, numberOfReads, mutations, true)
+	//simReads := GenomeDiversity(genome.Nodes, readLength, numberOfReads)
+	fastq.Write("genomeDiversity.fastq", simReads)
+	log.Printf("Writing fastqs to file...\n")
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read(dnaSequence)
+	log.Printf("Indexing the genome...\n")
+	tiles := IndexGenomeIntoMap(referenceGenome.Nodes, tileSize, stepSize)
+	file, _ := os.Create("testdata/genomeDiversity.sam")
+	defer file.Close()
+	header := NodesHeader(genome.Nodes)
+	sam.WriteHeaderToFileHandle(file, header)
+
+	time.Sleep(10 * time.Second)
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.Fastq, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 824)
+
+	log.Printf("Waiting for 10 seconds and then aligning reads...\n")
+	time.Sleep(10 * time.Second)
+
+	go fastq.ReadToChan("genomeDiversity.fastq", fastqPipe)
+
+	log.Printf("Starting alignment worker...\n")
+	workerWaiter.Add(numWorkers)
+	start := time.Now()
+	for i := 0; i < numWorkers; i++ {
+		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
+	}
+
+	writerWaiter.Add(1)
+
+	go sam.SamChanToFile(samPipe, file, &writerWaiter)
+
+	workerWaiter.Wait()
+	close(samPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	writerWaiter.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
 }*/

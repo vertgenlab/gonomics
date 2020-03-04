@@ -57,13 +57,11 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Info, beta.Info) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Format, beta.Format) != 0 {
-		return false
-	}
-	if len(alpha.Sample) != len(beta.Sample) {
+	if strings.Compare(alpha.Notes, beta.Notes) != 0 {
 		return false
 	}
 	return true
+
 }
 
 func AllEqual(alpha []*Vcf, beta []*Vcf) bool {

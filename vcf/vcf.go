@@ -1,16 +1,12 @@
 package vcf
 
 import (
-	"bufio"
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -26,7 +22,7 @@ type Vcf struct {
 	Filter string
 	Info   string
 	Format string
-	Sample []string
+	Notes  string
 }
 
 type VCF struct {
@@ -38,55 +34,28 @@ type VcfHeader struct {
 	Text []string
 }
 
-func Read(filename string) []*Vcf {
-	var answer []*Vcf
-	var curr *Vcf
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil
-	}
-	var err2 error
-	//var rline []byte
-	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-		//line = string(rline[:])
-		data := strings.Split(line, "\t")
-		//fmt.Println("there is data here")
-		switch {
-		case strings.HasPrefix(line, "#"):
-			//don't do anything
-		case len(data) == 1:
-			//these lines are sequences, and we are not recording them
-			//fmt.Println("found sequences")
-		case len(line) == 0:
-			//blank line
-
-		case len(data) == 10:
-			curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Qual: common.StringToFloat64(data[5]), Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
-			answer = append(answer, curr)
-		default:
-			//fmt.Println("unexpected line")
-		}
-	}
-	return answer
-}
-
 func processVcfLine(line string) *Vcf {
-	var curr Vcf
-	//var err error
 
-	data := strings.Split(line, "\t")
-	if len(data) < 10 {
-		log.Fatal(fmt.Errorf("Was expecting atleast 10 columns per line, but this line did not:%s\n", line))
+	data := Vcf{Chr: "", Pos: 0, Id: "", Ref: "", Alt: "", Qual: 0, Filter: "", Info: "", Format: "", Notes: ""}
+	text := strings.Split(line, "\t")
+	if len(text) < 9 {
+		log.Fatal(fmt.Errorf("Was expecting atleast 8 columns per line, but this line did not:%s\n", line))
 	}
-	position, _ := strconv.ParseInt(data[1], 10, 64)
-	curr = Vcf{Chr: data[0], Pos: position, Id: data[2], Ref: data[3], Alt: data[4], Qual: 0, Filter: data[6], Info: data[7], Format: data[8], Sample: data[9:]}
+	data.Pos = common.StringToInt64(text[1])
+	data.Qual = common.StringToFloat64(text[5])
 
-	return &curr
+	data.Chr = text[0]
+	data.Id = text[2]
+	data.Ref = text[3]
+	data.Alt = text[4]
+	data.Filter = text[6]
+	data.Info = text[7]
+	data.Format = text[8]
+	if len(text) > 9 {
+		data.Notes = text[9]
+	}
+
+	return &data
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
@@ -97,22 +66,26 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-func ReadVcf(er *fileio.EasyReader) []*Vcf {
+func Read(filename string) []*Vcf {
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+
 	var line string
 	var done bool
 	var answer []*Vcf
-	for line, done = fileio.EasyNextLine(er); !done; line, done = fileio.EasyNextLine(er) {
+	ReadHeader(file)
+	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		answer = append(answer, processVcfLine(line))
 	}
 	return answer
 }
 
-func ReadFile(filename string) *VCF {
+func ReadVcf(filename string) *VCF {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
 	header := ReadHeader(file)
-	vcfRecords := ReadVcf(file)
+	vcfRecords := Read(filename)
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
@@ -158,22 +131,35 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteVcfToFileHandle(file *os.File, input []*Vcf) error {
+func WriteHeader(file *os.File, header *VcfHeader) {
 	var err error
-	var trim string
-	var chrLen []*chromInfo.ChromInfo = []*chromInfo.ChromInfo{}
-	header := MakeHeader(chrLen)
-	for h := 0; h < len(header); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header[h])
+	//header := MakeHeader()
+	for h := 0; h < len(header.Text); h++ {
+		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
 	}
+	common.ExitIfError(err)
+}
+
+func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
+	var err error
 	for i := 0; i < len(input); i++ {
-		trim = strings.Join(input[i].Sample, "\t")
-		trim = strings.Trim(trim, "[")
-		trim = strings.Trim(trim, "]")
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, trim)
+		if input[i].Notes == "" {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
+		} else {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
+		}
 		common.ExitIfError(err)
 	}
-	return err
+}
+
+func WriteVcf(file *os.File, input *Vcf) {
+	var err error
+	if input.Notes == "" {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
+	} else {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format, input.Notes)
+	}
+	common.ExitIfError(err)
 }
 
 func Write(filename string, data []*Vcf) {
@@ -182,14 +168,16 @@ func Write(filename string, data []*Vcf) {
 	WriteVcfToFileHandle(file, data)
 }
 
-func PrintVcf(input []*Vcf) {
-	var trim string
-	for i := range input {
-		trim = strings.Join(input[i].Sample, "\t")
-		trim = strings.Trim(trim, "[")
-		trim = strings.Trim(trim, "]")
-		fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, trim)
-	}
+func PrintVcf(data []*Vcf) {
+	Write("/dev/stdout", data)
+}
+
+func PrintSingleLine(data *Vcf) {
+	var err error
+	file := fileio.MustCreate("/dev/stdout")
+	defer file.Close()
+	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
+	common.ExitIfError(err)
 }
 
 func PrintHeader(header []string) {
@@ -198,20 +186,21 @@ func PrintHeader(header []string) {
 	}
 }
 
-func MakeHeader(chrom []*chromInfo.ChromInfo) []string {
+func MakeHeader() []string {
+	//TODO: add logic to add contig length to header of file
 	var header []string
-	var line string
+	//var line string
 	t := time.Now()
 	header = append(header, "##fileformat=VCFv4.2\n"+
 		"##fileDate="+t.Format("20060102")+"\n"+
 		"##source=github.com/vertgenlab/gonomics\n"+
 		"##reference=gasAcu1")
-	if len(chrom) > 0 {
-		for i := 0; i < len(chrom); i++ {
-			line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
-			header = append(header, line)
-		}
-	}
+	//if len(chrom) > 0 {
+	//	for i := 0; i < len(chrom); i++ {
+	//		line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
+	//		header = append(header, line)
+	//}
+	//}
 	header = append(header, "##phasing=none\n"+
 		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
@@ -224,6 +213,6 @@ func MakeHeader(chrom []*chromInfo.ChromInfo) []string {
 		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
-		"#CHROM  POS     ID      REF     ALT     QUAL    FILTER    INFO    FORMAT    Sample")
+		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
 	return header
 }

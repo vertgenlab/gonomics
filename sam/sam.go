@@ -40,12 +40,21 @@ type SamAln struct {
 	Extra string
 }
 
+func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
+	file, _ := os.Create(filename)
+	defer file.Close()
+	WriteHeaderToFileHandle(file, header)
+	for alignedRead := range incomingSams {
+		WriteAlnToFileHandle(file, alignedRead)
+	}
+	wg.Done()
+}
+
 func processHeaderLine(header *SamHeader, line string) {
 	var err error
 	var chrCount int64 = 0
 
 	header.Text = append(header.Text, line)
-
 	if strings.HasPrefix(line, "@SQ") && strings.Contains(line, "SN:") && strings.Contains(line, "LN:") {
 		curr := chromInfo.ChromInfo{Name: "", Size: 0, Order: chrCount}
 		chrCount++
@@ -174,16 +183,13 @@ func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
 	common.ExitIfError(err)
 }
 
-func SamChanToFile(incomingSams <-chan *SamAln, outputFilename string, wg *sync.WaitGroup) {
-	file, err := os.Create(outputFilename)
-	common.ExitIfError(err)
-	defer file.Close()
+func TestSamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {
+
 	for alignedRead := range incomingSams {
 		WriteAlnToFileHandle(file, alignedRead)
 	}
 	wg.Done()
 }
-
 func SamChanToStdOut(incomingSams <-chan *SamAln, wg *sync.WaitGroup) {
 	for alignedRead := range incomingSams {
 		log.Printf("%s\n", SamAlnToString(alignedRead))

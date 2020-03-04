@@ -204,6 +204,7 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 		minJ = j
 		//log.Printf("cigar in the making=%s\n", cigar.ToString(route))
 	}
+	//TODO: double check if this is tracing back in the correct directions
 	reverseCigarPointer(route)
 	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
 }
@@ -214,7 +215,6 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 	var maxI int
 	var maxJ int
 	var i, j, routeIdx int
-
 	//setting up the first rows and columns
 	//seting up the rest of the matrix
 

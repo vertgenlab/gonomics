@@ -5,14 +5,13 @@ import (
 )
 
 func AddPath(newPath uint32, allPaths []uint32) []uint32 {
-	if allPaths == nil {
+	if len(allPaths) == 0 {
 		allPaths = append(allPaths, newPath)
 	} else if allPaths[len(allPaths)-1] == newPath {
 		return allPaths
 	} else {
 		allPaths = append(allPaths, newPath)
 	}
-
 	return allPaths
 }
 
@@ -48,4 +47,16 @@ func PathToString(allPaths []uint32, gg *SimpleGraph) string {
 		}
 	}
 	return s
+}
+
+//PathToString(CatPaths(CatPaths(reversePath(leftPath), getSeedPath(seeds[i])), rightPath), gg)
+func getSeedPath(seed *SeedDev) []uint32 {
+	var path []uint32 = []uint32{seed.TargetId}
+	if seed.Next == nil {
+
+		return path
+	} else {
+		path = append(path, getSeedPath(seed.Next)...)
+	}
+	return path
 }
