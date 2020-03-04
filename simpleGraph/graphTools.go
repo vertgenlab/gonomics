@@ -147,7 +147,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 
 			//	prev = append(prev, refAllele)
 			//	prev = append(prev, altAllele)
-			index = vcfsChr[i].Pos
+			index = vcfsChr[i].Pos + int64(len(refAllele.Seq)) - 1
 		}
 
 		lastMatch = currMatch
