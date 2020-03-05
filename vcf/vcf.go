@@ -1,12 +1,10 @@
 package vcf
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
 	"log"
 	"os"
 	"strings"
@@ -69,41 +67,27 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 }
 
 func Read(filename string) []*Vcf {
-	var answer []*Vcf
-	//var curr *Vcf
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil
-	}
-	ReadHeader(reader)
-	var err2 error
 
-	for line, _ = reader.ReadString('\n'); err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-		line = strings.TrimSuffix(line, "\n")
+	var line string
+	var done bool
+	var answer []*Vcf
+	ReadHeader(file)
+	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		answer = append(answer, processVcfLine(line))
 	}
 	return answer
 }
 
 func ReadVcf(filename string) *VCF {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
-	reader := bufio.NewReader(file)
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
-	header := ReadHeader(reader)
+	header := ReadHeader(file)
 	vcfRecords := Read(filename)
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
-
 
 func processHeader(header *VcfHeader, line string) {
 	var err error
@@ -115,14 +99,14 @@ func processHeader(header *VcfHeader, line string) {
 	}
 }
 
-func ReadHeader(er *bufio.Reader) *VcfHeader {
+func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var line string
 	var err error
 	var nextBytes []byte
 	var header VcfHeader
+
 	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
-		line, _ = er.ReadString('\n')
-		line = strings.TrimSuffix(line, "\n")
+		line, _ = fileio.EasyNextLine(er)
 		processHeader(&header, line)
 	}
 	return &header
