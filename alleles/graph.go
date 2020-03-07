@@ -2,7 +2,6 @@ package alleles
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -11,9 +10,11 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Functions to find vars that exist in graph
@@ -279,8 +280,14 @@ type GraphSampleMap map[GraphLocation]*AlleleCount
 
 type BatchGraphSampleMap map[GraphLocation][]*BatchAlleleCount
 
-func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) BatchGraphSampleMap {
-	answer := make(BatchGraphSampleMap)
+type BatchAllele struct {
+	Sample 	string
+	Allele 	*Allele
+}
+
+type ProgressLock bool
+
+func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) chan []*BatchAllele {
 
 	if !strings.HasSuffix(inDirectory, "/") {
 		inDirectory = inDirectory + "/"
@@ -288,13 +295,90 @@ func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, 
 
 	files, _ := ioutil.ReadDir(inDirectory)
 
+	var currLocation *Location
+	var receiveAlleles chan *BatchAllele = make(chan *BatchAllele)
+	var sendAlleles chan []*BatchAllele = make(chan []*BatchAllele)
+
+	// Get sam header
+	filePath := fmt.Sprintf("%s%s", inDirectory, files[0].Name())
+	samFile := fileio.EasyOpen(filePath)
+	samHeader := sam.ReadHeader(samFile)
+
+	var progressLocks []*ProgressLock
+
 	for _, file := range files {
-		filePath := fmt.Sprintf("%s%s", inDirectory, file.Name())
-		alleleCount := GraphCountAlleles(graph, filePath, minMapQ)
-		appendBGSM(answer, alleleCount, file.Name())
+		var lock ProgressLock = false
+		go sendOffAlleles(inDirectory, file, graph, minMapQ, currLocation, receiveAlleles, &lock)
+		progressLocks = append(progressLocks, &lock)
 	}
 
-	return answer
+	go listenForAlleles(samHeader, receiveAlleles, sendAlleles, currLocation, progressLocks)
+
+	return sendAlleles
+}
+
+func listenForAlleles(samHeader *sam.SamHeader, receiveAlleles chan *BatchAllele, sendAlleles chan []*BatchAllele, currLocation *Location, locks []*ProgressLock) {
+	var i, k int
+	var j int64
+	answer := make([]*BatchAllele, 0)
+
+	go func() {
+		for allele := range receiveAlleles {
+			answer = append(answer, allele)
+		}
+	}()
+
+	for i = 0; i < len(samHeader.Chroms); i++ {
+		currLocation.Chr = samHeader.Chroms[0].Name
+		for j = 0; j < samHeader.Chroms[i].Size; j++ {
+			currLocation.Pos = j
+
+			for {
+				// Check to see if all workers are ready for next base
+				var readyToProgress bool = true
+				for k = 0; k < len(locks); k++ {
+					if *locks[k] == false {
+						readyToProgress = false
+					}
+				}
+
+				// If all workers are ready for next base, set locks to false and progress currLocation
+				if readyToProgress == true {
+					for k = 0; k < len(locks); k++ {
+						*locks[k] = false
+					}
+					break
+				}
+			}
+
+			sendAlleles <- answer
+			answer = nil
+		}
+	}
+	close(sendAlleles)
+	close(receiveAlleles)
+}
+
+func sendOffAlleles(inDirectory string, file os.FileInfo, graph *simpleGraph.SimpleGraph, minMapQ int64, currLocation *Location, receiveAlleles chan *BatchAllele, lock *ProgressLock) {
+	filePath := fmt.Sprintf("%s%s", inDirectory, file.Name())
+	alleleStream := SamToAlleles(filePath, graph, minMapQ)
+
+	for allele := range alleleStream {
+		// Loop forever until the allele is sent
+		for {
+			// If the allele ready to send is at the currLocaiton, then send it
+			if allele.Location.Pos == currLocation.Pos && allele.Location.Chr == currLocation.Chr {
+				receiveAlleles <- &BatchAllele{file.Name(), allele}
+			} else {
+				// If the allele ready to send is not at the currLocation,
+				// then set the lock to true to indicate this goroutines is ready for the next location
+				*lock = true
+
+				// Sleep to add a brief block to prevent continuous execution
+				time.Sleep(time.Millisecond)
+			}
+		}
+	}
 }
 
 func batchAddIndels(write *BatchAlleleCount, read *AlleleCount) {
@@ -328,7 +412,7 @@ func addSlice(a []int32, b []int32) []int32 {
 	}
 	return c
 }
-
+/*
 func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName string) BatchGraphSampleMap {
 	for key, value := range InMap {
 
@@ -375,8 +459,8 @@ func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName str
 	}
 	return OutMap
 }
-
-func GraphScoreVariants(input BatchGraphSampleMap, sigThreshold float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
+*/
+func GraphScoreVariants(input []*BatchAlleleCount, sigThreshold float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
 
 	fmt.Printf("#\n# Calling Variants\n")
 	var VariantScores []*vcf.Vcf
