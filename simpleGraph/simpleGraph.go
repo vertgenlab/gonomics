@@ -2,6 +2,7 @@ package simpleGraph
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -26,7 +27,8 @@ type Edge struct {
 	Dest *Node
 	Prob float32
 }
-
+//Storing annotation as a 64 uint: first 8 will be used to represent what allele, next 32 will be used for starting postion of chromosome.
+//variants are represented as follows: 0=match, 1=mismatch, 2=insert, 3=deletion, 4=hap
 type Annotation struct {
 	Allele  uint8
 	Start   uint32
@@ -78,6 +80,63 @@ func Read(filename string) *SimpleGraph {
 	return genomeGraph
 }
 
+//TODO: We are transitioning to a new Read function that will keep track of chromosome lengths
+func DevRead(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
+	genomeGraph := NewGraph()
+	chrSize := make(map[string]*chromInfo.ChromInfo)
+	var count int64 = 0
+	var line string
+	var currSeq []dna.Base
+	var seqIdx int64 = -1
+	var doneReading bool = false
+	var words []string
+	var weight float32
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	//creates map: name points to Node
+	//uses this map to add edges to graph
+	edges := make(map[string]*Node)
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		if strings.HasPrefix(line, ">") {
+			seqIdx++
+			words = strings.Split(line, "_")
+			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:]}
+			if len(words) == 3 {
+				tmp.Info = &Annotation{Start: common.StringToUint32(words[2])}
+			}
+			AddNode(genomeGraph, &tmp)
+			_, info := chrSize[words[0][1:]]
+			if !info {
+				cInfo := chromInfo.ChromInfo{Name: words[0][1:], Size: 0, Order: count}
+				chrSize[words[0][1:]] = &cInfo
+				count++
+			}
+
+			_, ok := edges[line[1:]]
+			if !ok {
+				edges[line[1:]] = &tmp
+			}
+		} else if strings.Contains(line, "\t") {
+			words = strings.Split(line, "\t")
+			if len(words) > 2 {
+				for i := 1; i < len(words); i += 2 {
+					weight = float32(common.StringToFloat64(words[i]))
+					AddEdge(edges[words[0]], edges[words[i+1]], weight)
+				}
+			}
+		} else {
+			if !strings.Contains(line, "_") {
+				currSeq = dna.StringToBases(line)
+				dna.AllToUpper(currSeq)
+
+				chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
+				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
+			}
+		}
+	}
+	return genomeGraph, chrSize
+}
+
 func AddNode(g *SimpleGraph, n *Node) {
 	g.Nodes = append(g.Nodes, n)
 }
@@ -112,53 +171,6 @@ func NewGraph() *SimpleGraph {
 func PrintGraph(gg *SimpleGraph) {
 	Write("/dev/stdout", gg)
 }
-
-//TODO: thinking about the idea of making a slice of graphs instead of one graph
-/*
-func PrintTestGraphFormat(gg []*SimpleGraph) {
-	//Write("/dev/stdout", gg)
-	lineLength := 50
-	file := fileio.EasyCreate("/dev/stdout")
-	defer file.Close()
-	NodesToFile(file, gg, lineLength)
-	EdgesToFile(file, gg)
-}
-
-func NodesToFile(file io.Writer, genome []*SimpleGraph, lineLength int) {
-	var err error
-	var i, j, k int
-	for i = 0; i < len(genome); i++ {
-		for j = 0; j < len(genome[i].Nodes); j++ {
-			_, err = fmt.Fprintf(file, "%s\n", ">"+genome[i].Nodes[j].Name)
-			for k = 0; k < len(genome[i].Nodes[j].Seq); k += lineLength {
-				if k+lineLength > len(genome[i].Nodes[j].Seq) {
-					_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(genome[i].Nodes[j].Seq[k:]))
-					common.ExitIfError(err)
-				} else {
-					_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(genome[i].Nodes[j].Seq[k:k+lineLength]))
-					common.ExitIfError(err)
-				}
-			}
-		}
-	}
-}
-
-func EdgesToFile(file io.Writer, genome []*SimpleGraph) {
-	var err error
-	var i, j, k int
-	for i = 0; i < len(genome); i++ {
-		for j = 0; j < len(genome[i].Nodes); j++ {
-			_, err = fmt.Fprintf(file, "%s:%d", genome[i].Nodes[j].Name, genome[i].Nodes[j].Id)
-			near := genome[i].Nodes[j].Next
-			for k = 0; k < len(near); k++ {
-				_, err = fmt.Fprintf(file, "\t%v:%v", near[k].Dest.Id, near[k].Prob)
-				common.ExitIfError(err)
-			}
-		_, err = fmt.Fprintf(file, "\n")
-		common.ExitIfError(err)
-		}
-	}
-}*/
 
 func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	var err error

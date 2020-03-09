@@ -20,8 +20,7 @@ func checkAlignment(aln *sam.SamAln, genome *SimpleGraph) bool {
 	var answer bool = false
 	qName := strings.Split(aln.QName, "_")
 	rName := strings.Split(aln.RName, "_")
-	alignedPos := common.StringToInt64(qName[1])
-
+	alignedPos := getStartRead(aln)
 	if strings.Compare(rName[1], qName[0]) == 0 && alignedPos == aln.Pos {
 		return true
 	} else {

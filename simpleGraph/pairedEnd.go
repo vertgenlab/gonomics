@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
+	"math"
 	"sync"
 )
 
@@ -14,6 +15,10 @@ func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uin
 	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, m, trace)
 	mappedPair.FwdSam.Flag += 64
 	mappedPair.RevSam.Flag += 128
+	if math.Abs(float64(mappedPair.FwdSam.Pos-mappedPair.RevSam.Pos)) < 10000 {
+		mappedPair.FwdSam.Flag += 2
+		mappedPair.RevSam.Flag += 2
+	}
 	return &mappedPair
 }
 

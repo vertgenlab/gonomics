@@ -9,30 +9,37 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"strings"
+	"sync"
 )
 
-func PathToSeq(alignPath []uint32, gg *SimpleGraph, start int64) []dna.Base {
-	answer := make([]dna.Base, 0)
-	answer = append(answer, gg.Nodes[alignPath[0]].Seq[start:]...)
-	if len(alignPath) > 1 {
-		for i := 1; i < len(alignPath); i++ {
-			answer = append(answer, gg.Nodes[alignPath[i]].Seq...)
-		}
+func PathToSeq(alignPath []uint32, gg *SimpleGraph) []dna.Base {
+	var answer []dna.Base
+	for i := 0; i < len(alignPath); i++ {
+		answer = append(answer, gg.Nodes[alignPath[i]].Seq...)
 	}
 	return answer
 }
 
+func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.WaitGroup) {
+
+	for alignedRead := range incomingSams {
+		//log.Printf("path=%v\n", SamToPath(alignedRead))
+		log.Printf("%s\n", ViewGraphAignment(alignedRead, gg))
+	}
+	wg.Done()
+}
+
 func ViewGraphAignment(samLine *sam.SamAln, genome *SimpleGraph) string {
-	//var maxI int64
-	//var operations []*Cigar
+
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar
-	var i int64 = 0
-	var j int64 = 0
+	var i int64 = samLine.Pos - 1
+	var j int64 = getStartRead(samLine)
 	var count int64
 	//words := strings.Split(samLine.RName, "_")
-	var alpha []dna.Base = PathToSeq(SamToPath(samLine), genome, samLine.Pos-1)
+	//log.Printf("path=%v\n", SamToPath(samLine))
+	var alpha []dna.Base = PathToSeq(SamToPath(samLine), genome)
 	var beta []dna.Base = samLine.Seq
 
 	for _, operation := range operations {
@@ -63,11 +70,12 @@ func SamToPath(aln *sam.SamAln) []uint32 {
 
 	words := strings.Split(aln.Extra, "\t")
 	if len(words) < 2 {
-		log.Fatalf("Error: input sam might not contain path information...")
+		//log.Fatalf("Error: input sam might not contain path information...")
+		log.Printf("Possible unmapped read:%s\n", sam.SamAlnToString(aln))
+		return nil
 	}
 	//log.Printf("%d\n", StringToPath(words[1]))
 	return StringToPath(words[1])
-
 }
 
 func AddPath(newPath uint32, allPaths []uint32) []uint32 {
@@ -134,4 +142,12 @@ func getSeedPath(seed *SeedDev) []uint32 {
 		path = append(path, getSeedPath(seed.Next)...)
 	}
 	return path
+}
+
+func getStartRead(aln *sam.SamAln) int64 {
+	var alignedPos int64 = 0
+	if aln.Cigar[0].Op == 'S' {
+		alignedPos += aln.Cigar[0].RunLength
+	}
+	return alignedPos
 }

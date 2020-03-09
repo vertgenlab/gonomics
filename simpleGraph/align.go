@@ -10,7 +10,7 @@ import (
 )
 
 func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, len(read.Seq)), Qual: "", Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
@@ -47,7 +47,6 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
 		seedScore = BlastSeed(seeds[i], currRead)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
-
 		currScore = leftScore + seedScore + rightScore
 
 		if currScore > bestScore {
@@ -58,6 +57,8 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 			} else {
 				currBest.Flag = 16
 			}
+			currBest.Seq = currRead.Seq
+			currBest.Qual = string(currRead.Qual)
 			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id)
 			currBest.Pos = int64(minTarget) + 1
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
@@ -68,6 +69,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
+
 	return &currBest
 }
 

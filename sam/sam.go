@@ -180,6 +180,24 @@ func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
 	return &header
 }
 
+func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader {
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+	var i int64
+	for i = 0; i < int64(len(chromSize));{
+		for j := range chromSize {
+			if i == chromSize[j].Order {
+				words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[j].Name, chromSize[j].Size)
+				header.Text = append(header.Text, words)
+				i++
+			}
+		}
+		
+	}
+	return &header
+}
+
 func SamAlnToString(aln *SamAln) string {
 	var answer string
 	if aln.Extra == "" {

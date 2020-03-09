@@ -8,11 +8,11 @@ import (
 )
 
 func AlignTraversalFwd(rightNode *Node, seq []dna.Base, start int, currentPath []uint32, extention int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
-	currentPath = AddPath(rightNode.Id, currentPath)
+
 	var bestQueryEnd, queryEnd int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
-	var path, bestPath []uint32
+	var bestPath []uint32
 
 	if len(seq) >= extention {
 		log.Fatalf("Error: the length of DNA sequence in previous nodes should not be enough to satisfy the desired extension.\n")
@@ -36,18 +36,19 @@ func AlignTraversalFwd(rightNode *Node, seq []dna.Base, start int, currentPath [
 			s[len(seq)+base] = n.Seq[start+base]
 		}*/
 	if availableBases >= extention || len(rightNode.Next) == 0 {
+		currentPath = AddPath(rightNode.Id, currentPath)
 		score, alignment, _, _, _, queryEnd = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		return alignment, score, queryEnd, currentPath
 	} else {
 
 		for _, i := range rightNode.Next {
 			bestScore = -1
-			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, currentPath, extention, read, m, trace)
+			alignment, score, queryEnd, currentPath = AlignTraversalFwd(i.Dest, s, 0, currentPath, extention, read, m, trace)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
 				bestQueryEnd = queryEnd
-				bestPath = path
+				bestPath = currentPath
 			}
 		}
 		return bestAlignment, bestScore, bestQueryEnd, bestPath
@@ -55,11 +56,11 @@ func AlignTraversalFwd(rightNode *Node, seq []dna.Base, start int, currentPath [
 }
 
 func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extention int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
-	currentPath = AddPath(n.Id, currentPath)
+
 	var bestQueryStart, queryStart, refStart, bestRefStart int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
-	var path, bestPath []uint32
+	var bestPath []uint32
 
 	var availableBases int = len(seq) + refEnd
 	var targetLength int = common.Min(availableBases, extention)
@@ -76,6 +77,7 @@ func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath
 		}
 	}*/
 	if availableBases >= extention || len(n.Next) == 0 {
+		currentPath = AddPath(n.Id, currentPath)
 		score, alignment, refStart, _, queryStart, _ = LeftLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		return alignment, score, refEnd - basesToTake + refStart, queryStart, currentPath
 	} else {
@@ -83,13 +85,13 @@ func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath
 		//tmp := make([]uint32, len(currentPath))
 		//copy(tmp, currentPath)
 		for _, i := range n.Prev {
-			alignment, score, refStart, queryStart, path = AlignReverseGraphTraversal(i.Dest, s, len(i.Dest.Seq), currentPath, extention, read, m, trace)
+			alignment, score, refStart, queryStart, currentPath = AlignReverseGraphTraversal(i.Dest, s, len(i.Dest.Seq), currentPath, extention, read, m, trace)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
 				bestRefStart = refStart
 				bestQueryStart = queryStart
-				bestPath = path
+				bestPath = currentPath
 			}
 		}
 		reversePath(bestPath)

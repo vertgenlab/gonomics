@@ -50,15 +50,15 @@ func TestAlignPairedEnd(t *testing.T) {
 	var numWorkers int = 8
 
 	log.Printf("Reading in the genome (Simple Graph)...\n")
-	genome := Read("testdata/gasAcu1.fa")
+	fa := Read("testdata/gasAcu1.fa")
 	log.Printf("Simulating reads...\n")
 
-	simReads := RandomPairedReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomPairedReads(fa.Nodes, readLength, numberOfReads, mutations)
 	log.Printf("length of simulated paired end reads: %d\n", len(simReads))
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.PairedEnd, 824)
-
+	genome := Read("testdata/rabsToGasAcu1.gg")
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 

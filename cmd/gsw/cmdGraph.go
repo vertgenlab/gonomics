@@ -41,7 +41,7 @@ func main() {
 	var tagAxt *string = flag.String("axt", "", "axt alignment file")
 	var vcfTag *string = flag.String("vcf", "", "vcf file")
 	var outTag *string = flag.String("out", "/dev/stdout", "final output, .vcf/.gg/.sam")
-	var faFormat *string = flag.String("faFormat", "", "provide original fasta to output a sam alignment formated to linear reference")
+	//var faFormat *string = flag.String("faFormat", "", "provide original fasta to output a sam alignment formated to linear reference")
 	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
 	//var cpus int = runtime.GOMAXPROCS(runtime.NumCPU())
 	var threads *int = flag.Int("t", 4, "Number of threads or CPUs to use")
@@ -95,27 +95,13 @@ func main() {
 		}
 		//flag args(0) is usually the reference
 		reads := flag.Args()
-		//reads = reads[1:]
-
-		//if user only provides single fastq, aligns single read
 		if len(reads) == 2 {
-			//if usuer provides a .sam as output will write alignment
-			//to that file; otherwise, software will write to STDout
-			if strings.HasSuffix(*outTag, ".sam") {
-				//simpleGraph.GSWsBatchPair(gg, 30, 29, reads[1], reads[2], *outTag)
-			}
+
 		}
 		if len(reads) == 3 {
-			if *faFormat != ""  {
-				fa := simpleGraph.Read(*faFormat)
-				header := simpleGraph.DevHeader(fa.Nodes)
-				simpleGraph.GswAlignFaFormat(gg, reads[1], reads[2], *outTag, *threads, *kMerHash, header)
-			} else {
-				simpleGraph.GSWsBatchPair(gg, reads[1], reads[2], *outTag, *threads, *kMerHash)
-			}
+		
+			simpleGraph.GSWsBatchPair(gg, reads[1], reads[2], *outTag, *threads, *kMerHash)
 		}
-		//if user provides paired end reads, will do alignment on paired end reads
-
 	}
 }
 /*

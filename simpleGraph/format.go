@@ -2,15 +2,11 @@ package simpleGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
 	"log"
 	"strings"
 	"sync"
@@ -32,63 +28,7 @@ func gswPairEndFormat(gg *SimpleGraph, seedHash map[uint64][]*SeedBed, seedLen i
 	}
 	wg.Done()
 }
-
-func faSize(fa []*fasta.Fasta, fileName string) string {
-	var header string = ""
-	//header := fmt.Sprintf("##reference=%s\n", fileName)
-	for i := 0; i < len(fa); i++ {
-		header += fmt.Sprintf("#%s\t%d\n", fa[i].Name, len(fa[i].Seq))
-	}
-	return header
-}
-
-func writeFaHeader(file io.Writer, header string) {
-	var err error
-	_, err = fmt.Fprintf(file, header)
-	common.ExitIfError(err)
-}
-
-//TODO: This is the more elegant solution to generate the header, but could not get it to work with samtools...
-func DevHeader(ref []*Node) *sam.SamHeader {
-	var header sam.SamHeader
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-
-	for i := 0; i < len(ref); i++ {
-		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
-		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
-	}
-	return &header
-}
-
-func WriteFormatFa(filename string, sg *SimpleGraph, header string) {
-	lineLength := 50
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	writeFaHeader(file, header)
-	WriteToGraphHandle(file, sg, lineLength)
-}
-
-func ProcessHeader(er *fileio.EasyReader) map[string]*chromInfo.ChromInfo {
-	var line string
-	var err error
-	var nextBytes []byte
-	answer := make(map[string]*chromInfo.ChromInfo)
-	var words []string
-	var i int64
-	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
-		line, _ = fileio.EasyNextLine(er)
-		words = strings.Split(line, "\t")
-		curr := chromInfo.ChromInfo{Name: words[0][1:], Size: common.StringToInt64(words[1]), Order: i}
-		answer[words[0][1:]] = &curr
-		//answer = append(answer, &chromInfo.ChromInfo{Name: words[0][1:], Size: common.StringToInt64(words[1]), Order: i})
-		i++
-	}
-	return answer
-}
-
+//Function to format sam alignment to be compatible with linear reference 
 func GraphAlignToFaFormat(align *sam.SamAln) {
 	if strings.Compare(align.RName, "*") != 0 {
 		words := strings.Split(align.RName, "_")
@@ -98,9 +38,9 @@ func GraphAlignToFaFormat(align *sam.SamAln) {
 		}
 	}
 }
-
+//Function to align sam  to be compatible with linear reference 
 func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, len(read.Seq)), Qual: "", Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
@@ -134,9 +74,9 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 		}
 
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currRead.Seq[:seeds[i].QueryStart], m, trace)
+		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
 		seedScore = BlastSeed(seeds[i], currRead)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
-
 		currScore = leftScore + seedScore + rightScore
 
 		if currScore > bestScore {
@@ -147,8 +87,10 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 			} else {
 				currBest.Flag = 16
 			}
+			currBest.Seq = currRead.Seq
+			currBest.Qual = string(currRead.Qual)
 			currBest.RName = gg.Nodes[bestPath[0]].Name
-			currBest.Pos = int64(minTarget + 1)
+			currBest.Pos = int64(minTarget) + 1
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath), gg)
@@ -157,9 +99,10 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
+
 	return &currBest
 }
-
+//Wraper to align to linear reference compatible sam record
 func GswAlignFaFormat(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, header *sam.SamHeader) {
 
 	//var seedLen int = kMer
