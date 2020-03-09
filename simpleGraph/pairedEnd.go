@@ -22,7 +22,6 @@ func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uin
 	return &mappedPair
 }
 
-//TODO: Does not work on graph with edges. Work in progress
 func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int) {
 
 	//var seedLen int = kMer
