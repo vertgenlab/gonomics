@@ -9,12 +9,10 @@ import (
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // Functions to find vars that exist in graph
@@ -276,9 +274,9 @@ func FindVarsInsideGraph(graph *simpleGraph.SimpleGraph, sampleData *BatchData, 
 
 
 // Functions to find vars that DO NOT exist in graph
-type GraphSampleMap map[GraphLocation]*AlleleCount
+//type GraphSampleMap map[GraphLocation]*AlleleCount
 
-type BatchGraphSampleMap map[GraphLocation][]*BatchAlleleCount
+//type BatchGraphSampleMap map[GraphLocation][]*BatchAlleleCount
 
 type BatchAllele struct {
 	Sample 	string
@@ -304,20 +302,24 @@ func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, 
 	samFile := fileio.EasyOpen(filePath)
 	samHeader := sam.ReadHeader(samFile)
 
-	var progressLocks []*ProgressLock
+	// Define start position
+	currLocation = &Location{samHeader.Chroms[0].Name, 0}
+
+	var wg sync.WaitGroup
+	locks := make([]*ProgressLock, 0)
 
 	for _, file := range files {
 		var lock ProgressLock = false
-		go sendOffAlleles(inDirectory, file, graph, minMapQ, currLocation, receiveAlleles, &lock)
-		progressLocks = append(progressLocks, &lock)
+		go sendOffAlleles(inDirectory, file, graph, minMapQ, currLocation, receiveAlleles, &wg, &lock)
+		locks = append(locks, &lock)
 	}
 
-	go listenForAlleles(samHeader, receiveAlleles, sendAlleles, currLocation, progressLocks)
+	go listenForAlleles(samHeader, receiveAlleles, sendAlleles, currLocation, &wg, locks)
 
 	return sendAlleles
 }
 
-func listenForAlleles(samHeader *sam.SamHeader, receiveAlleles chan *BatchAllele, sendAlleles chan []*BatchAllele, currLocation *Location, locks []*ProgressLock) {
+func listenForAlleles(samHeader *sam.SamHeader, receiveAlleles chan *BatchAllele, sendAlleles chan []*BatchAllele, currLocation *Location, wg *sync.WaitGroup, locks []*ProgressLock) {
 	var i, k int
 	var j int64
 	answer := make([]*BatchAllele, 0)
@@ -329,37 +331,39 @@ func listenForAlleles(samHeader *sam.SamHeader, receiveAlleles chan *BatchAllele
 	}()
 
 	for i = 0; i < len(samHeader.Chroms); i++ {
-		currLocation.Chr = samHeader.Chroms[0].Name
+		currLocation.Chr = samHeader.Chroms[i].Name
 		for j = 0; j < samHeader.Chroms[i].Size; j++ {
 			currLocation.Pos = j
+			wg.Add(1)
 
 			for {
-				// Check to see if all workers are ready for next base
 				var readyToProgress bool = true
+				// Check to see if all workers are ready for next currLocation
 				for k = 0; k < len(locks); k++ {
 					if *locks[k] == false {
 						readyToProgress = false
+						break
 					}
 				}
-
-				// If all workers are ready for next base, set locks to false and progress currLocation
+				// If all workers are ready, then reset the locks, send the allele, and progress
 				if readyToProgress == true {
 					for k = 0; k < len(locks); k++ {
 						*locks[k] = false
 					}
+
+					sendAlleles <- answer
+					answer = nil
+					wg.Done()
 					break
 				}
 			}
-
-			sendAlleles <- answer
-			answer = nil
 		}
 	}
 	close(sendAlleles)
 	close(receiveAlleles)
 }
 
-func sendOffAlleles(inDirectory string, file os.FileInfo, graph *simpleGraph.SimpleGraph, minMapQ int64, currLocation *Location, receiveAlleles chan *BatchAllele, lock *ProgressLock) {
+func sendOffAlleles(inDirectory string, file os.FileInfo, graph *simpleGraph.SimpleGraph, minMapQ int64, currLocation *Location, receiveAlleles chan *BatchAllele, wg *sync.WaitGroup, lock *ProgressLock) {
 	filePath := fmt.Sprintf("%s%s", inDirectory, file.Name())
 	alleleStream := SamToAlleles(filePath, graph, minMapQ)
 
@@ -369,13 +373,10 @@ func sendOffAlleles(inDirectory string, file os.FileInfo, graph *simpleGraph.Sim
 			// If the allele ready to send is at the currLocaiton, then send it
 			if allele.Location.Pos == currLocation.Pos && allele.Location.Chr == currLocation.Chr {
 				receiveAlleles <- &BatchAllele{file.Name(), allele}
+				break
 			} else {
-				// If the allele ready to send is not at the currLocation,
-				// then set the lock to true to indicate this goroutines is ready for the next location
 				*lock = true
-
-				// Sleep to add a brief block to prevent continuous execution
-				time.Sleep(time.Millisecond)
+				wg.Wait()
 			}
 		}
 	}
@@ -460,238 +461,256 @@ func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName str
 	return OutMap
 }
 */
-func GraphScoreVariants(input []*BatchAlleleCount, sigThreshold float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
 
-	fmt.Printf("#\n# Calling Variants\n")
-	var VariantScores []*vcf.Vcf
-	var progressMeter int
-	var cA, cC, cG, cT, cIndel, dA, dC, dG, dT, dIndel int32
-	var a, b []int32
-
-	// Initialize a buffered channel to send completed vcf structs through
-	vcfChannel := make(chan *vcf.Vcf, len(input))
-	var wg sync.WaitGroup
-
-	// Start Goroutines
-	var threads int
-	if len(input) < numGoRoutines {
-		threads = len(input)
-	} else {
-		threads = numGoRoutines
-	}
-
-	wg.Add(threads)
-	inputChan := make(chan ScoreInput)
-	for k := 0; k < threads; k++ {
-		go func() {
-			for {
-				data, ok := <-inputChan
-				if !ok {
-					wg.Done()
-					return
-				}
-				answer := score(data)
-				if answer != nil {
-					vcfChannel <- answer
-				}
-			}
-		}()
-	}
-
-	// Loop through BatchSampleMap
-	for loc, alleles := range input {
-
-		if progressMeter%1000 == 0 {
-			log.Printf("# Processed %d Positions\n", progressMeter)
-		}
-		progressMeter++
-
-		// Must be at least 2 samples in the slice to generate a batch p value.
-		// A single sample would be len = 2 because the background values are always element 0
-		if len(alleles) <= 2 {
-			continue
-		}
-
-		// Begin gathering parameters for Fishers Exact Test done in the numbers package
-		// test is for the matrix:
-		// [a b]
-		// [c d]
-		// a = Samples Ref Allele Count
-		// b = Background Ref Allele Count - Samples Ref Allele Count
-		// c = Samples Alt Allele Count
-		// d = Background Alt Allele Count - Samples Alt Allele Count
-
-		// Determine Reference Base
-		// If ref base is unknown then skip
-		var i, j, l int
-		a = make([]int32, len(alleles)-1)
-		b = make([]int32, len(alleles)-1)
-		switch alleles[0].Ref {
-		// Loop through samples and gather inputs for a and b
-		// For loop starts at index 1 because index zero is the background values
-		case dna.A:
-			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseAF + alleles[i].BaseAR
-				b[i-1] = alleles[0].BaseAF + alleles[0].BaseAR - a[i-1]
-			}
-		case dna.C:
-			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseCF + alleles[i].BaseCR
-				b[i-1] = alleles[0].BaseCF + alleles[0].BaseCR - a[i-1]
-			}
-		case dna.G:
-			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseGF + alleles[i].BaseGR
-				b[i-1] = alleles[0].BaseGF + alleles[0].BaseGR - a[i-1]
-			}
-		case dna.T:
-			for i = 1; i < len(alleles); i++ {
-				a[i-1] = alleles[i].BaseTF + alleles[i].BaseTR
-				b[i-1] = alleles[0].BaseTF + alleles[0].BaseTR - a[i-1]
-			}
-		default:
-			continue
-		}
-
-		// Loop through samples and generate scores
-		// For loop starts at index 1 because index zero is the background values
-		for i = 1; i < len(alleles); i++ {
-
-			// Retrieve Values for c
-			cA = alleles[i].BaseAF + alleles[i].BaseAR
-			cC = alleles[i].BaseCF + alleles[i].BaseCR
-			cG = alleles[i].BaseGF + alleles[i].BaseGR
-			cT = alleles[i].BaseTF + alleles[i].BaseTR
-
-			// Retrieve Values for d
-			dA = alleles[0].BaseAF + alleles[i].BaseAR - cA
-			dC = alleles[0].BaseCF + alleles[i].BaseCR - cC
-			dG = alleles[0].BaseGF + alleles[i].BaseGR - cG
-			dT = alleles[0].BaseTF + alleles[i].BaseTR - cT
-
-			// Generate Scores
-
-			fetInput := ScoreInput{
-				a:             a[i-1],
-				b:             b[i-1],
-				afThreshold:   afThreshold,
-				inStruct:      alleles[i],
-				loc:           Location{loc.Node.Name, loc.Pos},
-				sigThreshold:  sigThreshold,
-				indelslicepos: 0}
-
-			var doesPassStrandBias = true
-
-			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseAF, alleles[i].BaseAR)
-			}
-
-			if alleles[i].Ref != dna.A && doesPassStrandBias {
-				fetInput.c = cA
-				fetInput.d = dA
-				fetInput.altbase = "A"
-				inputChan <- fetInput
-			}
-
-			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseCF, alleles[i].BaseCR)
-			}
-
-			if alleles[i].Ref != dna.C && doesPassStrandBias {
-				fetInput.c = cC
-				fetInput.d = dC
-				fetInput.altbase = "C"
-				inputChan <- fetInput
-			}
-
-			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseGF, alleles[i].BaseGR)
-			}
-
-			if alleles[i].Ref != dna.G && doesPassStrandBias {
-				fetInput.c = cG
-				fetInput.d = dG
-				fetInput.altbase = "G"
-				inputChan <- fetInput
-			}
-
-			if paired == true {
-				doesPassStrandBias = passStrandBias(alleles[i].BaseTF, alleles[i].BaseTR)
-			}
-
-			if alleles[i].Ref != dna.T && doesPassStrandBias {
-				fetInput.c = cT
-				fetInput.d = dT
-				fetInput.altbase = "T"
-				inputChan <- fetInput
-			}
-
-			// Calculate p for each Indel
-			for j = 0; j < len(alleles[i].Indel); j++ {
-				cIndel = alleles[i].Indel[j].CountF + alleles[i].Indel[j].CountR
-				// Find Indel in the background Indel slice
-				for l = 0; l < len(alleles[0].Indel); l++ {
-					if dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Alt, alleles[0].Indel[l].Alt) == 0 &&
-						dna.CompareSeqsIgnoreCase(alleles[i].Indel[j].Ref, alleles[0].Indel[l].Ref) == 0 {
-						dIndel = alleles[0].Indel[l].CountF + alleles[i].Indel[j].CountR - cIndel
-						break
-					}
-				}
-
-				if paired == true {
-					if passStrandBias(alleles[i].Indel[j].CountF, alleles[i].Indel[j].CountR) == false {
-						continue
-					}
-				}
-
-				fetInput.c = cIndel
-				fetInput.d = dIndel
-				fetInput.altbase = "Indel"
-				fetInput.indelslicepos = j
-				inputChan <- fetInput
-			}
+func FindMatchingIndel(queryIndel *Indel, subjectSlice []Indel) *Indel {
+	var i int
+	for i = 0; i < len(subjectSlice); i++ {
+		if dna.CompareSeqsIgnoreCase(queryIndel.Alt, subjectSlice[i].Alt) == 0 &&
+			dna.CompareSeqsIgnoreCase(queryIndel.Ref, subjectSlice[i].Ref) == 0 {
+			return &subjectSlice[i]
 		}
 	}
-
-	fmt.Println("# Waiting for Goroutines to finish")
-
-	// Start GoRoutine to monitor for the finish of the wait group then close the output channel
-	go func() {
-		wg.Wait()
-		fmt.Println("# Goroutines finished")
-		close(vcfChannel)
-	}()
-
-	close(inputChan)
-	wg.Wait()
-
-	for answer := range vcfChannel {
-		VariantScores = append(VariantScores, answer)
-	}
-
-	return VariantScores
+	return nil
 }
 
-func FindVarsOutsideGraph(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
-	var answer []*vcf.Vcf
+func sumBatchAllele(input []*BatchAllele) *AlleleCount {
+	var answer = &AlleleCount{input[0].Allele.Count.Ref, 0, 0, 0, 0, 0, 0, 0, 0, 0, make([]Indel, 0)}
+	var count *AlleleCount
+	var i, j int
+	for i = 0; i < len(input); i++ {
+		count = input[i].Allele.Count
+		answer.Counts += count.Counts
+		answer.BaseAF += count.BaseAF
+		answer.BaseAR += count.BaseAR
+		answer.BaseCF += count.BaseCF
+		answer.BaseCR += count.BaseCR
+		answer.BaseGF += count.BaseGF
+		answer.BaseGR += count.BaseGR
+		answer.BaseTF += count.BaseTF
+		answer.BaseTR += count.BaseTR
 
-	alleleCount := GraphCountAllelesInDir(graph, inDirectory, minMapQ)
+		for j = 0; j < len(count.Indel); j++ {
+			indel := FindMatchingIndel(&count.Indel[j], answer.Indel)
+			if indel != nil {
+				indel.CountF += count.Indel[j].CountF
+				indel.CountR += count.Indel[j].CountR
+			} else {
+				answer.Indel = append(answer.Indel, count.Indel[j])
+			}
+		}
+	}
+	return answer
+}
 
-	answer = GraphScoreVariants(alleleCount, minPval, afThreshold, numGoRoutines, paired)
+func appendAlleleToVcf(vcf *vcf.Vcf, refBase []dna.Base, altBase []dna.Base) *vcf.Vcf {
+
+
+	return vcf
+}
+
+func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold float64, afThreshold float64, paired bool) {
+
+	fmt.Printf("#\n# Calling Variants\n")
+	var cA, cC, cG, cT, cIndel, dA, dC, dG, dT, dIndel int32
+	var a, b []int32
+	var sumCount *AlleleCount
+
+	// Must be at least 2 samples in the slice to generate a batch p value.
+	if len(input) < 2 {
+		return
+	}
+
+	sumCount = sumBatchAllele(input)
+
+	// Begin gathering parameters for Fishers Exact Test done in the numbers package
+	// test is for the matrix:
+	// [a b]
+	// [c d]
+	// a = Samples Ref Allele Count
+	// b = Background Ref Allele Count - Samples Ref Allele Count
+	// c = Samples Alt Allele Count
+	// d = Background Alt Allele Count - Samples Alt Allele Count
+
+	// Determine Reference Base
+	// If ref base is unknown then skip
+	var i, j, l int
+	a = make([]int32, len(input))
+	b = make([]int32, len(input))
+	switch input[0].Allele.Count.Ref {
+	// Loop through samples and gather inputs for a and b
+	// For loop starts at index 1 because index zero is the background values
+	case dna.A:
+		for i = 0; i < len(input); i++ {
+			a[i] = input[i].Allele.Count.BaseAF + input[i].Allele.Count.BaseAR
+			b[i] = sumCount.BaseAF + sumCount.BaseAR - a[i]
+		}
+	case dna.C:
+		for i = 0; i < len(input); i++ {
+			a[i] = input[i].Allele.Count.BaseCF + input[i].Allele.Count.BaseCR
+			b[i] = sumCount.BaseCF + sumCount.BaseCR - a[i]
+		}
+	case dna.G:
+		for i = 0; i < len(input); i++ {
+			a[i] = input[i].Allele.Count.BaseGF + input[i].Allele.Count.BaseGR
+			b[i] = sumCount.BaseGF + sumCount.BaseGR - a[i]
+		}
+	case dna.T:
+		for i = 0; i < len(input); i++ {
+			a[i] = input[i].Allele.Count.BaseTF + input[i].Allele.Count.BaseTR
+			b[i] = sumCount.BaseTF + sumCount.BaseTR - a[i]
+		}
+	default:
+		return
+	}
+
+	// Loop through samples and generate scores
+	// For loop starts at index 1 because index zero is the background values
+	for i = 0; i < len(input); i++ {
+		var vcfRecord *vcf.Vcf
+		vcfRecord.Chr = input[i].Allele.Location.Chr
+		vcfRecord.Pos = input[i].Allele.Location.Pos
+		vcfRecord.Ref = dna.BaseToString(input[i].Allele.Count.Ref)
+
+		count := input[i].Allele.Count
+
+		// Retrieve Values for c
+		cA = count.BaseAF + count.BaseAR
+		cC = count.BaseCF + count.BaseCR
+		cG = count.BaseGF + count.BaseGR
+		cT = count.BaseTF + count.BaseTR
+
+		// Retrieve Values for d
+		dA = sumCount.BaseAF + sumCount.BaseAR - cA
+		dC = sumCount.BaseCF + sumCount.BaseCR - cC
+		dG = sumCount.BaseGF + sumCount.BaseGR - cG
+		dT = sumCount.BaseTF + sumCount.BaseTR - cT
+
+		// Generate Scores
+		var doesPassStrandBias = true
+
+		if paired == true {
+			doesPassStrandBias = passStrandBias(count.BaseAF, count.BaseAR)
+		}
+
+		if count.Ref != dna.A && doesPassStrandBias {
+			p := ScoreVariant(a[i], b[i], cA, dA, afThreshold)
+			if p < sigThreshold {
+
+			}
+		}
+
+		if paired == true {
+			doesPassStrandBias = passStrandBias(count.BaseCF, count.BaseCR)
+		}
+
+		if count.Ref != dna.C && doesPassStrandBias {
+			p := ScoreVariant(a[i], b[i], cC, dC, afThreshold)
+			fmt.Println(p)
+			appendAlleleToVcf(vcfRecord)
+			// TODO: Variant to VCF
+		}
+
+		if paired == true {
+			doesPassStrandBias = passStrandBias(count.BaseGF, count.BaseGR)
+		}
+
+		if count.Ref != dna.G && doesPassStrandBias {
+			p := ScoreVariant(a[i], b[i], cG, dG, afThreshold)
+			fmt.Println(p)
+			// TODO: Variant to VCF
+		}
+
+		if paired == true {
+			doesPassStrandBias = passStrandBias(count.BaseTF, count.BaseTR)
+		}
+
+		if count.Ref != dna.T && doesPassStrandBias {
+			p := ScoreVariant(a[i], b[i], cT, dT, afThreshold)
+			fmt.Println(p)
+			// TODO: Variant to VCF
+		}
+
+		// Calculate p for each Indel
+		for j = 0; j < len(count.Indel); j++ {
+			cIndel = count.Indel[j].CountF + count.Indel[j].CountR
+			// Find Indel in the background Indel slice
+			for l = 0; l < len(sumCount.Indel); l++ {
+				if dna.CompareSeqsIgnoreCase(count.Indel[j].Alt, sumCount.Indel[l].Alt) == 0 &&
+					dna.CompareSeqsIgnoreCase(count.Indel[j].Ref, sumCount.Indel[l].Ref) == 0 {
+					dIndel = sumCount.Indel[l].CountF + count.Indel[j].CountR - cIndel
+					break
+				}
+			}
+
+			if paired == true {
+				if passStrandBias(count.Indel[j].CountF, count.Indel[j].CountR) == false {
+					continue
+				}
+			}
+
+			p := ScoreVariant(a[i], b[i], cIndel, dIndel, afThreshold)
+			fmt.Println(p)
+			// TODO: Variant to VCF
+
+		}
+	}
+}
+
+func FindVarsOutsideGraph(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64, minPval float64, afThreshold float64, paired bool) chan *vcf.Vcf {
+	answer := make(chan *vcf.Vcf)
+	alleleStream := GraphCountAllelesInDir(graph, inDirectory, minMapQ)
+
+	go func() {
+		for allele := range alleleStream {
+			GraphScoreVariant(answer, allele, minPval, afThreshold, paired)
+		}
+		close(answer)
+	}()
 
 	return answer
+}
+
+func ScoreVariant(a int32, b int32, c int32, d int32, afThreshold float64) float64 {
+	var p float64
+
+	switch {
+	// If alternate allele is zero then there is no variant and score is 1
+	case c == 0:
+		p = 1
+
+	// If a = b and c = d then it is testing itself and should return 1
+	case a == b && c == d:
+		p = 1
+
+	// If the allele frequency of d > c then p is 1
+	case float64(c)/float64(c+a) < float64(d)/float64(d+b):
+		p = 1
+
+	// If the allele frequency is less than the threshold then p is noted as 1 so as to be excluded
+	case float64(c)/float64(c+a) < afThreshold:
+		p = 1
+
+	// If no exclusion conditions are met, then calculate p value
+	default:
+		p = numbers.FisherExact(int(a), int(b), int(c), int(d), true)
+	}
+	return p
 }
 
 
 // Complete wrapper function for vars inside and outside graph
 func GraphVariants(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64, maxPopFreq float64, minReadFreq float64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
-
+	var answer []*vcf.Vcf
 	pathCounts := CountPathsInDir(graph, inDirectory, minMapQ)
 
 	VarsInGraph := FindVarsInsideGraph(graph, pathCounts, maxPopFreq, minReadFreq, minPval)
-	VarsOutGraph := FindVarsOutsideGraph(graph, inDirectory, minMapQ, minPval, afThreshold, numGoRoutines, paired)
+	VarsOutGraph := FindVarsOutsideGraph(graph, inDirectory, minMapQ, minPval, afThreshold, paired)
 
-	answer := append(VarsInGraph, VarsOutGraph...)
+	for val := range VarsOutGraph {
+		answer = append(VarsInGraph, val)
+	}
 
 	return answer
 }
+
+
