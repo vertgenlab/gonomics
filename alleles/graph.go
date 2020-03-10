@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -302,6 +303,10 @@ func GraphCountAllelesInDir(graph *simpleGraph.SimpleGraph, inDirectory string, 
 	samFile := fileio.EasyOpen(filePath)
 	samHeader := sam.ReadHeader(samFile)
 
+	if len(samHeader.Chroms) == 0 {
+		log.Fatalln("ERROR: No sam header detected")
+	}
+
 	// Define start position
 	currLocation = &Location{samHeader.Chroms[0].Name, 0}
 
@@ -502,9 +507,27 @@ func sumBatchAllele(input []*BatchAllele) *AlleleCount {
 	return answer
 }
 
-func appendAlleleToVcf(vcf *vcf.Vcf, refBase []dna.Base, altBase []dna.Base) *vcf.Vcf {
+func appendAlleleToVcf(vcf *vcf.Vcf, refBase []dna.Base, altBase []dna.Base, data *BatchAllele, p float64) *vcf.Vcf {
+
+	if vcf.Alt == "" {
+		vcf.Alt = dna.BasesToString(altBase)
+	} else {
+		vcf.Alt = vcf.Alt + "," + dna.BasesToString(altBase)
+	}
 
 
+	// Check if it is a SNP or Indel
+	// Format order is "Sample:RefCount:AltCount:Cov:pValue"
+	if len(refBase) == 1 && len(altBase) == 1 {
+		// Case SNP
+		// TODO: fill in fields
+	} else {
+		// case INDEL
+		if len(refBase) != 1 {
+			vcf.Ref = vcf.Ref + "," + dna.BasesToString(refBase)
+		}
+		// TODO: fill in fields
+	}
 	return vcf
 }
 
@@ -570,6 +593,7 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 		vcfRecord.Chr = input[i].Allele.Location.Chr
 		vcfRecord.Pos = input[i].Allele.Location.Pos
 		vcfRecord.Ref = dna.BaseToString(input[i].Allele.Count.Ref)
+		vcfRecord.Format = "Sample:RefCount:AltCount:Cov:pValue"
 
 		count := input[i].Allele.Count
 
@@ -595,7 +619,7 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 		if count.Ref != dna.A && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cA, dA, afThreshold)
 			if p < sigThreshold {
-
+				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.A}, input[i], p)
 			}
 		}
 
@@ -605,9 +629,9 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 
 		if count.Ref != dna.C && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cC, dC, afThreshold)
-			fmt.Println(p)
-			appendAlleleToVcf(vcfRecord)
-			// TODO: Variant to VCF
+			if p < sigThreshold{
+				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.C}, input[i], p)
+			}
 		}
 
 		if paired == true {
@@ -616,8 +640,9 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 
 		if count.Ref != dna.G && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cG, dG, afThreshold)
-			fmt.Println(p)
-			// TODO: Variant to VCF
+			if p < sigThreshold{
+				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.G}, input[i], p)
+			}
 		}
 
 		if paired == true {
@@ -626,8 +651,9 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 
 		if count.Ref != dna.T && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cT, dT, afThreshold)
-			fmt.Println(p)
-			// TODO: Variant to VCF
+			if p < sigThreshold{
+				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.T}, input[i], p)
+			}
 		}
 
 		// Calculate p for each Indel
@@ -649,10 +675,11 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 			}
 
 			p := ScoreVariant(a[i], b[i], cIndel, dIndel, afThreshold)
-			fmt.Println(p)
-			// TODO: Variant to VCF
-
+			if p < sigThreshold{
+				appendAlleleToVcf(vcfRecord, count.Indel[j].Ref, count.Indel[j].Alt, input[i], p)
+			}
 		}
+		answer <- vcfRecord
 	}
 }
 
