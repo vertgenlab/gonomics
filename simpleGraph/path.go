@@ -21,16 +21,25 @@ func PathToSeq(alignPath []uint32, gg *SimpleGraph) []dna.Base {
 }
 
 func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.WaitGroup) {
-
+	var yes, no, numReads int = 0, 0, 0
 	for alignedRead := range incomingSams {
+		numReads++
 		//log.Printf("path=%v\n", SamToPath(alignedRead))
+
 		log.Printf("%s\n", ViewGraphAignment(alignedRead, gg))
+		if checkAlignment(alignedRead) {
+			yes++
+		} else {
+			no++
+		}
 	}
+	log.Printf("Total number of reads aligned: %d...", numReads)
+	log.Printf("Number of reads correctly aligned: %d...\n", yes)
+	log.Printf("Number of reads mismapped: %d...\n", no)
 	wg.Done()
 }
 
 func ViewGraphAignment(samLine *sam.SamAln, genome *SimpleGraph) string {
-
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar
@@ -46,6 +55,11 @@ func ViewGraphAignment(samLine *sam.SamAln, genome *SimpleGraph) string {
 		for count = 0; count < operation.RunLength; count++ {
 			switch operation.Op {
 			case 'M':
+				if i >= int64(len(alpha)) {
+					log.Printf("%s\n", sam.SamAlnToString(samLine))
+					log.Printf("target:%s\n", dna.BasesToString(alpha))
+					log.Printf("query:%s\n", dna.BasesToString(beta))
+				}
 				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
 				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
 				i, j = i+1, j+1

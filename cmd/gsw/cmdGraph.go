@@ -61,7 +61,7 @@ func main() {
 		//v := vcf.FilterVcf(vcfs, false, true, true)
 		if *outTag != "" {
 			axtFile := axt.Read(*tagAxt)
-	fa := fasta.Read(ref)
+			fa := fasta.Read(ref)
 			axt.AxtVcfToFile(*outTag, axtFile, fa)
 			//axt.AxtToVcfQueryInsertion(*outTag, axtFile, fa, fasta.Read("/data/lowelab/edotau/toGasAcu2RABS/gasAcu2RABS/gasAcu2RABS.fasta"))
 		}
@@ -88,10 +88,10 @@ func main() {
 	}
 	if *alignFlag == true {
 		if strings.HasSuffix(ref, ".gg") {
-			gg = simpleGraph.Read(ref)
+			gg, _ = simpleGraph.Read(ref)
 		}
 		if strings.HasSuffix(ref, ".fa") {
-			gg = simpleGraph.Read(ref)
+			gg, _ = simpleGraph.Read(ref)
 		}
 		//flag args(0) is usually the reference
 		reads := flag.Args()
@@ -99,11 +99,12 @@ func main() {
 
 		}
 		if len(reads) == 3 {
-		
+
 			simpleGraph.GSWsBatchPair(gg, reads[1], reads[2], *outTag, *threads, *kMerHash)
 		}
 	}
 }
+
 /*
 func mkVcf(filename string) []*vcf.Vcf {
 	axtFile := axt.Read(filename)

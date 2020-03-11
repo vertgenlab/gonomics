@@ -28,7 +28,8 @@ func gswPairEndFormat(gg *SimpleGraph, seedHash map[uint64][]*SeedBed, seedLen i
 	}
 	wg.Done()
 }
-//Function to format sam alignment to be compatible with linear reference 
+
+//Function to format sam alignment to be compatible with linear reference
 func GraphAlignToFaFormat(align *sam.SamAln) {
 	if strings.Compare(align.RName, "*") != 0 {
 		words := strings.Split(align.RName, "_")
@@ -38,9 +39,10 @@ func GraphAlignToFaFormat(align *sam.SamAln) {
 		}
 	}
 }
-//Function to align sam  to be compatible with linear reference 
+
+//Function to align sam  to be compatible with linear reference
 func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, len(read.Seq)), Qual: "", Extra: "BZ:i:0"}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, 0, len(read.Seq)), Qual: "", Extra: "BZ:i:0"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
@@ -72,13 +74,11 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 		} else {
 			currRead = revCompRead
 		}
-
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
 		seedScore = BlastSeed(seeds[i], currRead)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
-
 		if currScore > bestScore {
 			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath)
 			bestScore = currScore
@@ -89,6 +89,9 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 			}
 			currBest.Seq = currRead.Seq
 			currBest.Qual = string(currRead.Qual)
+			if gg.Nodes[bestPath[0]].Info != nil {
+				currBest.RName = fmt.Sprintf("%s_%d_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id, gg.Nodes[bestPath[0]].Info.Start)
+			}
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget) + 1
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
@@ -99,9 +102,9 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
-
 	return &currBest
 }
+
 //Wraper to align to linear reference compatible sam record
 func GswAlignFaFormat(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, header *sam.SamHeader) {
 
@@ -123,7 +126,7 @@ func GswAlignFaFormat(ref *SimpleGraph, readOne string, readTwo string, output s
 
 	wgAlign.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go gswPairEndFormat(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
+		go gswPairEnd(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
 	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)

@@ -13,27 +13,27 @@ import (
 	//"os"
 	"fmt"
 	"sort"
-	"strings"
+	//"strings"
 )
 
-func checkAlignment(aln *sam.SamAln, genome *SimpleGraph) bool {
+func checkAlignment(aln *sam.SamAln) bool {
 	var answer bool = false
-	qName := strings.Split(aln.QName, "_")
-	rName := strings.Split(aln.RName, "_")
+	//qName := strings.Split(aln.QName, "_")
+	//rName := strings.Split(aln.RName, "_")
 	alignedPos := getStartRead(aln)
-	if strings.Compare(rName[1], qName[0]) == 0 && alignedPos == aln.Pos {
+	if alignedPos == aln.Pos {
 		return true
-	} else {
-		log.Fatalf("Incorrect Alignment:\n%s\n%s\n", ViewGraphAignment(aln, genome), sam.SamAlnToString(aln))
+	} //else {
+	//log.Fatalf("Incorrect Alignment:\n%s\n%s\n", ViewGraphAignment(aln, genome), sam.SamAlnToString(aln))
 
-	}
+	//}
 	return answer
 }
 
 func CheckAnswers(query []*sam.SamAln, genome *SimpleGraph) {
 	var yes, no int64 = 0, 0
 	for i := 0; i < len(query); i++ {
-		if checkAlignment(query[i], genome) {
+		if checkAlignment(query[i]) {
 			yes++
 			//log.Printf(sam.SamAlnToString(query[i]))
 		} else {

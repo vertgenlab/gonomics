@@ -27,6 +27,7 @@ type Edge struct {
 	Dest *Node
 	Prob float32
 }
+
 //Storing annotation as a 64 uint: first 8 will be used to represent what allele, next 32 will be used for starting postion of chromosome.
 //variants are represented as follows: 0=match, 1=mismatch, 2=insert, 3=deletion, 4=hap
 type Annotation struct {
@@ -35,6 +36,7 @@ type Annotation struct {
 	Variant uint8
 }
 
+/*
 func Read(filename string) *SimpleGraph {
 	genomeGraph := NewGraph()
 	var line string
@@ -78,10 +80,10 @@ func Read(filename string) *SimpleGraph {
 		}
 	}
 	return genomeGraph
-}
+}*/
 
 //TODO: We are transitioning to a new Read function that will keep track of chromosome lengths
-func DevRead(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
+func Read(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 	genomeGraph := NewGraph()
 	chrSize := make(map[string]*chromInfo.ChromInfo)
 	var count int64 = 0
@@ -91,6 +93,7 @@ func DevRead(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 	var doneReading bool = false
 	var words []string
 	var weight float32
+	//var cInfo chromInfo.ChromInfo
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 	//creates map: name points to Node
@@ -99,18 +102,19 @@ func DevRead(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
-			words = strings.Split(line, "_")
-			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:]}
-			if len(words) == 3 {
-				tmp.Info = &Annotation{Start: common.StringToUint32(words[2])}
-			}
-			AddNode(genomeGraph, &tmp)
-			_, info := chrSize[words[0][1:]]
-			if !info {
-				cInfo := chromInfo.ChromInfo{Name: words[0][1:], Size: 0, Order: count}
-				chrSize[words[0][1:]] = &cInfo
+			words = strings.Split(line, ".")
+			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:], Info: nil}
+			_, cinfo := chrSize[tmp.Name]
+			if !cinfo {
+				cInfo := chromInfo.ChromInfo{Name: tmp.Name, Size: 0, Order: count}
+				chrSize[tmp.Name] = &cInfo
 				count++
 			}
+			if len(words) == 5 {
+				//tmp.Info = &Annotation{Start: common.StringToUint32(words[3]), Variant: uint8(common.StringToUint32(words[2]))}
+				tmp.Info = &Annotation{Allele: uint8(common.StringToUint32(words[2])), Start: common.StringToUint32(words[4]), Variant: uint8(common.StringToUint32(words[3]))}
+			}
+			AddNode(genomeGraph, &tmp)
 
 			_, ok := edges[line[1:]]
 			if !ok {
@@ -125,11 +129,17 @@ func DevRead(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 				}
 			}
 		} else {
-			if !strings.Contains(line, "_") {
+			if !strings.Contains(line, ".") {
 				currSeq = dna.StringToBases(line)
 				dna.AllToUpper(currSeq)
-
-				chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
+				if genomeGraph.Nodes[seqIdx].Info == nil {
+					chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
+				} else { //if genomeGraph.Nodes[seqIdx].Info != nil
+					if genomeGraph.Nodes[seqIdx].Info.Allele == 0 {
+						words = strings.Split(genomeGraph.Nodes[seqIdx].Name, ".")
+						chrSize[words[0]].Size += int64(len(currSeq))
+					}
+				}
 				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
 			}
 		}
@@ -172,6 +182,7 @@ func PrintGraph(gg *SimpleGraph) {
 	Write("/dev/stdout", gg)
 }
 
+/*
 func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	var err error
 	var i, j int
@@ -197,6 +208,47 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 		near := gg.Nodes[i].Next
 		for j = 0; j < len(near); j++ {
 			_, err = fmt.Fprintf(file, "\t%v\t%s_%d_%d", near[j].Prob, near[j].Dest.Name, near[j].Dest.Id, near[j].Dest.Info.Start)
+			common.ExitIfError(err)
+		}
+		_, err = fmt.Fprintf(file, "\n")
+		common.ExitIfError(err)
+	}
+}*/
+
+func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
+	var err error
+	var i, j int
+	for i = 0; i < len(gg.Nodes); i++ {
+
+		if gg.Nodes[i].Info != nil {
+			_, err = fmt.Fprintf(file, ">%s.%d.%d.%d.%d\n", gg.Nodes[i].Name, gg.Nodes[i].Id, gg.Nodes[i].Info.Allele, gg.Nodes[i].Info.Variant, gg.Nodes[i].Info.Start)
+		} else {
+			_, err = fmt.Fprintf(file, ">%s\n", gg.Nodes[i].Name)
+		}
+		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
+			if j+lineLength > len(gg.Nodes[i].Seq) {
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
+				common.ExitIfError(err)
+			} else {
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
+				common.ExitIfError(err)
+			}
+		}
+	}
+	for i = 0; i < len(gg.Nodes); i++ {
+		if gg.Nodes[i].Info != nil {
+			_, err = fmt.Fprintf(file, "%s.%d.%d.%d.%d", gg.Nodes[i].Name, gg.Nodes[i].Id, gg.Nodes[i].Info.Allele, gg.Nodes[i].Info.Variant, gg.Nodes[i].Info.Start)
+		} else {
+			_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name)
+		}
+		near := gg.Nodes[i].Next
+		for j = 0; j < len(near); j++ {
+			if gg.Nodes[i].Info != nil {
+				_, err = fmt.Fprintf(file, "\t%v\t%s.%d.%d.%d.%d", near[j].Prob, near[j].Dest.Name, near[j].Dest.Id, near[j].Dest.Info.Allele, near[j].Dest.Info.Variant, near[j].Dest.Info.Start)
+			} else {
+				_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name)
+			}
+
 			common.ExitIfError(err)
 		}
 		_, err = fmt.Fprintf(file, "\n")

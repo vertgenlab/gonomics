@@ -1,6 +1,7 @@
 package simpleGraph
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
@@ -19,7 +20,7 @@ func TestSeed(t *testing.T) {
 	snp1 := &Node{Id: 1, Seq: dna.StringToBases("C")}
 	AddNode(gg, snp1)
 	AddEdge(newNode, snp1, 0.5)
-	snp2 := &Node{Id: 2, Seq: dna.StringToBases("C")}
+	snp2 := &Node{Id: 2, Seq: dna.StringToBases("T")}
 	AddNode(gg, snp2)
 	AddEdge(newNode, snp2, 0.5)
 	match2 := &Node{Id: 3, Seq: dna.StringToBases("CAGATCCCCGTGTTTGGACCCCATAAGAATGAGAAGA")}
@@ -49,6 +50,10 @@ func TestSeed(t *testing.T) {
 
 	}
 	printSeedDevInfo(hits)
+	seedHits := getSeqTraversal(gg.Nodes[0], []dna.Base{}, 0, 32)
+	for j := 0; j < len(seedHits); j++ {
+		fmt.Printf("%s\n", dna.BasesToString(seedHits[j]))
+	}
 	//seq1 := dna.StringToBases("ATATTAGTGTCTAAAAGCTGTGAAAACACAAACCTACTTTAGTGTAACATTAGTTTTTTTTAAATTTGTAAATCCTTCTGTATGTTTGGATAGTTTTTATACACTTTTCTTTTATTTCAGTTCACCCAAAAGCTTTAAAGGTTGTCTTTAG")
 	//seq2 := dna.StringToBases("TCCACCTAGAGGAGCCTGTTCTAGAACCGATAACCACCGTTCAACCTTACCTCCCCTTGTTAATACCGCCTATATACCACCGTCGTCAGCTTACCCTGTGAGGGACTAATAGTAAGCTAAACT-------------------GGTCGAGGTGTAGCGAATGAGGAGGGAAGAAATGGGCTACATTTGGCTAC-AGCAGCGAACACGAATGATGTCTTGAAACGTACATCTGAAGGAGGATTTAGCAGTAAGTACAAAATAGAGTGT")
 	//log.Printf("Length of 2 sequences are: %d\n", len(seq1))

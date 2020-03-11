@@ -57,7 +57,6 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	var lastMatch *Node = nil
 	var refAllele, altAllele *Node
 	var prev []*Node = nil
-	//var weight float32 = 0
 	var i, j, edge int
 	var index int64 = 0
 	for i = 0; i < len(vcfsChr); i++ {
@@ -66,6 +65,31 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			AddNode(genome, currMatch)
 		} else if vcfsChr[i].Pos-index == 0 {
 			currMatch = lastMatch
+			//assuming we already created the ref allele, we only need to create
+			//the alt alleles this iteration
+			if isSNP(vcfsChr[i]) {
+				altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 1}}
+				AddNode(genome, altAllele)
+				AddEdge(currMatch, altAllele, 0.5)
+			}
+			if isINS(vcfsChr[i]) {
+				insertion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 2}}
+				AddNode(genome, insertion)
+				AddEdge(currMatch, insertion, 1)
+				index = vcfsChr[i].Pos
+			}
+			if isDEL(vcfsChr[i]) {
+				deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
+				AddNode(genome, deletion)
+				AddEdge(currMatch, deletion, 1)
+				index = vcfsChr[i].Pos + int64(len(deletion.Seq))
+			}
+			if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
+				altAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
+				AddNode(genome, altAllele)
+				AddEdge(currMatch, altAllele, 1)
+				index = vcfsChr[i].Pos + int64(len(refAllele.Seq)) - 1
+			}
 		} else {
 			log.Printf("Warning: Check vcf record at %s, postion %d and %d...\n", chr.Name, vcfsChr[i-1].Pos, vcfsChr[i].Pos)
 			continue
@@ -80,6 +104,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			SetEvenWeights(lastMatch)
 		}
 		if isSNP(vcfsChr[i]) {
+
 			refAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 1}}
 			AddNode(genome, refAllele)
 			AddEdge(currMatch, refAllele, 0.5)
@@ -101,23 +126,29 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			}
 		}
 		if isINS(vcfsChr[i]) {
+
 			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Ref)...)
+
 			insertion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 2}}
 			AddNode(genome, insertion)
 			AddEdge(currMatch, insertion, 1)
 			index = vcfsChr[i].Pos
 		}
 		if isDEL(vcfsChr[i]) {
+
 			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Alt)...)
+
 			deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
 			AddNode(genome, deletion)
 			AddEdge(currMatch, deletion, 1)
 			index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 		}
 		if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
+
 			refAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, refAllele)
 			AddEdge(currMatch, refAllele, 1)
+
 			altAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, altAllele)
 			AddEdge(currMatch, altAllele, 1)

@@ -50,7 +50,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	var numWorkers int = 8
 
 	log.Printf("Reading in the genome (Simple Graph)...\n")
-	fa := Read("testdata/gasAcu1.fa")
+	fa, _ := Read("testdata/gasAcu1.fa")
 	log.Printf("Simulating reads...\n")
 
 	simReads := RandomPairedReads(fa.Nodes, readLength, numberOfReads, mutations)
@@ -58,7 +58,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.PairedEnd, 824)
-	genome := Read("testdata/rabsToGasAcu1.gg")
+	genome, _ := Read("testdata/rabsToGasAcu1.gg")
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
@@ -105,11 +105,11 @@ func TestVcfToGraph(t *testing.T) {
 	//vcf.Sort(vcfFile)
 	//vcf.PrintVcf(vcfFile)
 	//log.Printf("Vcf to genome graph...\n")
-	genome := Read("testdata/gasAcu1-4_snpIndels.gg")
+	genome, _ := Read("testdata/gasAcu1-4_snpIndels.gg")
 	//VariantGraph(ref, vcfFile)
 	//Write("testdata/vcfGraph.gg", genome)
 	log.Printf("Simulating reads...\n")
-	fa := Read("testdata/gasAcu1.fa")
+	fa, _ := Read("testdata/gasAcu1.fa")
 
 	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, 0)
 
