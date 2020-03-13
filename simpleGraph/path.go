@@ -39,7 +39,7 @@ func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.Wait
 	wg.Done()
 }
 
-func ViewGraphAignment(samLine *sam.SamAln, genome *SimpleGraph) string {
+func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar
