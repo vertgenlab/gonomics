@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	//"fmt"
 )
@@ -159,6 +160,30 @@ func getSeqTraversal(curr *Node, seq []dna.Base, start int, extension int) [][]d
 	}
 }
 
+func lookingForSeeds(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, scoreMatrix [][]int64, gg *SimpleGraph) []*SeedDev {
+	var codedSeq uint64 = 0
+	var hits []*SeedDev = make([]*SeedDev, 0)
+	var currSeed *SeedDev
+	var currScore, bestScore int64 = 0, -1
+	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
+		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
+			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
+			currHits := seedHash[codedSeq]
+			for _, value := range currHits {
+				currSeed = seedBedToSeedDev(value, uint32(subSeqStart), posStrand)
+				extendSeedDev(currSeed, gg, read)
+				currScore = BlastSeed(currSeed, read, scoreMatrix)
+				if currScore > bestScore {
+					hits = append(hits, currSeed)
+				}
+			}
+		}
+	}
+	//log.Printf("Total of %d hits.\n", len(hits))
+	return hits
+}
+
+/*
 func devIndexGraph(genome *SimpleGraph, seedLen int, seedStep int) map[uint64][]*SeedBed {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
@@ -264,7 +289,7 @@ func SeedBedGraph(genome *SimpleGraph, seedLen int, graphSeed *SeedBed, leftOver
 		}
 	}
 	return nodeIdx, answer
-}
+}*/
 
 func PointToBases(currSeq []dna.Base, incomingSeq []dna.Base, currStart int, incomingStart int, currEnd int, incomingEnd int, currFront bool) {
 	newSize := currEnd + incomingEnd - currStart - incomingStart

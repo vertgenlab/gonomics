@@ -58,14 +58,14 @@ func TestAlignPairedEnd(t *testing.T) {
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.PairedEnd, 824)
-	genome, _ := Read("testdata/rabsToGasAcu1.gg")
+	genome, chrSize := Read("testdata/gasAcu1.fa")
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making sam channel...\n")
 	samPipe := make(chan *sam.PairedSamAln, 824)
 
-	header := NodesHeader(genome.Nodes)
+	header := sam.ChromInfoMapSamHeader(chrSize)
 
 	start := time.Now()
 	go fastq.PairEndToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)

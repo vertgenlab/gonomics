@@ -1,6 +1,7 @@
 package simpleGraph
 
 import (
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
@@ -22,9 +23,8 @@ func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uin
 	return &mappedPair
 }
 
-func GSWsBatchPair(filename string, readOne string, readTwo string, output string, threads int, seedLen int) {
-	ref, sizes := Read(filename)
-	header := sam.ChromInfoMapSamHeader(sizes)
+func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, chrSizes map[string]*chromInfo.ChromInfo) {
+	header := sam.ChromInfoMapSamHeader(chrSizes)
 	//var seedLen int = kMer
 	var stepSize int = seedLen - 1
 	var numWorkers int = threads

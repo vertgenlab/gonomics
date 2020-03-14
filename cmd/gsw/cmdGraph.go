@@ -51,7 +51,7 @@ func needHelp(cmdName string) {
 			"\t\tnumber of CPUs to use\n\n"
 	} else if strings.Compare(cmdName, "ggTools") == 0 {
 		answer += "\nggTools: utilities to create, manipulate and operate on genome graphs\n" +
-			"\nTo create genome graph reference w/ vcf file:\n" +
+			"\nTo create genome graph reference w/ vcf file:\n\n" +
 			"./gsw --ggTools --vcf SNPsIndels.vcf genome.fa\n\n" +
 			"usage:\t./gsw --ggTools [options] ref.[.gg/.fa]\n\n" +
 			"\t--split\t--out genome_[chr1, chr2, chr3 ...].gg\n" +
@@ -60,8 +60,8 @@ func needHelp(cmdName string) {
 			"\t\tmerge split by chromosome sam files into one\n" +
 			"\t\tfinds best alignment for each read\n\n" +
 			"\t--axt\t./gsw --ggTools --axt genomes.axt --out SNPsIndels.vcf ref.fa\n" +
-			"\t\tuse axt alignment to create VCF: small SNPs and indels\n" +
-			"\t--slurm\tsubmit GSW command as a slurm job\n\n"
+			"\t\tuse axt alignment to create VCF: small SNPs and indels\n\n" +
+			"\t--slurm\tbeta: submit GSW command as a slurm job\n\n"
 	} else if strings.Compare(cmdName, "view") == 0 {
 		answer += "GSW - genome graph toolkit:\n\n" + "visualize alignment\n" + "usage:" +
 			"\t./gsw --view [options] --vcf input.vcf ref.[.gg/.fa]\n\n" +
@@ -93,6 +93,8 @@ func main() {
 	var ggTools *bool = flag.Bool("ggTools", false, "genome graph tools")
 	var mergeSam *string = flag.String("merge", "", "merge split sam files back into one")
 	var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
+	var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
@@ -104,17 +106,22 @@ func main() {
 			flag.Usage()
 		}
 	}
-	if *slurmScript == true {
+	//log.Printf("Num of args=%d\n", len(flag.Args()))
+	if *slurmScript == true && *ggTools == true {
 		slurm()
+	} else if *kent == true && *ggTools == true {
+		kentUtils(flag.Args())
 	} else {
 		if *alignFlag == true {
+			log.Printf("Reading reference genome...\n")
+			ref, chrSize := simpleGraph.Read(flag.Arg(0))
 			//user provides single end reads
 			if len(flag.Args()) == 2 {
-				simpleGraph.GswSingleReadWrap(flag.Arg(0), flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize)
-			}
-			//user provides paired end reads
-			if len(flag.Args()) == 3 {
-				simpleGraph.GSWsBatchPair(flag.Arg(0), flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash)
+				
+				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, chrSize)
+			} else if len(flag.Args()) == 3 {
+				//user provides paired end reads
+				simpleGraph.GSWsBatchPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, chrSize)
 			}
 		}
 		if *ggTools == true {
@@ -190,4 +197,20 @@ func slurm() {
 		os.Stderr.WriteString(err.Error())
 	}
 	fmt.Print(string(cmdOutput.Bytes()))
+}
+
+func kentUtils(command []string) {
+	dir := "/Users/bulbasaur/kentUtils/"
+	dir += command[0]
+	var args []string = command[1:]
+	cmd := exec.Command(dir, args...)
+	cmdOutput := &bytes.Buffer{}
+	cmd.Stdout = cmdOutput
+	err := cmd.Run()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+	}
+	fmt.Print(string(cmdOutput.Bytes()))
+	
+
 }

@@ -23,13 +23,15 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	extension := int(perfectScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
-	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
-	seeds = GraphDictionary(seeds, gg, read)
+	//var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
+	var seeds []*SeedDev = lookingForSeeds(seedHash, read, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
+	//seeds = GraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
-	revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
+	//var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
+	var revCompSeeds []*SeedDev = lookingForSeeds(seedHash, revCompRead, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
+	//revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
 
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedExtended(seeds)
@@ -67,7 +69,8 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 			//currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id)
 			currBest.Pos = int64(minTarget) + 1
 			if gg.Nodes[bestPath[0]].Info != nil {
-				currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start)
+				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
+				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start)
 			}
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)

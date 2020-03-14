@@ -47,15 +47,15 @@ func TestFaFormat(t *testing.T) {
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 100
+	var numberOfReads int = 10000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
-	//genome, chrSize := Read("testdata/gasAcu1.fa")
+	genome, chrSize := Read("testdata/gasAcu1.fa")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	//genome := Read("testdata/rabs_chr8.gg")
-	fa, _ := Read("testdata/chrI.fa")
+	//fa, _ := Read("testdata/chrI.fa")
 	log.Printf("Indexing the genome...\n")
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.Fastq, 824)
@@ -64,15 +64,15 @@ func TestWorkerWithWriting(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	os.Remove("testdata/simReads.fq")
 	fastq.Write("testdata/simReads.fq", simReads)
-	genome, chrSize := Read("testdata/rabsBepaChrI.gg")
+	//genome, chrSize := Read("testdata/rabsBepaChrI.gg")
 
 	header := sam.ChromInfoMapSamHeader(chrSize)
 
 	//log.Printf("%v\n", header)
-	tiles := devIndexGraph(genome, tileSize, stepSize)
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 	log.Printf("Finished Indexing Genome...\n")
 	start := time.Now()
 	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
@@ -85,7 +85,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	writerWaiter.Add(1)
 	//go SamChanView(samPipe, genome, &writerWaiter)
 	///dev/stdout
-	go sam.SamChanToFile(samPipe, "/Users/bulbasaur/gonomics/cmd/gsw/rabsToBepaChrI.sam", header, &writerWaiter)
+	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
