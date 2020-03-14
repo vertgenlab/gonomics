@@ -1,8 +1,8 @@
 package simpleGraph
 
 import (
-	//"github.com/vertgenlab/gonomics/common"
-	//"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
@@ -23,45 +23,8 @@ func GraphDictionary(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	for i := 0; i < len(seeds); i++ {
 		hash = append(hash, extendSeedTogether(seeds[i], gg, read)...)
 	}
-	//SortBlastz(hash, read)
-	//if len(hash) > 248 {
-	//log.Printf("Length of hash for read:%s is %d\n", read.Name, len(hash))
-	//	hash = hash[:30]
-	//}
 	return hash
 }
-
-/*
-// TODO: this does not take into account breaking up seeds by gaps instead of mismatches
-// similar calculations could also be used as the parameters to a banded alignment
-func isSeedBetter(currIndex int, hash []*SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
-	seedLen := int64(sumLen(hash[currIndex]))
-	seeds := queryLen / (seedLen + 1)
-	remainder := queryLen % (seedLen + 1)
-	if currIndex > 248 {
-		//log.Printf("seed along with whole seeds, but not the remainder: %d\n", seedLen*seeds*maxMatch+seeds*leastSevereMismatch)
-		return false
-	} else if currIndex > 30 && currBestScore > 11000 {
-		//log.Printf("Index where we found a score of 10000: %d\n", currIndex)
-		return false
-	} else {
-		// seed by itself could be best
-		if seedLen*maxMatch >= currBestScore &&
-			perfectScore-((queryLen-seedLen)*minMatch) >= currBestScore {
-			return true
-			// seed along with whole seeds, but not the remainder
-		} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= currBestScore &&
-			perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= currBestScore {
-			return true
-			// seed along with whole seeds, as well as both remainders
-		} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= currBestScore &&
-			perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= currBestScore {
-			return true
-		} else {
-			return false
-		}
-	}
-}*/
 
 func extendCurrSeed(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq, left bool, right bool) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
@@ -169,12 +132,12 @@ func CompareSumLen(a *SeedDev, b *SeedDev) int {
 	}
 }
 
-func CompareBlastScore(a *SeedDev, b *SeedDev, read *fastq.Fastq) int {
-	if BlastSeed(a, read) == BlastSeed(b, read) {
+func CompareBlastScore(a *SeedDev, b *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int {
+	if BlastSeed(a, read, scoreMatrix) == BlastSeed(b, read, scoreMatrix) {
 		return 0
-	} else if BlastSeed(a, read) < BlastSeed(b, read) {
+	} else if BlastSeed(a, read, scoreMatrix) < BlastSeed(b, read, scoreMatrix) {
 		return -1
-	} else if BlastSeed(a, read) > BlastSeed(b, read) {
+	} else if BlastSeed(a, read, scoreMatrix) > BlastSeed(b, read, scoreMatrix) {
 		return 1
 	} else {
 		log.Fatalf("Error: SeedDev len compare failed on:%d %d %d, %d %d %d\n", a.TargetId, a.TargetStart, a.Length, b.TargetId, b.TargetStart, b.Length)
@@ -186,16 +149,25 @@ func SortSeedExtended(seeds []*SeedDev) {
 	sort.Slice(seeds, func(i, j int) bool { return CompareSumLen(seeds[i], seeds[j]) == 1 })
 }
 
-func SortBlastz(seeds []*SeedDev, read *fastq.Fastq) {
-	sort.Slice(seeds, func(i, j int) bool { return CompareBlastScore(seeds[i], seeds[j], read) == 1 })
+func SortBlastz(seeds []*SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) {
+	sort.Slice(seeds, func(i, j int) bool { return CompareBlastScore(seeds[i], seeds[j], read, scoreMatrix) == 1 })
 }
 
-func BlastSeed(seed *SeedDev, read *fastq.Fastq) int64 {
+func BlastSeed(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	if seed.Next == nil {
-		return scoreSeed(seed, read)
+		return scoreSeed(seed, read, scoreMatrix)
 	} else {
-		return scoreSeed(seed, read) + scoreSeed(seed.Next, read)
+		return scoreSeed(seed, read, scoreMatrix) + scoreSeed(seed.Next, read, scoreMatrix)
 	}
+}
+
+func AlternateOrder(seeds []*SeedDev) []*SeedDev {
+	var answer []*SeedDev = make([]*SeedDev, 0, len(seeds))
+	for i, j := 0, len(seeds)-1; i < len(seeds)/2 || j > len(seeds)/2; i, j = i+1, j-1 {
+		answer = append(answer, seeds[i])
+		answer = append(answer, seeds[j])
+	}
+	return answer
 }
 
 /*
@@ -254,26 +226,129 @@ func seedBedMask(a *SeedBed, currQPos uint32, posStrand bool, numMismatch int) *
 	}
 }
 
-/*
-func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, mask int) []*SeedDev {
+func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, gg *SimpleGraph, scoreMatrix [][]int64) []*SeedDev {
 	var codedSeq uint64 = 0
 	var hits []*SeedDev = make([]*SeedDev, 0)
-	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart += 2 {
+	var seeds []*SeedDev = make([]*SeedDev, 0)
+	var currSeed *SeedDev
+	var bestSeedScore, currSeedScore int64 = -1, 0
+	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
 		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
 			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
 			currHits := seedHash[codedSeq]
 			for _, value := range currHits {
-				hits = append(hits, seedBedToSeedDev(value, uint32(subSeqStart), posStrand))
+				currSeed = seedBedToSeedDev(value, uint32(subSeqStart), posStrand)
+				extendSeedDev(currSeed, gg, read)
+				currSeedScore = BlastSeed(currSeed, read, scoreMatrix)
+				hits = append(hits, currSeed)
+				if currSeedScore > bestSeedScore {
+					bestSeedScore = currSeedScore
+				}
 			}
+			//log.Printf("len=%d", len(currHits))
+			/*if len(currHits) > 0 {
+				for i, j = 0, len(currHits)-1; (i <= len(currHits)/2 || j > len(currHits)/2); i, j = i+1, j-1 {
+					//printSeedDevNext(seedBedToSeedDev(currHits[i], uint32(subSeqStart), posStrand))
+					seeds = extendSeedTogether(seedBedToSeedDev(currHits[i], uint32(subSeqStart), posStrand), gg, read)
+					seeds = append(seeds, extendSeedTogether(seedBedToSeedDev(currHits[j], uint32(subSeqStart), posStrand), gg, read)...)
+					for k = 0; k < len(seeds);k++ {
+						if isSeedBetter(seeds[k], read, scoreMatrix, currBestScore) {
+
+							score = BlastSeed(seeds[k], read)
+							if score > currBestScore {
+								currBestScore = score
+							}
+						}
+					}
+					//hits = append(hits, seedBedToSeedDev(value, uint32(subSeqStart), posStrand))
+				}
+			}*/
+		}
+
+	}
+	//if len(hits) > 0 {
+	//	if isSeedBetter(hits, 0, read, scoreMatrix) {
+	//		seeds = append(seeds, extendSeedTogether(hits[0], gg, read)...)
+	//	}
+	//}
+	//var i, j, k int
+	//for i = 0; i < len(hits)-1; {
+	//	if !canMerge(hits[i], hits[i+1]) {
+	//		i++
+	//	} else {
+	//hits[i].TargetStart, hits[i].QueryStart,
+	//		for j = i + 1; j < len(hits)-1; j++ {
+	//			hits[j] = hits[j+1]
+	//		}
+	//		hits = hits[:len(hits)-1]
+	//	}
+	//}
+	SortSeedDevByLen(hits)
+	seeds = AlternateOrder(hits)
+	for k := 0; k < len(hits); k++ {
+		if BlastSeed(hits[k], read, scoreMatrix) > bestSeedScore {
+			seeds = append(seeds, extendSeedTogether(hits[k], gg, read)...)
 		}
 	}
-	if len(hits) == 0 {
-		log.Printf("No hits were found for seed length %d...\n", seedLen)
-		log.Printf("Trying a smaller seed length...\n")
-		hits = CheckSmallerHash(seedHash, read, seedLen, mask, posStrand, mask)
+	return seeds
+}
+
+// TODO: this does not take into account breaking up seeds by gaps instead of mismatches
+// similar calculations could also be used as the parameters to a banded alignment
+
+func isSeedBetter(hits []*SeedDev, index int, read *fastq.Fastq, scoreMatrix [][]int64) bool {
+	if index > 248 {
+		return false
 	}
-	return hits
-}*/
+	seedLen := int64(sumLen(hits[index]))
+	queryLen := int64(len(read.Seq))
+	seeds := queryLen / (seedLen + 1)
+	remainder := queryLen % (seedLen + 1)
+	var perfectScore int64 = perfectMatch(read, scoreMatrix)
+	var maxMatch int64 = scoreMatrix[1][1]
+	var minMatch int64 = scoreMatrix[0][0]
+	var leastSevereMismatch int64 = scoreMatrix[1][4]
+	var leastSevereMatchMismatchChange int64 = leastSevereMismatch - maxMatch
+	// seed by itself could be best
+	if seedLen*maxMatch >= 5000 &&
+		perfectScore-((queryLen-seedLen)*minMatch) >= 5000 {
+		return true
+		// seed along with whole seeds, but not the remainder
+	} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= 5000 &&
+		perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= 5000 {
+		return true
+		// seed along with whole seeds, as well as both remainders
+	} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= 5000 &&
+		perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= 5000 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func SeedOverLap(a *SeedDev, b *SeedDev) bool {
+	if a == nil || b == nil {
+		return false
+	}
+	aLen := FindTotalLengthSeed(a, a.Length)
+	bLen := FindTotalLengthSeed(b, b.Length)
+	if common.MaxUint32(a.TargetStart, b.TargetStart) <= common.MinUint32(a.TargetStart+aLen, b.TargetStart+bLen) {
+		if common.MaxUint32(a.QueryStart, b.QueryStart) <= common.MinUint32(a.QueryStart+aLen, b.QueryStart+bLen) {
+			if int(b.TargetStart)-int(a.TargetStart) == int(b.QueryStart)-int(a.QueryStart) {
+				return true
+			}
+
+		}
+	}
+	return false
+}
+func FindTotalLengthSeed(seed *SeedDev, length uint32) uint32 {
+	if seed.Next != nil {
+		length += seed.Next.Length
+		FindTotalLengthSeed(seed.Next, length)
+	}
+	return length
+}
 
 func seedBedToSeed(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 	if a == nil {
@@ -282,6 +357,36 @@ func seedBedToSeed(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 		return &SeedDev{TargetId: a.Id, TargetStart: a.Start, QueryStart: currQPos, Length: a.End - a.Start, PosStrand: posStrand, Next: seedBedToSeedDev(a.Next, currQPos+a.End-a.Start, posStrand)}
 	}
 }
+
+/*
+func isSeedBetter(currIndex int, hash []*SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
+	seedLen := int64(sumLen(hash[currIndex]))
+	seeds := queryLen / (seedLen + 1)
+	remainder := queryLen % (seedLen + 1)
+	if currIndex > 248 {
+		//log.Printf("seed along with whole seeds, but not the remainder: %d\n", seedLen*seeds*maxMatch+seeds*leastSevereMismatch)
+		return false
+	} else if currIndex > 30 && currBestScore > 11000 {
+		//log.Printf("Index where we found a score of 10000: %d\n", currIndex)
+		return false
+	} else {
+		// seed by itself could be best
+		if seedLen*maxMatch >= currBestScore &&
+			perfectScore-((queryLen-seedLen)*minMatch) >= currBestScore {
+			return true
+			// seed along with whole seeds, but not the remainder
+		} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= currBestScore &&
+			perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= currBestScore {
+			return true
+			// seed along with whole seeds, as well as both remainders
+		} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= currBestScore &&
+			perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= currBestScore {
+			return true
+		} else {
+			return false
+		}
+	}
+}*/
 
 //TODO continue working on copying to head
 /*
@@ -357,6 +462,7 @@ func pointToHead(seed *SeedDev) *SeedDev {
 		return pointToHead(seed.Prev)
 	}
 }*/
+
 /*
 func isNextSeedBetter(curr *Seed, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
 	seedLen := int64(FindTotalLengthSeed(curr, curr.Length))
@@ -389,26 +495,4 @@ func DevScoreSeed(seed *Seed, read *fastq.Fastq) int64 {
 		}
 	}
 	return score
-}
-
-func SeedOverLap(a *Seed, b *Seed) bool {
-	if a == nil || b == nil {
-		return false
-	}
-	aLen := FindTotalLengthSeed(a, a.Length)
-	bLen := FindTotalLengthSeed(b, b.Length)
-	if common.MaxInt32(a.TargetStart, b.TargetStart) < common.MinInt32(a.TargetStart+aLen, b.TargetStart+bLen) {
-		if common.MaxInt32(a.QueryStart, b.QueryStart) < common.MinInt32(a.QueryStart+aLen, b.QueryStart+bLen) {
-			return true
-		}
-	}
-	return false
-}
-
-func FindTotalLengthSeed(seed *Seed, length int32) int32 {
-	if seed.Next != nil {
-		length += seed.Next.Length
-		FindTotalLengthSeed(seed.Next, length)
-	}
-	return length
 }*/

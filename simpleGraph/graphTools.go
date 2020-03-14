@@ -48,6 +48,19 @@ func VariantGraph(reference []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 	return gg
 }
 
+func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*SimpleGraph {
+	gg := make(map[string]*SimpleGraph)
+	vcfSplit := vcf.VcfSplit(vcfs, reference)
+	if len(vcfSplit) != len(reference) {
+		log.Fatal("Slice of vcfs do not equal reference length")
+	} else {
+		for i := 0; i < len(reference); i++ {
+			gg[reference[i].Name] = vChrGraph(NewGraph(), reference[i], vcfSplit[i])
+		}
+	}
+	return gg
+}
+
 func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
 	fasta.ToUpper(chr)
 	if len(vcfsChr) == 0 {
@@ -90,6 +103,8 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				AddEdge(currMatch, altAllele, 1)
 				index = vcfsChr[i].Pos + int64(len(refAllele.Seq)) - 1
 			}
+			lastMatch = currMatch
+			continue
 		} else {
 			log.Printf("Warning: Check vcf record at %s, postion %d and %d...\n", chr.Name, vcfsChr[i-1].Pos, vcfsChr[i].Pos)
 			continue
@@ -98,6 +113,11 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			if len(lastMatch.Next) > 0 {
 				for edge = 0; edge < len(lastMatch.Next); edge++ {
 					AddEdge(lastMatch.Next[edge].Dest, currMatch, 1)
+				}
+			}
+			if i > 0 {
+				if isSNP(vcfsChr[i-1]) || isHaplotypeBlock(vcfsChr[i-1]) {
+					AddEdge(altAllele, currMatch, 1)
 				}
 			}
 			AddEdge(lastMatch, currMatch, 1)
@@ -112,6 +132,8 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 1}}
 			AddNode(genome, altAllele)
 			AddEdge(currMatch, altAllele, 0.5)
+
+			currMatch = refAllele
 			index = vcfsChr[i].Pos
 			for j = i + 1; j < len(vcfsChr)-1; j++ {
 				if isSNP(vcfsChr[j-1]) && isSNP(vcfsChr[j]) && vcfsChr[j].Pos-1 == vcfsChr[j-1].Pos {
@@ -126,9 +148,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			}
 		}
 		if isINS(vcfsChr[i]) {
-
 			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Ref)...)
-
 			insertion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 2}}
 			AddNode(genome, insertion)
 			AddEdge(currMatch, insertion, 1)
@@ -143,16 +163,17 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			AddEdge(currMatch, deletion, 1)
 			index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 		}
-		if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
+		if isHaplotypeBlock(vcfsChr[i]) {
 
-			refAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
+			refAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, refAllele)
 			AddEdge(currMatch, refAllele, 1)
 
-			altAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
+			altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, altAllele)
 			AddEdge(currMatch, altAllele, 1)
 			index = vcfsChr[i].Pos + int64(len(refAllele.Seq)) - 1
+			currMatch = refAllele
 		}
 		lastMatch = currMatch
 	}
@@ -163,7 +184,12 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	for edge = 0; edge < len(lastMatch.Next); edge++ {
 		AddEdge(lastMatch.Next[edge].Dest, lastNode, 1)
 	}
+	if isSNP(vcfsChr[len(vcfsChr)-1]) || isHaplotypeBlock(vcfsChr[len(vcfsChr)-1]) {
+		AddEdge(altAllele, currMatch, 1)
+	}
+	//if !isSNP(vcfsChr[len(vcfsChr)-1]) {
 	AddEdge(lastMatch, lastNode, 1)
+
 	SetEvenWeights(lastMatch)
 	return genome
 }
@@ -242,6 +268,14 @@ func isINS(v *vcf.Vcf) bool {
 	return truth
 }
 
+func isHaplotypeBlock(v *vcf.Vcf) bool {
+	if strings.Compare(v.Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(v.Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(v.Format, "SVTYPE=HAP") == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
 func createDEL(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
 	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)])}
 	AddNode(sg, &curr)
@@ -291,7 +325,7 @@ func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[ui
 		} else {
 			currRead = revCompRead
 		}
-		seedScore = scoreSeed(seeds[i], currRead)
+		seedScore = scoreSeed(seeds[i], currRead, HumanChimpTwoScoreMatrix)
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
@@ -345,7 +379,7 @@ func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*Seed
 		} else {
 			currRead = revCompRead
 		}
-		seedScore = scoreSeed(seeds[i], currRead)
+		seedScore = scoreSeed(seeds[i], currRead, HumanChimpTwoScoreMatrix)
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, ext, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart+seeds[i].Length), []uint32{}, ext, currRead.Seq[seeds[i].QueryStart+seeds[i].Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore

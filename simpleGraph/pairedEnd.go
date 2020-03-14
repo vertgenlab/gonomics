@@ -22,14 +22,15 @@ func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uin
 	return &mappedPair
 }
 
-func GSWsBatchPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int) {
-
+func GSWsBatchPair(filename string, readOne string, readTwo string, output string, threads int, seedLen int) {
+	ref, sizes := Read(filename)
+	header := sam.ChromInfoMapSamHeader(sizes)
 	//var seedLen int = kMer
 	var stepSize int = seedLen - 1
 	var numWorkers int = threads
 	log.Printf("Indexing the genome...\n")
 	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	header := NodesHeader(ref.Nodes)
+	//header := NodesHeader(ref.Nodes)
 	var wgAlign, wgWrite sync.WaitGroup
 
 	log.Printf("Making fastq channel...\n")

@@ -50,7 +50,7 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 	var leftPath, rightPath, bestPath []uint32
 
 	var currScore int64 = 0
-	perfectScore := perfectMatch(read)
+	perfectScore := perfectMatch(read, HumanChimpTwoScoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
@@ -76,7 +76,7 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 		}
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
-		seedScore = BlastSeed(seeds[i], currRead)
+		seedScore = BlastSeed(seeds[i], currRead, HumanChimpTwoScoreMatrix)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
 		if currScore > bestScore {

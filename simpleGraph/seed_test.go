@@ -12,7 +12,11 @@ import (
 //     --> node_1            --> node_4
 //node_0          --> node_3             --> node_6
 //     --> node_2           -->  node_5
-
+func TestScoreSeed(t *testing.T) {
+	fq := fastq.Fastq{Name: "Test", Seq: dna.StringToBases("AAAAGCTCAGCTCCCATCGAGCTGAAAATGTTCCCCCCCACAGTTTTATCATGCTGTAAATGAAGGTGGGATGTCTCAACAAATAGTTCCCAGCCTTCTTTTTCTCTTTTGTGAAAAAGGCCAAAGGAATTCAGACTGTCACGTAATTTA")}
+	seedScore := perfectMatch(&fq, HumanChimpTwoScoreMatrix)
+	log.Printf("Score of this read is: %d", seedScore)
+}
 func TestSeed(t *testing.T) {
 	gg := NewGraph()
 	newNode := &Node{Id: 0, Seq: dna.StringToBases("CCCATTCTTCCCTCCACAAGAT")}
