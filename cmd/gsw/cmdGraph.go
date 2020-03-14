@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"path"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
@@ -13,11 +14,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"path/filepath"
 )
 
 func usage() {
 	fmt.Print(
-		"\nGSW - genome graph toolkit\n" +
+		"\nGSW - genome graph toolkit" +
 			"\nusage:\n" +
 			"\tgsw [options] ref.fa/.gg R1.fastq.gz R2.fastq.gz\n" +
 			"options:\n" +
@@ -51,7 +53,7 @@ func needHelp(cmdName string) {
 			"\t\tnumber of CPUs to use\n\n"
 	} else if strings.Compare(cmdName, "ggTools") == 0 {
 		answer += "\nggTools: utilities to create, manipulate and operate on genome graphs\n" +
-			"\nTo create genome graph reference w/ vcf file:\n\n" +
+			"\nTo create genome graph reference w/ vcf file:\n" +
 			"./gsw --ggTools --vcf SNPsIndels.vcf genome.fa\n\n" +
 			"usage:\t./gsw --ggTools [options] ref.[.gg/.fa]\n\n" +
 			"\t--split\t--out genome_[chr1, chr2, chr3 ...].gg\n" +
@@ -61,7 +63,9 @@ func needHelp(cmdName string) {
 			"\t\tfinds best alignment for each read\n\n" +
 			"\t--axt\t./gsw --ggTools --axt genomes.axt --out SNPsIndels.vcf ref.fa\n" +
 			"\t\tuse axt alignment to create VCF: small SNPs and indels\n\n" +
-			"\t--slurm\tbeta: submit GSW command as a slurm job\n\n"
+			"\t--slurm\tbeta: submit GSW command as a slurm job\n" +
+			"\t\tdefault settings are: --mem=32G, --ntasks=1, --cpus-per-task=8\n\n"
+		//"\t--kent\tkentUtils - ucsc\n\n"
 	} else if strings.Compare(cmdName, "view") == 0 {
 		answer += "GSW - genome graph toolkit:\n\n" + "visualize alignment\n" + "usage:" +
 			"\t./gsw --view [options] --vcf input.vcf ref.[.gg/.fa]\n\n" +
@@ -90,15 +94,13 @@ func main() {
 	var splitChr *bool = flag.Bool("split", false, "splits graph output by chromosomes")
 	var chrPrefix *string = flag.String("name", "genomeGraph", "basename for .gg file, split by chromosome")
 
-	var ggTools *bool = flag.Bool("ggTools", false, "genome graph tools")
+	var ggTools *string = flag.String("ggTools", "", "genome graph tools")
 	var mergeSam *string = flag.String("merge", "", "merge split sam files back into one")
-	var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
-	var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
-
+	//var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
+	//var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
-
 	if *moreHelp != "" {
 		needHelp(*moreHelp)
 	} else {
@@ -107,37 +109,72 @@ func main() {
 		}
 	}
 	//log.Printf("Num of args=%d\n", len(flag.Args()))
-	if *slurmScript == true && *ggTools == true {
+	if strings.Contains(*ggTools, "slurm") && *splitChr == false {
 		slurm()
-	} else if *kent == true && *ggTools == true {
+	} else if strings.Contains(*ggTools, "kent") || strings.Contains(*ggTools, "kentUtils") {
 		kentUtils(flag.Args())
 	} else {
 		if *alignFlag == true {
 			log.Printf("Reading reference genome...\n")
 			ref, chrSize := simpleGraph.Read(flag.Arg(0))
+			header := sam.ChromInfoMapSamHeader(chrSize)
+			header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL", strings.Join(os.Args, " ")))
 			//user provides single end reads
 			if len(flag.Args()) == 2 {
-				
-				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, chrSize)
+				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, header)
 			} else if len(flag.Args()) == 3 {
 				//user provides paired end reads
-				simpleGraph.GSWsBatchPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, chrSize)
+				simpleGraph.GSWsBatchPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, header)
 			}
 		}
-		if *ggTools == true {
+		if strings.Contains(*ggTools, "axt") {
 			if strings.HasSuffix(*tagAxt, ".axt") {
 				if *outTag != "" {
 					axtFile := axt.Read(*tagAxt)
 					fa := fasta.Read(flag.Arg(0))
 					axt.AxtVcfToFile(*outTag, axtFile, fa)
 				}
-			} else if strings.HasSuffix(*vcfTag, ".vcf") {
+			}
+		}
+			if strings.HasSuffix(*vcfTag, ".vcf") {
 				vcfs := vcf.Read(*vcfTag)
 				if strings.HasSuffix(flag.Arg(0), ".fa") {
 					fa := fasta.Read(flag.Arg(0))
 					if *splitChr == true {
+						log.Printf("VCF to graph, split into chromosomes...\n")
 						ggChr := simpleGraph.SplitGraphChr(fa, vcfs)
-						simpleGraph.WriteToGraphSplit(*chrPrefix, ggChr)
+						if strings.Contains(*ggTools, "slurm") && strings.Contains(flag.Arg(1), ".fastq") {
+							var readOne string = filepath.Base(strings.TrimSuffix(flag.Arg(1), path.Ext(flag.Arg(1))))
+							gswCommand := fmt.Sprintf(" --wrap=\"./gsw --align --k 16 --t 8 --out %s_", readOne)
+							
+							var currCmd string
+
+							//args = append(args, wrapPrompt)
+							var echo string
+							for chr := range ggChr {
+								log.Printf("Writing graph %s to file...\n", chr)
+								simpleGraph.Write(chr+"_"+*outTag, ggChr[chr])
+								currCmd = gswCommand + fmt.Sprintf("to_%s_%s.sam %s %s\"", chr, *outTag, flag.Arg(0), flag.Arg(1))
+								if len(flag.Args()) == 3 {
+									currCmd += fmt.Sprintf(" %s", flag.Arg(2))
+								}
+								args := []string{"--mem=16G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
+								args = append(args, currCmd)
+								log.Printf("\n\nSlurm job submission:\n")
+								echo = "sbatch " + strings.Join(args, " ")
+								log.Printf("\n\n%s\n\n", echo)
+								cmd := exec.Command("sbatch", args...)
+								cmdOutput := &bytes.Buffer{}
+								cmd.Stdout = cmdOutput
+								err := cmd.Run()
+								if err != nil {
+									os.Stderr.WriteString(err.Error())
+								}
+								fmt.Print(string(cmdOutput.Bytes()))
+							}
+						} else {
+							simpleGraph.WriteToGraphSplit(*chrPrefix, ggChr)
+						}
 					} else {
 						gg := simpleGraph.VariantGraph(fa, vcfs)
 						simpleGraph.Write(*outTag, gg)
@@ -148,7 +185,7 @@ func main() {
 			} else if strings.Compare(*mergeSam, "") != 0 {
 				sam.ReadFiles(flag.Args(), *mergeSam)
 			}
-		}
+		
 		if strings.HasSuffix(*view, ".sam") {
 			var yes, no, numReads int = 0, 0, 0
 			log.SetFlags(log.Ldate | log.Ltime)
@@ -177,19 +214,12 @@ func slurm() {
 	slurmJob := "sbatch"
 	args := []string{"--mem=32G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
 	commands := os.Args
-	var tmp []string
-	for i := 0; i < len(commands); i++ {
-		if !strings.Contains(commands[i], "slurm") {
-			tmp = append(tmp, commands[i])
-		}
-	}
 	var wrapPrompt string = "--wrap=\""
-	wrapPrompt += strings.Join(tmp, " ") + "\""
+	wrapPrompt += strings.Join(commands, " ") + "\""
 	args = append(args, wrapPrompt)
-	fmt.Printf("The wrap prompt is: %s\n", wrapPrompt)
+	echo := slurmJob + " " + strings.Join(args, " ")
+	log.Printf("\n\nSlurm job submission:\n\n%s\n\n", echo)
 	cmd := exec.Command(slurmJob, args...)
-
-	//cmd := exec.Command("sbatch", mem, inputMem, nodes, inputNodes, tasks, inputTasks, cpus, numCpus, mailType, email, userEmail, wrap, gswCmd)
 	cmdOutput := &bytes.Buffer{}
 	cmd.Stdout = cmdOutput
 	err := cmd.Run()
@@ -201,16 +231,26 @@ func slurm() {
 
 func kentUtils(command []string) {
 	dir := "/Users/bulbasaur/kentUtils/"
-	dir += command[0]
-	var args []string = command[1:]
-	cmd := exec.Command(dir, args...)
-	cmdOutput := &bytes.Buffer{}
-	cmd.Stdout = cmdOutput
-	err := cmd.Run()
-	if err != nil {
-		os.Stderr.WriteString(err.Error())
+	if len(command) == 0 {
+		cmd := exec.Command("ls", dir)
+		cmdOutput := &bytes.Buffer{}
+		cmd.Stdout = cmdOutput
+		err := cmd.Run()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+		}
+		fmt.Print(string(cmdOutput.Bytes()))
+	} else {
+		dir += command[0]
+		var args []string = command[1:]
+		cmd := exec.Command(dir, args...)
+		cmdOutput := &bytes.Buffer{}
+		cmd.Stdout = cmdOutput
+		err := cmd.Run()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+		}
+		fmt.Print(string(cmdOutput.Bytes()))
 	}
-	fmt.Print(string(cmdOutput.Bytes()))
-	
-
 }
+

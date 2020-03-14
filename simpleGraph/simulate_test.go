@@ -17,7 +17,6 @@ import (
 )
 
 func TestSamToVcf(t *testing.T) {
-
 	chrI := &Node{Name: "chrI", Seq: dna.StringToBases("ACAAAAAAAAAAAAA")}
 	h := NodesHeader([]*Node{chrI})
 	align1 := &sam.SamAln{QName: "", Flag: 0, RName: "chrI", Pos: 2, MapQ: 255, Cigar: cigar.FromString("1M5S"), RNext: "*", PNext: 0, TLen: 0, Seq: dna.StringToBases("GAAAAA"), Extra: "BZ:i:0"}
@@ -29,15 +28,12 @@ func TestSamToVcf(t *testing.T) {
 	var testSam []*sam.SamAln = []*sam.SamAln{align1, align2, align3, align4, align5, align6}
 	samTest := &sam.Sam{Header: h, Aln: testSam}
 	sam.Write("testdata/samToVcfTest.sam", samTest)
-
 	chrITest := &fasta.Fasta{Name: "chrI", Seq: dna.StringToBases("ACAAAAAAAAAAAAA")}
 	votes := samToGenomeNotes("testdata/samToVcfTest.sam", chrITest, 0)
 	log.Printf("Before: %s\n", dna.BasesToString(chrITest.Seq))
 	fa, v := EditGenome("testdata/samToVcfTest.sam", chrITest, 0, votes)
-
 	log.Printf("After:%s\n", dna.BasesToString(fa.Seq))
 	vcf.PrintVcf(v)
-
 }
 
 func TestAlignPairedEnd(t *testing.T) {

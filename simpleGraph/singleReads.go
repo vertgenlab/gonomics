@@ -1,14 +1,13 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"sync"
 )
 
-func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, chrSize map[string]*chromInfo.ChromInfo) {
+func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, header *sam.SamHeader) {
 	//var seedLen int = kMer
 	//var stepSize int = seedLen - 1
 	log.Printf("Reading reference...\n")
@@ -16,7 +15,6 @@ func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads 
 	var numWorkers int = threads
 	log.Printf("Indexing the genome...\n")
 	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	header := sam.ChromInfoMapSamHeader(chrSize)
 	var wgAlign, wgWrite sync.WaitGroup
 
 	log.Printf("Setting up goroutine channels...\n")

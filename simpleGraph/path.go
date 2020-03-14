@@ -101,7 +101,7 @@ func UnMappedRead(length int) []dna.Base {
 
 func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
 	if SamToPath(samLine) == nil {
-		return fmt.Sprintf("Unmapped Alignment:\n%s\n", sam.ModifySamToString(samLine, false, false, true, false, true, false, false, false, false, false, true))
+		return fmt.Sprintf("Unmapped Alignment:\n%s\n", ModifySamToString(samLine, false, false, true, false, true, false, false, false, false, false, true))
 	} else {
 
 		var seqOne, seqTwo bytes.Buffer
@@ -149,7 +149,7 @@ func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
 				prettySeq += fmt.Sprintf("%s:\t[%d-%d]\n", samLine.RName, k+pos, k+lineLength+pos) + fmt.Sprintf("%s\n", seqOne.String()[k:k+lineLength]) + fmt.Sprintf("%s\n", seqTwo.String()[k:k+lineLength])
 			}
 		}
-		return fmt.Sprintf("%s\n%s", ModifySamToString(samLine, false, false, false, false, true, false, false, false, false, false, true), prettySeq)
+		return fmt.Sprintf("%s\n%s", ModifySamToString(samLine, false, true, true, false, true, false, false, false, false, false, true), prettySeq)
 	}
 }
 
@@ -163,7 +163,7 @@ func addStartChrPos(samfile *sam.SamAln) int64 {
 }
 
 func ModifySamToString(aln *sam.SamAln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
-	var answer string = fmt.Sprintf("%s\n", aln.QName)
+	var answer string = fmt.Sprintf("%s\n\n", aln.QName)
 	if samflag {
 		answer += fmt.Sprintf("%d\n", aln.Flag)
 	}
