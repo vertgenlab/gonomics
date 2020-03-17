@@ -200,7 +200,7 @@ func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
 	var i int64
-	for i = 0; i < int64(len(chromSize));{
+	for i = 0; i < int64(len(chromSize)); {
 		for j := range chromSize {
 			if i == chromSize[j].Order {
 				words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[j].Name, chromSize[j].Size)
@@ -208,7 +208,7 @@ func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader
 				i++
 			}
 		}
-		
+
 	}
 	return &header
 }
@@ -234,7 +234,7 @@ func ModifySamToString(aln *SamAln, samflag bool, rname bool, pos bool, mapq boo
 	if pos {
 		if strings.Contains(aln.Extra, "XO:i:") {
 			words := strings.Split(aln.Extra, "\t")
-			aln.Pos+= common.StringToInt64(words[2][5:])
+			aln.Pos += common.StringToInt64(words[2][5:])
 		}
 		answer += fmt.Sprintf("%d\t", aln.Pos)
 	}
@@ -276,27 +276,27 @@ func pathPrettyString(graphPath string) string {
 	var s string = ""
 	if !strings.Contains(graphPath, "GP:Z:") {
 		return s
-	} else  {
+	} else {
 		s = "GP:Z:\n"
-		
+
 		words := strings.Split(graphPath[5:], ":")
 		//log.Printf("%v\n", words)
 		var i int
 		var j int
-		for i = 0; i < len(words); i+=8 {
+		for i = 0; i < len(words); i += 8 {
 			var line string = ""
 			if i+8 > len(words) {
 				line += fmt.Sprintf("%s", words[i])
-				for j = i + 1;j < len(words)-1; j++ {
+				for j = i + 1; j < len(words)-1; j++ {
 					line += fmt.Sprintf(":%s", words[j])
 				}
-				s+= fmt.Sprintf("%s\n", line)
+				s += fmt.Sprintf("%s\n", line)
 			} else {
 				line += fmt.Sprintf("%s", words[i])
-				for j = i + 1;j < i+8; j++ {
+				for j = i + 1; j < i+8; j++ {
 					line += fmt.Sprintf(":%s", words[j])
 				}
-				s+= fmt.Sprintf("%s\n", line)
+				s += fmt.Sprintf("%s\n", line)
 			}
 			//s += fmt.Sprintf("\n")
 		}

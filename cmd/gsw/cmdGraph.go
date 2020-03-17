@@ -28,7 +28,7 @@ func usage() {
 			"\t\t./gsw --align --out align.sam ref.gg R1.fastq.gz R2.fastq.gz\n" +
 			"\t--ggTools\n" +
 			"\t\tcreate genome graph reference w/ vcf file\n" +
-			"\t\t./gsw --vcf input.vcf --out ref.gg ref.fa\n" +
+			"\t\t./gsw --ggTools --vcf input.vcf --out ref.gg ref.fa\n" +
 			"\t--view\n" +
 			"\t\tvisualize alignment /dev/stdout\n" +
 			"\t\t./gsw --view alignToGraph.sam ref.gg\n" +
@@ -67,10 +67,10 @@ func needHelp(cmdName string) {
 			"\t\tdefault settings are: --mem=32G, --ntasks=1, --cpus-per-task=8\n\n"
 		//"\t--kent\tkentUtils - ucsc\n\n"
 	} else if strings.Compare(cmdName, "view") == 0 {
-		answer += "GSW - genome graph toolkit:\n\n" + "visualize alignment\n" + "usage:" +
-			"\t./gsw --view [options] --vcf input.vcf ref.[.gg/.fa]\n\n" +
+		answer += "GSW - genome graph toolkit:\n\n" + "Visualize Alignment\n\n" + "usage:" +
+			"\t./gsw --view [options] graph.sam ref.[.gg/.fa]\n\n" +
 			"\t--out\tdefault: /dev/stdout\n" +
-			"\t\tnotes.txt\n"
+			"\t\tnotes.txt\n\n"
 	} else if strings.Compare(cmdName, "axt") == 0 {
 		answer +=
 			"\t./gsw  --out SNPsIndels.vcf ref.fa\n\n"
@@ -94,10 +94,10 @@ func main() {
 	var splitChr *bool = flag.Bool("split", false, "splits graph output by chromosomes")
 	var chrPrefix *string = flag.String("name", "genomeGraph", "basename for .gg file, split by chromosome")
 
-	var ggTools *string = flag.String("ggTools", "", "genome graph tools")
+	var ggTools *bool = flag.Bool("ggTools", false, "genome graph tools")
 	var mergeSam *string = flag.String("merge", "", "merge split sam files back into one")
-	//var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
-	//var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
+	var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
+	var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
@@ -109,16 +109,16 @@ func main() {
 		}
 	}
 	//log.Printf("Num of args=%d\n", len(flag.Args()))
-	if strings.Contains(*ggTools, "slurm") && *splitChr == false {
+	if *slurmScript == true && *ggTools == true && *splitChr == false {
 		slurm()
-	} else if strings.Contains(*ggTools, "kent") || strings.Contains(*ggTools, "kentUtils") {
+	} else if *ggTools == true &&  *kent == true {
 		kentUtils(flag.Args())
 	} else {
 		if *alignFlag == true {
 			log.Printf("Reading reference genome...\n")
 			ref, chrSize := simpleGraph.Read(flag.Arg(0))
 			header := sam.ChromInfoMapSamHeader(chrSize)
-			header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL", strings.Join(os.Args, " ")))
+			header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL:%s", strings.Join(os.Args, " ")))
 			//user provides single end reads
 			if len(flag.Args()) == 2 {
 				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, header)
@@ -127,23 +127,23 @@ func main() {
 				simpleGraph.GSWsBatchPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, header)
 			}
 		}
-		if strings.Contains(*ggTools, "axt") {
-			if strings.HasSuffix(*tagAxt, ".axt") {
+		if *ggTools == true &&  strings.HasSuffix(*tagAxt, ".axt") {
+
 				if *outTag != "" {
 					axtFile := axt.Read(*tagAxt)
 					fa := fasta.Read(flag.Arg(0))
 					axt.AxtVcfToFile(*outTag, axtFile, fa)
 				}
-			}
 		}
-			if strings.HasSuffix(*vcfTag, ".vcf") {
+		if *ggTools == true && strings.HasSuffix(*vcfTag, ".vcf") {
+
 				vcfs := vcf.Read(*vcfTag)
 				if strings.HasSuffix(flag.Arg(0), ".fa") {
 					fa := fasta.Read(flag.Arg(0))
 					if *splitChr == true {
 						log.Printf("VCF to graph, split into chromosomes...\n")
 						ggChr := simpleGraph.SplitGraphChr(fa, vcfs)
-						if strings.Contains(*ggTools, "slurm") && strings.Contains(flag.Arg(1), ".fastq") {
+						if *slurmScript && strings.Contains(flag.Arg(1), ".fastq") {
 							var readOne string = filepath.Base(strings.TrimSuffix(flag.Arg(1), path.Ext(flag.Arg(1))))
 							gswCommand := fmt.Sprintf(" --wrap=\"./gsw --align --k 16 --t 8 --out %s_", readOne)
 							
@@ -187,23 +187,23 @@ func main() {
 			}
 		
 		if strings.HasSuffix(*view, ".sam") {
-			var yes, no, numReads int = 0, 0, 0
+			//var yes, no, numReads int = 0, 0, 0
 			log.SetFlags(log.Ldate | log.Ltime)
-			if strings.HasSuffix(flag.Arg(0), ".gg") {
+			if strings.HasSuffix(flag.Arg(0), ".gg") || strings.HasSuffix(flag.Arg(0), ".fa"){
 				gg, _ := simpleGraph.Read(flag.Arg(0))
 				samfile, _ := sam.Read(*view)
 				for _, samline := range samfile.Aln {
 					log.Printf("%s\n", simpleGraph.ViewGraphAlignment(samline, gg))
-					numReads++
-					if simpleGraph.CheckAlignment(samline) {
-						yes++
-					} else {
-						no++
-					}
+				//	numReads++
+				//	if simpleGraph.CheckAlignment(samline) {
+				//		yes++
+				//	} else {
+				//		no++
+				//	}
 				}
-				log.Printf("Total number of reads aligned: %d...", numReads)
-				log.Printf("Number of reads correctly aligned: %d...\n", yes)
-				log.Printf("Number of reads mismapped: %d...\n", no)
+				//log.Printf("Total number of reads aligned: %d...", numReads)
+				//log.Printf("Number of reads correctly aligned: %d...\n", yes)
+				//log.Printf("Number of reads mismapped: %d...\n", no)
 			}
 		}
 	}
@@ -212,10 +212,17 @@ func main() {
 func slurm() {
 	//set basic commands for now:
 	slurmJob := "sbatch"
-	args := []string{"--mem=32G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
-	commands := os.Args
+	args := []string{"--mem=32G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8"}
+	//, "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"
+	var gswCommand []string
 	var wrapPrompt string = "--wrap=\""
-	wrapPrompt += strings.Join(commands, " ") + "\""
+
+	for _, cmds := range os.Args {
+		if !strings.Contains(cmds, "slurm") {
+			gswCommand = append(gswCommand, cmds)
+		}
+	}
+	wrapPrompt += strings.Join(gswCommand, " ") + "\""
 	args = append(args, wrapPrompt)
 	echo := slurmJob + " " + strings.Join(args, " ")
 	log.Printf("\n\nSlurm job submission:\n\n%s\n\n", echo)
@@ -224,9 +231,9 @@ func slurm() {
 	cmd.Stdout = cmdOutput
 	err := cmd.Run()
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString(err.Error()+"\n")
 	}
-	fmt.Print(string(cmdOutput.Bytes()))
+	fmt.Print(string(cmdOutput.Bytes())+"\n")
 }
 
 func kentUtils(command []string) {
@@ -248,9 +255,8 @@ func kentUtils(command []string) {
 		cmd.Stdout = cmdOutput
 		err := cmd.Run()
 		if err != nil {
-			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString(err.Error()+"\n")
 		}
-		fmt.Print(string(cmdOutput.Bytes()))
+		fmt.Print(string(cmdOutput.Bytes())+"\n")
 	}
 }
-
