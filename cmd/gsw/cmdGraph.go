@@ -108,6 +108,7 @@ func main() {
 	} else {
 		if len(flag.Args()) == 0 {
 			flag.Usage()
+			errorMessage()
 		}
 	}
 	//log.Printf("Num of args=%d\n", len(flag.Args()))
