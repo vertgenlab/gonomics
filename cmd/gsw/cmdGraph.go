@@ -56,6 +56,7 @@ func needHelp(cmdName string) {
 			"\nTo create genome graph reference w/ vcf file:\n" +
 			"./gsw --ggTools --vcf SNPsIndels.vcf genome.fa\n\n" +
 			"usage:\t./gsw --ggTools [options] ref.[.gg/.fa]\n\n" +
+			"\t--vcf\tSNPsIndels.vcf --out ref.gg ref.fa\n\n"+
 			"\t--split\t--out genome_[chr1, chr2, chr3 ...].gg\n" +
 			"\t\tgraph reference split by chromosome\n\n" +
 			"\t--merge\t./gsw --ggTools merged.sam --merge chr1.sam chr2.sam chr3.sam...\n" +
@@ -109,12 +110,12 @@ func main() {
 		}
 	}
 	//log.Printf("Num of args=%d\n", len(flag.Args()))
-	if *slurmScript == true && *ggTools == true && *splitChr == false {
+	if *slurmScript && *ggTools == true && *splitChr == false {
 		slurm()
 	} else if *ggTools == true &&  *kent == true {
 		kentUtils(flag.Args())
 	} else {
-		if *alignFlag == true {
+		if *alignFlag {
 			log.Printf("Reading reference genome...\n")
 			ref, chrSize := simpleGraph.Read(flag.Arg(0))
 			header := sam.ChromInfoMapSamHeader(chrSize)
@@ -140,7 +141,7 @@ func main() {
 				vcfs := vcf.Read(*vcfTag)
 				if strings.HasSuffix(flag.Arg(0), ".fa") {
 					fa := fasta.Read(flag.Arg(0))
-					if *splitChr == true {
+					if *splitChr {
 						log.Printf("VCF to graph, split into chromosomes...\n")
 						ggChr := simpleGraph.SplitGraphChr(fa, vcfs)
 						if *slurmScript && strings.Contains(flag.Arg(1), ".fastq") {
@@ -153,11 +154,14 @@ func main() {
 							var echo string
 							for chr := range ggChr {
 								log.Printf("Writing graph %s to file...\n", chr)
-								simpleGraph.Write(chr+"_"+*outTag, ggChr[chr])
-								currCmd = gswCommand + fmt.Sprintf("to_%s_%s.sam %s %s\"", chr, *outTag, flag.Arg(0), flag.Arg(1))
+								splitRefName := fmt.Sprintf("%s_%s.gg", chr, *outTag)
+								simpleGraph.Write(splitRefName, ggChr[chr])
+
+								currCmd = gswCommand + fmt.Sprintf("to_%s_%s.sam %s %s", chr, *outTag, splitRefName, flag.Arg(1))
 								if len(flag.Args()) == 3 {
 									currCmd += fmt.Sprintf(" %s", flag.Arg(2))
 								}
+								currCmd += "\""
 								args := []string{"--mem=16G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
 								args = append(args, currCmd)
 								log.Printf("\n\nSlurm job submission:\n")
