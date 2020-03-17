@@ -27,13 +27,13 @@ func usage() {
 			"\t\tGraph-Smith-Waterman: align fastqs to genome graph\n" +
 			"\t\t./gsw --align --out align.sam ref.gg R1.fastq.gz R2.fastq.gz\n" +
 			"\t--ggTools\n" +
-			"\t\tcreate genome graph reference w/ vcf file\n" +
+			"\t\tCreate genome graph reference w/ vcf file\n" +
 			"\t\t./gsw --ggTools --vcf input.vcf --out ref.gg ref.fa\n" +
 			"\t--view\n" +
-			"\t\tvisualize alignment /dev/stdout\n" +
+			"\t\tVisualize alignment /dev/stdout\n" +
 			"\t\t./gsw --view alignToGraph.sam ref.gg\n" +
 			"\t--options\n" +
-			"\t\tneed more help? See advanced user options:\n" +
+			"\t\tNeed more help? See advanced user options:\n" +
 			"\t\t./gsw --options [align/ggTools/view]\n\n")
 }
 func needHelp(cmdName string) {
