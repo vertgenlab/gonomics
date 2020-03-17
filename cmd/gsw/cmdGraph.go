@@ -59,10 +59,10 @@ func needHelp(cmdName string) {
 			"\t--vcf\tSNPsIndels.vcf --out ref.gg ref.fa\n\n"+
 			"\t--split\t--out genome_[chr1, chr2, chr3 ...].gg\n" +
 			"\t\tgraph reference split by chromosome\n\n" +
-			"\t--merge\t./gsw --ggTools merged.sam --merge chr1.sam chr2.sam chr3.sam...\n" +
+			"\t--merge\t--out merge.sam chr1.sam chr2.sam chr3.sam ...\n" +
 			"\t\tmerge split by chromosome sam files into one\n" +
 			"\t\tfinds best alignment for each read\n\n" +
-			"\t--axt\t./gsw --ggTools --axt genomes.axt --out SNPsIndels.vcf ref.fa\n" +
+			"\t--axt\tgenomes.axt --out SNPsIndels.vcf ref.fa\n" +
 			"\t\tuse axt alignment to create VCF: small SNPs and indels\n\n" +
 			"\t--slurm\tbeta: submit GSW command as a slurm job\n" +
 			"\t\tdefault settings are: --mem=32G, --ntasks=1, --cpus-per-task=8\n\n"
@@ -96,7 +96,7 @@ func main() {
 	var chrPrefix *string = flag.String("name", "genomeGraph", "basename for .gg file, split by chromosome")
 
 	var ggTools *bool = flag.Bool("ggTools", false, "genome graph tools")
-	var mergeSam *string = flag.String("merge", "", "merge split sam files back into one")
+	var mergeSam *bool = flag.Bool("merge", false, "merge split sam files back into one")
 	var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
 	var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
 	flag.Usage = usage
@@ -136,8 +136,7 @@ func main() {
 					axt.AxtVcfToFile(*outTag, axtFile, fa)
 				}
 		}
-		if *ggTools == true && strings.HasSuffix(*vcfTag, ".vcf") {
-
+		if *ggTools && strings.HasSuffix(*vcfTag, ".vcf") {
 				vcfs := vcf.Read(*vcfTag)
 				if strings.HasSuffix(flag.Arg(0), ".fa") {
 					fa := fasta.Read(flag.Arg(0))
@@ -186,9 +185,10 @@ func main() {
 				} else {
 					log.Fatalf("Error: Apologies, your command line prompt was not recognized...\nPlease provide both a fasta reference and a VCF file...\n")
 				}
-			} else if strings.Compare(*mergeSam, "") != 0 {
-				sam.ReadFiles(flag.Args(), *mergeSam)
 			}
+		if *ggTools && *mergeSam {
+			sam.ReadFiles(flag.Args(), *outTag)
+		}
 		
 		if strings.HasSuffix(*view, ".sam") {
 			//var yes, no, numReads int = 0, 0, 0
