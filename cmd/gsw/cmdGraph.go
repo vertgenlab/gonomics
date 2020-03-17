@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"path"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
@@ -13,15 +12,16 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
+	"path"
 	"path/filepath"
+	"strings"
 )
 
 func usage() {
 	fmt.Print(
 		"\nGSW - genome graph toolkit" +
 			"\nusage:\n" +
-			"\tgsw [options] ref.fa/.gg R1.fastq.gz R2.fastq.gz\n" +
+			"\t./gsw [options] ref.fa/.gg\n" +
 			"options:\n" +
 			"\t--align\n" +
 			"\t\tGraph-Smith-Waterman: align fastqs to genome graph\n" +
@@ -56,7 +56,7 @@ func needHelp(cmdName string) {
 			"\nTo create genome graph reference w/ vcf file:\n" +
 			"./gsw --ggTools --vcf SNPsIndels.vcf genome.fa\n\n" +
 			"usage:\t./gsw --ggTools [options] ref.[.gg/.fa]\n\n" +
-			"\t--vcf\tSNPsIndels.vcf --out ref.gg ref.fa\n\n"+
+			"\t--vcf\tSNPsIndels.vcf --out ref.gg ref.fa\n\n" +
 			"\t--split\t--out genome_[chr1, chr2, chr3 ...].gg\n" +
 			"\t\tgraph reference split by chromosome\n\n" +
 			"\t--merge\t--out merge.sam chr1.sam chr2.sam chr3.sam ...\n" +
@@ -76,7 +76,8 @@ func needHelp(cmdName string) {
 		answer +=
 			"\t./gsw  --out SNPsIndels.vcf ref.fa\n\n"
 	} else {
-		log.Fatalf("Error: Apologies, your command line prompt was not recognized...")
+		errorMessage()
+		//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
 	}
 	fmt.Print(answer)
 }
@@ -110,9 +111,9 @@ func main() {
 		}
 	}
 	//log.Printf("Num of args=%d\n", len(flag.Args()))
-	if *slurmScript && *ggTools == true && *splitChr == false {
+	if *slurmScript && *ggTools && !*splitChr {
 		slurm()
-	} else if *ggTools == true &&  *kent == true {
+	} else if *ggTools && *kent {
 		kentUtils(flag.Args())
 	} else {
 		if *alignFlag {
@@ -128,89 +129,97 @@ func main() {
 				simpleGraph.GSWsBatchPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, header)
 			}
 		}
-		if *ggTools == true &&  strings.HasSuffix(*tagAxt, ".axt") {
+		if *ggTools && strings.HasSuffix(*tagAxt, ".axt") {
 
-				if *outTag != "" {
-					axtFile := axt.Read(*tagAxt)
-					fa := fasta.Read(flag.Arg(0))
-					axt.AxtVcfToFile(*outTag, axtFile, fa)
-				}
+			if *outTag != "" {
+				axtFile := axt.Read(*tagAxt)
+				fa := fasta.Read(flag.Arg(0))
+				axt.AxtVcfToFile(*outTag, axtFile, fa)
+			}
 		}
 		if *ggTools && strings.HasSuffix(*vcfTag, ".vcf") {
-				vcfs := vcf.Read(*vcfTag)
-				if strings.HasSuffix(flag.Arg(0), ".fa") {
-					fa := fasta.Read(flag.Arg(0))
-					if *splitChr {
-						log.Printf("VCF to graph, split into chromosomes...\n")
-						ggChr := simpleGraph.SplitGraphChr(fa, vcfs)
-						if *slurmScript && strings.Contains(flag.Arg(1), ".fastq") {
-							var readOne string = filepath.Base(strings.TrimSuffix(flag.Arg(1), path.Ext(flag.Arg(1))))
-							gswCommand := fmt.Sprintf(" --wrap=\"./gsw --align --k 16 --t 8 --out %s_", readOne)
-							
-							var currCmd string
+			vcfs := vcf.Read(*vcfTag)
+			if strings.HasSuffix(flag.Arg(0), ".fa") {
+				fa := fasta.Read(flag.Arg(0))
+				if *splitChr {
+					log.Printf("VCF to graph, split into chromosomes...\n")
+					ggChr := simpleGraph.SplitGraphChr(fa, vcfs)
+					if *slurmScript && strings.Contains(flag.Arg(1), ".fastq") {
+						var readOne string = filepath.Base(strings.TrimSuffix(flag.Arg(1), path.Ext(flag.Arg(1))))
+						gswCommand := fmt.Sprintf(" --wrap=\"./gsw --align --k 16 --t 8 --out %s_", readOne)
 
-							//args = append(args, wrapPrompt)
-							var echo string
-							for chr := range ggChr {
-								log.Printf("Writing graph %s to file...\n", chr)
-								splitRefName := fmt.Sprintf("%s_%s.gg", chr, *outTag)
-								simpleGraph.Write(splitRefName, ggChr[chr])
+						var currCmd string
 
-								currCmd = gswCommand + fmt.Sprintf("to_%s_%s.sam %s %s", chr, *outTag, splitRefName, flag.Arg(1))
-								if len(flag.Args()) == 3 {
-									currCmd += fmt.Sprintf(" %s", flag.Arg(2))
-								}
-								currCmd += "\""
-								args := []string{"--mem=16G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
-								args = append(args, currCmd)
-								log.Printf("\n\nSlurm job submission:\n")
-								echo = "sbatch " + strings.Join(args, " ")
-								log.Printf("\n\n%s\n\n", echo)
-								cmd := exec.Command("sbatch", args...)
-								cmdOutput := &bytes.Buffer{}
-								cmd.Stdout = cmdOutput
-								err := cmd.Run()
-								if err != nil {
-									os.Stderr.WriteString(err.Error())
-								}
-								fmt.Print(string(cmdOutput.Bytes()))
+						//args = append(args, wrapPrompt)
+						var echo string
+						for chr := range ggChr {
+							log.Printf("Writing graph %s to file...\n", chr)
+							splitRefName := fmt.Sprintf("%s_%s.gg", chr, *outTag)
+							simpleGraph.Write(splitRefName, ggChr[chr])
+
+							currCmd = gswCommand + fmt.Sprintf("to_%s_%s.sam %s %s", chr, *outTag, splitRefName, flag.Arg(1))
+							if len(flag.Args()) == 3 {
+								currCmd += fmt.Sprintf(" %s", flag.Arg(2))
 							}
-						} else {
-							simpleGraph.WriteToGraphSplit(*chrPrefix, ggChr)
+							currCmd += "\""
+							args := []string{"--mem=16G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
+							args = append(args, currCmd)
+							log.Printf("\n\nSlurm job submission:\n")
+							echo = "sbatch " + strings.Join(args, " ")
+							log.Printf("\n\n%s\n\n", echo)
+							cmd := exec.Command("sbatch", args...)
+							cmdOutput := &bytes.Buffer{}
+							cmd.Stdout = cmdOutput
+							err := cmd.Run()
+							if err != nil {
+								os.Stderr.WriteString(err.Error())
+							}
+							fmt.Print(string(cmdOutput.Bytes()))
 						}
 					} else {
-						gg := simpleGraph.VariantGraph(fa, vcfs)
-						simpleGraph.Write(*outTag, gg)
+						simpleGraph.WriteToGraphSplit(*chrPrefix, ggChr)
 					}
 				} else {
-					log.Fatalf("Error: Apologies, your command line prompt was not recognized...\nPlease provide both a fasta reference and a VCF file...\n")
+					gg := simpleGraph.VariantGraph(fa, vcfs)
+					simpleGraph.Write(*outTag, gg)
 				}
+			} else {
+				errorMessage()
+				//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
 			}
+		}
 		if *ggTools && *mergeSam {
 			sam.ReadFiles(flag.Args(), *outTag)
 		}
-		
 		if strings.HasSuffix(*view, ".sam") {
 			//var yes, no, numReads int = 0, 0, 0
 			log.SetFlags(log.Ldate | log.Ltime)
-			if strings.HasSuffix(flag.Arg(0), ".gg") || strings.HasSuffix(flag.Arg(0), ".fa"){
+			if strings.HasSuffix(flag.Arg(0), ".gg") || strings.HasSuffix(flag.Arg(0), ".fa") {
 				gg, _ := simpleGraph.Read(flag.Arg(0))
 				samfile, _ := sam.Read(*view)
 				for _, samline := range samfile.Aln {
 					log.Printf("%s\n", simpleGraph.ViewGraphAlignment(samline, gg))
-				//	numReads++
-				//	if simpleGraph.CheckAlignment(samline) {
-				//		yes++
-				//	} else {
-				//		no++
-				//	}
+					//	numReads++
+					//	if simpleGraph.CheckAlignment(samline) {
+					//		yes++
+					//	} else {
+					//		no++
+					//	}
 				}
 				//log.Printf("Total number of reads aligned: %d...", numReads)
 				//log.Printf("Number of reads correctly aligned: %d...\n", yes)
 				//log.Printf("Number of reads mismapped: %d...\n", no)
 			}
+		} else {
+			//errorMessage()
+			//log.Fatalf("Error: Apologies, your command line prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
 		}
 	}
+}
+
+func errorMessage() {
+	log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
+	//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n\t\t\t\t\t\t\t\t\t-xoxo GG")
 }
 
 func slurm() {
@@ -235,13 +244,13 @@ func slurm() {
 	cmd.Stdout = cmdOutput
 	err := cmd.Run()
 	if err != nil {
-		os.Stderr.WriteString(err.Error()+"\n")
+		os.Stderr.WriteString(err.Error() + "\n")
 	}
-	fmt.Print(string(cmdOutput.Bytes())+"\n")
+	fmt.Print(string(cmdOutput.Bytes()) + "\n")
 }
 
 func kentUtils(command []string) {
-	dir := "/Users/bulbasaur/kentUtils/"
+	dir := "/Users/edotau/kentUtils/"
 	if len(command) == 0 {
 		cmd := exec.Command("ls", dir)
 		cmdOutput := &bytes.Buffer{}
@@ -259,8 +268,8 @@ func kentUtils(command []string) {
 		cmd.Stdout = cmdOutput
 		err := cmd.Run()
 		if err != nil {
-			os.Stderr.WriteString(err.Error()+"\n")
+			os.Stderr.WriteString(err.Error() + "\n")
 		}
-		fmt.Print(string(cmdOutput.Bytes())+"\n")
+		fmt.Print(string(cmdOutput.Bytes()) + "\n")
 	}
 }
