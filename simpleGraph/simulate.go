@@ -13,31 +13,27 @@ import (
 	//"os"
 	"fmt"
 	"sort"
-	"strings"
+	//"strings"
 )
 
-func checkAlignment(aln *sam.SamAln) bool {
+func CheckAlignment(aln *sam.SamAln) bool {
 	var answer bool = false
-	words := strings.Split(aln.QName, "_")
-	var ref int64
-	//var query int64
-	var blastScore int64
-	alignedPos := common.StringToInt64(words[1])
-	if alignedPos <= ref-10 || (alignedPos > ref+100) {
-		words = strings.Split(aln.Extra, "\t")
-		blastScore = common.StringToInt64(words[0][5:])
-		if blastScore > 5000 {
-			answer = true
-		}
-		//log.Printf("\t%s\t%s\t%d\t%s\t%s\n", cigar.ToString(aln.Cigar), aln.QName, aln.Pos, aln.RName, aln.Extra)
-	}
+	//qName := strings.Split(aln.QName, "_")
+	//rName := strings.Split(aln.RName, "_")
+	alignedPos := getStartRead(aln)
+	if alignedPos == aln.Pos {
+		return true
+	} //else {
+	//log.Fatalf("Incorrect Alignment:\n%s\n%s\n", ViewGraphAignment(aln, genome), sam.SamAlnToString(aln))
+
+	//}
 	return answer
 }
 
-func CheckAnswers(query []*sam.SamAln) {
+func CheckAnswers(query []*sam.SamAln, genome *SimpleGraph) {
 	var yes, no int64 = 0, 0
 	for i := 0; i < len(query); i++ {
-		if checkAlignment(query[i]) {
+		if CheckAlignment(query[i]) {
 			yes++
 			//log.Printf(sam.SamAlnToString(query[i]))
 		} else {
