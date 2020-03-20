@@ -2,11 +2,11 @@ package dnaTwoBit
 
 import (
 	"github.com/vertgenlab/gonomics/common"
-	"log"
+	//"log"
 	"math/bits"
 )
 
-func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint64, startTwo int, lenTwo int) int {
+func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int {
 
 	const bitsPerBase int = 2
 	const bitsPerInt int = 64
@@ -15,41 +15,40 @@ func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint6
 
 	var i, j int
 	var seqDiff uint64 = 0
-	var bitMatches, matches int = 0, 0
+	var bitMatches, totalMatches int = 0, 0
 
 	var offsetOne int = (startOne % basesPerInt) * bitsPerBase
-	var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
+	/*var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
 
 	if offsetOne != offsetTwo {
 		log.Fatalf("Error: Different offsets when comparing sequences\n")
-	}
+	}*/
 
 	i = startOne / basesPerInt
 	j = startTwo / basesPerInt
-	iEnd := (lenOne + basesPerInt - 1) / basesPerInt
-	jEnd := (lenTwo + basesPerInt - 1) / basesPerInt
+	iEnd := (one.Len + basesPerInt - 1) / basesPerInt
+	jEnd := (two.Len + basesPerInt - 1) / basesPerInt
 
-	seqDiff = seqOne[i] ^ seqTwo[j]
+	seqDiff = one.Seq[i] ^ two.Seq[j]
 	seqDiff = seqDiff & (ones >> uint(offsetOne))
 
 	bitMatches = bits.LeadingZeros64(seqDiff)
-	matches = (bitMatches - offsetOne) / bitsPerBase
+	totalMatches = bitMatches - offsetOne
 
 	for i, j = i+1, j+1; i < iEnd && j < jEnd && bitMatches == bitsPerInt; i, j = i+1, j+1 {
-		seqDiff = seqOne[i] ^ seqTwo[j]
+		seqDiff = one.Seq[i] ^ two.Seq[j]
 		bitMatches = bits.LeadingZeros64(seqDiff)
-		matches += bitMatches / bitsPerBase
+		totalMatches += bitMatches
 	}
 
 	// TODO: I am not sure what to do here.  The "padding" on the end of the sequence
 	// when it does not fit nicely into 64 bits, is assumed to be different, so that
 	// it will not match.  We could use the commented out Min() function instead
-	return common.Min(common.Min(matches, lenOne-startOne), lenTwo-startTwo)
+	return common.Min(common.Min(totalMatches/bitsPerBase, one.Len-startOne), two.Len-startTwo)
 	//return matches
 }
 
-func countLeftMatches(seqOne []uint64, startOne int, seqTwo []uint64, startTwo int) int {
-
+func CountLeftMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int {
 	const bitsPerBase int = 2
 	const bitsPerInt int = 64
 	const basesPerInt int = bitsPerInt / bitsPerBase
@@ -57,30 +56,30 @@ func countLeftMatches(seqOne []uint64, startOne int, seqTwo []uint64, startTwo i
 
 	var i, j int
 	var seqDiff uint64 = 0
-	var bitMatches, matches int = 0, 0
+	var bitMatches, totalMatches int = 0, 0
 
 	var offsetOne int = (startOne % basesPerInt) * bitsPerBase
-	var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
+	/*var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
 
 	if offsetOne != offsetTwo {
 		log.Fatalf("Different offsets when comparing sequences\n")
-	}
+	}*/
+	var firstBitsNoLook int = bitsPerInt - offsetOne - bitsPerBase
 
 	i = startOne / basesPerInt
 	j = startTwo / basesPerInt
 
-	seqDiff = seqOne[i] ^ seqTwo[j]
-	seqDiff = seqDiff & (ones << uint(bitsPerInt-offsetOne-bitsPerBase))
+	seqDiff = one.Seq[i] ^ two.Seq[j]
+	seqDiff = seqDiff & (ones << uint(firstBitsNoLook))
 
 	bitMatches = bits.TrailingZeros64(seqDiff)
-	matches = (bitMatches - (bitsPerInt - offsetOne - bitsPerBase)) / bitsPerBase
+	totalMatches = bitMatches - (firstBitsNoLook)
 
 	for i, j = i-1, j-1; i >= 0 && j >= 0 && bitMatches == bitsPerInt; i, j = i-1, j-1 {
-		seqDiff = seqOne[i] ^ seqTwo[j]
+		seqDiff = one.Seq[i] ^ two.Seq[j]
 		bitMatches = bits.TrailingZeros64(seqDiff)
-		matches += bitMatches / bitsPerBase
+		totalMatches += bitMatches
 	}
 
-	return matches
+	return totalMatches / bitsPerBase
 }
-

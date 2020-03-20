@@ -86,11 +86,11 @@ func TestCounting(t *testing.T) {
 	var matches int
 	seedTests := append(seedTestsShort, seedTestsLong...)
 	for _, data := range seedTests {
-		matches = countLeftMatches(data.SmallA.Seq, data.StartA, data.SmallB.Seq, data.StartB)
+		matches = CountLeftMatches(data.SmallA, data.StartA, data.SmallB, data.StartB)
 		if matches != data.TrueMatchesLeft {
 			t.Errorf("Error: found %d left matches, but was expecting %d\n", matches, data.TrueMatchesLeft)
 		}
-		matches = countRightMatches(data.SmallA.Seq, data.StartA, data.SmallA.Len, data.SmallB.Seq, data.StartB, data.SmallB.Len)
+		matches = CountRightMatches(data.SmallA, data.StartA, data.SmallB, data.StartB)
 		if matches != data.TrueMatchesRight {
 			t.Errorf("Error: found %d right matches, but was expecting %d\n", matches, data.TrueMatchesRight)
 		}
@@ -154,7 +154,7 @@ func BenchmarkNewShortLeft(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for _, data := range seedTestsShort {
-			matches = countLeftMatches(data.SmallA.Seq, data.StartA, data.SmallB.Seq, data.StartB)
+			matches = CountLeftMatches(data.SmallA, data.StartA, data.SmallB, data.StartB)
 			if matches != data.TrueMatchesLeft {
 				b.Errorf("Error: wrong number of matches.\n")
 			}
@@ -167,7 +167,7 @@ func BenchmarkNewLongLeft(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for _, data := range seedTestsLong {
-			matches = countLeftMatches(data.SmallA.Seq, data.StartA, data.SmallB.Seq, data.StartB)
+			matches = CountLeftMatches(data.SmallA, data.StartA, data.SmallB, data.StartB)
 			if matches != data.TrueMatchesLeft {
 				b.Errorf("Error: wrong number of matches.\n")
 			}
@@ -180,7 +180,7 @@ func BenchmarkNewShortRight(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for _, data := range seedTestsShort {
-			matches = countRightMatches(data.SmallA.Seq, data.StartA, data.SmallA.Len, data.SmallB.Seq, data.StartB, data.SmallB.Len)
+			matches = CountRightMatches(data.SmallA, data.StartA, data.SmallB, data.StartB)
 			if matches != data.TrueMatchesRight {
 				b.Errorf("Error: wrong number of matches\n")
 			}
@@ -193,7 +193,7 @@ func BenchmarkNewLongRight(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		for _, data := range seedTestsLong {
-			matches = countRightMatches(data.SmallA.Seq, data.StartA, data.SmallA.Len, data.SmallB.Seq, data.StartB, data.SmallB.Len)
+			matches = CountRightMatches(data.SmallA, data.StartA, data.SmallB, data.StartB)
 			if matches != data.TrueMatchesRight {
 				b.Errorf("Error: wrong number of matches\n")
 			}
