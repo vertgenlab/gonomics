@@ -2,7 +2,7 @@ package simpleGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/align"
+	//"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -23,15 +23,15 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	extension := int(perfectScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
-	//var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
-	var seeds []*SeedDev = lookingForSeeds(seedHash, read, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
-	//seeds = GraphDictionary(seeds, gg, read)
+	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
+	//var seeds []*SeedDev = lookingForSeeds(seedHash, read, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
+	seeds = GraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
-	//var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
-	var revCompSeeds []*SeedDev = lookingForSeeds(seedHash, revCompRead, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
-	//revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
+	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
+	//var revCompSeeds []*SeedDev = lookingForSeeds(seedHash, revCompRead, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
+	revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
 
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedExtended(seeds)
@@ -71,11 +71,11 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath), gg)
 			if gg.Nodes[bestPath[0]].Info != nil {
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
-				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start)
+				currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
 			}
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
-			
+
 		}
 	}
 	if bestScore < 1200 {
@@ -85,6 +85,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	return &currBest
 }
 
+/*
 func devGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune, scoreMatrix [][]int64) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, 0, len(read.Seq)), Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
@@ -157,7 +158,7 @@ func devGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint
 
 	return &currBest
 
-}
+}*/
 
 var HumanChimpTwoScoreMatrix = [][]int64{
 	{90, -330, -236, -356, -208},

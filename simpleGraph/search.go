@@ -4,7 +4,6 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	//"fmt"
 )
@@ -160,6 +159,8 @@ func getSeqTraversal(curr *Node, seq []dna.Base, start int, extension int) [][]d
 	}
 }
 
+/*
+TODO: I don't think we can promise the best alignment is going to be from the best perfect match extension
 func lookingForSeeds(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, scoreMatrix [][]int64, gg *SimpleGraph) []*SeedDev {
 	var codedSeq uint64 = 0
 	var hits []*SeedDev = make([]*SeedDev, 0)
@@ -181,7 +182,7 @@ func lookingForSeeds(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen 
 	}
 	//log.Printf("Total of %d hits.\n", len(hits))
 	return hits
-}
+}*/
 
 /*
 func devIndexGraph(genome *SimpleGraph, seedLen int, seedStep int) map[uint64][]*SeedBed {

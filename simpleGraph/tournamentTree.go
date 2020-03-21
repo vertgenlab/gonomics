@@ -1,11 +1,11 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	//"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dnaTwoBit"
-	"github.com/vertgenlab/gonomics/fastq"
-	//"log"
+//"github.com/vertgenlab/gonomics/common"
+//"github.com/vertgenlab/gonomics/dna"
+//"github.com/vertgenlab/gonomics/dnaTwoBit"
+//"github.com/vertgenlab/gonomics/fastq"
+//"log"
 )
 
 /*func seedBedToSeedDev(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
@@ -84,7 +84,7 @@ import (
 	//printSeedDev(merged)
 	return noMerge, merged
 }*/
-
+/*
 func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, memoryPool **SeedDev) *SeedDev {
 	var hits *SeedDev
 	var currHits []uint64
@@ -171,8 +171,9 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 
 	*memoryPool = poolHead
 	return hits
-}
+}*/
 
+/*
 func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64) []*SeedDev {
 	var hits []*SeedDev = make([]*SeedDev, 0)
 	var currHits []uint64
@@ -231,7 +232,7 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 		}
 	}
 	return hits[0:(badIdx + 1)]
-}
+}*/
 
 /*func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0

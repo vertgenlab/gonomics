@@ -29,30 +29,15 @@ var readWriteTests = []struct {
 	//{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA, nil, nil}, {1, "seqOneB", seqOneB, nil, nil}, {2, "seqOneC", seqOneC, nil, nil}}},
 }
 
-func TestFaFormat(t *testing.T) {
-
-	var tileSize int = 32
-	var numberOfReads int = 100
-	var readLength int = 150
-	var mutations int = 0
-	var numWorkers int = 8
-	log.Printf("Reading in the genome (simple graph)...\n")
-	genome, chrSize := Read("testdata/gasAcu1.fa")
-	simReads := RandomPairedReads(genome.Nodes, readLength, numberOfReads, mutations)
-	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
-	header := sam.ChromInfoMapSamHeader(chrSize)
-	GswAlignFaFormat(genome, "testdata/simReads_R1.fq", "testdata/simReads_R2.fq", "testdata/format.sam", numWorkers, tileSize, header)
-}
-
 func TestWorkerWithWriting(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 10000
+	var numberOfReads int = 10
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 8
-	genome, chrSize := Read("testdata/gasAcu1.fa")
+	var numWorkers int = 4
+	genome, _ := Read("testdata/gasAcu1.fa")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	//genome := Read("testdata/rabs_chr8.gg")
 	//fa, _ := Read("testdata/chrI.fa")
@@ -69,7 +54,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	fastq.Write("testdata/simReads.fq", simReads)
 	//genome, chrSize := Read("testdata/rabsBepaChrI.gg")
 
-	header := sam.ChromInfoMapSamHeader(chrSize)
+	//header := sam.ChromInfoMapSamHeader(chrSize)
 
 	//log.Printf("%v\n", header)
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -83,9 +68,9 @@ func TestWorkerWithWriting(t *testing.T) {
 		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
 	}
 	writerWaiter.Add(1)
-	//go SamChanView(samPipe, genome, &writerWaiter)
+	go SamChanView(samPipe, genome, &writerWaiter)
 	///dev/stdout
-	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
+	//go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -362,6 +347,22 @@ func BenchmarkGoRoutinesSlice(b *testing.B) {
 		}
 	}
 }
+
+/*
+func TestFaFormat(t *testing.T) {
+
+	var tileSize int = 32
+	var numberOfReads int = 100
+	var readLength int = 150
+	var mutations int = 0
+	var numWorkers int = 8
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome, chrSize := Read("testdata/gasAcu1.fa")
+	simReads := RandomPairedReads(genome.Nodes, readLength, numberOfReads, mutations)
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	header := sam.ChromInfoMapSamHeader(chrSize)
+	GswAlignFaFormat(genome, "testdata/simReads_R1.fq", "testdata/simReads_R2.fq", "testdata/format.sam", numWorkers, tileSize, header)
+}*/
 
 /*
 func TestNewSeed(t *testing.T) {

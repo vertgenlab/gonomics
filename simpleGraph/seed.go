@@ -1,7 +1,6 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
@@ -326,6 +325,7 @@ func isSeedBetter(hits []*SeedDev, index int, read *fastq.Fastq, scoreMatrix [][
 	}
 }
 
+/*
 func SeedOverLap(a *SeedDev, b *SeedDev) bool {
 	if a == nil || b == nil {
 		return false
@@ -341,7 +341,7 @@ func SeedOverLap(a *SeedDev, b *SeedDev) bool {
 		}
 	}
 	return false
-}
+}*/
 func FindTotalLengthSeed(seed *SeedDev, length uint32) uint32 {
 	if seed.Next != nil {
 		length += seed.Next.Length

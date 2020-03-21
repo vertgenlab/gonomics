@@ -78,7 +78,7 @@ func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.Wait
 		//log.Printf("path=%v\n", SamToPath(alignedRead))
 
 		log.Printf("%s\n", ViewGraphAlignment(alignedRead, gg))
-		if CheckAlignment(alignedRead) {
+		if CheckAlignment(alignedRead, gg) {
 			yes++
 		} else {
 			no++
@@ -100,13 +100,18 @@ func UnMappedRead(length int) []dna.Base {
 }
 
 func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
-	if SamToPath(samLine) == nil {
+	samPath := SamToPath(samLine)
+	if samPath == nil {
 		return fmt.Sprintf("Unmapped Alignment:\n%s\n", ModifySamToString(samLine, false, false, true, false, true, false, false, false, false, false, true))
 	} else {
 
 		var seqOne, seqTwo bytes.Buffer
 		var operations []*cigar.Cigar = samLine.Cigar
 		var i int64 = samLine.Pos - 1
+
+		if genome.Nodes[samPath[0]].Info != nil {
+			i = i - int64(genome.Nodes[samPath[0]].Info.Start) - 1
+		}
 		var j int64 = getStartRead(samLine)
 		//var k int64
 		var count int64

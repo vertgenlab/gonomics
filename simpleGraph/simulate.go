@@ -1,6 +1,7 @@
 package simpleGraph
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -10,18 +11,18 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	//"os"
-	"fmt"
 	"sort"
-	//"strings"
+	"strings"
 )
 
-func CheckAlignment(aln *sam.SamAln) bool {
+func CheckAlignment(aln *sam.SamAln, genome *SimpleGraph) bool {
 	var answer bool = false
-	//qName := strings.Split(aln.QName, "_")
-	//rName := strings.Split(aln.RName, "_")
-	alignedPos := getStartRead(aln)
-	if alignedPos == aln.Pos {
+	samPath := SamToPath(aln)
+	if samPath == nil {
+		return false
+	}
+	qName := strings.Split(aln.QName, "_")
+	if strings.Compare(genome.Nodes[common.StringToUint32(qName[0])].Name, aln.RName) == 0 && aln.Pos == common.StringToInt64(qName[1]) {
 		return true
 	} //else {
 	//log.Fatalf("Incorrect Alignment:\n%s\n%s\n", ViewGraphAignment(aln, genome), sam.SamAlnToString(aln))
@@ -33,7 +34,7 @@ func CheckAlignment(aln *sam.SamAln) bool {
 func CheckAnswers(query []*sam.SamAln, genome *SimpleGraph) {
 	var yes, no int64 = 0, 0
 	for i := 0; i < len(query); i++ {
-		if CheckAlignment(query[i]) {
+		if CheckAlignment(query[i], genome) {
 			yes++
 			//log.Printf(sam.SamAlnToString(query[i]))
 		} else {
