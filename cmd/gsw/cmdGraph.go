@@ -222,7 +222,7 @@ func errorMessage() {
 	log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 	//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n\t\t\t\t\t\t\t\t\t-xoxo GG")
 }
-
+//TODO: Will remove to a personal script
 func slurm() {
 	//set basic commands for now:
 	slurmJob := "sbatch"
@@ -249,7 +249,7 @@ func slurm() {
 	}
 	fmt.Print(string(cmdOutput.Bytes()) + "\n")
 }
-
+//TODO: Will remove to a personal script
 func kentUtils(command []string) {
 	dir := "/Users/edotau/kentUtils/"
 	if len(command) == 0 {
