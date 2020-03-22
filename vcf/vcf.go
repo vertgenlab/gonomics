@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"io"
+	"bufio"
 )
 
 //slices of slice
@@ -37,8 +39,8 @@ type VcfHeader struct {
 func processVcfLine(line string) *Vcf {
 
 	data := Vcf{Chr: "", Pos: 0, Id: "", Ref: "", Alt: "", Qual: 0, Filter: "", Info: "", Format: "", Notes: ""}
-	text := strings.Split(line, "\t")
-	if len(text) < 9 {
+	text := strings.SplitN(line, "\t", 9)
+	if len(text) < 8 {
 		log.Fatal(fmt.Errorf("Was expecting atleast 8 columns per line, but this line did not:%s\n", line))
 	}
 	data.Pos = common.StringToInt64(text[1])
@@ -65,7 +67,7 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	}
 	return processVcfLine(line), false
 }
-
+/*
 func Read(filename string) []*Vcf {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -76,6 +78,42 @@ func Read(filename string) []*Vcf {
 	ReadHeader(file)
 	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		answer = append(answer, processVcfLine(line))
+	}
+	return answer
+}*/
+func Read(filename string) []*Vcf {
+	var answer []*Vcf
+	var curr *Vcf
+	var line string
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil
+	}
+	reader := bufio.NewReader(file)
+	if err != nil {
+		return nil
+	}
+	var err2 error
+	//var rline []byte
+	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
+		//line = string(rline[:])
+		data := strings.Split(line, "\t")
+		//fmt.Println("there is data here")
+		switch {
+		case strings.HasPrefix(line, "#"):
+			//don't do anything
+		case len(data) == 1:
+			//these lines are sequences, and we are not recording them
+			//fmt.Println("found sequences")
+		case len(line) == 0:
+			//blank line
+
+		case len(data) == 10:
+			curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Qual: common.StringToFloat64(data[5]), Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
+			answer = append(answer, curr)
+		default:
+			//fmt.Println("unexpected line")
+		}
 	}
 	return answer
 }
@@ -131,11 +169,11 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteHeader(file *os.File, header *VcfHeader) {
+func WriteHeader(file *os.File) {
 	var err error
-	//header := MakeHeader()
-	for h := 0; h < len(header.Text); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
+	header := MakeHeader()
+	for h := 0; h < len(header); h++ {
+		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	common.ExitIfError(err)
 }
@@ -165,6 +203,7 @@ func WriteVcf(file *os.File, input *Vcf) {
 func Write(filename string, data []*Vcf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
+	WriteHeader(file)
 	WriteVcfToFileHandle(file, data)
 }
 

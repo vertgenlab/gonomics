@@ -1,6 +1,7 @@
 package simpleGraph
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -10,34 +11,30 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	//"os"
-	"fmt"
 	"sort"
 	"strings"
 )
 
-func checkAlignment(aln *sam.SamAln) bool {
+func CheckAlignment(aln *sam.SamAln, genome *SimpleGraph) bool {
 	var answer bool = false
-	words := strings.Split(aln.QName, "_")
-	var ref int64
-	//var query int64
-	var blastScore int64
-	alignedPos := common.StringToInt64(words[1])
-	if alignedPos <= ref-10 || (alignedPos > ref+100) {
-		words = strings.Split(aln.Extra, "\t")
-		blastScore = common.StringToInt64(words[0][5:])
-		if blastScore > 5000 {
-			answer = true
-		}
-		//log.Printf("\t%s\t%s\t%d\t%s\t%s\n", cigar.ToString(aln.Cigar), aln.QName, aln.Pos, aln.RName, aln.Extra)
+	samPath := SamToPath(aln)
+	if samPath == nil {
+		return false
 	}
+	qName := strings.Split(aln.QName, "_")
+	if strings.Compare(genome.Nodes[common.StringToUint32(qName[0])].Name, aln.RName) == 0 && aln.Pos == common.StringToInt64(qName[1]) {
+		return true
+	} //else {
+	//log.Fatalf("Incorrect Alignment:\n%s\n%s\n", ViewGraphAignment(aln, genome), sam.SamAlnToString(aln))
+
+	//}
 	return answer
 }
 
-func CheckAnswers(query []*sam.SamAln) {
+func CheckAnswers(query []*sam.SamAln, genome *SimpleGraph) {
 	var yes, no int64 = 0, 0
 	for i := 0; i < len(query); i++ {
-		if checkAlignment(query[i]) {
+		if CheckAlignment(query[i], genome) {
 			yes++
 			//log.Printf(sam.SamAlnToString(query[i]))
 		} else {

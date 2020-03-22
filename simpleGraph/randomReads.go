@@ -10,6 +10,46 @@ import (
 	"math/rand"
 )
 
+func RandomPairedReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
+	var answer []*fastq.PairedEnd = make([]*fastq.PairedEnd, numReads)
+	var start, start2 int
+	var fragLen int
+	var chromIdx int
+	var strand bool
+	for i := 0; i < numReads; {
+		chromIdx = randIntInRange(0, len(genome))
+		fragLen = randIntInRange(300, 500)
+		start = randIntInRange(0, len(genome[chromIdx].Seq)-fragLen)
+		start2 = start + fragLen - readLength
+		strand = randIntInRange(0, 2) == 0
+		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
+			curr := fastq.PairedEnd{Fwd: &fastq.Fastq{}, Rev: &fastq.Fastq{}}
+
+			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%c_%d_R: 1", genome[chromIdx].Id, start+1, start+1+readLength, common.StrandToRune(strand), fragLen)
+			curr.Fwd.Seq = make([]dna.Base, readLength)
+			copy(curr.Fwd.Seq, genome[chromIdx].Seq[start:start+readLength])
+			curr.Fwd.Qual = generateDiverseFakeQual(readLength)
+
+			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%c_%d_R: 2", genome[chromIdx].Id, start2+1, fragLen+start+1, common.StrandToRune(strand), fragLen)
+			curr.Rev.Seq = make([]dna.Base, readLength)
+			copy(curr.Rev.Seq, genome[chromIdx].Seq[start2:start2+readLength])
+			curr.Rev.Qual = generateDiverseFakeQual(readLength)
+
+			if !strand {
+				fastq.ReverseComplement(curr.Fwd)
+			} else {
+				fastq.ReverseComplement(curr.Rev)
+			}
+
+			mutate(curr.Fwd.Seq, numChanges)
+			mutate(curr.Rev.Seq, numChanges)
+			answer[i] = &curr
+			i++
+		}
+	}
+	return answer
+}
+
 func PairedEndRandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
 	simReads := RandomReads(genome, readLength, numReads, numChanges)
 	log.Printf("length of single generated reads: %d\n", len(simReads))
