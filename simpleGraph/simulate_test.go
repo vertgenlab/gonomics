@@ -39,14 +39,14 @@ func TestSamToVcf(t *testing.T) {
 func TestAlignPairedEnd(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 10000
+	var numberOfReads int = 4
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 8
+	var numWorkers int = 2
 
 	log.Printf("Reading in the genome (Simple Graph)...\n")
-	fa, _ := Read("testdata/gasAcu1.fa")
+	fa, _ := Read("testdata/bigGenome.sg")
 	log.Printf("Simulating reads...\n")
 
 	simReads := RandomPairedReads(fa.Nodes, readLength, numberOfReads, mutations)
@@ -54,7 +54,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.PairedEnd, 824)
-	genome, chrSize := Read("testdata/gasAcu1.fa")
+	genome, chrSize := Read("testdata/bigGenome.sg")
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
@@ -84,28 +84,29 @@ func TestAlignPairedEnd(t *testing.T) {
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
 }
 
-func TestVcfToGraph(t *testing.T) {
+/*func TestVcfToGraph(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 20000
+	var numberOfReads int = 20
 	var readLength int = 150
 	//var mutations int = 0
 
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	log.Printf("Reading in the genome (fasta)...\n")
-	ref := fasta.Read("testdata/gasAcu1.fa")
+	ref := fasta.Read("testdata/bigGenome.sg")
 	fasta.AllToUpper(ref)
 	//log.Printf("Simulating vcf...\n")
 	//vcfFile := SimulateVcfGenomeWide(ref, mutations)
 	//vcf.Sort(vcfFile)
 	//vcf.PrintVcf(vcfFile)
 	//log.Printf("Vcf to genome graph...\n")
+	//TODO: file not in testdata
 	genome, _ := Read("testdata/gasAcu1-4_snpIndels.gg")
 	//VariantGraph(ref, vcfFile)
 	//Write("testdata/vcfGraph.gg", genome)
 	log.Printf("Simulating reads...\n")
-	fa, _ := Read("testdata/gasAcu1.fa")
+	fa, _ := Read("testdata/bigGenome.sg")
 
 	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, 0)
 
@@ -147,4 +148,5 @@ func TestVcfToGraph(t *testing.T) {
 	//}
 	CheckAnswers(aln.Aln, genome)
 
-}
+}*/
+
