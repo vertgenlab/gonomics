@@ -3,6 +3,7 @@ package graph
 import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"testing"
 )
@@ -21,7 +22,10 @@ func TestRead(t *testing.T) {
 
 func TestAxtToGraph(t *testing.T) {
 	axtAlign := axt.Read("testdata/test.axt")
-	vcfAxt := axt.CallSnpsToVcf(axtAlign)
+	vcfAxt := make([]*vcf.Vcf, 0)
+	for i := 0; i < len(axtAlign); i++ {
+		vcfAxt = append(vcfAxt, axt.AxtToVcf(axtAlign[i])...)
+	}
 	ref := fasta.Read("testdata/test.fa")
 	g := RefernceToGraph(vcfAxt, ref, NewGraph())
 	Write("temp.gg", g)

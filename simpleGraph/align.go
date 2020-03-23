@@ -38,7 +38,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 	var tailSeed *SeedDev
 	var seedScore int64
 
-	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+	for i = 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		tailSeed = toTail(seeds[i])
 		if seeds[i].PosStrand {
 			currRead = read
@@ -194,6 +194,14 @@ func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
 	}
 	return perfectScore
+}
+
+func scoreSeedFastqBig(seed *SeedDev, read *fastq.FastqBig, scoreMatrix [][]int64) int64 {
+	var score int64 = 0
+	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
+		score += scoreMatrix[read.Seq[i]][read.Seq[i]]
+	}
+	return score
 }
 
 func scoreSeed(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {

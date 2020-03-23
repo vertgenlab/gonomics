@@ -14,18 +14,18 @@ import (
 )
 
 type BatchAlleleCount struct {
-	Sample 	string
-	Ref    	dna.Base
-	Counts 	int32
-	BaseAF  int32
-	BaseCF  int32
-	BaseGF  int32
-	BaseTF  int32
-	BaseAR  int32
-	BaseCR  int32
-	BaseGR  int32
-	BaseTR  int32
-	Indel  	[]Indel
+	Sample string
+	Ref    dna.Base
+	Counts int32
+	BaseAF int32
+	BaseCF int32
+	BaseGF int32
+	BaseTF int32
+	BaseAR int32
+	BaseCR int32
+	BaseGR int32
+	BaseTR int32
+	Indel  []Indel
 }
 
 type ScoreInput struct {
@@ -110,14 +110,14 @@ func CreateBatchSampleMap(inDirectory string) BatchSampleMap {
 				Sample: SampleName,
 				Ref:    alleles.Ref,
 				Counts: alleles.Counts,
-				BaseAF:  alleles.BaseAF,
-				BaseCF:  alleles.BaseCF,
-				BaseGF:  alleles.BaseGF,
-				BaseTF:  alleles.BaseTF,
-				BaseAR:  alleles.BaseAR,
-				BaseCR:  alleles.BaseCR,
-				BaseGR:  alleles.BaseGR,
-				BaseTR:  alleles.BaseTR,
+				BaseAF: alleles.BaseAF,
+				BaseCF: alleles.BaseCF,
+				BaseGF: alleles.BaseGF,
+				BaseTF: alleles.BaseTF,
+				BaseAR: alleles.BaseAR,
+				BaseCR: alleles.BaseCR,
+				BaseGR: alleles.BaseGR,
+				BaseTR: alleles.BaseTR,
 				Indel:  alleles.Indel}
 
 			SampleMap[Location{loc.Chr, loc.Pos}] = append(SampleMap[Location{loc.Chr, loc.Pos}], current)
@@ -331,7 +331,7 @@ func passStrandBias(alpha int32, beta int32) bool {
 
 // Includes logic to exclude putative variants for which fishers exact test is unnecessary (e.g. alt allele count = 0) and exports as vcf.Vcf
 
-func score(input *ScoreInput) *vcf.Vcf{
+func score(input *ScoreInput) *vcf.Vcf {
 
 	var p float64
 	var answer *vcf.Vcf
@@ -363,12 +363,12 @@ func score(input *ScoreInput) *vcf.Vcf{
 		var sampleField []string = make([]string, 0)
 		sampleField = append(sampleField, fmt.Sprintf("%s:%d:%d:%d", input.inStruct.Sample, input.a, input.c, input.inStruct.Counts))
 		answer = &vcf.Vcf{
-			Chr:     input.loc.Chr,
-			Id:      ".",
-			Qual:    p,
-			Filter:  ".",
-			Format:  "Sample:RefCount:AltCount:Cov",
-			Notes: sampleField[0]}
+			Chr:    input.loc.Chr,
+			Id:     ".",
+			Qual:   p,
+			Filter: ".",
+			Format: "Sample:RefCount:AltCount:Cov",
+			Notes:  sampleField[0]}
 
 		switch input.altbase {
 		case "A", "C", "G", "T":
@@ -428,5 +428,3 @@ func EffToCSV(inFile string, outFile string) {
 			Ann[6])       // Transcript
 	}
 }
-
-

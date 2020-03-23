@@ -1,10 +1,14 @@
 package mummer
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/vergenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type Snp struct {
@@ -16,15 +20,15 @@ type Snp struct {
 	QuerySub  string
 }
 
-func MummerToVcf(mummer []*Snp, reference map[string][]dna.Base) []*Vcf {
-	var answer []*Vcf
-	var curr *Vcf
+func MummerToVcf(mummer []*Snp, reference map[string][]dna.Base) []*vcf.Vcf {
+	var answer []*vcf.Vcf
+	var curr *vcf.Vcf
 	var currentSeq []dna.Base
 	for i := 0; i < len(mummer); i++ {
 		switch {
 		//SNP
 		case SnpTruth(mummer[i]) == 0:
-			curr = &Vcf{Chr: mummer[i].RefName, Pos: mummer[i].RefPos, Id: ".", Ref: mummer[i].RefSub, Alt: mummer[i].QuerySub, Qual: 0, Filter: "PASS", Info: ".", Format: "IREDR=0;PAO=0;PQA=0;PQR=0;PRO=0;QA=0;QR=0;RO=0;RPL=0;RPP=7.35324;RPPR=0;RPR=2;RUN=1;SAF=2;SAP=7.35324;SAR=0;SRF=0;SRP=0;SRR=0;TYPE=snp", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+			curr = &vcf.Vcf{Chr: mummer[i].RefName, Pos: mummer[i].RefPos, Id: ".", Ref: mummer[i].RefSub, Alt: mummer[i].QuerySub, Qual: 0, Filter: "PASS", Info: ".", Format: "IREDR=0;PAO=0;PQA=0;PQR=0;PRO=0;QA=0;QR=0;RO=0;RPL=0;RPP=7.35324;RPPR=0;RPR=2;RUN=1;SAF=2;SAP=7.35324;SAR=0;SRF=0;SRP=0;SRR=0;TYPE=snp", Notes: "GT:DP:AD:RO:QR:AO:QA:GL"}
 			//fmt.Println(mummer[i].RefSub, mummer[i].QuerySub)
 			answer = append(answer, curr)
 		//logic for insertion relative to the reference
@@ -32,7 +36,7 @@ func MummerToVcf(mummer []*Snp, reference map[string][]dna.Base) []*Vcf {
 			var altTmp string
 			currentSeq = reference[mummer[i].RefName]
 			altTmp = dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1])) + mummer[i].QuerySub
-			curr = &Vcf{Chr: mummer[i].RefName, Pos: mummer[i].RefPos, Id: ".", Ref: dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1])), Alt: altTmp, Qual: 0, Filter: "PASS", Info: ".", Format: "IREDR=0;PAO=0;PQA=0;PQR=0;PRO=0;QA=0;QR=0;RO=0;RPL=0;RPP=7.35324;RPPR=0;RPR=2;RUN=1;SAF=2;SAP=7.35324;SAR=0;SRF=0;SRP=0;SRR=0;TYPE=snp", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+			curr = &vcf.Vcf{Chr: mummer[i].RefName, Pos: mummer[i].RefPos, Id: ".", Ref: dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1])), Alt: altTmp, Qual: 0, Filter: "PASS", Info: ".", Format: "IREDR=0;PAO=0;PQA=0;PQR=0;PRO=0;QA=0;QR=0;RO=0;RPL=0;RPP=7.35324;RPPR=0;RPR=2;RUN=1;SAF=2;SAP=7.35324;SAR=0;SRF=0;SRP=0;SRR=0;TYPE=snp", Notes: "GT:DP:AD:RO:QR:AO:QA:GL"}
 			answer = append(answer, curr)
 		//logic for deletions
 		case strings.Compare(mummer[i].RefSub, ".") == 0:
@@ -40,7 +44,7 @@ func MummerToVcf(mummer []*Snp, reference map[string][]dna.Base) []*Vcf {
 			currentSeq = reference[mummer[i].RefName]
 			refTmp = dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1])) + dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1]))
 			//var refTmp string
-			curr = &Vcf{Chr: mummer[i].RefName, Pos: mummer[i].RefPos, Id: ".", Ref: refTmp, Alt: dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1])), Qual: 0, Filter: "PASS", Info: ".", Format: "MQMR=0;NS=1;NUMALT=1;ODDS=4.15888;PAIRED=0;PAIREDR=0;PAO=0;PQA=0;PQR=0;PRO=0;QA=0;QR=0;RO=0;RPL=2;RPP=7.35324;RPPR=0;RPR=0;RUN=1;SAF=2;SAP=7.35324;SAR=0;SRF=0;SRP=0;SRR=0;TYPE=del", Unknown: "GT:DP:AD:RO:QR:AO:QA:GL"}
+			curr = &vcf.Vcf{Chr: mummer[i].RefName, Pos: mummer[i].RefPos, Id: ".", Ref: refTmp, Alt: dna.BaseToString(dna.ToUpper(currentSeq[mummer[i].RefPos-1])), Qual: 0, Filter: "PASS", Info: ".", Format: "MQMR=0;NS=1;NUMALT=1;ODDS=4.15888;PAIRED=0;PAIREDR=0;PAO=0;PQA=0;PQR=0;PRO=0;QA=0;QR=0;RO=0;RPL=2;RPP=7.35324;RPPR=0;RPR=0;RUN=1;SAF=2;SAP=7.35324;SAR=0;SRF=0;SRP=0;SRR=0;TYPE=del", Notes: "GT:DP:AD:RO:QR:AO:QA:GL"}
 			answer = append(answer, curr)
 		}
 	}

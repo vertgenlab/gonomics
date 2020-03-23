@@ -67,7 +67,7 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 	var tailSeed *SeedDev
 	var seedScore int64
 
-	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+	for i = 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		tailSeed = toTail(seeds[i])
 		if seeds[i].PosStrand {
 			currRead = read

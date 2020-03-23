@@ -1,11 +1,10 @@
 package simpleGraph
 
-/*
 import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
-	"log"
-	"sort"
+//	"github.com/vertgenlab/gonomics/dna"
+//	"github.com/vertgenlab/gonomics/fastq"
+//	"log"
+//	"sort"
 )
 
 type SeedDev struct {
@@ -19,6 +18,7 @@ type SeedDev struct {
 	Next        *SeedDev
 }
 
+/*
 func indexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]uint64 {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
@@ -96,7 +96,7 @@ func indexGenomeIntoSliceHelper(prevSeq []dna.Base, currNode *Node, locationCode
 			indexGenomeIntoSliceHelper(append(prevSeq, currNode.Seq...), currNode.Next[edgeIdx].Dest, locationCode, seedLen, seedSlice)
 		}
 	}
-}
+}*/
 
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment
@@ -121,6 +121,7 @@ func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, q
 	}
 }
 
+/*
 func numberOfSeeds(head *SeedDev) int {
 	var answer int = 0
 	for ; head != nil; head = head.Next {

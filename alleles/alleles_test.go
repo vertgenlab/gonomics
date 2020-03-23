@@ -3,9 +3,10 @@ package alleles
 import (
 	"testing"
 )
+
 /*
 func TestCountAlleles(t *testing.T) {
-	samplemap := CountAlleles("testdata/human_chrM.fasta", 
+	samplemap := CountAlleles("testdata/human_chrM.fasta",
 "testdata/human_chrM.sam", 0)
 	if samplemap == nil {
 		t.Errorf("Problem with CountAlleles")
@@ -13,7 +14,7 @@ func TestCountAlleles(t *testing.T) {
 }
 
 func TestGoCountAlleles(t *testing.T) {
-	samplemap := GoCountAlleles("testdata/human_chrM.fasta", 
+	samplemap := GoCountAlleles("testdata/human_chrM.fasta",
 "testdata/human_chrM.sam", 0, 10)
 	if samplemap == nil {
 		t.Errorf("Problem with GoCountAlleles")
@@ -21,7 +22,7 @@ func TestGoCountAlleles(t *testing.T) {
 }
 
 func TestAllelesToVcf(t *testing.T) {
-	samplemap := CountAlleles("testdata/human_chrM.fasta", 
+	samplemap := CountAlleles("testdata/human_chrM.fasta",
 "testdata/human_chrM.sam", 0)
 	answer := AllelesToVcf(samplemap)
 	if answer == nil {
@@ -29,7 +30,7 @@ func TestAllelesToVcf(t *testing.T) {
 	}
 }
 
- */
+*/
 
 func TestReadVcfToAlleleCounts(t *testing.T) {
 	samplemap := ReadVcfToAlleleCounts("testdata/human_chrM.vcf")
@@ -54,7 +55,7 @@ func TestFindMajorAllele(t *testing.T) {
 	var ins int32 = 0
 	var del int32 = 1
 
-	major := FindMajorAllele(a,c,g,tt,ins,del)
+	major := FindMajorAllele(a, c, g, tt, ins, del)
 
 	if major != 50 {
 		t.Errorf("Problem with FindMajorAllele")
@@ -69,7 +70,7 @@ func TestFindMinorAllele(t *testing.T) {
 	var ins int32 = 0
 	var del int32 = 1
 
-	minor := FindMinorAllele(a,c,g,tt,ins,del)
+	minor := FindMinorAllele(a, c, g, tt, ins, del)
 
 	if minor != 10 {
 		t.Errorf("Problem with FindMinorAllele")

@@ -75,7 +75,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 
 				// Catch instance where every entry in running count is sent
 				// Delete all of runningCount
-				if i == len(runningCount) - 1 {
+				if i == len(runningCount)-1 {
 					runningCount = nil
 				}
 				continue
@@ -87,7 +87,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 
 				// Catch instance where every entry in running count is sent
 				// Delete all of runningCount
-				if i == len(runningCount) - 1 {
+				if i == len(runningCount)-1 {
 					runningCount = nil
 				}
 
@@ -97,7 +97,6 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 				break
 			}
 		}
-
 
 		// Count the bases
 		progress++
@@ -313,7 +312,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 
 				// Catch instance where every entry in running count is sent
 				// Delete all of runningCount
-				if l == len(runningCount) - 1 {
+				if l == len(runningCount)-1 {
 					runningCount = nil
 				}
 
@@ -326,7 +325,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 
 				// Catch instance where every entry in running count is sent
 				// Delete all of runningCount
-				if l == len(runningCount) - 1 {
+				if l == len(runningCount)-1 {
 					runningCount = nil
 				}
 
@@ -336,7 +335,6 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 				break
 			}
 		}
-
 
 		// If read is unmapped then go to the next alignment
 		if aln.Cigar[0].Op == '*' {
@@ -368,12 +366,11 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 
 				// First base in indel is the base prior to the indel sequence per VCF standard format
 				if OrigRefIndex == 0 {
-					prevNodeSeq := graph.Nodes[readPath[currNode - 1]].Seq
-					indelSeq[0] = prevNodeSeq[len(prevNodeSeq) - 1]
+					prevNodeSeq := graph.Nodes[readPath[currNode-1]].Seq
+					indelSeq[0] = prevNodeSeq[len(prevNodeSeq)-1]
 				} else {
-					indelSeq[0] = OrigNode.Seq[OrigRefIndex - 1]
+					indelSeq[0] = OrigNode.Seq[OrigRefIndex-1]
 				}
-
 
 				for k = 0; k < int32(aln.Cigar[i].RunLength); k++ {
 
@@ -392,12 +389,14 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 
 					currAlleles[GraphLocation{ref, RefIndex}].Counts++
 
-					if RefIndex + 1 == int64(len(ref.Seq)) {
+					if RefIndex+1 == int64(len(ref.Seq)) {
 						RefIndex = 0
 						currNode++
-						if currNode + 1 <= len(readPath) {
+						if currNode+1 <= len(readPath) {
 							ref = graph.Nodes[readPath[currNode]]
-						} else {break}
+						} else {
+							break
+						}
 					} else {
 						RefIndex++
 					}
@@ -453,10 +452,10 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 
 				// First base in indel is the base prior to the indel sequence per VCF standard format
 				if RefIndex == 0 {
-					prevNodeSeq := graph.Nodes[readPath[currNode - 1]].Seq
-					indelSeq[0] = prevNodeSeq[len(prevNodeSeq) - 1]
+					prevNodeSeq := graph.Nodes[readPath[currNode-1]].Seq
+					indelSeq[0] = prevNodeSeq[len(prevNodeSeq)-1]
 				} else {
-					indelSeq[0] = ref.Seq[RefIndex - 1]
+					indelSeq[0] = ref.Seq[RefIndex-1]
 				}
 
 				// Keep track of inserted sequence by moving along the read
@@ -539,12 +538,14 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 						currAlleles[GraphLocation{ref, RefIndex}].Counts++
 					}
 					SeqIndex++
-					if RefIndex + 1 == int64(len(ref.Seq)) {
+					if RefIndex+1 == int64(len(ref.Seq)) {
 						RefIndex = 0
 						currNode++
-						if currNode + 1 <= len(readPath) {
+						if currNode+1 <= len(readPath) {
 							ref = graph.Nodes[readPath[currNode]]
-						} else {break}
+						} else {
+							break
+						}
 					} else {
 						RefIndex++
 					}

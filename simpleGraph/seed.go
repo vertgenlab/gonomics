@@ -57,10 +57,10 @@ func toTheRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 			//log.Printf("Number of nodes to check %d\n", len(gg.Nodes[seed.TargetId].Next))
 			if len(next.Dest.Seq) > 0 {
 				if next.Dest.Seq[newTStart] == read.Seq[newQStart] {
-					nextSeed := &SeedDev{TargetId: next.Dest.Id, TargetStart: uint32(newTStart), QueryStart: uint32(newQStart), Length: 1, PosStrand: seed.PosStrand, Next: nil, Prev: nil}
+					nextSeed := &SeedDev{TargetId: next.Dest.Id, TargetStart: uint32(newTStart), QueryStart: uint32(newQStart), Length: 1, PosStrand: seed.PosStrand, NextPart: nil, Next: nil}
 					edgeSeeds = toTheRight(nextSeed, gg, read)
 					for e = 0; e < len(edgeSeeds); e++ {
-						currSeed := &SeedDev{TargetId: seed.TargetId, TargetStart: seed.TargetStart, QueryStart: seed.QueryStart, Length: seed.Length, PosStrand: seed.PosStrand, Next: nil, Prev: nil}
+						currSeed := &SeedDev{TargetId: seed.TargetId, TargetStart: seed.TargetStart, QueryStart: seed.QueryStart, Length: seed.Length, PosStrand: seed.PosStrand, NextPart: nil, Next: nil}
 						currSeed.Next = edgeSeeds[e]
 						answer = append(answer, currSeed)
 					}
@@ -85,7 +85,7 @@ func toTheLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 				var newTStart int32 = int32(len(prev.Dest.Seq)) - 1
 				var newQStart int32 = int32(seed.QueryStart) - 1
 				if prev.Dest.Seq[newTStart] == read.Seq[newQStart] {
-					prevSeed := &SeedDev{TargetId: prev.Dest.Id, TargetStart: uint32(newTStart), QueryStart: uint32(newQStart), Length: 1, PosStrand: seed.PosStrand, Next: nil, Prev: nil}
+					prevSeed := &SeedDev{TargetId: prev.Dest.Id, TargetStart: uint32(newTStart), QueryStart: uint32(newQStart), Length: 1, PosStrand: seed.PosStrand, NextPart: nil, Next: nil}
 					prevSeed.Next = seed
 					depthSeeds = toTheLeft(prevSeed, gg, read)
 					for prevLeft = 0; prevLeft < len(depthSeeds); prevLeft++ {

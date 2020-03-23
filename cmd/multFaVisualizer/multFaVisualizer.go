@@ -19,7 +19,7 @@ func multFaVisualizer(infile string, start int64, end int64, noMask bool, lineLe
 	var stop int
 	records := fasta.Read(infile)
 
-	if noMask{
+	if noMask {
 		fasta.AllToUpper(records)
 	}
 

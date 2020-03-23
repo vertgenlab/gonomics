@@ -13,8 +13,7 @@ import (
 
 func faChunkAlign(inFile string, chunkSize int, gapOpen int64, gapExtend int64, outFile string) {
 	log.Printf("Reading %s...\n", inFile)
-	records, err := fasta.Read(inFile)
-	common.ExitIfError(err)
+	records := fasta.Read(inFile)
 	log.Printf("Successfully read %d sequences from fasta file.\n", len(records))
 
 	log.Printf("Aligning sequences...")

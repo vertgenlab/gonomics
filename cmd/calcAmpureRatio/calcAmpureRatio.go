@@ -72,18 +72,18 @@ func main() {
 	// check to make sure input is a valid number and that the numbers are in ranges that make sense
 	lowSize, err = strconv.ParseFloat(lowText, 64)
 	if err != nil {
-		log.Fatalf("Error: expecting a number for the low threshold, but got %w\n", lowText)
+		log.Fatalf("Error: expecting a number for the low threshold, but got %s\n", lowText)
 	}
 	if lowSize <= minSizeForBeads || lowSize >= maxSizeForBeads {
-		log.Fatalf("Error: expecting lower threshold to be between %d and %d, but got %d\n", minSizeForBeads, maxSizeForBeads, lowSize)
+		log.Fatalf("Error: expecting lower threshold to be between %f and %f, but got %f\n", minSizeForBeads, maxSizeForBeads, lowSize)
 	}
 
 	highSize, err = strconv.ParseFloat(highText, 64)
 	if err != nil {
-		log.Fatalf("Error: expecting a number for the high threshold, but got %w\n", highText)
+		log.Fatalf("Error: expecting a number for the high threshold, but got %s\n", highText)
 	}
 	if highSize <= minSizeForBeads || highSize >= maxSizeForBeads || highSize <= lowSize {
-		log.Fatalf("Error: expecting higher threshold to be between %d and %d (and greater than the lower threshold), but got %d\n", minSizeForBeads, maxSizeForBeads, highSize)
+		log.Fatalf("Error: expecting higher threshold to be between %f and %f (and greater than the lower threshold), but got %f\n", minSizeForBeads, maxSizeForBeads, highSize)
 	}
 
 	volume, err = strconv.ParseFloat(volumeText, 64)
