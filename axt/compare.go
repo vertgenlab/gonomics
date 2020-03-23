@@ -10,14 +10,14 @@ func checkQueryBlock(alpha *Axt, beta *Axt, bestQueryLen int64, bestScore int64,
 		return false, bestQueryLen, bestScore
 	}
 	if CompareRName(alpha, beta) != 0 {
-		bestQueryLen = beta.QEnd-beta.QStart
+		bestQueryLen = beta.QEnd - beta.QStart
 		bestScore = beta.Score
 		return true, bestQueryLen, bestScore
 	} else {
 		if CompareRName(alpha, beta) == 0 {
 			if CompareQName(alpha, beta) != 0 {
 				if (beta.QEnd-beta.QStart > bestQueryLen) && (beta.Score > bestScore) {
-					bestQueryLen = beta.QEnd-beta.QStart
+					bestQueryLen = beta.QEnd - beta.QStart
 					bestScore = beta.Score
 					return true, bestQueryLen, bestScore
 				} else {

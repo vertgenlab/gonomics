@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
@@ -15,12 +16,13 @@ type SimpleGraph struct {
 }
 
 type Node struct {
-	Id   uint32
-	Name string
-	Seq  []dna.Base
-	Prev []*Edge
-	Next []*Edge
-	Info *Annotation
+	Id        uint32
+	Name      string
+	Seq       []dna.Base
+	SeqTwoBit *dnaTwoBit.TwoBit
+	Prev      []*Edge
+	Next      []*Edge
+	Info      *Annotation
 }
 
 type Edge struct {
@@ -97,6 +99,9 @@ func Read(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
 			}
 		}
+	}
+	for i := 0; i < len(genomeGraph.Nodes); i++ {
+		genomeGraph.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genomeGraph.Nodes[i].Seq)
 	}
 	return genomeGraph, chrSize
 }

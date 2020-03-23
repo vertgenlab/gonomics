@@ -1,16 +1,16 @@
 package vcf
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"os"
 	"strings"
 	"time"
-	"io"
-	"bufio"
 )
 
 //slices of slice
@@ -67,6 +67,7 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	}
 	return processVcfLine(line), false
 }
+
 /*
 func Read(filename string) []*Vcf {
 	file := fileio.EasyOpen(filename)
@@ -230,10 +231,11 @@ func MakeHeader() []string {
 	var header []string
 	//var line string
 	t := time.Now()
+	//TODO: gasAcu1 should not be hard coded in here
 	header = append(header, "##fileformat=VCFv4.2\n"+
 		"##fileDate="+t.Format("20060102")+"\n"+
-		"##source=github.com/vertgenlab/gonomics\n"+
-		"##reference=gasAcu1")
+		"##source=github.com/vertgenlab/gonomics")
+	//	"##reference=gasAcu1")
 	//if len(chrom) > 0 {
 	//	for i := 0; i < len(chrom); i++ {
 	//		line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"

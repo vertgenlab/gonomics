@@ -319,7 +319,7 @@ func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[ui
 	//log.Printf("Have %d seeds, where best is of length %d, and it took %s\n", len(seeds), seeds[0].Length, seedDuration)
 
 	//swStart := time.Now()
-	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+	for i = 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, maxScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		if seeds[i].PosStrand {
 			currRead = read
 		} else {
@@ -351,7 +351,7 @@ func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[ui
 	return &currBest
 }
 
-func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
+/*func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 0, RName: "", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: ""}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
@@ -400,7 +400,7 @@ func goGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash [][]*Seed
 		}
 	}
 	return &currBest
-}
+}*/
 
 func wrapMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, c chan *sam.SamAln) {
 	var mappedRead *sam.SamAln
@@ -410,13 +410,13 @@ func wrapMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, s
 	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
 }
 
-func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, c chan *sam.SamAln) {
+/*func wrap(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int, c chan *sam.SamAln) {
 	var mappedRead *sam.SamAln
 	m, trace := swMatrixSetup(10000)
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	c <- mappedRead
 	//log.Printf("%s\n", sam.SamAlnToString(mappedRead))
-}
+}*/
 
 func wrapNoChanMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int) {
 	var mappedRead *sam.SamAln
@@ -431,12 +431,12 @@ func wrapNoChanMap(ref *SimpleGraph, r *fastq.Fastq, seedHash map[uint64][]*Seed
 	log.Printf("%s %s %s\n", sam.SamAlnToString(mappedRead), durationOne, durationTwo)
 }
 
-func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int) {
+/*func wrapNoChan(ref *SimpleGraph, r *fastq.Fastq, seedHash [][]*SeedBed, seedLen int) {
 	var mappedRead *sam.SamAln
 	m, trace := swMatrixSetup(10000)
 	mappedRead = goGraphSmithWaterman(ref, r, seedHash, seedLen, m, trace)
 	log.Printf("%s\n", sam.SamAlnToString(mappedRead))
-}
+}*/
 
 /*
 func VcfNodesToGraph(sg *SimpleGraph, chr *fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {

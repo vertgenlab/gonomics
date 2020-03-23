@@ -139,14 +139,14 @@ func FromBaseCall(b dna.Base, err float64) *QBase {
 	return &curr
 }
 
-func FromBaseCalls(in []dna.Base, err []float64) []*QBase {
+func FromBaseCalls(in []dna.Base, err []float32) []*QBase {
 	//answer := make([]*QBase, len(in))
 	if len(in) != len(err) {
 		log.Fatalf("Number of bases do not match the number of quality scores")
 	}
 	var answer []*QBase = make([]*QBase, len(in))
 	for i := 0; i < len(in); i++ {
-		answer[i] = FromBaseCall(in[i], err[i])
+		answer[i] = FromBaseCall(in[i], float64(err[i]))
 	}
 	return answer
 }

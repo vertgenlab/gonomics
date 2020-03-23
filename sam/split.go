@@ -9,6 +9,7 @@ import (
 	"os"
 	//"sync"
 )
+
 //TODO: respond to craigs comments of git
 //I am worried about opening all the files, then reading them, then closing them all. What if you put reading the file in the loop where you open it? Then you could: open, read, close, go to next file, open, read close, go to next file, etc
 func ReadFilesToChan(filenames []string, output chan<- []*SamAln) {

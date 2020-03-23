@@ -98,18 +98,17 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []
 	var gap *vcf.Vcf
 	var refSeq []dna.Base
 	for i := 0; i < len(axtList); i++ {
-		if axtList[i].RStart - refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
+		if axtList[i].RStart-refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
 			refSeq = ref[axtList[i].RName][refIndex:axtList[i].RStart]
 			dna.AllToUpper(refSeq)
-			
-			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex+1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
-			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Alt: , Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=INS", Notes: AxtInfo(axtList[i])}
 
+			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex + 1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
+			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Alt: , Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=INS", Notes: AxtInfo(axtList[i])}
 
 			records = append(records, gap)
 		}
 		records = append(records, AxtToVcf(axtList[i])...)
-		refIndex = axtList[i].REnd-1
+		refIndex = axtList[i].REnd - 1
 		lastChr = axtList[i].RName
 	}
 	records = vcf.FilterAxtVcf(records, fa)
@@ -119,7 +118,7 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []
 	//vcf.WriteHeader(records, head)
 	vcf.Write(filename, records)
 }
- 
+
 func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta, qFa []*fasta.Fasta) {
 	ref := fasta.FastaMap(tFa)
 	query := fasta.FastaMap(qFa)
@@ -131,20 +130,20 @@ func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta,
 	var gap *vcf.Vcf
 	var refSeq, altSeq []dna.Base
 	for i := 0; i < len(axtList); i++ {
-		if axtList[i].RStart - refIndex > 2 && strings.Compare(lastChr, axtList[i].RName) == 0 {
-			if axtList[i].QStart - queryIndex > 2 && strings.Compare(lastQuery, axtList[i].QName) == 0 {
-				refSeq = ref[axtList[i].RName][refIndex:axtList[i].RStart-1]
-				altSeq = query[axtList[i].QName][queryIndex:axtList[i].QStart-1]
+		if axtList[i].RStart-refIndex > 2 && strings.Compare(lastChr, axtList[i].RName) == 0 {
+			if axtList[i].QStart-queryIndex > 2 && strings.Compare(lastQuery, axtList[i].QName) == 0 {
+				refSeq = ref[axtList[i].RName][refIndex : axtList[i].RStart-1]
+				altSeq = query[axtList[i].QName][queryIndex : axtList[i].QStart-1]
 				dna.AllToUpper(refSeq)
 				dna.AllToUpper(altSeq)
-				gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex+1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(ref[axtList[i].RName][refIndex]) + dna.BasesToString(altSeq), Qual: 248, Filter: "PASS", Info: ".", Format: "SVTYPE=HAP", Notes: AxtInfo(axtList[i])}
+				gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex + 1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(ref[axtList[i].RName][refIndex]) + dna.BasesToString(altSeq), Qual: 248, Filter: "PASS", Info: ".", Format: "SVTYPE=HAP", Notes: AxtInfo(axtList[i])}
 				records = append(records, gap)
 			}
 			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
 		}
 		records = append(records, AxtToVcf(axtList[i])...)
-		refIndex = axtList[i].REnd-1
-		queryIndex = axtList[i].QEnd-1
+		refIndex = axtList[i].REnd - 1
+		queryIndex = axtList[i].QEnd - 1
 		lastQuery = axtList[i].QName
 		lastChr = axtList[i].RName
 	}
@@ -158,7 +157,7 @@ func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta,
 
 func Filter(records []*Axt) []*Axt {
 	var answer []*Axt = []*Axt{records[0]}
-	var bestQueryLen int64 = records[0].QEnd-records[0].QStart
+	var bestQueryLen int64 = records[0].QEnd - records[0].QStart
 	var bestQueryScore int64 = records[0].Score
 	var i int
 	var ok bool

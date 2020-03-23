@@ -16,7 +16,7 @@ type SeedBed struct {
 	Next  *SeedBed
 }
 
-type SeedDev struct {
+/*type SeedDev struct {
 	TargetId    uint32
 	TargetStart uint32
 	QueryStart  uint32
@@ -24,7 +24,7 @@ type SeedDev struct {
 	PosStrand   bool
 	Next        *SeedDev
 	Prev        *SeedDev
-}
+}*/
 
 func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 	for i := 0; i < len(seeds); i++ {
@@ -167,7 +167,7 @@ func IndexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]*SeedBe
 
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment
-func seedCouldBeBetter(curr *SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
+/*func seedCouldBeBetter(curr *SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
 	seedLen := int64(sumLen(curr))
 	seeds := queryLen / (seedLen + 1)
 	remainder := queryLen % (seedLen + 1)
@@ -187,7 +187,7 @@ func seedCouldBeBetter(curr *SeedDev, currBestScore int64, perfectScore int64, q
 	} else {
 		return false
 	}
-}
+}*/
 
 /*
 func addSeedDev(existing []*SeedDev, curr *SeedDev) []*SeedDev {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sophie/tree_newick"
+	"github.com/vertgenlab/gonomics/tree_newick"
 )
 
 //final function to run
@@ -26,10 +26,10 @@ func Reconstruct(root *tree_newick.NTree, filename_output string) {
 		fastas = append(fastas, branches[i].Fasta)
 	}
 
-	var fas []fasta.Fasta
+	var fas []*fasta.Fasta
 	//loop sites
 	for i := 0; i < len(fastas); i++ {
-		fas = append(fas, *fastas[i])
+		fas = append(fas, fastas[i])
 	}
 
 	fasta.Write(filename_output, fas)
@@ -39,14 +39,10 @@ func Reconstruct(root *tree_newick.NTree, filename_output string) {
 //test accuracy of the reconstruction compared to the simulation
 func Accuracy(sim_filename string, rec_filename string) float64 {
 	tot := 0.0
-	sim, ers := fasta.Read(sim_filename)
-	rec, err := fasta.Read(rec_filename)
-	if ers != err {
-	}
+	sim := fasta.Read(sim_filename)
+	rec := fasta.Read(rec_filename)
 	des := "descendents_" + sim_filename
-	sim_leafs, ersl := fasta.Read(des)
-	if ersl != nil {
-	}
+	sim_leafs := fasta.Read(des)
 	for i := 0; i < len(sim); i++ {
 		for j := 0; j < len(sim_leafs); j++ {
 			if sim[i].Name == sim_leafs[j].Name {

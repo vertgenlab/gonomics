@@ -1,20 +1,21 @@
 package simpleGraph
 
 import (
-//"github.com/vertgenlab/gonomics/common"
-//"github.com/vertgenlab/gonomics/dna"
-//"github.com/vertgenlab/gonomics/dnaTwoBit"
-//"github.com/vertgenlab/gonomics/fastq"
-//"log"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/fastq"
+	//"log"
 )
 
-/*func seedBedToSeedDev(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
+// TODO: get rid of this when seedBed is eliminated
+func seedBedToSeedDev(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 	if a == nil {
 		return nil
 	} else {
 		return &SeedDev{TargetId: a.Id, TargetStart: a.Start, QueryStart: currQPos, Length: a.End - a.Start, PosStrand: posStrand, Next: seedBedToSeedDev(a.Next, currQPos+a.End-a.Start, posStrand)}
 	}
-}*/
+}
 
 /*func mergeIntoSeed(aTail *SeedDev, b *SeedBed, currQPos uint32, posStrand bool) bool {
 	if aTail.TargetId == b.Id &&
@@ -84,8 +85,8 @@ import (
 	//printSeedDev(merged)
 	return noMerge, merged
 }*/
-/*
-func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, memoryPool **SeedDev) *SeedDev {
+
+func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, memoryPool **SeedDev) *SeedDev {
 	var hits *SeedDev
 	var currHits []uint64
 	var codedPos uint64
@@ -121,7 +122,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 				currSeed.TotalLength = uint32(leftMatches + rightMatches - 1)
 				currSeed.Next = hits
 				hits = currSeed
-				seedScore = scoreSeedFastqBig(currSeed, read)
+				seedScore = scoreSeedFastqBig(currSeed, read, scoreMatrix)
 				if seedScore > bestScore {
 					bestScore = seedScore
 				}
@@ -149,7 +150,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 				currSeed.TotalLength = uint32(leftMatches + rightMatches - 1)
 				currSeed.Next = hits
 				hits = currSeed
-				seedScore = scoreSeedFastqBig(currSeed, read)
+				seedScore = scoreSeedFastqBig(currSeed, read, scoreMatrix)
 				if seedScore > bestScore {
 					bestScore = seedScore
 				}
@@ -171,10 +172,9 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 
 	*memoryPool = poolHead
 	return hits
-}*/
+}
 
-/*
-func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64) []*SeedDev {
+func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
 	var hits []*SeedDev = make([]*SeedDev, 0)
 	var currHits []uint64
 	var codedPos uint64
@@ -196,7 +196,7 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 			rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(pos), read.Rainbow[offset], readStart+offset)
 			if seedCouldBeBetter(int64(leftMatches+rightMatches-1), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296) {
 				currSeed = &SeedDev{TargetId: uint32(nodeIdx), TargetStart: uint32(int(pos) - leftMatches + 1), QueryStart: uint32(readStart - leftMatches + 1), Length: uint32(leftMatches + rightMatches - 1), PosStrand: true, TotalLength: uint32(leftMatches + rightMatches - 1), Next: nil}
-				seedScore = scoreSeedFastqBig(currSeed, read)
+				seedScore = scoreSeedFastqBig(currSeed, read, scoreMatrix)
 				if seedScore > bestScore {
 					bestScore = seedScore
 				}
@@ -212,7 +212,7 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 			rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(pos), read.RainbowRc[offset], readStart+offset)
 			if seedCouldBeBetter(int64(leftMatches+rightMatches-1), bestScore, perfectScore, int64(len(read.SeqRc)), 100, 90, -196, -296) {
 				currSeed = &SeedDev{TargetId: uint32(nodeIdx), TargetStart: uint32(int(pos) - leftMatches + 1), QueryStart: uint32(readStart - leftMatches + 1), Length: uint32(leftMatches + rightMatches - 1), PosStrand: false, TotalLength: uint32(leftMatches + rightMatches - 1), Next: nil}
-				seedScore = scoreSeedFastqBig(currSeed, read)
+				seedScore = scoreSeedFastqBig(currSeed, read, scoreMatrix)
 				if seedScore > bestScore {
 					bestScore = seedScore
 				}
@@ -232,9 +232,10 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 		}
 	}
 	return hits[0:(badIdx + 1)]
-}*/
+}
 
-/*func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
+//TODO: get rid of this
+func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0
 	var hits []*SeedDev = make([]*SeedDev, 0)
 	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
@@ -248,7 +249,7 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 	}
 	//log.Printf("Total of %d hits.\n", len(hits))
 	return hits
-}*/
+}
 
 // need to handle neg strand
 /*func findSeedsInMap(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
@@ -274,7 +275,6 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 	return allHits
 }*/
 
-// need to handle neg strand
 /*func findSeedsInSlice(seedHash [][]uint64, read *fastq.Fastq, seedLen int, posStrand bool) []*SeedDev {
 	var codedSeq uint64 = 0
 	var allHits []*SeedDev = make([]*SeedDev, 0)

@@ -1,5 +1,6 @@
 package simulate
 
+/*
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
@@ -168,3 +169,4 @@ func Simulate(rand_seq_filename string, tree_output_filename string, root *recon
 	seq := Get_seq(rand1)
 	fasta.Write(tree_output_filename, Tree_print(root, seq))
 }
+*/

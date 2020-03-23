@@ -1,8 +1,8 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"strings"
 )
 
@@ -22,7 +22,7 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 				ref = dna.StringToBases(split[i][j].Ref)
 				alt = dna.StringToBases(split[i][j].Alt)
 				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
-				
+
 					answer = append(answer, split[i][j])
 				}
 			}

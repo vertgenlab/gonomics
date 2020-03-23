@@ -19,13 +19,14 @@ func countAlleles(inFile string, outFile string, refFile string, coverageThresho
 	}
 	log.Printf("Counting Alleles")
 
-	if concurrentThreads == 1 {
+	//TODO: I think this needs to be updated to match improvements in the alleles package
+	/*if concurrentThreads == 1 {
 		data = alleles.CountAlleles(refFile, inFile, int64(minMapQ))
 	} else if concurrentThreads > 1 {
 		data = alleles.GoCountAlleles(refFile, inFile, int64(minMapQ), concurrentThreads)
-	} else {
-		log.Fatalf("Error: Requires at least 1 thread")
-	}
+	} else {*/
+	log.Fatalf("Error: Requires at least 1 thread")
+	//}
 
 	log.Printf("Filtering Alleles")
 	alleles.FilterAlleles(data, int32(coverageThreshold))
