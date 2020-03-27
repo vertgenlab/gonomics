@@ -1,9 +1,9 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"math"
 )
 
@@ -11,19 +11,19 @@ import (
 Calculates Tajima's D. Requires a gapless alignment block.
 */
 
-func TajimaFromBedNoGroup(b  *bed.Bed, aln []*fasta.Fasta) float64 {
-	bLen := b.ChromEnd - b.ChromStart 
+func TajimaFromBedNoGroup(b *bed.Bed, aln []*fasta.Fasta) float64 {
+	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
-	tmpFa := fasta.CopySubset(aln, alnPos, alnPos + int(bLen))
+	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
 	tmpFa = fasta.RemoveMissingMult(tmpFa)
 
 	return Tajima(tmpFa)
 }
 
-func TajimaFromBed(b  *bed.Bed, aln []*fasta.Fasta, g []*Group) float64 {
-	bLen := b.ChromEnd - b.ChromStart 
+func TajimaFromBed(b *bed.Bed, aln []*fasta.Fasta, g []*Group) float64 {
+	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
-	tmpFa := fasta.CopySubset(aln, alnPos, alnPos + int(bLen))
+	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
 	tmpFa = fasta.RemoveMissingMult(tmpFa)
 
 	tmpFa = FilterMultByGroup(tmpFa, g[0])
@@ -38,7 +38,7 @@ func Tajima(aln []*fasta.Fasta) float64 {
 	return D
 }
 
-func calculateDenominator(aln []*fasta.Fasta) float64{
+func calculateDenominator(aln []*fasta.Fasta) float64 {
 	n := float64(len(aln))
 	b1 := (n + 1) / (3 * (n - 1))
 	b2 := 2 * (math.Pow(n, 2) + n + 3) / (9 * n * (n - 1))
@@ -47,12 +47,12 @@ func calculateDenominator(aln []*fasta.Fasta) float64{
 
 	c1 := b1 - (1 / a1)
 	e1 := c1 / a1
-	c2 := b2 - (n + 2) / (a1 * n) + a2 / math.Pow(a1, 2)
+	c2 := b2 - (n+2)/(a1*n) + a2/math.Pow(a1, 2)
 	e2 := c2 / (math.Pow(a1, 2) + a2)
 
 	S := float64(calculateS(aln))
 
-	return math.Sqrt(e1 * S + e2 * S * (S - 1))
+	return math.Sqrt(e1*S + e2*S*(S-1))
 }
 
 func calculateA2(aln []*fasta.Fasta) float64 {
@@ -113,5 +113,5 @@ func calculateTajimaK(aln []*fasta.Fasta) float64 {
 		sum += distList[i]
 	}
 
-	return float64(sum) / float64(n)	
+	return float64(sum) / float64(n)
 }

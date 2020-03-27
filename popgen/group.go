@@ -1,13 +1,13 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"strings"
 )
 
 type Group struct {
-	Name string
+	Name    string
 	Members []string
 }
 
@@ -18,7 +18,6 @@ func ReadGroups(filename string) []*Group {
 	answer := make([]*Group, 0)
 	//answer[0] = &Group{Name: "", Members: make([]string, 0)}
 	//answer[1] = &Group{Name: "", Members: make([]string, 0)}
-
 
 	groupFile := fileio.EasyOpen(filename)
 	defer groupFile.Close()
@@ -40,7 +39,7 @@ func FilterMultByGroup(aln []*fasta.Fasta, g *Group) []*fasta.Fasta {
 	var answer []*fasta.Fasta
 	for i := 0; i < len(aln); i++ {
 		contained = false
-		for j := 0 ; j < len(g.Members); j++ {
+		for j := 0; j < len(g.Members); j++ {
 			if aln[i].Name == g.Members[j] {
 				contained = true
 			}

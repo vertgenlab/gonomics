@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/popgen"
-	"github.com/vertgenlab/gonomics/bed"
+	"log"
 )
 
 func tajimaD(inFile string, alnFile string, groupFile string, outFile string) {
@@ -27,13 +27,12 @@ func tajimaD(inFile string, alnFile string, groupFile string, outFile string) {
 	bed.Write(outFile, b, 7)
 }
 
-
 func usage() {
 	fmt.Print(
 		"tajimaD - Computes Tajima's D for each region in an input bed for a given multiFa alignment.\n" +
-		"Usage:\n" +
-		"dunnIndex regions.bed aln.multi.fa  groups.list outfile.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			"dunnIndex regions.bed aln.multi.fa  groups.list outfile.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

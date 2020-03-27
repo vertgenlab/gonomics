@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
+	"log"
 )
 
 func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
@@ -24,15 +24,15 @@ func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
 func usage() {
 	fmt.Print(
 		"bedDistanceFromEnds - Returns a bed file with the score containing the distance from the end of the chromosome.\n" +
-		"Usage:\n" +
-		"bedDistanceFromEnds input.bed reference.chrom.sizes output.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			"bedDistanceFromEnds input.bed reference.chrom.sizes output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 3
-	
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
