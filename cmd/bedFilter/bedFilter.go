@@ -79,9 +79,9 @@ func bedFilter(infile string, outfile string, minScore int64, maxScore int64, mi
 func usage() {
 	fmt.Print(
 		"bedFilter\n" +
-			"Usage:\n" +
-			"bedFilter input.bed output.bed\n" +
-			"options:\n")
+		"Usage:\n" +
+		"bedFilter input.bed output.bed\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 
