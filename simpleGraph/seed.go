@@ -110,12 +110,16 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	return answer
 }
 
-func toTail(a *SeedDev) *SeedDev {
-	if a.Next == nil {
-		return a
-	} else {
-		return toTail(a.Next)
+func getLastPart(a *SeedDev) *SeedDev {
+	for ; a.NextPart != nil; a = a.NextPart {
 	}
+	return a
+}
+
+func toTail(a *SeedDev) *SeedDev {
+	for ; a.Next != nil; a = a.Next {
+	}
+	return a
 }
 
 func CompareSumLen(a *SeedDev, b *SeedDev) int {
