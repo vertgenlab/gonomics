@@ -1,7 +1,7 @@
 package gaf
 
 import (
-	//"github.com/vertgenlab/gonomics/common"
+//"github.com/vertgenlab/gonomics/common"
 )
 
 type Gaf struct {
@@ -17,8 +17,9 @@ type Gaf struct {
 	MatchNum uint32
 	BlkLen   uint32
 	MapQ     int32
-	Notes	string
+	Notes    string
 }
+
 //TODO: Figure out how to define stable path...
 type Path struct {
 	Name       string
@@ -27,6 +28,7 @@ type Path struct {
 	End        uint32
 	Next       *Path
 }
+
 //TODO:
 /*
 func Read(filename string) []Gaf {
@@ -36,7 +38,7 @@ func Read(filename string) []Gaf {
 	var text []string
 	defer file.Close()
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		
+
 
 	}
 }
