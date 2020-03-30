@@ -10,6 +10,62 @@ import (
 	"math/rand"
 )
 
+//TODO: Check for bugs, failed align tests so it's unclear if this function is wrong or alignment function is wrong...
+func GraphRandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.Fastq {
+	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
+	var start int
+	var chromIdx int
+	var strand bool
+	for i := 0; i < numReads; {
+		strand = randIntInRange(0, 2) == 0
+		chromIdx = randIntInRange(0, len(genome))
+		//curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start+1, start+1+readLength, common.StrandToRune(strand))
+		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, common.Min(start+readLength, len(genome[chromIdx].Seq))) == 0 {
+			curr := fastq.Fastq{}
+			curr.Seq = make([]dna.Base, readLength)
+			if len(genome[chromIdx].Seq) < readLength {
+				start = randIntInRange(0, len(genome[chromIdx].Seq))
+				curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start+1, len(genome[chromIdx].Seq), common.StrandToRune(strand))
+				curr = getSeqRandHelp(genome[chromIdx], []dna.Base{}, start, readLength, curr)
+			} else {
+				start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
+				curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start+1, start+1+readLength, common.StrandToRune(strand))
+				copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
+			}
+			curr.Qual = generateDiverseFakeQual(readLength)
+			if !strand {
+				dna.ReverseComplement(curr.Seq)
+			}
+			mutate(curr.Seq, numChanges)
+			answer[i] = &curr
+			i++
+		}
+	}
+	return answer
+}
+
+func getSeqRandHelp(curr *Node, seq []dna.Base, start int, readLength int, answer fastq.Fastq) fastq.Fastq {
+	//var answer *fastq.Fastq
+	var availableBases int = len(curr.Seq) - start + len(seq)
+	var targetLength int = common.Min(availableBases, readLength)
+	var basesToTake int = targetLength - len(seq)
+	//log.Printf("len(seq)=%d, len(n.Seq)=%d, start=%d, targetLength=%d, basesToTake=%d\n", len(seq), len(curr.Seq), start, targetLength, basesToTake)
+	var s []dna.Base = make([]dna.Base, targetLength)
+	copy(s[0:len(seq)], seq)
+	copy(s[len(seq):targetLength], curr.Seq[start:start+basesToTake])
+	if availableBases >= readLength || len(curr.Next) == 0 {
+		if dna.CountBaseInterval(s, dna.N, 0, len(s)) == 0 {
+			copy(answer.Seq, s)
+		}
+		return answer
+	} else {
+		edgeIdx := randIntInRange(0, len(curr.Next))
+		answer.Name += fmt.Sprintf(":%d", curr.Next[edgeIdx].Dest.Id)
+		answer = getSeqRandHelp(curr.Next[edgeIdx].Dest, s, 0, readLength, answer)
+		return answer
+	}
+}
+
 func RandomPairedReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
 	var answer []*fastq.PairedEnd = make([]*fastq.PairedEnd, numReads)
 	var start, start2 int
