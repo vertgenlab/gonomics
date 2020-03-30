@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"github.com/vertgenlab/gonomics/common"
 	"io"
+	"log"
 	"os"
 	"strings"
 	"sync"
-	"log"
 )
 
 func ReadToChan(filename string) chan *Vcf {

@@ -9,7 +9,7 @@ func TestReadToChan(t *testing.T) {
 
 		stream := ReadToChan(tempFile)
 
-		for vcf := range(stream) {
+		for vcf := range stream {
 			actual = append(actual, vcf)
 		}
 
