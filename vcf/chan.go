@@ -58,3 +58,39 @@ func ReadToChan(filename string) chan *Vcf {
 
 	return answer
 }
+
+
+//TODO: switch to the version below when easyio is implemented in vcf package on master
+
+/*
+func ReadToChan(filename string) chan *Vcf {
+	var answer = make(chan *Vcf)
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		var line string
+		file, _ := os.Open(filename)
+
+		defer file.Close()
+		reader := bufio.NewReader(file)
+
+		ReadHeader(reader)
+		var err2 error
+
+		for line, _ = reader.ReadString('\n'); err2 != io.EOF; line, err2 = reader.ReadString('\n') {
+			line = strings.TrimSuffix(line, "\n")
+			answer <- processVcfLine(line)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		wg.Wait()
+		close(answer)
+	}()
+
+	return answer
+}
+
+ */
