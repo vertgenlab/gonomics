@@ -1,5 +1,6 @@
 package vcf
 
+/*
 import (
 	"bufio"
 	"github.com/vertgenlab/gonomics/common"
@@ -57,8 +58,7 @@ func ReadToChan(filename string) chan *Vcf {
 	}()
 
 	return answer
-}
-
+}*/
 
 //TODO: switch to the version below when easyio is implemented in vcf package on master
 
@@ -93,4 +93,4 @@ func ReadToChan(filename string) chan *Vcf {
 	return answer
 }
 
- */
+*/

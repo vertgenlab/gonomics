@@ -1,15 +1,14 @@
 package vcf
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -27,6 +26,7 @@ type Vcf struct {
 	Notes  string
 }
 
+//Might get rid of this
 type VCF struct {
 	Header *VcfHeader
 	Vcf    []*Vcf
@@ -44,8 +44,11 @@ func processVcfLine(line string) *Vcf {
 		log.Fatal(fmt.Errorf("Was expecting atleast 8 columns per line, but this line did not:%s\n", line))
 	}
 	data.Pos = common.StringToInt64(text[1])
-	data.Qual = common.StringToFloat64(text[5])
-
+	if strings.Compare(text[5], ".") != 0 {
+		data.Qual = common.StringToFloat64(text[5])
+	} else {
+		data.Qual = 255
+	}
 	data.Chr = text[0]
 	data.Id = text[2]
 	data.Ref = text[3]
@@ -68,55 +71,29 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-/*
 func Read(filename string) []*Vcf {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-
-	var line string
-	var done bool
 	var answer []*Vcf
 	ReadHeader(file)
-	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
+	for line, done := fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		answer = append(answer, processVcfLine(line))
 	}
 	return answer
-}*/
-func Read(filename string) []*Vcf {
-	var answer []*Vcf
-	var curr *Vcf
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil
-	}
-	var err2 error
-	//var rline []byte
-	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-		//line = string(rline[:])
-		data := strings.Split(line, "\t")
-		//fmt.Println("there is data here")
-		switch {
-		case strings.HasPrefix(line, "#"):
-			//don't do anything
-		case len(data) == 1:
-			//these lines are sequences, and we are not recording them
-			//fmt.Println("found sequences")
-		case len(line) == 0:
-			//blank line
+}
 
-		case len(data) == 10:
-			curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Qual: common.StringToFloat64(data[5]), Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
-			answer = append(answer, curr)
-		default:
-			//fmt.Println("unexpected line")
-		}
+func ReadToChan(filename string, output chan<- *Vcf) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	ReadHeader(file)
+	for line, done := fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
+		output <- processVcfLine(line)
 	}
-	return answer
+	wg.Done()
+	close(output)
+	wg.Wait()
 }
 
 func ReadVcf(filename string) *VCF {
@@ -209,7 +186,15 @@ func Write(filename string, data []*Vcf) {
 }
 
 func PrintVcf(data []*Vcf) {
-	Write("/dev/stdout", data)
+	for i := 0; i < len(data); i++ {
+		PrintSingleLine(data[i])
+	}
+}
+
+func PrintVcfLines(data []*Vcf, num int) {
+	for i := 0; i < num; i++ {
+		PrintSingleLine(data[i])
+	}
 }
 
 func PrintSingleLine(data *Vcf) {
@@ -231,17 +216,9 @@ func MakeHeader() []string {
 	var header []string
 	//var line string
 	t := time.Now()
-	//TODO: gasAcu1 should not be hard coded in here
 	header = append(header, "##fileformat=VCFv4.2\n"+
 		"##fileDate="+t.Format("20060102")+"\n"+
 		"##source=github.com/vertgenlab/gonomics")
-	//	"##reference=gasAcu1")
-	//if len(chrom) > 0 {
-	//	for i := 0; i < len(chrom); i++ {
-	//		line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
-	//		header = append(header, line)
-	//}
-	//}
 	header = append(header, "##phasing=none\n"+
 		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
