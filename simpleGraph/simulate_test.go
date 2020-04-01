@@ -149,4 +149,3 @@ func TestAlignPairedEnd(t *testing.T) {
 	CheckAnswers(aln.Aln, genome)
 
 }*/
-

@@ -3,6 +3,7 @@ package numbers
 import (
 	"log"
 	"math"
+	"math/rand"
 )
 
 func carefulMultDiv(numer []float64, denom []float64) float64 {
@@ -92,4 +93,8 @@ func FisherExact(a, b, c, d int, aSmall bool) float64 {
 	} else {
 		return fisherExactLess(c, d, a, b)
 	}
+}
+
+func RandIntInRange(x int, y int) int {
+        return int(rand.Float64()*float64(y-x)) + x
 }
