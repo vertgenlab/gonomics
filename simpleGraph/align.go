@@ -34,12 +34,10 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		} else {
 			currSeq = read.SeqRc
 		}
-
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension, currSeq[:currSeed.QueryStart], m, trace)
 		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
-
 		if currScore > bestScore {
 			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath)
 			bestScore = currScore
@@ -48,7 +46,7 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			} else {
 				currBest.Flag = 16
 			}
-			currBest.Seq = read.Seq
+			currBest.Seq = currSeq
 			currBest.Qual = string(read.Qual)
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget) + 1
