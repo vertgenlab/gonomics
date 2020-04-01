@@ -17,16 +17,17 @@ import (
 func TestQuickMemPool(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 10
+	var numberOfReads int = 2
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 2
+	var numWorkers int = 1
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome, _ := Read("testdata/bigGenome.sg")
+	//genome, _ := Read("testdata/bigGenome.sg")
 	//genome, _ := Read("testdata/rabsBepaChrI.gg")
+	genome, _ := Read("testdata/tiny.gg")
 
 	log.Printf("Indexing the genome...\n")
 	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -38,7 +39,7 @@ func TestQuickMemPool(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
 
 	header := NodesHeader(genome.Nodes)

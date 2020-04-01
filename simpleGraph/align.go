@@ -46,7 +46,7 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			} else {
 				currBest.Flag = 16
 			}
-			currBest.Seq = currSeq  // unsure why this line was lost
+			currBest.Seq = currSeq // unsure why this line was lost
 			currBest.Qual = string(read.Qual)
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget) + 1

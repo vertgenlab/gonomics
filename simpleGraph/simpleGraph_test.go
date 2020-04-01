@@ -49,7 +49,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	os.Remove("testdata/simReads.fq")
 	fastq.Write("testdata/simReads.fq", simReads)
 	//genome, chrSize := Read("testdata/rabsBepaChrI.gg")
@@ -180,7 +180,7 @@ func TestAligning(t *testing.T) {
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 
 	log.Printf("Aligning reads...\n")
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
@@ -322,7 +322,7 @@ func BenchmarkGoRoutinesMap(b *testing.B) {
 
 	genome, _ := Read("testdata/bigGenome.sg")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
