@@ -36,64 +36,6 @@ type VcfHeader struct {
 	Text []string
 }
 
-func processVcfLine(line string) *Vcf {
-	var curr *Vcf
-	data := strings.Split(line, "\t")
-	//fmt.Println("there is data here")
-	switch {
-	case strings.HasPrefix(line, "#"):
-		//don't do anything
-	case len(data) == 1:
-		//these lines are sequences, and we are not recording them
-		//fmt.Println("found sequences")
-	case len(line) == 0:
-		//blank line
-	case len(data) >= 10:
-		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
-		if strings.Compare(data[5], ".") == 0 {
-			curr.Qual = 255
-		} else {
-			curr.Qual = common.StringToFloat64(data[5])
-		}
-		if len(data) < 10 {
-			curr.Notes = strings.Join(data[9:], "\t")
-		}
-	default:
-		//fmt.Println("unexpected line")
-	}
-
-	return curr
-}
-
-func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
-	line, done := fileio.EasyNextLine(reader)
-	if done {
-		return nil, true
-	}
-	return processVcfLine(line), false
-}
-
-/*
-func Read(filename string) []*Vcf {
-	var answer []*Vcf
-	var curr *Vcf
-	var line string
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
-	}
-	reader := bufio.NewReader(file)
-	if err != nil {
-		return nil
-	}
-	var err2 error
-	//var rline []byte
-	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-
-	}
-	return answer
-}*/
-
 func Read(filename string) []*Vcf {
 	var answer []*Vcf
 	file := fileio.EasyOpen(filename)
@@ -113,12 +55,47 @@ func ReadToChan(filename string, output chan<- *Vcf) {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 	ReadHeader(file)
-	for line, done := fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
-		output <- processVcfLine(line)
+	var curr *Vcf
+	var done bool
+	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+		output <- curr
 	}
 	wg.Done()
 	close(output)
 	wg.Wait()
+}
+
+func processVcfLine(line string) *Vcf {
+	var curr *Vcf
+	data := strings.Split(line, "\t")
+	switch {
+	case strings.HasPrefix(line, "#"):
+		//don't do anything
+	case len(data) == 1:
+		//these lines are sequences, and we are not recording them
+	case len(line) == 0:
+		//blank line
+	case len(data) >= 10:
+		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
+		if strings.Compare(data[5], ".") == 0 {
+			curr.Qual = 255
+		} else {
+			curr.Qual = common.StringToFloat64(data[5])
+		}
+		if len(data) < 10 {
+			curr.Notes = strings.Join(data[9:], "\t")
+		}
+	default:
+	}
+	return curr
+}
+
+func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
+	line, done := fileio.EasyNextLine(reader)
+	if done {
+		return nil, true
+	}
+	return processVcfLine(line), false
 }
 
 func ReadVcf(filename string) *VCF {
@@ -130,6 +107,18 @@ func ReadVcf(filename string) *VCF {
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
+func ReadHeader(er *fileio.EasyReader) *VcfHeader {
+	var line string
+	var err error
+	var nextBytes []byte
+	var header VcfHeader
+	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
+		line, _ = fileio.EasyNextLine(er)
+		processHeader(&header, line)
+	}
+	return &header
+}
+
 func processHeader(header *VcfHeader, line string) {
 	var err error
 	if strings.HasPrefix(line, "#") {
@@ -138,19 +127,6 @@ func processHeader(header *VcfHeader, line string) {
 	if err != nil {
 		log.Fatal("There was an error reading the header line")
 	}
-}
-
-func ReadHeader(er *fileio.EasyReader) *VcfHeader {
-	var line string
-	var err error
-	var nextBytes []byte
-	var header VcfHeader
-
-	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
-		line, _ = fileio.EasyNextLine(er)
-		processHeader(&header, line)
-	}
-	return &header
 }
 
 //split vcf into slices to deal with different chromosomes
@@ -179,6 +155,22 @@ func WriteHeader(file *os.File) {
 		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	common.ExitIfError(err)
+}
+
+func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
+	var err error
+	header := BetterHeader(fa)
+	for h := 0; h < len(header); h++ {
+		_, err = fmt.Fprintf(file, "%s\n", header[h])
+	}
+	common.ExitIfError(err)
+}
+
+func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
+	file := fileio.MustCreate(filename)
+	defer file.Close()
+	WriteBetterHeader(file, fa)
+	WriteVcfToFileHandle(file, data)
 }
 
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
@@ -247,7 +239,8 @@ func MakeHeader() []string {
 	header = append(header, "##phasing=none\n"+
 		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
-		"##INFO=<ID=QUERY,Number=1,Type=String,Description=\"Name of read/contig aligned\">"+
+		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
+		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
 		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
 		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
 		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
@@ -257,5 +250,33 @@ func MakeHeader() []string {
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
 		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
+	return header
+}
+
+func BetterHeader(fa []*fasta.Fasta) []string {
+	var header []string
+	t := time.Now()
+	header = append(header, "##fileformat=VCFv4.2\n"+
+		"##fileDate="+t.Format("20060102")+"\n"+
+		"##source=github.com/vertgenlab/gonomics")
+	header = append(header, "##phasing=none\n"+
+		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
+		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
+		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
+		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
+		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
+		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
+		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
+		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n"+
+		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n"+
+		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
+		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
+		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">")
+	var text string = ""
+	for i := 0; i < len(fa); i++ {
+		text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
+	}
+	text += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES"
+	header = append(header, text)
 	return header
 }
