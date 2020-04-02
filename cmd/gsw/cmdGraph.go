@@ -220,7 +220,6 @@ func main() {
 
 func errorMessage() {
 	log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
-	//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n\t\t\t\t\t\t\t\t\t-xoxo GG")
 }
 
 //TODO: Will remove to a personal script

@@ -2,6 +2,7 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -42,7 +43,15 @@ func VariantGraph(reference []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 		log.Fatal("Slice of vcfs do not equal reference length")
 	} else {
 		for i := 0; i < len(reference); i++ {
-			gg = vChrGraph(gg, reference[i], vcfSplit[i])
+			if len(vcfSplit[i]) != 0 {
+				//vcf.NoVcfOverlap(vcfSplit[i])
+				//vcfSplit[i] = vcf.FilterAxtVcf(vcfSplit[i], reference)
+				gg = vChrGraph(gg, reference[i], vcfSplit[i])
+			} else {
+				//when only calling large SV, no variants called on chr is possible, entire chr becomes a node
+				chrNode := &Node{Id: uint32(len(gg.Nodes)), Name: reference[i].Name, Seq: reference[i].Seq, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: 1, Variant: 0}}
+				AddNode(gg, chrNode)
+			}
 		}
 	}
 	return gg
@@ -63,20 +72,21 @@ func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*Simple
 
 func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
 	fasta.ToUpper(chr)
-	if len(vcfsChr) == 0 {
-		log.Fatalf("Error: vcf file is empty, please try again...\n")
-	}
 	var currMatch *Node = nil
 	var lastMatch *Node = nil
 	var refAllele, altAllele *Node
 	var prev []*Node = nil
 	var i, j, edge int
 	var index int64 = 0
-	for i = 0; i < len(vcfsChr); i++ {
+	var num int = 0
+	for i = 0; i < len(vcfsChr)-1; i++ {
+		if strings.Compare(chr.Name, vcfsChr[i].Chr) != 0 {
+			log.Fatalf("Error: chromosome names do not match...\n")
+		}
 		if vcfsChr[i].Pos-index > 0 {
 			currMatch = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: chr.Seq[index : vcfsChr[i].Pos-1], Prev: nil, Next: make([]*Edge, 0, 2), Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 0}}
 			AddNode(genome, currMatch)
-		} else if vcfsChr[i].Pos-index == 0 {
+		} else if vcfsChr[i].Pos == index || vcfsChr[i-1].Pos == vcfsChr[i].Pos {
 			currMatch = lastMatch
 			//assuming we already created the ref allele, we only need to create
 			//the alt alleles this iteration
@@ -106,7 +116,11 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			lastMatch = currMatch
 			continue
 		} else {
-			log.Printf("Warning: Check vcf record at %s, postion %d and %d...\n", chr.Name, vcfsChr[i-1].Pos, vcfsChr[i].Pos)
+			num++
+			log.Printf("vcf.Pos, index =%d-%d ...\n", vcfsChr[i].Pos, index)
+			log.Printf("i-1, i = %d-%d ...\n", vcfsChr[i-1].Pos, vcfsChr[i].Pos)
+			log.Printf("chr: %s, %d/%d", vcfsChr[i].Chr, num, len(vcfsChr))
+			//log.Printf("Warning: Check vcf record at %s, postion %d and %d...\n", chr.Name, vcfsChr[i-1].Pos, vcfsChr[i].Pos)
 			continue
 		}
 		if lastMatch != nil {
@@ -153,22 +167,38 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 			AddNode(genome, insertion)
 			AddEdge(currMatch, insertion, 1)
 			index = vcfsChr[i].Pos
+			//if strings.Contains(vcfsChr[i].Id, "pbsv") && i < len(vcfsChr)-1 {
+			//	index = common.MinInt64(getSvEnd(vcfsChr[i]), vcfsChr[i+1].Pos)
+			//}
 		}
 		if isDEL(vcfsChr[i]) {
-
 			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Alt)...)
-
-			deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
+			deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: chr.Seq[vcfsChr[i].Pos:common.MinInt64(vcfsChr[i].Pos+int64(len(dna.StringToBases(vcfsChr[i].Ref)[1:])), vcfsChr[i+1].Pos)], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
 			AddNode(genome, deletion)
 			AddEdge(currMatch, deletion, 1)
 			index = vcfsChr[i].Pos + int64(len(deletion.Seq))
+			//if strings.Contains(vcfsChr[i].Id, "pbsv") && i < len(vcfsChr)-1 {
+			//	index = common.MinInt64(index, vcfsChr[i+1].Pos)
+			//}
+		}
+		if isINV(vcfsChr[i]) {
+			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Ref)...)
+			inversion := mkInversionNode(genome, vcfsChr[i], chr)
+			AddNode(genome, inversion)
+			AddEdge(currMatch, inversion, 1)
+			index = getSvEnd(vcfsChr[i])
+		}
+		if isCNV(vcfsChr[i]) || isDup(vcfsChr[i]) {
+			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Ref)...)
+			copyVariance := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: chr.Seq[vcfsChr[i].Pos:getSvEnd(vcfsChr[i])], Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 6}}
+			AddNode(genome, copyVariance)
+			AddEdge(currMatch, copyVariance, 1)
+			index = getSvEnd(vcfsChr[i])
 		}
 		if isHaplotypeBlock(vcfsChr[i]) {
-
 			refAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, refAllele)
 			AddEdge(currMatch, refAllele, 1)
-
 			altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 			AddNode(genome, altAllele)
 			AddEdge(currMatch, altAllele, 1)
@@ -189,9 +219,89 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	}
 	//if !isSNP(vcfsChr[len(vcfsChr)-1]) {
 	AddEdge(lastMatch, lastNode, 1)
-
 	SetEvenWeights(lastMatch)
 	return genome
+}
+
+//new nodes are treated as insertion
+func isINV(v *vcf.Vcf) bool {
+	var truth bool = false
+	data := strings.Split(v.Info, ";")
+	if strings.Compare(v.Alt, "<INV>") == 0 || strings.Compare(data[0], "SVTYPE=INV") == 0 {
+		truth = true
+	}
+	return truth
+}
+
+func isSNP(v *vcf.Vcf) bool {
+	var truth bool = false
+	if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
+		truth = true
+	}
+	return truth
+}
+
+func isINS(v *vcf.Vcf) bool {
+	var truth bool = false
+	//data := strings.Split(v.Info, ";")
+	if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
+		truth = true
+	}
+	if strings.Contains(v.Info, "SVTYPE=INS") {
+		truth = true
+	}
+	return truth
+}
+
+func isDEL(v *vcf.Vcf) bool {
+	var truth bool = false
+	//data := strings.Split(v.Info, ";")
+	if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
+		truth = true
+	}
+	if strings.Contains(v.Info, "SVTYPE=DEL") {
+		truth = true
+	}
+	return truth
+}
+
+func isDup(v *vcf.Vcf) bool {
+	var truth bool = false
+	if strings.Contains(v.Info, "SVTYPE=DUP") {
+		truth = true
+	}
+	return truth
+}
+
+func isCNV(v *vcf.Vcf) bool {
+	var truth bool = false
+	if strings.Contains(v.Info, "SVTYPE=CNV") {
+		truth = true
+	}
+	return truth
+}
+
+func getSvEnd(v *vcf.Vcf) int64 {
+	if !strings.Contains(v.Info, "END=") {
+		log.Fatalf("Error: Vcf might not be from PBSV...")
+	} else {
+		words := strings.Split(v.Info, ";")
+		for i := 0; i < len(words); i++ {
+			if strings.Contains(words[i], "END=") {
+				text := strings.Split(words[i], "END=")
+				return common.StringToInt64(text[1])
+			}
+		}
+	}
+	return 0
+}
+
+func mkInversionNode(genome *SimpleGraph, v *vcf.Vcf, chr *fasta.Fasta) *Node {
+	invSeq := make([]dna.Base, 0)
+	invSeq = append(invSeq, chr.Seq[v.Pos:getSvEnd(v)]...)
+	dna.ReverseComplement(invSeq)
+	inversion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: invSeq, Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(v.Pos), Variant: 5}}
+	return inversion
 }
 
 func createSNP(sg *SimpleGraph, snp *vcf.Vcf, chr string) (*Node, *Node) {
@@ -246,26 +356,10 @@ func findUngap(fa *fasta.Fasta, index int64, end int64) []*noNsBed {
 	return answer
 }
 
-func isSNP(v *vcf.Vcf) bool {
-	var truth bool = false
-	if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-		truth = true
-	}
-	return truth
-}
-
 func createINS(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
 	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(v.Alt)}
 	AddNode(sg, &curr)
 	return &curr
-}
-
-func isINS(v *vcf.Vcf) bool {
-	var truth bool = false
-	if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-		truth = true
-	}
-	return truth
 }
 
 func isHaplotypeBlock(v *vcf.Vcf) bool {
@@ -280,14 +374,6 @@ func createDEL(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
 	curr := Node{Id: uint32(len(sg.Nodes)), Name: chr, Seq: dna.StringToBases(v.Ref[1:len(v.Ref)])}
 	AddNode(sg, &curr)
 	return &curr
-}
-
-func isDEL(v *vcf.Vcf) bool {
-	var truth bool = false
-	if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
-		truth = true
-	}
-	return truth
 }
 
 func goGraphSmithWatermanMap(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {

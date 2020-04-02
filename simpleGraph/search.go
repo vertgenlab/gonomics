@@ -9,7 +9,7 @@ import (
 )
 
 func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
-	currentPath = append(currentPath, n.Id)
+	//currentPath = append(currentPath, n.Id)
 	var bestQueryEnd, queryEnd int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
@@ -27,14 +27,16 @@ func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32,
 	copy(s[len(seq):targetLength], n.Seq[start:start+basesToTake])
 
 	if availableBases >= ext || len(n.Next) == 0 {
+
 		score, alignment, _, _, _, queryEnd = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		return alignment, score, queryEnd, currentPath
 	} else {
 		bestScore = -1
-		tmpPath := make([]uint32, len(currentPath))
-		copy(tmpPath, currentPath)
+		//tmpPath := make([]uint32, len(currentPath))
+		//copy(tmpPath, currentPath)
 		for _, i := range n.Next {
-			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, tmpPath, ext, read, m, trace)
+			AddPath(i.Dest.Id, currentPath)
+			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, currentPath, ext, read, m, trace)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
@@ -94,7 +96,7 @@ func AlignForwardTraversal(n *Node, seq []dna.Base, start int, seed *SeedDev, ex
 }*/
 
 func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
-	currentPath = append([]uint32{n.Id}, currentPath...)
+
 	var bestQueryStart, queryStart, refStart, bestRefStart int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
@@ -109,15 +111,18 @@ func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath
 
 	//log.Printf("left(reverse) alignment: seq1=%s, seq2=%s\n", dna.BasesToString(s), dna.BasesToString(read))
 	if availableBases >= ext || len(n.Next) == 0 {
+		AddPath(n.Id, currentPath)
+		//currentPath = append([]uint32{}, currentPath...)
 		//log.Printf("at leaf, about to align, path is:%v\n", currentPath)
 		score, alignment, refStart, _, queryStart, _ = LeftLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		return alignment, score, refEnd - basesToTake + refStart, queryStart, currentPath
 	} else {
 		bestScore = -1
-		tmp := make([]uint32, len(currentPath))
-		copy(tmp, currentPath)
-		for _, i := range n.Prev {
+		//tmp := make([]uint32, len(currentPath))
+		//copy(tmp, currentPath)
 
+		for _, i := range n.Prev {
+			AddPath(i.Dest.Id, currentPath)
 			alignment, score, refStart, queryStart, path = AlignReverseGraphTraversal(i.Dest, s, len(i.Dest.Seq), currentPath, ext, read, m, trace)
 			if score > bestScore {
 				bestScore = score
@@ -156,6 +161,46 @@ func getSeqTraversal(curr *Node, seq []dna.Base, start int, extension int) [][]d
 			answer = append(answer, getSeqTraversal(i.Dest, s, 0, extension)...)
 		}
 		return answer
+	}
+}
+
+func devIndexGraph(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
+	if seedLen < 2 || seedLen > 32 {
+		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
+	}
+	answer := make(map[uint64][]*SeedBed)
+	var seqCode uint64
+	var nodeIdx, pos int
+	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
+		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
+				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
+				curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
+				answer[seqCode] = append(answer[seqCode], &curr)
+			}
+		}
+		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
+			//locationCode = chromAndPosToNumber(nodeIdx, pos)
+			headSeed := &SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(len(genome[nodeIdx].Seq)), Next: nil}
+			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
+				devGraphHelp(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, headSeed, seedLen, answer)
+			}
+		}
+	}
+	return answer
+}
+
+func devGraphHelp(prevSeq []dna.Base, currNode *Node, headSeed *SeedBed, seedLen int, seedMap map[uint64][]*SeedBed) {
+	if len(prevSeq)+len(currNode.Seq) >= seedLen {
+		currSeq := append(prevSeq, currNode.Seq[0:(seedLen-len(prevSeq))]...)
+		if dna.CountBaseInterval(currSeq, dna.N, 0, seedLen) == 0 {
+			seqCode := dnaToNumber(currSeq, 0, seedLen)
+			seedMap[seqCode] = append(seedMap[seqCode], headSeed)
+		}
+	} else {
+		for edgeIdx := 0; edgeIdx < len(currNode.Next); edgeIdx++ {
+			devGraphHelp(append(prevSeq, currNode.Seq...), currNode.Next[edgeIdx].Dest, headSeed, seedLen, seedMap)
+		}
 	}
 }
 
@@ -225,6 +270,8 @@ func devIndexGraph(genome *SimpleGraph, seedLen int, seedStep int) map[uint64][]
 	}
 	return answer
 }
+
+
 
 func BedTail(a *SeedBed) *SeedBed {
 	if a.Next == nil {
