@@ -2,6 +2,7 @@ package giraf
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 type Giraf struct {
@@ -10,9 +11,11 @@ type Giraf struct {
 	QEnd      int
 	PosStrand bool
 	Path      *Path
-	Aln       *cigar.Cigar
+	Aln       *cigar.Cigar // current cigar will need to be expanded
 	AlnScore  int
 	MapQ      uint8
+	Seq       []dna.Base // dnaTwoBit?
+	Qual      []uint8
 	Notes     []Note // Similar to sam, this is should be a list of notes.
 	// Each note should be of the form TAG:TYPE:VALUE
 	// TAG is two characters
