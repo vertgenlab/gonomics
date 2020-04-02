@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
 )
@@ -106,7 +108,7 @@ func RandomPairedReads(genome []*Node, readLength int, numReads int, numChanges 
 	return answer
 }
 
-func PairedEndRandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
+func PairedEndRandomReads(genome *SimpleGraph, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
 	simReads := RandomReads(genome, readLength, numReads, numChanges)
 	log.Printf("length of single generated reads: %d\n", len(simReads))
 	simPairs := make([]*fastq.PairedEnd, len(simReads))
@@ -182,32 +184,73 @@ func MutateRandomReads(genome []*Node, readLength int, numReads int, numChanges 
 	return answer
 }
 
-func RandomReads(genome []*Node, readLength int, numReads int, numChanges int) []*fastq.Fastq {
+func RandLocation(genome *SimpleGraph) (uint32, uint32) {
+	var totalBases int = BasesInGraph(genome)
+	return RandLocationFast(genome, totalBases)
+}
+
+func RandLocationFast(genome *SimpleGraph, totalBases int) (uint32, uint32) {
+	var rand int = numbers.RandIntInRange(0, totalBases)
+	for i := 0; i < len(genome.Nodes); i++ {
+		if rand < genome.Nodes[i].SeqTwoBit.Len {
+			return uint32(i), uint32(rand)
+		} else {
+			rand -= genome.Nodes[i].SeqTwoBit.Len
+		}
+	}
+	log.Fatal("Error: trouble selecting a random location in the graph\n")
+	return 0, 0 //needed for compiler, should not get here
+}
+
+func RandPathFwd(genome *SimpleGraph, nodeIdx uint32, pos uint32, length int) ([]uint32, uint32, []dna.Base) {
+	var answer []dna.Base = make([]dna.Base, 0, length)
+	var i int = 0
+	for i = 0; i < length && int(pos) < genome.Nodes[nodeIdx].SeqTwoBit.Len; i, pos = i+1, pos+1 {
+		answer = append(answer, dnaTwoBit.GetBase(genome.Nodes[nodeIdx].SeqTwoBit, uint(pos)))
+	}
+	if i == length || len(genome.Nodes[nodeIdx].Next) == 0 {
+		return []uint32{nodeIdx}, pos, answer
+	} else {
+		edgeIdx := numbers.RandIntInRange(0, len(genome.Nodes[nodeIdx].Next))
+		return randPathFwdHelper(genome, genome.Nodes[nodeIdx].Next[edgeIdx].Dest.Id, length, answer, []uint32{nodeIdx})
+	}
+}
+
+func randPathFwdHelper(genome *SimpleGraph, nodeIdx uint32, length int, progress []dna.Base, path []uint32) ([]uint32, uint32, []dna.Base) {
+	var pos uint32 = 0
+	for pos = 0; len(progress) < length && int(pos) < genome.Nodes[nodeIdx].SeqTwoBit.Len; pos = pos + 1 {
+		progress = append(progress, dnaTwoBit.GetBase(genome.Nodes[nodeIdx].SeqTwoBit, uint(pos)))
+	}
+	if len(progress) == length || len(genome.Nodes[nodeIdx].Next) == 0 {
+		return append(path, nodeIdx), pos, progress
+	} else {
+		edgeIdx := numbers.RandIntInRange(0, len(genome.Nodes[nodeIdx].Next))
+		return randPathFwdHelper(genome, genome.Nodes[nodeIdx].Next[edgeIdx].Dest.Id, length, progress, append(path, nodeIdx))
+	}
+}
+
+func RandomReads(genome *SimpleGraph, readLength int, numReads int, numChanges int) []*fastq.Fastq {
 	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
-	var start int
-	var chromIdx int
+	var seq []dna.Base
+	var path []uint32
+	var nodeIdx, pos, endPos uint32
 	var strand bool
+	var totalBases = BasesInGraph(genome)
 	for i := 0; i < numReads; {
-		chromIdx = randIntInRange(0, len(genome))
-		if len(genome[chromIdx].Seq) > readLength {
-
-
-			start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
-			strand = randIntInRange(0, 2) == 0
-
-			if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
-				curr := fastq.Fastq{}
-				curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start+1, start+1+readLength, common.StrandToRune(strand))
-				curr.Seq = make([]dna.Base, readLength)
-				copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
-				curr.Qual = generateDiverseFakeQual(readLength)
-				if !strand {
-					dna.ReverseComplement(curr.Seq)
-				}
-				mutate(curr.Seq, numChanges)
-				answer[i] = &curr
-				i++
+		nodeIdx, pos = RandLocationFast(genome, totalBases)
+		path, endPos, seq = RandPathFwd(genome, nodeIdx, pos, readLength)
+		strand = numbers.RandIntInRange(0, 2) == 0
+		if (len(seq) == readLength) && (dna.CountBaseInterval(seq, dna.N, 0, readLength) == 0) {
+			curr := fastq.Fastq{}
+			curr.Name = fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, common.StrandToRune(strand))
+			curr.Seq = seq
+			curr.Qual = generateDiverseFakeQual(readLength)
+			if !strand {
+				dna.ReverseComplement(curr.Seq)
 			}
+			mutate(curr.Seq, numChanges)
+			answer[i] = &curr
+			i++
 		}
 	}
 	return answer
