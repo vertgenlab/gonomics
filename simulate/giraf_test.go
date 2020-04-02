@@ -148,9 +148,7 @@ func TestRandGiraf(t *testing.T) {
 
 	fmt.Println("Sequences Match")
 
-	mutantNodes, mutantPos := RandSomaticMutations(MakeTestGraph(), reads, 1, 0.75, seed)
-
-	fmt.Println(mutantNodes, mutantPos)
+	RandSomaticMutations(MakeTestGraph(), reads, 1, 0.75, seed)
 
 	if reads[0].Seq[1] != 1 {
 		log.Fatalln("Problem with simulating somatic mutations")
