@@ -37,30 +37,32 @@ type VcfHeader struct {
 }
 
 func processVcfLine(line string) *Vcf {
+	var curr *Vcf
+	data := strings.Split(line, "\t")
+	//fmt.Println("there is data here")
+	switch {
+	case strings.HasPrefix(line, "#"):
+		//don't do anything
+	case len(data) == 1:
+		//these lines are sequences, and we are not recording them
+		//fmt.Println("found sequences")
+	case len(line) == 0:
+		//blank line
+	case len(data) >= 10:
+		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
+		if strings.Compare(data[5], ".") == 0 {
+			curr.Qual = 255
+		} else {
+			curr.Qual = common.StringToFloat64(data[5])
+		}
+		if len(data) < 10 {
+			curr.Notes = strings.Join(data[9:], "\t")
+		}
+	default:
+		//fmt.Println("unexpected line")
+	}
 
-	data := Vcf{Chr: "", Pos: 0, Id: "", Ref: "", Alt: "", Qual: 0, Filter: "", Info: "", Format: "", Notes: ""}
-	text := strings.SplitN(line, "\t", 9)
-	if len(text) < 8 {
-		log.Fatal(fmt.Errorf("Was expecting atleast 8 columns per line, but this line did not:%s\n", line))
-	}
-	data.Pos = common.StringToInt64(text[1])
-	if strings.Compare(text[5], ".") != 0 {
-		data.Qual = common.StringToFloat64(text[5])
-	} else {
-		data.Qual = 255
-	}
-	data.Chr = text[0]
-	data.Id = text[2]
-	data.Ref = text[3]
-	data.Alt = text[4]
-	data.Filter = text[6]
-	data.Info = text[7]
-	data.Format = text[8]
-	if len(text) > 9 {
-		data.Notes = text[9]
-	}
-
-	return &data
+	return curr
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
@@ -71,13 +73,36 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
+/*
 func Read(filename string) []*Vcf {
+	var answer []*Vcf
+	var curr *Vcf
+	var line string
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil
+	}
+	reader := bufio.NewReader(file)
+	if err != nil {
+		return nil
+	}
+	var err2 error
+	//var rline []byte
+	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
+
+	}
+	return answer
+}*/
+
+func Read(filename string) []*Vcf {
+	var answer []*Vcf
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	var answer []*Vcf
 	ReadHeader(file)
-	for line, done := fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
-		answer = append(answer, processVcfLine(line))
+	var curr *Vcf
+	var done bool
+	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+		answer = append(answer, curr)
 	}
 	return answer
 }

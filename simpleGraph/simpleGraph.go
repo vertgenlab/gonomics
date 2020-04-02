@@ -273,11 +273,3 @@ func WriteToGraphSplit(filename string, gg map[string]*SimpleGraph) {
 		Write(name, gg[chr])
 	}
 }
-
-func BasesInGraph(g *SimpleGraph) int {
-	var i, baseCount int = 0, 0
-	for i = 0; i < len(g.Nodes); i++ {
-		baseCount += g.Nodes[i].SeqTwoBit.Len
-	}
-	return baseCount
-}

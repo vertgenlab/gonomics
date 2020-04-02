@@ -2,6 +2,7 @@ package simpleGraph
 
 import (
 	"fmt"
+	//"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -10,7 +11,7 @@ import (
 )
 
 func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, 0, len(read.Seq)), Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget int
 	var minQuery int
@@ -46,14 +47,14 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			} else {
 				currBest.Flag = 16
 			}
-			currBest.Seq = currSeq // unsure why this line was lost
+			currBest.Seq = currSeq
 			currBest.Qual = string(read.Qual)
 			currBest.RName = gg.Nodes[bestPath[0]].Name
 			currBest.Pos = int64(minTarget) + 1
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath), gg)
 			if gg.Nodes[bestPath[0]].Info != nil {
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
-				currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
+				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
 			}
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
