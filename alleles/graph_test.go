@@ -29,7 +29,12 @@ import (
 //               T
 
 // Sam Header:
-//
+//@HD     VN:1.6  SO:coordinate
+//@SQ     SN:n0 LN:3
+//@SQ     SN:n1 LN:2
+//@SQ     SN:n2 LN:1
+//@SQ     SN:n3 LN:1
+//@SQ     SN:n4 LN:3
 
 // Test Functions
 func MakeTestGraph() *simpleGraph.SimpleGraph {
@@ -352,9 +357,24 @@ func MakeTestReads(graph *simpleGraph.SimpleGraph, numReads int, readLen int, nu
 	}
 	return answer
 }
+/*
+func MakeMGraph() *simpleGraph.SimpleGraph {
+	var answer *simpleGraph.SimpleGraph
+
+	ref := fasta.Read("testdata/human_chrM.fasta")
+	vcf := vcf.Read("testdata/human_chrM_short.vcf")
+
+	answer = simpleGraph.FaToGenomeGraph(ref, vcf)
+
+	fmt.Println(answer)
+
+	return answer
+}
+ */
 
 func TestGraphVariants(t *testing.T) {
 	answer := GraphVariants(MakeTestGraph(), "testdata2", 0, 1, 0, 1, 0, 10, false)
+	//answer := GraphVariants(MakeMGraph(), "testdata2", 0, 1, 0, 1, 0, 10, false)
 
 	if answer == nil || len(answer) == 0 {
 		t.Errorf("Problem with GraphVariants")

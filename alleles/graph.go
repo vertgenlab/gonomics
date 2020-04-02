@@ -515,7 +515,6 @@ func appendAlleleToVcf(vcf *vcf.Vcf, refBase []dna.Base, altBase []dna.Base, dat
 		vcf.Alt = vcf.Alt + "," + dna.BasesToString(altBase)
 	}
 
-
 	// Check if it is a SNP or Indel
 	// Format order is "Sample:RefCount:AltCount:Cov:pValue"
 	if len(refBase) == 1 && len(altBase) == 1 {
