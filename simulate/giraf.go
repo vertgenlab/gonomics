@@ -27,9 +27,9 @@ func RandGiraf(graph *simpleGraph.SimpleGraph, numReads int, readLen int, randSe
 
 		if (len(seq) == readLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLen) == 0) {
 			girafPath := &giraf.Path{
-				TStart: int(pos+1),
+				TStart: int(pos),
 				Nodes: path,
-				TEnd: int(endPos)}
+				TEnd: int(endPos - 1)}
 
 			qual, alnScore, mapQ := generateDiverseQuals(readLen)
 
@@ -95,11 +95,71 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 	return answer, alnScore, mapQ
 }
 
-func RandSomaticMutations(graph *simpleGraph.SimpleGraph, reads []*giraf.Giraf, numSomaticSNV int, numSomaticIns int, numSomaticDel int, randSeed int64) []*giraf.Giraf {
-	//var totalBases = ByteBasesInGraph(graph)
+//TODO: simulate indels
+func RandSomaticMutations(graph *simpleGraph.SimpleGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
+	var totalBases = ByteBasesInGraph(graph)
+	var mutationNode, mutationPos []uint32
+	var nodeIdx uint32
+	var pos, readPos uint32
 	rand.Seed(randSeed)
 
-	return reads
+	for i := 0; i < numSomaticSNV; i++ {
+		nodeIdx, pos = ByteRandLocationFast(graph, totalBases)
+		mutationNode = append(mutationNode, nodeIdx)
+		mutationPos = append(mutationPos, pos)
+		var mutantBase dna.Base = 4
+
+		for j := 0; j < len(reads); j++ {
+			for k := 0; k < len(reads[j].Path.Nodes); k++ {
+				if reads[j].Path.Nodes[k] == nodeIdx {
+					if reads[j].Path.Nodes[0] == nodeIdx && reads[j].Path.TStart > int(pos) {
+						continue
+					}
+					if reads[j].Path.Nodes[len(reads[j].Path.Nodes)-1] == nodeIdx && reads[j].Path.TEnd < int(pos) {
+						continue
+					}
+					readPos = NodePosToReadPos(graph, reads[j], nodeIdx, pos)
+
+					if mutantBase == 4 {
+						base := reads[j].Seq[readPos]
+						for {
+							mutantBase = dna.Base(rand.Intn(4))
+							if mutantBase != base {
+								break
+							}
+						}
+					}
+
+					randProb := float64(rand.Intn(100)) / 100
+					if randProb <= AlleleFrequency {
+						reads[j].Seq[readPos] = mutantBase
+					}
+				}
+			}
+		}
+	}
+	return mutationNode, mutationPos
+}
+
+func NodePosToReadPos(graph *simpleGraph.SimpleGraph, read *giraf.Giraf, node uint32, pos uint32) uint32 {
+	var posInPath int
+	var readPos uint32 = 0
+
+	for i := 0 ; i < len(read.Path.Nodes); i++ {
+		if read.Path.Nodes[i] == node {
+			posInPath = i
+			break
+		}
+	}
+
+	for i := 0 ; i < posInPath; i++ {
+		readPos += uint32(len(graph.Nodes[read.Path.Nodes[i]].Seq))
+	}
+
+	readPos += pos
+	readPos -= uint32(read.Path.TStart)
+
+	return readPos
 }
 
 func ByteBasesInGraph(g *simpleGraph.SimpleGraph) int {

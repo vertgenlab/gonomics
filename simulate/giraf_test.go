@@ -114,7 +114,7 @@ var check = giraf.Giraf{
 	QStart: 0,
 	QEnd: 4,
 	PosStrand: false, // rev strand, must reverse complement
-	Path: &giraf.Path{3, []uint32{0, 1, 2}, 1}, // Nodes 0->1->2, start base 3, end base 1
+	Path: &giraf.Path{2, []uint32{0, 1, 2}, 0}, // Nodes 0->1->2, start base 3, end base 1
 	Aln: []*cigar.Cigar{{4, 'M'}},
 	AlnScore: 16602,
 	MapQ: 35,
@@ -128,7 +128,7 @@ func TestRandGiraf(t *testing.T) {
 	// Uncomment following line for random reads
 	//seed = time.Now().UnixNano()
 
-	reads := RandGiraf(MakeTestGraph(), 1, 4, seed)
+	reads := RandGiraf(MakeTestGraph(), 10, 4, seed)
 
 	if reads[0].QName != check.QName {
 		log.Fatalln("Reads do not match")
@@ -148,10 +148,20 @@ func TestRandGiraf(t *testing.T) {
 
 	fmt.Println("Sequences Match")
 
-	/*
+	mutantNodes, mutantPos := RandSomaticMutations(MakeTestGraph(), reads, 1, 0.75, seed)
+
+	fmt.Println(mutantNodes, mutantPos)
+
+	if reads[0].Seq[1] != 1 {
+		log.Fatalln("Problem with simulating somatic mutations")
+	}
+
+	fmt.Println("Somatic Mutations Generated Correctly")
+
+
 	for i := 0; i < len(reads); i++ {
 		fmt.Println(reads[i])
 		fmt.Println(reads[i].Path, reads[i].Aln[0])
 	}
-	 */
+
 }
