@@ -19,8 +19,7 @@ func RandGiraf(graph *simpleGraph.SimpleGraph, numReads int, readLen int, randSe
 	var totalBases = ByteBasesInGraph(graph)
 	rand.Seed(randSeed)
 
-
-	for ; len(answer) < numReads ; {
+	for len(answer) < numReads {
 		nodeIdx, pos := ByteRandLocationFast(graph, totalBases)
 		path, endPos, seq := ByteRandPathFwd(graph, nodeIdx, pos, readLen)
 		strand := rand.Intn(2) == 0
@@ -28,24 +27,23 @@ func RandGiraf(graph *simpleGraph.SimpleGraph, numReads int, readLen int, randSe
 		if (len(seq) == readLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLen) == 0) {
 			girafPath := &giraf.Path{
 				TStart: int(pos),
-				Nodes: path,
-				TEnd: int(endPos - 1)}
+				Nodes:  path,
+				TEnd:   int(endPos - 1)}
 
 			qual, alnScore, mapQ := generateDiverseQuals(readLen)
 
 			curr = &giraf.Giraf{
-				QName: fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, common.StrandToRune(strand)),
-				QStart: 0,
-				QEnd: readLen,
+				QName:     fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, common.StrandToRune(strand)),
+				QStart:    0,
+				QEnd:      readLen,
 				PosStrand: strand,
-				Path: girafPath,
-				Aln: []*cigar.Cigar{{int64(readLen), 'M'}}, // tmp cigar until giraf cigars have been implemented
-				AlnScore: alnScore, // placeholder
-				MapQ: mapQ, // placeholder
-				Seq: seq,
-				Qual: qual,
-				Notes: nil}
-
+				Path:      girafPath,
+				Aln:       []*cigar.Cigar{{int64(readLen), 'M'}}, // tmp cigar until giraf cigars have been implemented
+				AlnScore:  alnScore,                              // placeholder
+				MapQ:      mapQ,                                  // placeholder
+				Seq:       seq,
+				Qual:      qual,
+				Notes:     nil}
 
 			if !strand {
 				dna.ReverseComplement(curr.Seq)
@@ -145,14 +143,14 @@ func NodePosToReadPos(graph *simpleGraph.SimpleGraph, read *giraf.Giraf, node ui
 	var posInPath int
 	var readPos uint32 = 0
 
-	for i := 0 ; i < len(read.Path.Nodes); i++ {
+	for i := 0; i < len(read.Path.Nodes); i++ {
 		if read.Path.Nodes[i] == node {
 			posInPath = i
 			break
 		}
 	}
 
-	for i := 0 ; i < posInPath; i++ {
+	for i := 0; i < posInPath; i++ {
 		readPos += uint32(len(graph.Nodes[read.Path.Nodes[i]].Seq))
 	}
 
