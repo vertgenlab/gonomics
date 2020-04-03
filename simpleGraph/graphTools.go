@@ -39,15 +39,14 @@ func FaToGenomeGraph(ref []*fasta.Fasta, vcfs []*vcf.Vcf) (*SimpleGraph, map[str
 func VariantGraph(reference []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
 	vcfSplit := vcf.VcfSplit(vcfs, reference)
+	var filterVcf []*vcf.Vcf
 	if len(vcfSplit) != len(reference) {
 		log.Fatal("Slice of vcfs do not equal reference length")
 	} else {
 		for i := 0; i < len(reference); i++ {
 			if len(vcfSplit[i]) != 0 {
-				//vcfSplit[i] = append(vcfSplit[i], &vcf.Vcf{Chr: vcfSplit[i][0].Chr, Pos: int64(len(reference[i].Seq))})
-				//vcf.NoVcfOverlap(vcfSplit[i])
-				//vcfSplit[i] = vcf.FilterAxtVcf(vcfSplit[i], reference)
-				gg = vChrGraph(gg, reference[i], vcfSplit[i])
+				filterVcf = vcf.FilterNs(vcfSplit[i])
+				gg = vChrGraph(gg, reference[i], filterVcf)
 			} else {
 				//when only calling large SV, no variants called on chr is possible, entire chr becomes a node
 				chrNode := &Node{Id: uint32(len(gg.Nodes)), Name: reference[i].Name, Seq: reference[i].Seq, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: 1, Variant: 0}}
