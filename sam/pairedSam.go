@@ -3,7 +3,6 @@ package sam
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
-	"log"
 	"os"
 	"sync"
 )
@@ -20,7 +19,6 @@ func SamChanPairToFile(incomingSams <-chan *PairedSamAln, filename string, heade
 	for alignedRead := range incomingSams {
 		WriteAlnPairToFileHandle(file, alignedRead)
 	}
-	log.Printf("Finished aligning read pair!!\n")
 	wg.Done()
 }
 
