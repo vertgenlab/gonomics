@@ -1,11 +1,11 @@
-package simulate
+package simpleGraph
 
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 	"testing"
 )
@@ -36,60 +36,60 @@ import (
 //@SQ     SN:n4 LN:3
 
 // Test Functions
-func MakeTestGraph() *simpleGraph.SimpleGraph {
-	graph := simpleGraph.NewGraph()
+func MakeTestGraph() *SimpleGraph {
+	graph := NewGraph()
 
-	var n0, n1, n2, n3, n4 *simpleGraph.Node
-	var e0, e1, e2, e3, e4, e5 *simpleGraph.Edge
+	var n0, n1, n2, n3, n4 *Node
+	var e0, e1, e2, e3, e4, e5 *Edge
 
 	// Make Nodes
-	n0 = &simpleGraph.Node{
+	n0 = &Node{
 		Id:   0,
 		Name: "n0",
 		Seq:  dna.StringToBases("ATG")}
 
-	n1 = &simpleGraph.Node{
+	n1 = &Node{
 		Id:   1,
 		Name: "n1",
 		Seq:  dna.StringToBases("CG")}
 
-	n2 = &simpleGraph.Node{
+	n2 = &Node{
 		Id:   2,
 		Name: "n2",
 		Seq:  dna.StringToBases("A")}
 
-	n3 = &simpleGraph.Node{
+	n3 = &Node{
 		Id:   3,
 		Name: "n3",
 		Seq:  dna.StringToBases("T")}
 
-	n4 = &simpleGraph.Node{
+	n4 = &Node{
 		Id:   4,
 		Name: "n4",
 		Seq:  dna.StringToBases("TAA")}
 
 	// Make Edges
-	e0 = &simpleGraph.Edge{
+	e0 = &Edge{
 		Dest: n1,
 		Prob: 1}
 
-	e1 = &simpleGraph.Edge{
+	e1 = &Edge{
 		Dest: n2,
 		Prob: 0.05}
 
-	e2 = &simpleGraph.Edge{
+	e2 = &Edge{
 		Dest: n4,
 		Prob: 1}
 
-	e3 = &simpleGraph.Edge{
+	e3 = &Edge{
 		Dest: n4,
 		Prob: 0.8}
 
-	e4 = &simpleGraph.Edge{
+	e4 = &Edge{
 		Dest: n3,
 		Prob: 0.15}
 
-	e5 = &simpleGraph.Edge{
+	e5 = &Edge{
 		Dest: n4,
 		Prob: 1}
 
@@ -104,6 +104,10 @@ func MakeTestGraph() *simpleGraph.SimpleGraph {
 	n4.Prev = append(n4.Prev, e2, e3, e5)
 
 	graph.Nodes = append(graph.Nodes, n0, n1, n2, n3, n4)
+
+	for i := 0; i < len(graph.Nodes); i++ {
+		graph.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(graph.Nodes[i].Seq)
+	}
 
 	return graph
 }

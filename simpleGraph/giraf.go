@@ -1,4 +1,4 @@
-package simulate
+package simpleGraph
 
 import (
 	"fmt"
@@ -7,28 +7,26 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/simpleGraph"
-	"log"
 	"math/rand"
 )
 
-func RandGiraf(graph *simpleGraph.SimpleGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
+func RandGiraf(graph *SimpleGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
 	answer := make([]*giraf.Giraf, 0)
 	var curr *giraf.Giraf
 
-	var totalBases = ByteBasesInGraph(graph)
+	var totalBases = BasesInGraph(graph)
 	rand.Seed(randSeed)
 
 	for len(answer) < numReads {
-		nodeIdx, pos := ByteRandLocationFast(graph, totalBases)
-		path, endPos, seq := ByteRandPathFwd(graph, nodeIdx, pos, readLen)
+		nodeIdx, pos := RandLocationFast(graph, totalBases)
+		path, endPos, seq := RandPathFwd(graph, nodeIdx, pos, readLen)
 		strand := rand.Intn(2) == 0
 
 		if (len(seq) == readLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLen) == 0) {
 			girafPath := &giraf.Path{
 				TStart: int(pos),
 				Nodes:  path,
-				TEnd:   int(endPos - 1)}
+				TEnd:   int(endPos)}
 
 			qual, alnScore, mapQ := generateDiverseQuals(readLen)
 
@@ -62,17 +60,17 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 	scoreProb := rand.Intn(100)
 	switch {
 	case scoreProb == 0: // 1% of bases will have alnScore between 6k-8k, and mapQ below 5
-		alnScore = 6000 + rand.Intn(2000)
+		alnScore = numbers.RandIntInRange(6000, 8000)
 		mapQ = uint8(rand.Intn(5))
 	case scoreProb < 10: // 10% of bases will have alnScore between 8k-10k, and mapQ below 15
-		alnScore = 8000 + rand.Intn(2000)
-		mapQ = 5 + uint8(rand.Intn(10))
+		alnScore = numbers.RandIntInRange(8000, 10000)
+		mapQ = uint8(numbers.RandIntInRange(5, 15))
 	case scoreProb < 20: // 20% of bases will have alnScore between 10k-15k, and mapQ below 30
-		alnScore = 10000 + rand.Intn(5000)
-		mapQ = 15 + uint8(rand.Intn(15))
+		alnScore = numbers.RandIntInRange(10000, 15000)
+		mapQ = uint8(numbers.RandIntInRange(15, 30))
 	default: // 80% of bases will have alnScore between 15k-20k, and mapQ below 40
-		alnScore = 15000 + rand.Intn(5000)
-		mapQ = 30 + uint8(rand.Intn(10))
+		alnScore = numbers.RandIntInRange(15000, 20000)
+		mapQ = uint8(numbers.RandIntInRange(30, 40))
 	}
 
 	for i := 0; i < readLen; i++ {
@@ -94,15 +92,15 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 }
 
 //TODO: simulate indels
-func RandSomaticMutations(graph *simpleGraph.SimpleGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
-	var totalBases = ByteBasesInGraph(graph)
+func RandSomaticMutations(graph *SimpleGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
+	var totalBases = BasesInGraph(graph)
 	var mutationNode, mutationPos []uint32
 	var nodeIdx uint32
 	var pos, readPos uint32
 	rand.Seed(randSeed)
 
 	for i := 0; i < numSomaticSNV; i++ {
-		nodeIdx, pos = ByteRandLocationFast(graph, totalBases)
+		nodeIdx, pos = RandLocationFast(graph, totalBases)
 		mutationNode = append(mutationNode, nodeIdx)
 		mutationPos = append(mutationPos, pos)
 		var mutantBase dna.Base = 4
@@ -139,7 +137,7 @@ func RandSomaticMutations(graph *simpleGraph.SimpleGraph, reads []*giraf.Giraf, 
 	return mutationNode, mutationPos
 }
 
-func NodePosToReadPos(graph *simpleGraph.SimpleGraph, read *giraf.Giraf, node uint32, pos uint32) uint32 {
+func NodePosToReadPos(graph *SimpleGraph, read *giraf.Giraf, node uint32, pos uint32) uint32 {
 	var posInPath int
 	var readPos uint32 = 0
 
@@ -158,52 +156,4 @@ func NodePosToReadPos(graph *simpleGraph.SimpleGraph, read *giraf.Giraf, node ui
 	readPos -= uint32(read.Path.TStart)
 
 	return readPos
-}
-
-func ByteBasesInGraph(g *simpleGraph.SimpleGraph) int {
-	var i, baseCount int = 0, 0
-	for i = 0; i < len(g.Nodes); i++ {
-		baseCount += len(g.Nodes[i].Seq)
-	}
-	return baseCount
-}
-
-func ByteRandLocationFast(genome *simpleGraph.SimpleGraph, totalBases int) (uint32, uint32) {
-	var rand int = numbers.RandIntInRange(0, totalBases)
-	for i := 0; i < len(genome.Nodes); i++ {
-		if rand < len(genome.Nodes[i].Seq) {
-			return uint32(i), uint32(rand)
-		} else {
-			rand -= len(genome.Nodes[i].Seq)
-		}
-	}
-	log.Fatal("Error: trouble selecting a random location in the graph\n")
-	return 0, 0 //needed for compiler, should not get here
-}
-
-func ByteRandPathFwd(genome *simpleGraph.SimpleGraph, nodeIdx uint32, pos uint32, length int) ([]uint32, uint32, []dna.Base) {
-	var answer []dna.Base = make([]dna.Base, 0, length)
-	var i int = 0
-	for i = 0; i < length && int(pos) < len(genome.Nodes[nodeIdx].Seq); i, pos = i+1, pos+1 {
-		answer = append(answer, genome.Nodes[nodeIdx].Seq[pos])
-	}
-	if i == length || len(genome.Nodes[nodeIdx].Next) == 0 {
-		return []uint32{nodeIdx}, pos, answer
-	} else {
-		edgeIdx := numbers.RandIntInRange(0, len(genome.Nodes[nodeIdx].Next))
-		return randPathFwdHelper(genome, genome.Nodes[nodeIdx].Next[edgeIdx].Dest.Id, length, answer, []uint32{nodeIdx})
-	}
-}
-
-func randPathFwdHelper(genome *simpleGraph.SimpleGraph, nodeIdx uint32, length int, progress []dna.Base, path []uint32) ([]uint32, uint32, []dna.Base) {
-	var pos uint32 = 0
-	for pos = 0; len(progress) < length && int(pos) < len(genome.Nodes[nodeIdx].Seq); pos = pos + 1 {
-		progress = append(progress, genome.Nodes[nodeIdx].Seq[pos])
-	}
-	if len(progress) == length || len(genome.Nodes[nodeIdx].Next) == 0 {
-		return append(path, nodeIdx), pos, progress
-	} else {
-		edgeIdx := numbers.RandIntInRange(0, len(genome.Nodes[nodeIdx].Next))
-		return randPathFwdHelper(genome, genome.Nodes[nodeIdx].Next[edgeIdx].Dest.Id, length, progress, append(path, nodeIdx))
-	}
 }
