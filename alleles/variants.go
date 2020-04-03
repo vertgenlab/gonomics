@@ -3,7 +3,6 @@ package alleles
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
@@ -384,7 +383,7 @@ func score(input ScoreInput) *vcf.Vcf{
 	}
 	return answer
 }
-
+/*
 // Inputs a vcf file annotated by SnpEff and exports as a csv
 func EffToCSV(inFile string, outFile string) {
 	vcfchan := vcf.ReadToChan(inFile)
@@ -480,5 +479,4 @@ func EffToCSV(inFile string, outFile string) {
 			PROVEAN)
 	}
 }
-
-
+ */
