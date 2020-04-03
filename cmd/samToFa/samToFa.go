@@ -45,7 +45,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 			SeqIndex = 0
 			RefIndex = aln.Pos - 1
 			for i = 0; i < len(aln.Cigar); i++ {
-				currentSeq = dna.StringToBases(aln.Seq)
+				currentSeq = aln.Seq
 				if aln.Cigar[i].Op == 'D' {
 					RefIndex = RefIndex + int64(aln.Cigar[i].RunLength)
 				} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
@@ -74,7 +74,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 
 	outFile := fileio.EasyCreate(vcfFile)
 	defer outFile.Close()
-	fmt.Fprintf(outFile, "%s\n", vcf.BasicHeader())
+	fmt.Fprintf(outFile, "%s\n", vcf.MakeHeader())
 	var current dna.Base
 	//fmt.Printf("Voting matrix complete, time to vote.\n")
 	var maxList []dna.Base
@@ -148,7 +148,7 @@ func voter(v *voteBase, maxList []dna.Base) dna.Base {
 	if maxCount < 2 {
 		return outBase
 	}
-	
+
 	return maxList[common.RandIntInRange(0, len(maxList))]
 }
 
@@ -168,9 +168,9 @@ type voteBase struct {
 func usage() {
 	fmt.Print(
 		"samToFa - Generate a fasta file from a sam over a refrence sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
-		"Usage:\n" +
-		"samToFa individual.sam ref.fa output.fa variantList.vcf\n" +
-		"options:\n")
+			"Usage:\n" +
+			"samToFa individual.sam ref.fa output.fa variantList.vcf\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

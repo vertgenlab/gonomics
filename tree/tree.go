@@ -55,11 +55,11 @@ func ParseDot(input string) *Tree {
 		words := strings.Split(line, " -> ")
 		if len(words) < 2 {
 			if words[0] == "}" {
-				fmt.Println("End Line.\n")
+				fmt.Printf("End Line.\n")
 			} else {
 				wordSpace := strings.Split(words[0], " ")
 				if wordSpace[0] == "digraph" {
-					fmt.Println("header line.\n")
+					fmt.Printf("header line.\n")
 				} else {
 					log.Fatalf("Invalid line.\n")
 				}

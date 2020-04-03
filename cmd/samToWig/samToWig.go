@@ -7,9 +7,9 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
 	//"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
 
@@ -19,9 +19,9 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	if paired && fragLength != int64(-1) {
 		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
 	}
-	
+
 	ref := chromInfo.ReadToMap(reference)
-	
+
 	samFile := fileio.EasyOpen(samFileName)
 	defer samFile.Close()
 	var done bool = false
@@ -31,7 +31,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 
 	//records, err := sam.Read(infile)    old version
 	//common.ExitIfError(err)
-	
+
 	var outWig []*wig.Wig
 	var currentBed *bed.Bed
 
@@ -59,10 +59,10 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 func usage() {
 	fmt.Print(
 		"samToWig - Converts sam to wig\n" +
-		"Usage:\n" +
-		" samToWig input.sam reference.chrom.sizes output.wig\n" +
-		" Currently fills in Wig values over deletions.\n" +
-		"options:\n")
+			"Usage:\n" +
+			" samToWig input.sam reference.chrom.sizes output.wig\n" +
+			" Currently fills in Wig values over deletions.\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

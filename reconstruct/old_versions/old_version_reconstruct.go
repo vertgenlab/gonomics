@@ -1,5 +1,6 @@
-package reconstruct_pre
+package reconstruct
 
+/*
 import (
 // "fmt"
 "github.com/vertgenlab/gonomics/fasta"
@@ -250,3 +251,4 @@ fas = append(fas, *fastas[i])
 
 return fas
 }
+*/

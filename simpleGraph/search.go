@@ -1,177 +1,42 @@
 package simpleGraph
 
 import (
-	"fmt"
-
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"strings"
-	//"sync"
+	//"fmt"
 )
 
-func VariantGraph(reference []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
-	gg := NewGraph()
-	vcfSplit := vcf.VcfSplit(vcfs, reference)
-	if len(vcfSplit) != len(reference) {
-		log.Fatal("Slice of vcfs do not equal reference length")
-	} else {
-		for i := 0; i < len(reference); i++ {
-			gg = vChrGraph(gg, reference[i], vcfSplit[i])
-		}
-	}
-	return gg
-}
-
-func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
-	fasta.ToUpper(chr)
-	if len(vcfsChr) == 0 {
-		log.Fatalf("Error: vcf file is empty, please try again...\n")
-	}
-	var currMatch *Node = nil
-	var lastMatch *Node = nil
-	var refAllele, altAllele *Node
-	var prev []*Node = nil
-	var weight float32 = 0
-	var i, edge int //, j, edge int
-	//var j int
-	var index int64 = 0
-	//for debuging, max index can go up to in the for loop:
-	//var lastPos int64 = int64(len(chr.Seq)) - vcfsChr[len(vcfsChr)-1].Pos - 1
-	//var lastV *vcf.Vcf = *vcf.Vcf{Pos: 0}
-	for i = 0; i < len(vcfsChr); i++ {
-		//trivial case
-		if vcfsChr[i].Pos-index > 0 {
-			currMatch = &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d", chr.Name, index+1), Seq: chr.Seq[index : vcfsChr[i].Pos-1], Prev: nil, Next: make([]*Edge, 0, 2)}
-			AddNode(genome, currMatch)
-		//	currMatch = &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d", chr.Name, index+1), Seq: []dna.Base{chr.Seq[index]}, Prev: nil, Next: make([]*Edge, 0, 2)}
-		//}
-		} else if vcfsChr[i].Pos-index == 0 {
-			currMatch = lastMatch
-			//log.Printf("Warning: there are two vcf records in %s, postion %d...\n", chr.Name, vcfsChr[i].Pos)
-			//fmt.Printf("%s\t%s\t%d\t%s\t%s\n%s\t%s\t%d\t%s\t%s\n", vcfsChr[i-1].Format, vcfsChr[i-1].Chr, vcfsChr[i-1].Pos, vcfsChr[i-1].Ref, vcfsChr[i-1].Alt, vcfsChr[i].Format, vcfsChr[i].Chr, vcfsChr[i].Pos, vcfsChr[i].Ref, vcfsChr[i].Alt)
-			//continue
-		} else {
-			log.Printf("Warning: Check vcf record at %s, postion %d...\n", chr.Name, vcfsChr[i].Pos)
-			continue
-		}
-		if lastMatch != nil {
-			AddEdge(lastMatch, currMatch, 1)
-			SetEvenWeights(lastMatch)
-		}
-		
-	//	prev = make([]*Node, 0, 2)
-		
-		
-		if isSNP(vcfsChr[i]) {
-			refAllele = &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_SNP", chr.Name, vcfsChr[i].Pos), Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil}
-			AddNode(genome, refAllele)
-			AddEdge(currMatch, refAllele, 0.5)
-
-			altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_SNP", chr.Name, vcfsChr[i].Pos), Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil}
-			AddNode(genome, altAllele)
-			AddEdge(currMatch, altAllele, 0.5)
-
-			//prev = append(prev, refAllele)
-			//prev = append(prev, altAllele)
-			index = vcfsChr[i].Pos
-			//for j = i + 1; j < len(vcfsChr)-1;j++ {
-			//	if isSNP(vcfsChr[j-1]) && isSNP(vcfsChr[j]) && vcfsChr[j].Pos-1 == vcfsChr[j-1].Pos {
-			//		refAllele.Seq = append(refAllele.Seq, dna.StringToBases(vcfsChr[j].Ref)...)
-			//		altAllele.Seq = append(altAllele.Seq, dna.StringToBases(vcfsChr[j].Alt)...)
-			//		index = vcfsChr[j].Pos
-			//	} else {
-			//		lastMatch = currMatch
-			//		i = j -1
-			//		break
-			//	}
-			//}
-		}
-		if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 {
-			refAllele = &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_SNP_INDEL", chr.Name, vcfsChr[i].Pos), Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil}
-			AddNode(genome, refAllele)
-			AddEdge(currMatch, refAllele, 1)
-
-		//	altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_SNP_INDEL", chr.Name, vcfsChr[i].Pos), Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil}
-			AddNode(genome, altAllele)
-			AddEdge(currMatch, altAllele, 1)
-
-		//	prev = append(prev, refAllele)
-		//	prev = append(prev, altAllele)
-			index = vcfsChr[i].Pos
-		}
-
-		if isINS(vcfsChr[i]) {
-			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Ref)...)
-			insertion := &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_INS", chr.Name, vcfsChr[i].Pos), Seq: dna.StringToBases(vcfsChr[i].Alt)[1:], Prev: nil, Next: nil}
-			AddNode(genome, insertion)
-			AddEdge(currMatch, insertion, 1)
-			//prev = append(prev, insertion)
-			index = vcfsChr[i].Pos
-		}
-		if isDEL(vcfsChr[i]) {
-			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Alt)...)
-			deletion := &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_DEL", chr.Name, index+1), Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil}
-			//deletion.Name += fmt.Sprintf("_del_%d_%d", vcfsChr[i].Pos+1, vcfsChr[i].Pos+int64(len(deletion.Seq)))
-			AddNode(genome, deletion)
-			AddEdge(currMatch, deletion, 1)
-			//prev = append(prev, deletion)
-			index = vcfsChr[i].Pos + int64(len(deletion.Seq))
-		}
-		lastMatch = currMatch
-		//lastV = vcfsChr[i]
-		//currMatch.Name+= fmt.Sprintf("_%d", len(currMatch.Seq))
-		
-	}
-	//Case: last node
-	lastNode := &Node{Id: uint32(len(genome.Nodes)), Name: fmt.Sprintf("%s_%d_%d", chr.Name, index+1, int64(len(chr.Seq))-index), Seq: chr.Seq[index:], Prev: make([]*Edge, 0, len(prev)), Next: nil}
-	AddNode(genome, lastNode)
-	weight = float32(1) / float32(len(prev))
-	for edge = 0; edge < len(prev); edge++ {
-		AddEdge(prev[edge], lastNode, weight)
-	}
-	return genome
-}
-
-func AlignTraversalFwd(rightNode *Node, seq []dna.Base, start int, currentPath []uint32, extention int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
-	currentPath = AddPath(rightNode.Id, currentPath)
+func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
+	//currentPath = append(currentPath, n.Id)
 	var bestQueryEnd, queryEnd int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
 	var path, bestPath []uint32
 
-	if len(seq) >= extention {
-		log.Fatalf("Error: the length of DNA sequence in previous nodes should not be enough to satisfy the desired extension.\n")
+	if len(seq) >= ext {
+		log.Fatalf("Error: the length of DNA sequence in previous nodes should not be enough to satisfy the desired extenion.\n")
 	}
-	var availableBases int = len(rightNode.Seq) - start + len(seq)
-
-	var targetLength int = common.Min(availableBases, extention)
+	var availableBases int = len(seq) + len(n.Seq) - start
+	var targetLength int = common.Min(availableBases, ext)
 	var basesToTake int = targetLength - len(seq)
-	//log.Printf("len(seq)=%d, len(n.Seq)=%d, start=%d, targetLength=%d, basesToTake=%d\n", len(seq), len(rightNode.Seq), start, targetLength, basesToTake)
 	var s []dna.Base = make([]dna.Base, targetLength)
-
+	//log.Printf("len(seq)=%d, len(n.Seq)=%d, start=%d, targetLength=%d, basesToTake=%d\n", len(seq), len(n.Seq), start, targetLength, basesToTake)
 	copy(s[0:len(seq)], seq)
-	copy(s[len(seq):targetLength], rightNode.Seq[start:start+basesToTake])
+	copy(s[len(seq):targetLength], n.Seq[start:start+basesToTake])
 
-	/*
-		var base int
-		for base = 0; base < len(seq); base++ {
-			s[base] = seq[base]
-		}
-		for base = 0; base < len(n.Seq[start:start+basesToTake]); base++ {
-			s[len(seq)+base] = n.Seq[start+base]
-		}*/
-	if availableBases >= extention || len(rightNode.Next) == 0 {
+	if availableBases >= ext || len(n.Next) == 0 {
+
 		score, alignment, _, _, _, queryEnd = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		return alignment, score, queryEnd, currentPath
 	} else {
-
-		for _, i := range rightNode.Next {
-			bestScore = -1
-			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, currentPath, extention, read, m, trace)
+		bestScore = -1
+		//tmpPath := make([]uint32, len(currentPath))
+		//copy(tmpPath, currentPath)
+		for _, i := range n.Next {
+			AddPath(i.Dest.Id, currentPath)
+			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, currentPath, ext, read, m, trace)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
@@ -183,36 +48,82 @@ func AlignTraversalFwd(rightNode *Node, seq []dna.Base, start int, currentPath [
 	}
 }
 
-func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extention int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
-	currentPath = AddPath(n.Id, currentPath)
+/*
+func AlignForwardTraversal(n *Node, seq []dna.Base, start int, seed *SeedDev, ext int, read *fastq.Fastq, m [][]int64, trace [][]rune) ([]*cigar.Cigar, *SeedDev) {
+
+	var bestQueryEnd, queryEnd int
+	var bestScore, score int64
+	var bestAlignment, alignment []*cigar.Cigar
+	//var path, bestPath []uint32
+
+	if len(seq) >= ext {
+		log.Fatalf("Error: the length of DNA sequence in previous nodes should not be enough to satisfy the desired extenion.\n")
+	}
+	var availableBases int = len(seq) + len(n.Seq) - start
+	var targetLength int = common.Min(availableBases, ext)
+	var basesToTake int = targetLength - len(seq)
+	var s []dna.Base = make([]dna.Base, targetLength)
+	//log.Printf("len(seq)=%d, len(n.Seq)=%d, start=%d, targetLength=%d, basesToTake=%d\n", len(seq), len(n.Seq), start, targetLength, basesToTake)
+	copy(s[0:len(seq)], seq)
+	copy(s[len(seq):targetLength], n.Seq[start:start+basesToTake])
+
+	if availableBases >= ext || len(n.Next) == 0 {
+
+		score, alignment, _, _, _, queryEnd = RightLocal(s, read.Seq, HumanChimpTwoScoreMatrix, -600, m, trace)
+		return alignment, seed
+	} else {
+		bestScore = -1
+		newSeed := &SeedDev{TargetId: seed.TargetId, TargetStart: uint32(start), QueryStart: uint32(newQStart), Length: 0, PosStrand: seed.PosStrand, Next: nil, Prev: nil}
+		for _, i := range n.Next {
+
+			if availableBases < len(n.Seq) || availableBases < len(read.Seq[start:]) {
+
+			}
+
+
+			//tmpPath := make([]uint32, len(currentPath)) //TODO: should not need to copy path N times, but N-1 times
+			copy(tmpPath, currentPath)
+			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, tmpPath, ext, read, m, trace)
+			if score > bestScore {
+				bestScore = score
+				bestAlignment = alignment
+				bestQueryEnd = queryEnd
+				bestPath = path
+			}
+		}
+		return bestAlignment, bestScore, bestQueryEnd, bestPath
+	}
+}*/
+
+func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
+
 	var bestQueryStart, queryStart, refStart, bestRefStart int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
 	var path, bestPath []uint32
 
 	var availableBases int = len(seq) + refEnd
-	var targetLength int = common.Min(availableBases, extention)
+	var targetLength int = common.Min(availableBases, ext)
 	var basesToTake int = targetLength - len(seq)
 	var s []dna.Base = make([]dna.Base, targetLength)
 	copy(s[0:basesToTake], n.Seq[refEnd-basesToTake:refEnd])
 	copy(s[basesToTake:targetLength], seq)
-	/*var base int
-	for base = 0; base < targetLength; base++ {
-		if base < basesToTake {
-			s[base] = n.Seq[refEnd-basesToTake+base]
-		} else {
-			s[base] = seq[base]
-		}
-	}*/
-	if availableBases >= extention || len(n.Next) == 0 {
+
+	//log.Printf("left(reverse) alignment: seq1=%s, seq2=%s\n", dna.BasesToString(s), dna.BasesToString(read))
+	if availableBases >= ext || len(n.Next) == 0 {
+		AddPath(n.Id, currentPath)
+		//currentPath = append([]uint32{}, currentPath...)
+		//log.Printf("at leaf, about to align, path is:%v\n", currentPath)
 		score, alignment, refStart, _, queryStart, _ = LeftLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		return alignment, score, refEnd - basesToTake + refStart, queryStart, currentPath
 	} else {
 		bestScore = -1
 		//tmp := make([]uint32, len(currentPath))
 		//copy(tmp, currentPath)
+
 		for _, i := range n.Prev {
-			alignment, score, refStart, queryStart, path = AlignReverseGraphTraversal(i.Dest, s, len(i.Dest.Seq), currentPath, extention, read, m, trace)
+			AddPath(i.Dest.Id, currentPath)
+			alignment, score, refStart, queryStart, path = AlignReverseGraphTraversal(i.Dest, s, len(i.Dest.Seq), currentPath, ext, read, m, trace)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
@@ -221,10 +132,212 @@ func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath
 				bestPath = path
 			}
 		}
-		reversePath(bestPath)
 		return bestAlignment, bestScore, bestRefStart, bestQueryStart, bestPath
 	}
 }
+
+func getSeqTraversal(curr *Node, seq []dna.Base, start int, extension int) [][]dna.Base {
+	var answer [][]dna.Base
+	if len(seq) >= extension {
+		log.Fatalf("Error: the length of DNA sequence in previous nodes should not be enough to satisfy the desired extension.\n")
+	}
+	var availableBases int = len(curr.Seq) - start + len(seq)
+	var targetLength int = common.Min(availableBases, extension)
+	var basesToTake int = targetLength - len(seq)
+	//log.Printf("len(seq)=%d, len(n.Seq)=%d, start=%d, targetLength=%d, basesToTake=%d\n", len(seq), len(curr.Seq), start, targetLength, basesToTake)
+	var s []dna.Base = make([]dna.Base, targetLength)
+	copy(s[0:len(seq)], seq)
+	copy(s[len(seq):targetLength], curr.Seq[start:start+basesToTake])
+	if availableBases >= extension || len(curr.Next) == 0 {
+		if dna.CountBaseInterval(s, dna.N, 0, len(s)) == 0 {
+			answer = append(answer, s)
+		}
+
+		//score, alignment, _, _, _, queryEnd = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
+		return answer
+	} else {
+
+		for _, i := range curr.Next {
+			answer = append(answer, getSeqTraversal(i.Dest, s, 0, extension)...)
+		}
+		return answer
+	}
+}
+
+func devIndexGraph(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
+	if seedLen < 2 || seedLen > 32 {
+		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
+	}
+	answer := make(map[uint64][]*SeedBed)
+	var seqCode uint64
+	var nodeIdx, pos int
+	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
+		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
+				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
+				curr := SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
+				answer[seqCode] = append(answer[seqCode], &curr)
+			}
+		}
+		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
+			//locationCode = chromAndPosToNumber(nodeIdx, pos)
+			headSeed := &SeedBed{Id: genome[nodeIdx].Id, Start: uint32(pos), End: uint32(len(genome[nodeIdx].Seq)), Next: nil}
+			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
+				devGraphHelp(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, headSeed, seedLen, answer)
+			}
+		}
+	}
+	return answer
+}
+
+func devGraphHelp(prevSeq []dna.Base, currNode *Node, headSeed *SeedBed, seedLen int, seedMap map[uint64][]*SeedBed) {
+	if len(prevSeq)+len(currNode.Seq) >= seedLen {
+		currSeq := append(prevSeq, currNode.Seq[0:(seedLen-len(prevSeq))]...)
+		if dna.CountBaseInterval(currSeq, dna.N, 0, seedLen) == 0 {
+			seqCode := dnaToNumber(currSeq, 0, seedLen)
+			seedMap[seqCode] = append(seedMap[seqCode], headSeed)
+		}
+	} else {
+		for edgeIdx := 0; edgeIdx < len(currNode.Next); edgeIdx++ {
+			devGraphHelp(append(prevSeq, currNode.Seq...), currNode.Next[edgeIdx].Dest, headSeed, seedLen, seedMap)
+		}
+	}
+}
+
+/*
+TODO: I don't think we can promise the best alignment is going to be from the best perfect match extension
+func lookingForSeeds(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, scoreMatrix [][]int64, gg *SimpleGraph) []*SeedDev {
+	var codedSeq uint64 = 0
+	var hits []*SeedDev = make([]*SeedDev, 0)
+	var currSeed *SeedDev
+	var currScore, bestScore int64 = 0, -1
+	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
+		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
+			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
+			currHits := seedHash[codedSeq]
+			for _, value := range currHits {
+				currSeed = seedBedToSeedDev(value, uint32(subSeqStart), posStrand)
+				extendSeedDev(currSeed, gg, read)
+				currScore = BlastSeed(currSeed, read, scoreMatrix)
+				if currScore > bestScore {
+					hits = append(hits, currSeed)
+				}
+			}
+		}
+	}
+	//log.Printf("Total of %d hits.\n", len(hits))
+	return hits
+}*/
+
+/*
+func devIndexGraph(genome *SimpleGraph, seedLen int, seedStep int) map[uint64][]*SeedBed {
+	if seedLen < 2 || seedLen > 32 {
+		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
+	}
+	answer := make(map[uint64][]*SeedBed)
+	var seqCode uint64
+	var nodeIdx, pos int
+	//var extension []*SeedBed
+	for nodeIdx = 0; nodeIdx < len(genome.Nodes); nodeIdx++ {
+		//log.Printf("Indexing node %d", nodeIdx)
+
+		for pos = 0; pos < len(genome.Nodes[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+			if len(genome.Nodes[nodeIdx].Seq) < pos+seedLen {
+				var extendSeq []dna.Base
+				curr := SeedBed{Id: genome.Nodes[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + len(genome.Nodes[nodeIdx].Seq)), Next: nil}
+				//curr := SeedBed{Id: genome.Nodes[nodeIdx].Id, Start: uint32(pos), End: uint32(common.Min(len(genome.Nodes[nodeIdx].Seq), pos+seedLen)), Next: nil}
+				_, answer = SeedBedGraph(genome, seedLen, &curr, extendSeq)
+
+				//log.Printf("node after traversal %d", nodeIdx)
+
+				//extension = SeedBedGraph(genome, seedLen, &curr, []dna.Base{})
+				//fmt.Printf("extension seed len=%d", len(extension))
+				//var extendSeq []dna.Base
+				//for i = 0 ; i < len(extension);i++ {
+				//	extendSeq = seedBedToSeq(extension[i], seedLen, genome)
+				//	seqCode = dnaToNumber(extendSeq, 0, seedLen)
+				//	answer[seqCode] = append(answer[seqCode], extension[i])
+				//	nodeIdx = int(BedTail(extension[i]).Id)
+				//}
+			} else {
+				if dna.CountBaseInterval(genome.Nodes[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
+					seqCode = dnaToNumber(genome.Nodes[nodeIdx].Seq, pos, pos+seedLen)
+					curr := SeedBed{Id: genome.Nodes[nodeIdx].Id, Start: uint32(pos), End: uint32(pos + seedLen), Next: nil}
+					answer[seqCode] = append(answer[seqCode], &curr)
+				}
+			}
+		}
+	}
+	return answer
+}
+
+
+
+func BedTail(a *SeedBed) *SeedBed {
+	if a.Next == nil {
+		return a
+	} else {
+		return BedTail(a.Next)
+	}
+}
+
+func seedBedToSeq(head *SeedBed, length int, gg *SimpleGraph) []dna.Base {
+	var answer []dna.Base
+	answer = append(answer, gg.Nodes[head.Id].Seq[:common.Min(length, len(gg.Nodes[head.Id].Seq))]...)
+	if len(answer) < length && head.Next != nil {
+		answer = append(answer, seedBedToSeq(head.Next, length, gg)...)
+	}
+	if len(answer) > length {
+		answer = answer[:length]
+	}
+	//log.Printf("Checking to make sure len of sequence %d equals seedlen %d", len(answer), length)
+
+	return answer
+}
+
+func SeedBedGraph(genome *SimpleGraph, seedLen int, graphSeed *SeedBed, leftOverSeq []dna.Base) (int, map[uint64][]*SeedBed) {
+	if seedLen < 2 || seedLen > 32 {
+		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
+	}
+	var nodeIdx = int(graphSeed.Id)
+	answer := make(map[uint64][]*SeedBed)
+	var seqCode uint64
+	var e int
+	leftOverSeq = append(leftOverSeq, genome.Nodes[graphSeed.Id].Seq[graphSeed.Start:int(graphSeed.Start)+common.Min(seedLen-len(leftOverSeq), len(genome.Nodes[graphSeed.Id].Seq))]...)
+	graphSeed.End = graphSeed.Start + uint32(len(leftOverSeq))
+	if len(leftOverSeq) < seedLen {
+
+		if len(genome.Nodes[graphSeed.Id].Next) > 0 {
+			//var numBasesNeed int
+
+			graphSeed.End = uint32(len(genome.Nodes[graphSeed.Id].Seq))
+			//nextSeeds := make(map[uint64][]*SeedBed)
+			for _, next := range genome.Nodes[graphSeed.Id].Next {
+				nodeIdx = int(next.Dest.Id)
+				nextGraphSeed := &SeedBed{Id: next.Dest.Id, Start: 0, End: uint32(common.Min(seedLen-len(leftOverSeq), len(next.Dest.Seq))), Next: nil}
+				nodeIdx, answer = SeedBedGraph(genome, seedLen, nextGraphSeed, leftOverSeq)
+				for edge := range answer {
+					var tmp []*SeedBed
+					for e = 0; e < len(answer[edge]); e++ {
+						currSeed := &SeedBed{Id: graphSeed.Id, Start: graphSeed.Start, End: graphSeed.End, Next: answer[edge][e]}
+						tmp = append(tmp, currSeed)
+					}
+					answer[edge] = tmp
+				}
+			}
+		}
+	} else {
+		if dna.CountBaseInterval(leftOverSeq, dna.N, 0, len(leftOverSeq)) == 0 {
+			//fmt.Printf("seqToCode: %s\n", dna.BasesToString(leftOverSeq))
+			seqCode = dnaToNumber(leftOverSeq, 0, len(leftOverSeq))
+
+			answer[seqCode] = append(answer[seqCode], graphSeed)
+
+			//answer = append(answer, graphSeed)
+		}
+	}
+	return nodeIdx, answer
+}*/
 
 func PointToBases(currSeq []dna.Base, incomingSeq []dna.Base, currStart int, incomingStart int, currEnd int, incomingEnd int, currFront bool) {
 	newSize := currEnd + incomingEnd - currStart - incomingStart

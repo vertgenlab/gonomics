@@ -1,15 +1,14 @@
 package vcf
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -27,6 +26,7 @@ type Vcf struct {
 	Notes  string
 }
 
+//Might get rid of this
 type VCF struct {
 	Header *VcfHeader
 	Vcf    []*Vcf
@@ -37,27 +37,32 @@ type VcfHeader struct {
 }
 
 func processVcfLine(line string) *Vcf {
-
-	data := Vcf{Chr: "", Pos: 0, Id: "", Ref: "", Alt: "", Qual: 0, Filter: "", Info: "", Format: "", Notes: ""}
-	text := strings.Split(line, "\t")
-	if len(text) < 9 {
-		log.Fatal(fmt.Errorf("Was expecting atleast 8 columns per line, but this line did not:%s\n", line))
+	var curr *Vcf
+	data := strings.Split(line, "\t")
+	//fmt.Println("there is data here")
+	switch {
+	case strings.HasPrefix(line, "#"):
+		//don't do anything
+	case len(data) == 1:
+		//these lines are sequences, and we are not recording them
+		//fmt.Println("found sequences")
+	case len(line) == 0:
+		//blank line
+	case len(data) >= 10:
+		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
+		if strings.Compare(data[5], ".") == 0 {
+			curr.Qual = 255
+		} else {
+			curr.Qual = common.StringToFloat64(data[5])
+		}
+		if len(data) < 10 {
+			curr.Notes = strings.Join(data[9:], "\t")
+		}
+	default:
+		//fmt.Println("unexpected line")
 	}
-	data.Pos = common.StringToInt64(text[1])
-	data.Qual = common.StringToFloat64(text[5])
 
-	data.Chr = text[0]
-	data.Id = text[2]
-	data.Ref = text[3]
-	data.Alt = text[4]
-	data.Filter = text[6]
-	data.Info = text[7]
-	data.Format = text[8]
-	if len(text) > 9 {
-		data.Notes = text[9]
-	}
-
-	return &data
+	return curr
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
@@ -68,42 +73,62 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
+/*
 func Read(filename string) []*Vcf {
 	var answer []*Vcf
-	//var curr *Vcf
+	var curr *Vcf
 	var line string
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil
 	}
-	defer file.Close()
 	reader := bufio.NewReader(file)
 	if err != nil {
 		return nil
 	}
-	ReadHeader(reader)
 	var err2 error
+	//var rline []byte
+	for ; err2 != io.EOF; line, err2 = reader.ReadString('\n') {
 
-	for line, _ = reader.ReadString('\n'); err2 != io.EOF; line, err2 = reader.ReadString('\n') {
-		line = strings.TrimSuffix(line, "\n")
-		answer = append(answer, processVcfLine(line))
+	}
+	return answer
+}*/
+
+func Read(filename string) []*Vcf {
+	var answer []*Vcf
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	ReadHeader(file)
+	var curr *Vcf
+	var done bool
+	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+		answer = append(answer, curr)
 	}
 	return answer
 }
 
-func ReadVcf(filename string) *VCF {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil
+func ReadToChan(filename string, output chan<- *Vcf) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	ReadHeader(file)
+	for line, done := fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
+		output <- processVcfLine(line)
 	}
-	reader := bufio.NewReader(file)
+	wg.Done()
+	close(output)
+	wg.Wait()
+}
+
+func ReadVcf(filename string) *VCF {
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
 
-	header := ReadHeader(reader)
+	header := ReadHeader(file)
 	vcfRecords := Read(filename)
 	return &VCF{Header: header, Vcf: vcfRecords}
 }
-
 
 func processHeader(header *VcfHeader, line string) {
 	var err error
@@ -115,14 +140,14 @@ func processHeader(header *VcfHeader, line string) {
 	}
 }
 
-func ReadHeader(er *bufio.Reader) *VcfHeader {
+func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var line string
 	var err error
 	var nextBytes []byte
 	var header VcfHeader
+
 	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
-		line, _ = er.ReadString('\n')
-		line = strings.TrimSuffix(line, "\n")
+		line, _ = fileio.EasyNextLine(er)
 		processHeader(&header, line)
 	}
 	return &header
@@ -147,11 +172,11 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteHeader(file *os.File, header *VcfHeader) {
+func WriteHeader(file *os.File) {
 	var err error
-	//header := MakeHeader()
-	for h := 0; h < len(header.Text); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
+	header := MakeHeader()
+	for h := 0; h < len(header); h++ {
+		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	common.ExitIfError(err)
 }
@@ -181,11 +206,20 @@ func WriteVcf(file *os.File, input *Vcf) {
 func Write(filename string, data []*Vcf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
+	WriteHeader(file)
 	WriteVcfToFileHandle(file, data)
 }
 
 func PrintVcf(data []*Vcf) {
-	Write("/dev/stdout", data)
+	for i := 0; i < len(data); i++ {
+		PrintSingleLine(data[i])
+	}
+}
+
+func PrintVcfLines(data []*Vcf, num int) {
+	for i := 0; i < num; i++ {
+		PrintSingleLine(data[i])
+	}
 }
 
 func PrintSingleLine(data *Vcf) {
@@ -209,14 +243,7 @@ func MakeHeader() []string {
 	t := time.Now()
 	header = append(header, "##fileformat=VCFv4.2\n"+
 		"##fileDate="+t.Format("20060102")+"\n"+
-		"##source=github.com/vertgenlab/gonomics\n"+
-		"##reference=gasAcu1")
-	//if len(chrom) > 0 {
-	//	for i := 0; i < len(chrom); i++ {
-	//		line = "##contig=<ID=" + chrom[i].Name + ",length=" + string(chrom[i].Size) + ">"
-	//		header = append(header, line)
-	//}
-	//}
+		"##source=github.com/vertgenlab/gonomics")
 	header = append(header, "##phasing=none\n"+
 		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+

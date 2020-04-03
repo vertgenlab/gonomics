@@ -1,52 +1,197 @@
 package simpleGraph
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
-	"os"
-	"strings"
-	//"log"
 )
 
-func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
+	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
+	var minTarget int
+	var minQuery int
+	var leftScore, rightScore int64
+	var bestScore int64
+	var leftPath, rightPath, bestPath []uint32
+	var currScore int64 = 0
+	perfectScore := perfectMatchBig(read, scoreMatrix)
+	extension := int(perfectScore/600) + len(read.Seq)
+	var seeds *SeedDev
+	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
+	SortSeedDevListByTotalLen(&seeds)
+	var tailSeed *SeedDev
+	var seedScore int64
+	var currSeq []dna.Base
+	var currSeed *SeedDev
+	for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+		tailSeed = getLastPart(currSeed)
+		if currSeed.PosStrand {
+			currSeq = read.Seq
+		} else {
+			currSeq = read.SeqRc
+		}
+		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension, currSeq[:currSeed.QueryStart], m, trace)
+		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
+		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+		currScore = leftScore + seedScore + rightScore
+		if currScore > bestScore {
+			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath)
+			bestScore = currScore
+			if currSeed.PosStrand {
+				currBest.Flag = 0
+			} else {
+				currBest.Flag = 16
+			}
+			currBest.Seq = currSeq // unsure why this line was lost
+			currBest.Qual = string(read.Qual)
+			currBest.RName = gg.Nodes[bestPath[0]].Name
+			currBest.Pos = int64(minTarget) + 1
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath), gg)
+			if gg.Nodes[bestPath[0]].Info != nil {
+				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
+				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
+			}
+			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment)
+			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
+
+		}
+	}
+	if bestScore < 1200 {
+		currBest.Flag = 4
+	}
+	if seeds != nil {
+		tailSeed = toTail(seeds)
+		tailSeed.Next = *memoryPool
+		*memoryPool = seeds
+	}
+	return &currBest
+}
+
+/*func GraphSmithWatermanBasic(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, 0, len(read.Seq)), Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var i, minTarget int
 	var minQuery int
 	var leftScore, rightScore, bestScore int64
 	var leftPath, rightPath []uint32
+	var currScore int64 = 0
+	perfectScore := perfectMatchBig(read)
+	extension := int(perfectScore/600) + len(read.Seq)
+	var seeds []*SeedDev
+	seeds = findSeedsInSmallMap(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	SortSeedDevByTotalLen(seeds)
+	var tailSeed *SeedDev
+	var seedScore int64
+	var currSeq []dna.Base
+	for i = 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+		tailSeed = toTail(seeds[i])
+		if seeds[i].PosStrand {
+			currSeq = read.Seq
+		} else {
+			currSeq = read.SeqRc
+		}
+		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currSeq[:seeds[i].QueryStart], m, trace)
+		seedScore = scoreSeedSeq(seeds[i], currSeq)
+		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+		currScore = leftScore + seedScore + rightScore
+		if currScore > bestScore {
+			bestScore = currScore
+			if seeds[i].PosStrand {
+				currBest.Flag = 0
+			} else {
+				currBest.Flag = 16
+			}
+			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[seeds[i].TargetId].Name, seeds[i].TargetId)
+			currBest.Pos = int64(minTarget) + 1
+			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(seeds[i].TotalLength), Op: 'M'}), rightAlignment)
+			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath), gg)
+		}
+	}
+	if bestScore < 1200 {
+		currBest.Flag = 4
+	}
+	return &currBest
+}*/
+
+//TODO: what about neg strand?
+func perfectMatchBig(read *fastq.FastqBig, scoreMatrix [][]int64) int64 {
+	var perfectScore int64 = 0
+	for i := 0; i < len(read.Seq); i++ {
+		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
+	}
+	return perfectScore
+}
+
+func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int64) int64 {
+	var score int64 = 0
+	for i := start; i < end; i++ {
+		score += scoreMatrix[seq[i]][seq[i]]
+	}
+	return score
+}
+
+func scoreSeedFastqBig(seed *SeedDev, read *fastq.FastqBig, scoreMatrix [][]int64) int64 {
+	var score int64 = 0
+	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
+		if seed.PosStrand {
+			score += scoreMatrix[read.Seq[i]][read.Seq[i]]
+		} else {
+			score += scoreMatrix[read.SeqRc[i]][read.SeqRc[i]]
+		}
+	}
+	return score
+}
+
+func scoreSeedPart(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {
+	var score int64 = 0
+	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
+		score += scoreMatrix[read.Seq[i]][read.Seq[i]]
+	}
+	return score
+}
+
+func scoreSeed(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {
+	var score int64 = 0
+	for ; seed != nil; seed = seed.NextPart {
+		score += scoreSeedPart(seed, read, scoreMatrix)
+	}
+	return score
+}
+
+func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, 0, len(read.Seq)), Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
+	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
+	var i, minTarget int
+	var minQuery int
+	var leftScore, rightScore, bestScore int64
+	var leftPath, rightPath, bestPath []uint32
 
 	var currScore int64 = 0
-	perfectScore := perfectMatch(read)
+	perfectScore := perfectMatch(read, HumanChimpTwoScoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
 
 	var currRead *fastq.Fastq = nil
 	var seeds []*SeedDev = findSeedsInMapDev(seedHash, read, seedLen, stepSize, true)
+	//var seeds []*SeedDev = lookingForSeeds(seedHash, read, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
 	seeds = GraphDictionary(seeds, gg, read)
 
 	revCompRead := fastq.Copy(read)
 	fastq.ReverseComplement(revCompRead)
 	var revCompSeeds []*SeedDev = findSeedsInMapDev(seedHash, revCompRead, seedLen, stepSize, false)
+	//var revCompSeeds []*SeedDev = lookingForSeeds(seedHash, revCompRead, seedLen, stepSize, true, HumanChimpTwoScoreMatrix, gg)
 	revCompSeeds = GraphDictionary(revCompSeeds, gg, revCompRead)
+
 	seeds = append(seeds, revCompSeeds...)
 	SortSeedExtended(seeds)
-	//CompareBlastScore(seeds, read)
 	var tailSeed *SeedDev
-	//, m [][]int64, trace [][]rune
-	//m, trace := SwMatrixSetup(int64(extension+1)
 	var seedScore int64
 
-	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
-		//log.Printf("seed hit: %d, len=%d\n", i, sumLen(seeds[i]))
+	for i = 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		tailSeed = toTail(seeds[i])
 		if seeds[i].PosStrand {
 			currRead = read
@@ -56,31 +201,117 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64]
 
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
-		seedScore = BlastSeed(seeds[i], currRead)
+		seedScore = BlastSeed(seeds[i], currRead, HumanChimpTwoScoreMatrix)
 		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
-
 		currScore = leftScore + seedScore + rightScore
 
 		if currScore > bestScore {
-			//log.Printf("Index: %d left=%d, seed=%d, right=%d\n", i, leftScore, seedScore, rightScore)
+			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath)
 			bestScore = currScore
 			if seeds[i].PosStrand {
 				currBest.Flag = 0
 			} else {
 				currBest.Flag = 16
 			}
-			currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[seeds[i].TargetId].Name, seeds[i].TargetId)
+			currBest.Seq = currRead.Seq
+			currBest.Qual = string(currRead.Qual)
+			//if gg.Nodes[bestPath[0]].Info != nil {
+			//	currBest.RName = fmt.Sprintf("%s.%d.%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id, gg.Nodes[bestPath[0]].Info.Start)
+			//}
+			currBest.RName = gg.Nodes[bestPath[0]].Name
+			//currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id)
 			currBest.Pos = int64(minTarget) + 1
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath), gg)
+			if gg.Nodes[bestPath[0]].Info != nil {
+				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
+				currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
+			}
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
-			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath), gg)
+
 		}
 	}
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
+
 	return &currBest
 }
+
+/*
+func devGraphSmithWaterman(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune, scoreMatrix [][]int64) *sam.SamAln {
+	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: make([]dna.Base, 0, len(read.Seq)), Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
+	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
+	var i, minTarget, minQuery int
+	var leftScore, rightScore, bestScore int64
+	var leftPath, rightPath, bestPath []uint32
+
+	var currScore int64 = 0
+	perfectScore := perfectMatch(read, align.HumanChimpTwoScoreMatrix)
+	extension := int(perfectScore/400) + len(read.Seq)
+
+	var currRead *fastq.Fastq = nil
+	var seeds []*SeedDev = findSeedsInGraph(seedHash, read, seedLen, stepSize, true, gg, align.DefaultScoreMatrix)
+	//extendSeedsDev(seeds, gg, read)
+
+	revCompRead := fastq.Copy(read)
+	fastq.ReverseComplement(revCompRead)
+	var revCompSeeds []*SeedDev = findSeedsInGraph(seedHash, revCompRead, seedLen, stepSize, false, gg, align.DefaultScoreMatrix)
+	//extendSeedsDev(revCompSeeds, gg, revCompRead)
+
+	seeds = append(seeds, revCompSeeds...)
+	//SortSeedDevByLen(seeds)
+	seeds = AlternateOrder(seeds)
+	//SortSeedExtended(seeds)
+	var tailSeed *SeedDev
+	var seedScore int64
+	for i = 0; i < len(seeds) && seedCouldBeBetter(seeds[i], bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+		tailSeed = toTail(seeds[i])
+		if seeds[i].PosStrand {
+			currRead = read
+		} else {
+			currRead = revCompRead
+		}
+
+		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currRead.Seq[:seeds[i].QueryStart], m, trace)
+		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
+		seedScore = BlastSeed(seeds[i], currRead, align.HumanChimpTwoScoreMatrix)
+		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+		currScore = leftScore + seedScore + rightScore
+
+		if currScore > bestScore {
+			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath)
+			bestScore = currScore
+			if seeds[i].PosStrand {
+				currBest.Flag = 0
+			} else {
+				currBest.Flag = 16
+			}
+			currBest.Seq = currRead.Seq
+			currBest.Qual = string(currRead.Qual)
+			//if gg.Nodes[bestPath[0]].Info != nil {
+			//	currBest.RName = fmt.Sprintf("%s.%d.%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id, gg.Nodes[bestPath[0]].Info.Start)
+			//}
+			currBest.RName = gg.Nodes[bestPath[0]].Name
+			//currBest.RName = fmt.Sprintf("%s_%d", gg.Nodes[bestPath[0]].Name, gg.Nodes[bestPath[0]].Id)
+			currBest.Pos = int64(minTarget) + 1
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath), gg)
+			if gg.Nodes[bestPath[0]].Info != nil {
+				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
+				//	currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
+			}
+			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(seeds[i])), Op: 'M'}), rightAlignment)
+			currBest.Cigar = AddSClip(minQuery, len(currRead.Seq), currBest.Cigar)
+
+		}
+	}
+	if bestScore < 1200 {
+		currBest.Flag = 4
+	}
+
+	return &currBest
+
+}*/
 
 var HumanChimpTwoScoreMatrix = [][]int64{
 	{90, -330, -236, -356, -208},
@@ -89,6 +320,8 @@ var HumanChimpTwoScoreMatrix = [][]int64{
 	{-356, -236, -330, 90, -208},
 	{-208, -196, -196, -208, -202},
 }
+
+//100, 90, -196, -296
 
 func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 	var runLen int64 = cigar.QueryLength(cig)
@@ -105,35 +338,15 @@ func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 	} else {
 		return cig
 	}
-
 }
 
 //perfect match
-func perfectMatch(read *fastq.Fastq) int64 {
+func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {
-		perfectScore += HumanChimpTwoScoreMatrix[read.Seq[i]][read.Seq[i]]
+		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
 	}
 	return perfectScore
-}
-
-func scoreSeed(seed *SeedDev, read *fastq.Fastq) int64 {
-	var score int64 = 0
-	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
-		score += HumanChimpTwoScoreMatrix[read.Seq[i]][read.Seq[i]]
-	}
-	return score
-}
-
-func BasicHeader(ref []*Node) *sam.SamHeader {
-	var header sam.SamHeader
-	var words string = "@HD\tVN:1.6\tSO:unsorted\n"
-	for i := 0; i < len(ref); i++ {
-		words += fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d\n", ref[i].Name, ref[i].Id, len(ref[i].Seq))
-	}
-	words += "@PG\tID:gonomics\tPN:GSW\tVN:1.0\n"
-	header.Text = append(header.Text, words)
-	return &header
 }
 
 func NodesHeader(ref []*Node) *sam.SamHeader {
@@ -143,7 +356,9 @@ func NodesHeader(ref []*Node) *sam.SamHeader {
 
 	for i := 0; i < len(ref); i++ {
 		//words = "@SQ\tSN:" + strconv.FormatInt(ref[i].Id, 10) + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
-		words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + fmt.Sprint(len(ref[i].Seq))
+		//words = "@SQ\tSN:" + ref[i].Name + "_" + fmt.Sprint(ref[i].Id) + "\tLN:" + fmt.Sprint(len(ref[i].Seq))
+		words = fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d", ref[i].Name, ref[i].Id, len(ref[i].Seq))
+		//words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}
@@ -157,18 +372,6 @@ func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 
 		for pos = 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
 			seqCode = dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
-			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
-		}
-	}
-	return answer
-}
-
-func MkDictionary(genome []*fasta.Fasta, seedLen int) map[uint64][]uint64 {
-	answer := make(map[uint64][]uint64)
-	for chromIdx := 0; chromIdx < len(genome); chromIdx++ {
-		for pos := 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
-
-			seqCode := dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
 			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
 		}
 	}
@@ -191,6 +394,17 @@ func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
 	return answer
 }
 
+func numberToChromAndPos(code uint64) (int64, int64) {
+	var rightSideOnes uint64 = 4294967295
+	var leftSideOnes uint64 = rightSideOnes << 32
+	var chromIdx uint64 = code & leftSideOnes
+	chromIdx = chromIdx >> 32
+	var pos uint64 = code & rightSideOnes
+	return int64(chromIdx), int64(pos)
+}
+
+/*
+
 func maskSeedLen(seq []dna.Base, start int, end int, numMismatch int) []uint64 {
 	var answer []uint64
 	var maskOne uint64 = 1
@@ -205,74 +419,7 @@ func maskSeedLen(seq []dna.Base, start int, end int, numMismatch int) []uint64 {
 	answer = append(answer, dnaToNumber(seq, start, end)^maskTwo)
 	answer = append(answer, dnaToNumber(seq, start, end)^maskThree)
 	return answer
-}
-
-func numberToChromAndPos(code uint64) (int64, int64) {
-	var rightSideOnes uint64 = 4294967295
-	var leftSideOnes uint64 = rightSideOnes << 32
-	var chromIdx uint64 = code & leftSideOnes
-	chromIdx = chromIdx >> 32
-	var pos uint64 = code & rightSideOnes
-	return int64(chromIdx), int64(pos)
-}
-
-/*
-func SClipCigar(front int64, back int64, lengthOfRead int64, cig []*cigar.Cigar) []*cigar.Cigar {
-	var answer []*cigar.Cigar
-	if front > 0 {
-		answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
-		answer = append(answer, cig...)
-		if back < lengthOfRead {
-			answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
-		}
-	} else if back < lengthOfRead {
-		answer = append(answer, cig...)
-		answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - back, Op: 'S'})
-	} else {
-		return cig
-	}
-	return answer
 }*/
-
-func ReadDictionary(filename string) map[uint64][]uint64 {
-	answer := make(map[uint64][]uint64)
-	file, _ := os.Open(filename)
-	defer file.Close()
-	reader := bufio.NewReader(file)
-	var err error
-	var line string
-	var words []byte
-	for ; err != io.EOF; words, _, err = reader.ReadLine() {
-		line = string(words[:])
-		data := strings.Split(line, " ")
-		for i := 1; i < len(data); i++ {
-			answer[common.StringToUint64(data[0])] = append(answer[common.StringToUint64(data[0])], common.StringToUint64(data[i]))
-		}
-	}
-	return answer
-}
-
-func WriteDictToFileHandle(file *os.File, input map[uint64][]uint64) error {
-	var err error
-
-	for i := range input {
-		_, err = fmt.Fprintf(file, "%v", i)
-		for j := range input[i] {
-			_, err = fmt.Fprintf(file, "\t%v", input[i][j])
-			common.ExitIfError(err)
-		}
-		_, err = fmt.Fprintf(file, "\n")
-	}
-	return err
-}
-
-func WriteDictionary(filename string, data map[uint64][]uint64) {
-	//func Write(filename string, data map[int64][]ChrDict) {
-	file := fileio.MustCreate(filename)
-	defer file.Close()
-	WriteDictToFileHandle(file, data)
-	//WriteChromDictToFileHandle(file, data)
-}
 
 /*
 func MapSingleFastq(ref []*Node, chromPosHash map[uint64][]uint64, read *fastq.Fastq, seedLen int, m [][]int64, trace [][]rune) *sam.SamAln {

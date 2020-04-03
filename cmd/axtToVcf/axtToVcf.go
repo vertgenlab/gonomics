@@ -8,12 +8,14 @@ import (
 	"log"
 )
 
+// TODO: This should be more detailed
 func usage() {
 	fmt.Print(
 		"AXT Alignment package - b\n")
 	flag.PrintDefaults()
 }
 
+// TODO: add another function so that not everything is inside main
 func main() {
 	var expectedNumArgs int = 1
 	flag.Usage = usage
@@ -24,9 +26,12 @@ func main() {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
-	axtFile, _ := axt.ReadIn(flag.Arg(0))
-	snps := axt.CallSnpsToVcf(axtFile)
+	snps := make([]*vcf.Vcf, 0)
+	axtFile := axt.Read(flag.Arg(0))
+	for i := 0; i < len(axtFile); i++ {
+		snps = append(snps, axt.AxtToVcf(axtFile[i])...)
+	}
 	vcf.Sort(snps)
-	vcf.PrintHeader()
+	//vcf.PrintHeader()
 	vcf.PrintVcf(snps)
 }

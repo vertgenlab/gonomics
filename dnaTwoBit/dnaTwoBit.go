@@ -12,10 +12,10 @@ type TwoBit struct {
 }
 
 const (
-	A          uint8 = 0
-	C          uint8 = 1
-	G          uint8 = 2
-	T          uint8 = 3
+	A uint8 = 0
+	C uint8 = 1
+	G uint8 = 2
+	T uint8 = 3
 )
 
 func BasesToUint64LeftAln(seq []dna.Base, start int, end int) uint64 {
@@ -23,7 +23,7 @@ func BasesToUint64LeftAln(seq []dna.Base, start int, end int) uint64 {
 		log.Fatalf("Error: when converting to TwoBit. start=%d end=%d\n", start, end)
 	}
 	var answer uint64 = 0
-	var i int = 0
+	var i int = start
 	for ; i < end; i++ {
 		answer = answer << 2
 		answer = answer | uint64(seq[i])
@@ -35,15 +35,15 @@ func BasesToUint64LeftAln(seq []dna.Base, start int, end int) uint64 {
 }
 
 func BasesToUint64RightAln(seq []dna.Base, start int, end int) uint64 {
-        if end-start > 32 || end-start < 1 {
-                log.Fatalf("Error: when converting to TwoBit. start=%d end=%d\n", start, end)
-        }
-        var answer uint64 = 0
-        for ; start < end; start++ {
-                answer = answer << 2
-                answer = answer | uint64(seq[start])
-        }
-        return answer
+	if end-start > 32 || end-start < 1 {
+		log.Fatalf("Error: when converting to TwoBit. start=%d end=%d\n", start, end)
+	}
+	var answer uint64 = 0
+	for ; start < end; start++ {
+		answer = answer << 2
+		answer = answer | uint64(seq[start])
+	}
+	return answer
 }
 
 func GetBase(frag *TwoBit, pos uint) dna.Base {
@@ -63,6 +63,5 @@ func NewTwoBit(inSeq []dna.Base) *TwoBit {
 		end = common.Min(start+32, len(inSeq))
 		answer.Seq[i] = BasesToUint64LeftAln(inSeq, start, end)
 	}
-	return (&answer)
+	return &answer
 }
-
