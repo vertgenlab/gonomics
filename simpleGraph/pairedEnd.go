@@ -40,7 +40,6 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 	log.Printf("Aligning with the following settings: threads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	log.Printf("Indexing the genome...\n")
 	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	//header := NodesHeader(ref.Nodes)
 	var wgAlign, wgWrite sync.WaitGroup
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Setting up read and write channels...\n")

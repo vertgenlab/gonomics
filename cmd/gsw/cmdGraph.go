@@ -37,7 +37,7 @@ func usage() {
 			"\t\t./gsw --options [align/ggTools/view]\n\n")
 }
 func needHelp(cmdName string) {
-	var answer string = "" //usage:\n\t//gsw [options] ref.fa/.gg R1.fastq.gz R2.fastq.gz\noptions:\n"
+	var answer string = ""
 	if strings.Compare(cmdName, "align") == 0 {
 		answer += "GSW - genome graph toolkit:\n\n" +
 			"Graph-Smith-Waterman:\n\n" + "usage:" +
@@ -77,7 +77,6 @@ func needHelp(cmdName string) {
 			"\t./gsw  --out SNPsIndels.vcf ref.fa\n\n"
 	} else {
 		errorMessage()
-		//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
 	}
 	fmt.Print(answer)
 }
@@ -111,7 +110,6 @@ func main() {
 			errorMessage()
 		}
 	}
-	//log.Printf("Num of args=%d\n", len(flag.Args()))
 	if *slurmScript && *ggTools && !*splitChr {
 		slurm()
 	} else if *ggTools && *kent {
@@ -127,7 +125,7 @@ func main() {
 				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, header)
 			} else if len(flag.Args()) == 3 {
 				//user provides paired end reads
-				simpleGraph.GSWsBatchPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, header)
+				simpleGraph.GSWsPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, *stepSize, header)
 			}
 		}
 		if *ggTools && strings.HasSuffix(*tagAxt, ".axt") {
@@ -186,34 +184,24 @@ func main() {
 				}
 			} else {
 				errorMessage()
-				//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
 			}
 		}
 		if *ggTools && *mergeSam {
 			sam.ReadFiles(flag.Args(), *outTag)
 		}
 		if strings.HasSuffix(*view, ".sam") {
-			//var yes, no, numReads int = 0, 0, 0
 			log.SetFlags(log.Ldate | log.Ltime)
 			if strings.HasSuffix(flag.Arg(0), ".gg") || strings.HasSuffix(flag.Arg(0), ".fa") {
 				gg, _ := simpleGraph.Read(flag.Arg(0))
 				samfile, _ := sam.Read(*view)
 				for _, samline := range samfile.Aln {
 					log.Printf("%s\n", simpleGraph.ViewGraphAlignment(samline, gg))
-					//	numReads++
-					//	if simpleGraph.CheckAlignment(samline) {
-					//		yes++
-					//	} else {
-					//		no++
-					//	}
+
 				}
-				//log.Printf("Total number of reads aligned: %d...", numReads)
-				//log.Printf("Number of reads correctly aligned: %d...\n", yes)
-				//log.Printf("Number of reads mismapped: %d...\n", no)
+
 			}
 		} else {
-			//errorMessage()
-			//log.Fatalf("Error: Apologies, your command line prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
+			errorMessage()
 		}
 	}
 }

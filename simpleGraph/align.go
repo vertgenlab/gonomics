@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 )
 
 //Uses small mem pool
@@ -134,11 +133,6 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			}
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
-			log.Printf("leftScore=%d, seedScore=%d, rightScore=%d\n", leftScore, seedScore, rightScore)
-			printSeedDev([]*SeedDev{currSeed})
-			log.Printf("leftPath=%s, seedPath=%s, rightPath=%s\n", PathToString(leftPath, gg), PathToString(getSeedPath(currSeed), gg), PathToString(rightPath, gg))
-			fmt.Println(sam.SamAlnToString(&currBest))
-
 		}
 	}
 	if bestScore < 1200 {

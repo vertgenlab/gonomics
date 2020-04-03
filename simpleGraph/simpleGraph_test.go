@@ -34,7 +34,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.sam"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 100
+	var numberOfReads int = 10
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
