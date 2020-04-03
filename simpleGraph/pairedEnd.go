@@ -34,14 +34,14 @@ func gswWorkerPairedEnd(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen i
 	wg.Done()
 }
 
-func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, header *sam.SamHeader) {
+func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
+	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("GSW!\n")
 	log.Printf("Paired end reads detected...\n")
 	log.Printf("Aligning with the following settings: threads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	log.Printf("Indexing the genome...\n")
 	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
-	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Setting up read and write channels...\n")
 	fastqPipe := make(chan *fastq.PairedEndBig, 824)
 	samPipe := make(chan *sam.PairedSamAln, 824)

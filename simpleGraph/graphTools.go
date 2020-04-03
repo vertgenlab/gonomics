@@ -103,15 +103,15 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				index = vcfsChr[i].Pos
 			}
 			if isDEL(vcfsChr[i]) {
-				deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
-				if i < len(vcfsChr)-1 {
-					deletion.Seq = chr.Seq[vcfsChr[i].Pos:common.MinInt64(vcfsChr[i].Pos+int64(len(dna.StringToBases(vcfsChr[i].Ref)[1:])), vcfsChr[i+1].Pos)]
-				} else {
-					deletion.Seq = dna.StringToBases(vcfsChr[i].Ref)[1:]
-				}
+				deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
+				//if i < len(vcfsChr)-1 {
+				//	deletion.Seq = chr.Seq[vcfsChr[i].Pos:common.MinInt64(vcfsChr[i].Pos+int64(len(dna.StringToBases(vcfsChr[i].Ref)[1:])), vcfsChr[i+1].Pos)]
+				//} else {
+				//	deletion.Seq = dna.StringToBases(vcfsChr[i].Ref)[1:]
+				//}
 				AddNode(genome, deletion)
 				AddEdge(currMatch, deletion, 1)
-				index = vcfsChr[i].Pos + int64(len(deletion.Seq))
+				index = +int64(len(deletion.Seq))
 			}
 			if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
 				altAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
@@ -179,15 +179,15 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 		}
 		if isDEL(vcfsChr[i]) {
 			currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Alt)...)
-			deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
-			if i < len(vcfsChr)-1 {
-				deletion.Seq = chr.Seq[vcfsChr[i].Pos:common.MinInt64(vcfsChr[i].Pos+int64(len(dna.StringToBases(vcfsChr[i].Ref)[1:])), vcfsChr[i+1].Pos)]
-			} else {
-				deletion.Seq = dna.StringToBases(vcfsChr[i].Ref)[1:]
-			}
+			deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 3}}
+			//if i < len(vcfsChr)-1 {
+			//	deletion.Seq = chr.Seq[vcfsChr[i].Pos:common.MinInt64(vcfsChr[i].Pos+int64(len(dna.StringToBases(vcfsChr[i].Ref)[1:])), vcfsChr[i+1].Pos)]
+			//} else {
+			//	deletion.Seq = dna.StringToBases(vcfsChr[i].Ref)[1:]
+			//}
 			AddNode(genome, deletion)
 			AddEdge(currMatch, deletion, 1)
-			index = vcfsChr[i].Pos + int64(len(deletion.Seq))
+			index += int64(len(deletion.Seq))
 			//if strings.Contains(vcfsChr[i].Id, "pbsv") && i < len(vcfsChr)-1 {
 			//	index = common.MinInt64(index, vcfsChr[i+1].Pos)
 			//}

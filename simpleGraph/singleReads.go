@@ -7,14 +7,13 @@ import (
 	"sync"
 )
 
-func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, header *sam.SamHeader) {
+func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
 	log.Printf("GSW!\n")
 	log.Printf("Single end reads detected...\n")
 	log.Printf("Aligning with the following settings: threads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	log.Printf("Indexing the genome...\n")
 	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
-	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Setting up read and write channels...\n")
 	fastqPipe := make(chan *fastq.FastqBig, 824)
 	samPipe := make(chan *sam.SamAln, 824)

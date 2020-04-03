@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
@@ -37,7 +38,7 @@ func usage() {
 			"\t\t./gsw --options [align/ggTools/view]\n\n")
 }
 func needHelp(cmdName string) {
-	var answer string = ""
+	var answer string = "" //usage:\n\t//gsw [options] ref.fa/.gg R1.fastq.gz R2.fastq.gz\noptions:\n"
 	if strings.Compare(cmdName, "align") == 0 {
 		answer += "GSW - genome graph toolkit:\n\n" +
 			"Graph-Smith-Waterman:\n\n" + "usage:" +
@@ -50,7 +51,13 @@ func needHelp(cmdName string) {
 			"\t--step\tdefault: k-1\n" +
 			"\t\toffset position of sliding window of hash\n\n" +
 			"\t--cpu\tdefault: 4\n" +
-			"\t\tnumber of CPUs to use\n\n"
+			"\t\tnumber of CPUs to use\n\n" +
+			"\t--score\thumanChimp:\n\t\t" + printMatrix(align.HumanChimpTwoScoreMatrix) + "\n" +
+			"\t\thoxD55:\n\t\t" + printMatrix(align.HoxD55ScoreMatrix) + "\n" +
+			"\t\tmouseRat:\n\t\t" + printMatrix(align.MouseRatScoreMatrix) + "\n\n"
+
+		//HoxD55\n\t\tMouseRat\n\n"
+
 	} else if strings.Compare(cmdName, "ggTools") == 0 {
 		answer += "\nggTools: utilities to create, manipulate and operate on genome graphs\n" +
 			"\nTo create genome graph reference w/ vcf file:\n" +
@@ -71,12 +78,14 @@ func needHelp(cmdName string) {
 		answer += "GSW - genome graph toolkit:\n\n" + "Visualize Alignment\n\n" + "usage:" +
 			"\t./gsw --view [options] graph.sam ref.[.gg/.fa]\n\n" +
 			"\t--out\tdefault: /dev/stdout\n" +
-			"\t\tnotes.txt\n\n"
+			"\t\tnotes.txt\n\n" //+
+		//"\tscores\tprint score matrix options\n\n"
 	} else if strings.Compare(cmdName, "axt") == 0 {
 		answer +=
 			"\t./gsw  --out SNPsIndels.vcf ref.fa\n\n"
 	} else {
 		errorMessage()
+		//log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\t\t\t\t\t\t\t\t-xoxo GG")
 	}
 	fmt.Print(answer)
 }
@@ -94,11 +103,13 @@ func main() {
 	var moreHelp *string = flag.String("options", "", "advanced user options")
 	var splitChr *bool = flag.Bool("split", false, "splits graph output by chromosomes")
 	var chrPrefix *string = flag.String("name", "genomeGraph", "basename for .gg file, split by chromosome")
-
 	var ggTools *bool = flag.Bool("ggTools", false, "genome graph tools")
 	var mergeSam *bool = flag.Bool("merge", false, "merge split sam files back into one")
+	var score *string = flag.String("score", "humanChimp", "choose a scoring matrix")
+
 	var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
 	var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
@@ -122,10 +133,10 @@ func main() {
 			header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL:%s", strings.Join(os.Args, " ")))
 			//user provides single end reads
 			if len(flag.Args()) == 2 {
-				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, header)
+				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score), header)
 			} else if len(flag.Args()) == 3 {
 				//user provides paired end reads
-				simpleGraph.GSWsPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, *stepSize, header)
+				simpleGraph.GSWsPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score), header)
 			}
 		}
 		if *ggTools && strings.HasSuffix(*tagAxt, ".axt") {
@@ -146,10 +157,7 @@ func main() {
 					if *slurmScript && strings.Contains(flag.Arg(1), ".fastq") {
 						var readOne string = filepath.Base(strings.TrimSuffix(flag.Arg(1), path.Ext(flag.Arg(1))))
 						gswCommand := fmt.Sprintf(" --wrap=\"./gsw --align --k 16 --t 8 --out %s_", readOne)
-
 						var currCmd string
-
-						//args = append(args, wrapPrompt)
 						var echo string
 						for chr := range ggChr {
 							log.Printf("Writing graph %s to file...\n", chr)
@@ -196,18 +204,37 @@ func main() {
 				samfile, _ := sam.Read(*view)
 				for _, samline := range samfile.Aln {
 					log.Printf("%s\n", simpleGraph.ViewGraphAlignment(samline, gg))
-
 				}
 
 			}
-		} else {
-			errorMessage()
 		}
 	}
 }
 
 func errorMessage() {
 	log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
+}
+
+func selectScoreMatrix(score string) [][]int64 {
+	var scoreMatrix [][]int64
+	switch {
+	case strings.Contains(score, "humanChimp"):
+		scoreMatrix = align.HumanChimpTwoScoreMatrix
+	case strings.Contains(score, "hoxD55"):
+		scoreMatrix = align.HoxD55ScoreMatrix
+	case strings.Contains(score, "mouseRat"):
+		scoreMatrix = align.MouseRatScoreMatrix
+	case strings.Contains(score, "general"):
+		scoreMatrix = align.DefaultScoreMatrix
+	default:
+	}
+	return scoreMatrix
+}
+
+func printMatrix(m [][]int64) string {
+	var message string = ""
+	message += fmt.Sprintf(" %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
+	return message
 }
 
 //TODO: Will remove to a personal script

@@ -28,7 +28,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 	var seedScore int64
 	var currSeq []dna.Base
 	var currSeed *SeedDev
-	for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+	for currSeed = seeds; currSeed != nil && seedCouldBeBetterScores(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), scoreMatrix); currSeed = currSeed.Next {
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
 			currSeq = read.Seq
@@ -74,6 +74,37 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 		*memoryPool = seeds
 	}
 	return &currBest
+}
+
+//let me know if i figured this out right...
+//returns maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
+//100, 90, -196, -296
+func calcSeedMismatch(scoreMatrix [][]int64) (int64, int64, int64, int64) {
+	//returns maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
+	//100, 90, -196, -296
+	//(2,2), (1,1), (1,4), (1,4)-(2,2)
+	return scoreMatrix[2][2], scoreMatrix[1][1], scoreMatrix[1][4], (scoreMatrix[1][4] - scoreMatrix[2][2])
+}
+
+func seedCouldBeBetterScores(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, scoreMatrix [][]int64) bool {
+	maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange := calcSeedMismatch(scoreMatrix)
+	seeds := queryLen / (seedLen + 1)
+	remainder := queryLen % (seedLen + 1)
+	// seed by itself could be best
+	if seedLen*maxMatch >= currBestScore &&
+		perfectScore-((queryLen-seedLen)*minMatch) >= currBestScore {
+		return true
+		// seed along with whole seeds, but not the remainder
+	} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= currBestScore &&
+		perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= currBestScore {
+		return true
+		// seed along with whole seeds, as well as both remainders
+	} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= currBestScore &&
+		perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= currBestScore {
+		return true
+	} else {
+		return false
+	}
 }
 
 func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
@@ -434,8 +465,6 @@ var HumanChimpTwoScoreMatrix = [][]int64{
 	{-356, -236, -330, 90, -208},
 	{-208, -196, -196, -208, -202},
 }
-
-//100, 90, -196, -296
 
 func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 	var runLen int64 = cigar.QueryLength(cig)
