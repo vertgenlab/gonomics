@@ -50,13 +50,11 @@ func needHelp(cmdName string) {
 			"\t\tbetween 2 and 32\n\n" +
 			"\t--step\tdefault: k-1\n" +
 			"\t\toffset position of sliding window of hash\n\n" +
-			"\t--cpu\tdefault: 4\n" +
-			"\t\tnumber of CPUs to use\n\n" +
 			"\t--score\thumanChimp:\n\t\t" + printMatrix(align.HumanChimpTwoScoreMatrix) + "\n" +
 			"\t\thoxD55:\n\t\t" + printMatrix(align.HoxD55ScoreMatrix) + "\n" +
-			"\t\tmouseRat:\n\t\t" + printMatrix(align.MouseRatScoreMatrix) + "\n\n"
-
-		//HoxD55\n\t\tMouseRat\n\n"
+			"\t\tmouseRat:\n\t\t" + printMatrix(align.MouseRatScoreMatrix) + "\n" +
+			"\t--cpu\tdefault: 4\n" +
+			"\t\tnumber of CPUs to use\n\n"
 
 	} else if strings.Compare(cmdName, "ggTools") == 0 {
 		answer += "\nggTools: utilities to create, manipulate and operate on genome graphs\n" +
