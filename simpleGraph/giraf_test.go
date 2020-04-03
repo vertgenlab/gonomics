@@ -118,10 +118,10 @@ var check = giraf.Giraf{
 	QStart:    0,
 	QEnd:      4,
 	PosStrand: false,                                // rev strand, must reverse complement
-	Path:      &giraf.Path{2, []uint32{0, 1, 2}, 0}, // Nodes 0->1->2, start base 3, end base 1
+	Path:      &giraf.Path{2, []uint32{0, 1, 2}, 1}, // Nodes 0->1->2, start base 3, end base 1
 	Aln:       []*cigar.Cigar{{4, 'M'}},
-	AlnScore:  16602,
-	MapQ:      35,
+	AlnScore:  16607,
+	MapQ:      30,
 	Seq:       []dna.Base{3, 1, 2, 1}, // TCGC
 	Qual:      []uint8{16, 38, 38, 36},
 	Notes:     nil}
@@ -134,6 +134,8 @@ func TestRandGiraf(t *testing.T) {
 
 	reads := RandGiraf(MakeTestGraph(), 10, 4, seed)
 
+	fmt.Println(reads[0])
+	fmt.Println(reads[0].Path)
 	if reads[0].QName != check.QName {
 		log.Fatalln("Reads do not match")
 	}
