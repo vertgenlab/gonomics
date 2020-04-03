@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"sync"
+	"time"
 )
 
 func PairedEndTwoBitAlign(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.PairedSamAln {
@@ -37,28 +38,31 @@ func gswWorkerPairedEnd(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen i
 
 func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
 	log.SetFlags(log.Ldate | log.Ltime)
-	log.Printf("GSW!\n")
 	log.Printf("Paired end reads detected...\n")
-	log.Printf("Aligning with the following settings: threads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
+
 	log.Printf("Indexing the genome...\n")
 	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
-	log.Printf("Setting up read and write channels...\n")
+	//log.Printf("Setting up read and write channels...\n\n")
 	fastqPipe := make(chan *fastq.PairedEndBig, 824)
 	samPipe := make(chan *sam.PairedSamAln, 824)
 	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
-	log.Printf("Scoring matrix used:\n%s", viewMatrix(scoreMatrix))
+	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
+	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
+	log.Printf("Aligning sequene to genome graph...")
+	start := time.Now()
 	for i := 0; i < threads; i++ {
 		go gswWorkerPairedEnd(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
 	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)
 	wgAlign.Wait()
+	stop := time.Now()
 	close(samPipe)
-	log.Printf("Aligners finished and channel closed\n")
 	wgWrite.Wait()
-	log.Printf("Sam writer finished and we are all done\n")
+	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
+	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
 
 func viewMatrix(m [][]int64) string {
