@@ -1,7 +1,8 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
@@ -108,6 +109,66 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 		answer = append(answer, toTheLeft(rightGraph[rSeeds], gg, read)...)
 	}
 	return answer
+}
+
+func findSeedsInGraph(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+	var hits []*SeedDev = make([]*SeedDev, 0)
+	var currHits []uint64
+	var codedPos uint64
+	var currSeed *SeedDev
+	var leftMatches, rightMatches int = 0, 0
+	var idx, offset int = 0, 0
+	var nodeIdx, pos int64 = 0, 0
+	var bestScore, seedScore int64 = 0, 0
+
+	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
+		idx = (readStart + 31) / 32
+		offset = 31 - ((readStart + 31) % 32)
+
+		// do fwd strand
+		currHits = seedHash[read.Rainbow[offset].Seq[idx]]
+		for _, codedPos = range currHits {
+			nodeIdx, pos = numberToChromAndPos(codedPos)
+			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(pos), read.Rainbow[offset], readStart+offset))
+			rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(pos), read.Rainbow[offset], readStart+offset)
+			if seedCouldBeBetter(int64(leftMatches+rightMatches-1), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296) {
+				currSeed = &SeedDev{TargetId: uint32(nodeIdx), TargetStart: uint32(int(pos) - leftMatches + 1), QueryStart: uint32(readStart - leftMatches + 1), Length: uint32(leftMatches + rightMatches - 1), PosStrand: true, TotalLength: uint32(leftMatches + rightMatches - 1), Next: nil}
+				seedScore = scoreSeedFastqBig(currSeed, read, scoreMatrix)
+				if seedScore > bestScore {
+					bestScore = seedScore
+				}
+				hits = append(hits, currSeed)
+			}
+		}
+
+		// do rev strand
+		currHits = seedHash[read.RainbowRc[offset].Seq[idx]]
+		for _, codedPos = range currHits {
+			nodeIdx, pos = numberToChromAndPos(codedPos)
+			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(pos), read.RainbowRc[offset], readStart+offset))
+			rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(pos), read.RainbowRc[offset], readStart+offset)
+			if seedCouldBeBetter(int64(leftMatches+rightMatches-1), bestScore, perfectScore, int64(len(read.SeqRc)), 100, 90, -196, -296) {
+				currSeed = &SeedDev{TargetId: uint32(nodeIdx), TargetStart: uint32(int(pos) - leftMatches + 1), QueryStart: uint32(readStart - leftMatches + 1), Length: uint32(leftMatches + rightMatches - 1), PosStrand: false, TotalLength: uint32(leftMatches + rightMatches - 1), Next: nil}
+				seedScore = scoreSeedFastqBig(currSeed, read, scoreMatrix)
+				if seedScore > bestScore {
+					bestScore = seedScore
+				}
+				hits = append(hits, currSeed)
+			}
+		}
+	}
+	var badIdx = len(hits) - 1
+	var badCount = 0
+	for i := 0; i <= badIdx; {
+		if !seedCouldBeBetter(int64(hits[i].TotalLength), bestScore, perfectScore, int64(len(read.SeqRc)), 100, 90, -196, -296) {
+			hits[i], hits[badIdx] = hits[badIdx], hits[i]
+			badIdx--
+			badCount++
+		} else {
+			i++
+		}
+	}
+	return hits[0:(badIdx + 1)]
 }
 
 func getLastPart(a *SeedDev) *SeedDev {
@@ -229,6 +290,7 @@ func seedBedMask(a *SeedBed, currQPos uint32, posStrand bool, numMismatch int) *
 	}
 }
 
+/*
 func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool, gg *SimpleGraph, scoreMatrix [][]int64) []*SeedDev {
 	var codedSeq uint64 = 0
 	var hits []*SeedDev = make([]*SeedDev, 0)
@@ -249,7 +311,7 @@ func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen
 				}
 			}
 			//log.Printf("len=%d", len(currHits))
-			/*if len(currHits) > 0 {
+			if len(currHits) > 0 {
 				for i, j = 0, len(currHits)-1; (i <= len(currHits)/2 || j > len(currHits)/2); i, j = i+1, j-1 {
 					//printSeedDevNext(seedBedToSeedDev(currHits[i], uint32(subSeqStart), posStrand))
 					seeds = extendSeedTogether(seedBedToSeedDev(currHits[i], uint32(subSeqStart), posStrand), gg, read)
@@ -265,7 +327,7 @@ func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen
 					}
 					//hits = append(hits, seedBedToSeedDev(value, uint32(subSeqStart), posStrand))
 				}
-			}*/
+			}
 		}
 
 	}
@@ -294,7 +356,7 @@ func findSeedsInGraph(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen
 		}
 	}
 	return seeds
-}
+}*/
 
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment
