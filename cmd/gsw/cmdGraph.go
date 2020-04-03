@@ -48,7 +48,7 @@ func needHelp(cmdName string) {
 			"\t\t> kMer: slower alignment, better mapping\n" +
 			"\t\t< kMer: faster alignment, but higher change of unmapped reads\n" +
 			"\t\tbetween 2 and 32\n\n" +
-			"\t--step\tdefault: k-1\n" +
+			"\t--step\tdefault: 32\n" +
 			"\t\toffset position of sliding window of hash\n\n" +
 			"\t--score\thumanChimp:\n\t\t" + printMatrix(align.HumanChimpTwoScoreMatrix) + "\n" +
 			"\t\thoxD55:\n\t\t" + printMatrix(align.HoxD55ScoreMatrix) + "\n" +
@@ -95,8 +95,8 @@ func main() {
 	var outTag *string = flag.String("out", "/dev/stdout", "final output, .vcf/.gg/.sam")
 	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
 	var threads *int = flag.Int("cpu", 4, "Number of threads or CPUs to use")
-	var kMerHash *int = flag.Int("seed", 32, "Seed length used for indexing the reference genome")
-	var stepSize *int = flag.Int("step", *kMerHash-1, "step size for building hash")
+	var kMerHash *int = flag.Int("seed", 16, "Seed length used for indexing the reference genome")
+	var stepSize *int = flag.Int("step", 16, "step size for building hash")
 	var view *string = flag.String("view", "", "visualize sam alignment")
 	var moreHelp *string = flag.String("options", "", "advanced user options")
 	var splitChr *bool = flag.Bool("split", false, "splits graph output by chromosomes")

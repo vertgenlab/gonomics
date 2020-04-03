@@ -1,6 +1,7 @@
 package simpleGraph
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
@@ -46,6 +47,7 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 	fastqPipe := make(chan *fastq.PairedEndBig, 824)
 	samPipe := make(chan *sam.PairedSamAln, 824)
 	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
+	log.Printf("Scoring matrix used:\n%s", viewMatrix(scoreMatrix))
 	wgAlign.Add(threads)
 	for i := 0; i < threads; i++ {
 		go gswWorkerPairedEnd(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
@@ -57,6 +59,12 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 	log.Printf("Aligners finished and channel closed\n")
 	wgWrite.Wait()
 	log.Printf("Sam writer finished and we are all done\n")
+}
+
+func viewMatrix(m [][]int64) string {
+	var message string = ""
+	message += fmt.Sprintf("\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
+	return message
 }
 
 func PairedEndAlign(gg *SimpleGraph, readPair *fastq.PairedEnd, seedHash map[uint64][]*SeedBed, seedLen int, stepSize int, m [][]int64, trace [][]rune) *sam.PairedSamAln {
