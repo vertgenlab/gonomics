@@ -134,8 +134,6 @@ func TestRandGiraf(t *testing.T) {
 
 	reads := RandGiraf(MakeTestGraph(), 10, 4, seed)
 
-	fmt.Println(reads[0])
-	fmt.Println(reads[0].Path)
 	if reads[0].QName != check.QName {
 		log.Fatalln("Reads do not match")
 	}
