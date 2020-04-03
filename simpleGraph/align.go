@@ -17,7 +17,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 	var minQuery int
 	var leftScore, rightScore int64 = 0, 0
 	var bestScore int64
-	var currPath, bestPath []uint32
+	var leftPath, rightPath, bestPath []uint32
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
@@ -39,15 +39,14 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 			currScore = seedScore
 			minTarget = int(currSeed.TargetStart)
 			minQuery = int(currSeed.QueryStart)
-			currPath = getSeedPath(currSeed)
 		} else {
-			leftAlignment, leftScore, minTarget, minQuery, currPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
-			rightAlignment, rightScore, _, currPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), CatPaths(currPath, getSeedPath(currSeed)), extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+			leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
+			rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		}
 		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		currScore = leftScore + seedScore + rightScore
 		if currScore > bestScore {
-			bestPath = currPath
+			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath)
 			bestScore = currScore
 			if currSeed.PosStrand {
 				currBest.Flag = 0

@@ -8,7 +8,7 @@ import (
 )
 
 func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
-	AddPath(n.Id, currentPath)
+	currentPath = append(currentPath, n.Id)
 	var bestQueryEnd, queryEnd int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
@@ -46,7 +46,7 @@ func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32,
 }
 
 func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
-	AddPath(n.Id, currentPath)
+	currentPath = append(currentPath, n.Id)
 	var bestQueryStart, queryStart, refStart, bestRefStart int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
