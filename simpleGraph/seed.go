@@ -1,8 +1,6 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
