@@ -40,7 +40,7 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Paired end reads detected...\n")
 
-	log.Printf("Indexing the genome...\n")
+	log.Printf("Indexing the genome...\n\n")
 	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
 	//log.Printf("Setting up read and write channels...\n\n")
@@ -50,7 +50,7 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
-	log.Printf("Aligning sequene to genome graph...")
+	log.Printf("Aligning sequence to genome graph...")
 	start := time.Now()
 	for i := 0; i < threads; i++ {
 		go gswWorkerPairedEnd(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
@@ -67,7 +67,7 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 
 func viewMatrix(m [][]int64) string {
 	var message string = ""
-	message += fmt.Sprintf("\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
+	message += fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
 	return message
 }
 

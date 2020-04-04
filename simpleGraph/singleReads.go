@@ -11,7 +11,7 @@ import (
 func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Paired end reads detected...\n")
-	log.Printf("Indexing the genome...\n")
+	log.Printf("Indexing the genome...\n\n")
 	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
 	//log.Printf("Setting up read and write channels...\n")
@@ -21,6 +21,7 @@ func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads 
 	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
+	log.Printf("Aligning sequence to genome graph...")
 	start := time.Now()
 	for i := 0; i < threads; i++ {
 		go gswWorkerMemPool(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
