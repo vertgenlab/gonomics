@@ -12,7 +12,7 @@ import(
 	)
 
 
-func assemblyStats(infile string, outfile string) {
+func assemblyStats(infile string, outfile string, countLowerAsGaps bool) {
 	records := fasta.Read(infile)
 	var scaf bool = false
 	var scafLen int = 0
@@ -20,21 +20,45 @@ func assemblyStats(infile string, outfile string) {
 	var genomeLength, N50, sum int
 
 	for i := 0; i < len(records); i++ {
+		scaf = false
 		for k := 0; k < len(records[i].Seq); k++ {
 			if scaf {
-				if records[i].Seq[k] == dna.N || dna.IsLower(records[i].Seq[k]) {
-					scaf = false
-					scafList = append(scafList, scafLen)
-					scafLen = 0
+				if countLowerAsGaps {
+					if records[i].Seq[k] == dna.N || dna.IsLower(records[i].Seq[k]) {
+						scaf = false
+						scafList = append(scafList, scafLen)
+						scafLen = 0
+					} else {
+						scafLen++
+					}
 				} else {
-					scafLen++
+					if records[i].Seq[k] == dna.N {
+						caf = false
+						scafList = append(scafList, scafLen)
+						scafLen = 0
+					} else {
+						scafLen++
+					}
 				}
+
 			} else {
-				if !(records[i].Seq[k] == dna.N || dna.IsLower(records[i].Seq[k])) {
-					scaf = true
-					scafLen++
+				if !(records[i].Seq[k] == dna.N) {
+					if countLowerAsGaps {
+						if !(dna.IsLower(records[i].Seq[k])) {
+							scaf = true
+							scafLen++
+						}
+					} else {
+						scaf = true
+						scafLen++
+					}
 				}
 			}
+		}
+		
+		if scaf {
+			scafList = append(scafList, scafLen)
+			scafLen = 0
 		}
 	}
 
@@ -76,6 +100,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
+	var countLower *bool = flag.Bool("countLowerAsGaps", false, "Lower case letters count as gaps and break contigs.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -89,5 +114,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	assemblyStats(infile, outfile)
+	assemblyStats(infile, outfile, *countLower)
 }
