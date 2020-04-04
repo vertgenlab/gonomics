@@ -1,18 +1,21 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	//"log"
-	//"strings"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
 
 type PairedEnd struct {
 	Fwd *Fastq
 	Rev *Fastq
+}
+
+type PairedEndBig struct {
+	Fwd *FastqBig
+	Rev *FastqBig
 }
 
 func ReadPairs(readOne string, readTwo string) []*PairedEnd {
@@ -41,16 +44,29 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	close(output)
 }
 
+func ReadPairBigToChan(readOne string, readTwo string, output chan<- *PairedEndBig) {
+	var curr *PairedEnd
+	var done bool
+
+	fileOne := fileio.EasyOpen(readOne)
+	defer fileOne.Close()
+	fileTwo := fileio.EasyOpen(readTwo)
+	defer fileTwo.Close()
+
+	for curr, done = NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
+		currBig := &PairedEndBig{Fwd: ToFastqBig(curr.Fwd), Rev: ToFastqBig(curr.Rev)}
+
+		output <- currBig
+	}
+	close(output)
+}
+
 //TODO: rewrite logic to catch error
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*PairedEnd, bool) {
 	curr := PairedEnd{Fwd: nil, Rev: nil}
 	fqOne, done1 := NextFastq(reader1)
 	fqTwo, done2 := NextFastq(reader2)
-	//name1 := strings.Split(fqOne.Name, " ")
-	//name2 := strings.Split(fqTwo.Name, " ")
-	//if name1[0] != name2[0] || (string(name1[1][0]) != "1" && string(name2[1][0]) != "2") {
-	//	log.Fatalf("Error: Names of fastq pair are not the same\n")
-	//}
+
 	curr.Fwd = fqOne
 	curr.Rev = fqTwo
 	if done1 || done2 {

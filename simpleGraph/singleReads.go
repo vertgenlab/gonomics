@@ -5,34 +5,33 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"sync"
+	"time"
 )
 
-func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, header *sam.SamHeader) {
-	//var seedLen int = kMer
-	//var stepSize int = seedLen - 1
-	log.Printf("Reading reference...\n")
-	//ref, chrSize := Read(filename)
-	var numWorkers int = threads
-	log.Printf("Indexing the genome...\n")
-	seedHash := IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
+func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
+	log.SetFlags(log.Ldate | log.Ltime)
+	log.Printf("Paired end reads detected...\n")
+	log.Printf("Indexing the genome...\n\n")
+	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
-
-	log.Printf("Setting up goroutine channels...\n")
-	fastqPipe := make(chan *fastq.Fastq, 824)
-
-	//log.Printf("Making sam channel...\n")
+	//log.Printf("Setting up read and write channels...\n")
+	fastqPipe := make(chan *fastq.FastqBig, 824)
 	samPipe := make(chan *sam.SamAln, 824)
-	go fastq.ReadToChan(readOne, fastqPipe)
-	wgAlign.Add(numWorkers)
-	log.Printf("Aligning fastqs to graph...\n")
-	for i := 0; i < numWorkers; i++ {
-		go gswWorker(ref, seedHash, seedLen, stepSize, fastqPipe, samPipe, &wgAlign)
+	go fastq.ReadBigToChan(readOne, fastqPipe)
+	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
+	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
+	wgAlign.Add(threads)
+	log.Printf("Aligning sequence to genome graph...")
+	start := time.Now()
+	for i := 0; i < threads; i++ {
+		go gswWorkerMemPool(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
-
 	go sam.SamChanToFile(samPipe, output, header, &wgWrite)
 	wgAlign.Wait()
+	stop := time.Now()
 	close(samPipe)
 	wgWrite.Wait()
-	log.Printf("Finished aligning fastqs!!\n")
+	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
+	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }

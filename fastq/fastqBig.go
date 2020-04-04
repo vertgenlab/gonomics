@@ -19,10 +19,8 @@ func ReadBigToChan(filename string, output chan<- *FastqBig) {
 	var curr *Fastq
 	var currBig *FastqBig
 	var done bool
-
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-
 	for curr, done = NextFastq(file); !done; curr, done = NextFastq(file) {
 		currBig = ToFastqBig(curr)
 		output <- currBig

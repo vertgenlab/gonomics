@@ -10,7 +10,7 @@ func gswWorker(gg *SimpleGraph, seedHash map[uint64][]*SeedBed, seedLen int, ste
 	m, trace := swMatrixSetup(10000)
 	for read := range incomingFastqs {
 		//outgoingSams <- devGraphSmithWaterman(gg, read, seedHash, seedLen, stepSize, m, trace, HumanChimpTwoScoreMatrix)
-		outgoingSams <- GraphSmithWaterman(gg, read, seedHash, seedLen, stepSize, m, trace)
+		outgoingSams <- oldGraphSmithWaterman(gg, read, seedHash, seedLen, stepSize, m, trace)
 	}
 	wg.Done()
 }

@@ -30,111 +30,43 @@ var readWriteTests = []struct {
 	//{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA, nil, nil}, {1, "seqOneB", seqOneB, nil, nil}, {2, "seqOneC", seqOneC, nil, nil}}},
 }
 
-/*
-func TestPabBioGraph(t *testing.T) {
+func TestWorkerWithWriting(t *testing.T) {
+	var output string = "testdata/pairedTest.sam"
 	var tileSize int = 32
 	var stepSize int = 32
 	var numberOfReads int = 10
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 8
+	var numWorkers int = 4
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-
+	genome, chrSize := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome, _ := Read("testdata/BRpbsv.gg")
-	//genome, _ := Read("testdata/rabsBepaChrI.gg")
-
 	log.Printf("Indexing the genome...\n")
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.PairedEndBig, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.PairedSamAln, 824)
+
+	log.Printf("Simulating reads...\n")
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	os.Remove("testdata/simReads_R1.fq")
+	os.Remove("testdata/simReads_R2.fq")
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	header := sam.ChromInfoMapSamHeader(chrSize)
 	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-
-	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.FastqBig, 824)
-
-	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *sam.SamAln, 824)
-
-	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
-	fastq.Write("testdata/simReads.fq", simReads)
-
-	header := NodesHeader(genome.Nodes)
-
-	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
-	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
-
-	log.Printf("Starting alignment worker...\n")
-	time.Sleep(5 * time.Second)
-
-	f, err := os.Create("testdata/cpuprofile.data")
-	common.ExitIfError(err)
-	defer f.Close()
-	err = pprof.StartCPUProfile(f)
-	common.ExitIfError(err)
-
-	start := time.Now()
-	workerWaiter.Add(numWorkers)
-	for i := 0; i < numWorkers; i++ {
-		go gswWorkerMemPool(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
-	}
-
-	workerWaiter.Wait()
-	stop := time.Now()
-	pprof.StopCPUProfile()
-	close(samPipe)
-
-	log.Printf("Aligners finished and channel closed\n")
-	writerWaiter.Wait()
-	log.Printf("Sam writer finished and we are all done\n")
-	duration := stop.Sub(start)
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
-	//strictCheckFile("testPabBioGraph.sam", genome)
-	//log.Printf("Passed alignment check!!!\n")
-}*/
-
-func TestWorkerWithWriting(t *testing.T) {
-	var tileSize int = 32
-	var stepSize int = 31
-	var numberOfReads int = 10
-	var readLength int = 150
-	var mutations int = 0
-	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 3
-	genome, _ := Read("testdata/bigGenome.sg")
-	log.Printf("Reading in the genome (simple graph)...\n")
-	//genome := Read("testdata/rabs_chr8.gg")
-	//fa, _ := Read("testdata/chrI.fa")
-	log.Printf("Indexing the genome...\n")
-	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.Fastq, 824)
-
-	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *sam.SamAln, 824)
-
-	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
-	os.Remove("testdata/simReads.fq")
-	fastq.Write("testdata/simReads.fq", simReads)
-	//genome, chrSize := Read("testdata/rabsBepaChrI.gg")
-
-	//header := sam.ChromInfoMapSamHeader(chrSize)
-
-	//log.Printf("%v\n", header)
-	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 	log.Printf("Finished Indexing Genome...\n")
 	start := time.Now()
-	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
 
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
+		go gswWorkerPairedEnd(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
 	}
+	go sam.SamChanPairToFile(samPipe, output, header, &writerWaiter)
 	writerWaiter.Add(1)
-	go SamChanView(samPipe, genome, &writerWaiter)
-	///dev/stdout
-	//go sam.SamChanToFile(samPipe, "/dev/stdout", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -142,8 +74,12 @@ func TestWorkerWithWriting(t *testing.T) {
 	log.Printf("Sam writer finished and we are all done\n")
 	stop := time.Now()
 	duration := stop.Sub(start)
-	//os.Remove("testdata/sim.sam")
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	samfile, _ := sam.Read("testdata/pairedTest.sam")
+	for _, samline := range samfile.Aln {
+		log.Printf("%s\n", ViewGraphAlignment(samline, genome))
+	}
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	os.Remove(output)
 }
 
 /*func TestWorkerWithTiming(t *testing.T) {
@@ -593,4 +529,74 @@ func TestWriteAndRead(t *testing.T) {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
 		}
 	}
+}*/
+
+/*
+func TestPabBioGraph(t *testing.T) {
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 10000
+	var readLength int = 150
+	var mutations int = 0
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 8
+	var scoreMatrix = HumanChimpTwoScoreMatrix
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome, chrSize := Read("testdata/BRpbsv.gg")
+
+	//genome, _ := Read("testdata/rabsBepaChrI.gg")
+
+	log.Printf("Indexing the genome...\n")
+	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.FastqBig, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.SamAln, 824)
+
+	log.Printf("Simulating reads...\n")
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
+	fastq.Write("testdata/simReads.fq", simReads)
+
+	header := sam.ChromInfoMapSamHeader(chrSize)
+
+	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
+	writerWaiter.Add(1)
+	go sam.SamChanToFile(samPipe, "testdata/test.sam", header, &writerWaiter)
+
+	log.Printf("Starting alignment worker...\n")
+	time.Sleep(5 * time.Second)
+
+	f, err := os.Create("testdata/cpuprofile.data")
+	common.ExitIfError(err)
+	defer f.Close()
+	err = pprof.StartCPUProfile(f)
+	common.ExitIfError(err)
+
+	start := time.Now()
+	workerWaiter.Add(numWorkers)
+	for i := 0; i < numWorkers; i++ {
+		go gswWorkerMemPool(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
+	}
+
+	workerWaiter.Wait()
+	stop := time.Now()
+	pprof.StopCPUProfile()
+	close(samPipe)
+
+	log.Printf("Aligners finished and channel closed\n")
+	writerWaiter.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+	duration := stop.Sub(start)
+
+	samfile, _ := sam.Read("testdata/test.sam")
+	for _, samline := range samfile.Aln {
+		log.Printf("%s\n", ViewGraphAlignment(samline, genome))
+	}
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	//strictCheckFile("testPabBioGraph.sam", genome)
+
+	//log.Printf("Passed alignment check!!!\n")
 }*/
