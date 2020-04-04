@@ -20,15 +20,16 @@ func TajimaFromBedNoGroup(b *bed.Bed, aln []*fasta.Fasta) float64 {
 	return Tajima(tmpFa)
 }
 
-func TajimaFromBed(b *bed.Bed, aln []*fasta.Fasta, g []*Group) float64 {
+func TajimaFromBed(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
 	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
 	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
-	tmpFa = fasta.RemoveMissingMult(tmpFa)
+	tmp2Fa := fasta.RemoveMissingMult(tmpFa)
 
-	tmpFa = FilterMultByGroup(tmpFa, g[0])
+	tmp3Fa := FilterMultByGroup(tmp2Fa, g)
+	missing := FindMissingGroupMembers(tmp3Fa, g)
 
-	return Tajima(tmpFa)
+	return Tajima(tmpFa), missing
 }
 
 func Tajima(aln []*fasta.Fasta) float64 {

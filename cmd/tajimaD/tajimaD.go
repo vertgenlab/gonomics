@@ -20,8 +20,10 @@ func tajimaD(inFile string, alnFile string, groupFile string, outFile string) {
 		}
 	} else {
 		for i := 0; i < len(b); i++ {
-			b[i].Annotation = make([]string, 1)
-			b[i].Annotation[0] = fmt.Sprintf("%f", popgen.TajimaFromBed(b[i], aln, popgen.ReadGroups(groupFile)))
+			b[i].Annotation = make([]string, 2)
+			tajima, missing := popgen.TajimaFromBed(b[i], aln, popgen.ReadGroups(groupFile))
+			b[i].Annotation[0] = fmt.Sprintf("%f", tajima) 
+			b[i].Annotation[1] = missing
 		}
 	}
 	bed.Write(outFile, b, 7)
@@ -31,14 +33,14 @@ func usage() {
 	fmt.Print(
 		"tajimaD - Computes Tajima's D for each region in an input bed for a given multiFa alignment.\n" +
 			"Usage:\n" +
-			"dunnIndex regions.bed aln.multi.fa  groups.list outfile.bed\n" +
+			"dunnIndex regions.bed aln.multi.fa outfile.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 3
-	var groupFile *string = flag.String("group", "", "Restricts analysis to a subset of the alignment.")
+	var groupFile *string = flag.String("groups", "", "Restricts analysis to a subset of the alignment.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()

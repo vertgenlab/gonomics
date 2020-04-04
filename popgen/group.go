@@ -34,19 +34,51 @@ func ReadGroups(filename string) []*Group {
 	return answer
 }
 
-func FilterMultByGroup(aln []*fasta.Fasta, g *Group) []*fasta.Fasta {
-	var contained bool
+func FilterToGroups(aln []*fasta.Fasta, g []*Group) []*fasta.Fasta {
 	var answer []*fasta.Fasta
 	for i := 0; i < len(aln); i++ {
-		contained = false
-		for j := 0; j < len(g.Members); j++ {
-			if aln[i].Name == g.Members[j] {
-				contained = true
+		for j := 0; j < len(g); j++ {
+			for k := 0; k < len(g[j].Members); k++ {
+				if aln[i].Name == g[j].Members[k] {
+					answer = append(answer, aln[i])
+				}
 			}
-		}
-		if contained {
-			answer = append(answer, aln[i])
 		}
 	}
 	return answer
 }
+
+func FindMissingGroupMembers(aln []*fasta.Fasta, g []*Group) string {
+	var answer string = "Missing: "
+	var missing bool = false
+	for i := 0; i < len(g); i++ {
+		answer = answer + g[i].Name + ": "
+		for j := 0; j < len(g[i].Members); j++ {
+			missing = true
+			for k := 0; k < len(aln); k++ {
+				if aln[k].Name == g[i].Members[j] {
+					missing = false
+				}
+			}
+			if missing {
+				answer = answer + g[i].Members[j] + ", "
+			}
+		}
+	}
+	return answer
+}
+
+func FilterMultByGroup(aln []*fasta.Fasta, g []*Group) []*fasta.Fasta {
+	var answer []*fasta.Fasta
+	for i := 0; i < len(aln); i++ {
+		for j := 0; j < len(g); j++ {
+			for k := 0; k < len(g[j].Members); k++ {
+				if aln[i].Name == g[j].Members[k] {
+					answer = append(answer, aln[i])
+				}
+			}
+		}
+	}
+	return answer
+}
+
