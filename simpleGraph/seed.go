@@ -108,7 +108,6 @@ func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*Se
 	}
 	return answer
 }
-
 //TODO: playing around with dfferent seeding ideas, ndo not use
 /*
 func findSeedsInGraph(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {

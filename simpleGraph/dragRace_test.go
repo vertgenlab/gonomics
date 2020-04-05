@@ -15,9 +15,9 @@ import (
 )
 
 func TestQuickMemPool(t *testing.T) {
-	var tileSize int = 26
-	var stepSize int = 8
-	var numberOfReads int = 20
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 2
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup

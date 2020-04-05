@@ -2,7 +2,7 @@ package dnaTwoBit
 
 import (
 	"github.com/vertgenlab/gonomics/common"
-	"log"
+	//"log"
 	"math/bits"
 )
 
@@ -18,11 +18,11 @@ func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int
 	var bitMatches, totalMatches int = 0, 0
 
 	var offsetOne int = (startOne % basesPerInt) * bitsPerBase
-	var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
+	/*var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
 
 	if offsetOne != offsetTwo {
 		log.Fatalf("Error: Different offsets when comparing sequences\n")
-	}
+	}*/
 
 	i = startOne / basesPerInt
 	j = startTwo / basesPerInt
@@ -59,11 +59,11 @@ func CountLeftMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int 
 	var bitMatches, totalMatches int = 0, 0
 
 	var offsetOne int = (startOne % basesPerInt) * bitsPerBase
-	var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
+	/*var offsetTwo int = (startTwo % basesPerInt) * bitsPerBase
 
 	if offsetOne != offsetTwo {
 		log.Fatalf("Different offsets when comparing sequences\n")
-	}
+	}*/
 	var firstBitsNoLook int = bitsPerInt - offsetOne - bitsPerBase
 
 	i = startOne / basesPerInt
