@@ -123,10 +123,9 @@ func RemoveMissingMult(records []*Fasta) []*Fasta {
 
 	for i := 0; i < len(records); i++ {
 		missing = true
-		for j := 0; j < len(records[i].Seq); j++ {
+		for j := 0; j < len(records[i].Seq) && missing; j++ {
 			if records[i].Seq[j] != dna.Gap {
 				missing = false
-				break
 			}
 		}
 		if !missing {

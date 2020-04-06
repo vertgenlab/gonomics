@@ -1,9 +1,9 @@
 package fasta
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/dna"
 	"sort"
+	"testing"
 )
 
 var contigOneSeq = dna.StringToBases("ACGTGAGTGAGTAGGACCACGATGACACGANNTGA")
@@ -16,8 +16,8 @@ func TestMakeContigList(t *testing.T) {
 	input := makeContigList(inputFasta, true)
 	sort.Ints(input)
 	if !ContigAllAreEqual(input, expected) {
-			t.Errorf("Do not match. Input: %v. Expected: %v. \n", input, expected)
-		}
+		t.Errorf("Do not match. Input: %v. Expected: %v. \n", input, expected)
+	}
 }
 
 func ContigAllAreEqual(input []int, expected []int) bool {

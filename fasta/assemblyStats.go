@@ -2,11 +2,11 @@ package fasta
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/common"
-	"sort"
 	"log"
+	"sort"
 )
 
 func AssemblyStats(infile string, outfile string, countLowerAsGaps bool) {
@@ -14,7 +14,7 @@ func AssemblyStats(infile string, outfile string, countLowerAsGaps bool) {
 	var genomeLength int
 
 	contigList := makeContigList(records, countLowerAsGaps)
-	
+
 	for i := 0; i < len(contigList); i++ {
 		genomeLength += contigList[i]
 	}
@@ -30,7 +30,7 @@ func AssemblyStats(infile string, outfile string, countLowerAsGaps bool) {
 
 func calculateN50(contigList []int, halfGenome int) int {
 	var sum int = 0
-	for i := len(contigList) -1; i > -1; i-- {
+	for i := len(contigList) - 1; i > -1; i-- {
 		sum += contigList[i]
 		if sum > halfGenome {
 			return contigList[i]
@@ -81,7 +81,7 @@ func makeContigList(records []*Fasta, countLowerAsGaps bool) []int {
 				}
 			}
 		}
-		
+
 		if contig {
 			contigList = append(contigList, contigLen)
 			contigLen = 0
@@ -103,4 +103,3 @@ func writeAssemblyStats(infile string, outfile string, N50 int, halfGenome int, 
 	_, err = fmt.Fprintf(file, "N50: %d\n", N50)
 	common.ExitIfError(err)
 }
-

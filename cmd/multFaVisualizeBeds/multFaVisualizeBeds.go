@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/browser"
+	"log"
 )
 
 func multFaVisualizeBeds(bedFile string, alnFile string, outFormat bool, noMask bool, lineLength int64) {
@@ -25,10 +25,10 @@ func multFaVisualizeBeds(bedFile string, alnFile string, outFormat bool, noMask 
 func usage() {
 	fmt.Print(
 		"multFaVisualizer - Provides human-readable multiple alignments for all entries in a bed file.\n" +
-		"All bed entries must be on the same chromosome to interface with multiFa file.\n" +
-		"Usage:\n" +
-		"multiFaVisualizeBeds in.bed mult.fa\n" +
-		"options:\n")
+			"All bed entries must be on the same chromosome to interface with multiFa file.\n" +
+			"Usage:\n" +
+			"multiFaVisualizeBeds in.bed mult.fa\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
