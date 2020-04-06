@@ -71,6 +71,11 @@ func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int6
 }
 
 func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64) *BatchData {
+
+	if inDirectory == "" {
+		return nil
+	}
+
 	var wg sync.WaitGroup
 	receivePathCount := make(chan *SampleData)
 
@@ -111,7 +116,7 @@ func CountPathsInDir(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ
 	return answer
 }
 
-func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph.Node, sampleData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) {
+func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph.Node, sampleData *BatchData, normalData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) {
 	defer wg.Done()
 	pathCounts := sampleData.Counts
 	genomeCounts := sampleData.GenomeCounts
@@ -143,25 +148,29 @@ func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph
 	// [a b]
 	// [c d]
 	// a = Samples Genome Count
-	// b = Background Genome Count - Samples Genome Count
+	// b = Background Genome Count (- Samples Genome Count if no normal)
 	// c = Samples Alt Path Count
-	// d = Background Alt Path Count - Samples Alt Path Count
+	// d = Background Alt Path Count (- Samples Alt Path Count if no normal)
 	for i := 0; i < len(pathCounts); i++ {
 		a := int(genomeCounts[i])
 		c := int(pathCounts[i][start.Id])
 		var b, d int
 
-		for j := 0; j < len(genomeCounts); j++ {
-			b += int(genomeCounts[i])
+		if normalData != nil {
 
+		} else {
+			for j := 0; j < len(genomeCounts); j++ {
+				b += int(genomeCounts[i])
+
+			}
+
+			for k := 0; k < len(pathCounts); k++ {
+				d += int(pathCounts[k][start.Id])
+			}
+
+			b = b - a
+			d = d - c
 		}
-
-		for k := 0; k < len(pathCounts); k++ {
-			d += int(pathCounts[k][start.Id])
-		}
-
-		b = b - a
-		d = d - c
 
 		p := numbers.FisherExact(a, b, c, d, true)
 		switch {
@@ -181,7 +190,7 @@ func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph
 	}
 }
 
-func FindRareNodes(graph *simpleGraph.SimpleGraph, sampleData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) []*NodeP {
+func FindRareNodes(graph *simpleGraph.SimpleGraph, sampleData *BatchData, normalData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) []*NodeP {
 	var answer = make([]*NodeP, 0)
 	result := make(chan *NodeP)
 	var wg sync.WaitGroup
@@ -205,8 +214,9 @@ func FindRareNodes(graph *simpleGraph.SimpleGraph, sampleData *BatchData, maxPop
 		if areThereReads == false {
 			continue
 		}
+
 		wg.Add(1)
-		go calcRareNode(&wg, result, graph.Nodes[i], sampleData, maxPopFreq, minReadFreq, minPval)
+		go calcRareNode(&wg, result, graph.Nodes[i], sampleData, normalData, maxPopFreq, minReadFreq, minPval)
 	}
 
 	go func() {
@@ -262,11 +272,11 @@ func NodesToVcf(nodes []*NodeP) []*vcf.Vcf {
 	return answer
 }
 
-func FindVarsInsideGraph(graph *simpleGraph.SimpleGraph, sampleData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) []*vcf.Vcf {
+func FindVarsInsideGraph(graph *simpleGraph.SimpleGraph, sampleData *BatchData, normalData *BatchData,  maxPopFreq float64, minReadFreq float64, minPval float64) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 
 	// Find rare nodes in graph
-	rareNodes := FindRareNodes(graph, sampleData, maxPopFreq, minReadFreq, minPval)
+	rareNodes := FindRareNodes(graph, sampleData, normalData, maxPopFreq, minReadFreq, minPval)
 
 	answer = NodesToVcf(rareNodes)
 
@@ -725,12 +735,13 @@ func ScoreVariant(a int32, b int32, c int32, d int32, afThreshold float64) float
 
 
 // Complete wrapper function for vars inside and outside graph
-func GraphVariants(graph *simpleGraph.SimpleGraph, inDirectory string, minMapQ int64, maxPopFreq float64, minReadFreq float64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
+func GraphVariants(graph *simpleGraph.SimpleGraph, sampleDirectory string, normalDirectory string, minMapQ int64, maxPopFreq float64, minReadFreq float64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
 	var answer []*vcf.Vcf
-	pathCounts := CountPathsInDir(graph, inDirectory, minMapQ)
+	pathCounts := CountPathsInDir(graph, sampleDirectory, minMapQ)
+	normalCounts := CountPathsInDir(graph, normalDirectory, minMapQ)
 
-	VarsInGraph := FindVarsInsideGraph(graph, pathCounts, maxPopFreq, minReadFreq, minPval)
-	VarsOutGraph := FindVarsOutsideGraph(graph, inDirectory, minMapQ, minPval, afThreshold, paired)
+	VarsInGraph := FindVarsInsideGraph(graph, pathCounts, normalCounts, maxPopFreq, minReadFreq, minPval)
+	VarsOutGraph := FindVarsOutsideGraph(graph, sampleDirectory, minMapQ, minPval, afThreshold, paired)
 
 	for val := range VarsOutGraph {
 		answer = append(VarsInGraph, val)

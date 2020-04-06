@@ -373,7 +373,7 @@ func MakeMGraph() *simpleGraph.SimpleGraph {
  */
 
 func TestGraphVariants(t *testing.T) {
-	answer := GraphVariants(MakeTestGraph(), "testdata2", 0, 1, 0, 1, 0, 10, false)
+	answer := GraphVariants(MakeTestGraph(), "testdata2", "", 0, 1, 0, 1, 0, 10, false)
 	//answer := GraphVariants(MakeMGraph(), "testdata2", 0, 1, 0, 1, 0, 10, false)
 
 	if answer == nil || len(answer) == 0 {
