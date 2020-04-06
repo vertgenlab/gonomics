@@ -47,18 +47,16 @@ func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, t
 	fastqPipe := make(chan *fastq.PairedEndBig, 824)
 	samPipe := make(chan *sam.PairedSamAln, 824)
 	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
-	wgWrite.Add(1)
-	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)
-
 	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
-	time.Sleep(5 * time.Second)
 	log.Printf("Aligning sequence to genome graph...")
 	start := time.Now()
 	for i := 0; i < threads; i++ {
 		go gswWorkerPairedEnd(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
 	}
+	wgWrite.Add(1)
+	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)
 	wgAlign.Wait()
 	stop := time.Now()
 	close(samPipe)
