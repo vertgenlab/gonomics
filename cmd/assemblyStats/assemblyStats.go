@@ -1,10 +1,10 @@
 package main
 
-import(
-	"log"
-	"fmt"
+import (
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 )
 
 func assemblyStats(infile string, outfile string, countLowerAsGaps bool) {
@@ -14,9 +14,9 @@ func assemblyStats(infile string, outfile string, countLowerAsGaps bool) {
 func usage() {
 	fmt.Print(
 		"assemblyStats: Provides information about the number of scaffolds, including the N50, number of scaffolds, and distribution of lengths of assembled scaffolds.\n" +
-		"Usage:\n" +
-		"assemblyStats input.fa output.txt\n" +
-		"options:\n")
+			"Usage:\n" +
+			"assemblyStats input.fa output.txt\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
