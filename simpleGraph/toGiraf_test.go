@@ -40,7 +40,7 @@ func TestExcuteGiraf(t *testing.T) {
 	var numberOfReads int = 100
 	var readLength int = 150
 	var mutations int = 0
-	var cpus int = 4
+	var cpus int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Reading in the genome (simple graph)...\n")
 	genome := Read("testdata/bigGenome.sg")
@@ -55,10 +55,10 @@ func TestExcuteGiraf(t *testing.T) {
 }
 
 func TestGirafGSW(t *testing.T) {
-	var output string = "/dev/stdout"
+	var output string = "testdata/giraf.tsv"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 1000
+	var numberOfReads int = 160000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -103,5 +103,5 @@ func TestGirafGSW(t *testing.T) {
 	///	log.Printf("%s\n", ViewGraphAlignment(samline, genome))
 	//}
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-	//os.Remove(output)
+	os.Remove(output)
 }

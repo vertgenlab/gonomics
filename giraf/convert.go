@@ -10,9 +10,9 @@ import (
 	"strings"
 )
 
-func GriafToString(g *Giraf) string {
+func GirafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s\t%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), Uint8QualToString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), Uint8QualToString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
@@ -32,7 +32,7 @@ func stringToGiraf(line string) *Giraf {
 			AlnScore:  common.StringToInt(data[6]),
 			MapQ:      uint8(common.StringToInt(data[7])),
 			Seq:       dna.StringToBases(data[8]),
-			Qual:      fromStringToQual(data[9]),
+			Qual:      ToQualUint8([]rune(data[9])),
 			Notes:     FromStringToNotes(data[10])}
 	}
 	return curr
@@ -62,11 +62,11 @@ func FromStringToPath(column string) *Path {
 }
 
 func NotesToString(notes []Note) string {
-	var answer string = NoteToString(notes[0])
-	if len(notes) == 1 {
+	var answer string = ""
+	if len(notes) == 0 {
 		return answer
 	} else {
-		for i := 1; i < len(notes); i++ {
+		for i := 0; i < len(notes); i++ {
 			answer += fmt.Sprintf("\t%s", NoteToString(notes[i]))
 		}
 	}
@@ -80,6 +80,12 @@ func ToQualUint8(qual []rune) []uint8 {
 		answer[i] = uint8(qual[i])
 	}
 	return answer
+}
+
+func ReverseQualUint8Record(qualScore []uint8) {
+	for i, j := 0, len(qualScore)-1; i <= j; i, j = i+1, j-1 {
+		qualScore[i], qualScore[j] = qualScore[j], qualScore[i]
+	}
 }
 
 func Uint8QualToString(qual []uint8) string {
@@ -135,10 +141,10 @@ func qualToString(qual []uint8) string {
 }
 
 func fromStringToQual(s string) []uint8 {
-	words := strings.Split(s, ",")
-	answer := make([]uint8, len(words))
-	for i, v := range words {
-		answer[i] = uint8(common.StringToInt(v))
+	words := []rune(s)
+	answer := make([]uint8, 0)
+	for _, v := range words {
+		answer = append(answer, uint8(v))
 	}
 	return answer
 }

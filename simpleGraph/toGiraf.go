@@ -80,6 +80,9 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			}
 		}
 	}
+	if !currBest.PosStrand {
+		giraf.ReverseQualUint8Record(currBest.Qual)
+	}
 	if seeds != nil {
 		tailSeed = toTail(seeds)
 		tailSeed.Next = *memoryPool
@@ -255,7 +258,12 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 		curr.Pos = int64(ag.Path.TStart) + common.StringToInt64(target[1])
 		curr.Flag = getSamFlags(ag)
 		curr.Cigar = ag.Aln
-		curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:Z:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))
+
+		if len(ag.Notes) == 2 {
+			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:Z:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))
+		} else {
+			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:Z:%d", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart)
+		}
 	}
 	return curr
 }
