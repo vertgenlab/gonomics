@@ -3,6 +3,7 @@ package alleles
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io/ioutil"
@@ -383,17 +384,18 @@ func score(input *ScoreInput) *vcf.Vcf {
 	}
 	return answer
 }
-/*
+
 // Inputs a vcf file annotated by SnpEff and exports as a csv
 func EffToCSV(inFile string, outFile string) {
-	vcfchan := vcf.ReadToChan(inFile)
+	vcfchan := make(chan *vcf.Vcf)
+	go vcf.ReadToChan(inFile, vcfchan)
 
 	// Write header to output file
 	output := fileio.MustCreate(outFile)
 	defer output.Close()
 	fmt.Fprintf(output, "Sample\tChr\tPos\tRef\tAlt\tpVal\tGene\tDNA\tProtein\tRefCount\tAltCount\tCoverage\tConsequence\tPrediction\tTranscript\tTLOD Score\tPopulation AF\tCOSMIC ID\tSIFT pred\tPOLYPHEN pred\tPROVEAN pred\n")
 
-	for data := range(vcfchan) {
+	for data := range vcfchan {
 		Sample := strings.Split(data.Notes, ":")
 		Info := strings.Split(data.Info, ";")
 		Chr := strings.Split(data.Chr, ":")
@@ -452,12 +454,12 @@ func EffToCSV(inFile string, outFile string) {
 
 		// Eff Example Line: ANN=A|missense_variant|MODERATE|TGFBR3|TGFBR3|transcript|NM_003243.4|protein_coding|13/17|c.2050G>T|p.Asp684Tyr|2565/6467|2050/2556|684/851||
 		Ann := strings.Split(ANNOTATIONS, "|")
-		Cov := strings.Split(Sample[3], "\n")
-		counts := strings.Split(Sample[1], ",")
+		//Cov := strings.Split(Sample[3], "\n")
+		//counts := strings.Split(Sample[1], ",")
 
 		fmt.Fprintf(output, "%s\t%s\t%d\t%s\t%s\t%.3v\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-			Chr[0],    // Sample
-			Chr[1],  // Chr
+			Sample[0],    // Sample
+			Chr[0],  // Chr
 			data.Pos,  // Pos
 			data.Ref,  // Ref
 			data.Alt,  // Alt
@@ -465,9 +467,9 @@ func EffToCSV(inFile string, outFile string) {
 			Ann[3],       // Gene
 			Ann[9],       // DNA
 			Ann[10],      // Protein
-			counts[0],    // RefCount
-			counts[1],    // AltCount
-			Cov[0],       // Coverage
+			Sample[1],    // RefCount
+			Sample[2],    // AltCount
+			Sample[3],       // Coverage
 			Ann[1],       // Consequence
 			Ann[2],       // Prediction
 			Ann[6],      // Transcript
@@ -479,5 +481,4 @@ func EffToCSV(inFile string, outFile string) {
 			PROVEAN)
 	}
 }
- */
 
