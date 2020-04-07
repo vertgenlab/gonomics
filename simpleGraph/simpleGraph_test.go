@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -25,15 +26,16 @@ func TestExcute(t *testing.T) {
 	var cpus int = 4
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/BRpbsv.gg")
-
+	genome := Read("testdata/gasAcu1.fa")
+	chrSize := chromInfo.ReadToSlice("testdata/bigGenome.sizes")
+	header := sam.ChromInfoSamHeader(chrSize)
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	readOne := "testdata/simReads_R1.fastq"
 	readTwo := "testdata/simReads_R2.fastq"
 	os.Remove(readOne)
 	os.Remove(readTwo)
 	fastq.WritePair(readOne, readTwo, simReads)
-	GSWsPair(genome, readOne, readTwo, "testdata/test.sam", cpus, tileSize, stepSize, scoreMatrix, nil)
+	GSWsPair(genome, readOne, readTwo, "testdata/test.sam", cpus, tileSize, stepSize, scoreMatrix, header)
 	samfile, _ := sam.Read("testdata/test.sam")
 	for _, samline := range samfile.Aln {
 		log.Printf("%s\n", ViewGraphAlignment(samline, genome))
@@ -52,7 +54,7 @@ func TestPabBioGraph(t *testing.T) {
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/BRpbsv.gg")
+	genome := Read("testdata/bigGenome.sg")
 
 	//genome, _ := Read("testdata/rabsBepaChrI.gg")
 
@@ -118,7 +120,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	genome := Read("testdata/gasAcu1.fa")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 	log.Printf("Making fastq channel...\n")

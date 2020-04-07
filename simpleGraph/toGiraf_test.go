@@ -22,8 +22,8 @@ func TestGirafLiftoverToSam(t *testing.T) {
 	var cpus int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/BRpbsv.gg")
-	chrSize := chromInfo.ReadToSlice("testdata/gasAcu1.sizes")
+	genome := Read("testdata/bigGenome.sg")
+	chrSize := chromInfo.ReadToSlice("testdata/bigGenome.sizes")
 	header := sam.ChromInfoSamHeader(chrSize)
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	readOne := "testdata/simReads_R1.fastq"
@@ -43,7 +43,7 @@ func TestExcuteGiraf(t *testing.T) {
 	var cpus int = 4
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/BRpbsv.gg")
+	genome := Read("testdata/bigGenome.sg")
 
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	readOne := "testdata/simReads_R1.fastq"
@@ -55,10 +55,10 @@ func TestExcuteGiraf(t *testing.T) {
 }
 
 func TestGirafGSW(t *testing.T) {
-	var output string = "testdata/pairedTest.tsv"
+	var output string = "/dev/stdout"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 10000
+	var numberOfReads int = 1000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
