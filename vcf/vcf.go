@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -50,19 +49,17 @@ func Read(filename string) []*Vcf {
 }
 
 func ReadToChan(filename string, output chan<- *Vcf) {
-	var wg sync.WaitGroup
-	wg.Add(1)
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 	ReadHeader(file)
 	var curr *Vcf
 	var done bool
-	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
-		output <- curr
-	}
-	wg.Done()
-	close(output)
-	wg.Wait()
+	go func(){
+		for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+			output <- curr
+		}
+		close(output)
+	}()
 }
 
 func processVcfLine(line string) *Vcf {
