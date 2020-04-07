@@ -27,7 +27,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		AlnScore:  0,
 		MapQ:      255,
 		Seq:       read.Seq,
-		Qual:      []uint8{},
+		Qual:      giraf.ToQualUint8(read.Qual),
 		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 	}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
@@ -244,10 +244,10 @@ func WrapGirafLiftoverToSam(ref *SimpleGraph, readOne string, readTwo string, ou
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
 
-func GirafToSam(ag *giraf.Giraf, read *fastq.FastqBig) *sam.SamAln {
-	curr := &sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
+	curr := &sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: giraf.Uint8QualToString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+	//read is unMapped
 	if strings.Compare(ag.Notes[0].Value, "~") == 0 {
-		//read is unMapped
 		return curr
 	} else {
 		target := strings.Split(ag.Notes[0].Value, "=")
@@ -262,14 +262,14 @@ func GirafToSam(ag *giraf.Giraf, read *fastq.FastqBig) *sam.SamAln {
 
 func GirafLiftoverToSam(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.PairedSamAln {
 	mappedPair := WrapPairGiraf(gg, readPair, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
-	toSamPair := GirafPairToSam(mappedPair, readPair)
+	toSamPair := GirafPairToSam(mappedPair)
 	return toSamPair
 }
 
-func GirafPairToSam(ag *giraf.GirafPair, readPair *fastq.PairedEndBig) *sam.PairedSamAln {
+func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {
 	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: &sam.SamAln{}, RevSam: &sam.SamAln{}}
-	mappedPair.FwdSam = GirafToSam(ag.Fwd, readPair.Fwd)
-	mappedPair.RevSam = GirafToSam(ag.Rev, readPair.Rev)
+	mappedPair.FwdSam = GirafToSam(ag.Fwd)
+	mappedPair.RevSam = GirafToSam(ag.Rev)
 	mappedPair.FwdSam.Flag += 64
 	mappedPair.RevSam.Flag += 128
 	if isProperPairAlign(ag) {

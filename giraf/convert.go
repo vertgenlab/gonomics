@@ -12,7 +12,7 @@ import (
 
 func GriafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s\t%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), qualToString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s\t%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), Uint8QualToString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
@@ -71,6 +71,23 @@ func NotesToString(notes []Note) string {
 		}
 	}
 	return answer
+}
+
+//TODO: will move to fastq package
+func ToQualUint8(qual []rune) []uint8 {
+	var answer []uint8 = make([]uint8, len(qual))
+	for i := 0; i < len(qual); i++ {
+		answer[i] = uint8(qual[i])
+	}
+	return answer
+}
+
+func Uint8QualToString(qual []uint8) string {
+	var answer []rune = make([]rune, len(qual))
+	for i := 0; i < len(qual); i++ {
+		answer[i] = rune(qual[i])
+	}
+	return string(answer)
 }
 
 func strandToRune(posStrand bool) rune {
