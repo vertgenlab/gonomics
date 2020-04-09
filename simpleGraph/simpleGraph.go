@@ -2,7 +2,6 @@ package simpleGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
@@ -39,10 +38,10 @@ type Annotation struct {
 }
 
 //TODO: We are transitioning to a new Read function that will keep track of chromosome lengths
-func Read(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
+func Read(filename string) *SimpleGraph {
 	genomeGraph := NewGraph()
-	chrSize := make(map[string]*chromInfo.ChromInfo)
-	var count int64 = 0
+	//chrSize := make(map[string]*chromInfo.ChromInfo)
+	//var count int64 = 0
 	var line string
 	var currSeq []dna.Base
 	var seqIdx int64 = -1
@@ -60,12 +59,12 @@ func Read(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 			seqIdx++
 			words = strings.Split(line, ":")
 			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:], Info: nil}
-			_, cinfo := chrSize[tmp.Name]
-			if !cinfo {
-				cInfo := chromInfo.ChromInfo{Name: tmp.Name, Size: 0, Order: count}
-				chrSize[tmp.Name] = &cInfo
-				count++
-			}
+			//_, cinfo := chrSize[tmp.Name]
+			//if !cinfo {
+			//	cInfo := chromInfo.ChromInfo{Name: tmp.Name, Size: 0, Order: count}
+			//	chrSize[tmp.Name] = &cInfo
+			//	count++
+			//}
 			if len(words) == 2 {
 				text = strings.Split(words[1], "_")
 				tmp.Info = &Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
@@ -88,14 +87,14 @@ func Read(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 			if !strings.Contains(line, ":") && !strings.Contains(line, "\t") {
 				currSeq = dna.StringToBases(line)
 				dna.AllToUpper(currSeq)
-				if genomeGraph.Nodes[seqIdx].Info == nil {
-					chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
-				} else { //if genomeGraph.Nodes[seqIdx].Info != nil
-					if genomeGraph.Nodes[seqIdx].Info.Allele == 0 {
-						words = strings.Split(genomeGraph.Nodes[seqIdx].Name, ":")
-						chrSize[words[0]].Size += int64(len(currSeq))
-					}
-				}
+				//if genomeGraph.Nodes[seqIdx].Info == nil {
+				//	chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
+				//} else { //if genomeGraph.Nodes[seqIdx].Info != nil
+				//	if genomeGraph.Nodes[seqIdx].Info.Allele == 0 {
+				//		words = strings.Split(genomeGraph.Nodes[seqIdx].Name, ":")
+				//		chrSize[words[0]].Size += int64(len(currSeq))
+				//	}
+				//}
 				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
 			}
 		}
@@ -103,7 +102,7 @@ func Read(filename string) (*SimpleGraph, map[string]*chromInfo.ChromInfo) {
 	for i := 0; i < len(genomeGraph.Nodes); i++ {
 		genomeGraph.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genomeGraph.Nodes[i].Seq)
 	}
-	return genomeGraph, chrSize
+	return genomeGraph
 }
 
 func ReadToMap(filename string) map[string]*SimpleGraph {
@@ -232,33 +231,6 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 				_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name)
 			}
 
-			common.ExitIfError(err)
-		}
-		_, err = fmt.Fprintf(file, "\n")
-		common.ExitIfError(err)
-	}
-}
-
-func WriteToGraphCoordinates(file io.Writer, gg *SimpleGraph, lineLength int) {
-	var err error
-	var i, j int
-	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s\n", ">"+gg.Nodes[i].Name)
-		for j = 0; j < len(gg.Nodes[i].Seq); j += lineLength {
-			if j+lineLength > len(gg.Nodes[i].Seq) {
-				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:]))
-				common.ExitIfError(err)
-			} else {
-				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(gg.Nodes[i].Seq[j:j+lineLength]))
-				common.ExitIfError(err)
-			}
-		}
-	}
-	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%s", gg.Nodes[i].Name)
-		near := gg.Nodes[i].Next
-		for j = 0; j < len(near); j++ {
-			_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name)
 			common.ExitIfError(err)
 		}
 		_, err = fmt.Fprintf(file, "\n")

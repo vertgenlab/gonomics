@@ -7,9 +7,9 @@ import (
 	"log"
 )
 
-func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, []uint32) {
+func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {
 	currentPath = append(currentPath, n.Id)
-	var bestQueryEnd, queryEnd int
+	var bestTargetEnd, bestQueryEnd, targetEnd, queryEnd int
 	var bestScore, score int64
 	var bestAlignment, alignment []*cigar.Cigar
 	var path, bestPath []uint32
@@ -25,24 +25,25 @@ func AlignTraversalFwd(n *Node, seq []dna.Base, start int, currentPath []uint32,
 	copy(s[len(seq):targetLength], n.Seq[start:start+basesToTake])
 
 	if availableBases >= ext || len(n.Next) == 0 {
-		score, alignment, _, _, _, queryEnd = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
-		return alignment, score, queryEnd, currentPath
+		score, alignment, _, targetEnd, _, queryEnd = RightLocal(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
+		return alignment, score, targetEnd, queryEnd, currentPath
 	} else {
 		bestScore = -1
 		tmpPath := make([]uint32, len(currentPath))
 		copy(tmpPath, currentPath)
 		for _, i := range n.Next {
 			AddPath(i.Dest.Id, currentPath)
-			alignment, score, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, currentPath, ext, read, m, trace)
+			alignment, score, targetEnd, queryEnd, path = AlignTraversalFwd(i.Dest, s, 0, currentPath, ext, read, m, trace)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
+				bestTargetEnd = targetEnd
 				bestQueryEnd = queryEnd
 				bestPath = path
 			}
 		}
 	}
-	return bestAlignment, bestScore, bestQueryEnd, bestPath
+	return bestAlignment, bestScore, bestTargetEnd, bestQueryEnd, bestPath
 }
 
 func AlignReverseGraphTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]rune) ([]*cigar.Cigar, int64, int, int, []uint32) {

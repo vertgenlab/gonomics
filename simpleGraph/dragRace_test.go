@@ -27,7 +27,7 @@ func TestQuickMemPool(t *testing.T) {
 	log.Printf("Reading in the genome (simple graph)...\n")
 	//genome, _ := Read("testdata/bigGenome.sg")
 	//genome, _ := Read("testdata/rabsBepaChrI.gg")
-	genome, _ := Read("testdata/tiny.gg")
+	genome := Read("testdata/tiny.gg")
 
 	log.Printf("Indexing the genome...\n")
 	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)

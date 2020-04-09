@@ -1,5 +1,7 @@
 package simpleGraph
 
+//TODO: Will remove all of this, just need to make sure
+/*
 import (
 	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
@@ -82,7 +84,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	duration := stop.Sub(start)
 	os.Remove("samFile.sam")
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-}
+}*/
 
 /*func TestVcfToGraph(t *testing.T) {
 	var tileSize int = 32
