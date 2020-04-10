@@ -52,7 +52,6 @@ func calculateDenominator(aln []*fasta.Fasta) float64 {
 	e2 := c2 / (math.Pow(a1, 2) + a2)
 
 	S := float64(calculateS(aln))
-
 	return math.Sqrt(e1*S + e2*S*(S-1))
 }
 
