@@ -43,8 +43,8 @@ func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 	var group2index int
 	for i := 0; i < len(g.Members); i++ {
 		for j := i + 1; j < len(g.Members); j++ {
-			group1index = findFaIndex(subFa, g.Members[i])
-			group2index = findFaIndex(subFa, g.Members[j])
+			group1index = fasta.FindFaIndex(subFa, g.Members[i])
+			group2index = fasta.FindFaIndex(subFa, g.Members[j])
 			if group1index != -1 && group2index != -1 {
 				answer = common.Max(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
 			} 
@@ -53,22 +53,13 @@ func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 	return answer
 }
 
-func findFaIndex(subFa []*fasta.Fasta, n string) int {
-	for i := 0; i < len(subFa); i++ {
-		if subFa[i].Name == n {
-			return i
-		}
-	}
-	return -1
-}
-
 func FindMinInter(g []*Group, subFa []*fasta.Fasta) int {
 	var answer int = math.MaxInt64
 	var group1index, group2index int
 	for i := 0; i < len(g[0].Members); i++ {
 		for j := 0; j < len(g[1].Members); j++ {
-			group1index = findFaIndex(subFa, g[0].Members[i])
-			group2index = findFaIndex(subFa, g[1].Members[j])
+			group1index = fasta.FindFaIndex(subFa, g[0].Members[i])
+			group2index = fasta.FindFaIndex(subFa, g[1].Members[j])
 			if group1index != -1 && group2index != -1 {
 				answer = common.Min(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
 			} 

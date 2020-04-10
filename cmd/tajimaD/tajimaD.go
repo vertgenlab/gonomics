@@ -33,7 +33,7 @@ func usage() {
 	fmt.Print(
 		"tajimaD - Computes Tajima's D for each region in an input bed for a given multiFa alignment.\n" +
 			"Usage:\n" +
-			"dunnIndex regions.bed aln.multi.fa outfile.bed\n" +
+			"tajimaD regions.bed aln.multi.fa outfile.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }

@@ -96,10 +96,15 @@ func writeAssemblyStats(infile string, outfile string, N50 int, halfGenome int, 
 
 	var err error
 	_, err = fmt.Fprintf(file, "Assembly Name: %s\n", infile)
+	common.ExitIfError(err)
 	_, err = fmt.Fprintf(file, "halfGenome: %d\n", halfGenome)
+	common.ExitIfError(err)
 	_, err = fmt.Fprintf(file, "genomeLength: %d\n", genomeLength)
+	common.ExitIfError(err)
 	_, err = fmt.Fprintf(file, "Number of contigs: %d\n", numContigs)
+	common.ExitIfError(err)
 	_, err = fmt.Fprintf(file, "Largest Contig: %d\n", largestContig)
+	common.ExitIfError(err)
 	_, err = fmt.Fprintf(file, "N50: %d\n", N50)
 	common.ExitIfError(err)
 }
