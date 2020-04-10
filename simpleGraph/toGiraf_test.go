@@ -5,13 +5,24 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-
+	//"github.com/vertgenlab/gonomics/align"
 	"log"
 	"os"
 	"sync"
 	"testing"
 	"time"
 )
+
+/*
+//TODO: finish writing matrix helper function
+func TestScoreMatrixHelper(t *testing.T) {
+	var scoreMatrixSlice [][][]int64 = [][][]int64{align.HumanChimpTwoScoreMatrix, align.HoxD55ScoreMatrix, align.MouseRatScoreMatrix}
+	for i := 0; i < len(scoreMatrixSlice);i++ {
+		help := getScoreMatrixHelp(scoreMatrixSlice[i])
+		maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange := help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange
+		log.Printf("maxMatch=%d, minMatch=%d, leastSevereMismatch=%d, leastSevereMatchMismatchChange=%d", maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange)
+	}
+}*/
 
 func TestGirafLiftoverToSam(t *testing.T) {
 	var tileSize int = 32
@@ -31,7 +42,7 @@ func TestGirafLiftoverToSam(t *testing.T) {
 	os.Remove(readOne)
 	os.Remove(readTwo)
 	fastq.WritePair(readOne, readTwo, simReads)
-	WrapGirafLiftoverToSam(genome, readOne, readTwo, "testdata/liftover.sam", cpus, tileSize, stepSize, scoreMatrix, header)
+	WrapGirafLiftoverToSam(genome, readOne, readTwo, "testdata/liftoverToSam.sam", cpus, tileSize, stepSize, scoreMatrix, header)
 }
 
 func TestExcuteGiraf(t *testing.T) {
@@ -64,7 +75,7 @@ func TestGirafGSW(t *testing.T) {
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	genome := Read("testdata/gasAcu1.fa")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 	log.Printf("Making fastq channel...\n")
