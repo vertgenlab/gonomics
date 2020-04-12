@@ -9,11 +9,11 @@ import (
 	"sort"
 )
 
-func AssemblyStats(infile string, outfile string, countLowerAsGaps bool) {
+func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, int) {
 	records := Read(infile)
 	var genomeLength int
 
-	contigList := makeContigList(records, countLowerAsGaps)
+	contigList := MakeContigList(records, countLowerAsGaps)
 
 	for i := 0; i < len(contigList); i++ {
 		genomeLength += contigList[i]
@@ -21,18 +21,18 @@ func AssemblyStats(infile string, outfile string, countLowerAsGaps bool) {
 	sort.Ints(contigList)
 	halfGenome := genomeLength / 2
 
-	N50 := calculateN50(contigList, halfGenome)
+	N50 := CalculateN50(contigList, halfGenome)
 	numContigs := len(contigList)
 	largestContig := contigList[len(contigList)-1]
 
-	writeAssemblyStats(infile, outfile, N50, halfGenome, genomeLength, largestContig, numContigs)
+	return N50, halfGenome, genomeLength, largestContig, numContigs
 }
 
-func calculateN50(contigList []int, halfGenome int) int {
+func CalculateN50(contigList []int, halfGenome int) int {
 	var sum int = 0
 	for i := len(contigList) - 1; i > -1; i-- {
 		sum += contigList[i]
-		if sum > halfGenome {
+		if sum >= halfGenome {
 			return contigList[i]
 		}
 	}
@@ -40,7 +40,7 @@ func calculateN50(contigList []int, halfGenome int) int {
 	return -1
 }
 
-func makeContigList(records []*Fasta, countLowerAsGaps bool) []int {
+func MakeContigList(records []*Fasta, countLowerAsGaps bool) []int {
 	var contigLen int = 0
 	var contig bool = false
 	var contigList []int
@@ -90,7 +90,7 @@ func makeContigList(records []*Fasta, countLowerAsGaps bool) []int {
 	return contigList
 }
 
-func writeAssemblyStats(infile string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
+func WriteAssemblyStats(infile string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
 	file := fileio.EasyCreate(outfile)
 	defer file.Close()
 

@@ -81,4 +81,3 @@ func FilterMultByGroup(aln []*fasta.Fasta, g []*Group) []*fasta.Fasta {
 	}
 	return answer
 }
-

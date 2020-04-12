@@ -47,7 +47,7 @@ func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 			group2index = fasta.FindFaIndex(subFa, g.Members[j])
 			if group1index != -1 && group2index != -1 {
 				answer = common.Max(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
-			} 
+			}
 		}
 	}
 	return answer
@@ -62,7 +62,7 @@ func FindMinInter(g []*Group, subFa []*fasta.Fasta) int {
 			group2index = fasta.FindFaIndex(subFa, g[1].Members[j])
 			if group1index != -1 && group2index != -1 {
 				answer = common.Min(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
-			} 
+			}
 		}
 	}
 	return int(answer)

@@ -1,10 +1,10 @@
 package popgen
 
 import (
-	"testing"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/dna"
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"testing"
 )
 
 var seqA []dna.Base = dna.StringToBases("ATAATAAAAAAATAATAAAAAAATAAAAAAAATAAAAAAA")

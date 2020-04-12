@@ -8,7 +8,8 @@ import (
 )
 
 func assemblyStats(infile string, outfile string, countLowerAsGaps bool) {
-	fasta.AssemblyStats(infile, outfile, countLowerAsGaps)
+	N50, halfGenome, genomeLength, largestContig, numContigs := fasta.AssemblyStats(infile, countLowerAsGaps)
+	fasta.WriteAssemblyStats(infile, outfile, N50, halfGenome, genomeLength, largestContig, numContigs)
 }
 
 func usage() {

@@ -13,7 +13,7 @@ var inputFasta []*Fasta = []*Fasta{{"apple", contigOneSeq}, {"banana", contigTwo
 var expected []int = []int{1, 2, 3, 11, 30}
 
 func TestMakeContigList(t *testing.T) {
-	input := makeContigList(inputFasta, true)
+	input := MakeContigList(inputFasta, true)
 	sort.Ints(input)
 	if !ContigAllAreEqual(input, expected) {
 		t.Errorf("Do not match. Input: %v. Expected: %v. \n", input, expected)
