@@ -1,4 +1,4 @@
-package main
+package methyl
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
@@ -9,15 +9,15 @@ import (
 )
 
 type MethylCount struct {
-	ReadID 	string
-	Chr 	string
-	Pos 	int
-	CG 	int
-	RefCG 	int
-	CHH 	int
-	RefCHH 	int
-	CHG 	int
-	RefCHG	int
+	ReadID string
+	Chr    string
+	Pos    int
+	CG     int
+	RefCG  int
+	CHH    int
+	RefCHH int
+	CHG    int
+	RefCHG int
 }
 
 func CountCysteine(samFilename string, refFilename string) []*MethylCount {
@@ -53,10 +53,9 @@ func CountCysteine(samFilename string, refFilename string) []*MethylCount {
 
 				for j := 0; int64(j) < aln.Cigar[i].RunLength; j++ {
 
-					if int(seqIdx) > len(aln.Seq) - 3 {
+					if int(seqIdx) > len(aln.Seq)-3 {
 						break
 					}
-
 
 					if ref[aln.RName][refIdx] == dna.C {
 

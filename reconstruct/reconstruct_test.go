@@ -1,10 +1,9 @@
 package reconstruct
 
 import (
-	"github.com/vertgenlab/gonomics/sophie/simulate"
-	"github.com/vertgenlab/gonomics/sophie/tree_newick"
+	"github.com/vertgenlab/gonomics/simulate"
+	"github.com/vertgenlab/gonomics/tree_newick"
 	"testing"
-
 	"time"
 )
 

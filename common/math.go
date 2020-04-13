@@ -6,6 +6,14 @@ import (
 	"strconv"
 )
 
+func StringToInt(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a int\n", s)
+	}
+	return n
+}
+
 func StringToFloat64(s string) float64 {
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {

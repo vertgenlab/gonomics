@@ -2,9 +2,6 @@ package qDna
 
 import (
 	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/sam"
 	"reflect"
 )
 
@@ -102,7 +99,7 @@ func UngappedQueryLen(cig []align.Cigar) int64 {
 	return reds
 }
 
-func GSW(ref []*QFrag, reads []*fastq.Fastq) []*sam.SamAln {
+/*func GSW(ref []*QFrag, reads []*fastq.Fastq) []*sam.SamAln {
 	var answer []*sam.SamAln = make([]*sam.SamAln, len(reads))
 	var reverseRead []*QBase
 	//var query []*qDna.QBase
@@ -161,7 +158,7 @@ func GSW(ref []*QFrag, reads []*fastq.Fastq) []*sam.SamAln {
 		}
 	}
 	return answer
-}
+}*/
 
 /*
 func UngappedAlign(alpha []*QBase, beta []*QBase, alphaOffset int, betaOffset int, scoreMatrix [][]float64) float64 {

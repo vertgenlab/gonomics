@@ -5,6 +5,35 @@ import (
 	"strings"
 )
 
+func checkQueryBlock(alpha *Axt, beta *Axt, bestQueryLen int64, bestScore int64, minScore int64) (bool, int64, int64) {
+	if beta.Score < minScore {
+		return false, bestQueryLen, bestScore
+	}
+	if CompareRName(alpha, beta) != 0 {
+		bestQueryLen = beta.QEnd - beta.QStart
+		bestScore = beta.Score
+		return true, bestQueryLen, bestScore
+	} else {
+		if CompareRName(alpha, beta) == 0 {
+			if CompareQName(alpha, beta) != 0 {
+				if (beta.QEnd-beta.QStart > bestQueryLen) && (beta.Score > bestScore) {
+					bestQueryLen = beta.QEnd - beta.QStart
+					bestScore = beta.Score
+					return true, bestQueryLen, bestScore
+				} else {
+					return false, bestQueryLen, bestScore
+				}
+			}
+			if CompareQName(alpha, beta) == 0 {
+				bestQueryLen = bestQueryLen + beta.QEnd - beta.QStart
+				bestScore = bestScore + beta.Score
+				return true, bestQueryLen, bestScore
+			}
+		}
+	}
+	return false, bestQueryLen, bestScore
+}
+
 func CompareRCoord(alpha *Axt, beta *Axt) int {
 	if alpha.RStart < beta.RStart {
 		return -1

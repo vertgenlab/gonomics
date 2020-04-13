@@ -18,7 +18,7 @@ func AddCigar(cigs []*Cigar, newCig *Cigar) []*Cigar {
 }
 
 func CatCigar(cigs []*Cigar, newCigs []*Cigar) []*Cigar {
-	if len(newCigs) == 0 {
+	if len(newCigs) == 0 || newCigs == nil {
 		return cigs
 	} else if len(cigs) == 0 {
 		return newCigs

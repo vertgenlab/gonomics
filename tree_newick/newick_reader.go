@@ -205,15 +205,13 @@ func Set_up(root *NTree, prev_node *NTree) {
 
 //set up tree with fastas
 func Set_fastas_up(root *NTree, fasta_file string) {
-	fastas, err := fasta.Read(fasta_file)
+	fastas := fasta.Read(fasta_file)
 	Set_up(root, nil)
-	if err != nil {
-	}
 	leaves := Get_leaf(root)
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {
-				leaves[i].Fasta = &fastas[j]
+				leaves[i].Fasta = fastas[j]
 				leaves[i].State = int(leaves[i].Fasta.Seq[0])
 			}
 

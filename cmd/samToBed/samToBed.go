@@ -73,8 +73,8 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	log.Printf("Paired: %b\n", *paired)
-	log.Printf("fragLength: %v\n", *fragLength)
+	log.Printf("Paired: %t\n", *paired)
+	log.Printf("fragLength: %d\n", *fragLength)
 
 	/*if paired && (*fragLength != -1) {
 	        log.Fatalf("Error: cannot be both paired and have a fixed frag size.")

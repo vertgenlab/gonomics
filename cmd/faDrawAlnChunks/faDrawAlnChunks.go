@@ -14,8 +14,7 @@ import (
 
 func faDrawAlnChunks(faAlnFilename string, chunkSize int, imageOutFilename string) {
 	log.Printf("Reading %s...\n", faAlnFilename)
-	aln, err := fasta.Read(faAlnFilename)
-	common.ExitIfError(err)
+	aln := fasta.Read(faAlnFilename)
 	log.Printf("Successfully read %d sequences from fasta file.\n", len(aln))
 
 	img, err := align.DrawAlignedChunks(aln, chunkSize, 6, 12)

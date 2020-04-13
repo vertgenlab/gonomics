@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/tree_newick"
 	"math/rand"
 	"strings"
 	"time"
-
-	"github.com/vertgenlab/gonomics/sophie/tree_newick"
 )
 
 // makes random gene with start and stop codon, must be length multiple of 3
@@ -48,13 +47,11 @@ func Rand_gene(name string, length int) {
 			seq = seq + "TAA"
 		}
 
-		sb, err := dna.StringToBases(seq)
-		if err != nil {
-		}
+		sb := dna.StringToBases(seq)
 
 		record := fasta.Fasta{name, sb}
-		var answer []fasta.Fasta
-		answer = append(answer, record)
+		var answer []*fasta.Fasta
+		answer = append(answer, &record)
 		filename := name + ".fasta"
 		fasta.Write(filename, answer)
 	}
@@ -62,9 +59,8 @@ func Rand_gene(name string, length int) {
 
 //final function to run to simulate based off of the random gene and the tree
 func Simulate(rand_seq_filename string, tree_output_filename string, root *tree_newick.NTree) {
-	rand1, err := fasta.Read(rand_seq_filename)
-	fmt.Print(err)
-	root.Fasta = &rand1[0]
+	rand1 := fasta.Read(rand_seq_filename)
+	root.Fasta = rand1[0]
 	seq := Get_seq(rand1)
 	fasta.Write(tree_output_filename, Tree_print(root, seq))
 }
@@ -155,7 +151,7 @@ var m = map[string]aa{
 	"GCA": aa(0), "GCG": aa(0), "GCT": aa(0), "GCC": aa(0)}
 
 //get sequence of fastas
-func Get_seq(record []fasta.Fasta) []string {
+func Get_seq(record []*fasta.Fasta) []string {
 	var sequence []string
 
 	for _, rec := range record {
@@ -265,20 +261,17 @@ func Mutate_seq(seq []string, distance_percent float64) []string {
 
 func SeqtoFformat(sequence []string, new_name string) fasta.Fasta {
 	seq := strings.Join(sequence, "")
-	var new fasta.Fasta
+	var answer fasta.Fasta
 	for i := 0; i < len(seq); i++ {
-		s, err := dna.StringToBases(seq)
-		if err == nil {
-			new = fasta.Fasta{new_name, s}
-
-		}
+		s := dna.StringToBases(seq)
+		answer = fasta.Fasta{new_name, s}
 	}
-	return new
+	return answer
 }
 
 //make fastas based off of node and random DNA_sequence
-func Tree_print(node *tree_newick.NTree, DNA_seq []string) []fasta.Fasta {
-	var fasta_final []fasta.Fasta
+func Tree_print(node *tree_newick.NTree, DNA_seq []string) []*fasta.Fasta {
+	var fasta_final []*fasta.Fasta
 	var seq []string
 
 	length := float64(node.BranchLength)
@@ -286,7 +279,7 @@ func Tree_print(node *tree_newick.NTree, DNA_seq []string) []fasta.Fasta {
 	seq = Mutate_seq(DNA_seq, length)
 
 	s := SeqtoFformat(seq, node.Name)
-	fasta_final = append(fasta_final, s)
+	fasta_final = append(fasta_final, &s)
 	if node.Left != nil && node.Right != nil {
 		b := Tree_print(node.Right, seq)
 		fasta_final = append(fasta_final, b...)
@@ -298,10 +291,8 @@ func Tree_print(node *tree_newick.NTree, DNA_seq []string) []fasta.Fasta {
 
 //remove ancestors from the fasta file for reconstruction
 func Remove_No_Names(filename string) {
-	fastas, err := fasta.Read(filename)
-	if err != nil {
-	}
-	var fastas_new []fasta.Fasta
+	fastas := fasta.Read(filename)
+	var fastas_new []*fasta.Fasta
 	for i := 0; i < len(fastas); i++ {
 		if fastas[i].Name != "" {
 			fastas_new = append(fastas_new, fastas[i])
@@ -327,10 +318,8 @@ func Get_leaf(node *tree_newick.NTree) []*tree_newick.NTree {
 }
 
 func Remove_ancestors(filename string, tree *tree_newick.NTree) {
-	fastas, err := fasta.Read(filename)
-	if err != nil {
-	}
-	var fastas_new []fasta.Fasta
+	fastas := fasta.Read(filename)
+	var fastas_new []*fasta.Fasta
 
 	leaf := Get_leaf(tree)
 	for i := 0; i < len(fastas); i++ {

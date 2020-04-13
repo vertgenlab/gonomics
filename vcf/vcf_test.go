@@ -1,6 +1,8 @@
 package vcf
 
 import (
+	"log"
+	"os"
 	"testing"
 )
 
@@ -10,24 +12,34 @@ var readWriteTests = []struct {
 	{"testdata/test.vcf"},
 }
 
-//TODO: need to finish writing the write function
+func TestReadToChan(t *testing.T) {
+	alpha := Read("testdata/m54089_181119_141900.subreads.vcf")
+	var beta []*Vcf
+	vcfPipe := make(chan *Vcf)
+	go ReadToChan("testdata/m54089_181119_141900.subreads.vcf", vcfPipe)
+	for vcfs := range vcfPipe {
+		beta = append(beta, vcfs)
+	}
+	log.Printf("alpha=%d, beta=%d", len(alpha), len(beta))
+	LogEqual(alpha, beta)
+}
+
 func TestWriteAndRead(t *testing.T) {
 	var actual []*Vcf
 	for _, test := range readWriteTests {
-		tempFile := test.filename //+ ".tmp"
+		tempFile := "tmp"
+		actual = Read(test.filename)
+		Write(tempFile, actual)
+		alpha := Read(tempFile)
+		beta := Read("testdata/test.vcf")
+		PrintVcfLines(beta, 5)
+		log.Printf("alpha=%d, beta=%d", len(alpha), len(beta))
+		if len(alpha) != len(beta) {
+			t.Errorf("Vcf lengths are not equal...")
+		}
+		LogEqual(alpha, beta)
+		//t.Errorf("VCF files are not the same...")
 
-		actual = Read(tempFile)
-
-		//Write(tempFile, actual)
-		//alpha := ReadFile(tempFile)
-		//beta := ReadFile("testdata/test.vcf")
-		PrintVcf(actual)
-		//if !AllEqual(alpha.Vcf, beta.Vcf) {
-		//	t.Errorf("VCF files are not the same")
-		//}
-		//err := os.Remove(tempFile)
-		//if err != nil {
-		//	t.Errorf("Deleting temp file %s gave an error.", tempFile)
-		//}
+		os.Remove(tempFile)
 	}
 }

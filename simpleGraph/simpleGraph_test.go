@@ -1,73 +1,151 @@
 package simpleGraph
 
 import (
-	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"log"
-	"math"
 	"os"
-	"runtime"
 	"runtime/pprof"
 	"sync"
 	"testing"
 	"time"
 )
 
-var seqOneA = dna.StringToBases("ACGTACGTCATCATCATTACTACTAC")
-var seqOneB = dna.StringToBases("ACGTACGT")
-var seqOneC = dna.StringToBases("ACGTACGTACGTT")
-var readWriteTests = []struct {
-	filename string // input
-	//data *SimpleGraph
-	data []*Node
-}{
-	//{"testdata/testOne.sg", []*Node{{0, "seqOneA", seqOneA, nil, nil}, {1, "seqOneB", seqOneB, nil, nil}, {2, "seqOneC", seqOneC, nil, nil}}},
+func TestExcute(t *testing.T) {
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 100
+	var readLength int = 150
+	var mutations int = 0
+	var cpus int = 4
+	var scoreMatrix = HumanChimpTwoScoreMatrix
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome := Read("testdata/gasAcu1.fa")
+	chrSize := chromInfo.ReadToSlice("testdata/bigGenome.sizes")
+	header := sam.ChromInfoSamHeader(chrSize)
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	readOne := "testdata/simReads_R1.fastq"
+	readTwo := "testdata/simReads_R2.fastq"
+	os.Remove(readOne)
+	os.Remove(readTwo)
+	fastq.WritePair(readOne, readTwo, simReads)
+	GSWsPair(genome, readOne, readTwo, "testdata/test.sam", cpus, tileSize, stepSize, scoreMatrix, header)
+	samfile, _ := sam.Read("testdata/test.sam")
+	for _, samline := range samfile.Aln {
+		log.Printf("%s\n", ViewGraphAlignment(samline, genome))
+	}
+	os.Remove("testdata/test.sam")
 }
 
-func TestWorkerWithWriting(t *testing.T) {
+func TestPabBioGraph(t *testing.T) {
 	var tileSize int = 32
-	var stepSize int = 31
-	var numberOfReads int = 20000
+	var stepSize int = 32
+	var numberOfReads int = 10
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
-	//fa := Read("testdata/gasAcu1.fa")
+	var scoreMatrix = HumanChimpTwoScoreMatrix
+
 	log.Printf("Reading in the genome (simple graph)...\n")
-	//genome := Read("testdata/rabs_chr8.gg")
-	genome := Read("testdata/gasAcu1.fa")
+	genome := Read("testdata/bigGenome.sg")
+
+	//genome, _ := Read("testdata/rabsBepaChrI.gg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.Fastq, 824)
+	fastqPipe := make(chan *fastq.FastqBig, 824)
 
 	log.Printf("Making sam channel...\n")
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
 
-	header := NodesHeader(genome.Nodes)
+	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
+	writerWaiter.Add(1)
+	go sam.SamChanToFile(samPipe, "testdata/test.sam", nil, &writerWaiter)
+
+	log.Printf("Starting alignment worker...\n")
+	time.Sleep(5 * time.Second)
+
+	f, err := os.Create("testdata/cpuprofile.data")
+	common.ExitIfError(err)
+	defer f.Close()
+	err = pprof.StartCPUProfile(f)
+	common.ExitIfError(err)
 
 	start := time.Now()
-	go fastq.ReadToChan("testdata/simReads.fq", fastqPipe)
+	workerWaiter.Add(numWorkers)
+	for i := 0; i < numWorkers; i++ {
+		go gswWorkerMemPool(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
+	}
+
+	workerWaiter.Wait()
+	stop := time.Now()
+	pprof.StopCPUProfile()
+	close(samPipe)
+
+	log.Printf("Aligners finished and channel closed\n")
+	writerWaiter.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+	duration := stop.Sub(start)
+
+	samfile, _ := sam.Read("testdata/test.sam")
+	for _, samline := range samfile.Aln {
+		log.Printf("%s\n", ViewGraphAlignment(samline, genome))
+	}
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	//strictCheckFile("testPabBioGraph.sam", genome)
+
+	//log.Printf("Passed alignment check!!!\n")
+}
+
+func TestWorkerWithWriting(t *testing.T) {
+	var output string = "testdata/pairedTest.sam"
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 10000
+	var readLength int = 150
+	var mutations int = 0
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 8
+	var scoreMatrix = HumanChimpTwoScoreMatrix
+	genome := Read("testdata/bigGenome.sg")
+	log.Printf("Reading in the genome (simple graph)...\n")
+	log.Printf("Indexing the genome...\n")
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.PairedEndBig, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *sam.PairedSamAln, 824)
+
+	log.Printf("Simulating reads...\n")
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	os.Remove("testdata/simReads_R1.fq")
+	os.Remove("testdata/simReads_R2.fq")
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
+	log.Printf("Finished Indexing Genome...\n")
+	start := time.Now()
 
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &workerWaiter)
+		go gswWorkerPairedEnd(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
 	}
+	go sam.SamChanPairToFile(samPipe, output, nil, &writerWaiter)
 	writerWaiter.Add(1)
-	///dev/stdout
-	go sam.SamChanToFile(samPipe, "testdata/sim.sam", header, &writerWaiter)
 	workerWaiter.Wait()
 	close(samPipe)
 	log.Printf("Aligners finished and channel closed\n")
@@ -75,23 +153,24 @@ func TestWorkerWithWriting(t *testing.T) {
 	log.Printf("Sam writer finished and we are all done\n")
 	stop := time.Now()
 	duration := stop.Sub(start)
-	//os.Remove("testdata/sim.sam")
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	//samfile, _ := sam.Read(output)
+	//for _, samline := range samfile.Aln {
+	///	log.Printf("%s\n", ViewGraphAlignment(samline, genome))
+	//}
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	//os.Remove(output)
 }
 
-func TestWorkerWithTiming(t *testing.T) {
+/*func TestWorkerWithTiming(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
 	var numberOfReads int = 100
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 2
 	var dummyWaiter sync.WaitGroup
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/gasAcu1.fa")
-
-	log.Printf("Indexing the genome...\n")
-	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	fa, _ := Read("testdata/bigGenome.sg")
 
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.Fastq, 824)
@@ -100,10 +179,17 @@ func TestWorkerWithTiming(t *testing.T) {
 	samPipe := make(chan *sam.SamAln, 824)
 
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, mutations)
+	//dummyWaiter.Add(len(simReads))
 	alignments := make([]*sam.SamAln, numberOfReads)
+	//TODO: this file does not exist in testdata
+	genome, _ := Read("testdata/rabsToGasAcu1.gg")
+	log.Printf("Indexing the genome...\n")
+
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Starting alignment worker...\n")
+	dummyWaiter.Add(1)
 	go gswWorker(genome, tiles, tileSize, stepSize, fastqPipe, samPipe, &dummyWaiter)
 
 	log.Printf("Waiting for 5 seconds and then aligning reads...\n")
@@ -116,14 +202,16 @@ func TestWorkerWithTiming(t *testing.T) {
 	for j := 0; j < numberOfReads; j++ {
 		alignments[j] = <-samPipe
 	}
+	dummyWaiter.Wait()
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(alignments), duration, float64(len(alignments))/duration.Seconds())
-	CheckAnswers(alignments)
-	for k := 0; k < len(alignments); k++ {
-		fmt.Printf("%s\n", LocalView(alignments[k], genome.Nodes))
-	}
-}
+	//for k := 0; k < len(alignments); k++ {
+	//fmt.Printf("%s\n", LocalView(alignments[k], genome.Nodes))
+	//	fmt.Printf("%s\n", ViewGraphAignment(alignments[k], genome))
+	//}
+	//CheckAnswers(alignments, genome)
+}*/
 
 func TestHippoAln(t *testing.T) {
 	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("TGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGTGAGTGATTTGAAGGTACATGGAATACCACCACGGGAGCAAAGC"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
@@ -133,7 +221,7 @@ func TestHippoAln(t *testing.T) {
 	var dummyWaiter sync.WaitGroup
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/gasAcu1.fa")
+	genome := Read("testdata/bigGenome.sg")
 
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -158,81 +246,24 @@ func TestHippoAln(t *testing.T) {
 	log.Printf("duration:%s\t%s\n", duration, dna.BasesToString(alignment.Seq))
 }
 
-func TestAligning(t *testing.T) {
-	var tileSize int = 32
-	var stepSize int = tileSize - 1
-	var readLength int = 150
-	var numberOfReads int = 10000
-	var mutations int = 0
-	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/gasAcu1.fa")
-
-	log.Printf("Indexing the genome...\n")
-	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-
-	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
-
-	log.Printf("Aligning reads...\n")
-	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-	var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close()
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
-
-	start := time.Now()
-	for i := 0; i < len(simReads); i++ {
-		before := time.Now()
-		wrapNoChanMap(genome, simReads[i], tiles, tileSize, stepSize)
-		after := time.Now()
-		timeForOne := after.Sub(before)
-		log.Printf("It took %s to map the last read\n", timeForOne)
-	}
-	stop := time.Now()
-	elapsed := stop.Sub(start)
-	//code block for program profiling
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close()
-		runtime.GC() // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
-
-	log.Printf("It took %s to map %d reads\n", elapsed, numberOfReads)
-}
-
-func TestReadsWithTiming(t *testing.T) {
+/*func TestReadsWithTiming(t *testing.T) {
 	//var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("ACCTTTTTCTTGTTGTATTTAAAGACAAATGATTTGATTTTATATAGCCAAATGGTTTTCAACGCTAGCAGTGTTTGGTGGCAACTCAGTTTCACCCACGTCTGTTCCAACTAACATGCAATATGTTTCCTGTAATCTGCAGCACGCTTT"), Qual: []rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ")}
 	var tileSize int = 32
 	var stepSize int = 31
-	var numberOfReads int = 1000
+	var numberOfReads int = 1
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 2
 	var dummyWaiter sync.WaitGroup
 
 	var fastestRead, slowestRead *fastq.Fastq = nil, nil
 	var fastestTime, slowestTime float64 = math.MaxFloat64, 0
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/gasAcu1.fa")
-
+	fa, _ := Read("testdata/bigGenome.sg")
+	//TODO: this file does not exist in testdata
+	genome, _ := Read("testdata/rabsBepa.gg")
 	log.Printf("Simulating reads...\n")
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(fa.Nodes, readLength, numberOfReads, mutations)
 
 	log.Printf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -268,8 +299,9 @@ func TestReadsWithTiming(t *testing.T) {
 		}
 	}
 	log.Printf("Fastest read was (%.4f):\n%s\nSlowest reads was (%.4f):\n%s\n", fastestTime, dna.BasesToString(fastestRead.Seq), slowestTime, dna.BasesToString(slowestRead.Seq))
-	CheckAnswers(alignments)
-}
+
+	//CheckAnswers(alignments, genome)
+}*/
 
 func TestVcfGraph(t *testing.T) {
 	//smallFasta := fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("ATCGA")}
@@ -279,12 +311,6 @@ func TestVcfGraph(t *testing.T) {
 	var vcfTest []*vcf.Vcf
 	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "T", Alt: "TA", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS"})
 	vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "C", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=SNP"})
-	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 3, Id: ".", Ref: "C", Alt: "CTAG", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS"})
-	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 2, Id: ".", Ref: "TCG", Alt: "T", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=DEL"})
-	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 14, Id: ".", Ref: "G", Alt: "GAAAAAAAAAA", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS"})
-	//vcfTest = append(vcfTest, &vcf.Vcf{Chr: "chr1", Pos: 19, Id: ".", Ref: "A", Alt: "ATTTTT", Qual: 0, Filter: "PASS", Info: "", Format: "SVTYPE=INS"})
-	//var sg *SimpleGraph = NewGraph()
-
 	sg := vChrGraph(NewGraph(), &smallFasta, vcfTest)
 
 	for n := 0; n < len(sg.Nodes); n++ {
@@ -302,16 +328,17 @@ func TestVcfGraph(t *testing.T) {
 	vcf.Write("anotherTesting.vcf", vcfTest)
 }
 
+/*
 func BenchmarkGoRoutinesMap(b *testing.B) {
 	var tileSize int = 32
 	var stepSize int = tileSize - 1
 	var readLength int = 150
-	var numberOfReads int = 50
+	var numberOfReads int = 5
 	var mutations int = 0
 
-	genome := Read("testdata/bigGenome.sg")
+	genome, _ := Read("testdata/bigGenome.sg")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
@@ -319,16 +346,17 @@ func BenchmarkGoRoutinesMap(b *testing.B) {
 			wrapNoChanMap(genome, simReads[i], tiles, tileSize, stepSize)
 		}
 	}
-}
+}*/
 
-func BenchmarkGoRoutinesSlice(b *testing.B) {
+//TODO: slices not working right now
+/*func BenchmarkGoRoutinesSlice(b *testing.B) {
 	var tileSize int = 12
 	var stepSize int = tileSize - 1
 	var readLength int = 150
 	var numberOfReads int = 50
 	var mutations int = 0
 
-	genome := Read("testdata/bigGenome.sg")
+	genome, _ := Read("testdata/bigGenome.sg")
 	tiles := IndexGenomeIntoSlice(genome.Nodes, tileSize, stepSize)
 	simReads := RandomReads(genome.Nodes, readLength, numberOfReads, mutations)
 	b.ResetTimer()
@@ -338,7 +366,23 @@ func BenchmarkGoRoutinesSlice(b *testing.B) {
 			wrapNoChan(genome, simReads[i], tiles, tileSize)
 		}
 	}
-}
+}*/
+
+/*
+func TestFaFormat(t *testing.T) {
+
+	var tileSize int = 32
+	var numberOfReads int = 100
+	var readLength int = 150
+	var mutations int = 0
+	var numWorkers int = 8
+	log.Printf("Reading in the genome (simple graph)...\n")
+	genome, chrSize := Read("testdata/gasAcu1.fa")
+	simReads := RandomPairedReads(genome.Nodes, readLength, numberOfReads, mutations)
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	header := sam.ChromInfoMapSamHeader(chrSize)
+	GswAlignFaFormat(genome, "testdata/simReads_R1.fq", "testdata/simReads_R2.fq", "testdata/format.sam", numWorkers, tileSize, header)
+}*/
 
 /*
 func TestNewSeed(t *testing.T) {

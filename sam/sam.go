@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 	"os"
 	"strconv"
@@ -38,6 +39,20 @@ type SamAln struct {
 	Seq   []dna.Base
 	Qual  string
 	Extra string
+}
+
+func ReadToChan(filename string, output chan<- *SamAln) {
+	var curr *SamAln
+	var done bool
+
+	file := fileio.EasyOpen(filename)
+	ReadHeader(file)
+	defer file.Close()
+
+	for curr, done = NextAlignment(file); done != true; curr, done = NextAlignment(file) {
+		output <- curr
+	}
+	close(output)
 }
 
 func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
@@ -168,6 +183,36 @@ func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
 	return nil
 }
 
+func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+
+	for i := 0; i < len(chromSize); i++ {
+		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[i].Name, chromSize[i].Size)
+		header.Text = append(header.Text, words)
+	}
+	return &header
+}
+
+func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader {
+	var header SamHeader
+	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
+	var words string
+	var i int64
+	for i = 0; i < int64(len(chromSize)); {
+		for j := range chromSize {
+			if i == chromSize[j].Order {
+				words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[j].Name, chromSize[j].Size)
+				header.Text = append(header.Text, words)
+				i++
+			}
+		}
+
+	}
+	return &header
+}
+
 func SamAlnToString(aln *SamAln) string {
 	var answer string
 	if aln.Extra == "" {
@@ -176,6 +221,87 @@ func SamAlnToString(aln *SamAln) string {
 		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
 	}
 	return answer
+}
+
+func ModifySamToString(aln *SamAln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
+	var answer string = fmt.Sprintf("%s\n", aln.QName)
+	if samflag {
+		answer += fmt.Sprintf("%d\n", aln.Flag)
+	}
+	if rname {
+		answer += fmt.Sprintf("%s\t", aln.RName)
+	}
+	if pos {
+		if strings.Contains(aln.Extra, "XO:i:") {
+			words := strings.Split(aln.Extra, "\t")
+			aln.Pos += common.StringToInt64(words[2][5:])
+		}
+		answer += fmt.Sprintf("%d\t", aln.Pos)
+	}
+	if mapq {
+		answer += fmt.Sprintf("%d\t", aln.MapQ)
+	}
+	if cig {
+		answer += fmt.Sprintf("%s\t", cigar.ToString(aln.Cigar))
+	}
+	if rnext {
+		answer += fmt.Sprintf("%s\t", aln.RNext)
+	}
+	if pnext {
+		answer += fmt.Sprintf("%d\t", aln.PNext)
+	}
+	if tlen {
+		answer += fmt.Sprintf("%d\t", aln.TLen)
+	}
+	if seq {
+		answer += fmt.Sprintf("%s\t", dna.BasesToString(aln.Seq))
+	}
+	if qual {
+		answer += fmt.Sprintf("%s\t", string(aln.Qual))
+	}
+	if extra {
+		words := strings.Split(aln.Extra, "\t")
+		for _, text := range words[:len(words)-1] {
+			if strings.Contains(text, "GP:Z:") {
+				answer += fmt.Sprintf("%s", pathPrettyString(text))
+			} else {
+				answer += fmt.Sprintf("%s\n", text)
+			}
+		}
+	}
+	return answer
+}
+
+func pathPrettyString(graphPath string) string {
+	var s string = ""
+	if !strings.Contains(graphPath, "GP:Z:") {
+		return s
+	} else {
+		s = "GP:Z:\n"
+
+		words := strings.Split(graphPath[5:], ":")
+		//log.Printf("%v\n", words)
+		var i int
+		var j int
+		for i = 0; i < len(words); i += 8 {
+			var line string = ""
+			if i+8 > len(words) {
+				line += fmt.Sprintf("%s", words[i])
+				for j = i + 1; j < len(words)-1; j++ {
+					line += fmt.Sprintf(":%s", words[j])
+				}
+				s += fmt.Sprintf("%s\n", line)
+			} else {
+				line += fmt.Sprintf("%s", words[i])
+				for j = i + 1; j < i+8; j++ {
+					line += fmt.Sprintf(":%s", words[j])
+				}
+				s += fmt.Sprintf("%s\n", line)
+			}
+			//s += fmt.Sprintf("\n")
+		}
+	}
+	return s
 }
 
 func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
@@ -213,12 +339,13 @@ func Write(filename string, data *Sam) error {
 	return err
 }
 
-func AlignmentHeader(ref []*fasta.Fasta) *SamHeader {
+func FastaHeader(ref []*fasta.Fasta) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
+
 	for i := 0; i < len(ref); i++ {
-		words = "@SQ\tSN:" + ref[i].Name + "\tLN:" + strconv.Itoa(len(ref[i].Seq))
+		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
 	}
