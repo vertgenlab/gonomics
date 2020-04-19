@@ -33,8 +33,8 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 
 func FilterNs(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
-	for i := 0; i < len(vcfs);i++ {
-		if (!strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N")) {
+	for i := 0; i < len(vcfs); i++ {
+		if !strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N") {
 			answer = append(answer, vcfs[i])
 		}
 	}

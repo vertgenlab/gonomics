@@ -75,14 +75,14 @@ func processVcfLine(line string) *Vcf {
 		//these lines are sequences, and we are not recording them
 	case len(line) == 0:
 		//blank line
-	case len(data) >= 10:
+	case len(data) >= 9:
 		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
 		if strings.Compare(data[5], ".") == 0 {
 			curr.Qual = 255
 		} else {
 			curr.Qual = common.StringToFloat64(data[5])
 		}
-		if len(data) < 10 {
+		if len(data) > 9 {
 			curr.Notes = strings.Join(data[9:], "\t")
 		}
 	default:

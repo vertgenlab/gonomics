@@ -127,8 +127,6 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
-//maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
-
 func GswToGiraf(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
 	log.Printf("Paired end reads detected...\n")
 
