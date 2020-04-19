@@ -40,3 +40,12 @@ func FastaMap(ref []*Fasta) map[string][]dna.Base {
 	}
 	return m
 }
+
+func FindFaIndex(subFa []*Fasta, n string) int {
+	for i := 0; i < len(subFa); i++ {
+		if subFa[i].Name == n {
+			return i
+		}
+	}
+	return -1
+}

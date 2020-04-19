@@ -1,5 +1,27 @@
 package sam
 
+import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/cigar"
+)
+
+func TotalAlignedBases(filename string) int64 {
+	samFile := fileio.EasyOpen(filename)
+	defer samFile.Close()
+	var done bool = false
+	var aln *SamAln
+	var alignedBases int64
+
+	ReadHeader(samFile)
+
+	for aln, done = NextAlignment(samFile); done != true; aln, done = NextAlignment(samFile) {
+		if aln.Cigar[0].Op != '*' {
+			alignedBases += cigar.MatchLength(aln.Cigar)
+		}
+	}
+	return alignedBases
+}
+
 func flagTestBit(num int64, bit int64) bool {
 	var dummy int64 = bit & num //bitwise AND
 	return dummy == 0
