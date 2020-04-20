@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-type Genotype struct {
+type GVcf struct {
 	Alleles [][]dna.Base
-	GVcf    []Haplotype
+	Genotypes    []Haplotype
 	//Maybe Qual?
 	//I personally think it is up to the user
 	//to QC input data
@@ -28,8 +28,8 @@ type Dictionary struct {
 	HapIdx map[string]int32
 }
 
-func GenotypeToMap(vcfs []*Vcf, names map[string]int) map[uint64]*Genotype {
-	mapToGVcf := make(map[uint64]*Genotype)
+func GenotypeToMap(vcfs []*Vcf, names map[string]int) map[uint64]*GVcf {
+	mapToGVcf := make(map[uint64]*GVcf)
 	var code uint64
 	for _, v := range vcfs {
 		code = secretCode(names[v.Chr], int(v.Pos))
@@ -51,8 +51,8 @@ func secretCode(chrom int, start int) uint64 {
 
 //Helper functions to convert Vcf line into a more compact version
 //to accommadate a magnitude of samples.
-func vcfToGenotype(v *Vcf) *Genotype {
-	gVcf := &Genotype{Alleles: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), GVcf: notesToHaplotype(genotypeHelper(v.Notes))}
+func vcfToGenotype(v *Vcf) *GVcf {
+	gVcf := &GVcf{Alleles: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: notesToHaplotype(genotypeHelper(v.Notes))}
 	return gVcf
 }
 
@@ -126,19 +126,19 @@ func HeaderToMaps(filename string) *Dictionary {
 }
 
 //To string functions for debugging and visualizing
-func genotypeToString(gVcf *Genotype) string {
+func genotypeToString(gVcf *GVcf) string {
 	var answer string
 	answer = fmt.Sprintf("0=%s,1=%s,%v", dna.BasesToString(gVcf.Alleles[0]), altBasesToString(gVcf.Alleles[1:]), haplotypesToString(gVcf))
 	return answer
 }
 
-func haplotypesToString(sample *Genotype) string {
+func haplotypesToString(sample *GVcf) string {
 	var answer string = ""
-	for i := 0; i < len(sample.GVcf); i++ {
-		if sample.GVcf[i].One < 0 {
+	for i := 0; i < len(sample.Genotypes); i++ {
+		if sample.Genotypes[i].One < 0 {
 			answer += "NoData "
 		} else {
-			answer += fmt.Sprintf("%v=%s,%s ", sample.GVcf[i], dna.BasesToString(sample.Alleles[sample.GVcf[i].One]), dna.BasesToString(sample.Alleles[sample.GVcf[i].Two]))
+			answer += fmt.Sprintf("%v=%s,%s ", sample.Genotypes[i], dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
 		}
 	}
 	return answer
