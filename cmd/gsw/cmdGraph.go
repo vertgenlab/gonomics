@@ -137,7 +137,13 @@ func main() {
 			//header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL:%s", strings.Join(os.Args, " ")))
 			//user provides single end reads
 			if len(flag.Args()) == 2 {
-				simpleGraph.GswSingleReadWrap(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score), nil)
+				if strings.HasSuffix(*liftover, ".sizes") {
+					chrSize := chromInfo.ReadToSlice(*liftover)
+					header := sam.ChromInfoSamHeader(chrSize)
+					simpleGraph.WrapSingleGirafLiftover(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score), header)
+				} else {
+					simpleGraph.GswToGiraf(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score))
+				}
 			} else if len(flag.Args()) == 3 {
 				//user provides paired end reads
 				if strings.HasSuffix(*liftover, ".sizes") {
