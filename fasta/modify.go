@@ -58,7 +58,7 @@ func FilterName(records []*Fasta, name string) []*Fasta {
 	return records
 }
 
-func FilterRange(records []*Fasta, start int, end int) []*Fasta {
+func CopySubset(records []*Fasta, start int, end int) []*Fasta {
 	c := make([]*Fasta, len(records))
 	length := end - start
 	for i := 0; i < len(records); i++ {
@@ -114,6 +114,25 @@ func GetChromIndex(records []*Fasta, name string) int {
 	}
 	log.Fatalf("Chromosome name not found in fasta file.\n")
 	return -1
+}
+
+//In a multiple alignment block, removes any entries comprised only of gaps.
+func RemoveMissingMult(records []*Fasta) []*Fasta {
+	var answer []*Fasta
+	var missing bool = true
+
+	for i := 0; i < len(records); i++ {
+		missing = true
+		for j := 0; j < len(records[i].Seq) && missing; j++ {
+			if records[i].Seq[j] != dna.Gap {
+				missing = false
+			}
+		}
+		if !missing {
+			answer = append(answer, records[i])
+		}
+	}
+	return answer
 }
 
 //returns alignment columns with no gaps or lowercase letters

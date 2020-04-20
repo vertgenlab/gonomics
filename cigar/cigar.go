@@ -3,6 +3,7 @@ package cigar
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"unicode"
 )
@@ -74,6 +75,19 @@ func FromString(input string) []*Cigar {
 			log.Fatalf("Cigar ended with digit")
 		} */
 	return output
+}
+
+func MatchLength(c []*Cigar) int64 {
+	var ans int64
+	if c[0].Op == '*' {
+		log.Fatalf("Cannot calculate MatchLength from unaligned reads.")
+	}
+	for _, v := range c {
+		if ConsumesReference(v.Op) && ConsumesQuery(v.Op) {
+			ans = ans + v.RunLength
+		}
+	}
+	return ans
 }
 
 func ReferenceLength(c []*Cigar) int64 {
