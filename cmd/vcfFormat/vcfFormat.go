@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/convert"
-	"log"
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 )
 
 func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool) {
@@ -31,10 +31,10 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 
 func usage() {
 	fmt.Print(
-	"vcfFormat: Options alter VCF formatting.\n" +
-	"Usage:\n" +
-	"bedFilter input.vcf output.vcf\n" +
-	"options:\n")
+		"vcfFormat: Options alter VCF formatting.\n" +
+			"Usage:\n" +
+			"bedFilter input.vcf output.vcf\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -42,7 +42,7 @@ func main() {
 	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
-	
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
