@@ -85,7 +85,7 @@ func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
 }
 
 func GirafPairChanToFile(filename string, input <-chan *GirafPair, wg *sync.WaitGroup) {
-	file, _ := os.Create(filename)
+	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for pair := range input {
 		WriteGriafHelper(file, pair.Fwd)

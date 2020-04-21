@@ -84,12 +84,12 @@ func samToGenomeNotes(samFileName string, chr *fasta.Fasta, chromIdx int) map[ui
 					for subSeqIdx = 0; subSeqIdx < aln.Cigar[i].RunLength; subSeqIdx++ {
 						gapSeq[subSeqIdx] = dna.Gap
 					}
-					seqCode = chromAndPosToNumber(chromIdx, int(RefIndex))
+					seqCode = ChromAndPosToNumber(chromIdx, int(RefIndex))
 					votes[seqCode] = append(votes[seqCode], dna.BasesToString(gapSeq))
 					//RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
 				} else if aln.Cigar[i].Op == 'M' {
 					for subSeqIdx = 0; subSeqIdx < aln.Cigar[i].RunLength; subSeqIdx++ {
-						seqCode = chromAndPosToNumber(chromIdx, int(RefIndex+subSeqIdx))
+						seqCode = ChromAndPosToNumber(chromIdx, int(RefIndex+subSeqIdx))
 						votes[seqCode] = append(votes[seqCode], dna.BaseToString(currentSeq[SeqIndex+subSeqIdx]))
 					}
 					//RefIndex++
@@ -97,7 +97,7 @@ func samToGenomeNotes(samFileName string, chr *fasta.Fasta, chromIdx int) map[ui
 					//RefIndex, SeqIndex = cigar.UpdateIndices(aln.Cigar[i], RefIndex, SeqIndex)
 				} else if aln.Cigar[i].Op == 'I' {
 					if i > 0 {
-						seqCode = chromAndPosToNumber(chromIdx, int(RefIndex))
+						seqCode = ChromAndPosToNumber(chromIdx, int(RefIndex))
 						votes[seqCode] = append(votes[seqCode], dna.BasesToString(currentSeq[SeqIndex-1:SeqIndex-1+aln.Cigar[i].RunLength]))
 
 					}
@@ -117,7 +117,7 @@ func toVcf(samFileName string, chr *fasta.Fasta, chromIdx int, votes map[uint64]
 	var vcfs []*vcf.Vcf
 	var base int64
 	for base = 0; base < int64(len(chr.Seq)); base++ {
-		seqCode = chromAndPosToNumber(chromIdx, int(base))
+		seqCode = ChromAndPosToNumber(chromIdx, int(base))
 		_, ok := votes[seqCode]
 		if ok {
 
@@ -150,7 +150,7 @@ func EditGenome(samFileName string, chr *fasta.Fasta, chromIdx int, votes map[ui
 	var vcfs []*vcf.Vcf
 	var base int64
 	for base = int64(len(chr.Seq) - 1); 0 <= base; base-- {
-		seqCode = chromAndPosToNumber(chromIdx, int(base))
+		seqCode = ChromAndPosToNumber(chromIdx, int(base))
 		_, ok := votes[seqCode]
 		if ok {
 			concensus = dna.StringToBases(MostOccuringSeq(votes[seqCode]))

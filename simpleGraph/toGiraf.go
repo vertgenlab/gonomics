@@ -91,53 +91,40 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	return &currBest
 }
 
-func setPath(p *giraf.Path, targetStart int, nodes []uint32, targetEnd int) *giraf.Path {
-	p.TStart = targetStart
-	p.Nodes = nodes
-	p.TEnd = targetEnd
-	return p
+type ScoreMatrixHelper struct {
+	Matrix                         [][]int64
+	MaxMatch                       int64
+	MinMatch                       int64
+	LeastSevereMismatch            int64
+	LeastSevereMatchMismatchChange int64
 }
 
-func vInfoToValue(n *Node) string {
-	var answer string
-	switch {
-	case n.Info.Variant == 1:
-		answer = fmt.Sprintf("%d=%s", n.Id, "snp")
-	case n.Info.Variant == 2:
-		answer = fmt.Sprintf("%d=%s", n.Id, "ins")
-	case n.Info.Variant == 3:
-		answer = fmt.Sprintf("%d=%s", n.Id, "del")
-	}
-	return answer
+func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
+	help := ScoreMatrixHelper{Matrix: scoreMatrix}
+	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
+	return &help
 }
 
-func infoToNotes(nodes []*Node, path []uint32) giraf.Note {
-	var vInfo giraf.Note = giraf.Note{Tag: "XV", Type: 'Z'}
-	vInfo.Value = fmt.Sprintf("%d_%d", nodes[0].Info.Allele, nodes[0].Info.Variant)
-	if len(path) > 0 {
-		for i := 1; i < len(path); i++ {
-			if nodes[i].Info.Variant > 0 {
-				vInfo.Value += fmt.Sprintf(",%s", vInfoToValue(nodes[path[i]]))
+func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
+	var maxMatch int64 = 0
+	var minMatch int64
+	var leastSevereMismatch int64 = scoreMatrix[0][1]
+	var i, j int
+	for i = 0; i < len(scoreMatrix); i++ {
+		for j = 0; j < len(scoreMatrix[i]); j++ {
+			if scoreMatrix[i][j] > maxMatch {
+				minMatch = maxMatch
+				maxMatch = scoreMatrix[i][j]
 			} else {
-				vInfo.Value += fmt.Sprintf(",%d_%d", nodes[i].Info.Allele, nodes[path[i]].Info.Variant)
+				if scoreMatrix[i][j] < 0 && leastSevereMismatch < scoreMatrix[i][j] {
+					leastSevereMismatch = scoreMatrix[i][j]
+				}
 			}
 
 		}
 	}
-	return vInfo
-}
-
-func routineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *giraf.Giraf, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])
-	for read := range inputChan {
-		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
-	}
-	wg.Done()
+	var leastSevereMatchMismatchChange int64 = leastSevereMismatch - maxMatch
+	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
 func GswToGiraf(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
@@ -168,26 +155,8 @@ func GswToGiraf(ref *SimpleGraph, readOne string, output string, threads int, se
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
 
-func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *giraf.GirafPair {
-	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
-	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
-	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
-	return &mappedPair
-}
-
-func routineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan *fastq.PairedEndBig, output chan<- *giraf.GirafPair, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])
-	for read := range input {
-		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
-	}
-	wg.Done()
-}
-
+//TODO: wrapper functions for gsw exe, will move out of simple graph package
+//      once some functions are changed from private to global.
 func GswToGirafPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
 	log.Printf("Paired end reads detected...\n")
 
@@ -212,6 +181,36 @@ func GswToGirafPair(ref *SimpleGraph, readOne string, readTwo string, output str
 	wgAlign.Wait()
 	stop := time.Now()
 	close(girafPipe)
+	wgWrite.Wait()
+	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
+	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
+}
+
+func WrapSingleGirafLiftover(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
+	log.SetFlags(log.Ldate | log.Ltime)
+	log.Printf("Paired end reads detected...\n")
+
+	log.Printf("Indexing the genome...\n\n")
+	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
+	var wgAlign, wgWrite sync.WaitGroup
+	//log.Printf("Setting up read and write channels...\n\n")
+	fastqPipe := make(chan *fastq.FastqBig, 824)
+	samPipe := make(chan *sam.SamAln, 824)
+	go fastq.ReadBigToChan(readOne, fastqPipe)
+
+	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
+	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
+	wgAlign.Add(threads)
+	log.Printf("Aligning sequence to genome graph...")
+	start := time.Now()
+	for i := 0; i < threads; i++ {
+		go routineGirafToSamSingle(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
+	}
+	wgWrite.Add(1)
+	go sam.SamChanToFile(samPipe, output, header, &wgWrite)
+	wgAlign.Wait()
+	stop := time.Now()
+	close(samPipe)
 	wgWrite.Wait()
 	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
@@ -245,6 +244,66 @@ func WrapGirafLiftoverToSam(ref *SimpleGraph, readOne string, readTwo string, ou
 	wgWrite.Wait()
 	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
+}
+
+func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *giraf.GirafPair {
+	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
+	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
+	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
+	return &mappedPair
+}
+
+//Goroutine worker functions
+func routineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *giraf.Giraf, wg *sync.WaitGroup) {
+	m, trace := swMatrixSetup(10000)
+	memChunk := make([]SeedDev, 100000)
+	for i := 0; i < len(memChunk)-1; i++ {
+		memChunk[i].Next = &memChunk[i+1]
+	}
+	memStart := &(memChunk[0])
+	for read := range inputChan {
+		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
+	}
+	wg.Done()
+}
+
+func routineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan *fastq.PairedEndBig, output chan<- *giraf.GirafPair, wg *sync.WaitGroup) {
+	m, trace := swMatrixSetup(10000)
+	memChunk := make([]SeedDev, 100000)
+	for i := 0; i < len(memChunk)-1; i++ {
+		memChunk[i].Next = &memChunk[i+1]
+	}
+	memStart := &(memChunk[0])
+	for read := range input {
+		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
+	}
+	wg.Done()
+}
+
+func routineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
+	m, trace := swMatrixSetup(10000)
+	memChunk := make([]SeedDev, 100000)
+	for i := 0; i < len(memChunk)-1; i++ {
+		memChunk[i].Next = &memChunk[i+1]
+	}
+	memStart := &(memChunk[0])
+	for read := range inputChan {
+		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart))
+	}
+	wg.Done()
+}
+
+func routineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.PairedEndBig, outputChan chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
+	m, trace := swMatrixSetup(10000)
+	memChunk := make([]SeedDev, 100000)
+	for i := 0; i < len(memChunk)-1; i++ {
+		memChunk[i].Next = &memChunk[i+1]
+	}
+	memStart := &(memChunk[0])
+	for read := range inputChan {
+		outputChan <- GirafLiftoverToSam(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
+	}
+	wg.Done()
 }
 
 func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
@@ -287,19 +346,6 @@ func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {
 	return &mappedPair
 }
 
-func routineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.PairedEndBig, outputChan chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])
-	for read := range inputChan {
-		outputChan <- GirafLiftoverToSam(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
-	}
-	wg.Done()
-}
-
 func isProperPairAlign(mappedPair *giraf.GirafPair) bool {
 	if math.Abs(float64(mappedPair.Fwd.Path.TStart-mappedPair.Rev.Path.TStart)) < 10000 {
 		if mappedPair.Fwd.Path.TStart < mappedPair.Rev.Path.TStart && mappedPair.Fwd.PosStrand && !mappedPair.Rev.PosStrand {
@@ -321,4 +367,40 @@ func getSamFlags(ag *giraf.Giraf) int64 {
 		answer += 4
 	}
 	return answer
+}
+
+func setPath(p *giraf.Path, targetStart int, nodes []uint32, targetEnd int) *giraf.Path {
+	p.TStart = targetStart
+	p.Nodes = nodes
+	p.TEnd = targetEnd
+	return p
+}
+
+func vInfoToValue(n *Node) string {
+	var answer string
+	switch {
+	case n.Info.Variant == 1:
+		answer = fmt.Sprintf("%d=%s", n.Id, "snp")
+	case n.Info.Variant == 2:
+		answer = fmt.Sprintf("%d=%s", n.Id, "ins")
+	case n.Info.Variant == 3:
+		answer = fmt.Sprintf("%d=%s", n.Id, "del")
+	}
+	return answer
+}
+
+func infoToNotes(nodes []*Node, path []uint32) giraf.Note {
+	var vInfo giraf.Note = giraf.Note{Tag: "XV", Type: 'Z'}
+	vInfo.Value = fmt.Sprintf("%d_%d", nodes[0].Info.Allele, nodes[0].Info.Variant)
+	if len(path) > 0 {
+		for i := 1; i < len(path); i++ {
+			if nodes[i].Info.Variant > 0 {
+				vInfo.Value += fmt.Sprintf(",%s", vInfoToValue(nodes[path[i]]))
+			} else {
+				vInfo.Value += fmt.Sprintf(",%d_%d", nodes[i].Info.Allele, nodes[path[i]].Info.Variant)
+			}
+
+		}
+	}
+	return vInfo
 }

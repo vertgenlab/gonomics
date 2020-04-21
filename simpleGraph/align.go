@@ -367,7 +367,6 @@ func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 		return cig
 	}
 }
-
 //perfect match
 func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
@@ -400,13 +399,13 @@ func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 
 		for pos = 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
 			seqCode = dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
-			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
+			answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(chromIdx, pos))
 		}
 	}
 	return answer
 }
 
-func chromAndPosToNumber(chrom int, start int) uint64 {
+func ChromAndPosToNumber(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
 	var answer uint64 = chromCode | uint64(start)

@@ -15,7 +15,7 @@ type IdeogramPoint struct {
 	Score    int64
 }
 
-func formatIdeogram(inBed string, outTxt string) {
+func formatIdeogram(inBed string, outTxt string, noScore bool) {
 	var line string
 	var doneReading bool = false
 	var startNum, endNum, midpoint int64
@@ -34,7 +34,11 @@ func formatIdeogram(inBed string, outTxt string) {
 		midpoint = (startNum + endNum) / int64(2)
 
 		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint - int64(1), Score: int64(1)})
-		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
+		if noScore {
+			outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: 10})
+		} else {
+			outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
+		}
 		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint + int64(1), Score: int64(1)})
 	}
 
@@ -58,6 +62,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
+	var noScore *bool = flag.Bool("noScore", false, "Used for bed files without a score column.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -71,5 +76,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	formatIdeogram(infile, outfile)
+	formatIdeogram(infile, outfile, *noScore)
 }
