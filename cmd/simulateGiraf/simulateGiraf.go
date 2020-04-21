@@ -60,6 +60,10 @@ func main() {
 	outFile := flag.Arg(1)
 	graph := simpleGraph.Read(inFile)
 
-	simulateGiraf(graph, *numReads, *readLen, *seed, *numSomaticSNV, *AlleleFrequency, outFile, *outputSam)
+	//TODO add remove block once GirafToSam is complete
+	if *outputSam == true {
+		log.Fatalln("ERROR: Sam output is still in development")
+	}
 
+	simulateGiraf(graph, *numReads, *readLen, *seed, *numSomaticSNV, *AlleleFrequency, outFile, *outputSam)
 }
