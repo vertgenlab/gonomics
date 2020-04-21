@@ -91,8 +91,13 @@ func ReverseQualUint8Record(qualScore []uint8) {
 func Uint8QualToString(qual []uint8) string {
 	var answer []rune = make([]rune, len(qual))
 	for i := 0; i < len(qual); i++ {
-		answer[i] = rune(qual[i])
+		// SAM format uses ascii offset of 33 to make everything start with individual characters
+		// without adding 33 you get values like spaces and newlines
+		var asciiOffset uint8 = 33
+		answer[i] = rune(qual[i] + asciiOffset)
 	}
+	fmt.Println(answer)
+	fmt.Println(string(answer))
 	return string(answer)
 }
 
