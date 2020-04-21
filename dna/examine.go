@@ -2,6 +2,7 @@ package dna
 
 import (
 	"fmt"
+	"log"
 	"github.com/vertgenlab/gonomics/common"
 )
 

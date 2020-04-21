@@ -83,7 +83,7 @@ func processVcfLine(line string) *Vcf {
 		} else {
 			curr.Qual = common.StringToFloat64(data[5])
 		}
-		if len(data) < 10 {
+		if len(data) > 10 {
 			curr.Notes = strings.Join(data[9:], "\t")
 		}
 	default:
