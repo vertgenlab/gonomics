@@ -22,13 +22,22 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 				ref = dna.StringToBases(split[i][j].Ref)
 				alt = dna.StringToBases(split[i][j].Alt)
 				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
-
 					answer = append(answer, split[i][j])
 				}
 			}
 		}
 	}
 	Sort(answer)
+	return answer
+}
+
+func FilterNs(vcfs []*Vcf) []*Vcf {
+	var answer []*Vcf
+	for i := 0; i < len(vcfs);i++ {
+		if (!strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N")) {
+			answer = append(answer, vcfs[i])
+		}
+	}
 	return answer
 }
 
@@ -58,15 +67,3 @@ func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
 	}
 	return mergeRecord
 }
-
-/*
-else if CompareName(curr, vcfs[i]) == 0 && curr.Pos+1 == vcfs[i].pos {
-			if strings.Compare(curr.Format, "SVTYPE=SNP") == 0 && strings.Compare("SVTYPE=SNP", vcfs[i].Format) == 0 {
-				for j = i; j < len(vcfs); j++ {
-					curr.Ref+= vcfs[j].Ref
-					curr.Alt+= vcfs[j].Alt
-				}
-
-
-			}
-		}*/

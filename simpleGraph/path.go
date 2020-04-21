@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	//"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"strings"
 	"sync"
@@ -26,36 +25,14 @@ func PathToSeq(alignPath []uint32, samfile *sam.SamAln, gg *SimpleGraph) []dna.B
 }
 
 func SamToPath(aln *sam.SamAln) []uint32 {
-
 	words := strings.Split(aln.Extra, "\t")
 	if len(words) < 2 {
-		//log.Fatalf("Error: input sam might not contain path information...")
-		//log.Printf("Possible unmapped read:%s\n", sam.SamAlnToString(aln))
 		return nil
+
 	} else {
 		return StringToPath(words[1])
 	}
-	//log.Printf("%d\n", StringToPath(words[1]))
-
 }
-
-/*
-func betterSamToPath(aln *sam.SamAln) []uint32 {
-	words := strings.Split(aln.Extra, "\t")
-	answer := make([]uint32, 0)
-	if len(words) < 2 || sam.IsUnmapped(aln) {
-		//log.Fatalf("Error: input sam might not contain path information...")
-		//log.Printf("Possible unmapped read:%s\n", sam.SamAlnToString(aln))
-		return nil
-	}
-	words[1] = words[1][5:]
-	words = strings.Split(words[1], ":")
-	for i := 0; i < len(words); i++ {
-		answer = append(answer, common.StringToUint32(words[i]))
-	}
-	return answer
-	//return StringToPath(words[1])
-}*/
 
 func StringToPath(allPaths string) []uint32 {
 	words := strings.Split(allPaths[5:], ":")
@@ -75,8 +52,6 @@ func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.Wait
 	log.SetFlags(log.Ldate | log.Ltime)
 	for alignedRead := range incomingSams {
 		numReads++
-		//log.Printf("path=%v\n", SamToPath(alignedRead))
-
 		log.Printf("%s\n", ViewGraphAlignment(alignedRead, gg))
 		if CheckAlignment(alignedRead, gg) {
 			yes++
@@ -92,7 +67,6 @@ func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.Wait
 
 func UnMappedRead(length int) []dna.Base {
 	answer := make([]dna.Base, length)
-	//var answer *fastq.Fastq = {Name: "UnMapped_Read", Seq: make([]dna.Base, length)
 	for i := 0; i < len(answer); i++ {
 		answer[i] = dna.N
 	}
@@ -102,24 +76,16 @@ func UnMappedRead(length int) []dna.Base {
 func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
 	samPath := SamToPath(samLine)
 	if samPath == nil {
-		return fmt.Sprintf("Unmapped Alignment:\n%s\n", ModifySamToString(samLine, false, false, true, false, true, false, false, false, false, false, true))
+		return fmt.Sprintf("Unmapped Alignment:\n%s\n", sam.SamAlnToString(samLine))
 	} else {
-
 		var seqOne, seqTwo bytes.Buffer
 		var operations []*cigar.Cigar = samLine.Cigar
 		var i int64 = samLine.Pos - 1
-
-		if genome.Nodes[samPath[0]].Info != nil {
-			i = i - int64(genome.Nodes[samPath[0]].Info.Start) - 1
-		}
 		var j int64 = getStartRead(samLine)
-		//var k int64
+
 		var count int64
-		//words := strings.Split(samLine.RName, "_")
-		//log.Printf("path=%v\n", SamToPath(samLine))
 		var alpha []dna.Base = PathToSeq(SamToPath(samLine), samLine, genome)
 		var beta []dna.Base = samLine.Seq
-		//var lineLength int = 50
 		for _, operation := range operations {
 			for count = 0; count < operation.RunLength; count++ {
 				switch operation.Op {
@@ -215,13 +181,9 @@ func ModifySamToString(aln *sam.SamAln, samflag bool, rname bool, pos bool, mapq
 }
 
 func pathPrettyString(graphPath string) string {
-
 	var s string = ""
-
 	words := strings.Split(graphPath, ":")
-	//log.Printf("%v\n", words)
-	var i int
-	var j int
+	var i, j int
 	for i = 0; i < len(words); i += 8 {
 		var line string = ""
 		if i+8 > len(words) {
@@ -237,9 +199,7 @@ func pathPrettyString(graphPath string) string {
 			}
 			s += fmt.Sprintf("%s\n", line)
 		}
-		//s += fmt.Sprintf("\n")
 	}
-
 	return s
 }
 
@@ -272,23 +232,21 @@ func reversePath(alpha []uint32) {
 	}
 }
 
-func PathToString(allPaths []uint32, gg *SimpleGraph) string {
+func PathToString(allPaths []uint32) string {
 	var s string = ""
-	//fmt.Printf("length of paths %d\n", len(allPaths))
 	if allPaths == nil {
 		return s
 	} else {
-		s += fmt.Sprint(gg.Nodes[allPaths[0]].Id)
+		s += fmt.Sprint(allPaths[0])
 		if len(allPaths) > 1 {
 			for i := 1; i < len(allPaths); i++ {
-				s += ":" + fmt.Sprint(gg.Nodes[allPaths[i]].Id)
+				s += ":" + fmt.Sprint(allPaths[i])
 			}
 		}
 	}
 	return s
 }
 
-//PathToString(CatPaths(CatPaths(reversePath(leftPath), getSeedPath(seeds[i])), rightPath), gg)
 func getSeedPath(seed *SeedDev) []uint32 {
 	var path []uint32 = []uint32{seed.TargetId}
 	if seed.Next == nil {

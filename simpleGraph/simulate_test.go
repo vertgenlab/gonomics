@@ -1,5 +1,7 @@
 package simpleGraph
 
+//TODO: Will remove all of this, just need to make sure
+/*
 import (
 	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
@@ -49,7 +51,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	fa, _ := Read("testdata/bigGenome.sg")
 	log.Printf("Simulating reads...\n")
 
-	simReads := RandomPairedReads(fa.Nodes, readLength, numberOfReads, mutations)
+	simReads := RandomPairedReads(fa, readLength, numberOfReads, mutations)
 	log.Printf("length of simulated paired end reads: %d\n", len(simReads))
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	log.Printf("Making fastq channel...\n")
@@ -82,7 +84,7 @@ func TestAlignPairedEnd(t *testing.T) {
 	duration := stop.Sub(start)
 	os.Remove("samFile.sam")
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-}
+}*/
 
 /*func TestVcfToGraph(t *testing.T) {
 	var tileSize int = 32
