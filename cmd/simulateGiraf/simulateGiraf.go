@@ -19,7 +19,7 @@ func simulateGiraf(graph *simpleGraph.SimpleGraph, numReads int, readLen int, ra
 	}
 
 	if outputSam == true {
-		for i := 0 ; i < len(reads) ; i++ {
+		for i := 0; i < len(reads); i++ {
 			samReads = append(samReads, simpleGraph.GirafToSam(reads[i]))
 		}
 		samHeader := simpleGraph.NodesHeader(graph.Nodes)
