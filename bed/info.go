@@ -32,3 +32,12 @@ func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	}
 	return answer
 }
+
+func TotalSize(b []*Bed) int64 {
+	var ans, curLen int64
+	for i := 0; i < len(b); i++ {
+		curLen = b[i].ChromEnd - b[i].ChromStart
+		ans += curLen
+	}
+	return ans
+}

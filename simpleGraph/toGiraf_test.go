@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-
+	//"github.com/vertgenlab/gonomics/align"
 	"log"
 	"os"
 	"sync"
@@ -13,17 +13,28 @@ import (
 	"time"
 )
 
+/*
+//TODO: finish writing matrix helper function
+func TestScoreMatrixHelper(t *testing.T) {
+	var scoreMatrixSlice [][][]int64 = [][][]int64{align.HumanChimpTwoScoreMatrix, align.HoxD55ScoreMatrix, align.MouseRatScoreMatrix}
+	for i := 0; i < len(scoreMatrixSlice);i++ {
+		help := getScoreMatrixHelp(scoreMatrixSlice[i])
+		maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange := help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange
+		log.Printf("maxMatch=%d, minMatch=%d, leastSevereMismatch=%d, leastSevereMatchMismatchChange=%d", maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange)
+	}
+}*/
+
 func TestGirafLiftoverToSam(t *testing.T) {
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 10000
+	var numberOfReads int = 1000
 	var readLength int = 150
 	var mutations int = 0
 	var cpus int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/bigGenome.sg")
-	chrSize := chromInfo.ReadToSlice("testdata/bigGenome.sizes")
+	genome := Read("testdata/gasAcu1.fa")
+	chrSize := chromInfo.ReadToSlice("testdata/gasAcu1.sizes")
 	header := sam.ChromInfoSamHeader(chrSize)
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	readOne := "testdata/simReads_R1.fastq"
@@ -31,7 +42,7 @@ func TestGirafLiftoverToSam(t *testing.T) {
 	os.Remove(readOne)
 	os.Remove(readTwo)
 	fastq.WritePair(readOne, readTwo, simReads)
-	WrapGirafLiftoverToSam(genome, readOne, readTwo, "testdata/liftover.sam", cpus, tileSize, stepSize, scoreMatrix, header)
+	WrapGirafLiftoverToSam(genome, readOne, readTwo, "testdata/liftoverToSam.sam", cpus, tileSize, stepSize, scoreMatrix, header)
 }
 
 func TestExcuteGiraf(t *testing.T) {
@@ -58,13 +69,13 @@ func TestGirafGSW(t *testing.T) {
 	var output string = "testdata/giraf.tsv"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 160000
+	var numberOfReads int = 1000
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	genome := Read("testdata/gasAcu1.fa")
+	genome := Read("testdata/bepaRabsSV.gg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 	log.Printf("Making fastq channel...\n")
@@ -103,5 +114,5 @@ func TestGirafGSW(t *testing.T) {
 	///	log.Printf("%s\n", ViewGraphAlignment(samline, genome))
 	//}
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-	os.Remove(output)
+	//os.Remove(output)
 }

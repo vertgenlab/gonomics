@@ -29,11 +29,11 @@ func indexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]
 		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
 			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
 				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
-				answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(nodeIdx, pos))
+				answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(nodeIdx, pos))
 			}
 		}
 		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
-			locationCode = chromAndPosToNumber(nodeIdx, pos)
+			locationCode = ChromAndPosToNumber(nodeIdx, pos)
 			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
 				indexGenomeIntoMapHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, answer)
 			}
@@ -70,11 +70,11 @@ func indexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]uint64 
 		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
 			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
 				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
-				answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(nodeIdx, pos))
+				answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(nodeIdx, pos))
 			}
 		}
 		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
-			locationCode = chromAndPosToNumber(nodeIdx, pos)
+			locationCode = ChromAndPosToNumber(nodeIdx, pos)
 			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
 				indexGenomeIntoSliceHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, answer)
 			}
