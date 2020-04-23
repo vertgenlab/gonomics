@@ -32,9 +32,9 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 func usage() {
 	fmt.Print(
 		"vcfFormat: Options alter VCF formatting.\n" +
-			"Usage:\n" +
-			"bedFilter input.vcf output.vcf\n" +
-			"options:\n")
+		"Usage:\n" +
+		"vcfFormat input.vcf output.vcf\n" +
+		"options:\n")
 	flag.PrintDefaults()
 }
 

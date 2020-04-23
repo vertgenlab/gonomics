@@ -3,7 +3,7 @@ package cigar
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"unicode"
 )
