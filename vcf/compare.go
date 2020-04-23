@@ -116,7 +116,7 @@ func IsHomozygous(hap Haplotype) bool {
 	if hap.One != hap.Two {
 		return false
 	}
-	
+
 	return false
 }
 
@@ -128,6 +128,7 @@ func Heterozygous(key []int16, gt []Haplotype) bool {
 	}
 	return true
 }
+
 //Both Homozygous, but different allele
 func UniqueHomozygous(key []int16, AA []Haplotype) bool {
 	hash := make(map[int16]bool)
@@ -139,7 +140,7 @@ func UniqueHomozygous(key []int16, AA []Haplotype) bool {
 				hash[AA[key[aa]].One] = true
 			} else {
 				return false
-			}	
+			}
 		} else {
 			return false
 		}

@@ -28,7 +28,7 @@ func SnpSearch(samfile string, genotypeVcf string, sampleSheet string) {
 	defer AA.Close()
 	bb, _ := os.Create(fmt.Sprintf("%s.SNPs.sam", aa[1]))
 	defer bb.Close()
-	
+
 	sam.WriteHeaderToFileHandle(AA, header)
 	sam.WriteHeaderToFileHandle(bb, header)
 	wg.Add(1)
