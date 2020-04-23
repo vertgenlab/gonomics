@@ -1,10 +1,117 @@
 package vcf
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+	"os"
 	"strings"
 )
+
+func ASFilter(v *Vcf, AaAa []int16, BBbb []int16) bool {
+	gt := genotypeHelper(v)
+	if Unqualified(AaAa, gt) || Unqualified(BBbb, gt) {
+		return false
+	} else if Heterozygous(AaAa, gt) && UniqueHomozygous(BBbb, gt) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func HetsOnly(v *Vcf, AaAa []int16, BBbb []int16) bool {
+	gt := genotypeHelper(v)
+	if Heterozygous(AaAa, gt) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func WriteHeaderDev(file *os.File, header *VcfHeader) {
+	var err error
+	for h := 0; h < len(header.Text); h++ {
+		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
+	}
+	common.ExitIfError(err)
+}
+
+func SimpleASFilter(v *Vcf, axb int16, a int16, b int16) bool {
+	gt := genotypeHelper(v)
+	if LowQual(gt[axb]) || LowQual(gt[a]) || LowQual(gt[b]) {
+		return false
+	}
+	if gt[axb].One != gt[axb].Two && (gt[a].One == gt[a].Two && (gt[a].One != gt[b].One || gt[a].Two != gt[b].Two)) && (gt[b].One == gt[b].Two) {
+		return true
+	} else {
+		return false
+	}
+}
+func ReadFilterList(filename string, dict map[string]int16) ([]string, []string) {
+	file := fileio.Read(filename)
+	if len(file) != 2 {
+		log.Fatalf("Error: Sample sheet should be exactly 2 lines: hets one line 1, homo on line 2")
+	}
+	AaAa := strings.Split(file[0], ",")
+	//log.Printf("read in %s\n", file[0])
+	BBbb := strings.Split(file[1], ",")
+	return AaAa, BBbb
+	//log.Printf("read in %s\n", file[1])
+	//log.Printf("mapped ids HET=%d, HOM=%d\n", MapNameToIndex(dict, AaAa), MapNameToIndex(dict, BBbb))
+	//return MapNameToIndex(dict, AaAa), MapNameToIndex(dict, BBbb)
+}
+
+func MapNameToIndex(dict map[string]int16, list []string) []int16 {
+	var answer []int16 = make([]int16, len(list))
+	for i := 0; i < len(list); i++ {
+		answer[i] = dict[list[i]]
+	}
+	return answer
+}
+
+/*
+func FilterList(v *Vcf, hets []int16, homo []int16) bool {
+	//Converts notes to slice of Haplotype structs
+	gt := genotypeHelper(v)
+
+	for i := 0 ; i <len(homo); i++ {
+
+	}
+}*/
+
+/*
+func MediumASFilter(v *Vcf, axb1 int16, axb2 int16, axb3 int16, a int16, b int16) bool {
+	gt := genotypeHelper(v)
+	if IsHeterozygous(gt[axb1]) || gt[axb3].One != gt[axb3].Two) && ((gt[a].One != gt[b].One && gt[a].Two != gt[b].Two)) && (gt[b].One == gt[b].Two) {
+		return true
+	} else {
+		return false
+	}
+}*/
+
+//all records must be Hets.
+func StrictHetFilter(v *Vcf) bool {
+	samples := genotypeHelper(v)
+	for _, gVcf := range samples {
+		if gVcf.One == gVcf.Two {
+			return false
+		}
+	}
+	return true
+}
+
+func MediumHetFilter(v *Vcf, index []int) bool {
+	samples := genotypeHelper(v)
+	for _, idx := range index {
+		if samples[idx].One == samples[idx].Two {
+			return false
+		}
+	}
+	return true
+}
 
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
