@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/bed"
 	"log"
 	"strings"
 )
@@ -183,8 +184,8 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	for edge = 0; edge < len(lastMatch.Next); edge++ {
 		AddEdge(lastMatch.Next[edge].Dest, lastNode, 1)
 	}
-	if isSNP(vcfsChr[len(vcfsChr)-1]) || isHaplotypeBlock(vcfsChr[len(vcfsChr)-1]) {
-		AddEdge(altAllele, currMatch, 1)
+	if isSNP(vcfsChr[len(vcfsChr)-2]) || isHaplotypeBlock(vcfsChr[len(vcfsChr)-2]) {
+		AddEdge(altAllele, lastNode, 1)
 	}
 	AddEdge(lastMatch, lastNode, 1)
 	SetEvenWeights(lastMatch)
@@ -205,6 +206,23 @@ func GraphToFa(gg *SimpleGraph) []*fasta.Fasta {
 	return answer
 }
 
+func chrSplitByNs(chr *fasta.Fasta) []*fasta.Fasta {
+	unGapped := bed.UngappedRegionsFromFa(chr)
+	var answer []*fasta.Fasta = make([]*fasta.Fasta, len(unGapped))
+	for i := 0; i < len(unGapped); i++ {
+		answer[i] = &fasta.Fasta{Name: fmt.Sprintf("%s_%d_%d", unGapped[i].Chrom, unGapped[i].ChromStart, unGapped[i].ChromEnd), Seq: chr.Seq[unGapped[i].ChromStart:unGapped[i].ChromEnd]}
+	}
+	return answer
+}
+
+func FaSplitByNs(fa[]*fasta.Fasta) []*fasta.Fasta {
+	var answer []*fasta.Fasta
+	for i := 0; i < len(fa);i++ {
+		answer = append(answer, chrSplitByNs(fa[i])...)
+	}
+	return answer
+}
+
 /*
 func ToFaSubSet(gg *SimpleGraph, variant uint8) []*fasta.Fasta {
 	var answer []*fasta.Fasta
@@ -220,6 +238,7 @@ func ToFaSubSet(gg *SimpleGraph, variant uint8) []*fasta.Fasta {
 	}
 	return answer
 }*/
+//TODO move these vcf helper functions to vcf
 //new nodes are treated as insertion
 func isINV(v *vcf.Vcf) bool {
 	var truth bool = false
