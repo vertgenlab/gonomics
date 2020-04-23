@@ -81,3 +81,76 @@ func LogEqual(alpha []*Vcf, beta []*Vcf) {
 		}
 	}
 }
+
+func LowQual(hap Haplotype) bool {
+	if hap.One < 0 || hap.Two < 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func Unqualified(key []int16, gt []Haplotype) bool {
+	for i := 0; i < len(key); i++ {
+		if LowQual(gt[key[i]]) {
+			return true
+		}
+	}
+	return false
+}
+
+func IsHeterozygous(hap Haplotype) bool {
+	if hap.One != hap.Two {
+		return true
+	}
+	if hap.One == hap.Two {
+		return false
+	}
+	return false
+}
+
+func IsHomozygous(hap Haplotype) bool {
+	if hap.One == hap.Two {
+		return true
+	}
+	if hap.One != hap.Two {
+		return false
+	}
+	
+	return false
+}
+
+func Heterozygous(key []int16, gt []Haplotype) bool {
+	for _, Aa := range key {
+		if !IsHeterozygous(gt[Aa]) {
+			return false
+		}
+	}
+	return true
+}
+//Both Homozygous, but different allele
+func UniqueHomozygous(key []int16, AA []Haplotype) bool {
+	hash := make(map[int16]bool)
+	var ok bool
+	for aa := 0; aa < len(key); aa++ {
+		if IsHomozygous(AA[key[aa]]) {
+			_, ok = hash[AA[key[aa]].One]
+			if !ok {
+				hash[AA[key[aa]].One] = true
+			} else {
+				return false
+			}	
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func homozygousPairDiff(AA Haplotype, aa Haplotype) bool {
+	if AA.One != aa.Two && IsHomozygous(AA) && IsHomozygous(aa) {
+		return true
+	} else {
+		return false
+	}
+}
