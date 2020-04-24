@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 )
 
 func bedFormat(infile string, outfile string, fields int, ensemblToUCSC bool, UCSCToEnsembl bool) {
@@ -31,9 +31,9 @@ func bedFormat(infile string, outfile string, fields int, ensemblToUCSC bool, UC
 func usage() {
 	fmt.Print(
 		"bedFormat: Options alter bed formatting.\n" +
-		"Usage:\n" +
-		"bedFormat input.bed output.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			"bedFormat input.bed output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
