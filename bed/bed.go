@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
+	"os"
 	"log"
 	"strings"
 )
@@ -39,6 +40,12 @@ func BedToString(bunk *Bed, fields int) string {
 		log.Fatalf("Error: expecting a request to print 3 to 7 bed fields, but got: %d\n", fields)
 	}
 	return ""
+}
+
+func WriteBed(file *os.File, input *Bed, fields int) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", BedToString(input, fields))
+	common.ExitIfError(err)
 }
 
 func WriteToFileHandle(file io.Writer, rec *Bed, fields int) {
