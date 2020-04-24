@@ -11,7 +11,7 @@ func TestSyncAlleleStreams(t *testing.T) {
 	one := SamToAlleles("testdata/chrM_head.sam", ref, 0)
 	two := SamToAlleles("testdata/chrM_tail.sam", ref, 0)
 
-	answer := SyncAlleleStreams(ref, 1000,  one, two)
+	answer := SyncAlleleStreams(ref, 1000, one, two)
 
 	for i := range answer {
 		fmt.Println("finished", i[0].Location, len(i))

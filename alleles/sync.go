@@ -69,7 +69,7 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 }
 
 // Inputs a []*fasta.Fasta or a *simpleGraph.SimpleGraph and increments currLoc
-func nextPos (reference interface{}, currLoc *Allele, refIdx *int) bool {
+func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 	switch r := reference.(type) {
 	case []*fasta.Fasta:
 
