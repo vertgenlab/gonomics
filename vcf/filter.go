@@ -22,6 +22,24 @@ func ASFilter(v *Vcf, AaAa []int16, BBbb []int16) bool {
 	}
 }
 
+func WrongFilter(v *Vcf, AaAa []int16, BBbb []int16) bool {
+	gt := genotypeHelper(v)
+	if Homozygous(AaAa, gt) || Heterozygous(BBbb, gt) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func Homozygous(key []int16, gt []Haplotype) bool {
+	for _, Aa := range key {
+		if !IsHomozygous(gt[Aa]) {
+			return false
+		}
+	}
+	return true
+}
+
 func HetsOnly(v *Vcf, AaAa []int16, BBbb []int16) bool {
 	gt := genotypeHelper(v)
 	if Heterozygous(AaAa, gt) {
@@ -71,6 +89,8 @@ func MapNameToIndex(dict map[string]int16, list []string) []int16 {
 	}
 	return answer
 }
+
+
 
 /*
 func FilterList(v *Vcf, hets []int16, homo []int16) bool {
