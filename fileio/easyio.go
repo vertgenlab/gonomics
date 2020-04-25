@@ -9,30 +9,30 @@ import (
 )
 
 type EasyReader struct {
-	file         *os.File
+	File         *os.File
 	internalBuff *bufio.Reader
 	internalGzip *gzip.Reader
 	BuffReader   *bufio.Reader
 }
 
 type EasyWriter struct {
-	file         *os.File
+	File         *os.File
 	internalBuff *bufio.Writer
 	internalGzip *gzip.Writer
 }
 
 func EasyOpen(filename string) *EasyReader {
 	answer := EasyReader{}
-	answer.file = MustOpen(filename)
+	answer.File = MustOpen(filename)
 	var err error
 
 	if strings.HasSuffix(filename, ".gz") {
-		answer.internalBuff = bufio.NewReader(answer.file)
+		answer.internalBuff = bufio.NewReader(answer.File)
 		answer.internalGzip, err = gzip.NewReader(answer.internalBuff)
 		common.ExitIfError(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
-		answer.BuffReader = bufio.NewReader(answer.file)
+		answer.BuffReader = bufio.NewReader(answer.File)
 		answer.internalBuff = nil
 		answer.internalGzip = nil
 	}
@@ -41,8 +41,8 @@ func EasyOpen(filename string) *EasyReader {
 
 func EasyCreate(filename string) *EasyWriter {
 	answer := EasyWriter{}
-	answer.file = MustCreate(filename)
-	answer.internalBuff = bufio.NewWriter(answer.file)
+	answer.File = MustCreate(filename)
+	answer.internalBuff = bufio.NewWriter(answer.File)
 
 	if strings.HasSuffix(filename, ".gz") {
 		answer.internalGzip = gzip.NewWriter(answer.internalBuff)
@@ -70,8 +70,8 @@ func (er *EasyReader) Close() {
 	/*if er.internalBuff != nil {
 		er.internalBuff.Close()
 	}*/
-	if er.file != nil {
-		er.file.Close()
+	if er.File != nil {
+		er.File.Close()
 	}
 }
 
@@ -82,8 +82,8 @@ func (ew *EasyWriter) Close() {
 	if ew.internalBuff != nil {
 		ew.internalBuff.Flush()
 	}
-	if ew.file != nil {
-		ew.file.Close()
+	if ew.File != nil {
+		ew.File.Close()
 	}
 }
 
