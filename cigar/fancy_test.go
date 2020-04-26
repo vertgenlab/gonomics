@@ -40,3 +40,26 @@ func TestMakeExplicit(t *testing.T) {
 		log.Fatalln("Problem with sequence reconstruction from explicit cigar")
 	}
 }
+
+const cycles = 10
+
+
+func BenchmarkPlusString(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		var test string
+		var add string = "more"
+		for i := 0; i < cycles; i++ {
+			test = test + fmt.Sprintf(":%s", add)
+		}
+	}
+}
+
+func BenchmarkSprintString(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		var test string
+		var add string = "more"
+		for i := 0; i < cycles; i++ {
+			test = fmt.Sprintf("%s:%s", test, add)
+		}
+	}
+}
