@@ -7,39 +7,103 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
+	"sync"
 )
 
-type Genotype struct {
-	Alleles [][]dna.Base
-	GVcf    []Haplotype
-	//Maybe Qual?
-	//I personally think it is up to the user
-	//to QC input data
+type GVcf struct {
+	Alleles   [][]dna.Base
+	Genotypes []Haplotype
 }
 
 type Haplotype struct {
-	One int32
-	Two int32
+	One    int16
+	Two    int16
 	Phased bool
+	GQ     uint8
 }
 
 type Dictionary struct {
-	Fa     map[string]int32
-	HapIdx map[string]int32
+	Fa     map[string]int16
+	HapIdx map[string]int16
 }
 
-func GenotypeToMap(vcfs []*Vcf, names map[string]int) map[uint64]*Genotype {
-	mapToGVcf := make(map[uint64]*Genotype)
-	var code uint64
-	for _, v := range vcfs {
-		code = secretCode(names[v.Chr], int(v.Pos))
-		_, ok := mapToGVcf[code]
-		if !ok {
-			mapToGVcf[code] = vcfToGenotype(v)
+func genotypeHelper(v *Vcf) []Haplotype {
+	text := strings.Split(v.Notes, "\t")
+	var hap string
+	var alleles []string
+	var answer []Haplotype = make([]Haplotype, len(text))
+	for i := 0; i < len(text); i++ {
+		hap = strings.Split(text[i], ":")[0]
+		if strings.Compare(hap, "./.") == 0 || strings.Compare(hap, ".|.") == 0 {
+			answer[i] = Haplotype{One: -1, Two: -1, Phased: false, GQ: getGQ(v)}
+			//answer[i] = Haplotype{One: -1, Two: -1, Phased: false}
+		} else if strings.Contains(hap, "|") {
+			alleles = strings.SplitN(hap, "|", 2)
+			answer[i] = Haplotype{One: common.StringToInt16(alleles[0]), Two: common.StringToInt16(alleles[1]), Phased: true, GQ: getGQ(v)}
+			//answer[i] = Haplotype{One: common.StringToInt16(alleles[0]), Two: common.StringToInt16(alleles[1]), Phased: true}
+		} else {
+			alleles = strings.SplitN(hap, "/", 2)
+			answer[i] = Haplotype{One: common.StringToInt16(alleles[0]), Two: common.StringToInt16(alleles[1]), Phased: false, GQ: getGQ(v)}
+			//answer[i] = Haplotype{One: common.StringToInt16(alleles[0]), Two: common.StringToInt16(alleles[1]), Phased: false}
 		}
 	}
+	return answer
+}
+
+func GenotypeToMap(vcfs <-chan *Vcf, names map[string]int16, AaAa []int16, BBbb []int16, wg *sync.WaitGroup) map[uint64]*GVcf {
+	mapToGVcf := make(map[uint64]*GVcf)
+	var code uint64
+	for v := range vcfs {
+		if ASFilter(v, AaAa, BBbb) {
+			code = secretCode(int(names[v.Chr]), int(v.Pos-1))
+			_, ok := mapToGVcf[code]
+			if !ok {
+				mapToGVcf[code] = &GVcf{}
+				mapToGVcf[code] = vcfToGenotype(v)
+			}
+		}
+	}
+	wg.Done()
 	return mapToGVcf
 }
+
+func getGQ(v *Vcf) uint8 {
+	var answer uint8 = 0
+	if strings.Contains(v.Format, "GQ") {
+		stats := strings.Split(v.Format, ":")
+		for i := 0; i < len(stats); i++ {
+			if strings.Compare(stats[i], "GQ") == 0 {
+				value := strings.Split(v.Notes, ":")
+				if strings.Contains(value[i], ".") || strings.Contains(value[i], ",") {
+					answer = 0
+				} else {
+
+					answer = common.StringToUint8(value[i])
+				}
+
+			}
+
+		}
+	}
+	return answer
+}
+func compareHaps(a Haplotype, b Haplotype) bool {
+	if a.One == b.One && a.Two == b.Two {
+		return true
+	} else {
+		return false
+	}
+}
+
+func CompareAllHaps(gt []Haplotype) bool {
+	for i := 0; i < len(gt)-1; i++ {
+		if !compareHaps(gt[i], gt[i+1]) {
+			return false
+		}
+	}
+	return true
+}
+
 //tmp , this functions lives in simple graph, but import cycles are not allowed...
 //need to find a new package for this function
 func secretCode(chrom int, start int) uint64 {
@@ -51,19 +115,10 @@ func secretCode(chrom int, start int) uint64 {
 
 //Helper functions to convert Vcf line into a more compact version
 //to accommadate a magnitude of samples.
-func vcfToGenotype(v *Vcf) *Genotype {
-	gVcf := &Genotype{Alleles: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), GVcf: notesToHaplotype(genotypeHelper(v.Notes))}
+//Chr: v.Chr, Pos: int(v.Pos),
+func vcfToGenotype(v *Vcf) *GVcf {
+	gVcf := &GVcf{Alleles: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: genotypeHelper(v)}
 	return gVcf
-}
-
-func genotypeHelper(notes string) []string {
-	text := strings.Split(notes, "\t")
-	//var hap string
-	var answer []string = make([]string, len(text))
-	for i := 0; i < len(text); i++ {
-		answer[i] = strings.Split(text[i], ":")[0]
-	}
-	return answer
 }
 
 func getAltBases(alt string) [][]dna.Base {
@@ -75,36 +130,27 @@ func getAltBases(alt string) [][]dna.Base {
 	return answer
 }
 
-func notesToHaplotype(genotypes []string) []Haplotype {
-	var answer []Haplotype = make([]Haplotype, len(genotypes))
-	var alleles []string
-	for i := 0; i < len(answer); i++ {
-		if strings.Compare(genotypes[i], "./.") == 0 || strings.Compare(genotypes[i], ".|.") == 0 {
-			answer[i] = Haplotype{One: -1, Two: -1, Phased: false}
-		} else if strings.Contains(genotypes[i], "|") {
-			alleles = strings.SplitN(genotypes[i], "|", 2)
-			answer[i] = Haplotype{One: common.StringToInt32(alleles[0]), Two: common.StringToInt32(alleles[1]), Phased: true}
-		} else {
-			alleles = strings.SplitN(genotypes[i], "/", 2)
-			answer[i] = Haplotype{One: common.StringToInt32(alleles[0]), Two: common.StringToInt32(alleles[1]), Phased: false}
-		}
-	}
-	return answer
+func GetHeader(filename string) *VcfHeader {
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	header := ReadHeader(file)
+	return header
 }
 
 func HeaderToMaps(filename string) *Dictionary {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 	var line, name string
-	var index, hapIdx int32
+	var index, hapIdx int16
 	var err error
 	var nextBytes []byte
-	var hash *Dictionary = &Dictionary{Fa: make(map[string]int32), HapIdx: make(map[string]int32)}
+	var hash *Dictionary = &Dictionary{Fa: make(map[string]int16), HapIdx: make(map[string]int16)}
 	for nextBytes, err = file.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = file.Peek(1) {
 		line, _ = fileio.EasyNextLine(file)
 		if strings.HasPrefix(line, "##contig") {
 			//##contig=<ID=scaffold_15,length=15191604>
 			//split to get chrom/contig name
+
 			name = strings.Split(strings.Split(line, "=")[2], ",")[0]
 			_, ok := hash.Fa[name]
 			if !ok {
@@ -114,7 +160,7 @@ func HeaderToMaps(filename string) *Dictionary {
 		}
 		if strings.HasPrefix(line, "#CHROM") {
 			words := strings.Split(line, "\t")[9:]
-			for hapIdx = 0; hapIdx < int32(len(words)); hapIdx++ {
+			for hapIdx = 0; hapIdx < int16(len(words)); hapIdx++ {
 				hash.HapIdx[words[hapIdx]] = hapIdx
 			}
 		}
@@ -125,21 +171,27 @@ func HeaderToMaps(filename string) *Dictionary {
 	return hash
 }
 
+/*
 //To string functions for debugging and visualizing
-func genotypeToString(gVcf *Genotype) string {
+func printHap(gVcf *GVcf, int16) string {
 	var answer string
-	answer = fmt.Sprintf("0=%s,1=%s,%v", dna.BasesToString(gVcf.Alleles[0]), altBasesToString(gVcf.Alleles[1:]), haplotypesToString(gVcf))
+	answer = fmt.Sprintf("%d%s%d=%s%s%s", haplotypesToString(gVcf))
 	return answer
+}*/
+
+func hapToStringHelper(sample *GVcf, i int) string {
+	if sample.Genotypes[i].One < 0 {
+		return "NoData "
+	} else {
+		//answer += fmt.Sprintf("%d%s%d=%s%s%s\t", sample.Genotypes[i].One, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].Two, dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
+		return fmt.Sprintf("GQ=%d,%d%s%d=%s%s%s\t", sample.Genotypes[i].GQ, sample.Genotypes[i].One, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].Two, dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
+	}
 }
 
-func haplotypesToString(sample *Genotype) string {
+func haplotypesToString(sample *GVcf) string {
 	var answer string = ""
-	for i := 0; i < len(sample.GVcf); i++ {
-		if sample.GVcf[i].One < 0 {
-			answer += "NoData "
-		} else {
-			answer += fmt.Sprintf("%v=%s,%s ", sample.GVcf[i], dna.BasesToString(sample.Alleles[sample.GVcf[i].One]), dna.BasesToString(sample.Alleles[sample.GVcf[i].Two]))
-		}
+	for i := 0; i < len(sample.Genotypes); i++ {
+		answer += hapToStringHelper(sample, i)
 	}
 	return answer
 }
@@ -152,7 +204,10 @@ func altBasesToString(alt [][]dna.Base) string {
 	return strings.Join(work, ",")
 }
 
-/*
-func chromPosToString(chr string, pos int64) string {
-	return fmt.Sprintf("%s_%d", chr, pos)
-}*/
+func PhasedToString(phased bool) string {
+	if phased {
+		return "|"
+	} else {
+		return "/"
+	}
+}
