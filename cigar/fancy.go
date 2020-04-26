@@ -7,7 +7,6 @@ import (
 
 //TODO: build functions to rip linear sequence for cigar from []*Fasta or a *SimpleGraph
 
-
 // Make an existing sam-formatted cigar include the explicit sequence so that the read sequence is no longer necessary
 // Mismatch character 'X'
 // Sequence additions are lowercase in an effort to improve human readability

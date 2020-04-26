@@ -43,7 +43,6 @@ func TestMakeExplicit(t *testing.T) {
 
 const cycles = 10
 
-
 func BenchmarkPlusString(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var test string

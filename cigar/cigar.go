@@ -175,7 +175,6 @@ func CigarConsumesReference(c Cigar) bool {
 	return ConsumesReference(c.Op)
 }
 
-
 func ConsumesReference(r rune) bool {
 	switch r {
 	case 'M':
