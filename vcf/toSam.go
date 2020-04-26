@@ -9,24 +9,27 @@ import (
 	//"log"
 	"os"
 	"sync"
+	"strings"
 )
 
-func SnpSearch(samfile string, genotypeVcf string, sampleSheet string) {
+func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne string, alleleTwo, prefix string) {
 	dict := HeaderToMaps(genotypeVcf)
 
 	var wg sync.WaitGroup
 	gvcf := make(chan *Vcf)
 	go ReadToChan(genotypeVcf, gvcf)
-	Aa, aa := ReadFilterList(sampleSheet, dict.HapIdx)
+	Aa:= strings.Split(cross, ",")
+	aa := []string{alleleOne, alleleTwo}
+	// ReadFilterList(sampleSheet, dict.HapIdx)
 	index1, index2 := MapNameToIndex(dict.HapIdx, Aa), MapNameToIndex(dict.HapIdx, aa)
 
 	samFile := fileio.EasyOpen(samfile)
 	defer samFile.Close()
 	header := sam.ReadHeader(samFile)
 
-	AA, _ := os.Create(fmt.Sprintf("%s.SNPs.sam", aa[0]))
+	AA, _ := os.Create(fmt.Sprintf("%s.%s.SNPs.sam", prefix,aa[0]))
 	defer AA.Close()
-	bb, _ := os.Create(fmt.Sprintf("%s.SNPs.sam", aa[1]))
+	bb, _ := os.Create(fmt.Sprintf("%s.%s.SNPs.sam", prefix,aa[1]))
 	defer bb.Close()
 
 	sam.WriteHeaderToFileHandle(AA, header)

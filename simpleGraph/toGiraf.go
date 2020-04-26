@@ -347,7 +347,7 @@ func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {
 }
 
 func isProperPairAlign(mappedPair *giraf.GirafPair) bool {
-	if math.Abs(float64(mappedPair.Fwd.Path.TStart-mappedPair.Rev.Path.TStart)) < 10000 {
+	if math.Abs(float64(mappedPair.Fwd.Path.TStart-mappedPair.Rev.Path.TStart)) < 20000 {
 		if mappedPair.Fwd.Path.TStart < mappedPair.Rev.Path.TStart && mappedPair.Fwd.PosStrand && !mappedPair.Rev.PosStrand {
 			return true
 		}
