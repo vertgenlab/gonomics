@@ -38,6 +38,9 @@ type Annotation struct {
 }
 
 //TODO: We are transitioning to a new Read function that will keep track of chromosome lengths
+//ex of valid gg hode header:
+//>Name:NodeId_AlleleId_VariantId_StartPos
+//>%s:%d_%d_%d_%d\n", gg.Nodes[i].Name, gg.Nodes[i].Id, gg.Nodes[i].Info.Allele, gg.Nodes[i].Info.Variant, gg.Nodes[i].Info.Start
 func Read(filename string) *SimpleGraph {
 	genomeGraph := NewGraph()
 	//chrSize := make(map[string]*chromInfo.ChromInfo)
@@ -58,13 +61,7 @@ func Read(filename string) *SimpleGraph {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
 			words = strings.Split(line, ":")
-			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:], Info: nil}
-			//_, cinfo := chrSize[tmp.Name]
-			//if !cinfo {
-			//	cInfo := chromInfo.ChromInfo{Name: tmp.Name, Size: 0, Order: count}
-			//	chrSize[tmp.Name] = &cInfo
-			//	count++
-			//}
+			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:], Info: nil}++
 			if len(words) == 2 {
 				text = strings.Split(words[1], "_")
 				tmp.Info = &Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
@@ -87,14 +84,6 @@ func Read(filename string) *SimpleGraph {
 			if !strings.Contains(line, ":") && !strings.Contains(line, "\t") {
 				currSeq = dna.StringToBases(line)
 				dna.AllToUpper(currSeq)
-				//if genomeGraph.Nodes[seqIdx].Info == nil {
-				//	chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
-				//} else { //if genomeGraph.Nodes[seqIdx].Info != nil
-				//	if genomeGraph.Nodes[seqIdx].Info.Allele == 0 {
-				//		words = strings.Split(genomeGraph.Nodes[seqIdx].Name, ":")
-				//		chrSize[words[0]].Size += int64(len(currSeq))
-				//	}
-				//}
 				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
 			}
 		}
