@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
+	"log"
 )
 
 //Uses small mem pool
@@ -22,7 +23,7 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
 	var seeds *SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
+	//seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
 	SortSeedDevListByTotalLen(&seeds)
 	var tailSeed *SeedDev
 	var seedScore int64
@@ -118,14 +119,20 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
-	var seeds *SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
-	SortSeedDevListByTotalLen(&seeds)
+	var seeds []*SeedDev
+	//seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
+	//SortSeedDevListByTotalLen(&seeds)
+	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
 	var seedScore int64
 	var currSeq []dna.Base
 	var currSeed *SeedDev
-	for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+	log.Printf("Seeds found are:\n")
+	printSeedDev(seeds)
+	//for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
 			currSeq = read.Seq
@@ -168,11 +175,11 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
-	if seeds != nil {
+	/*if seeds != nil {
 		tailSeed = toTail(seeds)
 		tailSeed.Next = *memoryPool
 		*memoryPool = seeds
-	}
+	}*/
 	return &currBest
 }
 
