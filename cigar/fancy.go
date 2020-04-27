@@ -23,7 +23,7 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 					runLenCount++
 				} else {
 					// Append the matching bases so far
-					answer = append(answer, &Cigar{RunLength: runLenCount, Op: 'M'})
+					answer = append(answer, &Cigar{RunLength: runLenCount, Op: '='})
 					// Append the mismatch base
 					answer = append(answer, &Cigar{RunLength: 1, Op: 'X', Sequence: []dna.Base{sequence[k]}})
 					runLenCount = 0
@@ -31,7 +31,7 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 				seqIdx++
 				refIdx++
 			}
-			answer = append(answer, &Cigar{RunLength: runLenCount, Op: 'M'})
+			answer = append(answer, &Cigar{RunLength: runLenCount, Op: '='})
 
 		case 'I':
 			var insSeq []dna.Base
@@ -42,6 +42,10 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 			answer = append(answer, &Cigar{RunLength: cigar[i].RunLength, Op: 'I', Sequence: insSeq})
 
 		case 'X':
+			log.Println("WARNING: The input cigar already has explicit formatting")
+			return cigar
+
+		case '=':
 			log.Println("WARNING: The input cigar already has explicit formatting")
 			return cigar
 
