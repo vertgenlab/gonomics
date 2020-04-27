@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
@@ -77,7 +78,7 @@ func GswFaFormat(gg *SimpleGraph, read *fastq.Fastq, seedHash map[uint64][]*Seed
 		leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[seeds[i].TargetId], []dna.Base{}, int(seeds[i].TargetStart), []uint32{}, extension, currRead.Seq[:seeds[i].QueryStart], m, trace)
 		//log.Printf("NodeLen=%d, TargetStart=%d, length=%d\n", len(gg.Nodes[tailSeed.TargetId].Seq), tailSeed.TargetStart, tailSeed.Length)
 		seedScore = BlastSeed(seeds[i], currRead, HumanChimpTwoScoreMatrix)
-		rightAlignment, rightScore, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+		rightAlignment, rightScore, _, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension, currRead.Seq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		currScore = leftScore + seedScore + rightScore
 		if currScore > bestScore {
 			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(seeds[i])), rightPath)
@@ -135,7 +136,7 @@ func GswAlignFaFormat(ref *SimpleGraph, readOne string, readTwo string, output s
 	log.Printf("Aligners finished and channel closed\n")
 	wgWrite.Wait()
 	log.Printf("Sam writer finished and we are all done\n")
-}
+}*/
 
 //TODO: thinking about the idea of making a slice of graphs instead of one graph
 /*

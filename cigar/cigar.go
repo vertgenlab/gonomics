@@ -3,13 +3,16 @@ package cigar
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"strings"
 	"unicode"
 )
 
 type Cigar struct {
 	RunLength int64
 	Op        rune
+	Sequence  []dna.Base
 }
 
 func NumInsertions(input []*Cigar) int64 {
@@ -45,7 +48,8 @@ func ToString(c []*Cigar) string {
 			output = "*"
 			break
 		}
-		output = output + fmt.Sprintf("%v%c", v.RunLength, v.Op)
+		printSeq := dna.BasesToString(v.Sequence)
+		output = output + fmt.Sprintf("%v%c%s", v.RunLength, v.Op, strings.ToLower(printSeq))
 	}
 	return output
 }
@@ -74,6 +78,19 @@ func FromString(input string) []*Cigar {
 			log.Fatalf("Cigar ended with digit")
 		} */
 	return output
+}
+
+func MatchLength(c []*Cigar) int64 {
+	var ans int64
+	if c[0].Op == '*' {
+		log.Fatalf("Cannot calculate MatchLength from unaligned reads.")
+	}
+	for _, v := range c {
+		if ConsumesReference(v.Op) && ConsumesQuery(v.Op) {
+			ans = ans + v.RunLength
+		}
+	}
+	return ans
 }
 
 func ReferenceLength(c []*Cigar) int64 {

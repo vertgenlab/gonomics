@@ -27,11 +27,11 @@ func SamToAlleles(samFilename string, reference interface{}, minMapQ int64) chan
 	switch reference.(type) {
 	case []*fasta.Fasta:
 		reference := reference.([]*fasta.Fasta)
-		go CountAlleles(answer, &wg, samFile, reference, minMapQ)
+		go CountAlleles(answer, &wg, samFilename, samFile, reference, minMapQ)
 
 	case *simpleGraph.SimpleGraph:
 		ref := reference.(*simpleGraph.SimpleGraph)
-		go GraphCountAlleles(answer, &wg, samFile, ref, minMapQ)
+		go GraphCountAlleles(answer, &wg, samFilename, samFile, ref, minMapQ)
 
 	default:
 		log.Fatalln("Unrecognized reference type: must be []*Fasta or *SimpleGraph")
@@ -45,7 +45,7 @@ func SamToAlleles(samFilename string, reference interface{}, minMapQ int64) chan
 	return answer
 }
 
-func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyReader, reference []*fasta.Fasta, minMapQ int64) {
+func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename string, samFile *fileio.EasyReader, reference []*fasta.Fasta, minMapQ int64) {
 	defer samFile.Close()
 	var RefIndex, SeqIndex int64
 	var currentSeq []dna.Base
@@ -70,7 +70,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 		for i = 0; i < len(runningCount); i++ {
 
 			if runningCount[i].Chr != aln.RName {
-				answer <- &Allele{currAlleles[*runningCount[i]], runningCount[i]}
+				answer <- &Allele{samFilename, currAlleles[*runningCount[i]], runningCount[i]}
 				delete(currAlleles, *runningCount[i])
 
 				// Catch instance where every entry in running count is sent
@@ -82,7 +82,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 			}
 
 			if runningCount[i].Pos < (aln.Pos - 1) {
-				answer <- &Allele{currAlleles[*runningCount[i]], runningCount[i]}
+				answer <- &Allele{samFilename, currAlleles[*runningCount[i]], runningCount[i]}
 				delete(currAlleles, *runningCount[i])
 
 				// Catch instance where every entry in running count is sent
@@ -282,7 +282,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyR
 	wg.Done()
 }
 
-func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.EasyReader, graph *simpleGraph.SimpleGraph, minMapQ int64) {
+func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename string, samFile *fileio.EasyReader, graph *simpleGraph.SimpleGraph, minMapQ int64) {
 	var i, k int32
 	var j, l, progress int
 	defer samFile.Close()
@@ -307,7 +307,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 		for l = 0; l < len(runningCount); l++ {
 
 			if runningCount[l].Node.Name != aln.RName {
-				answer <- &Allele{currAlleles[*runningCount[l]], &Location{runningCount[l].Node.Name, runningCount[l].Pos}}
+				answer <- &Allele{samFilename, currAlleles[*runningCount[l]], &Location{runningCount[l].Node.Name, runningCount[l].Pos}}
 				delete(currAlleles, *runningCount[l])
 
 				// Catch instance where every entry in running count is sent
@@ -320,7 +320,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 			}
 
 			if runningCount[l].Pos < (aln.Pos - 1) {
-				answer <- &Allele{currAlleles[*runningCount[l]], &Location{runningCount[l].Node.Name, runningCount[l].Pos}}
+				answer <- &Allele{samFilename, currAlleles[*runningCount[l]], &Location{runningCount[l].Node.Name, runningCount[l].Pos}}
 				delete(currAlleles, *runningCount[l])
 
 				// Catch instance where every entry in running count is sent
@@ -558,7 +558,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFile *fileio.
 	log.Printf("Finished analyzing %d alignments...", progress)
 
 	for loc, count := range currAlleles {
-		answer <- &Allele{count, &Location{loc.Node.Name, loc.Pos}}
+		answer <- &Allele{samFilename, count, &Location{loc.Node.Name, loc.Pos}}
 	}
 
 	wg.Done()

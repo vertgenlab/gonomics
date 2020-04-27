@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
+	"os"
 	"log"
 	"strings"
 )
@@ -41,6 +42,12 @@ func BedToString(bunk *Bed, fields int) string {
 	return ""
 }
 
+func WriteBed(file *os.File, input *Bed, fields int) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", BedToString(input, fields))
+	common.ExitIfError(err)
+}
+
 func WriteToFileHandle(file io.Writer, rec *Bed, fields int) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", BedToString(rec, fields))
@@ -63,7 +70,6 @@ func Write(filename string, records []*Bed, fields int) {
 func Read(filename string) []*Bed {
 	var line string
 	var answer []*Bed
-	var startNum, endNum int64
 	var doneReading bool = false
 
 	file := fileio.EasyOpen(filename)
@@ -71,29 +77,56 @@ func Read(filename string) []*Bed {
 	//reader := bufio.NewReader(file)
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		words := strings.Split(line, "\t")
-
-		startNum = common.StringToInt64(words[1])
-		endNum = common.StringToInt64(words[2])
-
-		current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
-		if len(words) >= 4 {
-			current.Name = words[3]
-		}
-		if len(words) >= 5 {
-			current.Score = common.StringToInt64(words[4])
-		}
-		if len(words) >= 6 {
-			current.Strand = common.StringToStrand(words[5])
-		}
-		if len(words) >= 7 {
-			for i := 6; i < len(words); i++ {
-				current.Annotation = append(current.Annotation, words[i])
-			}
-		}
-
-		answer = append(answer, &current)
-
+		current := processBedLine(line)
+		answer = append(answer, current)
 	}
 	return answer
+}
+
+func processBedLine(line string) *Bed {
+	words := strings.Split(line, "\t")
+	startNum := common.StringToInt64(words[1])
+	endNum := common.StringToInt64(words[2])
+
+	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+	if len(words) >= 4 {
+		current.Name = words[3]
+	}
+	if len(words) >= 5 {
+		current.Score = common.StringToInt64(words[4])
+	}
+	if len(words) >= 6 {
+		current.Strand = common.StringToStrand(words[5])
+	}
+	if len(words) >= 7 {
+		for i := 6; i < len(words); i++ {
+			current.Annotation = append(current.Annotation, words[i])
+		}
+	}
+	return &current
+}
+
+func NextBed(reader *fileio.EasyReader) (*Bed, bool) {
+	line, done := fileio.EasyNextLine(reader)
+	if done {
+		return nil, true
+	}
+	return processBedLine(line), false
+}
+
+func GoReadToChan(filename string) <-chan *Bed {
+	output := make(chan *Bed)
+	go ReadToChan(filename, output)
+	return output
+}
+
+func ReadToChan(filename string, output chan<- *Bed) {
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	var curr *Bed
+	var done bool
+	for curr, done = NextBed(file); !done; curr, done = NextBed(file) {
+		output <- curr
+	}
+	close(output)
 }

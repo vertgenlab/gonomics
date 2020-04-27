@@ -6,12 +6,28 @@ import (
 	"strconv"
 )
 
+func StringToInt(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a int\n", s)
+	}
+	return n
+}
+
 func StringToFloat64(s string) float64 {
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		log.Fatalf("Error: trouble converting %s to a float64\n", s)
 	}
 	return n
+}
+
+func StringToInt32(s string) int32 {
+	n, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint32\n", s)
+	}
+	return int32(n)
 }
 
 func StringToInt64(s string) int64 {

@@ -28,12 +28,12 @@ func RandomPairedReads(genome *SimpleGraph, readLength int, numReads int, numCha
 
 		if (len(seq) == fragLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLength) == 0) {
 			curr := fastq.PairedEnd{Fwd: &fastq.Fastq{}, Rev: &fastq.Fastq{}}
-			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 1", path[0], start1+1, path[len(path)-1], start1+uint32(readLength), common.StrandToRune(strand))
+			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 1", path[0], start1, path[len(path)-1], start1+uint32(readLength), common.StrandToRune(strand))
 			curr.Fwd.Seq = make([]dna.Base, readLength)
 			copy(curr.Fwd.Seq, seq[:readLength])
 
 			curr.Fwd.Qual = generateDiverseFakeQual(readLength)
-			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 2", path[0], start1+1+uint32(fragLen-readLength), path[len(path)-1], endPos+1, common.StrandToRune(strand))
+			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 2", path[0], start1+uint32(fragLen-readLength), path[len(path)-1], endPos, common.StrandToRune(strand))
 			curr.Rev.Seq = make([]dna.Base, readLength)
 			copy(curr.Rev.Seq, seq[uint32(fragLen-readLength):])
 			curr.Rev.Qual = generateDiverseFakeQual(readLength)

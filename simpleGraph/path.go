@@ -232,15 +232,15 @@ func reversePath(alpha []uint32) {
 	}
 }
 
-func PathToString(allPaths []uint32, gg *SimpleGraph) string {
+func PathToString(allPaths []uint32) string {
 	var s string = ""
 	if allPaths == nil {
 		return s
 	} else {
-		s += fmt.Sprint(gg.Nodes[allPaths[0]].Id)
+		s += fmt.Sprint(allPaths[0])
 		if len(allPaths) > 1 {
 			for i := 1; i < len(allPaths); i++ {
-				s += ":" + fmt.Sprint(gg.Nodes[allPaths[i]].Id)
+				s += ":" + fmt.Sprint(allPaths[i])
 			}
 		}
 	}
