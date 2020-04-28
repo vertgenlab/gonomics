@@ -13,7 +13,7 @@ func TestMakeExplicit(t *testing.T) {
 	// Reference Sequenced: ACGTA  CGTACG
 	// Read Sequence:       ACTTATT GTACG
 	// Explicit Cigar:      2M1Xt2M2Itt1D5M
-	var expectedCigar string = "2M1Xt2M2Itt1D5M"
+	var expectedCigar string = "2=1Xt2=2Itt1D5="
 
 	var refSeq []dna.Base = dna.StringToBases("ACGTACGTACG")
 	var readSeq []dna.Base = dna.StringToBases("ACTTATTGTACG")
