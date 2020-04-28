@@ -15,7 +15,7 @@ import (
 func TestFaGraphSplit(t *testing.T) {
 	fa := []*fasta.Fasta{&fasta.Fasta{Name: "Test", Seq: dna.StringToBases("AAA")}, &fasta.Fasta{Name: "Test", Seq: dna.StringToBases("ANNNA")}, &fasta.Fasta{Name: "Test", Seq: dna.StringToBases("NAAN")}}
 	faSplit := FaSplitByNs(fa)
-	for i:= 0; i < len(faSplit);i++ {
+	for i := 0; i < len(faSplit); i++ {
 		log.Printf("name=%s, seq=%s\n", faSplit[i].Name, dna.BasesToString(faSplit[i].Seq))
 	}
 }

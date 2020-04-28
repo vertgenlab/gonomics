@@ -2,11 +2,11 @@ package simpleGraph
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/bed"
 	"log"
 	"strings"
 )
@@ -215,9 +215,9 @@ func chrSplitByNs(chr *fasta.Fasta) []*fasta.Fasta {
 	return answer
 }
 
-func FaSplitByNs(fa[]*fasta.Fasta) []*fasta.Fasta {
+func FaSplitByNs(fa []*fasta.Fasta) []*fasta.Fasta {
 	var answer []*fasta.Fasta
-	for i := 0; i < len(fa);i++ {
+	for i := 0; i < len(fa); i++ {
 		answer = append(answer, chrSplitByNs(fa[i])...)
 	}
 	return answer

@@ -150,9 +150,9 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 		// do fwd strand
 		seqKey = read.Rainbow[keyOffset].Seq[keyIdx] >> keyShift
 		currHits = seedHash[seqKey]
-		if len(currHits) > 0 {
+		/*if len(currHits) > 0 {
 			log.Printf(" %d hits\n", len(currHits))
-		}
+		}*/
 		for _, codedNodeCoord = range currHits {
 			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
 			nodeOffset = int(nodePos % basesPerInt)
@@ -198,9 +198,9 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 		// do rev strand
 		seqKey = read.RainbowRc[keyOffset].Seq[keyIdx] >> keyShift
 		currHits = seedHash[seqKey]
-		if len(currHits) > 0 {
+		/*if len(currHits) > 0 {
 			log.Printf(" %d hits\n", len(currHits))
-		}
+		}*/
 		for _, codedNodeCoord = range currHits {
 			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
 			nodeOffset = int(nodePos % basesPerInt)
@@ -212,7 +212,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			//log.Printf("After extendToTheRight rev:\n")
 			//printSeedDev(tempSeeds)
 			for _, tempSeed = range tempSeeds {
-				log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
+				//log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
 				finalSeeds = append(finalSeeds, extendToTheLeft(nodes[nodeIdx], read, tempSeed)...)
 			}
 			//log.Printf("After extendToTheLeft rev:\n")
@@ -262,7 +262,8 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 	return finalSeeds
 }
 
-func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+// does not support extending along edges, so commented out
+/*func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
 	var currHits []uint64
 	var leftMatches int = 0
 	var nodeIdx int64 = 0
@@ -324,7 +325,7 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 	}
 	return finalSeeds
 	// TODO: Bring back speed optimizations
-	/*var badIdx = len(hits) - 1
+	var badIdx = len(hits) - 1
 	var badCount = 0
 	for i := 0; i <= badIdx; {
 		if !seedCouldBeBetter(int64(hits[i].TotalLength), bestScore, perfectScore, int64(len(read.SeqRc)), 100, 90, -196, -296) {
@@ -335,8 +336,8 @@ func findSeedsInSmallMap(seedHash map[uint64][]uint64, nodes []*Node, read *fast
 			i++
 		}
 	}
-	return hits[0:(badIdx + 1)]*/
-}
+	return hits[0:(badIdx + 1)]
+}*/
 
 //TODO: get rid of this
 func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {

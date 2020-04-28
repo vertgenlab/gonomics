@@ -36,9 +36,9 @@ func RandGiraf(graph *SimpleGraph, numReads int, readLen int, randSeed int64) []
 				QEnd:      readLen,
 				PosStrand: strand,
 				Path:      girafPath,
-				Aln:       []*cigar.Cigar{{int64(readLen), 'M'}}, // tmp cigar until giraf cigars have been implemented
-				AlnScore:  alnScore,                              // placeholder
-				MapQ:      mapQ,                                  // placeholder
+				Aln:       []*cigar.Cigar{{int64(readLen), 'M', nil}}, // tmp cigar until giraf cigars have been implemented
+				AlnScore:  alnScore,                                   // placeholder
+				MapQ:      mapQ,                                       // placeholder
 				Seq:       seq,
 				Qual:      qual,
 				Notes:     nil}
