@@ -3,49 +3,38 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/alleles"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 )
 
 func usage() {
 	fmt.Print(
-		"callVariants - Inputs a directory of allele count files and outputs a concatenated file that can be used as input for variant calling.\n" +
+		"callVariants - Calls variants from input sam or giraf based on a linear or graph reference.\n" +
 			"Usage:\n" +
-			" callVariants [options] inputDirectory/ \n" +
+			" callVariants [options] \n" +
+			"\t-i experimental.sam \n" +
+			"\t-n normal.sam \n" +
+			"\t-r reference.fasta \n" +
+			"\t-o output.vcf \n\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
-func callVariants(inDirectory string, outFile string, sigThreshold float64, afThreshold float64, numGoRoutines int) {
-	log.Printf("# Merging Samples\n")
-	SampleMap := alleles.CreateBatchSampleMap(inDirectory)
-	Variants := alleles.ScoreVariants(SampleMap, sigThreshold, afThreshold, numGoRoutines)
-	if outFile == "stdout" {
-		vcf.PrintVcf(Variants)
-	} else {
-		vcf.Write(outFile, Variants)
-	}
-}
-
 func main() {
-	var expectedNumArgs int = 1
-	var outFile *string = flag.String("out", "stdout", "Write output to a file")
-	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value")
-	var afThreshold *float64 = flag.Float64("af", 0.01, "Do not output variants with allele frequency less than this value")
-	var numGoRoutines *int = flag.Int("threads", 1000000, "Maximum number of Goroutines at once. Estimate 8KB per Goroutine.")
+	var outFile *string = flag.String("out", "stdout", "Write output to a file [.vcf].")
+	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value.")
+	var afThreshold *float64 = flag.Float64("af", 0.01, "Do not output variants with allele frequency less than this value.")
+	var reference *string = flag.String("r", "", "Reference used for alignment [.fasta, .gg]. Can be linear or graph.")
+	var experimentalSamples *string = flag.String("i", "", "Input experimental sample(s) [.sam, .giraf]. Can be a file or directory.")
+	var normalSamples *string = flag.String("n", "", "Input normal sample(s) [.sam, .giraf]. Can be a file or directory. If no normal samples are given, each experimental sample will me measured against the other experimental samples.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if len(flag.Args()) != expectedNumArgs {
+	if *experimentalSamples == "" || *reference == "" || *outFile == "" {
 		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+		log.Fatalf("ERROR: Must include parameters for -i, -r, -o")
 	}
 	flag.Parse()
 
-	inDirectory := flag.Arg(0)
-
-	callVariants(inDirectory, *outFile, *sigThreshold, *afThreshold, *numGoRoutines)
-
+	fmt.Sprintf("test", normalSamples, experimentalSamples, reference, afThreshold, sigThreshold, outFile)
 }
