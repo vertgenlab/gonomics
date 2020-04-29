@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func PairedEndTwoBitAlign(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.PairedSamAln {
+func PairedEndTwoBitAlign(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.PairedSamAln {
 	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: nil, RevSam: nil}
-	mappedPair.FwdSam = GraphSmithWaterman(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
-	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace, memoryPool)
+	mappedPair.FwdSam = GraphSmithWaterman(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
+	mappedPair.RevSam = GraphSmithWaterman(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
 	mappedPair.FwdSam.Flag += 64
 	mappedPair.RevSam.Flag += 128
 	if math.Abs(float64(mappedPair.FwdSam.Pos-mappedPair.RevSam.Pos)) < 10000 {
@@ -25,13 +25,13 @@ func PairedEndTwoBitAlign(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHas
 
 func gswWorkerPairedEnd(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, incomingFastqs <-chan *fastq.PairedEndBig, outgoingSams chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
 	m, trace := swMatrixSetup(10000)
-	memChunk := make([]SeedDev, 100000)
+	/*memChunk := make([]SeedDev, 100000)
 	for i := 0; i < len(memChunk)-1; i++ {
 		memChunk[i].Next = &memChunk[i+1]
 	}
-	memStart := &(memChunk[0])
+	memStart := &(memChunk[0])*/
 	for read := range incomingFastqs {
-		outgoingSams <- PairedEndTwoBitAlign(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
+		outgoingSams <- PairedEndTwoBitAlign(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
 	}
 	wg.Done()
 }

@@ -49,7 +49,7 @@ func extendSeedDev(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 
 func printSeedDev(a []*SeedDev) {
 	for i, _ := range a {
-		log.Printf("%d\t%d\t%d\t%d\t%t\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].PosStrand)
+		log.Printf("tId:%d\ttStart:%d\tqStart:%d\tLen:%d\ttotalLen:%d\tposStrand:%t\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].TotalLength, a[i].PosStrand)
 	}
 }
 
@@ -253,14 +253,14 @@ func SortSeedDevByLen(seeds []*SeedDev) {
 }
 
 func CompareLenSeedDev(a *SeedDev, b *SeedDev) int {
-	if a.Length == b.Length {
+	if a.TotalLength == b.TotalLength {
 		return 0
-	} else if a.Length < b.Length {
+	} else if a.TotalLength < b.TotalLength {
 		return -1
-	} else if a.Length > b.Length {
+	} else if a.TotalLength > b.TotalLength {
 		return 1
 	} else {
-		log.Fatalf("Error: SeedDev len compare failed on:%d %d %d, %d %d %d\n", a.TargetId, a.TargetStart, a.Length, b.TargetId, b.TargetStart, b.Length)
+		log.Fatalf("Error: SeedDev total length compare failed on:%d %d %d, %d %d %d\n", a.TargetId, a.TargetStart, a.TotalLength, b.TargetId, b.TargetStart, b.TotalLength)
 		return 0
 	}
 }
