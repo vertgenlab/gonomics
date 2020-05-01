@@ -276,7 +276,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename string, s
 		}
 	}
 
-	log.Printf("Finished analyzing %d alignments...", progress)
+	log.Printf("Finished analyzing %s", samFilename)
 	wg.Done()
 }
 
@@ -553,11 +553,17 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 			}
 		}
 	}
-	log.Printf("Finished analyzing %d alignments...", progress)
+	log.Printf("Finished analyzing %s", samFilename)
 
 	for loc, count := range currAlleles {
 		answer <- &Allele{samFilename, count, &Location{loc.Node.Name, loc.Pos}}
 	}
 
 	wg.Done()
+}
+
+func GirafToAlleles(girafFilename string) chan *Allele {
+	answer := make(chan *Allele)
+
+	return answer
 }
