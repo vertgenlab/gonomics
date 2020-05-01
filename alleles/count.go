@@ -299,7 +299,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 	log.Printf("Reading in sam alignments...")
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-		readPath := StringToPath(aln.Extra)
+		readPath := simpleGraph.StringToPath(aln.Extra)
 
 		// Send positions that have been passed in the file
 		for l = 0; l < len(runningCount); l++ {
