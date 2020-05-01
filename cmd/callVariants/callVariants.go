@@ -35,7 +35,7 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 		ref = simpleGraph.Read(graphRef)
 	}
 
-	answer := alleles.CallVariants(ref, expSamples, normSamples, afThreshold, sigThreshold, minMapQ, memBufferSize)
+	answer := alleles.FindNewVariation(ref, expSamples, normSamples, afThreshold, sigThreshold, minMapQ, memBufferSize)
 
 	vcf.WriteHeader(output)
 	for vcfRecord := range answer {
@@ -46,7 +46,7 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 func main() {
 	var outFile *string = flag.String("out", "", "Write output to a file [.vcf].")
 	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value.")
-	var afThreshold *float64 = flag.Float64("af", 0.01, "Do not output variants with allele frequency less than this value.")
+	var afThreshold *float64 = flag.Float64("af", 0.01, "Variants with allele frequency less than this value will be treated as p = 1.")
 	var linearReference *string = flag.String("lr", "", "Linear reference used for alignment [.fasta].")
 	var graphReference *string = flag.String("gr", "", "Graph reference used for alignment [.gg].")
 	var experimentalSamples *string = flag.String("i", "", "Input experimental sample(s) [.sam, .giraf]. Can be a file or directory.")
