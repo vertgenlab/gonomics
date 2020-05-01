@@ -5,8 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"testing"
 )
-
-
+// TODO: build more robust test
 // TODO: build test for graph genome
 func TestFindNewVariation(t *testing.T) {
 	ref := fasta.Read("testdata/human_chrM.fasta")

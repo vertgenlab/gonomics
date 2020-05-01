@@ -18,21 +18,21 @@ import (
 
 // Functions to find vars that exist in graph
 type SampleData struct {
-	Sample			string
-	Counts 			[]uint32
-	GenomeCount 	uint32
+	Sample      string
+	Counts      []uint32
+	GenomeCount uint32
 }
 
 type BatchData struct {
-	Samples 		[]string
-	Counts 			[][]uint32
-	GenomeCounts 	[]uint32
+	Samples      []string
+	Counts       [][]uint32
+	GenomeCounts []uint32
 }
 
 type NodeP struct {
-	Sample 	string
-	Node 	*simpleGraph.Node
-	pVal	float64
+	Sample string
+	Node   *simpleGraph.Node
+	pVal   float64
 }
 
 func StringToPath(input string) []uint32 {
@@ -63,7 +63,9 @@ func CountPaths(graph *simpleGraph.SimpleGraph, samFilename string, minMapQ int6
 	var GenomeCounts uint32 = 0
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-		if aln.MapQ < minMapQ {continue}
+		if aln.MapQ < minMapQ {
+			continue
+		}
 		GenomeCounts++
 		addPathToCount(answer, StringToPath(aln.Extra))
 	}
@@ -130,7 +132,6 @@ func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph
 	// If the prob of entry from the majorLocalNode is > maxPopFreq then exit.
 	// No probabilty for first node in graph
 
-
 	//var prob float64
 	//if len(start.Prev) > 0 {
 	//	prob = majorPrevEdge.Prob
@@ -141,7 +142,6 @@ func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph
 	//if prob > maxPopFreq {
 	//	return
 	//}
-
 
 	// Begin testing on each sample
 	// test is for the matrix:
@@ -174,13 +174,13 @@ func calcRareNode(wg *sync.WaitGroup, sendResult chan *NodeP, start *simpleGraph
 
 		p := numbers.FisherExact(a, b, c, d, true)
 		switch {
-			// If alternate allele is zero then there is no variant and should exit
-			case c == 0:
-				return
+		// If alternate allele is zero then there is no variant and should exit
+		case c == 0:
+			return
 
-			// If a = b and c = d then it is testing itself and should exit
-			case a == b && c == d:
-				return
+		// If a = b and c = d then it is testing itself and should exit
+		case a == b && c == d:
+			return
 		}
 
 		if p < minPval {
@@ -232,16 +232,16 @@ func FindRareNodes(graph *simpleGraph.SimpleGraph, sampleData *BatchData, normal
 
 func nodeToVcf(node *NodeP) *vcf.Vcf {
 	answer := &vcf.Vcf{
-		Chr: 	node.Node.Name,
-		Pos: 	0,
-		Id: 	"",
-		Ref: 	"",
-		Alt: 	dna.BasesToString(node.Node.Seq),
-		Qual: 	0,
+		Chr:    node.Node.Name,
+		Pos:    0,
+		Id:     "",
+		Ref:    "",
+		Alt:    dna.BasesToString(node.Node.Seq),
+		Qual:   0,
 		Filter: "",
-		Info: 	fmt.Sprintf("Sample:%s, p:%e", node.Sample, node.pVal),
+		Info:   fmt.Sprintf("Sample:%s, p:%e", node.Sample, node.pVal),
 		Format: "",
-		Notes: ""}
+		Notes:  ""}
 
 	return answer
 }
@@ -272,7 +272,7 @@ func NodesToVcf(nodes []*NodeP) []*vcf.Vcf {
 	return answer
 }
 
-func FindVarsInsideGraph(graph *simpleGraph.SimpleGraph, sampleData *BatchData, normalData *BatchData,  maxPopFreq float64, minReadFreq float64, minPval float64) []*vcf.Vcf {
+func FindVarsInsideGraph(graph *simpleGraph.SimpleGraph, sampleData *BatchData, normalData *BatchData, maxPopFreq float64, minReadFreq float64, minPval float64) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 
 	// Find rare nodes in graph
@@ -283,15 +283,14 @@ func FindVarsInsideGraph(graph *simpleGraph.SimpleGraph, sampleData *BatchData, 
 	return answer
 }
 
-
 // Functions to find vars that DO NOT exist in graph
 //type GraphSampleMap map[GraphLocation]*AlleleCount
 
 //type BatchGraphSampleMap map[GraphLocation][]*BatchAlleleCount
 
 type BatchAllele struct {
-	Sample 	string
-	Allele 	*Allele
+	Sample string
+	Allele *Allele
 }
 
 type ProgressLock bool
@@ -397,6 +396,7 @@ func sendOffAlleles(inDirectory string, file os.FileInfo, graph *simpleGraph.Sim
 	}
 }
 
+/*
 func batchAddIndels(write *BatchAlleleCount, read *AlleleCount) {
 	var Match bool
 	var i, j int
@@ -420,6 +420,7 @@ func batchAddIndels(write *BatchAlleleCount, read *AlleleCount) {
 		}
 	}
 }
+*/
 
 func addSlice(a []int32, b []int32) []int32 {
 	c := make([]int32, len(a))
@@ -428,6 +429,7 @@ func addSlice(a []int32, b []int32) []int32 {
 	}
 	return c
 }
+
 /*
 func appendBGSM(OutMap BatchGraphSampleMap, InMap GraphSampleMap, SampleName string) BatchGraphSampleMap {
 	for key, value := range InMap {
@@ -622,7 +624,7 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 		var doesPassStrandBias = true
 
 		if paired == true {
-			doesPassStrandBias = passStrandBias(count.BaseAF, count.BaseAR)
+			doesPassStrandBias = passesStrandBias(count.BaseAF, count.BaseAR)
 		}
 
 		if count.Ref != dna.A && doesPassStrandBias {
@@ -633,34 +635,34 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 		}
 
 		if paired == true {
-			doesPassStrandBias = passStrandBias(count.BaseCF, count.BaseCR)
+			doesPassStrandBias = passesStrandBias(count.BaseCF, count.BaseCR)
 		}
 
 		if count.Ref != dna.C && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cC, dC, afThreshold)
-			if p < sigThreshold{
+			if p < sigThreshold {
 				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.C}, input[i], p)
 			}
 		}
 
 		if paired == true {
-			doesPassStrandBias = passStrandBias(count.BaseGF, count.BaseGR)
+			doesPassStrandBias = passesStrandBias(count.BaseGF, count.BaseGR)
 		}
 
 		if count.Ref != dna.G && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cG, dG, afThreshold)
-			if p < sigThreshold{
+			if p < sigThreshold {
 				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.G}, input[i], p)
 			}
 		}
 
 		if paired == true {
-			doesPassStrandBias = passStrandBias(count.BaseTF, count.BaseTR)
+			doesPassStrandBias = passesStrandBias(count.BaseTF, count.BaseTR)
 		}
 
 		if count.Ref != dna.T && doesPassStrandBias {
 			p := ScoreVariant(a[i], b[i], cT, dT, afThreshold)
-			if p < sigThreshold{
+			if p < sigThreshold {
 				appendAlleleToVcf(vcfRecord, []dna.Base{count.Ref}, []dna.Base{dna.T}, input[i], p)
 			}
 		}
@@ -678,13 +680,13 @@ func GraphScoreVariant(answer chan *vcf.Vcf, input []*BatchAllele, sigThreshold 
 			}
 
 			if paired == true {
-				if passStrandBias(count.Indel[j].CountF, count.Indel[j].CountR) == false {
+				if passesStrandBias(count.Indel[j].CountF, count.Indel[j].CountR) == false {
 					continue
 				}
 			}
 
 			p := ScoreVariant(a[i], b[i], cIndel, dIndel, afThreshold)
-			if p < sigThreshold{
+			if p < sigThreshold {
 				appendAlleleToVcf(vcfRecord, count.Indel[j].Ref, count.Indel[j].Alt, input[i], p)
 			}
 		}
@@ -733,7 +735,6 @@ func ScoreVariant(a int32, b int32, c int32, d int32, afThreshold float64) float
 	return p
 }
 
-
 // Complete wrapper function for vars inside and outside graph
 func GraphVariants(graph *simpleGraph.SimpleGraph, sampleDirectory string, normalDirectory string, minMapQ int64, maxPopFreq float64, minReadFreq float64, minPval float64, afThreshold float64, numGoRoutines int, paired bool) []*vcf.Vcf {
 	var answer []*vcf.Vcf
@@ -749,5 +750,3 @@ func GraphVariants(graph *simpleGraph.SimpleGraph, sampleDirectory string, norma
 
 	return answer
 }
-
-

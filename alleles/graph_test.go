@@ -1,13 +1,10 @@
 package alleles
 
 import (
-	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simpleGraph"
-	"github.com/vertgenlab/gonomics/vcf"
 	"math/rand"
-	"testing"
 	"time"
 )
 
@@ -45,54 +42,54 @@ func MakeTestGraph() *simpleGraph.SimpleGraph {
 
 	// Make Nodes
 	n0 = &simpleGraph.Node{
-		Id: 	0,
-		Name: 	"n0",
-		Seq:	dna.StringToBases("ATG")}
+		Id:   0,
+		Name: "n0",
+		Seq:  dna.StringToBases("ATG")}
 
 	n1 = &simpleGraph.Node{
-		Id: 	1,
-		Name: 	"n1",
-		Seq:	dna.StringToBases("CG")}
+		Id:   1,
+		Name: "n1",
+		Seq:  dna.StringToBases("CG")}
 
 	n2 = &simpleGraph.Node{
-		Id: 	2,
-		Name: 	"n2",
-		Seq:	dna.StringToBases("A")}
+		Id:   2,
+		Name: "n2",
+		Seq:  dna.StringToBases("A")}
 
 	n3 = &simpleGraph.Node{
-		Id: 	3,
-		Name: 	"n3",
-		Seq:	dna.StringToBases("T")}
+		Id:   3,
+		Name: "n3",
+		Seq:  dna.StringToBases("T")}
 
 	n4 = &simpleGraph.Node{
-		Id: 	4,
-		Name: 	"n4",
-		Seq:	dna.StringToBases("TAA")}
+		Id:   4,
+		Name: "n4",
+		Seq:  dna.StringToBases("TAA")}
 
 	// Make Edges
 	e0 = &simpleGraph.Edge{
-		Dest: 	n1,
-		Prob: 	1}
+		Dest: n1,
+		Prob: 1}
 
 	e1 = &simpleGraph.Edge{
-		Dest: 	n2,
-		Prob: 	0.05}
+		Dest: n2,
+		Prob: 0.05}
 
 	e2 = &simpleGraph.Edge{
-		Dest: 	n4,
-		Prob: 	1}
+		Dest: n4,
+		Prob: 1}
 
 	e3 = &simpleGraph.Edge{
-		Dest: 	n4,
-		Prob: 	0.8}
+		Dest: n4,
+		Prob: 0.8}
 
 	e4 = &simpleGraph.Edge{
-		Dest: 	n3,
-		Prob: 	0.15}
+		Dest: n3,
+		Prob: 0.15}
 
 	e5 = &simpleGraph.Edge{
-		Dest: 	n4,
-		Prob: 	1}
+		Dest: n4,
+		Prob: 1}
 
 	// Define Paths
 	n0.Next = append(n0.Next, e0)
@@ -114,56 +111,56 @@ func MakeTestAln() []*sam.SamAln {
 	var r1, r2, r3, r4, r5, r6, r7, r8, r9, r10 *sam.SamAln
 
 	r1 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("ATGCGTAA"),
-		Extra: 	"0:1:4"}
+		RName: "n0",
+		Seq:   dna.StringToBases("ATGCGTAA"),
+		Extra: "0:1:4"}
 
 	r2 = &sam.SamAln{
-		RName: 	"n1",
-		Seq:	dna.StringToBases("CGTAA"),
-		Extra: 	"1:4"}
+		RName: "n1",
+		Seq:   dna.StringToBases("CGTAA"),
+		Extra: "1:4"}
 
 	r3 = &sam.SamAln{
-		RName: 	"n1",
-		Seq:	dna.StringToBases("CGT"),
-		Extra: 	"1:3"}
+		RName: "n1",
+		Seq:   dna.StringToBases("CGT"),
+		Extra: "1:3"}
 
 	r4 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("ATGCGA"),
-		Extra: 	"0:1:2"}
+		RName: "n0",
+		Seq:   dna.StringToBases("ATGCGA"),
+		Extra: "0:1:2"}
 
 	r5 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("ATGCGTAA"),
-		Extra: 	"0:1:4"}
+		RName: "n0",
+		Seq:   dna.StringToBases("ATGCGTAA"),
+		Extra: "0:1:4"}
 
 	// Mutation in n1
 	r6 = &sam.SamAln{
-		RName: 	"n0",
-		Seq:	dna.StringToBases("AAGCGTAA"),
-		Extra: 	"0:1:4"}
+		RName: "n0",
+		Seq:   dna.StringToBases("AAGCGTAA"),
+		Extra: "0:1:4"}
 
 	r7 = &sam.SamAln{
-		RName: 	"n4",
-		Seq:	dna.StringToBases("TAA"),
-		Extra: 	"4"}
+		RName: "n4",
+		Seq:   dna.StringToBases("TAA"),
+		Extra: "4"}
 
 	r8 = &sam.SamAln{
-		RName: 	"n3",
-		Seq:	dna.StringToBases("A"),
-		Extra: 	"3"}
+		RName: "n3",
+		Seq:   dna.StringToBases("A"),
+		Extra: "3"}
 
 	// Mutation in n5
 	r9 = &sam.SamAln{
-		RName: 	"n1",
-		Seq:	dna.StringToBases("CGTTAG"),
-		Extra: 	"1:3:4"}
+		RName: "n1",
+		Seq:   dna.StringToBases("CGTTAG"),
+		Extra: "1:3:4"}
 
 	r10 = &sam.SamAln{
-		RName: 	"n3",
-		Seq:	dna.StringToBases("TTAA"),
-		Extra: 	"3:4"}
+		RName: "n3",
+		Seq:   dna.StringToBases("TTAA"),
+		Extra: "3:4"}
 
 	reads = append(reads, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10)
 	return reads
@@ -195,12 +192,12 @@ func RandPath(graph *simpleGraph.SimpleGraph) []*simpleGraph.Node {
 // Currently does not make indels that are not in graph
 // TODO: add in functionality for somatic SNVs
 type NewSNV struct {
-	Node 	*simpleGraph.Node
-	Pos 	int
-	Base 	dna.Base
+	Node *simpleGraph.Node
+	Pos  int
+	Base dna.Base
 }
 
-func randBase (base dna.Base) dna.Base {
+func randBase(base dna.Base) dna.Base {
 	rand.Seed(time.Now().UnixNano())
 
 	var randomBase dna.Base
@@ -208,13 +205,13 @@ func randBase (base dna.Base) dna.Base {
 	for {
 		randNum := rand.Intn(4)
 		switch randNum {
-		case 0 :
+		case 0:
 			randomBase = dna.A
-		case 1 :
+		case 1:
 			randomBase = dna.C
-		case 2 :
+		case 2:
 			randomBase = dna.G
-		case 3 :
+		case 3:
 			randomBase = dna.T
 		}
 
@@ -226,6 +223,7 @@ func randBase (base dna.Base) dna.Base {
 	return randomBase
 }
 
+/*
 func MakeTestReads(graph *simpleGraph.SimpleGraph, numReads int, readLen int, numSNP int, numNewSNV int) []*sam.SamAln {
 	answer := make([]*sam.SamAln, 0)
 	rand.Seed(time.Now().UnixNano())
@@ -370,7 +368,7 @@ func MakeMGraph() *simpleGraph.SimpleGraph {
 
 	return answer
 }
- */
+
 
 func TestGraphVariants(t *testing.T) {
 	answer := GraphVariants(MakeTestGraph(), "testdata2", "", 0, 1, 0, 1, 0, 10, false)
@@ -382,3 +380,5 @@ func TestGraphVariants(t *testing.T) {
 
 	vcf.PrintVcf(answer)
 }
+
+*/

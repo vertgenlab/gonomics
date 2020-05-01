@@ -125,7 +125,9 @@ func startAlleleStreams(ref interface{}, experimental string, normal string, min
 func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64) {
 
 	for alleles := range alleleStream {
-		if len(alleles) == 1 {continue} // Can only evaluate when at least two samples are present
+		if len(alleles) == 1 {
+			continue
+		} // Can only evaluate when at least two samples are present
 		bkgd, normalPresent := calcBackground(alleles, normalIDs)
 
 		var a, b, c, d int
@@ -134,7 +136,6 @@ func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalI
 
 		for i := 0; i < len(alleles); i++ {
 			if !normalIDs[alleles[i].Sample] { // if sample is listed as experimental
-
 				//TODO: There is room for improvement here. the b and d values values don't need to be determined
 				// for each individual allele and each individual base. We just need to make adjustments on the fly
 				// depending on whether or not normals are present and therefore we need to do b -= a and d -= c
@@ -264,7 +265,7 @@ func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int,
 
 	filename := path.Base(allele.Sample)
 	ext := filepath.Ext(filename)
-	name := filename[0:len(filename) - len(ext)]
+	name := filename[0 : len(filename)-len(ext)]
 
 	answer = &vcf.Vcf{
 		Chr:    allele.Location.Chr,
@@ -279,23 +280,23 @@ func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int,
 	case dna.A:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = "A"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseAF + allele.Count.BaseAR)
+		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseAF+allele.Count.BaseAR)
 	case dna.C:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = "C"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseCF + allele.Count.BaseCR)
+		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseCF+allele.Count.BaseCR)
 	case dna.G:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = "G"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseGF + allele.Count.BaseGR)
+		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseGF+allele.Count.BaseGR)
 	case dna.T:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = "T"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseTF + allele.Count.BaseTR)
+		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseTF+allele.Count.BaseTR)
 	case dna.Gap:
 		answer.Ref = dna.BasesToString(allele.Count.Indel[indelSlicePos].Ref)
 		answer.Alt = dna.BasesToString(allele.Count.Indel[indelSlicePos].Alt)
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.Indel[indelSlicePos].CountF + allele.Count.Indel[indelSlicePos].CountR)
+		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.Indel[indelSlicePos].CountF+allele.Count.Indel[indelSlicePos].CountR)
 	}
 	return answer
 }
@@ -353,7 +354,6 @@ func getFishersInput(experimental *Allele, bkgd *Allele, normalPresent bool, alt
 		b = int(bkgd.Count.BaseTF + bkgd.Count.BaseTR)
 	}
 
-
 	switch altBase {
 	case dna.A:
 		c = int(experimental.Count.BaseAF + experimental.Count.BaseAR)
@@ -373,7 +373,7 @@ func getFishersInput(experimental *Allele, bkgd *Allele, normalPresent bool, alt
 		d = int(bkgdIndel.CountF + bkgdIndel.CountR)
 	}
 
-	if !normalPresent{
+	if !normalPresent {
 		b -= a
 		d -= c
 	}
@@ -389,7 +389,7 @@ func delimitStringSlice(strings []string, delimiter string) string {
 			answer = answer + strings[i-1] + delimiter
 		}
 		answer = answer + strings[i-1]
-	} else {
+	} else if len(strings) == 1 {
 		answer = answer + strings[0]
 	}
 

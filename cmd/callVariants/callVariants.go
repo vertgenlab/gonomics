@@ -39,6 +39,7 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 
 	vcf.WriteHeader(output)
 	for vcfRecord := range answer {
+		vcf.PrintSingleLine(vcfRecord)
 		vcf.WriteVcf(output, vcfRecord)
 	}
 }
