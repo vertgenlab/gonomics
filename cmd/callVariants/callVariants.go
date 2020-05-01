@@ -24,7 +24,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64) {
+func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64, minMapQ int64, memBufferSize int) {
 	var ref interface{}
 	output := fileio.MustCreate(outFile)
 	defer output.Close()
@@ -35,10 +35,10 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 		ref = simpleGraph.Read(graphRef)
 	}
 
-	answer := alleles.CallVariants(ref, expSamples, normSamples, afThreshold, sigThreshold)
+	answer := alleles.CallVariants(ref, expSamples, normSamples, afThreshold, sigThreshold, minMapQ, memBufferSize)
 
+	vcf.WriteHeader(output)
 	for vcfRecord := range answer {
-		vcf.WriteHeader(output)
 		vcf.WriteVcf(output, vcfRecord)
 	}
 }
@@ -51,6 +51,8 @@ func main() {
 	var graphReference *string = flag.String("gr", "", "Graph reference used for alignment [.gg].")
 	var experimentalSamples *string = flag.String("i", "", "Input experimental sample(s) [.sam, .giraf]. Can be a file or directory.")
 	var normalSamples *string = flag.String("n", "", "Input normal sample(s) [.sam, .giraf]. Can be a file or directory. If no normal samples are given, each experimental sample will me measured against the other experimental samples.")
+	var minMapQ *int64 = flag.Int64("minMapQ", 20, "Exclude all reads with mapping quality less than this value")
+	var memBufferSize *int = flag.Int("memBuffer", 100, "Maximum number of allele records to store in memory at once")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -61,9 +63,9 @@ func main() {
 
 	if *experimentalSamples == "" || *outFile == "" || (*linearReference == "" && *graphReference == "") {
 		flag.Usage()
-		log.Fatalf("ERROR: Must include parameters for -i, -o, (-lr or -gr)")
+		log.Fatalf("ERROR: Must include parameters for -i, -out, (-lr or -gr)")
 	}
 	flag.Parse()
 
-	callVariants(*linearReference, *graphReference, *experimentalSamples, *normalSamples, *outFile, *afThreshold, *sigThreshold)
+	callVariants(*linearReference, *graphReference, *experimentalSamples, *normalSamples, *outFile, *afThreshold, *sigThreshold, *minMapQ, *memBufferSize)
 }
