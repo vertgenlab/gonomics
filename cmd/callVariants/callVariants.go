@@ -9,6 +9,8 @@ import (
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"path/filepath"
+	"strings"
 )
 
 func usage() {
@@ -34,8 +36,8 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 	} else if graphRef != "" {
 		ref = simpleGraph.Read(graphRef)
 	}
-
-	answer := alleles.FindNewVariation(ref, expSamples, normSamples, afThreshold, sigThreshold, minMapQ, memBufferSize)
+	alleleStream, normalIDs := startAlleleStreams(ref, expSamples, normSamples, minMapQ, memBufferSize)
+	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold)
 
 	vcf.WriteHeader(output)
 	for vcfRecord := range answer {
@@ -44,14 +46,78 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 	}
 }
 
+// fills alleleChans and normalIDs with the appropriate data
+// file can be .sam, .giraf, or .txt as a list of .sams or .girafs
+func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan *alleles.Allele, normalIDs map[string]bool, samFilesPresent *bool, girafFilesPresent *bool, minMapQ int64) {
+	switch filepath.Ext(file) {
+	case ".giraf":
+		//TODO: Make giraf to alleles function
+		*alleleChans = append(*alleleChans, alleles.GirafToAlleles(file))
+		*girafFilesPresent = true
+		if isNormal == true {
+			normalIDs[file] = true
+		} else {
+			normalIDs[file] = false
+		}
+		log.Println("Started Allele Stream for", file)
+	case ".sam":
+		*alleleChans = append(*alleleChans, alleles.SamToAlleles(file, ref, minMapQ))
+		*samFilesPresent = true
+		if isNormal == true {
+			normalIDs[file] = true
+		} else {
+			normalIDs[file] = false
+		}
+		log.Println("Started Allele Stream for", file)
+	case ".txt":
+		reader := fileio.EasyOpen(file)
+		defer reader.Close()
+		for line, done := fileio.EasyNextLine(reader); !done; line, done = fileio.EasyNextLine(reader) {
+			if line == file {
+				log.Fatalln("ERROR: Infinite recursion detected: Cannot call", line, "within", file)
+			}
+			if strings.HasPrefix(line, "#") {
+				continue
+			} else {
+				addChans(ref, line, isNormal, alleleChans, normalIDs, samFilesPresent, girafFilesPresent, minMapQ)
+			}
+		}
+
+	default:
+		log.Println("ERROR: Did not recognize extension", filepath.Ext(file), "for input:", file)
+	}
+}
+
+// Starts and syncs the allele streams for both experimental and normal files,
+// returns channel to synced alleles and a map[filename]bool (true = normal)
+func startAlleleStreams(ref interface{}, experimental string, normal string, minMapQ int64, memBufferSize int) (<-chan []*alleles.Allele, map[string]bool) {
+	var alleleChans []<-chan *alleles.Allele
+	normalIDs := make(map[string]bool) // map[filename] (true = normal)
+	var samFilesPresent, girafFilesPresent bool
+
+	addChans(ref, experimental, false, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
+	addChans(ref, normal, true, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
+
+	if samFilesPresent && girafFilesPresent {
+		log.Fatalln("ERROR: Input directories contain both giraf and sam files")
+	}
+	if len(alleleChans) < 2 {
+		log.Fatalln("ERROR: Must input at least two samples (between experimental and normal) to facilitate comparisons. Only", len(alleleChans), "sample was submitted")
+	}
+
+	syncedAllelesChan := alleles.SyncAlleleStreams(ref, memBufferSize, alleleChans...)
+
+	return syncedAllelesChan, normalIDs
+}
+
 func main() {
 	var outFile *string = flag.String("out", "", "Write output to a file [.vcf].")
 	var sigThreshold *float64 = flag.Float64("p", 0.05, "Do not output variants with p value greater than this value.")
 	var afThreshold *float64 = flag.Float64("af", 0.01, "Variants with allele frequency less than this value will be treated as p = 1.")
 	var linearReference *string = flag.String("lr", "", "Linear reference used for alignment [.fasta].")
 	var graphReference *string = flag.String("gr", "", "Graph reference used for alignment [.gg].")
-	var experimentalSamples *string = flag.String("i", "", "Input experimental sample(s) [.sam, .giraf]. Can be a file or directory.")
-	var normalSamples *string = flag.String("n", "", "Input normal sample(s) [.sam, .giraf]. Can be a file or directory. If no normal samples are given, each experimental sample will me measured against the other experimental samples.")
+	var experimentalSamples *string = flag.String("i", "", "Input experimental sample(s) [.sam, .giraf, .txt]. Can be a file or a txt file with a list (must have .txt extension) of sample paths.")
+	var normalSamples *string = flag.String("n", "", "Input normal sample(s) [.sam, .giraf, .txt]. Can be a file or a txt file with a list (must have .txt extension) of sample paths. If no normal samples are given, each experimental sample will me measured against the other experimental samples.")
 	var minMapQ *int64 = flag.Int64("minMapQ", 20, "Exclude all reads with mapping quality less than this value")
 	var memBufferSize *int = flag.Int("memBuffer", 100, "Maximum number of allele records to store in memory at once")
 	flag.Usage = usage

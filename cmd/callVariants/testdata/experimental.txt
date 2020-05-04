@@ -1,0 +1,3 @@
+#TEST PREFIX
+testDir/human_chrM.sam
+testDir/human_chrM2.sam

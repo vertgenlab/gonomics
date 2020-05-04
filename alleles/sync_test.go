@@ -14,6 +14,6 @@ func TestSyncAlleleStreams(t *testing.T) {
 	answer := SyncAlleleStreams(ref, 1000, one, two)
 
 	for i := range answer {
-		fmt.Sprintln("finished", i[0].Location, len(i))
+		fmt.Println("Finished", i[0].Location, len(i))
 	}
 }
