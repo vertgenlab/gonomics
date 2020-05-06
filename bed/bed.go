@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
-	"os"
 	"log"
+	"os"
 	"strings"
 )
 

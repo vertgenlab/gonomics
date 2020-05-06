@@ -96,5 +96,5 @@ func FisherExact(a, b, c, d int, aSmall bool) float64 {
 }
 
 func RandIntInRange(x int, y int) int {
-        return int(rand.Float64()*float64(y-x)) + x
+	return int(rand.Float64()*float64(y-x)) + x
 }

@@ -4,8 +4,6 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"strings"
-	
-
 )
 
 func SelectVcf(vcfs []*Vcf, snp bool, ins bool, del bool) []*Vcf {
@@ -38,13 +36,13 @@ func VcfToBed(vcfs []*Vcf) []*bed.Bed {
 
 func vcfLineToBed(v *Vcf) *bed.Bed {
 	var b *bed.Bed = &bed.Bed{Chrom: v.Chr, Name: v.Id}
-	if  Snp(v) {
+	if Snp(v) {
 		b.ChromStart, b.ChromEnd = v.Pos-1, v.Pos-1
 	}
-	if  Ins(v) {
+	if Ins(v) {
 		b.ChromStart, b.ChromEnd = v.Pos, v.Pos
 	}
-	if  Del(v) {
+	if Del(v) {
 		b.ChromStart = v.Pos
 		b.ChromEnd = v.Pos + int64(len(dna.StringToBases(v.Ref))-1)
 	}
@@ -105,6 +103,7 @@ func CopyVcfPointer(v *Vcf) *Vcf {
 	answer := &Vcf{Chr: v.Chr, Pos: v.Pos, Id: v.Id, Ref: v.Ref, Alt: v.Alt, Qual: v.Qual, Filter: v.Filter, Info: v.Info, Format: v.Format, Notes: v.Notes}
 	return answer
 }
+
 /*
 func vcfMergeAllelles(a *Vcf, b *Vcf, aXb *Vcf) {
 	if strings.Compare(a.Chr, b.Chr) == 0 && a.Pos == b.Pos {
@@ -117,7 +116,6 @@ func VcfToAlleleMap(a []*Vcf, b []*Vcf, aXb []*Vcf) {
 		vcfMergeAllelles(a[i], b[i], aXb[i])
 	}
 }*/
-
 
 /*
 type VcfAllele struct {

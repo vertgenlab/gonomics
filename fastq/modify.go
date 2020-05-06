@@ -1,4 +1,5 @@
 package fastq
+
 //TODO work in progress to deal with sequences that contain Ns
 /*
 import (

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
-	"github.com/vertgenlab/gonomics/bed"
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"log"
 )
 
 func simulateBed(regionCount int, simLength int64, noGapFile string, outFile string) {
@@ -19,7 +19,7 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 		Length = noGap[i].ChromEnd - noGap[i].ChromStart
 
 		if Length >= simLength {
-			totalWindows = totalWindows + int(Length - simLength)
+			totalWindows = totalWindows + int(Length-simLength)
 		}
 	}
 	//fmt.Printf("totalWindows: %d\n", totalWindows)
@@ -34,11 +34,11 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 			if chromWindows < 1 {
 				break
 			}
-			if tmp - chromWindows > 0 {
+			if tmp-chromWindows > 0 {
 				tmp = tmp - chromWindows
 			} else {
 				fmt.Printf("Got one\n")
-				answer = append(answer, &bed.Bed{Chrom: noGap[j].Chrom, ChromStart: noGap[j].ChromStart + tmp -1, ChromEnd: noGap[j].ChromStart + tmp - 1 + simLength, Name: noGap[j].Name})
+				answer = append(answer, &bed.Bed{Chrom: noGap[j].Chrom, ChromStart: noGap[j].ChromStart + tmp - 1, ChromEnd: noGap[j].ChromStart + tmp - 1 + simLength, Name: noGap[j].Name})
 				break
 			}
 		}
@@ -49,9 +49,9 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 func usage() {
 	fmt.Print(
 		"simulateBed - Returns a file of random bed regions of an input bed file.\n" +
-		"Usage:\n" +
-		" simulateBed input.bed output.bed\n" +
-		"options:\n")
+			"Usage:\n" +
+			" simulateBed input.bed output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

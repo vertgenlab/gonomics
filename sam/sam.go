@@ -58,7 +58,9 @@ func ReadToChan(filename string, output chan<- *SamAln) {
 func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
 	file, _ := os.Create(filename)
 	defer file.Close()
-	WriteHeaderToFileHandle(file, header)
+	if header != nil {
+		WriteHeaderToFileHandle(file, header)
+	}
 	for alignedRead := range incomingSams {
 		WriteAlnToFileHandle(file, alignedRead)
 	}
