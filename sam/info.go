@@ -1,8 +1,8 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func TotalAlignedBases(filename string) int64 {

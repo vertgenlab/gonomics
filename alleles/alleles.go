@@ -43,7 +43,7 @@ type GraphLocation struct {
 }
 
 type Allele struct {
-	Sample 	 string
+	Sample   string
 	Count    *AlleleCount
 	Location *Location
 }

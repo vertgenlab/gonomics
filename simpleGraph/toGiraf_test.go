@@ -33,8 +33,8 @@ func TestGirafLiftoverToSam(t *testing.T) {
 	var cpus int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	log.Printf("Reading in the genome (simple graph)...\n")
-	genome := Read("testdata/gasAcu1.fa")
-	chrSize := chromInfo.ReadToSlice("testdata/gasAcu1.sizes")
+	genome := Read("testdata/bigGenome.sg")
+	chrSize := chromInfo.ReadToSlice("testdata/bigGenome.sizes")
 	header := sam.ChromInfoSamHeader(chrSize)
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	readOne := "testdata/simReads_R1.fastq"
@@ -75,7 +75,8 @@ func TestGirafGSW(t *testing.T) {
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	genome := Read("testdata/bepaRabsSV.gg")
+	//genome := Read("testdata/bepaRabsSV.gg")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 	log.Printf("Making fastq channel...\n")

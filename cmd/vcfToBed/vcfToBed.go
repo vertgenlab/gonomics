@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
 	"flag"
 	"fmt"
-	"strings"
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"strings"
 )
 
 func vcfToBed(infile string, outfile string, delimiter string) {
@@ -30,17 +30,17 @@ func vcfToBed(infile string, outfile string, delimiter string) {
 
 func usage() {
 	fmt.Print(
-	"vcfToBed: Converts vcf to bed format. Intended for subsequent use for vcf LiftOver.\n" +
-	"Usage:\n" +
-	"bedFilter input.vcf output.bed\n" +
-	"options:\n")
+		"vcfToBed: Converts vcf to bed format. Intended for subsequent use for vcf LiftOver.\n" +
+			"Usage:\n" +
+			"bedFilter input.vcf output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 2
 	var delimiter *string = flag.String("delimiter", "&", "Sets the output name column delimiter.")
-	
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()

@@ -22,7 +22,7 @@ func tajimaD(inFile string, alnFile string, groupFile string, outFile string) {
 		for i := 0; i < len(b); i++ {
 			b[i].Annotation = make([]string, 2)
 			tajima, missing := popgen.TajimaFromBed(b[i], aln, popgen.ReadGroups(groupFile))
-			b[i].Annotation[0] = fmt.Sprintf("%f", tajima) 
+			b[i].Annotation[0] = fmt.Sprintf("%f", tajima)
 			b[i].Annotation[1] = missing
 		}
 	}

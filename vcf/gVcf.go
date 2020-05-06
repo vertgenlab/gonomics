@@ -18,8 +18,8 @@ type Genotype struct {
 }
 
 type Haplotype struct {
-	One int32
-	Two int32
+	One    int32
+	Two    int32
 	Phased bool
 }
 
@@ -40,6 +40,7 @@ func GenotypeToMap(vcfs []*Vcf, names map[string]int) map[uint64]*Genotype {
 	}
 	return mapToGVcf
 }
+
 //tmp , this functions lives in simple graph, but import cycles are not allowed...
 //need to find a new package for this function
 func secretCode(chrom int, start int) uint64 {
