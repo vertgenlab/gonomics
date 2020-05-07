@@ -1,5 +1,5 @@
 package simpleGraph
-
+/*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
@@ -34,4 +34,4 @@ func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads 
 	wgWrite.Wait()
 	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
-}
+}*/

@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 	"math"
 	"sync"
-	"time"
+
 )
 
 func PairedEndTwoBitAlign(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.PairedSamAln {
@@ -36,36 +35,7 @@ func gswWorkerPairedEnd(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen i
 	wg.Done()
 }
 
-func GSWsPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
-	log.SetFlags(log.Ldate | log.Ltime)
-	log.Printf("Paired end reads detected...\n")
-
-	log.Printf("Indexing the genome...\n\n")
-	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	var wgAlign, wgWrite sync.WaitGroup
-	//log.Printf("Setting up read and write channels...\n\n")
-	fastqPipe := make(chan *fastq.PairedEndBig, 824)
-	samPipe := make(chan *sam.PairedSamAln, 824)
-	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
-	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
-	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
-	wgAlign.Add(threads)
-	log.Printf("Aligning sequence to genome graph...")
-	start := time.Now()
-	for i := 0; i < threads; i++ {
-		go gswWorkerPairedEnd(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
-	}
-	wgWrite.Add(1)
-	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)
-	wgAlign.Wait()
-	stop := time.Now()
-	close(samPipe)
-	wgWrite.Wait()
-	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
-	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
-}
-
-func viewMatrix(m [][]int64) string {
+func ViewMatrix(m [][]int64) string {
 	var message string = ""
 	message += fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
 	return message

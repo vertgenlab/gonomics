@@ -3,28 +3,116 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
+	"strings"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
+
 	"log"
-	"os"
+	//"os"
 )
 
 func usage() {
 	fmt.Print(
-		"alleleSplit - a tool that separates a heterozygous sam alignment into different alleles\n" +
-			"1) Takes sam file of aligned reads\n2)Vcf file containing SNPs\n3)Name of output files\n\n" +
-			"usage:\n" +
-			"./alleleSplit [options] input.sam input.vcf output.sam\n" +
-			"\t--ref ref.output\n" +
-			"\t\tname output ref allele sam file\n" +
-			"\t--alt alt.output\n" +
-			"\t\tname output alt allele sam file\n" +
-			"\t--undetermined undetermined.sam\n" +
-			"\t\toutputs third file containing reads discarded from analysis\n")
+		"alleleSplit - a tool to separate allele specific heterozygous alignments into two split sams\n" +
+			"\nusage:\n" +
+			"\t./alleleSplit [options] het.sam SNPs.vcf.gz\n\n" +
+			"required:\n" +
+			"\t\t\tAll names specified in x,a,b must match columns of SNPs.vcf.gz exactly\n" +
+			"\t--x\t\tlist of f1 hybrid samples\n"+ //that map to columns in SNPs.vcf.gz separate multiple samples by commas\n" +
+			"\t--a\t\tname of allele one of cross\n"+ //must match name found in SNPs.vcf.gz\n" +
+			"\t--b\t\tname of allele two of cross\n\n"+ //must match name found in SNPs.vcf.gz"
+
+			"options:\n" +
+			"\t--name\t\tprefix string to name output sam files\n"+
+			"\t--filter\t[AS/medium/strict/wrong]\n\t\t\tExtra filters to apply to input SNPs\n\n"+
+			"\t\t\tAS: default when het input is 1-2 samples all must have het genotype in vcf\n"+
+			"\t\t\tmedium: het input cohort >2, requires at least one het genotype to be considered\n"+
+			"\t\t\tstrict: het input cohort >2 requires every sample to have hets in vcf record\n"+
+			"\t\t\twrong: bad data to calibrate VQSR filter\n\n"+
+			"./alleleSplit --x wgsAxB,atacAxB --a wgsAa --b wgsBb --name atacAxB het.sam SNPs.vcf.gz\n\n"+
+			"./alleleSplit --filter snps.vcf samples.csv [AS/medium/strict/wrong] output\n\n")
+}
+func main() {
+	var cross *string = flag.String("x", "", "string containing hets")
+	var alleleOne *string = flag.String("a", "", "allele one")
+	var alleleTwo *string = flag.String("b", "", "allele two")
+	var name *string = flag.String("name", "f1Hybrd", "prefix to name output files")
+	var filter *bool = flag.Bool("filter", false, "filter vcf")
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
+
+	if *filter {
+		var expectedNumArgs int = 4
+		if len(flag.Args()) != expectedNumArgs {
+			flag.Usage()
+			log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+		}
+		file := flag.Arg(0)
+		sampleSheet := flag.Arg(1)
+		vcfFilter := flag.Arg(2)
+		output := fileio.EasyCreate(flag.Arg(3))
+		header := vcf.GetHeader(file)
+
+		//output := fileio.MustCreate(flag.Arg(3))
+
+		defer output.Close()
+		vcf.WriteHeaderDev(output, header)
+		dict := vcf.HeaderToMaps(file)
+
+		vcfPipe := make(chan *vcf.Vcf)
+
+		AaAa, AAaa := vcf.ReadFilterList(sampleSheet, dict.HapIdx)
+		index1, index2 := vcf.MapNameToIndex(dict.HapIdx, AaAa), vcf.MapNameToIndex(dict.HapIdx, AAaa)
+		go vcf.ReadToChan(file, vcfPipe)
+		logHeader := fmt.Sprintf("Chrom\tPos\tRef\tAlt\t%s\t%s", strings.Join(AaAa, "\t"), strings.Join(AAaa, "\t"))
+
+        fmt.Printf("%s\n", logHeader)
+
+        var group []vcf.Haplotype
+        for gVcf := range vcfPipe {
+        	group = vcf.GenotypeHelper(gVcf)
+        	if vcf.ApplyFilter(vcfFilter, group, index1, index2) {
+        		vcf.WriteVcf(output, gVcf)
+        		vcf.PrettyShuffle(gVcf, index1, index2)
+        	}
+
+        }
+	    //   for record := range vcfPipe {
+	    //    	if vcf.WrongFilter(record, vcf.MapNameToIndex(dict.HapIdx, AaAa), vcf.MapNameToIndex(dict.HapIdx, AAaa)) {
+	    //    		vcf.WriteVcf(output, record)
+	    //           	vcf.ViewGenotypeVcf(record)
+	    //    	}
+	    //    }
+
+	} else {
+		samfile := flag.Arg(0)
+		snps := flag.Arg(1)
+		catchError(*cross, *alleleOne, *alleleTwo)
+		vcf.SnpSearch(samfile, snps, *cross, *alleleOne, *alleleTwo, *name)
+	}
 }
 
+
+/*
+file := flag.Arg(0)
+	header := vcf.GetHeader(file)
+	output := fileio.MustCreate()
+	defer output.Close()
+	vcf.WriteHeaderDev(output, header)
+	dict := vcf.HeaderToMaps(file)
+	vcfPipe := make(chan *vcf.Vcf)*/
+
+func catchError(cross string, one string, two string) {
+	if len(flag.Args()) < 2 {
+		flag.Usage()
+	}
+	if strings.Compare(cross, "") == 0 || strings.Compare(one, "") == 0 || strings.Compare(two, "") == 0 {
+		flag.Usage()
+	}
+}
+/*
 type Alleles struct {
 	Ref dna.Base
 	Alt dna.Base
@@ -138,4 +226,4 @@ func main() {
 		log.Fatalf("\n\n./alleleSplit [options] $sam $vcf $name\n\n")
 	}
 	AlleleExpression(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix, *undetermined)
-}
+}*/
