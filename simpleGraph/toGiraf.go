@@ -24,7 +24,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		AlnScore:  0,
 		MapQ:      255,
 		Seq:       read.Seq,
-		Qual:      giraf.ToQualUint8(read.Qual),
+		Qual:      read.Qual,
 		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 	}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
@@ -80,7 +80,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		}
 	}
 	if !currBest.PosStrand {
-		giraf.ReverseQualUint8Record(currBest.Qual)
+		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
 	/*if seeds != nil {
 		tailSeed = toTail(seeds)
@@ -134,7 +134,7 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 }
 
 func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
-	curr := &sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: giraf.Uint8QualToString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+	curr := &sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.Uint8QualToString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
 	//read is unMapped
 	if strings.Compare(ag.Notes[0].Value, "~") == 0 {
 		return curr

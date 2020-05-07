@@ -32,11 +32,11 @@ func RandomPairedReads(genome *SimpleGraph, readLength int, numReads int, numCha
 			curr.Fwd.Seq = make([]dna.Base, readLength)
 			copy(curr.Fwd.Seq, seq[:readLength])
 
-			curr.Fwd.Qual = generateDiverseFakeQual(readLength)
+			curr.Fwd.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
 			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 2", path[0], start1+uint32(fragLen-readLength), path[len(path)-1], endPos, common.StrandToRune(strand))
 			curr.Rev.Seq = make([]dna.Base, readLength)
 			copy(curr.Rev.Seq, seq[uint32(fragLen-readLength):])
-			curr.Rev.Qual = generateDiverseFakeQual(readLength)
+			curr.Rev.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
 			if !strand {
 				fastq.ReverseComplement(curr.Fwd)
 			} else {
@@ -64,10 +64,10 @@ func PairedEndRandomReads(genome *SimpleGraph, readLength int, numReads int, num
 }
 
 func singleToPair(inFq *fastq.Fastq) fastq.PairedEnd {
-	fwd := &fastq.Fastq{Name: fmt.Sprintf("%s 1", inFq.Name), Seq: make([]dna.Base, len(inFq.Seq)), Qual: make([]rune, len(inFq.Qual))}
+	fwd := &fastq.Fastq{Name: fmt.Sprintf("%s 1", inFq.Name), Seq: make([]dna.Base, len(inFq.Seq)), Qual: make([]uint8, len(inFq.Qual))}
 	copy(fwd.Seq, inFq.Seq)
 	copy(fwd.Qual, inFq.Qual)
-	rev := &fastq.Fastq{Name: fmt.Sprintf("%s 2", inFq.Name), Seq: make([]dna.Base, len(inFq.Seq)), Qual: make([]rune, len(inFq.Qual))}
+	rev := &fastq.Fastq{Name: fmt.Sprintf("%s 2", inFq.Name), Seq: make([]dna.Base, len(inFq.Seq)), Qual: make([]uint8, len(inFq.Qual))}
 	copy(rev.Seq, inFq.Seq)
 	copy(rev.Qual, inFq.Qual)
 	fastq.ReverseComplement(rev)
@@ -114,7 +114,7 @@ func MutateRandomReads(genome []*Node, readLength int, numReads int, numChanges 
 			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
 			copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
-			curr.Qual = generateDiverseFakeQual(readLength)
+			curr.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
 			curr = mutateSingleRead(curr, location, size)
 			if !strand {
 				dna.ReverseComplement(curr.Seq)
@@ -187,7 +187,7 @@ func RandomReads(genome *SimpleGraph, readLength int, numReads int, numChanges i
 			curr := fastq.Fastq{}
 			curr.Name = fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, common.StrandToRune(strand))
 			curr.Seq = seq
-			curr.Qual = generateDiverseFakeQual(readLength)
+			curr.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
 			if !strand {
 				dna.ReverseComplement(curr.Seq)
 			}
@@ -205,7 +205,7 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 	var chromIdx int
 	var readName string
 	var strand bool
-	var qual []rune
+	var qual []uint8
 	var seq []dna.Base
 	for i := 0; i < numReads; {
 		chromIdx = randIntInRange(0, len(genome))
@@ -213,7 +213,7 @@ func RandomFastqGen(genome []*fasta.Fasta, readLength int, numReads int) []*fast
 		strand = randIntInRange(0, 2) == 0
 		if dna.CountBaseInterval(genome[chromIdx].Seq, dna.N, start, start+readLength) == 0 {
 			readName = fmt.Sprintf("%s_%d_%d_%c", genome[chromIdx].Name, start, start+readLength, common.StrandToRune(strand))
-			qual = generateDiverseFakeQual(readLength)
+			qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
 			seq = genome[chromIdx].Seq[start : start+readLength]
 			if !strand {
 				dna.ReverseComplement(seq)
@@ -252,7 +252,6 @@ func RandomReadOneMutation(genome []*Node, readLength int, mutantPos int) *fastq
 	var chromIdx int
 	var strand bool
 	var readOk bool = false
-
 	for !readOk {
 		chromIdx = randIntInRange(0, len(genome))
 		start = randIntInRange(0, len(genome[chromIdx].Seq)-readLength)
@@ -262,7 +261,7 @@ func RandomReadOneMutation(genome []*Node, readLength int, mutantPos int) *fastq
 			curr.Name = fmt.Sprintf("%d_%d_%d_%c", genome[chromIdx].Id, start, start+readLength, common.StrandToRune(strand))
 			curr.Seq = make([]dna.Base, readLength)
 			copy(curr.Seq, genome[chromIdx].Seq[start:start+readLength])
-			curr.Qual = generateFakeQual(readLength)
+			curr.Qual = fastq.ToQualUint8(generateFakeQual(readLength))
 			if !strand {
 				dna.ReverseComplement(curr.Seq)
 			}

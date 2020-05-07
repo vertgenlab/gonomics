@@ -86,7 +86,7 @@ func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out s
 			GswToGirafPair(gRef, tail[1], tail[2], out, cpus, seedNum, stepSize, selectScoreMatrix(score))
 		}
 	default:
-		errorMessage()
+		alignExtend()
 	}
 }
 

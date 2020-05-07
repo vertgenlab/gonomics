@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 func GirafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), Uint8QualToString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
@@ -32,7 +33,7 @@ func stringToGiraf(line string) *Giraf {
 			AlnScore:  common.StringToInt(data[6]),
 			MapQ:      uint8(common.StringToInt(data[7])),
 			Seq:       dna.StringToBases(data[8]),
-			Qual:      ToQualUint8([]rune(data[9])),
+			Qual:      fastq.ToQualUint8([]rune(data[9])),
 			Notes:     FromStringToNotes(data[10])}
 	}
 	return curr
@@ -71,36 +72,6 @@ func NotesToString(notes []Note) string {
 		}
 	}
 	return answer
-}
-
-//TODO: will move to fastq package
-func ToQualUint8(qual []rune) []uint8 {
-	var answer []uint8 = make([]uint8, len(qual))
-	for i := 0; i < len(qual); i++ {
-		// SAM format uses ascii offset of 33 to make everything start with individual characters
-		// without adding 33 you get values like spaces and newlines
-		var asciiOffset uint8 = 33
-		answer[i] = uint8(qual[i]) - asciiOffset
-	}
-	return answer
-}
-
-func ReverseQualUint8Record(qualScore []uint8) {
-	for i, j := 0, len(qualScore)-1; i <= j; i, j = i+1, j-1 {
-		qualScore[i], qualScore[j] = qualScore[j], qualScore[i]
-	}
-}
-
-func Uint8QualToString(qual []uint8) string {
-	var answer []rune = make([]rune, len(qual))
-	for i := 0; i < len(qual); i++ {
-		// SAM format uses ascii offset of 33 to make everything start with individual characters
-		// without adding 33 you get values like spaces and newlines
-		var asciiOffset uint8 = 33
-		answer[i] = rune(qual[i] + asciiOffset)
-	}
-
-	return string(answer)
 }
 
 func strandToRune(posStrand bool) rune {
