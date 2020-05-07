@@ -13,29 +13,9 @@ func vcfFilter(infile string, outfile string, chrom string, minPos int64, maxPos
 	ch := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
-	var pass bool = false
 
 	for v := range ch {
-		pass = true
-		if v.Pos < minPos {
-			pass = false
-		}
-		if v.Pos > maxPos {
-			pass = false
-		}
-		if chrom != "" && v.Chr != chrom {
-			pass = false
-		}
-		if ref != "" && v.Ref != ref {
-			pass = false
-		}
-		if alt != "" && v.Alt != alt {
-			pass = false
-		}
-		if v.Qual < minQual {
-			pass = false
-		}
-		if pass {
+		if vcf.Filter(v, chrom, minPos, maxPos, ref, alt, minQual) {
 			vcf.WriteVcf(out.File, v)
 		}
 	}
