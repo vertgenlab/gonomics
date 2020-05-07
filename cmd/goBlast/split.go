@@ -1,13 +1,13 @@
 package main
 
-import(
+import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"strings"
 	"sync"
-	"fmt"
 )
 
 func FaToMatrix(fa []*fasta.Fasta, numSplit int) [][]*fasta.Fasta {

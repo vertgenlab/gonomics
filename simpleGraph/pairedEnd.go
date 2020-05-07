@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"math"
 	"sync"
-
 )
 
 func PairedEndTwoBitAlign(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.PairedSamAln {

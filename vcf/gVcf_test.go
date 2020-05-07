@@ -46,5 +46,5 @@ func TestSampleSheetFilter(t *testing.T) {
 }
 
 func TestSamToAlleles(t *testing.T) {
-	SnpSearch("testdata/CL12.wgs.merged.scaffold_1_30030-88166.sam", "testdata/LITCxMATA.trio.test.vcf", "CL12merged.bam", "LITC",	"MATA", "testdata/CL12.wgs.merged")
+	SnpSearch("testdata/CL12.wgs.merged.scaffold_1_30030-88166.sam", "testdata/LITCxMATA.trio.test.vcf", "CL12merged.bam", "LITC", "MATA", "testdata/CL12.wgs.merged")
 }

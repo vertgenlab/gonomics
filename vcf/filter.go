@@ -12,22 +12,22 @@ import (
 
 func ApplyFilter(method string, gt []Haplotype, AaAa []int16, BBbb []int16) bool {
 	switch {
-		case strings.Contains(method, "AS"):
-			if ASFilter(gt, AaAa, BBbb) {
-				return true
-			}
-		case strings.Contains(method, "wrong"):
-			if WrongFilter(gt, AaAa, BBbb) {
-				return true
-			}
-		case strings.Contains(method, "medium"):
-			if MediumHetFilter(gt, AaAa, BBbb) {
-				return true
-			}
-		default:
-			if ASFilter(gt, AaAa, BBbb) {
-				return true
-			}
+	case strings.Contains(method, "AS"):
+		if ASFilter(gt, AaAa, BBbb) {
+			return true
+		}
+	case strings.Contains(method, "wrong"):
+		if WrongFilter(gt, AaAa, BBbb) {
+			return true
+		}
+	case strings.Contains(method, "medium"):
+		if MediumHetFilter(gt, AaAa, BBbb) {
+			return true
+		}
+	default:
+		if ASFilter(gt, AaAa, BBbb) {
+			return true
+		}
 	}
 	return false
 }
@@ -39,6 +39,7 @@ func ASFilter(gt []Haplotype, AaAa []int16, BBbb []int16) bool {
 		return false
 	}
 }
+
 //get uninformative alleles: either parents are hets or the same allele
 //use as bad training data for VQSR training
 func WrongFilter(gt []Haplotype, AaAa []int16, BBbb []int16) bool {
@@ -67,20 +68,20 @@ func HetsOnly(gt []Haplotype, AaAa []int16) bool {
 		return false
 	}
 }
+
 //checks parents for homo alleles
 //at least one het in other group plasses the filter.
 func MediumHetFilter(samples []Haplotype, AaAa []int16, BBbb []int16) bool {
 	//samples := genotypeHelper(v)
 	if Homozygous(BBbb, samples) {
 		for _, idx := range AaAa {
-			if (samples[idx].One != samples[idx].Two){
+			if samples[idx].One != samples[idx].Two {
 				return true
 			}
 		}
 	}
 	return false
 }
-
 
 func DifferentParents(parentOne Haplotype, parentTwo Haplotype) bool {
 	if IsHomozygous(parentOne) && IsHomozygous(parentTwo) && (parentOne.One != parentTwo.One && parentOne.Two != parentTwo.Two) {

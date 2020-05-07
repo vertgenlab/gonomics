@@ -1,12 +1,12 @@
 package vcf
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"fmt"
-	"sync"
 	"strings"
+	"sync"
 )
 
 func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne string, alleleTwo, prefix string) {
@@ -19,12 +19,12 @@ func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne strin
 	parents := []string{alleleOne, alleleTwo}
 	// ReadFilterList(sampleSheet, dict.HapIdx)
 	hets, homs := MapNameToIndex(dict.HapIdx, children), MapNameToIndex(dict.HapIdx, parents)
-	
+
 	snpDb := make(map[uint64]*GVcf)
 
 	for genotype := range gvcf {
 		if ASFilter(GenotypeHelper(genotype), hets, homs) {
-			 GenotypeToMap(genotype, dict.Fa, snpDb)
+			GenotypeToMap(genotype, dict.Fa, snpDb)
 		}
 	}
 	samFile := fileio.EasyOpen(samfile)
@@ -34,7 +34,7 @@ func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne strin
 
 	childOne := fileio.MustCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[0]))
 	defer childOne.Close()
-	childTwo:= fileio.MustCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[1]))
+	childTwo := fileio.MustCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[1]))
 	defer childTwo.Close()
 
 	sam.WriteHeaderToFileHandle(childOne, header)
@@ -45,7 +45,6 @@ func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne strin
 	var ok bool
 	var code uint64
 	wg.Wait()
-
 
 	var gV *GVcf
 	for read, done := sam.NextAlignment(samFile); done != true; read, done = sam.NextAlignment(samFile) {

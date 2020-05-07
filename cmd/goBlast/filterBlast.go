@@ -49,7 +49,7 @@ func FinalContigsToCanu(filterOut string, output string, contigs []string) {
 		go fasta.ReadToChan(file, faChan, &wg, false)
 	}
 	var writer sync.WaitGroup
-	writer.Add(1) 
+	writer.Add(1)
 	go FaFilterWrite(finalFa, dbFilter, faChan, &writer)
 	wg.Wait()
 	close(faChan)
@@ -108,7 +108,7 @@ func readText(filename string, txDb map[int]bool, output *fileio.EasyWriter) {
 	blast := make(chan string)
 	go toChan(filename, blast)
 	for text := range blast {
-		if !filterMatchingTax(txDb, text){
+		if !filterMatchingTax(txDb, text) {
 			writeSummary(output, text)
 			log.Printf("%s\n", text)
 		}
@@ -120,6 +120,7 @@ func writeSummary(file *fileio.EasyWriter, failedFilter string) {
 	_, err = fmt.Fprintf(file, "%s\n", failedFilter)
 	common.ExitIfError(err)
 }
+
 /*
 func sticklebackHit(subject string) bool {
 	if strings.Contains(subject, "Gasterosteus") || strings.Contains(subject, "aculeatus") || strings.Contains(subject, "Pungitius") {

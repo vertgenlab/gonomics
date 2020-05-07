@@ -50,7 +50,7 @@ func GenotypeHelper(v *Vcf) []Haplotype {
 }
 
 func GenotypeToMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf) map[uint64]*GVcf {
-	//mapToGVcf := 
+	//mapToGVcf :=
 	//var code uint64
 	code := secretCode(int(names[v.Chr]), int(v.Pos-1))
 	_, ok := mapToGVcf[code]
@@ -178,9 +178,9 @@ func hapToStringHelper(sample *GVcf, i int) string {
 	} else {
 		if i == len(sample.Genotypes)-1 {
 			return fmt.Sprintf("%d%s%d=%s%s%s", sample.Genotypes[i].One, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].Two, dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
-		}else {
+		} else {
 			return fmt.Sprintf("%d%s%d=%s%s%s\t", sample.Genotypes[i].One, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].Two, dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
-		//return fmt.Sprintf("GQ=%d,%d%s%d=%s%s%s\t", sample.Genotypes[i].GQ, sample.Genotypes[i].One, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].Two, dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
+			//return fmt.Sprintf("GQ=%d,%d%s%d=%s%s%s\t", sample.Genotypes[i].GQ, sample.Genotypes[i].One, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].Two, dna.BasesToString(sample.Alleles[sample.Genotypes[i].One]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Alleles[sample.Genotypes[i].Two]))
 		}
 	}
 }

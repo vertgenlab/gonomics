@@ -41,6 +41,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 }
+
 /*
 func gatherFastafiles(output string, files []string) {
 	faChan := make(chan *fasta.Fasta, 824)

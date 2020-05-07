@@ -2,8 +2,8 @@ package simpleGraph
 
 import (
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/sam"
 	"sync"
 )
 

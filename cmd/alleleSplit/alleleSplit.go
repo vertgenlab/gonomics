@@ -19,18 +19,18 @@ func usage() {
 			"\t./alleleSplit [options] het.sam SNPs.vcf.gz\n\n" +
 			"required:\n" +
 			"\t\t\tAll names specified in x,a,b must match columns of SNPs.vcf.gz exactly\n" +
-			"\t--x\t\tlist of f1 hybrid samples\n"+ //that map to columns in SNPs.vcf.gz separate multiple samples by commas\n" +
-			"\t--a\t\tname of allele one of cross\n"+ //must match name found in SNPs.vcf.gz\n" +
-			"\t--b\t\tname of allele two of cross\n\n"+ //must match name found in SNPs.vcf.gz"
+			"\t--x\t\tlist of f1 hybrid samples\n" + //that map to columns in SNPs.vcf.gz separate multiple samples by commas\n" +
+			"\t--a\t\tname of allele one of cross\n" + //must match name found in SNPs.vcf.gz\n" +
+			"\t--b\t\tname of allele two of cross\n\n" + //must match name found in SNPs.vcf.gz"
 
 			"options:\n" +
-			"\t--name\t\tprefix string to name output sam files\n"+
-			"\t--filter\t[AS/medium/strict/wrong]\n\t\t\tExtra filters to apply to input SNPs\n\n"+
-			"\t\t\tAS: default when het input is 1-2 samples all must have het genotype in vcf\n"+
-			"\t\t\tmedium: het input cohort >2, requires at least one het genotype to be considered\n"+
-			"\t\t\tstrict: het input cohort >2 requires every sample to have hets in vcf record\n"+
-			"\t\t\twrong: bad data to calibrate VQSR filter\n\n"+
-			"./alleleSplit --x wgsAxB,atacAxB --a wgsAa --b wgsBb --name atacAxB het.sam SNPs.vcf.gz\n\n"+
+			"\t--name\t\tprefix string to name output sam files\n" +
+			"\t--filter\t[AS/medium/strict/wrong]\n\t\t\tExtra filters to apply to input SNPs\n\n" +
+			"\t\t\tAS: default when het input is 1-2 samples all must have het genotype in vcf\n" +
+			"\t\t\tmedium: het input cohort >2, requires at least one het genotype to be considered\n" +
+			"\t\t\tstrict: het input cohort >2 requires every sample to have hets in vcf record\n" +
+			"\t\t\twrong: bad data to calibrate VQSR filter\n\n" +
+			"./alleleSplit --x wgsAxB,atacAxB --a wgsAa --b wgsBb --name atacAxB het.sam SNPs.vcf.gz\n\n" +
 			"./alleleSplit --filter snps.vcf samples.csv [AS/medium/strict/wrong] output\n\n")
 }
 func main() {
@@ -68,23 +68,23 @@ func main() {
 		go vcf.ReadToChan(file, vcfPipe)
 		logHeader := fmt.Sprintf("Chrom\tPos\tRef\tAlt\t%s\t%s", strings.Join(AaAa, "\t"), strings.Join(AAaa, "\t"))
 
-        fmt.Printf("%s\n", logHeader)
+		fmt.Printf("%s\n", logHeader)
 
-        var group []vcf.Haplotype
-        for gVcf := range vcfPipe {
-        	group = vcf.GenotypeHelper(gVcf)
-        	if vcf.ApplyFilter(vcfFilter, group, index1, index2) {
-        		vcf.WriteVcf(output, gVcf)
-        		vcf.PrettyShuffle(gVcf, index1, index2)
-        	}
+		var group []vcf.Haplotype
+		for gVcf := range vcfPipe {
+			group = vcf.GenotypeHelper(gVcf)
+			if vcf.ApplyFilter(vcfFilter, group, index1, index2) {
+				vcf.WriteVcf(output, gVcf)
+				vcf.PrettyShuffle(gVcf, index1, index2)
+			}
 
-        }
-	    //   for record := range vcfPipe {
-	    //    	if vcf.WrongFilter(record, vcf.MapNameToIndex(dict.HapIdx, AaAa), vcf.MapNameToIndex(dict.HapIdx, AAaa)) {
-	    //    		vcf.WriteVcf(output, record)
-	    //           	vcf.ViewGenotypeVcf(record)
-	    //    	}
-	    //    }
+		}
+		//   for record := range vcfPipe {
+		//    	if vcf.WrongFilter(record, vcf.MapNameToIndex(dict.HapIdx, AaAa), vcf.MapNameToIndex(dict.HapIdx, AAaa)) {
+		//    		vcf.WriteVcf(output, record)
+		//           	vcf.ViewGenotypeVcf(record)
+		//    	}
+		//    }
 
 	} else {
 		samfile := flag.Arg(0)
@@ -93,7 +93,6 @@ func main() {
 		vcf.SnpSearch(samfile, snps, *cross, *alleleOne, *alleleTwo, *name)
 	}
 }
-
 
 /*
 file := flag.Arg(0)
@@ -112,6 +111,7 @@ func catchError(cross string, one string, two string) {
 		flag.Usage()
 	}
 }
+
 /*
 type Alleles struct {
 	Ref dna.Base

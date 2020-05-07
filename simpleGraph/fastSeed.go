@@ -123,6 +123,7 @@ func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 		}
 	}
 }
+
 //TODO: get rid of this
 func indexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
 	if seedLen < 2 || seedLen > 32 {

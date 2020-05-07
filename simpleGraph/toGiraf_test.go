@@ -1,4 +1,5 @@
 package simpleGraph
+
 /*
 import (
 	"github.com/vertgenlab/gonomics/chromInfo"
@@ -23,4 +24,3 @@ func TestScoreMatrixHelper(t *testing.T) {
 		log.Printf("maxMatch=%d, minMatch=%d, leastSevereMismatch=%d, leastSevereMatchMismatchChange=%d", maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange)
 	}
 }*/
-
