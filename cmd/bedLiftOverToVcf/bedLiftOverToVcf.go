@@ -22,7 +22,7 @@ func bedLiftOverToVcf(infile string, outfile string, delimiter string) {
 		for i := 0; i < len(words); i++ {
 			output = output + "\t" + words[i]
 		}
-		_, err = fmt.Fprintf(out, output)
+		_, err = fmt.Fprintf(out, output+"\n")
 		common.ExitIfError(err)
 	}
 
