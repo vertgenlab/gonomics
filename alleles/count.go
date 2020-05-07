@@ -8,8 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
-	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -278,7 +276,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename string, s
 		}
 	}
 
-	log.Printf("Finished analyzing %d alignments...", progress)
+	log.Printf("Finished analyzing %s", samFilename)
 	wg.Done()
 }
 
@@ -301,7 +299,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 	log.Printf("Reading in sam alignments...")
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
-		readPath := StringToPath(aln.Extra)
+		readPath := simpleGraph.StringToPath(aln.Extra)
 
 		// Send positions that have been passed in the file
 		for l = 0; l < len(runningCount); l++ {
@@ -555,7 +553,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 			}
 		}
 	}
-	log.Printf("Finished analyzing %d alignments...", progress)
+	log.Printf("Finished analyzing %s", samFilename)
 
 	for loc, count := range currAlleles {
 		answer <- &Allele{samFilename, count, &Location{loc.Node.Name, loc.Pos}}
@@ -564,13 +562,8 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 	wg.Done()
 }
 
-// TODO: remove StringToPath once graph caller has been merged
-func StringToPath(input string) []uint32 {
-	answer := make([]uint32, 0)
-	words := strings.Split(input, ":")
-	for i := 0; i < len(words); i++ {
-		node, _ := strconv.ParseUint(words[i], 10, 32)
-		answer = append(answer, uint32(node))
-	}
+func GirafToAlleles(girafFilename string) chan *Allele {
+	answer := make(chan *Allele)
+
 	return answer
 }
