@@ -14,41 +14,30 @@ type LinkedRead struct {
 }
 
 func ReadToChanLinked(fileOne string, fileTwo string, tenXg chan<- *LinkedRead) {
-	var curr *LinkedRead
-	var done bool
-
-	fwd := fileio.EasyOpen(fileOne)
+	fwd, rev := fileio.EasyOpen(fileOne), fileio.EasyOpen(fileTwo)
 	defer fwd.Close()
-
-	rev := fileio.EasyOpen(fileTwo)
 	defer rev.Close()
 
-	for curr, done = NextSeq(fwd, rev); !done; curr, done = NextSeq(fwd, rev) {
+	for curr, done := NextSeq(fwd, rev); !done; curr, done = NextSeq(fwd, rev) {
 		tenXg <- curr
 	}
 	close(tenXg)
 }
 
 func NextSeq(fwdReader *fileio.EasyReader, revReader *fileio.EasyReader) (*LinkedRead, bool) {
-	curr := &PairedEnd{Fwd: nil, Rev: nil}
-	var done bool
-	curr, done = NextFastqPair(fwdReader, revReader)
+	curr, done := NextFastqPair(fwdReader, revReader)
 	if curr == nil || done {
 		return nil, true
-	} else {
-		//var tenXg *LinkedRead 
-		//tenXg = 
-		return FastqPairLinked(curr), false
 	}
+	return FastqPairLinked(curr), false
 }
 
 func FastqPairLinked(fqPair *PairedEnd) *LinkedRead {
-	tenXG := LinkedRead{Fwd: nil, Rev: nil, Bx: GetBarcode(fqPair.Fwd, 0, 16), Umi: GetBarcode(fqPair.Fwd, 17,23)}
+	tenXG := LinkedRead{Fwd: nil, Rev: fqPair.Rev, Bx: GetBarcode(fqPair.Fwd, 0, 16), Umi: GetBarcode(fqPair.Fwd, 17,23)}
 	tenXG.Fwd = TrimFastq(fqPair.Fwd, 24, len(fqPair.Fwd.Seq))
-	tenXG.Rev = fqPair.Rev
-
-	tenXG.Fwd.Name = fmt.Sprintf("%s %s-1", fqPair.Fwd.Name, dna.BasesToString(tenXG.Bx))
-	tenXG.Rev.Name = fmt.Sprintf("%s %s-1", fqPair.Rev.Name, dna.BasesToString(tenXG.Bx))
+	bxTag := fmt.Sprintf("BX:%s", dna.BasesToString(tenXG.Bx))
+	tenXG.Fwd.Name = fmt.Sprintf("%s_%s", fqPair.Fwd.Name, bxTag)
+	tenXG.Rev.Name = fmt.Sprintf("%s_%s", fqPair.Rev.Name, bxTag)
 	return &tenXG
 }
 //trimes fastq bases and quals given a start and end position zero base
@@ -88,7 +77,6 @@ func ReadInterLeaceLoop(filename string) []*PairedEnd {
 	return answer
 }
 
-
 func fastqStats(fq *Fastq) {
 	fmt.Printf("%s\t%d\n%s\n", fq.Name, len(fq.Seq), dna.BasesToString(fq.Seq))
 }
@@ -96,7 +84,6 @@ func fastqStats(fq *Fastq) {
 func PrettyPrint(lr *LinkedRead) {
 	fmt.Printf("Read\t%s\n10xG\t%s\nUmi\t%s\n\n", lr.Fwd.Name, dna.BasesToString(lr.Bx), dna.BasesToString(lr.Umi))
 }
-
 //TODO: add a more stringent test to make sure we are trimming the reads correctly
 func isLinkedRead(lr *LinkedRead) bool {
 	if len(lr.Bx) != 16 {
@@ -107,58 +94,3 @@ func isLinkedRead(lr *LinkedRead) bool {
 	}
 	return true
 }
-/*
-func readOneHandle(line1 string, line2 string, line3 string, line4 string) (*Fastq, []dna.Base, []dna.Base) {
-	var curr Fastq
-
-	if line3 != "+" {
-		log.Fatalf("Error: This line should be a + (plus) sign \n")
-	}
-	curr = Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: []rune(line4)}
-	bx := curr.Seq[:15]
-	umi := curr.Seq[16:23]
-	curr.Seq = curr.Seq[24:]
-	return &curr, bx, umi
-}
-
-func LinkedROne(reader *fileio.EasyReader) (*Fastq, []dna.Base, []dna.Base, bool) {
-	line, done := fileio.EasyNextLine(reader)
-	line2, done2 := fileio.EasyNextLine(reader)
-	line3, done3 := fileio.EasyNextLine(reader)
-	line4, done4 := fileio.EasyNextLine(reader)
-	if done {
-		return nil, true
-	}
-	if done2 || done3 || done4 {
-		log.Fatalf("Error: There is an empty line in this fastq record\n")
-	}
-	return readOneHandle(line, line2, line3, line4), false
-}
-
-func LinkedReadToChan(readOne string, readTwo string, out chan<- *LinkedRead) {
-	var readClouds *LinkedRead
-	var done bool
-
-	fileOne := fileio.EasyOpen(readOne)
-	defer fileOne.Close()
-	fileTwo := fileio.EasyOpen(readTwo)
-	defer fileTwo.Close()
-
-	for readClouds, done = NextLinked(fileOne, fileTwo); !done; readClouds, done = NextLinked(fileOne, fileTwo) {
-		out <- readClouds
-	}
-	close(out)
-}
-
-func NextLinked(readerFwd *fileio.EasyReader, readerRev *fileio.EasyReader) (*LinkedRead, bool) {
-	curr := LinkedRead{Fwd: nil, Rev: nil, Bx: nil, Umi: nil}
-	fqOne, tenX, uniq, doneFwd := LinkedROne(readerFwd)
-	fqTwo, doneRev := NextFastq(readerRev)
-
-	curr.Fwd = fqOne
-	curr.Rev = fqTwo
-	curr.Bx = tenX
-	curr.Umi = uniq
-	return &curr, false
-}*/
-
