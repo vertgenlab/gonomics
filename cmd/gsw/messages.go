@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	//"github.com/vertgenlab/gonomics/align"
+	"flag"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simpleGraph"
-	"strings"
-	"flag"
 	"log"
 	"os"
+	"strings"
 )
+
 //Genome Graph Gonomics
 func usage() {
 	fmt.Print(
@@ -65,7 +66,7 @@ func moreHelp(cmdFlag string) {
 		alignExtend()
 	} else if strings.Contains("ggtools", cmdFlag) {
 		ggtoolsExtend()
-	} else if strings.Contains("view", cmdFlag){
+	} else if strings.Contains("view", cmdFlag) {
 		viewExtend()
 	} else {
 		errorMessage()
@@ -84,10 +85,10 @@ func alignExtend() {
 			"  -t, --threads\t\tNumber of CPUs for Goroutine concurrency (default: 4)\n" +
 			"  -l, --liftover\tConvert alignment coordinate to linear reference in sam format\n" +
 			"  -m, --matrix\t\tScores used to align matches and mismatches (default: humanChimp)\n\n")
-			//"Matrix options:\n\n" +
-			//"humanChimp:\n" + printMatrix(align.HumanChimpTwoScoreMatrix) + "\n" +
-			//"hoxD55:\n" + printMatrix(align.HoxD55ScoreMatrix) + "\n" +
-			//"mouseRat:\n" + printMatrix(align.MouseRatScoreMatrix) + "\n")
+	//"Matrix options:\n\n" +
+	//"humanChimp:\n" + printMatrix(align.HumanChimpTwoScoreMatrix) + "\n" +
+	//"hoxD55:\n" + printMatrix(align.HoxD55ScoreMatrix) + "\n" +
+	//"mouseRat:\n" + printMatrix(align.MouseRatScoreMatrix) + "\n")
 }
 
 func ggtoolsExtend() {
@@ -109,9 +110,9 @@ func viewExtend() {
 }
 
 type ViewExe struct {
-	Cmd *flag.FlagSet
+	Cmd       *flag.FlagSet
 	GirafFile string
-	SamFile string
+	SamFile   string
 }
 
 func ViewArgs() *ViewExe {
@@ -150,9 +151,3 @@ func viewAlignmentStdOut(ref string, samfile string, gF string) {
 		}
 	}
 }
-
-
-
-
-
-

@@ -1,15 +1,15 @@
 package main
-import(
 
-	"log"
-	"sync"
-	"github.com/vertgenlab/gonomics/simpleGraph"
-	"github.com/vertgenlab/gonomics/sam"
+import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/simpleGraph"
+	"log"
 	"path/filepath"
-	"time"
 	"strings"
+	"sync"
+	"time"
 )
 
 func GswToGirafPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
@@ -40,7 +40,6 @@ func GswToGirafPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string
 	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
-
 
 func WrapGirafLiftoverToSam(ref *simpleGraph.SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
 	log.SetFlags(log.Ldate | log.Ltime)

@@ -1,20 +1,20 @@
 package main
 
-import(
+import (
 	"flag"
-	"os"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
+	"os"
 	"strings"
 )
 
 type GgToolsExe struct {
-	Cmd *flag.FlagSet
+	Cmd     *flag.FlagSet
 	Axtfile string
-	Vcfs string
-	Out string
+	Vcfs    string
+	Out     string
 }
 
 func GgtoolsArgs() *GgToolsExe {
@@ -22,7 +22,7 @@ func GgtoolsArgs() *GgToolsExe {
 	ggT.Cmd.StringVar(&ggT.Axtfile, "axt", "", "axt pairwise alignment file used to create Vcfs")
 	ggT.Cmd.StringVar(&ggT.Vcfs, "vcf", "", "vcf file combined with fasta reference to make a genome graph")
 	ggT.Cmd.StringVar(&ggT.Out, "out", "/dev/stdout", "Output filename, [.gg/.vcf/.sam]")
-	
+
 	ggT.Cmd.StringVar(&ggT.Axtfile, "a", "", "axt pairwise alignment file used to create Vcfs")
 	ggT.Cmd.StringVar(&ggT.Vcfs, "v", "", "vcf file combined with fasta reference to make a genome graph")
 	ggT.Cmd.StringVar(&ggT.Out, "o", "/dev/stdout", "Output filename, [.gg/.vcf/.sam]")
@@ -44,7 +44,7 @@ func graphTools(out string, axtfile string, vcfCalls string, files []string) {
 		if strings.HasSuffix(axtfile, ".axt") {
 			axtfile := axt.Read(axtfile)
 			axt.AxtVcfToFile(out, axtfile, fa)
-		} else if (strings.HasSuffix(vcfCalls, ".vcf") || strings.HasSuffix(files[i], "vcf.gz")) {
+		} else if strings.HasSuffix(vcfCalls, ".vcf") || strings.HasSuffix(files[i], "vcf.gz") {
 			vcfs := vcf.Read(vcfCalls)
 			gg := simpleGraph.VariantGraph(fa, vcfs)
 			simpleGraph.Write(out, gg)

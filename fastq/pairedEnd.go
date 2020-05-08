@@ -64,7 +64,7 @@ func ReadPairBigToChan(readOne string, readTwo string, output chan<- *PairedEndB
 
 //TODO: rewrite logic to catch error
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*PairedEnd, bool) {
-	
+
 	fqOne, done1 := NextFastq(reader1)
 	fqTwo, done2 := NextFastq(reader2)
 	curr := PairedEnd{Fwd: nil, Rev: nil}

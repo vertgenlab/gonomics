@@ -2,18 +2,18 @@ package main
 
 import (
 
-//	"flag"
+	//	"flag"
+	"fmt"
 	"os"
-		"fmt"
 	//"strings"
 )
 
 func root(args []string) error {
 
-    if len(args) < 2 {
-        errorMessage()
-    }
-    switch os.Args[1] {
+	if len(args) < 2 {
+		errorMessage()
+	}
+	switch os.Args[1] {
 	case "align":
 		if len(os.Args) == 2 {
 			alignUsage()
@@ -30,16 +30,17 @@ func root(args []string) error {
 	default:
 		errorMessage()
 		return nil
-}
+	}
 	return fmt.Errorf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 }
 
 func main() {
-    if err := root(os.Args[1:]); err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
+	if err := root(os.Args[1:]); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
+
 /*
 func usage() {
 	fmt.Print(

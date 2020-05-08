@@ -56,7 +56,7 @@ func ReadToChan(filename string, output chan<- *SamAln) {
 }
 
 func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
-	file, _ := os.Create(filename)
+	file := fileio.MustCreate(filename)
 	defer file.Close()
 	if header != nil {
 		WriteHeaderToFileHandle(file, header)
@@ -210,7 +210,6 @@ func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader
 				i++
 			}
 		}
-
 	}
 	return &header
 }

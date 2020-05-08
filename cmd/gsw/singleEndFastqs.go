@@ -1,16 +1,17 @@
 package main
 
-import(
-	"log"
-	"sync"
-	"github.com/vertgenlab/gonomics/simpleGraph"
-	"github.com/vertgenlab/gonomics/sam"
+import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/simpleGraph"
+	"log"
 	"path/filepath"
-	"time"
 	"strings"
+	"sync"
+	"time"
 )
+
 func GswToGiraf(ref *simpleGraph.SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
 	log.Printf("Single end reads detected...\n")
 	log.Printf("Indexing the genome...\n\n")

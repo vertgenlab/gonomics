@@ -1,25 +1,25 @@
 package main
 
-import(
+import (
 	"flag"
-	"os"
 	"fmt"
-	"strings"
+	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simpleGraph"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/align"
+	"os"
+	"strings"
 )
 
 type AlignExe struct {
-	Cmd *flag.FlagSet
-	Index int
+	Cmd      *flag.FlagSet
+	Index    int
 	StepSize int
-	Cpus int
-	Matrix string
+	Cpus     int
+	Matrix   string
 	Liftover string
-	Help string
-	Out string
+	Help     string
+	Out      string
 }
 
 func Gsw() *AlignExe {
@@ -31,12 +31,12 @@ func Gsw() *AlignExe {
 
 	gsw.Cmd.IntVar(&gsw.StepSize, "window", 32, "offset position of sliding window of hash")
 	gsw.Cmd.IntVar(&gsw.StepSize, "w", 32, "offset position of sliding window of hash")
-	
+
 	gsw.Cmd.IntVar(&gsw.Cpus, "threads", 4, "Number of CPUs for goroutines")
 	gsw.Cmd.IntVar(&gsw.Cpus, "t", 4, "Number of CPUs for goroutines")
-	
-	gsw.Cmd.StringVar(&gsw.Matrix,"matrix", "humanChimp", "Scoring matrix for alignment")
-	gsw.Cmd.StringVar(&gsw.Matrix,"m", "humanChimp", "Scoring matrix for alignment")
+
+	gsw.Cmd.StringVar(&gsw.Matrix, "matrix", "humanChimp", "Scoring matrix for alignment")
+	gsw.Cmd.StringVar(&gsw.Matrix, "m", "humanChimp", "Scoring matrix for alignment")
 
 	gsw.Cmd.StringVar(&gsw.Liftover, "liftover", "", "liftover to linear reference sam file")
 	gsw.Cmd.StringVar(&gsw.Liftover, "l", "", "liftover to linear reference sam file")
@@ -46,13 +46,13 @@ func Gsw() *AlignExe {
 
 	gsw.Cmd.StringVar(&gsw.Out, "out", "/dev/stdout", "Output filename, [.gg/.vcf/.sam]")
 	gsw.Cmd.StringVar(&gsw.Out, "o", "/dev/stdout", "Output filename, [.gg/.vcf/.sam]")
-	
+
 	gsw.Cmd.Usage = alignExtend
 	return gsw
 }
 
 func RunAlignExe() error {
-	
+
 	gsw := Gsw()
 
 	Init(gsw.Cmd, os.Args[2:])

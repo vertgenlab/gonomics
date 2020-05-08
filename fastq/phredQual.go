@@ -1,8 +1,9 @@
 package fastq
 
-import(
+import (
 	"math"
 )
+
 func ToQualUint8(qual []rune) []uint8 {
 	var answer []uint8 = make([]uint8, len(qual))
 	for i := 0; i < len(qual); i++ {
