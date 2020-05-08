@@ -1,24 +1,47 @@
 package main
 
 import (
-	"bytes"
-	"flag"
+
+	//	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/axt"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/simpleGraph"
-	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 	"os"
-	"os/exec"
-	"path"
-	"path/filepath"
-	"strings"
+	//"strings"
 )
 
+func root(args []string) error {
+
+	if len(args) < 2 {
+		errorMessage()
+	}
+	switch os.Args[1] {
+	case "align":
+		if len(os.Args) == 2 {
+			alignUsage()
+		}
+		return RunAlignExe()
+	case "ggtools":
+		return RunGgTools()
+	case "view":
+		return RunViewExe()
+	case "help":
+		Init(extendHelpMsg, os.Args[2:])
+		moreHelp(os.Args[2])
+		return nil
+	default:
+		errorMessage()
+		return nil
+	}
+	return fmt.Errorf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
+}
+
+func main() {
+	if err := root(os.Args[1:]); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+/*
 func usage() {
 	fmt.Print(
 		"\nGSW - genome graph toolkit" +
@@ -238,21 +261,6 @@ func errorMessage() {
 	log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 }
 
-func selectScoreMatrix(score string) [][]int64 {
-	var scoreMatrix [][]int64
-	switch {
-	case strings.Contains(score, "humanChimp"):
-		scoreMatrix = align.HumanChimpTwoScoreMatrix
-	case strings.Contains(score, "hoxD55"):
-		scoreMatrix = align.HoxD55ScoreMatrix
-	case strings.Contains(score, "mouseRat"):
-		scoreMatrix = align.MouseRatScoreMatrix
-	case strings.Contains(score, "general"):
-		scoreMatrix = align.DefaultScoreMatrix
-	default:
-	}
-	return scoreMatrix
-}
 
 func printMatrix(m [][]int64) string {
 	var message string = ""
@@ -312,4 +320,4 @@ func kentUtils(command []string) {
 		}
 		fmt.Print(string(cmdOutput.Bytes()) + "\n")
 	}
-}
+}*/

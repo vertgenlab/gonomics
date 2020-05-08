@@ -124,7 +124,8 @@ func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 	}
 }
 
-func IndexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
+//TODO: get rid of this
+func indexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
 	}

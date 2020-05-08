@@ -31,7 +31,7 @@ func TestQuickMemPool(t *testing.T) {
 	genome := Read("testdata/mini.gg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.FastqBig, 824)
