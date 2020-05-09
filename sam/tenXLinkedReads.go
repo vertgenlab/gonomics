@@ -60,22 +60,28 @@ func bxTagWorker(reader <-chan *SamAln, writer chan<- *SamAln, wg *sync.WaitGrou
 	wg.Done()
 }
 
-func SwitchBxTagChannel(filename string, output string, threads int) {
-	//var wg sync.WaitGroup
-	header := getHeader(filename) //BarcodeHeader(filename, &wg)
+func SwitchBxTagChannel(filename string, output string) {
+	//	var wg sync.WaitGroup
+	//header := getHeader(filename) //BarcodeHeader(filename, &wg)
 	//wg.Wait()
-	reader, writer := make(chan *SamAln), make(chan *SamAln)
-	go ReadToChan(filename, reader)
-	var worker, finish sync.WaitGroup
-	worker.Add(threads)
-	for i := 0; i < threads; i++ {
-		go bxTagWorker(reader, writer, &worker)
+	//reader,
+	//	writer := make(chan *SamAln) // make(chan *SamAln)
+	//	go ReadToChan(filename, reader)
+	samFile := fileio.EasyOpen(filename)
+	defer samFile.Close()
+	header := ReadHeader(samFile)
+	//	wg.Add(1)
+	//	go SamChanToFile(writer, output, header, &wg)
+	modified := fileio.EasyCreate(output)
+	WriteHeaderToFileHandle(modified, header)
+	//var tenX *SamAln
+	for read, done := NextAlignment(samFile); done != true; read, done = NextAlignment(samFile) {
+		tenX := switchBxTag(read)
+		WriteAlnToFileHandle(modified, tenX)
 	}
-	finish.Add(1)
-	go SamChanToFile(writer, output, header, &finish)
-	worker.Wait()
-	close(writer)
-	finish.Wait()
+
+	//	close(writer)
+	//	wg.Wait()
 }
 
 func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
