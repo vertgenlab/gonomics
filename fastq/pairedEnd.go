@@ -62,28 +62,21 @@ func ReadPairBigToChan(readOne string, readTwo string, output chan<- *PairedEndB
 	close(output)
 }
 
-//TODO: rewrite logic to catch error
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*PairedEnd, bool) {
-
 	fqOne, done1 := NextFastq(reader1)
 	fqTwo, done2 := NextFastq(reader2)
-	curr := PairedEnd{Fwd: nil, Rev: nil}
 	if done1 || done2 {
 		return nil, true
 	}
 	if fqOne == nil || fqTwo == nil {
 		return nil, true
 	}
+	curr := PairedEnd{Fwd: nil, Rev: nil}
 	curr.Fwd = fqOne
 	curr.Fwd.Name = strings.Split(fqOne.Name, " ")[0]
 	curr.Rev = fqTwo
 	curr.Rev.Name = strings.Split(fqTwo.Name, " ")[0]
 	return &curr, false
-}
-
-func editName(fq *Fastq) string {
-	words := strings.Split(fq.Name, " ")
-	return words[0]
 }
 
 func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd {
