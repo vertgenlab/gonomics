@@ -39,14 +39,13 @@ func GswToGiraf(ref *simpleGraph.SimpleGraph, readOne string, output string, thr
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
 
-func WrapSingleGirafLiftover(ref *simpleGraph.SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
+func GswToSam(ref *simpleGraph.SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Paired end reads detected...\n")
 
 	log.Printf("Indexing the genome...\n\n")
 	seedHash := simpleGraph.IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
-	//log.Printf("Setting up read and write channels...\n\n")
 	fastqPipe := make(chan *fastq.FastqBig, 824)
 	samPipe := make(chan *sam.SamAln, 824)
 	go fastq.ReadBigToChan(readOne, fastqPipe)

@@ -22,7 +22,6 @@ func usage() {
 	viewUsage()
 	helpMessgae()
 	flagsPrint()
-
 }
 
 func main() {

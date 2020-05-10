@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type InitGswAlign struct {
+type GswSettings struct {
 	Cmd      *flag.FlagSet
 	Index    int
 	StepSize int
@@ -41,8 +41,8 @@ func extendedAlignUsage() {
 			"  -m, --matrix\t\tScores used to align matches and mismatches (default: humanChimp)\n\n")
 }
 
-func settingsForGsw() *InitGswAlign {
-	gsw := &InitGswAlign{Cmd: flag.NewFlagSet("align", flag.ContinueOnError)}
+func initArgsGsw() *GswSettings {
+	gsw := &GswSettings{Cmd: flag.NewFlagSet("align", flag.ExitOnError)}
 	gsw.Cmd.Usage = extendedAlignUsage
 
 	gsw.Cmd.IntVar(&gsw.Index, "index", 32, "``hash look up length")
@@ -70,7 +70,7 @@ func settingsForGsw() *InitGswAlign {
 }
 
 func RunAlignExe() {
-	gsw := settingsForGsw()
+	gsw := initArgsGsw()
 	gsw.Cmd.Parse(os.Args[2:])
 	if len(gsw.Cmd.Args()) == 0 {
 		gsw.Cmd.Usage()
@@ -100,10 +100,10 @@ func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out s
 		chrSize := chromInfo.ReadToSlice(liftover)
 		header := sam.ChromInfoSamHeader(chrSize)
 		if len(args) == 2 {
-			WrapSingleGirafLiftover(genomeGraph, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
+			GswToSam(genomeGraph, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
 		}
 		if len(args) == 3 {
-			WrapGirafLiftoverToSam(genomeGraph, readOne, readTwo, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
+			GswToSamPair(genomeGraph, readOne, readTwo, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
 		}
 	default:
 		extendedAlignUsage()

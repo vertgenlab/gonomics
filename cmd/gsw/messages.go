@@ -23,10 +23,7 @@ func helpMessgae() {
 	fmt.Printf(
 		"  help\t\tDetailed help message for any command\n")
 }
-func ggToolsUsage() {
-	fmt.Printf(
-		"  ggtools\tGenomic utilities to create, manipulate and operate on genome graphs\n")
-}
+
 func viewUsage() {
 	fmt.Printf(
 		"  view\t\tVisualize graph generated alignment\n")
@@ -53,15 +50,6 @@ func moreHelp(cmdFlag string) {
 	} else {
 		errorMessage()
 	}
-}
-
-func ggtoolsExtend() {
-	fmt.Print(
-		"Usage:\n" +
-			"  gsw ggtools [options] ref\n\n" +
-			"Options:\n" +
-			"  -v, --vcf\t\tProvide a VCF to create a graph reference (.gg) used in gsw align\n" +
-			"  -a, --axt\t\tUse axt generated from UCSC kentUtils to create a VCF\n\n")
 }
 
 func viewExtend() {
