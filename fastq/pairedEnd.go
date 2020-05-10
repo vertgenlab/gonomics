@@ -71,6 +71,9 @@ func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*Pai
 	if done1 || done2 {
 		return nil, true
 	}
+	if fqOne == nil || fqTwo == nil {
+		return nil, true
+	}
 	curr.Fwd = fqOne
 	curr.Fwd.Name = strings.Split(fqOne.Name, " ")[0]
 	curr.Rev = fqTwo
