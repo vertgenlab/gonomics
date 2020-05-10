@@ -32,9 +32,9 @@ func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne strin
 	defer samFile.Close()
 	header := sam.ReadHeader(samFile)
 
-	childOne := fileio.MustCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[0]))
+	childOne := fileio.EasyCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[0]))
 	defer childOne.Close()
-	childTwo := fileio.MustCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[1]))
+	childTwo := fileio.EasyCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parents[1]))
 	defer childTwo.Close()
 
 	sam.WriteHeaderToFileHandle(childOne, header)
@@ -56,17 +56,17 @@ func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne strin
 			case 'S':
 				query += read.Cigar[i].RunLength
 			case 'I':
-				code = secretCode(int(dict.Fa[read.RName]), int(target))
-				_, ok = snpDb[code]
-				if ok {
-					gV = snpDb[code]
-					if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[0]]].One]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[0]]].Two]) == 0 {
-						parentAllele1++
-					}
-					if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[1]]].One]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[1]]].Two]) == 0 {
-						parentAllele2++
-					}
-				}
+				/*	code = secretCode(int(dict.Fa[read.RName]), int(target))
+					_, ok = snpDb[code]
+					if ok {
+						gV = snpDb[code]
+						if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[0]]].One]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[0]]].Two]) == 0 {
+							parentAllele1++
+						}
+						if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[1]]].One]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.HapIdx[parents[1]]].Two]) == 0 {
+							parentAllele2++
+						}
+					}*/
 				query += read.Cigar[i].RunLength
 			case 'D':
 				code = secretCode(int(dict.Fa[read.RName]), int(target))

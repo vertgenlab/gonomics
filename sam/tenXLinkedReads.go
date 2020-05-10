@@ -60,30 +60,36 @@ func bxTagWorker(reader <-chan *SamAln, writer chan<- *SamAln, wg *sync.WaitGrou
 	wg.Done()
 }
 
-func SwitchBxTagChannel(filename string, output string) {
-	//	var wg sync.WaitGroup
-	//header := getHeader(filename) //BarcodeHeader(filename, &wg)
-	//wg.Wait()
-	//reader,
-	//	writer := make(chan *SamAln) // make(chan *SamAln)
-	//	go ReadToChan(filename, reader)
-	samFile := fileio.EasyOpen(filename)
-	defer samFile.Close()
-	header := ReadHeader(samFile)
-	//	wg.Add(1)
-	//	go SamChanToFile(writer, output, header, &wg)
-	modified := fileio.EasyCreate(output)
-	WriteHeaderToFileHandle(modified, header)
-	//var tenX *SamAln
-	for read, done := NextAlignment(samFile); done != true; read, done = NextAlignment(samFile) {
-		tenX := switchBxTag(read)
-		WriteAlnToFileHandle(modified, tenX)
-	}
+func SwitchBxTagChannel(filename string, output string, threads int) {
+	samfile := fileio.EasyOpen(filename)
+	defer samfile.Close()
+	header := ReadHeader(samfile)
 
-	//	close(writer)
-	//	wg.Wait()
+	var worker, toFile sync.WaitGroup
+	reader, writer := make(chan *SamAln), make(chan *SamAln)
+	go ReadToChan(samfile, reader)
+	worker.Add(threads)
+	for i := 0; i < threads; i++ {
+		go bxTagWorker(reader, writer, &worker)
+	}
+	toFile.Add(1)
+	go SamChanToFile(writer, output, header, &toFile)
+
+	worker.Wait()
+	close(writer)
+	toFile.Wait()
+
+	//	modified := fileio.EasyCreate(output)
+	//	WriteHeaderToFileHandle(modified, header)
+	//var tenX *SamAln
+	//	for read, done := NextAlignment(samFile); done != true; read, done = NextAlignment(samFile) {
+	//		tenX := switchBxTag(read)
+	//		WriteAlnToFileHandle(modified, tenX)
+	//	}
+
 }
 
+/*
 func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
 	//wg.Add(1)
 	reader := make(chan *SamAln)
@@ -104,7 +110,7 @@ func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
 	}
 	wg.Done()
 	return &header
-}
+}*/
 
 func getHeader(filename string) *SamHeader {
 	file := fileio.EasyOpen(filename)
@@ -113,7 +119,10 @@ func getHeader(filename string) *SamHeader {
 	return header
 }
 
-func TenXPrettyPrint(samfile string) {
+func TenXPrettyPrint(filename string) {
+	samfile := fileio.EasyOpen(filename)
+	defer samfile.Close()
+	ReadHeader(samfile)
 	linkedReads := make(chan *SamAln)
 	go ReadToChan(samfile, linkedReads)
 	for barcodes := range linkedReads {

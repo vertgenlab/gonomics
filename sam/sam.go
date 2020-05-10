@@ -39,15 +39,15 @@ type SamAln struct {
 	Extra string
 }
 
-func ReadToChan(filename string, output chan<- *SamAln) {
+func ReadToChan(reader *fileio.EasyReader, output chan<- *SamAln) {
 	var curr *SamAln
 	var done bool
 
-	file := fileio.EasyOpen(filename)
-	ReadHeader(file)
-	defer file.Close()
+	//file := fileio.EasyOpen(filename)
+	//ReadHeader(file)
+	//defer file.Close()
 
-	for curr, done = NextAlignment(file); done != true; curr, done = NextAlignment(file) {
+	for curr, done = NextAlignment(reader); done != true; curr, done = NextAlignment(reader) {
 		output <- curr
 	}
 	close(output)
