@@ -30,12 +30,10 @@ func GgtoolsArgs() *GgToolsExe {
 	ggT.Cmd.Usage = ggtoolsExtend
 	return ggT
 }
-func RunGgTools() error {
+func RunGgTools() {
 	ggT := GgtoolsArgs()
-	Init(ggT.Cmd, os.Args[2:])
-	tail := ggT.Cmd.Args()
-	graphTools(ggT.Out, ggT.Axtfile, ggT.Vcfs, tail)
-	return nil
+	ggT.Cmd.Parse(os.Args[2:])
+	graphTools(ggT.Out, ggT.Axtfile, ggT.Vcfs, ggT.Cmd.Args())
 }
 
 func graphTools(out string, axtfile string, vcfCalls string, files []string) {

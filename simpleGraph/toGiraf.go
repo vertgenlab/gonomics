@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-
 	"math"
 	"strings"
 )
@@ -82,11 +81,6 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
-	/*if seeds != nil {
-		tailSeed = toTail(seeds)
-		tailSeed.Next = *memoryPool
-		*memoryPool = seeds
-	}*/
 	return &currBest
 }
 
@@ -152,12 +146,6 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 		}
 	}
 	return curr
-}
-
-func GirafLiftoverToSam(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.PairedSamAln {
-	mappedPair := WrapPairGiraf(gg, readPair, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
-	toSamPair := GirafPairToSam(mappedPair)
-	return toSamPair
 }
 
 func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {

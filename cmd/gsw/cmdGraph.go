@@ -1,87 +1,65 @@
 package main
 
 import (
-
-	//	"flag"
+	"flag"
 	"fmt"
 	"os"
-	//"strings"
 )
 
-func root(args []string) error {
+//Genome Graph Gonomics
+func usage() {
+	fmt.Print(
+		"GSW - Graph Smith Waterman:\n\nGonomics Genome Graph Software\n" +
+			"Author: Eric Au \teric.au@duke.edu\n\tCraig Lowe\tcraig.lowe@duke.edu\n\n" +
+			"Source code: https://github.com/vertgenlab/gonomics\n" +
+			"Documents: https://github.com/edotau/sticklebackCipher\n\n" +
+			"Version: 0.1.0\n\n" +
+			"Usage:\n" +
+			"  gsw [options]\n\n" +
+			"Options:\n")
+	alignUsage()
+	ggToolsUsage()
+	viewUsage()
+	helpMessgae()
+	flagsPrint()
 
-	if len(args) < 2 {
-		errorMessage()
-	}
-	switch os.Args[1] {
-	case "align":
-		if len(os.Args) == 2 {
-			alignUsage()
-		}
-		return RunAlignExe()
-	case "ggtools":
-		return RunGgTools()
-	case "view":
-		return RunViewExe()
-	case "help":
-		Init(extendHelpMsg, os.Args[2:])
-		moreHelp(os.Args[2])
-		return nil
-	default:
-		errorMessage()
-		return nil
-	}
-	return fmt.Errorf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 }
 
+func main() {
+	flag.Usage = usage
+	if len(os.Args) < 2 {
+		usage()
+	} else {
+		switch os.Args[1] {
+		case "align":
+			if len(os.Args) == 2 { //2 ./gsw align, this catch makes it equivalent to gsw align -h includes the name first command
+				alignUsage()
+				extendedAlignUsage()
+			} else {
+				RunAlignExe()
+			}
+		case "ggtools":
+			RunGgTools()
+		case "view":
+			RunViewExe()
+		case "help":
+			extendHelpMsg.Parse(os.Args[2:])
+			moreHelp(os.Args[2])
+		default:
+			errorMessage()
+		}
+	}
+}
+
+/*
 func main() {
 	if err := root(os.Args[1:]); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
+}*/
 
 /*
-func usage() {
-	fmt.Print(
-		"\nGSW - genome graph toolkit" +
-			"\nusage:\n" +
-			"\t./gsw [options] ref.fa/.gg\n" +
-			"options:\n" +
-			"\t--align\n" +
-			"\t\tGraph-Smith-Waterman: align fastqs to genome graph\n" +
-			"\t\t./gsw --align --out align.sam ref.gg R1.fastq.gz R2.fastq.gz\n" +
-			"\t--ggTools\n" +
-			"\t\tCreate genome graph reference w/ vcf file\n" +
-			"\t\t./gsw --ggTools --vcf input.vcf --out ref.gg ref.fa\n" +
-			"\t--view\n" +
-			"\t\tVisualize alignment /dev/stdout\n" +
-			"\t\t./gsw --view alignToGraph.sam ref.gg\n" +
-			"\t--options\n" +
-			"\t\tNeed more help? See advanced user options:\n" +
-			"\t\t./gsw --options [align/ggTools/view]\n\n")
-}
-func needHelp(cmdName string) {
-	var answer string = "" //usage:\n\t//gsw [options] ref.fa/.gg R1.fastq.gz R2.fastq.gz\noptions:\n"
-	if strings.Compare(cmdName, "align") == 0 {
-		answer += "GSW - genome graph toolkit:\n\n" +
-			"Graph-Smith-Waterman:\n\n" + "usage:" +
-			"\t./gsw --align [options] ref.gg R1.fastq.gz R2.fastq.gz\n\n" +
-			"\t--seed\tdefault: 32\n" +
-			"\t\t\tseedLen kMer for creating hash look up reference genome\n" +
-			"\t\t\t> kMer: slower alignment, better mapping\n" +
-			"\t\t\t< kMer: faster alignment, but higher change of unmapped reads\n" +
-			"\t\t\tbetween 2 and 32\n\n" +
-			"\t--step\t\tdefault: 32\n" +
-			"\t\t\toffset position of sliding window of hash\n\n" +
-			"\t--score\t\thumanChimp:\n\t\t" + printMatrix(align.HumanChimpTwoScoreMatrix) + "\n" +
-			"\t\t\thoxD55:\n\t\t" + printMatrix(align.HoxD55ScoreMatrix) + "\n" +
-			"\t\t\tmouseRat:\n\t\t" + printMatrix(align.MouseRatScoreMatrix) + "\n" +
-			"\t--cpus\t\tdefault: 4\n" +
-			"\t\t\tnumber of CPUs to use\n\n" +
-			"\t--liftover\tprovide a chrom sizes file\n" +
-			"\t\t\tconvert alignment coordinates to linear reference in sam format\n\n"
-
 	} else if strings.Compare(cmdName, "ggTools") == 0 {
 		answer += "\nggTools: utilities to create, manipulate and operate on genome graphs\n" +
 			"\nTo create genome graph reference w/ vcf file:\n" +
@@ -116,157 +94,6 @@ func needHelp(cmdName string) {
 	fmt.Print(answer)
 }
 
-//WORK IN PROGRESS
-func main() {
-	var tagAxt *string = flag.String("axt", "", "axt alignment file")
-	var vcfTag *string = flag.String("vcf", "", "vcf file")
-	var outTag *string = flag.String("out", "/dev/stdout", "final output, .vcf/.gg/.sam")
-	var alignFlag *bool = flag.Bool("align", false, "in.fastq out.sam")
-	var threads *int = flag.Int("cpus", 4, "Number of threads or CPUs to use")
-	var kMerHash *int = flag.Int("seed", 32, "Seed length used for indexing the reference genome")
-	var stepSize *int = flag.Int("step", 32, "step size for building hash")
-	var view *string = flag.String("view", "", "visualize sam alignment")
-	var moreHelp *string = flag.String("options", "", "advanced user options")
-	var splitChr *bool = flag.Bool("split", false, "splits graph output by chromosomes")
-	var chrPrefix *string = flag.String("name", "genomeGraph", "basename for .gg file, split by chromosome")
-	var ggTools *bool = flag.Bool("ggTools", false, "genome graph tools")
-	var mergeSam *bool = flag.Bool("merge", false, "merge split sam files back into one")
-	var score *string = flag.String("score", "humanChimp", "choose a scoring matrix")
-	var fa *bool = flag.Bool("fa", false, "converts graph back to fa")
-	var liftover *string = flag.String("liftover", "", "liftover to linear reference sam file")
-
-	var slurmScript *bool = flag.Bool("slurm", false, "submit gsw command as a slurm job")
-	var kent *bool = flag.Bool("kent", false, "run a kentUtils through GSW")
-
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime)
-	flag.Parse()
-	if *moreHelp != "" {
-		needHelp(*moreHelp)
-	} else {
-		if len(flag.Args()) == 0 {
-			flag.Usage()
-			errorMessage()
-		}
-	}
-	if *slurmScript && *ggTools && !*splitChr {
-		slurm()
-	} else if *ggTools && *kent {
-		kentUtils(flag.Args())
-	} else {
-		if *alignFlag {
-			log.Printf("Reading reference genome...\n")
-			ref := simpleGraph.Read(flag.Arg(0))
-			//header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL:%s", strings.Join(os.Args, " ")))
-			//user provides single end reads
-			if len(flag.Args()) == 2 {
-				if strings.HasSuffix(*liftover, ".sizes") {
-					chrSize := chromInfo.ReadToSlice(*liftover)
-					header := sam.ChromInfoSamHeader(chrSize)
-					simpleGraph.WrapSingleGirafLiftover(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score), header)
-				} else {
-					simpleGraph.GswToGiraf(ref, flag.Arg(1), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score))
-				}
-			} else if len(flag.Args()) == 3 {
-				//user provides paired end reads
-				if strings.HasSuffix(*liftover, ".sizes") {
-					chrSize := chromInfo.ReadToSlice(*liftover)
-					header := sam.ChromInfoSamHeader(chrSize)
-					header.Text = append(header.Text, fmt.Sprintf("@PG\tID:GSW\tPN:ggTools\tVN:1130\tCL:%s", strings.Join(os.Args, " ")))
-					simpleGraph.WrapGirafLiftoverToSam(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score), header)
-				} else {
-					simpleGraph.GswToGirafPair(ref, flag.Arg(1), flag.Arg(2), *outTag, *threads, *kMerHash, *stepSize, selectScoreMatrix(*score))
-				}
-			}
-		}
-		if *ggTools && strings.HasSuffix(*tagAxt, ".axt") {
-			if *outTag != "" {
-				axtFile := axt.Read(*tagAxt)
-				fa := fasta.Read(flag.Arg(0))
-				axt.AxtVcfToFile(*outTag, axtFile, fa)
-			}
-		}
-		if *ggTools && (strings.HasSuffix(*vcfTag, ".vcf") || strings.HasSuffix(*vcfTag, ".gz")) {
-			vcfs := vcf.Read(*vcfTag)
-			if strings.HasSuffix(flag.Arg(0), ".fa") {
-				fa := fasta.Read(flag.Arg(0))
-				if *splitChr {
-					log.Printf("VCF to graph, split into chromosomes...\n")
-					ggChr := simpleGraph.SplitGraphChr(fa, vcfs)
-					if *slurmScript && strings.Contains(flag.Arg(1), ".fastq") {
-						var readOne string = filepath.Base(strings.TrimSuffix(flag.Arg(1), path.Ext(flag.Arg(1))))
-						gswCommand := fmt.Sprintf(" --wrap=\"./gsw --align --k 16 --t 8 --out %s_", readOne)
-						var currCmd string
-						var echo string
-						for chr := range ggChr {
-							log.Printf("Writing graph %s to file...\n", chr)
-							splitRefName := fmt.Sprintf("%s_%s.gg", chr, *outTag)
-							simpleGraph.Write(splitRefName, ggChr[chr])
-
-							currCmd = gswCommand + fmt.Sprintf("to_%s_%s.sam %s %s", chr, *outTag, splitRefName, flag.Arg(1))
-							if len(flag.Args()) == 3 {
-								currCmd += fmt.Sprintf(" %s", flag.Arg(2))
-							}
-							currCmd += "\""
-							args := []string{"--mem=16G", "--nodes=1", "--ntasks=1", "--cpus-per-task=8", "--mail-type=END,FAIL", "--mail-user=eric.au@duke.edu"}
-							args = append(args, currCmd)
-							log.Printf("\n\nSlurm job submission:\n")
-							echo = "sbatch " + strings.Join(args, " ")
-							log.Printf("\n\n%s\n\n", echo)
-							cmd := exec.Command("sbatch", args...)
-							cmdOutput := &bytes.Buffer{}
-							cmd.Stdout = cmdOutput
-							err := cmd.Run()
-							if err != nil {
-								os.Stderr.WriteString(err.Error())
-							}
-							fmt.Print(string(cmdOutput.Bytes()))
-						}
-					} else {
-						simpleGraph.WriteToGraphSplit(*chrPrefix, ggChr)
-					}
-				} else {
-					gg := simpleGraph.VariantGraph(fa, vcfs)
-					simpleGraph.Write(*outTag, gg)
-				}
-			} else {
-				errorMessage()
-			}
-		}
-		if *ggTools && *fa {
-			gg := simpleGraph.Read(flag.Arg(0))
-
-			f := simpleGraph.GraphToFa(gg)
-			fasta.Write(*outTag, f)
-
-		}
-		if *ggTools && *mergeSam {
-			sam.ReadFiles(flag.Args(), *outTag)
-		}
-		if strings.HasSuffix(*view, ".sam") {
-			log.SetFlags(log.Ldate | log.Ltime)
-			if strings.HasSuffix(flag.Arg(0), ".gg") || strings.HasSuffix(flag.Arg(0), ".fa") {
-				gg := simpleGraph.Read(flag.Arg(0))
-				samfile, _ := sam.Read(*view)
-				for _, samline := range samfile.Aln {
-					log.Printf("%s\n", simpleGraph.ViewGraphAlignment(samline, gg))
-				}
-
-			}
-		}
-	}
-}
-
-func errorMessage() {
-	log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
-}
-
-
-func printMatrix(m [][]int64) string {
-	var message string = ""
-	message += fmt.Sprintf("\t %d\t%d\t%d\t%d\n\t\t\t%d\t%d\t%d\t%d\n\t\t\t%d\t%d\t%d\t%d\n\t\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
-	return message
-}
 
 //TODO: Will remove to a personal script
 func slurm() {
@@ -295,29 +122,4 @@ func slurm() {
 	}
 	fmt.Print(string(cmdOutput.Bytes()) + "\n")
 }
-
-//TODO: Will remove to a personal script
-func kentUtils(command []string) {
-	dir := "/Users/edotau/kentUtils/"
-	if len(command) == 0 {
-		cmd := exec.Command("ls", dir)
-		cmdOutput := &bytes.Buffer{}
-		cmd.Stdout = cmdOutput
-		err := cmd.Run()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-		}
-		fmt.Print(string(cmdOutput.Bytes()))
-	} else {
-		dir += command[0]
-		var args []string = command[1:]
-		cmd := exec.Command(dir, args...)
-		cmdOutput := &bytes.Buffer{}
-		cmd.Stdout = cmdOutput
-		err := cmd.Run()
-		if err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-		}
-		fmt.Print(string(cmdOutput.Bytes()) + "\n")
-	}
 }*/

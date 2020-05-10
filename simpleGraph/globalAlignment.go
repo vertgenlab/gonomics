@@ -17,7 +17,6 @@ func nmMatrixSetup(size int64) ([][]int64, [][]rune) {
 }
 
 func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar) {
-
 	var i, j, routeIdx int
 	for i = 0; i < len(alpha)+1; i++ {
 		for j = 0; j < len(beta)+1; j++ {

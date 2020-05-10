@@ -4,12 +4,13 @@ import (
 	"math"
 )
 
+// SAM format uses ascii offset of 33 to make everything start with individual characters
+// without adding 33 you get values like spaces and newlines
+const asciiOffset uint8 = 33
+
 func ToQualUint8(qual []rune) []uint8 {
 	var answer []uint8 = make([]uint8, len(qual))
 	for i := 0; i < len(qual); i++ {
-		// SAM format uses ascii offset of 33 to make everything start with individual characters
-		// without adding 33 you get values like spaces and newlines
-		var asciiOffset uint8 = 33
 		answer[i] = uint8(qual[i]) - asciiOffset
 	}
 	return answer
@@ -24,12 +25,8 @@ func ReverseQualUint8Record(qualScore []uint8) {
 func Uint8QualToString(qual []uint8) string {
 	var answer []rune = make([]rune, len(qual))
 	for i := 0; i < len(qual); i++ {
-		// SAM format uses ascii offset of 33 to make everything start with individual characters
-		// without adding 33 you get values like spaces and newlines
-		var asciiOffset uint8 = 33
 		answer[i] = rune(qual[i] + asciiOffset)
 	}
-
 	return string(answer)
 }
 
