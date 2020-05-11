@@ -1,13 +1,11 @@
 package axt
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -34,14 +32,14 @@ func Read(filename string) []*Axt {
 	var hDone, rDone, qDone, bDone bool
 	var words []string
 
-	file := fileio.MustOpen(filename)
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	reader := bufio.NewReader(file)
+	
 
-	for header, hDone = fileio.NextRealLine(reader); !hDone; header, hDone = fileio.NextRealLine(reader) {
-		rSeq, rDone = fileio.NextRealLine(reader)
-		qSeq, qDone = fileio.NextRealLine(reader)
-		blank, bDone = fileio.NextRealLine(reader)
+	for header, hDone = fileio.EasyNextRealLine(file); !hDone; header, hDone = fileio.EasyNextRealLine(file) {
+		rSeq, rDone = fileio.EasyNextRealLine(file)
+		qSeq, qDone = fileio.EasyNextRealLine(file)
+		blank, bDone = fileio.EasyNextRealLine(file)
 		if rDone || qDone || bDone {
 			log.Fatalf("Error: lines in %s, must be a multiple of four\n", filename)
 		}
@@ -87,14 +85,14 @@ func Read(filename string) []*Axt {
 	return answer
 }
 
-func WriteToFileHandle(file *os.File, input *Axt, alnNumber int) {
+func WriteToFileHandle(file *fileio.EasyWriter, input *Axt, alnNumber int) {
 	strand := common.StrandToRune(input.QStrandPos)
 	_, err := fmt.Fprintf(file, "%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", alnNumber, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, strand, input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 	common.ExitIfError(err)
 }
 
 func Write(filename string, data []*Axt) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	for i, _ := range data {

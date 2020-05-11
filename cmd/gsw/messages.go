@@ -23,7 +23,8 @@ func helpMessage() {
 	fmt.Printf(
 		"  help\t\tDetailed help message for any command\n")
 }
-
+//TODO: finish implementing view function.
+//it works, but we need to figure outan easy way to run the command
 func viewUsage() {
 	fmt.Printf(
 		"  view\t\tVisualize graph generated alignment\n")
@@ -31,8 +32,8 @@ func viewUsage() {
 func flagsPrint() {
 	fmt.Print(
 		"\nFlags:\n" +
-			"  -h, --help\t\tEnter gsw --help [align/ggtools/view] for detailed information\n" +
-			"  -o, --out\t\tFilename[.gg/.vcf/.gz/.sam]  (default: /dev/stdout)\n\n")
+			"  -h, --help\t\tEnter gsw --help [align/ggtools/view] for detailed information\n\n")
+			//"  -o, --out\t\tFilename[.gg/.vcf/.gz/.sam]  (default: /dev/stdout)\n\n")
 	//"  -t, --threads\t\tNumber of CPUs for goroutines  (default: 4)\n\n")
 }
 
