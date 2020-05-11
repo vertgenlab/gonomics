@@ -34,8 +34,6 @@ func Read(filename string) []*Axt {
 
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	//file := bufio.NewReader(file)
-
 	for header, hDone = fileio.EasyNextRealLine(file); !hDone; header, hDone = fileio.EasyNextRealLine(file) {
 		rSeq, rDone = fileio.EasyNextRealLine(file)
 		qSeq, qDone = fileio.EasyNextRealLine(file)
