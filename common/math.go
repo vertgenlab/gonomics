@@ -22,10 +22,18 @@ func StringToFloat64(s string) float64 {
 	return n
 }
 
+func StringToInt16(s string) int16 {
+	n, err := strconv.ParseUint(s, 10, 16)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a int16\n", s)
+	}
+	return int16(n)
+}
+
 func StringToInt32(s string) int32 {
 	n, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
-		log.Fatalf("Error: trouble converting %s to a uint32\n", s)
+		log.Fatalf("Error: trouble converting %s to a int32\n", s)
 	}
 	return int32(n)
 }
@@ -52,6 +60,14 @@ func StringToUint32(s string) uint32 {
 		log.Fatalf("Error: trouble converting %s to a uint32\n", s)
 	}
 	return uint32(n)
+}
+
+func StringToUint8(s string) uint8 {
+	n, err := strconv.ParseUint(s, 10, 8)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint8\n", s)
+	}
+	return uint8(n)
 }
 
 func Max(a int, b int) int {

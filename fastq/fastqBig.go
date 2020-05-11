@@ -10,7 +10,7 @@ type FastqBig struct {
 	Name      string
 	Seq       []dna.Base
 	SeqRc     []dna.Base
-	Qual      []rune
+	Qual      []uint8
 	Rainbow   []*dnaTwoBit.TwoBit
 	RainbowRc []*dnaTwoBit.TwoBit
 }

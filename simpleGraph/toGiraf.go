@@ -8,12 +8,8 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 	"math"
-	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 )
 
 func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *giraf.Giraf {
@@ -27,7 +23,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		AlnScore:  0,
 		MapQ:      255,
 		Seq:       read.Seq,
-		Qual:      giraf.ToQualUint8(read.Qual),
+		Qual:      read.Qual,
 		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 	}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
@@ -83,13 +79,8 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		}
 	}
 	if !currBest.PosStrand {
-		giraf.ReverseQualUint8Record(currBest.Qual)
+		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
-	/*if seeds != nil {
-		tailSeed = toTail(seeds)
-		tailSeed.Next = *memoryPool
-		*memoryPool = seeds
-	}*/
 	return &currBest
 }
 
@@ -129,125 +120,6 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
-func GswToGiraf(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
-	log.Printf("Paired end reads detected...\n")
-
-	log.Printf("Indexing the genome...\n\n")
-	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	var wgAlign, wgWrite sync.WaitGroup
-
-	fastqPipe := make(chan *fastq.FastqBig, 824)
-	girafPipe := make(chan *giraf.Giraf, 824)
-	go fastq.ReadBigToChan(readOne, fastqPipe)
-	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
-	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
-	wgAlign.Add(threads)
-	log.Printf("Aligning %s to genome graph...", strings.Split(filepath.Base(readOne), ".")[0])
-	start := time.Now()
-	for i := 0; i < threads; i++ {
-		go routineFqToGiraf(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, girafPipe, &wgAlign)
-	}
-	wgWrite.Add(1)
-	go giraf.GirafChanToFile(output, girafPipe, &wgWrite)
-	wgAlign.Wait()
-	stop := time.Now()
-	close(girafPipe)
-	wgWrite.Wait()
-	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
-	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
-}
-
-//TODO: wrapper functions for gsw exe, will move out of simple graph package
-//      once some functions are changed from private to global.
-func GswToGirafPair(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {
-	log.Printf("Paired end reads detected...\n")
-
-	log.Printf("Indexing the genome...\n\n")
-	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	var wgAlign, wgWrite sync.WaitGroup
-
-	fastqPipe := make(chan *fastq.PairedEndBig, 824)
-	girafPipe := make(chan *giraf.GirafPair, 824)
-	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
-	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
-	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
-	wgAlign.Add(threads)
-
-	log.Printf("Aligning %s and %s to genome graph...", strings.Split(filepath.Base(readOne), ".")[0], strings.Split(filepath.Base(readTwo), ".")[0])
-	start := time.Now()
-	for i := 0; i < threads; i++ {
-		go routineFqPairToGiraf(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, girafPipe, &wgAlign)
-	}
-	wgWrite.Add(1)
-	go giraf.GirafPairChanToFile(output, girafPipe, &wgWrite)
-	wgAlign.Wait()
-	stop := time.Now()
-	close(girafPipe)
-	wgWrite.Wait()
-	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
-	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
-}
-
-func WrapSingleGirafLiftover(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
-	log.SetFlags(log.Ldate | log.Ltime)
-	log.Printf("Paired end reads detected...\n")
-
-	log.Printf("Indexing the genome...\n\n")
-	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	var wgAlign, wgWrite sync.WaitGroup
-	//log.Printf("Setting up read and write channels...\n\n")
-	fastqPipe := make(chan *fastq.FastqBig, 824)
-	samPipe := make(chan *sam.SamAln, 824)
-	go fastq.ReadBigToChan(readOne, fastqPipe)
-
-	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
-	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
-	wgAlign.Add(threads)
-	log.Printf("Aligning sequence to genome graph...")
-	start := time.Now()
-	for i := 0; i < threads; i++ {
-		go routineGirafToSamSingle(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
-	}
-	wgWrite.Add(1)
-	go sam.SamChanToFile(samPipe, output, header, &wgWrite)
-	wgAlign.Wait()
-	stop := time.Now()
-	close(samPipe)
-	wgWrite.Wait()
-	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
-	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
-}
-
-func WrapGirafLiftoverToSam(ref *SimpleGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
-	log.SetFlags(log.Ldate | log.Ltime)
-	log.Printf("Paired end reads detected...\n")
-
-	log.Printf("Indexing the genome...\n\n")
-	seedHash := indexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
-	var wgAlign, wgWrite sync.WaitGroup
-	//log.Printf("Setting up read and write channels...\n\n")
-	fastqPipe := make(chan *fastq.PairedEndBig, 824)
-	samPipe := make(chan *sam.PairedSamAln, 824)
-	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
-
-	log.Printf("Scoring matrix used:\n%s\n", viewMatrix(scoreMatrix))
-	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
-	wgAlign.Add(threads)
-	log.Printf("Aligning sequence to genome graph...")
-	start := time.Now()
-	for i := 0; i < threads; i++ {
-		go routineGirafToSam(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
-	}
-	wgWrite.Add(1)
-	go sam.SamChanPairToFile(samPipe, output, header, &wgWrite)
-	wgAlign.Wait()
-	stop := time.Now()
-	close(samPipe)
-	wgWrite.Wait()
-	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
-	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
-}
-
 func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *giraf.GirafPair {
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
 	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
@@ -255,61 +127,8 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 	return &mappedPair
 }
 
-//Goroutine worker functions
-func routineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *giraf.Giraf, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	/*memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])*/
-	for read := range inputChan {
-		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
-	}
-	wg.Done()
-}
-
-func routineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan *fastq.PairedEndBig, output chan<- *giraf.GirafPair, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	/*memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])*/
-	for read := range input {
-		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
-	}
-	wg.Done()
-}
-
-func routineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	/*memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])*/
-	for read := range inputChan {
-		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace))
-	}
-	wg.Done()
-}
-
-func routineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.PairedEndBig, outputChan chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	/*memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])*/
-	for read := range inputChan {
-		outputChan <- GirafLiftoverToSam(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
-	}
-	wg.Done()
-}
-
 func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
-	curr := &sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: giraf.Uint8QualToString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+	curr := &sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.Uint8QualToString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
 	//read is unMapped
 	if strings.Compare(ag.Notes[0].Value, "~") == 0 {
 		return curr
@@ -327,12 +146,6 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 		}
 	}
 	return curr
-}
-
-func GirafLiftoverToSam(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.PairedSamAln {
-	mappedPair := WrapPairGiraf(gg, readPair, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
-	toSamPair := GirafPairToSam(mappedPair)
-	return toSamPair
 }
 
 func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {

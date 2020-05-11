@@ -6,7 +6,7 @@ import (
 
 func ReverseComplement(record *Fastq) {
 	dna.ReverseComplement(record.Seq)
-	reverseQualRecord(record.Qual)
+	ReverseQualUint8Record(record.Qual)
 }
 
 func ReverseComplementAll(records []*Fastq) {
