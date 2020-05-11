@@ -13,7 +13,7 @@ func usage() {
 			"Author: Eric Au\n\tCraig Lowe\n\n" +
 			"Vertebrate Genetics Laboratory: http://www.vertgenlab.org\n" +
 			"Source code: https://github.com/vertgenlab/gonomics\n" +
-			"Documents: https://github.com/edotau/sticklebackCipher\n\n" +
+			"Documents: https://github.com/vertgenlab/vglDocumentation\n\n" +
 			"Version: 0.1.0\n\n" +
 			"Usage:\n" +
 			"  gsw [options]\n\n" +

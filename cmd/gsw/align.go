@@ -35,9 +35,9 @@ func extendedAlignUsage() {
 			"  ref[.gg/.fa]\t\tReference genome: acceptes both fasta and graph formats\n\n" +
 			"Options:\n" +
 			"  -i, --index\t\tKmer length for index hash look up  (default: 32)\n" +
-			"  -w, --window\t\tOffset sliding window step size for hash set up (default 32)\n" +
+			"  -s, --step\t\tOffset sliding window step size for hash set up (default 32)\n" +
 			"  -t, --threads\t\tNumber of CPUs for Goroutine concurrency (default: 4)\n" +
-			"  -l, --liftover\tConvert alignment coordinate to linear reference in sam format\n" +
+			"  -p, --project\t\tConvert alignment coordinate to linear reference in sam format\n" +
 			"  -m, --matrix\t\tScores used to align matches and mismatches (default: humanChimp)\n\n")
 }
 
@@ -78,7 +78,7 @@ func RunAlignExe() {
 		graphSmithWaterman(gsw.Index, gsw.StepSize, gsw.Cpus, gsw.Matrix, gsw.Out, gsw.Liftover, gsw.Cmd.Args())
 	}
 }
-
+//TODO: add check for too many args or an implementation for multiple fastq pairs
 func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out string, liftover string, args []string) {
 	//should be at most 3 args to add to the input, reference, readOne and/or readTwo
 	var genomeGraph *simpleGraph.SimpleGraph = simpleGraph.Read(args[0])

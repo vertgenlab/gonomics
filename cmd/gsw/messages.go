@@ -23,7 +23,8 @@ func helpMessage() {
 	fmt.Printf(
 		"  help\t\tDetailed help message for any command\n")
 }
-
+//TODO: finish implementing view function.
+//it works, but we need to figure outan easy way to run the command
 func viewUsage() {
 	fmt.Printf(
 		"  view\t\tVisualize graph generated alignment\n")
