@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/sam"
 	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
@@ -27,9 +27,9 @@ func samCoverage(samFileName string, noGapFileName string, outFile string) {
 func usage() {
 	fmt.Print(
 		"samCoverage - Calculates genome coverage as the quotient of aligned bases in a sequencing dataset to the total length of ungapped genomic regions in the reference genome.\n" +
-		"Usage:\n" +
-		"samCoverage input.sam nogap.bed outfile.txt\n" +
-		"options:\n")
+			"Usage:\n" +
+			"samCoverage input.sam nogap.bed outfile.txt\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -48,7 +48,6 @@ func main() {
 	samFileName := flag.Arg(0)
 	noGapFileName := flag.Arg(1)
 	outFile := flag.Arg(2)
-
 
 	samCoverage(samFileName, noGapFileName, outFile)
 }

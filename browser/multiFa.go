@@ -1,14 +1,13 @@
 package browser
 
 import (
-	"log"
+	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"fmt"
+	"log"
 	"unicode/utf8"
-
 )
 
 func MultiFaVisualizer(infile string, outfile string, start int64, end int64, noMask bool, lineLength int64) {
@@ -19,7 +18,7 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 	var stop int
 	records := fasta.Read(infile)
 
-	if noMask{
+	if noMask {
 		fasta.AllToUpper(records)
 	}
 
@@ -83,4 +82,3 @@ func calculateLongestName(f []*fasta.Fasta) int {
 	}
 	return ans
 }
-

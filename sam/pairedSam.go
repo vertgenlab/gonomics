@@ -15,7 +15,9 @@ type PairedSamAln struct {
 func SamChanPairToFile(incomingSams <-chan *PairedSamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
 	file, _ := os.Create(filename)
 	defer file.Close()
-	WriteHeaderToFileHandle(file, header)
+	if header != nil {
+		WriteHeaderToFileHandle(file, header)
+	}
 	for alignedRead := range incomingSams {
 		WriteAlnPairToFileHandle(file, alignedRead)
 	}

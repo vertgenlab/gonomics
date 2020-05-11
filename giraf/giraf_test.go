@@ -19,7 +19,7 @@ func TestReadAndWrite(t *testing.T) {
 		QEnd:      2020,
 		PosStrand: true,
 		Path:      girafPath,
-		Aln:       []*cigar.Cigar{{int64(5), 'M'}},
+		Aln:       []*cigar.Cigar{{int64(5), 'M', nil}},
 		AlnScore:  110335,
 		MapQ:      5,
 		Seq:       dna.StringToBases("ATGCG"),

@@ -6,6 +6,60 @@ import (
 	"strings"
 )
 
+func Filter(v *Vcf, chrom string, minPos int64, maxPos int64, ref string, alt string, minQual float64) bool {
+	if !FilterRange(v, minPos, maxPos) {
+		return false
+	}
+	if !FilterChrom(v, chrom) {
+		return false
+	}
+	if !FilterRef(v, ref) {
+		return false
+	}
+	if !FilterAlt(v, alt) {
+		return false
+	}
+	if !FilterQual(v, minQual) {
+		return false
+	}
+	return true
+}
+
+func FilterQual(v *Vcf, minQual float64) bool {
+	if v.Qual < minQual {
+		return false
+	}
+	return true
+}
+
+func FilterAlt(v *Vcf, alt string) bool {
+	if alt != "" && v.Alt != alt {
+		return false
+	}
+	return true
+}
+
+func FilterRef(v *Vcf, ref string) bool {
+	if ref != "" && v.Ref != ref {
+		return false
+	}
+	return true
+}
+
+func FilterRange(v *Vcf, minPos int64, maxPos int64) bool {
+	if v.Pos < minPos || v.Pos > maxPos {
+		return false
+	}
+	return true
+}
+
+func FilterChrom(v *Vcf, chrom string) bool {
+	if chrom != "" && v.Chr != chrom {
+		return false
+	}
+	return true
+}
+
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
 	var answer []*Vcf
@@ -33,8 +87,8 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 
 func FilterNs(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
-	for i := 0; i < len(vcfs);i++ {
-		if (!strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N")) {
+	for i := 0; i < len(vcfs); i++ {
+		if !strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N") {
 			answer = append(answer, vcfs[i])
 		}
 	}

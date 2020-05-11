@@ -30,6 +30,9 @@ func RuneToBase(r rune) Base {
 		return n
 	case '-':
 		return Gap
+	//VCF uses star to denote a deleted allele
+	case '*':
+		return Gap
 	case '.':
 		return Dot
 	default:

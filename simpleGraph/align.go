@@ -10,7 +10,7 @@ import (
 )
 
 //Uses small mem pool
-func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
+func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget int
@@ -21,14 +21,16 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
-	var seeds *SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
-	SortSeedDevListByTotalLen(&seeds)
+	var seeds []*SeedDev
+	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
 	var seedScore int64
 	var currSeq []dna.Base
 	var currSeed *SeedDev
-	for currSeed = seeds; currSeed != nil && seedCouldBeBetterScores(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), scoreMatrix); currSeed = currSeed.Next {
+	//for currSeed = seeds; currSeed != nil && seedCouldBeBetterScores(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), scoreMatrix); currSeed = currSeed.Next {
+	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
 			currSeq = read.Seq
@@ -68,11 +70,11 @@ func GraphSmithWaterman(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
-	if seeds != nil {
+	/*if seeds != nil {
 		tailSeed = toTail(seeds)
 		tailSeed.Next = *memoryPool
 		*memoryPool = seeds
-	}
+	}*/
 	return &currBest
 }
 
@@ -118,14 +120,18 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 	extension := int(perfectScore/600) + len(read.Seq)
-	var seeds *SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix, memoryPool)
-	SortSeedDevListByTotalLen(&seeds)
+	var seeds []*SeedDev
+	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
 	var seedScore int64
 	var currSeq []dna.Base
 	var currSeed *SeedDev
-	for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+	//log.Printf("Seeds found are:\n")
+	//printSeedDev(seeds)
+	//for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
 			currSeq = read.Seq
@@ -168,11 +174,11 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
-	if seeds != nil {
+	/*if seeds != nil {
 		tailSeed = toTail(seeds)
 		tailSeed.Next = *memoryPool
 		*memoryPool = seeds
-	}
+	}*/
 	return &currBest
 }
 
@@ -400,13 +406,13 @@ func indexGenome(genome []*Node, seedLen int) map[uint64][]uint64 {
 
 		for pos = 0; pos < len(genome[chromIdx].Seq)-seedLen+1; pos++ {
 			seqCode = dnaToNumber(genome[chromIdx].Seq, pos, pos+seedLen)
-			answer[seqCode] = append(answer[seqCode], chromAndPosToNumber(chromIdx, pos))
+			answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(chromIdx, pos))
 		}
 	}
 	return answer
 }
 
-func chromAndPosToNumber(chrom int, start int) uint64 {
+func ChromAndPosToNumber(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
 	var answer uint64 = chromCode | uint64(start)
