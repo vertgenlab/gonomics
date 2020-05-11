@@ -27,9 +27,11 @@ func ggtoolsExtend() {
 	fmt.Print(
 		"Usage:\n" +
 			"  gsw ggtools [options] ref\n\n" +
+			"Required:\n" +
+			"  Fasta reference\n\n" +
 			"Options:\n" +
-			"  -v, --vcf\t\tProvide a VCF to create a graph reference (.gg) used in gsw align\n" +
-			"  -a, --axt\t\tUse axt generated from UCSC kentUtils to create a VCF\n\n")
+			"  -v, --vcf\tProvide a VCF to create a graph reference (.gg) used in gsw align\n\t\t\tExample:  gsw ggtools -v variance.vcf.gz -o variance.gg ref.fa\n" +
+			"  -a, --axt\tUse axt generated from UCSC kentUtils to create a VCF\n\t\t\tExample:  gsw ggtools -a nettedChains.axt -o globalAlign.vcf.gz ref.fa\n\n")
 }
 
 func initGgtoolsArgs() *GgToolsSettings {
@@ -48,7 +50,11 @@ func initGgtoolsArgs() *GgToolsSettings {
 func RunGgTools() {
 	ggT := initGgtoolsArgs()
 	ggT.Cmd.Parse(os.Args[2:])
-	graphTools(ggT.Out, ggT.Axtfile, ggT.Vcfs, ggT.Cmd.Args())
+	if len(os.Args) == 2 {
+		ggT.Cmd.Usage()
+	} else {
+		graphTools(ggT.Out, ggT.Axtfile, ggT.Vcfs, ggT.Cmd.Args())
+	}
 }
 
 func graphTools(out string, axtfile string, vcfCalls string, files []string) {
@@ -57,7 +63,7 @@ func graphTools(out string, axtfile string, vcfCalls string, files []string) {
 		if strings.HasSuffix(axtfile, ".axt") {
 			axtfile := axt.Read(axtfile)
 			axt.AxtVcfToFile(out, axtfile, fa)
-		} else if strings.HasSuffix(vcfCalls, ".vcf") || strings.HasSuffix(files[i], "vcf.gz") {
+		} else if strings.HasSuffix(vcfCalls, ".vcf") || strings.HasSuffix(vcfCalls, "vcf.gz") {
 			vcfs := vcf.Read(vcfCalls)
 			gg := simpleGraph.VariantGraph(fa, vcfs)
 			simpleGraph.Write(out, gg)
