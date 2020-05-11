@@ -3,6 +3,7 @@ package dna
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"log"
 )
 
 func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount int, aCount int, cCount int, gCount int, tCount int, nCount int, gapCount int) {
