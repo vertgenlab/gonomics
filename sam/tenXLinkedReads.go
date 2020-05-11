@@ -36,19 +36,8 @@ func customNoteToString(n *giraf.Note) string {
 }
 
 func switchBxTag(samfile *SamAln) *SamAln {
-	//bxTag := LinkedReadsBarcode(samfile)
-	//read := samfile.QName
 	samfile.Extra = fmt.Sprintf("RX:Z:%s\t%s", samfile.QName, samfile.Extra)
 	samfile.QName = LinkedReadsBarcode(samfile) //fmt.Sprintf("%s", bxTag)
-	//infoMap := BarcodeInfoMap(samfile)
-	//tags := fmt.Sprintf("\tXR:Z:%s", samfile.RName)
-	//for keys := range infoMap {
-	//	if keys == "BX" {
-	//		bxTag := fmt.Sprintf("%s_%s", infoMap[keys].Tag, infoMap[keys].Value[:len(infoMap[keys].Value)-2])
-	//samfile.RName, samfile.RNext  = bxTag, bxTag
-	//	}
-	//}
-	//samfile.Extra = tags
 	return samfile
 
 }
@@ -74,19 +63,9 @@ func SwitchBxTagChannel(filename string, output string, threads int) {
 	}
 	toFile.Add(1)
 	go SamChanToFile(writer, output, header, &toFile)
-
 	worker.Wait()
 	close(writer)
 	toFile.Wait()
-
-	//	modified := fileio.EasyCreate(output)
-	//	WriteHeaderToFileHandle(modified, header)
-	//var tenX *SamAln
-	//	for read, done := NextAlignment(samFile); done != true; read, done = NextAlignment(samFile) {
-	//		tenX := switchBxTag(read)
-	//		WriteAlnToFileHandle(modified, tenX)
-	//	}
-
 }
 
 /*
@@ -128,7 +107,6 @@ func TenXPrettyPrint(filename string) {
 	for barcodes := range linkedReads {
 		if !IsForwardRead(barcodes) {
 			fmt.Printf("%s\t%s\t%s\t%s\n", barcodes.RName, barcodes.QName, LinkedReadsBarcode(barcodes), cigar.ToString(barcodes.Cigar))
-			//fmt.Printf("%s\n", )
 		} else {
 
 		}

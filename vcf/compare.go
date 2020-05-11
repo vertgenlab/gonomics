@@ -69,3 +69,15 @@ func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
 	}
 	return true
 }
+
+func sameRecord(a *Vcf, b *Vcf) bool {
+	if isEqual(a, b) {
+		return true
+	}
+	if strings.Compare(a.Chr, b.Chr) == 0 && a.Pos == b.Pos {
+		if strings.Compare(a.Ref, b.Ref) == 0 && strings.Compare(a.Alt, b.Alt) == 0 {
+			return true
+		}
+	}
+	return false
+}
