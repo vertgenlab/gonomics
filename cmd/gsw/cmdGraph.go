@@ -9,8 +9,9 @@ import (
 //Genome Graph Gonomics
 func usage() {
 	fmt.Print(
-		"GSW - Graph Smith Waterman:\n\nGonomics Genome Graph Software\n" +
-			"Author: Eric Au \teric.au@duke.edu\n\tCraig Lowe\tcraig.lowe@duke.edu\n\n" +
+		"GSW - Graph Smith Waterman:\n\nGenome Graph Software\n" +
+			"Author: Eric Au\n\tCraig Lowe\n\n" +
+			"Vertebrate Genetics Laboratory: http://www.vertgenlab.org\n" +
 			"Source code: https://github.com/vertgenlab/gonomics\n" +
 			"Documents: https://github.com/edotau/sticklebackCipher\n\n" +
 			"Version: 0.1.0\n\n" +
@@ -20,7 +21,7 @@ func usage() {
 	alignUsage()
 	ggToolsUsage()
 	viewUsage()
-	helpMessgae()
+	helpMessage()
 	flagsPrint()
 }
 

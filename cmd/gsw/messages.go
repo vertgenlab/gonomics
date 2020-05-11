@@ -19,7 +19,7 @@ type ViewExe struct {
 
 var extendHelpMsg *flag.FlagSet = flag.NewFlagSet("help", flag.ExitOnError)
 
-func helpMessgae() {
+func helpMessage() {
 	fmt.Printf(
 		"  help\t\tDetailed help message for any command\n")
 }
