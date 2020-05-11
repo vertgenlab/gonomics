@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="2f84f194-b9de-41ba-ab92-b0430fabe196" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../dna/examine.go" beforeDir="false" afterPath="$PROJECT_DIR$/../../dna/examine.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../tree/draw.go" beforeDir="false" afterPath="$PROJECT_DIR$/../../tree/draw.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../tree/tree.go" beforeDir="false" afterPath="$PROJECT_DIR$/../../tree/tree.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" path="/usr/local/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectId" id="1aM2PdQwUBAwOtWYN9Nv8TlGIMp" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+  </component>
+  <component name="RunManager">
+    <configuration name="go build drawNewickTree.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="newickToTree" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <kind value="FILE" />
+      <filePath value="$PROJECT_DIR$/drawNewickTree.go" />
+      <package value="github.com/vertgenlab/gonomics/cmd/newickToTree" />
+      <directory value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build drawNewickTree.go" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2f84f194-b9de-41ba-ab92-b0430fabe196" name="Default Changelist" comment="" />
+      <created>1586531119288</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1586531119288</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="2217" y="190" key="#Inspections" timestamp="1586534140953">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2217" y="190" key="#Inspections/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586534140953" />
+    <state x="2430" y="248" key="#com.intellij.ide.util.MemberChooser" timestamp="1586532369959">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2430" y="248" key="#com.intellij.ide.util.MemberChooser/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586532369959" />
+    <state x="2337" y="278" key="#com.intellij.tools.ToolEditorDialog" timestamp="1586549036603">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2337" y="278" key="#com.intellij.tools.ToolEditorDialog/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586549036603" />
+    <state x="2312" y="160" key="#go_build_drawNewickTree.go" timestamp="1586549970636">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2312" y="160" key="#go_build_drawNewickTree.go/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586549970636" />
+    <state width="1358" height="249" key="GridCell.Tab.0.bottom" timestamp="1586550040853">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state width="1358" height="249" key="GridCell.Tab.0.bottom/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586550040853" />
+    <state width="1358" height="249" key="GridCell.Tab.0.center" timestamp="1586550040853">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state width="1358" height="249" key="GridCell.Tab.0.center/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586550040853" />
+    <state width="1358" height="249" key="GridCell.Tab.0.left" timestamp="1586550040853">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state width="1358" height="249" key="GridCell.Tab.0.left/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586550040853" />
+    <state width="1358" height="249" key="GridCell.Tab.0.right" timestamp="1586550040853">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state width="1358" height="249" key="GridCell.Tab.0.right/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586550040853" />
+    <state x="2076" y="128" key="SettingsEditor" timestamp="1587085073688">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2076" y="128" key="SettingsEditor/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1587085073688" />
+    <state x="2282" y="263" key="search.everywhere.popup" timestamp="1586531331231">
+      <screen x="1680" y="23" width="1920" height="1057" />
+    </state>
+    <state x="2282" y="263" key="search.everywhere.popup/1680.23.1920.1057/0.23.1680.972@1680.23.1920.1057" timestamp="1586531331231" />
+  </component>
+</project>
