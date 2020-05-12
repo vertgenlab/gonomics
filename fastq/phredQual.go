@@ -30,16 +30,16 @@ func Uint8QualToString(qual []uint8) string {
 	return string(answer)
 }
 
-func PhredToPError(ascii rune) float32 {
-	q := float64(ascii) - 33
+func PhredToPError(baseQual uint8) float32 {
+	q := float64(baseQual)
 	p := math.Pow(10, -q/10)
 	return float32(p)
 }
 
-func ErrorRate(ASCII []rune) []float32 {
-	var answer []float32 = make([]float32, len(ASCII))
-	for i := 0; i < len(ASCII); i++ {
-		answer[i] = PhredToPError(ASCII[i])
+func ErrorRate(baseQual []uint8) []float32 {
+	var answer []float32 = make([]float32, len(baseQual))
+	for i := 0; i < len(baseQual); i++ {
+		answer[i] = PhredToPError(baseQual[i])
 	}
 	return answer
 }
