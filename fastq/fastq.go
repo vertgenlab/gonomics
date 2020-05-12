@@ -7,20 +7,12 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"math"
 )
 
 type Fastq struct {
 	Name string
 	Seq  []dna.Base
-	Qual []rune
-}
-
-func Copy(a *Fastq) *Fastq {
-	var answer Fastq = Fastq{Name: a.Name, Seq: make([]dna.Base, len(a.Seq)), Qual: make([]rune, len(a.Qual))}
-	copy(answer.Seq, a.Seq)
-	copy(answer.Qual, a.Qual)
-	return &answer
+	Qual []uint8
 }
 
 func Read(filename string) []*Fastq {
@@ -44,12 +36,27 @@ func ReadToChan(filename string, output chan<- *Fastq) {
 	close(output)
 }
 
+func Write(filename string, records []*Fastq) {
+	file := fileio.EasyCreate(filename)
+	defer file.Close()
+	WriteToFileHandle(file, records)
+}
+
+func WriteToFileHandle(file io.Writer, fq []*Fastq) error {
+	var err error
+	for i := 0; i < len(fq); i++ {
+		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Name, dna.BasesToString(fq[i].Seq), "+", Uint8QualToString(fq[i].Qual))
+		common.ExitIfError(err)
+	}
+	return err
+}
+
 func processFastqRecord(line1 string, line2 string, line3 string, line4 string) *Fastq {
 	var curr Fastq
 	if line3 != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
-	curr = Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: []rune(line4)}
+	curr = Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQualUint8([]rune(line4))}
 	return &curr
 }
 
@@ -77,18 +84,11 @@ func ReadFastqs(er *fileio.EasyReader) []*Fastq {
 	return answer
 }
 
-func PhredToPError(ascii rune) float32 {
-	q := float64(ascii) - 33
-	p := math.Pow(10, -q/10)
-	return float32(p)
-}
-
-func ErrorRate(ASCII []rune) []float32 {
-	var answer []float32 = make([]float32, len(ASCII))
-	for i := 0; i < len(ASCII); i++ {
-		answer[i] = PhredToPError(ASCII[i])
-	}
-	return answer
+func Copy(a *Fastq) *Fastq {
+	var answer Fastq = Fastq{Name: a.Name, Seq: make([]dna.Base, len(a.Seq)), Qual: make([]uint8, len(a.Qual))}
+	copy(answer.Seq, a.Seq)
+	copy(answer.Qual, a.Qual)
+	return &answer
 }
 
 func PrintFastq(fq []*Fastq) {
@@ -98,19 +98,4 @@ func PrintFastq(fq []*Fastq) {
 		quality := string(fq[i].Qual)
 		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 	}
-}
-
-func Write(filename string, records []*Fastq) {
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	WriteToFileHandle(file, records)
-}
-
-func WriteToFileHandle(file io.Writer, fq []*Fastq) error {
-	var err error
-	for i := 0; i < len(fq); i++ {
-		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Name, dna.BasesToString(fq[i].Seq), "+", string(fq[i].Qual))
-		common.ExitIfError(err)
-	}
-	return err
 }
