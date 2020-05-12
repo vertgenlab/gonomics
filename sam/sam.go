@@ -42,11 +42,6 @@ type SamAln struct {
 func ReadToChan(reader *fileio.EasyReader, output chan<- *SamAln) {
 	var curr *SamAln
 	var done bool
-
-	//file := fileio.EasyOpen(filename)
-	//ReadHeader(file)
-	//defer file.Close()
-
 	for curr, done = NextAlignment(reader); done != true; curr, done = NextAlignment(reader) {
 		output <- curr
 	}
