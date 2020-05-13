@@ -1,8 +1,7 @@
 package simpleGraph
 
 func GetSortOrder(g *SimpleGraph) []uint32 {
-	answer := breadthFirstSearch(g.Nodes)
-	return answer
+	return breadthFirstSearch(g.Nodes)
 }
 
 func breadthFirstSearch(nodes []*Node) []uint32 {
