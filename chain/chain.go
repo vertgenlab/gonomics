@@ -5,28 +5,31 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"sync"
 	"strings"
+	"sync"
 )
 
 type Chain struct {
-	Score         int
-	TName         string
-	TSize         int
-	TStrand       bool
-	TStart        int
-	TEnd          int
-	QName         string
-	QSize         int
-	QStrand       bool
-	QStart        int
-	QEnd          int
-	Data          []*Ungapped
-	LastUnGapSize int
-	Id            int
+	Score     int
+	TName     string
+	TSize     int
+	TStrand   bool
+	TStart    int
+	TEnd      int
+	QName     string
+	QSize     int
+	QStrand   bool
+	QStart    int
+	QEnd      int
+	Alignment *Ungapped
+	Id        int
 }
 
 type Ungapped struct {
+	Data []*Diff
+}
+
+type Diff struct {
 	Size  int
 	TDiff int
 	QDiff int
@@ -48,14 +51,13 @@ func Read(filename string) ([]*Chain, *FileComments) {
 }
 
 func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
-	//answer := make(chan *Chain)
 	for data, err := NextChain(reader); !err; data, err = NextChain(reader) {
 		answer <- data
 	}
 	close(answer)
 }
 
-func ChanToFile(filename string, chaining <- chan *Chain, comments *FileComments, wg *sync.WaitGroup) {
+func ChanToFile(filename string, chaining <-chan *Chain, comments *FileComments, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	if comments != nil {
@@ -64,10 +66,11 @@ func ChanToFile(filename string, chaining <- chan *Chain, comments *FileComments
 	for data := range chaining {
 		WriteChain(file, data)
 	}
+	wg.Done()
 }
 
 func WriteComments(file *fileio.EasyWriter, comments *FileComments) {
-	for _,each := range comments.HashTag {
+	for _, each := range comments.HashTag {
 		_, err := fmt.Fprintf(file, "%s\n", each)
 		common.ExitIfError(err)
 	}
@@ -90,12 +93,12 @@ func SaveComments(er *fileio.EasyReader) *FileComments {
 	return &commments
 }
 
-func ChainToString(block *Chain) string {
-	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", block.Score, block.TName, block.TSize, common.StrandToRune(block.TStrand), block.TStart, block.TEnd, block.QName, block.QSize, common.StrandToRune(block.QStrand), block.QStart, block.QEnd, block.Id)
-	for i := 0; i < len(block.Data); i++ {
-		answer += fmt.Sprintf("%d\t%d\t%d\n", block.Data[i].Size, block.Data[i].TDiff, block.Data[i].QDiff)
+func ChainToString(ch *Chain) string {
+	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	for i := 0; i < len(ch.Alignment.Data)-1; i++ {
+		answer += fmt.Sprintf("%d\t%d\t%d\n", ch.Alignment.Data[i].Size, ch.Alignment.Data[i].TDiff, ch.Alignment.Data[i].QDiff)
 	}
-	answer = fmt.Sprintf("%s%d\n\n", answer, block.LastUnGapSize)
+	answer = fmt.Sprintf("%s%d\n\n", answer, ch.Alignment.Data[len(ch.Alignment.Data)-1].Size)
 	return answer
 }
 
@@ -105,7 +108,7 @@ func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 		return nil, true
 	}
 	answer := NewChain(header)
-	answer.Data, answer.LastUnGapSize = GatherUngapped(reader)
+	answer.Alignment = chainingHelper(reader)
 	return answer, false
 }
 
@@ -114,40 +117,49 @@ func NewChain(text string) *Chain {
 	if len(data) != 13 {
 		log.Fatalf("Error: header line needs to contain 13 data fields\n")
 	}
-	var curr Chain
-	curr.Score = common.StringToInt(data[1])
-	curr.TName = data[2]
-	curr.TSize = common.StringToInt(data[3])
-	curr.TStrand = common.StringToStrand(data[4])
-	curr.TStart, curr.TEnd = common.StringToInt(data[5]), common.StringToInt(data[6])
-	curr.QName = data[7]
-	curr.QSize = common.StringToInt(data[8])
-	curr.QStrand = common.StringToStrand(data[9])
-	curr.QStart, curr.QEnd = common.StringToInt(data[10]), common.StringToInt(data[11])
-	curr.Id = common.StringToInt(data[12])
-	return &curr
+	curr := &Chain{
+		Score:   common.StringToInt(data[1]),
+		TName:   data[2],
+		TSize:   common.StringToInt(data[3]),
+		TStrand: common.StringToStrand(data[4]),
+		TStart:  common.StringToInt(data[5]),
+		TEnd:    common.StringToInt(data[6]),
+		QName:   data[7],
+		QSize:   common.StringToInt(data[8]),
+		QStrand: common.StringToStrand(data[9]),
+		QStart:  common.StringToInt(data[10]),
+		QEnd:    common.StringToInt(data[11]),
+		Id:      common.StringToInt(data[12]),
+	}
+	return curr
 }
 
-func GatherUngapped(reader *fileio.EasyReader) ([]*Ungapped, int) {
+func chainingHelper(reader *fileio.EasyReader) *Ungapped {
 	var line string
 	var data []string
-	var answer []*Ungapped
-	var lastBlock int
+	var answer Ungapped
+	var curr *Diff
 	for nextBytes, err := reader.Peek(1); nextBytes[0] != 0 && err == nil; nextBytes, err = reader.Peek(1) {
 		line, _ = fileio.EasyNextRealLine(reader)
 		data = strings.Split(line, "\t")
-		curr := Ungapped{}
 		if len(data) == 1 {
-			lastBlock = common.StringToInt(data[0])
+			curr = &Diff{
+				Size:  common.StringToInt(data[0]),
+				TDiff: 0,
+				QDiff: 0,
+			}
+			answer.Data = append(answer.Data, curr)
 			line, _ = fileio.EasyNextRealLine(reader)
 			break
 		}
 		if len(data) == 3 {
-			curr.Size = common.StringToInt(data[0])
-			curr.TDiff = common.StringToInt(data[1])
-			curr.QDiff = common.StringToInt(data[2])
-			answer = append(answer, &curr)
+			curr = &Diff{
+				Size:  common.StringToInt(data[0]),
+				TDiff: common.StringToInt(data[1]),
+				QDiff: common.StringToInt(data[2]),
+			}
+			answer.Data = append(answer.Data, curr)
 		}
 	}
-	return answer, lastBlock
+	return &answer
 }
