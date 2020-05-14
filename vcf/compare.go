@@ -1,7 +1,6 @@
 package vcf
 
 import (
-	"log"
 	"sort"
 	"strings"
 )
@@ -71,13 +70,14 @@ func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
 	return true
 }
 
-func LogEqual(alpha []*Vcf, beta []*Vcf) {
-	if len(alpha) != len(beta) {
-		log.Fatalf("len=%v and len=%v are not equal\n", len(alpha), len(beta))
+func sameRecord(a *Vcf, b *Vcf) bool {
+	if isEqual(a, b) {
+		return true
 	}
-	for i := 0; i < len(alpha); i++ {
-		if !isEqual(alpha[i], beta[i]) {
-			log.Fatalf("%v and %v are not equal\n", alpha[i], beta[i])
+	if strings.Compare(a.Chr, b.Chr) == 0 && a.Pos == b.Pos {
+		if strings.Compare(a.Ref, b.Ref) == 0 && strings.Compare(a.Alt, b.Alt) == 0 {
+			return true
 		}
 	}
+	return false
 }

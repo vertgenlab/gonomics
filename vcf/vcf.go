@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -49,15 +48,15 @@ func Read(filename string) []*Vcf {
 }
 
 func GoReadToChan(filename string) <-chan *Vcf {
-	output := make(chan *Vcf)
-	go ReadToChan(filename, output)
-	return output
-}
-
-func ReadToChan(filename string, output chan<- *Vcf) {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 	ReadHeader(file)
+	output := make(chan *Vcf)
+	go ReadToChan(file, output)
+	return output
+}
+
+func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 	var curr *Vcf
 	var done bool
 	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
@@ -76,14 +75,14 @@ func processVcfLine(line string) *Vcf {
 		//these lines are sequences, and we are not recording them
 	case len(line) == 0:
 		//blank line
-	case len(data) >= 9:
+	case len(data) >= 10:
 		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
 		if strings.Compare(data[5], ".") == 0 {
 			curr.Qual = 255
 		} else {
 			curr.Qual = common.StringToFloat64(data[5])
 		}
-		if len(data) > 9 {
+		if len(data) > 10 {
 			curr.Notes = strings.Join(data[9:], "\t")
 		}
 	default:
@@ -149,7 +148,7 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteHeader(file *os.File) {
+func WriteHeader(file *fileio.EasyWriter) {
 	var err error
 	header := MakeHeader()
 	for h := 0; h < len(header); h++ {
@@ -158,7 +157,7 @@ func WriteHeader(file *os.File) {
 	common.ExitIfError(err)
 }
 
-func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
+func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
 	var err error
 	header := BetterHeader(fa)
 	for h := 0; h < len(header); h++ {
@@ -168,13 +167,13 @@ func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
 }
 
 func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	WriteBetterHeader(file, fa)
 	WriteVcfToFileHandle(file, data)
 }
 
-func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
+func WriteVcfToFileHandle(file *fileio.EasyWriter, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
 		if input[i].Notes == "" {
@@ -186,7 +185,7 @@ func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	}
 }
 
-func WriteVcf(file *os.File, input *Vcf) {
+func WriteVcf(file *fileio.EasyWriter, input *Vcf) {
 	var err error
 	if input.Notes == "" {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
@@ -197,7 +196,7 @@ func WriteVcf(file *os.File, input *Vcf) {
 }
 
 func Write(filename string, data []*Vcf) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	WriteHeader(file)
 	WriteVcfToFileHandle(file, data)
@@ -217,7 +216,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 
 func PrintSingleLine(data *Vcf) {
 	var err error
-	file := fileio.MustCreate("/dev/stdout")
+	file := fileio.EasyCreate("/dev/stdout")
 	defer file.Close()
 	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 	common.ExitIfError(err)

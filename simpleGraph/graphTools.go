@@ -66,17 +66,17 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				currMatch = lastMatch
 				//assuming we already created the ref allele, we only need to create
 				//the alt alleles this iteration
-				if isSNP(vcfsChr[i]) {
+				if vcf.Snp(vcfsChr[i]) {
 					altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 1}}
 					AddNode(genome, altAllele)
 					AddEdge(currMatch, altAllele, 0.5)
-				} else if isINS(vcfsChr[i]) {
+				} else if vcf.Ins(vcfsChr[i]) {
 					insertion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 2}}
 					AddNode(genome, insertion)
 					AddEdge(currMatch, insertion, 1)
 
 					index = vcfsChr[i].Pos - 1
-				} else if isDEL(vcfsChr[i]) {
+				} else if vcf.Del(vcfsChr[i]) {
 					deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref)[1:], Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 3}}
 					AddNode(genome, deletion)
 					AddEdge(currMatch, deletion, 1)
@@ -85,7 +85,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 					} else {
 						index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 					}
-				} else if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
+				} else if strings.Compare(vcfsChr[i].Info, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Info, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Info, "SVTYPE=HAP") == 0 {
 					altAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 					AddNode(genome, altAllele)
 					AddEdge(currMatch, altAllele, 1)
@@ -93,7 +93,6 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				}
 				lastMatch = currMatch
 			} else if len(currMatch.Seq) > 0 {
-
 				AddNode(genome, currMatch)
 				if lastMatch != nil {
 					if len(lastMatch.Next) > 0 {
@@ -102,14 +101,14 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 						}
 					}
 					if i > 0 {
-						if isSNP(vcfsChr[i-1]) || isHaplotypeBlock(vcfsChr[i-1]) {
+						if vcf.Snp(vcfsChr[i-1]) || isHaplotypeBlock(vcfsChr[i-1]) {
 							AddEdge(altAllele, currMatch, 1)
 						}
 					}
 					AddEdge(lastMatch, currMatch, 1)
 					SetEvenWeights(lastMatch)
 				}
-				if isSNP(vcfsChr[i]) {
+				if vcf.Snp(vcfsChr[i]) {
 
 					refAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 1}}
 					AddNode(genome, refAllele)
@@ -122,7 +121,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 					currMatch = refAllele
 					index = vcfsChr[i].Pos
 					for j = i + 1; j < len(vcfsChr)-1; j++ {
-						if isSNP(vcfsChr[j-1]) && isSNP(vcfsChr[j]) && vcfsChr[j].Pos-1 == vcfsChr[j-1].Pos {
+						if vcf.Snp(vcfsChr[j-1]) && vcf.Snp(vcfsChr[j]) && vcfsChr[j].Pos-1 == vcfsChr[j-1].Pos {
 							refAllele.Seq = append(refAllele.Seq, dna.StringToBases(vcfsChr[j].Ref)...)
 							altAllele.Seq = append(altAllele.Seq, dna.StringToBases(vcfsChr[j].Alt)...)
 							index = vcfsChr[j].Pos
@@ -132,13 +131,13 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 							break
 						}
 					}
-				} else if isINS(vcfsChr[i]) {
+				} else if vcf.Ins(vcfsChr[i]) {
 					//currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Ref)...)
 					insertion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 2}}
 					AddNode(genome, insertion)
 					AddEdge(currMatch, insertion, 1)
 					index = vcfsChr[i].Pos - 1
-				} else if isDEL(vcfsChr[i]) {
+				} else if vcf.Del(vcfsChr[i]) {
 					//TODO: does not deal with ends of large deletions well, might contain extra sequence towards the end.
 					//currMatch.Seq = append(currMatch.Seq, dna.StringToBases(vcfsChr[i].Alt)...)
 					deletion := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: uint32(vcfsChr[i].Pos), Variant: 3}}
@@ -184,7 +183,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	for edge = 0; edge < len(lastMatch.Next); edge++ {
 		AddEdge(lastMatch.Next[edge].Dest, lastNode, 1)
 	}
-	if isSNP(vcfsChr[len(vcfsChr)-2]) || isHaplotypeBlock(vcfsChr[len(vcfsChr)-2]) {
+	if vcf.Snp(vcfsChr[len(vcfsChr)-2]) || isHaplotypeBlock(vcfsChr[len(vcfsChr)-2]) {
 		AddEdge(altAllele, lastNode, 1)
 	}
 	AddEdge(lastMatch, lastNode, 1)
@@ -244,38 +243,6 @@ func isINV(v *vcf.Vcf) bool {
 	var truth bool = false
 	data := strings.Split(v.Info, ";")
 	if strings.Compare(v.Alt, "<INV>") == 0 || strings.Compare(data[0], "SVTYPE=INV") == 0 {
-		truth = true
-	}
-	return truth
-}
-
-func isSNP(v *vcf.Vcf) bool {
-	var truth bool = false
-	if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-		truth = true
-	}
-	return truth
-}
-
-func isINS(v *vcf.Vcf) bool {
-	var truth bool = false
-	//data := strings.Split(v.Info, ";")
-	if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-		truth = true
-	}
-	if strings.Contains(v.Info, "SVTYPE=INS") {
-		truth = true
-	}
-	return truth
-}
-
-func isDEL(v *vcf.Vcf) bool {
-	var truth bool = false
-	//data := strings.Split(v.Info, ";")
-	if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
-		truth = true
-	}
-	if strings.Contains(v.Info, "SVTYPE=DEL") {
 		truth = true
 	}
 	return truth
@@ -379,7 +346,7 @@ func createINS(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
 }
 
 func isHaplotypeBlock(v *vcf.Vcf) bool {
-	if strings.Compare(v.Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(v.Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(v.Format, "SVTYPE=HAP") == 0 {
+	if strings.Compare(v.Info, "SVTYPE=SNP;INS") == 0 || strings.Compare(v.Info, "SVTYPE=SNP;DEL") == 0 || strings.Compare(v.Info, "SVTYPE=HAP") == 0 {
 		return true
 	} else {
 		return false
