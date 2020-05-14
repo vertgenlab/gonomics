@@ -5,12 +5,12 @@ import (
 	"log"
 	"strings"
 	"testing"
-)
-
+) /*
+//TODO: Only debugging prints, need to come up with a better test function
 func Test10xBarcode(t *testing.T) {
 	TenXPrettyPrint("testdata/tenXbarcodeTest.sam")
-}
-
+}*/
+//TODO hard code this into a small toy example
 func TestReadingBarcode(t *testing.T) {
 	log.SetFlags(log.Ltime)
 	reader := make(chan *SamAln)
