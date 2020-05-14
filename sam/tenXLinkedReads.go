@@ -1,12 +1,11 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/giraf"
-	"strings"
-	//"github.com/vertgenlab/gonomics/dna"
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"strings"
 	"sync"
 )
 
@@ -21,11 +20,13 @@ func BarcodeInfoMap(samfile *SamAln) map[string]*giraf.Note {
 	return answer
 }
 
-func LinkedReadsBarcode(samfile *SamAln) string {
-	barcodeInfo := BarcodeInfoMap(samfile)
-	_, ok := barcodeInfo["BX"]
+//Barcodes corrected for sequence errors are taged BX, while uncorrected barcodes are labeled RX
+//BX tags do not exist for all reads
+func LinkedReadsBarcode(samLine *SamAln) string {
+	barcodeInfo := BarcodeInfoMap(samLine)
+	data, ok := barcodeInfo["BX"]
 	if ok {
-		return customNoteToString(barcodeInfo["BX"])
+		return customNoteToString(data)
 	} else {
 		return customNoteToString(barcodeInfo["RX"])
 	}
@@ -35,60 +36,21 @@ func customNoteToString(n *giraf.Note) string {
 	return fmt.Sprintf("%s_%s", n.Tag, n.Value[:len(n.Value)-2])
 }
 
-func switchBxTag(samfile *SamAln) *SamAln {
-	//bxTag := LinkedReadsBarcode(samfile)
-	//read := samfile.QName
-	samfile.Extra = fmt.Sprintf("RX:Z:%s\t%s", samfile.QName, samfile.Extra)
-	samfile.QName = LinkedReadsBarcode(samfile) //fmt.Sprintf("%s", bxTag)
-	//infoMap := BarcodeInfoMap(samfile)
-	//tags := fmt.Sprintf("\tXR:Z:%s", samfile.RName)
-	//for keys := range infoMap {
-	//	if keys == "BX" {
-	//		bxTag := fmt.Sprintf("%s_%s", infoMap[keys].Tag, infoMap[keys].Value[:len(infoMap[keys].Value)-2])
-	//samfile.RName, samfile.RNext  = bxTag, bxTag
-	//	}
-	//}
-	//samfile.Extra = tags
-	return samfile
+func switchBxTag(samLine *SamAln) *SamAln {
+	samLine.Extra = fmt.Sprintf("RX:Z:%s\t%s", samLine.QName, samLine.Extra)
+	samLine.QName = LinkedReadsBarcode(samLine) //fmt.Sprintf("%s", bxTag)
+	return samLine
 
 }
 
-func bxTagWorker(reader <-chan *SamAln, writer chan<- *SamAln, wg *sync.WaitGroup) {
+func BxTagWorker(reader <-chan *SamAln, writer chan<- *SamAln, wg *sync.WaitGroup) {
 	for align := range reader {
 		writer <- switchBxTag(align)
 	}
 	wg.Done()
 }
 
-func SwitchBxTagChannel(filename string, output string, threads int) {
-	samfile := fileio.EasyOpen(filename)
-	defer samfile.Close()
-	header := ReadHeader(samfile)
-
-	var worker, toFile sync.WaitGroup
-	reader, writer := make(chan *SamAln), make(chan *SamAln)
-	go ReadToChan(samfile, reader)
-	worker.Add(threads)
-	for i := 0; i < threads; i++ {
-		go bxTagWorker(reader, writer, &worker)
-	}
-	toFile.Add(1)
-	go SamChanToFile(writer, output, header, &toFile)
-
-	worker.Wait()
-	close(writer)
-	toFile.Wait()
-
-	//	modified := fileio.EasyCreate(output)
-	//	WriteHeaderToFileHandle(modified, header)
-	//var tenX *SamAln
-	//	for read, done := NextAlignment(samFile); done != true; read, done = NextAlignment(samFile) {
-	//		tenX := switchBxTag(read)
-	//		WriteAlnToFileHandle(modified, tenX)
-	//	}
-
-}
-
+//TODO modify a header containing BX barcodes as "reference"
 /*
 func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
 	//wg.Add(1)
@@ -112,13 +74,6 @@ func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
 	return &header
 }*/
 
-func getHeader(filename string) *SamHeader {
-	file := fileio.EasyOpen(filename)
-	header := ReadHeader(file)
-	defer file.Close()
-	return header
-}
-
 func TenXPrettyPrint(filename string) {
 	samfile := fileio.EasyOpen(filename)
 	defer samfile.Close()
@@ -128,9 +83,6 @@ func TenXPrettyPrint(filename string) {
 	for barcodes := range linkedReads {
 		if !IsForwardRead(barcodes) {
 			fmt.Printf("%s\t%s\t%s\t%s\n", barcodes.RName, barcodes.QName, LinkedReadsBarcode(barcodes), cigar.ToString(barcodes.Cigar))
-			//fmt.Printf("%s\n", )
-		} else {
-
 		}
 	}
 }
