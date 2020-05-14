@@ -2,11 +2,11 @@ package vcf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/bed"
 	"log"
 	"strings"
 )
@@ -66,7 +66,7 @@ func FilterChrom(v *Vcf, chrom string) bool {
 }
 
 func VcfOverlap(alpha *Vcf, beta *Vcf) bool {
-	if common.MaxInt64(alpha.Pos-1, beta.Pos-1) < common.MinInt64(int64(len(dna.StringToBases(alpha.Ref))), int64(len(dna.StringToBases(beta.Ref)))) && strings.Compare(alpha.Chr, beta.Chr) == 0{
+	if common.MaxInt64(alpha.Pos-1, beta.Pos-1) < common.MinInt64(int64(len(dna.StringToBases(alpha.Ref))), int64(len(dna.StringToBases(beta.Ref)))) && strings.Compare(alpha.Chr, beta.Chr) == 0 {
 		return true
 	} else {
 		return false
@@ -74,7 +74,7 @@ func VcfOverlap(alpha *Vcf, beta *Vcf) bool {
 }
 
 func VcfBedOverlap(alpha *Vcf, beta *bed.Bed) bool {
-	if common.MaxInt64(alpha.Pos-1, beta.ChromStart) < common.MinInt64(int64(len(dna.StringToBases(alpha.Ref))), beta.ChromEnd) && strings.Compare(alpha.Chr, beta.Chrom) == 0{
+	if common.MaxInt64(alpha.Pos-1, beta.ChromStart) < common.MinInt64(int64(len(dna.StringToBases(alpha.Ref))), beta.ChromEnd) && strings.Compare(alpha.Chr, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
@@ -115,7 +115,6 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 	}
 	return answer
 }
-
 
 func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
 	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Alt: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}

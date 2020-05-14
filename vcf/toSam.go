@@ -9,6 +9,7 @@ import (
 	"sync"
 )
 
+//TODO will get rid of this once i know the goroutines version is error free
 func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne string, alleleTwo, prefix string) {
 	var wg sync.WaitGroup
 	gvcf := make(chan *Vcf)
