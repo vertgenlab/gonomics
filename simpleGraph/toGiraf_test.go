@@ -1,4 +1,5 @@
 package simpleGraph
+/*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -47,7 +48,7 @@ func TestViewGirafAlign(t *testing.T) {
 		log.Printf("forward:\n%s\n", ViewGirafAlign(alignPair.Fwd, genome))
 		log.Printf("reverse:\n%s\n", ViewGirafAlign(alignPair.Rev, genome))
 	}
-}
+}*/
 /*
 import (
 	"github.com/vertgenlab/gonomics/chromInfo"
