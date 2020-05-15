@@ -112,6 +112,7 @@ func WritingChan(readOne string, readTwo string, output <-chan *PairedEnd, wg *s
 	for fq := range output {
 		WritingHelper(fileOne, fileTwo, fq)
 	}
+	wg.Done()
 }
 
 func GoWriteFqPair(readOne string, readTwo string, data <-chan *PairedEnd) {

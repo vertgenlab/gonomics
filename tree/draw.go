@@ -59,7 +59,7 @@ func Draw(node *Tree, imageWidth int, imageHeight int) (*image.RGBA, error) {
 		return img, fmt.Errorf("Error: unable to draw an empty tree\n")
 	} else {
 		var nodesPrinted int = 0
-		drawHelper(img, node, 0, 100, 10, &nodesPrinted)
+		drawHelper(img, node, 0, 1000, 10, &nodesPrinted)
 		return img, nil
 	}
 }
