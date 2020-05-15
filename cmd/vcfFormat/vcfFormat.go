@@ -49,20 +49,6 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 	}
 }
 
-func switchFormat(ch chan *vcf.Vcf, UCSCToEnsembl bool, ensemblToUCSC bool, out *fileio.EasyWriter) {
-	if ensemblToUCSC {
-		for v := range ch {
-			v.Chr = convert.EnsemblToUCSC(v.Chr)
-			vcf.WriteVcf(out.File, v)
-		}
-	} else if UCSCToEnsembl {
-		for v := range ch {
-			v.Chr = convert.UCSCToEnsembl(v.Chr)
-			vcf.WriteVcf(out.File, v)
-		}
-	}
-}
-
 func usage() {
 	fmt.Print(
 		"vcfFormat: Options alter VCF formatting.\n" +
@@ -71,6 +57,7 @@ func usage() {
 			"options:\n")
 	flag.PrintDefaults()
 }
+
 
 func main() {
 	var expectedNumArgs int = 2
