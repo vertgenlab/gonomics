@@ -4,12 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 )
 
-func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool) {
+func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string) {
 	ch := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
@@ -18,14 +19,47 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
 	}
 
-	for v := range ch {
+	if fixVcfRecords {
+		ref := fasta.FastaToMap(fasta.Read(ref))
 		if ensemblToUCSC {
+			for v := range ch {
+				vcf.FixVcf(v, ref)
+				v.Chr = convert.EnsemblToUCSC(v.Chr)
+				vcf.WriteVcf(out.File, v)
+			}
+		} else if UCSCToEnsembl{
+			for v := range ch {
+				vcf.FixVcf(v, ref)
+				v.Chr = convert.UCSCToEnsembl(v.Chr)
+				vcf.WriteVcf(out.File, v)
+			}
+		}
+	} else {
+		if ensemblToUCSC {
+			for v := range ch {
+				v.Chr = convert.EnsemblToUCSC(v.Chr)
+				vcf.WriteVcf(out.File, v)
+			}
+		} else if UCSCToEnsembl{
+			for v := range ch {
+				v.Chr = convert.UCSCToEnsembl(v.Chr)
+				vcf.WriteVcf(out.File, v)
+			}
+		}
+	}
+}
+
+func switchFormat(ch chan *vcf.Vcf, UCSCToEnsembl bool, ensemblToUCSC bool, out *fileio.EasyWriter) {
+	if ensemblToUCSC {
+		for v := range ch {
 			v.Chr = convert.EnsemblToUCSC(v.Chr)
+			vcf.WriteVcf(out.File, v)
 		}
-		if UCSCToEnsembl {
+	} else if UCSCToEnsembl{
+		for v := range ch {
 			v.Chr = convert.UCSCToEnsembl(v.Chr)
+			vcf.WriteVcf(out.File, v)
 		}
-		vcf.WriteVcf(out.File, v)
 	}
 }
 
@@ -42,6 +76,8 @@ func main() {
 	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
+	var fixVcfRecords *bool = flag.Bool("fix", false, "Fixes improperly formatted vcf records (e.g. '-' in ALT field")
+	var ref *string = flag.String("ref", "", "Reference fasta. Only needed if using -fix.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -56,5 +92,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl)
+	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref)
 }
