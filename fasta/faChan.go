@@ -52,22 +52,9 @@ func nextSeq(reader *fileio.EasyReader) []dna.Base {
 	return answer
 }
 
-/*
-func WritingChannelMultiFiles(files []*fileio.EasyWriter, output <-chan *Fasta, wg *sync.WaitGroup) {
-	var index int = 0
-	for fa := range output {
-		WriteToFileHandle(files[index], fa, 50)
-		index++
-		if index == len(files) {
-			index = 0
-		}
-	}
-	wg.Done()
-}*/
-
 func WritingChannel(file *fileio.EasyWriter, output <-chan *Fasta, wg *sync.WaitGroup) {
 	for fa := range output {
-		WriteToFileHandle(file, fa, 50)
+		WriteHelper(file, fa, 50)
 	}
 	wg.Done()
 }
@@ -78,7 +65,7 @@ func WriteGroups(filename string, groups [][]*Fasta) {
 	lineLength := 50
 	for i, _ := range groups {
 		for _, records := range groups[i] {
-			WriteToFileHandle(file, records, lineLength)
+			WriteHelper(file, records, lineLength)
 		}
 	}
 }

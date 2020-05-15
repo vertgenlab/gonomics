@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"strings"
 )
 
@@ -37,7 +38,25 @@ func Read(filename string) []*Fasta {
 	return answer
 }
 
-func WriteToFileHandle(file *fileio.EasyWriter, rec *Fasta, lineLength int) {
+func WriteToFileHandle(file io.Writer, records []*Fasta, lineLength int) {
+	var err error
+	for _, rec := range records {
+		_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
+		common.ExitIfError(err)
+		for i := 0; i < len(rec.Seq); i += lineLength {
+			if i+lineLength > len(rec.Seq) {
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:]))
+				common.ExitIfError(err)
+			} else {
+				_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:i+lineLength]))
+				common.ExitIfError(err)
+			}
+		}
+	}
+}
+//TODO: this is a modified version of WriteToFileHandle.
+//My changes will break a lot of code so I will work slowly to slide this in to other functions
+func WriteHelper(file *fileio.EasyWriter, rec *Fasta, lineLength int) {
 	var err error
 	_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
 	common.ExitIfError(err)
@@ -57,7 +76,7 @@ func Write(filename string, records []*Fasta) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	for _, rec := range records {
-		WriteToFileHandle(file, rec, lineLength)
+		WriteHelper(file, rec, lineLength)
 	}
 }
 
