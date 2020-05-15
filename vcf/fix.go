@@ -21,14 +21,14 @@ func FixVcf(query *Vcf, ref map[string][]dna.Base) {
 func fixDash(query *Vcf, ref map[string][]dna.Base) {
 	if strings.Compare(query.Alt, "-") == 0 {
 		// query.Pos is -2, one for zero base, and one for previous base
-		prevBase := dna.BaseToString(ref[query.Chr][query.Pos - 2])
+		prevBase := dna.BaseToString(ref[query.Chr][query.Pos-2])
 		query.Pos--
 		query.Ref = prevBase + query.Ref
 		query.Alt = prevBase
 	}
 	if strings.Compare(query.Ref, "-") == 0 {
 		// query.Pos is -2, one for zero base, and one for previous base
-		prevBase := dna.BaseToString(ref[query.Chr][query.Pos - 2])
+		prevBase := dna.BaseToString(ref[query.Chr][query.Pos-2])
 		query.Pos--
 		query.Ref = prevBase
 		query.Alt = prevBase + query.Alt

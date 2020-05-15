@@ -27,7 +27,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 				v.Chr = convert.EnsemblToUCSC(v.Chr)
 				vcf.WriteVcf(out.File, v)
 			}
-		} else if UCSCToEnsembl{
+		} else if UCSCToEnsembl {
 			for v := range ch {
 				vcf.FixVcf(v, ref)
 				v.Chr = convert.UCSCToEnsembl(v.Chr)
@@ -40,7 +40,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 				v.Chr = convert.EnsemblToUCSC(v.Chr)
 				vcf.WriteVcf(out.File, v)
 			}
-		} else if UCSCToEnsembl{
+		} else if UCSCToEnsembl {
 			for v := range ch {
 				v.Chr = convert.UCSCToEnsembl(v.Chr)
 				vcf.WriteVcf(out.File, v)
@@ -55,7 +55,7 @@ func switchFormat(ch chan *vcf.Vcf, UCSCToEnsembl bool, ensemblToUCSC bool, out 
 			v.Chr = convert.EnsemblToUCSC(v.Chr)
 			vcf.WriteVcf(out.File, v)
 		}
-	} else if UCSCToEnsembl{
+	} else if UCSCToEnsembl {
 		for v := range ch {
 			v.Chr = convert.UCSCToEnsembl(v.Chr)
 			vcf.WriteVcf(out.File, v)
