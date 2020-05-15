@@ -36,10 +36,8 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 		}
 		//insertion in VCF record
 		if axtFile.RSeq[i] == dna.Gap {
-
 			qCount++
 			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: "SVTYPE=INS", Format: fmt.Sprintf("query=%d", qCount), Notes: AxtInfo(axtFile)}
-
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.RSeq[j]) == dna.Gap {
 					curr.Alt += dna.BaseToString(dna.ToUpper(axtFile.QSeq[j]))

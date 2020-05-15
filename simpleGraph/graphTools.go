@@ -11,24 +11,19 @@ import (
 	"strings"
 )
 
-func VariantGraph(reference []*fasta.Fasta, vcfs []*vcf.Vcf) *SimpleGraph {
+func VariantGraph(ref <-chan *fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
-	vcfSplit := vcf.VcfSplit(vcfs, reference)
 	var filterVcf []*vcf.Vcf
-	if len(vcfSplit) != len(reference) {
-		log.Fatal("Slice of vcfs do not equal reference length")
-	} else {
-		for i := 0; i < len(reference); i++ {
-			if len(vcfSplit[i]) != 0 {
-				vcfSplit[i] = append(vcfSplit[i], &vcf.Vcf{Chr: reference[i].Name, Pos: int64(len(reference[i].Seq))})
-				filterVcf = vcf.FilterNs(vcfSplit[i])
-				vcf.Sort(filterVcf)
-				gg = vChrGraph(gg, reference[i], filterVcf)
-			} else {
-				//when only calling large SV, no variants called on chr is possible, entire chr becomes a node
-				chrNode := &Node{Id: uint32(len(gg.Nodes)), Name: reference[i].Name, Seq: reference[i].Seq, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: 1, Variant: 0}}
-				AddNode(gg, chrNode)
-			}
+	for chr := range ref {
+		filterVcf = vcfMap[chr.Name]
+		if len(filterVcf) != 0 {
+			filterVcf = append(filterVcf, &vcf.Vcf{Chr: chr.Name, Pos: int64(len(chr.Seq))})
+			vcf.Sort(filterVcf)
+			gg = vChrGraph(gg, chr, filterVcf)
+		} else {
+			//when only calling large SV, no variants called on chr is possible, entire chr becomes a node
+			chrNode := &Node{Id: uint32(len(gg.Nodes)), Name: chr.Name, Seq: chr.Seq, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: 1, Variant: 0}}
+			AddNode(gg, chrNode)
 		}
 	}
 	return gg
@@ -48,7 +43,9 @@ func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*Simple
 }
 
 func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
+	log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
 	fasta.ToUpper(chr)
+
 	var currMatch *Node = nil
 	var lastMatch *Node = nil
 	var refAllele, altAllele *Node
@@ -85,7 +82,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 					} else {
 						index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 					}
-				} else if strings.Compare(vcfsChr[i].Info, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Info, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Info, "SVTYPE=HAP") == 0 {
+				} else if strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(vcfsChr[i].Format, "SVTYPE=HAP") == 0 {
 					altAllele := &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: &Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 					AddNode(genome, altAllele)
 					AddEdge(currMatch, altAllele, 1)
@@ -93,6 +90,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				}
 				lastMatch = currMatch
 			} else if len(currMatch.Seq) > 0 {
+
 				AddNode(genome, currMatch)
 				if lastMatch != nil {
 					if len(lastMatch.Next) > 0 {
@@ -173,7 +171,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				lastMatch = currMatch
 			} else {
 				num++
-				log.Printf("index=%d, vcfPos=%d\ndiff=%d\n%s", index, vcfsChr[i].Pos, vcfsChr[i].Pos-index, vcfsChr[i].Info)
+				//log.Printf("index=%d, vcfPos=%d\ndiff=%d\n%s", index, vcfsChr[i].Pos, vcfsChr[i].Pos-index, vcfsChr[i].Info)
 			}
 		}
 	}
@@ -188,7 +186,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	}
 	AddEdge(lastMatch, lastNode, 1)
 	SetEvenWeights(lastMatch)
-	log.Printf("%s Graph missed %d/%d\n", chr.Name, num, len(vcfsChr))
+	//log.Printf("%s Graph missed %d/%d\n", chr.Name, num, len(vcfsChr))
 	return genome
 }
 
@@ -346,7 +344,7 @@ func createINS(sg *SimpleGraph, v *vcf.Vcf, chr string) *Node {
 }
 
 func isHaplotypeBlock(v *vcf.Vcf) bool {
-	if strings.Compare(v.Info, "SVTYPE=SNP;INS") == 0 || strings.Compare(v.Info, "SVTYPE=SNP;DEL") == 0 || strings.Compare(v.Info, "SVTYPE=HAP") == 0 {
+	if strings.Compare(v.Format, "SVTYPE=SNP;INS") == 0 || strings.Compare(v.Format, "SVTYPE=SNP;DEL") == 0 || strings.Compare(v.Format, "SVTYPE=HAP") == 0 {
 		return true
 	} else {
 		return false

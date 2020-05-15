@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
@@ -48,10 +49,9 @@ func Read(filename string) []*Vcf {
 }
 
 func GoReadToChan(filename string) <-chan *Vcf {
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	ReadHeader(file)
 	output := make(chan *Vcf)
+	file := fileio.EasyOpen(filename)
+	ReadHeader(file)
 	go ReadToChan(file, output)
 	return output
 }
@@ -148,7 +148,7 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteHeader(file *fileio.EasyWriter) {
+func WriteHeader(file *os.File) {
 	var err error
 	header := MakeHeader()
 	for h := 0; h < len(header); h++ {
@@ -157,7 +157,7 @@ func WriteHeader(file *fileio.EasyWriter) {
 	common.ExitIfError(err)
 }
 
-func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
+func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
 	var err error
 	header := BetterHeader(fa)
 	for h := 0; h < len(header); h++ {
@@ -167,13 +167,13 @@ func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
 }
 
 func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
-	file := fileio.EasyCreate(filename)
+	file := fileio.MustCreate(filename)
 	defer file.Close()
 	WriteBetterHeader(file, fa)
 	WriteVcfToFileHandle(file, data)
 }
 
-func WriteVcfToFileHandle(file *fileio.EasyWriter, input []*Vcf) {
+func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
 		if input[i].Notes == "" {
@@ -196,7 +196,7 @@ func WriteVcf(file *fileio.EasyWriter, input *Vcf) {
 }
 
 func Write(filename string, data []*Vcf) {
-	file := fileio.EasyCreate(filename)
+	file := fileio.MustCreate(filename)
 	defer file.Close()
 	WriteHeader(file)
 	WriteVcfToFileHandle(file, data)
@@ -228,6 +228,7 @@ func PrintHeader(header []string) {
 	}
 }
 
+//TODO will be removed in the next few weeks
 func MakeHeader() []string {
 	//TODO: add logic to add contig length to header of file
 	var header []string
@@ -260,21 +261,15 @@ func BetterHeader(fa []*fasta.Fasta) []string {
 		"##fileDate="+t.Format("20060102")+"\n"+
 		"##source=github.com/vertgenlab/gonomics")
 	header = append(header, "##phasing=none\n"+
-		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
 		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
 		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
-		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
-		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
-		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n"+
-		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n"+
-		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
-		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
-		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">")
+		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 	var text string = ""
-	for i := 0; i < len(fa); i++ {
-		text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
+	if fa != nil {
+		for i := 0; i < len(fa); i++ {
+			text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
+		}
 	}
 	text += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES"
 	header = append(header, text)

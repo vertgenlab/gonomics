@@ -1,9 +1,9 @@
 package simpleGraph
+//TODO: will work on improving this test file or completely remove it by the next pull request
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"testing"
 )
@@ -11,20 +11,14 @@ import (
 //TODO: consider dot format to graph
 //     --> node_1            --> node_4
 //node_0          --> node_3             --> node_6
-//     --> node_2           -->  node_5
+//     --> node_2      -->  node_5
+
 func TestFaGraphSplit(t *testing.T) {
 	fa := []*fasta.Fasta{&fasta.Fasta{Name: "Test", Seq: dna.StringToBases("AAA")}, &fasta.Fasta{Name: "Test", Seq: dna.StringToBases("ANNNA")}, &fasta.Fasta{Name: "Test", Seq: dna.StringToBases("NAAN")}}
 	faSplit := FaSplitByNs(fa)
 	for i := 0; i < len(faSplit); i++ {
 		log.Printf("name=%s, seq=%s\n", faSplit[i].Name, dna.BasesToString(faSplit[i].Seq))
 	}
-}
-
-func TestVcfTools(t *testing.T) {
-	fa := []*fasta.Fasta{&fasta.Fasta{Name: "chrZ", Seq: dna.StringToBases("CCTTTAATCC")}}
-	vcfs := []*vcf.Vcf{&vcf.Vcf{Chr: "chrZ", Pos: 2, Id: ".", Ref: "C", Alt: "T", Qual: 24, Filter: "PASS", Info: "", Format: "SVTYPE=SNP"}, &vcf.Vcf{Chr: "chrZ", Pos: 4, Id: ".", Ref: "T", Alt: "A", Qual: 24, Filter: "PASS", Info: "", Format: "SVTYPE=SNP"}, &vcf.Vcf{Chr: "chrZ", Pos: 9, Id: ".", Ref: "C", Alt: "T", Qual: 24, Filter: "PASS", Info: "", Format: "SVTYPE=SNP"}}
-	gg := VariantGraph(fa, vcfs)
-	PrintGraph(gg)
 }
 
 /*

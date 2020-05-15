@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"os"
@@ -58,15 +59,43 @@ func RunGgTools() {
 }
 
 func graphTools(out string, axtfile string, vcfCalls string, files []string) {
-	fa := fasta.Read(files[0])
 	for i := 0; i < len(files); i++ {
 		if strings.HasSuffix(axtfile, ".axt") {
+			fa := fasta.Read(files[0])
 			axtfile := axt.Read(axtfile)
 			axt.AxtVcfToFile(out, axtfile, fa)
 		} else if strings.HasSuffix(vcfCalls, ".vcf") || strings.HasSuffix(vcfCalls, "vcf.gz") {
-			vcfs := vcf.Read(vcfCalls)
-			gg := simpleGraph.VariantGraph(fa, vcfs)
+			gg := FaVcfChannels(files[0], vcfCalls)
 			simpleGraph.Write(out, gg)
 		}
 	}
+}
+
+func vcfSplitChrNoN(vcfs string) map[string][]*vcf.Vcf {
+	vcfReader := make(chan *vcf.Vcf)
+
+	records := fileio.EasyOpen(vcfs)
+	defer records.Close()
+	vcf.ReadHeader(records)
+	go vcf.ReadToChan(records, vcfReader)
+	//var seen bool
+	chrMap := make(map[string][]*vcf.Vcf)
+	for data := range vcfReader {
+		if !strings.Contains(data.Ref, "N") && !strings.Contains(data.Alt, "N") {
+			//_, seen = chrMap[data.Chr]
+			//if !seen {
+			//	chrMap[data.Chr] = make([]*vcf.Vcf, 0)
+			//}
+			chrMap[data.Chr] = append(chrMap[data.Chr], data)
+		}
+	}
+	return chrMap
+}
+
+func FaVcfChannels(ref string, vcfs string) *simpleGraph.SimpleGraph {
+	vcfFilteredMap := vcfSplitChrNoN(vcfs)
+	faReader := make(chan *fasta.Fasta)
+	go fasta.ReadToChan(ref, faReader, nil, true)
+	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)
+	return gg
 }

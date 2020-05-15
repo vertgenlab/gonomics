@@ -4,8 +4,8 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 	"strings"
 )
 
