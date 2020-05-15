@@ -157,7 +157,7 @@ func WriteHeader(file *os.File) {
 	common.ExitIfError(err)
 }
 
-func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
+func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
 	var err error
 	header := BetterHeader(fa)
 	for h := 0; h < len(header); h++ {
@@ -167,10 +167,12 @@ func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
 }
 
 func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	WriteBetterHeader(file, fa)
-	WriteVcfToFileHandle(file, data)
+	for _, each := range data {
+		WriteVcf(file, each)
+	}
 }
 
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
