@@ -27,7 +27,7 @@ func TestReadAndWrite(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error writing %s as a temp fasta file", tempFile)
 		}
-		err = Write(tempFile, actual)
+		Write(tempFile, actual)
 		if err != nil {
 			t.Errorf("Reading %s gave an error", test.filename)
 		}

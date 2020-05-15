@@ -16,16 +16,6 @@ type SeedBed struct {
 	Next  *SeedBed
 }
 
-/*type SeedDev struct {
-	TargetId    uint32
-	TargetStart uint32
-	QueryStart  uint32
-	Length      uint32
-	PosStrand   bool
-	Next        *SeedDev
-	Prev        *SeedDev
-}*/
-
 func extendSeedsDev(seeds []*SeedDev, gg *SimpleGraph, read *fastq.Fastq) {
 	for i := 0; i < len(seeds); i++ {
 		extendSeedDev(seeds[i], gg, read)
@@ -124,7 +114,8 @@ func indexGenomeHelper(n *Node, seedLen int) []*SeedBed {
 	}
 }
 
-func IndexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
+//TODO: get rid of this
+func indexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]*SeedBed {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
 	}
@@ -164,57 +155,6 @@ func IndexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]*SeedBe
 	}
 	return answer
 }
-
-// TODO: this does not take into account breaking up seeds by gaps instead of mismatches
-// similar calculations could also be used as the parameters to a banded alignment
-/*func seedCouldBeBetter(curr *SeedDev, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
-	seedLen := int64(sumLen(curr))
-	seeds := queryLen / (seedLen + 1)
-	remainder := queryLen % (seedLen + 1)
-
-	// seed by itself could be best
-	if seedLen*maxMatch >= currBestScore &&
-		perfectScore-((queryLen-seedLen)*minMatch) >= currBestScore {
-		return true
-		// seed along with whole seeds, but not the remainder
-	} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= currBestScore &&
-		perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= currBestScore {
-		return true
-		// seed along with whole seeds, as well as both remainders
-	} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= currBestScore &&
-		perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= currBestScore {
-		return true
-	} else {
-		return false
-	}
-}*/
-
-/*
-func addSeedDev(existing []*SeedDev, curr *SeedDev) []*SeedDev {
-	var compareSeed int = -1
-	for i := 0; i < len(existing) && compareSeed < 0; i++ {
-		if canMerge(existing[i], curr) {
-			existing[i].TargetStart = common.MinInt64(existing[i].TargetStart, curr.TargetStart)
-			existing[i].TargetEnd = common.MaxInt64(existing[i].TargetEnd, curr.TargetEnd)
-			existing[i].QueryStart = common.MinInt64(existing[i].QueryStart, curr.QueryStart)
-			existing[i].QueryEnd = common.MaxInt64(existing[i].QueryEnd, curr.QueryEnd)
-			return existing
-		}
-		compareSeed = CompareSeedDev(existing[i], curr)
-		if compareSeed <= 0 {
-			//do nothing
-		} else if compareSeed > 0 {
-			existing = append(existing, existing[len(existing)-1])
-			copy(existing[i+1:], existing[i:])
-			existing[i] = curr
-			return existing
-		} else {
-			log.Fatal("Some logic we did not catch when adding seed")
-		}
-	}
-	existing = append(existing, curr)
-	return existing
-}*/
 
 func canMerge(a *SeedDev, b *SeedDev) bool {
 	if a.TargetId == b.TargetId &&
