@@ -30,16 +30,14 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 			qCount++
 			//snp mismatch
 			if dna.ToUpper(axtFile.RSeq[i]) != dna.ToUpper(axtFile.QSeq[i]) {
-				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 30, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: "SVTYPE=SNP", Notes: AxtInfo(axtFile)}
+				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 30, Filter: "PASS", Info: "SVTYPE=SNP", Format: fmt.Sprintf("query=%d", qCount), Notes: AxtInfo(axtFile)}
 				answer = append(answer, curr)
 			}
 		}
 		//insertion in VCF record
 		if axtFile.RSeq[i] == dna.Gap {
-
 			qCount++
-			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: "SVTYPE=INS", Notes: AxtInfo(axtFile)}
-
+			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: "SVTYPE=INS", Format: fmt.Sprintf("query=%d", qCount), Notes: AxtInfo(axtFile)}
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.RSeq[j]) == dna.Gap {
 					curr.Alt += dna.BaseToString(dna.ToUpper(axtFile.QSeq[j]))
@@ -47,8 +45,8 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 				} else {
 					if len(answer) == 0 {
 						answer = append(answer, curr)
-					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Format, "SVTYPE=SNP") == 0 {
-						curr.Format = "SVTYPE=SNP;INS"
+					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Info, "SVTYPE=SNP") == 0 {
+						curr.Info = "SVTYPE=SNP;INS"
 						answer[len(answer)-1] = curr
 					} else {
 						answer = append(answer, curr)
@@ -63,7 +61,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 		//deleteion vcf record
 		if axtFile.QSeq[i] == dna.Gap {
 			tempRCount := 0
-			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: "SVTYPE=DEL", Notes: AxtInfo(axtFile)}
+			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: "SVTYPE=DEL", Format: fmt.Sprintf("query=%d", qCount), Notes: AxtInfo(axtFile)}
 			//altTmp = dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1]))
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.QSeq[j]) == dna.Gap {
@@ -73,8 +71,8 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 				} else {
 					if len(answer) == 0 {
 						answer = append(answer, curr)
-					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Format, "SVTYPE=SNP") == 0 {
-						curr.Format = "SVTYPE=SNP;DEL"
+					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Info, "SVTYPE=SNP") == 0 {
+						curr.Info = "SVTYPE=SNP;DEL"
 						answer[len(answer)-1] = curr
 					} else {
 						answer = append(answer, curr)

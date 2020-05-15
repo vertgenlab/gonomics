@@ -1,26 +1,23 @@
 package vcf
 
 import (
-	//"fmt"
-	//"testing"
-	//"log"
+	"github.com/vertgenlab/gonomics/fileio"
+	"testing"
 )
 
-// We should fix this test to either read a current file
-// in testdata, include a smaller one, or add the referenced
-// file to testdata
-/*func TestGvcf(t *testing.T) {
-	//aXb := Read("litcMataF1.het.vcf")
-	//m := GenotypeToMap(aXb)
+func TestVcfToGvcf(t *testing.T) {
+	file := fileio.EasyOpen("testdata/testGenotype.vcf")
+	defer file.Close()
+	dict := HeaderToMaps(file)
 	vcfPipe := make(chan *Vcf)
-
-	dict := HeaderToMaps("testdata/smallLITCxMATAGenotypeGVCFs.vcf")
-	log.Printf("Found %d contigs in this header\n", len(dict.Fa))
-	fmt.Printf("Sample index is: %v\n", dict.HapIdx)
-	go ReadToChan("testdata/smallLITCxMATAGenotypeGVCFs.vcf", vcfPipe)
+	go ReadToChan(file, vcfPipe)
 	for record := range vcfPipe {
-		fmt.Printf("%s\n", genotypeToString(vcfToGenotype(record)))
+		if SimpleASFilter(record, dict.HapIdx["MATAxLITC_cl12w16-7_L6"], dict.HapIdx["LITC"], dict.HapIdx["MATA"]) {
+			ViewGenotypeVcf(record)
+		}
 	}
+}
 
-}*/
-
+func TestSamToAlleles(t *testing.T) {
+	SnpSearch("testdata/CL12.wgs.merged.scaffold_1_30030-88166.sam", "testdata/LITCxMATA.trio.test.vcf", "CL12merged.bam", "LITC", "MATA", "testdata/CL12.wgs.merged")
+}

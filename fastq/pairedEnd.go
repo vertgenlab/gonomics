@@ -5,8 +5,9 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
+	"log"
 	"strings"
+	"sync"
 )
 
 type PairedEnd struct {
@@ -45,38 +46,32 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	close(output)
 }
 
-func ReadPairBigToChan(readOne string, readTwo string, output chan<- *PairedEndBig) {
-	var curr *PairedEnd
-	var done bool
+func ReadPairBigToChan(readOne string, readTwo string, answer chan<- *PairedEndBig) {
+	var fq *PairedEndBig
+	fileOne, fileTwo := fileio.EasyOpen(readOne), fileio.EasyOpen(readTwo)
 
-	fileOne := fileio.EasyOpen(readOne)
 	defer fileOne.Close()
-	fileTwo := fileio.EasyOpen(readTwo)
 	defer fileTwo.Close()
 
-	for curr, done = NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
-		currBig := &PairedEndBig{Fwd: ToFastqBig(curr.Fwd), Rev: ToFastqBig(curr.Rev)}
-
-		output <- currBig
+	for curr, done := NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
+		fq = &PairedEndBig{Fwd: ToFastqBig(curr.Fwd), Rev: ToFastqBig(curr.Rev)}
+		answer <- fq
 	}
-	close(output)
+	close(answer)
 }
 
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*PairedEnd, bool) {
 	fqOne, done1 := NextFastq(reader1)
 	fqTwo, done2 := NextFastq(reader2)
-	if done1 || done2 {
+	if (!done1 && done2) || (done1 && !done2) {
+		log.Fatalf("Error: fastq files do not end at the same time...\n")
+	} else if done1 || done2 {
 		return nil, true
 	}
-	if fqOne == nil || fqTwo == nil {
-		return nil, true
-	}
-	curr := PairedEnd{Fwd: nil, Rev: nil}
-	curr.Fwd = fqOne
-	curr.Fwd.Name = strings.Split(fqOne.Name, " ")[0]
-	curr.Rev = fqTwo
-	curr.Rev.Name = strings.Split(fqTwo.Name, " ")[0]
-	return &curr, false
+	curr := &PairedEnd{Fwd: nil, Rev: nil}
+	curr.Fwd, curr.Rev = fqOne, fqTwo
+	curr.Fwd.Name, curr.Rev.Name = strings.Split(fqOne.Name, " ")[0], strings.Split(fqTwo.Name, " ")[0]
+	return curr, false
 }
 
 func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd {
@@ -89,20 +84,40 @@ func ReadFastqsPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []*PairedEnd
 	return answer
 }
 
-func WritePairToFileHandle(file io.Writer, file2 io.Writer, fq []*PairedEnd) {
+func WritingHelper(fileOne *fileio.EasyWriter, fileTwo *fileio.EasyWriter, fq *PairedEnd) {
+	//TODO: figure out why this seems a little slower
+	//WriteToFileHandle(fileOne, fq.Fwd)
+	//WriteToFileHandle(fileTwo, fq.Rev)
 	var err error
-	for i := 0; i < len(fq); i++ {
-		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Fwd.Name, dna.BasesToString(fq[i].Fwd.Seq), "+", string(fq[i].Fwd.Qual))
-		common.ExitIfError(err)
-		_, err = fmt.Fprintf(file2, "%s\n%s\n%s\n%s\n", "@"+fq[i].Rev.Name, dna.BasesToString(fq[i].Rev.Seq), "+", string(fq[i].Rev.Qual))
-		common.ExitIfError(err)
-	}
+	_, err = fmt.Fprintf(fileOne, "@%s\n%s\n+\n%s\n", fq.Fwd.Name, dna.BasesToString(fq.Fwd.Seq), Uint8QualToString(fq.Fwd.Qual))
+	common.ExitIfError(err)
+	_, err = fmt.Fprintf(fileTwo, "@%s\n%s\n+\n%s\n", fq.Rev.Name, dna.BasesToString(fq.Rev.Seq), Uint8QualToString(fq.Rev.Qual))
+	common.ExitIfError(err)
 }
 
 func WritePair(readOne string, readTwo string, records []*PairedEnd) {
-	file := fileio.EasyCreate(readOne)
-	file2 := fileio.EasyCreate(readTwo)
-	defer file.Close()
-	defer file2.Close()
-	WritePairToFileHandle(file, file2, records)
+	fileOne := fileio.EasyCreate(readOne)
+	fileTwo := fileio.EasyCreate(readTwo)
+	defer fileOne.Close()
+	defer fileTwo.Close()
+	for _, fq := range records {
+		WritingHelper(fileOne, fileTwo, fq)
+	}
+}
+
+func WritingChan(readOne string, readTwo string, output <-chan *PairedEnd, wg *sync.WaitGroup) {
+	fileOne, fileTwo := fileio.EasyCreate(readOne), fileio.EasyCreate(readTwo)
+	defer fileOne.Close()
+	defer fileTwo.Close()
+	for fq := range output {
+		WritingHelper(fileOne, fileTwo, fq)
+	}
+	wg.Done()
+}
+
+func GoWriteFqPair(readOne string, readTwo string, data <-chan *PairedEnd) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go WritingChan(readOne, readTwo, data, &wg)
+	wg.Wait()
 }

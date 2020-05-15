@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
 	"log"
 )
 
@@ -39,25 +38,24 @@ func ReadToChan(filename string, output chan<- *Fastq) {
 func Write(filename string, records []*Fastq) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
-	WriteToFileHandle(file, records)
+	for _, fq := range records {
+		WriteToFileHandle(file, fq)
+	}
 }
 
-func WriteToFileHandle(file io.Writer, fq []*Fastq) error {
+func WriteToFileHandle(file *fileio.EasyWriter, fq *Fastq) {
 	var err error
-	for i := 0; i < len(fq); i++ {
-		_, err = fmt.Fprintf(file, "%s\n%s\n%s\n%s\n", "@"+fq[i].Name, dna.BasesToString(fq[i].Seq), "+", Uint8QualToString(fq[i].Qual))
-		common.ExitIfError(err)
-	}
-	return err
+	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), Uint8QualToString(fq.Qual))
+	common.ExitIfError(err)
 }
 
 func processFastqRecord(line1 string, line2 string, line3 string, line4 string) *Fastq {
-	var curr Fastq
+	var curr *Fastq
 	if line3 != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
-	curr = Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQualUint8([]rune(line4))}
-	return &curr
+	curr = &Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQualUint8([]rune(line4))}
+	return curr
 }
 
 func NextFastq(reader *fileio.EasyReader) (*Fastq, bool) {
@@ -95,7 +93,7 @@ func PrintFastq(fq []*Fastq) {
 	for i := 0; i < len(fq); i++ {
 		readName := "@" + fq[i].Name
 		read := dna.BasesToString(fq[i].Seq)
-		quality := string(fq[i].Qual)
+		quality := Uint8QualToString(fq[i].Qual)
 		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 	}
 }

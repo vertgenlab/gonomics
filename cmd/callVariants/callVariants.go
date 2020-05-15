@@ -28,7 +28,7 @@ func usage() {
 
 func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64, minMapQ int64, memBufferSize int) {
 	var ref interface{}
-	output := fileio.MustCreate(outFile)
+	output := fileio.EasyCreate(outFile)
 	defer output.Close()
 
 	if linearRef != "" {

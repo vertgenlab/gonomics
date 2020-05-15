@@ -68,35 +68,31 @@ func NoVcfOverlap(vcfs []*Vcf) {
 
 }
 
+//TODO: checking for svtype will be strictly in Info column so the format logic will be removed
+//Will do so slowly b/c there might be a lot of test files that use the format code
 func Snp(v *Vcf) bool {
-	if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
-		return true
-	}
 	if strings.Compare(v.Info, "SVTYPE=SNP") == 0 {
 		return true
+	} else {
+		return false
 	}
-	return false
 }
 
 func Ins(v *Vcf) bool {
-	if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
-		return true
-	}
 	if strings.Contains(v.Info, "SVTYPE=INS") {
 		return true
+	} else {
+		return false
 	}
-	return false
+
 }
 
 func Del(v *Vcf) bool {
-	var truth bool = false
-	if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
-		return true
-	}
 	if strings.Contains(v.Info, "SVTYPE=DEL") {
 		return true
+	} else {
+		return false
 	}
-	return truth
 }
 
 func CopyVcfPointer(v *Vcf) *Vcf {
