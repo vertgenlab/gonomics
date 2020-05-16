@@ -100,15 +100,6 @@ func SaveComments(er *fileio.EasyReader) *FileComments {
 	return &commments
 }
 
-func ChainToString(ch *Chain) string {
-	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
-	for i := 0; i < len(ch.Alignment)-1; i++ {
-		answer += fmt.Sprintf("%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TDiff, ch.Alignment[i].QDiff)
-	}
-	answer = fmt.Sprintf("%s%d\n", answer, ch.Alignment[len(ch.Alignment)-1].Size)
-	return answer
-}
-
 func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 	header, done := fileio.EasyNextRealLine(reader)
 	if done {
@@ -169,4 +160,17 @@ func chainingHelper(reader *fileio.EasyReader) []*DiffBases {
 		}
 	}
 	return answer
+}
+
+func ChainToString(ch *Chain) string {
+	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	for i := 0; i < len(ch.Alignment)-1; i++ {
+		answer += fmt.Sprintf("%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TDiff, ch.Alignment[i].QDiff)
+	}
+	answer = fmt.Sprintf("%s%d\n", answer, ch.Alignment[len(ch.Alignment)-1].Size)
+	return answer
+}
+
+func printHeader(ch *Chain) string {
+	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
