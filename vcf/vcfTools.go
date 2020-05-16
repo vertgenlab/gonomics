@@ -67,7 +67,6 @@ func NoVcfOverlap(vcfs []*Vcf) {
 	}
 
 }
-
 //TODO: checking for svtype will be strictly in Info column so the format logic will be removed
 //Will do so slowly b/c there might be a lot of test files that use the format code
 func Snp(v *Vcf) bool {

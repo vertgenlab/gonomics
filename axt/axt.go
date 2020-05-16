@@ -84,9 +84,12 @@ func Read(filename string) []*Axt {
 }
 
 func WriteToFileHandle(file *fileio.EasyWriter, input *Axt, alnNumber int) {
-	strand := common.StrandToRune(input.QStrandPos)
-	_, err := fmt.Fprintf(file, "%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", alnNumber, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, strand, input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
+	_, err := fmt.Fprintf(file, "%s", ToString(input, alnNumber))
 	common.ExitIfError(err)
+}
+
+func ToString(input *Axt, id int) string {
+	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, common.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 }
 
 func Write(filename string, data []*Axt) {

@@ -49,8 +49,6 @@ func GenotypeHelper(v *Vcf) []Haplotype {
 }
 
 func GenotypeToMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf) map[uint64]*GVcf {
-	//mapToGVcf :=
-	//var code uint64
 	code := secretCode(int(names[v.Chr]), int(v.Pos-1))
 	_, ok := mapToGVcf[code]
 	if !ok {
