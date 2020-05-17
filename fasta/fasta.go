@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -39,12 +38,6 @@ func Read(filename string) []*Fasta {
 	return answer
 }
 
-func WriteToSplitChr(filename string, records []*Fasta) {
-	for _, rec := range records {
-		Write(filename+rec.Name+".fa", []*Fasta{rec})
-	}
-}
-
 func WriteToFileHandle(file io.Writer, records []*Fasta, lineLength int) {
 	var err error
 	for _, rec := range records {
@@ -62,28 +55,30 @@ func WriteToFileHandle(file io.Writer, records []*Fasta, lineLength int) {
 	}
 }
 
+//TODO: this is a modified version of WriteToFileHandle.
+//My changes will break a lot of code so I will work slowly to slide this in to other functions
+func WriteHelper(file *fileio.EasyWriter, rec *Fasta, lineLength int) {
+	var err error
+	_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
+	common.ExitIfError(err)
+	for i := 0; i < len(rec.Seq); i += lineLength {
+		if i+lineLength > len(rec.Seq) {
+			_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:]))
+			common.ExitIfError(err)
+		} else {
+			_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:i+lineLength]))
+			common.ExitIfError(err)
+		}
+	}
+}
+
 func Write(filename string, records []*Fasta) {
 	lineLength := 50
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
-
-	WriteToFileHandle(file, records, lineLength)
-}
-
-func WriteGroups(filename string, groups [][]*Fasta) error {
-	lineLength := 50
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
+	for _, rec := range records {
+		WriteHelper(file, rec, lineLength)
 	}
-	defer file.Close()
-
-	for i, _ := range groups {
-		WriteToFileHandle(file, groups[i], lineLength)
-		_, err = fmt.Fprint(file, "\n")
-		common.ExitIfError(err)
-	}
-	return nil
 }
 
 func CreateAllGaps(name string, numGaps int64) *Fasta {
@@ -94,17 +89,4 @@ func CreateAllGaps(name string, numGaps int64) *Fasta {
 func CreateAllNs(name string, numGaps int64) *Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllNs(numGaps)}
 	return &answer
-}
-
-func FastaToMap(fasta []*Fasta) map[string][]dna.Base {
-	answer := make(map[string][]dna.Base)
-	var curr *Fasta
-	for i := 0; i < len(fasta); i++ {
-		curr = fasta[i]
-		_, ok := answer[curr.Name]
-		if !ok {
-			answer[curr.Name] = curr.Seq
-		}
-	}
-	return answer
 }
