@@ -2,7 +2,6 @@ package sort
 
 import (
 	"github.com/vertgenlab/gonomics/simpleGraph"
-	"log"
 	"os"
 	"testing"
 )
@@ -20,7 +19,7 @@ func TestReadAndWriteIdx(t *testing.T) {
 
 	for i := 0; i < len(inputOrder); i++ {
 		if inputOrder[i] != ouputOrder[i] {
-			log.Fatalln("ERROR: Problem with reading and writing sort indexes")
+			t.Error("ERROR: Problem with reading and writing sort indexes")
 		}
 	}
 
