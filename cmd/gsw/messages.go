@@ -32,7 +32,7 @@ func viewUsage() {
 func flagsPrint() {
 	fmt.Print(
 		"\nFlags:\n" +
-			"  -h, --help\t\tEnter gsw --help [align/ggtools/view] for detailed information\n\n" +
+			"  -h, --help\t\tEnter gsw --help [align/ggtools/view] for detailed information\n\n")
 			"  -o, --out\t\tFilename[.gg/.vcf/.gz/.sam]  (default: /dev/stdout)\n\n")
 	//"  -t, --threads\t\tNumber of CPUs for goroutines  (default: 4)\n\n")
 }
