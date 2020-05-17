@@ -1,7 +1,6 @@
 package simpleGraph
 
 import (
-	"log"
 	"testing"
 )
 
@@ -18,6 +17,6 @@ func TestGetSortOrder(t *testing.T) {
 		if order[i] == correctOrder[i] {
 			continue
 		}
-		log.Fatalf("Error: Problem with graph sort \n Expected Order : %v \n Received Order : %v", correctOrder, order)
+		t.Errorf("Error: Problem with graph sort \n Expected Order : %v \n Received Order : %v", correctOrder, order)
 	}
 }
