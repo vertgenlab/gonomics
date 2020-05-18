@@ -40,18 +40,9 @@ func OverlapLength(a *Bed, b *Bed) int64 {
 	if !Overlap(a, b) {
 		return 0
 	}
-	if a.ChromStart < b.ChromStart {
-		return a.ChromEnd-b.ChromStart
-	}else if a.ChromStart > b.ChromStart{
-		return b.ChromEnd-a.ChromStart
-	}
-	if a.ChromEnd > b.ChromEnd {
-		return b.ChromEnd-b.ChromStart
-	}else if a.ChromEnd < b.ChromEnd {
-			return a.ChromEnd-a.ChromStart
-	}
-	log.Fatalf("Critical Failure: End of Days")
-	return -1
+	end := common.MinInt64(a.ChromEnd, b.ChromEnd)
+        start := common.MaxInt64(a.ChromStart, b.ChromStart)
+        return end - start
 }
 
 func Compare(a *Bed, b *Bed) int {
