@@ -25,7 +25,6 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 
 	// Find the first node with inDegree == 0
 	for node, inDegree = range inDegreeTable {
-		//fmt.Println(inDegree)
 		updatedNodes = nil
 		if inDegree == 0 {
 			answer = append(answer, node.Id)
