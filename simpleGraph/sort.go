@@ -7,7 +7,6 @@ func GetSortOrder(g *SimpleGraph) []uint32 {
 func breadthFirstSearch(nodes []*Node) []uint32 {
 	answer := make([]uint32, 0)
 	var inDegree int
-	var ok bool
 	var node *Node
 	inDegreeTable := make(map[*Node]int)
 
@@ -33,13 +32,9 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 			delete(inDegreeTable, node)
 			updateTable(inDegreeTable, node, &updatedNodes)
 			for k := 0; k < len(updatedNodes); k++ {
-				// If updatedNodes[k] is not present in map, skip
-				inDegree, ok = inDegreeTable[updatedNodes[k]]
-				if ok {
-					answer = append(answer, updatedNodes[k].Id)
-					delete(inDegreeTable, updatedNodes[k])
-					updateTable(inDegreeTable, updatedNodes[k], &updatedNodes)
-				}
+				answer = append(answer, updatedNodes[k].Id)
+				delete(inDegreeTable, updatedNodes[k])
+				updateTable(inDegreeTable, updatedNodes[k], &updatedNodes)
 			}
 		}
 	}
