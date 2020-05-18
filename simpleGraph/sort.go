@@ -36,11 +36,9 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 				// If updatedNodes[k] is not present in map, skip
 				inDegree, ok = inDegreeTable[updatedNodes[k]]
 				if ok {
-					if inDegree == 0 {
-						answer = append(answer, updatedNodes[k].Id)
-						delete(inDegreeTable, updatedNodes[k])
-						updateTable(inDegreeTable, updatedNodes[k], &updatedNodes)
-					}
+					answer = append(answer, updatedNodes[k].Id)
+					delete(inDegreeTable, updatedNodes[k])
+					updateTable(inDegreeTable, updatedNodes[k], &updatedNodes)
 				}
 			}
 		}
@@ -51,6 +49,8 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 func updateTable(inDegreeTable map[*Node]int, node *Node, updatedNodes *[]*Node) {
 	for i := 0; i < len(node.Next); i++ {
 		inDegreeTable[node.Next[i].Dest]--
-		*updatedNodes = append(*updatedNodes, node.Next[i].Dest)
+		if inDegreeTable[node.Next[i].Dest] == 0 {
+			*updatedNodes = append(*updatedNodes, node.Next[i].Dest)
+		}
 	}
 }
