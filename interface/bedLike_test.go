@@ -17,9 +17,9 @@ func TestBedLike(t *testing.T) {
 	// If we have a vcf of 1 ACG -> A
 
 	testBed := &bed.Bed{
-		Chrom: "chr1",
+		Chrom:      "chr1",
 		ChromStart: 1,
-		ChromEnd: 3}
+		ChromEnd:   3}
 
 	testVcf := &vcf.Vcf{
 		Chr: "chr1",
@@ -28,9 +28,9 @@ func TestBedLike(t *testing.T) {
 		Alt: "A"}
 
 	testAxt := &axt.Axt{
-		RName: "chr1",
+		RName:  "chr1",
 		RStart: 2,
-		REnd: 3}
+		REnd:   3}
 
 	if testEquality(testBed, testVcf) && testEquality(testVcf, testAxt) {
 		log.Println("BedLike is functioning properly")
