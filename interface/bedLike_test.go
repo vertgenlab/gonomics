@@ -1,7 +1,8 @@
-package bed
+package _interface
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"testing"
@@ -15,7 +16,7 @@ func TestBedLike(t *testing.T) {
 	// seq    A  C  G  T
 	// If we have a vcf of 1 ACG -> A
 
-	testBed := &Bed{
+	testBed := &bed.Bed{
 		Chrom: "chr1",
 		ChromStart: 1,
 		ChromEnd: 3}
