@@ -4,7 +4,6 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"sort"
 	"strings"
-	"log"
 )
 
 func SortByCoord(bedFile []*Bed) {
