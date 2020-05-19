@@ -18,6 +18,7 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 	// breadth-first approach
 	updatedNodes := make([]*Node, 0)
 
+	// TODO: traverse forwards and backwards to get indegree table for each contiguous graph
 	// Initialize starting state for inDegreeTable
 	for i := 0; i < len(nodes); i++ {
 		inDegreeTable[nodes[i]] = len(nodes[i].Prev)
