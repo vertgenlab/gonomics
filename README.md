@@ -6,3 +6,4 @@ Authors:
 * Sophie Campione
 * Riley Mangan
 * Daniel Snellings
+*Christiana Fauci
