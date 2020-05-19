@@ -4,6 +4,8 @@ package _interface
 // implements methods to retrieve Chr, start and end pos
 // Current data types that implement these methods:
 // bed.Bed
+// axt.Axt
+// vcf.Vcf
 
 type BedLike interface {
 	GetChr() string
