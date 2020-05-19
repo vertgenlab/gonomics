@@ -4,5 +4,6 @@ Authors:
 * Craig Lowe
 * Eric Au
 * Sophie Campione
+* Christiana Fauci
 * Riley Mangan
 * Daniel Snellings
