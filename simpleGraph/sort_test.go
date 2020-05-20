@@ -23,13 +23,12 @@ func TestGetSortOrder(t *testing.T) {
 	}
 
 	var discontiguousGraph *SimpleGraph = MakeDisContigTestGraph()
-	brokenGraph := breakNonContiguousGraph(discontiguousGraph)
+	brokenGraph := breakNonContiguousGraph(discontiguousGraph.Nodes)
 	if len(brokenGraph) != 2 {
 		t.Errorf("ERROR: Problem with breaking up discontigous graph into subgraphs")
 	}
 
 }
-
 
 // TestGraph Structure
 //             n2          e0 = 1
