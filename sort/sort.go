@@ -52,7 +52,7 @@ func (g byTopologicalOrder) Less(i, j int) bool {
 			return false
 			// if the start pos is the same go through the paths until there is a sortable difference
 		} else {
-			for k := 1; k < minPathLen - 1; k++ {
+			for k := 1; k < minPathLen-1; k++ {
 				if g[i].sortPath[k] < g[j].sortPath[k] {
 					return true
 				} else if g[i].sortPath[k] > g[j].sortPath[k] {
