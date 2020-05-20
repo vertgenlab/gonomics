@@ -52,6 +52,45 @@ func updateTable(inDegreeTable map[*Node]int, node *Node, updatedNodes *[]*Node)
 
 func breakNonContiguousGraph(g *SimpleGraph) [][]*Node {
 	answer := make([][]*Node, 0)
+	var contiguousGraph []*Node
+	inDegreeTable := make(map[*Node]int)
+	visited := make([]bool, len(g.Nodes))
+	var inDegree int
+	var node *Node
+
+	for i := 0; i < len(g.Nodes); i++ {
+		inDegreeTable[g.Nodes[i]] = len(g.Nodes[i].Prev)
+	}
+
+	for node, inDegree = range inDegreeTable {
+		if inDegree == 0 && !visited[node.Id] {
+			contiguousGraph = make([]*Node, 1)
+			contiguousGraph[0] = node
+			visited[node.Id] = true
+			traceGraph(node, visited, &contiguousGraph)
+			answer = append(answer, contiguousGraph)
+		}
+	}
 
 	return answer
+}
+
+func traceGraph(startNode *Node, visited []bool, answer *[]*Node) {
+	var i int = 0
+
+	for i = 0; i < len(startNode.Next); i++ {
+		if !visited[startNode.Next[i].Dest.Id] {
+			*answer = append(*answer, startNode.Next[i].Dest)
+			visited[startNode.Next[i].Dest.Id] = true
+			traceGraph(startNode.Next[i].Dest, visited, answer)
+		}
+	}
+
+	for i = 0; i < len(startNode.Prev); i ++ {
+		if !visited[startNode.Prev[i].Dest.Id] {
+			*answer = append(*answer, startNode.Prev[i].Dest)
+			visited[startNode.Prev[i].Dest.Id] = true
+			traceGraph(startNode.Prev[i].Dest, visited, answer)
+		}
+	}
 }
