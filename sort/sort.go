@@ -6,16 +6,21 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
+	"log"
 	"os"
 	"sort"
 	"strconv"
 	"sync"
 )
 
+const (
+	maxTmpFilesAllowed = 1000
+)
+
 // TODO: I needed some way to determine which chunk the most recent giraf popped from
 //  and came up with this. There may be a more elegant solution to this problem.
 type priorityGiraf struct {
-	g      *giraf.Giraf
+	data      *giraf.Giraf
 	origin int
 }
 
@@ -27,10 +32,10 @@ func (g byTopologicalOrder) Len() int { return len(g) }
 func (g byTopologicalOrder) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
 
 func (g byTopologicalOrder) Less(i, j int) bool {
-	if g[i].g.Path.Nodes[0] < g[j].g.Path.Nodes[0] {
+	if g[i].data.Path.Nodes[0] < g[j].data.Path.Nodes[0] {
 		return true
-	} else if g[i].g.Path.Nodes[0] == g[j].g.Path.Nodes[0] {
-		if g[i].g.Path.TStart < g[j].g.Path.TStart {
+	} else if g[i].data.Path.Nodes[0] == g[j].data.Path.Nodes[0] {
+		if g[i].data.Path.TStart < g[j].data.Path.TStart {
 			return true
 		}
 	}
@@ -52,7 +57,7 @@ func (g *byTopologicalOrder) Pop() interface{} {
 	return giraf
 }
 
-// Sorts giraf by starposition and startnode given the node order defined in nodeIdSortOrder
+// Sorts giraf by startposition and startnode given the node order defined in nodeIdSortOrder
 // This was intended to be paired with a list of sorted nodes such as simpleGraph.GetSortOrder()
 // so that the file result would be a topologically sorted giraf file, however this can be used with
 // any given node sort order
@@ -60,16 +65,21 @@ func ExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk
 	file := fileio.EasyOpen(girafFile)
 	var done bool
 	var chunkIDs []string
+	var currChunkID string
 
 	var currValues byTopologicalOrder
 	sortOrderMap := sortOrderToMap(nodeIdSortOrder)
 
 	for i := 0; !done; i++ {
+		if i > maxTmpFilesAllowed {
+			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
+		}
 		currValues = readChunk(file, linesPerChunk, &done)
 		//TODO: is there a better way to ensure sorting by input nodeId order without renaming paths???
 		switchIDs(currValues, sortOrderMap)
 		sort.Sort(currValues)
-		writeChunk(currValues, i, &chunkIDs)
+		currChunkID = writeChunk(currValues, i)
+		chunkIDs = append(chunkIDs, currChunkID)
 	}
 	file.Close()
 
@@ -102,7 +112,7 @@ func invertMap(m map[uint32]uint32) map[uint32]uint32 {
 
 func switchIDs(g []*priorityGiraf, m map[uint32]uint32) {
 	for i := 0; i < len(g); i++ {
-		g[i].g.Path.Nodes[0] = m[g[i].g.Path.Nodes[0]]
+		g[i].data.Path.Nodes[0] = m[g[i].data.Path.Nodes[0]]
 	}
 }
 
@@ -119,14 +129,15 @@ func readChunk(file *fileio.EasyReader, linesPerChunk int, done *bool) []*priori
 	return answer
 }
 
-func writeChunk(g []*priorityGiraf, chunkNum int, chunkFiles *[]string) {
+func writeChunk(g []*priorityGiraf, chunkNum int) string {
 	chunkName := fmt.Sprintf("tmp_%d", chunkNum)
-	*chunkFiles = append(*chunkFiles, chunkName)
 	file := fileio.MustCreate(chunkName)
 	defer file.Close()
 	for i := 0; i < len(g); i++ {
-		giraf.WriteGriafHelper(file, g[i].g)
+		giraf.WriteGirafToFileHandle(file, g[i].data)
+
 	}
+	return chunkName
 }
 
 func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, invertedSortOrder map[uint32]uint32) {
@@ -154,8 +165,8 @@ func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, invertedSort
 	for priorityQueue.Len() > 0 {
 		curr = heap.Pop(&priorityQueue).(*priorityGiraf)
 		// Fix the path that we renamed to get the sort order
-		curr.g.Path.Nodes[0] = invertedSortOrder[curr.g.Path.Nodes[0]]
-		outputChan <- curr.g
+		curr.data.Path.Nodes[0] = invertedSortOrder[curr.data.Path.Nodes[0]]
+		outputChan <- curr.data
 		nextGiraf, done = giraf.NextGiraf(chunkReaders[curr.origin])
 		if done {
 			chunkReaders[curr.origin].Close()
