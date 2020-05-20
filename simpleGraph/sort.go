@@ -49,3 +49,9 @@ func updateTable(inDegreeTable map[*Node]int, node *Node, updatedNodes *[]*Node)
 		}
 	}
 }
+
+func breakNonContiguousGraph(g *SimpleGraph) [][]*Node {
+	answer := make([][]*Node, 0)
+
+	return answer
+}
