@@ -17,11 +17,10 @@ const (
 	maxTmpFilesAllowed = 1000
 )
 
-// TODO: I needed some way to determine which chunk the most recent giraf popped from
-//  and came up with this. There may be a more elegant solution to this problem.
 type priorityGiraf struct {
-	data      *giraf.Giraf
-	origin int
+	data     *giraf.Giraf
+	origin   int
+	sortPath []uint32
 }
 
 // Implements sort.Interface based on Breadth-First topological ordering of a SimpleGraph
@@ -32,13 +31,42 @@ func (g byTopologicalOrder) Len() int { return len(g) }
 func (g byTopologicalOrder) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
 
 func (g byTopologicalOrder) Less(i, j int) bool {
-	if g[i].data.Path.Nodes[0] < g[j].data.Path.Nodes[0] {
+	// determine minPathLen so that we dont overshoot the index on one of the inputs
+	var minPathLen int
+	if len(g[i].sortPath) < len(g[j].sortPath) {
+		minPathLen = len(g[i].sortPath)
+	} else {
+		minPathLen = len(g[j].sortPath)
+	}
+
+	// check first node and see if there is a sortable difference
+	if g[i].sortPath[0] < g[j].sortPath[0] {
 		return true
-	} else if g[i].data.Path.Nodes[0] == g[j].data.Path.Nodes[0] {
+	} else if g[i].sortPath[0] > g[j].sortPath[0] {
+		return false
+		// if the nodes are the same, check the start position
+	} else {
 		if g[i].data.Path.TStart < g[j].data.Path.TStart {
 			return true
+		} else if g[i].data.Path.TStart > g[j].data.Path.TStart {
+			return false
+			// if the start pos is the same go through the paths until there is a sortable difference
+		} else {
+			for k := 1; k < minPathLen - 1; k++ {
+				if g[i].sortPath[k] < g[j].sortPath[k] {
+					return true
+				} else if g[i].sortPath[k] > g[j].sortPath[k] {
+					return false
+				}
+			}
 		}
 	}
+
+	// if there is no sortable difference, the shorter path is less
+	if len(g[i].sortPath) < len(g[j].sortPath) {
+		return true
+	}
+
 	return false
 }
 
@@ -74,20 +102,18 @@ func ExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk
 		if i > maxTmpFilesAllowed {
 			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
 		}
-		currValues = readChunk(file, linesPerChunk, &done)
-		//TODO: is there a better way to ensure sorting by input nodeId order without renaming paths???
-		switchIDs(currValues, sortOrderMap)
+		currValues = readChunk(file, linesPerChunk, &done, sortOrderMap)
 		sort.Sort(currValues)
 		currChunkID = writeChunk(currValues, i)
 		chunkIDs = append(chunkIDs, currChunkID)
 	}
 	file.Close()
 
-	invertedSortOrder := invertMap(sortOrderMap)
+	//invertedSortOrder := invertMap(sortOrderMap)
 	var wg sync.WaitGroup
 	writeChan := make(chan *giraf.Giraf)
 
-	go mergeChunks(writeChan, chunkIDs, invertedSortOrder)
+	go mergeChunks(writeChan, chunkIDs, sortOrderMap)
 	wg.Add(1)
 	giraf.GirafChanToFile(outFile, writeChan, &wg)
 	writeIdx(outFile, nodeIdSortOrder)
@@ -97,26 +123,20 @@ func sortOrderToMap(desiredOrder []uint32) map[uint32]uint32 {
 	answer := make(map[uint32]uint32)
 	var i uint32
 	for i = 0; int(i) < len(desiredOrder); i++ {
-		answer[i] = desiredOrder[i]
+		answer[desiredOrder[i]] = i
 	}
 	return answer
 }
 
-func invertMap(m map[uint32]uint32) map[uint32]uint32 {
-	n := make(map[uint32]uint32)
-	for key, value := range m {
-		n[value] = key
+func getSortPath(path *giraf.Path, sortOrderMap map[uint32]uint32) []uint32 {
+	answer := make([]uint32, len(path.Nodes))
+	for i := 0; i < len(path.Nodes); i++ {
+		answer[i] = sortOrderMap[path.Nodes[i]]
 	}
-	return n
+	return answer
 }
 
-func switchIDs(g []*priorityGiraf, m map[uint32]uint32) {
-	for i := 0; i < len(g); i++ {
-		g[i].data.Path.Nodes[0] = m[g[i].data.Path.Nodes[0]]
-	}
-}
-
-func readChunk(file *fileio.EasyReader, linesPerChunk int, done *bool) []*priorityGiraf {
+func readChunk(file *fileio.EasyReader, linesPerChunk int, done *bool, sortOrderMap map[uint32]uint32) []*priorityGiraf {
 	answer := make([]*priorityGiraf, linesPerChunk)
 	var curr *giraf.Giraf
 	for i := 0; i < linesPerChunk; i++ {
@@ -124,7 +144,7 @@ func readChunk(file *fileio.EasyReader, linesPerChunk int, done *bool) []*priori
 		if *done {
 			return answer[:i]
 		}
-		answer[i] = &priorityGiraf{curr, 0}
+		answer[i] = &priorityGiraf{curr, 0, getSortPath(curr.Path, sortOrderMap)}
 	}
 	return answer
 }
@@ -140,9 +160,10 @@ func writeChunk(g []*priorityGiraf, chunkNum int) string {
 	return chunkName
 }
 
-func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, invertedSortOrder map[uint32]uint32) {
+func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrderMap map[uint32]uint32) {
 	var chunkReaders []*fileio.EasyReader = make([]*fileio.EasyReader, len(chunkIDs))
 	priorityQueue := make(byTopologicalOrder, 0)
+	var sortPath []uint32
 	// Gather the first element from each chunk to init heap
 	for i := 0; i < len(chunkIDs); i++ {
 		chunkReaders[i] = fileio.EasyOpen(chunkIDs[i])
@@ -152,7 +173,10 @@ func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, invertedSort
 			err := os.Remove(chunkReaders[i].File.Name())
 			common.ExitIfError(err)
 		} else {
-			priorityQueue = append(priorityQueue, &priorityGiraf{curr, i})
+			// I figure that it would be just as quick to rederive the sortPath
+			// compared to writing it to the tmp file and decoding it here
+			sortPath = getSortPath(curr.Path, sortOrderMap)
+			priorityQueue = append(priorityQueue, &priorityGiraf{curr, i, sortPath})
 		}
 	}
 
@@ -164,8 +188,6 @@ func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, invertedSort
 	var done bool
 	for priorityQueue.Len() > 0 {
 		curr = heap.Pop(&priorityQueue).(*priorityGiraf)
-		// Fix the path that we renamed to get the sort order
-		curr.data.Path.Nodes[0] = invertedSortOrder[curr.data.Path.Nodes[0]]
 		outputChan <- curr.data
 		nextGiraf, done = giraf.NextGiraf(chunkReaders[curr.origin])
 		if done {
@@ -173,7 +195,7 @@ func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, invertedSort
 			err := os.Remove(chunkReaders[curr.origin].File.Name())
 			common.ExitIfError(err)
 		} else {
-			heap.Push(&priorityQueue, &priorityGiraf{nextGiraf, curr.origin})
+			heap.Push(&priorityQueue, &priorityGiraf{nextGiraf, curr.origin, getSortPath(nextGiraf.Path, sortOrderMap)})
 		}
 	}
 	close(outputChan)
