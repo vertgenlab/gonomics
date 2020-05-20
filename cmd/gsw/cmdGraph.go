@@ -57,9 +57,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}*/
-
-/*
+}
 	} else if strings.Compare(cmdName, "ggTools") == 0 {
 		answer += "\nggTools: utilities to create, manipulate and operate on genome graphs\n" +
 			"\nTo create genome graph reference w/ vcf file:\n" +

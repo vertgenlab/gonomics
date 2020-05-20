@@ -32,7 +32,7 @@ func extendedAlignUsage() {
 		"Usage:\n" +
 			"  gsw align [options] ref.gg R1.fastq.gz R2.fastq.gz\n\n" +
 			"Required:\n" +
-			"  ref[.gg/.fa]\t\tReference genome: acceptes both fasta and graph formats\n\n" +
+			"  ref[.gg/.fa]\t\tReference genome: both fasta and graph formats accepted\n\n" +
 			"Options:\n" +
 			"  -i, --index\t\tKmer length for index hash look up  (default: 32)\n" +
 			"  -s, --step\t\tOffset sliding window step size for hash set up (default 32)\n" +
