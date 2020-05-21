@@ -1,6 +1,8 @@
 package vcf
 
-import "github.com/vertgenlab/gonomics/dna"
+import (
+	"github.com/vertgenlab/gonomics/dna"
+)
 
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
@@ -40,4 +42,41 @@ func (v *Vcf) GetChromEnd() int {
 	} else {
 		return int(v.Pos) + len(refBases) - 1
 	}
+}
+
+type byGenomicCoordinates []*Vcf
+
+func (g byGenomicCoordinates) Len() int { return len(g) }
+
+func (g byGenomicCoordinates) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
+
+func (g byGenomicCoordinates) Less(i, j int) bool {
+	// First sort criteria is chromosome
+	if g[i].GetChrom() < g[j].GetChrom() {
+		return true
+	} else if g[i].GetChrom() == g[j].GetChrom() {
+		// If chroms are equal then sort by start position
+		if g[i].GetChromStart() < g[j].GetChromStart() {
+			return true
+		} else if g[i].GetChromStart() == g[j].GetChromStart() {
+			// If start positions are equal then the shorter region wins
+			if g[i].GetChromEnd() < g[j].GetChromEnd() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (g *byGenomicCoordinates) Push(x interface{}) {
+	answer := x.(*Vcf)
+	*g = append(*g, answer)
+}
+
+func (g *byGenomicCoordinates) Pop() interface{} {
+	oldQueue := *g
+	n := len(oldQueue)
+	answer := oldQueue[n-1]
+	*g = oldQueue[:n-1]
+	return answer
 }
