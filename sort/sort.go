@@ -166,7 +166,7 @@ func writeChunk(g []*priorityGiraf, chunkNum int) string {
 
 func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrderMap map[uint32]uint32) {
 	var chunkReaders []*fileio.EasyReader = make([]*fileio.EasyReader, len(chunkIDs))
-	priorityQueue := make(byTopologicalOrder, 0)
+	priorityQueue := make(byTopologicalOrder, 0, len(chunkIDs))
 	var sortPath []uint32
 	// Gather the first element from each chunk to init heap
 	for i := 0; i < len(chunkIDs); i++ {
