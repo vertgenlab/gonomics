@@ -1,4 +1,4 @@
-package _interface
+package interf
 
 // bedLike interface compatible with any data type that
 // implements methods to retrieve Chr, start and end pos

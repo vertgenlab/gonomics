@@ -1,4 +1,4 @@
-package _interface
+package interf
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
