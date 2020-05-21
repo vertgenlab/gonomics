@@ -5,7 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"strings"
 )
-//TODO: Will move to the overlap interface once we have that set up, essentially all the functions 
+
+//TODO: Will move to the overlap interface once we have that set up, essentially all the functions
 //if target bool is true, we select the target/refernce regions, if target bool is false we use the query
 func OverlapChainBed(alpha *Chain, beta *bed.Bed, target bool) bool {
 	if target {
