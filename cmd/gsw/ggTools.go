@@ -204,6 +204,7 @@ func findAxtBedOverlap(axtFmt string, bedFmt string, output string, invert bool)
 	target := mkAxtMap(axtFmt)
 
 	answer := fileio.MustCreate(output)
+	defer answer.Close()
 	for eachRegion := range query {
 		if overlapAxtCompareBeds(target[eachRegion.Chrom], eachRegion) {
 			//TODO: consider changing this so people can input n fields
