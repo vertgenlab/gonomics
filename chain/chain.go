@@ -21,11 +21,11 @@ type Chain struct {
 	QStrand   bool
 	QStart    int
 	QEnd      int
-	Alignment []*DiffBases
+	Alignment []*BaseStats
 	Id        int
 }
 
-type DiffBases struct {
+type BaseStats struct {
 	Size   int
 	TBases int
 	QBases int
@@ -141,16 +141,16 @@ func NewChain(text string) *Chain {
 	return curr
 }
 
-func chainingHelper(reader *fileio.EasyReader) []*DiffBases {
+func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 	var line string
 	var data []string
-	var answer []*DiffBases
-	var curr *DiffBases
+	var answer []*BaseStats
+	var curr *BaseStats
 	for nextBytes, err := reader.Peek(1); nextBytes[0] != 0 && err == nil; nextBytes, err = reader.Peek(1) {
 		line, _ = fileio.EasyNextRealLine(reader)
 		data = strings.Split(line, "\t")
 		if len(data) == 1 {
-			curr = &DiffBases{
+			curr = &BaseStats{
 				Size:   common.StringToInt(data[0]),
 				TBases: 0,
 				QBases: 0,
@@ -160,7 +160,7 @@ func chainingHelper(reader *fileio.EasyReader) []*DiffBases {
 			break
 		}
 		if len(data) == 3 {
-			curr = &DiffBases{
+			curr = &BaseStats{
 				Size:   common.StringToInt(data[0]),
 				TBases: common.StringToInt(data[1]),
 				QBases: common.StringToInt(data[2]),

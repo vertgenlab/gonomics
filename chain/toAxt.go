@@ -80,15 +80,15 @@ func calcMissingBases(rSeq []dna.Base, qSeq []dna.Base) (int, int) {
 	return target, query
 }
 
-func CalcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []*DiffBases {
-	var answer []*DiffBases
-	var curr *DiffBases
+func CalcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []*BaseStats {
+	var answer []*BaseStats
+	var curr *BaseStats
 	if len(rSeq) != len(qSeq) {
 		log.Fatalf("Error input sequences should match in length\n")
 	}
 	for i := 0; i < len(rSeq) && i < len(qSeq); {
 		//first count matching seq
-		curr = &DiffBases{
+		curr = &BaseStats{
 			Size:   getChainCounts(rSeq[i:], qSeq[i:]),
 			TBases: 0,
 			QBases: 0,
@@ -119,7 +119,7 @@ func AxtToChain(align *axt.Axt, id int) *Chain {
 		QStrand:   align.QStrandPos,
 		QStart:    int(align.QStart) - 1,
 		QEnd:      int(align.QEnd) - 1,
-		Alignment: make([]*DiffBases, 0),
+		Alignment: make([]*BaseStats, 0),
 		Id:        id,
 	}
 	answer.Alignment = append(answer.Alignment, CalcEntireBlock(align.RSeq, align.QSeq)...)
