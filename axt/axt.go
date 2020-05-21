@@ -106,8 +106,8 @@ func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
 
 func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
 	var words []string = strings.Split(header, " ")
-	if len(words) != 9 {
-		log.Fatalf("Error: sequences in should be the same length\n")
+	if len(words) != 9 || rSeq == "" || qSeq == "" {
+		log.Fatalf("Error: missing fields in header or sequences\n")
 	}
 	var answer *Axt = &Axt{
 		RName:      words[1],
