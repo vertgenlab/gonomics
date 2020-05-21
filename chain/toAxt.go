@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
 )
+
 //TODO: Next to figure out a better way to pass in target and query
 func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 	var tLen, qLen int = ch.TEnd - ch.TStart, ch.QEnd - ch.QStart
