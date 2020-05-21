@@ -45,7 +45,7 @@ func compareScores(a *Chain, b *Chain) int {
 		return -1
 	}
 	if a.Score > b.Score {
-		return -1
+		return 1
 	}
 	return 0
 }
