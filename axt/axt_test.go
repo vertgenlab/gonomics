@@ -1,9 +1,9 @@
 package axt
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var readWriteTests = []struct {

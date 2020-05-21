@@ -110,16 +110,16 @@ func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
 		log.Fatalf("Error: sequences in should be the same length\n")
 	}
 	var answer *Axt = &Axt{
-		RName: words[1],
-		RStart: common.StringToInt64(words[2]),
-		REnd: common.StringToInt64(words[3]),
-		QName:  words[4],
-		QStart: common.StringToInt64(words[5]),
-		QEnd: common.StringToInt64(words[6]),
+		RName:      words[1],
+		RStart:     common.StringToInt64(words[2]),
+		REnd:       common.StringToInt64(words[3]),
+		QName:      words[4],
+		QStart:     common.StringToInt64(words[5]),
+		QEnd:       common.StringToInt64(words[6]),
 		QStrandPos: common.StringToStrand(words[7]),
-		Score: common.StringToInt64(words[8]),
-		RSeq: dna.StringToBases(rSeq),
-		QSeq: dna.StringToBases(qSeq),
+		Score:      common.StringToInt64(words[8]),
+		RSeq:       dna.StringToBases(rSeq),
+		QSeq:       dna.StringToBases(qSeq),
 	}
 	return answer
 }
