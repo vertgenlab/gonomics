@@ -1,8 +1,9 @@
 # gonomics
 A collection of genomics software tools written in Go (golang).
 Authors:
-* Craig Lowe
 * Eric Au
 * Sophie Campione
-* Riley Mangan
-* Daniel Snellings
+* Christiana Fauci
+* Craig B. Lowe
+* Riley J. Mangan
+* Daniel A. Snellings

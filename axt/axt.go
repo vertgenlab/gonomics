@@ -34,8 +34,6 @@ func Read(filename string) []*Axt {
 
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	
-
 	for header, hDone = fileio.EasyNextRealLine(file); !hDone; header, hDone = fileio.EasyNextRealLine(file) {
 		rSeq, rDone = fileio.EasyNextRealLine(file)
 		qSeq, qDone = fileio.EasyNextRealLine(file)
@@ -85,10 +83,54 @@ func Read(filename string) []*Axt {
 	return answer
 }
 
+func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
+	for data, err := NextAxt(reader); !err; data, err = NextAxt(reader) {
+		answer <- data
+	}
+	close(answer)
+}
+//TODO: Add an if statement that catches the case where 4 lines do not exist
+func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
+	header, hDone := fileio.EasyNextRealLine(reader)
+	rSeq, rDone := fileio.EasyNextRealLine(reader)
+	qSeq, qDone := fileio.EasyNextRealLine(reader)
+	blank, bDone := fileio.EasyNextRealLine(reader)
+	if blank != "" {
+		log.Fatalf("Error: every fourth line should be blank\n")
+	}
+	if hDone || rDone || qDone || bDone {
+		return nil, true
+	}
+	return axtHelper(header, rSeq, qSeq, blank), false
+}
+
+func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
+	var words []string = strings.Split(header, " ")
+	if len(words) != 9 {
+		log.Fatalf("Error: sequences in should be the same length\n")
+	}
+	var answer *Axt = &Axt{
+		RName:      words[1],
+		RStart:     common.StringToInt64(words[2]),
+		REnd:       common.StringToInt64(words[3]),
+		QName:      words[4],
+		QStart:     common.StringToInt64(words[5]),
+		QEnd:       common.StringToInt64(words[6]),
+		QStrandPos: common.StringToStrand(words[7]),
+		Score:      common.StringToInt64(words[8]),
+		RSeq:       dna.StringToBases(rSeq),
+		QSeq:       dna.StringToBases(qSeq),
+	}
+	return answer
+}
+
 func WriteToFileHandle(file *fileio.EasyWriter, input *Axt, alnNumber int) {
-	strand := common.StrandToRune(input.QStrandPos)
-	_, err := fmt.Fprintf(file, "%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", alnNumber, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, strand, input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
+	_, err := fmt.Fprintf(file, "%s", ToString(input, alnNumber))
 	common.ExitIfError(err)
+}
+
+func ToString(input *Axt, id int) string {
+	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, common.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 }
 
 func Write(filename string, data []*Axt) {

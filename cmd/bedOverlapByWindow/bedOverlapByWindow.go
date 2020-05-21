@@ -4,6 +4,7 @@ import (
         "github.com/vertgenlab/gonomics/chromInfo"
         "github.com/vertgenlab/gonomics/bed"
         "github.com/vertgenlab/gonomics/fileio"
+        "github.com/vertgenlab/gonomics/common"
         "fmt"
         "flag"
         "log"
@@ -14,21 +15,48 @@ func bedOverlapByWindow (infile string, chromsizes string, outfile string, windo
         bInfo := bed.Read(infile)
         out := fileio.EasyCreate(outfile)
         defer out.Close()
+        var positionCounts map[string][]uint32
+        positionCounts = make(map[string][]uint32)
+        var i, b, p, j, x int64
+        var thisChrom []uint32 
 
-        for i := 0; i < len(cInfo); i++ {
-                for s := int64(0); s < cInfo[i].Size-windowSize; s++ {
 
-                        output := bed.Bed{Chrom: cInfo[i].Name, ChromStart:int64(s), ChromEnd:int64(s+windowSize), Score: int64(0), Name: "."}
+        for i = 0; i < int64(len(cInfo)); i++ {
+
+                positionCounts[cInfo[i].Name] = make([]uint32, cInfo[i].Size)
 
 
-                        for b := 0; b < len(bInfo); b++ {
-                                output.Score = output.Score+bed.OverlapLength(bInfo[b], &output)
+        }
+
+        for b = 0; b < int64(len(bInfo)); b++ {
+                
+                thisChrom = positionCounts[bInfo[b].Chrom]
+
+
+                for p = bInfo[b].ChromStart; p < bInfo[b].ChromEnd; p++{
+
+                        for x = common.MaxInt64(0, p-(windowSize-1)); x < common.MinInt64(bInfo[b].ChromEnd, p+1); x++{
+
+//for x = common.MaxInt64(0, p-(windowSize-1)); x < common.MinInt64(bInfo[b].ChromEnd, p+(windowSize-1)); x++{
+                           thisChrom[x]+=1  
 
                         }
-                        bed.WriteBed(out.File, &output, 5)
+
                 }
 
         }
+        
+        for i = 0; i < int64(len(cInfo)); i++ {
+
+                thisChrom=positionCounts[cInfo[i].Name]
+
+                for j = 0; j < int64(len(thisChrom)); j++{
+
+                        fmt.Fprintf(out, "%s\t%d\t%d\t%s\t%d\n", cInfo[i].Name, j, j+windowSize, ".", thisChrom[j])
+
+                }
+
+        }        
 
 }
 

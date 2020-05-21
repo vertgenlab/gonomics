@@ -25,22 +25,6 @@ func CountBase(fa *Fasta, b dna.Base) int64 {
 	return answer
 }
 
-//Dictionary/hash map look up of sequence by name
-func FastaMap(ref []*Fasta) map[string][]dna.Base {
-	m := make(map[string][]dna.Base)
-	var curr *Fasta
-	for i := 0; i < len(ref); i++ {
-		curr = ref[i]
-		_, ok := m[curr.Name]
-		if !ok {
-			m[curr.Name] = curr.Seq
-		} else {
-			log.Fatalf("Fasta slice has duplicate names")
-		}
-	}
-	return m
-}
-
 func FindFaIndex(subFa []*Fasta, n string) int {
 	for i := 0; i < len(subFa); i++ {
 		if subFa[i].Name == n {

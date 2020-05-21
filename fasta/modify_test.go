@@ -1,7 +1,6 @@
 package fasta
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 )
@@ -28,6 +27,7 @@ func TestReverseComplement(t *testing.T) {
 	}
 }
 
+/*
 func TestChangeName(t *testing.T) {
 	fa := Read("testdata/testOne.fa")
 	newFa := Read("testdata/testOne.fa")
@@ -38,4 +38,4 @@ func TestChangeName(t *testing.T) {
 			t.Errorf("Fasta record change was not successful")
 		}
 	}
-}
+}*/
