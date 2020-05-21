@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ShuffleVcfColumn(input *Vcf, het []int16, hom []int16) *Vcf {
+func ReorderSampleColumns(input *Vcf, het []int16, hom []int16) *Vcf {
 	columnData := make([]string, 0, len(het)+len(hom))
 	words := strings.Split(input.Notes, "\t")
 	var i int
@@ -24,8 +24,8 @@ func ViewGenotypeVcf(v *Vcf) {
 	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, haplotypesToString(gVcf))
 }
 
-func PrettyShuffle(v *Vcf, het []int16, hom []int16) {
-	gVcf := VcfToGenotype(ShuffleVcfColumn(v, het, hom))
+func PrintReOrder(v *Vcf, het []int16, hom []int16) {
+	gVcf := VcfToGenotype(ReorderSampleColumns(v, het, hom))
 	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, haplotypesToString(gVcf))
 }
 

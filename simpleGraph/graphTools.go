@@ -17,7 +17,6 @@ func VariantGraph(ref <-chan *fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *Simple
 	for chr := range ref {
 		filterVcf = vcfMap[chr.Name]
 		if len(filterVcf) != 0 {
-			filterVcf = append(filterVcf, &vcf.Vcf{Chr: chr.Name, Pos: int64(len(chr.Seq))})
 			vcf.Sort(filterVcf)
 			gg = vChrGraph(gg, chr, filterVcf)
 		} else {
@@ -43,9 +42,9 @@ func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*Simple
 }
 
 func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
+	vcfsChr = append(vcfsChr, &vcf.Vcf{Chr: chr.Name, Pos: int64(len(chr.Seq))})
 	log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
 	fasta.ToUpper(chr)
-
 	var currMatch *Node = nil
 	var lastMatch *Node = nil
 	var refAllele, altAllele *Node

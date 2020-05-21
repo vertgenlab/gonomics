@@ -58,14 +58,3 @@ func WritingChannel(file *fileio.EasyWriter, output <-chan *Fasta, wg *sync.Wait
 	}
 	wg.Done()
 }
-
-func WriteGroups(filename string, groups [][]*Fasta) {
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	lineLength := 50
-	for i, _ := range groups {
-		for _, records := range groups[i] {
-			WriteHelper(file, records, lineLength)
-		}
-	}
-}
