@@ -25,6 +25,7 @@ func sortGiraf(girafFile string, graphFile string, linesPerChunk int, outFile st
 
 func main() {
 	var expectedNumArgs = 3
+	//TODO: add flag that allows user to define custom prefix for tmp files
 	var linesPerChunk *int = flag.Int("chunkSize", 1000000, "Number of giraf records to use for each tmp file written to disk.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

@@ -1,12 +1,24 @@
 package sort
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"os"
 	"testing"
+	"unsafe"
 )
 
+type ByteTest struct {
+	d	int32
+	s 	int32
+	a 	byte
+	c 	byte
+}
+
 func TestExternalMergeSort(t *testing.T) {
+	var test ByteTest
+	val := unsafe.Sizeof(test)
+	fmt.Println(val)
 	graph := simpleGraph.Read("testdata/mini.gg")
 	sortOrder := simpleGraph.GetSortOrder(graph)
 	ExternalMergeSort("testdata/miniReads.giraf", sortOrder, 100, "testSort.giraf")

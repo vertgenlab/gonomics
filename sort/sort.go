@@ -80,7 +80,7 @@ func (g *byTopologicalOrder) Pop() interface{} {
 	oldQueue := *g
 	n := len(oldQueue)
 	giraf := oldQueue[n-1]
-	oldQueue[n-1] = nil
+	//oldQueue[n-1] = nil // potential solution to memory leak?
 	*g = oldQueue[:n-1]
 	return giraf
 }
@@ -103,6 +103,10 @@ func ExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk
 			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
 		}
 		currValues = readChunk(file, linesPerChunk, &done, sortOrderMap)
+		// Check to see if currValues contains any data. If not, continue.
+		if len(currValues) == 0 {
+			continue
+		}
 		sort.Sort(currValues)
 		currChunkID = writeChunk(currValues, i)
 		chunkIDs = append(chunkIDs, currChunkID)
@@ -137,14 +141,14 @@ func getSortPath(path *giraf.Path, sortOrderMap map[uint32]uint32) []uint32 {
 }
 
 func readChunk(file *fileio.EasyReader, linesPerChunk int, done *bool, sortOrderMap map[uint32]uint32) []*priorityGiraf {
-	answer := make([]*priorityGiraf, linesPerChunk)
+	answer := make([]*priorityGiraf, 0, linesPerChunk)
 	var curr *giraf.Giraf
 	for i := 0; i < linesPerChunk; i++ {
 		curr, *done = giraf.NextGiraf(file)
 		if *done {
-			return answer[:i]
+			return answer
 		}
-		answer[i] = &priorityGiraf{curr, 0, getSortPath(curr.Path, sortOrderMap)}
+		answer = append(answer, &priorityGiraf{curr, 0, getSortPath(curr.Path, sortOrderMap)})
 	}
 	return answer
 }
