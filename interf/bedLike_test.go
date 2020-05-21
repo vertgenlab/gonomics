@@ -41,9 +41,9 @@ func TestBedLike(t *testing.T) {
 }
 
 func testEquality(a BedLike, b BedLike) bool {
-	testChr := a.GetChr() == b.GetChr()
-	testStart := a.GetStart() == b.GetStart()
-	testEnd := a.GetEnd() == b.GetEnd()
+	testChr := a.GetChrom() == b.GetChrom()
+	testStart := a.GetChromStart() == b.GetChromStart()
+	testEnd := a.GetChromEnd() == b.GetChromEnd()
 
 	if testChr && testStart && testEnd {
 		return true

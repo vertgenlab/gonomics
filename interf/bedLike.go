@@ -8,7 +8,7 @@ package interf
 // vcf.Vcf
 
 type BedLike interface {
-	GetChr() string
-	GetStart() int
-	GetEnd() int
+	GetChrom() string
+	GetChromStart() int
+	GetChromEnd() int
 }

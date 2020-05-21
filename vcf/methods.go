@@ -5,7 +5,7 @@ import "github.com/vertgenlab/gonomics/dna"
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
-func (v *Vcf) GetChr() string {
+func (v *Vcf) GetChrom() string {
 	return v.Chr
 }
 
@@ -24,7 +24,7 @@ func (v *Vcf) GetChr() string {
 // for indels, vcf records the startpos as the base prior to the change
 // to find the region actually being changed we need to check if it is indel
 // and adjust accordingly
-func (v *Vcf) GetStart() int {
+func (v *Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
 		return int(v.Pos - 1)
@@ -33,7 +33,7 @@ func (v *Vcf) GetStart() int {
 	}
 }
 
-func (v *Vcf) GetEnd() int {
+func (v *Vcf) GetChromEnd() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
 		return int(v.Pos)
