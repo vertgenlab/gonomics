@@ -77,12 +77,13 @@ func initGgtoolsArgs() *GgToolsSettings {
 func RunGgTools() {
 	ggT := initGgtoolsArgs()
 	ggT.Cmd.Parse(os.Args[2:])
-	if len(os.Args) == 2 {
+	if len(os.Args) < 2 {
 		ggT.Cmd.Usage()
 	} else {
 		graphTools(ggT.Out, ggT.Axtfile, ggT.VcfFmt, ggT.FmtOutput, ggT.Cmd.Arg(0), ggT.BedFmt, ggT.ChainFmt, ggT.SelectOverlap, ggT.NonOverlap)
 	}
 }
+
 //This is similar to the function we usually run in main() which takes the flag pointers as arguments and runs our analysis
 func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRef string, bedFmt string, chainFmt string, overlap bool, invert bool) {
 	switch true {
@@ -94,6 +95,8 @@ func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRe
 		//chain.OverlapChainBed(chainFmt)
 		//TODO: add feature to select target or query
 		chainToBed(chainFmt, outfmt, true, out)
+	default:
+		errorMessage()
 	}
 	//These are the functions that require a fasta reference, need to perform check separate from switch case because the value could be empty
 	if isFasta(faRef) {
@@ -148,6 +151,7 @@ func chainToBed(chainFmt, bedFmt string, target bool, out string) {
 	go chain.ReadToChan(input, reader)
 
 	outFile := fileio.MustCreate(out)
+	defer outFile.Close()
 	for each := range reader {
 		bed.WriteBed(outFile, chain.ChainToBed(each, target), 5)
 	}
@@ -169,8 +173,8 @@ func chainToAxt(chainFmt string, axtFmt string) {
 
 }*/
 
-func vcfSplitChrNoN(vcfs string) map[string][]*vcf.Vcf {
-	reader := fileio.EasyOpen(vcfs)
+func vcfSplitChrNoN(vcfInput string) map[string][]*vcf.Vcf {
+	reader := fileio.EasyOpen(vcfInput)
 	defer reader.Close()
 	vcf.ReadHeader(reader)
 	var data *vcf.Vcf
@@ -184,8 +188,8 @@ func vcfSplitChrNoN(vcfs string) map[string][]*vcf.Vcf {
 	return chrMap
 }
 
-func FaVcfChannels(ref string, vcfs string) *simpleGraph.SimpleGraph {
-	vcfFilteredMap := vcfSplitChrNoN(vcfs)
+func FaVcfChannels(ref string, vcfInput string) *simpleGraph.SimpleGraph {
+	vcfFilteredMap := vcfSplitChrNoN(vcfInput)
 	faReader := make(chan *fasta.Fasta)
 	go fasta.ReadToChan(ref, faReader, nil, true)
 	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)

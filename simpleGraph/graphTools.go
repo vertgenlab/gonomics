@@ -43,7 +43,7 @@ func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*Simple
 
 func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
 	vcfsChr = append(vcfsChr, &vcf.Vcf{Chr: chr.Name, Pos: int64(len(chr.Seq))})
-	log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
+	//log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
 	fasta.ToUpper(chr)
 	var currMatch *Node = nil
 	var lastMatch *Node = nil
@@ -51,10 +51,10 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	var prev []*Node = nil
 	var i, j, edge int
 	var index int64 = 0
-	var num int = 0
+	//var num int = 0
 	for i = 0; i < len(vcfsChr)-1; i++ {
 		if strings.Compare(chr.Name, vcfsChr[i].Chr) != 0 {
-			log.Fatalf("Error: chromosome names do not match...\n")
+			//log.Fatalf("Error: chromosome names do not match...\n")
 		}
 		if vcfsChr[i].Pos-index > 0 {
 			currMatch = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: chr.Seq[index : vcfsChr[i].Pos-1], Prev: nil, Next: make([]*Edge, 0, 2), Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 0}}
@@ -169,7 +169,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 				}
 				lastMatch = currMatch
 			} else {
-				num++
+				//num++
 				//log.Printf("index=%d, vcfPos=%d\ndiff=%d\n%s", index, vcfsChr[i].Pos, vcfsChr[i].Pos-index, vcfsChr[i].Info)
 			}
 		}

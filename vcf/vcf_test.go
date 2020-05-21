@@ -17,17 +17,18 @@ func TestReadToChan(t *testing.T) {
 	alpha := Read("testdata/pacbio.vcf")
 	var beta []*Vcf
 	vcfPipe := make(chan *Vcf)
-
 	file := fileio.EasyOpen("testdata/pacbio.vcf")
 	defer file.Close()
 	ReadHeader(file)
-
 	go ReadToChan(file, vcfPipe)
 	for vcfs := range vcfPipe {
 		beta = append(beta, vcfs)
 	}
-	log.Printf("alpha=%d, beta=%d", len(alpha), len(beta))
-	LogEqual(alpha, beta)
+	if AllEqual(alpha, beta) {
+		log.Printf("PASS: go ReadToChan function matches standard read funtion\n")
+	} else {
+		t.Errorf("Error there might be a bug in the ReadToChan implementation\n")
+	}
 }
 
 func TestWriteAndRead(t *testing.T) {
@@ -38,14 +39,13 @@ func TestWriteAndRead(t *testing.T) {
 		Write(tempFile, actual)
 		alpha := Read(tempFile)
 		beta := Read("testdata/test.vcf")
-		PrintVcfLines(beta, 5)
+		log.Printf("Print one line...\n")
+		PrintVcfLines(beta, 1)
+		log.Printf("Looks good to me!\n")
 		log.Printf("alpha=%d, beta=%d", len(alpha), len(beta))
-		if len(alpha) != len(beta) {
-			t.Errorf("Vcf lengths are not equal...")
+		if !AllEqual(alpha, beta) {
+			t.Errorf("Error: Read and write files do not match\n")
 		}
-		LogEqual(alpha, beta)
-		//t.Errorf("VCF files are not the same...")
-
 		os.Remove(tempFile)
 	}
 }
