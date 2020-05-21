@@ -89,7 +89,7 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
 	}
 	close(answer)
 }
-//TODO: Add an if statement that catches the case where 4 lines do not exist
+
 func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
 	rSeq, rDone := fileio.EasyNextRealLine(reader)
