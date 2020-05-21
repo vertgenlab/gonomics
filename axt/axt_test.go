@@ -1,6 +1,7 @@
 package axt
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
 )
@@ -11,9 +12,21 @@ var readWriteTests = []struct {
 	{"testdata/chrM_gasacu1.axt"},
 }
 
-func TestRead(t *testing.T) {
+func TestReadToChan(t *testing.T) {
 	for _, test := range readWriteTests {
-		_ = Read(test.filename)
+		file := Read(test.filename)
+		testFile := fileio.EasyOpen(test.filename)
+		reader := make(chan *Axt)
+		defer testFile.Close()
+		go ReadToChan(testFile, reader)
+		var index int = 0
+		for each := range reader {
+			if !isEqual(each, file[index]) {
+				t.Errorf("Error: Read to chan function does not equal standard read funtion\n")
+			}
+			index++
+		}
+
 	}
 }
 
