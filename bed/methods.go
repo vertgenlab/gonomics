@@ -15,13 +15,13 @@ func (b *Bed) GetChromEnd() int {
 	return int(b.ChromEnd)
 }
 
-type byGenomicCoordinates []*Bed
+type ByGenomicCoordinates []*Bed
 
-func (g byGenomicCoordinates) Len() int { return len(g) }
+func (g ByGenomicCoordinates) Len() int { return len(g) }
 
-func (g byGenomicCoordinates) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
+func (g ByGenomicCoordinates) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
 
-func (g byGenomicCoordinates) Less(i, j int) bool {
+func (g ByGenomicCoordinates) Less(i, j int) bool {
 	// First sort criteria is chromosome
 	if g[i].GetChrom() < g[j].GetChrom() {
 		return true
@@ -39,12 +39,12 @@ func (g byGenomicCoordinates) Less(i, j int) bool {
 	return false
 }
 
-func (g *byGenomicCoordinates) Push(x interface{}) {
+func (g *ByGenomicCoordinates) Push(x interface{}) {
 	answer := x.(*Bed)
 	*g = append(*g, answer)
 }
 
-func (g *byGenomicCoordinates) Pop() interface{} {
+func (g *ByGenomicCoordinates) Pop() interface{} {
 	oldQueue := *g
 	n := len(oldQueue)
 	answer := oldQueue[n-1]
