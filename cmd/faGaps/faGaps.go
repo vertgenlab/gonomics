@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
 )
 
 func faNoGap(inFile string, outFile string) {
@@ -39,17 +38,10 @@ func init() {
 }
 
 func main() {
-	if len(os.Args) == 1 {
-		flag.Usage()
-	}
 	var expectedNumArgs int = 1
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
 
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-	}
 	var inFile string = flag.Arg(0)
 	if *bedOut {
 		faNoGap(inFile, *outFile)
@@ -57,8 +49,7 @@ func main() {
 		faSplitByNs(inFile, *outFile)
 	} else {
 		flag.Usage()
-
-		log.Fatalf("Error: please try your command prompt again...\n")
+		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 }
 
