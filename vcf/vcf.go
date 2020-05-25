@@ -48,12 +48,12 @@ func Read(filename string) []*Vcf {
 	return answer
 }
 
-func GoReadToChan(filename string) <-chan *Vcf {
+func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
 	output := make(chan *Vcf)
 	file := fileio.EasyOpen(filename)
-	ReadHeader(file)
+	header := ReadHeader(file)
 	go ReadToChan(file, output)
-	return output
+	return output, header
 }
 
 func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
