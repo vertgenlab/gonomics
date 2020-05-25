@@ -7,29 +7,39 @@ import (
 
 //Uses bool to compare target or query coordinates as one function
 //true is for target, false is for query
-func compareStartCoord(a *Chain, b *Chain, whichGenome bool) int {
-	if whichGenome {
-		sameChr := strings.Compare(a.TName, b.TName)
-		if sameChr != 0 {
-			return sameChr
-		}
-		if a.TStart < b.TStart {
-			return -1
-		}
-		if a.TStart > b.TStart {
-			return 1
-		}
+func compareStartCoord(a *Chain, b *Chain, checkTarget bool) int {
+	if checkTarget {
+		return targetCoord(a, b)
 	} else {
-		sameChr := strings.Compare(a.QName, b.QName)
-		if sameChr != 0 {
-			return sameChr
-		}
-		if a.QStart < b.QStart {
-			return -1
-		}
-		if a.QStart > b.QStart {
-			return 1
-		}
+		return queryCoord(a, b)
+	}
+	return 0
+}
+
+func targetCoord(a *Chain, b *Chain) int {
+	sameChr := strings.Compare(a.TName, b.TName)
+	if sameChr != 0 {
+		return sameChr
+	}
+	if a.TStart < b.TStart {
+		return -1
+	}
+	if a.TStart > b.TStart {
+		return 1
+	}
+	return 0
+}
+
+func queryCoord(a *Chain, b *Chain) int {
+	sameChr := strings.Compare(a.QName, b.QName)
+	if sameChr != 0 {
+		return sameChr
+	}
+	if a.QStart < b.QStart {
+		return -1
+	}
+	if a.QStart > b.QStart {
+		return 1
 	}
 	return 0
 }
@@ -48,10 +58,6 @@ func compareScores(a *Chain, b *Chain) int {
 		return 1
 	}
 	return 0
-}
-
-func CompareName(alpha string, beta string) int {
-	return strings.Compare(alpha, beta)
 }
 
 func Equal(a []*Chain, b []*Chain) bool {

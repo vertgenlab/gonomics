@@ -54,7 +54,7 @@ func getSequence(seq []dna.Base, start int, length int) []dna.Base {
 //get alignment blocks for the 3 columns containing alignment data
 //length of of target and query seqs in axts should be the same i believe, so we can loop over either one.
 func getChainCounts(rSeq []dna.Base, qSeq []dna.Base) int {
-	var answer int
+	var answer int = 0
 	for i := 0; i < len(rSeq); i++ {
 		if rSeq[i] != dna.Gap && qSeq[i] != dna.Gap {
 			answer++
@@ -66,16 +66,14 @@ func getChainCounts(rSeq []dna.Base, qSeq []dna.Base) int {
 }
 
 func calcMissingBases(rSeq []dna.Base, qSeq []dna.Base) (int, int) {
-	var target, query int
-	for i, j := 0, 0; i < len(rSeq) && j < len(qSeq) && (rSeq[i] == dna.Gap || qSeq[i] == dna.Gap); {
+	var target, query int = 0, 0
+	for i := 0; i < len(rSeq) && (rSeq[i] == dna.Gap || qSeq[i] == dna.Gap); i++ {
 		if rSeq[i] == dna.Gap {
 			query++
 		}
 		if qSeq[i] == dna.Gap {
 			target++
 		}
-		i++
-		j++
 	}
 	return target, query
 }

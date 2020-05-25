@@ -8,19 +8,27 @@ import (
 
 //TODO: Will move to the overlap interface once we have that set up, essentially all the functions
 //if target bool is true, we select the target/refernce regions, if target bool is false we use the query
-func OverlapChainBed(alpha *Chain, beta *bed.Bed, target bool) bool {
-	if target {
-		if (common.MaxInt64(int64(alpha.TStart), beta.ChromStart) < common.MinInt64(int64(alpha.TEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
-			return true
-		} else {
-			return false
-		}
+func OverlapChainBed(alpha *Chain, beta *bed.Bed, checkTarget bool) bool {
+	if checkTarget {
+		return targetOverlap(alpha, beta)
 	} else {
-		if (common.MaxInt64(int64(alpha.QStart), beta.ChromStart) < common.MinInt64(int64(alpha.QEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
-			return true
-		} else {
-			return false
-		}
+		return queryOverlap(alpha, beta)
+	}
+}
+
+func targetOverlap(alpha *Chain, beta *bed.Bed) bool {
+	if (common.MaxInt64(int64(alpha.TStart), beta.ChromStart) < common.MinInt64(int64(alpha.TEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
+	if (common.MaxInt64(int64(alpha.QStart), beta.ChromStart) < common.MinInt64(int64(alpha.QEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
+		return true
+	} else {
+		return false
 	}
 }
 
