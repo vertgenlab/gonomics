@@ -52,7 +52,7 @@ func (g byTopologicalOrder) Less(i, j int) bool {
 			return false
 			// if the start pos is the same go through the paths until there is a sortable difference
 		} else {
-			for k := 1; k < minPathLen-1; k++ {
+			for k := 1; k < minPathLen; k++ {
 				if g[i].sortPath[k] < g[j].sortPath[k] {
 					return true
 				} else if g[i].sortPath[k] > g[j].sortPath[k] {
@@ -176,6 +176,7 @@ func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrderMap
 			chunkReaders[i].Close()
 			err := os.Remove(chunkReaders[i].File.Name())
 			common.ExitIfError(err)
+			log.Fatalln("ERROR: Could not find file, or file empty", chunkIDs[i])
 		} else {
 			// I figure that it would be just as quick to rederive the sortPath
 			// compared to writing it to the tmp file and decoding it here
