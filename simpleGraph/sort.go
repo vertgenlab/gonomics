@@ -18,7 +18,7 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 	// breadth-first approach
 	updatedNodes := make([]*Node, 0)
 
-	subGraphs := breakNonContiguousGraph(nodes)
+	subGraphs := BreakNonContiguousGraph(nodes)
 
 	// loop through each contiguous subGraph
 	for _, nodeSet := range subGraphs {
@@ -53,7 +53,9 @@ func updateTable(inDegreeTable map[*Node]int, node *Node, updatedNodes *[]*Node)
 	}
 }
 
-func breakNonContiguousGraph(g []*Node) [][]*Node {
+// TODO: possible to order nodes while breaking discontiguous graphs???
+// TODO: presort graph node IDs and incorporate into simpleGraph??
+func BreakNonContiguousGraph(g []*Node) [][]*Node {
 	answer := make([][]*Node, 0)
 	var contiguousGraph []*Node
 	inDegreeTable := make(map[*Node]int)
