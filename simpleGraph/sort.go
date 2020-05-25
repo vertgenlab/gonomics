@@ -4,6 +4,7 @@ func GetSortOrder(g *SimpleGraph) []uint32 {
 	return breadthFirstSearch(g.Nodes)
 }
 
+// TODO: design function to get start positions only
 func breadthFirstSearch(nodes []*Node) []uint32 {
 	answer := make([]uint32, 0)
 	var inDegree int
