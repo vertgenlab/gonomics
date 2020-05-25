@@ -15,41 +15,43 @@ func faNoGap(inFile string, outFile string) {
 	bed.Write(outFile, beds, 3)
 }
 
-func usage() {
-	fmt.Print(
-		"faGap - a program to investigate regions containing gaps\n" +
-			"Usage:\n" +
-			"  faGap [options] input.fa\n\n" +
-			"Options:\n" +
-			"  -b, --bed\toutput bed file containing regions outside gaps\n" +
-			"  -s, --split\tbreak fasta into multiple records, split by gapped regions\n" +
-			"  -o, --out\twrite to filename (default: /dev/stdout)\n\n")
+func faSplitByNs(filename string, outFile string) {
+	reader := fileio.EasyOpen(filename)
+	writer := fileio.EasyCreate(outFile)
+	defer reader.Close()
+	for fa, done := fasta.NextFasta(reader); !done; fa, done = fasta.NextFasta(reader) {
+		fasta.WriteToFileHandle(writer, chrSplitByNs(fa), 50)
+	}
 }
 
-var bedOut = flag.Bool("`'`b", false, "`--bed`output bed file containing regions outside gaps")
-var faOut = flag.Bool("s", false, "`--split`break fasta into multiple records, split by gapped regions")
-var outFile = flag.String("o", "/dev/stdout", "`--out`write to filename (default: /dev/stdout)")
-
-func init() {
-	flag.BoolVar(bedOut, "bed", false, "output bed file containing regions outside gaps")
-	flag.BoolVar(faOut, "split", false, "break fasta into multiple records, split by gapped regions")
-	flag.StringVar(outFile, "out", "/dev/stdout", "write to filename (default: /dev/stdout)")
-	flag.Usage = usage
+func usage() {
+	fmt.Print(
+		"faGap - a program to investigate regions containing gaps\n\n" +
+			"Usage:\n" +
+			"  faGap [options] in.fa outfmt\n\n" +
+			"Options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 1
+	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
+	var expectedNumArgs int = 2
+	var bedOut = flag.Bool("bed", false, "find genomic coordinates containing regions outside gaps `.bed`")
+	var faOut = flag.Bool("fasta", false, "split fasta into several records using gapped coordinates `.fa/.gz`\n")
+
 	flag.Parse()
 
 	var inFile string = flag.Arg(0)
+	var outFile string = flag.Arg(1)
+
 	if *bedOut {
-		faNoGap(inFile, *outFile)
+		faNoGap(inFile, outFile)
 	} else if *faOut {
-		faSplitByNs(inFile, *outFile)
+		faSplitByNs(inFile, outFile)
 	} else {
 		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 	}
 }
 
@@ -61,12 +63,4 @@ func chrSplitByNs(chr *fasta.Fasta) []*fasta.Fasta {
 		answer[i] = &fasta.Fasta{Name: fmt.Sprintf("%s_%d_%d", unGapped[i].Chrom, unGapped[i].ChromStart, unGapped[i].ChromEnd), Seq: chr.Seq[unGapped[i].ChromStart:unGapped[i].ChromEnd]}
 	}
 	return answer
-}
-
-func faSplitByNs(filename string, outFile string) {
-	fa := fasta.Read(filename)
-	out := fileio.EasyCreate(outFile)
-	for i := 0; i < len(fa); i++ {
-		fasta.WriteToFileHandle(out, chrSplitByNs(fa[i]), 50)
-	}
 }
