@@ -3,6 +3,7 @@ package chain
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"log"
 	"strings"
 )
 
@@ -32,10 +33,30 @@ func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
 	}
 }
 
-func ChainToBed(ch *Chain, target bool) *bed.Bed {
-	if target {
+func ChainToBed(ch *Chain, checkTarget bool) *bed.Bed {
+	if !ch.TStrand || !ch.QStrand {
+		return negativeChainBed(ch, checkTarget)
+	} else if checkTarget && ch.TStrand {
 		return &bed.Bed{Chrom: ch.TName, ChromStart: int64(ch.TStart), ChromEnd: int64(ch.TEnd), Name: ch.QName, Score: int64(ch.Score)}
 	} else {
 		return &bed.Bed{Chrom: ch.QName, ChromStart: int64(ch.QStart), ChromEnd: int64(ch.QEnd), Name: ch.TName, Score: int64(ch.Score)}
+	}
+}
+
+//converts chain to be strictly only the negative strand
+//let me know what you think about me separating these two log.Fatals
+//i could do if !ch.TStrand || !ch.QStrand { but i was worry about not catching ch.TStrand && ch.QStrand case
+//still runs the same way i believe
+func negativeChainBed(ch *Chain, checkTarget bool) *bed.Bed {
+	if checkTarget {
+		if ch.TStrand {
+			log.Fatalf("Error: Found a target alignment with positive strand, please check input...\n")
+		}
+		return &bed.Bed{Chrom: ch.TName, ChromStart: int64(ch.TSize - ch.TEnd), ChromEnd: int64(ch.TSize - ch.TStart), Name: ch.QName, Score: int64(ch.Score)}
+	} else {
+		if ch.QStrand {
+			log.Fatalf("Error: Found a query alignment with positive strand, please check input...\n")
+		}
+		return &bed.Bed{Chrom: ch.QName, ChromStart: int64(ch.QSize - ch.QEnd), ChromEnd: int64(ch.QSize - ch.QStart), Name: ch.TName, Score: int64(ch.Score)}
 	}
 }
