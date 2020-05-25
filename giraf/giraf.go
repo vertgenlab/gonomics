@@ -70,7 +70,7 @@ func Write(filename string, gfs []*Giraf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for i := 0; i < len(gfs); i++ {
-		WriteGriafHelper(file, gfs[i])
+		WriteGirafToFileHandle(file, gfs[i])
 	}
 }
 
@@ -79,7 +79,7 @@ func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
 	defer file.Close()
 
 	for line := range input {
-		WriteGriafHelper(file, line)
+		WriteGirafToFileHandle(file, line)
 	}
 	wg.Done()
 }
@@ -88,13 +88,13 @@ func GirafPairChanToFile(filename string, input <-chan *GirafPair, wg *sync.Wait
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for pair := range input {
-		WriteGriafHelper(file, pair.Fwd)
-		WriteGriafHelper(file, pair.Rev)
+		WriteGirafToFileHandle(file, pair.Fwd)
+		WriteGirafToFileHandle(file, pair.Rev)
 	}
 	wg.Done()
 }
 
-func WriteGriafHelper(file *os.File, gf *Giraf) {
+func WriteGirafToFileHandle(file *os.File, gf *Giraf) {
 	_, err := fmt.Fprintf(file, "%s\n", GirafToString(gf))
 	common.ExitIfError(err)
 }
