@@ -19,6 +19,7 @@ func faSplitByNs(filename string, outFile string) {
 	reader := fileio.EasyOpen(filename)
 	writer := fileio.EasyCreate(outFile)
 	defer reader.Close()
+	defer writer.Close()
 	for fa, done := fasta.NextFasta(reader); !done; fa, done = fasta.NextFasta(reader) {
 		fasta.WriteToFileHandle(writer, chrSplitByNs(fa), 50)
 	}
@@ -28,7 +29,7 @@ func usage() {
 	fmt.Print(
 		"faGap - a program to investigate regions containing gaps\n\n" +
 			"Usage:\n" +
-			"  faGap [options] in.fa outfmt\n\n" +
+			"  faGap [options] in.fa out.file\n\n" +
 			"Options:\n")
 	flag.PrintDefaults()
 }
