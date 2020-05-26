@@ -4,12 +4,14 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
 //TODO: Next to figure out a better way to pass in target and query
 func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 	var tLen, qLen int = ch.TEnd - ch.TStart, ch.QEnd - ch.QStart
+
 	var answer *axt.Axt = &axt.Axt{
 		RName:      ch.TName,
 		RStart:     int64(ch.TStart) + 1,
@@ -22,6 +24,13 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 		RSeq:       make([]dna.Base, 0, tLen),
 		QSeq:       make([]dna.Base, 0, qLen),
 	}
+	if !ch.TStrand {
+		dna.ReverseComplement(target)
+	}
+	if !ch.QStrand {
+		dna.ReverseComplement(query)
+	}
+
 	var tIndex, qIndex int = ch.TStart, ch.QStart
 	for _, each := range ch.Alignment {
 		answer.RSeq = append(answer.RSeq, getSequence(target, tIndex, each.Size)...)
@@ -40,11 +49,12 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 			qIndex += each.QBases
 		}
 	}
-	if len(answer.RSeq) != tLen || len(answer.QSeq) != qLen {
-		log.Fatalf("Error: %s indices for target and/or query, may be off by 1\n", axt.ToString(answer, 0))
-	}
 	return answer
 }
+
+//func getRevStart(start int) int {
+
+//}
 
 //helper function to quickly get sequence at a starting pos plus length this way i dont have to keep doing start:start+length everytime
 func getSequence(seq []dna.Base, start int, length int) []dna.Base {
@@ -103,8 +113,7 @@ func CalcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []*BaseStats {
 	return answer
 }
 
-func AxtToChain(align *axt.Axt, id int) *Chain {
-	var tLen, qLen int = int(align.REnd - align.RStart), int(align.QEnd - align.QStart)
+func AxtToChain(align *axt.Axt, tLen int, qLen int, id int) *Chain {
 	var answer *Chain = &Chain{
 		Score:     int(align.Score),
 		TName:     align.RName,
@@ -116,7 +125,7 @@ func AxtToChain(align *axt.Axt, id int) *Chain {
 		QSize:     qLen,
 		QStrand:   align.QStrandPos,
 		QStart:    int(align.QStart) - 1,
-		QEnd:      int(align.QEnd) - 1,
+		QEnd:      int(align.QEnd),
 		Alignment: make([]*BaseStats, 0),
 		Id:        id,
 	}

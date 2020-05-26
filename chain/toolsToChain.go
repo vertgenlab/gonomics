@@ -71,6 +71,8 @@ func reverseTStrandBed(ch *Chain) *bed.Bed {
 	}
 }
 
+//Just want to point out that it might be weird checking the false statement first
+//However, the more important condition is checked first
 func reverseQStrandBed(ch *Chain) *bed.Bed {
 	if !ch.QStrand {
 		return &bed.Bed{Chrom: ch.QName, ChromStart: int64(ch.QSize - ch.QEnd), ChromEnd: int64(ch.QSize - ch.QStart), Name: ch.TName, Score: int64(ch.Score)}

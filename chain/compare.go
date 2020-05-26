@@ -76,6 +76,9 @@ func isEqual(a *Chain, b *Chain) bool {
 	if strings.Compare(a.TName, b.TName) != 0 {
 		return false
 	}
+	if strings.Compare(a.QName, b.QName) != 0 {
+		return false
+	}
 	if a.TSize != b.TSize {
 		return false
 	}
@@ -86,9 +89,6 @@ func isEqual(a *Chain, b *Chain) bool {
 		return false
 	}
 	if a.TEnd != b.TEnd {
-		return false
-	}
-	if strings.Compare(a.QName, b.QName) != 0 {
 		return false
 	}
 	if a.QSize != b.QSize {
