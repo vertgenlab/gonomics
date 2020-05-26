@@ -158,14 +158,15 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 			answer = append(answer, curr)
 			line, _ = fileio.EasyNextRealLine(reader)
 			break
-		}
-		if len(data) == 3 {
+		} else if len(data) == 3 {
 			curr = &BaseStats{
 				Size:   common.StringToInt(data[0]),
 				TBases: common.StringToInt(data[1]),
 				QBases: common.StringToInt(data[2]),
 			}
 			answer = append(answer, curr)
+		} else {
+			log.Fatalf("Error: expecting alignment data columns to be 3 or 1 but encountered %d\n", len(data))
 		}
 	}
 	return answer
