@@ -9,14 +9,14 @@ import (
 //true is for target, false is for query
 func compareStartCoord(a *Chain, b *Chain, checkTarget bool) int {
 	if checkTarget {
-		return targetCoordCheck(a, b)
+		return compareTargetCoord(a, b)
 	} else {
-		return queryCoordCheck(a, b)
+		return compareQueryCoord(a, b)
 	}
 	return 0
 }
 
-func targetCoordCheck(a *Chain, b *Chain) int {
+func compareTargetCoord(a *Chain, b *Chain) int {
 	sameChr := strings.Compare(a.TName, b.TName)
 	if sameChr != 0 {
 		return sameChr
@@ -30,7 +30,7 @@ func targetCoordCheck(a *Chain, b *Chain) int {
 	return 0
 }
 
-func queryCoordCheck(a *Chain, b *Chain) int {
+func compareQueryCoord(a *Chain, b *Chain) int {
 	sameChr := strings.Compare(a.QName, b.QName)
 	if sameChr != 0 {
 		return sameChr

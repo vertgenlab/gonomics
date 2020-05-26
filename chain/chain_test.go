@@ -22,7 +22,7 @@ func TestReaderAndWriter(t *testing.T) {
 		file := fileio.EasyOpen(writeToFile)
 		reader := make(chan *Chain)
 		defer file.Close()
-		goHashTags := SaveComments(file)
+		goHashTags := ReadHeaderComments(file)
 		go ReadToChan(file, reader)
 		testGoRoutines := "testdata/goReaderWriter.chain"
 		var wg sync.WaitGroup

@@ -31,15 +31,15 @@ type BaseStats struct {
 	QBases int
 }
 
-type FileComments struct {
+type HeaderComments struct {
 	HashTag []string
 }
 
-func Read(filename string) ([]*Chain, *FileComments) {
+func Read(filename string) ([]*Chain, *HeaderComments) {
 	file := fileio.EasyOpen(filename)
 	var answer []*Chain
 	defer file.Close()
-	notes := SaveComments(file)
+	notes := ReadHeaderComments(file)
 	for block, done := NextChain(file); !done; block, done = NextChain(file) {
 		answer = append(answer, block)
 	}
@@ -53,11 +53,11 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 	close(answer)
 }
 
-func WriteToFile(filename string, chaining <-chan *Chain, comments *FileComments, wg *sync.WaitGroup) {
+func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderComments, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	if comments != nil {
-		WriteComments(file, comments)
+		WriteHeaderComments(file, comments)
 	}
 	for data := range chaining {
 		WriteChain(file, data)
@@ -65,34 +65,35 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *FileComments
 	wg.Done()
 }
 
-func Write(filename string, chaining []*Chain, comments *FileComments) {
+func Write(filename string, chaining []*Chain, comments *HeaderComments) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	if comments != nil {
-		WriteComments(file, comments)
+		WriteHeaderComments(file, comments)
 	}
 	for _, data := range chaining {
 		WriteChain(file, data)
 	}
 }
 
-func WriteComments(file *fileio.EasyWriter, comments *FileComments) {
+func WriteHeaderComments(file *fileio.EasyWriter, comments *HeaderComments) {
+	var err error
 	for _, each := range comments.HashTag {
-		_, err := fmt.Fprintf(file, "%s\n", each)
+		_, err = fmt.Fprintf(file, "%s\n", each)
 		common.ExitIfError(err)
 	}
 }
 
 func WriteChain(file *fileio.EasyWriter, chaining *Chain) {
-	_, err := fmt.Fprintf(file, "%s\n", ChainToString(chaining))
+	_, err := fmt.Fprintf(file, "%s\n", ToString(chaining))
 	common.ExitIfError(err)
 }
 
-func SaveComments(er *fileio.EasyReader) *FileComments {
+func ReadHeaderComments(er *fileio.EasyReader) *HeaderComments {
 	var line string
 	var err error
 	var nextBytes []byte
-	var commments FileComments
+	var commments HeaderComments
 	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		commments.HashTag = append(commments.HashTag, line)
@@ -100,8 +101,9 @@ func SaveComments(er *fileio.EasyReader) *FileComments {
 	return &commments
 }
 
-func ChainToString(ch *Chain) string {
+func ToString(ch *Chain) string {
 	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	//minus one in the loop because last line contains 2 zeros and we do not want to print those
 	for i := 0; i < len(ch.Alignment)-1; i++ {
 		answer += fmt.Sprintf("%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TBases, ch.Alignment[i].QBases)
 	}
@@ -114,29 +116,28 @@ func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 	if done {
 		return nil, true
 	}
-	answer := NewChain(header)
-	answer.Alignment = chainingHelper(reader)
-	return answer, false
+	return NewChain(header, reader), false
 }
 
-func NewChain(text string) *Chain {
+func NewChain(text string, reader *fileio.EasyReader) *Chain {
 	data := strings.Split(text, " ")
 	if len(data) != 13 {
 		log.Fatalf("Error: header line needs to contain 13 data fields\n")
 	}
 	curr := &Chain{
-		Score:   common.StringToInt(data[1]),
-		TName:   data[2],
-		TSize:   common.StringToInt(data[3]),
-		TStrand: common.StringToStrand(data[4]),
-		TStart:  common.StringToInt(data[5]),
-		TEnd:    common.StringToInt(data[6]),
-		QName:   data[7],
-		QSize:   common.StringToInt(data[8]),
-		QStrand: common.StringToStrand(data[9]),
-		QStart:  common.StringToInt(data[10]),
-		QEnd:    common.StringToInt(data[11]),
-		Id:      common.StringToInt(data[12]),
+		Score:     common.StringToInt(data[1]),
+		TName:     data[2],
+		TSize:     common.StringToInt(data[3]),
+		TStrand:   common.StringToStrand(data[4]),
+		TStart:    common.StringToInt(data[5]),
+		TEnd:      common.StringToInt(data[6]),
+		QName:     data[7],
+		QSize:     common.StringToInt(data[8]),
+		QStrand:   common.StringToStrand(data[9]),
+		QStart:    common.StringToInt(data[10]),
+		QEnd:      common.StringToInt(data[11]),
+		Alignment: chainingHelper(reader),
+		Id:        common.StringToInt(data[12]),
 	}
 	return curr
 }
@@ -156,8 +157,10 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 				QBases: 0,
 			}
 			answer = append(answer, curr)
+			//this will advance the reader to the blank line
+			//i beliebe the reader will peak at the blank line in the next iteration and exit
 			line, _ = fileio.EasyNextRealLine(reader)
-			break
+			return answer
 		} else if len(data) == 3 {
 			curr = &BaseStats{
 				Size:   common.StringToInt(data[0]),
@@ -169,7 +172,7 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 			log.Fatalf("Error: expecting alignment data columns to be 3 or 1 but encountered %d\n", len(data))
 		}
 	}
-	return answer
+	return nil
 }
 
 func printHeader(ch *Chain) string {
