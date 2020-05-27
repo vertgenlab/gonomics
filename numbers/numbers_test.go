@@ -65,3 +65,26 @@ func TestFisherGreater(t *testing.T) {
 		}
 	}
 }
+
+var BinomCoefficientTests = []struct {
+	n      int
+	k      int
+	answer int
+}{
+	{0, 0, 1},
+	{9, 0, 1},
+	{3, 2, 3},
+	{30, 12, 86493225},
+	{13, 13, 1},
+	{9, 2, 36},
+	{11, 5, 462},
+}
+
+func TestBinomCoefficient(t *testing.T) {
+	for _, test := range BinomCoefficientTests {
+		calculated := BinomCoefficient(test.n, test.k)
+		if calculated != test.answer {
+			t.Errorf("For BinomialCoefficient(%d, %d) we would expect %d, but we got %d", test.n, test.k, test.answer, calculated)
+		}
+	}
+}

@@ -6,7 +6,12 @@ import (
 	"math/rand"
 )
 
-func carefulMultDiv(numer []float64, denom []float64) float64 {
+// this function tries to gracefully handle the case when you have a
+// bunch of numbers being multiplied together in a numberator (numer)
+// and then being divided by a bunch of number being multipled together
+// in a denominator (denom).  For example number={2,3,4} and denom={6,3,4}
+// would be equal to 2*3*4/6/3/4
+func carefulMultDivFloat(numer []float64, denom []float64) float64 {
 	var answer float64 = 1
 	var i, j int = 0, 0
 
@@ -27,6 +32,34 @@ func carefulMultDiv(numer []float64, denom []float64) float64 {
 			}
 			answer = answer / denom[j]
 			j++
+		}
+	}
+	return answer
+}
+
+// This function does the same thing as carefulMultDivFloat, but for
+// ints and raises a fatal error if the answer can not be represented as an int
+// TODO: right now the overflow check assumes we are on 64bit arch
+func carefulMultDivInt(numer []int, denom []int) int {
+	var answer int = 1
+	var i, j int = 0, 0
+
+	for i < len(numer) || j < len(denom) {
+		// if there are still numbers in the denominator
+		// and the number in the denominator goes in evenly to
+		// the running calculation
+		if j < len(denom) && answer%denom[j] == 0 {
+			answer = answer / denom[j]
+			j++
+		} else if i < len(numer) {
+			if math.MaxInt64/numer[i] < answer {
+				log.Fatal("Error: integer overflow was detected\n")
+			} else {
+				answer = answer * numer[i]
+				i++
+			}
+		} else {
+			log.Fatal("Error: integer division could not be done successfully\n")
 		}
 	}
 	return answer
@@ -77,7 +110,7 @@ func fisherProbLess(a, b, c, d int) float64 {
 	for j := 1; j < n+1; j++ {
 		denom[j-1] = float64(j)
 	}
-	return carefulMultDiv(numer, denom)
+	return carefulMultDivFloat(numer, denom)
 }
 
 // test is for the matrix:
@@ -93,6 +126,32 @@ func FisherExact(a, b, c, d int, aSmall bool) float64 {
 	} else {
 		return fisherExactLess(c, d, a, b)
 	}
+}
+
+// This calculates the Binomial Coefficient, which
+// is also called the "Choose" Function. The answer
+// returned is "n choose k" or n!/(n-k)!k!
+func BinomCoefficient(n int, k int) int {
+	if n < 0 || k < 0 || k > n {
+		log.Fatalf("The binomial coefficient call could not be handled: n=%d and k=%d\n", n, k)
+	}
+	if n-k > k {
+		k = n - k
+	}
+	// this special case is handled here so that we don't ask for negative memory for denom
+	if k == n {
+		return 1
+	}
+	numer := make([]int, 0, n-k)
+	denom := make([]int, 0, n-k-1)
+	var x, y int
+	for x = k + 1; x < n+1; x++ {
+		numer = append(numer, x)
+	}
+	for y = 2; y < n-k+1; y++ {
+		denom = append(denom, y)
+	}
+	return carefulMultDivInt(numer, denom)
 }
 
 func RandIntInRange(x int, y int) int {
