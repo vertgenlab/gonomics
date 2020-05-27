@@ -5,10 +5,10 @@ import (
 	"math"
 )
 
-// There are a number of ways to evaluate a definite integral computationally
-// Romberg's method seems like a good mix of accuracy and coding difficulty, but there
-// are better methods
-// This code tries to follow the algorithm and variables names used here:
+// There are a number of ways to evaluate a definite integral computationally.
+// Romberg's method seems like a good mix of accuracy and coding difficulty,
+// but there are better methods out there if more speed or accuracy are needed.
+// This code tries to follow the algorithm and variable names used here:
 // https://en.wikipedia.org/wiki/Romberg's_method
 // TODO: memory allocation could be reduced since only the last row of R needs to be saved
 func rombergsMethod(f func(float64) float64, a float64, b float64, precision float64, maxIter int) float64 {
@@ -40,7 +40,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, precision flo
 	return (0)
 }
 
-// DefiniteIntegral is will compute the definite integral of f(x) dx from start to end
+// DefiniteIntegral computes the definite integral of f(x) dx from start to end
 func DefiniteIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 1e-10, 20)
 }
