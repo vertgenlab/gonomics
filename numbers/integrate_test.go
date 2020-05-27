@@ -24,3 +24,11 @@ func TestDefiniteIntegral(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkDefiniteIntegral(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for _, test := range definiteIntegralTests {
+			DefiniteIntegral(test.f, test.a, test.b)
+		}
+	}
+}
