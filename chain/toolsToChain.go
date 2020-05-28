@@ -18,7 +18,13 @@ func OverlapChainBed(alpha *Chain, beta *bed.Bed, checkTarget bool) bool {
 }
 
 func targetOverlap(alpha *Chain, beta *bed.Bed) bool {
-	if (common.MaxInt64(int64(alpha.TStart), beta.ChromStart) < common.MinInt64(int64(alpha.TEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
+	var tStart, tEnd int
+	if !alpha.TStrand {
+		tStart, tEnd = getSwapTCoord(alpha, true, false), getSwapTCoord(alpha, false, true)
+	} else {
+		tStart, tEnd = alpha.TStart, alpha.TEnd
+	}
+	if (common.MaxInt64(int64(tStart), beta.ChromStart) < common.MinInt64(int64(tEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
@@ -26,7 +32,13 @@ func targetOverlap(alpha *Chain, beta *bed.Bed) bool {
 }
 
 func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
-	if (common.MaxInt64(int64(alpha.QStart), beta.ChromStart) < common.MinInt64(int64(alpha.QEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
+	var qStart, qEnd int
+	if !alpha.QStrand {
+		qStart, qEnd = getSwapTCoord(alpha, true, false), getSwapTCoord(alpha, false, true)
+	} else {
+		qStart, qEnd = alpha.QStart, alpha.TEnd
+	}
+	if (common.MaxInt64(int64(qStart), beta.ChromStart) < common.MinInt64(int64(qEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
