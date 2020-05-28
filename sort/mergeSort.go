@@ -88,7 +88,6 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 	mergeChunks(tmpFiles, outFilename, filetype) // Begin merge of tmp files
 }
 
-// New case must be added to readChunk for each new filetype
 func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, bool) {
 	var done bool = false
 
@@ -115,7 +114,6 @@ func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, 
 	return chunk, done
 }
 
-// New case must be added to mergeChunk for each new filetype
 func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 	fileReaders := make([]*fileio.EasyReader, len(tmpFiles))
 	var done bool
