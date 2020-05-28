@@ -1,5 +1,7 @@
 package axt
 
+import "github.com/vertgenlab/gonomics/fileio"
+
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
@@ -52,4 +54,21 @@ func (g *ByGenomicCoordinates) Pop() interface{} {
 	answer := oldQueue[n-1]
 	*g = oldQueue[:n-1]
 	return answer
+}
+
+func (g ByGenomicCoordinates) Write(file string) {
+	Write(file, g)
+}
+
+func (a *Axt) WriteToFileHandle(file *fileio.EasyWriter) {
+	//TODO: what to do with alnNumber???
+	WriteToFileHandle(file, a, 0)
+}
+
+func (a *Axt) NextLine(file *fileio.EasyReader) bool {
+	var done bool
+	var next *Axt
+	next, done = NextAxt(file)
+	*a = *next
+	return done
 }

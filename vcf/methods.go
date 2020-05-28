@@ -2,6 +2,7 @@ package vcf
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Current methods satisfy requirements for the following interfaces:
@@ -79,4 +80,20 @@ func (g *ByGenomicCoordinates) Pop() interface{} {
 	answer := oldQueue[n-1]
 	*g = oldQueue[:n-1]
 	return answer
+}
+
+func (g ByGenomicCoordinates) Write(file string) {
+	Write(file, g)
+}
+
+func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
+	WriteVcf(file, v)
+}
+
+func (v *Vcf) NextLine(file *fileio.EasyReader) bool {
+	var done bool
+	var next *Vcf
+	next, done = NextVcf(file)
+	*v = *next
+	return done
 }

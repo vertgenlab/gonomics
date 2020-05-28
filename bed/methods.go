@@ -1,5 +1,7 @@
 package bed
 
+import "github.com/vertgenlab/gonomics/fileio"
+
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
@@ -50,4 +52,21 @@ func (g *ByGenomicCoordinates) Pop() interface{} {
 	answer := oldQueue[n-1]
 	*g = oldQueue[:n-1]
 	return answer
+}
+
+func (g ByGenomicCoordinates) Write(file string) {
+	Write(file, g, 7)
+}
+
+func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
+	//TODO: write max fields that are non-nil?
+	WriteToFileHandle(file, b, 7)
+}
+
+func (b *Bed) NextLine(file *fileio.EasyReader) bool {
+	var done bool
+	var next *Bed
+	next, done = NextBed(file)
+	*b = *next
+	return done
 }
