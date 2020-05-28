@@ -56,9 +56,6 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderComments, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
-	if comments != nil {
-		WriteHeaderComments(file, comments)
-	}
 	for data := range chaining {
 		WriteChain(file, data)
 	}
@@ -68,9 +65,6 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderCommen
 func Write(filename string, chaining []*Chain, comments *HeaderComments) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
-	if comments != nil {
-		WriteHeaderComments(file, comments)
-	}
 	for _, data := range chaining {
 		WriteChain(file, data)
 	}

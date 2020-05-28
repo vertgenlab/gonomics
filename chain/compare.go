@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"log"
 	"sort"
 	"strings"
 )
@@ -21,10 +22,24 @@ func compareTargetCoord(a *Chain, b *Chain) int {
 	if sameChr != 0 {
 		return sameChr
 	}
-	if a.TStart < b.TStart {
+	var alphaStart, betaStart int
+	//check for negative strand and swap if you have to
+	if !a.TStrand {
+		alphaStart = getSwapTCoord(a, true, false)
+	} else {
+		alphaStart = a.TStart
+	}
+	//check for negative again
+	if !b.TStrand {
+		betaStart = getSwapTCoord(b, true, false)
+	} else {
+		betaStart = b.TStart
+	}
+	//finally, we do the comparison
+	if alphaStart < betaStart {
 		return -1
 	}
-	if a.TStart > b.TStart {
+	if alphaStart > betaStart {
 		return 1
 	}
 	return 0
@@ -35,12 +50,27 @@ func compareQueryCoord(a *Chain, b *Chain) int {
 	if sameChr != 0 {
 		return sameChr
 	}
-	if a.QStart < b.QStart {
+	var alphaStart, betaStart int
+	//check for negative strand and swap if you have to
+	if !a.QStrand {
+		alphaStart = getSwapQCoord(a, true, false)
+	} else {
+		alphaStart = a.QStart
+	}
+	//check for negative again
+	if !b.QStrand {
+		betaStart = getSwapQCoord(b, true, false)
+	} else {
+		betaStart = b.QStart
+	}
+
+	if alphaStart < betaStart {
 		return -1
 	}
-	if a.QStart > b.QStart {
+	if alphaStart > betaStart {
 		return 1
 	}
+
 	return 0
 }
 
@@ -107,4 +137,32 @@ func isEqual(a *Chain, b *Chain) bool {
 		return false
 	}
 	return true
+}
+
+//set start true if you want to adjust the start or end to be true to adjust for the negative stand on the end
+func getSwapTCoord(ch *Chain, start bool, end bool) int {
+	if !ch.TStrand {
+		if start {
+			return ch.TSize - ch.TEnd
+		}
+		if end {
+			return ch.TSize - ch.TStart
+		}
+	}
+	log.Fatalf("Error: Must select either start or end, and not both...\n")
+	return -1
+}
+
+//Could have one function that performs on both query and target
+func getSwapQCoord(ch *Chain, start bool, end bool) int {
+	if !ch.QStrand {
+		if start {
+			return ch.QSize - ch.QEnd
+		}
+		if end {
+			return ch.QSize - ch.QStart
+		}
+	}
+	log.Fatalf("Error: Must select either start or end, and not both...\n")
+	return -1
 }

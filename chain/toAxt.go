@@ -24,37 +24,42 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 		RSeq:       make([]dna.Base, 0, tLen),
 		QSeq:       make([]dna.Base, 0, qLen),
 	}
-	if !ch.TStrand {
-		dna.ReverseComplement(target)
-	}
-	if !ch.QStrand {
-		dna.ReverseComplement(query)
+	var targetFa []dna.Base = make([]dna.Base, len(target))
+	copy(targetFa, target)
+
+	var queryFa []dna.Base = make([]dna.Base, len(query))
+	copy(queryFa, query)
+
+	switch true {
+	case !ch.TStrand && ch.QStrand:
+		dna.ReverseComplement(targetFa)
+		dna.ReverseComplement(queryFa)
+	case ch.TStrand && !ch.QStrand:
+		dna.ReverseComplement(queryFa)
+	case !ch.TStrand && !ch.QStrand:
+		dna.ReverseComplement(targetFa)
 	}
 
 	var tIndex, qIndex int = ch.TStart, ch.QStart
 	for _, each := range ch.Alignment {
-		answer.RSeq = append(answer.RSeq, getSequence(target, tIndex, each.Size)...)
-		answer.QSeq = append(answer.QSeq, getSequence(query, qIndex, each.Size)...)
+		answer.RSeq = append(answer.RSeq, getSequence(targetFa, tIndex, each.Size)...)
+		answer.QSeq = append(answer.QSeq, getSequence(queryFa, qIndex, each.Size)...)
 
 		tIndex, qIndex = tIndex+each.Size, qIndex+each.Size
 		//update idx
 		if each.TBases > 0 {
-			answer.RSeq = append(answer.RSeq, getSequence(target, tIndex, each.TBases)...)
+			answer.RSeq = append(answer.RSeq, getSequence(targetFa, tIndex, each.TBases)...)
 			answer.QSeq = append(answer.QSeq, dna.CreateAllGaps(int64(each.TBases))...)
 			tIndex += each.TBases
 		}
 		if each.QBases > 0 {
-			answer.QSeq = append(answer.QSeq, getSequence(query, qIndex, each.QBases)...)
+			answer.QSeq = append(answer.QSeq, getSequence(queryFa, qIndex, each.QBases)...)
 			answer.RSeq = append(answer.RSeq, dna.CreateAllGaps(int64(each.QBases))...)
 			qIndex += each.QBases
 		}
 	}
 	return answer
 }
-
-//func getRevStart(start int) int {
-
-//}
 
 //helper function to quickly get sequence at a starting pos plus length this way i dont have to keep doing start:start+length everytime
 func getSequence(seq []dna.Base, start int, length int) []dna.Base {
