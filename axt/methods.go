@@ -65,10 +65,23 @@ func (a *Axt) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteToFileHandle(file, a, 0)
 }
 
-func (a *Axt) NextLine(file *fileio.EasyReader) bool {
+func (a *Axt) NextRealLine(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Axt
-	next, done = NextAxt(file)
-	*a = *next
+	for next == nil && !done {
+		next, done = NextAxt(file)
+	}
+	if done {
+		return done
+	}
+	if next != nil {
+		*a = *next
+	}
 	return done
+}
+
+func (a *Axt) Copy(to *interface{}) {
+	var answer *Axt = new(Axt)
+	*answer = *a
+	*to = answer
 }

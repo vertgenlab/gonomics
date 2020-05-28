@@ -90,10 +90,23 @@ func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteVcf(file, v)
 }
 
-func (v *Vcf) NextLine(file *fileio.EasyReader) bool {
+func (v *Vcf) NextRealLine(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Vcf
-	next, done = NextVcf(file)
-	*v = *next
+	for next == nil && !done {
+		next, done = NextVcf(file)
+	}
+	if done {
+		return true
+	}
+	if next != nil {
+		*v = *next
+	}
 	return done
+}
+
+func (v *Vcf) Copy(to *interface{}) {
+	var answer *Vcf = new(Vcf)
+	*answer = *v
+	*to = answer
 }

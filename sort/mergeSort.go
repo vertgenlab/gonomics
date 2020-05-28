@@ -16,12 +16,44 @@ import (
 
 const (
 	// Newly added filetypes should be added to the following valid types list
-	validFileTypes = "axt, bed, vcf"
+	validFileTypes     = "axt, bed, vcf"
 	maxTmpFilesAllowed = 1000
 )
 
-func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string, outFilename string) {
+// New case must be added to readChunk for each new filetype
+// This function declare a MergeSort and MergeSortSingle with the
+// underlying type corresponding to the filetype input
+func chooseDataType(filetype string) (MergeSort, MergeSortSingle) {
+	var answer MergeSort
+	var single MergeSortSingle
+	switch filetype {
+	case ".axt":
+		curr := make(axt.ByGenomicCoordinates, 0)
+		answer = &curr
+		single = new(axt.Axt)
 
+	case ".bed":
+		curr := make(bed.ByGenomicCoordinates, 0)
+		answer = &curr
+		single = new(bed.Bed)
+
+	case ".vcf":
+		curr := make(vcf.ByGenomicCoordinates, 0)
+		answer = &curr
+		single = new(vcf.Vcf)
+
+	default:
+		log.Println("Valid file types include:", validFileTypes)
+		if filetype == "" {
+			log.Fatalln("ERROR: Input file must have proper file extension")
+		} else {
+			log.Fatalln("ERROR: Merge sort methods have not been implemented for file type:", filetype)
+		}
+	}
+	return answer, single
+}
+
+func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string, outFilename string) {
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(filename)
 
@@ -34,170 +66,102 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 
 	// Read files into sorted chunk until reached EOF
 	for currChunk, done = readChunk(file, linesPerChunk, filetype); !done; currChunk, done = readChunk(file, linesPerChunk, filetype) {
+
+		if tmpFileId == maxTmpFilesAllowed {
+			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
+		}
+
 		if currChunk.Len() == 0 {
 			continue
 		}
 
-		// Sort the incoming chunk to be written
-		sort.Sort(currChunk)
+		sort.Sort(currChunk) // Sort the incoming chunk to be written
 
 		// Handle naming of tmp file and keep a record of it
 		tmpFilename = fmt.Sprintf("%s_%d", tmpFilePrefix, tmpFileId)
 		tmpFiles = append(tmpFiles, tmpFilename)
 		tmpFileId++
 
-		// Write the sorted chunk to a tmp file
-		currChunk.Write(tmpFilename)
+		currChunk.Write(tmpFilename) // Write the sorted chunk to a tmp file
 	}
 
-	// Begin merge of tmp files
-	mergeChunks(tmpFiles, outFilename, filetype)
+	mergeChunks(tmpFiles, outFilename, filetype) // Begin merge of tmp files
 }
 
 // New case must be added to readChunk for each new filetype
 func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, bool) {
 	var done bool = false
-	switch filetype {
 
-	// Functions to read in each filetype line by line
-	// New case must be added for each new file type to be sorted
+	// Initialize an empty chunk and an empty single value with the proper underlying type for later functions
+	chunk, curr := chooseDataType(filetype)
 
-	// For the most part these can be copy-paste so long as the
-	// NextLine function has been implemented for the desired data type
+	// In the following function the curr variable acts as a static pointer to a changing value that is
+	// updated with each call of curr.NextRealLine. To actually get each value in a slice, we need
+	// to copy the underlying value in the pointer to an interface (valueToAdd) then assert the type of
+	// that copied value and push it onto the heap
 
-	case "axt":
-		var curr *axt.Axt
-		chunk := make([]*axt.Axt, 0, lines)
-		for i := 0; i < lines; i++ {
-			curr, done = axt.NextAxt(file)
-			if done {
-				done = true
-				break
-			}
-			chunk = append(chunk, curr)
-		}
-		answer := axt.ByGenomicCoordinates(chunk)
-		return &answer, done
-
-	case "bed":
-		var curr *bed.Bed
-		chunk := make([]*bed.Bed, 0, lines)
-		for i := 0; i < lines; i++ {
-			curr, done = bed.NextBed(file)
-			if done {
-				done = true
-				break
-			}
-			chunk = append(chunk, curr)
-		}
-		answer := bed.ByGenomicCoordinates(chunk)
-		return &answer, done
-
-	case "vcf":
-		var curr *vcf.Vcf
-		chunk := make([]*vcf.Vcf, 0, lines)
-		for i := 0; i < lines; i++ {
-			curr, done = vcf.NextVcf(file)
-			if done {
-				done = true
-				break
-			}
-			chunk = append(chunk, curr)
-		}
-		answer := vcf.ByGenomicCoordinates(chunk)
-		return &answer, done
-
-	default:
-		log.Println("Valid file types include:", validFileTypes)
-		if filetype == "" {
-			log.Fatalln("ERROR: Input file must have proper file extension")
-		} else {
-			log.Fatalln("ERROR: Merge sort methods have not been implemented for file type:", filetype)
+	for i := 0; i < lines; i++ {
+		// Initialize an empty ptr to an interface to copy the curr value to
+		var valueToAdd *interface{} = new(interface{})
+		done = curr.NextRealLine(file) // Get the next value and store it in the curr receiver
+		if done {
+			done = true
+			break
+		} else if curr != nil {
+			curr.Copy(valueToAdd)                       // Copy the curr value to a new memory address
+			chunk.Push((*valueToAdd).(MergeSortSingle)) // Push the copied pointer to the slice
 		}
 	}
-	// Should never get to this point
-	return nil, true
+	return chunk, done
 }
 
 // New case must be added to mergeChunk for each new filetype
 func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 	fileReaders := make([]*fileio.EasyReader, len(tmpFiles))
-	var priorityQueue MergeSort
 	var done bool
 
-	// Stores the memory address of variable from each file and retrieves the file it came from
+	// This memory address map will store the memory address of each of the input variables
+	// and key them to the origin file reader. The memory addresses for each file is kept static
+	// throughout the heap loop below and therefore can be used as a stable key to determine
+	// the file of origin
 	memoryAddressMap := make(map[interface{}]*fileio.EasyReader)
 
-	// Must add new filetype to list AND a new case
-	// TODO: better way to handle this???
-	var Axt axt.ByGenomicCoordinates
-	var Bed bed.ByGenomicCoordinates
-	var Vcf vcf.ByGenomicCoordinates
+	priorityQueue, curr := chooseDataType(filetype)
 
 	for i := 0; i < len(tmpFiles); i++ {
 		fileReaders[i] = fileio.EasyOpen(tmpFiles[i])
+		valueToAdd := new(interface{}) // Initialize empty interface to copy curr into
+		done = curr.NextRealLine(fileReaders[i])
 
-		switch filetype {
-
-		case "axt":
-			var curr *axt.Axt
-			curr, done = axt.NextAxt(fileReaders[i])
-			memoryAddressMap[curr] = fileReaders[i]
-			if !done{Axt = append(Axt, curr)}
-
-		case "bed":
-			var curr *bed.Bed
-			curr, done = bed.NextBed(fileReaders[i])
-			memoryAddressMap[curr] = fileReaders[i]
-			if !done{Bed = append(Bed, curr)}
-
-		case "vcf":
-			var curr *vcf.Vcf
-			curr, done = vcf.NextVcf(fileReaders[i])
-			memoryAddressMap[curr] = fileReaders[i]
-			if !done{Vcf = append(Vcf, curr)}
-		}
-		if done {
-			fileReaders[i].Close()
-			err := os.Remove(fileReaders[i].File.Name())
-			common.ExitIfError(err)
-			log.Fatalln("ERROR: Could not find file, or file empty", tmpFiles[i])
-		}
-	}
-
-
-	switch filetype {
-	case "axt":
-		priorityQueue = &Axt
-
-	case "bed":
-		priorityQueue = &Bed
-
-	case "vcf":
-		priorityQueue = &Vcf
+		curr.Copy(valueToAdd)                       // Copy the curr value to a new memory address
+		writeVal := (*valueToAdd).(MergeSortSingle) // Assert the type of the empty interface valueToAdd
+		priorityQueue.Push(writeVal)                // Push the copied pointer to the heap
+		memoryAddressMap[writeVal] = fileReaders[i] // Key the memory address to the origin file reader
 	}
 
 	// Initialize heap
 	heap.Init(priorityQueue)
 
-	// Pop heap until all tmp files are exhausted
-	var curr MergeSortSingle
+	var currVal MergeSortSingle
 	var currFile *fileio.EasyReader
 	outFile := fileio.EasyCreate(outFilename)
 	defer outFile.Close()
-	for priorityQueue.Len() < 0 {
+	// Pop heap until all tmp files are exhausted
+	for priorityQueue.Len() > 0 {
 		done = false
-		curr = heap.Pop(priorityQueue).(MergeSortSingle)
-		currFile = memoryAddressMap[curr]
-		curr.WriteToFileHandle(outFile)
-		done = curr.NextLine(currFile)
+		// Get minimum value from the heap, recall that the memory address of this value
+		// has been keyed in the memoryAddressMap to the origin file reader
+		currVal = heap.Pop(priorityQueue).(MergeSortSingle)
+		currFile = memoryAddressMap[currVal]  // Get the origin file reader
+		currVal.WriteToFileHandle(outFile)    // Write the lowest value to the outfile
+		done = currVal.NextRealLine(currFile) // Get the next value from the origin file
 
-		if done {
+		if done { // if done then close and remove the tmp file
 			currFile.Close()
 			err := os.Remove(currFile.File.Name())
 			common.ExitIfError(err)
 		} else {
-			heap.Push(priorityQueue, curr)
+			heap.Push(priorityQueue, currVal) // push the new value onto the heap
 		}
 	}
 }

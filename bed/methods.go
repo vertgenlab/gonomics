@@ -63,10 +63,23 @@ func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteToFileHandle(file, b, 7)
 }
 
-func (b *Bed) NextLine(file *fileio.EasyReader) bool {
+func (b *Bed) NextRealLine(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Bed
-	next, done = NextBed(file)
-	*b = *next
+	for next == nil && !done {
+		next, done = NextBed(file)
+	}
+	if done {
+		return done
+	}
+	if next != nil {
+		*b = *next
+	}
 	return done
+}
+
+func (b *Bed) Copy(to *interface{}) {
+	var answer *Bed = new(Bed)
+	*answer = *b
+	*to = answer
 }

@@ -9,10 +9,11 @@ type MergeSort interface {
 	Less(i, j int) bool
 	Push(x interface{})
 	Pop() interface{}
-	Write(file string)
+	Write(file string) // Write entire slice to file
 }
 
 type MergeSortSingle interface {
-	WriteToFileHandle(*fileio.EasyWriter)
-	NextLine(*fileio.EasyReader) bool
+	WriteToFileHandle(*fileio.EasyWriter) // Write receiver to input file
+	NextRealLine(*fileio.EasyReader) bool // Must skip any comment lines, cannot return nil
+	Copy(to *interface{})                 // Copies value in receiver pointer to the to interface
 }
