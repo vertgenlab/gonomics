@@ -34,7 +34,7 @@ func targetOverlap(alpha *Chain, beta *bed.Bed) bool {
 func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
 	var qStart, qEnd int
 	if !alpha.QStrand {
-		qStart, qEnd = getSwapTCoord(alpha, true, false), getSwapTCoord(alpha, false, true)
+		qStart, qEnd = getSwapQCoord(alpha, true, false), getSwapQCoord(alpha, false, true)
 	} else {
 		qStart, qEnd = alpha.QStart, alpha.TEnd
 	}
