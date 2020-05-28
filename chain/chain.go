@@ -47,7 +47,7 @@ func Read(filename string) ([]*Chain, *HeaderComments) {
 }
 
 func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
-	for data, err := NextChain(reader); !err; data, err = NextChain(reader) {
+	for data, done := NextChain(reader); !done; data, done = NextChain(reader) {
 		answer <- data
 	}
 	close(answer)
@@ -85,10 +85,8 @@ func WriteChain(file *fileio.EasyWriter, chaining *Chain) {
 
 func ReadHeaderComments(er *fileio.EasyReader) *HeaderComments {
 	var line string
-	var err error
-	var nextBytes []byte
 	var commments HeaderComments
-	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
+	for nextBytes, done := er.Peek(1); nextBytes[0] == '#' && done == nil; nextBytes, done = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		commments.HashTag = append(commments.HashTag, line)
 	}
@@ -141,7 +139,7 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 	var data []string
 	var answer []*BaseStats
 	var curr *BaseStats
-	for nextBytes, err := reader.Peek(1); nextBytes[0] != 0 && err == nil; nextBytes, err = reader.Peek(1) {
+	for nextBytes, done := reader.Peek(1); nextBytes[0] != 0 && done == nil; nextBytes, done = reader.Peek(1) {
 		line, _ = fileio.EasyNextRealLine(reader)
 		data = strings.Split(line, "\t")
 		if len(data) == 1 {

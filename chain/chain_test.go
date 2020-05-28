@@ -15,8 +15,8 @@ func TestReaderAndWriter(t *testing.T) {
 	for _, readFile := range dir {
 		//1st pass, test standard read and write (non-channel) functuions
 		writeToFile := readFile + ".tmp"
-		readerChains, hashTags := Read(readFile)
-		Write(writeToFile, readerChains, hashTags)
+		readerChains, nil := Read(readFile)
+		Write(writeToFile, readerChains, nil)
 
 		//2nd pass: read back and write using goroutines
 		file := fileio.EasyOpen(writeToFile)

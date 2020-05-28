@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-//TODO: come up with a better test to check conversion. It is possible to be 1 off for keeping track of indices
 func TestConvertAxt(t *testing.T) {
 	chainfile, _ := Read("testdata/axtTest.chain")
 	SortByCoordinates(chainfile, true)
