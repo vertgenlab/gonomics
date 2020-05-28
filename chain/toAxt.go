@@ -24,6 +24,7 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 		RSeq:       make([]dna.Base, 0, tLen),
 		QSeq:       make([]dna.Base, 0, qLen),
 	}
+
 	var targetFa []dna.Base = make([]dna.Base, len(target))
 	copy(targetFa, target)
 
@@ -32,12 +33,18 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 
 	switch true {
 	case !ch.TStrand && ch.QStrand:
+		//axt aligns to target so if target is minus, you need to reverse comp both
 		dna.ReverseComplement(targetFa)
 		dna.ReverseComplement(queryFa)
 	case ch.TStrand && !ch.QStrand:
+		//simple case where only query needs to be reverse comp
 		dna.ReverseComplement(queryFa)
 	case !ch.TStrand && !ch.QStrand:
+		//both are negative, you have to swap the target, meaning both get swap, but we are getting the sequence from the fasta you swap query one more time, so you only need to handle target
 		dna.ReverseComplement(targetFa)
+
+	default:
+		//if they are both positive we do not run the switch
 	}
 
 	var tIndex, qIndex int = ch.TStart, ch.QStart
