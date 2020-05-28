@@ -1,3 +1,4 @@
+// Package numbers provides a variety of functions related to statistics
 package numbers
 
 import (
@@ -6,10 +7,10 @@ import (
 	"math/rand"
 )
 
-// this function tries to gracefully handle the case when you have a
-// bunch of numbers being multiplied together in a numberator (numer)
-// and then being divided by a bunch of number being multipled together
-// in a denominator (denom).  For example number={2,3,4} and denom={6,3,4}
+// carefulMultDivFloat tries to gracefully handle the case when you have a
+// bunch of numbers being multiplied together in a numerator (numer)
+// and then being divided by a bunch of numbers
+// in a denominator (denom).  For example numer={2,3,4} and denom={6,3,4}
 // would be equal to 2*3*4/6/3/4
 func carefulMultDivFloat(numer []float64, denom []float64) float64 {
 	var answer float64 = 1
@@ -37,7 +38,7 @@ func carefulMultDivFloat(numer []float64, denom []float64) float64 {
 	return answer
 }
 
-// This function does the same thing as carefulMultDivFloat, but for
+// carefulMultDivInt does the same thing as carefulMultDivFloat, but for
 // ints and raises a fatal error if the answer can not be represented as an int
 // TODO: right now the overflow check assumes we are on 64bit arch
 func carefulMultDivInt(numer []int, denom []int) int {
@@ -113,7 +114,9 @@ func fisherProbLess(a, b, c, d int) float64 {
 	return carefulMultDivFloat(numer, denom)
 }
 
-// test is for the matrix:
+// FisherExact computes a one-sided Fisher's
+// Exact test on the 2x2 table provided
+// The test is for the matrix:
 // [a b]
 // [c d]
 // aSmall being true tests for the ratio of a to b
@@ -128,7 +131,7 @@ func FisherExact(a, b, c, d int, aSmall bool) float64 {
 	}
 }
 
-// This calculates the Binomial Coefficient, which
+// BinomCoefficient calculates the Binomial Coefficient, which
 // is also called the "Choose" Function. The answer
 // returned is "n choose k" or n!/(n-k)!k!
 func BinomCoefficient(n int, k int) int {
