@@ -1,8 +1,8 @@
 package dna
 
 import (
-	"log"
 	"fmt"
+	"log"
 )
 
 type Codon struct {
@@ -129,7 +129,7 @@ func BasesToCodons(b []Base) []*Codon {
 func CodonsToSeq(c []*Codon) []Base {
 	var answer []Base
 	for i := 0; i < len(c); i++ {
-		for j := 0; j < len (c[i].Seq); j++ {
+		for j := 0; j < len(c[i].Seq); j++ {
 			answer = append(answer, c[i].Seq[j])
 		}
 	}
