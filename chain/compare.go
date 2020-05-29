@@ -148,8 +148,12 @@ func getSwapTCoord(ch *Chain, start bool, end bool) int {
 		if end {
 			return ch.TSize - ch.TStart
 		}
+		if start && end {
+			log.Fatalf("Error: Must select either start or end, and not both...\n")
+		}
+	} else {
+		log.Fatalf("Error: Positive strand chain record detected, This function is primarily used only to swap coordinates on the negative strand ...\n")
 	}
-	log.Fatalf("Error: Must select either start or end, and not both...\n")
 	return -1
 }
 
@@ -162,7 +166,12 @@ func getSwapQCoord(ch *Chain, start bool, end bool) int {
 		if end {
 			return ch.QSize - ch.QStart
 		}
+		if start && end {
+			log.Fatalf("Error: Must select either start or end, and not both...\n")
+		}
+	} else {
+		log.Fatalf("Error: Positive strand chain record detected, This function is primarily used only to swap coordinates on the negative strand ...\n")
+
 	}
-	log.Fatalf("Error: Must select either start or end, and not both...\n")
 	return -1
 }
