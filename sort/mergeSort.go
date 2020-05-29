@@ -28,18 +28,15 @@ func chooseDataType(filetype string) (MergeSort, MergeSortSingle) {
 	var single MergeSortSingle
 	switch filetype {
 	case ".axt":
-		curr := make(axt.ByGenomicCoordinates, 0)
-		answer = &curr
+		answer = new(axt.ByGenomicCoordinates)
 		single = new(axt.Axt)
 
 	case ".bed":
-		curr := make(bed.ByGenomicCoordinates, 0)
-		answer = &curr
+		answer = new(bed.ByGenomicCoordinates)
 		single = new(bed.Bed)
 
 	case ".vcf":
-		curr := make(vcf.ByGenomicCoordinates, 0)
-		answer = &curr
+		answer = new(vcf.ByGenomicCoordinates)
 		single = new(vcf.Vcf)
 
 	default:
