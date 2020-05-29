@@ -72,9 +72,7 @@ func (b *Bed) NextRealLine(file *fileio.EasyReader) bool {
 	if done {
 		return done
 	}
-	if next != nil {
-		*b = *next
-	}
+	*b = *next
 	return done
 }
 

@@ -99,9 +99,7 @@ func (v *Vcf) NextRealLine(file *fileio.EasyReader) bool {
 	if done {
 		return true
 	}
-	if next != nil {
-		*v = *next
-	}
+	*v = *next
 	return done
 }
 

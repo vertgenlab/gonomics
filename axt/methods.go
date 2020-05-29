@@ -74,9 +74,7 @@ func (a *Axt) NextRealLine(file *fileio.EasyReader) bool {
 	if done {
 		return done
 	}
-	if next != nil {
-		*a = *next
-	}
+	*a = *next
 	return done
 }
 
