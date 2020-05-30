@@ -112,7 +112,7 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var err error
 	var nextBytes []byte
 	var header VcfHeader
-	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
+	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		processHeader(&header, line)
 	}
