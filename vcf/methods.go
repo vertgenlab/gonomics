@@ -45,45 +45,27 @@ func (v *Vcf) GetChromEnd() int {
 	}
 }
 
-type ByGenomicCoordinates []*Vcf
+type VcfSlice []*Vcf
 
-func (g ByGenomicCoordinates) Len() int { return len(g) }
+func (v VcfSlice) Len() int { return len(v) }
 
-func (g ByGenomicCoordinates) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
+func (v VcfSlice) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
 
-func (g ByGenomicCoordinates) Less(i, j int) bool {
-	// First sort criteria is chromosome
-	if g[i].GetChrom() < g[j].GetChrom() {
-		return true
-	} else if g[i].GetChrom() == g[j].GetChrom() {
-		// If chroms are equal then sort by start position
-		if g[i].GetChromStart() < g[j].GetChromStart() {
-			return true
-		} else if g[i].GetChromStart() == g[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g[i].GetChromEnd() < g[j].GetChromEnd() {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (g *ByGenomicCoordinates) Push(x interface{}) {
+func (v *VcfSlice) Push(x interface{}) {
 	answer := x.(*Vcf)
-	*g = append(*g, answer)
+	*v = append(*v, answer)
 }
 
-func (g *ByGenomicCoordinates) Pop() interface{} {
-	oldQueue := *g
+func (v *VcfSlice) Pop() interface{} {
+	oldQueue := *v
 	n := len(oldQueue)
 	answer := oldQueue[n-1]
-	*g = oldQueue[:n-1]
+	*v = oldQueue[:n-1]
 	return answer
 }
 
-func (g ByGenomicCoordinates) Write(file string) {
-	Write(file, g)
+func (v VcfSlice) Write(file string) {
+	Write(file, v)
 }
 
 func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
@@ -107,4 +89,26 @@ func (v *Vcf) Copy(to *interface{}) {
 	var answer *Vcf = new(Vcf)
 	*answer = *v
 	*to = answer
+}
+
+type ByGenomicCoordinates struct {
+	VcfSlice
+}
+
+func (g ByGenomicCoordinates) Less(i, j int) bool {
+	// First sort criteria is chromosome
+	if g.VcfSlice[i].GetChrom() < g.VcfSlice[j].GetChrom() {
+		return true
+	} else if g.VcfSlice[i].GetChrom() == g.VcfSlice[j].GetChrom() {
+		// If chroms are equal then sort by start position
+		if g.VcfSlice[i].GetChromStart() < g.VcfSlice[j].GetChromStart() {
+			return true
+		} else if g.VcfSlice[i].GetChromStart() == g.VcfSlice[j].GetChromStart() {
+			// If start positions are equal then the shorter region wins
+			if g.VcfSlice[i].GetChromEnd() < g.VcfSlice[j].GetChromEnd() {
+				return true
+			}
+		}
+	}
+	return false
 }

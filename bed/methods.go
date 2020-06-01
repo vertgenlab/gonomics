@@ -17,45 +17,27 @@ func (b *Bed) GetChromEnd() int {
 	return int(b.ChromEnd)
 }
 
-type ByGenomicCoordinates []*Bed
+type BedSlice []*Bed
 
-func (g ByGenomicCoordinates) Len() int { return len(g) }
+func (b BedSlice) Len() int { return len(b) }
 
-func (g ByGenomicCoordinates) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
+func (b BedSlice) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
-func (g ByGenomicCoordinates) Less(i, j int) bool {
-	// First sort criteria is chromosome
-	if g[i].GetChrom() < g[j].GetChrom() {
-		return true
-	} else if g[i].GetChrom() == g[j].GetChrom() {
-		// If chroms are equal then sort by start position
-		if g[i].GetChromStart() < g[j].GetChromStart() {
-			return true
-		} else if g[i].GetChromStart() == g[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g[i].GetChromEnd() < g[j].GetChromEnd() {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (g *ByGenomicCoordinates) Push(x interface{}) {
+func (b *BedSlice) Push(x interface{}) {
 	answer := x.(*Bed)
-	*g = append(*g, answer)
+	*b = append(*b, answer)
 }
 
-func (g *ByGenomicCoordinates) Pop() interface{} {
-	oldQueue := *g
+func (b *BedSlice) Pop() interface{} {
+	oldQueue := *b
 	n := len(oldQueue)
 	answer := oldQueue[n-1]
-	*g = oldQueue[:n-1]
+	*b = oldQueue[:n-1]
 	return answer
 }
 
-func (g ByGenomicCoordinates) Write(file string) {
-	Write(file, g, 7)
+func (b BedSlice) Write(file string) {
+	Write(file, b, 7)
 }
 
 func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
@@ -80,4 +62,26 @@ func (b *Bed) Copy(to *interface{}) {
 	var answer *Bed = new(Bed)
 	*answer = *b
 	*to = answer
+}
+
+type ByGenomicCoordinates struct {
+	BedSlice
+}
+
+func (g ByGenomicCoordinates) Less(i, j int) bool {
+	// First sort criteria is chromosome
+	if g.BedSlice[i].GetChrom() < g.BedSlice[j].GetChrom() {
+		return true
+	} else if g.BedSlice[i].GetChrom() == g.BedSlice[j].GetChrom() {
+		// If chroms are equal then sort by start position
+		if g.BedSlice[i].GetChromStart() < g.BedSlice[j].GetChromStart() {
+			return true
+		} else if g.BedSlice[i].GetChromStart() == g.BedSlice[j].GetChromStart() {
+			// If start positions are equal then the shorter region wins
+			if g.BedSlice[i].GetChromEnd() < g.BedSlice[j].GetChromEnd() {
+				return true
+			}
+		}
+	}
+	return false
 }

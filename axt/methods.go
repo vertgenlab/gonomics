@@ -19,45 +19,27 @@ func (a *Axt) GetChromEnd() int {
 	return int(a.REnd)
 }
 
-type ByGenomicCoordinates []*Axt
+type AxtSlice []*Axt
 
-func (g ByGenomicCoordinates) Len() int { return len(g) }
+func (a AxtSlice) Len() int { return len(a) }
 
-func (g ByGenomicCoordinates) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
+func (a AxtSlice) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
-func (g ByGenomicCoordinates) Less(i, j int) bool {
-	// First sort criteria is chromosome
-	if g[i].GetChrom() < g[j].GetChrom() {
-		return true
-	} else if g[i].GetChrom() == g[j].GetChrom() {
-		// If chroms are equal then sort by start position
-		if g[i].GetChromStart() < g[j].GetChromStart() {
-			return true
-		} else if g[i].GetChromStart() == g[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g[i].GetChromEnd() < g[j].GetChromEnd() {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (g *ByGenomicCoordinates) Push(x interface{}) {
+func (a *AxtSlice) Push(x interface{}) {
 	answer := x.(*Axt)
-	*g = append(*g, answer)
+	*a = append(*a, answer)
 }
 
-func (g *ByGenomicCoordinates) Pop() interface{} {
-	oldQueue := *g
+func (a *AxtSlice) Pop() interface{} {
+	oldQueue := *a
 	n := len(oldQueue)
 	answer := oldQueue[n-1]
-	*g = oldQueue[:n-1]
+	*a = oldQueue[:n-1]
 	return answer
 }
 
-func (g ByGenomicCoordinates) Write(file string) {
-	Write(file, g)
+func (a AxtSlice) Write(file string) {
+	Write(file, a)
 }
 
 func (a *Axt) WriteToFileHandle(file *fileio.EasyWriter) {
@@ -82,4 +64,26 @@ func (a *Axt) Copy(to *interface{}) {
 	var answer *Axt = new(Axt)
 	*answer = *a
 	*to = answer
+}
+
+type ByGenomicCoordinates struct {
+	AxtSlice
+}
+
+func (g ByGenomicCoordinates) Less(i, j int) bool {
+	// First sort criteria is chromosome
+	if g.AxtSlice[i].GetChrom() < g.AxtSlice[j].GetChrom() {
+		return true
+	} else if g.AxtSlice[i].GetChrom() == g.AxtSlice[j].GetChrom() {
+		// If chroms are equal then sort by start position
+		if g.AxtSlice[i].GetChromStart() < g.AxtSlice[j].GetChromStart() {
+			return true
+		} else if g.AxtSlice[i].GetChromStart() == g.AxtSlice[j].GetChromStart() {
+			// If start positions are equal then the shorter region wins
+			if g.AxtSlice[i].GetChromEnd() < g.AxtSlice[j].GetChromEnd() {
+				return true
+			}
+		}
+	}
+	return false
 }
