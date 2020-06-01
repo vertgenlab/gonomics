@@ -56,7 +56,7 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 
 	if filetype == ".gz" {
 		// If terminal extension is ".gz" then trim off the gz and get the next extension
-		filetype = path.Ext(filename[0:len(filename) - len(filetype)])
+		filetype = path.Ext(filename[0 : len(filename)-len(filetype)])
 	}
 
 	file := fileio.EasyOpen(filename)
@@ -67,14 +67,10 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 	var currChunk MergeSort
 
 	// Read files into sorted chunk until reached EOF
-	for currChunk, done = readChunk(file, linesPerChunk, filetype); !done; currChunk, done = readChunk(file, linesPerChunk, filetype) {
+	for currChunk, done = readChunk(file, linesPerChunk, filetype); !done && currChunk.Len() != 0; currChunk, done = readChunk(file, linesPerChunk, filetype) {
 
 		if tmpFileId == maxTmpFilesAllowed {
 			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
-		}
-
-		if currChunk.Len() == 0 {
-			continue
 		}
 
 		sort.Sort(currChunk) // Sort the incoming chunk to be written
@@ -152,8 +148,8 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 		// Get minimum value from the heap, recall that the memory address of this value
 		// has been keyed in the memoryAddressMap to the origin file reader
 		currVal = heap.Pop(priorityQueue).(MergeSortSingle)
-		currFile = memoryAddressMap[currVal]  // Get the origin file reader
-		currVal.WriteToFileHandle(outFile)    // Write the lowest value to the outfile
+		currFile = memoryAddressMap[currVal]    // Get the origin file reader
+		currVal.WriteToFileHandle(outFile)      // Write the lowest value to the outfile
 		done = currVal.NextRealRecord(currFile) // Get the next value from the origin file
 
 		if done { // if done then close and remove the tmp file
