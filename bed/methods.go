@@ -58,10 +58,10 @@ func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	return done
 }
 
-func (b *Bed) Copy(to *interface{}) {
+func (b *Bed) Copy() interface{} {
 	var answer *Bed = new(Bed)
 	*answer = *b
-	*to = answer
+	return answer
 }
 
 type ByGenomicCoordinates struct {

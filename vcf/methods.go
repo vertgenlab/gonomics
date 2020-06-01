@@ -85,10 +85,10 @@ func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
 	return done
 }
 
-func (v *Vcf) Copy(to *interface{}) {
+func (v *Vcf) Copy() interface{} {
 	var answer *Vcf = new(Vcf)
 	*answer = *v
-	*to = answer
+	return answer
 }
 
 type ByGenomicCoordinates struct {

@@ -98,15 +98,13 @@ func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, 
 	// that copied value and push it onto the heap
 
 	for i := 0; i < lines; i++ {
-		// Initialize an empty ptr to an interface to copy the curr value to
-		var valueToAdd *interface{} = new(interface{})
 		done = curr.NextRealRecord(file) // Get the next value and store it in the curr receiver
 		if done {
 			done = true
 			break
 		} else if curr != nil {
-			curr.Copy(valueToAdd)                       // Copy the curr value to a new memory address
-			chunk.Push((*valueToAdd).(MergeSortSingle)) // Push the copied pointer to the slice
+			valueToAdd := curr.Copy()                  // Copy the curr value to a new memory address
+			chunk.Push((valueToAdd).(MergeSortSingle)) // Push the copied pointer to the slice
 		}
 	}
 	return chunk, done
@@ -126,11 +124,10 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 
 	for i := 0; i < len(tmpFiles); i++ {
 		fileReaders[i] = fileio.EasyOpen(tmpFiles[i])
-		valueToAdd := new(interface{}) // Initialize empty interface to copy curr into
 		done = curr.NextRealRecord(fileReaders[i])
 
-		curr.Copy(valueToAdd)                       // Copy the curr value to a new memory address
-		writeVal := (*valueToAdd).(MergeSortSingle) // Assert the type of the empty interface valueToAdd
+		valueToAdd := curr.Copy()                   // Copy the curr value to a new memory address
+		writeVal := (valueToAdd).(MergeSortSingle)  // Assert the type of the empty interface valueToAdd
 		priorityQueue.Push(writeVal)                // Push the copied pointer to the heap
 		memoryAddressMap[writeVal] = fileReaders[i] // Key the memory address to the origin file reader
 	}

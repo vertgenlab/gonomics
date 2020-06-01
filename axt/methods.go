@@ -60,10 +60,10 @@ func (a *Axt) NextRealRecord(file *fileio.EasyReader) bool {
 	return done
 }
 
-func (a *Axt) Copy(to *interface{}) {
+func (a *Axt) Copy() interface{} {
 	var answer *Axt = new(Axt)
 	*answer = *a
-	*to = answer
+	return answer
 }
 
 type ByGenomicCoordinates struct {
