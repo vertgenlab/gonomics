@@ -54,6 +54,11 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(filename)
 
+	if filetype == ".gz" {
+		// If terminal extension is ".gz" then trim off the gz and get the next extension
+		filetype = path.Ext(filename[0:len(filename) - len(filetype)])
+	}
+
 	file := fileio.EasyOpen(filename)
 	var done bool
 	var tmpFiles []string
@@ -99,7 +104,7 @@ func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, 
 	for i := 0; i < lines; i++ {
 		// Initialize an empty ptr to an interface to copy the curr value to
 		var valueToAdd *interface{} = new(interface{})
-		done = curr.NextRealLine(file) // Get the next value and store it in the curr receiver
+		done = curr.NextRealRecord(file) // Get the next value and store it in the curr receiver
 		if done {
 			done = true
 			break
@@ -126,7 +131,7 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 	for i := 0; i < len(tmpFiles); i++ {
 		fileReaders[i] = fileio.EasyOpen(tmpFiles[i])
 		valueToAdd := new(interface{}) // Initialize empty interface to copy curr into
-		done = curr.NextRealLine(fileReaders[i])
+		done = curr.NextRealRecord(fileReaders[i])
 
 		curr.Copy(valueToAdd)                       // Copy the curr value to a new memory address
 		writeVal := (*valueToAdd).(MergeSortSingle) // Assert the type of the empty interface valueToAdd
@@ -149,7 +154,7 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 		currVal = heap.Pop(priorityQueue).(MergeSortSingle)
 		currFile = memoryAddressMap[currVal]  // Get the origin file reader
 		currVal.WriteToFileHandle(outFile)    // Write the lowest value to the outfile
-		done = currVal.NextRealLine(currFile) // Get the next value from the origin file
+		done = currVal.NextRealRecord(currFile) // Get the next value from the origin file
 
 		if done { // if done then close and remove the tmp file
 			currFile.Close()

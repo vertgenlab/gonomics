@@ -47,7 +47,7 @@ func (a *Axt) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteToFileHandle(file, a, 0)
 }
 
-func (a *Axt) NextRealLine(file *fileio.EasyReader) bool {
+func (a *Axt) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Axt
 	for next == nil && !done {

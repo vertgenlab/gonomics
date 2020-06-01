@@ -45,7 +45,7 @@ func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteToFileHandle(file, b, 7)
 }
 
-func (b *Bed) NextRealLine(file *fileio.EasyReader) bool {
+func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Bed
 	for next == nil && !done {

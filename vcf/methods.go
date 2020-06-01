@@ -72,7 +72,7 @@ func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteVcf(file, v)
 }
 
-func (v *Vcf) NextRealLine(file *fileio.EasyReader) bool {
+func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Vcf
 	for next == nil && !done {
