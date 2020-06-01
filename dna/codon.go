@@ -1,7 +1,6 @@
 package dna
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -9,98 +8,150 @@ type Codon struct {
 	Seq []Base
 }
 
-//moving Sophie's code for aa identities and the genetic code to the DNA package.
-type aa int
+//moving Sophie's code for AminoAcid identities and the genetic code to the DNA package.
+type AminoAcid uint8
 
 const (
-	ala  aa = 0
-	arg  aa = 1
-	asn  aa = 2
-	asp  aa = 3
-	cys  aa = 4
-	gln  aa = 5
-	glu  aa = 6
-	gly  aa = 7
-	his  aa = 8
-	ile  aa = 9
-	leu  aa = 10
-	lys  aa = 11
-	met  aa = 12
-	phe  aa = 13
-	pro  aa = 14
-	ser  aa = 15
-	thr  aa = 16
-	trp  aa = 17
-	tyr  aa = 18
-	val  aa = 19
-	stop aa = 20
+	Ala  AminoAcid = 0
+	Arg  AminoAcid = 1
+	Asn  AminoAcid = 2
+	Asp  AminoAcid = 3
+	Cys  AminoAcid = 4
+	Gln  AminoAcid = 5
+	Glu  AminoAcid = 6
+	Gly  AminoAcid = 7
+	His  AminoAcid = 8
+	Ile  AminoAcid = 9
+	Leu  AminoAcid = 10
+	Lys  AminoAcid = 11
+	Met  AminoAcid = 12
+	Phe  AminoAcid = 13
+	Pro  AminoAcid = 14
+	Ser  AminoAcid = 15
+	Thr  AminoAcid = 16
+	Trp  AminoAcid = 17
+	Tyr  AminoAcid = 18
+	Val  AminoAcid = 19
+	Stop AminoAcid = 20
 )
 
-var GeneticCode = map[string]aa{
-	"TGA": aa(20), "TAA": aa(20), "TAG": aa(20),
-	"GTA": aa(19), "GTC": aa(19), "GTG": aa(19), "GTT": aa(19),
-	"TAT": aa(18), "TAC": aa(18),
-	"TGG": aa(17),
-	"ACA": aa(16), "ACG": aa(16), "ACT": aa(16), "ACC": aa(16),
-	"TCA": aa(15), "TCC": aa(15), "TCG": aa(15), "TCT": aa(15), "AGT": aa(15), "AGC": aa(15),
-	"CCC": aa(14), "CCT": aa(14), "CCA": aa(14), "CCG": aa(14),
-	"TTT": aa(13), "TTC": aa(13),
-	"ATG": aa(12),
-	"AAA": aa(11), "AAG": aa(11),
-	"TTA": aa(10), "TTG": aa(10), "CTC": aa(10), "CTG": aa(10), "CTA": aa(10), "CTT": aa(10),
-	"ATT": aa(9), "ATC": aa(9), "ATA": aa(9),
-	"CAT": aa(8), "CAC": aa(8),
-	"GGG": aa(7), "GGA": aa(7), "GGT": aa(7), "GGC": aa(7),
-	"GAA": aa(6), "GAG": aa(6),
-	"CAA": aa(5), "CAG": aa(5),
-	"TGT": aa(4), "TGC": aa(4),
-	"GAT": aa(3), "GAC": aa(3),
-	"AAT": aa(2), "AAC": aa(2),
-	"AGA": aa(1), "AGG": aa(1), "CGC": aa(1), "CGG": aa(1), "CGA": aa(1), "CGT": aa(1),
-	"GCA": aa(0), "GCG": aa(0), "GCT": aa(0), "GCC": aa(0)}
+var GeneticCode = map[string]AminoAcid{
+	"TGA": AminoAcid(20), "TAA": AminoAcid(20), "TAG": AminoAcid(20),
+	"GTA": AminoAcid(19), "GTC": AminoAcid(19), "GTG": AminoAcid(19), "GTT": AminoAcid(19),
+	"TAT": AminoAcid(18), "TAC": AminoAcid(18),
+	"TGG": AminoAcid(17),
+	"ACA": AminoAcid(16), "ACG": AminoAcid(16), "ACT": AminoAcid(16), "ACC": AminoAcid(16),
+	"TCA": AminoAcid(15), "TCC": AminoAcid(15), "TCG": AminoAcid(15), "TCT": AminoAcid(15), "AGT": AminoAcid(15), "AGC": AminoAcid(15),
+	"CCC": AminoAcid(14), "CCT": AminoAcid(14), "CCA": AminoAcid(14), "CCG": AminoAcid(14),
+	"TTT": AminoAcid(13), "TTC": AminoAcid(13),
+	"ATG": AminoAcid(12),
+	"AAA": AminoAcid(11), "AAG": AminoAcid(11),
+	"TTA": AminoAcid(10), "TTG": AminoAcid(10), "CTC": AminoAcid(10), "CTG": AminoAcid(10), "CTA": AminoAcid(10), "CTT": AminoAcid(10),
+	"ATT": AminoAcid(9), "ATC": AminoAcid(9), "ATA": AminoAcid(9),
+	"CAT": AminoAcid(8), "CAC": AminoAcid(8),
+	"GGG": AminoAcid(7), "GGA": AminoAcid(7), "GGT": AminoAcid(7), "GGC": AminoAcid(7),
+	"GAA": AminoAcid(6), "GAG": AminoAcid(6),
+	"CAA": AminoAcid(5), "CAG": AminoAcid(5),
+	"TGT": AminoAcid(4), "TGC": AminoAcid(4),
+	"GAT": AminoAcid(3), "GAC": AminoAcid(3),
+	"AAT": AminoAcid(2), "AAC": AminoAcid(2),
+	"AGA": AminoAcid(1), "AGG": AminoAcid(1), "CGC": AminoAcid(1), "CGG": AminoAcid(1), "CGA": AminoAcid(1), "CGT": AminoAcid(1),
+	"GCA": AminoAcid(0), "GCG": AminoAcid(0), "GCT": AminoAcid(0), "GCC": AminoAcid(0)}
 
-func AAToString(a aa) string {
+func AminoAcidToShortString(a AminoAcid) string {
 	switch a {
-	case ala:
+	case Ala:
 		return "A"
-	case arg:
+	case Arg:
 		return "R"
-	case asn:
+	case Asn:
 		return "N"
-	case asp:
+	case Asp:
 		return "D"
-	case cys:
+	case Cys:
 		return "C"
-	case gln:
+	case Gln:
 		return "Q"
-	case glu:
+	case Glu:
 		return "E"
-	case gly:
+	case Gly:
 		return "G"
-	case his:
+	case His:
 		return "H"
-	case ile:
+	case Ile:
 		return "I"
-	case leu:
+	case Leu:
 		return "L"
-	case lys:
+	case Lys:
 		return "K"
-	case met:
+	case Met:
 		return "M"
-	case phe:
+	case Phe:
 		return "F"
-	case ser:
+	case Pro:
+		return "P"
+	case Ser:
 		return "S"
-	case thr:
+	case Thr:
 		return "T"
-	case trp:
+	case Trp:
 		return "W"
-	case tyr:
+	case Tyr:
 		return "Y"
-	case val:
+	case Val:
 		return "V"
-	case stop:
-		return "stop"
+	case Stop:
+		return "*"
+	default:
+		log.Fatalf("Error: unexpected amino acid value %v\n", a)
+		return "X"
+	}
+}
+
+func AminoAcidToString(a AminoAcid) string {
+	switch a {
+	case Ala:
+		return "Ala"
+	case Arg:
+		return "Arg"
+	case Asn:
+		return "Asn"
+	case Asp:
+		return "Asp"
+	case Cys:
+		return "Cys"
+	case Gln:
+		return "Gln"
+	case Glu:
+		return "Glu"
+	case Gly:
+		return "Gly"
+	case His:
+		return "His"
+	case Ile:
+		return "Ile"
+	case Leu:
+		return "Leu"
+	case Lys:
+		return "Lys"
+	case Met:
+		return "Met"
+	case Phe:
+		return "Phe"
+	case Pro:
+		return "Pro"
+	case Ser:
+		return "Ser"
+	case Thr:
+		return "Thr"
+	case Trp:
+		return "Trp"
+	case Tyr:
+		return "Tyr"
+	case Val:
+		return "Val"
+	case Stop:
+		return "Ter"
 	default:
 		log.Fatalf("Error: unexpected amino acid value %v\n", a)
 		return "X"
@@ -108,6 +159,7 @@ func AAToString(a aa) string {
 }
 
 //TODO: Add in frame as an argument.
+//TODO: Initialize to len 3 and use the frame argument to update the index instead of append.
 func BasesToCodons(b []Base) []*Codon {
 	var frame int
 	var answer []*Codon
@@ -136,7 +188,7 @@ func CodonsToSeq(c []*Codon) []Base {
 	return answer
 }
 
-func TranslateCodon(c *Codon) aa {
+func TranslateCodon(c *Codon) AminoAcid {
 	val, ok := GeneticCode[BasesToString(c.Seq)]
 	if ok {
 		return val
@@ -158,29 +210,39 @@ func IsEqual(c1 *Codon, c2 *Codon) bool {
 	return BasesToString(c1.Seq) == BasesToString(c2.Seq)
 }
 
-func TranslateSeq(b []Base) []aa {
-	var answer []aa
+func TranslateSeq(b []Base) []AminoAcid {
+	var answer []AminoAcid
 	codons := BasesToCodons(b)
 	for i := 0; i < len(codons); i++ {
-		fmt.Printf("%v\n", codons[i])
 		answer = append(answer, TranslateCodon(codons[i]))
 	}
 	return answer
 }
 
-func PolypeptideToString(a []aa) string {
+func PolypeptideToShortString(a []AminoAcid) string {
 	var answer string
 	for i := 0; i < len(a); i++ {
-		answer = answer + AAToString(a[i])
+		answer = answer + AminoAcidToShortString(a[i])
 	}
 	return answer
+}
+
+func PolypeptideToString(a []AminoAcid) string {
+	var answer string
+	for i := 0; i < len(a); i++ {
+		answer = answer + AminoAcidToString(a[i])
+	}
+	return answer
+}
+
+func TranslateToShortString(b []Base) string {
+	AllToUpper(b)
+	a := TranslateSeq(b)
+	return PolypeptideToShortString(a)
 }
 
 func TranslateToString(b []Base) string {
 	AllToUpper(b)
 	a := TranslateSeq(b)
-	for i := 0; i < len(a); i++ {
-		fmt.Println(a[i])
-	}
 	return PolypeptideToString(a)
 }
