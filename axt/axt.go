@@ -90,7 +90,6 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
 	close(answer)
 }
 
-//TODO: Add an if statement that catches the case where 4 lines do not exist
 func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
 	rSeq, rDone := fileio.EasyNextRealLine(reader)
@@ -107,8 +106,8 @@ func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
 
 func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
 	var words []string = strings.Split(header, " ")
-	if len(words) != 9 {
-		log.Fatalf("Error: sequences in should be the same length\n")
+	if len(words) != 9 || rSeq == "" || qSeq == "" {
+		log.Fatalf("Error: missing fields in header or sequences\n")
 	}
 	var answer *Axt = &Axt{
 		RName:      words[1],
