@@ -7,6 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"os"
@@ -16,7 +18,7 @@ import (
 
 const (
 	// Newly added filetypes should be added to the following valid types list
-	validFileTypes     = "axt, bed, vcf"
+	validFileTypes     = "axt, bed, vcf, sam, giraf"
 	maxTmpFilesAllowed = 1000
 )
 
@@ -38,6 +40,14 @@ func chooseDataType(filetype string) (MergeSort, MergeSortSingle) {
 	case ".vcf":
 		answer = new(vcf.ByGenomicCoordinates)
 		single = new(vcf.Vcf)
+
+	case ".sam":
+		answer = new(sam.ByGenomicCoordinates)
+		single = new(sam.SamAln)
+
+	case ".giraf":
+		answer = new(giraf.ByTopologicalNodeOrder)
+		single = new(giraf.Giraf)
 
 	default:
 		log.Println("Valid file types include:", validFileTypes)
