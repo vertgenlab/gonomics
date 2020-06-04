@@ -21,7 +21,7 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 		Cigar: PairSeqToCigar(axtFmt.RSeq, axtFmt.QSeq),
 		RNext: "*",
 		PNext: 0,
-		TLen:  axtFmt.REnd - axtFmt.REnd, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
+		TLen:  axtFmt.REnd - axtFmt.RStart, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
 		Seq:   dna.RemoveBase(axtFmt.QSeq, dna.Gap),
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),
@@ -38,11 +38,11 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	var i int64
 	for i = 0; i < int64(len(a)); i++ {
 		switch true {
-		case a[i] == b[i] && a[i] != dna.Gap || b[i] != dna.Gap:
+		case a[i] == b[i] && a[i] != dna.Gap:
 			curr = equalMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] != b[i] && a[i] != dna.Gap && b[i] != dna.Gap:
+		case a[i] != b[i] && a[i] != dna.Gap:
 			curr = diffMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)

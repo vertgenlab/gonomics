@@ -17,16 +17,17 @@ func usage() {
 		"axtSam - convert axt alignments to sam format\n\n" +
 			"Usage:\n" +
 			"  axtSam [options] in.axt out.sam\n\n" +
-			"Options:\n")
+			"Options:\n\n")
 	flag.PrintDefaults()
+	fmt.Print("Comming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
 }
 
 func main() {
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
-	var chrInfo *string = flag.String("chrom", "", "in order to write a proper sam header that is compatible with samtools, a `chrom.sizes` file to determine target lengths must be provided")
-	var faSeq *string = flag.String("fasta", "", "provide target sequences in `.fasta` format to obtain sequence lengths to process sam header\n")
+	var chrInfo *string = flag.String("chrom", "", "in order to write a proper sam header that is compatible with samtools,\na chrom`.sizes` file to determine target lengths must be provided")
+	var faSeq *string = flag.String("fasta", "", "provide target sequences in `.fasta` format to obtain sequence lengths\nto process sam header\n")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -46,7 +47,7 @@ func main() {
 		log.Printf("Converting axt alignments into sam format...\n")
 
 		axtToSam(inFile, headerInfo, outFile)
-		log.Printf("Job finished!\n")
+		log.Printf("Finished!\n")
 	}
 }
 
@@ -57,7 +58,7 @@ func axtToSam(axtfile string, header *sam.SamHeader, output string) {
 	defer writer.Close()
 
 	//setting up channels and wait groups
-	data, results := make(chan *axt.Axt), make(chan *sam.SamAln)
+	data, results := make(chan *axt.Axt, 824), make(chan *sam.SamAln, 824)
 	var working, writingJob sync.WaitGroup
 
 	go axt.ReadToChan(reader, data)
