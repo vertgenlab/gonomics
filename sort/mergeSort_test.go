@@ -7,7 +7,7 @@ import (
 
 //TODO: add test function for each data type
 func TestExternalMergeSort(t *testing.T) {
-	ExternalMergeSort("testdata/test.vcf", 100, "tmp", "sorted.vcf")
+	ExternalMergeSort("testdata/test.vcf", 100, "tmp", "sorted.vcf", "byGenomicCoordinates")
 	sorted := vcf.Read("sorted.vcf")
 	var test vcf.ByGenomicCoordinates
 	test.VcfSlice = sorted

@@ -81,7 +81,11 @@ func (g ByTopologicalNodeOrder) Less(i, j int) bool {
 			return true
 		} else if g.GirafSlice[i].GetChromStart() == g.GirafSlice[j].GetChromStart() {
 			// If start positions are equal then loop through nodes and see if one has priority
-			for k := 0; k < len(g.GirafSlice[i].Path.Nodes); k++ {
+			minPathLength := len(g.GirafSlice[i].Path.Nodes)
+			if len(g.GirafSlice[j].Path.Nodes) < minPathLength {
+				minPathLength = len(g.GirafSlice[j].Path.Nodes)
+			}
+			for k := 0; k < minPathLength; k++ {
 				if g.GirafSlice[i].Path.Nodes[k] < g.GirafSlice[j].Path.Nodes[k] {
 					return true
 				}

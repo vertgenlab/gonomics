@@ -58,7 +58,11 @@ func (s *SamAln) WriteToFileHandle(file *fileio.EasyWriter) {
 func (s *SamAln) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *SamAln
-	for next == nil && !done {
+	for nextBytes, err := file.Peek(1); next == nil && !done; nextBytes, err = file.Peek(1) {
+		if err == nil && nextBytes[0] == '@' {
+			fileio.EasyNextLine(file)
+			continue
+		}
 		next, done = NextAlignment(file)
 	}
 	if done {

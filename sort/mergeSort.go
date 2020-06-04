@@ -25,28 +25,43 @@ const (
 // New case must be added to readChunk for each new filetype
 // This function declare a MergeSort and MergeSortSingle with the
 // underlying type corresponding to the filetype input
-func chooseDataType(filetype string) (MergeSort, MergeSortSingle) {
+func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingle) {
 	var answer MergeSort
 	var single MergeSortSingle
 	switch filetype {
 	case ".axt":
-		answer = new(axt.ByGenomicCoordinates)
+		switch sortType {
+		case "byGenomicCoordinates":
+			answer = new(axt.ByGenomicCoordinates)
+		}
 		single = new(axt.Axt)
 
 	case ".bed":
-		answer = new(bed.ByGenomicCoordinates)
+		switch sortType {
+		case "byGenomicCoordinates":
+			answer = new(bed.ByGenomicCoordinates)
+		}
 		single = new(bed.Bed)
 
 	case ".vcf":
-		answer = new(vcf.ByGenomicCoordinates)
+		switch sortType {
+		case "byGenomicCoordinates":
+			answer = new(vcf.ByGenomicCoordinates)
+		}
 		single = new(vcf.Vcf)
 
 	case ".sam":
-		answer = new(sam.ByGenomicCoordinates)
+		switch sortType {
+		case "byGenomicCoordinates":
+			answer = new(sam.ByGenomicCoordinates)
+		}
 		single = new(sam.SamAln)
 
 	case ".giraf":
-		answer = new(giraf.ByTopologicalNodeOrder)
+		switch sortType {
+		case "byGenomicCoordinates":
+			answer = new(giraf.ByTopologicalNodeOrder)
+		}
 		single = new(giraf.Giraf)
 
 	default:
@@ -60,7 +75,12 @@ func chooseDataType(filetype string) (MergeSort, MergeSortSingle) {
 	return answer, single
 }
 
-func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string, outFilename string) {
+func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string, outFilename string, sortType string) {
+	// Default sort order is by genomic coordinates
+	if sortType == "" {
+		sortType = "byGenomicCoordinates"
+	}
+
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(filename)
 
@@ -77,8 +97,7 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 	var currChunk MergeSort
 
 	// Read files into sorted chunk until reached EOF
-	for currChunk, done = readChunk(file, linesPerChunk, filetype); !done && currChunk.Len() != 0; currChunk, done = readChunk(file, linesPerChunk, filetype) {
-
+	for currChunk, done = readChunk(file, linesPerChunk, filetype, sortType); currChunk.Len() != 0; currChunk, done = readChunk(file, linesPerChunk, filetype, sortType) {
 		if tmpFileId == maxTmpFilesAllowed {
 			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
 		}
@@ -91,16 +110,19 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 		tmpFileId++
 
 		currChunk.Write(tmpFilename) // Write the sorted chunk to a tmp file
+
+		if done {
+			break
+		}
 	}
 
-	mergeChunks(tmpFiles, outFilename, filetype) // Begin merge of tmp files
+	mergeChunks(tmpFiles, outFilename, filetype, sortType) // Begin merge of tmp files
 }
 
-func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, bool) {
+func readChunk(file *fileio.EasyReader, lines int, filetype string, sortType string) (MergeSort, bool) {
 	var done bool = false
-
 	// Initialize an empty chunk and an empty single value with the proper underlying type for later functions
-	chunk, curr := chooseDataType(filetype)
+	chunk, curr := chooseDataType(filetype, sortType)
 
 	// In the following function the curr variable acts as a static pointer to a changing value that is
 	// updated with each call of curr.NextRealLine. To actually get each value in a slice, we need
@@ -120,7 +142,7 @@ func readChunk(file *fileio.EasyReader, lines int, filetype string) (MergeSort, 
 	return chunk, done
 }
 
-func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
+func mergeChunks(tmpFiles []string, outFilename string, filetype string, sortType string) {
 	fileReaders := make([]*fileio.EasyReader, len(tmpFiles))
 	var done bool
 
@@ -130,7 +152,7 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string) {
 	// the file of origin
 	memoryAddressMap := make(map[interface{}]*fileio.EasyReader)
 
-	priorityQueue, curr := chooseDataType(filetype)
+	priorityQueue, curr := chooseDataType(filetype, sortType)
 
 	for i := 0; i < len(tmpFiles); i++ {
 		fileReaders[i] = fileio.EasyOpen(tmpFiles[i])
