@@ -10,11 +10,9 @@ import (
 // but there are better methods out there if more speed or accuracy are needed.
 // This code tries to follow the algorithm and variable names used here:
 // https://en.wikipedia.org/wiki/Romberg's_method
-func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedError float64, maxIter int) float64 {
+func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedError float64, relativeEstError float64, maxIter int) float64 {
 	var n, m int
-	var kMax, k float64
-
-	var h float64
+	var kMax, k, h, currEstError float64
 	var currR, prevR []float64 = make([]float64, maxIter), make([]float64, maxIter)
 
 	prevR[0] = 0.5 * (f(a) + f(b))
@@ -41,7 +39,9 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 		// and some use R[n][n]-R[n-1][n-1]
 		// these appear to be related by a constant of 1/(4^n-1) with
 		// R[n][n]-R[n-1][n-1] being more conservative, so we will use that one
-		if math.Abs(currR[n]-prevR[n-1]) < estimatedError {
+		// log.Printf("prevEst=%e, currEst=%e\n", prevR[n-1], currR[n])
+		currEstError = math.Abs(currR[n] - prevR[n-1])
+		if currEstError < estimatedError || currEstError < relativeEstError * math.Abs(currR[n]) {
 			return currR[n]
 		}
 
@@ -54,5 +54,5 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 
 // DefiniteIntegral computes the definite integral of f(x) dx from start to end
 func DefiniteIntegral(f func(float64) float64, start float64, end float64) float64 {
-	return rombergsMethod(f, start, end, 1e-5, 30)
+	return rombergsMethod(f, start, end, 1e-8, 1e-8, 30)
 }
