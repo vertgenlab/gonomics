@@ -108,6 +108,7 @@ func insertCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	}
 	return insertion
 }
+
 func deletionCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	deletion := &cigar.Cigar{Op: 'D', RunLength: 1}
 	var i int64
@@ -120,14 +121,6 @@ func deletionCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 		}
 	}
 	return deletion
-}
-
-func generateFakeQual(length int) []rune {
-	var answer []rune = make([]rune, length)
-	for i := 0; i < length; i++ {
-		answer[i] = 'J'
-	}
-	return answer
 }
 
 func setStrandFlag(strand bool) int64 {
