@@ -129,4 +129,5 @@ func setStrandFlag(strand bool) int64 {
 	} else {
 		return 16
 	}
+
 }

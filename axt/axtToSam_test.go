@@ -46,5 +46,4 @@ func TestSamFileConvert(t *testing.T) {
 		log.Printf("%s\n", sam.SamAlnToString(answerSam))
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
-
 }
