@@ -17,7 +17,7 @@ func bedLiftOverToVcf(infile string, outfile string, delimiter string) {
 	defer out.Close()
 
 	for v := range ch {
-		var output string = fmt.Sprintf("%s\t%v\t", v.Chrom, v.ChromEnd)
+		var output string = fmt.Sprintf("%s\t%v", v.Chrom, v.ChromEnd)
 		words := strings.Split(v.Name, delimiter)
 		for i := 0; i < len(words); i++ {
 			output = output + "\t" + words[i]

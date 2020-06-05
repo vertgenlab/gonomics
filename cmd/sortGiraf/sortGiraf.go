@@ -20,7 +20,7 @@ func usage() {
 func sortGiraf(girafFile string, graphFile string, linesPerChunk int, outFile string) {
 	graph := simpleGraph.Read(graphFile)
 	topoOrder := simpleGraph.GetSortOrder(graph)
-	sort.ExternalMergeSort(girafFile, topoOrder, linesPerChunk, outFile)
+	sort.GirafExternalMergeSort(girafFile, topoOrder, linesPerChunk, outFile)
 }
 
 func main() {

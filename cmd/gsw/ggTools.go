@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chain"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
@@ -24,6 +25,8 @@ type GgToolsSettings struct {
 	VcfFmt        string
 	NonOverlap    bool
 	SelectOverlap bool
+	TargetChrom   string
+	QueryChrom    string
 	FmtOutput     string
 	Out           string
 }
@@ -43,6 +46,8 @@ func ggtoolsExtend() {
 			"  -a, --axt\tConvert axt generated from UCSC kentUtils to a different file format\n\t\tExample:\tgsw ggtools -a pairwise.axt -f vcf -o genome.vcf.gz ref.fa\n\t\tOutfmt:\t\t[.vcf/.gz/.chain/.bed]\n" +
 			"  -b  --bed\tAnalyze bed formated genomic regions\n\t\tComing Soon!\n" +
 			"  -c, --chain\tInput a chain file for addional graph and assembly capabilities\n\t\tComing Soon!\n" +
+			"  -tLen  --targetSizes\tA two column-tab file target name and length, required for converting axt to chain\n" +
+			"  -qLen  --querySizes\t" +
 			"  -v, --vcf\tProvide a VCF to create a graph reference (.gg) used in gsw align\n\t\tExample:\tgsw ggtools -v variance.vcf.gz -o variance.gg ref.fa\n" +
 			"Settings:\n" +
 			"  -s, --select\t  Query bed regions that overlap target axt or chain formats\n" +
@@ -57,6 +62,9 @@ func initGgtoolsArgs() *GgToolsSettings {
 	ggT.Cmd.StringVar(&ggT.BedFmt, "bed", "", "Analyze bed formated genomic regions")
 	ggT.Cmd.StringVar(&ggT.ChainFmt, "chain", "", "Input a chain file for addional graph and assembly capabilities")
 	ggT.Cmd.StringVar(&ggT.FmtOutput, "format", "", "Pick file format for output, only applies to file conversions utils")
+	ggT.Cmd.StringVar(&ggT.TargetChrom, "targetSizes", "", "A two column-tab file containing target name and length is required for converting axt to chain")
+	ggT.Cmd.StringVar(&ggT.QueryChrom, "querySizes", "", "A two column-tab file containing query name and length is required for converting axt to chain")
+
 	ggT.Cmd.BoolVar(&ggT.SelectOverlap, "select", false, "Query bed regions that overlap target axt or chain formats")
 	ggT.Cmd.BoolVar(&ggT.NonOverlap, "invert", false, "Filter nonOverlapping bed regions from target axt or chain formats")
 	ggT.Cmd.StringVar(&ggT.VcfFmt, "vcf", "", "vcf file combined with fasta reference to make a genome graph")
@@ -66,6 +74,9 @@ func initGgtoolsArgs() *GgToolsSettings {
 	ggT.Cmd.StringVar(&ggT.BedFmt, "b", "", "Analyze bed formated genomic regions")
 	ggT.Cmd.StringVar(&ggT.ChainFmt, "c", "", "Input a chain file for addional graph and assembly capabilities")
 	ggT.Cmd.StringVar(&ggT.FmtOutput, "f", "", "Pick file format for output, only applies to file conversions utils")
+	ggT.Cmd.StringVar(&ggT.TargetChrom, "tLen", "", "A two column-tab file containing target name and length is required for converting axt to chain")
+	ggT.Cmd.StringVar(&ggT.QueryChrom, "qLen", "", "A two column-tab file containing query name and length is required for converting axt to chain")
+
 	ggT.Cmd.BoolVar(&ggT.SelectOverlap, "s", false, "Query bed regions that overlap target axt or chain formats")
 	ggT.Cmd.BoolVar(&ggT.NonOverlap, "i", false, "Query nonoverlapping bed regions from target axt or chain formats")
 	ggT.Cmd.StringVar(&ggT.VcfFmt, "v", "", "vcf file combined with fasta reference to make a genome graph")
@@ -80,15 +91,15 @@ func RunGgTools() {
 	if len(os.Args) < 2 {
 		ggT.Cmd.Usage()
 	} else {
-		graphTools(ggT.Out, ggT.Axtfile, ggT.VcfFmt, ggT.FmtOutput, ggT.Cmd.Arg(0), ggT.BedFmt, ggT.ChainFmt, ggT.SelectOverlap, ggT.NonOverlap)
+		graphTools(ggT.Out, ggT.Axtfile, ggT.VcfFmt, ggT.FmtOutput, ggT.Cmd.Arg(0), ggT.BedFmt, ggT.ChainFmt, ggT.SelectOverlap, ggT.NonOverlap, ggT.TargetChrom, ggT.QueryChrom)
 	}
 }
 
 //This is similar to the function we usually run in main() which takes the flag pointers as arguments and runs our analysis
-func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRef string, bedFmt string, chainFmt string, overlap bool, invert bool) {
+func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRef string, bedFmt string, chainFmt string, overlap bool, invert bool, targetChrom string, queryChrom string) {
 	switch true {
-	case strings.HasSuffix(axtfile, ".axt") && strings.Contains(outfmt, "chain"):
-		axtToChain(axtfile, out)
+	case strings.HasSuffix(axtfile, ".axt") && strings.Contains(outfmt, "chain") && strings.Compare(targetChrom, "") != 0 && strings.Compare(queryChrom, "") != 0:
+		axtToChain(axtfile, out, targetChrom, queryChrom)
 	case overlap && strings.HasSuffix(axtfile, ".axt") && strings.HasSuffix(bedFmt, ".bed"):
 		findAxtBedOverlap(axtfile, bedFmt, out, invert)
 	case strings.HasSuffix(chainFmt, ".chain") && strings.Contains(outfmt, "bed"):
@@ -127,22 +138,33 @@ func isFasta(filename string) bool {
 	}
 }
 
-func axtToChain(axtFmt string, chainFmt string) {
+func axtToChain(axtFmt string, chainFmt string, target string, query string) {
 	input := fileio.EasyOpen(axtFmt)
+
 	defer input.Close()
+
 	reader, writer := make(chan *axt.Axt), make(chan *chain.Chain)
+
 	go axt.ReadToChan(input, reader)
-	var i int = 0
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go chain.WriteToFile(chainFmt, writer, nil, &wg)
+	var i int = 0
+	targetChrom := chromInfo.ReadToMap(target)
+	queryChrom := chromInfo.ReadToMap(query)
 	for each := range reader {
-		writer <- chain.AxtToChain(each, i)
+		writer <- chain.AxtToChain(each, int(targetChrom[each.RName].Size), int(queryChrom[each.QName].Size), i)
 		i++
 	}
 	close(writer)
 	wg.Wait()
 }
+
+/*
+func routineWorker(reader <-chan *chain.Chain, writing chan <- *axt.Axt, target string, query string) {
+
+}*/
 
 func chainToBed(chainFmt, bedFmt string, target bool, out string) {
 	input := fileio.EasyOpen(chainFmt)

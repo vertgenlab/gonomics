@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func TestExternalMergeSort(t *testing.T) {
+func TestGirafExternalMergeSort(t *testing.T) {
 	graph := simpleGraph.Read("testdata/mini.gg")
 	sortOrder := simpleGraph.GetSortOrder(graph)
-	ExternalMergeSort("testdata/miniReads.giraf", sortOrder, 100, "testSort.giraf")
+	GirafExternalMergeSort("testdata/miniReads.giraf", sortOrder, 100, "testSort.giraf")
 }
 
 func TestReadAndWriteIdx(t *testing.T) {
