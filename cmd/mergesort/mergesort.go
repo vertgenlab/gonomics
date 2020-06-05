@@ -23,9 +23,9 @@ func mergeSort(inFile string, outFile string, tmpFilePrefix string, numLinesPerC
 
 func main() {
 	expectedNumArgs := 2
-	var tmpFilePrefix *string = flag.String("prefix", "tmp", "Prefix to use when writing temporary files (e.g. tmp_0).")
-	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "Number of records to read into memory before writing to a tmp file.")
-	var byGenomicCoordinates *bool = flag.Bool("genomicCoordinates", true, "Sort Criteria: Chromosome -> StartPos -> EndPos.")
+	var tmpFilePrefix *string = flag.String("prefix", "tmp", "Prefix to use when writing temporary files (e.g. tmp_0).``")
+	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "The number of records to read into memory before writing to a tmp file.``")
+	var byGenomicCoordinates *bool = flag.Bool("genomicCoordinates", true, "Sort Criteria: Chromosome -> StartPos -> EndPos.``")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
