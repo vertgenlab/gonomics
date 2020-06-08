@@ -33,6 +33,8 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		switch sortType {
 		case "byGenomicCoordinates":
 			answer = new(axt.ByGenomicCoordinates)
+		default:
+			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
 		single = new(axt.Axt)
 
@@ -40,6 +42,8 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		switch sortType {
 		case "byGenomicCoordinates":
 			answer = new(bed.ByGenomicCoordinates)
+		default:
+			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
 		single = new(bed.Bed)
 
@@ -47,6 +51,8 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		switch sortType {
 		case "byGenomicCoordinates":
 			answer = new(vcf.ByGenomicCoordinates)
+		default:
+			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
 		single = new(vcf.Vcf)
 
@@ -54,6 +60,8 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		switch sortType {
 		case "byGenomicCoordinates":
 			answer = new(sam.ByGenomicCoordinates)
+		default:
+			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
 		single = new(sam.SamAln)
 
@@ -61,6 +69,8 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		switch sortType {
 		case "byGenomicCoordinates":
 			answer = new(giraf.ByTopologicalNodeOrder)
+		default:
+			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
 		single = new(giraf.Giraf)
 
