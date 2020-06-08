@@ -49,11 +49,7 @@ func (g *Giraf) WriteToFileHandle(file *fileio.EasyWriter) {
 }
 
 func (g *Giraf) NextRealRecord(file *fileio.EasyReader) bool {
-	var done bool
-	var next *Giraf
-	for next == nil && !done {
-		next, done = NextGiraf(file)
-	}
+	next, done := NextGiraf(file)
 	if done {
 		return true
 	}
