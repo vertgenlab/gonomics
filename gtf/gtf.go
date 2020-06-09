@@ -9,49 +9,49 @@ import (
 )
 
 type Gene struct {
-	GeneID string
-	GeneName string
+	GeneID      string
+	GeneName    string
 	Transcripts []*Transcript
 }
 
 type Transcript struct {
-	Chr string
-	Source string
-	Start int
-	End int
-	Score float64
-	Strand bool
+	Chr          string
+	Source       string
+	Start        int
+	End          int
+	Score        float64
+	Strand       bool
 	TranscriptID string
-	Exons []*Exon
+	Exons        []*Exon
 }
 
 type Exon struct {
-	Start int
-	End int
-	Score float64
+	Start      int
+	End        int
+	Score      float64
 	ExonNumber string
-	ExonID string
-	Cds *CDS
-	FiveUtr *FiveUTR
-	ThreeUtr *ThreeUTR
+	ExonID     string
+	Cds        *CDS
+	FiveUtr    *FiveUTR
+	ThreeUtr   *ThreeUTR
 }
 
 type FiveUTR struct {
 	Start int
-	End int
+	End   int
 	Score float64
 }
 
 type CDS struct {
 	Start int
-	End int
+	End   int
 	Score float64
 	Frame int
 }
 
 type ThreeUTR struct {
 	Start int
-	End int
+	End   int
 	Score float64
 }
 
@@ -66,6 +66,7 @@ func ParseFrame(s string) int {
 	return answer
 }
 
+//reads to  map[geneID]*Gene
 func Read(filename string) map[string]*Gene {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -73,7 +74,6 @@ func Read(filename string) map[string]*Gene {
 	var currentTranscript Transcript
 	var doneReading bool = false
 	answer := make(map[string]*Gene)
-
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
@@ -86,9 +86,11 @@ func Read(filename string) map[string]*Gene {
 			words[5] = "-1"
 		}
 
-		att := strings.Split(words[8], "; ")
+		att := strings.Split(words[8], ";")
 		var currGeneID, currGeneName, currT, currEID, currENumber string
 		for i := 0; i < len(att); i++ {
+			//this command trims the leading space in the annotation field
+			att[i] = strings.TrimSpace(att[i])
 			field := strings.Split(att[i], " ")
 			if field[0] == "gene_id" {
 				currGeneID = field[1]
@@ -100,14 +102,15 @@ func Read(filename string) map[string]*Gene {
 				currGeneName = field[1]
 			}
 			if field[0] == "exon_id" {
-					currEID = field[1]
+				currEID = field[1]
 			}
 			if field[0] == "exon_number" {
 				currENumber = field[1]
 			}
 		}
 
-		if words[2] == "transcript" {
+		switch words[2] {
+		case "transcript":
 			currentTranscript = Transcript{Chr: words[0], Source: words[1], Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), TranscriptID: currT}
 			currentTranscript.Strand = common.StringToStrand(words[6])
 			currentTranscript.Exons = make([]*Exon, 0)
@@ -119,14 +122,14 @@ func Read(filename string) map[string]*Gene {
 				answer[currGeneID].Transcripts = make([]*Transcript, 0)
 				answer[currGeneID].Transcripts = append(answer[currGeneID].Transcripts, &currentTranscript)
 			}
-		} else if words[2] == "exon" {
+		case "exon":
 			currentExon := Exon{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), ExonNumber: currENumber, ExonID: currEID, Score: common.StringToFloat64(words[5])}
 			for i := 0; i < len(answer[currGeneID].Transcripts); i++ {
 				if answer[currGeneID].Transcripts[i].TranscriptID == currT {
 					answer[currGeneID].Transcripts[i].Exons = append(answer[currGeneID].Transcripts[i].Exons, &currentExon)
 				}
 			}
-		} else if words[2] == "CDS" {
+		case "CDS":
 			currentCDS := CDS{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), Frame: ParseFrame(words[7])}
 			for i := 0; i < len(answer[currGeneID].Transcripts); i++ {
 				if answer[currGeneID].Transcripts[i].TranscriptID == currT {
@@ -137,7 +140,7 @@ func Read(filename string) map[string]*Gene {
 					}
 				}
 			}
-		} else if words[2] == "5UTR" {
+		case "5UTR":
 			current5Utr := FiveUTR{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
 			for i := 0; i < len(answer[currGeneID].Transcripts); i++ {
 				if answer[currGeneID].Transcripts[i].TranscriptID == currT {
@@ -148,7 +151,7 @@ func Read(filename string) map[string]*Gene {
 					}
 				}
 			}
-		} else if words[2] == "3UTR" {
+		case "3UTR":
 			current3Utr := ThreeUTR{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
 			for i := 0; i < len(answer[currGeneID].Transcripts); i++ {
 				for j := 0; j < len(answer[currGeneID].Transcripts[i].Exons); j++ {
@@ -157,8 +160,11 @@ func Read(filename string) map[string]*Gene {
 					}
 				}
 			}
+		default:
+			//start_codon and stop_codon lines not read for now.
+			//TODO: add in a parser for these lines and throw a log.Fatalf for other line types.
+			continue
 		}
-		//TODO: parse start_codon and stop_codon. Not sure how necessary these will be.
 	}
 	return answer
 }
@@ -175,11 +181,11 @@ func Write(filename string, records map[string]*Gene) {
 			for j := 0; j < len(records[k].Transcripts[i].Exons); j++ {
 				_, err = fmt.Fprintf(file, "%s\n", GtfExonToString(records[k].Transcripts[i].Exons[j], records[k].Transcripts[i], records[k]))
 				common.ExitIfError(err)
-				if records[k].Transcripts[i].Exons[j].FiveUtr != nil {//if cds, 5utr, and 3utr are not nil pointers the underlying struct
+				if records[k].Transcripts[i].Exons[j].FiveUtr != nil { //if cds, 5utr, and 3utr are not nil pointers the underlying struct
 					_, err = fmt.Fprintf(file, "%s\n", Gtf5UtrToString(records[k].Transcripts[i].Exons[j], records[k].Transcripts[i], records[k]))
 					common.ExitIfError(err)
 				}
-				if records[k].Transcripts[i].Exons[j].Cds != nil { 
+				if records[k].Transcripts[i].Exons[j].Cds != nil {
 					_, err = fmt.Fprintf(file, "%s\n", GtfCdsToString(records[k].Transcripts[i].Exons[j], records[k].Transcripts[i], records[k]))
 					common.ExitIfError(err)
 				}
@@ -205,7 +211,7 @@ func GtfTranscriptToString(t *Transcript, g *Gene) string {
 		strand = "-"
 	}
 	frame = "."
-	att = fmt.Sprintf("gene_id: %s; transcript_id: %s; gene_name: %s;", g.GeneID, t.TranscriptID, g.GeneName)
+	att = fmt.Sprintf("gene_id %s; transcript_id %s; gene_name %s;", g.GeneID, t.TranscriptID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, t.Start, t.End, score, strand, frame, att)
 }
 
@@ -223,7 +229,7 @@ func GtfExonToString(e *Exon, t *Transcript, g *Gene) string {
 		strand = "-"
 	}
 	frame = "."
-	att = fmt.Sprintf("gene_id: %s; transcript_id: %s; exon_number: %s; exon_id: %s; gene_name: %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, e.Start, e.End, score, strand, frame, att)
 }
 
@@ -240,8 +246,8 @@ func Gtf5UtrToString(e *Exon, t *Transcript, g *Gene) string {
 	} else {
 		strand = "-"
 	}
-	frame =  "."
-	att = fmt.Sprintf("gene_id: %s; transcript_id: %s; exon_number: %s; exon_id: %s; gene_name: %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	frame = "."
+	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, e.FiveUtr.Start, e.FiveUtr.End, score, strand, frame, att)
 }
 
@@ -258,7 +264,7 @@ func GtfCdsToString(e *Exon, t *Transcript, g *Gene) string {
 	} else {
 		strand = "-"
 	}
-	att = fmt.Sprintf("gene_id: %s; transcript_id: %s; exon_number: %s; exon_id: %s; gene_name: %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%v\t%s", t.Chr, t.Source, lineType, e.Cds.Start, e.Cds.End, score, strand, e.Cds.Frame, att)
 }
 
@@ -275,12 +281,7 @@ func Gtf3UtrToString(e *Exon, t *Transcript, g *Gene) string {
 	} else {
 		strand = "-"
 	}
-	frame =  "."
-	att = fmt.Sprintf("gene_id: %s; transcript_id: %s; exon_number: %s; exon_id: %s; gene_name: %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	frame = "."
+	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%v\t%s", t.Chr, t.Source, lineType, e.ThreeUtr.Start, e.ThreeUtr.End, score, strand, frame, att)
 }
-
-
-
-
-

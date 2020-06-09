@@ -1,20 +1,18 @@
 package gtf
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 )
 
 func AllAreEqual(a map[string]*Gene, b map[string]*Gene) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for k, _ := range a {
-		if _, ok := b[k]; !ok {
-			fmt.Printf("Here's the problem: %s.", k)
+	for k, _ := range b {
+		if _, ok := a[k]; !ok {
 			return false
 		} else {
-			fmt.Println("Comparing entries.")
 			if !EqualGene(a[k], b[k]) {
 				return false
 			}
@@ -25,7 +23,6 @@ func AllAreEqual(a map[string]*Gene, b map[string]*Gene) bool {
 
 func EqualGene(a *Gene, b *Gene) bool {
 	if strings.Compare(a.GeneID, b.GeneID) != 0 {
-		fmt.Println("Here's the problem.")
 		return false
 	}
 	if strings.Compare(a.GeneName, b.GeneName) != 0 {
@@ -114,17 +111,13 @@ func EqualExon(a *Exon, b *Exon) bool {
 }
 
 func EqualFiveUtr(a *FiveUTR, b *FiveUTR) bool {
-	return a.Start != b.Start || a.End != b.End || a.Score != b.Score
+	return a.Start == b.Start && a.End == b.End && a.Score == b.Score
 }
 
 func EqualCds(a *CDS, b *CDS) bool {
-	return a.Start != b.Start || a.End != b.End || a.Score != b.Score || a.Frame != b.Frame
+	return a.Start == b.Start && a.End == b.End && a.Score == b.Score && a.Frame == b.Frame
 }
 
 func EqualThreeUtr(a *ThreeUTR, b *ThreeUTR) bool {
-	return a.Start != b.Start || a.End != b.End || a.Score != b.Score
+	return a.Start == b.Start && a.End == b.End && a.Score == b.Score
 }
-
-
-
-
