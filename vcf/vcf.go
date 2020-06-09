@@ -67,7 +67,7 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
-	data := strings.Split(line, "\t")
+	data := strings.SplitN(line, "\t", 10)
 	//switch {
 	//case strings.HasPrefix(line, "#"):
 	//don't do anything
@@ -85,7 +85,7 @@ func processVcfLine(line string) *Vcf {
 		curr.Qual = common.StringToFloat64(data[5])
 	}
 	if len(data) > 9 {
-		curr.Notes = strings.Join(data[9:], "\t")
+		curr.Notes = data[9]
 	}
 	return curr
 }
