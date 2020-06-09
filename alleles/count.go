@@ -60,7 +60,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename string, s
 	fasta.AllToUpper(reference)
 	ref := fasta.FastaMap(reference)
 
-	log.Printf("Reading in sam alignments...")
+	//log.Printf("Reading in sam alignments...")
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 
@@ -276,7 +276,7 @@ func CountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename string, s
 		}
 	}
 
-	log.Printf("Finished analyzing %s", samFilename)
+	//log.Printf("Finished analyzing %s", samFilename)
 	wg.Done()
 }
 
@@ -296,7 +296,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 	var currAlleles = make(map[GraphLocation]*AlleleCount)
 	var runningCount = make([]*GraphLocation, 0)
 
-	log.Printf("Reading in sam alignments...")
+	//log.Printf("Reading in sam alignments...")
 
 	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 		readPath := simpleGraph.StringToPath(aln.Extra)
@@ -553,7 +553,7 @@ func GraphCountAlleles(answer chan *Allele, wg *sync.WaitGroup, samFilename stri
 			}
 		}
 	}
-	log.Printf("Finished analyzing %s", samFilename)
+	//log.Printf("Finished analyzing %s", samFilename)
 
 	for loc, count := range currAlleles {
 		answer <- &Allele{samFilename, count, &Location{loc.Node.Name, loc.Pos}}
