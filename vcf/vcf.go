@@ -69,12 +69,12 @@ func processVcfLine(line string) *Vcf {
 	var curr *Vcf
 	data := strings.Split(line, "\t")
 	switch {
-	case strings.HasPrefix(line, "#"):
-		//don't do anything
-	case len(data) == 1:
-		//these lines are sequences, and we are not recording them
-	case len(line) == 0:
-		//blank line
+	//case strings.HasPrefix(line, "#"):
+	//don't do anything
+	//case len(data) == 1:
+	//these lines are sequences, and we are not recording them
+	//case len(line) == 0:
+	//blank line
 	case len(data) >= 10:
 		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
 		if strings.Compare(data[5], ".") == 0 {
@@ -86,12 +86,13 @@ func processVcfLine(line string) *Vcf {
 			curr.Notes = strings.Join(data[9:], "\t")
 		}
 	default:
+		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 10 columns", line)
 	}
 	return curr
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return nil, true
 	}
