@@ -58,7 +58,6 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-
 func main() {
 	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")

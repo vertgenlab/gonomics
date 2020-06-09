@@ -11,7 +11,7 @@ import (
 )
 
 func vcfToBed(infile string, outfile string, delimiter string) {
-	ch, _:= vcf.GoReadToChan(infile)
+	ch, _ := vcf.GoReadToChan(infile)
 	var note string
 	var err error
 	out := fileio.EasyCreate(outfile)

@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func drawIndTree(inFile string, outFile string, imgWidth int, imgHeight int){
+func drawIndTree(inFile string, outFile string, imgWidth int, imgHeight int) {
 	var nt *tree.Tree
 	var err error
 	var img *image.RGBA
