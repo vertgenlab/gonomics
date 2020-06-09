@@ -2,7 +2,6 @@ package vcf
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
 	"testing"
 )
 
@@ -25,6 +24,6 @@ func TestFixVcf(t *testing.T) {
 	FixVcf(&vcfTest, ref)
 
 	if vcfTest != correctAnswer {
-		log.Fatalf("ERROR: Problem fixing VCF. Expected %v, got %v", correctAnswer, vcfTest)
+		t.Errorf("ERROR: Problem fixing VCF. Expected %v, got %v", correctAnswer, vcfTest)
 	}
 }
