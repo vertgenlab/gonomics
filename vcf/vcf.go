@@ -176,6 +176,7 @@ func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
 	}
 }
 
+//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
