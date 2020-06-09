@@ -34,7 +34,10 @@ func stringToGiraf(line string) *Giraf {
 			MapQ:      uint8(common.StringToInt(data[7])),
 			Seq:       dna.StringToBases(data[8]),
 			Qual:      fastq.ToQualUint8([]rune(data[9])),
-			Notes:     FromStringToNotes(data[10])}
+			Notes:     make([]Note, 0)}
+		if len(data) == 11 {
+			curr.Notes = FromStringToNotes(data[10])
+		}
 	}
 	return curr
 }
