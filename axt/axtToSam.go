@@ -27,9 +27,6 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),
 		//AS=alignment score, XS=query start , XE= query end position
 	}
-	if int(cigar.QueryLength(answer.Cigar)) != len(answer.Seq) {
-		log.Fatalf("Error: Query sequence does not match cigar length...\n")
-	}
 	//answer.Cigar = append(answer.Cigar, &cigar.Cigar{Op: 'H', RunLength: axtFmt.QStart-1} )
 	return answer
 }
@@ -43,11 +40,11 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 		//Removing the extra case statements introduced a bug in real data
 		//TODO: add another test to catch this
 		switch true {
-		case a[i] == b[i] && (a[i] != dna.Gap || b[i] != dna.Gap):
+		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]:
 			curr = equalMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] != b[i] && (a[i] != dna.Gap || b[i] != dna.Gap):
+		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] != b[i]:
 			curr = diffMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
