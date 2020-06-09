@@ -1,37 +1,49 @@
 package axt
 
 import (
-
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
+	"fmt"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"testing"
 )
 
 func TestSamFileConvert(t *testing.T) {
+
 	//chr19 3001012 3001075 chr11 70568380 70568443 - 3500
-	var testAxt  = &Axt{
+	var testAxt = &Axt{
 		RName:      "chr19",
-		RStart:     3001012,
-		REnd:       3001075,
+		RStart:     1,
+		REnd:       30,
 		QName:      "chr11",
-		QStart:     70568380,
-		QEnd:       70568443,
+		QStart:     2,
+		QEnd:       31,
 		QStrandPos: false,
 		Score:      3500,
-		RSeq:       dna.StringToBases("TCAGCTCATAAATCACCTCCTGCCACAAGCCTGGCCTGGTCCCAGGAGAGTGTCCAGGCTCAGA"),
-		QSeq:       dna.StringToBases("TCTGTTCATAAACCACCTGCCATGACAAGCCTGGCCTGTTCCCAAGACAATGTCCAGGCTCAGA"),
+		RSeq:       dna.StringToBases("TCAGCTCATAAATCACCTCCTGCCACAAGC"),
+		QSeq:       dna.StringToBases("TCTGTTCATAAACCACCTGCCATGACAAGC"),
 	}
-	log.Printf("%s\n", sam.SamAlnToString(AxtToSam(testAxt)))
-	log.Printf("Toy example: PASS!")
-	testFile := fileio.EasyOpen("testdata/rabsToGasAcu1_filteredByScore.axt")
-	reader := make(chan *Axt)
-	defer testFile.Close()
-	go ReadToChan(testFile, reader)
-	for each := range reader {
-		log.Printf("%s\n", sam.SamAlnToString(AxtToSam(each)))
+	samFromAxt := AxtToSam(testAxt)
+
+	var answerSam *sam.SamAln = &sam.SamAln{
+		QName: "chr11",
+		Flag:  16,
+		RName: "chr19",
+		Pos:   1,
+		MapQ:  255, // mapping quality setting to 255 because we are not calculating it
+		Cigar: cigar.FromString("2=1X1=1X7=1X5=1X1=4X6="),
+		RNext: "*",
+		PNext: 0,
+		TLen:  29, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
+		Seq:   dna.StringToBases("TCTGTTCATAAACCACCTGCCATGACAAGC"),
+		Qual:  "*",
+		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", 3500, 2, 31),
 	}
 
+	if !sam.IsEqual(samFromAxt, answerSam) {
+		log.Printf("%s\n", sam.SamAlnToString(samFromAxt))
+		log.Printf("%s\n", sam.SamAlnToString(answerSam))
+		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
+	}
 }
-
