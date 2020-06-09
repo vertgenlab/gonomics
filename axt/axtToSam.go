@@ -27,6 +27,9 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),
 		//AS=alignment score, XS=query start , XE= query end position
 	}
+	if int(cigar.QueryLength(answer.Cigar)) != len(answer.Seq) {
+		log.Fatalf("Error: Query sequence does not match cigar length...\n")
+	}
 	//answer.Cigar = append(answer.Cigar, &cigar.Cigar{Op: 'H', RunLength: axtFmt.QStart-1} )
 	return answer
 }

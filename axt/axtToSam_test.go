@@ -40,6 +40,9 @@ func TestSamFileConvert(t *testing.T) {
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", 3500, 2, 31),
 	}
+	if int(cigar.QueryLength(samFromAxt.Cigar)) != len(samFromAxt.Seq) {
+		log.Fatalf("Error: Query sequence does not match cigar length...\n")
+	}
 
 	if !sam.IsEqual(samFromAxt, answerSam) {
 		log.Printf("%s\n", sam.SamAlnToString(samFromAxt))
