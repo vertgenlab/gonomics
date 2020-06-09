@@ -68,25 +68,24 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
 	data := strings.Split(line, "\t")
-	switch {
+	//switch {
 	//case strings.HasPrefix(line, "#"):
 	//don't do anything
 	//case len(data) == 1:
 	//these lines are sequences, and we are not recording them
 	//case len(line) == 0:
 	//blank line
-	case len(data) >= 10:
-		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
-		if strings.Compare(data[5], ".") == 0 {
-			curr.Qual = 255
-		} else {
-			curr.Qual = common.StringToFloat64(data[5])
-		}
-		if len(data) > 10 {
-			curr.Notes = strings.Join(data[9:], "\t")
-		}
-	default:
-		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 10 columns", line)
+	if len(data) < 9 {
+		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
+	}
+	curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
+	if strings.Compare(data[5], ".") == 0 {
+		curr.Qual = 255
+	} else {
+		curr.Qual = common.StringToFloat64(data[5])
+	}
+	if len(data) > 9 {
+		curr.Notes = strings.Join(data[9:], "\t")
 	}
 	return curr
 }
