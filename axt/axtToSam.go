@@ -37,23 +37,22 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	curr := &cigar.Cigar{}
 	var i int64
 	for i = 0; i < int64(len(a)); i++ {
-		//Removing the extra case statements introduced a bug in real data
 		//TODO: add another test to catch this
 		switch true {
-		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]:
+		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]: //match, bases equal
 			curr = equalMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
 		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] != b[i]:
+
 			curr = diffMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] == dna.Gap && b[i] != dna.Gap:
+		case a[i] == dna.Gap && b[i] != dna.Gap: //deletion: query has gap, non-gap base in target
 			curr = insertCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] != dna.Gap && b[i] == dna.Gap:
-			//found a deletion, in gap in reference, non-gap base in target
+		case a[i] != dna.Gap && b[i] == dna.Gap: //insertion: target is a gap, contains sequence
 			curr = deletionCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)

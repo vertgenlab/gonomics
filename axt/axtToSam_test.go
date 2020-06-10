@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
+	//"log"
 	"testing"
 )
 
@@ -21,8 +21,8 @@ func TestSamFileConvert(t *testing.T) {
 		QEnd:       31,
 		QStrandPos: false,
 		Score:      3500,
-		RSeq:       dna.StringToBases("TCAGCTCATAAATCACCTCCTGCCACAAGC"),
-		QSeq:       dna.StringToBases("TCTGTTCATAAACCACCTGCCATGACAAGC"),
+		RSeq:       dna.StringToBases("TCAGCTCATAAATCACCTCC----ACAAGC"),
+		QSeq:       dna.StringToBases("TCTG--CATAAACCACCTGCCATGACAAGC"),
 	}
 	samFromAxt := AxtToSam(testAxt)
 
@@ -32,21 +32,15 @@ func TestSamFileConvert(t *testing.T) {
 		RName: "chr19",
 		Pos:   1,
 		MapQ:  255, // mapping quality setting to 255 because we are not calculating it
-		Cigar: cigar.FromString("2=1X1=1X7=1X5=1X1=4X6="),
+		Cigar: cigar.FromString("2=1X1=2D6=1X5=1X1=4I6="),
 		RNext: "*",
 		PNext: 0,
 		TLen:  29, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
-		Seq:   dna.StringToBases("TCTGTTCATAAACCACCTGCCATGACAAGC"),
+		Seq:   dna.StringToBases("TCTGCATAAACCACCTGCCATGACAAGC"),
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", 3500, 2, 31),
 	}
-	if int(cigar.QueryLength(samFromAxt.Cigar)) != len(samFromAxt.Seq) {
-		log.Fatalf("Error: Query sequence does not match cigar length...\n")
-	}
-
 	if !sam.IsEqual(samFromAxt, answerSam) {
-		log.Printf("%s\n", sam.SamAlnToString(samFromAxt))
-		log.Printf("%s\n", sam.SamAlnToString(answerSam))
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
 }
