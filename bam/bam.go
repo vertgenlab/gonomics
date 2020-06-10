@@ -42,21 +42,31 @@ func processBamRecord(reader *BamReader) {
   	var flagNc    uint32
   	var binMqNl   uint32
   	//var ans []*BinAln
-  	for {
+  	bai := BinAln{}
+  	
+  	reader.PipeIo.Data = make([]byte, blockSize)
+  	for reader.PipeIo.Debug = binary.Read(bytes.NewBuffer(reader.PipeIo.Data), binary.LittleEndian, &blockSize); reader.PipeIo.Debug != io.EOF && reader.PipeIo.Debug != nil; {
   		
-  		buf := bytes.NewBuffer(reader.PipeIo.Data)
-  		bai := BinAln{}
-  		//reads the block size
-  		//reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize)
-  		
-  		//common.ExitIfError(reader.PipeIo.Debug)
-  		reader.PipeIo.BytesRead = decodeBinaryInt32(reader)
-  		reader.PipeIo.Data = make([]byte, blockSize)
 
+  		//!ByteErrOF(reader.PipeIo.Debug); {
+  		
+ 		buf := bytes.NewBuffer(reader.PipeIo.Data)
+  		//log.Printf("Bytes read: %d\n",reader.PipeIo.Data)
+  		//reads the block size
+  		//reader.PipeIo.Data = make([]byte, blockSize)
   		//block data
   		reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.RName)
   		common.ExitIfError(reader.PipeIo.Debug)
-  			
+  		reader.PipeIo.Data = make([]byte, bai.RName)
+		//var i, j int = 0, 0
+	//	for i = 0; i < int(bai.RName); {
+	//		j, reader.PipeIo.Debug = reader.gunzip.Read(reader.PipeIo.Data[i:])
+	//		common.ExitIfError(reader.PipeIo.Debug)
+	//		i += j
+	//	}
+
+ 		var i int
+  		
   		//position
   		reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.Pos)
   		common.ExitIfError(reader.PipeIo.Debug)
@@ -84,53 +94,47 @@ func processBamRecord(reader *BamReader) {
   		reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.NextPos)
   		common.ExitIfError(reader.PipeIo.Debug)
   		
-  	
-  		
   		reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.TLength)
   		common.ExitIfError(reader.PipeIo.Debug)
 
   		var b byte
-
   		
-  		for {
-  			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &b)
-  			common.ExitIfError(reader.PipeIo.Debug)
+  		for reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &b) ;reader.PipeIo.Debug != io.EOF && reader.PipeIo.Debug != nil; {
+  			
   			if b == 0 {
   				bai.QName = buf.String()
   				break
   			}
   			
   		}
-
   		bai.Cigar = make([]uint32, bai.NCigarOp)
-  		for i := 0; i < int(bai.NCigarOp); i++ {
+  		for i = 0; i < int(bai.NCigarOp); i++ {
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.Cigar[i])
   			common.ExitIfError(reader.PipeIo.Debug)
-
   		}
 
   		bai.Seq = make([]byte, (bai.LSeq+1/2))
-  		for i := 0; i < int((bai.LSeq+1)/2); i++ {
+  		for i = 0; i < int((bai.LSeq+1)/2); i++ {
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.Seq[i])
   			common.ExitIfError(reader.PipeIo.Debug)
   		}
 
   		bai.Qual = make([]byte, bai.LSeq)
-  		for i := 0; i < int(bai.LSeq); i++ {
+  		for i = 0; i < int(bai.LSeq); i++ {
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.Qual[i])
   			common.ExitIfError(reader.PipeIo.Debug)
   		}
 
   		position := 8*4 + int(bai.RNLength) + 4*int(bai.NCigarOp) + int((bai.LSeq + 1)/2) + int(bai.LSeq)
-  		for i := 0; position + i < int(blockSize); {
-  			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.TLength)
-  			common.ExitIfError(reader.PipeIo.Debug)
+ 
+  		for i = 0; position + i < int(blockSize); {
+  			//reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &auxLen)
+
+  			//reader.gunzip.Read(reader.gunzip, binary.LittleEndian, &bai.TLength)
+  			//common.ExitIfError(reader.PipeIo.Debug)
   			_, reader.PipeIo.Debug = io.CopyN(ioutil.Discard, reader.gunzip, int64(blockSize) - int64(position))
   		}
-  		//ans = append(ans, &bai)
   	}
-  	
- 
 }
 
 func bamBlocks(bams []*BinAln) {
@@ -247,5 +251,17 @@ func decodeBinaryInt32(reader *BamReader) int {
 	return i
 }
 
+func ByteErrOF(err error) bool {
+	switch true {
+	case err != nil && err != io.EOF:
+		common.ExitIfError(err)
+		return true
+	case err == io.EOF:
+		return true
+	default:
+		return false
+	}
+}
 	
+
 
