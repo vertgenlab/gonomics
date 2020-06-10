@@ -18,10 +18,13 @@ func processHeaderLine(header *VcfHeader, line string) {
 	}
 }
 
+//If you have multiple samples to add to the header, use strings.Join(samples[], "\t") as an argument that combines multiple samples by tabs
+//Name input is strictly used to push in a name for the sample column.
+
 func NewHeader(name string) *VcfHeader {
 	var header *VcfHeader
 	t := time.Now()
-	header.Text = append(header.Text, "##fileformat=VCFv4.2\n")
+	header.Text = append(header.Text, "##fileformat=VCFv4.2")
 	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))
 	header.Text = append(header.Text, "##source=github.com/vertgenlab/gonomics")
 	header.Text = append(header.Text, "##phasing=none")
@@ -61,6 +64,7 @@ func NewWriteHeader(file io.Writer, header *VcfHeader) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
+		common.ExitIfError(err)
 	}
-	common.ExitIfError(err)
+
 }
