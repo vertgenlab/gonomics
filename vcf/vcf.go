@@ -217,11 +217,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 }
 
 func PrintSingleLine(data *Vcf) {
-	var err error
-	file := fileio.EasyCreate("/dev/stdout")
-	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
-	common.ExitIfError(err)
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 }
 
 func PrintHeader(header []string) {

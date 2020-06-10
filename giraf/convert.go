@@ -20,9 +20,7 @@ func GirafToString(g *Giraf) string {
 func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
 	data := strings.SplitN(line, "\t", 11)
-	if len(data) < 10 {
-		log.Fatalf("Error: Expecting at least 10 columns, but only found %d on %s", len(data), line)
-	} else {
+	if len(data) >= 10 {
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
@@ -33,12 +31,15 @@ func stringToGiraf(line string) *Giraf {
 			AlnScore:  common.StringToInt(data[6]),
 			MapQ:      uint8(common.StringToInt(data[7])),
 			Seq:       dna.StringToBases(data[8]),
-			Qual:      fastq.ToQualUint8([]rune(data[9])),
-			Notes:     make([]Note, 0)}
-		if len(data) == 11 {
-			curr.Notes = FromStringToNotes(data[10])
-		}
+			Qual:      fastq.ToQualUint8([]rune(data[9]))}
+	} else {
+		log.Fatalf("Error: Expecting at least 10 columns, but only found %d on %s", len(data), line)
 	}
+
+	if len(data) == 11 {
+		curr.Notes = FromStringToNotes(data[10])
+	}
+
 	return curr
 }
 
