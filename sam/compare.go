@@ -3,7 +3,6 @@ package sam
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
 	"sort"
 	"strings"
 )
