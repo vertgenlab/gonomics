@@ -48,11 +48,11 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 			curr = diffMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] == dna.Gap && b[i] != dna.Gap: //deletion: query has gap, non-gap base in target
+		case a[i] == dna.Gap && b[i] != dna.Gap: //target has gap, non-gap base in target
 			curr = insertCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] != dna.Gap && b[i] == dna.Gap: //insertion: target is a gap, contains sequence
+		case a[i] != dna.Gap && b[i] == dna.Gap: //query is a gap, contains sequence
 			curr = deletionCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
