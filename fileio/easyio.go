@@ -31,7 +31,6 @@ func EasyOpen(filename string) *EasyReader {
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
 		answer.BuffReader = bufio.NewReader(answer.File)
-		answer.internalBuff = nil
 		answer.internalGzip = nil
 	}
 	return &answer
