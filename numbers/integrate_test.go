@@ -14,6 +14,7 @@ var definiteIntegralTests = []struct {
 	{func(x float64) float64 { return x }, 0, 1, 0.5},
 	{func(x float64) float64 { return math.Pow(x, 2) + 1 }, 0, 2, 14.0 / 3.0},
 	{func(x float64) float64 { return 6*math.Pow(x, 2) - 5*x + 2 }, -3, 1, 84},
+	{func(x float64) float64 { return 1/(math.Sqrt(math.Pi)) * math.Exp(-1*math.Pow(x, 2))}, 0, 1, 0.42135039647485743467},
 }
 
 func TestDefiniteIntegral(t *testing.T) {

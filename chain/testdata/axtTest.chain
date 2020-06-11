@@ -1,0 +1,35 @@
+##matrix=axtChain 16 91,-114,-31,-123,-114,100,-125,-31,-31,-125,100,-114,-123,-31,-114,91
+##gapPenalties=axtChain O=400 E=30
+# lastz.v1.04.04 --nochain --output=smallchain.axt --format=axt 
+#
+# hsp_threshold      = 3000
+# gapped_threshold   = 3000
+# x_drop             = 910
+# y_drop             = 9400
+# gap_open_penalty   = 400
+# gap_extend_penalty = 30
+#        A    C    G    T
+#   A   91 -114  -31 -123
+#   C -114  100 -125  -31
+#   G  -31 -125  100 -114
+#   T -123  -31 -114   91
+chain 4766 chrI 600 + 550 600 contig_12 50 + 0 50 1
+30	2	0
+10	0	2
+6
+
+chain 4583 chrI 600 + 400 447 contig_9 47 + 0 47 2
+47
+
+chain 3956 chrI 600 + 359 400 contig_8 46 + 5 46 3
+41
+
+chain 3638 chrI 600 + 100 138 contig_3 47 + 0 38 4
+38
+
+chain 2965 chrI 600 + 318 349 contig_7 47 + 15 46 5
+31
+
+chain 1428 chrI 600 + 300 315 contig_7 47 + 0 15 6
+15
+
