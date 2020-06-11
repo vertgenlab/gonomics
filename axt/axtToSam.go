@@ -31,20 +31,17 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 	return answer
 }
 
-//TODO: Use X to denote matching bases from aligning bases
 func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	var align []*cigar.Cigar = make([]*cigar.Cigar, 0)
 	curr := &cigar.Cigar{}
 	var i int64
 	for i = 0; i < int64(len(a)); i++ {
-		//TODO: add another test to catch this
 		switch true {
 		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]: //match, bases equal
 			curr = equalMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
 		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] != b[i]:
-
 			curr = diffMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
@@ -130,5 +127,4 @@ func setStrandFlag(strand bool) int64 {
 	} else {
 		return 16
 	}
-
 }

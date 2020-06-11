@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -112,7 +113,7 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var err error
 	var nextBytes []byte
 	var header VcfHeader
-	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
+	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		processHeader(&header, line)
 	}
@@ -175,6 +176,7 @@ func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
 	}
 }
 
+//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
@@ -187,7 +189,7 @@ func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	}
 }
 
-func WriteVcf(file *fileio.EasyWriter, input *Vcf) {
+func WriteVcf(file io.Writer, input *Vcf) {
 	var err error
 	if input.Notes == "" {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)

@@ -13,10 +13,6 @@ import (
 	"sync"
 )
 
-const (
-	maxTmpFilesAllowed = 1000
-)
-
 type priorityGiraf struct {
 	data     *giraf.Giraf
 	origin   int
@@ -89,7 +85,7 @@ func (g *byTopologicalOrder) Pop() interface{} {
 // This was intended to be paired with a list of sorted nodes such as simpleGraph.GetSortOrder()
 // so that the file result would be a topologically sorted giraf file, however this can be used with
 // any given node sort order
-func ExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk int, outFile string) {
+func GirafExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk int, outFile string) {
 	file := fileio.EasyOpen(girafFile)
 	var done bool
 	var chunkIDs []string
@@ -102,7 +98,7 @@ func ExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk
 		if i > maxTmpFilesAllowed {
 			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
 		}
-		currValues = readChunk(file, linesPerChunk, &done, sortOrderMap)
+		currValues = girafReadChunk(file, linesPerChunk, &done, sortOrderMap)
 		// Check to see if currValues contains any data. If not, continue.
 		if len(currValues) == 0 {
 			continue
@@ -117,7 +113,7 @@ func ExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk
 	var wg sync.WaitGroup
 	writeChan := make(chan *giraf.Giraf)
 
-	go mergeChunks(writeChan, chunkIDs, sortOrderMap)
+	go girafMergeChunks(writeChan, chunkIDs, sortOrderMap)
 	wg.Add(1)
 	giraf.GirafChanToFile(outFile, writeChan, &wg)
 	writeIdx(outFile, nodeIdSortOrder)
@@ -140,7 +136,7 @@ func getSortPath(path *giraf.Path, sortOrderMap map[uint32]uint32) []uint32 {
 	return answer
 }
 
-func readChunk(file *fileio.EasyReader, linesPerChunk int, done *bool, sortOrderMap map[uint32]uint32) []*priorityGiraf {
+func girafReadChunk(file *fileio.EasyReader, linesPerChunk int, done *bool, sortOrderMap map[uint32]uint32) []*priorityGiraf {
 	answer := make([]*priorityGiraf, 0, linesPerChunk)
 	var curr *giraf.Giraf
 	for i := 0; i < linesPerChunk; i++ {
@@ -164,7 +160,7 @@ func writeChunk(g []*priorityGiraf, chunkNum int) string {
 	return chunkName
 }
 
-func mergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrderMap map[uint32]uint32) {
+func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrderMap map[uint32]uint32) {
 	var chunkReaders []*fileio.EasyReader = make([]*fileio.EasyReader, len(chunkIDs))
 	priorityQueue := make(byTopologicalOrder, 0, len(chunkIDs))
 	var sortPath []uint32

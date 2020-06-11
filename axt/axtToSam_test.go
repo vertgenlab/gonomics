@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	//"log"
+	"log"
 	"testing"
 )
 
@@ -43,4 +43,5 @@ func TestSamFileConvert(t *testing.T) {
 	if !sam.IsEqual(samFromAxt, answerSam) {
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
+
 }
