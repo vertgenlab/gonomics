@@ -10,7 +10,7 @@ import (
 )
 
 func vcfFilter(infile string, outfile string, chrom string, minPos int64, maxPos int64, ref string, alt string, minQual float64) {
-	ch := vcf.GoReadToChan(infile)
+	ch, _ := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
 

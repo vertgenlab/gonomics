@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 )
+
 //TODO: write a better test
 func TestCheck10xBarcodes(t *testing.T) {
 	TenxFq := Read("testdata/10x.barcoded_test.fastq")
