@@ -69,6 +69,7 @@ func ParseFrame(s string) int {
 
 //reads to  map[geneID]*Gene
 //TODO: Break up into helper functions
+//TODO: Set up Exon and CDS pointers to match the style of transcripts
 func Read(filename string) map[string]*Gene {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
