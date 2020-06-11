@@ -5,9 +5,9 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"os"
-
 	"strings"
 	"time"
 )
@@ -137,16 +137,26 @@ func WriteHeader(file *os.File) {
 	common.ExitIfError(err)
 }
 
+//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
+		if input[i].Notes == "" {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
+		} else {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, input[i].Alt, input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
+		}
 		common.ExitIfError(err)
 	}
 }
 
-func WriteVcf(file *fileio.EasyWriter, input *Vcf) {
-	_, err := fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format, input.Notes)
+func WriteVcf(file io.Writer, input *Vcf) {
+	var err error
+	if input.Notes == "" {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
+	} else {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format, input.Notes)
+	}
 	common.ExitIfError(err)
 }
 
