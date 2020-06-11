@@ -14,6 +14,7 @@ type Gene struct {
 	Transcripts []*Transcript
 }
 
+//TODO: Functionality for canonical exon as longest transcript.
 type Transcript struct {
 	Chr          string
 	Source       string
@@ -67,11 +68,12 @@ func ParseFrame(s string) int {
 }
 
 //reads to  map[geneID]*Gene
+//TODO: Break up into helper functions
 func Read(filename string) map[string]*Gene {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
 	var line string
-	var currentTranscript Transcript
+	var currentTranscript *Transcript
 	var doneReading bool = false
 	answer := make(map[string]*Gene)
 
@@ -111,16 +113,16 @@ func Read(filename string) map[string]*Gene {
 
 		switch words[2] {
 		case "transcript":
-			currentTranscript = Transcript{Chr: words[0], Source: words[1], Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), TranscriptID: currT}
+			currentTranscript = &Transcript{Chr: words[0], Source: words[1], Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), TranscriptID: currT}
 			currentTranscript.Strand = common.StringToStrand(words[6])
 			currentTranscript.Exons = make([]*Exon, 0)
 
 			if _, ok := answer[currGeneID]; ok {
-				answer[currGeneID].Transcripts = append(answer[currGeneID].Transcripts, &currentTranscript)
+				answer[currGeneID].Transcripts = append(answer[currGeneID].Transcripts, currentTranscript)
 			} else {
 				answer[currGeneID] = &Gene{GeneID: currGeneID, GeneName: currGeneName}
 				answer[currGeneID].Transcripts = make([]*Transcript, 0)
-				answer[currGeneID].Transcripts = append(answer[currGeneID].Transcripts, &currentTranscript)
+				answer[currGeneID].Transcripts = append(answer[currGeneID].Transcripts, currentTranscript)
 			}
 		case "exon":
 			currentExon := Exon{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), ExonNumber: currENumber, ExonID: currEID, Score: common.StringToFloat64(words[5])}
