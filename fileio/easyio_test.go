@@ -4,8 +4,17 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"io"
+	"os"
 	"testing"
 )
+
+// example going straight to file
+func writeDnaFile(file *os.File) {
+	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", fakeDna)
+	common.ExitIfError(err)
+}
 
 // example using io.Writer
 func writeDnaIo(file io.Writer) {
@@ -74,7 +83,7 @@ func BenchmarkWriteFileio(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna")
 
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10000; i++ {
 			writeDnaFileio(ew)
 		}
 		ew.Close()
@@ -85,7 +94,7 @@ func BenchmarkWriteFileioGz(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna.gz")
 
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10000; i++ {
 			writeDnaFileio(ew)
 		}
 		ew.Close()
@@ -96,7 +105,7 @@ func BenchmarkWriteIo(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna")
 
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10000; i++ {
 			writeDnaIo(ew)
 		}
 		ew.Close()
@@ -107,9 +116,21 @@ func BenchmarkWriteIoGz(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna.gz")
 
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10000; i++ {
 			writeDnaIo(ew)
 		}
 		ew.Close()
+	}
+}
+
+func BenchmarkWriteFile(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		osf, err := os.Create("testdata/testWrite.dna")
+		common.ExitIfError(err)
+
+		for i := 0; i < 10000; i++ {
+			writeDnaFile(osf)
+		}
+		osf.Close()
 	}
 }
