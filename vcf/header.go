@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func processHeaderLine(header *VcfHeader, line string) {
+func processHeader(header *VcfHeader, line string) {
 	if strings.HasPrefix(line, "#") {
 		header.Text = append(header.Text, line)
 	} else {
