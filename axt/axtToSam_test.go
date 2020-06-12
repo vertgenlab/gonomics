@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 	"testing"
 )
 
