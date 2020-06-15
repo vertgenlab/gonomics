@@ -102,6 +102,48 @@ func BuildTree(intervals []Interval) *IntervalNode {
 	return answer
 }
 
-func Query(tree *IntervalNode, query Interval, relationship string) []Interval {
+func Query(tree *IntervalNode, q Interval, relationship string) []Interval {
+	var answer []Interval
+	// TODO: build in logic for: any, within, start, end, equal
+	// see table 7 for relationships
+	switch relationship {
+	case "any":
+	case "within":
+	case "start":
+	case "end":
+	case "equal":
+	default:
+		answer = query(tree, q, relationship)
+	}
+	return answer
+}
+
+func query(tree *IntervalNode, q Interval, relationship string) []Interval {
+	var answer []Interval
+	x1, x2, y1, y2 := transform(q, relationship)
+
+	vSplit := findSplit()
+
+	if vSplit == nil {
+		return nil
+	}
+
+	if vSplit.val != nil {
+		if withinRange(tree.val, x1, x2, y1, y2) {
+			answer = append(answer, tree.val)
+		}
+	}
+	// TODO: pickup on algorithm 2 line 9
+
+	return answer
+}
+
+func withinRange(q Interval, x1, x2, y1, y2 float32) bool {
+	q1 := float32(q.GetChromStart())
+	q2 := float32(q.GetChromEnd())
+	return (q1 > x1 && q1 < x2) && (q2 > y1 && q2 < y2)
+}
+
+func findSplit() *IntervalNode {
 
 }
