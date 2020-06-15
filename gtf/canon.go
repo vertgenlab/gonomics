@@ -6,7 +6,7 @@ import "sort"
 func CdnaLength(t *Transcript) int {
 	var answer int = 0
 	for i := 0; i < len(t.Exons); i++ {
-		answer += t.Exons[i].End - t.Exons[i].Start
+		answer += t.Exons[i].End - t.Exons[i].Start + 1
 	}
 	return answer
 }
@@ -16,7 +16,7 @@ func CdsLength(t *Transcript) int {
 	var answer int = 0
 	for i := 0; i < len(t.Exons); i++ {
 		if t.Exons[i].Cds != nil {
-			answer += t.Exons[i].Cds.End - t.Exons[i].Cds.Start
+			answer += t.Exons[i].Cds.End - t.Exons[i].Cds.Start + 1
 		}
 	}
 	return answer
