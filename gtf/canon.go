@@ -28,7 +28,7 @@ func isLonger(i, j *Transcript) bool {
 	return iLen > jLen || (iLen == jLen && CdnaLength(i) > CdnaLength(j))
 }
 
-// Sorts so that the cannonical transcript is always g.Transcripts[0]
+// Sorts so that the canonical transcript is always g.Transcripts[0]
 func SortTranscripts(g *Gene) {
 	sort.Slice(g.Transcripts, func(i, j int) bool { return isLonger(g.Transcripts[i], g.Transcripts[j]) })
 }
@@ -39,8 +39,8 @@ func SortAllTranscripts(m map[string]*Gene) {
 	}
 }
 
-// Moves cannonical to zero without sorting all transcripts. Faster than SortTranscripts
-func MoveCannonicalToZero(g *Gene) {
+// Moves canonical to zero without sorting all transcripts. Faster than SortTranscripts
+func MoveCanonicalToZero(g *Gene) {
 	for i := 1; i < len(g.Transcripts); i++ {
 		if isLonger(g.Transcripts[i], g.Transcripts[0]) {
 			g.Transcripts[0], g.Transcripts[i] = g.Transcripts[i], g.Transcripts[0]
@@ -48,8 +48,8 @@ func MoveCannonicalToZero(g *Gene) {
 	}
 }
 
-func MoveAllCannonicalToZero(m map[string]*Gene) {
+func MoveAllCanonicalToZero(m map[string]*Gene) {
 	for _, g := range m {
-		MoveCannonicalToZero(g)
+		MoveCanonicalToZero(g)
 	}
 }
