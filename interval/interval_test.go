@@ -13,10 +13,5 @@ func TestSmallerIntervals(t *testing.T) {
 		&bed.Bed{Chrom: "1", ChromStart: 1, ChromEnd: 2},
 		&bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 4},
 	}
-	sortIntervals(testIntervals)
-	newIntervals, smaller := computeSmallerIntervals(testIntervals)
-	if smaller[newIntervals[2]][0].GetChromStart() != 2 ||
-		smaller[newIntervals[2]][0].GetChromEnd() != 3 {
-		t.Errorf("ERROR: Problem computing smaller intervals")
-	}
+	BuildRTFC(testIntervals)
 }

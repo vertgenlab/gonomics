@@ -10,83 +10,62 @@ type Interval interface {
 	GetChromEnd() int
 }
 
+type IntervalNode struct {
+	Interval
+}
+
 type IntervalSlice []Interval
 
-func sortIntervals(s IntervalSlice) {
-	less := func(i, j int) bool {
-		return s[i].GetChromStart() < s[j].GetChromStart() ||
-			(s[i].GetChromStart() == s[j].GetChromStart() && s[i].GetChromEnd() <= s[j].GetChromEnd())
-	}
-	sort.Slice(s, less)
+func sortIntervals(s IntervalSlice, less func(a, b Interval) bool) {
+	sort.Slice(s, func(i, j int) bool { return less(s[i], s[j]) })
 }
 
-// For each interval (l) in IntervalSlice
-// holds all intervals (a) in IntervalSlice
-// in which the len of a < len of l such that
-// such that smallerIntervals is a map[l][]a
-// Note: []a is sorted by length
-type smallerIntervals map[Interval]IntervalSlice
+func xLess(a, b Interval) bool {
+	return a.GetChromStart() < b.GetChromStart()
+}
 
-// Generates smallerIntervals map for a input list of intervals
-// Removes each element put in smallerIntervals from s
-// Note: must input a sorted interval slice
-func computeSmallerIntervals(s IntervalSlice) (IntervalSlice, smallerIntervals) {
-	smaller := make(smallerIntervals)
-	var keptIntervals int = len(s)
+func yLess(a, b Interval) bool {
+	return a.GetChromEnd() < b.GetChromEnd()
+}
 
-	for i := 0; i < len(s)-1; i++ {
-		// If a two intervals are found to have the same start
-		if s[i].GetChromStart() == s[i+1].GetChromStart() {
-			var currSmaller IntervalSlice
+func createFCIndex(large IntervalSlice, small IntervalSlice) []int {
+	answer := make([]int, len(large))
+	var largeIdx, smallIdx int
 
-			// Go through slice until the left endpoints do not equal
-			// first check is to make sure we dont run off the slice
-			for ; len(s) > i+1 && s[i].GetChromStart() == s[i+1].GetChromStart(); i++ {
-				// Add s[i] to currSmaller and remove from s
-				currSmaller = append(currSmaller, s[i])
-				s[i] = nil
-				keptIntervals--
-			}
-			// Flip currSmaller so that intervals are sorted by descending order
-			reverse(currSmaller)
-			// Make the entry in the map and link to currSmaller
-			smaller[s[i]] = currSmaller
+	for largeIdx = 0; largeIdx < len(large); largeIdx++ {
+
+	}
+	return answer
+}
+
+func BuildRTFC(intervals IntervalSlice) *IntervalNode {
+
+	P := make(IntervalSlice, len(intervals))
+	Py := make(IntervalSlice, len(intervals))
+	copy(P, intervals)
+	copy(Py, intervals)
+
+	sortIntervals(P, xLess)
+	sortIntervals(P, yLess)
+
+	var answer, vLeaf *IntervalNode
+
+	if len(P) == 1 {
+		vLeaf = &IntervalNode{Interval: P[0]}
+	} else {
+		var midPos int
+		if len(P)%2 == 0 {
+			midPos = (len(P) / 2) - 1
+		} else {
+			midPos = (len(P) - 1) / 2
 		}
+
+		Pleft := P[:midPos+1]
+		Pright := P[midPos+1:]
+
+		sortIntervals(Pleft, yLess)
+		sortIntervals(Pright, yLess)
 	}
 
-	// Recast s into new interval slice with the nil values removed
-	newIntervals := make(IntervalSlice, keptIntervals)
-	var currIdx int = 0
-
-	for i := 0; i < len(s); i++ {
-		if s[i] != nil {
-			newIntervals[currIdx] = s[i]
-			currIdx++
-		}
-	}
-
-	return newIntervals, smaller
-}
-
-// Flips slice
-func reverse(s IntervalSlice) {
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
-	}
-}
-
-// s must be sorted and have gone through computeSmallerIntervals
-func ConstructTree(s IntervalSlice) []*IntervalNode {
-	answer := make([]*IntervalNode, len(s)+1)
-	dummy := &IntervalNode{nil, nil, nil, make([]*IntervalNode, 0)}
-	answer[0] = dummy
-
-	// Add first node to dummy
-	answer[1] = &IntervalNode{Interval: s[0], Parent: dummy, Children: make([]*IntervalNode, 0)}
-	dummy.Children = append(dummy.Children, answer[1])
-
-	for i := 1; i < len(s); i++ {
-
-	}
 	return answer
 }
