@@ -1,6 +1,8 @@
 package interval
 
-import "log"
+import (
+	"log"
+)
 
 const (
 	xMin = 0
@@ -54,5 +56,6 @@ func transform(query Interval, op string) (x1, x2, y1, y2 float32) {
 	default:
 		log.Fatalf("ERROR: Invalid relationship: %s", op)
 	}
+
 	return x1, x2, y1, y2
 }

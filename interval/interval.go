@@ -4,7 +4,6 @@ package interval
 // DOI: 10.1038/s41598-019-41451-3
 
 import (
-	"log"
 	"sort"
 )
 
@@ -126,14 +125,34 @@ func BuildTree(intervals []Interval) *IntervalNode {
 
 func Query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
-	// TODO: build in logic for: any, within, start, end, equal
-	// see table 7 for relationships
 	switch relationship {
 	case "any":
+		answer = append(answer, query(tree, q, "o")...)
+		answer = append(answer, query(tree, q, "oi")...)
+		answer = append(answer, query(tree, q, "d")...)
+		answer = append(answer, query(tree, q, "di")...)
+		answer = append(answer, query(tree, q, "m")...)
+		answer = append(answer, query(tree, q, "mi")...)
+		answer = append(answer, query(tree, q, "s")...)
+		answer = append(answer, query(tree, q, "si")...)
+		answer = append(answer, query(tree, q, "f")...)
+		answer = append(answer, query(tree, q, "fi")...)
+		answer = append(answer, query(tree, q, "e")...)
 	case "within":
+		answer = append(answer, query(tree, q, "d")...)
+		answer = append(answer, query(tree, q, "s")...)
+		answer = append(answer, query(tree, q, "f")...)
+		answer = append(answer, query(tree, q, "e")...)
 	case "start":
+		answer = append(answer, query(tree, q, "s")...)
+		answer = append(answer, query(tree, q, "si")...)
+		answer = append(answer, query(tree, q, "e")...)
 	case "end":
+		answer = append(answer, query(tree, q, "f")...)
+		answer = append(answer, query(tree, q, "fi")...)
+		answer = append(answer, query(tree, q, "e")...)
 	case "equal":
+		answer = query(tree, q, "e")
 	default:
 		answer = query(tree, q, relationship)
 	}
@@ -157,7 +176,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 
 	if vSplit.val != nil { // 4. if vsplit is a leaf node then
 		// 5. if vsplit. interval. x ∈ [x1, x2] and vsplit. interval. y ∈ [y1, y2] then
-		if withinRange(tree.val, x1, x2, y1, y2) {
+		if withinRange(tree.val, relationship, x1, x2, y1, y2) {
 			// 6. Report the interval in vsplit, S = S ∪ {vsplit. interval}
 			answer = append(answer, tree.val)
 		} // 7. end if
@@ -170,6 +189,12 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 		return float32(vSplit.data[i].GetChromEnd()) >= y1
 	})
 
+	ri := i // save this value for later
+
+	if i >= len(vSplit.data) {
+		return nil
+	}
+
 	var v *IntervalNode
 	v, i = vSplit.lChild, vSplit.iLeft[i] // 10. vsplit = vsplit.lchild, i = vsplit.lfc[i]
 
@@ -177,11 +202,16 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 		if x1 <= float32(v.xMid) { // 12. if x1 ≤ v.x then
 			j := v.iRight[i] // 13. j = v.rfc[i]
 
-			// ADDED MODIFICATIONS ON 14
 			// 14. while j ≠ −1 and v.rchild.data[j].y ≤ y2 and j ≤ v.rchild.data.size do
 			for j != -1 && j < len(v.rChild.data) && float32(v.rChild.data[j].GetChromEnd()) <= y2 {
-				// 15. Report interval, S = S ∪ {v. rchild. data[j]}
-				answer = append(answer, v.rChild.data[j])
+				if relationship == "m" || relationship == "mi" {
+					if v.rChild.data[j].GetChromStart() != v.rChild.data[j].GetChromEnd() {
+						answer = append(answer, v.rChild.data[j])
+					}
+				} else {
+					// 15. Report interval, S = S ∪ {v. rchild. data[j]}
+					answer = append(answer, v.rChild.data[j])
+				}
 				j++ // 16. j=j+1
 			} // 17. end while
 
@@ -195,21 +225,26 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	} // 22. end while
 
 	// 23. if v is a leaf and v.interval.x ∈ [x1, x2] and v.interval.y ∈ [y1, y2] then
-	if v.val != nil && withinRange(v.val, x1, x2, y1, y2) {
+	if v.val != nil && withinRange(v.val, relationship, x1, x2, y1, y2) {
 		answer = append(answer, v.val) // 24. Report the interval in v, S = S ∪ {v. interval}
 	} // 25. end if
 
-	v, i = vSplit.rChild, vSplit.iRight[i] // 26. v = vsplit. rchild, i = vsplit. rcf[i]
+	v, i = vSplit.rChild, vSplit.iRight[ri] // 26. v = vsplit. rchild, i = vsplit. rcf[i]
 
 	for v.val == nil && i != -1 { // 27. while v is not a leaf and i≠−1 do
 		if x2 >= float32(v.xMid) { // 28. if x2 ≥ v. x then
 			j := v.iLeft[i] // 29. j = v. lfc[i]
 
-			// ADDED MODIFICATIONS ON 30
 			// 30. while j ≠ −1 and v. lchild. data[j]. y ≤ y2 and j ≤ v. lchild. data. size do
 			for j != -1 && j < len(v.lChild.data) && float32(v.lChild.data[j].GetChromEnd()) <= y2 {
-				answer = append(answer, v.lChild.data[j]) // 31. Report interval, S = S ∪ {v. lchild. data[j]}
-				j++                                       // 32. j=j+1
+				if relationship == "m" || relationship == "mi" {
+					if v.lChild.data[j].GetChromStart() != v.lChild.data[j].GetChromEnd() {
+						answer = append(answer, v.lChild.data[j])
+					}
+				} else {
+					answer = append(answer, v.lChild.data[j])
+				} // 31. Report interval, S = S ∪ {v. lchild. data[j]}
+				j++ // 32. j=j+1
 			} // 33. end while
 
 			i, v = v.iRight[i], v.rChild // 34. i=v. rfc[i], v=v. rchild
@@ -220,23 +255,24 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	} // 38. end while
 
 	// 39. if v is a leaf and v. interval. x ∈ [x1, x2] and v. interval. y ∈ [y1, y2] then
-	if v.val != nil && withinRange(v.val, x1, x2, y1, y2) {
+	if v.val != nil && withinRange(v.val, relationship, x1, x2, y1, y2) {
 		answer = append(answer, v.val) // 40. Report the interval in v, S = S ∪ {v. interval}
 	} // 41. end if
 	return answer // 42. return S
 }
 
-func withinRange(q Interval, x1, x2, y1, y2 float32) bool {
+func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
 	q1 := float32(q.GetChromStart())
 	q2 := float32(q.GetChromEnd())
+	if relationship == "m" || relationship == "mi" {
+		if q1 == q2 {
+			return false
+		}
+	}
 	return (q1 >= x1 && q1 <= x2) && (q2 >= y1 && q2 <= y2)
 }
 
 func findSplit(x1, x2 float32, node *IntervalNode) *IntervalNode {
-
-	if x1 > x2 {
-		log.Fatalf("ERROR: Problem with range. Interval start must be less than interval end")
-	}
 
 	for node.val == nil {
 		if float32(node.xMid) < x1 {
