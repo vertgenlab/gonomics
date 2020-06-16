@@ -60,8 +60,29 @@ func createFCIndex(large []Interval, small []Interval) []int {
 	return answer
 }
 
-func BuildTree(intervals []Interval) *IntervalNode {
+func splitIntervalsByChr(s []Interval) map[string][]Interval {
+	answer := make(map[string][]Interval)
+	for i := 0; i < len(s); i++ {
+		if _, ok := answer[s[i].GetChrom()]; !ok {
+			answer[s[i].GetChrom()] = make([]Interval, 0)
+		}
+		answer[s[i].GetChrom()] = append(answer[s[i].GetChrom()], s[i])
+	}
+	return answer
+}
 
+func BuildTree(intervals []Interval) map[string]*IntervalNode {
+	answer := make(map[string]*IntervalNode)
+	chrMap := splitIntervalsByChr(intervals)
+
+	for idx, val := range chrMap {
+		answer[idx] = buildTree(val)
+	}
+
+	return answer
+}
+
+func buildTree(intervals []Interval) *IntervalNode {
 	p := make([]Interval, len(intervals))
 	pY := make([]Interval, len(intervals))
 	copy(p, intervals)
@@ -103,8 +124,8 @@ func BuildTree(intervals []Interval) *IntervalNode {
 
 		// 9. vleft ← BuildRTFC(Pleft)
 		// 10. vright ← BuildRTFC(Pright)
-		vLeft := BuildTree(pLeft)
-		vRight := BuildTree(pRight)
+		vLeft := buildTree(pLeft)
+		vRight := buildTree(pRight)
 
 		// 11. Create a node v storing xmid, Ileft and Iright. v.x = xmid; v.data = Py;
 		// v. lfc = Ileft; v. rfc = Iright; v. lchild = vleft; v. rchild = vright
@@ -123,38 +144,38 @@ func BuildTree(intervals []Interval) *IntervalNode {
 	return answer
 }
 
-func Query(tree *IntervalNode, q Interval, relationship string) []Interval {
+func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
 	switch relationship {
 	case "any":
-		answer = append(answer, query(tree, q, "o")...)
-		answer = append(answer, query(tree, q, "oi")...)
-		answer = append(answer, query(tree, q, "d")...)
-		answer = append(answer, query(tree, q, "di")...)
-		answer = append(answer, query(tree, q, "m")...)
-		answer = append(answer, query(tree, q, "mi")...)
-		answer = append(answer, query(tree, q, "s")...)
-		answer = append(answer, query(tree, q, "si")...)
-		answer = append(answer, query(tree, q, "f")...)
-		answer = append(answer, query(tree, q, "fi")...)
-		answer = append(answer, query(tree, q, "e")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "o")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "oi")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "di")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "m")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "mi")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
 	case "within":
-		answer = append(answer, query(tree, q, "d")...)
-		answer = append(answer, query(tree, q, "s")...)
-		answer = append(answer, query(tree, q, "f")...)
-		answer = append(answer, query(tree, q, "e")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
 	case "start":
-		answer = append(answer, query(tree, q, "s")...)
-		answer = append(answer, query(tree, q, "si")...)
-		answer = append(answer, query(tree, q, "e")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
 	case "end":
-		answer = append(answer, query(tree, q, "f")...)
-		answer = append(answer, query(tree, q, "fi")...)
-		answer = append(answer, query(tree, q, "e")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
+		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
 	case "equal":
-		answer = query(tree, q, "e")
+		answer = query(treeMap[q.GetChrom()], q, "e")
 	default:
-		answer = query(tree, q, relationship)
+		answer = query(treeMap[q.GetChrom()], q, relationship)
 	}
 	return answer
 }

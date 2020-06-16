@@ -44,25 +44,25 @@ func TestBuildTree(t *testing.T) {
 		&bed.Bed{Chrom: "1", ChromStart: 9, ChromEnd: 10},
 	}
 	tree := BuildTree(testIntervals)
-	if tree.xMid != 5 {
+	if tree["1"].xMid != 5 {
 		t.Errorf("ERROR: Problem building tree")
 	}
-	if tree.lChild.xMid != 3 {
+	if tree["1"].lChild.xMid != 3 {
 		t.Errorf("ERROR: Problem building tree")
 	}
-	if tree.rChild.xMid != 7 {
+	if tree["1"].rChild.xMid != 7 {
 		t.Errorf("ERROR: Problem building tree")
 	}
-	if tree.lChild.lChild.xMid != 1 {
+	if tree["1"].lChild.lChild.xMid != 1 {
 		t.Errorf("ERROR: Problem building tree")
 	}
-	if tree.lChild.rChild.xMid != 4 {
+	if tree["1"].lChild.rChild.xMid != 4 {
 		t.Errorf("ERROR: Problem building tree")
 	}
-	if tree.rChild.lChild.xMid != 6 {
+	if tree["1"].rChild.lChild.xMid != 6 {
 		t.Errorf("ERROR: Problem building tree")
 	}
-	if tree.rChild.rChild.xMid != 8 {
+	if tree["1"].rChild.rChild.xMid != 8 {
 		t.Errorf("ERROR: Problem building tree")
 	}
 }
