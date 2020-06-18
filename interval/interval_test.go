@@ -100,7 +100,7 @@ func TestBuildFCIndex(t *testing.T) {
 const (
 	numIntervals = 1000
 	rangeLow     = 0
-	rangeHigh    = 100
+	rangeHigh    = 248956422
 )
 
 func BenchmarkQueryO(b *testing.B) {
@@ -288,7 +288,7 @@ func randInterval(rangeLow int, rangeHigh int) Interval {
 	var currI Interval
 	curr.chr = "1"
 	curr.start = common.RandIntInRange(rangeLow, rangeHigh)
-	curr.end = common.RandIntInRange(curr.start, rangeHigh)
+	curr.end = common.RandIntInRange(curr.start, curr.start + 1000)
 	currI = &curr
 	return currI
 }

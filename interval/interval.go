@@ -60,13 +60,10 @@ func createFCIndex(large []Interval, small []Interval) []int {
 	return answer
 }
 
-func splitIntervalsByChr(s []Interval) map[string][]Interval {
+func splitIntervalsByChr(intervals []Interval) map[string][]Interval {
 	answer := make(map[string][]Interval)
-	for i := 0; i < len(s); i++ {
-		if _, ok := answer[s[i].GetChrom()]; !ok {
-			answer[s[i].GetChrom()] = make([]Interval, 0)
-		}
-		answer[s[i].GetChrom()] = append(answer[s[i].GetChrom()], s[i])
+	for i := 0; i < len(intervals); i++ {
+		answer[intervals[i].GetChrom()] = append(answer[intervals[i].GetChrom()], intervals[i])
 	}
 	return answer
 }
