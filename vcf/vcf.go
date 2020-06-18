@@ -109,6 +109,7 @@ func ReadVcf(filename string) *VCF {
 func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var line string
 	var err error
+	var nextBytes []byte
 	var header VcfHeader
 	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
