@@ -41,7 +41,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 		// R[n][n]-R[n-1][n-1] being more conservative, so we will use that one
 		// log.Printf("prevEst=%e, currEst=%e\n", prevR[n-1], currR[n])
 		currEstError = math.Abs(currR[n] - prevR[n-1])
-		if currEstError < estimatedError || currEstError < relativeEstError * math.Abs(currR[n]) {
+		if currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n]) {
 			return currR[n]
 		}
 

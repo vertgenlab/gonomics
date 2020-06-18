@@ -10,7 +10,6 @@ import (
 
 type EasyReader struct {
 	File         *os.File
-	internalBuff *bufio.Reader
 	internalGzip *gzip.Reader
 	BuffReader   *bufio.Reader
 }
@@ -27,13 +26,11 @@ func EasyOpen(filename string) *EasyReader {
 	var err error
 
 	if strings.HasSuffix(filename, ".gz") {
-		answer.internalBuff = bufio.NewReader(answer.File)
-		answer.internalGzip, err = gzip.NewReader(answer.internalBuff)
+		answer.internalGzip, err = gzip.NewReader(answer.File)
 		common.ExitIfError(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
 		answer.BuffReader = bufio.NewReader(answer.File)
-		answer.internalBuff = nil
 		answer.internalGzip = nil
 	}
 	return &answer
@@ -67,9 +64,6 @@ func (er *EasyReader) Close() {
 	if er.internalGzip != nil {
 		er.internalGzip.Close()
 	}
-	/*if er.internalBuff != nil {
-		er.internalBuff.Close()
-	}*/
 	if er.File != nil {
 		er.File.Close()
 	}

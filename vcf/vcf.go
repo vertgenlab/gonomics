@@ -66,25 +66,31 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
-	data := strings.Split(line, "\t")
-	if len(data) >= 10 {
-		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
-		if strings.Compare(data[5], ".") == 0 {
-			curr.Qual = 255
-		} else {
-			curr.Qual = common.StringToFloat64(data[5])
-		}
-		if len(data) > 10 {
-			curr.Notes = strings.Join(data[9:], "\t")
-		}
+	data := strings.SplitN(line, "\t", 10)
+	//switch {
+	//case strings.HasPrefix(line, "#"):
+	//don't do anything
+	//case len(data) == 1:
+	//these lines are sequences, and we are not recording them
+	//case len(line) == 0:
+	//blank line
+	if len(data) < 9 {
+		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
+	}
+	curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
+	if strings.Compare(data[5], ".") == 0 {
+		curr.Qual = 255
 	} else {
-		log.Fatalf("Error: Every Vcf line should contain at least 10 lines\n")
+		curr.Qual = common.StringToFloat64(data[5])
+	}
+	if len(data) > 9 {
+		curr.Notes = data[9]
 	}
 	return curr
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return nil, true
 	}
@@ -193,11 +199,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 }
 
 func PrintSingleLine(data *Vcf) {
-	var err error
-	file := fileio.EasyCreate("/dev/stdout")
-	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
-	common.ExitIfError(err)
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 }
 
 func PrintHeader(header []string) {

@@ -11,7 +11,7 @@ import (
 )
 
 func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string) {
-	ch := vcf.GoReadToChan(infile)
+	ch, _ := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
 
@@ -20,7 +20,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 	}
 
 	if fixVcfRecords {
-		ref := fasta.FastaToMap(fasta.Read(ref))
+		ref := fasta.FastaMap(fasta.Read(ref))
 		if ensemblToUCSC {
 			for v := range ch {
 				vcf.FixVcf(v, ref)
@@ -57,7 +57,6 @@ func usage() {
 			"options:\n")
 	flag.PrintDefaults()
 }
-
 
 func main() {
 	var expectedNumArgs int = 2

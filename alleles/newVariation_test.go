@@ -1,10 +1,8 @@
 package alleles
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"path/filepath"
 	"strings"
@@ -18,12 +16,7 @@ func TestFindNewVariation(t *testing.T) {
 	experimental := "testdata/human_chrM.sam"
 	normal := "testdata/chrM_head.sam"
 	alleleStreams, normalIDs := startAlleleStreams(ref, experimental, normal, 20, 100)
-	fmt.Println(len(alleleStreams))
-	answer := FindNewVariation(alleleStreams, normalIDs, 0, 1)
-
-	for data := range answer {
-		vcf.PrintSingleLine(data)
-	}
+	FindNewVariation(alleleStreams, normalIDs, 0, 1)
 }
 
 // fills alleleChans and normalIDs with the appropriate data
@@ -39,7 +32,7 @@ func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan
 		} else {
 			normalIDs[file] = false
 		}
-		log.Println("Started Allele Stream for", file)
+		//log.Println("Started Allele Stream for", file)
 	case ".sam":
 		*alleleChans = append(*alleleChans, SamToAlleles(file, ref, minMapQ))
 		*samFilesPresent = true
@@ -48,7 +41,7 @@ func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan
 		} else {
 			normalIDs[file] = false
 		}
-		log.Println("Started Allele Stream for", file)
+		//log.Println("Started Allele Stream for", file)
 	case ".txt":
 		reader := fileio.EasyOpen(file)
 		defer reader.Close()

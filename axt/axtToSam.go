@@ -31,27 +31,25 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 	return answer
 }
 
-//TODO: Use X to denote matching bases from aligning bases
 func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	var align []*cigar.Cigar = make([]*cigar.Cigar, 0)
 	curr := &cigar.Cigar{}
 	var i int64
 	for i = 0; i < int64(len(a)); i++ {
 		switch true {
-		case a[i] == b[i] && a[i] != dna.Gap:
+		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]: //match, bases equal
 			curr = equalMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] != b[i] && a[i] != dna.Gap:
+		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] != b[i]:
 			curr = diffMatchCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] == dna.Gap && b[i] != dna.Gap:
+		case a[i] == dna.Gap && b[i] != dna.Gap: //target has gap, non-gap base in target
 			curr = insertCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
-		case a[i] != dna.Gap && b[i] == dna.Gap:
-			//found a deletion, in gap in reference, non-gap base in target
+		case a[i] != dna.Gap && b[i] == dna.Gap: //query is a gap, contains sequence
 			curr = deletionCigar(a, b, i)
 			i += curr.RunLength - 1
 			align = append(align, curr)
