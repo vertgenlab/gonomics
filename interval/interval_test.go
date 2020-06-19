@@ -98,16 +98,24 @@ func TestBuildFCIndex(t *testing.T) {
 }
 
 const (
-	numIntervals = 1000
+	numIntervals = 10000
 	rangeLow     = 0
 	rangeHigh    = 248956422
 )
 
+func BenchmarkBuildTree(b *testing.B) {
+	rand.Seed(time.Now().UnixNano())
+	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		BuildTree(intervals)
+	}
+}
 func BenchmarkQueryO(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "o")
 	}
@@ -116,7 +124,7 @@ func BenchmarkQueryOi(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "oi")
 	}
@@ -125,7 +133,7 @@ func BenchmarkQueryD(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "d")
 	}
@@ -134,7 +142,7 @@ func BenchmarkQueryDi(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "di")
 	}
@@ -143,7 +151,7 @@ func BenchmarkQueryS(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "s")
 	}
@@ -152,7 +160,7 @@ func BenchmarkQuerySi(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "si")
 	}
@@ -161,7 +169,7 @@ func BenchmarkQueryF(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "f")
 	}
@@ -170,7 +178,7 @@ func BenchmarkQueryFi(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "fi")
 	}
@@ -179,7 +187,7 @@ func BenchmarkQueryM(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "m")
 	}
@@ -188,7 +196,7 @@ func BenchmarkQueryMi(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "mi")
 	}
@@ -197,7 +205,7 @@ func BenchmarkQueryE(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "e")
 	}
@@ -206,7 +214,7 @@ func BenchmarkQueryLT(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "lt")
 	}
@@ -215,7 +223,7 @@ func BenchmarkQueryGT(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "gt")
 	}
@@ -224,7 +232,7 @@ func BenchmarkQueryAny(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "any")
 	}
@@ -233,7 +241,7 @@ func BenchmarkQueryWithin(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "within")
 	}
@@ -242,7 +250,7 @@ func BenchmarkQueryStart(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "start")
 	}
@@ -251,7 +259,7 @@ func BenchmarkQueryEnd(b *testing.B) {
 	rand.Seed(time.Now().UnixNano())
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	tree := BuildTree(intervals)
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		Query(tree, randInterval(rangeLow, rangeHigh), "end")
 	}
@@ -288,7 +296,7 @@ func randInterval(rangeLow int, rangeHigh int) Interval {
 	var currI Interval
 	curr.chr = "1"
 	curr.start = common.RandIntInRange(rangeLow, rangeHigh)
-	curr.end = common.RandIntInRange(curr.start, curr.start + 1000)
+	curr.end = common.RandIntInRange(curr.start, curr.start+1000)
 	currI = &curr
 	return currI
 }
