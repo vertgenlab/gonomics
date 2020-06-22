@@ -40,11 +40,11 @@ var fisherExactGreaterTests = []struct {
 	{59, 2476, 5071, 180530, 0.906449513485591},
 	{111, 3357, 5019, 179649, 0.0494041701774109},
 	{0, 0, 94, 90, 1},
-	{108, 1432, 742, 70208, 2.95E-50},
-	{76, 542, 774, 71098, 1.04E-52},
-	{47, 1253, 50, 84636, 7.12E-59},
-	{112, 2417, 87, 114989, 2.40E-131},
-	{313, 1977, 537, 69663, 6.59E-245},
+	{108, 1432, 742, 70208, 2.95e-50},
+	{76, 542, 774, 71098, 1.04e-52},
+	{47, 1253, 50, 84636, 7.12e-59},
+	{112, 2417, 87, 114989, 2.40e-131},
+	{313, 1977, 537, 69663, 6.59e-245},
 	{520, 1239, 889, 97088, math.SmallestNonzeroFloat64},
 }
 
@@ -62,6 +62,29 @@ func TestFisherGreater(t *testing.T) {
 		calculated := FisherExact(test.a, test.b, test.c, test.d, false)
 		if calculated > test.pvalue*1.01 || calculated < test.pvalue*0.99 {
 			t.Errorf("For a fisher test (greater) on (%d, %d, %d, %d): expected %e, but got %e", test.a, test.b, test.c, test.d, test.pvalue, calculated)
+		}
+	}
+}
+
+var BinomCoefficientTests = []struct {
+	n      int
+	k      int
+	answer int
+}{
+	{0, 0, 1},
+	{9, 0, 1},
+	{3, 2, 3},
+	{30, 12, 86493225},
+	{13, 13, 1},
+	{9, 2, 36},
+	{11, 5, 462},
+}
+
+func TestBinomCoefficient(t *testing.T) {
+	for _, test := range BinomCoefficientTests {
+		calculated := BinomCoefficient(test.n, test.k)
+		if calculated != test.answer {
+			t.Errorf("For BinomialCoefficient(%d, %d) we would expect %d, but we got %d", test.n, test.k, test.answer, calculated)
 		}
 	}
 }

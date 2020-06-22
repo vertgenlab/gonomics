@@ -17,7 +17,7 @@ func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile str
 
 	for i := 0; i < len(b); i++ {
 		b[i].Annotation = make([]string, 2)
-		dunn, missing :=  popgen.Dunn(b[i], aln, g)
+		dunn, missing := popgen.Dunn(b[i], aln, g)
 		b[i].Annotation[0] = fmt.Sprintf("%f", dunn)
 		b[i].Annotation[1] = missing
 	}

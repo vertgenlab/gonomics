@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -43,11 +42,13 @@ type GraphLocation struct {
 }
 
 type Allele struct {
+	Sample   string
 	Count    *AlleleCount
 	Location *Location
 }
 
 type GraphAllele struct {
+	Sample   string
 	Count    *AlleleCount
 	Location *GraphLocation
 }
@@ -67,7 +68,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	for loc, alleles := range input {
 		progressMeter++
 		if progressMeter%5000000 == 0 {
-			log.Printf("processed %d positions", progressMeter)
+			//log.Printf("processed %d positions", progressMeter)
 		}
 		switch alleles.Ref {
 		case dna.A:
@@ -232,7 +233,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 
 		if progressMeter%500000 == 0 {
-			log.Printf("# Read %d Lines\n", progressMeter)
+			//log.Printf("# Read %d Lines\n", progressMeter)
 		}
 		progressMeter++
 

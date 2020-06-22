@@ -15,9 +15,9 @@ import (
 )
 
 func TestQuickMemPool(t *testing.T) {
-	var tileSize int = 12
+	var tileSize int = 14
 	var stepSize int = 4
-	var numberOfReads int = 10
+	var numberOfReads int = 20
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -25,12 +25,13 @@ func TestQuickMemPool(t *testing.T) {
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 
 	log.Printf("Reading in the genome (simple graph)...\n")
-	//genome, _ := Read("testdata/bigGenome.sg")
-	//genome, _ := Read("testdata/rabsBepaChrI.gg")
-	genome := Read("testdata/tiny.gg")
+	//genome := Read("testdata/bigGenome.sg")
+	//genome := Read("testdata/rabsBepaChrI.gg")
+	//genome := Read("testdata/tiny.gg")
+	genome := Read("testdata/mini.gg")
 
 	log.Printf("Indexing the genome...\n")
-	tiles := indexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan *fastq.FastqBig, 824)

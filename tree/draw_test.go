@@ -18,7 +18,7 @@ var treeConvertTests = []struct {
 
 func TestTreeConv(t *testing.T) {
 	for _, test := range treeConvertTests {
-		tree, err := parseNewick(test.treeText)
+		tree, err := ParseNewick(test.treeText)
 		if err != nil {
 			t.Error(err)
 		}
@@ -44,7 +44,7 @@ var treeDrawTests = []struct {
 
 func TestTreeDraw(t *testing.T) {
 	for _, test := range treeDrawTests {
-		tree, err := parseNewick(test.treeText)
+		tree, err := ParseNewick(test.treeText)
 		if err != nil {
 			t.Error(err)
 		}

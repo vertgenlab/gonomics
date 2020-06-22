@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -48,16 +49,15 @@ func Read(filename string) []*Vcf {
 	return answer
 }
 
-func GoReadToChan(filename string) <-chan *Vcf {
+func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
 	output := make(chan *Vcf)
-	go ReadToChan(filename, output)
-	return output
+	file := fileio.EasyOpen(filename)
+	header := ReadHeader(file)
+	go ReadToChan(file, output)
+	return output, header
 }
 
-func ReadToChan(filename string, output chan<- *Vcf) {
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	ReadHeader(file)
+func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 	var curr *Vcf
 	var done bool
 	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
@@ -68,31 +68,31 @@ func ReadToChan(filename string, output chan<- *Vcf) {
 
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
-	data := strings.Split(line, "\t")
-	switch {
-	case strings.HasPrefix(line, "#"):
-		//don't do anything
-	case len(data) == 1:
-		//these lines are sequences, and we are not recording them
-	case len(line) == 0:
-		//blank line
-	case len(data) >= 9:
-		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
-		if strings.Compare(data[5], ".") == 0 {
-			curr.Qual = 255
-		} else {
-			curr.Qual = common.StringToFloat64(data[5])
-		}
-		if len(data) > 9 {
-			curr.Notes = strings.Join(data[9:], "\t")
-		}
-	default:
+	data := strings.SplitN(line, "\t", 10)
+	//switch {
+	//case strings.HasPrefix(line, "#"):
+	//don't do anything
+	//case len(data) == 1:
+	//these lines are sequences, and we are not recording them
+	//case len(line) == 0:
+	//blank line
+	if len(data) < 9 {
+		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
+	}
+	curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
+	if strings.Compare(data[5], ".") == 0 {
+		curr.Qual = 255
+	} else {
+		curr.Qual = common.StringToFloat64(data[5])
+	}
+	if len(data) > 9 {
+		curr.Notes = data[9]
 	}
 	return curr
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return nil, true
 	}
@@ -113,7 +113,7 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var err error
 	var nextBytes []byte
 	var header VcfHeader
-	for nextBytes, err = er.Peek(1); nextBytes[0] == '#' && err == nil; nextBytes, err = er.Peek(1) {
+	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		processHeader(&header, line)
 	}
@@ -158,7 +158,7 @@ func WriteHeader(file *os.File) {
 	common.ExitIfError(err)
 }
 
-func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
+func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
 	var err error
 	header := BetterHeader(fa)
 	for h := 0; h < len(header); h++ {
@@ -168,12 +168,15 @@ func WriteBetterHeader(file *os.File, fa []*fasta.Fasta) {
 }
 
 func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	WriteBetterHeader(file, fa)
-	WriteVcfToFileHandle(file, data)
+	for _, each := range data {
+		WriteVcf(file, each)
+	}
 }
 
+//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
@@ -186,7 +189,7 @@ func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	}
 }
 
-func WriteVcf(file *os.File, input *Vcf) {
+func WriteVcf(file io.Writer, input *Vcf) {
 	var err error
 	if input.Notes == "" {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
@@ -216,11 +219,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 }
 
 func PrintSingleLine(data *Vcf) {
-	var err error
-	file := fileio.MustCreate("/dev/stdout")
-	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
-	common.ExitIfError(err)
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 }
 
 func PrintHeader(header []string) {
@@ -229,6 +228,7 @@ func PrintHeader(header []string) {
 	}
 }
 
+//TODO will be removed in the next few weeks
 func MakeHeader() []string {
 	//TODO: add logic to add contig length to header of file
 	var header []string
@@ -261,21 +261,15 @@ func BetterHeader(fa []*fasta.Fasta) []string {
 		"##fileDate="+t.Format("20060102")+"\n"+
 		"##source=github.com/vertgenlab/gonomics")
 	header = append(header, "##phasing=none\n"+
-		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
 		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
 		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
 		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
-		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
-		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
-		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n"+
-		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n"+
-		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
-		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
-		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">")
+		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 	var text string = ""
-	for i := 0; i < len(fa); i++ {
-		text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
+	if fa != nil {
+		for i := 0; i < len(fa); i++ {
+			text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
+		}
 	}
 	text += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES"
 	header = append(header, text)

@@ -1,13 +1,11 @@
 package axt
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -34,14 +32,12 @@ func Read(filename string) []*Axt {
 	var hDone, rDone, qDone, bDone bool
 	var words []string
 
-	file := fileio.MustOpen(filename)
+	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	reader := bufio.NewReader(file)
-
-	for header, hDone = fileio.NextRealLine(reader); !hDone; header, hDone = fileio.NextRealLine(reader) {
-		rSeq, rDone = fileio.NextRealLine(reader)
-		qSeq, qDone = fileio.NextRealLine(reader)
-		blank, bDone = fileio.NextRealLine(reader)
+	for header, hDone = fileio.EasyNextRealLine(file); !hDone; header, hDone = fileio.EasyNextRealLine(file) {
+		rSeq, rDone = fileio.EasyNextRealLine(file)
+		qSeq, qDone = fileio.EasyNextRealLine(file)
+		blank, bDone = fileio.EasyNextRealLine(file)
 		if rDone || qDone || bDone {
 			log.Fatalf("Error: lines in %s, must be a multiple of four\n", filename)
 		}
@@ -87,14 +83,58 @@ func Read(filename string) []*Axt {
 	return answer
 }
 
-func WriteToFileHandle(file *os.File, input *Axt, alnNumber int) {
-	strand := common.StrandToRune(input.QStrandPos)
-	_, err := fmt.Fprintf(file, "%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", alnNumber, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, strand, input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
+func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
+	for data, err := NextAxt(reader); !err; data, err = NextAxt(reader) {
+		answer <- data
+	}
+	close(answer)
+}
+
+func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
+	header, hDone := fileio.EasyNextRealLine(reader)
+	rSeq, rDone := fileio.EasyNextRealLine(reader)
+	qSeq, qDone := fileio.EasyNextRealLine(reader)
+	blank, bDone := fileio.EasyNextRealLine(reader)
+	if blank != "" {
+		log.Fatalf("Error: every fourth line should be blank\n")
+	}
+	if hDone || rDone || qDone || bDone {
+		return nil, true
+	}
+	return axtHelper(header, rSeq, qSeq, blank), false
+}
+
+func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
+	var words []string = strings.Split(header, " ")
+	if len(words) != 9 || rSeq == "" || qSeq == "" {
+		log.Fatalf("Error: missing fields in header or sequences\n")
+	}
+	var answer *Axt = &Axt{
+		RName:      words[1],
+		RStart:     common.StringToInt64(words[2]),
+		REnd:       common.StringToInt64(words[3]),
+		QName:      words[4],
+		QStart:     common.StringToInt64(words[5]),
+		QEnd:       common.StringToInt64(words[6]),
+		QStrandPos: common.StringToStrand(words[7]),
+		Score:      common.StringToInt64(words[8]),
+		RSeq:       dna.StringToBases(rSeq),
+		QSeq:       dna.StringToBases(qSeq),
+	}
+	return answer
+}
+
+func WriteToFileHandle(file *fileio.EasyWriter, input *Axt, alnNumber int) {
+	_, err := fmt.Fprintf(file, "%s", ToString(input, alnNumber))
 	common.ExitIfError(err)
 }
 
+func ToString(input *Axt, id int) string {
+	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, common.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
+}
+
 func Write(filename string, data []*Axt) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	for i, _ := range data {

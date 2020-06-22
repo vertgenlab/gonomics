@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
+	"log"
 	"os"
 	"strings"
 )
@@ -70,6 +71,23 @@ func Write(filename string, records []*Fasta) {
 	WriteToFileHandle(file, records, lineLength)
 }
 
+//TODO: this is a modified version of WriteToFileHandle.
+//My changes will break a lot of code so I will work slowly to slide this in to other functions
+func WriteHelper(file *fileio.EasyWriter, rec *Fasta, lineLength int) {
+	var err error
+	_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
+	common.ExitIfError(err)
+	for i := 0; i < len(rec.Seq); i += lineLength {
+		if i+lineLength > len(rec.Seq) {
+			_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:]))
+			common.ExitIfError(err)
+		} else {
+			_, err = fmt.Fprintf(file, "%s\n", dna.BasesToString(rec.Seq[i:i+lineLength]))
+			common.ExitIfError(err)
+		}
+	}
+}
+
 func WriteGroups(filename string, groups [][]*Fasta) error {
 	lineLength := 50
 	file, err := os.Create(filename)
@@ -96,15 +114,18 @@ func CreateAllNs(name string, numGaps int64) *Fasta {
 	return &answer
 }
 
-func FastaToMap(fasta []*Fasta) map[string][]dna.Base {
-	answer := make(map[string][]dna.Base)
+//Dictionary/hash map look up of sequence by name
+func FastaMap(ref []*Fasta) map[string][]dna.Base {
+	m := make(map[string][]dna.Base)
 	var curr *Fasta
-	for i := 0; i < len(fasta); i++ {
-		curr = fasta[i]
-		_, ok := answer[curr.Name]
+	for i := 0; i < len(ref); i++ {
+		curr = ref[i]
+		_, ok := m[curr.Name]
 		if !ok {
-			answer[curr.Name] = curr.Seq
+			m[curr.Name] = curr.Seq
+		} else {
+			log.Fatalf("Fasta slice has duplicate names")
 		}
 	}
-	return answer
+	return m
 }

@@ -94,7 +94,7 @@ func ParseDot(input string) *Tree {
 	return root
 }
 
-func parseNewick(input string) (*Tree, error) {
+func ParseNewick(input string) (*Tree, error) {
 	if !strings.HasPrefix(input, "(") || !strings.HasSuffix(input, ";") {
 		return nil, fmt.Errorf("Error: tree %s should start with '(' and end with ';'", input)
 	}
@@ -180,7 +180,7 @@ func ReadNewick(filename string) (*Tree, error) {
 	for scanner.Scan() {
 		line = scanner.Text()
 		if !strings.HasPrefix(line, "#") {
-			return parseNewick(line[strings.Index(line, "("):strings.LastIndex(line, ";")])
+			return ParseNewick(line[strings.Index(line, "("): 1+strings.LastIndex(line, ";")])
 		}
 	}
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")

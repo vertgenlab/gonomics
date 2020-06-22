@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+//TODO: files to read was modified because others didn't exist
+// would be good to make this a tougher test
 func TestReadPairChan(t *testing.T) {
 	fastqPipe := make(chan *PairedEnd, 824)
 	var readOne string = "testdata/simReads_R1.fq"

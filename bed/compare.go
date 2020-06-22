@@ -35,6 +35,15 @@ func Overlap(alpha *Bed, beta *Bed) bool {
 	}
 }
 
+func OverlapLength(a *Bed, b *Bed) int64 {
+	if !Overlap(a, b) {
+		return 0
+	}
+	end := common.MinInt64(a.ChromEnd, b.ChromEnd)
+	start := common.MaxInt64(a.ChromStart, b.ChromStart)
+	return end - start
+}
+
 func Compare(a *Bed, b *Bed) int {
 	chromComp := strings.Compare(a.Chrom, b.Chrom)
 	if chromComp != 0 {

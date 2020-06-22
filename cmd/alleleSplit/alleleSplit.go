@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"os"
 )
 
 func usage() {
@@ -64,16 +63,16 @@ func AlleleExpression(samFilename string, v []*vcf.Vcf, fileName string, ref str
 	defer samFile.Close()
 	header := sam.ReadHeader(samFile)
 
-	refFile, _ := os.Create(fileName + "_" + ref + "Allele.sam")
+	refFile := fileio.EasyCreate(fileName + "_" + ref + "Allele.sam")
 	defer refFile.Close()
 
-	altFile, _ := os.Create(fileName + "_" + alt + "Allele.sam")
+	altFile := fileio.EasyCreate(fileName + "_" + alt + "Allele.sam")
 	defer altFile.Close()
 	sam.WriteHeaderToFileHandle(refFile, header)
 	sam.WriteHeaderToFileHandle(altFile, header)
-	var un *os.File = nil
+	var un *fileio.EasyWriter = nil
 	if unFlag {
-		un, _ := os.Create(fileName + "_undetermined.sam")
+		un = fileio.EasyCreate(fileName + "_undetermined.sam")
 		defer un.Close()
 		sam.WriteHeaderToFileHandle(un, header)
 	}

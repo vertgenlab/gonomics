@@ -8,9 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	//"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,24 +39,21 @@ type SamAln struct {
 	Extra string
 }
 
-func ReadToChan(filename string, output chan<- *SamAln) {
+func ReadToChan(reader *fileio.EasyReader, output chan<- *SamAln) {
 	var curr *SamAln
 	var done bool
-
-	file := fileio.EasyOpen(filename)
-	ReadHeader(file)
-	defer file.Close()
-
-	for curr, done = NextAlignment(file); done != true; curr, done = NextAlignment(file) {
+	for curr, done = NextAlignment(reader); done != true; curr, done = NextAlignment(reader) {
 		output <- curr
 	}
 	close(output)
 }
 
 func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
-	file, _ := os.Create(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
-	WriteHeaderToFileHandle(file, header)
+	if header != nil {
+		WriteHeaderToFileHandle(file, header)
+	}
 	for alignedRead := range incomingSams {
 		WriteAlnToFileHandle(file, alignedRead)
 	}
@@ -87,7 +82,7 @@ func processHeaderLine(header *SamHeader, line string) {
 			}
 		}
 		if curr.Name == "" || curr.Size == 0 {
-			log.Fatal(fmt.Errorf("Thought I would get a name and non-zero size on this line: %s\n", line))
+			//	log.Fatal(fmt.Errorf("Thought I would get a name and non-zero size on this line: %s\n", line))
 		}
 		header.Chroms = append(header.Chroms, &curr)
 	}
@@ -99,7 +94,7 @@ func ReadHeader(er *fileio.EasyReader) *SamHeader {
 	var nextBytes []byte
 	var header SamHeader
 
-	for nextBytes, err = er.Peek(1); nextBytes[0] == '@' && err == nil; nextBytes, err = er.Peek(1) {
+	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '@'; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		processHeaderLine(&header, line)
 	}
@@ -173,7 +168,7 @@ func Read(filename string) (*Sam, error) {
 	return &Sam{Header: header, Aln: alnRecords}, nil
 }
 
-func WriteHeaderToFileHandle(file *os.File, header *SamHeader) error {
+func WriteHeaderToFileHandle(file *fileio.EasyWriter, header *SamHeader) error {
 	var err error
 
 	for i, _ := range header.Text {
@@ -208,7 +203,6 @@ func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader
 				i++
 			}
 		}
-
 	}
 	return &header
 }
@@ -304,39 +298,18 @@ func pathPrettyString(graphPath string) string {
 	return s
 }
 
-func WriteAlnToFileHandle(file *os.File, aln *SamAln) {
+func WriteAlnToFileHandle(file *fileio.EasyWriter, aln *SamAln) {
 	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
 	common.ExitIfError(err)
 }
 
-func TestSamChanToFile(incomingSams <-chan *SamAln, file *os.File, wg *sync.WaitGroup) {
-
-	for alignedRead := range incomingSams {
-		WriteAlnToFileHandle(file, alignedRead)
-	}
-	wg.Done()
-}
-func SamChanToStdOut(incomingSams <-chan *SamAln, wg *sync.WaitGroup) {
-	for alignedRead := range incomingSams {
-		log.Printf("%s\n", SamAlnToString(alignedRead))
-		//WriteAlnToFileHandle(file, alignedRead)
-
-	}
-	wg.Done()
-}
-
-func Write(filename string, data *Sam) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
+func Write(filename string, data *Sam) {
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
-
-	err = WriteHeaderToFileHandle(file, data.Header)
+	WriteHeaderToFileHandle(file, data.Header)
 	for i, _ := range data.Aln {
 		WriteAlnToFileHandle(file, data.Aln[i])
 	}
-	return err
 }
 
 func FastaHeader(ref []*fasta.Fasta) *SamHeader {
