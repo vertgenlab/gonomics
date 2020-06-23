@@ -3,10 +3,10 @@ package gtf
 import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/vcf"
-	)
+)
 
 func VariantArrayOverlap(v *vcf.Vcf, a map[string][]bool) bool {
-	return a[v.Chr][v.Pos - 1]
+	return a[v.Chr][v.Pos-1]
 }
 
 //returns a map of chromosome names to bool arrays, true if that position lies in an exon
@@ -40,7 +40,7 @@ func CdsBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[str
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				if g[k].Transcripts[i].Exons[j].Cds != nil {
 					for m := g[k].Transcripts[i].Exons[j].Cds.Start - 1; m < g[k].Transcripts[i].Exons[j].Cds.End; m++ {
-					answer[k][m] = true
+						answer[k][m] = true
 					}
 				}
 			}
@@ -60,7 +60,7 @@ func FiveUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				if g[k].Transcripts[i].Exons[j].FiveUtr != nil {
 					for m := g[k].Transcripts[i].Exons[j].FiveUtr.Start - 1; m < g[k].Transcripts[i].Exons[j].FiveUtr.End; m++ {
-					answer[k][m] = true
+						answer[k][m] = true
 					}
 				}
 			}
@@ -80,7 +80,7 @@ func ThreeUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) ma
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				if g[k].Transcripts[i].Exons[j].ThreeUtr != nil {
 					for m := g[k].Transcripts[i].Exons[j].ThreeUtr.Start - 1; m < g[k].Transcripts[i].Exons[j].ThreeUtr.End; m++ {
-					answer[k][m] = true
+						answer[k][m] = true
 					}
 				}
 			}

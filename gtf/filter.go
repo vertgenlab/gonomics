@@ -1,11 +1,10 @@
 package gtf
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/dna"
-
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func FilterVariantGtf(v *vcf.Vcf, g map[string]*Gene, c map[string]*chromInfo.ChromInfo, exon bool, code bool, five bool, three bool) bool {
@@ -51,4 +50,3 @@ func FilterVariantFiveUtr(v *vcf.Vcf, g map[string]*Gene, e bool, c map[string]*
 	a := FiveUtrBoolArray(g, c)
 	return VariantArrayOverlap(v, a)
 }
-
