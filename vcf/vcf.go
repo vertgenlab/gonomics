@@ -145,16 +145,6 @@ func WriteHeader(file *os.File) {
 	common.ExitIfError(err)
 }
 
-func EasyVcfWrite(gzip *fileio.EasyWriter, input *Vcf) {
-	var err error
-	if input.Notes == "" {
-		_, err = fmt.Fprintf(gzip, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
-	} else {
-		_, err = fmt.Fprintf(gzip, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format, input.Notes)
-	}
-	common.ExitIfError(err)
-}
-  
 //TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
