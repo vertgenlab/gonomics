@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
@@ -77,12 +77,6 @@ func axtTargetGap(record *axt.Axt) bool {
 	} else {
 		return false
 	}
-}
-
-//Trim fasta records by giving start and end coords
-func TrimFasta(fa *fasta.Fasta, start int, end int) *fasta.Fasta {
-	fa.Seq = fa.Seq[start:end]
-	return fa
 }
 
 //TODO: Coming soon: axt alignment to Fasta
