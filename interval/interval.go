@@ -4,6 +4,7 @@ package interval
 // DOI: 10.1038/s41598-019-41451-3
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
 	"sort"
 )
 
@@ -11,6 +12,7 @@ type Interval interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
+	WriteToFileHandle(*fileio.EasyWriter)
 }
 
 type IntervalNode struct {

@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"path"
 	"strconv"
@@ -66,16 +69,56 @@ func readToIntervalChan(inputFile string, send chan interval.Interval) {
 		}
 
 	case ".axt":
-		receive := axt.ReadToChan
+		receive := axt.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+
+	case ".vcf":
+		receive, _ := vcf.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+
+	case ".sam":
+		receive := sam.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+	}
+}
+
+func writeIntervals(input []interval.Interval, out *fileio.EasyWriter) {
+	for _, val := range input {
+		val.WriteToFileHandle(out)
 	}
 }
 
 func genomeOverlap(query string, selectRange string, target string, out string, relationship string) {
+	targetChan := goReadToIntervalChan(target)
+	targetIntervals := make([]interval.Interval, 0)
+	for val := range targetChan {
+		targetIntervals = append(targetIntervals, val)
+	}
+	tree := interval.BuildTree(targetIntervals)
 
 	var inputQuery interval.Interval
+	var answer []interval.Interval
+	outFile := fileio.EasyCreate(out)
+	defer outFile.Close()
 
 	if selectRange != "" {
 		inputQuery = parseSelectRange(selectRange)
+		answer = interval.Query(tree, inputQuery, relationship)
+		writeIntervals(answer, outFile)
+		return
+	}
+
+	queryChan := goReadToIntervalChan(query)
+
+	for queryRecord := range queryChan {
+		answer = interval.Query(tree, queryRecord, relationship)
+		writeIntervals(answer, outFile)
 	}
 }
 
