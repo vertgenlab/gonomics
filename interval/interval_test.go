@@ -3,6 +3,7 @@ package interval
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -279,6 +280,9 @@ func (t *testInterval) GetChromStart() int {
 }
 func (t *testInterval) GetChromEnd() int {
 	return t.end
+}
+func (t *testInterval) WriteToFileHandle(file *fileio.EasyWriter) {
+	return
 }
 
 func generateIntervals(num int, rangeLow int, rangeHigh int) []Interval {

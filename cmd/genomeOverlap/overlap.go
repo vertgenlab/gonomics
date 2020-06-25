@@ -132,6 +132,17 @@ func main() {
 	var out *string = flag.String("out", "", "Filename containing records from target that overlap query. File type will be the same as target file type")
 	var selectRange *string = flag.String("selectRange", "", "Input a range and select all regions in target file that fall in this range. " +
 		"Cannot be used at the same time as query. \n Format:\tchr:start-end\n NOTE: start and end must be 0 based (same as Bed format)")
+	//TODO: nonOverlapping
+	//TODO: excludeSelf
+	//TODO: strand
+	//TODO: oppositeStrand
+	//TODO: aggregate
+	//TODO: minimumOverlapPercent
+	//TODO: maximumOverlapPercent
+	//TODO: minimumOverlapBases
+	//TODO: maximumOverlapBases
+	//TODO: statsOutput
+
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
