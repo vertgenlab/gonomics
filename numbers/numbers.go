@@ -158,10 +158,7 @@ func BinomCoefficient(n int, k int) int {
 }
 
 func Factorial(n int) int {
-	if n > 0 {
-		return n * Factorial(n-1)
-	}
-	return 1
+	return int(math.Gamma(float64(n + 1)))
 }
 
 func RandIntInRange(x int, y int) int {
