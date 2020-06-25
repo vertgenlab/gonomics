@@ -9,6 +9,32 @@ const (
 	xMax = 10000000000 // maximum size of genome
 )
 
+func TestValidRelationship(op string) bool {
+	switch op {
+	case "o":
+	case "oi":
+	case "d":
+	case "di":
+	case "m":
+	case "mi":
+	case "s":
+	case "si":
+	case "f":
+	case "fi":
+	case "lt":
+	case "gt":
+	case "e":
+	case "any":
+	case "within":
+	case "start":
+	case "end":
+	case "equal":
+	default:
+		log.Fatalf("ERROR: Invalid relationship: %s", op)
+	}
+	return true
+}
+
 func transform(query Interval, op string) (x1, x2, y1, y2 float32) {
 	var x float32 = float32(query.GetChromStart())
 	var y float32 = float32(query.GetChromEnd())
