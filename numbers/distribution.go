@@ -56,3 +56,9 @@ func BetaClosure(alpha float64, beta float64) func(float64) float64 {
 		return BetaDist(x, alpha, beta)
 	}
 }
+
+func GammaClosure(alpha float64, beta float64) func(float64) float64 {
+	return func(x float64) float64 {
+		return GammaDist(x, alpha, beta)
+	}
+}
