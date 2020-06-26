@@ -5,10 +5,10 @@ import (
 )
 
 type AggregateInterval struct {
-	chr 	string
-	start 	int
-	end 	int
-	tree 	map[string]*IntervalNode
+	chr   string
+	start int
+	end   int
+	tree  map[string]*IntervalNode
 }
 
 func (a *AggregateInterval) GetChrom() string {
@@ -23,6 +23,7 @@ func (a *AggregateInterval) GetChromEnd() int {
 func (a *AggregateInterval) SetExclude() {
 	a.chr = "EXCLUDE"
 }
+
 // Write all intervals in the merge interval, should not be used for most queries
 func (a *AggregateInterval) WriteToFileHandle(file *fileio.EasyWriter) {
 	for _, tree := range a.tree {
@@ -41,13 +42,13 @@ func MergeIntervals(intervals []Interval) []Interval {
 		var currComponents []Interval
 		for i := 0; i < len(input); i++ {
 
-			if i + 1 < len(input) - 1 && input[i+1].GetChromStart() <= input[i].GetChromEnd() {
+			if i+1 < len(input)-1 && input[i+1].GetChromStart() <= input[i].GetChromEnd() {
 				currComponents = nil
 				currComponents = append(currComponents, input[i])
 				curr = &AggregateInterval{
-					chr: 	input[i].GetChrom(),
-					start: 	input[i].GetChromStart(),
-					end: 	input[i].GetChromEnd(),
+					chr:   input[i].GetChrom(),
+					start: input[i].GetChromStart(),
+					end:   input[i].GetChromEnd(),
 				}
 				for i++; curr.GetChrom() == input[i].GetChrom() &&
 					input[i].GetChromStart() <= curr.GetChromEnd(); i++ {
@@ -55,7 +56,7 @@ func MergeIntervals(intervals []Interval) []Interval {
 						curr.end = input[i].GetChromEnd()
 					}
 					currComponents = append(currComponents, input[i])
-					if i + 1 > len(input) - 1 {
+					if i+1 > len(input)-1 {
 						curr.tree = BuildTree(currComponents)
 						answer = append(answer, curr)
 						return answer

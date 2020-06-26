@@ -40,9 +40,9 @@ func parseSelectRange(input string) *bed.Bed {
 	start, _ := strconv.ParseInt(val[0], 10, 64)
 	end, _ := strconv.ParseInt(val[1], 10, 64)
 	answer := &bed.Bed{
-		Chrom: words[0],
+		Chrom:      words[0],
 		ChromStart: start,
-		ChromEnd: end}
+		ChromEnd:   end}
 	return answer
 }
 
@@ -130,13 +130,13 @@ func genomeOverlap(query string, selectRange string, target string, out string, 
 
 func main() {
 	var helpRelationships *bool = flag.Bool("printRelationships", false, "Show a diagram of the valid interval relationships that can be tested for")
-	var relationship *string = flag.String("relationship", "any", "Choose a specific relationships that target " +
+	var relationship *string = flag.String("relationship", "any", "Choose a specific relationships that target "+
 		"and query records must fulfill to be reported. Use --printRelationships for more information.")
 	var query *string = flag.String("query", "", "File containing query records. File will be read based on its file extension. See valid file types above.")
-	var target *string = flag.String("target", "", "File containing target records that will be reported in output if they overlap a query record" +
+	var target *string = flag.String("target", "", "File containing target records that will be reported in output if they overlap a query record"+
 		"File will be read based on its file extension. See valid file types above.")
 	var out *string = flag.String("out", "", "Filename containing records from target that overlap query. File type will be the same as target file type")
-	var selectRange *string = flag.String("selectRange", "", "Input a range and select all regions in target file that fall in this range. " +
+	var selectRange *string = flag.String("selectRange", "", "Input a range and select all regions in target file that fall in this range. "+
 		"Cannot be used at the same time as query. \n Format:\t`chr:start-end`\n NOTE: start and end must be 0 based (same as Bed format)")
 	var aggregate *bool = flag.Bool("aggregate", false, "Determine overlap based on the sum of overlapping target records rather than individual target records")
 	//TODO: nonOverlapping
@@ -148,7 +148,6 @@ func main() {
 	//TODO: minimumOverlapBases
 	//TODO: maximumOverlapBases
 	//TODO: statsOutput
-
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
