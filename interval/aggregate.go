@@ -18,6 +18,9 @@ func (a *AggregateInterval) GetChromStart() int {
 func (a *AggregateInterval) GetChromEnd() int {
 	return a.end
 }
+func (a *AggregateInterval) SetExclude() {
+	a.chr = "EXCLUDE"
+}
 func (a *AggregateInterval) WriteToFileHandle(file *fileio.EasyWriter) {
 	for _, val := range a.components {
 		val.WriteToFileHandle(file)

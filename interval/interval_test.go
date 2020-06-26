@@ -281,6 +281,9 @@ func (t *testInterval) GetChromStart() int {
 func (t *testInterval) GetChromEnd() int {
 	return t.end
 }
+func (t *testInterval) SetExclude() {
+	t.chr = "EXCLUDE"
+}
 func (t *testInterval) WriteToFileHandle(file *fileio.EasyWriter) {
 	return
 }
