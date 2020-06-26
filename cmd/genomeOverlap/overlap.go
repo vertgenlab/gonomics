@@ -90,15 +90,21 @@ func readToIntervalChan(inputFile string, send chan interval.Interval) {
 
 func writeIntervals(input []interval.Interval, out *fileio.EasyWriter) {
 	for _, val := range input {
-		val.WriteToFileHandle(out)
+		if val.GetChrom() != "EXCLUDE" { // Prevents same record from being reported from multiple queries
+			val.WriteToFileHandle(out)
+			val.SetExclude()
+		}
 	}
 }
 
-func genomeOverlap(query string, selectRange string, target string, out string, relationship string) {
+func genomeOverlap(query string, selectRange string, target string, out string, relationship string, aggregate bool) {
 	targetChan := goReadToIntervalChan(target)
 	targetIntervals := make([]interval.Interval, 0)
 	for val := range targetChan {
 		targetIntervals = append(targetIntervals, val)
+	}
+	if aggregate {
+		targetIntervals = interval.MergeIntervals(targetIntervals)
 	}
 	tree := interval.BuildTree(targetIntervals)
 
@@ -131,12 +137,12 @@ func main() {
 		"File will be read based on its file extension. See valid file types above.")
 	var out *string = flag.String("out", "", "Filename containing records from target that overlap query. File type will be the same as target file type")
 	var selectRange *string = flag.String("selectRange", "", "Input a range and select all regions in target file that fall in this range. " +
-		"Cannot be used at the same time as query. \n Format:\tchr:start-end\n NOTE: start and end must be 0 based (same as Bed format)")
+		"Cannot be used at the same time as query. \n Format:\t`chr:start-end`\n NOTE: start and end must be 0 based (same as Bed format)")
+	var aggregate *bool = flag.Bool("aggregate", false, "Determine overlap based on the sum of overlapping target records rather than individual target records")
 	//TODO: nonOverlapping
 	//TODO: excludeSelf
 	//TODO: strand
 	//TODO: oppositeStrand
-	//TODO: aggregate
 	//TODO: minimumOverlapPercent
 	//TODO: maximumOverlapPercent
 	//TODO: minimumOverlapBases
@@ -162,5 +168,5 @@ func main() {
 		log.Fatalln("ERROR: Cannot use both -query and -selectRange")
 	}
 
-	genomeOverlap(*query, *selectRange, *target, *out, *relationship)
+	genomeOverlap(*query, *selectRange, *target, *out, *relationship, *aggregate)
 }
