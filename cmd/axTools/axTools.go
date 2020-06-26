@@ -23,15 +23,17 @@ func main() {
 	var expectedNumArgs int = 2
 
 	var targetGaps *bool = flag.Bool("gap", false, "Find axt alignments when target contains Ns, but query does not")
-	
-	//var concensus *bool = flag.Bool("concensus", false, "Output `.fasta` consensus sequence based on the axt alignment")
+
+	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
 	input, output := flag.Arg(0), flag.Arg(1)
 
-	 if *targetGaps {
+	if *targetGaps {
 		searchAxt(input, output)
+	} else if fasta.IsFasta(*concensus) {
+		axtToFa(input, output, *concensus)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -41,9 +43,9 @@ func main() {
 }
 
 func searchAxt(input string, output string) {
-	ioReader, ioWriter:= fileio.EasyOpen(input), fileio.EasyCreate(output)
+	ioReader, ioWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
 	data := make(chan *axt.Axt)
-	
+
 	go axt.ReadToChan(ioReader, data)
 
 	var index int = 0
@@ -73,24 +75,26 @@ func axtQueryGap(record *axt.Axt) bool {
 
 //TODO: Coming soon: axt alignment to Fasta
 
-func axtToFa(input string, output string) {
+func axtToFa(input string, output string, target string) {
 	ioReader, ioWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
+	faMap := fasta.FastaMap(fasta.Read(target))
+
 	data := make(chan *axt.Axt)
 
 	go axt.ReadToChan(ioReader, data)
 
 	for each := range data {
-		fasta.WriteFasta(ioWriter, axtSeq(each, nil), 50)
+		fasta.WriteFasta(ioWriter, axtSeq(each, faMap[each.RName]), 50)
 	}
 }
 
 //if target sequence contains Ns, uses query non N bases to fill Ns
-func axtSeq(axtRecord *axt.Axt, fa *fasta.Fasta) *fasta.Fasta {
+func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) *fasta.Fasta {
 	concensus := &fasta.Fasta{
 		Name: fmt.Sprintf("%s", axtRecord.RName),
-		Seq:  make([]dna.Base, 0, len(fa.Seq)),
+		Seq:  make([]dna.Base, 0, len(faSeq)),
 	}
-	concensus.Seq = append(concensus.Seq, fa.Seq[:axtRecord.RStart-1]...)
+	concensus.Seq = append(concensus.Seq, faSeq[:axtRecord.RStart-1]...)
 	for i := 0; i < len(axtRecord.RSeq); i++ {
 		if axtRecord.RSeq[i] == dna.N && axtRecord.QSeq[i] != dna.N {
 			concensus.Seq = append(concensus.Seq, axtRecord.QSeq[i])
@@ -98,8 +102,8 @@ func axtSeq(axtRecord *axt.Axt, fa *fasta.Fasta) *fasta.Fasta {
 			concensus.Seq = append(concensus.Seq, axtRecord.RSeq[i])
 		}
 	}
-	concensus.Seq = append(concensus.Seq, fa.Seq[axtRecord.REnd:]...)
-	if len(concensus.Seq) != len(fa.Seq) {
+	concensus.Seq = append(concensus.Seq, faSeq[axtRecord.REnd:]...)
+	if len(concensus.Seq) != len(faSeq) {
 		log.Fatalf("Error: Sequence length is not the same...\n")
 	}
 	return concensus

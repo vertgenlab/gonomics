@@ -28,6 +28,6 @@ func TestAxtToFasta(t *testing.T) {
 		Seq:  dna.StringToBases("AAAAAAAAAATCTGNNNNTAAACCACCNNNNATGACAAGC"),
 	}
 
-	seq := axtSeq(testAxt, testFa)
+	seq := axtSeq(testAxt, testFa.Seq)
 	log.Printf("%s %s\n", seq.Name, dna.BasesToString(seq.Seq))
 }
