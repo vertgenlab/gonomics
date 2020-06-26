@@ -76,6 +76,7 @@ func BuildTree(intervals []Interval) map[string]*IntervalNode {
 	chrMap := splitIntervalsByChr(intervals)
 
 	for idx, val := range chrMap {
+		sortIntervals(val, yLess)
 		answer[idx] = buildTree(val)
 	}
 
@@ -91,7 +92,7 @@ func buildTree(intervals []Interval) *IntervalNode {
 	//TODO: Optimize the sorting to get rid of xLess sort up front by copying pLeft and pRight and feeding the original xLess sorted child into the recursive call
 	// 1. Sort P by y-value, return an array of intervals Py.
 	sortIntervals(p, xLess)
-	sortIntervals(pY, yLess)
+	//sortIntervals(pY, yLess)
 
 	var answer *IntervalNode
 
