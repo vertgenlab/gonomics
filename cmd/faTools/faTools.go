@@ -30,7 +30,10 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
-
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+	}
 	inputFile, outputFile := flag.Arg(0), flag.Arg(1)
 	switch true {
 	case *faTrim:
@@ -42,10 +45,7 @@ func main() {
 	case *rename != "":
 		setNewPrefix(inputFile, outputFile, *rename)
 	default:
-		if len(flag.Args()) != expectedNumArgs {
-			flag.Usage()
-			log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-		}
+		flag.Usage()
 	}
 }
 
