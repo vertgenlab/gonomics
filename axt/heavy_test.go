@@ -7,21 +7,21 @@ import (
 func TestAxtHeavy(t *testing.T) {
 	// Making sure methods for AxtHeavy overrule methods for Axt
 	a := &Axt{
-		RName: "R",
-		RStart: 0,
-		REnd: 10,
-		QName: "Q",
-		QStart: 100,
-		QEnd: 110,
+		RName:      "R",
+		RStart:     0,
+		REnd:       10,
+		QName:      "Q",
+		QStart:     100,
+		QEnd:       110,
 		QStrandPos: false,
 	}
 
-	b := AxtHeavy {
-		Axt: a,
-		Chrom: "Heavy",
-		ChromSize: 200,
+	b := AxtHeavy{
+		Axt:        a,
+		Chrom:      "Heavy",
+		ChromSize:  200,
 		ChromStart: 50,
-		ChromEnd: 60,
+		ChromEnd:   60,
 	}
 
 	if b.GetChrom() == a.GetChrom() ||
