@@ -88,44 +88,64 @@ func readToIntervalChan(inputFile string, send chan interval.Interval) {
 	}
 }
 
-func writeIntervals(input []interval.Interval, out *fileio.EasyWriter) {
-	for _, val := range input {
-		if val.GetChrom() != "EXCLUDE" { // Prevents same record from being reported from multiple queries
+func writeIntervals(query interval.Interval, input []interval.Interval, out *fileio.EasyWriter, allowDuplicates bool, printQuery bool) {
+	if printQuery {
+		query.WriteToFileHandle(out)
+	}
+	if allowDuplicates {
+		for _, val := range input {
 			val.WriteToFileHandle(out)
-			val.SetExclude()
+		}
+	} else {
+		for _, val := range input {
+			if val.GetChrom() != "EXCLUDE" { // Prevents same record from being reported from multiple queries
+				val.WriteToFileHandle(out)
+				val.SetExclude()
+			}
 		}
 	}
 }
 
-func genomeOverlap(query string, selectRange string, target string, out string, relationship string, aggregate bool) {
-	targetChan := goReadToIntervalChan(target)
+func genomeOverlap(input *inputOptions) {
+	targetChan := goReadToIntervalChan(input.target)
 	targetIntervals := make([]interval.Interval, 0)
 	for val := range targetChan {
 		targetIntervals = append(targetIntervals, val)
 	}
-	if aggregate {
+	if input.aggregate {
 		targetIntervals = interval.MergeIntervals(targetIntervals)
 	}
 	tree := interval.BuildTree(targetIntervals)
 
 	var inputQuery interval.Interval
 	var answer []interval.Interval
-	outFile := fileio.EasyCreate(out)
+	outFile := fileio.EasyCreate(input.out)
 	defer outFile.Close()
 
-	if selectRange != "" {
-		inputQuery = parseSelectRange(selectRange)
-		answer = interval.Query(tree, inputQuery, relationship)
-		writeIntervals(answer, outFile)
+	if input.selectRange != "" {
+		inputQuery = parseSelectRange(input.selectRange)
+		answer = interval.Query(tree, inputQuery, input.relationship)
+		writeIntervals(inputQuery, answer, outFile, input.allowDuplicates, input.printQuery)
 		return
 	}
 
-	queryChan := goReadToIntervalChan(query)
+	queryChan := goReadToIntervalChan(input.query)
 
 	for queryRecord := range queryChan {
-		answer = interval.Query(tree, queryRecord, relationship)
-		writeIntervals(answer, outFile)
+		answer = interval.Query(tree, queryRecord, input.relationship)
+		writeIntervals(queryRecord, answer, outFile, input.allowDuplicates, input.printQuery)
 	}
+}
+
+type inputOptions struct {
+	query           string
+	selectRange     string
+	target          string
+	out             string
+	relationship    string
+	aggregate       bool
+	allowDuplicates bool
+	printQuery      bool
 }
 
 func main() {
@@ -139,6 +159,10 @@ func main() {
 	var selectRange *string = flag.String("selectRange", "", "Input a range and select all regions in target file that fall in this range. "+
 		"Cannot be used at the same time as query. \n Format:\t`chr:start-end`\n NOTE: start and end must be 0 based (same as Bed format)")
 	var aggregate *bool = flag.Bool("aggregate", false, "Determine overlap based on the sum of overlapping target records rather than individual target records")
+	var printQuery *bool = flag.Bool("printQuery", false, "Print the query line followed by the corresponding target lines in the outfile."+
+		"NOTE: This option automatically enables -allowDuplicates")
+	var allowDuplicates *bool = flag.Bool("allowDuplicates", false, "Allows a single target record to appear multiple times in outfile"+
+		"depending on the number of overlapping queries")
 	//TODO: nonOverlapping
 	//TODO: excludeSelf
 	//TODO: strand
@@ -158,6 +182,10 @@ func main() {
 		return
 	}
 
+	if *printQuery {
+		*allowDuplicates = true
+	}
+
 	if !interval.TestValidRelationship(*relationship) {
 		printRelationships()
 		log.Fatalln("ERROR: Invalid relationship", *relationship)
@@ -167,5 +195,15 @@ func main() {
 		log.Fatalln("ERROR: Cannot use both -query and -selectRange")
 	}
 
-	genomeOverlap(*query, *selectRange, *target, *out, *relationship, *aggregate)
+	input := &inputOptions{
+		query:           *query,
+		selectRange:     *selectRange,
+		target:          *target,
+		out:             *out,
+		relationship:    *relationship,
+		aggregate:       *aggregate,
+		allowDuplicates: *allowDuplicates,
+		printQuery:      *printQuery}
+
+	genomeOverlap(input)
 }
