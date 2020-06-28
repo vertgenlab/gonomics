@@ -2,15 +2,18 @@ package axt
 
 type AxtHeavy struct {
 	*Axt
+	Chrom      string
 	ChromSize  int
+	ChromStart int
+	ChromEnd   int
 }
-//TODO: GetChrom, GetStart, GetEnd returns target chr, implement a target and query swap and call same function on target to return query Chr, Start, End
+
 func (a *AxtHeavy) GetChrom() string {
-	return a.RName
+	return a.Chrom
 }
 func (a *AxtHeavy) GetChromStart() int {
-	return a.RStart - 1
+	return a.ChromStart
 }
 func (a *AxtHeavy) GetChromEnd() int {
-	return a.REnd
+	return a.ChromEnd
 }
