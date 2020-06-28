@@ -53,11 +53,10 @@ func main() {
 
 func mergeFa(files []string, outputFile string) {
 	ans := fasta.NewPipe()
-	go ans.ReadToChan(files)
 	ans.Wg.Add(1)
+	go ans.ReadToChan(files)
 	go fasta.WritingChannel(outputFile, ans.Stream, ans.Wg)
 	ans.Wg.Wait()
-
 }
 
 func faSortRecords(inFile string, outFile string, method string) {
