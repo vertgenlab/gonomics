@@ -1,7 +1,6 @@
 package fasta
 
 import (
-	"io"
 	"sync"
 	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -15,10 +14,17 @@ type FaPipe struct {
 	Wg     *sync.WaitGroup
 }
 
-func (pipe *FaPipe) ReadToChan(filename string) {
-	file := fileio.EasyOpen(filename)
-	for fa, done := NextFasta(file); !done; fa, done = NextFasta(file) {
-		pipe.Stream <- fa
+func (pipe *FaPipe) ReadToChan(files []string) {
+	//var curr *fileio.EasyReader
+	var fa *Fasta
+	var done bool
+	for _, each := range files {
+		//TODO: Figure out if we should declare os.File/EasyReader outside loop, can we re-use as a pointer?
+		curr := fileio.EasyOpen(each)
+		defer curr.Close()
+		for fa, done = NextFasta(curr); !done; fa, done = NextFasta(curr) {
+			pipe.Stream <- fa
+		}
 	}
 	close(pipe.Stream)
 }
@@ -41,6 +47,7 @@ func NewPipe() *FaPipe {
 
 func ReadToChan(filename string, output chan<- *Fasta) {
 	file := fileio.EasyOpen(filename)
+	defer file.Close()
 	for fa, done := NextFasta(file); !done; fa, done = NextFasta(file) {
 		output <- fa
 	}
@@ -72,9 +79,11 @@ func nextSeq(reader *fileio.EasyReader) []dna.Base {
 	return answer
 }
 
-func WritingChannel(file io.Writer, output <-chan *Fasta, wg *sync.WaitGroup) {
+func WritingChannel(filename string, output <-chan *Fasta, wg *sync.WaitGroup) {
+	writer := fileio.EasyCreate(filename)
+    defer writer.Close()
 	for fa := range output {
-		WriteFasta(file, fa, 50)
+		WriteFasta(writer, fa, 50)
 	}
 	wg.Done()
 }
