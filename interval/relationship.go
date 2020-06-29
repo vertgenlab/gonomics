@@ -104,7 +104,7 @@ func PrintRelationships() {
 
 	fmt.Println("Valid relationships are as follows")
 	fmt.Println("Top line:    target")
-	fmt.Println("Bottom line: query\n")
+	fmt.Println("Bottom line: query")
 	fmt.Printf("\"o\"  = %s", o)
 	fmt.Printf("\"oi\" = %s", oi)
 	fmt.Printf("\"d\"  = %s", d)
