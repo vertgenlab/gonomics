@@ -42,7 +42,7 @@ func main() {
 	}
 }
 
-func searchAxt(input string, output string) {
+func filterAxt(input string, output string) {
 	ioReader, ioWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
 	data := make(chan *axt.Axt)
 
@@ -72,8 +72,6 @@ func axtQueryGap(record *axt.Axt) bool {
 		return false
 	}
 }
-
-//TODO: Coming soon: axt alignment to Fasta
 
 func axtToFa(input string, output string, target string) {
 	ioReader, ioWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
