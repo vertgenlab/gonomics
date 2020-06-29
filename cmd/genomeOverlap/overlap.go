@@ -178,7 +178,7 @@ func main() {
 	flag.Parse()
 
 	if *helpRelationships {
-		printRelationships()
+		interval.PrintRelationships()
 		return
 	}
 
@@ -187,7 +187,7 @@ func main() {
 	}
 
 	if !interval.TestValidRelationship(*relationship) {
-		printRelationships()
+		interval.PrintRelationships()
 		log.Fatalln("ERROR: Invalid relationship", *relationship)
 	}
 
