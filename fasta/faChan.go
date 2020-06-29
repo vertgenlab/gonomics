@@ -9,12 +9,11 @@ import (
 )
 
 type FaPipe struct {
-	Stream chan *Fasta
 	StdOut chan *Fasta
 	Wg     *sync.WaitGroup
 }
 
-func (pipe *FaPipe) ReadToChan(files []string) {
+func ReadMuliFileToChan(pipe *FaPipe, files []string) {
 	//var curr *fileio.EasyReader
 	var fa *Fasta
 	var done bool
@@ -23,10 +22,10 @@ func (pipe *FaPipe) ReadToChan(files []string) {
 		curr := fileio.EasyOpen(each)
 		defer curr.Close()
 		for fa, done = NextFasta(curr); !done; fa, done = NextFasta(curr) {
-			pipe.Stream <- fa
+			pipe.StdOut <- fa
 		}
 	}
-	close(pipe.Stream)
+	close(pipe.StdOut)
 }
 
 /*
@@ -39,7 +38,6 @@ func (mc *FaPipe) SafeClose() {
 func NewPipe() *FaPipe {
 	var wg sync.WaitGroup
 	return &FaPipe{
-		Stream: make(chan *Fasta),
 		StdOut: make(chan *Fasta),
 		Wg:     &wg,
 	}
@@ -81,7 +79,7 @@ func nextSeq(reader *fileio.EasyReader) []dna.Base {
 
 func WritingChannel(filename string, output <-chan *Fasta, wg *sync.WaitGroup) {
 	writer := fileio.EasyCreate(filename)
-    defer writer.Close()
+	defer writer.Close()
 	for fa := range output {
 		WriteFasta(writer, fa, 50)
 	}

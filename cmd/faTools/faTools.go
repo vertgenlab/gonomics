@@ -54,8 +54,8 @@ func main() {
 func mergeFa(files []string, outputFile string) {
 	ans := fasta.NewPipe()
 	ans.Wg.Add(1)
-	go ans.ReadToChan(files)
-	go fasta.WritingChannel(outputFile, ans.Stream, ans.Wg)
+	go fasta.ReadMuliFileToChan(ans, files)
+	go fasta.WritingChannel(outputFile, ans.StdOut, ans.Wg)
 	ans.Wg.Wait()
 }
 
@@ -87,13 +87,13 @@ func faSubsetFrag(inputFile string, outputFile string, window string) {
 
 func setNewPrefix(inputFile string, outputFile string, prefix string) {
 	faPipe := fasta.NewPipe()
-	go fasta.ReadToChan(inputFile, faPipe.Stream)
+	go fasta.ReadToChan(inputFile, faPipe.StdOut)
 
 	var index int = 0
 	writer := fileio.EasyCreate(outputFile)
 	defer writer.Close()
 
-	for eachFa := range faPipe.Stream {
+	for eachFa := range faPipe.StdOut {
 		fasta.ChangePrefix(eachFa, prefix, index)
 		fasta.WriteFasta(writer, eachFa, 50)
 		index++
