@@ -73,7 +73,7 @@ func Write(filename string, records []*Fasta) {
 
 //TODO: this is a modified version of WriteToFileHandle.
 //My changes will break a lot of code so I will work slowly to slide this in to other functions
-func WriteHelper(file *fileio.EasyWriter, rec *Fasta, lineLength int) {
+func WriteFasta(file io.Writer, rec *Fasta, lineLength int) {
 	var err error
 	_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
 	common.ExitIfError(err)

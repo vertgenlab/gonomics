@@ -2,6 +2,7 @@ package fasta
 
 import (
 	"sync"
+	"io"
 	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -52,9 +53,9 @@ func nextSeq(reader *fileio.EasyReader) []dna.Base {
 	return answer
 }
 
-func WritingChannel(file *fileio.EasyWriter, output <-chan *Fasta, wg *sync.WaitGroup) {
+func WritingChannel(file io.Writer, output <-chan *Fasta, wg *sync.WaitGroup) {
 	for fa := range output {
-		WriteHelper(file, fa, 50)
+		WriteFasta(file, fa, 50)
 	}
 	wg.Done()
 }
