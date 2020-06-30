@@ -1,8 +1,8 @@
 package popgen
 
 import (
-	"math"
 	"github.com/vertgenlab/gonomics/numbers"
+	"math"
 )
 
 /*
@@ -14,7 +14,7 @@ Equations from this thesis that are replicated here are marked.
 
 //eq 2.1
 func AFSStationarity(p float64, alpha float64) float64 {
-	return (1-math.Exp(-alpha * (1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
+	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
 }
 
 func AFSStationarityClosure(alpha float64) func(float64) float64 {
@@ -24,7 +24,7 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 }
 
 func AFSSampleClosure(n int, k int, alpha float64) func(float64) float64 {
-	return func (p float64) float64 {
+	return func(p float64) float64 {
 		return AFSStationarity(p, alpha) * numbers.BinomialDist(n, k, p)
 	}
 }
@@ -38,12 +38,11 @@ func AFSSampleDensity(n int, k int, alpha float64) float64 {
 //eq 2.3
 func AlleleFrequencyProbability(i int, n int, alpha float64) float64 {
 	var denominator float64
-	for j := 1; j < n - 1; j++ {
+	for j := 1; j < n-1; j++ {
 		denominator = denominator + AFSSampleDensity(j, n, alpha)
 	}
 	return AFSSampleDensity(i, n, alpha) / denominator
 }
-
 
 //eq 2.4
 //afs array has a dummy variable in position 0, so loop starts at 1.
