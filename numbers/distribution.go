@@ -41,7 +41,7 @@ func GammaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha < 0 || beta < 0 || x < 0 {
 		log.Fatalf("Alpha, beta parameters and input value must be greater than or equal to 0 in the gamma distribution.")
 	}
-	return (math.Pow(beta, alpha) / math.Gamma(alpha)) * math.Pow(x, alpha - 1) * math.Exp(-beta * x)
+	return (math.Pow(beta, alpha) / math.Gamma(alpha)) * math.Pow(x, alpha-1) * math.Exp(-beta*x)
 }
 
 //returns an instantiation of a normal distribution for a particular mean and SD
@@ -65,7 +65,7 @@ func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 
 func PoissonLeftSummation(k int, lambda float64) float64 {
 	var answer float64 = 0
-	for i := 1; i < k + 1; i++ {
+	for i := 1; i < k+1; i++ {
 		answer = answer + PoissonDist(i, lambda)
 	}
 	return answer
@@ -73,22 +73,22 @@ func PoissonLeftSummation(k int, lambda float64) float64 {
 
 //The Poisson right sum is infinite but can be evaluated as 1 - the left hand sum, which is finite.
 func PoissonRightSummation(k int, lambda float64) float64 {
-	return 1 - PoissonLeftSummation(k - 1, lambda)
+	return 1 - PoissonLeftSummation(k-1, lambda)
 }
 
 func BinomialLeftSummation(n int, k int, p float64) float64 {
-	if k <= n / 2 {
+	if k <= n/2 {
 		return evaluateLeftBinomialSum(n, k, p)
 	} else {
-		return 1 - evaluateRightBinomialSum(n, k + 1, p)
+		return 1 - evaluateRightBinomialSum(n, k+1, p)
 	}
 }
 
 func BinomialRightSummation(n int, k int, p float64) float64 {
-	if k > n / 2 {
+	if k > n/2 {
 		return evaluateRightBinomialSum(n, k, p)
 	} else {
-		return 1 - evaluateLeftBinomialSum(n, k - 1, p)
+		return 1 - evaluateLeftBinomialSum(n, k-1, p)
 	}
 }
 
@@ -102,8 +102,29 @@ func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 
 func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
-	for i := 0; i < k + 1; i++ {
+	for i := 0; i < k+1; i++ {
 		answer = answer + BinomialDist(n, k, p)
+	}
+	return answer
+}
+
+//Measures the divergence between two probability distributions. Generally evaluated as an indefinite integral
+//So set start and end to arbitrarily large numbers such that p(>end) -> 0 if the function is supported to infinity.
+func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64) float64, start float64, end float64) float64 {
+	f := func(x float64) float64 {
+		return p(x) * math.Log2(p(x)/q(x))
+	}
+	return DefiniteIntegral(f, start, end)
+}
+
+//inclusive range
+func DiscreteKullbackLeiblerDivergence(p func(int) float64, q func(int) float64, start int, end int) float64 {
+	f := func(x int) float64 {
+		return p(x) * math.Log2(p(x)/q(x))
+	}
+	var answer float64 = 0
+	for i := start; i < end+1; i++ {
+		answer = answer + f(i)
 	}
 	return answer
 }
