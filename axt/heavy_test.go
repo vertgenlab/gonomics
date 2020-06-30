@@ -6,7 +6,7 @@ import (
 
 func TestAxtHeavy(t *testing.T) {
 	// Making sure methods for AxtHeavy overrule methods for Axt
-	a := &Axt{
+	a := Axt{
 		RName:      "R",
 		RStart:     0,
 		REnd:       10,
@@ -18,15 +18,12 @@ func TestAxtHeavy(t *testing.T) {
 
 	b := AxtHeavy{
 		Axt:        a,
-		Chrom:      "Heavy",
 		ChromSize:  200,
-		ChromStart: 50,
-		ChromEnd:   60,
 	}
 
-	if b.GetChrom() == a.GetChrom() ||
-		b.GetChromStart() == a.GetChromStart() ||
-		b.GetChromEnd() == a.GetChromEnd() {
-		t.Errorf("ERROR: Methods for Axt overrule methods for AxtHeavy")
+	if b.GetChrom() != a.GetChrom() ||
+		b.GetChromStart() != a.GetChromStart() ||
+		b.GetChromEnd() != a.GetChromEnd() {
+		t.Errorf("ERROR: Problem with Axt to AxtHeavy")
 	}
 }

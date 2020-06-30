@@ -1,19 +1,16 @@
 package axt
 
 type AxtHeavy struct {
-	*Axt
-	Chrom      string
+	Axt
 	ChromSize  int
-	ChromStart int
-	ChromEnd   int
 }
 
 func (a *AxtHeavy) GetChrom() string {
-	return a.Chrom
+	return a.Axt.GetChrom()
 }
 func (a *AxtHeavy) GetChromStart() int {
-	return a.ChromStart
+	return a.Axt.GetChromStart()
 }
 func (a *AxtHeavy) GetChromEnd() int {
-	return a.ChromEnd
+	return a.Axt.GetChromEnd()
 }
