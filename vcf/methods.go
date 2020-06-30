@@ -12,9 +12,6 @@ func (v *Vcf) GetChrom() string {
 	return v.Chr
 }
 
-func (v *Vcf) SetExclude() {
-	v.Chr = "EXCLUDE"
-}
 // to conform with bed standards the startpos will be zero base and the endpos will be 1 base
 // Example:
 // bed reg  |----|

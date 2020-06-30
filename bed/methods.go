@@ -17,10 +17,6 @@ func (b *Bed) GetChromEnd() int {
 	return int(b.ChromEnd)
 }
 
-func (b *Bed) SetExclude() {
-	b.Chrom = "EXCLUDE"
-}
-
 type BedSlice []*Bed
 
 func (b BedSlice) Len() int { return len(b) }

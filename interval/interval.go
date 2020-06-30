@@ -13,7 +13,6 @@ type Interval interface {
 	GetChromStart() int
 	GetChromEnd() int
 	WriteToFileHandle(*fileio.EasyWriter)
-	SetExclude()
 }
 
 type IntervalNode struct {

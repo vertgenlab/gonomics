@@ -19,10 +19,6 @@ func (a *Axt) GetChromEnd() int {
 	return int(a.REnd)
 }
 
-func (a *Axt) SetExclude() {
-a.RName = "EXCLUDE"
-}
-
 type AxtSlice []*Axt
 
 func (a AxtSlice) Len() int { return len(a) }

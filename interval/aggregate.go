@@ -20,9 +20,6 @@ func (a *AggregateInterval) GetChromStart() int {
 func (a *AggregateInterval) GetChromEnd() int {
 	return a.end
 }
-func (a *AggregateInterval) SetExclude() {
-	a.chr = "EXCLUDE"
-}
 
 // Write all intervals in the merge interval, should not be used for most queries
 func (a *AggregateInterval) WriteToFileHandle(file *fileio.EasyWriter) {
