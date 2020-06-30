@@ -27,8 +27,7 @@ func TestQuery(t *testing.T) {
 
 	//TODO: build in more types of relationship tests
 	answer := Query(tree, q, "e")
-
-	if reflect.DeepEqual(answer[0].(*bed.Bed), *q) {
+	if !reflect.DeepEqual(answer[0].(*bed.Bed), q) {
 		t.Errorf("ERROR: Problem with querying tree")
 	}
 }
