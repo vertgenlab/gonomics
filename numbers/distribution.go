@@ -62,3 +62,48 @@ func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 		return GammaDist(x, alpha, beta)
 	}
 }
+
+func PoissonLeftSummation(k int, lambda float64) float64 {
+	var answer float64 = 0
+	for i := 1; i < k + 1; i++ {
+		answer = answer + PoissonDist(i, lambda)
+	}
+	return answer
+}
+
+//The Poisson right sum is infinite but can be evaluated as 1 - the left hand sum, which is finite.
+func PoissonRightSummation(k int, lambda float64) float64 {
+	return 1 - PoissonLeftSummation(k - 1, lambda)
+}
+
+func BinomialLeftSummation(n int, k int, p float64) float64 {
+	if k <= n / 2 {
+		return evaluateLeftBinomialSum(n, k, p)
+	} else {
+		return 1 - evaluateRightBinomialSum(n, k + 1, p)
+	}
+}
+
+func BinomialRightSummation(n int, k int, p float64) float64 {
+	if k > n / 2 {
+		return evaluateRightBinomialSum(n, k, p)
+	} else {
+		return 1 - evaluateLeftBinomialSum(n, k - 1, p)
+	}
+}
+
+func evaluateRightBinomialSum(n int, k int, p float64) float64 {
+	var answer float64 = 0
+	for i := k; i <= n; i++ {
+		answer = answer + BinomialDist(n, k, p)
+	}
+	return answer
+}
+
+func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
+	var answer float64 = 0
+	for i := 0; i < k + 1; i++ {
+		answer = answer + BinomialDist(n, k, p)
+	}
+	return answer
+}
