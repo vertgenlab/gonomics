@@ -4,10 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"strings"
 )
 
 func usage() {
@@ -23,7 +25,7 @@ func main() {
 	var expectedNumArgs int = 2
 
 	var targetGaps *bool = flag.Bool("gap", false, "Find axt alignments when target contains Ns, but query does not")
-
+	var querySwap *string = flag.String("swap", "", "Swap target and query records. Must provide a `chrom.sizes` file containing query sequence lengths")
 	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -31,9 +33,11 @@ func main() {
 	input, output := flag.Arg(0), flag.Arg(1)
 
 	if *targetGaps {
-		searchAxt(input, output)
+		filterAxt(input, output)
 	} else if fasta.IsFasta(*concensus) {
 		axtToFa(input, output, *concensus)
+	} else if strings.Contains(*querySwap, ".sizes") {
+		QuerySwapAll(input, output, *querySwap)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -105,4 +109,22 @@ func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) *fasta.Fasta {
 		log.Fatalf("Error: Sequence length is not the same...\n")
 	}
 	return concensus
+}
+
+func QuerySwapAll(input string, output string, chromSize string) {
+	chrInfo := chromInfo.ReadToMap(chromSize)
+
+	file, axtWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
+	defer file.Close()
+
+	axtReader := make(chan *axt.Axt)
+
+	go axt.ReadToChan(file, axtReader)
+
+	var index int = 0
+	for each := range axtReader {
+		axt.WriteToFileHandle(axtWriter, axt.QuerySwap(each, chrInfo[each.QName].Size), index)
+		index++
+	}
+	axtWriter.Close()
 }

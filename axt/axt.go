@@ -147,3 +147,24 @@ func AxtInfo(input *Axt) string {
 	text = fmt.Sprintf("%s;%d;%d;%s;%d;%d;%t;%d", input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, input.QStrandPos, input.Score)
 	return text
 }
+
+func QuerySwap(in *Axt, qLen int64) *Axt {
+	var ans *Axt = &Axt{}
+	//perform swap
+	ans.RName, ans.QName = in.QName, in.RName
+	ans.QStart, ans.QEnd = in.RStart, in.REnd
+	//set to positive because target is always positive
+	ans.QStrandPos = true
+	ans.Score = in.Score
+
+	ans.RSeq, ans.QSeq = make([]dna.Base, len(in.QSeq)), in.RSeq
+	copy(ans.RSeq, in.QSeq)
+
+	if !in.QStrandPos {
+		ans.RStart, ans.REnd = qLen-in.QEnd, qLen-in.QStart
+		dna.ReverseComplement(ans.RSeq)
+	} else {
+		ans.RStart, ans.REnd = in.QStart, in.QEnd
+	}
+	return ans
+}

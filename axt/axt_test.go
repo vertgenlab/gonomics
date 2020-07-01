@@ -2,6 +2,7 @@ package axt
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 	"os"
 	"testing"
 )
@@ -45,4 +46,20 @@ func TestWriteAndRead(t *testing.T) {
 			t.Errorf("Deleting temp file %s gave an error.", tempFile)
 		}
 	}
+}
+
+func TestAxtSwap(t *testing.T) {
+	var queryLen int64 = 50
+	aTest := &Axt{
+		RName:      "TargetGenome",
+		RStart:     0,
+		REnd:       100,
+		QName:      "QueryGenome",
+		QStart:     20,
+		QEnd:       40,
+		QStrandPos: false,
+	}
+
+	aSwap := QuerySwap(aTest, queryLen)
+	log.Printf("%s", ToString(aSwap, 0))
 }
