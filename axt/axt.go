@@ -93,7 +93,6 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
 func GoReadToChan(filename string) chan *Axt {
 	answer := make(chan *Axt)
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 	go ReadToChan(file, answer)
 	return answer
 }

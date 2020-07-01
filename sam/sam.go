@@ -51,7 +51,6 @@ func ReadToChan(reader *fileio.EasyReader, output chan<- *SamAln) {
 func GoReadToChan(filename string) chan *SamAln {
 	answer := make(chan *SamAln)
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 	go ReadToChan(file, answer)
 	return answer
 }
