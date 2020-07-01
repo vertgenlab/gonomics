@@ -9,7 +9,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"strings"
 )
 
 func usage() {
@@ -25,7 +24,11 @@ func main() {
 	var expectedNumArgs int = 2
 
 	var targetGaps *bool = flag.Bool("gap", false, "Find axt alignments when target contains Ns, but query does not")
-	var querySwap *string = flag.String("swap", "", "Swap target and query records. Must provide a `chrom.sizes` file containing query sequence lengths")
+	var querySwap *bool = flag.Bool("swap", false, "Swap target and query records. Must provide a `target.sizes and query.sizes` file containing query sequence lengths")
+	
+	var tLen *string = flag.String("tLen", "", "target `chrom.sizes` file containing target sequence lengths")
+	var qLen *string = flag.String("qLen", "", "query `chrom.sizes` file containing query sequence lengths")
+	
 	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -36,8 +39,8 @@ func main() {
 		filterAxt(input, output)
 	} else if fasta.IsFasta(*concensus) {
 		axtToFa(input, output, *concensus)
-	} else if strings.Contains(*querySwap, ".sizes") {
-		QuerySwapAll(input, output, *querySwap)
+	} else if *querySwap {
+		QuerySwapAll(input, output, *tLen,*qLen)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -111,8 +114,9 @@ func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) *fasta.Fasta {
 	return concensus
 }
 
-func QuerySwapAll(input string, output string, chromSize string) {
-	chrInfo := chromInfo.ReadToMap(chromSize)
+func QuerySwapAll(input string, output string, targetLen string, queryLen string) {
+	targetInfo := chromInfo.ReadToMap(targetLen)
+	queryInfo := chromInfo.ReadToMap(queryLen)
 
 	file, axtWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
 	defer file.Close()
@@ -122,8 +126,10 @@ func QuerySwapAll(input string, output string, chromSize string) {
 	go axt.ReadToChan(file, axtReader)
 
 	var index int = 0
+	var curr *axt.Axt
 	for each := range axtReader {
-		axt.WriteToFileHandle(axtWriter, axt.QuerySwap(each, chrInfo[each.QName].Size), index)
+		curr = axt.QuerySwap(each, targetInfo[each.RName].Size, queryInfo[each.QName].Size)
+		axt.WriteToFileHandle(axtWriter, curr, index)
 		index++
 	}
 	axtWriter.Close()

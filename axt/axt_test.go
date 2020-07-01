@@ -2,6 +2,7 @@ package axt
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"os"
 	"testing"
@@ -49,17 +50,37 @@ func TestWriteAndRead(t *testing.T) {
 }
 
 func TestAxtSwap(t *testing.T) {
-	var queryLen int64 = 50
+	var targetLen int64 = 10
+	var queryLen int64 = 10
 	aTest := &Axt{
 		RName:      "TargetGenome",
-		RStart:     0,
-		REnd:       100,
+		RStart:     1,
+		REnd:       10,
 		QName:      "QueryGenome",
-		QStart:     20,
-		QEnd:       40,
+		QStart:     1,
+		QEnd:       10,
 		QStrandPos: false,
+		//RSeq: dna.StringToBases("CGTCCCTCGA"),
+		//QSeq: dna.StringToBases("CGTCCCTCGA"),
 	}
 
-	aSwap := QuerySwap(aTest, queryLen)
-	log.Printf("%s", ToString(aSwap, 0))
+	ans := &Axt{
+		RName:      "QueryGenome",
+		RStart:     1,
+		REnd:       10,
+		QName:      "TargetGenome",
+		QStart:     1,
+		QEnd:       10,
+		QStrandPos: false,
+		//RSeq: dna.StringToBases("CGTCCCTCGA"),
+		//QSeq: dna.StringToBases("CGTCCCTCGA"),
+	}
+
+	aSwap := QuerySwap(aTest, targetLen, queryLen)
+	//TODO: Add logic to test that can check reverse complemented sequences
+	if !isEqual(aSwap, ans) {
+		log.Printf("%s", ToString(aSwap, 0))
+		log.Printf("%s", ToString(ans, 0))
+		t.Errorf("Error: Swap axt did not yield the expected value...\n")
+	}
 }
