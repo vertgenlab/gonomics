@@ -23,10 +23,6 @@ func (s *SamAln) GetChromEnd() int {
 	return s.GetChromStart() + runlength
 }
 
-func (s *SamAln) SetExclude() {
-	s.RName = "EXCLUDE"
-}
-
 type SamSlice []*SamAln
 
 func (v SamSlice) Len() int { return len(v) }
