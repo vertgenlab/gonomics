@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 	"strings"
 )
 
@@ -20,13 +21,14 @@ type Genotype struct {
 
 type SampleIdMap struct {
 	FaIndex     map[string]int16
-	IndexAlelle map[string]int16
+	IndexAllele map[string]int16
 }
 
+//Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
 func HeaderToMaps(header *VcfHeader) *SampleIdMap {
 	var name string
 	var index, hapIdx int16
-	var hash *SampleIdMap = &SampleIdMap{FaIndex: make(map[string]int16), IndexAlelle: make(map[string]int16)}
+	var hash *SampleIdMap = &SampleIdMap{FaIndex: make(map[string]int16), IndexAllele: make(map[string]int16)}
 	for _, line := range header.Text {
 		if strings.HasPrefix(line, "##contig") {
 			name = strings.Split(strings.Split(line, "=")[2], ",")[0]
@@ -38,7 +40,7 @@ func HeaderToMaps(header *VcfHeader) *SampleIdMap {
 		} else if strings.HasPrefix(line, "#CHROM") {
 			words := strings.Split(line, "\t")[9:]
 			for hapIdx = 0; hapIdx < int16(len(words)); hapIdx++ {
-				hash.IndexAlelle[words[hapIdx]] = hapIdx
+				hash.IndexAllele[words[hapIdx]] = hapIdx
 			}
 		}
 	}
@@ -79,13 +81,30 @@ func GetAlleleGenotype(v *Vcf) []Genotype {
 	return answer
 }
 
+//builds hash to Gvcfs, for a single vcf line
 func GenotypeToMap(v *Vcf, names map[string]int16) map[uint64]*GVcf {
 	mapToGVcf := make(map[uint64]*GVcf)
 	return buildGenotypeMap(v, names, mapToGVcf)
 }
 
+//Parse Vcf header to quickly print sample names that appear inside Vcf
+func PrintSampleNames(header *VcfHeader) string {
+	var ans string = ""
+	for _, line := range header.Text {
+		if strings.HasPrefix(line, "#CHROM") {
+			//starts at first sample column
+			words := strings.Split(line, "\t")
+			for i := 9; i < len(words); i++ {
+				ans += fmt.Sprintf("%s\n", words[i])
+			}
+			return ans
+		}
+	}
+	return ans
+}
+
 func buildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf) map[uint64]*GVcf {
-	code := chromPosToUInt64(int(names[v.Chr]), int(v.Pos-1))
+	code := ChromPosToUInt64(int(names[v.Chr]), int(v.Pos-1))
 	_, ok := mapToGVcf[code]
 	if !ok {
 		mapToGVcf[code] = VcfToGenotype(v)
@@ -93,7 +112,7 @@ func buildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf
 	return mapToGVcf
 }
 
-func chromPosToUInt64(chrom int, start int) uint64 {
+func ChromPosToUInt64(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
 	var answer uint64 = chromCode | uint64(start)
@@ -118,7 +137,7 @@ func ViewGenotypeVcf(v *Vcf) {
 
 func PrintReOrder(v *Vcf, samples []int16) {
 	gVcf := VcfToGenotype(ReorderSampleColumns(v, samples))
-	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(gVcf))
+	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(gVcf))
 }
 
 func vcfPrettyPrint(v *Vcf) {

@@ -132,6 +132,9 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 }
 
 func isHeterozygous(gt Genotype) bool {
+	if gt.AlleleOne < 0 || gt.AlleleTwo < 0 {
+		return false
+	}
 	if gt.AlleleOne != gt.AlleleTwo {
 		return true
 	} else {
@@ -140,6 +143,9 @@ func isHeterozygous(gt Genotype) bool {
 }
 
 func isHomozygous(gt Genotype) bool {
+	if gt.AlleleOne < 0 || gt.AlleleTwo < 0 {
+		return false
+	}
 	if gt.AlleleOne == gt.AlleleTwo {
 		return true
 	} else {
