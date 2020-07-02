@@ -12,6 +12,7 @@ type Interval interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
+	//TODO: Change write to file handle to input io.Writer
 	WriteToFileHandle(*fileio.EasyWriter)
 }
 
