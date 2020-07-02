@@ -121,3 +121,46 @@ func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
 	}
 	return mergeRecord
 }
+
+func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
+	gt := GetAlleleGenotype(v)
+	if isHomozygous(gt[parentOne]) && isHomozygous(gt[parentTwo]) && isHeterozygous(gt[F1]) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func isHeterozygous(gt Genotype) bool {
+	if gt.AlleleOne != gt.AlleleTwo {
+		return true
+	} else {
+		return false
+	}
+}
+
+func isHomozygous(gt Genotype) bool {
+	if gt.AlleleOne == gt.AlleleTwo {
+		return true
+	} else {
+		return false
+	}
+}
+
+func Heterozygous(samples []int16, gt []Genotype) bool {
+	for _, Aa := range samples {
+		if !isHeterozygous(gt[Aa]) {
+			return false
+		}
+	}
+	return true
+}
+
+func Homozygous(samples []int16, gt []Genotype) bool {
+	for _, Aa := range samples {
+		if !isHomozygous(gt[Aa]) {
+			return false
+		}
+	}
+	return true
+}
