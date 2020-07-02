@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
+	//"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"sync"
+	//"sync"
 	//"strings"
 )
 
@@ -31,7 +31,7 @@ func main() {
 	var sampleName *bool = flag.Bool("sampleNames", false, "Get names of samples that appear in Vcf header")
 
 	var samSplit *string = flag.String("sam", "", "Provide a sam alignment of the F1 hybrid to split file two sam alignments``")
-	var prefix *string = flag.String("prefix", "", "Name output sam files by a defined prefix``")
+	//var prefix *string = flag.String("prefix", "", "Name output sam files by a defined prefix``")
 	flag.Parse()
 	if len(flag.Args()) != expectedNumArgs {
 		if *sampleName && len(flag.Args()) == 1 {
@@ -40,7 +40,7 @@ func main() {
 			header := vcf.ReadHeader(file)
 			log.Printf("%s", vcf.PrintSampleNames(header))
 		} else if *samSplit != "" {
-			GoRoutinesSnpSearch(*samSplit, flag.Arg(0), parental[0], parental[1], *prefix, *f1Genome, 4)
+			//GoRoutinesSnpSearch(*samSplit, flag.Arg(0), parental[0], parental[1], *prefix, *f1Genome, 4)
 			//SnpSearch(*samSplit, flag.Arg(0), *f1Genome, parental[0], parental[1], *prefix)
 		} else {
 			flag.Usage()
@@ -88,7 +88,7 @@ func (i *arrayFlags) Set(value string) error {
 	*i = append(*i, value)
 	return nil
 }
-
+//TODO: Run a small test to make sure functions are still working.
 /*
 func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne string, alleleTwo string, prefix string) {
 	var wg sync.WaitGroup
@@ -195,7 +195,7 @@ func SnpSearch(samfile string, genotypeVcf string, cross string, alleleOne strin
 		}
 	}
 }*/
-
+/*
 func GoRoutinesSnpSearch(samfile string, genotypeVcf string, parentOne string, parentTwo, prefix string, f1 string, threads int) {
 	var wg sync.WaitGroup
 	gvcf := make(chan *vcf.Vcf)
@@ -258,17 +258,17 @@ func snpAnalysis(snpDb map[uint64]*vcf.GVcf, sampleHash *vcf.SampleIdMap, parent
 			case 'S':
 				query += read.Cigar[i].RunLength
 			case 'I':
-				code = vcf.ChromPosToUInt64(int(sampleHash.FaIndex[read.RName]), int(target))
-				_, ok = snpDb[code]
-				if ok {
-					gV = snpDb[code]
-					if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[0]]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[0]]].AlleleTwo]) == 0 {
-						parentAllele1++
-					}
-					if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[1]]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[1]]].AlleleTwo]) == 0 {
-						parentAllele2++
-					}
-				}
+				//code = vcf.ChromPosToUInt64(int(sampleHash.FaIndex[read.RName]), int(target))
+				//_, ok = snpDb[code]
+				//if ok {
+				//	gV = snpDb[code]
+				//	if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[0]]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[0]]].AlleleTwo]) == 0 {
+				//		parentAllele1++
+				//	}
+				//	if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[1]]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Seq[gV.Genotypes[sampleHash.IndexAllele[parents[1]]].AlleleTwo]) == 0 {
+				//		parentAllele2++
+				//	}
+				//}
 				query += read.Cigar[i].RunLength
 			case 'D':
 				code = vcf.ChromPosToUInt64(int(sampleHash.FaIndex[read.RName]), int(target))
@@ -314,4 +314,4 @@ func snpAnalysis(snpDb map[uint64]*vcf.GVcf, sampleHash *vcf.SampleIdMap, parent
 		}
 	}
 	wg.Done()
-}
+}*/
