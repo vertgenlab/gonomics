@@ -78,10 +78,10 @@ func nextSeq(reader *fileio.EasyReader) []dna.Base {
 	return answer
 }
 
-func WritingChannel(filename string, output <-chan *Fasta, wg *sync.WaitGroup) {
-	writer := fileio.EasyCreate(filename)
+func WritingChannel(toWrite <-chan *Fasta, wg *sync.WaitGroup, fileOutput string) {
+	writer := fileio.EasyCreate(fileOutput)
 	defer writer.Close()
-	for fa := range output {
+	for fa := range toWrite {
 		WriteFasta(writer, fa, 50)
 
 	}
