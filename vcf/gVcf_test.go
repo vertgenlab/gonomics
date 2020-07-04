@@ -15,7 +15,7 @@ func TestASFilter(t *testing.T) {
 	go ReadToChan(file, reader)
 
 	var passFilter []*Vcf
-	var parentalOne, parentalTwo, fOne int16 = sampleHash.IndexAlelle["LITC"], sampleHash.IndexAlelle["MATA"], sampleHash.IndexAlelle["CL12_wgs_merged"]
+	var parentalOne, parentalTwo, fOne int16 = sampleHash.IndexAllele["LITC"], sampleHash.IndexAllele["MATA"], sampleHash.IndexAllele["CL12_wgs_merged"]
 	for each := range reader {
 		if ASFilter(each, parentalOne, parentalTwo, fOne) {
 			//PrintReOrder(each, []int16{parentalOne, parentalTwo, fOne})
