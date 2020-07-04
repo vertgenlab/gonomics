@@ -2,19 +2,19 @@ package fasta
 
 import (
 	"sync"
-	"io"
+	//"io"
 	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"strings"
 )
 
-type FaPipe struct {
-	StdOut chan *Fasta
+type FaChannel struct {
+	StreamBuf chan *Fasta
 	Wg     *sync.WaitGroup
 }
 
-func ReadMultiFilesToChan(pipe *FaPipe, files []string) {
+func ReadMultiFilesToChan(faChan *FaChannel, files []string) {
 	//var curr *fileio.EasyReader
 	var fa *Fasta
 	var done bool
@@ -23,10 +23,10 @@ func ReadMultiFilesToChan(pipe *FaPipe, files []string) {
 		curr := fileio.EasyOpen(each)
 		defer curr.Close()
 		for fa, done = NextFasta(curr); !done; fa, done = NextFasta(curr) {
-			pipe.StdOut <- fa
+			faChan.StreamBuf <- fa
 		}
 	}
-	close(pipe.StdOut)
+	close(faChan.StreamBuf)
 }
 
 /*
@@ -36,10 +36,10 @@ func (mc *FaPipe) SafeClose() {
 	})
 }*/
 
-func NewPipe() *FaPipe {
+func NewFaChannel() *FaChannel {
 	var wg sync.WaitGroup
-	return &FaPipe{
-		StdOut: make(chan *Fasta),
+	return &FaChannel{
+		StreamBuf: make(chan *Fasta),
 		Wg:     &wg,
 	}
 }
