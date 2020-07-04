@@ -13,7 +13,7 @@ type FaPipe struct {
 	Wg     *sync.WaitGroup
 }
 
-func ReadMuliFileToChan(pipe *FaPipe, files []string) {
+func ReadMultiFilesToChan(pipe *FaPipe, files []string) {
 	//var curr *fileio.EasyReader
 	var fa *Fasta
 	var done bool

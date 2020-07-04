@@ -32,7 +32,7 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
-	if len(flag.Args()) < 1 {
+	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
@@ -45,16 +45,16 @@ func main() {
 	case *rename != "":
 		setNewPrefix(inputFile, outputFile, *rename)
 	case *merge:
-		mergeFa(flag.Args(), *outMerge)
+		combineFastaFiles(flag.Args(), *outMerge)
 	default:
 		flag.Usage()
 	}
 }
 
-func mergeFa(files []string, outputFile string) {
+func combineFastaFiles(files []string, outputFile string) {
 	ans := fasta.NewPipe()
 	ans.Wg.Add(1)
-	go fasta.ReadMuliFileToChan(ans, files)
+	go fasta.ReadMultiFilesToChan(ans, files)
 	go fasta.WritingChannel(outputFile, ans.StdOut, ans.Wg)
 	ans.Wg.Wait()
 }
