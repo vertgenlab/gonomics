@@ -58,9 +58,7 @@ func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
 }
 
 func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
-	var curr *Vcf
-	var done bool
-	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		output <- curr
 	}
 	close(output)
@@ -120,20 +118,9 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	return &header
 }
 
-func processHeader(header *VcfHeader, line string) {
-	var err error
-	if strings.HasPrefix(line, "#") {
-		header.Text = append(header.Text, line)
-	}
-	if err != nil {
-		log.Fatal("There was an error reading the header line")
-	}
-}
-
 //split vcf into slices to deal with different chromosomes
 func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	var answer [][]*Vcf
-
 	for i := 0; i < len(fastaRecord); i++ {
 		var curr []*Vcf
 		for j := 0; j < len(vcfRecord); j++ {
@@ -156,24 +143,6 @@ func WriteHeader(file *os.File) {
 		_, err = fmt.Fprintf(file, "%s\n", header[h])
 	}
 	common.ExitIfError(err)
-}
-
-func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
-	var err error
-	header := BetterHeader(fa)
-	for h := 0; h < len(header); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header[h])
-	}
-	common.ExitIfError(err)
-}
-
-func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	WriteBetterHeader(file, fa)
-	for _, each := range data {
-		WriteVcf(file, each)
-	}
 }
 
 //TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
@@ -251,27 +220,5 @@ func MakeHeader() []string {
 		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
 		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
-	return header
-}
-
-func BetterHeader(fa []*fasta.Fasta) []string {
-	var header []string
-	t := time.Now()
-	header = append(header, "##fileformat=VCFv4.2\n"+
-		"##fileDate="+t.Format("20060102")+"\n"+
-		"##source=github.com/vertgenlab/gonomics")
-	header = append(header, "##phasing=none\n"+
-		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
-		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
-		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
-	var text string = ""
-	if fa != nil {
-		for i := 0; i < len(fa); i++ {
-			text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
-		}
-	}
-	text += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES"
-	header = append(header, text)
 	return header
 }

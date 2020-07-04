@@ -157,6 +157,10 @@ func BinomCoefficient(n int, k int) int {
 	return carefulMultDivInt(numer, denom)
 }
 
+func Factorial(n int) int {
+	return int(math.Gamma(float64(n + 1)))
+}
+
 func RandIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }

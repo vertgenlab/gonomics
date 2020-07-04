@@ -2,6 +2,7 @@ package fasta
 
 import (
 	"sync"
+	"io"
 	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -82,6 +83,7 @@ func WritingChannel(filename string, output <-chan *Fasta, wg *sync.WaitGroup) {
 	defer writer.Close()
 	for fa := range output {
 		WriteFasta(writer, fa, 50)
+
 	}
 	wg.Done()
 }
