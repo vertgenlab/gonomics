@@ -4,6 +4,7 @@ package interval
 // DOI: 10.1038/s41598-019-41451-3
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
 	"sort"
 )
 
@@ -11,6 +12,8 @@ type Interval interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
+	//TODO: Change write to file handle to input io.Writer
+	WriteToFileHandle(*fileio.EasyWriter)
 }
 
 type IntervalNode struct {
@@ -73,6 +76,7 @@ func BuildTree(intervals []Interval) map[string]*IntervalNode {
 	chrMap := splitIntervalsByChr(intervals)
 
 	for idx, val := range chrMap {
+		sortIntervals(val, yLess)
 		answer[idx] = buildTree(val)
 	}
 
@@ -88,7 +92,7 @@ func buildTree(intervals []Interval) *IntervalNode {
 	//TODO: Optimize the sorting to get rid of xLess sort up front by copying pLeft and pRight and feeding the original xLess sorted child into the recursive call
 	// 1. Sort P by y-value, return an array of intervals Py.
 	sortIntervals(p, xLess)
-	sortIntervals(pY, yLess)
+	//sortIntervals(pY, yLess)
 
 	var answer *IntervalNode
 
@@ -197,7 +201,12 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 		// 5. if vsplit. interval. x ∈ [x1, x2] and vsplit. interval. y ∈ [y1, y2] then
 		if withinRange(tree.val, relationship, x1, x2, y1, y2) {
 			// 6. Report the interval in vsplit, S = S ∪ {vsplit. interval}
-			answer = append(answer, tree.val)
+			switch z := tree.val.(type) {
+			case *AggregateInterval:
+				answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+			default:
+				answer = append(answer, z)
+			}
 		} // 7. end if
 		return answer // 8. return S
 	}
@@ -225,11 +234,21 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			for j != -1 && j < len(v.rChild.data) && float32(v.rChild.data[j].GetChromEnd()) <= y2 {
 				if relationship == "m" || relationship == "mi" {
 					if v.rChild.data[j].GetChromStart() != v.rChild.data[j].GetChromEnd() {
-						answer = append(answer, v.rChild.data[j])
+						switch z := v.rChild.data[j].(type) {
+						case *AggregateInterval:
+							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+						default:
+							answer = append(answer, z)
+						}
 					}
 				} else {
 					// 15. Report interval, S = S ∪ {v. rchild. data[j]}
-					answer = append(answer, v.rChild.data[j])
+					switch z := v.rChild.data[j].(type) {
+					case *AggregateInterval:
+						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+					default:
+						answer = append(answer, z)
+					}
 				}
 				j++ // 16. j=j+1
 			} // 17. end while
@@ -258,10 +277,20 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			for j != -1 && j < len(v.lChild.data) && float32(v.lChild.data[j].GetChromEnd()) <= y2 {
 				if relationship == "m" || relationship == "mi" {
 					if v.lChild.data[j].GetChromStart() != v.lChild.data[j].GetChromEnd() {
-						answer = append(answer, v.lChild.data[j])
+						switch z := v.lChild.data[j].(type) {
+						case *AggregateInterval:
+							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+						default:
+							answer = append(answer, z)
+						}
 					}
 				} else {
-					answer = append(answer, v.lChild.data[j])
+					switch z := v.lChild.data[j].(type) {
+					case *AggregateInterval:
+						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+					default:
+						answer = append(answer, z)
+					}
 				} // 31. Report interval, S = S ∪ {v. lchild. data[j]}
 				j++ // 32. j=j+1
 			} // 33. end while
@@ -275,7 +304,12 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 
 	// 39. if v is a leaf and v. interval. x ∈ [x1, x2] and v. interval. y ∈ [y1, y2] then
 	if v.val != nil && withinRange(v.val, relationship, x1, x2, y1, y2) {
-		answer = append(answer, v.val) // 40. Report the interval in v, S = S ∪ {v. interval}
+		switch z := v.val.(type) {
+		case *AggregateInterval:
+			answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+		default:
+			answer = append(answer, z)
+		} // 40. Report the interval in v, S = S ∪ {v. interval}
 	} // 41. end if
 	return answer // 42. return S
 }
