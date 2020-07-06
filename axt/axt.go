@@ -90,6 +90,13 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
 	close(answer)
 }
 
+func GoReadToChan(filename string) chan *Axt {
+	answer := make(chan *Axt)
+	file := fileio.EasyOpen(filename)
+	go ReadToChan(file, answer)
+	return answer
+}
+
 func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
 	rSeq, rDone := fileio.EasyNextRealLine(reader)

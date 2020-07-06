@@ -3,6 +3,7 @@ package interval
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -26,8 +27,7 @@ func TestQuery(t *testing.T) {
 
 	//TODO: build in more types of relationship tests
 	answer := Query(tree, q, "e")
-
-	if reflect.DeepEqual(answer[0].(*bed.Bed), *q) {
+	if !reflect.DeepEqual(answer[0].(*bed.Bed), q) {
 		t.Errorf("ERROR: Problem with querying tree")
 	}
 }
@@ -279,6 +279,9 @@ func (t *testInterval) GetChromStart() int {
 }
 func (t *testInterval) GetChromEnd() int {
 	return t.end
+}
+func (t *testInterval) WriteToFileHandle(file *fileio.EasyWriter) {
+	return
 }
 
 func generateIntervals(num int, rangeLow int, rangeHigh int) []Interval {
