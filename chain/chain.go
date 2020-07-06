@@ -3,6 +3,8 @@ package chain
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
@@ -31,6 +33,13 @@ type BaseStats struct {
 	QBases int
 }
 
+//Struct used to construct liftover
+type BigChain struct {
+	Chain
+	TSeq []dna.Base
+	QSeq []dna.Base
+}
+
 type HeaderComments struct {
 	HashTag []string
 }
@@ -51,6 +60,14 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 		answer <- data
 	}
 	close(answer)
+}
+
+func ToBigChain(ch *Chain, target *fasta.Fasta, query *fasta.Fasta) *BigChain {
+	return &BigChain{
+		Chain: *ch,
+		TSeq:  target.Seq,
+		QSeq:  query.Seq,
+	}
 }
 
 func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderComments, wg *sync.WaitGroup) {
