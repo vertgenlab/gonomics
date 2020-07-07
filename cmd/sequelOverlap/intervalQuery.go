@@ -1,8 +1,13 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
+	"path"
 	"sync"
 )
 
@@ -64,4 +69,48 @@ func writeToFile(answerChan <-chan queryAnswer, outfile *fileio.EasyWriter, merg
 			}
 		}
 	}
+}
+
+func goReadToIntervalChan(inputFile string) chan interval.Interval {
+	answer := make(chan interval.Interval)
+	go readToIntervalChan(inputFile, answer)
+	return answer
+}
+
+func readToIntervalChan(inputFile string, send chan interval.Interval) {
+	// How the file is read is dependent on the file extension
+	filetype := path.Ext(inputFile)
+
+	if filetype == ".gz" {
+		// If terminal extension is ".gz" then trim off the gz and get the next extension
+		filetype = path.Ext(inputFile[0 : len(inputFile)-len(filetype)])
+	}
+
+	switch filetype {
+	case ".bed":
+		receive := bed.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+
+	case ".axt":
+		receive := axt.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+
+	case ".vcf":
+		receive, _ := vcf.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+
+	case ".sam":
+		receive := sam.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+		//TODO: Other filetypes
+	}
+	close(send)
 }
