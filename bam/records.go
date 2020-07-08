@@ -1,4 +1,5 @@
 package bam
+
 /*
 import(
 	"encoding/binary"
@@ -13,13 +14,13 @@ func bamLine(reader *BamReader) {
   		//reader.PipeIo.Data = make([]byte, blockSize)
   		reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize)
   		reader.PipeIo.Data = make([]byte, blockSize)
-  		
+
   		var i, j int = 0, 0
   		for i = 0; i < int(blockSize); {
   			bai := BinAln{}
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.RName)
   			common.ExitIfError(reader.PipeIo.Debug)
-  		
+
   			//position
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.Pos)
   			common.ExitIfError(reader.PipeIo.Debug)
@@ -45,13 +46,13 @@ func bamLine(reader *BamReader) {
 
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.NextPos)
   			common.ExitIfError(reader.PipeIo.Debug)
-  		
-  	
-  		
+
+
+
   			reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.TLength)
   			common.ExitIfError(reader.PipeIo.Debug)
 
-  			
+
 
   			j, reader.PipeIo.Debug = reader.gunzip.Read(reader.PipeIo.Data[i:])
   			common.ExitIfError(reader.PipeIo.Debug)
@@ -68,13 +69,13 @@ func bamLine(reader *BamReader) {
   		//ref name
   		//reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.RName)
   		//common.ExitIfError(reader.PipeIo.Debug)
-  		
+
   		//position
   		//reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bai.Pos)
   		//common.ExitIfError(reader.PipeIo.Debug)
 
 
-  		
-  		
+
+
  	}
 }*/

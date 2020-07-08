@@ -4,12 +4,11 @@ import (
 	"testing"
 	//"github.com/vertgenlab/gonomics/fileio"
 	//"log"
-
 )
 
 func TestBgzipBlocks(t *testing.T) {
-	
-	Read("testdata/rabsCanuHicTenX.gasAcu1.bam")
+
+	Read("testdata/small.bam")
 	//bam := NewBamReader("testdata/rabsCanuHicTenX.gasAcu1.bam")
 	//defer bam.File.Close()
 	//ReadHeader(bam)

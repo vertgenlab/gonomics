@@ -1,21 +1,22 @@
 package bam
 
 import (
-	"encoding/binary"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/common"
-	"log"
-	"strings"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/dna"
-	"bytes"
 	"bufio"
-	"io"
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
+	"strings"
 )
+
 //Note: This is not a bam struct but palce holders for pointers to decode binary file
 //4.2 The BAM format defined in hts specs
 
@@ -42,19 +43,18 @@ func BamBlockToSam(header *BamHeader, bam *BamData) {
 	//var buffer bytes.Buffer
 	var ans *sam.SamAln = &sam.SamAln{
 		QName: bam.QName,
-		Flag: int64(bam.Flag),
+		Flag:  int64(bam.Flag),
 		RName: header.Chroms[bam.RName].Name,
-		Pos: int64(bam.Pos),
-		MapQ: int64(bam.MapQ),
+		Pos:   int64(bam.Pos),
+		MapQ:  int64(bam.MapQ),
 		RNext: "",
 		PNext: int64(bam.NextPos),
-		TLen: int64(header.Chroms[bam.RName].Size),
-		Seq: dna.StringToBases(bamSequence(bam.Seq)),
-		Qual: qualToString(bam.Qual),
+		TLen:  int64(header.Chroms[bam.RName].Size),
+		Seq:   dna.StringToBases(bamSequence(bam.Seq)),
+		Qual:  qualToString(bam.Qual),
 		//Extra:
 	}
 	log.Printf("%v\n", sam.SamAlnToString(ans))
-
 
 }
 
@@ -84,7 +84,7 @@ func qualToString(qual []byte) string {
 			fmt.Fprintf(writer, "%c", qual[i]+33)
 		}
 	}
-	
+
 	writer.Flush()
 	return buffer.String()
 }
@@ -100,16 +100,16 @@ func NewBamReader(filename string) *BamReader {
 }
 
 type BamHeader struct {
-	Txt         string
-	ChromSize   map[string]int
-	decoder     *cInfo
-	Chroms []*chromInfo.ChromInfo
+	Txt       string
+	ChromSize map[string]int
+	decoder   *cInfo
+	Chroms    []*chromInfo.ChromInfo
 }
 
 type BamReader struct {
-	File 	*os.File
-	gunzip 	*Bgzip
-	PipeIo  *BgzipPipe
+	File   *os.File
+	gunzip *Bgzip
+	PipeIo *BgzipPipe
 }
 
 func ReadHeader(reader *BamReader) *BamHeader {
@@ -152,7 +152,6 @@ func ReadHeader(reader *BamReader) *BamHeader {
 	return bamHeader
 }
 
-
 func decodeBinaryInt32(reader *BamReader) int {
 	var key int32 = 0
 	reader.PipeIo.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &key)
@@ -177,115 +176,114 @@ func Read(filename string) {
 	}
 }
 
-func bamToChan(reader *BamReader, binaryData chan <- *BamData) {
+func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 	var blockSize int32
-  	var flagNc    uint32
-  	var stats   uint32
-  	var err error
-  	//binaryData := make(chan *BamData)
-  	for {
-  		block := &BamData{}
-  		buf := bytes.NewBuffer([]byte{})
-  		// read block size
-  		if err = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize); err != nil {
-  			if err == io.EOF {
-  				break
-      		}
-      		common.ExitIfError(err)
-  		}
-  		//read block data
-  		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.RName); err != nil {
-  			common.ExitIfError(err)
-  		}
-  		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Pos); err != nil {
-      		common.ExitIfError(err)
-      	}
-      	if err = binary.Read(reader.gunzip, binary.LittleEndian, &stats); err != nil {
-      		common.ExitIfError(err)
-      	}
-      	block.Bai      = uint16((stats >> 16) & 0xffff)
-    	block.MapQ     = uint8 ((stats >>  8) & 0xff)
-    	block.RNLength = uint8 ((stats >>  0) & 0xff)
-    	if err = binary.Read(reader.gunzip, binary.LittleEndian, &flagNc); err != nil {
-    		common.ExitIfError(err)
-    	}
-    	// get Flag and NCigarOp from FlagNc
-    	block.Flag     = uint16(flagNc >> 16)
-    	block.NCigarOp = uint16(flagNc & 0xffff)
-    	if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.LSeq); err != nil {
-    		common.ExitIfError(err)
-    	}
-    	if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextRefID); err != nil {
-    		common.ExitIfError(err)
-    	}
-    	if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextPos); err != nil {
-    		common.ExitIfError(err)
-    	}
-    	if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.TLength); err != nil {
-    	 	common.ExitIfError(err)
-    	}
-    	// parse the read name
-    	var b byte
-    	for {
-    		if err = binary.Read(reader.gunzip, binary.LittleEndian, &b); err != nil {
-    			common.ExitIfError(err)
+	var flagNc uint32
+	var stats uint32
+	var err error
+	//binaryData := make(chan *BamData)
+	for {
+		block := &BamData{}
+		buf := bytes.NewBuffer([]byte{})
+		// read block size
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize); err != nil {
+			if err == io.EOF {
+				close(binaryData)
+				break
+			}
+			common.ExitIfError(err)
+		}
+		//read block data
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.RName); err != nil {
+			common.ExitIfError(err)
+		}
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Pos); err != nil {
+			common.ExitIfError(err)
+		}
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &stats); err != nil {
+			common.ExitIfError(err)
+		}
+		block.Bai = uint16((stats >> 16) & 0xffff)
+		block.MapQ = uint8((stats >> 8) & 0xff)
+		block.RNLength = uint8((stats >> 0) & 0xff)
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &flagNc); err != nil {
+			common.ExitIfError(err)
+		}
+		// get Flag and NCigarOp from FlagNc
+		block.Flag = uint16(flagNc >> 16)
+		block.NCigarOp = uint16(flagNc & 0xffff)
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.LSeq); err != nil {
+			common.ExitIfError(err)
+		}
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextRefID); err != nil {
+			common.ExitIfError(err)
+		}
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextPos); err != nil {
+			common.ExitIfError(err)
+		}
+		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.TLength); err != nil {
+			common.ExitIfError(err)
+		}
+		// parse the read name
+		var b byte
+		for {
+			if err = binary.Read(reader.gunzip, binary.LittleEndian, &b); err != nil {
+				common.ExitIfError(err)
 
-    		}
-    		if b == 0 {
-        		block.QName = buf.String()
-        		break
-      		}
-      		buf.WriteByte(b)
-    	}
-    	var i int
-    	// parse cigar block
-    	block.Cigar = make(BamCigar, block.NCigarOp)
-    	for i := 0; i < int(block.NCigarOp); i++ {
-    		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Cigar[i]); err != nil {
-    			common.ExitIfError(err)
-    		}
-    	}
-    	 // parse seq
-    	block.Seq = make([]byte, (block.LSeq+1)/2)
-    	for i = 0; i < int((block.LSeq+1)/2); i++ {
-    		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Seq[i]); err != nil {
-    			common.ExitIfError(err)
-    		}
-    	}
-    	block.Qual = make([]byte, block.LSeq)
-    	for i = 0; i < int(block.LSeq); i++ {
-    		if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Qual[i]); err != nil {
-    			common.ExitIfError(err)
-    		}
-    	}
-    	// read auxiliary data
-    	position := 8*4 + int(block.RNLength) + 4*int(block.NCigarOp) + int((block.LSeq + 1)/2) + int(block.LSeq)
-    	//for i := 0; position + i < int(blockSize); {
+			}
+			if b == 0 {
+				block.QName = buf.String()
+				break
+			}
+			buf.WriteByte(b)
+		}
+		var i int
+		// parse cigar block
+		block.Cigar = make(BamCigar, block.NCigarOp)
+		for i := 0; i < int(block.NCigarOp); i++ {
+			if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Cigar[i]); err != nil {
+				common.ExitIfError(err)
+			}
+		}
+		// parse seq
+		block.Seq = make([]byte, (block.LSeq+1)/2)
+		for i = 0; i < int((block.LSeq+1)/2); i++ {
+			if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Seq[i]); err != nil {
+				common.ExitIfError(err)
+			}
+		}
+		block.Qual = make([]byte, block.LSeq)
+		for i = 0; i < int(block.LSeq); i++ {
+			if err = binary.Read(reader.gunzip, binary.LittleEndian, &block.Qual[i]); err != nil {
+				common.ExitIfError(err)
+			}
+		}
+		// read auxiliary data
+		position := 8*4 + int(block.RNLength) + 4*int(block.NCigarOp) + int((block.LSeq+1)/2) + int(block.LSeq)
+		//for i := 0; position + i < int(blockSize); {
 
-    	//}
-    	if _, err = io.CopyN(ioutil.Discard, reader.gunzip, int64(blockSize) - int64(position)); err != nil {
-    		common.ExitIfError(err)
-    	}
-    	//log.Printf("%v\n", block)
-    	binaryData <- block
-  	}
+		//}
+		if _, err = io.CopyN(ioutil.Discard, reader.gunzip, int64(blockSize)-int64(position)); err != nil {
+			common.ExitIfError(err)
+		}
+		//log.Printf("%v\n", block)
+		binaryData <- block
+	}
 
 }
 
+/*
 type BamAuxiliary struct {
 	Tag   [2]byte
 	Value interface{}
-}
+}*/
 type BamCigar []uint32
 
 func bamBlocks(bams []*BamData) {
-	for i:= 0; i < len(bams);i ++ {
+	for i := 0; i < len(bams); i++ {
 		log.Printf("%v\n", bams[i])
 	}
 }
-
-
-
 
 type CigarByte struct {
 	Op  byte
@@ -293,9 +291,9 @@ type CigarByte struct {
 }
 
 type cInfo struct {
-	Text    string
-	Len 	int32
-	NRef 	int32
+	Text string
+	Len  int32
+	NRef int32
 }
 
 //allocates memory for new bam header
@@ -304,12 +302,11 @@ func MakeHeader() *BamHeader {
 }
 
 type BgzipPipe struct {
-	Bufio bytes.Buffer
-	Data []byte
+	Bufio     bytes.Buffer
+	Data      []byte
 	BytesRead int
-	Debug error
+	Debug     error
 }
-
 
 //func bamBlockToSam()
 /*
@@ -406,4 +403,3 @@ func bamTryAgain(reader *BamReader) {
     	//log.Printf("Block Value: %v\n", block)
   	}
 }*/
-	

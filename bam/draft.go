@@ -1,6 +1,5 @@
 package bam
 
-
 //func bamBlockToSam()
 /*
 func bamTryAgain(reader *BamReader) {
