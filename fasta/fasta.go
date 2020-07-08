@@ -130,8 +130,3 @@ func FastaMap(ref []*Fasta) map[string][]dna.Base {
 	}
 	return m
 }
-
-func ConstructContigs(fa *Fasta) *Fasta {
-	var ans *Fasta = &Fasta{Name: fa.Name, Seq: make([]dna.Base, 0, len(fa.Seq))}
-	
-}
