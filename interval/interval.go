@@ -192,7 +192,6 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	// 3. Find the split node vsplit in range tree T where the paths
 	// to x1 and x2 split, or the leaf where both paths end.
 	vSplit := findSplit(x1, x2, tree)
-
 	if vSplit == nil {
 		return nil
 	}
@@ -326,6 +325,10 @@ func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
 }
 
 func findSplit(x1, x2 float32, node *IntervalNode) *IntervalNode {
+
+	if node.val != nil { // Handles case where only 1 node is present in tree
+		return node
+	}
 
 	for node.val == nil {
 		if float32(node.xMid) < x1 {
