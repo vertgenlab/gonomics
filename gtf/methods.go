@@ -1,7 +1,6 @@
 package gtf
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -18,6 +17,5 @@ func (g *Gene) GetChromEnd() int {
 }
 
 func (g *Gene) WriteToFileHandle(file *fileio.EasyWriter) {
-	err := WriteToFileHandle(file, g)
-	common.ExitIfError(err)
+	WriteToFileHandle(file, g)
 }

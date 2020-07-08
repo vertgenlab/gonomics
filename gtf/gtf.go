@@ -183,32 +183,33 @@ func Read(filename string) map[string]*Gene {
 func Write(filename string, records map[string]*Gene) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
-	var err error
-
 	for _, k := range records { //for each gene
-		err = WriteToFileHandle(file, k)
-		common.ExitIfError(err)
+		WriteToFileHandle(file, k)
 	}
 }
 
-func WriteToFileHandle(file io.Writer, gene *Gene) error {
+func WriteToFileHandle(file io.Writer, gene *Gene) {
 	var err error
 	for i := 0; i < len(gene.Transcripts); i++ { //for each transcript associated with that gene
 		_, err = fmt.Fprintf(file, "%s\n", GtfTranscriptToString(gene.Transcripts[i], gene))
+		common.ExitIfError(err)
 		for j := 0; j < len(gene.Transcripts[i].Exons); j++ {
 			_, err = fmt.Fprintf(file, "%s\n", GtfExonToString(gene.Transcripts[i].Exons[j], gene.Transcripts[i], gene))
+			common.ExitIfError(err)
 			if gene.Transcripts[i].Exons[j].FiveUtr != nil { //if cds, 5utr, and 3utr are not nil pointers the underlying struct
 				_, err = fmt.Fprintf(file, "%s\n", Gtf5UtrToString(gene.Transcripts[i].Exons[j], gene.Transcripts[i], gene))
+				common.ExitIfError(err)
 			}
 			if gene.Transcripts[i].Exons[j].Cds != nil {
 				_, err = fmt.Fprintf(file, "%s\n", GtfCdsToString(gene.Transcripts[i].Exons[j], gene.Transcripts[i], gene))
+				common.ExitIfError(err)
 			}
 			if gene.Transcripts[i].Exons[j].ThreeUtr != nil {
 				_, err = fmt.Fprintf(file, "%s\n", Gtf3UtrToString(gene.Transcripts[i].Exons[j], gene.Transcripts[i], gene))
+				common.ExitIfError(err)
 			}
 		}
 	}
-	return err
 }
 
 func GtfTranscriptToString(t *Transcript, g *Gene) string {
