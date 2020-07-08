@@ -1,5 +1,5 @@
 package bam
-
+/*
 import(
 	"encoding/binary"
 	"github.com/vertgenlab/gonomics/common"
@@ -77,4 +77,4 @@ func bamLine(reader *BamReader) {
   		
   		
  	}
-}
+}*/

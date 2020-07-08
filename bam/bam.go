@@ -77,7 +77,7 @@ func bamSequence(seq []byte) string {
 func qualToString(qual []byte) string {
 	var buffer bytes.Buffer
 	writer := bufio.NewWriter(&buffer)
-	if string(qual) == "*" {
+	if strings.Contains(string(qual), "\n") {
 		fmt.Fprintf(writer, "%c", '*')
 	} else {
 		for i := 0; i < len(qual); i++ {
