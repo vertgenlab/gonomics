@@ -35,6 +35,7 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base) (*Variant, error) {
 	var answer *Variant
 	var err error
+
 	overlappingGenes := interval.Query(tree, v, "any")
 
 	if len(overlappingGenes) > 1 {
@@ -44,9 +45,8 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 	var annotatingGene *Gene
 	if len(overlappingGenes) > 0 {
 		annotatingGene = overlappingGenes[0].(*Gene)
+		answer = vcfToVariant(v, annotatingGene, seq)
 	}
-
-	answer = vcfToVariant(v, annotatingGene, seq)
 
 	return answer, err
 }
@@ -92,11 +92,11 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	var seqPos int = int(variant.Pos) - 1
 	var currCDS *CDS = variant.NearestCDS
 	seqPos -= determineFrame(variant)
-	for ;seqPos < 0; seqPos++ {
-		if seqPos < currCDS.Start -1 {
+	for ; seqPos < int(variant.Pos - 1); seqPos++ {
+		if seqPos < currCDS.Start-1 {
 			seqPos = currCDS.Prev.End - 1
 			currCDS = currCDS.Prev
-		} else if seqPos > currCDS.End - 1 {
+		} else if seqPos > currCDS.End-1 {
 			seqPos = currCDS.Next.Start - 1
 			currCDS = currCDS.Next
 		}
@@ -106,27 +106,28 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	refBases = append(refBases, dna.StringToBases(variant.Ref)...)
 	altBases = append(altBases, dna.StringToBases(variant.Alt)...)
 	seqPos += len(dna.StringToBases(variant.Ref))
-	for offset := 1; len(refBases)%3 != 0; offset++ {
-		if seqPos + offset > currCDS.End - 1 {
+	var offset int
+	for offset = 0; len(refBases)%3 != 0; offset++ {
+		if seqPos+offset > currCDS.End-1 {
 			seqPos = currCDS.Next.Start - 1
 			currCDS = currCDS.Next
 		}
-		refBases = append(refBases, seq[variant.Chr][seqPos + offset])
+		refBases = append(refBases, seq[variant.Chr][seqPos+offset])
 	}
-	for offset := 1; len(altBases)%3 != 0; offset++ {
-		if seqPos + offset > currCDS.End - 1 {
+	for offset = 0; len(altBases)%3 != 0; offset++ {
+		if seqPos+offset > currCDS.End-1 {
 			seqPos = currCDS.Next.Start - 1
 			currCDS = currCDS.Next
 		}
-		altBases = append(altBases, seq[variant.Chr][seqPos + offset])
+		altBases = append(altBases, seq[variant.Chr][seqPos+offset])
 	}
 	variant.AARef = dna.TranslateSeq(refBases)
 	variant.AAAlt = dna.TranslateSeq(altBases)
-	variant.AAPos = int(math.Round((float64(variant.CDNAPos)/3) + 0.4)) // Add 0.4 so pos will always round up
+	variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) // Add 0.4 so pos will always round up
 }
 
 func determineFrame(v *Variant) int {
-	return (int(v.Pos) - v.NearestCDS.Start)%3 + v.NearestCDS.Frame
+	return (int(v.Pos)-v.NearestCDS.Start)%3 + v.NearestCDS.Frame
 }
 
 func VariantToHGVS(variant *Variant) string {
