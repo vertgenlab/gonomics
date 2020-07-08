@@ -84,6 +84,9 @@ func WriteFasta(file io.Writer, rec *Fasta, lineLength int) {
 			common.ExitIfError(err)
 		}
 	}
+	//New line character
+	_, err = fmt.Fprint(file, "\n")
+	common.ExitIfError(err)
 }
 
 func WriteGroups(filename string, groups [][]*Fasta) error {
@@ -126,4 +129,9 @@ func FastaMap(ref []*Fasta) map[string][]dna.Base {
 		}
 	}
 	return m
+}
+
+func ConstructContigs(fa *Fasta) *Fasta {
+	var ans *Fasta = &Fasta{Name: fa.Name, Seq: make([]dna.Base, 0, len(fa.Seq))}
+	
 }

@@ -9,41 +9,6 @@ import (
 	"strings"
 )
 
-type FaChannel struct {
-	StreamBuf chan *Fasta
-	Wg     *sync.WaitGroup
-}
-
-func ReadMultiFilesToChan(faChan *FaChannel, files []string) {
-	//var curr *fileio.EasyReader
-	var fa *Fasta
-	var done bool
-	for _, each := range files {
-		//TODO: Figure out if we should declare os.File/EasyReader outside loop, can we re-use as a pointer?
-		curr := fileio.EasyOpen(each)
-		defer curr.Close()
-		for fa, done = NextFasta(curr); !done; fa, done = NextFasta(curr) {
-			faChan.StreamBuf <- fa
-		}
-	}
-	close(faChan.StreamBuf)
-}
-
-/*
-func (mc *FaPipe) SafeClose() {
-	mc.Once.Do(func() {
-		close(mc.StdIn)
-	})
-}*/
-
-func NewFaChannel() *FaChannel {
-	var wg sync.WaitGroup
-	return &FaChannel{
-		StreamBuf: make(chan *Fasta),
-		Wg:     &wg,
-	}
-}
-
 func ReadToChan(filename string, output chan<- *Fasta) {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -51,6 +16,12 @@ func ReadToChan(filename string, output chan<- *Fasta) {
 		output <- fa
 	}
 	close(output)
+}
+
+func GoReadToChan(filename string) <-chan *Fasta {
+	output := make(chan *Fasta)
+	go ReadToChan(filename, output)
+	return output
 }
 
 func NextFasta(reader *fileio.EasyReader) (*Fasta, bool) {
@@ -88,8 +59,38 @@ func WritingChannel(toWrite <-chan *Fasta, wg *sync.WaitGroup, fileOutput string
 	wg.Done()
 }
 
-func GoReadToChan(filename string) <-chan *Fasta {
-	output := make(chan *Fasta)
-	go ReadToChan(filename, output)
-	return output
+func ReadMultiFilesToChan(faChan *FaChannel, files []string) {
+	var fa *Fasta
+	var done bool
+	for _, each := range files {
+		//TODO: Figure out if we should declare os.File/EasyReader outside loop, can we re-use as a pointer? Is curr thread safe?
+		curr := fileio.EasyOpen(each)
+		for fa, done = NextFasta(curr); !done; fa, done = NextFasta(curr) {
+			faChan.StreamBuf <- fa
+		}
+		curr.Close()
+	}
+	close(faChan.StreamBuf)
+}
+
+type FaChannel struct {
+	StreamBuf chan *Fasta
+	SyncWg *sync.WaitGroup
+	Cmd *sync.Once
+}
+
+func NewFaChannel() *FaChannel {
+	var wg sync.WaitGroup
+	var o sync.Once
+	return &FaChannel{
+		StreamBuf: make(chan *Fasta),
+		SyncWg:     &wg,
+		Cmd: &o,
+	}
+}
+
+func (fa *FaChannel) SafeClose() {
+	fa.Cmd.Do(func() {
+		close(fa.StreamBuf)
+	})
 }

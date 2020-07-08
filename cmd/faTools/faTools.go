@@ -40,16 +40,17 @@ func main() {
 			flag.Usage()
 		}
 	} else {
+		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 }
 
 func combineFastaFiles(files []string, outputFile string) {
 	ans := fasta.NewFaChannel()
-	ans.Wg.Add(1)
+	ans.SyncWg.Add(1)
 	go fasta.ReadMultiFilesToChan(ans, files)
-	go fasta.WritingChannel(outputFile, ans.StreamBuf, ans.Wg)
-	ans.Wg.Wait()
+	go fasta.WritingChannel(ans.StreamBuf, ans.SyncWg, outputFile)
+	ans.SyncWg.Wait()
 }
 
 func faSortRecords(inFile string, outFile string, method string) {
@@ -79,14 +80,14 @@ func faSubsetFrag(inputFile string, outputFile string, window string) {
 }
 
 func renameRecords(inputFile string, outputFile string, prefix string) {
-	faPipe := fasta.NewFaChannel()
-	go fasta.ReadToChan(inputFile, faPipe.StreamBuf)
+	faChannel := fasta.NewFaChannel()
+	go fasta.ReadToChan(inputFile, faChannel.StreamBuf)
 
 	var index int = 0
 	writer := fileio.EasyCreate(outputFile)
 	defer writer.Close()
 
-	for eachFa := range faPipe.StreamBuf {
+	for eachFa := range faChannel.StreamBuf {
 		fasta.RenameFaRecord(eachFa, prefix, index)
 		fasta.WriteFasta(writer, eachFa, 50)
 		index++

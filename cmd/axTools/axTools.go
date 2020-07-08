@@ -31,7 +31,7 @@ func main() {
 	input, output := flag.Arg(0), flag.Arg(1)
 
 	if *targetGaps {
-		searchAxt(input, output)
+		filterAxt(input, output)
 	} else if fasta.IsFasta(*concensus) {
 		axtToFa(input, output, *concensus)
 	} else {
