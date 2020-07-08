@@ -26,12 +26,6 @@ type Vcf struct {
 	Notes  string
 }
 
-//Might get rid of this
-type VCF struct {
-	Header *VcfHeader
-	Vcf    []*Vcf
-}
-
 type VcfHeader struct {
 	Text []string
 }
@@ -95,15 +89,6 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 		return nil, true
 	}
 	return processVcfLine(line), false
-}
-
-func ReadVcf(filename string) *VCF {
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	header := ReadHeader(file)
-	vcfRecords := Read(filename)
-	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
 func ReadHeader(er *fileio.EasyReader) *VcfHeader {

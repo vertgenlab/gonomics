@@ -22,7 +22,7 @@ func TestASFilter(t *testing.T) {
 			passFilter = append(passFilter, each)
 		}
 	}
-	var currGt []Genotype
+	var currGt []Sample
 	for i := 0; i < len(passFilter); i++ {
 		currGt = GetAlleleGenotype(passFilter[i])
 		if isHeterozygous(currGt[parentalOne]) || isHeterozygous(currGt[parentalTwo]) || isHomozygous(currGt[fOne]) {

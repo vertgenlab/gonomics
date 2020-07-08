@@ -131,7 +131,7 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 	}
 }
 
-func isHeterozygous(gt Genotype) bool {
+func isHeterozygous(gt Sample) bool {
 	if gt.AlleleOne < 0 || gt.AlleleTwo < 0 {
 		return false
 	}
@@ -142,7 +142,7 @@ func isHeterozygous(gt Genotype) bool {
 	}
 }
 
-func isHomozygous(gt Genotype) bool {
+func isHomozygous(gt Sample) bool {
 	if gt.AlleleOne < 0 || gt.AlleleTwo < 0 {
 		return false
 	}
@@ -153,7 +153,7 @@ func isHomozygous(gt Genotype) bool {
 	}
 }
 
-func Heterozygous(samples []int16, gt []Genotype) bool {
+func Heterozygous(samples []int16, gt []Sample) bool {
 	for _, Aa := range samples {
 		if !isHeterozygous(gt[Aa]) {
 			return false
@@ -162,7 +162,7 @@ func Heterozygous(samples []int16, gt []Genotype) bool {
 	return true
 }
 
-func Homozygous(samples []int16, gt []Genotype) bool {
+func Homozygous(samples []int16, gt []Sample) bool {
 	for _, Aa := range samples {
 		if !isHomozygous(gt[Aa]) {
 			return false

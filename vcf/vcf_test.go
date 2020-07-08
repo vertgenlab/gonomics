@@ -49,3 +49,23 @@ func TestWriteAndRead(t *testing.T) {
 		os.Remove(tempFile)
 	}
 }
+
+func TestReadToChanTwo(t *testing.T) {
+	alpha := ReadGVcf("testdata/pacbio.vcf")
+	var savedFromAlpha []*Vcf
+	for v := range alpha.Vcfs {
+		savedFromAlpha = append(savedFromAlpha, v)
+	}
+	alpha.Reader.Close()
+	beta := fileio.EasyOpen("testdata/pacbio.vcf")
+	vcfData := make(chan *Vcf)
+	go ReadToChan(beta, vcfData)
+	var i int = 0
+	for each := range vcfData {
+		if !isEqual(each, savedFromAlpha[i]) {
+			t.Errorf("Error: Read channels are not matching\n")
+		}
+		i++
+	}
+}
+

@@ -3,17 +3,28 @@ package vcf
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
-)
+	"sync"
 
+)
+//Could also call it VcfChan or HeavyVcf
 type GVcf struct {
-	Seq       [][]dna.Base
-	Genotypes []Genotype
+	Reader *fileio.EasyReader
+	Header *VcfHeader
+	Vcfs    chan *Vcf
+	SyncWg *sync.WaitGroup
 }
 
-type Genotype struct {
+type Genotypes struct {
+	Vcf
+	Seq       [][]dna.Base
+	Genotypes []Sample
+}
+
+type Sample struct {
 	AlleleOne int16
 	AlleleTwo int16
 	Phased    bool
@@ -22,6 +33,17 @@ type Genotype struct {
 type SampleIdMap struct {
 	FaIndex     map[string]int16
 	IndexAllele map[string]int16
+}
+
+func ReadGVcf(filename string) *GVcf {
+	var ans *GVcf = &GVcf{}
+	var wg sync.WaitGroup
+	ans.Reader = fileio.EasyOpen(filename)
+	ans.Header = ReadHeader(ans.Reader)
+	ans.Vcfs = make(chan *Vcf)
+	ans.SyncWg = &wg
+	go ReadToChan(ans.Reader, ans.Vcfs)
+	return ans
 }
 
 //Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
@@ -47,9 +69,8 @@ func HeaderToMaps(header *VcfHeader) *SampleIdMap {
 	return hash
 }
 
-func VcfToGenotype(v *Vcf) *GVcf {
-	gVcf := &GVcf{Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
-	return gVcf
+func VcfToGenotype(v *Vcf) *Genotypes {
+	return &Genotypes{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
 }
 
 func getAltBases(alt string) [][]dna.Base {
@@ -61,29 +82,29 @@ func getAltBases(alt string) [][]dna.Base {
 	return answer
 }
 
-func GetAlleleGenotype(v *Vcf) []Genotype {
+func GetAlleleGenotype(v *Vcf) []Sample {
 	text := strings.Split(v.Notes, "\t")
 	var hap string
 	var alleles []string
-	var answer []Genotype = make([]Genotype, len(text))
+	var answer []Sample = make([]Sample, len(text))
 	for i := 0; i < len(text); i++ {
 		hap = strings.Split(text[i], ":")[0]
 		if strings.Compare(hap, "./.") == 0 || strings.Compare(hap, ".|.") == 0 {
-			answer[i] = Genotype{AlleleOne: -1, AlleleTwo: -1, Phased: false}
+			answer[i] = Sample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
 		} else if strings.Contains(hap, "|") {
 			alleles = strings.SplitN(hap, "|", 2)
-			answer[i] = Genotype{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true}
+			answer[i] = Sample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true}
 		} else {
 			alleles = strings.SplitN(hap, "/", 2)
-			answer[i] = Genotype{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false}
+			answer[i] = Sample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false}
 		}
 	}
 	return answer
 }
 
 //builds hash to Gvcfs, for a single vcf line
-func GenotypeToMap(v *Vcf, names map[string]int16) map[uint64]*GVcf {
-	mapToGVcf := make(map[uint64]*GVcf)
+func GenotypeToMap(v *Vcf, names map[string]int16) map[uint64]*Genotypes {
+	mapToGVcf := make(map[uint64]*Genotypes)
 	return buildGenotypeMap(v, names, mapToGVcf)
 }
 
@@ -103,7 +124,7 @@ func PrintSampleNames(header *VcfHeader) string {
 	return ans
 }
 
-func buildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf) map[uint64]*GVcf {
+func buildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*Genotypes) map[uint64]*Genotypes {
 	code := ChromPosToUInt64(int(names[v.Chr]), int(v.Pos-1))
 	_, ok := mapToGVcf[code]
 	if !ok {
@@ -131,20 +152,20 @@ func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
 }
 
 func ViewGenotypeVcf(v *Vcf) {
-	gVcf := VcfToGenotype(v)
-	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(gVcf))
+	Genotypes := VcfToGenotype(v)
+	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(Genotypes))
 }
 
 func PrintReOrder(v *Vcf, samples []int16) {
-	gVcf := VcfToGenotype(ReorderSampleColumns(v, samples))
-	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(gVcf))
+	Genotypes := VcfToGenotype(ReorderSampleColumns(v, samples))
+	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(Genotypes))
 }
 
 func vcfPrettyPrint(v *Vcf) {
 	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, v.Notes)
 }
 
-func genotypeToString(sample *GVcf) string {
+func genotypeToString(sample *Genotypes) string {
 	var answer string = ""
 	for i := 0; i < len(sample.Genotypes); i++ {
 		answer += helperGenotypeToString(sample, i)
@@ -152,7 +173,7 @@ func genotypeToString(sample *GVcf) string {
 	return answer
 }
 
-func helperGenotypeToString(sample *GVcf, i int) string {
+func helperGenotypeToString(sample *Genotypes, i int) string {
 	if sample.Genotypes[i].AlleleOne < 0 {
 		return "NoData "
 	} else {
