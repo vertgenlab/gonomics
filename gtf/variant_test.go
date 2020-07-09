@@ -2,7 +2,6 @@ package gtf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/vcf"
 	"testing"
@@ -44,7 +43,10 @@ func TestVcfToVariant(t *testing.T) {
 	// Variant c.2A>C p.H1P
 	tree := GenesToIntervalTree(inGtf)
 	answer, err := VcfToVariant(inVcf, tree, inSeq)
-	common.ExitIfError(err)
+
+	if err != nil {
+		t.Errorf("%s", err)
+	}
 
 	fmt.Println(answer)
 }
