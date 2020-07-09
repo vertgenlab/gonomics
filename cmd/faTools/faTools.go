@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/bed"
+	//"github.com/vertgenlab/gonomics/bed"
 	"log"
 	"strings"
 )
@@ -101,11 +101,12 @@ func TrimFasta(fa *fasta.Fasta, start int, end int) *fasta.Fasta {
 	return fa
 }
 
+/*
 func constructContigs(faFile string, bedFile string) {
 	regions := make(chan *bed.Bed)
 	bedHash := make(map[string][]*bed.Bed)
 	go bed.ReadToChan(bedFile, regions)
-	
+
 	for b := range regions {
 		bedHash[b.Chrom] = append(bedHash[b.Chrom], b)
 	}
@@ -116,8 +117,8 @@ func constructContigs(faFile string, bedFile string) {
 	var curr []*bed.Bed
 	for i := range faChannel.Stream {
 		curr = bedHash[i.Name]
-		
+
 	}
 
 
-}
+}*/
