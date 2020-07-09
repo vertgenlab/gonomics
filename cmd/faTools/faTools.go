@@ -46,14 +46,6 @@ func main() {
 	}
 }
 
-func combineFastaFiles(files []string, outputFile string) {
-	ans := fasta.NewFaChannel()
-	ans.SyncWg.Add(1)
-	go fasta.ReadMultiFilesToChan(ans, files)
-	go fasta.WritingChannel(ans.Stream, ans.SyncWg, outputFile)
-	ans.SyncWg.Wait()
-}
-
 func faSortRecords(inFile string, outFile string, method string) {
 	fa := fasta.Read(inFile)
 
@@ -119,6 +111,14 @@ func constructContigs(faFile string, bedFile string) {
 		curr = bedHash[i.Name]
 
 	}
+}
 
+func combineFastaFiles(files []string, outputFile string) {
+	ans := fasta.NewFaChannel()
+	ans.SyncWg.Add(1)
+	go fasta.ReadMultiFilesToChan(ans, files)
+	go fasta.WritingChannel(ans.Stream, ans.SyncWg, outputFile)
+	ans.SyncWg.Wait()
+}
 
-}*/
+*/
