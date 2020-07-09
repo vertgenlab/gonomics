@@ -11,7 +11,7 @@ func (ch *Chain) GetChrom() string {
 	return ch.TName
 }
 
-// Chains are 0-base
+// Chains are 0-base, half open
 func (ch *Chain) GetChromStart() int {
 	if ch.TStrand {
 		return ch.TStart
