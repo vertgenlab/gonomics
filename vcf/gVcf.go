@@ -3,18 +3,18 @@ package vcf
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"sync"
-
 )
+
 //Could also call it VcfChan or HeavyVcf
 type GVcf struct {
 	Reader *fileio.EasyReader
 	Header *VcfHeader
-	Vcfs    chan *Vcf
+	Vcfs   chan *Vcf
 	SyncWg *sync.WaitGroup
 }
 
