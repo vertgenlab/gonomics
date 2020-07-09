@@ -50,7 +50,7 @@ func combineFastaFiles(files []string, outputFile string) {
 	ans := fasta.NewFaChannel()
 	ans.SyncWg.Add(1)
 	go fasta.ReadMultiFilesToChan(ans, files)
-	go fasta.WritingChannel(ans.StreamBuf, ans.SyncWg, outputFile)
+	go fasta.WritingChannel(ans.Stream, ans.SyncWg, outputFile)
 	ans.SyncWg.Wait()
 }
 
@@ -82,13 +82,13 @@ func faSubsetFrag(inputFile string, outputFile string, window string) {
 
 func renameRecords(inputFile string, outputFile string, prefix string) {
 	faChannel := fasta.NewFaChannel()
-	go fasta.ReadToChan(inputFile, faChannel.StreamBuf)
+	go fasta.ReadToChan(inputFile, faChannel.Stream)
 
 	var index int = 0
 	writer := fileio.EasyCreate(outputFile)
 	defer writer.Close()
 
-	for eachFa := range faChannel.StreamBuf {
+	for eachFa := range faChannel.Stream {
 		fasta.RenameFaRecord(eachFa, prefix, index)
 		fasta.WriteFasta(writer, eachFa, 50)
 		index++
@@ -107,7 +107,7 @@ func constructContigs(faFile string, bedFile string) {
 	go bed.ReadToChan(bedFile, regions)
 	
 	for b := range regions {
-		bedHash[b.Chrom] = append(b.Chrom, b)
+		bedHash[b.Chrom] = append(bedHash[b.Chrom], b)
 	}
 
 	faChannel := fasta.NewFaChannel()
