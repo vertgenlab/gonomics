@@ -66,31 +66,31 @@ func ReadMultiFilesToChan(faChan *FaChannel, files []string) {
 		//TODO: Figure out if we should declare os.File/EasyReader outside loop, can we re-use as a pointer? Is curr thread safe?
 		curr := fileio.EasyOpen(each)
 		for fa, done = NextFasta(curr); !done; fa, done = NextFasta(curr) {
-			faChan.StreamBuf <- fa
+			faChan.Stream <- fa
 		}
 		curr.Close()
 	}
-	close(faChan.StreamBuf)
+	close(faChan.Stream)
 }
 
 type FaChannel struct {
-	StreamBuf chan *Fasta
+	Stream chan *Fasta
 	SyncWg *sync.WaitGroup
-	Cmd *sync.Once
+	Cmd    *sync.Once
 }
 
 func NewFaChannel() *FaChannel {
 	var wg sync.WaitGroup
 	var o sync.Once
 	return &FaChannel{
-		StreamBuf: make(chan *Fasta),
-		SyncWg:     &wg,
-		Cmd: &o,
+		Stream: make(chan *Fasta),
+		SyncWg: &wg,
+		Cmd:    &o,
 	}
 }
 
 func (fa *FaChannel) SafeClose() {
 	fa.Cmd.Do(func() {
-		close(fa.StreamBuf)
+		close(fa.Stream)
 	})
 }
