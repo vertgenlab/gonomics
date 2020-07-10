@@ -3,6 +3,7 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"strings"
 )
 
@@ -107,19 +108,21 @@ func sameRecord(a *Vcf, b *Vcf) bool {
 	return false
 }
 
-func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
-	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Alt: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
-	if len(a.Ref) < len(b.Ref) {
-		mergeRecord.Ref += b.Ref
-	} else {
-		mergeRecord.Ref += a.Ref
+//Returns a vcf line with a selection of samples:
+func ByNames(gvcf *GVcf, list []string, writer *fileio.EasyWriter) {
+	//ans := make(chan *Vcf)
+	sampleHash := HeaderToMaps(gvcf.Header)
+	var listIndex []int16 = make([]int16, len(list))
+	for i := 0; i < len(listIndex); i++ {
+		//look up alt allele index belonging to each string
+		listIndex[i] = sampleHash.IndexAllele[list[i]]
 	}
-	if len(a.Alt) < len(b.Alt) {
-		mergeRecord.Alt += b.Alt
-	} else {
-		mergeRecord.Alt += a.Alt
+
+	for record := range gvcf.Vcfs {
+		WriteVcf(writer, ReorderSampleColumns(record, listIndex))
 	}
-	return mergeRecord
+	//close(ans)
+	//return ans
 }
 
 func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
@@ -170,3 +173,20 @@ func Homozygous(samples []int16, gt []Sample) bool {
 	}
 	return true
 }
+
+//TODO: merge sample columns from many VCF files
+/*
+func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
+	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Alt: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
+	if len(a.Ref) < len(b.Ref) {
+		mergeRecord.Ref += b.Ref
+	} else {
+		mergeRecord.Ref += a.Ref
+	}
+	if len(a.Alt) < len(b.Alt) {
+		mergeRecord.Alt += b.Alt
+	} else {
+		mergeRecord.Alt += a.Alt
+	}
+	return mergeRecord
+}*/
