@@ -13,7 +13,7 @@ func usage() {
 	fmt.Print(
 		"filterGenotypes - a gonomics tool to filter genotyped Vcfs containing multiple samples\n\n" +
 			"Usage:\n" +
-			"  ./filterGenotypes [options] input output [.vcf/.gz] \n\n")
+			"  ./filterGenotypes [options] input.vcf output.vcf\n\n")
 	flag.PrintDefaults()
 }
 
@@ -22,11 +22,11 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	var parental arrayFlags
-	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf\nMust match Vcf Header exactly``")
-	var f1Genome *string = flag.String("f1", "", "Define of f1 hybrid sample that appears heterozygous in the genotype Vcf\nMust match Vcf Header exactly``")
-	var sampleName *bool = flag.Bool("sampleNames", false, "Get names of samples that appear in Vcf header\n(Default: /dev/stdout)")
+	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf .Must match Vcf Header exactly and include second `name -parent two -f1 name`")
+	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf. Must match Vcf Header exactly and include `name -parent one -parent two`")
+	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: /dev/stdout)")
 
-	var list *string = flag.String("byname", "", "Provide a name`.txt` file containing a list of sample names to filter samples of interest, one name per line")
+	var list *string = flag.String("byname", "", "Filter samples of interest by providing a name`.txt` file containing a list of sample names\nOne name per line")
 
 	flag.Parse()
 	if len(flag.Args()) != expectedNumArgs {
