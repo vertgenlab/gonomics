@@ -157,9 +157,13 @@ func QuerySwap(in *Axt, tLen int64, qLen int64) *Axt {
 	ans.QStrandPos = in.QStrandPos
 	ans.Score = in.Score
 
-	ans.RSeq, ans.QSeq = make([]dna.Base, len(in.QSeq)), in.RSeq
+	ans.RSeq = make([]dna.Base, len(in.QSeq))
 	copy(ans.RSeq, in.QSeq)
 
+	ans.QSeq = make([]dna.Base, len(in.RSeq))
+	copy(ans.QSeq, in.RSeq)
+
+	
 	if !in.QStrandPos {
 		ans.RStart, ans.REnd = qLen-in.QEnd+1, qLen-in.QStart+1
 		ans.QStart, ans.QEnd = tLen-in.REnd+1, tLen-in.RStart+1
