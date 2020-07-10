@@ -189,3 +189,38 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 func printHeader(ch *Chain) string {
 	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
+//Simple swaping of target and query fields
+//TODO: Ask craig or dan if they prefer making a new copy or re-use the alocated memory
+func SwapQuery(ch *Chain) *Chain {
+	return &Chain{
+		Score:     ch.Score,
+		TName:     ch.QName,
+		TSize:     ch.QSize,
+		TStrand:   ch.QStrand,
+		TStart:    ch.QStart,
+		TEnd:      ch.QEnd,
+		QName:     ch.TName,
+		QSize:     ch.TSize,
+		QStrand:   ch.TStrand,
+		QStart:    ch.TStart,
+		QEnd:      ch.TEnd,
+		Alignment: SwapAllUngapped(ch.Alignment),
+		Id:        ch.Id,
+	}
+}
+
+func swapAlignStats(align *BaseStats) *BaseStats {
+	return &BaseStats{
+		Size: align.Size,
+		TBases: align.QBases,
+		QBases: align.TBases,
+	}
+}
+
+func SwapAllUngapped(chainStats []*BaseStats) []*BaseStats{
+	for i := 0; i < len(chainStats); i++ {
+		chainStats[i] = swapAlignStats(chainStats[i])
+	}
+	return chainStats
+}
+

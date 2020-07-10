@@ -28,26 +28,6 @@ func (ch *Chain) GetChromEnd() int {
 	}
 }
 
-//Simple swaping of target and query fields
-//TODO: Ask craig or dan if they prefer making a new copy or re-use the alocated memory
-func (ch *Chain) SwapQuery() *Chain {
-	return &Chain{
-		Score:     ch.Score,
-		TName:     ch.QName,
-		TSize:     ch.QSize,
-		TStrand:   ch.QStrand,
-		TStart:    ch.QStart,
-		TEnd:      ch.QEnd,
-		QName:     ch.TName,
-		QSize:     ch.TSize,
-		QStrand:   ch.TStrand,
-		QStart:    ch.TStart,
-		QEnd:      ch.TEnd,
-		Alignment: ch.Alignment,
-		Id:        ch.Id,
-	}
-}
-
 type ChainSlice []*Chain
 
 func (ch ChainSlice) Len() int { return len(ch) }
@@ -105,16 +85,17 @@ func (g ByGenomicCoordinates) Less(i, j int) bool {
 	// First sort criteria is chromosome
 	if g.ChainSlice[i].GetChrom() < g.ChainSlice[j].GetChrom() {
 		return true
-	} else if g.ChainSlice[i].GetChrom() == g.ChainSlice[j].GetChrom() {
+	} else if g.ChainSlice[i].GetChrom() == g.ChainSlice[j].GetChrom() && g.ChainSlice[i].GetChromStart() < g.ChainSlice[j].GetChromStart() {
 		// If chroms are equal then sort by start position
-		if g.ChainSlice[i].GetChromStart() < g.ChainSlice[j].GetChromStart() {
-			return true
-		} else if g.ChainSlice[i].GetChromStart() == g.ChainSlice[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g.ChainSlice[i].GetChromEnd() < g.ChainSlice[j].GetChromEnd() {
-				return true
-			}
-		}
+		return true
+	} else if g.ChainSlice[i].GetChromStart() == g.ChainSlice[j].GetChromStart() && g.ChainSlice[i].GetChromEnd() < g.ChainSlice[j].GetChromEnd() {
+		// If start positions are equal then the shorter region wins
+		return true
+	} else {
+		return false
 	}
-	return false
+}
+
+func (ch *Chain) SwapQuery() *Chain {
+	return SwapQuery(ch)
 }
