@@ -35,8 +35,8 @@ type BaseStats struct {
 //Struct used to construct liftover
 type SeqChain struct {
 	Chains chan *Chain
-	TSeq []*fasta.Fasta
-	QSeq []*fasta.Fasta
+	TSeq   []*fasta.Fasta
+	QSeq   []*fasta.Fasta
 }
 
 type HeaderComments struct {
@@ -67,8 +67,8 @@ func ToSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *S
 	go ReadToChan(file, ans)
 	return &SeqChain{
 		Chains: ans,
-		TSeq:  target,
-		QSeq:  query,
+		TSeq:   target,
+		QSeq:   query,
 	}
 }
 
@@ -189,6 +189,7 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 func printHeader(ch *Chain) string {
 	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
+
 //Simple swaping of target and query fields
 //TODO: Ask craig or dan if they prefer making a new copy or re-use the alocated memory
 func SwapQuery(ch *Chain) *Chain {
@@ -211,16 +212,15 @@ func SwapQuery(ch *Chain) *Chain {
 
 func swapAlignStats(align *BaseStats) *BaseStats {
 	return &BaseStats{
-		Size: align.Size,
+		Size:   align.Size,
 		TBases: align.QBases,
 		QBases: align.TBases,
 	}
 }
 
-func SwapAllUngapped(chainStats []*BaseStats) []*BaseStats{
+func SwapAllUngapped(chainStats []*BaseStats) []*BaseStats {
 	for i := 0; i < len(chainStats); i++ {
 		chainStats[i] = swapAlignStats(chainStats[i])
 	}
 	return chainStats
 }
-
