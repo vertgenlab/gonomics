@@ -68,8 +68,8 @@ func HeaderToMaps(header *VcfHeader) *SampleIdMap {
 	}
 	return hash
 }
-
-func VcfToGenotype(v *Vcf) *Genotypes {
+//TODO: Solidify names
+func VcfToGVcf(v *Vcf) *Genotypes {
 	return &Genotypes{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
 }
 
@@ -128,7 +128,7 @@ func buildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*Geno
 	code := ChromPosToUInt64(int(names[v.Chr]), int(v.Pos-1))
 	_, ok := mapToGVcf[code]
 	if !ok {
-		mapToGVcf[code] = VcfToGenotype(v)
+		mapToGVcf[code] = VcfToGVcf(v)
 	}
 	return mapToGVcf
 }
@@ -152,12 +152,12 @@ func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
 }
 
 func ViewGenotypeVcf(v *Vcf) {
-	Genotypes := VcfToGenotype(v)
+	Genotypes := VcfToGVcf(v)
 	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(Genotypes))
 }
 
 func PrintReOrder(v *Vcf, samples []int16) {
-	Genotypes := VcfToGenotype(ReorderSampleColumns(v, samples))
+	Genotypes := VcfToGVcf(ReorderSampleColumns(v, samples))
 	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(Genotypes))
 }
 
