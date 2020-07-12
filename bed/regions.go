@@ -23,14 +23,16 @@ func InvertRegions(beds []*Bed, chromLen int) []*Bed {
 		log.Fatalf("Error: chromosome of first bed in slice must be the same as the last slice...\n")
 	} else {
 		var prev int = 0
+		var i int = 0
 		var curr *Bed
 		if beds[0].ChromStart == 0 {
+			i++
 			prev = int(beds[0].ChromEnd)
 		} //else {
 		//	ans = append(ans, &Bed{Chrom: beds[0].Chrom, ChromStart: 0, ChromEnd: beds[0].ChromEnd})
 
 		//}
-		for i := 0; i < len(beds); i++ {
+		for ; i < len(beds); i++ {
 			prev, curr = negatePrevBed(beds[i], prev)
 			ans = append(ans, curr)
 		}
