@@ -41,3 +41,18 @@ func TotalSize(b []*Bed) int64 {
 	}
 	return ans
 }
+
+//Uses bed regions to fragment fasta and returns fasta sequences contained in regions
+//Since beds import fasta here, this function is renting until it finds a more permanant home
+//Could also go in CMD folder
+func EditFastaByRegion(fa *fasta.Fasta, beds []*Bed) *fasta.Fasta {
+	var ans *fasta.Fasta = &fasta.Fasta{Name: fa.Name, Seq: make([]dna.Base, 0, len(fa.Seq))}
+	for i, b := range beds {
+		ans.Seq = append(ans.Seq, fa.Seq[b.ChromStart:b.ChromEnd]...)
+		//adds 100n in between bed regions
+		if i < len(beds)-2 {
+			ans.Seq = append(ans.Seq, dna.CreateAllNs(100)...)
+		}
+	}
+	return ans
+}
