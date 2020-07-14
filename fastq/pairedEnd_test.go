@@ -1,7 +1,6 @@
 package fastq
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -18,6 +17,6 @@ func TestReadPairChan(t *testing.T) {
 		beta = append(beta, readPair)
 	}
 	if len(alpha) != len(beta) {
-		fmt.Errorf("Error: Read fastq pair to channel did not result in the same length...\n")
+		t.Errorf("Error: Read fastq pair to channel did not result in the same length...\n")
 	}
 }
