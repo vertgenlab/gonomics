@@ -165,7 +165,7 @@ func addVariantType(v *Variant) {
 	//TODO: Frameshift
 	//TODO: Splice
 	//TODO: FarSplice
-	default: // Unknown
+	default:
 		v.VariantType = "Unrecognized"
 	}
 }
