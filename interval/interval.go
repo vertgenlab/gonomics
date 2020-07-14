@@ -326,6 +326,13 @@ func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
 }
 
 func findSplit(x1, x2 float32, node *IntervalNode) *IntervalNode {
+	if node == nil { // TODO: find situation where nil nodes are built into tree
+		return nil
+	}
+
+	if node.val != nil { // Handles case where only 1 node is present in tree
+		return node
+	}
 
 	for node.val == nil {
 		if float32(node.xMid) < x1 {
