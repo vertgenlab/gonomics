@@ -7,17 +7,20 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
+	"strings"
 )
 
 type Variant struct {
 	vcf.Vcf
-	RefId      string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
-	Gene       string
-	NearestCDS *CDS
-	CDNAPos    int // 1-base
-	AAPos      int // 1-base
-	AARef      []dna.AminoAcid
-	AAAlt      []dna.AminoAcid
+	RefId       string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
+	Gene        string
+	NearestCDS  *CDS
+	CDNAPos     int // 1-base
+	AAPos       int // 1-base
+	AARef       []dna.AminoAcid
+	AAAlt       []dna.AminoAcid
+	VariantType string // e.g. Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
+	Prediction  string // e.g. LOW, MODERATE, HIGH
 }
 
 func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNode {
@@ -46,8 +49,11 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 	if len(overlappingGenes) > 0 {
 		annotatingGene = overlappingGenes[0].(*Gene)
 		answer = vcfToVariant(v, annotatingGene, seq)
+	} else {
+		answer = &Variant{Vcf: *v}
 	}
-
+	addVariantType(answer)
+	addPrediction(answer)
 	return answer, err
 }
 
@@ -92,7 +98,7 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	var seqPos int = int(variant.Pos) - 1
 	var currCDS *CDS = variant.NearestCDS
 	seqPos -= determineFrame(variant)
-	for ; seqPos < int(variant.Pos - 1); seqPos++ {
+	for ; seqPos < int(variant.Pos-1); seqPos++ {
 		if seqPos < currCDS.Start-1 {
 			seqPos = currCDS.Prev.End - 1
 			currCDS = currCDS.Prev
@@ -130,6 +136,69 @@ func determineFrame(v *Variant) int {
 	return (int(v.Pos)-v.NearestCDS.Start)%3 + v.NearestCDS.Frame
 }
 
-func VariantToHGVS(variant *Variant) string {
-	return ""
+// Annotation format is: Genomic | VariantType | Prediction | Gene | cDNA | Protein
+func VariantToAnnotation(variant *Variant) string {
+	return addGenomic(variant) + "|" + variant.Prediction + "|" + variant.Gene + "|" + addCDNA(variant) + "|" + addProtein(variant)
+}
+
+func addGenomic(v *Variant) string {
+	return fmt.Sprintf("g.%d%s>%s", v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
+}
+
+func addCDNA(v *Variant) string {
+	// TODO: check for splice
+}
+
+func addProtein(v *Variant) string {
+
+}
+
+func addVariantType(v *Variant) {
+	switch {
+	case v.Gene == "":
+		v.VariantType = "Intergenic"
+	case v.AARef == nil:
+		v.VariantType = "Intronic"
+	//TODO: Intronic
+	//TODO: Missense
+	//TODO: Nonsense
+	//TODO: Frameshift
+	//TODO: Splice
+	//TODO: FarSplice
+	default: // Unknown
+		v.VariantType = "Unrecognized"
+	}
+}
+
+func addPrediction(v *Variant) {
+	switch v.VariantType {
+	case "Intergenic":
+		v.Prediction = "LOW"
+	case "Intronic":
+		v.Prediction = "LOW"
+	case "Missense":
+		v.Prediction = "MODERATE"
+	case "Nonsense":
+		v.Prediction = "HIGH"
+	case "Frameshift":
+		v.Prediction = "HIGH"
+	case "Splice":
+		v.Prediction = "HIGH"
+	case "FarSplice:":
+		v.Prediction = "MODERATE"
+	default:
+		v.Prediction = "LOW"
+	}
+}
+
+// UCSC standard gtf files use NR_##### for version 1 and NR_#####_X or non-version 1
+// where X is the version number. This function converts to NR_#####.X
+func toAnnotationTranscriptVersion(transcriptID string) string {
+	words := strings.Split(transcriptID, "_")
+	if len(words) == 2 {
+		return transcriptID + ".1"
+	} else if len(words) == 3 {
+		return words[0] + "_" + words[1] + "." + words[2]
+	}
+	return transcriptID // Unrecognized format, just return input
 }
