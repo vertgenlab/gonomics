@@ -22,8 +22,8 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	var parental arrayFlags
-	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf. Must match Vcf Header exactly and include second `name -parent two -f1 name`")
-	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf. Must match Vcf Header exactly and include `name -parent one -parent two`")
+	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf.")
+	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype")
 	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: /dev/stdout)")
 
 	var list *string = flag.String("byname", "", "Filter samples of interest by providing a name`.txt` file containing a list of sample names, one name per line")
@@ -37,6 +37,7 @@ func main() {
 			fmt.Printf("%s", vcf.PrintSampleNames(header))
 		} else {
 			flag.Usage()
+			fmt.Printf("\nExamples:\nAllele Specific Filter:\n./filterGenotypes -f1 name -parent name -parent name input.vcf output.vcf\n\nView sample names:\n./filterGenotypes -samples file.vcf\n\n")
 			log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 		}
 	} else {

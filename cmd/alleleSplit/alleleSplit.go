@@ -25,12 +25,12 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime)
 
 	var parental arrayFlags
-	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf. Include second `name -parent two -f1 name`")
-	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf. Include `name -parent one -parent two`")
+	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf``")
+	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf``")
 	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: `/dev/stdout`)")
 
 	flag.Parse()
-	
+
 	if *sampleName {
 		file := fileio.EasyOpen(flag.Arg(0))
 		defer file.Close()
@@ -38,6 +38,7 @@ func main() {
 		fmt.Printf("%s", vcf.PrintSampleNames(header))
 	} else if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
+		fmt.Printf("\nExamples:\n./alleleSplit -f1 name -parent name -parent name input.sam input.vcf\n\nView sample names:\n./alleleSplit -samples file.vcf\n\n")
 		log.Fatalf("\n\nError: unexpected number of arguments...\n\n")
 	} else {
 		if len(parental) != 2 {
