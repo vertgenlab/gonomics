@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
+	//"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	//"sync"
@@ -15,10 +15,52 @@ func usage() {
 	fmt.Print(
 		"alleleSplit - a tool that separates a heterozygous sam alignment into different alignments by alleles\n" +
 			"Usage:\n" +
-			"./alleleSplit [options] input.sam input.vcf output.sam\n\n")
+			"./alleleSplit [options] input.sam input.vcf\n\n")
 	flag.PrintDefaults()
 }
 
+func main() {
+	var expectedNumArgs int = 2
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime)
+
+	var parental arrayFlags
+	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf. Include second `name -parent two -f1 name`")
+	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf. Include `name -parent one -parent two`")
+	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: `/dev/stdout`)")
+
+	flag.Parse()
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("\n\nError: unexpected number of arguments...\n\n")
+	}
+	if *sampleName {
+		file := fileio.EasyOpen(flag.Arg(0))
+		defer file.Close()
+		header := vcf.ReadHeader(file)
+		fmt.Printf("%s", vcf.PrintSampleNames(header))
+	} else {
+		if len(parental) != 2 {
+			log.Fatalf("Error: must provide exactly 2 parental genomes\n")
+		}
+		SnpSearch(flag.Arg(0), flag.Arg(1), *f1Genome, parental[0], parental[1], *f1Genome)
+	}
+
+	//BasicAlleleExpression(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix)
+}
+
+//Define flag value as an array. Used to define parent genomes.
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return "my string representation"
+}
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+/*
 type Alleles struct {
 	Ref dna.Base
 	Alt dna.Base
@@ -116,48 +158,7 @@ func BasicAlleleExpression(samFilename string, v []*vcf.Vcf, fileName string, re
 			//Skip read
 		}
 	}
-}
-
-func main() {
-	var expectedNumArgs int = 2
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-
-	//var refPrefix *string = flag.String("ref", "ref", "name of ref allele")
-	//var altPrefix *string = flag.String("alt", "alt", "name of alt allele")
-	//var undetermined *bool = flag.Bool("undetermined", false, "undetermined.sam")
-	var parental arrayFlags
-	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf. Must match Vcf Header exactly and include second `name -parent two -f1 name`")
-	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf. Must match Vcf Header exactly and include `name -parent one -parent two`")
-	//var prefix *string = flag.String("prefix", "", "set prefix for output sam files``")
-
-	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: /dev/stdout)")
-
-	flag.Parse()
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("\n\n./alleleSplit [options] $sam $vcf $name\n\n")
-	}
-	if *sampleName {
-		file := fileio.EasyOpen(flag.Arg(0))
-		defer file.Close()
-		header := vcf.ReadHeader(file)
-		fmt.Printf("%s", vcf.PrintSampleNames(header))
-	}
-	SnpSearch(flag.Arg(0), flag.Arg(1), *f1Genome, parental[0], parental[1], *f1Genome)
-	//BasicAlleleExpression(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix)
-}
-
-//Define flag value as an array. Used to define parent genomes.
-type arrayFlags []string
-
-func (i *arrayFlags) String() string {
-	return "my string representation"
-}
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
+}*/
 
 /*
 func GoRoutinesSnpSearch(samfile string, genotypeVcf string, parentOne string, parentTwo, prefix string, f1 string, threads int) {
