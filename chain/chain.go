@@ -197,13 +197,8 @@ func SwapBoth(ch *Chain) *Chain {
 	ch.TStrand, ch.QStrand = ch.QStrand, ch.TStrand
 	ch.TStart, ch.QStart = ch.QStart, ch.TStart
 	ch.TEnd, ch.QEnd = ch.QEnd, ch.TEnd
-	ch.Alignment = SwapAlign(ch.Alignment)
-	return ch
-}
-
-func SwapAlign(chainStats []*BaseStats) []*BaseStats {
-	for i := 0; i < len(chainStats); i++ {
-		chainStats[i].TBases, chainStats[i].QBases = chainStats[i].QBases, chainStats[i].TBases
+	for i := 0; i < len(ch.Alignment); i++ {
+		ch.Alignment[i].TBases, ch.Alignment[i].QBases = ch.Alignment[i].QBases, ch.Alignment[i].TBases
 	}
-	return chainStats
+	return ch
 }
