@@ -3,12 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	//"github.com/vertgenlab/gonomics/dna"
+	"strings"
 	"github.com/vertgenlab/gonomics/fileio"
-	//"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	//"sync"
 )
 
 func usage() {
@@ -23,42 +21,28 @@ func main() {
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
-
-	var parental arrayFlags
-	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf``")
 	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf``")
-	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: `/dev/stdout`)")
-
+	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header (Default: /dev/stdout``)")
+	var parentOne *string = flag.String("parentOne", "", "Name of first parental genome``")
+	var parentTwo *string = flag.String("parentTwo", "", "Name of second parental genome``")
 	flag.Parse()
 
-	if *sampleName {
-		file := fileio.EasyOpen(flag.Arg(0))
-		defer file.Close()
-		header := vcf.ReadHeader(file)
-		fmt.Printf("%s", vcf.PrintSampleNames(header))
-	} else if len(flag.Args()) != expectedNumArgs {
+	if *sampleName && len(flag.Args()) == 1 {
+		if strings.HasSuffix(flag.Arg(0), "vcf.gz") || strings.HasSuffix(flag.Arg(0), ".vcf") {
+			file := fileio.EasyOpen(flag.Arg(0))
+			defer file.Close()
+			header := vcf.ReadHeader(file)
+			fmt.Printf("%s", vcf.PrintSampleNames(header))
+		}
+	} else if len(flag.Args()) != expectedNumArgs || (*f1Genome == "" && *parentOne == "" || *parentTwo == ""){
 		flag.Usage()
-		fmt.Printf("\nExamples:\n./alleleSplit -f1 name -parent name -parent name input.sam input.vcf\n\nView sample names:\n./alleleSplit -samples file.vcf\n\n")
+		fmt.Printf("\nExamples:\n./alleleSplit -f1 name -parentOne name -parentTwo name input.sam input.vcf\n\nView sample names:\n./alleleSplit -samples file.vcf\n\n")
 		log.Fatalf("\n\nError: unexpected number of arguments...\n\n")
 	} else {
-		if len(parental) != 2 {
-			log.Fatalf("Error: must provide exactly 2 parental genomes\n")
-		}
-		SnpSearch(flag.Arg(0), flag.Arg(1), *f1Genome, parental[0], parental[1], *f1Genome)
+		SnpSearch(flag.Arg(0), flag.Arg(1), *f1Genome, *parentOne, *parentTwo, *f1Genome)
 	}
 
 	//BasicAlleleExpression(flag.Arg(0), vcf.Read(flag.Arg(1)), flag.Arg(2), *refPrefix, *altPrefix)
-}
-
-//Define flag value as an array. Used to define parent genomes.
-type arrayFlags []string
-
-func (i *arrayFlags) String() string {
-	return "my string representation"
-}
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
 }
 
 /*

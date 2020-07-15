@@ -21,10 +21,12 @@ func main() {
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
-	var parental arrayFlags
-	flag.Var(&parental, "parent", "Define of two parential that appears homozygous in the genotype Vcf.")
-	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype")
+
+	var f1Genome *string = flag.String("f1", "", "F1 hybrid sample that appears heterozygous in genotype Vcf``")
 	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: /dev/stdout)")
+
+	var parentOne *string = flag.String("parentOne", "", "Name of first parental genome``")
+	var parentTwo *string = flag.String("parentTwo", "", "Name of second parental genome``")
 
 	var list *string = flag.String("byname", "", "Filter samples of interest by providing a name`.txt` file containing a list of sample names, one name per line")
 
@@ -37,7 +39,7 @@ func main() {
 			fmt.Printf("%s", vcf.PrintSampleNames(header))
 		} else {
 			flag.Usage()
-			fmt.Printf("\nExamples:\nAllele Specific Filter:\n./filterGenotypes -f1 name -parent name -parent name input.vcf output.vcf\n\nView sample names:\n./filterGenotypes -samples file.vcf\n\n")
+			fmt.Printf("\nExamples:\nAllele Specific Filter:\n./filterGenotypes -f1 name -parentOne name -parentTwo name input.vcf output.vcf\n\nView sample names:\n./filterGenotypes -samples file.vcf\n\n")
 			log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 		}
 	} else {
@@ -45,7 +47,7 @@ func main() {
 		if strings.HasSuffix(*list, ".txt") {
 			samples := fileio.Read(*list)
 
-			gvcf := vcf.ReadGVcf(input)
+			gvcf := vcf.GoReadGVcf(input)
 			writer := fileio.EasyCreate(output)
 
 			//write header
@@ -54,8 +56,8 @@ func main() {
 
 			writer.Close()
 
-		} else if len(parental) != 2 {
-			log.Fatalf("Error: Must provide exactly 2 parents, found %d...\n", len(parental))
+		} else if *parentOne == "" || *parentTwo == "" {
+			log.Fatalf("Error: Must provide exactly 2 parents, found...\n")
 		} else {
 			file := fileio.EasyOpen(input)
 			defer file.Close()
@@ -63,7 +65,7 @@ func main() {
 			header := vcf.ReadHeader(file)
 			sampleHash := vcf.HeaderToMaps(header)
 
-			var parentalOne, parentalTwo, fOne int16 = sampleHash.GIndex[parental[0]], sampleHash.GIndex[parental[1]], sampleHash.GIndex[*f1Genome]
+			var parentalOne, parentalTwo, fOne int16 = sampleHash.GIndex[*parentOne], sampleHash.GIndex[*parentTwo], sampleHash.GIndex[*f1Genome]
 			writer := fileio.EasyCreate(output)
 			vcf.NewWriteHeader(writer, header)
 			reader := make(chan *vcf.Vcf)

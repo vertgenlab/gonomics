@@ -120,35 +120,35 @@ func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
 	return mergeRecord
 }
 
-func LowQual(hap GenomeSample) bool {
-	if hap.AlleleOne < 0 || hap.AlleleTwo < 0 {
+func LowQual(genome GenomeSample) bool {
+	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
 		return true
 	} else {
 		return false
 	}
 }
 
-func IsHeterozygous(hap GenomeSample) bool {
-	if hap.AlleleOne < 0 || hap.AlleleTwo < 0 {
+func IsHeterozygous(genome GenomeSample) bool {
+	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
 		return false
 	}
-	if hap.AlleleOne != hap.AlleleTwo {
+	if genome.AlleleOne != genome.AlleleTwo {
 		return true
 	}
-	if hap.AlleleOne == hap.AlleleTwo {
+	if genome.AlleleOne == genome.AlleleTwo {
 		return false
 	}
 	return false
 }
 
-func IsHomozygous(hap GenomeSample) bool {
-	if hap.AlleleOne < 0 || hap.AlleleTwo < 0 {
+func IsHomozygous(genome GenomeSample) bool {
+	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
 		return false
 	}
-	if hap.AlleleOne == hap.AlleleTwo {
+	if genome.AlleleOne == genome.AlleleTwo {
 		return true
 	}
-	if hap.AlleleOne != hap.AlleleTwo {
+	if genome.AlleleOne != genome.AlleleTwo {
 		return false
 	}
 	return false

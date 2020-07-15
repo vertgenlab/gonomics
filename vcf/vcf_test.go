@@ -51,7 +51,7 @@ func TestWriteAndRead(t *testing.T) {
 }
 
 func TestReadToChanTwo(t *testing.T) {
-	alpha := ReadGVcf("testdata/test.vcf")
+	alpha := GoReadGVcf("testdata/test.vcf")
 	var savedFromAlpha []*Vcf
 	for v := range alpha.Vcfs {
 		savedFromAlpha = append(savedFromAlpha, v)

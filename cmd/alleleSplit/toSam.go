@@ -10,12 +10,12 @@ import (
 )
 
 func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string, parentTwo, prefix string) {
-	reader := vcf.ReadGVcf(genotypeVcf)
-	dict := vcf.HeaderToMaps(reader.Header)
+	reader := vcf.GoReadGVcf(genotypeVcf)
+	sampleHash := vcf.HeaderToMaps(reader.Header)
 	snpDb := make(map[uint64]*vcf.GVcf)
 	for genotype := range reader.Vcfs {
-		if vcf.ASFilter(genotype, dict.GIndex[parentOne], dict.GIndex[parentTwo], dict.GIndex[fOne]) {
-			vcf.GenotypeToMap(genotype, dict.Fa, snpDb)
+		if vcf.ASFilter(genotype, sampleHash.GIndex[parentOne], sampleHash.GIndex[parentTwo], sampleHash.GIndex[fOne]) {
+			vcf.GenotypeToMap(genotype, sampleHash.Fa, snpDb)
 		}
 	}
 	samFile := fileio.EasyOpen(samfile)
@@ -47,41 +47,41 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 				query += read.Cigar[i].RunLength
 			case 'I':
 				//TODO: Figure out how to take insertions into account
-				//code = ChromPosToUInt64(int(dict.Fa[read.RName]), int(target))
+				//code = ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target))
 				//_, ok = snpDb[code]
 				//if ok {
 				//	gV = snpDb[code]
-				//	if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.GIndex[parentOne]].AlleleTwo]) == 0 {
+				//	if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo]) == 0 {
 				//		parentAllele1++
 				//	}
-				//	if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.GIndex[parentTwo]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[dict.GIndex[parentTwo]].AlleleTwo]) == 0 {
+				//	if dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase(read.Seq[query:query+read.Cigar[i].RunLength], gV.Alleles[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleTwo]) == 0 {
 				//		parentAllele2++
 				//	}
 				//}
 				query += read.Cigar[i].RunLength
 			case 'D':
-				code = vcf.ChromPosToUInt64(int(dict.Fa[read.RName]), int(target))
+				code = vcf.ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target))
 				_, ok = snpDb[code]
 				if ok {
 					gV = snpDb[code]
-					if dna.CountBase(gV.Seq[gV.Genotypes[dict.GIndex[parentOne]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[dict.GIndex[parentOne]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
+					if dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
 						parentAllele1++
 					}
-					if dna.CountBase(gV.Seq[gV.Genotypes[dict.GIndex[parentTwo]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[dict.GIndex[parentTwo]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
+					if dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
 						parentAllele1++
 					}
 				}
 				target += read.Cigar[i].RunLength
 			case 'M':
 				for j = 0; j < read.Cigar[i].RunLength; j++ {
-					code = vcf.ChromPosToUInt64(int(dict.Fa[read.RName]), int(target+j))
+					code = vcf.ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target+j))
 					_, ok = snpDb[code]
 					if ok {
 						gV = snpDb[code]
-						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[dict.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[dict.GIndex[parentOne]].AlleleTwo]) == 0 {
+						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo]) == 0 {
 							parentAllele1++
 						}
-						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[dict.GIndex[parentTwo]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[dict.GIndex[parentTwo]].AlleleTwo]) == 0 {
+						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleTwo]) == 0 {
 							parentAllele2++
 						}
 					}

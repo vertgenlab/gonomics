@@ -17,7 +17,7 @@ type Reader struct {
 	SyncWg *sync.WaitGroup
 }
 
-func ReadGVcf(filename string) *Reader {
+func GoReadGVcf(filename string) *Reader {
 	var ans *Reader = &Reader{}
 	var wg sync.WaitGroup
 	ans.File = fileio.EasyOpen(filename)
