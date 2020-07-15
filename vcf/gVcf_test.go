@@ -30,9 +30,3 @@ func TestASFilter(t *testing.T) {
 		}
 	}
 }
-
-//TODO: Finish Sam split testing code
-/*
-func TestSamToAlleles(t *testing.T) {
-	SnpSearch("testdata/CL12_wgsTest.sam", "testdata/multiSampleTest.vcf", "CL12_wgs_merged", "LITC", "MATA", "testdata/CL12_FINAL_test")
-}*/
