@@ -30,15 +30,15 @@ func main() {
 	var sampleName *bool = flag.Bool("samples", false, "Get names of samples that appear in Vcf header. (Default: `/dev/stdout`)")
 
 	flag.Parse()
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("\n\nError: unexpected number of arguments...\n\n")
-	}
+	
 	if *sampleName {
 		file := fileio.EasyOpen(flag.Arg(0))
 		defer file.Close()
 		header := vcf.ReadHeader(file)
 		fmt.Printf("%s", vcf.PrintSampleNames(header))
+	} else if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("\n\nError: unexpected number of arguments...\n\n")
 	} else {
 		if len(parental) != 2 {
 			log.Fatalf("Error: must provide exactly 2 parental genomes\n")
