@@ -148,30 +148,18 @@ func AxtInfo(input *Axt) string {
 	return text
 }
 
-func QuerySwap(in *Axt, tLen int64, qLen int64) *Axt {
-	var ans *Axt = &Axt{}
-	//perform swap
-	ans.RName, ans.QName = in.QName, in.RName
-
-	//set to positive because target is always positive
-	ans.QStrandPos = in.QStrandPos
-	ans.Score = in.Score
-
-	ans.RSeq = make([]dna.Base, len(in.QSeq))
-	copy(ans.RSeq, in.QSeq)
-
-	ans.QSeq = make([]dna.Base, len(in.RSeq))
-	copy(ans.QSeq, in.RSeq)
-
-	
+func SwapBoth(in *Axt, tLen int64, qLen int64) *Axt {
+	in.RSeq, in.QSeq = in.QSeq, in.RSeq
+	in.RName, in.QName = in.QName, in.RName
 	if !in.QStrandPos {
-		ans.RStart, ans.REnd = qLen-in.QEnd+1, qLen-in.QStart+1
-		ans.QStart, ans.QEnd = tLen-in.REnd+1, tLen-in.RStart+1
-		dna.ReverseComplement(ans.RSeq)
-		dna.ReverseComplement(ans.QSeq)
+		in.RStart, in.REnd = qLen-in.QEnd+1, qLen-in.QStart+1
+		in.QStart, in.QEnd = tLen-in.REnd+1, tLen-in.RStart+1
+		dna.ReverseComplement(in.RSeq)
+		dna.ReverseComplement(in.QSeq)
 	} else {
-		ans.RStart, ans.REnd = in.QStart, in.QEnd
-		ans.QStart, ans.QEnd = in.RStart, in.REnd
+		in.RStart, in.REnd = in.QStart, in.QEnd
+		in.QStart, in.QEnd = in.RStart, in.REnd
 	}
-	return ans
+	in.RSeq, in.QSeq = in.QSeq, in.RSeq
+	return in
 }

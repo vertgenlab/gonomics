@@ -76,7 +76,7 @@ func TestAxtSwap(t *testing.T) {
 		//QSeq: dna.StringToBases("CGTCCCTCGA"),
 	}
 
-	aSwap := QuerySwap(aTest, targetLen, queryLen)
+	aSwap := SwapBoth(aTest, targetLen, queryLen)
 	//TODO: Add logic to test that can check reverse complemented sequences
 	if !isEqual(aSwap, ans) {
 		log.Printf("%s", ToString(aSwap, 0))
