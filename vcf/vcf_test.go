@@ -56,7 +56,7 @@ func TestReadToChanTwo(t *testing.T) {
 	for v := range alpha.Vcfs {
 		savedFromAlpha = append(savedFromAlpha, v)
 	}
-	alpha.Reader.Close()
+	alpha.File.Close()
 	beta := fileio.EasyOpen("testdata/pacbio.vcf")
 	vcfData := make(chan *Vcf)
 	go ReadToChan(beta, vcfData)

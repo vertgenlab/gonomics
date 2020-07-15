@@ -1,10 +1,15 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/fileio"
 	"testing"
 )
 
+func TestSamToAlleles(t *testing.T) {
+	SnpSearch("testdata/CL12_wgsTest.sam", "testdata/multiSampleTest.vcf", "CL12_wgs_merged", "LITC", "MATA", "testdata/CL12_FINAL_test")
+}
+
+/*
 func TestASFilter(t *testing.T) {
 	file := fileio.EasyOpen("testdata/multiSampleTest.vcf")
 	defer file.Close()
@@ -29,4 +34,4 @@ func TestASFilter(t *testing.T) {
 			t.Errorf("Error: Parental genomes should be Homozygous and F1 should be Heterozygous...\n")
 		}
 	}
-}
+}*/

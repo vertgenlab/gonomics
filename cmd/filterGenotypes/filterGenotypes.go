@@ -62,7 +62,7 @@ func main() {
 			header := vcf.ReadHeader(file)
 			sampleHash := vcf.HeaderToMaps(header)
 
-			var parentalOne, parentalTwo, fOne int16 = sampleHash.IndexAllele[parental[0]], sampleHash.IndexAllele[parental[1]], sampleHash.IndexAllele[*f1Genome]
+			var parentalOne, parentalTwo, fOne int16 = sampleHash.GIndex[parental[0]], sampleHash.GIndex[parental[1]], sampleHash.GIndex[*f1Genome]
 			writer := fileio.EasyCreate(output)
 			vcf.NewWriteHeader(writer, header)
 			reader := make(chan *vcf.Vcf)
