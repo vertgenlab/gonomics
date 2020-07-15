@@ -15,7 +15,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	snpDb := make(map[uint64]*vcf.GVcf)
 	for genotype := range reader.Vcfs {
 		if vcf.ASFilter(genotype, sampleHash.GIndex[parentOne], sampleHash.GIndex[parentTwo], sampleHash.GIndex[fOne]) {
-			vcf.GenotypeToMap(genotype, sampleHash.Fa, snpDb)
+			vcf.BuildGenotypeMap(genotype, sampleHash.Fa, snpDb)
 		}
 	}
 	samFile := fileio.EasyOpen(samfile)
