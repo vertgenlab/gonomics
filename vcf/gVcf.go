@@ -45,6 +45,11 @@ type SampleHash struct {
 	GIndex map[string]int16
 }
 
+func VcfToGvcf(v *Vcf) *GVcf {
+	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
+	return gVcf
+}
+
 func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	text := strings.Split(v.Notes, "\t")
 	var hap string
@@ -53,15 +58,12 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	for i := 0; i < len(text); i++ {
 		hap = strings.Split(text[i], ":")[0]
 		if strings.Compare(hap, "./.") == 0 || strings.Compare(hap, ".|.") == 0 {
-			//answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, GQ: getGQ(v)}
 			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
 		} else if strings.Contains(hap, "|") {
 			alleles = strings.SplitN(hap, "|", 2)
-			//answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, GQ: getGQ(v)}
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true}
 		} else {
 			alleles = strings.SplitN(hap, "/", 2)
-			//answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, GQ: getGQ(v)}
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false}
 		}
 	}
@@ -76,22 +78,6 @@ func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf
 	}
 	return mapToGVcf
 }
-
-/*
-//builds hash to Gvcfs, for a single vcf line
-func GenotypeToMap(v *Vcf, names map[string]int16) map[uint64]*GVcf {
-	mapToGVcf := make(map[uint64]*GVcf)
-	return buildGenotypeMap(v, names, mapToGVcf)
-}
-
-func buildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf) map[uint64]*GVcf {
-	code := ChromPosToUInt64(int(names[v.Chr]), int(v.Pos-1))
-	_, ok := mapToGVcf[code]
-	if !ok {
-		mapToGVcf[code] = VcfToGVcf(v)
-	}
-	return mapToGVcf
-}*/
 
 func getGQ(v *Vcf) uint8 {
 	var answer uint8 = 0
@@ -113,22 +99,6 @@ func getGQ(v *Vcf) uint8 {
 	}
 	return answer
 }
-func compareHaps(a GenomeSample, b GenomeSample) bool {
-	if a.AlleleOne == b.AlleleOne && a.AlleleTwo == b.AlleleTwo {
-		return true
-	} else {
-		return false
-	}
-}
-
-func CompareAllHaps(gt []GenomeSample) bool {
-	for i := 0; i < len(gt)-1; i++ {
-		if !compareHaps(gt[i], gt[i+1]) {
-			return false
-		}
-	}
-	return true
-}
 
 //tmp , this functions lives in simple graph, but import cycles are not allowed...
 //need to find a new package for this function
@@ -136,27 +106,6 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
 	var answer uint64 = chromCode | uint64(start)
-	return answer
-}
-
-//Helper functions to convert Vcf line into a more compact version
-//to accommadate a magnitude of samples.
-//Chr: v.Chr, Pos: int(v.Pos),
-func VcfToGvcf(v *Vcf) *GVcf {
-	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
-	return gVcf
-}
-
-//func VcfToGVcf(v *Vcf) *Genotypes {
-//	return &Genotypes{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
-//}
-
-func getAltBases(alt string) [][]dna.Base {
-	words := strings.Split(alt, ",")
-	var answer [][]dna.Base = make([][]dna.Base, len(words))
-	for i := 0; i < len(words); i++ {
-		answer[i] = dna.StringToBases(words[i])
-	}
 	return answer
 }
 
@@ -197,6 +146,15 @@ func PrintSampleNames(header *VcfHeader) string {
 		}
 	}
 	return ans
+}
+
+func getAltBases(alt string) [][]dna.Base {
+	words := strings.Split(alt, ",")
+	var answer [][]dna.Base = make([][]dna.Base, len(words))
+	for i := 0; i < len(words); i++ {
+		answer[i] = dna.StringToBases(words[i])
+	}
+	return answer
 }
 
 func altBasesToString(alt [][]dna.Base) string {
