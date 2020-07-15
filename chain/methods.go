@@ -96,6 +96,6 @@ func (g ByGenomicCoordinates) Less(i, j int) bool {
 	}
 }
 
-func (ch *Chain) SwapQuery() *Chain {
-	return SwapQuery(ch)
+func (ch *Chain) SwapBoth() *Chain {
+	return SwapBoth(ch)
 }

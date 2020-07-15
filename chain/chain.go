@@ -191,36 +191,19 @@ func printHeader(ch *Chain) string {
 }
 
 //Simple swaping of target and query fields
-//TODO: Ask craig or dan if they prefer making a new copy or re-use the alocated memory
-func SwapQuery(ch *Chain) *Chain {
-	return &Chain{
-		Score:     ch.Score,
-		TName:     ch.QName,
-		TSize:     ch.QSize,
-		TStrand:   ch.QStrand,
-		TStart:    ch.QStart,
-		TEnd:      ch.QEnd,
-		QName:     ch.TName,
-		QSize:     ch.TSize,
-		QStrand:   ch.TStrand,
-		QStart:    ch.TStart,
-		QEnd:      ch.TEnd,
-		Alignment: SwapAllUngapped(ch.Alignment),
-		Id:        ch.Id,
-	}
+func SwapBoth(ch *Chain) *Chain {
+	ch.TName, ch.QName = ch.QName, ch.TName
+	ch.TSize, ch.QSize = ch.QSize, ch.TSize
+	ch.TStrand, ch.QStrand = ch.QStrand, ch.TStrand
+	ch.TStart, ch.QStart = ch.QStart, ch.TStart
+	ch.TEnd, ch.QEnd = ch.QEnd, ch.TEnd
+	ch.Alignment = SwapAlign(ch.Alignment)
+	return ch
 }
 
-func swapAlignStats(align *BaseStats) *BaseStats {
-	return &BaseStats{
-		Size:   align.Size,
-		TBases: align.QBases,
-		QBases: align.TBases,
-	}
-}
-
-func SwapAllUngapped(chainStats []*BaseStats) []*BaseStats {
+func SwapAlign(chainStats []*BaseStats) []*BaseStats {
 	for i := 0; i < len(chainStats); i++ {
-		chainStats[i] = swapAlignStats(chainStats[i])
+		chainStats[i].TBases, chainStats[i].QBases = chainStats[i].QBases, chainStats[i].TBases
 	}
 	return chainStats
 }
