@@ -2,6 +2,7 @@ package popgen
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 	"math"
 )
 
@@ -11,6 +12,54 @@ alpha based on an allele frequency spectrum obtained from multiple alignment dat
 More details can be obtained from the Ph.D. Thesis of Sol Katzman, available at https://compbio.soe.ucsc.edu/theses/Sol-Katzman-PhD-2010.pdf.
 Equations from this thesis that are replicated here are marked.
 */
+
+//k is len(sites)
+type AFS struct {
+	sites []*SegSite
+}
+
+type SegSite struct {
+	i int //individuals with the allele
+	n int //total number of individuals
+}
+
+func gVCFToAFS(filename string) AFS {
+	var answer AFS
+	answer.sites = make([]*SegSite, 0)
+	alpha := vcf.ReadGVcf(filename)
+	var currentSeg *SegSite
+
+	for i := range alpha.Vcfs {
+		currentSeg = &SegSite{i: 0, n: 0}
+		g := vcf.VcfToGenotype(i)
+		for j := 0; j < len(g.Genotypes); j++ {
+			if g.Genotypes[j].AlleleOne != -1 && g.Genotypes[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
+				currentSeg.n = currentSeg.n + 2
+				if g.Genotypes[j].AlleleOne > 0 {
+					currentSeg.i++
+				}
+				if g.Genotypes[j].AlleleTwo > 0 {
+					currentSeg.i++
+				}
+			}
+		}
+		if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
+			answer.sites = append(answer.sites, currentSeg)
+		}
+	}
+	alpha.Reader.Close()
+	return answer
+}
+
+//converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
+func AFSToFrequency(a AFS) []float64 {
+	var answer []float64
+	answer = make([]float64, len(a.sites))
+	for x := 0; x < len(a.sites); x++ {
+		answer[x] = float64(AFS.sites[x].i) / float64(AFS.sites[x].n)
+	}
+	return answer
+}
 
 //eq 2.1
 func AFSStationarity(p float64, alpha float64) float64 {
@@ -46,10 +95,10 @@ func AlleleFrequencyProbability(i int, n int, alpha float64) float64 {
 
 //eq 2.4
 //afs array has a dummy variable in position 0, so loop starts at 1.
-func AFSLikelihood(afs []int, alpha float64) float64 {
+func AFSLikelihood(afs AFS, alpha []float64) float64 {
 	var answer float64 = 1.0
-	for i := 1; i < len(afs); i++ {
-		answer = answer * AlleleFrequencyProbability(afs[i], len(afs), alpha)
+	for i := 1; i < len(afs.sites); i++ {
+		answer = answer * AlleleFrequencyProbability(afs.sites[i], len(afs.sites), alpha[i])
 	}
 	return answer
 }

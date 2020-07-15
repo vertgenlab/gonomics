@@ -5,9 +5,15 @@ import (
 	"math"
 )
 
+//TODO: Test functions for distribution values.
+
 //returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.
 func NormalDist(x float64, mu float64, sigma float64) float64 {
 	return (1 / (sigma * math.Sqrt(2*math.Pi))) * math.Exp(-0.5*math.Pow((x-mu)/sigma, 2))
+}
+
+func StandardNormalDist(x float64) float64 {
+	return NormalDist(x, 0, 1)
 }
 
 func BinomialDist(n int, k int, p float64) float64 {
@@ -44,6 +50,10 @@ func GammaDist(x float64, alpha float64, beta float64) float64 {
 	return (math.Pow(beta, alpha) / math.Gamma(alpha)) * math.Pow(x, alpha-1) * math.Exp(-beta*x)
 }
 
+func Uninformative_Gamma(x float64) float64 {
+	return GammaDist(x, 0.01, 0.01)
+}
+
 //returns an instantiation of a normal distribution for a particular mean and SD
 func NormalClosure(mu float64, sigma float64) func(float64) float64 {
 	return func(x float64) float64 {
@@ -65,7 +75,7 @@ func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 
 func PoissonLeftSummation(k int, lambda float64) float64 {
 	var answer float64 = 0
-	for i := 1; i < k+1; i++ {
+	for i := 0; i < k+1; i++ {
 		answer = answer + PoissonDist(i, lambda)
 	}
 	return answer
@@ -76,6 +86,7 @@ func PoissonRightSummation(k int, lambda float64) float64 {
 	return 1 - PoissonLeftSummation(k-1, lambda)
 }
 
+//all binomial summations include the query value n. Thus, the left and right sums will not add to 1.
 func BinomialLeftSummation(n int, k int, p float64) float64 {
 	if k <= n/2 {
 		return evaluateLeftBinomialSum(n, k, p)

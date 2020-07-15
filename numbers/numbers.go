@@ -164,3 +164,7 @@ func Factorial(n int) int {
 func RandIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }
+
+func RandFloatInRange(x float64, y float64) float64 {
+	return rand.Float64()*float64(y-x) + x
+}
