@@ -3,6 +3,8 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	//"log"
 	"strings"
 )
 
@@ -94,17 +96,13 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 	}
 	return answer
 }
-
-func sameRecord(a *Vcf, b *Vcf) bool {
-	if isEqual(a, b) {
+func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
+	gt := GetAlleleGenotype(v)
+	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && IsHeterozygous(gt[F1]) {
 		return true
+	} else {
+		return false
 	}
-	if strings.Compare(a.Chr, b.Chr) == 0 && a.Pos == b.Pos {
-		if strings.Compare(a.Ref, b.Ref) == 0 && strings.Compare(a.Alt, b.Alt) == 0 {
-			return true
-		}
-	}
-	return false
 }
 
 func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
@@ -120,4 +118,50 @@ func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
 		mergeRecord.Alt += a.Alt
 	}
 	return mergeRecord
+}
+
+func LowQual(genome GenomeSample) bool {
+	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsHeterozygous(genome GenomeSample) bool {
+	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
+		return false
+	}
+	if genome.AlleleOne != genome.AlleleTwo {
+		return true
+	}
+	if genome.AlleleOne == genome.AlleleTwo {
+		return false
+	}
+	return false
+}
+
+func IsHomozygous(genome GenomeSample) bool {
+	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
+		return false
+	}
+	if genome.AlleleOne == genome.AlleleTwo {
+		return true
+	}
+	if genome.AlleleOne != genome.AlleleTwo {
+		return false
+	}
+	return false
+}
+
+func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
+	sampleHash := HeaderToMaps(gvcf.Header)
+	var listIndex []int16 = make([]int16, len(list))
+	for i := 0; i < len(listIndex); i++ {
+		//look up alt allele index belonging to each string
+		listIndex[i] = sampleHash.GIndex[list[i]]
+	}
+	for record := range gvcf.Vcfs {
+		WriteVcf(writer, ReorderSampleColumns(record, listIndex))
+	}
 }

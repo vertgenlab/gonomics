@@ -32,7 +32,6 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	var target, query, j int64
 	var ok bool
 	var code uint64
-	
 	var gV *vcf.GVcf
 	for read, done := sam.NextAlignment(samFile); done != true; read, done = sam.NextAlignment(samFile) {
 		parentAllele1, parentAllele2 = 0, 0
@@ -43,7 +42,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 			case 'S':
 				query += read.Cigar[i].RunLength
 			case 'I':
-				//TODO: Figure out how to take insertions into account. This algorithm below should work in theory, but there is a case I can't figure out 
+				//TODO: Figure out how to take insertions into account. This algorithm below should work in theory, but there is a case I can't figure out
 				//code = ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target))
 				//_, ok = snpDb[code]
 				//if ok {
