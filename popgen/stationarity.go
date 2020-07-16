@@ -26,13 +26,14 @@ type SegSite struct {
 func gVCFToAFS(filename string) AFS {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
-	alpha := vcf.ReadGVcf(filename)
+	alpha := vcf.GoReadGVcf(filename)
 	var currentSeg *SegSite
 
+	var j int
 	for i := range alpha.Vcfs {
 		currentSeg = &SegSite{i: 0, n: 0}
-		g := vcf.VcfToGenotype(i)
-		for j := 0; j < len(g.Genotypes); j++ {
+		g := vcf.VcfToGvcf(i)
+		for j = 0; j < len(g.Genotypes); j++ {
 			if g.Genotypes[j].AlleleOne != -1 && g.Genotypes[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
 				currentSeg.n = currentSeg.n + 2
 				if g.Genotypes[j].AlleleOne > 0 {
@@ -56,7 +57,7 @@ func AFSToFrequency(a AFS) []float64 {
 	var answer []float64
 	answer = make([]float64, len(a.sites))
 	for x := 0; x < len(a.sites); x++ {
-		answer[x] = float64(AFS.sites[x].i) / float64(AFS.sites[x].n)
+		answer[x] = float64(a.sites[x].i) / float64(a.sites[x].n)
 	}
 	return answer
 }
@@ -97,8 +98,8 @@ func AlleleFrequencyProbability(i int, n int, alpha float64) float64 {
 //afs array has a dummy variable in position 0, so loop starts at 1.
 func AFSLikelihood(afs AFS, alpha []float64) float64 {
 	var answer float64 = 1.0
-	for i := 1; i < len(afs.sites); i++ {
-		answer = answer * AlleleFrequencyProbability(afs.sites[i], len(afs.sites), alpha[i])
+	for j := 1; j < len(afs.sites); j++ {
+		answer = answer * AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j])
 	}
 	return answer
 }

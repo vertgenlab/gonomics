@@ -30,6 +30,12 @@ func PoissonDist(k int, lambda float64) float64 {
 	return (math.Pow(lambda, float64(k)) * math.Pow(math.E, -lambda)) / float64(Factorial(k))
 }
 
+func PoissonDistClosure(lambda float64) func(float64) float64 {
+	return func(x float64) float64 {
+		return PoissonDist(x, lambda)
+	}
+}
+
 func BetaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha <= 0 {
 		log.Fatalf("Alpha parameter must be greater than 0.")
@@ -50,8 +56,8 @@ func GammaDist(x float64, alpha float64, beta float64) float64 {
 	return (math.Pow(beta, alpha) / math.Gamma(alpha)) * math.Pow(x, alpha-1) * math.Exp(-beta*x)
 }
 
-func Uninformative_Gamma(x float64) float64 {
-	return GammaDist(x, 0.01, 0.01)
+func UninformativeGamma(x float64) float64 {
+	return GammaDist(x, 1, 1)
 }
 
 //returns an instantiation of a normal distribution for a particular mean and SD
