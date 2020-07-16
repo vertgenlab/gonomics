@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"strings"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"strings"
 )
 
 func usage() {
@@ -34,7 +34,7 @@ func main() {
 			header := vcf.ReadHeader(file)
 			fmt.Printf("%s", vcf.PrintSampleNames(header))
 		}
-	} else if len(flag.Args()) != expectedNumArgs || (*f1Genome == "" && *parentOne == "" || *parentTwo == ""){
+	} else if len(flag.Args()) != expectedNumArgs || (*f1Genome == "" && *parentOne == "" || *parentTwo == "") {
 		flag.Usage()
 		fmt.Printf("\nExamples:\n./alleleSplit -f1 name -parentOne name -parentTwo name input.sam input.vcf\n\nView sample names:\n./alleleSplit -samples file.vcf\n\n")
 		log.Fatalf("\n\nError: unexpected number of arguments...\n\n")

@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 )
 
 func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string, parentTwo, prefix string) {
@@ -22,9 +21,8 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	defer samFile.Close()
 	header := sam.ReadHeader(samFile)
 
-	childOne := fileio.EasyCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parentOne))
+	childOne, childTwo := fileio.EasyCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parentOne)), fileio.EasyCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parentTwo))
 	defer childOne.Close()
-	childTwo := fileio.EasyCreate(fmt.Sprintf("%s.%s.SNPs.sam", prefix, parentTwo))
 	defer childTwo.Close()
 
 	sam.WriteHeaderToFileHandle(childOne, header)
@@ -34,7 +32,6 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	var target, query, j int64
 	var ok bool
 	var code uint64
-	//wg.Wait()
 
 	var gV *vcf.GVcf
 	for read, done := sam.NextAlignment(samFile); done != true; read, done = sam.NextAlignment(samFile) {
@@ -46,7 +43,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 			case 'S':
 				query += read.Cigar[i].RunLength
 			case 'I':
-				//TODO: Figure out how to take insertions into account
+				//TODO: Figure out how to take insertions into account. This algorithm below should work in theory, but there is a case I can't figure out
 				//code = ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target))
 				//_, ok = snpDb[code]
 				//if ok {
@@ -61,9 +58,8 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 				query += read.Cigar[i].RunLength
 			case 'D':
 				code = vcf.ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target))
-				_, ok = snpDb[code]
+				gV, ok = snpDb[code]
 				if ok {
-					gV = snpDb[code]
 					if dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
 						parentAllele1++
 					}
@@ -75,9 +71,8 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 			case 'M':
 				for j = 0; j < read.Cigar[i].RunLength; j++ {
 					code = vcf.ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target+j))
-					_, ok = snpDb[code]
+					gV, ok = snpDb[code]
 					if ok {
-						gV = snpDb[code]
 						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo]) == 0 {
 							parentAllele1++
 						}
@@ -91,13 +86,11 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 				query += read.Cigar[i].RunLength
 			}
 		}
-		if parentAllele1 > parentAllele2 {
+		switch true {
+		case parentAllele1 > parentAllele2:
 			sam.WriteAlnToFileHandle(childOne, read)
-		} else if parentAllele2 > parentAllele1 {
+		case parentAllele2 > parentAllele1:
 			sam.WriteAlnToFileHandle(childTwo, read)
-		} else {
-			//Skip read
-			log.Printf("Warning: read %s skipped\n", read.QName)
 		}
 	}
 	reader.File.Close()
