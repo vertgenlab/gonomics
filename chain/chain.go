@@ -3,6 +3,7 @@ package chain
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
@@ -31,6 +32,13 @@ type BaseStats struct {
 	QBases int
 }
 
+//Struct used to construct liftover
+type SeqChain struct {
+	Chains chan *Chain
+	TSeq   []*fasta.Fasta
+	QSeq   []*fasta.Fasta
+}
+
 type HeaderComments struct {
 	HashTag []string
 }
@@ -51,6 +59,17 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 		answer <- data
 	}
 	close(answer)
+}
+
+func ToSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
+	file := fileio.EasyOpen(filename)
+	ans := make(chan *Chain)
+	go ReadToChan(file, ans)
+	return &SeqChain{
+		Chains: ans,
+		TSeq:   target,
+		QSeq:   query,
+	}
 }
 
 func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderComments, wg *sync.WaitGroup) {
@@ -169,4 +188,17 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 
 func printHeader(ch *Chain) string {
 	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+}
+
+//Simple swaping of target and query fields
+func SwapBoth(ch *Chain) *Chain {
+	ch.TName, ch.QName = ch.QName, ch.TName
+	ch.TSize, ch.QSize = ch.QSize, ch.TSize
+	ch.TStrand, ch.QStrand = ch.QStrand, ch.TStrand
+	ch.TStart, ch.QStart = ch.QStart, ch.TStart
+	ch.TEnd, ch.QEnd = ch.QEnd, ch.TEnd
+	for i := 0; i < len(ch.Alignment); i++ {
+		ch.Alignment[i].TBases, ch.Alignment[i].QBases = ch.Alignment[i].QBases, ch.Alignment[i].TBases
+	}
+	return ch
 }
