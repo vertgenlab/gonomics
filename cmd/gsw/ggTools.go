@@ -13,7 +13,7 @@ import (
 	"os"
 	//"log"
 	"strings"
-	"sync"
+	//"sync"
 )
 
 type GgToolsSettings struct {
@@ -88,13 +88,13 @@ func RunGgTools() {
 func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRef string, bedFmt string, chainFmt string, overlap bool, invert bool) {
 	switch true {
 	case strings.HasSuffix(axtfile, ".axt") && strings.Contains(outfmt, "chain"):
-		axtToChain(axtfile, out)
+		//axtToChain(axtfile, out)
 	case overlap && strings.HasSuffix(axtfile, ".axt") && strings.HasSuffix(bedFmt, ".bed"):
 		findAxtBedOverlap(axtfile, bedFmt, out, invert)
 	case strings.HasSuffix(chainFmt, ".chain") && strings.Contains(outfmt, "bed"):
 		//chain.OverlapChainBed(chainFmt)
 		//TODO: add feature to select target or query
-		chainToBed(chainFmt, outfmt, true, out)
+		//chainToBed(chainFmt, outfmt, true, out)
 	default:
 		errorMessage()
 	}
@@ -126,7 +126,7 @@ func isFasta(filename string) bool {
 		return false
 	}
 }
-
+/*
 func axtToChain(axtFmt string, chainFmt string) {
 	input := fileio.EasyOpen(axtFmt)
 	defer input.Close()
@@ -142,7 +142,7 @@ func axtToChain(axtFmt string, chainFmt string) {
 	}
 	close(writer)
 	wg.Wait()
-}
+}*/
 
 func chainToBed(chainFmt, bedFmt string, target bool, out string) {
 	input := fileio.EasyOpen(chainFmt)
@@ -195,7 +195,7 @@ func FaVcfChannels(ref string, vcfInput string) *simpleGraph.SimpleGraph {
 	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)
 	return gg
 }
-
+/*
 //axt is the select/target regions we are looking for overlaps from
 func findAxtBedOverlap(axtFmt string, bedFmt string, output string, invert bool) {
 	query := make(chan *bed.Bed)
@@ -216,7 +216,7 @@ func findAxtBedOverlap(axtFmt string, bedFmt string, output string, invert bool)
 		}
 	}
 }
-
+/*
 func mkAxtMap(axtFmt string) map[string][]*axt.Axt {
 	input := fileio.EasyOpen(axtFmt)
 	reader := make(chan *axt.Axt)
@@ -249,4 +249,4 @@ func overlapChainCompareBeds(target []*chain.Chain, query *bed.Bed) bool {
 		}
 	}
 	return false
-}
+}*/
