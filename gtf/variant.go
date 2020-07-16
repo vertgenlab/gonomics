@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"math"
+	"reflect"
 	"strings"
 )
 
@@ -19,7 +22,7 @@ type Variant struct {
 	AAPos       int // 1-base
 	AARef       []dna.AminoAcid
 	AAAlt       []dna.AminoAcid
-	VariantType string // e.g. Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
+	VariantType string // e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
 	Prediction  string // e.g. LOW, MODERATE, HIGH
 }
 
@@ -154,20 +157,80 @@ func addProtein(v *Variant) string {
 }
 
 func addVariantType(v *Variant) {
+	cdsDist := getCdsDist(v)
 	switch {
 	case v.Gene == "":
 		v.VariantType = "Intergenic"
+	case cdsDist > 0 && cdsDist <= 2:
+		v.VariantType = "Splice"
+	case cdsDist > 0 && cdsDist <= 10:
+		v.VariantType = "FarSplice"
 	case v.AARef == nil:
 		v.VariantType = "Intronic"
-	//TODO: Intronic
-	//TODO: Missense
-	//TODO: Nonsense
-	//TODO: Frameshift
-	//TODO: Splice
-	//TODO: FarSplice
+	case isFrameshift(v):
+		v.VariantType = "Frameshift"
+	case isNonsense(v):
+		v.VariantType = "Nonsense"
+	case !reflect.DeepEqual(v.AARef, v.AAAlt):
+		v.VariantType = "Missense"
+	case reflect.DeepEqual(v.AARef, v.AAAlt):
+		v.VariantType = "Silent"
 	default:
 		v.VariantType = "Unrecognized"
 	}
+}
+
+func getCdsDist(v *Variant) int {
+	switch {
+	case int(v.Pos) >= v.NearestCDS.Start && int(v.Pos) <= v.NearestCDS.End: // Variant is in CDS
+		return 0
+
+	case int(v.Pos) < v.NearestCDS.Start: // Variant is before nearest CDS
+		return v.NearestCDS.Start - int(v.Pos)
+
+	default:
+		return v.NearestCDS.End - int(v.Pos) // Variant is after nearest CDS
+	}
+}
+
+func isFrameshift(v *Variant) bool { //TODO CDS CALCULATION
+	refBases := dna.StringToBases(v.Ref)
+	altBases := dna.StringToBases(v.Alt)
+
+	start := int(v.Pos)
+	refEnd := start + len(refBases) - 1
+	altEnd := start + len(altBases) - 1
+
+	var refBasesInCds int
+	var altBasesInCds int
+
+	var startOffset int
+	if start < v.NearestCDS.Start {
+		startOffset = v.NearestCDS.Start - start
+	}
+
+	if refEnd <= v.NearestCDS.End {
+		refBasesInCds = len(refBases) - startOffset
+	} else if refEnd > v.NearestCDS.End {
+		refBasesInCds = len(refBases) - (refEnd - v.NearestCDS.End) - startOffset
+	}
+	if altEnd <= v.NearestCDS.End {
+		altBasesInCds = len(altBases) - startOffset
+	} else if altEnd > v.NearestCDS.End {
+		altBasesInCds = len(altBases) - (altEnd - v.NearestCDS.End) - startOffset
+	}
+
+	shift := altBasesInCds - refBasesInCds
+	return shift%3 != 0
+}
+
+func isNonsense(v *Variant) bool {
+	for _, val := range v.AAAlt {
+		if val == dna.Stop {
+			return true
+		}
+	}
+	return false
 }
 
 func addPrediction(v *Variant) {
@@ -184,21 +247,11 @@ func addPrediction(v *Variant) {
 		v.Prediction = "HIGH"
 	case "Splice":
 		v.Prediction = "HIGH"
-	case "FarSplice:":
+	case "FarSplice":
 		v.Prediction = "MODERATE"
+	case "Silent":
+		v.Prediction = "LOW"
 	default:
 		v.Prediction = "LOW"
 	}
-}
-
-// UCSC standard gtf files use NR_##### for version 1 and NR_#####_X or non-version 1
-// where X is the version number. This function converts to NR_#####.X
-func toAnnotationTranscriptVersion(transcriptID string) string {
-	words := strings.Split(transcriptID, "_")
-	if len(words) == 2 {
-		return transcriptID + ".1"
-	} else if len(words) == 3 {
-		return words[0] + "_" + words[1] + "." + words[2]
-	}
-	return transcriptID // Unrecognized format, just return input
 }
