@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
 	"sync"
@@ -35,8 +36,8 @@ type BaseStats struct {
 //Struct used to construct liftover
 type SeqChain struct {
 	Chains chan *Chain
-	TSeq   []*fasta.Fasta
-	QSeq   []*fasta.Fasta
+	TSeq   map[string][]dna.Base
+	QSeq   map[string][]dna.Base
 }
 
 type HeaderComments struct {
@@ -61,14 +62,14 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 	close(answer)
 }
 
-func ToSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
+func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
 	file := fileio.EasyOpen(filename)
 	ans := make(chan *Chain)
 	go ReadToChan(file, ans)
 	return &SeqChain{
 		Chains: ans,
-		TSeq:   target,
-		QSeq:   query,
+		TSeq:   fasta.FastaMap(target),
+		QSeq:   fasta.FastaMap(query),
 	}
 }
 
@@ -168,8 +169,7 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 				QBases: 0,
 			}
 			answer = append(answer, curr)
-			//this will advance the reader to the blank line
-			//i beliebe the reader will peak at the blank line in the next iteration and exit
+			//this will advance the reader to the blank line i beliebe the reader will peak at the blank line in the next iteration and exit
 			line, _ = fileio.EasyNextRealLine(reader)
 			return answer
 		} else if len(data) == 3 {
