@@ -19,11 +19,11 @@ import (
 type GgToolsSettings struct {
 	Cmd           *flag.FlagSet
 	Axtfile       string
-	BedFmt        string
+	//BedFmt        string
 	ChainFmt      string
 	VcfFmt        string
-	NonOverlap    bool
-	SelectOverlap bool
+	//NonOverlap    bool
+	//SelectOverlap bool
 	FmtOutput     string
 	Out           string
 }
@@ -40,34 +40,34 @@ func ggtoolsExtend() {
 			"Required:\n" +
 			"  Fasta reference\n\n" +
 			"Options:\n" +
-			"  -a, --axt\tConvert axt generated from UCSC kentUtils to a different file format\n\t\tExample:\tgsw ggtools -a pairwise.axt -f vcf -o genome.vcf.gz ref.fa\n\t\tOutfmt:\t\t[.vcf/.gz/.chain/.bed]\n" +
-			"  -b  --bed\tAnalyze bed formated genomic regions\n\t\tComing Soon!\n" +
+			"  -a, --axt\tConvert axt generated from UCSC kentUtils to a different file format\n\t\tExample:\tgsw ggtools -a pairwise.axt -f vcf -o genome.vcf.gz ref.fa\n\t\tOutfmt:\t\t[vcf/gz/chain]\n" +
+			//"  -b  --bed\tAnalyze bed formated genomic regions\n\t\tComing Soon!\n" +
 			"  -c, --chain\tInput a chain file for addional graph and assembly capabilities\n\t\tComing Soon!\n" +
 			"  -v, --vcf\tProvide a VCF to create a graph reference (.gg) used in gsw align\n\t\tExample:\tgsw ggtools -v variance.vcf.gz -o variance.gg ref.fa\n" +
 			"Settings:\n" +
-			"  -s, --select\t  Query bed regions that overlap target axt or chain formats\n" +
-			"  -i, --invert\t  Filter nonOverlapping bed regions from target axt or chain formats\n" +
+			//"  -s, --select\t  Query bed regions that overlap target axt or chain formats\n" +
+			//"  -i, --invert\t  Filter nonOverlapping bed regions from target axt or chain formats\n" +
 			"  -f, --format\t  Pick file format for output, only applies to file conversions utils\n" +
-			"  -o, --out\t  Filename[.bed/.chain/.gg/.sam/.vcf/.gz/]  (default: /dev/stdout)\n\n")
+			"  -o, --out\t  .chain/.gg/.sam/.vcf/.gz  (default: /dev/stdout)\n\n")
 }
 
 func initGgtoolsArgs() *GgToolsSettings {
 	ggT := &GgToolsSettings{Cmd: flag.NewFlagSet("ggtools", flag.ExitOnError)}
 	ggT.Cmd.StringVar(&ggT.Axtfile, "axt", "", "Convert axt generated from UCSC kentUtils to a different file format")
-	ggT.Cmd.StringVar(&ggT.BedFmt, "bed", "", "Analyze bed formated genomic regions")
+	//ggT.Cmd.StringVar(&ggT.BedFmt, "bed", "", "Analyze bed formated genomic regions")
 	ggT.Cmd.StringVar(&ggT.ChainFmt, "chain", "", "Input a chain file for addional graph and assembly capabilities")
 	ggT.Cmd.StringVar(&ggT.FmtOutput, "format", "", "Pick file format for output, only applies to file conversions utils")
-	ggT.Cmd.BoolVar(&ggT.SelectOverlap, "select", false, "Query bed regions that overlap target axt or chain formats")
-	ggT.Cmd.BoolVar(&ggT.NonOverlap, "invert", false, "Filter nonOverlapping bed regions from target axt or chain formats")
+	//ggT.Cmd.BoolVar(&ggT.SelectOverlap, "select", false, "Query bed regions that overlap target axt or chain formats")
+	//ggT.Cmd.BoolVar(&ggT.NonOverlap, "invert", false, "Filter nonOverlapping bed regions from target axt or chain formats")
 	ggT.Cmd.StringVar(&ggT.VcfFmt, "vcf", "", "vcf file combined with fasta reference to make a genome graph")
 	ggT.Cmd.StringVar(&ggT.Out, "out", "/dev/stdout", "Output filename, [.gg/.vcf]")
 
 	ggT.Cmd.StringVar(&ggT.Axtfile, "a", "", "Convert axt generated from UCSC kentUtils to a different file format")
-	ggT.Cmd.StringVar(&ggT.BedFmt, "b", "", "Analyze bed formated genomic regions")
+	//ggT.Cmd.StringVar(&ggT.BedFmt, "b", "", "Analyze bed formated genomic regions")
 	ggT.Cmd.StringVar(&ggT.ChainFmt, "c", "", "Input a chain file for addional graph and assembly capabilities")
 	ggT.Cmd.StringVar(&ggT.FmtOutput, "f", "", "Pick file format for output, only applies to file conversions utils")
-	ggT.Cmd.BoolVar(&ggT.SelectOverlap, "s", false, "Query bed regions that overlap target axt or chain formats")
-	ggT.Cmd.BoolVar(&ggT.NonOverlap, "i", false, "Query nonoverlapping bed regions from target axt or chain formats")
+	//ggT.Cmd.BoolVar(&ggT.SelectOverlap, "s", false, "Query bed regions that overlap target axt or chain formats")
+	//ggT.Cmd.BoolVar(&ggT.NonOverlap, "i", false, "Query nonoverlapping bed regions from target axt or chain formats")
 	ggT.Cmd.StringVar(&ggT.VcfFmt, "v", "", "vcf file combined with fasta reference to make a genome graph")
 	ggT.Cmd.StringVar(&ggT.Out, "o", "/dev/stdout", "Output filename, [.gg/.vcf/.sam]")
 
@@ -80,17 +80,17 @@ func RunGgTools() {
 	if len(os.Args) < 2 {
 		ggT.Cmd.Usage()
 	} else {
-		graphTools(ggT.Out, ggT.Axtfile, ggT.VcfFmt, ggT.FmtOutput, ggT.Cmd.Arg(0), ggT.BedFmt, ggT.ChainFmt, ggT.SelectOverlap, ggT.NonOverlap)
+		graphTools(ggT.Out, ggT.Axtfile, ggT.VcfFmt, ggT.FmtOutput, ggT.Cmd.Arg(0), ggT.ChainFmt)
 	}
 }
 
 //This is similar to the function we usually run in main() which takes the flag pointers as arguments and runs our analysis
-func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRef string, bedFmt string, chainFmt string, overlap bool, invert bool) {
+func graphTools(out string, axtfile string, vcfCalls string, outfmt string, faRef string, chainFmt string) {
 	switch true {
 	case strings.HasSuffix(axtfile, ".axt") && strings.Contains(outfmt, "chain"):
 		//axtToChain(axtfile, out)
-	case overlap && strings.HasSuffix(axtfile, ".axt") && strings.HasSuffix(bedFmt, ".bed"):
-		findAxtBedOverlap(axtfile, bedFmt, out, invert)
+	//case overlap && strings.HasSuffix(axtfile, ".axt") && strings.HasSuffix(bedFmt, ".bed"):
+	//	findAxtBedOverlap(axtfile, bedFmt, out, invert)
 	case strings.HasSuffix(chainFmt, ".chain") && strings.Contains(outfmt, "bed"):
 		//chain.OverlapChainBed(chainFmt)
 		//TODO: add feature to select target or query
@@ -191,7 +191,7 @@ func vcfSplitChrNoN(vcfInput string) map[string][]*vcf.Vcf {
 func FaVcfChannels(ref string, vcfInput string) *simpleGraph.SimpleGraph {
 	vcfFilteredMap := vcfSplitChrNoN(vcfInput)
 	faReader := make(chan *fasta.Fasta)
-	go fasta.ReadToChan(ref, faReader, nil, true)
+	go fasta.ReadToChan(ref, faReader)
 	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)
 	return gg
 }
