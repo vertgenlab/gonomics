@@ -25,6 +25,7 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	}
 	return answer
 }
+
 //Finds gapped regions for entire fasta slice
 func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	var answer []*Bed
@@ -33,6 +34,7 @@ func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	}
 	return answer
 }
+
 //Gives back to total region covered by bed entry
 func TotalSize(b []*Bed) int64 {
 	var ans, curLen int64

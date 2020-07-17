@@ -14,6 +14,7 @@ func negatePrevBed(curr *Bed, prev int) (int, *Bed) {
 		return int(curr.ChromEnd), &Bed{Chrom: curr.Chrom, ChromStart: int64(prev), ChromEnd: curr.ChromStart}
 	}
 }
+
 //Given a set of bed region, return bed regions that are inverted, negated, and/or covered by the given input. Bed entries should be sorted by chromosome position
 func InvertRegions(beds []*Bed, chromLen int) []*Bed {
 	var ans []*Bed
