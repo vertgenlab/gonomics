@@ -10,6 +10,17 @@ func compareName(alpha *Fasta, beta *Fasta) int {
 	return strings.Compare(alpha.Name, beta.Name)
 }
 
+//largest to smallest
+func compareLength(alpha *Fasta, beta *Fasta) int {
+	if len(alpha.Seq) > len(beta.Seq) {
+		return -1
+	} else if len(alpha.Seq) < len(beta.Seq) {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 func compareSeq(alpha *Fasta, beta *Fasta) int {
 	return dna.CompareSeqsCaseSensitive(alpha.Seq, beta.Seq)
 }
@@ -56,4 +67,8 @@ func SortByName(seqs []*Fasta) {
 
 func SortBySeq(seqs []*Fasta) {
 	sort.Slice(seqs, func(i, j int) bool { return compareSeqIgnoreCase(seqs[i], seqs[j]) == -1 })
+}
+
+func SortBySeqLen(seqs []*Fasta) {
+	sort.Slice(seqs, func(i, j int) bool { return compareLength(seqs[i], seqs[j]) == -1 })
 }

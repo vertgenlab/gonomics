@@ -71,8 +71,6 @@ func Write(filename string, records []*Fasta) {
 	WriteToFileHandle(file, records, lineLength)
 }
 
-//TODO: this is a modified version of WriteToFileHandle.
-//My changes will break a lot of code so I will work slowly to slide this in to other functions
 func WriteFasta(file io.Writer, rec *Fasta, lineLength int) {
 	var err error
 	_, err = fmt.Fprintf(file, ">%s\n", rec.Name)
@@ -86,6 +84,9 @@ func WriteFasta(file io.Writer, rec *Fasta, lineLength int) {
 			common.ExitIfError(err)
 		}
 	}
+	//New line character
+	_, err = fmt.Fprint(file, "\n")
+	common.ExitIfError(err)
 }
 
 func WriteGroups(filename string, groups [][]*Fasta) error {
