@@ -58,7 +58,7 @@ func (ch ChainSlice) Write(file string) {
 }
 */
 
-func (ch *Chain) NextChain(file *fileio.EasyReader) bool {
+func (ch *Chain) NextRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Chain
 	for next == nil && !done {

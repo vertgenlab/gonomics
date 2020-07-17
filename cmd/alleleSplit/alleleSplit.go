@@ -11,7 +11,7 @@ import (
 
 func usage() {
 	fmt.Print(
-		"alleleSplit - a tool that separates a heterozygous sam alignment into different alignments by alleles\n" +
+		"alleleSplit - separates a sam alignment from a heterozygous individual\n" +
 			"Usage:\n" +
 			"./alleleSplit [options] input.sam input.vcf\n\n")
 	flag.PrintDefaults()

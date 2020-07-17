@@ -11,7 +11,7 @@ import (
 
 func usage() {
 	fmt.Print(
-		"filterGenotypes - a gonomics tool to filter genotyped Vcfs containing multiple samples\n\n" +
+		"filterGenotypes - filter genotyped Vcfs containing at leaste 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents\n\n" +
 			"Usage:\n" +
 			"  ./filterGenotypes [options] input.vcf output.vcf\n\n")
 	flag.PrintDefaults()
@@ -27,7 +27,7 @@ func main() {
 
 	var parentOne *string = flag.String("parentOne", "", "Name of first parental genome``")
 	var parentTwo *string = flag.String("parentTwo", "", "Name of second parental genome``")
-
+	//TODO: Look into using the groups struct in the popgen package
 	var list *string = flag.String("byname", "", "Filter samples of interest by providing a name`.txt` file containing a list of sample names, one name per line")
 
 	flag.Parse()
@@ -56,7 +56,7 @@ func main() {
 
 			writer.Close()
 
-		} else if *parentOne == "" || *parentTwo == "" {
+		} else if *parentOne == "" || *parentTwo == "" || *f1Genome == "" {
 			log.Fatalf("Error: Must provide exactly 2 parents, found...\n")
 		} else {
 			file := fileio.EasyOpen(input)
@@ -81,15 +81,4 @@ func main() {
 			}
 		}
 	}
-}
-
-//Define flag value as an array. Used to define parent genomes.
-type arrayFlags []string
-
-func (i *arrayFlags) String() string {
-	return "my string representation"
-}
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
 }
