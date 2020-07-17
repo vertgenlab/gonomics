@@ -26,6 +26,7 @@ func InvertRegions(beds []*Bed, chromLen int) []*Bed {
 		var prev int = 0
 		var i int = 0
 		var curr *Bed
+		//TODO: Consider handling the start and end positions differently (not satisfied with this solution)
 		if beds[0].ChromStart == 0 {
 			i++
 			prev = int(beds[0].ChromEnd)
