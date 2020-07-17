@@ -32,7 +32,7 @@ func PoissonDist(k int, lambda float64) float64 {
 
 func PoissonDistClosure(lambda float64) func(float64) float64 {
 	return func(x float64) float64 {
-		return PoissonDist(x, lambda)
+		return PoissonDist(int(x), lambda)
 	}
 }
 
