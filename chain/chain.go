@@ -1,16 +1,18 @@
+//Package chain declares the Chain struct that describes an alignment block and contains functions that operates on chain structs.
 package chain
 
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
 	"sync"
 )
 
+//Chain alignment fields.
 type Chain struct {
 	Score     int
 	TName     string
@@ -27,23 +29,26 @@ type Chain struct {
 	Id        int
 }
 
+//BaseStats is a cigar-like info for alignment block: First number is the length/size of bases, then number of target gaps and finally query gaps.
 type BaseStats struct {
 	Size   int
 	TBases int
 	QBases int
 }
 
-//Struct used to construct liftover
+//SeqChain is a struct that wraps over a chain channeltarget and query sequences implemented as a hash mapping seqeuence names to []dna.Base.
 type SeqChain struct {
 	Chains chan *Chain
 	TSeq   map[string][]dna.Base
 	QSeq   map[string][]dna.Base
 }
 
+//HeaderComments stores the comment lines at the beginning of chain alignments into a struct.
 type HeaderComments struct {
 	HashTag []string
 }
 
+//Read processes an input file and returns a header stuct and a slice of chain alignments.
 func Read(filename string) ([]*Chain, *HeaderComments) {
 	file := fileio.EasyOpen(filename)
 	var answer []*Chain
@@ -55,6 +60,7 @@ func Read(filename string) ([]*Chain, *HeaderComments) {
 	return answer, notes
 }
 
+//ReadToChan processes a chain text file to a channel of chains.
 func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 	for data, done := NextChain(reader); !done; data, done = NextChain(reader) {
 		answer <- data
@@ -62,6 +68,7 @@ func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
 	close(answer)
 }
 
+//GoReadSeqChain will wrap a chain file with target and query fasta seqeunces into the SeqChain struct.
 func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
 	file := fileio.EasyOpen(filename)
 	ans := make(chan *Chain)
@@ -73,6 +80,7 @@ func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta
 	}
 }
 
+//WriteToFile will prcoess a chain channel and writes the data to a file.
 func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderComments, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
@@ -82,6 +90,7 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderCommen
 	wg.Done()
 }
 
+//Write will write chain slice and any given comments to the top of the file.
 func Write(filename string, chaining []*Chain, comments *HeaderComments) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
@@ -90,6 +99,7 @@ func Write(filename string, chaining []*Chain, comments *HeaderComments) {
 	}
 }
 
+//WriteHeaderComments will take the HeaderComment struct and write to file.
 func WriteHeaderComments(file *fileio.EasyWriter, comments *HeaderComments) {
 	var err error
 	for _, each := range comments.HashTag {
@@ -98,11 +108,13 @@ func WriteHeaderComments(file *fileio.EasyWriter, comments *HeaderComments) {
 	}
 }
 
+//WriteChain processes a chain struct and writes the data to a file.
 func WriteChain(file *fileio.EasyWriter, chaining *Chain) {
 	_, err := fmt.Fprintf(file, "%s\n", ToString(chaining))
 	common.ExitIfError(err)
 }
 
+//ReadHeaderComments will process header comments that sometimes appear at the beginning of chain file and returns a struct.
 func ReadHeaderComments(er *fileio.EasyReader) *HeaderComments {
 	var line string
 	var commments HeaderComments
@@ -113,6 +125,7 @@ func ReadHeaderComments(er *fileio.EasyReader) *HeaderComments {
 	return &commments
 }
 
+//ToString will convert a chain struct to original string format.
 func ToString(ch *Chain) string {
 	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 	//minus one in the loop because last line contains 2 zeros and we do not want to print those
@@ -123,6 +136,7 @@ func ToString(ch *Chain) string {
 	return answer
 }
 
+//NextChain will lines in file and return one chain record at a time and a true false determining the EOF.
 func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 	header, done := fileio.EasyNextRealLine(reader)
 	if done {
@@ -131,6 +145,7 @@ func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 	return NewChain(header, reader), false
 }
 
+//NewChain will process cast text into chain data fields.
 func NewChain(text string, reader *fileio.EasyReader) *Chain {
 	data := strings.Split(text, " ")
 	if len(data) != 13 {
@@ -154,6 +169,7 @@ func NewChain(text string, reader *fileio.EasyReader) *Chain {
 	return curr
 }
 
+//chainingHelper is the helper function that will process the chain alignment fields and return the alignment stats.
 func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 	var line string
 	var data []string
@@ -186,6 +202,7 @@ func chainingHelper(reader *fileio.EasyReader) []*BaseStats {
 	return nil
 }
 
+//printHeader is a pretty print that will return a string containing chain alignment fields without the alignment stats columns.
 func printHeader(ch *Chain) string {
 	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
@@ -201,4 +218,15 @@ func SwapBoth(ch *Chain) *Chain {
 		ch.Alignment[i].TBases, ch.Alignment[i].QBases = ch.Alignment[i].QBases, ch.Alignment[i].TBases
 	}
 	return ch
+}
+
+//IsChainFile will check the filename suffix and determine if the file input is a chain.
+func IsChainFile(filename string) bool {
+	if strings.HasSuffix(filename, ".chain") {
+		return true
+	} else if strings.HasSuffix(filename, ".chain.gz") {
+		return true
+	} else {
+		return false
+	}
 }

@@ -1,12 +1,12 @@
 package main
 
-import(
+import (
+	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/axt"
-	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/vcf"
 	"strings"
 )
 
@@ -53,7 +53,7 @@ func chainToSimpleGraph(chainFile, targetFa, queryFa string) *simpleGraph.Simple
 	chainFa := chain.GoReadSeqChain(chainFile, target, query)
 	axtChannel := make(chan *axt.Axt)
 	go workThreadChainAxt(chainFa, axtChannel)
-	
+
 	vcfChannel := make(chan *vcf.Vcf)
 	go workThreadAxtVcf(axtChannel, vcfChannel)
 
@@ -64,18 +64,18 @@ func chainToSimpleGraph(chainFile, targetFa, queryFa string) *simpleGraph.Simple
 	return simpleGraph.VariantGraph(ref, chrVcfMap)
 }
 
-func workThreadChainAxt(chFa *chain.SeqChain, ans chan <- *axt.Axt) {
+func workThreadChainAxt(chFa *chain.SeqChain, ans chan<- *axt.Axt) {
 	for i := range chFa.Chains {
 		ans <- chain.ChainToAxt(i, chFa.TSeq[i.TName], chFa.QSeq[i.QName])
 	}
 	close(ans)
 }
 
-func workThreadAxtVcf(axtChannel <- chan *axt.Axt, ans chan <- *vcf.Vcf) {
+func workThreadAxtVcf(axtChannel <-chan *axt.Axt, ans chan<- *vcf.Vcf) {
 	var j int = 0
 	var curr []*vcf.Vcf
 	for i := range axtChannel {
-		//filter for uniq 
+		//filter for uniq
 		curr = vcf.FilterVcfPos(axt.AxtToVcf(i))
 		for j = 0; j < len(curr); j++ {
 			if !strings.Contains(curr[j].Ref, "N") && !strings.Contains(curr[j].Alt, "N") {
@@ -92,10 +92,9 @@ func goFaChannel(ref []*fasta.Fasta) <-chan *fasta.Fasta {
 	return ans
 }
 
-func faWorker(ref []*fasta.Fasta, faChan chan <- *fasta.Fasta) {
+func faWorker(ref []*fasta.Fasta, faChan chan<- *fasta.Fasta) {
 	for _, chr := range ref {
 		faChan <- chr
 	}
 	close(faChan)
 }
-

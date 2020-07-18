@@ -1,18 +1,18 @@
 package main
 
-import(
-	"github.com/vertgenlab/gonomics/fileio"
+import (
 	"github.com/vertgenlab/gonomics/axt"
-	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func convertAxt(axtFile, format, targetFa, output string) {
 	switch format {
 	case "vcf":
 		vcfChannel := goChannelAxtVcf(axtFile)
-		
+
 		file := fileio.EasyCreate(output)
 		vcf.NewWriteHeader(file, vcf.NewHeader(targetFa))
 		for i := range vcfChannel {
