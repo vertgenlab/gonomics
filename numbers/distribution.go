@@ -75,12 +75,12 @@ func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 
 func NormalLeftIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
-	return DefiniteIntegral(f, mu - 200*sigma, x)
+	return DefiniteIntegral(f, mu-200*sigma, x)
 }
 
 func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
-	return DefiniteIntegral(f, mu + 200*sigma, x)
+	return DefiniteIntegral(f, mu+200*sigma, x)
 }
 
 func BetaLeftIntegral(x float64, alpha float64, beta float64) float64 {
@@ -148,7 +148,6 @@ func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	}
 	return answer
 }
-
 
 //TODO: Think of a way to test these two functions
 //Measures the divergence between two probability distributions. Generally evaluated as an indefinite integral

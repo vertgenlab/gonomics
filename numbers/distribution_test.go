@@ -1,8 +1,8 @@
 package numbers
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 //All expected values are calculated from online calculator tools or in the R programming language.
