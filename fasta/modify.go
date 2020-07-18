@@ -163,6 +163,8 @@ func DistColumn(records []*Fasta) []*Fasta {
 	return subFa
 }
 
-func RenameFaRecord(records *Fasta, prefix string, idx int) {
-	records.Name = fmt.Sprintf("%s_%02d", prefix, idx)
+func ChangePrefix(records []*Fasta, prefix string) {
+	for idx := 0; idx < len(records); idx++ {
+		records[idx].Name = fmt.Sprintf("%s_%d", prefix, idx)
+	}
 }
