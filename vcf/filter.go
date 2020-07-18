@@ -169,7 +169,7 @@ func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
 func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
 	chrVcfMap := make(map[string][]*Vcf)
-	
+
 	var ref []dna.Base
 	var alt []dna.Base
 	for _, v := range vcfs {
