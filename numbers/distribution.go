@@ -30,12 +30,6 @@ func PoissonDist(k int, lambda float64) float64 {
 	return (math.Pow(lambda, float64(k)) * math.Pow(math.E, -lambda)) / float64(Factorial(k))
 }
 
-func PoissonDistClosure(lambda float64) func(float64) float64 {
-	return func(x float64) float64 {
-		return PoissonDist(x, lambda)
-	}
-}
-
 func BetaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha <= 0 {
 		log.Fatalf("Alpha parameter must be greater than 0.")
@@ -79,6 +73,36 @@ func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 	}
 }
 
+func NormalLeftIntegral(x float64, mu float64, sigma float64) float64 {
+	f := NormalClosure(mu, sigma)
+	return DefiniteIntegral(f, mu - 200*sigma, x)
+}
+
+func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
+	f := NormalClosure(mu, sigma)
+	return DefiniteIntegral(f, mu + 200*sigma, x)
+}
+
+func BetaLeftIntegral(x float64, alpha float64, beta float64) float64 {
+	f := BetaClosure(alpha, beta)
+	return DefiniteIntegral(f, 0, x)
+}
+
+func BetaRightIntegral(x float64, alpha float64, beta float64) float64 {
+	f := BetaClosure(alpha, beta)
+	return DefiniteIntegral(f, x, 1)
+}
+
+func GammaLeftIntegral(x float64, alpha float64, beta float64) float64 {
+	f := GammaClosure(alpha, beta)
+	return DefiniteIntegral(f, 0, x)
+}
+
+func GammaRightIntegral(x float64, alpha float64, beta float64) float64 {
+	f := GammaClosure(alpha, beta)
+	return 1 - DefiniteIntegral(f, 0, x)
+}
+
 func PoissonLeftSummation(k int, lambda float64) float64 {
 	var answer float64 = 0
 	for i := 0; i < k+1; i++ {
@@ -112,7 +136,7 @@ func BinomialRightSummation(n int, k int, p float64) float64 {
 func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
 	for i := k; i <= n; i++ {
-		answer = answer + BinomialDist(n, k, p)
+		answer = answer + BinomialDist(n, i, p)
 	}
 	return answer
 }
@@ -120,11 +144,13 @@ func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
 	for i := 0; i < k+1; i++ {
-		answer = answer + BinomialDist(n, k, p)
+		answer = answer + BinomialDist(n, i, p)
 	}
 	return answer
 }
 
+
+//TODO: Think of a way to test these two functions
 //Measures the divergence between two probability distributions. Generally evaluated as an indefinite integral
 //So set start and end to arbitrarily large numbers such that p(>end) -> 0 if the function is supported to infinity.
 func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64) float64, start float64, end float64) float64 {
