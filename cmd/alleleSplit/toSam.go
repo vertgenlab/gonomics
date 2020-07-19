@@ -32,6 +32,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	var target, query, j int64
 	var ok bool
 	var code uint64
+
 	var gV *vcf.GVcf
 	for read, done := sam.NextAlignment(samFile); done != true; read, done = sam.NextAlignment(samFile) {
 		parentAllele1, parentAllele2 = 0, 0
