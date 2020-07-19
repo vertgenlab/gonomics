@@ -155,8 +155,8 @@ func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {
 	mappedPair.FwdSam.Flag += 64
 	mappedPair.RevSam.Flag += 128
 	if isProperPairAlign(ag) {
-		mappedPair.FwdSam.Flag += 1
-		mappedPair.RevSam.Flag += 1
+		mappedPair.FwdSam.Flag += 2
+		mappedPair.RevSam.Flag += 2
 	}
 	return &mappedPair
 }
