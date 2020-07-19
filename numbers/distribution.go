@@ -30,8 +30,8 @@ func PoissonDist(k int, lambda float64) float64 {
 	return (math.Pow(lambda, float64(k)) * math.Pow(math.E, -lambda)) / float64(Factorial(k))
 }
 
-func PoissonDistClosure(lambda float64) func(float64) float64 {
-	return func(x float64) float64 {
+func PoissonDistClosure(lambda float64) func(int) float64 {
+	return func(x int) float64 {
 		return PoissonDist(x, lambda)
 	}
 }

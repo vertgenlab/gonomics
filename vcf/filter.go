@@ -98,7 +98,7 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 }
 func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 	gt := GetAlleleGenotype(v)
-	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && IsHeterozygous(gt[F1]) {
+	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && gt[parentOne].AlleleOne != gt[parentTwo].AlleleOne && IsHeterozygous(gt[F1]) {
 		return true
 	} else {
 		return false
