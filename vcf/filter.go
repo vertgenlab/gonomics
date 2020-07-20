@@ -98,7 +98,7 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 }
 func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 	gt := GetAlleleGenotype(v)
-	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && IsHeterozygous(gt[F1]) {
+	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && gt[parentOne].AlleleOne != gt[parentTwo].AlleleOne && IsHeterozygous(gt[F1]) {
 		return true
 	} else {
 		return false
@@ -164,4 +164,36 @@ func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
 	for record := range gvcf.Vcfs {
 		WriteVcf(writer, ReorderSampleColumns(record, listIndex))
 	}
+}
+
+func FilterVcfPos(vcfs []*Vcf) []*Vcf {
+	var answer []*Vcf
+	chrVcfMap := make(map[string][]*Vcf)
+
+	var ref []dna.Base
+	var alt []dna.Base
+	for _, v := range vcfs {
+		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
+	}
+	var i int
+	var curr []*Vcf
+	for key := range chrVcfMap {
+		curr = chrVcfMap[key]
+		encountered := make(map[int64]bool)
+		for i = 0; i < len(curr); i++ {
+			if encountered[curr[i].Pos] == true {
+				//do not add
+			} else {
+				encountered[curr[i].Pos] = true
+				ref = dna.StringToBases(curr[i].Ref)
+				alt = dna.StringToBases(curr[i].Alt)
+				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
+					answer = append(answer, curr[i])
+				}
+			}
+
+		}
+	}
+	Sort(answer)
+	return answer
 }
