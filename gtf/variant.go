@@ -4,13 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
-	"io"
 	"math"
 	"reflect"
-	"strings"
 )
 
 type Variant struct {
@@ -140,8 +137,8 @@ func determineFrame(v *Variant) int {
 }
 
 // Annotation format is: Genomic | VariantType | Prediction | Gene | cDNA | Protein
-func VariantToAnnotation(variant *Variant) string {
-	return addGenomic(variant) + "|" + variant.Prediction + "|" + variant.Gene + "|" + addCDNA(variant) + "|" + addProtein(variant)
+func VariantToAnnotation(variant *Variant, seq map[string][]dna.Base) string {
+	return addGenomic(variant) + "|" + variant.Prediction + "|" + variant.Gene + "|" + addCDNA(variant) + "|" + addProtein(variant, seq)
 }
 
 func addGenomic(v *Variant) string {
@@ -149,11 +146,55 @@ func addGenomic(v *Variant) string {
 }
 
 func addCDNA(v *Variant) string {
-	// TODO: check for splice
+	var answer string = v.RefId + ":c."
+	if v.VariantType == "Splice" || v.VariantType == "FarSplice" {
+		dist, start := getNearestCdsPos(v)
+		if start {
+			answer += fmt.Sprintf("%d+%d", dist, getCdsDist(v))
+		} else {
+			answer += fmt.Sprintf("%d-%d", dist, getCdsDist(v))
+		}
+	} else {
+		answer += fmt.Sprintf("%d", v.CDNAPos)
+	}
+	answer += v.Ref + ">" + v.Alt
+	return answer
 }
 
-func addProtein(v *Variant) string {
+func addProtein(v *Variant, seq map[string][]dna.Base) string {
+	var answer string = "p."
+	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AARef[0]), v.AAPos)
+	if len(v.AARef) > 1 {
+		answer += "_" + dna.AminoAcidToString(v.AAAlt[len(v.AAAlt)-1]) + fmt.Sprintf("%d", v.AAPos + len(v.AAAlt) - 1)
+	}
 
+	refLen := len(v.AARef)
+	altLen := len(v.AAAlt)
+	switch {
+	case refLen == 1 && altLen == 1: // Neither -> nothing is added
+	case refLen == 1 && altLen > 1: // Insertion -> add "ins"
+		answer += "ins"
+	case refLen >= 1 && altLen <= 1: // Deletion -> add "del"
+		answer += "del"
+	case refLen >= 1 && altLen > 1: // Delins -> add "delins"
+		answer += "delins"
+	}
+
+	if len(v.AAAlt) == 1 {
+		answer += dna.AminoAcidToString(v.AAAlt[0])
+	} else if len(v.AAAlt) > 5 {
+		answer += fmt.Sprintf("%d", len(v.AAAlt))
+	} else {
+		for _, val := range v.AAAlt {
+			answer += dna.AminoAcidToString(val)
+		}
+	}
+
+	if v.VariantType == "Frameshift" {
+		answer += fmt.Sprintf("fs*%d", distToNextTer(v, seq))
+	}
+
+	return answer
 }
 
 func addVariantType(v *Variant) {
@@ -180,6 +221,59 @@ func addVariantType(v *Variant) {
 	}
 }
 
+func getNearestCdsPos(v *Variant) (pos int, start bool) {
+	var currCDS *CDS = v.NearestCDS
+	if int(v.Pos) < v.NearestCDS.Start {
+		pos = 1
+	} else {
+		pos = v.NearestCDS.End - v.NearestCDS.Start
+	}
+
+	for currCDS.Prev != nil { // Go to first CDS to begin count
+		currCDS = currCDS.Prev
+		pos += currCDS.End - currCDS.Start
+	}
+	return pos, int(v.Pos) < v.NearestCDS.Start
+}
+
+func distToNextTer(v *Variant, seq map[string][]dna.Base) int {
+	var answer int
+	currSeq := seq[v.Chr]
+	frame := determineFrame(v)
+	var currCodon []dna.Base
+	for i := frame; i > 0; i-- {
+		currCodon = append(currCodon, currSeq[int(v.Pos) - 1 - i])
+	}
+	seqPos := int(v.Pos) + len(dna.StringToBases(v.Ref)) - 1
+	altSeq := dna.StringToBases(v.Alt)
+	for _, val := range altSeq {
+		currCodon = append(currCodon, val)
+		if len(currCodon)%3 == 0 {
+			if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+				return answer
+			}
+			answer++
+			currCodon = nil
+		}
+	}
+	currCDS := v.NearestCDS
+	for {
+		if seqPos > currCDS.End - 1 {
+			currCDS = currCDS.Next
+			seqPos = currCDS.Start - 1
+		}
+		currCodon = append(currCodon, currSeq[seqPos])
+		seqPos++
+		if len(currCodon)%3 == 0 {
+			if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+				return answer
+			}
+			answer++
+			currCodon = nil
+		}
+	}
+}
+
 func getCdsDist(v *Variant) int {
 	switch {
 	case int(v.Pos) >= v.NearestCDS.Start && int(v.Pos) <= v.NearestCDS.End: // Variant is in CDS
@@ -193,7 +287,7 @@ func getCdsDist(v *Variant) int {
 	}
 }
 
-func isFrameshift(v *Variant) bool { //TODO CDS CALCULATION
+func isFrameshift(v *Variant) bool {
 	refBases := dna.StringToBases(v.Ref)
 	altBases := dna.StringToBases(v.Alt)
 
