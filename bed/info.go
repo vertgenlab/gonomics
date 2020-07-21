@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-//Finds all gapped regions in a given fasta record
+//UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
 func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	var answer []*Bed
 	var inRegion bool = false
@@ -26,7 +26,7 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	return answer
 }
 
-//Finds gapped regions for entire fasta slice
+//UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
 func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	var answer []*Bed
 	for idx, _ := range records {
@@ -35,7 +35,7 @@ func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	return answer
 }
 
-//Gives back to total region covered by bed entry
+//TotalSize gives back to total region covered by bed entry.
 func TotalSize(b []*Bed) int64 {
 	var ans, curLen int64
 	for i := 0; i < len(b); i++ {

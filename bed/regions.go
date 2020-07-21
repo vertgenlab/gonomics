@@ -15,7 +15,7 @@ func negatePrevBed(curr *Bed, prev int) (int, *Bed) {
 	}
 }
 
-//Given a set of bed region, return bed regions that are inverted, negated, and/or covered by the given input. Bed entries should be sorted by chromosome position
+//Given a set of bed region, return bed regions that are inverted, negated, and/or covered by the given input. Bed entries should be sorted by chromosome position and cannot contain overlaps.
 func InvertRegions(beds []*Bed, chromLen int) []*Bed {
 	var ans []*Bed
 	if len(beds) < 1 {
