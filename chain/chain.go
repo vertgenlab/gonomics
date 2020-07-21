@@ -36,7 +36,7 @@ type BaseStats struct {
 	QBases int
 }
 
-//SeqChain is a struct that wraps over a chain channeltarget and query sequences implemented as a hash mapping seqeuence names to []dna.Base.
+//SeqChain is a data structure that wraps over a chain channel. The struct also includes target and query sequences implemented as a hash, mapping seqeuence names to []dna.Base.
 type SeqChain struct {
 	Chains chan *Chain
 	TSeq   map[string][]dna.Base
@@ -80,10 +80,13 @@ func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta
 	}
 }
 
-//WriteToFile will prcoess a chain channel and writes the data to a file.
+//WriteToFile will process a chain channel and writes the data to a file. Once WriteToFile finishes ranging over the channel, it will call Done() on the waitGroup. WaitGroup must be set up beforehand.
 func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderComments, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
+	if comments != nil {
+		WriteHeaderComments(file, comments)
+	}
 	for data := range chaining {
 		WriteChain(file, data)
 	}
@@ -94,6 +97,9 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderCommen
 func Write(filename string, chaining []*Chain, comments *HeaderComments) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
+	if comments != nil {
+		WriteHeaderComments(file, comments)
+	}
 	for _, data := range chaining {
 		WriteChain(file, data)
 	}

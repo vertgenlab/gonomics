@@ -85,7 +85,7 @@ func Read(filename string) []*Axt {
 	return answer
 }
 
-//ReadToChan is a function that takes an EasyReader, which is an interface that implements os.File to read axt alignments into an Axt channel.
+//ReadToChan is a function that takes an EasyReader, which uses type os.File as an input to read axt alignments into an Axt channel.
 func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
 	for data, err := NextAxt(reader); !err; data, err = NextAxt(reader) {
 		answer <- data
@@ -142,7 +142,7 @@ func WriteToFileHandle(file *fileio.EasyWriter, input *Axt, alnNumber int) {
 	common.ExitIfError(err)
 }
 
-//ToString converts ax Axt alignment struct into a string
+//ToString converts an Axt alignment struct into a string.
 func ToString(input *Axt, id int) string {
 	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, common.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 }
