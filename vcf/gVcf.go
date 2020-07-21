@@ -74,6 +74,8 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 			n, err = strconv.ParseInt(alleles[0], 10, 16)
 			if err != nil {
 				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false}
+			} else {
+				answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
 			}
 		}
 	}
