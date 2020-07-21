@@ -148,37 +148,40 @@ func buildTree(intervals []Interval) *IntervalNode {
 
 func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
-	switch relationship {
-	case "any":
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "o")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "oi")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "di")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "m")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "mi")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-	case "within":
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-	case "start":
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-	case "end":
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
-		answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-	case "equal":
-		answer = query(treeMap[q.GetChrom()], q, "e")
-	default:
-		answer = query(treeMap[q.GetChrom()], q, relationship)
+	if treeMap[q.GetChrom()] != nil {
+		switch relationship {
+		case "any":
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "o")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "oi")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "di")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "m")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "mi")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
+		case "within":
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
+		case "start":
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
+		case "end":
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
+			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
+		case "equal":
+			answer = query(treeMap[q.GetChrom()], q, "e")
+		default:
+			answer = query(treeMap[q.GetChrom()], q, relationship)
+		}
 	}
+
 	return answer
 }
 
@@ -192,6 +195,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	// 3. Find the split node vsplit in range tree T where the paths
 	// to x1 and x2 split, or the leaf where both paths end.
 	vSplit := findSplit(x1, x2, tree)
+
 	if vSplit == nil {
 		return nil
 	}
@@ -325,7 +329,6 @@ func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
 }
 
 func findSplit(x1, x2 float32, node *IntervalNode) *IntervalNode {
-
 	if node.val != nil { // Handles case where only 1 node is present in tree
 		return node
 	}
