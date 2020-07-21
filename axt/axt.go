@@ -154,3 +154,19 @@ func AxtInfo(input *Axt) string {
 	text = fmt.Sprintf("%s;%d;%d;%s;%d;%d;%t;%d", input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, input.QStrandPos, input.Score)
 	return text
 }
+
+func SwapBoth(in *Axt, tLen int64, qLen int64) *Axt {
+	in.RSeq, in.QSeq = in.QSeq, in.RSeq
+	in.RName, in.QName = in.QName, in.RName
+	if !in.QStrandPos {
+		in.RStart, in.REnd = qLen-in.QEnd+1, qLen-in.QStart+1
+		in.QStart, in.QEnd = tLen-in.REnd+1, tLen-in.RStart+1
+		dna.ReverseComplement(in.RSeq)
+		dna.ReverseComplement(in.QSeq)
+	} else {
+		in.RStart, in.REnd = in.QStart, in.QEnd
+		in.QStart, in.QEnd = in.RStart, in.REnd
+	}
+	in.RSeq, in.QSeq = in.QSeq, in.RSeq
+	return in
+}
