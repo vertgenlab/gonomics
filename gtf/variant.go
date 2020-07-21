@@ -22,7 +22,6 @@ type Variant struct {
 	AARef       []dna.AminoAcid
 	AAAlt       []dna.AminoAcid
 	VariantType string // e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
-	Prediction  string // e.g. LOW, MODERATE, HIGH
 }
 
 func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNode {
@@ -55,7 +54,6 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 		answer = &Variant{Vcf: *v}
 	}
 	addVariantType(answer)
-	addPrediction(answer)
 	return answer, err
 }
 
@@ -72,83 +70,155 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
 	return answer
 }
 
-//TODO Strand
 func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 	var cdsPos int
 	var exon *Exon
-	for i := 0; i < len(gene.Transcripts[0].Exons); i++ {
-		exon = gene.Transcripts[0].Exons[i]
-		if exon.Cds != nil && int(v.Pos) > exon.Cds.End { // variant is further in gene
-			cdsPos += exon.Cds.End - exon.Cds.Start + 1
-			answer.NearestCDS = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
-		} else if exon.Cds != nil && int(v.Pos) <= exon.Cds.End { // variant is before end of this exon
-			if int(v.Pos) < exon.Cds.Start { // Variant is NOT in CDS
-				if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[0].Exons[i-1].Cds.Start {
-					answer.NearestCDS = exon.Cds
-				} else {
-					answer.NearestCDS = gene.Transcripts[0].Exons[i-1].Cds
+	//TODO: this code may be able to be compressed
+	if answer.PosStrand {
+		for i := 0; i < len(gene.Transcripts[0].Exons); i++ {
+			exon = gene.Transcripts[0].Exons[i]
+			if exon.Cds != nil && int(v.Pos) > exon.Cds.End { // variant is further in gene
+				cdsPos += exon.Cds.End - exon.Cds.Start + 1
+				answer.NearestCDS = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
+			} else if exon.Cds != nil && int(v.Pos) <= exon.Cds.End { // variant is before end of this exon
+				if int(v.Pos) < exon.Cds.Start { // Variant is NOT in CDS
+					if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[0].Exons[i-1].Cds.Start {
+						answer.NearestCDS = exon.Cds
+					} else {
+						answer.NearestCDS = gene.Transcripts[0].Exons[i-1].Cds
+					}
+					break
 				}
-				break
+				cdsPos += int(v.Pos) - exon.Cds.Start + 1
+				answer.CDNAPos = cdsPos
+				answer.NearestCDS = exon.Cds
 			}
-			cdsPos += int(v.Pos) - exon.Cds.Start + 1
-			answer.CDNAPos = cdsPos
-			answer.NearestCDS = exon.Cds
+		}
+	} else {
+		for i := 0; i < len(gene.Transcripts[0].Exons); i++ {
+			exon = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons) - 1 - i]
+			if exon.Cds != nil && int(v.Pos) < exon.Cds.Start { // variant is further in gene
+				cdsPos += exon.Cds.End - exon.Cds.Start + 1
+				answer.NearestCDS = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
+			} else if exon.Cds != nil && int(v.Pos) >= exon.Cds.Start { // variant is before end of this exon
+				if int(v.Pos) > exon.Cds.End { // Variant is NOT in CDS
+					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons) - 1 - i + 1].Cds.Start-int(v.Pos) {
+						answer.NearestCDS = exon.Cds
+					} else {
+						answer.NearestCDS = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons) - 1 - i + 1].Cds
+					}
+					break
+				}
+				// Variant IS in CDS
+				cdsPos += exon.Cds.End - int(v.Pos) + 1
+				answer.CDNAPos = cdsPos
+				answer.NearestCDS = exon.Cds
+			}
 		}
 	}
+
 }
 
-//TODO Strand
 func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
 	var currCDS *CDS = variant.NearestCDS
-	seqPos -= determineFrame(variant)
-	for ; seqPos < int(variant.Pos-1); seqPos++ {
-		if seqPos < currCDS.Start-1 {
-			seqPos = currCDS.Prev.End - 1
-			currCDS = currCDS.Prev
-		} else if seqPos > currCDS.End-1 {
-			seqPos = currCDS.Next.Start - 1
-			currCDS = currCDS.Next
+	if variant.PosStrand {
+		seqPos -= determineFrame(variant)
+		for ; seqPos < int(variant.Pos-1); seqPos++ {
+			if seqPos < currCDS.Start-1 {
+				seqPos = currCDS.Prev.End - 1
+				currCDS = currCDS.Prev
+			} else if seqPos > currCDS.End-1 {
+				seqPos = currCDS.Next.Start - 1
+				currCDS = currCDS.Next
+			}
+			refBases = append(refBases, seq[variant.Chr][seqPos])
+			altBases = append(altBases, seq[variant.Chr][seqPos])
 		}
-		refBases = append(refBases, seq[variant.Chr][seqPos])
-		altBases = append(altBases, seq[variant.Chr][seqPos])
-	}
-	refBases = append(refBases, dna.StringToBases(variant.Ref)...)
-	altBases = append(altBases, dna.StringToBases(variant.Alt)...)
-	seqPos += len(dna.StringToBases(variant.Ref))
-	var offset int
-	for offset = 0; len(refBases)%3 != 0; offset++ {
-		if seqPos+offset > currCDS.End-1 {
-			seqPos = currCDS.Next.Start - 1
-			currCDS = currCDS.Next
+		refBases = append(refBases, dna.StringToBases(variant.Ref)...)
+		altBases = append(altBases, dna.StringToBases(variant.Alt)...)
+		seqPos += len(dna.StringToBases(variant.Ref))
+		var offset int
+		for offset = 0; len(refBases)%3 != 0; offset++ {
+			if seqPos+offset > currCDS.End-1 {
+				seqPos = currCDS.Next.Start - 1
+				currCDS = currCDS.Next
+			}
+			refBases = append(refBases, seq[variant.Chr][seqPos+offset])
 		}
-		refBases = append(refBases, seq[variant.Chr][seqPos+offset])
-	}
-	for offset = 0; len(altBases)%3 != 0; offset++ {
-		if seqPos+offset > currCDS.End-1 {
-			seqPos = currCDS.Next.Start - 1
-			currCDS = currCDS.Next
+		for offset = 0; len(altBases)%3 != 0; offset++ {
+			if seqPos+offset > currCDS.End-1 {
+				seqPos = currCDS.Next.Start - 1
+				currCDS = currCDS.Next
+			}
+			altBases = append(altBases, seq[variant.Chr][seqPos+offset])
 		}
-		altBases = append(altBases, seq[variant.Chr][seqPos+offset])
+		variant.AARef = dna.TranslateSeq(refBases)
+		variant.AAAlt = dna.TranslateSeq(altBases)
+		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) // Add 0.4 so pos will always round up
+	} else {
+		seqPos += determineFrame(variant)
+		for ; seqPos > int(variant.Pos-1); seqPos-- {
+			if seqPos < currCDS.Start-1 {
+				seqPos = currCDS.Prev.End - 1
+				currCDS = currCDS.Prev
+			} else if seqPos > currCDS.End-1 {
+				seqPos = currCDS.Next.Start - 1
+				currCDS = currCDS.Next
+			}
+			refBases = append(refBases, seq[variant.Chr][seqPos])
+			altBases = append(altBases, seq[variant.Chr][seqPos])
+		}
+		refBases = append(refBases, reverse(dna.StringToBases(variant.Ref))...)
+		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt))...)
+		seqPos -= len(dna.StringToBases(variant.Ref))
+		var offset int
+		for offset = 0; len(refBases)%3 != 0; offset++ {
+			if seqPos-offset < currCDS.Start-1 {
+				seqPos = currCDS.Prev.End - 1
+				currCDS = currCDS.Prev
+			}
+			refBases = append(refBases, seq[variant.Chr][seqPos-offset])
+		}
+		for offset = 0; len(altBases)%3 != 0; offset++ {
+			if seqPos-offset < currCDS.Start-1 {
+				seqPos = currCDS.Prev.End - 1
+				currCDS = currCDS.Prev
+			}
+			altBases = append(altBases, seq[variant.Chr][seqPos-offset])
+		}
+		dna.Complement(refBases)
+		dna.Complement(altBases)
+		variant.AARef = dna.TranslateSeq(refBases)
+		variant.AAAlt = dna.TranslateSeq(altBases)
+		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) // Add 0.4 so pos will always round up
 	}
-	variant.AARef = dna.TranslateSeq(refBases)
-	variant.AAAlt = dna.TranslateSeq(altBases)
-	variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) // Add 0.4 so pos will always round up
+}
+
+func reverse(s []dna.Base) []dna.Base {
+	for i := 0; i < len(s) / 2; i++ {
+		s[i], s[len(s)-1-i] = s[len(s)-1-i], s[i]
+	}
+	return s
 }
 
 func determineFrame(v *Variant) int {
-	return (int(v.Pos)-v.NearestCDS.Start)%3 + v.NearestCDS.Frame
+	if v.PosStrand {
+		return (int(v.Pos)-v.NearestCDS.Start)%3 + v.NearestCDS.Frame
+	} else {
+		return (v.NearestCDS.End-int(v.Pos))%3 + v.NearestCDS.Frame
+	}
 }
 
-// Annotation format is: Genomic | VariantType | Prediction | Gene | cDNA | Protein
+// Annotation format is: Genomic | VariantType | Gene | cDNA | Protein
 func VariantToAnnotation(variant *Variant, seq map[string][]dna.Base) string {
-	return addGenomic(variant) + "|" + variant.Prediction + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant) + "|" + addProtein(variant, seq)
+	return addGenomic(variant) + "|" + variant.VariantType + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant) + "|" + addProtein(variant, seq)
 }
 
 func addGenomic(v *Variant) string {
-	return fmt.Sprintf("g.%d%s>%s", v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
+	return fmt.Sprintf("g.%s:%d%s>%s", v.Chr, v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
 }
 
 //TODO Strand
@@ -231,6 +301,7 @@ func addVariantType(v *Variant) {
 	}
 }
 
+//TODO Strand
 func getNearestCdsPos(v *Variant) (pos int, start bool) {
 	var currCDS *CDS = v.NearestCDS
 	if int(v.Pos) < v.NearestCDS.Start {
@@ -252,39 +323,78 @@ func distToNextTer(v *Variant, seq map[string][]dna.Base) int {
 	currSeq := seq[v.Chr]
 	frame := determineFrame(v)
 	var currCodon []dna.Base
-	for i := frame; i > 0; i-- {
-		currCodon = append(currCodon, currSeq[int(v.Pos) - 1 - i])
-	}
-	seqPos := int(v.Pos) + len(dna.StringToBases(v.Ref)) - 1
-	altSeq := dna.StringToBases(v.Alt)
-	for _, val := range altSeq {
-		currCodon = append(currCodon, val)
-		if len(currCodon)%3 == 0 {
-			if dna.TranslateSeq(currCodon)[0] == dna.Stop {
-				return answer
-			}
-			answer++
-			currCodon = nil
+	if v.PosStrand {
+		for i := frame; i > 0; i-- {
+			currCodon = append(currCodon, currSeq[int(v.Pos) - 1 - i])
 		}
-	}
-	currCDS := v.NearestCDS
-	for {
-		if seqPos > currCDS.End - 1 {
-			currCDS = currCDS.Next
-			seqPos = currCDS.Start - 1
-		}
-		currCodon = append(currCodon, currSeq[seqPos])
-		seqPos++
-		if len(currCodon)%3 == 0 {
-			if dna.TranslateSeq(currCodon)[0] == dna.Stop {
-				return answer
+		seqPos := int(v.Pos) + len(dna.StringToBases(v.Ref)) - 1
+		altSeq := dna.StringToBases(v.Alt)
+		for _, val := range altSeq {
+			currCodon = append(currCodon, val)
+			if len(currCodon)%3 == 0 {
+				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+					return answer
+				}
+				answer++
+				currCodon = nil
 			}
-			answer++
-			currCodon = nil
+		}
+		currCDS := v.NearestCDS
+		for {
+			if seqPos > currCDS.End - 1 {
+				currCDS = currCDS.Next
+				seqPos = currCDS.Start - 1
+			}
+			currCodon = append(currCodon, currSeq[seqPos])
+			seqPos++
+			if len(currCodon)%3 == 0 {
+				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+					return answer
+				}
+				answer++
+				currCodon = nil
+			}
+		}
+	} else {
+		for i := frame; i > 0; i-- {
+			currCodon = append(currCodon, currSeq[int(v.Pos) - 1 + i])
+		}
+		seqPos := int(v.Pos) - 1 - len(dna.StringToBases(v.Ref))
+		altSeq := reverse(dna.StringToBases(v.Alt))
+		for _, val := range altSeq {
+			currCodon = append(currCodon, val)
+			if len(currCodon)%3 == 0 {
+				dna.Complement(currCodon)
+				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+					return answer
+				}
+				answer++
+				currCodon = nil
+			}
+		}
+		currCDS := v.NearestCDS
+		for {
+			if seqPos < currCDS.Start - 1 { //TODO: add if currCDS.Prev != nil &&
+				currCDS = currCDS.Prev
+				fmt.Println(currCDS)
+				seqPos = currCDS.End - 1
+			}
+			currCodon = append(currCodon, currSeq[seqPos])
+			seqPos--
+			if len(currCodon)%3 == 0 {
+				dna.Complement(currCodon)
+				//fmt.Println(dna.TranslateSeq(currCodon)[0])
+				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+					return answer
+				}
+				answer++
+				currCodon = nil
+			}
 		}
 	}
 }
 
+//TODO Strand
 func getCdsDist(v *Variant) int {
 	switch {
 	case int(v.Pos) >= v.NearestCDS.Start && int(v.Pos) <= v.NearestCDS.End: // Variant is in CDS
@@ -336,27 +446,4 @@ func isNonsense(v *Variant) bool {
 		}
 	}
 	return false
-}
-
-func addPrediction(v *Variant) {
-	switch v.VariantType {
-	case "Intergenic":
-		v.Prediction = "LOW"
-	case "Intronic":
-		v.Prediction = "LOW"
-	case "Missense":
-		v.Prediction = "MODERATE"
-	case "Nonsense":
-		v.Prediction = "HIGH"
-	case "Frameshift":
-		v.Prediction = "HIGH"
-	case "Splice":
-		v.Prediction = "HIGH"
-	case "FarSplice":
-		v.Prediction = "MODERATE"
-	case "Silent":
-		v.Prediction = "LOW"
-	default:
-		v.Prediction = "LOW"
-	}
 }

@@ -26,6 +26,7 @@ func TestVcfToVariant(t *testing.T) {
 		GeneName: "DummyGene",
 		Transcripts: []*Transcript{{
 			Chr:          "DummyChr",
+			Strand: 	true,
 			Start:        1,
 			End:          3,
 			TranscriptID: "DummyTranscriptID",
@@ -51,9 +52,9 @@ func TestVcfToVariant(t *testing.T) {
 	}
 
 	answer := fmt.Sprint(VariantToAnnotation(variant, inSeq))
-	if answer != "g.2A>C|MODERATE|DummyGene|DummyTranscriptID:c.2A>C|p.His1Pro" {
+	if answer != "g.DummyChr:2A>C|Missense|DummyGene|DummyTranscriptID:c.2A>C|p.His1Pro" {
 		log.Println("Output: ", answer)
-		log.Println("Expected: g.2A>C|MODERATE|DummyGene|DummyTranscriptID:c.2A>C|p.His1Pro")
+		log.Println("Expected: g.DummyChr:2A>C|Missense|DummyGene|DummyTranscriptID:c.2A>C|p.His1Pro")
 		t.Errorf("ERROR: Problem annotating variant")
 	}
 }
@@ -66,11 +67,11 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 	var err error
 	var variant *Variant
 	for _, val := range testVcf {
+		fmt.Printf("\nANSWER: POS=%d VAR=%s\n", val.Pos, val.Info)
 		variant, err = VcfToVariant(val, tree, testFasta)
 		if err != nil {
 			log.Println(err)
 		}
-		fmt.Printf("\nANSWER: POS=%d VAR=%s\n", variant.Pos, variant.Info)
 		fmt.Printf("OUTPUT: %s\n", VariantToAnnotation(variant, testFasta))
 	}
 }

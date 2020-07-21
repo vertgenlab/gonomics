@@ -80,6 +80,7 @@ func Read(filename string) map[string]*Gene {
 	var currentTranscript *Transcript
 	var doneReading bool = false
 	answer := make(map[string]*Gene)
+	var prevCDS *CDS
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
@@ -114,9 +115,10 @@ func Read(filename string) map[string]*Gene {
 				currENumber = field[1]
 			}
 		}
-		var prevCDS *CDS
+
 		switch words[2] {
 		case "transcript":
+			prevCDS = nil
 			currentTranscript = &Transcript{Chr: words[0], Source: words[1], Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), TranscriptID: currT}
 			currentTranscript.Strand = common.StringToStrand(words[6])
 			currentTranscript.Exons = make([]*Exon, 0)
