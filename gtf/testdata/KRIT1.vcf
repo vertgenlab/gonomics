@@ -1,0 +1,713 @@
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NOTES
+chr7	92200665	rs1322524683	T	C	.	.	c.*71A>G|	.	
+chr7	92200673	rs536470704	C	A	.	.	c.*63G>T|	.	
+chr7	92200679	rs529937203	C	T	.	.	c.*57G>A|	.	
+chr7	92200680	rs370590941	G	A	.	.	c.*56C>T|	.	
+chr7	92200681	rs1039846647	G	GA	.	.	c.*54dup|	.	
+chr7	92200683	rs11542681	A	G	.	.	c.*53T>C|	.	
+chr7	92200689	rs760613422	A	C	.	.	c.*47T>G|	.	
+chr7	92200690	rs369227523	C	T	.	.	c.*46G>A|	.	
+chr7	92200692	rs1303888609	C	A	.	.	c.*44G>T|	.	
+chr7	92200696	rs377118330	A	G	.	.	c.*40T>C|	.	
+chr7	92200706	rs369515161	G	A	.	.	c.*30C>T|	.	
+chr7	92200709	rs1394800763	G	A	.	.	c.*27C>T|	.	
+chr7	92200716		G	T	.	.	c.*20C>A|	.	
+chr7	92200740		G	A	.	.	p.Ser736Leu|p.Ser736Leu	.	
+chr7	92200754	rs778136104	G	A	.	.	p.Pro731Pro|p.Pro731Pro	.	
+chr7	92200758	rs1251580650	A	G	.	.	p.Met730Thr|p.Met730Thr	.	
+chr7	92200764	rs1197446372	T	C	.	.	p.Gln728Arg|p.Gln728Arg	.	
+chr7	92200787	rs1178875536	T	C	.	.	p.Lys720Lys|p.Lys720Lys	.	
+chr7	92200792	rs759149249	C	A	.	.	p.Val719Leu|p.Val719Leu	.	
+chr7	92200795	rs140952803	C	T	.	.	p.Val718Met|p.Val718Met	.	
+chr7	92200796		G	T	.	.	p.Leu717Leu|p.Leu717Leu	.	
+chr7	92200796	rs373944904	G	A	.	.	p.Leu717Leu|p.Leu717Leu	.	
+chr7	92200804		C	A	.	.	p.Ala715Ser|p.Ala715Ser	.	
+chr7	92200820	rs1488786224	T	C	.	.	c.2143-16A>G|	.	
+chr7	92200825	rs753709316	A	G	.	.	c.2143-21T>C|	.	
+chr7	92200827		A	G	.	.	c.2143-23T>C|	.	
+chr7	92200832	rs190282704	A	G	.	.	c.2143-28T>C|	.	
+chr7	92200850	rs374703570	T	C	.	.	c.2143-46A>G|	.	
+chr7	92200851	rs1424229283	C	A	.	.	c.2143-47G>T|	.	
+chr7	92201245		T	TAAAAAA	.	.	c.2142+56_2142+61dup|	.	
+chr7	92201245	rs186484437	T	A	.	.	c.2142+62A>T|	.	
+chr7	92201246	rs963761548	A	T	.	.	c.2142+61T>A|	.	
+chr7	92201252	rs992575735	A	G	.	.	c.2142+55T>C|	.	
+chr7	92201256		G	A	.	.	c.2142+51C>T|	.	
+chr7	92201257	rs1472056077	TAA	T	.	.	c.2142+48_2142+49del|	.	
+chr7	92201275	rs553903839	A	G	.	.	c.2142+32T>C|	.	
+chr7	92201281		T	C	.	.	c.2142+26A>G|	.	
+chr7	92201282	rs778248939	G	T	.	.	c.2142+25C>A|	.	
+chr7	92201285	rs775640665	G	GTCCAAAATA	.	.	c.2142+13_2142+21dup|	.	
+chr7	92201288	rs1436003399	C	T	.	.	c.2142+19G>A|	.	
+chr7	92201294	rs1459353910	A	G	.	.	c.2142+13T>C|	.	
+chr7	92201297		T	G	.	.	c.2142+10A>C|	.	
+chr7	92201300	rs778346235	T	C	.	.	c.2142+7A>G|	.	
+chr7	92201302	rs1437871346	C	T	.	.	c.2142+5G>A|	.	
+chr7	92201304	rs1462431994	T	TA	.	.	c.2142+2dup|	.	
+chr7	92201317	rs909824155	T	C	.	.	p.His711Arg|p.His711Arg	.	
+chr7	92201333	rs1244004015	T	C	.	.	p.Met706Val|p.Met706Val	.	
+chr7	92201345	rs140875641	T	C	.	.	p.Met702Val|p.Met702Val	.	
+chr7	92201347	rs760437448	C	T	.	.	p.Ser701Asn|p.Ser701Asn	.	
+chr7	92201351	rs776534817	G	C	.	.	p.His700Asp|p.His700Asp	.	
+chr7	92201363	rs764839013	AAGTATC	A	.	.	p.Asp694_Thr695del|p.Asp694_Thr695del	.	
+chr7	92201364	rs149437256	A	T	.	.	p.Thr695Thr|p.Thr695Thr	.	
+chr7	92201381	rs370766145	A	G	.	.	p.Leu690Leu|p.Leu690Leu	.	
+chr7	92201382	rs1454191008	T	C	.	.	p.Gln689Gln|p.Gln689Gln	.	
+chr7	92201388		C	G	.	.	p.Met687Ile|p.Met687Ile	.	
+chr7	92201396		A	G	.	.	p.Cys685Arg|p.Cys685Arg	.	
+chr7	92201403	rs144960332	C	T	.	.	p.Lys682Lys|p.Lys682Lys	.	
+chr7	92201405	rs138763545	T	G	.	.	p.Lys682Gln|p.Lys682Gln	.	
+chr7	92201406	rs914262614	A	C	.	.	p.Leu681Leu|p.Leu681Leu	.	
+chr7	92201418	rs947066977	T	A	.	.	p.Leu677Phe|p.Leu677Phe	.	
+chr7	92201420		A	G	.	.	p.Leu677Leu|p.Leu677Leu	.	
+chr7	92201435	rs1041438637	T	C	.	.	c.2026-12A>G|	.	
+chr7	92201442	rs763882887	CA	C	.	.	c.2026-20del|	.	
+chr7	92201445	rs757892929	C	T	.	.	c.2026-22G>A|	.	
+chr7	92201460		T	C	.	.	c.2026-37A>G|	.	
+chr7	92201467	rs1002862290	A	C	.	.	c.2026-44T>G|	.	
+chr7	92201470	rs958619490	T	A	.	.	c.2026-47A>T|	.	
+chr7	92201472		C	G	.	.	c.2026-49G>C|	.	
+chr7	92201482	rs373414067	C	G	.	.	c.2026-59G>C|	.	
+chr7	92201485		TTACTATC	T	.	.	c.2026-69_2026-63del|	.	
+chr7	92213129		T	G	.	.	c.2025+66A>C|	.	
+chr7	92213129		T	C	.	.	c.2025+66A>G|	.	
+chr7	92213130	rs1193658097	G	A	.	.	c.2025+65C>T|	.	
+chr7	92213135	rs1488852039	T	C	.	.	c.2025+60A>G|	.	
+chr7	92213143		GTTGTT	G	.	.	c.2025+47_2025+51del|	.	
+chr7	92213154	rs1203603555	T	C	.	.	c.2025+41A>G|	.	
+chr7	92213158	rs1272299219	A	G	.	.	c.2025+37T>C|	.	
+chr7	92213162		G	A	.	.	c.2025+33C>T|	.	
+chr7	92213166	rs1201947226	T	C	.	.	c.2025+29A>G|	.	
+chr7	92213169	rs183850671	T	C	.	.	c.2025+26A>G|	.	
+chr7	92213171	rs760510480	G	A	.	.	c.2025+24C>T|	.	
+chr7	92213179		A	G	.	.	c.2025+16T>C|	.	
+chr7	92213187		A	G	.	.	c.2025+8T>C|	.	
+chr7	92213192	rs367615006	T	C	.	.	c.2025+3A>G|	.	
+chr7	92213206		T	G	.	.	p.Met672Leu|p.Met672Leu	.	
+chr7	92213210	rs865972530	G	A	.	.	p.Leu670Leu|p.Leu670Leu	.	
+chr7	92213212	rs1186485946	G	A	.	.	p.Leu670Phe|p.Leu670Phe	.	
+chr7	92213218	rs372151718	G	A	.	.	p.His668Tyr|p.His668Tyr	.	
+chr7	92213222	rs1237537840	T	G	.	.	p.Gly666Gly|p.Gly666Gly	.	
+chr7	92213231	rs758948765	A	G	.	.	p.Asn663Asn|p.Asn663Asn	.	
+chr7	92213232	rs202120786	T	C	.	.	p.Asn663Ser|p.Asn663Ser	.	
+chr7	92213240	rs11542682	T	C	.	.	p.Val660Val|p.Val660Val	.	
+chr7	92213244	rs376806042	T	C	.	.	p.Tyr659Cys|p.Tyr659Cys	.	
+chr7	92213248		C	T	.	.	p.Val658Met|p.Val658Met	.	
+chr7	92213250	rs527290163	G	A	.	.	p.Pro657Leu|p.Pro657Leu	.	
+chr7	92213271		G	A	.	.	p.Pro650Leu|p.Pro650Leu	.	
+chr7	92213281	rs1388816253	T	C	.	.	p.Lys647Glu|p.Lys647Glu	.	
+chr7	92213282	rs369915828	T	C	.	.	p.Thr646Thr|p.Thr646Thr	.	
+chr7	92213300		G	A	.	.	p.Phe640Phe|p.Phe640Phe	.	
+chr7	92213306	rs146106391	T	C	.	.	p.Ala638Ala|p.Ala638Ala	.	
+chr7	92213315	rs140072597	A	G	.	.	p.Tyr635Tyr|p.Tyr635Tyr	.	
+chr7	92213338	rs568344545	T	G	.	.	p.Asn628His|p.Asn628His	.	
+chr7	92213349	rs1429043774	A	G	.	.	p.Met624Thr|p.Met624Thr	.	
+chr7	92213352	rs143644029	C	T	.	.	p.Arg623His|p.Arg623His	.	
+chr7	92213353	rs569494969	G	A	.	.	p.Arg623Cys|p.Arg623Cys	.	
+chr7	92213355	rs1043093114	T	C	.	.	p.Gln622Arg|p.Gln622Arg	.	
+chr7	92213376	rs780608959	C	T	.	.	p.Ser615Asn|p.Ser615Asn	.	
+chr7	92213377	rs752376692	T	G	.	.	p.Ser615Arg|p.Ser615Arg	.	
+chr7	92213377		T	C	.	.	p.Ser615Gly|p.Ser615Gly	.	
+chr7	92213382	rs35311859	C	T	.	.	p.Gly613Asp|p.Gly613Asp	.	
+chr7	92213387		A	C	.	.	p.Ser611Arg|p.Ser611Arg	.	
+chr7	92213388	rs1242449420	C	T	.	.	p.Ser611Asn|p.Ser611Asn	.	
+chr7	92213391	rs140810405	G	A	.	.	p.Thr610Ile|p.Thr610Ile	.	
+chr7	92213413	rs199748245	C	G	.	.	c.1819-12G>C|	.	
+chr7	92213415	rs1383661600	A	G	.	.	c.1819-14T>C|	.	
+chr7	92213421	rs778894969	A	G	.	.	c.1819-20T>C|	.	
+chr7	92213431		A	G	.	.	c.1819-30T>C|	.	
+chr7	92213437		A	T	.	.	c.1819-36T>A|	.	
+chr7	92213440	rs201642279	T	C	.	.	c.1819-39A>G|	.	
+chr7	92213443	rs1235845846	A	G	.	.	c.1819-42T>C|	.	
+chr7	92213447	rs768747143	A	C	.	.	c.1819-46T>G|	.	
+chr7	92213458	rs571815497	T	C	.	.	c.1819-57A>G|	.	
+chr7	92213465		T	C	.	.	c.1819-64A>G|	.	
+chr7	92213471	rs1445868074	T	C	.	.	c.1819-70A>G|	.	
+chr7	92213819	rs550833552	T	A	.	.	c.1818+73A>T|	.	
+chr7	92213828	rs371877693	T	A	.	.	c.1818+64A>T|	.	
+chr7	92213835	rs549687923	C	T	.	.	c.1818+57G>A|	.	
+chr7	92213836	rs893225424	T	C	.	.	c.1818+56A>G|	.	
+chr7	92213849	rs1364341242	A	C	.	.	c.1818+43T>G|	.	
+chr7	92213862	rs369937847	A	T	.	.	c.1818+30T>A|	.	
+chr7	92213864	rs1347967217	GTCTTT	G	.	.	c.1818+23_1818+27del|	.	
+chr7	92213875	rs1005985855	T	G	.	.	c.1818+17A>C|	.	
+chr7	92213888	rs193035191	T	C	.	.	c.1818+4A>G|	.	
+chr7	92213901	rs149754162	A	G	.	.	p.His603His|p.His603His	.	
+chr7	92213906		G	A	.	.	p.Leu602Phe|p.Leu602Phe	.	
+chr7	92213907	rs752077150	T	C	.	.	p.Ile601Met|p.Ile601Met	.	
+chr7	92213912	rs767088205	G	A	.	.	p.Arg600Cys|p.Arg600Cys	.	
+chr7	92213928	rs145605400	T	C	.	.	p.Ala594Ala|p.Ala594Ala	.	
+chr7	92213935	rs372952135	C	G	.	.	p.Ser592Thr|p.Ser592Thr	.	
+chr7	92213957	rs757069823	C	T	.	.	p.Val585Ile|p.Val585Ile	.	
+chr7	92213958	rs148836047	G	A	.	.	p.Ile584Ile|p.Ile584Ile	.	
+chr7	92213967	rs571688551	T	C	.	.	p.Leu581Leu|p.Leu581Leu	.	
+chr7	92213971	rs781205082	T	C	.	.	p.Asn580Ser|p.Asn580Ser	.	
+chr7	92213984		A	G	.	.	c.1731-5T>C|	.	
+chr7	92213994		G	T	.	.	c.1731-15C>A|	.	
+chr7	92213995	rs1464003571	C	T	.	.	c.1731-16G>A|	.	
+chr7	92213998		A	G	.	.	c.1731-19T>C|	.	
+chr7	92214001	rs77739260	T	C	.	.	c.1731-22A>G|	.	
+chr7	92214015		C	G	.	.	c.1731-36G>C|	.	
+chr7	92214017	rs370581322	T	C	.	.	c.1731-38A>G|	.	
+chr7	92214018		C	G	.	.	c.1731-39G>C|	.	
+chr7	92214021	rs768143383	T	G	.	.	c.1731-42A>C|	.	
+chr7	92214022	rs775082322	A	C	.	.	c.1731-43T>G|	.	
+chr7	92214029	rs760247984	A	G	.	.	c.1731-50T>C|	.	
+chr7	92214030	rs1375296702	AAGTAT	A	.	.	c.1731-56_1731-52del|	.	
+chr7	92214041	rs1236535515	T	C	.	.	c.1731-62A>G|	.	
+chr7	92214044	rs187645445	T	C	.	.	c.1731-65A>G|	.	
+chr7	92214538	rs1403083429	A	C	.	.	c.1730+73T>G|	.	
+chr7	92214539	rs996349116	C	T	.	.	c.1730+72G>A|	.	
+chr7	92214541	rs1003018172	T	C	.	.	c.1730+70A>G|	.	
+chr7	92214541		T	A	.	.	c.1730+70A>T|	.	
+chr7	92214549	rs1274000554	C	T	.	.	c.1730+62G>A|	.	
+chr7	92214552		T	C	.	.	c.1730+59A>G|	.	
+chr7	92214559	rs563811537	T	C	.	.	c.1730+52A>G|	.	
+chr7	92214565	rs1393970001	G	C	.	.	c.1730+46C>G|	.	
+chr7	92214574	rs1308052679	G	C	.	.	c.1730+37C>G|	.	
+chr7	92214577		T	C	.	.	c.1730+34A>G|	.	
+chr7	92214588	rs1057302014	C	G	.	.	c.1730+23G>C|	.	
+chr7	92214589	rs1339911590	A	C	.	.	c.1730+22T>G|	.	
+chr7	92214598		A	G	.	.	c.1730+13T>C|	.	
+chr7	92214599	rs1257977593	T	C	.	.	c.1730+12A>G|	.	
+chr7	92214604	rs750212524	T	C	.	.	c.1730+7A>G|	.	
+chr7	92214612	rs1471106675	T	G	.	.	p.Asn577His|p.Asn577His	.	
+chr7	92214620	rs1318585118	C	T	.	.	p.Gly574Asp|p.Gly574Asp	.	
+chr7	92214634	rs1197872079	T	C	.	.	p.Lys569Lys|p.Lys569Lys	.	
+chr7	92214652	rs576997977	A	G	.	.	p.Tyr563Tyr|p.Tyr563Tyr	.	
+chr7	92214653	rs756158170	T	C	.	.	p.Tyr563Cys|p.Tyr563Cys	.	
+chr7	92214660	rs146927768	T	C	.	.	p.Ile561Val|p.Ile561Val	.	
+chr7	92214661	rs867558295	T	A	.	.	p.Gln560His|p.Gln560His	.	
+chr7	92214676	rs771091721	T	G	.	.	p.Ala555Ala|p.Ala555Ala	.	
+chr7	92214679		C	T	.	.	p.Leu554Leu|p.Leu554Leu	.	
+chr7	92214683	rs1368297691	G	A	.	.	p.Thr553Ile|p.Thr553Ile	.	
+chr7	92214691	rs746233065	C	T	.	.	p.Lys550Lys|p.Lys550Lys	.	
+chr7	92214700	rs1227890115	A	G	.	.	p.Pro547Pro|p.Pro547Pro	.	
+chr7	92214702		G	A	.	.	p.Pro547Ser|p.Pro547Ser	.	
+chr7	92214714	rs1329278178	A	T	.	.	p.Phe543Ile|p.Phe543Ile	.	
+chr7	92214724		T	C	.	.	p.Leu539Leu|p.Leu539Leu	.	
+chr7	92214745		A	G	.	.	p.Phe532Phe|p.Phe532Phe	.	
+chr7	92214766	rs1183977344	T	C	.	.	p.Pro525Pro|p.Pro525Pro	.	
+chr7	92214769	rs1219930277	G	T	.	.	p.Asp524Glu|p.Asp524Glu	.	
+chr7	92214773		T	C	.	.	p.Glu523Gly|p.Glu523Gly	.	
+chr7	92214776	rs758188972	A	G	.	.	p.Ile522Thr|p.Ile522Thr	.	
+chr7	92214777	rs149975731	T	C	.	.	p.Ile522Val|p.Ile522Val	.	
+chr7	92214786	rs754933329	A	G	.	.	c.1564-9T>C|	.	
+chr7	92214787	rs1244076275	A	G	.	.	c.1564-10T>C|	.	
+chr7	92214793		A	G	.	.	c.1564-16T>C|	.	
+chr7	92214810	rs749333865	C	T	.	.	c.1564-33G>A|	.	
+chr7	92214813	rs563247706	C	T	.	.	c.1564-36G>A|	.	
+chr7	92214813		C	A	.	.	c.1564-36G>T|	.	
+chr7	92214816		T	A	.	.	c.1564-39A>T|	.	
+chr7	92214824	rs746159455	T	C	.	.	c.1564-47A>G|	.	
+chr7	92214827	rs1180958993	A	G	.	.	c.1564-50T>C|	.	
+chr7	92214844	rs191349155	T	C	.	.	c.1564-67A>G|	.	
+chr7	92214844		TG	T	.	.	c.1564-68del|	.	
+chr7	92221832	rs1329190104	T	C	.	.	c.1563+70A>G|	.	
+chr7	92221841	rs540583324	C	T	.	.	c.1563+61G>A|	.	
+chr7	92221843		A	G	.	.	c.1563+59T>C|	.	
+chr7	92221844		T	C	.	.	c.1563+58A>G|	.	
+chr7	92221844		T	A	.	.	c.1563+58A>T|	.	
+chr7	92221847	rs1055796690	A	T	.	.	c.1563+55T>A|	.	
+chr7	92221850	rs1457549071	C	T	.	.	c.1563+52G>A|	.	
+chr7	92221852	rs1237205823	C	G	.	.	c.1563+50G>C|	.	
+chr7	92221855	rs564079957	C	T	.	.	c.1563+47G>A|	.	
+chr7	92221873	rs769314278	A	G	.	.	c.1563+29T>C|	.	
+chr7	92221879	rs755510711	G	GT	.	.	c.1563+22dup|	.	
+chr7	92221896	rs1379958318	G	A	.	.	c.1563+6C>T|	.	
+chr7	92221903	rs761239146	T	C	.	.	p.Gln521Arg|p.Gln521Arg	.	
+chr7	92221908	rs1220167731	T	C	.	.	p.Glu519Glu|p.Glu519Glu	.	
+chr7	92221912	rs142071709	A	G	.	.	p.Val518Ala|p.Val518Ala	.	
+chr7	92221941	rs1237739230	T	C	.	.	p.Leu508Leu|p.Leu508Leu	.	
+chr7	92221955		G	T	.	.	p.Pro504Thr|p.Pro504Thr	.	
+chr7	92221975	rs1161326710	A	G	.	.	p.Leu497Pro|p.Leu497Pro	.	
+chr7	92221990		G	T	.	.	p.Ala492Asp|p.Ala492Asp	.	
+chr7	92221997	rs752739125	T	C	.	.	p.Ile490Val|p.Ile490Val	.	
+chr7	92222009	rs779089104	C	T	.	.	p.Asp486Asn|p.Asp486Asn	.	
+chr7	92222011	rs145845538	C	T	.	.	p.Arg485His|p.Arg485His	.	
+chr7	92222012	rs557519259	G	A	.	.	p.Arg485Cys|p.Arg485Cys	.	
+chr7	92222019		T	G	.	.	p.Gln482His|p.Gln482His	.	
+chr7	92222019		T	C	.	.	p.Gln482Gln|p.Gln482Gln	.	
+chr7	92222021	rs747380313	G	C	.	.	p.Gln482Glu|p.Gln482Glu	.	
+chr7	92222026	rs1457775920	G	C	.	.	p.Pro480Arg|p.Pro480Arg	.	
+chr7	92222027	rs1290742964	G	T	.	.	p.Pro480Thr|p.Pro480Thr	.	
+chr7	92222029	rs576080477	T	G	.	.	p.Lys479Thr|p.Lys479Thr	.	
+chr7	92222037	rs781533650	T	C	.	.	p.Pro476Pro|p.Pro476Pro	.	
+chr7	92222039		G	A	.	.	p.Pro476Ser|p.Pro476Ser	.	
+chr7	92222046		T	C	.	.	p.Gln473Gln|p.Gln473Gln	.	
+chr7	92222046		T	G	.	.	p.Gln473His|p.Gln473His	.	
+chr7	92222061		AC	A	.	.	c.1412-9del|	.	
+chr7	92222062	rs199932606	C	T	.	.	c.1412-9G>A|	.	
+chr7	92222098	rs767411877	A	G	.	.	c.1412-45T>C|	.	
+chr7	92222112	rs190803990	T	C	.	.	c.1412-59A>G|	.	
+chr7	92222118	rs1250790080	CTT	C	.	.	c.1412-67_1412-66del|	.	
+chr7	92222765	rs1366102343	A	C	.	.	c.1411+57T>G|	.	
+chr7	92222767	rs1045808885	C	A	.	.	c.1411+55G>T|	.	
+chr7	92222768	rs973616256	C	G	.	.	c.1411+54G>C|	.	
+chr7	92222773	rs1370005945	C	G	.	.	c.1411+49G>C|	.	
+chr7	92222778		A	G	.	.	c.1411+44T>C|	.	
+chr7	92222781	rs779250401	GAAT	G	.	.	c.1411+38_1411+40del|	.	
+chr7	92222788		G	C	.	.	c.1411+34C>G|	.	
+chr7	92222788		G	A	.	.	c.1411+34C>T|	.	
+chr7	92222790	rs1245104477	G	A	.	.	c.1411+32C>T|	.	
+chr7	92222797	rs886038758	TATAAC	T	.	.	c.1411+20_1411+24del|	.	
+chr7	92222800	rs751884140	A	T	.	.	c.1411+22T>A|	.	
+chr7	92222801	rs755271155	A	C	.	.	c.1411+21T>G|	.	
+chr7	92222810	rs1263220122	A	T	.	.	c.1411+12T>A|	.	
+chr7	92222812	rs748557204	A	T	.	.	c.1411+10T>A|	.	
+chr7	92222815	rs1354823570	T	C	.	.	c.1411+7A>G|	.	
+chr7	92222823	rs756678643	G	A	.	.	p.Leu470Leu|p.Leu470Leu	.	
+chr7	92222825	rs1268476200	G	T	.	.	p.Leu470Ile|p.Leu470Ile	.	
+chr7	92222845	rs770486304	A	G	.	.	p.Ile463Thr|p.Ile463Thr	.	
+chr7	92222849	rs141514714	T	C	.	.	p.Thr462Ala|p.Thr462Ala	.	
+chr7	92222856	rs775375977	T	C	.	.	p.Gln459Gln|p.Gln459Gln	.	
+chr7	92222857		T	C	.	.	p.Gln459Arg|p.Gln459Arg	.	
+chr7	92222859	rs760487764	C	G	.	.	p.Gln458His|p.Gln458His	.	
+chr7	92222864	rs1230178894	T	C	.	.	p.Thr457Ala|p.Thr457Ala	.	
+chr7	92222869	rs1180476377	TGAGA	T	.	.	p.Ser454LysfsTer40|p.Ser454LysfsTer40	.	
+chr7	92222870		G	A	.	.	p.Gln455Ter|p.Gln455Ter	.	
+chr7	92222870		G	C	.	.	p.Gln455Glu|p.Gln455Glu	.	
+chr7	92222877	rs764094230	A	T	.	.	p.Arg452Arg|p.Arg452Arg	.	
+chr7	92222878	rs201272513	C	T	.	.	p.Arg452His|p.Arg452His	.	
+chr7	92222879	rs1480771068	G	A	.	.	p.Arg452Cys|p.Arg452Cys	.	
+chr7	92222891	rs1291992806	T	C	.	.	p.Met448Val|p.Met448Val	.	
+chr7	92222894	rs1161355896	T	A	.	.	p.Ile447Leu|p.Ile447Leu	.	
+chr7	92222901	rs559639590	C	T	.	.	p.Val444Val|p.Val444Val	.	
+chr7	92222904	rs1366839369	T	C	.	.	p.Thr443Thr|p.Thr443Thr	.	
+chr7	92222907		G	C	.	.	p.Thr442Thr|p.Thr442Thr	.	
+chr7	92222908	rs1441557672	G	A	.	.	p.Thr442Ile|p.Thr442Ile	.	
+chr7	92222912	rs932502689	T	C	.	.	p.Asn441Asp|p.Asn441Asp	.	
+chr7	92222915	rs765351431	T	G	.	.	p.Asn440His|p.Asn440His	.	
+chr7	92222927	rs998452517	A	G	.	.	p.Leu436Leu|p.Leu436Leu	.	
+chr7	92222938	rs1472538856	C	T	.	.	p.Arg432His|p.Arg432His	.	
+chr7	92222953	rs138326046	A	G	.	.	p.Met427Thr|p.Met427Thr	.	
+chr7	92222954	rs1307201830	T	A	.	.	p.Met427Leu|p.Met427Leu	.	
+chr7	92222960	rs1032651526	A	G	.	.	p.Tyr425His|p.Tyr425His	.	
+chr7	92222969	rs139690878	C	T	.	.	p.Val422Ile|p.Val422Ile	.	
+chr7	92222973		T	C	.	.	p.Glu420Glu|p.Glu420Glu	.	
+chr7	92222982	rs771787133	C	T	.	.	c.1255-4G>A|	.	
+chr7	92222989		C	A	.	.	c.1255-11G>T|	.	
+chr7	92222989		C	T	.	.	c.1255-11G>A|	.	
+chr7	92222990	rs1466107875	G	A	.	.	c.1255-12C>T|	.	
+chr7	92222990		GATAA	G	.	.	c.1255-16_1255-13del|	.	
+chr7	92222992	rs776700879	T	C	.	.	c.1255-14A>G|	.	
+chr7	92222999		C	T	.	.	c.1255-21G>A|	.	
+chr7	92223000	rs766521201	G	A	.	.	c.1255-22C>T|	.	
+chr7	92223004	rs774523272	C	T	.	.	c.1255-26G>A|	.	
+chr7	92223005		G	A	.	.	c.1255-27C>T|	.	
+chr7	92223005		G	C	.	.	c.1255-27C>G|	.	
+chr7	92223014	rs748284336	A	AT	.	.	c.1255-37_1255-36insA|	.	
+chr7	92223017	rs1014290457	T	C	.	.	c.1255-39A>G|	.	
+chr7	92223020	rs752922693	T	C	.	.	c.1255-42A>G|	.	
+chr7	92223021	rs777300802	A	T	.	.	c.1255-43T>A|	.	
+chr7	92223024		T	C	.	.	c.1255-46A>G|	.	
+chr7	92223029	rs1335541626	A	G	.	.	c.1255-51T>C|	.	
+chr7	92223039		A	G	.	.	c.1255-61T>C|	.	
+chr7	92223042		C	G	.	.	c.1255-64G>C|	.	
+chr7	92223042		C	T	.	.	c.1255-64G>A|	.	
+chr7	92223045	rs1027839838	TC	T	.	.	c.1255-68del|	.	
+chr7	92223050	rs766801628	C	A	.	.	c.1255-72G>T|	.	
+chr7	92225647	rs1404210069	C	A	.	.	c.1254+73G>T|	.	
+chr7	92225656		C	T	.	.	c.1254+64G>A|	.	
+chr7	92225657	rs1339387433	T	C	.	.	c.1254+63A>G|	.	
+chr7	92225660		A	G	.	.	c.1254+60T>C|	.	
+chr7	92225668	rs1190005935	T	C	.	.	c.1254+52A>G|	.	
+chr7	92225670	rs561085077	T	G	.	.	c.1254+50A>C|	.	
+chr7	92225692	rs757926705	T	C	.	.	c.1254+28A>G|	.	
+chr7	92225697	rs779741478	C	T	.	.	c.1254+23G>A|	.	
+chr7	92225703	rs189745348	A	G	.	.	c.1254+17T>C|	.	
+chr7	92225704	rs369072291	T	C	.	.	c.1254+16A>G|	.	
+chr7	92225720		T	C	.	.	p.Pro418Pro|p.Pro418Pro	.	
+chr7	92225729	rs41278788	A	C	.	.	p.Ile415Met|p.Ile415Met	.	
+chr7	92225731	rs769861430	T	C	.	.	p.Ile415Val|p.Ile415Val	.	
+chr7	92225732	rs774238688	T	G	.	.	p.Ala414Ala|p.Ala414Ala	.	
+chr7	92225744		C	A	.	.	p.Leu410Phe|p.Leu410Phe	.	
+chr7	92225750	rs759649310	T	A	.	.	p.Ala408Ala|p.Ala408Ala	.	
+chr7	92225759	rs1329070229	T	G	.	.	p.Glu405Asp|p.Glu405Asp	.	
+chr7	92225766	rs760935725	T	C	.	.	p.Asn403Ser|p.Asn403Ser	.	
+chr7	92225773	rs1331502949	G	C	.	.	p.Gln401Glu|p.Gln401Glu	.	
+chr7	92225782		C	T	.	.	p.Glu398Lys|p.Glu398Lys	.	
+chr7	92225785	rs1167694568	C	T	.	.	p.Glu397Lys|p.Glu397Lys	.	
+chr7	92225798	rs538610091	T	C	.	.	p.Pro392Pro|p.Pro392Pro	.	
+chr7	92225802	rs762240115	G	T	.	.	p.Ser391Tyr|p.Ser391Tyr	.	
+chr7	92225810	rs1481868592	T	C	.	.	p.Gln388Gln|p.Gln388Gln	.	
+chr7	92225814	rs1208613514	T	A	.	.	p.Gln387Leu|p.Gln387Leu	.	
+chr7	92225824		T	C	.	.	p.Ile384Val|p.Ile384Val	.	
+chr7	92225826	rs1195083508	T	C	.	.	p.His383Arg|p.His383Arg	.	
+chr7	92225857	rs769771399	A	G	.	.	c.1147-30T>C|	.	
+chr7	92225868	rs1463185779	A	G	.	.	c.1147-41T>C|	.	
+chr7	92225873	rs760845596	G	C	.	.	c.1147-46C>G|	.	
+chr7	92225877	rs747233442	T	TA	.	.	c.1147-51_1147-50insT|	.	
+chr7	92225884	rs527875393	G	A	.	.	c.1147-57C>T|	.	
+chr7	92225888	rs1420691857	A	G	.	.	c.1147-61T>C|	.	
+chr7	92225894	rs547708837	A	G	.	.	c.1147-67T>C|	.	
+chr7	92225901		T	C	.	.	c.1147-74A>G|	.	
+chr7	92226452	rs546739604	A	G	.	.	c.1146+74T>C|	.	
+chr7	92226454	rs915065873	T	G	.	.	c.1146+72A>C|	.	
+chr7	92226460	rs1443150825	TTTTAGTG	T	.	.	c.1146+59_1146+65del|	.	
+chr7	92226462	rs560241766	T	A	.	.	c.1146+64A>T|	.	
+chr7	92226463	rs532153187	T	A	.	.	c.1146+63A>T|	.	
+chr7	92226463		T	C	.	.	c.1146+63A>G|	.	
+chr7	92226464	rs1002528207	A	C	.	.	c.1146+62T>G|	.	
+chr7	92226465	rs551873487	G	A	.	.	c.1146+61C>T|	.	
+chr7	92226471	rs569176478	T	C	.	.	c.1146+55A>G|	.	
+chr7	92226477		G	A	.	.	c.1146+49C>T|	.	
+chr7	92226478	rs148726625	T	C	.	.	c.1146+48A>G|	.	
+chr7	92226485	rs1396068431	C	T	.	.	c.1146+41G>A|	.	
+chr7	92226507		A	G	.	.	c.1146+19T>C|	.	
+chr7	92226509	rs1159504024	C	T	.	.	c.1146+17G>A|	.	
+chr7	92226511	rs1470341274	T	C	.	.	c.1146+15A>G|	.	
+chr7	92226513	rs1316564078	GA	G	.	.	c.1146+12del|	.	
+chr7	92226518	rs182762651	T	A	.	.	c.1146+8A>T|	.	
+chr7	92226529		A	G	.	.	p.Asp381Asp|p.Asp381Asp	.	
+chr7	92226532	rs140009885	C	T	.	.	p.Thr380Thr|p.Thr380Thr	.	
+chr7	92226533	rs533696377	G	A	.	.	p.Thr380Met|p.Thr380Met	.	
+chr7	92226545	rs747246677	T	A	.	.	p.Asn376Ile|p.Asn376Ile	.	
+chr7	92226558	rs780114710	G	C	.	.	p.Gln372Glu|p.Gln372Glu	.	
+chr7	92226562	rs1207066410	TA	T	.	.	p.Ile370LysfsTer6|p.Ile370LysfsTer6	.	
+chr7	92226565	rs1254441547	T	G	.	.	p.Glu369Asp|p.Glu369Asp	.	
+chr7	92226577	rs143710815	T	C	.	.	p.Gly365Gly|p.Gly365Gly	.	
+chr7	92226596	rs1356206191	AGAG	A	.	.	p.Pro358del|p.Pro358del	.	
+chr7	92226609		G	A	.	.	p.Leu355Phe|p.Leu355Phe	.	
+chr7	92226610	rs369340607	T	C	.	.	p.Gln354Gln|p.Gln354Gln	.	
+chr7	92226613	rs1310010328	T	C	.	.	p.Gly353Gly|p.Gly353Gly	.	
+chr7	92226616	rs1245083943	A	G	.	.	p.Asn352Asn|p.Asn352Asn	.	
+chr7	92226617	rs1371831219	T	C	.	.	p.Asn352Ser|p.Asn352Ser	.	
+chr7	92226659	rs757160047	C	T	.	.	p.Arg338His|p.Arg338His	.	
+chr7	92226660		G	A	.	.	p.Arg338Cys|p.Arg338Cys	.	
+chr7	92226663	rs745869294	T	C	.	.	p.Thr337Ala|p.Thr337Ala	.	
+chr7	92226665	rs1455253513	G	A	.	.	p.Ala336Val|p.Ala336Val	.	
+chr7	92226689	rs769915628	A	G	.	.	c.990-7T>C|	.	
+chr7	92226692	rs769773658	AAAAC	A	.	.	c.990-14_990-11del|	.	
+chr7	92226692	rs773570660	A	C	.	.	c.990-10T>G|	.	
+chr7	92226695		A	G	.	.	c.990-13T>C|	.	
+chr7	92226695	rs780010981	AC	A	.	.	c.990-14del|	.	
+chr7	92226701		A	G	.	.	c.990-19T>C|	.	
+chr7	92226703		AC	A	.	.	c.990-22del|	.	
+chr7	92226708	rs563677273	AAAC	A	.	.	c.990-29_990-27del|	.	
+chr7	92226708	rs760172132	A	G	.	.	c.990-26T>C|	.	
+chr7	92226709	rs1274084482	A	C	.	.	c.990-27T>G|	.	
+chr7	92226710	rs539869948	A	C	.	.	c.990-28T>G|	.	
+chr7	92226726	rs760306650	C	A	.	.	c.990-44G>T|	.	
+chr7	92226734	rs779813506	A	C	.	.	c.990-52T>G|	.	
+chr7	92226737	rs989635043	AGATCATCT	A	.	.	c.990-63_990-56del|	.	
+chr7	92226743	rs1043521545	T	C	.	.	c.990-61A>G|	.	
+chr7	92226751		G	A	.	.	c.990-69C>T|	.	
+chr7	92234381	rs1165770033	A	G	.	.	c.989+68T>C|	.	
+chr7	92234386		G	C	.	.	c.989+63C>G|	.	
+chr7	92234394	rs1161878599	T	C	.	.	c.989+55A>G|	.	
+chr7	92234396	rs1319551318	T	C	.	.	c.989+53A>G|	.	
+chr7	92234398		T	TA	.	.	c.989+50dup|	.	
+chr7	92234399	rs373251781	A	G	.	.	c.989+50T>C|	.	
+chr7	92234401	rs1385896702	T	TA	.	.	c.989+47dup|	.	
+chr7	92234409	rs377366885	G	A	.	.	c.989+40C>T|	.	
+chr7	92234414		C	T	.	.	c.989+35G>A|	.	
+chr7	92234419		T	G	.	.	c.989+30A>C|	.	
+chr7	92234419		T	C	.	.	c.989+30A>G|	.	
+chr7	92234423	rs1258932535	A	C	.	.	c.989+26T>G|	.	
+chr7	92234425	rs1317403313	GA	G	.	.	c.989+23del|	.	
+chr7	92234425	rs376318376	G	C	.	.	c.989+24C>G|	.	
+chr7	92234430		G	T	.	.	c.989+19C>A|	.	
+chr7	92234431	rs758350735	A	G	.	.	c.989+18T>C|	.	
+chr7	92234437	rs377726302	T	C	.	.	c.989+12A>G|	.	
+chr7	92234456	rs1372652841	C	T	.	.	p.Ala328Thr|p.Ala328Thr	.	
+chr7	92234468	rs749565503	G	A	.	.	p.Pro324Ser|p.Pro324Ser	.	
+chr7	92234476	rs779444331	T	C	.	.	p.His321Arg|p.His321Arg	.	
+chr7	92234491	rs746338208	T	G	.	.	p.Gln316Pro|p.Gln316Pro	.	
+chr7	92234521	rs916184603	C	T	.	.	p.Arg306His|p.Arg306His	.	
+chr7	92234522	rs146328341	G	A	.	.	p.Arg306Cys|p.Arg306Cys	.	
+chr7	92234527	rs1224422531	A	G	.	.	p.Leu304Pro|p.Leu304Pro	.	
+chr7	92234552		C	T	.	.	p.Ala296Thr|p.Ala296Thr	.	
+chr7	92234553	rs761571988	G	A	.	.	p.Ser295Ser|p.Ser295Ser	.	
+chr7	92234558		G	T	.	.	p.Arg294Arg|p.Arg294Arg	.	
+chr7	92234576		C	T	.	.	p.Asp288Asn|p.Asp288Asn	.	
+chr7	92234587	rs371778508	C	T	.	.	p.Arg284Gln|p.Arg284Gln	.	
+chr7	92234588	rs374662170	G	A	.	.	p.Arg284Ter|p.Arg284Ter	.	
+chr7	92234596	rs1195348682	A	AT	.	.	c.846-5dup|	.	
+chr7	92234607		G	A	.	.	c.846-15C>T|	.	
+chr7	92234611	rs1463554461	T	C	.	.	c.846-19A>G|	.	
+chr7	92234613		T	C	.	.	c.846-21A>G|	.	
+chr7	92234618	rs56777261	A	T	.	.	c.846-26T>A|	.	
+chr7	92234625	rs199858601	A	G	.	.	c.846-33T>C|	.	
+chr7	92234636	rs889046518	A	G	.	.	c.846-44T>C|	.	
+chr7	92234637	rs747587570	A	T	.	.	c.846-45T>A|	.	
+chr7	92234640	rs768025663	T	C	.	.	c.846-48A>G|	.	
+chr7	92234646	rs1474880517	C	T	.	.	c.846-54G>A|	.	
+chr7	92234660	rs1194774012	C	T	.	.	c.846-68G>A|	.	
+chr7	92234662	rs1428591616	C	T	.	.	c.846-70G>A|	.	
+chr7	92234664		T	C	.	.	c.846-72A>G|	.	
+chr7	92234735	rs1328620407	T	C	.	.	c.845+73A>G|	.	
+chr7	92234741	rs1408561591	TA	T	.	.	c.845+66del|	.	
+chr7	92234746	rs1414770086	A	G	.	.	c.845+62T>C|	.	
+chr7	92234755		A	T	.	.	c.845+53T>A|	.	
+chr7	92234787	rs375060119	G	A	.	.	c.845+21C>T|	.	
+chr7	92234797		C	T	.	.	c.845+11G>A|	.	
+chr7	92234798		G	C	.	.	c.845+10C>G|	.	
+chr7	92234798		G	A	.	.	c.845+10C>T|	.	
+chr7	92234799	rs140152251	A	C	.	.	c.845+9T>G|	.	
+chr7	92234815	rs753958961	C	T	.	.	p.Glu280Lys|p.Glu280Lys	.	
+chr7	92234820	rs867967922	A	G	.	.	p.Val278Ala|p.Val278Ala	.	
+chr7	92234823		C	T	.	.	p.Ser277Asn|p.Ser277Asn	.	
+chr7	92234825	rs1178221573	G	A	.	.	p.Ser276Ser|p.Ser276Ser	.	
+chr7	92234838	rs765542241	T	C	.	.	p.Gln272Arg|p.Gln272Arg	.	
+chr7	92234851	rs1334378315	GT	G	.	.	p.Lys267AsnfsTer9|p.Lys267AsnfsTer9	.	
+chr7	92234867	rs758804410	T	C	.	.	p.Lys262Lys|p.Lys262Lys	.	
+chr7	92234879		T	A	.	.	p.Pro258Pro|p.Pro258Pro	.	
+chr7	92234881		G	A	.	.	p.Pro258Ser|p.Pro258Ser	.	
+chr7	92234882	rs904770582	A	C	.	.	p.Ala257Ala|p.Ala257Ala	.	
+chr7	92234909	rs142163635	T	C	.	.	p.Val248Val|p.Val248Val	.	
+chr7	92234931	rs999546595	G	A	.	.	c.730-8C>T|	.	
+chr7	92234938	rs753113118	C	CA	.	.	c.730-16dup|	.	
+chr7	92234938	rs372964375	C	G	.	.	c.730-15G>C|	.	
+chr7	92234940	rs748993958	A	G	.	.	c.730-17T>C|	.	
+chr7	92234944	rs774233562	C	T	.	.	c.730-21G>A|	.	
+chr7	92234960	rs767501691	G	A	.	.	c.730-37C>T|	.	
+chr7	92234966	rs761979669	T	C	.	.	c.730-43A>G|	.	
+chr7	92234978	rs189436321	T	C	.	.	c.730-55A>G|	.	
+chr7	92234980	rs556067670	A	C	.	.	c.730-57T>G|	.	
+chr7	92234980		A	G	.	.	c.730-57T>C|	.	
+chr7	92234982		A	G	.	.	c.730-59T>C|	.	
+chr7	92234996	rs1345438827	A	C	.	.	c.730-73T>G|	.	
+chr7	92234998	rs1251362858	T	C	.	.	c.730-75A>G|	.	
+chr7	92235328	rs1232085911	T	C	.	.	c.729+75A>G|	.	
+chr7	92235338	rs1332665394	GA	G	.	.	c.729+64del|	.	
+chr7	92235339	rs765692163	A	G	.	.	c.729+64T>C|	.	
+chr7	92235347	rs750808742	T	G	.	.	c.729+56A>C|	.	
+chr7	92235350		C	G	.	.	c.729+53G>C|	.	
+chr7	92235351		A	G	.	.	c.729+52T>C|	.	
+chr7	92235353		T	C	.	.	c.729+50A>G|	.	
+chr7	92235357		G	A	.	.	c.729+46C>T|	.	
+chr7	92235364	rs766609977	C	T	.	.	c.729+39G>A|	.	
+chr7	92235365	rs201570546	G	A	.	.	c.729+38C>T|	.	
+chr7	92235381	rs1252476990	C	T	.	.	c.729+22G>A|	.	
+chr7	92235423	rs781721827	C	G	.	.	p.Asp237His|p.Asp237His	.	
+chr7	92235433	rs1456339042	C	A	.	.	p.Leu233Phe|p.Leu233Phe	.	
+chr7	92235436	rs1285357330	A	C	.	.	p.Pro232Pro|p.Pro232Pro	.	
+chr7	92235438	rs748697858	G	T	.	.	p.Pro232Thr|p.Pro232Thr	.	
+chr7	92235440	rs755603488	T	C	.	.	p.Asn231Ser|p.Asn231Ser	.	
+chr7	92235452	rs113064674	G	A	.	.	p.Thr227Ile|p.Thr227Ile	.	
+chr7	92235457	rs770622492	T	A	.	.	p.Ala225Ala|p.Ala225Ala	.	
+chr7	92235459	rs1327383758	C	T	.	.	p.Ala225Thr|p.Ala225Thr	.	
+chr7	92235468	rs1243296644	G	C	.	.	p.Leu222Val|p.Leu222Val	.	
+chr7	92235475		C	G	.	.	p.Met219Ile|p.Met219Ile	.	
+chr7	92235483	rs377164418	T	A	.	.	p.Ser217Cys|p.Ser217Cys	.	
+chr7	92235497	rs1318622179	G	A	.	.	p.Ala212Val|p.Ala212Val	.	
+chr7	92235498	rs1219369614	C	A	.	.	p.Ala212Ser|p.Ala212Ser	.	
+chr7	92235507	rs1245901598	C	T	.	.	p.Gly209Ser|p.Gly209Ser	.	
+chr7	92235509	rs1187162691	A	G	.	.	p.Met208Thr|p.Met208Thr	.	
+chr7	92235514	rs1462881046	T	C	.	.	p.Leu206Leu|p.Leu206Leu	.	
+chr7	92235518	rs760742758	G	A	.	.	p.Ser205Leu|p.Ser205Leu	.	
+chr7	92235520	rs907176069	G	A	.	.	p.Asn204Asn|p.Asn204Asn	.	
+chr7	92235538	rs769941203	T	C	.	.	p.Asn4Ser|p.Asn4Ser	.	
+chr7	92235543	rs140396626	T	C	.	.	p.Thr197Ala|p.Thr197Ala	.	
+chr7	92235545	rs549707288	G	C	.	.	p.Ala196Gly|p.Ala196Gly	.	
+chr7	92235550	rs369744043	T	C	.	.	p.Ala194Ala|p.Ala194Ala	.	
+chr7	92235554		G	C	.	.	p.Pro193Arg|p.Pro193Arg	.	
+chr7	92235579	rs534952866	G	A	.	.	p.Arg185Trp|p.Arg185Trp	.	
+chr7	92235583	rs759916474	A	C	.	.	p.Leu183Leu|p.Leu183Leu	.	
+chr7	92235584	rs758571745	AGAG	A	.	.	p.Pro182del|p.Pro182del	.	
+chr7	92235585	rs1161802228	G	C	.	.	p.Leu183Val|p.Leu183Val	.	
+chr7	92235587	rs1440699483	G	A	.	.	p.Pro182Leu|p.Pro182Leu	.	
+chr7	92235588	rs1409604560	G	C	.	.	p.Pro182Ala|p.Pro182Ala	.	
+chr7	92235597	rs777198867	G	A	.	.	p.Arg179Ter|p.Arg179Ter	.	
+chr7	92235605		G	C	.	.	p.Ala176Gly|p.Ala176Gly	.	
+chr7	92235607		T	G	.	.	p.Pro175Pro|p.Pro175Pro	.	
+chr7	92235607		T	C	.	.	p.Pro175Pro|p.Pro175Pro	.	
+chr7	92235622	rs200684252	T	C	.	.	p.Gln170Gln|p.Gln170Gln	.	
+chr7	92235632	rs374246090	C	T	.	.	p.Arg167His|p.Arg167His	.	
+chr7	92235633	rs35350895	G	A	.	.	p.Arg167Cys|p.Arg167Cys	.	
+chr7	92235637	rs780013006	A	C	.	.	p.Asp165Glu|p.Asp165Glu	.	
+chr7	92235639	rs1218571578	C	T	.	.	p.Asp165Asn|p.Asp165Asn	.	
+chr7	92235646	rs1425646156	C	T	.	.	p.Lys162Lys|p.Lys162Lys	.	
+chr7	92235656	rs777990783	TA	T	.	.	c.486-11del|	.	
+chr7	92235656		T	C	.	.	c.486-10A>G|	.	
+chr7	92235658	rs1232407280	A	G	.	.	c.486-12T>C|	.	
+chr7	92235674	rs768593885	T	C	.	.	c.486-28A>G|	.	
+chr7	92235678	rs1381703399	C	A	.	.	c.486-32G>T|	.	
+chr7	92235681	rs1308746257	T	C	.	.	c.486-35A>G|	.	
+chr7	92235682	rs773365307	C	T	.	.	c.486-36G>A|	.	
+chr7	92235683		G	A	.	.	c.486-37C>T|	.	
+chr7	92235683		G	C	.	.	c.486-37C>G|	.	
+chr7	92235688	rs369649957	T	C	.	.	c.486-42A>G|	.	
+chr7	92235690	rs759702933	A	C	.	.	c.486-44T>G|	.	
+chr7	92235692		G	T	.	.	c.486-46C>A|	.	
+chr7	92235703	rs539541930	T	C	.	.	c.486-57A>G|	.	
+chr7	92235704	rs1015465970	A	T	.	.	c.486-58T>A|	.	
+chr7	92235708	rs1242065813	T	C	.	.	c.486-62A>G|	.	
+chr7	92235709	rs374681247	ACTAT	A	.	.	c.486-67_486-64del|	.	
+chr7	92235717	rs948577195	A	C	.	.	c.486-71T>G|	.	
+chr7	92235719	rs1028259686	T	C	.	.	c.486-73A>G|	.	
+chr7	92236348		C	G	.	.	c.485+65G>C|	.	
+chr7	92236348		C	T	.	.	c.485+65G>A|	.	
+chr7	92236351		C	T	.	.	c.485+62G>A|	.	
+chr7	92236365	rs971479950	A	G	.	.	c.485+48T>C|	.	
+chr7	92236368	rs747266971	C	T	.	.	c.485+45G>A|	.	
+chr7	92236369	rs764572725	A	G	.	.	c.485+44T>C|	.	
+chr7	92236370	rs1452819173	T	C	.	.	c.485+43A>G|	.	
+chr7	92236372		T	A	.	.	c.485+41A>T|	.	
+chr7	92236374	rs1395800608	T	C	.	.	c.485+39A>G|	.	
+chr7	92236381	rs373118380	A	G	.	.	c.485+32T>C|	.	
+chr7	92236386	rs571815444	A	G	.	.	c.485+27T>C|	.	
+chr7	92236390		A	G	.	.	c.485+23T>C|	.	
+chr7	92236400		C	T	.	.	c.485+13G>A|	.	
+chr7	92236401	rs371895905	G	A	.	.	c.485+12C>T|	.	
+chr7	92236413	rs1264517779	T	C	.	.	p.Lys162Arg|p.Lys162Arg	.	
+chr7	92236420	rs1349486073	A	C	.	.	p.Leu160Val|p.Leu160Val	.	
+chr7	92236453		A	T	.	.	p.Phe149Ile|p.Phe149Ile	.	
+chr7	92236454	rs746035680	A	G	.	.	p.His148His|p.His148His	.	
+chr7	92236458	rs145272953	G	A	.	.	p.Thr147Ile|p.Thr147Ile	.	
+chr7	92236471	rs775749438	T	C	.	.	p.Ser143Gly|p.Ser143Gly	.	
+chr7	92236472	rs761025657	A	G	.	.	p.Cys142Cys|p.Cys142Cys	.	
+chr7	92236485	rs1172939308	A	G	.	.	p.Ile138Thr|p.Ile138Thr	.	
+chr7	92236486	rs764480666	T	C	.	.	p.Ile138Val|p.Ile138Val	.	
+chr7	92236488		T	A	.	.	p.Asp137Val|p.Asp137Val	.	
+chr7	92236507		T	A	.	.	p.Ile131Phe|p.Ile131Phe	.	
+chr7	92236507	rs762248954	T	C	.	.	p.Ile131Val|p.Ile131Val	.	
+chr7	92236508		T	C	.	.	p.Pro130Pro|p.Pro130Pro	.	
+chr7	92236512	rs764760437	C	T	.	.	p.Cys129Tyr|p.Cys129Tyr	.	
+chr7	92236521	rs1232504536	G	T	.	.	p.Thr126Asn|p.Thr126Asn	.	
+chr7	92236523	rs749902195	A	G	.	.	p.Tyr125Tyr|p.Tyr125Tyr	.	
+chr7	92236528	rs766114156	T	C	.	.	p.Thr124Ala|p.Thr124Ala	.	
+chr7	92236536	rs1180804711	G	A	.	.	p.Thr121Ile|p.Thr121Ile	.	
+chr7	92236560	rs1304326425	A	G	.	.	c.356-18T>C|	.	
+chr7	92236569	rs1461308132	C	T	.	.	c.356-27G>A|	.	
+chr7	92236571		A	G	.	.	c.356-29T>C|	.	
+chr7	92236579	rs748082222	A	G	.	.	c.356-37T>C|	.	
+chr7	92236584	rs1398603363	T	C	.	.	c.356-42A>G|	.	
+chr7	92236588	rs756009833	C	A	.	.	c.356-46G>T|	.	
+chr7	92236593	rs755786568	G	GC	.	.	c.356-52dup|	.	
+chr7	92236606		T	C	.	.	c.356-64A>G|	.	
+chr7	92236606	rs189923061	T	G	.	.	c.356-64A>C|	.	
+chr7	92236614	rs933779852	C	T	.	.	c.356-72G>A|	.	
+chr7	92237592	rs926816951	T	A	.	.	c.355+75A>T|	.	
+chr7	92237594	rs1216107681	C	CTT	.	.	c.355+71_355+72dup|	.	
+chr7	92237596	rs981280962	T	A	.	.	c.355+71A>T|	.	
+chr7	92237608	rs3213610	T	C	.	.	c.355+59A>G|	.	
+chr7	92237617	rs374463102	A	G	.	.	c.355+50T>C|	.	
+chr7	92237623		C	T	.	.	c.355+44G>A|	.	
+chr7	92237625	rs895471531	T	G	.	.	c.355+42A>C|	.	
+chr7	92237636	rs574142144	TAA	T	.	.	c.355+29_355+30del|	.	
+chr7	92237655		T	A	.	.	c.355+12A>T|	.	
+chr7	92237660		A	G	.	.	c.355+7T>C|	.	
+chr7	92237685		C	T	.	.	p.Val113Ile|p.Val113Ile	.	
+chr7	92237698	rs762545968	T	G	.	.	p.Ala108Ala|p.Ala108Ala	.	
+chr7	92237705		C	T	.	.	p.Arg106Lys|p.Arg106Lys	.	
+chr7	92237708		C	T	.	.	p.Gly105Asp|p.Gly105Asp	.	
+chr7	92237714	rs1329724001	T	C	.	.	p.Lys103Arg|p.Lys103Arg	.	
+chr7	92237719		T	A	.	.	p.Gly101Gly|p.Gly101Gly	.	
+chr7	92237720	rs147568834	C	A	.	.	p.Gly101Val|p.Gly101Val	.	
+chr7	92237723	rs1420680753	T	G	.	.	p.Asp100Ala|p.Asp100Ala	.	
+chr7	92237725		C	G	.	.	p.Leu99Leu|p.Leu99Leu	.	
+chr7	92237726	rs1445866560	A	T	.	.	p.Leu99Gln|p.Leu99Gln	.	
+chr7	92237730	rs199905288	G	A	.	.	p.Pro98Ser|p.Pro98Ser	.	
+chr7	92237744	rs1235381178	A	G	.	.	p.Leu93Pro|p.Leu93Pro	.	
+chr7	92237746	rs573853526	T	C	.	.	p.Val92Val|p.Val92Val	.	
+chr7	92237758	rs201877439	T	C	.	.	p.Gly88Gly|p.Gly88Gly	.	
+chr7	92237760	rs897929960	C	G	.	.	c.263-1G>C|	.	
+chr7	92237771	rs748446872	T	A	.	.	c.263-12A>T|	.	
+chr7	92237772	rs770258512	A	T	.	.	c.263-13T>A|	.	
+chr7	92237788	rs1051883004	A	G	.	.	c.263-29T>C|	.	
+chr7	92237789	rs1296093545	AAAAT	A	.	.	c.263-34_263-31del|	.	
+chr7	92237790	rs1227524171	AAAT	A	.	.	c.263-34_263-32del|	.	
+chr7	92237792	rs763577796	A	C	.	.	c.263-33T>G|	.	
+chr7	92237796	rs771937753	TAC	T	.	.	c.263-39_263-38del|	.	
+chr7	92237800	rs774002727	C	T	.	.	c.263-41G>A|	.	
+chr7	92237802	rs1341123468	T	G	.	.	c.263-43A>C|	.	
+chr7	92237807	rs767066962	A	G	.	.	c.263-48T>C|	.	
+chr7	92237813	rs1355617171	T	C	.	.	c.263-54A>G|	.	
+chr7	92237827	rs1417885476	A	G	.	.	c.263-68T>C|	.	
+chr7	92240919	rs940591714	T	A	.	.	c.262+74A>T|	.	
+chr7	92240925		T	C	.	.	c.262+68A>G|	.	
+chr7	92240933	rs1036702763	A	G	.	.	c.262+60T>C|	.	
+chr7	92240939	rs1344441306	T	C	.	.	c.262+54A>G|	.	
+chr7	92240940		C	A	.	.	c.262+53G>T|	.	
+chr7	92240952	rs760136636	GTAT	G	.	.	c.262+38_262+40del|	.	
+chr7	92240952	rs752465280	G	A	.	.	c.262+41C>T|	.	
+chr7	92240963	rs760358892	A	G	.	.	c.262+30T>C|	.	
+chr7	92240965	rs763996206	T	C	.	.	c.262+28A>G|	.	
+chr7	92240974		T	A	.	.	c.262+19A>T|	.	
+chr7	92240979	rs757214090	A	T	.	.	c.262+14T>A|	.	
+chr7	92240995		C	T	.	.	p.Arg87Lys|p.Arg87Lys	.	
+chr7	92240995	rs1335478074	C	G	.	.	p.Arg87Thr|p.Arg87Thr	.	
+chr7	92241001	rs1307060289	C	T	.	.	p.Gly85Asp|p.Gly85Asp	.	
+chr7	92241020		T	C	.	.	p.Ile79Val|p.Ile79Val	.	
+chr7	92241030	rs749747198	G	T	.	.	p.Thr75Thr|p.Thr75Thr	.	
+chr7	92241032		T	C	.	.	p.Thr75Ala|p.Thr75Ala	.	
+chr7	92241040	rs1440357472	A	G	.	.	p.Val72Ala|p.Val72Ala	.	
+chr7	92241041	rs775059905	C	T	.	.	p.Val72Ile|p.Val72Ile	.	
+chr7	92241042	rs759116201	G	A	.	.	p.Tyr71Tyr|p.Tyr71Tyr	.	
+chr7	92241046	rs1050501717	T	C	.	.	p.Asp70Gly|p.Asp70Gly	.	
+chr7	92241057		T	C	.	.	p.Gln66Gln|p.Gln66Gln	.	
+chr7	92241067	rs774985805	T	G	.	.	p.Glu63Ala|p.Glu63Ala	.	
+chr7	92241080	rs1192358468	G	A	.	.	p.Gln59Ter|p.Gln59Ter	.	
+chr7	92241085	rs760394812	T	C	.	.	p.Lys57Arg|p.Lys57Arg	.	
+chr7	92241087	rs145901266	C	T	.	.	p.Thr56Thr|p.Thr56Thr	.	
+chr7	92241088		G	A	.	.	p.Thr56Met|p.Thr56Met	.	
+chr7	92241106		T	C	.	.	p.Lys50Arg|p.Lys50Arg	.	
+chr7	92241107	rs1057518665	TTC	T	.	.	p.Arg49LysfsTer14|p.Arg49LysfsTer14	.	
+chr7	92241111		C	CT	.	.	p.Arg49GlufsTer15|p.Arg49GlufsTer15	.	
+chr7	92241111	rs776245507	CT	C	.	.	p.Lys48ArgfsTer17|p.Lys48ArgfsTer17	.	
+chr7	92241129	rs1293064262	A	G	.	.	p.Ile42Ile|p.Ile42Ile	.	
+chr7	92241134		G	C	.	.	p.Pro41Ala|p.Pro41Ala	.	
+chr7	92241137	rs755097554	C	T	.	.	p.Val40Ile|p.Val40Ile	.	
+chr7	92241149	rs1041666983	A	G	.	.	p.Leu36Leu|p.Leu36Leu	.	
+chr7	92241156		A	C	.	.	c.103-4T>G|	.	
+chr7	92241159	rs1405862907	T	C	.	.	c.103-7A>G|	.	
+chr7	92241160	rs1418348893	G	A	.	.	c.103-8C>T|	.	
+chr7	92241171		T	C	.	.	c.103-19A>G|	.	
+chr7	92241173	rs1156683859	A	C	.	.	c.103-21T>G|	.	
+chr7	92241174		G	A	.	.	c.103-22C>T|	.	
+chr7	92241186	rs114457784	A	C	.	.	c.103-34T>G|	.	
+chr7	92241191	rs746572551	A	G	.	.	c.103-39T>C|	.	
+chr7	92241192		G	C	.	.	c.103-40C>G|	.	
+chr7	92241194	rs1229649376	C	T	.	.	c.103-42G>A|	.	
+chr7	92241196		A	G	.	.	c.103-44T>C|	.	
+chr7	92241212	rs768468515	T	C	.	.	c.103-60A>G|	.	
+chr7	92241220	rs999087486	G	A	.	.	c.103-68C>T|	.	
+chr7	92241224	rs1345889765	G	A	.	.	c.103-72C>T|	.	
+chr7	92241225		C	T	.	.	c.103-73G>A|	.	
+chr7	92241966	rs951759722	T	C	.	.	c.102+68A>G|	.	
+chr7	92241973		G	A	.	.	c.102+61C>T|	.	
+chr7	92241973		G	T	.	.	c.102+61C>A|	.	
+chr7	92241974	rs1026827516	T	C	.	.	c.102+60A>G|	.	
+chr7	92241976	rs534195214	AATG	A	.	.	c.102+55_102+57del|	.	
+chr7	92241978	rs1193613114	T	C	.	.	c.102+56A>G|	.	
+chr7	92241979	rs1441574300	G	A	.	.	c.102+55C>T|	.	
+chr7	92241992		G	A	.	.	c.102+42C>T|	.	
+chr7	92242002		G	A	.	.	c.102+32C>T|	.	
+chr7	92242009	rs1318379482	A	T	.	.	c.102+25T>A|	.	
+chr7	92242037	rs1273978810	A	AT	.	.	p.Tyr33Ter|p.Tyr33Ter	.	
+chr7	92242041	rs767430726	G	A	.	.	p.Ser32Leu|p.Ser32Leu	.	
+chr7	92242044	rs1367968203	T	C	.	.	p.Lys31Arg|p.Lys31Arg	.	
+chr7	92242059	rs34358665	C	T	.	.	p.Arg26Gln|p.Arg26Gln	.	
+chr7	92242062	rs779446044	G	A	.	.	p.Ser25Phe|p.Ser25Phe	.	
+chr7	92242066		T	C	.	.	p.Asn24Asp|p.Asn24Asp	.	
+chr7	92242076		A	C	.	.	p.Thr20Thr|p.Thr20Thr	.	
+chr7	92242087		G	T	.	.	p.Pro17Thr|p.Pro17Thr	.	
+chr7	92242089	rs1313893193	C	T	.	.	p.Arg16His|p.Arg16His	.	
+chr7	92242102	rs1015584962	C	T	.	.	p.Val12Ile|p.Val12Ile	.	
+chr7	92242106		T	G	.	.	p.Ala10Ala|p.Ala10Ala	.	
+chr7	92242106		T	C	.	.	p.Ala10Ala|p.Ala10Ala	.	
+chr7	92242117		T	C	.	.	p.Ile7Val|p.Ile7Val	.	
+chr7	92242144	rs550533414	A	G	.	.	c.-2-7T>C|	.	
+chr7	92242148	rs1462224531	CAAAT	C	.	.	c.-2-15_-2-12del|	.	
+chr7	92242152	rs763388363	TA	T	.	.	c.-2-16del|	.	
+chr7	92242152	rs769844167	T	TA	.	.	c.-2-16dup|	.	
+chr7	92242153	rs747844999	A	T	.	.	c.-2-16T>A|	.	
+chr7	92242157	rs187572275	A	C	.	.	c.-2-20T>G|	.	
+chr7	92242158		A	T	.	.	c.-2-21T>A|	.	
+chr7	92242160	rs201130221	T	A	.	.	c.-2-23A>T|	.	
+chr7	92242163		T	G	.	.	c.-2-26A>C|	.	
+chr7	92242168	rs766326515	A	G	.	.	c.-2-31T>C|	.	
+chr7	92242171	rs559842433	A	G	.	.	c.-2-34T>C|	.	
+chr7	92242182	rs764632243	C	CATTTGATG	.	.	c.-2-53_-2-46dup|	.	
+chr7	92242182	rs760781928	C	T	.	.	c.-2-45G>A|	.	
+chr7	92242184	rs764321564	T	C	.	.	c.-2-47A>G|	.	
+chr7	92242185	rs1244256420	T	A	.	.	c.-2-48A>T|	.	
+chr7	92242190		G	T	.	.	c.-2-53C>A|	.	
+chr7	92242196	rs907459653	A	G	.	.	c.-2-59T>C|	.	
+chr7	92242197	rs913591603	T	TA	.	.	c.-2-61dup|	.	
+chr7	92242197	rs949091724	TA	T	.	.	c.-2-61del|	.	
+chr7	92242200	rs1003121426	A	C	.	.	c.-2-63T>G|	.	
+chr7	92242210	rs367830981	T	G	.	.	c.-2-73A>C|	.
+	

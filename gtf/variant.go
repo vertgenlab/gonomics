@@ -8,12 +8,14 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
 	"reflect"
+	"strings"
 )
 
 type Variant struct {
 	vcf.Vcf
 	RefId       string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
 	Gene        string
+	PosStrand 	bool
 	NearestCDS  *CDS
 	CDNAPos     int // 1-base
 	AAPos       int // 1-base
@@ -62,6 +64,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
 	answer.Vcf = *v
 	answer.RefId = gene.Transcripts[0].TranscriptID
 	answer.Gene = gene.GeneID
+	answer.PosStrand = gene.Transcripts[0].Strand
 	vcfCdsIntersect(v, gene, answer)
 	if int(v.Pos) >= answer.NearestCDS.Start && int(v.Pos) <= answer.NearestCDS.End {
 		findAAChange(answer, seq)
@@ -69,6 +72,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
 	return answer
 }
 
+//TODO Strand
 func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 	var cdsPos int
 	var exon *Exon
@@ -76,9 +80,10 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 		exon = gene.Transcripts[0].Exons[i]
 		if exon.Cds != nil && int(v.Pos) > exon.Cds.End { // variant is further in gene
 			cdsPos += exon.Cds.End - exon.Cds.Start + 1
+			answer.NearestCDS = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 		} else if exon.Cds != nil && int(v.Pos) <= exon.Cds.End { // variant is before end of this exon
 			if int(v.Pos) < exon.Cds.Start { // Variant is NOT in CDS
-				if exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[0].Exons[i-1].Cds.Start {
+				if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[0].Exons[i-1].Cds.Start {
 					answer.NearestCDS = exon.Cds
 				} else {
 					answer.NearestCDS = gene.Transcripts[0].Exons[i-1].Cds
@@ -92,6 +97,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 	}
 }
 
+//TODO Strand
 func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
@@ -138,15 +144,16 @@ func determineFrame(v *Variant) int {
 
 // Annotation format is: Genomic | VariantType | Prediction | Gene | cDNA | Protein
 func VariantToAnnotation(variant *Variant, seq map[string][]dna.Base) string {
-	return addGenomic(variant) + "|" + variant.Prediction + "|" + variant.Gene + "|" + addCDNA(variant) + "|" + addProtein(variant, seq)
+	return addGenomic(variant) + "|" + variant.Prediction + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant) + "|" + addProtein(variant, seq)
 }
 
 func addGenomic(v *Variant) string {
 	return fmt.Sprintf("g.%d%s>%s", v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
 }
 
+//TODO Strand
 func addCDNA(v *Variant) string {
-	var answer string = v.RefId + ":c."
+	var answer string = strings.Trim(v.RefId, "\"") + ":c."
 	if v.VariantType == "Splice" || v.VariantType == "FarSplice" {
 		dist, start := getNearestCdsPos(v)
 		if start {
@@ -162,6 +169,9 @@ func addCDNA(v *Variant) string {
 }
 
 func addProtein(v *Variant, seq map[string][]dna.Base) string {
+	// e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
+	if v.VariantType == "Silent" || v.VariantType == "Missense" || v.VariantType == "Nonsense" || v.VariantType == "Frameshift" {
+	} else {return ""}
 	var answer string = "p."
 	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AARef[0]), v.AAPos)
 	if len(v.AARef) > 1 {
@@ -236,6 +246,7 @@ func getNearestCdsPos(v *Variant) (pos int, start bool) {
 	return pos, int(v.Pos) < v.NearestCDS.Start
 }
 
+//TODO Strand
 func distToNextTer(v *Variant, seq map[string][]dna.Base) int {
 	var answer int
 	currSeq := seq[v.Chr]
