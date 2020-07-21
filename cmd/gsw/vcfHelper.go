@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-//set up vcf records split my chroms
+//set up vcf records split by chroms
 func makeVcfChrMap(vcfChannel <-chan *vcf.Vcf) map[string][]*vcf.Vcf {
 	chrVcfMap := make(map[string][]*vcf.Vcf)
 	for i := range vcfChannel {

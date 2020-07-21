@@ -20,7 +20,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 			axt.WriteToFileHandle(file, i, idx)
 		}
 	case "vcf":
-		vcfChannel := goChainVcf(chainFile, targetFa, queryFa)
+		vcfChannel := goChainToVcf(chainFile, targetFa, queryFa)
 		file := fileio.EasyCreate(output)
 		vcf.NewWriteHeader(file, vcf.NewHeader(targetFa))
 		for i := range vcfChannel {
@@ -29,7 +29,8 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 	case "gg":
 		simpleGraph.Write(output, chainToSimpleGraph(chainFile, targetFa, queryFa))
 	default:
-
+		ggToolsUsage()
+		errorMessage()
 	}
 }
 
@@ -41,7 +42,7 @@ func goChainToAxt(chainFile, targetFa, queryFa string) <-chan *axt.Axt {
 	return ans
 }
 
-func goChainVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
+func goChainToVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
 	ans := make(chan *vcf.Vcf)
 	axtChannel := goChainToAxt(chainFile, targetFa, queryFa)
 	go workThreadAxtVcf(axtChannel, ans)

@@ -21,7 +21,8 @@ func convertAxt(axtFile, format, targetFa, output string) {
 	case "gg":
 		simpleGraph.Write(output, axtToSimpleGraph(axtFile, targetFa))
 	default:
-
+		ggToolsUsage()
+		errorMessage()
 	}
 }
 

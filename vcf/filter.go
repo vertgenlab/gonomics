@@ -62,6 +62,7 @@ func FilterChrom(v *Vcf, chrom string) bool {
 	return true
 }
 
+//TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
 	var answer []*Vcf
@@ -166,6 +167,7 @@ func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
 	}
 }
 
+//FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
 func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
 	chrVcfMap := make(map[string][]*Vcf)
