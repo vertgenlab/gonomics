@@ -9,10 +9,10 @@ func TestCanon(t *testing.T) {
 	gtf := Read("testdata/gtfFileTest.gtf")
 	for _, i := range gtf {
 		SortTranscripts(i)
-		if CdsLength(i.Transcripts[0]) != 219 {
+		if CdsLength(i.Transcripts[0]) != 221 {
 			t.Errorf("ERROR: Problem calculating CDS Length")
 		}
-		if CdnaLength(i.Transcripts[0]) != 1237 {
+		if CdnaLength(i.Transcripts[0]) != 1239 {
 			t.Errorf("ERROR: Problem calculating cDNA Length")
 		}
 	}

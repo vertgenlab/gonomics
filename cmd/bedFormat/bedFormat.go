@@ -12,6 +12,7 @@ import (
 func bedFormat(infile string, outfile string, fields int, ensemblToUCSC bool, UCSCToEnsembl bool) {
 	ch := bed.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
+	defer out.Close()
 
 	if ensemblToUCSC && UCSCToEnsembl {
 		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")

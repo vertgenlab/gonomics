@@ -3,6 +3,7 @@ package fasta
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"strings"
 )
 
 func Extract(f *Fasta, start int64, end int64, name string) *Fasta {
@@ -33,3 +34,11 @@ func FindFaIndex(subFa []*Fasta, n string) int {
 	}
 	return -1
 }
+func IsFasta(filename string) bool {
+	if strings.HasSuffix(filename, ".fasta") || strings.HasSuffix(filename, ".fa") || strings.HasSuffix(filename, ".fasta.gz") || strings.HasSuffix(filename, ".fa.gz") {
+		return true
+	} else {
+		return false
+	}
+}
+

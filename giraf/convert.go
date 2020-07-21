@@ -20,7 +20,7 @@ func GirafToString(g *Giraf) string {
 func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
 	data := strings.SplitN(line, "\t", 11)
-	if len(data) >= 10 {
+	if len(data) > 9 {
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
@@ -39,7 +39,6 @@ func stringToGiraf(line string) *Giraf {
 	} else {
 		log.Fatalf("Error: Expecting at least 10 columns, but only found %d on %s", len(data), line)
 	}
-
 	return curr
 }
 
