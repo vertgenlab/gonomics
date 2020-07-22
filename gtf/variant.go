@@ -3,6 +3,7 @@ package gtf
 import (
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -234,14 +235,27 @@ func addCDNA(v *Variant) string {
 	} else {
 		answer += fmt.Sprintf("%d", v.CDNAPos)
 	}
+	ref := dna.StringToBases(v.Ref)
+	alt := dna.StringToBases(v.Alt)
 	if v.PosStrand {
-		answer += v.Ref + ">" + v.Alt
+		if len(ref) == 1 && len(alt) == 1 { // Substitution
+			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
+		} else if len(ref) > len(alt) { // Deletion
+			//TODO Make addition
+		} else if len(alt) > len(ref) { // Insertion
+			//TODO Make addition
+		}
+
 	} else {
-		ref := dna.StringToBases(v.Ref)
-		alt := dna.StringToBases(v.Alt)
 		dna.ReverseComplement(ref)
 		dna.ReverseComplement(alt)
-		answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
+		if len(ref) == 1 && len(alt) == 1 {
+			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
+		} else if len(ref) > len(alt) { // Deletion
+			//TODO Make addition
+		} else if len(alt) > len(ref) { // Insertion
+			//TODO Make addition
+		}
 	}
 
 	return answer
@@ -256,12 +270,24 @@ func truncateOnTer(a []dna.AminoAcid) []dna.AminoAcid {
 	return a
 }
 
+func trimSynonymous(alpha []dna.AminoAcid, beta []dna.AminoAcid) (a, b []dna.AminoAcid) {
+	if len(alpha) > 1 && len(beta) > 1 {
+		for i := 0 ; i < common.Min(len(alpha), len(beta)); i++ {
+			if alpha[i] != beta[i] {
+				return alpha[i:], beta[i:]
+			}
+		}
+	}
+	return alpha, beta
+}
+
 func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	// e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
 	if v.VariantType == "Silent" || v.VariantType == "Missense" || v.VariantType == "Nonsense" || v.VariantType == "Frameshift" {
 	} else {return ""}
 	var answer string = "p."
 	v.AAAlt = truncateOnTer(v.AAAlt)
+	v.AARef, v.AAAlt = trimSynonymous(v.AARef, v.AAAlt)
 	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AARef[0]), v.AAPos)
 	if len(v.AARef) > 1 {
 		answer += "_" + dna.AminoAcidToString(v.AARef[len(v.AARef)-1]) + fmt.Sprintf("%d", v.AAPos + len(v.AARef) - 1)
