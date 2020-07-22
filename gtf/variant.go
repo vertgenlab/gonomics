@@ -206,13 +206,14 @@ func reverse(s []dna.Base) []dna.Base {
 
 func determineFrame(v *Variant) int {
 	if v.PosStrand {
-		return (int(v.Pos)-v.NearestCDS.Start)%3 + v.NearestCDS.Frame
+		return ((int(v.Pos)-v.NearestCDS.Start))%3 + ((3-v.NearestCDS.Frame)%3)
 	} else {
-		return (v.NearestCDS.End-int(v.Pos))%3 + v.NearestCDS.Frame
+		return ((v.NearestCDS.End-int(v.Pos)))%3 + ((3-v.NearestCDS.Frame)%3)
 	}
 }
 
 // Annotation format is: Genomic | VariantType | Gene | cDNA | Protein
+// TODO: Not sensitive to UTR splice junctions
 func VariantToAnnotation(variant *Variant, seq map[string][]dna.Base) string {
 	return addGenomic(variant) + "|" + variant.VariantType + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant) + "|" + addProtein(variant, seq)
 }
@@ -221,21 +222,38 @@ func addGenomic(v *Variant) string {
 	return fmt.Sprintf("g.%s:%d%s>%s", v.Chr, v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
 }
 
-//TODO Strand
 func addCDNA(v *Variant) string {
 	var answer string = strings.Trim(v.RefId, "\"") + ":c."
-	if v.VariantType == "Splice" || v.VariantType == "FarSplice" {
+	if v.VariantType == "Intronic" || v.VariantType == "Splice" || v.VariantType == "FarSplice" {
 		dist, start := getNearestCdsPos(v)
 		if start {
-			answer += fmt.Sprintf("%d+%d", dist, getCdsDist(v))
-		} else {
 			answer += fmt.Sprintf("%d-%d", dist, getCdsDist(v))
+		} else {
+			answer += fmt.Sprintf("%d+%d", dist, getCdsDist(v))
 		}
 	} else {
 		answer += fmt.Sprintf("%d", v.CDNAPos)
 	}
-	answer += v.Ref + ">" + v.Alt
+	if v.PosStrand {
+		answer += v.Ref + ">" + v.Alt
+	} else {
+		ref := dna.StringToBases(v.Ref)
+		alt := dna.StringToBases(v.Alt)
+		dna.ReverseComplement(ref)
+		dna.ReverseComplement(alt)
+		answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
+	}
+
 	return answer
+}
+
+func truncateOnTer(a []dna.AminoAcid) []dna.AminoAcid {
+	for i := 0 ; i < len(a) ; i++ {
+		if a[i] == dna.Stop {
+			return a[:i+1]
+		}
+	}
+	return a
 }
 
 func addProtein(v *Variant, seq map[string][]dna.Base) string {
@@ -243,9 +261,10 @@ func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	if v.VariantType == "Silent" || v.VariantType == "Missense" || v.VariantType == "Nonsense" || v.VariantType == "Frameshift" {
 	} else {return ""}
 	var answer string = "p."
+	v.AAAlt = truncateOnTer(v.AAAlt)
 	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AARef[0]), v.AAPos)
 	if len(v.AARef) > 1 {
-		answer += "_" + dna.AminoAcidToString(v.AAAlt[len(v.AAAlt)-1]) + fmt.Sprintf("%d", v.AAPos + len(v.AAAlt) - 1)
+		answer += "_" + dna.AminoAcidToString(v.AARef[len(v.AARef)-1]) + fmt.Sprintf("%d", v.AAPos + len(v.AARef) - 1)
 	}
 
 	refLen := len(v.AARef)
@@ -271,9 +290,13 @@ func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	}
 
 	if v.VariantType == "Frameshift" {
-		answer += fmt.Sprintf("fs*%d", distToNextTer(v, seq))
+		terDist := distToNextTer(v, seq)
+		if terDist == 0 {
+			v.VariantType = "Nonsense"
+			return addProtein(v, seq)
+		}
+		answer += fmt.Sprintf("fsTer%d", terDist)
 	}
-
 	return answer
 }
 
@@ -301,23 +324,35 @@ func addVariantType(v *Variant) {
 	}
 }
 
-//TODO Strand
 func getNearestCdsPos(v *Variant) (pos int, start bool) {
 	var currCDS *CDS = v.NearestCDS
-	if int(v.Pos) < v.NearestCDS.Start {
-		pos = 1
-	} else {
-		pos = v.NearestCDS.End - v.NearestCDS.Start
-	}
+	if v.PosStrand {
+		if int(v.Pos) < v.NearestCDS.Start {
+			pos = 1
+		} else {
+			pos = v.NearestCDS.End - v.NearestCDS.Start + 1
+		}
 
-	for currCDS.Prev != nil { // Go to first CDS to begin count
-		currCDS = currCDS.Prev
-		pos += currCDS.End - currCDS.Start
+		for currCDS.Prev != nil { // Go to first CDS to begin count
+			currCDS = currCDS.Prev
+			pos += currCDS.End - currCDS.Start
+		}
+		return pos, int(v.Pos) < v.NearestCDS.Start
+	} else {
+		if int(v.Pos) > v.NearestCDS.End {
+			pos = 1
+		} else {
+			pos = v.NearestCDS.End - v.NearestCDS.Start + 1
+		}
+
+		for currCDS.Next != nil { // Go to first CDS to begin count
+			currCDS = currCDS.Next
+			pos += currCDS.End - currCDS.Start + 1
+		}
+		return pos, int(v.Pos) > v.NearestCDS.End
 	}
-	return pos, int(v.Pos) < v.NearestCDS.Start
 }
 
-//TODO Strand
 func distToNextTer(v *Variant, seq map[string][]dna.Base) int {
 	var answer int
 	currSeq := seq[v.Chr]
@@ -394,7 +429,6 @@ func distToNextTer(v *Variant, seq map[string][]dna.Base) int {
 	}
 }
 
-//TODO Strand
 func getCdsDist(v *Variant) int {
 	switch {
 	case int(v.Pos) >= v.NearestCDS.Start && int(v.Pos) <= v.NearestCDS.End: // Variant is in CDS
@@ -404,7 +438,7 @@ func getCdsDist(v *Variant) int {
 		return v.NearestCDS.Start - int(v.Pos)
 
 	default:
-		return v.NearestCDS.End - int(v.Pos) // Variant is after nearest CDS
+		return int(v.Pos) - v.NearestCDS.End  // Variant is after nearest CDS
 	}
 }
 
