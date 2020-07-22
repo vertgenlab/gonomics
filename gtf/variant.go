@@ -117,6 +117,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 
 }
 
+// TODO: WILL REQUIRE CHANGES FOR POS STRAND
 func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
@@ -180,20 +181,31 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 		}
 		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) + aaPosOffset // Add 0.4 so pos will always round up
 	} else {
+		//fmt.Println("NEW VARIANT")
 		var trimAA bool
 		frame := determineFrame(variant)
+		//fmt.Println(frame)
 		seqPos += frame
 		lenOffset := (len(dna.StringToBases(variant.Ref)) - 1)
 
-		if  int(variant.Pos - 1) + lenOffset > seqPos {
+		for int(variant.Pos - 1) + lenOffset > seqPos {
 			seqPos += 3
 			trimAA = true
 			aaPosOffset--
 		}
+
+		if seqPos > currCDS.End - 1 {
+			seqPos = (currCDS.Next.Start - 1) + ((seqPos - int(variant.Pos)) - (currCDS.End - int(variant.Pos)))
+			currCDS = currCDS.Next
+		}
+
 		for ; seqPos > (int(variant.Pos-1) + lenOffset); seqPos-- {
 			if seqPos < currCDS.Start-1 {
 				seqPos = currCDS.Prev.End - 1
 				currCDS = currCDS.Prev
+				if seqPos == (int(variant.Pos - 1)+ lenOffset) {
+					break
+				}
 			} else if seqPos > currCDS.End-1 {
 				seqPos = currCDS.Next.Start - 1
 				currCDS = currCDS.Next
@@ -206,27 +218,43 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt))...)
 		seqPos -= len(dna.StringToBases(variant.Ref))
 		var offset int
+		altCDS := currCDS
+		altSeqPos := seqPos
 		for offset = 0; len(altBases)%3 != 0; offset++ {
-			if seqPos-offset < currCDS.Start-1 {
-				seqPos = currCDS.Prev.End - 1
-				currCDS = currCDS.Prev
+			if altSeqPos-offset < altCDS.Start-1 {
+				offset = 0
+				altSeqPos = altCDS.Prev.End - 1
+				altCDS = altCDS.Prev
 			}
-			altBases = append(altBases, seq[variant.Chr][seqPos-offset])
+			altBases = append(altBases, seq[variant.Chr][altSeqPos-offset])
 		}
+		refCDS := currCDS
+		refSeqPos := seqPos
 		for offset = 0; len(refBases)%3 != 0; offset++ {
-			if seqPos-offset < currCDS.Start-1 {
-				seqPos = currCDS.Prev.End - 1
-				currCDS = currCDS.Prev
+			if refSeqPos-offset < refCDS.Start-1 {
+				offset = 0
+				refSeqPos = refCDS.Prev.End - 1
+				refCDS = refCDS.Prev
 			}
-			refBases = append(refBases, seq[variant.Chr][seqPos-offset])
+			refBases = append(refBases, seq[variant.Chr][refSeqPos-offset])
 		}
+
+		//fmt.Println(dna.BasesToString(refBases))
+		//fmt.Println(dna.BasesToString(altBases))
 
 		dna.Complement(refBases)
 		dna.Complement(altBases)
 		variant.AARef = dna.TranslateSeq(refBases)
 		variant.AAAlt = dna.TranslateSeq(altBases)
 
+		//fmt.Println(dna.PolypeptideToString(variant.AARef))
+		//fmt.Println(dna.PolypeptideToString(variant.AAAlt))
+
 		if trimAA {
+			if variant.AARef[len(variant.AARef)-1] == variant.AAAlt[len(variant.AAAlt)-1] &&
+				(len(dna.StringToBases(variant.Ref)) - len(dna.StringToBases(variant.Alt)))%3 == 0 {
+				variant.AAAlt = variant.AAAlt[:len(variant.AAAlt)-1]
+			}
 			variant.AARef = variant.AARef[:len(variant.AARef)-1]
 		}
 

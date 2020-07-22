@@ -34,11 +34,11 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 			strings.HasPrefix(correctString, "c.-") || strings.HasPrefix(correctString, "c.*") {
 			continue
 		}
-		errorCount++
 
-		fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
-		fmt.Printf("EXPECTED: %s\n", correctString)
-		fmt.Printf("RECEIVED: %s\n", annotation)
+			errorCount++
+			fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
+			fmt.Printf("EXPECTED: %s\n", correctString)
+			fmt.Printf("RECEIVED: %s\n", annotation)
 
 	}
 	if errorCount != 0 {
