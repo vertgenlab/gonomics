@@ -3,6 +3,7 @@ package numbers
 import (
 	"log"
 	"math"
+	"github.com/vertgenlab/gonomics/common"
 )
 
 //TODO: Test functions for distribution values.
@@ -83,6 +84,48 @@ func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	return DefiniteIntegral(f, mu+200*sigma, x)
 }
 
+func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64) float64 {
+	var leftInf, rightInf bool
+	f := NormalClosure(mu, sigma)
+	if left == "-INF" || left == "-Inf" || left == "-inf" {
+		leftInf = true
+	}
+	if right == "INF" || right == "Inf" || right == "inf" {
+		rightInf = true
+	}
+	if leftInf && rightInf {
+		return 1.0
+	} else if !leftInf && !rightInf {
+		l := common.StringToFloat64(left)
+		r := common.StringToFloat64(right)
+		return DefiniteIntegral(f, l, r)
+	} else if leftInf {
+		r := common.StringToFloat64(right)
+		if r > mu + 6 * sigma { //Romberg can fail if a large right tail is evaluated in this case. R returns 1.0 for normal values over 6.
+			return 1.0
+		}
+		if r > mu - 3 * sigma { //dealing with values close to mu
+			return DefiniteIntegral(f, r - 8 * sigma, r)
+		} else {
+			//uses optimized small integral Romberg wrapper.
+			return DefiniteSmallIntegral(f, r - 50 * sigma, r) //more accuracy is required for extreme values, where the tail contriburtes more to the overall probability.
+		}
+	} else if rightInf {
+		l := common.StringToFloat64(left)
+		if l < mu - 6 * sigma {
+			return 1.0 //same as above
+		}
+		if l < mu + 3 * sigma {
+			return DefiniteIntegral(f, l, l + 8 * sigma)
+		} else {
+			return DefiniteSmallIntegral(f, l, l + 50 * sigma)
+		}
+	} else {
+		log.Fatalf("Something went wrong.")
+		return -1.0
+	}
+}
+
 func BetaLeftIntegral(x float64, alpha float64, beta float64) float64 {
 	f := BetaClosure(alpha, beta)
 	return DefiniteIntegral(f, 0, x)
@@ -93,6 +136,11 @@ func BetaRightIntegral(x float64, alpha float64, beta float64) float64 {
 	return DefiniteIntegral(f, x, 1)
 }
 
+func BetaIntegral(left float64, right float64, alpha float64, beta float64) float64 {
+	f := BetaClosure(alpha, beta)
+	return DefiniteIntegral(f, left, right)
+}
+
 func GammaLeftIntegral(x float64, alpha float64, beta float64) float64 {
 	f := GammaClosure(alpha, beta)
 	return DefiniteIntegral(f, 0, x)
@@ -101,6 +149,11 @@ func GammaLeftIntegral(x float64, alpha float64, beta float64) float64 {
 func GammaRightIntegral(x float64, alpha float64, beta float64) float64 {
 	f := GammaClosure(alpha, beta)
 	return 1 - DefiniteIntegral(f, 0, x)
+}
+
+func GammaIntegral(left float64, right float64, alpha float64, beta float64) float64 {
+	f := GammaClosure(alpha, beta)
+	return DefiniteIntegral(f, left, right)
 }
 
 func PoissonLeftSummation(k int, lambda float64) float64 {
@@ -114,6 +167,18 @@ func PoissonLeftSummation(k int, lambda float64) float64 {
 //The Poisson right sum is infinite but can be evaluated as 1 - the left hand sum, which is finite.
 func PoissonRightSummation(k int, lambda float64) float64 {
 	return 1 - PoissonLeftSummation(k-1, lambda)
+}
+
+//inclusive on both ends
+func PoissonSum(left int, right int, lambda float64) float64 {
+	if right > left {
+		log.Fatalf("PoissonSum failed. Right side value must be lower than the left side value.")
+	}
+	var answer float64 = 0
+	for i := left; i < right; i++ {
+		answer = answer + PoissonDist(i, lambda)
+	}
+	return answer
 }
 
 //all binomial summations include the query value n. Thus, the left and right sums will not add to 1.
@@ -131,6 +196,18 @@ func BinomialRightSummation(n int, k int, p float64) float64 {
 	} else {
 		return 1 - evaluateLeftBinomialSum(n, k-1, p)
 	}
+}
+
+//inclusive on both ends
+func BinomialSum(left int, right int, n int, p float64) float64 {
+	if right < left {
+		log.Fatalf("BinomialSum failed. Right side value must be greater than the left side value.")
+	}
+	var answer float64 = 0
+	for i := left; i <= right; i++ {
+		answer = answer + BinomialDist(n, i, p)
+	}
+	return answer
 }
 
 func evaluateRightBinomialSum(n int, k int, p float64) float64 {
