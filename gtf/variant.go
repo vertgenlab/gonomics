@@ -14,7 +14,7 @@ type Variant struct {
 	vcf.Vcf
 	RefId       string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
 	Gene        string
-	PosStrand 	bool
+	PosStrand   bool
 	NearestCDS  *CDS
 	CDNAPos     int // 1-base
 	AAPos       int // 1-base
@@ -100,16 +100,16 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 		}
 	} else {
 		for i := 0; i < len(gene.Transcripts[0].Exons); i++ {
-			exon = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons) - 1 - i]
+			exon = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons)-1-i]
 			if exon.Cds != nil && int(v.Pos) < exon.Cds.Start { // variant is further in gene
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCDS = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) >= exon.Cds.Start { // variant is before end of this exon
 				if int(v.Pos) > exon.Cds.End { // Variant is NOT in CDS
-					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons) - 1 - i + 1].Cds.Start-int(v.Pos) {
+					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons)-1-i+1].Cds.Start-int(v.Pos) {
 						answer.NearestCDS = exon.Cds
 					} else {
-						answer.NearestCDS = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons) - 1 - i + 1].Cds
+						answer.NearestCDS = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons)-1-i+1].Cds
 					}
 					break
 				}
@@ -232,7 +232,7 @@ func addVariantType(v *Variant) {
 // reverse reverses the order of a slice of dna.Base
 // e.g. [0 1 2] -> [2 1 0]
 func reverse(s []dna.Base) []dna.Base {
-	for i := 0; i < len(s) / 2; i++ {
+	for i := 0; i < len(s)/2; i++ {
 		s[i], s[len(s)-1-i] = s[len(s)-1-i], s[i]
 	}
 	return s
@@ -242,9 +242,9 @@ func reverse(s []dna.Base) []dna.Base {
 // This is used to determine how many bases before the variant must be retrieved to get the full codon
 func determineFrame(v *Variant) int {
 	if v.PosStrand {
-		return ((int(v.Pos)-v.NearestCDS.Start))%3 + ((3-v.NearestCDS.Frame)%3)
+		return (int(v.Pos)-v.NearestCDS.Start)%3 + ((3 - v.NearestCDS.Frame) % 3)
 	} else {
-		return ((v.NearestCDS.End-int(v.Pos)))%3 + ((3-v.NearestCDS.Frame)%3)
+		return (v.NearestCDS.End-int(v.Pos))%3 + ((3 - v.NearestCDS.Frame) % 3)
 	}
 }
 
@@ -259,7 +259,7 @@ func getCdsDist(v *Variant) int {
 		return v.NearestCDS.Start - int(v.Pos)
 
 	default:
-		return int(v.Pos) - v.NearestCDS.End  // Variant is after nearest CDS
+		return int(v.Pos) - v.NearestCDS.End // Variant is after nearest CDS
 	}
 }
 

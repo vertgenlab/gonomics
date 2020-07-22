@@ -23,7 +23,7 @@ func TestVcfToVariant(t *testing.T) {
 		GeneName: "DummyGene",
 		Transcripts: []*Transcript{{
 			Chr:          "DummyChr",
-			Strand: 	true,
+			Strand:       true,
 			Start:        1,
 			End:          3,
 			TranscriptID: "DummyTranscriptID",
