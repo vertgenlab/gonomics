@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"strings"
 )
@@ -38,10 +38,10 @@ func usage() {
 			"Usage:\t" +
 			" statCalc [options] \n" +
 			"options:\n" +
-			" -normal=mu,sigma. Defines a normal distribution with mean mu and standard deviation sigma. Ex Usage: -normal=0,1 1 or -normal=0,1 2 inf\n" + 
+			" -normal=mu,sigma. Defines a normal distribution with mean mu and standard deviation sigma. Ex Usage: -normal=0,1 1 or -normal=0,1 2 inf\n" +
 			" -binomial=n,p. Defines a binomial distribution with n experiments and success probability p. Ex Usage: -binomial=10,0.5 3 or -binomial=10, 0.5 6 n\n" +
-			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" + 
-			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" + 
+			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
+			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
 			" -gamma=alpha,beta. Defines a gamma distribution with parameters alpha and beta. Ex Usage: -gamma=4,4 6\n" +
 			"After defining a distribution, one float64 argument returns the function density at that value.\n" +
 			"For discrete distributions, two arguments will evaluate the sum between two input values.\n" +
@@ -59,7 +59,7 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
-	
+
 	MultipleOptionErrorCheck(Normal, Binomial, Poisson, Beta, Gamma)
 
 	if *Normal != "" {
@@ -101,7 +101,7 @@ func main() {
 					fmt.Printf("%e\n", 1.00000)
 				} else {
 					fmt.Printf("%e\n", numbers.BinomialRightSummation(n, left, p))
-				} 
+				}
 			} else if left == 0 {
 				right := common.StringToInt(flag.Arg(1))
 				fmt.Printf("%e\n", numbers.BinomialLeftSummation(n, right, p))
@@ -149,7 +149,7 @@ func main() {
 			right := common.StringToFloat64(flag.Arg(1))
 			fmt.Printf("%e\n", numbers.BetaIntegral(left, right, alpha, beta))
 		}
-	} else if *Gamma != "" {	
+	} else if *Gamma != "" {
 		words := strings.Split(*Gamma, ",")
 		if len(words) != 2 {
 			log.Fatalf("Error: a gamma distribution is defined by two parameters. Received %v.\n", len(words))
