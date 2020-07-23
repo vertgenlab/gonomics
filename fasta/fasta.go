@@ -84,9 +84,6 @@ func WriteFasta(file io.Writer, rec *Fasta, lineLength int) {
 			common.ExitIfError(err)
 		}
 	}
-	//New line character
-	_, err = fmt.Fprint(file, "\n")
-	common.ExitIfError(err)
 }
 
 func WriteGroups(filename string, groups [][]*Fasta) error {
