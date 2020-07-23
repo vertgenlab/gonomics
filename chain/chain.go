@@ -142,7 +142,7 @@ func ToString(ch *Chain) string {
 	return answer
 }
 
-//NextChain will lines in file and return one chain record at a time and a true false determining the EOF.
+//NextChain will read lines in file and return one chain record at a time and a true false determining the EOF.
 func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 	header, done := fileio.EasyNextRealLine(reader)
 	if done {
