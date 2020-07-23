@@ -60,5 +60,5 @@ func DefiniteIntegral(f func(float64) float64, start float64, end float64) float
 //DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
 //slower than DefiniteIntegral, but more accurate for small values.
 func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
-	return rombergsMethod(f, start, end, 0, 1e-8, 30)
+	return rombergsMethod(f, start, end, 0, 1e-6, 30)
 }

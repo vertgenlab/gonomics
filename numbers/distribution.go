@@ -98,27 +98,35 @@ func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64
 	} else if !leftInf && !rightInf {
 		l := common.StringToFloat64(left)
 		r := common.StringToFloat64(right)
-		return DefiniteIntegral(f, l, r)
+		//if l > mu+10*sigma || r < mu-10*sigma {
+		//	return DefiniteSmallIntegral(f, l, r)
+		//}
+		return DefiniteSmallIntegral(f, l, r)
 	} else if leftInf {
 		r := common.StringToFloat64(right)
 		if r > mu+6*sigma { //Romberg can fail if a large right tail is evaluated in this case. R returns 1.0 for normal values over 6.
 			return 1.0
 		}
-		if r > mu-3*sigma { //dealing with values close to mu
-			return DefiniteIntegral(f, r-8*sigma, r)
+		if r < mu - 38*sigma {
+			return 0.0
+		}
+		if r > mu-3 * sigma { //dealing with values close to mu
+			return DefiniteSmallIntegral(f, r-15*sigma, r)
 		} else {
-			//uses optimized small integral Romberg wrapper.
-			return DefiniteSmallIntegral(f, r-50*sigma, r) //more accuracy is required for extreme values, where the tail contriburtes more to the overall probability.
+			return DefiniteSmallIntegral(f, r-10*sigma, r)
 		}
 	} else if rightInf {
 		l := common.StringToFloat64(left)
-		if l < mu-6*sigma {
+		if l < mu-6 * sigma {
 			return 1.0 //same as above
 		}
-		if l < mu+3*sigma {
-			return DefiniteIntegral(f, l, l+8*sigma)
+		if l > mu + 38 * sigma {
+			return 0.0
+		}
+		if l < mu+10*sigma {
+			return DefiniteSmallIntegral(f, l, l+15*sigma)
 		} else {
-			return DefiniteSmallIntegral(f, l, l+50*sigma)
+			return DefiniteSmallIntegral(f, l, l+10*sigma)
 		}
 	} else {
 		log.Fatalf("Something went wrong.")

@@ -69,7 +69,6 @@ func main() {
 		}
 		mu := common.StringToFloat64(words[0])
 		sigma := common.StringToFloat64(words[1])
-
 		if len(flag.Args()) > 2 || len(flag.Args()) < 1 {
 			flag.Usage()
 			log.Fatalf("Error: expected one or two arguments, but got %d\n", len(flag.Args()))
