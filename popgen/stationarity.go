@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
+	"strings"
 )
 
 /*
@@ -23,32 +24,34 @@ type SegSite struct {
 	n int //total number of individuals
 }
 
-func gVCFToAFS(filename string) AFS {
+func GVCFToAFS(filename string) AFS {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
 	alpha := vcf.GoReadGVcf(filename)
 	var currentSeg *SegSite
-
 	var j int
 	for i := range alpha.Vcfs {
 		currentSeg = &SegSite{i: 0, n: 0}
-		g := vcf.VcfToGvcf(i)
-		for j = 0; j < len(g.Genotypes); j++ {
-			if g.Genotypes[j].AlleleOne != -1 && g.Genotypes[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
-				currentSeg.n = currentSeg.n + 2
-				if g.Genotypes[j].AlleleOne > 0 {
-					currentSeg.i++
-				}
-				if g.Genotypes[j].AlleleTwo > 0 {
-					currentSeg.i++
+		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
+		if !strings.ContainsAny(i.Alt, "<>") {
+			g := vcf.VcfToGvcf(i)
+			for j = 0; j < len(g.Genotypes); j++ {
+				if g.Genotypes[j].AlleleOne != -1 && g.Genotypes[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
+					currentSeg.n = currentSeg.n + 2
+					if g.Genotypes[j].AlleleOne > 0 {
+						currentSeg.i++
+					}
+					if g.Genotypes[j].AlleleTwo > 0 {
+						currentSeg.i++
+					}
 				}
 			}
-		}
-		if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
-			answer.sites = append(answer.sites, currentSeg)
+			if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
+				answer.sites = append(answer.sites, currentSeg)
+			}
 		}
 	}
-	alpha.Reader.Close()
+	alpha.File.Close()
 	return answer
 }
 
