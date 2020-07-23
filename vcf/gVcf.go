@@ -75,7 +75,7 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 			if err != nil && n < int64(len(text)) {
 				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false}
 			} else {
-				answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
+				log.Fatalf("Error: Unexpected parsing error...\n")
 			}
 		}
 	}
