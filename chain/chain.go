@@ -151,7 +151,7 @@ func NextChain(reader *fileio.EasyReader) (*Chain, bool) {
 	return NewChain(header, reader), false
 }
 
-//NewChain will process cast text into chain data fields.
+//NewChain will process text into chain data fields. It will read the first line of the file and assign to header fields and use a reader to read and process the additional lines of the alignment.
 func NewChain(text string, reader *fileio.EasyReader) *Chain {
 	data := strings.Split(text, " ")
 	if len(data) != 13 {
