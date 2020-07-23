@@ -62,6 +62,7 @@ func FilterChrom(v *Vcf, chrom string) bool {
 	return true
 }
 
+//TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
 	var answer []*Vcf
@@ -164,4 +165,37 @@ func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
 	for record := range gvcf.Vcfs {
 		WriteVcf(writer, ReorderSampleColumns(record, listIndex))
 	}
+}
+
+//FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
+func FilterVcfPos(vcfs []*Vcf) []*Vcf {
+	var answer []*Vcf
+	chrVcfMap := make(map[string][]*Vcf)
+
+	var ref []dna.Base
+	var alt []dna.Base
+	for _, v := range vcfs {
+		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
+	}
+	var i int
+	var curr []*Vcf
+	for key := range chrVcfMap {
+		curr = chrVcfMap[key]
+		encountered := make(map[int64]bool)
+		for i = 0; i < len(curr); i++ {
+			if encountered[curr[i].Pos] == true {
+				//do not add
+			} else {
+				encountered[curr[i].Pos] = true
+				ref = dna.StringToBases(curr[i].Ref)
+				alt = dna.StringToBases(curr[i].Alt)
+				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
+					answer = append(answer, curr[i])
+				}
+			}
+
+		}
+	}
+	Sort(answer)
+	return answer
 }

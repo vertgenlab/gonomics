@@ -48,6 +48,13 @@ func ReadToChan(reader *fileio.EasyReader, output chan<- *SamAln) {
 	close(output)
 }
 
+func GoReadToChan(filename string) chan *SamAln {
+	answer := make(chan *SamAln)
+	file := fileio.EasyOpen(filename)
+	go ReadToChan(file, answer)
+	return answer
+}
+
 func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHeader, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()

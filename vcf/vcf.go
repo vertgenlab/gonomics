@@ -207,3 +207,12 @@ func MakeHeader() []string {
 		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
 	return header
 }
+
+//Checks suffix of filename to confirm if the file is a vcf formatted file
+func IsVcfFile(filename string) bool {
+	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
+		return true
+	} else {
+		return false
+	}
+}
