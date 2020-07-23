@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -45,6 +46,7 @@ type SampleHash struct {
 	GIndex map[string]int16
 }
 
+//TODO: Can only process short variants. Need long term solution for large structural variance.
 func VcfToGvcf(v *Vcf) *GVcf {
 	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
 	return gVcf
@@ -54,6 +56,8 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	text := strings.Split(v.Notes, "\t")
 	var hap string
 	var alleles []string
+	var err error
+	var n int64
 	var answer []GenomeSample = make([]GenomeSample, len(text))
 	for i := 0; i < len(text); i++ {
 		hap = strings.Split(text[i], ":")[0]
@@ -62,9 +66,17 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 		} else if strings.Contains(hap, "|") {
 			alleles = strings.SplitN(hap, "|", 2)
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true}
-		} else {
+		} else if strings.Contains(hap, "/") {
 			alleles = strings.SplitN(hap, "/", 2)
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false}
+		} else {
+			//Deal with single haps. There might be a better soltuion, but I think this should work.
+			n, err = strconv.ParseInt(alleles[0], 10, 16)
+			if err != nil && n < int64(len(text)) {
+				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false}
+			} else {
+				answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
+			}
 		}
 	}
 	return answer
