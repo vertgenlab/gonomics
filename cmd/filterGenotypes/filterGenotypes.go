@@ -57,7 +57,7 @@ func main() {
 			writer.Close()
 
 		} else if *parentOne == "" || *parentTwo == "" || *f1Genome == "" {
-			log.Fatalf("Error: Must provide exactly 2 parents, found...\n")
+			log.Fatalf("Error: Must provide exactly 2 parents and 1 F1 sample...\n")
 		} else {
 			file := fileio.EasyOpen(input)
 			defer file.Close()
@@ -75,7 +75,8 @@ func main() {
 			log.SetFlags(0)
 			for each := range reader {
 				if vcf.ASFilter(each, parentalOne, parentalTwo, fOne) {
-					vcf.PrintReOrder(each, []int16{parentalOne, parentalTwo, fOne})
+					//TODO: Need to chanch logic for this log print feature.
+					//vcf.PrintReOrder(each, []int16{parentalOne, parentalTwo, fOne})
 					vcf.WriteVcf(writer, each)
 				}
 			}
