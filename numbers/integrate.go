@@ -41,7 +41,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 		// R[n][n]-R[n-1][n-1] being more conservative, so we will use that one
 		// log.Printf("prevEst=%e, currEst=%e\n", prevR[n-1], currR[n])
 		currEstError = math.Abs(currR[n] - prevR[n-1])
-		if currEstError < estimatedError || currEstError < relativeEstError * math.Abs(currR[n]) {
+		if currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n]) {
 			return currR[n]
 		}
 
@@ -55,4 +55,10 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 // DefiniteIntegral computes the definite integral of f(x) dx from start to end
 func DefiniteIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 1e-8, 1e-8, 30)
+}
+
+//DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
+//slower than DefiniteIntegral, but more accurate for small values.
+func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
+	return rombergsMethod(f, start, end, 0, 1e-6, 30)
 }

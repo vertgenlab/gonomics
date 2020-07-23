@@ -58,9 +58,6 @@ func IsEqual(a *SamAln, b *SamAln) bool {
 	if a.PNext != b.PNext {
 		return false
 	}
-	if a.PNext != b.PNext {
-		return false
-	}
 	if a.TLen != b.TLen {
 		return false
 	}

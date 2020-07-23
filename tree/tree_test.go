@@ -16,7 +16,7 @@ var treeTests = []struct {
 
 func TestStringConv(t *testing.T) {
 	for _, test := range treeTests {
-		tree, err := parseNewick(test.treeText)
+		tree, err := ParseNewick(test.treeText)
 		if err != nil {
 			t.Error(err)
 		}

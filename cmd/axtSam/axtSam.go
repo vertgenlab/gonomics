@@ -76,7 +76,6 @@ func axtToSam(axtfile string, header *sam.SamHeader, output string) {
 	working.Wait()
 	close(results)
 	writingJob.Wait()
-
 }
 
 func chromInfoSamHeader(filename string) *sam.SamHeader {

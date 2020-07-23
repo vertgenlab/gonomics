@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -23,12 +24,6 @@ type Vcf struct {
 	Info   string
 	Format string
 	Notes  string
-}
-
-//Might get rid of this
-type VCF struct {
-	Header *VcfHeader
-	Vcf    []*Vcf
 }
 
 type VcfHeader struct {
@@ -57,9 +52,7 @@ func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
 }
 
 func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
-	var curr *Vcf
-	var done bool
-	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		output <- curr
 	}
 	close(output)
@@ -67,44 +60,35 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
-	data := strings.Split(line, "\t")
-	switch {
-	case strings.HasPrefix(line, "#"):
-		//don't do anything
-	case len(data) == 1:
-		//these lines are sequences, and we are not recording them
-	case len(line) == 0:
-		//blank line
-	case len(data) >= 10:
-		curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: data[9]}
-		if strings.Compare(data[5], ".") == 0 {
-			curr.Qual = 255
-		} else {
-			curr.Qual = common.StringToFloat64(data[5])
-		}
-		if len(data) > 10 {
-			curr.Notes = strings.Join(data[9:], "\t")
-		}
-	default:
+	data := strings.SplitN(line, "\t", 10)
+	//switch {
+	//case strings.HasPrefix(line, "#"):
+	//don't do anything
+	//case len(data) == 1:
+	//these lines are sequences, and we are not recording them
+	//case len(line) == 0:
+	//blank line
+	if len(data) < 9 {
+		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
+	}
+	curr = &Vcf{Chr: data[0], Pos: common.StringToInt64(data[1]), Id: data[2], Ref: data[3], Alt: data[4], Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
+	if strings.Compare(data[5], ".") == 0 {
+		curr.Qual = 255
+	} else {
+		curr.Qual = common.StringToFloat64(data[5])
+	}
+	if len(data) > 9 {
+		curr.Notes = data[9]
 	}
 	return curr
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return nil, true
 	}
 	return processVcfLine(line), false
-}
-
-func ReadVcf(filename string) *VCF {
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	header := ReadHeader(file)
-	vcfRecords := Read(filename)
-	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
 func ReadHeader(er *fileio.EasyReader) *VcfHeader {
@@ -119,20 +103,9 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	return &header
 }
 
-func processHeader(header *VcfHeader, line string) {
-	var err error
-	if strings.HasPrefix(line, "#") {
-		header.Text = append(header.Text, line)
-	}
-	if err != nil {
-		log.Fatal("There was an error reading the header line")
-	}
-}
-
 //split vcf into slices to deal with different chromosomes
 func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	var answer [][]*Vcf
-
 	for i := 0; i < len(fastaRecord); i++ {
 		var curr []*Vcf
 		for j := 0; j < len(vcfRecord); j++ {
@@ -157,24 +130,7 @@ func WriteHeader(file *os.File) {
 	common.ExitIfError(err)
 }
 
-func WriteBetterHeader(file *fileio.EasyWriter, fa []*fasta.Fasta) {
-	var err error
-	header := BetterHeader(fa)
-	for h := 0; h < len(header); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header[h])
-	}
-	common.ExitIfError(err)
-}
-
-func NewWrite(filename string, data []*Vcf, fa []*fasta.Fasta) {
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	WriteBetterHeader(file, fa)
-	for _, each := range data {
-		WriteVcf(file, each)
-	}
-}
-
+//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
@@ -187,7 +143,7 @@ func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	}
 }
 
-func WriteVcf(file *fileio.EasyWriter, input *Vcf) {
+func WriteVcf(file io.Writer, input *Vcf) {
 	var err error
 	if input.Notes == "" {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, input.Alt, input.Qual, input.Filter, input.Info, input.Format)
@@ -217,11 +173,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 }
 
 func PrintSingleLine(data *Vcf) {
-	var err error
-	file := fileio.EasyCreate("/dev/stdout")
-	defer file.Close()
-	_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
-	common.ExitIfError(err)
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 }
 
 func PrintHeader(header []string) {
@@ -256,24 +208,11 @@ func MakeHeader() []string {
 	return header
 }
 
-func BetterHeader(fa []*fasta.Fasta) []string {
-	var header []string
-	t := time.Now()
-	header = append(header, "##fileformat=VCFv4.2\n"+
-		"##fileDate="+t.Format("20060102")+"\n"+
-		"##source=github.com/vertgenlab/gonomics")
-	header = append(header, "##phasing=none\n"+
-		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
-		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
-		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
-	var text string = ""
-	if fa != nil {
-		for i := 0; i < len(fa); i++ {
-			text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
-		}
+//Checks suffix of filename to confirm if the file is a vcf formatted file
+func IsVcfFile(filename string) bool {
+	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
+		return true
+	} else {
+		return false
 	}
-	text += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES"
-	header = append(header, text)
-	return header
 }
