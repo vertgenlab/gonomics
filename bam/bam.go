@@ -48,7 +48,7 @@ func BamBlockToSam(header *BamHeader, bam *BamData) {
 		Pos:   int64(bam.Pos),
 		MapQ:  int64(bam.MapQ),
 		RNext: "",
-		PNext: int64(bam.NextPos),
+		PNext: int64(bam.NextPos)+1,
 		TLen:  int64(header.Chroms[bam.RName].Size),
 		Seq:   dna.StringToBases(bamSequence(bam.Seq)),
 		Qual:  qualToString(bam.Qual),
@@ -77,16 +77,22 @@ func bamSequence(seq []byte) string {
 func qualToString(qual []byte) string {
 	var buffer bytes.Buffer
 	writer := bufio.NewWriter(&buffer)
-	if strings.Contains(string(qual), "\n") {
-		fmt.Fprintf(writer, "%c", '*')
-	} else {
-		for i := 0; i < len(qual); i++ {
-			fmt.Fprintf(writer, "%c", qual[i]+33)
-		}
-	}
-
+	fmt.Fprintf(writer, "%s", string(formatQual(qual)))
 	writer.Flush()
 	return buffer.String()
+}
+
+func formatQual(q []byte) []byte {
+	for _, v := range q {
+		if v != 0xff {
+			a := make([]byte, len(q))
+			for i, p := range q {
+				a[i] = p + 33
+			}
+			return a
+		}
+	}
+	return []byte{'*'}
 }
 
 func NewBamReader(filename string) *BamReader {
