@@ -88,9 +88,3 @@ func NewFaChannel() *FaChannel {
 		Cmd:    &o,
 	}
 }
-
-func (fa *FaChannel) SafeClose() {
-	fa.Cmd.Do(func() {
-		close(fa.Stream)
-	})
-}
