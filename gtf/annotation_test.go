@@ -4,40 +4,45 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 	"strings"
 	"testing"
 )
 
 func TestVariantToAnnotationLarge(t *testing.T) {
-	testGtf := Read("testdata/KRIT1.gtf")
-	testVcf := vcf.Read("testdata/KRIT1.vcf")
-	testFasta := fasta.FastaMap(fasta.Read("testdata/hg38_chr7.fa"))
+	testGtf := Read("testdata/CFTR.gtf")
+	testVcf := vcf.Read("testdata/CFTR.vcf")
+	f := fasta.Read("testdata/hg38_chr7.fa")
+	fasta.AllToUpper(f)
+	testFasta := fasta.FastaMap(f)
 	tree := GenesToIntervalTree(testGtf)
-	var err error
+	//var err error
 	var variant *Variant
 	var words, newWords, newerWords []string
-	var correctString, annotation string
+	var correctCDNA, correctProt, outputCDNA, outputProt, annotation string
 	var errorCount int
 	for _, val := range testVcf {
-		variant, err = VcfToVariant(val, tree, testFasta)
-		if err != nil {
-			log.Println(err)
-		}
+		//fmt.Println("NEW VARIANT")
+		variant, _ = VcfToVariant(val, tree, testFasta)
+		//if err != nil {
+		//	log.Println(err)
+		//}
 		words = strings.Split(val.Info,"|")
-		correctString = words[0]
+		correctCDNA = words[0]
+		correctProt = words[1]
 		annotation = VariantToAnnotation(variant, testFasta)
 		newWords = strings.Split(annotation, "|")
 		newerWords = strings.Split(newWords[3], ":")
+		outputCDNA = newerWords[1]
+		outputProt = newWords[4]
 		//fmt.Sprintln(newerWords)
-		if newWords[4] == correctString || newerWords[1] == correctString ||
-			strings.HasPrefix(correctString, "c.-") || strings.HasPrefix(correctString, "c.*") {
+		if (outputCDNA == correctCDNA && outputProt == correctProt) ||
+			strings.HasPrefix(correctCDNA, "c.-") || strings.HasPrefix(correctCDNA, "c.*") {
 			continue
 		}
 
 			errorCount++
 			fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
-			fmt.Printf("EXPECTED: %s\n", correctString)
+			fmt.Printf("EXPECTED: %s|%s\n", correctCDNA, correctProt)
 			fmt.Printf("RECEIVED: %s\n", annotation)
 
 	}

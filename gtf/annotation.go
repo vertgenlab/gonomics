@@ -12,7 +12,7 @@ import (
 // Annotation format is: Genomic | VariantType | Gene | cDNA | Protein
 // TODO: Not sensitive to UTR splice junctions
 func VariantToAnnotation(variant *Variant, seq map[string][]dna.Base) string {
-	return addGenomic(variant) + "|" + variant.VariantType + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant, seq) + "|" + addProtein(variant, seq)
+	return "GoEP=" + addGenomic(variant) + "|" + variant.VariantType + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant, seq) + "|" + addProtein(variant, seq)
 }
 
 func addGenomic(v *Variant) string {
@@ -23,8 +23,8 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 	var answer string = strings.Trim(v.RefId, "\"") + ":c."
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt)
+	cdsPos, start := getNearestCdsPos(v)
 	if v.VariantType == "Intronic" || v.VariantType == "Splice" || v.VariantType == "FarSplice" {
-		cdsPos, start := getNearestCdsPos(v)
 		cdsDist := getCdsDist(v)
 		if len(ref) == 1 && len(alt) == 1 { // Substitution
 			if start {
@@ -33,19 +33,38 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 				answer += fmt.Sprintf("%d+%d", cdsPos, cdsDist)
 			}
 		} else if len(ref) == 2 && len(alt) == 1 {
-			if start {
-				answer += fmt.Sprintf("%d-%ddel", cdsPos, cdsDist + 1)
+			if v.PosStrand {
+				var duplicateOffset int
+				for i := 1; seq[v.Chr][int(v.Pos)+i] == ref[1]; i++ {
+					duplicateOffset++
+				}
+				if start {
+					answer += fmt.Sprintf("%d-%ddel", cdsPos, (cdsDist - 1) - duplicateOffset)
+				} else {
+					answer += fmt.Sprintf("%d+%ddel", cdsPos, cdsDist + 1 + duplicateOffset)
+				}
 			} else {
-				answer += fmt.Sprintf("%d+%ddel", cdsPos, cdsDist - 1)
+				if start {
+					answer += fmt.Sprintf("%d-%ddel", cdsPos, cdsDist + 1)
+				} else {
+					answer += fmt.Sprintf("%d+%ddel", cdsPos, cdsDist - 1)
+				}
 			}
+			return answer
 		} else if len(ref) > len(alt) { // Deletion
 			if v.PosStrand {
+				var duplicateOffset int
+				for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(ref)-1)+j] == ref[i]; j++{
+					duplicateOffset++
+					i++
+					if i == len(ref) {
+						i = 1
+					}
+				}
 				if start {
-					// TODO: test this on pos strand to make sure it is right
-					// TODO: this will need emperical fixing
-					answer += fmt.Sprintf("%d-%d_%d-%ddel",cdsPos ,cdsDist - 1 ,cdsPos, cdsDist + len(ref) - 1)
+					answer += fmt.Sprintf("%d-%d_%d-%ddel",cdsPos ,cdsDist - 1 - duplicateOffset, cdsPos, cdsDist - (len(ref) - 1) - duplicateOffset)
 				} else {
-					answer += fmt.Sprintf("%d+%d_%d+%ddel",cdsPos ,cdsDist - 1 ,cdsPos, cdsDist + len(ref) - 1)
+					answer += fmt.Sprintf("%d+%d_%d+%ddel",cdsPos ,cdsDist + 1 + duplicateOffset ,cdsPos, cdsDist + (len(ref) - 1) + duplicateOffset)
 				}
 			} else {
 				if start {
@@ -54,15 +73,18 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 					answer += fmt.Sprintf("%d+%d_%d+%ddel",cdsPos ,cdsDist - len(ref) + 1 ,cdsPos, cdsDist - 1)
 				}
 			}
+			return answer
 		} else if isDuplication(v, seq) {
 			if len(alt) == 2 {
 				if v.PosStrand {
+					var duplicateOffset int
+					for i := 1; seq[v.Chr][int(v.Pos)+i] == alt[1]; i++ {
+						duplicateOffset++
+					}
 					if start {
-						// TODO: test this on pos strand to make sure it is right
-						// TODO: this will probably need emperical fixing
-						answer += fmt.Sprintf("%d-%ddup",cdsPos ,cdsDist + 1)
+						answer += fmt.Sprintf("%d-%ddup",cdsPos ,cdsDist - 1 - duplicateOffset)
 					} else {
-						answer += fmt.Sprintf("%d+%ddup",cdsPos ,cdsDist + len(alt) - 1)
+						answer += fmt.Sprintf("%d+%ddup",cdsPos ,cdsDist + 1 + duplicateOffset)
 					}
 				} else {
 					if start {
@@ -73,12 +95,18 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 				}
 			} else {
 				if v.PosStrand {
+					var duplicateOffset int
+					for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+j] == alt[i]; j++{
+						duplicateOffset++
+						i++
+						if i == len(alt) {
+							i = 1
+						}
+					}
 					if start {
-						// TODO: test this on pos strand to make sure it is right
-						// TODO: this will probably need emperical fixing
-						answer += fmt.Sprintf("%d-%d_%d-%ddup",cdsPos ,cdsDist + len(alt) - 1 ,cdsPos, cdsDist + 1)
+						answer += fmt.Sprintf("%d-%d_%d-%ddup",cdsPos ,cdsDist - duplicateOffset + (len(alt) - 1) - 1 ,cdsPos, cdsDist - duplicateOffset)
 					} else {
-						answer += fmt.Sprintf("%d+%d_%d+%ddup",cdsPos ,cdsDist + 1 ,cdsPos, cdsDist + len(alt) - 1)
+						answer += fmt.Sprintf("%d+%d_%d+%ddup",cdsPos ,cdsDist + (duplicateOffset - (len(alt) - 1)) + 1 ,cdsPos, cdsDist + duplicateOffset)
 					}
 				} else {
 					if start {
@@ -88,14 +116,26 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 					}
 				}
 			}
+			return answer
 		} else if len(alt) > len(ref) { // Insertion
 			if v.PosStrand {
+				var duplicateOffset int
+				for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+j] == alt[i]; j++{
+					duplicateOffset++
+					i++
+					if i == len(alt) {
+						i = 1
+					}
+				}
+				fmt.Println(cdsPos, cdsDist, duplicateOffset)
+				basesToAdd := alt[len(ref):]
+				if duplicateOffset > 0 {
+					basesToAdd = append(basesToAdd[duplicateOffset:], basesToAdd[:duplicateOffset]...)
+				}
 				if start {
-					// TODO: test this on pos strand to make sure it is right
-					// TODO: this will probably need emperical fixing
-					answer += fmt.Sprintf("%d-%d_%d-%dins%s",cdsPos ,cdsDist + len(ref) - 1 ,cdsPos, cdsDist - 1, v.Alt)
+					answer += fmt.Sprintf("%d-%d_%d-%dins%s",cdsPos ,cdsDist + len(ref) - 1 - duplicateOffset,cdsPos, cdsDist - 1 - duplicateOffset, dna.BasesToString(basesToAdd))
 				} else {
-					answer += fmt.Sprintf("%d+%d_%d+%dins%s",cdsPos ,cdsDist - 1 ,cdsPos, cdsDist + len(ref) - 1, v.Alt)
+					answer += fmt.Sprintf("%d+%d_%d+%dins%s",cdsPos ,cdsDist + duplicateOffset ,cdsPos, cdsDist + 1 + duplicateOffset, dna.BasesToString(basesToAdd))
 				}
 			} else {
 				tmpAlt := alt[len(ref):]
@@ -106,29 +146,73 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 					answer += fmt.Sprintf("%d+%d_%d+%dins%s",cdsPos ,cdsDist - len(ref) + 1 ,cdsPos, cdsDist - 1, dna.BasesToString(tmpAlt))
 				}
 			}
+			return answer
 		}
-	} else {
-		answer += fmt.Sprintf("%d", v.CDNAPos)
 	}
 
 	if v.PosStrand {
 		if len(ref) == 1 && len(alt) == 1 { // Substitution
+			if v.CDNAPos != 0 {
+				answer += fmt.Sprintf("%d", v.CDNAPos)
+			}
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
 		} else if len(ref) > len(alt) { // Deletion
-			//TODO Make addition
+			var duplicateOffset int
+			for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(ref)-1)+j] == ref[i]; j++{
+				duplicateOffset++
+				i++
+				if i == len(ref) {
+					i = 1
+				}
+			}
+			if len(ref) == 2 {
+				answer += fmt.Sprintf("%ddel", v.CDNAPos + len(alt) + duplicateOffset)
+			} else {
+				//fmt.Println(v.CDNAPos, duplicateOffset)
+				if v.CDNAPos + (len(ref) - 1) + duplicateOffset > cdsPos {
+					answer += fmt.Sprintf("%d_%d+%ddel", v.CDNAPos + 1 + duplicateOffset, cdsPos, (v.CDNAPos + (len(ref) - 1) + duplicateOffset) - cdsPos)
+				} else {
+					answer += fmt.Sprintf("%d_%ddel", v.CDNAPos + 1 + duplicateOffset, v.CDNAPos + (len(ref) - 1) + duplicateOffset)
+				}
+			}
 		} else if len(alt) > len(ref) { // Insertion
-			//TODO Make addition
+			if isDuplication(v, seq) {
+				var duplicateOffset int
+				for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(alt)-1)+j] == alt[i]; j++{
+					duplicateOffset++
+					i++
+					if i == len(alt) {
+						i = 1
+					}
+				}
+				if len(alt) == 2 {
+					answer += fmt.Sprintf("%ddup", v.CDNAPos + duplicateOffset + 1)
+				} else {
+					answer += fmt.Sprintf("%d_%ddup", v.CDNAPos + duplicateOffset + 1, v.CDNAPos + duplicateOffset + 1 + (len(alt) - 2))
+				}
+			} else {
+				answer += fmt.Sprintf("%d_%dins%s", v.CDNAPos, v.CDNAPos + 1, dna.BasesToString(alt[1:]))
+			}
 		}
 
 	} else {
 		dna.ReverseComplement(ref)
 		dna.ReverseComplement(alt)
 		if len(ref) == 1 && len(alt) == 1 {
+			if v.CDNAPos != 0 {
+				answer += fmt.Sprintf("%d", v.CDNAPos)
+			}
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
 		} else if len(ref) > len(alt) { // Deletion
-			//TODO Make addition
+			if len(ref) == 2 {
+				answer += fmt.Sprintf("%ddel", v.CDNAPos - len(alt))
+			} else {
+				answer += fmt.Sprintf("%d_%ddel", v.CDNAPos - (len(ref) - 1), v.CDNAPos - 1)
+			}
 		} else if len(alt) > len(ref) { // Insertion
-			//TODO Make addition
+			if isDuplication(v, seq) {
+				answer += fmt.Sprintf("%ddup", v.CDNAPos - (len(alt) - 1))
+			} //TODO: Needs else???
 		}
 	}
 
@@ -252,7 +336,7 @@ func getNearestCdsPos(v *Variant) (pos int, start bool) {
 
 		for currCDS.Prev != nil { // Go to first CDS to begin count
 			currCDS = currCDS.Prev
-			pos += currCDS.End - currCDS.Start
+			pos += currCDS.End - currCDS.Start + 1
 		}
 		return pos, int(v.Pos) < v.NearestCDS.Start
 	} else {
