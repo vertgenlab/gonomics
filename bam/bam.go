@@ -1,3 +1,4 @@
+//bam package is used to process binary alignment files and and decode data into human readable sam text.
 package bam
 
 import (
@@ -17,11 +18,18 @@ import (
 	"strings"
 )
 
-//Note: This is not a bam struct but palce holders for pointers to decode binary file
-//4.2 The BAM format defined in hts specs
+//BamReader contains data fields used to read and process binary file.
+type BamReader struct {
+	File      *os.File
+	gunzip    *Bgzip
+	Data      []byte
+	BytesRead int
+	Error     error
+}
 
-type BamData struct {
-	RName     int32
+//BinaryDecoder: Uses the BAM format 4.2, defined in hts specs. Note: This is not a bam struct but palce holders for pointers to decode binary file
+type BinaryDecoder struct {
+	RefID     int32
 	Pos       int32
 	Bai       uint16
 	MapQ      uint8
@@ -36,9 +44,10 @@ type BamData struct {
 	Cigar     []uint32
 	Seq       []byte
 	Qual      []byte
-	Aux       []*BamAuxiliary
+	Aux       []*BamAux
 }
 
+//BamHeader is a data structure containing header information parsed from the binary alignment file as well as a decoder used to convert the bam to sam
 type BamHeader struct {
 	Txt       string
 	ChromSize map[string]int
@@ -46,85 +55,41 @@ type BamHeader struct {
 	Chroms    []*chromInfo.ChromInfo
 }
 
-type BamReader struct {
-	File   *os.File
-	gunzip *Bgzip
-	Data      []byte
-	BytesRead int
-	Error     error
+//cInfo is used to decode fields contained in the header
+type cInfo struct {
+	Text string
+	Len  int32
+	NRef int32
 }
 
-
-type BamAuxiliary struct {
+//BamAux is a struct that organizes the extra tags at the end of sam/bam records
+type BamAux struct {
 	Tag   [2]byte
 	Type  byte
 	Value interface{}
 }
 
-func BamBlockToSam(header *BamHeader, bam *BamData) *sam.SamAln {
-	return &sam.SamAln{
-		QName: bam.QName,
-		Flag:  int64(bam.Flag),
-		RName: header.Chroms[bam.RName].Name,
-		Pos:   int64(bam.Pos) + 1,
-		MapQ:  int64(bam.MapQ),
-		Cigar: ToHeavyCigar(bam.Cigar),
-		RNext: setRNext(header, bam),
-		PNext: int64(bam.NextPos) + 1,
-		TLen:  int64(bam.TLength),
-		Seq:   dna.StringToBases(bamSequence(bam.Seq)),
-		Qual:  qualToString(bam.Qual),
-		Extra: NotesToString(bam.Aux),
+//CigarByte is a light weight cigar stuct that stores the runlength as an int (not int64) and Op as a byte.
+type CigarByte struct {
+	Len int
+	Op  byte
+}
+
+//Read will process a bam file and return a slice of sam records that were decoded from binary.
+func Read(filename string) []*sam.SamAln {
+	bamFile := NewBamReader(filename)
+	defer bamFile.File.Close()
+	h := ReadHeader(bamFile)
+	binaryData := make(chan *BinaryDecoder)
+	var ans []*sam.SamAln
+	go BamToChannel(bamFile, binaryData)
+	for each := range binaryData {
+		ans = append(ans, BamBlockToSam(h, each))
 	}
+	return ans
 }
 
-func setRNext(header *BamHeader, bam *BamData) string {
-	if bam.NextRefID == bam.RName {
-		return "="
-	} else if bam.NextRefID > 0 {
-		return header.Chroms[bam.NextRefID].Name //fmt.Sprintf("Chrom: %d", bam.NextRefID)
-	} else {
-		return "*"
-	}
-}
-
-func bamSequence(seq []byte) string {
-	var buffer bytes.Buffer
-	writer := bufio.NewWriter(&buffer)
-	t := []byte{'=', 'A', 'C', 'M', 'G', 'R', 'S', 'V', 'T', 'W', 'Y', 'H', 'K', 'D', 'B', 'N'}
-	for i := 0; i < len(seq); i++ {
-		b1 := seq[i] >> 4
-		b2 := seq[i] & 0xf
-		fmt.Fprintf(writer, "%c", t[b1])
-		if b2 != 0 {
-			fmt.Fprintf(writer, "%c", t[b2])
-		}
-	}
-	writer.Flush()
-	return buffer.String()
-}
-
-func qualToString(qual []byte) string {
-	var buffer bytes.Buffer
-	writer := bufio.NewWriter(&buffer)
-	fmt.Fprintf(writer, "%s", string(formatQual(qual)))
-	writer.Flush()
-	return buffer.String()
-}
-
-func formatQual(q []byte) []byte {
-	for _, v := range q {
-		if v != 0xff {
-			a := make([]byte, len(q))
-			for i, p := range q {
-				a[i] = p + 33
-			}
-			return a
-		}
-	}
-	return []byte{'*'}
-}
-
+//NewBamReader is similar to fileio.EasyOpen/fileio.EasyReader; which will allocate memory for the struct fields and is ready to start processing bam lines after calling this function.
 func NewBamReader(filename string) *BamReader {
 	var bamR *BamReader = &BamReader{}
 	var err error
@@ -134,6 +99,7 @@ func NewBamReader(filename string) *BamReader {
 	return bamR
 }
 
+//ReadHeader will take a BamReader structure as an input, performs a quick check to make sure the binary file is a valid bam, then process header lines and returns a BamHeader (similar to samHeader).
 func ReadHeader(reader *BamReader) *BamHeader {
 	bamHeader := MakeHeader()
 	magic := make([]byte, 4)
@@ -171,43 +137,18 @@ func ReadHeader(reader *BamReader) *BamHeader {
 	}
 	return bamHeader
 }
-/*
-func decodeBinaryInt32(reader *BamReader) int {
-	var key int32 = 0
-	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &key)
-	reader.Data = make([]byte, key)
-	var i, j int = 0, 0
-	for i = 0; i < int(key); {
-		j, reader.Error = reader.gunzip.Read(reader.Data[i:])
-		common.ExitIfError(reader.Error)
-		i += j
-	}
-	return i
-}*/
 
-func Read(filename string) []*sam.SamAln {
-	bamFile := NewBamReader(filename)
-	defer bamFile.File.Close()
-	h := ReadHeader(bamFile)
-	binaryData := make(chan *BamData)
-	var ans []*sam.SamAln
-	go bamToChan(bamFile, binaryData)
-	for each := range binaryData {
-		ans = append(ans, BamBlockToSam(h, each))
-	}
-	return ans
-}
-
-func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
+//BamToChannel is a goroutine that will use the binary reader to decode bam records and send them off to a channel that could be processed into a sam record further downstream.
+func BamToChannel(reader *BamReader, binaryData chan<- *BinaryDecoder) {
 	var blockSize int32
 	var bitFlag uint32
 	var stats uint32
 	var i, j int
 	var b byte
-	var block *BamData
+	var block *BinaryDecoder
 
 	for {
-		block = &BamData{}
+		block = &BinaryDecoder{}
 		buf := bytes.NewBuffer([]byte{})
 		// read block size
 		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize)
@@ -217,7 +158,7 @@ func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 		}
 		common.ExitIfError(reader.Error)
 		//read block data
-		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.RName)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.RefID)
 		common.ExitIfError(reader.Error)
 
 		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.Pos)
@@ -283,14 +224,83 @@ func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 		// read auxiliary data
 		j = 8*4 + int(block.RNLength) + 4*int(block.NCigarOp) + int((block.LSeq+1)/2) + int(block.LSeq)
 		for i = 0; j+i < int(blockSize); {
-			block.Aux = append(block.Aux, ReadBamAuxiliary(reader))
+			block.Aux = append(block.Aux, decodeAuxiliary(reader))
 			i += reader.BytesRead
 		}
 		binaryData <- block
 	}
 }
 
-func NotesToString(aux []*BamAuxiliary) string {
+//BamBlockToSam is a function that will convert a decoded (already processed binary structure) to a human readable sam data.
+func BamBlockToSam(header *BamHeader, bam *BinaryDecoder) *sam.SamAln {
+	return &sam.SamAln{
+		QName: bam.QName,
+		Flag:  int64(bam.Flag),
+		RName: header.Chroms[bam.RefID].Name,
+		Pos:   int64(bam.Pos) + 1,
+		MapQ:  int64(bam.MapQ),
+		Cigar: ToHeavyCigar(bam.Cigar),
+		RNext: setRNext(header, bam),
+		PNext: int64(bam.NextPos) + 1,
+		TLen:  int64(bam.TLength),
+		Seq:   dna.StringToBases(BamSeq(bam.Seq)),
+		Qual:  qualToString(bam.Qual),
+		Extra: auxToString(bam.Aux),
+	}
+}
+
+//setRNext will process the reference name of the mate pair alignment. If the alignment is on the same fragment.
+func setRNext(header *BamHeader, bam *BinaryDecoder) string {
+	if bam.NextRefID == bam.RefID {
+		return "="
+	} else if bam.NextRefID > 0 {
+		return header.Chroms[bam.NextRefID].Name //fmt.Sprintf("Chrom: %d", bam.NextRefID)
+	} else {
+		return "*"
+	}
+}
+
+//BamSeq will convert raw bytes to a string which can be converted to dna.Base.
+//TODO: Look into converting bytes straight to dna.Base
+func BamSeq(seq []byte) string {
+	var buffer bytes.Buffer
+	writer := bufio.NewWriter(&buffer)
+	t := []byte{'=', 'A', 'C', 'M', 'G', 'R', 'S', 'V', 'T', 'W', 'Y', 'H', 'K', 'D', 'B', 'N'}
+	for i := 0; i < len(seq); i++ {
+		b1 := seq[i] >> 4
+		b2 := seq[i] & 0xf
+		fmt.Fprintf(writer, "%c", t[b1])
+		if b2 != 0 {
+			fmt.Fprintf(writer, "%c", t[b2])
+		}
+	}
+	writer.Flush()
+	return buffer.String()
+}
+
+func qualToString(qual []byte) string {
+	var buffer bytes.Buffer
+	writer := bufio.NewWriter(&buffer)
+	fmt.Fprintf(writer, "%s", string(formatQual(qual)))
+	writer.Flush()
+	return buffer.String()
+}
+
+func formatQual(q []byte) []byte {
+	for _, v := range q {
+		if v != 0xff {
+			a := make([]byte, len(q))
+			for i, p := range q {
+				a[i] = p + 33
+			}
+			return a
+		}
+	}
+	return []byte{'*'}
+}
+
+//axtToString will convert the sam/bam auxiliary struct into a human readable string.
+func auxToString(aux []*BamAux) string {
 	var ans []string
 	for i := 0; i < len(aux); i++ {
 		ans = append(ans, fmt.Sprintf("%c%c:%c:%v", aux[i].Tag[0], aux[i].Tag[1], aux[i].Type, aux[i].Value))
@@ -298,8 +308,10 @@ func NotesToString(aux []*BamAuxiliary) string {
 	return strings.Join(ans, "\t")
 }
 
-func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
-	aux := &BamAuxiliary{}
+//decodeAuxiliary will use the bam reader struct to decode binary text to sam auxilary fields. In giraf this is what we are calling notes.
+//TODO: Look to synchronize auxilary and notes.
+func decodeAuxiliary(reader *BamReader) *BamAux {
+	aux := &BamAux{}
 	var i int
 	// number of read bytes
 	reader.BytesRead = 0
@@ -390,7 +402,6 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 		for {
 			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &b)
 			common.ExitIfError(reader.Error)
-
 			reader.BytesRead += 1
 			if b == 0 {
 				break
@@ -404,7 +415,6 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 		for {
 			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &b)
 			common.ExitIfError(reader.Error)
-
 			reader.BytesRead += 1
 			if b == 0 {
 				break
@@ -426,98 +436,62 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 		switch t {
 		case 'c':
 			data := make([]int32, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 1
 			}
 			aux.Value = data
 		case 'C':
 			data := make([]uint8, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
-
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 1
 			}
 			aux.Value = data
 		case 's':
 			data := make([]int16, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
-
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 2
 			}
 			aux.Value = data
 		case 'S':
 			data := make([]uint16, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
-
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 2
 			}
 			aux.Value = data
 		case 'i':
 			data := make([]int32, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
-
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 4
 			}
 			aux.Value = data
 		case 'I':
 			data := make([]uint32, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
-
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 4
 			}
 			aux.Value = data
 		case 'f':
 			data := make([]float32, k)
-			for i = 0; i < int(k); i++ {
-				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Error)
-
+			for i, reader.Error = 0, binary.Read(reader.gunzip, binary.LittleEndian, &data[i]); i < int(k) && reader.Error == nil; i++ {
 				reader.BytesRead += 4
 			}
 			aux.Value = data
 		default:
-			reader.Error = fmt.Errorf("invalid auxiliary array value type `%c'", t)
-			common.ExitIfError(reader.Error)
+			log.Fatalf("Error: encountered unknown auxiliary array value type %c...\n", t)
 		}
 
 	default:
-		reader.Error = fmt.Errorf("invalid auxiliary value type `%c'", aux.Type)
-		common.ExitIfError(reader.Error)
+		log.Fatalf("Error: Found invalid auxiliary value type %c...\n", aux.Type)
 	}
 	return aux
 }
 
-type CigarByte struct {
-	Op  byte
-	Len int
-}
-
-type cInfo struct {
-	Text string
-	Len  int32
-	NRef int32
-}
-
-//allocates memory for new bam header
+//MakeHeader allocates memory for new bam header.
 func MakeHeader() *BamHeader {
 	return &BamHeader{ChromSize: make(map[string]int), decoder: &cInfo{Len: 0, NRef: 0}}
 }
 
-func bamCigar(bCig []uint32) string {
-	return byteCigarToString(ParseCigar(bCig))
-}
-
+//ToHeavyCigar will convert the cigar byte to the cigar struct we are using in the cigar package.
 func ToHeavyCigar(bCig []uint32) []*cigar.Cigar {
 	var ans []*cigar.Cigar
 	for _, i := range ParseCigar(bCig) {
@@ -526,14 +500,7 @@ func ToHeavyCigar(bCig []uint32) []*cigar.Cigar {
 	return ans
 }
 
-func byteCigarToString(cig []CigarByte) string {
-	var ans string = ""
-	for i := 0; i < len(cig); i++ {
-		ans += fmt.Sprintf("%s%d", string(cig[i].Op), cig[i].Len)
-	}
-	return ans
-}
-
+//ParseCigar will parse and convert a slice of uint32 and return a slice of cigar bytes.
 func ParseCigar(bamCigar []uint32) []CigarByte {
 	var ans []CigarByte
 	types := []byte{'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X'}
@@ -544,3 +511,29 @@ func ParseCigar(bamCigar []uint32) []CigarByte {
 	}
 	return ans
 }
+
+//ByteCigarToString will process the cigar byte struct and parse and/or convert the data into a string.
+func ByteCigarToString(cig []CigarByte) string {
+	var ans string = ""
+	for i := 0; i < len(cig); i++ {
+		ans += fmt.Sprintf("%s%d", string(cig[i].Op), cig[i].Len)
+	}
+	return ans
+}
+
+/*
+// TODO: Plans for the new SAM/BAM record.
+type Record struct {
+	QName      string
+	Ref       string
+	Pos       int
+	MapQ      byte
+	Cigar     []uint32
+	Flags     uint16
+	MateRef   string
+	MatePos   int
+	TempLen   int
+	Seq       []dna.Base
+	Qual      []byte
+	AuxFields AuxFields
+}*/

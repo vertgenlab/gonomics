@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+//TestBamToSamReader will convert a bam file into a sam record and perform a comparison with the same sam file that was created using samtools view.
 func TestBamToSamReader(t *testing.T) {
 
 	bamFile := Read("testdata/tenXbarcodeTest.bam")
@@ -22,6 +23,7 @@ func TestBamToSamReader(t *testing.T) {
 	}
 }
 
+//BenchmarkSamReader will benchmark the reading speed of a basic sam text file. (This is used to compare with reading a bam file)
 func BenchmarkSamReader(b *testing.B) {
 	var samFile *sam.Sam
 	var err error
@@ -34,6 +36,7 @@ func BenchmarkSamReader(b *testing.B) {
 	}
 }
 
+//BenchmarkBamReader will benchmark the speed of decoding a bam file and convert the data into sam records. (This is used to compare with reading a sam file)
 func BenchmarkBamReader(b *testing.B) {
 	var bamFile []*sam.SamAln
 	b.ResetTimer()
