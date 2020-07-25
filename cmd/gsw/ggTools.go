@@ -45,11 +45,11 @@ func initGgtoolsArgs() *GgToolsSettings {
 	ggT := &GgToolsSettings{Cmd: flag.NewFlagSet("ggtools", flag.ExitOnError)}
 	ggT.Cmd.StringVar(&ggT.FmtOutput, "format", "", "Pick file format for output, only applies to file conversions utils")
 	ggT.Cmd.StringVar(&ggT.TargetFa, "target", "", "Specify target reference fasta file")
-	ggT.Cmd.StringVar(&ggT.TargetFa, "query", "", "Specify query fasta file")
+	ggT.Cmd.StringVar(&ggT.QueryFa, "query", "", "Specify query fasta file")
 	ggT.Cmd.StringVar(&ggT.Out, "out", "/dev/stdout", "Output filename, [.gg/.vcf]")
 
 	ggT.Cmd.StringVar(&ggT.TargetFa, "t", "", "Specify target reference fasta file")
-	ggT.Cmd.StringVar(&ggT.TargetFa, "q", "", "Specify query fasta file")
+	ggT.Cmd.StringVar(&ggT.QueryFa, "q", "", "Specify query fasta file")
 	ggT.Cmd.StringVar(&ggT.FmtOutput, "f", "", "Pick file format for output, only applies to file conversions utils")
 	ggT.Cmd.StringVar(&ggT.Out, "o", "/dev/stdout", "Output filename, [.gg/.vcf/.sam]")
 	ggT.Cmd.Usage = ggtoolsExtend
@@ -58,13 +58,14 @@ func initGgtoolsArgs() *GgToolsSettings {
 func RunGgTools() {
 	ggT := initGgtoolsArgs()
 	ggT.Cmd.Parse(os.Args[2:])
-	if len(os.Args) < 2 {
+	if len(ggT.Cmd.Args()) != 1 {
 		ggT.Cmd.Usage()
 	} else {
-		inFile := flag.Arg(0)
+		inFile := ggT.Cmd.Arg(0)
+		log.Printf("File read: %s\n", inFile)
 		switch true {
 		case chain.IsChainFile(inFile):
-			if strings.Compare(ggT.TargetFa, "") != 0 || strings.Compare(ggT.QueryFa, "") != 0 {
+			if strings.Compare(ggT.TargetFa, "") != 0 && strings.Compare(ggT.QueryFa, "") != 0 {
 				convertChains(inFile, ggT.TargetFa, ggT.QueryFa, ggT.FmtOutput, ggT.Out)
 			} else {
 				ggT.Cmd.Usage()
@@ -82,7 +83,7 @@ func RunGgTools() {
 				convertAxt(inFile, ggT.FmtOutput, ggT.TargetFa, ggT.Out)
 			}
 		default:
-			ggT.Cmd.Usage()
+			// /ggT.Cmd.Usage()
 			errorMessage()
 		}
 	}

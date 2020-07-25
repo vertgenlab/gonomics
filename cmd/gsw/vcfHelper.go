@@ -10,9 +10,11 @@ import (
 //set up vcf records split by chroms
 func makeVcfChrMap(vcfChannel <-chan *vcf.Vcf) map[string][]*vcf.Vcf {
 	chrVcfMap := make(map[string][]*vcf.Vcf)
-	for i := range vcfChannel {
-		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
-	}
+	go func() {
+		for i := range vcfChannel {
+			chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
+		}
+	}()
 	return chrVcfMap
 }
 
