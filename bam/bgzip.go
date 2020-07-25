@@ -23,7 +23,7 @@ type BgzipHeader struct {
 	BSize uint16
 }
 
-//OpenBgzipFile is a wrapper will open a file and return a gzip reader that can further process data in the file.
+//OpenBgzipFile is a wrapper that will open a file and return a gzip reader that can further process data in the file.
 func OpenBgzipFile(filename string) *Bgzip {
 	file := fileio.MustOpen(filename)
 	return NewBgzipReader(file)
@@ -36,7 +36,7 @@ func NewBgzipReader(r io.Reader) *Bgzip {
 	return &Bgzip{Reader: *reader}
 }
 
-//BgzipBuffer will gunzip text, catch any possible errors and return a slice of bytes.
+//BgzipBuffer will gunzip text, catch any possible errors, and return a slice of bytes.
 func BgzipBuffer(file *Bgzip, data []byte) []byte {
 	_, err := file.Reader.Read(data)
 	common.ExitIfError(err)
