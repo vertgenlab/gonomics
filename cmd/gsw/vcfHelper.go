@@ -25,6 +25,10 @@ func vcfToSimpleGraph(vcfFile, faFile string) *simpleGraph.SimpleGraph {
 	ref := make(chan *fasta.Fasta)
 	go vcf.ReadToChan(file, vcfChannel)
 	go fasta.ReadToChan(faFile, ref)
-	hashByChrom := makeVcfChrMap(vcfChannel)
+
+	hashByChrom := make(map[string][]*vcf.Vcf)
+	for i := range vcfChannel {
+		hashByChrom[i.Chr] = append(hashByChrom[i.Chr], i)
+	}
 	return simpleGraph.VariantGraph(ref, hashByChrom)
 }
