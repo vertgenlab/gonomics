@@ -278,6 +278,7 @@ func BamSeq(seq []byte) string {
 	return buffer.String()
 }
 
+//qualToString will convert the aul bytes into a readable string.
 func qualToString(qual []byte) string {
 	var buffer bytes.Buffer
 	writer := bufio.NewWriter(&buffer)
@@ -286,6 +287,7 @@ func qualToString(qual []byte) string {
 	return buffer.String()
 }
 
+//formatQual is a helper function that will add the 33 offset to the ASCII values or set '*' if the qual scores do not exist in the bam.
 func formatQual(q []byte) []byte {
 	for _, v := range q {
 		if v != 0xff {
