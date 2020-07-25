@@ -89,7 +89,7 @@ func IsEqualDebug(a *SamAln, b *SamAln) bool {
 		return false
 	}
 	if a.Flag != b.Flag {
-		log.Printf("Flags are not equal: %s != %s\n", a.Flag, b.Flag)
+		log.Printf("Flags are not equal: %d != %d\n", a.Flag, b.Flag)
 		return false
 	}
 	if strings.Compare(a.RName, b.RName) != 0 {
