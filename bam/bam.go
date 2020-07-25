@@ -11,9 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	//"github.com/vertgenlab/gonomics/giraf"
 	"io"
-	//"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -39,6 +37,19 @@ type BamData struct {
 	Seq       []byte
 	Qual      []byte
 	Aux       []*BamAuxiliary
+}
+
+type BamHeader struct {
+	Txt       string
+	ChromSize map[string]int
+	decoder   *cInfo
+	Chroms    []*chromInfo.ChromInfo
+}
+
+type BamReader struct {
+	File   *os.File
+	gunzip *Bgzip
+	Stream *BgZipBuffer
 }
 
 func BamBlockToSam(header *BamHeader, bam *BamData) *sam.SamAln {
@@ -115,19 +126,6 @@ func NewBamReader(filename string) *BamReader {
 	return bamR
 }
 
-type BamHeader struct {
-	Txt       string
-	ChromSize map[string]int
-	decoder   *cInfo
-	Chroms    []*chromInfo.ChromInfo
-}
-
-type BamReader struct {
-	File   *os.File
-	gunzip *Bgzip
-	Stream *BgZipBuffer
-}
-
 func ReadHeader(reader *BamReader) *BamHeader {
 	bamHeader := MakeHeader()
 	magic := make([]byte, 4)
@@ -162,9 +160,7 @@ func ReadHeader(reader *BamReader) *BamHeader {
 		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &lengthSeq)
 		common.ExitIfError(reader.Stream.Debug)
 		bamHeader.Chroms = append(bamHeader.Chroms, &chromInfo.ChromInfo{Name: strings.Trim(string(reader.Stream.Data), "\n\000"), Size: int64(lengthSeq), Order: int64(len(bamHeader.Chroms))})
-		//bamHeader.ChromSize[string(reader.Stream.Data)] = int(lengthSeq)
 	}
-	//log.Printf("%s\n", bamHeader.Txt)
 	return bamHeader
 }
 
@@ -202,7 +198,6 @@ func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 	var b byte
 	var block *BamData
 
-	//binaryData := make(chan *BamData)
 	for {
 		block = &BamData{}
 		buf := bytes.NewBuffer([]byte{})
@@ -304,7 +299,6 @@ type BamAuxiliary struct {
 func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 	aux := &BamAuxiliary{}
 	var i int
-	//var valueType byte = 0
 	// number of read bytes
 	reader.Stream.BytesRead = 0
 	// read data
@@ -429,67 +423,67 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 		reader.Stream.BytesRead += 4
 		switch t {
 		case 'c':
-			tmp := make([]int32, k)
+			data := make([]int32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 				reader.Stream.BytesRead += 1
 			}
-			aux.Value = tmp
+			aux.Value = data
 		case 'C':
-			tmp := make([]uint8, k)
+			data := make([]uint8, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 
 				reader.Stream.BytesRead += 1
 			}
-			aux.Value = tmp
+			aux.Value = data
 		case 's':
-			tmp := make([]int16, k)
+			data := make([]int16, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 
 				reader.Stream.BytesRead += 2
 			}
-			aux.Value = tmp
+			aux.Value = data
 		case 'S':
-			tmp := make([]uint16, k)
+			data := make([]uint16, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 
 				reader.Stream.BytesRead += 2
 			}
-			aux.Value = tmp
+			aux.Value = data
 		case 'i':
-			tmp := make([]int32, k)
+			data := make([]int32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 
 				reader.Stream.BytesRead += 4
 			}
-			aux.Value = tmp
+			aux.Value = data
 		case 'I':
-			tmp := make([]uint32, k)
+			data := make([]uint32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 
 				reader.Stream.BytesRead += 4
 			}
-			aux.Value = tmp
+			aux.Value = data
 		case 'f':
-			tmp := make([]float32, k)
+			data := make([]float32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &tmp[i])
+				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
 				common.ExitIfError(reader.Stream.Debug)
 
 				reader.Stream.BytesRead += 4
 			}
-			aux.Value = tmp
+			aux.Value = data
 		default:
 			reader.Stream.Debug = fmt.Errorf("invalid auxiliary array value type `%c'", t)
 			common.ExitIfError(reader.Stream.Debug)
@@ -502,16 +496,7 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 	return aux
 }
 
-//type BamCigar []uint32
-
-func bamBlocks(bams []*BamData) {
-	for i := 0; i < len(bams); i++ {
-		log.Printf("%v\n", bams[i])
-	}
-}
-
 type CigarByte struct {
-	//cigar.Cigar
 	Op  byte
 	Len int
 }
