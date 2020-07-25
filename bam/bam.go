@@ -1,4 +1,4 @@
-//bam package is used to process binary alignment files and and decode data into human readable sam text.
+//Package bam is used to process binary alignment files and and decode data into human readable sam text.
 package bam
 
 import (
