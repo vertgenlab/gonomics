@@ -361,21 +361,21 @@ func decodeAuxiliary(reader *BamReader) *BamAux {
 		value := int16(0)
 		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
 		common.ExitIfError(reader.Error)
-
+		aux.Type = 'i'
 		aux.Value = value
 		reader.BytesRead += 2
 	case 'S':
 		value := uint16(0)
 		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
 		common.ExitIfError(reader.Error)
-
+		aux.Type = 'i'
 		aux.Value = value
 		reader.BytesRead += 2
 	case 'i':
 		value := int32(0)
 		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
 		common.ExitIfError(reader.Error)
-
+		aux.Type = 'i'
 		aux.Value = value
 		reader.BytesRead += 4
 	case 'I':
