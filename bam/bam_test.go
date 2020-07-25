@@ -7,7 +7,6 @@ import (
 
 //TestBamToSamReader will convert a bam file into a sam record and perform a comparison with the same sam file that was created using samtools view.
 func TestBamToSamReader(t *testing.T) {
-
 	bamFile := Read("testdata/tenXbarcodeTest.bam")
 	samFile, err := sam.Read("testdata/tenXbarcodeTest.sam")
 	if err != nil {
