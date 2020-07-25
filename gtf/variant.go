@@ -131,6 +131,7 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 		//fmt.Println("NEW VARIANT")
 		seqPos -= determineFrame(variant)
 
+		var hasDuplication bool
 		var duplicateOffset int
 		var duplicateBasePos int
 		if (len(ref) - len(alt))%3 == 0 && len(ref) > 1 {
@@ -140,10 +141,21 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 			for duplicateBasePos, j = 1, 1; seq[variant.Chr][int(variant.Pos-1)+(len(ref)-1)+j] == ref[duplicateBasePos]; j++{
 				duplicateOffset++
 				duplicateBasePos++
+
+				if duplicateBasePos >= 3 {
+					hasDuplication = true
+				}
+
 				if duplicateBasePos == len(ref) {
 					duplicateBasePos = 1
 				}
 			}
+
+			if !hasDuplication {
+				duplicateOffset = 0
+				duplicateBasePos = 0
+			}
+			//fmt.Println(variant.CDNAPos)
 
 			variant.CDNAPos += duplicateOffset
 			variant.Pos += int64(duplicateOffset)
@@ -174,10 +186,18 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 				refBases = append(refBases, ref[1:duplicateBasePos-1]...)
 				seqPos -= len(ref[1:duplicateBasePos-1])
 			}
+			altBases = append(altBases, alt[1:]...)
 		} else {
 			refBases = append(refBases, ref...)
+			altBases = append(altBases, alt...)
 		}
-		altBases = append(altBases, alt...)
+
+		//if duplicateOffset != 0 {
+		//	fmt.Println("NEW VAR ON", variant.Info)
+		//	fmt.Println(duplicateOffset)
+		//	fmt.Println(dna.BasesToString(refBases))
+		//	fmt.Println(dna.BasesToString(altBases))
+		//}
 
 		//fmt.Println(len(refBases), len(altBases))
 		seqPos += len(ref)
@@ -275,17 +295,22 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 			}
 		}
 
+		//fmt.Println("END REF:", dna.PolypeptideToString(variant.AARef))
+		//fmt.Println("END ALT:", dna.PolypeptideToString(variant.AAAlt))
+
 		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) + aaPosOffset // Add 0.4 so pos will always round up
 	} else {
 		var trimAA bool
 		seqPos += determineFrame(variant)
 		lenOffset := (len(dna.StringToBases(variant.Ref)) - 1)
 
-		for int(variant.Pos - 1) + lenOffset > seqPos {
-			seqPos += 3
-			trimAA = true
-			aaPosOffset--
-		}
+		//if !isRepetetive(variant, seq) {
+			for int(variant.Pos-1)+lenOffset > seqPos {
+				seqPos += 3
+				trimAA = true
+				aaPosOffset--
+			}
+		//}
 
 		if seqPos > currCDS.End - 1 {
 			seqPos = (currCDS.Next.Start - 1) + ((seqPos - int(variant.Pos)) - (currCDS.End - int(variant.Pos)))
@@ -310,28 +335,39 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 		refBases = append(refBases, reverse(dna.StringToBases(variant.Ref))...)
 		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt))...)
 		seqPos -= len(dna.StringToBases(variant.Ref))
-		var offset int
+
 		altCDS := currCDS
 		altSeqPos := seqPos
-		for offset = 0; len(altBases)%3 != 0; offset++ {
-			if altSeqPos-offset < altCDS.Start-1 {
-				offset = 0
+		for ; len(altBases)%3 != 0; altSeqPos-- {
+			if altSeqPos < altCDS.Start-1 {
 				altSeqPos = altCDS.Prev.End - 1
 				altCDS = altCDS.Prev
 			}
-			altBases = append(altBases, seq[variant.Chr][altSeqPos-offset])
+			//if variant.Info == "c.3747del|p.Phe1250LeufsTer13" || variant.Info == "c.5604del|p.Gln1869SerfsTer42" ||
+			//	variant.Info == "c.8307_8308del|p.Ala2770HisfsTer4" || variant.Info == "c.13104del|p.Val4369CysfsTer25" {
+			//	fmt.Println("ALT:", altSeqPos + 1)
+			//}
+			altBases = append(altBases, seq[variant.Chr][altSeqPos])
 		}
 		refCDS := currCDS
 		refSeqPos := seqPos
-		for offset = 0; len(refBases)%3 != 0; offset++ {
-			if refSeqPos-offset < refCDS.Start-1 {
-				offset = 0
+		for ; len(refBases)%3 != 0; refSeqPos-- {
+			if refSeqPos < refCDS.Start-1 {
 				refSeqPos = refCDS.Prev.End - 1
 				refCDS = refCDS.Prev
 			}
-			refBases = append(refBases, seq[variant.Chr][refSeqPos-offset])
+			//if variant.Info == "c.3747del|p.Phe1250LeufsTer13" || variant.Info == "c.5604del|p.Gln1869SerfsTer42" ||
+			//	variant.Info == "c.8307_8308del|p.Ala2770HisfsTer4" || variant.Info == "c.13104del|p.Val4369CysfsTer25" {
+			//	fmt.Println("REF:", refSeqPos + 1)
+			//}
+			refBases = append(refBases, seq[variant.Chr][refSeqPos])
 		}
 
+		//if variant.Info == "c.3747del|p.Phe1250LeufsTer13" || variant.Info == "c.5604del|p.Gln1869SerfsTer42" ||
+		//	variant.Info == "c.8307_8308del|p.Ala2770HisfsTer4" || variant.Info == "c.13104del|p.Val4369CysfsTer25" {
+		//	fmt.Println(dna.BasesToString(refBases))
+		//	fmt.Println(dna.BasesToString(altBases))
+		//}
 		//fmt.Println(dna.BasesToString(refBases))
 		//fmt.Println(dna.BasesToString(altBases))
 
@@ -340,40 +376,117 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 		variant.AARef = dna.TranslateSeq(refBases)
 		variant.AAAlt = dna.TranslateSeq(altBases)
 
-		//fmt.Println(dna.PolypeptideToString(variant.AARef))
-		//fmt.Println(dna.PolypeptideToString(variant.AAAlt))
+		//if variant.Info == "c.2625_2627dup|p.Thr876dup" ||
+		//	variant.Info == "c.33513_33515dup|p.Glu11172dup" {
+		//	fmt.Println(dna.PolypeptideToString(variant.AARef))
+		//	fmt.Println(dna.PolypeptideToString(variant.AAAlt))
+		//	fmt.Println(trimAA)
+		//}
+
 		//fmt.Println(len(variant.AARef), len(variant.AAAlt))
 
 		if trimAA {
-			if variant.AARef[len(variant.AARef)-1] == variant.AAAlt[len(variant.AAAlt)-1] &&
-				(len(dna.StringToBases(variant.Ref)) - len(dna.StringToBases(variant.Alt)))%3 == 0 {
-				variant.AAAlt = variant.AAAlt[:len(variant.AAAlt)-1]
+			if (len(ref) - len(alt))%3 == 0 {
+				if variant.AARef[len(variant.AARef)-1] == variant.AAAlt[len(variant.AAAlt)-1] {
+					variant.AAAlt = variant.AAAlt[:len(variant.AAAlt)-1]
+					variant.AARef = variant.AARef[:len(variant.AARef)-1]
+				} else {
+					variant.AARef = variant.AARef[:len(variant.AARef)-1]
+				}
 			}
-			variant.AARef = variant.AARef[:len(variant.AARef)-1]
+			//if variant.AARef[len(variant.AARef)-1] == variant.AAAlt[len(variant.AAAlt)-1] &&
+			//	(len(ref) - len(alt))%3 == 0 {
+			//	variant.AAAlt = variant.AAAlt[:len(variant.AAAlt)-1]
+			//
+			//}
+			//variant.AARef = variant.AARef[:len(variant.AARef)-1]
 		}
 
-		//fmt.Println(len(variant.AARef), len(variant.AAAlt))
+		//if variant.Info == "c.1758_1760del|p.Glu586_Thr587delinsAsp" {
+		//	fmt.Println(dna.PolypeptideToString(variant.AARef))
+		//	fmt.Println(dna.PolypeptideToString(variant.AAAlt))
+		//	fmt.Println(variant.Vcf)
+		//}
 
-		if !isSynonymous(variant) && len(variant.AAAlt) > 1 {
-			var codonToAdd []dna.Base
-			var j int
-			for len(variant.AAAlt) > 0 && variant.AARef[0] == variant.AAAlt[0] {
+		//fmt.Println(len(variant.AARef), len(variant.AAAlt))
+		var codonToAdd []dna.Base
+		var j int
+
+		//if variant.Info == "c.107219dup|p.Pro35741AlafsTer20" {
+		//	fmt.Println("REF:", dna.PolypeptideToString(variant.AARef))
+		//	fmt.Println("ALT:", dna.PolypeptideToString(variant.AAAlt))
+		//}
+
+		if !isSynonymous(variant) && len(variant.AAAlt) > 1 && len(variant.AARef) > 0{
+			for len(variant.AARef) > 0 && len(variant.AAAlt) > 0 && variant.AARef[0] == variant.AAAlt[0] {
+				if len(variant.AAAlt) == 2 && variant.AARef[0] == variant.AAAlt[1] {
+					variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+					aaPosOffset++
+					break
+				}
 				variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
 				aaPosOffset++
 				if len(variant.AARef) == 0 {
 					codonToAdd = nil
 					for j = 0; j < 3; j++ {
-						if (seqPos-offset)-j < currCDS.Start-1 {
+						if (refSeqPos)-j < currCDS.Start-1 {
 							seqPos = currCDS.Prev.End - 1
 							currCDS = currCDS.Prev
 						}
-						codonToAdd = append(codonToAdd, seq[variant.Chr][(seqPos-offset)-j])
+						codonToAdd = append(codonToAdd, seq[variant.Chr][(refSeqPos)-j])
 					}
 					dna.Complement(codonToAdd)
 					variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
 				}
 			}
 		}
+
+		//if variant.Info == "c.3747del|p.Phe1250LeufsTer13" || variant.Info == "c.5604del|p.Gln1869SerfsTer42" ||
+		//	variant.Info == "c.8307_8308del|p.Ala2770HisfsTer4" || variant.Info == "c.13104del|p.Val4369CysfsTer25" {
+		//	fmt.Println(dna.PolypeptideToString(variant.AARef))
+		//	fmt.Println(dna.PolypeptideToString(variant.AAAlt))
+		//}
+
+		//if variant.Info == "c.33513_33515del|p.Glu11172del" {
+		//	fmt.Println(dna.PolypeptideToString(variant.AARef))
+		//	fmt.Println(dna.PolypeptideToString(variant.AAAlt))
+		//}
+
+		if (len(ref) - len(alt))%3 != 0 && len(variant.AARef) > 0 && len(variant.AAAlt) > 0 && variant.AARef[0] == variant.AAAlt[0] {
+			if trimAA {
+				trimAA = false
+				refSeqPos += 3
+			}
+			codonToAdd = nil
+			variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+			aaPosOffset++
+			for len(codonToAdd) == 0 || len(codonToAdd)%3 != 0 {
+				//if variant.Info == "c.3747del|p.Phe1250LeufsTer13" || variant.Info == "c.5604del|p.Gln1869SerfsTer42" ||
+				//	variant.Info == "c.8307_8308del|p.Ala2770HisfsTer4" || variant.Info == "c.13104del|p.Val4369CysfsTer25" {
+				//	fmt.Println(refSeqPos + 1)
+				//}
+				codonToAdd = append(codonToAdd, seq[variant.Chr][refSeqPos])
+				refSeqPos--
+				if refSeqPos < refCDS.Start-1 {
+					refSeqPos = refCDS.Prev.End - 1
+					refCDS = refCDS.Prev
+				}
+			}
+			dna.Complement(codonToAdd)
+			variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
+			codonToAdd = nil
+			for len(codonToAdd) == 0 || len(codonToAdd)%3 != 0 {
+				codonToAdd = append(codonToAdd, seq[variant.Chr][altSeqPos])
+				altSeqPos--
+				if altSeqPos < altCDS.Start-1 {
+					altSeqPos = altCDS.Prev.End - 1
+					altCDS = altCDS.Prev
+				}
+			}
+			dna.Complement(codonToAdd)
+			variant.AAAlt = append(variant.AAAlt, dna.TranslateSeq(codonToAdd)...)
+		}
+
 		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) + aaPosOffset // Add 0.4 so pos will always round up
 	}
 }
@@ -459,3 +572,15 @@ func isSynonymous(v *Variant) bool {
 	}
 	return answer
 }
+
+//func isRepetetive(v *Variant, seq map[string][]dna.Base) bool {
+//	var answer = true
+//	ref := dna.StringToBases(v.Ref)
+//	for i := 1; i < len(ref); i++ {
+//		if seq[v.Chr][int(v.Pos - 1) + i] != seq[v.Chr][int(v.Pos - 1) + len(ref) + i] {
+//			answer = false
+//			break
+//		}
+//	}
+//	return answer
+//}

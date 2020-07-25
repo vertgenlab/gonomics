@@ -9,9 +9,9 @@ import (
 )
 
 func TestVariantToAnnotationLarge(t *testing.T) {
-	testGtf := Read("testdata/CFTR.gtf")
-	testVcf := vcf.Read("testdata/CFTR.vcf")
-	f := fasta.Read("testdata/hg38_chr7.fa")
+	testGtf := Read("testdata/TTN.gtf")
+	testVcf := vcf.Read("testdata/TTN.vcf")
+	f := fasta.Read("testdata/hg38.fa")
 	fasta.AllToUpper(f)
 	testFasta := fasta.FastaMap(f)
 	tree := GenesToIntervalTree(testGtf)

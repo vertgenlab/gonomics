@@ -70,7 +70,11 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 				if start {
 					answer += fmt.Sprintf("%d-%d_%d-%ddel",cdsPos ,cdsDist + len(ref) - 1 ,cdsPos, cdsDist + 1)
 				} else {
-					answer += fmt.Sprintf("%d+%d_%d+%ddel",cdsPos ,cdsDist - len(ref) + 1 ,cdsPos, cdsDist - 1)
+					if cdsDist - len(ref) + 1 <= 0 {
+						answer += fmt.Sprintf("%d_%d+%ddel",cdsPos + (cdsDist - len(ref) + 1) ,cdsPos, cdsDist - 1)
+					} else {
+						answer += fmt.Sprintf("%d+%d_%d+%ddel",cdsPos ,cdsDist - len(ref) + 1 ,cdsPos, cdsDist - 1)
+					}
 				}
 			}
 			return answer
@@ -110,7 +114,7 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 					}
 				} else {
 					if start {
-						answer += fmt.Sprintf("%d-%d_%d-%ddup",cdsPos ,cdsDist - 1 ,cdsPos, cdsDist + len(alt) - 1)
+						answer += fmt.Sprintf("%d-%d_%d-%ddup",cdsPos ,cdsDist + len(alt) - 1 ,cdsPos, cdsDist + 1)
 					} else {
 						answer += fmt.Sprintf("%d+%d_%d+%ddup",cdsPos ,cdsDist - len(alt) + 1 ,cdsPos, cdsDist - 1)
 					}
@@ -127,7 +131,7 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 						i = 1
 					}
 				}
-				fmt.Println(cdsPos, cdsDist, duplicateOffset)
+				//fmt.Println(cdsPos, cdsDist, duplicateOffset)
 				basesToAdd := alt[len(ref):]
 				if duplicateOffset > 0 {
 					basesToAdd = append(basesToAdd[duplicateOffset:], basesToAdd[:duplicateOffset]...)
@@ -143,7 +147,7 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 				if start {
 					answer += fmt.Sprintf("%d-%d_%d-%dins%s",cdsPos ,cdsDist + 1 ,cdsPos, cdsDist + len(ref) - 1, dna.BasesToString(tmpAlt))
 				} else {
-					answer += fmt.Sprintf("%d+%d_%d+%dins%s",cdsPos ,cdsDist - len(ref) + 1 ,cdsPos, cdsDist - 1, dna.BasesToString(tmpAlt))
+					answer += fmt.Sprintf("%d+%d_%d+%dins%s",cdsPos ,cdsDist - 1 ,cdsPos, cdsDist - len(ref) + 1, dna.BasesToString(tmpAlt))
 				}
 			}
 			return answer
@@ -158,13 +162,23 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
 		} else if len(ref) > len(alt) { // Deletion
 			var duplicateOffset int
+			var hasDuplication bool
 			for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(ref)-1)+j] == ref[i]; j++{
 				duplicateOffset++
 				i++
+				if i >= 3 {
+					hasDuplication = true
+				}
 				if i == len(ref) {
 					i = 1
+					hasDuplication = true
 				}
 			}
+
+			if !hasDuplication {
+				//duplicateOffset = 0
+			}
+
 			if len(ref) == 2 {
 				answer += fmt.Sprintf("%ddel", v.CDNAPos + len(alt) + duplicateOffset)
 			} else {
@@ -211,8 +225,14 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 			}
 		} else if len(alt) > len(ref) { // Insertion
 			if isDuplication(v, seq) {
-				answer += fmt.Sprintf("%ddup", v.CDNAPos - (len(alt) - 1))
-			} //TODO: Needs else???
+				if len(alt) == 2 {
+					answer += fmt.Sprintf("%ddup", v.CDNAPos - (len(alt) - 1))
+				} else {
+					answer += fmt.Sprintf("%d_%ddup", v.CDNAPos - (len(alt) - 1), v.CDNAPos - 1)
+				}
+			} else {
+				answer += fmt.Sprintf("%d_%dins%s", v.CDNAPos - 1, v.CDNAPos, dna.BasesToString(alt[:len(alt)-1]))
+			}
 		}
 	}
 
@@ -260,10 +280,43 @@ func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	if v.VariantType == "Silent" || v.VariantType == "Missense" || v.VariantType == "Nonsense" || v.VariantType == "Frameshift" {
 	} else {return ""}
 	var answer string = "p."
+
+	if v.VariantType == "Missense" && len(v.AAAlt) > 1 && v.AARef[0] == v.AAAlt[len(v.AAAlt)-1] {
+		if len(v.AAAlt) - 1 == 1 {
+			answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.AAPos - 1)
+		} else {
+			answer += fmt.Sprintf("%s%d_%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.AAPos - (len(v.AAAlt) - 1), dna.AminoAcidToString(v.AAAlt[len(v.AAAlt)-2]), v.AAPos - 1)
+		}
+		return answer
+	}
+
+	if v.VariantType == "Missense" && len(v.AARef) == 1 && len(v.AAAlt) == 0 && len(dna.StringToBases(v.Ref)) > 3 {
+		answer += fmt.Sprintf("%s%ddel", dna.AminoAcidToString(v.AARef[0]), v.CDNAPos/3)
+		return answer
+	}
+
+	if v.VariantType == "Missense" && len(v.AARef) == 0 {
+		answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.CDNAPos/3)
+		return answer
+	}
+
 	v.AAAlt = truncateOnTer(v.AAAlt)
 	v.AARef, v.AAAlt = trimSynonymous(v.AARef, v.AAAlt)
+
+	//fmt.Println(v.Info)
+	//fmt.Println(dna.PolypeptideToString(v.AARef))
+	//fmt.Println(dna.PolypeptideToString(v.AAAlt))
+	//fmt.Println(v.Vcf)
+	//fmt.Println(v)
+
 	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AARef[0]), v.AAPos)
-	if len(v.AARef) > 1 {
+
+	if v.VariantType == "Nonsense" {
+		answer += "Ter"
+		return answer
+	}
+
+	if len(v.AARef) > 1 && v.VariantType != "Frameshift" {
 		answer += "_" + dna.AminoAcidToString(v.AARef[len(v.AARef)-1]) + fmt.Sprintf("%d", v.AAPos + len(v.AARef) - 1)
 	}
 
@@ -271,15 +324,15 @@ func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	altLen := len(v.AAAlt)
 	switch {
 	case refLen == 1 && altLen == 1: // Neither -> nothing is added
-	case refLen == 1 && altLen > 1: // Insertion -> add "ins"
-		answer += "ins"
-	case refLen >= 1 && altLen <= 1: // Deletion -> add "del"
+	case refLen == 1 && altLen > 1 && v.VariantType != "Frameshift": // Insertion -> add "ins"
+		answer += "delins"
+	case refLen >= 1 && altLen == 0 && v.VariantType != "Frameshift": // Deletion -> add "del"
 		answer += "del"
-	case refLen >= 1 && altLen > 1: // Delins -> add "delins"
+	case refLen >= 1 && altLen >= 1 && v.VariantType != "Frameshift": // Delins -> add "delins"
 		answer += "delins"
 	}
 
-	if len(v.AAAlt) == 1 {
+	if len(v.AAAlt) == 1 || (len(v.AAAlt) > 1 && v.VariantType == "Frameshift") {
 		answer += dna.AminoAcidToString(v.AAAlt[0])
 	} else if len(v.AAAlt) > 5 {
 		answer += fmt.Sprintf("%d", len(v.AAAlt))
@@ -292,7 +345,8 @@ func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	if v.VariantType == "Frameshift" {
 		terDist := distToNextTer(v, seq)
 		terDist = terDist - (v.AAPos - int(math.Round((float64(v.CDNAPos) / 3) + 0.4)))
-		if terDist == 1 {
+
+		if terDist == 1 || (len(v.AAAlt) > 0 && v.AAAlt[0] == dna.Stop) {
 			v.VariantType = "Nonsense"
 			return addProtein(v, seq)
 		}
