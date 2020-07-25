@@ -8,7 +8,10 @@ import (
 func TestBamToSamReader(t *testing.T) {
 
 	bamFile := Read("testdata/tenXbarcodeTest.bam")
-	samFile, _ := sam.Read("testdata/tenXbarcodeTest.sam")
+	samFile, err := sam.Read("testdata/tenXbarcodeTest.sam")
+	if err != nil {
+		t.Errorf("Error: There was a problem reading in the sam file...\n")
+	}
 	if len(bamFile) != len(samFile.Aln) {
 		t.Errorf("Error: File lines are not equal...\n")
 	}
@@ -16,5 +19,28 @@ func TestBamToSamReader(t *testing.T) {
 		if !sam.IsEqualDebug(bamFile[i], samFile.Aln[i]) {
 			t.Fatalf("Error: Did not create the same sam file as samtools view...\n")
 		}
+	}
+}
+
+func BenchmarkSamReader(b *testing.B) {
+	var samFile *sam.Sam
+	var err error
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		samFile, err = sam.Read("testdata/tenXbarcodeTest.sam")
+	}
+	if err != nil {
+		b.Errorf("Error: There was a problem reading in the sam file after %d lines...\n", len(samFile.Aln))
+	}
+}
+
+func BenchmarkBamReader(b *testing.B) {
+	var bamFile []*sam.SamAln
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		bamFile = Read("testdata/tenXbarcodeTest.bam")
+	}
+	if bamFile == nil {
+		b.Errorf("Error: There was a problem reading in the sam file after %d lines...\n", len(bamFile))
 	}
 }

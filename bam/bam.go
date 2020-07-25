@@ -49,7 +49,16 @@ type BamHeader struct {
 type BamReader struct {
 	File   *os.File
 	gunzip *Bgzip
-	Stream *BgZipBuffer
+	Data      []byte
+	BytesRead int
+	Error     error
+}
+
+
+type BamAuxiliary struct {
+	Tag   [2]byte
+	Type  byte
+	Value interface{}
 }
 
 func BamBlockToSam(header *BamHeader, bam *BamData) *sam.SamAln {
@@ -121,8 +130,7 @@ func NewBamReader(filename string) *BamReader {
 	var err error
 	bamR.File = fileio.MustOpen(filename)
 	bamR.gunzip = NewBgzipReader(bamR.File)
-
-	bamR.Stream = &BgZipBuffer{BytesRead: 0, Debug: err}
+	bamR.Error = err
 	return bamR
 }
 
@@ -131,51 +139,51 @@ func ReadHeader(reader *BamReader) *BamHeader {
 	magic := make([]byte, 4)
 	magic = BgzipBuffer(reader.gunzip, magic)
 	if string(magic) != "BAM\001" {
-		log.Fatalf("Not a BAM file: %s\n", string(reader.Stream.Data))
+		log.Fatalf("Not a BAM file: %s\n", string(reader.Data))
 	}
-	reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bamHeader.decoder.Len)
-	common.ExitIfError(reader.Stream.Debug)
-	reader.Stream.Data = make([]byte, bamHeader.decoder.Len)
+	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &bamHeader.decoder.Len)
+	common.ExitIfError(reader.Error)
+	reader.Data = make([]byte, bamHeader.decoder.Len)
 	var i, j, k int = 0, 0, 0
 	for i = 0; i < int(bamHeader.decoder.Len); {
-		j, reader.Stream.Debug = reader.gunzip.Read(reader.Stream.Data[i:])
-		common.ExitIfError(reader.Stream.Debug)
+		j, reader.Error = reader.gunzip.Read(reader.Data[i:])
+		common.ExitIfError(reader.Error)
 		i += j
 	}
-	bamHeader.Txt = string(reader.Stream.Data)
-	reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &bamHeader.decoder.NRef)
-	common.ExitIfError(reader.Stream.Debug)
-	reader.Stream.Data = make([]byte, bamHeader.decoder.NRef)
+	bamHeader.Txt = string(reader.Data)
+	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &bamHeader.decoder.NRef)
+	common.ExitIfError(reader.Error)
+	reader.Data = make([]byte, bamHeader.decoder.NRef)
 	var lengthName, lengthSeq int32
 	for i = 0; i < int(bamHeader.decoder.NRef); i++ {
 		lengthName, lengthSeq = 0, 0
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &lengthName)
-		common.ExitIfError(reader.Stream.Debug)
-		reader.Stream.Data = make([]byte, lengthName)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &lengthName)
+		common.ExitIfError(reader.Error)
+		reader.Data = make([]byte, lengthName)
 		for j = 0; j < int(lengthName); {
-			k, reader.Stream.Debug = reader.gunzip.Read(reader.Stream.Data[j:])
-			common.ExitIfError(reader.Stream.Debug)
+			k, reader.Error = reader.gunzip.Read(reader.Data[j:])
+			common.ExitIfError(reader.Error)
 			j += k
 		}
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &lengthSeq)
-		common.ExitIfError(reader.Stream.Debug)
-		bamHeader.Chroms = append(bamHeader.Chroms, &chromInfo.ChromInfo{Name: strings.Trim(string(reader.Stream.Data), "\n\000"), Size: int64(lengthSeq), Order: int64(len(bamHeader.Chroms))})
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &lengthSeq)
+		common.ExitIfError(reader.Error)
+		bamHeader.Chroms = append(bamHeader.Chroms, &chromInfo.ChromInfo{Name: strings.Trim(string(reader.Data), "\n\000"), Size: int64(lengthSeq), Order: int64(len(bamHeader.Chroms))})
 	}
 	return bamHeader
 }
-
+/*
 func decodeBinaryInt32(reader *BamReader) int {
 	var key int32 = 0
-	reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &key)
-	reader.Stream.Data = make([]byte, key)
+	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &key)
+	reader.Data = make([]byte, key)
 	var i, j int = 0, 0
 	for i = 0; i < int(key); {
-		j, reader.Stream.Debug = reader.gunzip.Read(reader.Stream.Data[i:])
-		common.ExitIfError(reader.Stream.Debug)
+		j, reader.Error = reader.gunzip.Read(reader.Data[i:])
+		common.ExitIfError(reader.Error)
 		i += j
 	}
 	return i
-}
+}*/
 
 func Read(filename string) []*sam.SamAln {
 	bamFile := NewBamReader(filename)
@@ -192,7 +200,7 @@ func Read(filename string) []*sam.SamAln {
 
 func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 	var blockSize int32
-	var flagNc uint32
+	var bitFlag uint32
 	var stats uint32
 	var i, j int
 	var b byte
@@ -202,50 +210,50 @@ func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 		block = &BamData{}
 		buf := bytes.NewBuffer([]byte{})
 		// read block size
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize)
-		if reader.Stream.Debug == io.EOF {
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &blockSize)
+		if reader.Error == io.EOF {
 			close(binaryData)
 			break
 		}
-		common.ExitIfError(reader.Stream.Debug)
+		common.ExitIfError(reader.Error)
 		//read block data
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.RName)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.RName)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.Pos)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.Pos)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &stats)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &stats)
+		common.ExitIfError(reader.Error)
 
 		block.Bai = uint16((stats >> 16) & 0xffff)
 		block.MapQ = uint8((stats >> 8) & 0xff)
 		block.RNLength = uint8((stats >> 0) & 0xff)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &flagNc)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &bitFlag)
+		common.ExitIfError(reader.Error)
 
-		// get Flag and NCigarOp from FlagNc
-		block.Flag = uint16(flagNc >> 16)
-		block.NCigarOp = uint16(flagNc & 0xffff)
+		// get Flag and NCigarOp from bitFlag
+		block.Flag = uint16(bitFlag >> 16)
+		block.NCigarOp = uint16(bitFlag & 0xffff)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.LSeq)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.LSeq)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextRefID)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextRefID)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextPos)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.NextPos)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.TLength)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.TLength)
+		common.ExitIfError(reader.Error)
 
 		// parse the read name
 
 		for {
-			reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &b)
-			common.ExitIfError(reader.Stream.Debug)
+			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &b)
+			common.ExitIfError(reader.Error)
 
 			if b == 0 {
 				block.QName = buf.String()
@@ -255,28 +263,28 @@ func bamToChan(reader *BamReader, binaryData chan<- *BamData) {
 		}
 		// parse cigar block
 		block.Cigar = make([]uint32, block.NCigarOp)
-		for i = 0; i < int(block.NCigarOp) && reader.Stream.Debug == nil; i++ {
-			reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.Cigar[i])
-			common.ExitIfError(reader.Stream.Debug)
+		for i = 0; i < int(block.NCigarOp) && reader.Error == nil; i++ {
+			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.Cigar[i])
+			common.ExitIfError(reader.Error)
 
 		}
 		// parse seq
 		block.Seq = make([]byte, (block.LSeq+1)/2)
 		for i = 0; i < int((block.LSeq+1)/2); i++ {
-			reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.Seq[i])
-			common.ExitIfError(reader.Stream.Debug)
+			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.Seq[i])
+			common.ExitIfError(reader.Error)
 
 		}
 		block.Qual = make([]byte, block.LSeq)
 		for i = 0; i < int(block.LSeq); i++ {
-			reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &block.Qual[i])
-			common.ExitIfError(reader.Stream.Debug)
+			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &block.Qual[i])
+			common.ExitIfError(reader.Error)
 		}
 		// read auxiliary data
 		j = 8*4 + int(block.RNLength) + 4*int(block.NCigarOp) + int((block.LSeq+1)/2) + int(block.LSeq)
 		for i = 0; j+i < int(blockSize); {
 			block.Aux = append(block.Aux, ReadBamAuxiliary(reader))
-			i += reader.Stream.BytesRead
+			i += reader.BytesRead
 		}
 		binaryData <- block
 	}
@@ -290,106 +298,100 @@ func NotesToString(aux []*BamAuxiliary) string {
 	return strings.Join(ans, "\t")
 }
 
-type BamAuxiliary struct {
-	Tag   [2]byte
-	Type  byte
-	Value interface{}
-}
-
 func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 	aux := &BamAuxiliary{}
 	var i int
 	// number of read bytes
-	reader.Stream.BytesRead = 0
+	reader.BytesRead = 0
 	// read data
-	reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &aux.Tag[0])
-	common.ExitIfError(reader.Stream.Debug)
+	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &aux.Tag[0])
+	common.ExitIfError(reader.Error)
 
-	reader.Stream.BytesRead += 1
-	reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &aux.Tag[1])
-	common.ExitIfError(reader.Stream.Debug)
+	reader.BytesRead += 1
+	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &aux.Tag[1])
+	common.ExitIfError(reader.Error)
 
-	reader.Stream.BytesRead += 1
-	reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &aux.Type)
-	common.ExitIfError(reader.Stream.Debug)
+	reader.BytesRead += 1
+	reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &aux.Type)
+	common.ExitIfError(reader.Error)
 
 	// three bytes read so far
-	reader.Stream.BytesRead += 1
+	reader.BytesRead += 1
 	// read value
 
 	switch aux.Type {
 	case 'A':
 		value := byte(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
-		reader.Stream.BytesRead += 1
+		reader.BytesRead += 1
 	case 'c':
 		value := int8(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
 		aux.Type = 'i'
-		reader.Stream.BytesRead += 1
+		reader.BytesRead += 1
 	case 'C':
 		value := uint8(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
 		aux.Type = 'i'
-		reader.Stream.BytesRead += 1
+		reader.BytesRead += 1
 	case 's':
 		value := int16(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
-		reader.Stream.BytesRead += 2
+		reader.BytesRead += 2
 	case 'S':
 		value := uint16(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
-		reader.Stream.BytesRead += 2
+		reader.BytesRead += 2
 	case 'i':
 		value := int32(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
-		reader.Stream.BytesRead += 4
+		reader.BytesRead += 4
 	case 'I':
 		value := uint32(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 		aux.Value = value
-		reader.Stream.BytesRead += 4
+		reader.BytesRead += 4
 	case 'f':
 		value := float32(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
-		reader.Stream.BytesRead += 4
+		reader.BytesRead += 4
 	case 'd':
 		value := float64(0)
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &value)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &value)
+		common.ExitIfError(reader.Error)
 
 		aux.Value = value
-		reader.Stream.BytesRead += 8
+		reader.BytesRead += 8
 	case 'Z':
 		var b byte
 		var buffer bytes.Buffer
 		for {
-			reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &b)
-			common.ExitIfError(reader.Stream.Debug)
+			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &b)
+			common.ExitIfError(reader.Error)
 
-			reader.Stream.BytesRead += 1
+			reader.BytesRead += 1
 			if b == 0 {
 				break
 			}
@@ -400,10 +402,10 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 		var b byte
 		var buffer bytes.Buffer
 		for {
-			reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &b)
-			common.ExitIfError(reader.Stream.Debug)
+			reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &b)
+			common.ExitIfError(reader.Error)
 
-			reader.Stream.BytesRead += 1
+			reader.BytesRead += 1
 			if b == 0 {
 				break
 			}
@@ -413,85 +415,85 @@ func ReadBamAuxiliary(reader *BamReader) *BamAuxiliary {
 	case 'B':
 		var t byte
 		var k int32
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &t)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &t)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.BytesRead += 1
-		reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &k)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.BytesRead += 1
+		reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &k)
+		common.ExitIfError(reader.Error)
 
-		reader.Stream.BytesRead += 4
+		reader.BytesRead += 4
 		switch t {
 		case 'c':
 			data := make([]int32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
-				reader.Stream.BytesRead += 1
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
+				reader.BytesRead += 1
 			}
 			aux.Value = data
 		case 'C':
 			data := make([]uint8, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
 
-				reader.Stream.BytesRead += 1
+				reader.BytesRead += 1
 			}
 			aux.Value = data
 		case 's':
 			data := make([]int16, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
 
-				reader.Stream.BytesRead += 2
+				reader.BytesRead += 2
 			}
 			aux.Value = data
 		case 'S':
 			data := make([]uint16, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
 
-				reader.Stream.BytesRead += 2
+				reader.BytesRead += 2
 			}
 			aux.Value = data
 		case 'i':
 			data := make([]int32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
 
-				reader.Stream.BytesRead += 4
+				reader.BytesRead += 4
 			}
 			aux.Value = data
 		case 'I':
 			data := make([]uint32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
 
-				reader.Stream.BytesRead += 4
+				reader.BytesRead += 4
 			}
 			aux.Value = data
 		case 'f':
 			data := make([]float32, k)
 			for i = 0; i < int(k); i++ {
-				reader.Stream.Debug = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
-				common.ExitIfError(reader.Stream.Debug)
+				reader.Error = binary.Read(reader.gunzip, binary.LittleEndian, &data[i])
+				common.ExitIfError(reader.Error)
 
-				reader.Stream.BytesRead += 4
+				reader.BytesRead += 4
 			}
 			aux.Value = data
 		default:
-			reader.Stream.Debug = fmt.Errorf("invalid auxiliary array value type `%c'", t)
-			common.ExitIfError(reader.Stream.Debug)
+			reader.Error = fmt.Errorf("invalid auxiliary array value type `%c'", t)
+			common.ExitIfError(reader.Error)
 		}
 
 	default:
-		reader.Stream.Debug = fmt.Errorf("invalid auxiliary value type `%c'", aux.Type)
-		common.ExitIfError(reader.Stream.Debug)
+		reader.Error = fmt.Errorf("invalid auxiliary value type `%c'", aux.Type)
+		common.ExitIfError(reader.Error)
 	}
 	return aux
 }
@@ -510,13 +512,6 @@ type cInfo struct {
 //allocates memory for new bam header
 func MakeHeader() *BamHeader {
 	return &BamHeader{ChromSize: make(map[string]int), decoder: &cInfo{Len: 0, NRef: 0}}
-}
-
-type BgZipBuffer struct {
-	Bufio     bytes.Buffer
-	Data      []byte
-	BytesRead int
-	Debug     error
 }
 
 func bamCigar(bCig []uint32) string {
