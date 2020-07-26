@@ -55,10 +55,4 @@ func TestVcfToVariant(t *testing.T) {
 		t.Errorf("ERROR: Problem converting vcf to variant")
 	}
 
-	//answer := fmt.Sprint(VariantToAnnotation(variant, inSeq))
-	//if answer != "g.DummyChr:2A>C|Missense|DummyGene|DummyTranscriptID:c.2A>C|p.His1Pro" {
-	//	log.Println("Output: ", answer)
-	//	log.Println("Expected: g.DummyChr:2A>C|Missense|DummyGene|DummyTranscriptID:c.2A>C|p.His1Pro")
-	//	t.Errorf("ERROR: Problem annotating variant")
-	//}
 }

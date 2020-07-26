@@ -10,7 +10,7 @@ import (
 	"reflect"
 )
 
-type Variant struct {
+type vcfEffectPrediction struct {
 	vcf.Vcf
 	RefId       string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
 	Gene        string
@@ -38,8 +38,9 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 
 // VcfToVariant determines the effects of a variant on the cDNA and amino acid sequence by querying genes in the tree made by GenesToIntervalTree
 // Note that if multiple genes are found to overlap a variant this function will return the variant based on the first queried gene and throw an error
-func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base) (*Variant, error) {
-	var answer *Variant
+// All bases in fasta record must be uppercase
+func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base) (*vcfEffectPrediction, error) {
+	var answer *vcfEffectPrediction
 	var err error
 
 	overlappingGenes := interval.Query(tree, v, "any")
@@ -53,15 +54,15 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 		annotatingGene = overlappingGenes[0].(*Gene)
 		answer = vcfToVariant(v, annotatingGene, seq)
 	} else {
-		answer = &Variant{Vcf: *v}
+		answer = &vcfEffectPrediction{Vcf: *v}
 	}
 	addVariantType(answer)
 	return answer, err
 }
 
 // vcfToVariant is a helper function that annotates the Variant struct with information from the Vcf and Gtf input
-func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
-	answer := new(Variant)
+func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *vcfEffectPrediction {
+	answer := new(vcfEffectPrediction)
 	answer.Vcf = *v
 	answer.RefId = gene.Transcripts[0].TranscriptID
 	answer.Gene = gene.GeneID
@@ -74,7 +75,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
 }
 
 // vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the CDS nearest to the vcf
-func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
+func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction) {
 	var cdsPos int
 	var exon *Exon
 	//TODO: this code may be able to be compressed
@@ -124,13 +125,46 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 }
 
 // findAAChange annotates the Variant struct with the amino acids changed by a given variant
-func findAAChange(variant *Variant, seq map[string][]dna.Base) {
+func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
+	ref := dna.StringToBases(variant.Ref)
+	alt := dna.StringToBases(variant.Alt)
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
 	var currCDS *CDS = variant.NearestCDS
+	var aaPosOffset int = 0
 	if variant.PosStrand {
 		seqPos -= determineFrame(variant)
+
+		var hasDuplication bool
+		var duplicateOffset int
+		var duplicateBasePos int
+		if (len(ref)-len(alt))%3 == 0 && len(ref) > 1 {
+			var j int
+			for duplicateBasePos, j = 1, 1; seq[variant.Chr][int(variant.Pos-1)+(len(ref)-1)+j] == ref[duplicateBasePos]; j++ {
+				duplicateOffset++
+				duplicateBasePos++
+
+				if duplicateBasePos >= 3 {
+					hasDuplication = true
+				}
+
+				if duplicateBasePos == len(ref) {
+					duplicateBasePos = 1
+				}
+			}
+
+			if !hasDuplication {
+				duplicateOffset = 0
+				duplicateBasePos = 0
+			}
+
+			variant.CDNAPos += duplicateOffset
+			variant.Pos += int64(duplicateOffset)
+			seqPos = int(variant.Pos) - 1
+			seqPos -= determineFrame(variant)
+		}
+
 		for ; seqPos < int(variant.Pos-1); seqPos++ {
 			if seqPos < currCDS.Start-1 {
 				seqPos = currCDS.Prev.End - 1
@@ -138,37 +172,127 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 			} else if seqPos > currCDS.End-1 {
 				seqPos = currCDS.Next.Start - 1
 				currCDS = currCDS.Next
+				if seqPos <= int(variant.Pos-1) {
+					break
+				}
 			}
 			refBases = append(refBases, seq[variant.Chr][seqPos])
 			altBases = append(altBases, seq[variant.Chr][seqPos])
 		}
-		refBases = append(refBases, dna.StringToBases(variant.Ref)...)
-		altBases = append(altBases, dna.StringToBases(variant.Alt)...)
-		seqPos += len(dna.StringToBases(variant.Ref))
-		var offset int
-		for offset = 0; len(refBases)%3 != 0; offset++ {
-			if seqPos+offset > currCDS.End-1 {
-				seqPos = currCDS.Next.Start - 1
-				currCDS = currCDS.Next
+		if duplicateOffset > 0 {
+			refBases = append(refBases, ref[duplicateBasePos-1:]...)
+			if duplicateBasePos-1 > 0 {
+				refBases = append(refBases, ref[1:duplicateBasePos-1]...)
+				seqPos -= len(ref[1 : duplicateBasePos-1])
 			}
-			refBases = append(refBases, seq[variant.Chr][seqPos+offset])
+			altBases = append(altBases, alt[1:]...)
+		} else {
+			refBases = append(refBases, ref...)
+			altBases = append(altBases, alt...)
 		}
-		for offset = 0; len(altBases)%3 != 0; offset++ {
-			if seqPos+offset > currCDS.End-1 {
-				seqPos = currCDS.Next.Start - 1
-				currCDS = currCDS.Next
+
+		seqPos += len(ref)
+
+		var offset int
+		altCDS := currCDS
+		altSeqPos := seqPos
+		for ; len(altBases)%3 != 0; altSeqPos++ {
+			if altSeqPos > altCDS.End-1 {
+				altSeqPos = altCDS.Next.Start - 1
+				altCDS = altCDS.Next
 			}
-			altBases = append(altBases, seq[variant.Chr][seqPos+offset])
+			altBases = append(altBases, seq[variant.Chr][altSeqPos])
+		}
+		refCDS := currCDS
+		refSeqPos := seqPos
+		for ; len(refBases)%3 != 0; refSeqPos++ {
+			if refSeqPos > refCDS.End-1 {
+				refSeqPos = refCDS.Next.Start - 1
+				refCDS = refCDS.Next
+			}
+			refBases = append(refBases, seq[variant.Chr][refSeqPos])
 		}
 		variant.AARef = dna.TranslateSeq(refBases)
 		variant.AAAlt = dna.TranslateSeq(altBases)
-		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) // Add 0.4 so pos will always round up
+
+		if (len(ref)-len(alt))%3 != 0 {
+			var codonToAdd []dna.Base
+			var j int
+			for variant.AARef[0] == variant.AAAlt[0] {
+				codonToAdd = nil
+				variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+				//fmt.Println("BASE ADDED")
+				aaPosOffset++
+				if len(variant.AARef) == 0 {
+					for j = 0; j < 3; j++ {
+						if refSeqPos > refCDS.End-1 {
+							refSeqPos = refCDS.Next.Start - 1
+							refCDS = refCDS.Next
+						}
+						codonToAdd = append(codonToAdd, seq[variant.Chr][refSeqPos])
+						refSeqPos++
+					}
+					variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
+				}
+				codonToAdd = nil
+				if len(variant.AAAlt) == 0 {
+					for j = 0; j < 3; j++ {
+						if altSeqPos > altCDS.End-1 {
+							altSeqPos = altCDS.Next.Start - 1
+							altCDS = altCDS.Next
+						}
+						codonToAdd = append(codonToAdd, seq[variant.Chr][altSeqPos])
+						altSeqPos++
+					}
+					variant.AAAlt = append(variant.AAAlt, dna.TranslateSeq(codonToAdd)...)
+				}
+			}
+		}
+
+		if !isSynonymous(variant) && len(variant.AARef) > 1 {
+			var codonToAdd []dna.Base
+			var j int
+			for len(variant.AAAlt) > 0 && variant.AARef[0] == variant.AAAlt[0] {
+				variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+				aaPosOffset++
+				if len(variant.AARef) == 0 {
+					codonToAdd = nil
+					for j = 0; j < 3; j++ {
+						if (seqPos+offset)+j > currCDS.End-1 {
+							seqPos = currCDS.Next.Start - 1
+							currCDS = currCDS.Next
+						}
+						codonToAdd = append(codonToAdd, seq[variant.Chr][(seqPos+offset)+j])
+					}
+					variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
+				}
+			}
+		}
+
+		variant.AAPos = int(math.Round((float64(variant.CDNAPos)/3)+0.4)) + aaPosOffset // Add 0.4 so pos will always round up
 	} else {
+		var trimAA bool
 		seqPos += determineFrame(variant)
-		for ; seqPos > int(variant.Pos-1); seqPos-- {
+		lenOffset := (len(dna.StringToBases(variant.Ref)) - 1)
+
+		for int(variant.Pos-1)+lenOffset > seqPos {
+			seqPos += 3
+			trimAA = true
+			aaPosOffset--
+		}
+
+		if seqPos > currCDS.End-1 {
+			seqPos = (currCDS.Next.Start - 1) + ((seqPos - int(variant.Pos)) - (currCDS.End - int(variant.Pos)))
+			currCDS = currCDS.Next
+		}
+
+		for ; seqPos > (int(variant.Pos-1) + lenOffset); seqPos-- {
 			if seqPos < currCDS.Start-1 {
 				seqPos = currCDS.Prev.End - 1
 				currCDS = currCDS.Prev
+				if seqPos == (int(variant.Pos-1) + lenOffset) {
+					break
+				}
 			} else if seqPos > currCDS.End-1 {
 				seqPos = currCDS.Next.Start - 1
 				currCDS = currCDS.Next
@@ -176,36 +300,122 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 			refBases = append(refBases, seq[variant.Chr][seqPos])
 			altBases = append(altBases, seq[variant.Chr][seqPos])
 		}
+
 		refBases = append(refBases, reverse(dna.StringToBases(variant.Ref))...)
 		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt))...)
 		seqPos -= len(dna.StringToBases(variant.Ref))
-		var offset int
-		for offset = 0; len(refBases)%3 != 0; offset++ {
-			if seqPos-offset < currCDS.Start-1 {
-				seqPos = currCDS.Prev.End - 1
-				currCDS = currCDS.Prev
+
+		altCDS := currCDS
+		altSeqPos := seqPos
+		for ; len(altBases)%3 != 0; altSeqPos-- {
+			if altSeqPos < altCDS.Start-1 {
+				altSeqPos = altCDS.Prev.End - 1
+				altCDS = altCDS.Prev
 			}
-			refBases = append(refBases, seq[variant.Chr][seqPos-offset])
+			altBases = append(altBases, seq[variant.Chr][altSeqPos])
 		}
-		for offset = 0; len(altBases)%3 != 0; offset++ {
-			if seqPos-offset < currCDS.Start-1 {
-				seqPos = currCDS.Prev.End - 1
-				currCDS = currCDS.Prev
+		refCDS := currCDS
+		refSeqPos := seqPos
+		for ; len(refBases)%3 != 0; refSeqPos-- {
+			if refSeqPos < refCDS.Start-1 {
+				refSeqPos = refCDS.Prev.End - 1
+				refCDS = refCDS.Prev
 			}
-			altBases = append(altBases, seq[variant.Chr][seqPos-offset])
+			refBases = append(refBases, seq[variant.Chr][refSeqPos])
 		}
+
 		dna.Complement(refBases)
 		dna.Complement(altBases)
 		variant.AARef = dna.TranslateSeq(refBases)
 		variant.AAAlt = dna.TranslateSeq(altBases)
-		variant.AAPos = int(math.Round((float64(variant.CDNAPos) / 3) + 0.4)) // Add 0.4 so pos will always round up
+
+		if trimAA && (len(ref)-len(alt))%3 == 0 && variant.AARef[len(variant.AARef)-1] == variant.AAAlt[len(variant.AAAlt)-1] {
+			variant.AAAlt = variant.AAAlt[:len(variant.AAAlt)-1]
+			variant.AARef = variant.AARef[:len(variant.AARef)-1]
+		}
+
+		var codonToAdd []dna.Base
+		var j int
+
+		if !isSynonymous(variant) && len(variant.AAAlt) > 1 && len(variant.AARef) > 0 {
+			for len(variant.AARef) > 0 && len(variant.AAAlt) > 0 && variant.AARef[0] == variant.AAAlt[0] {
+				if len(variant.AAAlt) > 1 && variant.AARef[0] == variant.AAAlt[len(variant.AAAlt)-1] && (len(ref)-len(alt))%3 == 0 {
+					variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+					aaPosOffset++
+					break
+				}
+				variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+				aaPosOffset++
+				if len(variant.AARef) == 0 {
+					codonToAdd = nil
+					for j = 0; j < 3; j++ {
+						if (refSeqPos)-j < currCDS.Start-1 {
+							seqPos = currCDS.Prev.End - 1
+							currCDS = currCDS.Prev
+						}
+						codonToAdd = append(codonToAdd, seq[variant.Chr][(refSeqPos)-j])
+					}
+					dna.Complement(codonToAdd)
+					variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
+				}
+			}
+		} else if !isSynonymous(variant) && len(variant.AAAlt) == 1 && len(variant.AARef) == 1 && variant.AAAlt[0] == variant.AARef[0] && len(ref) > len(alt) {
+			if trimAA {
+				refSeqPos += 3
+			}
+			variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+			aaPosOffset++
+			codonToAdd = nil
+			for j = 0; j < 3; j++ {
+				if (refSeqPos)-j < currCDS.Start-1 {
+					seqPos = currCDS.Prev.End - 1
+					currCDS = currCDS.Prev
+				}
+				codonToAdd = append(codonToAdd, seq[variant.Chr][(refSeqPos)-j])
+			}
+			dna.Complement(codonToAdd)
+			variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
+		}
+
+		if (len(ref)-len(alt))%3 != 0 && len(variant.AARef) > 0 && len(variant.AAAlt) > 0 && variant.AARef[0] == variant.AAAlt[0] {
+			if trimAA {
+				trimAA = false
+				refSeqPos += 3
+			}
+			codonToAdd = nil
+			variant.AARef, variant.AAAlt = variant.AARef[1:], variant.AAAlt[1:]
+			aaPosOffset++
+			for len(codonToAdd) == 0 || len(codonToAdd)%3 != 0 {
+				codonToAdd = append(codonToAdd, seq[variant.Chr][refSeqPos])
+				refSeqPos--
+				if refSeqPos < refCDS.Start-1 {
+					refSeqPos = refCDS.Prev.End - 1
+					refCDS = refCDS.Prev
+				}
+			}
+			dna.Complement(codonToAdd)
+			variant.AARef = append(variant.AARef, dna.TranslateSeq(codonToAdd)...)
+			codonToAdd = nil
+			for len(codonToAdd) == 0 || len(codonToAdd)%3 != 0 {
+				codonToAdd = append(codonToAdd, seq[variant.Chr][altSeqPos])
+				altSeqPos--
+				if altSeqPos < altCDS.Start-1 {
+					altSeqPos = altCDS.Prev.End - 1
+					altCDS = altCDS.Prev
+				}
+			}
+			dna.Complement(codonToAdd)
+			variant.AAAlt = append(variant.AAAlt, dna.TranslateSeq(codonToAdd)...)
+		}
+
+		variant.AAPos = int(math.Round((float64(variant.CDNAPos)/3)+0.4)) + aaPosOffset // Add 0.4 so pos will always round up
 	}
 }
 
 // addVariantType annotates the Variant struct with the VariantType
 // Valid types include: Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice, FarSplice
 // Splice is defined as 1-2 bases away from intron-exon border, Farsplice is 3-10 bases away from intron-exon border
-func addVariantType(v *Variant) {
+func addVariantType(v *vcfEffectPrediction) {
 	cdsDist := getCdsDist(v)
 	switch {
 	case v.Gene == "":
@@ -240,17 +450,17 @@ func reverse(s []dna.Base) []dna.Base {
 
 // determineFrame will determine the position of the variant in a codon
 // This is used to determine how many bases before the variant must be retrieved to get the full codon
-func determineFrame(v *Variant) int {
+func determineFrame(v *vcfEffectPrediction) int {
 	if v.PosStrand {
-		return (int(v.Pos)-v.NearestCDS.Start)%3 + ((3 - v.NearestCDS.Frame) % 3)
+		return ((int(v.Pos)-v.NearestCDS.Start)%3 + ((3 - v.NearestCDS.Frame) % 3)) % 3
 	} else {
-		return (v.NearestCDS.End-int(v.Pos))%3 + ((3 - v.NearestCDS.Frame) % 3)
+		return ((v.NearestCDS.End-int(v.Pos))%3 + ((3 - v.NearestCDS.Frame) % 3)) % 3
 	}
 }
 
 // getCdsDist determines the distance of the variant from the nearest CDS
 // Returns 0 if the variant is inside the CDS
-func getCdsDist(v *Variant) int {
+func getCdsDist(v *vcfEffectPrediction) int {
 	switch {
 	case int(v.Pos) >= v.NearestCDS.Start && int(v.Pos) <= v.NearestCDS.End: // Variant is in CDS
 		return 0
@@ -264,13 +474,12 @@ func getCdsDist(v *Variant) int {
 }
 
 // isFrameshift returns true if the variant shifts the reading frame
-func isFrameshift(v *Variant) bool {
+func isFrameshift(v *vcfEffectPrediction) bool {
 	refBases := dna.StringToBases(v.Ref)
 	altBases := dna.StringToBases(v.Alt)
 
 	start := int(v.Pos)
 	refEnd := start + len(refBases) - 1
-	altEnd := start + len(altBases) - 1
 
 	var refBasesInCds int
 	var altBasesInCds int
@@ -285,22 +494,32 @@ func isFrameshift(v *Variant) bool {
 	} else if refEnd > v.NearestCDS.End {
 		refBasesInCds = len(refBases) - (refEnd - v.NearestCDS.End) - startOffset
 	}
-	if altEnd <= v.NearestCDS.End {
-		altBasesInCds = len(altBases) - startOffset
-	} else if altEnd > v.NearestCDS.End {
-		altBasesInCds = len(altBases) - (altEnd - v.NearestCDS.End) - startOffset
-	}
-
+	altBasesInCds = len(altBases) - startOffset
 	shift := altBasesInCds - refBasesInCds
 	return shift%3 != 0
 }
 
 // isNonsense returns true if the variant creates a premature stop codon
-func isNonsense(v *Variant) bool {
+func isNonsense(v *vcfEffectPrediction) bool {
 	for _, val := range v.AAAlt {
 		if val == dna.Stop {
 			return true
 		}
 	}
 	return false
+}
+
+// isSynonymous returns true if the variant does not change the amino acid sequence
+func isSynonymous(v *vcfEffectPrediction) bool {
+	var answer bool = true
+	if len(v.AAAlt) != len(v.AARef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt)) {
+		return false
+	} else {
+		for i := 0; i < len(v.AARef); i++ {
+			if v.AARef[i] != v.AAAlt[i] {
+				answer = false
+			}
+		}
+	}
+	return answer
 }
