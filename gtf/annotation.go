@@ -166,9 +166,9 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 			for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(ref)-1)+j] == ref[i]; j++ {
 				duplicateOffset++
 				i++
-				if i >= 3 {
-					//hasDuplication = true
-				}
+				//if i >= 3 {
+				//	//hasDuplication = true
+				//}
 				if i == len(ref) {
 					i = 1
 					//hasDuplication = true
