@@ -14,10 +14,11 @@ var readBamTests = []struct {
 	{"testdata/tenXbarcodeTest.bam", "testdata/tenXbarcodeTest.sam"},
 }
 
-//TestBamToSamReader will convert a bam file into a sam record and perform a comparison with the same sam file that was created using samtools view.
+//TestBamToSamReader will convert a bam file into a sam record and
+//perform a comparison with the same sam file that was created using samtools view.
 func TestBamToSamReader(t *testing.T) {
 	for _, test := range readBamTests {
-		bamFile := Read(test.bam)
+		_, bamFile := Read(test.bam)
 		samFile, err := sam.Read(test.sam)
 		if err != nil {
 			t.Errorf("Error: There was a problem reading in the sam file...\n")
@@ -33,7 +34,8 @@ func TestBamToSamReader(t *testing.T) {
 	}
 }
 
-//BenchmarkSamReader will benchmark the reading speed of a basic sam text file. (This is used to compare with reading a bam file)
+//BenchmarkSamReader will benchmark the reading speed of a basic sam text file.
+//(This is used to compare with reading a bam file)
 func BenchmarkSamReader(b *testing.B) {
 	var samFile *sam.Sam
 	var err error
@@ -48,13 +50,14 @@ func BenchmarkSamReader(b *testing.B) {
 	}
 }
 
-//BenchmarkBamReader will benchmark the speed of decoding a bam file and convert the data into sam records. (This is used to compare with reading a sam file)
+//BenchmarkBamReader will benchmark the speed of decoding a bam file and convert the data into sam records.
+//(This is used to compare with reading a sam file)
 func BenchmarkBamReader(b *testing.B) {
 	var bamFile []*sam.SamAln
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		for _, test := range readBamTests {
-			bamFile = Read(test.bam)
+			_, bamFile = Read(test.bam)
 		}
 
 	}
