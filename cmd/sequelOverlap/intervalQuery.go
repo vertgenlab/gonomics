@@ -12,16 +12,17 @@ import (
 )
 
 type Settings struct { // Draft of input setting struct
+	Input           string // implemented
+	Output          string // implemented
+	SelectFile      string // implemented
 	Extend          int
-	Format          string
 	NonOverlap      bool // implemented // not compatible with MergedOutput
-	Threads         int
-	Output          string
+	Threads         int  // implemented
 	PercentOverlap  float64
 	BaseOverlap     int
-	Aggregate       bool // implemented
-	Relationship    string
-	MergedOutput    bool // implemented // not compatible with NonOverlap
+	Aggregate       bool   // implemented
+	Relationship    string // implemented
+	MergedOutput    bool   // implemented // not compatible with NonOverlap
 	SwapTargetQuery bool
 }
 
