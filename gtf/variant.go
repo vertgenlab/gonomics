@@ -7,9 +7,10 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
+	"reflect"
 )
 
-type Variant struct {
+type vcfEffectPrediction struct {
 	vcf.Vcf
 	RefId       string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
 	Gene        string
@@ -35,8 +36,8 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 }
 
 // NOTE: All bases in fasta record must be uppercase
-func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base) (*Variant, error) {
-	var answer *Variant
+func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base) (*vcfEffectPrediction, error) {
+	var answer *vcfEffectPrediction
 	var err error
 
 	overlappingGenes := interval.Query(tree, v, "any")
@@ -50,14 +51,14 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 		annotatingGene = overlappingGenes[0].(*Gene)
 		answer = vcfToVariant(v, annotatingGene, seq)
 	} else {
-		answer = &Variant{Vcf: *v}
+		answer = &vcfEffectPrediction{Vcf: *v}
 	}
 	addVariantType(answer)
 	return answer, err
 }
 
-func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
-	answer := new(Variant)
+func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *vcfEffectPrediction {
+	answer := new(vcfEffectPrediction)
 	answer.Vcf = *v
 	answer.RefId = gene.Transcripts[0].TranscriptID
 	answer.Gene = gene.GeneID
@@ -69,7 +70,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *Variant {
 	return answer
 }
 
-func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
+func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction) {
 	var cdsPos int
 	var exon *Exon
 	//TODO: this code may be able to be compressed
@@ -118,8 +119,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *Variant) {
 
 }
 
-// TODO: WILL REQUIRE CHANGES FOR POS STRAND
-func findAAChange(variant *Variant, seq map[string][]dna.Base) {
+func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	ref := dna.StringToBases(variant.Ref)
 	alt := dna.StringToBases(variant.Alt)
 	var refBases = make([]dna.Base, 0)
@@ -406,6 +406,30 @@ func findAAChange(variant *Variant, seq map[string][]dna.Base) {
 	}
 }
 
+func addVariantType(v *vcfEffectPrediction) {
+	cdsDist := getCdsDist(v)
+	switch {
+	case v.Gene == "":
+		v.VariantType = "Intergenic"
+	case cdsDist > 0 && cdsDist <= 2:
+		v.VariantType = "Splice"
+	case cdsDist > 0 && cdsDist <= 10:
+		v.VariantType = "FarSplice"
+	case v.AARef == nil:
+		v.VariantType = "Intronic"
+	case isFrameshift(v):
+		v.VariantType = "Frameshift"
+	case isNonsense(v):
+		v.VariantType = "Nonsense"
+	case !reflect.DeepEqual(v.AARef, v.AAAlt):
+		v.VariantType = "Missense"
+	case reflect.DeepEqual(v.AARef, v.AAAlt):
+		v.VariantType = "Silent"
+	default:
+		v.VariantType = "Unrecognized"
+	}
+}
+
 func reverse(s []dna.Base) []dna.Base {
 	for i := 0; i < len(s)/2; i++ {
 		s[i], s[len(s)-1-i] = s[len(s)-1-i], s[i]
@@ -413,7 +437,7 @@ func reverse(s []dna.Base) []dna.Base {
 	return s
 }
 
-func determineFrame(v *Variant) int {
+func determineFrame(v *vcfEffectPrediction) int {
 	if v.PosStrand {
 		return ((int(v.Pos)-v.NearestCDS.Start)%3 + ((3 - v.NearestCDS.Frame) % 3)) % 3
 	} else {
@@ -421,7 +445,7 @@ func determineFrame(v *Variant) int {
 	}
 }
 
-func getCdsDist(v *Variant) int {
+func getCdsDist(v *vcfEffectPrediction) int {
 	switch {
 	case int(v.Pos) >= v.NearestCDS.Start && int(v.Pos) <= v.NearestCDS.End: // Variant is in CDS
 		return 0
@@ -434,7 +458,7 @@ func getCdsDist(v *Variant) int {
 	}
 }
 
-func isFrameshift(v *Variant) bool {
+func isFrameshift(v *vcfEffectPrediction) bool {
 	refBases := dna.StringToBases(v.Ref)
 	altBases := dna.StringToBases(v.Alt)
 
@@ -459,7 +483,7 @@ func isFrameshift(v *Variant) bool {
 	return shift%3 != 0
 }
 
-func isNonsense(v *Variant) bool {
+func isNonsense(v *vcfEffectPrediction) bool {
 	for _, val := range v.AAAlt {
 		if val == dna.Stop {
 			return true
@@ -468,7 +492,7 @@ func isNonsense(v *Variant) bool {
 	return false
 }
 
-func isSynonymous(v *Variant) bool {
+func isSynonymous(v *vcfEffectPrediction) bool {
 	var answer bool = true
 	if len(v.AAAlt) != len(v.AARef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt)) {
 		return false

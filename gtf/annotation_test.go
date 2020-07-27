@@ -18,7 +18,7 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 	fasta.AllToUpper(f)
 	testFasta := fasta.FastaMap(f)
 	tree := GenesToIntervalTree(testGtf)
-	var variant *Variant
+	var variant *vcfEffectPrediction
 	var words, newWords, newerWords []string
 	var correctCDNA, correctProt, outputCDNA, outputProt, annotation string
 	var errorCount int

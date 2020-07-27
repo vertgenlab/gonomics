@@ -5,21 +5,20 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"math"
-	"reflect"
 	"strings"
 )
 
 // Annotation format is: Genomic | VariantType | Gene | cDNA | Protein
 // TODO: Not sensitive to UTR splice junctions
-func VariantToAnnotation(variant *Variant, seq map[string][]dna.Base) string {
+func VariantToAnnotation(variant *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	return "GoEP=" + addGenomic(variant) + "|" + variant.VariantType + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant, seq) + "|" + addProtein(variant, seq)
 }
 
-func addGenomic(v *Variant) string {
+func addGenomic(v *vcfEffectPrediction) string {
 	return fmt.Sprintf("g.%s:%d%s>%s", v.Chr, v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
 }
 
-func addCDNA(v *Variant, seq map[string][]dna.Base) string {
+func addCDNA(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = strings.Trim(v.RefId, "\"") + ":c."
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt)
@@ -234,7 +233,7 @@ func addCDNA(v *Variant, seq map[string][]dna.Base) string {
 	return answer
 }
 
-func isDuplication(v *Variant, seq map[string][]dna.Base) bool {
+func isDuplication(v *vcfEffectPrediction, seq map[string][]dna.Base) bool {
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt)
 	if len(ref) != 1 || len(ref) > len(alt) {
@@ -270,7 +269,7 @@ func trimSynonymous(alpha []dna.AminoAcid, beta []dna.AminoAcid) (a, b []dna.Ami
 	return alpha, beta
 }
 
-func addProtein(v *Variant, seq map[string][]dna.Base) string {
+func addProtein(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	// e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
 	if v.VariantType == "Silent" || v.VariantType == "Missense" || v.VariantType == "Nonsense" || v.VariantType == "Frameshift" {
 	} else {
@@ -355,31 +354,7 @@ func addProtein(v *Variant, seq map[string][]dna.Base) string {
 	return answer
 }
 
-func addVariantType(v *Variant) {
-	cdsDist := getCdsDist(v)
-	switch {
-	case v.Gene == "":
-		v.VariantType = "Intergenic"
-	case cdsDist > 0 && cdsDist <= 2:
-		v.VariantType = "Splice"
-	case cdsDist > 0 && cdsDist <= 10:
-		v.VariantType = "FarSplice"
-	case v.AARef == nil:
-		v.VariantType = "Intronic"
-	case isFrameshift(v):
-		v.VariantType = "Frameshift"
-	case isNonsense(v):
-		v.VariantType = "Nonsense"
-	case !reflect.DeepEqual(v.AARef, v.AAAlt):
-		v.VariantType = "Missense"
-	case reflect.DeepEqual(v.AARef, v.AAAlt):
-		v.VariantType = "Silent"
-	default:
-		v.VariantType = "Unrecognized"
-	}
-}
-
-func getNearestCdsPos(v *Variant) (pos int, start bool) {
+func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
 	var currCDS *CDS = v.NearestCDS
 	if v.PosStrand {
 		if int(v.Pos) < v.NearestCDS.Start {
@@ -408,7 +383,7 @@ func getNearestCdsPos(v *Variant) (pos int, start bool) {
 	}
 }
 
-func distToNextTer(v *Variant, seq map[string][]dna.Base) int {
+func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 	var answer int = 1
 	currSeq := seq[v.Chr]
 	var currCodon []dna.Base
