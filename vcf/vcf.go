@@ -26,12 +26,6 @@ type Vcf struct {
 	Notes  string
 }
 
-//Might get rid of this
-type VCF struct {
-	Header *VcfHeader
-	Vcf    []*Vcf
-}
-
 type VcfHeader struct {
 	Text []string
 }
@@ -95,15 +89,6 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 		return nil, true
 	}
 	return processVcfLine(line), false
-}
-
-func ReadVcf(filename string) *VCF {
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	header := ReadHeader(file)
-	vcfRecords := Read(filename)
-	return &VCF{Header: header, Vcf: vcfRecords}
 }
 
 func ReadHeader(er *fileio.EasyReader) *VcfHeader {
@@ -221,4 +206,13 @@ func MakeHeader() []string {
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
 		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
 	return header
+}
+
+//Checks suffix of filename to confirm if the file is a vcf formatted file
+func IsVcfFile(filename string) bool {
+	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
+		return true
+	} else {
+		return false
+	}
 }

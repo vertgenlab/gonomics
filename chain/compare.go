@@ -14,7 +14,6 @@ func compareStartCoord(a *Chain, b *Chain, checkTarget bool) int {
 	} else {
 		return compareQueryCoord(a, b)
 	}
-	return 0
 }
 
 func compareTargetCoord(a *Chain, b *Chain) int {
