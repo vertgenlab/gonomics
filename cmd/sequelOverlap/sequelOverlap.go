@@ -58,9 +58,11 @@ func main() {
 	var mergedOutput *bool = flag.Bool("mergedOutput", false, "Print the input line followed by the corresponding select lines in the outfile.")
 	var swapTargetQuery *bool = flag.Bool("swapTargetQuery", false, "WIP") //TODO
 	var helpRelationships *bool = flag.Bool("printRelationships", false, "Show a diagram of the valid interval relationships that can be tested for.")
+	flag.Parse()
 
 	if *helpRelationships {
 		interval.PrintRelationships()
+		return
 	}
 
 	if !interval.TestValidRelationship(*relationship) {
@@ -75,7 +77,6 @@ func main() {
 	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
-	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
