@@ -48,7 +48,7 @@ func gVCFToAFS(filename string) AFS {
 			answer.sites = append(answer.sites, currentSeg)
 		}
 	}
-	alpha.Reader.Close()
+	alpha.File.Close()
 	return answer
 }
 
