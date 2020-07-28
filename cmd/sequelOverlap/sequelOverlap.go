@@ -18,7 +18,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func sequelOverlap(init *Settings) chan queryAnswer {
+func sequelOverlap(init *Settings) chan *queryAnswer {
 	selectChan := goReadToIntervalChan(init.SelectFile)
 
 	var intervals []interval.Interval
@@ -28,10 +28,8 @@ func sequelOverlap(init *Settings) chan queryAnswer {
 
 	tree := buildTree(intervals, init.Aggregate)
 
-	fmt.Println(tree["chr1"])
-
 	queryChan := goReadToIntervalChan(init.Input)
-	answerChan := make(chan queryAnswer, 10) // not sure if the buffer will speed anything up here
+	answerChan := make(chan *queryAnswer, 1000) // not sure if the buffer will speed anything up here
 
 	var wg sync.WaitGroup
 	for i := 0; i < init.Threads; i++ {

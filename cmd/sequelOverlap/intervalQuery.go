@@ -38,16 +38,16 @@ func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interv
 	return interval.BuildTree(intervals)
 }
 
-func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- queryAnswer, relationship string, wg *sync.WaitGroup) {
+func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup) {
 	var answer []interval.Interval
 	for query := range queryChan {
 		answer = interval.Query(tree, query, relationship)
-		answerChan <- queryAnswer{query, answer}
+		answerChan <- &queryAnswer{query, answer}
 	}
 	wg.Done()
 }
 
-func writeToFile(answerChan <-chan queryAnswer, outfile *fileio.EasyWriter, mergedOutput bool, nonoverlap bool) {
+func writeToFile(answerChan <-chan *queryAnswer, outfile *fileio.EasyWriter, mergedOutput bool, nonoverlap bool) {
 	if mergedOutput {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
@@ -80,7 +80,7 @@ func goReadToIntervalChan(inputFile string) chan interval.Interval {
 }
 
 // TODO: Move to interval package
-func readToIntervalChan(inputFile string, send chan interval.Interval) {
+func readToIntervalChan(inputFile string, send chan<- interval.Interval) {
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(inputFile)
 
