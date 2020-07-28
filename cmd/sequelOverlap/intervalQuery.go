@@ -72,12 +72,14 @@ func writeToFile(answerChan <-chan queryAnswer, outfile *fileio.EasyWriter, merg
 	}
 }
 
+// TODO: Move to interval package
 func goReadToIntervalChan(inputFile string) chan interval.Interval {
 	answer := make(chan interval.Interval)
 	go readToIntervalChan(inputFile, answer)
 	return answer
 }
 
+// TODO: Move to interval package
 func readToIntervalChan(inputFile string, send chan interval.Interval) {
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(inputFile)
