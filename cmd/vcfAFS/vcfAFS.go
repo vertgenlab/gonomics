@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
+	"log"
 )
 
 func vcfAFS(vcfFile string, outFile string) {
@@ -21,7 +21,7 @@ func vcfAFS(vcfFile string, outFile string) {
 func usage() {
 	fmt.Print(
 		"vcfAFS - Returns allele frequency spectrum information in a text file for graphing.\n" +
-		"vcfAFS - vcfFile.vcf outFile.txt")
+			"vcfAFS - vcfFile.vcf outFile.txt")
 }
 
 func main() {

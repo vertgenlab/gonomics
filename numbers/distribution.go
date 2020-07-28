@@ -17,6 +17,10 @@ func StandardNormalDist(x float64) float64 {
 	return NormalDist(x, 0, 1)
 }
 
+func Bernouilli(n int, k int, p float64) float64 {
+	return math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
+}
+
 func BinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
 }
