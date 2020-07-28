@@ -16,9 +16,9 @@ func VarianceFloat64(f []float64) float64 {
 	answer := 0.0
 	average := AverageFloat64(f)
 	for i := 0; i < len(f); i++ {
-		answer = answer + math.Pow(f[i] - average, 2)
+		answer = answer + math.Pow(f[i]-average, 2)
 	}
-	return answer / float64(len(f) - 1)
+	return answer / float64(len(f)-1)
 }
 
 func StandardDeviationFloat64(f []float64) float64 {

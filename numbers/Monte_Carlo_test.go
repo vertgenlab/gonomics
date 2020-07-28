@@ -37,22 +37,22 @@ func TestRandGamma(t *testing.T) {
 	ave3 := AverageFloat64(list3)
 	var3 := VarianceFloat64(list3)
 
-	if ave1 < expectedMean1 * 0.9 || ave1 > expectedMean1 * 1.1 {
-		t.Errorf("Gamma distribution simulated average outside acceptable range. Input : %e. Expected: %e.", ave1, expectedMean1)
+	if ave1 < expectedMean1*0.9 || ave1 > expectedMean1*1.1 {
+		t.Errorf("Gamma distribution simulated average outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", ave1, expectedMean1, expectedMean1*0.9, expectedMean1*1.1)
 	}
-	if ave2 < expectedMean2 * 0.9 || ave2 > expectedMean2 * 1.1 {
-		t.Errorf("Gamma distribution simulated average outside acceptable range. Input : %e. Expected: %e.", ave2, expectedMean2)
+	if ave2 < expectedMean2*0.9 || ave2 > expectedMean2*1.1 {
+		t.Errorf("Gamma distribution simulated average outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", ave2, expectedMean2, expectedMean2*0.9, expectedMean2*1.1)
 	}
-	if ave3 < expectedMean3 * 0.9 || ave3 > expectedMean3 * 1.1 {
-		t.Errorf("Gamma distribution simulated average outside acceptable range. Input : %f. Expected: %f. Accepted range: %f -- %f", ave3, expectedMean3, expectedMean3 * 0.9, expectedMean3 * 1.1)
+	if ave3 < expectedMean3*0.9 || ave3 > expectedMean3*1.1 {
+		t.Errorf("Gamma distribution simulated average outside acceptable range. Input : %f. Expected: %f. Accepted range: %f -- %f", ave3, expectedMean3, expectedMean3*0.9, expectedMean3*1.1)
 	}
-	if var1 < expectedVariance1 * 0.9 || var1 > expectedVariance1 * 1.1 {
-		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e.", var1, expectedVariance1)
+	if var1 < expectedVariance1*0.9 || var1 > expectedVariance1*1.1 {
+		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", var1, expectedVariance1, expectedVariance1*0.9, expectedVariance1*1.1)
 	}
-	if var2 < expectedVariance2 * 0.9 || var2 > expectedVariance2 * 1.1 {
-		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e.", var2, expectedVariance2)
+	if var2 < expectedVariance2*0.9 || var2 > expectedVariance2*1.1 {
+		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", var2, expectedVariance2, expectedVariance2*0.9, expectedVariance2*1.1)
 	}
-	if var3 < expectedVariance3 * 0.9 || var3 > expectedVariance3 * 1.1 {
-		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e.", var3, expectedVariance3)
+	if var3 < expectedVariance3*0.9 || var3 > expectedVariance3*1.1 {
+		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", var3, expectedVariance3, expectedVariance3*0.9, expectedVariance3*1.1)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
 	"strings"
-	"fmt"
+	//DEBUG"fmt"
 )
 
 /*
@@ -87,9 +87,10 @@ func AFSSampleClosure(n int, k int, alpha float64) func(float64) float64 {
 //eq. 2.2
 func AFSSampleDensity(n int, k int, alpha float64) float64 {
 	f := AFSSampleClosure(n, k, alpha)
-	fmt.Printf("f(0.1)=%e\n", f(0.1))
-	fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
-	fmt.Printf("N: %v. K: %v. Alpha: %f.\n", n, k, alpha)
+	//DEBUG prints
+	//fmt.Printf("f(0.1)=%e\n", f(0.1))
+	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
+	//fmt.Printf("N: %v. K: %v. Alpha: %f.\n", n, k, alpha)
 	//n choose k * Definiteintegral(p(1-p secrition)stationaritydensity)
 	return numbers.DefiniteIntegral(f, 0.000001, 0.9999999999)
 }

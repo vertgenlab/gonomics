@@ -111,20 +111,20 @@ func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64
 		if r > mu+6*sigma { //Romberg can fail if a large right tail is evaluated in this case. R returns 1.0 for normal values over 6.
 			return 1.0
 		}
-		if r < mu - 38*sigma {
+		if r < mu-38*sigma {
 			return 0.0
 		}
-		if r > mu-3 * sigma { //dealing with values close to mu
+		if r > mu-3*sigma { //dealing with values close to mu
 			return DefiniteSmallIntegral(f, r-15*sigma, r)
 		} else {
 			return DefiniteSmallIntegral(f, r-10*sigma, r)
 		}
 	} else if rightInf {
 		l := common.StringToFloat64(left)
-		if l < mu-6 * sigma {
+		if l < mu-6*sigma {
 			return 1.0 //same as above
 		}
-		if l > mu + 38 * sigma {
+		if l > mu+38*sigma {
 			return 0.0
 		}
 		if l < mu+10*sigma {

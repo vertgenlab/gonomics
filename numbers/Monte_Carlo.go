@@ -1,9 +1,9 @@
 package numbers
 
 import (
-	"math/rand"
-	"math"
 	"log"
+	"math"
+	"math/rand"
 )
 
 //returns a simulated value from a normal distribution.
@@ -38,24 +38,24 @@ func RandGamma(a float64, b float64) float64 {
 	b = 1 / b //convert parameter system
 	var x, v, u float64
 	if a < 1 {
-		u = rand.Float64() 
-		return RandGamma(1.0 + a, b) * math.Pow(u, 1.0 / a)
+		u = rand.Float64()
+		return RandGamma(1.0+a, b) * math.Pow(u, 1.0/a)
 	}
 	var d float64 = a - (1.0 / 3.0)
 	var c float64 = (1.0 / 3.0) / math.Sqrt(d)
 	for 1 > 0 {
 		x = rand.NormFloat64()
-		v = 1.0 + c * x
-		for v <= 0 {//do while loop
+		v = 1.0 + c*x
+		for v <= 0 { //do while loop
 			x = rand.NormFloat64()
-			v = 1.0 + c * x
+			v = 1.0 + c*x
 		}
 		v = v * v * v
 		u = rand.Float64()
-		if (u < 1 - 0.0331 * x * x * x * x) {
+		if u < 1-0.0331*x*x*x*x {
 			break
 		}
-		if (math.Log(u) < 0.5 * x * x + d * (1 - v + math.Log(v))) {
+		if math.Log(u) < 0.5*x*x+d*(1-v+math.Log(v)) {
 			break
 		}
 	}
