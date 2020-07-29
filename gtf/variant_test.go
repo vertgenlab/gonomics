@@ -48,10 +48,10 @@ func TestVcfToVariant(t *testing.T) {
 		t.Errorf("%s", err)
 	}
 
-	if variant.AAPos != 1 ||
-		variant.AARef[0] != dna.His ||
-		variant.AAAlt[0] != dna.Pro ||
-		variant.CDNAPos != 2 {
+	if variant.AaPos != 1 ||
+		variant.AaRef[0] != dna.His ||
+		variant.AaAlt[0] != dna.Pro ||
+		variant.CdnaPos != 2 {
 		t.Errorf("ERROR: Problem converting vcf to variant")
 	}
 

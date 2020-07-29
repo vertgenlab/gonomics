@@ -158,8 +158,8 @@ func addCDNA(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 
 	if v.PosStrand {
 		if len(ref) == 1 && len(alt) == 1 { // Substitution
-			if v.CDNAPos != 0 {
-				answer += fmt.Sprintf("%d", v.CDNAPos)
+			if v.CdnaPos != 0 {
+				answer += fmt.Sprintf("%d", v.CdnaPos)
 			}
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
 		} else if len(ref) > len(alt) { // Deletion
@@ -178,12 +178,12 @@ func addCDNA(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 			}
 
 			if len(ref) == 2 {
-				answer += fmt.Sprintf("%ddel", v.CDNAPos+len(alt)+duplicateOffset)
+				answer += fmt.Sprintf("%ddel", v.CdnaPos+len(alt)+duplicateOffset)
 			} else {
-				if v.CDNAPos+(len(ref)-1)+duplicateOffset > cdsPos {
-					answer += fmt.Sprintf("%d_%d+%ddel", v.CDNAPos+1+duplicateOffset, cdsPos, (v.CDNAPos+(len(ref)-1)+duplicateOffset)-cdsPos)
+				if v.CdnaPos+(len(ref)-1)+duplicateOffset > cdsPos {
+					answer += fmt.Sprintf("%d_%d+%ddel", v.CdnaPos+1+duplicateOffset, cdsPos, (v.CdnaPos+(len(ref)-1)+duplicateOffset)-cdsPos)
 				} else {
-					answer += fmt.Sprintf("%d_%ddel", v.CDNAPos+1+duplicateOffset, v.CDNAPos+(len(ref)-1)+duplicateOffset)
+					answer += fmt.Sprintf("%d_%ddel", v.CdnaPos+1+duplicateOffset, v.CdnaPos+(len(ref)-1)+duplicateOffset)
 				}
 			}
 		} else if len(alt) > len(ref) { // Insertion
@@ -197,12 +197,12 @@ func addCDNA(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 					}
 				}
 				if len(alt) == 2 {
-					answer += fmt.Sprintf("%ddup", v.CDNAPos+duplicateOffset+1)
+					answer += fmt.Sprintf("%ddup", v.CdnaPos+duplicateOffset+1)
 				} else {
-					answer += fmt.Sprintf("%d_%ddup", v.CDNAPos+duplicateOffset+1, v.CDNAPos+duplicateOffset+1+(len(alt)-2))
+					answer += fmt.Sprintf("%d_%ddup", v.CdnaPos+duplicateOffset+1, v.CdnaPos+duplicateOffset+1+(len(alt)-2))
 				}
 			} else {
-				answer += fmt.Sprintf("%d_%dins%s", v.CDNAPos, v.CDNAPos+1, dna.BasesToString(alt[1:]))
+				answer += fmt.Sprintf("%d_%dins%s", v.CdnaPos, v.CdnaPos+1, dna.BasesToString(alt[1:]))
 			}
 		}
 
@@ -210,25 +210,25 @@ func addCDNA(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 		dna.ReverseComplement(ref)
 		dna.ReverseComplement(alt)
 		if len(ref) == 1 && len(alt) == 1 {
-			if v.CDNAPos != 0 {
-				answer += fmt.Sprintf("%d", v.CDNAPos)
+			if v.CdnaPos != 0 {
+				answer += fmt.Sprintf("%d", v.CdnaPos)
 			}
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
 		} else if len(ref) > len(alt) { // Deletion
 			if len(ref) == 2 {
-				answer += fmt.Sprintf("%ddel", v.CDNAPos-len(alt))
+				answer += fmt.Sprintf("%ddel", v.CdnaPos-len(alt))
 			} else {
-				answer += fmt.Sprintf("%d_%ddel", v.CDNAPos-(len(ref)-1), v.CDNAPos-1)
+				answer += fmt.Sprintf("%d_%ddel", v.CdnaPos-(len(ref)-1), v.CdnaPos-1)
 			}
 		} else if len(alt) > len(ref) { // Insertion
 			if isDuplication(v, seq) {
 				if len(alt) == 2 {
-					answer += fmt.Sprintf("%ddup", v.CDNAPos-(len(alt)-1))
+					answer += fmt.Sprintf("%ddup", v.CdnaPos-(len(alt)-1))
 				} else {
-					answer += fmt.Sprintf("%d_%ddup", v.CDNAPos-(len(alt)-1), v.CDNAPos-1)
+					answer += fmt.Sprintf("%d_%ddup", v.CdnaPos-(len(alt)-1), v.CdnaPos-1)
 				}
 			} else {
-				answer += fmt.Sprintf("%d_%dins%s", v.CDNAPos-1, v.CDNAPos, dna.BasesToString(alt[:len(alt)-1]))
+				answer += fmt.Sprintf("%d_%dins%s", v.CdnaPos-1, v.CdnaPos, dna.BasesToString(alt[:len(alt)-1]))
 			}
 		}
 	}
@@ -282,51 +282,51 @@ func addProtein(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 		return ""
 	}
 	var answer string = "p."
-	if v.VariantType == "Missense" && len(v.AARef) == 0 {
-		if len(v.AAAlt) == 1 {
-			answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.CDNAPos/3)
+	if v.VariantType == "Missense" && len(v.AaRef) == 0 {
+		if len(v.AaAlt) == 1 {
+			answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AaAlt[0]), v.CdnaPos/3)
 		} else {
-			fmt.Println(v.AAPos)
-			answer += fmt.Sprintf("%s%d_%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.AAPos, dna.AminoAcidToString(v.AAAlt[len(v.AAAlt)-1]), (v.CDNAPos/3)+len(v.AAAlt))
+			fmt.Println(v.AaPos)
+			answer += fmt.Sprintf("%s%d_%s%ddup", dna.AminoAcidToString(v.AaAlt[0]), v.AaPos, dna.AminoAcidToString(v.AaAlt[len(v.AaAlt)-1]), (v.CdnaPos/3)+len(v.AaAlt))
 		}
 		return answer
 	}
 
-	if v.VariantType == "Missense" && len(v.AAAlt) > 1 && v.AARef[0] == v.AAAlt[len(v.AAAlt)-1] {
-		if len(v.AAAlt)-1 == 1 {
-			answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.AAPos-1)
+	if v.VariantType == "Missense" && len(v.AaAlt) > 1 && v.AaRef[0] == v.AaAlt[len(v.AaAlt)-1] {
+		if len(v.AaAlt)-1 == 1 {
+			answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AaAlt[0]), v.AaPos-1)
 		} else {
-			answer += fmt.Sprintf("%s%d_%s%ddup", dna.AminoAcidToString(v.AAAlt[0]), v.AAPos-(len(v.AAAlt)-1), dna.AminoAcidToString(v.AAAlt[len(v.AAAlt)-2]), v.AAPos-1)
+			answer += fmt.Sprintf("%s%d_%s%ddup", dna.AminoAcidToString(v.AaAlt[0]), v.AaPos-(len(v.AaAlt)-1), dna.AminoAcidToString(v.AaAlt[len(v.AaAlt)-2]), v.AaPos-1)
 		}
 		return answer
 	}
 
-	if v.VariantType == "Missense" && len(v.AARef) == 1 && len(v.AAAlt) == 0 && len(dna.StringToBases(v.Ref)) > 3 {
-		answer += fmt.Sprintf("%s%ddel", dna.AminoAcidToString(v.AARef[0]), v.CDNAPos/3)
+	if v.VariantType == "Missense" && len(v.AaRef) == 1 && len(v.AaAlt) == 0 && len(dna.StringToBases(v.Ref)) > 3 {
+		answer += fmt.Sprintf("%s%ddel", dna.AminoAcidToString(v.AaRef[0]), v.CdnaPos/3)
 		return answer
 	}
 
 	if v.Info == "c.38753_38784del|p.Leu12918CysfsTer2" {
-		fmt.Println(dna.PolypeptideToString(v.AARef))
-		fmt.Println(dna.PolypeptideToString(v.AAAlt))
+		fmt.Println(dna.PolypeptideToString(v.AaRef))
+		fmt.Println(dna.PolypeptideToString(v.AaAlt))
 	}
 
-	v.AAAlt = truncateOnTer(v.AAAlt)
-	v.AARef, v.AAAlt = trimSynonymous(v.AARef, v.AAAlt)
+	v.AaAlt = truncateOnTer(v.AaAlt)
+	v.AaRef, v.AaAlt = trimSynonymous(v.AaRef, v.AaAlt)
 
-	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AARef[0]), v.AAPos)
+	answer += fmt.Sprintf("%s%d", dna.AminoAcidToString(v.AaRef[0]), v.AaPos)
 
 	if v.VariantType == "Nonsense" {
 		answer += "Ter"
 		return answer
 	}
 
-	if len(v.AARef) > 1 && v.VariantType != "Frameshift" {
-		answer += "_" + dna.AminoAcidToString(v.AARef[len(v.AARef)-1]) + fmt.Sprintf("%d", v.AAPos+len(v.AARef)-1)
+	if len(v.AaRef) > 1 && v.VariantType != "Frameshift" {
+		answer += "_" + dna.AminoAcidToString(v.AaRef[len(v.AaRef)-1]) + fmt.Sprintf("%d", v.AaPos+len(v.AaRef)-1)
 	}
 
-	refLen := len(v.AARef)
-	altLen := len(v.AAAlt)
+	refLen := len(v.AaRef)
+	altLen := len(v.AaAlt)
 	switch {
 	case refLen == 1 && altLen == 1: // Neither -> nothing is added
 	case refLen == 1 && altLen > 1 && v.VariantType != "Frameshift": // Insertion -> add "ins"
@@ -337,21 +337,21 @@ func addProtein(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 		answer += "delins"
 	}
 
-	if len(v.AAAlt) == 1 || (len(v.AAAlt) > 1 && v.VariantType == "Frameshift") {
-		answer += dna.AminoAcidToString(v.AAAlt[0])
-	} else if len(v.AAAlt) > 5 {
-		answer += fmt.Sprintf("%d", len(v.AAAlt))
+	if len(v.AaAlt) == 1 || (len(v.AaAlt) > 1 && v.VariantType == "Frameshift") {
+		answer += dna.AminoAcidToString(v.AaAlt[0])
+	} else if len(v.AaAlt) > 5 {
+		answer += fmt.Sprintf("%d", len(v.AaAlt))
 	} else {
-		for _, val := range v.AAAlt {
+		for _, val := range v.AaAlt {
 			answer += dna.AminoAcidToString(val)
 		}
 	}
 
 	if v.VariantType == "Frameshift" {
 		terDist := distToNextTer(v, seq)
-		terDist = terDist - (v.AAPos - int(math.Round((float64(v.CDNAPos)/3)+0.4)))
+		terDist = terDist - (v.AaPos - int(math.Round((float64(v.CdnaPos)/3)+0.4)))
 
-		if terDist == 1 || (len(v.AAAlt) > 0 && v.AAAlt[0] == dna.Stop) {
+		if terDist == 1 || (len(v.AaAlt) > 0 && v.AaAlt[0] == dna.Stop) {
 			v.VariantType = "Nonsense"
 			return addProtein(v, seq)
 		}
@@ -363,31 +363,31 @@ func addProtein(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 // getNearestCdsPos determines the cDNA position of the nearest CDS end and whether the reported end is the 5' or 3' end
 // Used for reporting intronic variants
 func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
-	var currCDS *CDS = v.NearestCDS
+	var currCDS *CDS = v.NearestCds
 	if v.PosStrand {
-		if int(v.Pos) < v.NearestCDS.Start {
+		if int(v.Pos) < v.NearestCds.Start {
 			pos = 1
 		} else {
-			pos = v.NearestCDS.End - v.NearestCDS.Start + 1
+			pos = v.NearestCds.End - v.NearestCds.Start + 1
 		}
 
 		for currCDS.Prev != nil { // Go to first CDS to begin count
 			currCDS = currCDS.Prev
 			pos += currCDS.End - currCDS.Start + 1
 		}
-		return pos, int(v.Pos) < v.NearestCDS.Start
+		return pos, int(v.Pos) < v.NearestCds.Start
 	} else {
-		if int(v.Pos) > v.NearestCDS.End {
+		if int(v.Pos) > v.NearestCds.End {
 			pos = 1
 		} else {
-			pos = v.NearestCDS.End - v.NearestCDS.Start + 1
+			pos = v.NearestCds.End - v.NearestCds.Start + 1
 		}
 
 		for currCDS.Next != nil { // Go to first CDS to begin count
 			currCDS = currCDS.Next
 			pos += currCDS.End - currCDS.Start + 1
 		}
-		return pos, int(v.Pos) > v.NearestCDS.End
+		return pos, int(v.Pos) > v.NearestCds.End
 	}
 }
 
@@ -415,7 +415,7 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 				currCodon = nil
 			}
 		}
-		currCDS := v.NearestCDS
+		currCDS := v.NearestCds
 		for {
 			if seqPos > currCDS.End-1 {
 				currCDS = currCDS.Next
@@ -439,7 +439,7 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 			answer -= 1 + (((refLen - 2) - originalFrame) / 3)
 		}
 
-		frame := ((v.NearestCDS.End-(int(v.Pos)+len(dna.StringToBases(v.Ref))-1))%3 + ((3 - v.NearestCDS.Frame) % 3)) % 3
+		frame := ((v.NearestCds.End-(int(v.Pos)+len(dna.StringToBases(v.Ref))-1))%3 + ((3 - v.NearestCds.Frame) % 3)) % 3
 		for i := frame; i > 0; i-- {
 			currCodon = append(currCodon, currSeq[int(v.Pos)+i])
 		}
@@ -462,7 +462,7 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 				currCodon = nil
 			}
 		}
-		currCDS := v.NearestCDS
+		currCDS := v.NearestCds
 		for {
 			if currCDS.Prev != nil && seqPos < currCDS.Start-1 {
 				currCDS = currCDS.Prev
