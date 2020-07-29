@@ -29,7 +29,7 @@ func sequelOverlap(init *Settings) chan *queryAnswer {
 	tree := buildTree(intervals, init.Aggregate)
 
 	queryChan := goReadToIntervalChan(init.Input)
-	answerChan := make(chan *queryAnswer, 1000) // not sure if the buffer will speed anything up here
+	answerChan := make(chan *queryAnswer, 1000) // TODO: benchmark buffer size
 
 	var wg sync.WaitGroup
 	for i := 0; i < init.Threads; i++ {
@@ -37,6 +37,7 @@ func sequelOverlap(init *Settings) chan *queryAnswer {
 		go queryWorker(tree, queryChan, answerChan, init.Relationship, &wg)
 	}
 
+	// Spawn a goroutine that closes answerChan once all queryWorkers have finished
 	go func() {
 		wg.Wait()
 		close(answerChan)

@@ -6,7 +6,7 @@ import (
 )
 
 func TestSequelOverlap(t *testing.T) {
-	init := &Settings{
+	options := &Settings{
 		Input:           "testdata/test.vcf",
 		Output:          "/dev/stdout",
 		SelectFile:      "testdata/test.bed",
@@ -21,7 +21,7 @@ func TestSequelOverlap(t *testing.T) {
 		SwapTargetQuery: false,
 	}
 
-	answer := sequelOverlap(init)
+	answer := sequelOverlap(options)
 
 	for val := range answer {
 		b := val.answer[0].(*bed.Bed)

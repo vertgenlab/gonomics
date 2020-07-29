@@ -73,8 +73,8 @@ func writeToFile(answerChan <-chan *queryAnswer, outfile *fileio.EasyWriter, mer
 }
 
 // TODO: Move to interval package
-func goReadToIntervalChan(inputFile string) chan interval.Interval {
-	answer := make(chan interval.Interval)
+func goReadToIntervalChan(inputFile string) <-chan interval.Interval {
+	answer := make(chan interval.Interval, 1000)
 	go readToIntervalChan(inputFile, answer)
 	return answer
 }
