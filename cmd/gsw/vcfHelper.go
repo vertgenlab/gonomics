@@ -7,17 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-//set up vcf records split by chroms
-func makeVcfChrMap(vcfChannel <-chan *vcf.Vcf) map[string][]*vcf.Vcf {
-	chrVcfMap := make(map[string][]*vcf.Vcf)
-	go func() {
-		for i := range vcfChannel {
-			chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
-		}
-	}()
-	return chrVcfMap
-}
-
 func vcfToSimpleGraph(vcfFile, faFile string) *simpleGraph.SimpleGraph {
 	file := fileio.EasyOpen(vcfFile)
 	vcf.ReadHeader(file)
