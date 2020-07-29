@@ -18,23 +18,23 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func sequelOverlap(init *Settings) chan *queryAnswer {
-	selectChan := goReadToIntervalChan(init.SelectFile)
+func sequelOverlap(options *Settings) chan *queryAnswer {
+	selectChan := goReadToIntervalChan(options.SelectFile)
 
 	var intervals []interval.Interval
 	for val := range selectChan {
 		intervals = append(intervals, val)
 	}
 
-	tree := buildTree(intervals, init.Aggregate)
+	tree := buildTree(intervals, options.Aggregate)
 
-	queryChan := goReadToIntervalChan(init.Input)
+	queryChan := goReadToIntervalChan(options.Input)
 	answerChan := make(chan *queryAnswer, 1000) // TODO: benchmark buffer size
 
 	var wg sync.WaitGroup
-	for i := 0; i < init.Threads; i++ {
+	for i := 0; i < options.Threads; i++ {
 		wg.Add(1)
-		go queryWorker(tree, queryChan, answerChan, init.Relationship, &wg)
+		go queryWorker(tree, queryChan, answerChan, options.Relationship, &wg)
 	}
 
 	// Spawn a goroutine that closes answerChan once all queryWorkers have finished
@@ -82,7 +82,7 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 	} else {
 		selectFile, inFile, outFile := flag.Arg(0), flag.Arg(1), flag.Arg(2)
-		init := &Settings{
+		options := &Settings{
 			Input:           inFile,
 			Output:          outFile,
 			SelectFile:      selectFile,
@@ -96,10 +96,10 @@ func main() {
 			MergedOutput:    *mergedOutput,
 			SwapTargetQuery: *swapTargetQuery,
 		}
-		answerChan := sequelOverlap(init)
+		answerChan := sequelOverlap(options)
 
-		output := fileio.EasyCreate(init.Output)
-		writeToFile(answerChan, output, init.MergedOutput, init.NonOverlap)
+		output := fileio.EasyCreate(options.Output)
+		writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
 	}
 }
 
