@@ -55,6 +55,7 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		output <- curr
 	}
+	file.Close()
 	close(output)
 }
 
