@@ -36,7 +36,10 @@ func goChannelAxtVcf(axtFile string) <-chan *vcf.Vcf {
 
 func axtToSimpleGraph(axtFile, faFile string) *simpleGraph.SimpleGraph {
 	vcfChannel := goChannelAxtVcf(axtFile)
-	chrVcfMap := makeVcfChrMap(vcfChannel)
+	chrVcfMap := make(map[string][]*vcf.Vcf)
+	for i := range vcfChannel {
+		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
+	}
 	ref := make(chan *fasta.Fasta)
 	go fasta.ReadToChan(faFile, ref)
 	return simpleGraph.VariantGraph(ref, chrVcfMap)
