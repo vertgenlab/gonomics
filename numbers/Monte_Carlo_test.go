@@ -4,6 +4,28 @@ import (
 	"testing"
 )
 
+func TestRandExp(t *testing.T) {
+	expectedMean := 1.0
+	expectedVariance := 1.0
+
+	var input []float64
+	input = make([]float64, 100000)
+	for i := 0; i < 100000; i++ {
+		input[i] = RandExp()
+	}
+
+	ave := AverageFloat64(input)
+	variance := VarianceFloat64(input)
+
+
+	if ave < expectedMean*0.9 || ave > expectedMean*1.1 {
+		t.Errorf("Standard exponential distribution simulated average outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", ave, expectedMean, expectedMean * 0.9, expectedMean * 1.1)
+	}
+	if variance < expectedVariance*0.9 || variance > expectedVariance*1.1 {
+		t.Errorf("Standard exponential distribution simulated variance outsidle acceptable range. Input: %e. Expected: %e. Accepted range: %f -- %f", variance, expectedVariance, expectedVariance * 0.9, expectedVariance * 1.1)
+	}
+}
+
 //pulls 100000 values from a gamma distribution and passes if the mean and variance of the values is within 10 percent of the expected values.
 func TestRandGamma(t *testing.T) {
 	alpha1 := 1.0
