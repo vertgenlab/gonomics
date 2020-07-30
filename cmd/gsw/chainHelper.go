@@ -58,7 +58,10 @@ func chainToSimpleGraph(chainFile, targetFa, queryFa string) *simpleGraph.Simple
 	vcfChannel := make(chan *vcf.Vcf)
 	go workThreadAxtVcf(axtChannel, vcfChannel)
 
-	chrVcfMap := makeVcfChrMap(vcfChannel)
+	chrVcfMap := make(map[string][]*vcf.Vcf)
+	for i := range vcfChannel {
+		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
+	}
 	//set up fa channel
 	ref := goFaChannel(target)
 	//return the simple graph
@@ -84,6 +87,7 @@ func workThreadAxtVcf(axtChannel <-chan *axt.Axt, ans chan<- *vcf.Vcf) {
 			}
 		}
 	}
+	close(ans)
 }
 
 func goFaChannel(ref []*fasta.Fasta) <-chan *fasta.Fasta {
