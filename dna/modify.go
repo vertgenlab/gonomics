@@ -90,6 +90,12 @@ func ReverseComplement(bases []Base) {
 	}
 }
 
+func Complement(bases []Base) {
+	for i := 0; i < len(bases); i++ {
+		bases[i] = complement(bases[i])
+	}
+}
+
 func RemoveGaps(bases []Base) []Base {
 	var ans []Base
 	for i := 0; i < len(bases); i++ {
