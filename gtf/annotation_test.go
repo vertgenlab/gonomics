@@ -12,9 +12,18 @@ import (
 func TestVariantToAnnotationLarge(t *testing.T) {
 	testGtf := Read("testdata/test.gtf")
 	testVcf := vcf.Read("testdata/test.vcf")
-	f := fasta.Read("testdata/test.fa")
-	newSeq := make([]dna.Base, 92198969)
-	f[0].Seq = append(newSeq, f[0].Seq...)
+	krit := fasta.Read("testdata/krit1.fa")
+	cftr := fasta.Read("testdata/cftr.fa")
+
+	// The fasta files were split up to reduce the filesize. The following 6 lines
+	// assemble the fasta files so that everything is in the correct place
+	f := []*fasta.Fasta{{"chr7", make([]dna.Base, 92198968)}}
+	f[0].Seq = append(f[0].Seq, krit[0].Seq...)
+	for i := 0; i < 117480024-92246100; i++ {
+		f[0].Seq = append(f[0].Seq, dna.N)
+	}
+	f[0].Seq = append(f[0].Seq, cftr[0].Seq...)
+
 	fasta.AllToUpper(f)
 	testFasta := fasta.FastaMap(f)
 	tree := GenesToIntervalTree(testGtf)
