@@ -16,7 +16,7 @@ func AxtVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 		records = append(records, AxtToVcf(axtList[i])...)
 	}
 	records = vcf.FilterAxtVcf(records, fa)
-	vcf.NewWrite(filename, records, fa)
+	vcf.Write(filename, records)
 }
 
 func AxtToVcf(axtFile *Axt) []*vcf.Vcf {

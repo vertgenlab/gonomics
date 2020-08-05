@@ -55,6 +55,7 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		output <- curr
 	}
+	file.Close()
 	close(output)
 }
 
@@ -206,4 +207,13 @@ func MakeHeader() []string {
 		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
 		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
 	return header
+}
+
+//Checks suffix of filename to confirm if the file is a vcf formatted file
+func IsVcfFile(filename string) bool {
+	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
+		return true
+	} else {
+		return false
+	}
 }
