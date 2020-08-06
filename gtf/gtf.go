@@ -99,19 +99,19 @@ func Read(filename string) map[string]*Gene {
 			att[i] = strings.TrimSpace(att[i])
 			field := strings.Split(att[i], " ")
 			if field[0] == "gene_id" {
-				currGeneID = field[1]
+				currGeneID = strings.Trim(field[1], "\"")
 			}
 			if field[0] == "transcript_id" {
-				currT = field[1]
+				currT = strings.Trim(field[1], "\"")
 			}
 			if field[0] == "gene_name" {
-				currGeneName = field[1]
+				currGeneName = strings.Trim(field[1], "\"")
 			}
 			if field[0] == "exon_id" {
-				currEID = field[1]
+				currEID = strings.Trim(field[1], "\"")
 			}
 			if field[0] == "exon_number" {
-				currENumber = field[1]
+				currENumber = strings.Trim(field[1], "\"")
 			}
 		}
 
@@ -227,7 +227,7 @@ func GtfTranscriptToString(t *Transcript, g *Gene) string {
 		strand = "-"
 	}
 	frame = "."
-	att = fmt.Sprintf("gene_id %s; transcript_id %s; gene_name %s;", g.GeneID, t.TranscriptID, g.GeneName)
+	att = fmt.Sprintf("gene_id \"%s\"; transcript_id \"%s\"; gene_name \"%s\";", g.GeneID, t.TranscriptID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, t.Start, t.End, score, strand, frame, att)
 }
 
@@ -245,7 +245,7 @@ func GtfExonToString(e *Exon, t *Transcript, g *Gene) string {
 		strand = "-"
 	}
 	frame = "."
-	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	att = fmt.Sprintf("gene_id \"%s\"; transcript_id \"%s\"; exon_number \"%s\"; exon_id \"%s\"; gene_name \"%s\";", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, e.Start, e.End, score, strand, frame, att)
 }
 
@@ -263,7 +263,7 @@ func Gtf5UtrToString(e *Exon, t *Transcript, g *Gene) string {
 		strand = "-"
 	}
 	frame = "."
-	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	att = fmt.Sprintf("gene_id \"%s\"; transcript_id \"%s\"; exon_number \"%s\"; exon_id \"%s\"; gene_name \"%s\";", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, e.FiveUtr.Start, e.FiveUtr.End, score, strand, frame, att)
 }
 
@@ -280,7 +280,7 @@ func GtfCdsToString(e *Exon, t *Transcript, g *Gene) string {
 	} else {
 		strand = "-"
 	}
-	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	att = fmt.Sprintf("gene_id \"%s\"; transcript_id \"%s\"; exon_number \"%s\"; exon_id \"%s\"; gene_name \"%s\";", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%v\t%s", t.Chr, t.Source, lineType, e.Cds.Start, e.Cds.End, score, strand, e.Cds.Frame, att)
 }
 
@@ -298,6 +298,6 @@ func Gtf3UtrToString(e *Exon, t *Transcript, g *Gene) string {
 		strand = "-"
 	}
 	frame = "."
-	att = fmt.Sprintf("gene_id %s; transcript_id %s; exon_number %s; exon_id %s; gene_name %s;", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
+	att = fmt.Sprintf("gene_id \"%s\"; transcript_id \"%s\"; exon_number \"%s\"; exon_id \"%s\"; gene_name \"%s\";", g.GeneID, t.TranscriptID, e.ExonNumber, e.ExonID, g.GeneName)
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%v\t%s", t.Chr, t.Source, lineType, e.ThreeUtr.Start, e.ThreeUtr.End, score, strand, frame, att)
 }
