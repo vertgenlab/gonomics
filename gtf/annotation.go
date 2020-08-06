@@ -255,17 +255,16 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 func isDuplication(v *vcfEffectPrediction, seq map[string][]dna.Base) bool {
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt)
-	if len(ref) != 1 || len(ref) > len(alt) {
+	if len(ref) > len(alt) {
 		return false
 	}
-	var answer bool = true
 	var seqPos int = int(v.Pos - 1)
 	for i := 0; i < len(alt); i++ {
 		if alt[i] != seq[v.Chr][seqPos+i] {
-			answer = false
+			return false
 		}
 	}
-	return answer
+	return true
 }
 
 // truncateOnTer inputs a slice of amino acids and truncates the slice at the first stop codon

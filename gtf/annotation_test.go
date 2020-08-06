@@ -24,6 +24,10 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 	}
 	f[0].Seq = append(f[0].Seq, cftr[0].Seq...)
 
+	//f := fasta.Read("testdata/hg38.fa")
+	//testGtf := Read("testdata/TTN.gtf")
+	//testVcf := vcf.Read("testdata/TTN.vcf")
+
 	fasta.AllToUpper(f)
 	testFasta := fasta.FastaMap(f)
 	tree := GenesToIntervalTree(testGtf)
