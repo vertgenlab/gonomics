@@ -83,6 +83,11 @@ func main() {
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 
+	if *fasta == "" || *gtf == "" {
+		usage()
+		log.Fatalf("ERROR: Must input a fasta and a gtf")
+	}
+
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
