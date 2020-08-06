@@ -36,7 +36,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 	alt := dna.StringToBases(v.Alt)
 	cdsPos, start := getNearestCdsPos(v)
 	cdsDist := getCdsDist(v)
-	if len(ref) == 1 && len(alt) == 1 { // Substitution
+	if len(ref) == 1 && len(alt) == 1 { // Substitution: c.10-1A>G
 		if start {
 			answer += fmt.Sprintf("%d-%d", cdsPos, cdsDist)
 		} else {
@@ -50,7 +50,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
 		}
 		return answer
-	} else if len(ref) == 2 && len(alt) == 1 { // Single-Base Deletion
+	} else if len(ref) == 2 && len(alt) == 1 { // Single-Base Deletion: c.10-1del
 		if v.PosStrand {
 			var duplicateOffset int
 			for i := 1; seq[v.Chr][int(v.Pos)+i] == ref[1]; i++ {
@@ -69,7 +69,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 			}
 		}
 		return answer
-	} else if len(ref) > len(alt) { // Multi-Base Deletion
+	} else if len(ref) > len(alt) { // Multi-Base Deletion: c.10-1_10-2del
 		if v.PosStrand {
 			var duplicateOffset int
 			for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(ref)-1)+j] == ref[i]; j++ {
@@ -96,8 +96,8 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 			}
 		}
 		return answer
-	} else if isDuplication(v, seq) { // Duplication
-		if len(alt) == 2 {
+	} else if isDuplication(v, seq) { // Duplications
+		if len(alt) == 2 { // Single-Base Duplication: c.10-1dup
 			if v.PosStrand {
 				var duplicateOffset int
 				for i := 1; seq[v.Chr][int(v.Pos)+i] == alt[1]; i++ {
@@ -139,7 +139,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 			}
 		}
 		return answer
-	} else if len(alt) > len(ref) { // Insertion
+	} else if len(alt) > len(ref) { // Multi-Base Duplication: c.10-1_10-2dup
 		if v.PosStrand {
 			var duplicateOffset int
 			for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+j] == alt[i]; j++ {
@@ -149,7 +149,6 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 					i = 1
 				}
 			}
-			//fmt.Println(cdsPos, cdsDist, duplicateOffset)
 			basesToAdd := alt[len(ref):]
 			if duplicateOffset > 0 {
 				basesToAdd = append(basesToAdd[duplicateOffset:], basesToAdd[:duplicateOffset]...)
@@ -179,13 +178,13 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt)
 	cdsPos, _ := getNearestCdsPos(v)
-	if v.PosStrand {
-		if len(ref) == 1 && len(alt) == 1 { // Substitution
+	if v.PosStrand { // For Pos Strand
+		if len(ref) == 1 && len(alt) == 1 { // Substitution c.10A>G
 			if v.CdnaPos != 0 {
 				answer += fmt.Sprintf("%d", v.CdnaPos)
 			}
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
-		} else if len(ref) > len(alt) { // Deletion
+		} else if len(ref) > len(alt) { // Deletions
 			var duplicateOffset int
 			for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(ref)-1)+j] == ref[i]; j++ {
 				duplicateOffset++
@@ -195,17 +194,17 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 				}
 			}
 
-			if len(ref) == 2 {
+			if len(ref) == 2 { // Single-Base Deletion: c.10del
 				answer += fmt.Sprintf("%ddel", v.CdnaPos+len(alt)+duplicateOffset)
-			} else {
+			} else { // Multi-Base Deletion: c.10_12del
 				if v.CdnaPos+(len(ref)-1)+duplicateOffset > cdsPos {
 					answer += fmt.Sprintf("%d_%d+%ddel", v.CdnaPos+1+duplicateOffset, cdsPos, (v.CdnaPos+(len(ref)-1)+duplicateOffset)-cdsPos)
 				} else {
 					answer += fmt.Sprintf("%d_%ddel", v.CdnaPos+1+duplicateOffset, v.CdnaPos+(len(ref)-1)+duplicateOffset)
 				}
 			}
-		} else if len(alt) > len(ref) { // Insertion
-			if isDuplication(v, seq) {
+		} else if len(alt) > len(ref) {
+			if isDuplication(v, seq) { // Duplications
 				var duplicateOffset int
 				for i, j := 1, 1; seq[v.Chr][int(v.Pos-1)+(len(alt)-1)+j] == alt[i]; j++ {
 					duplicateOffset++
@@ -214,37 +213,37 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 						i = 1
 					}
 				}
-				if len(alt) == 2 {
+				if len(alt) == 2 { // Single-Base Duplication: c.10dup
 					answer += fmt.Sprintf("%ddup", v.CdnaPos+duplicateOffset+1)
-				} else {
+				} else { // Multi-Base Duplication: c.10_12dup
 					answer += fmt.Sprintf("%d_%ddup", v.CdnaPos+duplicateOffset+1, v.CdnaPos+duplicateOffset+1+(len(alt)-2))
 				}
-			} else {
+			} else { // Insertion: c.10_11insAT
 				answer += fmt.Sprintf("%d_%dins%s", v.CdnaPos, v.CdnaPos+1, dna.BasesToString(alt[1:]))
 			}
 		}
-	} else {
+	} else { // For Neg Strand
 		dna.ReverseComplement(ref)
 		dna.ReverseComplement(alt)
-		if len(ref) == 1 && len(alt) == 1 { // Substitution
+		if len(ref) == 1 && len(alt) == 1 { // Substitution: c.10A>G
 			if v.CdnaPos != 0 {
 				answer += fmt.Sprintf("%d", v.CdnaPos)
 			}
 			answer += dna.BasesToString(ref) + ">" + dna.BasesToString(alt)
-		} else if len(ref) > len(alt) { // Deletion
-			if len(ref) == 2 {
+		} else if len(ref) > len(alt) { // Deletions
+			if len(ref) == 2 { // Single-Base Deletion: c.10del
 				answer += fmt.Sprintf("%ddel", v.CdnaPos-len(alt))
-			} else {
+			} else { // Multi-Base Deletion: c.10_12del
 				answer += fmt.Sprintf("%d_%ddel", v.CdnaPos-(len(ref)-1), v.CdnaPos-1)
 			}
-		} else if len(alt) > len(ref) { // Insertion
-			if isDuplication(v, seq) {
-				if len(alt) == 2 {
+		} else if len(alt) > len(ref) {
+			if isDuplication(v, seq) { // Duplications
+				if len(alt) == 2 { // Single-Base Duplication: c.10dup
 					answer += fmt.Sprintf("%ddup", v.CdnaPos-(len(alt)-1))
-				} else {
+				} else { // Multi-Base Duplication: c.10_12dup
 					answer += fmt.Sprintf("%d_%ddup", v.CdnaPos-(len(alt)-1), v.CdnaPos-1)
 				}
-			} else {
+			} else { // Insertion: c.10_11insAT
 				answer += fmt.Sprintf("%d_%dins%s", v.CdnaPos-1, v.CdnaPos, dna.BasesToString(alt[:len(alt)-1]))
 			}
 		}
