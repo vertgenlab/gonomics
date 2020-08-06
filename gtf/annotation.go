@@ -5,14 +5,13 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"math"
-	"strings"
 )
 
 // VariantToAnnotation generates an annotation which can be appended to the INFO field of a VCF
 // Annotation format is: GoEP= Genomic | VariantType | Gene | cDNA | Protein
 // TODO: Not sensitive to UTR splice junctions
 func VariantToAnnotation(variant *vcfEffectPrediction, seq map[string][]dna.Base) string {
-	return "GoEP=" + addGenomic(variant) + "|" + variant.VariantType + "|" + strings.Trim(variant.Gene, "\"") + "|" + addCDNA(variant, seq) + "|" + addProtein(variant, seq)
+	return "GoEP=" + addGenomic(variant) + "|" + variant.VariantType + "|" + variant.Gene + "|" + addCDNA(variant, seq) + "|" + addProtein(variant, seq)
 }
 
 // addGenomic adds the genotype portion of the annotation
@@ -22,7 +21,7 @@ func addGenomic(v *vcfEffectPrediction) string {
 
 // addCDNA adds the cDNA portion of the annotation and makes several adjustments for standard variant nomenclature
 func addCDNA(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
-	var answer string = strings.Trim(v.RefId, "\"") + ":c."
+	var answer string = v.RefId + ":c."
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt)
 	cdsPos, start := getNearestCdsPos(v)
