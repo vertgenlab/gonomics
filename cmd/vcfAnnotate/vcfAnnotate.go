@@ -28,11 +28,7 @@ func usage() {
 			"\tAnnotations are added to the INFO field of the Vcf with the following format: \"GoEP= g.XXX | VariantType | Gene | TranscriptId:c.XXX | p.XXX\"\n" +
 			"\tVariantTypes include: Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away from intron-exon boundary), FarSplice (3-10 away from intron-exon boundary)\n" +
 			"Usage:\n" +
-			" vcfAnnotate [options]\n" +
-			"\t-fasta ref.fa \n" +
-			"\t-gtf ref.gtf \n" +
-			"\tinput.vcf \n" +
-			"\toutput.vcf \n\n" +
+			" vcfAnnotate [options] -fasta ref.fa -gtf ref.gtf input.vcf output.vcf \n\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
