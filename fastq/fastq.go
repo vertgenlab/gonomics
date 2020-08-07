@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"sync"
 )
 
 type Fastq struct {
@@ -22,17 +23,40 @@ func Read(filename string) []*Fastq {
 	return answer
 }
 
-func ReadToChan(filename string, output chan<- *Fastq) {
-	var curr *Fastq
-	var done bool
+//func ReadToChan(filename string, output chan<- *Fastq) {
+//	var curr *Fastq
+//	var done bool
+//
+//	file := fileio.EasyOpen(filename)
+//	defer file.Close()
+//
+//	for curr, done = NextFastq(file); !done; curr, done = NextFastq(file) {
+//		output <- curr
+//	}
+//	close(output)
+//}
 
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	for curr, done = NextFastq(file); !done; curr, done = NextFastq(file) {
-		output <- curr
+func ReadToChan(file *fileio.EasyReader, data chan<- *Fastq, wg *sync.WaitGroup) {
+	for curr, done := NextFastq(file); !done; curr, done = NextFastq(file) {
+		data <- curr
 	}
-	close(output)
+	file.Close()
+	wg.Done()
+}
+
+func GoReadToChan(filename string) <-chan *Fastq {
+	file := fileio.EasyOpen(filename)
+	var wg sync.WaitGroup
+	data := make(chan *Fastq)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
 }
 
 func Write(filename string, records []*Fastq) {
