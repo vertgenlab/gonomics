@@ -8,11 +8,17 @@ import (
 )
 
 // VariantToAnnotation generates an annotation which can be appended to the INFO field of a VCF
-// Annotation format is: GoEP= Genomic | VariantType | Gene | cDNA | Protein
+// Annotation format is: GoEP= Genomic | Gene | cDNA | Protein | VariantType
 // Genomic cDNA and Protein annotations are in HGVS variant nomenclature format https://varnomen.hgvs.org/
 // TODO: Not sensitive to UTR splice junctions
+// TODO: Remove reports of splice variants for terminal exons; NMD prediction?
 func VariantToAnnotation(variant *vcfEffectPrediction, seq map[string][]dna.Base) string {
-	return "GoEP=" + genomicToString(variant) + "|" + variant.VariantType + "|" + variant.Gene + "|" + cDnaToString(variant, seq) + "|" + proteinToString(variant, seq)
+	var answer string = "GoEP=" + genomicToString(variant) + "|" + variant.Gene + "|" + cDnaToString(variant, seq) + "|" + proteinToString(variant, seq) + "|" + variant.VariantType
+	for variant.NextTranscript != nil {
+		variant = variant.NextTranscript
+		answer += "|" + cDnaToString(variant, seq) + "|" + proteinToString(variant, seq) + "|" + variant.VariantType
+	}
+	return answer
 }
 
 // genomicToString adds the genotype portion of the annotation

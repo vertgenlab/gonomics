@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -25,12 +26,27 @@ type Settings struct {
 func usage() {
 	fmt.Print(
 		"vcfAnnotate - Annotate Vcf records with cDNA and protein effect predictions.\n" +
-			"\tAnnotations are added to the INFO field of the Vcf with the following format: \"GoEP= g.XXX | VariantType | Gene | TranscriptId:c.XXX | p.XXX\"\n" +
+			"\tAnnotations are added to the INFO field of the Vcf with the following format: \"GoEP= g.XXX | Gene | TranscriptId:c.XXX | p.XXX | VariantType\"\n" +
 			"\tVariantTypes include: Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away from intron-exon boundary), FarSplice (3-10 away from intron-exon boundary)\n" +
 			"Usage:\n" +
 			" vcfAnnotate [options] -fasta ref.fa -gtf ref.gtf input.vcf output.vcf \n\n" +
 			"options:\n")
 	flag.PrintDefaults()
+}
+
+func AppendAnnotationHeader(header *vcf.VcfHeader) {
+	var columnIDs string
+	if strings.HasPrefix(header.Text[len(header.Text)-1], "#CHROM\t") {
+		columnIDs = header.Text[len(header.Text)-1]
+		header.Text = header.Text[:len(header.Text)-1]
+	}
+
+	header.Text = append(header.Text, "##GoEffectPrediction Version=1.0\n")
+	header.Text = append(header.Text, "##INFO=<ID=GoEP,Number=.,Type=String,Description=\"Functional annotations: HGVS.g | Gene | TranscriptId : HGVS.c | HGVS.p | VariantType\">\n")
+
+	if columnIDs != "" {
+		header.Text = append(header.Text, columnIDs)
+	}
 }
 
 func vcfAnnotate(settings *Settings) (<-chan *vcf.Vcf, *vcf.VcfHeader) {
@@ -54,14 +70,14 @@ func vcfAnnotate(settings *Settings) (<-chan *vcf.Vcf, *vcf.VcfHeader) {
 		close(answer)
 	}()
 
-	//gtf.AppendAnnotationHeader(vcfHeader) //TODO: Make this function to add header lines for addition data in INFO
+	AppendAnnotationHeader(vcfHeader)
 	return answer, vcfHeader
 }
 
 func annotationWorker(wg *sync.WaitGroup, tree map[string]*interval.IntervalNode, fasta map[string][]dna.Base, vcfChan <-chan *vcf.Vcf, answer chan<- *vcf.Vcf, allTranscripts bool) {
 	var annotation string
-	for vcfRecord := range vcfChan { //TODO Add allTranscripts option to gtf.VcfToVariant and gtf.GenesToIntervalTree
-		variant, _ := gtf.VcfToVariant(vcfRecord, tree, fasta) //TODO: make gtf.vcfEffectPrediciton a public struct and declare outside of loop
+	for vcfRecord := range vcfChan {
+		variant, _ := gtf.VcfToVariant(vcfRecord, tree, fasta, allTranscripts) //TODO: make gtf.vcfEffectPrediciton a public struct and declare outside of loop
 		annotation = gtf.VariantToAnnotation(variant, fasta)
 		vcfRecord.Info = vcfRecord.Info + ";" + annotation
 		answer <- vcfRecord
@@ -72,8 +88,9 @@ func annotationWorker(wg *sync.WaitGroup, tree map[string]*interval.IntervalNode
 func main() {
 	var fasta *string = flag.String("fasta", "", "Fasta file used to generate Vcf file.")
 	var gtf *string = flag.String("gtf", "", "Gtf/Gff file with coordinates corresponding to the input Fasta file. \nNote: Row order of Gtf file must match UCSC Genome Browser style.")
-	var threads *int = flag.Int("threads", 1, "Number of threads to use. \nNOTE: if >1 thread is used, the order of output Vcf may not match the input Vcf.")
-	var allTranscripts *bool = flag.Bool("allTranscripts", false, "Generate annotation for each transcript isoform. Default only annotates for the canonical transcript. `WORK IN PROGRESS`") //TODO
+	var threads *int = flag.Int("threads", 1, "Number of threads to use. \nNote: if >1 thread is used, the order of output Vcf may not match the input Vcf.")
+	var allTranscripts *bool = flag.Bool("allTranscripts", false, "Generate annotation for each transcript isoform. Default only annotates for the canonical transcript.\n"+
+		"Note: Cannonical transcript will always be reported first, predictions for additional transcripts are appended to the \"GoEP\" Info field with repeating \"| HGVS.c | HGVS.p | VariantType\"")
 	flag.Parse()
 
 	var expectedNumArgs int = 2
