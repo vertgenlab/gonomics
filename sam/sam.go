@@ -39,22 +39,6 @@ type SamAln struct {
 	Extra string
 }
 
-//func ReadToChan(reader *fileio.EasyReader, output chan<- *SamAln) {
-//	var curr *SamAln
-//	var done bool
-//	for curr, done = NextAlignment(reader); done != true; curr, done = NextAlignment(reader) {
-//		output <- curr
-//	}
-//	close(output)
-//}
-//
-//func GoReadToChan(filename string) chan *SamAln {
-//	answer := make(chan *SamAln)
-//	file := fileio.EasyOpen(filename)
-//	go ReadToChan(file, answer)
-//	return answer
-//}
-
 func ReadToChan(file *fileio.EasyReader, data chan<- *SamAln, wg *sync.WaitGroup) {
 	for curr, done := NextAlignment(file); !done; curr, done = NextAlignment(file) {
 		data <- curr
