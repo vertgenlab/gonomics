@@ -99,10 +99,7 @@ func isFasta(filename string) bool {
 }
 
 func chainToBed(chainFmt, bedFmt string, target bool, out string) {
-	input := fileio.EasyOpen(chainFmt)
-	defer input.Close()
-	reader := make(chan *chain.Chain)
-	go chain.ReadToChan(input, reader)
+	reader, _ := chain.GoReadToChan(chainFmt)
 
 	outFile := fileio.MustCreate(out)
 	defer outFile.Close()
