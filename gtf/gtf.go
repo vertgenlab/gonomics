@@ -1,3 +1,6 @@
+//Package gtf contains functions for reading, writing, and manipulating GTF format files.
+//More information on the GTF file format can be found at http://genomewiki.ucsc.edu/index.php/Genes_in_gtf_or_gff_format
+//Structs in the GTF package are organized hierarchically, with the gene struct containing the underlying transcripts, exons, and other gene features associated with that gene.
 package gtf
 
 import (
@@ -9,12 +12,14 @@ import (
 	"strings"
 )
 
+//The Gene struct organizes all underlying data on a gene feature in a GTF file.
 type Gene struct {
 	GeneID      string
 	GeneName    string
 	Transcripts []*Transcript
 }
 
+//The Transcript struct contains information on the location, score and strand of a transcript, along with the underlying exons.
 type Transcript struct {
 	Chr          string
 	Source       string
@@ -26,6 +31,7 @@ type Transcript struct {
 	Exons        []*Exon
 }
 
+//The Exon struct contains information on the location, score, and relative order of exons in a GTF file.
 type Exon struct {
 	Start      int
 	End        int
@@ -37,12 +43,14 @@ type Exon struct {
 	ThreeUtr   *ThreeUTR
 }
 
+//FiveUTR contains the location and score information for FiveUTR lines of a GTF file.
 type FiveUTR struct {
 	Start int
 	End   int
 	Score float64
 }
 
+//CDS contains the location and score information for CDS lines of a GTF file. CDS structs also point to the next and previous CDS in the transcript.
 type CDS struct {
 	Start int
 	End   int
@@ -52,12 +60,14 @@ type CDS struct {
 	Next  *CDS
 }
 
+//ThreeUTR contains the location and score information for ThreeUTR lines of a GTF file.
 type ThreeUTR struct {
 	Start int
 	End   int
 	Score float64
 }
 
+//ParseFram is a helper function for Read that converts a string into the frame value for a CDS struct.
 func ParseFrame(s string) int {
 	if s == "." {
 		return -1
@@ -69,9 +79,9 @@ func ParseFrame(s string) int {
 	return answer
 }
 
-//reads to  map[geneID]*Gene
 //TODO: Break up into helper functions
 //TODO: Set up Exon and CDS pointers to match the style of transcripts
+//Read generates a map[geneID]*Gene of GTF information from an input GTF format file.
 func Read(filename string) map[string]*Gene {
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -181,6 +191,7 @@ func Read(filename string) map[string]*Gene {
 	return answer
 }
 
+//Write writes information contained in a GTF data structure to an output file.
 func Write(filename string, records map[string]*Gene) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
@@ -189,6 +200,7 @@ func Write(filename string, records map[string]*Gene) {
 	}
 }
 
+//WriteToFileHandle is a helper function of Write that facilitates writing GTF data to an output file.
 func WriteToFileHandle(file io.Writer, gene *Gene) {
 	var err error
 	for i := 0; i < len(gene.Transcripts); i++ { //for each transcript associated with that gene
@@ -213,6 +225,7 @@ func WriteToFileHandle(file io.Writer, gene *Gene) {
 	}
 }
 
+//GtfTranscriptToString is a helper function of WriteToFileHandle that converts a transcript struct into a string to be written to the output file.
 func GtfTranscriptToString(t *Transcript, g *Gene) string {
 	lineType := "transcript"
 	var score, strand, frame, att string
@@ -231,6 +244,7 @@ func GtfTranscriptToString(t *Transcript, g *Gene) string {
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, t.Start, t.End, score, strand, frame, att)
 }
 
+//GtfExonToString is a helper function of WriteToFileHandle that converts an Exon struct into a string to be written to the output file.
 func GtfExonToString(e *Exon, t *Transcript, g *Gene) string {
 	lineType := "exon"
 	var score, strand, frame, att string
@@ -249,6 +263,7 @@ func GtfExonToString(e *Exon, t *Transcript, g *Gene) string {
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, e.Start, e.End, score, strand, frame, att)
 }
 
+//Gtf5UtrToString is a helper function of WriteToFileHandle that converts a FiveUTR struct into a string to be written to the output file.
 func Gtf5UtrToString(e *Exon, t *Transcript, g *Gene) string {
 	lineType := "5UTR"
 	var score, strand, frame, att string
@@ -267,6 +282,7 @@ func Gtf5UtrToString(e *Exon, t *Transcript, g *Gene) string {
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%s\t%s", t.Chr, t.Source, lineType, e.FiveUtr.Start, e.FiveUtr.End, score, strand, frame, att)
 }
 
+//GtfCdsToString is a helper function of WriteToFileHandle that converts a CDS struct into a string to be written to the output file.
 func GtfCdsToString(e *Exon, t *Transcript, g *Gene) string {
 	lineType := "CDS"
 	var score, strand, att string
@@ -284,6 +300,7 @@ func GtfCdsToString(e *Exon, t *Transcript, g *Gene) string {
 	return fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%s\t%s\t%v\t%s", t.Chr, t.Source, lineType, e.Cds.Start, e.Cds.End, score, strand, e.Cds.Frame, att)
 }
 
+//Gtf3UtrToString is a helper function of WriteToFileHandle that converts a ThreeUTR struct into a string to be written to the output file.
 func Gtf3UtrToString(e *Exon, t *Transcript, g *Gene) string {
 	lineType := "3UTR"
 	var score, strand, frame, att string
