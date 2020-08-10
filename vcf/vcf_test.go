@@ -35,8 +35,6 @@ func TestWriteAndRead(t *testing.T) {
 		Write(tempFile, actual)
 		alpha := Read(tempFile)
 		beta := Read("testdata/test.vcf")
-		log.Printf("Print one line...\n")
-		PrintVcfLines(beta, 1)
 		log.Printf("Looks good to me!\n")
 		log.Printf("alpha=%d, beta=%d", len(alpha), len(beta))
 		if !AllEqual(alpha, beta) {
