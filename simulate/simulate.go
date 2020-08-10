@@ -10,65 +10,74 @@ import (
 	"time"
 )
 
+var GC float64 = 0.42
+var AT float64 = 0.58
+
 // makes random gene with start and stop codon, must be length multiple of 3
-func Rand_gene(name string, length int) {
+func RandGene(name string, length int) []*fasta.Fasta {
+
+	seq := []dna.Base{dna.A, dna.T, dna.G} //"ATG"
+	rand_length := length - 6
+
+	//rt := rand.NewSource(time.Now().UnixNano())
+	//rt := rand.NewSource(17)
+	//rn := rand.New(rt)
+	r := rand.Float64()
+
 	if length%3 != 0 {
+
 		fmt.Print("length must be divisible by three")
+
 	} else {
-		seq := "ATG"
-		rand_length := length - 6
+
 		for i := 0; i < rand_length; i++ {
-			rt := rand.NewSource(time.Now().UnixNano())
-			rn := rand.New(rt)
-			r := rn.Intn(100)
 
-			switch {
-			case r < 25:
-				seq = seq + "A"
-			case r < 50:
-				seq = seq + "C"
-			case r < 75:
-				seq = seq + "T"
-			default:
-				seq = seq + "G"
-
+			//cut-offs based on GC content of galGal6, could pass in a variable and not hard code the GC content
+			if r < GC/2 {
+				seq = append(seq, dna.G)
+			} else if r < GC {
+				seq = append(seq, dna.C)
+			} else if r < AT/2+GC {
+				seq = append(seq, dna.T)
+			} else {
+				seq = append(seq, dna.A)
 			}
+
 		}
-
-		rts := rand.NewSource(time.Now().UnixNano())
-		rns := rand.New(rts)
-		rs := rns.Intn(100)
-		switch {
-		case rs < 100/3:
-			seq = seq + "TAG"
-		case rs < 100/3*2:
-			seq = seq + "TGA"
-		default:
-			seq = seq + "TAA"
-		}
-
-		sb := dna.StringToBases(seq)
-
-		record := fasta.Fasta{name, sb}
-		var answer []*fasta.Fasta
-		answer = append(answer, &record)
-		filename := name + ".fasta"
-		fasta.Write(filename, answer)
 	}
+
+	r = rand.Float64()
+
+	if r < 1/3 {
+		seq = append(seq, dna.T, dna.A, dna.G)
+	} else if r < 1/3*2 {
+		seq = append(seq, dna.T, dna.G, dna.A)
+	} else {
+		seq = append(seq, dna.T, dna.A, dna.A)
+	}
+
+	record := fasta.Fasta{name, seq}
+	var answer []*fasta.Fasta
+	answer = append(answer, &record)
+	//filename := name + ".fasta"
+	//fasta.Write(filename, answer)
+	return answer
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(rand_seq_filename string, tree_output_filename string, root *tree_newick.NTree) {
-	rand1 := fasta.Read(rand_seq_filename)
+func Simulate(randSeqFilename string, treeOutputFilename string, root *tree_newick.NTree) {
+	var rand1 []*fasta.Fasta
+
+	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	seq := Get_seq(rand1)
-	fasta.Write(tree_output_filename, Tree_print(root, seq))
+	//rand1 is the fasta assigned to the root of the tree
+	fasta.Write(treeOutputFilename, printSeqForNodes(root, rand1[0].Seq))
 }
 
-func Translate(codon []string) aa {
+func TranslateSingleCodon(codon []string) aa {
 	cod := strings.Join(codon, "")
 	var am aa
-	if len(cod) != 3 {
+	if len(codon) != 3 {
 		fmt.Print("codon must have length of 3 bases")
 	} else {
 		am = m[cod]
@@ -78,7 +87,7 @@ func Translate(codon []string) aa {
 
 type aa int
 
-// BLOSUM matrix for amino acid switching probabilities
+// BLOSUM matrix for amino acid switching probabilities CHECK WHICH BLOSUM THIS IS, unsure how it was calculated
 var BLOSUM = [][]float64{[]float64{0.288590604, 0.03087248322, 0.03087248322, 0.02953020134, 0.02147651007, 0.0255033557, 0.04026845638, 0.07785234899, 0.01476510067, 0.04295302013, 0.05906040268, 0.04429530201, 0.01744966443, 0.02147651007, 0.02953020134, 0.08456375839, 0.04966442953, 0.005369127517, 0.01744966443, 0.06845637584, 0.0},
 	[]float64{0.04457364341, 0.3449612403, 0.03875968992, 0.03100775194, 0.007751937984, 0.0484496124, 0.0523255814, 0.03294573643, 0.02325581395, 0.02325581395, 0.04651162791, 0.1201550388, 0.01550387597, 0.01744186047, 0.01937984496, 0.04457364341, 0.03488372093, 0.005813953488, 0.01744186047, 0.03100775194, 0.0},
 	[]float64{0.05122494432, 0.04454342984, 0.3140311804, 0.08240534521, 0.008908685969, 0.03340757238, 0.04899777283, 0.06458797327, 0.03118040089, 0.02227171492, 0.03118040089, 0.05345211581, 0.01113585746, 0.01781737194, 0.02004454343, 0.06904231626, 0.04899777283, 0.004454342984, 0.01559020045, 0.02672605791, 0.0},
@@ -150,103 +159,132 @@ var m = map[string]aa{
 	"AGA": aa(1), "AGG": aa(1), "CGC": aa(1), "CGG": aa(1), "CGA": aa(1), "CGT": aa(1),
 	"GCA": aa(0), "GCG": aa(0), "GCT": aa(0), "GCC": aa(0)}
 
-//get sequence of fastas
-func Get_seq(record []*fasta.Fasta) []string {
+//everything below here seems to be a helper function that we may be able to lowercase?
+
+//convert between fastas and strings
+/*func fastaToString(record []*fasta.Fasta) []string {
 	var sequence []string
 
 	for _, rec := range record {
 		for i := 0; i < len(rec.Seq); i += len(rec.Seq) {
-			s := dna.BasesToString(rec.Seq[i:])
+			s := dna.BasesToString(rec.Seq[i:])//: with nothing after means startpoint to the end
 			sequence = strings.Split(s, "")
 		}
 	}
 	return sequence
 }
 
-//choose base based off of random seed
-func Base_choice() string {
+func stringToFasta(sequence []string, new_name string) fasta.Fasta {
+	seq := strings.Join(sequence, "")
+	var answer fasta.Fasta
 
-	rt := rand.NewSource(time.Now().UnixNano())
-	rn := rand.New(rt)
-	r := rn.Intn(100)
-	var base string
-	switch {
-	case r < 25:
-		base = "A"
-	case r < 50:
-		base = "C"
-	case r < 75:
-		base = "T"
-	default:
-		base = "G"
+	for i := 0; i < len(seq); i++ {
+		s := dna.StringToBases(seq)
+		answer = fasta.Fasta{new_name, s}
 	}
-	return base
-}
+	return answer
+}*/
 
-//mutate base given random seeded float
-func Mutate_base(b string, distance_percent float64) string {
+//choose base based off of random seed
+func chooseRandomBase() dna.Base {
 
 	rt := rand.NewSource(time.Now().UnixNano())
 	rn := rand.New(rt)
 	r := rn.Float64()
+	//needs to be seeded
 
-	var base string
-	switch {
-	case distance_percent == 0:
+	var base dna.Base
+	//I could make this also dependent on GC content but then i'll feel the need to take into account what kinds of mutations cause which other base to take it's place
+	if r < GC/2 {
+		base = dna.G
+	} else if r < GC {
+		base = dna.C
+	} else if r < AT/2+GC {
+		base = dna.T
+	} else {
+		base = dna.A
+	}
+
+	return base
+}
+
+func changeBase(originalBase dna.Base) dna.Base {
+	newBase := chooseRandomBase()
+
+	for newBase == originalBase {
+		newBase = chooseRandomBase()
+	}
+	return newBase
+}
+
+//mutate base given random seeded float
+func mutateBase(b dna.Base, branchLength float64) dna.Base {
+
+	//rt := rand.NewSource(time.Now().UnixNano())
+	//rn := rand.New(rt)
+	r := rand.Float64()
+
+	var base dna.Base
+
+	if branchLength == 0 {
 		base = b
-	case r < distance_percent:
-		base = Base_choice()
-	default:
+	} else if r < branchLength {
+		base = changeBase(base)
+	} else {
 		base = b
 	}
 
 	return base
-
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
-func Mutate_seq(seq []string, distance_percent float64) []string {
-	c := make([]string, len(seq))
-	copy(c, seq)
+/*func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
+	var base dna.Base
+	var base_new dna.Base
+	var seqString []string
+	var codon []string
+	var codon_new []string
+	var am_ac aa
+	var am_ac_new aa
+
+	c := make([]dna.Base, len(seq))
+	copy(c, seq) //should mutate sequence without changing previous nodes' sequence
+	//might want to transfer this to another function copySeq
+
 	if len(seq)%3 != 0 {
 		fmt.Print("sequence length must be divisible by three")
 	} else {
-		rt := rand.NewSource(time.Now().UnixNano())
-		rn := rand.New(rt)
-		r := rn.Float64()
+		//rt := rand.NewSource(time.Now().UnixNano())
+		//rn := rand.New(rt)
+		r := rand.Float64()
 
-		var base string
-		var base_new string
-		var codon []string
-		var codon_new []string
-		var am_ac aa
-		var am_ac_new aa
-		codons := len(seq) / 3
-		for i := 0; i < codons; i++ {
-			codon = []string{seq[i*3], seq[i*3+1], seq[i*3+2]}
+		seqString = dna.BasesToString(seq) //bases to string converts to string not []string which is what the map needs
+		codonNum := len(seq) / 3
+		for i := 0; i < codonNum; i++ {
+			codon = []string{seqString[i*3], seqString[i*3+1], seqString[i*3+2]} //looping through each codon, curent codon times 3, times 3+1 and times 3+2.
+
 			for j := 0; j < 3; j++ {
 				base = c[i*3+j]
-				switch {
-				case i == 0:
-					base_new = base
-				case i == codons:
-					base_new = base
-				default:
-					base_new = Mutate_base(base, distance_percent)
-				}
-				codon_new = []string{seq[i*3], seq[i*3+1], seq[i*3+2]}
-				codon_new[j] = base_new
-				am_ac = Translate(codon)
 
+				if i == 0 {
+					base_new = base
+				} else if i == codonNum {
+					base_new = base
+				} else {
+					base_new = mutateBase(base, branchLength)
+				}
+
+				codon_new = []string{seqString[i*3], seqString[i*3+1], seqString[i*3+2]}
+				codon_new[j] = dna.BaseToString(base_new)
+				am_ac = Translate(codon)
 				am_ac_new = Translate(codon_new)
+
 				if am_ac_new != am_ac {
 					prob := BLOSUM[am_ac][am_ac_new]
 					if r < prob {
-
 						c[i*3+j] = base_new
 					} else {
 						c[i*3+j] = base
-
 					}
 				} else {
 					c[i*3+j] = base_new
@@ -257,71 +295,126 @@ func Mutate_seq(seq []string, distance_percent float64) []string {
 
 	}
 	return c
-}
+}*/
+func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
+	var originalBase dna.Base
+	var newBase dna.Base
+	var originalCodons []*dna.Codon
+	var newCodons []*dna.Codon
+	var originalAmAc dna.AminoAcid
+	var newAmAc dna.AminoAcid
+	var newSequence []dna.Base
 
-func SeqtoFformat(sequence []string, new_name string) fasta.Fasta {
-	seq := strings.Join(sequence, "")
-	var answer fasta.Fasta
-	for i := 0; i < len(seq); i++ {
-		s := dna.StringToBases(seq)
-		answer = fasta.Fasta{new_name, s}
+	//i don't think i need the copy there. It was necessary so she could do the math assignment of each codon and base,
+	//but now i just need to copy something to leave at the root and then build the new one on the same structure
+
+	if len(seq)%3 != 0 {
+		fmt.Print("sequence length must be divisible by three")
+	} else {
+		//rt := rand.NewSource(time.Now().UnixNano())
+		//rn := rand.New(rt)
+		r := rand.Float64()
+
+		//fmt.Print(myMap, len(myMap))
+		fmt.Print(newSequence)
+
+		codonNum := len(seq) / 3
+		for i := 0; i < codonNum; i++ {
+			originalCodons = dna.BasesToCodons(seq)
+
+			for j := 0; j < 3; j++ {
+				originalBase = originalCodons[i].Seq[j]
+				var thisCodon []dna.Base
+
+				//fmt.Print(thisCodon, "\n")
+				//fmt.Print(originalBase, "\n")
+
+				if i == 0 {
+					newBase = originalBase //cannot change start codon
+				} else if i == codonNum - 1 { //cannot change stop codon, zero based
+					newBase = originalBase
+				} else {
+					fmt.Print(originalBase)
+					newBase = mutateBase(originalBase, branchLength)
+				}
+				fmt.Print(newBase, "\n")
+
+				if j == 0 {
+					thisCodon = append(thisCodon, newBase)
+					thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+					thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
+					//fmt.Print(dna.BasesToString(thisCodon), "\n")
+				} else if j == 1 {
+					thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+					thisCodon = append(thisCodon, newBase)
+					thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+					//fmt.Print(dna.BasesToString(thisCodon), "\n")
+				} else {
+					thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
+					thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+					thisCodon = append(thisCodon, newBase)
+					//fmt.Print(dna.BasesToString(thisCodon), "\n")
+				}
+
+				newCodons = dna.BasesToCodons(thisCodon)
+				originalAmAc = dna.TranslateCodon(originalCodons[i])
+				newAmAc = dna.TranslateCodon(newCodons[0])
+				//fmt.Print(originalAmAc, newAmAc, "\n")
+
+				if originalAmAc == newAmAc {
+					prob := BLOSUM[originalAmAc][newAmAc]
+					if r < prob {
+						originalCodons[i].Seq[j] = newBase
+					} else {
+						originalCodons[i].Seq[j] = originalBase
+					}
+				} else {
+					originalCodons[i].Seq[j] = newBase
+				}
+
+				//fmt.Print(originalCodons[i].Seq[j], "\n")
+				newSequence = append(newSequence, originalCodons[i].Seq[j])
+				fmt.Print(dna.BasesToString(newSequence), "\n")
+			}
+		}
 	}
-	return answer
+
+	//TODO: check random number generators and maybe seed them (always A)
+	return newSequence
 }
 
-//make fastas based off of node and random DNA_sequence
-func Tree_print(node *tree_newick.NTree, DNA_seq []string) []*fasta.Fasta {
-	var fasta_final []*fasta.Fasta
-	var seq []string
+func copySeq(seq []dna.Base) []dna.Base {
+	//make sure this works with root assigned fasta
+	original := make([]dna.Base, len(seq))
+	copy(original, seq)
+	return original
+}
+
+//make fastas based off of node and random seqStringuence
+func printSeqForNodes(node *tree_newick.NTree, sequence []dna.Base) []*fasta.Fasta {
+	var fastaFinal []*fasta.Fasta
+	var seq []dna.Base
 
 	length := float64(node.BranchLength)
 
-	seq = Mutate_seq(DNA_seq, length)
+	seq = MutateSeq(sequence, length)
 
-	s := SeqtoFformat(seq, node.Name)
-	fasta_final = append(fasta_final, &s)
+	seqFasta := fasta.Fasta{node.Name, seq}
+	fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
-		b := Tree_print(node.Right, seq)
-		fasta_final = append(fasta_final, b...)
-		a := Tree_print(node.Left, seq)
-		fasta_final = append(fasta_final, a...)
+		b := printSeqForNodes(node.Right, seq)
+		fastaFinal = append(fastaFinal, b...)
+		a := printSeqForNodes(node.Left, seq)
+		fastaFinal = append(fastaFinal, a...)
 	}
-	return fasta_final
+	return fastaFinal //could this be printed in a tree format?
 }
 
-//remove ancestors from the fasta file for reconstruction
-func Remove_No_Names(filename string) {
-	fastas := fasta.Read(filename)
-	var fastas_new []*fasta.Fasta
-	for i := 0; i < len(fastas); i++ {
-		if fastas[i].Name != "" {
-			fastas_new = append(fastas_new, fastas[i])
-		}
-
-	}
-	filename_new := "descendents_" + filename
-	fasta.Write(filename_new, fastas_new)
-}
-
-func Get_leaf(node *tree_newick.NTree) []*tree_newick.NTree {
-	var leaf []*tree_newick.NTree
-	if node.Left != nil && node.Right != nil {
-		a := Get_leaf(node.Left)
-		b := Get_leaf(node.Right)
-		leaf = append(leaf, a...)
-		leaf = append(leaf, b...)
-	}
-	if node.Left == nil && node.Right == nil {
-		leaf = append(leaf, node)
-	}
-	return leaf
-}
-
-func Remove_ancestors(filename string, tree *tree_newick.NTree) {
+func removeAncestors(filename string, tree *tree_newick.NTree) {
 	fastas := fasta.Read(filename)
 	var fastas_new []*fasta.Fasta
 
-	leaf := Get_leaf(tree)
+	leaf := tree_newick.Get_leaf(tree)
 	for i := 0; i < len(fastas); i++ {
 		for j := 0; j < len(leaf); j++ {
 			if fastas[i].Name == leaf[j].Name {
