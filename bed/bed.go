@@ -137,20 +137,3 @@ func GoReadToChan(filename string) <-chan *Bed {
 
 	return data
 }
-
-//func GoReadToChan(filename string) <-chan *Bed {
-//	output := make(chan *Bed)
-//	go ReadToChan(filename, output)
-//	return output
-//}
-//
-//func ReadToChan(filename string, output chan<- *Bed) {
-//	file := fileio.EasyOpen(filename)
-//	defer file.Close()
-//	var curr *Bed
-//	var done bool
-//	for curr, done = NextBed(file); !done; curr, done = NextBed(file) {
-//		output <- curr
-//	}
-//	close(output)
-//}
