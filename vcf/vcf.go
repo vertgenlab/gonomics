@@ -44,23 +44,6 @@ func Read(filename string) []*Vcf {
 	return answer
 }
 
-// LEGACY READ TO CHAN FUNCTIONS
-//func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
-//	output := make(chan *Vcf)
-//	file := fileio.EasyOpen(filename)
-//	header := ReadHeader(file)
-//	go ReadToChan(file, output)
-//	return output, header
-//}
-//
-//func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
-//	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
-//		output <- curr
-//	}
-//	file.Close()
-//	close(output)
-//}
-
 func ReadToChan(file *fileio.EasyReader, data chan<- *Vcf, wg *sync.WaitGroup) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		data <- curr
