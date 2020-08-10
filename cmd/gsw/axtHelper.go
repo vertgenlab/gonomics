@@ -28,8 +28,7 @@ func convertAxt(axtFile, format, targetFa, output string) {
 
 func goChannelAxtVcf(axtFile string) <-chan *vcf.Vcf {
 	ans := make(chan *vcf.Vcf)
-	axtChannel := make(chan *axt.Axt)
-	go axt.ReadToChan(fileio.EasyOpen(axtFile), axtChannel)
+	axtChannel := axt.GoReadToChan(axtFile)
 	go workThreadAxtVcf(axtChannel, ans)
 	return ans
 }

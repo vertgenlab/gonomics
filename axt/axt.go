@@ -9,6 +9,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Axt struct: Naming convention is hard here because UCSC website does not
@@ -86,18 +87,27 @@ func Read(filename string) []*Axt {
 }
 
 //ReadToChan is a function that takes an EasyReader, which uses type os.File as an input to read axt alignments into an Axt channel.
-func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
-	for data, err := NextAxt(reader); !err; data, err = NextAxt(reader) {
-		answer <- data
+func ReadToChan(file *fileio.EasyReader, data chan<- *Axt, wg *sync.WaitGroup) {
+	for curr, done := NextAxt(file); !done; curr, done = NextAxt(file) {
+		data <- curr
 	}
-	close(answer)
+	file.Close()
+	wg.Done()
 }
 
-func GoReadToChan(filename string) chan *Axt {
-	answer := make(chan *Axt)
+func GoReadToChan(filename string) <-chan *Axt {
 	file := fileio.EasyOpen(filename)
-	go ReadToChan(file, answer)
-	return answer
+	var wg sync.WaitGroup
+	data := make(chan *Axt)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
 }
 
 //NextAxt processes the next Axt alignment in the provided input.
