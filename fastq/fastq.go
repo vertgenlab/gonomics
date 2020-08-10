@@ -23,19 +23,6 @@ func Read(filename string) []*Fastq {
 	return answer
 }
 
-//func ReadToChan(filename string, output chan<- *Fastq) {
-//	var curr *Fastq
-//	var done bool
-//
-//	file := fileio.EasyOpen(filename)
-//	defer file.Close()
-//
-//	for curr, done = NextFastq(file); !done; curr, done = NextFastq(file) {
-//		output <- curr
-//	}
-//	close(output)
-//}
-
 func ReadToChan(file *fileio.EasyReader, data chan<- *Fastq, wg *sync.WaitGroup) {
 	for curr, done := NextFastq(file); !done; curr, done = NextFastq(file) {
 		data <- curr
