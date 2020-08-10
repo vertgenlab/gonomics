@@ -60,14 +60,6 @@ func Read(filename string) ([]*Chain, *HeaderComments) {
 	return answer, notes
 }
 
-
-//func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
-//	for data, done := NextChain(reader); !done; data, done = NextChain(reader) {
-//		answer <- data
-//	}
-//	close(answer)
-//}
-
 //ReadToChan processes a chain text file to a channel of chains.
 func ReadToChan(file *fileio.EasyReader, data chan<- *Chain, wg *sync.WaitGroup) {
 	for curr, done := NextChain(file); !done; curr, done = NextChain(file) {
