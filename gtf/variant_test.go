@@ -42,7 +42,7 @@ func TestVcfToVariant(t *testing.T) {
 	// Seq: CAT
 	// Variant c.2A>C p.H1P
 	tree := GenesToIntervalTree(inGtf)
-	variant, err := VcfToVariant(inVcf, tree, inSeq)
+	variant, err := VcfToVariant(inVcf, tree, inSeq, false)
 
 	if err != nil {
 		t.Errorf("%s", err)

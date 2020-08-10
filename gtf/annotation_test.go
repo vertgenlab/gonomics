@@ -36,15 +36,15 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 	var correctCDNA, correctProt, outputCDNA, outputProt, annotation string
 	var errorCount int
 	for _, val := range testVcf {
-		variant, _ = VcfToVariant(val, tree, testFasta)
+		variant, _ = VcfToVariant(val, tree, testFasta, false)
 		words = strings.Split(val.Info, "|")
 		correctCDNA = words[0]
 		correctProt = words[1]
 		annotation = VariantToAnnotation(variant, testFasta)
 		newWords = strings.Split(annotation, "|")
-		newerWords = strings.Split(newWords[3], ":")
+		newerWords = strings.Split(newWords[2], ":")
 		outputCDNA = newerWords[1]
-		outputProt = newWords[4]
+		outputProt = newWords[3]
 		if (outputCDNA == correctCDNA && outputProt == correctProt) ||
 			strings.HasPrefix(correctCDNA, "c.-") || strings.HasPrefix(correctCDNA, "c.*") {
 			continue
