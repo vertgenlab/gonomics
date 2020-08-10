@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"testing"
@@ -13,11 +12,7 @@ func Test10xBarcode(t *testing.T) {
 //TODO hard code this into a small toy example
 func TestReadingBarcode(t *testing.T) {
 	log.SetFlags(log.Ltime)
-	reader := make(chan *SamAln)
-	samfile := fileio.EasyOpen("testdata/tenXbarcodeTest.sam")
-	defer samfile.Close()
-	ReadHeader(samfile)
-	go ReadToChan(samfile, reader)
+	reader, _ := GoReadToChan("testdata/tenXbarcodeTest.sam")
 	var bxTag string
 	for read := range reader {
 		bxTag = LinkedReadsBarcode(read)

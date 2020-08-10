@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Bed struct {
@@ -114,19 +115,25 @@ func NextBed(reader *fileio.EasyReader) (*Bed, bool) {
 	return processBedLine(line), false
 }
 
-func GoReadToChan(filename string) <-chan *Bed {
-	output := make(chan *Bed)
-	go ReadToChan(filename, output)
-	return output
+func ReadToChan(file *fileio.EasyReader, data chan<- *Bed, wg *sync.WaitGroup) {
+	for curr, done := NextBed(file); !done; curr, done = NextBed(file) {
+		data <- curr
+	}
+	file.Close()
+	wg.Done()
 }
 
-func ReadToChan(filename string, output chan<- *Bed) {
+func GoReadToChan(filename string) <-chan *Bed {
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	var curr *Bed
-	var done bool
-	for curr, done = NextBed(file); !done; curr, done = NextBed(file) {
-		output <- curr
-	}
-	close(output)
+	var wg sync.WaitGroup
+	data := make(chan *Bed)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
 }
