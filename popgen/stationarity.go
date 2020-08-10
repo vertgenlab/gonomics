@@ -3,6 +3,8 @@ package popgen
 import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/dna"
 	"math"
 	"strings"
 	//DEBUG"fmt"
@@ -23,6 +25,27 @@ type AFS struct {
 type SegSite struct {
 	i int //individuals with the allele
 	n int //total number of individuals
+}
+
+//Constructs an allele frequency spectrum struct from a multiFa alignment block.
+//TODO: Ask Craig about derived state here.
+func MultiFaToAFS(aln []*fasta.Fasta) AFS {
+	var answer AFS
+	var count int
+	var current dna.Base
+	aln = fasta.SegregatingSites(aln)
+	answer.sites = make([]*SegSite, len(aln[0].Seq))
+	for i := 0; i < len(aln[0].Seq); i++ {
+		count = 0
+		current = aln[0].Seq[i]
+		for j := 0; j < len(aln); j++ {
+			if aln[j].Seq[i] != current {
+				count++
+			}
+		}
+		answer.sites = append(answer.sites, &SegSite{count, len(aln)})
+	}
+	return answer
 }
 
 func GVCFToAFS(filename string) AFS {
@@ -113,3 +136,14 @@ func AFSLikelihood(afs AFS, alpha []float64) float64 {
 	}
 	return answer
 }
+
+func AFSLogLikelihood(afs AFS, alpha []float64) float64 {
+	var answer float64 = 0.0 //ln(1)
+	var logLikelihood float64
+	for j := 1; j < len(afs.sites); j++ {
+		logLikelihood = math.Log(AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j]))
+		answer = numbers.MultiplyLog(answer, logLikelihood)
+	}
+	return answer
+}
+

@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/numbers"
 	"math/rand"
+	//DEBUG: "fmt"
 )
 
 type Theta struct {
@@ -13,18 +14,19 @@ type Theta struct {
 	probability float64
 }
 
-func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS) bool {
+func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, logSpace bool) bool {
 	yRand := rand.Float64()
 	var pAccept float64
-	pAccept = common.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data)*Hastings_Ratio(old, thetaPrime))
+	pAccept = common.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, logSpace)*Hastings_Ratio(old, thetaPrime))
+	//DEBUG: fmt.Printf("Likelihood ratio: %f\n", pAccept)
 	return pAccept > yRand
 }
 
 func Hastings_Ratio(tOld Theta, tNew Theta) float64 {
 	var newGivenOld, oldGivenNew float64
 
-	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) * numbers.GammaDist(tNew.sigma, tOld.sigma*tOld.sigma, tOld.sigma)
-	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) * numbers.GammaDist(tOld.sigma, tNew.sigma*tNew.sigma, tNew.sigma)
+	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) //* numbers.GammaDist(tNew.sigma, tOld.sigma*tOld.sigma, tOld.sigma)
+	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) //* numbers.GammaDist(tOld.sigma, tNew.sigma*tNew.sigma, tNew.sigma)
 
 	/*
 		for i := 0; i < len(tOld.alpha); i++ {
@@ -34,7 +36,10 @@ func Hastings_Ratio(tOld Theta, tNew Theta) float64 {
 	return oldGivenNew / newGivenOld
 }
 
-func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS) float64 {
+func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, logSpace bool) float64 {
+	if logSpace {
+		return AFSLogLikelihood(data, old.alpha) * old.probability / (AFSLogLikelihood(data, thetaPrime.alpha) * thetaPrime.probability)
+	}
 	return AFSLikelihood(data, old.alpha) * old.probability / (AFSLikelihood(data, thetaPrime.alpha) * thetaPrime.probability)
 }
 
@@ -49,8 +54,9 @@ func GenerateCandidateThetaPrime(t Theta) Theta {
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
 	//TODO: right end for reasonable sigma draw
 	//sigmaPrime := numbers.RandGamma(t.sigma*t.sigma, t.sigma)
-	sigmaPrime := numbers.RandGamma(1, 1)
-
+	sigmaPrime := numbers.RandGamma(1.0, 1.0) 
+	//sigmaPrime = common.MaxFloat64(sigmaPrime, 0.01)
+	//DEBUG: fmt.Printf("sigmaPrime: %e. tSigma: %e.\n", sigmaPrime, t.sigma)
 	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
 	for i := 0; i < len(t.alpha); i++ {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
@@ -75,7 +81,7 @@ func InitializeTheta(m float64, s float64, k int) Theta {
 }
 
 //muZero and sigmaZero represent the starting hyperparameter values.
-func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int) ([]float64, []float64, []bool) {
+func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, logSpace bool) ([]float64, []float64, []bool) {
 	muList := make([]float64, iterations)
 	sigmaList := make([]float64, iterations)
 	acceptList := make([]bool, iterations)
@@ -83,7 +89,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	t := InitializeTheta(muZero, sigmaZero, len(data.sites))
 	for i := 0; i < iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t)
-		if Metropolis_Accept(tCandidate, t, data) {
+		if Metropolis_Accept(tCandidate, t, data, logSpace) {
 			t = tCandidate
 			acceptList[i] = true
 		} else {

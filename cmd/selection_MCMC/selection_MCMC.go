@@ -8,9 +8,9 @@ import (
 	"log"
 )
 
-func selectionMCMC(filename string, outfile string, muZero float64, sigmaZero float64, iterations int) {
+func selectionMCMC(filename string, outfile string, muZero float64, sigmaZero float64, iterations int, logSpace bool) {
 	data := popgen.GVCFToAFS(filename)
-	muList, sigmaList, acceptList := popgen.MetropolisHastings(data, muZero, sigmaZero, iterations)
+	muList, sigmaList, acceptList := popgen.MetropolisHastings(data, muZero, sigmaZero, iterations, logSpace)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
 	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
@@ -34,6 +34,7 @@ func main() {
 	var iterations *int = flag.Int("iterations", 100, "Number of MCMC iterations.")
 	var muZero *float64 = flag.Float64("muZero", 0, "Starting position for the mean selection coefficient parameter mu.")
 	var sigmaZero *float64 = flag.Float64("sigmaZero", 1, "Starting value for the selection coefficient distribution variance parameter sigma.")
+	var logSpace *bool = flag.Bool("logSpace", false, "This argument converts internal calculations to logSpace. Recommended for large datasets.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -45,5 +46,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations)
+	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *logSpace)
 }

@@ -11,12 +11,12 @@ func LogCanConvert(x float64) bool {
 }
 
 func AddLog(x float64, y float64) float64 {
-	//if x == -infinity {
-	//	return y
-	//}
-	//if y == -infinity {
-	//	return x
-	//}
+	if math.IsInf(x, -1) {
+		return y
+	}
+	if math.IsInf(y, -1) {
+		return x
+	}
 	if x >= y {
 		return x + math.Log(1+math.Exp(y-x))
 	}
@@ -28,18 +28,28 @@ func SubtractLog(x float64, y float64) float64 {
 		log.Fatalf("Error: Taking the log of a negative number.")
 		return 0
 	}
-	/*if x == y{
-		return -Inf
+	if x == y {
+		return math.Inf(-1)
 	}
-	if y == -Inf {
+	if math.IsInf(y, -1) {
 		return x
-	}*/
+	}
 	return x + math.Log(1-math.Exp(y-x))
 }
 
 func MultiplyLog(x float64, y float64) float64 {
-	/*if x == -Inf || y == -Inf {
-		return -Inf
-	}*/
+	if math.IsInf(x, -1) || math.IsInf(y, -1) {
+		return math.Inf(-1)
+	}
 	return x + y
+}
+
+func DivideLog(x float64, y float64) float64 {
+	if math.IsInf(x, -1) {
+		return math.Inf(-1)
+	}
+	if math.IsInf(y, -1) {
+		log.Fatalf("Divide by zero error in logSpace. x=%f. y=%f.", x, y)
+	}
+	return x - y
 }
