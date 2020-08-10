@@ -109,7 +109,7 @@ func readToIntervalChan(inputFile string, send chan<- interval.Interval) {
 		}
 
 	case ".sam":
-		receive := sam.GoReadToChan(inputFile)
+		receive, _ := sam.GoReadToChan(inputFile)
 		for val := range receive {
 			send <- val
 		}

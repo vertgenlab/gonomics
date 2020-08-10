@@ -58,6 +58,29 @@ func Read(filename string) []*Giraf {
 	return answer
 }
 
+func ReadToChan(file *fileio.EasyReader, data chan<- *Giraf, wg *sync.WaitGroup) {
+	for curr, done := NextGiraf(file); !done; curr, done = NextGiraf(file) {
+		data <- curr
+	}
+	file.Close()
+	wg.Done()
+}
+
+func GoReadToChan(filename string) <-chan *Giraf {
+	file := fileio.EasyOpen(filename)
+	var wg sync.WaitGroup
+	data := make(chan *Giraf)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
+}
+
 func NextGiraf(reader *fileio.EasyReader) (*Giraf, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	if done {

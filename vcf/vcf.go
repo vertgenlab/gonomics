@@ -9,6 +9,8 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
+	"time"
 )
 
 //slices of slice
@@ -42,20 +44,28 @@ func Read(filename string) []*Vcf {
 	return answer
 }
 
-func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
-	output := make(chan *Vcf)
-	file := fileio.EasyOpen(filename)
-	header := ReadHeader(file)
-	go ReadToChan(file, output)
-	return output, header
-}
-
-func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
+func ReadToChan(file *fileio.EasyReader, data chan<- *Vcf, wg *sync.WaitGroup) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
-		output <- curr
+		data <- curr
 	}
 	file.Close()
-	close(output)
+	wg.Done()
+}
+
+func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
+	file := fileio.EasyOpen(filename)
+	header := ReadHeader(file)
+	var wg sync.WaitGroup
+	data := make(chan *Vcf)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data, header
 }
 
 func processVcfLine(line string) *Vcf {

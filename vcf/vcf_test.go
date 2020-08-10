@@ -1,7 +1,6 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"testing"
@@ -16,11 +15,8 @@ var readWriteTests = []struct {
 func TestReadToChan(t *testing.T) {
 	alpha := Read("testdata/test.vcf")
 	var beta []*Vcf
-	vcfPipe := make(chan *Vcf)
-	file := fileio.EasyOpen("testdata/test.vcf")
-	defer file.Close()
-	ReadHeader(file)
-	go ReadToChan(file, vcfPipe)
+	vcfPipe, _ := GoReadToChan("testdata/test.vcf")
+
 	for vcfs := range vcfPipe {
 		beta = append(beta, vcfs)
 	}
@@ -55,9 +51,7 @@ func TestReadToChanTwo(t *testing.T) {
 		savedFromAlpha = append(savedFromAlpha, v)
 	}
 	alpha.File.Close()
-	beta := fileio.EasyOpen("testdata/test.vcf")
-	vcfData := make(chan *Vcf)
-	go ReadToChan(beta, vcfData)
+	vcfData, _ := GoReadToChan("testdata/test.vcf")
 	var i int = 0
 	for each := range vcfData {
 		if !isEqual(each, savedFromAlpha[i]) {

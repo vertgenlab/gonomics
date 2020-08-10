@@ -61,18 +61,42 @@ func Read(filename string) ([]*Chain, *HeaderComments) {
 }
 
 //ReadToChan processes a chain text file to a channel of chains.
-func ReadToChan(reader *fileio.EasyReader, answer chan<- *Chain) {
-	for data, done := NextChain(reader); !done; data, done = NextChain(reader) {
-		answer <- data
+func ReadToChan(file *fileio.EasyReader, data chan<- *Chain, wg *sync.WaitGroup) {
+	for curr, done := NextChain(file); !done; curr, done = NextChain(file) {
+		data <- curr
 	}
-	close(answer)
+	file.Close()
+	wg.Done()
+}
+
+func GoReadToChan(filename string) (<-chan *Chain, *HeaderComments) {
+	file := fileio.EasyOpen(filename)
+	var wg sync.WaitGroup
+	data := make(chan *Chain)
+	header := ReadHeaderComments(file)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data, header
 }
 
 //GoReadSeqChain will wrap a chain file with target and query fasta seqeunces into the SeqChain struct.
 func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
 	file := fileio.EasyOpen(filename)
 	ans := make(chan *Chain)
-	go ReadToChan(file, ans)
+	var wg sync.WaitGroup
+	go ReadToChan(file, ans, &wg)
+
+	go func() {
+		wg.Wait()
+		close(ans)
+	}()
+
 	return &SeqChain{
 		Chains: ans,
 		TSeq:   fasta.FastaMap(target),
