@@ -61,6 +61,13 @@ func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
 	data := strings.SplitN(line, "\t", 10)
+	//switch {
+	//case strings.HasPrefix(line, "#"):
+	//don't do anything
+	//case len(data) == 1:
+	//these lines are sequences, and we are not recording them
+	//case len(line) == 0:
+	//blank line
 	if len(data) < 9 {
 		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
 	}
@@ -114,14 +121,6 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteHeader(file *os.File, header *VcfHeader) {
-	var err error
-	for h := 0; h < len(header.Text); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
-	}
-	common.ExitIfError(err)
-}
-
 //TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
 func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
 	var err error
@@ -144,11 +143,28 @@ func WriteVcf(file io.Writer, input *Vcf) {
 	}
 	common.ExitIfError(err)
 }
-//TODO: fix this function to take in headers. Must apply to methods as well.
+
 func Write(filename string, data []*Vcf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
+
 	WriteVcfToFileHandle(file, data)
+}
+
+func PrintVcf(data []*Vcf) {
+	for i := 0; i < len(data); i++ {
+		PrintSingleLine(data[i])
+	}
+}
+
+func PrintVcfLines(data []*Vcf, num int) {
+	for i := 0; i < num; i++ {
+		PrintSingleLine(data[i])
+	}
+}
+
+func PrintSingleLine(data *Vcf) {
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 }
 
 //Checks suffix of filename to confirm if the file is a vcf formatted file
