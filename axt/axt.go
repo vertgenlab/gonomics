@@ -110,20 +110,6 @@ func GoReadToChan(filename string) <-chan *Axt {
 	return data
 }
 
-//func ReadToChan(reader *fileio.EasyReader, answer chan<- *Axt) {
-//	for data, err := NextAxt(reader); !err; data, err = NextAxt(reader) {
-//		answer <- data
-//	}
-//	close(answer)
-//}
-//
-//func GoReadToChan(filename string) chan *Axt {
-//	answer := make(chan *Axt)
-//	file := fileio.EasyOpen(filename)
-//	go ReadToChan(file, answer)
-//	return answer
-//}
-
 //NextAxt processes the next Axt alignment in the provided input.
 func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
