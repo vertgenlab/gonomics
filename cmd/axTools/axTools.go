@@ -119,7 +119,7 @@ func QuerySwapAll(input string, output string, targetLen string, queryLen string
 	var index int = 0
 	var curr *axt.Axt
 	for each := range axtReader {
-		curr = axt.QuerySwap(each, targetInfo[each.RName].Size, queryInfo[each.QName].Size)
+		curr = axt.SwapBoth(each, targetInfo[each.RName].Size, queryInfo[each.QName].Size)
 		axt.WriteToFileHandle(axtWriter, curr, index)
 		index++
 	}

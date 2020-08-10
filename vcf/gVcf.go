@@ -25,7 +25,14 @@ func GoReadGVcf(filename string) *Reader {
 	ans.Header = ReadHeader(ans.File)
 	ans.Vcfs = make(chan *Vcf)
 	ans.SyncWg = &wg
-	go ReadToChan(ans.File, ans.Vcfs)
+	wg.Add(1)
+	go ReadToChan(ans.File, ans.Vcfs, ans.SyncWg)
+
+	go func() {
+		wg.Wait()
+		close(ans.Vcfs)
+	}()
+
 	return ans
 }
 

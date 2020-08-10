@@ -1,18 +1,12 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
 )
 
 func TestASFilter(t *testing.T) {
-	file := fileio.EasyOpen("testdata/multiSampleTest.vcf")
-	defer file.Close()
-	header := ReadHeader(file)
+	reader, header := GoReadToChan("testdata/multiSampleTest.vcf")
 	sampleHash := HeaderToMaps(header)
-
-	reader := make(chan *Vcf)
-	go ReadToChan(file, reader)
 
 	var passFilter []*Vcf
 	var parentalOne, parentalTwo, fOne int16 = sampleHash.GIndex["LITC"], sampleHash.GIndex["MATA"], sampleHash.GIndex["CL12_wgs_merged"]
