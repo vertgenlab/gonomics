@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/tree_newick"
+	//"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/tree"
 	"log"
 	"math/rand"
-	"strings"
 )
 
 var GC float64 = 0.42
@@ -19,9 +19,6 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	seq := []dna.Base{dna.A, dna.T, dna.G} //"ATG"
 	rand_length := length - 6
 
-	//rt := rand.NewSource(time.Now().UnixNano())
-	//rt := rand.NewSource(17)
-	//rn := rand.New(rt)
 	r := rand.Float64()
 
 	if length%3 != 0 {
@@ -32,7 +29,7 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 
 		for i := 0; i < rand_length; i++ {
 
-			//cut-offs based on GC content of galGal6, could pass in a variable and not hard code the GC content
+			//cut-offs based on GC content of galGal6
 			if r < GC/2 {
 				seq = append(seq, dna.G)
 			} else if r < GC {
@@ -65,7 +62,7 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, treeOutputFilename string, root *tree_newick.NTree) {
+func Simulate(randSeqFilename string, treeOutputFilename string, root *tree.Tree) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
@@ -73,19 +70,6 @@ func Simulate(randSeqFilename string, treeOutputFilename string, root *tree_newi
 	//rand1 is the fasta assigned to the root of the tree
 	fasta.Write(treeOutputFilename, printSeqForNodes(root, rand1[0].Seq))
 }
-
-func TranslateSingleCodon(codon []string) aa {
-	cod := strings.Join(codon, "")
-	var am aa
-	if len(codon) != 3 {
-		fmt.Print("codon must have length of 3 bases")
-	} else {
-		am = m[cod]
-	}
-	return am
-}
-
-type aa int
 
 // BLOSUM matrix for amino acid switching probabilities CHECK WHICH BLOSUM THIS IS, unsure how it was calculated
 var BLOSUM = [][]float64{[]float64{0.288590604, 0.03087248322, 0.03087248322, 0.02953020134, 0.02147651007, 0.0255033557, 0.04026845638, 0.07785234899, 0.01476510067, 0.04295302013, 0.05906040268, 0.04429530201, 0.01744966443, 0.02147651007, 0.02953020134, 0.08456375839, 0.04966442953, 0.005369127517, 0.01744966443, 0.06845637584, 0.0},
@@ -110,82 +94,7 @@ var BLOSUM = [][]float64{[]float64{0.288590604, 0.03087248322, 0.03087248322, 0.
 	[]float64{0.06995884774, 0.0219478738, 0.01646090535, 0.01783264746, 0.01920438957, 0.01646090535, 0.02331961591, 0.02469135802, 0.008230452675, 0.1646090535, 0.1303155007, 0.02606310014, 0.03155006859, 0.03566529492, 0.01646090535, 0.0329218107, 0.04938271605, 0.00548696845, 0.02057613169, 0.268861454, 0.0},
 	[]float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}
 
-//amino acids
-const (
-	ala  aa = 0
-	arg  aa = 1
-	asn  aa = 2
-	asp  aa = 3
-	cys  aa = 4
-	gln  aa = 5
-	glu  aa = 6
-	gly  aa = 7
-	his  aa = 8
-	ile  aa = 9
-	leu  aa = 10
-	lys  aa = 11
-	met  aa = 12
-	phe  aa = 13
-	pro  aa = 14
-	ser  aa = 15
-	thr  aa = 16
-	trp  aa = 17
-	tyr  aa = 18
-	val  aa = 19
-	stop aa = 20
-)
-
-//translation map
-var m = map[string]aa{
-	"TGA": aa(20), "TAA": aa(20), "TAG": aa(20),
-	"GTA": aa(19), "GTC": aa(19), "GTG": aa(19), "GTT": aa(19),
-	"TAT": aa(18), "TAC": aa(18),
-	"TGG": aa(17),
-	"ACA": aa(16), "ACG": aa(16), "ACT": aa(16), "ACC": aa(16),
-	"TCA": aa(15), "TCC": aa(15), "TCG": aa(15), "TCT": aa(15), "AGT": aa(15), "AGC": aa(15),
-	"CCC": aa(14), "CCT": aa(14), "CCA": aa(14), "CCG": aa(14),
-	"TTT": aa(13), "TTC": aa(13),
-	"ATG": aa(12),
-	"AAA": aa(11), "AAG": aa(11),
-	"TTA": aa(10), "TTG": aa(10), "CTC": aa(10), "CTG": aa(10), "CTA": aa(10), "CTT": aa(10),
-	"ATT": aa(9), "ATC": aa(9), "ATA": aa(9),
-	"CAT": aa(8), "CAC": aa(8),
-	"GGG": aa(7), "GGA": aa(7), "GGT": aa(7), "GGC": aa(7),
-	"GAA": aa(6), "GAG": aa(6),
-	"CAA": aa(5), "CAG": aa(5),
-	"TGT": aa(4), "TGC": aa(4),
-	"GAT": aa(3), "GAC": aa(3),
-	"AAT": aa(2), "AAC": aa(2),
-	"AGA": aa(1), "AGG": aa(1), "CGC": aa(1), "CGG": aa(1), "CGA": aa(1), "CGT": aa(1),
-	"GCA": aa(0), "GCG": aa(0), "GCT": aa(0), "GCC": aa(0)}
-
-//everything below here seems to be a helper function that we may be able to lowercase?
-
-//convert between fastas and strings
-/*func fastaToString(record []*fasta.Fasta) []string {
-	var sequence []string
-
-	for _, rec := range record {
-		for i := 0; i < len(rec.Seq); i += len(rec.Seq) {
-			s := dna.BasesToString(rec.Seq[i:])//: with nothing after means startpoint to the end
-			sequence = strings.Split(s, "")
-		}
-	}
-	return sequence
-}
-
-func stringToFasta(sequence []string, new_name string) fasta.Fasta {
-	seq := strings.Join(sequence, "")
-	var answer fasta.Fasta
-
-	for i := 0; i < len(seq); i++ {
-		s := dna.StringToBases(seq)
-		answer = fasta.Fasta{new_name, s}
-	}
-	return answer
-}*/
-
-//choose base based off of random seed
+//choose base based off of random float, takes in GC content
 func chooseRandomBase(GCcontent float64) dna.Base {
 	var base dna.Base
 	var AT float64
@@ -206,6 +115,7 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 	return base
 }
 
+//calls chooseRandomBase and loops until a different base than the original is found
 func changeBase(originalBase dna.Base) dna.Base {
 	newBase := chooseRandomBase(GC)
 
@@ -215,11 +125,9 @@ func changeBase(originalBase dna.Base) dna.Base {
 	return newBase
 }
 
-//mutate base given random seeded float
+//mutate base given random float, whether it's mutated is dependent on branchLength
 func mutateBase(b dna.Base, branchLength float64) dna.Base {
 
-	//rt := rand.NewSource(time.Now().UnixNano())
-	//rn := rand.New(rt)
 	r := rand.Float64()
 
 	var base dna.Base
@@ -300,6 +208,7 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	return newSequence
 }
 
+//make a map and a copy of that map of an original sequence so the sequence can be assigned to a node and then mutated
 func copySeq(seq []dna.Base) []dna.Base {
 	//make sure this works with root assigned fasta
 	original := make([]dna.Base, len(seq))
@@ -307,16 +216,17 @@ func copySeq(seq []dna.Base) []dna.Base {
 	return original
 }
 
-//make fastas based off of node and random seqStringuence
-func printSeqForNodes(node *tree_newick.NTree, sequence []dna.Base) []*fasta.Fasta {
-	var fastaFinal []*fasta.Fasta
+//make fastas based off of node and random sequence
+func printSeqForNodes(node *tree.Tree, sequence []dna.Base) []*fasta.Fasta {
+	var length float64
 	var seq []dna.Base
+	var seqFasta fasta.Fasta
+	var fastaFinal []*fasta.Fasta
 
-	length := float64(node.BranchLength)
-
+	length = node.BranchLength
 	seq = MutateSeq(sequence, length)
 
-	seqFasta := fasta.Fasta{node.Name, seq}
+	seqFasta = fasta.Fasta{node.Name, seq}
 	fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
 		b := printSeqForNodes(node.Right, seq)
@@ -324,21 +234,38 @@ func printSeqForNodes(node *tree_newick.NTree, sequence []dna.Base) []*fasta.Fas
 		a := printSeqForNodes(node.Left, seq)
 		fastaFinal = append(fastaFinal, a...)
 	}
-	return fastaFinal //could this be printed in a tree format?
+	return fastaFinal
 }
 
-func removeAncestors(filename string, tree *tree_newick.NTree) {
-	fastas := fasta.Read(filename)
-	var fastas_new []*fasta.Fasta
+func GetLeaf(node *tree.Tree) []*tree.Tree { //new
+	var leaf []*tree.Tree
+	if node.Left != nil && node.Right != nil {
+		a := GetLeaf(node.Left)
+		b := GetLeaf(node.Right)
+		leaf = append(leaf, a...)
+		leaf = append(leaf, b...)
+	}
+	if node.Left == nil && node.Right == nil {
+		leaf = append(leaf, node)
+	}
+	return leaf
+}
 
-	leaf := tree_newick.Get_leaf(tree)
+func removeAncestors(filename string, tree *tree.Tree) {
+	var fastas []*fasta.Fasta
+	var newFastas []*fasta.Fasta
+	var outFile string
+
+	fastas = fasta.Read(filename)
+
+	leaves := GetLeaf(tree)
 	for i := 0; i < len(fastas); i++ {
-		for j := 0; j < len(leaf); j++ {
-			if fastas[i].Name == leaf[j].Name {
-				fastas_new = append(fastas_new, fastas[i])
+		for j := 0; j < len(leaves); j++ {
+			if fastas[i].Name == leaves[j].Name {
+				newFastas = append(newFastas, fastas[i])
 			}
 		}
 	}
-	filename_new := "descendents_" + filename
-	fasta.Write(filename_new, fastas_new)
+	outFile = "descendents_" + filename
+	fasta.Write(outFile, newFastas)
 }
