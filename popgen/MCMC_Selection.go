@@ -52,7 +52,7 @@ func GenerateCandidateThetaPrime(t Theta) Theta {
 	//sample new sigma from a gamma function where the mean is always the current sigma value
 	//mean of a gamma dist is alpha / beta, so mean = alpha / beta = sigma**2 / sigma = sigma
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
-	//TODO: right end for reasonable sigma draw
+	//TODO: sigmaPrime still reverts to ultrasmall values, impeding step size. Need a permanant solution before this tool can be used effectively.
 	//sigmaPrime := numbers.RandGamma(t.sigma*t.sigma, t.sigma)
 	sigmaPrime := numbers.RandGamma(1.0, 1.0) 
 	//sigmaPrime = common.MaxFloat64(sigmaPrime, 0.01)
@@ -80,6 +80,7 @@ func InitializeTheta(m float64, s float64, k int) Theta {
 	return answer
 }
 
+//MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
 func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, logSpace bool) ([]float64, []float64, []bool) {
 	muList := make([]float64, iterations)
