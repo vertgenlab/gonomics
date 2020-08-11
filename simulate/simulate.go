@@ -5,17 +5,17 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/tree_newick"
+	"log"
 	"math/rand"
 	"strings"
-	"time"
 )
 
 var GC float64 = 0.42
-var AT float64 = 0.58
 
 // makes random gene with start and stop codon, must be length multiple of 3
-func RandGene(name string, length int) []*fasta.Fasta {
-
+func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
+	var AT float64
+	AT = 1 - GC
 	seq := []dna.Base{dna.A, dna.T, dna.G} //"ATG"
 	rand_length := length - 6
 
@@ -186,15 +186,13 @@ func stringToFasta(sequence []string, new_name string) fasta.Fasta {
 }*/
 
 //choose base based off of random seed
-func chooseRandomBase() dna.Base {
-
-	rt := rand.NewSource(time.Now().UnixNano())
-	rn := rand.New(rt)
-	r := rn.Float64()
-	//needs to be seeded
-
+func chooseRandomBase(GCcontent float64) dna.Base {
 	var base dna.Base
-	//I could make this also dependent on GC content but then i'll feel the need to take into account what kinds of mutations cause which other base to take it's place
+	var AT float64
+	AT = 1 - GC
+
+	r := rand.Float64()
+
 	if r < GC/2 {
 		base = dna.G
 	} else if r < GC {
@@ -209,10 +207,10 @@ func chooseRandomBase() dna.Base {
 }
 
 func changeBase(originalBase dna.Base) dna.Base {
-	newBase := chooseRandomBase()
+	newBase := chooseRandomBase(GC)
 
 	for newBase == originalBase {
-		newBase = chooseRandomBase()
+		newBase = chooseRandomBase(GC)
 	}
 	return newBase
 }
@@ -238,64 +236,6 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
-/*func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
-	var base dna.Base
-	var base_new dna.Base
-	var seqString []string
-	var codon []string
-	var codon_new []string
-	var am_ac aa
-	var am_ac_new aa
-
-	c := make([]dna.Base, len(seq))
-	copy(c, seq) //should mutate sequence without changing previous nodes' sequence
-	//might want to transfer this to another function copySeq
-
-	if len(seq)%3 != 0 {
-		fmt.Print("sequence length must be divisible by three")
-	} else {
-		//rt := rand.NewSource(time.Now().UnixNano())
-		//rn := rand.New(rt)
-		r := rand.Float64()
-
-		seqString = dna.BasesToString(seq) //bases to string converts to string not []string which is what the map needs
-		codonNum := len(seq) / 3
-		for i := 0; i < codonNum; i++ {
-			codon = []string{seqString[i*3], seqString[i*3+1], seqString[i*3+2]} //looping through each codon, curent codon times 3, times 3+1 and times 3+2.
-
-			for j := 0; j < 3; j++ {
-				base = c[i*3+j]
-
-				if i == 0 {
-					base_new = base
-				} else if i == codonNum {
-					base_new = base
-				} else {
-					base_new = mutateBase(base, branchLength)
-				}
-
-				codon_new = []string{seqString[i*3], seqString[i*3+1], seqString[i*3+2]}
-				codon_new[j] = dna.BaseToString(base_new)
-				am_ac = Translate(codon)
-				am_ac_new = Translate(codon_new)
-
-				if am_ac_new != am_ac {
-					prob := BLOSUM[am_ac][am_ac_new]
-					if r < prob {
-						c[i*3+j] = base_new
-					} else {
-						c[i*3+j] = base
-					}
-				} else {
-					c[i*3+j] = base_new
-				}
-			}
-
-		}
-
-	}
-	return c
-}*/
 func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	var originalBase dna.Base
 	var newBase dna.Base
@@ -305,18 +245,9 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
 
-	//i don't think i need the copy there. It was necessary so she could do the math assignment of each codon and base,
-	//but now i just need to copy something to leave at the root and then build the new one on the same structure
-
 	if len(seq)%3 != 0 {
-		fmt.Print("sequence length must be divisible by three")
+		log.Fatal("sequence length must be divisible by three")
 	} else {
-		//rt := rand.NewSource(time.Now().UnixNano())
-		//rn := rand.New(rt)
-		r := rand.Float64()
-
-		//fmt.Print(myMap, len(myMap))
-		fmt.Print(newSequence)
 
 		codonNum := len(seq) / 3
 		for i := 0; i < codonNum; i++ {
@@ -326,60 +257,46 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 				originalBase = originalCodons[i].Seq[j]
 				var thisCodon []dna.Base
 
-				//fmt.Print(thisCodon, "\n")
-				//fmt.Print(originalBase, "\n")
-
 				if i == 0 {
 					newBase = originalBase //cannot change start codon
-				} else if i == codonNum - 1 { //cannot change stop codon, zero based
+				} else if i == codonNum-1 { //cannot change stop codon, zero based
 					newBase = originalBase
 				} else {
-					fmt.Print(originalBase)
 					newBase = mutateBase(originalBase, branchLength)
 				}
-				fmt.Print(newBase, "\n")
 
 				if j == 0 {
 					thisCodon = append(thisCodon, newBase)
 					thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
 					thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
-					//fmt.Print(dna.BasesToString(thisCodon), "\n")
 				} else if j == 1 {
 					thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
 					thisCodon = append(thisCodon, newBase)
 					thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
-					//fmt.Print(dna.BasesToString(thisCodon), "\n")
 				} else {
 					thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
 					thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
 					thisCodon = append(thisCodon, newBase)
-					//fmt.Print(dna.BasesToString(thisCodon), "\n")
 				}
 
 				newCodons = dna.BasesToCodons(thisCodon)
 				originalAmAc = dna.TranslateCodon(originalCodons[i])
 				newAmAc = dna.TranslateCodon(newCodons[0])
-				//fmt.Print(originalAmAc, newAmAc, "\n")
 
-				if originalAmAc == newAmAc {
-					prob := BLOSUM[originalAmAc][newAmAc]
-					if r < prob {
-						originalCodons[i].Seq[j] = newBase
-					} else {
-						originalCodons[i].Seq[j] = originalBase
-					}
-				} else {
+				prob := BLOSUM[originalAmAc][newAmAc]
+				r := rand.Float64()
+
+				if r < prob {
 					originalCodons[i].Seq[j] = newBase
+				} else {
+					originalCodons[i].Seq[j] = originalBase
 				}
 
-				//fmt.Print(originalCodons[i].Seq[j], "\n")
 				newSequence = append(newSequence, originalCodons[i].Seq[j])
-				fmt.Print(dna.BasesToString(newSequence), "\n")
 			}
 		}
 	}
 
-	//TODO: check random number generators and maybe seed them (always A)
 	return newSequence
 }
 

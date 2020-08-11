@@ -3,21 +3,21 @@ package simulate
 import (
 	"testing"
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
-	"fmt"
+	//"fmt"
 )
 
 
 var RandGeneTests = []struct {
 	name string
 	length int
+	GC float64
 }{
-	{"testingRangGene", 30},
+	{"testingRangGene", 30, 0.42},
 }
 
 func TestRandGene(t *testing.T) {
 	for _, test := range RandGeneTests {
-		a := RandGene(test.name, test.length)
+		a := RandGene(test.name, test.length, test.GC)
 		if len(a[0].Seq) != test.length {
 			t.Errorf("expected RandGene to give %v, gave %v", test.length, len(a[0].Seq))
 		}
@@ -38,7 +38,6 @@ func TestMutateSeq(t *testing.T) {
 		if len(seq) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %s \n Ending: %s", seq, dna.BasesToString(a))
 		}
-		log.Printf(dna.BasesToString(a))
 	}
 }
 
@@ -49,7 +48,8 @@ var changeBaseTests = []struct {
 	{base},
 }
 
-func TestChangeBase(t *testing.T) {
+//tests for functions that MutateSeq is dependent on
+/*func TestChangeBase(t *testing.T) {
 	for _, test := range changeBaseTests {
 		a := changeBase(test.originalBase)
 		if a == 2 {
@@ -63,6 +63,8 @@ var originalBase = dna.G
 var mutateBaseTests = []struct {
 	base dna.Base
 	branchLength float64
+*/
+/*
 } {
 	{base, 1.0},
 }
@@ -72,4 +74,4 @@ func TestMutateBase(t *testing.T) {
 		a := mutateBase(test.base, test.branchLength)
 		fmt.Print(a, "\n")
 	}
-}
+}*/

@@ -17,17 +17,17 @@ type NTree struct {
 	Name         string
 	BranchLength float64
 	OnlyTopology bool
-	Fasta        *fasta.Fasta
-	State        int
+	Fasta        *fasta.Fasta //assigning fastas to nodes
+	State        int //is this hardcoded to 4 for the bases? so state = # which denotes a particular base at a site i.e. a state?
 	Stored       []float64
 	Scrap        float64
 	Left         *NTree
 	Right        *NTree
-	Up           *NTree
+	Up           *NTree //traversing the tree for reconstruction
 }
 
 //read tree from filename and add fastas and up pointers to the tree
-func Read_tree(filename_newick string, filename_fastas string) *NTree {
+func Read_tree(filename_newick string, filename_fastas string) *NTree { //new
 	tr, err := ReadNewick(filename_newick)
 	if err == nil {
 	}
@@ -36,7 +36,7 @@ func Read_tree(filename_newick string, filename_fastas string) *NTree {
 }
 
 //read in tree from filename
-func ReadNewick(filename string) (*NTree, error) {
+func ReadNewick(filename string) (*NTree, error) { //same as in tree.go
 	var line string
 
 	file, err := os.Open(filename)
@@ -56,14 +56,14 @@ func ReadNewick(filename string) (*NTree, error) {
 }
 
 // read in tree from string of newick
-func ReadNewick_string(tree string) *NTree {
+func ReadNewick_string(tree string) *NTree { //what's the point of this function?
 	tree_thing, err := parseNewick(tree)
 	if err != nil {
 	}
 	return tree_thing
 }
 
-func Get_tree(node *NTree) []*NTree {
+func Get_tree(node *NTree) []*NTree { //new
 	var branch []*NTree
 	branch = append(branch, node)
 	if node.Right != nil {
@@ -77,7 +77,20 @@ func Get_tree(node *NTree) []*NTree {
 	return branch
 }
 
-func Get_branch(node *NTree) []*NTree {
+func CopyTree(tree *NTree) *NTree {
+	var treeCopy *NTree
+	*treeCopy = *tree
+
+	if tree.Left != nil {
+		*treeCopy.Left = *CopyTree(tree.Left)
+	}
+	if tree.Right != nil {
+		*treeCopy.Right = *CopyTree(tree.Right)
+	}
+	return treeCopy
+}
+
+func Get_branch(node *NTree) []*NTree { //new
 	var branch []*NTree
 	if node.Left != nil && node.Right != nil {
 		branch = append(branch, node)
@@ -89,7 +102,7 @@ func Get_branch(node *NTree) []*NTree {
 	return branch
 }
 
-func Get_leaf(node *NTree) []*NTree {
+func Get_leaf(node *NTree) []*NTree { //new
 	var leaf []*NTree
 	if node.Left != nil && node.Right != nil {
 		a := Get_leaf(node.Left)
@@ -191,7 +204,7 @@ func parseNewick(input string) (*NTree, error) {
 }
 
 //set up tree with ups
-func Set_up(root *NTree, prev_node *NTree) {
+func Set_up(root *NTree, prev_node *NTree) { //new
 	if prev_node != nil {
 		root.Up = prev_node
 	} else {
@@ -204,15 +217,15 @@ func Set_up(root *NTree, prev_node *NTree) {
 }
 
 //set up tree with fastas
-func Set_fastas_up(root *NTree, fasta_file string) {
+func Set_fastas_up(root *NTree, fasta_file string) { //new
 	fastas := fasta.Read(fasta_file)
 	Set_up(root, nil)
 	leaves := Get_leaf(root)
-	for i := 0; i < len(leaves); i++ {
+	for i := 0; i < len(leaves); i++ { //length = number of nodes in leaf, i = given node
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {
 				leaves[i].Fasta = fastas[j]
-				leaves[i].State = int(leaves[i].Fasta.Seq[0])
+				leaves[i].State = int(leaves[i].Fasta.Seq[0]) //how is fasta.seq something that can be made into an int?
 			}
 
 		}
