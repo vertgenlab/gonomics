@@ -1,16 +1,15 @@
 package simulate
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/dna"
+	"testing"
 	//"fmt"
 )
 
-
 var RandGeneTests = []struct {
-	name string
+	name   string
 	length int
-	GC float64
+	GC     float64
 }{
 	{"testingRangGene", 30, 0.42},
 }
@@ -26,10 +25,10 @@ func TestRandGene(t *testing.T) {
 
 var seq = dna.StringToBases("ATGAGGTCACGATATTAG")
 var MutateSeqTests = []struct {
-	sequence []dna.Base
+	sequence     []dna.Base
 	branchLength float64
 }{
-	{seq, 1.0},//branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{seq, 1.0}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 func TestMutateSeq(t *testing.T) {
