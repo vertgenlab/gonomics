@@ -17,7 +17,7 @@ type ETree struct {
 	BranchLength float64
 	OnlyTopology bool
 	Fasta        *fasta.Fasta //assigning fastas to nodes
-	State        int //is this hardcoded to 4 for the bases? so state = # which denotes a particular base at a site i.e. a state?
+	State        int
 	Stored       []float64
 	Scrap        float64
 	Left         *ETree
