@@ -1,4 +1,4 @@
-package exapndedTree
+package expandedTree
 
 import (
 	"fmt"
