@@ -1,10 +1,9 @@
-package exapndedTree
+package expandedTree
 
 import (
-	"fmt"
-
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"os"
