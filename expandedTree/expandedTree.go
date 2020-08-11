@@ -1,4 +1,4 @@
-package tree_newick
+package exapndedTree
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 //Tree structure for simulation and reconstruction
-type ETree struct { //ETree
+type ETree struct {
 	Name         string
 	BranchLength float64
 	OnlyTopology bool
@@ -77,6 +77,7 @@ func GetTree(node *ETree) []*ETree {
 	return branch
 }
 
+//goland:noinspection GoNilness
 func CopyTree(tree *ETree) *ETree {
 	var treeCopy *ETree
 	*treeCopy = *tree
@@ -117,7 +118,7 @@ func GetLeaf(node *ETree) []*ETree {
 }
 
 func splittingCommaIndex(input string) int {
-	var openCount, closedCount int = 0, 0
+	var openCount, closedCount = 0, 0
 	for i, r := range input {
 		if r == ',' && openCount == closedCount+1 {
 			return i
