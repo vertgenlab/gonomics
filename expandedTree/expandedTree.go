@@ -76,7 +76,6 @@ func GetTree(node *ETree) []*ETree {
 	return branch
 }
 
-//goland:noinspection GoNilness
 func CopyTree(tree *ETree) *ETree {
 	var treeCopy *ETree
 	*treeCopy = *tree
