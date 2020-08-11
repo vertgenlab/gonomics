@@ -41,15 +41,14 @@ func TestMutateSeq(t *testing.T) {
 	}
 }
 
-var base = dna.G
+//tests for functions that MutateSeq is dependent on
+/*var base = dna.G
 var changeBaseTests = []struct {
 	originalBase dna.Base
 } {
 	{base},
 }
-
-//tests for functions that MutateSeq is dependent on
-/*func TestChangeBase(t *testing.T) {
+func TestChangeBase(t *testing.T) {
 	for _, test := range changeBaseTests {
 		a := changeBase(test.originalBase)
 		if a == 2 {
@@ -63,8 +62,7 @@ var originalBase = dna.G
 var mutateBaseTests = []struct {
 	base dna.Base
 	branchLength float64
-*/
-/*
+
 } {
 	{base, 1.0},
 }
