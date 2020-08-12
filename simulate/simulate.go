@@ -14,9 +14,9 @@ var GC float64 = 0.42
 // makes random gene with start and stop codon, must be length multiple of 3
 func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	var AT float64
-	AT = 1 - GC
+	AT = 1 - GCcontent
 	seq := []dna.Base{dna.A, dna.T, dna.G}
-	rand_length := length - 6
+	randLength := length - 6
 
 	r := rand.Float64()
 
@@ -26,7 +26,7 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 
 	} else {
 
-		for i := 0; i < rand_length; i++ {
+		for i := 0; i < randLength; i++ {
 
 			//cut-offs based on GC content of galGal6
 			if r < GC/2 {
@@ -67,7 +67,7 @@ func Simulate(randSeqFilename string, treeOutputFilename string, root *expandedT
 	fasta.Write(treeOutputFilename, printSeqForNodes(root, rand1[0].Seq))
 }
 
-// BLOSUM matrix for amino acid switching probabilities CHECK WHICH BLOSUM THIS IS, unsure how it was calculated
+// BLOSUM matrix for amino acid switching probabilities normalized to 0-1, unsure how it was calculated
 var BLOSUM = [][]float64{[]float64{0.288590604, 0.03087248322, 0.03087248322, 0.02953020134, 0.02147651007, 0.0255033557, 0.04026845638, 0.07785234899, 0.01476510067, 0.04295302013, 0.05906040268, 0.04429530201, 0.01744966443, 0.02147651007, 0.02953020134, 0.08456375839, 0.04966442953, 0.005369127517, 0.01744966443, 0.06845637584, 0.0},
 	[]float64{0.04457364341, 0.3449612403, 0.03875968992, 0.03100775194, 0.007751937984, 0.0484496124, 0.0523255814, 0.03294573643, 0.02325581395, 0.02325581395, 0.04651162791, 0.1201550388, 0.01550387597, 0.01744186047, 0.01937984496, 0.04457364341, 0.03488372093, 0.005813953488, 0.01744186047, 0.03100775194, 0.0},
 	[]float64{0.05122494432, 0.04454342984, 0.3140311804, 0.08240534521, 0.008908685969, 0.03340757238, 0.04899777283, 0.06458797327, 0.03118040089, 0.02227171492, 0.03118040089, 0.05345211581, 0.01113585746, 0.01781737194, 0.02004454343, 0.06904231626, 0.04899777283, 0.004454342984, 0.01559020045, 0.02672605791, 0.0},
@@ -94,7 +94,7 @@ var BLOSUM = [][]float64{[]float64{0.288590604, 0.03087248322, 0.03087248322, 0.
 func chooseRandomBase(GCcontent float64) dna.Base {
 	var base dna.Base
 	var AT float64
-	AT = 1 - GC
+	AT = 1 - GCcontent
 
 	r := rand.Float64()
 
