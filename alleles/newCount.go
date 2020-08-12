@@ -268,8 +268,6 @@ func NewCountAlleles(answer chan<- *Allele, samFilename string, reference []*fas
 	wg.Done()
 }
 
-
-
 func countGraphRead(aln *giraf.Giraf, currAlleles map[GraphLocation]*AlleleCount, runningCount []*GraphLocation, ref simpleGraph.SimpleGraph, minMapQ uint8, progress int) (map[GraphLocation]*AlleleCount, []*GraphLocation) {
 	if aln.Aln[0].Op == '*' {
 		return currAlleles, runningCount
@@ -287,11 +285,11 @@ func countGraphRead(aln *giraf.Giraf, currAlleles map[GraphLocation]*AlleleCount
 		switch cig.Op {
 		case '=': // Match
 			for i = 0; i < cig.RunLength; i++ { // For each matching base
-				currLoc := GraphLocation{Node: currNode, Pos: refPos}// define location on reference
-				// add the pos to map if necessary
-				// count the base
-				refPos++ // move to the next base in the ref
-				if int(refPos) > len(currNode.Seq) - 1 { // check if next base is on another node
+				currLoc := GraphLocation{Node: currNode, Pos: refPos}                        // define location on reference
+				currAlleles, runningCount = addPosToMap(&currLoc, currAlleles, runningCount) // add the pos to map if necessary
+				// count the base //TODO
+				refPos++                               // move to the next base in the ref
+				if int(refPos) > len(currNode.Seq)-1 { // check if next base is on another node
 					readNodeIdx++
 					currNode = ref.Nodes[aln.Path.Nodes[readNodeIdx]]
 					refPos = 0
