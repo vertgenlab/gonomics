@@ -74,7 +74,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 
 	outFile := fileio.EasyCreate(vcfFile)
 	defer outFile.Close()
-	fmt.Fprintf(outFile, "%s\n", vcf.MakeHeader())
+	fmt.Fprintf(outFile, "%s\n", vcf.NewHeader(samFileName))
 	var current dna.Base
 	//fmt.Printf("Voting matrix complete, time to vote.\n")
 	var maxList []dna.Base
