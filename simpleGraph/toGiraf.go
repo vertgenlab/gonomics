@@ -124,7 +124,19 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
 	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
 	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
+	setGirafFlags(&mappedPair)
 	return &mappedPair
+}
+
+func setGirafFlags(pair *giraf.GirafPair) {
+	pair.Fwd.Flag = uint16(getSamFlags(pair.Fwd))
+	pair.Rev.Flag = uint16(getSamFlags(pair.Rev))
+	pair.Fwd.Flag += 64
+	pair.Rev.Flag += 128
+	if isProperPairAlign(pair) {
+		pair.Fwd.Flag += 2
+		pair.Rev.Flag += 2
+	}
 }
 
 func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
