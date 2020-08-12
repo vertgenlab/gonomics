@@ -128,6 +128,7 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 	return &mappedPair
 }
 
+// setGirafFlags generates the appropriate flags for each giraf in a pair
 func setGirafFlags(pair *giraf.GirafPair) {
 	pair.Fwd.Flag = uint16(getSamFlags(pair.Fwd))
 	pair.Rev.Flag = uint16(getSamFlags(pair.Rev))
