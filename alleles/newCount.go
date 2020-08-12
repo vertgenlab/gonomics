@@ -4,11 +4,15 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/simpleGraph"
+	"log"
 	"sync"
 )
 
 // sendPassedPositions sends positions that have been passed in the file
+// TODO: Version for graph. Maybe readin graph and use simpleGraph.GetSortOrder to determine ordering
 func sendPassedPositions(answer chan<- *Allele, aln *sam.SamAln, samFilename string, runningCount []*Location, currAlleles map[Location]*AlleleCount) []*Location {
 	for i := 0; i < len(runningCount); i++ {
 
@@ -43,7 +47,16 @@ func sendPassedPositions(answer chan<- *Allele, aln *sam.SamAln, samFilename str
 	return runningCount
 }
 
-func countRead(aln *sam.SamAln, currAlleles map[Location]*AlleleCount, runningCount []*Location, ref map[string][]dna.Base, minMapQ int64, progress int) (map[Location]*AlleleCount, []*Location) {
+func countLinearRead(aln *sam.SamAln, currAlleles map[Location]*AlleleCount, runningCount []*Location, ref map[string][]dna.Base, minMapQ int64, progress int) (map[Location]*AlleleCount, []*Location) {
+
+	if aln.Cigar[0].Op == '*' {
+		return currAlleles, runningCount
+	}
+
+	if aln.MapQ < minMapQ {
+		return currAlleles, runningCount
+	}
+
 	var RefIndex, SeqIndex int64
 	var currentSeq []dna.Base
 	var i, j, k int
@@ -56,14 +69,6 @@ func countRead(aln *sam.SamAln, currAlleles map[Location]*AlleleCount, runningCo
 	progress++
 	SeqIndex = 0
 	RefIndex = aln.Pos - 1
-
-	if aln.Cigar[0].Op == '*' {
-		return currAlleles, runningCount
-	}
-
-	if aln.MapQ < minMapQ {
-		return currAlleles, runningCount
-	}
 
 	for i = 0; i < len(aln.Cigar); i++ {
 		currentSeq = aln.Seq
@@ -258,7 +263,61 @@ func NewCountAlleles(answer chan<- *Allele, samFilename string, reference []*fas
 
 	for read := range samChan {
 		runningCount = sendPassedPositions(answer, read, samFilename, runningCount, currAlleles)
-		currAlleles, runningCount = countRead(read, currAlleles, runningCount, ref, minMapQ, progress)
+		currAlleles, runningCount = countLinearRead(read, currAlleles, runningCount, ref, minMapQ, progress)
 	}
 	wg.Done()
+}
+
+
+
+func countGraphRead(aln *giraf.Giraf, currAlleles map[GraphLocation]*AlleleCount, runningCount []*GraphLocation, ref simpleGraph.SimpleGraph, minMapQ uint8, progress int) (map[GraphLocation]*AlleleCount, []*GraphLocation) {
+	if aln.Aln[0].Op == '*' {
+		return currAlleles, runningCount
+	}
+
+	if aln.MapQ < minMapQ {
+		return currAlleles, runningCount
+	}
+
+	var i, refPos int64
+	var readNodeIdx int = 0
+	var currNode *simpleGraph.Node = ref.Nodes[aln.Path.Nodes[readNodeIdx]]
+
+	for _, cig := range aln.Aln {
+		switch cig.Op {
+		case '=': // Match
+			for i = 0; i < cig.RunLength; i++ { // For each matching base
+				currLoc := GraphLocation{Node: currNode, Pos: refPos}// define location on reference
+				// add the pos to map if necessary
+				// count the base
+				refPos++ // move to the next base in the ref
+				if int(refPos) > len(currNode.Seq) - 1 { // check if next base is on another node
+					readNodeIdx++
+					currNode = ref.Nodes[aln.Path.Nodes[readNodeIdx]]
+					refPos = 0
+				}
+			}
+
+		case 'X': // Mismatch
+
+		case 'I': // Insertion
+
+		case 'D': // Deletion
+
+		case 'M': // Likely that cigar is using sam format and not fancy format. Throw error to let user know they may need to reformat.
+			log.Fatalf("ERROR: Unrecognized character 'M' in cigar. Reformat to fancy cigars to use this functionality.")
+		default: //TODO handle other cigar runes, maybe with cigar.ConsumesReference/Query
+			log.Fatalf("ERROR: Unrecognized character '%v' in cigar for read %s. Valid characters are '=' 'X' 'I' 'D'.", cig.Op, aln.QName)
+		}
+	}
+	return currAlleles, runningCount
+}
+
+func addPosToMap(currLocation *GraphLocation, currAlleles map[GraphLocation]*AlleleCount, runningCount []*GraphLocation) (map[GraphLocation]*AlleleCount, []*GraphLocation) {
+	if _, ok := currAlleles[*currLocation]; !ok {
+		currAlleles[*currLocation] = &AlleleCount{
+			Ref: currLocation.Node.Seq[currLocation.Pos], Counts: 0, BaseAF: 0, BaseCF: 0, BaseGF: 0, BaseTF: 0, BaseAR: 0, BaseCR: 0, BaseGR: 0, BaseTR: 0, Indel: make([]Indel, 0)}
+		runningCount = append(runningCount, currLocation)
+	}
+	return currAlleles, runningCount
 }

@@ -17,7 +17,6 @@ func TestSamToAlleles(t *testing.T) {
 		}
 		i++
 	}
-	fmt.Println()
 }
 
 func TestNewCountAlleles(t *testing.T) {
