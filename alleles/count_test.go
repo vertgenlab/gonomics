@@ -10,7 +10,25 @@ func TestSamToAlleles(t *testing.T) {
 	ref := fasta.Read("testdata/human_chrM.fasta")
 	answer := SamToAlleles("testdata/human_chrM.sam", ref, 0)
 
+	var i int
 	for value := range answer {
-		fmt.Sprintln(value)
+		if i < 10 {
+			fmt.Sprintln(value.Count)
+		}
+		i++
+	}
+	fmt.Println()
+}
+
+func TestNewCountAlleles(t *testing.T) {
+	ref := fasta.Read("testdata/human_chrM.fasta")
+	answerChan := GoCountAlleles("testdata/human_chrM.sam", ref, 0)
+
+	var i int
+	for value := range answerChan {
+		if i < 10 {
+			fmt.Sprintln(value.Count)
+		}
+		i++
 	}
 }
