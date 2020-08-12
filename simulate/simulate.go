@@ -15,7 +15,7 @@ var GC float64 = 0.42
 func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	var AT float64
 	AT = 1 - GC
-	seq := []dna.Base{dna.A, dna.T, dna.G} //"ATG"
+	seq := []dna.Base{dna.A, dna.T, dna.G}
 	rand_length := length - 6
 
 	r := rand.Float64()
@@ -55,8 +55,6 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	record := fasta.Fasta{name, seq}
 	var answer []*fasta.Fasta
 	answer = append(answer, &record)
-	//filename := name + ".fasta"
-	//fasta.Write(filename, answer)
 	return answer
 }
 
@@ -66,7 +64,6 @@ func Simulate(randSeqFilename string, treeOutputFilename string, root *expandedT
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	//rand1 is the fasta assigned to the root of the tree
 	fasta.Write(treeOutputFilename, printSeqForNodes(root, rand1[0].Seq))
 }
 
@@ -209,7 +206,6 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 
 //make a map and a copy of that map of an original sequence so the sequence can be assigned to a node and then mutated
 func copySeq(seq []dna.Base) []dna.Base {
-	//make sure this works with root assigned fasta
 	original := make([]dna.Base, len(seq))
 	copy(original, seq)
 	return original
