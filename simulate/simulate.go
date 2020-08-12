@@ -29,11 +29,11 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 		for i := 0; i < randLength; i++ {
 
 			//cut-offs based on GC content of galGal6
-			if r < GC/2 {
+			if r < GCcontent/2 {
 				seq = append(seq, dna.G)
-			} else if r < GC {
+			} else if r < GCcontent {
 				seq = append(seq, dna.C)
-			} else if r < AT/2+GC {
+			} else if r < AT/2+GCcontent {
 				seq = append(seq, dna.T)
 			} else {
 				seq = append(seq, dna.A)
@@ -98,11 +98,11 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 
 	r := rand.Float64()
 
-	if r < GC/2 {
+	if r < GCcontent/2 {
 		base = dna.G
-	} else if r < GC {
+	} else if r < GCcontent {
 		base = dna.C
-	} else if r < AT/2+GC {
+	} else if r < AT/2+GCcontent {
 		base = dna.T
 	} else {
 		base = dna.A
