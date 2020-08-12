@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	//"time" imported and not used led to compile error.
 )
 
 //slices of slice
