@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	//"github.com/vertgenlab/gonomics/expandedTree"
-	"github.com/vertgenlab/gonomics/tree"
+	"github.com/vertgenlab/gonomics/expandedTree"
+	//"github.com/vertgenlab/gonomics/tree"
 	"log"
 	"math/rand"
 )
@@ -62,7 +62,7 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, treeOutputFilename string, root *tree.Tree) {
+func Simulate(randSeqFilename string, treeOutputFilename string, root *expandedTree.ETree) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
@@ -217,7 +217,7 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 //make fastas based off of node and random sequence
-func printSeqForNodes(node *tree.Tree, sequence []dna.Base) []*fasta.Fasta {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base) []*fasta.Fasta {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
@@ -237,8 +237,8 @@ func printSeqForNodes(node *tree.Tree, sequence []dna.Base) []*fasta.Fasta {
 	return fastaFinal
 }
 
-func GetLeaf(node *tree.Tree) []*tree.Tree { //new
-	var leaf []*tree.Tree
+func GetLeaf(node *expandedTree.ETree) []*expandedTree.ETree { //new
+	var leaf []*expandedTree.ETree
 	if node.Left != nil && node.Right != nil {
 		a := GetLeaf(node.Left)
 		b := GetLeaf(node.Right)
@@ -251,7 +251,7 @@ func GetLeaf(node *tree.Tree) []*tree.Tree { //new
 	return leaf
 }
 
-func removeAncestors(filename string, tree *tree.Tree) {
+func removeAncestors(filename string, tree *expandedTree.ETree) {
 	var fastas []*fasta.Fasta
 	var newFastas []*fasta.Fasta
 	var outFile string
