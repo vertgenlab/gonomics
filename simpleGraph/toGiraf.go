@@ -13,7 +13,7 @@ import (
 )
 
 func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *giraf.Giraf {
-	var currBest giraf.Giraf = giraf.Giraf{
+	var currBest *giraf.Giraf = &giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
 		QEnd:      0,
@@ -81,7 +81,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
-	return &currBest
+	return currBest
 }
 
 type ScoreMatrixHelper struct {
@@ -124,7 +124,21 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
 	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
 	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
+	setGirafFlags(&mappedPair)
 	return &mappedPair
+}
+
+// setGirafFlags generates the appropriate flags for each giraf in a pair
+func setGirafFlags(pair *giraf.GirafPair) {
+	pair.Fwd.Flag = getGirafFlags(pair.Fwd)
+	pair.Rev.Flag = getGirafFlags(pair.Rev)
+	pair.Fwd.Flag += 8 // Forward
+	pair.Fwd.Flag += 16 // Paired Reads
+	pair.Fwd.Flag += 16 // Paired Reads
+	if isProperPairAlign(pair) {
+		pair.Fwd.Flag += 1 // Properly Aligned
+		pair.Rev.Flag += 1 // Properly Aligned
+	}
 }
 
 func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
@@ -171,6 +185,17 @@ func isProperPairAlign(mappedPair *giraf.GirafPair) bool {
 		}
 	}
 	return false
+}
+
+func getGirafFlags(ag *giraf.Giraf) uint8 {
+	var answer uint8
+	if ag.PosStrand {
+		answer += 4 // Positive Strand
+	}
+	if ag.AlnScore < 1200 {
+		answer += 2 // Unmapped
+	}
+	return answer
 }
 
 func getSamFlags(ag *giraf.Giraf) int64 {
