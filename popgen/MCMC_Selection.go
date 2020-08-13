@@ -38,9 +38,9 @@ func Hastings_Ratio(tOld Theta, tNew Theta) float64 {
 
 func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, logSpace bool) float64 {
 	if logSpace {
-		return AFSLogLikelihood(data, old.alpha) * old.probability / (AFSLogLikelihood(data, thetaPrime.alpha) * thetaPrime.probability)
+		return numbers.DivideLog(AFSLogLikelihood(data, old.alpha), AFSLogLikelihood(data, thetaPrime.alpha)) * (thetaPrime.probability / old.probability)
 	}
-	return AFSLikelihood(data, old.alpha) * old.probability / (AFSLikelihood(data, thetaPrime.alpha) * thetaPrime.probability)
+	return (AFSLikelihood(data, thetaPrime.alpha) * thetaPrime.probability) / (AFSLikelihood(data, old.alpha) * old.probability)
 }
 
 func GenerateCandidateThetaPrime(t Theta) Theta {
@@ -90,7 +90,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	t := InitializeTheta(muZero, sigmaZero, len(data.sites))
 	for i := 0; i < iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t)
-		if Metropolis_Accept(tCandidate, t, data, logSpace) {
+		if Metropolis_Accept(t, tCandidate, data, logSpace) {
 			t = tCandidate
 			acceptList[i] = true
 		} else {
