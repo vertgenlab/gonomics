@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"os"
 	"strings"
 	"sync"
 )
@@ -131,7 +130,7 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 }
 
 //TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
-func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
+func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
 		if input[i].Notes == "" {

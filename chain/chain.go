@@ -90,6 +90,7 @@ func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta
 	file := fileio.EasyOpen(filename)
 	ans := make(chan *Chain)
 	var wg sync.WaitGroup
+	wg.Add(1)
 	go ReadToChan(file, ans, &wg)
 
 	go func() {
