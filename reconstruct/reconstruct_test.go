@@ -4,7 +4,6 @@ import (
 	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/tree_newick"
 	"testing"
-	"time"
 )
 
 var input = []struct {
@@ -16,7 +15,6 @@ var input = []struct {
 	{"testdata/hackett_newick", 66}}
 
 func Test_reconstruct(t *testing.T) {
-	start := time.Now()
 	for _, test := range input {
 
 		//example of how to run simulation: 1) read in tree (no fastas) 2) simulate random gene 3) simulate evolution 4) remove ancestors for reconstruction 4) set up fastas
@@ -38,11 +36,6 @@ func Test_reconstruct(t *testing.T) {
 		if a < 0.8 {
 			t.Errorf("Accuracy of %v is below 0.8, expected is (~ .9, .91, .97)", a)
 		}
-
-	}
-	elapsed := time.Since(start)
-	if elapsed > 1*time.Second {
-		t.Errorf("time of %v is greater than expected (expected ~.33 seconds )", elapsed)
 
 	}
 }
