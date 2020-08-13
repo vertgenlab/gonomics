@@ -23,6 +23,7 @@ func convertAxt(axtFile, format, targetFa, output string) {
 			ans = append(ans, i)
 		}
 		vcf.Sort(ans)
+		vcf.WriteVcfToFileHandle(file, ans)
 		file.Close()
 	case "gg":
 		simpleGraph.Write(output, axtToSimpleGraph(axtFile, targetFa))
