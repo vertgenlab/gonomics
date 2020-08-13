@@ -14,7 +14,7 @@ type Giraf struct {
 	QName     string
 	QStart    int
 	QEnd      int
-	Flag      uint16
+	Flag      uint8
 	PosStrand bool
 	Path      *Path
 	Aln       []*cigar.Cigar // current cigar will need to be expanded

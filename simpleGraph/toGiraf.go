@@ -130,13 +130,14 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 
 // setGirafFlags generates the appropriate flags for each giraf in a pair
 func setGirafFlags(pair *giraf.GirafPair) {
-	pair.Fwd.Flag = uint16(getSamFlags(pair.Fwd))
-	pair.Rev.Flag = uint16(getSamFlags(pair.Rev))
-	pair.Fwd.Flag += 64
-	pair.Rev.Flag += 128
+	pair.Fwd.Flag = getGirafFlags(pair.Fwd)
+	pair.Rev.Flag = getGirafFlags(pair.Rev)
+	pair.Fwd.Flag += 8 // Forward
+	pair.Fwd.Flag += 16 // Paired Reads
+	pair.Fwd.Flag += 16 // Paired Reads
 	if isProperPairAlign(pair) {
-		pair.Fwd.Flag += 2
-		pair.Rev.Flag += 2
+		pair.Fwd.Flag += 1 // Properly Aligned
+		pair.Rev.Flag += 1 // Properly Aligned
 	}
 }
 
@@ -184,6 +185,17 @@ func isProperPairAlign(mappedPair *giraf.GirafPair) bool {
 		}
 	}
 	return false
+}
+
+func getGirafFlags(ag *giraf.Giraf) uint8 {
+	var answer uint8
+	if ag.PosStrand {
+		answer += 4 // Positive Strand
+	}
+	if ag.AlnScore < 1200 {
+		answer += 2 // Unmapped
+	}
+	return answer
 }
 
 func getSamFlags(ag *giraf.Giraf) int64 {

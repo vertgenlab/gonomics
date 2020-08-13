@@ -26,7 +26,7 @@ func stringToGiraf(line string) *Giraf {
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
 			QEnd:      common.StringToInt(data[2]),
-			Flag:      common.StringToUint16(data[3]),
+			Flag:      common.StringToUint8(data[3]),
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
 			Aln:       cigar.FromString(data[6]),
