@@ -169,6 +169,7 @@ func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
 
 //FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
 func FilterVcfPos(vcfs []*Vcf) []*Vcf {
+	Sort(vcfs)
 	var answer []*Vcf
 	chrVcfMap := make(map[string][]*Vcf)
 
@@ -196,6 +197,5 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 
 		}
 	}
-	Sort(answer)
 	return answer
 }
