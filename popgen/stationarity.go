@@ -75,7 +75,6 @@ func GVCFToAFS(filename string) AFS {
 			}
 		}
 	}
-	alpha.File.Close()
 	return answer
 }
 
