@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/tree_newick"
+	"github.com/vertgenlab/gonomics/expandedTree"
+	//"github.com/vertgenlab/gonomics/simulate"
 )
 
 //final function to run
-func Reconstruct(root *tree_newick.NTree, filename_output string) {
-	leaf := Get_leaf(root)
-	branches := Get_branch(root)
+func Reconstruct(root *expandedTree.ETree, filename_output string) {
+	leaf := expandedTree.GetLeaf(root)
+	branches := expandedTree.GetBranch(root)
 	length := len(leaf[0].Fasta.Seq)
 
 	for i := 0; i < length; i++ {
@@ -92,7 +93,7 @@ func Yhat(r []float64) int {
 	}
 	return pos
 }
-
+/* repeated functions that exist in expandedTree
 //get the nodes of the entire tree in a slice
 func Get_tree(node *tree_newick.NTree) []*tree_newick.NTree {
 	var branch []*tree_newick.NTree
@@ -136,9 +137,11 @@ func Get_leaf(node *tree_newick.NTree) []*tree_newick.NTree {
 	return leaf
 }
 
+ */
+
 //set the state of the tree given the Fasta and the position
-func Set_state(node *tree_newick.NTree, pos int) {
-	leaf := Get_leaf(node)
+func Set_state(node *expandedTree.ETree, pos int) {
+	leaf := expandedTree.GetLeaf(node)
 	var leaf_names []string
 	for i := 0; i < len(leaf); i++ {
 		leaf_names = append(leaf_names, leaf[i].Name)
@@ -164,7 +167,7 @@ func Set_state(node *tree_newick.NTree, pos int) {
 }
 
 //set up the tree with memory of the nodes below it using the set state
-func Postorder(node *tree_newick.NTree) {
+func Postorder(node *expandedTree.ETree) {
 	if node.Left != nil && node.Right != nil {
 		Postorder(node.Left)
 		Postorder(node.Right)
@@ -185,7 +188,7 @@ func Postorder(node *tree_newick.NTree) {
 }
 
 //Bubble up the tree using the memory of the previous nodes
-func Bubble_up(node *tree_newick.NTree, prev_node *tree_newick.NTree, scrap []float64) {
+func Bubble_up(node *expandedTree.ETree, prev_node *expandedTree.ETree, scrap []float64) {
 	tot := 0.0
 	scrap_new := []float64{0, 0, 0, 0}
 	for i := 0; i < 4; i++ {
@@ -217,7 +220,7 @@ func Bubble_up(node *tree_newick.NTree, prev_node *tree_newick.NTree, scrap []fl
 }
 
 //fix each node and return the probabilities for each base at that site
-func Fix_fc(root *tree_newick.NTree, node *tree_newick.NTree) []float64 {
+func Fix_fc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	ans := []float64{0, 0, 0, 0}
 
 	for i := 0; i < 4; i++ {
@@ -236,9 +239,9 @@ func Fix_fc(root *tree_newick.NTree, node *tree_newick.NTree) []float64 {
 }
 
 //loop over the nodes of the tree to fix each node and append the most probable base to the Fasta
-func Loop_nodes(root *tree_newick.NTree) {
-	leafs := Get_leaf(root)
-	branches := Get_branch(root)
+func Loop_nodes(root *expandedTree.ETree) {
+	leafs := expandedTree.GetLeaf(root)
+	branches := expandedTree.GetBranch(root)
 	for j := 0; j < len(leafs[0].Fasta.Seq); j++ {
 		for i := 0; i < len(leafs); i++ {
 			leafs[i].State = int(leafs[i].Fasta.Seq[j])

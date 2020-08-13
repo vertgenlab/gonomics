@@ -2,7 +2,7 @@ package reconstruct
 
 import (
 	"github.com/vertgenlab/gonomics/simulate"
-	"github.com/vertgenlab/gonomics/tree_newick"
+	"github.com/vertgenlab/gonomics/expandedTree"
 	"testing"
 	"time"
 )
@@ -20,16 +20,16 @@ func Test_reconstruct(t *testing.T) {
 	for _, test := range input {
 
 		//example of how to run simulation: 1) read in tree (no fastas) 2) simulate random gene 3) simulate evolution 4) remove ancestors for reconstruction 4) set up fastas
-		tre, er := tree_newick.ReadNewick(test.newick_filename)
+		tre, er := expandedTree.ReadNewick(test.newick_filename)
 		if er != nil {
 		}
-		simulate.Rand_gene("test", test.length)
+		simulate.RandGene("test", test.length, 0.42)
 		simulate.Simulate("test.fasta", "test_tree.fasta", tre)
-		simulate.Remove_ancestors("test_tree.fasta", tre)
-		tree_newick.Set_fastas_up(tre, "test_tree.fasta")
+		simulate.RemoveAncestors("test_tree.fasta", tre)
+		expandedTree.AssignFastas(tre, "test_tree.fasta")
 
 		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
-		tr := tree_newick.Read_tree(test.newick_filename, "test_tree.fasta")
+		tr := expandedTree.ReadTree(test.newick_filename, "test_tree.fasta")
 		Reconstruct(tr, "test_reconstruction.fasta")
 
 		//example of check simulation vs reconstrucion

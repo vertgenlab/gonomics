@@ -246,7 +246,7 @@ func GetLeaf(node *expandedTree.ETree) []*expandedTree.ETree { //new
 	return leaf
 }
 
-func removeAncestors(filename string, tree *expandedTree.ETree) {
+func RemoveAncestors(filename string, tree *expandedTree.ETree) {
 	var fastas []*fasta.Fasta
 	var newFastas []*fasta.Fasta
 	var outFile string
