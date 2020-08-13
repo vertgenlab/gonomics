@@ -13,7 +13,7 @@ import (
 )
 
 func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune) *giraf.Giraf {
-	var currBest *giraf.Giraf = &giraf.Giraf{
+	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
 		QEnd:      0,
@@ -81,7 +81,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
-	return currBest
+	return &currBest
 }
 
 type ScoreMatrixHelper struct {
