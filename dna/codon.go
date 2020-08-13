@@ -4,11 +4,13 @@ import (
 	"log"
 )
 
+//Codon represents three DNA bases for genetic analysis of proteins and amino acids.
 type Codon struct {
 	Seq []Base
 }
 
 //moving Sophie's code for AminoAcid identities and the genetic code to the DNA package.
+//AminoAcid converts the twenty canonical amino acids and stop codon into numberical uiint8 codes.
 type AminoAcid uint8
 
 const (
@@ -35,6 +37,7 @@ const (
 	Stop AminoAcid = 20
 )
 
+//The GeneticCode variable is a map of codon strings to amino acids. Useful for translation for protein analysis.
 var GeneticCode = map[string]AminoAcid{
 	"TGA": AminoAcid(20), "TAA": AminoAcid(20), "TAG": AminoAcid(20),
 	"GTA": AminoAcid(19), "GTC": AminoAcid(19), "GTG": AminoAcid(19), "GTT": AminoAcid(19),
@@ -58,6 +61,7 @@ var GeneticCode = map[string]AminoAcid{
 	"AGA": AminoAcid(1), "AGG": AminoAcid(1), "CGC": AminoAcid(1), "CGG": AminoAcid(1), "CGA": AminoAcid(1), "CGT": AminoAcid(1),
 	"GCA": AminoAcid(0), "GCG": AminoAcid(0), "GCT": AminoAcid(0), "GCC": AminoAcid(0)}
 
+//AminoAcidToShortString converts type AminoAcid into single character amino acid symbols.
 func AminoAcidToShortString(a AminoAcid) string {
 	switch a {
 	case Ala:
@@ -108,6 +112,7 @@ func AminoAcidToShortString(a AminoAcid) string {
 	}
 }
 
+//AminoAcidToString converts type AminoAcid into three letter amino acid symbols.
 func AminoAcidToString(a AminoAcid) string {
 	switch a {
 	case Ala:
@@ -158,6 +163,7 @@ func AminoAcidToString(a AminoAcid) string {
 	}
 }
 
+//BasesToCodons converts a slice of Dna bases into a slice of Codons.
 //TODO: Add in frame as an argument.
 //TODO: Initialize to len 3 and use the frame argument to update the index instead of append.
 func BasesToCodons(b []Base) []*Codon {
@@ -178,6 +184,7 @@ func BasesToCodons(b []Base) []*Codon {
 	return answer
 }
 
+//CodonsToSeq reverts a slice of Codons into a slice of DNA bases.
 func CodonsToSeq(c []*Codon) []Base {
 	var answer []Base
 	for i := 0; i < len(c); i++ {
@@ -188,6 +195,7 @@ func CodonsToSeq(c []*Codon) []Base {
 	return answer
 }
 
+//TranslateCodon converts an individual Codon struct into the corresponding AminoAcid type.
 func TranslateCodon(c *Codon) AminoAcid {
 	val, ok := GeneticCode[BasesToString(c.Seq)]
 	if ok {
@@ -198,18 +206,22 @@ func TranslateCodon(c *Codon) AminoAcid {
 	}
 }
 
+//NonSynonymous compares two Codon structs and returns true if they encode different AminoAcids.
 func NonSynonymous(c1 *Codon, c2 *Codon) bool {
 	return TranslateCodon(c1) != TranslateCodon(c2)
 }
 
+//Synonymous compares two codons and returns true if the codones have non-identical sequences that code for the same amino acid.
 func Synonymous(c1 *Codon, c2 *Codon) bool {
 	return TranslateCodon(c1) == TranslateCodon(c2) && !IsEqual(c1, c2)
 }
 
+//IsEqual compares two Codons and returns true if tthe underlying sequences are identical.
 func IsEqual(c1 *Codon, c2 *Codon) bool {
 	return BasesToString(c1.Seq) == BasesToString(c2.Seq)
 }
 
+//TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
 func TranslateSeq(b []Base) []AminoAcid {
 	var answer []AminoAcid
 	codons := BasesToCodons(b)
@@ -219,6 +231,7 @@ func TranslateSeq(b []Base) []AminoAcid {
 	return answer
 }
 
+//PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
 func PolypeptideToShortString(a []AminoAcid) string {
 	var answer string
 	for i := 0; i < len(a); i++ {
@@ -227,6 +240,7 @@ func PolypeptideToShortString(a []AminoAcid) string {
 	return answer
 }
 
+//PolypeptideToString converts a slice of AminoAcids into a string of three character amino acid symbols.
 func PolypeptideToString(a []AminoAcid) string {
 	var answer string
 	for i := 0; i < len(a); i++ {
@@ -235,12 +249,14 @@ func PolypeptideToString(a []AminoAcid) string {
 	return answer
 }
 
+//TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
 func TranslateToShortString(b []Base) string {
 	AllToUpper(b)
 	a := TranslateSeq(b)
 	return PolypeptideToShortString(a)
 }
 
+//TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
 func TranslateToString(b []Base) string {
 	AllToUpper(b)
 	a := TranslateSeq(b)
