@@ -69,17 +69,17 @@ func NoVcfOverlap(vcfs []*Vcf) {
 }
 
 func Snp(v *Vcf) bool {
-	if strings.Compare(v.Format, "SVTYPE=SNP") == 0 {
+	if strings.Contains(v.Format, "SVTYPE=SNP") {
 		return true
 	}
-	if strings.Compare(v.Info, "SVTYPE=SNP") == 0 {
+	if strings.Contains(v.Info, "SVTYPE=SNP") {
 		return true
 	}
 	return false
 }
 
 func Ins(v *Vcf) bool {
-	if strings.Compare(v.Format, "SVTYPE=INS") == 0 {
+	if strings.Contains(v.Format, "SVTYPE=INS") {
 		return true
 	}
 	if strings.Contains(v.Info, "SVTYPE=INS") {
@@ -90,7 +90,7 @@ func Ins(v *Vcf) bool {
 
 func Del(v *Vcf) bool {
 	var truth bool = false
-	if strings.Compare(v.Format, "SVTYPE=DEL") == 0 {
+	if strings.Contains(v.Format, "SVTYPE=DEL") {
 		return true
 	}
 	if strings.Contains(v.Info, "SVTYPE=DEL") {
