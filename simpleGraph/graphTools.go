@@ -27,6 +27,7 @@ func VariantGraph(ref <-chan *fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *Simple
 			AddNode(gg, chrNode)
 		}
 	}
+	gg = SortGraph(gg)
 	return gg
 }
 
