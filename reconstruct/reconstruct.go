@@ -3,37 +3,37 @@ package reconstruct
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
 	//"github.com/vertgenlab/gonomics/simulate"
 )
 
 //final function to run
-func Reconstruct(root *expandedTree.ETree, filename_output string) {
+func Reconstruct(root *expandedTree.ETree, outFilename string) {
 	leaf := expandedTree.GetLeaf(root)
 	branches := expandedTree.GetBranch(root)
 	length := len(leaf[0].Fasta.Seq)
 
 	for i := 0; i < length; i++ {
 		//set up tree
-		Set_state(root, i)
+		SetState(root, i)
 		Postorder(root)
 		// loop nodes to get probable base at that site and node
 		Loop_nodes(root)
 	}
 	var fastas []*fasta.Fasta
 
-	for i := 0; i < len(branches); i++ {
-		fastas = append(fastas, branches[i].Fasta)
+	for j := 0; j < len(branches); j++ {
+		fastas = append(fastas, branches[j].Fasta)
 	}
 
 	var fas []*fasta.Fasta
 	//loop sites
-	for i := 0; i < len(fastas); i++ {
-		fas = append(fas, fastas[i])
+	for k := 0; k < len(fastas); k++ {
+		fas = append(fas, fastas[k])
 	}
 
-	fasta.Write(filename_output, fas)
+	fasta.Write(outFilename, fas)
 
 }
 
@@ -93,6 +93,7 @@ func Yhat(r []float64) int {
 	}
 	return pos
 }
+
 /* repeated functions that exist in expandedTree
 //get the nodes of the entire tree in a slice
 func Get_tree(node *tree_newick.NTree) []*tree_newick.NTree {
@@ -137,32 +138,38 @@ func Get_leaf(node *tree_newick.NTree) []*tree_newick.NTree {
 	return leaf
 }
 
- */
+*/
 
-//set the state of the tree given the Fasta and the position
-func Set_state(node *expandedTree.ETree, pos int) {
+//set the state of the tree given the Fasta and the position (zero-based)
+func SetState(node *expandedTree.ETree, pos int) {
 	leaf := expandedTree.GetLeaf(node)
-	var leaf_names []string
+	var leafNames []string
 	for i := 0; i < len(leaf); i++ {
-		leaf_names = append(leaf_names, leaf[i].Name)
+		leafNames = append(leafNames, leaf[i].Name)
 	}
+
+	//didn't have a situation where position could be the last base of a sequence? Was that because of stop codons?
 	node.State = 4
-	node.Stored = []float64{0, 0, 0, 0}
-	for i := 0; i < len(leaf_names); i++ {
-		if node.Name == leaf_names[i] {
-			if len(node.Fasta.Seq) > pos {
+	node.Stored = []float64{0, 0, 0, 0} //everything starts as N
+	for i := 0; i < len(leafNames); i++ {
+		if node.Name == leafNames[i] {
+			if len(node.Fasta.Seq) > pos { //keeps it from returning an index out of range error
+				node.State = int(node.Fasta.Seq[pos]) //State = base at given position
+				// node.Stored = []float64{0, 0, 0, 0} //do i need to respecify thins every time or within the larger loop?
+				node.Stored[node.State] = 1 //the position in the list which corresponds to the base of State becomes 1 (state =0 (A) then 0 position of stored becomes 1)
+			} else if len(node.Fasta.Seq) == pos { //I'm gonna add this here because it feels necessary?
 				node.State = int(node.Fasta.Seq[pos])
-				node.Stored = []float64{0, 0, 0, 0}
+				//node.Stored = []float64{0, 0, 0, 0}
 				node.Stored[node.State] = 1
 			}
 		}
 	}
 
 	if node.Left != nil {
-		Set_state(node.Left, pos)
+		SetState(node.Left, pos)
 	}
 	if node.Right != nil {
-		Set_state(node.Right, pos)
+		SetState(node.Right, pos)
 	}
 }
 

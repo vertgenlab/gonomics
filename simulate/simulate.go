@@ -163,8 +163,29 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 
 				if i == 0 {
 					newBase = originalBase //cannot change start codon
-				} else if i == codonNum-1 { //cannot change stop codon, zero based
-					newBase = originalBase
+				} else if i == codonNum-1 { //zero-based
+					for sCod := 0; sCod < 3; sCod++ {
+						r := rand.Float64()
+						if sCod == 0 { //first position is only ever a T
+							originalCodons[i].Seq[sCod] = dna.T
+						} else if sCod == 1 { //second position can either be an A or G
+							if r < 0.66 { //2/3 preference for A
+								originalCodons[i].Seq[sCod] = dna.A
+							} else {
+								originalCodons[i].Seq[sCod] = dna.G
+							}
+						} else { //last position can either be A or G, but if previous position is G it cannot be G again
+							if originalCodons[i].Seq[sCod-1] == dna.G {
+								originalCodons[i].Seq[sCod] = dna.A
+							} else {
+								if r < 0.5 {
+									originalCodons[i].Seq[sCod] = dna.A
+								} else {
+									originalCodons[i].Seq[sCod] = dna.G
+								}
+							}
+						}
+					}
 				} else {
 					newBase = mutateBase(originalBase, branchLength)
 				}
@@ -232,20 +253,6 @@ func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base) []*fasta.Fa
 	return fastaFinal
 }
 
-func GetLeaf(node *expandedTree.ETree) []*expandedTree.ETree { //new
-	var leaf []*expandedTree.ETree
-	if node.Left != nil && node.Right != nil {
-		a := GetLeaf(node.Left)
-		b := GetLeaf(node.Right)
-		leaf = append(leaf, a...)
-		leaf = append(leaf, b...)
-	}
-	if node.Left == nil && node.Right == nil {
-		leaf = append(leaf, node)
-	}
-	return leaf
-}
-
 func RemoveAncestors(filename string, tree *expandedTree.ETree) {
 	var fastas []*fasta.Fasta
 	var newFastas []*fasta.Fasta
@@ -253,7 +260,7 @@ func RemoveAncestors(filename string, tree *expandedTree.ETree) {
 
 	fastas = fasta.Read(filename)
 
-	leaves := GetLeaf(tree)
+	leaves := expandedTree.GetLeaf(tree)
 	for i := 0; i < len(fastas); i++ {
 		for j := 0; j < len(leaves); j++ {
 			if fastas[i].Name == leaves[j].Name {
