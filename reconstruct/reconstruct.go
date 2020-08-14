@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	//"github.com/vertgenlab/gonomics/simulate"
 )
 
 //final function to run
@@ -38,15 +37,15 @@ func Reconstruct(root *expandedTree.ETree, outFilename string) {
 }
 
 //test accuracy of the reconstruction compared to the simulation
-func Accuracy(sim_filename string, rec_filename string) float64 {
+func Accuracy(simFilename string, recFilename string) float64 {
 	tot := 0.0
-	sim := fasta.Read(sim_filename)
-	rec := fasta.Read(rec_filename)
-	des := "descendents_" + sim_filename
-	sim_leafs := fasta.Read(des)
+	sim := fasta.Read(simFilename)
+	rec := fasta.Read(recFilename)
+	des := "descendents_" + simFilename
+	simLeafs := fasta.Read(des)
 	for i := 0; i < len(sim); i++ {
-		for j := 0; j < len(sim_leafs); j++ {
-			if sim[i].Name == sim_leafs[j].Name {
+		for j := 0; j < len(simLeafs); j++ {
+			if sim[i].Name == simLeafs[j].Name {
 				sim = append(sim[:i], sim[i+1:]...)
 			}
 		}
@@ -93,52 +92,6 @@ func Yhat(r []float64) int {
 	}
 	return pos
 }
-
-/* repeated functions that exist in expandedTree
-//get the nodes of the entire tree in a slice
-func Get_tree(node *tree_newick.NTree) []*tree_newick.NTree {
-	var branch []*tree_newick.NTree
-	branch = append(branch, node)
-	if node.Right != nil {
-		b := Get_tree(node.Right)
-		branch = append(branch, b...)
-	}
-	if node.Left != nil {
-		a := Get_tree(node.Left)
-		branch = append(branch, a...)
-	}
-	return branch
-}
-
-//get the interior nodes of the tree
-func Get_branch(node *tree_newick.NTree) []*tree_newick.NTree {
-	var branch []*tree_newick.NTree
-	if node.Left != nil && node.Right != nil {
-		branch = append(branch, node)
-		a := Get_branch(node.Left)
-		b := Get_branch(node.Right)
-		branch = append(branch, a...)
-		branch = append(branch, b...)
-	}
-	return branch
-}
-
-//get the leafs of the tree
-func Get_leaf(node *tree_newick.NTree) []*tree_newick.NTree {
-	var leaf []*tree_newick.NTree
-	if node.Left != nil && node.Right != nil {
-		a := Get_leaf(node.Left)
-		b := Get_leaf(node.Right)
-		leaf = append(leaf, a...)
-		leaf = append(leaf, b...)
-	}
-	if node.Left == nil && node.Right == nil {
-		leaf = append(leaf, node)
-	}
-	return leaf
-}
-
-*/
 
 //set the state of the tree given the Fasta and the position (zero-based)
 func SetState(node *expandedTree.ETree, pos int) {
