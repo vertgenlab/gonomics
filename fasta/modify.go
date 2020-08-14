@@ -46,6 +46,20 @@ func RefPosToAlnPos(record *Fasta, RefPos int) int {
 	return AlnPos
 }
 
+//AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceeding reference position.
+//0 based.
+func AlnPosToRefPos(record *Fasta, AlnPos int) int {
+	var RefPos int = 0
+	for t := 0; t < AlnPos; t++ {
+		if t == len(record.Seq) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if record.Seq[t] != dna.Gap {
+			RefPos++
+		}
+	}
+	return RefPos
+}
+
 func FilterName(records []*Fasta, name string) []*Fasta {
 	for i := 0; i < len(records); {
 		fmt.Printf("i: %d. len: %d\n", i, len(records))
