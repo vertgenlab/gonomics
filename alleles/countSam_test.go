@@ -8,7 +8,7 @@ import (
 
 func TestSamToAlleles(t *testing.T) {
 	ref := fasta.Read("testdata/human_chrM.fasta")
-	answer := SamToAlleles("testdata/human_chrM.sam", ref, 0)
+	answer := GoCountSamAlleles("testdata/human_chrM.sam", ref, 0)
 
 	var i int
 	for value := range answer {
@@ -21,7 +21,7 @@ func TestSamToAlleles(t *testing.T) {
 
 func TestNewCountAlleles(t *testing.T) {
 	ref := fasta.Read("testdata/human_chrM.fasta")
-	answerChan := GoCountAlleles("testdata/human_chrM.sam", ref, 0)
+	answerChan := GoCountSamAlleles("testdata/human_chrM.sam", ref, 0)
 
 	var i int
 	for value := range answerChan {
