@@ -39,7 +39,7 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 	alleleStream, normalIDs := startAlleleStreams(ref, expSamples, normSamples, minMapQ, memBufferSize)
 	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold)
 
-	vcf.WriteHeader(output)
+	//vcf.WriteHeader(output)
 	for vcfRecord := range answer {
 		vcf.PrintSingleLine(vcfRecord)
 		vcf.WriteVcf(output, vcfRecord)
