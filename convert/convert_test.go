@@ -1,12 +1,11 @@
 package convert
 
-import(
-	"testing"
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/fasta"
+import (
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/vcf"
+	"testing"
 )
-
 
 var seqA []dna.Base = dna.StringToBases("--TTTC--ATGAATAA")
 var seqB []dna.Base = dna.StringToBases("CCATTCCAA--CAGA-")

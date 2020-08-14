@@ -8,12 +8,12 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"strings"
 )
@@ -227,47 +227,47 @@ func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
 //PairwiseFaToVcf takes in a pairwise multiFa alignment and returns Vcf entries for segregating sites with the first entry as the reference and the second fasta entry as the alt allele.
 //This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
 func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
-	var pastStart bool = false//bool check to see if we have an insertion at the start of an alignment.
+	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
 	var insertion bool = false
 	var deletion bool = false
 	var insertionAlnPos int
 	var deletionAlnPos int
 	answer := make([]*vcf.Vcf, 0)
 
-	for i := 0; i < len(f[0].Seq); i++ {//loop through reference alignment positions
-		if f[0].Seq[i] == dna.Gap {//reference is gap (insertion)
+	for i := 0; i < len(f[0].Seq); i++ { //loop through reference alignment positions
+		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
 			if pastStart {
 				if !insertion {
-				insertionAlnPos = i - 1//TODO: breaks for alignments starting with an insertion(gap in Aln postion 0 of the reference)
+					insertionAlnPos = i - 1 //TODO: breaks for alignments starting with an insertion(gap in Aln postion 0 of the reference)
 				}
 				insertion = true
 			}
 		} else if f[0].Seq[i] != f[1].Seq[i] {
 			pastStart = true
-			if insertion {//catches the case where an insertion, now complete, is followed directly by a snp.
+			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
 				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
 			}
-			if f[1].Seq[i] == dna.Gap {//alt is gap (deletion)
+			if f[1].Seq[i] == dna.Gap { //alt is gap (deletion)
 				if !deletion {
-					deletionAlnPos = i -1 
+					deletionAlnPos = i - 1
 				}
 				deletion = true
-			} else if deletion {//snp immediately follows the end of a deletion
+			} else if deletion { //snp immediately follows the end of a deletion
 				deletion = false
-				answer = append(answer, &vcf.Vcf{Chr:chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref:dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})//from deletion
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})//then add current diff
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})                                           //then add current diff
 			} else {
 				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
 			}
 			insertion = false
-		} else if insertion {//case where ref and alt agree now but previous bases were part of an insertion.
+		} else if insertion { //case where ref and alt agree now but previous bases were part of an insertion.
 			pastStart = true
 			insertion = false
 			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
 		} else if deletion {
 			pastStart = true
 			deletion = false
-			answer = append(answer, &vcf.Vcf{Chr:chr, Pos: int64(fasta.AlnPosToRefPos(f[0],  deletionAlnPos) + 1), Id: ".", Ref:dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})//from deletion		}
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion		}
 		}
 	}
 	//DEBUG:
@@ -276,4 +276,3 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 	}*/
 	return answer
 }
-
