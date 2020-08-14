@@ -271,9 +271,9 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 		}
 	}
 	//DEBUG:
-	for i := 0; i < len(answer); i++ {
+	/*for i := 0; i < len(answer); i++ {
 		vcf.PrintSingleLine(answer[i])
-	}
+	}*/
 	return answer
 }
 
