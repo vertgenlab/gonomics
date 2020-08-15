@@ -26,6 +26,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 		for i := range vcfChannel {
 			vcf.WriteVcf(file, i)
 		}
+		file.Close()
 	case "gg":
 		simpleGraph.Write(output, chainToSimpleGraph(chainFile, targetFa, queryFa))
 	default:

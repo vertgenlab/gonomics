@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -16,27 +15,16 @@ func convertAxt(axtFile, format, targetFa, output string) {
 	switch format {
 	case "vcf":
 		vcfChannel := goChannelAxtVcf(axtFile)
-		tmp := output + ".tmp"
-		file := fileio.EasyCreate(tmp)
-
+		file := fileio.EasyCreate(output)
 		header := vcf.NewHeader(strings.TrimSuffix(targetFa, filepath.Ext(targetFa)))
 		vcf.NewWriteHeader(file, header)
+		var ans []*vcf.Vcf
 		for i := range vcfChannel {
-			vcf.WriteVcf(file, i)
+			ans = append(ans, i)
 		}
+		vcf.Sort(ans)
+		vcf.WriteVcfToFileHandle(file, ans)
 		file.Close()
-
-		unSortedVcf := vcf.Read(tmp)
-		final := fileio.EasyCreate(output)
-		vcf.NewWriteHeader(final, header)
-		vcf.Sort(unSortedVcf)
-
-		for _, v := range unSortedVcf {
-			vcf.WriteVcf(final, v)
-		}
-		os.Remove(tmp)
-		final.Close()
-
 	case "gg":
 		simpleGraph.Write(output, axtToSimpleGraph(axtFile, targetFa))
 	default:
