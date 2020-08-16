@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"sync"
 )
-
+//TODO: Merge with countGiraf functions using interfaces???
 func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int64) <-chan *Allele {
 	answer := make(chan *Allele)
 	var wg sync.WaitGroup

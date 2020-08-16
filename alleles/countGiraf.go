@@ -7,7 +7,7 @@ import (
 	"log"
 	"sync"
 )
-
+//TODO: Merge with countSam functions using interfaces???
 func GoCountGirafAlleles(girafFilename string, reference *simpleGraph.SimpleGraph, minMapQ uint8) <-chan *GraphAllele {
 	answer := make(chan *GraphAllele)
 	var wg sync.WaitGroup
