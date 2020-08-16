@@ -12,9 +12,6 @@ func GoCountGirafAlleles(girafFilename string, reference *simpleGraph.SimpleGrap
 	answer := make(chan *GraphAllele)
 	var wg sync.WaitGroup
 	wg.Add(1)
-
-	//TODO: simpleGraph.AllToUpper(reference)
-
 	go CountGirafAlleles(answer, girafFilename, reference, minMapQ, &wg)
 
 	go func() {
