@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"strconv"
 	"strings"
@@ -31,30 +30,30 @@ type Indel struct {
 	CountR int32
 }
 
-type Location struct {
-	Chr string
+type Coordinate struct {
+	Chr string // or node
 	Pos int64
 }
 
-type GraphLocation struct {
-	Node *simpleGraph.Node
-	Pos  int64
-}
+//type GraphCoordinate struct {
+//	Node *simpleGraph.Node
+//	Pos  int64
+//}
 
 type Allele struct {
 	Sample   string
 	Count    *AlleleCount
-	Location *Location
+	Location *Coordinate
 }
 
-type GraphAllele struct {
-	Sample   string
-	Count    *AlleleCount
-	Location *GraphLocation
-}
+//type GraphAllele struct {
+//	Sample   string
+//	Count    *AlleleCount
+//	Location *GraphCoordinate
+//}
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount
-type SampleMap map[Location]*AlleleCount
+type SampleMap map[Coordinate]*AlleleCount
 
 // Convert SampleMap to VCF
 func AllelesToVcf(input SampleMap) []*vcf.Vcf {
@@ -261,9 +260,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				// If the position is in the map move along, else initialize
 				// Subtract 1 from Pos for index 0
-				_, ok := answer[Location{Chr, Pos - 1}]
+				_, ok := answer[Coordinate{Chr, Pos - 1}]
 				if !ok {
-					answer[Location{Chr, Pos - 1}] = &AlleleCount{
+					answer[Coordinate{Chr, Pos - 1}] = &AlleleCount{
 						Ref:    0,
 						Counts: 0,
 						BaseAF: 0,
@@ -277,22 +276,22 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 						Indel:  make([]Indel, 0)}
 				}
 
-				answer[Location{Chr, Pos - 1}].Ref = RefSeq[0]
-				answer[Location{Chr, Pos - 1}].Counts = int32(Counts)
+				answer[Coordinate{Chr, Pos - 1}].Ref = RefSeq[0]
+				answer[Coordinate{Chr, Pos - 1}].Counts = int32(Counts)
 
 				switch AltSeq[0] {
 				case dna.A:
-					answer[Location{Chr, Pos - 1}].BaseAF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseAR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseAF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseAR = int32(AltCountR)
 				case dna.C:
-					answer[Location{Chr, Pos - 1}].BaseCF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseCR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseCF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseCR = int32(AltCountR)
 				case dna.G:
-					answer[Location{Chr, Pos - 1}].BaseGF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseGR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseGF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseGR = int32(AltCountR)
 				case dna.T:
-					answer[Location{Chr, Pos - 1}].BaseTF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseTR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseTF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseTR = int32(AltCountR)
 				}
 
 				// If Indel
@@ -300,9 +299,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				// If the position is in the map move along, else initialize
 				// VCF stores pos as base prior to indel so subtracting 1 for index 0 is unnecessary
-				_, ok := answer[Location{Chr, Pos}]
+				_, ok := answer[Coordinate{Chr, Pos}]
 				if !ok {
-					answer[Location{Chr, Pos}] = &AlleleCount{
+					answer[Coordinate{Chr, Pos}] = &AlleleCount{
 						Ref:    0,
 						Counts: 0,
 						BaseAF: 0,
@@ -322,7 +321,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 					CountF: int32(AltCountF),
 					CountR: int32(AltCountR)}
 
-				answer[Location{Chr, Pos}].Indel = append(answer[Location{Chr, Pos}].Indel, currentIndel)
+				answer[Coordinate{Chr, Pos}].Indel = append(answer[Coordinate{Chr, Pos}].Indel, currentIndel)
 
 			}
 		}

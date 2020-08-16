@@ -18,7 +18,7 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 	var refIdx int = 0
 	// To get alleles for each position we increment throught the reference (whether linear or graph) and request alleles for each position
 	// currLoc stores the current location we are asking for and begins with a dummy value to start for the nextPos function
-	var currLoc *Allele = &Allele{Location: &Location{"dummy", 0}}
+	var currLoc *Allele = &Allele{Location: &Coordinate{"dummy", 0}}
 	// The currAlleles data structure is arranged as [SampleStream][Allele (length = memBufferSize)]
 	// currAlleles transiently stores data read from each alleleStream and allows for a variable buffer size depending on the desired memory allocation
 	var currAlleles [][]*Allele = make([][]*Allele, len(alleleStreams))
