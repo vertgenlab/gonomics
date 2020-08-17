@@ -12,7 +12,11 @@ import(
 func multiFaToVcf(inFile string, chr string, outFile string) {
 	f := fasta.Read(inFile)
 	v := convert.PairwiseFaToVcf(f, chr)
-	vcf.Write(outFile, v)
+	vcfWriter := fileio.EasyCreate(outFile)
+	header := vcf.NewHeader("nameFastaSample")
+	vcf.NewWriteHeader(vcfWriter, header)
+	vcf.WriteVcfToFileHandle(vcfWriter, v)
+	vcfWriter.Close()
 }
 
 func usage() {
