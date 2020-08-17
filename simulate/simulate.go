@@ -140,7 +140,8 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
-func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
+func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
+	var seq []dna.Base
 	var originalBase dna.Base
 	var newBase dna.Base
 	var originalCodons []*dna.Codon
@@ -148,6 +149,8 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
+
+	seq = copySeq(inputSeq)
 
 	if len(seq)%3 != 0 {
 		log.Fatal("sequence length must be divisible by three")
@@ -225,7 +228,7 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	return newSequence
 }
 
-//make a map and a copy of that map of an original sequence so the sequence can be assigned to a node and then mutated
+//make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
 func copySeq(seq []dna.Base) []dna.Base {
 	original := make([]dna.Base, len(seq))
 	copy(original, seq)

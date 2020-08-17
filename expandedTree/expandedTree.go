@@ -17,8 +17,8 @@ type ETree struct {
 	BranchLength float64
 	OnlyTopology bool
 	Fasta        *fasta.Fasta //assigning fastas to nodes
-	State        int
-	Stored       []float64
+	State        int //corresponds to a base same numbering encoded by dna.Base
+	Stored       []float64 //a list of probabilities for each base at any given site of the genome
 	Scrap        float64
 	Left         *ETree
 	Right        *ETree
