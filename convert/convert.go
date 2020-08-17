@@ -1,19 +1,24 @@
+//package convert contains functions for converting data between standard file formats. This is a high level package that avoids circular dependencies.
+
 package convert
 
 import (
-	"fmt"
+	//DEBUG: "fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"strings"
 )
 
+//singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
 func singleBedToFasta(b *bed.Bed, ref []*fasta.Fasta) *fasta.Fasta {
 	for i := 0; i < len(ref); i++ {
 		if b.Chrom == ref[i].Name {
@@ -24,6 +29,7 @@ func singleBedToFasta(b *bed.Bed, ref []*fasta.Fasta) *fasta.Fasta {
 	return nil
 }
 
+//BedToFasta extracts subFastas out of a reference fasta slice comprised of the sequences of input bed regions.
 func BedToFasta(b []*bed.Bed, ref []*fasta.Fasta) []*fasta.Fasta {
 	outlist := make([]*fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
@@ -32,6 +38,7 @@ func BedToFasta(b []*bed.Bed, ref []*fasta.Fasta) []*fasta.Fasta {
 	return outlist
 }
 
+//SamToBed extracts the position information from a SamAln entry and returns it as a bed entry.
 func SamToBed(s *sam.SamAln) *bed.Bed {
 	if s.Cigar[0].Op == '*' {
 		return nil
@@ -49,6 +56,7 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 	//add output to bedlist
 } */
 
+//SamToBedFrag converts a SamAln entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
 func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromInfo.ChromInfo) *bed.Bed {
 	var answer *bed.Bed
 
@@ -69,6 +77,7 @@ func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromIn
 	}
 }
 
+//BedScoreToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is equal to the score of an overlapping bed entry at the bed entry midpoint, and zero if no bed regions overlap.
 func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var line string
@@ -90,7 +99,7 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 		i++
 	}
 
-	log.Println("Completed wig skeleton, looping through bed.")
+	//DEBUG: log.Println("Completed wig skeleton, looping through bed.")
 
 	//loop through bed line at a time
 	file := fileio.EasyOpen(infile)
@@ -119,6 +128,7 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	return wigSlice
 }
 
+//BedScoreToWigRange uses bed entries from an input file to construct a Wig data structure where the Wig value at each position is equal to the score of an overlapping bed entry, and zero if no bed regions overlap.
 func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var line string
@@ -140,7 +150,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 		i++
 	}
 
-	log.Println("Completed wig skeleton, looping through bed.")
+	//DEBUG: log.Println("Completed wig skeleton, looping through bed.")
 
 	//loop through bed line at a time
 	file := fileio.EasyOpen(infile)
@@ -162,13 +172,14 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 			log.Fatalf("Multiple scores for one position.")
 		}
 		for k := current.ChromStart; k < current.ChromEnd; k++ {
-			//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
+			//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
 			wigSlice[chromIndex].Values[k+1].Value = float64(current.Score)
 		}
 	}
 	return wigSlice
 }
 
+//BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
 func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
@@ -187,20 +198,22 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 
 	for j := 0; j < len(b); j++ {
 		chromIndex = getWigChromIndex(b[j].Chrom, wigSlice)
-		fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
+		//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
-			//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
+			//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
 			wigSlice[chromIndex].Values[k].Value++
 		}
-		//fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
+		//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 	}
 	return wigSlice
 }
 
+//bedMidpoint returns the midpoint position of an input bed entry.
 func bedMidpoint(b *bed.Bed) int {
 	return int(b.ChromEnd+b.ChromStart) / 2
 }
 
+//getWigChromIndex searches a wig slice for the wig entry with a particular name and returns the index of that entry in the slice.
 func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
 	for i := 0; i < len(wigSlice); i++ {
 		if s == wigSlice[i].Chrom {
@@ -209,4 +222,57 @@ func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
 	}
 	log.Fatalf("Bed Chromosome, %s, not in reference genome.", s)
 	return -1
+}
+
+//PairwiseFaToVcf takes in a pairwise multiFa alignment and returns Vcf entries for segregating sites with the first entry as the reference and the second fasta entry as the alt allele.
+//This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
+func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
+	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
+	var insertion bool = false
+	var deletion bool = false
+	var insertionAlnPos int
+	var deletionAlnPos int
+	answer := make([]*vcf.Vcf, 0)
+
+	for i := 0; i < len(f[0].Seq); i++ { //loop through reference alignment positions
+		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
+			if pastStart {
+				if !insertion {
+					insertionAlnPos = i - 1
+				}
+				insertion = true
+			}
+		} else if f[0].Seq[i] != f[1].Seq[i] {
+			pastStart = true
+			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+			}
+			if f[1].Seq[i] == dna.Gap { //alt is gap (deletion)
+				if !deletion {
+					deletionAlnPos = i - 1
+				}
+				deletion = true
+			} else if deletion { //snp immediately follows the end of a deletion
+				deletion = false
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})                                           //then add current diff
+			} else {
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+			}
+			insertion = false
+		} else if insertion { //case where ref and alt agree now but previous bases were part of an insertion.
+			pastStart = true
+			insertion = false
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+		} else if deletion {
+			pastStart = true
+			deletion = false
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion		}
+		}
+	}
+	//DEBUG:
+	/*for i := 0; i < len(answer); i++ {
+		vcf.PrintSingleLine(answer[i])
+	}*/
+	return answer
 }
