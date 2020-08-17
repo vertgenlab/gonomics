@@ -238,7 +238,7 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
 			if pastStart {
 				if !insertion {
-					insertionAlnPos = i - 1 //TODO: breaks for alignments starting with an insertion(gap in Aln postion 0 of the reference)
+					insertionAlnPos = i - 1
 				}
 				insertion = true
 			}
