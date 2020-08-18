@@ -5,7 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/simpleGraph"
 )
 
-// Syncs allele streams output from SamToAlleles and returns a []*Allele with the Allele struct for each sample at position n
+// SyncAlleleStreams syncs allele streams output from SamToAlleles and returns a []*Allele with the Allele struct for each sample at position n.
+// The reference input variable should be either a []*fasta.Fasta or a *simpleGraph.SimpleGraph
 //TODO: still needs to tested with graph input
 func SyncAlleleStreams(reference interface{}, memBufferSize int, alleleStreams ...<-chan *Allele) <-chan []*Allele {
 	answer := make(chan []*Allele)
@@ -13,10 +14,11 @@ func SyncAlleleStreams(reference interface{}, memBufferSize int, alleleStreams .
 	return answer
 }
 
+// syncAlleles is the helper functions for SyncAlleleStreams and manages the component streams to keep in sync.
 func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-chan *Allele, answer chan<- []*Allele) {
 	var i int
 	var refIdx int = 0
-	// To get alleles for each position we increment throught the reference (whether linear or graph) and request alleles for each position
+	// To get alleles for each position we increment through the reference (whether linear or graph) and request alleles for each position
 	// currLoc stores the current location we are asking for and begins with a dummy value to start for the nextPos function
 	var currLoc *Allele = &Allele{Location: &Coordinate{"dummy", 0}}
 	// The currAlleles data structure is arranged as [SampleStream][Allele (length = memBufferSize)]
@@ -68,7 +70,7 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 	close(answer)
 }
 
-// Inputs a []*fasta.Fasta or a *simpleGraph.SimpleGraph and increments currLoc
+// nextPos inputs a []*fasta.Fasta or a *simpleGraph.SimpleGraph and increments currLoc
 func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 	switch r := reference.(type) {
 	case []*fasta.Fasta:

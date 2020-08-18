@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 //TODO: Merge with countGiraf functions using interfaces???
+// GoCountSamAlleles is a wrapper for CountSamAlleles that manages channel closure.
 func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int64) <-chan *Allele {
 	answer := make(chan *Allele)
 	var wg sync.WaitGroup
@@ -22,6 +23,7 @@ func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int
 	return answer
 }
 
+// CountSamAlleles counts the alleles in a sam file aligned to a linear reference (fasta) and sends them to an input channel sending the allele count for each position in the reference covered by the sam file
 func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []*fasta.Fasta, minMapQ int64, wg *sync.WaitGroup) {
 	samChan, _ := sam.GoReadToChan(samFilename)
 	var currAlleles = make(map[Coordinate]*AlleleCount)
@@ -38,7 +40,7 @@ func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []*fas
 	wg.Done()
 }
 
-// sendPassedPositions sends positions that have been passed in the file
+// sendPassedPositionsSam sends positions that have been passed in the file
 func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename string, runningCount []*Coordinate, currAlleles map[Coordinate]*AlleleCount) []*Coordinate {
 	for i := 0; i < len(runningCount); i++ {
 
@@ -73,6 +75,7 @@ func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename 
 	return runningCount
 }
 
+// countSamRead adds the bases in a single sam read to the currAlleles map
 func countSamRead(aln *sam.SamAln, currAlleles map[Coordinate]*AlleleCount, runningCount []*Coordinate, ref map[string][]dna.Base, minMapQ int64, progress int) (map[Coordinate]*AlleleCount, []*Coordinate) {
 
 	if aln.Cigar[0].Op == '*' {

@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 //TODO: Merge with countSam functions using interfaces???
+// GoCountGirafAlleles is a wrapper for CountGirafAlleles that manages channel closure.
 func GoCountGirafAlleles(girafFilename string, ref *simpleGraph.SimpleGraph, minMapQ uint8) <-chan *Allele {
 	answer := make(chan *Allele)
 	refMap := simpleGraph.GraphToMap(ref)
@@ -23,6 +24,7 @@ func GoCountGirafAlleles(girafFilename string, ref *simpleGraph.SimpleGraph, min
 	return answer
 }
 
+// CountSamAlleles counts the alleles in a giraf file aligned to a graph reference (gg) and sends them to an input channel sending the allele count for each position in the reference covered by the giraf file
 func CountGirafAlleles(answer chan<- *Allele, girafFilename string, ref *simpleGraph.SimpleGraph, refMap map[string]*simpleGraph.Node, minMapQ uint8, wg *sync.WaitGroup) {
 	girafChan := giraf.GoReadToChan(girafFilename)
 	var currAlleles = make(map[Coordinate]*AlleleCount)
@@ -36,6 +38,7 @@ func CountGirafAlleles(answer chan<- *Allele, girafFilename string, ref *simpleG
 	wg.Done()
 }
 
+// sendPassedPositionsGiraf sends positions that have been passed in the file
 func sendPassedPositionsGiraf(answer chan<- *Allele, aln *giraf.Giraf, ref map[string]*simpleGraph.Node, girafFilename string, runningCount []*Coordinate, currAlleles map[Coordinate]*AlleleCount) []*Coordinate {
 	for i := 0; i < len(runningCount); i++ {
 
@@ -70,6 +73,7 @@ func sendPassedPositionsGiraf(answer chan<- *Allele, aln *giraf.Giraf, ref map[s
 	return runningCount
 }
 
+// countGraphRead adds the bases in a single giraf read to the currAlleles map
 func countGraphRead(aln *giraf.Giraf, currAlleles map[Coordinate]*AlleleCount, runningCount []*Coordinate, ref *simpleGraph.SimpleGraph, minMapQ uint8, progress int) (map[Coordinate]*AlleleCount, []*Coordinate) {
 	if aln.Aln[0].Op == '*' {
 		return currAlleles, runningCount
@@ -168,6 +172,7 @@ func countGraphRead(aln *giraf.Giraf, currAlleles map[Coordinate]*AlleleCount, r
 	return currAlleles, runningCount
 }
 
+// countBase will add a single base or indel to the currAlleles struct. The indel will be added instead of the base unless indel == nil
 func countBase(base dna.Base, indel *Indel, aln *giraf.Giraf, currLoc *Coordinate, currAlleles map[Coordinate]*AlleleCount) map[Coordinate]*AlleleCount {
 	currAlleles[*currLoc].Counts++
 
@@ -224,6 +229,7 @@ func countBase(base dna.Base, indel *Indel, aln *giraf.Giraf, currLoc *Coordinat
 	return currAlleles
 }
 
+// addPosToMap checks if a position has already been added to the currAlleles map. If not, then the position is added to the map and appended to runningCount.
 func addPosToMap(node *simpleGraph.Node, currLocation *Coordinate, currAlleles map[Coordinate]*AlleleCount, runningCount []*Coordinate) (map[Coordinate]*AlleleCount, []*Coordinate) {
 	if _, ok := currAlleles[*currLocation]; !ok {
 		currAlleles[*currLocation] = &AlleleCount{

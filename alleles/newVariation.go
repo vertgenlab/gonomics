@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 )
 
+// FindNewVariation calls variants from a set of samples and normals that DO NOT already exist in the graph structure.
 func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64) <-chan *vcf.Vcf {
 	answer := make(chan *vcf.Vcf)
 
@@ -22,7 +23,7 @@ func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, 
 	return answer
 }
 
-// Designed to be run as a goroutine that accepts alleles from the alleleStream channel,
+// scoreAlleles is Designed to be run as a goroutine that accepts alleles from the alleleStream channel,
 // computes the p value and makes a VCF, then sends the vcf record on the answer channel
 func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64) {
 
@@ -109,6 +110,7 @@ func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalI
 	close(answer)
 }
 
+// calcBackground adds the count values for all allele structs designated as normal and returns a single background struct
 func calcBackground(alleles []*Allele, normalIDs map[string]bool) (*Allele, bool) {
 	var answer *Allele = &Allele{Count: &AlleleCount{alleles[0].Count.Ref, 0, 0, 0, 0, 0, 0, 0, 0, 0, make([]Indel, 0)}}
 	var normalPresent bool
@@ -130,6 +132,7 @@ func calcBackground(alleles []*Allele, normalIDs map[string]bool) (*Allele, bool
 	return answer, normalPresent
 }
 
+// addAlleles adds the count values in two allele structs
 func addAlleles(sum *Allele, toBeAdded *Allele) {
 	sum.Count.BaseAF += toBeAdded.Count.BaseAF
 	sum.Count.BaseAR += toBeAdded.Count.BaseAR
@@ -151,6 +154,7 @@ func addAlleles(sum *Allele, toBeAdded *Allele) {
 	}
 }
 
+// findMatchingIndel searches for queryIndel in subjectSlice returning the matching indel in subjectSlice if present, else returning nil if not present
 func findMatchingIndel(queryIndel *Indel, subjectSlice []Indel) *Indel {
 	var i int
 	for i = 0; i < len(subjectSlice); i++ {
@@ -162,6 +166,7 @@ func findMatchingIndel(queryIndel *Indel, subjectSlice []Indel) *Indel {
 	return nil
 }
 
+// alleleToVcf converts a *Allele to a vcf record
 func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int, warnings []string) *vcf.Vcf {
 	var answer *vcf.Vcf
 
@@ -203,6 +208,7 @@ func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int,
 	return answer
 }
 
+// alleleFishersExact test performs fishers exact test with the given parameters and returns p
 func alleleFishersExact(a int, b int, c int, d int, afThreshold float64) float64 {
 	var p float64
 
@@ -230,6 +236,7 @@ func alleleFishersExact(a int, b int, c int, d int, afThreshold float64) float64
 	return p
 }
 
+// getFishersInput determines the variables to use as input to alleleFishersExact
 func getFishersInput(experimental *Allele, bkgd *Allele, normalPresent bool, altBase dna.Base, indelSlicePos int) (int, int, int, int) {
 	// Begin gathering parameters for Fishers Exact Test done in the numbers package
 	// test is for the matrix:
@@ -283,6 +290,7 @@ func getFishersInput(experimental *Allele, bkgd *Allele, normalPresent bool, alt
 	return a, b, c, d
 }
 
+// delimitStringSlice is a helper function that concatenates a []string with a given delimiter
 func delimitStringSlice(strings []string, delimiter string) string {
 	var answer string
 	var i int = 0
@@ -298,7 +306,7 @@ func delimitStringSlice(strings []string, delimiter string) string {
 	return answer
 }
 
-// Calculates strand bias
+// passesStrandBias returns false if the distribution of forward and reverse reads is more extreme than 95% fwd/rev
 func passesStrandBias(alpha int32, beta int32) bool {
 	val := float64(alpha) / float64(alpha+beta)
 	if val < 0.95 && val > 0.05 {
