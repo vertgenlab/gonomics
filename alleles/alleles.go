@@ -35,22 +35,11 @@ type Coordinate struct {
 	Pos int64
 }
 
-//type GraphCoordinate struct {
-//	Node *simpleGraph.Node
-//	Pos  int64
-//}
-
 type Allele struct {
 	Sample   string
 	Count    *AlleleCount
 	Location *Coordinate
 }
-
-//type GraphAllele struct {
-//	Sample   string
-//	Count    *AlleleCount
-//	Location *GraphCoordinate
-//}
 
 // Map structure: map[Chromosome]map[Position]*AlleleCount
 type SampleMap map[Coordinate]*AlleleCount
@@ -371,7 +360,6 @@ func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) i
 
 // Find the allele with the 2nd highest frequency
 func FindMinorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32 {
-
 	majorAllele := FindMajorAllele(A, C, G, T, Ins, Del)
 
 	var minorAllele = A
