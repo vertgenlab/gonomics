@@ -18,7 +18,7 @@ func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 	for i := 0; i < seqLength; i++ {
 		//set up tree
 		SetState(root, i)
-		Postorder(root)
+		PostOrder(root)
 		// loop nodes to get probable base at that site and node
 		Loop_nodes(root)
 	}
@@ -36,10 +36,10 @@ func Accuracy(simFilename string, recFilename string) float64 {
 	sim := fasta.Read(simFilename)
 	rec := fasta.Read(recFilename)
 	des := "descendents_" + simFilename
-	simLeafs := fasta.Read(des)
+	simLeaves := fasta.Read(des)
 	for i := 0; i < len(sim); i++ {
-		for j := 0; j < len(simLeafs); j++ {
-			if sim[i].Name == simLeafs[j].Name {
+		for j := 0; j < len(simLeaves); j++ {
+			if sim[i].Name == simLeaves[j].Name {
 				sim = append(sim[:i], sim[i+1:]...)
 			}
 		}
@@ -69,7 +69,7 @@ func Prob(a int, b int, t float64) float64 {
 	case a == b:
 		p = 1 - t
 	default:
-		p = t / 3
+		p = t / 3 //why branch length divided by 3?
 	}
 	return p
 }
@@ -108,24 +108,24 @@ func SetState(node *expandedTree.ETree, pos int) {
 		}
 	}
 }
-
+//better description: set up Stored list for each node in the tree with probability of each base
 //set up the tree with memory of the nodes below it using the set state
-func Postorder(node *expandedTree.ETree) {
+func PostOrder(node *expandedTree.ETree) {
 	if node.Left != nil && node.Right != nil {
-		Postorder(node.Left)
-		Postorder(node.Right)
+		PostOrder(node.Left)
+		PostOrder(node.Right)
 		for i := 0; i < 4; i++ {
 			sum := 0.0
 			for j := 0; j < 4; j++ {
 				for k := 0; k < 4; k++ {
 					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[j]*node.Right.Stored[k]
-				}
+				}//probability that base i becomes either base j or k time the probability stored in the []float64 of that base appearing
 			}
 			node.Stored[i] = sum
 		}
-	} else {
-		if node.State != 4 {
-			node.Stored[node.State] = 1
+	} else { //if at a leaf, use SeState to determine Stored Values
+		for leaf := 0; leaf < len(expandedTree.GetLeaves(node)); leaf++ {
+		SetState(node, leaf)
 		}
 	}
 }
