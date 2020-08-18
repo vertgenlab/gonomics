@@ -6,12 +6,14 @@ import (
 	//"fmt"
 )
 
+var GCcontent = 0.42
+
 var RandGeneTests = []struct {
 	name   string
 	length int
 	GC     float64
 }{
-	{"testingRangGene", 30, 0.42},
+	{"testingRangGene", 30, GCcontent},
 }
 
 func TestRandGene(t *testing.T) {

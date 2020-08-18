@@ -263,7 +263,7 @@ func RemoveAncestors(filename string, tree *expandedTree.ETree) {
 
 	fastas = fasta.Read(filename)
 
-	leaves := expandedTree.GetLeaf(tree)
+	leaves := expandedTree.GetLeaves(tree)
 	for i := 0; i < len(fastas); i++ {
 		for j := 0; j < len(leaves); j++ {
 			if fastas[i].Name == leaves[j].Name {
