@@ -6,33 +6,26 @@ import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 )
-
+//reconstruct never called
 //final function to run
-func Reconstruct(root *expandedTree.ETree, outFilename string) {
-	leaf := expandedTree.GetLeaf(root)
+func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
+	leaves := expandedTree.GetLeaves(root)
 	branches := expandedTree.GetBranch(root)
-	length := len(leaf[0].Fasta.Seq)
+	var treeFastas []*fasta.Fasta
 
-	for i := 0; i < length; i++ {
+	seqLength := len(leaves[0].Fasta.Seq)
+	for i := 0; i < seqLength; i++ {
 		//set up tree
 		SetState(root, i)
 		Postorder(root)
 		// loop nodes to get probable base at that site and node
 		Loop_nodes(root)
 	}
-	var fastas []*fasta.Fasta
-
 	for j := 0; j < len(branches); j++ {
-		fastas = append(fastas, branches[j].Fasta)
+		treeFastas = append(treeFastas, branches[j].Fasta)
 	}
 
-	var fas []*fasta.Fasta
-	//loop sites
-	for k := 0; k < len(fastas); k++ {
-		fas = append(fas, fastas[k])
-	}
-
-	fasta.Write(outFilename, fas)
+	return treeFastas
 
 }
 
@@ -95,7 +88,7 @@ func Yhat(r []float64) int {
 
 //set the state of the tree given the Fasta and the position (zero-based)
 func SetState(node *expandedTree.ETree, pos int) {
-	leaf := expandedTree.GetLeaf(node)
+	leaf := expandedTree.GetLeaves(node)
 	var leafNames []string
 	for i := 0; i < len(leaf); i++ {
 		leafNames = append(leafNames, leaf[i].Name)
@@ -110,11 +103,7 @@ func SetState(node *expandedTree.ETree, pos int) {
 				node.State = int(node.Fasta.Seq[pos]) //State = base at given position
 				// node.Stored = []float64{0, 0, 0, 0} //do i need to respecify thins every time or within the larger loop?
 				node.Stored[node.State] = 1 //the position in the list which corresponds to the base of State becomes 1 (state =0 (A) then 0 position of stored becomes 1)
-			} else if len(node.Fasta.Seq) == pos { //I'm gonna add this here because it feels necessary?
-				node.State = int(node.Fasta.Seq[pos])
-				//node.Stored = []float64{0, 0, 0, 0}
-				node.Stored[node.State] = 1
-			}
+			} //TODO: else for >=
 		}
 	}
 
@@ -200,7 +189,7 @@ func Fix_fc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 
 //loop over the nodes of the tree to fix each node and append the most probable base to the Fasta
 func Loop_nodes(root *expandedTree.ETree) {
-	leafs := expandedTree.GetLeaf(root)
+	leafs := expandedTree.GetLeaves(root)
 	branches := expandedTree.GetBranch(root)
 	for j := 0; j < len(leafs[0].Fasta.Seq); j++ {
 		for i := 0; i < len(leafs); i++ {

@@ -101,11 +101,11 @@ func GetBranch(node *ETree) []*ETree {
 	return branch
 }
 
-func GetLeaf(node *ETree) []*ETree {
+func GetLeaves(node *ETree) []*ETree {
 	var leaf []*ETree
 	if node.Left != nil && node.Right != nil {
-		a := GetLeaf(node.Left)
-		b := GetLeaf(node.Right)
+		a := GetLeaves(node.Left)
+		b := GetLeaves(node.Right)
 		leaf = append(leaf, a...)
 		leaf = append(leaf, b...)
 	}
@@ -219,7 +219,7 @@ func SetUp(root *ETree, prevNode *ETree) {
 func AssignFastas(root *ETree, fastaFilename string) {
 	fastas := fasta.Read(fastaFilename)
 	SetUp(root, nil)
-	leaves := GetLeaf(root)
+	leaves := GetLeaves(root)
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {
