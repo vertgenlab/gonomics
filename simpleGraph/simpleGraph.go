@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -252,4 +253,17 @@ func BasesInGraph(g *SimpleGraph) int {
 		baseCount += g.Nodes[i].SeqTwoBit.Len
 	}
 	return baseCount
+}
+
+// GraphToMap converts a genome graph to a map leading to Nodes keyed by the node names
+func GraphToMap(g *SimpleGraph) map[string]*Node {
+	m := make(map[string]*Node)
+	for _, val := range g.Nodes {
+		if _, ok := m[val.Name]; ok {
+			log.Fatalf("ERROR: Node names in graph are not unique: %s", val.Name)
+		} else {
+			m[val.Name] = val
+		}
+	}
+	return m
 }

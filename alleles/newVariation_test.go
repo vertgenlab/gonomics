@@ -23,18 +23,18 @@ func TestFindNewVariation(t *testing.T) {
 // file can be .sam, .giraf, or .txt as a list of .sams or .girafs
 func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan *Allele, normalIDs map[string]bool, samFilesPresent *bool, girafFilesPresent *bool, minMapQ int64) {
 	switch filepath.Ext(file) {
-	case ".giraf":
-		//TODO: Make giraf to alleles function
-		*alleleChans = append(*alleleChans, GirafToAlleles(file))
-		*girafFilesPresent = true
-		if isNormal == true {
-			normalIDs[file] = true
-		} else {
-			normalIDs[file] = false
-		}
-		//log.Println("Started Allele Stream for", file)
+	//case ".giraf":
+	//	//TODO: Make giraf to alleles function
+	//	*alleleChans = append(*alleleChans, GirafToAlleles(file))
+	//	*girafFilesPresent = true
+	//	if isNormal == true {
+	//		normalIDs[file] = true
+	//	} else {
+	//		normalIDs[file] = false
+	//	}
+	//	//log.Println("Started Allele Stream for", file)
 	case ".sam":
-		*alleleChans = append(*alleleChans, SamToAlleles(file, ref, minMapQ))
+		*alleleChans = append(*alleleChans, GoCountSamAlleles(file, ref.([]*fasta.Fasta), minMapQ))
 		*samFilesPresent = true
 		if isNormal == true {
 			normalIDs[file] = true
