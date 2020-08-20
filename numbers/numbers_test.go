@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"math"
+	"fmt"
 	"testing"
 )
 
@@ -80,11 +81,38 @@ var BinomCoefficientTests = []struct {
 	{11, 5, 462},
 }
 
+//answers from WolframAlpha, which can handle large choose inputs
+var BinomCoefficientLogTests = []struct {
+	n      int
+	k      int
+	answer float64
+}{
+	{2000, 1000, 1382.267994},
+	{10000, 8000, 4999.416374},
+}
+
 func TestBinomCoefficient(t *testing.T) {
 	for _, test := range BinomCoefficientTests {
 		calculated := BinomCoefficient(test.n, test.k)
 		if calculated != test.answer {
 			t.Errorf("For BinomialCoefficient(%d, %d) we would expect %d, but we got %d", test.n, test.k, test.answer, calculated)
+		}
+	}
+}
+
+func TestBinomCoefficientLog(t *testing.T) {
+	//first we see if we have consistency with the non-log version
+	for _, test := range BinomCoefficientTests {
+		calculated := math.Exp(BinomCoefficientLog(test.n, test.k))
+		if fmt.Sprintf("%f", calculated) != fmt.Sprintf("%f", float64(test.answer)) {
+			t.Errorf("ForBinomialCoefficientLog(%d, %d) we would expect %f, but we got %f", test.n, test.k, float64(test.answer), calculated)
+		}
+	}
+	//now we test big numbers
+	for _, test := range BinomCoefficientLogTests {
+		calculated := BinomCoefficientLog(test.n, test.k)
+		if fmt.Sprintf("%f", calculated) != fmt.Sprintf("%f", test.answer) {
+			t.Errorf("ForBinomialCoefficientLog(%d, %d) we would expected %f, but we got %f", test.n, test.k, test.answer, calculated)
 		}
 	}
 }

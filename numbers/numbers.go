@@ -157,6 +157,30 @@ func BinomCoefficient(n int, k int) int {
 	return carefulMultDivInt(numer, denom)
 }
 
+//BinomCoefficientLog returns log(n choose k), where log is the natural logarithm. 
+//Ideal for large numbers as this raises the overflow ceiling considerably.
+func BinomCoefficientLog(n int, k int) float64 {
+	if n < 0 || k < 0 || k > n {
+		log.Fatalf("The binomial coefficient call could not be handled: n=%d and k=%d\n", n, k)
+	}
+	if n-k > k {
+		k = n - k
+	}
+	// this special case is handled here so that we don't ask for negative memory for denom
+	if k == n {
+		return 0.0
+	}
+	var x, y int
+	var numer, denom float64 = 0.0, 0.0
+	for x = k + 1; x < n+1; x++ {
+		numer = numer + math.Log(float64(x))
+	}
+	for y = 2; y < n-k+1; y++ {
+		denom = denom + math.Log(float64(y))
+	}
+	return DivideLog(numer, denom)
+}
+
 func Factorial(n int) int {
 	return int(math.Gamma(float64(n + 1)))
 }
