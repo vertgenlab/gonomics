@@ -20,7 +20,7 @@ func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 		SetLeafState(root, i)
 		SetInternalState(root)
 		// loop nodes to get probable base at that site and node
-		Loop_nodes(root)
+		LoopNodes(root)
 	}
 	for j := 0; j < len(branches); j++ {
 		treeFastas = append(treeFastas, branches[j].Fasta)
@@ -131,48 +131,47 @@ func SetInternalState(node *expandedTree.ETree) {
 }
 
 //Bubble up the tree using the memory of the previous nodes
-func Bubble_up(node *expandedTree.ETree, prev_node *expandedTree.ETree, scrap []float64) {
+func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
 	tot := 0.0
-	scrap_new := []float64{0, 0, 0, 0}
+	scrapNew := []float64{0, 0, 0, 0}
 	for i := 0; i < 4; i++ {
 		sum := 0.0
 		for j := 0; j < 4; j++ {
 			for k := 0; k < 4; k++ {
-				if prev_node.Up != nil {
-					switch {
-					case prev_node.Up.Left == prev_node:
+				if prevNode.Up != nil {
+					if prevNode.Up.Left == prevNode {
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Right.Stored[j]
-					case prev_node.Up.Right == prev_node:
+					} else if prevNode.Up.Right == prevNode {
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Left.Stored[k]
-					default:
+					} else {
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[k]*node.Right.Stored[j]
 					}
-				} else if prev_node.Up == nil {
+				} else if prevNode.Up == nil {
 					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[k]*node.Right.Stored[j]
 				}
 			}
 		}
-		scrap_new[i] = sum
+		scrapNew[i] = sum
 	}
 	if node.Up != nil {
-		Bubble_up(node.Up, node, scrap_new)
+		BubbleUp(node.Up, node, scrapNew)
 	} else if node.Up == nil {
-		tot = scrap_new[0] + scrap_new[1] + scrap_new[2] + scrap_new[3]
+		tot = scrapNew[0] + scrapNew[1] + scrapNew[2] + scrapNew[3]
 		node.Scrap = tot
 	}
 }
 
 //fix each node and return the probabilities for each base at that site
-func Fix_fc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
+func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	ans := []float64{0, 0, 0, 0}
 
 	for i := 0; i < 4; i++ {
 		scrap := []float64{0, 0, 0, 0}
-		scrap[i] = node.Stored[i]
+		scrap[i] = node.Stored[i] //not connecting this to root.Scrap?
 		if node.Up != nil {
 			//Bubble up the tree using the memory of the previous nodes given the fixed node
-			Bubble_up(node.Up, node, scrap)
-			ans[i] = root.Scrap
+			BubbleUp(node.Up, node, scrap)
+			ans[i] = root.Scrap //this is setting it to nothing?
 		} else if node.Up == nil {
 			ans[i] = root.Stored[i]
 		}
@@ -182,7 +181,7 @@ func Fix_fc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 }
 
 //loop over the nodes of the tree to fix each node and append the most probable base to the Fasta
-func Loop_nodes(root *expandedTree.ETree) {
+func LoopNodes(root *expandedTree.ETree) { //what is fixing the nodes doing?
 	leaves := expandedTree.GetLeaves(root)
 	branches := expandedTree.GetBranch(root)
 	for j := 0; j < len(leaves[0].Fasta.Seq); j++ {
@@ -192,8 +191,8 @@ func Loop_nodes(root *expandedTree.ETree) {
 	}
 	for j := 0; j < len(branches); j++ {
 		//fix each interior node and get the most probable base
-		fix := Fix_fc(root, branches[j])
-		yhat := Yhat(fix)
-		branches[j].Fasta.Seq = append(branches[j].Fasta.Seq, []dna.Base{dna.Base(yhat)}...)
+		fix := FixFc(root, branches[j])
+		yHat := Yhat(fix)
+		branches[j].Fasta.Seq = append(branches[j].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
 	}
 }
