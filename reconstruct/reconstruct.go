@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
-//reconstruct never called
+//TODO: reconstruct never called
 //final function to run
 func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 	leaves := expandedTree.GetLeaves(root)
@@ -17,8 +17,8 @@ func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 	seqLength := len(leaves[0].Fasta.Seq)
 	for i := 0; i < seqLength; i++ {
 		//set up tree
-		SetState(root, i)
-		PostOrder(root)
+		SetLeafState(root, i)
+		SetInternalState(root)
 		// loop nodes to get probable base at that site and node
 		Loop_nodes(root)
 	}
@@ -32,7 +32,7 @@ func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 
 //test accuracy of the reconstruction compared to the simulation
 func Accuracy(simFilename string, recFilename string) float64 {
-	tot := 0.0
+	tot := 0.0 //why is this here when it could just be num?
 	sim := fasta.Read(simFilename)
 	rec := fasta.Read(recFilename)
 	des := "descendents_" + simFilename
@@ -40,7 +40,8 @@ func Accuracy(simFilename string, recFilename string) float64 {
 	for i := 0; i < len(sim); i++ {
 		for j := 0; j < len(simLeaves); j++ {
 			if sim[i].Name == simLeaves[j].Name {
-				sim = append(sim[:i], sim[i+1:]...)
+				sim = append(sim[:i], sim[i+1:]...)//this is adding the next record which hasn't been checked to the records?
+				//sim is already all of the simulation fastas, why are we appending them?
 			}
 		}
 	}
@@ -88,16 +89,15 @@ func Yhat(r []float64) int {
 }
 
 //set the state of the tree given the Fasta and the position (zero-based)
-func SetState(node *expandedTree.ETree, pos int) {
-	node.State = 4
-	node.Stored = []float64{0, 0, 0, 0} //everything starts as N
+func SetLeafState(node *expandedTree.ETree, pos int) {
+	node.State = 4 // starts as N
+	node.Stored = []float64{0, 0, 0, 0}
 
 	if node.Right == nil && node.Left == nil { //if we are at a leaf
 		if len(node.Fasta.Seq) <= pos {
 			log.Fatal("position specified is out of range of sequence \n")
 		} else if len(node.Fasta.Seq) > pos {
 			node.State = int(node.Fasta.Seq[pos]) //State = base at given position
-		//the position in the list which corresponds to the base of State becomes 1 (state =0 (A) then 0 position of stored becomes 1)
 			for i := 0; i < 4; i++ { //check to make sure all other values of Stored are zero
 				if i == node.State {
 					node.Stored[i] = 1
@@ -110,10 +110,10 @@ func SetState(node *expandedTree.ETree, pos int) {
 }
 //better description: set up Stored list for each node in the tree with probability of each base
 //set up the tree with memory of the nodes below it using the set state
-func PostOrder(node *expandedTree.ETree) {
+func SetInternalState(node *expandedTree.ETree) {
 	if node.Left != nil && node.Right != nil {
-		PostOrder(node.Left)
-		PostOrder(node.Right)
+		SetInternalState(node.Left)
+		SetInternalState(node.Right)
 		for i := 0; i < 4; i++ {
 			sum := 0.0
 			for j := 0; j < 4; j++ {
@@ -123,9 +123,9 @@ func PostOrder(node *expandedTree.ETree) {
 			}
 			node.Stored[i] = sum
 		}
-	} else { //if at a leaf, use SeState to determine Stored Values
-		for leaf := 0; leaf < len(expandedTree.GetLeaves(node)); leaf++ {
-		SetState(node, leaf)
+	} else if node.Left == nil && node.Right == nil{ //if at a leaf, use SetState to determine Stored Values
+		for bases := 0; bases < len(node.Fasta.Seq); bases++ {
+		SetLeafState(node, bases)
 		}
 	}
 }
