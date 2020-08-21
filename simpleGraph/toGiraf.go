@@ -19,14 +19,14 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		QEnd:      0,
 		PosStrand: true,
 		Path:      &giraf.Path{},
-		Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
+		//Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
 		AlnScore:  0,
 		MapQ:      255,
 		Seq:       read.Seq,
 		Qual:      read.Qual,
 		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 	}
-	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
+	//var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget, maxTarget int
 	var minQuery, maxQuery int
 	var leftScore, rightScore int64 = 0, 0
@@ -58,8 +58,10 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			minQuery = int(currSeed.QueryStart)
 			maxQuery = int(currSeed.TotalLength - 1)
 		} else {
-			leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
-			rightAlignment, rightScore, maxTarget, maxQuery, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+			_, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
+			_, rightScore, maxTarget, maxQuery, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+			//leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
+			//rightAlignment, rightScore, maxTarget, maxQuery, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		}
 		currScore = leftScore + seedScore + rightScore
 		if currScore > int64(currBest.AlnScore) {
@@ -67,7 +69,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			currBest.QEnd = maxQuery
 			currBest.PosStrand = currSeed.PosStrand
 			currBest.Path = setPath(currBest.Path, minTarget, CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath), maxTarget)
-			currBest.Aln = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment))
+			//currBest.Aln = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment))
 			currBest.AlnScore = int(currScore)
 			currBest.Seq = currSeq
 			if gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
@@ -151,7 +153,7 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 		curr.RName = target[0]
 		curr.Pos = int64(ag.Path.TStart) + common.StringToInt64(target[1])
 		curr.Flag = getSamFlags(ag)
-		curr.Cigar = ag.Aln
+		//curr.Cigar = ag.Aln
 
 		if len(ag.Notes) == 2 {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:Z:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))

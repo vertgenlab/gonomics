@@ -2,10 +2,10 @@ package giraf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/edotau/simpleio"
 	"os"
 	"sync"
 )
@@ -17,7 +17,7 @@ type Giraf struct {
 	Flag      uint8
 	PosStrand bool
 	Path      *Path
-	Aln       []*cigar.Cigar // current cigar will need to be expanded
+	Aln       []simpleio.ByteCigar// current cigar will need to be expanded
 	AlnScore  int
 	MapQ      uint8
 	Seq       []dna.Base // dnaTwoBit?
