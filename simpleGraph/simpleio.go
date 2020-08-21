@@ -9,11 +9,16 @@ import(
 	"strings"
 
 )
+func NewGenomeGraph() SimpleGraph {
+	graph := new(SimpleGraph)
+	graph.Nodes = make([]*Node, 0)
+	return *graph
+}
 
-func SimplyRead(filename string) *SimpleGraph {
-	simpleRead := simpleio.NewSimpleReader(filename)
+func SimplyRead(filename string) SimpleGraph {
+	simpleioReader := simpleio.NewSimpleReader(filename)
+	genome := NewGenomeGraph()
 
-	genome := NewGraph()
 	var currNode *Node
 	var edges map[string]*Node = make(map[string]*Node)
 	var weight float32
@@ -31,7 +36,7 @@ func SimplyRead(filename string) *SimpleGraph {
 	var i int
 	var ok bool
 
-	for reader, done := simpleio.ReadLine(simpleRead); !done; reader, done = simpleio.ReadLine(simpleRead) {
+	for reader, done := simpleio.ReadLine(simpleioReader); !done; reader, done = simpleio.ReadLine(simpleioReader) {
 		data = simplePool.Get().(*bytes.Buffer)
 		data.Write(reader)
 		line = data.String()
@@ -45,7 +50,7 @@ func SimplyRead(filename string) *SimpleGraph {
 				text = strings.Split(words[1], "_")
 				currNode.Info = &Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
 			}
-			AddNode(genome, currNode)
+			AddNode(&genome, currNode)
 			_, ok = edges[line[1:]]
 
 			if !ok {
@@ -65,9 +70,16 @@ func SimplyRead(filename string) *SimpleGraph {
 		data.Reset()
 		simplePool.Put(data)	
 	}
-	simpleRead.Close()
+	simpleioReader.Close()
 	for i = 0; i < len(genome.Nodes); i++ {
 		genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)
 	}
 	return genome
+}
+
+
+
+func ReadFastqGsw() {
+
+
 }

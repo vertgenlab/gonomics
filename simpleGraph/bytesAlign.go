@@ -136,6 +136,8 @@ func SoftClipBases(front int, lengthOfRead int, cig []simpleio.ByteCigar) []simp
 	} else {
 		return cig
 	}
+
+
 }
 
 func SimpleSequenceGraph(ref <-chan *fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleGraph {

@@ -3,10 +3,12 @@ package simpleGraph
 
 import(
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/common"
 	"log"
+	"github.com/edotau/simpleio"
 )
 
-func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]CigarOp) (int64, []ByteCigar, int, int, int, int) {
+func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]simpleio.CigarOp) (int64, []simpleio.ByteCigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var currMax int64
 	var maxI int
@@ -25,7 +27,7 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 				m[i][j] = m[i-1][j] + gapPen
 				trace[i][j] = 'D'
 			} else {
-				m[i][j], trace[i][j] = ByteMatrixTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				m[i][j], trace[i][j] = simpleio.ByteMatrixTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
 			if m[i][j] > currMax {
 				currMax = m[i][j]
@@ -34,18 +36,18 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			}
 		}
 	}
-	var route []ByteCigar = make([]ByteCigar, 0, 1)
+	var route []simpleio.ByteCigar = make([]simpleio.ByteCigar, 0, 1)
 	//traceback starts in top corner
-	curr := ByteCigar{}
+	curr := simpleio.ByteCigar{}
 	for i, j, routeIdx = maxI, maxJ, 0; i > 0 || j > 0; {
 		//if route[routeIdx].RunLength == 0 {
 		if len(route) == 0 {
-			curr = ByteCigar{RunLen: 1, Op: trace[i][j]}
+			curr = simpleio.ByteCigar{RunLen: 1, Op: trace[i][j]}
 			route = append(route, curr)
 		} else if route[routeIdx].Op == trace[i][j] {
 			route[routeIdx].RunLen += 1
 		} else {
-			curr = ByteCigar{RunLen: 1, Op: trace[i][j]}
+			curr = simpleio.ByteCigar{RunLen: 1, Op: trace[i][j]}
 			route = append(route, curr)
 			routeIdx++
 		}
@@ -60,11 +62,11 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			log.Fatalf("Error: unexpected traceback with %c\n", trace[i][j])
 		}
 	}
-	ReverseBytesCigar(route)
+	simpleio.ReverseBytesCigar(route)
 	return m[maxI][maxJ], route, 0, maxI, 0, maxJ
 }
 
-func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]CigarOp) (int64, []ByteCigar, int, int, int, int) {
+func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]simpleio.CigarOp) (int64, []simpleio.ByteCigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var i, j, routeIdx int
 
@@ -76,25 +78,25 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen 
 	}
 	for i = 1; i < len(alpha)+1; i++ {
 		for j = 1; j < len(beta)+1; j++ {
-			m[i][j], trace[i][j] = ByteMatrixTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+			m[i][j], trace[i][j] = simpleio.ByteMatrixTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			if m[i][j] < 0 {
 				m[i][j] = 0
 			}
 		}
 	}
 	var minI, minJ = len(alpha), len(beta)
-	var route []ByteCigar = make([]ByteCigar, 0, 1)
-	curr := ByteCigar{}
+	var route []simpleio.ByteCigar = make([]simpleio.ByteCigar, 0, 1)
+	curr := simpleio.ByteCigar{}
 	//traceback starts in top corner
 	for i, j, routeIdx = len(alpha), len(beta), 0; m[i][j] > 0; {
 		//if route[routeIdx].RunLength == 0 {
 		if len(route) == 0 {
-			curr = ByteCigar{RunLen: 1, Op: trace[i][j]}
+			curr = simpleio.ByteCigar{RunLen: 1, Op: trace[i][j]}
 			route = append(route, curr)
 		} else if route[routeIdx].Op == trace[i][j] {
 			route[routeIdx].RunLen += 1
 		} else {
-			curr = ByteCigar{RunLen: 1, Op: trace[i][j]}
+			curr = simpleio.ByteCigar{RunLen: 1, Op: trace[i][j]}
 			route = append(route, curr)
 			routeIdx++
 		}
@@ -112,7 +114,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen 
 		minJ = j
 	}
 	//TODO: double check if this is tracing back in the correct directions
-	ReverseBytesCigar(route)
+	simpleio.ReverseBytesCigar(route)
 	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
 }
 
@@ -162,6 +164,7 @@ func getLeftTargetBases(n *Node, extenion int, tEndPos int, headSeq []dna.Base) 
 	copy(ans[basesToTake:targetLen], headSeq)
 	return ans
 }
+
 func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]simpleio.CigarOp) ([]simpleio.ByteCigar, int64, int, int, []uint32) {
 	path := make([]uint32, 0, len(currentPath))
 	copy(path, currentPath)
@@ -192,21 +195,20 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	}
 	return bestAlignment, bestScore, refEnd - len(s)-len(seq) +bestRefStart, bestQueryStart, bestPath
 }
-
-func SoftClipBases(front int, lengthOfRead int, cig []ByteCigar) []ByteCigar {
-	var runLen int = QueryRunLen(cig)
-	if runLen < lengthOfRead {
-		answer := make([]ByteCigar, 0, len(cig)+2)
-		if front > 0 {
-			answer = append(answer, ByteCigar{RunLen: uint32(front), Op: 'S'})
+/*
+func  Neighbors(n *Node) []Node {
+	var nodes []Node
+	for _, e := range n.edges {
+		if ef == nil || ef(e) {
+			if a := e.Tail(); a.ID() == n.ID() {
+				nodes = append(nodes, e.Head())
+			} else {
+				nodes = append(nodes, a)
+			}
 		}
-		answer = append(answer, cig...)
-		if front+QueryRunLen(cig) < lengthOfRead {
-			answer = append(answer, ByteCigar{RunLen: uint32(lengthOfRead-front - runLen), Op: 'S'})
-		}
-		return answer
-	} else {
-		return cig
 	}
-}
+	return nodes
+}*/
+
+
 
