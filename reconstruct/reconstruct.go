@@ -15,7 +15,7 @@ func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 	var treeFastas []*fasta.Fasta
 
 	seqLength := len(leaves[0].Fasta.Seq)
-	for i := 0; i < seqLength; i++ {
+	for i := 0; i < seqLength; i++ { //loop through every base for SetLeafState
 		//set up tree
 		SetLeafState(root, i)
 		SetInternalState(root)
@@ -27,21 +27,20 @@ func Reconstruct(root *expandedTree.ETree) []*fasta.Fasta {
 	}
 
 	return treeFastas
-
 }
 
 //test accuracy of the reconstruction compared to the simulation
 func Accuracy(simFilename string, recFilename string) float64 {
 	tot := 0.0 //why is this here when it could just be num?
-	sim := fasta.Read(simFilename)
+	sim := fasta.Read(simFilename) //produced by simulate.printSeqForNodes, returned by simulate.Simulate
 	rec := fasta.Read(recFilename)
-	des := "descendents_" + simFilename
+	des := "descendents_" + simFilename //refers to file created by simulate.RemoveAncestors which has only leaf nodes labelled
 	simLeaves := fasta.Read(des)
 	for i := 0; i < len(sim); i++ {
 		for j := 0; j < len(simLeaves); j++ {
-			if sim[i].Name == simLeaves[j].Name {
-				sim = append(sim[:i], sim[i+1:]...)//this is adding the next record which hasn't been checked to the records?
-				//sim is already all of the simulation fastas, why are we appending them?
+			if sim[i].Name == simLeaves[j].Name { //if current fasta is a leaf fasta
+				sim = append(sim[:i], sim[i+1:]...)//this is adding the next record?
+				//sim is fastas of every node but the leaf nodes, so we are adding leaf fastas to the original simulation file
 			}
 		}
 	}
@@ -88,7 +87,7 @@ func Yhat(r []float64) int {
 	return pos
 }
 
-//set the state of the tree given the Fasta and the position (zero-based)
+//set the initial (leaf) state of the tree given the Fasta and the position (zero-based)
 func SetLeafState(node *expandedTree.ETree, pos int) {
 	node.State = 4 // starts as N
 	node.Stored = []float64{0, 0, 0, 0}
@@ -108,8 +107,7 @@ func SetLeafState(node *expandedTree.ETree, pos int) {
 		}
 	}
 }
-//better description: set up Stored list for each node in the tree with probability of each base
-//set up the tree with memory of the nodes below it using the set state
+//set up Stored list for each internal node in the tree with probability of each base
 func SetInternalState(node *expandedTree.ETree) {
 	if node.Left != nil && node.Right != nil {
 		SetInternalState(node.Left)
@@ -139,12 +137,10 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 		for j := 0; j < 4; j++ {
 			for k := 0; k < 4; k++ {
 				if prevNode.Up != nil {
-					if prevNode.Up.Left == prevNode {
+					if prevNode == node.Left {
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Right.Stored[j]
-					} else if prevNode.Up.Right == prevNode {
+					} else if prevNode == node.Right {
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Left.Stored[k]
-					} else {
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[k]*node.Right.Stored[j]
 					}
 				} else if prevNode.Up == nil {
 					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[k]*node.Right.Stored[j]
@@ -171,7 +167,7 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 		if node.Up != nil {
 			//Bubble up the tree using the memory of the previous nodes given the fixed node
 			BubbleUp(node.Up, node, scrap)
-			ans[i] = root.Scrap //this is setting it to nothing?
+			ans[i] = root.Scrap
 		} else if node.Up == nil {
 			ans[i] = root.Stored[i]
 		}
