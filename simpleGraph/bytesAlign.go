@@ -1,21 +1,20 @@
 package simpleGraph
 
-import(
+import (
+	"bytes"
 	"fmt"
+	"github.com/edotau/simpleio"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/edotau/simpleio"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
-	"bytes"
 	"sync"
-
 )
 
 func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]simpleio.CigarOp) *giraf.Giraf {
@@ -31,9 +30,8 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 		Seq:       read.Seq,
 		Qual:      read.Qual,
 		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
-	
-		ByteCigar:       []simpleio.ByteCigar{},
 
+		ByteCigar: []simpleio.ByteCigar{},
 	}
 	var leftAlignment, rightAlignment []simpleio.ByteCigar = []simpleio.ByteCigar{}, []simpleio.ByteCigar{}
 	var minTarget, maxTarget int
@@ -71,7 +69,6 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 		} else {
 			leftSeq = make([]dna.Base, 0, currSeed.QueryStart)
 			leftAlignment, leftScore, minTarget, minQuery, leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], leftSeq, int(currSeed.TargetStart), leftPath, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
-			
 
 			rightSeq = make([]dna.Base, 0, uint32(len(currSeq))-tailSeed.QueryStart-tailSeed.Length)
 			rightAlignment, rightScore, maxTarget, maxQuery, rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], rightSeq, int(tailSeed.TargetStart+tailSeed.Length), rightPath, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
@@ -84,10 +81,10 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 			currBest.QStart = minQuery
 			currBest.QEnd = maxQuery
 			currBest.PosStrand = currSeed.PosStrand
-			
+
 			currBest.Path = setPath(currBest.Path, minTarget, CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath), maxTarget)
 			//currBest.Aln = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment))
-			
+
 			currBest.ByteCigar = simpleio.SoftClipBases(minQuery, len(currSeq), simpleio.CatByteCigar(simpleio.AddCigar(leftAlignment, simpleio.ByteCigar{RunLen: sumLen(currSeed), Op: 'M'}), rightAlignment))
 			currBest.AlnScore = int(currScore)
 			currBest.Seq = currSeq
@@ -130,13 +127,12 @@ func SoftClipBases(front int, lengthOfRead int, cig []simpleio.ByteCigar) []simp
 		}
 		answer = append(answer, cig...)
 		if front+simpleio.QueryRunLen(cig) < lengthOfRead {
-			answer = append(answer, simpleio.ByteCigar{RunLen: uint32(lengthOfRead-front - runLen), Op: 'S'})
+			answer = append(answer, simpleio.ByteCigar{RunLen: uint32(lengthOfRead - front - runLen), Op: 'S'})
 		}
 		return answer
 	} else {
 		return cig
 	}
-
 
 }
 
@@ -314,32 +310,30 @@ func checkAlignment(aln *giraf.Giraf, genome *SimpleGraph) bool {
 		return false
 	}
 
-
-	
 	targetStart := aln.Path.TStart
 	targetEnd := aln.Path.TEnd
 	//if len(aln.Aln) < 1 {
 	if aln.ByteCigar[0].Op == 'S' {
-	//log.Printf("%s\n", giraf.GirafToString(aln))
+		//log.Printf("%s\n", giraf.GirafToString(aln))
 		targetStart = targetStart - int(aln.ByteCigar[0].RunLen)
 	}
-	if aln.Aln[len(aln.Aln)-1].Op =='S' {
+	if aln.Aln[len(aln.Aln)-1].Op == 'S' {
 		targetEnd = targetEnd + int(aln.ByteCigar[len(aln.ByteCigar)-1].RunLen)
 
-	//}
-	
+		//}
+
 	}
-	if common.StringToInt(qName[0])  == int(aln.Path.Nodes[0]) && common.StringToInt(qName[1]) ==  targetStart && targetEnd == common.StringToInt(qName[3]) {
+	if common.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && common.StringToInt(qName[1]) == targetStart && targetEnd == common.StringToInt(qName[3]) {
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
-	//	log.Printf("%s\n", giraf.GirafToString(aln))
+		//	log.Printf("%s\n", giraf.GirafToString(aln))
 		return true
 	} else {
 		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLen)
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Error: this read is not aligning correctly...\n")
 	}
-return false
+	return false
 }
 
 func isGirafPairCorrect(input <-chan *giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
@@ -353,7 +347,7 @@ func isGirafPairCorrect(input <-chan *giraf.GirafPair, genome *SimpleGraph, wg *
 			unmapped++
 			//log.Printf("Error: failed alignment simulation...\n")
 			//log.Printf("%s\n", giraf.GirafToString(pair.Fwd))
-			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))	
+			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))
 		}
 		if !checkAlignment(pair.Rev, genome) {
 			//log.Printf("Error: failed alignment simulation...\n")
@@ -361,14 +355,14 @@ func isGirafPairCorrect(input <-chan *giraf.GirafPair, genome *SimpleGraph, wg *
 			unmapped++
 		}
 	}
-	
+
 	log.Printf("Mapped %d out of %d\n", numReads-unmapped, numReads)
 	log.Printf("%f of the reads are mapping correctly\n", percentOfFloat(numReads-unmapped, numReads))
 
 	wg.Done()
 }
 
-func ReadGenomeGraph(filename string) *SimpleGraph{
+func ReadGenomeGraph(filename string) *SimpleGraph {
 	reader := simpleio.NewSimpleReader(filename)
 	defer reader.Close()
 	genome := NewGraph()
@@ -382,7 +376,6 @@ func ReadGenomeGraph(filename string) *SimpleGraph{
 	//var currNode *simpleGraph.Node
 	//Uses this map to add edges to graph
 	edges := make(map[string]*Node)
-
 
 	for line, done = simpleio.ReadLine(reader); !done; line, done = simpleio.ReadLine(reader) {
 		switch true {
@@ -410,12 +403,12 @@ func ReadGenomeGraph(filename string) *SimpleGraph{
 				}
 			}
 		case !bytes.ContainsAny(line, "\t:"):
-			 genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, simpleio.ByteSliceToDnaBases(line)...)
+			genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, simpleio.ByteSliceToDnaBases(line)...)
 
-			 ///for line, done = 
+			///for line, done =
 		}
 	}
-	
+
 	for i = 0; i < len(genome.Nodes); i++ {
 		genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)
 	}

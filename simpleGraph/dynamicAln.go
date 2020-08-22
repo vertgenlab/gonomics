@@ -1,11 +1,10 @@
 package simpleGraph
 
-
-import(
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/common"
-	"log"
+import (
 	"github.com/edotau/simpleio"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"log"
 )
 
 func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]simpleio.CigarOp) (int64, []simpleio.ByteCigar, int, int, int, int) {
@@ -118,7 +117,6 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen 
 	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
 }
 
-
 func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]simpleio.CigarOp) ([]simpleio.ByteCigar, int64, int, int, []uint32) {
 	path := make([]uint32, 0, len(currentPath))
 	copy(path, currentPath)
@@ -139,7 +137,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 
 	if availableBases >= ext || len(n.Next) == 0 {
 		score, alignment, _, targetEnd, _, queryEnd = simpleio.RightDynamicAln(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
-		return alignment, score, targetEnd+start, queryEnd, path
+		return alignment, score, targetEnd + start, queryEnd, path
 	} else {
 		bestScore = -1
 		for _, i := range n.Next {
@@ -153,8 +151,9 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 			}
 		}
 	}
-	return bestAlignment, bestScore, bestTargetEnd+start, bestQueryEnd, bestPath
+	return bestAlignment, bestScore, bestTargetEnd + start, bestQueryEnd, bestPath
 }
+
 // Get Target sequence to align to
 func getLeftTargetBases(n *Node, extenion int, tEndPos int, headSeq []dna.Base) []dna.Base {
 	var targetLen int = common.Min(len(headSeq)+tEndPos, extenion)
@@ -178,7 +177,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	if len(s)-len(seq) >= ext || len(n.Next) == 0 {
 		score, alignment, refStart, _, queryStart, _ = simpleio.LeftDynamicAln(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		simpleio.ReversePath(path)
-		return alignment, score, refEnd - len(s)-len(seq) + refStart, queryStart, path
+		return alignment, score, refEnd - len(s) - len(seq) + refStart, queryStart, path
 	} else {
 		bestScore = -1
 
@@ -193,8 +192,9 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 			}
 		}
 	}
-	return bestAlignment, bestScore, refEnd - len(s)-len(seq) +bestRefStart, bestQueryStart, bestPath
+	return bestAlignment, bestScore, refEnd - len(s) - len(seq) + bestRefStart, bestQueryStart, bestPath
 }
+
 /*
 func  Neighbors(n *Node) []Node {
 	var nodes []Node
@@ -209,6 +209,3 @@ func  Neighbors(n *Node) []Node {
 	}
 	return nodes
 }*/
-
-
-
