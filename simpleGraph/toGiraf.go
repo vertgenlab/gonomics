@@ -100,7 +100,7 @@ func GirafToExplicitCigar(giraf *giraf.Giraf, graph *SimpleGraph) []*cigar.Cigar
 	var k, runLenCount int64
 
 	if giraf.Aln[0].Op == '*' {
-		return nil
+		return []*cigar.Cigar{&cigar.Cigar{Op: '*'}}
 	}
 
 	for i := 0; i < len(giraf.Aln); i++ {
