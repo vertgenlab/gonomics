@@ -74,7 +74,7 @@ func CalculatePiTajima(all []*IndividualAllele) float64 {
 	return (float64(sum) / float64(n))
 }
 
-//TajimaGVCF is the main function that takes an individual allele matrix and calculates Tajima's D.
+//TajimaGVCF is the main function that takes an individual allele matrix and calculates Tajima's D. Limited to SNPs.
 func TajimaGVCF(all []*IndividualAllele) float64 {
 	pi := CalculatePiTajima(all)
 	n := len(all)
@@ -91,7 +91,7 @@ func TajimaGVCF(all []*IndividualAllele) float64 {
 }
 
 //TajimaGVCFBedSet is designed to calculate Tajima's D from a
-//gVCF file for variants falling in a particular set of bed regions. Returns one value for the whole set. 
+//gVCF file for variants falling in a particular set of bed regions. Returns one value for the whole set. Limited to SNPs.
 func TajimaGVCFBedSet(b []*bed.Bed, gVCFFile string) float64 {
 	alpha := vcf.GoReadGVcf(gVCFFile)
 	var all []*IndividualAllele
