@@ -1,7 +1,6 @@
 package cigar
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
 )
@@ -12,7 +11,6 @@ import (
 // Mismatch character 'X'
 // Sequence additions are lowercase in an effort to improve human readability
 func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*Cigar {
-	fmt.Println("Started")
 	var answer []*Cigar
 	var seqIdx, refIdx int
 	var k, runLenCount int64
