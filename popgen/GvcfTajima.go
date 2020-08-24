@@ -10,11 +10,17 @@ import (
 	"strings"
 	"math"
 )
+/*
+This file contains functions for calculating Tajima's D from a gVCF. More information on Tajima's D can be found at https://en.wikipedia.org/wiki/Tajima%27s_D
+*/
 
+//IndividualAllele is an internal struct for the Tajima's D calculation from gVCFs. It contains the "column" information of a gVCF block
+//In other words, an IndividualAllele represents the state of each segregating site for one allele in a gVCF block.
 type IndividualAllele struct {
 	sites [][]dna.Base
 } 
 
+//IndividualDist is a helper function for Tajima's D calculations that calculates the distance (the number of segregating sites that are different by state) between two IndividualAllele structs.
 func IndividualDist(a IndividualAllele, b IndividualAllele) int {
 	var answer int = 0
 	if len(a.sites) != len(b.sites) {
@@ -30,6 +36,7 @@ func IndividualDist(a IndividualAllele, b IndividualAllele) int {
 	return answer
 }
 
+//GVCFCalculateA2 returns the A2 sum used in the calculation of Tajima's D. More information for this constant can be found at the wikipedia page.
 func GVCFCalculateA2(n int) float64 {
 	var answer float64
 
@@ -39,6 +46,7 @@ func GVCFCalculateA2(n int) float64 {
 	return answer
 }
 
+//GVCFCalculateA1 returns the A1 sum used in the calculation of Tajima's D. (see wiki)
 func GVCFCalculateA1(n int) float64 {
 	var answer float64
 
