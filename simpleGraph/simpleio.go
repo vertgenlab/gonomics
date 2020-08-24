@@ -7,18 +7,19 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
+
 	"log"
 	"strings"
 	"sync"
 )
 
-func NewGenomeGraph() SimpleGraph {
+func NewGenomeGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
 	graph.Nodes = make([]*Node, 0)
-	return *graph
+	return graph
 }
 
-func SimplyRead(filename string) SimpleGraph {
+func SimplyRead(filename string) *SimpleGraph {
 	simpleioReader := simpleio.NewSimpleReader(filename)
 	genome := NewGenomeGraph()
 	var currNode *Node
@@ -52,7 +53,7 @@ func SimplyRead(filename string) SimpleGraph {
 				text = strings.Split(words[1], "_")
 				currNode.Info = &Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
 			}
-			AddNode(&genome, currNode)
+			AddNode(genome, currNode)
 			_, ok = edges[line[1:]]
 			if !ok {
 				edges[string(line[1:])] = currNode
@@ -80,20 +81,59 @@ func SimplyRead(filename string) SimpleGraph {
 
 func readFastqGsw(fileOne string, fileTwo string, answer chan<- *fastq.PairedEndBig) {
 	readOne, readTwo := simpleio.NewSimpleReader(fileOne), simpleio.NewSimpleReader(fileTwo)
-	var simplePool = sync.Pool{
+	var fastqReader = sync.Pool{
 		New: func() interface{} {
-			return &bytes.Buffer{}
+			return &fastq.PairedEndBig{}
 		},
 	}
-	for curr, done := fqPair(readOne, readTwo, simplePool); !done; curr, done = fqPair(readOne, readTwo, simplePool) {
-		answer <- curr
+	var done bool
+	for {
+		fq := fastqReader.Get().(*fastq.PairedEndBig)
+		fq, done = fqPair(readOne, readTwo)
+		if !done {
+			answer <- fq
+			fastqReader.Put(fq)
+		} else {
+			close(answer)
+			break
+		}
 	}
-	close(answer)
 }
 
-func fqPair(reader1 *simpleio.SimpleReader, reader2 *simpleio.SimpleReader, simplePool sync.Pool) (*fastq.PairedEndBig, bool) {
-	fqOne, done1 := nextFq(reader1, simplePool)
-	fqTwo, done2 := nextFq(reader2, simplePool)
+/*
+func readFastqGsw(gg *SimpleGraph, fileOne string, fileTwo string, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, ans chan<- *giraf.GirafPair, wg *sync.WaitGroup, m [][]int64, trace [][]simpleio.CigarOp) {
+	readOne, readTwo := simpleio.NewSimpleReader(fileOne), simpleio.NewSimpleReader(fileTwo)
+	var fastqReader  = sync.Pool{
+		New: func() interface{} {
+			return new(fastq.PairedEndBig)
+		},
+	}
+	//var done bool = false
+	for {
+		fq := fastqReader.Get().(*fastq.PairedEndBig)
+		fq, done := fqPair(readOne, readTwo);
+		if done {
+			break
+		} else {
+			ans <- WrapSimplyGsw(gg, fq, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
+		}
+	}
+	wg.Done()
+}*/
+/*
+func RoutineSimplyGirafWrapTest(gg *SimpleGraph, fileOne string, fileTwo string, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, outputChan chan<- *giraf.GirafPair, wg *sync.WaitGroup) {
+	m, trace := simpleio.MatrixSetup(10000)
+	readFastqGsw(fileOne, fileTwo)
+
+	for read := range inputChan {
+		outputChan <- WrapSimplyGsw(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
+	}
+	wg.Done()
+}*/
+
+func fqPair(reader1 *simpleio.SimpleReader, reader2 *simpleio.SimpleReader) (*fastq.PairedEndBig, bool) {
+	fqOne, done1 := nextFq(reader1)
+	fqTwo, done2 := nextFq(reader2)
 	if (!done1 && done2) || (done1 && !done2) {
 		log.Fatalf("Error: fastq files do not end at the same time...\n")
 	} else if done1 || done2 {
@@ -106,7 +146,7 @@ func fqPair(reader1 *simpleio.SimpleReader, reader2 *simpleio.SimpleReader, simp
 	return curr, false
 }
 
-func nextFq(reader *simpleio.SimpleReader, simplePool sync.Pool) (*fastq.FastqBig, bool) {
+func nextFq(reader *simpleio.SimpleReader) (*fastq.FastqBig, bool) {
 	name, done := simpleio.ReadLine(reader)
 	if done {
 		return nil, true
@@ -120,13 +160,13 @@ func nextFq(reader *simpleio.SimpleReader, simplePool sync.Pool) (*fastq.FastqBi
 	}
 
 	answer := fastq.FastqBig{}
-	data := simplePool.Get().(*bytes.Buffer)
-	data.Write(name)
-	answer.Name = strings.Split(data.String()[1:], " ")[0]
-	data.Reset()
-	data.Write(seq)
+	//data := simplePool.Get().(*bytes.Buffer)
+	//data.Write(name)
+	answer.Name = strings.Split(string(name[1:]), " ")[0]
+	//data.Reset()
+	//data.Write(seq)
 	//set up sequence and reverse comp
-	answer.Seq = simpleio.ByteSliceToDnaBases(data.Bytes())
+	answer.Seq = simpleio.ByteSliceToDnaBases(seq)
 	answer.SeqRc = make([]dna.Base, len(answer.Seq))
 	copy(answer.SeqRc, answer.Seq)
 	dna.ReverseComplement(answer.SeqRc)
@@ -135,16 +175,16 @@ func nextFq(reader *simpleio.SimpleReader, simplePool sync.Pool) (*fastq.FastqBi
 	answer.Rainbow = dnaTwoBit.NewTwoBitRainbow(answer.Seq)
 	answer.RainbowRc = dnaTwoBit.NewTwoBitRainbow(answer.SeqRc)
 
-	data.Reset()
+	//data.Reset()
 
 	if string(plus) != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
+	//data.Write(qual)
+	answer.Qual = fastq.ToQualUint8(bytes.Runes(qual))
 
-	data.Write(qual)
-	answer.Qual = fastq.ToQualUint8(bytes.Runes(data.Bytes()))
-	data.Reset()
-	simplePool.Put(data)
+	//data.Reset()
+	//simplePool.Put(data)
 	return &answer, false
 }
 

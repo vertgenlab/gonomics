@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/edotau/simpleio"
-	"github.com/vertgenlab/gonomics/cigar"
+	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"log"
+
 	"strings"
 	"sync"
 )
@@ -24,12 +27,12 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 		QEnd:      0,
 		PosStrand: true,
 		Path:      &giraf.Path{},
-		Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
-		AlnScore:  0,
-		MapQ:      255,
-		Seq:       read.Seq,
-		Qual:      read.Qual,
-		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
+		//Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
+		AlnScore: 0,
+		MapQ:     255,
+		Seq:      read.Seq,
+		Qual:     read.Qual,
+		Notes:    []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 
 		ByteCigar: []simpleio.ByteCigar{},
 	}
@@ -49,8 +52,13 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 	var currSeq []dna.Base
 	var currSeed *SeedDev
 
-	var leftSeq, rightSeq []dna.Base
+	var leftSeq, rightSeq []dna.Base //leftSeq,
 
+	var dnaPool = sync.Pool{
+		New: func() interface{} {
+			return make([]dna.Base, 0, 150)
+		},
+	}
 	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), int64(currBest.AlnScore), perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
@@ -67,13 +75,16 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 			minQuery = int(currSeed.QueryStart)
 			maxQuery = int(currSeed.TotalLength - 1)
 		} else {
-			leftSeq = make([]dna.Base, 0, currSeed.QueryStart)
-			leftAlignment, leftScore, minTarget, minQuery, leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], leftSeq, int(currSeed.TargetStart), leftPath, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
+			//leftSeq = make([]dna.Base, 0, currSeed.QueryStart)
 
-			rightSeq = make([]dna.Base, 0, uint32(len(currSeq))-tailSeed.QueryStart-tailSeed.Length)
-			rightAlignment, rightScore, maxTarget, maxQuery, rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], rightSeq, int(tailSeed.TargetStart+tailSeed.Length), rightPath, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+			leftAlignment, leftScore, minTarget, minQuery, leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], leftSeq, int(currSeed.TargetStart), leftPath, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace, &dnaPool)
+
+			//rightSeq = make([]dna.Base, 0, uint32(len(currSeq))-tailSeed.QueryStart-tailSeed.Length)
+
+			rightAlignment, rightScore, maxTarget, maxQuery, rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], rightSeq, int(tailSeed.TargetStart+tailSeed.Length), rightPath, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace, &dnaPool)
+
 			//log.Printf("left alignment: %s\n", simpleio.ByteCigarString(leftAlignment))
-			simpleio.ByteCigarString(rightAlignment)
+			//simpleio.ByteCigarString(rightAlignment)
 			//log.Printf("right alignment: %s\n", simpleio.ByteCigarString(rightAlignment))
 		}
 		currScore = leftScore + seedScore + rightScore
@@ -85,7 +96,7 @@ func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint
 			currBest.Path = setPath(currBest.Path, minTarget, CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath), maxTarget)
 			//currBest.Aln = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment))
 
-			currBest.ByteCigar = simpleio.SoftClipBases(minQuery, len(currSeq), simpleio.CatByteCigar(simpleio.AddCigar(leftAlignment, simpleio.ByteCigar{RunLen: sumLen(currSeed), Op: 'M'}), rightAlignment))
+			currBest.ByteCigar = SoftClipBases(minQuery, len(currSeq), simpleio.CatByteCigar(simpleio.AddCigar(leftAlignment, simpleio.ByteCigar{RunLen: sumLen(currSeed), Op: 'M'}), rightAlignment))
 			currBest.AlnScore = int(currScore)
 			currBest.Seq = currSeq
 			if gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
@@ -109,6 +120,35 @@ func RoutineSimplyGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen i
 	}
 	wg.Done()
 }
+
+func NewMatrixPool() sync.Pool {
+	return sync.Pool{
+		New: func() interface{} {
+			return NewSwMatrix(10000)
+		},
+	}
+}
+
+func NewSwMatrix(size int) *MatrixAln {
+	sw := MatrixAln{}
+	sw.m, sw.trace = simpleio.MatrixSetup(size)
+	return &sw
+}
+
+/*
+func RoutineSimplyGirafPool(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.PairedEndBig, outputChan chan<- *giraf.GirafPair, wg *sync.WaitGroup, matrixPool *sync.Pool) {
+
+	alnMatrix := matrixPool.Get().(*MatrixAln)
+	alnMatrix = NewSwMatrix(10000)
+	//m, trace := simpleio.MatrixSetup(10000)
+	for read := range inputChan {
+
+		//alnMatrix.m, alnMatrix.trace = simpleio.MatrixSetup(10000)
+		outputChan <- WrapSimplyGsw(gg, read, seedHash, seedLen, stepSize, scoreMatrix, alnMatrix.m, alnMatrix.trace)
+	}
+	wg.Done()
+	matrixPool.Put(alnMatrix)
+}*/
 
 func WrapSimplyGsw(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]simpleio.CigarOp) *giraf.GirafPair {
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
@@ -334,6 +374,33 @@ func checkAlignment(aln *giraf.Giraf, genome *SimpleGraph) bool {
 		//log.Printf("Error: this read is not aligning correctly...\n")
 	}
 	return false
+}
+
+//simpleio.BytesToCigar([]byte(data[6])),
+func WriteSimpleGirafPair(filename string, input <-chan *giraf.GirafPair, wg *sync.WaitGroup) {
+	file := fileio.EasyCreate(filename)
+	//var buf *bytes.Buffer
+	var err error
+	var simplePool = sync.Pool{
+		New: func() interface{} {
+			return &bytes.Buffer{}
+		},
+	}
+	for gp := range input {
+		buf := simplePool.Get().(*bytes.Buffer)
+		_, err = fmt.Fprintf(buf, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s\n", gp.Fwd.QName, gp.Fwd.QStart, gp.Fwd.QEnd, gp.Fwd.Flag, common.StrandToRune(gp.Fwd.PosStrand), giraf.PathToString(gp.Fwd.Path), simpleio.ByteCigarString(gp.Fwd.ByteCigar), gp.Fwd.AlnScore, gp.Fwd.MapQ, dna.BasesToString(gp.Fwd.Seq), fastq.Uint8QualToString(gp.Fwd.Qual), giraf.NotesToString(gp.Fwd.Notes))
+		common.ExitIfError(err)
+		_, err = fmt.Fprintf(buf, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s\n", gp.Rev.QName, gp.Rev.QStart, gp.Rev.QEnd, gp.Rev.Flag, common.StrandToRune(gp.Rev.PosStrand), giraf.PathToString(gp.Rev.Path), simpleio.ByteCigarString(gp.Rev.ByteCigar), gp.Rev.AlnScore, gp.Rev.MapQ, dna.BasesToString(gp.Rev.Seq), fastq.Uint8QualToString(gp.Rev.Qual), giraf.NotesToString(gp.Rev.Notes))
+		common.ExitIfError(err)
+
+		io.Copy(file, buf)
+		buf.Reset()
+		simplePool.Put(buf)
+	}
+	file.Close()
+	wg.Done()
+
+	//return str.String()
 }
 
 func isGirafPairCorrect(input <-chan *giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
