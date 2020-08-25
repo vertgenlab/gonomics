@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"testing"
 	"os"
@@ -16,7 +17,7 @@ var genomeGraphs = []struct {
 }
 var cpuprofile string =  "simpleioProf/simpleio.ReaderCPU.prof"//flag.String("cpuprofile", "", "write cpu profile to `file`")
 var memprofile string= "simpleioProf/simpleio.ReaderMEM.prof"//flag.String("memprofile", "", "write memory profile to `file`")
-/*
+
 func BenchmarkSimplePoolReader(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -24,8 +25,8 @@ func BenchmarkSimplePoolReader(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			SimplyRead(test.file)
 		}
-		
-	}	
+
+	}
 }
 
 func BenchmarkEasyReader(b *testing.B) {
@@ -35,8 +36,8 @@ func BenchmarkEasyReader(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			Read(test.file)
 		}
-	}	
-}*/
+	}
+}
 
 func BenchmarkNewReader(b *testing.B) {
 	flag.Parse()
@@ -66,5 +67,4 @@ func BenchmarkNewReader(b *testing.B) {
             log.Fatal("could not write memory profile: ", err)
         }
     }
-
-}
+}*/

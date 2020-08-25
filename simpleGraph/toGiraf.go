@@ -20,11 +20,11 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		PosStrand: true,
 		Path:      &giraf.Path{},
 		//Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
-		AlnScore:  0,
-		MapQ:      255,
-		Seq:       read.Seq,
-		Qual:      read.Qual,
-		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
+		AlnScore: 0,
+		MapQ:     255,
+		Seq:      read.Seq,
+		Qual:     read.Qual,
+		Notes:    []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 	}
 	//var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget, maxTarget int
@@ -134,7 +134,7 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 func setGirafFlags(pair *giraf.GirafPair) {
 	pair.Fwd.Flag = getGirafFlags(pair.Fwd)
 	pair.Rev.Flag = getGirafFlags(pair.Rev)
-	pair.Fwd.Flag += 8 // Forward
+	pair.Fwd.Flag += 8  // Forward
 	pair.Fwd.Flag += 16 // Paired Reads
 	pair.Fwd.Flag += 16 // Paired Reads
 	if isProperPairAlign(pair) {
