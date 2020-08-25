@@ -14,10 +14,13 @@ import (
 	"sync"
 )
 
+// SimpleGraph struct contains a slice of Nodes
 type SimpleGraph struct {
 	Nodes []*Node
 }
 
+// Node is uniquely definded by Id and is encoded with information
+// describing sequence order and orientation and annotated variance
 type Node struct {
 	Id        uint32
 	Name      string
@@ -28,6 +31,8 @@ type Node struct {
 	Info      *Annotation
 }
 
+// Edge describes the neighboring nodes and a weighted probabilty
+// of the of the more likely path
 type Edge struct {
 	Dest *Node
 	Prob float32
@@ -66,6 +71,7 @@ func Read(filename string) *SimpleGraph {
 	for reader, done := simpleio.ReadLine(simpleioReader); !done; reader, done = simpleio.ReadLine(simpleioReader) {
 		data = simplePool.Get().(*bytes.Buffer)
 		data.Write(reader)
+
 		line = data.String()
 		switch true {
 		case strings.HasPrefix(line, ">"):
@@ -96,7 +102,6 @@ func Read(filename string) *SimpleGraph {
 		data.Reset()
 		simplePool.Put(data)
 	}
-	simpleioReader.Close()
 	for i = 0; i < len(genome.Nodes); i++ {
 		genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)
 	}
