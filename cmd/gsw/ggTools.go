@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	//"sync"
 )
 
 type GgToolsSettings struct {
@@ -62,30 +61,37 @@ func RunGgTools() {
 		ggT.Cmd.Usage()
 	} else {
 		inFile := ggT.Cmd.Arg(0)
-		log.Printf("File read: %s\n", inFile)
+		log.Printf("Reading: %s\n", inFile)
 		switch true {
 		case chain.IsChainFile(inFile):
+			log.Printf("Input chain detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 && strings.Compare(ggT.QueryFa, "") != 0 {
+				log.Printf("Converting chain to %s...\n", ggT.FmtOutput)
 				convertChains(inFile, ggT.TargetFa, ggT.QueryFa, ggT.FmtOutput, ggT.Out)
 			} else {
 				ggT.Cmd.Usage()
 				log.Fatalf("Error: Must specify both target and query fasta files...\n")
 			}
 		case vcf.IsVcfFile(inFile):
+			log.Printf("Input vcf detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 {
+				log.Printf("Converting vcf to %s...\n", ggT.FmtOutput)
 				simpleGraph.Write(ggT.Out, vcfToSimpleGraph(inFile, ggT.TargetFa))
 			} else {
 				ggT.Cmd.Usage()
 				log.Fatalf("Error: Must specify target reference fasta file...\n")
 			}
 		case axt.IsAxtFile(inFile):
+			log.Printf("Input axt detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 {
+				log.Printf("Converting axt alignment to %s...\n", ggT.FmtOutput)
 				convertAxt(inFile, ggT.FmtOutput, ggT.TargetFa, ggT.Out)
 			}
 		default:
 			// /ggT.Cmd.Usage()
 			errorMessage()
 		}
+		log.Printf("Finished writing %s file\n-xoxo gg\n", ggT.FmtOutput)
 	}
 }
 
