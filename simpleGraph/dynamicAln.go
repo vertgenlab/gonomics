@@ -10,7 +10,7 @@ import (
 
 type MatrixAln struct {
 	m     [][]int64
-	trace [][]simpleio.CigarOp
+	trace [][]byte
 }
 
 func NewDnaPool() sync.Pool {
@@ -21,7 +21,7 @@ func NewDnaPool() sync.Pool {
 	}
 }
 
-func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]simpleio.CigarOp) (int64, []simpleio.ByteCigar, int, int, int, int) {
+func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []simpleio.ByteCigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var currMax int64
 	var maxI int
@@ -79,7 +79,7 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 	return m[maxI][maxJ], route, 0, maxI, 0, maxJ
 }
 
-func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]simpleio.CigarOp) (int64, []simpleio.ByteCigar, int, int, int, int) {
+func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []simpleio.ByteCigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var i, j, routeIdx int
 
@@ -142,7 +142,7 @@ func getRightBases(n *Node, extenion int, tStartPos int, headSeq []dna.Base) []d
 	return s
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]simpleio.CigarOp, dnaPool *sync.Pool) ([]simpleio.ByteCigar, int64, int, int, []uint32) {
+func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]byte, dnaPool *sync.Pool) ([]simpleio.ByteCigar, int64, int, int, []uint32) {
 
 	s := dnaPool.Get().([]dna.Base)
 	s = getRightBases(n, ext, start, seq)
@@ -166,7 +166,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 	//copy(s[len(seq):targetLength], n.Seq[start:start+basesToTake])
 
 	if len(s)-len(seq) >= ext || len(n.Next) == 0 {
-		score, alignment, _, targetEnd, _, queryEnd = simpleio.RightDynamicAln(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
+		score, alignment, _, targetEnd, _, queryEnd = RightDynamicAln(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		s = s[:0]
 		dnaPool.Put(s)
 		return alignment, score, targetEnd + start, queryEnd, path
@@ -199,7 +199,7 @@ func getLeftTargetBases(n *Node, extenion int, tEndPos int, headSeq []dna.Base) 
 	return ans
 }
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]simpleio.CigarOp, dnaPool *sync.Pool) ([]simpleio.ByteCigar, int64, int, int, []uint32) {
+func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, m [][]int64, trace [][]byte, dnaPool *sync.Pool) ([]simpleio.ByteCigar, int64, int, int, []uint32) {
 	s := dnaPool.Get().([]dna.Base)
 	s = getLeftTargetBases(n, ext, refEnd, seq)
 
@@ -212,7 +212,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	var bestPath []uint32
 
 	if len(s)-len(seq) >= ext || len(n.Next) == 0 {
-		score, alignment, refStart, _, queryStart, _ = simpleio.LeftDynamicAln(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
+		score, alignment, refStart, _, queryStart, _ = LeftDynamicAln(s, read, HumanChimpTwoScoreMatrix, -600, m, trace)
 		simpleio.ReversePath(path)
 		s = s[:0]
 		dnaPool.Put(s)

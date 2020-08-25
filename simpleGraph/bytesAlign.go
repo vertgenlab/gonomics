@@ -20,7 +20,7 @@ import (
 	"sync"
 )
 
-func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]simpleio.CigarOp) *giraf.Giraf {
+func SimplyGsw(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]byte) *giraf.Giraf {
 	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
@@ -150,7 +150,7 @@ func RoutineSimplyGirafPool(gg *SimpleGraph, seedHash map[uint64][]uint64, seedL
 	matrixPool.Put(alnMatrix)
 }*/
 
-func WrapSimplyGsw(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]simpleio.CigarOp) *giraf.GirafPair {
+func WrapSimplyGsw(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]byte) *giraf.GirafPair {
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
 	mappedPair.Fwd = SimplyGsw(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
 	mappedPair.Rev = SimplyGsw(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
@@ -380,7 +380,7 @@ func checkAlignment(aln *giraf.Giraf, genome *SimpleGraph) bool {
 func WriteSimpleGirafPair(filename string, input <-chan *giraf.GirafPair, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	//var buf *bytes.Buffer
-	var err error
+	
 	var simplePool = sync.Pool{
 		New: func() interface{} {
 			return &bytes.Buffer{}
@@ -388,20 +388,23 @@ func WriteSimpleGirafPair(filename string, input <-chan *giraf.GirafPair, wg *sy
 	}
 	for gp := range input {
 		buf := simplePool.Get().(*bytes.Buffer)
-		_, err = fmt.Fprintf(buf, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s\n", gp.Fwd.QName, gp.Fwd.QStart, gp.Fwd.QEnd, gp.Fwd.Flag, common.StrandToRune(gp.Fwd.PosStrand), giraf.PathToString(gp.Fwd.Path), simpleio.ByteCigarString(gp.Fwd.ByteCigar), gp.Fwd.AlnScore, gp.Fwd.MapQ, dna.BasesToString(gp.Fwd.Seq), fastq.Uint8QualToString(gp.Fwd.Qual), giraf.NotesToString(gp.Fwd.Notes))
-		common.ExitIfError(err)
-		_, err = fmt.Fprintf(buf, "%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s\n", gp.Rev.QName, gp.Rev.QStart, gp.Rev.QEnd, gp.Rev.Flag, common.StrandToRune(gp.Rev.PosStrand), giraf.PathToString(gp.Rev.Path), simpleio.ByteCigarString(gp.Rev.ByteCigar), gp.Rev.AlnScore, gp.Rev.MapQ, dna.BasesToString(gp.Rev.Seq), fastq.Uint8QualToString(gp.Rev.Qual), giraf.NotesToString(gp.Rev.Notes))
-		common.ExitIfError(err)
-
+		buf = GirafPairToString(gp, buf)
 		io.Copy(file, buf)
 		buf.Reset()
 		simplePool.Put(buf)
 	}
 	file.Close()
 	wg.Done()
-
-	//return str.String()
 }
+
+
+func GirafPairToString(gp *giraf.GirafPair, buf *bytes.Buffer) *bytes.Buffer {
+
+	buf = giraf.GirafStringBuilder(gp.Fwd, buf)
+	buf = giraf.GirafStringBuilder(gp.Rev, buf)
+	return buf
+}
+
 
 func isGirafPairCorrect(input <-chan *giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
 	var unmapped int = 0

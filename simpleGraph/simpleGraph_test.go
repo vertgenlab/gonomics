@@ -8,7 +8,8 @@ import (
 	"os"
 	"sync"
 	"testing"
-
+	//"net/http"
+	//"net/http/pprof"
 	"flag"
 	"runtime"
 	"runtime/pprof"
@@ -17,57 +18,43 @@ import (
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
 var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-
 /*
-
-
-
-
-
-rightSeq = make([]dna.Base, 0, uint32(len(currSeq))-tailSeed.QueryStart-tailSeed.Length)
-leftSeq = make([]dna.Base, 0, currSeed.QueryStart)
-
-
-func BenchmarkTestWorkerWithWriting(b *testing.B) {
-	b.ResetTimer()
+//test code in master right now
+func TestWorkerWithWritingMASTER(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 20000
+	var numberOfReads int = 5000
 	var readLength int = 150
-	var mutations int =2
+	var mutations int = 2
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
 	genome := Read("testdata/rabsTHREEspine.fa")
+	log.Printf("Reading in the genome (simple graph)...\n")
+	log.Printf("Indexing the genome...\n")
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.PairedEndBig, 824)
+
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan *giraf.GirafPair, 824)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	os.Remove("testdata/simReads_R1.fq")
 	os.Remove("testdata/simReads_R2.fq")
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
-
-	//if *cpuprofile != "" {
-    //    f, err := os.Create(*cpuprofile)
-     //   if err != nil {
-    //        log.Fatal("could not create CPU profile: ", err)
-    //    }
-     //   defer f.Close() // error handling omitted for example
-     //   if err := pprof.StartCPUProfile(f); err != nil {
-    //        log.Fatal("could not start CPU profile: ", err)
-    //    }
-     //   defer pprof.StopCPUProfile()
-    //}
-
-	log.Printf("Reading in the genome (simple graph)...\n")
-	log.Printf("Indexing the genome...\n")
-	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.PairedEndBig, 2408)
-
-	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *giraf.GirafPair, 2408)
-
-
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 	log.Printf("Finished Indexing Genome...\n")
@@ -88,30 +75,158 @@ func BenchmarkTestWorkerWithWriting(b *testing.B) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-
-	//if *memprofile != "" {
-    //    f, err := os.Create(*memprofile)
-    //    if err != nil {
-    //        log.Fatal("could not create memory profile: ", err)
-       // }
-     //   defer f.Close() // error handling omitted for example
-     //   runtime.GC() // get up-to-date statistics
-     //   if err := pprof.WriteHeapProfile(f); err != nil {
-     //       log.Fatal("could not write memory profile: ", err)
-     //   }
-   // }
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
 }*/
+/*()
+func TestNewGraph(t *testing.T) {
+
+	var output string = "testdata/test.giraf"
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 50000
+	var readLength int = 150
+	var mutations int = 0
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 8
+	var scoreMatrix = HumanChimpTwoScoreMatrix
+	genome := SimplyRead("testdata/rabsTHREEspine.fa")
+
+	log.Printf("Simulating reads...\n")
+	simReads := RandomPairedReads(&genome, readLength, numberOfReads, mutations)
+	os.Remove("testdata/simReads_R1.fq")
+	os.Remove("testdata/simReads_R2.fq")
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	log.Printf("Indexing the genome...\n")
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.PairedEndBig, 2408)
+
+	log.Printf("Making giraf channel...\n")
+	girafPipe := make(chan *giraf.GirafPair, 2408)
+
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
+	log.Printf("Finished Indexing Genome...\n")
+	start := time.Now()
+
+	log.Printf("Starting alignment worker...\n")
+	workerWaiter.Add(numWorkers)
+	for i := 0; i < numWorkers; i++ {
+		go RoutineSimplyGiraf(&genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+	}
+
+	go giraf.GirafPairChanToFile(output, girafPipe, &writerWaiter)
+	writerWaiter.Add(1)
+	workerWaiter.Wait()
+	close(girafPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	writerWaiter.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+}*/
+
+func BenchmarkTestWorkerWithWriting(b *testing.B) {
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+	//for n := 0; n < b.N; n++ {
+	b.ResetTimer()
+	var output string = "/dev/stdout"
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 5000
+	var readLength int = 150
+	var mutations int = 2
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 8
+	var scoreMatrix = HumanChimpTwoScoreMatrix
+	genome := SimplyRead("testdata/rabsTHREEspine.fa")
+
+	log.Printf("Simulating reads...\n")
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	os.Remove("testdata/simReads_R1.fq")
+	os.Remove("testdata/simReads_R2.fq")
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+
+	log.Printf("Reading in the genome (simple graph)...\n")
+	log.Printf("Indexing the genome...\n")
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan *fastq.PairedEndBig, 2408)
+
+	log.Printf("Making giraf channel...\n")
+	girafPipe := make(chan *giraf.GirafPair, 2408)
+
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+
+	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
+	log.Printf("Finished Indexing Genome...\n")
+	start := time.Now()
+
+	log.Printf("Starting alignment worker...\n")
+	workerWaiter.Add(numWorkers)
+	//matrixPool := NewMatrixPool()
+	for i := 0; i < numWorkers; i++ {
+		go RoutineSimplyGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+	}
+
+	go WriteSimpleGirafPair(output, girafPipe, &writerWaiter)
+	writerWaiter.Add(1)
+	workerWaiter.Wait()
+	close(girafPipe)
+	log.Printf("Aligners finished and channel closed\n")
+	writerWaiter.Wait()
+	log.Printf("Sam writer finished and we are all done\n")
+	stop := time.Now()
+	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	//}
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
+	
+}
+
+/*
 func TestSimpleio(t *testing.T) {
 	//var output string = "testdata/simple.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 50
+	var numberOfReads int = 1000
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	genome := Read("testdata/rabsTHREEspine.fa")
+	genome := Read("testdata/gasAcu1.fa")
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
@@ -145,24 +260,25 @@ func TestSimpleio(t *testing.T) {
 	log.Printf("Aligners finished and channel closed\n")
 	writerWaiter.Wait()
 	//b.StopTimer()
-	log.Printf("Sam writer finished and we are all done\n")
+	log.Printf("Giraf writer finished and we are all done\n")
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-}
+}*/
+/*
 func BenchmarkSimpleio(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 500
+	var numberOfReads int = 20000
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	genome := ReadGenomeGraph("testdata/rabsTHREEspine.fa")
+	genome := ReadGenomeGraph("testdata/gasAcu1.fa")
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)

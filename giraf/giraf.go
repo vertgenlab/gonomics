@@ -2,12 +2,18 @@ package giraf
 
 import (
 	"fmt"
+	"github.com/edotau/simpleio"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/edotau/simpleio"
+	"github.com/vertgenlab/gonomics/fastq"
 	"os"
 	"sync"
+	
+	"strconv"
+	"bytes"
+	"io"
 )
 
 type Giraf struct {
@@ -17,7 +23,8 @@ type Giraf struct {
 	Flag      uint8
 	PosStrand bool
 	Path      *Path
-	Aln       []simpleio.ByteCigar// current cigar will need to be expanded
+	Aln       []*cigar.Cigar
+	ByteCigar []simpleio.ByteCigar // current cigar will need to be expanded
 	AlnScore  int
 	MapQ      uint8
 	Seq       []dna.Base // dnaTwoBit?
@@ -121,4 +128,83 @@ func GirafPairChanToFile(filename string, input <-chan *GirafPair, wg *sync.Wait
 func WriteGirafToFileHandle(file *os.File, gf *Giraf) {
 	_, err := fmt.Fprintf(file, "%s\n", GirafToString(gf))
 	common.ExitIfError(err)
+}
+
+func WriteSimpleGiraf(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
+	file := fileio.EasyCreate(filename)
+	var buf *bytes.Buffer
+	
+	var simplePool = sync.Pool{
+		New: func() interface{} {
+			return &bytes.Buffer{}
+		},
+	}
+	
+	for gp := range input {
+		buf = simplePool.Get().(*bytes.Buffer)
+		buf = GirafStringBuilder(gp, buf)
+		io.Copy(file, buf)
+		buf.Reset()
+		simplePool.Put(buf)
+	}
+	file.Close()
+	wg.Done()
+}
+
+func GirafStringBuilder(g *Giraf, buf *bytes.Buffer) *bytes.Buffer {
+	var err error
+	buf = buildGirafString(buf, g, err)
+	err = buf.WriteByte('\n')
+	common.ExitIfError(err)
+	return buf
+}
+
+func buildGirafString(buf *bytes.Buffer, g *Giraf, err error) *bytes.Buffer {
+	_, err = buf.WriteString(g.QName)
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.QStart))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.QEnd))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(int(g.Flag)))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteRune(common.StrandToRune(g.PosStrand))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(PathToString(g.Path))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(simpleio.ByteCigarString(g.ByteCigar))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.AlnScore))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(int(g.MapQ)))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(simpleio.ByteDnaBasesToString(g.Seq))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(fastq.Uint8QualToString(g.Qual))
+	//common.ExitIfError(err)
+	//err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(NotesToString(g.Notes))
+	common.ExitIfError(err)
+	return buf
 }
