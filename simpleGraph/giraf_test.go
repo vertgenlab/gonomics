@@ -1,4 +1,5 @@
 package simpleGraph
+
 /*
 import (
 	"fmt"
@@ -165,6 +166,6 @@ func TestRandGiraf(t *testing.T) {
 			fmt.Println(reads[i])
 			fmt.Println(reads[i].Path, reads[i].Aln[0])
 		}
-	
+
 
 }*/

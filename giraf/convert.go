@@ -2,10 +2,11 @@ package giraf
 
 import (
 	"fmt"
+	"github.com/edotau/simpleio"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/edotau/simpleio"
 	"log"
 	"strconv"
 	"strings"
@@ -13,7 +14,14 @@ import (
 
 func GirafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), simpleio.ByteCigarString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
+	return answer
+}
+
+//simpleio.BytesToCigar([]byte(data[6])),
+func SimpleGirafToString(g *Giraf) string {
+	var answer string
+	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), simpleio.ByteCigarString(g.ByteCigar), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
@@ -29,7 +37,7 @@ func stringToGiraf(line string) *Giraf {
 			Flag:      common.StringToUint8(data[3]),
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
-			Aln:       simpleio.BytesToCigar([]byte(data[6])),
+			Aln:       cigar.FromString(data[6]),
 			AlnScore:  common.StringToInt(data[7]),
 			MapQ:      uint8(common.StringToInt(data[8])),
 			Seq:       dna.StringToBases(data[9]),
