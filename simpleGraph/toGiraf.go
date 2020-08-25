@@ -132,7 +132,7 @@ func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[u
 func setGirafFlags(pair *giraf.GirafPair) {
 	pair.Fwd.Flag = getGirafFlags(pair.Fwd)
 	pair.Rev.Flag = getGirafFlags(pair.Rev)
-	pair.Fwd.Flag += 8 // Forward
+	pair.Fwd.Flag += 8  // Forward
 	pair.Fwd.Flag += 16 // Paired Reads
 	pair.Fwd.Flag += 16 // Paired Reads
 	if isProperPairAlign(pair) {
