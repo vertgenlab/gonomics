@@ -1,7 +1,6 @@
 package dnaThreeBit
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
@@ -16,6 +15,7 @@ type ThreeBit struct {
 // of casting between uint64 and uint8.  I don't think many
 // ThreeBitBases will be sitting around for a long time by themselves
 // so I don't think the extra memory will be noticed.
+// Even though it is encoded as 64 bits, only the last three can be used (zero to seven)
 type ThreeBitBase uint64
 
 const (
@@ -28,58 +28,14 @@ const (
 	PaddingTwo ThreeBitBase = 6
 )
 
-//basesTo3bit
-//3bitToBases
-//stringTo3Bit
-//3BitToString
-//ReadFasta
-//WriteFasta
-//Read3bit
-//Write3bit
-
-func ReadFromFasta(filename string) []*ThreeBit {
-        var line string
-        var currSeq []dna.Base
-        var answer []*Fasta
-        var seqIdx int64 = -1
-        var doneReading bool = false
-
-        file := fileio.EasyOpen(filename)
-        defer file.Close()
-
-        for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-                if strings.HasPrefix(line, ">") {
-                        tmp := Fasta{Name: line[1:len(line)]}
-                        answer = append(answer, &tmp)
-                        seqIdx++
-                } else {
-                        currSeq = dna.StringToBases(line)
-                        answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
-                }
-        }
-        return answer
-}
-
-func NextSeqFasta(reader *fileio.EasyReader) *ThreeBit {
-        var line, seqSoFar string
-        var err error
-        var nextBytes []byte
-        var answer []dna.Base
-        for nextBytes, err = reader.Peek(1); err == nil && nextBytes[0] != '>'; nextBytes, err = reader.Peek(1) {
-                line, _ = fileio.EasyNextLine(reader)
-                answer = append(answer, dna.StringToBases(line)...)
-        }
-        return answer
-}
-
 func BasesToUint64(seq []dna.Base, start int, end int, padding ThreeBitBase) uint64 {
 	if end-start > 21 || start >= end {
 		log.Fatalf("Error: when converting to ThreeBit. start=%d end=%d\n", start, end)
 	}
 	var idx int
-	var answer uint64 = uint64(seq[start]) << 1
-	for idx = start + 1; idx < end; idx++ {
-		answer = answer << 3
+	var answer uint64 = 0
+	for idx = start; idx < end; idx++ {
+		answer = answer << 3 // no needed first time through, but does not hurt
 		answer = answer | (uint64(seq[idx]) << 1)
 	}
 	for ; idx < start+21; idx++ {
@@ -105,7 +61,7 @@ func basesToUint64WithOffset(seq []dna.Base, start int, end int, padding ThreeBi
                 answer = answer << 3
                 answer = answer | (uint64(seq[idx]) << 1)
         }
-        for ; idx < start+21; idx++ {
+        for ; idx < start+21-offset; idx++ {
                 answer = answer << 3
                 answer = answer | (uint64(padding) << 1)
         }
@@ -121,7 +77,7 @@ func GetThreeBitBase(fragment *ThreeBit, pos int) ThreeBitBase {
         var idx uint = upos / 21
         var remainder uint = upos % 21
         var shift uint = 64 - 3*(remainder+1)
-        return (fragment.Seq[idx] >> shift) & lastBase
+        return ThreeBitBase((fragment.Seq[idx] >> shift) & lastBase)
 }
 
 func GetBase(fragment *ThreeBit, pos int) dna.Base {
@@ -144,8 +100,9 @@ func newThreeBitWithOffset(inSeq []dna.Base, padding ThreeBitBase, offset int) *
         var sliceLenNeeded int = (len(inSeq) + offset + 20) / 21
         var start, end int = 0, 0
         answer := ThreeBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq)+offset}
-        for i := 0; i < sliceLenNeeded; i++ {
-                start = i * 21
+	answer.Seq[0] = basesToUint64WithOffset(inSeq, 0, common.Min(len(inSeq), 21-offset), padding, offset)
+        for i := 1; i < sliceLenNeeded; i++ {
+                start = i * 21 - offset
                 end = common.Min(start+21, len(inSeq))
                 answer.Seq[i] = BasesToUint64(inSeq, start, end, padding)
         }
