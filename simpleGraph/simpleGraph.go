@@ -1,7 +1,9 @@
 package simpleGraph
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/edotau/simpleio"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
@@ -9,6 +11,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"sync"
 )
 
 type SimpleGraph struct {
@@ -30,80 +33,74 @@ type Edge struct {
 	Prob float32
 }
 
-//Storing annotation as a 64 uint: first 8 will be used to represent what allele, next 32 will be used for starting postion of chromosome.
-//variants are represented as follows: 0=match, 1=mismatch, 2=insert, 3=deletion, 4=hap
+// Annotation struct is an uint64 encoding of allele id, starting position on linear reference and variant on node
+// uint8 will represent what allele the node came from, uint32 will be used for starting postion of chromosome of the linear reference
+// uint8 are variants are represented as follows: 0=match, 1=mismatch, 2=insert, 3=deletion, 4=hap
 type Annotation struct {
 	Allele  uint8
 	Start   uint32
 	Variant uint8
 }
 
-//TODO: We are transitioning to a new Read function that will keep track of chromosome lengths
+// Read will process a simple graph formated text file and parse the data into graph fields
 func Read(filename string) *SimpleGraph {
-	genomeGraph := NewGraph()
-	//chrSize := make(map[string]*chromInfo.ChromInfo)
-	//var count int64 = 0
-	var line string
-	var currSeq []dna.Base
-	var seqIdx int64 = -1
-	var doneReading bool = false
-	var words, text []string
+	simpleioReader := simpleio.NewSimpleReader(filename)
+	genome := NewGraph()
+	var currNode *Node
+	var edges map[string]*Node = make(map[string]*Node)
 	var weight float32
-	//var cInfo chromInfo.ChromInfo
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	//creates map: name points to Node
-	//uses this map to add edges to graph
-	edges := make(map[string]*Node)
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.HasPrefix(line, ">") {
+
+	var simplePool = sync.Pool{
+		New: func() interface{} {
+			return &bytes.Buffer{}
+		},
+	}
+	var data *bytes.Buffer
+	var line string
+	var words []string = make([]string, 0, 2)
+	var text []string = make([]string, 0, 3)
+	var seqIdx int32 = -1
+	var i int
+	var ok bool
+
+	for reader, done := simpleio.ReadLine(simpleioReader); !done; reader, done = simpleio.ReadLine(simpleioReader) {
+		data = simplePool.Get().(*bytes.Buffer)
+		data.Write(reader)
+		line = data.String()
+		switch true {
+		case strings.HasPrefix(line, ">"):
 			seqIdx++
-			words = strings.Split(line, ":")
-			tmp := Node{Id: uint32(seqIdx), Name: words[0][1:], Info: nil}
-			//_, cinfo := chrSize[tmp.Name]
-			//if !cinfo {
-			//	cInfo := chromInfo.ChromInfo{Name: tmp.Name, Size: 0, Order: count}
-			//	chrSize[tmp.Name] = &cInfo
-			//	count++
-			//}
+			words = strings.Split(line[1:], ":")
+
+			currNode = &Node{Id: uint32(seqIdx), Name: string(words[0])}
 			if len(words) == 2 {
 				text = strings.Split(words[1], "_")
-				tmp.Info = &Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
+				currNode.Info = &Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
 			}
-			AddNode(genomeGraph, &tmp)
-
-			_, ok := edges[line[1:]]
+			AddNode(genome, currNode)
+			_, ok = edges[line[1:]]
 			if !ok {
-				edges[line[1:]] = &tmp
+				edges[string(line[1:])] = currNode
 			}
-		} else if strings.Contains(line, "\t") {
+		case strings.Contains(line, "\t"):
 			words = strings.Split(line, "\t")
 			if len(words) > 2 {
-				for i := 1; i < len(words); i += 2 {
+				for i = 1; i < len(words); i += 2 {
 					weight = float32(common.StringToFloat64(words[i]))
 					AddEdge(edges[words[0]], edges[words[i+1]], weight)
 				}
 			}
-		} else {
-			if !strings.Contains(line, ":") && !strings.Contains(line, "\t") {
-				currSeq = dna.StringToBases(line)
-				dna.AllToUpper(currSeq)
-				//if genomeGraph.Nodes[seqIdx].Info == nil {
-				//	chrSize[genomeGraph.Nodes[seqIdx].Name].Size += int64(len(currSeq))
-				//} else { //if genomeGraph.Nodes[seqIdx].Info != nil
-				//	if genomeGraph.Nodes[seqIdx].Info.Allele == 0 {
-				//		words = strings.Split(genomeGraph.Nodes[seqIdx].Name, ":")
-				//		chrSize[words[0]].Size += int64(len(currSeq))
-				//	}
-				//}
-				genomeGraph.Nodes[seqIdx].Seq = append(genomeGraph.Nodes[seqIdx].Seq, currSeq...)
-			}
+		case !strings.ContainsAny(line, "\t:"):
+			genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, simpleio.ByteSliceToDnaBases(data.Bytes())...)
 		}
+		data.Reset()
+		simplePool.Put(data)
 	}
-	for i := 0; i < len(genomeGraph.Nodes); i++ {
-		genomeGraph.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genomeGraph.Nodes[i].Seq)
+	simpleioReader.Close()
+	for i = 0; i < len(genome.Nodes); i++ {
+		genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)
 	}
-	return genomeGraph
+	return genome
 }
 
 func ReadToMap(filename string) map[string]*SimpleGraph {
@@ -143,7 +140,6 @@ func ReadToMap(filename string) map[string]*SimpleGraph {
 			if !ok {
 				edges[line[1:]] = &tmp
 			}
-
 		} else if strings.Contains(line, "\t") {
 			words = strings.Split(line, "\t")
 			if len(words) > 2 {
@@ -178,7 +174,6 @@ func SetEvenWeights(u *Node) {
 	for edge = 0; edge < len(u.Next); edge++ {
 		u.Next[edge].Prob = weights
 	}
-	//do we care about the prev edges?
 }
 
 func Write(filename string, sg *SimpleGraph) {
@@ -188,12 +183,14 @@ func Write(filename string, sg *SimpleGraph) {
 	WriteToGraphHandle(file, sg, lineLength)
 }
 
+// NewGraph will allocate a new zero pointer to a simple graph and will allocate memory for the Nodes of the graph
 func NewGraph() *SimpleGraph {
 	graph := new(SimpleGraph)
 	graph.Nodes = make([]*Node, 0)
 	return graph
 }
 
+// PrintGraph will quickly print simpleGraph to standard out
 func PrintGraph(gg *SimpleGraph) {
 	Write("/dev/stdout", gg)
 }
