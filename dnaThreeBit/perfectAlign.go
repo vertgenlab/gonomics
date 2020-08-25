@@ -80,4 +80,3 @@ func countLeftMatches(seqOne []uint64, startOne int, seqTwo []uint64, startTwo i
 
 	return matches
 }
-

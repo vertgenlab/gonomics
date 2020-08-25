@@ -2,8 +2,8 @@ package dnaThreeBit
 
 import (
 	"bytes"
-	"log"
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 )
 
 func RuneToThreeBitBase(r rune) ThreeBitBase {
@@ -57,34 +57,33 @@ func ThreeBitBaseToString(b ThreeBitBase) string {
 }
 
 func FromString(s string) *ThreeBit {
-        answer := &ThreeBit{Seq:[]uint64{}, Len:0}
-        for _, runeValue := range s {
-                answer = Append(answer, RuneToThreeBitBase(runeValue))
-        }
-        return answer
+	answer := &ThreeBit{Seq: []uint64{}, Len: 0}
+	for _, runeValue := range s {
+		answer = Append(answer, RuneToThreeBitBase(runeValue))
+	}
+	return answer
 }
 
 func ToString(fragment *ThreeBit) string {
-        var buffer bytes.Buffer
+	var buffer bytes.Buffer
 
-        for i:=0; i<fragment.Len; i++ {
-                buffer.WriteRune(dna.BaseToRune(GetBase(fragment, i)))
-        }
-        return buffer.String()
+	for i := 0; i < fragment.Len; i++ {
+		buffer.WriteRune(dna.BaseToRune(GetBase(fragment, i)))
+	}
+	return buffer.String()
 }
 
 func SectionToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
-	if end >= fragment.Len || start >= end {
+	if end > fragment.Len || start >= end {
 		log.Fatalf("Error: unable to extract bases from %d to %d from a sequence of length %d\n", start, end, fragment.Len)
 	}
-        answer := make([]dna.Base, 0, end-start)
-        for i := start; i < end; i++ {
-                answer = append(answer, GetBase(fragment, i))
-        }
-        return answer
+	answer := make([]dna.Base, 0, end-start)
+	for i := start; i < end; i++ {
+		answer = append(answer, GetBase(fragment, i))
+	}
+	return answer
 }
 
 func ToDnaBases(fragment *ThreeBit) []dna.Base {
 	return SectionToDnaBases(fragment, 0, fragment.Len)
 }
-

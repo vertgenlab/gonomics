@@ -48,36 +48,36 @@ func BasesToUint64(seq []dna.Base, start int, end int, padding ThreeBitBase) uin
 // basesToUint64WithOffset places padding at the beginning of the sequence (as well as the end, which is normal)
 // so that sequences may be "in register" with each other so that an xor can quickly compare them for equality
 func basesToUint64WithOffset(seq []dna.Base, start int, end int, padding ThreeBitBase, offset int) uint64 {
-        if end-start+offset > 21 || start >= end {
-                log.Fatalf("Error: when converting to ThreeBit. start=%d end=%d\n", start, end)
-        }
-        var idx int
+	if end-start+offset > 21 || start >= end {
+		log.Fatalf("Error: when converting to ThreeBit. start=%d end=%d\n", start, end)
+	}
+	var idx int
 	var answer uint64 = 0
 	for idx = 0; idx < offset; idx++ {
 		answer = answer << 3 // not needed the first time through the loop, but does not hurt
 		answer = answer | (uint64(padding) << 1)
 	}
-        for idx = start; idx < end; idx++ {
-                answer = answer << 3
-                answer = answer | (uint64(seq[idx]) << 1)
-        }
-        for ; idx < start+21-offset; idx++ {
-                answer = answer << 3
-                answer = answer | (uint64(padding) << 1)
-        }
-        return answer
+	for idx = start; idx < end; idx++ {
+		answer = answer << 3
+		answer = answer | (uint64(seq[idx]) << 1)
+	}
+	for ; idx < start+21-offset; idx++ {
+		answer = answer << 3
+		answer = answer | (uint64(padding) << 1)
+	}
+	return answer
 }
 
 func GetThreeBitBase(fragment *ThreeBit, pos int) ThreeBitBase {
-        if pos < 0 || pos >= fragment.Len {
-                log.Fatalf("Error: asked for base at position:%d for a sequence with length:%d\n", pos, fragment.Len)
-        }
-        var upos = uint(pos)
-        const lastBase uint64 = 7 // right-most three bits are one
-        var idx uint = upos / 21
-        var remainder uint = upos % 21
-        var shift uint = 64 - 3*(remainder+1)
-        return ThreeBitBase((fragment.Seq[idx] >> shift) & lastBase)
+	if pos < 0 || pos >= fragment.Len {
+		log.Fatalf("Error: asked for base at position:%d for a sequence with length:%d\n", pos, fragment.Len)
+	}
+	var upos = uint(pos)
+	const lastBase uint64 = 7 // right-most three bits are one
+	var idx uint = upos / 21
+	var remainder uint = upos % 21
+	var shift uint = 64 - 3*(remainder+1)
+	return ThreeBitBase((fragment.Seq[idx] >> shift) & lastBase)
 }
 
 func GetBase(fragment *ThreeBit, pos int) dna.Base {
@@ -97,14 +97,14 @@ func NewThreeBit(inSeq []dna.Base, padding ThreeBitBase) *ThreeBit {
 }
 
 func newThreeBitWithOffset(inSeq []dna.Base, padding ThreeBitBase, offset int) *ThreeBit {
-        var sliceLenNeeded int = (len(inSeq) + offset + 20) / 21
-        var start, end int = 0, 0
-        answer := ThreeBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq)+offset}
+	var sliceLenNeeded int = (len(inSeq) + offset + 20) / 21
+	var start, end int = 0, 0
+	answer := ThreeBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq) + offset}
 	answer.Seq[0] = basesToUint64WithOffset(inSeq, 0, common.Min(len(inSeq), 21-offset), padding, offset)
-        for i := 1; i < sliceLenNeeded; i++ {
-                start = i * 21 - offset
-                end = common.Min(start+21, len(inSeq))
-                answer.Seq[i] = BasesToUint64(inSeq, start, end, padding)
-        }
-        return &answer
+	for i := 1; i < sliceLenNeeded; i++ {
+		start = i*21 - offset
+		end = common.Min(start+21, len(inSeq))
+		answer.Seq[i] = BasesToUint64(inSeq, start, end, padding)
+	}
+	return &answer
 }
