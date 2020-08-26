@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
+	//"sync"
 )
 
 // TODO: get rid of this when seedBed is eliminated
@@ -39,12 +40,15 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 	// we went all the way to end and there might be more
 	if readStart+rightMatches < len(read.Seq) && nodeStart+rightMatches == node.SeqTwoBit.Len && len(node.Next) != 0 {
 		for i = 0; i < len(node.Next); i++ {
+			//nextParts := extendSeeds.Get().([]*SeedDev)
 			nextParts = extendToTheRight(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand)
 			// if we aligned into the next node, make a seed for this node and point it to the next one
 			for j = 0; j < len(nextParts); j++ {
 				currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j], Next: nil}
 				answer = append(answer, currNode)
 			}
+			//nextParts = nextParts[:0]
+			//extendSeeds.Put(nextParts)
 		}
 	}
 
@@ -130,7 +134,7 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	return answer
 }
 
-func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev) []*SeedDev {
 	const basesPerInt int64 = 32
 	var currHits []uint64
 	var codedNodeCoord uint64
@@ -140,9 +144,9 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 	//var poolHead *SeedDev = *memoryPool
 	var seqKey uint64
 	var keyShift uint = 64 - (uint(seedLen) * 2)
-	var tempSeeds, finalSeeds []*SeedDev
+	var tempSeeds []*SeedDev
+	//tempSeeds := seedPool.Get().([]*SeedDev)
 	var tempSeed *SeedDev
-
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
 		keyIdx = (readStart + 31) / 32
 		keyOffset = 31 - ((readStart + 31) % 32)
@@ -259,6 +263,8 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 	*memoryPool = poolHead
 	return hits*/
 	//printSeedDev(finalSeeds)
+	//tempSeeds = tempSeeds[:0]
+	//seedPool.Put(tempSeeds)
 	return finalSeeds
 }
 
