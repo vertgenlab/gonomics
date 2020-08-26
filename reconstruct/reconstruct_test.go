@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+var GCcontent = 0.42
 var input = []struct {
 	newick_filename string // first input
 	length          int    // second input
@@ -21,14 +22,14 @@ func Test_reconstruct(t *testing.T) {
 		tre, er := expandedTree.ReadNewick(test.newick_filename)
 		if er != nil {
 		}
-		simulate.RandGene("test", test.length, 0.42) //galGal6
+		simulate.RandGene("test", test.length, GCcontent) //galGal6 GC
 		simulate.Simulate("test.fasta", "test_tree.fasta", tre)
 		simulate.RemoveAncestors("test_tree.fasta", tre)
 		expandedTree.AssignFastas(tre, "test_tree.fasta")
 
 		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
 		tr := expandedTree.ReadTree(test.newick_filename, "test_tree.fasta")
-		Reconstruct(tr, "test_reconstruction.fasta")
+		Reconstruct(tr)
 
 		//example of check simulation vs reconstrucion
 		a := Accuracy("test_tree.fasta", "test_reconstruction.fasta")
