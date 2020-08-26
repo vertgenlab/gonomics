@@ -256,14 +256,14 @@ func ReversePath(alpha []uint32) {
 }
 
 func readFastqGsw(fileOne string, fileTwo string, answer chan<- *fastq.PairedEndBig) {
-	readOne, readTwo := fileio.EasyOpen(fileOne), fileio.EasyOpen(fileTwo)
+	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
 	for fq, done := fqPair(readOne, readTwo); !done; fq, done = fqPair(readOne, readTwo) {
 		answer <- fq
 	}
 	close(answer)
 }
 
-func fqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*fastq.PairedEndBig, bool) {
+func fqPair(reader1 *fileio.SimpleReader, reader2 *fileio.SimpleReader) (*fastq.PairedEndBig, bool) {
 	fqOne, done1 := nextFq(reader1)
 	fqTwo, done2 := nextFq(reader2)
 	if (!done1 && done2) || (done1 && !done2) {
@@ -277,7 +277,7 @@ func fqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (*fastq.Pair
 	return curr, false
 }
 
-func nextFq(reader *fileio.EasyReader) (*fastq.FastqBig, bool) {
+func nextFq(reader *fileio.SimpleReader) (*fastq.FastqBig, bool) {
 	name, done := fileio.ReadLine(reader)
 	if done {
 		return nil, true
