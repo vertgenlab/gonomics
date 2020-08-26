@@ -11,7 +11,6 @@ import (
 	"io"
 	"log"
 	"strings"
-	"sync"
 )
 
 // SimpleGraph struct contains a slice of Nodes
@@ -55,12 +54,7 @@ func Read(filename string) *SimpleGraph {
 	var edges map[string]*Node = make(map[string]*Node)
 	var weight float32
 
-	var simplePool = sync.Pool{
-		New: func() interface{} {
-			return &bytes.Buffer{}
-		},
-	}
-	var data *bytes.Buffer
+	var data bytes.Buffer
 	var line string
 	var words []string = make([]string, 0, 2)
 	var text []string = make([]string, 0, 3)
@@ -69,7 +63,7 @@ func Read(filename string) *SimpleGraph {
 	var ok bool
 
 	for reader, done := simpleio.ReadLine(simpleioReader); !done; reader, done = simpleio.ReadLine(simpleioReader) {
-		data = simplePool.Get().(*bytes.Buffer)
+		data.Reset()
 		data.Write(reader)
 
 		line = data.String()
@@ -99,8 +93,6 @@ func Read(filename string) *SimpleGraph {
 		case !strings.ContainsAny(line, "\t:"):
 			genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, simpleio.ByteSliceToDnaBases(data.Bytes())...)
 		}
-		data.Reset()
-		simplePool.Put(data)
 	}
 	for i = 0; i < len(genome.Nodes); i++ {
 		genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)

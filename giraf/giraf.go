@@ -28,6 +28,7 @@ type Giraf struct {
 	// TYPE is a single character
 	// VALUE will be stored as a string and can then be de-coded based on type
 	// An example would be "BZ:i:4000
+	ByteCigar []cigar.ByteCigar
 }
 
 type Path struct {
