@@ -13,46 +13,75 @@ import (
 	"sync"
 )
 
-func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]byte) *giraf.Giraf {
+type scoreKeeper struct {
+	minTarget, maxTarget int
+	minQuery, maxQuery   int
+
+	currScore, seedScore int64
+	perfectScore         int64
+
+	leftAlignment, rightAlignment []cigar.ByteCigar
+	leftPath, rightPath           []uint32
+	leftSeq, rightSeq             []dna.Base
+	leftScore, rightScore         int64
+	currSeq                       []dna.Base
+	extension                     int
+}
+
+func resetScoreKeeper(sk scoreKeeper) {
+	sk.minTarget, sk.maxTarget = 0, 0
+	sk.minQuery, sk.maxQuery = 0, 0
+	sk.currScore, sk.seedScore = 0, 0
+	sk.perfectScore = 0
+	sk.leftAlignment, sk.rightAlignment = sk.leftAlignment[:0], sk.rightAlignment[:0]
+	sk.leftPath, sk.rightPath = sk.leftPath[:0], sk.rightPath[:0]
+	sk.leftSeq, sk.rightSeq = sk.leftSeq[:0], sk.rightSeq[:0]
+	sk.leftScore, sk.rightScore = 0, 0
+	sk.currSeq = sk.currSeq[:0]
+}
+func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]byte, seedPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) *giraf.Giraf {
 	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
 		QEnd:      0,
 		PosStrand: true,
 		Path:      &giraf.Path{},
-		Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
-		AlnScore:  0,
-		MapQ:      255,
-		Seq:       read.Seq,
-		Qual:      read.Qual,
-		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
+		//Aln:       []*cigar.Cigar{&cigar.Cigar{Op: '*'}},
+		AlnScore: 0,
+		MapQ:     255,
+		Seq:      read.Seq,
+		Qual:     read.Qual,
+		Notes:    []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
 
-		ByteCigar: []cigar.ByteCigar{},
+		ByteCigar: nil,
 	}
-	var leftAlignment, rightAlignment []cigar.ByteCigar = []cigar.ByteCigar{}, []cigar.ByteCigar{}
-	var minTarget, maxTarget int
-	var minQuery, maxQuery int
-	var leftScore, rightScore int64 = 0, 0
-	var leftPath, rightPath []uint32
-	var currScore int64 = 0
-	perfectScore := perfectMatchBig(read, scoreMatrix)
-	extension := int(perfectScore/600) + len(read.Seq)
-	var seeds []*SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	resetScoreKeeper(sk)
+	//var leftAlignment, rightAlignment []cigar.ByteCigar = []cigar.ByteCigar{}, []cigar.ByteCigar{}
+	//var minTarget, maxTarget int
+	//var minQuery, maxQuery int
+	//var leftScore, rightScore int64 = 0, 0
+	//var leftPath, rightPath []uint32
+	//var currScore int64 = 0
+	sk.perfectScore = perfectMatchBig(read, scoreMatrix)
+	sk.extension = int(sk.perfectScore/600) + len(read.Seq)
+	var seeds []*SeedDev = seedPool.Get().([]*SeedDev)
+	//var tmpSeeds []*SeedDev = extendPool.Get().([]*SeedDev)
+	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, sk.perfectScore, scoreMatrix, seeds)
+
 	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
-	var seedScore int64
-	var currSeq []dna.Base
+	//var seedScore int64
+	var currSeq []dna.Base = make([]dna.Base, len(read.Seq))
 	var currSeed *SeedDev
 
-	var leftSeq, rightSeq []dna.Base //leftSeq,
+	//leftSeq,
 
 	var dnaPool = sync.Pool{
 		New: func() interface{} {
-			return make([]dna.Base, 0, 150)
+			return make([]dna.Base, sk.extension)
 		},
 	}
-	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), int64(currBest.AlnScore), perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
@@ -60,31 +89,26 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 		} else {
 			currSeq = read.SeqRc
 		}
-		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
+		sk.seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		if int(currSeed.TotalLength) == len(currSeq) {
-			currScore = seedScore
-			minTarget = int(currSeed.TargetStart)
-			maxTarget = int(tailSeed.TargetStart + tailSeed.Length)
-			minQuery = int(currSeed.QueryStart)
-			maxQuery = int(currSeed.TotalLength - 1)
+			sk.currScore = sk.seedScore
+			sk.minTarget = int(currSeed.TargetStart)
+			sk.maxTarget = int(tailSeed.TargetStart + tailSeed.Length)
+			sk.minQuery = int(currSeed.QueryStart)
+			sk.maxQuery = int(currSeed.TotalLength - 1)
 		} else {
-			//leftSeq = make([]dna.Base, 0, currSeed.QueryStart)
-
-			leftAlignment, leftScore, minTarget, minQuery, leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], leftSeq, int(currSeed.TargetStart), leftPath, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace, &dnaPool)
-
-			rightAlignment, rightScore, maxTarget, maxQuery, rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], rightSeq, int(tailSeed.TargetStart+tailSeed.Length), rightPath, extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace, &dnaPool)
+			sk.leftAlignment, sk.leftScore, sk.minTarget, sk.minQuery, sk.leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], sk.leftSeq, int(currSeed.TargetStart), sk.leftPath, sk.extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace, &dnaPool, dynamicScore)
+			sk.rightAlignment, sk.rightScore, sk.maxTarget, sk.maxQuery, sk.rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], sk.rightSeq, int(tailSeed.TargetStart+tailSeed.Length), sk.rightPath, sk.extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace, &dnaPool, dynamicScore)
 		}
-		currScore = leftScore + seedScore + rightScore
-		if currScore > int64(currBest.AlnScore) {
-			currBest.QStart = minQuery
-			currBest.QEnd = maxQuery
+		sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
+		if sk.currScore > int64(currBest.AlnScore) {
+			currBest.QStart = sk.minQuery
+			currBest.QEnd = sk.maxQuery
 			currBest.PosStrand = currSeed.PosStrand
-
-			currBest.Path = setPath(currBest.Path, minTarget, CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath), maxTarget)
-			//currBest.Aln = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(sumLen(currSeed)), Op: 'M'}), rightAlignment))
-
-			currBest.ByteCigar = SoftClipBases(minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(leftAlignment, cigar.ByteCigar{RunLen: sumLen(currSeed), Op: 'M'}), rightAlignment))
-			currBest.AlnScore = int(currScore)
+			ReversePath(sk.leftPath)
+			currBest.Path = setPath(currBest.Path, sk.minTarget, CatPaths(CatPaths(sk.leftPath, getSeedPath(currSeed)), sk.rightPath), sk.maxTarget)
+			currBest.ByteCigar = SoftClipBases(sk.minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: sumLen(currSeed), Op: 'M'}), sk.rightAlignment))
+			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = currSeq
 			if gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
 				currBest.Notes[0].Value = fmt.Sprintf("%s=%d", gg.Nodes[currBest.Path.Nodes[0]].Name, gg.Nodes[currBest.Path.Nodes[0]].Info.Start)
@@ -94,6 +118,8 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			}
 		}
 	}
+	seeds = seeds[:0]
+	seedPool.Put(seeds)
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
@@ -136,10 +162,10 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
-func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]byte) *giraf.GirafPair {
+func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]byte, seedPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) *giraf.GirafPair {
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
-	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
-	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace)
+	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, scoreMatrix, m, trace, seedPool, sk, dynamicScore)
+	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, scoreMatrix, m, trace, seedPool, sk, dynamicScore)
 	setGirafFlags(&mappedPair)
 	return &mappedPair
 }
