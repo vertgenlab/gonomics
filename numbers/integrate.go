@@ -11,18 +11,18 @@ func logIntegrate(f func(float64) float64, a float64, b float64, n int) float64 
 	if a >= b {
 		log.Fatalf("logIntegrate failed, left bound must be smaller than right bound.")
 	}
-	var deltaX float64 = (b-a) / float64(n)
+	var deltaX float64 = (b - a) / float64(n)
 	var logDeltaX float64 = math.Log(deltaX)
 	var currLeft float64 = a //this variable stores the left bound of the current rectangle.
 	var currRight float64 = a + deltaX
 	var answer float64
 	//first time, sets answer as the area of the first rectangle
-	answer = MidpointLog(f(currLeft), f(currRight)) * logDeltaX
+	answer = MultiplyLog(MidpointLog(f(currLeft), f(currRight)), logDeltaX)
 
 	for i := 1; i < n; i++ {
 		currLeft += deltaX
 		currRight += deltaX
-		answer += MidpointLog(f(currLeft), f(currRight)) * logDeltaX
+		answer += MultiplyLog(MidpointLog(f(currLeft), f(currRight)), logDeltaX)
 	}
 	return answer
 }

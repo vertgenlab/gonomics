@@ -79,7 +79,6 @@ func LogPowInt(x float64, y int) float64 {
 	}
 	for i := 0; i < y; i++ {
 		answer = MultiplyLog(answer, logX)
-	} 
+	}
 	return answer
 }
-

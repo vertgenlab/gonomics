@@ -1,15 +1,15 @@
 package numbers
 
 import (
-	"testing"
-	"math"
 	"fmt"
+	"math"
+	"testing"
 )
 
 var LogPowIntTests = []struct {
-	x	float64
-	y	int
-	answer	float64
+	x      float64
+	y      int
+	answer float64
 }{
 	{0.0, 0, 0.0},
 	{9.0, 0, 0.0},
@@ -22,7 +22,7 @@ func TestLogPowInt(t *testing.T) {
 	for _, test := range LogPowIntTests {
 		calculated := LogPowInt(test.x, test.y)
 		if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
-			fmt.Println(math.Abs(calculated-test.answer)/test.answer)
+			fmt.Println(math.Abs(calculated-test.answer) / test.answer)
 			t.Errorf("LogPowerInt for x: %f y:%d returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
 		}
 	}

@@ -157,7 +157,7 @@ func BinomCoefficient(n int, k int) int {
 	return carefulMultDivInt(numer, denom)
 }
 
-//BinomCoefficientLog returns log(n choose k), where log is the natural logarithm. 
+//BinomCoefficientLog returns log(n choose k), where log is the natural logarithm.
 //Ideal for large numbers as this raises the overflow ceiling considerably.
 func BinomCoefficientLog(n int, k int) float64 {
 	if n < 0 || k < 0 || k > n {

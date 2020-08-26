@@ -1,7 +1,7 @@
 package numbers
 
 //BinomialDistLog returns log(BinomialDist), where log is the natural logarithm.
-//This is ideal for very small probabilities to avoid underflow. 
+//This is ideal for very small probabilities to avoid underflow.
 func BinomialDistLog(n int, k int, p float64) float64 {
 	coefficient := BinomCoefficientLog(n, k)
 	s := LogPowInt(p, k)

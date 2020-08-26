@@ -36,13 +36,13 @@ func BenchmarkDefiniteIntegral(b *testing.B) {
 
 //answer from WolframAlpha
 var logIntegralTests = []struct {
-	f func(float64) float64
-	a	float64
-	b	float64
+	f      func(float64) float64
+	a      float64
+	b      float64
 	answer float64
 }{
-	{func(x float64) float64 {return math.Log(x)}, 1, 2, -0.951156},
-	{func(x float64) float64 {return x}, 2, 5, 2.35138},
+	{func(x float64) float64 { return math.Log(x) }, 1, 2, -0.951156},
+	{func(x float64) float64 { return x }, 2, 5, 2.35138},
 }
 
 func TestLogIntegral(t *testing.T) {
