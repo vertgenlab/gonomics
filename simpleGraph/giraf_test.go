@@ -1,13 +1,13 @@
 package simpleGraph
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/giraf"
-	"log"
-	"testing"
+	//"log"
+	//"testing"
 )
 
 // TestGraph Structure
@@ -126,6 +126,7 @@ var check = giraf.Giraf{
 	Qual:      []uint8{16, 38, 38, 36},
 	Notes:     nil}
 
+/*
 func TestRandGiraf(t *testing.T) {
 	var seed int64 = 777
 
@@ -160,11 +161,6 @@ func TestRandGiraf(t *testing.T) {
 
 	fmt.Println("Somatic Mutations Generated Correctly")
 
-	/*
-		for i := 0; i < len(reads); i++ {
-			fmt.Println(reads[i])
-			fmt.Println(reads[i].Path, reads[i].Aln[0])
-		}
-	*/
 
-}
+
+}*/

@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -20,4 +21,4 @@ func TestDotFormat(t *testing.T) {
 	printSeedDev(hits)
 	log.Printf("Number of expanded seeds is: %d", len(hits))
 
-}
+}*/

@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -27,4 +28,4 @@ func TestLeftLocal(t *testing.T) {
 	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := LeftLocal(seqOneA, seqOneB, HumanChimpTwoScoreMatrix, -600, m, trace)
 
 	log.Printf("score=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", score, cigar.ToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
-}
+}*/
