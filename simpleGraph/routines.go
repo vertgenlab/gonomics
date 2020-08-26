@@ -7,11 +7,6 @@ import (
 	"sync"
 )
 
-type SeedBuilding struct {
-	extendSeeds []*SeedDev
-	finalSeeds  []*SeedDev
-}
-
 //Goroutine worker functions
 func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *giraf.Giraf, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(10000)
@@ -72,4 +67,9 @@ func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen in
 		outputChan <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix.m, matrix.trace, &seedPool, scorekeeper, dynamicKeeper))
 	}
 	wg.Done()
+}
+
+type SeedBuilding struct {
+	extendSeeds []*SeedDev
+	finalSeeds  []*SeedDev
 }
