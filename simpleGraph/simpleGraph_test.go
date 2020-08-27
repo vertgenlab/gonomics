@@ -11,10 +11,10 @@ import (
 )
 
 func TestWorkerWithWriting(t *testing.T) {
-	var output string = "testdata/pairedTest.giraf"
+	var output string = "/dev/stdout"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 100
+	var numberOfReads int = 5
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup

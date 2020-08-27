@@ -117,7 +117,7 @@ var check = giraf.Giraf{
 	QName:     "0_3_2_2_-",
 	QStart:    0,
 	QEnd:      4,
-	PosStrand: false,                                // rev strand, must reverse complement
+	PosStrand: false,                                                     // rev strand, must reverse complement
 	Path:      &giraf.Path{TStart: 2, Nodes: []uint32{0, 1, 2}, TEnd: 1}, // Nodes 0->1->2, start base 3, end base 1
 	Aln:       []*cigar.Cigar{{RunLength: 4, Op: 'M', Sequence: nil}},
 	AlnScore:  16607,
