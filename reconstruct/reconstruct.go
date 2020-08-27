@@ -209,7 +209,8 @@ func LoopNodes(root *expandedTree.ETree) []*fasta.Fasta {
 			yHat := Yhat(fix)
 			branches[k].Fasta.Seq = append(branches[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
 		}
-	} //now that each node has their reconstructed Fasta, create a slice of fastas for leaves anf branches and return a single slice of fastas for the whole tree
+	}
+//now that each node has their reconstructed Fasta, create a slice of fastas for leaves and branches and return a single slice of fastas for the whole tree
 	for l := 0; l < len(leaves); l++ {
 		leafFastas = append(leafFastas, leaves[l].Fasta)
 	}

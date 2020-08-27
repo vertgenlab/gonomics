@@ -3,10 +3,11 @@ package simulate
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"math/rand"
+	"time"
 )
 
 var GC float64 = 0.42
@@ -18,7 +19,9 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	seq := []dna.Base{dna.A, dna.T, dna.G}
 	randLength := length - 6
 
-	r := rand.Float64()
+	s := rand.NewSource(time.Now().UnixNano())
+	rn := rand.New(s)
+	r := rn.Float64()
 
 	if length%3 != 0 {
 
@@ -96,7 +99,9 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 	var AT float64
 	AT = 1 - GCcontent
 
-	r := rand.Float64()
+	s := rand.NewSource(time.Now().UnixNano())
+	rn := rand.New(s)
+	r := rn.Float64()
 
 	if r < GCcontent/2 {
 		base = dna.G
@@ -123,8 +128,9 @@ func changeBase(originalBase dna.Base) dna.Base {
 
 //mutate base given random float, whether it's mutated is dependent on branchLength
 func mutateBase(b dna.Base, branchLength float64) dna.Base {
-
-	r := rand.Float64()
+	s := rand.NewSource(time.Now().UnixNano())
+	rn := rand.New(s)
+	r := rn.Float64()
 
 	var base dna.Base
 
@@ -168,6 +174,8 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
 					newBase = originalBase //cannot change start codon
 				} else if i == codonNum-1 { //zero-based
 					for sCod := 0; sCod < 3; sCod++ {
+						//s := rand.NewSource(time.Now().UnixNano())
+						//rn := rand.New(s)
 						r := rand.Float64()
 						if sCod == 0 { //first position is only ever a T
 							originalCodons[i].Seq[sCod] = dna.T
@@ -212,7 +220,9 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
 				newAmAc = dna.TranslateCodon(newCodons[0])
 
 				prob := BLOSUM[originalAmAc][newAmAc]
-				r := rand.Float64()
+				s := rand.NewSource(time.Now().UnixNano())
+				rn := rand.New(s)
+				r := rn.Float64()
 
 				if r < prob {
 					originalCodons[i].Seq[j] = newBase

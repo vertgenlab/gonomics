@@ -3,6 +3,7 @@ package reconstruct
 import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/simulate"
+	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ var input = []struct {
 	newick_filename string // first input
 	length          int    // second input
 }{
-	{"testdata/test_newick", 33},
+	//{"testdata/test_newick", 33},
 	{"testdata/test_newick", 333},
 	{"testdata/hackett_newick", 66}}
 
@@ -22,14 +23,14 @@ func Test_reconstruct(t *testing.T) {
 		tre, er := expandedTree.ReadNewick(test.newick_filename)
 		if er != nil {
 		}
-		simulate.RandGene("test", test.length, GCcontent) //galGal6 GC
+		fasta.Write("test.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
 		simulate.Simulate("test.fasta", "test_tree.fasta", tre)
 		simulate.RemoveAncestors("test_tree.fasta", tre)
 		expandedTree.AssignFastas(tre, "test_tree.fasta")
 
 		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
 		tr := expandedTree.ReadTree(test.newick_filename, "test_tree.fasta")
-		Reconstruct(tr)
+		LoopNodes(tr)
 
 		//example of check simulation vs reconstrucion
 		a := Accuracy("test_tree.fasta", "test_reconstruction.fasta")

@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 	//"fmt"
@@ -22,6 +23,7 @@ func TestRandGene(t *testing.T) {
 		if len(a[0].Seq) != test.length {
 			t.Errorf("expected RandGene to give %v, gave %v", test.length, len(a[0].Seq))
 		}
+		fmt.Print(dna.BasesToString(a[0].Seq), "\n")
 	}
 }
 
@@ -39,16 +41,18 @@ func TestMutateSeq(t *testing.T) {
 		if len(seq) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %s \n Ending: %s", seq, dna.BasesToString(a))
 		}
+		fmt.Print(dna.BasesToString(a), "\n")
 	}
 }
 
 //tests for functions that MutateSeq is dependent on
-/*var base = dna.G
+var base = dna.G
 var changeBaseTests = []struct {
 	originalBase dna.Base
-} {
+}{
 	{base},
 }
+
 func TestChangeBase(t *testing.T) {
 	for _, test := range changeBaseTests {
 		a := changeBase(test.originalBase)
@@ -61,10 +65,9 @@ func TestChangeBase(t *testing.T) {
 
 var originalBase = dna.G
 var mutateBaseTests = []struct {
-	base dna.Base
+	base         dna.Base
 	branchLength float64
-
-} {
+}{
 	{base, 1.0},
 }
 
@@ -73,4 +76,4 @@ func TestMutateBase(t *testing.T) {
 		a := mutateBase(test.base, test.branchLength)
 		fmt.Print(a, "\n")
 	}
-}*/
+}
