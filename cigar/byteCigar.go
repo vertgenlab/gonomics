@@ -217,7 +217,7 @@ func MatrixSetup(size int) ([][]int64, [][]byte) {
 }
 
 // Uint32ToByteCigar will process a uint32 slice and decode each number into a byte cigar struct.
-// Due to a limitation of the BAM format, CIGAR operation lengths are limited to 2^28-1
+// CIGAR operation lengths are limited to 2^28-1 in the current sam/bam formats
 func Uint32ToByteCigar(cigar []uint32) []ByteCigar {
 	var answer []ByteCigar = make([]ByteCigar, len(cigar))
 	for i := 0; i < len(cigar); i++ {
