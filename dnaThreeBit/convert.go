@@ -1,11 +1,12 @@
 package dnaThreeBit
 
 import (
-	"bytes"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"strings"
 )
 
+// RuneToThreeBitBase returns a single bases in ThreeBitBase format that corresponds to the given rune
 func RuneToThreeBitBase(r rune) ThreeBitBase {
 	switch r {
 	case 'A':
@@ -34,6 +35,7 @@ func RuneToThreeBitBase(r rune) ThreeBitBase {
 	}
 }
 
+// ThreeBitBaseToRune returns a rune that corresponds to the single base in ThreeBitBase format
 func ThreeBitBaseToRune(base ThreeBitBase) rune {
 	switch base {
 	case A:
@@ -52,6 +54,7 @@ func ThreeBitBaseToRune(base ThreeBitBase) rune {
 	}
 }
 
+// ThreeBitBaseToString returns a string that corresponds to the single base give as a ThreeBitBase
 func ThreeBitBaseToString(b ThreeBitBase) string {
 	return string(ThreeBitBaseToRune(b))
 }
@@ -65,15 +68,15 @@ func FromString(s string) *ThreeBit {
 }
 
 func ToString(fragment *ThreeBit) string {
-	var buffer bytes.Buffer
-
+	var buffer strings.Builder
+	buffer.Grow(fragment.Len)
 	for i := 0; i < fragment.Len; i++ {
 		buffer.WriteRune(dna.BaseToRune(GetBase(fragment, i)))
 	}
 	return buffer.String()
 }
 
-func SectionToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
+func RangeToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
 	if end > fragment.Len || start >= end {
 		log.Fatalf("Error: unable to extract bases from %d to %d from a sequence of length %d\n", start, end, fragment.Len)
 	}
@@ -85,5 +88,5 @@ func SectionToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
 }
 
 func ToDnaBases(fragment *ThreeBit) []dna.Base {
-	return SectionToDnaBases(fragment, 0, fragment.Len)
+	return RangeToDnaBases(fragment, 0, fragment.Len)
 }

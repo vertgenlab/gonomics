@@ -20,7 +20,7 @@ func TestRainbow(t *testing.T) {
 		rainbowTable := NewThreeBitRainbow(dna.StringToBases(currString), G)
 
 		for i, color := range rainbowTable {
-			shouldBeOriginal := dna.BasesToString(SectionToDnaBases(color, i, i+len(currString)))
+			shouldBeOriginal := dna.BasesToString(RangeToDnaBases(color, i, i+len(currString)))
 			if shouldBeOriginal != currString {
 				t.Errorf("Error: expected to get %s, but got %s instead.\n", currString, shouldBeOriginal)
 			}

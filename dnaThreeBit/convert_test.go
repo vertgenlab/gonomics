@@ -1,7 +1,9 @@
 package dnaThreeBit
 
 import (
+	"bytes"
 	"github.com/vertgenlab/gonomics/dna"
+	"strings"
 	"testing"
 )
 
@@ -10,7 +12,7 @@ import (
 //func ThreeBitBaseToString(b ThreeBitBase) string {
 //func FromString(s string) *ThreeBit {
 //func ToString(fragment *ThreeBit) string {
-//func SectionToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
+//func RangeToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
 //func ToDnaBases(fragment *ThreeBit) []dna.Base {
 
 var dnaSamples = []string{
@@ -67,4 +69,69 @@ func TestIndividualBasesViaThreeBitBase(t *testing.T) {
 			t.Errorf("Error: expected to get a C, but got a %s. %64b\n", singleBase, tripleBit.Seq[0])
 		}
 	}
+}
+
+func BenchmarkBufferToString(b *testing.B) {
+	b.ReportAllocs()
+	threeBitVersion := FromString(dnaSamples[4])
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		ToStringBuffer(threeBitVersion)
+	}
+}
+
+func BenchmarkBuilderToString(b *testing.B) {
+	b.ReportAllocs()
+	threeBitVersion := FromString(dnaSamples[4])
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		ToStringBuilder(threeBitVersion)
+	}
+}
+
+func BenchmarkBufferToStringPreAlloc(b *testing.B) {
+	b.ReportAllocs()
+	threeBitVersion := FromString(dnaSamples[4])
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		ToStringBufferPreAlloc(threeBitVersion)
+	}
+}
+
+func BenchmarkBuilderToStringPreAlloc(b *testing.B) {
+	b.ReportAllocs()
+	threeBitVersion := FromString(dnaSamples[4])
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		ToString(threeBitVersion)
+	}
+}
+
+// old implementations kept for benchmarking, but not for use
+
+func ToStringBuffer(fragment *ThreeBit) string {
+	var buffer bytes.Buffer
+
+	for i := 0; i < fragment.Len; i++ {
+		buffer.WriteRune(dna.BaseToRune(GetBase(fragment, i)))
+	}
+	return buffer.String()
+}
+
+func ToStringBuilder(fragment *ThreeBit) string {
+	var buffer strings.Builder
+
+	for i := 0; i < fragment.Len; i++ {
+		buffer.WriteRune(dna.BaseToRune(GetBase(fragment, i)))
+	}
+	return buffer.String()
+}
+
+func ToStringBufferPreAlloc(fragment *ThreeBit) string {
+	var buffer bytes.Buffer
+	buffer.Grow(fragment.Len)
+	for i := 0; i < fragment.Len; i++ {
+		buffer.WriteRune(dna.BaseToRune(GetBase(fragment, i)))
+	}
+	return buffer.String()
 }
