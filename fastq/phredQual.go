@@ -1,7 +1,9 @@
 package fastq
 
 import (
+	"github.com/vertgenlab/gonomics/common"
 	"math"
+	"strings"
 )
 
 // SAM format uses ascii offset of 33 to make everything start with individual characters
@@ -28,6 +30,17 @@ func Uint8QualToString(qual []uint8) string {
 		answer[i] = rune(qual[i] + asciiOffset)
 	}
 	return string(answer)
+}
+
+func QualString(qual []uint8) string {
+	var str strings.Builder
+	var err error
+	str.Grow(len(qual))
+	for i := 0; i < len(qual); i++ {
+		err = str.WriteByte(byte(qual[i] + asciiOffset))
+		common.ExitIfError(err)
+	}
+	return str.String()
 }
 
 func PhredToPError(baseQual uint8) float32 {

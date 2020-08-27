@@ -9,6 +9,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	//"bytes"
 )
 
 func GirafToString(g *Giraf) string {
@@ -30,6 +31,7 @@ func stringToGiraf(line string) *Giraf {
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
 			Aln:       cigar.FromString(data[6]),
+			//Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
 			AlnScore:  common.StringToInt(data[7]),
 			MapQ:      uint8(common.StringToInt(data[8])),
 			Seq:       dna.StringToBases(data[9]),
@@ -130,4 +132,83 @@ func fromStringToQual(s string) []uint8 {
 		answer = append(answer, uint8(v))
 	}
 	return answer
+}
+
+func FromString(line string) *Giraf {
+	var curr *Giraf
+	data := strings.SplitN(line, "\t", 12)
+	if len(data) > 10 {
+
+		curr = &Giraf{
+			QName:     data[0],
+			QStart:    common.StringToInt(data[1]),
+			QEnd:      common.StringToInt(data[2]),
+			Flag:      common.StringToUint8(data[3]),
+			PosStrand: StringToPos(data[4]),
+			Path:      FromStringToPath(data[5]),
+			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
+			AlnScore:  common.StringToInt(data[7]),
+			MapQ:      uint8(common.StringToInt(data[8])),
+			Seq:       dna.StringToBases(data[9]),
+			Qual:      fastq.ToQualUint8([]rune(data[10]))}
+
+		if len(data) == 12 {
+			curr.Notes = FromStringToNotes(data[11])
+		}
+	} else {
+		log.Fatalf("Error: Expecting at least 11 columns, but only found %d on %s", len(data), line)
+	}
+	return curr
+}
+
+func ToString(g *Giraf) string {
+	buf := &strings.Builder{}
+	buf.Grow(400)
+	var err error
+	_, err = buf.WriteString(g.QName)
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.QStart))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.QEnd))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(int(g.Flag)))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteRune(common.StrandToRune(g.PosStrand))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(PathToString(g.Path))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(cigar.ByteCigarToString(g.Cigar))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.AlnScore))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(int(g.MapQ)))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(dna.ByteDnaBasesToString(g.Seq))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(fastq.QualString(g.Qual))
+	common.ExitIfError(err)
+	_, err = buf.WriteString(NotesToString(g.Notes))
+	common.ExitIfError(err)
+	//fmt.Printf("aprx size is: %d\n", len(buf.String()))
+	return buf.String()
 }
