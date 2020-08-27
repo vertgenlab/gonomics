@@ -80,22 +80,6 @@ func SoftClipBases(front int, lengthOfRead int, cig []cigar.ByteCigar) []cigar.B
 
 }
 
-func NewSwMatrix(size int) *MatrixAln {
-	sw := MatrixAln{}
-	sw.m, sw.trace = MatrixSetup(size)
-	return &sw
-}
-
-func MatrixSetup(size int) ([][]int64, [][]byte) {
-	m := make([][]int64, size)
-	trace := make([][]byte, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		trace[idx] = make([]byte, size)
-	}
-	return m, trace
-}
-
 //perfect match
 func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0

@@ -18,7 +18,7 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range inputChan {
-		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix.m, matrix.trace, &seedPool, scorekeeper, dynamicKeeper)
+		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper)
 	}
 	wg.Done()
 }
@@ -33,7 +33,7 @@ func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range input {
-		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix.m, matrix.trace, &seedPool, scorekeeper, dynamicKeeper)
+		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper)
 	}
 	wg.Done()
 }
@@ -48,7 +48,7 @@ func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seed
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range inputChan {
-		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix.m, matrix.trace, &seedPool, scorekeeper, dynamicKeeper))
+		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper))
 	}
 	wg.Done()
 }
@@ -64,7 +64,7 @@ func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen in
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range inputChan {
-		outputChan <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix.m, matrix.trace, &seedPool, scorekeeper, dynamicKeeper))
+		outputChan <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper))
 	}
 	wg.Done()
 }
