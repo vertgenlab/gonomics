@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"os"
-	//"runtime"
+	"runtime"
 	//"runtime/pprof"
 	"strings"
 	"sync"
@@ -20,11 +20,11 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
 func BenchmarkGsw(b *testing.B) {
 	b.ReportAllocs()
-	//var output string = "/dev/stdout"
+	var output string = "/dev/stdout"
 	//var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 500
+	var numberOfReads int = 50
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -53,21 +53,12 @@ func BenchmarkGsw(b *testing.B) {
 
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
-	var seedPool = sync.Pool{
-		New: func() interface{} {
-			return make([]*SeedDev, 0, 1000)
-		},
-	}
-	var extendSeeds = sync.Pool{
-		New: func() interface{} {
-			return make([]*SeedDev, 0, 100)
-		},
-	}
+
 	for i := 0; i < numWorkers; i++ {
-		go DevRoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter, &seedPool, &extendSeeds)
+		go RoutinePathSeed(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
 	}
-	//go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
+	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)
@@ -77,7 +68,7 @@ func BenchmarkGsw(b *testing.B) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-
+	runtime.GC()
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
 
 }
@@ -87,19 +78,19 @@ func checkAlignment(aln giraf.Giraf, genome *SimpleGraph) bool {
 	//if len(qName) < 5 {
 	//	log.Fatalf("Error: input giraf file does not match simulation format...\n")
 	//}
-	if len(aln.ByteCigar) < 1 {
+	if len(aln.Cigar) < 1 {
 		return false
 	}
 
 	targetStart := aln.Path.TStart
 	targetEnd := aln.Path.TEnd
 	//if len(aln.Aln) < 1 {
-	if aln.ByteCigar[0].Op == 'S' {
+	if aln.Cigar[0].Op == 'S' {
 		//log.Printf("%s\n", giraf.GirafToString(aln))
-		targetStart = targetStart - int(aln.ByteCigar[0].RunLen)
+		targetStart = targetStart - int(aln.Cigar[0].RunLen)
 	}
-	if aln.ByteCigar[len(aln.ByteCigar)-1].Op == 'S' {
-		targetEnd = targetEnd + int(aln.ByteCigar[len(aln.ByteCigar)-1].RunLen)
+	if aln.Cigar[len(aln.Cigar)-1].Op == 'S' {
+		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLen)
 
 		//}
 
@@ -131,12 +122,14 @@ func isGirafPairCorrect(input <-chan GirafGsw, genome *SimpleGraph, wg *sync.Wai
 			//log.Printf("%s\n", buf.String())
 			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))
 		}
+
 		if !checkAlignment(pair.ReadTwo, genome) {
 			//log.Printf("Error: failed alignment simulation...\n")
 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
 			//log.Printf("%s\n", buf.String())
 			unmapped++
 		}
+
 	}
 
 	log.Printf("Mapped %d out of %d\n", numReads-unmapped, numReads)

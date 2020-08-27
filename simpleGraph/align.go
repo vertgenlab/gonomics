@@ -67,11 +67,11 @@ func SoftClipBases(front int, lengthOfRead int, cig []cigar.ByteCigar) []cigar.B
 	if runLen < lengthOfRead {
 		answer := make([]cigar.ByteCigar, 0, len(cig)+2)
 		if front > 0 {
-			answer = append(answer, cigar.ByteCigar{RunLen: uint32(front), Op: 'S'})
+			answer = append(answer, cigar.ByteCigar{RunLen: uint16(front), Op: 'S'})
 		}
 		answer = append(answer, cig...)
 		if front+cigar.QueryRunLen(cig) < lengthOfRead {
-			answer = append(answer, cigar.ByteCigar{RunLen: uint32(lengthOfRead - front - runLen), Op: 'S'})
+			answer = append(answer, cigar.ByteCigar{RunLen: uint16(lengthOfRead - front - runLen), Op: 'S'})
 		}
 		return answer
 	} else {

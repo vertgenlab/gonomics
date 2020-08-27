@@ -11,53 +11,56 @@ import (
 	"sync"
 )
 
-func DevRoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan FastqGsw, output chan<- GirafGsw, wg *sync.WaitGroup, seedPool *sync.Pool, extendSeeds *sync.Pool) {
-	matrix := NewSwMatrix(10000)
+type memoryPool struct {
+	Hits []*SeedDev
+}
 
+func DevRoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan FastqGsw, output chan<- GirafGsw, wg *sync.WaitGroup, seedPool *sync.Pool) {
+	matrix := NewSwMatrix(10000)
+	//var extendSeeds = sync.Pool{
+	//	New: func() interface{} {
+	//		return []*SeedDev
+	//	},
+	//}
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range input {
-		output <- DevWrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, seedPool, extendSeeds, scorekeeper, dynamicKeeper)
+		output <- DevWrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, seedPool, scorekeeper, dynamicKeeper)
 	}
 	wg.Done()
 }
 
-func DevGraphSmithWaterman(gg *SimpleGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, extendSeeds *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) giraf.Giraf {
+func DevGraphSmithWaterman(gg *SimpleGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) giraf.Giraf {
 	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
 		QEnd:      0,
 		PosStrand: true,
 		Path:      &giraf.Path{},
+		Cigar:     nil,
 		AlnScore:  0,
 		MapQ:      255,
 		Seq:       read.Seq,
 		Qual:      read.Qual,
 		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
-		ByteCigar: nil,
 	}
 	resetScoreKeeper(sk)
 	sk.perfectScore = perfectMatchBig(&read, scoreMatrix)
 	sk.extension = int(sk.perfectScore/600) + len(read.Seq)
-	seeds := seedPool.Get().([]*SeedDev)
-	tempSeeds := extendSeeds.Get().([]*SeedDev)
+	//seeds := seedPool.Get().(*memoryPool)
+	//tempSeeds := extendSeeds.Get().([]*SeedDev)
 	//var tmpSeeds []*SeedDev = extendPool.Get().([]*SeedDev)
-	seeds = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seeds, tempSeeds)
-	tempSeeds = tempSeeds[:0]
-	extendSeeds.Put(tempSeeds)
+	seeds := findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seedPool)
+
+	//tempSeeds = tempSeeds[:0]
+	//extendSeeds.Put(tempSeeds)
 	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
 	//var seedScore int64
 	var currSeq []dna.Base = make([]dna.Base, len(read.Seq))
 	var currSeed *SeedDev
 
-	//leftSeq,
-
-	var dnaPool = sync.Pool{
-		New: func() interface{} {
-			return make([]dna.Base, sk.extension)
-		},
-	}
+	//log.Printf("Number of hits: %d\n", len(seeds.Hits))
 	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
@@ -68,23 +71,24 @@ func DevGraphSmithWaterman(gg *SimpleGraph, read fastq.FastqBig, seedHash map[ui
 		}
 		sk.seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		if int(currSeed.TotalLength) == len(currSeq) {
-			sk.currScore = sk.seedScore
 			sk.minTarget = int(currSeed.TargetStart)
 			sk.maxTarget = int(tailSeed.TargetStart + tailSeed.Length)
 			sk.minQuery = int(currSeed.QueryStart)
-			sk.maxQuery = int(currSeed.TotalLength - 1)
+			//sk.maxQuery = int(currSeed.TotalLength - 1)
+			sk.currScore = sk.seedScore
 		} else {
-			sk.leftAlignment, sk.leftScore, sk.minTarget, sk.minQuery, sk.leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], sk.leftSeq, int(currSeed.TargetStart), sk.leftPath, sk.extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], scoreMatrix, matrix, &dnaPool, dynamicScore)
-			sk.rightAlignment, sk.rightScore, sk.maxTarget, sk.maxQuery, sk.rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], sk.rightSeq, int(tailSeed.TargetStart+tailSeed.Length), sk.rightPath, sk.extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], scoreMatrix, matrix, &dnaPool, dynamicScore)
+			sk.leftAlignment, sk.leftScore, sk.minTarget, sk.minQuery, sk.leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], sk.leftSeq, int(currSeed.TargetStart), sk.leftPath, sk.extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], scoreMatrix, matrix, dynamicScore)
+			sk.rightAlignment, sk.rightScore, sk.maxTarget, sk.maxQuery, sk.rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], sk.rightSeq, int(tailSeed.TargetStart+tailSeed.Length), sk.rightPath, sk.extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], scoreMatrix, matrix, dynamicScore)
+			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
 		}
-		sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
 		if sk.currScore > int64(currBest.AlnScore) {
+
 			currBest.QStart = sk.minQuery
-			currBest.QEnd = sk.maxQuery
+			currBest.QEnd = int(currSeed.QueryStart) + sk.minQuery + sk.maxQuery + int(currSeed.TotalLength) - 1
 			currBest.PosStrand = currSeed.PosStrand
 			ReversePath(sk.leftPath)
 			currBest.Path = setPath(currBest.Path, sk.minTarget, CatPaths(CatPaths(sk.leftPath, getSeedPath(currSeed)), sk.rightPath), sk.maxTarget)
-			currBest.ByteCigar = SoftClipBases(sk.minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: sumLen(currSeed), Op: 'M'}), sk.rightAlignment))
+			currBest.Cigar = SoftClipBases(sk.minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sumLen(currSeed)), Op: 'M'}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = currSeq
 			if gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
@@ -95,18 +99,16 @@ func DevGraphSmithWaterman(gg *SimpleGraph, read fastq.FastqBig, seedHash map[ui
 			}
 		}
 	}
-	seeds = seeds[:0]
-	seedPool.Put(seeds)
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
 	return currBest
 }
 
-func DevWrapPairGiraf(gg *SimpleGraph, fq FastqGsw, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, extendSeeds *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) GirafGsw {
+func DevWrapPairGiraf(gg *SimpleGraph, fq FastqGsw, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) GirafGsw {
 	var mappedPair GirafGsw = GirafGsw{
-		ReadOne: DevGraphSmithWaterman(gg, fq.ReadOne, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, extendSeeds, sk, dynamicScore),
-		ReadTwo: DevGraphSmithWaterman(gg, fq.ReadTwo, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, extendSeeds, sk, dynamicScore),
+		ReadOne: DevGraphSmithWaterman(gg, fq.ReadOne, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, sk, dynamicScore),
+		ReadTwo: DevGraphSmithWaterman(gg, fq.ReadTwo, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, sk, dynamicScore),
 	}
 	//setGirafFlags(&mappedPair)
 	return mappedPair
@@ -155,23 +157,23 @@ func MatrixSetup(size int) ([][]int64, [][]byte) {
 	return m, trace
 }
 
-func getRightBases(n *Node, ext int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
+func getRightBases(n *Node, ext int, start int, seq []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + len(n.Seq) - start
 	var targetLength int = common.Min(availableBases, ext)
 	var basesToTake int = targetLength - len(seq)
-	ans = make([]dna.Base, targetLength)
+	ans := make([]dna.Base, targetLength)
 	copy(ans[0:len(seq)], seq)
 	copy(ans[len(seq):targetLength], n.Seq[start:start+basesToTake])
 	return ans
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, dnaPool *sync.Pool, dynamicScore dynamicScoreKeeper) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, dynamicScore dynamicScoreKeeper) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	if len(seq) >= ext {
 		log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), ext)
 	}
 
-	s := dnaPool.Get().([]dna.Base)
-	s = getRightBases(n, ext, start, seq, s)
+	//s := dnaPool.Get().([]dna.Base)
+	s := getRightBases(n, ext, start, seq)
 
 	path := make([]uint32, len(currentPath))
 	copy(path, currentPath)
@@ -186,7 +188,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 	} else {
 		bestScore = -1
 		for _, i := range n.Next {
-			alignment, score, targetEnd, queryEnd, path = RightAlignTraversal(i.Dest, s, 0, path, ext, read, scoreMatrix, matrix, dnaPool, dynamicScore)
+			alignment, score, targetEnd, queryEnd, path = RightAlignTraversal(i.Dest, s, 0, path, ext, read, scoreMatrix, matrix, dynamicScore)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
@@ -197,8 +199,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 		}
 
 	}
-	s = s[:0]
-	dnaPool.Put(s)
+
 	return bestAlignment, bestScore, bestTargetEnd + start, bestQueryEnd, bestPath
 }
 
@@ -314,22 +315,22 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix 
 	return matrix.m[len(alpha)][len(beta)], dynamicScore.route, minI, len(alpha), minJ, len(beta)
 }
 
-func getLeftTargetBases(n *Node, ext int, refEnd int, seq []dna.Base, s []dna.Base) []dna.Base {
+func getLeftTargetBases(n *Node, ext int, refEnd int, seq []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + refEnd
 	var targetLength int = common.Min(availableBases, ext)
 	var basesToTake int = targetLength - len(seq)
-	s = make([]dna.Base, targetLength)
+	s := make([]dna.Base, targetLength)
 	copy(s[0:basesToTake], n.Seq[refEnd-basesToTake:refEnd])
 	copy(s[basesToTake:targetLength], seq)
 	return s
 }
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, scores [][]int64, matrix *MatrixAln, dnaPool *sync.Pool, dynamicScore dynamicScoreKeeper) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, scores [][]int64, matrix *MatrixAln, dynamicScore dynamicScoreKeeper) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	if len(seq) >= ext {
 		log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), ext)
 	}
-	s := dnaPool.Get().([]dna.Base)
-	s = getLeftTargetBases(n, ext, refEnd, seq, s)
+	//s := dnaPool.Get().([]dna.Base)
+	s := getLeftTargetBases(n, ext, refEnd, seq)
 
 	path := make([]uint32, len(currentPath))
 	copy(path, currentPath)
@@ -347,7 +348,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	} else {
 		bestScore = -1
 		for _, i := range n.Prev {
-			alignment, score, refStart, queryStart, path = LeftAlignTraversal(i.Dest, s, len(i.Dest.Seq), path, ext, read, scores, matrix, dnaPool, dynamicScore)
+			alignment, score, refStart, queryStart, path = LeftAlignTraversal(i.Dest, s, len(i.Dest.Seq), path, ext, read, scores, matrix, dynamicScore)
 			if score > bestScore {
 				bestScore = score
 				bestAlignment = alignment
@@ -357,8 +358,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 			}
 		}
 	}
-	s = s[:0]
-	dnaPool.Put(s)
+
 	return bestAlignment, bestScore, bestRefStart, bestQueryStart, bestPath
 }
 

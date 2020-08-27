@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"

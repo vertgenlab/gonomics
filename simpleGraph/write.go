@@ -45,10 +45,19 @@ func SimpleWriteGirafPair(filename string, input <-chan GirafGsw, wg *sync.WaitG
 			return &bytes.Buffer{}
 		},
 	}
+	var err error
 	for gp := range input {
 		buf = simplePool.Get().(*bytes.Buffer)
-		buf = GirafStringBuilder(gp.ReadOne, buf)
-		buf = GirafStringBuilder(gp.ReadTwo, buf)
+		_, err = buf.WriteString(giraf.ToString(&gp.ReadOne))
+		common.ExitIfError(err)
+		err = buf.WriteByte('\n')
+		common.ExitIfError(err)
+
+		_, err = buf.WriteString(giraf.ToString(&gp.ReadTwo))
+		common.ExitIfError(err)
+		err = buf.WriteByte('\n')
+		common.ExitIfError(err)
+
 		io.Copy(file, buf)
 		buf.Reset()
 		simplePool.Put(buf)
@@ -90,7 +99,7 @@ func buildGirafString(buf *bytes.Buffer, g giraf.Giraf, err error) *bytes.Buffer
 	common.ExitIfError(err)
 	err = buf.WriteByte('\t')
 	common.ExitIfError(err)
-	_, err = buf.WriteString(cigar.ByteCigarToString(g.ByteCigar))
+	_, err = buf.WriteString(cigar.ByteCigarToString(g.Cigar))
 	common.ExitIfError(err)
 	err = buf.WriteByte('\t')
 	common.ExitIfError(err)

@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
@@ -117,4 +118,4 @@ func MakeDisContigTestGraph() *SimpleGraph {
 	}
 
 	return graph
-}
+}*/

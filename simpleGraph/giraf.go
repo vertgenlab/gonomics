@@ -2,7 +2,7 @@ package simpleGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/cigar"
+	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -36,12 +36,12 @@ func RandGiraf(graph *SimpleGraph, numReads int, readLen int, randSeed int64) []
 				QEnd:      readLen,
 				PosStrand: strand,
 				Path:      girafPath,
-				Aln:       []*cigar.Cigar{{RunLength: int64(readLen), Op: 'M', Sequence: nil}}, // tmp cigar until giraf cigars have been implemented
-				AlnScore:  alnScore,                                                            // placeholder
-				MapQ:      mapQ,                                                                // placeholder
-				Seq:       seq,
-				Qual:      qual,
-				Notes:     nil}
+				//Aln:       []*cigar.Cigar{{RunLength: int64(readLen), Op: 'M', Sequence: nil}}, // tmp cigar until giraf cigars have been implemented
+				AlnScore: alnScore, // placeholder
+				MapQ:     mapQ,     // placeholder
+				Seq:      seq,
+				Qual:     qual,
+				Notes:    nil}
 
 			if !strand {
 				dna.ReverseComplement(curr.Seq)

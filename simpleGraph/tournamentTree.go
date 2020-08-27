@@ -6,10 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
-	"os"
-	"runtime"
-	"runtime/pprof"
-	//"sync"
+	"sync"
 )
 
 // TODO: get rid of this when seedBed is eliminated
@@ -138,18 +135,8 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	return answer
 }
 
-func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev) []*SeedDev {
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
+func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, seedPool *sync.Pool) []*SeedDev {
+
 	const basesPerInt int64 = 32
 	var currHits []uint64
 	var codedNodeCoord uint64
@@ -159,7 +146,8 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 	//var poolHead *SeedDev = *memoryPool
 	var seqKey uint64
 	var keyShift uint = 64 - (uint(seedLen) * 2)
-	var tempSeeds []*SeedDev
+	//var tempSeeds []*SeedDev
+	var finalSeeds []*SeedDev
 	//tempSeeds := seedPool.Get().([]*SeedDev)
 	var tempSeed *SeedDev
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
@@ -179,12 +167,17 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 
 			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
-			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
+			tempSeeds := seedPool.Get().(*memoryPool)
+			tempSeeds.Hits = tempSeeds.Hits[:0]
+
+			tempSeeds.Hits = append(tempSeeds.Hits, extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)...)
 			//log.Printf("After extendToTheRight fwd:\n")
 			//printSeedDev(tempSeeds)
-			for _, tempSeed = range tempSeeds {
+			for _, tempSeed = range tempSeeds.Hits {
 				finalSeeds = append(finalSeeds, extendToTheLeft(nodes[nodeIdx], read, tempSeed)...)
 			}
+			tempSeeds.Hits = tempSeeds.Hits[:0]
+			seedPool.Put(tempSeeds)
 			//log.Printf("After extendToTheLeft fwd:\n")
 			//printSeedDev(finalSeeds)
 			// TODO: Bring back speed optimizations once we are sure of correctness
@@ -227,13 +220,18 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 
 			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
-			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
+
+			tempSeeds := seedPool.Get().(*memoryPool)
+			tempSeeds.Hits = tempSeeds.Hits[:0]
+			tempSeeds.Hits = append(tempSeeds.Hits, extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)...)
 			//log.Printf("After extendToTheRight rev:\n")
 			//printSeedDev(tempSeeds)
-			for _, tempSeed = range tempSeeds {
+			for _, tempSeed = range tempSeeds.Hits {
 				//log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
 				finalSeeds = append(finalSeeds, extendToTheLeft(nodes[nodeIdx], read, tempSeed)...)
 			}
+			tempSeeds.Hits = tempSeeds.Hits[:0]
+			seedPool.Put(tempSeeds)
 			//log.Printf("After extendToTheLeft rev:\n")
 			//printSeedDev(finalSeeds)
 			// TODO: bring back speed optimizations
@@ -280,17 +278,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 	//printSeedDev(finalSeeds)
 	//tempSeeds = tempSeeds[:0]
 	//seedPool.Put(tempSeeds)
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
+
 	return finalSeeds
 }
 
