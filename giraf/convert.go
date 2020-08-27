@@ -31,7 +31,7 @@ func stringToGiraf(line string) *Giraf {
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
 			Aln:       cigar.FromString(data[6]),
-			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
+			//Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
 			AlnScore:  common.StringToInt(data[7]),
 			MapQ:      uint8(common.StringToInt(data[8])),
 			Seq:       dna.StringToBases(data[9]),
