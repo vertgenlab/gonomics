@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-// Giraf struct contains data fields that decribes query sequences aligned to a genome graph reference
+// Giraf struct contains data fields that describes query sequences aligned to a genome graph reference
 type Giraf struct {
 	QName     string
 	QStart    int
