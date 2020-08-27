@@ -23,16 +23,23 @@ func TestBytesToCigar(t *testing.T) {
 }
 
 func TestUint32ToCigar(t *testing.T) {
-	threeFiveM := uint32(0) | uint32(35)<<4
-	twoI := uint32(1) | uint32(2)<<4
-	sixteenD := uint32(2) | uint32(16)<<4
-	var bamCigar []uint32 = []uint32{threeFiveM, twoI, sixteenD}
-	byteCigs := Uint32ToByteCigar(bamCigar)
+	var query []uint32 = []uint32{560, 33, 258}
+	byteCigs := Uint32ToByteCigar(query)
 	if string(ByteCigarToString(byteCigs)) != "35M2I16D" {
-		t.Errorf("Error: could not convert %v to cigar...\n", byteCigs)
+		t.Errorf("Error: 35M!=560, 2I!=33, 16D!=258...\n")
 	}
 }
 
+func TestToUint32(t *testing.T) {
+	var answer []uint32 = []uint32{560, 33, 258}
+	byteCigs := []ByteCigar{b1, b2, b3}
+	code := ByteCigarToUint32(byteCigs)
+	if len(answer) == len(code) {
+		if code[0] != answer[0] || code[1] != answer[1] || code[2] != answer[2] {
+			t.Errorf("Error: %d!=35M || %d!=2I || %d!=16D\n", code[0], code[1], code[2])
+		}
+	}
+}
 func BenchmarkCigarBytesToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()

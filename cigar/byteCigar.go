@@ -55,6 +55,33 @@ func lookUpCigByte(op uint32) byte {
 	}
 }
 
+// lookUpUint32 will return a uint32 representation of a cigar Op.
+func lookUpUint32(op byte) uint32 {
+	switch op {
+	case Match:
+		return 0
+	case Insertion:
+		return 1
+	case Deletion:
+		return 2
+	case N:
+		return 3
+	case SoftClip:
+		return 4
+	case HardClip:
+		return 5
+	case Padded:
+		return 6
+	case Equal:
+		return 7
+	case Mismatch:
+		return 8
+	default:
+		log.Fatalf("Error: cound not identify input byte")
+		return 0
+	}
+}
+
 // ReadToBytesCigar will process a byte slice and define a small
 func ReadToBytesCigar(cigar []byte) []ByteCigar {
 	if cigar[0] == '*' {
@@ -195,6 +222,14 @@ func Uint32ToByteCigar(cigar []uint32) []ByteCigar {
 	var answer []ByteCigar = make([]ByteCigar, len(cigar))
 	for i := 0; i < len(cigar); i++ {
 		answer[i] = ByteCigar{RunLen: uint16(cigar[i] >> 4), Op: lookUpCigByte(cigar[i] & 0xf)}
+	}
+	return answer
+}
+
+func ByteCigarToUint32(cigar []ByteCigar) []uint32 {
+	var answer []uint32 = make([]uint32, len(cigar))
+	for i := 0; i < len(cigar); i++ {
+		answer[i] = lookUpUint32(cigar[i].Op) | uint32(cigar[i].RunLen)<<4
 	}
 	return answer
 }
