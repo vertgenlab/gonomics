@@ -7,9 +7,10 @@ import (
 
 //these two values mark the overflow/underflow boundaries for math.Exp(x)
 func LogCanConvert(x float64) bool {
-	return x > 709.782712893383973096e+02 || x < -745.133219101941108420e+02
+	return x > 709.782712893383973096 || x < -745.133219101941108420
 }
 
+//TODO: test for AverageLog and MidpointLog
 //AverageLog returns the average of a list of logSpace numbers
 func AverageLog(x []float64) float64 {
 	var n int = len(x)
