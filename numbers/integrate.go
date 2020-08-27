@@ -6,6 +6,31 @@ import (
 	//"fmt"
 )
 
+//logIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
+func logIntegrate(f func(float64) float64, a float64, b float64, n int) float64 {
+	if a >= b {
+		log.Fatalf("logIntegrate failed, left bound must be smaller than right bound.")
+	}
+	var deltaX float64 = (b - a) / float64(n)
+	var logDeltaX float64 = math.Log(deltaX)
+	var currLeft float64 = a //this variable stores the left bound of the current rectangle.
+	var currRight float64 = a + deltaX
+	var answer float64
+	//first time, sets answer as the area of the first rectangle
+	var nextLeftEval float64 = f(currRight)
+	answer = MultiplyLog(MidpointLog(f(currLeft), nextLeftEval), logDeltaX)
+	var rightEval float64
+	
+	for i := 1; i < n; i++ {
+		currLeft += deltaX
+		currRight += deltaX
+		rightEval = f(currRight)
+		answer += MultiplyLog(MidpointLog(nextLeftEval, rightEval), logDeltaX)
+		nextLeftEval = rightEval
+	}
+	return answer
+}
+
 // There are a number of ways to evaluate a definite integral computationally.
 // Romberg's method seems like a good mix of accuracy and coding difficulty,
 // but there are better methods out there if more speed or accuracy are needed.
@@ -15,6 +40,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 	var n, m int
 	var kMax, k, h, currEstError float64
 	var currR, prevR []float64 = make([]float64, maxIter), make([]float64, maxIter)
+	var minIter int = 10
 
 	prevR[0] = 0.5 * (f(a) + f(b))
 	for n = 1; n < maxIter; n++ {
@@ -43,7 +69,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 		// log.Printf("prevEst=%e, currEst=%e\n", prevR[n-1], currR[n])
 		currEstError = math.Abs(currR[n] - prevR[n-1])
 		//fmt.Printf("currValue: %e. currError: %e\n", currR[n], currEstError)
-		if currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n]) {
+		if (currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n])) && n >= minIter {
 			return currR[n]
 		}
 
