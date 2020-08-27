@@ -16,7 +16,7 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 	var k, runLenCount int64
 
 	if cigar[0].Op == '*' {
-		return []*Cigar{&Cigar{Op: '*'}}
+		return nil
 	}
 
 	for i := 0; i < len(cigar); i++ {
