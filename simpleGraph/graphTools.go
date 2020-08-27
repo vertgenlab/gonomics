@@ -13,18 +13,21 @@ import (
 
 func VariantGraph(ref <-chan *fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
-	var filterVcf []*vcf.Vcf
+	var filterVcf []*vcf.Vcf = make([]*vcf.Vcf, 0)
 	for chr := range ref {
 		filterVcf = vcfMap[chr.Name]
 		if len(filterVcf) != 0 {
 			vcf.Sort(filterVcf)
 			gg = vChrGraph(gg, chr, filterVcf)
 		} else {
-			//when only calling large SV, no variants called on chr is possible, entire chr becomes a node
+			// Given the input is a vcf containing large structural variance
+			// It is possible for a chromosome to contain no call variants (ex. chrM).
+			// In such a case, we add the entire chromosome as one node.
 			chrNode := &Node{Id: uint32(len(gg.Nodes)), Name: chr.Name, Seq: chr.Seq, Prev: nil, Next: nil, Info: &Annotation{Allele: 0, Start: 1, Variant: 0}}
 			AddNode(gg, chrNode)
 		}
 	}
+	gg = SortGraph(gg)
 	return gg
 }
 
@@ -45,16 +48,15 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	vcfsChr = append(vcfsChr, &vcf.Vcf{Chr: chr.Name, Pos: int64(len(chr.Seq))})
 	//log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
 	fasta.ToUpper(chr)
-	var currMatch *Node = nil
-	var lastMatch *Node = nil
-	var refAllele, altAllele *Node
+	var currMatch *Node = &Node{}
+	var lastMatch *Node = &Node{}
+	var refAllele, altAllele *Node = &Node{}, &Node{}
 	var prev []*Node = nil
 	var i, j, edge int
 	var index int64 = 0
-	//var num int = 0
 	for i = 0; i < len(vcfsChr)-1; i++ {
 		if strings.Compare(chr.Name, vcfsChr[i].Chr) != 0 {
-			//log.Fatalf("Error: chromosome names do not match...\n")
+			log.Fatalf("Error: chromosome names do not match...\n")
 		}
 		if vcfsChr[i].Pos-index > 0 {
 			currMatch = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: chr.Seq[index : vcfsChr[i].Pos-1], Prev: nil, Next: make([]*Edge, 0, 2), Info: &Annotation{Allele: 0, Start: uint32(index + 1), Variant: 0}}
@@ -185,7 +187,6 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 	}
 	AddEdge(lastMatch, lastNode, 1)
 	SetEvenWeights(lastMatch)
-	//log.Printf("%s Graph missed %d/%d\n", chr.Name, num, len(vcfsChr))
 	return genome
 }
 

@@ -12,15 +12,16 @@ import (
 
 type vcfEffectPrediction struct {
 	vcf.Vcf
-	RefId       string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
-	Gene        string
-	PosStrand   bool
-	NearestCds  *CDS
-	CdnaPos     int // 1-base
-	AaPos       int // 1-base
-	AaRef       []dna.AminoAcid
-	AaAlt       []dna.AminoAcid
-	VariantType string // e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
+	RefId          string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
+	Gene           string
+	PosStrand      bool
+	NearestCds     *CDS
+	CdnaPos        int // 1-base
+	AaPos          int // 1-base
+	AaRef          []dna.AminoAcid
+	AaAlt          []dna.AminoAcid
+	VariantType    string // e.g. Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away), FarSplice (3-10 away)
+	NextTranscript *vcfEffectPrediction
 }
 
 // GenesToIntervalTree builds a fractionally cascaded 2d interval tree for efficiently identifying genes that overlap a variant
@@ -39,7 +40,7 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 // VcfToVariant determines the effects of a variant on the cDNA and amino acid sequence by querying genes in the tree made by GenesToIntervalTree
 // Note that if multiple genes are found to overlap a variant this function will return the variant based on the first queried gene and throw an error
 // All bases in fasta record must be uppercase
-func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base) (*vcfEffectPrediction, error) {
+func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
 	var answer *vcfEffectPrediction
 	var err error
 
@@ -52,45 +53,64 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 	var annotatingGene *Gene
 	if len(overlappingGenes) > 0 {
 		annotatingGene = overlappingGenes[0].(*Gene)
-		answer = vcfToVariant(v, annotatingGene, seq)
+		answer = vcfToVariant(v, annotatingGene, seq, allTranscripts)
 	} else {
 		answer = &vcfEffectPrediction{Vcf: *v}
 	}
-	addVariantType(answer)
 	return answer, err
 }
 
 // vcfToVariant is a helper function that annotates the Variant struct with information from the Vcf and Gtf input
-func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base) *vcfEffectPrediction {
+func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscripts bool) *vcfEffectPrediction {
 	answer := new(vcfEffectPrediction)
 	answer.Vcf = *v
 	answer.RefId = gene.Transcripts[0].TranscriptID
 	answer.Gene = gene.GeneID
 	answer.PosStrand = gene.Transcripts[0].Strand
-	vcfCdsIntersect(v, gene, answer)
+	vcfCdsIntersect(v, gene, answer, 0)
 	if int(v.Pos) >= answer.NearestCds.Start && int(v.Pos) <= answer.NearestCds.End {
 		findAAChange(answer, seq)
 	}
+	addVariantType(answer)
+
+	if allTranscripts {
+		var prev *vcfEffectPrediction = answer
+		for i := 1; i < len(gene.Transcripts); i++ {
+			additionalTranscript := new(vcfEffectPrediction)
+			additionalTranscript.Vcf = *v
+			additionalTranscript.RefId = gene.Transcripts[i].TranscriptID
+			additionalTranscript.Gene = gene.GeneID
+			additionalTranscript.PosStrand = gene.Transcripts[i].Strand
+			vcfCdsIntersect(v, gene, additionalTranscript, i)
+			if int(v.Pos) >= additionalTranscript.NearestCds.Start && int(v.Pos) <= additionalTranscript.NearestCds.End {
+				findAAChange(additionalTranscript, seq)
+			}
+			addVariantType(additionalTranscript)
+			prev.NextTranscript = additionalTranscript
+			prev = additionalTranscript
+		}
+	}
+
 	return answer
 }
 
 // vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the CDS nearest to the vcf
-func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction) {
+func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
 	var cdsPos int
 	var exon *Exon
 	//TODO: this code may be able to be compressed
 	if answer.PosStrand {
-		for i := 0; i < len(gene.Transcripts[0].Exons); i++ {
-			exon = gene.Transcripts[0].Exons[i]
+		for i := 0; i < len(gene.Transcripts[transcriptPosInSlice].Exons); i++ {
+			exon = gene.Transcripts[transcriptPosInSlice].Exons[i]
 			if exon.Cds != nil && int(v.Pos) > exon.Cds.End { // variant is further in gene
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCds = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) <= exon.Cds.End { // variant is before end of this exon
 				if int(v.Pos) < exon.Cds.Start { // Variant is NOT in CDS
-					if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[0].Exons[i-1].Cds.Start {
+					if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[transcriptPosInSlice].Exons[i-1].Cds.Start {
 						answer.NearestCds = exon.Cds
 					} else {
-						answer.NearestCds = gene.Transcripts[0].Exons[i-1].Cds
+						answer.NearestCds = gene.Transcripts[transcriptPosInSlice].Exons[i-1].Cds
 					}
 					break
 				}
@@ -100,17 +120,17 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction) {
 			}
 		}
 	} else {
-		for i := 0; i < len(gene.Transcripts[0].Exons); i++ {
-			exon = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons)-1-i]
+		for i := 0; i < len(gene.Transcripts[transcriptPosInSlice].Exons); i++ {
+			exon = gene.Transcripts[transcriptPosInSlice].Exons[len(gene.Transcripts[transcriptPosInSlice].Exons)-1-i]
 			if exon.Cds != nil && int(v.Pos) < exon.Cds.Start { // variant is further in gene
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCds = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) >= exon.Cds.Start { // variant is before end of this exon
 				if int(v.Pos) > exon.Cds.End { // Variant is NOT in CDS
-					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons)-1-i+1].Cds.Start-int(v.Pos) {
+					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[transcriptPosInSlice].Exons[len(gene.Transcripts[transcriptPosInSlice].Exons)-1-i+1].Cds.Start-int(v.Pos) {
 						answer.NearestCds = exon.Cds
 					} else {
-						answer.NearestCds = gene.Transcripts[0].Exons[len(gene.Transcripts[0].Exons)-1-i+1].Cds
+						answer.NearestCds = gene.Transcripts[transcriptPosInSlice].Exons[len(gene.Transcripts[transcriptPosInSlice].Exons)-1-i+1].Cds
 					}
 					break
 				}

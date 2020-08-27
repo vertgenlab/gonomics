@@ -62,6 +62,15 @@ func StringToUint32(s string) uint32 {
 	return uint32(n)
 }
 
+// StringToUint16 converts a string to a uint16
+func StringToUint16(s string) uint16 {
+	n, err := strconv.ParseUint(s, 10, 16)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a uint16\n", s)
+	}
+	return uint16(n)
+}
+
 func StringToUint8(s string) uint8 {
 	n, err := strconv.ParseUint(s, 10, 8)
 	if err != nil {

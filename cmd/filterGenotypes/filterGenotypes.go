@@ -59,17 +59,13 @@ func main() {
 		} else if *parentOne == "" || *parentTwo == "" || *f1Genome == "" {
 			log.Fatalf("Error: Must provide exactly 2 parents and 1 F1 sample...\n")
 		} else {
-			file := fileio.EasyOpen(input)
-			defer file.Close()
-
-			header := vcf.ReadHeader(file)
+			reader, header := vcf.GoReadToChan(input)
 			sampleHash := vcf.HeaderToMaps(header)
 
 			var parentalOne, parentalTwo, fOne int16 = sampleHash.GIndex[*parentOne], sampleHash.GIndex[*parentTwo], sampleHash.GIndex[*f1Genome]
 			writer := fileio.EasyCreate(output)
 			vcf.NewWriteHeader(writer, header)
-			reader := make(chan *vcf.Vcf)
-			go vcf.ReadToChan(file, reader)
+
 
 			defer writer.Close()
 			log.SetFlags(0)

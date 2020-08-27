@@ -13,31 +13,33 @@ import (
 
 func GirafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
 func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
-	data := strings.SplitN(line, "\t", 11)
-	if len(data) > 9 {
+	data := strings.SplitN(line, "\t", 12)
+	if len(data) > 10 {
+
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
 			QEnd:      common.StringToInt(data[2]),
-			PosStrand: StringToPos(data[3]),
-			Path:      FromStringToPath(data[4]),
-			Aln:       cigar.FromString(data[5]),
-			AlnScore:  common.StringToInt(data[6]),
-			MapQ:      uint8(common.StringToInt(data[7])),
-			Seq:       dna.StringToBases(data[8]),
-			Qual:      fastq.ToQualUint8([]rune(data[9]))}
+			Flag:      common.StringToUint8(data[3]),
+			PosStrand: StringToPos(data[4]),
+			Path:      FromStringToPath(data[5]),
+			Aln:       cigar.FromString(data[6]),
+			AlnScore:  common.StringToInt(data[7]),
+			MapQ:      uint8(common.StringToInt(data[8])),
+			Seq:       dna.StringToBases(data[9]),
+			Qual:      fastq.ToQualUint8([]rune(data[10]))}
 
-		if len(data) == 11 {
-			curr.Notes = FromStringToNotes(data[10])
+		if len(data) == 12 {
+			curr.Notes = FromStringToNotes(data[11])
 		}
 	} else {
-		log.Fatalf("Error: Expecting at least 10 columns, but only found %d on %s", len(data), line)
+		log.Fatalf("Error: Expecting at least 11 columns, but only found %d on %s", len(data), line)
 	}
 	return curr
 }

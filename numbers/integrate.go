@@ -3,6 +3,7 @@ package numbers
 import (
 	"log"
 	"math"
+	//"fmt"
 )
 
 // There are a number of ways to evaluate a definite integral computationally.
@@ -41,6 +42,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 		// R[n][n]-R[n-1][n-1] being more conservative, so we will use that one
 		// log.Printf("prevEst=%e, currEst=%e\n", prevR[n-1], currR[n])
 		currEstError = math.Abs(currR[n] - prevR[n-1])
+		//fmt.Printf("currValue: %e. currError: %e\n", currR[n], currEstError)
 		if currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n]) {
 			return currR[n]
 		}

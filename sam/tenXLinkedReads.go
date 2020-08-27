@@ -3,7 +3,6 @@ package sam
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"strings"
 	"sync"
@@ -75,11 +74,7 @@ func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
 }*/
 
 func TenXPrettyPrint(filename string) {
-	samfile := fileio.EasyOpen(filename)
-	defer samfile.Close()
-	ReadHeader(samfile)
-	linkedReads := make(chan *SamAln)
-	go ReadToChan(samfile, linkedReads)
+	linkedReads, _ := GoReadToChan(filename)
 	for barcodes := range linkedReads {
 		if !IsForwardRead(barcodes) {
 			fmt.Printf("%s\t%s\t%s\t%s\n", barcodes.RName, barcodes.QName, LinkedReadsBarcode(barcodes), cigar.ToString(barcodes.Cigar))

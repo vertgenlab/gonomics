@@ -26,6 +26,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 		for i := range vcfChannel {
 			vcf.WriteVcf(file, i)
 		}
+		file.Close()
 	case "gg":
 		simpleGraph.Write(output, chainToSimpleGraph(chainFile, targetFa, queryFa))
 	default:
@@ -37,13 +38,13 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 func goChainToAxt(chainFile, targetFa, queryFa string) <-chan *axt.Axt {
 	target, query := fasta.Read(targetFa), fasta.Read(queryFa)
 	chainFa := chain.GoReadSeqChain(chainFile, target, query)
-	ans := make(chan *axt.Axt)
+	ans := make(chan *axt.Axt, 2408)
 	go workThreadChainAxt(chainFa, ans)
 	return ans
 }
 
 func goChainToVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
-	ans := make(chan *vcf.Vcf)
+	ans := make(chan *vcf.Vcf, 2408)
 	axtChannel := goChainToAxt(chainFile, targetFa, queryFa)
 	go workThreadAxtVcf(axtChannel, ans)
 	return ans
@@ -52,10 +53,10 @@ func goChainToVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
 func chainToSimpleGraph(chainFile, targetFa, queryFa string) *simpleGraph.SimpleGraph {
 	target, query := fasta.Read(targetFa), fasta.Read(queryFa)
 	chainFa := chain.GoReadSeqChain(chainFile, target, query)
-	axtChannel := make(chan *axt.Axt)
+	axtChannel := make(chan *axt.Axt, 2408)
 	go workThreadChainAxt(chainFa, axtChannel)
 
-	vcfChannel := make(chan *vcf.Vcf)
+	vcfChannel := make(chan *vcf.Vcf, 2408)
 	go workThreadAxtVcf(axtChannel, vcfChannel)
 
 	chrVcfMap := make(map[string][]*vcf.Vcf)
@@ -92,7 +93,7 @@ func workThreadAxtVcf(axtChannel <-chan *axt.Axt, ans chan<- *vcf.Vcf) {
 
 func goFaChannel(ref []*fasta.Fasta) <-chan *fasta.Fasta {
 	//set up faChan
-	ans := make(chan *fasta.Fasta)
+	ans := make(chan *fasta.Fasta, 100)
 	go faWorker(ref, ans)
 	return ans
 }

@@ -1,10 +1,9 @@
-package tree_newick
+package expandedTree
 
 import (
-	"fmt"
-
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"os"
@@ -13,30 +12,30 @@ import (
 )
 
 //Tree structure for simulation and reconstruction
-type NTree struct {
+type ETree struct {
 	Name         string
 	BranchLength float64
 	OnlyTopology bool
-	Fasta        *fasta.Fasta
+	Fasta        *fasta.Fasta //assigning fastas to nodes
 	State        int
 	Stored       []float64
 	Scrap        float64
-	Left         *NTree
-	Right        *NTree
-	Up           *NTree
+	Left         *ETree
+	Right        *ETree
+	Up           *ETree //traversing the tree for reconstruction
 }
 
 //read tree from filename and add fastas and up pointers to the tree
-func Read_tree(filename_newick string, filename_fastas string) *NTree {
-	tr, err := ReadNewick(filename_newick)
+func ReadTree(newickFilename string, fastasFilename string) *ETree {
+	tr, err := ReadNewick(newickFilename)
 	if err == nil {
 	}
-	Set_fastas_up(tr, filename_fastas)
+	AssignFastas(tr, fastasFilename)
 	return tr
 }
 
 //read in tree from filename
-func ReadNewick(filename string) (*NTree, error) {
+func ReadNewick(filename string) (*ETree, error) {
 	var line string
 
 	file, err := os.Open(filename)
@@ -56,44 +55,57 @@ func ReadNewick(filename string) (*NTree, error) {
 }
 
 // read in tree from string of newick
-func ReadNewick_string(tree string) *NTree {
-	tree_thing, err := parseNewick(tree)
+func NewickToTree(tree string) *ETree {
+	makeTree, err := parseNewick(tree)
 	if err != nil {
 	}
-	return tree_thing
+	return makeTree
 }
 
-func Get_tree(node *NTree) []*NTree {
-	var branch []*NTree
+func GetTree(node *ETree) []*ETree {
+	var branch []*ETree
 	branch = append(branch, node)
 	if node.Right != nil {
-		b := Get_tree(node.Right)
+		b := GetTree(node.Right)
 		branch = append(branch, b...)
 	}
 	if node.Left != nil {
-		a := Get_tree(node.Left)
+		a := GetTree(node.Left)
 		branch = append(branch, a...)
 	}
 	return branch
 }
 
-func Get_branch(node *NTree) []*NTree {
-	var branch []*NTree
+func CopyTree(tree *ETree) *ETree {
+	var treeCopy *ETree
+	*treeCopy = *tree
+
+	if tree.Left != nil {
+		*treeCopy.Left = *CopyTree(tree.Left)
+	}
+	if tree.Right != nil {
+		*treeCopy.Right = *CopyTree(tree.Right)
+	}
+	return treeCopy
+}
+
+func GetBranch(node *ETree) []*ETree {
+	var branch []*ETree
 	if node.Left != nil && node.Right != nil {
 		branch = append(branch, node)
-		a := Get_branch(node.Left)
-		b := Get_branch(node.Right)
+		a := GetBranch(node.Left)
+		b := GetBranch(node.Right)
 		branch = append(branch, a...)
 		branch = append(branch, b...)
 	}
 	return branch
 }
 
-func Get_leaf(node *NTree) []*NTree {
-	var leaf []*NTree
+func GetLeaf(node *ETree) []*ETree {
+	var leaf []*ETree
 	if node.Left != nil && node.Right != nil {
-		a := Get_leaf(node.Left)
-		b := Get_leaf(node.Right)
+		a := GetLeaf(node.Left)
+		b := GetLeaf(node.Right)
 		leaf = append(leaf, a...)
 		leaf = append(leaf, b...)
 	}
@@ -104,7 +116,7 @@ func Get_leaf(node *NTree) []*NTree {
 }
 
 func splittingCommaIndex(input string) int {
-	var openCount, closedCount int = 0, 0
+	var openCount, closedCount = 0, 0
 	for i, r := range input {
 		if r == ',' && openCount == closedCount+1 {
 			return i
@@ -133,8 +145,8 @@ func splitNameAndLength(input string) (string, float64, bool, error) {
 	return "", 0, false, fmt.Errorf("Error: %s should only have one or two colons\n", input)
 }
 
-func parseNewickHelper(input string) (*NTree, error) {
-	var answer NTree
+func parseNewickHelper(input string) (*ETree, error) {
+	var answer ETree
 	var err error
 
 	// all the character finding is up front and then all the logic follows
@@ -159,7 +171,7 @@ func parseNewickHelper(input string) (*NTree, error) {
 		return nil, fmt.Errorf("Error: %s should have a number of colons equal to zero or twice the number of colons (with another possible for the root branch)\n", input)
 	}
 
-	answer = NTree{Name: "", BranchLength: 1, OnlyTopology: true, Fasta: nil, State: 4, Stored: []float64{0, 0, 0, 0}, Scrap: 0.0, Left: nil, Right: nil, Up: nil}
+	answer = ETree{Name: "", BranchLength: 1, OnlyTopology: true, Fasta: nil, State: 4, Stored: []float64{0, 0, 0, 0}, Scrap: 0.0, Left: nil, Right: nil, Up: nil}
 	if numOpen == 0 { /* leaf node */
 		answer.Name, answer.BranchLength, answer.OnlyTopology, err = splitNameAndLength(input)
 		if err != nil {
@@ -183,31 +195,31 @@ func parseNewickHelper(input string) (*NTree, error) {
 	}
 }
 
-func parseNewick(input string) (*NTree, error) {
+func parseNewick(input string) (*ETree, error) {
 	if !strings.HasPrefix(input, "(") || !strings.HasSuffix(input, ";") {
 		return nil, fmt.Errorf("Error: tree %s should start with '(' and end with ';'", input)
 	}
 	return parseNewickHelper(input[:len(input)-1])
 }
 
-//set up tree with ups
-func Set_up(root *NTree, prev_node *NTree) {
-	if prev_node != nil {
-		root.Up = prev_node
+//tell tree what "up" is
+func SetUp(root *ETree, prevNode *ETree) {
+	if prevNode != nil {
+		root.Up = prevNode
 	} else {
 		root.Up = nil
 	}
 	if root.Left != nil && root.Right != nil {
-		Set_up(root.Left, root)
-		Set_up(root.Right, root)
+		SetUp(root.Left, root)
+		SetUp(root.Right, root)
 	}
 }
 
 //set up tree with fastas
-func Set_fastas_up(root *NTree, fasta_file string) {
-	fastas := fasta.Read(fasta_file)
-	Set_up(root, nil)
-	leaves := Get_leaf(root)
+func AssignFastas(root *ETree, fastaFilename string) {
+	fastas := fasta.Read(fastaFilename)
+	SetUp(root, nil)
+	leaves := GetLeaf(root)
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {
@@ -217,7 +229,7 @@ func Set_fastas_up(root *NTree, fasta_file string) {
 
 		}
 	}
-	branches := Get_branch(root)
+	branches := GetBranch(root)
 
 	for i := 0; i < len(branches); i++ {
 		f := fasta.Fasta{branches[i].Name, []dna.Base{}}

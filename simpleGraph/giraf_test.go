@@ -118,8 +118,8 @@ var check = giraf.Giraf{
 	QStart:    0,
 	QEnd:      4,
 	PosStrand: false,                                // rev strand, must reverse complement
-	Path:      &giraf.Path{2, []uint32{0, 1, 2}, 1}, // Nodes 0->1->2, start base 3, end base 1
-	Aln:       []*cigar.Cigar{{4, 'M', nil}},
+	Path:      &giraf.Path{TStart: 2, Nodes: []uint32{0, 1, 2}, TEnd: 1}, // Nodes 0->1->2, start base 3, end base 1
+	Aln:       []*cigar.Cigar{{RunLength: 4, Op: 'M', Sequence: nil}},
 	AlnScore:  16607,
 	MapQ:      30,
 	Seq:       []dna.Base{3, 1, 2, 1}, // TCGC

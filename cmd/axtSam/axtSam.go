@@ -61,7 +61,13 @@ func axtToSam(axtfile string, header *sam.SamHeader, output string) {
 	data, results := make(chan *axt.Axt, 824), make(chan *sam.SamAln, 824)
 	var working, writingJob sync.WaitGroup
 
-	go axt.ReadToChan(reader, data)
+	var wg sync.WaitGroup
+	go axt.ReadToChan(reader, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
 
 	if header != nil {
 		sam.WriteHeaderToFileHandle(writer, header)

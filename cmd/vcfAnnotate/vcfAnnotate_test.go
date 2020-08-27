@@ -60,9 +60,9 @@ func TestVcfAnnotate(t *testing.T) {
 		correctCDNA = words[0]
 		correctProt = words[1]
 		newWords = strings.Split(annotation[1], "|")
-		newerWords = strings.Split(newWords[3], ":")
+		newerWords = strings.Split(newWords[2], ":")
 		outputCDNA = newerWords[1]
-		outputProt = newWords[4]
+		outputProt = newWords[3]
 		if (outputCDNA == correctCDNA && outputProt == correctProt) ||
 			strings.HasPrefix(correctCDNA, "c.-") || strings.HasPrefix(correctCDNA, "c.*") {
 			continue

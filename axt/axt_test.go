@@ -1,7 +1,6 @@
 package axt
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	//"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"os"
@@ -17,10 +16,7 @@ var readWriteTests = []struct {
 func TestReadToChan(t *testing.T) {
 	for _, test := range readWriteTests {
 		file := Read(test.filename)
-		testFile := fileio.EasyOpen(test.filename)
-		reader := make(chan *Axt)
-		defer testFile.Close()
-		go ReadToChan(testFile, reader)
+		reader := GoReadToChan(test.filename)
 		var index int = 0
 		for each := range reader {
 			if !isEqual(each, file[index]) {
