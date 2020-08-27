@@ -6,6 +6,9 @@ import (
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"log"
+	"os"
+	"runtime"
+	"runtime/pprof"
 	//"sync"
 )
 
@@ -19,11 +22,12 @@ func seedBedToSeedDev(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
 }
 
 func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []*SeedDev {
+
 	const basesPerInt int = 32
 	var nodeOffset int = nodeStart % basesPerInt
 	var readOffset int = 31 - ((readStart - nodeOffset + 31) % 32)
 	var rightMatches int = 0
-	var currNode *SeedDev = nil
+	var currNode SeedDev
 	var answer, nextParts []*SeedDev
 	var i, j int = 0, 0
 
@@ -44,8 +48,8 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 			nextParts = extendToTheRight(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand)
 			// if we aligned into the next node, make a seed for this node and point it to the next one
 			for j = 0; j < len(nextParts); j++ {
-				currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j], Next: nil}
-				answer = append(answer, currNode)
+				currNode = SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j], Next: nil}
+				answer = append(answer, &currNode)
 			}
 			//nextParts = nextParts[:0]
 			//extendSeeds.Put(nextParts)
@@ -54,8 +58,8 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 
 	// if the alignment did not go to another node, return the match for this node
 	if len(answer) == 0 {
-		currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil, Next: nil}
-		answer = []*SeedDev{currNode}
+		currNode = SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil, Next: nil}
+		answer = []*SeedDev{&currNode}
 	}
 
 	return answer
@@ -135,6 +139,17 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 }
 
 func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev) []*SeedDev {
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
 	const basesPerInt int64 = 32
 	var currHits []uint64
 	var codedNodeCoord uint64
@@ -265,6 +280,17 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 	//printSeedDev(finalSeeds)
 	//tempSeeds = tempSeeds[:0]
 	//seedPool.Put(tempSeeds)
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
 	return finalSeeds
 }
 

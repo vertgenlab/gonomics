@@ -7,8 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"os"
-	"runtime"
-	"runtime/pprof"
+	//"runtime"
+	//"runtime/pprof"
 	"strings"
 	"sync"
 	"testing"
@@ -21,10 +21,10 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 func BenchmarkGsw(b *testing.B) {
 	b.ReportAllocs()
 	//var output string = "/dev/stdout"
-	var output string = "testdata/rabs_test.giraf"
+	//var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 50000
+	var numberOfReads int = 500
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -35,8 +35,8 @@ func BenchmarkGsw(b *testing.B) {
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 
-	fastqPipe := make(chan *fastq.PairedEndBig, 2408)
-	girafPipe := make(chan *giraf.GirafPair, 2408)
+	fastqPipe := make(chan FastqGsw, 2408)
+	girafPipe := make(chan GirafGsw, 2408)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
@@ -46,17 +46,6 @@ func BenchmarkGsw(b *testing.B) {
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
 
 	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 	log.Printf("Finished Indexing Genome...\n")
@@ -64,11 +53,21 @@ func BenchmarkGsw(b *testing.B) {
 
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
-	for i := 0; i < numWorkers; i++ {
-		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+	var seedPool = sync.Pool{
+		New: func() interface{} {
+			return make([]*SeedDev, 0, 1000)
+		},
 	}
-	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	var extendSeeds = sync.Pool{
+		New: func() interface{} {
+			return make([]*SeedDev, 0, 100)
+		},
+	}
+	for i := 0; i < numWorkers; i++ {
+		go DevRoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter, &seedPool, &extendSeeds)
+	}
+	//go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
+	go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)
@@ -80,20 +79,10 @@ func BenchmarkGsw(b *testing.B) {
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
 
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
+
 }
 
-func checkAlignment(aln *giraf.Giraf, genome *SimpleGraph) bool {
+func checkAlignment(aln giraf.Giraf, genome *SimpleGraph) bool {
 	qName := strings.Split(aln.QName, "_")
 	//if len(qName) < 5 {
 	//	log.Fatalf("Error: input giraf file does not match simulation format...\n")
@@ -132,17 +121,17 @@ func percentOfFloat(part int, total int) float64 {
 	return (float64(part) * float64(100)) / float64(total)
 }
 
-func isGirafPairCorrect(input <-chan *giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
+func isGirafPairCorrect(input <-chan GirafGsw, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
 	var unmapped int = 0
 	for pair := range input {
-		if !checkAlignment(pair.Fwd, genome) {
+		if !checkAlignment(pair.ReadOne, genome) {
 			unmapped++
 			//log.Printf("Error: failed alignment simulation...\n")
 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
 			//log.Printf("%s\n", buf.String())
 			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))
 		}
-		if !checkAlignment(pair.Rev, genome) {
+		if !checkAlignment(pair.ReadTwo, genome) {
 			//log.Printf("Error: failed alignment simulation...\n")
 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
 			//log.Printf("%s\n", buf.String())

@@ -100,6 +100,10 @@ func Read(filename string) *SimpleGraph {
 	return genome
 }
 
+// ReadToMap will process a text file and create a hash look up using
+// name string as keys to return a SimpleGraph. One possible use case
+// is using this function to split the graph by chromocomes and using
+// the name of the chromosomes as keys.
 func ReadToMap(filename string) map[string]*SimpleGraph {
 	genomeGraph := make(map[string]*SimpleGraph)
 	var chrGraph string
@@ -156,15 +160,21 @@ func ReadToMap(filename string) map[string]*SimpleGraph {
 	return genomeGraph
 }
 
+// AddNode will append a new Node to a slice of nodes in SimpleGraph
 func AddNode(g *SimpleGraph, n *Node) {
 	g.Nodes = append(g.Nodes, n)
 }
 
+// AddEdge will append two edges one forward and one backwards for any two
+// given node. Provide a probability float32 to specify a weight for an edge
+// to describe the more likely path through the graph
 func AddEdge(u, v *Node, p float32) {
 	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
 	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
 }
 
+// SetEvenWeights will loop through a slice of edges and set the probability weight
+// divided by the length of the slice.
 func SetEvenWeights(u *Node) {
 	var edge int
 	var weights float32 = 1 / float32(len(u.Next))
@@ -173,6 +183,7 @@ func SetEvenWeights(u *Node) {
 	}
 }
 
+// Write function will process SimpleGraph and write the data to a file
 func Write(filename string, sg *SimpleGraph) {
 	lineLength := 50
 	file := fileio.EasyCreate(filename)
@@ -192,11 +203,11 @@ func PrintGraph(gg *SimpleGraph) {
 	Write("/dev/stdout", gg)
 }
 
+// WriteToGraphHandle will help with any error handling when writing SimpleGraph to file.
 func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	var err error
 	var i, j int
 	for i = 0; i < len(gg.Nodes); i++ {
-
 		if gg.Nodes[i].Info != nil {
 			_, err = fmt.Fprintf(file, ">%s:%d_%d_%d_%d\n", gg.Nodes[i].Name, gg.Nodes[i].Id, gg.Nodes[i].Info.Allele, gg.Nodes[i].Info.Variant, gg.Nodes[i].Info.Start)
 		} else {
@@ -225,7 +236,6 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 			} else {
 				_, err = fmt.Fprintf(file, "\t%v\t%s", near[j].Prob, near[j].Dest.Name)
 			}
-
 			common.ExitIfError(err)
 		}
 		_, err = fmt.Fprintf(file, "\n")
@@ -233,6 +243,8 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	}
 }
 
+// WriteToGraphSplit will write all SimpleGraphs contained in a provided hash map to separate
+// files based on unique keys.
 func WriteToGraphSplit(filename string, gg map[string]*SimpleGraph) {
 	var name string
 	for chr := range gg {
@@ -241,6 +253,7 @@ func WriteToGraphSplit(filename string, gg map[string]*SimpleGraph) {
 	}
 }
 
+// BasesInGraph will calculate the number of bases contained in SimpleGraph using dnaTwoBit
 func BasesInGraph(g *SimpleGraph) int {
 	var i, baseCount int = 0, 0
 	for i = 0; i < len(g.Nodes); i++ {
