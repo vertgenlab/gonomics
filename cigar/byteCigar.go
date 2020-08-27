@@ -225,7 +225,7 @@ func Uint32ToByteCigar(cigar []uint32) []ByteCigar {
 	}
 	return answer
 }
-
+// ByteCigarToUint32 will convert a slice of []ByteCigar to a slice of []uint32
 func ByteCigarToUint32(cigar []ByteCigar) []uint32 {
 	var answer []uint32 = make([]uint32, len(cigar))
 	for i := 0; i < len(cigar); i++ {
