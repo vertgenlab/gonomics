@@ -17,12 +17,16 @@ func logIntegrate(f func(float64) float64, a float64, b float64, n int) float64 
 	var currRight float64 = a + deltaX
 	var answer float64
 	//first time, sets answer as the area of the first rectangle
-	answer = MultiplyLog(MidpointLog(f(currLeft), f(currRight)), logDeltaX)
-
+	var nextLeftEval float64 = f(currRight)
+	answer = MultiplyLog(MidpointLog(f(currLeft), nextLeftEval), logDeltaX)
+	var rightEval float64
+	
 	for i := 1; i < n; i++ {
 		currLeft += deltaX
 		currRight += deltaX
-		answer += MultiplyLog(MidpointLog(f(currLeft), f(currRight)), logDeltaX)
+		rightEval = f(currRight)
+		answer += MultiplyLog(MidpointLog(nextLeftEval, rightEval), logDeltaX)
+		nextLeftEval = rightEval
 	}
 	return answer
 }
