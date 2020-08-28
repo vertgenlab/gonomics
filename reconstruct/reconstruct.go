@@ -78,10 +78,10 @@ func Prob(a int, b int, t float64) float64 {
 
 //take in probability of all 4 bases return integer value of the most likely base
 func Yhat(r []float64) int {
-	var n float64
+	var n float64 //automatically 0
 	var pos int
-	for p, v := range r {
-		if v > n {
+	for p, v := range r { //p is the position in the list, v is the value at that position (?)
+		if v > n { //first time through, n=0 so then n can become whatever is in the first position of the list. which then compared to the second position if the second is greater, the first is replaced, and so on. It picks the biggest
 			n = v
 			pos = p
 		}
@@ -150,13 +150,13 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 		for j := 0; j < 4; j++ {
 			for k := 0; k < 4; k++ {
 				if prevNode.Up != nil {
-					if prevNode == node.Left {
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Right.Stored[j]
+					if prevNode == node.Left { //scrap is equal to one position of prevNode.Stored (Left or Right)
+						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Right.Stored[k]
 					} else if prevNode == node.Right {
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Left.Stored[k]
+						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Left.Stored[j]
 					}
 				} else if prevNode.Up == nil {
-					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[k]*node.Right.Stored[j]
+					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[j]*node.Right.Stored[k]
 				}
 			}
 		}
@@ -175,13 +175,13 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	ans := []float64{0, 0, 0, 0}
 
 	for i := 0; i < 4; i++ {
-		scrap := []float64{0, 0, 0, 0}
-		scrap[i] = node.Stored[i] //not connecting this to root.Scrap?
+		scrap := []float64{0, 0, 0, 0} //checking one base at a time each time you call BubbleUp
+		scrap[i] = node.Stored[i]
 		if node.Up != nil {
 			//Bubble up the tree using the memory of the previous node in relation to changing position taking in probabilities of bases
 			//(node will be BubbleUp prevNode and node.Up will be the node being operated on)
-			BubbleUp(node.Up, node, scrap)
-			ans[i] = root.Scrap
+			BubbleUp(node.Up, node, scrap) //node becomes PrevNode and scrap is set to one value of prevNode.Stored in BubbleUp
+			ans[i] = root.Scrap            //root.Stored has previously assigned values (SetInternalState), you want to use whatever is returned by BubbleUp instead
 		} else if node.Up == nil {
 			ans[i] = root.Stored[i]
 		}
@@ -209,8 +209,9 @@ func LoopNodes(root *expandedTree.ETree) []*fasta.Fasta {
 			yHat := Yhat(fix)
 			branches[k].Fasta.Seq = append(branches[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
 		}
+		//log.Print(i)
 	}
-//now that each node has their reconstructed Fasta, create a slice of fastas for leaves and branches and return a single slice of fastas for the whole tree
+	//now that each node has their reconstructed Fasta, create a slice of fastas for leaves and branches and return a single slice of fastas for the whole tree
 	for l := 0; l < len(leaves); l++ {
 		leafFastas = append(leafFastas, leaves[l].Fasta)
 	}

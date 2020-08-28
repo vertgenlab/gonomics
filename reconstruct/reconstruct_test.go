@@ -2,8 +2,8 @@ package reconstruct
 
 import (
 	"github.com/vertgenlab/gonomics/expandedTree"
-	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/simulate"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ var input = []struct {
 	newick_filename string // first input
 	length          int    // second input
 }{
-	//{"testdata/test_newick", 33},
+	{"testdata/test_newick", 33},
 	{"testdata/test_newick", 333},
 	{"testdata/hackett_newick", 66}}
 
