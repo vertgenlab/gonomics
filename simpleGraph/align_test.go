@@ -20,11 +20,11 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
 func BenchmarkGsw(b *testing.B) {
 	b.ReportAllocs()
-	var output string = "/dev/stdout"
+	//var output string = "/dev/stdout"
 	//var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 50
+	var numberOfReads int = 5000
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -55,10 +55,10 @@ func BenchmarkGsw(b *testing.B) {
 	workerWaiter.Add(numWorkers)
 
 	for i := 0; i < numWorkers; i++ {
-		go RoutinePathSeed(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+		go DevRoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
 	}
-	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	//go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
+	go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)
