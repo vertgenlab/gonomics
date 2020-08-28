@@ -1,8 +1,8 @@
 package numbers
 
 import (
-	"math"
 	"fmt"
+	"math"
 	"testing"
 )
 

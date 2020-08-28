@@ -33,3 +33,22 @@ func BenchmarkDefiniteIntegral(b *testing.B) {
 		}
 	}
 }
+
+//answer from WolframAlpha
+var logIntegralTests = []struct {
+	f      func(float64) float64
+	a      float64
+	b      float64
+	answer float64
+}{
+	{func(x float64) float64 { return x }, 2, 5, 1.29771},
+}
+
+func TestLogIntegral(t *testing.T) {
+	for _, test := range logIntegralTests {
+		calculated := logIntegrate(test.f, test.a, test.b, 100)
+		if calculated > test.answer*1.01 || calculated < test.answer*0.99 {
+			t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
+		}
+	}
+}

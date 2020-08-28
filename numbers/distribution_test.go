@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -22,6 +23,14 @@ func TestBinomialDist(t *testing.T) {
 	}
 	if fmt.Sprintf("%e", input3) != fmt.Sprintf("%e", expected3) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input3, expected3)
+	}
+}
+
+func TestBinomialDistLog(t *testing.T) {
+	input1 := math.Exp(BinomialDistLog(20, 4, 0.6))
+	expected1 := 2.696862e-04
+	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
 }
 
@@ -98,7 +107,7 @@ func TestNormalIntegral(t *testing.T) {
 	input1 := DefiniteIntegral(f, 3, 200)
 	expected1 := 1.349890e-03
 	input2 := DefiniteIntegral(f, -200, -6)
-	expected2 := 1.012647e-09
+	expected2 := 6.389367e-10
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}

@@ -22,7 +22,7 @@ func processHeader(header *VcfHeader, line string) {
 //Name input is strictly used to push in a name for the sample column.
 
 func NewHeader(name string) *VcfHeader {
-	var header *VcfHeader
+	var header *VcfHeader = &VcfHeader{}
 	t := time.Now()
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
 	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))

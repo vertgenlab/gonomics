@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/bed"
 	"testing"
 )
 
@@ -18,9 +19,19 @@ var seqH []dna.Base = dna.StringToBases("AAAAAAAAAATATAATAAAAAAATAAAAAAAAAAATAAA
 var testFa []*fasta.Fasta = []*fasta.Fasta{{"eggplant", seqA}, {"raddish", seqB}, {"rhubarb", seqC}, {"asparagus", seqD}, {"broccoli", seqE}, {"tomato", seqF}, {"celery", seqG}, {"carrot", seqH}}
 var expected float64 = -1.296575
 
+var b []*bed.Bed = []*bed.Bed{{Chrom: "chr10", ChromStart: 49396820, ChromEnd: 68756350}, {Chrom: "chr10", ChromStart: 75967636, ChromEnd: 76282688}}
+
 func TestTajima(t *testing.T) {
 	input := Tajima(testFa)
 	//fmt.Printf("%f\n",input)
+	if fmt.Sprintf("%f", input) != fmt.Sprintf("%f", expected) {
+		t.Errorf("Do not match. Input: %f. Expected: %f.", input, expected)
+	}
+}
+
+func TestVCFTajima(t *testing.T) {
+	input := TajimaGVCFBedSet(b, "testdata/tajimaSet.vcf")
+	expected := 1.0
 	if fmt.Sprintf("%f", input) != fmt.Sprintf("%f", expected) {
 		t.Errorf("Do not match. Input: %f. Expected: %f.", input, expected)
 	}
