@@ -6,25 +6,25 @@ import (
 	"math"
 )
 
-//TODO: Test functions for distribution values.
-
-//returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.
+//NormalDist returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.
 func NormalDist(x float64, mu float64, sigma float64) float64 {
 	return (1 / (sigma * math.Sqrt(2*math.Pi))) * math.Exp(-0.5*math.Pow((x-mu)/sigma, 2))
 }
 
+//StandardNormalDist returns the probability density associated with a particular x value on a standard normal distribution.
 func StandardNormalDist(x float64) float64 {
 	return NormalDist(x, 0, 1)
 }
 
 func Bernouilli(n int, k int, p float64) float64 {
 	return math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
-}
 
+//BinomialDist returns the probability mass from a binomial distribution with k successes out of n observations with success probability p.
 func BinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
 }
 
+//PoissonDist returns the probability density of a poisson distribution with parameter lambda at the integer value k.
 func PoissonDist(k int, lambda float64) float64 {
 	if k < 0 {
 		log.Fatalf("The poisson distribution is supported for k > 0.")
@@ -35,6 +35,7 @@ func PoissonDist(k int, lambda float64) float64 {
 	return (math.Pow(lambda, float64(k)) * math.Pow(math.E, -lambda)) / float64(Factorial(k))
 }
 
+//BetaDist returns the probability density of a beta distribution with parameters alpha and beta at position x.
 func BetaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha <= 0 {
 		log.Fatalf("Alpha parameter must be greater than 0.")
@@ -48,6 +49,7 @@ func BetaDist(x float64, alpha float64, beta float64) float64 {
 	return math.Gamma(alpha+beta) / (math.Gamma(alpha) * math.Gamma(beta)) * math.Pow(x, alpha-1) * math.Pow(1-x, beta-1)
 }
 
+//GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
 func GammaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha < 0 || beta < 0 || x < 0 {
 		log.Fatalf("Alpha, beta parameters and input value must be greater than or equal to 0 in the gamma distribution.")
@@ -66,28 +68,33 @@ func NormalClosure(mu float64, sigma float64) func(float64) float64 {
 	}
 }
 
+//BetaClosure returns a BetaDist-like function with fixed alpha and beta parameters.
 func BetaClosure(alpha float64, beta float64) func(float64) float64 {
 	return func(x float64) float64 {
 		return BetaDist(x, alpha, beta)
 	}
 }
 
+//GamaClosure returns a GammaDist-like function with fixed alpha and beta parameters.
 func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 	return func(x float64) float64 {
 		return GammaDist(x, alpha, beta)
 	}
 }
 
+//NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the left of an input point x. 
 func NormalLeftIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
 	return DefiniteIntegral(f, mu-200*sigma, x)
 }
 
+//NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x. 
 func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
 	return DefiniteIntegral(f, mu+200*sigma, x)
 }
 
+//NormalAdaptiveIntegral returns the integral under a normal probability distribution with mean mu and standard deviation sigma from a specified left and right bound.
 func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64) float64 {
 	var leftInf, rightInf bool
 	f := NormalClosure(mu, sigma)
@@ -138,36 +145,43 @@ func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64
 	}
 }
 
+//BetaLeftIntegral returns the integral to the left of an input point x from a beta distribution with parameters alpha and beta.
 func BetaLeftIntegral(x float64, alpha float64, beta float64) float64 {
 	f := BetaClosure(alpha, beta)
 	return DefiniteIntegral(f, 0, x)
 }
 
+//BetaRightIntegral returns the integral to the right of an input point x from a beta distribution with parameters alpha and beta.
 func BetaRightIntegral(x float64, alpha float64, beta float64) float64 {
 	f := BetaClosure(alpha, beta)
 	return DefiniteIntegral(f, x, 1)
 }
 
+//BetaIntegral calculates the integral under a beta distribution with parameters alpha and beta between a specified left and right bound.
 func BetaIntegral(left float64, right float64, alpha float64, beta float64) float64 {
 	f := BetaClosure(alpha, beta)
 	return DefiniteIntegral(f, left, right)
 }
 
+//GammaLeftIntegral calculates the integral to the left of an input position on a gamma distribution with parameters alpha and beta.
 func GammaLeftIntegral(x float64, alpha float64, beta float64) float64 {
 	f := GammaClosure(alpha, beta)
 	return DefiniteIntegral(f, 0, x)
 }
 
+//GammaRightIntegral calculates the integral to the right of an input position on a gamma distribution with parameters alpha and beta.
 func GammaRightIntegral(x float64, alpha float64, beta float64) float64 {
 	f := GammaClosure(alpha, beta)
 	return 1 - DefiniteIntegral(f, 0, x)
 }
 
+//GammaIntegral calculates the integral between an input left and right bound of a gamma distribution with parameters alpha and beta.
 func GammaIntegral(left float64, right float64, alpha float64, beta float64) float64 {
 	f := GammaClosure(alpha, beta)
 	return DefiniteIntegral(f, left, right)
 }
 
+//PoissonLeftSummation calculates the sum of probabilities to the left of an integer k, inclusive.
 func PoissonLeftSummation(k int, lambda float64) float64 {
 	var answer float64 = 0
 	for i := 0; i < k+1; i++ {
@@ -176,12 +190,12 @@ func PoissonLeftSummation(k int, lambda float64) float64 {
 	return answer
 }
 
-//The Poisson right sum is infinite but can be evaluated as 1 - the left hand sum, which is finite.
+//PoissonRightSummation calculates the sum of probabilities to the right of an integer k, inclusive.
 func PoissonRightSummation(k int, lambda float64) float64 {
 	return 1 - PoissonLeftSummation(k-1, lambda)
 }
 
-//inclusive on both ends
+//PoissonSum calculates the sum of probabilities between an input left and right bound, inclusive on both ends.
 func PoissonSum(left int, right int, lambda float64) float64 {
 	if right > left {
 		log.Fatalf("PoissonSum failed. Right side value must be lower than the left side value.")
@@ -193,7 +207,7 @@ func PoissonSum(left int, right int, lambda float64) float64 {
 	return answer
 }
 
-//all binomial summations include the query value n. Thus, the left and right sums will not add to 1.
+//BinomialLeftSummation calculates the sum of binomial probabilities to the left of k successes for a binomial distribution with n experiments and a success probability of p, inclusive.
 func BinomialLeftSummation(n int, k int, p float64) float64 {
 	if k <= n/2 {
 		return evaluateLeftBinomialSum(n, k, p)
@@ -202,6 +216,7 @@ func BinomialLeftSummation(n int, k int, p float64) float64 {
 	}
 }
 
+//BinomialRightSummation calculates the sum of binomial probabilities to the right of k successes for a binomial distribution with n experiments and a success probability of p, inclusive.
 func BinomialRightSummation(n int, k int, p float64) float64 {
 	if k > n/2 {
 		return evaluateRightBinomialSum(n, k, p)
@@ -210,7 +225,7 @@ func BinomialRightSummation(n int, k int, p float64) float64 {
 	}
 }
 
-//inclusive on both ends
+//BinomialSum calculates the sum of probabilities in a binomial distribution with n experiments and success probability p between two input k values. Inclusive on both ends.
 func BinomialSum(left int, right int, n int, p float64) float64 {
 	if right < left {
 		log.Fatalf("BinomialSum failed. Right side value must be greater than the left side value.")
@@ -222,6 +237,7 @@ func BinomialSum(left int, right int, n int, p float64) float64 {
 	return answer
 }
 
+//evaluateRightBinomialSum is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the right of an input k value, inclusive.
 func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
 	for i := k; i <= n; i++ {
@@ -230,6 +246,7 @@ func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 	return answer
 }
 
+//evaluateLeftBinomialSum is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the left of an input k value, inclusive.
 func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
 	for i := 0; i < k+1; i++ {
@@ -238,9 +255,9 @@ func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	return answer
 }
 
-//TODO: Think of a way to test these two functions
-//Measures the divergence between two probability distributions. Generally evaluated as an indefinite integral
-//So set start and end to arbitrarily large numbers such that p(>end) -> 0 if the function is supported to infinity.
+//TODO: No testing on the KL divergence functions.
+
+//ContinuousKullbackLeiblerDivergence measures the divergence between two continuous probability distributions between a specified start and end position. 
 func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64) float64, start float64, end float64) float64 {
 	f := func(x float64) float64 {
 		return p(x) * math.Log2(p(x)/q(x))
@@ -248,7 +265,7 @@ func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64
 	return DefiniteIntegral(f, start, end)
 }
 
-//inclusive range
+//DiscreteKullbackLeiblerDivergence measures the divergence between two discrete probability distributions between a specified start and end integer. Inclusive range.
 func DiscreteKullbackLeiblerDivergence(p func(int) float64, q func(int) float64, start int, end int) float64 {
 	f := func(x int) float64 {
 		return p(x) * math.Log2(p(x)/q(x))

@@ -17,12 +17,11 @@ func TestRandExp(t *testing.T) {
 	ave := AverageFloat64(input)
 	variance := VarianceFloat64(input)
 
-
 	if ave < expectedMean*0.9 || ave > expectedMean*1.1 {
-		t.Errorf("Standard exponential distribution simulated average outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", ave, expectedMean, expectedMean * 0.9, expectedMean * 1.1)
+		t.Errorf("Standard exponential distribution simulated average outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", ave, expectedMean, expectedMean*0.9, expectedMean*1.1)
 	}
 	if variance < expectedVariance*0.9 || variance > expectedVariance*1.1 {
-		t.Errorf("Standard exponential distribution simulated variance outsidle acceptable range. Input: %e. Expected: %e. Accepted range: %f -- %f", variance, expectedVariance, expectedVariance * 0.9, expectedVariance * 1.1)
+		t.Errorf("Standard exponential distribution simulated variance outsidle acceptable range. Input: %e. Expected: %e. Accepted range: %f -- %f", variance, expectedVariance, expectedVariance*0.9, expectedVariance*1.1)
 	}
 }
 

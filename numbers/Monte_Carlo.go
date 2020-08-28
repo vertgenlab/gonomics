@@ -1,7 +1,7 @@
 package numbers
 
 /*
-	Implementation ported from the R source code. 
+	Implementation ported from the R source code.
 	https://github.com/wch/r-source/blob/trunk/src/nmath/rgamma.c
 	https://github.com/wch/r-source/blob/trunk/src/nmath/sexp.c
 */
@@ -54,7 +54,7 @@ func RandExp() float64 {
 		a += q[0]
 	}
 	r -= 1
-	if (r <= q[0]) {
+	if r <= q[0] {
 		return a + r
 	}
 
@@ -62,14 +62,14 @@ func RandExp() float64 {
 	ustart := rand.Float64()
 	umin := ustart
 
-	for (r > q[i]) {
+	for r > q[i] {
 		ustart = rand.Float64()
 		if umin > ustart {
 			umin = ustart
 		}
 		i++
 	}
-	return a + umin * q[0]
+	return a + umin*q[0]
 }
 
 /*
@@ -90,14 +90,14 @@ func RandGamma(a float64, b float64) float64 {
 		return RandGamma(1.0+a, b) * math.Pow(u, 1.0/a)
 		*/
 		e1 := 0.36787944117144232159 //exp(-1), left as a constant to speed up computation
-		e := 1.0 + e1 * a
+		e := 1.0 + e1*a
 		for 1 > 0 { //repeat loop until breaks
 			p := e * rand.Float64()
 			if p >= 1.0 {
-				x = -1 * math.Log((e - p) / a)
-				if RandExp() >= (1.0 - a) * math.Log(x) {
+				x = -1 * math.Log((e-p)/a)
+				if RandExp() >= (1.0-a)*math.Log(x) {
 					break
-				} 
+				}
 			} else {
 				x = math.Exp(math.Log(p) / a)
 				if RandExp() >= x {

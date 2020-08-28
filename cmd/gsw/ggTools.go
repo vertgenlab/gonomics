@@ -64,24 +64,27 @@ func RunGgTools() {
 		log.Printf("Reading: %s\n", inFile)
 		switch true {
 		case chain.IsChainFile(inFile):
-			log.Printf("chain input detected!\n")
+			log.Printf("Input chain detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 && strings.Compare(ggT.QueryFa, "") != 0 {
+				log.Printf("Converting chain to %s...\n", ggT.FmtOutput)
 				convertChains(inFile, ggT.TargetFa, ggT.QueryFa, ggT.FmtOutput, ggT.Out)
 			} else {
 				ggT.Cmd.Usage()
 				log.Fatalf("Error: Must specify both target and query fasta files...\n")
 			}
 		case vcf.IsVcfFile(inFile):
-			log.Printf("vcf input detected!\n")
+			log.Printf("Input vcf detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 {
+				log.Printf("Converting vcf to %s...\n", ggT.FmtOutput)
 				simpleGraph.Write(ggT.Out, vcfToSimpleGraph(inFile, ggT.TargetFa))
 			} else {
 				ggT.Cmd.Usage()
 				log.Fatalf("Error: Must specify target reference fasta file...\n")
 			}
 		case axt.IsAxtFile(inFile):
-			log.Printf("axt input detected!\n")
+			log.Printf("Input axt detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 {
+				log.Printf("Converting axt alignment to %s...\n", ggT.FmtOutput)
 				convertAxt(inFile, ggT.FmtOutput, ggT.TargetFa, ggT.Out)
 			}
 		default:
