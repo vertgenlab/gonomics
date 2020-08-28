@@ -50,13 +50,13 @@ func nextFq(reader *fileio.SimpleReader) (*fastq.FastqBig, bool) {
 	if done {
 		return nil, true
 	}
-	answer.Name = strings.Split(string(line[1:]), " ")[0]
+	answer.Name = strings.Split(string(line.String()[1:]), " ")[0]
 	line, done = fileio.ReadLine(reader)
 	if done {
 		return nil, true
 	}
 	//set up sequence and reverse comp
-	answer.Seq = ByteSliceToDnaBases(line)
+	answer.Seq = ByteSliceToDnaBases(line.Bytes())
 	answer.SeqRc = make([]dna.Base, len(answer.Seq))
 	copy(answer.SeqRc, answer.Seq)
 	dna.ReverseComplement(answer.SeqRc)
@@ -69,7 +69,7 @@ func nextFq(reader *fileio.SimpleReader) (*fastq.FastqBig, bool) {
 	if done {
 		return nil, true
 	}
-	if string(line) != "+" {
+	if line.String() != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
 
@@ -77,7 +77,7 @@ func nextFq(reader *fileio.SimpleReader) (*fastq.FastqBig, bool) {
 	if done {
 		return nil, true
 	}
-	answer.Qual = fastq.ToQualUint8(bytes.Runes(line))
+	answer.Qual = fastq.ToQualUint8(bytes.Runes(line.Bytes()))
 	return &answer, false
 }
 
