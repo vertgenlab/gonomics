@@ -20,7 +20,7 @@ type Giraf struct {
 	PosStrand bool
 	Path      *Path
 	Cigar     []cigar.ByteCigar
-	//Aln       []*cigar.Cigar // current cigar will need to be expanded
+	Aln       []*cigar.Cigar // current cigar will need to be expanded
 	AlnScore  int
 	MapQ      uint8
 	Seq       []dna.Base // dnaTwoBit?

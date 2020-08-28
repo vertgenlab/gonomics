@@ -134,7 +134,7 @@ func pathSeedDevGraphSmithWaterman(gg *SimpleGraph, read fastq.FastqBig, seedHas
 			currBest.Cigar = SoftClipBases(sk.minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(currSeed.Len), Op: 'M'}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = currSeq
-			if gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
+			if &gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
 				currBest.Notes[0].Value = fmt.Sprintf("%s=%d", gg.Nodes[currBest.Path.Nodes[0]].Name, gg.Nodes[currBest.Path.Nodes[0]].Info.Start)
 				currBest.Notes = append(currBest.Notes, infoToNotes(gg.Nodes, currBest.Path.Nodes))
 			} else {
@@ -231,7 +231,7 @@ func ExtendRightPath(node *Node, read *fastq.FastqBig, readStart int, nodeStart 
 	var nodeOffset int = nodeStart % basesPerInt
 	var readOffset int = 31 - ((readStart - nodeOffset + 31) % 32)
 	var rightMatches int = 0
-	var currNode pathSeed
+	var currNode *pathSeed
 	currNode.TStart = nodeStart
 	currNode.QStart = readStart
 	currNode.QPos = posStrand
@@ -263,7 +263,7 @@ func ExtendRightPath(node *Node, read *fastq.FastqBig, readStart int, nodeStart 
 				currNode.TNodes = append(currNode.TNodes, pool.working[j].TNodes...)
 				currNode.TEnd = pool.working[j].TEnd
 				currNode.Len = pool.working[j].Len
-				answer = append(answer, &currNode)
+				answer = append(answer, currNode)
 			}
 			seedPool.Put(pool)
 		}
@@ -272,7 +272,7 @@ func ExtendRightPath(node *Node, read *fastq.FastqBig, readStart int, nodeStart 
 	if len(answer) == 0 {
 		currNode.Len += rightMatches
 		currNode.TEnd = currNode.TStart + rightMatches
-		answer = []*pathSeed{&currNode}
+		answer = []*pathSeed{currNode}
 	}
 	return answer
 }

@@ -91,7 +91,7 @@ func DevGraphSmithWaterman(gg *SimpleGraph, read fastq.FastqBig, seedHash map[ui
 			currBest.Cigar = SoftClipBases(sk.minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sumLen(currSeed)), Op: 'M'}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = currSeq
-			if gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
+			if &gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
 				currBest.Notes[0].Value = fmt.Sprintf("%s=%d", gg.Nodes[currBest.Path.Nodes[0]].Name, gg.Nodes[currBest.Path.Nodes[0]].Info.Start)
 				currBest.Notes = append(currBest.Notes, infoToNotes(gg.Nodes, currBest.Path.Nodes))
 			} else {
