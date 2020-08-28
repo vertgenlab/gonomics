@@ -2,12 +2,11 @@ package expandedTree
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -27,21 +26,18 @@ type ETree struct {
 
 //read tree from filename and add fastas and up pointers to the tree
 func ReadTree(newickFilename string, fastasFilename string) *ETree {
-	tr, err := ReadNewick(newickFilename)
-	if err == nil {
-	}
+	tr := ReadNewick(newickFilename)
 	AssignFastas(tr, fastasFilename)
 	return tr
 }
 
 //read in tree from filename
-func ReadNewick(filename string) (*ETree, error) {
+func ReadNewick(filename string) *ETree {
+	// some small tweaks so that the code dies right away instead of continuing with error
 	var line string
 
 	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+	common.ExitIfError(err)
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 
@@ -51,14 +47,13 @@ func ReadNewick(filename string) (*ETree, error) {
 			return parseNewick(line[strings.Index(line, "("):(1 + strings.LastIndex(line, ";"))])
 		}
 	}
-	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
+	log.Fatalf("Error: %s is either empty or has no non-comment lines\n", filename)
+	return nil
 }
 
 // read in tree from string of newick
 func NewickToTree(tree string) *ETree {
-	makeTree, err := parseNewick(tree)
-	if err != nil {
-	}
+	makeTree := parseNewick(tree)
 	return makeTree
 }
 
@@ -129,25 +124,22 @@ func splittingCommaIndex(input string) int {
 	return -1
 }
 
-func splitNameAndLength(input string) (string, float64, bool, error) {
+func splitNameAndLength(input string) (string, float64, bool) {
 	numColon := strings.Count(input, ":")
 	if numColon == 0 {
-		return input, 1, true, nil
+		return input, 1, true
 	} else if numColon == 1 {
 		lastColon := strings.LastIndex(input, ":")
 		name := input[:lastColon]
-		branchLength, err := strconv.ParseFloat(input[lastColon+1:], 64)
-		if err != nil {
-			return name, 0, false, fmt.Errorf("Error: expecting %s to be a branch length\n", input[lastColon+1:])
-		}
-		return name, branchLength, false, nil
+		branchLength := common.StringToFloat64(input[lastColon+1:])
+		return name, branchLength, false
 	}
-	return "", 0, false, fmt.Errorf("Error: %s should only have one or two colons\n", input)
+	log.Fatalf("Error: %s should only have one or two colons\n", input)
+	return "", 0, false
 }
 
-func parseNewickHelper(input string) (*ETree, error) {
+func parseNewickHelper(input string) *ETree {
 	var answer ETree
-	var err error
 
 	// all the character finding is up front and then all the logic follows
 	// this is inefficient, but parsing trees should not be a limiting step
@@ -162,63 +154,49 @@ func parseNewickHelper(input string) (*ETree, error) {
 	splittingComma := splittingCommaIndex(input)
 
 	if numOpen != numClosed {
-		return nil, fmt.Errorf("Error: %s does not have an equal number of open and close parentheses\n", input)
+		log.Fatalf("Error: %s does not have an equal number of open and close parentheses\n", input)
 	} else if numOpen != numComma {
-		return nil, fmt.Errorf("Error: %s does not have an a number of commas equal to the number of parenthesis pairs\n", input)
+		log.Fatalf("Error: %s does not have an a number of commas equal to the number of parenthesis pairs\n", input)
 	} else if len(input) == 0 {
-		return nil, errors.New("Error: can not build tree/node from an empty string")
+		log.Fatal("Error: can not build tree/node from an empty string")
 	} else if numColon != 0 && (numColon != 2*numComma && lastColon < lastClosed) && (numColon != 2*numComma+1 && lastColon > lastClosed) {
-		return nil, fmt.Errorf("Error: %s should have a number of colons equal to zero or twice the number of colons (with another possible for the root branch)\n", input)
+		log.Fatalf("Error: %s should have a number of colons equal to zero or twice the number of colons (with another possible for the root branch)\n", input)
 	}
 
 	answer = ETree{Name: "", BranchLength: 1, OnlyTopology: true, Fasta: nil, State: 4, Stored: []float64{0, 0, 0, 0}, Scrap: 0.0, Left: nil, Right: nil, Up: nil}
 	if numOpen == 0 { /* leaf node */
-		answer.Name, answer.BranchLength, answer.OnlyTopology, err = splitNameAndLength(input)
-		if err != nil {
-			return nil, err
-		}
-		return &answer, nil
+		answer.Name, answer.BranchLength, answer.OnlyTopology = splitNameAndLength(input)
+		return &answer
 	} else { /* internal node */
-		answer.Name, answer.BranchLength, answer.OnlyTopology, err = splitNameAndLength(input[lastClosed+1:])
-		if err != nil {
-			return nil, err
-		}
-		answer.Left, err = parseNewickHelper(input[firstOpen+1 : splittingComma])
-		if err != nil {
-			return nil, err
-		}
-		answer.Right, err = parseNewickHelper(input[splittingComma+1 : lastClosed])
-		if err != nil {
-			return nil, err
-		}
-		return &answer, nil
+		answer.Name, answer.BranchLength, answer.OnlyTopology = splitNameAndLength(input[lastClosed+1:])
+		answer.Left = parseNewickHelper(input[firstOpen+1 : splittingComma])
+		answer.Right = parseNewickHelper(input[splittingComma+1 : lastClosed])
+		return &answer
 	}
 }
 
-func parseNewick(input string) (*ETree, error) {
+func parseNewick(input string) *ETree {
 	if !strings.HasPrefix(input, "(") || !strings.HasSuffix(input, ";") {
-		return nil, fmt.Errorf("Error: tree %s should start with '(' and end with ';'", input)
+		log.Fatalf("Error: tree %s should start with '(' and end with ';'", input)
 	}
-	return parseNewickHelper(input[:len(input)-1])
+	answer := parseNewickHelper(input[:len(input)-1])
+	setUp(answer, nil)
+	return answer
 }
 
 //tell tree what "up" is
-func SetUp(root *ETree, prevNode *ETree) {
-	if prevNode != nil {
-		root.Up = prevNode
-	} else {
-		root.Up = nil
-	}
+func setUp(root *ETree, prevNode *ETree) {
+	root.Up = prevNode
 	if root.Left != nil && root.Right != nil {
-		SetUp(root.Left, root)
-		SetUp(root.Right, root)
+		setUp(root.Left, root)
+		setUp(root.Right, root)
 	}
 }
 
 //set up tree with fastas
 func AssignFastas(root *ETree, fastaFilename string) {
 	fastas := fasta.Read(fastaFilename)
-	SetUp(root, nil)
+	//SetUp(root, nil) placed inside the parseNewick function so it always happens
 	leaves := GetLeaves(root)
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
@@ -226,7 +204,9 @@ func AssignFastas(root *ETree, fastaFilename string) {
 				leaves[i].Fasta = fastas[j]
 				leaves[i].State = int(leaves[i].Fasta.Seq[0])
 			}
-
+		}
+		if leaves[i].Fasta == nil {
+			log.Fatalf("Error: could not find %s in the fasta file\n", leaves[i].Name)
 		}
 	}
 	branches := GetBranch(root)
