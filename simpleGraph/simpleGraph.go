@@ -1,9 +1,7 @@
 package simpleGraph
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/edotau/simpleio"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
@@ -53,8 +51,6 @@ func Read(filename string) *SimpleGraph {
 	var currNode *Node
 	var edges map[string]*Node = make(map[string]*Node)
 	var weight float32
-
-	var data bytes.Buffer
 	var line string
 	var words []string = make([]string, 0, 2)
 	var text []string = make([]string, 0, 3)
@@ -63,10 +59,8 @@ func Read(filename string) *SimpleGraph {
 	var ok bool
 
 	for reader, done := fileio.ReadLine(simpleReader); !done; reader, done = fileio.ReadLine(simpleReader) {
-		data.Reset()
-		data.Write(reader)
 
-		line = data.String()
+		line = reader.String()
 		switch true {
 		case strings.HasPrefix(line, ">"):
 			seqIdx++
@@ -91,7 +85,7 @@ func Read(filename string) *SimpleGraph {
 				}
 			}
 		case !strings.ContainsAny(line, "\t:"):
-			genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, simpleio.ByteSliceToDnaBases(data.Bytes())...)
+			genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, dna.ByteSliceToDnaBases(reader.Bytes())...)
 		}
 	}
 	for i = 0; i < len(genome.Nodes); i++ {
