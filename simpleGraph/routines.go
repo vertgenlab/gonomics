@@ -3,7 +3,7 @@ package simpleGraph
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/sam"
+	//"github.com/vertgenlab/gonomics/sam"
 	"sync"
 )
 
@@ -12,13 +12,17 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	matrix := NewSwMatrix(10000)
 	var seedPool = sync.Pool{
 		New: func() interface{} {
-			return make([]*SeedDev, 0, 1000)
+			pool := memoryPool{}
+			pool.Hits = make([]*SeedDev, 0, 10000)
+
+			return &pool
 		},
 	}
+	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range inputChan {
-		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper)
+		outputChan <- GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper)
 	}
 	wg.Done()
 }
@@ -30,14 +34,17 @@ func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen
 			return make([]*SeedDev, 0, 1000)
 		},
 	}
+	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range input {
-		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper)
+
+		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, &matrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper)
 	}
 	wg.Done()
 }
 
+/*
 func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(10000)
 	var seedPool = sync.Pool{
@@ -67,7 +74,7 @@ func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen in
 		outputChan <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper))
 	}
 	wg.Done()
-}
+}*/
 
 type SeedBuilding struct {
 	extendSeeds []*SeedDev
