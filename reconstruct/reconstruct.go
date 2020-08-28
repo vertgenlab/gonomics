@@ -78,10 +78,11 @@ func Prob(a int, b int, t float64) float64 {
 
 //take in probability of all 4 bases return integer value of the most likely base
 func Yhat(r []float64) int {
-	var n float64 //automatically 0
+	var n float64
+	n = 0
 	var pos int
-	for p, v := range r { //p is the position in the list, v is the value at that position (?)
-		if v > n { //first time through, n=0 so then n can become whatever is in the first position of the list. which then compared to the second position if the second is greater, the first is replaced, and so on. It picks the biggest
+	for p, v := range r {
+		if v > n {
 			n = v
 			pos = p
 		}
@@ -115,7 +116,7 @@ func SetLeafState(node *expandedTree.ETree, pos int) {
 }
 
 //set up Stored list for each internal node in the tree with probability of each base
-func SetInternalState(node *expandedTree.ETree) {
+func SetInternalState(node *expandedTree.ETree) { //TODO: combine this with SetLeafState
 	if node.Left != nil {
 		SetInternalState(node.Left)
 		for i := 0; i < 4; i++ {
@@ -198,12 +199,9 @@ func LoopNodes(root *expandedTree.ETree) []*fasta.Fasta {
 	var branchFastas []*fasta.Fasta
 	var reconTree []*fasta.Fasta
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ { //reconstruct a single position at every node in the tree and add it to that nodes Fasta
-		for j := 0; j < len(leaves); j++ {
-			SetLeafState(root, i)
-			leaves[j].Fasta.Seq = append(leaves[j].Fasta.Seq, leaves[j].Fasta.Seq[i])
-		}
+		SetLeafState(root, i) //make this one call for SetState that does every node including leaves
 		for k := 0; k < len(branches); k++ {
-			SetInternalState(root)
+			//SetInternalState(root)
 			//fix each interior node and get the most probable base
 			fix := FixFc(root, branches[k])
 			yHat := Yhat(fix)
@@ -211,6 +209,7 @@ func LoopNodes(root *expandedTree.ETree) []*fasta.Fasta {
 		}
 		//log.Print(i)
 	}
+	//TODO: this logic can go into the command, look at Craig's Reconstruct_Test function
 	//now that each node has their reconstructed Fasta, create a slice of fastas for leaves and branches and return a single slice of fastas for the whole tree
 	for l := 0; l < len(leaves); l++ {
 		leafFastas = append(leafFastas, leaves[l].Fasta)

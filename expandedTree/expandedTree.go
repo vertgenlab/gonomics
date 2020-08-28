@@ -72,7 +72,7 @@ func GetTree(node *ETree) []*ETree {
 	if node.Left != nil {
 		a := GetTree(node.Left)
 		branch = append(branch, a...)
-	}
+	} //add piece to get leaves
 	return branch
 }
 
