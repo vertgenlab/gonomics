@@ -18,7 +18,7 @@ func StandardNormalDist(x float64) float64 {
 
 func Bernouilli(n int, k int, p float64) float64 {
 	return math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
-
+}
 //BinomialDist returns the probability mass from a binomial distribution with k successes out of n observations with success probability p.
 func BinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
