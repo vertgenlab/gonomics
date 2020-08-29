@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -98,4 +99,4 @@ func strictCheckFile(filename string, genome *SimpleGraph) {
 	for curr, done = sam.NextAlignment(file); done != true; curr, done = sam.NextAlignment(file) {
 		strictCheckAlignment(curr, genome)
 	}
-}
+}*/

@@ -1,5 +1,6 @@
 package simpleGraph
 
+/*
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -55,7 +56,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
 
-}
+}*/
 
 /*
 func TestHippoAln(t *testing.T) {
