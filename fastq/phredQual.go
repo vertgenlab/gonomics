@@ -18,6 +18,14 @@ func ToQualUint8(qual []rune) []uint8 {
 	return answer
 }
 
+func ToQualUint8Test(qual []byte) []uint8 {
+	var answer []uint8 = make([]uint8, len(qual))
+	for i := 0; i < len(qual); i++ {
+		answer[i] = uint8(qual[i]) - asciiOffset
+	}
+	return answer
+}
+
 func ReverseQualUint8Record(qualScore []uint8) {
 	for i, j := 0, len(qualScore)-1; i <= j; i, j = i+1, j-1 {
 		qualScore[i], qualScore[j] = qualScore[j], qualScore[i]
