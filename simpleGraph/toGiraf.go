@@ -14,18 +14,23 @@ import (
 )
 
 type scoreKeeper struct {
-	minTarget, maxTarget int
-	minQuery, maxQuery   int
-
-	currScore, seedScore int64
-	perfectScore         int64
-
-	leftAlignment, rightAlignment []cigar.ByteCigar
-	leftPath, rightPath           []uint32
-	leftSeq, rightSeq             []dna.Base
-	leftScore, rightScore         int64
-	currSeq                       []dna.Base
-	extension                     int
+	minTarget      int
+	maxTarget      int
+	minQuery       int
+	maxQuery       int
+	extension      int
+	currScore      int64
+	seedScore      int64
+	perfectScore   int64
+	leftScore      int64
+	rightScore     int64
+	leftPath       []uint32
+	rightPath      []uint32
+	leftSeq        []dna.Base
+	rightSeq       []dna.Base
+	currSeq        []dna.Base
+	leftAlignment  []cigar.ByteCigar
+	rightAlignment []cigar.ByteCigar
 }
 
 func resetScoreKeeper(sk scoreKeeper) {
@@ -229,8 +234,8 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 
 func WrapPairGiraf(gg *SimpleGraph, readPair *fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, matrix *MatrixAln, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) *giraf.GirafPair {
 	var mappedPair giraf.GirafPair = giraf.GirafPair{Fwd: nil, Rev: nil}
-	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, readPair.Fwd, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore)
-	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, readPair.Rev, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore)
+	mappedPair.Fwd = GraphSmithWatermanToGiraf(gg, &readPair.Fwd, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore)
+	mappedPair.Rev = GraphSmithWatermanToGiraf(gg, &readPair.Rev, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore)
 	setGirafFlags(&mappedPair)
 	return &mappedPair
 }

@@ -47,6 +47,7 @@ type Annotation struct {
 // Read will process a simple graph formated text file and parse the data into graph fields
 func Read(filename string) *SimpleGraph {
 	simpleReader := fileio.NewSimpleReader(filename)
+
 	genome := NewGraph()
 	var currNode *Node
 	var edges map[string]*Node = make(map[string]*Node)
@@ -59,7 +60,6 @@ func Read(filename string) *SimpleGraph {
 	var ok bool
 
 	for reader, done := fileio.ReadLine(simpleReader); !done; reader, done = fileio.ReadLine(simpleReader) {
-
 		line = reader.String()
 		switch true {
 		case strings.HasPrefix(line, ">"):
@@ -74,7 +74,7 @@ func Read(filename string) *SimpleGraph {
 			AddNode(genome, currNode)
 			_, ok = edges[line[1:]]
 			if !ok {
-				edges[string(line[1:])] = currNode
+				edges[line[1:]] = currNode
 			}
 		case strings.Contains(line, "\t"):
 			words = strings.Split(line, "\t")
