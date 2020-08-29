@@ -21,22 +21,27 @@ const (
 // and a pointer to os.File for closeure when reading is complete.
 type SimpleReader struct {
 	*bufio.Reader
-	File   *os.File
-	Pool   *sync.Pool
-	Buffer *bytes.Buffer
+	file   *os.File
+	pool   *sync.Pool
+	buffer *bytes.Buffer
 }
 
+// Line is a struct that wraps a slice of bytes, making it easy to create
+// and/or dereference a pointer to a slice.
 type Line struct {
-	Pool []byte
+	Slice []byte
 }
 
+// NewLine will allocate memory for a slice of bytes used to reduce the memory allocation to the buffer
+// during the line to line file read in.
 func NewLine() *Line {
 	return &Line{
-		Pool: make([]byte, defaultBufSize),
+		Slice: make([]byte, defaultBufSize),
 	}
 }
 
-// Read reads data into p. It returns the number of bytes read into p.
+// Read reads data into p and is a method required to implement the io.Reader interface.
+// It returns the number of bytes read into p.
 func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 	return reader.Read(b)
 }
@@ -56,17 +61,17 @@ func NewSimpleReader(filename string) *SimpleReader {
 		},
 	}
 	var answer SimpleReader = SimpleReader{
-		File:   MustOpen(filename),
-		Pool:   &pool,
-		Buffer: &bytes.Buffer{},
+		file:   MustOpen(filename),
+		pool:   &pool,
+		buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		gzipReader, err := gzip.NewReader(answer.File)
+		gzipReader, err := gzip.NewReader(answer.file)
 		common.ExitIfError(err)
 		answer.Reader = bufio.NewReader(gzipReader)
 	default:
-		answer.Reader = bufio.NewReader(answer.File)
+		answer.Reader = bufio.NewReader(answer.file)
 	}
 	return &answer
 }
@@ -77,15 +82,16 @@ func NewSimpleReader(filename string) *SimpleReader {
 // reader will call close on the file once the reader encounters EOF.
 func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
-	curr := reader.Pool.Get().(*Line)
-	defer reader.Pool.Put(curr)
-	curr.Pool = curr.Pool[:0]
-	curr.Pool, err = reader.ReadSlice('\n')
+	curr := reader.pool.Get().(*Line)
+	defer reader.pool.Put(curr)
+	curr.Slice = curr.Slice[:0]
+	curr.Slice, err = reader.ReadSlice('\n')
 	if err == nil {
-		if curr.Pool[len(curr.Pool)-1] == '\n' {
-			reader.Buffer.Reset()
-			reader.Buffer.Write(curr.Pool[:len(curr.Pool)-1])
-			return reader.Buffer, false
+		if curr.Slice[len(curr.Slice)-1] == '\n' {
+			reader.buffer.Reset()
+			_, err = reader.buffer.Write(curr.Slice[:len(curr.Slice)-1])
+			common.ExitIfError(err)
+			return reader.buffer, false
 		} else {
 			log.Fatalf("Error: end of line did not end with a white space character...\n")
 		}
@@ -109,7 +115,7 @@ func CatchErrThrowEOF(err error) {
 // Close will return an error if it has already been called.
 func (reader *SimpleReader) Close() {
 	if reader != nil {
-		err := reader.File.Close()
+		err := reader.file.Close()
 		common.ExitIfError(err)
 	}
 }
