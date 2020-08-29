@@ -35,7 +35,7 @@ type binaryGiraf struct {
 	mapQ        uint8                // mapping quality score
 	// Seq field is dropped, can be determined from aln
 	readLen uint32        // length of read
-	qual    []uint8       // phred-scaled base qualities. len(qual) = readLen
+	qual    []cigar.ByteCigar       // phred-scaled base qualities. run-length encoding using ByteCigar
 	notes   []binaryNotes // the notes field will be identical to the SAM notes field. See section 4.2.4 in SAM specs for details
 }
 
