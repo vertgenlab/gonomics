@@ -28,11 +28,7 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 
 func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- GirafGsw, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(10000)
-	var seedPool = sync.Pool{
-		New: func() interface{} {
-			return make([]*SeedDev, 0, 1000)
-		},
-	}
+	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
