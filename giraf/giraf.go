@@ -16,9 +16,8 @@ type Giraf struct {
 	QEnd      int
 	Flag      uint8
 	PosStrand bool
-	Path      *Path
+	Path      Path
 	Cigar     []cigar.ByteCigar
-	Aln       []*cigar.Cigar // current cigar will need to be expanded
 	AlnScore  int
 	MapQ      uint8
 	Seq       []dna.Base // dnaTwoBit?
