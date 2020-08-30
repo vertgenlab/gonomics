@@ -26,7 +26,7 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	wg.Done()
 }
 
-func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- GirafGsw, wg *sync.WaitGroup) {
+func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- giraf.GirafPair, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(10000)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
@@ -36,6 +36,14 @@ func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen
 		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper)
 	}
 	wg.Done()
+}
+func WrapPairGiraf(gg *SimpleGraph, fq fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) giraf.GirafPair {
+	var mappedPair giraf.GirafPair = giraf.GirafPair{
+		Fwd: GraphSmithWatermanToGiraf(gg, fq.Fwd, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore),
+		Rev: GraphSmithWatermanToGiraf(gg, fq.Rev, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore),
+	}
+	//setGirafFlags(&mappedPair)
+	return mappedPair
 }
 
 /*

@@ -93,11 +93,6 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read fastq.FastqBig, seedHash ma
 	return currBest
 }
 
-type GirafGsw struct {
-	ReadOne giraf.Giraf
-	ReadTwo giraf.Giraf
-}
-
 func readFastqGsw(fileOne string, fileTwo string, answer chan<- fastq.PairedEndBig) {
 	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
 	for fq, done := fastq.ReadFqBigPair(readOne, readTwo); !done; fq, done = fastq.ReadFqBigPair(readOne, readTwo) {
@@ -218,19 +213,10 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
-func WrapPairGiraf(gg *SimpleGraph, fq fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper) GirafGsw {
-	var mappedPair GirafGsw = GirafGsw{
-		ReadOne: DevGraphSmithWaterman(gg, fq.Fwd, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore),
-		ReadTwo: DevGraphSmithWaterman(gg, fq.Rev, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore),
-	}
-	//setGirafFlags(&mappedPair)
-	return mappedPair
-}
-
 // setGirafFlags generates the appropriate flags for each giraf in a pair
 func setGirafFlags(pair *giraf.GirafPair) {
-	pair.Fwd.Flag = getGirafFlags(pair.Fwd)
-	pair.Rev.Flag = getGirafFlags(pair.Rev)
+	pair.Fwd.Flag = getGirafFlags(&pair.Fwd)
+	pair.Rev.Flag = getGirafFlags(&pair.Rev)
 	pair.Fwd.Flag += 8  // Forward
 	pair.Fwd.Flag += 16 // Paired Reads
 	pair.Fwd.Flag += 16 // Paired Reads
@@ -250,8 +236,6 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 		curr.RName = target[0]
 		curr.Pos = int64(ag.Path.TStart) + common.StringToInt64(target[1])
 		curr.Flag = getSamFlags(ag)
-		//curr.Cigar = ag.Aln
-
 		if len(ag.Notes) == 2 {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:Z:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))
 		} else {
@@ -263,8 +247,8 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 
 func GirafPairToSam(ag *giraf.GirafPair) *sam.PairedSamAln {
 	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: &sam.SamAln{}, RevSam: &sam.SamAln{}}
-	mappedPair.FwdSam = GirafToSam(ag.Fwd)
-	mappedPair.RevSam = GirafToSam(ag.Rev)
+	mappedPair.FwdSam = GirafToSam(&ag.Fwd)
+	mappedPair.RevSam = GirafToSam(&ag.Rev)
 	mappedPair.FwdSam.Flag += 64
 	mappedPair.RevSam.Flag += 128
 	if isProperPairAlign(ag) {

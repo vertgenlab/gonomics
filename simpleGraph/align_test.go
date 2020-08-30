@@ -42,7 +42,7 @@ func BenchmarkGsw(b *testing.B) {
 	//var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 10000
+	var numberOfReads int = 25000
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -54,7 +54,7 @@ func BenchmarkGsw(b *testing.B) {
 	log.Printf("Indexing the genome...\n")
 
 	fastqPipe := make(chan fastq.PairedEndBig, 2408)
-	girafPipe := make(chan GirafGsw, 2408)
+	girafPipe := make(chan giraf.GirafPair, 2408)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
@@ -104,63 +104,46 @@ func BenchmarkGsw(b *testing.B) {
 
 func checkAlignment(aln giraf.Giraf, genome *SimpleGraph) bool {
 	qName := strings.Split(aln.QName, "_")
-	//if len(qName) < 5 {
-	//	log.Fatalf("Error: input giraf file does not match simulation format...\n")
-	//}
+
 	if len(aln.Cigar) < 1 {
 		return false
 	}
 
 	targetStart := aln.Path.TStart
 	targetEnd := aln.Path.TEnd
-	//if len(aln.Aln) < 1 {
+
 	if aln.Cigar[0].Op == 'S' {
-		//log.Printf("%s\n", giraf.GirafToString(aln))
+
 		targetStart = targetStart - int(aln.Cigar[0].RunLen)
 	}
 	if aln.Cigar[len(aln.Cigar)-1].Op == 'S' {
 		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLen)
 
-		//}
-
 	}
 	if common.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && common.StringToInt(qName[1]) == targetStart && targetEnd == common.StringToInt(qName[3]) {
-		//log.Printf("%s\n", giraf.GirafToString(aln))
-		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
-		//	log.Printf("%s\n", giraf.GirafToString(aln))
+
 		return true
 	} else {
-		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLen)
-		//log.Printf("%s\n", giraf.GirafToString(aln))
-		//log.Printf("Error: this read is not aligning correctly...\n")
+
 	}
 	return false
 }
 func percentOfFloat(part int, total int) float64 {
-
 	return (float64(part) * float64(100)) / float64(total)
 }
 
-func isGirafPairCorrect(input <-chan GirafGsw, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
+func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
 	var unmapped int = 0
 	for pair := range input {
-		if !checkAlignment(pair.ReadOne, genome) {
-			unmapped++
-			//log.Printf("Error: failed alignment simulation...\n")
-			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
-			//log.Printf("%s\n", buf.String())
-			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))
-		}
-
-		if !checkAlignment(pair.ReadTwo, genome) {
-			//log.Printf("Error: failed alignment simulation...\n")
-			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
-			//log.Printf("%s\n", buf.String())
+		if !checkAlignment(pair.Fwd, genome) {
 			unmapped++
 		}
 
+		if !checkAlignment(pair.Rev, genome) {
+
+			unmapped++
+		}
 	}
-
 	log.Printf("Mapped %d out of %d\n", numReads-unmapped, numReads)
 	log.Printf("%f of the reads are mapping correctly\n", percentOfFloat(numReads-unmapped, numReads))
 
