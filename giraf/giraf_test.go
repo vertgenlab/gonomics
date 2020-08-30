@@ -12,7 +12,7 @@ import (
 func TestReadAndWrite(t *testing.T) {
 	var numGiraf int = 1
 	girafPath := Path{TStart: 2008, Nodes: []uint32{2015, 2017, 2018}, TEnd: 2020}
-	girafNotes := []Note{Note{Tag: "BZ", Type: 'i', Value: "5"}, Note{Tag: "GP", Type: 'Z', Value: "30,11,35,9,23"}, Note{Tag: "XO", Type: 'i', Value: "ham5"}}
+	girafNotes := []Note{Note{Tag: []byte("BZ"), Type: 'i', Value: "5"}, Note{Tag: []byte("GP"), Type: 'Z', Value: "30,11,35,9,23"}, Note{Tag: []byte("XO"), Type: 'i', Value: "ham5"}}
 	g := &Giraf{
 		QName:     "goldenState",
 		QStart:    2008,
