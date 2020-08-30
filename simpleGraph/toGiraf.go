@@ -26,7 +26,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read fastq.FastqBig, seedHash ma
 		MapQ:      255,
 		Seq:       read.Seq,
 		Qual:      read.Qual,
-		Notes:     []giraf.Note{giraf.Note{Tag: "XO", Type: 'Z', Value: "~"}},
+		Notes:     []giraf.Note{giraf.Note{Tag: []byte("XO")[:2], Type: 'Z', Value: "~"}},
 	}
 	resetScoreKeeper(sk)
 	sk.perfectScore = perfectMatchBig(&read, scoreMatrix)
@@ -329,7 +329,7 @@ func vInfoToValue(n *Node) string {
 }
 
 func infoToNotes(nodes []*Node, path []uint32) giraf.Note {
-	var vInfo giraf.Note = giraf.Note{Tag: "XV", Type: 'Z'}
+	var vInfo giraf.Note = giraf.Note{Tag: []byte{'X', 'V'}, Type: 'Z'}
 	vInfo.Value = fmt.Sprintf("%d_%d", nodes[0].Info.Allele, nodes[0].Info.Variant)
 	if len(path) > 0 {
 		for i := 1; i < len(path); i++ {

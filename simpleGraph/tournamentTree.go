@@ -27,9 +27,9 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 	var i, j int = 0, 0
 
 	if posStrand {
-		rightMatches = dnaTwoBit.CountRightMatches(node.SeqTwoBit, nodeStart, read.Rainbow[readOffset], readStart+readOffset)
+		rightMatches = dnaTwoBit.CountRightMatches(node.SeqTwoBit, nodeStart, &read.Rainbow[readOffset], readStart+readOffset)
 	} else {
-		rightMatches = dnaTwoBit.CountRightMatches(node.SeqTwoBit, nodeStart, read.RainbowRc[readOffset], readStart+readOffset)
+		rightMatches = dnaTwoBit.CountRightMatches(node.SeqTwoBit, nodeStart, &read.RainbowRc[readOffset], readStart+readOffset)
 	}
 
 	// nothing aligned here
@@ -65,9 +65,9 @@ func extendToTheLeft(node *Node, read *fastq.FastqBig, currPart *SeedDev) []*See
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
 		for i = 0; i < len(node.Prev); i++ {
 			if currPart.PosStrand {
-				readBase = dnaTwoBit.GetBase(read.Rainbow[0], uint(currPart.QueryStart)-1)
+				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
 			} else {
-				readBase = dnaTwoBit.GetBase(read.RainbowRc[0], uint(currPart.QueryStart)-1)
+				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
 			}
 			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
 				prevParts = extendToTheLeftHelper(node.Prev[i].Dest, read, currPart)
@@ -96,9 +96,9 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	var readBase dna.Base
 
 	if nextPart.PosStrand {
-		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, read.Rainbow[readOffset], readPos+readOffset))
+		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
 	} else {
-		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, read.RainbowRc[readOffset], readPos+readOffset))
+		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
 	}
 
 	if leftMatches == 0 {
@@ -111,9 +111,9 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
 		for i = 0; i < len(node.Prev); i++ {
 			if nextPart.PosStrand {
-				readBase = dnaTwoBit.GetBase(read.Rainbow[0], uint(currPart.QueryStart)-1)
+				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
 			} else {
-				readBase = dnaTwoBit.GetBase(read.RainbowRc[0], uint(currPart.QueryStart)-1)
+				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
 			}
 			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
 				prevParts = extendToTheLeftHelper(node.Prev[i].Dest, read, currPart)
@@ -158,7 +158,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset))
+			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
 			//log.Printf("After extendToTheRight fwd:\n")
@@ -206,7 +206,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset))
+			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
 			//log.Printf("After extendToTheRight rev:\n")

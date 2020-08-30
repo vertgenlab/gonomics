@@ -1,17 +1,15 @@
 package simpleGraph
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 	"strings"
-	"sync"
 )
 
+/*
 func PathToSeq(alignPath []uint32, samfile *sam.SamAln, gg *SimpleGraph) []dna.Base {
 	var answer []dna.Base
 	if alignPath == nil {
@@ -22,18 +20,8 @@ func PathToSeq(alignPath []uint32, samfile *sam.SamAln, gg *SimpleGraph) []dna.B
 		}
 	}
 	return answer
-}
-
-func SamToPath(aln *sam.SamAln) []uint32 {
-	words := strings.Split(aln.Extra, "\t")
-	if len(words) < 2 {
-		return nil
-
-	} else {
-		return StringToPath(words[1])
-	}
-}
-
+}*/
+/*
 func StringToPath(allPaths string) []uint32 {
 	words := strings.Split(allPaths[5:], ":")
 	answer := make([]uint32, len(words))
@@ -43,32 +31,6 @@ func StringToPath(allPaths string) []uint32 {
 		for i := 0; i < len(words); i++ {
 			answer[i] = common.StringToUint32(words[i])
 		}
-	}
-	return answer
-}
-
-func SamChanView(incomingSams <-chan *sam.SamAln, gg *SimpleGraph, wg *sync.WaitGroup) {
-	var yes, no, numReads int = 0, 0, 0
-	log.SetFlags(log.Ldate | log.Ltime)
-	for alignedRead := range incomingSams {
-		numReads++
-		log.Printf("%s\n", ViewGraphAlignment(alignedRead, gg))
-		if CheckAlignment(alignedRead, gg) {
-			yes++
-		} else {
-			no++
-		}
-	}
-	log.Printf("Total number of reads aligned: %d...", numReads)
-	log.Printf("Number of reads correctly aligned: %d...\n", yes)
-	log.Printf("Number of reads mismapped: %d...\n", no)
-	wg.Done()
-}
-
-func UnMappedRead(length int) []dna.Base {
-	answer := make([]dna.Base, length)
-	for i := 0; i < len(answer); i++ {
-		answer[i] = dna.N
 	}
 	return answer
 }
@@ -122,7 +84,7 @@ func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
 		}
 		return fmt.Sprintf("%s\n%s", ModifySamToString(samLine, false, true, true, false, true, false, false, false, false, false, true), prettySeq)
 	}
-}
+}*/
 
 func addStartChrPos(samfile *sam.SamAln) int64 {
 	var answer int64 = 0
@@ -170,7 +132,6 @@ func ModifySamToString(aln *sam.SamAln, samflag bool, rname bool, pos bool, mapq
 		words := strings.Split(aln.Extra, "\t")
 		for _, text := range words[:len(words)-1] {
 			if strings.Contains(text, "GP:Z:") {
-
 				answer += fmt.Sprintf("GP:Z:\n%s", pathPrettyString(text[5:]))
 			} else {
 				answer += fmt.Sprintf("%s\t", text)
@@ -203,7 +164,7 @@ func pathPrettyString(graphPath string) string {
 	return s
 }
 
-func AddPath(newPath uint32, allPaths []uint32) []uint32 {
+func AddPath(allPaths []uint32, newPath uint32) []uint32 {
 	if len(allPaths) == 0 {
 		allPaths = append(allPaths, newPath)
 	} else if allPaths[len(allPaths)-1] == newPath {
@@ -220,7 +181,7 @@ func CatPaths(currPaths []uint32, newPaths []uint32) []uint32 {
 	} else if len(currPaths) == 0 {
 		return newPaths
 	} else {
-		currPaths = AddPath(newPaths[0], currPaths)
+		currPaths = AddPath(currPaths, newPaths[0])
 		currPaths = append(currPaths, newPaths[1:]...)
 		return currPaths
 	}
