@@ -109,7 +109,7 @@ func FromStringToNotes(s string) []Note {
 	var text []string
 	for i, v := range words {
 		text = strings.SplitN(v, ":", 3)
-		answer[i] = Note{Tag: text[0], Type: []rune(text[1])[0], Value: text[2]}
+		answer[i] = Note{Tag: []byte(text[0])[:1], Type: []byte(text[1])[0], Value: text[2]}
 	}
 	return answer
 }
