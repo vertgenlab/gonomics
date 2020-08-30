@@ -16,7 +16,6 @@ var readWriteTests = []struct {
 func TestRead(t *testing.T) {
 	for _, test := range readWriteTests {
 		fastq := Read(test.filename)
-		PrintFastq(fastq)
 		Write(test.filename+".tmp", fastq)
 		fastqTwo := Read(test.filename + ".tmp")
 		if !reflect.DeepEqual(fastq, fastqTwo) {

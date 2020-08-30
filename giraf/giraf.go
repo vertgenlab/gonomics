@@ -41,7 +41,7 @@ type Path struct {
 
 // Note is a scruct containing additional information from the graph alignment
 type Note struct {
-	Tag   [2]byte
+	Tag   []byte
 	Type  byte
 	Value string
 }
