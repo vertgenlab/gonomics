@@ -54,7 +54,7 @@ func BenchmarkGsw(b *testing.B) {
 	log.Printf("Indexing the genome...\n")
 
 	fastqPipe := make(chan fastq.PairedEndBig, 2408)
-	girafPipe := make(chan GirafGsw, 2408)
+	girafPipe := make(chan giraf.GirafPair, 2408)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
@@ -141,10 +141,10 @@ func percentOfFloat(part int, total int) float64 {
 	return (float64(part) * float64(100)) / float64(total)
 }
 
-func isGirafPairCorrect(input <-chan GirafGsw, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
+func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
 	var unmapped int = 0
 	for pair := range input {
-		if !checkAlignment(pair.ReadOne, genome) {
+		if !checkAlignment(pair.Fwd, genome) {
 			unmapped++
 			//log.Printf("Error: failed alignment simulation...\n")
 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
@@ -152,7 +152,7 @@ func isGirafPairCorrect(input <-chan GirafGsw, genome *SimpleGraph, wg *sync.Wai
 			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))
 		}
 
-		if !checkAlignment(pair.ReadTwo, genome) {
+		if !checkAlignment(pair.Rev, genome) {
 			//log.Printf("Error: failed alignment simulation...\n")
 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
 			//log.Printf("%s\n", buf.String())
