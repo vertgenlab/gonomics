@@ -42,7 +42,7 @@ func BenchmarkGsw(b *testing.B) {
 	//var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 10000
+	var numberOfReads int = 50000
 	var readLength int = 150
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
