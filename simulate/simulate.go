@@ -185,7 +185,6 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
 							}
 						}
 					}
-					fmt.Printf("After, %s \n", dna.BasesToString(dna.CodonsToSeq(originalCodons)))
 				} else {
 					newBase = mutateBase(originalBase, branchLength)
 

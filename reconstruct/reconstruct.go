@@ -41,7 +41,7 @@ func Accuracy(simFilename string, recFilename string) float64 {
 	for i := 0; i < len(sim); i++ {
 		for j := 0; j < len(simLeaves); j++ {
 			if sim[i].Name == simLeaves[j].Name { //if current fasta is a leaf fasta
-				sim = append(sim[:i], sim[i+1:]...) //this is adding the next record?
+				sim = append(sim[:i], sim[i+1:]...)
 				//sim is fastas of every node but the leaf nodes, so we are adding leaf fastas to the original simulation file
 			}
 		}
@@ -71,7 +71,7 @@ func Prob(a int, b int, t float64) float64 {
 	case a == b:
 		p = 1 - t
 	default:
-		p = t / 3 //chance there's a mutation divided among possible alternative outcomes
+		p = t / 3
 	}
 	return p
 }
@@ -90,35 +90,38 @@ func Yhat(r []float64) int {
 	return pos
 }
 
-//set the initial (leaf) state of the tree given the Fasta and the position (zero-based)
-func SetLeafState(node *expandedTree.ETree, pos int) {
-	node.State = 4 // starts as N
-	node.Stored = []float64{0, 0, 0, 0}
-
-	if node.Right == nil && node.Left == nil { //if we are at a leaf
-		if len(node.Fasta.Seq) <= pos {
-			log.Fatal("position specified is out of range of sequence \n")
-		} else if len(node.Fasta.Seq) > pos {
-			node.State = int(node.Fasta.Seq[pos]) //State = base at given position
-			for i := 0; i < 4; i++ {              //check to make sure all other values of Stored are zero
-				if i == node.State {
-					node.Stored[i] = 1
-				} else {
-					node.Stored[i] = 0
-				}
-			}
+func allZero(r []float64) bool {
+	for _, v := range r {
+		if v != 0 {
+			return false
 		}
-	} else if node.Right != nil {
-		SetInternalState(node)
-	} else if node.Left != nil {
-		SetInternalState(node)
 	}
+	return true
 }
 
-//set up Stored list for each internal node in the tree with probability of each base
-func SetInternalState(node *expandedTree.ETree) { //TODO: combine this with SetLeafState
-	if node.Left != nil {
-		SetInternalState(node.Left)
+//set up Stored list for each node in the tree with probability of each base
+func SetState(node *expandedTree.ETree, position int) {
+	if node.Left != nil && node.Right != nil {
+		SetState(node.Left, position)
+		SetState(node.Right, position)
+		if allZero(node.Left.Stored) && allZero(node.Right.Stored) {
+			log.Fatal("no Stored values passed to internal node")
+		}
+
+		for i := 0; i < 4; i++ {
+			sum := 0.0
+			for j := 0; j < 4; j++ {
+				for k := 0; k < 4; k++ {
+					sum = sum + Prob(i, j, node.Left.BranchLength)*node.Left.Stored[j]*Prob(i, k, node.Right.BranchLength)*node.Right.Stored[k]
+				}
+			} //branch length (transition probability) times the probability of a base appearing given the context of the lower tree nodes
+			node.Stored[i] = sum
+		}
+	} else if node.Left != nil {
+		SetState(node.Left, position)
+		if node.Left.Stored == nil {
+			log.Fatal("no Stored values passed to internal node, left branch")
+		}
 		for i := 0; i < 4; i++ {
 			sum := 0.0
 			for j := 0; j < 4; j++ {
@@ -127,7 +130,10 @@ func SetInternalState(node *expandedTree.ETree) { //TODO: combine this with SetL
 			node.Stored[i] = sum
 		}
 	} else if node.Right != nil {
-		SetInternalState(node.Right)
+		SetState(node.Right, position)
+		if node.Right.Stored == nil {
+			log.Fatal("no Stored values passed to internal node, right branch")
+		}
 		for i := 0; i < 4; i++ {
 			sum := 0.0
 			for k := 0; k < 4; k++ {
@@ -135,9 +141,21 @@ func SetInternalState(node *expandedTree.ETree) { //TODO: combine this with SetL
 			}
 			node.Stored[i] = sum
 		}
-	} else {
-		if node.State != 4 {
-			node.Stored[node.State] = 1
+	} else if node.Right == nil && node.Left == nil {
+		node.State = 4 // starts as N
+		node.Stored = []float64{0, 0, 0, 0}
+
+		if len(node.Fasta.Seq) <= position {
+			log.Fatal("position specified is out of range of sequence \n")
+		} else if len(node.Fasta.Seq) > position {
+			node.State = int(node.Fasta.Seq[position])
+			for i := 0; i < 4; i++ {
+				if i == node.State {
+					node.Stored[i] = 1
+				} else {
+					node.Stored[i] = 0
+				}
+			}
 		}
 	}
 }
@@ -191,37 +209,13 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	return ans
 }
 
-//loop over the nodes of the tree to fix each node and append the most probable base to the Fasta, return a slice of fastas for the whole tree
-func LoopNodes(root *expandedTree.ETree) []*fasta.Fasta {
-	leaves := expandedTree.GetLeaves(root)
-	branches := expandedTree.GetBranch(root)
-	var leafFastas []*fasta.Fasta
-	var branchFastas []*fasta.Fasta
-	var reconTree []*fasta.Fasta
-	for i := 0; i < len(leaves[0].Fasta.Seq); i++ { //reconstruct a single position at every node in the tree and add it to that nodes Fasta
-		SetLeafState(root, i) //make this one call for SetState that does every node including leaves
-		for k := 0; k < len(branches); k++ {
-			//SetInternalState(root)
-			//fix each interior node and get the most probable base
-			fix := FixFc(root, branches[k])
-			yHat := Yhat(fix)
-			branches[k].Fasta.Seq = append(branches[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
-		}
-		//log.Print(i)
+//called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree to return most probable base to the Fasta
+func LoopNodes(root *expandedTree.ETree, position int) {
+	internalNodes := expandedTree.GetBranch(root) //does this logic look like it will get leaves as well? We may want to use GetLeaves, which looks like it gets everything
+	SetState(root, position)
+	for k := 0; k < len(internalNodes); k++ {
+		fix := FixFc(root, internalNodes[k])
+		yHat := Yhat(fix)
+		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
 	}
-	//TODO: this logic can go into the command, look at Craig's Reconstruct_Test function
-	//now that each node has their reconstructed Fasta, create a slice of fastas for leaves and branches and return a single slice of fastas for the whole tree
-	for l := 0; l < len(leaves); l++ {
-		leafFastas = append(leafFastas, leaves[l].Fasta)
-	}
-	for lf := 0; lf < len(leafFastas); lf++ {
-		reconTree = append(reconTree, leafFastas[lf])
-	}
-	for b := 0; b < len(branches); b++ {
-		branchFastas = append(branchFastas, branches[b].Fasta)
-	}
-	for bf := 0; bf < len(branchFastas); bf++ {
-		reconTree = append(reconTree, branchFastas[bf])
-	}
-	return reconTree
 }
