@@ -171,7 +171,7 @@ func ToString(g *Giraf) string {
 	common.ExitIfError(err)
 	err = buf.WriteByte('\t')
 	common.ExitIfError(err)
-	_, err = buf.WriteString(dna.ByteDnaBasesToString(g.Seq))
+	_, err = buf.WriteString(dna.BasesToString(g.Seq))
 	common.ExitIfError(err)
 	err = buf.WriteByte('\t')
 	common.ExitIfError(err)
