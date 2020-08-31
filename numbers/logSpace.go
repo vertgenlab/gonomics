@@ -3,19 +3,19 @@ package numbers
 import (
 	"log"
 	"math"
+	//DEBUG: "fmt"
 )
 
-//these two values mark the overflow/underflow boundaries for math.Exp(x)
+//LogCanconvert returns true if the input logSpace number can be converted to a number in normal space without overflow or underflow.
 func LogCanConvert(x float64) bool {
-	return x > 709.782712893383973096 || x < -745.133219101941108420
+	return x < 709.782712893383973096 || x > -745.133219101941108420
 }
 
-//TODO: test for AverageLog and MidpointLog
 //AverageLog returns the average of a list of logSpace numbers
 func AverageLog(x []float64) float64 {
 	var n int = len(x)
-	var logN float64 = math.Log(float64(n))
 	var sum float64 = x[0]
+	var logN float64 = math.Log(float64(n))
 	for i := 1; i < len(x); i++ {
 		sum = AddLog(sum, x[i])
 	}
@@ -24,9 +24,10 @@ func AverageLog(x []float64) float64 {
 
 //MidpointLog returns a log number that is equidistant from two input logSpace numbers
 func MidpointLog(x float64, y float64) float64 {
-	return AddLog(x, y) / math.Log(2.0)
+	return DivideLog(AddLog(x, y), math.Log(2.0))
 }
 
+//AddLog returns the sum of two numbers in logSpace.
 func AddLog(x float64, y float64) float64 {
 	if math.IsInf(x, -1) {
 		return y
@@ -35,11 +36,18 @@ func AddLog(x float64, y float64) float64 {
 		return x
 	}
 	if x >= y {
-		return x + math.Log(1+math.Exp(y-x))
+		if LogCanConvert(y - x) {
+			return x + math.Log(1+math.Exp(y-x))
+		}
+		return x
 	}
-	return y + math.Log(1-math.Exp(y-x))
+	if LogCanConvert(y - x) {
+		return y + math.Log(1+math.Exp(x-y))
+	}
+	return y
 }
 
+//SubtractLog returns the difference of two numbers in logSpace.
 func SubtractLog(x float64, y float64) float64 {
 	if x < y {
 		log.Fatalf("Error: Taking the log of a negative number.")
@@ -51,9 +59,13 @@ func SubtractLog(x float64, y float64) float64 {
 	if math.IsInf(y, -1) {
 		return x
 	}
-	return x + math.Log(1-math.Exp(y-x))
+	if LogCanConvert(y - x) {
+		return x + math.Log(1-math.Exp(y-x))
+	}
+	return x
 }
 
+//MultiplyLog returns the product of two numbers in logSpace.
 func MultiplyLog(x float64, y float64) float64 {
 	if math.IsInf(x, -1) || math.IsInf(y, -1) {
 		return math.Inf(-1)
@@ -61,17 +73,19 @@ func MultiplyLog(x float64, y float64) float64 {
 	return x + y
 }
 
+//DivideLog returns the quotient of two numbers in logSpace.
 func DivideLog(x float64, y float64) float64 {
-	if math.IsInf(x, -1) {
-		return math.Inf(-1)
-	}
 	if math.IsInf(y, -1) {
 		log.Fatalf("Divide by zero error in logSpace. x=%f. y=%f.", x, y)
 	}
+	if math.IsInf(x, -1) {
+		return math.Inf(-1)
+	}
+
 	return x - y
 }
 
-//LogPow returns log(x**y) where log is the natural logarithm. Safe for large numbers. Support for positive real numbers.
+//LogPowInt returns log(x**y) where log is the natural logarithm. Safe for large numbers. Support for positive real numbers with integer exponents.
 func LogPowInt(x float64, y int) float64 {
 	var answer float64
 	logX := math.Log(x)

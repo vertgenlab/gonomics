@@ -3,11 +3,11 @@ package numbers
 import (
 	"log"
 	"math"
-	//"fmt"
+	//DEBUG: "fmt"
 )
 
-//logIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
-func logIntegrate(f func(float64) float64, a float64, b float64, n int) float64 {
+//LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
+func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 {
 	if a >= b {
 		log.Fatalf("logIntegrate failed, left bound must be smaller than right bound.")
 	}
@@ -20,12 +20,12 @@ func logIntegrate(f func(float64) float64, a float64, b float64, n int) float64 
 	var nextLeftEval float64 = f(currRight)
 	answer = MultiplyLog(MidpointLog(f(currLeft), nextLeftEval), logDeltaX)
 	var rightEval float64
-	
+
 	for i := 1; i < n; i++ {
 		currLeft += deltaX
 		currRight += deltaX
 		rightEval = f(currRight)
-		answer += MultiplyLog(MidpointLog(nextLeftEval, rightEval), logDeltaX)
+		answer = AddLog(answer, MultiplyLog(MidpointLog(nextLeftEval, rightEval), logDeltaX))
 		nextLeftEval = rightEval
 	}
 	return answer
@@ -85,7 +85,7 @@ func DefiniteIntegral(f func(float64) float64, start float64, end float64) float
 	return rombergsMethod(f, start, end, 1e-8, 1e-8, 30)
 }
 
-//DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
+//DefiniteSmallIntegral is like DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
 //slower than DefiniteIntegral, but more accurate for small values.
 func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 0, 1e-6, 30)
