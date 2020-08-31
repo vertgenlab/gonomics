@@ -93,7 +93,7 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 			common.ExitIfError(err)
 			return reader.buffer, false
 		} else {
-			log.Fatalf("Error: end of line did not end with a white space character...\n")
+			log.Fatalf("Error: end of line did not end with an end of line character...\n")
 		}
 	}
 	CatchErrThrowEOF(err)

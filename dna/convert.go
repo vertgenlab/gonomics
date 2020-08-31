@@ -1,8 +1,9 @@
 package dna
 
 import (
-	"bytes"
+	"github.com/vertgenlab/gonomics/common"
 	"log"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -39,6 +40,43 @@ func RuneToBase(r rune) Base {
 		return Dot
 	default:
 		log.Fatalf("Error: unexpected character in dna %c\n", r)
+		return N
+	}
+}
+
+// ByteToBaseToBase converts a byte into a dna.Base if it matches one of the acceptable DNA characters.
+// Notes: It will also mask the lower case values and return dna.Base as uppercase bases.
+// Note: '*', used by VCF to denote deleted alleles, becomes a Gap in DNA.
+func ByteToBase(b byte) Base {
+	switch b {
+	case 'A':
+		return A
+	case 'C':
+		return C
+	case 'G':
+		return G
+	case 'T':
+		return T
+	case 'N':
+		return N
+	case 'a':
+		return A
+	case 'c':
+		return C
+	case 'g':
+		return G
+	case 't':
+		return T
+	case 'n':
+		return N
+	case '-':
+		return Gap
+	case '*':
+		return Gap
+	case '.':
+		return Dot
+	default:
+		log.Fatalf("Error: unexpected character in dna %c\n", b)
 		return N
 	}
 }
@@ -98,10 +136,20 @@ func StringToBases(s string) []Base {
 
 //BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
 func BasesToString(bases []Base) string {
-	var buffer bytes.Buffer
-
-	for _, base := range bases {
-		buffer.WriteRune(BaseToRune(base))
+	var buffer strings.Builder
+	buffer.Grow(len(bases))
+	var err error
+	for _, b := range bases {
+		_, err = buffer.WriteRune(BaseToRune(b))
+		common.ExitIfError(err)
 	}
 	return buffer.String()
+}
+// ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases with no lowercase bases.
+func ByteSliceToDnaBases(b []byte) []Base {
+	var answer []Base = make([]Base, len(b))
+	for i, byteValue := range b {
+		answer[i] = ByteToBase(byteValue)
+	}
+	return answer
 }
