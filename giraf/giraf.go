@@ -49,8 +49,8 @@ type Note struct {
 // GirafPair is a paired end giraf alignment with pointers to
 // forward (readOne alignment) and reverse (readTwo alignment)
 type GirafPair struct {
-	Fwd Giraf
-	Rev Giraf
+	Fwd *Giraf
+	Rev *Giraf
 }
 
 // Read will process a text file, parse the data fields and assign values to the appropriate giraf data fields
@@ -128,8 +128,8 @@ func GirafPairChanToFile(filename string, input <-chan *GirafPair, wg *sync.Wait
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for pair := range input {
-		WriteGirafToFileHandle(file, &pair.Fwd)
-		WriteGirafToFileHandle(file, &pair.Rev)
+		WriteGirafToFileHandle(file, pair.Fwd)
+		WriteGirafToFileHandle(file, pair.Rev)
 	}
 	wg.Done()
 }
