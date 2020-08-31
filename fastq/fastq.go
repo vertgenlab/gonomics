@@ -56,7 +56,7 @@ func Write(filename string, records []*Fastq) {
 
 func WriteToFileHandle(file *fileio.EasyWriter, fq *Fastq) {
 	var err error
-	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), Uint8QualToString(fq.Qual))
+	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
 	common.ExitIfError(err)
 }
 
