@@ -27,6 +27,14 @@ func BenchmarkSimpleReader(b *testing.B) {
 	}
 }
 
+func BenchmarkEasyReader(b *testing.B) {
+	reader := EasyOpen(testFile)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for _, done := EasyNextLine(reader); !done; _, done = EasyNextLine(reader) {
+
+	}
+}
 func ezReaderTest(filename string) []string {
 	var answer []string
 	er := EasyOpen(filename)
