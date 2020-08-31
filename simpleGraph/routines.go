@@ -51,19 +51,14 @@ func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seed
 	wg.Done()
 }
 
-/*
-func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan *fastq.PairedEndBig, outputChan chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
+func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(10000)
-	var seedPool = sync.Pool{
-		New: func() interface{} {
-			return make([]*SeedDev, 0, 1000)
-		},
-	}
-
+	seedPool := NewMemSeedPool()
+	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
-	for read := range inputChan {
-		outputChan <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, scoreMatrix, matrix, &seedPool, scorekeeper, dynamicKeeper))
+	for read := range input {
+		output <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper))
 	}
 	wg.Done()
-}*/
+}

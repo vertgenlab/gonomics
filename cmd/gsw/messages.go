@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/sam"
+	//"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 	"os"
@@ -79,19 +81,21 @@ func RunViewExe() error {
 		flag.PrintDefaults()
 		return fmt.Errorf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 	}
-	viewAlignmentStdOut(tail[0], view.GirafFile, view.SamFile)
+	viewAlignmentStdOut(tail[0], view.GirafFile)
 	return nil
 }
 
-func viewAlignmentStdOut(ref string, samfile string, gF string) {
+func viewAlignmentStdOut(ref string, g string) {
 	if !strings.HasSuffix(ref, ".gg") {
 		log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 	}
 	gg := simpleGraph.Read(ref)
-	if strings.Compare(samfile, "sam") == 0 {
-		samfile, _ := sam.Read(samfile)
-		for _, samline := range samfile.Aln {
-			log.Printf("%s\n", simpleGraph.ViewGraphAlignment(samline, gg))
+	if strings.HasSuffix(g, ".giraf") {
+
+		file := fileio.EasyOpen(g)
+		defer file.Close()
+		for curr, done := giraf.NextGiraf(file); !done; curr, done = giraf.NextGiraf(file) {
+			log.Printf("%s\n", simpleGraph.ViewGraphAlignment(curr, gg))
 		}
 	}
 }
