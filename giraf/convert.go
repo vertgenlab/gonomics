@@ -132,7 +132,7 @@ func fromStringToQual(s string) []uint8 {
 }
 
 func ToString(g *Giraf) string {
-	buf := &strings.Builder{}
+	buf := strings.Builder{}
 	buf.Grow(400)
 	var err error
 	_, err = buf.WriteString(g.QName)
