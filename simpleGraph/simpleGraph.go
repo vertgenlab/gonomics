@@ -23,8 +23,8 @@ type Node struct {
 	Name      string
 	Seq       []dna.Base
 	SeqTwoBit *dnaTwoBit.TwoBit
-	Prev      []Edge
-	Next      []Edge
+	Prev      []*Edge
+	Next      []*Edge
 	Info      Annotation
 }
 
@@ -162,8 +162,8 @@ func AddNode(g *SimpleGraph, n *Node) {
 // given node. Provide a probability float32 to specify a weight for an edge
 // to describe the more likely path through the graph
 func AddEdge(u, v *Node, p float32) {
-	u.Next = append(u.Next, Edge{Dest: v, Prob: p})
-	v.Prev = append(v.Prev, Edge{Dest: u, Prob: p})
+	u.Next = append(u.Next, &Edge{Dest: v, Prob: p})
+	v.Prev = append(v.Prev, &Edge{Dest: u, Prob: p})
 }
 
 // SetEvenWeights will loop through a slice of edges and set the probability weight

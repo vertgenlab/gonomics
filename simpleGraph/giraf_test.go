@@ -40,7 +40,7 @@ func MakeTestGraph() *SimpleGraph {
 	graph := NewGraph()
 
 	var n0, n1, n2, n3, n4 *Node
-	var e0, e1, e2, e3, e4, e5 Edge
+	var e0, e1, e2, e3, e4, e5 *Edge
 
 	// Make Nodes
 	n0 = &Node{
@@ -69,27 +69,27 @@ func MakeTestGraph() *SimpleGraph {
 		Seq:  dna.StringToBases("TAA")}
 
 	// Make Edges
-	e0 = Edge{
+	e0 = &Edge{
 		Dest: n1,
 		Prob: 1}
 
-	e1 = Edge{
+	e1 = &Edge{
 		Dest: n2,
 		Prob: 0.05}
 
-	e2 = Edge{
+	e2 = &Edge{
 		Dest: n4,
 		Prob: 1}
 
-	e3 = Edge{
+	e3 = &Edge{
 		Dest: n4,
 		Prob: 0.8}
 
-	e4 = Edge{
+	e4 = &Edge{
 		Dest: n3,
 		Prob: 0.15}
 
-	e5 = Edge{
+	e5 = &Edge{
 		Dest: n4,
 		Prob: 1}
 
