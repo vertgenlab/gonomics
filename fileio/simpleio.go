@@ -21,22 +21,8 @@ const (
 type SimpleReader struct {
 	*bufio.Reader
 	file   *os.File
-	memPool []byte
+	line   []byte
 	buffer *bytes.Buffer
-}
-
-// Line is a struct that wraps a slice of bytes, making it easy to create
-// and/or dereference a pointer to a slice.
-type Line struct {
-	Slice []byte
-}
-
-// NewLine will allocate memory for a slice of bytes used to reduce the memory allocation to the buffer
-// during the line to line file read in.
-func NewLine() *Line {
-	return &Line{
-		Slice: make([]byte, defaultBufSize),
-	}
 }
 
 // Read reads data into p and is a method required to implement the io.Reader interface.
@@ -51,7 +37,7 @@ func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 func NewSimpleReader(filename string) *SimpleReader {
 	var answer SimpleReader = SimpleReader{
 		file:   MustOpen(filename),
-		memPool: make([]byte, 4096),
+		line:   make([]byte, defaultBufSize),
 		buffer: &bytes.Buffer{},
 	}
 	switch true {
@@ -71,12 +57,12 @@ func NewSimpleReader(filename string) *SimpleReader {
 // reader will call close on the file once the reader encounters EOF.
 func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
-	reader.memPool = reader.memPool[:0]
-	reader.memPool, err = reader.ReadSlice('\n')
+	reader.line = reader.line[:0]
+	reader.line, err = reader.ReadSlice('\n')
 	if err == nil {
-		if reader.memPool[len(reader.memPool)-1] == '\n' {
+		if reader.line[len(reader.line)-1] == '\n' {
 			reader.buffer.Reset()
-			_, err = reader.buffer.Write(reader.memPool[:len(reader.memPool)-1])
+			_, err = reader.buffer.Write(reader.line[:len(reader.line)-1])
 			common.ExitIfError(err)
 			return reader.buffer, false
 		} else {

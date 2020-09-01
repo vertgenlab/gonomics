@@ -4,11 +4,9 @@ import (
 	"testing"
 )
 
-var testFile string = "testdata/big.fa.gz"
-
 func TestSimpleReader(t *testing.T) {
-	answer := ezReaderTest(testFile)
-	reader := NewSimpleReader(testFile)
+	answer := ezReaderTest("testdata/big.fa.gz")
+	reader := NewSimpleReader("testdata/big.fa.gz")
 	var i int = 0
 	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
 		if line.String() != answer[i] {
@@ -19,22 +17,51 @@ func TestSimpleReader(t *testing.T) {
 }
 
 func BenchmarkSimpleReader(b *testing.B) {
-	reader := NewSimpleReader(testFile)
 	b.ReportAllocs()
 	b.ResetTimer()
-	for _, done := ReadLine(reader); !done; _, done = ReadLine(reader) {
-		//Nothing to assign, testing pure reading of the file
+	for n := 0; n < b.N; n++ {
+		reader := NewSimpleReader("testdata/big.fa")
+		for _, done := ReadLine(reader); !done; _, done = ReadLine(reader) {
+			//Nothing to assign, testing pure reading of the file
+		}
 	}
 }
 
-func BenchmarkEasyReader(b *testing.B) {
-	reader := EasyOpen(testFile)
+func BenchmarkSimpleReaderGz(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
-	for _, done := EasyNextLine(reader); !done; _, done = EasyNextLine(reader) {
-
+	for n := 0; n < b.N; n++ {
+		reader := NewSimpleReader("testdata/big.fa.gz")
+		for _, done := ReadLine(reader); !done; _, done = ReadLine(reader) {
+			//Nothing to assign, testing pure reading of the file
+		}
 	}
 }
+
+func BenchmarkEasyReaderReg(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		var reader *EasyReader
+		var done bool
+		reader = EasyOpen("testdata/big.fa")
+		for _, done = EasyNextLine(reader); !done; _, done = EasyNextLine(reader) {
+		}
+	}
+}
+
+func BenchmarkEasyReaderGz(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		var reader *EasyReader
+		var done bool
+		reader = EasyOpen("testdata/big.fa.gz")
+		for _, done = EasyNextLine(reader); !done; _, done = EasyNextLine(reader) {
+		}
+	}
+}
+
 func ezReaderTest(filename string) []string {
 	var answer []string
 	er := EasyOpen(filename)
