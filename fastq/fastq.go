@@ -104,7 +104,7 @@ func PrintFastq(fq []*Fastq) {
 	for i := 0; i < len(fq); i++ {
 		readName := "@" + fq[i].Name
 		read := dna.BasesToString(fq[i].Seq)
-		quality := Uint8QualToString(fq[i].Qual)
+		quality := QualString(fq[i].Qual)
 		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 	}
 }
