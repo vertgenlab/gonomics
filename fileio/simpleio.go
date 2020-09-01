@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 type SimpleReader struct {
 	*bufio.Reader
 	file   *os.File
-	pool   *sync.Pool
+	memPool []byte
 	buffer *bytes.Buffer
 }
 
@@ -50,19 +49,9 @@ func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 // SimpleReader will prcoess gzipped files accordinging by performing a check on the suffix
 // of the provided file.
 func NewSimpleReader(filename string) *SimpleReader {
-	var pool = sync.Pool{
-		// New creates an object when the pool has nothing available to return.
-		// New must return an interface{} to make it flexible. You have to cast
-		// your type after getting it.
-		New: func() interface{} {
-			// Pools often contain things like *bytes.Buffer, which are
-			// temporary and re-usable. In this case we have a pointer to a slice of bytes.
-			return NewLine()
-		},
-	}
 	var answer SimpleReader = SimpleReader{
 		file:   MustOpen(filename),
-		pool:   &pool,
+		memPool: make([]byte, 4096),
 		buffer: &bytes.Buffer{},
 	}
 	switch true {
@@ -82,14 +71,12 @@ func NewSimpleReader(filename string) *SimpleReader {
 // reader will call close on the file once the reader encounters EOF.
 func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
-	curr := reader.pool.Get().(*Line)
-	defer reader.pool.Put(curr)
-	curr.Slice = curr.Slice[:0]
-	curr.Slice, err = reader.ReadSlice('\n')
+	reader.memPool = reader.memPool[:0]
+	reader.memPool, err = reader.ReadSlice('\n')
 	if err == nil {
-		if curr.Slice[len(curr.Slice)-1] == '\n' {
+		if reader.memPool[len(reader.memPool)-1] == '\n' {
 			reader.buffer.Reset()
-			_, err = reader.buffer.Write(curr.Slice[:len(curr.Slice)-1])
+			_, err = reader.buffer.Write(reader.memPool[:len(reader.memPool)-1])
 			common.ExitIfError(err)
 			return reader.buffer, false
 		} else {
