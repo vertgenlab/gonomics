@@ -4,7 +4,6 @@ import (
 	"log"
 	"math"
 	//DEBUG: "fmt"
-	"fmt"
 )
 
 //LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
@@ -46,9 +45,6 @@ func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIte
 		n := n * 10
 		curr := LogIntegrate(f, a, b, n)
 		if (prev - curr) / curr < relativeError {
-			fmt.Printf("Prev: %f. Curr: %f.\n", prev, curr)
-			fmt.Printf("relativeErr: %f\n", ((prev-curr)/curr))
-			fmt.Printf("Converged in %v iterations.\n", i)
 			return curr
 		}
 		prev = curr
