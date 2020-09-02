@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	//DEBUG: "fmt"
+	"fmt"
 )
 
 //LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
@@ -29,6 +30,31 @@ func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 
 		nextLeftEval = rightEval
 	}
 	return answer
+}
+
+func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIter int, relativeError float64) float64 {
+	if maxIter < 2 {
+		log.Fatalf("maxIterations for LogIntegrateIterative must be at least 2.")
+	}
+	if relativeError <= 0 {
+		log.Fatalf("relativeError for LogIntegrateIterative must be greater than 0.")
+	}
+	n := 1000
+	prev := LogIntegrate(f, a, b, n)
+
+	for i := 0; i < maxIter; i++ {
+		n := n * 10
+		curr := LogIntegrate(f, a, b, n)
+		if (prev - curr) / curr < relativeError {
+			fmt.Printf("Prev: %f. Curr: %f.\n", prev, curr)
+			fmt.Printf("relativeErr: %f\n", ((prev-curr)/curr))
+			fmt.Printf("Converged in %v iterations.\n", i)
+			return curr
+		}
+		prev = curr
+	}
+	log.Fatalf("LogIntegrateIterative failed to converge below relative error: %f in maxIter: %v.", relativeError, maxIter)	
+	return (0)
 }
 
 // There are a number of ways to evaluate a definite integral computationally.

@@ -3,7 +3,7 @@ package numbers
 import (
 	"math"
 	"testing"
-	"fmt"
+	//DEBUG: "fmt"
 )
 
 var definiteIntegralTests = []struct {
@@ -50,9 +50,18 @@ var logIntegralTests = []struct {
 func TestLogIntegral(t *testing.T) {
 	for _, test := range logIntegralTests {
 		calculated := LogIntegrate(test.f, test.a, test.b, 1000)
-		fmt.Printf("Calculated: %f. \n", calculated)
+		//DEBUG: fmt.Printf("Calculated: %f. \n", calculated)
 		if calculated > test.answer*1.01 || calculated < test.answer*0.99 {
 			t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
 		}
+	}
+}
+
+func TestLogIntegrateIterative(t *testing.T) {
+	for _, test := range logIntegralTests {
+		calculated := LogIntegrateIterative(test.f, test.a, test.b, 30, 1e-8)
+		if calculated > test.answer*1.00001 || calculated < test.answer*0.99999 {
+				t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
+			}
 	}
 }
