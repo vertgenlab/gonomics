@@ -104,7 +104,6 @@ func recursiveSort(arr []*SeedDev, start, end int) {
 }
 
 type seedHelper struct {
-	ExtendRight                               *seedHelper
 	currHits                                  []uint64
 	codedNodeCoord                            uint64
 	seqKey                                    uint64
@@ -201,7 +200,6 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart *SeedDe
 	if leftMatches == 0 {
 		log.Fatal("Error: should not have zero matches to the left\n")
 	}
-
 	currPart = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint32(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint32(leftMatches) + nextPart.TotalLength, NextPart: nextPart, Next: nil}
 	// we went all the way to end and there might be more
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
@@ -244,10 +242,9 @@ func restartSeedHelper(helper *seedHelper) {
 func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev, tempSeeds []*SeedDev, seedBuildHelper *seedHelper) []*SeedDev {
 	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)
-	//var seedBuildHelper.currHits []uint64
-	//var seedBuildHelper.codedNodeCoord uint64 seedBuildHelper.keyIdx,
+
 	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
-	//var tempSeed *SeedDev
+	
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
 		seedBuildHelper.keyIdx = (readStart + 31) / 32
 		seedBuildHelper.keyOffset = 31 - ((readStart + 31) % 32)
