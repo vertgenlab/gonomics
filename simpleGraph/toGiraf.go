@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -26,7 +25,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read fastq.FastqBig, seedHash ma
 		MapQ:      255,
 		Seq:       read.Seq,
 		Qual:      read.Qual,
-		Notes:     []giraf.Note{giraf.Note{Tag: []byte("XO")[:2], Type: 'Z', Value: "~"}},
+		Notes:     []giraf.Note{giraf.Note{Tag: []byte{'X', 'O'}, Type: 'Z', Value: "~"}},
 	}
 	resetScoreKeeper(sk)
 	sk.perfectScore = perfectMatchBig(&read, scoreMatrix)
@@ -34,50 +33,42 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read fastq.FastqBig, seedHash ma
 	seeds := seedPool.Get().(*memoryPool)
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
-	//tempSeeds := extendSeeds.Get().([]*SeedDev)
-	//var tmpSeeds []*SeedDev = extendPool.Get().([]*SeedDev)
+
 	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seeds.Hits, seeds.Worker)
 
-	//tempSeeds = tempSeeds[:0]
-	//extendSeeds.Put(tempSeeds)
 	SortSeedDevByLen(seeds.Hits)
 	var tailSeed *SeedDev
-	//var seedScore int64
-	var currSeq []dna.Base = make([]dna.Base, len(read.Seq))
+
+	//var sk.currSeq []dna.Base = make([]dna.Base, len(read.Seq))
 	var currSeed *SeedDev
 
-	//log.Printf("Number of hits: %d\n", len(seeds.Hits))
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		currSeed = seeds.Hits[i]
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
-			currSeq = read.Seq
+			sk.currSeq = read.Seq
 		} else {
-			currSeq = read.SeqRc
+			sk.currSeq = read.SeqRc
 		}
-		sk.seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
-		if int(currSeed.TotalLength) == len(currSeq) {
-			sk.minTarget = int(currSeed.TargetStart)
-			sk.maxTarget = int(tailSeed.TargetStart + tailSeed.Length)
+		sk.seedScore = scoreSeedSeq(sk.currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
+		if int(currSeed.TotalLength) == len(sk.currSeq) {
+			sk.targetStart = int(currSeed.TargetStart)
+			sk.targetEnd = int(tailSeed.TargetStart + tailSeed.Length)
 			sk.minQuery = int(currSeed.QueryStart)
-			//sk.maxQuery = int(currSeed.TotalLength - 1)
 			sk.currScore = sk.seedScore
 		} else {
-
-			sk.leftAlignment, sk.leftScore, sk.minTarget, sk.minQuery, sk.leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], sk.leftSeq, int(currSeed.TargetStart), sk.leftPath, sk.extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
-			sk.rightAlignment, sk.rightScore, sk.maxTarget, sk.maxQuery, sk.rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], sk.rightSeq, int(tailSeed.TargetStart+tailSeed.Length), sk.rightPath, sk.extension-int(currSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
+			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.minQuery, sk.leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], sk.leftSeq, int(currSeed.TargetStart), sk.leftPath, sk.extension-int(currSeed.TotalLength), sk.currSeq[:currSeed.QueryStart], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
+			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.maxQuery, sk.rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], sk.rightSeq, int(tailSeed.TargetStart+tailSeed.Length), sk.rightPath, sk.extension-int(currSeed.TotalLength), sk.currSeq[tailSeed.QueryStart+tailSeed.Length:], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
-
 		}
 		if sk.currScore > int64(currBest.AlnScore) {
 			currBest.QStart = sk.minQuery
 			currBest.QEnd = int(currSeed.QueryStart) + sk.minQuery + sk.maxQuery + int(currSeed.TotalLength) - 1
 			currBest.PosStrand = currSeed.PosStrand
-			//ReversePath(sk.leftPath)
-			currBest.Path = setPath(currBest.Path, sk.minTarget, CatPaths(CatPaths(sk.leftPath, getSeedPath(currSeed)), sk.rightPath), sk.maxTarget)
-			currBest.Cigar = SoftClipBases(sk.minQuery, len(currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sumLen(currSeed)), Op: 'M'}), sk.rightAlignment))
+			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(currSeed)), sk.rightPath), sk.targetEnd)
+			currBest.Cigar = SoftClipBases(sk.minQuery, len(sk.currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sumLen(currSeed)), Op: 'M'}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
-			currBest.Seq = currSeq
+			currBest.Seq = sk.currSeq
 			if &gg.Nodes[currBest.Path.Nodes[0]].Info != nil {
 				currBest.Notes[0].Value = fmt.Sprintf("%s=%d", gg.Nodes[currBest.Path.Nodes[0]].Name, gg.Nodes[currBest.Path.Nodes[0]].Info.Start)
 				currBest.Notes = append(currBest.Notes, infoToNotes(gg.Nodes, currBest.Path.Nodes))
