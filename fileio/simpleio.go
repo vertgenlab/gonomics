@@ -2,6 +2,7 @@ package fileio
 
 import (
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"github.com/vertgenlab/gonomics/common"
 	"io"
@@ -10,15 +11,22 @@ import (
 	"strings"
 )
 
+const (
+	defaultBufSize = 4096
+)
+
 // SimpleReader implements the io.Reader interface by providing
 // the Read(b []byte) method. The struct contains an embedded *bufio.Reader
 // and a pointer to os.File for closeure when reading is complete.
 type SimpleReader struct {
 	*bufio.Reader
-	File *os.File
+	file   *os.File
+	line   []byte
+	buffer *bytes.Buffer
 }
 
-// Read reads data into p. It returns the number of bytes read into p.
+// Read reads data into p and is a method required to implement the io.Reader interface.
+// It returns the number of bytes read into p.
 func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 	return reader.Read(b)
 }
@@ -28,29 +36,37 @@ func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 // of the provided file.
 func NewSimpleReader(filename string) *SimpleReader {
 	var answer SimpleReader = SimpleReader{
-		File: MustOpen(filename),
+		file:   MustOpen(filename),
+		line:   make([]byte, defaultBufSize),
+		buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		gzipReader, err := gzip.NewReader(answer.File)
+		gzipReader, err := gzip.NewReader(answer.file)
 		common.ExitIfError(err)
 		answer.Reader = bufio.NewReader(gzipReader)
 	default:
-		answer.Reader = bufio.NewReader(answer.File)
+		answer.Reader = bufio.NewReader(answer.file)
 	}
 	return &answer
 }
 
-// ReadLine will return a slice of bytes for each line and provided this function is called within a loop,
-// will return bool to continue reading. Please be aware that the function will call close on the file once
-// the reader encounters EOF.
-func ReadLine(reader *SimpleReader) ([]byte, bool) {
-	curr, err := reader.ReadBytes('\n')
+// ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
+// the function will read one line at a time, and return bool to continue reading. Important to note the buffer return points to
+// the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied. Please be aware the
+// reader will call close on the file once the reader encounters EOF.
+func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
+	var err error
+	reader.line = reader.line[:0]
+	reader.line, err = reader.ReadSlice('\n')
 	if err == nil {
-		if curr[len(curr)-1] == '\n' {
-			return curr[:len(curr)-1], false
+		if reader.line[len(reader.line)-1] == '\n' {
+			reader.buffer.Reset()
+			_, err = reader.buffer.Write(reader.line[:len(reader.line)-1])
+			common.ExitIfError(err)
+			return reader.buffer, false
 		} else {
-			log.Fatalf("Error: end of line did not end with a white space character...\n")
+			log.Fatalf("Error: end of line did not end with an end of line character...\n")
 		}
 	}
 	CatchErrThrowEOF(err)
@@ -72,7 +88,7 @@ func CatchErrThrowEOF(err error) {
 // Close will return an error if it has already been called.
 func (reader *SimpleReader) Close() {
 	if reader != nil {
-		err := reader.File.Close()
+		err := reader.file.Close()
 		common.ExitIfError(err)
 	}
 }
