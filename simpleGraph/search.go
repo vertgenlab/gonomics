@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	defaultMatrixSize int = 5000
+	defaultMatrixSize int = 10000
 )
 
 type memoryPool struct {
@@ -42,21 +42,24 @@ type dynamicScoreKeeper struct {
 }
 
 type scoreKeeper struct {
-	targetStart    int
-	targetEnd      int
-	queryStart     int
-	queryEnd       int
-	extension      int
-	currScore      int64
-	seedScore      int64
-	perfectScore   int64
-	leftScore      int64
-	rightScore     int64
-	leftPath       []uint32
-	rightPath      []uint32
-	leftSeq        []dna.Base
-	rightSeq       []dna.Base
-	currSeq        []dna.Base
+	targetStart  int
+	targetEnd    int
+	queryStart   int
+	queryEnd     int
+	extension    int
+	currScore    int64
+	seedScore    int64
+	perfectScore int64
+	leftScore    int64
+	rightScore   int64
+	leftPath     []uint32
+	rightPath    []uint32
+	leftSeq      []dna.Base
+	rightSeq     []dna.Base
+	currSeq      []dna.Base
+	tailSeed     *SeedDev
+
+	currSeed       *SeedDev
 	leftAlignment  []cigar.ByteCigar
 	rightAlignment []cigar.ByteCigar
 }

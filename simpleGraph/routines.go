@@ -9,15 +9,8 @@ import (
 
 //Goroutine worker functions
 func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- giraf.Giraf, wg *sync.WaitGroup) {
-	matrix := NewSwMatrix(10000)
-	var seedPool = sync.Pool{
-		New: func() interface{} {
-			pool := memoryPool{}
-			pool.Hits = make([]*SeedDev, 0, 10000)
-
-			return &pool
-		},
-	}
+	matrix := NewSwMatrix(defaultMatrixSize)
+	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
@@ -28,7 +21,7 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 }
 
 func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- giraf.GirafPair, wg *sync.WaitGroup) {
-	matrix := NewSwMatrix(10000)
+	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
@@ -40,7 +33,7 @@ func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen
 }
 
 func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
-	matrix := NewSwMatrix(10000)
+	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
@@ -52,7 +45,7 @@ func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seed
 }
 
 func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
-	matrix := NewSwMatrix(10000)
+	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}

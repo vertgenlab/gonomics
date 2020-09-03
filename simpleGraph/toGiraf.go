@@ -33,38 +33,32 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read fastq.FastqBig, seedHash ma
 	seeds := seedPool.Get().(*memoryPool)
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
-
 	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seeds.Hits, seeds.Worker)
-	SortSeedDevByTotalLen(seeds.Hits)
-	var tailSeed *SeedDev
-
-	var currSeed *SeedDev
-
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
-		currSeed = seeds.Hits[i]
-		tailSeed = getLastPart(currSeed)
-		if currSeed.PosStrand {
+		sk.currSeed = seeds.Hits[i]
+		sk.tailSeed = getLastPart(sk.currSeed)
+		if sk.currSeed.PosStrand {
 			sk.currSeq = read.Seq
 		} else {
 			sk.currSeq = read.SeqRc
 		}
-		sk.seedScore = scoreSeedSeq(sk.currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
-		if int(currSeed.TotalLength) == len(sk.currSeq) {
-			sk.targetStart = int(currSeed.TargetStart)
-			sk.targetEnd = int(tailSeed.TargetStart + tailSeed.Length)
-			sk.queryStart = int(currSeed.QueryStart)
+		sk.seedScore = scoreSeedSeq(sk.currSeq, sk.currSeed.QueryStart, sk.tailSeed.QueryStart+sk.tailSeed.Length, scoreMatrix)
+		if int(sk.currSeed.TotalLength) == len(sk.currSeq) {
+			sk.targetStart = int(sk.currSeed.TargetStart)
+			sk.targetEnd = int(sk.tailSeed.TargetStart + sk.tailSeed.Length)
+			sk.queryStart = int(sk.currSeed.QueryStart)
 			sk.currScore = sk.seedScore
 		} else {
-			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(gg.Nodes[currSeed.TargetId], sk.leftSeq, int(currSeed.TargetStart), sk.leftPath, sk.extension-int(currSeed.TotalLength), sk.currSeq[:currSeed.QueryStart], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
-			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(gg.Nodes[tailSeed.TargetId], sk.rightSeq, int(tailSeed.TargetStart+tailSeed.Length), sk.rightPath, sk.extension-int(currSeed.TotalLength), sk.currSeq[tailSeed.QueryStart+tailSeed.Length:], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
+			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[:sk.currSeed.QueryStart], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
+			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
 		}
 		if sk.currScore > int64(currBest.AlnScore) {
 			currBest.QStart = sk.queryStart
-			currBest.QEnd = int(currSeed.QueryStart) + sk.queryStart + sk.queryEnd + int(currSeed.TotalLength) - 1
-			currBest.PosStrand = currSeed.PosStrand
-			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(currSeed)), sk.rightPath), sk.targetEnd)
-			currBest.Cigar = SoftClipBases(sk.queryStart, len(sk.currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sumLen(currSeed)), Op: 'M'}), sk.rightAlignment))
+			currBest.QEnd = int(sk.currSeed.QueryStart) + sk.queryStart + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
+			currBest.PosStrand = sk.currSeed.PosStrand
+			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(sk.currSeed)), sk.rightPath), sk.targetEnd)
+			currBest.Cigar = SoftClipBases(sk.queryStart, len(sk.currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sumLen(sk.currSeed)), Op: 'M'}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = sk.currSeq
 			if &gg.Nodes[currBest.Path.Nodes[0]].Info != nil {

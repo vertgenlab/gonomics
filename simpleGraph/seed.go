@@ -256,6 +256,11 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 			finalSeeds = append(finalSeeds, tempSeeds...)
 		}
 	}
+	if len(finalSeeds) < 400000 {
+		SortSeedDevByTotalLen(finalSeeds)
+	} else {
+		heapSortSeeds(finalSeeds)
+	}
 	return finalSeeds
 }
 
