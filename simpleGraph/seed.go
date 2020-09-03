@@ -226,7 +226,6 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
 		keyIdx = (readStart + 31) / 32
 		keyOffset = 31 - ((readStart + 31) % 32)
-
 		// do fwd strand
 		seqKey = read.Rainbow[keyOffset].Seq[keyIdx] >> keyShift
 		currHits = seedHash[seqKey]
@@ -235,10 +234,8 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
-
 			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
 			tempSeeds = extendToTheRightDev(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true, tempSeeds)
-
 			for _, tempSeed = range tempSeeds {
 				finalSeeds = append(finalSeeds, extendToTheLeftDev(nodes[nodeIdx], read, tempSeed)...)
 			}
@@ -256,7 +253,7 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 			finalSeeds = append(finalSeeds, tempSeeds...)
 		}
 	}
-	if len(finalSeeds) < 400000 {
+	if len(finalSeeds) < 1000000 {
 		SortSeedDevByTotalLen(finalSeeds)
 	} else {
 		heapSortSeeds(finalSeeds)

@@ -59,14 +59,24 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
 	reader.line = reader.line[:0]
 	reader.line, err = reader.ReadSlice('\n')
+	reader.buffer.Reset()
 	if err == nil {
 		if reader.line[len(reader.line)-1] == '\n' {
-			reader.buffer.Reset()
 			_, err = reader.buffer.Write(reader.line[:len(reader.line)-1])
 			common.ExitIfError(err)
 			return reader.buffer, false
 		} else {
 			log.Fatalf("Error: end of line did not end with an end of line character...\n")
+		}
+	} else if err == bufio.ErrBufferFull {
+		_, err = reader.buffer.Write(reader.line[:len(reader.line)-1])
+		common.ExitIfError(err)
+		reader.buffer.Grow(defaultBufSize)
+		reader.line, err = reader.ReadBytes('\n')
+		if err == nil {
+			_, err = reader.buffer.Write(reader.line[:len(reader.line)-1])
+			common.ExitIfError(err)
+			return reader.buffer, false
 		}
 	}
 	CatchErrThrowEOF(err)
