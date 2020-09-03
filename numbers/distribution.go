@@ -19,6 +19,7 @@ func StandardNormalDist(x float64) float64 {
 func Bernouilli(n int, k int, p float64) float64 {
 	return math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
 }
+
 //BinomialDist returns the probability mass from a binomial distribution with k successes out of n observations with success probability p.
 func BinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
@@ -82,13 +83,13 @@ func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 	}
 }
 
-//NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the left of an input point x. 
+//NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the left of an input point x.
 func NormalLeftIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
 	return DefiniteIntegral(f, mu-200*sigma, x)
 }
 
-//NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x. 
+//NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x.
 func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
 	return DefiniteIntegral(f, mu+200*sigma, x)
@@ -257,7 +258,7 @@ func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 
 //TODO: No testing on the KL divergence functions.
 
-//ContinuousKullbackLeiblerDivergence measures the divergence between two continuous probability distributions between a specified start and end position. 
+//ContinuousKullbackLeiblerDivergence measures the divergence between two continuous probability distributions between a specified start and end position.
 func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64) float64, start float64, end float64) float64 {
 	f := func(x float64) float64 {
 		return p(x) * math.Log2(p(x)/q(x))

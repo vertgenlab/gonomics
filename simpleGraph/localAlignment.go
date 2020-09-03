@@ -75,7 +75,7 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	initialZeroMatrix(m, len(alpha), len(beta))
 	for i = 1; i < int64(len(alpha)+1); i++ {
 		for j = 1; j < int64(len(beta)+1); j++ {
-			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			if m[i][j] > currMax {
 				currMax = m[i][j]
 				maxI = int64(i)
@@ -102,9 +102,11 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case 'M':
+		case '=':
 			i, j = i-1, j-1
 			//refStart = refStart + 1
+		case 'X':
+			i, j = i-1, j-1
 		case 'I':
 			j -= 1
 		case 'D':
@@ -120,9 +122,13 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
 
-func tripleMaxTrace(a int64, b int64, c int64) (int64, rune) {
+func tripleMaxTrace(prev int64, a int64, b int64, c int64) (int64, rune) {
 	if a >= b && a >= c {
-		return a, 'M'
+		if a > prev {
+			return a, '='
+		} else {
+			return a, 'X'
+		}
 	} else if b >= c {
 		return b, 'I'
 	} else {
@@ -136,7 +142,7 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 	initialZeroMatrix(m, len(alpha), len(beta))
 	for i = 1; i < len(alpha)+1; i++ {
 		for j = 1; j < len(beta)+1; j++ {
-			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			if m[i][j] < 0 {
 				m[i][j] = 0
 			}
@@ -158,14 +164,16 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case 'M':
+		case '=':
+			i, j = i-1, j-1
+		case 'X':
 			i, j = i-1, j-1
 		case 'I':
 			j -= 1
 		case 'D':
 			i -= 1
 		default:
-			log.Fatalf("Error: unexpected traceback")
+			log.Fatalf("Error: unexpected traceback %c\n", trace[i][j])
 		}
 		minI = i
 		minJ = j
@@ -194,7 +202,7 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 				m[i][j] = m[i-1][j] + gapPen
 				trace[i][j] = 'D'
 			} else {
-				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
 			if m[i][j] > currMax {
 				currMax = m[i][j]
@@ -218,7 +226,9 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case 'M':
+		case '=':
+			i, j = i-1, j-1
+		case 'X':
 			i, j = i-1, j-1
 		case 'I':
 			j -= 1

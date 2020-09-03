@@ -29,7 +29,7 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 				m[i][j] = m[i-1][j] + gapPen
 				trace[i][j] = 'D'
 			} else {
-				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
 		}
 	}
@@ -46,7 +46,9 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case 'M':
+		case '=':
+			i, j = i-1, j-1
+		case 'X':
 			i, j = i-1, j-1
 		case 'I':
 			j -= 1
