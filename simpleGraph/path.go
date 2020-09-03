@@ -1,26 +1,79 @@
 package simpleGraph
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
 	"strings"
 )
 
-/*
-func PathToSeq(alignPath []uint32, samfile *sam.SamAln, gg *SimpleGraph) []dna.Base {
-	var answer []dna.Base
-	if alignPath == nil {
-		answer = UnMappedRead(len(samfile.Seq))
+func PathToSeq(p giraf.Path, genome *SimpleGraph) []dna.Base {
+	if len(p.Nodes) == 1 {
+		answer := make([]dna.Base, p.TEnd-p.TStart)
+		copy(answer, genome.Nodes[p.Nodes[0]].Seq[p.TStart:p.TEnd])
+		return answer
 	} else {
-		for i := 0; i < len(alignPath); i++ {
-			answer = append(answer, gg.Nodes[alignPath[i]].Seq...)
+		answer := make([]dna.Base, len(genome.Nodes[p.Nodes[0]].Seq)-p.TStart)
+		copy(answer, genome.Nodes[p.Nodes[0]].Seq[p.TStart:])
+		for i := 1; i < len(p.Nodes)-1; i++ {
+			answer = append(answer, genome.Nodes[p.Nodes[i]].Seq...)
 		}
+		answer = append(answer, genome.Nodes[p.Nodes[len(p.Nodes)-1]].Seq[:p.TEnd]...)
+		return answer
 	}
-	return answer
-}*/
+}
+
+func ViewGraphAlignment(g *giraf.Giraf, genome *SimpleGraph) string {
+
+	var seqOne, seqTwo bytes.Buffer
+	var i int = g.Path.TStart
+	var j int = g.QStart
+
+	var count int
+	var alpha []dna.Base = PathToSeq(g.Path, genome)
+	var beta []dna.Base = g.Seq
+	for _, operation := range g.Cigar {
+		for count = 0; count < int(operation.RunLen); count++ {
+			switch operation.Op {
+			case 'M':
+				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
+				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
+				i, j = i+1, j+1
+			case 'I':
+				seqOne.WriteRune('-')
+				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
+				j++
+			case 'D':
+				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
+				seqTwo.WriteRune('-')
+				i++
+			case 'S':
+				seqOne.WriteRune('-')
+				seqTwo.WriteRune('-')
+			}
+		}
+	} /*
+		var lineLength int64 = 50
+		var k, pos int
+		var prettySeq string = ""
+		pos = addStartChrPos(samLine) + samLine.Pos
+		for k = 0; k < int64(len(seqOne.String())); k += lineLength {
+
+			if k+lineLength > int64(len(seqOne.String())) && k+lineLength > int64(len(seqTwo.String())) {
+
+				prettySeq += fmt.Sprintf("%s:\t[%d-%d]\n", samLine.RName, k+pos, k+lineLength+pos) + fmt.Sprintf("%s\n", seqOne.String()[k:]) + fmt.Sprintf("%s\n", seqTwo.String()[k:])
+			} else {
+				prettySeq += fmt.Sprintf("%s:\t[%d-%d]\n", samLine.RName, k+pos, k+lineLength+pos) + fmt.Sprintf("%s\n", seqOne.String()[k:k+lineLength]) + fmt.Sprintf("%s\n", seqTwo.String()[k:k+lineLength])
+			}
+		}*/
+	//return fmt.Sprintf("%s\n%s", ModifySamToString(samLine, false, true, true, false, true, false, false, false, false, false, true), prettySeq)
+	return fmt.Sprintf("%s\n%s", seqOne.String(), seqTwo.String())
+}
+
 /*
 func StringToPath(allPaths string) []uint32 {
 	words := strings.Split(allPaths[5:], ":")
@@ -33,57 +86,6 @@ func StringToPath(allPaths string) []uint32 {
 		}
 	}
 	return answer
-}
-
-func ViewGraphAlignment(samLine *sam.SamAln, genome *SimpleGraph) string {
-	samPath := SamToPath(samLine)
-	if samPath == nil {
-		return fmt.Sprintf("Unmapped Alignment:\n%s\n", sam.SamAlnToString(samLine))
-	} else {
-		var seqOne, seqTwo bytes.Buffer
-		var operations []*cigar.Cigar = samLine.Cigar
-		var i int64 = samLine.Pos - 1
-		var j int64 = getStartRead(samLine)
-
-		var count int64
-		var alpha []dna.Base = PathToSeq(SamToPath(samLine), samLine, genome)
-		var beta []dna.Base = samLine.Seq
-		for _, operation := range operations {
-			for count = 0; count < operation.RunLength; count++ {
-				switch operation.Op {
-				case 'M':
-					seqOne.WriteRune(dna.BaseToRune(alpha[i]))
-					seqTwo.WriteRune(dna.BaseToRune(beta[j]))
-					i, j = i+1, j+1
-				case 'I':
-					seqOne.WriteRune('-')
-					seqTwo.WriteRune(dna.BaseToRune(beta[j]))
-					j++
-				case 'D':
-					seqOne.WriteRune(dna.BaseToRune(alpha[i]))
-					seqTwo.WriteRune('-')
-					i++
-				case 'S':
-					seqOne.WriteRune('-')
-					seqTwo.WriteRune('-')
-				}
-			}
-		}
-		var lineLength int64 = 50
-		var k, pos int64
-		var prettySeq string = ""
-		pos = addStartChrPos(samLine) + samLine.Pos
-		for k = 0; k < int64(len(seqOne.String())); k += lineLength {
-
-			if k+lineLength > int64(len(seqOne.String())) && k+lineLength > int64(len(seqTwo.String())) {
-
-				prettySeq += fmt.Sprintf("%s:\t[%d-%d]\n", samLine.RName, k+pos, k+lineLength+pos) + fmt.Sprintf("%s\n", seqOne.String()[k:]) + fmt.Sprintf("%s\n", seqTwo.String()[k:])
-			} else {
-				prettySeq += fmt.Sprintf("%s:\t[%d-%d]\n", samLine.RName, k+pos, k+lineLength+pos) + fmt.Sprintf("%s\n", seqOne.String()[k:k+lineLength]) + fmt.Sprintf("%s\n", seqTwo.String()[k:k+lineLength])
-			}
-		}
-		return fmt.Sprintf("%s\n%s", ModifySamToString(samLine, false, true, true, false, true, false, false, false, false, false, true), prettySeq)
-	}
 }*/
 
 func addStartChrPos(samfile *sam.SamAln) int64 {

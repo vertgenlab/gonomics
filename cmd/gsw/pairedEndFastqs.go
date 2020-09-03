@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simpleGraph"
@@ -19,9 +20,9 @@ func GswToGirafPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string
 	seedHash := simpleGraph.IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
 
-	fastqPipe := make(chan *fastq.PairedEndBig, 824)
-	girafPipe := make(chan *giraf.GirafPair, 824)
-	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
+	fastqPipe := make(chan fastq.PairedEndBig, 824)
+	girafPipe := make(chan giraf.GirafPair, 824)
+	go readFastqGsw(readOne, readTwo, fastqPipe)
 	log.Printf("Scoring matrix used:\n%s\n", simpleGraph.ViewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
@@ -32,7 +33,7 @@ func GswToGirafPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string
 		go simpleGraph.RoutineFqPairToGiraf(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, girafPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
-	go giraf.GirafPairChanToFile(output, girafPipe, &wgWrite)
+	go simpleGraph.SimpleWriteGirafPair(output, girafPipe, &wgWrite)
 	wgAlign.Wait()
 	stop := time.Now()
 	close(girafPipe)
@@ -49,9 +50,9 @@ func GswToSamPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string, 
 	seedHash := simpleGraph.IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
 	//log.Printf("Setting up read and write channels...\n\n")
-	fastqPipe := make(chan *fastq.PairedEndBig, 824)
+	fastqPipe := make(chan fastq.PairedEndBig, 824)
 	samPipe := make(chan *sam.PairedSamAln, 824)
-	go fastq.ReadPairBigToChan(readOne, readTwo, fastqPipe)
+	go readFastqGsw(readOne, readTwo, fastqPipe)
 
 	log.Printf("Scoring matrix used:\n%s\n", simpleGraph.ViewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
@@ -69,4 +70,12 @@ func GswToSamPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string, 
 	wgWrite.Wait()
 	log.Printf("GSW aligner finished in %.1f seconds\n", stop.Sub(start).Seconds())
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
+}
+
+func readFastqGsw(fileOne string, fileTwo string, answer chan<- fastq.PairedEndBig) {
+	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
+	for fq, done := fastq.ReadFqBigPair(readOne, readTwo); !done; fq, done = fastq.ReadFqBigPair(readOne, readTwo) {
+		answer <- *fq
+	}
+	close(answer)
 }

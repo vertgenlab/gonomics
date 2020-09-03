@@ -84,6 +84,7 @@ func Read(filename string) *SimpleGraph {
 				}
 			}
 		case !strings.ContainsAny(line, "\t:"):
+
 			genome.Nodes[seqIdx].Seq = append(genome.Nodes[seqIdx].Seq, dna.ByteSliceToDnaBases(reader.Bytes())...)
 		}
 	}

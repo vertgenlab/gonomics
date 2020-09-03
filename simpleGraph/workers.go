@@ -33,7 +33,7 @@ func gswWorkerMemPool(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	wg.Done()
 }*/
 
-func SimpleWriteGirafPair(filename string, input <-chan GirafGsw, wg *sync.WaitGroup) {
+func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	var buf *bytes.Buffer
 	var simplePool = sync.Pool{
@@ -44,11 +44,11 @@ func SimpleWriteGirafPair(filename string, input <-chan GirafGsw, wg *sync.WaitG
 	var err error
 	for gp := range input {
 		buf = simplePool.Get().(*bytes.Buffer)
-		_, err = buf.WriteString(giraf.ToString(&gp.ReadOne))
+		_, err = buf.WriteString(giraf.ToString(&gp.Fwd))
 		common.ExitIfError(err)
 		err = buf.WriteByte('\n')
 		common.ExitIfError(err)
-		_, err = buf.WriteString(giraf.ToString(&gp.ReadTwo))
+		_, err = buf.WriteString(giraf.ToString(&gp.Rev))
 		common.ExitIfError(err)
 		err = buf.WriteByte('\n')
 		common.ExitIfError(err)
