@@ -36,7 +36,7 @@ func GraphSmithWatermanToGiraf(gg *SimpleGraph, read fastq.FastqBig, seedHash ma
 
 	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seeds.Hits, seeds.Worker)
 
-	SortSeedDevByLen(seeds.Hits)
+	SortSeedDevByTotalLen(seeds.Hits)
 	var tailSeed *SeedDev
 
 	//var sk.currSeq []dna.Base = make([]dna.Base, len(read.Seq))
