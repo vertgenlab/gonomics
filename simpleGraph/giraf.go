@@ -23,7 +23,7 @@ func RandGiraf(graph *SimpleGraph, numReads int, readLen int, randSeed int64) []
 		strand := rand.Intn(2) == 0
 
 		if (len(seq) == readLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLen) == 0) {
-			girafPath := &giraf.Path{
+			girafPath := giraf.Path{
 				TStart: int(pos),
 				Nodes:  path,
 				TEnd:   int(endPos)}
@@ -36,9 +36,9 @@ func RandGiraf(graph *SimpleGraph, numReads int, readLen int, randSeed int64) []
 				QEnd:      readLen,
 				PosStrand: strand,
 				Path:      girafPath,
-				Aln:       []*cigar.Cigar{{RunLength: int64(readLen), Op: 'M', Sequence: nil}}, // tmp cigar until giraf cigars have been implemented
-				AlnScore:  alnScore,                                                            // placeholder
-				MapQ:      mapQ,                                                                // placeholder
+				Cigar:     []cigar.ByteCigar{{RunLen: uint16(readLen), Op: 'M'}}, // tmp cigar until giraf cigars have been implemented
+				AlnScore:  alnScore,                                              // placeholder
+				MapQ:      mapQ,                                                  // placeholder
 				Seq:       seq,
 				Qual:      qual,
 				Notes:     nil}

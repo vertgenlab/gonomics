@@ -1,11 +1,15 @@
 package simpleGraph
 
 import (
+	"bytes"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
+	"io"
 	"log"
 	"math"
 	"sync"
@@ -547,7 +551,7 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 	restartSeedHelper(seedBuildHelper)
 
 	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
-	
+
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
 		seedBuildHelper.keyIdx = (readStart + 31) / 32
 		seedBuildHelper.keyOffset = 31 - ((readStart + 31) % 32)
@@ -586,6 +590,22 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 	return finalSeeds
 }
 
+func SoftClipBases(front int, lengthOfRead int, cig []cigar.ByteCigar) []cigar.ByteCigar {
+	var runLen int = cigar.QueryRunLen(cig)
+	if runLen < lengthOfRead {
+		answer := make([]cigar.ByteCigar, 0, len(cig)+2)
+		if front > 0 {
+			answer = append(answer, cigar.ByteCigar{RunLen: uint16(front), Op: 'S'})
+		}
+		answer = append(answer, cig...)
+		if front+cigar.QueryRunLen(cig) < lengthOfRead {
+			answer = append(answer, cigar.ByteCigar{RunLen: uint16(lengthOfRead - front - runLen), Op: 'S'})
+		}
+		return answer
+	} else {
+		return cig
+	}
+}
 
 func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
@@ -613,4 +633,3 @@ func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *syn
 	file.Close()
 	wg.Done()
 }
-
