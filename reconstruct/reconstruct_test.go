@@ -12,9 +12,10 @@ var input = []struct {
 	newick_filename string // first input
 	length          int    // second input
 }{
-	{"testdata/test_newick", 33},
-	{"testdata/test_newick", 333},
-	{"testdata/hackett_newick", 66}}
+	{"newTestFiles/newickLongBranches.txt", 150},
+	//{"newTestFiles/newickShortBranches.txt", 333},
+	//{"newTestFiles/newickShortBranches.txt", 66}
+}
 
 func Test_reconstruct(t *testing.T) {
 	for _, test := range input {
@@ -23,17 +24,15 @@ func Test_reconstruct(t *testing.T) {
 		tre, er := expandedTree.ReadNewick(test.newick_filename)
 		if er != nil {
 		}
-		fasta.Write("test.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
-		simulate.Simulate("test.fasta", "test_tree.fasta", tre)
-		simulate.RemoveAncestors("test_tree.fasta", tre)
-		expandedTree.AssignFastas(tre, "test_tree.fasta")
+		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
+		simulate.Simulate("RandGeneOutput.fasta", "simOut.fasta", tre)                         //produced whole tree fasta file
+		simulate.RemoveAncestors("simOut.fasta", tre)                                          //removes everything but leaves from simOut and produced another file
+		expandedTree.AssignFastas(tre, "simOut.fasta")
 
 		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
-		tr := expandedTree.ReadTree(test.newick_filename, "test_tree.fasta")
+		tr := expandedTree.ReadTree(test.newick_filename, "simOut.fasta")
 		for i := 0; i < len(tr.Fasta.Seq); i++ {
 			LoopNodes(tr, i)
 		}
-		//TODO:accuracy in own cmd
-		//TODO:two outputs from sim: secret (interior) known to recon (leaves)
 	}
 }

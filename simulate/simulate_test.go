@@ -1,7 +1,6 @@
 package simulate
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 	//"fmt"
@@ -32,7 +31,7 @@ var MutateSeqTests = []struct {
 	sequence     []dna.Base
 	branchLength float64
 }{
-	{seq, 1.0}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{seq, 0.5}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 func TestMutateSeq(t *testing.T) {
@@ -41,7 +40,7 @@ func TestMutateSeq(t *testing.T) {
 		if len(seq) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %s \n Ending: %s", seq, dna.BasesToString(a))
 		}
-		fmt.Print(dna.BasesToString(a), "\n")
+		//fmt.Print(dna.BasesToString(a), "\n")
 	}
 }
 
