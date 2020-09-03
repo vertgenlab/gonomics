@@ -1,15 +1,12 @@
 package simpleGraph
 
 import (
-	"bytes"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
-	"io"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/sam"
 	"sync"
 )
 
-/*
 // this is just for speed testing to see how much of the speed slowdown is due to alignment time
 func gswNothingWorker(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, incomingFastqs <-chan *fastq.FastqBig, outgoingSams chan<- *sam.SamAln, wg *sync.WaitGroup) {
 	var curr *sam.SamAln
@@ -30,32 +27,5 @@ func gswWorkerMemPool(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	for read := range incomingFastqs {
 		outgoingSams <- GraphSmithWatermanMemPool(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
 	}
-	wg.Done()
-}*/
-
-func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
-	file := fileio.EasyCreate(filename)
-	var buf *bytes.Buffer
-	var simplePool = sync.Pool{
-		New: func() interface{} {
-			return &bytes.Buffer{}
-		},
-	}
-	var err error
-	for gp := range input {
-		buf = simplePool.Get().(*bytes.Buffer)
-		buf.Reset()
-		_, err = buf.WriteString(giraf.ToString(&gp.Fwd))
-		common.ExitIfError(err)
-		err = buf.WriteByte('\n')
-		common.ExitIfError(err)
-		_, err = buf.WriteString(giraf.ToString(&gp.Rev))
-		common.ExitIfError(err)
-		err = buf.WriteByte('\n')
-		common.ExitIfError(err)
-		io.Copy(file, buf)
-		simplePool.Put(buf)
-	}
-	file.Close()
 	wg.Done()
 }
