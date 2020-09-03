@@ -1,14 +1,10 @@
 package simpleGraph
 
 import (
-	//"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"math"
-	//"github.com/vertgenlab/gonomics/fastq"
-	//"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"sync"
 )
@@ -211,14 +207,14 @@ func getRightBases(n *Node, ext int, start int, seq []dna.Base, ans []dna.Base) 
 	var basesToTake int = targetLength - len(seq)
 	return append(append(ans, seq...), n.Seq[start:start+basesToTake]...)
 }
-
+/*
 func rightBasesFromTwoBit(n *Node, ext int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + len(n.Seq) - start
 	var targetLength int = common.Min(availableBases, ext)
 	var basesToTake int = targetLength - len(seq)
 
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
-}
+}*/
 
 func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	if len(seq) >= ext {
@@ -371,13 +367,13 @@ func getLeftTargetBases(n *Node, ext int, refEnd int, seq []dna.Base, ans []dna.
 	var basesToTake int = targetLength - len(seq)
 	return append(append(ans, n.Seq[refEnd-basesToTake:refEnd]...), seq...)
 }
-
+/*
 func leftBasesFromTwoBit(n *Node, ext int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + refEnd
 	var targetLength int = common.Min(availableBases, ext)
 	var basesToTake int = targetLength - len(seq)
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, refEnd-basesToTake, refEnd)...)
-}
+}*/
 
 func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	if len(seq) >= ext {
