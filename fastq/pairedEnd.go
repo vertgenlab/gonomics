@@ -89,9 +89,9 @@ func WritingHelper(fileOne *fileio.EasyWriter, fileTwo *fileio.EasyWriter, fq *P
 	//WriteToFileHandle(fileOne, fq.Fwd)
 	//WriteToFileHandle(fileTwo, fq.Rev)
 	var err error
-	_, err = fmt.Fprintf(fileOne, "@%s\n%s\n+\n%s\n", fq.Fwd.Name, dna.BasesToString(fq.Fwd.Seq), Uint8QualToString(fq.Fwd.Qual))
+	_, err = fmt.Fprintf(fileOne, "@%s\n%s\n+\n%s\n", fq.Fwd.Name, dna.BasesToString(fq.Fwd.Seq), QualString(fq.Fwd.Qual))
 	common.ExitIfError(err)
-	_, err = fmt.Fprintf(fileTwo, "@%s\n%s\n+\n%s\n", fq.Rev.Name, dna.BasesToString(fq.Rev.Seq), Uint8QualToString(fq.Rev.Qual))
+	_, err = fmt.Fprintf(fileTwo, "@%s\n%s\n+\n%s\n", fq.Rev.Name, dna.BasesToString(fq.Rev.Seq), QualString(fq.Rev.Qual))
 	common.ExitIfError(err)
 }
 
