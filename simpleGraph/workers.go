@@ -44,6 +44,7 @@ func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *syn
 	var err error
 	for gp := range input {
 		buf = simplePool.Get().(*bytes.Buffer)
+		buf.Reset()
 		_, err = buf.WriteString(giraf.ToString(&gp.Fwd))
 		common.ExitIfError(err)
 		err = buf.WriteByte('\n')
@@ -53,7 +54,6 @@ func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *syn
 		err = buf.WriteByte('\n')
 		common.ExitIfError(err)
 		io.Copy(file, buf)
-		buf.Reset()
 		simplePool.Put(buf)
 	}
 	file.Close()

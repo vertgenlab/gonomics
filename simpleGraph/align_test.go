@@ -33,14 +33,14 @@ func BenchmarkGsw(b *testing.B) {
 	}
 	b.ReportAllocs()
 	//var output string = "/dev/stdout"
-	//var output string = "testdata/rabs_test.giraf"
+	var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 50000
-	var readLength int = 150
-	var mutations int = 1
+	//var numberOfReads int = 50000
+	//var readLength int = 150
+	//var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 4
+	var numWorkers int = 6
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	b.ResetTimer()
 	genome := Read("testdata/rabsTHREEspine.fa")
@@ -50,12 +50,12 @@ func BenchmarkGsw(b *testing.B) {
 	fastqPipe := make(chan fastq.PairedEndBig, 2408)
 	girafPipe := make(chan giraf.GirafPair, 2408)
 
-	log.Printf("Simulating reads...\n")
-	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
-	os.Remove("testdata/simReads_R1.fq")
-	os.Remove("testdata/simReads_R2.fq")
+	//log.Printf("Simulating reads...\n")
+	//simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	//os.Remove("testdata/simReads_R1.fq")
+	//os.Remove("testdata/simReads_R2.fq")
 
-	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	//fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
@@ -68,8 +68,8 @@ func BenchmarkGsw(b *testing.B) {
 	for i := 0; i < numWorkers; i++ {
 		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
 	}
-	//go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
+	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)
@@ -78,8 +78,8 @@ func BenchmarkGsw(b *testing.B) {
 
 	stop := time.Now()
 	duration := stop.Sub(start)
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-
+	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {
@@ -91,8 +91,6 @@ func BenchmarkGsw(b *testing.B) {
 			log.Fatal("could not write memory profile: ", err)
 		}
 	}
-
-	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
 
 }
 
@@ -119,6 +117,7 @@ func checkAlignment(aln giraf.Giraf, genome *SimpleGraph) bool {
 
 	}
 	if common.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && common.StringToInt(qName[1]) == targetStart && targetEnd == common.StringToInt(qName[3]) {
+
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
 		//	log.Printf("%s\n", giraf.GirafToString(aln))

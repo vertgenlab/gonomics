@@ -1,4 +1,5 @@
 package simpleGraph
+
 /*
 import (
 	"fmt"
@@ -160,11 +161,12 @@ func TestRandGiraf(t *testing.T) {
 
 	fmt.Println("Somatic Mutations Generated Correctly")
 
-	
+
 		for i := 0; i < len(reads); i++ {
 			fmt.Println(reads[i])
 			fmt.Println(reads[i].Path, reads[i].Aln[0])
 		}
-	
 
-}*/
+
+}
+*/
