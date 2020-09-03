@@ -30,14 +30,10 @@ func Test_reconstruct(t *testing.T) {
 
 		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
 		tr := expandedTree.ReadTree(test.newick_filename, "test_tree.fasta")
-		LoopNodes(tr)
-
-		//example of check simulation vs reconstrucion
-		a := Accuracy("test_tree.fasta", "test_reconstruction.fasta")
-
-		if a < 0.8 {
-			t.Errorf("Accuracy of %v is below 0.8, expected is (~ .9, .91, .97)", a)
+		for i := 0; i < len(tr.Fasta.Seq); i++ {
+			LoopNodes(tr, i)
 		}
-
+		//TODO:accuracy in own cmd
+		//TODO:two outputs from sim: secret (interior) known to recon (leaves)
 	}
 }
