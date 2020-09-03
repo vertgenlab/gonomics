@@ -31,12 +31,6 @@ func BenchmarkGsw(b *testing.B) {
 		}
 		defer pprof.StopCPUProfile()
 	}
-	gorout, err := os.Create("/dev/stdout")
-	if err != nil {
-		log.Fatal("could not create GOroutines profile: ", err)
-	}
-	defer gorout.Close()
-
 	b.ReportAllocs()
 	//var output string = "/dev/stdout"
 	//var output string = "testdata/rabs_test.giraf"
