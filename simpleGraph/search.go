@@ -30,6 +30,7 @@ type dnaPool struct {
 	queryEnd    int
 	targetStart int
 	targetEnd   int
+	currScore   int64
 }
 
 type dynamicScoreKeeper struct {
@@ -43,8 +44,8 @@ type dynamicScoreKeeper struct {
 type scoreKeeper struct {
 	targetStart    int
 	targetEnd      int
-	minQuery       int
-	maxQuery       int
+	queryStart     int
+	queryEnd       int
 	extension      int
 	currScore      int64
 	seedScore      int64
@@ -65,7 +66,7 @@ func NewDnaPool() sync.Pool {
 		New: func() interface{} {
 			dnaSeq := dnaPool{
 				Seq:         make([]dna.Base, 0, 150),
-				Path:        make([]uint32, 10),
+				Path:        make([]uint32, 0, 10),
 				queryStart:  0,
 				targetStart: 0,
 				targetEnd:   0,
@@ -110,7 +111,7 @@ func MatrixSetup(size int) ([][]int64, [][]byte) {
 
 func resetScoreKeeper(sk scoreKeeper) {
 	sk.targetStart, sk.targetEnd = 0, 0
-	sk.minQuery, sk.maxQuery = 0, 0
+	sk.queryStart, sk.queryEnd = 0, 0
 	sk.currScore, sk.seedScore = 0, 0
 	sk.perfectScore = 0
 	sk.leftAlignment, sk.rightAlignment = sk.leftAlignment[:0], sk.rightAlignment[:0]
@@ -119,106 +120,106 @@ func resetScoreKeeper(sk scoreKeeper) {
 	sk.leftScore, sk.rightScore = 0, 0
 }
 
-func getLeftTargetBases(n *Node, ext int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
+func getLeftTargetBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + refEnd
-	var targetLength int = common.Min(availableBases, ext)
+	var targetLength int = common.Min(availableBases, extension)
 	var basesToTake int = targetLength - len(seq)
 	return append(append(ans, n.Seq[refEnd-basesToTake:refEnd]...), seq...)
 }
 
-func getRightBases(n *Node, ext int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
+func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + len(n.Seq) - start
-	var targetLength int = common.Min(availableBases, ext)
+	var targetLength int = common.Min(availableBases, extension)
 	var basesToTake int = targetLength - len(seq)
 	return append(append(ans, seq...), n.Seq[start:start+basesToTake]...)
 }
 
 /*
-func leftBasesFromTwoBit(n *Node, ext int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
+func leftBasesFromTwoBit(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + refEnd
-	var targetLength int = common.Min(availableBases, ext)
+	var targetLength int = common.Min(availableBases, extension)
 	var basesToTake int = targetLength - len(seq)
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, refEnd-basesToTake, refEnd)...)
 }*/
 
 /*
-func rightBasesFromTwoBit(n *Node, ext int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
+func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	var availableBases int = len(seq) + len(n.Seq) - start
-	var targetLength int = common.Min(availableBases, ext)
+	var targetLength int = common.Min(availableBases, extension)
 	var basesToTake int = targetLength - len(seq)
 
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
 }*/
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, ext int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	if len(seq) >= ext {
-		log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), ext)
+func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+	if len(seq) >= extension {
+		log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
 	}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Seq = getLeftTargetBases(n, ext, refEnd, seq, s.Seq)
+	s.Seq = getLeftTargetBases(n, extension, refEnd, seq, s.Seq)
+	s.Path = make([]uint32, len(currentPath))
 	copy(s.Path, currentPath)
 	AddPath(s.Path, n.Id)
-	if len(seq)+refEnd >= ext || len(n.Prev) == 0 {
-		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.minQuery, _ = LeftDynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore)
+	if len(seq)+refEnd >= extension || len(n.Prev) == 0 {
+		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore)
 		sk.targetStart = refEnd - len(s.Seq) - len(seq) + sk.targetStart
 		sk.leftPath = s.Path
 		pool.Put(s)
-		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.minQuery, sk.leftPath
+		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath
 	} else {
 		//A very negative number
 		sk.leftScore = math.MinInt64
-		var score int64
 		for _, i := range n.Prev {
-			dynamicScore.route, score, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, ext, read, scores, matrix, sk, dynamicScore, pool)
-			if score > sk.leftScore {
-				sk.leftScore = score
+			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, extension, read, scores, matrix, sk, dynamicScore, pool)
+			if s.currScore > sk.leftScore {
+				sk.leftScore = s.currScore
 				sk.leftAlignment = dynamicScore.route
 				sk.targetStart = refEnd - len(s.Seq) - len(seq) + s.targetStart
-				sk.minQuery = s.queryStart
+				sk.queryStart = s.queryStart
 				sk.leftPath = s.Path
 			}
 		}
 		pool.Put(s)
 		cigar.ReverseBytesCigar(sk.leftAlignment)
 		ReversePath(sk.leftPath)
-		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.minQuery, sk.leftPath
+		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath
 	}
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, ext int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	if len(seq) >= ext {
-		log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), ext)
+func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+	if len(seq) >= extension {
+		log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
 	}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Seq = getRightBases(n, ext, start, seq, s.Seq)
+	s.Seq = getRightBases(n, extension, start, seq, s.Seq)
+	s.Path = make([]uint32, len(currentPath))
 	copy(s.Path, currentPath)
-	if len(seq)+len(n.Seq)-start >= ext || len(n.Next) == 0 {
-		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.maxQuery = RightDynamicAln(s.Seq, read, scoreMatrix, matrix, -600, dynamicScore)
+	if len(seq)+len(n.Seq)-start >= extension || len(n.Next) == 0 {
+		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(s.Seq, read, scoreMatrix, matrix, -600, dynamicScore)
 		sk.rightPath = s.Path
 		pool.Put(s)
-		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.maxQuery, sk.rightPath
+		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.queryEnd, sk.rightPath
 	} else {
 		sk.rightScore = math.MinInt64
-		var score int64
 		for _, i := range n.Next {
-			dynamicScore.route, score, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, ext, read, scoreMatrix, matrix, sk, dynamicScore, pool)
-			if score > sk.rightScore {
-				sk.rightScore = score
+			dynamicScore.route, s.currScore, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, extension, read, scoreMatrix, matrix, sk, dynamicScore, pool)
+			if s.currScore > sk.rightScore {
+				sk.rightScore = s.currScore
 				sk.rightAlignment = dynamicScore.route
 				sk.targetEnd = s.targetEnd
-				sk.maxQuery = s.queryEnd
+				sk.queryEnd = s.queryEnd
 				sk.rightPath = s.Path
 			}
 		}
 		pool.Put(s)
 		cigar.ReverseBytesCigar(sk.rightAlignment)
-		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.maxQuery, sk.rightPath
+		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.queryEnd, sk.rightPath
 	}
 }
 
-func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int, int) {
+func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
 	resetDynamicScore(dynamicScore)
 	for dynamicScore.i = 0; dynamicScore.i < len(alpha)+1; dynamicScore.i++ {
 		matrix.m[dynamicScore.i][0] = 0
@@ -256,8 +257,9 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix 
 		default:
 			log.Fatalf("Error: unexpected traceback %c\n", matrix.trace[dynamicScore.i][dynamicScore.j])
 		}
+
 	}
-	return matrix.m[len(alpha)][len(beta)], dynamicScore.route, dynamicScore.i, len(alpha), len(beta)
+	return matrix.m[len(alpha)][len(beta)], dynamicScore.route, dynamicScore.i, dynamicScore.j
 }
 
 func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
