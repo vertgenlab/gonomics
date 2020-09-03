@@ -12,10 +12,11 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
+	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range inputChan {
-		outputChan <- *GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper)
+		outputChan <- *GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
 	}
 	wg.Done()
 }
@@ -24,10 +25,11 @@ func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
+	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range input {
-		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper)
+		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
 	}
 	wg.Done()
 }
@@ -36,10 +38,11 @@ func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seed
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
+	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	for read := range inputChan {
-		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper))
+		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
 	}
 	wg.Done()
 }
@@ -50,8 +53,9 @@ func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen in
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
+	seedBuildHelper := newSeedBuilder()
 	for read := range input {
-		output <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper))
+		output <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
 	}
 	wg.Done()
 }

@@ -103,6 +103,19 @@ func recursiveSort(arr []*SeedDev, start, end int) {
 	recursiveSort(arr, splitIndex+1, end)
 }
 
+type seedHelper struct {
+	ExtendRight                               *seedHelper
+	currHits                                  []uint64
+	codedNodeCoord                            uint64
+	seqKey                                    uint64
+	keyShift                                  uint
+	keyIdx, keyOffset, readOffset, nodeOffset int
+	nodeIdx, nodePos                          int64
+	leftMatches                               int
+	rightMatches                              int
+	tempSeed                                  *SeedDev
+}
+
 func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []*SeedDev) []*SeedDev {
 	const basesPerInt int = 32
 	answer = answer[:0]
@@ -211,49 +224,61 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart *SeedDe
 	return answer
 }
 
-func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev, tempSeeds []*SeedDev) []*SeedDev {
+func newSeedBuilder() *seedHelper {
+	var tmp SeedDev = SeedDev{}
+	return &seedHelper{
+		currHits: make([]uint64, 0, 20),
+		tempSeed: &tmp,
+	}
+}
+
+func restartSeedHelper(helper *seedHelper) {
+	helper.currHits = helper.currHits[:0]
+	helper.keyIdx, helper.keyOffset, helper.readOffset, helper.nodeOffset = 0, 0, 0, 0
+	helper.nodeIdx, helper.nodePos = 0, 0
+	helper.seqKey, helper.codedNodeCoord = 0, 0
+	helper.leftMatches = 0
+}
+
+//seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0
+func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev, tempSeeds []*SeedDev, seedBuildHelper *seedHelper) []*SeedDev {
 	const basesPerInt int64 = 32
-	var currHits []uint64
-	var codedNodeCoord uint64
-	var leftMatches int = 0
-	var keyIdx, keyOffset, readOffset, nodeOffset int = 0, 0, 0, 0
-	var nodeIdx, nodePos int64 = 0, 0
-
-	var seqKey uint64
-	var keyShift uint = 64 - (uint(seedLen) * 2)
-
-	var tempSeed *SeedDev
+	restartSeedHelper(seedBuildHelper)
+	//var seedBuildHelper.currHits []uint64
+	//var seedBuildHelper.codedNodeCoord uint64 seedBuildHelper.keyIdx,
+	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
+	//var tempSeed *SeedDev
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
-		keyIdx = (readStart + 31) / 32
-		keyOffset = 31 - ((readStart + 31) % 32)
+		seedBuildHelper.keyIdx = (readStart + 31) / 32
+		seedBuildHelper.keyOffset = 31 - ((readStart + 31) % 32)
 		// do fwd strand
-		seqKey = read.Rainbow[keyOffset].Seq[keyIdx] >> keyShift
-		currHits = seedHash[seqKey]
+		seedBuildHelper.seqKey = read.Rainbow[seedBuildHelper.keyOffset].Seq[seedBuildHelper.keyIdx] >> seedBuildHelper.keyShift
+		seedBuildHelper.currHits = seedHash[seedBuildHelper.seqKey]
 
-		for _, codedNodeCoord = range currHits {
-			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
-			nodeOffset = int(nodePos % basesPerInt)
-			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
-			tempSeeds = extendToTheRightDev(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true, tempSeeds)
-			for _, tempSeed = range tempSeeds {
-				finalSeeds = append(finalSeeds, extendToTheLeftDev(nodes[nodeIdx], read, tempSeed)...)
+		for _, seedBuildHelper.codedNodeCoord = range seedBuildHelper.currHits {
+			seedBuildHelper.nodeIdx, seedBuildHelper.nodePos = numberToChromAndPos(seedBuildHelper.codedNodeCoord)
+			seedBuildHelper.nodeOffset = int(seedBuildHelper.nodePos % basesPerInt)
+			seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
+			seedBuildHelper.leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit, int(seedBuildHelper.nodePos), &read.Rainbow[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
+			tempSeeds = extendToTheRightDev(nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), true, tempSeeds)
+			for _, seedBuildHelper.tempSeed = range tempSeeds {
+				finalSeeds = append(finalSeeds, extendToTheLeftDev(nodes[seedBuildHelper.nodeIdx], read, seedBuildHelper.tempSeed)...)
 			}
 		}
 		// do rev strand
-		seqKey = read.RainbowRc[keyOffset].Seq[keyIdx] >> keyShift
-		currHits = seedHash[seqKey]
-		for _, codedNodeCoord = range currHits {
-			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
-			nodeOffset = int(nodePos % basesPerInt)
-			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
+		seedBuildHelper.seqKey = read.RainbowRc[seedBuildHelper.keyOffset].Seq[seedBuildHelper.keyIdx] >> seedBuildHelper.keyShift
+		seedBuildHelper.currHits = seedHash[seedBuildHelper.seqKey]
+		for _, seedBuildHelper.codedNodeCoord = range seedBuildHelper.currHits {
+			seedBuildHelper.nodeIdx, seedBuildHelper.nodePos = numberToChromAndPos(seedBuildHelper.codedNodeCoord)
+			seedBuildHelper.nodeOffset = int(seedBuildHelper.nodePos % basesPerInt)
+			seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
-			tempSeeds = extendToTheRightDev(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false, tempSeeds)
+			seedBuildHelper.leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit, int(seedBuildHelper.nodePos), &read.RainbowRc[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
+			tempSeeds = extendToTheRightDev(nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), false, tempSeeds)
 			finalSeeds = append(finalSeeds, tempSeeds...)
 		}
 	}
-	if len(finalSeeds) < 1000000 {
+	if len(finalSeeds) > 100 {
 		SortSeedDevByTotalLen(finalSeeds)
 	} else {
 		heapSortSeeds(finalSeeds)
