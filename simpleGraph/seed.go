@@ -225,12 +225,13 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRightDev(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false, tempSeeds)
+			finalSeeds = append(finalSeeds, tempSeeds...)
 			//log.Printf("After extendToTheRightDev rev:\n")
 			//printSeedDev(tempSeeds)
-			for _, tempSeed = range tempSeeds {
-				//log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
-				finalSeeds = append(finalSeeds, extendToTheLeftDev(nodes[nodeIdx], read, tempSeed)...)
-			}
+			//for _, tempSeed = range tempSeeds {
+			//log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
+			//	finalSeeds = append(finalSeeds, extendToTheLeftDev(nodes[nodeIdx], read, tempSeed)...)
+			//}
 
 		}
 	}
