@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	defaultMatrixSize int = 10000
+	defaultMatrixSize int = 2480
 )
 
 type memoryPool struct {
@@ -90,8 +90,8 @@ func NewMemSeedPool() sync.Pool {
 	return sync.Pool{
 		New: func() interface{} {
 			pool := memoryPool{
-				Hits:   make([]*SeedDev, 10000),
-				Worker: make([]*SeedDev, 10000),
+				Hits:   make([]*SeedDev, 0, 10000),
+				Worker: make([]*SeedDev, 0, 10000),
 			}
 			return &pool
 		},
@@ -130,17 +130,17 @@ func resetScoreKeeper(sk scoreKeeper) {
 }
 
 func getLeftTargetBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	var availableBases int = len(seq) + refEnd
-	var targetLength int = common.Min(availableBases, extension)
-	var basesToTake int = targetLength - len(seq)
-	return append(append(ans, n.Seq[refEnd-basesToTake:refEnd]...), seq...)
+	//var availableBases int = len(seq) + refEnd
+	//var targetLength int = common.Min(availableBases, extension)
+	//var basesToTake int = targetLength - len(seq)
+	return append(append(ans, n.Seq[refEnd-common.Min(len(seq) + refEnd, extension) - len(seq):refEnd]...), seq...)
 }
 
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	var availableBases int = len(seq) + len(n.Seq) - start
-	var targetLength int = common.Min(availableBases, extension)
-	var basesToTake int = targetLength - len(seq)
-	return append(append(ans, seq...), n.Seq[start:start+basesToTake]...)
+	//var availableBases int = len(seq) + len(n.Seq) - start
+	//var targetLength int = common.Min(availableBases, extension)
+	//var basesToTake int = targetLength - len(seq)
+	return append(append(ans, seq...), n.Seq[start:start+common.Min(len(seq) + len(n.Seq) - start, extension) - len(seq)]...)
 }
 
 /*
@@ -161,9 +161,9 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 }*/
 
 func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	if len(seq) >= extension {
-		log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
-	}
+	//if len(seq) >= extension {
+	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
+	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
 	s.Seq = getLeftTargetBases(n, extension, refEnd, seq, s.Seq)
@@ -197,9 +197,9 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 }
 
 func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	if len(seq) >= extension {
-		log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
-	}
+	//if len(seq) >= extension {
+	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
+	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
 	s.Seq = getRightBases(n, extension, start, seq, s.Seq)
@@ -266,7 +266,6 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix 
 		default:
 			log.Fatalf("Error: unexpected traceback %c\n", matrix.trace[dynamicScore.i][dynamicScore.j])
 		}
-
 	}
 	return matrix.m[len(alpha)][len(beta)], dynamicScore.route, dynamicScore.i, dynamicScore.j
 }
@@ -428,7 +427,7 @@ func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeSt
 	var nodeOffset int = nodeStart % basesPerInt
 	var readOffset int = 31 - ((readStart - nodeOffset + 31) % 32)
 	var rightMatches int = 0
-	var currNode SeedDev
+	var currNode *SeedDev = nil
 	var nextParts []*SeedDev
 	var i, j int = 0, 0
 	if posStrand {
@@ -446,15 +445,15 @@ func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeSt
 			nextParts = extendToTheRightDev(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand, nextParts)
 			// if we aligned into the next node, make a seed for this node and point it to the next one
 			for j = 0; j < len(nextParts); j++ {
-				currNode = SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j], Next: nil}
-				answer = append(answer, &currNode)
+				currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j], Next: nil}
+				answer = append(answer, currNode)
 			}
 		}
 	}
 	// if the alignment did not go to another node, return the match for this node
 	if len(answer) == 0 {
-		currNode = SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil, Next: nil}
-		answer = []*SeedDev{&currNode}
+		currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil, Next: nil}
+		answer = []*SeedDev{currNode}
 	}
 
 	return answer

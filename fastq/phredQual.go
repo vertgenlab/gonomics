@@ -26,10 +26,11 @@ func ToQual(qual []byte) []uint8 {
 	}
 	return answer
 }
-
+//qualScore
 func ReverseQualUint8Record(qualScore []uint8) {
-	for i, j := 0, len(qualScore)-1; i <= j; i, j = i+1, j-1 {
-		qualScore[i], qualScore[j] = qualScore[j], qualScore[i]
+	var i, off int
+	for i, off = len(qualScore)/2-1, len(qualScore)-1-i; i >= 0; i-- {
+		qualScore[i], qualScore[off] = qualScore[off], qualScore[i]
 	}
 }
 
