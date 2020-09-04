@@ -83,3 +83,16 @@ func CompareSeqsIgnoreCaseAndGaps(alpha []Base, beta []Base) int {
 func CompareSeqsCaseSensitiveIgnoreGaps(alpha []Base, beta []Base) int {
 	return compareSeqsIgnoreGaps(alpha, beta, false)
 }
+
+//SeqEqual returns true if two DNA sequences are identical, false otherwise.
+func SeqEqual(alpha []Base, beta []Base) bool {
+	if len(alpha) != len(beta) {
+		return false
+	}
+	for i := 0; i < len(alpha); i++ {
+		if alpha[i] != beta[i] {
+			return false
+		}
+	}
+	return true
+}

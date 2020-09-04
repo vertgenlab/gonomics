@@ -81,3 +81,10 @@ func WriteMultiSamplesHeader(file io.Writer, header *VcfHeader, listNames []stri
 		}
 	}
 }
+
+func PrintHeader(header *VcfHeader) {
+	for i := 0; i < len(header.Text);i++ {
+		fmt.Println(header.Text[i])
+	}
+}
+
