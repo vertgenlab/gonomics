@@ -548,7 +548,6 @@ func restartSeedHelper(helper *seedHelper) {
 func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []*SeedDev, tempSeeds []*SeedDev, seedBuildHelper *seedHelper) []*SeedDev {
 	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)
-
 	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
 
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
@@ -586,6 +585,7 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.Fas
 	} else {
 		heapSortSeeds(finalSeeds)
 	}
+	
 	return finalSeeds
 }
 
