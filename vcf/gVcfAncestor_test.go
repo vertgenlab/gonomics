@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	//DEBUG: "fmt"
-	"fmt"
 )
 
 var AncestorAlleles []dna.Base = []dna.Base{dna.A, dna.T, dna.G, dna.C, dna.A, dna.A, dna.C}
@@ -36,7 +35,6 @@ func TestGVcfAppendAncestor(t *testing.T) {
 		v = VcfToGvcf(each)
 		allele[0] = AncestorAlleles[i]
 		GVcfAppendAncestor(v, allele)
-		
 		input = GVcfQueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
 			t.Errorf("Error in TestGVcfAppendAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
@@ -79,7 +77,7 @@ func TestGVcfAnnotateAncestorFromFa(t *testing.T) {
 	for each := range reader {
 		v = VcfToGvcf(each)
 		GVcfAnnotateAncestorFromFa(v, records)
-		fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
+		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
 		if !dna.SeqEqual(GVcfQueryAncestor(v), answers[i]) {
 			t.Errorf("Error in TestGVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(GVcfQueryAncestor(v)))
 		}

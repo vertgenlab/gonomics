@@ -46,17 +46,15 @@ func TestCompare(t *testing.T) {
 }
 
 var SeqEqualTests = []struct {
-	a string
-	b string
+	a      string
+	b      string
 	answer bool
 }{
 	{"ATGC", "ATG", false},
 	{"AGGC", "AGGC", true},
 	{"ATCG", "ACCG", false},
 	{"ANCG", "ACCG", false},
-
 }
-
 
 func TestSeqEqual(t *testing.T) {
 	var input bool
