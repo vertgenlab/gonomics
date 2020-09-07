@@ -109,7 +109,7 @@ func FromStringToNotes(s string) []Note {
 	var text []string
 	for i, v := range words {
 		text = strings.SplitN(v, ":", 3)
-		answer[i] = Note{Tag: text[0], Type: []rune(text[1])[0], Value: text[2]}
+		answer[i] = Note{Tag: []byte(text[0]), Type: []byte(text[1])[0], Value: text[2]}
 	}
 	return answer
 }
@@ -132,7 +132,7 @@ func fromStringToQual(s string) []uint8 {
 }
 
 func ToString(g *Giraf) string {
-	buf := &strings.Builder{}
+	buf := strings.Builder{}
 	buf.Grow(400)
 	var err error
 	_, err = buf.WriteString(g.QName)
