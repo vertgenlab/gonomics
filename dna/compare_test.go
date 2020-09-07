@@ -44,26 +44,3 @@ func TestCompare(t *testing.T) {
 		}
 	}
 }
-
-var SeqEqualTests = []struct {
-	a      string
-	b      string
-	answer bool
-}{
-	{"ATGC", "ATG", false},
-	{"AGGC", "AGGC", true},
-	{"ATCG", "ACCG", false},
-	{"ANCG", "ACCG", false},
-}
-
-func TestSeqEqual(t *testing.T) {
-	var input bool
-	for _, test := range SeqEqualTests {
-		a := StringToBases(test.a)
-		b := StringToBases(test.b)
-		input = SeqEqual(a, b)
-		if input != test.answer {
-			t.Errorf("SeqEqual: expected: %t. Input: %t.", test.answer, input)
-		}
-	}
-}

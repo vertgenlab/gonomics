@@ -78,7 +78,7 @@ func TestGVcfAnnotateAncestorFromFa(t *testing.T) {
 		v = VcfToGvcf(each)
 		GVcfAnnotateAncestorFromFa(v, records)
 		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
-		if !dna.SeqEqual(GVcfQueryAncestor(v), answers[i]) {
+		if dna.CompareSeqsIgnoreCase(GVcfQueryAncestor(v), answers[i]) != 0 {
 			t.Errorf("Error in TestGVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(GVcfQueryAncestor(v)))
 		}
 		i++
