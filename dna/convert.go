@@ -145,6 +145,7 @@ func BasesToString(bases []Base) string {
 	}
 	return buffer.String()
 }
+
 // ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases with no lowercase bases.
 func ByteSliceToDnaBases(b []byte) []Base {
 	var answer []Base = make([]Base, len(b))
