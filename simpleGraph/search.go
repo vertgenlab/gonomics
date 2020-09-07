@@ -320,7 +320,8 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix
 
 func ReversePath(alpha []uint32) {
 	var i, off int
-	for i, off = len(alpha)/2-1, len(alpha)-1-i; i >= 0; i-- {
+	for i = len(alpha)/2-1; i >= 0; i-- {
+		off = len(alpha)-1-i
 		alpha[i], alpha[off] = alpha[off], alpha[i]
 	}
 }
