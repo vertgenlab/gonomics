@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"strings"
 )
 
 func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
@@ -22,7 +19,7 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	var leftPath, rightPath, bestPath []uint32
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
-	extension := int(perfectScore/600) + len(read.Seq)
+	//extension := int(perfectScore/600) + len(read.Seq)
 	var seeds []*SeedDev
 	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
 	SortSeedDevByLen(seeds)
@@ -30,7 +27,7 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 	var seedScore int64
 	var currSeq []dna.Base
 	var currSeed *SeedDev
-	//log.Printf("Seeds found are:\n")
+	//fmt.Printf("Extention: %v\n", extension)
 	//printSeedDev(seeds)
 	//for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
 	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
@@ -48,8 +45,8 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			minQuery = int(currSeed.QueryStart)
 			rightScore = 0
 		} else {
-			leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
-			rightAlignment, rightScore, _, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(tailSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
+			//leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
+			//rightAlignment, rightScore, _, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(tailSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		}
 		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		currScore = leftScore + seedScore + rightScore
@@ -200,33 +197,4 @@ func ViewMatrix(m [][]int64) string {
 	var message string = ""
 	message += fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
 	return message
-}
-
-func CheckAlignment(aln *sam.SamAln, genome *SimpleGraph) bool {
-	var answer bool = false
-	samPath := SamToPath(aln)
-	if samPath == nil {
-		return false
-	}
-	qName := strings.Split(aln.QName, "_")
-	if strings.Compare(genome.Nodes[common.StringToUint32(qName[0])].Name, aln.RName) == 0 && aln.Pos == common.StringToInt64(qName[1]) {
-		return true
-	}
-	return answer
-}
-
-func CheckAnswers(query []*sam.SamAln, genome *SimpleGraph) {
-	var yes, no int64 = 0, 0
-	for i := 0; i < len(query); i++ {
-		if CheckAlignment(query[i], genome) {
-			yes++
-			//log.Printf(sam.SamAlnToString(query[i]))
-		} else {
-			no++
-			//log.Printf("This did not map:\n%s\n", sam.SamAlnToString(query[i]))
-		}
-	}
-	log.Printf("Total number of reads aligned: %d...", len(query))
-	log.Printf("Number of reads correctly aligned: %d...\n", yes)
-	log.Printf("Number of reads mismapped: %d...\n", no)
 }

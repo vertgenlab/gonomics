@@ -56,7 +56,7 @@ func Write(filename string, records []*Fastq) {
 
 func WriteToFileHandle(file *fileio.EasyWriter, fq *Fastq) {
 	var err error
-	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), Uint8QualToString(fq.Qual))
+	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
 	common.ExitIfError(err)
 }
 
@@ -65,7 +65,7 @@ func processFastqRecord(line1 string, line2 string, line3 string, line4 string) 
 	if line3 != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
-	curr = &Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQualUint8([]rune(line4))}
+	curr = &Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQual([]byte(line4))}
 	return curr
 }
 
@@ -104,7 +104,7 @@ func PrintFastq(fq []*Fastq) {
 	for i := 0; i < len(fq); i++ {
 		readName := "@" + fq[i].Name
 		read := dna.BasesToString(fq[i].Seq)
-		quality := Uint8QualToString(fq[i].Qual)
+		quality := QualString(fq[i].Qual)
 		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 	}
 }

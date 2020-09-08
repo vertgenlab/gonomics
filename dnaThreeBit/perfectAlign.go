@@ -5,6 +5,10 @@ import (
 	"math/bits"
 )
 
+// countRightMatches counts the number of perfectly matching bases between seqOne and seqTwo, starting
+// a position startOne in seqOne and startTwo in seqTwo.  The slices must be encoded with the threeBit format
+// and in register with each other.  The first comparison is startOne vs startTwo, and then to increasing
+// positions
 func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint64, startTwo int, lenTwo int) int {
 	const bitsPerBase int = 3
 	const bitsPerInt int = 64
@@ -45,6 +49,10 @@ func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint6
 	return matches
 }
 
+// countLeftMatches counts the number of perfectly matching bases between seqOne and seqTwo, starting
+// a position startOne in seqOne and startTwo in seqTwo.  The slices must be encoded with the threeBit format
+// and in register with each other.  The first comparison is startOne vs startTwo, and then to decreasing
+// positions
 func countLeftMatches(seqOne []uint64, startOne int, seqTwo []uint64, startTwo int) int {
 
 	const bitsPerBase int = 3
