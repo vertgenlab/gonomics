@@ -7,7 +7,7 @@ import (
 
 // Compressed with BGZF with TOC storing reads in blocks
 
-type binaryGirafHeader struct {
+type BinGirafHeader struct {
 	magic          [4]byte  // magic string to verify file is a binary giraf
 	refChecksum    [16]byte // md5 checksum to make sure correct gg file is used for decompression
 	textLen        uint32   // length of below text field
@@ -16,7 +16,7 @@ type binaryGirafHeader struct {
 	qNamePrefix    string   // prefix of read name, may be updated to algorithmic compression of read names
 }
 
-type binaryGiraf struct {
+type BinGiraf struct {
 	blockSize     uint32 // total length of the alignment record, excluding this field
 	hasNamePrefix bool   // bool to determine whether qNamePrefix is valid for this read
 	qNameLen      uint8  // length of below qName field
@@ -34,12 +34,12 @@ type binaryGiraf struct {
 	alnScore    int64                // alignment quality score
 	mapQ        uint8                // mapping quality score
 	// Seq field is dropped, can be determined from aln
-	readLen uint32        // length of read
-	qual    []cigar.ByteCigar       // phred-scaled base qualities. run-length encoding using ByteCigar
-	notes   []binaryNotes // the notes field will be identical to the SAM notes field. See section 4.2.4 in SAM specs for details
+	numQualOps uint16            // number of qual operations for field below
+	qual       []cigar.ByteCigar // phred-scaled base qualities. run-length encoding using ByteCigar
+	notes      []BinNote         // the notes field will be identical to the SAM notes field. See section 4.2.4 in SAM specs for details
 }
 
-type binaryNotes struct {
+type BinNote struct {
 	tag     [2]byte // tag ID
 	tagType byte    // type of data encoded. See section 4.2.4 in SAM specs
 	data    []byte  // data attributed to the the tag. See section 4.2.4 in SAM specs for how to decode
