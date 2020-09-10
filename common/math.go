@@ -22,6 +22,14 @@ func StringToFloat64(s string) float64 {
 	return n
 }
 
+func StringToInt8(s string) int8 {
+	n, err := strconv.ParseInt(s, 10, 8)
+	if err != nil {
+		log.Fatalf("Error: trouble converting %s to a int8\n", s)
+	}
+	return int8(n)
+}
+
 func StringToInt16(s string) int16 {
 	n, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {

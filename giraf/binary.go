@@ -42,5 +42,5 @@ type BinGiraf struct {
 type BinNote struct {
 	tag     [2]byte // tag ID
 	tagType byte    // type of data encoded. See section 4.2.4 in SAM specs
-	data    []byte  // data attributed to the the tag. See section 4.2.4 in SAM specs for how to decode
+	data    string  // data attributed to the the tag. See section 4.2.4 in SAM specs for how to decode
 }
