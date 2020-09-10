@@ -132,7 +132,7 @@ func (bw *BinWriter) Write(g *giraf.Giraf) error {
 	}
 
 	// notes ([]BinNote)
-	bw.buf.Write(notes) // notes ([]BinNotes)
+	bw.buf.Write(notes) // notes ([]bytes)
 
 	// write all bytes in buffer
 	_, err := bw.bg.Write(bw.buf.Bytes())
