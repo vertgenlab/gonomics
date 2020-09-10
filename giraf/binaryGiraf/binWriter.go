@@ -38,8 +38,6 @@ func CompressGiraf(filename string) {
 		common.ExitIfError(err)
 	}
 
-	//TODO: Do I need to write newline to end file???
-
 	// Close writer
 	err = writer.bg.Close()
 	common.ExitIfError(err)
@@ -246,7 +244,6 @@ func noteToBytes(n giraf.Note) []byte {
 		answer = append(answer, n.Value...)
 		if answer[len(answer)-1] != '\000' { // check if last byte is nil string
 			answer = append(answer, '\000') // if not, create nil terminated string
-			log.Printf("WARNING: String in tag is not nil terminated, adding nil: %+v", n)
 		}
 	case 'H': // hex
 		answer = append(answer, n.Value...)
