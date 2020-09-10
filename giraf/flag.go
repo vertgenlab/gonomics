@@ -2,7 +2,7 @@ package giraf
 
 // flagTestBit test a single bit in a 16 bit flag
 func flagTestBit(num uint8, bit uint8) bool {
-	return bit & num == 0
+	return bit&num == 0
 }
 
 // ProperlyAligned returns true if the aligner determined this read was aligned correctly
@@ -32,4 +32,8 @@ func IsReverseRead(giraf *Giraf) bool {
 
 func IsPaired(giraf *Giraf) bool {
 	return flagTestBit(giraf.Flag, 16) // 1 in sam
+}
+
+func HasNamePrefix(giraf *Giraf) bool {
+	return flagTestBit(giraf.Flag, 32) // for binary giraf
 }

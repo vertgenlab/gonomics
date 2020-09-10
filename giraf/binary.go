@@ -17,10 +17,10 @@ type BinGirafHeader struct {
 }
 
 type BinGiraf struct {
-	blockSize     uint32 // total length of the alignment record, excluding this field
-	hasNamePrefix bool   // bool to determine whether qNamePrefix is valid for this read
-	qNameLen      uint8  // length of below qName field
-	qName         string // name of read, qNamePrefix is prepended if hasNamePrefix
+	blockSize uint32 // total length of the alignment record, excluding this field
+	// THIS HAS BEEN MOVED TO FLAG //hasNamePrefix bool   // bool to determine whether qNamePrefix is valid for this read
+	qNameLen uint8  // length of below qName field
+	qName    string // name of read, qNamePrefix is prepended if hasNamePrefix
 	//Question: can we drop QStart and QEnd? Do these serve a different purpose from TStart and TEnd in the Path?
 	flag uint8 // bitwise flags
 	// PosStrand is dropped, stored in flag

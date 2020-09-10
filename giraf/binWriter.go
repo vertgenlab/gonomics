@@ -24,9 +24,29 @@ func NewWriter(file io.Writer) *BinWriter {
 	}
 }
 
+// Byte size of BinGiraf fixed size fields excluding blockSize.
+// Exluded Fields: qName, path, byteCigar, fancySeq.Seq, qual, notes
+var binGirafFixedSize int = 33
+
 func (bw *BinWriter) Write(g *Giraf) error {
 	bw.buf.Reset() // clear buffer for new write
 	var currBuf [8]byte
+
+	// encode data for later use
+	fancySeq := getFancySeq(g.Seq, g.Cigar)
+	qual := encodeQual(g.Qual)
+	notes := notesToBytes(g.Notes)
+
+	// blockSize (uint32)
+	size := binGirafFixedSize +
+		len(g.QName) +
+		(4 * len(g.Path.Nodes)) +
+		(3 * len(g.Cigar)) +
+		(8 * len(fancySeq.Seq)) +
+		(3 * len(qual)) +
+		len(notes)
+	binary.LittleEndian.PutUint32(currBuf[:4], uint32(size))
+	bw.buf.Write(currBuf[:4])
 
 	// qNameLen (uint8)
 	bw.buf.Write([]byte{uint8(len(g.QName))})
@@ -60,18 +80,17 @@ func (bw *BinWriter) Write(g *Giraf) error {
 
 	for _, val := range g.Cigar {
 		binary.LittleEndian.PutUint16(currBuf[:2], val.RunLen)
-		bw.buf.Write(currBuf[:2]) // byteCigar.RunLen (uint16)
+		bw.buf.Write(currBuf[:2])    // byteCigar.RunLen (uint16)
 		bw.buf.Write([]byte{val.Op}) // byteCigar.Op (byte)
 	}
 
 	// fancySeq (dnaThreeBit.ThreeBit)
-	fancySeq := getFancySeq(g.Seq, g.Cigar)
 	binary.LittleEndian.PutUint32(currBuf[:4], uint32(fancySeq.Len))
 	bw.buf.Write(currBuf[:4]) // fancySeq.Len (uint32)
 
 	for _, val := range fancySeq.Seq {
-		binary.LittleEndian.PutUint64(currBuf[:8], val)
-		bw.buf.Write(currBuf[:8]) // fancySeq.Seq (uint64)
+		binary.LittleEndian.PutUint64(currBuf[:8], val) // TODO: does not need to be uint64?
+		bw.buf.Write(currBuf[:8])                       // fancySeq.Seq (uint64)
 	}
 
 	// alnScore (int64)
@@ -82,20 +101,17 @@ func (bw *BinWriter) Write(g *Giraf) error {
 	bw.buf.Write([]byte{g.MapQ})
 
 	// qual ([]cigar.ByteCigar)
-	qual := encodeQual(g.Qual)
 	binary.LittleEndian.PutUint16(currBuf[:2], uint16(len(qual)))
 	bw.buf.Write(currBuf[:2]) // numQualOps (uint16)
 
 	for _, val := range qual {
 		binary.LittleEndian.PutUint16(currBuf[:2], val.RunLen)
-		bw.buf.Write(currBuf[:2]) // byteCigar.RunLen (uint16)
+		bw.buf.Write(currBuf[:2])    // byteCigar.RunLen (uint16)
 		bw.buf.Write([]byte{val.Op}) // byteCigar.Op (byte)
 	}
 
 	// notes ([]BinNote)
-	for _, val := range g.Notes {
-		bw.buf.Write(noteToBytes(val)) // notes ([]BinNotes)
-	}
+	bw.buf.Write(notes) // notes ([]BinNotes)
 
 	// write all bytes in buffer
 	_, err := bw.bg.Write(bw.buf.Bytes())
@@ -113,28 +129,6 @@ func WriteBinGiraf(filename string) {
 		common.ExitIfError(err)
 	}
 }
-
-//func CompressGiraf(g Giraf) BinGiraf {
-//	var answer BinGiraf
-//	answer.qNameLen = uint8(len(g.QName))
-//	answer.qName = g.QName
-//	answer.flag = g.Flag
-//	answer.tStart = uint32(g.Path.TStart)
-//	answer.tEnd = uint32(g.Path.TEnd)
-//	answer.pathLen = uint16(len(g.Path.Nodes))
-//	answer.path = g.Path.Nodes
-//	answer.numCigarOps = uint16(len(g.Cigar))
-//	answer.byteCigar = g.Cigar
-//	answer.fancySeq = getFancySeq(g.Seq, g.Cigar) //TODO compress ThreeBitDna into []byte + len ?
-//	answer.alnScore = int64(g.AlnScore)
-//	answer.mapQ = g.MapQ
-//	answer.qual = encodeQual(g.Qual)
-//	answer.numQualOps = uint16(len(answer.qual))
-//	answer.notes = encodeNotes(g.Notes)
-//	//TODO hasNamePrefix
-//	//TODO blocksize
-//	return answer
-//}
 
 func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
 	var answer []dna.Base
@@ -165,6 +159,14 @@ func encodeQual(q []uint8) []cigar.ByteCigar {
 		answer = append(answer, curr)
 	}
 
+	return answer
+}
+
+func notesToBytes(n []Note) []byte {
+	var answer []byte
+	for _, val := range n {
+		answer = append(answer, noteToBytes(val)...)
+	}
 	return answer
 }
 
