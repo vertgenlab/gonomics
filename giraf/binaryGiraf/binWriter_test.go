@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
+	"io"
 	"reflect"
 	"testing"
 )
@@ -49,7 +50,7 @@ func TestEncodeNotes(t *testing.T) {
 func TestWrite(t *testing.T) {
 	CompressGiraf("testdata/test.giraf")
 	result := fileio.EasyOpen("testdata/test.giraf.fe")
-	if _, eof := fileio.EasyNextLine(result); eof {
+	if _, err := result.BuffReader.ReadByte(); err == io.EOF {
 		t.Errorf("Error: binary giraf was not written")
 	}
 }
