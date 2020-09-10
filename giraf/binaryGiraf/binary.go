@@ -1,4 +1,4 @@
-package giraf
+package binaryGiraf
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"

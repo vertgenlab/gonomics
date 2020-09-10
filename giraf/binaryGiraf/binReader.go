@@ -1,10 +1,11 @@
-package giraf
+package binaryGiraf
 
 import (
 	"bytes"
 	"github.com/biogo/hts/bgzf"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"io"
 	"strings"
@@ -35,10 +36,10 @@ func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
 	defer outfile.Close()
 
 	// Read info until EOF
-	var curr Giraf
+	var curr giraf.Giraf
 	for curr, err = reader.Read(graph); err != io.EOF; curr, err = reader.Read(graph) {
 		common.ExitIfError(err)
-		WriteGirafToFileHandle(outfile, &curr)
+		giraf.WriteGirafToFileHandle(outfile, &curr)
 	}
 
 	// Close reader
@@ -46,8 +47,8 @@ func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
 	common.ExitIfError(err)
 }
 
-func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (Giraf, error) {
-	var answer Giraf
+func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
+	var answer giraf.Giraf
 	var err error
 
 	return answer, err

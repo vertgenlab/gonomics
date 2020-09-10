@@ -1,4 +1,4 @@
-package giraf
+package binaryGiraf
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 	"io"
 	"log"
 )
@@ -25,7 +26,7 @@ func NewBinWriter(file io.Writer) *BinWriter {
 }
 
 func CompressGiraf(filename string) {
-	inputStream := GoReadToChan(filename)
+	inputStream := giraf.GoReadToChan(filename)
 	outfile := fileio.EasyCreate(filename + ".fe")
 	defer outfile.Close()
 	writer := NewBinWriter(outfile)
@@ -48,7 +49,7 @@ func CompressGiraf(filename string) {
 // Exluded Fields: qName, path, byteCigar, fancySeq.Seq, qual, notes
 var binGirafFixedSize int = 29
 
-func (bw *BinWriter) Write(g *Giraf) error {
+func (bw *BinWriter) Write(g *giraf.Giraf) error {
 	bw.buf.Reset() // clear buffer for new write
 	var currBuf [8]byte
 
@@ -173,7 +174,7 @@ func encodeQual(q []uint8) []cigar.ByteCigar {
 	return answer
 }
 
-func notesToBytes(n []Note) []byte {
+func notesToBytes(n []giraf.Note) []byte {
 	var answer []byte
 	for _, val := range n {
 		answer = append(answer, noteToBytes(val)...)
@@ -181,7 +182,7 @@ func notesToBytes(n []Note) []byte {
 	return answer
 }
 
-func noteToBytes(n Note) []byte {
+func noteToBytes(n giraf.Note) []byte {
 	var answer []byte
 	var currBuf [4]byte
 	if len(n.Tag) != 2 {

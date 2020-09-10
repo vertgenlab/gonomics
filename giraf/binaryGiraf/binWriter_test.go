@@ -1,10 +1,11 @@
-package giraf
+package binaryGiraf
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 	"reflect"
 	"testing"
 )
@@ -34,7 +35,7 @@ func TestGetFancySeq(t *testing.T) {
 	}
 }
 
-var TestNotes = []Note{{Tag: []byte("BC"), Type: 'Z', Value: "TEST" + "\000"},
+var TestNotes = []giraf.Note{{Tag: []byte("BC"), Type: 'Z', Value: "TEST" + "\000"},
 	{Tag: []byte("AD"), Type: 'Z', Value: "TEST2" + "\000"}}
 var ByteNotes = "BCZTEST" + "\000" + "ADZTEST2" + "\000"
 
