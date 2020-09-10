@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaThreeBit"
+	"github.com/vertgenlab/gonomics/fileio"
 	"reflect"
 	"testing"
 )
@@ -35,14 +36,19 @@ func TestGetFancySeq(t *testing.T) {
 
 var TestNotes = []Note{{Tag: []byte("BC"), Type: 'Z', Value: "TEST" + "\000"},
 	{Tag: []byte("AD"), Type: 'Z', Value: "TEST2" + "\000"}}
-
-//var BinNotes = []BinNote{{tag: [2]byte{'B', 'C'}, tagType: 'I', data: []byte("TEST")},
-//	{tag: [2]byte{'A', 'D'}, tagType: 'E', data: []byte("TEST2")}}
 var ByteNotes = "BCZTEST" + "\000" + "ADZTEST2" + "\000"
 
 func TestEncodeNotes(t *testing.T) {
 	answer := notesToBytes(TestNotes)
 	if !reflect.DeepEqual(answer, []byte(ByteNotes)) {
 		t.Errorf("Error encoding giraf notes")
+	}
+}
+
+func TestWrite(t *testing.T) {
+	CompressGiraf("testdata/large.giraf")
+	result := fileio.EasyOpen("testdata/large.giraf.fe")
+	if _, eof := fileio.EasyNextLine(result); eof {
+		t.Errorf("Error: binary giraf was not written")
 	}
 }

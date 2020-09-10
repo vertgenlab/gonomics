@@ -24,9 +24,29 @@ func NewWriter(file io.Writer) *BinWriter {
 	}
 }
 
+func CompressGiraf(filename string) {
+	inputStream := GoReadToChan(filename)
+	outfile := fileio.EasyCreate(filename + ".fe")
+	defer outfile.Close()
+	writer := NewWriter(outfile)
+	var err error
+
+	// Write info from all girafs in inputStream
+	for giraf := range inputStream {
+		err = writer.Write(giraf)
+		common.ExitIfError(err)
+	}
+
+	//TODO: Do I need to write newline to end file???
+
+	// Close writer
+	err = writer.bg.Close()
+	common.ExitIfError(err)
+}
+
 // Byte size of BinGiraf fixed size fields excluding blockSize.
 // Exluded Fields: qName, path, byteCigar, fancySeq.Seq, qual, notes
-var binGirafFixedSize int = 33
+var binGirafFixedSize int = 29
 
 func (bw *BinWriter) Write(g *Giraf) error {
 	bw.buf.Reset() // clear buffer for new write
@@ -116,18 +136,6 @@ func (bw *BinWriter) Write(g *Giraf) error {
 	// write all bytes in buffer
 	_, err := bw.bg.Write(bw.buf.Bytes())
 	return err
-}
-
-func WriteBinGiraf(filename string) {
-	inputStream := GoReadToChan(filename)
-	outfile := fileio.EasyCreate(filename + ".fe")
-	writer := NewWriter(outfile)
-	var err error
-
-	for giraf := range inputStream {
-		err = writer.Write(giraf)
-		common.ExitIfError(err)
-	}
 }
 
 func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
