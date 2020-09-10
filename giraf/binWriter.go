@@ -231,16 +231,19 @@ func noteToBytes(n Note) []byte {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'Z': // string
+		answer = append(answer, n.Value...)
 		if answer[len(answer)-1] != '\000' { // check if last byte is nil string
 			answer = append(answer, '\000') // if not, create nil terminated string
 			log.Printf("WARNING: String in tag is not nil terminated, adding nil: %+v", n)
 		}
 	case 'H': // hex
+		answer = append(answer, n.Value...)
 		if answer[len(answer)-1] != '\000' { // check if last byte is nil string
 			answer = append(answer, '\000') // if not, create nil terminated string
 			log.Printf("WARNING: String in tag is not nil terminated, adding nil: %+v", n)
 		}
 	case 'B': // array //TODO: currently treat as string, but could be array per sam format. Will require changes to Giraf struct
+		answer = append(answer, n.Value...)
 		if answer[len(answer)-1] != '\000' { // check if last byte is nil string
 			answer = append(answer, '\000') // if not, create nil terminated string
 		}

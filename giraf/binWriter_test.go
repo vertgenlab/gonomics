@@ -33,14 +33,16 @@ func TestGetFancySeq(t *testing.T) {
 	}
 }
 
-var TestNotes = []Note{{Tag: []byte("BC"), Type: 'I', Value: "TEST"},
-	{Tag: []byte("AD"), Type: 'E', Value: "TEST2"}}
-var BinNotes = []BinNote{{tag: [2]byte{'B', 'C'}, tagType: 'I', data: []byte("TEST")},
-	{tag: [2]byte{'A', 'D'}, tagType: 'E', data: []byte("TEST2")}}
+var TestNotes = []Note{{Tag: []byte("BC"), Type: 'Z', Value: "TEST" + "\000"},
+	{Tag: []byte("AD"), Type: 'Z', Value: "TEST2" + "\000"}}
+
+//var BinNotes = []BinNote{{tag: [2]byte{'B', 'C'}, tagType: 'I', data: []byte("TEST")},
+//	{tag: [2]byte{'A', 'D'}, tagType: 'E', data: []byte("TEST2")}}
+var ByteNotes = "BCZTEST" + "\000" + "ADZTEST2" + "\000"
 
 func TestEncodeNotes(t *testing.T) {
-	answer := encodeNotes(TestNotes)
-	if !reflect.DeepEqual(answer, BinNotes) {
+	answer := notesToBytes(TestNotes)
+	if !reflect.DeepEqual(answer, []byte(ByteNotes)) {
 		t.Errorf("Error encoding giraf notes")
 	}
 }
