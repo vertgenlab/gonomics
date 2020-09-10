@@ -18,7 +18,7 @@ type BinWriter struct {
 	buf bytes.Buffer
 }
 
-func NewWriter(file io.Writer) *BinWriter {
+func NewBinWriter(file io.Writer) *BinWriter {
 	return &BinWriter{
 		bg: bgzf.NewWriter(file, 1), //TODO: Play with different levels of concurrency
 	}
@@ -28,7 +28,7 @@ func CompressGiraf(filename string) {
 	inputStream := GoReadToChan(filename)
 	outfile := fileio.EasyCreate(filename + ".fe")
 	defer outfile.Close()
-	writer := NewWriter(outfile)
+	writer := NewBinWriter(outfile)
 	var err error
 
 	// Write info from all girafs in inputStream
@@ -141,6 +141,9 @@ func (bw *BinWriter) Write(g *Giraf) error {
 func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
 	var answer []dna.Base
 	var seqIdx int
+	if cigar == nil {
+		return *dnaThreeBit.NewThreeBit(seq, dnaThreeBit.A)
+	}
 	for _, val := range cigar {
 		if val.Op == 'S' || val.Op == 'X' || val.Op == 'I' {
 			answer = append(answer, seq[seqIdx:seqIdx+int(val.RunLen)]...)

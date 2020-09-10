@@ -46,8 +46,8 @@ func TestEncodeNotes(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
-	CompressGiraf("testdata/large.giraf")
-	result := fileio.EasyOpen("testdata/large.giraf.fe")
+	CompressGiraf("testdata/test.giraf")
+	result := fileio.EasyOpen("testdata/test.giraf.fe")
 	if _, eof := fileio.EasyNextLine(result); eof {
 		t.Errorf("Error: binary giraf was not written")
 	}
