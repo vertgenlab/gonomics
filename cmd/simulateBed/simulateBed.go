@@ -6,9 +6,20 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"log"
+	"math/rand"
+	"time"
 )
 
-func simulateBed(regionCount int, simLength int64, noGapFile string, outFile string) {
+func simulateBed(regionCount int, simLength int64, noGapFile string, outFile string, randSeed bool, setSeed int64) {
+	if randSeed && setSeed != -1 {
+		log.Fatalf("Cannot use a set seed and also a random seed.")
+	}
+	if randSeed {
+		rand.Seed(time.Now().UnixNano())
+	} else if setSeed != -1 {
+		rand.Seed(setSeed)
+	}
+
 	noGap := bed.Read(noGapFile)
 	answer := make([]*bed.Bed, 0)
 	var Length, tmp, chromWindows int64
@@ -37,7 +48,7 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 			if tmp-chromWindows > 0 {
 				tmp = tmp - chromWindows
 			} else {
-				fmt.Printf("Got one\n")
+				//DEBUG: fmt.Printf("Got one\n")
 				answer = append(answer, &bed.Bed{Chrom: noGap[j].Chrom, ChromStart: noGap[j].ChromStart + tmp - 1, ChromEnd: noGap[j].ChromStart + tmp - 1 + simLength, Name: noGap[j].Name})
 				break
 			}
@@ -59,6 +70,8 @@ func main() {
 	var expectedNumArgs int = 2
 	var Length *int64 = flag.Int64("L", 1000, "Specifies the length of simulated regions.")
 	var regionCount *int = flag.Int("N", 10, "Specifies the number of simulated bed regions.")
+	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
+	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -73,5 +86,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	simulateBed(*regionCount, *Length, inFile, outFile)
+	simulateBed(*regionCount, *Length, inFile, outFile, *randSeed, *setSeed)
 }
