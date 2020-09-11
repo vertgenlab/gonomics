@@ -129,8 +129,7 @@ func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	for j := 0; j < numInts; j++ {
 		fancyBases.Seq = append(fancyBases.Seq, binary.LittleEndian.Uint64(br.currData.Next(8))) // fancySeq.Seq (uint64)
 	}
-
-	answer.Seq = fancyToFullSeq(&fancyBases, g)
+	addFullSeq(&answer, &fancyBases, g)
 
 	// alnScore (int64)
 	answer.AlnScore = int(binary.LittleEndian.Uint64(br.currData.Next(8)))
@@ -152,13 +151,53 @@ func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	// notes ([]BinNote)
 	appendNotes(&answer, br) // notes ([]bytes)
 
+	if giraf.IsForwardRead(&answer) {
+		answer.PosStrand = true
+	}
+
 	return answer, err
 }
 
-func fancyToFullSeq(fancySeq *dnaThreeBit.ThreeBit, graph *simpleGraph.SimpleGraph) []dna.Base {
-	answer := make([]dna.Base, 0)
-	//TODO
-	return answer
+func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *simpleGraph.SimpleGraph) {
+	var fancyBases []dna.Base
+	if fancySeq.Len != 0 {
+		fancyBases = dnaThreeBit.ToDnaBases(fancySeq)
+	}
+	refIdx := answer.Path.TStart
+	var currNodeId int
+	var currNode *simpleGraph.Node = graph.Nodes[answer.Path.Nodes[0]]
+	var i uint16
+
+	for _, cigar := range answer.Cigar {
+		switch cigar.Op {
+		case '=':
+			for i = 0; i < cigar.RunLen; i++ {
+				if refIdx > len(currNode.Seq)-1 {
+					refIdx = 0
+					currNodeId++
+					currNode = graph.Nodes[answer.Path.Nodes[currNodeId]]
+				}
+
+				answer.Seq = append(answer.Seq, currNode.Seq[refIdx])
+				refIdx++
+			}
+		case 'X':
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...)
+			fancyBases = fancyBases[:cigar.RunLen]
+			refIdx += int(cigar.RunLen)
+		case 'S':
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...)
+			fancyBases = fancyBases[:cigar.RunLen]
+		case 'I':
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...)
+			fancyBases = fancyBases[:cigar.RunLen]
+		case 'D':
+			refIdx += int(cigar.RunLen)
+		default:
+			log.Fatalf("ERROR: Unrecognized cigar operation: %v", cigar.Op)
+		}
+	}
+
 }
 
 func appendNotes(answer *giraf.Giraf, br *BinReader) {
