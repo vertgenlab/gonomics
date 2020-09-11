@@ -1,5 +1,7 @@
 package binaryGiraf
 
+// Package binaryGiraf provides functions for reading and writing binary giraf files
+
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dnaThreeBit"

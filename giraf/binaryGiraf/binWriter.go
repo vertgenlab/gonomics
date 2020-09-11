@@ -14,17 +14,20 @@ import (
 	"log"
 )
 
+// The BinWriter struct wraps the bgzf writer from the biogo repository with a bytes buffer to store encoded giraf records
 type BinWriter struct {
 	bg  *bgzf.Writer
 	buf bytes.Buffer
 }
 
+// NewBinWriter creates a new BinWriter
 func NewBinWriter(file io.Writer) *BinWriter {
 	return &BinWriter{
 		bg: bgzf.NewWriter(file, 1), //TODO: Play with different levels of concurrency
 	}
 }
 
+// CompressGiraf will encode a giraf file (.giraf) and output a binary giraf file (.giraf.fe)
 func CompressGiraf(filename string) {
 	inputStream := giraf.GoReadToChan(filename)
 	outfile := fileio.EasyCreate(filename + ".fe")
@@ -47,6 +50,7 @@ func CompressGiraf(filename string) {
 // Exluded Fields: qName, path, byteCigar, fancySeq.Seq, qual, notes
 var binGirafFixedSize int = 29
 
+// The Write method for the BinWriter struct compresses a single giraf record and writes to file
 func (bw *BinWriter) Write(g *giraf.Giraf) error {
 	bw.buf.Reset() // clear buffer for new write
 	var currBuf [8]byte
@@ -137,6 +141,7 @@ func (bw *BinWriter) Write(g *giraf.Giraf) error {
 	return err
 }
 
+// getFancySeq will parse the []cigar.ByteCigar and record any bases that cannot be recovered by reference matching
 func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
 	var answer []dna.Base
 	var seqIdx int
@@ -152,6 +157,7 @@ func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
 	return *dnaThreeBit.NewThreeBit(answer, dnaThreeBit.A)
 }
 
+// encodeQual creates a run-length encoded representation of the Qual scores in the ByteCigar format
 func encodeQual(q []uint8) []cigar.ByteCigar {
 	answer := make([]cigar.ByteCigar, 0, len(q))
 	var curr cigar.ByteCigar
@@ -172,6 +178,7 @@ func encodeQual(q []uint8) []cigar.ByteCigar {
 	return answer
 }
 
+// notesToBytes parses a slice of notes and returns a slice of encoded bytes
 func notesToBytes(n []giraf.Note) []byte {
 	var answer []byte
 	for _, val := range n {
@@ -180,6 +187,7 @@ func notesToBytes(n []giraf.Note) []byte {
 	return answer
 }
 
+// noteToBytes parses a single note and returns a slice of encoded bytes
 func noteToBytes(n giraf.Note) []byte {
 	var answer []byte
 	var currBuf [4]byte

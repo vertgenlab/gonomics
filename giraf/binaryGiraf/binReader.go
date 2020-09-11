@@ -17,11 +17,13 @@ import (
 	"strings"
 )
 
+// The BinReader struct wraps the bgzf reader from the biogo repository with a bytes buffer to store encoded giraf records
 type BinReader struct {
 	bg       *bgzf.Reader
 	currData *bytes.Buffer
 }
 
+// NewBinReader creates a new BinReader
 func NewBinReader(file io.Reader) *BinReader {
 	reader, err := bgzf.NewReader(file, 1) //TODO: Play with different levels of concurrency
 	common.ExitIfError(err)
@@ -31,6 +33,7 @@ func NewBinReader(file io.Reader) *BinReader {
 	}
 }
 
+// DecompressGiraf will decode a binary giraf file (.giraf.fe) and output a giraf file (.giraf)
 func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
 	// Initialize infile
 	infile := fileio.EasyOpen(filename)
@@ -54,6 +57,7 @@ func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
 	common.ExitIfError(err)
 }
 
+// The Read method for the BinWriter struct decompresses a single giraf record and writes to file
 func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	var answer giraf.Giraf
 	var bytesRead int
@@ -158,6 +162,7 @@ func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	return answer, err
 }
 
+// addFullSeq parses the cigar and the fancySeq fields to retrieve the full length read sequence
 func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *simpleGraph.SimpleGraph) {
 	var fancyBases []dna.Base
 	if fancySeq.Len != 0 {
@@ -200,6 +205,7 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *simp
 
 }
 
+// appendNotes parses the encoded notes at the end of the alignment record and appends them to the output giraf record
 func appendNotes(answer *giraf.Giraf, br *BinReader) {
 	var currNote giraf.Note
 	var currString strings.Builder
