@@ -30,10 +30,12 @@ func IsReverseRead(giraf *Giraf) bool {
 	return !flagTestBit(giraf.Flag, 8) // 128 in sam
 }
 
+// IsPaired returns true if the read has a mate
 func IsPaired(giraf *Giraf) bool {
 	return flagTestBit(giraf.Flag, 16) // 1 in sam
 }
 
+// HasNamePrefix is reserved for binary giraf processing and returns true if read follows a defined prefix pattern
 func HasNamePrefix(giraf *Giraf) bool {
 	return flagTestBit(giraf.Flag, 32) // for binary giraf
 }
