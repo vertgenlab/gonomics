@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+// StringToInt parses a string into an int and will exit on error
 func StringToInt(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
@@ -14,6 +15,7 @@ func StringToInt(s string) int {
 	return n
 }
 
+// StringToFloat64 parses a string into a float64 and will exit on error
 func StringToFloat64(s string) float64 {
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
@@ -22,6 +24,7 @@ func StringToFloat64(s string) float64 {
 	return n
 }
 
+// StringToInt8 parses a string into an int8 and will exit on error
 func StringToInt8(s string) int8 {
 	n, err := strconv.ParseInt(s, 10, 8)
 	if err != nil {
@@ -30,6 +33,7 @@ func StringToInt8(s string) int8 {
 	return int8(n)
 }
 
+// StringToInt16 parses a string into an int16 and will exit on error
 func StringToInt16(s string) int16 {
 	n, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {
@@ -38,6 +42,7 @@ func StringToInt16(s string) int16 {
 	return int16(n)
 }
 
+// StringToInt32 parses a string into an int32 and will exit on error
 func StringToInt32(s string) int32 {
 	n, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
@@ -46,6 +51,7 @@ func StringToInt32(s string) int32 {
 	return int32(n)
 }
 
+// StringToInt64 parses a string into an int64 and will exit on error
 func StringToInt64(s string) int64 {
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
@@ -54,6 +60,7 @@ func StringToInt64(s string) int64 {
 	return n
 }
 
+// StringToUint64 parses a string into a uint64 and will exit on error
 func StringToUint64(s string) uint64 {
 	n, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
@@ -62,6 +69,7 @@ func StringToUint64(s string) uint64 {
 	return n
 }
 
+// StringToUint32 parses a string into a uint32 and will exit on error
 func StringToUint32(s string) uint32 {
 	n, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
@@ -70,7 +78,7 @@ func StringToUint32(s string) uint32 {
 	return uint32(n)
 }
 
-// StringToUint16 converts a string to a uint16
+// StringToUint16 parses a string into a uint16 and will exit on error
 func StringToUint16(s string) uint16 {
 	n, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {
@@ -79,6 +87,7 @@ func StringToUint16(s string) uint16 {
 	return uint16(n)
 }
 
+// StringToUint8 parses a string into a uint8 and will exit on error
 func StringToUint8(s string) uint8 {
 	n, err := strconv.ParseUint(s, 10, 8)
 	if err != nil {
