@@ -1,10 +1,10 @@
 package popgen
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/dna"
 	"math"
 	"strings"
 	//DEBUG"fmt"
@@ -99,50 +99,41 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
-func AFSSampleClosure(n int, k int, alpha float64) func(float64) float64 {
+func AFSSampleClosure(n int, k int, alpha float64, binomMap *map[int][]float64) func(float64) float64 {
 	return func(p float64) float64 {
+		//DEBUG: fmt.Println(binomMap)
 		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
-		return AFSStationarity(p, alpha) * numbers.BinomialDist(n, k, p)
+		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialDistLogMap(n, k, p, binomMap))
 	}
 }
 
 //eq. 2.2
-func AFSSampleDensity(n int, k int, alpha float64) float64 {
-	f := AFSSampleClosure(n, k, alpha)
+func AFSSampleDensity(n int, k int, alpha float64, binomMap *map[int][]float64) float64 {
+	f := AFSSampleClosure(n, k, alpha, binomMap)
 	//DEBUG prints
 	//fmt.Printf("f(0.1)=%e\n", f(0.1))
 	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
 	//fmt.Printf("N: %v. K: %v. Alpha: %f.\n", n, k, alpha)
 	//n choose k * Definiteintegral(p(1-p secrition)stationaritydensity)
-	return numbers.DefiniteIntegral(f, 0.000001, 0.9999999999)
+	return numbers.LogIntegrateIterative(f, 0.000001, 0.9999999, 20, 10e-8)
 }
 
 //eq 2.3
-func AlleleFrequencyProbability(i int, n int, alpha float64) float64 {
+func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap *map[int][]float64) float64 {
 	var denominator float64
+	//check if n has already been seen
 	for j := 1; j < n-1; j++ {
-		denominator = denominator + AFSSampleDensity(n, j, alpha)
+		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomMap))
 	}
-	return AFSSampleDensity(n, i, alpha) / denominator
+	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, binomMap), denominator)
 }
 
 //eq 2.4
 //afs array has a dummy variable in position 0, so loop starts at 1.
-func AFSLikelihood(afs AFS, alpha []float64) float64 {
-	var answer float64 = 1.0
+func AFSLikelihood(afs AFS, alpha []float64, binomMap *map[int][]float64) float64 {
+	var answer float64 = 0.0
 	for j := 1; j < len(afs.sites); j++ {
-		answer = answer * AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j])
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomMap))
 	}
 	return answer
 }
-
-func AFSLogLikelihood(afs AFS, alpha []float64) float64 {
-	var answer float64 = 0.0 //ln(1)
-	var logLikelihood float64
-	for j := 1; j < len(afs.sites); j++ {
-		logLikelihood = math.Log(AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j]))
-		answer = numbers.MultiplyLog(answer, logLikelihood)
-	}
-	return answer
-}
-
