@@ -6,9 +6,9 @@ import (
 )
 
 var BinomialDistLogTests = []struct {
-	n int
-	k int
-	p float64
+	n      int
+	k      int
+	p      float64
 	answer float64
 }{
 	{20, 4, 0.6, -8.21825},
@@ -43,9 +43,9 @@ func TestAddBinomMapEntry(t *testing.T) {
 }
 
 var BinomialDistLogMapTests = []struct {
-	n int
-	k int
-	p float64
+	n      int
+	k      int
+	p      float64
 	answer float64
 }{
 	{20, 4, 0.6, -8.21825},
@@ -66,8 +66,6 @@ func TestBinomalDistLogMap(t *testing.T) {
 		t.Errorf("BinomialDistLogMap had binomMap of length %v. Expected 2.", len(binomMap))
 	}
 }
-
-
 
 /*
 var binomMap map[int][]float64

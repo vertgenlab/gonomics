@@ -42,9 +42,9 @@ var logIntegralTests = []struct {
 	b      float64
 	answer float64
 }{
-//	{func(x float64) float64 { return x }, 2, 3, 2.62},
+	//	{func(x float64) float64 { return x }, 2, 3, 2.62},
 	{func(x float64) float64 { return x }, 2, 5, 4.94893081905},
-	{func(x float64) float64 { return math.Log(x*x) }, 2, 11, 6.089044875},
+	{func(x float64) float64 { return math.Log(x * x) }, 2, 11, 6.089044875},
 }
 
 func TestLogIntegral(t *testing.T) {
@@ -61,7 +61,7 @@ func TestLogIntegrateIterative(t *testing.T) {
 	for _, test := range logIntegralTests {
 		calculated := LogIntegrateIterative(test.f, test.a, test.b, 30, 1e-8)
 		if calculated > test.answer*1.00000001 || calculated < test.answer*0.99999999 {
-				t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
-			}
+			t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
+		}
 	}
 }
