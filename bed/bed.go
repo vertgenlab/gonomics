@@ -1,3 +1,5 @@
+//package bed provides functions for reading, writing, and manipulating Browser Extinsible Data (BED) format files.
+//More information on the BED file format can be found at https://genome.ucsc.edu/FAQ/FAQformat.html#format1
 package bed
 
 import (
@@ -11,6 +13,7 @@ import (
 	"sync"
 )
 
+//Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
 type Bed struct {
 	Chrom      string
 	ChromStart int64
@@ -21,6 +24,7 @@ type Bed struct {
 	Annotation []string //long form for extra fields
 }
 
+//BedToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
 func BedToString(bunk *Bed, fields int) string {
 	switch fields {
 	case 3:
@@ -43,24 +47,28 @@ func BedToString(bunk *Bed, fields int) string {
 	return ""
 }
 
+//WriteBed writes an input Bed struct to an os.File with a specified number of Bed fields.
 func WriteBed(file *os.File, input *Bed, fields int) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", BedToString(input, fields))
 	common.ExitIfError(err)
 }
 
+//WriteToFileHandle writes an input Bed struct with a specified number of fields to an io.Writer
 func WriteToFileHandle(file io.Writer, rec *Bed, fields int) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", BedToString(rec, fields))
 	common.ExitIfError(err)
 }
 
+//WriteSliceToFileHandle writes a slice of Bed structs with a specified number of fields to an io.Writer
 func WriteSliceToFileHandle(file io.Writer, records []*Bed, fields int) {
 	for _, rec := range records {
 		WriteToFileHandle(file, rec, fields)
 	}
 }
 
+//Write writes a slice of Bed structs with a specified number of fields to a specified filename.
 func Write(filename string, records []*Bed, fields int) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
@@ -68,6 +76,7 @@ func Write(filename string, records []*Bed, fields int) {
 	WriteSliceToFileHandle(file, records, fields)
 }
 
+//Read returns a slice of Bed structs from an input filename.
 func Read(filename string) []*Bed {
 	var line string
 	var answer []*Bed
@@ -84,6 +93,7 @@ func Read(filename string) []*Bed {
 	return answer
 }
 
+//processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) *Bed {
 	words := strings.Split(line, "\t")
 	startNum := common.StringToInt64(words[1])
@@ -107,6 +117,7 @@ func processBedLine(line string) *Bed {
 	return &current
 }
 
+//NextBed returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
 func NextBed(reader *fileio.EasyReader) (*Bed, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	if done {
@@ -115,6 +126,7 @@ func NextBed(reader *fileio.EasyReader) (*Bed, bool) {
 	return processBedLine(line), false
 }
 
+//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- *Bed. 
 func ReadToChan(file *fileio.EasyReader, data chan<- *Bed, wg *sync.WaitGroup) {
 	for curr, done := NextBed(file); !done; curr, done = NextBed(file) {
 		data <- curr
@@ -123,6 +135,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- *Bed, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
+//GoReadToChan reads Bed entries from an input filename to a <-chan *Bed.
 func GoReadToChan(filename string) <-chan *Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
