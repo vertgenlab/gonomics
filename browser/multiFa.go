@@ -1,3 +1,4 @@
+//Package browser contains command line visualization tools for genomic information.
 package browser
 
 import (
@@ -10,6 +11,8 @@ import (
 	"unicode/utf8"
 )
 
+//MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position. 
+//Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
 func MultiFaVisualizer(infile string, outfile string, start int64, end int64, noMask bool, lineLength int64) {
 	if !(start < end) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
@@ -71,6 +74,7 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 	}
 }
 
+//calculateLongestName is a helper function of MultiFaVisualizer that returns the length of the longest name in a slice of fasta.Fasta structs. 
 func calculateLongestName(f []*fasta.Fasta) int {
 	var ans int = 0
 	var temp int
