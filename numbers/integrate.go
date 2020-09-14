@@ -44,12 +44,12 @@ func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIte
 	for i := 0; i < maxIter; i++ {
 		n := n * 10
 		curr := LogIntegrate(f, a, b, n)
-		if (prev - curr) / curr < relativeError {
+		if (prev-curr)/curr < relativeError {
 			return curr
 		}
 		prev = curr
 	}
-	log.Fatalf("LogIntegrateIterative failed to converge below relative error: %f in maxIter: %v.", relativeError, maxIter)	
+	log.Fatalf("LogIntegrateIterative failed to converge below relative error: %f in maxIter: %v.", relativeError, maxIter)
 	return (0)
 }
 

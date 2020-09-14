@@ -9,7 +9,7 @@ import (
 	"math"
 )
 
-//Dunn returns the dunn index as a float64 and missing group members as a string. 
+//Dunn returns the dunn index as a float64 and missing group members as a string.
 //Mathematical details of the Dunn Index are described at https://en.wikipedia.org/wiki/Dunn_index.
 func Dunn(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
 	var maxIntra int = 0

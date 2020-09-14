@@ -3,7 +3,12 @@ package popgen
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/numbers"
+	"math"
 	"math/rand"
+	//DEBUG:
+	"log"
+	"os"
+	"runtime/pprof"
 	//DEBUG: "fmt"
 )
 
@@ -14,10 +19,10 @@ type Theta struct {
 	probability float64
 }
 
-func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, logSpace bool) bool {
+func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, binomMap *map[int][]float64) bool {
 	yRand := rand.Float64()
 	var pAccept float64
-	pAccept = common.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, logSpace)*Hastings_Ratio(old, thetaPrime))
+	pAccept = common.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, binomMap)*Hastings_Ratio(old, thetaPrime))
 	//DEBUG: fmt.Printf("Likelihood ratio: %f\n", pAccept)
 	return pAccept > yRand
 }
@@ -36,11 +41,8 @@ func Hastings_Ratio(tOld Theta, tNew Theta) float64 {
 	return oldGivenNew / newGivenOld
 }
 
-func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, logSpace bool) float64 {
-	if logSpace {
-		return numbers.DivideLog(AFSLogLikelihood(data, old.alpha), AFSLogLikelihood(data, thetaPrime.alpha)) * (thetaPrime.probability / old.probability)
-	}
-	return (AFSLikelihood(data, thetaPrime.alpha) * thetaPrime.probability) / (AFSLikelihood(data, old.alpha) * old.probability)
+func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, binomMap *map[int][]float64) float64 {
+	return numbers.MultiplyLog(numbers.DivideLog(AFSLikelihood(data, old.alpha, binomMap), AFSLikelihood(data, thetaPrime.alpha, binomMap)), math.Log(thetaPrime.probability/old.probability))
 }
 
 func GenerateCandidateThetaPrime(t Theta) Theta {
@@ -54,7 +56,7 @@ func GenerateCandidateThetaPrime(t Theta) Theta {
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
 	//TODO: sigmaPrime still reverts to ultrasmall values, impeding step size. Need a permanant solution before this tool can be used effectively.
 	//sigmaPrime := numbers.RandGamma(t.sigma*t.sigma, t.sigma)
-	sigmaPrime := numbers.RandGamma(1.0, 1.0) 
+	sigmaPrime := numbers.RandGamma(1.0, 1.0)
 	//sigmaPrime = common.MaxFloat64(sigmaPrime, 0.01)
 	//DEBUG: fmt.Printf("sigmaPrime: %e. tSigma: %e.\n", sigmaPrime, t.sigma)
 	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
@@ -82,7 +84,17 @@ func InitializeTheta(m float64, s float64, k int) Theta {
 
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
-func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, logSpace bool) ([]float64, []float64, []bool) {
+func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int) ([]float64, []float64, []bool) {
+	//profiling test code
+	f, err := os.Create("testProfile.prof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
+	binomMap := make(map[int][]float64)
+
 	muList := make([]float64, iterations)
 	sigmaList := make([]float64, iterations)
 	acceptList := make([]bool, iterations)
@@ -90,7 +102,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	t := InitializeTheta(muZero, sigmaZero, len(data.sites))
 	for i := 0; i < iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t)
-		if Metropolis_Accept(t, tCandidate, data, logSpace) {
+		if Metropolis_Accept(t, tCandidate, data, &binomMap) {
 			t = tCandidate
 			acceptList[i] = true
 		} else {

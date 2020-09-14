@@ -63,7 +63,6 @@ func RandExp() float64 {
 	return a + umin*q[0]
 }
 
-
 //RandGamma returns a random number drawn from a gamma distribution with parameters alpha and beta.
 //a > 1 uses the method from Marsaglia and Tsang 2000. Written for k, theta parameters, so the first step converts b to 1 / b to evaluate gamma in terms of alpha and beta parameters.
 //a < 1 uses the method from Ahrens, J.H. and Dieter, U. (1974). Computer methods for sampling from gamma, beta, poisson and binomial distributions. Computing, 12, 223-246.
