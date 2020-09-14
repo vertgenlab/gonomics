@@ -57,12 +57,12 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, treeOutputFilename string, root *expandedTree.ETree) {
+func Simulate(randSeqFilename string, root *expandedTree.ETree) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	fasta.Write(treeOutputFilename, printSeqForNodes(root, rand1[0].Seq))
+	printSeqForNodes(root, rand1[0].Seq)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1, unsure how it was calculated
@@ -230,27 +230,27 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 //make fastas based off of node and random sequence
-func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base) []*fasta.Fasta {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base) {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
-	var fastaFinal []*fasta.Fasta
+	//var fastaFinal []*fasta.Fasta
 
 	length = node.BranchLength
 	seq = MutateSeq(sequence, length)
 
 	seqFasta = fasta.Fasta{node.Name, seq}
-	fastaFinal = append(fastaFinal, &seqFasta)
+	node.Fasta = &seqFasta
+	//fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
-		b := printSeqForNodes(node.Right, seq)
-		fastaFinal = append(fastaFinal, b...)
-		a := printSeqForNodes(node.Left, seq)
-		fastaFinal = append(fastaFinal, a...)
+		printSeqForNodes(node.Right, seq)
+		//fastaFinal = append(fastaFinal, b...)
+		printSeqForNodes(node.Left, seq)
+		//fastaFinal = append(fastaFinal, a...)
 	}
-	return fastaFinal
 }
 
-func RemoveAncestors(filename string, tree *expandedTree.ETree) {
+func RemoveAncestors(filename string, tree *expandedTree.ETree, outputFilename string) {
 	var fastas []*fasta.Fasta
 	var newFastas []*fasta.Fasta
 	var outFile string
@@ -265,6 +265,6 @@ func RemoveAncestors(filename string, tree *expandedTree.ETree) {
 			}
 		}
 	}
-	outFile = "descendents_" + filename
+	outFile = outputFilename
 	fasta.Write(outFile, newFastas)
 }

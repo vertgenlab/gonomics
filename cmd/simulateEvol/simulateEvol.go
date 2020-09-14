@@ -9,16 +9,22 @@ import (
 	"log"
 )
 
-func SimulateEvol(rootFastaFile string, treeFile string, outFile string) {
+func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
-	nodes := expandedTree.GetTree(tree)
 	var fastas []*fasta.Fasta
-	simulate.Simulate(rootFastaFile, outFile, tree)
+	simulate.Simulate(rootFastaFile, tree)
+	nodes := expandedTree.GetTree(tree)
+	fmt.Printf("%s, %s, %s, \n", rootFastaFile, treeFile, simOutFile)
 
 	for i := 0; i < len(nodes); i++ {
 		fastas = append(fastas, nodes[i].Fasta)
+		if nodes[i].Fasta != nil {
+			fmt.Printf("nodes[i].Fasta is not nil, %s \n", nodes[i].Fasta.Name)
+		}
 	}
-	fasta.Write(outFile, fastas)
+	fasta.Write(simOutFile, fastas)
+
+	simulate.RemoveAncestors(simOutFile, tree, leafOutFile)
 }
 
 func usage() {
@@ -31,7 +37,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs = 3
+	var expectedNumArgs = 4
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -46,6 +52,7 @@ func main() {
 	rootFasta := flag.Arg(0)
 	newickTree := flag.Arg(1)
 	outFile := flag.Arg(2)
+	leafOutFile := flag.Arg(3)
 
-	SimulateEvol(rootFasta, newickTree, outFile)
+	SimulateEvol(rootFasta, newickTree, outFile, leafOutFile)
 }
