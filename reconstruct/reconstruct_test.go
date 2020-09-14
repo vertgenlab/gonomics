@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simulate"
+	"log"
 	"testing"
 )
 
@@ -23,6 +24,7 @@ func Test_reconstruct(t *testing.T) {
 		//example of how to run simulation: 1) read in tree (no fastas) 2) simulate random gene 3) simulate evolution 4) remove ancestors for reconstruction 4) assign fastas
 		tre, er := expandedTree.ReadNewick(test.newickFilename)
 		if er != nil {
+			log.Fatal("Couldn't read file")
 		}
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
 		simulate.Simulate("RandGeneOutput.fasta", "simOut.fasta", tre)                         //produced whole tree fasta file

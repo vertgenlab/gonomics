@@ -1,7 +1,6 @@
 package simulate
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -20,7 +19,7 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 
 	if length%3 != 0 {
 
-		fmt.Print("length must be divisible by three")
+		log.Fatal("length must be divisible by three")
 
 	} else {
 

@@ -1,20 +1,20 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/reconstruct"
-	"github.com/vertgenlab/gonomics/expandedTree"
-	"github.com/vertgenlab/gonomics/fasta"
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/reconstruct"
 	"log"
 )
 
-func ReconstructSeq (newickInput string, fastaInput string, outputFilename string) {
+func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree := expandedTree.ReadTree(newickInput, fastaInput)
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 	var treeFastas []*fasta.Fasta
-	
+
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 		reconstruct.LoopNodes(tree, i)
 	}
