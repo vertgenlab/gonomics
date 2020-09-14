@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simulate"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 )
 
-func SimulateEvol (rootFastaFile string, treeFile string, outFile string) {
+func SimulateEvol(rootFastaFile string, treeFile string, outFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	nodes := expandedTree.GetTree(tree)
 	var fastas []*fasta.Fasta
