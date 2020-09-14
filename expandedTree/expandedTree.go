@@ -17,8 +17,8 @@ type ETree struct {
 	BranchLength float64
 	OnlyTopology bool
 	Fasta        *fasta.Fasta //assigning fastas to nodes
-	State        int
-	Stored       []float64
+	State        int //corresponds to a base same numbering encoded by dna.Base
+	Stored       []float64 //a list of probabilities for each base at any given site of the genome
 	Scrap        float64
 	Left         *ETree
 	Right        *ETree
@@ -72,7 +72,7 @@ func GetTree(node *ETree) []*ETree {
 	if node.Left != nil {
 		a := GetTree(node.Left)
 		branch = append(branch, a...)
-	}
+	} //add piece to get leaves
 	return branch
 }
 
@@ -101,11 +101,11 @@ func GetBranch(node *ETree) []*ETree {
 	return branch
 }
 
-func GetLeaf(node *ETree) []*ETree {
+func GetLeaves(node *ETree) []*ETree {
 	var leaf []*ETree
 	if node.Left != nil && node.Right != nil {
-		a := GetLeaf(node.Left)
-		b := GetLeaf(node.Right)
+		a := GetLeaves(node.Left)
+		b := GetLeaves(node.Right)
 		leaf = append(leaf, a...)
 		leaf = append(leaf, b...)
 	}
@@ -219,7 +219,7 @@ func SetUp(root *ETree, prevNode *ETree) {
 func AssignFastas(root *ETree, fastaFilename string) {
 	fastas := fasta.Read(fastaFilename)
 	SetUp(root, nil)
-	leaves := GetLeaf(root)
+	leaves := GetLeaves(root)
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {

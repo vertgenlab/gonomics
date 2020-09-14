@@ -1,10 +1,9 @@
 package simulate
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"math/rand"
 )
@@ -18,15 +17,14 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	seq := []dna.Base{dna.A, dna.T, dna.G}
 	randLength := length - 6
 
-	r := rand.Float64()
-
 	if length%3 != 0 {
 
-		fmt.Print("length must be divisible by three")
+		log.Fatal("length must be divisible by three")
 
 	} else {
 
 		for i := 0; i < randLength; i++ {
+			r := rand.Float64()
 
 			//cut-offs based on GC content of galGal6
 			if r < GCcontent/2 {
@@ -42,7 +40,7 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 		}
 	}
 
-	r = rand.Float64()
+	r := rand.Float64()
 
 	if r < 1/3 {
 		seq = append(seq, dna.T, dna.A, dna.G)
@@ -123,7 +121,6 @@ func changeBase(originalBase dna.Base) dna.Base {
 
 //mutate base given random float, whether it's mutated is dependent on branchLength
 func mutateBase(b dna.Base, branchLength float64) dna.Base {
-
 	r := rand.Float64()
 
 	var base dna.Base
@@ -131,7 +128,7 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 	if branchLength == 0 {
 		base = b
 	} else if r < branchLength {
-		base = changeBase(base)
+		base = changeBase(b)
 	} else {
 		base = b
 	}
@@ -140,7 +137,8 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
-func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
+func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
+	var seq []dna.Base
 	var originalBase dna.Base
 	var newBase dna.Base
 	var originalCodons []*dna.Codon
@@ -148,6 +146,8 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
+
+	seq = copySeq(inputSeq)
 
 	if len(seq)%3 != 0 {
 		log.Fatal("sequence length must be divisible by three")
@@ -163,39 +163,57 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 
 				if i == 0 {
 					newBase = originalBase //cannot change start codon
-				} else if i == codonNum-1 { //cannot change stop codon, zero based
-					newBase = originalBase
+				} else if i == codonNum-1 { //zero-based, sometimes decides not to mutate, sometimes decides to ignore check for 2nd base G
+					r := rand.Float64()
+					if j == 0 { //first position is only ever a T
+						originalCodons[i].Seq[j] = dna.T
+					} else if j == 1 { //second position can either be an A or G
+						if r < 0.66 { //2/3 preference for A
+							originalCodons[i].Seq[j] = dna.A
+						} else {
+							originalCodons[i].Seq[j] = dna.G
+						}
+					} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
+						if originalCodons[i].Seq[j-1] == dna.G {
+							originalCodons[i].Seq[j] = dna.A
+						} else {
+							if r < 0.5 {
+								originalCodons[i].Seq[j] = dna.A
+							} else {
+								originalCodons[i].Seq[j] = dna.G
+							}
+						}
+					}
 				} else {
 					newBase = mutateBase(originalBase, branchLength)
+
+					if j == 0 {
+						thisCodon = append(thisCodon, newBase)
+						thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+						thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
+					} else if j == 1 {
+						thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+						thisCodon = append(thisCodon, newBase)
+						thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+					} else {
+						thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
+						thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+						thisCodon = append(thisCodon, newBase)
+					}
+
+					newCodons = dna.BasesToCodons(thisCodon)
+					originalAmAc = dna.TranslateCodon(originalCodons[i])
+					newAmAc = dna.TranslateCodon(newCodons[0])
+
+					prob := BLOSUM[originalAmAc][newAmAc]
+					r := rand.Float64()
+
+					if r < prob {
+						originalCodons[i].Seq[j] = newBase
+					} else {
+						originalCodons[i].Seq[j] = originalBase
+					}
 				}
-
-				if j == 0 {
-					thisCodon = append(thisCodon, newBase)
-					thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
-					thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
-				} else if j == 1 {
-					thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
-					thisCodon = append(thisCodon, newBase)
-					thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
-				} else {
-					thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
-					thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
-					thisCodon = append(thisCodon, newBase)
-				}
-
-				newCodons = dna.BasesToCodons(thisCodon)
-				originalAmAc = dna.TranslateCodon(originalCodons[i])
-				newAmAc = dna.TranslateCodon(newCodons[0])
-
-				prob := BLOSUM[originalAmAc][newAmAc]
-				r := rand.Float64()
-
-				if r < prob {
-					originalCodons[i].Seq[j] = newBase
-				} else {
-					originalCodons[i].Seq[j] = originalBase
-				}
-
 				newSequence = append(newSequence, originalCodons[i].Seq[j])
 			}
 		}
@@ -204,7 +222,7 @@ func MutateSeq(seq []dna.Base, branchLength float64) []dna.Base {
 	return newSequence
 }
 
-//make a map and a copy of that map of an original sequence so the sequence can be assigned to a node and then mutated
+//make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
 func copySeq(seq []dna.Base) []dna.Base {
 	original := make([]dna.Base, len(seq))
 	copy(original, seq)
@@ -232,28 +250,14 @@ func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base) []*fasta.Fa
 	return fastaFinal
 }
 
-func GetLeaf(node *expandedTree.ETree) []*expandedTree.ETree { //new
-	var leaf []*expandedTree.ETree
-	if node.Left != nil && node.Right != nil {
-		a := GetLeaf(node.Left)
-		b := GetLeaf(node.Right)
-		leaf = append(leaf, a...)
-		leaf = append(leaf, b...)
-	}
-	if node.Left == nil && node.Right == nil {
-		leaf = append(leaf, node)
-	}
-	return leaf
-}
-
-func removeAncestors(filename string, tree *expandedTree.ETree) {
+func RemoveAncestors(filename string, tree *expandedTree.ETree) {
 	var fastas []*fasta.Fasta
 	var newFastas []*fasta.Fasta
 	var outFile string
 
 	fastas = fasta.Read(filename)
 
-	leaves := GetLeaf(tree)
+	leaves := expandedTree.GetLeaves(tree)
 	for i := 0; i < len(fastas); i++ {
 		for j := 0; j < len(leaves); j++ {
 			if fastas[i].Name == leaves[j].Name {
