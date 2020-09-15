@@ -21,6 +21,7 @@ import (
 type BinReader struct {
 	bg       *bgzf.Reader
 	currData *bytes.Buffer
+	readBffr []byte
 }
 
 // NewBinReader creates a new BinReader
@@ -30,6 +31,7 @@ func NewBinReader(file io.Reader) *BinReader {
 	return &BinReader{
 		bg:       reader,
 		currData: &bytes.Buffer{},
+		readBffr: make([]byte, 0),
 	}
 }
 
@@ -65,9 +67,6 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	var i, j, runLen uint16
 	var buffer [4]byte
 
-	// reset data buffer
-	br.currData.Reset()
-
 	// blockSize (uint32)
 	bytesRead, err = br.bg.Read(buffer[:4])
 	if err == io.EOF || bytesRead != 4 {
@@ -76,14 +75,24 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	common.ExitIfError(err)
 	blockSize := int(binary.LittleEndian.Uint32(buffer[:4]))
 
-	// fill currData buffer with blockSize of bytes
-	data := make([]byte, blockSize) // read giraf to intermediate buffer //TODO: this is not great, find a way to not make an intermediate buffer
-	bytesRead, err = io.ReadFull(br.bg, data)
-	if err == io.EOF || bytesRead != blockSize {
+	// reset data buffer
+	br.currData.Reset()
+
+	// reset and check cap of readBffr. Either make new slice, or re-slice as needed
+	br.readBffr = br.readBffr[:0]
+	if cap(br.readBffr) < blockSize {
+		br.readBffr = make([]byte, blockSize)
+	} else {
+		br.readBffr = br.readBffr[:blockSize]
+	}
+
+	// read block to readBffr and fill currData buffer with read bytes
+	bytesRead, err = io.ReadFull(br.bg, br.readBffr)
+	if err == io.ErrUnexpectedEOF || bytesRead != blockSize {
 		log.Fatalln("ERROR: truncated record")
 	}
 	common.ExitIfError(err)
-	br.currData.Write(data) // copy data from intermediate buffer to bytes buffer
+	br.currData.Write(br.readBffr) // copy data from intermediate buffer to bytes buffer
 
 	// qNameLen (uint8)
 	qNameLen := int(br.currData.Next(1)[0])
