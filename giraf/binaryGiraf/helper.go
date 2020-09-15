@@ -19,9 +19,12 @@ func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 	reader := NewBinReader(file.BuffReader)
 	var curr giraf.Giraf
 	var err error
-	for curr, err = reader.Read(graph); err != io.EOF; curr, err = reader.Read(graph) {
-		common.ExitIfError(err)
+	for curr, err = ReadGiraf(reader, graph); err == nil; curr, err = ReadGiraf(reader, graph) {
 		answer = append(answer, curr)
+	}
+
+	if err != io.EOF {
+		common.ExitIfError(err)
 	}
 
 	// Close reader
@@ -37,9 +40,12 @@ func ReadToChan(file *fileio.EasyReader, graph *simpleGraph.SimpleGraph, data ch
 	var curr giraf.Giraf
 	var err error
 	reader := NewBinReader(file.BuffReader)
-	for curr, err = reader.Read(graph); err != io.EOF; curr, err = reader.Read(graph) {
-		common.ExitIfError(err)
+	for curr, err = ReadGiraf(reader, graph); err == nil; curr, err = ReadGiraf(reader, graph) {
 		data <- curr
+	}
+
+	if err != io.EOF {
+		common.ExitIfError(err)
 	}
 
 	// Close reader
@@ -77,7 +83,7 @@ func GirafChanToBinary(filename string, input <-chan *giraf.Giraf, wg *sync.Wait
 	defer file.Close()
 
 	for record := range input {
-		err = writer.Write(record)
+		err = WriteGiraf(writer, record)
 		common.ExitIfError(err)
 	}
 	err = writer.bg.Close()

@@ -57,7 +57,7 @@ func TestRead(t *testing.T) {
 	// Read info until EOF
 	var curr giraf.Giraf
 	graph := MakeTestGraph()
-	for curr, err = reader.Read(graph); err != io.EOF; curr, err = reader.Read(graph) {
+	for curr, err = ReadGiraf(reader, graph); err != io.EOF; curr, err = ReadGiraf(reader, graph) {
 		if err != nil {
 			t.Error(err)
 		}
@@ -84,7 +84,7 @@ func TestReadAndWrite(t *testing.T) {
 	// Read info until EOF
 	var curr giraf.Giraf
 	graph := MakeTestGraph()
-	for curr, err = reader.Read(graph); err != io.EOF; curr, err = reader.Read(graph) {
+	for curr, err = ReadGiraf(reader, graph); err != io.EOF; curr, err = ReadGiraf(reader, graph) {
 		if !reflect.DeepEqual(*(correct[0]), curr) {
 			t.Error("Problem with writing and reading binary giraf files")
 		}

@@ -18,6 +18,7 @@ import (
 type BinWriter struct {
 	bg  *bgzf.Writer
 	buf bytes.Buffer
+	tmpBuf [4]byte
 }
 
 // NewBinWriter creates a new BinWriter
@@ -36,8 +37,8 @@ func CompressGiraf(filename string) {
 	var err error
 
 	// Write info from all girafs in inputStream
-	for giraf := range inputStream {
-		err = writer.Write(giraf)
+	for record := range inputStream {
+		err = WriteGiraf(writer, record)
 		common.ExitIfError(err)
 	}
 
@@ -51,7 +52,7 @@ func CompressGiraf(filename string) {
 var binGirafFixedSize int = 29
 
 // The Write method for the BinWriter struct compresses a single giraf record and writes to file
-func (bw *BinWriter) Write(g *giraf.Giraf) error {
+func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	bw.buf.Reset() // clear buffer for new write
 	var currBuf [8]byte
 

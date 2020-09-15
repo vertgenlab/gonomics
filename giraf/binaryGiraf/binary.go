@@ -25,7 +25,7 @@ type binGiraf struct {
 	// THIS HAS BEEN MOVED TO FLAG //hasNamePrefix bool   // bool to determine whether qNamePrefix is valid for this read
 	qNameLen uint8  // length of below qName field
 	qName    string // name of read, qNamePrefix is prepended if hasNamePrefix
-	//Question: can we drop QStart and QEnd? Do these serve a different purpose from TStart and TEnd in the Path?
+	// QStart and QEnd are determined by clipped bases in Cigar
 	flag uint8 // bitwise flags
 	// PosStrand is dropped, stored in flag
 	tStart      uint32               // start position on first node (nodes[0]) in path, zero base

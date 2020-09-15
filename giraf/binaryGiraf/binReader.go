@@ -47,7 +47,7 @@ func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
 
 	// Read info until EOF
 	var curr giraf.Giraf
-	for curr, err = reader.Read(graph); err != io.EOF; curr, err = reader.Read(graph) {
+	for curr, err = ReadGiraf(reader, graph); err != io.EOF; curr, err = ReadGiraf(reader, graph) {
 		common.ExitIfError(err)
 		giraf.WriteGirafToFileHandle(outfile, &curr)
 	}
@@ -58,7 +58,7 @@ func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
 }
 
 // The Read method for the BinWriter struct decompresses a single giraf record and writes to file
-func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
+func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	var answer giraf.Giraf
 	var bytesRead int
 	var err error
@@ -95,12 +95,10 @@ func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	answer.Flag = br.currData.Next(1)[0]
 
 	// tStart (uint32)
-	answer.QStart = int(binary.LittleEndian.Uint32(br.currData.Next(4)))
-	answer.Path.TStart = answer.QStart //TODO: Is this true?
+	answer.Path.TStart = int(binary.LittleEndian.Uint32(br.currData.Next(4)))
 
 	// tEnd (uint32)
-	answer.QEnd = int(binary.LittleEndian.Uint32(br.currData.Next(4)))
-	answer.Path.TEnd = answer.QEnd //TODO: Is this true?
+	answer.Path.TEnd = int(binary.LittleEndian.Uint32(br.currData.Next(4)))
 
 	// path ([]uint32
 	pathLen := binary.LittleEndian.Uint16(br.currData.Next(2)) // pathLen (uint16)
@@ -151,6 +149,9 @@ func (br *BinReader) Read(g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 			answer.Qual = append(answer.Qual, op)
 		}
 	}
+
+	// QStart, QEnd (int)
+	answer.QStart, answer.QEnd = determineQStartQEnd(&answer)
 
 	// notes ([]BinNote)
 	appendNotes(&answer, br) // notes ([]bytes)
@@ -266,4 +267,26 @@ func appendNotes(answer *giraf.Giraf, br *BinReader) {
 		}
 		answer.Notes = append(answer.Notes, currNote)
 	}
+}
+
+// determineQStartQEnd parses the cigar to determine where the alignment starts and ends
+func determineQStartQEnd(answer *giraf.Giraf) (int, int) {
+	var start, end int
+	if answer.Cigar == nil {
+		return 0,0
+	}
+
+	if answer.Cigar[0].Op == 'S' {
+		start = int(answer.Cigar[0].RunLen)
+	} else {
+		start = 0
+	}
+
+	if answer.Cigar[len(answer.Cigar)-1].Op == 'S' {
+		end = (len(answer.Seq) - 1) - int(answer.Cigar[len(answer.Cigar)-1].RunLen)
+	} else {
+		end = len(answer.Seq) - 1
+	}
+
+	return start, end
 }
