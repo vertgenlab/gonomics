@@ -16,8 +16,8 @@ import (
 
 // The BinWriter struct wraps the bgzf writer from the biogo repository with a bytes buffer to store encoded giraf records
 type BinWriter struct {
-	bg  *bgzf.Writer
-	buf bytes.Buffer
+	bg     *bgzf.Writer
+	buf    bytes.Buffer
 	tmpBuf [4]byte
 }
 

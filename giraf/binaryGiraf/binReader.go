@@ -282,7 +282,7 @@ func appendNotes(answer *giraf.Giraf, br *BinReader) {
 func determineQStartQEnd(answer *giraf.Giraf) (int, int) {
 	var start, end int
 	if answer.Cigar == nil {
-		return 0,0
+		return 0, 0
 	}
 
 	if answer.Cigar[0].Op == 'S' {
