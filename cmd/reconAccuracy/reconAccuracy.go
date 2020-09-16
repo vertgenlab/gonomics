@@ -12,8 +12,7 @@ func ReconAccuracy(simFilename string, reconFilename string) float64 {
 
 	for i := 0; i < len(sim); i++ {
 		num := 0.0
-
-		for k := 0; k < len(sim[0].Seq); k++ {
+		for k := 0; k < len(sim[i].Seq); k++ { //should that be sim[0] or sim[i]
 			if sim[i].Seq[k] != recon[i].Seq[k] {
 				num = num + 1
 			}
