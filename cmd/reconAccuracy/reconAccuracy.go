@@ -9,7 +9,7 @@ func ReconAccuracy(simFilename string, reconFilename string) float64 {
 	tot := 0.0
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
-	//TODO: add usages
+
 	for i := 0; i < len(sim); i++ {
 		num := 0.0
 
