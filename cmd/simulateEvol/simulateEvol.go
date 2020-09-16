@@ -31,7 +31,7 @@ func usage() {
 	fmt.Print(
 		"simulateEvol takes in a root fasta and a newick formatted tree with branch lengths and simulates evolution along the tree. It returns a list of fastas for the whole tree for reference and a list of fastas from leaves for reconstruction.\n" +
 			"Usage:\n" +
-			"simulateEvol <rootFasta.fasta> <newickTree.txt> <outFile.fasta>\n" +
+			"simulateEvol <rootFasta.fasta> <newickTree.txt> <outFile.fasta> <leafOutputFile.fasta> \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
