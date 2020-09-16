@@ -25,11 +25,11 @@ type Settings struct {
 
 func usage() {
 	fmt.Print(
-		"vcfAnnotate - Annotate Vcf records with cDNA and protein effect predictions.\n" +
+		"vcfEffectPrediction - Annotate Vcf records with cDNA and protein effect predictions.\n" +
 			"\tAnnotations are added to the INFO field of the Vcf with the following format: \"GoEP= g.XXX | Gene | TranscriptId:c.XXX | p.XXX | VariantType\"\n" +
 			"\tVariantTypes include: Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice (1-2 away from intron-exon boundary), FarSplice (3-10 away from intron-exon boundary)\n" +
 			"Usage:\n" +
-			" vcfAnnotate [options] -fasta ref.fa -gtf ref.gtf input.vcf output.vcf \n\n" +
+			" vcfEffectPrediction [options] -fasta ref.fa -gtf ref.gtf input.vcf output.vcf \n\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -49,7 +49,7 @@ func AppendAnnotationHeader(header *vcf.VcfHeader) {
 	}
 }
 
-func vcfAnnotate(settings *Settings) (<-chan *vcf.Vcf, *vcf.VcfHeader) {
+func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.VcfHeader) {
 	f := fasta.Read(settings.Fasta)
 	fasta.AllToUpper(f)
 	fastaRecords := fasta.FastaMap(f)
@@ -115,7 +115,7 @@ func main() {
 			OutFile:        outFile,
 		}
 		outfile := fileio.EasyCreate(options.OutFile)
-		answer, header := vcfAnnotate(options)
+		answer, header := vcfEffectPrediction(options)
 		vcf.NewWriteHeader(outfile, header)
 		for val := range answer {
 			vcf.WriteVcf(outfile, val)
