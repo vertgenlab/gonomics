@@ -9,35 +9,31 @@ import (
 
 var AncestorAlleles []dna.Base = []dna.Base{dna.A, dna.T, dna.G, dna.C, dna.A, dna.A, dna.C}
 
-func TestGVcfQueryAncestor(t *testing.T) {
+func TestVcfQueryAncestor(t *testing.T) {
 	reader, _ := GoReadToChan("testdata/AncestorTest.vcf")
 	var input []dna.Base
 	var i int = 0
-	var v *GVcf
-	for each := range reader {
-		v = VcfToGvcf(each)
-		input = GVcfQueryAncestor(v)
+	for v := range reader {
+		input = VcfQueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
-			t.Errorf("Error in TestGVcfQueryAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
+			t.Errorf("Error in TestVcfQueryAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
 		}
 		i++
 	}
 }
 
-func TestGVcfAppendAncestor(t *testing.T) {
+func TestVcfAppendAncestor(t *testing.T) {
 	reader, _ := GoReadToChan("testdata/Ancestor_No_Annotation.vcf")
 	var i int = 0
 	var input []dna.Base
 	var allele []dna.Base = make([]dna.Base, 1)
-	var v *GVcf
 
-	for each := range reader {
-		v = VcfToGvcf(each)
+	for v := range reader {
 		allele[0] = AncestorAlleles[i]
-		GVcfAppendAncestor(v, allele)
-		input = GVcfQueryAncestor(v)
+		VcfAppendAncestor(v, allele)
+		input = VcfQueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
-			t.Errorf("Error in TestGVcfAppendAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
+			t.Errorf("Error in TestVcfAppendAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
 		}
 		i++
 	}
@@ -68,18 +64,16 @@ func TestAncestorFlagToHeader(t *testing.T) {
 
 var answers [][]dna.Base = [][]dna.Base{dna.StringToBases("A"), dna.StringToBases("T"), dna.StringToBases("A"), dna.StringToBases("CCT"), dna.StringToBases("N")}
 
-func TestGVcfAnnotateAncestorFromFa(t *testing.T) {
-	reader, _ := GoReadToChan("testdata/TestGVcfAnnotateAncestorFromFa.vcf")
+func TestVcfAnnotateAncestorFromFa(t *testing.T) {
+	reader, _ := GoReadToChan("testdata/TestVcfAnnotateAncestorFromFa.vcf")
 	records := fasta.Read("testdata/testAncestorSequence.fa")
-	var v *GVcf
 	var i int = 0
 
-	for each := range reader {
-		v = VcfToGvcf(each)
-		GVcfAnnotateAncestorFromFa(v, records)
+	for v := range reader {
+		VcfAnnotateAncestorFromFa(v, records)
 		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
-		if dna.CompareSeqsIgnoreCase(GVcfQueryAncestor(v), answers[i]) != 0 {
-			t.Errorf("Error in TestGVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(GVcfQueryAncestor(v)))
+		if dna.CompareSeqsIgnoreCase(VcfQueryAncestor(v), answers[i]) != 0 {
+			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(VcfQueryAncestor(v)))
 		}
 		i++
 	}
