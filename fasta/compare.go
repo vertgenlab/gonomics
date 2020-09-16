@@ -18,7 +18,8 @@ func compareSeqIgnoreCase(alpha *Fasta, beta *Fasta) int {
 	return dna.CompareSeqsIgnoreCase(alpha.Seq, beta.Seq)
 }
 
-func isEqual(alpha *Fasta, beta *Fasta) bool {
+//IsEqual returns true if two input Fasta structs have an equal name and sequence.
+func IsEqual(alpha *Fasta, beta *Fasta) bool {
 	if compareName(alpha, beta) == 0 && compareSeq(alpha, beta) == 0 {
 		return true
 	} else {
@@ -35,17 +36,19 @@ func allEqual(alpha []*Fasta, beta []*Fasta, ignoreOrder bool) bool {
 		SortByName(beta)
 	}
 	for idx, _ := range alpha {
-		if !isEqual(alpha[idx], beta[idx]) {
+		if !IsEqual(alpha[idx], beta[idx]) {
 			return false
 		}
 	}
 	return true
 }
 
+//AllAreEqual returns true if every entry in a slice of Fasta structs passes IsEqual. Sensitive to order in the slice.
 func AllAreEqual(alpha []*Fasta, beta []*Fasta) bool {
 	return allEqual(alpha, beta, false)
 }
 
+//AllAreEqualIgnoreOrder returns true if every entry in a slice of Fasta structs passes IsEqual. Not sensitive to order in the slice.
 func AllAreEqualIgnoreOrder(alpha []*Fasta, beta []*Fasta) bool {
 	return allEqual(alpha, beta, true)
 }
