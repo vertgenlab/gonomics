@@ -34,7 +34,7 @@ func ReconAccuracy(simFilename string, reconFilename string) float64 {
 
 func usage() {
 	fmt.Print(
-		"ReconAccuracy takes in a fasta file of simulated evolution along a tree, and the reconstructed fastas of the same tree and returns the percentage accuracy of the sequences of the tree.\n" +
+		"ReconAccuracy takes in a fasta file of simulated evolution along a tree, and the reconstructed fastas of the same tree and returns the percentage accuracy of the sequences of all nodes in the tree.\n" +
 			"reconAccuracy <simulationOut.fasta> <reconstructionOut.fasta> \n" +
 			//TODO: update if printing to another file
 			"options:\n")

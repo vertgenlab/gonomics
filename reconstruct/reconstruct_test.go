@@ -27,9 +27,10 @@ func Test_reconstruct(t *testing.T) {
 			log.Fatal("Couldn't read file")
 		}
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
-		simulate.Simulate("RandGeneOutput.fasta", "simOut.fasta", tre)                         //produced whole tree fasta file
-		simulate.RemoveAncestors("simOut.fasta", tre)                                          //removes everything but leaves from simOut and produced another file
+		simulate.Simulate("RandGeneOutput.fasta", tre)                                         //produced whole tree fasta file
+		simulate.RemoveAncestors("simOut.fasta", tre, "leavesOnly.fasta")                      //removes everything but leaves from simOut and produced another file
 		expandedTree.AssignFastas(tre, "simOut.fasta")
+		//TODO: none of this works this way anymore, should call simulateEvol command to run these.
 
 		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
 		tr := expandedTree.ReadTree(test.newickFilename, "simOut.fasta")
