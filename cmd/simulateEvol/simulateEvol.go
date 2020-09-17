@@ -14,13 +14,9 @@ func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leaf
 	var fastas []*fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree)
 	nodes := expandedTree.GetTree(tree)
-	fmt.Printf("%s, %s, %s, \n", rootFastaFile, treeFile, simOutFile)
 
 	for i := 0; i < len(nodes); i++ {
 		fastas = append(fastas, nodes[i].Fasta)
-		if nodes[i].Fasta != nil {
-			fmt.Printf("nodes[i].Fasta is not nil, %s \n", nodes[i].Fasta.Name)
-		}
 	}
 	fasta.Write(simOutFile, fastas)
 
