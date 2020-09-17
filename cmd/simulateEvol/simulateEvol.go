@@ -9,6 +9,7 @@ import (
 	"log"
 )
 
+//TODO: option for seeded or unseeded random numbers (include in simulate.go)
 func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
