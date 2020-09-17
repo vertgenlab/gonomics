@@ -28,7 +28,7 @@ func StringToFloat64(s string) float64 {
 func StringToInt8(s string) int8 {
 	n, err := strconv.ParseInt(s, 10, 8)
 	if err != nil {
-		log.Fatalf("Error: trouble converting %s to a int8\n", s)
+		panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int8\n", s))
 	}
 	return int8(n)
 }
