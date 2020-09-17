@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestVcfAnnotate(t *testing.T) {
+func TestVcfEffectPrediction(t *testing.T) {
 	settings := &Settings{
 		Vcf:            "../../gtf/testdata/test.vcf",
 		Gtf:            "../../gtf/testdata/test.gtf",
