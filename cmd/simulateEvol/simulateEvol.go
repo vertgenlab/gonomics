@@ -17,8 +17,6 @@ func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leaf
 
 	for i := 0; i < len(nodes); i++ {
 		fastas = append(fastas, nodes[i].Fasta)
-		if nodes[i].Fasta != nil {
-		}
 	}
 	fasta.Write(simOutFile, fastas)
 
