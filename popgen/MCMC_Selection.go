@@ -5,11 +5,11 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 	"math/rand"
-	//DEBUG:
-	"log"
+	//DEBUG packages:
+	/*"log"
 	"os"
 	"runtime/pprof"
-	//DEBUG: "fmt"
+	"fmt"*/
 )
 
 type Theta struct {
@@ -19,7 +19,7 @@ type Theta struct {
 	probability float64
 }
 
-func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, binomMap *map[int][]float64) bool {
+func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, binomMap [][]float64) bool {
 	yRand := rand.Float64()
 	var pAccept float64
 	pAccept = common.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, binomMap)*Hastings_Ratio(old, thetaPrime))
@@ -41,7 +41,7 @@ func Hastings_Ratio(tOld Theta, tNew Theta) float64 {
 	return oldGivenNew / newGivenOld
 }
 
-func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, binomMap *map[int][]float64) float64 {
+func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, binomMap [][]float64) float64 {
 	return numbers.MultiplyLog(numbers.DivideLog(AFSLikelihood(data, old.alpha, binomMap), AFSLikelihood(data, thetaPrime.alpha, binomMap)), math.Log(thetaPrime.probability/old.probability))
 }
 
@@ -85,15 +85,15 @@ func InitializeTheta(m float64, s float64, k int) Theta {
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
 func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int) ([]float64, []float64, []bool) {
-	//profiling test code
-	f, err := os.Create("testProfile.prof")
+	//profiling test code DEBUG
+	/*f, err := os.Create("testProfile.prof")
 	if err != nil {
 		log.Fatal(err)
 	}
 	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	binomMap := make(map[int][]float64)
+	defer pprof.StopCPUProfile()*/
+	maxN := findMaxN(data)
+	binomMap := make([][]float64, maxN+1)
 
 	muList := make([]float64, iterations)
 	sigmaList := make([]float64, iterations)
@@ -102,7 +102,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	t := InitializeTheta(muZero, sigmaZero, len(data.sites))
 	for i := 0; i < iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t)
-		if Metropolis_Accept(t, tCandidate, data, &binomMap) {
+		if Metropolis_Accept(t, tCandidate, data, binomMap) {
 			t = tCandidate
 			acceptList[i] = true
 		} else {
@@ -112,4 +112,13 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 		sigmaList[i] = t.sigma
 	}
 	return muList, sigmaList, acceptList
+}
+
+//in order to determine the proper length of the binomMap, we need to figure out which variant has the largest value of N.
+func findMaxN(data AFS) int {
+	var answer int = 0
+	for i := 0; i < len(data.sites); i++ {
+		answer = common.Max(answer, data.sites[i].n)
+	}
+	return answer
 }

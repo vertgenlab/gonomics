@@ -60,9 +60,12 @@ func FromStringToPath(column string) Path {
 	nodes := strings.Split(words[1], ">")
 	answer := Path{TStart: common.StringToInt(words[0]), Nodes: make([]uint32, len(nodes)), TEnd: common.StringToInt(words[2])}
 
-	for i, v := range nodes {
-		answer.Nodes[i] = common.StringToUint32(v)
+	if nodes[0] != "" { // catch unaligned reads
+		for i, v := range nodes {
+			answer.Nodes[i] = common.StringToUint32(v)
+		}
 	}
+
 	return answer
 }
 

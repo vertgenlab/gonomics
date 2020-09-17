@@ -42,7 +42,7 @@ func TestAddBinomMapEntry(t *testing.T) {
 	}
 }
 
-var BinomialDistLogMapTests = []struct {
+var BinomialDistLogSliceTests = []struct {
 	n      int
 	k      int
 	p      float64
@@ -54,16 +54,23 @@ var BinomialDistLogMapTests = []struct {
 }
 
 //tests if all of the values are correct and tests the number of entries in the binomMap at the end
-func TestBinomalDistLogMap(t *testing.T) {
-	binomMap := make(map[int][]float64)
-	for _, test := range BinomialDistLogMapTests {
-		calculated := BinomialDistLogMap(test.n, test.k, test.p, &binomMap)
+func TestBinomalDistLogSlice(t *testing.T) {
+	binomMap := make([][]float64, 31)
+	for _, test := range BinomialDistLogSliceTests {
+		calculated := BinomialDistLogSlice(test.n, test.k, test.p, binomMap)
 		if (calculated-test.answer)/test.answer > 0.000001 {
 			t.Errorf("BinomialDistLogMap for n: %v, k: %v, and p: %f returned %f. Expected: %f.", test.n, test.k, test.p, calculated, test.answer)
 		}
 	}
-	if len(binomMap) != 2 {
-		t.Errorf("BinomialDistLogMap had binomMap of length %v. Expected 2.", len(binomMap))
+	//count number of non-nil entries in binomMap
+	var count int = 0
+	for i := 0; i < len(binomMap); i++ {
+		if binomMap[i] != nil {
+			count++
+		}
+	}
+	if count != 2 {
+		t.Errorf("BinomialDistLogSlice had binomMap of with # of non-nil entries %v. Expected 2.", len(binomMap))
 	}
 }
 

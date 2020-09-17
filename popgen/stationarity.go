@@ -99,16 +99,16 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
-func AFSSampleClosure(n int, k int, alpha float64, binomMap *map[int][]float64) func(float64) float64 {
+func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
 	return func(p float64) float64 {
 		//DEBUG: fmt.Println(binomMap)
 		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialDistLogMap(n, k, p, binomMap))
+		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialDistLogSlice(n, k, p, binomMap))
 	}
 }
 
 //eq. 2.2
-func AFSSampleDensity(n int, k int, alpha float64, binomMap *map[int][]float64) float64 {
+func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	f := AFSSampleClosure(n, k, alpha, binomMap)
 	//DEBUG prints
 	//fmt.Printf("f(0.1)=%e\n", f(0.1))
@@ -119,7 +119,7 @@ func AFSSampleDensity(n int, k int, alpha float64, binomMap *map[int][]float64) 
 }
 
 //eq 2.3
-func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap *map[int][]float64) float64 {
+func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
 	var denominator float64
 	//check if n has already been seen
 	for j := 1; j < n-1; j++ {
@@ -130,7 +130,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap *map[int][
 
 //eq 2.4
 //afs array has a dummy variable in position 0, so loop starts at 1.
-func AFSLikelihood(afs AFS, alpha []float64, binomMap *map[int][]float64) float64 {
+func AFSLikelihood(afs AFS, alpha []float64, binomMap [][]float64) float64 {
 	var answer float64 = 0.0
 	for j := 1; j < len(afs.sites); j++ {
 		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomMap))
