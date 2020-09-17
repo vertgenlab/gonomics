@@ -30,7 +30,7 @@ type binGiraf struct {
 	// PosStrand is dropped, stored in flag
 	tStart      uint32               // start position on first node (nodes[0]) in path, zero base
 	tEnd        uint32               // end position on last node (nodes[len(nodes)-1]) in path, zero base
-	pathLen     uint16               // length of below path
+	pathLen     uint32               // length of below path
 	path        []uint32             // list of nodes in alignment, len of path is = pathLen
 	numCigarOps uint16               // number of cigar operations
 	byteCigar   []cigar.ByteCigar    // run-length encoding of alignment. Can be copied directly from Giraf struct IF the aligner encodes mismatches into the cigar.

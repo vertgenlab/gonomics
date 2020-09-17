@@ -36,15 +36,15 @@ func NewBinReader(file io.Reader) *BinReader {
 }
 
 // DecompressGiraf will decode a binary giraf file (.giraf.fe) and output a giraf file (.giraf)
-func DecompressGiraf(filename string, graph *simpleGraph.SimpleGraph) {
+func DecompressGiraf(infilename string, outfilename string, graph *simpleGraph.SimpleGraph) {
 	// Initialize infile
-	infile := fileio.EasyOpen(filename)
+	infile := fileio.EasyOpen(infilename)
 	defer infile.Close()
 	reader := NewBinReader(infile.BuffReader)
 	var err error
 
 	// Initialize outfile
-	outfile := fileio.EasyCreate(strings.TrimSuffix(filename, ".fe"))
+	outfile := fileio.EasyCreate(outfilename)
 	defer outfile.Close()
 
 	// Read info until EOF
@@ -69,17 +69,16 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 
 	// blockSize (uint32)
 	bytesRead, err = br.bg.Read(buffer[:4])
-	if err == io.EOF || bytesRead != 4 {
+	if err == io.EOF {
 		return answer, io.EOF
+	}
+	if bytesRead != 4 {
+		return answer, io.ErrUnexpectedEOF
 	}
 	common.ExitIfError(err)
 	blockSize := int(binary.LittleEndian.Uint32(buffer[:4]))
 
-	// reset data buffer
-	br.currData.Reset()
-
-	// reset and check cap of readBffr. Either make new slice, or re-slice as needed
-	br.readBffr = br.readBffr[:0]
+	// check cap of readBffr. Either make new slice, or re-slice as needed
 	if cap(br.readBffr) < blockSize {
 		br.readBffr = make([]byte, blockSize)
 	} else {
@@ -110,9 +109,9 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	answer.Path.TEnd = int(binary.LittleEndian.Uint32(br.currData.Next(4)))
 
 	// path ([]uint32
-	pathLen := binary.LittleEndian.Uint16(br.currData.Next(2)) // pathLen (uint16)
-	var node uint32
-	for i = 0; i < pathLen; i++ { // path ([]uint32)
+	pathLen := binary.LittleEndian.Uint32(br.currData.Next(4)) // pathLen (uint32)
+	var node, k uint32
+	for k = 0; k < pathLen; k++ { // path ([]uint32)
 		node = binary.LittleEndian.Uint32(br.currData.Next(4))
 		answer.Path.Nodes = append(answer.Path.Nodes, node)
 	}

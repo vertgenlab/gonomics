@@ -49,7 +49,7 @@ func CompressGiraf(filename string) {
 
 // Byte size of BinGiraf fixed size fields excluding blockSize.
 // Exluded Fields: qName, path, byteCigar, fancySeq.Seq, qual, notes
-var binGirafFixedSize int = 29
+var binGirafFixedSize int = 31
 
 // The Write method for the BinWriter struct compresses a single giraf record and writes to file
 func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
@@ -90,8 +90,8 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	bw.buf.Write(currBuf[:4])
 
 	// path ([]uint32
-	binary.LittleEndian.PutUint16(currBuf[:2], uint16(len(g.Path.Nodes)))
-	bw.buf.Write(currBuf[:2]) // pathLen (uint16)
+	binary.LittleEndian.PutUint32(currBuf[:4], uint32(len(g.Path.Nodes)))
+	bw.buf.Write(currBuf[:4]) // pathLen (uint32)
 
 	for _, val := range g.Path.Nodes {
 		binary.LittleEndian.PutUint32(currBuf[:4], val)
