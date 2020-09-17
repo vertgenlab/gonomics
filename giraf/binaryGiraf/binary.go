@@ -32,7 +32,7 @@ type binGiraf struct {
 	tEnd        uint32               // end position on last node (nodes[len(nodes)-1]) in path, zero base
 	pathLen     uint32               // length of below path
 	path        []uint32             // list of nodes in alignment, len of path is = pathLen
-	numCigarOps uint16               // number of cigar operations
+	numCigarOps uint32               // number of cigar operations
 	byteCigar   []cigar.ByteCigar    // run-length encoding of alignment. Can be copied directly from Giraf struct IF the aligner encodes mismatches into the cigar.
 	fancySeq    dnaThreeBit.ThreeBit // three bit encoding of 'fancy-cigar' seq determined at time of compression. Length will be determined by Op's in byteCigar
 	alnScore    int64                // alignment quality score

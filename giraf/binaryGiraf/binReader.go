@@ -117,8 +117,8 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	}
 
 	// cigar ([]cigar.ByteCigar)
-	numCigarOps := binary.LittleEndian.Uint16(br.currData.Next(2)) // numCigarOps (uint16)
-	for i = 0; i < numCigarOps; i++ {
+	numCigarOps := binary.LittleEndian.Uint32(br.currData.Next(4)) // numCigarOps (uint16)
+	for k = 0; k < numCigarOps; k++ {
 		answer.Cigar = append(answer.Cigar, cigar.ByteCigar{
 			RunLen: binary.LittleEndian.Uint16(br.currData.Next(2)), // byteCigar.RunLen (uint16)
 			Op:     br.currData.Next(1)[0],                          // byteCigar.Op (byte)
