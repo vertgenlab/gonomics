@@ -12,6 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 	"io"
 	"log"
+	"math"
 )
 
 // The BinWriter struct wraps the bgzf writer from the biogo repository with a bytes buffer to store encoded giraf records
@@ -29,9 +30,9 @@ func NewBinWriter(file io.Writer) *BinWriter {
 }
 
 // CompressGiraf will encode a giraf file (.giraf) and output a binary giraf file (.giraf.fe)
-func CompressGiraf(filename string) {
-	inputStream := giraf.GoReadToChan(filename)
-	outfile := fileio.EasyCreate(filename + ".fe")
+func CompressGiraf(infilename string, outfilename string) {
+	inputStream := giraf.GoReadToChan(infilename)
+	outfile := fileio.EasyCreate(outfilename)
 	defer outfile.Close()
 	writer := NewBinWriter(outfile)
 	var err error
@@ -49,7 +50,9 @@ func CompressGiraf(filename string) {
 
 // Byte size of BinGiraf fixed size fields excluding blockSize.
 // Exluded Fields: qName, path, byteCigar, fancySeq.Seq, qual, notes
-var binGirafFixedSize int = 33
+const (
+	binGirafFixedSize int = 33
+)
 
 // The Write method for the BinWriter struct compresses a single giraf record and writes to file
 func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
@@ -73,6 +76,10 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	bw.buf.Write(currBuf[:4])
 
 	// qNameLen (uint8)
+	if len(g.QName) > math.MaxUint8 { // check read name will fit
+		log.Fatalln("ERROR: Read name exceeds 256 characters")
+	}
+
 	bw.buf.Write([]byte{uint8(len(g.QName))})
 
 	// qName (string)

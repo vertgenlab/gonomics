@@ -130,7 +130,6 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 	fancyBases.Len = int(binary.LittleEndian.Uint32(br.currData.Next(4))) // fancySeq.Len (uint32)
 
 	// figure out how many uint64 are needed to store fancySeqLen worth of bases
-	//TODO: Craig, do you think this is the best way to determine this?
 	numInts := fancyBases.Len / 21
 	if fancyBases.Len%21 != 0 {
 		numInts++
@@ -196,15 +195,15 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *simp
 				refIdx++
 			}
 		case 'X':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...)
-			fancyBases = fancyBases[:cigar.RunLen]
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...) // retrieve RunLen number of bases from the fancyBases slice
+			fancyBases = fancyBases[:cigar.RunLen]                        // removed the retrieved bases from the fancyBases slice
 			refIdx += int(cigar.RunLen)
 		case 'S':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...)
-			fancyBases = fancyBases[:cigar.RunLen]
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...) // retrieve RunLen number of bases from the fancyBases slice
+			fancyBases = fancyBases[:cigar.RunLen]                        // removed the retrieved bases from the fancyBases slice
 		case 'I':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...)
-			fancyBases = fancyBases[:cigar.RunLen]
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...) // retrieve RunLen number of bases from the fancyBases slice
+			fancyBases = fancyBases[:cigar.RunLen]                        // removed the retrieved bases from the fancyBases slice
 		case 'D':
 			refIdx += int(cigar.RunLen)
 		default:

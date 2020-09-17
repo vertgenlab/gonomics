@@ -73,7 +73,7 @@ func TestRead(t *testing.T) {
 
 func TestReadAndWrite(t *testing.T) {
 	correct := giraf.Read("testdata/test.giraf")
-	CompressGiraf("testdata/test.giraf")
+	CompressGiraf("testdata/test.giraf", "testdata/test.giraf.fe")
 
 	// Initialize infile
 	infile := fileio.EasyOpen("testdata/test.giraf.fe")
