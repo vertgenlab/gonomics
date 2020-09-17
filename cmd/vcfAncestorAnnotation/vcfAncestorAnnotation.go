@@ -29,7 +29,7 @@ func usage() {
 		"The VCF file must be split by chromosome beforehand, as the fasta file is formatted with the first entry as the reference sequence\n" +
 		"and the second entry as the inferred ancestor sequence for a particular chromosome.\n" +
 			"Usage:\n" +
-			"vcfAncestorAnnotation input.vcf records.fa output.vcf\n" +
+			"vcfAncestorAnnotation input.vcf alignment.fa output.vcf\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
