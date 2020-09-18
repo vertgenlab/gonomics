@@ -9,6 +9,7 @@ import (
 	"log"
 )
 
+//Somehow leaf sequences are different between file without ancestors and file with whole tree
 //TODO: option for seeded or unseeded random numbers (include in simulate.go)
 func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
