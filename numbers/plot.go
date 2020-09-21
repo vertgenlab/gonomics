@@ -1,8 +1,8 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 //Plot returns the values of a function(float64) float64 between a left and right bound for a specified number of bins.
