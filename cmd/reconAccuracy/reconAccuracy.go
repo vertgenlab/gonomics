@@ -6,17 +6,18 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
-
+//TODO: this code will need to change drastically for sequences of varying lengths.
+//The loop through the sequence is restricted by a single fasta and the tot calculation will need to calculate the total number of bps
+//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
 func ReconAccuracy(simFilename string, reconFilename string) float64 {
 	//TODO: print to file?
 	tot := 0.0
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
 	//TODO: account for inflating accuracy by counting leaf nodes?
-	//TODO: leaf nodes are not the same between sim and recon files
 	for i := 0; i < len(sim); i++ {
 		num := 0.0
-		for k := 0; k < len(sim[i].Seq); k++ { //should that be sim[0] or sim[i]
+		for k := 0; k < len(sim[0].Seq); k++ { //should that be sim[0] or sim[i]
 			if sim[i].Name == recon[i].Name { //added this line bc i noticed the output from recon was in a different order than output from simulation
 				if sim[i].Seq[k] != recon[i].Seq[k] {
 					num = num + 1

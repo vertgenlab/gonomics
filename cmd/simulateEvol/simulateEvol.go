@@ -14,15 +14,18 @@ import (
 func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
+	var leafFastas []*fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
 		fastas = append(fastas, nodes[i].Fasta)
+		if nodes[i].Left == nil && nodes[i].Right == nil {
+			leafFastas = append(leafFastas, nodes[i].Fasta)
+		}
 	}
 	fasta.Write(simOutFile, fastas)
-
-	simulate.RemoveAncestors(simOutFile, tree, leafOutFile)
+	fasta.Write(leafOutFile, leafFastas)
 }
 
 func usage() {
