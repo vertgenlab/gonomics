@@ -6,31 +6,45 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
+
 //TODO: this code will need to change drastically for sequences of varying lengths.
 //The loop through the sequence is restricted by a single fasta and the tot calculation will need to calculate the total number of bps
 //ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
 func ReconAccuracy(simFilename string, reconFilename string) float64 {
-	//TODO: print to file?
+	var found bool = false
 	tot := 0.0
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
-	//TODO: account for inflating accuracy by counting leaf nodes?
+
 	for i := 0; i < len(sim); i++ {
 		num := 0.0
-		for k := 0; k < len(sim[0].Seq); k++ { //should that be sim[0] or sim[i]
-			if sim[i].Name == recon[i].Name { //added this line bc i noticed the output from recon was in a different order than output from simulation
-				if sim[i].Seq[k] != recon[i].Seq[k] {
-					num = num + 1
+		found = false
+		for j := 0; j < len(recon); j++ {
+			if sim[i].Name == recon[j].Name {
+				found = true
+				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
+				for k := 0; k < len(sim[0].Seq); k++ {
+					if sim[i].Seq[k] != recon[j].Seq[k] {
+						num = num + 1
+					}
 				}
 			}
+		}
+		if found == false {
+			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
+		} else {
+			accuracy := num / float64(len(sim[i].Seq)) * 100.0
+			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+			acc := 100 - accuracy
+			log.Printf("accuracy over %s = %f percent \n", sim[i].Name, acc)
 		}
 		tot = tot + num
 	}
 	accuracy := tot / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
-	fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
-	fmt.Print("accuracy over all nodes= ", acc, "%", "\n")
-	return acc //probably a better way to do it than to print a number to the screen?
+	log.Print("accuracy over all nodes= ", acc, "%", "\n")
+	return acc
 }
 
 func usage() {
