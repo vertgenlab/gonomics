@@ -1,9 +1,12 @@
 package numbers
 
 import (
+	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"math"
 	"math/rand"
+	"time"
+	//DEBUG: "fmt"
 )
 
 //Sample InverseNormal returns a simulated value from a normal distribution.
@@ -11,13 +14,67 @@ func SampleInverseNormal(mu float64, sigma float64) float64 {
 	return rand.NormFloat64()*sigma + mu
 }
 
+//FastRejectionSample returns simulated values from an a func(float64) float64 between a left and right value using an optimized rejection sampler
+//that divides the function support into discrete bins with optimized sampling heights.
+//maxSampleDepth triggers the log.Fatalf in the RejectionSample func, and samples is the number of values to be returned.
+func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int, maxSampleDepth int, samples int, randSeed bool) []float64 {
+	if randSeed {
+		rand.Seed(time.Now().UnixNano())
+	}
+
+	var answer []float64 = make([]float64, samples)
+	if xLeft >= xRight {
+		log.Fatalf("Error in FastRejectionSample: xRight must be greater than xLeft.")
+	}
+	
+	var support float64 = xRight -xLeft
+	var stepSize float64 = support / float64(bins)
+	var binHeights []float64 = make([]float64, bins)
+	var currLeft float64 = xLeft
+	var currRight float64 = xLeft + stepSize
+	var sumHeights float64
+
+	for i := 0; i < bins; i++ {
+		binHeights[i] = common.MaxFloat64(f(currLeft), f(currRight))
+		currLeft += stepSize
+		currRight += stepSize
+		sumHeights += binHeights[i]
+	}
+	var currBin int
+	for j := 0; j < samples; j++ {
+		currBin = chooseBin(sumHeights, binHeights)
+		currLeft = xLeft + float64(currBin)*stepSize
+		currRight = currLeft + stepSize
+		//DEBUG: fmt.Printf("lenBinHeights: %v. currBin: %v. lenAnswer: %v. j: %v.\n", len(binHeights), currBin, len(answer), j)
+		answer[j] = RejectionSample(currLeft, currRight, binHeights[currBin], f, maxSampleDepth, true)
+	}
+	return answer
+}
+
+//chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
+func chooseBin(sumHeights float64, binHeights []float64) int {
+	var rand float64 = rand.Float64()
+	var cumulative float64 = 0.0
+	for i := 0; i < len(binHeights); i++ {
+		cumulative += (binHeights[i] / sumHeights)
+		if cumulative > rand {
+			return i
+		}
+	}
+	log.Fatalf("Error in chooseBin: failed to choose a bin, stiffled by indecision.")
+	return -1
+}
+
 //RejectionSample returns simulated values from an arbitrary function between a specified left and right bound using a simple rejection sampling method.
-func RejectionSample(xleft float64, xright float64, f func(float64) float64, maxIteration int) float64 {
+func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int, returnX bool) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
 		x = rand.Float64() //rand float64 in range xleft to xright
 		y = f(x)
-		if rand.Float64() < y {
+		if RandFloatInRange(0.0, yMax) < y {
+			if returnX {
+				return x
+			}
 			return y
 		}
 	}

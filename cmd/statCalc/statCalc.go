@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/popgen"
 	"log"
 	"strings"
 )
 
 //kills the program if multiple options are selected.
-func MultipleOptionErrorCheck(Normal *string, Binomial *string, Poisson *string, Beta *string, Gamma *string) {
+func MultipleOptionErrorCheck(Normal *string, Binomial *string, Poisson *string, Beta *string, Gamma *string, SampleAFS *string) {
 	var count int = 0
 	if *Normal != "" {
 		count++
@@ -25,6 +26,9 @@ func MultipleOptionErrorCheck(Normal *string, Binomial *string, Poisson *string,
 		count++
 	}
 	if *Gamma != "" {
+		count++
+	}
+	if *SampleAFS != "" {
 		count++
 	}
 	if count > 1 {
@@ -43,7 +47,9 @@ func usage() {
 			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
 			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
 			" -gamma=alpha,beta. Defines a gamma distribution with parameters alpha and beta. Ex Usage: -gamma=4,4 6\n" +
-			"After defining a distribution, one float64 argument returns the function density at that value.\n" +
+			" -sampleAFS=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha. " +
+			"sampleAFS will return numSamples many values between xLeft and xRight. Bins and maxSampleDepth are performance and accuracy options, suggested values are 1000 and 1000, respectively.\n" + 
+			"After defining a distribution, one float64 argument returns the function density at that value. Ex usage: -sampleAFS=0.02,200,1000,1000,0.001,0.999,false\n" +
 			"For discrete distributions, two arguments will evaluate the sum between two input values.\n" +
 			"For the binomial distribution summation, the second argument can be set to n or N to evaluate the entire right tailed sum.\n" +
 			"For continuous distributions, two arguments will evaluate an integral between the two input values with the defined distribution as the integrand.\n")
@@ -55,12 +61,14 @@ func main() {
 	var Poisson *string = flag.String("poisson", "", "")
 	var Beta *string = flag.String("beta", "", "")
 	var Gamma *string = flag.String("gamma", "", "")
+	var SampleAFS *string = flag.String("sampleAFS", "", "")
+
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	MultipleOptionErrorCheck(Normal, Binomial, Poisson, Beta, Gamma)
+	MultipleOptionErrorCheck(Normal, Binomial, Poisson, Beta, Gamma, SampleAFS)
 
 	if *Normal != "" {
 		words := strings.Split(*Normal, ",")
@@ -170,6 +178,22 @@ func main() {
 				right := common.StringToFloat64(flag.Arg(1))
 				fmt.Printf("%e\n", numbers.GammaIntegral(left, right, alpha, beta))
 			}
+		}
+	} else if *SampleAFS != "" {
+		words := strings.Split(*SampleAFS, ",")
+		if len(words) != 7 {
+			log.Fatalf("Error: sampleAFS expected seven parameters, received: %v.\n", len(words))
+		}
+		alpha := common.StringToFloat64(words[0])
+		numSamples := common.StringToInt(words[1])
+		maxSampleDepth := common.StringToInt(words[2])
+		bins := common.StringToInt(words[3])
+		xLeft := common.StringToFloat64(words[4])
+		xRight := common.StringToFloat64(words[5])
+		randSeed := common.StringToBool(words[6])
+		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight, randSeed)
+		for i := 0; i < len(answer); i++ {
+			fmt.Printf("%e\n", answer[i])
 		}
 	} else {
 		flag.Usage()
