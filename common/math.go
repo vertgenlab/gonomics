@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+//StringToBool parses a string into a bool and will exit on error
 func StringToBool(s string) bool {
 	b, err := strconv.ParseBool(s)
 	if err != nil {

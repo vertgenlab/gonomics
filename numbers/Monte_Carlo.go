@@ -61,7 +61,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 			return i
 		}
 	}
-	log.Fatalf("Error in chooseBin: failed to choose a bin, stiffled by indecision.")
+	log.Fatalf("Error in chooseBin: failed to choose a bin, stifled by indecision.")
 	return -1
 }
 

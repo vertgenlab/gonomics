@@ -16,7 +16,6 @@ import (
 
 //StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity 
 //distribution with selection parameter alpha.
-
 func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64, randSeed bool) []float64 {
 	f := AFSStationarityClosure(alpha)
 	return numbers.FastRejectionSampler(xLeft, xRight, f, bins, maxSampleDepth, samples, randSeed)
