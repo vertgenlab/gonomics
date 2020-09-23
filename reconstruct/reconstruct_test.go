@@ -27,15 +27,20 @@ func Test_reconstruct(t *testing.T) {
 			log.Fatal("Couldn't read file")
 		}
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
-		simulate.Simulate("RandGeneOutput.fasta", tre)                                         //produced whole tree fasta file
-		simulate.RemoveAncestors("simOut.fasta", tre, "leavesOnly.fasta")                      //removes everything but leaves from simOut and produced another file
-		expandedTree.AssignFastas(tre, "simOut.fasta")
-		//TODO: none of this works this way anymore, should call simulateEvol command to run these.
+		simulate.Simulate("RandGeneOutput.fasta", tre) //produced whole tree fasta file
+		WriteTreeToFasta(tre, "simOut.fasta")
+		WriteLeavesToFasta(tre, "leavesOnly.Fasta")
 
-		//example of how to run reconstruction: 1) reconstruct 2) check accuracy
-		tr := expandedTree.ReadTree(test.newickFilename, "simOut.fasta")
-		for i := 0; i < len(tr.Fasta.Seq); i++ {
+		tr := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
+		leaves := expandedTree.GetLeaves(tr)
+		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 			LoopNodes(tr, i)
+		}
+		WriteTreeToFasta(tr, "reconOut.fasta")
+		log.Printf("accuracy for all nodes: %f percent", ReconAccuracy("simOut.fasta", "reconOut.fasta"))
+		accuracyData := ReconAccuracy("simOut.fasta", "reconOut.fasta")
+		for name, accuracy := range accuracyData {
+		log.Printf("%s %f \n", name, accuracy)
 		}
 	}
 }

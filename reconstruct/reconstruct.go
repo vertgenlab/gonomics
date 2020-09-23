@@ -3,8 +3,66 @@ package reconstruct
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
+
+func ReconAccuracy(simFilename string, reconFilename string) float64 {
+	var found bool = false
+	tot := 0.0
+	sim := fasta.Read(simFilename)
+	recon := fasta.Read(reconFilename)
+
+	for i := 0; i < len(sim); i++ {
+		num := 0.0
+		found = false
+		for j := 0; j < len(recon); j++ {
+			if sim[i].Name == recon[j].Name {
+				found = true
+				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
+				for k := 0; k < len(sim[0].Seq); k++ {
+					if sim[i].Seq[k] != recon[j].Seq[k] {
+						num = num + 1
+					}
+				}
+			}
+		}
+		if found == false {
+			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
+		} else {
+			accuracy := num / float64(len(sim[i].Seq)) * 100.0
+			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+			acc := 100 - accuracy
+			log.Printf("accuracy over %s = %f percent \n", sim[i].Name, acc)
+		}
+		tot = tot + num
+	}
+	accuracy := tot / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
+	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+	acc := 100 - accuracy
+	log.Print("accuracy over all nodes= ", acc, "%", "\n")
+	return acc
+}
+
+func WriteTreeToFasta (tree *expandedTree.ETree, outFile string) {
+	var fastas []*fasta.Fasta
+	nodes := expandedTree.GetTree(tree)
+
+	for i := 0; i < len(nodes); i++ {
+		fastas = append(fastas, nodes[i].Fasta)
+	}
+	fasta.Write(outFile, fastas)
+}
+
+func WriteLeavesToFasta (tree *expandedTree.ETree, leafFile string) {
+	var leafFastas []*fasta.Fasta
+	nodes := expandedTree.GetLeaves(tree)
+
+	for i := 0; i < len(nodes); i++ {
+		leafFastas = append(leafFastas, nodes[i].Fasta)
+	}
+	fasta.Write(leafFile, leafFastas)
+}
 
 //calculate probability of switching from one base to another
 func Prob(a int, b int, t float64) float64 {

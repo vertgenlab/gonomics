@@ -10,11 +10,14 @@ import (
 //TODO: this code will need to change drastically for sequences of varying lengths.
 //The loop through the sequence is restricted by a single fasta and the tot calculation will need to calculate the total number of bps
 //ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
-func ReconAccuracy(simFilename string, reconFilename string) float64 {
+func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
+	var allNodes string
 	var found bool = false
 	tot := 0.0
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
+
+	answer := make(map[string]float64)
 
 	for i := 0; i < len(sim); i++ {
 		num := 0.0
@@ -36,15 +39,17 @@ func ReconAccuracy(simFilename string, reconFilename string) float64 {
 			accuracy := num / float64(len(sim[i].Seq)) * 100.0
 			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 			acc := 100 - accuracy
-			log.Printf("accuracy over %s = %f percent \n", sim[i].Name, acc)
+			answer[sim[i].Name] = acc
+			//log.Printf("accuracy over %s = %f percent \n", sim[i].Name, acc)
 		}
 		tot = tot + num
 	}
 	accuracy := tot / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
 	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
-	log.Print("accuracy over all nodes= ", acc, "%", "\n")
-	return acc
+	answer[allNodes] = acc
+	//log.Print("accuracy over all nodes= ", acc, "%", "\n")
+	return answer
 }
 
 func usage() {
