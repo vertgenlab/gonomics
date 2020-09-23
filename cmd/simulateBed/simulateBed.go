@@ -33,22 +33,26 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 			totalWindows = totalWindows + int(Length-simLength)
 		}
 	}
-	//fmt.Printf("totalWindows: %d\n", totalWindows)
+	// DEBUG fmt.Printf("totalWindows: %d\n", totalWindows)
 
 	for i := 0; i < regionCount; i++ {
 		tmp = int64(common.RandIntInRange(0, totalWindows))
-		//fmt.Printf("Random number is %d\n", tmp)
+		// DEBUG fmt.Printf("Random number is %d\n", tmp)
 		for j := 0; j < len(noGap); j++ {
+
+			// DEBUG fmt.Printf("ChromEnd:%v ChromStart:%v \n",noGap[j].ChromEnd,noGap[j].ChromStart)
 			Length = noGap[j].ChromEnd - noGap[j].ChromStart
+			// DEBUG fmt.Printf("Length; %v.\n", Length)
 			chromWindows = Length - simLength + 1
+			// DEBUG fmt.Printf("j; %v.\n", j)
 			//is chrom big enough?
 			if chromWindows < 1 {
-				break
+				continue
 			}
 			if tmp-chromWindows > 0 {
 				tmp = tmp - chromWindows
 			} else {
-				//DEBUG: fmt.Printf("Got one\n")
+				// DEBUG fmt.Printf("Got one\n")
 				answer = append(answer, &bed.Bed{Chrom: noGap[j].Chrom, ChromStart: noGap[j].ChromStart + tmp - 1, ChromEnd: noGap[j].ChromStart + tmp - 1 + simLength, Name: noGap[j].Name})
 				break
 			}
