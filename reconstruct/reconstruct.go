@@ -7,11 +7,16 @@ import (
 	"log"
 )
 
-func ReconAccuracy(simFilename string, reconFilename string) float64 {
+//returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
+func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
+	var allNodes string
+	allNodes = "all Nodes"
 	var found bool = false
 	tot := 0.0
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
+
+	answer := make(map[string]float64)
 
 	for i := 0; i < len(sim); i++ {
 		num := 0.0
@@ -33,15 +38,15 @@ func ReconAccuracy(simFilename string, reconFilename string) float64 {
 			accuracy := num / float64(len(sim[i].Seq)) * 100.0
 			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 			acc := 100 - accuracy
-			log.Printf("accuracy over %s = %f percent \n", sim[i].Name, acc)
+			answer[sim[i].Name] = acc
 		}
 		tot = tot + num
 	}
 	accuracy := tot / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
 	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
-	log.Print("accuracy over all nodes= ", acc, "%", "\n")
-	return acc
+	answer[allNodes] = acc
+	return answer
 }
 
 func WriteTreeToFasta (tree *expandedTree.ETree, outFile string) {

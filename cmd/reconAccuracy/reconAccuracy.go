@@ -41,7 +41,6 @@ func ReconAccuracy(simFilename string, reconFilename string) {
 			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 			acc := 100 - accuracy
 			answer[sim[i].Name] = acc
-			//log.Printf("accuracy over %s = %f percent \n", sim[i].Name, acc)
 		}
 		tot = tot + num
 	}
@@ -49,8 +48,6 @@ func ReconAccuracy(simFilename string, reconFilename string) {
 	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
 	answer[allNodes] = acc
-	//log.Print("accuracy over all nodes= ", acc, "%", "\n")
-	//return answer
 	for name, accuracy := range answer {
 		log.Printf("%s %f \n", name, accuracy)
 	}
@@ -58,9 +55,8 @@ func ReconAccuracy(simFilename string, reconFilename string) {
 
 func usage() {
 	fmt.Print(
-		"ReconAccuracy takes in a fasta file of simulated evolution along a tree, and the reconstructed fastas of the same tree and returns the percentage accuracy of the sequences of all nodes in the tree.\n" +
+		"ReconAccuracy takes in a fasta file of simulated evolution along a tree, and the reconstructed fastas of the same tree and returns the percentage accuracy of the sequences of each node and all nodes in the tree.\n" +
 			"reconAccuracy <simulationOut.fasta> <reconstructionOut.fasta> \n" +
-			//TODO: update if printing to another file
 			"options:\n")
 	flag.PrintDefaults()
 }
