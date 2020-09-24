@@ -11,7 +11,7 @@ import (
 )
 
 //kills the program if multiple options are selected.
-func MultipleOptionErrorCheck(Normal *string, Binomial *string, Poisson *string, Beta *string, Gamma *string, SampleAFS *string) {
+func MultipleOptionErrorCheck(Normal *string, Binomial *string, Poisson *string, Beta *string, Gamma *string, SampleAfs *string) {
 	var count int = 0
 	if *Normal != "" {
 		count++
@@ -28,7 +28,7 @@ func MultipleOptionErrorCheck(Normal *string, Binomial *string, Poisson *string,
 	if *Gamma != "" {
 		count++
 	}
-	if *SampleAFS != "" {
+	if *SampleAfs != "" {
 		count++
 	}
 	if count > 1 {
@@ -47,9 +47,9 @@ func usage() {
 			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
 			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
 			" -gamma=alpha,beta. Defines a gamma distribution with parameters alpha and beta. Ex Usage: -gamma=4,4 6\n" +
-			" -sampleAFS=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha. " +
-			"sampleAFS will return numSamples many values between xLeft and xRight. Bins and maxSampleDepth are performance and accuracy options, suggested values are 1000 and 1000, respectively.\n" + 
-			"After defining a distribution, one float64 argument returns the function density at that value. Ex usage: -sampleAFS=0.02,200,1000,1000,0.001,0.999,false\n" +
+			" -sampleAfs=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha. " +
+			"sampleAFS will return numSamples many values between xLeft and xRight. Bins and maxSampleDepth are performance and accuracy options, suggested values are 1000 and 1000, respectively.\n" +
+			"After defining a distribution, one float64 argument returns the function density at that value. Ex usage: -sampleAfs=0.02,200,1000,1000,0.001,0.999,false\n" +
 			"For discrete distributions, two arguments will evaluate the sum between two input values.\n" +
 			"For the binomial distribution summation, the second argument can be set to n or N to evaluate the entire right tailed sum.\n" +
 			"For continuous distributions, two arguments will evaluate an integral between the two input values with the defined distribution as the integrand.\n")
@@ -61,14 +61,13 @@ func main() {
 	var Poisson *string = flag.String("poisson", "", "")
 	var Beta *string = flag.String("beta", "", "")
 	var Gamma *string = flag.String("gamma", "", "")
-	var SampleAFS *string = flag.String("sampleAFS", "", "")
-
+	var SampleAfs *string = flag.String("sampleAfs", "", "")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	MultipleOptionErrorCheck(Normal, Binomial, Poisson, Beta, Gamma, SampleAFS)
+	MultipleOptionErrorCheck(Normal, Binomial, Poisson, Beta, Gamma, SampleAfs)
 
 	if *Normal != "" {
 		words := strings.Split(*Normal, ",")
@@ -179,8 +178,8 @@ func main() {
 				fmt.Printf("%e\n", numbers.GammaIntegral(left, right, alpha, beta))
 			}
 		}
-	} else if *SampleAFS != "" {
-		words := strings.Split(*SampleAFS, ",")
+	} else if *SampleAfs != "" {
+		words := strings.Split(*SampleAfs, ",")
 		if len(words) != 7 {
 			log.Fatalf("Error: sampleAFS expected seven parameters, received: %v.\n", len(words))
 		}

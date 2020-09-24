@@ -26,18 +26,29 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 	if xLeft >= xRight {
 		log.Fatalf("Error in FastRejectionSample: xRight must be greater than xLeft.")
 	}
-	
-	var support float64 = xRight -xLeft
+
+	var support float64 = xRight - xLeft
 	var stepSize float64 = support / float64(bins)
 	var binHeights []float64 = make([]float64, bins)
 	var currLeft float64 = xLeft
 	var currRight float64 = xLeft + stepSize
 	var sumHeights float64
 
+	var fCurrLeft, fCurrRight float64
+	var firstTime bool = true
+
 	for i := 0; i < bins; i++ {
-		binHeights[i] = common.MaxFloat64(f(currLeft), f(currRight))
-		currLeft += stepSize
-		currRight += stepSize
+		if firstTime {
+			firstTime = false
+			fCurrLeft = f(currLeft)
+			fCurrRight = f(currRight)
+			binHeights[i] = common.MaxFloat64(fCurrLeft, fCurrRight)
+		} else {
+			fCurrLeft = fCurrRight
+			currRight += stepSize
+			fCurrRight = f(currRight)
+			binHeights[i] = common.MaxFloat64(f(currLeft), f(currRight))
+		}
 		sumHeights += binHeights[i]
 	}
 	var currBin int
