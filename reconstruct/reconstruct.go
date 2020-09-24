@@ -49,7 +49,8 @@ func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 
 	return answer
 }
 
-func WriteTreeToFasta (tree *expandedTree.ETree, outFile string) {
+//write assigned sequences at all nodes to a fasta file
+func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
 	var fastas []*fasta.Fasta
 	nodes := expandedTree.GetTree(tree)
 
@@ -59,7 +60,8 @@ func WriteTreeToFasta (tree *expandedTree.ETree, outFile string) {
 	fasta.Write(outFile, fastas)
 }
 
-func WriteLeavesToFasta (tree *expandedTree.ETree, leafFile string) {
+//write assigned sequences at leaf nodes to a fasta file
+func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
 	var leafFastas []*fasta.Fasta
 	nodes := expandedTree.GetLeaves(tree)
 
