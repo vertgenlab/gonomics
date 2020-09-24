@@ -23,14 +23,14 @@ func usage() {
 		"plotFunctions-returns a tab separated list of function evaluations for plotting functions.\n" +
 		"To specify the function, use a function keyword. Currently only 'AfsStationarity' is supported.\n" + 
 			"Usage:\n" +
-			" plotFunctions functionKeyWord leftBound rightBound numberOfBins outFile\n" +
+			" plotFunctions functionKeyWord leftBound rightBound stepSize outFile\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 5
-	var alpha *float64 = flag.Float64("alpha", math.Inf(-1), "Specifies the strength of selection for AfsStationarity plots.")
+	var alpha *float64 = flag.Float64("alpha", 0.001, "Specifies the strength of selection (alpha=2NeS) for AfsStationarity plots.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
