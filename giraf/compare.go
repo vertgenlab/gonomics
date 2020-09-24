@@ -22,7 +22,7 @@ func isEqual(a *Giraf, b *Giraf) bool {
 	if strings.Compare(PathToString(a.Path), PathToString(b.Path)) != 0 {
 		return false
 	}
-	if strings.Compare(cigar.ToString(a.Aln), cigar.ToString(b.Aln)) != 0 {
+	if strings.Compare(cigar.ByteCigarToString(a.Cigar), cigar.ByteCigarToString(b.Cigar)) != 0 {
 		return false
 	}
 	if a.AlnScore != b.AlnScore {

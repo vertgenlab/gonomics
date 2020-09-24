@@ -1,15 +1,16 @@
+// Package alleles provides functions for counting the bases present in alignment files (sam/giraf) and calling variants based on those counts.
 package alleles
 
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"strconv"
 	"strings"
 )
 
+// The AlleleCount struct holds count information for all alleles seen in an alignment file and whether those counts were on the forward or reverse read.
 type AlleleCount struct {
 	Ref    dna.Base
 	Counts int32
@@ -24,6 +25,8 @@ type AlleleCount struct {
 	Indel  []Indel
 }
 
+// The Indel struct stores unique indels encountered in an alignment. Note that the ref and alt fields
+// follow the VCF standard where the first element in the slice is the base prior to the indel
 type Indel struct {
 	Ref    []dna.Base
 	Alt    []dna.Base
@@ -31,32 +34,23 @@ type Indel struct {
 	CountR int32
 }
 
-type Location struct {
-	Chr string
+// The Coordinate struct encodes the a genomic position on a linear or graph genome. In the case of a graph genome the Chr field corresponds to the node name.
+type Coordinate struct {
+	Chr string // or node
 	Pos int64
 }
 
-type GraphLocation struct {
-	Node *simpleGraph.Node
-	Pos  int64
-}
-
+// The Allele struct wraps a genomic location an allele count and a sample name into a single struct for conversion into a VCF record.
 type Allele struct {
 	Sample   string
 	Count    *AlleleCount
-	Location *Location
+	Location *Coordinate
 }
 
-type GraphAllele struct {
-	Sample   string
-	Count    *AlleleCount
-	Location *GraphLocation
-}
+// SampleMap links a genomic coordinate to an allele count. Map structure: map[Chromosome]map[Position]*AlleleCount
+type SampleMap map[Coordinate]*AlleleCount
 
-// Map structure: map[Chromosome]map[Position]*AlleleCount
-type SampleMap map[Location]*AlleleCount
-
-// Convert SampleMap to VCF
+// AllelesToVcf converts a SampleMap to a VCF
 func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 	var current *vcf.Vcf
@@ -202,7 +196,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 	return answer
 }
 
-// Removes positions with insufficient coverage from the map
+// FilterAlleles removes positions with insufficient coverage from the map
 func FilterAlleles(input SampleMap, coverageThreshold int32) SampleMap {
 	for loc, alleles := range input {
 		if alleles.Counts < coverageThreshold {
@@ -212,7 +206,7 @@ func FilterAlleles(input SampleMap, coverageThreshold int32) SampleMap {
 	return input
 }
 
-// Readin VCF file from AllelesToVcf -> vcf.Write and store as a SampleMap
+// ReadVcfToAlleleCounts reads a VCF file from AllelesToVcf and stores as a SampleMap
 func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 	var line string
 	var answer SampleMap
@@ -261,9 +255,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				// If the position is in the map move along, else initialize
 				// Subtract 1 from Pos for index 0
-				_, ok := answer[Location{Chr, Pos - 1}]
+				_, ok := answer[Coordinate{Chr, Pos - 1}]
 				if !ok {
-					answer[Location{Chr, Pos - 1}] = &AlleleCount{
+					answer[Coordinate{Chr, Pos - 1}] = &AlleleCount{
 						Ref:    0,
 						Counts: 0,
 						BaseAF: 0,
@@ -277,22 +271,22 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 						Indel:  make([]Indel, 0)}
 				}
 
-				answer[Location{Chr, Pos - 1}].Ref = RefSeq[0]
-				answer[Location{Chr, Pos - 1}].Counts = int32(Counts)
+				answer[Coordinate{Chr, Pos - 1}].Ref = RefSeq[0]
+				answer[Coordinate{Chr, Pos - 1}].Counts = int32(Counts)
 
 				switch AltSeq[0] {
 				case dna.A:
-					answer[Location{Chr, Pos - 1}].BaseAF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseAR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseAF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseAR = int32(AltCountR)
 				case dna.C:
-					answer[Location{Chr, Pos - 1}].BaseCF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseCR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseCF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseCR = int32(AltCountR)
 				case dna.G:
-					answer[Location{Chr, Pos - 1}].BaseGF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseGR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseGF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseGR = int32(AltCountR)
 				case dna.T:
-					answer[Location{Chr, Pos - 1}].BaseTF = int32(AltCountF)
-					answer[Location{Chr, Pos - 1}].BaseTR = int32(AltCountR)
+					answer[Coordinate{Chr, Pos - 1}].BaseTF = int32(AltCountF)
+					answer[Coordinate{Chr, Pos - 1}].BaseTR = int32(AltCountR)
 				}
 
 				// If Indel
@@ -300,9 +294,9 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 
 				// If the position is in the map move along, else initialize
 				// VCF stores pos as base prior to indel so subtracting 1 for index 0 is unnecessary
-				_, ok := answer[Location{Chr, Pos}]
+				_, ok := answer[Coordinate{Chr, Pos}]
 				if !ok {
-					answer[Location{Chr, Pos}] = &AlleleCount{
+					answer[Coordinate{Chr, Pos}] = &AlleleCount{
 						Ref:    0,
 						Counts: 0,
 						BaseAF: 0,
@@ -322,7 +316,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 					CountF: int32(AltCountF),
 					CountR: int32(AltCountR)}
 
-				answer[Location{Chr, Pos}].Indel = append(answer[Location{Chr, Pos}].Indel, currentIndel)
+				answer[Coordinate{Chr, Pos}].Indel = append(answer[Coordinate{Chr, Pos}].Indel, currentIndel)
 
 			}
 		}
@@ -330,7 +324,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 	return answer
 }
 
-// Find the allele with with the highest frequency within a subset of 5 alleles (helper for FindMinorAllele)
+// maxMinorAllele finds the allele with with the highest frequency within a subset of 5 alleles (helper for FindMinorAllele)
 func maxMinorAllele(allele1 int32, allele2 int32, allele3 int32, allele4 int32, allele5 int32) int32 {
 	var minorAllele = allele1
 	if allele2 > minorAllele {
@@ -348,7 +342,7 @@ func maxMinorAllele(allele1 int32, allele2 int32, allele3 int32, allele4 int32, 
 	return minorAllele
 }
 
-// Find the allele with highest frequency
+// FindMajorAllele find the allele with highest frequency
 func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32 {
 	var majorAllele = A
 	if C > majorAllele {
@@ -370,9 +364,8 @@ func FindMajorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) i
 	return majorAllele
 }
 
-// Find the allele with the 2nd highest frequency
+// FindMinorAllele find the allele with the 2nd highest frequency
 func FindMinorAllele(A int32, C int32, G int32, T int32, Ins int32, Del int32) int32 {
-
 	majorAllele := FindMajorAllele(A, C, G, T, Ins, Del)
 
 	var minorAllele = A

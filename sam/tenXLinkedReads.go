@@ -3,7 +3,6 @@ package sam
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"strings"
 	"sync"
@@ -15,13 +14,13 @@ func BarcodeInfoMap(samfile *SamAln) map[string]*giraf.Note {
 	var values []string
 	for _, tag := range words {
 		values = strings.SplitN(tag, ":", 3)
-		answer[values[0]] = &giraf.Note{Tag: values[0], Type: []rune(values[1])[0], Value: values[2]}
+		answer[values[0]] = &giraf.Note{Tag: []byte(values[0])[:2], Type: []byte(values[1])[0], Value: values[2]}
 	}
 	return answer
 }
 
-//Barcodes corrected for sequence errors are taged BX, while uncorrected barcodes are labeled RX
-//BX tags do not exist for all reads
+// Barcodes corrected for sequence errors are taged BX, while uncorrected barcodes are labeled RX
+// BX tags do not exist for all reads
 func LinkedReadsBarcode(samLine *SamAln) string {
 	barcodeInfo := BarcodeInfoMap(samLine)
 	data, ok := barcodeInfo["BX"]
@@ -75,11 +74,7 @@ func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
 }*/
 
 func TenXPrettyPrint(filename string) {
-	samfile := fileio.EasyOpen(filename)
-	defer samfile.Close()
-	ReadHeader(samfile)
-	linkedReads := make(chan *SamAln)
-	go ReadToChan(samfile, linkedReads)
+	linkedReads, _ := GoReadToChan(filename)
 	for barcodes := range linkedReads {
 		if !IsForwardRead(barcodes) {
 			fmt.Printf("%s\t%s\t%s\t%s\n", barcodes.RName, barcodes.QName, LinkedReadsBarcode(barcodes), cigar.ToString(barcodes.Cigar))

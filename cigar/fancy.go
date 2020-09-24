@@ -14,6 +14,11 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 	var answer []*Cigar
 	var seqIdx, refIdx int
 	var k, runLenCount int64
+
+	if cigar[0].Op == '*' {
+		return nil
+	}
+
 	for i := 0; i < len(cigar); i++ {
 		switch cigar[i].Op {
 		case 'M':
@@ -22,16 +27,28 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 				if sequence[seqIdx] == reference[refIdx] {
 					runLenCount++
 				} else {
-					// Append the matching bases so far
-					answer = append(answer, &Cigar{RunLength: runLenCount, Op: '='})
+					if runLenCount > 0 {
+						// Append the matching bases so far
+						answer = append(answer, &Cigar{RunLength: runLenCount, Op: '='})
+					}
 					// Append the mismatch base
-					answer = append(answer, &Cigar{RunLength: 1, Op: 'X', Sequence: []dna.Base{sequence[k]}})
+					if answer == nil {
+						answer = append(answer, &Cigar{RunLength: 1, Op: 'X', Sequence: []dna.Base{sequence[k]}})
+					} else if answer[len(answer) - 1].Op == 'X' {
+						answer[len(answer) - 1].RunLength++
+						answer[len(answer) - 1].Sequence = append(answer[len(answer) - 1].Sequence ,sequence[k])
+					} else {
+						answer = append(answer, &Cigar{RunLength: 1, Op: 'X', Sequence: []dna.Base{sequence[k]}})
+					}
 					runLenCount = 0
 				}
 				seqIdx++
 				refIdx++
 			}
-			answer = append(answer, &Cigar{RunLength: runLenCount, Op: '='})
+
+			if runLenCount > 0 {
+				answer = append(answer, &Cigar{RunLength: runLenCount, Op: '='})
+			}
 
 		case 'I':
 			var insSeq []dna.Base

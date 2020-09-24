@@ -1,3 +1,4 @@
+//Package popgen contains tools for population genetic analysis, specifically for selection and population structure.
 package popgen
 
 import (
@@ -6,11 +7,13 @@ import (
 	"strings"
 )
 
+//The Group struct and associated functions provides a system to partition a list of samples or species for subsequent analysis of subsections of the overall data.
 type Group struct {
 	Name    string
 	Members []string
 }
 
+//ReadGroups parses a Group format file into a slice of Group structs.
 func ReadGroups(filename string) []*Group {
 	var line string
 	var doneReading bool = false
@@ -34,20 +37,7 @@ func ReadGroups(filename string) []*Group {
 	return answer
 }
 
-func FilterToGroups(aln []*fasta.Fasta, g []*Group) []*fasta.Fasta {
-	var answer []*fasta.Fasta
-	for i := 0; i < len(aln); i++ {
-		for j := 0; j < len(g); j++ {
-			for k := 0; k < len(g[j].Members); k++ {
-				if aln[i].Name == g[j].Members[k] {
-					answer = append(answer, aln[i])
-				}
-			}
-		}
-	}
-	return answer
-}
-
+//FindMissingGroupMembers returns a string of all of the entries in a Group slice that are not contained in the names of a multiFa alignment.
 func FindMissingGroupMembers(aln []*fasta.Fasta, g []*Group) string {
 	var answer string = "Missing: "
 	var missing bool = false
@@ -68,6 +58,7 @@ func FindMissingGroupMembers(aln []*fasta.Fasta, g []*Group) string {
 	return answer
 }
 
+//FilterMultByGroup takes in a multiFa alignment returns a multiFa containing only the entries that are contained in an input slice of Group structs.
 func FilterMultByGroup(aln []*fasta.Fasta, g []*Group) []*fasta.Fasta {
 	var answer []*fasta.Fasta
 	for i := 0; i < len(aln); i++ {

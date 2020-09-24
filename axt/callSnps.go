@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 	"strings"
 )
 
@@ -16,7 +15,7 @@ func AxtVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 		records = append(records, AxtToVcf(axtList[i])...)
 	}
 	records = vcf.FilterAxtVcf(records, fa)
-	vcf.NewWrite(filename, records, fa)
+	vcf.Write(filename, records)
 }
 
 func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
@@ -86,7 +85,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 			}
 		}
 	}
-	log.Printf("\nFound %d differences in this block...\n%s\n", len(answer), AxtInfo(axtFile))
+	//log.Printf("\nFound %d differences in this block...\n%s\n", len(answer), AxtInfo(axtFile))
 	return answer
 }
 

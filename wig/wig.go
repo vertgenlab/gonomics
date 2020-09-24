@@ -1,3 +1,5 @@
+//package wig provides functions to read, write, and manipulate wig files.
+//more information on the WIG file format can be found at https://genome.ucsc.edu/goldenPath/help/wiggle.html
 package wig
 
 import (
@@ -9,6 +11,7 @@ import (
 	"strings"
 )
 
+//Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct.
 type Wig struct {
 	StepType string
 	Chrom    string
@@ -17,11 +20,13 @@ type Wig struct {
 	Values   []*WigValue //{position, score}
 }
 
+//WigValue is an internal struct of the Wig data structure that contains information on the Wig value at an individual genomic postion.
 type WigValue struct {
 	Position int64
 	Value    float64
 }
 
+//Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
 func Read(filename string) []*Wig {
 	var answer []*Wig
 	var line string
@@ -84,6 +89,7 @@ func Read(filename string) []*Wig {
 	return answer
 }
 
+//Prints the first record in a Wig struct. Mainly used for debugging.
 func PrintFirst(rec []*Wig) {
 	if len(rec) == 0 {
 		fmt.Println("Empty Wig")
@@ -102,6 +108,7 @@ func PrintFirst(rec []*Wig) {
 	}
 }
 
+//Write writes a Wig data structure to a WIG format file at the input filename
 func Write(filename string, rec []*Wig) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
@@ -111,6 +118,7 @@ func Write(filename string, rec []*Wig) {
 	}
 }
 
+//WriteToFileHandle is an helper function for Write that writes the Wig data structure to a file.
 func WriteToFileHandle(file io.Writer, rec *Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {

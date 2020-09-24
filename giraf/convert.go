@@ -13,37 +13,38 @@ import (
 
 func GirafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Aln), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.Uint8QualToString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ByteCigarToString(g.Cigar), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.QualString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
 func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
-	data := strings.SplitN(line, "\t", 11)
-	if len(data) > 9 {
+	data := strings.SplitN(line, "\t", 12)
+	if len(data) > 10 {
+
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
 			QEnd:      common.StringToInt(data[2]),
-			PosStrand: StringToPos(data[3]),
-			Path:      FromStringToPath(data[4]),
-			Aln:       cigar.FromString(data[5]),
-			AlnScore:  common.StringToInt(data[6]),
-			MapQ:      uint8(common.StringToInt(data[7])),
-			Seq:       dna.StringToBases(data[8]),
-			Qual:      fastq.ToQualUint8([]rune(data[9]))}
+			Flag:      common.StringToUint8(data[3]),
+			PosStrand: StringToPos(data[4]),
+			Path:      FromStringToPath(data[5]),
+			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
+			AlnScore:  common.StringToInt(data[7]),
+			MapQ:      uint8(common.StringToInt(data[8])),
+			Seq:       dna.StringToBases(data[9]),
+			Qual:      fastq.ToQualUint8([]rune(data[10]))}
 
-		if len(data) == 11 {
-			curr.Notes = FromStringToNotes(data[10])
+		if len(data) == 12 {
+			curr.Notes = FromStringToNotes(data[11])
 		}
 	} else {
-		log.Fatalf("Error: Expecting at least 10 columns, but only found %d on %s", len(data), line)
+		log.Fatalf("Error: Expecting at least 11 columns, but only found %d on %s", len(data), line)
 	}
 	return curr
 }
 
-//TODO: Specific txt formats are still up for discussion
-func PathToString(p *Path) string {
+func PathToString(p Path) string {
 	nodeString := make([]string, len(p.Nodes))
 	for i, v := range p.Nodes {
 		nodeString[i] = strconv.Itoa(int(v))
@@ -51,7 +52,7 @@ func PathToString(p *Path) string {
 	return fmt.Sprintf("%d:%s:%d", p.TStart, strings.Join(nodeString, ">"), p.TEnd)
 }
 
-func FromStringToPath(column string) *Path {
+func FromStringToPath(column string) Path {
 	words := strings.Split(column, ":")
 	if len(words) != 3 {
 		log.Fatalf("Error: Needs exact 3 values, only found %d", len(words))
@@ -59,10 +60,13 @@ func FromStringToPath(column string) *Path {
 	nodes := strings.Split(words[1], ">")
 	answer := Path{TStart: common.StringToInt(words[0]), Nodes: make([]uint32, len(nodes)), TEnd: common.StringToInt(words[2])}
 
-	for i, v := range nodes {
-		answer.Nodes[i] = common.StringToUint32(v)
+	if nodes[0] != "" { // catch unaligned reads
+		for i, v := range nodes {
+			answer.Nodes[i] = common.StringToUint32(v)
+		}
 	}
-	return &answer
+
+	return answer
 }
 
 func NotesToString(notes []Note) string {
@@ -108,7 +112,7 @@ func FromStringToNotes(s string) []Note {
 	var text []string
 	for i, v := range words {
 		text = strings.SplitN(v, ":", 3)
-		answer[i] = Note{Tag: text[0], Type: []rune(text[1])[0], Value: text[2]}
+		answer[i] = Note{Tag: []byte(text[0]), Type: []byte(text[1])[0], Value: text[2]}
 	}
 	return answer
 }
@@ -128,4 +132,55 @@ func fromStringToQual(s string) []uint8 {
 		answer = append(answer, uint8(v))
 	}
 	return answer
+}
+
+func ToString(g *Giraf) string {
+	buf := strings.Builder{}
+	buf.Grow(400)
+	var err error
+	_, err = buf.WriteString(g.QName)
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.QStart))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.QEnd))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(int(g.Flag)))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteRune(common.StrandToRune(g.PosStrand))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(PathToString(g.Path))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(cigar.ByteCigarToString(g.Cigar))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(g.AlnScore))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(strconv.Itoa(int(g.MapQ)))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(dna.BasesToString(g.Seq))
+	common.ExitIfError(err)
+	err = buf.WriteByte('\t')
+	common.ExitIfError(err)
+	_, err = buf.WriteString(fastq.QualString(g.Qual))
+	common.ExitIfError(err)
+	_, err = buf.WriteString(NotesToString(g.Notes))
+	common.ExitIfError(err)
+	return buf.String()
 }
