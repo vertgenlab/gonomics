@@ -23,7 +23,7 @@ func usage() {
 		"plotFunctions-returns a tab separated list of function evaluations for plotting functions.\n" +
 		"To specify the function, use a function keyword. Currently only 'AfsStationarity' is supported.\n" + 
 			"Usage:\n" +
-			" plotFunctions functionKeyWord leftBound rightBound stepSize outFile\n" +
+			" plotFunctions functionKeyWord leftBound rightBound steps outFile\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
