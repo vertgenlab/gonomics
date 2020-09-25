@@ -26,7 +26,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64, minMapQ int64, memBufferSize int) {
+func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64, minMapQ int64, memBufferSize int, minCov int) {
 	var ref interface{}
 	output := fileio.MustCreate(outFile)
 	defer output.Close()
@@ -37,7 +37,7 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 		ref = simpleGraph.Read(graphRef)
 	}
 	alleleStream, normalIDs := startAlleleStreams(ref, expSamples, normSamples, minMapQ, memBufferSize)
-	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold)
+	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold, minCov)
 
 	//vcf.WriteHeader(output)
 	for vcfRecord := range answer {
@@ -122,6 +122,7 @@ func main() {
 	var normalSamples *string = flag.String("n", "", "Input normal sample(s) [.sam, .giraf, .txt]. Can be a file or a txt file with a list (must have .txt extension) of sample paths. If no normal samples are given, each experimental sample will me measured against the other experimental samples.")
 	var minMapQ *int64 = flag.Int64("minMapQ", 20, "Exclude all reads with mapping quality less than this value")
 	var memBufferSize *int = flag.Int("memBuffer", 100, "Maximum number of allele records to store in memory at once")
+	var minCov *int = flag.Int("minCoverage", 10, "Minimum number of covering reads to be considered a valid variant")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -136,5 +137,5 @@ func main() {
 	}
 	flag.Parse()
 
-	callVariants(*linearReference, *graphReference, *experimentalSamples, *normalSamples, *outFile, *afThreshold, *sigThreshold, *minMapQ, *memBufferSize)
+	callVariants(*linearReference, *graphReference, *experimentalSamples, *normalSamples, *outFile, *afThreshold, *sigThreshold, *minMapQ, *memBufferSize, *minCov)
 }

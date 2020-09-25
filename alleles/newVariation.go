@@ -10,7 +10,7 @@ import (
 )
 
 // FindNewVariation calls variants from a set of samples and normals that DO NOT already exist in the graph structure.
-func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64) <-chan *vcf.Vcf {
+func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) <-chan *vcf.Vcf {
 	answer := make(chan *vcf.Vcf)
 
 	// To make the normal IDs option if the value is nil, just initialize empty map so all samples
@@ -19,14 +19,14 @@ func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, 
 		normalIDs = make(map[string]bool)
 	}
 
-	go scoreAlleles(answer, alleleStream, normalIDs, afThreshold, sigThreshold)
+	go scoreAlleles(answer, alleleStream, normalIDs, afThreshold, sigThreshold, minCoverage)
 	return answer
 }
 
 // scoreAlleles is Designed to be run as a goroutine that accepts alleles from the alleleStream channel,
 // computes the p value and makes a VCF, then sends the vcf record on the answer channel
-func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64) {
-
+func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) {
+	minCov := int32(minCoverage)
 	for alleles := range alleleStream {
 		if len(alleles) == 1 {
 			continue
@@ -42,6 +42,10 @@ func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalI
 				//TODO: There is room for improvement here. the b and d values values don't need to be determined
 				// for each individual allele and each individual base. We just need to make adjustments on the fly
 				// depending on whether or not normals are present and therefore we need to do b -= a and d -= c
+
+				if alleles[i].Count.Counts < minCov {
+					continue
+				}
 
 				warnings = nil
 				if !normalPresent {
