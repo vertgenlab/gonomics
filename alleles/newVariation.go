@@ -279,7 +279,9 @@ func getFishersInput(experimental *Allele, bkgd *Allele, normalPresent bool, alt
 	case dna.Gap:
 		c = int(experimental.Count.Indel[indelSlicePos].CountF + experimental.Count.Indel[indelSlicePos].CountR)
 		bkgdIndel := findMatchingIndel(&experimental.Count.Indel[indelSlicePos], bkgd.Count.Indel)
-		d = int(bkgdIndel.CountF + bkgdIndel.CountR)
+		if bkgdIndel != nil {
+			d = int(bkgdIndel.CountF + bkgdIndel.CountR)
+		}
 	}
 
 	if !normalPresent {
