@@ -17,7 +17,7 @@ func ReconAccuracy(simFilename string, reconFilename string, outFilename string)
 	defer out.Close()
 
 	for name, accuracy := range answer {
-		fmt.Fprintf(out, "%s %f \n", name, accuracy)
+		fmt.Fprintf(out, "%s\t%f\n", name, accuracy)
 	}
 }
 
