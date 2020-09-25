@@ -44,6 +44,8 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 
 	//vcf.WriteHeader(output)
 	for vcfRecord := range answer {
+		time.Sleep(time.Second)
+		fmt.Println(time.Since(lastProgressReport).Seconds())
 		if time.Since(lastProgressReport).Seconds() > 10 {
 			lastProgressReport = time.Now()
 			log.Printf("Current Position: %s\t%d", vcfRecord.Chr, vcfRecord.Pos)
