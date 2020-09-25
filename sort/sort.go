@@ -144,7 +144,7 @@ func girafReadChunk(file *fileio.EasyReader, linesPerChunk int, done *bool, sort
 		if *done {
 			return answer
 		}
-		answer = append(answer, &priorityGiraf{curr, 0, getSortPath(curr.Path, sortOrderMap)})
+		answer = append(answer, &priorityGiraf{curr, 0, getSortPath(&curr.Path, sortOrderMap)})
 	}
 	return answer
 }
@@ -176,7 +176,7 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 		} else {
 			// I figure that it would be just as quick to rederive the sortPath
 			// compared to writing it to the tmp file and decoding it here
-			sortPath = getSortPath(curr.Path, sortOrderMap)
+			sortPath = getSortPath(&curr.Path, sortOrderMap)
 			priorityQueue = append(priorityQueue, &priorityGiraf{curr, i, sortPath})
 		}
 	}
@@ -196,7 +196,7 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 			err := os.Remove(chunkReaders[curr.origin].File.Name())
 			common.ExitIfError(err)
 		} else {
-			heap.Push(&priorityQueue, &priorityGiraf{nextGiraf, curr.origin, getSortPath(nextGiraf.Path, sortOrderMap)})
+			heap.Push(&priorityQueue, &priorityGiraf{nextGiraf, curr.origin, getSortPath(&nextGiraf.Path, sortOrderMap)})
 		}
 	}
 	close(outputChan)

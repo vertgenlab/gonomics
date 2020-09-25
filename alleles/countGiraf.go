@@ -1,12 +1,7 @@
 package alleles
 
-import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
-	"log"
-	"sync"
-)
+//TODO: Will require major changes after giraf cigar change
+/*
 //TODO: Merge with countSam functions using interfaces???
 // GoCountGirafAlleles is a wrapper for CountGirafAlleles that manages channel closure.
 func GoCountGirafAlleles(girafFilename string, ref *simpleGraph.SimpleGraph, minMapQ uint8) <-chan *Allele {
@@ -238,3 +233,4 @@ func addPosToMap(node *simpleGraph.Node, currLocation *Coordinate, currAlleles m
 	}
 	return currAlleles, runningCount
 }
+*/

@@ -51,8 +51,9 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan *alleles.Allele, normalIDs map[string]bool, samFilesPresent *bool, girafFilesPresent *bool, minMapQ int64) {
 	switch filepath.Ext(file) {
 	case ".giraf":
-		//TODO: Make giraf to alleles function
-		*alleleChans = append(*alleleChans, alleles.GirafToAlleles(file))
+		//TODO: Fix giraf to alleles function
+		log.Fatalln("ERROR: giraf files are currently not supported")
+		//*alleleChans = append(*alleleChans, alleles.(file))
 		*girafFilesPresent = true
 		if isNormal == true {
 			normalIDs[file] = true
@@ -61,7 +62,7 @@ func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan
 		}
 		log.Println("Started Allele Stream for", file)
 	case ".sam":
-		*alleleChans = append(*alleleChans, alleles.SamToAlleles(file, ref, minMapQ))
+		*alleleChans = append(*alleleChans, alleles.GoCountSamAlleles(file, ref.([]*fasta.Fasta), minMapQ))
 		*samFilesPresent = true
 		if isNormal == true {
 			normalIDs[file] = true
@@ -96,7 +97,9 @@ func startAlleleStreams(ref interface{}, experimental string, normal string, min
 	var samFilesPresent, girafFilesPresent bool
 
 	addChans(ref, experimental, false, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
-	addChans(ref, normal, true, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
+	if normal != "" {
+		addChans(ref, normal, true, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
+	}
 
 	if samFilesPresent && girafFilesPresent {
 		log.Fatalln("ERROR: Input directories contain both giraf and sam files")
