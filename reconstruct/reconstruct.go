@@ -12,14 +12,16 @@ func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 
 	var allNodes string
 	allNodes = "all Nodes"
 	var found bool = false
-	tot := 0.0
+	var total float64
+	total = 0.0
+	var mistakes float64
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
 
 	answer := make(map[string]float64)
 
 	for i := 0; i < len(sim); i++ {
-		num := 0.0
+		mistakes = 0.0
 		found = false
 		for j := 0; j < len(recon); j++ {
 			if sim[i].Name == recon[j].Name {
@@ -27,22 +29,21 @@ func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 
 				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
 				for k := 0; k < len(sim[0].Seq); k++ {
 					if sim[i].Seq[k] != recon[j].Seq[k] {
-						num = num + 1
+						mistakes = mistakes + 1
 					}
 				}
 			}
 		}
 		if found == false {
 			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
-		} else {
-			accuracy := num / float64(len(sim[i].Seq)) * 100.0
-			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
-			acc := 100 - accuracy
-			answer[sim[i].Name] = acc
 		}
-		tot = tot + num
+		accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
+		//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+		acc := 100 - accuracy
+		answer[sim[i].Name] = acc
+		total = total + mistakes
 	}
-	accuracy := tot / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
+	accuracy := total / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
 	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
 	answer[allNodes] = acc
