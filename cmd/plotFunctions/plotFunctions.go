@@ -1,19 +1,18 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
-	"github.com/vertgenlab/gonomics/common"
 	"log"
-	"fmt"
-	"flag"
-	"math"
 )
 
 func plotFunctions(function string, left float64, right float64, bins int, outFile string, alpha float64) {
 	if function == "AfsStationarity" {
 		numbers.Plot(popgen.AFSStationarityClosure(alpha), left, right, bins, outFile)
-	} else {//here you can add more else ifs to add additional functions for plotting
+	} else { //here you can add more else ifs to add additional functions for plotting
 		fmt.Printf("Unrecognized function: %s.\n", function)
 	}
 }
@@ -21,7 +20,7 @@ func plotFunctions(function string, left float64, right float64, bins int, outFi
 func usage() {
 	fmt.Print(
 		"plotFunctions-returns a tab separated list of function evaluations for plotting functions.\n" +
-		"To specify the function, use a function keyword. Currently only 'AfsStationarity' is supported.\n" + 
+			"To specify the function, use a function keyword. Currently only 'AfsStationarity' is supported.\n" +
 			"Usage:\n" +
 			" plotFunctions functionKeyWord leftBound rightBound steps outFile\n" +
 			"options:\n")
@@ -34,7 +33,7 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
-	
+
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
