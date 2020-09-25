@@ -46,16 +46,10 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	close(output)
 }
 
-func ReadPairBigToChan(readOne string, readTwo string, answer chan<- PairedEndBig) {
-	var fq PairedEndBig
-	fileOne, fileTwo := fileio.EasyOpen(readOne), fileio.EasyOpen(readTwo)
-
-	defer fileOne.Close()
-	defer fileTwo.Close()
-
-	for curr, done := NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
-		fq = PairedEndBig{Fwd: *ToFastqBig(curr.Fwd), Rev: *ToFastqBig(curr.Rev)}
-		answer <- fq
+func ReadPairBigToChan(fileOne string, fileTwo string, answer chan<- PairedEndBig) {
+	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
+	for fq, done := ReadFqBigPair(readOne, readTwo); !done; fq, done = ReadFqBigPair(readOne, readTwo) {
+		answer <- *fq
 	}
 	close(answer)
 }
@@ -127,16 +121,16 @@ func GoWriteFqPair(readOne string, readTwo string, data <-chan *PairedEnd) {
 // In additon the pointers to read one and read two will also be dereference. When sending a pointer to a struct through
 // a channel, or a struct with pointers inside, memory allocated will be placed on the heap hindering performance.
 func ReadFqBigPair(readerOne *fileio.SimpleReader, readerTwo *fileio.SimpleReader) (*PairedEndBig, bool) {
-	var done bool
+	var doneOne, doneTwo bool
 	var fqOne, fqTwo *FastqBig = &FastqBig{}, &FastqBig{}
-	fqOne, done = ReadFqBig(readerOne)
-	if !done || fqOne != nil {
-		fqTwo, done = ReadFqBig(readerTwo)
-		if !done || fqTwo != nil {
-			return &PairedEndBig{Fwd: *fqOne, Rev: *fqTwo}, false
-		} else {
-			log.Fatalf("Error: fastq files do not end at the same time...\n")
-		}
+	fqOne, doneOne = ReadFqBig(readerOne)
+	fqTwo, doneTwo = ReadFqBig(readerTwo)
+	if !doneOne && !doneTwo {
+		return &PairedEndBig{Fwd: *fqOne, Rev: *fqTwo}, false
+	} else if doneOne && doneTwo {
+		return nil, true
+	} else {
+		log.Fatalf("Error: fastq files do not end at the same time...\n")
+		return nil, true
 	}
-	return nil, true
 }
