@@ -3,6 +3,7 @@ package numbers
 import (
 	"math"
 	"testing"
+	//DEBUG: "fmt"
 )
 
 var definiteIntegralTests = []struct {
@@ -30,6 +31,37 @@ func BenchmarkDefiniteIntegral(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		for _, test := range definiteIntegralTests {
 			DefiniteIntegral(test.f, test.a, test.b)
+		}
+	}
+}
+
+//answer from WolframAlpha
+var logIntegralTests = []struct {
+	f      func(float64) float64
+	a      float64
+	b      float64
+	answer float64
+}{
+	//	{func(x float64) float64 { return x }, 2, 3, 2.62},
+	{func(x float64) float64 { return x }, 2, 5, 4.94893081905},
+	{func(x float64) float64 { return math.Log(x * x) }, 2, 11, 6.089044875},
+}
+
+func TestLogIntegral(t *testing.T) {
+	for _, test := range logIntegralTests {
+		calculated := LogIntegrate(test.f, test.a, test.b, 1000)
+		//DEBUG: fmt.Printf("Calculated: %f. \n", calculated)
+		if calculated > test.answer*1.01 || calculated < test.answer*0.99 {
+			t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
+		}
+	}
+}
+
+func TestLogIntegrateIterative(t *testing.T) {
+	for _, test := range logIntegralTests {
+		calculated := LogIntegrateIterative(test.f, test.a, test.b, 30, 1e-8)
+		if calculated > test.answer*1.00000001 || calculated < test.answer*0.99999999 {
+			t.Errorf("For a logSpace integral we expected %e, but got %e", test.answer, calculated)
 		}
 	}
 }

@@ -22,7 +22,7 @@ func processHeader(header *VcfHeader, line string) {
 //Name input is strictly used to push in a name for the sample column.
 
 func NewHeader(name string) *VcfHeader {
-	var header *VcfHeader
+	var header *VcfHeader = &VcfHeader{}
 	t := time.Now()
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
 	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))
@@ -66,5 +66,25 @@ func NewWriteHeader(file io.Writer, header *VcfHeader) {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
 		common.ExitIfError(err)
 	}
-
 }
+
+func WriteMultiSamplesHeader(file io.Writer, header *VcfHeader, listNames []string) {
+	var err error
+	for h := 0; h < len(header.Text); h++ {
+		if strings.Contains(header.Text[h], "#CHROM\t") {
+			name := strings.Join(listNames, "\t")
+			_, err = fmt.Fprintf(file, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n", name))
+			common.ExitIfError(err)
+		} else {
+			_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
+			common.ExitIfError(err)
+		}
+	}
+}
+
+func PrintHeader(header *VcfHeader) {
+	for i := 0; i < len(header.Text);i++ {
+		fmt.Println(header.Text[i])
+	}
+}
+

@@ -3,7 +3,55 @@ package numbers
 import (
 	"log"
 	"math"
+	//DEBUG: "fmt"
 )
+
+//LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
+func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 {
+	if a >= b {
+		log.Fatalf("logIntegrate failed, left bound must be smaller than right bound.")
+	}
+	var deltaX float64 = (b - a) / float64(n)
+	var logDeltaX float64 = math.Log(deltaX)
+	var currLeft float64 = a //this variable stores the left bound of the current rectangle.
+	var currRight float64 = a + deltaX
+	var answer float64
+	//first time, sets answer as the area of the first rectangle
+	var nextLeftEval float64 = f(currRight)
+	answer = MultiplyLog(MidpointLog(f(currLeft), nextLeftEval), logDeltaX)
+	var rightEval float64
+
+	for i := 1; i < n; i++ {
+		currLeft += deltaX
+		currRight += deltaX
+		rightEval = f(currRight)
+		answer = AddLog(answer, MultiplyLog(MidpointLog(nextLeftEval, rightEval), logDeltaX))
+		nextLeftEval = rightEval
+	}
+	return answer
+}
+
+func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIter int, relativeError float64) float64 {
+	if maxIter < 2 {
+		log.Fatalf("maxIterations for LogIntegrateIterative must be at least 2.")
+	}
+	if relativeError <= 0 {
+		log.Fatalf("relativeError for LogIntegrateIterative must be greater than 0.")
+	}
+	n := 1000
+	prev := LogIntegrate(f, a, b, n)
+
+	for i := 0; i < maxIter; i++ {
+		n := n * 10
+		curr := LogIntegrate(f, a, b, n)
+		if (prev-curr)/curr < relativeError {
+			return curr
+		}
+		prev = curr
+	}
+	log.Fatalf("LogIntegrateIterative failed to converge below relative error: %f in maxIter: %v.", relativeError, maxIter)
+	return (0)
+}
 
 // There are a number of ways to evaluate a definite integral computationally.
 // Romberg's method seems like a good mix of accuracy and coding difficulty,
@@ -14,6 +62,7 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 	var n, m int
 	var kMax, k, h, currEstError float64
 	var currR, prevR []float64 = make([]float64, maxIter), make([]float64, maxIter)
+	var minIter int = 10
 
 	prevR[0] = 0.5 * (f(a) + f(b))
 	for n = 1; n < maxIter; n++ {
@@ -41,7 +90,8 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 		// R[n][n]-R[n-1][n-1] being more conservative, so we will use that one
 		// log.Printf("prevEst=%e, currEst=%e\n", prevR[n-1], currR[n])
 		currEstError = math.Abs(currR[n] - prevR[n-1])
-		if currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n]) {
+		//fmt.Printf("currValue: %e. currError: %e\n", currR[n], currEstError)
+		if (currEstError < estimatedError || currEstError < relativeEstError*math.Abs(currR[n])) && n >= minIter {
 			return currR[n]
 		}
 
@@ -55,4 +105,10 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 // DefiniteIntegral computes the definite integral of f(x) dx from start to end
 func DefiniteIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 1e-8, 1e-8, 30)
+}
+
+//DefiniteSmallIntegral is like DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
+//slower than DefiniteIntegral, but more accurate for small values.
+func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
+	return rombergsMethod(f, start, end, 0, 1e-6, 30)
 }

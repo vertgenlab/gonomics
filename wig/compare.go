@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+//isEqual returns true if two Wig data structures contain the exact same data and returns false otherwise.
 func isEqual(alpha *Wig, beta *Wig) bool {
 	if strings.Compare(alpha.StepType, beta.StepType) != 0 {
 		return false
@@ -30,6 +31,7 @@ func isEqual(alpha *Wig, beta *Wig) bool {
 	return true
 }
 
+//AllEqual returns true if two input arrays of wig data structures contain all the same data, false otherwise.
 func AllEqual(alpha []*Wig, beta []*Wig) bool {
 	if len(alpha) != len(beta) {
 		return false

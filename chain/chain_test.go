@@ -23,7 +23,16 @@ func TestReaderAndWriter(t *testing.T) {
 		reader := make(chan *Chain)
 		defer file.Close()
 		goHashTags := ReadHeaderComments(file)
-		go ReadToChan(file, reader)
+
+		var wg2 sync.WaitGroup
+		wg2.Add(1)
+		go ReadToChan(file, reader, &wg2)
+
+		go func() {
+			wg2.Wait()
+			close(reader)
+		}()
+
 		testGoRoutines := "testdata/goReaderWriter.chain"
 		var wg sync.WaitGroup
 		wg.Add(1)

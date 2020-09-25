@@ -11,15 +11,15 @@ import (
 //TODO: Will write a better high throughput test when random generator is working
 func TestReadAndWrite(t *testing.T) {
 	var numGiraf int = 1
-	girafPath := &Path{TStart: 2008, Nodes: []uint32{2015, 2017, 2018}, TEnd: 2020}
-	girafNotes := []Note{Note{Tag: "BZ", Type: 'i', Value: "5"}, Note{Tag: "GP", Type: 'Z', Value: "30,11,35,9,23"}, Note{Tag: "XO", Type: 'i', Value: "ham5"}}
+	girafPath := Path{TStart: 2008, Nodes: []uint32{2015, 2017, 2018}, TEnd: 2020}
+	girafNotes := []Note{Note{Tag: []byte{'B', 'Z'}, Type: 'i', Value: "5"}, Note{Tag: []byte{'G', 'P'}, Type: 'Z', Value: "30,11,35,9,23"}, Note{Tag: []byte("XO"), Type: 'i', Value: "ham5"}}
 	g := &Giraf{
 		QName:     "goldenState",
 		QStart:    2008,
 		QEnd:      2020,
 		PosStrand: true,
 		Path:      girafPath,
-		Aln:       []*cigar.Cigar{{RunLength: 5, Op: 'M'}},
+		Cigar:     []cigar.ByteCigar{{RunLen: 5, Op: 'M'}},
 		AlnScore:  110335,
 		MapQ:      5,
 		Seq:       dna.StringToBases("ATGCG"),

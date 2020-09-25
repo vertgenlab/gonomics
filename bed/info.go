@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
+//UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
 func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	var answer []*Bed
 	var inRegion bool = false
@@ -25,6 +26,7 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	return answer
 }
 
+//UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
 func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	var answer []*Bed
 	for idx, _ := range records {
@@ -33,11 +35,25 @@ func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	return answer
 }
 
+//TotalSize gives back to total region covered by bed entry.
 func TotalSize(b []*Bed) int64 {
 	var ans, curLen int64
 	for i := 0; i < len(b); i++ {
 		curLen = b[i].ChromEnd - b[i].ChromStart
 		ans += curLen
+	}
+	return ans
+}
+
+//Splits fasta regions by using bed regions and concatenate fasta sequences by filling 100 Ns in between
+func MakeContigFromBed(fa *fasta.Fasta, beds []*Bed) *fasta.Fasta {
+	var ans *fasta.Fasta = &fasta.Fasta{Name: fa.Name, Seq: make([]dna.Base, 0)}
+	for i, b := range beds {
+		ans.Seq = append(ans.Seq, fa.Seq[b.ChromStart:b.ChromEnd]...)
+		//adds 100n in between bed regions
+		if i < len(beds)-2 {
+			ans.Seq = append(ans.Seq, dna.CreateAllNs(100)...)
+		}
 	}
 	return ans
 }

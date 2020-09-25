@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -23,7 +24,11 @@ func main() {
 	var expectedNumArgs int = 2
 
 	var targetGaps *bool = flag.Bool("gap", false, "Find axt alignments when target contains Ns, but query does not")
-
+	var querySwap *bool = flag.Bool("swap", false, "Swap target and query records. Must provide a `target.sizes and query.sizes` file containing query sequence lengths")
+	
+	var tLen *string = flag.String("tLen", "", "target `chrom.sizes` file containing target sequence lengths")
+	var qLen *string = flag.String("qLen", "", "query `chrom.sizes` file containing query sequence lengths")
+	
 	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -31,9 +36,11 @@ func main() {
 	input, output := flag.Arg(0), flag.Arg(1)
 
 	if *targetGaps {
-		searchAxt(input, output)
+		filterAxt(input, output)
 	} else if fasta.IsFasta(*concensus) {
 		axtToFa(input, output, *concensus)
+	} else if *querySwap {
+		QuerySwapAll(input, output, *tLen,*qLen)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -43,10 +50,8 @@ func main() {
 }
 
 func filterAxt(input string, output string) {
-	ioReader, ioWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
-	data := make(chan *axt.Axt)
-
-	go axt.ReadToChan(ioReader, data)
+	ioWriter := fileio.EasyCreate(output)
+	data := axt.GoReadToChan(input)
 
 	var index int = 0
 	for each := range data {
@@ -74,12 +79,9 @@ func axtQueryGap(record *axt.Axt) bool {
 }
 
 func axtToFa(input string, output string, target string) {
-	ioReader, ioWriter := fileio.EasyOpen(input), fileio.EasyCreate(output)
+	ioWriter := fileio.EasyCreate(output)
 	faMap := fasta.FastaMap(fasta.Read(target))
-
-	data := make(chan *axt.Axt)
-
-	go axt.ReadToChan(ioReader, data)
+	data := axt.GoReadToChan(input)
 
 	for each := range data {
 		fasta.WriteFasta(ioWriter, axtSeq(each, faMap[each.RName]), 50)
@@ -105,4 +107,21 @@ func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) *fasta.Fasta {
 		log.Fatalf("Error: Sequence length is not the same...\n")
 	}
 	return concensus
+}
+
+func QuerySwapAll(input string, output string, targetLen string, queryLen string) {
+	targetInfo := chromInfo.ReadToMap(targetLen)
+	queryInfo := chromInfo.ReadToMap(queryLen)
+
+	axtWriter := fileio.EasyCreate(output)
+	axtReader := axt.GoReadToChan(input)
+
+	var index int = 0
+	var curr *axt.Axt
+	for each := range axtReader {
+		curr = axt.SwapBoth(each, targetInfo[each.RName].Size, queryInfo[each.QName].Size)
+		axt.WriteToFileHandle(axtWriter, curr, index)
+		index++
+	}
+	axtWriter.Close()
 }

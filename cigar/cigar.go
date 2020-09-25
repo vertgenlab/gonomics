@@ -1,3 +1,6 @@
+//Package cigar contains functions to manipulate cigar data in the SAM file format.
+//More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
+
 package cigar
 
 import (
@@ -9,12 +12,14 @@ import (
 	"unicode"
 )
 
+//The Cigar struct contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
 type Cigar struct {
 	RunLength int64
 	Op        rune
 	Sequence  []dna.Base
 }
 
+//NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
 func NumInsertions(input []*Cigar) int64 {
 	var count int64
 	if input[0].Op == '*' {
@@ -28,10 +33,11 @@ func NumInsertions(input []*Cigar) int64 {
 	return count
 }
 
+//NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
 func NumDeletions(input []*Cigar) int64 {
 	var count int64
 	if input[0].Op == '*' {
-		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+		log.Fatalf("Cannot calculate NumDeletions from unaligned reads.")
 	}
 	for i := 0; i < len(input); i++ {
 		if ConsumesReference(input[i].Op) && !ConsumesQuery(input[i].Op) {
@@ -41,6 +47,7 @@ func NumDeletions(input []*Cigar) int64 {
 	return count
 }
 
+//ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
 func ToString(c []*Cigar) string {
 	var output string = ""
 	for _, v := range c {
@@ -54,6 +61,7 @@ func ToString(c []*Cigar) string {
 	return output
 }
 
+//FromString parses an input string into a slice of Cigar structs.
 func FromString(input string) []*Cigar {
 	var output []*Cigar
 	var currentNumber string
@@ -73,13 +81,10 @@ func FromString(input string) []*Cigar {
 			log.Fatalf("Invalid character: %c", v)
 		}
 	}
-	/*
-		if RuneIsDigit(v) { //will not work, v is not seen outside loop
-			log.Fatalf("Cigar ended with digit")
-		} */
 	return output
 }
 
+//MatchLength returns the number of bases in a Cigar slice that align to the reference.
 func MatchLength(c []*Cigar) int64 {
 	var ans int64
 	if c[0].Op == '*' {
@@ -93,6 +98,7 @@ func MatchLength(c []*Cigar) int64 {
 	return ans
 }
 
+//ReferenceLength calculates the number of reference positions that a Cigar slice spans.
 func ReferenceLength(c []*Cigar) int64 {
 	var ans int64
 	if c[0].Op == '*' {
@@ -106,6 +112,7 @@ func ReferenceLength(c []*Cigar) int64 {
 	return ans
 }
 
+//QueryLength calculates the length of the query read from a slice of Cigar structs.
 func QueryLength(c []*Cigar) int64 {
 	var ans int64
 	if c[0].Op == '*' {
@@ -119,34 +126,7 @@ func QueryLength(c []*Cigar) int64 {
 	return ans
 }
 
-/*
-func RuneIsDigit(r rune) bool {
-	switch r {
-	case '0':
-		return true
-	case '1':
-		return true
-	case '2':
-		return true
-	case '3':
-		return true
-	case '4':
-		return true
-	case '5':
-		return true
-	case '6':
-		return true
-	case '7':
-		return true
-	case '8':
-		return true
-	case '9':
-		return true
-	}
-	return false
-}
-*/
-
+//RuneIsValidCharacter returns true if a particular input rune matches any of the acceptable Cigar operation characters.
 func RuneIsValidCharacter(r rune) bool {
 	switch r {
 	case 'M':
@@ -171,10 +151,12 @@ func RuneIsValidCharacter(r rune) bool {
 	return false
 }
 
+//CigarConsumesReference returns true if the Cigar operation is reference consuming, false otherwise.
 func CigarConsumesReference(c Cigar) bool {
 	return ConsumesReference(c.Op)
 }
 
+//ConsumesReference returns true of the rune matches an operation character that is reference consuming for Cigars.
 func ConsumesReference(r rune) bool {
 	switch r {
 	case 'M':
@@ -200,6 +182,7 @@ func ConsumesReference(r rune) bool {
 	return false
 }
 
+//ConsumesQuery returns true for input runes that match query consuming characters for Cigars.
 func ConsumesQuery(r rune) bool {
 	switch r {
 	case 'M':

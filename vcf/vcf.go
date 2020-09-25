@@ -7,9 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"os"
 	"strings"
-	"time"
+	"sync"
 )
 
 //slices of slice
@@ -24,12 +23,6 @@ type Vcf struct {
 	Info   string
 	Format string
 	Notes  string
-}
-
-//Might get rid of this
-type VCF struct {
-	Header *VcfHeader
-	Vcf    []*Vcf
 }
 
 type VcfHeader struct {
@@ -49,19 +42,28 @@ func Read(filename string) []*Vcf {
 	return answer
 }
 
-func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
-	output := make(chan *Vcf)
-	file := fileio.EasyOpen(filename)
-	header := ReadHeader(file)
-	go ReadToChan(file, output)
-	return output, header
+func ReadToChan(file *fileio.EasyReader, data chan<- *Vcf, wg *sync.WaitGroup) {
+	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
+		data <- curr
+	}
+	file.Close()
+	wg.Done()
 }
 
-func ReadToChan(file *fileio.EasyReader, output chan<- *Vcf) {
-	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
-		output <- curr
-	}
-	close(output)
+func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
+	file := fileio.EasyOpen(filename)
+	header := ReadHeader(file)
+	var wg sync.WaitGroup
+	data := make(chan *Vcf)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data, header
 }
 
 func processVcfLine(line string) *Vcf {
@@ -97,15 +99,6 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-func ReadVcf(filename string) *VCF {
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	header := ReadHeader(file)
-	vcfRecords := Read(filename)
-	return &VCF{Header: header, Vcf: vcfRecords}
-}
-
 func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var line string
 	var err error
@@ -136,17 +129,8 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-func WriteHeader(file *os.File) {
-	var err error
-	header := MakeHeader()
-	for h := 0; h < len(header); h++ {
-		_, err = fmt.Fprintf(file, "%s\n", header[h])
-	}
-	common.ExitIfError(err)
-}
-
 //TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
-func WriteVcfToFileHandle(file *os.File, input []*Vcf) {
+func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
 		if input[i].Notes == "" {
@@ -171,7 +155,7 @@ func WriteVcf(file io.Writer, input *Vcf) {
 func Write(filename string, data []*Vcf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
-	WriteHeader(file)
+
 	WriteVcfToFileHandle(file, data)
 }
 
@@ -191,34 +175,11 @@ func PrintSingleLine(data *Vcf) {
 	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, data.Alt, data.Qual, data.Filter, data.Info, data.Format)
 }
 
-func PrintHeader(header []string) {
-	for i := range header {
-		fmt.Println(header[i])
+//Checks suffix of filename to confirm if the file is a vcf formatted file
+func IsVcfFile(filename string) bool {
+	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
+		return true
+	} else {
+		return false
 	}
-}
-
-//TODO will be removed in the next few weeks
-func MakeHeader() []string {
-	//TODO: add logic to add contig length to header of file
-	var header []string
-	//var line string
-	t := time.Now()
-	header = append(header, "##fileformat=VCFv4.2\n"+
-		"##fileDate="+t.Format("20060102")+"\n"+
-		"##source=github.com/vertgenlab/gonomics")
-	header = append(header, "##phasing=none\n"+
-		"##INFO=<ID=CIGAR,Number=A,Type=String,Description=\"The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.\">\n"+
-		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">"+
-		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">"+
-		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">"+
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
-		"##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n"+
-		"##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Number of observation for each allele\">\n"+
-		"##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">\n"+
-		"##FORMAT=<ID=QR,Number=1,Type=Integer,Description=\"Sum of quality of the reference observations\">\n"+
-		"##FORMAT=<ID=AO,Number=A,Type=Integer,Description=\"Alternate allele observation count\">\n"+
-		"##FORMAT=<ID=QA,Number=A,Type=Integer,Description=\"Sum of quality of the alternate observations\">\n"+
-		"##FORMAT=<ID=GL,Number=G,Type=Float,Description=\"Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy\">\n"+
-		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNOTES")
-	return header
 }
