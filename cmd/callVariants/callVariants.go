@@ -11,6 +11,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func usage() {
@@ -39,8 +40,14 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 	alleleStream, normalIDs := startAlleleStreams(ref, expSamples, normSamples, minMapQ, memBufferSize)
 	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold, minCov)
 
+	lastProgressReport := time.Now().Second()
+
 	//vcf.WriteHeader(output)
 	for vcfRecord := range answer {
+		if time.Now().Second() > lastProgressReport+10 {
+			lastProgressReport = time.Now().Second()
+			log.Printf("Current Position: %s\t%d", vcfRecord.Chr, vcfRecord.Pos)
+		}
 		vcf.WriteVcf(output, vcfRecord)
 	}
 }
