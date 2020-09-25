@@ -43,6 +43,7 @@ func main() {
 }
 
 //faOne target, faTwo query
+//cigar to graph takes two fasta files as an input, performs a global alignment, and produces genome graph
 func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
 	answer := simpleGraph.NewGraph()
 	var targetEnd, queryEnd int64 = 0, 0
