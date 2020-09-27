@@ -11,6 +11,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func usage() {
@@ -26,7 +27,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64, minMapQ int64, memBufferSize int) {
+func callVariants(linearRef string, graphRef string, expSamples string, normSamples string, outFile string, afThreshold float64, sigThreshold float64, minMapQ int64, memBufferSize int, minCov int) {
 	var ref interface{}
 	output := fileio.MustCreate(outFile)
 	defer output.Close()
@@ -37,11 +38,16 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 		ref = simpleGraph.Read(graphRef)
 	}
 	alleleStream, normalIDs := startAlleleStreams(ref, expSamples, normSamples, minMapQ, memBufferSize)
-	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold)
+	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold, minCov)
+
+	lastProgressReport := time.Now()
 
 	//vcf.WriteHeader(output)
 	for vcfRecord := range answer {
-		vcf.PrintSingleLine(vcfRecord)
+		if time.Since(lastProgressReport).Seconds() > 10 {
+			lastProgressReport = time.Now()
+			log.Printf("Current Position: %s\t%d", vcfRecord.Chr, vcfRecord.Pos)
+		}
 		vcf.WriteVcf(output, vcfRecord)
 	}
 }
@@ -51,8 +57,9 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan *alleles.Allele, normalIDs map[string]bool, samFilesPresent *bool, girafFilesPresent *bool, minMapQ int64) {
 	switch filepath.Ext(file) {
 	case ".giraf":
-		//TODO: Make giraf to alleles function
-		*alleleChans = append(*alleleChans, alleles.GirafToAlleles(file))
+		//TODO: Fix giraf to alleles function
+		log.Fatalln("ERROR: giraf files are currently not supported")
+		//*alleleChans = append(*alleleChans, alleles.(file))
 		*girafFilesPresent = true
 		if isNormal == true {
 			normalIDs[file] = true
@@ -61,7 +68,7 @@ func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan
 		}
 		log.Println("Started Allele Stream for", file)
 	case ".sam":
-		*alleleChans = append(*alleleChans, alleles.SamToAlleles(file, ref, minMapQ))
+		*alleleChans = append(*alleleChans, alleles.GoCountSamAlleles(file, ref.([]*fasta.Fasta), minMapQ))
 		*samFilesPresent = true
 		if isNormal == true {
 			normalIDs[file] = true
@@ -96,7 +103,9 @@ func startAlleleStreams(ref interface{}, experimental string, normal string, min
 	var samFilesPresent, girafFilesPresent bool
 
 	addChans(ref, experimental, false, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
-	addChans(ref, normal, true, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
+	if normal != "" {
+		addChans(ref, normal, true, &alleleChans, normalIDs, &samFilesPresent, &girafFilesPresent, minMapQ)
+	}
 
 	if samFilesPresent && girafFilesPresent {
 		log.Fatalln("ERROR: Input directories contain both giraf and sam files")
@@ -120,6 +129,7 @@ func main() {
 	var normalSamples *string = flag.String("n", "", "Input normal sample(s) [.sam, .giraf, .txt]. Can be a file or a txt file with a list (must have .txt extension) of sample paths. If no normal samples are given, each experimental sample will me measured against the other experimental samples.")
 	var minMapQ *int64 = flag.Int64("minMapQ", 20, "Exclude all reads with mapping quality less than this value")
 	var memBufferSize *int = flag.Int("memBuffer", 100, "Maximum number of allele records to store in memory at once")
+	var minCov *int = flag.Int("minCoverage", 10, "Minimum number of covering reads to be considered a valid variant")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -134,5 +144,5 @@ func main() {
 	}
 	flag.Parse()
 
-	callVariants(*linearReference, *graphReference, *experimentalSamples, *normalSamples, *outFile, *afThreshold, *sigThreshold, *minMapQ, *memBufferSize)
+	callVariants(*linearReference, *graphReference, *experimentalSamples, *normalSamples, *outFile, *afThreshold, *sigThreshold, *minMapQ, *memBufferSize, *minCov)
 }
