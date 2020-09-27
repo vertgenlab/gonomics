@@ -51,16 +51,29 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 		}
 		sumHeights += binHeights[i]
 	}
-	var currBin int
 	for j := 0; j < samples; j++ {
-		currBin = chooseBin(sumHeights, binHeights)
-		currLeft = xLeft + float64(currBin)*stepSize
-		currRight = currLeft + stepSize
-		//DEBUG: fmt.Printf("lenBinHeights: %v. currBin: %v. lenAnswer: %v. j: %v.\n", len(binHeights), currBin, len(answer), j)
-		answer[j] = RejectionSample(currLeft, currRight, binHeights[currBin], f, maxSampleDepth, true)
+		answer[j] = RejectionSampleChooseBin(currLeft, currRight, stepSize, f, maxSampleDepth, sumHeights, binHeights)
 	}
 	return answer
 }
+
+func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func (float64) float64, maxIteration int, sumHeights float64, binHeights []float64) float64 {
+	var x, y float64
+	var currBin int
+	var currLeft, currRight float64
+	for i := 0; i < maxIteration; i++ {
+		currBin = chooseBin(sumHeights, binHeights)
+		currLeft = xLeft + float64(currBin)*stepSize
+		currRight = currLeft + stepSize
+		x = RandFloatInRange(currLeft, currRight)
+		y = f(x)
+		if RandFloatInRange(0.0, binHeights[currBin]) < y {
+			return x
+		}
+	}
+	log.Fatalf("Exceeded max iteration in RejectionSampleChooseBin.")
+	return -1.0
+} 
 
 //chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
 func chooseBin(sumHeights float64, binHeights []float64) int {
@@ -72,7 +85,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 			return i
 		}
 	}
-	log.Fatalf("Error in chooseBin: failed to choose a bin, stifled by indecision.")
+	log.Fatalf("Error in chooseBin: failed to choose a bin.")
 	return -1
 }
 
@@ -80,7 +93,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int, returnX bool) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
-		x = rand.Float64() //rand float64 in range xleft to xright
+		x = common.RandFloat64InRange(xLeft, xRight) //rand float64 in range xleft to xright
 		y = f(x)
 		if RandFloatInRange(0.0, yMax) < y {
 			if returnX {

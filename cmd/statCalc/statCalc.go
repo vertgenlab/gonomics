@@ -47,7 +47,7 @@ func usage() {
 			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
 			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
 			" -gamma=alpha,beta. Defines a gamma distribution with parameters alpha and beta. Ex Usage: -gamma=4,4 6\n" +
-			" -sampleAfs=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha. " +
+			" -sampleAfs=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight,randSeed. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha. " +
 			"sampleAFS will return numSamples many values between xLeft and xRight. Bins and maxSampleDepth are performance and accuracy options, suggested values are 1000 and 1000, respectively.\n" +
 			"After defining a distribution, one float64 argument returns the function density at that value. Ex usage: -sampleAfs=0.02,200,1000,1000,0.001,0.999,false\n" +
 			"For discrete distributions, two arguments will evaluate the sum between two input values.\n" +
