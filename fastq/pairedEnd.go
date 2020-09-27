@@ -46,15 +46,15 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 	close(output)
 }
 
-func ReadPairBigToChan(readOne string, readTwo string, answer chan<- *PairedEndBig) {
-	var fq *PairedEndBig
+func ReadPairBigToChan(readOne string, readTwo string, answer chan<- PairedEndBig) {
+	var fq PairedEndBig
 	fileOne, fileTwo := fileio.EasyOpen(readOne), fileio.EasyOpen(readTwo)
 
 	defer fileOne.Close()
 	defer fileTwo.Close()
 
 	for curr, done := NextFastqPair(fileOne, fileTwo); !done; curr, done = NextFastqPair(fileOne, fileTwo) {
-		fq = &PairedEndBig{Fwd: *ToFastqBig(curr.Fwd), Rev: *ToFastqBig(curr.Rev)}
+		fq = PairedEndBig{Fwd: *ToFastqBig(curr.Fwd), Rev: *ToFastqBig(curr.Rev)}
 		answer <- fq
 	}
 	close(answer)

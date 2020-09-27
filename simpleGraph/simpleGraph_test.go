@@ -24,10 +24,10 @@ func TestWorkerWithWriting(t *testing.T) {
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.PairedEndBig, 824)
+	fastqPipe := make(chan fastq.PairedEndBig, 824)
 
 	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *giraf.GirafPair, 824)
+	samPipe := make(chan giraf.GirafPair, 824)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
