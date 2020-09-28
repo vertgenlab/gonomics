@@ -34,9 +34,9 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 					// Append the mismatch base
 					if answer == nil {
 						answer = append(answer, &Cigar{RunLength: 1, Op: 'X', Sequence: []dna.Base{sequence[k]}})
-					} else if answer[len(answer) - 1].Op == 'X' {
-						answer[len(answer) - 1].RunLength++
-						answer[len(answer) - 1].Sequence = append(answer[len(answer) - 1].Sequence ,sequence[k])
+					} else if answer[len(answer)-1].Op == 'X' {
+						answer[len(answer)-1].RunLength++
+						answer[len(answer)-1].Sequence = append(answer[len(answer)-1].Sequence, sequence[k])
 					} else {
 						answer = append(answer, &Cigar{RunLength: 1, Op: 'X', Sequence: []dna.Base{sequence[k]}})
 					}

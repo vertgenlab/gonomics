@@ -14,8 +14,6 @@ func quickPrimateRecon(infile string, outfile string, messyToN bool) {
 	fasta.Write(outfile, output)
 }
 
-
-
 func usage() {
 	fmt.Print(
 		"quickPrimateRecon - Returns maximum likelihood sequence from an HBCGO primate alignment\n" +

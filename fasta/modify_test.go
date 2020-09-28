@@ -26,7 +26,6 @@ var expectedSegSite3 = dna.StringToBases("TG")
 var segSiteInput = []*Fasta{{"apple", segSite1}, {"banana", segSite2}, {"carrot", segSite3}}
 var segSiteExpected = []*Fasta{{"apple", expectedSegSite1}, {"banana", expectedSegSite2}, {"carrot", expectedSegSite3}}
 
-
 func TestReverseComplement(t *testing.T) {
 	for _, test := range allRevCompTests {
 		ReverseComplementAll(test.input)
