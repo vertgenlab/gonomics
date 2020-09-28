@@ -7,6 +7,15 @@ import (
 	"strconv"
 )
 
+//StringToBool parses a string into a bool and will exit on error
+func StringToBool(s string) bool {
+	b, err := strconv.ParseBool(s)
+	if err != nil {
+		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a bool", s))
+	}
+	return b
+}
+
 // StringToInt parses a string into an int and will exit on error
 func StringToInt(s string) int {
 	n, err := strconv.Atoi(s)
