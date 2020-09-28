@@ -66,7 +66,6 @@ func main() {
 			writer := fileio.EasyCreate(output)
 			vcf.NewWriteHeader(writer, header)
 
-
 			defer writer.Close()
 			log.SetFlags(0)
 			for each := range reader {

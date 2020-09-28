@@ -1,7 +1,7 @@
 package numbers
 
-import(
-	//DEBUG: "fmt"
+import (
+//DEBUG: "fmt"
 )
 
 //BinomialDistLog returns log(BinomialDist), where log is the natural logarithm.

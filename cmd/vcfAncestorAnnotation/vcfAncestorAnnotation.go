@@ -1,11 +1,11 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"flag"
-	"fmt"
 	"log"
 )
 
@@ -26,8 +26,8 @@ func vcfAncestorAnnotation(inFile string, faFile string, outFile string) {
 func usage() {
 	fmt.Print(
 		"vcfAncestorAnnotation - Adds ancestral allele to the INFO column of entries in a VCF file.\n" +
-		"The VCF file must be split by chromosome beforehand, as the fasta file is formatted with the first entry as the reference sequence\n" +
-		"and the second entry as the inferred ancestor sequence for a particular chromosome.\n" +
+			"The VCF file must be split by chromosome beforehand, as the fasta file is formatted with the first entry as the reference sequence\n" +
+			"and the second entry as the inferred ancestor sequence for a particular chromosome.\n" +
 			"Usage:\n" +
 			"vcfAncestorAnnotation input.vcf alignment.fa output.vcf\n" +
 			"options:\n")

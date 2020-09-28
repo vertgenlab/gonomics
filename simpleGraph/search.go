@@ -10,9 +10,9 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"io"
-	"sort"
 	"log"
 	"math"
+	"sort"
 	"sync"
 )
 
@@ -134,14 +134,14 @@ func getLeftTargetBases(n *Node, extension int, refEnd int, seq []dna.Base, ans 
 	//var availableBases int = len(seq) + refEnd
 	//var targetLength int = common.Min(availableBases, extension)
 	//var basesToTake int = targetLength - len(seq)
-	return append(append(ans, n.Seq[refEnd-common.Min(len(seq) + refEnd, extension) - len(seq):refEnd]...), seq...)
+	return append(append(ans, n.Seq[refEnd-common.Min(len(seq)+refEnd, extension)-len(seq):refEnd]...), seq...)
 }
 
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	//var availableBases int = len(seq) + len(n.Seq) - start
 	//var targetLength int = common.Min(availableBases, extension)
 	//var basesToTake int = targetLength - len(seq)
-	return append(append(ans, seq...), n.Seq[start:start+common.Min(len(seq) + len(n.Seq) - start, extension) - len(seq)]...)
+	return append(append(ans, seq...), n.Seq[start:start+common.Min(len(seq)+len(n.Seq)-start, extension)-len(seq)]...)
 }
 
 /*
@@ -320,8 +320,8 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix
 
 func ReversePath(alpha []uint32) {
 	var i, off int
-	for i = len(alpha)/2-1; i >= 0; i-- {
-		off = len(alpha)-1-i
+	for i = len(alpha)/2 - 1; i >= 0; i-- {
+		off = len(alpha) - 1 - i
 		alpha[i], alpha[off] = alpha[off], alpha[i]
 	}
 }

@@ -159,8 +159,8 @@ func ByteMatrixTrace(a int64, b int64, c int64) (int64, byte) {
 // from a local alignment.
 func ReverseBytesCigar(alpha []ByteCigar) {
 	var i, off int
-	for i = len(alpha)/2-1; i >= 0; i-- {
-		off = len(alpha)-1-i
+	for i = len(alpha)/2 - 1; i >= 0; i-- {
+		off = len(alpha) - 1 - i
 		alpha[i], alpha[off] = alpha[off], alpha[i]
 	}
 }
@@ -226,6 +226,7 @@ func Uint32ToByteCigar(cigar []uint32) []ByteCigar {
 	}
 	return answer
 }
+
 // ByteCigarToUint32 will convert a slice of []ByteCigar to a slice of []uint32
 func ByteCigarToUint32(cigar []ByteCigar) []uint32 {
 	var answer []uint32 = make([]uint32, len(cigar))

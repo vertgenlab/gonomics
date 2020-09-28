@@ -9,8 +9,7 @@ import (
 	/*"log"
 	"os"
 	"runtime/pprof"
-	"fmt"*/
-)
+	"fmt"*/)
 
 type Theta struct {
 	alpha       []float64
