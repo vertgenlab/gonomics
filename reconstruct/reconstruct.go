@@ -3,39 +3,74 @@ package reconstruct
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
-//test accuracy of the reconstruction compared to the simulation
-//func Accuracy(simFilename string, recFilename string) float64 {
-//	tot := 0.0                     //why is this here when it could just be num?
-//	sim := fasta.Read(simFilename) //produced by simulate.printSeqForNodes, returned by simulate.Simulate
-//	rec := fasta.Read(recFilename)
-//	des := "descendents_" + simFilename //refers to file created by simulate.RemoveAncestors which has only leaf nodes labelled
-//	simLeaves := fasta.Read(des)
-//	for i := 0; i < len(sim); i++ {
-//		for j := 0; j < len(simLeaves); j++ {
-//			if sim[i].Name == simLeaves[j].Name { //if current fasta is a leaf fasta
-//				sim = append(sim[:i], sim[i+1:]...)
-//				//sim is fastas of every node but the leaf nodes, so we are adding leaf fastas to the original simulation file
-//			}
-//		}
-//	}
-//	for i := 0; i < len(sim); i++ {
-//		num := 0.0
-//
-//		for k := 0; k < len(sim[0].Seq); k++ {
-//			if sim[i].Seq[k] != rec[i].Seq[k] {
-//				num = num + 1
-//			}
-//		}
-//		tot = tot + num
-//	}
-//	accuracy := tot / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
-//	acc := 100 - accuracy
-//	fmt.Print("accuracy over all nodes= ", acc, "%", "\n")
-//	return acc
-//}
+//returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
+func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
+	var allNodes string
+	allNodes = "all Nodes"
+	var found bool = false
+	var total float64
+	total = 0.0
+	var mistakes float64
+	sim := fasta.Read(simFilename)
+	recon := fasta.Read(reconFilename)
+
+	answer := make(map[string]float64)
+
+	for i := 0; i < len(sim); i++ {
+		mistakes = 0.0
+		found = false
+		for j := 0; j < len(recon); j++ {
+			if sim[i].Name == recon[j].Name {
+				found = true
+				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
+				for k := 0; k < len(sim[0].Seq); k++ {
+					if sim[i].Seq[k] != recon[j].Seq[k] {
+						mistakes = mistakes + 1
+					}
+				}
+			}
+		}
+		if found == false {
+			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
+		}
+		accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
+		//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+		acc := 100 - accuracy
+		answer[sim[i].Name] = acc
+		total = total + mistakes
+	}
+	accuracy := total / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
+	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+	acc := 100 - accuracy
+	answer[allNodes] = acc
+	return answer
+}
+
+//write assigned sequences at all nodes to a fasta file
+func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
+	var fastas []*fasta.Fasta
+	nodes := expandedTree.GetTree(tree)
+
+	for i := 0; i < len(nodes); i++ {
+		fastas = append(fastas, nodes[i].Fasta)
+	}
+	fasta.Write(outFile, fastas)
+}
+
+//write assigned sequences at leaf nodes to a fasta file
+func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
+	var leafFastas []*fasta.Fasta
+	nodes := expandedTree.GetLeaves(tree)
+
+	for i := 0; i < len(nodes); i++ {
+		leafFastas = append(leafFastas, nodes[i].Fasta)
+	}
+	fasta.Write(leafFile, leafFastas)
+}
 
 //calculate probability of switching from one base to another
 func Prob(a int, b int, t float64) float64 {
