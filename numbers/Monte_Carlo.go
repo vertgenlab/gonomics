@@ -47,7 +47,7 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 			fCurrLeft = fCurrRight
 			currRight += stepSize
 			fCurrRight = f(currRight)
-			binHeights[i] = common.MaxFloat64(f(currLeft), f(currRight))
+			binHeights[i] = common.MaxFloat64(fCurrLeft, fCurrRight)
 		}
 		sumHeights += binHeights[i]
 	}
