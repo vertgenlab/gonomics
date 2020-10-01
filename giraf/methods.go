@@ -1,11 +1,12 @@
 package giraf
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func (g *Giraf) GetChrom() string {
-	return string(g.Path.Nodes[0])
+	return fmt.Sprintf("%d", g.Path.Nodes[0])
 }
 
 func (g *Giraf) GetChromStart() int {
