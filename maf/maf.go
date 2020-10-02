@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"log"
 	"strings"
@@ -251,15 +252,15 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 			if temp > srcLen {
 				srcLen = temp
 			}
-			temp = common.DigitsBaseTen(m.Species[i].SLine.Start)
+			temp = numbers.DigitsBaseTen(m.Species[i].SLine.Start)
 			if temp > startLen {
 				startLen = temp
 			}
-			temp = common.DigitsBaseTen(m.Species[i].SLine.Size)
+			temp = numbers.DigitsBaseTen(m.Species[i].SLine.Size)
 			if temp > sizeLen {
 				sizeLen = temp
 			}
-			temp = common.DigitsBaseTen(m.Species[i].SLine.SrcSize)
+			temp = numbers.DigitsBaseTen(m.Species[i].SLine.SrcSize)
 			if temp > srcSizeLen {
 				srcSizeLen = temp
 			}
@@ -275,15 +276,15 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 			if temp > srcLen {
 				srcLen = temp
 			}
-			temp = common.DigitsBaseTen(m.Species[i].ELine.Start)
+			temp = numbers.DigitsBaseTen(m.Species[i].ELine.Start)
 			if temp > startLen {
 				startLen = temp
 			}
-			temp = common.DigitsBaseTen(m.Species[i].ELine.Size)
+			temp = numbers.DigitsBaseTen(m.Species[i].ELine.Size)
 			if temp > sizeLen {
 				sizeLen = temp
 			}
-			temp = common.DigitsBaseTen(m.Species[i].ELine.SrcSize)
+			temp = numbers.DigitsBaseTen(m.Species[i].ELine.SrcSize)
 			if temp > srcSizeLen {
 				srcSizeLen = temp
 			}

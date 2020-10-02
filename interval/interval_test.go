@@ -2,8 +2,8 @@ package interval
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -298,8 +298,8 @@ func randInterval(rangeLow int, rangeHigh int) Interval {
 	var curr testInterval
 	var currI Interval
 	curr.chr = "1"
-	curr.start = common.RandIntInRange(rangeLow, rangeHigh)
-	curr.end = common.RandIntInRange(curr.start, curr.start+1000)
+	curr.start = numbers.RandIntInRange(rangeLow, rangeHigh)
+	curr.end = numbers.RandIntInRange(curr.start, curr.start+1000)
 	currI = &curr
 	return currI
 }

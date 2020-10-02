@@ -2,9 +2,9 @@ package popgen
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers"
 	//"log"
 	"math"
 )
@@ -30,7 +30,7 @@ func Dunn(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
 	missing = FindMissingGroupMembers(subFa, g)
 
 	for i := 0; i < len(g); i++ {
-		maxIntra = common.Max(maxIntra, FindMaxIntra(subFa, g[i], b))
+		maxIntra = numbers.Max(maxIntra, FindMaxIntra(subFa, g[i], b))
 	}
 
 	minInter = FindMinInter(g, subFa)
@@ -48,7 +48,7 @@ func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 			group1index = fasta.FindFaIndex(subFa, g.Members[i])
 			group2index = fasta.FindFaIndex(subFa, g.Members[j])
 			if group1index != -1 && group2index != -1 {
-				answer = common.Max(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
+				answer = numbers.Max(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
 			}
 		}
 	}
@@ -64,7 +64,7 @@ func FindMinInter(g []*Group, subFa []*fasta.Fasta) int {
 			group1index = fasta.FindFaIndex(subFa, g[0].Members[i])
 			group2index = fasta.FindFaIndex(subFa, g[1].Members[j])
 			if group1index != -1 && group2index != -1 {
-				answer = common.Min(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
+				answer = numbers.Min(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -16,7 +16,7 @@ func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
 
 	for i := 0; i < len(records); i++ {
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
-		records[i].Score = common.MinInt64(lengthFromEnd, records[i].ChromStart)
+		records[i].Score = numbers.MinInt64(lengthFromEnd, records[i].ChromStart)
 	}
 	bed.Write(outFile, records, 5)
 }

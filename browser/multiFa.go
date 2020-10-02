@@ -3,10 +3,10 @@ package browser
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"unicode/utf8"
 )
@@ -65,7 +65,7 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 
 	for k := startCounter; k < endCounter; k = k + lineLength {
 		fmt.Fprintf(out, "Position: %d\n", chromStart)
-		stop = int(common.MinInt64(endCounter, k+lineLength))
+		stop = int(numbers.MinInt64(endCounter, k+lineLength))
 		for m := 0; m < len(records); m++ {
 			fmt.Fprintf(out, "|%-*s| %s\n", long, records[m].Name, dna.BasesToString(records[m].Seq[k:stop]))
 		}

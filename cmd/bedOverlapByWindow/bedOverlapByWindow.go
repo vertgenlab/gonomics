@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -32,9 +32,9 @@ func bedOverlapByWindow(infile string, chromsizes string, outfile string, window
 
 		for p = bInfo[b].ChromStart; p < bInfo[b].ChromEnd; p++ {
 
-			for x = common.MaxInt64(0, p-(windowSize-1)); x < common.MinInt64(bInfo[b].ChromEnd, p+1); x++ {
+			for x = numbers.MaxInt64(0, p-(windowSize-1)); x < numbers.MinInt64(bInfo[b].ChromEnd, p+1); x++ {
 
-				//for x = common.MaxInt64(0, p-(windowSize-1)); x < common.MinInt64(bInfo[b].ChromEnd, p+(windowSize-1)); x++{
+				//for x = numbers.MaxInt64(0, p-(windowSize-1)); x < numbers.MinInt64(bInfo[b].ChromEnd, p+(windowSize-1)); x++{
 				thisChrom[x] += 1
 
 			}
