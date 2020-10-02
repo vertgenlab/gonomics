@@ -93,7 +93,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int, returnX bool) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
-		x = common.RandFloat64InRange(xLeft, xRight) //rand float64 in range xleft to xright
+		x = RandFloatInRange(xLeft, xRight) //rand float64 in range xleft to xright
 		y = f(x)
 		if RandFloatInRange(0.0, yMax) < y {
 			if returnX {
