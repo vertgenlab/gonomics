@@ -7,7 +7,7 @@ import (
 	//DEBUG: "fmt"
 )
 
-//SimulateAFS returns an allele frequency spectrum AFS struct for n individuals with k segregating sites
+//SimulateAFS returns an allele frequency spectrum AFS struct for n haploid individuals with k segregating sites
 //with a selection parameter alpha.
 func SimulateAFS(alpha float64, n int, k int) AFS {
 	var answer AFS
@@ -17,7 +17,7 @@ func SimulateAFS(alpha float64, n int, k int) AFS {
 	var r float64
 	for i := 0; i < k; i++ {
 		//now we simulate the discrete number of alleles for n individuals based on the allele frequency
-		count = 0
+		count = 0//this variable represents the number of times a derived allele is observed
 		for j := 0; j < n; j++ {
 			r = rand.Float64()
 			if r < alleleFrequencies[i] {
@@ -35,10 +35,10 @@ func SimulateGenotype(alpha float64, n int, k int) [][]vcf.GenomeSample {
 	a := SimulateAFS(alpha, n, k)
 	var answer [][]vcf.GenomeSample = make([][]vcf.GenomeSample, 0, k)
 	
-	//now we initialize all column entries for each row of the answer matrix
-	for i := 0; i < len(answer); i++ {
+	//this memory allocation is no longer needed
+	/*for i := 0; i < len(answer); i++ {
 		answer[i] = make([]vcf.GenomeSample, 0, len(a.sites)/2 + 1)
-	}
+	}*/
 
 	var alleleArray []int16
 	var d int
@@ -69,7 +69,7 @@ func SimulateGenotype(alpha float64, n int, k int) [][]vcf.GenomeSample {
 	return answer
 }
 
-//SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i trues and n-i falses.
+//SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i values set to 1 and n-i values set to 0.
 //The array is then shuffled and returned.
 func SegSiteToAlleleArray(s *SegSite) []int16 {
 	var answer []int16 = make([]int16, s.n)
