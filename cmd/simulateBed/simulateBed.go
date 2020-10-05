@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
 	"time"
@@ -36,7 +36,7 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 	// DEBUG fmt.Printf("totalWindows: %d\n", totalWindows)
 
 	for i := 0; i < regionCount; i++ {
-		tmp = int64(common.RandIntInRange(0, totalWindows))
+		tmp = int64(numbers.RandIntInRange(0, totalWindows))
 		// DEBUG fmt.Printf("Random number is %d\n", tmp)
 		for j := 0; j < len(noGap); j++ {
 

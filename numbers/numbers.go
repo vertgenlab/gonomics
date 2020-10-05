@@ -4,7 +4,6 @@ package numbers
 import (
 	"log"
 	"math"
-	"math/rand"
 )
 
 // carefulMultDivFloat tries to gracefully handle the case when you have a
@@ -185,10 +184,15 @@ func Factorial(n int) int {
 	return int(math.Gamma(float64(n + 1)))
 }
 
-func RandIntInRange(x int, y int) int {
-	return int(rand.Float64()*float64(y-x)) + x
-}
-
-func RandFloatInRange(x float64, y float64) float64 {
-	return rand.Float64()*float64(y-x) + x
+func DigitsBaseTen(x int64) int {
+	var count int = 1
+	if x < 0 {
+		x = -1 * x
+		count++
+	}
+	for x >= 10 {
+		x = x / 10
+		count++
+	}
+	return count
 }

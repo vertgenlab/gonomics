@@ -45,7 +45,7 @@ func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint6
 
 	// TODO: I am not sure what to do here.  I am currently assuming that the "padding"
 	// on the end of the two sequences is different so that it will not match
-	//return common.Min(common.Min(matches, lenOne-startOne), lenTwo-startTwo)
+	//return numbers.Min(numbers.Min(matches, lenOne-startOne), lenTwo-startTwo)
 	return matches
 }
 

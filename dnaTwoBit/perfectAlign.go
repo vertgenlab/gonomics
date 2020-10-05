@@ -1,7 +1,7 @@
 package dnaTwoBit
 
 import (
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/bits"
 )
@@ -44,7 +44,7 @@ func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int
 	// TODO: I am not sure what to do here.  The "padding" on the end of the sequence
 	// when it does not fit nicely into 64 bits, is assumed to be different, so that
 	// it will not match.  We could use the commented out Min() function instead
-	return common.Min(common.Min(totalMatches/bitsPerBase, one.Len-startOne), two.Len-startTwo)
+	return numbers.Min(numbers.Min(totalMatches/bitsPerBase, one.Len-startOne), two.Len-startTwo)
 	//return matches
 }
 

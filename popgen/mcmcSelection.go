@@ -1,7 +1,6 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 	"math/rand"
@@ -21,7 +20,7 @@ type Theta struct {
 func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, binomMap [][]float64) bool {
 	yRand := rand.Float64()
 	var pAccept float64
-	pAccept = common.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, binomMap)*Hastings_Ratio(old, thetaPrime))
+	pAccept = numbers.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, binomMap)*Hastings_Ratio(old, thetaPrime))
 	//DEBUG: fmt.Printf("Likelihood ratio: %f\n", pAccept)
 	return pAccept > yRand
 }
@@ -56,7 +55,7 @@ func GenerateCandidateThetaPrime(t Theta) Theta {
 	//TODO: sigmaPrime still reverts to ultrasmall values, impeding step size. Need a permanant solution before this tool can be used effectively.
 	//sigmaPrime := numbers.RandGamma(t.sigma*t.sigma, t.sigma)
 	sigmaPrime := numbers.RandGamma(1.0, 1.0)
-	//sigmaPrime = common.MaxFloat64(sigmaPrime, 0.01)
+	//sigmaPrime = numbers.MaxFloat64(sigmaPrime, 0.01)
 	//DEBUG: fmt.Printf("sigmaPrime: %e. tSigma: %e.\n", sigmaPrime, t.sigma)
 	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
 	for i := 0; i < len(t.alpha); i++ {
@@ -117,7 +116,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 func findMaxN(data AFS) int {
 	var answer int = 0
 	for i := 0; i < len(data.sites); i++ {
-		answer = common.Max(answer, data.sites[i].n)
+		answer = numbers.Max(answer, data.sites[i].n)
 	}
 	return answer
 }

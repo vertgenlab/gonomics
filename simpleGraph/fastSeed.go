@@ -2,9 +2,9 @@ package simpleGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 )
@@ -158,8 +158,8 @@ func IndexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]*SeedBe
 
 func canMerge(a *SeedDev, b *SeedDev) bool {
 	if a.TargetId == b.TargetId &&
-		common.MaxUint32(a.TargetStart, b.TargetStart) <= common.MinUint32(a.TargetStart+a.Length, b.TargetStart+b.Length) &&
-		common.MaxUint32(a.QueryStart, b.QueryStart) <= common.MinUint32(a.QueryStart+a.Length, b.QueryStart+b.Length) &&
+		numbers.MaxUint32(a.TargetStart, b.TargetStart) <= numbers.MinUint32(a.TargetStart+a.Length, b.TargetStart+b.Length) &&
+		numbers.MaxUint32(a.QueryStart, b.QueryStart) <= numbers.MinUint32(a.QueryStart+a.Length, b.QueryStart+b.Length) &&
 		int(b.TargetStart)-int(a.TargetStart) == int(b.QueryStart)-int(a.QueryStart) {
 		return true
 	} else {

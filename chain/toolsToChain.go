@@ -2,7 +2,7 @@ package chain
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"strings"
 )
@@ -24,7 +24,7 @@ func targetOverlap(alpha *Chain, beta *bed.Bed) bool {
 	} else {
 		tStart, tEnd = alpha.TStart, alpha.TEnd
 	}
-	if (common.MaxInt64(int64(tStart), beta.ChromStart) < common.MinInt64(int64(tEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
+	if (numbers.MaxInt64(int64(tStart), beta.ChromStart) < numbers.MinInt64(int64(tEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
@@ -38,7 +38,7 @@ func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
 	} else {
 		qStart, qEnd = alpha.QStart, alpha.TEnd
 	}
-	if (common.MaxInt64(int64(qStart), beta.ChromStart) < common.MinInt64(int64(qEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
+	if (numbers.MaxInt64(int64(qStart), beta.ChromStart) < numbers.MinInt64(int64(qEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false

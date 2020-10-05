@@ -1,8 +1,8 @@
 package dnaTwoBit
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 func NewTwoBitRainbow(inSeq []dna.Base) []*TwoBit {
@@ -15,7 +15,7 @@ func NewTwoBitRainbow(inSeq []dna.Base) []*TwoBit {
 		answer[startOffset] = &TwoBit{Seq: make([]uint64, sliceLenNeeded), Len: len(clone)}
 		for i := 0; i < sliceLenNeeded; i++ {
 			start = i * 32
-			end = common.Min(start+32, len(clone))
+			end = numbers.Min(start+32, len(clone))
 			answer[startOffset].Seq[i] = BasesToUint64LeftAln(clone, start, end)
 		}
 		clone = append([]dna.Base{dna.A}, clone...)
@@ -34,7 +34,7 @@ func TwoBitRainbowDeReference(inSeq []dna.Base) []TwoBit {
 		answer[startOffset] = TwoBit{Seq: make([]uint64, sliceLenNeeded), Len: len(clone)}
 		for i := 0; i < sliceLenNeeded; i++ {
 			start = i * 32
-			end = common.Min(start+32, len(clone))
+			end = numbers.Min(start+32, len(clone))
 			answer[startOffset].Seq[i] = BasesToUint64LeftAln(clone, start, end)
 		}
 		clone = append([]dna.Base{dna.A}, clone...)

@@ -1,8 +1,8 @@
 package dnaThreeBit
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // NewThreeBitRainbow builds a "rainbow table" of a sequence in ThreeBit format
@@ -16,11 +16,11 @@ func NewThreeBitRainbow(inSeq []dna.Base, padding ThreeBitBase) []*ThreeBit {
 		sliceLenNeeded = (len(inSeq) + startOffset + 20) / 21
 		answer[startOffset] = &ThreeBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq) + startOffset}
 
-		end = common.Min(21-startOffset, len(inSeq))
+		end = numbers.Min(21-startOffset, len(inSeq))
 		answer[startOffset].Seq[0] = basesToUint64WithOffset(inSeq, 0, end, padding, startOffset)
 		for i = 1; i < sliceLenNeeded; i++ {
 			start = i*21 - startOffset
-			end = common.Min(start+21, len(inSeq))
+			end = numbers.Min(start+21, len(inSeq))
 			answer[startOffset].Seq[i] = BasesToUint64(inSeq, start, end, padding)
 		}
 	}

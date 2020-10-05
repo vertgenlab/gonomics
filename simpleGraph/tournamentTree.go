@@ -1,10 +1,10 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -96,9 +96,9 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	var readBase dna.Base
 
 	if nextPart.PosStrand {
-		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
+		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
 	} else {
-		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
+		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
 	}
 
 	if leftMatches == 0 {
@@ -158,7 +158,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
 			//log.Printf("After extendToTheRight fwd:\n")
@@ -206,7 +206,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
 			//log.Printf("After extendToTheRight rev:\n")
@@ -290,7 +290,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos) % basesPerInt
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-leftMatches, int(nodePos)-leftMatches, true)
 			log.Printf("After extendToTheRight fwd:\n")
@@ -311,7 +311,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos) % basesPerInt
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-leftMatches, int(nodePos)-leftMatches, false)
 			log.Printf("After extendToTheRight rev:\n")
