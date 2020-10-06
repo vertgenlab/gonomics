@@ -8,11 +8,7 @@ import (
 	//DEBUG: "fmt"
 )
 
-<<<<<<< HEAD:popgen/AFSsimulate.go
-//SimulateAFS returns an allele frequency spectrum AFS struct for n haploid individuals with k segregating sites
-=======
 //SimulateAFS returns an allele frequency spectrum AFS struct for n individuals with k segregating sites
->>>>>>> main:popgen/afsSimulate.go
 //with a selection parameter alpha.
 func SimulateAFS(alpha float64, n int, k int) AFS {
 	var answer AFS
