@@ -212,10 +212,10 @@ func PathToString(allPaths []uint32) string {
 
 func getSeedPath(seed *SeedDev) []uint32 {
 	var path []uint32 = []uint32{seed.TargetId}
-	if seed.Next == nil {
+	if seed.NextPart == nil {
 		return path
 	} else {
-		path = append(path, getSeedPath(seed.Next)...)
+		path = append(path, getSeedPath(seed.NextPart)...)
 	}
 	return path
 }

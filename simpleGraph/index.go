@@ -15,7 +15,6 @@ type SeedDev struct {
 	PosStrand   bool
 	TotalLength uint32
 	NextPart    *SeedDev
-	Next        *SeedDev
 }
 
 func IndexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]uint64 {
@@ -118,66 +117,6 @@ func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, q
 	} else {
 		return false
 	}
-}
-
-func numberOfSeeds(head *SeedDev) int {
-	var answer int = 0
-	for ; head != nil; head = head.Next {
-		answer++
-	}
-	return answer
-}
-
-func SortSeedDevListByTotalLen(headPtr **SeedDev) {
-	var head *SeedDev = *headPtr
-	if (head != nil) && (head.Next != nil) {
-		var halfway *SeedDev = nil
-		halfway = SplitSeedDevListInHalf(head)
-		SortSeedDevListByTotalLen(&head)
-		SortSeedDevListByTotalLen(&halfway)
-		*headPtr = MergeSortedSeedDevs(head, halfway)
-	}
-}
-
-func MergeSortedSeedDevs(a *SeedDev, b *SeedDev) *SeedDev {
-	var dummyHead *SeedDev = &SeedDev{}
-	var curr *SeedDev = dummyHead
-
-	for (a != nil) && (b != nil) {
-		if a.TotalLength >= b.TotalLength {
-			curr.Next = a
-			curr = curr.Next
-			a = a.Next
-		} else {
-			curr.Next = b
-			curr = curr.Next
-			b = b.Next
-		}
-	}
-	if a == nil && b != nil {
-		curr.Next = b
-	}
-	if b == nil && a != nil {
-		curr.Next = a
-	}
-	return dummyHead.Next
-}
-
-func SplitSeedDevListInHalf(head *SeedDev) *SeedDev {
-	var fast, slow, secondHalf *SeedDev = nil, nil, nil
-	slow = head
-	fast = head.Next
-
-	for fast != nil {
-		fast = fast.Next
-		if fast != nil {
-			slow = slow.Next
-			fast = fast.Next
-		}
-	}
-	secondHalf = slow.Next
-	slow.Next = nil
-	return secondHalf
 }
 
 func SortSeedDevByTotalLen(seeds []*SeedDev) {
