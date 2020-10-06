@@ -4,7 +4,6 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	"time"
 	//DEBUG: "fmt"
 )
 
@@ -13,26 +12,17 @@ func SampleInverseNormal(mu float64, sigma float64) float64 {
 	return rand.NormFloat64()*sigma + mu
 }
 
-//FastRejectionSample returns simulated values from an a func(float64) float64 between a left and right value using an optimized rejection sampler
-//that divides the function support into discrete bins with optimized sampling heights.
-//maxSampleDepth triggers the log.Fatalf in the RejectionSample func, and samples is the number of values to be returned.
-func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int, maxSampleDepth int, samples int, randSeed bool) []float64 {
-	if randSeed {
-		rand.Seed(time.Now().UnixNano())
-	}
-
-	var answer []float64 = make([]float64, samples)
+//InitializeFastRejectionSampler takes in the parameters of a rejection sampler and returns the binHeights and sumHeights variables.
+func InitializeFastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int) ([]float64, float64) {
 	if xLeft >= xRight {
 		log.Fatalf("Error in FastRejectionSample: xRight must be greater than xLeft.")
 	}
-
+	var binHeights []float64 = make([]float64, bins)
+	var sumHeights float64
 	var support float64 = xRight - xLeft
 	var stepSize float64 = support / float64(bins)
-	var binHeights []float64 = make([]float64, bins)
 	var currLeft float64 = xLeft
 	var currRight float64 = xLeft + stepSize
-	var sumHeights float64
-
 	var fCurrLeft, fCurrRight float64
 	var firstTime bool = true
 
@@ -50,8 +40,18 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 		}
 		sumHeights += binHeights[i]
 	}
+	return binHeights, sumHeights
+}
+
+//FastRejectionSampler returns simulated values from an a func(float64) float64 between a left and right value using an optimized rejection sampler
+//that divides the function support into discrete bins with optimized sampling heights.
+//maxSampleDepth triggers the log.Fatalf in the RejectionSample func, and samples is the number of values to be returned.
+func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int, maxSampleDepth int, samples int) []float64 {
+	var answer []float64 = make([]float64, samples)
+	var stepSize float64 = (xRight - xLeft) / float64(bins)
+	binHeights, sumHeights := InitializeFastRejectionSampler(xLeft, xRight, f, bins)
 	for j := 0; j < samples; j++ {
-		answer[j] = RejectionSampleChooseBin(currLeft, currRight, stepSize, f, maxSampleDepth, sumHeights, binHeights)
+		answer[j] = RejectionSampleChooseBin(xLeft, xRight, stepSize, f, maxSampleDepth, sumHeights, binHeights)
 	}
 	return answer
 }
