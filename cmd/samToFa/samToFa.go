@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -149,7 +149,7 @@ func voter(v *voteBase, maxList []dna.Base) dna.Base {
 		return outBase
 	}
 
-	return maxList[common.RandIntInRange(0, len(maxList))]
+	return maxList[numbers.RandIntInRange(0, len(maxList))]
 }
 
 /* MOVED TO COMMON/MATH.GO

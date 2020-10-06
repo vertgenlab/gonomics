@@ -1,7 +1,6 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"math"
 	"math/rand"
@@ -32,12 +31,12 @@ func InitializeFastRejectionSampler(xLeft float64, xRight float64, f func(float6
 			firstTime = false
 			fCurrLeft = f(currLeft)
 			fCurrRight = f(currRight)
-			binHeights[i] = common.MaxFloat64(fCurrLeft, fCurrRight)
+			binHeights[i] = MaxFloat64(fCurrLeft, fCurrRight)
 		} else {
 			fCurrLeft = fCurrRight
 			currRight += stepSize
 			fCurrRight = f(currRight)
-			binHeights[i] = common.MaxFloat64(fCurrLeft, fCurrRight)
+			binHeights[i] = MaxFloat64(fCurrLeft, fCurrRight)
 		}
 		sumHeights += binHeights[i]
 	}
@@ -57,7 +56,7 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 	return answer
 }
 
-func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func (float64) float64, maxIteration int, sumHeights float64, binHeights []float64) float64 {
+func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64) float64 {
 	var x, y float64
 	var currBin int
 	var currLeft, currRight float64
@@ -65,15 +64,15 @@ func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f
 		currBin = chooseBin(sumHeights, binHeights)
 		currLeft = xLeft + float64(currBin)*stepSize
 		currRight = currLeft + stepSize
-		x = RandFloatInRange(currLeft, currRight)
+		x = RandFloat64InRange(currLeft, currRight)
 		y = f(x)
-		if RandFloatInRange(0.0, binHeights[currBin]) < y {
+		if RandFloat64InRange(0.0, binHeights[currBin]) < y {
 			return x
 		}
 	}
 	log.Fatalf("Exceeded max iteration in RejectionSampleChooseBin.")
 	return -1.0
-} 
+}
 
 //chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
 func chooseBin(sumHeights float64, binHeights []float64) int {
@@ -93,9 +92,9 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int, returnX bool) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
-		x = RandFloatInRange(xLeft, xRight) //rand float64 in range xleft to xright
+		x = RandFloat64InRange(xLeft, xRight) //rand float64 in range xleft to xright
 		y = f(x)
-		if RandFloatInRange(0.0, yMax) < y {
+		if RandFloat64InRange(0.0, yMax) < y {
 			if returnX {
 				return x
 			}

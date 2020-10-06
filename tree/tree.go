@@ -180,7 +180,7 @@ func ReadNewick(filename string) (*Tree, error) {
 	for scanner.Scan() {
 		line = scanner.Text()
 		if !strings.HasPrefix(line, "#") {
-			return ParseNewick(line[strings.Index(line, "("): 1+strings.LastIndex(line, ";")])
+			return ParseNewick(line[strings.Index(line, "(") : 1+strings.LastIndex(line, ";")])
 		}
 	}
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")

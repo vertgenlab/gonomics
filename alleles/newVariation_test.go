@@ -16,7 +16,7 @@ func TestFindNewVariation(t *testing.T) {
 	experimental := "testdata/human_chrM.sam"
 	normal := "testdata/chrM_head.sam"
 	alleleStreams, normalIDs := startAlleleStreams(ref, experimental, normal, 20, 100)
-	FindNewVariation(alleleStreams, normalIDs, 0, 1)
+	FindNewVariation(alleleStreams, normalIDs, 0, 1, 0)
 }
 
 // fills alleleChans and normalIDs with the appropriate data

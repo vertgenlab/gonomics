@@ -1,7 +1,7 @@
 package dna
 
 import (
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -52,7 +52,7 @@ func compareSeqsIgnoreGaps(alpha []Base, beta []Base, ignoreCase bool) int {
 
 func compareSeqs(alpha []Base, beta []Base, ignoreCase bool) int {
 	var res int
-	stop := common.Min(len(alpha), len(beta))
+	stop := numbers.Min(len(alpha), len(beta))
 	for i := 0; i < stop; i++ {
 		res = compareBases(alpha[i], beta[i], ignoreCase)
 		if res != 0 {

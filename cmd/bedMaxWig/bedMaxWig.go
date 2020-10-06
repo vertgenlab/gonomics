@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 )
@@ -35,7 +35,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 					currentMax = 0
 					for m = 0; m < (recordLength - windowSize + 1); m++ {
 						currentStart = records[k].ChromStart + int64(m)
-						currentMax = common.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart+windowSize))
+						currentMax = numbers.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart+windowSize))
 					}
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", currentMax))
 

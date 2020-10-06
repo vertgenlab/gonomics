@@ -8,7 +8,11 @@ import (
 	//DEBUG: "fmt"
 )
 
+<<<<<<< HEAD:popgen/AFSsimulate.go
 //SimulateAFS returns an allele frequency spectrum AFS struct for n haploid individuals with k segregating sites
+=======
+//SimulateAFS returns an allele frequency spectrum AFS struct for n individuals with k segregating sites
+>>>>>>> main:popgen/afsSimulate.go
 //with a selection parameter alpha.
 func SimulateAFS(alpha float64, n int, k int) AFS {
 	var answer AFS
@@ -129,7 +133,7 @@ func AfsToGenotype(a AFS, phase bool) []vcf.GenomeSample {
 	return answer
 }*/
 
-//StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity 
+//StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity
 //distribution with selection parameter alpha.
 func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64) []float64 {
 	f := AFSStationarityClosure(alpha)
