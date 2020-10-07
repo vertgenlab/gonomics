@@ -2,13 +2,14 @@ package popgen
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/fileio"
 	"math"
 	"math/rand"
+	"fmt"
 	//DEBUG packages:
 	/*"log"
 	"os"
-	"runtime/pprof"
-	"fmt"*/)
+	"runtime/pprof"*/)
 
 type Theta struct {
 	alpha       []float64
@@ -82,7 +83,7 @@ func InitializeTheta(m float64, s float64, k int) Theta {
 
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
-func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int) ([]float64, []float64, []bool) {
+func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, outFile string) {
 	//profiling test code DEBUG
 	/*f, err := os.Create("testProfile.prof")
 	if err != nil {
@@ -90,26 +91,27 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()*/
+
+	out := fileio.EasyCreate(outFile)
+	defer out.Close()
+
 	maxN := findMaxN(data)
 	binomMap := make([][]float64, maxN+1)
-
-	muList := make([]float64, iterations)
-	sigmaList := make([]float64, iterations)
-	acceptList := make([]bool, iterations)
+	var currAccept bool
 	//initialization to uninformative standard normal
 	t := InitializeTheta(muZero, sigmaZero, len(data.sites))
+	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
+	
 	for i := 0; i < iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t)
 		if Metropolis_Accept(t, tCandidate, data, binomMap) {
 			t = tCandidate
-			acceptList[i] = true
+			currAccept = true
 		} else {
-			acceptList[i] = false
+			currAccept = false
 		}
-		muList[i] = t.mu
-		sigmaList[i] = t.sigma
+		fmt.Fprintf(out, "%v\t%e\t%e\t%t\n", i, t.mu, t.sigma, currAccept)
 	}
-	return muList, sigmaList, acceptList
 }
 
 //in order to determine the proper length of the binomMap, we need to figure out which variant has the largest value of N.
