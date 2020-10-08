@@ -3,27 +3,24 @@ package simulate
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
-	"sync"
 )
 
 func GoSimulateBed(searchSpace []*bed.Bed, regionCount int, regionLength int64) <-chan bed.Bed {
 	var Length, tmp, chromWindows int64
 	var totalWindows int
-	c := make(chan bed.Bed)
+	c := make(chan bed.Bed, 1000)
 
 	//count total viable windows
 	for i := 0; i < len(searchSpace); i++ {
 		Length = searchSpace[i].ChromEnd - searchSpace[i].ChromStart
 
 		if Length >= regionLength {
-			totalWindows = totalWindows + int(Length-regionLength)
+			totalWindows = totalWindows + int(Length-regionLength + 1)
 		}
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
 	// DEBUG fmt.Printf("totalWindows: %d\n", totalWindows)
+	//this function generates new bed regions and sends them to a channel.
 	go func() {
 		for i := 0; i < regionCount; i++ {
 				tmp = int64(numbers.RandIntInRange(0, totalWindows))
@@ -47,10 +44,6 @@ func GoSimulateBed(searchSpace []*bed.Bed, regionCount int, regionLength int64) 
 					}
 				}
 			}
-		wg.Done()
-	}()
-	go func() {
-		wg.Wait()
 		close(c)
 	}()
 	return c
