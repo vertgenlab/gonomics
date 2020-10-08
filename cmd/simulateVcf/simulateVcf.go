@@ -4,20 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/simulate"
+	"github.com/vertgenlab/gonomics/common"
 	"log"
-	"math/rand"
-	"time"
 )
 
 func simulateVcf(alpha float64, n int, k int, outFile string, randSeed bool, setSeed int64) {
-	if randSeed && setSeed != -1 {
-		log.Fatalf("Cannot use a set seed and also a random seed.")
-	}
-	if randSeed {
-		rand.Seed(time.Now().UnixNano())
-	} else if setSeed != -1 {
-		rand.Seed(setSeed)
-	}
+	common.RngSeed(randSeed, setSeed)
 	simulate.SimulateVcf(alpha, n, k, outFile)
 }
 
