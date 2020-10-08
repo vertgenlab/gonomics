@@ -110,9 +110,9 @@ func compareEdges(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGrap
 	for i := 0; i < len(manual.Nodes)-1; i++ {
 		for j := 0; j < len(manual.Nodes[i].Next); j++ {
 			if manual.Nodes[i].Next[j].Dest.Name == graph.Nodes[i].Next[j].Dest.Name {
-				prevNodeMatchCounter += 0
+				nextNodeMatchCounter += 0
 			} else {
-				prevNodeMatchCounter += 1
+				nextNodeMatchCounter += 1
 			}
 		}
 	}
