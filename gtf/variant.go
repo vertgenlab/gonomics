@@ -68,10 +68,12 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 	answer.Gene = gene.GeneID
 	answer.PosStrand = gene.Transcripts[0].Strand
 	vcfCdsIntersect(v, gene, answer, 0)
-	if int(v.Pos) >= answer.NearestCds.Start && int(v.Pos) <= answer.NearestCds.End {
-		findAAChange(answer, seq)
+	if answer.NearestCds != nil { // handle genes with no CDS
+		if int(v.Pos) >= answer.NearestCds.Start && int(v.Pos) <= answer.NearestCds.End {
+			findAAChange(answer, seq)
+		}
+		addVariantType(answer)
 	}
-	addVariantType(answer)
 
 	if allTranscripts {
 		var prev *vcfEffectPrediction = answer
@@ -82,10 +84,12 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 			additionalTranscript.Gene = gene.GeneID
 			additionalTranscript.PosStrand = gene.Transcripts[i].Strand
 			vcfCdsIntersect(v, gene, additionalTranscript, i)
-			if int(v.Pos) >= additionalTranscript.NearestCds.Start && int(v.Pos) <= additionalTranscript.NearestCds.End {
-				findAAChange(additionalTranscript, seq)
+			if answer.NearestCds != nil {
+				if int(v.Pos) >= additionalTranscript.NearestCds.Start && int(v.Pos) <= additionalTranscript.NearestCds.End {
+					findAAChange(additionalTranscript, seq)
+				}
+				addVariantType(additionalTranscript)
 			}
-			addVariantType(additionalTranscript)
 			prev.NextTranscript = additionalTranscript
 			prev = additionalTranscript
 		}
@@ -217,7 +221,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 		altCDS := currCDS
 		altSeqPos := seqPos
 		for ; len(altBases)%3 != 0; altSeqPos++ {
-			if altSeqPos > altCDS.End-1 {
+			if altSeqPos > altCDS.End-1 && altCDS.Next != nil {
 				altSeqPos = altCDS.Next.Start - 1
 				altCDS = altCDS.Next
 			}
@@ -226,7 +230,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 		refCDS := currCDS
 		refSeqPos := seqPos
 		for ; len(refBases)%3 != 0; refSeqPos++ {
-			if refSeqPos > refCDS.End-1 {
+			if refSeqPos > refCDS.End-1 && refCDS.Next != nil {
 				refSeqPos = refCDS.Next.Start - 1
 				refCDS = refCDS.Next
 			}
@@ -241,11 +245,10 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 			for variant.AaRef[0] == variant.AaAlt[0] {
 				codonToAdd = nil
 				variant.AaRef, variant.AaAlt = variant.AaRef[1:], variant.AaAlt[1:]
-				//fmt.Println("BASE ADDED")
 				aaPosOffset++
 				if len(variant.AaRef) == 0 {
 					for j = 0; j < 3; j++ {
-						if refSeqPos > refCDS.End-1 {
+						if refSeqPos > refCDS.End-1 && refCDS.Next != nil {
 							refSeqPos = refCDS.Next.Start - 1
 							refCDS = refCDS.Next
 						}
@@ -257,7 +260,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 				codonToAdd = nil
 				if len(variant.AaAlt) == 0 {
 					for j = 0; j < 3; j++ {
-						if altSeqPos > altCDS.End-1 {
+						if altSeqPos > altCDS.End-1 && altCDS.Next != nil {
 							altSeqPos = altCDS.Next.Start - 1
 							altCDS = altCDS.Next
 						}

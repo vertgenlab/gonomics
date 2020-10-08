@@ -36,13 +36,13 @@ func usage() {
 
 func AppendAnnotationHeader(header *vcf.VcfHeader) {
 	var columnIDs string
-	if strings.HasPrefix(header.Text[len(header.Text)-1], "#CHROM\t") {
+	if len(header.Text) > 0 && strings.HasPrefix(header.Text[len(header.Text)-1], "#CHROM\t") {
 		columnIDs = header.Text[len(header.Text)-1]
 		header.Text = header.Text[:len(header.Text)-1]
 	}
 
-	header.Text = append(header.Text, "##GoEffectPrediction Version=1.0\n")
-	header.Text = append(header.Text, "##INFO=<ID=GoEP,Number=.,Type=String,Description=\"Functional annotations: HGVS.g | Gene | TranscriptId : HGVS.c | HGVS.p | VariantType\">\n")
+	header.Text = append(header.Text, "##GoEffectPrediction Version=1.0")
+	header.Text = append(header.Text, "##INFO=<ID=GoEP,Number=.,Type=String,Description=\"Functional annotations: HGVS.g | Gene | TranscriptId : HGVS.c | HGVS.p | VariantType\">")
 
 	if columnIDs != "" {
 		header.Text = append(header.Text, columnIDs)
@@ -78,8 +78,10 @@ func annotationWorker(wg *sync.WaitGroup, tree map[string]*interval.IntervalNode
 	var annotation string
 	for vcfRecord := range vcfChan {
 		variant, _ := gtf.VcfToVariant(vcfRecord, tree, fasta, allTranscripts) //TODO: make gtf.vcfEffectPrediciton a public struct and declare outside of loop
-		annotation = gtf.VariantToAnnotation(variant, fasta)
-		vcfRecord.Info = vcfRecord.Info + ";" + annotation
+		if variant.Gene != "" && variant.NearestCds != nil {
+			annotation = gtf.VariantToAnnotation(variant, fasta)
+			vcfRecord.Info = vcfRecord.Info + ";" + annotation
+		}
 		answer <- vcfRecord
 	}
 	wg.Done()

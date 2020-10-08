@@ -306,7 +306,6 @@ func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 		if len(v.AaAlt) == 1 {
 			answer += fmt.Sprintf("%s%ddup", dna.AminoAcidToString(v.AaAlt[0]), v.CdnaPos/3)
 		} else {
-			fmt.Println(v.AaPos)
 			answer += fmt.Sprintf("%s%d_%s%ddup", dna.AminoAcidToString(v.AaAlt[0]), v.AaPos, dna.AminoAcidToString(v.AaAlt[len(v.AaAlt)-1]), (v.CdnaPos/3)+len(v.AaAlt))
 		}
 		return answer
@@ -324,11 +323,6 @@ func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	if v.VariantType == "Missense" && len(v.AaRef) == 1 && len(v.AaAlt) == 0 && len(dna.StringToBases(v.Ref)) > 3 {
 		answer += fmt.Sprintf("%s%ddel", dna.AminoAcidToString(v.AaRef[0]), v.CdnaPos/3)
 		return answer
-	}
-
-	if v.Info == "c.38753_38784del|p.Leu12918CysfsTer2" {
-		fmt.Println(dna.PolypeptideToString(v.AaRef))
-		fmt.Println(dna.PolypeptideToString(v.AaAlt))
 	}
 
 	v.AaAlt = truncateOnTer(v.AaAlt)
@@ -437,7 +431,7 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 		}
 		currCDS := v.NearestCds
 		for {
-			if seqPos > currCDS.End-1 {
+			if seqPos > currCDS.End-1 && currCDS.Next != nil {
 				currCDS = currCDS.Next
 				seqPos = currCDS.Start - 1
 			}
