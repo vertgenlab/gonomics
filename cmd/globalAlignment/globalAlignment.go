@@ -21,9 +21,9 @@ func main() {
 	flag.Parse()
 	if len(flag.Args()) != expectedNum {
 		log.Fatalf("error, expecting 2 .fasta files to be able to align, only found %d files...\n", len(flag.Args()))
-	}	
+	}
 
-	//read in sequences that should be put in as fasta type files. 
+	//read in sequences that should be put in as fasta type files.
 	faOne, faDoneOne := fasta.NextFasta(fileio.EasyOpen(flag.Arg(0)))
 	faTwo, faDoneTwo := fasta.NextFasta(fileio.EasyOpen(flag.Arg(1)))
 
@@ -50,13 +50,13 @@ func main() {
 //cigar to graph takes two fasta files as an input, performs a global alignment, and produces genome graph
 func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
 	answer := simpleGraph.NewGraph()
-	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along. 
+	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
 	var targetEnd, queryEnd int64 = 0, 0
-	
-	//TODO: Make sure it can handle non-match at node 0. Fill out annotations for each node (knowing which allele/haplotype). 
+
+	//TODO: Make sure it can handle non-match at node 0. Fill out annotations for each node (knowing which allele/haplotype).
 	//TODO: Handle multi-entry fasta?
 
-	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence. 
+	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence.
 	head := &simpleGraph.Node{
 		Id:   0,
 		Name: fmt.Sprintf("%s_0_%d", target.Name, aln[0].RunLength),
@@ -71,7 +71,7 @@ func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *s
 		targetEnd += aln[0].RunLength
 	}
 	simpleGraph.AddNode(answer, head)
-	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes. 
+	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes.
 	for i := 1; i < len(aln); i++ {
 		curr := &simpleGraph.Node{
 			Id:   uint32(i),
