@@ -27,7 +27,7 @@ type SegSite struct {
 	n int //total number of individuals
 }
 
-//Constructs an allele frequency spectrum struct from a multiFa alignment block.
+//MultiFaToAFS constructs an allele frequency spectrum struct from a multiFa alignment block.
 //TODO: Ask Craig about derived state here.
 func MultiFaToAFS(aln []*fasta.Fasta) AFS {
 	var answer AFS
@@ -48,6 +48,8 @@ func MultiFaToAFS(aln []*fasta.Fasta) AFS {
 	return answer
 }
 
+//GvcfToAFS reads in a Gvcf file, parses the genotype information, and constructs an AFS struct.
+//TODO: This function will change when we update the gVCF stuff.
 func GVCFToAFS(filename string) AFS {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
@@ -78,7 +80,7 @@ func GVCFToAFS(filename string) AFS {
 	return answer
 }
 
-//converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
+//AFSToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
 func AFSToFrequency(a AFS) []float64 {
 	var answer []float64
 	answer = make([]float64, len(a.sites))
@@ -88,17 +90,19 @@ func AFSToFrequency(a AFS) []float64 {
 	return answer
 }
 
-//eq 2.1
+//AFSStationarity returns the function value from a stationarity distribution with selection parameter alpha from a particular input allele frequency p.
 func AFSStationarity(p float64, alpha float64) float64 {
 	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
 }
 
+//AFSStationarityClosure returns a func(float64)float64 for a stationarity distribution with a fixed alpha value for subsequent integration.
 func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
 		return AFSStationarity(p, alpha)
 	}
 }
 
+//AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
 func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
 	return func(p float64) float64 {
 		//DEBUG: fmt.Println(binomMap)
@@ -107,7 +111,7 @@ func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(fl
 	}
 }
 
-//eq. 2.2
+//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	f := AFSSampleClosure(n, k, alpha, binomMap)
 	//DEBUG prints
@@ -118,7 +122,7 @@ func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64
 	return numbers.LogIntegrateIterative(f, 0.000001, 0.9999999, 20, 10e-8)
 }
 
-//eq 2.3
+//AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
 func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
 	var denominator float64
 	//check if n has already been seen
@@ -128,8 +132,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, binomMap), denominator)
 }
 
-//eq 2.4
-//afs array has a dummy variable in position 0, so loop starts at 1.
+//AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
 func AFSLikelihood(afs AFS, alpha []float64, binomMap [][]float64) float64 {
 	var answer float64 = 0.0
 	for j := 1; j < len(afs.sites); j++ {
