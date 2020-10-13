@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/gtf"
 	"log"
 	"math/rand"
 )
@@ -57,12 +58,12 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, root *expandedTree.ETree) {
+func Simulate(randSeqFilename string, root *expandedTree.ETree, gtfFilename string) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	printSeqForNodes(root, rand1[0].Seq)
+	printSeqForNodes(root, rand1[0].Seq, gtfFilename)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1, unsure how it was calculated
@@ -137,7 +138,7 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
-func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
+func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []dna.Base {
 	var seq []dna.Base
 	var originalBase dna.Base
 	var newBase dna.Base
@@ -149,13 +150,21 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
 
 	seq = copySeq(inputSeq)
 
-	if len(seq)%3 != 0 {
+	gtf.Read(gtfFilename)
+
+	//numCoding := #CDS in gtf
+	//for g := 0; g < number of CDS in gtf; g++ {
+	//currentCoding := thisCDS
+	//codingSeq = copySeq(currentCoding)
+	//if CDS {
+
+	if len(seq)%3 != 0 { //seq to codingSeq
 		log.Fatal("sequence length must be divisible by three")
 	} else {
 
-		codonNum := len(seq) / 3
+		codonNum := len(seq) / 3 //seq to codingSeq
 		for i := 0; i < codonNum; i++ {
-			originalCodons = dna.BasesToCodons(seq)
+			originalCodons = dna.BasesToCodons(seq) //seq to codingSeq
 
 			for j := 0; j < 3; j++ {
 				originalBase = originalCodons[i].Seq[j]
@@ -218,6 +227,18 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64) []dna.Base {
 			}
 		}
 	}
+	//} else { #new if statement at top
+	//copy length of seq and store in variable
+	//for k := 0; k < len(non coding seq in copied var); k++{
+	//newBase = mutateBase(originalBase, branchLength)
+	//}
+	//random number
+	//if r < 0.25 {
+	//	copiedVar.Seq[k] = newBase
+	//	} else {
+	//	copiedVar.Seq[k] = originalBase
+	//} newSequence = append(newSequence, copiedVar.Seq[k])
+	//} for new loop at top
 
 	return newSequence
 }
@@ -230,22 +251,22 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 //make fastas based off of node and random sequence
-func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base) {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gtfFilename string) {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
 	//var fastaFinal []*fasta.Fasta
 
 	length = node.BranchLength
-	seq = MutateSeq(sequence, length)
+	seq = MutateSeq(sequence, length, gtfFilename)
 
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	//fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
-		printSeqForNodes(node.Right, seq)
+		printSeqForNodes(node.Right, seq, gtfFilename)
 		//fastaFinal = append(fastaFinal, b...)
-		printSeqForNodes(node.Left, seq)
+		printSeqForNodes(node.Left, seq, gtfFilename)
 		//fastaFinal = append(fastaFinal, a...)
 	}
 }
