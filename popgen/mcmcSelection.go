@@ -6,48 +6,55 @@ import (
 	"math"
 	"math/rand"
 	"fmt"
+	"log"
 	//DEBUG packages:
-	/*"log"
-	"os"
+	/*"os"
 	"runtime/pprof"*/)
+
+//To access debug prints, set verbose to 1 and then compile.
+var verbose int = 0
 
 type Theta struct {
 	alpha       []float64
 	mu          float64
 	sigma       float64
 	probability float64
+	likelihood float64
 }
 
-func Metropolis_Accept(old Theta, thetaPrime Theta, data AFS, binomMap [][]float64) bool {
+//MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
+func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 	yRand := rand.Float64()
 	var pAccept float64
-	pAccept = numbers.MinFloat64(1.0, Bayes_Ratio(old, thetaPrime, data, binomMap)*Hastings_Ratio(old, thetaPrime))
-	//DEBUG: fmt.Printf("Likelihood ratio: %f\n", pAccept)
+	pAccept = numbers.MinFloat64(1.0, BayesRatio(old, thetaPrime)*HastingsRatio(old, thetaPrime))
+	if verbose > 0 {
+		log.Printf("Likelihood ratio: %f\n", pAccept)
+	}
 	return pAccept > yRand
 }
 
-func Hastings_Ratio(tOld Theta, tNew Theta) float64 {
+//HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio between two parameter sets.
+func HastingsRatio(tOld Theta, tNew Theta) float64 {
 	var newGivenOld, oldGivenNew float64
-
 	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) //* numbers.GammaDist(tNew.sigma, tOld.sigma*tOld.sigma, tOld.sigma)
 	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) //* numbers.GammaDist(tOld.sigma, tNew.sigma*tNew.sigma, tNew.sigma)
-
-	/*
-		for i := 0; i < len(tOld.alpha); i++ {
-			newGivenOld = newGivenOld * numbers.NormalDist(tNew.alpha[i], tNew.mu, tNew.sigma)
-			oldGivenNew = oldGivenNew * numbers.NormalDist(tOld.alpha[i], tOld.mu, tOld.sigma)
-		}*/
 	return oldGivenNew / newGivenOld
 }
 
-func Bayes_Ratio(old Theta, thetaPrime Theta, data AFS, binomMap [][]float64) float64 {
-	return numbers.MultiplyLog(numbers.DivideLog(AFSLikelihood(data, old.alpha, binomMap), AFSLikelihood(data, thetaPrime.alpha, binomMap)), math.Log(thetaPrime.probability/old.probability))
+//BayesRatio is a helper function of MetropolisAccept taht returns the ratio of likelihoods of parameter sets
+func BayesRatio(old Theta, thetaPrime Theta) float64 {
+if verbose > 0 {
+	log.Printf("Old likelihood: %e. New likelihood: %e.\n", old.likelihood, thetaPrime.likelihood)
+}
+	return numbers.MultiplyLog(numbers.DivideLog(old.likelihood, thetaPrime.likelihood), math.Log(thetaPrime.probability/old.probability))
 }
 
-func GenerateCandidateThetaPrime(t Theta) Theta {
+//GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of parameters based on the state of the current parameter set t. 
+func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta {
 	//sample from uninformative gamma
 	var alphaPrime []float64
 	var p float64 = 1.0
+	var likelihood float64
 	alphaPrime = make([]float64, len(t.alpha))
 
 	//sample new sigma from a gamma function where the mean is always the current sigma value
@@ -64,11 +71,16 @@ func GenerateCandidateThetaPrime(t Theta) Theta {
 		p = p * numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)
 	}
 	p = p * numbers.UninformativeGamma(sigmaPrime) * numbers.NormalDist(muPrime, t.mu, sigmaPrime)
-
-	return Theta{alphaPrime, muPrime, sigmaPrime, p}
+	likelihood = AFSLikelihood(data, alphaPrime, binomMap)
+	if verbose > 0 {
+		log.Printf("Candidate Theta. Mu: %e. Sigma:%e. Probability:%e. Likelihood: %e.\n", muPrime, sigmaPrime, p, likelihood)
+	}
+	return Theta{alphaPrime, muPrime, sigmaPrime, p, likelihood}
 }
 
-func InitializeTheta(m float64, s float64, k int) Theta {
+//InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
+func InitializeTheta(m float64, s float64, data AFS, binomMap [][]float64) Theta {
+	k := len(data.sites)
 	answer := Theta{mu: m, sigma: s}
 	var p float64 = 1.0
 	answer.alpha = make([]float64, k)
@@ -78,6 +90,7 @@ func InitializeTheta(m float64, s float64, k int) Theta {
 	}
 	//now multiply the probability of alpha, currently p, by the probability of drawing m and s from distributions if the previous state was m and s.
 	answer.probability = p * numbers.UninformativeGamma(s) * numbers.NormalDist(m, m, s)
+	answer.likelihood = AFSLikelihood(data, answer.alpha, binomMap)
 	return answer
 }
 
@@ -95,16 +108,26 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 
+	if verbose > 0 {
+		log.Println("Hello, I'm about to calculate MCMC.")
+	}
+
 	maxN := findMaxN(data)
 	binomMap := make([][]float64, maxN+1)
 	var currAccept bool
+	if verbose > 0 {
+		log.Println("Hello, I'm about to initialize theta.")
+	}
 	//initialization to uninformative standard normal
-	t := InitializeTheta(muZero, sigmaZero, len(data.sites))
+	t := InitializeTheta(muZero, sigmaZero, data, binomMap)
+	if verbose > 0 {
+		log.Println("Initial Theta: mu: %e. sigma: %e. probability: %e. likelihood: %e.", t.mu, t.sigma, t.probability, t.likelihood)
+	}
 	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
 	
 	for i := 0; i < iterations; i++ {
-		tCandidate := GenerateCandidateThetaPrime(t)
-		if Metropolis_Accept(t, tCandidate, data, binomMap) {
+		tCandidate := GenerateCandidateThetaPrime(t, data, binomMap)
+		if MetropolisAccept(t, tCandidate) {
 			t = tCandidate
 			currAccept = true
 		} else {
@@ -114,7 +137,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 }
 
-//in order to determine the proper length of the binomMap, we need to figure out which variant has the largest value of N.
+//findMaxN is a helper function that aids in the generation of binomMap. In order to determine the proper length of the binomMap, we need to figure out which variant has the largest value of N.
 func findMaxN(data AFS) int {
 	var answer int = 0
 	for i := 0; i < len(data.sites); i++ {
