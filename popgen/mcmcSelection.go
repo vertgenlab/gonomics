@@ -48,7 +48,7 @@ func HastingsRatio(tOld Theta, tNew Theta) float64 {
 //BayesRatio is a helper function of MetropolisAccept taht returns the ratio of likelihoods of parameter sets
 func BayesRatio(old Theta, thetaPrime Theta) float64 {
 	like := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
-	prob := math.Log(thetaPrime.probability / old.probability)
+	prob := numbers.DivideLog(thetaPrime.probability, old.probability) 
 	if verbose > 0 {
 		log.Printf("Old log(like): %e, New log(like): %e, likeRatio: %f, probRatio: %f\n", old.likelihood, thetaPrime.likelihood, math.Exp(like), math.Exp(prob))
 	}
@@ -73,7 +73,9 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta 
 		//p = p * numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)
 		p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)))
 	}
-	p = p * numbers.UninformativeGamma(sigmaPrime) * numbers.NormalDist(muPrime, t.mu, sigmaPrime)
+	p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
+	p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
+
 	likelihood = AFSLikelihood(data, alphaPrime, binomMap)
 	if verbose > 0 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogProbability:%e. LogLikelihood: %e.\n", muPrime, sigmaPrime, p, likelihood)
