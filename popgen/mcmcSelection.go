@@ -24,7 +24,7 @@ type Theta struct {
 //MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
 func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 	var pAccept, bayes, hastings, yRand float64
-	yRand = rand.Float64()
+	yRand = math.Log(rand.Float64())
 	var decision bool
 	bayes = BayesRatio(old, thetaPrime)
 	hastings = HastingsRatio(old, thetaPrime)
