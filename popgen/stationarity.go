@@ -124,7 +124,7 @@ func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
 func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
-	var denominator float64
+	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
 	//check if n has already been seen
 	for j := 1; j < n-1; j++ {
 		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomMap))
