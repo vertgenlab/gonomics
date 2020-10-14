@@ -17,7 +17,7 @@ type Theta struct {
 	alpha       []float64
 	mu          float64
 	sigma       float64
-	probability float64
+	//probability float64
 	likelihood  float64
 }
 
@@ -48,18 +48,19 @@ func HastingsRatio(tOld Theta, tNew Theta) float64 {
 //BayesRatio is a helper function of MetropolisAccept taht returns the ratio of likelihoods of parameter sets
 func BayesRatio(old Theta, thetaPrime Theta) float64 {
 	like := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
-	prob := numbers.DivideLog(thetaPrime.probability, old.probability) 
+	//prob := numbers.DivideLog(thetaPrime.probability, old.probability) 
+	//prob = 0 //trick for debug
 	if verbose > 0 {
-		log.Printf("Old log(like): %e, New log(like): %e, likeRatio: %f, probRatio: %f\n", old.likelihood, thetaPrime.likelihood, math.Exp(like), math.Exp(prob))
+		log.Printf("Old log(like): %e, New log(like): %e, likeRatio: %f", old.likelihood, thetaPrime.likelihood, math.Exp(like))
 	}
-	return numbers.MultiplyLog(like, prob)
+	return like
 }
 
 //GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of parameters based on the state of the current parameter set t. 
 func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta {
 	//sample from uninformative gamma
 	var alphaPrime []float64
-	var p float64 = 0.0
+	//var p float64 = 0.0
 	var likelihood float64
 	alphaPrime = make([]float64, len(t.alpha))
 
@@ -71,33 +72,32 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta 
 	for i := 0; i < len(t.alpha); i++ {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
 		//p = p * numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)
-		p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)))
+		//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)))
 	}
-	p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
-	p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
-
+	//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
+	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
 	likelihood = AFSLikelihood(data, alphaPrime, binomMap)
 	if verbose > 0 {
-		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogProbability:%e. LogLikelihood: %e.\n", muPrime, sigmaPrime, p, likelihood)
+		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
 	}
-	return Theta{alphaPrime, muPrime, sigmaPrime, p, likelihood}
+	return Theta{alphaPrime, muPrime, sigmaPrime, likelihood}
 }
 
 //InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
 func InitializeTheta(m float64, s float64, data AFS, binomMap [][]float64) Theta {
 	k := len(data.sites)
 	answer := Theta{mu: m, sigma: s}
-	var p float64 = 0.0
+	//var p float64 = 0.0
 	answer.alpha = make([]float64, k)
 	for i := 0; i < k; i++ {
 		answer.alpha[i] = numbers.SampleInverseNormal(m, s)
 		//p = p * numbers.NormalDist(answer.alpha[i], m, s)
-		p = numbers.MultiplyLog(p, numbers.NormalDist(answer.alpha[i], m, s))
+	//	p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(answer.alpha[i], m, s)))
 	}
 	//now multiply the probability of alpha, currently p, by the probability of drawing m and s from distributions if the previous state was m and s.
 	//answer.probability = p * numbers.UninformativeGamma(s) * numbers.NormalDist(m, m, s)
-	answer.probability = numbers.MultiplyLog(p,  math.Log(numbers.UninformativeGamma(s)))
-	answer.probability = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(m, m, s)))
+	//answer.probability = numbers.MultiplyLog(p,  math.Log(numbers.UninformativeGamma(s)))
+	//answer.probability = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(m, m, s)))
 	answer.likelihood = AFSLikelihood(data, answer.alpha, binomMap)
 	return answer
 }
@@ -130,7 +130,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	//initialization to uninformative standard normal
 	t := InitializeTheta(muZero, sigmaZero, data, binomMap)
 	if verbose > 0 {
-		log.Printf("Initial Theta: mu: %f. sigma: %f. LogProbability: %e. LogLikelihood: %e.", t.mu, t.sigma, t.probability, t.likelihood)
+		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
 	}
 	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
 	
