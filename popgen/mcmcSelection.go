@@ -12,7 +12,7 @@ import (
 	"runtime/pprof"*/)
 
 //To access debug prints, set verbose to 1 and then compile.
-var verbose int = 0
+const verbose int = 0
 
 type Theta struct {
 	alpha       []float64
@@ -25,20 +25,25 @@ type Theta struct {
 //MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
 func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 	yRand := rand.Float64()
-	var pAccept float64
-	pAccept = numbers.MinFloat64(1.0, BayesRatio(old, thetaPrime)*HastingsRatio(old, thetaPrime))
+	var pAccept, bayes, hastings float64
+	var decision bool
+	bayes = BayesRatio(old, thetaPrime)
+	hastings = HastingsRatio(old, thetaPrime)
+	pAccept = numbers.MultiplyLog(bayes, hastings)
+	decision = pAccept > yRand
+	//pAccept = numbers.MinFloat64(1.0, BayesRatio(old, thetaPrime)*HastingsRatio(old, thetaPrime))
 	if verbose > 0 {
-		log.Printf("Likelihood ratio: %f\n", pAccept)
+		log.Printf("bayesRatio: %e, hastingsRatio: %e, log(likelihoodRatio): %e, log(rand): %e, decision: %t\n", bayes, hastings, pAccept, yRand, decision)
 	}
-	return pAccept > yRand
+	return decision
 }
 
-//HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio between two parameter sets.
+//HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta) float64 {
 	var newGivenOld, oldGivenNew float64
 	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) //* numbers.GammaDist(tNew.sigma, tOld.sigma*tOld.sigma, tOld.sigma)
 	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) //* numbers.GammaDist(tOld.sigma, tNew.sigma*tNew.sigma, tNew.sigma)
-	return oldGivenNew / newGivenOld
+	return math.Log(oldGivenNew / newGivenOld)
 }
 
 //BayesRatio is a helper function of MetropolisAccept taht returns the ratio of likelihoods of parameter sets
@@ -46,7 +51,7 @@ func BayesRatio(old Theta, thetaPrime Theta) float64 {
 if verbose > 0 {
 	log.Printf("Old likelihood: %e. New likelihood: %e.\n", old.likelihood, thetaPrime.likelihood)
 }
-	return numbers.MultiplyLog(numbers.DivideLog(old.likelihood, thetaPrime.likelihood), math.Log(thetaPrime.probability/old.probability))
+	return numbers.MultiplyLog(numbers.DivideLog(thetaPrime.likelihood, old.likelihood), math.Log(thetaPrime.probability/old.probability))
 }
 
 //GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of parameters based on the state of the current parameter set t. 
@@ -60,11 +65,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta 
 	//sample new sigma from a gamma function where the mean is always the current sigma value
 	//mean of a gamma dist is alpha / beta, so mean = alpha / beta = sigma**2 / sigma = sigma
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
-	//TODO: sigmaPrime still reverts to ultrasmall values, impeding step size. Need a permanant solution before this tool can be used effectively.
-	//sigmaPrime := numbers.RandGamma(t.sigma*t.sigma, t.sigma)
-	sigmaPrime := numbers.RandGamma(1.0, 1.0)
-	//sigmaPrime = numbers.MaxFloat64(sigmaPrime, 0.01)
-	//DEBUG: fmt.Printf("sigmaPrime: %e. tSigma: %e.\n", sigmaPrime, t.sigma)
+	sigmaPrime := numbers.RandGamma(t.sigma*50, 50)
 	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
 	for i := 0; i < len(t.alpha); i++ {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
