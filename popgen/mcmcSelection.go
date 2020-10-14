@@ -96,8 +96,8 @@ func InitializeTheta(m float64, s float64, data AFS, binomMap [][]float64) Theta
 	}
 	//now multiply the probability of alpha, currently p, by the probability of drawing m and s from distributions if the previous state was m and s.
 	//answer.probability = p * numbers.UninformativeGamma(s) * numbers.NormalDist(m, m, s)
-	answer.probability = numbers.MultiplyLog(p,  numbers.UninformativeGamma(s))
-	answer.probability = numbers.MultiplyLog(p, numbers.NormalDist(m, m, s))
+	answer.probability = numbers.MultiplyLog(p,  math.Log(numbers.UninformativeGamma(s)))
+	answer.probability = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(m, m, s)))
 	answer.likelihood = AFSLikelihood(data, answer.alpha, binomMap)
 	return answer
 }
