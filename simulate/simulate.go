@@ -139,7 +139,6 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
 func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []dna.Base {
-	var seq []dna.Base
 	var originalBase dna.Base
 	var newBase dna.Base
 	var originalCodons []*dna.Codon
@@ -147,87 +146,115 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
+	var currExonIndex int = 0
+	var exon bool
+	var loops int
 
-	seq = copySeq(inputSeq)
+	seq := copySeq(inputSeq)
+	gtfRecord := gtf.Read(gtfFilename)
+	currCDS := gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
 
-	gtf.Read(gtfFilename)
+	//for currCDS == nil { //check if there is a coding seq in first exon of gtf
+	//	currExonIndex++
+	//	currCDS = gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
+	//}
 
-	//numCoding := #CDS in gtf
-	//for g := 0; g < number of CDS in gtf; g++ {
-	//currentCoding := thisCDS
-	//codingSeq = copySeq(currentCoding)
-	//if CDS {
+	for p := 0; p < len(seq); p++ {
 
-	if len(seq)%3 != 0 { //seq to codingSeq
-		log.Fatal("sequence length must be divisible by three")
-	} else {
+		exon, currCDS = CheckCDS(currCDS, p)
+		if !exon {
+			newBase = mutateBase(seq[p], branchLength)
+			newSequence = append(newSequence, newBase)
+		} else {
+			if len(seq[currCDS.Start:currCDS.End-1])%3 != 0 {
+				log.Fatal("sequence length must be divisible by three")
+			} else {
+				codonNum := len(seq) / 3
 
-		codonNum := len(seq) / 3 //seq to codingSeq
-		for i := 0; i < codonNum; i++ {
-			originalCodons = dna.BasesToCodons(seq) //seq to codingSeq
+				for i := 0; i < codonNum; i++ {
+					originalCodons = dna.BasesToCodons(seq)
+					loops++
 
-			for j := 0; j < 3; j++ {
-				originalBase = originalCodons[i].Seq[j]
-				var thisCodon []dna.Base
+					for j := 0; j < 3; j++ {
+						originalBase = originalCodons[i].Seq[j]
+						var thisCodon []dna.Base
 
-				if i == 0 {
-					newBase = originalBase //cannot change start codon
-				} else if i == codonNum-1 { //zero-based, sometimes decides not to mutate, sometimes decides to ignore check for 2nd base G
-					r := rand.Float64()
-					if j == 0 { //first position is only ever a T
-						originalCodons[i].Seq[j] = dna.T
-					} else if j == 1 { //second position can either be an A or G
-						if r < 0.66 { //2/3 preference for A
-							originalCodons[i].Seq[j] = dna.A
+						if i == 0 && loops == 0 { //first codon the first time through this loop
+							newBase = originalBase //cannot change start codon
+						} else if i == codonNum-1 && CheckStop(originalCodons[i].Seq[j:j+2]) == true { //zero-based, sometimes decides not to mutate, sometimes decides to ignore check for 2nd base G
+							r := rand.Float64()
+							if j == 0 { //first position is only ever a T
+								originalCodons[i].Seq[j] = dna.T
+							} else if j == 1 { //second position can either be an A or G
+								if r < 0.66 {
+									originalCodons[i].Seq[j] = dna.A
+								} else {
+									originalCodons[i].Seq[j] = dna.G
+								}
+							} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
+								if originalCodons[i].Seq[j-1] == dna.G {
+									originalCodons[i].Seq[j] = dna.A
+								} else {
+									if r < 0.5 {
+										originalCodons[i].Seq[j] = dna.A
+									} else {
+										originalCodons[i].Seq[j] = dna.G
+									}
+								}
+							}
 						} else {
-							originalCodons[i].Seq[j] = dna.G
-						}
-					} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
-						if originalCodons[i].Seq[j-1] == dna.G {
-							originalCodons[i].Seq[j] = dna.A
-						} else {
-							if r < 0.5 {
-								originalCodons[i].Seq[j] = dna.A
+							newBase = mutateBase(originalBase, branchLength)
+
+							if j == 0 {
+								thisCodon = append(thisCodon, newBase)
+								thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+								thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
+							} else if j == 1 {
+								thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+								thisCodon = append(thisCodon, newBase)
+								thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
 							} else {
-								originalCodons[i].Seq[j] = dna.G
+								thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
+								thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+								thisCodon = append(thisCodon, newBase)
+							}
+
+							newCodons = dna.BasesToCodons(thisCodon)
+							originalAmAc = dna.TranslateCodon(originalCodons[i])
+							newAmAc = dna.TranslateCodon(newCodons[0])
+
+							prob := BLOSUM[originalAmAc][newAmAc]
+							r := rand.Float64()
+
+							if r < prob {
+								originalCodons[i].Seq[j] = newBase
+							} else {
+								originalCodons[i].Seq[j] = originalBase
 							}
 						}
-					}
-				} else {
-					newBase = mutateBase(originalBase, branchLength)
-
-					if j == 0 {
-						thisCodon = append(thisCodon, newBase)
-						thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
-						thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
-					} else if j == 1 {
-						thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
-						thisCodon = append(thisCodon, newBase)
-						thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
-					} else {
-						thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
-						thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
-						thisCodon = append(thisCodon, newBase)
-					}
-
-					newCodons = dna.BasesToCodons(thisCodon)
-					originalAmAc = dna.TranslateCodon(originalCodons[i])
-					newAmAc = dna.TranslateCodon(newCodons[0])
-
-					prob := BLOSUM[originalAmAc][newAmAc]
-					r := rand.Float64()
-
-					if r < prob {
-						originalCodons[i].Seq[j] = newBase
-					} else {
-						originalCodons[i].Seq[j] = originalBase
+						newSequence = append(newSequence, originalCodons[i].Seq[j])
 					}
 				}
-				newSequence = append(newSequence, originalCodons[i].Seq[j])
 			}
 		}
 	}
-	//} else { #new if statement at top
+	//for currCDS != nil {
+	//	codingSeq = inputSeq[currCDS.Start : currCDS.End-1]
+
+	//	currCDS = currCDS.Next
+	//}
+	//currExonIndex = 0
+	//currCDS = gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
+	//for currCDS == nil {
+	//	currExonIndex++
+	//	currCDS = gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
+	//}
+
+	//for p := 0; p < len(inputSeq); p++ {
+	//	exon, currCDS = CheckCDS(currCDS, p)
+	//	if !exon {
+	//		mutateBase(inputSeq[p], branchLength)
+	//	}
 	//copy length of seq and store in variable
 	//for k := 0; k < len(non coding seq in copied var); k++{
 	//newBase = mutateBase(originalBase, branchLength)
@@ -239,8 +266,35 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 	//	copiedVar.Seq[k] = originalBase
 	//} newSequence = append(newSequence, copiedVar.Seq[k])
 	//} for new loop at top
-
+	//}
 	return newSequence
+}
+
+//checkCDS determines whether any given base pair in is a coding sequence based on gtf format
+func CheckCDS(cds *gtf.CDS, position int) (bool, *gtf.CDS) {
+	if position > cds.Start && position < cds.End-1 {
+		return true, cds
+	} else if position < cds.Start {
+		return false, cds
+	} else {
+		return false, cds.Next
+	}
+}
+
+func CheckStop(codon []dna.Base) bool {
+	var stop bool
+	for b := 0; b < len(codon); b++ {
+		if codon[b] == dna.T && codon[b+1] == dna.A && codon[b+2] == dna.A {
+			stop = true
+		} else if codon[b] == dna.T && codon[b+1] == dna.A && codon[b+2] == dna.G {
+			stop = true
+		} else if codon[b] == dna.T && codon[b+1] == dna.G && codon[b+2] == dna.A {
+			stop = true
+		} else {
+			stop = false
+		}
+	}
+	return stop
 }
 
 //make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated

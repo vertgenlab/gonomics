@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 	//"fmt"
@@ -26,21 +27,21 @@ func TestRandGene(t *testing.T) {
 	}
 }
 
-var seq = dna.StringToBases("ATGAGGTCACGATATTAG")
 var MutateSeqTests = []struct {
-	sequence     []dna.Base
+	sequence     string
 	branchLength float64
+	gtf          string
 }{
-	{seq, 0.5}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{"debug.fasta", 0.5, "debug.gtf"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 func TestMutateSeq(t *testing.T) {
 	for _, test := range MutateSeqTests {
-		a := MutateSeq(test.sequence, test.branchLength)
-		if len(seq) != len(a) {
-			t.Errorf("Expected same length sequences. Original: %s \n Ending: %s", seq, dna.BasesToString(a))
+		a := MutateSeq(dna.StringToBases(test.sequence), test.branchLength, test.gtf)
+		if len(dna.StringToBases(test.sequence)) != len(a) {
+			t.Errorf("Expected same length sequences. Original: %s \n Ending: %s", dna.StringToBases(test.sequence), dna.BasesToString(a))
 		}
-		//fmt.Print(dna.BasesToString(a), "\n")
+		fmt.Print(dna.BasesToString(a), "\n")
 	}
 }
 
