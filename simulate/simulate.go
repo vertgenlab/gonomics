@@ -146,42 +146,31 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
-	var currExonIndex int = 0
-	var exon bool
-	var loops int
 
 	seq := copySeq(inputSeq)
 	gtfRecord := gtf.Read(gtfFilename)
-	currCDS := gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
-
-	//for currCDS == nil { //check if there is a coding seq in first exon of gtf
-	//	currExonIndex++
-	//	currCDS = gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
-	//}
 
 	for p := 0; p < len(seq); p++ {
-
-		exon, currCDS = CheckCDS(currCDS, p)
-		if !exon {
+		overlapCDS, firstExon := getOverlapCDS(gtfRecord, p)
+		if overlapCDS == nil {
 			newBase = mutateBase(seq[p], branchLength)
 			newSequence = append(newSequence, newBase)
 		} else {
-			if len(seq[currCDS.Start:currCDS.End-1])%3 != 0 {
+			if (overlapCDS.End-overlapCDS.Start+1)%3 != 0 {
 				log.Fatal("sequence length must be divisible by three")
 			} else {
-				codonNum := len(seq) / 3
+				codonNum := (overlapCDS.End - overlapCDS.Start + 1) / 3
 
 				for i := 0; i < codonNum; i++ {
 					originalCodons = dna.BasesToCodons(seq)
-					loops++
 
 					for j := 0; j < 3; j++ {
 						originalBase = originalCodons[i].Seq[j]
 						var thisCodon []dna.Base
 
-						if i == 0 && loops == 0 { //first codon the first time through this loop
+						if i == 0 && firstExon == true { //first codon the first time through this loop
 							newBase = originalBase //cannot change start codon
-						} else if i == codonNum-1 && CheckStop(originalCodons[i].Seq[j:j+2]) == true { //zero-based, sometimes decides not to mutate, sometimes decides to ignore check for 2nd base G
+						} else if i == codonNum-1 && CheckStop(originalCodons[i].Seq[j:j+2]) == true { //TODO: not in CDS, make data struct.
 							r := rand.Float64()
 							if j == 0 { //first position is only ever a T
 								originalCodons[i].Seq[j] = dna.T
@@ -238,63 +227,58 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 			}
 		}
 	}
-	//for currCDS != nil {
-	//	codingSeq = inputSeq[currCDS.Start : currCDS.End-1]
-
-	//	currCDS = currCDS.Next
-	//}
-	//currExonIndex = 0
-	//currCDS = gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
-	//for currCDS == nil {
-	//	currExonIndex++
-	//	currCDS = gtfRecord["ex"].Transcripts[0].Exons[currExonIndex].Cds
-	//}
-
-	//for p := 0; p < len(inputSeq); p++ {
-	//	exon, currCDS = CheckCDS(currCDS, p)
-	//	if !exon {
-	//		mutateBase(inputSeq[p], branchLength)
-	//	}
-	//copy length of seq and store in variable
-	//for k := 0; k < len(non coding seq in copied var); k++{
-	//newBase = mutateBase(originalBase, branchLength)
-	//}
-	//random number
-	//if r < 0.25 {
-	//	copiedVar.Seq[k] = newBase
-	//	} else {
-	//	copiedVar.Seq[k] = originalBase
-	//} newSequence = append(newSequence, copiedVar.Seq[k])
-	//} for new loop at top
-	//}
 	return newSequence
 }
 
+func getOverlapCDS(gtf map[string]*gtf.Gene, pos int) (cds *gtf.CDS, start bool) { //only works on pos strand genes
+	for _, gene := range gtf {
+		for _, transcript := range gene.Transcripts {
+			for exonNum, exon := range transcript.Exons {
+				if exon.Cds != nil {
+					if exon.Cds.Start-1 <= pos && pos <= exon.Cds.End-1 {
+						return exon.Cds, exonNum == 0
+					}
+				}
+			}
+		}
+	}
+	return nil, false
+}
+
+//func getOverlapStop(gtf map[string]*gtf.Gene, pos int) (cds *gtf., start bool) {
+//	for _, gene := range gtf {
+//		for _, transcript := range gene.Transcripts {
+//			for exonNum, exon := range transcript.Exons {
+//				if exon.Cds != nil {
+//					if exon.Cds.Start-1 <= pos && pos <= exon.Cds.End-1 {
+//						return exon.Cds, exonNum == 0
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return nil, false
+//}
+
 //checkCDS determines whether any given base pair in is a coding sequence based on gtf format
-func CheckCDS(cds *gtf.CDS, position int) (bool, *gtf.CDS) {
-	if position > cds.Start && position < cds.End-1 {
-		return true, cds
-	} else if position < cds.Start {
-		return false, cds
+func CheckCDS(cds *gtf.CDS, position int) bool {
+	if position > cds.Start && position <= cds.End-1 {
+		return true
 	} else {
-		return false, cds.Next
+		return false
 	}
 }
 
 func CheckStop(codon []dna.Base) bool {
-	var stop bool
-	for b := 0; b < len(codon); b++ {
-		if codon[b] == dna.T && codon[b+1] == dna.A && codon[b+2] == dna.A {
-			stop = true
-		} else if codon[b] == dna.T && codon[b+1] == dna.A && codon[b+2] == dna.G {
-			stop = true
-		} else if codon[b] == dna.T && codon[b+1] == dna.G && codon[b+2] == dna.A {
-			stop = true
-		} else {
-			stop = false
-		}
+	if codon[0] == dna.T && codon[1] == dna.A && codon[2] == dna.A {
+		return true
+	} else if codon[0] == dna.T && codon[1] == dna.A && codon[2] == dna.G {
+		return true
+	} else if codon[0] == dna.T && codon[1] == dna.G && codon[2] == dna.A {
+		return true
+	} else {
+		return false
 	}
-	return stop
 }
 
 //make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
