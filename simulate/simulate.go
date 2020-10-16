@@ -146,10 +146,12 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
+	var basesProcessed int
 
 	seq := copySeq(inputSeq)
 	gtfRecord := gtf.Read(gtfFilename)
 
+	//p will be inaccurate if in a coding sequence. basesProcessed variable will reflect how many bases have gone through codon simulation.
 	for p := 0; p < len(seq); p++ {
 		overlapCDS, firstExon := getOverlapCDS(gtfRecord, p)
 		if overlapCDS == nil {
@@ -225,7 +227,8 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 						}
 						newSequence = append(newSequence, originalCodons[i].Seq[j])
 						//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
-						//TODO: p doesn't reflect actual position within coding sequence
+						basesProcessed++
+						//DEBUG:fmt.Printf("basesProcessed: %v\n", basesProcessed)
 					}
 
 				}
