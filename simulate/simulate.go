@@ -155,11 +155,13 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 		if overlapCDS == nil {
 			newBase = mutateBase(seq[p], branchLength)
 			newSequence = append(newSequence, newBase)
+			//DEBUG:fmt.Printf("newSequence to position %v: %s\n", p+1, dna.BasesToString(newSequence))
 		} else {
 			if (overlapCDS.End-overlapCDS.Start+1)%3 != 0 {
 				log.Fatal("sequence length must be divisible by three")
 			} else {
 				codonNum := (overlapCDS.End - overlapCDS.Start + 1) / 3
+				//DEBUG:fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
 
 				for i := 0; i < codonNum; i++ {
 					originalCodons = dna.BasesToCodons(seq)
@@ -170,27 +172,27 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 
 						if i == 0 && firstExon == true { //first codon the first time through this loop
 							newBase = originalBase //cannot change start codon
-						} else if i == codonNum-1 && CheckStop(originalCodons[i].Seq[j:j+2]) == true { //TODO: not in CDS, make data struct.
-							r := rand.Float64()
-							if j == 0 { //first position is only ever a T
-								originalCodons[i].Seq[j] = dna.T
-							} else if j == 1 { //second position can either be an A or G
-								if r < 0.66 {
-									originalCodons[i].Seq[j] = dna.A
-								} else {
-									originalCodons[i].Seq[j] = dna.G
-								}
-							} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
-								if originalCodons[i].Seq[j-1] == dna.G {
-									originalCodons[i].Seq[j] = dna.A
-								} else {
-									if r < 0.5 {
-										originalCodons[i].Seq[j] = dna.A
-									} else {
-										originalCodons[i].Seq[j] = dna.G
-									}
-								}
-							}
+							//} else if i == codonNum-1 && CheckStop(originalCodons[i].Seq[j:j+2]) == true { //TODO: not in CDS, make data struct.
+							//	r := rand.Float64()
+							//	if j == 0 { //first position is only ever a T
+							//		originalCodons[i].Seq[j] = dna.T
+							//	} else if j == 1 { //second position can either be an A or G
+							//		if r < 0.66 {
+							//			originalCodons[i].Seq[j] = dna.A
+							//		} else {
+							//			originalCodons[i].Seq[j] = dna.G
+							//		}
+							//	} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
+							//		if originalCodons[i].Seq[j-1] == dna.G {
+							//			originalCodons[i].Seq[j] = dna.A
+							//		} else {
+							//			if r < 0.5 {
+							//				originalCodons[i].Seq[j] = dna.A
+							//			} else {
+							//				originalCodons[i].Seq[j] = dna.G
+							//			}
+							//		}
+							//	}
 						} else {
 							newBase = mutateBase(originalBase, branchLength)
 
@@ -222,8 +224,12 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 							}
 						}
 						newSequence = append(newSequence, originalCodons[i].Seq[j])
+						//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
+						//TODO: p doesn't reflect actual position within coding sequence
 					}
+
 				}
+				p += 2 + (3 * (codonNum - 1)) //prevents looping through already processed bases of the codon which are handled within j loop
 			}
 		}
 	}
