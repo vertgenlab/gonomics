@@ -8,6 +8,15 @@ import (
 	"math/rand"
 )
 
+func IntSliceContains(a []int, b) bool {
+	for i := 0; i < len(a); i++ {
+		if a[i] == b {
+			return true
+		}
+	}
+	return false
+}
+
 //RngSeed sets the rand seed global variable using the randSeed and setSeed arguments
 func RngSeed(randSeed bool, setSeed int64) {
 	if randSeed && setSeed != -1 {

@@ -12,6 +12,7 @@ import (
 
 //To access debug prints, set verbose to 1 and then compile.
 const verbose int = 1
+const bins int = 100000
 
 type Theta struct {
 	alpha       []float64
@@ -57,7 +58,7 @@ func BayesRatio(old Theta, thetaPrime Theta) float64 {
 }
 
 //GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of parameters based on the state of the current parameter set t. 
-func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta {
+func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][][]float64) Theta {
 	//sample from uninformative gamma
 	var alphaPrime []float64
 	//var p float64 = 0.0
@@ -76,7 +77,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta 
 	}
 	//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
 	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
-	likelihood = AFSLikelihood(data, alphaPrime, binomMap)
+	likelihood = AFSLikelihood(data, alphaPrime, binomCache)
 	if verbose > 0 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
 	}
@@ -84,7 +85,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomMap [][]float64) Theta 
 }
 
 //InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
-func InitializeTheta(m float64, s float64, data AFS, binomMap [][]float64) Theta {
+func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64) Theta {
 	k := len(data.sites)
 	answer := Theta{mu: m, sigma: s}
 	//var p float64 = 0.0
@@ -98,7 +99,7 @@ func InitializeTheta(m float64, s float64, data AFS, binomMap [][]float64) Theta
 	//answer.probability = p * numbers.UninformativeGamma(s) * numbers.NormalDist(m, m, s)
 	//answer.probability = numbers.MultiplyLog(p,  math.Log(numbers.UninformativeGamma(s)))
 	//answer.probability = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(m, m, s)))
-	answer.likelihood = AFSLikelihood(data, answer.alpha, binomMap)
+	answer.likelihood = AFSLikelihood(data, answer.alpha, binomCache)
 	return answer
 }
 
@@ -122,13 +123,28 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 
 	maxN := findMaxN(data)
-	binomMap := make([][]float64, maxN+1)
+	allN := findAllN(data)
+	alleleFrequencyCache = cacheIndexToAlleleFrequencyCache(bins)
+	nkpCache := make([][][]float64, maxN+1)
+	var coefficient float64
+
+	for n := 0; n < len(allN); n++ {
+		nkpCache[allN[n]] = make([][]float64, allN[n])
+		for k := 0; k < len(allN[n]); k++ {
+			coefficient = numbers.BinomCoefficient(n, k)
+			nkpCache[allN[n]][k] = make([]float64, bins+1)
+			for p := 0; p < len(bins); p++ {
+				nkpCache[n][k][p] = numbers.BinomialDistKnownCoefficient(n, k, alleleFrequencyCache[p], coefficient)
+			}
+		}
+	}
+
 	var currAccept bool
 	if verbose > 0 {
 		log.Println("Hello, I'm about to initialize theta.")
 	}
 	//initialization to uninformative standard normal
-	t := InitializeTheta(muZero, sigmaZero, data, binomMap)
+	t := InitializeTheta(muZero, sigmaZero, data, nkpCache)
 	if verbose > 0 {
 		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
 	}
@@ -146,6 +162,16 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 }
 
+func findAllN(data AFS) []int {
+	var answer []int = make([]int, 0)
+	for i := 0; i < len(data.sites); i++ {
+		if !common.IntSliceContains(data.sites[i].n) {
+			answer = append(answer, data.sites[i].n)
+		}
+	}
+	return answer
+}
+
 //findMaxN is a helper function that aids in the generation of binomMap. In order to determine the proper length of the binomMap, we need to figure out which variant has the largest value of N.
 func findMaxN(data AFS) int {
 	var answer int = 0
@@ -154,3 +180,16 @@ func findMaxN(data AFS) int {
 	}
 	return answer
 }
+
+func cacheIndexToAlleleFrequencyCache(bins int) []float64 {
+	var answer []float64 = make([]float64, bins + 1)
+	//this is done with linear interpolation, as index zero corresponds to an allele frequency of the LeftBound and the index at len[n][k], the number of values p, is the rightBound allele frequency. y = mx + b. First we find m and b.
+	//b is simply the LeftBound.
+	m := (LeftBound - RightBound) / (bins + 1)
+	for i := 0; i < len(bins+1); i++ {
+		answer[i] = float64(i)*m + LeftBound
+	}
+	return answer
+}
+
+

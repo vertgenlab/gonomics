@@ -45,6 +45,7 @@ func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIte
 		n := n * 10
 		curr := LogIntegrate(f, a, b, n)
 		if (prev-curr)/curr < relativeError {
+			//DEBUG: log.Printf("In LogIntegrateIterative: i=%v.", i)
 			return curr
 		}
 		prev = curr
