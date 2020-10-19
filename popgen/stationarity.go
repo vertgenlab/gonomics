@@ -111,24 +111,25 @@ func AFSSampleClosure(n int, k int, alpha float64, binomCache [][][]float64) fun
 }
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
-func AFSSampleDensity(n int, k int, alpha float64, binomCache [][][]float64) float64 {
-	f := AFSSampleClosure(n, k, alpha, binomCache)
-	//DEBUG prints
-	//fmt.Printf("f(0.1)=%e\n", f(0.1))
-	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
-	//fmt.Printf("N: %v. K: %v. Alpha: %f.\n", n, k, alpha)
-	//n choose k * Definiteintegral(p(1-p secrition)stationaritydensity)
-	return numbers.LogIntegrateIterative(f, 0.000001, 0.9999999, 20, 10e-8)
+func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64) float64 {
+	//first evaluate integral with 1000 bins and 10000 bins and check the error.
+	thousandBins := LogIntegrateStationarityCache(alpha, n, k, 100, alleleFrequencyCache, nkpCache)
+	tenThousandBins := LogIntegrateStationarityCache(alpha, n, k, 10, alleleFrequencyCache, nkpCache)
+
+	if (thousandBins - tenThousandBins)/tenThousandBins < 1e-8 {
+		return tenThousandBins
+	}
+	return LogIntegrateStationarityCache(alpha, n, k, 1, alleleFrequencyCache, nkpCache)
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
-func AlleleFrequencyProbability(i int, n int, alpha float64, binomCache [][][]float64) float64 {
+func AlleleFrequencyProbability(i int, n int, alpha float64, nkpCache [][][]float64) float64 {
 	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
 	//check if n has already been seen
 	for j := 1; j < n-1; j++ {
-		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomCache))
+		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, nkpCache))
 	}
-	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, binomCache), denominator)
+	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, nkpCache), denominator)
 }
 
 func AlleleFrequencyProbabilityFast(i int, n int, alpha float64, binomCache [][][]float64) float64 {
