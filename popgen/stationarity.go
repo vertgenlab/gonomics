@@ -102,16 +102,17 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
+/*
 //AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
-func AFSSampleClosure(n int, k int, alpha float64, binomCache [][][]float64) func(float64) float64 {
+func AFSSampleClosure(n int, k int, alpha float64, nkpCache [][][]float64) func(float64) float64 {
 	return func(p float64) float64 {
 		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
 		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), binomCache[n][k][p])
 	}
-}
+}*/
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
-func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64) float64 {
+func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64, alleleFrequencyCache []float64) float64 {
 	//first evaluate integral with 1000 bins and 10000 bins and check the error.
 	thousandBins := LogIntegrateStationarityCache(alpha, n, k, 100, alleleFrequencyCache, nkpCache)
 	tenThousandBins := LogIntegrateStationarityCache(alpha, n, k, 10, alleleFrequencyCache, nkpCache)
@@ -123,24 +124,20 @@ func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64) float
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
-func AlleleFrequencyProbability(i int, n int, alpha float64, nkpCache [][][]float64) float64 {
+func AlleleFrequencyProbability(i int, n int, alpha float64, nkpCache [][][]float64, alleleFrequencyCache []float64) float64 {
 	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
 	//check if n has already been seen
 	for j := 1; j < n-1; j++ {
-		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, nkpCache))
+		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, nkpCache, alleleFrequencyCache))
 	}
-	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, nkpCache), denominator)
-}
-
-func AlleleFrequencyProbabilityFast(i int, n int, alpha float64, binomCache [][][]float64) float64 {
-	
+	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, nkpCache, alleleFrequencyCache), denominator)
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
-func AFSLikelihood(afs AFS, alpha []float64, binomCache [][][]float64) float64 {
+func AFSLikelihood(afs AFS, alpha []float64, nkpCache [][][]float64, alleleFrequencyCache []float64) float64 {
 	var answer float64 = 0.0
 	for j := 1; j < len(afs.sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomCache))
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], nkpCache, alleleFrequencyCache))
 	}
 	return answer
 }
