@@ -254,20 +254,35 @@ func getOverlapCDS(gtf map[string]*gtf.Gene, pos int) (cds *gtf.CDS, start bool)
 	return nil, false
 }
 
-//func getOverlapStop(gtf map[string]*gtf.Gene, pos int) (cds *gtf., start bool) {
-//	for _, gene := range gtf {
-//		for _, transcript := range gene.Transcripts {
-//			for exonNum, exon := range transcript.Exons {
-//				if exon.Cds != nil {
-//					if exon.Cds.Start-1 <= pos && pos <= exon.Cds.End-1 {
-//						return exon.Cds, exonNum == 0
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return nil, false
-//}
+func getOverlap5UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.FiveUTR, start bool) {
+	for _, gene := range gtf {
+		for _, transcript := range gene.Transcripts {
+			for exonNum, exon := range transcript.Exons {
+				if exon.FiveUtr != nil {
+					if exon.FiveUtr.Start-1 <= pos && pos <= exon.FiveUtr.End-1 {
+						return exon.FiveUtr, exonNum == 0
+					}
+				}
+			}
+		}
+	}
+	return nil, false
+}
+
+func getOverlap3UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.ThreeUTR, start bool) {
+	for _, gene := range gtf {
+		for _, transcript := range gene.Transcripts {
+			for exonNum, exon := range transcript.Exons {
+				if exon.ThreeUtr != nil {
+					if exon.ThreeUtr.Start-1 <= pos && pos <= exon.ThreeUtr.End-1 {
+						return exon.ThreeUtr, exonNum == 0
+					}
+				}
+			}
+		}
+	}
+	return nil, false
+}
 
 //checkCDS determines whether any given base pair in is a coding sequence based on gtf format
 func CheckCDS(cds *gtf.CDS, position int) bool {
