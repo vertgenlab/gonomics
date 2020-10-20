@@ -29,7 +29,6 @@ func Read(filename string) []*GenePred {
 
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
-	//reader := bufio.NewReader(file)
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		current := processGenePredLine(line)
@@ -59,6 +58,7 @@ func processGenePredLine(line string) *GenePred {
 	exonNumber := common.StringToInt(words[7])
 	current.ExonStarts = StringToIntSlice(words[8])
 	current.ExonEnds = StringToIntSlice(words[9])
+	current.ExonFrames = CalcExonFrame(current)
 	current.Score = 0
 
 	if exonNumber != len(current.ExonStarts) {
@@ -82,25 +82,34 @@ func StringToIntSlice(text string) []int {
 	return answer
 }
 
-func CalcExonFrame(gene *GenePred) []uint8 {
+func CalcExonFrame(gene GenePred) []uint8 {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds
 	cdsStart := gene.CdsStart
-	cdsEnd := gene.CdsEnd
-	var length int
-	var nextExonFrame
+	var length uint8
+	var nextExonLength uint8
+	var nextExonFrame uint8
 	var exonFrames []uint8
 	exonFrames[0] = 0
 
 	for i := 0; i < len(exonEnds); i++ {
 		if i == 0 {
-			length = exonEnds[0] - cdsStart
+			length = uint8(exonEnds[0] - cdsStart)
 			exonTwoFrame := length % 3
-			exonFrames = append(exonFrames, uint8(exonTwoFrame))
+			if exonTwoFrame > 2 {
+				log.Fatal("frame is offset by more than 2 positions")
+			}
+			exonFrames = append(exonFrames, exonTwoFrame)
+			//DEBUG: fmt.Print(exonFrames)
 		} else {
-			nextExonFrame := uint8(exonEnds[i] - exonStarts[i]) + exonFrames[i-1]
-
+			nextExonLength = uint8(exonEnds[i]-exonStarts[i]) + exonFrames[i]
+			nextExonFrame = nextExonLength % 3
+			if nextExonFrame > 2 {
+				log.Fatal("frame is offset by more than 2 positions")
+			}
+			exonFrames = append(exonFrames, nextExonFrame)
+			//DEBUG: fmt.Print(exonFrames)
 		}
 	}
+	return exonFrames
 }
-
