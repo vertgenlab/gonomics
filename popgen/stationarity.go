@@ -90,6 +90,12 @@ func AFSToFrequency(a AFS) []float64 {
 	return answer
 }
 
+//DetectionProbability returns the probability of detecting an allele at a frequency defined as the 'index' of the alleleFrequencyCache for n individuals in log space.
+func DetectionProbability(freqIndex int, n int, nkpCache [][][]float64) float64 {
+	var pNotDetected float64 = numbers.AddLog(nkpCache[n][0][freqIndex], nkpCache[n][n][freqIndex])
+	return numbers.SubtractLog(0, pNotDetected)
+}
+
 //AFSStationarity returns the function value from a stationarity distribution with selection parameter alpha from a particular input allele frequency p.
 func AFSStationarity(p float64, alpha float64) float64 {
 	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
@@ -101,15 +107,6 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 		return AFSStationarity(p, alpha)
 	}
 }
-
-/*
-//AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
-func AFSSampleClosure(n int, k int, alpha float64, nkpCache [][][]float64) func(float64) float64 {
-	return func(p float64) float64 {
-		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), binomCache[n][k][p])
-	}
-}*/
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
 func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64, alleleFrequencyCache []float64) float64 {

@@ -132,12 +132,13 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	nkpCache := make([][][]float64, maxN+1)
 	var coefficient float64
 
-	for n := 0; n < len(allN); n++ {
+	var n, k, p int
+	for n = 0; n < len(allN); n++ {
 		nkpCache[allN[n]] = make([][]float64, allN[n])
-		for k := 1; k < allN[n]; k++ {
+		for k = 1; k < allN[n]; k++ {
 			coefficient = numbers.BinomCoefficientLog(allN[n], k)
 			nkpCache[allN[n]][k] = make([]float64, bins+1)
-			for p := 0; p < bins+1; p++ {
+			for p = 0; p < bins+1; p++ {
 				nkpCache[allN[n]][k][p] = numbers.BinomialDistKnownCoefficient(allN[n], k, alleleFrequencyCache[p], coefficient)
 			}
 		}
