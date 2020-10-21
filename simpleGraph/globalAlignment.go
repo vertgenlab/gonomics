@@ -1,8 +1,11 @@
 package simpleGraph
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
@@ -60,4 +63,21 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 	}
 	reverseCigarPointer(route)
 	return m[len(alpha)-1][len(beta)-1], route
+}
+
+// FaSeqToNode is a general function used create a new node based on a target fasta, query fasta and a cigar operation.
+// In addition, given two indices, it will update start/end for the subset of bases used to create the new Node.
+func FaSeqToNode(target *fasta.Fasta, query *fasta.Fasta, tStart int, qStart int, cigar align.Cigar, index int) (*Node, int, int) {
+	switch cigar.Op {
+	case 0:
+		curr := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart+int(cigar.RunLength), query.Name, qStart, qStart+int(cigar.RunLength)), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
+		return &curr, tStart + int(cigar.RunLength), qStart + int(cigar.RunLength)
+	case 1:
+		ins := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart, query.Name, qStart, qStart+int(cigar.RunLength)), Seq: query.Seq[qStart : qStart+int(cigar.RunLength)]}
+		return &ins, tStart, qStart + int(cigar.RunLength)
+	case 2:
+		del := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart+int(cigar.RunLength), query.Name, qStart, qStart), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
+		return &del, tStart + int(cigar.RunLength), qStart
+	}
+	return nil, 0, 0
 }
