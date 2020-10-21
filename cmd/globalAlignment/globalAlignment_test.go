@@ -34,7 +34,7 @@ func TestCigarToGraphMatchManual(t *testing.T) {
 	compareScore = seqCounter + edgeCounter
 
 	if compareScore != 0 {
-		t.Errorf("'Graph' was not equivalent to 'manual'. Expect counter value to be zero. Use location of non-zero output to determine the locatino of the issue.  compareSeq() counter was %v, compareEdge() counter was %v, giving a total score of %v", seqCounter, edgeCounter, compareScore)
+		t.Errorf("'Graph' was not equivalent to 'manual'. Expect counter value to be zero. Use location of non-zero output to determine the location of the issue.  compareSeq() counter was %v, compareEdge() counter was %v, giving a total score of %v", seqCounter, edgeCounter, compareScore)
 	}
 }
 
