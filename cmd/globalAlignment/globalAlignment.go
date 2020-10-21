@@ -57,7 +57,7 @@ func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *s
 	//TODO: Handle multi-entry fasta?
 
 	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence.
-	curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(target, query, 0, 0, aln[0], 0)
+	curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[0], 0)
 	simpleGraph.AddNode(answer, curr)
 	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes.
 	for i := 1; i < len(aln); i++ {
