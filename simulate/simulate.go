@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -163,7 +164,7 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 				log.Fatal("sequence length must be divisible by three")
 			} else {
 				codonNum := (overlapCDS.End - overlapCDS.Start + 1) / 3
-				//DEBUG:fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
+				fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
 
 				for i := 0; i < codonNum; i++ {
 					originalCodons = dna.BasesToCodons(seq)
@@ -228,9 +229,8 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 						newSequence = append(newSequence, originalCodons[i].Seq[j])
 						//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
 						basesProcessed++
-						//DEBUG:fmt.Printf("basesProcessed: %v\n", basesProcessed)
+						fmt.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
 					}
-
 				}
 				p += 2 + (3 * (codonNum - 1)) //prevents looping through already processed bases of the codon which are handled within j loop
 			}

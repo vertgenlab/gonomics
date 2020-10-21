@@ -55,15 +55,16 @@ func processGenePredLine(line string) *GenePred {
 	current.TxEnd = common.StringToInt(words[4])
 	current.CdsStart = common.StringToInt(words[5])
 	current.CdsEnd = common.StringToInt(words[6])
-	exonNumber := common.StringToInt(words[7])
-	current.ExonStarts = StringToIntSlice(words[8])
-	current.ExonEnds = StringToIntSlice(words[9])
+	//exonNumber := len(current.ExonStarts)
+	current.ExonStarts = StringToIntSlice(words[7])
+	current.ExonEnds = StringToIntSlice(words[8])
 	current.ExonFrames = CalcExonFrame(current)
 	current.Score = 0
 
-	if exonNumber != len(current.ExonStarts) {
-		log.Fatal("exon number does not equal number of start coordinates")
-	}
+	//if exonNumber != len(current.ExonStarts) {
+	//	log.Print(exonNumber)
+	//	log.Fatal("exon number does not equal number of start coordinates")
+	//}
 
 	if len(current.ExonStarts) != len(current.ExonEnds) {
 		log.Fatal("there are not the same number of exon start positions as exon end positions")
@@ -90,7 +91,7 @@ func CalcExonFrame(gene GenePred) []uint8 {
 	var nextExonLength uint8
 	var nextExonFrame uint8
 	var exonFrames []uint8
-	exonFrames[0] = 0
+	exonFrames = append(exonFrames, 0)
 
 	//for first exon
 	length = uint8(exonEnds[0] - cdsStart)
