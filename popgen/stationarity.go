@@ -126,9 +126,9 @@ func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64, allel
 		return TwentyThousandBins
 	}
 	TwoHundredThousandBins := LogIntegrateStationarityCache(alpha, n, k, 1, alleleFrequencyCache, nkpCache)
-	currError = math.Abs(oneHundredThousandBins - tenThousandBins) / oneHundredThousandBins
+	currError = math.Abs(TwoHundredThousandBins - TwentyThousandBins) / TwoHundredThousandBins
 	if currError < RelError {
-		return oneHundredThousandBins
+		return TwoHundredThousandBins
 	}
 	log.Fatalf("AFSSampleDensity failed to converge. CurrError: %v.\n", currError)
 	return -1
