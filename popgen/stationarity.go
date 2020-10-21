@@ -6,9 +6,12 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
+	"log"
 	"strings"
 	//DEBUG"fmt"
 )
+
+const RelError float64 = 1e-8
 
 /*
 This file implements functions to construct a Hierarchical Bayesian model for inference of the selection parameter
@@ -111,13 +114,20 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
 func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64, alleleFrequencyCache []float64) float64 {
 	//first evaluate integral with 1000 bins and 10000 bins and check the error.
+	var currError float64
 	thousandBins := LogIntegrateStationarityCache(alpha, n, k, 100, alleleFrequencyCache, nkpCache)
 	tenThousandBins := LogIntegrateStationarityCache(alpha, n, k, 10, alleleFrequencyCache, nkpCache)
 
-	if (thousandBins - tenThousandBins)/tenThousandBins < 1e-8 {
+	if math.Abs(thousandBins - tenThousandBins) / tenThousandBins < RelError {
 		return tenThousandBins
 	}
-	return LogIntegrateStationarityCache(alpha, n, k, 1, alleleFrequencyCache, nkpCache)
+	oneHundredThousandBins := LogIntegrateStationarityCache(alpha, n, k, 1, alleleFrequencyCache, nkpCache)
+	currError = math.Abs(oneHundredThousandBins - tenThousandBins) / oneHundredThousandBins
+	if currError < RelError {
+		return oneHundredThousandBins
+	}
+	log.Fatalf("AFSSampleDensity failed to converge. CurrError: %v.\n", currError)
+	return -1
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.

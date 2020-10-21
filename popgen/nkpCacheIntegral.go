@@ -8,7 +8,7 @@ import (
 //LogIntegrateStationarityCache is a specialized numerical integration function for logspace integrals over the stationarity distribution, used for MCMC.
 func LogIntegrateStationarityCache(alpha float64, n int, k int, stepSize int, alleleFrequencyCache []float64, nkpCache [][][]float64) float64 {
 	var bins int = len(nkpCache[n][k])-1
-	var deltaX float64 = (stepSize * (RightBound - LeftBound)) / float64(bins)
+	var deltaX float64 = (float64(stepSize) * (RightBound - LeftBound)) / float64(bins)
 	var logDeltaX float64 = math.Log(deltaX)
 	var currLeftIndex int = 0
 	var currRightIndex int = stepSize

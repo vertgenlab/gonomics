@@ -8,7 +8,7 @@ import (
 
 //LogCanconvert returns true if the input logSpace number can be converted to a number in normal space without overflow or underflow.
 func LogCanConvert(x float64) bool {
-	return x < 709.782712893383973096 || x > -745.133219101941108420
+	 return x < 709.4 && x > -745.1
 }
 
 //AverageLog returns the average of a list of logSpace numbers
