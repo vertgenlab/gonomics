@@ -13,7 +13,7 @@ import (
 
 //To access debug prints, set verbose to 1 and then compile.
 const verbose int = 1
-const bins int = 100000
+const bins int = 200000
 const LeftBound float64 = 0.00001
 const RightBound float64 = 0.99999
 const RelErr float64 = 1e-8

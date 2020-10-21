@@ -115,13 +115,17 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 func AFSSampleDensity(n int, k int, alpha float64, nkpCache [][][]float64, alleleFrequencyCache []float64) float64 {
 	//first evaluate integral with 1000 bins and 10000 bins and check the error.
 	var currError float64
-	thousandBins := LogIntegrateStationarityCache(alpha, n, k, 100, alleleFrequencyCache, nkpCache)
-	tenThousandBins := LogIntegrateStationarityCache(alpha, n, k, 10, alleleFrequencyCache, nkpCache)
 
-	if math.Abs(thousandBins - tenThousandBins) / tenThousandBins < RelError {
-		return tenThousandBins
+	TwoHundredBins := LogIntegrateStationarityCache(alpha, n, k, 1000, alleleFrequencyCache, nkpCache)
+	TwoThousandBins := LogIntegrateStationarityCache(alpha, n, k, 100, alleleFrequencyCache, nkpCache)
+	if math.Abs(TwoHundredBins - TwoThousandBins) / TwoThousandBins < RelError {
+		return TwoThousandBins
 	}
-	oneHundredThousandBins := LogIntegrateStationarityCache(alpha, n, k, 1, alleleFrequencyCache, nkpCache)
+	TwentyThousandBins := LogIntegrateStationarityCache(alpha, n, k, 10, alleleFrequencyCache, nkpCache)
+	if math.Abs(TwoThousandBins - TwentyThousandBins) / TwentyThousandBins < RelError {
+		return TwentyThousandBins
+	}
+	TwoHundredThousandBins := LogIntegrateStationarityCache(alpha, n, k, 1, alleleFrequencyCache, nkpCache)
 	currError = math.Abs(oneHundredThousandBins - tenThousandBins) / oneHundredThousandBins
 	if currError < RelError {
 		return oneHundredThousandBins
