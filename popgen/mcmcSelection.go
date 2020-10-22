@@ -58,7 +58,7 @@ func BayesRatio(old Theta, thetaPrime Theta) float64 {
 	like := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
 	//prob := numbers.DivideLog(thetaPrime.probability, old.probability) 
 	//prob = 0 //trick for debug
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("Old log(like): %e, New log(like): %e, likeRatio: %f", old.likelihood, thetaPrime.likelihood, math.Exp(like))
 	}
 	return like
