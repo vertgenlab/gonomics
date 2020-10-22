@@ -37,16 +37,16 @@ func GenePredToString(g *GenePred) string {
 
 	if g.Id != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil {
 		if g.Strand == true {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
 		} else {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
 		}
 	}
 	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil {
 		if g.Strand == true {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
 		} else {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
 		}
 	}
 	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil && exonFrames != nil {
@@ -132,7 +132,7 @@ func processGenePredLine(line string) *GenePred {
 	current.CdsEnd = common.StringToInt(words[6])
 	current.ExonStarts = StringToIntSlice(words[7])
 	current.ExonEnds = StringToIntSlice(words[8])
-	current.ExonFrames = CalcExonFrame(current)
+	current.ExonFrames = CalcExonFrame(&current)
 	current.Score = 0
 	exonNumber := len(current.ExonStarts)
 
@@ -158,7 +158,7 @@ func StringToIntSlice(text string) []int {
 	return answer
 }
 
-func CalcExonFrame(gene GenePred) []uint8 {
+func CalcExonFrame(gene *GenePred) []uint8 {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds
 	cdsStart := gene.CdsStart
