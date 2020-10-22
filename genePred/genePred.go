@@ -1,8 +1,10 @@
 package genePred
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"strings"
 )
@@ -18,14 +20,87 @@ type GenePred struct {
 	CdsEnd     int
 	ExonStarts []int
 	ExonEnds   []int
-	ExonFrames []uint8 //i made this a slice, it should hold the frame for each exon?
+	ExonFrames []uint8
 	Score      int
+}
+
+func GenePredToString(g *GenePred) string {
+	var answer string
+	txStart := &g.TxStart
+	txEnd := &g.TxEnd
+	cdsStart := &g.CdsStart
+	cdsEnd := &g.CdsEnd
+	exonStarts := &g.ExonStarts
+	exonEnds := &g.ExonEnds
+	exonFrames := &g.ExonFrames
+	score := &g.Score
+
+	if g.Id != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil {
+		if g.Strand == true {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+		} else {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+		}
+	}
+	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil {
+		if g.Strand == true {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+		} else {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds)
+		}
+	}
+	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil && exonFrames != nil {
+		if g.Strand == true {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames)
+		} else {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames)
+		}
+	}
+	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil && exonFrames != nil && score != nil {
+		if g.Strand == true {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+		} else {
+			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+		}
+	}
+	return answer
+}
+
+////WriteGenePred writes an input GenePred struct to an os.File with a specified number of GenePred fields.
+//func WriteGenePred(file *os.File, input *GenePred, fields int) {
+//	var err error
+//	_, err = fmt.Fprintf(file, "%s\n", GenePredToString(input, fields))
+//	common.ExitIfError(err)
+//}
+
+//WriteToFileHandle writes an input GenePred struct with a specified number of fields to an io.Writer
+func WriteToFileHandle(file io.Writer, records []*GenePred) {
+	for _, rec := range records { //take out if we need writeSliceToFileHandle
+		var err error
+		_, err = fmt.Fprintf(file, "%s\n", GenePredToString(rec))
+		common.ExitIfError(err)
+	}
+}
+
+////WriteSliceToFileHandle writes a slice of GenePred structs with a specified number of fields to an io.Writer
+//func WriteSliceToFileHandle(file io.Writer, records []*GenePred, fields int) {
+//	for _, rec := range records {
+//		WriteToFileHandle(file, rec, fields)
+//	}
+//}
+
+//Write writes a slice of GenePred structs with a specified number of fields to a specified filename.
+func Write(filename string, records []*GenePred) {
+	file := fileio.EasyCreate(filename)
+	defer file.Close()
+
+	WriteToFileHandle(file, records)
 }
 
 func Read(filename string) []*GenePred {
 	var line string
 	var answer []*GenePred
-	var doneReading bool = false
+	var doneReading = false
 
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -75,7 +150,7 @@ func processGenePredLine(line string) *GenePred {
 
 func StringToIntSlice(text string) []int {
 	values := strings.Split(text, ",")
-	var answer []int = make([]int, len(values))
+	var answer = make([]int, len(values))
 
 	for i := 0; i < len(values); i++ {
 		answer[i] = common.StringToInt(values[i])

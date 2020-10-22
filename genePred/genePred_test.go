@@ -31,3 +31,10 @@ func TestRead(t *testing.T) {
 		}
 	}
 }
+
+func TestWrite(t *testing.T) {
+	for _, test := range ReadTests {
+		Write("testWriting.gpd", test.data)
+		//log.Print(written)
+	}
+}
