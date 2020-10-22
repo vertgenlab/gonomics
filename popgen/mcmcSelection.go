@@ -85,7 +85,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, nkpCache [][][]float64, alle
 	//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
 	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
 	likelihood = AFSLikelihood(data, alphaPrime, nkpCache, alleleFrequencyCache)
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
 	}
 	return Theta{alphaPrime, muPrime, sigmaPrime, likelihood}
