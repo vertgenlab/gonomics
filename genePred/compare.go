@@ -7,7 +7,6 @@ import (
 
 func AllAreEqual(a []*GenePred, b []*GenePred) bool {
 	if len(a) != len(b) {
-		log.Print("checking length of files")
 		return false
 	}
 	for i := 0; i < len(a); i++ {
@@ -20,42 +19,42 @@ func AllAreEqual(a []*GenePred, b []*GenePred) bool {
 
 func Equal(a *GenePred, b *GenePred) bool {
 	if strings.Compare(a.Id, b.Id) != 0 {
-		return false
 		log.Print("1")
+		return false
 	}
 	if strings.Compare(a.Chrom, b.Chrom) != 0 {
-		return false
 		log.Print("2")
+		return false
 	}
 	if a.Strand != b.Strand {
-		return false
 		log.Print("3")
+		return false
 	}
 	if a.TxStart != b.TxStart {
-		return false
 		log.Print("4")
+		return false
 	}
 	if a.TxEnd != b.TxEnd {
-		return false
 		log.Print("5")
+		return false
 	}
 	if a.CdsStart != b.CdsStart {
-		return false
 		log.Print("6")
+		return false
 	}
 	if a.CdsEnd != b.CdsEnd {
-		return false
 		log.Print("7")
+		return false
 	}
 	//exon ends must have the same number of values as exon starts
 	for i := 0; i < len(a.ExonStarts); i++ {
 		if a.ExonStarts[i] != b.ExonStarts[i] {
-			return false
 			log.Print("8")
+			return false
 		}
 		if b.ExonEnds[i] != b.ExonEnds[i] {
-			return false
 			log.Print("9")
+			return false
 		}
 	}
 	return true
