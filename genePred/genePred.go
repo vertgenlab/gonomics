@@ -20,7 +20,7 @@ type GenePred struct {
 	CdsEnd     int
 	ExonStarts []int
 	ExonEnds   []int
-	ExonFrames []uint8
+	ExonFrames []int
 	Score      int
 }
 
@@ -78,6 +78,7 @@ func WriteToFileHandle(file io.Writer, records []*GenePred) {
 	for _, rec := range records { //take out if we need writeSliceToFileHandle
 		var err error
 		_, err = fmt.Fprintf(file, "%s\n", GenePredToString(rec))
+		//TODO: fmt.Fprintf is slow
 		common.ExitIfError(err)
 	}
 }
@@ -119,7 +120,7 @@ func processGenePredLine(line string) *GenePred {
 	current.Id = words[0]
 	current.Symbol = words[0]
 	current.Chrom = words[1]
-	if words[2] == "+" {
+	if words[2] == "+" { // || == "."
 		current.Strand = true
 	} else if words[2] == "-" {
 		current.Strand = false
@@ -150,7 +151,7 @@ func processGenePredLine(line string) *GenePred {
 
 func StringToIntSlice(text string) []int {
 	values := strings.Split(text, ",")
-	var answer = make([]int, len(values))
+	var answer = make([]int, len(values)) //add -1 for ucsc genePreds
 
 	for i := 0; i < len(values); i++ {
 		answer[i] = common.StringToInt(values[i])
@@ -158,18 +159,18 @@ func StringToIntSlice(text string) []int {
 	return answer
 }
 
-func CalcExonFrame(gene *GenePred) []uint8 {
+func CalcExonFrame(gene *GenePred) []int {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds
 	cdsStart := gene.CdsStart
-	var length uint8
-	var nextExonLength uint8
-	var nextExonFrame uint8
-	var exonFrames []uint8
+	var length int
+	var nextExonLength int
+	var nextExonFrame int
+	var exonFrames []int
 	exonFrames = append(exonFrames, 0)
 
 	//for first exon
-	length = uint8(exonEnds[0] - cdsStart)
+	length = exonEnds[0] - cdsStart
 	exonTwoFrame := length % 3
 	if exonTwoFrame > 2 {
 		log.Fatal("frame is offset by more than 2 positions")
@@ -178,8 +179,8 @@ func CalcExonFrame(gene *GenePred) []uint8 {
 	//DEBUG: fmt.Print(exonFrames)
 
 	//for all other exons, which depend on the frame being calculated ahead of this step
-	for i := 1; i < len(exonEnds); i++ {
-		nextExonLength = uint8(exonEnds[i]-exonStarts[i]) + exonFrames[i]
+	for i := 1; i < len(exonEnds)-1; i++ {
+		nextExonLength = exonEnds[i] - exonStarts[i] + exonFrames[i]
 		nextExonFrame = nextExonLength % 3
 		if nextExonFrame > 2 {
 			log.Fatal("frame is offset by more than 2 positions")
