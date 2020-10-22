@@ -36,8 +36,11 @@ func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 	pAccept = numbers.MultiplyLog(bayes, hastings)
 	decision = pAccept > yRand
 	//pAccept = numbers.MinFloat64(1.0, BayesRatio(old, thetaPrime)*HastingsRatio(old, thetaPrime))
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("bayesRatio: %e, hastingsRatio: %e, log(likelihoodRatio): %e, log(rand): %e, decision: %t\n", bayes, hastings, pAccept, yRand, decision)
+	}
+	if verbose == 1 {
+		log.Printf("%e\t%e\t%e\t%e\t%e\t%e\t%t\n", old.mu, thetaPrime.mu, old.likelihood, thetaPrime.likelihood, pAccept, yRand, decision)
 	}
 	return decision
 }
@@ -110,7 +113,7 @@ func InitializeTheta(m float64, s float64, data AFS, nkpCache [][][]float64, all
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
 func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, outFile string) {
-	if verbose > 0 {
+	if verbose > 1 {
 		f, err := os.Create("testProfile.prof")
 		if err != nil {
 			log.Fatal(err)
@@ -122,7 +125,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Println("Hello, I'm about to calculate MCMC.")
 	}
 
@@ -145,13 +148,16 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 
 	var currAccept bool
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Println("Hello, I'm about to initialize theta.")
 	}
 	//initialization to uninformative standard normal
 	t := InitializeTheta(muZero, sigmaZero, data, nkpCache, alleleFrequencyCache)
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
+	}
+	if verbose == 1 {
+		log.Println("OldMu\tNewMu\tOldLikelihood\tNewLikelihood\tpAccept\tlogRand\tDecision\n")
 	}
 	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
 	
