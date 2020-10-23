@@ -98,7 +98,7 @@ func compareEdges(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGrap
 	prevNodeMatchCounter := 0
 	for i := 1; i < len(manual.Nodes); i++ {
 		for j := 0; j < len(manual.Nodes[i].Prev); j++ {
-			if len(manual.Nodes[i].Prev[j].Dest.Seq) == len(graph.Nodes[i].Prev[j].Dest.Seq) {
+			if dna.CompareSeqsCaseSensitive(manual.Nodes[i].Prev[j].Dest.Seq, graph.Nodes[i].Prev[j].Dest.Seq) == 0 {
 				prevNodeMatchCounter += 0
 			} else {
 				prevNodeMatchCounter += 1
@@ -109,7 +109,7 @@ func compareEdges(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGrap
 	nextNodeMatchCounter := 0
 	for i := 0; i < len(manual.Nodes)-1; i++ {
 		for j := 0; j < len(manual.Nodes[i].Next); j++ {
-			if len(manual.Nodes[i].Next[j].Dest.Seq) == len(graph.Nodes[i].Next[j].Dest.Seq) {
+			if dna.CompareSeqsCaseSensitive(manual.Nodes[i].Next[j].Dest.Seq, graph.Nodes[i].Next[j].Dest.Seq) == 0 {
 				nextNodeMatchCounter += 0
 			} else {
 				nextNodeMatchCounter += 1

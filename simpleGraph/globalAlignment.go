@@ -79,6 +79,8 @@ func FaSeqToNode(target *fasta.Fasta, query *fasta.Fasta, tStart int, qStart int
 	case 2:
 		del := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart+int(cigar.RunLength), query.Name, qStart, qStart), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
 		return &del, tStart + int(cigar.RunLength), qStart
+	default:
+		log.Fatalf("Error: Did not recognize cigar op %d...\n", cigar.Op)
 	}
 	return nil, 0, 0
 }
