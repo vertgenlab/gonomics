@@ -13,7 +13,7 @@ type GenePred struct {
 	Id         string
 	Symbol     string
 	Chrom      string
-	Strand     bool
+	Strand     byte
 	TxStart    int
 	TxEnd      int
 	CdsStart   int
@@ -26,43 +26,15 @@ type GenePred struct {
 
 func GenePredToString(g *GenePred) string {
 	var answer string
-	txStart := &g.TxStart
-	txEnd := &g.TxEnd
-	cdsStart := &g.CdsStart
-	cdsEnd := &g.CdsEnd
-	exonStarts := &g.ExonStarts
-	exonEnds := &g.ExonEnds
-	exonFrames := &g.ExonFrames
-	score := &g.Score
 
-	if g.Id != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil {
-		if g.Strand == true {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
-		} else {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
-		}
+	if g.Strand == '+' {
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+	} else if g.Strand == '-' {
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+	} else if g.Strand == '.' {
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, ".", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
 	}
-	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil {
-		if g.Strand == true {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
-		} else {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g))
-		}
-	}
-	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil && exonFrames != nil {
-		if g.Strand == true {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames)
-		} else {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames)
-		}
-	}
-	if g.Id != "" && g.Symbol != "" && g.Chrom != "" && txStart != nil && txEnd != nil && cdsStart != nil && cdsEnd != nil && exonStarts != nil && exonEnds != nil && exonFrames != nil && score != nil {
-		if g.Strand == true {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
-		} else {
-			answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
-		}
-	}
+
 	return answer
 }
 
@@ -121,9 +93,11 @@ func processGenePredLine(line string) *GenePred {
 	current.Symbol = words[0]
 	current.Chrom = words[1]
 	if words[2] == "+" { // || == "."
-		current.Strand = true
+		current.Strand = '+'
 	} else if words[2] == "-" {
-		current.Strand = false
+		current.Strand = '-'
+	} else if words[2] == "." {
+		current.Strand = '.'
 	} else {
 		log.Fatal("no strand specified")
 	}
@@ -151,9 +125,9 @@ func processGenePredLine(line string) *GenePred {
 
 func StringToIntSlice(text string) []int {
 	values := strings.Split(text, ",")
-	var answer = make([]int, len(values)) //add -1 for ucsc genePreds
+	var answer = make([]int, len(values)-1)
 
-	for i := 0; i < len(values); i++ {
+	for i := 0; i < len(values)-1; i++ {
 		answer[i] = common.StringToInt(values[i])
 	}
 	return answer
