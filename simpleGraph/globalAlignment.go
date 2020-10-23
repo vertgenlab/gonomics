@@ -70,13 +70,13 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 // TODO: Add logic for correct node name annotation convention
 func FaSeqToNode(target *fasta.Fasta, query *fasta.Fasta, tStart int, qStart int, cigar align.Cigar, index int) (*Node, int, int) {
 	switch cigar.Op {
-	case 0:
+	case align.ColM:
 		curr := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart+int(cigar.RunLength), query.Name, qStart, qStart+int(cigar.RunLength)), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
 		return &curr, tStart + int(cigar.RunLength), qStart + int(cigar.RunLength)
-	case 1:
+	case align.ColI:
 		ins := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart, query.Name, qStart, qStart+int(cigar.RunLength)), Seq: query.Seq[qStart : qStart+int(cigar.RunLength)]}
 		return &ins, tStart, qStart + int(cigar.RunLength)
-	case 2:
+	case align.ColD:
 		del := Node{Id: uint32(index), Name: fmt.Sprintf("%s_%d_%d_%s_%d_%d", target.Name, tStart, tStart+int(cigar.RunLength), query.Name, qStart, qStart), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
 		return &del, tStart + int(cigar.RunLength), qStart
 	default:
