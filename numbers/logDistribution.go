@@ -8,8 +8,8 @@ import (
 //This is ideal for very small probabilities to avoid underflow.
 func BinomialDistLog(n int, k int, p float64) float64 {
 	coefficient := BinomCoefficientLog(n, k)
-	s := LogPowInt(p, k)
-	f := LogPowInt(1.0-p, n-k)
+	s := LogPow(p, float64(k))
+	f := LogPow(1.0-p, float64(n-k))
 	expression := MultiplyLog(s, f)
 	return MultiplyLog(coefficient, expression)
 }
@@ -23,8 +23,8 @@ func BinomialDistLogSlice(n int, k int, p float64, binomMap [][]float64) float64
 	if binomMap[n] == nil {
 		binomMap[n] = AddBinomMapEntry(n)
 	}
-	s := LogPowInt(p, k)
-	f := LogPowInt(1.0-p, n-k)
+	s := LogPow(p, float64(k))
+	f := LogPow(1.0-p, float64(n-k))
 	expression := MultiplyLog(s, f)
 	return MultiplyLog(expression, binomMap[n][k])
 }
