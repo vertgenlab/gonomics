@@ -102,6 +102,12 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
+func AfsSampleClosureNoCoefficient(n int, k int, alpha float64) func(float64) float64 {
+	return func(p float64) float64 {
+		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
+	}
+}
+
 //AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
 func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
 	return func(p float64) float64 {
@@ -111,8 +117,13 @@ func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(fl
 	}
 }
 
-//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
+	f := AfsSampleClosureNoCoefficient(n, k, alpha)
+	return numbers.MultiplyLog(binomMap[n][k], numbers.AdaptiveSimpsons(f, 0.000001, 0.9999999, 1e-8, 100))
+}
+
+//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
+func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	f := AFSSampleClosure(n, k, alpha, binomMap)
 	//DEBUG prints
 	//fmt.Printf("f(0.1)=%e\n", f(0.1))
