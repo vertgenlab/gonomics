@@ -142,8 +142,9 @@ func CalcExonFrame(gene *GenePred) []int {
 	var nextExonFrame int
 	var exonFrames []int
 	exonFrames = append(exonFrames, 0)
+	var answer int
 
-	for i := 0; i < len(exonEnds)-2; i++ { // - 2 compensates for UCSC format with ending comma and not calculating frame for what would be an exon after the last exon
+	for i := 0; i < len(exonEnds)-1; i++ { // - 1 compensates for UCSC format with ending comma
 		if i == 0 {
 			//for first exon
 			length = (exonEnds[0] - cdsStart) + 1
@@ -151,17 +152,30 @@ func CalcExonFrame(gene *GenePred) []int {
 			if exonTwoFrame > 2 {
 				log.Fatal("frame is offset by more than 2 positions")
 			}
-			exonFrames = append(exonFrames, exonTwoFrame)
-			fmt.Print(exonFrames)
+			if exonTwoFrame == 0 {
+				answer = exonTwoFrame
+				exonFrames = append(exonFrames, answer)
+			} else {
+				answer = 3 - exonTwoFrame
+				exonFrames = append(exonFrames, answer)
+			}
+			//DEBUG: log.Print(exonFrames)
+		} else {
+			//for all other exons, which depend on the frame being calculated ahead of this step
+			nextExonLength = exonEnds[i] - exonStarts[i] + exonFrames[i] + 1
+			nextExonFrame = nextExonLength % 3
+			if nextExonFrame == 0 {
+				answer = nextExonFrame
+				exonFrames = append(exonFrames, answer)
+			} else {
+				answer = 3 - nextExonFrame
+				exonFrames = append(exonFrames, answer)
+			}
+			if nextExonFrame > 2 {
+				log.Fatal("frame is offset by more than 2 positions")
+			}
+			//DEBUG: fmt.Print(exonFrames)
 		}
-		//for all other exons, which depend on the frame being calculated ahead of this step
-		nextExonLength = exonEnds[i] - exonStarts[i] + exonFrames[i] + 1
-		nextExonFrame = nextExonLength % 3
-		if nextExonFrame > 2 {
-			log.Fatal("frame is offset by more than 2 positions")
-		}
-		exonFrames = append(exonFrames, nextExonFrame)
-		//DEBUG: fmt.Print(exonFrames)
 	}
 	return exonFrames
 }

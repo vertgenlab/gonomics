@@ -1,7 +1,6 @@
 package genePred
 
 import (
-	"log"
 	"testing"
 )
 
@@ -39,9 +38,9 @@ func TestWrite(t *testing.T) {
 	}
 }
 
-func TestCalcExonFrame(t *testing.T) {
-	for _, test := range ReadTests {
-		answer := CalcExonFrame(test.data[0])
-		log.Print(answer)
-	}
-}
+//func TestCalcExonFrame(t *testing.T) {
+//	for _, test := range ReadTests {
+//		answer := CalcExonFrame(test.data[0])
+//		log.Print(answer)
+//	}
+//}
