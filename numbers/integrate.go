@@ -39,12 +39,14 @@ func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIte
 		log.Fatalf("relativeError for LogIntegrateIterative must be greater than 0.")
 	}
 	n := 1000
-	prev := LogIntegrate(f, a, b, n)
+	var prev, curr float64
+	prev = LogIntegrate(f, a, b, n)
 
 	for i := 0; i < maxIter; i++ {
 		n := n * 10
-		curr := LogIntegrate(f, a, b, n)
-		if (prev-curr)/curr < relativeError {
+		curr = LogIntegrate(f, a, b, n)
+		if math.Abs(prev-curr)/curr < relativeError {
+			//DEBUG: log.Printf("In LogIntegrateIterative: i=%v.", i)
 			return curr
 		}
 		prev = curr
@@ -111,4 +113,47 @@ func DefiniteIntegral(f func(float64) float64, start float64, end float64) float
 //slower than DefiniteIntegral, but more accurate for small values.
 func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 0, 1e-6, 30)
+}
+
+// adaptiveSimponsHelper is the recursive core function for AdaptiveSimpsons
+func adaptiveSimpsonsHelper(f func(float64) float64, a, b, midpoint, fa, fb, fMidpoint, wholeEstimate, errorThresh float64, maxDepth int) float64 {
+	var h, leftMidpoint, rightMidpoint, fLeftMidpoint, fRightMidpoint, leftEstimate, rightEstimate, delta float64
+	h = (b - a) / 2
+	leftMidpoint = (a + midpoint) / 2
+	rightMidpoint = (midpoint + b) / 2
+
+	if maxDepth < 0 {
+		log.Fatalf("Error in integration: exceeded maximum depth\n")
+	} else if errorThresh/2 == errorThresh {
+		log.Fatalf("Error in integration: the error threshold has gotten too small after many recursive calls\n")
+	} else if a == leftMidpoint {
+		log.Fatalf("Error in integration: the left side and midpoint have gotten too close to each other\n")
+	}
+
+	fLeftMidpoint = f(leftMidpoint)
+	fRightMidpoint = f(rightMidpoint)
+	leftEstimate = (h / 6) * (fa + 4*fLeftMidpoint + fMidpoint)
+	rightEstimate = (h / 6) * (fMidpoint + 4*fRightMidpoint + fb)
+	delta = leftEstimate + rightEstimate - wholeEstimate
+
+	// Lyness 1969 + Richardson extrapolation; see article
+	if math.Abs(delta) <= 15*errorThresh {
+		return leftEstimate + rightEstimate + delta/15
+	} else {
+		return adaptiveSimpsonsHelper(f, a, midpoint, leftMidpoint, fa, fMidpoint, fLeftMidpoint, leftEstimate, errorThresh/2, maxDepth-1) + adaptiveSimpsonsHelper(f, midpoint, b, rightMidpoint, fMidpoint, fb, fRightMidpoint, rightEstimate, errorThresh/2, maxDepth-1)
+	}
+}
+
+// AdaptiveSimpsons returns the integral from a to b of function f
+// The error in the calculation should be less than or equal to errorThreshold.  If this can not be
+// achieved within maxDepth number recursions, then the function aborts.
+func AdaptiveSimpsons(f func(float64) float64, a float64, b float64, errorThreshold float64, maxDepth int) float64 {
+	var midpoint, h, fa, fb, fMidpoint, s float64
+	h = b - a
+	midpoint = (a + b) / 2
+	fa = f(a)
+	fb = f(b)
+	fMidpoint = f(midpoint)
+	s = (h / 6) * (fa + 4*fMidpoint + fb)
+	return adaptiveSimpsonsHelper(f, a, b, midpoint, fa, fb, fMidpoint, s, errorThreshold, maxDepth)
 }
