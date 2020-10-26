@@ -119,7 +119,7 @@ func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(fl
 
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	f := AfsSampleClosureNoCoefficient(n, k, alpha)
-	return numbers.MultiplyLog(binomMap[n][k], numbers.AdaptiveSimpsons(f, 0.000001, 0.9999999, 1e-8, 100))
+	return numbers.MultiplyLog(binomMap[n][k], numbers.AdaptiveSimpsonsLog(f, 0.000001, 0.9999999, 1e-8, 100))
 }
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
