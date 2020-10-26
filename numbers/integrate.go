@@ -145,6 +145,8 @@ func adaptiveSimpsonsHelper(f func(float64) float64, a, b, midpoint, fa, fb, fMi
 }
 
 // AdaptiveSimpsons returns the integral from a to b of function f
+// The error in the calculation should be less than or equal to errorThreshold.  If this can not be
+// achieved within maxDepth number recursions, then the function aborts.
 func AdaptiveSimpsons(f func(float64) float64, a float64, b float64, errorThreshold float64, maxDepth int) float64 {
 	var midpoint, h, fa, fb, fMidpoint, s float64
 	h = b - a
