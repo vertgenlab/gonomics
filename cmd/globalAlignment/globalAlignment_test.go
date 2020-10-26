@@ -34,7 +34,7 @@ func TestCigarToGraphMatchManual(t *testing.T) {
 	compareScore = seqCounter + edgeCounter
 
 	if compareScore != 0 {
-		t.Errorf("'Graph' was not equivalent to 'manual'. Expect counter value to be zero. Use location of non-zero output to determine the locatino of the issue.  compareSeq() counter was %v, compareEdge() counter was %v, giving a total score of %v", seqCounter, edgeCounter, compareScore)
+		t.Errorf("'Graph' was not equivalent to 'manual'. Expect counter value to be zero. Use location of non-zero output to determine the location of the issue.  compareSeq() counter was %v, compareEdge() counter was %v, giving a total score of %v", seqCounter, edgeCounter, compareScore)
 	}
 }
 
@@ -98,7 +98,7 @@ func compareEdges(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGrap
 	prevNodeMatchCounter := 0
 	for i := 1; i < len(manual.Nodes); i++ {
 		for j := 0; j < len(manual.Nodes[i].Prev); j++ {
-			if manual.Nodes[i].Prev[j].Dest.Name == graph.Nodes[i].Prev[j].Dest.Name {
+			if dna.CompareSeqsCaseSensitive(manual.Nodes[i].Prev[j].Dest.Seq, graph.Nodes[i].Prev[j].Dest.Seq) == 0 {
 				prevNodeMatchCounter += 0
 			} else {
 				prevNodeMatchCounter += 1
@@ -109,7 +109,7 @@ func compareEdges(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGrap
 	nextNodeMatchCounter := 0
 	for i := 0; i < len(manual.Nodes)-1; i++ {
 		for j := 0; j < len(manual.Nodes[i].Next); j++ {
-			if manual.Nodes[i].Next[j].Dest.Name == graph.Nodes[i].Next[j].Dest.Name {
+			if dna.CompareSeqsCaseSensitive(manual.Nodes[i].Next[j].Dest.Seq, graph.Nodes[i].Next[j].Dest.Seq) == 0 {
 				nextNodeMatchCounter += 0
 			} else {
 				nextNodeMatchCounter += 1
