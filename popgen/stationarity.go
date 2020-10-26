@@ -95,6 +95,15 @@ func AFSStationarity(p float64, alpha float64) float64 {
 	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
 }
 
+func DetectionProbability(p float64, n int) float64 {
+	var pNotDetected float64 = numbers.AddLog(numbers.BinomialExpressionLog(n, 0, p), numbers.BinomialExpressionLog(n, n, p))
+	return numbers.SubtractLog(0, pNotDetected)
+}
+
+func AfsStationarityCorrected(p float64, alpha float64, n int) float64 {
+	return numbers.MultiplyLog(DetectionProbability(p, n), AFSStationarity(p, alpha))
+}
+
 //AFSStationarityClosure returns a func(float64)float64 for a stationarity distribution with a fixed alpha value for subsequent integration.
 func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
@@ -104,7 +113,7 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 
 func AfsSampleClosureNoCoefficient(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
+		return numbers.MultiplyLog(math.Log(AfsStationarityCorrected(p, alpha, n)), numbers.BinomialExpressionLog(n, k, p))
 	}
 }
 
