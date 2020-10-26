@@ -28,11 +28,11 @@ func GenePredToString(g *GenePred) string {
 	var answer string
 
 	if g.Strand == '+' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g), g.Score)
 	} else if g.Strand == '-' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g), g.Score)
 	} else if g.Strand == '.' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, ".", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, g.ExonFrames, g.Score)
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, ".", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g), g.Score)
 	}
 
 	return answer
@@ -112,7 +112,7 @@ func processGenePredLine(line string) *GenePred {
 	exonNumber := len(current.ExonStarts)
 
 	if exonNumber != len(current.ExonStarts) {
-		log.Print(exonNumber)
+		//DEBUG: log.Print(exonNumber)
 		log.Fatal("exon number does not equal number of start coordinates")
 	}
 
@@ -143,18 +143,19 @@ func CalcExonFrame(gene *GenePred) []int {
 	var exonFrames []int
 	exonFrames = append(exonFrames, 0)
 
-	//for first exon
-	length = exonEnds[0] - cdsStart
-	exonTwoFrame := length % 3
-	if exonTwoFrame > 2 {
-		log.Fatal("frame is offset by more than 2 positions")
-	}
-	exonFrames = append(exonFrames, exonTwoFrame)
-	//DEBUG: fmt.Print(exonFrames)
-
-	//for all other exons, which depend on the frame being calculated ahead of this step
-	for i := 1; i < len(exonEnds)-1; i++ {
-		nextExonLength = exonEnds[i] - exonStarts[i] + exonFrames[i]
+	for i := 0; i < len(exonEnds)-2; i++ { // - 2 compensates for UCSC format with ending comma and not calculating frame for what would be an exon after the last exon
+		if i == 0 {
+			//for first exon
+			length = (exonEnds[0] - cdsStart) + 1
+			exonTwoFrame := length % 3
+			if exonTwoFrame > 2 {
+				log.Fatal("frame is offset by more than 2 positions")
+			}
+			exonFrames = append(exonFrames, exonTwoFrame)
+			fmt.Print(exonFrames)
+		}
+		//for all other exons, which depend on the frame being calculated ahead of this step
+		nextExonLength = exonEnds[i] - exonStarts[i] + exonFrames[i] + 1
 		nextExonFrame = nextExonLength % 3
 		if nextExonFrame > 2 {
 			log.Fatal("frame is offset by more than 2 positions")

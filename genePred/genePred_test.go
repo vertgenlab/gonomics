@@ -1,6 +1,7 @@
 package genePred
 
 import (
+	"log"
 	"testing"
 )
 
@@ -35,5 +36,12 @@ func TestRead(t *testing.T) {
 func TestWrite(t *testing.T) {
 	for _, test := range ReadTests {
 		Write("testWriting.gpd", test.data)
+	}
+}
+
+func TestCalcExonFrame(t *testing.T) {
+	for _, test := range ReadTests {
+		answer := CalcExonFrame(test.data[0])
+		log.Print(answer)
 	}
 }
