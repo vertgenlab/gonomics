@@ -88,13 +88,13 @@ func DivideLog(x float64, y float64) float64 {
 //LogPow returns log(x**y) where log is the natural logarithm. Safe for large numbers. Support for positive real numbers with integer exponents.
 func LogPow(x float64, y float64) float64 {
 	if x < 0 {
-		log.Fatalf("LowPowInt does not handle negative x values. x=%e\n", x)
+		log.Fatalf("LogPow does not handle negative x values. x=%e\n", x)
 	}
 	return y * math.Log(x)
 }
 
 // PowLog returns log(exp(x)**y) where log is the natural logarithm.
-// This back the log-space answer to x**y where x is already in log-space
+// In other words, this function returns the log-space answer to x**y where x is already in log-space
 func PowLog(x float64, y float64) float64 {
 	return y * x
 }

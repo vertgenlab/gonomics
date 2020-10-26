@@ -22,9 +22,18 @@ func TestLogPow(t *testing.T) {
 	for _, test := range LogPowTests {
 		calculated := LogPow(test.x, test.y)
 		if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
-			t.Errorf("LogPowerInt for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
+			t.Errorf("LogPow for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
 		}
 	}
+}
+
+func TestPowLog(t *testing.T) {
+        for _, test := range LogPowTests {
+                calculated := PowLog(math.Log(test.x), test.y)
+                if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
+                        t.Errorf("PowLog for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
+                }
+        }
 }
 
 var MultiplyLogTests = []struct {
