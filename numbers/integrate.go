@@ -157,3 +157,59 @@ func AdaptiveSimpsons(f func(float64) float64, a float64, b float64, errorThresh
 	s = (h / 6) * (fa + 4*fMidpoint + fb)
 	return adaptiveSimpsonsHelper(f, a, b, midpoint, fa, fb, fMidpoint, s, errorThreshold, maxDepth)
 }
+
+// adaptiveSimponsLogHelper is the recursive core function for AdaptiveSimpsonsLog
+func adaptiveSimpsonsLogHelper(f func(float64) float64, a, b, midpoint, fa, fb, fMidpoint, wholeEstimate, errorThresh float64, maxDepth int) float64 {
+	const logFour float64 = 1.386294
+	const logFifteen float64 = 2.70805
+	const logHalf float64 = -0.6931472
+	var estimateFromHalves, logHOverSix, h, leftMidpoint, rightMidpoint, fLeftMidpoint, fRightMidpoint, leftEstimate, rightEstimate, delta float64
+	h = (b - a) / 2
+	leftMidpoint = (a + midpoint) / 2
+	rightMidpoint = (midpoint + b) / 2
+
+	if maxDepth < 0 {
+		log.Fatalf("Error in integration: exceeded maximum depth\n")
+	} else if MultiplyLog(errorThresh, logHalf) == errorThresh {
+		log.Fatalf("Error in integration: the error threshold has gotten too small after many recursive calls\n")
+	} else if a == leftMidpoint {
+		log.Fatalf("Error in integration: the left side and midpoint have gotten too close to each other\n")
+	}
+
+	fLeftMidpoint = f(leftMidpoint)
+	fRightMidpoint = f(rightMidpoint)
+	logHOverSix = math.Log(h / 6)
+	leftEstimate = MultiplyLog(logHOverSix, AddLog(AddLog(fa, MultiplyLog(logFour, fLeftMidpoint)), fMidpoint))
+	rightEstimate = MultiplyLog(logHOverSix, AddLog(AddLog(fMidpoint, MultiplyLog(logFour, fRightMidpoint)), fb))
+	estimateFromHalves = AddLog(leftEstimate, rightEstimate)
+
+	//log.Printf("maxDepth:%d, left:%f, right:%f, fromHalves:%f, whole:%f\n", maxDepth, math.Exp(leftEstimate), math.Exp(rightEstimate), math.Exp(estimateFromHalves), math.Exp(estimateFromHalves))
+
+	if estimateFromHalves > wholeEstimate {
+		delta = SubtractLog(estimateFromHalves, wholeEstimate)
+		if delta <= MultiplyLog(logFifteen, errorThresh) {
+			return AddLog(AddLog(leftEstimate, rightEstimate), DivideLog(delta, logFifteen))
+		}
+	} else if wholeEstimate > estimateFromHalves {
+		delta = SubtractLog(wholeEstimate, estimateFromHalves)
+		if delta <= MultiplyLog(logFifteen, errorThresh) {
+			return AddLog(AddLog(leftEstimate, rightEstimate), DivideLog(delta, logFifteen))
+		}
+	}
+	return AddLog(adaptiveSimpsonsLogHelper(f, a, midpoint, leftMidpoint, fa, fMidpoint, fLeftMidpoint, leftEstimate, MultiplyLog(errorThresh, logHalf), maxDepth-1), adaptiveSimpsonsLogHelper(f, midpoint, b, rightMidpoint, fMidpoint, fb, fRightMidpoint, rightEstimate, MultiplyLog(errorThresh, logHalf), maxDepth-1))
+}
+
+// AdaptiveSimpsons returns the log of the integral from a to b of g(x), where f(x) = log(g(x))
+// The error in the calculation should be less than or equal to errorThreshold.  If this can not be
+// achieved within maxDepth number recursions, then the function aborts.
+func AdaptiveSimpsonsLog(f func(float64) float64, a float64, b float64, errorThreshold float64, maxDepth int) float64 {
+	const logFour float64 = 1.386294
+	var midpoint, h, fa, fb, fMidpoint, s float64
+	h = b - a
+	midpoint = (a + b) / 2
+	fa = f(a)
+	fb = f(b)
+	fMidpoint = f(midpoint)
+	s = MultiplyLog(math.Log(h/6), AddLog(AddLog(fa, MultiplyLog(logFour, fMidpoint)), fb))
+	return adaptiveSimpsonsLogHelper(f, a, b, midpoint, fa, fb, fMidpoint, s, math.Log(errorThreshold), maxDepth)
+}
