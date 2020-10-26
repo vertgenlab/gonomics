@@ -28,22 +28,15 @@ func GenePredToString(g *GenePred) string {
 	var answer string
 
 	if g.Strand == '+' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g), g.Score)
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
 	} else if g.Strand == '-' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g), g.Score)
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
 	} else if g.Strand == '.' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n", g.Id, g.Symbol, g.Chrom, ".", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonStarts, g.ExonEnds, CalcExonFrame(g), g.Score)
+		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, ".", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
 	}
 
 	return answer
 }
-
-////WriteGenePred writes an input GenePred struct to an os.File with a specified number of GenePred fields.
-//func WriteGenePred(file *os.File, input *GenePred, fields int) {
-//	var err error
-//	_, err = fmt.Fprintf(file, "%s\n", GenePredToString(input, fields))
-//	common.ExitIfError(err)
-//}
 
 //WriteToFileHandle writes an input GenePred struct with a specified number of fields to an io.Writer
 func WriteToFileHandle(file io.Writer, records []*GenePred) {
@@ -54,13 +47,6 @@ func WriteToFileHandle(file io.Writer, records []*GenePred) {
 		common.ExitIfError(err)
 	}
 }
-
-////WriteSliceToFileHandle writes a slice of GenePred structs with a specified number of fields to an io.Writer
-//func WriteSliceToFileHandle(file io.Writer, records []*GenePred, fields int) {
-//	for _, rec := range records {
-//		WriteToFileHandle(file, rec, fields)
-//	}
-//}
 
 //Write writes a slice of GenePred structs with a specified number of fields to a specified filename.
 func Write(filename string, records []*GenePred) {
@@ -92,12 +78,12 @@ func processGenePredLine(line string) *GenePred {
 	current.Id = words[0]
 	current.Symbol = words[0]
 	current.Chrom = words[1]
-	if words[2] == "+" { // || == "."
+	if words[2] == "+" {
 		current.Strand = '+'
-	} else if words[2] == "-" {
-		current.Strand = '-'
 	} else if words[2] == "." {
 		current.Strand = '.'
+	} else if words[2] == "-" {
+		current.Strand = '-'
 	} else {
 		log.Fatal("no strand specified")
 	}
@@ -154,11 +140,10 @@ func CalcExonFrame(gene *GenePred) []int {
 			}
 			if exonTwoFrame == 0 {
 				answer = exonTwoFrame
-				exonFrames = append(exonFrames, answer)
 			} else {
 				answer = 3 - exonTwoFrame
-				exonFrames = append(exonFrames, answer)
 			}
+			exonFrames = append(exonFrames, answer)
 			//DEBUG: log.Print(exonFrames)
 		} else {
 			//for all other exons, which depend on the frame being calculated ahead of this step
@@ -166,11 +151,10 @@ func CalcExonFrame(gene *GenePred) []int {
 			nextExonFrame = nextExonLength % 3
 			if nextExonFrame == 0 {
 				answer = nextExonFrame
-				exonFrames = append(exonFrames, answer)
 			} else {
 				answer = 3 - nextExonFrame
-				exonFrames = append(exonFrames, answer)
 			}
+			exonFrames = append(exonFrames, answer)
 			if nextExonFrame > 2 {
 				log.Fatal("frame is offset by more than 2 positions")
 			}
@@ -178,4 +162,12 @@ func CalcExonFrame(gene *GenePred) []int {
 		}
 	}
 	return exonFrames
+}
+
+func SliceIntToString(slice []int) string {
+	var buffer strings.Builder
+	for i := 0; i < len(slice); i++ {
+		buffer.WriteString(fmt.Sprintf("%d,", slice[i]))
+	}
+	return buffer.String()
 }
