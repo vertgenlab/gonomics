@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
+	"log"//DEBUG
 	"strings"
 	//DEBUG"fmt"
 )
@@ -97,10 +98,12 @@ func AFSStationarity(p float64, alpha float64) float64 {
 
 func DetectionProbability(p float64, n int) float64 {
 	var pNotDetected float64 = numbers.AddLog(numbers.BinomialExpressionLog(n, 0, p), numbers.BinomialExpressionLog(n, n, p))
+	log.Printf("pNotDetected: %f.", pNotDetected)
 	return numbers.SubtractLog(0, pNotDetected)
 }
 
 func AfsStationarityCorrected(p float64, alpha float64, n int) float64 {
+	log.Printf("p: %f. n: %d. alpha: %f. Detection: %f. Stationarity: %f.", p, n, alpha, math.Exp(DetectionProbability(p, n)), math.Exp(AFSStationarity(p, alpha)))
 	return numbers.MultiplyLog(DetectionProbability(p, n), AFSStationarity(p, alpha))
 }
 
@@ -113,7 +116,7 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 
 func AfsSampleClosureNoCoefficient(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
-		return numbers.MultiplyLog(math.Log(AfsStationarityCorrected(p, alpha, n)), numbers.BinomialExpressionLog(n, k, p))
+		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
 	}
 }
 
