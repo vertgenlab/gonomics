@@ -35,6 +35,24 @@ func BenchmarkDefiniteIntegral(b *testing.B) {
 	}
 }
 
+func TestSimpsonsIntegral(t *testing.T) {
+	const errorThreshold float64 = 0.01
+        for _, test := range definiteIntegralTests {
+                calculated := AdaptiveSimpsons(test.f, test.a, test.b, 0.01, 100)
+                if math.Abs(calculated-test.answer)/test.answer > 0.01 {
+                        t.Errorf("For a definite integral we expected %e, but got %e", test.answer, calculated)
+                }
+        }
+}
+
+func BenchmarkSimpsonsIntegral(b *testing.B) {
+        for n := 0; n < b.N; n++ {
+                for _, test := range definiteIntegralTests {
+                        AdaptiveSimpsons(test.f, test.a, test.b, 1e-8, 100)
+                }
+        }
+}
+
 //answer from WolframAlpha
 var logIntegralTests = []struct {
 	f      func(float64) float64
