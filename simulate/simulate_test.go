@@ -15,7 +15,7 @@ var RandGeneTests = []struct {
 	length int
 	GC     float64
 }{
-	{"testingRangGene", 99, GCcontent},
+	{"testingRandGene", 99, GCcontent},
 }
 
 func TestRandGene(t *testing.T) {

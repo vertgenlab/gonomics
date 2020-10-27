@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/gtf"
+	"github.com/vertgenlab/gonomics/genePred"
 	"log"
 	"math/rand"
 )
@@ -59,12 +59,12 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, root *expandedTree.ETree, gtfFilename string) {
+func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	printSeqForNodes(root, rand1[0].Seq, gtfFilename)
+	printSeqForNodes(root, rand1[0].Seq, gene)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1, unsure how it was calculated
@@ -139,7 +139,7 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
-func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []dna.Base {
+func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Base {
 	var originalBase dna.Base
 	var newBase dna.Base
 	var originalCodons []*dna.Codon
@@ -148,161 +148,161 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gtfFilename string) []
 	var newAmAc dna.AminoAcid
 	var newSequence []dna.Base
 	var basesProcessed int
+	var geneRecord []*genePred.GenePred
 
 	seq := copySeq(inputSeq)
-	gtfRecord := gtf.Read(gtfFilename)
+	geneRecord = genePred.Read(gene)
 
 	//p will be inaccurate if in a coding sequence. basesProcessed variable will reflect how many bases have gone through codon simulation.
-	for p := 0; p < len(seq); p++ {
-		overlapCDS, firstExon := getOverlapCDS(gtfRecord, p)
-		if overlapCDS == nil {
-			newBase = mutateBase(seq[p], branchLength)
-			newSequence = append(newSequence, newBase)
-			//DEBUG:fmt.Printf("newSequence to position %v: %s\n", p+1, dna.BasesToString(newSequence))
-		} else {
-			if (overlapCDS.End-overlapCDS.Start+1)%3 != 0 {
-				log.Fatal("sequence length must be divisible by three")
+	for g := 0; g < len(geneRecord); g++ {
+		for p := 0; p < len(seq); p++ {
+			overlapExon, thisExon := CheckExon(geneRecord[g], p)
+
+			if overlapExon == false {
+				newBase = mutateBase(seq[p], branchLength)
+				newSequence = append(newSequence, newBase)
+				//DEBUG:fmt.Printf("newSequence to position %v: %s\n", p+1, dna.BasesToString(newSequence))
 			} else {
-				codonNum := (overlapCDS.End - overlapCDS.Start + 1) / 3
-				fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
+				if (geneRecord[g].ExonEnds[thisExon]-geneRecord[g].ExonStarts[thisExon]+1)%3 != 0 {
+					log.Fatal("sequence length must be divisible by three")
+				} else {
+					codonNum := (geneRecord[g].ExonEnds[thisExon] - geneRecord[g].ExonStarts[thisExon] + 1) / 3
+					//fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
 
-				for i := 0; i < codonNum; i++ {
-					originalCodons = dna.BasesToCodons(seq)
+					for i := 0; i < codonNum; i++ {
+						originalCodons = dna.BasesToCodons(seq)
 
-					for j := 0; j < 3; j++ {
-						originalBase = originalCodons[i].Seq[j]
-						var thisCodon []dna.Base
+						for j := 0; j < 3; j++ {
+							originalBase = originalCodons[i].Seq[j]
+							var thisCodon []dna.Base
 
-						if i == 0 && firstExon == true { //first codon the first time through this loop
-							newBase = originalBase //cannot change start codon
-							//} else if i == codonNum-1 && CheckStop(originalCodons[i].Seq[j:j+2]) == true { //TODO: not in CDS, make data struct.
-							//	r := rand.Float64()
-							//	if j == 0 { //first position is only ever a T
-							//		originalCodons[i].Seq[j] = dna.T
-							//	} else if j == 1 { //second position can either be an A or G
-							//		if r < 0.66 {
-							//			originalCodons[i].Seq[j] = dna.A
-							//		} else {
-							//			originalCodons[i].Seq[j] = dna.G
-							//		}
-							//	} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
-							//		if originalCodons[i].Seq[j-1] == dna.G {
-							//			originalCodons[i].Seq[j] = dna.A
-							//		} else {
-							//			if r < 0.5 {
-							//				originalCodons[i].Seq[j] = dna.A
-							//			} else {
-							//				originalCodons[i].Seq[j] = dna.G
-							//			}
-							//		}
-							//	}
-						} else {
-							newBase = mutateBase(originalBase, branchLength)
-
-							if j == 0 {
-								thisCodon = append(thisCodon, newBase)
-								thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
-								thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
-							} else if j == 1 {
-								thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
-								thisCodon = append(thisCodon, newBase)
-								thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+							if i == 0 && thisExon == 0 {
+								newBase = originalBase //cannot change start codon
+							} else if i == codonNum-1 && thisExon == len(geneRecord[g].ExonStarts) { //if we are on the last codon of the last exon
+								r := rand.Float64()
+								if j == 0 { //first position is only ever a T
+									originalCodons[i].Seq[j] = dna.T
+								} else if j == 1 { //second position can either be an A or G
+									if r < 0.66 {
+										originalCodons[i].Seq[j] = dna.A
+									} else {
+										originalCodons[i].Seq[j] = dna.G
+									}
+								} else if j == 2 { //last position can either be A or G, but if previous position is G it cannot be G again
+									if originalCodons[i].Seq[j-1] == dna.G {
+										originalCodons[i].Seq[j] = dna.A
+									} else {
+										if r < 0.5 {
+											originalCodons[i].Seq[j] = dna.A
+										} else {
+											originalCodons[i].Seq[j] = dna.G
+										}
+									}
+								}
 							} else {
-								thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
-								thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
-								thisCodon = append(thisCodon, newBase)
+								newBase = mutateBase(originalBase, branchLength)
+
+								if j == 0 {
+									thisCodon = append(thisCodon, newBase)
+									thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+									thisCodon = append(thisCodon, originalCodons[i].Seq[j+2])
+								} else if j == 1 {
+									thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+									thisCodon = append(thisCodon, newBase)
+									thisCodon = append(thisCodon, originalCodons[i].Seq[j+1])
+								} else {
+									thisCodon = append(thisCodon, originalCodons[i].Seq[j-2])
+									thisCodon = append(thisCodon, originalCodons[i].Seq[j-1])
+									thisCodon = append(thisCodon, newBase)
+								}
+
+								newCodons = dna.BasesToCodons(thisCodon)
+								originalAmAc = dna.TranslateCodon(originalCodons[i])
+								newAmAc = dna.TranslateCodon(newCodons[0])
+
+								prob := BLOSUM[originalAmAc][newAmAc]
+								r := rand.Float64()
+
+								if r < prob {
+									originalCodons[i].Seq[j] = newBase
+								} else {
+									originalCodons[i].Seq[j] = originalBase
+								}
 							}
-
-							newCodons = dna.BasesToCodons(thisCodon)
-							originalAmAc = dna.TranslateCodon(originalCodons[i])
-							newAmAc = dna.TranslateCodon(newCodons[0])
-
-							prob := BLOSUM[originalAmAc][newAmAc]
-							r := rand.Float64()
-
-							if r < prob {
-								originalCodons[i].Seq[j] = newBase
-							} else {
-								originalCodons[i].Seq[j] = originalBase
-							}
+							newSequence = append(newSequence, originalCodons[i].Seq[j])
+							//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
+							basesProcessed++
+							fmt.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
 						}
-						newSequence = append(newSequence, originalCodons[i].Seq[j])
-						//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
-						basesProcessed++
-						fmt.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
 					}
+					p += 2 + (3 * (codonNum - 1)) //prevents looping through already processed bases of the codon which are handled within j loop
 				}
-				p += 2 + (3 * (codonNum - 1)) //prevents looping through already processed bases of the codon which are handled within j loop
 			}
 		}
 	}
+
 	return newSequence
 }
 
-func getOverlapCDS(gtf map[string]*gtf.Gene, pos int) (cds *gtf.CDS, start bool) { //only works on pos strand genes
-	for _, gene := range gtf {
-		for _, transcript := range gene.Transcripts {
-			for exonNum, exon := range transcript.Exons {
-				if exon.Cds != nil {
-					if exon.Cds.Start-1 <= pos && pos <= exon.Cds.End-1 {
-						return exon.Cds, exonNum == 0
-					}
-				}
-			}
+//func getOverlapCDS(gtf map[string]*gtf.Gene, pos int) (cds *gtf.CDS, start bool) { //only works on pos strand genes
+//	for _, gene := range gtf {
+//		for _, transcript := range gene.Transcripts {
+//			for exonNum, exon := range transcript.Exons {
+//				if exon.Cds != nil {
+//					if exon.Cds.Start-1 <= pos && pos <= exon.Cds.End-1 {
+//						return exon.Cds, exonNum == 0
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return nil, false
+//}
+//
+//func getOverlap5UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.FiveUTR, start bool) {
+//	for _, gene := range gtf {
+//		for _, transcript := range gene.Transcripts {
+//			for exonNum, exon := range transcript.Exons {
+//				if exon.FiveUtr != nil {
+//					if exon.FiveUtr.Start-1 <= pos && pos <= exon.FiveUtr.End-1 {
+//						return exon.FiveUtr, exonNum == 0
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return nil, false
+//}
+//
+//func getOverlap3UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.ThreeUTR, start bool) {
+//	for _, gene := range gtf {
+//		for _, transcript := range gene.Transcripts {
+//			for exonNum, exon := range transcript.Exons {
+//				if exon.ThreeUtr != nil {
+//					if exon.ThreeUtr.Start-1 <= pos && pos <= exon.ThreeUtr.End-1 {
+//						return exon.ThreeUtr, exonNum == 0
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return nil, false
+//}
+//
+
+func CheckExon(gene *genePred.GenePred, position int) (bool, int) {
+	var answer bool
+	var exonNum int
+	for i := 0; i < len(gene.ExonStarts); i++ {
+		if position >= gene.ExonStarts[i] && position <= gene.ExonEnds[i] {
+			answer = true
+			exonNum = i
+		} else {
+			answer = false
+			exonNum = i
 		}
 	}
-	return nil, false
-}
-
-func getOverlap5UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.FiveUTR, start bool) {
-	for _, gene := range gtf {
-		for _, transcript := range gene.Transcripts {
-			for exonNum, exon := range transcript.Exons {
-				if exon.FiveUtr != nil {
-					if exon.FiveUtr.Start-1 <= pos && pos <= exon.FiveUtr.End-1 {
-						return exon.FiveUtr, exonNum == 0
-					}
-				}
-			}
-		}
-	}
-	return nil, false
-}
-
-func getOverlap3UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.ThreeUTR, start bool) {
-	for _, gene := range gtf {
-		for _, transcript := range gene.Transcripts {
-			for exonNum, exon := range transcript.Exons {
-				if exon.ThreeUtr != nil {
-					if exon.ThreeUtr.Start-1 <= pos && pos <= exon.ThreeUtr.End-1 {
-						return exon.ThreeUtr, exonNum == 0
-					}
-				}
-			}
-		}
-	}
-	return nil, false
-}
-
-//checkCDS determines whether any given base pair in is a coding sequence based on gtf format
-func CheckCDS(cds *gtf.CDS, position int) bool {
-	if position > cds.Start && position <= cds.End-1 {
-		return true
-	} else {
-		return false
-	}
-}
-
-func CheckStop(codon []dna.Base) bool {
-	if codon[0] == dna.T && codon[1] == dna.A && codon[2] == dna.A {
-		return true
-	} else if codon[0] == dna.T && codon[1] == dna.A && codon[2] == dna.G {
-		return true
-	} else if codon[0] == dna.T && codon[1] == dna.G && codon[2] == dna.A {
-		return true
-	} else {
-		return false
-	}
+	return answer, exonNum
 }
 
 //make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
