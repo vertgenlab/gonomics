@@ -1,7 +1,6 @@
 package simulate
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -157,9 +156,13 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 	for g := 0; g < len(geneRecord); g++ {
 		for p := 0; p < len(seq); p++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
-			log.Printf("position: %v", p)
+			//log.Printf("position: %v", p)
 
 			if overlapExon == false {
+				if p == geneRecord[g].CdsStart || p == geneRecord[g].CdsStart+1 || p == geneRecord[g].CdsStart+2 { //cannot change start codon
+					newBase = originalBase
+					newSequence = append(newSequence, newBase)
+				}
 				newBase = mutateBase(seq[p], branchLength)
 				newSequence = append(newSequence, newBase)
 				//DEBUG:fmt.Printf("newSequence to position %v: %s\n", p+1, dna.BasesToString(newSequence))
@@ -177,9 +180,9 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 							originalBase = originalCodons[i].Seq[j]
 							var thisCodon []dna.Base
 
-							if i == 0 && thisExon == 0 {
+							if p == geneRecord[g].CdsStart || p == geneRecord[g].CdsStart+1 || p == geneRecord[g].CdsStart+2 {
 								newBase = originalBase //cannot change start codon
-							} else if i == codonNum-1 && thisExon == len(geneRecord[g].ExonStarts) { //if we are on the last codon of the last exon
+							} else if p == geneRecord[g].CdsEnd-3 { //if we are on the last codon of the last exon
 								r := rand.Float64()
 								if j == 0 { //first position is only ever a T
 									originalCodons[i].Seq[j] = dna.T
@@ -233,7 +236,7 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 							newSequence = append(newSequence, originalCodons[i].Seq[j])
 							//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
 							basesProcessed++
-							fmt.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
+							//fmt.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
 						}
 					}
 					p += 2 + (3 * (codonNum - 1)) //prevents looping through already processed bases of the codon which are handled within j loop
@@ -259,37 +262,6 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 //	}
 //	return nil, false
 //}
-//
-//func getOverlap5UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.FiveUTR, start bool) {
-//	for _, gene := range gtf {
-//		for _, transcript := range gene.Transcripts {
-//			for exonNum, exon := range transcript.Exons {
-//				if exon.FiveUtr != nil {
-//					if exon.FiveUtr.Start-1 <= pos && pos <= exon.FiveUtr.End-1 {
-//						return exon.FiveUtr, exonNum == 0
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return nil, false
-//}
-//
-//func getOverlap3UTR(gtf map[string]*gtf.Gene, pos int) (UTR *gtf.ThreeUTR, start bool) {
-//	for _, gene := range gtf {
-//		for _, transcript := range gene.Transcripts {
-//			for exonNum, exon := range transcript.Exons {
-//				if exon.ThreeUtr != nil {
-//					if exon.ThreeUtr.Start-1 <= pos && pos <= exon.ThreeUtr.End-1 {
-//						return exon.ThreeUtr, exonNum == 0
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return nil, false
-//}
-//
 
 func CheckExon(gene *genePred.GenePred, position int) (bool, int) {
 	var answer bool
