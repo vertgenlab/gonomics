@@ -49,7 +49,7 @@ func SimulateSegSite(alpha float64, n int, binHeights []float64, sumHeights floa
 				count++
 			}
 		}
-		if count < 1 {
+		if count < 1 || count == n {
 			continue
 		}
 		return &SegSite{count, n}

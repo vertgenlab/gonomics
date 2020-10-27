@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
-	"log"//DEBUG
+	//DEBUG"log"
 	"strings"
 	//DEBUG"fmt"
 )
@@ -17,6 +17,8 @@ alpha based on an allele frequency spectrum obtained from multiple alignment dat
 More details can be obtained from the Ph.D. Thesis of Sol Katzman, available at https://compbio.soe.ucsc.edu/theses/Sol-Katzman-PhD-2010.pdf.
 Equations from this thesis that are replicated here are marked.
 */
+
+const IntegralBound float64 = 1e-12
 
 //k is len(sites)
 type AFS struct {
@@ -98,12 +100,12 @@ func AFSStationarity(p float64, alpha float64) float64 {
 
 func DetectionProbability(p float64, n int) float64 {
 	var pNotDetected float64 = numbers.AddLog(numbers.BinomialExpressionLog(n, 0, p), numbers.BinomialExpressionLog(n, n, p))
-	log.Printf("pNotDetected: %f.", pNotDetected)
+	//DEBUG: log.Printf("pNotDetected: %f.", pNotDetected)
 	return numbers.SubtractLog(0, pNotDetected)
 }
 
 func AfsStationarityCorrected(p float64, alpha float64, n int) float64 {
-	log.Printf("p: %f. n: %d. alpha: %f. Detection: %f. Stationarity: %f.", p, n, alpha, math.Exp(DetectionProbability(p, n)), math.Exp(AFSStationarity(p, alpha)))
+	//DEBUG: log.Printf("p: %f. n: %d. alpha: %f. Detection: %f. Stationarity: %f.", p, n, alpha, math.Exp(DetectionProbability(p, n)), math.Exp(AFSStationarity(p, alpha)))
 	return numbers.MultiplyLog(DetectionProbability(p, n), AFSStationarity(p, alpha))
 }
 
@@ -131,7 +133,7 @@ func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(fl
 
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	f := AfsSampleClosureNoCoefficient(n, k, alpha)
-	return numbers.MultiplyLog(binomMap[n][k], numbers.AdaptiveSimpsonsLog(f, 0.000001, 0.9999999, 1e-8, 100))
+	return numbers.MultiplyLog(binomMap[n][k], numbers.AdaptiveSimpsonsLog(f, IntegralBound, 1.0-IntegralBound, 1e-8, 100))
 }
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.

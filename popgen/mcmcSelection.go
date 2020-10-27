@@ -13,6 +13,7 @@ import (
 
 //To access debug prints, set verbose to 1 and then compile.
 const verbose int = 1
+const step float64 = 50.0
 
 type Theta struct {
 	alpha       []float64
@@ -41,8 +42,8 @@ func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 //HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta) float64 {
 	var newGivenOld, oldGivenNew float64
-	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) * numbers.GammaDist(tNew.sigma, tOld.sigma*tOld.sigma, tOld.sigma)
-	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) * numbers.GammaDist(tOld.sigma, tNew.sigma*tNew.sigma, tNew.sigma)
+	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) * numbers.GammaDist(tNew.sigma, step, tOld.sigma/step)
+	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) * numbers.GammaDist(tOld.sigma, step, tNew.sigma/step)
 	return math.Log(oldGivenNew / newGivenOld)
 }
 
@@ -68,7 +69,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64) Thet
 	//sample new sigma from a gamma function where the mean is always the current sigma value
 	//mean of a gamma dist is alpha / beta, so mean = alpha / beta = sigma**2 / sigma = sigma
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
-	sigmaPrime := numbers.RandGamma(50, 50/t.sigma)
+	sigmaPrime := numbers.RandGamma(step, step/t.sigma)
 	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
 	for i := 0; i < len(t.alpha); i++ {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
