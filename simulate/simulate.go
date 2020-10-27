@@ -157,6 +157,7 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 	for g := 0; g < len(geneRecord); g++ {
 		for p := 0; p < len(seq); p++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
+			log.Printf("position: %v", p)
 
 			if overlapExon == false {
 				newBase = mutateBase(seq[p], branchLength)
@@ -313,22 +314,22 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 //make fastas based off of node and random sequence
-func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gtfFilename string) {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string) {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
 	//var fastaFinal []*fasta.Fasta
 
 	length = node.BranchLength
-	seq = MutateSeq(sequence, length, gtfFilename)
+	seq = MutateSeq(sequence, length, gene)
 
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	//fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
-		printSeqForNodes(node.Right, seq, gtfFilename)
+		printSeqForNodes(node.Right, seq, gene)
 		//fastaFinal = append(fastaFinal, b...)
-		printSeqForNodes(node.Left, seq, gtfFilename)
+		printSeqForNodes(node.Left, seq, gene)
 		//fastaFinal = append(fastaFinal, a...)
 	}
 }
