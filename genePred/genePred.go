@@ -27,14 +27,7 @@ type GenePred struct {
 func GenePredToString(g *GenePred) string {
 	var answer string
 
-	if g.Strand == '+' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, "+", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
-	} else if g.Strand == '-' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, "-", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
-	} else if g.Strand == '.' {
-		answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, ".", g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
-	}
-
+	answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, string(g.Strand), g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
 	return answer
 }
 
@@ -130,7 +123,7 @@ func CalcExonFrame(gene *GenePred) []int {
 	exonFrames = append(exonFrames, 0)
 	var answer int
 
-	for i := 0; i < len(exonEnds)-1; i++ { // - 1 compensates for UCSC format with ending comma
+	for i := 0; i < len(exonEnds)-1; i++ { // - 1 compensates for not needing to calculate the frame of the exon after the last
 		if i == 0 {
 			//for first exon
 			length = (exonEnds[0] - cdsStart) + 1

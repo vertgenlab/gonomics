@@ -5,7 +5,7 @@ import (
 )
 
 var genePred1 = GenePred{Id: "test", Chrom: "0", Strand: '+', TxStart: 0, TxEnd: 1000, CdsStart: 0, CdsEnd: 900, ExonStarts: []int{0, 18, 500, 800}, ExonEnds: []int{2, 20, 502, 802}}
-var genePred2 = GenePred{Id: "test", Chrom: "1", Strand: '+', TxStart: 0, TxEnd: 1000, CdsStart: 0, CdsEnd: 900, ExonStarts: []int{0, 18, 500, 800}, ExonEnds: []int{2, 57, 601, 830}}
+var genePred2 = GenePred{Id: "test", Chrom: "1", Strand: '+', TxStart: 0, TxEnd: 1000, CdsStart: 0, CdsEnd: 900, ExonStarts: []int{0, 18, 500, 800}, ExonEnds: []int{2, 57, 601, 831}}
 var genePreds []*GenePred = []*GenePred{&genePred1, &genePred2}
 
 var ReadTests = []struct {
