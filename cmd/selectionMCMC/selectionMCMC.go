@@ -34,7 +34,7 @@ func main() {
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	log.SetFlags()
+	log.SetFlags(0)
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
