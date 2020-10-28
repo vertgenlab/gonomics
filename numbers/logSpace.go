@@ -90,6 +90,9 @@ func LogPow(x float64, y float64) float64 {
 	if x < 0 {
 		log.Fatalf("LowPowInt does not handle negative x values. x=%e\n", x)
 	}
+	if y == 0.0 {
+		return 0.0
+	}
 	return y * math.Log(x)
 }
 

@@ -2,6 +2,7 @@ package numbers
 
 import (
 //DEBUG: "fmt"
+	//DEBUG"log"
 )
 
 //BinomialDistLog returns log(BinomialDist), where log is the natural logarithm.
@@ -15,6 +16,7 @@ func BinomialDistLog(n int, k int, p float64) float64 {
 func BinomialExpressionLog(n int, k int, p float64) float64 {
 	s := LogPow(p, float64(k))
 	f := LogPow(1.0-p, float64(n-k))
+	//DEBUG:log.Printf("n: %d. k: %d. p: %f. s: %e. f: %e.\n",n, k, p, s, f)
 	return MultiplyLog(s, f)
 }
 

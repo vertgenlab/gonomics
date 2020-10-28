@@ -178,6 +178,7 @@ func adaptiveSimpsonsLogHelper(f func(float64) float64, a, b, midpoint, fa, fb, 
 
 	fLeftMidpoint = f(leftMidpoint)
 	fRightMidpoint = f(rightMidpoint)
+	//DEBUG: log.Printf("fLeftMidpoint: %e. fRightMidpoint: %e.\n", fLeftMidpoint, fRightMidpoint)
 	logHOverSix = math.Log(h / 6)
 	leftEstimate = MultiplyLog(logHOverSix, AddLog(AddLog(fa, MultiplyLog(logFour, fLeftMidpoint)), fMidpoint))
 	rightEstimate = MultiplyLog(logHOverSix, AddLog(AddLog(fMidpoint, MultiplyLog(logFour, fRightMidpoint)), fb))

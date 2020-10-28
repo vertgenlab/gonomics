@@ -11,7 +11,7 @@ import (
 	"os"
 	"runtime/pprof")
 
-//To access debug prints, set verbose to 1 and then compile.
+//To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
 const verbose int = 1
 const step float64 = 50.0
 
@@ -33,8 +33,11 @@ func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 	pAccept = numbers.MultiplyLog(bayes, hastings)
 	decision = pAccept > yRand
 	//pAccept = numbers.MinFloat64(1.0, BayesRatio(old, thetaPrime)*HastingsRatio(old, thetaPrime))
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("bayesRatio: %e, hastingsRatio: %e, log(likelihoodRatio): %e, log(rand): %e, decision: %t\n", bayes, hastings, pAccept, yRand, decision)
+	}
+	if verbose == 1 {
+		log.Printf("%e\t%e\t%e\t%e\t%e\t%e\t%t\n", old.mu, thetaPrime.mu, old.likelihood, thetaPrime.likelihood, pAccept, yRand, decision)
 	}
 	return decision
 }
@@ -42,8 +45,8 @@ func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 //HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta) float64 {
 	var newGivenOld, oldGivenNew float64
-	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) * numbers.GammaDist(tNew.sigma, step, tOld.sigma/step)
-	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) * numbers.GammaDist(tOld.sigma, step, tNew.sigma/step)
+	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) * numbers.GammaDist(tNew.sigma, step, step/tOld.sigma)
+	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) * numbers.GammaDist(tOld.sigma, step, step/tNew.sigma)
 	return math.Log(oldGivenNew / newGivenOld)
 }
 
@@ -52,7 +55,7 @@ func BayesRatio(old Theta, thetaPrime Theta) float64 {
 	like := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
 	//prob := numbers.DivideLog(thetaPrime.probability, old.probability) 
 	//prob = 0 //trick for debug
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("Old log(like): %e, New log(like): %e, likeRatio: %f", old.likelihood, thetaPrime.likelihood, math.Exp(like))
 	}
 	return like
@@ -79,7 +82,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64) Thet
 	//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
 	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
 	likelihood = AFSLikelihood(data, alphaPrime, binomCache)
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
 	}
 	return Theta{alphaPrime, muPrime, sigmaPrime, likelihood}
@@ -107,7 +110,7 @@ func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64) The
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
 func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, outFile string) {
-	if verbose > 0 {
+	if verbose > 1 {
 		f, err := os.Create("testProfile.prof")
 		if err != nil {
 			log.Fatal(err)
@@ -119,7 +122,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Println("Hello, I'm about to calculate MCMC.")
 	}
 
@@ -136,13 +139,16 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 
 	var currAccept bool
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Println("Hello, I'm about to initialize theta.")
 	}
 	//initialization to uninformative standard normal
 	t := InitializeTheta(muZero, sigmaZero, data, binomCache)
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
+	}
+	if verbose == 1 {
+		log.Println("OldMu\tNewMu\tOldLikelihood\tNewLikelihood\tpAccept\tlogRand\tDecision\n")
 	}
 	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
 	

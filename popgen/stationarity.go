@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
-	//DEBUG"log"
+	//DEBUG: "log"
 	"strings"
 	//DEBUG"fmt"
 )
@@ -116,14 +116,23 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
-func AfsSampleClosureNoCoefficient(n int, k int, alpha float64) func(float64) float64 {
+func AfsSampleClosure(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
 		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
 	}
 }
 
+func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
+	return func(p float64) float64 {
+		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
+		logPart := math.Log((1-math.Exp(-alpha*(1.0-p))) * 2 / (1-math.Exp(-alpha)))
+		//log.Printf("Expression: %v. LogPart: %v.", expression, logPart)
+		return numbers.MultiplyLog(expression, logPart)
+	}
+}
+
 //AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
-func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
+func AFSSampleClosureOld(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
 	return func(p float64) float64 {
 		//DEBUG: fmt.Println(binomMap)
 		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
@@ -132,13 +141,18 @@ func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(fl
 }
 
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	f := AfsSampleClosureNoCoefficient(n, k, alpha)
-	return numbers.MultiplyLog(binomMap[n][k], numbers.AdaptiveSimpsonsLog(f, IntegralBound, 1.0-IntegralBound, 1e-8, 100))
+	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
+	f := FIntegralComponent(n, k, alpha)
+	//log.Printf("f(0): %f. f(0.25): %f. f(0.5): %f. f(1): %f.", f(0.0), f(0.25), f(0.5), f(1))
+	//log.Fatal()
+	//constantComponent := numbers.MultiplyLog(binomMap[n][k], math.Log(2 / (1-math.Exp(-alpha))))
+	constantComponent := binomMap[n][k]
+	return numbers.MultiplyLog(constantComponent, numbers.AdaptiveSimpsonsLog(f, 0.0, 1.0, 1e-8, 100))
 }
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
 func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	f := AFSSampleClosure(n, k, alpha, binomMap)
+	f := AFSSampleClosureOld(n, k, alpha, binomMap)
 	//DEBUG prints
 	//fmt.Printf("f(0.1)=%e\n", f(0.1))
 	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
