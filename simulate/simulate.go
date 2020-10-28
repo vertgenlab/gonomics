@@ -167,10 +167,10 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 				newSequence = append(newSequence, newBase)
 				//DEBUG:fmt.Printf("newSequence to position %v: %s\n", p+1, dna.BasesToString(newSequence))
 			} else {
-				if (geneRecord[g].ExonEnds[thisExon]-geneRecord[g].ExonStarts[thisExon]+1)%3 != 0 {
+				if (geneRecord[g].ExonEnds[thisExon]-geneRecord[g].ExonStarts[thisExon])%3 != 0 {
 					log.Fatal("sequence length must be divisible by three")
 				} else {
-					codonNum := (geneRecord[g].ExonEnds[thisExon] - geneRecord[g].ExonStarts[thisExon] + 1) / 3
+					codonNum := (geneRecord[g].ExonEnds[thisExon] - geneRecord[g].ExonStarts[thisExon]) / 3
 					//fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
 
 					for i := 0; i < codonNum; i++ {

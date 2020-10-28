@@ -49,11 +49,11 @@ func Equal(a *GenePred, b *GenePred) bool {
 	//exon ends must have the same number of values as exon starts
 	for i := 0; i < len(a.ExonStarts); i++ {
 		if a.ExonStarts[i] != b.ExonStarts[i] {
-			log.Print("8")
+			log.Print("9")
 			return false
 		}
 		if b.ExonEnds[i] != b.ExonEnds[i] {
-			log.Print("9")
+			log.Print("10")
 			return false
 		}
 	}
