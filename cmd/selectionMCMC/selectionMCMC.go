@@ -33,7 +33,8 @@ func main() {
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 
 	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetFlags()
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
