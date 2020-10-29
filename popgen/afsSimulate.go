@@ -9,7 +9,7 @@ import (
 )
 
 //SimulateAFS returns an allele frequency spectrum AFS struct for n individuals with k segregating sites
-//with a selection parameter alpha.
+//with a selection parameter alpha. This function has been replaced by SimulateSegSite and is not currently in use.
 func SimulateAFS(alpha float64, n int, k int) AFS {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
@@ -31,18 +31,19 @@ func SimulateAFS(alpha float64, n int, k int) AFS {
 }
 
 //SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
-func SimulateSegSite(alpha float64, n int, binHeights []float64, sumHeights float64) *SegSite {
-	var fatalCount int = 10000
+func SimulateSegSite(alpha float64, n int, binHeights []float64, sumHeights float64, AlleleFrequencyBound float64) *SegSite {
+	var fatalCount int = 1000000
 	var freq, r float64
 	var count int
+	var RightBound float64 = 1.0 - AlleleFrequencyBound
 
 	//stepSize is the function support divided by the number of bins
-	stepSize := (0.999-0.001)/float64(len(binHeights))
+	stepSize := (RightBound-AlleleFrequencyBound)/float64(len(binHeights))
 	f := AFSStationarityClosure(alpha)
 
 	for i := 0; i < fatalCount; i++ {
 		count = 0
-		freq = numbers.RejectionSampleChooseBin(0.001, 0.999, stepSize, f, 10000, sumHeights, binHeights)
+		freq = numbers.RejectionSampleChooseBin(AlleleFrequencyBound, RightBound, stepSize, f, len(binHeights), sumHeights, binHeights)
 		for j := 0; j < n; j++ {
 			r = rand.Float64()
 			if r < freq {
@@ -58,9 +59,9 @@ func SimulateSegSite(alpha float64, n int, binHeights []float64, sumHeights floa
 	return &SegSite{0, 0}
 }
 
-func SimulateGenotype(alpha float64, n int, binHeights []float64, sumHeights float64) []vcf.GenomeSample {
+func SimulateGenotype(alpha float64, n int, binHeights []float64, sumHeights float64, AlleleFrequencyBound float64) []vcf.GenomeSample {
 	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
-	s := SimulateSegSite(alpha, n, binHeights, sumHeights)
+	s := SimulateSegSite(alpha, n, binHeights, sumHeights, AlleleFrequencyBound)
 	alleleArray := SegSiteToAlleleArray(s)
 	var d int
 	for c := 0; c < n; c += 2 {
