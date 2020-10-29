@@ -1,6 +1,8 @@
 package simulate
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
 	//"fmt"
@@ -31,7 +33,7 @@ var MutateSeqTests = []struct {
 	branchLength float64
 	gpd          string
 }{
-	{"testSeq.fasta", 0.5, "test.gpd"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{"debug.fasta", 0.5, "debug.gpd"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 func TestMutateSeq(t *testing.T) {
@@ -42,7 +44,7 @@ func TestMutateSeq(t *testing.T) {
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
 		}
-		//fmt.Print(dna.BasesToString(a), "\n")
+		fmt.Print(dna.BasesToString(a), "\n")
 	}
 }
 

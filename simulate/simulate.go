@@ -175,14 +175,18 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 
 					for i := 0; i < codonNum; i++ {
 						originalCodons = dna.BasesToCodons(seq)
+						//log.Print(codonNum)
 
 						for j := 0; j < 3; j++ {
 							originalBase = originalCodons[i].Seq[j]
 							var thisCodon []dna.Base
+							log.Printf("Codon: %v, position: %v, p: %v", i, j, p)
 
-							if p == geneRecord[g].CdsStart || p == geneRecord[g].CdsStart+1 || p == geneRecord[g].CdsStart+2 {
-								newBase = originalBase //cannot change start codon
+							if p < (geneRecord[g].CdsStart+3) && codonNum == 0 {
+								log.Printf("in Start Else")
+								thisCodon = originalCodons[i].Seq //cannot change start codon
 							} else if p == geneRecord[g].CdsEnd-3 { //if we are on the last codon of the last exon
+								log.Printf("in Stop Else")
 								r := rand.Float64()
 								if j == 0 { //first position is only ever a T
 									originalCodons[i].Seq[j] = dna.T
@@ -204,6 +208,7 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 									}
 								}
 							} else {
+								log.Printf("in BLOSUM Else")
 								newBase = mutateBase(originalBase, branchLength)
 
 								if j == 0 {
@@ -234,9 +239,9 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 								}
 							}
 							newSequence = append(newSequence, originalCodons[i].Seq[j])
-							//DEBUG:fmt.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
+							log.Printf("newSequence @%v: %s\n", p+1, dna.BasesToString(newSequence))
 							basesProcessed++
-							//fmt.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
+							//log.Printf("basesProcessed: %v\n p: %v\n", basesProcessed, p)
 						}
 					}
 					p += 2 + (3 * (codonNum - 1)) //prevents looping through already processed bases of the codon which are handled within j loop
