@@ -98,6 +98,7 @@ func LogPow(x float64, y float64) float64 {
 
 // PowLog returns log(exp(x)**y) where log is the natural logarithm.
 // This back the log-space answer to x**y where x is already in log-space
+// In other words, this function returns the log-space answer to x**y where x is already in log-space
 func PowLog(x float64, y float64) float64 {
 	return y * x
 }
