@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
+	//DEBUG: "log"
 	"strings"
 	//DEBUG"fmt"
 )
@@ -16,6 +17,8 @@ alpha based on an allele frequency spectrum obtained from multiple alignment dat
 More details can be obtained from the Ph.D. Thesis of Sol Katzman, available at https://compbio.soe.ucsc.edu/theses/Sol-Katzman-PhD-2010.pdf.
 Equations from this thesis that are replicated here are marked.
 */
+
+const IntegralBound float64 = 1e-12
 
 //k is len(sites)
 type AFS struct {
@@ -95,6 +98,17 @@ func AFSStationarity(p float64, alpha float64) float64 {
 	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
 }
 
+func DetectionProbability(p float64, n int) float64 {
+	var pNotDetected float64 = numbers.AddLog(numbers.BinomialExpressionLog(n, 0, p), numbers.BinomialExpressionLog(n, n, p))
+	//DEBUG: log.Printf("pNotDetected: %f.", pNotDetected)
+	return numbers.SubtractLog(0, pNotDetected)
+}
+
+func AfsStationarityCorrected(p float64, alpha float64, n int) float64 {
+	//DEBUG: log.Printf("p: %f. n: %d. alpha: %f. Detection: %f. Stationarity: %f.", p, n, alpha, math.Exp(DetectionProbability(p, n)), math.Exp(AFSStationarity(p, alpha)))
+	return numbers.MultiplyLog(DetectionProbability(p, n), AFSStationarity(p, alpha))
+}
+
 //AFSStationarityClosure returns a func(float64)float64 for a stationarity distribution with a fixed alpha value for subsequent integration.
 func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
@@ -102,8 +116,23 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
+func AfsSampleClosure(n int, k int, alpha float64) func(float64) float64 {
+	return func(p float64) float64 {
+		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
+	}
+}
+
+func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
+	return func(p float64) float64 {
+		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
+		logPart := math.Log((1-math.Exp(-alpha*(1.0-p))) * 2 / (1-math.Exp(-alpha)))
+		//log.Printf("Expression: %v. LogPart: %v.", expression, logPart)
+		return numbers.MultiplyLog(expression, logPart)
+	}
+}
+
 //AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
-func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
+func AFSSampleClosureOld(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
 	return func(p float64) float64 {
 		//DEBUG: fmt.Println(binomMap)
 		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
@@ -111,9 +140,19 @@ func AFSSampleClosure(n int, k int, alpha float64, binomMap [][]float64) func(fl
 	}
 }
 
-//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	f := AFSSampleClosure(n, k, alpha, binomMap)
+	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
+	f := FIntegralComponent(n, k, alpha)
+	//log.Printf("f(0): %f. f(0.25): %f. f(0.5): %f. f(1): %f.", f(0.0), f(0.25), f(0.5), f(1))
+	//log.Fatal()
+	//constantComponent := numbers.MultiplyLog(binomMap[n][k], math.Log(2 / (1-math.Exp(-alpha))))
+	constantComponent := binomMap[n][k]
+	return numbers.MultiplyLog(constantComponent, numbers.AdaptiveSimpsonsLog(f, 0.0, 1.0, 1e-8, 100))
+}
+
+//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
+func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) float64 {
+	f := AFSSampleClosureOld(n, k, alpha, binomMap)
 	//DEBUG prints
 	//fmt.Printf("f(0.1)=%e\n", f(0.1))
 	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
