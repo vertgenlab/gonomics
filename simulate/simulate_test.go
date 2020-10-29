@@ -1,7 +1,9 @@
 package simulate
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
 	//"fmt"
 )
@@ -13,7 +15,7 @@ var RandGeneTests = []struct {
 	length int
 	GC     float64
 }{
-	{"testingRangGene", 30, GCcontent},
+	{"testingRandGene", 99, GCcontent},
 }
 
 func TestRandGene(t *testing.T) {
@@ -26,21 +28,23 @@ func TestRandGene(t *testing.T) {
 	}
 }
 
-var seq = dna.StringToBases("ATGAGGTCACGATATTAG")
 var MutateSeqTests = []struct {
-	sequence     []dna.Base
+	sequence     string
 	branchLength float64
+	gpd          string
 }{
-	{seq, 0.5}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{"debug.fasta", 0.5, "debug.gpd"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 func TestMutateSeq(t *testing.T) {
 	for _, test := range MutateSeqTests {
-		a := MutateSeq(test.sequence, test.branchLength)
-		if len(seq) != len(a) {
-			t.Errorf("Expected same length sequences. Original: %s \n Ending: %s", seq, dna.BasesToString(a))
+		seq := fasta.Read(test.sequence)
+		bases := seq[0].Seq
+		a := MutateSeq(bases, test.branchLength, test.gpd)
+		if len(bases) != len(a) {
+			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
 		}
-		//fmt.Print(dna.BasesToString(a), "\n")
+		fmt.Print(dna.BasesToString(a), "\n")
 	}
 }
 
