@@ -86,16 +86,14 @@ func processGenePredLine(line string) *GenePred {
 	current.CdsStart = common.StringToInt(words[5])
 	current.CdsEnd = common.StringToInt(words[6])
 	current.ExonNum = common.StringToInt(words[7])
-	if strings.HasSuffix(words[8], ",") {
-		current.ExonStarts = StringToIntSlice(words[8])
-	} else {
+	if !strings.HasSuffix(words[8], ",") {
 		log.Fatal("Exon Starts slice doesn't end in empty string.")
 	}
-	if strings.HasSuffix(words[9], ",") {
-		current.ExonEnds = StringToIntSlice(words[9])
-	} else {
+	current.ExonStarts = StringToIntSlice(words[8])
+	if !strings.HasSuffix(words[9], ",") {
 		log.Fatal("Exon Ends slice doesn't end in empty string.")
 	}
+	current.ExonEnds = StringToIntSlice(words[9])
 	current.ExonFrames = CalcExonFrame(&current)
 	current.Score = 0
 
@@ -121,6 +119,7 @@ func StringToIntSlice(text string) []int {
 	return answer
 }
 
+//TODO: May not work with - strand transcripts
 func CalcExonFrame(gene *GenePred) []int {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds
