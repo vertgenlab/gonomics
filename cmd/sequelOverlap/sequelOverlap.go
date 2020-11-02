@@ -28,7 +28,7 @@ func sequelOverlap(options *Settings) chan *queryAnswer {
 
 	tree := buildTree(intervals, options.Aggregate)
 
-	queryChan := goReadToIntervalChan(options.Input)
+	queryChan := Interval.GoReadToIntervalChan(options.Input)
 	answerChan := make(chan *queryAnswer, 1000) // TODO: benchmark buffer size
 
 	var wg sync.WaitGroup

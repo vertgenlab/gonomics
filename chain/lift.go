@@ -5,7 +5,7 @@ import (
 )
 
 //TPosToQPos converts a target position in a chain to the corresponding query position.
-func TPosToQPos(c Chain, TPos int) QPos {
+func TPosToQPos(c Chain, TPos int) int {
 	if TPos < c.TStart || TPos > c.TEnd {
 		log.Fatalf("Error in TPosToQPos: TPos: %d, is not within the range of the chain. TStart: %d. TEnd: %d.", TPos, c.TStart, c.TEnd)
 	}
@@ -29,4 +29,3 @@ func TPosToQPos(c Chain, TPos int) QPos {
 	log.Fatalf("Unable to locate the TPos within chain.")
 	return -1
 }
-
