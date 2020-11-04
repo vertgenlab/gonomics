@@ -9,7 +9,7 @@ import (
 	"math/rand"
 )
 
-type CodonExt struct {
+type CodonExt struct { //could make this a linked list so i can treat exons separately
 	Seq      []BaseExt
 	CodonPos []int
 }
@@ -162,7 +162,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	seq := copySeq(inputSeq)
 	seqExt := BaseToBaseExt(seq)
 
-	for p := 0; p < len(seqExt); p++ {
+	for p := 0; p < len(seqExt); p++ { //TODO: figure out what math needs to be done at end of loops to correct for an exon being processed (jump to end of thisExon?)
 		for g := 0; g < len(geneRecord); g++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
 			for ep := 0; ep < len(exonsProcessed); ep++ {
@@ -188,6 +188,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 					//if checkCoding == true
 					//if checkStart == true, skip first three bases
 				}
+				p = geneRecord[g].ExonEnds[thisExon]
 			}
 		}
 	}
