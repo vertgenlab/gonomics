@@ -150,13 +150,16 @@ func mutateBase(b dna.Base, branchLength float64) dna.Base {
 func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dna.Base {
 	//TODO: if we keep BaseExt, any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1
 	var newSequence []dna.Base
-	var originalBase dna.Base
+	//var originalBase dna.Base
 	var newBase dna.Base
+	var newCodon CodonExt
 	var originalCodons []CodonExt
 	var newCodons []CodonExt
 	var geneRecord []*genePred.GenePred
 	var exonsProcessed []int
 	var newExon = true
+	var start bool
+	var stop bool
 
 	geneRecord = genePred.Read(geneFile)
 	seq := copySeq(inputSeq)
@@ -177,16 +180,28 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 			} else {
 				if newExon == true {
 					exonsProcessed = append(exonsProcessed, thisExon)
-
 					originalCodons = CreateCodons(seqExt, geneRecord[g], thisExon)
-					//exonLength := findExonLength(geneRecord[g], thisExon)
 
-					if CheckStart(geneRecord[g], p) == true {
+					for c := 0; c < len(originalCodons); c++ {
+						thisCodon := originalCodons[c]
+						start = CheckStart(geneRecord[g], thisCodon)
+						stop = CheckStop(geneRecord[g], thisCodon)
+						if start == true {
+							newCodons = append(newCodons, thisCodon)
+						}
+						if stop == true {
+							newCodon = PickStop(thisCodon)
+							newCodons = append(newCodons, newCodon)
+						}
+						if start == false && stop == false {
+							for cp := 0; cp < 3; cp++ {
+								newBase = mutateBase(thisCodon.Seq[cp].Base, branchLength)
+								newCodon.Seq[cp].Base = newBase
+							} //mutating whole codon first, then checking BLOSUM?
 
+						}
+						//if checkStart == true, skip first three bases
 					}
-					//if checkStop == true
-					//if checkCoding == true
-					//if checkStart == true, skip first three bases
 				}
 				p = geneRecord[g].ExonEnds[thisExon]
 			}
@@ -282,7 +297,7 @@ func BaseExtToBase(seq []BaseExt) []dna.Base {
 
 	for i := 0; i < len(seq); i++ {
 		if seq[i].SeqPos == i {
-			newSequence = append(newSequence, seq[i].base)
+			newSequence = append(newSequence, seq[i].Base)
 			return newSequence
 		}
 	}
@@ -305,7 +320,7 @@ func MutateSeq(inputSeq []dna.Base, branchLength float64, gene string) []dna.Bas
 	geneRecord = genePred.Read(gene)
 
 	//p will be inaccurate if in a coding sequence. basesProcessed variable will reflect how many bases have gone through codon simulation.
-	for g := 0; g < len(geneRecord); g++ { //TODO: sequence loop outside geneRecord loop to check for a gene at each position
+	for g := 0; g < len(geneRecord); g++ {
 		for p := 0; p < len(seq); p++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
 			//log.Printf("position: %v", p)
@@ -417,35 +432,47 @@ func CheckExon(gene *genePred.GenePred, position int) (bool, int) {
 	return false, -1
 }
 
-func CheckStart(gene *genePred.GenePred, position int) bool {
+func CheckStart(gene *genePred.GenePred, codon CodonExt) bool {
 
-	if position == gene.CdsStart {
+	if codon.Seq[0].SeqPos == gene.CdsStart {
 		return true
 	}
 
 	return false
 }
 
-func findExonLength(gene *genePred.GenePred, exon int) int {
-	numExons := gene.ExonNum
-	var length int
-	//var seq []dna.Base
+func CheckStop(gene *genePred.GenePred, codon CodonExt) bool {
 
-	if exon == 0 {
-		length = gene.ExonEnds[exon] - gene.ExonStarts[exon] + gene.ExonFrames[exon+1]
-		//seq =
-		return length
-	} else if exon > 0 && exon < numExons {
-		length = gene.ExonEnds[exon] - gene.ExonStarts[exon] - gene.ExonFrames[exon] + gene.ExonFrames[exon+1]
-		return length
-	} else if exon == numExons {
-		length = gene.ExonEnds[exon] - gene.ExonStarts[exon] - gene.ExonFrames[exon]
-		return length
-	} else {
-		log.Print("could not find which exon of the gene was being calculated.")
+	if codon.Seq[0].SeqPos == (gene.CdsEnd - 3) {
+		return true
 	}
-	return length
+	return false
 }
+
+func PickStop(codon CodonExt) CodonExt {
+
+}
+
+//func findExonLength(gene *genePred.GenePred, exon int) int {
+//	numExons := gene.ExonNum
+//	var length int
+//	//var seq []dna.Base
+//
+//	if exon == 0 {
+//		length = gene.ExonEnds[exon] - gene.ExonStarts[exon] + gene.ExonFrames[exon+1]
+//		//seq =
+//		return length
+//	} else if exon > 0 && exon < numExons {
+//		length = gene.ExonEnds[exon] - gene.ExonStarts[exon] - gene.ExonFrames[exon] + gene.ExonFrames[exon+1]
+//		return length
+//	} else if exon == numExons {
+//		length = gene.ExonEnds[exon] - gene.ExonStarts[exon] - gene.ExonFrames[exon]
+//		return length
+//	} else {
+//		log.Print("could not find which exon of the gene was being calculated.")
+//	}
+//	return length
+//}
 
 //make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
 func copySeq(seq []dna.Base) []dna.Base {
