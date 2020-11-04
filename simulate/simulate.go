@@ -155,6 +155,8 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	var newCodon CodonExt
 	var originalCodons []CodonExt
 	var newCodons []CodonExt
+	var originalAmAc dna.AminoAcid
+	var newAmAc dna.AminoAcid
 	var geneRecord []*genePred.GenePred
 	var exonsProcessed []int
 	var newExon = true
@@ -197,10 +199,31 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 							for cp := 0; cp < 3; cp++ {
 								newBase = mutateBase(thisCodon.Seq[cp].Base, branchLength)
 								newCodon.Seq[cp].Base = newBase
-							} //mutating whole codon first, then checking BLOSUM?
+								newCodons = append(newCodons, newCodon)
 
+								//codonExt will be transferred to a codon to check translation against BLOSUM,
+								//but codon version won't be used further so we can preserve final seq order
+
+								tempOriCodon := CodonExtToCodon(originalCodons[c])
+								originalAmAc = dna.TranslateCodon(tempOriCodon)
+								tempNewCodon := CodonExtToCodon(newCodons[c])
+								newAmAc = dna.TranslateCodon(tempNewCodon)
+
+								prob := BLOSUM[originalAmAc][newAmAc]
+								r := rand.Float64()
+								//this is where checking base by base isn't ideal for our purposes bc the change from one amAc may be unlikely in the two intermediate changes
+								//considering as a whole codon I think is what we want
+								if r < prob {
+									newSequence = append(newSequence, newCodons[c].Seq[0].Base)
+									newSequence = append(newSequence, newCodons[c].Seq[1].Base)
+									newSequence = append(newSequence, newCodons[c].Seq[2].Base)
+								} else {
+									newSequence = append(newSequence, originalCodons[c].Seq[0].Base)
+									newSequence = append(newSequence, originalCodons[c].Seq[1].Base)
+									newSequence = append(newSequence, originalCodons[c].Seq[2].Base)
+								}
+							}
 						}
-						//if checkStart == true, skip first three bases
 					}
 				}
 				p = geneRecord[g].ExonEnds[thisExon]
@@ -295,13 +318,51 @@ func BaseToBaseExt(seq []dna.Base) []BaseExt {
 func BaseExtToBase(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
 
-	for i := 0; i < len(seq); i++ {
-		if seq[i].SeqPos == i {
-			newSequence = append(newSequence, seq[i].Base)
-			return newSequence
+	for i := 0; i < len(seq); i++ { //counter to put things back in order
+		for j := 0; j < len(seq); j++ { //counter to check all seq bases before incrementing to look for the next base in the newSeq
+			if seq[j].SeqPos == i {
+				newSequence = append(newSequence, seq[j].Base)
+				return newSequence
+			} else {
+				log.Fatal("Cannot find order of bases")
+			}
 		}
 	}
 	return newSequence
+}
+
+func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
+	var base BaseExt
+	var seq []BaseExt
+	for c := 0; c < len(allCodons); c++ {
+		for s := 0; s < 3; s++ {
+			base = allCodons[c].Seq[s]
+			seq = append(seq, base)
+		}
+	}
+	return seq
+}
+
+func CodonExtToCodon(cE CodonExt) *dna.Codon {
+	var codon dna.Codon
+
+	for c := 0; c < 3; c++ {
+		codon.Seq[c] = cE.Seq[c].Base
+	}
+	return &codon
+}
+
+func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
+	var codons []dna.Codon
+	var codon dna.Codon
+
+	for ext := 0; ext < len(cE); ext++ {
+		for c := 0; c < 3; c++ {
+			codon.Seq[c] = cE[ext].Seq[c].Base
+		}
+		codons = append(codons, codon)
+	}
+	return codons
 }
 
 //mutate sequence taking BLOSUM probabilites and gene structure into account
@@ -450,7 +511,23 @@ func CheckStop(gene *genePred.GenePred, codon CodonExt) bool {
 }
 
 func PickStop(codon CodonExt) CodonExt {
-
+	r := rand.Float64()
+	codon.Seq[0].Base = dna.T
+	if r < 0.66 {
+		codon.Seq[1].Base = dna.A
+	} else {
+		codon.Seq[1].Base = dna.G
+	}
+	if codon.Seq[1].Base == dna.G {
+		codon.Seq[2].Base = dna.A
+	} else {
+		if r < 0.5 {
+			codon.Seq[2].Base = dna.A
+		} else {
+			codon.Seq[2].Base = dna.G
+		}
+	}
+	return codon
 }
 
 //func findExonLength(gene *genePred.GenePred, exon int) int {
