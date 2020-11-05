@@ -11,19 +11,24 @@ import (
 
 func lift(chainFile string, inFile string, outFile string) {
 	//first task, make tree from chainFile
-	chainChan, chainHeader := chain.GoReadToChan(chainFile)
+	chainChan, _ := chain.GoReadToChan(chainFile)
 	var chainIntervals []interval.Interval
-	for val := range selectChan {
+	for val := range chainChan {
 		chainIntervals = append(chainIntervals, val)
 	}
 	tree := interval.BuildTree(chainIntervals)
-
+	out :=  fileio.EasyCreate(outFile)
 	//second task, read in intervals, find chain, and convert to new interval
 	inChan := interval.GoReadToLiftChan(inFile)
-
-	outChan := HELPERFUNCTION()
-	out :=  fileio.EasyCreate(outFile)
-	WRITETOFILE(out, outChan)
+	var overlap []interval.Interval
+	for i := range inChan {
+		overlap = interval.Query(tree, i, "any")
+		if len(overlap) > 1 {
+			log.Fatalf("Multiple overlaps???")
+		}
+		i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i))
+		i.WriteToFileHandle(out)
+	}
 }
 
 func usage() {
@@ -51,5 +56,5 @@ func main() {
 	chainFile := flag.Arg(0)
 	inFile := flag.Arg(1)
 	outFile := flag.Arg(2)
-	lift(chain, inFile, outFile)
+	lift(chainFile, inFile, outFile)
 }

@@ -47,7 +47,11 @@ func BetaDist(x float64, alpha float64, beta float64) float64 {
 	if x < 0 || x > 1 {
 		log.Fatalf("Value x out of range. The beta distribution is defined between 0 and 1.")
 	}
-	return math.Gamma(alpha+beta) / (math.Gamma(alpha) * math.Gamma(beta)) * math.Pow(x, alpha-1) * math.Pow(1-x, beta-1)
+	return math.Pow(x, alpha-1) * math.Pow(1-x, beta-1) / BetaFunc(alpha, beta)
+}
+
+func BetaFunc(x float64, y float64) float64 {
+	return math.Gamma(x) * math.Gamma(y) / math.Gamma(x+y)
 }
 
 //GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.

@@ -3,22 +3,19 @@ package interval
 import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/chain"
 	"path"
-	"sync"
 )
 
-func LiftIntervalWithChain(c chain.Chain, i Lift) string, int, int {
-	return c.QChrom, chain.TPosToQPos(c, i.GetChromStart()), chain.TPosToQPos(c, i.GetChromEnd())
+func LiftIntervalWithChain(c *chain.Chain, i Lift) (string, int, int) {
+	return c.QName, chain.TPosToQPos(c, i.GetChromStart()), chain.TPosToQPos(c, i.GetChromEnd())
 }
 
 func GoReadToLiftChan(inputFile string) <-chan Lift {
 	answer := make(chan Lift, 1000)
-	go readToIntervalChan(inputFile, answer)
+	go ReadToLiftChan(inputFile, answer)
 	return answer
 }
 
@@ -67,7 +64,7 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 
 func GoReadToIntervalChan(inputFile string) <-chan Interval {
 	answer := make(chan Interval, 1000)
-	go readToIntervalChan(inputFile, answer)
+	go ReadToIntervalChan(inputFile, answer)
 	return answer
 }
 

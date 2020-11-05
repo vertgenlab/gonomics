@@ -7,29 +7,64 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
+	"strings"
 )
 
-func plotFunctions(function string, left float64, right float64, bins int, outFile string, alpha float64) {
+func plotFunctions(function string, functionArgs string, left float64, right float64, bins int, outFile string) {
 	if function == "AfsStationarity" {
-		numbers.Plot(popgen.AFSStationarityClosure(alpha), left, right, bins, outFile)
+		words := strings.Split(functionArgs, ",")
+		if len(words) != 1 {
+			log.Fatalf("A stationarity distribution is defined by one parameter, received %d.", len(words))
+		}
+		alpha := common.StringToFloat64(words[0])
+		f := popgen.AFSStationarityClosure(alpha)
+	} else if function == "Beta" {
+		words := strings.Split(functionArgs, ",")
+		if len(words) != 2 {
+			log.Fatalf("A beta distribution is defined by two parameters, received %d.", len(words))
+		}
+		alpha := common.StringToFloat64(words[0])
+		beta := common.StringToFloat64(words[1])
+		f := numbers.BetaClosure(alpha, beta)
+	} else if function == "Gamma" {
+		words := strings.Split(functionArgs, ",")
+		if len(words) != 2 {
+			log.Fatalf("A gamma distribution is defined by two parameters, received %d.", len(words))
+		}
+		alpha := common.StringToFloat64(words[0])
+		beta := common.StringToFloat64(words[1])
+		f := numbers.GamaClosure(alpha, beta)
+	} else if function == "Normal" {
+		if len(words) != 2 {
+			log.Fatalf("a normal distribution is defined by two parameters, received %d.", len(words))
+		}
+		mu := common.StringToFloat64(words[0])
+		sigma := common.StringToFloat64(words[1])
+		f := numbers.NormalClosure(mu, sigma)
+	}
+
 	} else { //here you can add more else ifs to add additional functions for plotting
 		fmt.Printf("Unrecognized function: %s.\n", function)
 	}
+	numbers.Plot(f, left, right, bins, outFile)
 }
 
 func usage() {
 	fmt.Print(
 		"plotFunctions-returns a tab separated list of function evaluations for plotting functions.\n" +
-			"To specify the function, use a function keyword. Currently only 'AfsStationarity' is supported.\n" +
+			"To specify the function, use a function keyword. Then provide the function arguments as a comma separated list in the second argument.\n" +
 			"Usage:\n" +
-			" plotFunctions functionKeyWord leftBound rightBound steps outFile\n" +
+			" plotFunctions functionKeyWord functionArgs leftBound rightBound steps outFile\n" +
+			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" + 
+			"For Beta: defined by two parameters (called alpha and beta). ex usage: plotFunctions Beta 0.5,0.5 0.001 0.999 1000 betaPlot.txt\n" +
+			"For Gamma: defined by two parameters (called alpha and beta). ex usage: plotFunctions Gamma 0.5,0.5 0.001 0.999 1000 gammaPlot.txt\n" +
+			"For Normal: defined by two parameters (called mu and sigma). ex usage: plotFunctions Normal 0,0.5 -1 1 1000 normalPlot.txt\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 5
-	var alpha *float64 = flag.Float64("alpha", 0.001, "Specifies the strength of selection (alpha=2NeS) for AfsStationarity plots.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -41,10 +76,11 @@ func main() {
 	}
 
 	function := flag.Arg(0)
-	left := common.StringToFloat64(flag.Arg(1))
-	right := common.StringToFloat64(flag.Arg(2))
-	bins := common.StringToInt(flag.Arg(3))
-	outFile := flag.Arg(4)
+	funtionArgs := flag.Arg(1)
+	left := common.StringToFloat64(flag.Arg(2))
+	right := common.StringToFloat64(flag.Arg(3))
+	bins := common.StringToInt(flag.Arg(4))
+	outFile := flag.Arg(5)
 
-	plotFunctions(function, left, right, bins, outFile, *alpha)
+	plotFunctions(function, functionArgs, left, right, bins, outFile)
 }

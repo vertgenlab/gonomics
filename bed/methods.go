@@ -17,6 +17,12 @@ func (b *Bed) GetChromEnd() int {
 	return int(b.ChromEnd)
 }
 
+func (b *Bed) UpdateLift(c string, start int, end int) {
+	b.Chrom = c
+	b.ChromStart = int64(start)
+	b.ChromEnd = int64(end)
+}
+
 type BedSlice []*Bed
 
 func (b BedSlice) Len() int { return len(b) }

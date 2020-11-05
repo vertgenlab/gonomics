@@ -47,7 +47,7 @@ func usage() {
 			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
 			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
 			" -gamma=alpha,beta. Defines a gamma distribution with parameters alpha and beta. Ex Usage: -gamma=4,4 6\n" +
-			" -sampleAfs=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight,randSeed. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha. " +
+			" -sampleAfs=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha.\n" +
 			"sampleAFS will return numSamples many values between xLeft and xRight. Bins and maxSampleDepth are performance and accuracy options, suggested values are 1000 and 1000, respectively.\n" +
 			"After defining a distribution, one float64 argument returns the function density at that value. Ex usage: -sampleAfs=0.02,200,1000,1000,0.001,0.999,false\n" +
 			"For discrete distributions, two arguments will evaluate the sum between two input values.\n" +
@@ -62,13 +62,15 @@ func main() {
 	var Beta *string = flag.String("beta", "", "")
 	var Gamma *string = flag.String("gamma", "", "")
 	var SampleAfs *string = flag.String("sampleAfs", "", "")
+	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
+	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
 	MultipleOptionErrorCheck(Normal, Binomial, Poisson, Beta, Gamma, SampleAfs)
-
+	common.RngSeed(*randSeed, *setSeed)
 	if *Normal != "" {
 		words := strings.Split(*Normal, ",")
 		if len(words) != 2 {
@@ -180,7 +182,7 @@ func main() {
 		}
 	} else if *SampleAfs != "" {
 		words := strings.Split(*SampleAfs, ",")
-		if len(words) != 7 {
+		if len(words) != 6 {
 			log.Fatalf("Error: sampleAFS expected seven parameters, received: %v.\n", len(words))
 		}
 		alpha := common.StringToFloat64(words[0])
@@ -189,8 +191,7 @@ func main() {
 		bins := common.StringToInt(words[3])
 		xLeft := common.StringToFloat64(words[4])
 		xRight := common.StringToFloat64(words[5])
-		randSeed := common.StringToBool(words[6])
-		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight, randSeed)
+		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight)
 		for i := 0; i < len(answer); i++ {
 			fmt.Printf("%e\n", answer[i])
 		}
