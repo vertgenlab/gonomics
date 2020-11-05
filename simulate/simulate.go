@@ -168,7 +168,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 
 	geneRecord = genePred.Read(geneFile)
 	seq := copySeq(inputSeq)
-	seqExt := BaseToBaseExt(seq)
+	seqExt := BasesToBaseExt(seq)
 
 	for p := 0; p < len(seqExt); p++ { //TODO: figure out what math needs to be done at end of loops to correct for an exon being processed (jump to end of thisExon?)
 		for g := 0; g < len(geneRecord); g++ {
@@ -245,73 +245,94 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 	exonStart := gene.ExonStarts[exon]
 	exonEnd := gene.ExonEnds[exon]
 
-	if gene.ExonFrames[exon] == 0 && gene.ExonFrames[exon+1] == 0 {
-		exonSeq = seq[exonStart:exonEnd]
-		for p := 0; p < len(exonSeq); p++ {
-			if p%3 == 0 {
-				codon.Seq = seq[p : p+2]
-				codon.CodonPos[0] = 0
-				codon.CodonPos[1] = 1
-				codon.CodonPos[2] = 2
-				allCodons = append(allCodons, codon)
+	log.Print(gene.ExonFrames[exon])
+	if gene.ExonNum > exon { //this exon is not the last exon
+		if gene.ExonFrames[exon] == 0 && gene.ExonFrames[exon+1] == 0 { //Frame of both this and the next exons = 0
+			exonSeq = seq[exonStart:exonEnd]
+			for p := 0; p < len(exonSeq); p++ {
+				if p%3 == 0 {
+					codon.Seq = seq[p : p+2]
+					codon.CodonPos[0] = 0
+					codon.CodonPos[1] = 1
+					codon.CodonPos[2] = 2
+					allCodons = append(allCodons, codon)
+				}
+			}
+		} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] == 0 { //Frame of this exon != 0 but Frame of next exon = 0
+			startFrame := gene.ExonFrames[exon]
+			exonSeq = seq[(gene.ExonStarts[exon] - startFrame):gene.ExonEnds[exon]]
+			for p := 0; p < len(exonSeq); p++ {
+				if p%3 == 0 {
+					codon.Seq = seq[p : p+2]
+					codon.CodonPos[0] = 0
+					codon.CodonPos[1] = 1
+					codon.CodonPos[2] = 2
+					allCodons = append(allCodons, codon)
+				}
+			}
+		} else if gene.ExonFrames[exon] == 0 && gene.ExonFrames[exon+1] != 0 { //Frame of this exon = 0 but Frame of next exon != 0
+			endFrame := gene.ExonFrames[exon+1]
+			exonSeq = seq[exonStart:exonEnd]
+			for ef := 0; ef < endFrame; ef++ {
+				exonSeq = append(exonSeq, seq[ef])
+			}
+			for p := 0; p < len(exonSeq); p++ {
+				if p%3 == 0 {
+					codon.Seq = seq[p : p+2]
+					codon.CodonPos[0] = 0
+					codon.CodonPos[1] = 1
+					codon.CodonPos[2] = 2
+					allCodons = append(allCodons, codon)
+				}
+			}
+		} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] != 0 { //Frame of the last exon and this exon != 0
+			startFrame := gene.ExonFrames[exon]
+			endFrame := gene.ExonFrames[exon+1]
+			exonSeq = seq[(gene.ExonStarts[exon] - startFrame):gene.ExonEnds[exon]]
+			for ef := 0; ef < endFrame; ef++ {
+				exonSeq = append(exonSeq, seq[ef])
+			}
+			for p := 0; p < len(exonSeq); p++ {
+				if p%3 == 0 {
+					codon.Seq = seq[p : p+2]
+					codon.CodonPos[0] = 0
+					codon.CodonPos[1] = 1
+					codon.CodonPos[2] = 2
+					allCodons = append(allCodons, codon)
+				}
 			}
 		}
-	} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] == 0 {
-		startFrame := gene.ExonFrames[exon]
-		exonSeq = seq[(gene.ExonEnds[exon-1] - startFrame):gene.ExonEnds[exon-1]]
-		for e := exonStart; e < exonEnd; e++ {
-			exonSeq = append(exonSeq, seq[e])
-		}
-		for p := startFrame; p < len(exonSeq); p++ {
-			if (p-startFrame)%3 == 0 {
-				codon.Seq = seq[p : p+2]
-				codon.CodonPos[0] = 0
-				codon.CodonPos[1] = 1
-				codon.CodonPos[2] = 2
-				allCodons = append(allCodons, codon)
+	} else { //this exon is the last exon
+		if gene.ExonFrames[exon] == 0 { //Frame = 0
+			exonSeq = seq[exonStart:exonEnd]
+			for p := 0; p < len(exonSeq); p++ {
+				if p%3 == 0 {
+					codon.Seq = seq[p : p+2]
+					codon.CodonPos[0] = 0
+					codon.CodonPos[1] = 1
+					codon.CodonPos[2] = 2
+					allCodons = append(allCodons, codon)
+				}
 			}
-		}
-	} else if gene.ExonFrames[exon] == 0 && gene.ExonFrames[exon+1] != 0 {
-		endFrame := gene.ExonFrames[exon+1]
-		exonSeq = seq[exonStart:exonEnd]
-		for ef := 0; ef < endFrame; ef++ {
-			exonSeq = append(exonSeq, seq[ef])
-		}
-		for p := 0; p < len(exonSeq); p++ {
-			if p%3 == 0 {
-				codon.Seq = seq[p : p+2]
-				codon.CodonPos[0] = 0
-				codon.CodonPos[1] = 1
-				codon.CodonPos[2] = 2
-				allCodons = append(allCodons, codon)
-			}
-		}
-	} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] != 0 {
-		startFrame := gene.ExonFrames[exon]
-		endFrame := gene.ExonFrames[exon+1]
-		exonSeq = seq[(gene.ExonEnds[exon-1] - startFrame):gene.ExonEnds[exon-1]]
-		for e := 0; e < endFrame; e++ {
-			exonSeq = append(exonSeq, seq[e])
-		}
-		for ef := 0; ef < endFrame; ef++ {
-			exonSeq = append(exonSeq, seq[ef])
-		}
-		for p := 0; p < len(exonSeq); p++ {
-			if p%3 == 0 {
-				codon.Seq = seq[p : p+2]
-				codon.CodonPos[0] = 0
-				codon.CodonPos[1] = 1
-				codon.CodonPos[2] = 2
-				allCodons = append(allCodons, codon)
+		} else if gene.ExonFrames[exon] != 0 { //Frame != 0
+			startFrame := gene.ExonFrames[exon]
+			exonSeq = seq[(gene.ExonStarts[exon] - startFrame):gene.ExonEnds[exon]]
+			for p := 0; p < len(exonSeq); p++ {
+				if p%3 == 0 {
+					codon.Seq = seq[p : p+2]
+					codon.CodonPos[0] = 0
+					codon.CodonPos[1] = 1
+					codon.CodonPos[2] = 2
+					allCodons = append(allCodons, codon)
+				}
 			}
 		}
 	}
 	return allCodons
 }
 
-func BaseToBaseExt(seq []dna.Base) []BaseExt {
-	var Sequence []BaseExt
-
+func BasesToBaseExt(seq []dna.Base) []BaseExt {
+	Sequence := make([]BaseExt, len(seq))
 	for i := 0; i < len(seq); i++ {
 		Sequence[i].Base = seq[i]
 		Sequence[i].SeqPos = i

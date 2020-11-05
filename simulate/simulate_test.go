@@ -36,11 +36,11 @@ var MutateSeqTests = []struct {
 	{"debug.fasta", 0.5, "debug.gpd"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
-func TestMutateSeq(t *testing.T) {
+func TestMutateGene(t *testing.T) {
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
-		a := MutateSeq(bases, test.branchLength, test.gpd)
+		a := MutateGene(bases, test.branchLength, test.gpd)
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
 		}
