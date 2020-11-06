@@ -10,14 +10,15 @@ const RelError float64 = 1.0e-8
 const Small float64 = 1.0e-30
 const MaxIterations int = 200
 
-//RandBeta returns a random number drawn from a beta distribution with parameters alpha and beta.
+//RandBeta returns a random number drawn from a beta distribution with parameters alpha and beta as an xy point where y is the function density.
 //Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license.
-func RandBeta(a float64, b float64) float64 {
+func RandBeta(a float64, b float64) (float64, float64) {
 	r := rand.Float64()
 	for r <= 0.0 || r >= 1.0 { //prevents the case where u is exactly 0 or 1, which breaks the code.
 		r = rand.Float64()
 	}
-	return incompleteBetaHelper(a, b, r)
+	var answer = incompleteBetaHelper(a, b, r)
+	return answer, BetaDist(a, b, answer)
 }
 
 func incompleteBetaHelper(a float64, b float64, x float64) float64 {

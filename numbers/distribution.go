@@ -25,6 +25,11 @@ func BinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
 }
 
+//ExpDist returns the density of the standard ex
+func ExpDist(x float64) float64 {
+	return math.Exp(-x)
+}
+
 //PoissonDist returns the probability density of a poisson distribution with parameter lambda at the integer value k.
 func PoissonDist(k int, lambda float64) float64 {
 	if k < 0 {
