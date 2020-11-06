@@ -72,7 +72,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64) Thet
 	//sample new sigma from a gamma function where the mean is always the current sigma value
 	//mean of a gamma dist is alpha / beta, so mean = alpha / beta = sigma**2 / sigma = sigma
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
-	sigmaPrime := numbers.RandGamma(step, step/t.sigma)
+	sigmaPrime, _ := numbers.RandGamma(step, step/t.sigma)
 	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
 	for i := 0; i < len(t.alpha); i++ {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
