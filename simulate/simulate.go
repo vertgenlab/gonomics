@@ -156,6 +156,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	//var originalBase dna.Base
 	var newBase BaseExt
 	var newCodon CodonExt
+	newCodon.Seq = make([]BaseExt, 3)
 	var originalCodons []CodonExt
 	var newCodons []CodonExt
 	var originalAmAc dna.AminoAcid
@@ -178,7 +179,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 					newExon = false
 				}
 			}
-
 			if overlapExon == false {
 				newBase = mutateBase(seq[p], branchLength, p)
 				newSequence = append(newSequence, newBase)
@@ -228,7 +228,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 							}
 						}
 					}
-					finalSequence = BaseExtToBase(newSequence)
+					finalSequence = BaseExtToBases(newSequence)
 					p = geneRecord[g].ExonEnds[thisExon]
 				}
 			}
@@ -240,13 +240,13 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 
 func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 	var codon CodonExt
+	codon.CodonPos = make([]int, 3)
 	var allCodons []CodonExt
 	var exonSeq []BaseExt
 	exonStart := gene.ExonStarts[exon]
 	exonEnd := gene.ExonEnds[exon]
 
-	log.Print(gene.ExonFrames[exon])
-	if gene.ExonNum > exon { //this exon is not the last exon
+	if gene.ExonNum > exon+1 { //this exon is not the last exon
 		if gene.ExonFrames[exon] == 0 && gene.ExonFrames[exon+1] == 0 { //Frame of both this and the next exons = 0
 			exonSeq = seq[exonStart:exonEnd]
 			for p := 0; p < len(exonSeq); p++ {
@@ -340,7 +340,7 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 	return Sequence
 }
 
-func BaseExtToBase(seq []BaseExt) []dna.Base {
+func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
 
 	for i := 0; i < len(seq); i++ { //counter to put things back in order
@@ -370,9 +370,12 @@ func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 
 func CodonExtToCodon(cE CodonExt) *dna.Codon {
 	var codon dna.Codon
+	codon.Seq = make([]dna.Base, 3)
 
 	for c := 0; c < 3; c++ {
 		codon.Seq[c] = cE.Seq[c].Base
+		log.Printf("Codon: %s\n", codon.Seq)
+		log.Printf("cE: %s\n", dna.BasesToString(BaseExtToBases(cE.Seq)))
 	}
 	return &codon
 }

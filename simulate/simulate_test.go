@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 	"testing"
 	//"fmt"
 )
@@ -34,6 +35,18 @@ var MutateSeqTests = []struct {
 	gpd          string
 }{
 	{"debug.fasta", 0.5, "debug.gpd"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+}
+
+func TestBaseConversions(t *testing.T) {
+	for _, test := range MutateSeqTests {
+		seq := fasta.Read(test.sequence)
+		bases := seq[0].Seq
+		intermediate := BasesToBaseExt(bases)
+		log.Print(bases)
+		log.Print(intermediate)
+		answer := BaseExtToBases(intermediate)
+		log.Print(answer)
+	}
 }
 
 func TestMutateGene(t *testing.T) {
