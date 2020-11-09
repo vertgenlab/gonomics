@@ -18,6 +18,7 @@ func plotFunctions(function string, functionArgs string, left float64, right flo
 		}
 		alpha := common.StringToFloat64(words[0])
 		f := popgen.AFSStationarityClosure(alpha)
+		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Beta" {
 		words := strings.Split(functionArgs, ",")
 		if len(words) != 2 {
@@ -26,6 +27,7 @@ func plotFunctions(function string, functionArgs string, left float64, right flo
 		alpha := common.StringToFloat64(words[0])
 		beta := common.StringToFloat64(words[1])
 		f := numbers.BetaClosure(alpha, beta)
+		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Gamma" {
 		words := strings.Split(functionArgs, ",")
 		if len(words) != 2 {
@@ -33,20 +35,20 @@ func plotFunctions(function string, functionArgs string, left float64, right flo
 		}
 		alpha := common.StringToFloat64(words[0])
 		beta := common.StringToFloat64(words[1])
-		f := numbers.GamaClosure(alpha, beta)
+		f := numbers.GammaClosure(alpha, beta)
+		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Normal" {
+		words := strings.Split(functionArgs, ",")
 		if len(words) != 2 {
 			log.Fatalf("a normal distribution is defined by two parameters, received %d.", len(words))
 		}
 		mu := common.StringToFloat64(words[0])
 		sigma := common.StringToFloat64(words[1])
 		f := numbers.NormalClosure(mu, sigma)
-	}
-
+		numbers.Plot(f, left, right, bins, outFile)
 	} else { //here you can add more else ifs to add additional functions for plotting
 		fmt.Printf("Unrecognized function: %s.\n", function)
 	}
-	numbers.Plot(f, left, right, bins, outFile)
 }
 
 func usage() {
@@ -64,7 +66,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 5
+	var expectedNumArgs int = 6
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -76,7 +78,7 @@ func main() {
 	}
 
 	function := flag.Arg(0)
-	funtionArgs := flag.Arg(1)
+	functionArgs := flag.Arg(1)
 	left := common.StringToFloat64(flag.Arg(2))
 	right := common.StringToFloat64(flag.Arg(3))
 	bins := common.StringToInt(flag.Arg(4))

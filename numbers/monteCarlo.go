@@ -156,9 +156,11 @@ func RandExp() (float64, float64) {
 	return a + umin*q[0], ExpDist(a + umin*q[0])
 }
 
+
 func BetaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
-		return RandBeta(a, b)
+		answer := RandBeta(a, b)
+		return answer, BetaDist(a, b, answer)
 	}
 }
 

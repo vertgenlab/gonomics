@@ -11,16 +11,133 @@ const Small float64 = 1.0e-30
 const MaxIterations int = 200
 
 //RandBeta returns a random number drawn from a beta distribution with parameters alpha and beta as an xy point where y is the function density.
-//Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
-func RandBeta(a float64, b float64) (float64, float64) {
+//Implemented from principles in R. C. H. Cheng (1978). Generating beta variates with nonintegral shape parameters. Communications of the ACM 21, 317-322.
+func RandBeta(alpha float64, beta float64) float64 {
 	r := rand.Float64()
-	for r <= 0.0 || r >= 1.0 { //prevents the case where u is exactly 0 or 1, which breaks the code.
-		r = rand.Float64()
+	for r <= 0.0 || r >= 1.0 {//catches the case where r is exactly  0.0 or 1.0
+		r =rand.Float64()
 	}
-	var answer = incompleteBetaHelper(a, b, r)
-	return answer, BetaDist(a, b, answer)
+	
+	//special returns
+	if alpha < 0 || beta < 0 {
+		log.Fatalf("Error in RandBeta: alpha and beta must be greater than 0.  alpha: %f. beta: %f.", alpha, beta)
+	}
+	if math.IsInf(alpha, 1) && math.IsInf(beta, 1) {
+		return 0.5
+	}
+	if alpha == 0 && beta == 0 {
+		return 1.0
+	}
+	if math.IsInf(alpha, 1) || beta == 0 {
+		return 1.0
+	}
+	if math.IsInf(beta, 1) || alpha == 0 {
+		return 0.0
+	}
+
+	var sum, a, b, bet, delta, k1, k2, s, t, u1, u2, v, w, y, z float64
+	var i int
+	a = MinFloat64(alpha, beta)
+	b = MaxFloat64(alpha, beta)
+	sum = a + b
+
+	if a <= 1.0 {
+		//initializations
+		bet = 1.0 / a
+		delta = 1.0 + b - a
+		k1 = delta * (0.0138889 + 0.0416667 * a) / (b * bet - 0.777778)
+		k2 = 0.25 + (0.5 + 0.25 / delta) * a
+
+		for i = 0; i < MaxIterations; i++ {
+			u1 = rand.Float64()
+			u2 = rand.Float64()
+			if u1 < 0.5 {
+				y = u1 * u2
+				z = u1 * y
+				if (0.25 * u2 + z - y >= k1) {
+					continue
+				}
+			} else {
+				z = u1 * u1 * u2
+				if (z <= 0.25) {
+					//this block of code was broken into a helper function in the R implementation
+					v = beta * math.Log(u1 / (1.0 - u1))
+					if (v <= math.Log(math.MaxFloat64)) {
+						w = alpha * math.Exp(v)
+						if math.IsInf(w, 1) {
+							w = math.MaxFloat64
+						}
+					} else {
+						w = math.MaxFloat64
+					}
+					break
+				}
+				if z >= k2 {
+					continue
+				}
+			}
+
+			v = beta * math.Log(u1 / (1.0 - u1))
+			if (v <= math.Log(math.MaxFloat64)) {
+				w = b * math.Exp(v)
+				if math.IsInf(w, 1) {
+					w = math.MaxFloat64
+				}
+			} else {
+				w = math.MaxFloat64
+			}
+
+			if (sum * (math.Log(sum / (a + w)) + v) - 1.3862944 >= math.Log(z)) {
+				break
+			}
+		}
+
+		if i == MaxIterations {
+			log.Fatalf("Failed to converge.")
+			return -1.0
+		}
+
+		if alpha == a {
+			return a / (a + w)
+		}
+		return w / (a + w)
+	} else {
+		var u1, u2 float64
+		var bet float64 = math.Sqrt((sum - 2.0) / (2.0 * a * b - sum))
+		var gamma float64 = a * 1.0 / bet
+		for r + sum * math.Log(sum / (b + w)) < t {
+			u1 = rand.Float64()
+			u2 = rand.Float64()
+
+			v = beta * math.Log(u1 / (1.0 - u1))
+			if (v <= math.Log(math.MaxFloat64)) {
+				w = a * math.Exp(v)
+				if math.IsInf(w, 1) {
+					w = math.MaxFloat64
+				}
+			} else {
+				w = math.MaxFloat64
+			}
+
+			z = u1 * u1 * u2
+			r = gamma * v - 1.3862944
+			s = a + r - w
+			if (s + 2.609438 >= 5.0 * z) {
+				break
+			}
+			if s > t {
+				break
+			}
+		}
+		if alpha != a {
+			return b / (b + w)
+		} else {
+			return w / (b + w)
+		}
+	}
 }
 
+//Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
 func incompleteBetaHelper(a float64, b float64, x float64) float64 {
 	if (x > (a+1.0)/(a+b+2.0)) {
 		return (1.0-incompleteBetaHelper(b, a, 1.0-x))
