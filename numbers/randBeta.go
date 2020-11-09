@@ -28,9 +28,7 @@ func incompleteBetaHelper(a float64, b float64, x float64) float64 {
 	logBeta := math.Log(BetaFunc(a, b))
 	front := math.Exp(math.Log(x)*a + math.Log(1.0-x)*b-logBeta) / a
 
-	f := 1.0
-	c := 1.0
-	d := 0.0
+	var f, c, d float64 = 1.0, 1.0, 0.0
 
 	var numerator, m float64
 	var i int
@@ -46,7 +44,7 @@ func incompleteBetaHelper(a float64, b float64, x float64) float64 {
 
 		d = 1.0 + numerator * d
 		if (math.Abs(d) < Small) {
-			d= Small
+			d = Small
 		}
 
 		d = 1.0 / d
