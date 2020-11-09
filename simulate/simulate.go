@@ -170,18 +170,24 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	seqExt := BasesToBaseExt(seq)
 
 	for p := 0; p < len(seqExt); p++ { //TODO: figure out what math needs to be done at end of loops to correct for an exon being processed (jump to end of thisExon?)
+		log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 		for g := 0; g < len(geneRecord); g++ {
+			log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
 			for ep := 0; ep < len(exonsProcessed); ep++ {
+				newExon = true
 				if thisExon == exonsProcessed[ep] {
 					newExon = false
+				}
+				if newExon == true {
+					exonsProcessed = append(exonsProcessed, thisExon)
 				}
 			}
 			if overlapExon == false {
 				newBase = mutateBase(seq[p], branchLength, p)
-				log.Printf("No exon newBase: %v\n", newBase.Base)
+				//log.Printf("No exon newBase: %v\n", newBase.Base)
 				newSequence = append(newSequence, newBase)
-				log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
+				//log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 			} else {
 				if newExon == true {
 					exonsProcessed = append(exonsProcessed, thisExon)
@@ -197,7 +203,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 							newSequence = append(newSequence, thisCodon.Seq[0])
 							newSequence = append(newSequence, thisCodon.Seq[1])
 							newSequence = append(newSequence, thisCodon.Seq[2])
-							log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
+							//log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 						}
 						if stop == true {
 							newCodon = PickStop(thisCodon)
@@ -206,7 +212,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 							for cp := 0; cp < 3; cp++ { //codonPosition
 								newBase = mutateBase(thisCodon.Seq[cp].Base, branchLength, p+(c-1)*3+cp+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
 								newCodon.Seq[cp] = newBase
-								log.Printf("exon newBase: %v\n", newBase.Base)
+								//log.Printf("exon newBase: %v\n", newBase.Base)
 
 								//codonExt will be transferred to a codon to check translation against BLOSUM,
 								//but codon version won't be used further so we can preserve final seq order
@@ -227,14 +233,14 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 									newSequence = append(newSequence, originalCodons[c].Seq[0])
 									newSequence = append(newSequence, originalCodons[c].Seq[1])
 									newSequence = append(newSequence, originalCodons[c].Seq[2])
-									log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 								}
+								//log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 							}
 						}
 					}
-					log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
+					//log.Printf("NewSeq: %s\n", dna.BasesToString(BaseExtToBases(newSequence)))
 					finalSequence = BaseExtToBases(newSequence)
-					log.Printf("FinalSeq: %s\n", dna.BasesToString(finalSequence))
+					//log.Printf("FinalSeq: %s\n", dna.BasesToString(finalSequence))
 					p = geneRecord[g].ExonEnds[thisExon] //right open
 				}
 			}
