@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 	"testing"
 	//"fmt"
 )
@@ -37,27 +36,30 @@ var MutateSeqTests = []struct {
 	{"debug.fasta", 0.5, "debug.gpd"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
-func TestBaseConversions(t *testing.T) {
-	for _, test := range MutateSeqTests {
-		seq := fasta.Read(test.sequence)
-		bases := seq[0].Seq
-		intermediate := BasesToBaseExt(bases)
-		log.Print(bases)
-		log.Print(intermediate)
-		answer := BaseExtToBases(intermediate)
-		log.Print(answer)
-	}
-}
+//func TestBaseConversions(t *testing.T) {
+//	for _, test := range MutateSeqTests {
+//		seq := fasta.Read(test.sequence)
+//		bases := seq[0].Seq
+//		intermediate := BasesToBaseExt(bases)
+//		log.Print(bases)
+//		log.Print(intermediate)
+//		answer := BaseExtToBases(intermediate)
+//		log.Print(answer)
+//		if len(answer) != len(bases) {
+//			log.Fatal("Test Base Conversion: answer not written properly")
+//		}
+//	}
+//}
 
 func TestMutateGene(t *testing.T) {
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
 		a := MutateGene(bases, test.branchLength, test.gpd)
+		fmt.Printf("a: %s\n", dna.BasesToString(a))
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
 		}
-		fmt.Print(dna.BasesToString(a), "\n")
 	}
 }
 
