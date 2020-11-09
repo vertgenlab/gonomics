@@ -10,8 +10,7 @@ import (
 )
 
 type CodonExt struct { //could make this a linked list so i can treat exons separately
-	Seq      []BaseExt
-	CodonPos []int
+	Seq []BaseExt
 }
 
 type BaseExt struct {
@@ -158,7 +157,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	var newCodon CodonExt
 	newCodon.Seq = make([]BaseExt, 3)
 	var originalCodons []CodonExt
-	var newCodons []CodonExt
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var geneRecord []*genePred.GenePred
@@ -192,24 +190,25 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						start = CheckStart(geneRecord[g], thisCodon)
 						stop = CheckStop(geneRecord[g], thisCodon)
 						if start == true {
-							newCodons = append(newCodons, thisCodon)
+							newSequence = append(newSequence, thisCodon.Seq[0])
+							newSequence = append(newSequence, thisCodon.Seq[1])
+							newSequence = append(newSequence, thisCodon.Seq[2])
 						}
 						if stop == true {
 							newCodon = PickStop(thisCodon)
-							newCodons = append(newCodons, newCodon)
 						}
 						if start == false && stop == false {
-							for cp := 0; cp < 3; cp++ {
-								newBase = mutateBase(thisCodon.Seq[cp].Base, branchLength, p+c-1*3+cp+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
+							for cp := 0; cp < 3; cp++ { //codonPosition
+								newBase = mutateBase(thisCodon.Seq[cp].Base, branchLength, p+(c-1)*3+cp+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
 								newCodon.Seq[cp] = newBase
-								newCodons = append(newCodons, newCodon)
 
 								//codonExt will be transferred to a codon to check translation against BLOSUM,
 								//but codon version won't be used further so we can preserve final seq order
-
+								log.Printf("newCodon: %v", newCodon)
+								log.Printf("original codon[c]: %v", originalCodons[c])
 								tempOriCodon := CodonExtToCodon(originalCodons[c])
 								originalAmAc = dna.TranslateCodon(tempOriCodon)
-								tempNewCodon := CodonExtToCodon(newCodons[c])
+								tempNewCodon := CodonExtToCodon(newCodon)
 								newAmAc = dna.TranslateCodon(tempNewCodon)
 
 								prob := BLOSUM[originalAmAc][newAmAc]
@@ -217,9 +216,9 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 								//this is where checking base by base isn't ideal for our purposes bc the change from one amAc may be unlikely in the two intermediate changes
 								//considering as a whole codon I think is what we want
 								if r < prob {
-									newSequence = append(newSequence, newCodons[c].Seq[0])
-									newSequence = append(newSequence, newCodons[c].Seq[1])
-									newSequence = append(newSequence, newCodons[c].Seq[2])
+									newSequence = append(newSequence, newCodon.Seq[0])
+									newSequence = append(newSequence, newCodon.Seq[1])
+									newSequence = append(newSequence, newCodon.Seq[2])
 								} else {
 									newSequence = append(newSequence, originalCodons[c].Seq[0])
 									newSequence = append(newSequence, originalCodons[c].Seq[1])
@@ -229,7 +228,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						}
 					}
 					finalSequence = BaseExtToBases(newSequence)
-					p = geneRecord[g].ExonEnds[thisExon]
+					p = geneRecord[g].ExonEnds[thisExon] //right open
 				}
 			}
 		}
@@ -240,7 +239,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 
 func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 	var codon CodonExt
-	codon.CodonPos = make([]int, 3)
 	var allCodons []CodonExt
 	var exonSeq []BaseExt
 	exonStart := gene.ExonStarts[exon]
@@ -252,9 +250,6 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				if p%3 == 0 {
 					codon.Seq = seq[p : p+2]
-					codon.CodonPos[0] = 0
-					codon.CodonPos[1] = 1
-					codon.CodonPos[2] = 2
 					allCodons = append(allCodons, codon)
 				}
 			}
@@ -264,9 +259,6 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				if p%3 == 0 {
 					codon.Seq = seq[p : p+2]
-					codon.CodonPos[0] = 0
-					codon.CodonPos[1] = 1
-					codon.CodonPos[2] = 2
 					allCodons = append(allCodons, codon)
 				}
 			}
@@ -279,9 +271,6 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				if p%3 == 0 {
 					codon.Seq = seq[p : p+2]
-					codon.CodonPos[0] = 0
-					codon.CodonPos[1] = 1
-					codon.CodonPos[2] = 2
 					allCodons = append(allCodons, codon)
 				}
 			}
@@ -295,9 +284,6 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				if p%3 == 0 {
 					codon.Seq = seq[p : p+2]
-					codon.CodonPos[0] = 0
-					codon.CodonPos[1] = 1
-					codon.CodonPos[2] = 2
 					allCodons = append(allCodons, codon)
 				}
 			}
@@ -308,9 +294,6 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				if p%3 == 0 {
 					codon.Seq = seq[p : p+2]
-					codon.CodonPos[0] = 0
-					codon.CodonPos[1] = 1
-					codon.CodonPos[2] = 2
 					allCodons = append(allCodons, codon)
 				}
 			}
@@ -320,9 +303,6 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				if p%3 == 0 {
 					codon.Seq = seq[p : p+2]
-					codon.CodonPos[0] = 0
-					codon.CodonPos[1] = 1
-					codon.CodonPos[2] = 2
 					allCodons = append(allCodons, codon)
 				}
 			}
@@ -344,7 +324,10 @@ func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
 
 	for i := 0; i < len(seq); i++ { //counter to put things back in order
+		log.Printf("length Seq: %d", len(seq))
 		for j := 0; j < len(seq); j++ { //counter to check all seq bases before incrementing to look for the next base in the newSeq
+			log.Printf("length Seq: %d", len(seq))
+			log.Printf("j: %v", j)
 			if seq[j].SeqPos == i {
 				newSequence = append(newSequence, seq[j].Base)
 				return newSequence
@@ -371,11 +354,12 @@ func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 func CodonExtToCodon(cE CodonExt) *dna.Codon {
 	var codon dna.Codon
 	codon.Seq = make([]dna.Base, 3)
+	log.Print(cE.Seq)
 
 	for c := 0; c < 3; c++ {
 		codon.Seq[c] = cE.Seq[c].Base
-		log.Printf("Codon: %s\n", codon.Seq)
-		log.Printf("cE: %s\n", dna.BasesToString(BaseExtToBases(cE.Seq)))
+		//log.Printf("Codon: %s\n", codon.Seq)
+		//log.Printf("cE: %s\n", dna.BasesToString(BaseExtToBases(cE.Seq)))
 	}
 	return &codon
 }
