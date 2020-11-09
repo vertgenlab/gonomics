@@ -50,12 +50,13 @@ func incompleteBetaHelper(a float64, b float64, x float64) float64 {
 		}
 
 		d = 1.0 / d
+		c = 1.0 + numerator / c
 
 		if (math.Abs(c) < Small) {
 			c = Small
 		}
 
-		f += c * d
+		f *= c * d
 
 		if math.Abs(1.0-(c*d)) < RelError {
 			return front * (f-1.0)
