@@ -13,11 +13,6 @@ const MaxIterations int = 200
 //RandBeta returns a random number drawn from a beta distribution with parameters alpha and beta as an xy point where y is the function density.
 //Implemented from principles in R. C. H. Cheng (1978). Generating beta variates with nonintegral shape parameters. Communications of the ACM 21, 317-322.
 func RandBeta(alpha float64, beta float64) float64 {
-	r := rand.Float64()
-	for r <= 0.0 || r >= 1.0 {//catches the case where r is exactly  0.0 or 1.0
-		r =rand.Float64()
-	}
-	
 	//special returns
 	if alpha < 0 || beta < 0 {
 		log.Fatalf("Error in RandBeta: alpha and beta must be greater than 0.  alpha: %f. beta: %f.", alpha, beta)
@@ -35,7 +30,7 @@ func RandBeta(alpha float64, beta float64) float64 {
 		return 0.0
 	}
 
-	var sum, a, b, bet, delta, k1, k2, s, t, u1, u2, v, w, y, z float64
+	var sum, a, b, bet, delta, k1, k2, r, s, t, u1, u2, v, w, y, z float64
 	var i int
 	a = MinFloat64(alpha, beta)
 	b = MaxFloat64(alpha, beta)
@@ -101,11 +96,13 @@ func RandBeta(alpha float64, beta float64) float64 {
 			return a / (a + w)
 		}
 		return w / (a + w)
-	} else {
+	} else {//else we use algorithm BB from page 320.
 		var u1, u2 float64
 		var bet float64 = math.Sqrt((sum - 2.0) / (2.0 * a * b - sum))
-		var gamma float64 = a * 1.0 / bet
-		for r + sum * math.Log(sum / (b + w)) < t {
+		var gamma float64 = a + 1.0 / bet
+		var firstTime bool = true
+		for firstTime || r + sum * math.Log(sum / (b + w)) < t {//dowhile
+			firstTime = false
 			u1 = rand.Float64()
 			u2 = rand.Float64()
 
@@ -125,6 +122,7 @@ func RandBeta(alpha float64, beta float64) float64 {
 			if (s + 2.609438 >= 5.0 * z) {
 				break
 			}
+			t = math.Log(z)
 			if s > t {
 				break
 			}
