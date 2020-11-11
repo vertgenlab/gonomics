@@ -168,8 +168,10 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	seqExt := BasesToBaseExt(seq)
 
 	for p := 0; p < len(seqExt); p++ {
+		log.Printf("p: %d", p)
 		for g := 0; g < len(geneRecord); g++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
+			log.Printf("thisExon: %d", thisExon)
 			if overlapExon == false {
 				newBase = mutateBase(seq[p], branchLength, p)
 				newSequence = append(newSequence, newBase)
@@ -186,20 +188,29 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 				//	}
 				var originalCodons []CodonExt
 				originalCodons = CreateCodons(seqExt, geneRecord[g], thisExon)
+				log.Print(thisExon)
 				for codon := 0; codon < len(originalCodons); codon++ {
 					thisCodon := originalCodons[codon]
+					log.Print("codon#")
+					log.Print(codon)
 					start = CheckStart(geneRecord[g], thisCodon)
+					log.Printf("start: %t", start)
 					stop = CheckStop(geneRecord[g], thisCodon)
+					log.Print("thisCodon")
+					log.Print(thisCodon)
+					log.Printf("stop: %t", stop)
 					if start == true {
 						newSequence = append(newSequence, thisCodon.Seq[0])
 						newSequence = append(newSequence, thisCodon.Seq[1])
 						newSequence = append(newSequence, thisCodon.Seq[2])
+						log.Print(newSequence)
 					}
 					if stop == true {
 						newCodon = PickStop(thisCodon)
 						newSequence = append(newSequence, newCodon.Seq[0])
 						newSequence = append(newSequence, newCodon.Seq[1])
 						newSequence = append(newSequence, newCodon.Seq[2])
+						log.Print(newSequence)
 					}
 					if start == false && stop == false {
 						var newCodon CodonExt
@@ -230,7 +241,9 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						}
 					}
 				}
+				log.Print(newSequence)
 				finalSequence = BaseExtToBases(newSequence)
+				log.Print("final")
 				increment = geneRecord[g].ExonEnds[thisExon] - geneRecord[g].ExonStarts[thisExon] //right open
 				p += increment - 1
 			}
@@ -255,18 +268,16 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 			for p := 0; p < len(exonSeq); p++ {
 				var codon CodonExt
 				codon.Seq = make([]BaseExt, 3)
-
 				if p%3 == 0 {
 					codon.Seq[0] = exonSeq[p]
 					codon.Seq[1] = exonSeq[p+1]
 					codon.Seq[2] = exonSeq[p+2]
 					allCodons = append(allCodons, codon)
-					//log.Print(allCodons)
 				}
 			}
-		} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] == 0 { //Frame of this exon != 0 but Frame of next exon = 0
+		} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] == 0 { //Frame of this exon != 0 but Frame of next exon = 0 //TODO:this needs to be tested
 			startFrame := gene.ExonFrames[exon]
-			exonSeq = seq[(gene.ExonStarts[exon] - startFrame):gene.ExonEnds[exon]]
+			exonSeq = seq[(gene.ExonStarts[exon] + startFrame):gene.ExonEnds[exon]]
 			for p := 0; p < len(exonSeq); p++ {
 				var codon CodonExt
 				codon.Seq = make([]BaseExt, 3)
@@ -279,9 +290,11 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 				}
 			}
 		} else if gene.ExonFrames[exon] == 0 && gene.ExonFrames[exon+1] != 0 { //Frame of this exon = 0 but Frame of next exon != 0
+			log.Print("next Exon's frame !=0")
 			endFrame := gene.ExonFrames[exon+1]
+			nextExonStart := gene.ExonStarts[exon+1]
 			exonSeq = seq[exonStart:exonEnd]
-			for ef := 0; ef < endFrame; ef++ {
+			for ef := nextExonStart; ef < nextExonStart+endFrame; ef++ {
 				exonSeq = append(exonSeq, seq[ef])
 			}
 			for p := 0; p < len(exonSeq); p++ {
@@ -292,14 +305,14 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 					codon.Seq[1] = exonSeq[p+1]
 					codon.Seq[2] = exonSeq[p+2]
 					allCodons = append(allCodons, codon)
-					//log.Print(allCodons)
 				}
 			}
-		} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] != 0 { //Frame of the last exon and this exon != 0
+		} else if gene.ExonFrames[exon] != 0 && gene.ExonFrames[exon+1] != 0 { //Frame of the last exon and this exon != 0 //TODO:this needs to be tested
 			startFrame := gene.ExonFrames[exon]
 			endFrame := gene.ExonFrames[exon+1]
-			exonSeq = seq[(gene.ExonStarts[exon] - startFrame):gene.ExonEnds[exon]]
-			for ef := 0; ef < endFrame; ef++ {
+			nextExonStart := gene.ExonStarts[exon+1]
+			exonSeq = seq[(gene.ExonStarts[exon] + startFrame):gene.ExonEnds[exon]]
+			for ef := nextExonStart; ef < nextExonStart+endFrame; ef++ {
 				exonSeq = append(exonSeq, seq[ef])
 			}
 			for p := 0; p < len(exonSeq); p++ {
@@ -328,9 +341,12 @@ func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
 					//log.Print(allCodons)
 				}
 			}
-		} else if gene.ExonFrames[exon] != 0 { //Frame != 0
+		} else if gene.ExonFrames[exon] != 0 { //Frame != 0 //TODO:this needs to be tested
 			startFrame := gene.ExonFrames[exon]
-			exonSeq = seq[(gene.ExonStarts[exon] - startFrame):gene.ExonEnds[exon]]
+			log.Printf("startFrame: %d", startFrame)
+			exonSeq = seq[(gene.ExonStarts[exon] + startFrame):gene.ExonEnds[exon]]
+			log.Print("exonSeq")
+			log.Print(exonSeq)
 			for p := 0; p < len(exonSeq); p++ {
 				var codon CodonExt
 				codon.Seq = make([]BaseExt, 3)
