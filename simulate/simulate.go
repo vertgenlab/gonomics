@@ -167,7 +167,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	seq := copySeq(inputSeq)
 	seqExt := BasesToBaseExt(seq)
 
-	for p := 0; p < len(seqExt); p++ { //TODO: figure out what math needs to be done at end of loops to correct for an exon being processed (jump to end of thisExon?)
+	for p := 0; p < len(seqExt); p++ {
 		for g := 0; g < len(geneRecord); g++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
 			if overlapExon == false {
@@ -175,7 +175,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 				newSequence = append(newSequence, newBase)
 			} else {
 				//if newExon == true { //may not need this
-				//	for ep := 0; ep < len(exonsProcessed); ep++ { //TODO: test this
+				//	for ep := 0; ep < len(exonsProcessed); ep++ {
 				//		newExon = true
 				//		if thisExon == exonsProcessed[ep] {
 				//			newExon = false
@@ -204,7 +204,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 					if start == false && stop == false {
 						var newCodon CodonExt
 						newCodon.Seq = make([]BaseExt, 3)
-						for codonPosition := 0; codonPosition < 3; codonPosition++ { //TODO: change name to codonPosition
+						for codonPosition := 0; codonPosition < 3; codonPosition++ {
 							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, p+(codon-1)*3+codonPosition+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
 							newCodon.Seq[codonPosition] = newBase
 						}
@@ -498,7 +498,7 @@ func PickStop(codon CodonExt) CodonExt {
 //				//fmt.Printf("codonNum: %v\n position: %v\n", codonNum, p+1)
 //
 //				for i := 0; i < codonNum; i++ {
-//					originalCodons = dna.BasesToCodons(seq) //TODO: make sure this seq is just exon seq not the whole stretch
+//					originalCodons = dna.BasesToCodons(seq)
 //					//log.Print(codonNum)
 //
 //					for j := 0; j < 3; j++ {
