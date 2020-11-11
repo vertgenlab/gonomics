@@ -148,7 +148,7 @@ func CalcExonFrame(gene *GenePred) []int {
 			//DEBUG: log.Print(exonFrames)
 		} else {
 			//for all other exons, which depend on the frame being calculated ahead of this step
-			nextExonLength = exonEnds[i] - exonStarts[i] + exonFrames[i]
+			nextExonLength = exonEnds[i] - exonStarts[i] - exonFrames[i]
 			nextExonFrame = nextExonLength % 3
 			if nextExonFrame == 0 {
 				answer = nextExonFrame
