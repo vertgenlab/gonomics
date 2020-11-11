@@ -3,9 +3,9 @@ package interval
 import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/chain"
 	"path"
 )
 
@@ -61,13 +61,11 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 	close(send)
 }
 
-
 func GoReadToIntervalChan(inputFile string) <-chan Interval {
 	answer := make(chan Interval, 1000)
 	go ReadToIntervalChan(inputFile, answer)
 	return answer
 }
-
 
 func ReadToIntervalChan(inputFile string, send chan<- Interval) {
 	// How the file is read is dependent on the file extension

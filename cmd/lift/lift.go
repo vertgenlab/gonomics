@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/interval"
+	"log"
 )
 
 func lift(chainFile string, inFile string, outFile string) {
@@ -17,7 +17,7 @@ func lift(chainFile string, inFile string, outFile string) {
 		chainIntervals = append(chainIntervals, val)
 	}
 	tree := interval.BuildTree(chainIntervals)
-	out :=  fileio.EasyCreate(outFile)
+	out := fileio.EasyCreate(outFile)
 	//second task, read in intervals, find chain, and convert to new interval
 	inChan := interval.GoReadToLiftChan(inFile)
 	var overlap []interval.Interval

@@ -5,9 +5,9 @@ import (
 )
 
 var incompleteBetaTests = []struct {
-	a float64
-	b float64
-	x float64
+	a      float64
+	b      float64
+	x      float64
 	answer float64
 }{
 	{0.1, 0.1, 0.5, 0.5},

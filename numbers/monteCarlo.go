@@ -156,7 +156,6 @@ func RandExp() (float64, float64) {
 	return a + umin*q[0], ExpDist(a + umin*q[0])
 }
 
-
 func BetaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		answer := RandBeta(a, b)
@@ -196,7 +195,7 @@ func RandGamma(a float64, b float64) (float64, float64) {
 				}
 			}
 		}
-		return b * x, GammaDist(a, b, b * x)
+		return b * x, GammaDist(a, b, b*x)
 	}
 
 	var d float64 = a - (1.0 / 3.0)
@@ -217,7 +216,7 @@ func RandGamma(a float64, b float64) (float64, float64) {
 			break
 		}
 	}
-	return b * d * v, GammaDist(a, b, b * d * v)
+	return b * d * v, GammaDist(a, b, b*d*v)
 }
 
 func GammaSampler(a float64, b float64) func() (float64, float64) {
