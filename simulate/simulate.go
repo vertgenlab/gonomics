@@ -216,8 +216,10 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						var newCodon CodonExt
 						newCodon.Seq = make([]BaseExt, 3)
 						for codonPosition := 0; codonPosition < 3; codonPosition++ {
-							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, p+(codon-1)*3+codonPosition+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
+							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, thisCodon.Seq[codonPosition].SeqPos) //p+(codon-1)*3+codonPosition+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
 							newCodon.Seq[codonPosition] = newBase
+							log.Print("newCodon")
+							log.Print(newCodon)
 						}
 						//codonExt will be transferred to a codon to check translation against BLOSUM,
 						//but codon version won't be used further so we can preserve final seq order
