@@ -41,7 +41,7 @@ func IndividualDist(a IndividualAllele, b IndividualAllele) int {
 func GVCFCalculateA2(n int) float64 {
 	var answer float64
 
-	for i := 1; i < n-1; i++ {
+	for i := 1; i < n; i++ {
 		answer += (1.0 / math.Pow(float64(i), 2))
 	}
 	return answer
@@ -51,7 +51,7 @@ func GVCFCalculateA2(n int) float64 {
 func GVCFCalculateA1(n int) float64 {
 	var answer float64
 
-	for i := 1; i < n-1; i++ {
+	for i := 1; i < n; i++ {
 		answer += (1.0 / float64(i))
 	}
 	return answer
@@ -59,27 +59,43 @@ func GVCFCalculateA1(n int) float64 {
 
 //CalculatePiTajima calculates Pi, the mean pairwise distance between the members of an individual allele matrix.
 func CalculatePiTajima(all []*IndividualAllele) float64 {
-	var distList []int
-	var sum, curr int
+	var sumDiffs, numComparisons int
 	for i := 0; i < len(all); i++ {
 		for j := i + 1; j < len(all); j++ { //for all pairs of alleles
-			curr = IndividualDist(*all[i], *all[j])
-			distList = append(distList, curr)
-			sum += curr
+			sumDiffs += IndividualDist(*all[i], *all[j])
+			numComparisons++
 		}
 	}
-	n := len(all)
-	for i := 0; i < len(distList); i++ {
-		sum += distList[i]
+	return (float64(sumDiffs) / float64(numComparisons))
+}
+
+func CountSegSites(all []*IndividualAllele) int {
+	var segSites int = 0
+	var found bool = false
+
+	if len(all) < 2 {
+		log.Fatalf("Need more than two alleles to count segregating sites\n")
 	}
-	return (float64(sum) / float64(n))
+
+	for s := 0; s < len(all[0].sites); s++ {
+		found = false
+		for i := 0; i < len(all) && found == false; i++ {
+			for j := i + 1; j < len(all) && found == false; j++ {
+				if len(all[i].sites[s]) != len(all[j].sites[s]) || dna.Dist(all[i].sites[s], all[j].sites[s]) > 0 {
+					segSites++
+					found = true
+				}
+			}
+		}
+	}
+	return segSites
 }
 
 //TajimaGVCF is the main function that takes an individual allele matrix and calculates Tajima's D. Limited to SNPs.
 func TajimaGVCF(all []*IndividualAllele) float64 {
 	pi := CalculatePiTajima(all)
 	n := len(all)
-	S := len(all[0].sites)
+	S := CountSegSites(all)
 	a1 := GVCFCalculateA1(n)
 	a2 := GVCFCalculateA2(n)
 	b1 := (float64(n + 1)) / (3.0 * float64(n-1))
@@ -122,16 +138,8 @@ func TajimaGVCFBedSet(b []*bed.Bed, gVCFFile string) float64 {
 					if g.Genotypes[j].AlleleOne == -1 || g.Genotypes[j].AlleleTwo == -1 { //check that data exists for both alleles
 						log.Fatalf("Tajima's D on gVCFs requires complete alignment blocks.")
 					} else {
-						if g.Genotypes[j].AlleleOne > 0 {
-							all[j].sites = append(all[j].sites, g.Seq[1])
-						} else {
-							all[j].sites = append(all[j].sites, g.Seq[0])
-						}
-						if g.Genotypes[j].AlleleTwo > 0 {
-							all[j+len(g.Genotypes)].sites = append(all[j+len(g.Genotypes)].sites, g.Seq[0])
-						} else {
-							all[j+len(g.Genotypes)].sites = append(all[j+len(g.Genotypes)].sites, g.Seq[1])
-						}
+						all[2*j].sites = append(all[2*j].sites, g.Seq[g.Genotypes[j].AlleleOne])
+						all[2*j+1].sites = append(all[2*j+1].sites, g.Seq[g.Genotypes[j].AlleleTwo])
 					}
 				}
 			}
