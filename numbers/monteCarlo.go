@@ -160,7 +160,7 @@ func RandExp() (float64, float64) {
 func BetaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		answer := RandBeta(a, b)
-		return answer, BetaDist(a, b, answer)
+		return answer, BetaDist(answer, a, b)
 	}
 }
 

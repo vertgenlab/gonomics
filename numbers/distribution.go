@@ -47,7 +47,7 @@ func BetaDist(x float64, alpha float64, beta float64) float64 {
 		log.Fatalf("Alpha parameter must be greater than 0.")
 	}
 	if beta <= 0 {
-		log.Fatalf("Beta parameter must be greater than 0.")
+		log.Fatalf("Beta parameter must be greater than 0. Beta: %f.", beta)
 	}
 	if x < 0 || x > 1 {
 		log.Fatalf("Value x out of range. The beta distribution is defined between 0 and 1.")
