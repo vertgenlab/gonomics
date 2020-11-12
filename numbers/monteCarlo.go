@@ -102,7 +102,7 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 	return -1.0
 }
 
-func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) float64 {
+func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64,float64) {
 	var xSampler, ySampler, y float64
 	for i := 0; i < maxIteration; i++ {
 		xSampler, ySampler = boundingSampler()
@@ -111,11 +111,11 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y.")
 		}
 		if RandFloat64InRange(0.0, ySampler) < y {
-			return y
+			return xSampler, y
 		}
 	}
 	log.Fatalf("BoundedRejectionSample: Exceeded max iteration.")
-	return -1.0
+	return -1.0, -1.0
 }
 
 //RandExp Returns a random variable as a float64 from a standard exponential distribution. f(x)=e**-x.
@@ -189,7 +189,6 @@ func RandGamma(a float64, b float64) (float64, float64) {
 				}
 			} else {
 				x = math.Exp(math.Log(p) / a)
-				rExp, _ = RandExp()
 				if rExp >= x {
 					break
 				}

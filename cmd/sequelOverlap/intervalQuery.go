@@ -1,13 +1,8 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/axt"
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/vcf"
-	"path"
 	"sync"
 )
 

@@ -34,15 +34,17 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 		for val := range receive {
 			send <- val
 		}
-
-	case ".axt":
-		receive := axt.GoReadToChan(inputFile)
-		for val := range receive {
-			send <- val
-		}
+	
 
 	case ".vcf":
 		receive, _ := vcf.GoReadToChan(inputFile)
+		for val := range receive {
+			send <- val
+		}
+	}
+	/* These data types are theoretically compatible with Lift but not fully implemented.
+	case ".axt":
+		receive := axt.GoReadToChan(inputFile)
 		for val := range receive {
 			send <- val
 		}
@@ -57,17 +59,17 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 		for val := range receive {
 			send <- val
 		}
-	}
+	*/
 	close(send)
 }
 
-func GoReadToIntervalChan(inputFile string) <-chan Interval {
+func GoReadToChan(inputFile string) <-chan Interval {
 	answer := make(chan Interval, 1000)
-	go ReadToIntervalChan(inputFile, answer)
+	go ReadToChan(inputFile, answer)
 	return answer
 }
 
-func ReadToIntervalChan(inputFile string, send chan<- Interval) {
+func ReadToChan(inputFile string, send chan<- Interval) {
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(inputFile)
 

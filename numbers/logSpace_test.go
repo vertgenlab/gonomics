@@ -28,12 +28,12 @@ func TestLogPow(t *testing.T) {
 }
 
 func TestPowLog(t *testing.T) {
-        for _, test := range LogPowTests {
-                calculated := PowLog(math.Log(test.x), test.y)
-                if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
-                        t.Errorf("PowLog for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
-                }
-        }
+	for _, test := range LogPowTests {
+		calculated := PowLog(math.Log(test.x), test.y)
+		if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
+			t.Errorf("PowLog for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
+		}
+	}
 }
 
 var MultiplyLogTests = []struct {

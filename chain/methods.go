@@ -27,6 +27,7 @@ func (ch *Chain) GetChromEnd() int {
 	}
 }
 
+/* Necessary function if chain ever needs to implement the Lift interface.
 func (ch *Chain) UpdateLift(c string, start int, end int) {
 	ch.TName = c
 	if ch.TStrand {
@@ -37,7 +38,7 @@ func (ch *Chain) UpdateLift(c string, start int, end int) {
 	if ch.TStrand {
 		ch.TEnd = end
 	}
-}
+}*/
 
 //WriteToFileHandle was added in order to implement the Interval and Lift interfaces.
 func (ch *Chain) WriteToFileHandle(file *fileio.EasyWriter) {

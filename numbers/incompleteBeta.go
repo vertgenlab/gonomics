@@ -3,7 +3,6 @@ package numbers
 import (
 	"log"
 	"math"
-	"math/rand"
 )
 
 //Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
