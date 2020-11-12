@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/genePred"
+	"log"
 	"testing"
 	//"fmt"
 )
@@ -31,7 +33,7 @@ func TestRandGene(t *testing.T) {
 var MutateSeqTests = []struct {
 	sequence     string
 	branchLength float64
-	gpd          string
+	gp           string
 }{
 	{"testData/debug.fasta", 0.5, "testData/debug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
@@ -51,11 +53,23 @@ var MutateSeqTests = []struct {
 //	}
 //}
 
+func TestCodonExtConversions(t *testing.T) {
+	for _, test := range MutateSeqTests {
+		fasta := fasta.Read(test.sequence)
+		seq := BasesToBaseExt(fasta[0].Seq)
+		gene := genePred.Read(test.gp)
+		a := CodonExtsToCodons(CreateCodons(seq, gene[0], 0))
+		log.Print(a)
+		b := CodonExtToBaseExt(CreateCodons(seq, gene[0], 0))
+		log.Print(b)
+	}
+}
+
 func TestMutateGene(t *testing.T) {
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
-		a := MutateGene(bases, test.branchLength, test.gpd)
+		a := MutateGene(bases, test.branchLength, test.gp)
 		fmt.Printf("a: %s\n", dna.BasesToString(a))
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
@@ -85,13 +99,14 @@ func TestMutateGene(t *testing.T) {
 //var mutateBaseTests = []struct {
 //	base         dna.Base
 //	branchLength float64
+//	position	int
 //}{
-//	{base, 1.0},
+//	{originalBase, 1.0, 0},
 //}
-
+//
 //func TestMutateBase(t *testing.T) {
 //	for _, test := range mutateBaseTests {
-//		a := mutateBase(test.base, test.branchLength)
+//		a := mutateBase(test.base, test.branchLength, test.position)
 //		fmt.Print(a, "\n")
 //	}
 //}
