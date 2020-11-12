@@ -89,15 +89,12 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 }
 
 //RejectionSample returns simulated values from an arbitrary function between a specified left and right bound using a simple rejection sampling method.
-func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int, returnX bool) float64 {
+func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
 		x = RandFloat64InRange(xLeft, xRight) //rand float64 in range xleft to xright
 		y = f(x)
 		if RandFloat64InRange(0.0, yMax) < y {
-			if returnX {
-				return x
-			}
 			return y
 		}
 	}
@@ -105,9 +102,25 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 	return -1.0
 }
 
+func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64,float64) {
+	var xSampler, ySampler, y float64
+	for i := 0; i < maxIteration; i++ {
+		xSampler, ySampler = boundingSampler()
+		y = f(xSampler)
+		if y > ySampler {
+			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y.")
+		}
+		if RandFloat64InRange(0.0, ySampler) < y {
+			return xSampler, y
+		}
+	}
+	log.Fatalf("BoundedRejectionSample: Exceeded max iteration.")
+	return -1.0, -1.0
+}
+
 //RandExp Returns a random variable as a float64 from a standard exponential distribution. f(x)=e**-x.
 //Algorithm from Ahrens, J.H. and Dieter, U. (1972). Computer methods for sampling from the exponential and normal distributions. Comm. ACM, 15, 873-882.
-func RandExp() float64 {
+func RandExp() (float64, float64) {
 	//q series where q[k-1] = sum(log(2)^k / k!) for k=1,2,...n
 	q := [16]float64{0.6931471805599453, 0.9333736875190459, 0.9888777961838675, 0.9984959252914960, 0.9998292811061389, 0.9999833164100727, 0.9999985691438767, 0.9999998906925558, 0.9999999924734159, 0.9999999995283275, 0.9999999999728814, 0.9999999999985598, 0.9999999999999289, 0.9999999999999968, 0.9999999999999999, 1.0000000000000000}
 
@@ -126,7 +139,7 @@ func RandExp() float64 {
 	}
 	r -= 1
 	if r <= q[0] {
-		return a + r
+		return a + r, ExpDist(a + r)
 	}
 
 	var i int = 0
@@ -140,18 +153,25 @@ func RandExp() float64 {
 		}
 		i++
 	}
-	return a + umin*q[0]
+	return a + umin*q[0], ExpDist(a + umin*q[0])
 }
 
-//RandGamma returns a random number drawn from a gamma distribution with parameters alpha and beta.
+func BetaSampler(a float64, b float64) func() (float64, float64) {
+	return func() (float64, float64) {
+		answer := RandBeta(a, b)
+		return answer, BetaDist(answer, a, b)
+	}
+}
+
+//RandGamma returns a random x,y point drawn from a gamma distribution with parameters alpha and beta. y corresponds to the function density at that x value.
 //a > 1 uses the method from Marsaglia and Tsang 2000. Written for k, theta parameters, so the first step converts b to 1 / b to evaluate gamma in terms of alpha and beta parameters.
 //a < 1 uses the method from Ahrens, J.H. and Dieter, U. (1974). Computer methods for sampling from gamma, beta, poisson and binomial distributions. Computing, 12, 223-246.
-func RandGamma(a float64, b float64) float64 {
+func RandGamma(a float64, b float64) (float64, float64) {
 	if a < 0 || b < 0 {
 		log.Fatalf("Error: The gamma distribution is defined with alpha and beta parameters greater than zero.")
 	}
 	b = 1 / b //convert parameter system
-	var x, v, u float64
+	var x, v, u, rExp float64
 	if a < 1 {
 		/* Marsaglia and Tsang code, does not appear to work.
 		u = rand.Float64()
@@ -161,19 +181,20 @@ func RandGamma(a float64, b float64) float64 {
 		e := 1.0 + e1*a
 		for 1 > 0 { //repeat loop until breaks
 			p := e * rand.Float64()
+			rExp, _ = RandExp()
 			if p >= 1.0 {
 				x = -1 * math.Log((e-p)/a)
-				if RandExp() >= (1.0-a)*math.Log(x) {
+				if rExp >= (1.0-a)*math.Log(x) {
 					break
 				}
 			} else {
 				x = math.Exp(math.Log(p) / a)
-				if RandExp() >= x {
+				if rExp >= x {
 					break
 				}
 			}
 		}
-		return b * x
+		return b * x, GammaDist(a, b, b*x)
 	}
 
 	var d float64 = a - (1.0 / 3.0)
@@ -194,5 +215,11 @@ func RandGamma(a float64, b float64) float64 {
 			break
 		}
 	}
-	return b * d * v
+	return b * d * v, GammaDist(a, b, b*d*v)
+}
+
+func GammaSampler(a float64, b float64) func() (float64, float64) {
+	return func() (float64, float64) {
+		return RandGamma(a, b)
+	}
 }

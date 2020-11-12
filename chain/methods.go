@@ -2,7 +2,6 @@ package chain
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	//"io"
 )
 
 //Perform operations on target, chains are one based
@@ -26,6 +25,24 @@ func (ch *Chain) GetChromEnd() int {
 	} else {
 		return getSwapTCoord(ch, false, true)
 	}
+}
+
+/* Necessary function if chain ever needs to implement the Lift interface.
+func (ch *Chain) UpdateLift(c string, start int, end int) {
+	ch.TName = c
+	if ch.TStrand {
+		ch.TStart = start
+	} else {
+		
+	}
+	if ch.TStrand {
+		ch.TEnd = end
+	}
+}*/
+
+//WriteToFileHandle was added in order to implement the Interval and Lift interfaces.
+func (ch *Chain) WriteToFileHandle(file *fileio.EasyWriter) {
+	WriteToFileHandle(file, ch)
 }
 
 type ChainSlice []*Chain

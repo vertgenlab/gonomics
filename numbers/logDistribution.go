@@ -2,7 +2,7 @@ package numbers
 
 import (
 //DEBUG: "fmt"
-	//DEBUG"log"
+//DEBUG"log"
 )
 
 //BinomialDistLog returns log(BinomialDist), where log is the natural logarithm.

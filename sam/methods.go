@@ -23,6 +23,11 @@ func (s *SamAln) GetChromEnd() int {
 	return s.GetChromStart() + runlength
 }
 
+func (s *SamAln) UpdateLift(c string, start int, end int) {
+	s.RName = c
+	s.Pos = int64(start + 1)
+}
+
 type SamSlice []*SamAln
 
 func (v SamSlice) Len() int { return len(v) }
