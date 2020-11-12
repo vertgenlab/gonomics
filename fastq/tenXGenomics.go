@@ -37,9 +37,10 @@ func NextSeq(fwdReader *fileio.EasyReader, revReader *fileio.EasyReader) (*Linke
 //2) Next 6 bases is a 6 base Umi
 //3) finally adaptors and genomic sequence
 //TODO: consider trimming off adapter sequences too
+//TODO: it looks like tenX is now using a 10bp UMI, maybe an option to handle that is needed?
 func FastqPairLinked(fqPair *PairedEnd) *LinkedRead {
-	tenXG := LinkedRead{Fwd: nil, Rev: fqPair.Rev, Bx: GetBarcode(fqPair.Fwd, 0, 16), Umi: GetBarcode(fqPair.Fwd, 17, 23)}
-	tenXG.Fwd = TrimFastq(fqPair.Fwd, 24, len(fqPair.Fwd.Seq))
+	tenXG := LinkedRead{Fwd: nil, Rev: fqPair.Rev, Bx: GetBarcode(fqPair.Fwd, 0, 16), Umi: GetBarcode(fqPair.Fwd, 16, 22)}
+	tenXG.Fwd = TrimFastq(fqPair.Fwd, 22, len(fqPair.Fwd.Seq))
 	bxTag := fmt.Sprintf("BX:%s", dna.BasesToString(tenXG.Bx))
 	tenXG.Fwd.Name = fmt.Sprintf("%s_%s", fqPair.Fwd.Name, bxTag)
 	tenXG.Rev.Name = fmt.Sprintf("%s_%s", fqPair.Rev.Name, bxTag)
@@ -91,8 +92,8 @@ func fastqStats(fq *Fastq) string {
 	return fmt.Sprintf("%s\t%d\n%s\n", fq.Name, len(fq.Seq), dna.BasesToString(fq.Seq))
 }
 
-func PrettyPrint(lr *LinkedRead) string {
-	return fmt.Sprintf("Read\t%s\n10xG\t%s\nUmi\t%s\n\n", lr.Fwd.Name, dna.BasesToString(lr.Bx), dna.BasesToString(lr.Umi))
+func TenXPrettyString(lr *LinkedRead) string {
+	return fmt.Sprintf("FwdRead\t%s\nFwdSeq\t%s\nFwdQual\t%s\n10xG\t%s\nUmi\t%s\nRevRead\t%s\nRevSeq\t%s\nRevQual\t%s\n", lr.Fwd.Name, dna.BasesToString(lr.Fwd.Seq), QualString(lr.Fwd.Qual), dna.BasesToString(lr.Bx), dna.BasesToString(lr.Umi), lr.Rev.Name, dna.BasesToString(lr.Rev.Seq), QualString(lr.Rev.Qual))
 }
 
 //TODO: add a more stringent test to make sure we are trimming the reads correctly
