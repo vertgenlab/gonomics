@@ -31,22 +31,21 @@ func SimulateAFS(alpha float64, n int, k int) AFS {
 }
 
 //SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
-func SimulateSegSite(alpha float64, n int, binHeights []float64, sumHeights float64, AlleleFrequencyBound float64) *SegSite {
+func SimulateSegSite(alpha float64, n int) *SegSite {
 	var fatalCount int = 1000000
-	var freq, r float64
-	var count int
-	var RightBound float64 = 1.0 - AlleleFrequencyBound
+	var maxIteration int = 10000
+	var r, x float64
+	var count, i int
 
-	//stepSize is the function support divided by the number of bins
-	stepSize := (RightBound-AlleleFrequencyBound)/float64(len(binHeights))
+	bound := numbers.ScaledBetaSampler(0.001, 0.5, 5000)
 	f := AFSStationarityClosure(alpha)
 
-	for i := 0; i < fatalCount; i++ {
+	for i = 0; i < fatalCount; i++ {
 		count = 0
-		freq = numbers.RejectionSampleChooseBin(AlleleFrequencyBound, RightBound, stepSize, f, len(binHeights), sumHeights, binHeights)
+		x, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration)
 		for j := 0; j < n; j++ {
 			r = rand.Float64()
-			if r < freq {
+			if r < x {
 				count++
 			}
 		}
@@ -59,9 +58,9 @@ func SimulateSegSite(alpha float64, n int, binHeights []float64, sumHeights floa
 	return &SegSite{0, 0}
 }
 
-func SimulateGenotype(alpha float64, n int, binHeights []float64, sumHeights float64, AlleleFrequencyBound float64) []vcf.GenomeSample {
+func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
 	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
-	s := SimulateSegSite(alpha, n, binHeights, sumHeights, AlleleFrequencyBound)
+	s := SimulateSegSite(alpha, n)
 	alleleArray := SegSiteToAlleleArray(s)
 	var d int
 	for c := 0; c < n; c += 2 {
