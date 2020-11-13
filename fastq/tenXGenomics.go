@@ -37,7 +37,8 @@ func NextSeq(fwdReader *fileio.EasyReader, revReader *fileio.EasyReader) (*Linke
 //2) Next 6 bases is a 6 base Umi
 //3) finally adaptors and genomic sequence
 //TODO: consider trimming off adapter sequences too
-//TODO: it looks like tenX is now using a 10bp UMI, maybe an option to handle that is needed?
+//TODO: it looks like tenX is now using a 10bp UMI for scRNA-seq.  We could either make this struct
+// more general to handle both technologies, or make a new struct for the scRNA-seq data.
 func FastqPairLinked(fqPair *PairedEnd) *LinkedRead {
 	tenXG := LinkedRead{Fwd: nil, Rev: fqPair.Rev, Bx: GetBarcode(fqPair.Fwd, 0, 16), Umi: GetBarcode(fqPair.Fwd, 16, 22)}
 	tenXG.Fwd = TrimFastq(fqPair.Fwd, 22, len(fqPair.Fwd.Seq))
