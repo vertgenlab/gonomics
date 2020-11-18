@@ -152,7 +152,8 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 
 //MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths
 func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dna.Base {
-	//TODO: if we keep BaseExt, any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1
+	//TODO: make sure a genePred can be updated as we go through the tree
+	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
 	var newSequence []BaseExt
 	var finalSequence []dna.Base
 	var newBase BaseExt
