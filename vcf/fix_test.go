@@ -23,7 +23,7 @@ func TestFixVcf(t *testing.T) {
 
 	FixVcf(&vcfTest, ref)
 
-	if vcfTest != correctAnswer {
+	if !isEqual(&vcfTest, &correctAnswer) {
 		t.Errorf("ERROR: Problem fixing VCF. Expected %v, got %v", correctAnswer, vcfTest)
 	}
 }
