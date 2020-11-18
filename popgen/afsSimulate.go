@@ -37,28 +37,31 @@ func SimulateSegSite(alpha float64, n int) *SegSite {
 	var r, x float64
 	var count, i int
 
-	bound := numbers.ScaledBetaSampler(0.001, 0.5, 5000)
+	bound := numbers.ScaledBetaSampler(0.002, 0.5, 5000)
+	//bound := numbers.ScaledOneOverXSampler(3)
 	f := AFSStationarityClosure(alpha)
 
 	for i = 0; i < fatalCount; i++ {
 		count = 0
 		x, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration)
+		//log.Printf("option for p:%e\n", x)
 		for j := 0; j < n; j++ {
 			r = rand.Float64()
-			if r < x {
+			if r <= x {
 				count++
 			}
 		}
 		if count < 1 || count == n {
 			continue
 		}
+		log.Printf("p=%e\tcount=%d\n", x, count)
 		return &SegSite{count, n}
 	}
-	log.Fatalf("Error in simulateSegSite: unable to produce non-zero allele frequency for alpha:%f and %v alleles in 10000 iterations.", alpha, n)
+	log.Fatalf("Error in simulateSegSite: unable to produce non-zero allele frequency for alpha:%f and %v alleles in %d iterations.", alpha, n, fatalCount)
 	return &SegSite{0, 0}
 }
 
-func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
+func SimulateGenotype(alpha float64, n int) ([]vcf.GenomeSample, int) {
 	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
 	s := SimulateSegSite(alpha, n)
 	alleleArray := SegSiteToAlleleArray(s)
@@ -72,7 +75,7 @@ func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
 			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false})
 		}
 	}
-	return answer
+	return answer,s.i
 }
 
 /* This is an outdated version of SimulateGenotype that lacks memory management.

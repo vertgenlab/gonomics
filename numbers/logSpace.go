@@ -100,5 +100,8 @@ func LogPow(x float64, y float64) float64 {
 // This back the log-space answer to x**y where x is already in log-space
 // In other words, this function returns the log-space answer to x**y where x is already in log-space
 func PowLog(x float64, y float64) float64 {
+	if y == 0.0 {
+		return 0.0
+	}
 	return y * x
 }

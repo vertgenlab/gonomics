@@ -165,7 +165,7 @@ func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) floa
 func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
 	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
 	//check if n has already been seen
-	for j := 1; j < n-1; j++ {
+	for j := 1; j < n; j++ {
 		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomMap))
 	}
 	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, binomMap), denominator)
@@ -174,7 +174,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
 func AFSLikelihood(afs AFS, alpha []float64, binomMap [][]float64) float64 {
 	var answer float64 = 0.0
-	for j := 1; j < len(afs.sites); j++ {
+	for j := 0; j < len(afs.sites); j++ {
 		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomMap))
 	}
 	return answer

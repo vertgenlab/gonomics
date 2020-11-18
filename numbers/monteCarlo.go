@@ -109,6 +109,11 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 		y = f(xSampler)
 		if y > ySampler {
 			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y. xSampler: %e. ySampler: %e. y: %e.", xSampler, ySampler, y)
+		} else if math.IsInf(y, 1) {
+			//log.Printf("Warning: Function has reached infinity at %e, so we can't be sure it is bounded\n", xSampler)
+			continue
+		} else if math.IsInf(ySampler, 1) {
+			//log.Printf("Warning: Bounding function is infinity at %e\n", xSampler)
 		}
 		if RandFloat64InRange(0.0, ySampler) < y {
 			return xSampler, y
@@ -154,6 +159,15 @@ func RandExp() (float64, float64) {
 		i++
 	}
 	return a + umin*q[0], ExpDist(a + umin*q[0])
+}
+
+func ScaledOneOverXSampler(multiplier float64) func() (float64, float64) {
+        return func() (float64, float64) {
+		var xVal, yVal float64
+		yVal = RandFloat64InRange(0,1e9)
+		xVal = multiplier / yVal
+                return xVal, yVal
+        }
 }
 
 func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64, float64) {
