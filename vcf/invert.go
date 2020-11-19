@@ -5,7 +5,6 @@ import (
 	//DEBUG: "fmt"
 )
 
-
 //InvertGVcf inverts the reference and alt of a biallelic GVcf record.
 func InvertGVcf(g *GVcf) {
 	InvertVcf(&g.Vcf)

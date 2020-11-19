@@ -1,10 +1,10 @@
 package vcf
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"sort"
 	"strings"
-	"github.com/vertgenlab/gonomics/dna"
 )
 
 func CompareCoord(alpha *Vcf, beta *Vcf) int {

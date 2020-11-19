@@ -1,16 +1,16 @@
 package vcf
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/dna"
+	"testing"
 )
 
-var FirstInputVcf Vcf = Vcf{Chr:"chr2", Pos: 4, Ref: "C", Alt: "T"}
-var FirstExpectedVcf Vcf = Vcf{Chr:"chr2", Pos: 4, Ref: "T", Alt: "C"}
+var FirstInputVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: "C", Alt: "T"}
+var FirstExpectedVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: "T", Alt: "C"}
 
 var InvertVcfTests = []struct {
-	Input	Vcf
-	Expected	Vcf
+	Input    Vcf
+	Expected Vcf
 }{
 	{FirstInputVcf, FirstExpectedVcf},
 }
@@ -41,7 +41,7 @@ var FirstInputGVcf GVcf = GVcf{Vcf: FirstInputVcf, Seq: FirstInputSeq, Genotypes
 var FirstExpectedGVcf GVcf = GVcf{Vcf: FirstExpectedVcf, Seq: FirstExpectedSeq, Genotypes: FirstExpectedGenotypes}
 
 var InvertGVcfTests = []struct {
-	Input GVcf
+	Input    GVcf
 	Expected GVcf
 }{
 	{FirstInputGVcf, FirstExpectedGVcf},
