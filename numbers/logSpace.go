@@ -90,6 +90,7 @@ func LogPow(x float64, y float64) float64 {
 	if x < 0 {
 		log.Fatalf("LowPowInt does not handle negative x values. x=%e\n", x)
 	}
+	// anything to the zero power is 1, so we return 0 == log(1).  0^0 is what this catches
 	if y == 0.0 {
 		return 0.0
 	}
@@ -100,5 +101,9 @@ func LogPow(x float64, y float64) float64 {
 // This back the log-space answer to x**y where x is already in log-space
 // In other words, this function returns the log-space answer to x**y where x is already in log-space
 func PowLog(x float64, y float64) float64 {
+	// anything to the zero power is 1, so we return 0 == log(1).  0^0 is what this catches
+	if y == 0.0 {
+		return 0.0
+	}
 	return y * x
 }
