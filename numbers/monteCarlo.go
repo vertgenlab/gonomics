@@ -108,7 +108,7 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 		xSampler, ySampler = boundingSampler()
 		y = f(xSampler)
 		if y > ySampler {
-			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y.")
+			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y. xSampler: %e. ySampler: %e. y: %e.", xSampler, ySampler, y)
 		}
 		if RandFloat64InRange(0.0, ySampler) < y {
 			return xSampler, y
@@ -154,6 +154,13 @@ func RandExp() (float64, float64) {
 		i++
 	}
 	return a + umin*q[0], ExpDist(a + umin*q[0])
+}
+
+func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64, float64) {
+	return func() (float64, float64) {
+		answer := RandBeta(a, b)
+		return answer, multiplier * BetaDist(answer, a, b)
+	}
 }
 
 func BetaSampler(a float64, b float64) func() (float64, float64) {
