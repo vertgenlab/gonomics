@@ -342,15 +342,9 @@ func BaseExtToBases(seq []BaseExt) []dna.Base {
 		for j = 0; j < len(seq); j++ { //counter to check all seq bases before incrementing to look for the next base in the newSeq
 			if seq[j].SeqPos == i {
 				newSequence = append(newSequence, seq[j].Base)
-				log.Print(i)
-				log.Print(j)
-				i += 1
-				//TODO: somehow i skipped 13 when 13 was an exon start and was the position of the last base of a split codon
 			}
 		}
 	}
-	log.Print(seq, len(seq))
-	log.Print(newSequence, len(newSequence))
 	if len(newSequence) != len(seq) {
 		log.Fatal("Cannot find order of bases")
 	}
