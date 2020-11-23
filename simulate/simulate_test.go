@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/genePred"
-	"log"
 	"testing"
 	//"fmt"
 )
@@ -17,7 +15,7 @@ var RandGeneTests = []struct {
 	length int
 	GC     float64
 }{
-	{"testingRandGene", 99, GCcontent},
+	{"testingRandGene", 30, GCcontent},
 }
 
 func TestRandGene(t *testing.T) {
@@ -35,7 +33,7 @@ var MutateSeqTests = []struct {
 	branchLength float64
 	gp           string
 }{
-	{"testData/debug.fasta", 0.5, "testData/debug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{"testData/longDebug.fasta", 0.5, "testData/longDebug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 //func TestBaseConversions(t *testing.T) {
@@ -53,17 +51,17 @@ var MutateSeqTests = []struct {
 //	}
 //}
 
-func TestCodonExtConversions(t *testing.T) {
-	for _, test := range MutateSeqTests {
-		fasta := fasta.Read(test.sequence)
-		seq := BasesToBaseExt(fasta[0].Seq)
-		gene := genePred.Read(test.gp)
-		a := CodonExtsToCodons(CreateCodons(seq, gene[0], 0))
-		log.Print(a)
-		b := CodonExtToBaseExt(CreateCodons(seq, gene[0], 0))
-		log.Print(b)
-	}
-}
+//func TestCodonExtConversions(t *testing.T) {
+//	for _, test := range MutateSeqTests {
+//		fasta := fasta.Read(test.sequence)
+//		seq := BasesToBaseExt(fasta[0].Seq)
+//		gene := genePred.Read(test.gp)
+//		a := CodonExtsToCodons(CreateCodons(seq, gene[0], 0))
+//		log.Print(a)
+//		b := CodonExtToBaseExt(CreateCodons(seq, gene[0], 0))
+//		log.Print(b)
+//	}
+//}
 
 func TestMutateGene(t *testing.T) {
 	for _, test := range MutateSeqTests {
