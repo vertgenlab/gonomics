@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/interval"
 	"log"
 )
@@ -24,7 +25,6 @@ func lift(chainFile string, inFile string, outFile string, faFile string) {
 	out := fileio.EasyCreate(outFile)
 	var records []*fasta.Fasta
 	var currVcf *vcf.Vcf
-	var currRef, currAlt, faBases []dna.Base
 
 	if faFile != "" {
 		records = fasta.Read(faFile)
@@ -45,14 +45,14 @@ func lift(chainFile string, inFile string, outFile string, faFile string) {
 			currVcf = i.(*vcf.Vcf)
 
 			//first question: does the "Ref" match the destination fa at this position.
-			if fasta.QuerySeq(records, currVcf.Chr, currVcf.Pos - 1, dna.StringToBases(currVcf.Ref)) {
+			if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Ref)) {
 				//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-				if fasta.QuerySeq(records, currVcf.Chr, currVcf.Pos - 1, dna.StringToBases(currVcf.Alt)) && Verbose > 0 {
+				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt)) && Verbose > 0 {
 					log.Printf("For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 				}
 			//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
-			} else fasta.QuerySeq(records, currVcf.Chr, currVcf.Pos - 1, dna.StringToBases(currVcf.Alt)) {
-				InvertVcf(currVcf)
+			} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt)) {
+				vcf.InvertVcf(currVcf)
 			} else {
 				log.Fatalf("Neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.")
 			}

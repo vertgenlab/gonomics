@@ -65,7 +65,8 @@ func SortBySeq(seqs []*Fasta) {
 
 //QuerySeq takes in a slice of fastas and a position (name and index) and returns true if a query sequence of bases matches the fasta at this position.
 func QuerySeq(records []*Fasta, chr string, index int, query []dna.Base) bool {
-	return dna.CompareSeqsIgnoreCaseAndGaps(query, records[chr][index:index+len(query)]) != 0
+	chrIndex := GetChromIndex(records, chr)
+	return dna.CompareSeqsIgnoreCaseAndGaps(query, records[chrIndex].Seq[index:index+len(query)]) != 0
 }
 
 
