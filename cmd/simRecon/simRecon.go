@@ -11,8 +11,7 @@ import (
 	"log"
 )
 
-func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string) {
-	//SimEvolution
+func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
@@ -25,11 +24,12 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 			leafFastas = append(leafFastas, nodes[i].Fasta)
 		}
 	}
-
 	fasta.Write(simOutFile, fastas)
 	fasta.Write(leafOutFile, leafFastas)
+}
 
-	//ReconSeq
+func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
+	tree := expandedTree.ReadTree(newickInput, fastaInput)
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 	var treeFastas []*fasta.Fasta
@@ -43,12 +43,16 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	for k := 0; k < len(branches); k++ {
 		treeFastas = append(treeFastas, branches[k].Fasta)
 	}
-	fasta.Write(reconOutFile, treeFastas)
+	fasta.Write(outputFilename, treeFastas)
+}
 
-	//ReconAccuracy
+func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string) {
 	//TODO: this code will need to change drastically for sequences of varying lengths.
-	//The loop through the sequence is restricted by a single fasta and the tot calculation will need to calculate the total number of bps
+	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
+	SimulateEvol(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
+	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
+
 	answer := reconstruct.ReconAccuracy(simOutFile, reconOutFile)
 	out := fileio.EasyCreate(accuracyOutFile)
 	defer out.Close()
