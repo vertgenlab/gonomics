@@ -5,6 +5,7 @@ import (
 	//DEBUG: "fmt"
 )
 
+//TODO: Integrate GVcf into new updated Vcf struct. Also, handle phasing (if we do not adjust all records, some haplotypes could become unphased if some variants but not others are flipped.)
 //InvertGVcf inverts the reference and alt of a biallelic GVcf record.
 func InvertGVcf(g *GVcf) {
 	InvertVcf(&g.Vcf)
