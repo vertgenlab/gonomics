@@ -11,7 +11,8 @@ import (
 	"log"
 )
 
-func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
+//SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction
+func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
@@ -28,6 +29,7 @@ func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile s
 	fasta.Write(leafOutFile, leafFastas)
 }
 
+//ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree := expandedTree.ReadTree(newickInput, fastaInput)
 	leaves := expandedTree.GetLeaves(tree)
@@ -46,6 +48,7 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	fasta.Write(outputFilename, treeFastas)
 }
 
+//SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction
 func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string) {
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
