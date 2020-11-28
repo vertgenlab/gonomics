@@ -53,7 +53,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
-	SimulateEvol(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
+	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
 
 	answer := reconstruct.ReconAccuracy(simOutFile, reconOutFile)
