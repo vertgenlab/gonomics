@@ -1,22 +1,26 @@
 package reconstruct
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
+//TODO: add calcs for exon vs non-exon acc
 //returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
-func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
+func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string) map[string]float64 {
 	var allNodes string
 	allNodes = "all Nodes"
 	var found bool = false
+	var leaf = false
 	var total float64
 	total = 0.0
 	var mistakes float64
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
+	leaves := fasta.Read(leavesOnlyFile)
 
 	answer := make(map[string]float64)
 
@@ -25,10 +29,15 @@ func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 
 		found = false
 		for j := 0; j < len(recon); j++ {
 			if sim[i].Name == recon[j].Name {
+				for l := 0; l < len(leaves); l++ {
+					if recon[j].Name == leaves[l].Name {
+						leaf = true
+					}
+				}
 				found = true
 				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
 				for k := 0; k < len(sim[0].Seq); k++ {
-					if sim[i].Seq[k] != recon[j].Seq[k] {
+					if sim[i].Seq[k] != recon[j].Seq[k] && leaf == false {
 						mistakes = mistakes + 1
 					}
 				}
@@ -38,13 +47,13 @@ func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 
 			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
 		}
 		accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
-		//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+		fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", total, float64(len(sim)), float64(len(sim[0].Seq)))
 		acc := 100 - accuracy
 		answer[sim[i].Name] = acc
 		total = total + mistakes
 	}
-	accuracy := total / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
-	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+	accuracy := total / (float64(len(sim)-len(leaves)) * float64(len(sim[0].Seq))) * 100.0
+	fmt.Printf("tot: %f, acc: %f, len(sim): %f, len(leaves): %f, len(sim[0].Seq): %f \n", total, accuracy, float64(len(sim)), float64(len(leaves)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
 	answer[allNodes] = acc
 	return answer

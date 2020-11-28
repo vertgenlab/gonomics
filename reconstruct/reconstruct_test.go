@@ -25,7 +25,7 @@ func Test_reconstruct(t *testing.T) {
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
 		simulate.Simulate("RandGeneOutput.fasta", tre, "newTestFiles/genePred.gp")
 		WriteTreeToFasta(tre, "simOut.fasta")
-		WriteLeavesToFasta(tre, "leavesOnly.Fasta")
+		WriteLeavesToFasta(tre, "leavesOnly.fasta")
 
 		tr := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
 		leaves := expandedTree.GetLeaves(tr)
@@ -33,7 +33,7 @@ func Test_reconstruct(t *testing.T) {
 			LoopNodes(tr, i)
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
-		accuracyData := ReconAccuracy("simOut.fasta", "reconOut.fasta")
+		accuracyData := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta")
 		for name, accuracy := range accuracyData {
 			log.Printf("%s %f \n", name, accuracy)
 		}
