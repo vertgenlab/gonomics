@@ -237,7 +237,7 @@ func GenotypeToStringNew(sample []GenomeSample) string {
 }
 
 //helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
-func helperGenotypeToStringNew(sample []GenomeSample, i int)  string {
+func helperGenotypeToStringNew(sample []GenomeSample, i int) string {
 	if sample[i].AlleleOne < 0 {
 		return "noData "
 	} else {

@@ -42,7 +42,7 @@ func VcfAnnotateAncestorFromFa(g *Vcf, records []*fasta.Fasta) {
 	var insertionEnd int
 	if records[0].Seq[p+1] == dna.Gap { //true in the case of insertions, as there is a gap in the reference after the variant position.
 		insertionEnd = p + 1
-		fmt.Printf("Found insertion.\n")
+		//DEBUG: fmt.Printf("Found insertion.\n")
 		for insertionEnd < len(records[0].Seq) {
 			if records[0].Seq[insertionEnd] != dna.Gap {
 				break
