@@ -9,10 +9,10 @@ import (
 )
 
 //TODO: add calcs for exon vs non-exon acc
-//returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
+//returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined
 func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string) map[string]float64 {
 	var allNodes string
-	allNodes = "all Nodes"
+	allNodes = "All Reconstructed Nodes"
 	var found bool = false
 	var leaf = false
 	var total float64
