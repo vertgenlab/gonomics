@@ -27,50 +27,46 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
 	leaves := fasta.Read(leavesOnlyFile)
-
 	genes := genePred.Read(gpFilename)
+
 	answer := make(map[string]float64)
 
 	for i := 0; i < len(sim); i++ {
 		exonBases = 0.0
 		nonCodingBases = 0.0
-		for g := 0; g < len(genes); g++ {
-			for p := 0; p < len(sim[i].Seq); p++ {
-				exon, _ = simulate.CheckExon(genes[g], p)
-				if exon == true {
-					exonBases = exonBases + 1
-				} else {
-					nonCodingBases = nonCodingBases + 1
-				}
-			}
-		}
 		mistakes = 0.0
 		exonMistakes = 0.0
 		nonCodingMistakes = 0.0
 		found = false
 		for j := 0; j < len(recon); j++ {
 			if sim[i].Name == recon[j].Name {
+				leaf = false
 				for l := 0; l < len(leaves); l++ {
-					leaf = false
 					if recon[j].Name == leaves[l].Name {
 						leaf = true
 					}
 				}
 				found = true
 				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
-				for k := 0; k < len(sim[0].Seq); k++ {
-					if sim[i].Seq[k] != recon[j].Seq[k] {
-						if leaf == false {
-							//log.Print(sim[i].Name)
-							mistakes = mistakes + 1
-						} else {
-							log.Print(sim[i].Name)
-							leafMistakes = leafMistakes + 1
-						}
+				for g := 0; g < len(genes); g++ {
+					for k := 0; k < len(sim[i].Seq); k++ {
+						exon, _ = simulate.CheckExon(genes[g], k)
 						if exon == true {
-							exonMistakes = exonMistakes + 1
+							exonBases = exonBases + 1
 						} else {
-							nonCodingMistakes = nonCodingMistakes + 1
+							nonCodingBases = nonCodingBases + 1
+						}
+						if sim[i].Seq[k] != recon[j].Seq[k] {
+							if leaf == false {
+								mistakes = mistakes + 1
+							} else {
+								leafMistakes = leafMistakes + 1
+							}
+							if exon == true {
+								exonMistakes = exonMistakes + 1
+							} else {
+								nonCodingMistakes = nonCodingMistakes + 1
+							}
 						}
 					}
 				}
@@ -91,7 +87,7 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 			lAcc := 100 - leafAccuracy
 			answer[sim[i].Name+"(leaf)"] = lAcc
 		}
-		//BUG: it seems like exon/nonExon are swapped in simRecon test
+		//BUG: it seems like exonMistakes and nonCodingMistakes are swapped in simRecon test, but not exonBases or non-CodingBases
 		exonAccuracy := exonMistakes / exonBases * 100.0
 		nonCodingAccuracy := nonCodingMistakes / nonCodingBases * 100.0
 		log.Printf("Node: %s, nonCodingMistakes: %f, nonCodingBases: %f, exonMistakes: %f, exonBases: %f", sim[i].Name, nonCodingMistakes, nonCodingBases, exonMistakes, exonBases)
