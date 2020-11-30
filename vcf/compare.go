@@ -2,6 +2,7 @@ package vcf
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 	"strings"
@@ -17,39 +18,12 @@ func CompareCoord(alpha *Vcf, beta *Vcf) int {
 	return 0
 }
 
-func CompareName(alpha string, beta string) int {
-	return strings.Compare(alpha, beta)
-}
-
 func CompareVcf(alpha *Vcf, beta *Vcf) int {
-	compareStorage := CompareName(alpha.Chr, beta.Chr)
+	compareStorage := strings.Compare(alpha.Chr, beta.Chr)
 	if compareStorage != 0 {
 		return compareStorage
-	} else {
-		return CompareCoord(alpha, beta)
 	}
-}
-
-func EqualGVcf(alpha GVcf, beta GVcf) bool {
-	if !isEqual(&alpha.Vcf, &beta.Vcf) {
-		return false
-	}
-	if !EqualGenotypes(alpha.Genotypes, beta.Genotypes) || !EqualSeq(alpha.Seq, beta.Seq) {
-		return false
-	}
-	return true
-}
-
-func EqualSeq(alpha [][]dna.Base, beta [][]dna.Base) bool {
-	if len(alpha) != len(beta) {
-		return false
-	}
-	for i := 0; i < len(alpha); i++ {
-		if dna.CompareSeqsIgnoreCase(alpha[i], beta[i]) != 0 {
-			return false
-		}
-	}
-	return true
+	return CompareCoord(alpha, beta)//TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
 func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
@@ -74,16 +48,21 @@ func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
 	return 0
 }
 
-func EqualGenotypes(alpha []GenomeSample, beta []GenomeSample) bool {
-	if len(alpha) != len(beta) {
-		return false
-	}
-	for i := 0; i < len(alpha); i++ {
-		if CompareGenomeSample(alpha[i], beta[i]) != 0 {
-			return false
+func CompareGenotypes(alpha []GenomeSample, beta []GenomeSample) int {
+	var res int
+	stop := numbers.Min(len(alpha), len(beta))
+	for i := 0; i < stop; i++ {
+		res = CompareGenomeSample(alpha[i], beta[i])
+		if res != 0 {
+			return res
 		}
 	}
-	return true
+	if len(alpha) < len(beta) {
+		return -1
+	} else if len(alpha) > len(beta) {
+		return 1
+	}
+	return 0
 }
 
 func Sort(vcfFile []*Vcf) {
@@ -100,16 +79,22 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Id, beta.Id) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Ref, beta.Ref) != 0 {
+	if dna.CompareSeqsIgnoreCaseAndGaps(alpha.Ref, beta.Ref) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Alt, beta.Alt) != 0 {
+	if dna.CompareTwoDSeqsIgnoreCaseAndGaps(alpha.Alt, beta.Alt) != 0 {
 		return false
 	}
 	if strings.Compare(alpha.Filter, beta.Filter) != 0 {
 		return false
 	}
 	if strings.Compare(alpha.Info, beta.Info) != 0 {
+		return false
+	}
+	if strings.Compare(alpha.Notes, beta.Notes) != 0 {
+		return false
+	}
+	if CompareGenotypes(alpha.Genotypes, beta.Genotypes) != 0 {
 		return false
 	}
 	return true

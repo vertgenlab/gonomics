@@ -5,15 +5,6 @@ import (
 	//DEBUG: "fmt"
 )
 
-//TODO: Integrate GVcf into new updated Vcf struct. Also, handle phasing (if we do not adjust all records, some haplotypes could become unphased if some variants but not others are flipped.)
-//InvertGVcf inverts the reference and alt of a biallelic GVcf record.
-func InvertGVcf(g *GVcf) {
-	InvertVcf(&g.Vcf)
-	//Tuple assignment flips the reference and alt sequence.
-	g.Seq[0], g.Seq[1] = g.Seq[1], g.Seq[0]
-	InvertAlleles(g.Genotypes)
-}
-
 //InvertGenomeSample inverts the ancestral/derived state for each allele in a GenomeSample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
 func InvertGenomeSample(g *GenomeSample) {
 	if g.AlleleOne == 0 {
@@ -43,5 +34,6 @@ func InvertAlleles(g []GenomeSample) {
 func InvertVcf(v *Vcf) {
 	//DEBUG: fmt.Printf("v.Ref before inversion: %s.\n", v.Ref)
 	v.Ref, v.Alt = v.Alt, v.Ref
+	InvertAlleles(v.Genotypes)
 	//DEBUG: fmt.Printf("v.Ref after inversion: %s.\n", v.Ref)
 }

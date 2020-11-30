@@ -2,13 +2,13 @@ package vcf
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	//"log"
-	"strings"
+	//"strings"
 )
 
-func Filter(v *Vcf, chrom string, minPos int64, maxPos int64, ref string, alt string, minQual float64) bool {
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref []dna.Base, alt [][]dna.Base, minQual float64) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -34,21 +34,21 @@ func FilterQual(v *Vcf, minQual float64) bool {
 	return true
 }
 
-func FilterAlt(v *Vcf, alt string) bool {
-	if alt != "" && v.Alt != alt {
+func FilterAlt(v *Vcf, alt [][]dna.Base) bool {
+	if len(alt) > 0 && dna.CompareTwoDSeqsIgnoreCaseAndGaps(v.Alt, alt) != 0 {
 		return false
 	}
 	return true
 }
 
-func FilterRef(v *Vcf, ref string) bool {
-	if ref != "" && v.Ref != ref {
+func FilterRef(v *Vcf, ref []dna.Base) bool {
+	if len(ref) > 0 && dna.CompareSeqsIgnoreCaseAndGaps(v.Ref, ref) != 0 {
 		return false
 	}
 	return true
 }
 
-func FilterRange(v *Vcf, minPos int64, maxPos int64) bool {
+func FilterRange(v *Vcf, minPos int, maxPos int) bool {
 	if v.Pos < minPos || v.Pos > maxPos {
 		return false
 	}
@@ -62,6 +62,7 @@ func FilterChrom(v *Vcf, chrom string) bool {
 	return true
 }
 
+/*
 //TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
@@ -86,12 +87,22 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	}
 	Sort(answer)
 	return answer
-}
+}*/
 
 func FilterNs(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
+	var noN bool
 	for i := 0; i < len(vcfs); i++ {
-		if !strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N") {
+		noN = true
+		if dna.CountNs(vcfs[i].Ref) > 0 {
+			noN = false
+		}
+		for j := 0; j < len(vcfs[i].Alt); j++ {
+			if dna.CountNs(vcfs[i].Alt[j]) > 0 {
+				noN = false
+			}
+		}
+		if noN {
 			answer = append(answer, vcfs[i])
 		}
 	}
@@ -107,7 +118,7 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 }
 
 func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
-	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Alt: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
+	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: nil, Alt: nil, Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
 	if len(a.Ref) < len(b.Ref) {
 		mergeRecord.Ref += b.Ref
 	} else {

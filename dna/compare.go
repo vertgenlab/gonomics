@@ -83,3 +83,40 @@ func CompareSeqsIgnoreCaseAndGaps(alpha []Base, beta []Base) int {
 func CompareSeqsCaseSensitiveIgnoreGaps(alpha []Base, beta []Base) int {
 	return compareSeqsIgnoreGaps(alpha, beta, false)
 }
+
+func compare2DSeqs(alpha [][]Base, beta [][]Base, ignoreCase bool, ignoreGaps bool) int {
+	var res int
+	stop := numbers.Min(len(alpha), len(beta))
+	for i := 0; i < stop; i++ {
+		if ignoreGaps {
+			res = compareSeqsIgnoreGaps(alpha[i], beta[i], ignoreCase)
+		} else {
+			res = compareSeqs(alpha[i], beta[i], ignoreCase)
+		}
+		if res != 0 {
+			return res
+		}
+	}
+	if len(alpha) < len(beta) {
+		return -1
+	} else if len(alpha) > len(beta) {
+		return 1
+	}
+	return 0
+}
+
+func CompareTwoDSeqsIgnoreCase(alpha [][]Base, beta [][]Base) int {
+	return compare2DSeqs(alpha, beta, true, false)
+}
+
+func CompareTwoDSeqsCaseSensitive(alpha [][]Base, beta [][]Base) int {
+	return compare2DSeqs(alpha, beta, false, false)
+}
+
+func CompareTwoDSeqsIgnoreCaseAndGaps(alpha [][]Base, beta [][]Base) int {
+	return compare2DSeqs(alpha, beta, true, true)
+}
+
+func CompareTwoDSeqsCaseSensitiveIgnoreGaps(alpha [][]Base, beta [][]Base) int {
+	return compare2DSeqs(alpha, beta, false, true)
+}

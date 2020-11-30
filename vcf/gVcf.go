@@ -36,11 +36,12 @@ func GoReadGVcf(filename string) *Reader {
 	return ans
 }
 
+/*
 type GVcf struct {
 	Vcf
 	Seq       [][]dna.Base
 	Genotypes []GenomeSample
-}
+}*/
 
 type GenomeSample struct {
 	AlleleOne int16
@@ -53,11 +54,12 @@ type SampleHash struct {
 	GIndex map[string]int16
 }
 
+/*
 //TODO: Can only process short variants. Need long term solution for large structural variance.
 func VcfToGvcf(v *Vcf) *GVcf {
 	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
 	return gVcf
-}
+}*/
 
 func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	text := strings.Split(v.Notes, "\t")
@@ -167,7 +169,7 @@ func PrintSampleNames(header *VcfHeader) string {
 	return ans
 }
 
-func getAltBases(alt string) [][]dna.Base {
+func GetAltBases(alt string) [][]dna.Base {
 	words := strings.Split(alt, ",")
 	var answer [][]dna.Base = make([][]dna.Base, len(words))
 	for i := 0; i < len(words); i++ {
@@ -176,7 +178,7 @@ func getAltBases(alt string) [][]dna.Base {
 	return answer
 }
 
-func altBasesToString(alt [][]dna.Base) string {
+func AltBasesToString(alt [][]dna.Base) string {
 	var work []string = make([]string, len(alt))
 	for i := 0; i < len(work); i++ {
 		work[i] = dna.BasesToString(alt[i])
@@ -208,6 +210,7 @@ func PrintReOrder(v *Vcf, samples []int16) {
 	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypeToString(Genotypes))
 }
 
+/*
 func GenotypeToString(sample *GVcf) string {
 	var answer string = ""
 	for i := 0; i < len(sample.Genotypes); i++ {
@@ -226,18 +229,18 @@ func helperGenotypeToString(sample *GVcf, i int) string {
 			return fmt.Sprintf("%d%s%d=%s%s%s\t", sample.Genotypes[i].AlleleOne, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].AlleleTwo, dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleOne]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleTwo]))
 		}
 	}
-}
+}*/
 
-func GenotypeToStringNew(sample []GenomeSample) string {
+func GenotypeToString(sample []GenomeSample) string {
 	var answer string = ""
 	for i := 0; i < len(sample); i++ {
-		answer += helperGenotypeToStringNew(sample, i)
+		answer += helperGenotypeToString(sample, i)
 	}
 	return answer
 }
 
 //helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
-func helperGenotypeToStringNew(sample []GenomeSample, i int) string {
+func helperGenotypeToString(sample []GenomeSample, i int) string {
 	if sample[i].AlleleOne < 0 {
 		return "noData "
 	} else {
