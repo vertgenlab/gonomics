@@ -33,7 +33,7 @@ func Test_reconstruct(t *testing.T) {
 			LoopNodes(tr, i)
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
-		accuracyData := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta")
+		accuracyData := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "newTestFiles/genePred.gp")
 		for name, accuracy := range accuracyData {
 			log.Printf("%s %f \n", name, accuracy)
 		}
