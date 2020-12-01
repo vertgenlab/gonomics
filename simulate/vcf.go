@@ -104,6 +104,30 @@ func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
 	}
 }
 
+func ficBinomCoeff(n int, k int, alpha float64, binomCoeff float64) func(float64) float64 {
+        return func(p float64) float64 {
+                if p == 0 || p == 1 {
+                        return math.Inf(-1)
+                }
+                expression := numbers.BinomialExpressionLog(n-2, k-1, p)
+                logPart := math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p))) * 2.0 / (1.0-math.Exp(-1.0*alpha)))
+                return numbers.MultiplyLog(binomCoeff,numbers.MultiplyLog(expression, logPart))
+                //return numbers.MultiplyLog(expression, logPart)
+        }
+}
+
+func fic(n int, k int, alpha float64, binomCoeff float64) func(float64) float64 {
+        return func(p float64) float64 {
+                if p == 0 || p == 1 {
+                        return math.Inf(-1)
+                }
+                expression := numbers.BinomialExpressionLog(n-2, k-1, p)
+                logPart := math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p))) * 2.0 / (1.0-math.Exp(-1.0*alpha)))
+                return numbers.MultiplyLog(binomCoeff,numbers.MultiplyLog(expression, logPart))
+                //return numbers.MultiplyLog(expression, logPart)
+        }
+}
+
 func AFSSampleDensityCarefulLog(n int, k int, alpha float64, start float64, end float64, accuracy float64) float64 {
         //DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
         f := FIntegralComponentCarefulLog(n, k, alpha)
