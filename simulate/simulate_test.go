@@ -33,7 +33,7 @@ var MutateSeqTests = []struct {
 	branchLength float64
 	gp           string
 }{
-	{"testData/longDebug.fasta", 0.5, "testData/longDebug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
+	{"testdata/longDebug.fasta", 0.5, "testdata/longDebug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
 //func TestBaseConversions(t *testing.T) {
