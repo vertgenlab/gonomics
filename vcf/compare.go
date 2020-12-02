@@ -1,7 +1,7 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
@@ -65,6 +65,23 @@ func CompareGenotypes(alpha []GenomeSample, beta []GenomeSample) int {
 	return 0
 }
 
+func CompareAlt(alpha []string, beta []string) int {
+	var res int
+	stop := numbers.Min(len(alpha), len(beta))
+	for i := 0; i < stop; i++ {
+		res = strings.Compare(alpha[i], beta[i])
+		if res != 0 {
+			return res
+		}
+	}
+	if len(alpha) < len(beta) {
+		return -1
+	} else if len(alpha) > len(beta) {
+		return 1
+	}
+	return 0
+}
+
 func Sort(vcfFile []*Vcf) {
 	sort.Slice(vcfFile, func(i, j int) bool { return CompareVcf(vcfFile[i], vcfFile[j]) == -1 })
 }
@@ -79,10 +96,10 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Id, beta.Id) != 0 {
 		return false
 	}
-	if dna.CompareSeqsIgnoreCaseAndGaps(alpha.Ref, beta.Ref) != 0 {
+	if strings.Compare(alpha.Ref, beta.Ref) != 0 {
 		return false
 	}
-	if dna.CompareTwoDSeqsIgnoreCaseAndGaps(alpha.Alt, beta.Alt) != 0 {
+	if CompareAlt(alpha.Alt, beta.Alt) != 0 {
 		return false
 	}
 	if strings.Compare(alpha.Filter, beta.Filter) != 0 {

@@ -1,8 +1,8 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+	"strings"
 )
 
 var IG1 GenomeSample = GenomeSample{1, 0, false}
@@ -16,8 +16,8 @@ var EG3 GenomeSample = GenomeSample{0, 0, false}
 var FirstInputGenotypes []GenomeSample = []GenomeSample{IG1, IG2, IG3}
 var FirstExpectedGenotypes []GenomeSample = []GenomeSample{EG1, EG2, EG3}
 
-var FirstInputVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: dna.StringToBases("C"), Alt: GetAltBases("T"), Genotypes: FirstInputGenotypes}
-var FirstExpectedVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: dna.StringToBases("T"), Alt: GetAltBases("C"), Genotypes: FirstExpectedGenotypes}
+var FirstInputVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: "C", Alt: strings.Split("T", ","), Genotypes: FirstInputGenotypes}
+var FirstExpectedVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: "T", Alt: strings.Split("C", ","), Genotypes: FirstExpectedGenotypes}
 
 var InvertVcfTests = []struct {
 	Input    Vcf

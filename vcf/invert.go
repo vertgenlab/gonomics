@@ -32,8 +32,11 @@ func InvertAlleles(g []GenomeSample) {
 
 //InvertVcf inverts the reference and alt variants in a Vcf record. Currently does not update other fields, but this functionality may be added.
 func InvertVcf(v *Vcf) {
+	if len(v.Alt) > 1 {
+		log.Fatalf("InvertVCF is not currently supported for polyallelic bases.")
+	}
 	//DEBUG: fmt.Printf("v.Ref before inversion: %s.\n", v.Ref)
-	v.Ref, v.Alt = v.Alt, v.Ref
+	v.Ref, v.Alt[0] = v.Alt[0], v.Ref
 	InvertAlleles(v.Genotypes)
 	//DEBUG: fmt.Printf("v.Ref after inversion: %s.\n", v.Ref)
 }

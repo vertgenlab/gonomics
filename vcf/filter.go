@@ -5,10 +5,10 @@ import (
 	//"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	//"log"
-	//"strings"
+	"strings"
 )
 
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref []dna.Base, alt [][]dna.Base, minQual float64) bool {
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -34,15 +34,15 @@ func FilterQual(v *Vcf, minQual float64) bool {
 	return true
 }
 
-func FilterAlt(v *Vcf, alt [][]dna.Base) bool {
-	if len(alt) > 0 && dna.CompareTwoDSeqsIgnoreCaseAndGaps(v.Alt, alt) != 0 {
+func FilterAlt(v *Vcf, alt []string) bool {
+	if len(alt) > 0 && CompareAlt(v.Alt, alt) != 0 {
 		return false
 	}
 	return true
 }
 
-func FilterRef(v *Vcf, ref []dna.Base) bool {
-	if len(ref) > 0 && dna.CompareSeqsIgnoreCaseAndGaps(v.Ref, ref) != 0 {
+func FilterRef(v *Vcf, ref string) bool {
+	if len(ref) > 0 && strings.Compare(v.Ref, ref) != 0 {
 		return false
 	}
 	return true
@@ -94,11 +94,11 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 	var noN bool
 	for i := 0; i < len(vcfs); i++ {
 		noN = true
-		if dna.CountNs(vcfs[i].Ref) > 0 {
+		if dna.CountBase(dna.StringToBases(vcfs[i].Ref), dna.N) > 0 {
 			noN = false
 		}
 		for j := 0; j < len(vcfs[i].Alt); j++ {
-			if dna.CountNs(vcfs[i].Alt[j]) > 0 {
+			if dna.CountBase(dna.StringToBases(vcfs[i].Alt[j]), dna.N) > 0 {
 				noN = false
 			}
 		}
@@ -118,16 +118,16 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 }
 
 func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
-	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: nil, Alt: nil, Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
+	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
 	if len(a.Ref) < len(b.Ref) {
 		mergeRecord.Ref += b.Ref
 	} else {
 		mergeRecord.Ref += a.Ref
 	}
 	if len(a.Alt) < len(b.Alt) {
-		mergeRecord.Alt += b.Alt
+		mergeRecord.Alt = b.Alt
 	} else {
-		mergeRecord.Alt += a.Alt
+		mergeRecord.Alt = a.Alt
 	}
 	return mergeRecord
 }
@@ -185,7 +185,8 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	chrVcfMap := make(map[string][]*Vcf)
 
 	var ref []dna.Base
-	var alt []dna.Base
+	var alt [][]dna.Base
+	var containsN bool
 	for _, v := range vcfs {
 		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
 	}
@@ -193,19 +194,27 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	var curr []*Vcf
 	for key := range chrVcfMap {
 		curr = chrVcfMap[key]
-		encountered := make(map[int64]bool)
+		encountered := make(map[int]bool)
 		for i = 0; i < len(curr); i++ {
 			if encountered[curr[i].Pos] == true {
 				//do not add
 			} else {
 				encountered[curr[i].Pos] = true
+				containsN = false
 				ref = dna.StringToBases(curr[i].Ref)
-				alt = dna.StringToBases(curr[i].Alt)
-				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
+				alt = GetAltBases(curr[i].Alt)
+				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) != 0 {
+					containsN = true
+				}
+				for j := 0; j < len(alt); j++ {
+					if dna.CountBaseInterval(alt[j], dna.N, 0, len(alt[j])) != 0 {
+						containsN = true
+					}
+				}
+				if !containsN {
 					answer = append(answer, curr[i])
 				}
 			}
-
 		}
 	}
 	return answer

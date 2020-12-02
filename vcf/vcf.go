@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"log"
 	"strings"
@@ -17,8 +16,8 @@ type Vcf struct {
 	Chr    string
 	Pos    int
 	Id     string
-	Ref    []dna.Base
-	Alt    [][]dna.Base
+	Ref    string
+	Alt    []string
 	Qual   float64
 	Filter string
 	Info   string
@@ -81,7 +80,7 @@ func processVcfLine(line string) *Vcf {
 	if len(data) < 9 {
 		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
 	}
-	curr = &Vcf{Chr: data[0], Pos: common.StringToInt(data[1]), Id: data[2], Ref: dna.StringToBases(data[3]), Alt: GetAltBases(data[4]), Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
+	curr = &Vcf{Chr: data[0], Pos: common.StringToInt(data[1]), Id: data[2], Ref: data[3], Alt: strings.Split(data[4], ","), Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
 	if strings.Compare(data[5], ".") == 0 {
 		curr.Qual = 255
 	} else {
@@ -137,9 +136,9 @@ func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
 		if input[i].Notes == "" {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, dna.BasesToString(input[i].Ref), AltBasesToString(input[i].Alt), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
 		} else {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, dna.BasesToString(input[i].Ref), AltBasesToString(input[i].Alt), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, GenotypesToString(input[i].Genotypes))
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, GenotypesToString(input[i].Genotypes))
 		}
 		common.ExitIfError(err)
 	}
@@ -148,9 +147,9 @@ func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
 func WriteVcf(file io.Writer, input *Vcf) {
 	var err error
 	if input.Notes == "" {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, dna.BasesToString(input.Ref), AltBasesToString(input.Alt), input.Qual, input.Filter, input.Info, input.Format)
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format)
 	} else {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, dna.BasesToString(input.Ref), AltBasesToString(input.Alt), input.Qual, input.Filter, input.Info, input.Format, GenotypesToString(input.Genotypes))
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format, GenotypesToString(input.Genotypes))
 	}
 	common.ExitIfError(err)
 }
@@ -175,7 +174,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 }
 
 func PrintSingleLine(data *Vcf) {
-	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, dna.BasesToString(data.Ref), AltBasesToString(data.Alt), data.Qual, data.Filter, data.Info, data.Format)
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, GenotypesToString(data.Genotypes))
 }
 
 //Checks suffix of filename to confirm if the file is a vcf formatted file

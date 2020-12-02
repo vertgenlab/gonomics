@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strconv"
 	"strings"
-	"sync"
+	//"sync"
 )
 
+/*
 type Reader struct {
 	File   *fileio.EasyReader
 	Header *VcfHeader
@@ -36,7 +37,6 @@ func GoReadGVcf(filename string) *Reader {
 	return ans
 }
 
-/*
 type GVcf struct {
 	Vcf
 	Seq       [][]dna.Base
@@ -91,8 +91,8 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	return answer
 }
 
-func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToGVcf map[uint64]*GVcf) map[uint64]*GVcf {
-	code := ChromPosToUInt64(int(names[v.Chr]), int(v.Pos-1))
+func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
+	code := ChromPosToUInt64(int(names[v.Chr]), v.Pos-1)
 	_, ok := mapToGVcf[code]
 	if !ok {
 		mapToGVcf[code] = VcfToGvcf(v)
@@ -169,8 +169,7 @@ func PrintSampleNames(header *VcfHeader) string {
 	return ans
 }
 
-func GetAltBases(alt string) [][]dna.Base {
-	words := strings.Split(alt, ",")
+func GetAltBases(words []string) [][]dna.Base {
 	var answer [][]dna.Base = make([][]dna.Base, len(words))
 	for i := 0; i < len(words); i++ {
 		answer[i] = dna.StringToBases(words[i])
@@ -206,41 +205,20 @@ func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
 }
 
 func PrintReOrder(v *Vcf, samples []int16) {
-	Genotypes := VcfToGvcf(ReorderSampleColumns(v, samples))
-	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypeToString(Genotypes))
+	Genotypes := ReorderSampleColumns(v, samples)
+	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypesToString(Genotypes))
 }
 
-/*
-func GenotypeToString(sample *GVcf) string {
-	var answer string = ""
-	for i := 0; i < len(sample.Genotypes); i++ {
-		answer += helperGenotypeToString(sample, i)
-	}
-	return answer
-}
-
-func helperGenotypeToString(sample *GVcf, i int) string {
-	if sample.Genotypes[i].AlleleOne < 0 {
-		return "NoData "
-	} else {
-		if i == len(sample.Genotypes)-1 {
-			return fmt.Sprintf("%d%s%d=%s%s%s", sample.Genotypes[i].AlleleOne, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].AlleleTwo, dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleOne]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleTwo]))
-		} else {
-			return fmt.Sprintf("%d%s%d=%s%s%s\t", sample.Genotypes[i].AlleleOne, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].AlleleTwo, dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleOne]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleTwo]))
-		}
-	}
-}*/
-
-func GenotypeToString(sample []GenomeSample) string {
+func GenotypesToString(sample []GenomeSample) string {
 	var answer string = ""
 	for i := 0; i < len(sample); i++ {
-		answer += helperGenotypeToString(sample, i)
+		answer += helperGenotypesToString(sample, i)
 	}
 	return answer
 }
 
 //helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
-func helperGenotypeToString(sample []GenomeSample, i int) string {
+func helperGenotypesToString(sample []GenomeSample, i int) string {
 	if sample[i].AlleleOne < 0 {
 		return "noData "
 	} else {
