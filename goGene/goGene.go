@@ -15,14 +15,16 @@ const (
 	UtrFive  Feature = -5
 	// All positive values refer to cDNA position
 
-	Silent     MutationType = 0
-	Missense   MutationType = 1
-	Nonsense   MutationType = 2
-	Frameshift MutationType = 3
-	Intergenic MutationType = 4
-	Intronic   MutationType = 5
-	Splice     MutationType = 6 // +/- 1-2 of E-I boundary
-	FarSplice  MutationType = 7 // +/- 3-10 of E-I boundary
+	Silent       MutationType = 0
+	Missense     MutationType = 1
+	Nonsense     MutationType = 2
+	Frameshift   MutationType = 3
+	Intergenic   MutationType = 4
+	Intronic     MutationType = 5
+	Splice       MutationType = 6 // +/- 1-2 of E-I boundary
+	FarSplice    MutationType = 7 // +/- 3-10 of E-I boundary
+	DisruptStart MutationType = 8
+	DisruptStop  MutationType = 9
 )
 
 // GoGene is a processed version of a gtf record that enables easy
@@ -35,15 +37,20 @@ type GoGene struct {
 	genomeSeq    []dna.Base
 	cdnaSeq      []dna.Base
 	featureArray []Feature
+	changeLog    []diff
+}
+
+type diff struct {
+	genomeIndexPos int
+	removed        []dna.Base
+	added          []dna.Base
 }
 
 type EffectPrediction struct {
-	vcf.Vcf
-	RefId       string
 	Consequence MutationType
-	CdnaPos     int
+	CdnaPos     int // zero base
 	CdnaOffset  int
-	AaPos       int
+	AaPos       int // zero base
 	AaRef       []dna.AminoAcid
 	AaAlt       []dna.AminoAcid
 }
@@ -126,6 +133,27 @@ func CdnaPosToGenomic(g *GoGene, cdnaPos int) (int, error) {
 		return searchStartPos + (cdnaPos - int(g.featureArray[searchStartPos])) + g.startPos, nil
 	} else { // Negative Strand
 		return g.startPos - (searchStartPos + (cdnaPos - int(g.featureArray[searchStartPos]))), nil
+	}
+}
+
+func CdnaPosToCodon(g *GoGene, cdnaPos int) (dna.Codon, error) {
+	var answer dna.Codon
+	if cdnaPos < 0 {
+		return answer, errors.New("input cDNA position must be positive")
+	}
+	if cdnaPos > len(g.cdnaSeq)-1 {
+		return answer, errors.New("input position is greater than the length of the cDNA")
+	}
+
+	switch cdnaPos % 3 {
+	case 0:
+		return dna.Codon{Seq: g.cdnaSeq[cdnaPos : cdnaPos+3]}, nil
+	case 1:
+		return dna.Codon{Seq: g.cdnaSeq[cdnaPos-1 : cdnaPos+2]}, nil
+	case 2:
+		return dna.Codon{Seq: g.cdnaSeq[cdnaPos-2 : cdnaPos+1]}, nil
+	default: // never used
+		return answer, errors.New("problem determining frame")
 	}
 }
 
