@@ -20,7 +20,8 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 		answer.startPos = transcript.Start - 1
 
 		fastaMap := fasta.FastaMap(ref)
-		answer.genomeSeq = fastaMap[transcript.Chr][transcript.Start-1 : transcript.End]
+		answer.genomeSeq = make([]dna.Base, transcript.End-(transcript.Start-1))
+		copy(answer.genomeSeq, fastaMap[transcript.Chr][transcript.Start-1:transcript.End])
 		answer.cdnaSeq = make([]dna.Base, 0, gtf.CdsLength(transcript))
 		answer.featureArray = make([]Feature, len(answer.genomeSeq))
 		answer.cdsStarts = make([]int, 0, len(transcript.Exons))
@@ -61,7 +62,8 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 		answer.startPos = transcript.End - 1
 
 		fastaMap := fasta.FastaMap(ref)
-		answer.genomeSeq = fastaMap[transcript.Chr][transcript.Start-1 : transcript.End]
+		answer.genomeSeq = make([]dna.Base, transcript.End-(transcript.Start-1))
+		copy(answer.genomeSeq, fastaMap[transcript.Chr][transcript.Start-1:transcript.End])
 		dna.ReverseComplement(answer.genomeSeq)
 		answer.cdnaSeq = make([]dna.Base, 0, gtf.CdsLength(transcript))
 		answer.featureArray = make([]Feature, len(answer.genomeSeq))

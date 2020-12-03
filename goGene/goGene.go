@@ -63,7 +63,7 @@ func GenomicPosToCdna(g *GoGene, genomePos int) (int, int, error) {
 
 	feature := g.featureArray[queryPos]
 	switch feature {
-	case -1:
+	case Intron:
 		var forwardOffset, reverseOffset int = 1, -1
 		for {
 			if g.featureArray[queryPos+reverseOffset] > 0 {
@@ -77,26 +77,26 @@ func GenomicPosToCdna(g *GoGene, genomePos int) (int, int, error) {
 			forwardOffset++
 			reverseOffset--
 			if queryPos+forwardOffset > len(g.featureArray) || queryPos+reverseOffset < 0 {
-				return 0, 0, errors.New("ERROR: No coding sequence could be found")
+				return 0, 0, errors.New("no coding sequence could be found")
 			}
 		}
 
-	case -3:
+	case UtrThree:
 		var reverseOffset int = -1
 		for g.featureArray[queryPos+reverseOffset] < 0 {
 			reverseOffset--
 			if queryPos+reverseOffset < 0 {
-				return 0, 0, errors.New("ERROR: No coding sequence found before 3'UTR")
+				return 0, 0, errors.New("no coding sequence found before 3'UTR")
 			}
 		}
 		return int(g.featureArray[queryPos+reverseOffset]), reverseOffset * -1, nil
 
-	case -5:
+	case UtrFive:
 		var forwardOffset int = 1
 		for g.featureArray[queryPos+forwardOffset] < 0 {
 			forwardOffset++
 			if queryPos+forwardOffset > len(g.featureArray) {
-				return 0, 0, errors.New("ERROR: No coding sequence found after 5'UTR")
+				return 0, 0, errors.New("no coding sequence found after 5'UTR")
 			}
 		}
 		return int(g.featureArray[queryPos+forwardOffset]), forwardOffset * -1, nil
@@ -110,10 +110,10 @@ func GenomicPosToCdna(g *GoGene, genomePos int) (int, int, error) {
 // Input and output positions are zero-based
 func CdnaPosToGenomic(g *GoGene, cdnaPos int) (int, error) {
 	if cdnaPos < 0 {
-		return 0, errors.New("ERROR: Input cDNA position must be positive")
+		return 0, errors.New("input cDNA position must be positive")
 	}
 	if cdnaPos > len(g.cdnaSeq)-1 {
-		return 0, errors.New("ERROR: Input position is greater than the length of the cDNA")
+		return 0, errors.New("input position is greater than the length of the cDNA")
 	}
 	var searchStartPos int = g.cdsStarts[0]
 	for _, val := range g.cdsStarts {
