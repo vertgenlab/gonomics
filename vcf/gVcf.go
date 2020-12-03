@@ -91,14 +91,15 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	return answer
 }
 
+/*
 func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
 	code := ChromPosToUInt64(int(names[v.Chr]), v.Pos-1)
-	_, ok := mapToGVcf[code]
+	_, ok := mapToVcf[code]
 	if !ok {
-		mapToGVcf[code] = VcfToGvcf(v)
+		mapToVcf[code] = VcfToGvcf(v)
 	}
-	return mapToGVcf
-}
+	return mapToVcf
+}*/
 
 func getGQ(v *Vcf) uint8 {
 	var answer uint8 = 0
@@ -205,8 +206,8 @@ func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
 }
 
 func PrintReOrder(v *Vcf, samples []int16) {
-	Genotypes := ReorderSampleColumns(v, samples)
-	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypesToString(Genotypes))
+	vReorder := ReorderSampleColumns(v, samples)
+	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypesToString(vReorder.Genotypes))
 }
 
 func GenotypesToString(sample []GenomeSample) string {

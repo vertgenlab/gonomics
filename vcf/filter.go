@@ -166,14 +166,21 @@ func IsHomozygous(genome GenomeSample) bool {
 	return false
 }
 
-func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
-	sampleHash := HeaderToMaps(gvcf.Header)
+func getListIndex(header *VcfHeader, list []string) []int16 {
+	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))
 	for i := 0; i < len(listIndex); i++ {
 		//look up alt allele index belonging to each string
 		listIndex[i] = sampleHash.GIndex[list[i]]
 	}
-	for record := range gvcf.Vcfs {
+	return listIndex
+}
+
+
+func ByNames(inChan chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
+	var listIndex []int16 = getListIndex(header, list)
+
+	for record := range inChan {
 		WriteVcf(writer, ReorderSampleColumns(record, listIndex))
 	}
 }

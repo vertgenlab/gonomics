@@ -17,7 +17,7 @@ type Vcf struct {
 	Pos    int
 	Id     string
 	Ref    string
-	Alt    []string
+	Alt    []string//TODO: bytes.buffer for memory optimization
 	Qual   float64
 	Filter string
 	Info   string
@@ -131,34 +131,43 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	return answer
 }
 
-//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed
-func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
+//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
+func WriteVcfToFileHandle(file io.Writer, input []*Vcf, geno bool) {
 	var err error
 	for i := 0; i < len(input); i++ {
+		//DEBUG:fmt.Printf("Notes: %s\n", input[i].Notes)
 		if input[i].Notes == "" {
 			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
 		} else {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, GenotypesToString(input[i].Genotypes))
+			if geno {
+				_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, GenotypesToString(input[i].Genotypes))
+				} else {
+					_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
+				}
 		}
 		common.ExitIfError(err)
 	}
 }
 
-func WriteVcf(file io.Writer, input *Vcf) {
+func WriteVcf(file io.Writer, input *Vcf, geno bool) {
 	var err error
 	if input.Notes == "" {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format)
 	} else {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format, GenotypesToString(input.Genotypes))
+		if geno {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format, GenotypesToString(input.Genotypes))
+		} else {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format, input.Notes)
+		}
 	}
 	common.ExitIfError(err)
 }
 
-func Write(filename string, data []*Vcf) {
+func Write(filename string, data []*Vcf, geno bool) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 
-	WriteVcfToFileHandle(file, data)
+	WriteVcfToFileHandle(file, data, geno)
 }
 
 func PrintVcf(data []*Vcf) {
