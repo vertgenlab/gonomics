@@ -56,7 +56,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
 
-	answer := reconstruct.ReconAccuracy(simOutFile, reconOutFile)
+	answer := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp)
 	out := fileio.EasyCreate(accuracyOutFile)
 	defer out.Close()
 
