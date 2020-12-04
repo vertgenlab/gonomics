@@ -176,12 +176,12 @@ func GetAltBases(words []string) [][]dna.Base {
 	return answer
 }
 
-func AltBasesToString(alt [][]dna.Base) string {
+func AltBasesToStrings(alt [][]dna.Base) []string {
 	var work []string = make([]string, len(alt))
 	for i := 0; i < len(work); i++ {
 		work[i] = dna.BasesToString(alt[i])
 	}
-	return strings.Join(work, ",")
+	return work
 }
 
 func PhasedToString(phased bool) string {
