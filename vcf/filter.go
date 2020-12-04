@@ -108,9 +108,9 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 	}
 	return answer
 }
+
 func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
-	gt := GetAlleleGenotype(v)
-	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && IsHeterozygous(gt[F1]) && gt[parentOne].AlleleOne != gt[parentTwo].AlleleOne {
+	if IsHomozygous(v.Samples[parentOne]) && IsHomozygous(v.Samples[parentTwo]) && IsHeterozygous(v.Samples[F1]) && v.Samples[parentOne].AlleleOne != v.Samples[parentTwo].AlleleOne {
 		return true
 	} else {
 		return false
@@ -118,7 +118,7 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 }
 
 func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
-	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
+	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: a.Format, Samples: a.Samples}
 	if len(a.Ref) < len(b.Ref) {
 		mergeRecord.Ref += b.Ref
 	} else {

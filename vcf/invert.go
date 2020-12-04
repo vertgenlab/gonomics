@@ -6,6 +6,7 @@ import (
 )
 
 //InvertGenomeSample inverts the ancestral/derived state for each allele in a GenomeSample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
+//TODO: this is currently only supported for biallelic bases.
 func InvertGenomeSample(g *GenomeSample) {
 	if g.AlleleOne == 0 {
 		g.AlleleOne = 1
@@ -37,6 +38,6 @@ func InvertVcf(v *Vcf) {
 	}
 	//DEBUG: fmt.Printf("v.Ref before inversion: %s.\n", v.Ref)
 	v.Ref, v.Alt[0] = v.Alt[0], v.Ref
-	InvertAlleles(v.Genotypes)
+	InvertAlleles(v.Samples)
 	//DEBUG: fmt.Printf("v.Ref after inversion: %s.\n", v.Ref)
 }

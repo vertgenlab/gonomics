@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"strconv"
 	"sync"
 )
 
@@ -21,9 +22,15 @@ type Vcf struct {
 	Qual   float64
 	Filter string
 	Info   string
-	Format string
-	Notes  string
-	Genotypes []GenomeSample
+	Format []string
+	Samples []GenomeSample
+}
+
+type GenomeSample struct {
+	AlleleOne int16
+	AlleleTwo int16
+	Phased    bool
+	Other []string
 }
 
 type VcfHeader struct {
@@ -80,17 +87,57 @@ func processVcfLine(line string) *Vcf {
 	if len(data) < 9 {
 		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
 	}
-	curr = &Vcf{Chr: data[0], Pos: common.StringToInt(data[1]), Id: data[2], Ref: data[3], Alt: strings.Split(data[4], ","), Filter: data[6], Info: data[7], Format: data[8], Notes: ""}
+	curr = &Vcf{Chr: data[0], Pos: common.StringToInt(data[1]), Id: data[2], Ref: data[3], Alt: strings.Split(data[4], ","), Filter: data[6], Info: data[7], Format: strings.Split(data[8], ":")}
 	if strings.Compare(data[5], ".") == 0 {
 		curr.Qual = 255
 	} else {
 		curr.Qual = common.StringToFloat64(data[5])
 	}
 	if len(data) > 9 {
-		curr.Notes = data[9]
-		curr.Genotypes = GetAlleleGenotype(curr)
+		//DEBUG: fmt.Println(line)
+		curr.Samples = ParseNotes(data[9], curr.Format)
 	}
 	return curr
+}
+
+func ParseNotes(data string, format []string) []GenomeSample {
+	//DEBUG: fmt.Printf("Format: %s. Format[0]: %s.\n", format, format[0])
+	if len(format) == 0 {
+		log.Fatalf("Parsing error: cannot parse notes without formatting information.")
+	}
+	//firstFormat := format[0]
+	//fmt.Println(firstFormat)
+	if format[0] != "GT" {//len(format) == 0 checks for when there is info in the notes column but no format specification
+		log.Fatalf("VCF format files with sample information must begin with \"GT\" as the first format column. Here was the first format entry: %s.\nError parsing the line with this Notes column: %s.\n", format[0], data)
+	}
+	text := strings.Split(data, "\t")
+	var fields []string
+	var alleles []string
+	var err error 
+	var n int64
+	var answer []GenomeSample = make([]GenomeSample, len(text))
+	for i := 0; i < len(text); i++ {
+		fields = strings.Split(text[i], ":")
+		if strings.Compare(fields[0], "./.") == 0 || strings.Compare(fields[0], ".|.") == 0 {
+			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, Other: fields}
+		} else if strings.Contains(fields[0], "|") {
+			alleles = strings.SplitN(fields[0], "|", 2)
+			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, Other: fields}
+		} else if strings.Contains(fields[0], "/") {
+			alleles = strings.SplitN(fields[0], "/", 2)
+			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, Other: fields}
+		} else {
+			//Deal with single haps. There might be a better soltuion, but I think this should work.
+			n, err = strconv.ParseInt(fields[0], 10, 16)
+			if err != nil && n < int64(len(text)) {
+				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false, Other: fields}
+			} else {
+				log.Fatalf("Error: Unexpected parsing error...\n")
+			}
+		}
+		answer[i].Other[0] = "" //clears the genotype from the first other slot, making this a dummy position
+	}
+	return answer
 }
 
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
@@ -113,6 +160,20 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	return &header
 }
 
+func FormatToString(format []string) string {
+	if len(format) == 0 {
+		return ""
+	}
+	if len(format) == 1 {
+		return format[0]
+	}
+	var answer = format[0]
+	for i := 1; i < len(format); i++ {
+		answer = answer + ":" + format[i]
+	}
+	return answer
+}
+
 //split vcf into slices to deal with different chromosomes
 func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 	var answer [][]*Vcf
@@ -132,42 +193,34 @@ func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
 }
 
 //TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
-func WriteVcfToFileHandle(file io.Writer, input []*Vcf, geno bool) {
+func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
 		//DEBUG:fmt.Printf("Notes: %s\n", input[i].Notes)
-		if input[i].Notes == "" {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format)
+		if len(input[i].Format) == 0 {
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info)
 		} else {
-			if geno {
-				_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, GenotypesToString(input[i].Genotypes))
-				} else {
-					_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, input[i].Format, input[i].Notes)
-				}
+			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, FormatToString(input[i].Format), SamplesToString(input[i].Samples))
 		}
 		common.ExitIfError(err)
 	}
 }
 
-func WriteVcf(file io.Writer, input *Vcf, geno bool) {
+func WriteVcf(file io.Writer, input *Vcf) {
 	var err error
-	if input.Notes == "" {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format)
+	if len(input.Format) == 0 {
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info)
 	} else {
-		if geno {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format, GenotypesToString(input.Genotypes))
-		} else {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, input.Format, input.Notes)
-		}
+		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, FormatToString(input.Format), SamplesToString(input.Samples))
 	}
 	common.ExitIfError(err)
 }
 
-func Write(filename string, data []*Vcf, geno bool) {
+func Write(filename string, data []*Vcf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 
-	WriteVcfToFileHandle(file, data, geno)
+	WriteVcfToFileHandle(file, data)
 }
 
 func PrintVcf(data []*Vcf) {
@@ -183,7 +236,7 @@ func PrintVcfLines(data []*Vcf, num int) {
 }
 
 func PrintSingleLine(data *Vcf) {
-	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, GenotypesToString(data.Genotypes))
+	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, SamplesToString(data.Samples))
 }
 
 //Checks suffix of filename to confirm if the file is a vcf formatted file

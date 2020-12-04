@@ -6,19 +6,20 @@ import (
 	"strings"
 )
 
+//TODO: let's talk about this because it is weird. Originally written as Format, but these should be INFO fields, and we should parse delimiters
 func SelectVcf(vcfs []*Vcf, snp bool, ins bool, del bool) []*Vcf {
 	var answer []*Vcf
 	for i := 0; i < len(vcfs); i++ {
 		if !snp {
-			if strings.Compare(vcfs[i].Format, "SVTYPE=SNP") != 0 {
+			if strings.Compare(vcfs[i].Info, "SVTYPE=SNP") != 0 {
 				answer = append(answer, vcfs[i])
 			}
 		} else if !ins {
-			if strings.Compare(vcfs[i].Format, "SVTYPE=INS") != 0 {
+			if strings.Compare(vcfs[i].Info, "SVTYPE=INS") != 0 {
 				answer = append(answer, vcfs[i])
 			}
 		} else if !del {
-			if strings.Compare(vcfs[i].Format, "SVTYPE=DEL") != 0 {
+			if strings.Compare(vcfs[i].Info, "SVTYPE=DEL") != 0 {
 				answer = append(answer, vcfs[i])
 			}
 		}
@@ -69,9 +70,6 @@ func NoVcfOverlap(vcfs []*Vcf) {
 }
 
 func Snp(v *Vcf) bool {
-	if strings.Contains(v.Format, "SVTYPE=SNP") {
-		return true
-	}
 	if strings.Contains(v.Info, "SVTYPE=SNP") {
 		return true
 	}
@@ -79,9 +77,6 @@ func Snp(v *Vcf) bool {
 }
 
 func Ins(v *Vcf) bool {
-	if strings.Contains(v.Format, "SVTYPE=INS") {
-		return true
-	}
 	if strings.Contains(v.Info, "SVTYPE=INS") {
 		return true
 	}
@@ -90,9 +85,6 @@ func Ins(v *Vcf) bool {
 
 func Del(v *Vcf) bool {
 	var truth bool = false
-	if strings.Contains(v.Format, "SVTYPE=DEL") {
-		return true
-	}
 	if strings.Contains(v.Info, "SVTYPE=DEL") {
 		return true
 	}
@@ -100,7 +92,7 @@ func Del(v *Vcf) bool {
 }
 
 func CopyVcfPointer(v *Vcf) *Vcf {
-	answer := &Vcf{Chr: v.Chr, Pos: v.Pos, Id: v.Id, Ref: v.Ref, Alt: v.Alt, Qual: v.Qual, Filter: v.Filter, Info: v.Info, Format: v.Format, Notes: v.Notes}
+	answer := &Vcf{Chr: v.Chr, Pos: v.Pos, Id: v.Id, Ref: v.Ref, Alt: v.Alt, Qual: v.Qual, Filter: v.Filter, Info: v.Info, Format: v.Format, Samples: v.Samples}
 	return answer
 }
 

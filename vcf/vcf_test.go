@@ -2,7 +2,7 @@ package vcf
 
 import (
 	"log"
-	"os"
+	//DEBUG: "os"
 	"testing"
 )
 
@@ -40,7 +40,7 @@ func TestWriteAndRead(t *testing.T) {
 		if !AllEqual(alpha, beta) {
 			t.Errorf("Error: Read and write files do not match\n")
 		}
-		os.Remove(tempFile)
+		//os.Remove(tempFile)
 	}
 }
 

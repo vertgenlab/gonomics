@@ -27,6 +27,7 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 }
 
 func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
+	var res int
 	if alpha.AlleleOne != beta.AlleleOne {
 		if alpha.AlleleOne < beta.AlleleOne {
 			return -1
@@ -45,10 +46,19 @@ func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
 		}
 		return 1
 	}
+	res = CompareOther(alpha.Other, beta.Other)
+	if  res != 0 {
+		return res
+	}
 	return 0
 }
 
-func CompareGenotypes(alpha []GenomeSample, beta []GenomeSample) int {
+func CompareOther(alpha []string, beta []string) int {
+	return CompareAlt(alpha, beta)//both functions compare slice of strings for equality, but I made this a separate function for readability
+}
+
+
+func CompareGenomeSamples(alpha []GenomeSample, beta []GenomeSample) int {
 	var res int
 	stop := numbers.Min(len(alpha), len(beta))
 	for i := 0; i < stop; i++ {
@@ -108,10 +118,7 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Info, beta.Info) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Notes, beta.Notes) != 0 {
-		return false
-	}
-	if CompareGenotypes(alpha.Genotypes, beta.Genotypes) != 0 {
+	if CompareGenomeSamples(alpha.Samples, beta.Samples) != 0 {
 		return false
 	}
 	return true

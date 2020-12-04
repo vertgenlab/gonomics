@@ -2,11 +2,11 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	//"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"strconv"
+	//"strconv"
 	"strings"
 	//"sync"
 )
@@ -43,11 +43,7 @@ type GVcf struct {
 	Genotypes []GenomeSample
 }*/
 
-type GenomeSample struct {
-	AlleleOne int16
-	AlleleTwo int16
-	Phased    bool
-}
+
 
 type SampleHash struct {
 	Fa     map[string]int16
@@ -61,6 +57,7 @@ func VcfToGvcf(v *Vcf) *GVcf {
 	return gVcf
 }*/
 
+/* This function has now been incorporated into ParseNotes in vcf.go
 func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	text := strings.Split(v.Notes, "\t")
 	var hap string
@@ -89,7 +86,7 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 		}
 	}
 	return answer
-}
+}*/
 
 /*
 func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
@@ -101,6 +98,7 @@ func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) 
 	return mapToVcf
 }*/
 
+/* This function is unannotated and I'm not sure what it's supposed to do. Appears to return only GQ for the first value, but TODO: this should be implemented with new VCF struct, maybe returning a slice of GQ data corresponding to each sample
 func getGQ(v *Vcf) uint8 {
 	var answer uint8 = 0
 	if strings.Contains(v.Format, "GQ") {
@@ -120,7 +118,7 @@ func getGQ(v *Vcf) uint8 {
 		}
 	}
 	return answer
-}
+}*/
 
 //tmp , this functions lives in simple graph, but import cycles are not allowed...
 //need to find a new package for this function
@@ -194,43 +192,47 @@ func PhasedToString(phased bool) string {
 	}
 }
 
+//ReorderSampleColumns reorganizes the Samples slice based on a samples []int16 specification list.
 func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
-	columnData := make([]string, 0, len(samples))
-	words := strings.Split(input.Notes, "\t")
-	var i int
-	for i = 0; i < len(samples); i++ {
-		columnData = append(columnData, words[samples[i]])
+	outSamples := make([]GenomeSample, 0, len(samples))
+	for i := 0; i < len(samples); i++ {
+		outSamples = append(outSamples, input.Samples[samples[i]])
 	}
-	input.Notes = strings.Join(columnData, "\t")
+	input.Samples = outSamples
 	return input
 }
 
 func PrintReOrder(v *Vcf, samples []int16) {
 	vReorder := ReorderSampleColumns(v, samples)
-	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypesToString(vReorder.Genotypes))
+	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, SamplesToString(vReorder.Samples))
 }
 
-func GenotypesToString(sample []GenomeSample) string {
+func SamplesToString(sample []GenomeSample) string {
 	var answer string = ""
 	for i := 0; i < len(sample); i++ {
-		answer += helperGenotypesToString(sample, i)
+		answer += helperSamplesToString(sample, i)
 	}
 	return answer
 }
 
 //helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
-func helperGenotypesToString(sample []GenomeSample, i int) string {
+func helperSamplesToString(sample []GenomeSample, i int) string {
+	var answer string
 	if sample[i].AlleleOne < 0 {
-		return "noData "
+		answer = "noData "
 	} else {
 		if i == len(sample)-1 {
-			return fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
+			answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 		} else {
-			return fmt.Sprintf("%d%s%d\t", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
+			answer = fmt.Sprintf("%d%s%d\t", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 		}
 	}
+	if len(sample[i].Other) > 0 {
+		answer = answer + strings.Join(sample[i].Other, ":")
+	}
+	return answer
 }
 
 func vcfPrettyPrint(v *Vcf) {
-	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, v.Notes)
+	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, SamplesToString(v.Samples))
 }
