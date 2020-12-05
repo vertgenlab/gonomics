@@ -15,14 +15,25 @@ func TestGtfToGoGene(t *testing.T) {
 	// Positive strand test
 	answerPos := GtfToGoGene(g["test_gene_id"], f)
 
+	correctBackup := goGeneBackup{
+		startPos:     0,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+	}
+
 	var correctPos GoGene = GoGene{
 		id:           "test_gene_id",
 		startPos:     0,
 		strand:       true,
 		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
 		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
 		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
 		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+		orig:         correctBackup,
 	}
 
 	if !reflect.DeepEqual(*answerPos, correctPos) {
@@ -37,10 +48,14 @@ func TestGtfToGoGene(t *testing.T) {
 		startPos:     15,
 		strand:       false,
 		cdsStarts:    correctPos.cdsStarts,
+		cdsEnds:      correctPos.cdsEnds,
 		genomeSeq:    correctPos.genomeSeq,
 		cdnaSeq:      correctPos.cdnaSeq,
 		featureArray: correctPos.featureArray,
+		orig:         correctBackup,
 	}
+
+	correctNeg.orig.startPos = 15
 
 	if !reflect.DeepEqual(*answerNeg, correctNeg) {
 		t.Error("ERROR: Trouble converting gtf to GoGene on negative strand")

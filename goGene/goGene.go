@@ -34,16 +34,27 @@ type GoGene struct {
 	startPos     int
 	strand       bool
 	cdsStarts    []int
+	cdsEnds      []int
 	genomeSeq    []dna.Base
 	cdnaSeq      []dna.Base
 	featureArray []Feature
+	orig         goGeneBackup
 	changeLog    []diff
 }
 
+type goGeneBackup struct {
+	startPos     int
+	cdsStarts    []int
+	cdsEnds      []int
+	genomeSeq    []dna.Base
+	cdnaSeq      []dna.Base
+	featureArray []Feature
+}
+
 type diff struct {
-	genomeIndexPos int
-	removed        []dna.Base
-	added          []dna.Base
+	genomePos int
+	removed   []dna.Base
+	added     []dna.Base
 }
 
 type EffectPrediction struct {

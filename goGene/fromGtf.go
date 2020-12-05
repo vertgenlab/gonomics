@@ -25,6 +25,7 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 		answer.cdnaSeq = make([]dna.Base, 0, gtf.CdsLength(transcript))
 		answer.featureArray = make([]Feature, len(answer.genomeSeq))
 		answer.cdsStarts = make([]int, 0, len(transcript.Exons))
+		answer.cdsEnds = make([]int, 0, len(transcript.Exons))
 
 		var i int
 		var prevExonEnd int = answer.startPos
@@ -49,6 +50,7 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 
 			if val.Cds != nil {
 				answer.cdsStarts = append(answer.cdsStarts, val.Cds.Start-1-answer.startPos)
+				answer.cdsEnds = append(answer.cdsEnds, val.Cds.End-1-answer.startPos)
 				answer.cdnaSeq = append(answer.cdnaSeq, fastaMap[transcript.Chr][val.Cds.Start-1:val.Cds.End]...)
 
 				for i = val.Cds.Start - 1 - answer.startPos; i < val.Cds.End-answer.startPos; i++ {
@@ -68,6 +70,7 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 		answer.cdnaSeq = make([]dna.Base, 0, gtf.CdsLength(transcript))
 		answer.featureArray = make([]Feature, len(answer.genomeSeq))
 		answer.cdsStarts = make([]int, 0, len(transcript.Exons))
+		answer.cdsEnds = make([]int, 0, len(transcript.Exons))
 
 		var i, k int
 		var prevExonEnd int = answer.startPos
@@ -94,6 +97,7 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 
 			if val.Cds != nil {
 				answer.cdsStarts = append(answer.cdsStarts, answer.startPos-(val.Cds.End-1))
+				answer.cdsEnds = append(answer.cdsEnds, answer.startPos-(val.Cds.Start-1))
 				answer.cdnaSeq = append(answer.cdnaSeq, answer.genomeSeq[answer.startPos-(val.Cds.End-1):answer.startPos-(val.Cds.Start-2)]...)
 
 				for i = answer.startPos - (val.Cds.End - 1); i < answer.startPos-(val.Cds.Start-2); i++ {
@@ -103,5 +107,16 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 			}
 		}
 	}
+	answer.orig.startPos = answer.startPos
+	answer.orig.cdsStarts = make([]int, len(answer.cdsStarts))
+	copy(answer.orig.cdsStarts, answer.cdsStarts)
+	answer.orig.cdsEnds = make([]int, len(answer.cdsEnds))
+	copy(answer.orig.cdsEnds, answer.cdsEnds)
+	answer.orig.genomeSeq = make([]dna.Base, len(answer.genomeSeq))
+	copy(answer.orig.genomeSeq, answer.genomeSeq)
+	answer.orig.cdnaSeq = make([]dna.Base, len(answer.cdnaSeq))
+	copy(answer.orig.cdnaSeq, answer.cdnaSeq)
+	answer.orig.featureArray = make([]Feature, len(answer.featureArray))
+	copy(answer.orig.featureArray, answer.featureArray)
 	return answer
 }
