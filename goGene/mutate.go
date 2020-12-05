@@ -284,7 +284,7 @@ func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction
 		// if cds is after deletion
 		case genomeIndexEndPos <= g.cdsStarts[i]:
 			if cdnaDelEnd == -1 {
-				cdnaDelEnd = g.cdsStarts[i]
+				cdnaDelEnd = int(g.featureArray[g.cdsStarts[i]])
 			}
 
 			g.cdsStarts[i] -= deletionLen
@@ -310,16 +310,20 @@ func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction
 	copy(g.featureArray[genomeIndexStartPos+1:], g.featureArray[genomeIndexEndPos:])
 	g.featureArray = g.featureArray[:len(g.featureArray)-(genomeIndexEndPos-(genomeIndexStartPos+1))]
 
-	var j, l int
+	var j int = genomeIndexStartPos + 1
 	if g.featureArray[genomeIndexStartPos] >= 0 {
 		for j = genomeIndexStartPos + 1; g.featureArray[j] >= 0; j++ {
 			g.featureArray[j] -= Feature(deletedCdnaBases)
 		}
+	} else {
+		for g.featureArray[j] < 0 {
+			j++ // move to first cdsBase
+		}
 	}
 	for _, val := range g.cdsStarts {
-		if val > j {
-			for l = val; g.featureArray[l] >= 0; l++ {
-				g.featureArray[l] -= Feature(deletedCdnaBases)
+		if val >= j {
+			for j = val; g.featureArray[j] >= 0; j++ {
+				g.featureArray[j] -= Feature(deletedCdnaBases)
 			}
 		}
 	}
@@ -349,7 +353,7 @@ func Reset(g *GoGene) {
 					hasDel = true
 					break
 				}
-			} else if len(g.changeLog[i].added) > 1 && len(g.changeLog[i].removed) == 0 {
+			} else if len(g.changeLog[i].added) >= 1 && len(g.changeLog[i].removed) == 0 {
 				_, err = Deletion(g, g.changeLog[i].genomePos, g.changeLog[i].genomePos+len(g.changeLog[i].added)+1)
 				g.changeLog = g.changeLog[:len(g.changeLog)-2]
 				if err != nil {
@@ -362,16 +366,16 @@ func Reset(g *GoGene) {
 
 	if hasDel {
 		g.startPos = g.orig.startPos
-		copy(g.cdsStarts, g.orig.cdsStarts)
 		g.cdsStarts = g.cdsStarts[:len(g.orig.cdsStarts)]
-		copy(g.cdsEnds, g.orig.cdsEnds)
+		copy(g.cdsStarts, g.orig.cdsStarts)
 		g.cdsEnds = g.cdsEnds[:len(g.orig.cdsEnds)]
-		copy(g.genomeSeq, g.orig.genomeSeq)
+		copy(g.cdsEnds, g.orig.cdsEnds)
 		g.genomeSeq = g.genomeSeq[:len(g.orig.genomeSeq)]
-		copy(g.cdnaSeq, g.orig.cdnaSeq)
+		copy(g.genomeSeq, g.orig.genomeSeq)
 		g.cdnaSeq = g.cdnaSeq[:len(g.orig.cdnaSeq)]
-		copy(g.featureArray, g.orig.featureArray)
+		copy(g.cdnaSeq, g.orig.cdnaSeq)
 		g.featureArray = g.featureArray[:len(g.orig.featureArray)]
+		copy(g.featureArray, g.orig.featureArray)
 	}
 
 	g.changeLog = nil
