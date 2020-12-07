@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"log"
 )
 
 //Tree structure for simulation and reconstruction
@@ -204,6 +205,8 @@ func parseNewick(input string) (*ETree, error) {
 
 //tell tree what "up" is
 func SetUp(root *ETree, prevNode *ETree) {
+	log.Print(root.Name)
+	log.Print(prevNode.Name)
 	if prevNode != nil {
 		root.Up = prevNode
 	} else {

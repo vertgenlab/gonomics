@@ -15,7 +15,7 @@ var RandGeneTests = []struct {
 	length int
 	GC     float64
 }{
-	{"testingRandGene", 30, GCcontent},
+	{"testingRandGene", 102, GCcontent},
 }
 
 func TestRandGene(t *testing.T) {
@@ -24,7 +24,7 @@ func TestRandGene(t *testing.T) {
 		if len(a[0].Seq) != test.length {
 			t.Errorf("expected RandGene to give %v, gave %v", test.length, len(a[0].Seq))
 		}
-		//fmt.Print(dna.BasesToString(a[0].Seq), "\n")
+		fmt.Print(dna.BasesToString(a[0].Seq), "\n")
 	}
 }
 
