@@ -1,7 +1,7 @@
 package expandedTree
 
 import (
-	"bufio"
+	"github.com/vertgenlab/gonomics/fileio"
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
@@ -37,22 +37,34 @@ func ReadTree(newickFilename string, fastasFilename string) *ETree {
 
 //read in tree from filename
 func ReadNewick(filename string) (*ETree, error) {
-	var line string
+	var singleLineTree string
+	singleLineTree = ReadMultiLineTree(filename)
 
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
 
-	for scanner.Scan() {
-		line = scanner.Text()
-		if !strings.HasPrefix(line, "#") {
-			return parseNewick(line[strings.Index(line, "("):(1 + strings.LastIndex(line, ";"))])
-		}
+	if !strings.HasPrefix(singleLineTree, "#") {
+		return parseNewick(singleLineTree[strings.Index(singleLineTree, "("): 1+strings.LastIndex(singleLineTree, ";")])
 	}
+
+
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
+}
+
+func ReadMultiLineTree(input string) string {
+	var catInput string
+	var line string
+	var doneReading bool = false
+	file := fileio.EasyOpen(input)
+	defer file.Close()
+
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file){
+		catInput = catInput + line
+	}
+	return catInput
 }
 
 // read in tree from string of newick

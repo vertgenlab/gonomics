@@ -180,7 +180,6 @@ func parseNewickHelper(input string) (*Tree, error) {
 }
 
 func ReadNewick(filename string) (*Tree, error) {
-	//var line string
 	var singleLineTree string
 	singleLineTree = ReadMultiLineTree(filename)
 
@@ -189,13 +188,9 @@ func ReadNewick(filename string) (*Tree, error) {
 		return nil, err
 	}
 	defer file.Close()
-	//scanner := bufio.NewScanner(file)
 
-	//for scanner.Scan() {
-	//	line = scanner.Text()
 		if !strings.HasPrefix(singleLineTree, "#") {
 			return ParseNewick(singleLineTree[strings.Index(singleLineTree, "("): 1+strings.LastIndex(singleLineTree, ";")])
-		//}
 	}
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
 }
