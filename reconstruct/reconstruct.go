@@ -4,32 +4,70 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/genePred"
+	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 )
 
-//returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
-func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
+//returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined
+func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string) map[string]float64 {
 	var allNodes string
-	allNodes = "all Nodes"
-	var found bool = false
+	allNodes = "All Reconstructed Nodes"
+	var found = false
+	var leaf = false
+	var exon = false
 	var total float64
 	total = 0.0
 	var mistakes float64
+	var leafMistakes float64
+	var exonMistakes float64
+	var nonCodingMistakes float64
+	var exonBases float64
+	var nonCodingBases float64
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
+	leaves := fasta.Read(leavesOnlyFile)
+	genes := genePred.Read(gpFilename)
 
 	answer := make(map[string]float64)
 
 	for i := 0; i < len(sim); i++ {
+		exonBases = 0.0
+		nonCodingBases = 0.0
 		mistakes = 0.0
+		exonMistakes = 0.0
+		nonCodingMistakes = 0.0
 		found = false
 		for j := 0; j < len(recon); j++ {
 			if sim[i].Name == recon[j].Name {
+				leaf = false
+				for l := 0; l < len(leaves); l++ {
+					if recon[j].Name == leaves[l].Name {
+						leaf = true
+					}
+				}
 				found = true
 				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
-				for k := 0; k < len(sim[0].Seq); k++ {
-					if sim[i].Seq[k] != recon[j].Seq[k] {
-						mistakes = mistakes + 1
+				for g := 0; g < len(genes); g++ {
+					for k := 0; k < len(sim[i].Seq); k++ {
+						exon, _ = simulate.CheckExon(genes[g], k)
+						if exon == true {
+							exonBases = exonBases + 1
+						} else {
+							nonCodingBases = nonCodingBases + 1
+						}
+						if sim[i].Seq[k] != recon[j].Seq[k] {
+							if leaf == false {
+								mistakes = mistakes + 1
+							} else {
+								leafMistakes = leafMistakes + 1
+							}
+							if exon == true {
+								exonMistakes = exonMistakes + 1
+							} else {
+								nonCodingMistakes = nonCodingMistakes + 1
+							}
+						}
 					}
 				}
 			}
@@ -37,16 +75,32 @@ func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 
 		if found == false {
 			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
 		}
-		accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
-		//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
-		acc := 100 - accuracy
-		answer[sim[i].Name] = acc
-		total = total + mistakes
+		//BUG: leaf = true for only B, not D or E, check inside k loop is correct
+		if leaf == false {
+			accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
+			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", total, float64(len(sim)), float64(len(sim[0].Seq)))
+			acc := 100 - accuracy
+			answer[sim[i].Name] = acc
+			total = total + mistakes
+		} else {
+			leafAccuracy := leafMistakes / float64(len(sim[i].Seq)) * 100.0
+			lAcc := 100 - leafAccuracy
+			answer[sim[i].Name+"(leaf)"] = lAcc
+		}
+		//BUG: it seems like exonMistakes and nonCodingMistakes are swapped in simRecon test, but not exonBases or non-CodingBases
+		exonAccuracy := exonMistakes / exonBases * 100.0
+		nonCodingAccuracy := nonCodingMistakes / nonCodingBases * 100.0
+		log.Printf("Node: %s, nonCodingMistakes: %f, nonCodingBases: %f, exonMistakes: %f, exonBases: %f", sim[i].Name, nonCodingMistakes, nonCodingBases, exonMistakes, exonBases)
+		eAcc := 100 - exonAccuracy
+		nCAcc := 100 - nonCodingAccuracy
+		answer[sim[i].Name+" exon"] = eAcc
+		answer[sim[i].Name+" nonCoding"] = nCAcc
 	}
-	accuracy := total / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
-	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
+	accuracy := total / (float64(len(sim)-len(leaves)) * float64(len(sim[0].Seq))) * 100.0
+	//DEBUG: fmt.Printf("tot: %f, acc: %f, len(sim): %f, len(leaves): %f, len(sim[0].Seq): %f \n", total, accuracy, float64(len(sim)), float64(len(leaves)), float64(len(sim[0].Seq)))
 	acc := 100 - accuracy
 	answer[allNodes] = acc
+
 	return answer
 }
 
