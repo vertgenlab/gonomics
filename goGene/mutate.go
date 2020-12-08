@@ -9,11 +9,24 @@ import (
 
 // PointMutation changes a single nucleotide to the desired base, predicts the effect,
 // and updates the GoGene struct to reflect the change.
-// The position of the mutation should be given in genomic coordinates.
+// The position of the mutation should be given in base-zero genomic coordinates.
 func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var log diff
 	var err error
+
+	genomeIndexPos := numbers.Abs(genomePos - g.startPos) // abs needed to handle negative strand
+
+	// Fill log before change
+	log.genomePos = genomePos
+	log.removed = make([]dna.Base, 1)
+	log.removed[0] = g.genomeSeq[genomeIndexPos]
+	log.added = make([]dna.Base, 1)
+	log.added[0] = alt
+
+	if !g.strand { // so that diff can be undone by another PointMutation call
+		dna.ReverseComplement(log.removed)
+	}
 
 	if alt != dna.A && alt != dna.C && alt != dna.G && alt != dna.T {
 		return answer, errors.New("alt base must be A, C, T, or G")
@@ -30,17 +43,14 @@ func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, er
 		if genomePos > g.startPos {
 			return answer, errors.New("input genomePos is not in the gene")
 		}
+		alt = dna.ComplementSingleBase(alt)
 	}
-
-	genomeIndexPos := numbers.Abs(genomePos - g.startPos) // abs needed to handle negative strand
-	log.genomePos = genomePos
-	log.removed = []dna.Base{g.genomeSeq[genomeIndexPos]}
-	log.added = []dna.Base{alt}
 
 	if genomeIndexPos > len(g.genomeSeq)-1 {
 		return answer, errors.New("input genomePos is not in the gene")
 	}
 
+	// if no error then make the change and append log
 	g.genomeSeq[genomeIndexPos] = alt
 	g.changeLog = append(g.changeLog, log)
 
@@ -76,12 +86,18 @@ func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, er
 	return answer, nil
 }
 
-//TODO
+//TODO EffectPrediction
 // Insertion adds bases to the GoGene, predicts the effect, and updates the GoGene struct to reflect the change.
-// The position should be the genomic coordinate of the base directly BEFORE the inserted bases.
+// The position should be the base-zero genomic coordinate of the base directly BEFORE the inserted bases.
 func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var log diff
+	var genomeIndexPos int
+
+	// Fill changeLog
+	log.genomePos = genomePos
+	log.added = make([]dna.Base, len(alt))
+	copy(log.added, alt)
 
 	for _, val := range alt {
 		if val != dna.A && val != dna.C && val != dna.G && val != dna.T {
@@ -95,21 +111,20 @@ func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, erro
 		if genomePos < g.startPos {
 			return answer, errors.New("input genomePos is not in the gene")
 		}
+		genomeIndexPos = genomePos - g.startPos
 	} else {
 		if genomePos > g.startPos {
 			return answer, errors.New("input genomePos is not in the gene")
 		}
+		genomeIndexPos = (g.startPos - genomePos) - 1 // -1 is so the genomeIndexPos is the base BEFORE the insertion
+		dna.ReverseComplement(alt)
 	}
-
-	genomeIndexPos := numbers.Abs(genomePos - g.startPos) // abs needed to handle negative strand
 
 	if genomeIndexPos > len(g.genomeSeq)-1 {
 		return answer, errors.New("input genomePos is not in the gene")
 	}
 
-	// Fill changeLog
-	log.genomePos = genomePos
-	log.added = alt
+	// If no error, then append changeLog
 	g.changeLog = append(g.changeLog, log)
 
 	// Update genome sequence
@@ -178,10 +193,10 @@ func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, erro
 	return answer, nil
 }
 
-//TODO
+//TODO EffectPrediction
 // Deletion removes bases from the GoGene, predicts the effect, and updates the GoGene struct to reflect the change.
 // genomeStartPos should be the base directly BEFORE the deleted bases. genomeEndPos should be the base directly AFTER the deleted bases.
-// All positions should be given as genomic coordinates.
+// All positions should be given as base-zero genomic coordinates.
 func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var log diff
@@ -213,8 +228,16 @@ func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction
 		}
 	}
 
-	genomeIndexStartPos := numbers.Abs(genomeStartPos - g.startPos) // abs needed to handle negative strand
-	genomeIndexEndPos := numbers.Abs(genomeEndPos - g.startPos)
+	var genomeIndexStartPos, genomeIndexEndPos int
+
+	if g.strand {
+		genomeIndexStartPos = genomeStartPos - g.startPos
+		genomeIndexEndPos = genomeEndPos - g.startPos
+	} else { // flipped for neg strand. start of deletion, and end of deletion must be flipped
+		genomeIndexStartPos = g.startPos - genomeEndPos
+		genomeIndexEndPos = g.startPos - genomeStartPos
+	}
+
 	if genomeIndexEndPos > len(g.genomeSeq) {
 		genomeIndexEndPos = len(g.genomeSeq) // if deletion goes past the end of the gene, then trim the value
 	}
@@ -344,7 +367,7 @@ func Reset(g *GoGene) {
 		}
 	}
 
-	if !hasDel {
+	if !hasDel { // Point mutations and insertions can be quickly reversed by performing the inverse function
 		for i := len(g.changeLog) - 1; i >= 0; i-- {
 			if len(g.changeLog[i].added) == 1 && len(g.changeLog[i].removed) == 1 {
 				_, err = PointMutation(g, g.changeLog[i].genomePos, g.changeLog[i].removed[0])
@@ -364,7 +387,7 @@ func Reset(g *GoGene) {
 		}
 	}
 
-	if hasDel {
+	if hasDel { // Deletions can remove important feature context which is non-trivial to store in the changelog, so insertions must restore from backup
 		g.startPos = g.orig.startPos
 		g.cdsStarts = g.cdsStarts[:len(g.orig.cdsStarts)]
 		copy(g.cdsStarts, g.orig.cdsStarts)

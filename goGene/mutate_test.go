@@ -1,6 +1,7 @@
 package goGene
 
 import (
+	"errors"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/gtf"
@@ -104,7 +105,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerNeg, err = PointMutation(negGene, 12, dna.A)
+	answerNeg, err = PointMutation(negGene, 12, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,7 +123,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerNeg, err = PointMutation(negGene, 7, dna.A)
+	answerNeg, err = PointMutation(negGene, 7, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -140,7 +141,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerNeg, err = PointMutation(negGene, 4, dna.A)
+	answerNeg, err = PointMutation(negGene, 4, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -204,6 +205,37 @@ func TestUndoPointMutation(t *testing.T) {
 	if dna.CompareSeqsIgnoreCase(correctPos.genomeSeq, answerPos.genomeSeq) != 0 ||
 		dna.CompareSeqsIgnoreCase(correctPos.cdnaSeq, answerPos.cdnaSeq) != 0 {
 		t.Error("ERROR: Trouble undoing multiple point mutations")
+	}
+
+	correctNegBackup := goGeneBackup{
+		startPos:     15,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+	}
+
+	var correctNeg GoGene = GoGene{
+		id:           "test_gene_id_negative",
+		startPos:     15,
+		strand:       false,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+		orig:         correctNegBackup,
+	}
+
+	// Negative strand test
+	answerNeg := GtfToGoGene(g["test_gene_id_negative"], f)
+
+	_, _ = PointMutation(answerNeg, 9, dna.G)
+	Reset(answerNeg)
+
+	if ok, diff := equal(&correctNeg, answerNeg); !ok {
+		t.Errorf("trouble undoing point mutation on negative strand. Problem with %s", diff)
 	}
 }
 
@@ -326,41 +358,294 @@ func TestUndoDeletion(t *testing.T) {
 	}
 }
 
-//func TestInsertion(t *testing.T) {
-//	g := gtf.Read("testdata/test.gtf")
-//	f := fasta.Read("testdata/test.fasta")
-//
-//	// Positive strand test
-//	posGene := GtfToGoGene(g["test_gene_id"], f)
-//	fmt.Println(posGene)
-//
-//	//fmt.Println(dna.BasesToString(posGene.genomeSeq))
-//	//fmt.Println(posGene.featureArray)
-//	//fmt.Println(dna.BasesToString(posGene.cdnaSeq))
-//	Insertion(posGene, 8, []dna.Base{dna.A, dna.T})
-//	//fmt.Println(dna.BasesToString(posGene.genomeSeq))
-//	//fmt.Println(posGene.featureArray)
-//	//fmt.Println(dna.BasesToString(posGene.cdnaSeq))
-//
-//	fmt.Println(posGene)
-//}
+func TestInsertion(t *testing.T) {
+	g := gtf.Read("testdata/test.gtf")
+	f := fasta.Read("testdata/test.fasta")
+	var err error
 
-//func TestDeletion(t *testing.T) {
-//	g := gtf.Read("testdata/test.gtf")
-//	f := fasta.Read("testdata/test.fasta")
-//
-//	// Positive strand test
-//	posGene := GtfToGoGene(g["test_gene_id"], f)
-//
-//	fmt.Println(posGene)
-//
-//	fmt.Println(dna.BasesToString(posGene.genomeSeq))
-//	fmt.Println(posGene.featureArray)
-//	fmt.Println(dna.BasesToString(posGene.cdnaSeq))
-//	Deletion(posGene, 3, 12)
-//	fmt.Println(dna.BasesToString(posGene.genomeSeq))
-//	fmt.Println(posGene.featureArray)
-//	fmt.Println(dna.BasesToString(posGene.cdnaSeq))
-//
-//	fmt.Println(posGene)
-//}
+	gene := GtfToGoGene(g["test_gene_id"], f)
+
+	correctBackup := goGeneBackup{
+		startPos:     0,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+	}
+
+	var correctPos1 GoGene = GoGene{
+		id:           "test_gene_id",
+		startPos:     0,
+		strand:       true,
+		cdsStarts:    []int{2, 7, 13},
+		cdsEnds:      []int{4, 11, 15},
+		genomeSeq:    dna.StringToBases("ACATGCACCATGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCATGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, 6, 7, -1, 8, 9, 10, -3, -3},
+		orig:         correctBackup,
+	}
+
+	_, err = Insertion(gene, 8, []dna.Base{dna.A, dna.T})
+	if err != nil {
+		t.Error(err)
+	}
+	if ok, diff := equal(gene, &correctPos1); !ok {
+		t.Errorf("trouble making insertion. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	var correctPos2 GoGene = GoGene{
+		id:           "test_gene_id",
+		startPos:     0,
+		strand:       true,
+		cdsStarts:    []int{2, 9, 13},
+		cdsEnds:      []int{4, 11, 15},
+		genomeSeq:    dna.StringToBases("ACATGCATACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+		orig:         correctBackup,
+	}
+
+	_, err = Insertion(gene, 5, []dna.Base{dna.A, dna.T})
+	if err != nil {
+		t.Error(err)
+	}
+	if ok, diff := equal(gene, &correctPos2); !ok {
+		t.Errorf("trouble making insertion. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	var correctPos3 GoGene = GoGene{
+		id:           "test_gene_id",
+		startPos:     0,
+		strand:       true,
+		cdsStarts:    []int{2, 9, 13},
+		cdsEnds:      []int{4, 11, 15},
+		genomeSeq:    dna.StringToBases("ACATGCAATCCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+		orig:         correctBackup,
+	}
+
+	_, err = Insertion(gene, 6, []dna.Base{dna.A, dna.T})
+	if err != nil {
+		t.Error(err)
+	}
+	if ok, diff := equal(gene, &correctPos3); !ok {
+		t.Errorf("trouble making insertion. Error is in %s", diff)
+	}
+
+	// Negative strand test
+	negGene := GtfToGoGene(g["test_gene_id_negative"], f)
+
+	correctNegBackup := goGeneBackup{
+		startPos:     15,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+	}
+
+	var correctNeg1 GoGene = GoGene{
+		id:           "test_gene_id_negative",
+		startPos:     15,
+		strand:       false,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 15},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTCTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTCTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, 9, 10, -3, -3},
+		orig:         correctNegBackup,
+	}
+
+	_, err = Insertion(negGene, 3, []dna.Base{dna.A, dna.G})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if ok, diff := equal(negGene, &correctNeg1); !ok {
+		t.Errorf("trouble making insertion. Error is in %s", diff)
+	}
+}
+
+func TestDeletion(t *testing.T) {
+	g := gtf.Read("testdata/test.gtf")
+	f := fasta.Read("testdata/test.fasta")
+	var err error
+
+	gene := GtfToGoGene(g["test_gene_id"], f)
+
+	correctBackup := goGeneBackup{
+		startPos:     0,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+	}
+
+	var correctPos1 GoGene = GoGene{
+		id:           "test_gene_id",
+		startPos:     0,
+		strand:       true,
+		cdsStarts:    []int{2, 4},
+		cdsEnds:      []int{3, 5},
+		genomeSeq:    dna.StringToBases("ACATAACG"),
+		cdnaSeq:      dna.StringToBases("ATAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, 3, -3, -3},
+		orig:         correctBackup,
+	}
+
+	_, err = Deletion(gene, 3, 12)
+	if err != nil {
+		t.Error(err)
+	}
+	if ok, diff := equal(gene, &correctPos1); !ok {
+		t.Errorf("trouble making deletion. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	var correctPos2 GoGene = GoGene{
+		id:           "test_gene_id",
+		startPos:     0,
+		strand:       true,
+		cdsStarts:    []int{4, 8},
+		cdsEnds:      []int{6, 10},
+		genomeSeq:    dna.StringToBases("ACCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("CCGTAA"),
+		featureArray: []Feature{-5, -5, -1, -1, 0, 1, 2, -1, 3, 4, 5, -3, -3},
+		orig:         correctBackup,
+	}
+
+	_, err = Deletion(gene, 1, 5)
+	if err != nil {
+		t.Error(err)
+	}
+	if ok, diff := equal(gene, &correctPos2); !ok {
+		t.Errorf("trouble making deletion. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	var correctPos3 GoGene = GoGene{
+		id:           "test_gene_id",
+		startPos:     0,
+		strand:       true,
+		cdsStarts:    []int{2, 7, 10},
+		cdsEnds:      []int{4, 9, 12},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, 6, 7, 8, -3, -3},
+		orig:         correctBackup,
+	}
+
+	_, err = Deletion(gene, 9, 11)
+	if err != nil {
+		t.Error(err)
+	}
+	if ok, diff := equal(gene, &correctPos3); !ok {
+		t.Errorf("trouble making deletion. Error is in %s", diff)
+	}
+
+	// Negative strand test
+	negGene := GtfToGoGene(g["test_gene_id_negative"], f)
+
+	correctNegBackup := goGeneBackup{
+		startPos:     15,
+		cdsStarts:    []int{2, 7, 11},
+		cdsEnds:      []int{4, 9, 13},
+		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
+		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+	}
+
+	var correctNeg1 GoGene = GoGene{
+		id:           "test_gene_id_negative",
+		startPos:     15,
+		strand:       false,
+		cdsStarts:    []int{2, 4},
+		cdsEnds:      []int{3, 5},
+		genomeSeq:    dna.StringToBases("ACATAACG"),
+		cdnaSeq:      dna.StringToBases("ATAA"),
+		featureArray: []Feature{-5, -5, 0, 1, 2, 3, -3, -3},
+		orig:         correctNegBackup,
+	}
+
+	_, err = Deletion(negGene, 3, 12)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if ok, diff := equal(negGene, &correctNeg1); !ok {
+		t.Errorf("trouble making deletion on negative strand. Error is in %s", diff)
+	}
+}
+
+func equal(alpha, beta *GoGene) (bool, error) {
+	if alpha.id != beta.id {
+		return false, errors.New("id")
+	}
+
+	if alpha.startPos != beta.startPos {
+		return false, errors.New("startPos")
+	}
+
+	if alpha.strand != beta.strand {
+		return false, errors.New("strand")
+	}
+
+	if len(alpha.cdsStarts) != len(beta.cdsStarts) {
+		return false, errors.New("cdsStarts")
+	}
+
+	for idx, val := range alpha.cdsStarts {
+		if val != beta.cdsStarts[idx] {
+			return false, errors.New("cdsStarts")
+		}
+	}
+
+	if len(alpha.cdsEnds) != len(beta.cdsEnds) {
+		return false, errors.New("cdsEnds")
+	}
+
+	for idx, val := range alpha.cdsEnds {
+		if val != beta.cdsEnds[idx] {
+			return false, errors.New("cdsEnds")
+		}
+	}
+
+	if len(alpha.genomeSeq) != len(beta.genomeSeq) {
+		return false, errors.New("genomeSeq")
+	}
+
+	for idx, val := range alpha.genomeSeq {
+		if val != beta.genomeSeq[idx] {
+			return false, errors.New("genomeSeq")
+		}
+	}
+
+	if len(alpha.cdnaSeq) != len(beta.cdnaSeq) {
+		return false, errors.New("cdnaSeq")
+	}
+
+	for idx, val := range alpha.cdnaSeq {
+		if val != beta.cdnaSeq[idx] {
+			return false, errors.New("cdnaSeq")
+		}
+	}
+
+	if len(alpha.featureArray) != len(beta.featureArray) {
+		return false, errors.New("featureArray")
+	}
+
+	for idx, val := range alpha.featureArray {
+		if val != beta.featureArray[idx] {
+			return false, errors.New("featureArray")
+		}
+	}
+
+	return true, nil
+}
+
+//TODO Indel EffectPred tests

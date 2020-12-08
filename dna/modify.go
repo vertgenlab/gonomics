@@ -96,6 +96,11 @@ func Complement(bases []Base) {
 	}
 }
 
+func ComplementSingleBase(base Base) Base {
+	base = complement(base)
+	return base
+}
+
 func RemoveGaps(bases []Base) []Base {
 	var ans []Base
 	for i := 0; i < len(bases); i++ {
