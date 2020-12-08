@@ -1,15 +1,14 @@
 package expandedTree
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strconv"
 	"strings"
-	"log"
 )
 
 //Tree structure for simulation and reconstruction
@@ -18,8 +17,8 @@ type ETree struct {
 	BranchLength float64
 	OnlyTopology bool
 	Fasta        *fasta.Fasta //assigning fastas to nodes
-	State        int //corresponds to a base same numbering encoded by dna.Base
-	Stored       []float64 //a list of probabilities for each base at any given site of the genome
+	State        int          //corresponds to a base same numbering encoded by dna.Base
+	Stored       []float64    //a list of probabilities for each base at any given site of the genome
 	Scrap        float64
 	Left         *ETree
 	Right        *ETree
@@ -47,9 +46,8 @@ func ReadNewick(filename string) (*ETree, error) {
 	defer file.Close()
 
 	if !strings.HasPrefix(singleLineTree, "#") {
-		return parseNewick(singleLineTree[strings.Index(singleLineTree, "("): 1+strings.LastIndex(singleLineTree, ";")])
+		return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
 	}
-
 
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
 }
@@ -61,7 +59,7 @@ func ReadMultiLineTree(input string) string {
 	file := fileio.EasyOpen(input)
 	defer file.Close()
 
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file){
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		catInput = catInput + line
 	}
 	return catInput
@@ -217,8 +215,6 @@ func parseNewick(input string) (*ETree, error) {
 
 //tell tree what "up" is
 func SetUp(root *ETree, prevNode *ETree) {
-	log.Print(root.Name)
-	log.Print(prevNode.Name)
 	if prevNode != nil {
 		root.Up = prevNode
 	} else {

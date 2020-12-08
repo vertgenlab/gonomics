@@ -90,7 +90,7 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 		//BUG: it seems like exonMistakes and nonCodingMistakes are swapped in simRecon test, but not exonBases or non-CodingBases
 		exonAccuracy := exonMistakes / exonBases * 100.0
 		nonCodingAccuracy := nonCodingMistakes / nonCodingBases * 100.0
-		log.Printf("Node: %s, nonCodingMistakes: %f, nonCodingBases: %f, exonMistakes: %f, exonBases: %f", sim[i].Name, nonCodingMistakes, nonCodingBases, exonMistakes, exonBases)
+		//DEBUG: log.Printf("Node: %s, nonCodingMistakes: %f, nonCodingBases: %f, exonMistakes: %f, exonBases: %f", sim[i].Name, nonCodingMistakes, nonCodingBases, exonMistakes, exonBases)
 		eAcc := 100 - exonAccuracy
 		nCAcc := 100 - nonCodingAccuracy
 		answer[sim[i].Name+" exon"] = eAcc
