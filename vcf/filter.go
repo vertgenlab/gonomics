@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+//Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
 func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
@@ -27,6 +28,7 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 	return true
 }
 
+//FilterQual returns true if a Vcf quality is above an input minQual score, false otherwise.
 func FilterQual(v *Vcf, minQual float64) bool {
 	if v.Qual < minQual {
 		return false
@@ -34,6 +36,7 @@ func FilterQual(v *Vcf, minQual float64) bool {
 	return true
 }
 
+//FilterAlt returns true if the Alt field of a Vcf entry matches a desired input Alt field, false otherwise
 func FilterAlt(v *Vcf, alt []string) bool {
 	if len(alt) > 0 && CompareAlt(v.Alt, alt) != 0 {
 		return false
@@ -41,6 +44,7 @@ func FilterAlt(v *Vcf, alt []string) bool {
 	return true
 }
 
+//FilterRef returns true if the Ref field of a Vcf record matches an input string, false otherwise.
 func FilterRef(v *Vcf, ref string) bool {
 	if len(ref) > 0 && strings.Compare(v.Ref, ref) != 0 {
 		return false
@@ -48,6 +52,7 @@ func FilterRef(v *Vcf, ref string) bool {
 	return true
 }
 
+//FilterRange returns true if a Vcf position lies between an input minimum and maximum position (inclusive for both min and max), false otherwise.
 func FilterRange(v *Vcf, minPos int, maxPos int) bool {
 	if v.Pos < minPos || v.Pos > maxPos {
 		return false
@@ -55,6 +60,7 @@ func FilterRange(v *Vcf, minPos int, maxPos int) bool {
 	return true
 }
 
+//FilterChrom returns true if the Chrom field of a Vcf record matches an input string, false otherwise.
 func FilterChrom(v *Vcf, chrom string) bool {
 	if chrom != "" && v.Chr != chrom {
 		return false
@@ -98,6 +104,7 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	return answer
 }
 
+//FilterNs removes all records from a slice of Vcfs that contain Ns.
 func FilterNs(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
 	var noN bool

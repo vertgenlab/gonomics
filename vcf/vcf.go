@@ -1,3 +1,8 @@
+//Package vcf contains functions for reading, writing, and manipulating VCF format files. More information on the VCF file format can be found 
+//in its official documentation at https://samtools.github.io/hts-specs/VCFv4.2.pdf. This file is parsed into a struct containing header information
+//as well as a Vcf struct containing the information from each data line.
+
+
 package vcf
 
 import (
