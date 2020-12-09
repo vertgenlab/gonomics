@@ -116,19 +116,6 @@ func splitNameAndLength(input string) (string, float64, bool, error) {
 	return "", 0, false, fmt.Errorf("Error: %s should only have one or two colons\n", input)
 }
 
-func ReadMultiLineTree(input string) string {
-	var catInput string
-	var line string
-	var doneReading bool = false
-	file := fileio.EasyOpen(input)
-	defer file.Close()
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file){
-		catInput = catInput + line
-	}
-	return catInput
-}
-
 func parseNewickHelper(input string) (*Tree, error) {
 	var answer Tree
 	var err error
@@ -181,7 +168,7 @@ func parseNewickHelper(input string) (*Tree, error) {
 
 func ReadNewick(filename string) (*Tree, error) {
 	var singleLineTree string
-	singleLineTree = ReadMultiLineTree(filename)
+	singleLineTree = fileio.ReadFileToSingleLineString(filename)
 
 	file, err := os.Open(filename)
 	if err != nil {

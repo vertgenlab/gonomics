@@ -111,3 +111,16 @@ func Read(filename string) []string {
 	}
 	return answer
 }
+
+func ReadFileToSingleLineString(filename string) string {
+	var catInput string
+	var line string
+	var doneReading bool = false
+	file := EasyOpen(filename)
+	defer file.Close()
+
+	for line, doneReading = EasyNextRealLine(file); !doneReading; line, doneReading = EasyNextRealLine(file) {
+		catInput = catInput + line
+	}
+	return catInput
+}

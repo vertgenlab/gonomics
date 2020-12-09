@@ -37,7 +37,7 @@ func ReadTree(newickFilename string, fastasFilename string) *ETree {
 //read in tree from filename
 func ReadNewick(filename string) (*ETree, error) {
 	var singleLineTree string
-	singleLineTree = ReadMultiLineTree(filename)
+	singleLineTree = fileio.ReadFileToSingleLineString(filename)
 
 	file, err := os.Open(filename)
 	if err != nil {
@@ -50,19 +50,6 @@ func ReadNewick(filename string) (*ETree, error) {
 	}
 
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
-}
-
-func ReadMultiLineTree(input string) string {
-	var catInput string
-	var line string
-	var doneReading bool = false
-	file := fileio.EasyOpen(input)
-	defer file.Close()
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		catInput = catInput + line
-	}
-	return catInput
 }
 
 // read in tree from string of newick
