@@ -35,29 +35,28 @@ func GoReadGVcf(filename string) *Reader {
 	}()
 
 	return ans
-}
+}*/
 
-type GVcf struct {
+type GVcf struct {//TODO: Uncommented for now, but this struct needs to be removed soon.
 	Vcf
 	Seq       [][]dna.Base
 	Genotypes []GenomeSample
-}*/
-
-
+}
 
 type SampleHash struct {
 	Fa     map[string]int16
 	GIndex map[string]int16
 }
 
-/*
+
 //TODO: Can only process short variants. Need long term solution for large structural variance.
 func VcfToGvcf(v *Vcf) *GVcf {
-	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, getAltBases(v.Alt)...), Genotypes: GetAlleleGenotype(v)}
+	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, GetAltBases(v.Alt)...), Genotypes: v.Samples}
 	return gVcf
-}*/
+}
 
-/* This function has now been incorporated into ParseNotes in vcf.go
+/*
+//This function has now been incorporated into ParseNotes in vcf.go
 func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	text := strings.Split(v.Notes, "\t")
 	var hap string
@@ -227,8 +226,8 @@ func helperSamplesToString(sample []GenomeSample, i int) string {
 			answer = fmt.Sprintf("%d%s%d\t", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 		}
 	}
-	if len(sample[i].Other) > 0 {
-		answer = answer + strings.Join(sample[i].Other, ":")
+	if len(sample[i].FormatData) > 0 {
+		answer = answer + strings.Join(sample[i].FormatData, ":")
 	}
 	return answer
 }

@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-//slices of slice
+//Vcf contains information for each line of a VCF format file, corresponding to variants at one position of a reference genome.
 type Vcf struct {
 	Chr    string
 	Pos    int
@@ -26,17 +26,20 @@ type Vcf struct {
 	Samples []GenomeSample
 }
 
+//GenomeSample is a substruct of Vcf, and contains information about each individual represented in a VCF line.
 type GenomeSample struct {
-	AlleleOne int16
-	AlleleTwo int16
-	Phased    bool
-	Other []string
+	AlleleOne int16//First allele in genotype, 0 for reference, 1 for Alt[0], 2 for Alt[1], etc.
+	AlleleTwo int16//Second allele in genotype, same number format as above.
+	Phased    bool//True for phased genotype, false for unphased.
+	FormatData []string//FormatData contains additional sample fields after the genotype, which are parsed into a slice delimited by colons. 
 }
 
+//VcfHeader contains all of the information present in the header section of a VCf, simply delimited by line to form a slice of strings.
 type VcfHeader struct {
 	Text []string
 }
 
+//Read parses a slice of VCF structs from an input filename. Does not store or return the header.
 func Read(filename string) []*Vcf {
 	var answer []*Vcf
 	file := fileio.EasyOpen(filename)
@@ -50,6 +53,7 @@ func Read(filename string) []*Vcf {
 	return answer
 }
 
+//ReadToChan is a helper function of GoReadToChan.
 func ReadToChan(file *fileio.EasyReader, data chan<- *Vcf, wg *sync.WaitGroup) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		data <- curr
@@ -58,6 +62,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- *Vcf, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
+//GoReadToChan parses VCF structs from an input filename and returns a chan of VCF structs along with the header of the VCF file.
 func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
@@ -74,6 +79,7 @@ func GoReadToChan(filename string) (<-chan *Vcf, *VcfHeader) {
 	return data, header
 }
 
+//processVcfLine is a helper function of NextVcf that parses a VCF struct from an input line of a VCF file provided as a string.
 func processVcfLine(line string) *Vcf {
 	var curr *Vcf
 	data := strings.SplitN(line, "\t", 10)
@@ -100,6 +106,7 @@ func processVcfLine(line string) *Vcf {
 	return curr
 }
 
+//ParseNotes is a helper function of processVcfLine. Generates a slice of GenomeSample structs from a VCF data line.
 func ParseNotes(data string, format []string) []GenomeSample {
 	//DEBUG: fmt.Printf("Format: %s. Format[0]: %s.\n", format, format[0])
 	if len(format) == 0 {
@@ -119,27 +126,28 @@ func ParseNotes(data string, format []string) []GenomeSample {
 	for i := 0; i < len(text); i++ {
 		fields = strings.Split(text[i], ":")
 		if strings.Compare(fields[0], "./.") == 0 || strings.Compare(fields[0], ".|.") == 0 {
-			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, Other: fields}
+			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: fields}
 		} else if strings.Contains(fields[0], "|") {
 			alleles = strings.SplitN(fields[0], "|", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, Other: fields}
+			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, FormatData: fields}
 		} else if strings.Contains(fields[0], "/") {
 			alleles = strings.SplitN(fields[0], "/", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, Other: fields}
+			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, FormatData: fields}
 		} else {
 			//Deal with single haps. There might be a better soltuion, but I think this should work.
 			n, err = strconv.ParseInt(fields[0], 10, 16)
 			if err != nil && n < int64(len(text)) {
-				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false, Other: fields}
+				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false, FormatData: fields}
 			} else {
 				log.Fatalf("Error: Unexpected parsing error...\n")
 			}
 		}
-		answer[i].Other[0] = "" //clears the genotype from the first other slot, making this a dummy position
+		answer[i].FormatData[0] = "" //clears the genotype from the first other slot, making this a dummy position
 	}
 	return answer
 }
 
+//NextVcf is a helper function of Read and GoReadToChan. Checks a reader for additional data lines and parses a Vcf line if more lines exist.
 func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	line, done := fileio.EasyNextRealLine(reader)
 	if done {
@@ -148,6 +156,7 @@ func NextVcf(reader *fileio.EasyReader) (*Vcf, bool) {
 	return processVcfLine(line), false
 }
 
+//ReadHeader is a helper function of GoReadToChan. Parses a VCF header with a reader.
 func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	var line string
 	var err error
@@ -160,6 +169,7 @@ func ReadHeader(er *fileio.EasyReader) *VcfHeader {
 	return &header
 }
 
+//FormatToString converts the []string Format struct into a string by concatenating with a colon delimiter.
 func FormatToString(format []string) string {
 	if len(format) == 0 {
 		return ""
@@ -206,6 +216,7 @@ func WriteVcfToFileHandle(file io.Writer, input []*Vcf) {
 	}
 }
 
+//WriteVcf writes an individual Vcf struct to an io.Writer.
 func WriteVcf(file io.Writer, input *Vcf) {
 	var err error
 	if len(input.Format) == 0 {
@@ -216,6 +227,7 @@ func WriteVcf(file io.Writer, input *Vcf) {
 	common.ExitIfError(err)
 }
 
+//Write writes a []*Vcf to an output filename.
 func Write(filename string, data []*Vcf) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
@@ -223,23 +235,26 @@ func Write(filename string, data []*Vcf) {
 	WriteVcfToFileHandle(file, data)
 }
 
+//PrintVcf prints every line of a []*Vcf.
 func PrintVcf(data []*Vcf) {
 	for i := 0; i < len(data); i++ {
 		PrintSingleLine(data[i])
 	}
 }
 
+//PrintVcfLines prints the first "num" lines from a []*Vcf.
 func PrintVcfLines(data []*Vcf, num int) {
 	for i := 0; i < num; i++ {
 		PrintSingleLine(data[i])
 	}
 }
 
+//PrintSingleLine prints an individual Vcf line.
 func PrintSingleLine(data *Vcf) {
 	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, SamplesToString(data.Samples))
 }
 
-//Checks suffix of filename to confirm if the file is a vcf formatted file
+//IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file
 func IsVcfFile(filename string) bool {
 	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
 		return true
