@@ -21,7 +21,7 @@ func AxtVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
 func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 	var answer []*vcf.Vcf
 	var curr *vcf.Vcf
-	rCount := axtFile.RStart - 1
+	var rCount int = int(axtFile.RStart) - 1
 	qCount := axtFile.QStart - 1
 	for i := 0; i < len(axtFile.RSeq); i++ {
 		if axtFile.RSeq[i] != dna.Gap && axtFile.QSeq[i] != dna.Gap {
@@ -29,7 +29,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 			qCount++
 			//snp mismatch
 			if dna.ToUpper(axtFile.RSeq[i]) != dna.ToUpper(axtFile.QSeq[i]) {
-				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i])), Qual: 30, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: "SVTYPE=SNP", Notes: AxtInfo(axtFile)}
+				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))}, Qual: 30, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: []string{"SVTYPE=SNP"}, Notes: AxtInfo(axtFile)}
 				answer = append(answer, curr)
 			}
 		}
@@ -37,7 +37,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 		if axtFile.RSeq[i] == dna.Gap {
 
 			qCount++
-			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: "SVTYPE=INS", Notes: AxtInfo(axtFile)}
+			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: []string{"SVTYPE=INS"}, Notes: AxtInfo(axtFile)}
 
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.RSeq[j]) == dna.Gap {
