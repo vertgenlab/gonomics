@@ -1,4 +1,4 @@
-package goGene
+package gene
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
@@ -12,7 +12,7 @@ func TestGtfToGoGene(t *testing.T) {
 	g := gtf.Read("testdata/test.gtf")
 	f := fasta.Read("testdata/test.fasta")
 
-	// Positive strand test
+	// Positive posStrand test
 	answerPos := GtfToGoGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
@@ -24,10 +24,10 @@ func TestGtfToGoGene(t *testing.T) {
 		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
 	}
 
-	var correctPos GoGene = GoGene{
+	var correctPos Gene = Gene{
 		id:           "test_gene_id",
 		startPos:     0,
-		strand:       true,
+		posStrand:    true,
 		cdsStarts:    []int{2, 7, 11},
 		cdsEnds:      []int{4, 9, 13},
 		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
@@ -37,16 +37,16 @@ func TestGtfToGoGene(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(*answerPos, correctPos) {
-		t.Error("ERROR: Trouble converting gtf to GoGene on positive strand")
+		t.Error("ERROR: Trouble converting gtf to Gene on positive posStrand")
 	}
 
-	// Negative strand test
+	// Negative posStrand test
 	answerNeg := GtfToGoGene(g["test_gene_id_negative"], f)
 
-	var correctNeg GoGene = GoGene{
+	var correctNeg Gene = Gene{
 		id:           "test_gene_id_negative",
 		startPos:     15,
-		strand:       false,
+		posStrand:    false,
 		cdsStarts:    correctPos.cdsStarts,
 		cdsEnds:      correctPos.cdsEnds,
 		genomeSeq:    correctPos.genomeSeq,
@@ -58,7 +58,7 @@ func TestGtfToGoGene(t *testing.T) {
 	correctNeg.orig.startPos = 15
 
 	if !reflect.DeepEqual(*answerNeg, correctNeg) {
-		t.Error("ERROR: Trouble converting gtf to GoGene on negative strand")
+		t.Error("ERROR: Trouble converting gtf to Gene on negative posStrand")
 	}
 }
 
@@ -114,7 +114,7 @@ func TestPositionConversion(t *testing.T) {
 	}
 
 	if !testsPass {
-		t.Error("ERROR: Trouble converting positions on positive strand")
+		t.Error("ERROR: Trouble converting positions on positive posStrand")
 	}
 
 	// Negative Tests
@@ -162,6 +162,6 @@ func TestPositionConversion(t *testing.T) {
 	}
 
 	if !testsPass {
-		t.Error("ERROR: Trouble converting positions on negative strand")
+		t.Error("ERROR: Trouble converting positions on negative posStrand")
 	}
 }

@@ -1,4 +1,4 @@
-package goGene
+package gene
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
@@ -6,17 +6,17 @@ import (
 	"github.com/vertgenlab/gonomics/gtf"
 )
 
-// GtfToGoGene converts a gtf record into a GoGene data structure
-// WARNING: If multiple isoforms are present, only the longest is used
-func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
-	answer := new(GoGene)
+// GtfToGoGene converts a gtf record into a Gene data structure
+// WARNING: If multiple isoforms are present, only the isoform the longest CDS is used
+func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
+	answer := new(Gene)
 	gtf.MoveCanonicalToZero(g)
 	transcript := g.Transcripts[0]
 
 	answer.id = g.GeneID
-	answer.strand = transcript.Strand
+	answer.posStrand = transcript.Strand
 
-	if transcript.Strand { // If on the positive strand
+	if transcript.Strand { // If on the positive posStrand
 		answer.startPos = transcript.Start - 1
 
 		fastaMap := fasta.FastaMap(ref)
@@ -60,7 +60,7 @@ func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *GoGene {
 			}
 		}
 
-	} else { // If on the negative strand
+	} else { // If on the negative posStrand
 		answer.startPos = transcript.End - 1
 
 		fastaMap := fasta.FastaMap(ref)

@@ -1,4 +1,4 @@
-package goGene
+package gene
 
 import (
 	"errors"
@@ -8,14 +8,14 @@ import (
 )
 
 // PointMutation changes a single nucleotide to the desired base, predicts the effect,
-// and updates the GoGene struct to reflect the change.
+// and updates the Gene struct to reflect the change.
 // The position of the mutation should be given in base-zero genomic coordinates.
-func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, error) {
+func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var log diff
 	var err error
 
-	genomeIndexPos := numbers.Abs(genomePos - g.startPos) // abs needed to handle negative strand
+	genomeIndexPos := numbers.Abs(genomePos - g.startPos) // abs needed to handle negative posStrand
 
 	// Fill log before change
 	log.genomePos = genomePos
@@ -24,7 +24,7 @@ func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, er
 	log.added = make([]dna.Base, 1)
 	log.added[0] = alt
 
-	if !g.strand { // so that diff can be undone by another PointMutation call
+	if !g.posStrand { // so that diff can be undone by another PointMutation call
 		dna.ReverseComplement(log.removed)
 	}
 
@@ -35,7 +35,7 @@ func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, er
 	if genomePos < 0 {
 		return answer, errors.New("genomePos must be positive")
 	}
-	if g.strand {
+	if g.posStrand {
 		if genomePos < g.startPos {
 			return answer, errors.New("input genomePos is not in the gene")
 		}
@@ -80,19 +80,20 @@ func PointMutation(g *GoGene, genomePos int, alt dna.Base) (EffectPrediction, er
 	} else { // mutation is noncoding
 		answer.CdnaPos, answer.CdnaOffset, err = GenomicPosToCdna(g, genomePos)
 		common.ExitIfError(err)
-		answer.Consequence = checkSplice(g, genomeIndexPos)
+		answer.Consequence = checkSplice(answer.CdnaOffset)
 	}
 
 	return answer, nil
 }
 
 //TODO EffectPrediction
-// Insertion adds bases to the GoGene, predicts the effect, and updates the GoGene struct to reflect the change.
+// Insertion adds bases to the Gene, predicts the effect, and updates the Gene struct to reflect the change.
 // The position should be the base-zero genomic coordinate of the base directly BEFORE the inserted bases.
-func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, error) {
+func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var log diff
 	var genomeIndexPos int
+	var err error
 
 	// Fill changeLog
 	log.genomePos = genomePos
@@ -107,7 +108,7 @@ func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, erro
 	if genomePos < 0 {
 		return answer, errors.New("genomePos must be positive")
 	}
-	if g.strand {
+	if g.posStrand {
 		if genomePos < g.startPos {
 			return answer, errors.New("input genomePos is not in the gene")
 		}
@@ -146,13 +147,7 @@ func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, erro
 	}
 
 	if g.featureArray[genomeIndexPos] >= 0 && g.featureArray[genomeIndexPos+1] >= 0 { // Coding
-		// Update cDNA
 		cdnaPos := int(g.featureArray[genomeIndexPos])
-		g.cdnaSeq = append(g.cdnaSeq, alt...)
-		copy(g.cdnaSeq[cdnaPos+1+len(alt):], g.cdnaSeq[cdnaPos+1:])
-		for idx, val := range alt {
-			g.cdnaSeq[cdnaPos+1+idx] = val
-		}
 
 		// Update featureArray for coding
 		fillVal := Feature(cdnaPos + 1)
@@ -176,6 +171,65 @@ func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, erro
 				}
 			}
 		}
+
+		//TODO: Effect Prediction WIP
+		//answer.CdnaPos, answer.CdnaOffset, err = GenomicPosToCdna(g, genomePos + 1)
+		//frame := (cdnaPos + 1) % 3
+		//var currCodon dna.Codon
+		//
+		//if frame != 0 { // if insertion disrupts a codon, note the codon being changed
+		//	currCodon, err = CdnaPosToCodon(g, cdnaPos)
+		//	answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(&currCodon)}
+		//}
+
+		// Update cDNA
+		g.cdnaSeq = append(g.cdnaSeq, alt...)
+		copy(g.cdnaSeq[cdnaPos+1+len(alt):], g.cdnaSeq[cdnaPos+1:])
+		for idx, val := range alt {
+			g.cdnaSeq[cdnaPos+1+idx] = val
+		}
+
+		//TODO: Effect Prediction WIP
+		//answer.AaPos = cdnaPos / 3
+		//
+		//if len(alt) % 3 != 0 { // Causes Frameshift // TODO this is a bit jury rigged, but it works....
+		//	answer.Consequence = Frameshift
+		//	currCodon, err = CdnaPosToCodon(g, cdnaPos + 1)
+		//	var stopFound bool = true
+		//	for currCdnaPos := cdnaPos + 1 + 3; dna.TranslateCodon(&currCodon) != dna.Stop; currCdnaPos += 3 {
+		//		answer.AaAlt = append(answer.AaAlt, dna.TranslateCodon(&currCodon))
+		//		if currCdnaPos + (3 - frame) > len(g.cdnaSeq) { // if do dont hit a stop by the end of the cdnaSeq, then move to genomic DNA
+		//			currGdnaPos := g.cdsEnds[len(g.cdsEnds)-1] + 1 - frame
+		//			for ;dna.TranslateSeq(g.genomeSeq[currGdnaPos:currGdnaPos + 3])[0] != dna.Stop; currGdnaPos += 3 {
+		//				answer.AaAlt = append(answer.AaAlt, dna.TranslateSeq(g.genomeSeq[currGdnaPos:currGdnaPos + 3])[0])
+		//				if currGdnaPos + 3 > len(g.genomeSeq) {
+		//					stopFound = false
+		//					err = errors.New("frameshift was unable to find a stop before the end of the gene")
+		//					break
+		//				}
+		//			}
+		//			break
+		//		} else {
+		//			currCodon, err = CdnaPosToCodon(g, currCdnaPos)
+		//		}
+		//	}
+		//	if stopFound {
+		//		answer.AaAlt = append(answer.AaAlt, dna.Stop)
+		//	}
+		//} else { // In-Frame
+		//	answer.Consequence = InFrameInsertion
+		//	if frame != 0 { // Disrupts an existing codon
+		//		answer.AaAlt = dna.TranslateSeq(g.cdnaSeq[(cdnaPos + 1) - frame : (cdnaPos + 1) + len(alt) + (3 - frame)])
+		//		if answer.AaRef[0] == answer.AaAlt[0] {
+		//			answer.AaRef = nil
+		//			answer.AaAlt = answer.AaAlt[1:]
+		//			answer.AaPos++
+		//		}
+		//	} else { // Does not disrupt existing codons AND is inframe
+		//		answer.AaAlt = dna.TranslateSeq(alt)
+		//	}
+		//}
+
 	} else { // NonCoding
 		// Update featureArray for noncoding
 		// figure out how the inserted bases should be labelled in the feature array. Priority: 5'UTR=3'Utr>Intron
@@ -186,18 +240,24 @@ func Insertion(g *GoGene, genomePos int, alt []dna.Base) (EffectPrediction, erro
 		for i := 0; i < len(alt); i++ {
 			g.featureArray[genomeIndexPos+1+i] = fillVal
 		}
+		//TODO: Effect Prediction WIP
+		//var endCdnaOffset int
+		//answer.CdnaPos, answer.CdnaOffset, err = GenomicPosToCdna(g, genomePos + 1)
+		//_, endCdnaOffset, err = GenomicPosToCdna(g, genomePos + 1 + (len(alt) - 1))
+		//if numbers.Abs(endCdnaOffset) < numbers.Abs(answer.CdnaOffset) {
+		//	answer.Consequence = checkSplice(endCdnaOffset)
+		//} else {
+		//	answer.Consequence = checkSplice(answer.CdnaOffset)
+		//}
 	}
-
-	//TODO EffectPrediction
-
-	return answer, nil
+	return answer, err
 }
 
 //TODO EffectPrediction
-// Deletion removes bases from the GoGene, predicts the effect, and updates the GoGene struct to reflect the change.
+// Deletion removes bases from the Gene, predicts the effect, and updates the Gene struct to reflect the change.
 // genomeStartPos should be the base directly BEFORE the deleted bases. genomeEndPos should be the base directly AFTER the deleted bases.
 // All positions should be given as base-zero genomic coordinates.
-func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction, error) {
+func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var log diff
 	var err error
@@ -210,7 +270,7 @@ func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction
 		return answer, errors.New("genomeStartPos must be less than genomeEndPos")
 	}
 
-	if g.strand {
+	if g.posStrand {
 		if genomeStartPos < g.startPos {
 			if genomeEndPos > g.startPos {
 				genomeStartPos = g.startPos - 1 // if deletion partially overlaps the gene, then trim the value
@@ -230,10 +290,10 @@ func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction
 
 	var genomeIndexStartPos, genomeIndexEndPos int
 
-	if g.strand {
+	if g.posStrand {
 		genomeIndexStartPos = genomeStartPos - g.startPos
 		genomeIndexEndPos = genomeEndPos - g.startPos
-	} else { // flipped for neg strand. start of deletion, and end of deletion must be flipped
+	} else { // flipped for neg posStrand. start of deletion, and end of deletion must be flipped
 		genomeIndexStartPos = g.startPos - genomeEndPos
 		genomeIndexEndPos = g.startPos - genomeStartPos
 	}
@@ -356,8 +416,8 @@ func Deletion(g *GoGene, genomeStartPos int, genomeEndPos int) (EffectPrediction
 	return answer, err
 }
 
-// Reset reverts all mutations done to a GoGene.
-func Reset(g *GoGene) {
+// Reset reverts all mutations done to a Gene.
+func Reset(g *Gene) {
 	var hasDel bool
 	var err error
 	for _, val := range g.changeLog {
@@ -404,39 +464,13 @@ func Reset(g *GoGene) {
 	g.changeLog = nil
 }
 
-// checkSplice inputs a non-coding position in GoGene-adjusted genomic coordinates and determines if a variant at this site may affect splicing.
-func checkSplice(g *GoGene, genomeIndexPos int) MutationType {
-	var nearestExon, idx int
-	var val Feature
-
-	// check forwards
-	for nearestExon, val = range g.featureArray[genomeIndexPos:] {
-		if val >= 0 || nearestExon > 11 {
-			break
-		}
-	}
-
-	if nearestExon <= 2 {
+// checkSplice inputs a cDNA offset value and determines if a variant at this site may affect splicing.
+func checkSplice(CdnaOffset int) MutationType {
+	if numbers.Abs(CdnaOffset) <= 2 {
 		return Splice
-	} else if nearestExon <= 10 {
-		return FarSplice
 	}
 
-	// check backwards
-	nearestExon = 0
-	var lowerBound int
-	if genomeIndexPos-11 > 0 {
-		lowerBound = genomeIndexPos - 11
-	}
-	for idx, val = range g.featureArray[lowerBound:genomeIndexPos] {
-		if val >= 0 {
-			nearestExon = idx
-		}
-	}
-
-	if nearestExon >= 10 {
-		return Splice
-	} else if nearestExon >= 1 {
+	if numbers.Abs(CdnaOffset) <= 10 {
 		return FarSplice
 	}
 

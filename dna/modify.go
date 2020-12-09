@@ -48,7 +48,7 @@ func AllToLower(bases []Base) {
 	RangeToLower(bases, 0, len(bases))
 }
 
-func complement(b Base) Base {
+func ComplementSingleBase(b Base) Base {
 	switch b {
 	case A:
 		return T
@@ -75,7 +75,7 @@ func complement(b Base) Base {
 	case Dot:
 		return Dot
 	default:
-		common.ExitIfError(fmt.Errorf("Error: trying to reverse complement an unexpected base %d", b))
+		common.ExitIfError(fmt.Errorf("Error: trying to reverse ComplementSingleBase an unexpected base %d", b))
 		return N
 	}
 }
@@ -86,19 +86,14 @@ func swap(alpha Base, beta Base) (Base, Base) {
 
 func ReverseComplement(bases []Base) {
 	for i, j := 0, len(bases)-1; i <= j; i, j = i+1, j-1 {
-		bases[i], bases[j] = swap(complement(bases[i]), complement(bases[j]))
+		bases[i], bases[j] = swap(ComplementSingleBase(bases[i]), ComplementSingleBase(bases[j]))
 	}
 }
 
 func Complement(bases []Base) {
 	for i := 0; i < len(bases); i++ {
-		bases[i] = complement(bases[i])
+		bases[i] = ComplementSingleBase(bases[i])
 	}
-}
-
-func ComplementSingleBase(base Base) Base {
-	base = complement(base)
-	return base
 }
 
 func RemoveGaps(bases []Base) []Base {

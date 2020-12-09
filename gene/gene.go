@@ -1,4 +1,4 @@
-package goGene
+package gene
 
 import (
 	"errors"
@@ -15,31 +15,33 @@ const (
 	UtrFive  Feature = -5
 	// All positive values refer to cDNA position
 
-	Silent       MutationType = 0
-	Missense     MutationType = 1
-	Nonsense     MutationType = 2
-	Frameshift   MutationType = 3
-	Intergenic   MutationType = 4
-	Intronic     MutationType = 5
-	Splice       MutationType = 6 // +/- 1-2 of E-I boundary
-	FarSplice    MutationType = 7 // +/- 3-10 of E-I boundary
-	DisruptStart MutationType = 8
-	DisruptStop  MutationType = 9
+	Silent           MutationType = 0
+	Missense         MutationType = 1
+	Nonsense         MutationType = 2
+	Frameshift       MutationType = 3
+	Intergenic       MutationType = 4
+	Intronic         MutationType = 5
+	Splice           MutationType = 6 // +/- 1-2 of E-I boundary
+	FarSplice        MutationType = 7 // +/- 3-10 of E-I boundary
+	DisruptStart     MutationType = 8
+	DisruptStop      MutationType = 9
+	InFrameInsertion MutationType = 10
+	InFrameDeletion  MutationType = 11
 )
 
-// GoGene is a processed version of a gtf record that enables easy
+// Gene is a processed version of a gtf record that enables easy
 // traversal and manipulation of genes on the genomic and mRNA levels.
-type GoGene struct {
-	id           string
-	startPos     int
-	strand       bool
-	cdsStarts    []int
-	cdsEnds      []int
-	genomeSeq    []dna.Base
-	cdnaSeq      []dna.Base
-	featureArray []Feature
-	orig         goGeneBackup
-	changeLog    []diff
+type Gene struct {
+	id           string       // Identifier for the transcript the Gene is derived from. In GTF this is the GeneID field.
+	startPos     int          // Genomic start position of the gene. This should use the coordinate system of the reference fasta, rather than Gene internal genomic coordinates
+	posStrand    bool         // True if gene is on the positive strand, False if on negative strand.
+	cdsStarts    []int        // The start position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
+	cdsEnds      []int        // The end position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
+	genomeSeq    []dna.Base   // The genomic sequence of the gene from 5' to 3'. NOTE: This field is reverse complemented relative to reference file if the gene is on the negative strand
+	cdnaSeq      []dna.Base   // The cDNA sequence of the gene from 5' to 3'.
+	featureArray []Feature    // FeatureArray is a slice with len(featureArray) = len(genomeSeq). The index of featureArray corresponds to the same index of genomeSeq. featureArray denotes the features listed above as negative values, or the cDNA pos using all values > 0.
+	orig         goGeneBackup // Copy of initial Gene state to enable the Reset() function.
+	changeLog    []diff       // Log of any mutations that have been performed on the Gene to enable the Reset() function.
 }
 
 type goGeneBackup struct {
@@ -66,14 +68,14 @@ type EffectPrediction struct {
 	AaAlt       []dna.AminoAcid
 }
 
-// GenomicToCdna converts genomic coordinates to cDNA coordinates. The return format is c.100+10.
-// The first int return is the nearest position in the coding sequence.
+// GenomicToCdna converts genomic coordinates to cDNA coordinates. The return format is c.100+10 (HGVS).
+// The first int return is the nearest position in the coding sequence in cDNA coordinates.
 // The second int return is the distance from the nearest coding exon
-// (>0 if after cds; <0 if before cds, ==0 if inside coding sequence).
+// (>0 if 5' of cds; <0 if 3' of cds, ==0 if inside coding sequence, ties break to <0).
 // Input and output positions are zero-based
-func GenomicPosToCdna(g *GoGene, genomePos int) (int, int, error) {
+func GenomicPosToCdna(g *Gene, genomePos int) (int, int, error) {
 	var queryPos int
-	if g.strand { // Positive Strand
+	if g.posStrand { // Positive Strand
 		queryPos = genomePos - g.startPos
 	} else { // Negative Strand
 		queryPos = g.startPos - genomePos
@@ -126,7 +128,7 @@ func GenomicPosToCdna(g *GoGene, genomePos int) (int, int, error) {
 
 // CdnaPosToGenomic converts cDna coordinates to genomic coordinates
 // Input and output positions are zero-based
-func CdnaPosToGenomic(g *GoGene, cdnaPos int) (int, error) {
+func CdnaPosToGenomic(g *Gene, cdnaPos int) (int, error) {
 	if cdnaPos < 0 {
 		return 0, errors.New("input cDNA position must be positive")
 	}
@@ -140,14 +142,14 @@ func CdnaPosToGenomic(g *GoGene, cdnaPos int) (int, error) {
 		}
 		searchStartPos = val
 	}
-	if g.strand { // Positive Strand
+	if g.posStrand { // Positive Strand
 		return searchStartPos + (cdnaPos - int(g.featureArray[searchStartPos])) + g.startPos, nil
 	} else { // Negative Strand
 		return g.startPos - (searchStartPos + (cdnaPos - int(g.featureArray[searchStartPos]))), nil
 	}
 }
 
-func CdnaPosToCodon(g *GoGene, cdnaPos int) (dna.Codon, error) {
+func CdnaPosToCodon(g *Gene, cdnaPos int) (dna.Codon, error) {
 	var answer dna.Codon
 	if cdnaPos < 0 {
 		return answer, errors.New("input cDNA position must be positive")
@@ -169,7 +171,7 @@ func CdnaPosToCodon(g *GoGene, cdnaPos int) (dna.Codon, error) {
 }
 
 //WIP
-func VariantEffect(g *GoGene, v *vcf.Vcf) EffectPrediction {
+func VariantEffect(g *Gene, v *vcf.Vcf) EffectPrediction {
 	var answer EffectPrediction
 
 	return answer
