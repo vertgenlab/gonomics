@@ -112,6 +112,7 @@ func Read(filename string) []string {
 	return answer
 }
 
+//ReadFileToSingleLineString reads in any file type and returns contents without any \n 
 func ReadFileToSingleLineString(filename string) string {
 	var catInput string
 	var line string
