@@ -209,13 +209,13 @@ func PrintReOrder(v *Vcf, samples []int16) {
 func SamplesToString(sample []GenomeSample) string {
 	var answer string = ""
 	for i := 0; i < len(sample); i++ {
-		answer += helperSamplesToString(sample, i)
+		answer += HelperSamplesToString(sample, i)
 	}
 	return answer
 }
 
 //helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
-func helperSamplesToString(sample []GenomeSample, i int) string {
+func HelperSamplesToString(sample []GenomeSample, i int) string {
 	var answer string
 	if sample[i].AlleleOne < 0 {
 		answer = "noData "
