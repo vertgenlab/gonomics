@@ -1,8 +1,7 @@
 package fastq
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -14,13 +13,15 @@ var readWriteTests = []struct {
 }
 
 func TestRead(t *testing.T) {
+	var tmpFilename string
 	for _, test := range readWriteTests {
+		tmpFilename = test.filename + ".tmp"
 		fastq := Read(test.filename)
-		PrintFastq(fastq)
-		Write(test.filename+".tmp", fastq)
-		fastqTwo := Read(test.filename + ".tmp")
+		Write(tmpFilename, fastq)
+		fastqTwo := Read(tmpFilename)
 		if !reflect.DeepEqual(fastq, fastqTwo) {
-			common.ExitIfError(fmt.Errorf("Error: Read,Write,Read was not equal to the Read\n"))
+			t.Errorf("Error: Read,Write,Read was not equal to the Read\n")
 		}
+		os.Remove(tmpFilename)
 	}
 }

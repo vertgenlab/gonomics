@@ -1,21 +1,12 @@
 package simpleGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
-
-// TODO: get rid of this when seedBed is eliminated
-func seedBedToSeedDev(a *SeedBed, currQPos uint32, posStrand bool) *SeedDev {
-	if a == nil {
-		return nil
-	} else {
-		return &SeedDev{TargetId: a.Id, TargetStart: a.Start, QueryStart: currQPos, Length: a.End - a.Start, PosStrand: posStrand, Next: seedBedToSeedDev(a.Next, currQPos+a.End-a.Start, posStrand)}
-	}
-}
 
 func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []*SeedDev {
 	const basesPerInt int = 32
@@ -42,7 +33,7 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 			nextParts = extendToTheRight(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand)
 			// if we aligned into the next node, make a seed for this node and point it to the next one
 			for j = 0; j < len(nextParts); j++ {
-				currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j], Next: nil}
+				currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: nextParts[j]}
 				answer = append(answer, currNode)
 			}
 		}
@@ -50,7 +41,7 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 
 	// if the alignment did not go to another node, return the match for this node
 	if len(answer) == 0 {
-		currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil, Next: nil}
+		currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil}
 		answer = []*SeedDev{currNode}
 	}
 
@@ -96,16 +87,16 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	var readBase dna.Base
 
 	if nextPart.PosStrand {
-		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
+		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
 	} else {
-		leftMatches = common.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
+		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
 	}
 
 	if leftMatches == 0 {
 		log.Fatal("Error: should not have zero matches to the left\n")
 	}
 
-	currPart = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint32(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint32(leftMatches) + nextPart.TotalLength, NextPart: nextPart, Next: nil}
+	currPart = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint32(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint32(leftMatches) + nextPart.TotalLength, NextPart: nextPart}
 
 	// we went all the way to end and there might be more
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
@@ -158,7 +149,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
 			//log.Printf("After extendToTheRight fwd:\n")
@@ -206,7 +197,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos % basesPerInt)
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
 			//log.Printf("After extendToTheRight rev:\n")
@@ -290,7 +281,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos) % basesPerInt
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-leftMatches, int(nodePos)-leftMatches, true)
 			log.Printf("After extendToTheRight fwd:\n")
@@ -311,7 +302,7 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 			nodeOffset = int(nodePos) % basesPerInt
 			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
 
-			leftMatches = common.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset))
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
 			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-leftMatches, int(nodePos)-leftMatches, false)
 			log.Printf("After extendToTheRight rev:\n")
@@ -337,47 +328,6 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 		}
 	}
 	return hits[0:(badIdx + 1)]
-}*/
-
-//TODO: get rid of this
-func findSeedsInMapDev(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
-	var codedSeq uint64 = 0
-	var hits []*SeedDev = make([]*SeedDev, 0)
-	for subSeqStart := 0; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart++ {
-		if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
-			codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
-			currHits := seedHash[codedSeq]
-			for _, value := range currHits {
-				hits = append(hits, seedBedToSeedDev(value, uint32(subSeqStart), posStrand))
-			}
-		}
-	}
-	//log.Printf("Total of %d hits.\n", len(hits))
-	return hits
-}
-
-// need to handle neg strand
-/*func findSeedsInMap(seedHash map[uint64][]*SeedBed, read *fastq.Fastq, seedLen int, stepSize int, posStrand bool) []*SeedDev {
-	var codedSeq uint64 = 0
-	var prevHits []*SeedDev = make([]*SeedDev, 0)
-	var allHits []*SeedDev = make([]*SeedDev, 0)
-	for initOffset := 0; initOffset < stepSize; initOffset++ {
-		for subSeqStart := initOffset; subSeqStart < len(read.Seq)-seedLen+1; subSeqStart += stepSize {
-			if dna.CountBaseInterval(read.Seq, dna.N, subSeqStart, subSeqStart+seedLen) == 0 {
-				codedSeq = dnaToNumber(read.Seq, subSeqStart, subSeqStart+seedLen)
-				//fmt.Printf("Coded seq is:%d, seedLength:%d\n", codedSeq, seedLen)
-				currHits := seedHash[codedSeq]
-				//log.Printf("At position %d, we found %d hits.\n", subSeqStart, len(currHits))
-				noMerge, merged := mergeSeedLists(prevHits, currHits, uint32(subSeqStart), posStrand)
-				allHits = append(allHits, noMerge...)
-				prevHits = merged
-			}
-		}
-		allHits = append(allHits, prevHits...)
-		prevHits = prevHits[0:0]
-	}
-	//log.Printf("Total of %d hits.\n", len(allHits))
-	return allHits
 }*/
 
 /*func findSeedsInSlice(seedHash [][]uint64, read *fastq.Fastq, seedLen int, posStrand bool) []*SeedDev {

@@ -36,16 +36,6 @@ func swMatrixSetup(size int64) ([][]int64, [][]rune) {
 	return m, trace
 }
 
-func SwMatrixSetup(size int64) ([][]int64, [][]rune) {
-	m := make([][]int64, size)
-	trace := make([][]rune, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		trace[idx] = make([]rune, size)
-	}
-	return m, trace
-}
-
 func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
 	for i := 0; i < alphaLen+1; i++ {
 		m[i][0] = 0

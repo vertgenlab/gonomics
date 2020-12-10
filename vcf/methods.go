@@ -45,6 +45,11 @@ func (v *Vcf) GetChromEnd() int {
 	}
 }
 
+func (v *Vcf) UpdateLift(c string, start int, end int) {
+	v.Chr = c
+	v.Pos = int64(start + 1) //TODO: Is this the best way to handle this???
+}
+
 type VcfSlice []*Vcf
 
 func (v VcfSlice) Len() int { return len(v) }

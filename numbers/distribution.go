@@ -25,6 +25,11 @@ func BinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
 }
 
+//ExpDist returns the density of the standard ex
+func ExpDist(x float64) float64 {
+	return math.Exp(-x)
+}
+
 //PoissonDist returns the probability density of a poisson distribution with parameter lambda at the integer value k.
 func PoissonDist(k int, lambda float64) float64 {
 	if k < 0 {
@@ -42,12 +47,16 @@ func BetaDist(x float64, alpha float64, beta float64) float64 {
 		log.Fatalf("Alpha parameter must be greater than 0.")
 	}
 	if beta <= 0 {
-		log.Fatalf("Beta parameter must be greater than 0.")
+		log.Fatalf("Beta parameter must be greater than 0. Beta: %f.", beta)
 	}
 	if x < 0 || x > 1 {
 		log.Fatalf("Value x out of range. The beta distribution is defined between 0 and 1.")
 	}
-	return math.Gamma(alpha+beta) / (math.Gamma(alpha) * math.Gamma(beta)) * math.Pow(x, alpha-1) * math.Pow(1-x, beta-1)
+	return math.Pow(x, alpha-1) * math.Pow(1-x, beta-1) / BetaFunc(alpha, beta)
+}
+
+func BetaFunc(x float64, y float64) float64 {
+	return math.Gamma(x) * math.Gamma(y) / math.Gamma(x+y)
 }
 
 //GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.

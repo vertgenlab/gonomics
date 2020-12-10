@@ -126,7 +126,7 @@ func NextBed(reader *fileio.EasyReader) (*Bed, bool) {
 	return processBedLine(line), false
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- *Bed. 
+//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- *Bed.
 func ReadToChan(file *fileio.EasyReader, data chan<- *Bed, wg *sync.WaitGroup) {
 	for curr, done := NextBed(file); !done; curr, done = NextBed(file) {
 		data <- curr

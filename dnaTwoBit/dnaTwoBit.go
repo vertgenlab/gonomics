@@ -1,8 +1,8 @@
 package dnaTwoBit
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -60,7 +60,7 @@ func NewTwoBit(inSeq []dna.Base) *TwoBit {
 	answer := TwoBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq)}
 	for i := 0; i < sliceLenNeeded; i++ {
 		start = i * 32
-		end = common.Min(start+32, len(inSeq))
+		end = numbers.Min(start+32, len(inSeq))
 		answer.Seq[i] = BasesToUint64LeftAln(inSeq, start, end)
 	}
 	return &answer

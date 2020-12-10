@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math"
 	"strings"
@@ -62,13 +63,13 @@ func bedFilter(infile string, outfile string, minScore int64, maxScore int64, mi
 		if pass {
 			if len(words) == 3 {
 				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
-				numFields = common.Max(3, numFields)
+				numFields = numbers.Max(3, numFields)
 			} else if len(words) == 4 {
 				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[3]}
-				numFields = common.Max(4, numFields)
+				numFields = numbers.Max(4, numFields)
 			} else {
 				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[3], Score: common.StringToInt64(words[4])}
-				numFields = common.Max(5, numFields)
+				numFields = numbers.Max(5, numFields)
 			}
 			outlist = append(outlist, current)
 		}

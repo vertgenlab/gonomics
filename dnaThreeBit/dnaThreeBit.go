@@ -1,8 +1,8 @@
 package dnaThreeBit
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -114,7 +114,7 @@ func NewThreeBit(inSeq []dna.Base, padding ThreeBitBase) *ThreeBit {
 	answer := ThreeBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq)}
 	for i := 0; i < sliceLenNeeded; i++ {
 		start = i * 21
-		end = common.Min(start+21, len(inSeq))
+		end = numbers.Min(start+21, len(inSeq))
 		answer.Seq[i] = BasesToUint64(inSeq, start, end, padding)
 	}
 	return &answer
@@ -126,10 +126,10 @@ func newThreeBitWithOffset(inSeq []dna.Base, padding ThreeBitBase, offset int) *
 	var sliceLenNeeded int = (len(inSeq) + offset + 20) / 21
 	var start, end int = 0, 0
 	answer := ThreeBit{Seq: make([]uint64, sliceLenNeeded), Len: len(inSeq) + offset}
-	answer.Seq[0] = basesToUint64WithOffset(inSeq, 0, common.Min(len(inSeq), 21-offset), padding, offset)
+	answer.Seq[0] = basesToUint64WithOffset(inSeq, 0, numbers.Min(len(inSeq), 21-offset), padding, offset)
 	for i := 1; i < sliceLenNeeded; i++ {
 		start = i*21 - offset
-		end = common.Min(start+21, len(inSeq))
+		end = numbers.Min(start+21, len(inSeq))
 		answer.Seq[i] = BasesToUint64(inSeq, start, end, padding)
 	}
 	return &answer

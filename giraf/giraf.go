@@ -124,7 +124,7 @@ func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
 }
 
 // GirafPairChanToFile will write a giraf pair end alignment channel to a file
-func GirafPairChanToFile(filename string, input <-chan *GirafPair, wg *sync.WaitGroup) {
+func GirafPairChanToFile(filename string, input <-chan GirafPair, wg *sync.WaitGroup) {
 	file := fileio.MustCreate(filename)
 	defer file.Close()
 	for pair := range input {

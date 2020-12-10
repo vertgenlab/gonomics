@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -20,7 +20,7 @@ func bedMerge(infile string, outfile string) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}
-			currentMax.ChromEnd = common.MaxInt64(records[i].ChromEnd, currentMax.ChromEnd)
+			currentMax.ChromEnd = numbers.MaxInt64(records[i].ChromEnd, currentMax.ChromEnd)
 		} else {
 			outlist = append(outlist, currentMax)
 			currentMax = records[i]

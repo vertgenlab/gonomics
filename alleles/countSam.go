@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"sync"
 )
+
 //TODO: Merge with countGiraf functions using interfaces???
 // GoCountSamAlleles is a wrapper for CountSamAlleles that manages channel closure.
 func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int64) <-chan *Allele {

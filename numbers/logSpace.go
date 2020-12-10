@@ -8,7 +8,7 @@ import (
 
 //LogCanconvert returns true if the input logSpace number can be converted to a number in normal space without overflow or underflow.
 func LogCanConvert(x float64) bool {
-	return x < 709.782712893383973096 || x > -745.133219101941108420
+	return x < 709.4 && x > -745.1
 }
 
 //AverageLog returns the average of a list of logSpace numbers
@@ -85,15 +85,25 @@ func DivideLog(x float64, y float64) float64 {
 	return x - y
 }
 
-//LogPowInt returns log(x**y) where log is the natural logarithm. Safe for large numbers. Support for positive real numbers with integer exponents.
-func LogPowInt(x float64, y int) float64 {
-	var answer float64
-	logX := math.Log(x)
-	if y == 0 {
+//LogPow returns log(x**y) where log is the natural logarithm. Safe for large numbers. Support for positive real numbers with integer exponents.
+func LogPow(x float64, y float64) float64 {
+	if x < 0 {
+		log.Fatalf("LowPowInt does not handle negative x values. x=%e\n", x)
+	}
+	// anything to the zero power is 1, so we return 0 == log(1).  0^0 is what this catches
+	if y == 0.0 {
 		return 0.0
 	}
-	for i := 0; i < y; i++ {
-		answer = MultiplyLog(answer, logX)
+	return y * math.Log(x)
+}
+
+// PowLog returns log(exp(x)**y) where log is the natural logarithm.
+// This back the log-space answer to x**y where x is already in log-space
+// In other words, this function returns the log-space answer to x**y where x is already in log-space
+func PowLog(x float64, y float64) float64 {
+	// anything to the zero power is 1, so we return 0 == log(1).  0^0 is what this catches
+	if y == 0.0 {
+		return 0.0
 	}
-	return answer
+	return y * x
 }

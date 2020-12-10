@@ -1,12 +1,13 @@
-package main 
+package main
 
-import(
+import (
 	"flag"
 	"fmt"
-	"log"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 )
 
 func multiFaToVcf(inFile string, chr string, outFile string) {
@@ -22,9 +23,9 @@ func multiFaToVcf(inFile string, chr string, outFile string) {
 func usage() {
 	fmt.Print(
 		"multiFaToVcf - Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference.\n" +
-		"Usage:\n" +
-		"multiFaToVcf multi.Fa chromName out.vcf \n" +
-		"options:\n")
+			"Usage:\n" +
+			"multiFaToVcf multi.Fa chromName out.vcf \n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

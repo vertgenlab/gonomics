@@ -19,6 +19,12 @@ func (a *Axt) GetChromEnd() int {
 	return int(a.REnd)
 }
 
+func (a *Axt) UpdateLift(c string, start int, end int) {
+	a.RName = c
+	a.RStart = int64(start)
+	a.REnd = int64(end)
+}
+
 type AxtSlice []*Axt
 
 func (a AxtSlice) Len() int { return len(a) }

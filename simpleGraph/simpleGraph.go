@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -93,66 +92,6 @@ func Read(filename string) *SimpleGraph {
 	return genome
 }
 
-// ReadToMap will process a text file and create a hash look up using
-// name string as keys to return a SimpleGraph. One possible use case
-// is using this function to split the graph by chromocomes and using
-// the name of the chromosomes as keys.
-func ReadToMap(filename string) map[string]*SimpleGraph {
-	genomeGraph := make(map[string]*SimpleGraph)
-	var chrGraph string
-	var line string
-	var currSeq []dna.Base
-	//var nodeId int64 = -1
-	var nodeId uint32
-	var doneReading bool = false
-	var words, text []string
-	var weight float32
-	//var cInfo chromInfo.ChromInfo
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	//creates map: name points to Node
-	//uses this map to add edges to graph
-	edges := make(map[string]*Node)
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.HasPrefix(line, ">") {
-			words = strings.Split(line, ":")
-			chrGraph = words[0][1:]
-			_, key := genomeGraph[chrGraph]
-			if !key {
-				genomeGraph[chrGraph] = NewGraph()
-				nodeId = 0
-			} else {
-				nodeId++
-			}
-			tmp := Node{Id: nodeId, Name: words[0][1:]}
-			if len(words) == 2 {
-				text = strings.Split(words[1], "_")
-				tmp.Info = Annotation{Allele: uint8(common.StringToUint32(text[1])), Start: common.StringToUint32(text[3]), Variant: uint8(common.StringToUint32(text[2]))}
-			}
-			AddNode(genomeGraph[chrGraph], &tmp)
-			_, ok := edges[line[1:]]
-			if !ok {
-				edges[line[1:]] = &tmp
-			}
-		} else if strings.Contains(line, "\t") {
-			words = strings.Split(line, "\t")
-			if len(words) > 2 {
-				for i := 1; i < len(words); i += 2 {
-					weight = float32(common.StringToFloat64(words[i]))
-					AddEdge(edges[words[0]], edges[words[i+1]], weight)
-				}
-			}
-		} else {
-			if !strings.Contains(line, ":") && !strings.Contains(line, "\t") {
-				currSeq = dna.StringToBases(line)
-				dna.AllToUpper(currSeq)
-				genomeGraph[chrGraph].Nodes[nodeId].Seq = append(genomeGraph[chrGraph].Nodes[nodeId].Seq, currSeq...)
-			}
-		}
-	}
-	return genomeGraph
-}
-
 // AddNode will append a new Node to a slice of nodes in SimpleGraph
 func AddNode(g *SimpleGraph, n *Node) {
 	g.Nodes = append(g.Nodes, n)
@@ -236,16 +175,6 @@ func WriteToGraphHandle(file io.Writer, gg *SimpleGraph, lineLength int) {
 	}
 }
 
-// WriteToGraphSplit will write all SimpleGraphs contained in a provided hash map to separate
-// files based on unique keys.
-func WriteToGraphSplit(filename string, gg map[string]*SimpleGraph) {
-	var name string
-	for chr := range gg {
-		name = chr + "_" + filename + ".gg"
-		Write(name, gg[chr])
-	}
-}
-
 // BasesInGraph will calculate the number of bases contained in SimpleGraph using dnaTwoBit
 func BasesInGraph(g *SimpleGraph) int {
 	var i, baseCount int = 0, 0
@@ -253,17 +182,4 @@ func BasesInGraph(g *SimpleGraph) int {
 		baseCount += g.Nodes[i].SeqTwoBit.Len
 	}
 	return baseCount
-}
-
-// GraphToMap converts a genome graph to a map leading to Nodes keyed by the node names
-func GraphToMap(g *SimpleGraph) map[string]*Node {
-	m := make(map[string]*Node)
-	for _, val := range g.Nodes {
-		if _, ok := m[val.Name]; ok {
-			log.Fatalf("ERROR: Node names in graph are not unique: %s", val.Name)
-		} else {
-			m[val.Name] = val
-		}
-	}
-	return m
 }

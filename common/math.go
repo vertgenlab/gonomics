@@ -3,9 +3,41 @@ package common
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
+	"time"
+	"math/rand"
 )
+
+//RngSeed sets the rand seed global variable using the randSeed and setSeed arguments
+func RngSeed(randSeed bool, setSeed int64) {
+	if randSeed && setSeed != -1 {
+		log.Fatalf("Cannot use a set seed and also a random seed.")
+	}
+	if randSeed {
+		rand.Seed(time.Now().UnixNano())
+	} else if setSeed != -1 {
+		rand.Seed(setSeed)
+	}
+}
+
+//IntSliceContains returns true if a slice of ints a containts an int b, false otherwise.
+func IntSliceContains(a []int, b int) bool {
+	for i := 0; i < len(a); i++ {
+		if a[i] == b {
+			return true
+		}
+	}
+	return false
+}
+
+//StringToBool parses a string into a bool and will exit on error
+func StringToBool(s string) bool {
+	b, err := strconv.ParseBool(s)
+	if err != nil {
+		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a bool", s))
+	}
+	return b
+}
 
 // StringToInt parses a string into an int and will exit on error
 func StringToInt(s string) int {
@@ -95,112 +127,4 @@ func StringToUint8(s string) uint8 {
 		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a uint8\n", s))
 	}
 	return uint8(n)
-}
-
-func Max(a int, b int) int {
-	if a >= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MaxInt32(a int32, b int32) int32 {
-	if a >= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MaxUint32(a uint32, b uint32) uint32 {
-	if a >= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MaxInt64(a int64, b int64) int64 {
-	if a >= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MaxFloat64(a float64, b float64) float64 {
-	if a >= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func Min(a int, b int) int {
-	if a <= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MinInt32(a int32, b int32) int32 {
-	if a <= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MinUint32(a uint32, b uint32) uint32 {
-	if a <= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MinInt64(a int64, b int64) int64 {
-	if a <= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func MinFloat64(a float64, b float64) float64 {
-	if a <= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func TripleMax(a int, b int, c int) int {
-	if a >= b && a >= c {
-		return a
-	} else if b >= c {
-		return b
-	} else {
-		return c
-	}
-}
-
-func TripleMin(a int, b int, c int) int {
-	if a <= b && a <= c {
-		return a
-	} else if b <= c {
-		return b
-	} else {
-		return c
-	}
-}
-
-func RandIntInRange(x int, y int) int {
-	return int(rand.Float64()*float64(y-x)) + x
-}
-
-func RandInt64InRange(x int64, y int64) int64 {
-	return int64(rand.Float64()*float64(y-x)) + x
 }

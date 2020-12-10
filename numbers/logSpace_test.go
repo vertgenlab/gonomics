@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-var LogPowIntTests = []struct {
+var LogPowTests = []struct {
 	x      float64
-	y      int
+	y      float64
 	answer float64
 }{
 	{0.0, 0, 0.0},
@@ -18,11 +18,20 @@ var LogPowIntTests = []struct {
 	{0.05, 56401, -168962},
 }
 
-func TestLogPowInt(t *testing.T) {
-	for _, test := range LogPowIntTests {
-		calculated := LogPowInt(test.x, test.y)
+func TestLogPow(t *testing.T) {
+	for _, test := range LogPowTests {
+		calculated := LogPow(test.x, test.y)
 		if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
-			t.Errorf("LogPowerInt for x: %f y:%d returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
+			t.Errorf("LogPow for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
+		}
+	}
+}
+
+func TestPowLog(t *testing.T) {
+	for _, test := range LogPowTests {
+		calculated := PowLog(math.Log(test.x), test.y)
+		if math.Abs(calculated-test.answer)/test.answer > 0.000001 {
+			t.Errorf("PowLog for x: %f y: %f returned %f. Expected %f.", test.x, test.y, calculated, test.answer)
 		}
 	}
 }
