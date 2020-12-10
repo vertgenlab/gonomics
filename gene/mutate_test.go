@@ -17,7 +17,7 @@ func TestPointMutation(t *testing.T) {
 	var err error
 
 	// Positive posStrand test
-	posGene := GtfToGoGene(g["test_gene_id"], f)
+	posGene := GtfToGene(g["test_gene_id"], f)
 
 	answerPos, err = PointMutation(posGene, 6, dna.T)
 	if err != nil {
@@ -25,7 +25,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerPos.CdnaPos != 3 ||
-		answerPos.CdnaOffset != -1 ||
+		answerPos.CdnaDist != -1 ||
 		answerPos.Consequence != Splice {
 		t.Error("trouble with intronic point mutation on positive posStrand")
 	}
@@ -40,7 +40,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerPos.CdnaPos != 1 ||
-		answerPos.CdnaOffset != 0 ||
+		answerPos.CdnaDist != 0 ||
 		answerPos.Consequence != DisruptStart ||
 		answerPos.AaPos != 0 ||
 		answerPos.AaRef[0] != dna.Met ||
@@ -58,7 +58,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerPos.CdnaPos != 4 ||
-		answerPos.CdnaOffset != 0 ||
+		answerPos.CdnaDist != 0 ||
 		answerPos.Consequence != Missense ||
 		answerPos.AaPos != 1 ||
 		answerPos.AaRef[0] != dna.Pro ||
@@ -76,7 +76,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerPos.CdnaPos != 6 ||
-		answerPos.CdnaOffset != 0 ||
+		answerPos.CdnaDist != 0 ||
 		answerPos.Consequence != DisruptStop ||
 		answerPos.AaPos != 2 ||
 		answerPos.AaRef[0] != dna.Stop ||
@@ -89,7 +89,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	// Negative posStrand test
-	negGene := GtfToGoGene(g["test_gene_id_negative"], f)
+	negGene := GtfToGene(g["test_gene_id_negative"], f)
 
 	answerNeg, err = PointMutation(negGene, 9, dna.A)
 	if err != nil {
@@ -97,7 +97,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerNeg.CdnaPos != 3 ||
-		answerNeg.CdnaOffset != -1 ||
+		answerNeg.CdnaDist != -1 ||
 		answerNeg.Consequence != Splice {
 		t.Error("trouble with intronic point mutation on negative posStrand")
 	}
@@ -112,7 +112,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerNeg.CdnaPos != 1 ||
-		answerNeg.CdnaOffset != 0 ||
+		answerNeg.CdnaDist != 0 ||
 		answerNeg.Consequence != DisruptStart ||
 		answerNeg.AaPos != 0 ||
 		answerNeg.AaRef[0] != dna.Met ||
@@ -130,7 +130,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerNeg.CdnaPos != 4 ||
-		answerNeg.CdnaOffset != 0 ||
+		answerNeg.CdnaDist != 0 ||
 		answerNeg.Consequence != Missense ||
 		answerNeg.AaPos != 1 ||
 		answerNeg.AaRef[0] != dna.Pro ||
@@ -148,7 +148,7 @@ func TestPointMutation(t *testing.T) {
 	}
 
 	if answerNeg.CdnaPos != 6 ||
-		answerNeg.CdnaOffset != 0 ||
+		answerNeg.CdnaDist != 0 ||
 		answerNeg.Consequence != DisruptStop ||
 		answerNeg.AaPos != 2 ||
 		answerNeg.AaRef[0] != dna.Stop ||
@@ -166,7 +166,7 @@ func TestUndoPointMutation(t *testing.T) {
 	f := fasta.Read("testdata/test.fasta")
 
 	// Positive posStrand test
-	answerPos := GtfToGoGene(g["test_gene_id"], f)
+	answerPos := GtfToGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
 		startPos:     0,
@@ -230,7 +230,7 @@ func TestUndoPointMutation(t *testing.T) {
 	}
 
 	// Negative posStrand test
-	answerNeg := GtfToGoGene(g["test_gene_id_negative"], f)
+	answerNeg := GtfToGene(g["test_gene_id_negative"], f)
 
 	_, _ = PointMutation(answerNeg, 9, dna.G)
 	Reset(answerNeg)
@@ -245,7 +245,7 @@ func TestUndoInsertion(t *testing.T) {
 	f := fasta.Read("testdata/test.fasta")
 
 	// Positive posStrand test
-	answerPos := GtfToGoGene(g["test_gene_id"], f)
+	answerPos := GtfToGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
 		startPos:     0,
@@ -306,7 +306,7 @@ func TestUndoDeletion(t *testing.T) {
 	f := fasta.Read("testdata/test.fasta")
 
 	// Positive posStrand test
-	answerPos := GtfToGoGene(g["test_gene_id"], f)
+	answerPos := GtfToGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
 		startPos:     0,
@@ -364,7 +364,7 @@ func TestInsertion(t *testing.T) {
 	f := fasta.Read("testdata/test.fasta")
 	var err error
 
-	gene := GtfToGoGene(g["test_gene_id"], f)
+	gene := GtfToGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
 		startPos:     0,
@@ -438,7 +438,7 @@ func TestInsertion(t *testing.T) {
 	}
 
 	// Negative posStrand test
-	negGene := GtfToGoGene(g["test_gene_id_negative"], f)
+	negGene := GtfToGene(g["test_gene_id_negative"], f)
 
 	correctNegBackup := goGeneBackup{
 		startPos:     15,
@@ -476,7 +476,7 @@ func TestDeletion(t *testing.T) {
 	f := fasta.Read("testdata/test.fasta")
 	var err error
 
-	gene := GtfToGoGene(g["test_gene_id"], f)
+	gene := GtfToGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
 		startPos:     0,
@@ -550,7 +550,7 @@ func TestDeletion(t *testing.T) {
 	}
 
 	// Negative posStrand test
-	negGene := GtfToGoGene(g["test_gene_id_negative"], f)
+	negGene := GtfToGene(g["test_gene_id_negative"], f)
 
 	correctNegBackup := goGeneBackup{
 		startPos:     15,
@@ -649,23 +649,24 @@ func equal(alpha, beta *Gene) (bool, error) {
 	return true, nil
 }
 
-func TestInsertionEffectPrediction(t *testing.T) {
-	g := gtf.Read("testdata/test.gtf")
-	f := fasta.Read("testdata/test.fasta")
-	var err error
-	var pred EffectPrediction
-
-	gene := GtfToGoGene(g["test_gene_id"], f)
-
-	_, _ = Insertion(gene, 14, []dna.Base{dna.A, dna.A, dna.A, dna.T, dna.A, dna.T, dna.A, dna.A, dna.A, dna.T, dna.A, dna.A, dna.T})
-
-	pred, err = Insertion(gene, 2, []dna.Base{dna.A})
-	if err != nil {
-		t.Error(err)
-	}
-
-	printEffPred(pred)
-}
+//TODO WIP
+//func TestInsertionEffectPrediction(t *testing.T) {
+//	g := gtf.Read("testdata/test.gtf")
+//	f := fasta.Read("testdata/test.fasta")
+//	var err error
+//	var pred EffectPrediction
+//
+//	gene := GtfToGene(g["test_gene_id"], f)
+//
+//	_, _ = Insertion(gene, 14, []dna.Base{dna.A, dna.A, dna.A, dna.T, dna.A, dna.T, dna.A, dna.A, dna.A, dna.T, dna.A, dna.A, dna.T})
+//
+//	pred, err = Insertion(gene, 2, []dna.Base{dna.A})
+//	if err != nil {
+//		t.Error(err)
+//	}
+//
+//	printEffPred(pred)
+//}
 
 func printEffPred(pred EffectPrediction) {
 	var consequence string
@@ -692,7 +693,7 @@ func printEffPred(pred EffectPrediction) {
 		consequence = "DisruptStop"
 	}
 	fmt.Printf("Consequence: %s\n", consequence)
-	fmt.Printf("cDNA Pos: %d%+d\n", pred.CdnaPos, pred.CdnaOffset)
+	fmt.Printf("cDNA Pos: %d%+d\n", pred.CdnaPos, pred.CdnaDist)
 	fmt.Printf("AAPos: %d\n", pred.AaPos)
 	fmt.Printf("AaRef: %s\n", dna.PolypeptideToString(pred.AaRef))
 	fmt.Printf("AaAlt: %s\n", dna.PolypeptideToString(pred.AaAlt))

@@ -15,7 +15,7 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 	var log diff
 	var err error
 
-	genomeIndexPos := numbers.Abs(genomePos - g.startPos) // abs needed to handle negative posStrand
+	genomeIndexPos := numbers.AbsInt(genomePos - g.startPos) // abs needed to handle negative posStrand
 
 	// Fill log before change
 	log.genomePos = genomePos
@@ -78,9 +78,9 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 			}
 		}
 	} else { // mutation is noncoding
-		answer.CdnaPos, answer.CdnaOffset, err = GenomicPosToCdna(g, genomePos)
+		answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos)
 		common.ExitIfError(err)
-		answer.Consequence = checkSplice(answer.CdnaOffset)
+		answer.Consequence = checkSplice(answer.CdnaDist)
 	}
 
 	return answer, nil
@@ -100,11 +100,10 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 	log.added = make([]dna.Base, len(alt))
 	copy(log.added, alt)
 
-	for _, val := range alt {
-		if val != dna.A && val != dna.C && val != dna.G && val != dna.T {
-			return answer, errors.New("all alt bases must be A, C, T, or G")
-		}
+	if !dna.IsSeqOfACTG(alt) {
+		return answer, errors.New("all alt bases must be A, C, T, or G")
 	}
+
 	if genomePos < 0 {
 		return answer, errors.New("genomePos must be positive")
 	}
@@ -129,11 +128,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 	g.changeLog = append(g.changeLog, log)
 
 	// Update genome sequence
-	g.genomeSeq = append(g.genomeSeq, alt...)                                     // just to increase cap, will get overwritten next line
-	copy(g.genomeSeq[genomeIndexPos+1+len(alt):], g.genomeSeq[genomeIndexPos+1:]) // shift seq over len(alt) positions
-	for idx, val := range alt {                                                   // copy over inserted bases
-		g.genomeSeq[genomeIndexPos+1+idx] = val
-	}
+	g.genomeSeq = dna.Insert(g.genomeSeq, int64(genomeIndexPos+1), alt)
 
 	// Update CDS starts and ends
 	for idx, val := range g.cdsStarts {
@@ -173,7 +168,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		}
 
 		//TODO: Effect Prediction WIP
-		//answer.CdnaPos, answer.CdnaOffset, err = GenomicPosToCdna(g, genomePos + 1)
+		//answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos + 1)
 		//frame := (cdnaPos + 1) % 3
 		//var currCodon dna.Codon
 		//
@@ -183,11 +178,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		//}
 
 		// Update cDNA
-		g.cdnaSeq = append(g.cdnaSeq, alt...)
-		copy(g.cdnaSeq[cdnaPos+1+len(alt):], g.cdnaSeq[cdnaPos+1:])
-		for idx, val := range alt {
-			g.cdnaSeq[cdnaPos+1+idx] = val
-		}
+		g.cdnaSeq = dna.Insert(g.cdnaSeq, int64(cdnaPos+1), alt)
 
 		//TODO: Effect Prediction WIP
 		//answer.AaPos = cdnaPos / 3
@@ -242,12 +233,12 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		}
 		//TODO: Effect Prediction WIP
 		//var endCdnaOffset int
-		//answer.CdnaPos, answer.CdnaOffset, err = GenomicPosToCdna(g, genomePos + 1)
+		//answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos + 1)
 		//_, endCdnaOffset, err = GenomicPosToCdna(g, genomePos + 1 + (len(alt) - 1))
-		//if numbers.Abs(endCdnaOffset) < numbers.Abs(answer.CdnaOffset) {
+		//if numbers.AbsInt(endCdnaOffset) < numbers.AbsInt(answer.CdnaDist) {
 		//	answer.Consequence = checkSplice(endCdnaOffset)
 		//} else {
-		//	answer.Consequence = checkSplice(answer.CdnaOffset)
+		//	answer.Consequence = checkSplice(answer.CdnaDist)
 		//}
 	}
 	return answer, err
@@ -331,7 +322,6 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 		// if cds is before deletion
 		case genomeIndexStartPos >= g.cdsEnds[i]:
 			cdnaDelStart = int(g.featureArray[g.cdsEnds[i]])
-			continue
 
 		// If cds exon is fully deleted
 		case genomeIndexStartPos < g.cdsStarts[i] && genomeIndexEndPos > g.cdsEnds[i]:
@@ -466,11 +456,11 @@ func Reset(g *Gene) {
 
 // checkSplice inputs a cDNA offset value and determines if a variant at this site may affect splicing.
 func checkSplice(CdnaOffset int) MutationType {
-	if numbers.Abs(CdnaOffset) <= 2 {
+	if numbers.AbsInt(CdnaOffset) <= 2 {
 		return Splice
 	}
 
-	if numbers.Abs(CdnaOffset) <= 10 {
+	if numbers.AbsInt(CdnaOffset) <= 10 {
 		return FarSplice
 	}
 

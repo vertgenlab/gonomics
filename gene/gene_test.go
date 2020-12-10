@@ -4,16 +4,16 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/gtf"
-	"reflect"
 	"testing"
 )
 
 func TestGtfToGoGene(t *testing.T) {
 	g := gtf.Read("testdata/test.gtf")
 	f := fasta.Read("testdata/test.fasta")
+	var ok bool
 
 	// Positive posStrand test
-	answerPos := GtfToGoGene(g["test_gene_id"], f)
+	answerPos := GtfToGene(g["test_gene_id"], f)
 
 	correctBackup := goGeneBackup{
 		startPos:     0,
@@ -36,12 +36,12 @@ func TestGtfToGoGene(t *testing.T) {
 		orig:         correctBackup,
 	}
 
-	if !reflect.DeepEqual(*answerPos, correctPos) {
+	if ok, _ = equal(answerPos, &correctPos); !ok {
 		t.Error("ERROR: Trouble converting gtf to Gene on positive posStrand")
 	}
 
 	// Negative posStrand test
-	answerNeg := GtfToGoGene(g["test_gene_id_negative"], f)
+	answerNeg := GtfToGene(g["test_gene_id_negative"], f)
 
 	var correctNeg Gene = Gene{
 		id:           "test_gene_id_negative",
@@ -57,7 +57,7 @@ func TestGtfToGoGene(t *testing.T) {
 
 	correctNeg.orig.startPos = 15
 
-	if !reflect.DeepEqual(*answerNeg, correctNeg) {
+	if ok, _ = equal(answerNeg, &correctNeg); !ok {
 		t.Error("ERROR: Trouble converting gtf to Gene on negative posStrand")
 	}
 }
@@ -67,7 +67,7 @@ func TestPositionConversion(t *testing.T) {
 	f := fasta.Read("testdata/test.fasta")
 
 	// Positive Tests
-	genePos := GtfToGoGene(g["test_gene_id"], f)
+	genePos := GtfToGene(g["test_gene_id"], f)
 	var testsPass bool = true
 
 	var answerPos, answerOffset int
@@ -119,7 +119,7 @@ func TestPositionConversion(t *testing.T) {
 
 	// Negative Tests
 	testsPass = true
-	geneNeg := GtfToGoGene(g["test_gene_id_negative"], f)
+	geneNeg := GtfToGene(g["test_gene_id_negative"], f)
 
 	answerPos, answerOffset, err = GenomicPosToCdna(geneNeg, 0)
 	if answerPos != 8 || answerOffset != 2 || err != nil {

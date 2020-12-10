@@ -197,7 +197,7 @@ func DigitsBaseTen(x int64) int {
 	return count
 }
 
-func Abs(x int) int {
+func AbsInt(x int) int {
 	if x < 0 {
 		return -x
 	} else {

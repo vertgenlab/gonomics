@@ -3,7 +3,6 @@ package gene
 import (
 	"errors"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/vcf"
 )
 
 type Feature int32
@@ -44,6 +43,7 @@ type Gene struct {
 	changeLog    []diff       // Log of any mutations that have been performed on the Gene to enable the Reset() function.
 }
 
+// goGeneBackup stores the initial state of a GoGene to enable Reset() functionality.
 type goGeneBackup struct {
 	startPos     int
 	cdsStarts    []int
@@ -53,19 +53,21 @@ type goGeneBackup struct {
 	featureArray []Feature
 }
 
+// diff acts as an entry in a changelog listing how the sequence has been manipulated.
 type diff struct {
 	genomePos int
 	removed   []dna.Base
 	added     []dna.Base
 }
 
+// EffectPrediction outputs the effects of a mutation on the cDNA and protein sequences.
 type EffectPrediction struct {
-	Consequence MutationType
-	CdnaPos     int // zero base
-	CdnaOffset  int
-	AaPos       int // zero base
-	AaRef       []dna.AminoAcid
-	AaAlt       []dna.AminoAcid
+	Consequence MutationType    // Classification of mutation (see above for values)
+	CdnaPos     int             // Base-zero position in the cDNA
+	CdnaDist    int             // Distance from nearest CDS. Zero if in a CDS, >0 if 3' of CDS, <0 if 5' of CDS
+	AaPos       int             // Base-zero position of first changed amino acid
+	AaRef       []dna.AminoAcid // Slice of Ref amino acids (removed from protein)
+	AaAlt       []dna.AminoAcid // Slice of Alt amino acids (added to protein)
 }
 
 // GenomicToCdna converts genomic coordinates to cDNA coordinates. The return format is c.100+10 (HGVS).
@@ -168,11 +170,4 @@ func CdnaPosToCodon(g *Gene, cdnaPos int) (dna.Codon, error) {
 	default: // never used
 		return answer, errors.New("problem determining frame")
 	}
-}
-
-//WIP
-func VariantEffect(g *Gene, v *vcf.Vcf) EffectPrediction {
-	var answer EffectPrediction
-
-	return answer
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/vertgenlab/gonomics/gtf"
 )
 
-// GtfToGoGene converts a gtf record into a Gene data structure
+// GtfToGene converts a gtf record into a Gene data structure
 // WARNING: If multiple isoforms are present, only the isoform the longest CDS is used
-func GtfToGoGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
+func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 	answer := new(Gene)
 	gtf.MoveCanonicalToZero(g)
 	transcript := g.Transcripts[0]
