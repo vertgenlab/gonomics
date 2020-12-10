@@ -147,7 +147,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 // findAAChange annotates the Variant struct with the amino acids changed by a given variant
 func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	ref := dna.StringToBases(variant.Ref)
-	alt := dna.StringToBases(variant.Alt)
+	alt := dna.StringToBases(variant.Alt[0])//TODO: does not handle polyallelic bases.
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
@@ -180,7 +180,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 			}
 
 			variant.CdnaPos += duplicateOffset
-			variant.Pos += int64(duplicateOffset)
+			variant.Pos += duplicateOffset
 			seqPos = int(variant.Pos) - 1
 			seqPos -= determineFrame(variant)
 		}
@@ -322,7 +322,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 		}
 
 		refBases = append(refBases, reverse(dna.StringToBases(variant.Ref))...)
-		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt))...)
+		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt[0]))...)
 		seqPos -= len(dna.StringToBases(variant.Ref))
 
 		altCDS := currCDS
@@ -496,7 +496,7 @@ func getCdsDist(v *vcfEffectPrediction) int {
 // isFrameshift returns true if the variant shifts the reading frame
 func isFrameshift(v *vcfEffectPrediction) bool {
 	refBases := dna.StringToBases(v.Ref)
-	altBases := dna.StringToBases(v.Alt)
+	altBases := dna.StringToBases(v.Alt[0])//TODO: does not handle polyallelic bases.
 
 	start := int(v.Pos)
 	refEnd := start + len(refBases) - 1
@@ -532,7 +532,7 @@ func isNonsense(v *vcfEffectPrediction) bool {
 // isSynonymous returns true if the variant does not change the amino acid sequence
 func isSynonymous(v *vcfEffectPrediction) bool {
 	var answer bool = true
-	if len(v.AaAlt) != len(v.AaRef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt)) {
+	if len(v.AaAlt) != len(v.AaRef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt[0])) {
 		return false
 	} else {
 		for i := 0; i < len(v.AaRef); i++ {

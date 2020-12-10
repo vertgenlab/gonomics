@@ -109,8 +109,8 @@ func TajimaGVCF(all []*IndividualAllele) float64 {
 
 //TajimaGVCFBedSet is designed to calculate Tajima's D from a
 //gVCF file for variants falling in a particular set of bed regions. Returns one value for the whole set. Limited to SNPs.
-func TajimaGVCFBedSet(b []*bed.Bed, gVCFFile string) float64 {
-	alpha := vcf.GoReadGVcf(gVCFFile)
+func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
+	alpha, _ := vcf.GoReadToChan(VcfFile)
 	var all []*IndividualAllele
 	var j, k int
 	var firstTime bool = true
@@ -120,26 +120,33 @@ func TajimaGVCFBedSet(b []*bed.Bed, gVCFFile string) float64 {
 		intervals[i] = b[i]
 	}
 	tree := interval.BuildTree(intervals)
-	for i := range alpha.Vcfs {
+	for i := range alpha {
 		if len(interval.Query(tree, i, "any")) > 0 { //in other words, if the variant overlaps any of the beds
-			if !strings.ContainsAny(i.Alt, "<>") { //gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-				g := vcf.VcfToGvcf(i)
+			if !strings.ContainsAny(i.Alt[0], "<>") { //We convert the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 				//DEBUG: fmt.Printf("Len: %v.\n", len(g.Genotypes))
 				if firstTime {
 					firstTime = false
-					all = make([]*IndividualAllele, len(g.Genotypes)*2) //makes the individual list, with one entry for each allele
+					all = make([]*IndividualAllele, len(i.Samples)*2) //makes the individual list, with one entry for each allele
 
 					for k = 0; k < len(all); k++ { //in this loop we initialize all the sites lists
 						currSites := make([][]dna.Base, 0)
 						all[k] = &IndividualAllele{sites: currSites}
 					}
 				}
-				for j = 0; j < len(g.Genotypes); j++ {
-					if g.Genotypes[j].AlleleOne == -1 || g.Genotypes[j].AlleleTwo == -1 { //check that data exists for both alleles
-						log.Fatalf("Tajima's D on gVCFs requires complete alignment blocks.")
+				for j = 0; j < len(i.Samples); j++ {
+					if i.Samples[j].AlleleOne == -1 || i.Samples[j].AlleleTwo == -1 { //check that data exists for both alleles
+						log.Fatalf("Tajima's D on VCFs requires complete alignment blocks.")
 					} else {
-						all[2*j].sites = append(all[2*j].sites, g.Seq[g.Genotypes[j].AlleleOne])
-						all[2*j+1].sites = append(all[2*j+1].sites, g.Seq[g.Genotypes[j].AlleleTwo])
+						if i.Samples[j].AlleleOne == 0 {
+							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Ref))
+						} else {
+							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Alt[0]))//TODO: (riley) currently only handles biallelic positions.
+						}
+						if i.Samples[j].AlleleTwo == 0 {
+							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Ref))
+						} else {
+							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Alt[0]))
+						}
 					}
 				}
 			}

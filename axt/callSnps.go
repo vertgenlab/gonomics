@@ -29,7 +29,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 			qCount++
 			//snp mismatch
 			if dna.ToUpper(axtFile.RSeq[i]) != dna.ToUpper(axtFile.QSeq[i]) {
-				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))}, Qual: 30, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: []string{"SVTYPE=SNP"}, Notes: AxtInfo(axtFile)}
+				curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i]))}, Qual: 30, Filter: "PASS", Info: fmt.Sprintf("query=%d;SVTYPE=SNP;%s", qCount, AxtInfo(axtFile))}
 				answer = append(answer, curr)
 			}
 		}
@@ -37,17 +37,17 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 		if axtFile.RSeq[i] == dna.Gap {
 
 			qCount++
-			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: []string{"SVTYPE=INS"}, Notes: AxtInfo(axtFile)}
+			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d;SVTYPE=SNP;%s", qCount, AxtInfo(axtFile))}
 
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.RSeq[j]) == dna.Gap {
-					curr.Alt += dna.BaseToString(dna.ToUpper(axtFile.QSeq[j]))
+					curr.Alt = append(curr.Alt, dna.BaseToString(dna.ToUpper(axtFile.QSeq[j])))
 					qCount++
 				} else {
 					if len(answer) == 0 {
 						answer = append(answer, curr)
-					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Format, "SVTYPE=SNP") == 0 {
-						curr.Format = "SVTYPE=SNP;INS"
+					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Info, "SVTYPE=SNP") == 0 {
+						curr.Info = "SVTYPE=SNP;INS"
 						answer[len(answer)-1] = curr
 					} else {
 						answer = append(answer, curr)
@@ -62,7 +62,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 		//deleteion vcf record
 		if axtFile.QSeq[i] == dna.Gap {
 			tempRCount := 0
-			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1])), Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d", qCount), Format: "SVTYPE=DEL", Notes: AxtInfo(axtFile)}
+			curr = &vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d;SVTYPE=DEL;%s", qCount, AxtInfo(axtFile))}
 			//altTmp = dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1]))
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.QSeq[j]) == dna.Gap {
@@ -72,13 +72,13 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 				} else {
 					if len(answer) == 0 {
 						answer = append(answer, curr)
-					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Format, "SVTYPE=SNP") == 0 {
-						curr.Format = "SVTYPE=SNP;DEL"
+					} else if answer[len(answer)-1].Pos == curr.Pos && strings.Compare(answer[len(answer)-1].Info, "SVTYPE=SNP") == 0 {
+						curr.Info = "SVTYPE=SNP;DEL"
 						answer[len(answer)-1] = curr
 					} else {
 						answer = append(answer, curr)
 					}
-					rCount = rCount + int64(tempRCount)
+					rCount = rCount + tempRCount
 					i = j - 1
 					break
 				}
@@ -92,22 +92,22 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []*fasta.Fasta) {
 	ref := fasta.FastaMap(fa)
 	var records []*vcf.Vcf
-	var refIndex int64 = 0
+	var refIndex int = 0
 	var lastChr string = axtList[0].RName
 	var gap *vcf.Vcf
 	var refSeq []dna.Base
 	for i := 0; i < len(axtList); i++ {
-		if axtList[i].RStart-refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
+		if int(axtList[i].RStart)-refIndex > 1 && strings.Compare(lastChr, axtList[i].RName) == 0 {
 			refSeq = ref[axtList[i].RName][refIndex:axtList[i].RStart]
 			dna.AllToUpper(refSeq)
 
-			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex + 1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
+			gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex + 1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: []string{dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("SVTYPE=DEL;%s", AxtInfo(axtList[i]))}
 			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Alt: , Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=INS", Notes: AxtInfo(axtList[i])}
 
 			records = append(records, gap)
 		}
 		records = append(records, AxtToVcf(axtList[i])...)
-		refIndex = axtList[i].REnd - 1
+		refIndex = int(axtList[i].REnd) - 1
 		lastChr = axtList[i].RName
 	}
 	records = vcf.FilterAxtVcf(records, fa)
@@ -122,26 +122,26 @@ func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta,
 	ref := fasta.FastaMap(tFa)
 	query := fasta.FastaMap(qFa)
 	var records []*vcf.Vcf
-	var refIndex int64 = 0
+	var refIndex int = 0
 	var queryIndex int64 = 0
 	var lastQuery string = ""
 	var lastChr string = ""
 	var gap *vcf.Vcf
 	var refSeq, altSeq []dna.Base
 	for i := 0; i < len(axtList); i++ {
-		if axtList[i].RStart-refIndex > 2 && strings.Compare(lastChr, axtList[i].RName) == 0 {
+		if int(axtList[i].RStart)-refIndex > 2 && strings.Compare(lastChr, axtList[i].RName) == 0 {
 			if axtList[i].QStart-queryIndex > 2 && strings.Compare(lastQuery, axtList[i].QName) == 0 {
 				refSeq = ref[axtList[i].RName][refIndex : axtList[i].RStart-1]
 				altSeq = query[axtList[i].QName][queryIndex : axtList[i].QStart-1]
 				dna.AllToUpper(refSeq)
 				dna.AllToUpper(altSeq)
-				gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex + 1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(ref[axtList[i].RName][refIndex]) + dna.BasesToString(altSeq), Qual: 248, Filter: "PASS", Info: ".", Format: "SVTYPE=HAP", Notes: AxtInfo(axtList[i])}
+				gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex + 1, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: []string{dna.BaseToString(ref[axtList[i].RName][refIndex]) + dna.BasesToString(altSeq)}, Qual: 248, Filter: "PASS", Info: fmt.Sprintf("SVTYPE=HAP;%s", AxtInfo(axtList[i]))}
 				records = append(records, gap)
 			}
 			//gap = &vcf.Vcf{Chr: axtList[i].RName, Pos: refIndex, Id: axtList[i].QName, Ref: dna.BasesToString(refSeq), Alt: dna.BaseToString(dna.ToUpper(ref[axtList[i].RName][refIndex])), Qual: 24, Filter: "PASS", Info: ".", Format: "SVTYPE=DEL", Notes: AxtInfo(axtList[i])}
 		}
 		records = append(records, AxtToVcf(axtList[i])...)
-		refIndex = axtList[i].REnd - 1
+		refIndex = int(axtList[i].REnd) - 1
 		queryIndex = axtList[i].QEnd - 1
 		lastQuery = axtList[i].QName
 		lastChr = axtList[i].RName

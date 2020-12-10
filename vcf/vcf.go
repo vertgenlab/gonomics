@@ -36,7 +36,7 @@ type GenomeSample struct {
 	AlleleOne int16//First allele in genotype, 0 for reference, 1 for Alt[0], 2 for Alt[1], etc.
 	AlleleTwo int16//Second allele in genotype, same number format as above.
 	Phased    bool//True for phased genotype, false for unphased.
-	FormatData []string//FormatData contains additional sample fields after the genotype, which are parsed into a slice delimited by colons. 
+	FormatData []string//FormatData contains additional sample fields after the genotype, which are parsed into a slice delimited by colons. Currently contains a dummy empty strin in FormatData[0] corresponding to "GT" in Format, so indices in FormatData will match the indices in Format.
 }
 
 //VcfHeader contains all of the information present in the header section of a VCf, simply delimited by line to form a slice of strings.
@@ -119,8 +119,8 @@ func ParseNotes(data string, format []string) []GenomeSample {
 	}
 	//firstFormat := format[0]
 	//fmt.Println(firstFormat)
-	if format[0] != "GT" {//len(format) == 0 checks for when there is info in the notes column but no format specification
-		log.Fatalf("VCF format files with sample information must begin with \"GT\" as the first format column. Here was the first format entry: %s.\nError parsing the line with this Notes column: %s.\n", format[0], data)
+	if format[0] != "GT" && format[0] != "." {//len(format) == 0 checks for when there is info in the notes column but no format specification
+		log.Fatalf("VCF format files with sample information must begin with \"GT\" as the first format column or be marked blank with a period. Here was the first format entry: %s.\nError parsing the line with this Notes column: %s.\n", format[0], data)
 	}
 	text := strings.Split(data, "\t")
 	var fields []string
