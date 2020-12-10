@@ -205,10 +205,10 @@ func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
 
 func PrintReOrder(v *Vcf, samples []int16) {
 	Genotypes := VcfToGvcf(ReorderSampleColumns(v, samples))
-	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, genotypeToString(Genotypes))
+	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, GenotypeToString(Genotypes))
 }
 
-func genotypeToString(sample *GVcf) string {
+func GenotypeToString(sample *GVcf) string {
 	var answer string = ""
 	for i := 0; i < len(sample.Genotypes); i++ {
 		answer += helperGenotypeToString(sample, i)
@@ -224,6 +224,27 @@ func helperGenotypeToString(sample *GVcf, i int) string {
 			return fmt.Sprintf("%d%s%d=%s%s%s", sample.Genotypes[i].AlleleOne, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].AlleleTwo, dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleOne]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleTwo]))
 		} else {
 			return fmt.Sprintf("%d%s%d=%s%s%s\t", sample.Genotypes[i].AlleleOne, PhasedToString(sample.Genotypes[i].Phased), sample.Genotypes[i].AlleleTwo, dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleOne]), PhasedToString(sample.Genotypes[i].Phased), dna.BasesToString(sample.Seq[sample.Genotypes[i].AlleleTwo]))
+		}
+	}
+}
+
+func GenotypeToStringNew(sample []GenomeSample) string {
+	var answer string = ""
+	for i := 0; i < len(sample); i++ {
+		answer += helperGenotypeToStringNew(sample, i)
+	}
+	return answer
+}
+
+//helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
+func helperGenotypeToStringNew(sample []GenomeSample, i int) string {
+	if sample[i].AlleleOne < 0 {
+		return "noData "
+	} else {
+		if i == len(sample)-1 {
+			return fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
+		} else {
+			return fmt.Sprintf("%d%s%d\t", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 		}
 	}
 }

@@ -19,7 +19,7 @@ func usage() {
 }
 
 func sequelOverlap(options *Settings) chan *queryAnswer {
-	selectChan := goReadToIntervalChan(options.SelectFile)
+	selectChan := interval.GoReadToChan(options.SelectFile)
 
 	var intervals []interval.Interval
 	for val := range selectChan {
@@ -28,7 +28,7 @@ func sequelOverlap(options *Settings) chan *queryAnswer {
 
 	tree := buildTree(intervals, options.Aggregate)
 
-	queryChan := goReadToIntervalChan(options.Input)
+	queryChan := interval.GoReadToChan(options.Input)
 	answerChan := make(chan *queryAnswer, 1000) // TODO: benchmark buffer size
 
 	var wg sync.WaitGroup

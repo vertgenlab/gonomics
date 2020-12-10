@@ -19,13 +19,8 @@ func gswNothingWorker(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 
 func gswWorkerMemPool(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, incomingFastqs <-chan *fastq.FastqBig, outgoingSams chan<- *sam.SamAln, wg *sync.WaitGroup) {
 	m, trace := swMatrixSetup(10000)
-	memChunk := make([]SeedDev, 100000)
-	for i := 0; i < len(memChunk)-1; i++ {
-		memChunk[i].Next = &memChunk[i+1]
-	}
-	memStart := &(memChunk[0])
 	for read := range incomingFastqs {
-		outgoingSams <- GraphSmithWatermanMemPool(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, &memStart)
+		outgoingSams <- GraphSmithWatermanMemPool(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, nil)
 	}
 	wg.Done()
 }

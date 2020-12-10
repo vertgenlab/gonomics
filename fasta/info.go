@@ -41,4 +41,3 @@ func IsFasta(filename string) bool {
 		return false
 	}
 }
-

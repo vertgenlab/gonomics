@@ -18,6 +18,18 @@ var definiteIntegralTests = []struct {
 	{func(x float64) float64 { return 1 / (math.Sqrt(math.Pi)) * math.Exp(-1*math.Pow(x, 2)) }, 0, 1, 0.42135039647485743467},
 }
 
+var definiteIntegralLogTests = []struct {
+	f      func(float64) float64
+	a      float64
+	b      float64
+	answer float64
+}{
+	{func(x float64) float64 { return math.Log(x) }, 0, 1, 0.5},
+	{func(x float64) float64 { return math.Log(math.Pow(x, 2) + 1) }, 0, 2, 14.0 / 3.0},
+	{func(x float64) float64 { return math.Log(6*math.Pow(x, 2) - 5*x + 2) }, -3, 1, 84},
+	{func(x float64) float64 { return math.Log(1 / (math.Sqrt(math.Pi)) * math.Exp(-1*math.Pow(x, 2))) }, 0, 1, 0.42135039647485743467},
+}
+
 func TestDefiniteIntegral(t *testing.T) {
 	for _, test := range definiteIntegralTests {
 		calculated := DefiniteIntegral(test.f, test.a, test.b)
@@ -31,6 +43,42 @@ func BenchmarkDefiniteIntegral(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		for _, test := range definiteIntegralTests {
 			DefiniteIntegral(test.f, test.a, test.b)
+		}
+	}
+}
+
+func TestSimpsonsIntegral(t *testing.T) {
+	const errorThreshold float64 = 0.01
+	for _, test := range definiteIntegralTests {
+		calculated := AdaptiveSimpsons(test.f, test.a, test.b, 0.01, 100)
+		if math.Abs(calculated-test.answer)/test.answer > 0.01 {
+			t.Errorf("For a definite integral using Simpson's method we expected %e, but got %e", test.answer, calculated)
+		}
+	}
+}
+
+func BenchmarkSimpsonsIntegral(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for _, test := range definiteIntegralTests {
+			AdaptiveSimpsons(test.f, test.a, test.b, 1e-8, 100)
+		}
+	}
+}
+
+func TestSimpsonsLogIntegral(t *testing.T) {
+	const errorThreshold float64 = 0.01
+	for _, test := range definiteIntegralLogTests {
+		calculated := math.Exp(AdaptiveSimpsonsLog(test.f, test.a, test.b, 0.01, 100))
+		if math.Abs(calculated-test.answer)/test.answer > 0.01 {
+			t.Errorf("For a definite integral using Simpson's method (log) we expected %f, but got %f", test.answer, calculated)
+		}
+	}
+}
+
+func BenchmarkSimpsonsLogIntegral(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for _, test := range definiteIntegralLogTests {
+			AdaptiveSimpsonsLog(test.f, test.a, test.b, 1e-8, 100)
 		}
 	}
 }

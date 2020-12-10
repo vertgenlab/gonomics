@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
@@ -79,7 +80,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 					AddNode(genome, deletion)
 					AddEdge(currMatch, deletion, 1)
 					if strings.Contains(vcfsChr[i].Id, "pbsv") {
-						index = common.MinInt64(vcfsChr[i].Pos+int64(len(deletion.Seq))-1, vcfsChr[i+1].Pos-1)
+						index = numbers.MinInt64(vcfsChr[i].Pos+int64(len(deletion.Seq))-1, vcfsChr[i+1].Pos-1)
 					} else {
 						index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 					}
@@ -143,7 +144,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 					AddNode(genome, deletion)
 					AddEdge(currMatch, deletion, 1)
 					if strings.Contains(vcfsChr[i].Id, "pbsv") {
-						index = common.MinInt64(vcfsChr[i].Pos+int64(len(deletion.Seq))-1, vcfsChr[i+1].Pos-1)
+						index = numbers.MinInt64(vcfsChr[i].Pos+int64(len(deletion.Seq))-1, vcfsChr[i+1].Pos-1)
 					} else {
 						index = vcfsChr[i].Pos + int64(len(deletion.Seq))
 					}
@@ -166,7 +167,7 @@ func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *Simpl
 					altAllele = &Node{Id: uint32(len(genome.Nodes)), Name: chr.Name, Seq: dna.StringToBases(vcfsChr[i].Alt), Prev: nil, Next: nil, Info: Annotation{Allele: 1, Start: uint32(vcfsChr[i].Pos), Variant: 4}}
 					AddNode(genome, altAllele)
 					AddEdge(currMatch, altAllele, 1)
-					index = common.MinInt64(vcfsChr[i].Pos+int64(len(refAllele.Seq))-1, vcfsChr[i+1].Pos-1)
+					index = numbers.MinInt64(vcfsChr[i].Pos+int64(len(refAllele.Seq))-1, vcfsChr[i+1].Pos-1)
 					currMatch = refAllele
 				}
 				lastMatch = currMatch

@@ -3,15 +3,15 @@ package browser
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"unicode/utf8"
 )
 
-//MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position. 
+//MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position.
 //Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
 func MultiFaVisualizer(infile string, outfile string, start int64, end int64, noMask bool, lineLength int64) {
 	if !(start < end) {
@@ -65,7 +65,7 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 
 	for k := startCounter; k < endCounter; k = k + lineLength {
 		fmt.Fprintf(out, "Position: %d\n", chromStart)
-		stop = int(common.MinInt64(endCounter, k+lineLength))
+		stop = int(numbers.MinInt64(endCounter, k+lineLength))
 		for m := 0; m < len(records); m++ {
 			fmt.Fprintf(out, "|%-*s| %s\n", long, records[m].Name, dna.BasesToString(records[m].Seq[k:stop]))
 		}
@@ -74,7 +74,7 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 	}
 }
 
-//calculateLongestName is a helper function of MultiFaVisualizer that returns the length of the longest name in a slice of fasta.Fasta structs. 
+//calculateLongestName is a helper function of MultiFaVisualizer that returns the length of the longest name in a slice of fasta.Fasta structs.
 func calculateLongestName(f []*fasta.Fasta) int {
 	var ans int = 0
 	var temp int

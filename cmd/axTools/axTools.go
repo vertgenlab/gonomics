@@ -25,10 +25,10 @@ func main() {
 
 	var targetGaps *bool = flag.Bool("gap", false, "Find axt alignments when target contains Ns, but query does not")
 	var querySwap *bool = flag.Bool("swap", false, "Swap target and query records. Must provide a `target.sizes and query.sizes` file containing query sequence lengths")
-	
+
 	var tLen *string = flag.String("tLen", "", "target `chrom.sizes` file containing target sequence lengths")
 	var qLen *string = flag.String("qLen", "", "query `chrom.sizes` file containing query sequence lengths")
-	
+
 	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -40,7 +40,7 @@ func main() {
 	} else if fasta.IsFasta(*concensus) {
 		axtToFa(input, output, *concensus)
 	} else if *querySwap {
-		QuerySwapAll(input, output, *tLen,*qLen)
+		QuerySwapAll(input, output, *tLen, *qLen)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {

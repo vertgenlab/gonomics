@@ -1,6 +1,7 @@
 package vcf
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"sort"
 	"strings"
@@ -27,6 +28,62 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	} else {
 		return CompareCoord(alpha, beta)
 	}
+}
+
+func EqualGVcf(alpha GVcf, beta GVcf) bool {
+	if !isEqual(&alpha.Vcf, &beta.Vcf) {
+		return false
+	}
+	if !EqualGenotypes(alpha.Genotypes, beta.Genotypes) || !EqualSeq(alpha.Seq, beta.Seq) {
+		return false
+	}
+	return true
+}
+
+func EqualSeq(alpha [][]dna.Base, beta [][]dna.Base) bool {
+	if len(alpha) != len(beta) {
+		return false
+	}
+	for i := 0; i < len(alpha); i++ {
+		if dna.CompareSeqsIgnoreCase(alpha[i], beta[i]) != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
+	if alpha.AlleleOne != beta.AlleleOne {
+		if alpha.AlleleOne < beta.AlleleOne {
+			return -1
+		}
+		return 1
+	}
+	if alpha.AlleleTwo != beta.AlleleTwo {
+		if alpha.AlleleTwo < beta.AlleleTwo {
+			return -1
+		}
+		return 1
+	}
+	if alpha.Phased != beta.Phased {
+		if !alpha.Phased {
+			return -1
+		}
+		return 1
+	}
+	return 0
+}
+
+func EqualGenotypes(alpha []GenomeSample, beta []GenomeSample) bool {
+	if len(alpha) != len(beta) {
+		return false
+	}
+	for i := 0; i < len(alpha); i++ {
+		if CompareGenomeSample(alpha[i], beta[i]) != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func Sort(vcfFile []*Vcf) {

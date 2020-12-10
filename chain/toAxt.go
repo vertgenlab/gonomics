@@ -2,8 +2,8 @@ package chain
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 	//"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
@@ -119,7 +119,7 @@ func CalcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []*BaseStats {
 		} else {
 			curr.TBases, curr.QBases = calcMissingBases(rSeq[i:], qSeq[i:])
 			answer = append(answer, curr)
-			i += common.Max(curr.TBases, curr.QBases)
+			i += numbers.Max(curr.TBases, curr.QBases)
 		}
 	}
 	return answer

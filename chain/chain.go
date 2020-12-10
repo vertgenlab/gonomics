@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"io"
 	"strings"
 	"sync"
 )
@@ -116,6 +117,12 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderCommen
 		WriteChain(file, data)
 	}
 	wg.Done()
+}
+
+func WriteToFileHandle(file  io.Writer, rec *Chain) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", ToString(rec))
+	common.ExitIfError(err)
 }
 
 //Write will write chain slice and any given comments to the top of the file.

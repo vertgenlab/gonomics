@@ -2,8 +2,8 @@ package gtf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 )
 
@@ -286,7 +286,7 @@ func truncateOnTer(a []dna.AminoAcid) []dna.AminoAcid {
 // trimSynonymous removes identical amino acids that are present in the ref and alt amino acid slices
 func trimSynonymous(alpha []dna.AminoAcid, beta []dna.AminoAcid) (a, b []dna.AminoAcid) {
 	if len(alpha) > 1 && len(beta) > 1 {
-		for i := 0; i < common.Min(len(alpha), len(beta)); i++ {
+		for i := 0; i < numbers.Min(len(alpha), len(beta)); i++ {
 			if alpha[i] != beta[i] {
 				return alpha[i:], beta[i:]
 			}

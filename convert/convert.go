@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
@@ -66,12 +67,12 @@ func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromIn
 		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = s.Pos - 1
-			answer.ChromEnd = common.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
+			answer.ChromEnd = numbers.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
 			answer.Strand = true
 		} else {
 			answer.ChromEnd = s.Pos - 1 + cigar.ReferenceLength(s.Cigar)
 			answer.Strand = false
-			answer.ChromStart = common.MaxInt64(answer.ChromEnd-(fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar)), 0)
+			answer.ChromStart = numbers.MaxInt64(answer.ChromEnd-(fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar)), 0)
 		}
 		return answer
 	}

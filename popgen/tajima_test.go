@@ -30,8 +30,8 @@ func TestTajima(t *testing.T) {
 }
 
 func TestVCFTajima(t *testing.T) {
-	input := TajimaGVCFBedSet(b, "testdata/tajimaSet.vcf")
-	expected := 1.0
+	input := TajimaGVCFBedSet(b, "testdata/tajimaSet200.vcf")
+	expected := -0.998926
 	if fmt.Sprintf("%f", input) != fmt.Sprintf("%f", expected) {
 		t.Errorf("Do not match. Input: %f. Expected: %f.", input, expected)
 	}
