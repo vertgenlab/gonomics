@@ -5,6 +5,7 @@ package interval
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
+	"fmt"
 	"sort"
 )
 
@@ -315,6 +316,11 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 		} // 40. Report the interval in v, S = S ∪ {v. interval}
 	} // 41. end if
 	return answer // 42. return S
+}
+
+//PrettyPrint displayes the chrom, chromstart, and chromend on a line as a print for debugging.
+func PrettyPrint(q Interval) {
+	fmt.Printf("Interval. Chrom: %s. ChromStart: %d. ChromEnd: %d.\n", q.GetChrom(), q.GetChromStart(), q.GetChromEnd())
 }
 
 func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
