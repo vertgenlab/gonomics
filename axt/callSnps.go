@@ -41,7 +41,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 
 			for j := i; j < len(axtFile.RSeq); j++ {
 				if dna.ToUpper(axtFile.RSeq[j]) == dna.Gap {
-					curr.Alt = append(curr.Alt, dna.BaseToString(dna.ToUpper(axtFile.QSeq[j])))
+					curr.Alt[0] += dna.BaseToString(dna.ToUpper(axtFile.QSeq[j]))
 					qCount++
 				} else {
 					if len(answer) == 0 {
