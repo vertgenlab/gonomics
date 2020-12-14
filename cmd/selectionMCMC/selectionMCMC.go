@@ -10,7 +10,7 @@ import (
 
 func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64) {
 	common.RngSeed(randSeed, setSeed)
-	data := popgen.GVCFToAFS(filename)
+	data := popgen.VcfToAFS(filename)
 	popgen.MetropolisHastings(data, muZero, sigmaZero, iterations, outFile)
 }
 

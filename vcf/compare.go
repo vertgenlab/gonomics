@@ -1,13 +1,14 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 	"strings"
 )
 
+//CompareCoord compares two VCF structs by Pos for sorting or equality testing.
 func CompareCoord(alpha *Vcf, beta *Vcf) int {
 	if alpha.Pos < beta.Pos {
 		return -1
@@ -18,6 +19,7 @@ func CompareCoord(alpha *Vcf, beta *Vcf) int {
 	return 0
 }
 
+//CompareVcf compares two Vcf structs for sorting or equality testing.
 func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	compareStorage := strings.Compare(alpha.Chr, beta.Chr)
 	if compareStorage != 0 {
@@ -26,7 +28,9 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	return CompareCoord(alpha, beta)//TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
+//CompareGenomeSample compares two GenomeSample structs for sorting or equality testing.
 func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
+	var res int
 	if alpha.AlleleOne != beta.AlleleOne {
 		if alpha.AlleleOne < beta.AlleleOne {
 			return -1
@@ -45,10 +49,20 @@ func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
 		}
 		return 1
 	}
+	res = CompareFormatData(alpha.FormatData, beta.FormatData)
+	if  res != 0 {
+		return res
+	}
 	return 0
 }
 
-func CompareGenotypes(alpha []GenomeSample, beta []GenomeSample) int {
+//CompareFormatData compares the FormatData field of a VCF GenomeSample
+func CompareFormatData(alpha []string, beta []string) int {
+	return CompareAlt(alpha, beta)//both functions compare slice of strings for equality, but I made this a separate function for readability
+}
+
+//CompareGenoeSamples compares a slice of GenomeSample structs which underlies the VCF struct
+func CompareGenomeSamples(alpha []GenomeSample, beta []GenomeSample) int {
 	var res int
 	stop := numbers.Min(len(alpha), len(beta))
 	for i := 0; i < stop; i++ {
@@ -65,10 +79,30 @@ func CompareGenotypes(alpha []GenomeSample, beta []GenomeSample) int {
 	return 0
 }
 
+//CompareAlt compares the two slice of string Alt fields from a VCF lexigraphically.
+func CompareAlt(alpha []string, beta []string) int {
+	var res int
+	stop := numbers.Min(len(alpha), len(beta))
+	for i := 0; i < stop; i++ {
+		res = strings.Compare(alpha[i], beta[i])
+		if res != 0 {
+			return res
+		}
+	}
+	if len(alpha) < len(beta) {
+		return -1
+	} else if len(alpha) > len(beta) {
+		return 1
+	}
+	return 0
+}
+
+//Sort sorts a slice of Vcf structs in place.
 func Sort(vcfFile []*Vcf) {
 	sort.Slice(vcfFile, func(i, j int) bool { return CompareVcf(vcfFile[i], vcfFile[j]) == -1 })
 }
 
+//isEqual returns true if two input Vcf structs contain identical information, false otherwise.
 func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Chr, beta.Chr) != 0 {
 		return false
@@ -79,10 +113,10 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Id, beta.Id) != 0 {
 		return false
 	}
-	if dna.CompareSeqsIgnoreCaseAndGaps(alpha.Ref, beta.Ref) != 0 {
+	if strings.Compare(alpha.Ref, beta.Ref) != 0 {
 		return false
 	}
-	if dna.CompareTwoDSeqsIgnoreCaseAndGaps(alpha.Alt, beta.Alt) != 0 {
+	if CompareAlt(alpha.Alt, beta.Alt) != 0 {
 		return false
 	}
 	if strings.Compare(alpha.Filter, beta.Filter) != 0 {
@@ -91,16 +125,14 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 	if strings.Compare(alpha.Info, beta.Info) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Notes, beta.Notes) != 0 {
-		return false
-	}
-	if CompareGenotypes(alpha.Genotypes, beta.Genotypes) != 0 {
+	if CompareGenomeSamples(alpha.Samples, beta.Samples) != 0 {
 		return false
 	}
 	return true
 
 }
 
+//AllEqual returns true if each Vcf in a slice of Vcf structs contain identical information.
 func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
 	if len(alpha) != len(beta) {
 		return false
@@ -113,6 +145,7 @@ func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
 	return true
 }
 
+//LogEqual prints which two corresponding entries in two slices of Vcf structs are unequal and fatals out.
 func LogEqual(alpha []*Vcf, beta []*Vcf) {
 	if len(alpha) != len(beta) {
 		log.Fatalf("len=%v and len=%v are not equal\n", len(alpha), len(beta))

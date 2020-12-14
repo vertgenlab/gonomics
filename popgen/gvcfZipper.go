@@ -10,21 +10,21 @@ import (
 )
 
 //TajimaZipperVcf returns the Tajima's D value for each entry in a sorted bed slice using a pre-SORTED gVCF file for variant information.
-func TajimaZipperVcf(b []*bed.Bed, gVCFFile string) []float64 {
+func TajimaZipperVcf(b []*bed.Bed, VcfFile string) []float64 {
 	var answer []float64
 	var all []*IndividualAllele
 	answer = make([]float64, 0)
-	alpha := vcf.GoReadGVcf(gVCFFile) //must be sorted beforehand
+	alpha, _ := vcf.GoReadToChan(VcfFile) //must be sorted beforehand
 	sort.Sort(bed.ByGenomicCoordinates{b})
 	var currBedIndex int = 0
 	var currVariants []*vcf.Vcf
 	currVariants = make([]*vcf.Vcf, 0)
-	for i := range alpha.Vcfs {
+	for i := range alpha {
 		for 1 > 0 { //infinite condition for break loop
 			if helperVcfOverlapsBed(b[currBedIndex], i) {
 				currVariants = append(currVariants, i)
 			}
-			if i.Pos > b[currBedIndex].ChromEnd {
+			if i.Pos > int(b[currBedIndex].ChromEnd) {
 				all = VariantsToIndividualAlleleSlice(currVariants)
 				answer = append(answer, TajimaGVCF(all))
 				currVariants = currVariants[:0] //clear the list of current variants
@@ -42,7 +42,7 @@ func VariantsToIndividualAlleleSlice(curr []*vcf.Vcf) []*IndividualAllele {
 	var j int
 	var all []*IndividualAllele
 	for i := 0; i < len(curr); i++ {
-		if !strings.ContainsAny(curr[i].Alt, "<>") { //gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
+		if !strings.ContainsAny(curr[i].Alt[0], "<>") { //gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 			g := vcf.VcfToGvcf(curr[i])
 			if firstTime {
 				firstTime = false
@@ -76,5 +76,5 @@ func helperVcfOverlapsBed(b *bed.Bed, v *vcf.Vcf) bool {
 	if b.Chrom != v.Chr {
 		return false
 	}
-	return b.ChromStart+1 < v.Pos && b.ChromEnd+1 > v.Pos
+	return int(b.ChromStart)+1 < v.Pos && int(b.ChromEnd)+1 > v.Pos
 }

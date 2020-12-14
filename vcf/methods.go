@@ -30,24 +30,24 @@ func (v *Vcf) GetChrom() string {
 func (v *Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
-		return int(v.Pos - 1)
+		return v.Pos - 1
 	} else {
-		return int(v.Pos)
+		return v.Pos
 	}
 }
 
 func (v *Vcf) GetChromEnd() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
-		return int(v.Pos)
+		return v.Pos
 	} else {
-		return int(v.Pos) + len(refBases) - 1
+		return v.Pos + len(refBases) - 1
 	}
 }
 
 func (v *Vcf) UpdateLift(c string, start int, end int) {
 	v.Chr = c
-	v.Pos = int64(start + 1) //TODO: Is this the best way to handle this???
+	v.Pos = start + 1 //TODO: Is this the best way to handle this???
 }
 
 type VcfSlice []*Vcf

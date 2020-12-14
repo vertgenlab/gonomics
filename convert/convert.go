@@ -246,7 +246,7 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 		} else if f[0].Seq[i] != f[1].Seq[i] {
 			pastStart = true
 			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: "."})
 			}
 			if f[1].Seq[i] == dna.Gap { //alt is gap (deletion)
 				if !deletion {
@@ -255,20 +255,20 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 				deletion = true
 			} else if deletion { //snp immediately follows the end of a deletion
 				deletion = false
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})                                           //then add current diff
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: "."}) //from deletion
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: "."})                                           //then add current diff
 			} else {
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: "."})
 			}
 			insertion = false
 		} else if insertion { //case where ref and alt agree now but previous bases were part of an insertion.
 			pastStart = true
 			insertion = false
-			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: "."})
 		} else if deletion {
 			pastStart = true
 			deletion = false
-			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion		}
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: "."}) //from deletion		}
 		}
 	}
 	//DEBUG:

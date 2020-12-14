@@ -44,16 +44,6 @@ func CountMask(seq []Base) (unmaskedCount int, maskedCount int, gapCount int) {
 	return unmaskedCount, maskedCount, gapCount
 }
 
-func CountNs(seq []Base) int {
-	var nCount int
-	for _, b := range seq {
-		if b == N {
-			nCount++
-		}
-	}
-	return nCount
-}
-
 func CountGaps(seq []Base) int {
 	_, _, gapCount := CountMask(seq)
 	return gapCount

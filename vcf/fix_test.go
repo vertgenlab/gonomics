@@ -3,6 +3,7 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+	"strings"
 )
 
 func TestFixVcf(t *testing.T) {
@@ -13,17 +14,17 @@ func TestFixVcf(t *testing.T) {
 		Chr: "test",
 		Pos: 2,
 		Ref: "C",
-		Alt: "-"}
+		Alt: strings.Split("-", ",")}
 
 	correctAnswer := Vcf{
 		Chr: "test",
 		Pos: 1,
 		Ref: "AC",
-		Alt: "A"}
+		Alt: strings.Split("A", ",")}
 
 	FixVcf(&vcfTest, ref)
 
-	if vcfTest != correctAnswer {
+	if !isEqual(&vcfTest, &correctAnswer) {
 		t.Errorf("ERROR: Problem fixing VCF. Expected %v, got %v", correctAnswer, vcfTest)
 	}
 }

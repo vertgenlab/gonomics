@@ -1,23 +1,23 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+	"strings"
 )
 
-var IG1 GenomeSample = GenomeSample{1, 0, false}
-var IG2 GenomeSample = GenomeSample{0, 0, false}
-var IG3 GenomeSample = GenomeSample{1, 1, false}
+var IG1 GenomeSample = GenomeSample{1, 0, false, []string{""}}
+var IG2 GenomeSample = GenomeSample{0, 0, false, []string{""}}
+var IG3 GenomeSample = GenomeSample{1, 1, false, []string{""}}
 
-var EG1 GenomeSample = GenomeSample{0, 1, false}
-var EG2 GenomeSample = GenomeSample{1, 1, false}
-var EG3 GenomeSample = GenomeSample{0, 0, false}
+var EG1 GenomeSample = GenomeSample{0, 1, false, []string{""}}
+var EG2 GenomeSample = GenomeSample{1, 1, false, []string{""}}
+var EG3 GenomeSample = GenomeSample{0, 0, false, []string{""}}
 
-var FirstInputGenotypes []GenomeSample = []GenomeSample{IG1, IG2, IG3}
-var FirstExpectedGenotypes []GenomeSample = []GenomeSample{EG1, EG2, EG3}
+var FirstInputSamples []GenomeSample = []GenomeSample{IG1, IG2, IG3}
+var FirstExpectedSamples []GenomeSample = []GenomeSample{EG1, EG2, EG3}
 
-var FirstInputVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: dna.StringToBases("C"), Alt: GetAltBases("T"), Genotypes: FirstInputGenotypes}
-var FirstExpectedVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: dna.StringToBases("T"), Alt: GetAltBases("C"), Genotypes: FirstExpectedGenotypes}
+var FirstInputVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: "C", Alt: strings.Split("T", ","), Samples: FirstInputSamples}
+var FirstExpectedVcf Vcf = Vcf{Chr: "chr2", Pos: 4, Ref: "T", Alt: strings.Split("C", ","), Samples: FirstExpectedSamples}
 
 var InvertVcfTests = []struct {
 	Input    Vcf
