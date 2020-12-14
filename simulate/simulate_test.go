@@ -25,6 +25,7 @@ func TestRandGene(t *testing.T) {
 			t.Errorf("expected RandGene to give %v, gave %v", test.length, len(a[0].Seq))
 		}
 		//fmt.Print(dna.BasesToString(a[0].Seq), "\n")
+		//fasta.Write("outputRandGene.fasta", a)
 	}
 }
 
