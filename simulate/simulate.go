@@ -336,12 +336,12 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 //BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
 func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
-	newSequence = SortBaseExtBySeqPos(seq)
+	newSequence = OrderBaseExtBySeqPos(seq)
 	return newSequence
 }
 
 //SortBaseExtBySeqPos orders a string of BaseExt by seq position
-func SortBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
+func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
 	var ordered = make([]dna.Base, len(unordered))
 
 	for i := 0; i < len(unordered); i++ {
