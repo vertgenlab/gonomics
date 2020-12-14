@@ -32,6 +32,7 @@ type Vcf struct {
 }
 
 //GenomeSample is a substruct of Vcf, and contains information about each individual represented in a VCF line.
+// AlleleOne and AlleleTwo are set to -1 if no genotype data is present.
 type GenomeSample struct {
 	AlleleOne int16//First allele in genotype, 0 for reference, 1 for Alt[0], 2 for Alt[1], etc.
 	AlleleTwo int16//Second allele in genotype, same number format as above.
