@@ -13,7 +13,6 @@ import (
 
 //SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction
 func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
-	log.Print("In SimEvolve")
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
@@ -26,14 +25,12 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 			leafFastas = append(leafFastas, nodes[i].Fasta)
 		}
 	}
-	log.Print("Writing to files")
 	fasta.Write(simOutFile, fastas)
 	fasta.Write(leafOutFile, leafFastas)
 }
 
 //ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
-	log.Print("Reconstructing")
 	tree := expandedTree.ReadTree(newickInput, fastaInput)
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
@@ -48,7 +45,6 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	for k := 0; k < len(branches); k++ {
 		treeFastas = append(treeFastas, branches[k].Fasta)
 	}
-	log.Print("Writing to file")
 	fasta.Write(outputFilename, treeFastas)
 }
 
