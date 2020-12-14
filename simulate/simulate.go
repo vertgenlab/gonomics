@@ -341,11 +341,11 @@ func BaseExtToBases(seq []BaseExt) []dna.Base {
 }
 
 //SortBaseExtBySeqPos orders a string of BaseExt by seq position
-func SortBaseExtBySeqPos(unordered []BaseExt) []dna.Base{
+func SortBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
 	var ordered = make([]dna.Base, len(unordered))
 
 	for i := 0; i < len(unordered); i++ {
-		ordered[i] = unordered[i].Base
+		ordered[unordered[i].SeqPos] = unordered[i].Base
 	}
 	return ordered
 	//sort.Slice(unordered, func(i, j int) bool {
