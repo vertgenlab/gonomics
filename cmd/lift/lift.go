@@ -23,6 +23,8 @@ func lift(chainFile string, inFile string, outFile string, faFile string) {
 	}
 	tree := interval.BuildTree(chainIntervals)
 	out := fileio.EasyCreate(outFile)
+	defer out.Close()
+
 	var records []*fasta.Fasta
 	var currVcf *vcf.Vcf
 
