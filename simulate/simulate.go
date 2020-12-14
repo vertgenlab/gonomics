@@ -152,7 +152,8 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 
 //MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths
 func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dna.Base {
-	//TODO: if we keep BaseExt, any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1
+	//TODO: make sure a genePred can be updated as we go through the tree
+	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
 	var newSequence []BaseExt
 	var finalSequence []dna.Base
 	var newBase BaseExt
@@ -161,7 +162,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
 	var geneRecord []*genePred.GenePred
-	//var newExon = true
 	var start bool
 	var stop bool
 	var increment int
@@ -177,16 +177,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 				newBase = mutateBase(seq[p], branchLength, p)
 				newSequence = append(newSequence, newBase)
 			} else {
-				//if newExon == true { //may not need this
-				//	for ep := 0; ep < len(exonsProcessed); ep++ {
-				//		newExon = true
-				//		if thisExon == exonsProcessed[ep] {
-				//			newExon = false
-				//		}
-				//		if newExon == true {
-				//			exonsProcessed = append(exonsProcessed, thisExon)
-				//		}
-				//	}
 				var originalCodons []CodonExt
 				originalCodons = CreateCodons(seqExt, geneRecord[g], thisExon)
 				for codon := 0; codon < len(originalCodons); codon++ {
@@ -208,7 +198,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						var newCodon CodonExt
 						newCodon.Seq = make([]BaseExt, 3)
 						for codonPosition := 0; codonPosition < 3; codonPosition++ {
-							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, thisCodon.Seq[codonPosition].SeqPos) //p+(codon-1)*3+codonPosition+1) //pos, plus num of codons already handled*3 + num bases of this codon processed, corrected for zero-base
+							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, thisCodon.Seq[codonPosition].SeqPos)
 							newCodon.Seq[codonPosition] = newBase
 						}
 						//codonExt will be transferred to a codon to check translation against BLOSUM,
@@ -233,8 +223,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						}
 					}
 				}
-				finalSequence = BaseExtToBases(newSequence)
-				increment = geneRecord[g].ExonEnds[thisExon] - geneRecord[g].ExonStarts[thisExon] //right open
+				increment = geneRecord[g].ExonEnds[thisExon] - geneRecord[g].ExonStarts[thisExon]
 				p += increment - 1
 			}
 		}
@@ -347,21 +336,33 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 //BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
 func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
-	var i, j int
-
-	for i = 0; i < len(seq); i++ { //counter to put things back in order
-		for j = 0; j < len(seq); j++ { //counter to check all seq bases before incrementing to look for the next base in the newSeq
-			if seq[j].SeqPos == i {
-				newSequence = append(newSequence, seq[j].Base)
-				i += 1
-			}
-		}
-	}
-	if len(newSequence) != len(seq) {
-		log.Fatal("Cannot find order of bases")
-	}
+	newSequence = OrderBaseExtBySeqPos(seq)
 	return newSequence
 }
+
+//SortBaseExtBySeqPos orders a string of BaseExt by seq position
+func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
+	var ordered = make([]dna.Base, len(unordered))
+
+	for i := 0; i < len(unordered); i++ {
+		ordered[unordered[i].SeqPos] = unordered[i].Base
+	}
+	return ordered
+	//sort.Slice(unordered, func(i, j int) bool {
+	//	return Compare(unordered[i], unordered[j]) == -1
+	//})
+}
+
+////Compare returns 0 if the seqPos
+//func Compare(a BaseExt, b BaseExt) int {
+//	if a.SeqPos < b.SeqPos {
+//		return -1
+//	} else if a.SeqPos > b.SeqPos {
+//		return 1
+//	} else {
+//		return 0
+//	}
+//}
 
 //CodonExtToBaseExt converts a slice of CodonExt to a slice of BaseExt
 func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {

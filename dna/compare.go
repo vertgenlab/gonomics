@@ -84,6 +84,7 @@ func CompareSeqsCaseSensitiveIgnoreGaps(alpha []Base, beta []Base) int {
 	return compareSeqsIgnoreGaps(alpha, beta, false)
 }
 
+
 func compare2DSeqs(alpha [][]Base, beta [][]Base, ignoreCase bool, ignoreGaps bool) int {
 	var res int
 	stop := numbers.Min(len(alpha), len(beta))
@@ -119,4 +120,13 @@ func CompareTwoDSeqsIgnoreCaseAndGaps(alpha [][]Base, beta [][]Base) int {
 
 func CompareTwoDSeqsCaseSensitiveIgnoreGaps(alpha [][]Base, beta [][]Base) int {
 	return compare2DSeqs(alpha, beta, false, true)
+
+func IsSeqOfACTG(seq []Base) bool {
+	for _, val := range seq {
+		if val != A && val != C && val != G && val != T {
+			return false
+		}
+	}
+	return true
+
 }

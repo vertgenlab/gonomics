@@ -9,13 +9,12 @@ import (
 	"log"
 )
 
-//Somehow leaf sequences are different between file without ancestors and file with whole tree
 //TODO: option for seeded or unseeded random numbers (include in simulate.go)
-func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leafOutFile string) {
+func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
-	simulate.Simulate(rootFastaFile, tree)
+	simulate.Simulate(rootFastaFile, tree, gp)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
@@ -30,15 +29,15 @@ func SimulateEvol(rootFastaFile string, treeFile string, simOutFile string, leaf
 
 func usage() {
 	fmt.Print(
-		"simulateEvol takes in a root fasta and a newick formatted tree with branch lengths and simulates evolution along the tree. It returns a list of fastas for the whole tree for reference and a list of fastas from leaves for reconstruction.\n" +
+		"simulateEvol takes in a root fasta, the sequence's genePred file, and a newick formatted tree with branch lengths and simulates evolution along the tree. It returns a list of fastas for the whole tree for reference and a list of fastas from leaves for reconstruction.\n" +
 			"Usage:\n" +
-			"simulateEvol <rootFasta.fasta> <newickTree.txt> <outFile.fasta> <leafOutputFile.fasta> \n" +
+			"simulateEvol <rootFasta.fasta> <newickTree.txt> <genePred filename> <outFile.fasta> <leafOutputFile.fasta> \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs = 4
+	var expectedNumArgs = 5
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -52,8 +51,9 @@ func main() {
 
 	rootFasta := flag.Arg(0)
 	newickTree := flag.Arg(1)
-	outFile := flag.Arg(2)
-	leafOutFile := flag.Arg(3)
+	gene := flag.Arg(2)
+	outFile := flag.Arg(3)
+	leafOutFile := flag.Arg(4)
 
-	SimulateEvol(rootFasta, newickTree, outFile, leafOutFile)
+	SimulateEvol(rootFasta, newickTree, gene, outFile, leafOutFile)
 }
