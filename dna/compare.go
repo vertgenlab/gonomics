@@ -83,3 +83,12 @@ func CompareSeqsIgnoreCaseAndGaps(alpha []Base, beta []Base) int {
 func CompareSeqsCaseSensitiveIgnoreGaps(alpha []Base, beta []Base) int {
 	return compareSeqsIgnoreGaps(alpha, beta, false)
 }
+
+func IsSeqOfACTG(seq []Base) bool {
+	for _, val := range seq {
+		if val != A && val != C && val != G && val != T {
+			return false
+		}
+	}
+	return true
+}
