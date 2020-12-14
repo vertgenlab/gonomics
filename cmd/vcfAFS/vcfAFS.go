@@ -9,7 +9,7 @@ import (
 )
 
 func vcfAFS(vcfFile string, outFile string) {
-	g := popgen.GVCFToAFS(vcfFile)
+	g := popgen.VcfToAFS(vcfFile)
 	f := popgen.AFSToFrequency(g)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()

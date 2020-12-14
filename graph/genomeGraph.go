@@ -64,7 +64,7 @@ func SnpToSeq(sequence []dna.Base, snps []*vcf.Vcf) []dna.Base {
 		answer = append(answer, sequence[s])
 	}
 	for i := 0; i < len(snps); i++ {
-		base := dna.StringToBases(snps[i].Alt)
+		base := dna.StringToBases(snps[i].Alt[0])
 		answer[snps[i].Pos-1] = base[0]
 	}
 	return answer
@@ -80,22 +80,22 @@ func SeqToGraph(vcfFile []*vcf.Vcf, sequence *fasta.Fasta, gsw *GenomeGraph) *Ge
 	var currMatch *Node
 	var prev *Node
 	var lastMatch *Node = nil
-	var lastPos int64
+	var lastPos int64 = 0
 	var snps []*vcf.Vcf
 	lastPos = 0
 	for i := 0; i < len(vcfFile); i++ {
-		if strings.Compare(vcfFile[i].Format, "SVTYPE=SNP") == 0 {
+		if strings.Contains(vcfFile[i].Info, "SVTYPE=SNP") {
 			snps = append(snps, vcfFile[i])
 		}
 		//case insertion
-		if strings.Compare(vcfFile[i].Format, "SVTYPE=INS") == 0 {
+		if strings.Contains(vcfFile[i].Info, "SVTYPE=INS") {
 			//logic for calling SNPs
 			snpSeq := SnpToSeq(sequence.Seq, snps)
 			//added location of fragment and converted to 1 base by add 1
-			currMatch = &Node{QSeq: SnpQFrag(sequence.Seq[lastPos:vcfFile[i].Pos], snpSeq[lastPos:vcfFile[i].Pos], sequence.Name, lastPos+1, vcfFile[i].Pos), NodeID: g.NumNode}
+			currMatch = &Node{QSeq: SnpQFrag(sequence.Seq[lastPos:vcfFile[i].Pos], snpSeq[lastPos:vcfFile[i].Pos], sequence.Name, lastPos+1, int64(vcfFile[i].Pos)), NodeID: g.NumNode}
 			snps = nil
 			g.AddNode(currMatch)
-			bases := dna.StringToBases(vcfFile[i].Alt)
+			bases := dna.StringToBases(vcfFile[i].Alt[0])
 			curr = &Node{QSeq: qDna.QFragCoord(bases[1:len(bases)], sequence.Name, lastPos+1, lastPos+1), NodeID: g.NumNode}
 			g.AddNode(curr)
 			lastPos++
@@ -107,17 +107,17 @@ func SeqToGraph(vcfFile []*vcf.Vcf, sequence *fasta.Fasta, gsw *GenomeGraph) *Ge
 			lastMatch = currMatch
 		}
 		//deletion in vcf record
-		if strings.Compare(vcfFile[i].Format, "SVTYPE=DEL") == 0 {
+		if strings.Contains(vcfFile[i].Info, "SVTYPE=DEL") {
 
 			snpSeq := SnpToSeq(sequence.Seq, snps)
-			currMatch = &Node{QSeq: SnpQFrag(sequence.Seq[lastPos:vcfFile[i].Pos], snpSeq[lastPos:vcfFile[i].Pos], sequence.Name, lastPos+1, vcfFile[i].Pos), NodeID: g.NumNode}
+			currMatch = &Node{QSeq: SnpQFrag(sequence.Seq[lastPos:vcfFile[i].Pos], snpSeq[lastPos:vcfFile[i].Pos], sequence.Name, lastPos+1, int64(vcfFile[i].Pos)), NodeID: g.NumNode}
 			snps = nil
 			g.AddNode(currMatch)
 
 			bases := dna.StringToBases(vcfFile[i].Ref)
-			curr = &Node{QSeq: qDna.QFragCoord(bases[1:len(bases)], sequence.Name, vcfFile[i].Pos+1, vcfFile[i].Pos+int64(len(bases))-1), NodeID: g.NumNode}
+			curr = &Node{QSeq: qDna.QFragCoord(bases[1:len(bases)], sequence.Name, int64(vcfFile[i].Pos+1), int64(vcfFile[i].Pos)+int64(len(bases))-1), NodeID: g.NumNode}
 			g.AddNode(curr)
-			lastPos = vcfFile[i].Pos + int64(len(bases)) - 1
+			lastPos = int64(vcfFile[i].Pos) + int64(len(bases)) - 1
 			if lastMatch != nil {
 				g.AddEdge(lastMatch, currMatch, 1)
 				g.AddEdge(prev, currMatch, 1)

@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-func Filter(v *Vcf, chrom string, minPos int64, maxPos int64, ref string, alt string, minQual float64) bool {
+//Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -27,6 +28,7 @@ func Filter(v *Vcf, chrom string, minPos int64, maxPos int64, ref string, alt st
 	return true
 }
 
+//FilterQual returns true if a Vcf quality is above an input minQual score, false otherwise.
 func FilterQual(v *Vcf, minQual float64) bool {
 	if v.Qual < minQual {
 		return false
@@ -34,27 +36,31 @@ func FilterQual(v *Vcf, minQual float64) bool {
 	return true
 }
 
-func FilterAlt(v *Vcf, alt string) bool {
-	if alt != "" && v.Alt != alt {
+//FilterAlt returns true if the Alt field of a Vcf entry matches a desired input Alt field, false otherwise. Order sensitive.
+func FilterAlt(v *Vcf, alt []string) bool {
+	if len(alt) > 0 && CompareAlt(v.Alt, alt) != 0 {
 		return false
 	}
 	return true
 }
 
+//FilterRef returns true if the Ref field of a Vcf record matches an input string, false otherwise.
 func FilterRef(v *Vcf, ref string) bool {
-	if ref != "" && v.Ref != ref {
+	if len(ref) > 0 && strings.Compare(v.Ref, ref) != 0 {
 		return false
 	}
 	return true
 }
 
-func FilterRange(v *Vcf, minPos int64, maxPos int64) bool {
+//FilterRange returns true if a Vcf position lies between an input minimum and maximum position (inclusive for both min and max), false otherwise.
+func FilterRange(v *Vcf, minPos int, maxPos int) bool {
 	if v.Pos < minPos || v.Pos > maxPos {
 		return false
 	}
 	return true
 }
 
+//FilterChrom returns true if the Chrom field of a Vcf record matches an input string, false otherwise.
 func FilterChrom(v *Vcf, chrom string) bool {
 	if chrom != "" && v.Chr != chrom {
 		return false
@@ -62,24 +68,34 @@ func FilterChrom(v *Vcf, chrom string) bool {
 	return true
 }
 
+
 //TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
 	var answer []*Vcf
 	var i, j int
 	var ref []dna.Base
-	var alt []dna.Base
+	var alt [][]dna.Base
+	var noN bool
 	for i = 0; i < len(split); i++ {
-		encountered := make(map[int64]bool)
+		encountered := make(map[int]bool)
 		for j = 0; j < len(split[i]); j++ {
 			if encountered[split[i][j].Pos] == true {
 				//do not add
 			} else {
 				encountered[split[i][j].Pos] = true
 				ref = dna.StringToBases(split[i][j].Ref)
-				alt = dna.StringToBases(split[i][j].Alt)
-				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
-					answer = append(answer, split[i][j])
+				alt = GetAltBases(split[i][j].Alt)
+				noN = true
+				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 {
+					for k := 0; k < len(alt); k++ {
+						if dna.CountBaseInterval(alt[k], dna.N, 0, len(alt)) != 0 {
+							noN = false
+						}
+					}
+					if noN {
+						answer = append(answer, split[i][j])
+					}
 				}
 			}
 		}
@@ -88,18 +104,29 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	return answer
 }
 
+//FilterNs removes all records from a slice of Vcfs that contain Ns.
 func FilterNs(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
+	var noN bool
 	for i := 0; i < len(vcfs); i++ {
-		if !strings.Contains(vcfs[i].Ref, "N") && !strings.Contains(vcfs[i].Alt, "N") {
+		noN = true
+		if dna.CountBase(dna.StringToBases(vcfs[i].Ref), dna.N) > 0 {
+			noN = false
+		}
+		for j := 0; j < len(vcfs[i].Alt); j++ {
+			if dna.CountBase(dna.StringToBases(vcfs[i].Alt[j]), dna.N) > 0 {
+				noN = false
+			}
+		}
+		if noN {
 			answer = append(answer, vcfs[i])
 		}
 	}
 	return answer
 }
+
 func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
-	gt := GetAlleleGenotype(v)
-	if IsHomozygous(gt[parentOne]) && IsHomozygous(gt[parentTwo]) && IsHeterozygous(gt[F1]) && gt[parentOne].AlleleOne != gt[parentTwo].AlleleOne {
+	if IsHomozygous(v.Samples[parentOne]) && IsHomozygous(v.Samples[parentTwo]) && IsHeterozygous(v.Samples[F1]) && v.Samples[parentOne].AlleleOne != v.Samples[parentTwo].AlleleOne {
 		return true
 	} else {
 		return false
@@ -107,16 +134,16 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 }
 
 func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
-	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Alt: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: "SVTYPE=SNP", Notes: a.Notes}
+	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: a.Format, Samples: a.Samples}
 	if len(a.Ref) < len(b.Ref) {
 		mergeRecord.Ref += b.Ref
 	} else {
 		mergeRecord.Ref += a.Ref
 	}
 	if len(a.Alt) < len(b.Alt) {
-		mergeRecord.Alt += b.Alt
+		mergeRecord.Alt = b.Alt
 	} else {
-		mergeRecord.Alt += a.Alt
+		mergeRecord.Alt = a.Alt
 	}
 	return mergeRecord
 }
@@ -155,14 +182,21 @@ func IsHomozygous(genome GenomeSample) bool {
 	return false
 }
 
-func ByNames(gvcf *Reader, list []string, writer *fileio.EasyWriter) {
-	sampleHash := HeaderToMaps(gvcf.Header)
+func getListIndex(header *VcfHeader, list []string) []int16 {
+	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))
 	for i := 0; i < len(listIndex); i++ {
 		//look up alt allele index belonging to each string
 		listIndex[i] = sampleHash.GIndex[list[i]]
 	}
-	for record := range gvcf.Vcfs {
+	return listIndex
+}
+
+
+func ByNames(inChan chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
+	var listIndex []int16 = getListIndex(header, list)
+
+	for record := range inChan {
 		WriteVcf(writer, ReorderSampleColumns(record, listIndex))
 	}
 }
@@ -174,7 +208,8 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	chrVcfMap := make(map[string][]*Vcf)
 
 	var ref []dna.Base
-	var alt []dna.Base
+	var alt [][]dna.Base
+	var containsN bool
 	for _, v := range vcfs {
 		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
 	}
@@ -182,19 +217,27 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	var curr []*Vcf
 	for key := range chrVcfMap {
 		curr = chrVcfMap[key]
-		encountered := make(map[int64]bool)
+		encountered := make(map[int]bool)
 		for i = 0; i < len(curr); i++ {
 			if encountered[curr[i].Pos] == true {
 				//do not add
 			} else {
 				encountered[curr[i].Pos] = true
+				containsN = false
 				ref = dna.StringToBases(curr[i].Ref)
-				alt = dna.StringToBases(curr[i].Alt)
-				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 && dna.CountBaseInterval(alt, dna.N, 0, len(alt)) == 0 {
+				alt = GetAltBases(curr[i].Alt)
+				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) != 0 {
+					containsN = true
+				}
+				for j := 0; j < len(alt); j++ {
+					if dna.CountBaseInterval(alt[j], dna.N, 0, len(alt[j])) != 0 {
+						containsN = true
+					}
+				}
+				if !containsN {
 					answer = append(answer, curr[i])
 				}
 			}
-
 		}
 	}
 	return answer
