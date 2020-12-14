@@ -36,7 +36,7 @@ func FilterQual(v *Vcf, minQual float64) bool {
 	return true
 }
 
-//FilterAlt returns true if the Alt field of a Vcf entry matches a desired input Alt field, false otherwise
+//FilterAlt returns true if the Alt field of a Vcf entry matches a desired input Alt field, false otherwise. Order sensitive.
 func FilterAlt(v *Vcf, alt []string) bool {
 	if len(alt) > 0 && CompareAlt(v.Alt, alt) != 0 {
 		return false

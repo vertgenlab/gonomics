@@ -218,7 +218,7 @@ func SamplesToString(sample []GenomeSample) string {
 func HelperSamplesToString(sample []GenomeSample, i int) string {
 	var answer string
 	if sample[i].AlleleOne < 0 {
-		answer = "noData "
+		answer = "noData"
 	} else {
 		if i == len(sample)-1 {
 			answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)

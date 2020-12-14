@@ -17,6 +17,7 @@ func vcfToBed(infile string, outfile string, delimiter string) {
 	defer out.Close()
 
 	for v := range ch {
+		note = ""
 		for i := 0; i < len(v.Samples); i++ {
 			note = note + delimiter + vcf.HelperSamplesToString(v.Samples, i)
 		}

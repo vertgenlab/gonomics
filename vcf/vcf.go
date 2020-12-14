@@ -179,9 +179,6 @@ func FormatToString(format []string) string {
 	if len(format) == 0 {
 		return ""
 	}
-	if len(format) == 1 {
-		return format[0]
-	}
 	var answer = format[0]
 	for i := 1; i < len(format); i++ {
 		answer = answer + ":" + format[i]
