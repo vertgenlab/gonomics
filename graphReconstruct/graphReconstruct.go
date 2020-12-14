@@ -4,8 +4,14 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/graph"
 	"log"
 )
+
+type graphColumn struct {
+	AlignId    int
+	AlignNodes [][]*graph.Node
+}
 
 //returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
 func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
