@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 	"testing"
 	//"fmt"
 )
@@ -38,20 +37,22 @@ var MutateSeqTests = []struct {
 	{"testdata/longDebug.fasta", 0.5, "testdata/longDebug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
-func TestBaseConversions(t *testing.T) {
-	for _, test := range MutateSeqTests {
-		seq := fasta.Read(test.sequence)
-		bases := seq[0].Seq
-		intermediate := BasesToBaseExt(bases)
-		log.Print(bases)
-		log.Print(intermediate)
-		answer := BaseExtToBases(intermediate)
-		log.Print(answer)
-		if len(answer) != len(bases) {
-			log.Fatal("Test Base Conversion: answer not written properly")
-		}
-	}
-}
+//func TestBaseConversions(t *testing.T) {
+//	for _, test := range MutateSeqTests {
+//		seq := fasta.Read(test.sequence)
+//		bases := seq[0].Seq
+//		intermediate := BasesToBaseExt(bases)
+//		answer := BaseExtToBases(intermediate)
+//		for i := 0; i < len(intermediate); i++ {
+//			if intermediate[i].Base != answer[i] {
+//				log.Fatal("bases are not in the right order")
+//			}
+//		}
+//		if len(answer) != len(bases) {
+//			log.Fatal("Test Base Conversion: answer not written properly")
+//		}
+//	}
+//}
 
 //func TestCodonExtConversions(t *testing.T) {
 //	for _, test := range MutateSeqTests {

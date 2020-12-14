@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/genePred"
 	"log"
 	"math/rand"
-	"sort"
 )
 
 //CodonExt holds a slice of 3 bases and their original positions
@@ -336,35 +335,34 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 
 //BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
 func BaseExtToBases(seq []BaseExt) []dna.Base {
-	var newSequence []dna.Base = make([]dna.Base, len(seq))
-
-	SortBaseExtBySeqPos(seq)
-	for i := 0; i < len(seq); i++ {
-		newSequence[i] = seq[i].Base
-	}
-	if len(newSequence) != len(seq) {
-		log.Fatal("Cannot find order of bases")
-	}
+	var newSequence []dna.Base
+	newSequence = SortBaseExtBySeqPos(seq)
 	return newSequence
 }
 
 //SortBaseExtBySeqPos orders a string of BaseExt by seq position
-func SortBaseExtBySeqPos(unordered []BaseExt) {
-	sort.Slice(unordered, func(i, j int) bool {
-		return Compare(unordered[i], unordered[j]) == 0
-	})
+func SortBaseExtBySeqPos(unordered []BaseExt) []dna.Base{
+	var ordered = make([]dna.Base, len(unordered))
+
+	for i := 0; i < len(unordered); i++ {
+		ordered[i] = unordered[i].Base
+	}
+	return ordered
+	//sort.Slice(unordered, func(i, j int) bool {
+	//	return Compare(unordered[i], unordered[j]) == -1
+	//})
 }
 
-//Compare returns 0 if the seqPos
-func Compare(a BaseExt, b BaseExt) int {
-	if a.SeqPos < b.SeqPos {
-		return -1
-	} else if a.SeqPos > b.SeqPos {
-		return 1
-	} else {
-		return 0
-	}
-}
+////Compare returns 0 if the seqPos
+//func Compare(a BaseExt, b BaseExt) int {
+//	if a.SeqPos < b.SeqPos {
+//		return -1
+//	} else if a.SeqPos > b.SeqPos {
+//		return 1
+//	} else {
+//		return 0
+//	}
+//}
 
 //CodonExtToBaseExt converts a slice of CodonExt to a slice of BaseExt
 func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
