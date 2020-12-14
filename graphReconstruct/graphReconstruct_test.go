@@ -1,8 +1,11 @@
 package graphReconstruct
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"testing"
@@ -14,6 +17,54 @@ var input = []struct {
 	length         int    // second input
 }{
 	{"testdata/newickLongBranches.txt", 1005},
+}
+
+func TestGraphRecon(t *testing.T) {
+	var humanNode1 = &simpleGraph.Node{Id: 0, Name: "humanNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var humanNode2 = &simpleGraph.Node{Id: 0, Name: "humanNode2", Seq: dna.StringToBases("AAA"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("AAA")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var humanNode3 = &simpleGraph.Node{Id: 0, Name: "humanNode3", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+
+	var humanEdge1 = &simpleGraph.Edge{humanNode2, 0.50}
+	var humanEdge2 = &simpleGraph.Edge{humanNode3, 0.50}
+	var humanEdge3 = &simpleGraph.Edge{humanNode3, 1.00}
+
+	humanNode1.Next = []*simpleGraph.Edge{humanEdge1, humanEdge2}
+	humanNode2.Next = []*simpleGraph.Edge{humanEdge3}
+
+	var humanGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{humanNode1, humanNode2, humanNode3}}
+
+	simpleGraph.PrintGraph(humanGraph)
+
+	var chimpNode1 = &simpleGraph.Node{Id: 0, Name: "chimpNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var chimpNode2 = &simpleGraph.Node{Id: 0, Name: "chimpNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+
+	var chimpEdge1 = &simpleGraph.Edge{chimpNode2, 1.00}
+
+	chimpNode1.Next = []*simpleGraph.Edge{chimpEdge1}
+
+	var chimpGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{chimpNode1, chimpNode2}}
+
+	simpleGraph.PrintGraph(chimpGraph)
+
+	var gorillaNode1 = &simpleGraph.Node{Id: 0, Name: "gorillaNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var gorillaNode2 = &simpleGraph.Node{Id: 0, Name: "gorillaNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+
+	var gorillaEdge1 = &simpleGraph.Edge{gorillaNode2, 1.00}
+
+	gorillaNode1.Next = []*simpleGraph.Edge{gorillaEdge1}
+
+	var gorillaGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{gorillaNode1, gorillaNode2}}
+
+	simpleGraph.PrintGraph(gorillaGraph)
+
+	var nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[0]}, []*simpleGraph.Node{chimpGraph.Nodes[0]}, []*simpleGraph.Node{gorillaGraph.Nodes[0]}}}
+	var nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[1]}}}
+	var nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[2]}, []*simpleGraph.Node{chimpGraph.Nodes[1]}, []*simpleGraph.Node{gorillaGraph.Nodes[1]}}}
+
+	log.Print(nodeAlign0.AlignId)
+	log.Print(nodeAlign1.AlignId)
+	log.Print(nodeAlign2.AlignId)
+
 }
 
 func Test_reconstruct(t *testing.T) {

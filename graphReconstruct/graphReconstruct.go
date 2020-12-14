@@ -4,13 +4,13 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/graph"
+	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 )
 
 type graphColumn struct {
 	AlignId    int
-	AlignNodes [][]*graph.Node
+	AlignNodes [][]*simpleGraph.Node
 }
 
 //returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
