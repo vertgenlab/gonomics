@@ -1,5 +1,5 @@
 package graphReconstruct
-
+/*
 import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -23,7 +23,7 @@ func Test_reconstruct(t *testing.T) {
 			log.Fatal("Couldn't read file")
 		}
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
-		simulate.Simulate("RandGeneOutput.fasta", tre)
+		simulate.Simulate("RandGeneOutput.fasta", tre, "testdata/testGenePred.gp")
 		WriteTreeToFasta(tre, "simOut.fasta")
 		WriteLeavesToFasta(tre, "leavesOnly.Fasta")
 
@@ -38,4 +38,4 @@ func Test_reconstruct(t *testing.T) {
 			log.Printf("%s %f \n", name, accuracy)
 		}
 	}
-}
+}*/
