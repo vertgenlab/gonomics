@@ -337,25 +337,25 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 //BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
 func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base = make([]dna.Base, len(seq))
-	//var i, j int
 
 	SortBaseExtBySeqPos(seq)
 	for i := 0; i < len(seq); i++ {
 		newSequence[i] = seq[i].Base
 	}
-
 	if len(newSequence) != len(seq) {
 		log.Fatal("Cannot find order of bases")
 	}
 	return newSequence
 }
 
+//SortBaseExtBySeqPos orders a string of BaseExt by seq position
 func SortBaseExtBySeqPos(unordered []BaseExt) {
 	sort.Slice(unordered, func(i, j int) bool {
 		return Compare(unordered[i], unordered[j]) == 0
 	})
 }
 
+//Compare returns 0 if the seqPos
 func Compare(a BaseExt, b BaseExt) int {
 	if a.SeqPos < b.SeqPos {
 		return -1
