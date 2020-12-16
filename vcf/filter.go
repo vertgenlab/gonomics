@@ -193,7 +193,7 @@ func getListIndex(header *VcfHeader, list []string) []int16 {
 }
 
 
-func ByNames(inChan chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
+func ByNames(inChan <-chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
 	var listIndex []int16 = getListIndex(header, list)
 
 	for record := range inChan {
