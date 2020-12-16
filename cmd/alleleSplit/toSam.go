@@ -9,10 +9,10 @@ import (
 )
 
 func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string, parentTwo, prefix string) {
-	reader, vcfHeader := vcf.GoReadToChan(genotypeVcf)
-	sampleHash := vcf.HeaderToMaps(vcfHeader)
-	snpDb := make(map[uint64]*vcf.Vcf)
-	for genotype := range reader {
+	reader := vcf.GoReadGVcf(genotypeVcf)
+	sampleHash := vcf.HeaderToMaps(reader.Header)
+	snpDb := make(map[uint64]*vcf.GVcf)
+	for genotype := range reader.Vcfs {
 		if vcf.ASFilter(genotype, sampleHash.GIndex[parentOne], sampleHash.GIndex[parentTwo], sampleHash.GIndex[fOne]) {
 			vcf.BuildGenotypeMap(genotype, sampleHash.Fa, snpDb)
 		}
@@ -33,7 +33,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	var ok bool
 	var code uint64
 
-	var gV *vcf.Vcf
+	var gV *vcf.GVcf
 	for read, done := sam.NextAlignment(samFile); done != true; read, done = sam.NextAlignment(samFile) {
 		parentAllele1, parentAllele2 = 0, 0
 		target = read.Pos - 1
@@ -60,10 +60,10 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 				code = vcf.ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target))
 				gV, ok = snpDb[code]
 				if ok {
-					if dna.CountBase(getOldSeq(gV)[gV.Samples[sampleHash.GIndex[parentOne]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(getOldSeq(gV)[gV.Samples[sampleHash.GIndex[parentOne]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
+					if dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
 						parentAllele1++
 					}
-					if dna.CountBase(getOldSeq(gV)[gV.Samples[sampleHash.GIndex[parentTwo]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(getOldSeq(gV)[gV.Samples[sampleHash.GIndex[parentTwo]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
+					if dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleOne], dna.Gap) == int(read.Cigar[i].RunLength) && dna.CountBase(gV.Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleTwo], dna.Gap) == int(read.Cigar[i].RunLength) {
 						parentAllele1++
 					}
 				}
@@ -73,10 +73,10 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 					code = vcf.ChromPosToUInt64(int(sampleHash.Fa[read.RName]), int(target+j))
 					gV, ok = snpDb[code]
 					if ok {
-						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, getOldSeq(gV)[gV.Samples[sampleHash.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, getOldSeq(snpDb[code])[gV.Samples[sampleHash.GIndex[parentOne]].AlleleTwo]) == 0 {
+						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[sampleHash.GIndex[parentOne]].AlleleTwo]) == 0 {
 							parentAllele1++
 						}
-						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, getOldSeq(gV)[gV.Samples[sampleHash.GIndex[parentTwo]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, getOldSeq(snpDb[code])[gV.Samples[sampleHash.GIndex[parentTwo]].AlleleTwo]) == 0 {
+						if dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, gV.Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleOne]) == 0 && dna.CompareSeqsIgnoreCase([]dna.Base{read.Seq[query+j]}, snpDb[code].Seq[gV.Genotypes[sampleHash.GIndex[parentTwo]].AlleleTwo]) == 0 {
 							parentAllele2++
 						}
 					}
@@ -93,13 +93,5 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 			sam.WriteAlnToFileHandle(childTwo, read)
 		}
 	}
-}
-
-func getOldSeq(v *vcf.Vcf) [][]dna.Base {
-	ans := make([][]dna.Base, len(v.Alt)+1)
-	ans[0] = dna.StringToBases(v.Ref)
-	for i := 0; i < len(v.Alt); i++ {
-		ans[i+1] = dna.StringToBases(v.Alt[i])
-	}
-	return ans
+	reader.File.Close()
 }
