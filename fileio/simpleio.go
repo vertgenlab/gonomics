@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"io"
 	"log"
@@ -22,7 +23,7 @@ type SimpleReader struct {
 	*bufio.Reader
 	file   *os.File
 	line   []byte
-	buffer *bytes.Buffer
+	Buffer *bytes.Buffer
 }
 
 // Read reads data into p and is a method required to implement the io.Reader interface.
@@ -38,7 +39,7 @@ func NewSimpleReader(filename string) *SimpleReader {
 	var answer SimpleReader = SimpleReader{
 		file:   MustOpen(filename),
 		line:   make([]byte, defaultBufSize),
-		buffer: &bytes.Buffer{},
+		Buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
@@ -61,10 +62,10 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	reader.line, err = reader.ReadSlice('\n')
 	if err == nil {
 		if reader.line[len(reader.line)-1] == '\n' {
-			reader.buffer.Reset()
-			_, err = reader.buffer.Write(reader.line[:len(reader.line)-1])
+			reader.Buffer.Reset()
+			_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
 			common.ExitIfError(err)
-			return reader.buffer, false
+			return reader.Buffer, false
 		} else {
 			log.Fatalf("Error: end of line did not end with an end of line character...\n")
 		}
@@ -91,4 +92,20 @@ func (reader *SimpleReader) Close() {
 		err := reader.file.Close()
 		common.ExitIfError(err)
 	}
+}
+
+// IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
+func IntSliceToString(nums []int) string {
+	ans := strings.Builder{}
+	ans.Grow(2 * len(nums))
+	for i := 0; i < len(nums); i++ {
+		ans.WriteString(IntToString(nums[i]))
+		ans.WriteByte(',')
+	}
+	return ans.String()
+}
+
+// IntToString a function that converts a number of type int and return a string.
+func IntToString(i int) string {
+	return fmt.Sprintf("%d", i)
 }
