@@ -116,13 +116,13 @@ func allZero(r []float64) bool {
 }
 
 func GraphProb(a float32, b float64) float64 {
-	//calc probability that the number is the same in the next node up the tree
+	//calc probability that the edge.Prob is unchanged in parent
 	answer := float64(a) * (1 - b)
 	return answer
 }
 
 //set up Stored list for each node in the tree with probability of each base
-func SetState(node *expandedTree.ETree, position int, graph *simpleGraph.SimpleGraph) {
+func SetState(node *expandedTree.ETree, position int, graph *simpleGraph.SimpleGraph) *simpleGraph.SimpleGraph {
 	for gn := 0; gn < len(graph.Nodes); gn++ {
 		currNode := graph.Nodes[gn]
 		incoming := currNode.Prev
@@ -134,13 +134,11 @@ func SetState(node *expandedTree.ETree, position int, graph *simpleGraph.SimpleG
 			for i := 0; i < len(incoming); i++ {
 				//only want a single edge calculation in sum
 				sum = GraphProb(incoming[i].Prob, node.Left.BranchLength) * GraphProb(incoming[i].Prob, node.Right.BranchLength)
-				//missing probs needs to be derived from the same EDGE
-				//the probability that this node was passed through in node.r/l and the modifier that changes that prob
+				//the probability that this node was passed through in node.r/l and the prob that edge.prob has remained the same (BranchLength)
 				incoming[i].Prob = float32(sum)
 				//updates existing edge (either this node's graph has been copied from below, and needs to have edges changed
 				//or the graph is a single graph for the whole tree that gets passed up to the parent and the edges need to be updated)
 			}
-
 			//for i := 0; i < 4; i++ {
 			//	sum := 0.0
 			//	for j := 0; j < 4; j++ {
@@ -177,20 +175,26 @@ func SetState(node *expandedTree.ETree, position int, graph *simpleGraph.SimpleG
 		} else if node.Right == nil && node.Left == nil {
 			//node.State = 4 // starts as N
 			//node.Stored = []float64{0, 0, 0, 0}
-			if len(node.Fasta.Seq) <= position {
-				log.Fatal("position specified is out of range of sequence \n")
-			} else if len(node.Fasta.Seq) > position {
-				node.State = int(node.Fasta.Seq[position])
-				for i := 0; i < 4; i++ {
-					if i == node.State {
-						node.Stored[i] = 1
-					} else {
-						node.Stored[i] = 0
-					}
-				}
-			}
+			if len(graph.Nodes) <= gn {
+				log.Fatal("node is out of range")
+			} //not sure that i need an else (i don't need to use set or stored yet or maybe at all. Don't need to store the base,
+			// should maybe return a graph and then that can get fed to GraphRecon to create a likely path
+
+			//if len(node.Fasta.Seq) <= position {
+			//	log.Fatal("position specified is out of range of sequence \n")
+			//} else if len(node.Fasta.Seq) > position {
+			//	node.State = int(node.Fasta.Seq[position])
+			//	for i := 0; i < 4; i++ {
+			//		if i == node.State {
+			//			node.Stored[i] = 1
+			//		} else {
+			//			node.Stored[i] = 0
+			//		}
+			//	}
+			//}
 		}
 	}
+	return graph
 }
 
 //Bubble up the tree using the memory of the previous nodes
@@ -238,29 +242,31 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 			ans[i] = root.Stored[i]
 		}
 	}
-
 	return ans
 }
 
 //called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree to return most probable base to the Fasta
-func LoopNodes(root *expandedTree.ETree, position int) {
-	internalNodes := expandedTree.GetBranch(root)
-	SetState(root, position)
-	for k := 0; k < len(internalNodes); k++ {
-		fix := FixFc(root, internalNodes[k])
-		yHat := Yhat(fix)
-		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
-	}
-}
+//func LoopNodes(root *expandedTree.ETree, position int) {
+//	internalNodes := expandedTree.GetBranch(root)
+//	SetState(root, position)
+//	for k := 0; k < len(internalNodes); k++ {
+//		fix := FixFc(root, internalNodes[k])
+//		yHat := Yhat(fix)
+//		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
+//	}
+//}
 
-//for each node of the tree, we calculate the probabilities for each egde, end by finding the most likely
+//for each node of the tree, we calculate the probabilities for each edge, end by finding the most likely
 //path thru the graph and store that as the seq at that node
 //then that graph is used for calculations going up, so we need to pass the graph up the tree
 func GraphRecon(root *expandedTree.ETree, position int, graph *simpleGraph.SimpleGraph) {
 	internalNodes := expandedTree.GetBranch(root)
-	SetState(root, position, graph)
+	rootGraph := SetState(root, position, graph)
 	for k := 0; k < len(internalNodes); k++ {
 		//have to make a giraf?
-		seq := simpleGraph.PathToSeq( /*giraf output*/ )
+		seq := simpleGraph.PathToSeq( /*giraf.path, each node's graph*/ )
+		for i := 0; i < len(seq); i++ {
+			internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, seq[i])
+		}
 	}
 }

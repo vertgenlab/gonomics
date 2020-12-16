@@ -49,7 +49,7 @@ func TestGraphRecon(t *testing.T) {
 	var gorillaNode1 = &simpleGraph.Node{Id: 0, Name: "gorillaNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 	var gorillaNode2 = &simpleGraph.Node{Id: 0, Name: "gorillaNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
-	var gorillaEdge1 = &simpleGraph.Edge{gorillaNode2, 1.00}
+	var gorillaEdge1 = &simpleGraph.Edge{Dest: gorillaNode2, Prob: 1.00}
 
 	gorillaNode1.Next = []*simpleGraph.Edge{gorillaEdge1}
 
