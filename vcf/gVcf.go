@@ -37,7 +37,7 @@ func GoReadGVcf(filename string) *Reader {
 	return ans
 }*/
 
-type GVcf struct { //TODO: Uncommented for now, but this struct needs to be removed soon.
+type GVcf struct {//TODO: Uncommented for now, but this struct needs to be removed soon.
 	Vcf
 	Seq       [][]dna.Base
 	Genotypes []GenomeSample
@@ -47,6 +47,7 @@ type SampleHash struct {
 	Fa     map[string]int16
 	GIndex map[string]int16
 }
+
 
 //TODO: Can only process short variants. Need long term solution for large structural variance.
 func VcfToGvcf(v *Vcf) *GVcf {
