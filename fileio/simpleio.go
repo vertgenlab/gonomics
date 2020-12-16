@@ -69,10 +69,33 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 		} else {
 			log.Fatalf("Error: end of line did not end with an end of line character...\n")
 		}
+	} else {
+		if err == bufio.ErrBufferFull {
+			if reader.line[len(reader.line)-1] == '\n' {
+				reader.Buffer.Reset()
+				reader.line = reader.line[:len(reader.line)-1]
+				reader.line = append(reader.line, readMore(reader)...)
+				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
+				common.ExitIfError(err)
+				return reader.Buffer, false
+			}
+		} else {
+			CatchErrThrowEOF(err)
+			reader.Close()
+		}
 	}
-	CatchErrThrowEOF(err)
-	reader.Close()
 	return nil, true
+}
+
+// readMore is a private helper function to deal with very long lines to
+// avoid alocating too much memory upfront and only resize the size of the buffer
+// only when necessary. 
+func readMore(reader *SimpleReader) []byte {
+	var err error
+	reader.line, err = reader.ReadBytes('\n')
+	_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
+	common.ExitIfError(err)
+	return reader.Buffer.Bytes()
 }
 
 // CatchErrThrowEOF will silently handles and throws the EOF error and will log and exit any other errors.
@@ -110,6 +133,7 @@ func StringToIntSlice(column string) []int {
 }
 
 // IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
+// Important Note: string will include a trailing comma to satisfy UCSC's anomalies.
 func IntSliceToString(nums []int) string {
 	ans := strings.Builder{}
 	ans.Grow(2 * len(nums))
