@@ -4,7 +4,6 @@ package psl
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 	"strings"
 )
 
@@ -93,9 +92,9 @@ func pslLine(reader *PslReader) (*Psl, bool) {
 		reader.curr.TStart = common.StringToInt(reader.columns[15])
 		reader.curr.TEnd = common.StringToInt(reader.columns[16])
 		reader.curr.BlockCount = common.StringToInt(reader.columns[17])
-		reader.curr.BlockSize = numbers.StringToInts(reader.columns[18])
-		reader.curr.QList = numbers.StringToInts(reader.columns[19])
-		reader.curr.TList = numbers.StringToInts(reader.columns[20])
+		reader.curr.BlockSize = fileio.StringToIntSlice(reader.columns[18])
+		reader.curr.QList = fileio.StringToIntSlice(reader.columns[19])
+		reader.curr.TList = fileio.StringToIntSlice(reader.columns[20])
 		return &reader.curr, false
 	} else {
 		return nil, true
@@ -141,10 +140,10 @@ func ToString(p *Psl) string {
 	answer.WriteByte('\t')
 	answer.WriteString(fileio.IntToString(p.BlockCount))
 	answer.WriteByte('\t')
-	answer.WriteString(numbers.IntListToString(p.BlockSize))
+	answer.WriteString(fileio.IntSliceToString(p.BlockSize))
 	answer.WriteByte('\t')
-	answer.WriteString(numbers.IntListToString(p.QList))
+	answer.WriteString(fileio.IntSliceToString(p.QList))
 	answer.WriteByte('\t')
-	answer.WriteString(numbers.IntListToString(p.TList))
+	answer.WriteString(fileio.IntSliceToString(p.TList))
 	return answer.String()
 }

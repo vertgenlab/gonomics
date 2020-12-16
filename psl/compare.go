@@ -1,6 +1,8 @@
 package psl
 
-import ()
+import (
+	"github.com/vertgenlab/gonomics/numbers"
+)
 
 // Equal will check two psl structs and compare every single field of data to determine if they are the same.
 func Equal(x, y Psl) bool {
@@ -55,13 +57,13 @@ func Equal(x, y Psl) bool {
 	if x.BlockCount != y.BlockCount {
 		return false
 	}
-	if EqualSliceInt(x.BlockSize, y.BlockSize) {
+	if numbers.EqualSliceInt(x.BlockSize, y.BlockSize) {
 		return false
 	}
-	if EqualSliceInt(x.QList, y.QList) {
+	if numbers.EqualSliceInt(x.QList, y.QList) {
 		return false
 	}
-	if EqualSliceInt(x.TList, y.TList) {
+	if numbers.EqualSliceInt(x.TList, y.TList) {
 		return false
 	}
 	return true

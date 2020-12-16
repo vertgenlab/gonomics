@@ -94,12 +94,22 @@ func (reader *SimpleReader) Close() {
 	}
 }
 
+// StringToIntSlice will process a column data separated by commas, convert the slice into a slice of type int.
+func StringToIntSlice(column string) []int {
+	work := strings.Split(column, ",")
+	var answer []int = make([]int, len(work))
+	for i := 0; i < len(work)-1; i++ {
+		answer[i] = common.StringToInt(work[i])
+	}
+	return answer
+}
+
 // IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
 func IntSliceToString(nums []int) string {
 	ans := strings.Builder{}
 	ans.Grow(2 * len(nums))
 	for i := 0; i < len(nums); i++ {
-		ans.WriteString(IntToString(nums[i]))
+		ans.WriteString(fmt.Sprintf("%d", nums[i]))
 		ans.WriteByte(',')
 	}
 	return ans.String()
