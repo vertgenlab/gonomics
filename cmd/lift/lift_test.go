@@ -15,6 +15,7 @@ var LiftTests = []struct {
 	faFile string
 }{
 	{"testdata/input.bed", "testdata/expected.bed", "testdata/test.chain", ""},
+	{"testdata/Pollard.HARs.hg19.trimmed.bed", "testdata/Pollard.HARs.hg38.UCSC.trimmed.bed", "testdata/hg19ToHg38.over.chain", ""},
 }
 
 func TestLift(t *testing.T) {

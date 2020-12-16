@@ -63,6 +63,11 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 	close(send)
 }
 
+//match proportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ)
+func MatchProportion(c []*chain.Chain, i interval.Interval) float64, float64 {
+	return 0.0, 0.0
+}
+
 func GoReadToChan(inputFile string) <-chan Interval {
 	answer := make(chan Interval, 1000)
 	go ReadToChan(inputFile, answer)

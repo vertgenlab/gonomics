@@ -40,9 +40,9 @@ func lift(chainFile string, inFile string, outFile string, faFile string) {
 		if len(overlap) > 1 {
 			log.Fatalf("Multiple overlaps???")
 		}
-		interval.PrettyPrint(i)
+		//DEBUG: interval.PrettyPrint(i)
 		i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i))
-		interval.PrettyPrint(i)
+		//DEBUG: interval.PrettyPrint(i)
 		//special check for lifting over VCF files
 		if faFile != "" {
 			//faFile will be given if we are lifting over VCF data.

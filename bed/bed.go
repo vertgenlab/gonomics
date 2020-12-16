@@ -21,6 +21,7 @@ type Bed struct {
 	Name       string
 	Score      int64
 	Strand     bool
+	Fields int
 	Annotation []string //long form for extra fields
 }
 
@@ -99,7 +100,7 @@ func processBedLine(line string) *Bed {
 	startNum := common.StringToInt64(words[1])
 	endNum := common.StringToInt64(words[2])
 
-	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Fields: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
