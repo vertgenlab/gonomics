@@ -47,12 +47,12 @@ func main() {
 		if strings.HasSuffix(*list, ".txt") {
 			samples := fileio.Read(*list)
 
-			gvcf := vcf.GoReadGVcf(input)
+			gvcf, header := vcf.GoReadToChan(input)
 			writer := fileio.EasyCreate(output)
 
 			//write header
-			vcf.WriteMultiSamplesHeader(writer, gvcf.Header, samples)
-			vcf.ByNames(gvcf, samples, writer)
+			vcf.WriteMultiSamplesHeader(writer, header, samples)
+			vcf.ByNames(gvcf, header, samples, writer)
 
 			writer.Close()
 
