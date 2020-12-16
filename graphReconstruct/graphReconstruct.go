@@ -256,17 +256,71 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //	}
 //}
 
-//for each node of the tree, we calculate the probabilities for each edge, end by finding the most likely
-//path thru the graph and store that as the seq at that node
-//then that graph is used for calculations going up, so we need to pass the graph up the tree
 func GraphRecon(root *expandedTree.ETree, position int, graph *simpleGraph.SimpleGraph) {
 	internalNodes := expandedTree.GetBranch(root)
-	rootGraph := SetState(root, position, graph)
+	//SetState(root, position, graph) //don't want a root graph
+	//loop align columns
 	for k := 0; k < len(internalNodes); k++ {
-		//have to make a giraf?
-		seq := simpleGraph.PathToSeq( /*giraf.path, each node's graph*/ )
+		seq := PathFinder(graph)
+		//make seq a dna.Base and make the va above path
 		for i := 0; i < len(seq); i++ {
 			internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, seq[i])
 		}
 	}
+}
+
+//PathFinder finds the best path from start to finish through the graph
+func PathFinder(g *simpleGraph.SimpleGraph) []*simpleGraph.Node {
+	var path []*simpleGraph.Node
+	var same = true
+
+	for i := 0; i < len(g.Nodes); i++ {
+		in := len(g.Nodes[i].Prev)
+		if in == 0 {
+			path = append(path, g.Nodes[i])
+		} else if in == 1 {
+			path = append(path, g.Nodes[i])
+
+		} else if in > 1 { //finds a node where multiple paths converge
+			returnPath := findBestPath(g, i)
+			for l := 0; l < len(returnPath); l++ {
+				for p := 0; p < len(path); p++ {
+					if path[p].Id == returnPath[l].Id {
+						same = true
+					} else if path[p].Id != returnPath[l].Id {
+						same = false
+					}
+				}
+				if same == false {
+					path = append(path, returnPath[l])
+				}
+			}
+
+		} else {
+			log.Fatal("unknown number of edges leading to this node")
+		}
+	}
+	return path
+}
+
+//findBestPath finds the most likely path when there is a divergence in the graph where multiple paths are possible, over the entire length of the divergence
+func findBestPath(graph *simpleGraph.SimpleGraph, n int) []*simpleGraph.Node {
+	var possiblePaths map[int][]*simpleGraph.Node
+	var simplePath []*simpleGraph.Node
+	var divergence = false
+
+	for k := 0; k < n; k++ {
+		out := len(graph.Nodes[k].Next)
+		if out == 1 {
+			divergence = false
+		} else if out < 1 {
+			divergence = true
+		}
+		if divergence {
+			possiblePaths = make(map[int][]*simpleGraph.Node, out)
+
+		}
+	}
+
+	return simplePath
 }
