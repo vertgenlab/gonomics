@@ -4,6 +4,7 @@ package psl
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 	"strings"
 )
 
@@ -37,18 +38,14 @@ type PslReader struct {
 	Reader  *fileio.SimpleReader
 	curr    Psl
 	columns []string
-	err     bool
+	done    bool
 }
 
 // NewPslReader will open a given text file and return a pointer to a PslReader struct.
 func NewPslReader(filename string) *PslReader {
-	var fields []string
-	var done bool
 	return &PslReader{
-		Reader:  fileio.NewSimpleReader(filename),
-		curr:    Psl{},
-		columns: fields,
-		err:     done,
+		Reader: fileio.NewSimpleReader(filename),
+		curr:   Psl{},
 	}
 }
 
@@ -56,7 +53,9 @@ func NewPslReader(filename string) *PslReader {
 func Read(filename string) []Psl {
 	var ans []Psl
 	reader := NewPslReader(filename)
-	for curr, err := pslLine(reader); !err; curr, err = pslLine(reader) {
+	// done is a flag that tells up if we finished reading the psl
+	// io.EOF already handled in the fileio.ReadLine() function
+	for curr, done := pslLine(reader); !done; curr, done = pslLine(reader) {
 		ans = append(ans, *curr)
 	}
 	return ans
@@ -64,38 +63,46 @@ func Read(filename string) []Psl {
 
 // pslLine is a helper function which assigns data fields and return a pointer to a Psl.
 func pslLine(reader *PslReader) (*Psl, bool) {
-	reader.Reader.Buffer, reader.err = fileio.ReadLine(reader.Reader)
-	if !reader.err {
+	// done is a flag that tells up if we finished reading the psl
+	// io.EOF already handled in the fileio.ReadLine() function
+	var done bool
+	reader.Reader.Buffer, done = fileio.ReadLine(reader.Reader)
+	if !done {
 		if reader.Reader.Buffer.Bytes()[0] == '#' {
-			reader.Reader.Buffer, reader.err = fileio.ReadLine(reader.Reader)
-			if reader.err {
-				return nil, reader.err
+			// Buffer will advance to the next line if there is a hash tag at the beginning of the line
+			reader.Reader.Buffer, done = fileio.ReadLine(reader.Reader)
+			if done {
+				return nil, true
 			}
 		}
 		reader.columns = strings.Split(reader.Reader.Buffer.String(), "\t")
-
-		reader.curr.Match = common.StringToInt(reader.columns[0])
-		reader.curr.MisMatch = common.StringToInt(reader.columns[1])
-		reader.curr.RepeatMatch = common.StringToInt(reader.columns[2])
-		reader.curr.Ns = common.StringToInt(reader.columns[3])
-		reader.curr.QNumIns = common.StringToInt(reader.columns[4])
-		reader.curr.QBaseIns = common.StringToInt(reader.columns[5])
-		reader.curr.TNumIns = common.StringToInt(reader.columns[6])
-		reader.curr.TBaseIns = common.StringToInt(reader.columns[7])
-		reader.curr.Strand = reader.columns[8]
-		reader.curr.QName = reader.columns[9]
-		reader.curr.QSize = common.StringToInt(reader.columns[10])
-		reader.curr.QStart = common.StringToInt(reader.columns[11])
-		reader.curr.QEnd = common.StringToInt(reader.columns[12])
-		reader.curr.TName = reader.columns[13]
-		reader.curr.TSize = common.StringToInt(reader.columns[14])
-		reader.curr.TStart = common.StringToInt(reader.columns[15])
-		reader.curr.TEnd = common.StringToInt(reader.columns[16])
-		reader.curr.BlockCount = common.StringToInt(reader.columns[17])
-		reader.curr.BlockSize = fileio.StringToIntSlice(reader.columns[18])
-		reader.curr.QList = fileio.StringToIntSlice(reader.columns[19])
-		reader.curr.TList = fileio.StringToIntSlice(reader.columns[20])
-		return &reader.curr, false
+		if len(reader.columns) == 21 {
+			reader.curr.Match = common.StringToInt(reader.columns[0])
+			reader.curr.MisMatch = common.StringToInt(reader.columns[1])
+			reader.curr.RepeatMatch = common.StringToInt(reader.columns[2])
+			reader.curr.Ns = common.StringToInt(reader.columns[3])
+			reader.curr.QNumIns = common.StringToInt(reader.columns[4])
+			reader.curr.QBaseIns = common.StringToInt(reader.columns[5])
+			reader.curr.TNumIns = common.StringToInt(reader.columns[6])
+			reader.curr.TBaseIns = common.StringToInt(reader.columns[7])
+			reader.curr.Strand = reader.columns[8]
+			reader.curr.QName = reader.columns[9]
+			reader.curr.QSize = common.StringToInt(reader.columns[10])
+			reader.curr.QStart = common.StringToInt(reader.columns[11])
+			reader.curr.QEnd = common.StringToInt(reader.columns[12])
+			reader.curr.TName = reader.columns[13]
+			reader.curr.TSize = common.StringToInt(reader.columns[14])
+			reader.curr.TStart = common.StringToInt(reader.columns[15])
+			reader.curr.TEnd = common.StringToInt(reader.columns[16])
+			reader.curr.BlockCount = common.StringToInt(reader.columns[17])
+			reader.curr.BlockSize = fileio.StringToIntSlice(reader.columns[18])
+			reader.curr.QList = fileio.StringToIntSlice(reader.columns[19])
+			reader.curr.TList = fileio.StringToIntSlice(reader.columns[20])
+			return &reader.curr, false
+		} else {
+			log.Fatalf("Error: number of columns do not equal 21...\n")
+			return nil, true
+		}
 	} else {
 		return nil, true
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"io"
 	"log"
-	"os"
 	"strings"
 )
 
@@ -21,7 +20,7 @@ const (
 // and a pointer to os.File for closeure when reading is complete.
 type SimpleReader struct {
 	*bufio.Reader
-	file   *os.File
+	close  func() error
 	line   []byte
 	Buffer *bytes.Buffer
 }
@@ -36,18 +35,19 @@ func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 // SimpleReader will prcoess gzipped files accordinging by performing a check on the suffix
 // of the provided file.
 func NewSimpleReader(filename string) *SimpleReader {
+	file := MustOpen(filename)
 	var answer SimpleReader = SimpleReader{
-		file:   MustOpen(filename),
 		line:   make([]byte, defaultBufSize),
+		close:  file.Close,
 		Buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		gzipReader, err := gzip.NewReader(answer.file)
+		gzipReader, err := gzip.NewReader(file)
 		common.ExitIfError(err)
 		answer.Reader = bufio.NewReader(gzipReader)
 	default:
-		answer.Reader = bufio.NewReader(answer.file)
+		answer.Reader = bufio.NewReader(file)
 	}
 	return &answer
 }
@@ -89,8 +89,7 @@ func CatchErrThrowEOF(err error) {
 // Close will return an error if it has already been called.
 func (reader *SimpleReader) Close() {
 	if reader != nil {
-		err := reader.file.Close()
-		common.ExitIfError(err)
+		common.ExitIfError(reader.close())
 	}
 }
 
