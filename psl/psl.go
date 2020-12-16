@@ -65,13 +65,12 @@ func Read(filename string) []Psl {
 func pslLine(reader *PslReader) (*Psl, bool) {
 	// done is a flag that tells up if we finished reading the psl
 	// io.EOF already handled in the fileio.ReadLine() function
-	var done bool
-	reader.Reader.Buffer, done = fileio.ReadLine(reader.Reader)
-	if !done {
+	reader.Reader.Buffer, reader.done = fileio.ReadLine(reader.Reader)
+	if !reader.done {
 		if reader.Reader.Buffer.Bytes()[0] == '#' {
 			// Buffer will advance to the next line if there is a hash tag at the beginning of the line
-			reader.Reader.Buffer, done = fileio.ReadLine(reader.Reader)
-			if done {
+			reader.Reader.Buffer, reader.done = fileio.ReadLine(reader.Reader)
+			if reader.done {
 				return nil, true
 			}
 		}
