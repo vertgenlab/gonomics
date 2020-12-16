@@ -2,9 +2,9 @@
 package psl
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"strings"
 )
 
@@ -93,34 +93,13 @@ func pslLine(reader *PslReader) (*Psl, bool) {
 		reader.curr.TStart = common.StringToInt(reader.columns[15])
 		reader.curr.TEnd = common.StringToInt(reader.columns[16])
 		reader.curr.BlockCount = common.StringToInt(reader.columns[17])
-		reader.curr.BlockSize = stringToInts(reader.columns[18])
-		reader.curr.QList = stringToInts(reader.columns[19])
-		reader.curr.TList = stringToInts(reader.columns[20])
+		reader.curr.BlockSize = numbers.StringToInts(reader.columns[18])
+		reader.curr.QList = numbers.StringToInts(reader.columns[19])
+		reader.curr.TList = numbers.StringToInts(reader.columns[20])
 		return &reader.curr, false
 	} else {
 		return nil, true
 	}
-}
-
-// stringToInts will process a column of bytes and convert the slice into a slice of type int.
-func stringToInts(column string) []int {
-	work := strings.Split(column, ",")
-	var answer []int = make([]int, len(work))
-	for i := 0; i < len(work)-1; i++ {
-		answer[i] = common.StringToInt(work[i])
-	}
-	return answer
-}
-
-// intListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
-func intListToString(nums []int) string {
-	ans := strings.Builder{}
-	ans.Grow(2 * len(nums))
-	for i := 0; i < len(nums); i++ {
-		ans.WriteString(fmt.Sprintf("%d", nums[i]))
-		ans.WriteByte(',')
-	}
-	return ans.String()
 }
 
 // ToString will print a Psl struct to a human readable string.
@@ -162,10 +141,10 @@ func ToString(p *Psl) string {
 	answer.WriteByte('\t')
 	answer.WriteString(fileio.IntToString(p.BlockCount))
 	answer.WriteByte('\t')
-	answer.WriteString(intListToString(p.BlockSize))
+	answer.WriteString(numbers.IntListToString(p.BlockSize))
 	answer.WriteByte('\t')
-	answer.WriteString(intListToString(p.QList))
+	answer.WriteString(numbers.IntListToString(p.QList))
 	answer.WriteByte('\t')
-	answer.WriteString(intListToString(p.TList))
+	answer.WriteString(numbers.IntListToString(p.TList))
 	return answer.String()
 }
