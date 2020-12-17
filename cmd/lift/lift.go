@@ -16,7 +16,9 @@ import (
 const Verbose int = 0
 
 func lift(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64) {
-	//TODO: minMatch must be between 0 and 1
+	if minMatch < 0.0 || minMatch > 1.0 {
+		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", minMatch)
+	}
 	//first task, make tree from chainFile
 	chainChan, _ := chain.GoReadToChan(chainFile)
 	var chainIntervals []interval.Interval
@@ -68,11 +70,11 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 				//first question: does the "Ref" match the destination fa at this position.
 				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Ref)) {
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt)) && Verbose > 0 {
+					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
 						log.Printf("For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 					}
 				//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
-				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt)) {
+				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt[0])) {
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					i.WriteToFileHandle(un)
 					vcf.InvertVcf(currVcf)
