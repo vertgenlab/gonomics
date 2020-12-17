@@ -37,7 +37,7 @@ func (reader *SimpleReader) Read(b []byte) (n int, err error) {
 func NewSimpleReader(filename string) *SimpleReader {
 	file := MustOpen(filename)
 	var answer SimpleReader = SimpleReader{
-		line:   make([]byte, defaultBufSize),
+		//line:   make([]byte, defaultBufSize*2),
 		close:  file.Close,
 		Buffer: &bytes.Buffer{},
 	}
@@ -58,26 +58,22 @@ func NewSimpleReader(filename string) *SimpleReader {
 // reader will call close on the file once the reader encounters EOF.
 func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
-	reader.line = reader.line[:0]
 	reader.line, err = reader.ReadSlice('\n')
 	reader.Buffer.Reset()
 	if err == nil {
 		if reader.line[len(reader.line)-1] == '\n' {
-			BytesToBuffer(reader)
-			return reader.Buffer, false
+			return BytesToBuffer(reader), false
 		} else {
 			log.Fatalf("Error: end of line did not end with an end of line character...\n")
 		}
-	} else if err == bufio.ErrBufferFull {
-		// if the bufio buffer is full everything currently in the buffer will need to be process
-		BytesToBuffer(reader)
-		// now we finish feading the rest of the line
-		reader.line = readMore(reader)
-		// process the rest of the data into the buffer and return it.
-		BytesToBuffer(reader)
-		return reader.Buffer, false
 	} else {
-		CatchErrThrowEOF(err)
+		if err == bufio.ErrBufferFull {
+			reader.line = readMore(reader)
+			return BytesToBuffer(reader), false
+		} else {
+			CatchErrThrowEOF(err)
+			reader.Close()
+		}
 	}
 	return nil, true
 }
@@ -86,10 +82,20 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 // avoid alocating too much memory upfront and only resize the size of the buffer
 // only when necessary.
 func readMore(reader *SimpleReader) []byte {
-	var err error
-	reader.line, err = reader.ReadBytes('\n')
-	CatchErrThrowEOF(err)
-	return reader.Buffer.Bytes()
+	_, err := reader.Buffer.Write(reader.line)
+	common.ExitIfError(err)
+	reader.line, err = reader.ReadSlice('\n')
+	if err == nil {
+		return reader.line
+	}
+	if err == bufio.ErrBufferFull {
+		_, err = reader.Buffer.Write(reader.line)
+		common.ExitIfError(err)
+		// recursive call to read next bytes until reaching end of line character
+		return readMore(reader)
+	}
+	common.ExitIfError(err)
+	return reader.line
 }
 
 // CatchErrThrowEOF will silently handles and throws the EOF error and will log and exit any other errors.
@@ -101,9 +107,10 @@ func CatchErrThrowEOF(err error) {
 	}
 }
 
-func BytesToBuffer(reader *SimpleReader) {
+func BytesToBuffer(reader *SimpleReader) *bytes.Buffer {
 	_, err := reader.Buffer.Write(reader.line[:len(reader.line)-1])
 	common.ExitIfError(err)
+	return reader.Buffer
 }
 
 // Close closes the File, rendering it unusable for I/O. On files that support SetDeadline,

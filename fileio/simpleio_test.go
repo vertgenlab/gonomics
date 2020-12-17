@@ -16,6 +16,18 @@ func TestSimpleReader(t *testing.T) {
 	}
 }
 
+func TestLineExceedsDefaultBufferSize(t *testing.T) {
+	answer := ezReaderTest("testdata/longlined.vcf")
+	reader := NewSimpleReader("testdata/longlined.vcf")
+	var i int = 0
+	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
+		if line.String() != answer[i] {
+			t.Errorf("Error: line did not match easy reader...\n")
+		}
+		i++
+	}
+}
+
 func BenchmarkSimpleReader(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
