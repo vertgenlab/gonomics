@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/numbers"
 	"path"
 )
 
@@ -63,9 +64,25 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 	close(send)
 }
 
+//matchOverlapLen returns the number of bases shared between two start and end points. Used in MatchProportion.
+func matchOverlapLen(start1 int, end1 int, start2 int,  end2 int) int {
+	return numbers.Max(0, numbers.Min(end1, end2)-numbers.Max(start1, start2))
+}
+
 //match proportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ)
-func MatchProportion(c []*chain.Chain, i Interval) (float64, float64) {
-	return 0.0, 0.0
+func MatchProportion(c *chain.Chain, i Interval) (float64, float64) {
+	var match, dT, dQ int = 0, 0, 0
+	var currPos int = c.TStart//starting with strand +/+ case for now.
+	for j := 0; j < len(c.Alignment); j++ {
+		match += matchOverlapLen(currPos, currPos + c.Alignment[j].Size, i.GetChromStart(), i.GetChromEnd())
+		currPos += c.Alignment[j].Size
+		dT += matchOverlapLen(currPos, currPos + c.Alignment[j].TBases, i.GetChromStart(), i.GetChromEnd())
+		if matchOverlapLen(currPos, currPos + c.Alignment[j].TBases, i.GetChromStart(), i.GetChromEnd()) > 0 {
+			dQ += c.Alignment[j].QBases//this handles a special case where both TBases and QBases are non-zero, as in competing non-aligned bases are present at the same location in target and query.
+		}
+		currPos += c.Alignment[j].TBases
+	}
+	return float64(match)/float64(match+dT), float64(match)/float64(match+dQ)
 }
 
 func GoReadToChan(inputFile string) <-chan Interval {
