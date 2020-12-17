@@ -21,10 +21,11 @@ func TestLineExceedsDefaultBufferSize(t *testing.T) {
 	reader := NewSimpleReader("testdata/longlined.vcf")
 	var i int = 0
 	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
-		if line.String() != answer[i] {
-			t.Errorf("Error: line did not match easy reader...\n")
+		if line.String() == answer[i] {
+			i++
+		} else {
+			t.Errorf("Error: simpleReader did not process bytes into buffer beyond the default buffer size...\n")
 		}
-		i++
 	}
 }
 
