@@ -53,24 +53,23 @@ func MultiFaToAFS(aln []*fasta.Fasta) AFS {
 
 //GvcfToAFS reads in a Gvcf file, parses the genotype information, and constructs an AFS struct.
 //TODO: This function will change when we update the gVCF stuff.
-func GVCFToAFS(filename string) AFS {
+func VcfToAFS(filename string) AFS {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
-	alpha := vcf.GoReadGVcf(filename)
+	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
 	var j int
-	for i := range alpha.Vcfs {
+	for i := range alpha {
 		currentSeg = &SegSite{i: 0, n: 0}
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-		if !strings.ContainsAny(i.Alt, "<>") {
-			g := vcf.VcfToGvcf(i)
-			for j = 0; j < len(g.Genotypes); j++ {
-				if g.Genotypes[j].AlleleOne != -1 && g.Genotypes[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
+		if !strings.ContainsAny(i.Alt[0], "<>") {//By definition, segregting sites are biallelic, so we only check the first entry in Alt.
+			for j = 0; j < len(i.Samples); j++ {
+				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
 					currentSeg.n = currentSeg.n + 2
-					if g.Genotypes[j].AlleleOne > 0 {
+					if i.Samples[j].AlleleOne > 0 {
 						currentSeg.i++
 					}
-					if g.Genotypes[j].AlleleTwo > 0 {
+					if i.Samples[j].AlleleTwo > 0 {
 						currentSeg.i++
 					}
 				}
@@ -164,8 +163,8 @@ func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) floa
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
 func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
 	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
-	//check if n has already been seen
-	for j := 1; j < n-1; j++ {
+	// j loops over all possible values of i
+	for j := 1; j < n; j++ {
 		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomMap))
 	}
 	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, binomMap), denominator)
@@ -174,7 +173,8 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
 func AFSLikelihood(afs AFS, alpha []float64, binomMap [][]float64) float64 {
 	var answer float64 = 0.0
-	for j := 1; j < len(afs.sites); j++ {
+	// loop over all segregating sites
+	for j := 0; j < len(afs.sites); j++ {
 		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomMap))
 	}
 	return answer

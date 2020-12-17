@@ -6,42 +6,33 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-type LinkedRead struct {
+type TenXPair struct {
 	Fwd *Fastq
 	Rev *Fastq
 	Bx  []dna.Base
 	Umi []dna.Base
 }
 
-func ReadToChanLinked(fileOne string, fileTwo string, tenXg chan<- *LinkedRead) {
+func ReadToChanTenXPair(fileOne string, fileTwo string, barcodeLength int, umiLength int, tenXg chan<- *TenXPair) {
 	fwd, rev := fileio.EasyOpen(fileOne), fileio.EasyOpen(fileTwo)
 	defer fwd.Close()
 	defer rev.Close()
 
-	for curr, done := NextSeq(fwd, rev); !done; curr, done = NextSeq(fwd, rev) {
-		tenXg <- curr
+	for curr, done := NextFastqPair(fwd, rev); !done; curr, done = NextFastqPair(fwd, rev) {
+		tenXg <- FastqPairToTenXPair(curr, barcodeLength, umiLength)
 	}
 	close(tenXg)
-}
-
-func NextSeq(fwdReader *fileio.EasyReader, revReader *fileio.EasyReader) (*LinkedRead, bool) {
-	curr, done := NextFastqPair(fwdReader, revReader)
-	if done {
-		return nil, true
-	}
-	return FastqPairLinked(curr), false
 }
 
 //10x linked-read library construct are modifications only on forward or read one, read two remains unchanged:
 //1) first 16 bases: 10x barcode labeled either Bx or Rx tags
 //2) Next 6 bases is a 6 base Umi
 //3) finally adaptors and genomic sequence
+//10x scRNA-seq is also a 16bp barcode (for the cell), and then UMIs of various lengths
 //TODO: consider trimming off adapter sequences too
-//TODO: it looks like tenX is now using a 10bp UMI for scRNA-seq.  We could either make this struct
-// more general to handle both technologies, or make a new struct for the scRNA-seq data.
-func FastqPairLinked(fqPair *PairedEnd) *LinkedRead {
-	tenXG := LinkedRead{Fwd: nil, Rev: fqPair.Rev, Bx: GetBarcode(fqPair.Fwd, 0, 16), Umi: GetBarcode(fqPair.Fwd, 16, 22)}
-	tenXG.Fwd = TrimFastq(fqPair.Fwd, 22, len(fqPair.Fwd.Seq))
+func FastqPairToTenXPair(fqPair *PairedEnd, barcodeLength int, umiLength int) *TenXPair {
+	tenXG := TenXPair{Fwd: nil, Rev: fqPair.Rev, Bx: GetBarcode(fqPair.Fwd, 0, barcodeLength), Umi: GetBarcode(fqPair.Fwd, barcodeLength, barcodeLength+umiLength)}
+	tenXG.Fwd = TrimFastq(fqPair.Fwd, barcodeLength+umiLength, len(fqPair.Fwd.Seq))
 	bxTag := fmt.Sprintf("BX:%s", dna.BasesToString(tenXG.Bx))
 	tenXG.Fwd.Name = fmt.Sprintf("%s_%s", fqPair.Fwd.Name, bxTag)
 	tenXG.Rev.Name = fmt.Sprintf("%s_%s", fqPair.Rev.Name, bxTag)
@@ -93,12 +84,12 @@ func fastqStats(fq *Fastq) string {
 	return fmt.Sprintf("%s\t%d\n%s\n", fq.Name, len(fq.Seq), dna.BasesToString(fq.Seq))
 }
 
-func TenXPrettyString(lr *LinkedRead) string {
+func TenXPrettyString(lr *TenXPair) string {
 	return fmt.Sprintf("FwdRead\t%s\nFwdSeq\t%s\nFwdQual\t%s\n10xG\t%s\nUmi\t%s\nRevRead\t%s\nRevSeq\t%s\nRevQual\t%s\n", lr.Fwd.Name, dna.BasesToString(lr.Fwd.Seq), QualString(lr.Fwd.Qual), dna.BasesToString(lr.Bx), dna.BasesToString(lr.Umi), lr.Rev.Name, dna.BasesToString(lr.Rev.Seq), QualString(lr.Rev.Qual))
 }
 
 //TODO: add a more stringent test to make sure we are trimming the reads correctly
-func isLinkedRead(lr *LinkedRead) bool {
+func isLinkedRead(lr *TenXPair) bool {
 	if len(lr.Bx) != 16 {
 		return false
 	}

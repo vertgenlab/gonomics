@@ -18,7 +18,7 @@ func TestASFilter(t *testing.T) {
 	}
 	var currGt []GenomeSample
 	for i := 0; i < len(passFilter); i++ {
-		currGt = GetAlleleGenotype(passFilter[i])
+		currGt = passFilter[i].Samples
 		if IsHeterozygous(currGt[parentalOne]) || IsHeterozygous(currGt[parentalTwo]) || IsHomozygous(currGt[fOne]) {
 			t.Errorf("Error: Parental genomes should be Homozygous and F1 should be Heterozygous...\n")
 		}

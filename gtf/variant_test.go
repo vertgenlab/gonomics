@@ -13,7 +13,7 @@ func TestVcfToVariant(t *testing.T) {
 
 	inVcf.Chr = "DummyChr"
 	inVcf.Ref = "A"
-	inVcf.Alt = "C"
+	inVcf.Alt = []string{"C"}
 	inVcf.Pos = 2
 
 	inSeq["DummyChr"] = []dna.Base{dna.C, dna.A, dna.T}

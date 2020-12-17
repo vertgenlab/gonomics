@@ -6,16 +6,18 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"strings"
 	"math"
 )
 
-func vcfFilter(infile string, outfile string, chrom string, minPos int64, maxPos int64, ref string, alt string, minQual float64) {
+func vcfFilter(infile string, outfile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64) {
 	ch, _ := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
+	altSlice := strings.Split(alt, ",")
 
 	for v := range ch {
-		if vcf.Filter(v, chrom, minPos, maxPos, ref, alt, minQual) {
+		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual) {
 			vcf.WriteVcf(out.File, v)
 		}
 	}
@@ -33,8 +35,8 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
-	var minPos *int64 = flag.Int64("minPos", math.MinInt64, "Specifies the minimum position of the variant.")
-	var maxPos *int64 = flag.Int64("maxPos", math.MaxInt64, "Specifies the maximum position of the variant.")
+	var minPos *int = flag.Int("minPos", math.MinInt64, "Specifies the minimum position of the variant.")
+	var maxPos *int = flag.Int("maxPos", math.MaxInt64, "Specifies the maximum position of the variant.")
 	var minQual *float64 = flag.Float64("minQual", 0.0, "Specifies the minimum quality score.")
 	var ref *string = flag.String("ref", "", "Specifies the reference field.")
 	var alt *string = flag.String("alt", "", "Specifies the alt field.")
