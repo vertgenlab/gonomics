@@ -16,6 +16,19 @@ func TestSimpleReader(t *testing.T) {
 	}
 }
 
+func TestLineExceedsDefaultBufferSize(t *testing.T) {
+	answer := ezReaderTest("testdata/lineExceedsBufferSize.txt")
+	reader := NewSimpleReader("testdata/lineExceedsBufferSize.txt")
+	var i int = 0
+	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
+		if line.String() == answer[i] {
+			i++
+		} else {
+			t.Errorf("Error: simpleReader did not process bytes into buffer beyond the default buffer size...\n")
+		}
+	}
+}
+
 func BenchmarkSimpleReader(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
