@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -31,6 +32,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 
 	var records []*fasta.Fasta
 	var currVcf *vcf.Vcf
+	var a, b float64
 
 	if faFile != "" {
 		if !vcf.IsVcfFile(inFile) {
@@ -43,12 +45,17 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	inChan := interval.GoReadToLiftChan(inFile)
 	var overlap []interval.Interval
 	for i := range inChan {
-		overlap = interval.Query(tree, i, "within")//TODO: verify proper t/q contains
+		overlap = interval.Query(tree, i, "any")//TODO: verify proper t/q contains
 		if len(overlap) > 1 {
 			fmt.Fprintf(un, "Record below maps multiple chains:\n")
 			i.WriteToFileHandle(un)
+		} else if len(overlap) == 0 {
+			fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
+			i.WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
-			fmt.fprintf(un, "Record below fails minMatch:\n")
+			a, b = interval.MatchProportion(overlap[0].(*chain.Chain), i)
+			fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f:\n", numbers.MinFloat64(a, b))
+			fmt.Fprintf(un, "Here's the corresponding chain: Score: %d.\n", overlap[0].(*chain.Chain).Score)
 			i.WriteToFileHandle(un)
 		} else {
 			//DEBUG: interval.PrettyPrint(i)
@@ -66,6 +73,8 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 					}
 				//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
 				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt)) {
+					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
+					i.WriteToFileHandle(un)
 					vcf.InvertVcf(currVcf)
 				} else {
 					log.Fatalf("Neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.")
@@ -116,5 +125,5 @@ func main() {
 	inFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 	unMapped := flag.Arg(3)
-	lift(chainFile, inFile, outFile, *faFile, *minMatch)
+	lift(chainFile, inFile, outFile, *faFile, unMapped, *minMatch)
 }
