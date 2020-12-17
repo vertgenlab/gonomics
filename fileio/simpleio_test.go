@@ -17,8 +17,8 @@ func TestSimpleReader(t *testing.T) {
 }
 
 func TestLineExceedsDefaultBufferSize(t *testing.T) {
-	answer := ezReaderTest("testdata/longlined.vcf")
-	reader := NewSimpleReader("testdata/longlined.vcf")
+	answer := ezReaderTest("testdata/lineExceedsBufferSize.txt")
+	reader := NewSimpleReader("testdata/lineExceedsBufferSize.txt")
 	var i int = 0
 	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
 		if line.String() == answer[i] {
