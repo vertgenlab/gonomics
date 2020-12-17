@@ -60,41 +60,35 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
 	reader.line = reader.line[:0]
 	reader.line, err = reader.ReadSlice('\n')
+	reader.Buffer.Reset()
 	if err == nil {
 		if reader.line[len(reader.line)-1] == '\n' {
-			reader.Buffer.Reset()
-			_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
-			common.ExitIfError(err)
+			BytesToBuffer(reader)
 			return reader.Buffer, false
 		} else {
 			log.Fatalf("Error: end of line did not end with an end of line character...\n")
 		}
+	} else if err == bufio.ErrBufferFull {
+		// if the bufio buffer is full everything currently in the buffer will need to be process
+		BytesToBuffer(reader)
+		// now we finish feading the rest of the line
+		reader.line = readMore(reader)
+		// process the rest of the data into the buffer and return it.
+		BytesToBuffer(reader)
+		return reader.Buffer, false
 	} else {
-		if err == bufio.ErrBufferFull {
-			if reader.line[len(reader.line)-1] == '\n' {
-				reader.Buffer.Reset()
-				reader.line = reader.line[:len(reader.line)-1]
-				reader.line = append(reader.line, readMore(reader)...)
-				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
-				common.ExitIfError(err)
-				return reader.Buffer, false
-			}
-		} else {
-			CatchErrThrowEOF(err)
-			reader.Close()
-		}
+		CatchErrThrowEOF(err)
 	}
 	return nil, true
 }
 
 // readMore is a private helper function to deal with very long lines to
 // avoid alocating too much memory upfront and only resize the size of the buffer
-// only when necessary. 
+// only when necessary.
 func readMore(reader *SimpleReader) []byte {
 	var err error
 	reader.line, err = reader.ReadBytes('\n')
-	_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
-	common.ExitIfError(err)
+	CatchErrThrowEOF(err)
 	return reader.Buffer.Bytes()
 }
 
@@ -105,6 +99,11 @@ func CatchErrThrowEOF(err error) {
 	} else {
 		common.ExitIfError(err)
 	}
+}
+
+func BytesToBuffer(reader *SimpleReader) {
+	_, err := reader.Buffer.Write(reader.line[:len(reader.line)-1])
+	common.ExitIfError(err)
 }
 
 // Close closes the File, rendering it unusable for I/O. On files that support SetDeadline,
