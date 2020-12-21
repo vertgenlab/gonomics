@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/vcf"
 	"path"
+	"log"
 )
 
 type Lift interface {
@@ -69,7 +70,15 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 }
 
 func LiftIntervalWithChain(c *chain.Chain, i Lift) (string, int, int) {
-	return c.QName, chain.TPosToQPos(c, i.GetChromStart()), chain.TPosToQPos(c, i.GetChromEnd())
+	var newStart, newEnd int
+	newStart = chain.TPosToQPos(c, i.GetChromStart())
+	newEnd = chain.TPosToQPos(c, i.GetChromEnd() - 1) + 1//the minus one/plus one handles when a region ends with a structural variant and ensures correct placement of the end in the new assembly.
+	if !c.QStrand {//valid bed formats must have start < end. So this correction is made for intervals lifted to the negative strand.
+		newStart, newEnd = newEnd, newStart
+		newStart += 1//these lines are corrections for the open/closed interval start and end.
+		newEnd += 1
+	}
+	return c.QName, newStart, newEnd
 }
 
 //matchOverlapLen returns the number of bases shared between two start and end points. Used in MatchProportion.
@@ -81,6 +90,9 @@ func matchOverlapLen(start1 int, end1 int, start2 int,  end2 int) int {
 func MatchProportion(c *chain.Chain, i Interval) (float64, float64) {
 	var match, dT, dQ int = 0, 0, 0
 	var currPos int = c.TStart//starting with strand +/+ case for now.
+	if !c.TStrand {
+		log.Fatalf("Please format chain files for lift with the target in the positive strand.")
+	}
 	for j := 0; j < len(c.Alignment); j++ {
 		match += matchOverlapLen(currPos, currPos + c.Alignment[j].Size, i.GetChromStart(), i.GetChromEnd())
 		currPos += c.Alignment[j].Size
@@ -90,5 +102,10 @@ func MatchProportion(c *chain.Chain, i Interval) (float64, float64) {
 		}
 		currPos += c.Alignment[j].TBases
 	}
+	if match == 0 {
+		return 0, 0
+	}
 	return float64(match)/float64(match+dT), float64(match)/float64(match+dQ)
 }
+
+

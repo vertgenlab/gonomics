@@ -43,10 +43,14 @@ func TestLift(t *testing.T) {
 			if !bed.AllAreEqual(records, expected) {
 				t.Errorf("Error in Lift for bed.")
 			}
-			//err := os.Remove("tmp.bed")
-			//if err != nil {
-			//	common.ExitIfError(err)
-			//}
+			err := os.Remove("tmp.bed")
+			if err != nil {
+				common.ExitIfError(err)
+			}
+			err = os.Remove("tmp.unmapped")
+			if err != nil {
+				common.ExitIfError(err)
+			}
 		}
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
+	"unicode/utf8"
 )
 
 const Verbose int = 0
@@ -61,25 +62,30 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 			i.WriteToFileHandle(un)
 		} else {
 			//DEBUG: interval.PrettyPrint(i)
-			i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i))
+			i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i))//now i is 1-based and we can assert VCF.
 			//DEBUG: interval.PrettyPrint(i)
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
 				currVcf = i.(*vcf.Vcf)
+				if utf8.RuneCountInString(currVcf.Ref) > 1 {
+					log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.")//Currently we're causing INDEL records to fatal.
+				}
 				//first question: does the "Ref" match the destination fa at this position.
 				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Ref)) {
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
 					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
-						log.Printf("For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
+						fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 					}
 				//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
 				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt[0])) {
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
+					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
 					i.WriteToFileHandle(un)
 					vcf.InvertVcf(currVcf)
 				} else {
-					log.Fatalf("Neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.")
+					fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
+					i.WriteToFileHandle(un)
 				}
 			}
 			i.WriteToFileHandle(out)
