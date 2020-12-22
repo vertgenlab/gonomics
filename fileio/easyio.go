@@ -21,6 +21,9 @@ type EasyWriter struct {
 }
 
 func EasyOpen(filename string) *EasyReader {
+	if strings.Contains(filename, "http") {
+		return EasyHttp(filename)
+	}
 	answer := EasyReader{}
 	answer.File = MustOpen(filename)
 	var err error

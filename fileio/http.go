@@ -2,7 +2,6 @@ package fileio
 
 import (
 	"bufio"
-	"bytes"
 	"compress/gzip"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
@@ -10,38 +9,26 @@ import (
 	"strings"
 )
 
-// HttpReader will fetch data from files uploaded to an internet server and stream data into an io.Reader interface.
-func HttpReader(url string) *SimpleReader {
+// EasyHttp will fetch data from files uploaded to an internet server and stream data into EasyReader
+func EasyHttp(url string) *EasyReader {
+	answer := EasyReader{}
 	resp, err := http.Get(url)
 	common.ExitIfError(err)
-	var answer SimpleReader = SimpleReader{
-		Buffer: &bytes.Buffer{},
-		line:   make([]byte, defaultBufSize),
-	}
 	if strings.HasSuffix(url, ".gz") {
-		gzipReader, err := gzip.NewReader(resp.Body)
+		answer.internalGzip, err = gzip.NewReader(resp.Body)
 		common.ExitIfError(err)
-		answer.Reader = bufio.NewReader(gzipReader)
+		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
-		answer.Reader = bufio.NewReader(resp.Body)
+		answer.BuffReader = bufio.NewReader(resp.Body)
+		answer.internalGzip = nil
 	}
 	return &answer
 }
 
-// VimUrl is a basic function to procress a url link and print it out to stdout.
-func VimUrl(url string) {
-	reader := HttpReader(url)
-	for i, err := ReadLine(reader); !err; i, err = ReadLine(reader) {
-		fmt.Printf("%s\n", i.String())
+// CatUrl is a basic function to procress a url link and print it out to stdout.
+func CatUrl(url string) {
+	reader := EasyOpen(url)
+	for i, done := EasyNextLine(reader); !done; i, done = EasyNextLine(reader) {
+		fmt.Printf("%s\n", i)
 	}
-}
-
-// ReadUrl is a basic function to fetch data and read data from internet files and return a slice of strings for each line.
-func ReadUrl(url string) []string {
-	var answer []string
-	reader := HttpReader(url)
-	for i, err := ReadLine(reader); !err; i, err = ReadLine(reader) {
-		answer = append(answer, i.String())
-	}
-	return answer
 }

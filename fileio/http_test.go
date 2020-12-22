@@ -16,21 +16,21 @@ var httpTestingLookUp = []struct {
 func TestHttpReader(t *testing.T) {
 	for _, test := range httpTestingLookUp {
 		// ReadUrl is the function we are testing to see the reader is processing the lines of data correctly
-		internetData := ReadUrl(test.internet)
+		internetData := EasyOpen(test.internet)
+		var httpData []string
+		for data, done := EasyNextLine(internetData); !done; data, done = EasyNextLine(internetData) {
+			httpData = append(httpData, data)
+		}
 
-		// reading local file
-		localReader := NewSimpleReader(test.local)
-		defer localReader.Close()
+		localData := EasyOpen(test.local)
 		var index int = 0
-		// loop to read inputed local text file
-		for line, done := ReadLine(localReader); !done; line, done = ReadLine(localReader) {
-			if line.String() == internetData[index] {
-				t.Logf("%s\n", internetData[index])
+		for line, done := EasyNextLine(localData); !done; line, done = EasyNextLine(localData) {
+			if line == httpData[index] {
 				index++
+			} else {
+				t.Errorf("Error: fetching data over http did not equal local copy...\n")
 			}
 		}
-		if index != len(internetData) {
-			t.Errorf("Error: http did not read the same number of lines as the local file...\n")
-		}
+
 	}
 }
