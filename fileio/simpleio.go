@@ -54,8 +54,7 @@ func NewSimpleReader(filename string) *SimpleReader {
 
 // ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
 // the function will read one line at a time, and return bool to continue reading. Important to note the buffer return points to
-// the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied. Please be aware the
-// reader will call close on the file once the reader encounters EOF.
+// the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
 func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 	var err error
 	reader.line, err = reader.ReadSlice('\n')
@@ -72,7 +71,6 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 			return BytesToBuffer(reader), false
 		} else {
 			CatchErrThrowEOF(err)
-			reader.Close()
 		}
 	}
 	return nil, true
@@ -107,6 +105,7 @@ func CatchErrThrowEOF(err error) {
 	}
 }
 
+// BytesToBuffer will parse []byte and return a pointer to the same underlying bytes.Buffer
 func BytesToBuffer(reader *SimpleReader) *bytes.Buffer {
 	_, err := reader.Buffer.Write(reader.line[:len(reader.line)-1])
 	common.ExitIfError(err)
