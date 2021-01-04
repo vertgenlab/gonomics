@@ -65,7 +65,7 @@ type diff struct {
 type EffectPrediction struct {
 	Consequence MutationType    // Classification of mutation (see above for values)
 	CdnaPos     int             // Base-zero position in the cDNA
-	CdnaDist    int             // Distance from nearest CDS. Zero if in a CDS, >0 if 3' of CDS, <0 if 5' of CDS
+	CdnaDist    int             // Distance from nearest CDS. Zero if in a CDS, >0 if 3' of CDS, <0 if 5' of CDS.
 	AaPos       int             // Base-zero position of first changed amino acid
 	AaRef       []dna.AminoAcid // Slice of Ref amino acids (removed from protein)
 	AaAlt       []dna.AminoAcid // Slice of Alt amino acids (added to protein)

@@ -670,20 +670,111 @@ func TestInsertionEffectPrediction(t *testing.T) {
 	g := gtf.Read("testdata/test.gtf")
 	f := fasta.Read("testdata/test.fasta")
 	var err error
-	var pred EffectPrediction
+	var pred, correctPred EffectPrediction
 
 	gene := GtfToGene(g["test_gene_id"], f)
 
+	// TEST 1: cDNA Duplication
 	_, _ = Insertion(gene, 14, []dna.Base{dna.A, dna.A, dna.A, dna.T, dna.A, dna.T, dna.A, dna.T, dna.A, dna.A, dna.A, dna.A, dna.T})
-
 	pred, err = Insertion(gene, 2, []dna.Base{dna.T, dna.G, dna.C, dna.C})
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
 		}
 	}
+	correctPred.Consequence = Frameshift
+	correctPred.CdnaPos = 0
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 2
+	correctPred.AaRef = []dna.AminoAcid{dna.Stop}
+	correctPred.AaAlt = []dna.AminoAcid{dna.Ala}
+	correctPred.StopDist = 5
 
-	printEffPred(pred)
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 2: Intronic Insertion
+	pred, err = Insertion(gene, 5, []dna.Base{dna.T})
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Splice
+	correctPred.CdnaPos = 2
+	correctPred.CdnaDist = 2
+	correctPred.AaPos = 0
+	correctPred.AaRef = nil
+	correctPred.AaAlt = nil
+	correctPred.StopDist = -1
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 3: Single Base Insertion Causing Frameshift
+	pred, err = Insertion(gene, 7, []dna.Base{dna.A})
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Frameshift
+	correctPred.CdnaPos = 3
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 1
+	correctPred.AaRef = []dna.AminoAcid{dna.Pro}
+	correctPred.AaAlt = []dna.AminoAcid{dna.His}
+	correctPred.StopDist = -2
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 4: In-frame Insertion
+	pred, err = Insertion(gene, 3, []dna.Base{dna.A, dna.A, dna.A})
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = InFrameInsertion
+	correctPred.CdnaPos = 1
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 0
+	correctPred.AaRef = []dna.AminoAcid{dna.Met}
+	correctPred.AaAlt = []dna.AminoAcid{dna.Ile, dna.Lys}
+	correctPred.StopDist = -1
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 5: Frameshift with stop across exons
+	_, _ = Insertion(gene, 7, []dna.Base{dna.T, dna.A, dna.A})
+	pred, err = Insertion(gene, 2, []dna.Base{dna.C, dna.C})
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Frameshift
+	correctPred.CdnaPos = 0
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 0
+	correctPred.AaRef = []dna.AminoAcid{dna.Met}
+	correctPred.AaAlt = []dna.AminoAcid{dna.Thr}
+	correctPred.StopDist = 2
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
 }
 
 // for manual testing
@@ -710,6 +801,10 @@ func printEffPred(pred EffectPrediction) {
 		consequence = "DisruptStart"
 	case DisruptStop:
 		consequence = "DisruptStop"
+	case InFrameInsertion:
+		consequence = "InFrameInsertion"
+	case InFrameDeletion:
+		consequence = "InFrameDeletion"
 	}
 	fmt.Printf("Consequence: %s\n", consequence)
 	fmt.Printf("cDNA Pos: %d%+d\n", pred.CdnaPos, pred.CdnaDist)
@@ -717,6 +812,49 @@ func printEffPred(pred EffectPrediction) {
 	fmt.Printf("AaRef: %s\n", dna.PolypeptideToString(pred.AaRef))
 	fmt.Printf("AaAlt: %s\n", dna.PolypeptideToString(pred.AaAlt))
 	fmt.Printf("StopDist: %d\n", pred.StopDist)
+}
+
+func equalPred(alpha, beta *EffectPrediction) (bool, error) {
+	if alpha.Consequence != beta.Consequence {
+		return false, errors.New("Consequence")
+	}
+
+	if alpha.CdnaPos != beta.CdnaPos {
+		return false, errors.New("CdnaPos")
+	}
+
+	if alpha.AaPos != beta.AaPos {
+		return false, errors.New("AaPos")
+	}
+
+	if alpha.StopDist != beta.StopDist {
+		return false, errors.New("StopDist")
+	}
+
+	if alpha.CdnaDist != beta.CdnaDist {
+		return false, errors.New("CdnaDist")
+	}
+
+	if len(alpha.AaRef) != len(beta.AaRef) {
+		return false, errors.New("AaRef")
+	}
+
+	for idx, val := range alpha.AaRef {
+		if val != beta.AaRef[idx] {
+			return false, errors.New("cdsAaRefStarts")
+		}
+	}
+
+	if len(alpha.AaAlt) != len(beta.AaAlt) {
+		return false, errors.New("AaAlt")
+	}
+
+	for idx, val := range alpha.AaAlt {
+		if val != beta.AaAlt[idx] {
+			return false, errors.New("AaAlt")
+		}
+	}
+	return true, nil
 }
 
 //TODO Deletion EffectPred tests

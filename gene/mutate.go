@@ -93,7 +93,6 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 	return answer, nil
 }
 
-//TODO EffectPrediction
 // Insertion adds bases to the Gene, predicts the effect, and updates the Gene struct to reflect the change.
 // The position should be the base-zero genomic coordinate of the base directly BEFORE the inserted bases.
 func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error) {
@@ -175,8 +174,8 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 			}
 		}
 
-		//TODO: Effect Prediction WIP
 		answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos+1)
+		answer.CdnaPos-- // Subtract 1 to get base zero
 		frame := (cdnaPos + 1) % 3
 		var currCodon dna.Codon
 
@@ -188,7 +187,6 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		// Update cDNA
 		g.cdnaSeq = dna.Insert(g.cdnaSeq, int64(cdnaPos+1), alt)
 
-		//TODO: Effect Prediction WIP
 		answer.AaPos = cdnaPos / 3
 
 		if len(alt)%3 != 0 { // Causes Frameshift // TODO this is a bit jury rigged, but it works.
@@ -268,7 +266,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		for i := 0; i < len(alt); i++ {
 			g.featureArray[genomeIndexPos+1+i] = fillVal
 		}
-		//TODO: Effect Prediction WIP
+
 		var endCdnaOffset int
 		answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos+1)
 		_, endCdnaOffset, err = GenomicPosToCdna(g, genomePos+1+(len(alt)-1))
@@ -430,6 +428,9 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	} else {
 		for g.featureArray[j] < 0 {
 			j++ // move to first cdsBase
+			if j > len(g.featureArray)-1 {
+				break
+			}
 		}
 	}
 	for _, val := range g.cdsStarts {
