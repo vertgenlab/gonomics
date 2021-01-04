@@ -13,7 +13,7 @@ var input = []struct {
 	newickFilename string // first input
 	length         int    // second input
 }{
-	{"newTestFiles/newickLongBranches.txt", 1005},
+	{"testdata/newickLongBranches.txt", 1005},
 }
 
 func Test_reconstruct(t *testing.T) {
