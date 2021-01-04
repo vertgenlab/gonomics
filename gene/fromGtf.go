@@ -118,5 +118,6 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 	copy(answer.orig.cdnaSeq, answer.cdnaSeq)
 	answer.orig.featureArray = make([]Feature, len(answer.featureArray))
 	copy(answer.orig.featureArray, answer.featureArray)
+	answer.protSeq = dna.TranslateSeq(answer.cdnaSeq)
 	return answer
 }

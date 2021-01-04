@@ -31,16 +31,17 @@ const (
 // Gene is a processed version of a gtf record that enables easy
 // traversal and manipulation of genes on the genomic and mRNA levels.
 type Gene struct {
-	id           string       // Identifier for the transcript the Gene is derived from. In GTF this is the GeneID field.
-	startPos     int          // Genomic start position of the gene. This should use the coordinate system of the reference fasta, rather than Gene internal genomic coordinates
-	posStrand    bool         // True if gene is on the positive strand, False if on negative strand.
-	cdsStarts    []int        // The start position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
-	cdsEnds      []int        // The end position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
-	genomeSeq    []dna.Base   // The genomic sequence of the gene from 5' to 3'. NOTE: This field is reverse complemented relative to reference file if the gene is on the negative strand
-	cdnaSeq      []dna.Base   // The cDNA sequence of the gene from 5' to 3'.
-	featureArray []Feature    // FeatureArray is a slice with len(featureArray) = len(genomeSeq). The index of featureArray corresponds to the same index of genomeSeq. featureArray denotes the features listed above as negative values, or the cDNA pos using all values > 0.
-	orig         goGeneBackup // Copy of initial Gene state to enable the Reset() function.
-	changeLog    []diff       // Log of any mutations that have been performed on the Gene to enable the Reset() function.
+	id           string          // Identifier for the transcript the Gene is derived from. In GTF this is the GeneID field.
+	startPos     int             // Genomic start position of the gene. This should use the coordinate system of the reference fasta, rather than Gene internal genomic coordinates
+	posStrand    bool            // True if gene is on the positive strand, False if on negative strand.
+	cdsStarts    []int           // The start position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
+	cdsEnds      []int           // The end position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
+	genomeSeq    []dna.Base      // The genomic sequence of the gene from 5' to 3'. NOTE: This field is reverse complemented relative to reference file if the gene is on the negative strand
+	cdnaSeq      []dna.Base      // The cDNA sequence of the gene from 5' to 3'.
+	protSeq      []dna.AminoAcid // The polypeptide sequence resulting from the cDNA.
+	featureArray []Feature       // FeatureArray is a slice with len(featureArray) = len(genomeSeq). The index of featureArray corresponds to the same index of genomeSeq. featureArray denotes the features listed above as negative values, or the cDNA pos using all values > 0.
+	orig         goGeneBackup    // Copy of initial Gene state to enable the Reset() function.
+	changeLog    []diff          // Log of any mutations that have been performed on the Gene to enable the Reset() function.
 }
 
 // goGeneBackup stores the initial state of a GoGene to enable Reset() functionality.
@@ -68,6 +69,7 @@ type EffectPrediction struct {
 	AaPos       int             // Base-zero position of first changed amino acid
 	AaRef       []dna.AminoAcid // Slice of Ref amino acids (removed from protein)
 	AaAlt       []dna.AminoAcid // Slice of Alt amino acids (added to protein)
+	StopDist    int             // Distance to stop codon. This value is filled if and only if it changes as a result of the mutation. Value is -1 if unchanged and -2 if the new stop codon is beyond the bounds of the original gene.
 }
 
 // GenomicToCdna converts genomic coordinates to cDNA coordinates. The return format is c.100+10 (HGVS).

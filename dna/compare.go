@@ -1,8 +1,13 @@
 package dna
 
 import (
+	"errors"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
+)
+
+var (
+	ErrNonStandardBase = errors.New("all alt bases must be A, C, T, or G")
 )
 
 func compareBases(alpha Base, beta Base, ignoreCase bool) int {

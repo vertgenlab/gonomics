@@ -7,11 +7,16 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
+var (
+	ErrNoStopFound = errors.New("frameshift was unable to find a stop before the end of the gene")
+)
+
 // PointMutation changes a single nucleotide to the desired base, predicts the effect,
 // and updates the Gene struct to reflect the change.
 // The position of the mutation should be given in base-zero genomic coordinates.
 func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
+	answer.StopDist = -1
 	var log diff
 	var err error
 
@@ -69,8 +74,10 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 		} else {
 			if answer.AaAlt[0] == dna.Stop {
 				answer.Consequence = Nonsense
+				answer.StopDist = 0
 			} else if answer.AaRef[0] == dna.Stop {
 				answer.Consequence = DisruptStop
+				//TODO calculate dist to new stop
 			} else if answer.AaPos == 0 {
 				answer.Consequence = DisruptStart
 			} else {
@@ -82,7 +89,7 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 		common.ExitIfError(err)
 		answer.Consequence = checkSplice(answer.CdnaDist)
 	}
-
+	g.protSeq = dna.TranslateSeq(g.cdnaSeq) // TODO improve efficiency by updating the protein as changes are made
 	return answer, nil
 }
 
@@ -91,6 +98,7 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 // The position should be the base-zero genomic coordinate of the base directly BEFORE the inserted bases.
 func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
+	answer.StopDist = -1
 	var log diff
 	var genomeIndexPos int
 	var err error
@@ -101,7 +109,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 	copy(log.added, alt)
 
 	if !dna.IsSeqOfACTG(alt) {
-		return answer, errors.New("all alt bases must be A, C, T, or G")
+		return answer, dna.ErrNonStandardBase
 	}
 
 	if genomePos < 0 {
@@ -168,58 +176,87 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		}
 
 		//TODO: Effect Prediction WIP
-		//answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos + 1)
-		//frame := (cdnaPos + 1) % 3
-		//var currCodon dna.Codon
-		//
-		//if frame != 0 { // if insertion disrupts a codon, note the codon being changed
-		//	currCodon, err = CdnaPosToCodon(g, cdnaPos)
-		//	answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(&currCodon)}
-		//}
+		answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos+1)
+		frame := (cdnaPos + 1) % 3
+		var currCodon dna.Codon
+
+		if frame != 0 { // if insertion disrupts a codon, note the codon being changed
+			currCodon, err = CdnaPosToCodon(g, cdnaPos)
+			answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(&currCodon)}
+		}
 
 		// Update cDNA
 		g.cdnaSeq = dna.Insert(g.cdnaSeq, int64(cdnaPos+1), alt)
 
 		//TODO: Effect Prediction WIP
-		//answer.AaPos = cdnaPos / 3
-		//
-		//if len(alt) % 3 != 0 { // Causes Frameshift // TODO this is a bit jury rigged, but it works....
-		//	answer.Consequence = Frameshift
-		//	currCodon, err = CdnaPosToCodon(g, cdnaPos + 1)
-		//	var stopFound bool = true
-		//	for currCdnaPos := cdnaPos + 1 + 3; dna.TranslateCodon(&currCodon) != dna.Stop; currCdnaPos += 3 {
-		//		answer.AaAlt = append(answer.AaAlt, dna.TranslateCodon(&currCodon))
-		//		if currCdnaPos + (3 - frame) > len(g.cdnaSeq) { // if do dont hit a stop by the end of the cdnaSeq, then move to genomic DNA
-		//			currGdnaPos := g.cdsEnds[len(g.cdsEnds)-1] + 1 - frame
-		//			for ;dna.TranslateSeq(g.genomeSeq[currGdnaPos:currGdnaPos + 3])[0] != dna.Stop; currGdnaPos += 3 {
-		//				answer.AaAlt = append(answer.AaAlt, dna.TranslateSeq(g.genomeSeq[currGdnaPos:currGdnaPos + 3])[0])
-		//				if currGdnaPos + 3 > len(g.genomeSeq) {
-		//					stopFound = false
-		//					err = errors.New("frameshift was unable to find a stop before the end of the gene")
-		//					break
-		//				}
-		//			}
-		//			break
-		//		} else {
-		//			currCodon, err = CdnaPosToCodon(g, currCdnaPos)
-		//		}
-		//	}
-		//	if stopFound {
-		//		answer.AaAlt = append(answer.AaAlt, dna.Stop)
-		//	}
-		//} else { // In-Frame
-		//	answer.Consequence = InFrameInsertion
-		//	if frame != 0 { // Disrupts an existing codon
-		//		answer.AaAlt = dna.TranslateSeq(g.cdnaSeq[(cdnaPos + 1) - frame : (cdnaPos + 1) + len(alt) + (3 - frame)])
-		//		if answer.AaRef[0] == answer.AaAlt[0] {
-		//			answer.AaRef = nil
-		//			answer.AaAlt = answer.AaAlt[1:]
-		//			answer.AaPos++
-		//		}
-		//	} else { // Does not disrupt existing codons AND is inframe
-		//		answer.AaAlt = dna.TranslateSeq(alt)
-		//	}
-		//}
+		answer.AaPos = cdnaPos / 3
+
+		if len(alt)%3 != 0 { // Causes Frameshift // TODO this is a bit jury rigged, but it works.
+			answer.StopDist = 0
+			answer.Consequence = Frameshift
+			currCodon, err = CdnaPosToCodon(g, cdnaPos+1)
+			//var stopFound bool = true
+			answer.AaAlt = dna.TranslateSeq(g.cdnaSeq[(cdnaPos+1)-frame : (cdnaPos+1)+len(alt)+(3-frame)])
+			var tmpCodon dna.Codon
+
+			for currCdnaPos := cdnaPos + 1 + 3; dna.TranslateCodon(&currCodon) != dna.Stop; currCdnaPos += 3 {
+				if answer.AaRef[0] == answer.AaAlt[0] {
+					answer.AaPos++
+					answer.AaRef[0] = g.protSeq[answer.AaPos]
+					answer.AaAlt = answer.AaAlt[1:]
+					if len(answer.AaAlt) == 0 {
+						tmpCodon, err = CdnaPosToCodon(g, currCdnaPos)
+						answer.AaAlt = append(answer.AaAlt, dna.TranslateCodon(&tmpCodon))
+					}
+				} else {
+					answer.StopDist++
+				}
+				//answer.AaAlt = append(answer.AaAlt, dna.TranslateCodon(&currCodon))
+				if currCdnaPos+(3-frame) > len(g.cdnaSeq) { // if you don't hit a stop by the end of the cdnaSeq, then move to genomic DNA
+					currGdnaPos := g.cdsEnds[len(g.cdsEnds)-1] + 1 - frame
+					for ; dna.TranslateSeq(g.genomeSeq[currGdnaPos : currGdnaPos+3])[0] != dna.Stop; currGdnaPos += 3 {
+						if answer.AaRef[0] == answer.AaAlt[0] {
+							answer.AaPos++
+							answer.AaRef[0] = g.protSeq[answer.AaPos]
+							answer.AaAlt = answer.AaAlt[1:]
+							if len(answer.AaAlt) == 0 {
+								answer.AaAlt = append(answer.AaAlt, dna.TranslateSeq(g.genomeSeq[currGdnaPos : currGdnaPos+3])[0])
+							}
+						} else {
+							answer.StopDist++
+						}
+						//answer.AaAlt = append(answer.AaAlt, dna.TranslateSeq(g.genomeSeq[currGdnaPos : currGdnaPos+3])[0])
+
+						// Check +6 to account for moving to new codon at the start of next loop
+						// PLUS that three bases are present in the next codon
+						if currGdnaPos+6 > len(g.genomeSeq) {
+							//stopFound = false
+							answer.StopDist = -2
+							err = ErrNoStopFound
+							break
+						}
+					}
+					break
+				} else {
+					currCodon, err = CdnaPosToCodon(g, currCdnaPos)
+				}
+			}
+			//if stopFound {
+			//	answer.AaAlt = append(answer.AaAlt, dna.Stop)
+			//}
+		} else { // In-Frame
+			answer.Consequence = InFrameInsertion
+			if frame != 0 { // Disrupts an existing codon
+				answer.AaAlt = dna.TranslateSeq(g.cdnaSeq[(cdnaPos+1)-frame : (cdnaPos+1)+len(alt)+(3-frame)])
+				if answer.AaRef[0] == answer.AaAlt[0] {
+					answer.AaRef = nil
+					answer.AaAlt = answer.AaAlt[1:]
+					answer.AaPos++
+				}
+			} else { // Does not disrupt existing codons AND is inframe
+				answer.AaAlt = dna.TranslateSeq(alt)
+			}
+		}
 
 	} else { // NonCoding
 		// Update featureArray for noncoding
@@ -232,15 +269,17 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 			g.featureArray[genomeIndexPos+1+i] = fillVal
 		}
 		//TODO: Effect Prediction WIP
-		//var endCdnaOffset int
-		//answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos + 1)
-		//_, endCdnaOffset, err = GenomicPosToCdna(g, genomePos + 1 + (len(alt) - 1))
-		//if numbers.AbsInt(endCdnaOffset) < numbers.AbsInt(answer.CdnaDist) {
-		//	answer.Consequence = checkSplice(endCdnaOffset)
-		//} else {
-		//	answer.Consequence = checkSplice(answer.CdnaDist)
-		//}
+		var endCdnaOffset int
+		answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos+1)
+		_, endCdnaOffset, err = GenomicPosToCdna(g, genomePos+1+(len(alt)-1))
+		if numbers.AbsInt(endCdnaOffset) < numbers.AbsInt(answer.CdnaDist) {
+			answer.Consequence = checkSplice(endCdnaOffset)
+		} else {
+			answer.Consequence = checkSplice(answer.CdnaDist)
+		}
 	}
+
+	g.protSeq = dna.TranslateSeq(g.cdnaSeq) // TODO improve efficiency by updating the protein as changes are made
 	return answer, err
 }
 
@@ -402,7 +441,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	}
 
 	//TODO EffectPrediction
-
+	g.protSeq = dna.TranslateSeq(g.cdnaSeq) // TODO improve efficiency by updating the protein as changes are made
 	return answer, err
 }
 
@@ -452,6 +491,7 @@ func Reset(g *Gene) {
 	}
 
 	g.changeLog = nil
+	g.protSeq = dna.TranslateSeq(g.cdnaSeq)
 }
 
 // checkSplice inputs a cDNA offset value and determines if a variant at this site may affect splicing.

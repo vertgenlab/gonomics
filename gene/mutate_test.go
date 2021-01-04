@@ -389,7 +389,9 @@ func TestInsertion(t *testing.T) {
 
 	_, err = Insertion(gene, 8, []dna.Base{dna.A, dna.T})
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 	if ok, diff := equal(gene, &correctPos1); !ok {
 		t.Errorf("trouble making insertion. Error is in %s", diff)
@@ -410,7 +412,9 @@ func TestInsertion(t *testing.T) {
 
 	_, err = Insertion(gene, 5, []dna.Base{dna.A, dna.T})
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 	if ok, diff := equal(gene, &correctPos2); !ok {
 		t.Errorf("trouble making insertion. Error is in %s", diff)
@@ -431,7 +435,9 @@ func TestInsertion(t *testing.T) {
 
 	_, err = Insertion(gene, 6, []dna.Base{dna.A, dna.T})
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 	if ok, diff := equal(gene, &correctPos3); !ok {
 		t.Errorf("trouble making insertion. Error is in %s", diff)
@@ -463,7 +469,9 @@ func TestInsertion(t *testing.T) {
 
 	_, err = Insertion(negGene, 3, []dna.Base{dna.A, dna.G})
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 
 	if ok, diff := equal(negGene, &correctNeg1); !ok {
@@ -501,7 +509,9 @@ func TestDeletion(t *testing.T) {
 
 	_, err = Deletion(gene, 3, 12)
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 	if ok, diff := equal(gene, &correctPos1); !ok {
 		t.Errorf("trouble making deletion. Error is in %s", diff)
@@ -522,7 +532,9 @@ func TestDeletion(t *testing.T) {
 
 	_, err = Deletion(gene, 1, 5)
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 	if ok, diff := equal(gene, &correctPos2); !ok {
 		t.Errorf("trouble making deletion. Error is in %s", diff)
@@ -543,7 +555,9 @@ func TestDeletion(t *testing.T) {
 
 	_, err = Deletion(gene, 9, 11)
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 	if ok, diff := equal(gene, &correctPos3); !ok {
 		t.Errorf("trouble making deletion. Error is in %s", diff)
@@ -575,7 +589,9 @@ func TestDeletion(t *testing.T) {
 
 	_, err = Deletion(negGene, 3, 12)
 	if err != nil {
-		t.Error(err)
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
 	}
 
 	if ok, diff := equal(negGene, &correctNeg1); !ok {
@@ -650,24 +666,27 @@ func equal(alpha, beta *Gene) (bool, error) {
 }
 
 //TODO WIP
-//func TestInsertionEffectPrediction(t *testing.T) {
-//	g := gtf.Read("testdata/test.gtf")
-//	f := fasta.Read("testdata/test.fasta")
-//	var err error
-//	var pred EffectPrediction
-//
-//	gene := GtfToGene(g["test_gene_id"], f)
-//
-//	_, _ = Insertion(gene, 14, []dna.Base{dna.A, dna.A, dna.A, dna.T, dna.A, dna.T, dna.A, dna.A, dna.A, dna.T, dna.A, dna.A, dna.T})
-//
-//	pred, err = Insertion(gene, 2, []dna.Base{dna.A})
-//	if err != nil {
-//		t.Error(err)
-//	}
-//
-//	printEffPred(pred)
-//}
+func TestInsertionEffectPrediction(t *testing.T) {
+	g := gtf.Read("testdata/test.gtf")
+	f := fasta.Read("testdata/test.fasta")
+	var err error
+	var pred EffectPrediction
 
+	gene := GtfToGene(g["test_gene_id"], f)
+
+	_, _ = Insertion(gene, 14, []dna.Base{dna.A, dna.A, dna.A, dna.T, dna.A, dna.T, dna.A, dna.T, dna.A, dna.A, dna.A, dna.A, dna.T})
+
+	pred, err = Insertion(gene, 2, []dna.Base{dna.T, dna.G, dna.C, dna.C})
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+
+	printEffPred(pred)
+}
+
+// for manual testing
 func printEffPred(pred EffectPrediction) {
 	var consequence string
 	switch pred.Consequence {
@@ -697,6 +716,7 @@ func printEffPred(pred EffectPrediction) {
 	fmt.Printf("AAPos: %d\n", pred.AaPos)
 	fmt.Printf("AaRef: %s\n", dna.PolypeptideToString(pred.AaRef))
 	fmt.Printf("AaAlt: %s\n", dna.PolypeptideToString(pred.AaAlt))
+	fmt.Printf("StopDist: %d\n", pred.StopDist)
 }
 
-//TODO Indel EffectPred tests
+//TODO Deletion EffectPred tests
