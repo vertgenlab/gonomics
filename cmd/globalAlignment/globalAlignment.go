@@ -8,17 +8,40 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
+	"strings" //raven added this line for CountSeqIdx
+	"os" //raven added this line for MSA Fasta output
 )
 
+//raven edited this block to specify only 1 sequnce is expected in each fasta file
 func usage() {
-	fmt.Print("./globalAlignment - chelsea's global alignment \n")
+	fmt.Print(
+	"./globalAlignment - chelsea's global alignment\n" +
+	"Usage:\n" +
+	" Align 2 .fasta files, each with only 1 sequence\n" +
+	"options:\n")
 	flag.PrintDefaults()
 }
 
+//raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
+//maybe there are existing functions that do this already? I didn't find an existing function that returns seqIdx
+func CountSeqIdx(filename string) int {
+	var line string
+	var seqIdx int = 0 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here
+	var doneReading bool = false
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		if strings.HasPrefix(line, ">") {
+			seqIdx++
+		}
+	}
+	return seqIdx
+}
+
 func main() {
-	var expectedNum int = 2
-	flag.Usage = usage
+	faOut := flag.String("faOut","globalAlignment_result.fa","name of the MSA output file") //raven added this line
 	flag.Parse()
+	var expectedNum int = 2
 	if len(flag.Args()) != expectedNum {
 		log.Fatalf("error, expecting 2 .fasta files to be able to align, only found %d files...\n", len(flag.Args()))
 	}
@@ -32,6 +55,13 @@ func main() {
 		log.Fatalf("error, unable to read .fa files, check for > symbol before each name and that each fasta entry is only one line. Check to make sure there are only four bases or N, globalAlignment is unable to use anything outside A-T-G-C-N.\n")
 	}
 
+	//raven added this block
+	numSeqOne := CountSeqIdx(flag.Arg(0))
+	numSeqTwo := CountSeqIdx(flag.Arg(1))
+	if numSeqOne > 1 || numSeqTwo > 1 {
+		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n",numSeqOne,numSeqTwo)
+	}
+
 	//needleman wunsch (global alignment)
 	bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
 	fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
@@ -39,6 +69,19 @@ func main() {
 	//visualize
 	visualize := align.View(faOne.Seq, faTwo.Seq, aln)
 	fmt.Println(visualize)
+
+	//raven added this block to put visualized alignment output into MSA Fasta
+	visualizeOutput := ">" + faOne.Name + "\n" + strings.Split(visualize,"\n")[0] + "\n" + ">" + faTwo.Name + "\n" + strings.Split(visualize,"\n")[1]
+	outFileName := *faOut
+	outFile,err1 := os.Create(outFileName) //fileio.EasyCreate and other fileio tools should work, but I don't really know how to use them
+	if err1 != nil {
+		log.Fatalf("Write to file failed on step 1\n")
+	}
+	defer outFile.Close()
+	_,err2 := outFile.WriteString(visualizeOutput)
+	if err2 != nil {
+		log.Fatalf("Write to file failed on step 2\n")
+	}
 
 	//graph
 	genomeGraph := cigarToGraph(faOne, faTwo, aln)
