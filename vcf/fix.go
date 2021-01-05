@@ -19,8 +19,8 @@ func FixVcf(query *Vcf, ref map[string][]dna.Base) {
 // to represent a deletion. This function will reformat the vcf record
 // according to VCF specs
 func fixDash(query *Vcf, ref map[string][]dna.Base) {
-	for i := 0; i < len(query.Alt); i++ {//TODO: (Riley) right now we're just checking if any of the alts have dashes. Not sure if this is the best way to handle polyallelic sites for fix. 
-			if strings.Compare(query.Alt[i], "-") == 0 {
+	for i := 0; i < len(query.Alt); i++ { //TODO: (Riley) right now we're just checking if any of the alts have dashes. Not sure if this is the best way to handle polyallelic sites for fix.
+		if strings.Compare(query.Alt[i], "-") == 0 {
 			// query.Pos is -2, one for zero base, and one for previous base
 			prevBase := dna.BaseToString(ref[query.Chr][query.Pos-2])
 			query.Pos--
@@ -35,6 +35,6 @@ func fixDash(query *Vcf, ref map[string][]dna.Base) {
 		query.Ref = prevBase
 		for i := 0; i < len(query.Alt); i++ {
 			query.Alt[i] = prevBase + query.Alt[i]
-		}	
+		}
 	}
 }

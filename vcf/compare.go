@@ -25,7 +25,7 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	if compareStorage != 0 {
 		return compareStorage
 	}
-	return CompareCoord(alpha, beta)//TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
+	return CompareCoord(alpha, beta) //TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
 //CompareGenomeSample compares two GenomeSample structs for sorting or equality testing.
@@ -50,7 +50,7 @@ func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
 		return 1
 	}
 	res = CompareFormatData(alpha.FormatData, beta.FormatData)
-	if  res != 0 {
+	if res != 0 {
 		return res
 	}
 	return 0
@@ -58,7 +58,7 @@ func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
 
 //CompareFormatData compares the FormatData field of a VCF GenomeSample
 func CompareFormatData(alpha []string, beta []string) int {
-	return CompareAlt(alpha, beta)//both functions compare slice of strings for equality, but I made this a separate function for readability
+	return CompareAlt(alpha, beta) //both functions compare slice of strings for equality, but I made this a separate function for readability
 }
 
 //CompareGenoeSamples compares a slice of GenomeSample structs which underlies the VCF struct
