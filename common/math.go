@@ -3,9 +3,9 @@ package common
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"time"
-	"math/rand"
 )
 
 //RngSeed sets the rand seed global variable using the randSeed and setSeed arguments
