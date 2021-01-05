@@ -148,9 +148,9 @@ func InsertStable(destSeq []Base, insPos int, insSeq []Base) ([]Base, error) {
 	if len(destSeq)+len(insSeq) > cap(destSeq) {
 		return Insert(destSeq, int64(insPos), insSeq), ErrExceedCapNewSliceCreated
 	}
-	destSeq = destSeq[:len(destSeq)+1]
-	copy(destSeq[insPos+len(insSeq):cap(destSeq)], destSeq[insPos:cap(destSeq)])
-	for i := 0; i < len(insSeq); i++ {
+	destSeq = destSeq[:len(destSeq)+1]                                           // extend the LEN of the slice to include the inserted bases
+	copy(destSeq[insPos+len(insSeq):cap(destSeq)], destSeq[insPos:cap(destSeq)]) // shift bases in slice by len(insSeq) at the position of the insertion
+	for i := 0; i < len(insSeq); i++ {                                           // add in the inserted bases
 		destSeq[insPos+i] = insSeq[i]
 	}
 	return destSeq, nil
