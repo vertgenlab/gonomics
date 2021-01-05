@@ -1,9 +1,15 @@
 package dna
 
 import (
+	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"log"
+)
+
+var (
+	ErrInvalidPosition          = errors.New("Input position is invalid")
+	ErrExceedCapNewSliceCreated = errors.New("Capacity of input slice was exceeded, output slice was created at a new memory address")
 )
 
 func ToUpper(b Base) Base {
@@ -131,6 +137,23 @@ func Insert(seq []Base, insPos int64, insSeq []Base) []Base {
 		log.Fatalf("Error: insertion location of %d is not valid.\n", insPos)
 	}
 	return append(seq[:insPos], append(insSeq, seq[insPos:]...)...)
+}
+
+// InsertStable is identical to Insert, but conserves the
+// underlying memory of the input destSeq slice if possible
+func InsertStable(destSeq []Base, insPos int, insSeq []Base) ([]Base, error) {
+	if insPos < 0 || insPos > len(destSeq) {
+		return nil, ErrInvalidPosition
+	}
+	if len(destSeq)+len(insSeq) > cap(destSeq) {
+		return Insert(destSeq, int64(insPos), insSeq), ErrExceedCapNewSliceCreated
+	}
+	destSeq = destSeq[:len(destSeq)+1]
+	copy(destSeq[insPos+len(insSeq):cap(destSeq)], destSeq[insPos:cap(destSeq)])
+	for i := 0; i < len(insSeq); i++ {
+		destSeq[insPos+i] = insSeq[i]
+	}
+	return destSeq, nil
 }
 
 // all base positions are zero based and left closed, right open

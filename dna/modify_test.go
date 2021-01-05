@@ -79,6 +79,22 @@ func TestInsert(t *testing.T) {
 	}
 }
 
+func TestInsertStable(t *testing.T) {
+	destSeq := make([]Base, 4, 5)
+	copy(destSeq, []Base{A, C, G, T})
+	origFirstBase := destSeq[0:1]
+	insSeq := []Base{A}
+	expectedSeq := []Base{A, C, A, G, T}
+	actual, err := InsertStable(destSeq, 2, insSeq)
+	if CompareSeqsCaseSensitive(actual, expectedSeq) != 0 || err != nil {
+		t.Errorf("Inserting %v into %v at position %d gave %v when %v was expected.", insSeq, destSeq, 1, actual, expectedSeq)
+	}
+	destSeq[0] = T
+	if origFirstBase[0] != T {
+		t.Errorf("InsertStable did not conserve underlying memory")
+	}
+}
+
 func TestReplace(t *testing.T) {
 	for _, test := range replaceTests {
 		actual := Replace(test.seq, test.start, test.end, test.insSeq)
