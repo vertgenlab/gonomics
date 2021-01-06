@@ -140,7 +140,7 @@ func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
 						if i.Samples[j].AlleleOne == 0 {
 							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Ref))
 						} else {
-							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Alt[0]))//TODO: (riley) currently only handles biallelic positions.
+							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Alt[0])) //TODO: (riley) currently only handles biallelic positions.
 						}
 						if i.Samples[j].AlleleTwo == 0 {
 							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Ref))

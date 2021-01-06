@@ -147,7 +147,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 // findAAChange annotates the Variant struct with the amino acids changed by a given variant
 func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	ref := dna.StringToBases(variant.Ref)
-	alt := dna.StringToBases(variant.Alt[0])//TODO: does not handle polyallelic bases.
+	alt := dna.StringToBases(variant.Alt[0]) //TODO: does not handle polyallelic bases.
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
@@ -496,7 +496,7 @@ func getCdsDist(v *vcfEffectPrediction) int {
 // isFrameshift returns true if the variant shifts the reading frame
 func isFrameshift(v *vcfEffectPrediction) bool {
 	refBases := dna.StringToBases(v.Ref)
-	altBases := dna.StringToBases(v.Alt[0])//TODO: does not handle polyallelic bases.
+	altBases := dna.StringToBases(v.Alt[0]) //TODO: does not handle polyallelic bases.
 
 	start := int(v.Pos)
 	refEnd := start + len(refBases) - 1
