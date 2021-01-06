@@ -130,6 +130,17 @@ func Delete(seq []Base, delStart int64, delEnd int64) []Base {
 	return append(seq[:delStart], seq[delEnd:]...)
 }
 
+// DeleteStable is identical to Delete, but conserves the
+// underlying memory of the input destSeq slice
+func DeleteStable(seq *[]Base, delStart int, delEnd int) error {
+	if delStart >= delEnd || delStart < 0 || delEnd > len(*seq) {
+		return ErrInvalidPosition
+	}
+	*seq = (*seq)[:len(*seq)-(delEnd-delStart)]                // decrease the LEN of the slice to by num of deleted bases
+	copy((*seq)[delStart:cap(*seq)], (*seq)[delEnd:cap(*seq)]) // shift bases in slice to remove deleted bases
+	return nil
+}
+
 // base position is zero-based, insertion happens before specified base
 // giving the length of the sequence puts the insertion at the end
 func Insert(seq []Base, insPos int64, insSeq []Base) []Base {
@@ -141,19 +152,18 @@ func Insert(seq []Base, insPos int64, insSeq []Base) []Base {
 
 // InsertStable is identical to Insert, but conserves the
 // underlying memory of the input destSeq slice if possible
-func InsertStable(destSeq []Base, insPos int, insSeq []Base) ([]Base, error) {
-	if insPos < 0 || insPos > len(destSeq) {
-		return nil, ErrInvalidPosition
+func InsertStable(destSeq *[]Base, insPos int, insSeq []Base) error {
+	if insPos < 0 || insPos > len(*destSeq) {
+		return ErrInvalidPosition
 	}
-	if len(destSeq)+len(insSeq) > cap(destSeq) {
-		return Insert(destSeq, int64(insPos), insSeq), ErrExceedCapNewSliceCreated
+	if len(*destSeq)+len(insSeq) > cap(*destSeq) {
+		*destSeq = Insert(*destSeq, int64(insPos), insSeq)
+		return ErrExceedCapNewSliceCreated
 	}
-	destSeq = destSeq[:len(destSeq)+1]                                           // extend the LEN of the slice to include the inserted bases
-	copy(destSeq[insPos+len(insSeq):cap(destSeq)], destSeq[insPos:cap(destSeq)]) // shift bases in slice by len(insSeq) at the position of the insertion
-	for i := 0; i < len(insSeq); i++ {                                           // add in the inserted bases
-		destSeq[insPos+i] = insSeq[i]
-	}
-	return destSeq, nil
+	*destSeq = (*destSeq)[:len(*destSeq)+len(insSeq)]                                    // extend the LEN of the slice to include the inserted bases
+	copy((*destSeq)[insPos+len(insSeq):cap(*destSeq)], (*destSeq)[insPos:cap(*destSeq)]) // shift bases in slice by len(insSeq) at the position of the insertion
+	copy((*destSeq)[insPos:insPos+len(insSeq)], insSeq)                                  // add in the inserted bases
+	return nil
 }
 
 // all base positions are zero based and left closed, right open

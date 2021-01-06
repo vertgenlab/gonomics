@@ -1,6 +1,8 @@
 package dna
 
-import "testing"
+import (
+	"testing"
+)
 
 var revCompTests = []struct {
 	input    []Base // input
@@ -70,6 +72,20 @@ func TestDel(t *testing.T) {
 	}
 }
 
+func TestDelStable(t *testing.T) {
+	destSeq := []Base{A, C, G, T}
+	origFirstBase := destSeq[0:1]
+	expectedSeq := []Base{A, G, T}
+	err := DeleteStable(&destSeq, 1, 2)
+	if CompareSeqsCaseSensitive(destSeq, expectedSeq) != 0 || err != nil {
+		t.Errorf("Deleting positions %d to %d of %v gave %v when %v was expected.", 1, 2, destSeq, destSeq, expectedSeq)
+	}
+	destSeq[0] = T
+	if origFirstBase[0] != T {
+		t.Errorf("DeleteStable did not conserve underlying memory")
+	}
+}
+
 func TestInsert(t *testing.T) {
 	for _, test := range insertionTests {
 		actual := Insert(test.seq, test.pos, test.insSeq)
@@ -85,9 +101,9 @@ func TestInsertStable(t *testing.T) {
 	origFirstBase := destSeq[0:1]
 	insSeq := []Base{A}
 	expectedSeq := []Base{A, C, A, G, T}
-	actual, err := InsertStable(destSeq, 2, insSeq)
-	if CompareSeqsCaseSensitive(actual, expectedSeq) != 0 || err != nil {
-		t.Errorf("Inserting %v into %v at position %d gave %v when %v was expected.", insSeq, destSeq, 1, actual, expectedSeq)
+	err := InsertStable(&destSeq, 2, insSeq)
+	if CompareSeqsCaseSensitive(destSeq, expectedSeq) != 0 || err != nil {
+		t.Errorf("Inserting %v into %v at position %d gave %v when %v was expected.", insSeq, destSeq, 1, destSeq, expectedSeq)
 	}
 	destSeq[0] = T
 	if origFirstBase[0] != T {
