@@ -68,7 +68,3 @@ func QuerySeq(records []*Fasta, chr string, index int, query []dna.Base) bool {
 	chrIndex := GetChromIndex(records, chr)
 	return dna.CompareSeqsIgnoreCaseAndGaps(query, records[chrIndex].Seq[index:index+len(query)]) == 0
 }
-
-
-
-
