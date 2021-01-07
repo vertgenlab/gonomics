@@ -3,8 +3,8 @@ package popgen
 import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"math/rand"
 	"log"
+	"math/rand"
 	//DEBUG: "fmt"
 )
 
@@ -18,11 +18,11 @@ func SimulateAFS(alpha float64, n int, k int) AFS {
 	var r float64
 	for i := 0; i < k; i++ {
 		//now we simulate the discrete number of alleles for n individuals based on the allele frequency
-		count = 0//this variable represents the number of times a derived allele is observed
+		count = 0 //this variable represents the number of times a derived allele is observed
 		for j := 0; j < n; j++ {
 			r = rand.Float64()
 			if r < alleleFrequencies[i] {
-				count++ 
+				count++
 			}
 		}
 		answer.sites = append(answer.sites, &SegSite{count, n})
@@ -67,7 +67,7 @@ func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
 		d = c + 1
 		//if we have an odd number of alleles, we make one haploid entry
 		if d >= n {
-			answer = append(answer, vcf.GenomeSample{AlleleOne:alleleArray[c], AlleleTwo: -1, Phased: false})
+			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: -1, Phased: false})
 		} else {
 			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false})
 		}
@@ -116,9 +116,9 @@ func SegSiteToAlleleArray(s *SegSite) []int16 {
 	for j := 0; j < s.i; j++ {
 		answer[j] = 1
 	}
-	rand.Shuffle(len(answer), func(i, j int) { answer[i], answer[j] = answer[j], answer[i]})
+	rand.Shuffle(len(answer), func(i, j int) { answer[i], answer[j] = answer[j], answer[i] })
 	return answer
-} 
+}
 
 /*
 func AfsToGenotype(a AFS, phase bool) []vcf.GenomeSample {
