@@ -16,7 +16,9 @@ jobs:
 
     - name: Build
       run:
-        ln -s $GOPATH/github.com/vertgenlab/ .. &&
+        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+        mv ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go build -v ./...
   
   test:
@@ -26,7 +28,9 @@ jobs:
       
     - name: Test
       run: 
-        ln -s $GOPATH/github.com/vertgenlab/ .. &&
+        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+        mv ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go test -v ./...
         
   format:
