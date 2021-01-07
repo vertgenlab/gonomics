@@ -86,15 +86,15 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	return answer
 }*/
 
-/*
+
 func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
 	code := ChromPosToUInt64(int(names[v.Chr]), v.Pos-1)
 	_, ok := mapToVcf[code]
 	if !ok {
-		mapToVcf[code] = VcfToGvcf(v)
+		mapToVcf[code] = v
 	}
 	return mapToVcf
-}*/
+}
 
 /* This function is unannotated and I'm not sure what it's supposed to do. Appears to return only GQ for the first value, but TODO: this should be implemented with new VCF struct, maybe returning a slice of GQ data corresponding to each sample
 func getGQ(v *Vcf) uint8 {
