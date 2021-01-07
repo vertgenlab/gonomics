@@ -20,7 +20,7 @@ jobs:
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go get -v ./... && echo "Done with downloads" &&
-        go build -v ./...
+        go build ./...
   
   test:
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go get -v ./... && echo "Done with downloads" &&
-        go test -v ./...
+        go test ./...
         
   format:
     runs-on: ubuntu-latest
