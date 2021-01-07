@@ -91,6 +91,16 @@ func usage() {
 }
 
 func main() {
+	//raven started work here
+	//refer to maf/maf.go
+	//read file line by line, use maf.Read
+	if strings.HasPrefix(line,"e") { //line string
+		MafELine=parseMafELine(line)
+		if MafELine.Status=='C' && MafELine.Src=="panTro6" {//eC lines, which should belong to Chimp
+			//add to collection
+		}
+	}
+
 	var expectedNumArgs int = 2
 
 	flag.Usage = usage
