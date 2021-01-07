@@ -18,6 +18,7 @@ jobs:
       run:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go get ./... &&
         go build -v ./...
   
@@ -30,6 +31,7 @@ jobs:
       run: 
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go get ./... &&
         go test -v ./...
         
