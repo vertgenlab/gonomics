@@ -19,7 +19,7 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 	for i := 0; i < k; i++ {
 		genotype = popgen.SimulateGenotype(alpha, n)
 		//most fields are hardcoded but can be filled in later
-		current = &vcf.Vcf{Chr: "chr1", Pos: i+1, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
+		current = &vcf.Vcf{Chr: "chr1", Pos: i + 1, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
 
 		vcf.WriteVcf(out, current)
 	}

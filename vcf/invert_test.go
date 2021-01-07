@@ -1,8 +1,8 @@
 package vcf
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 var IG1 GenomeSample = GenomeSample{1, 0, false, []string{""}}

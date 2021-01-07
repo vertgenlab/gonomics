@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 )
 
@@ -16,7 +16,7 @@ func simulateBed(regionCount int, simLength int64, noGapFile string, outFile str
 	c := simulate.GoSimulateBed(noGap, regionCount, simLength)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
-	
+
 	for i := range c {
 		bed.WriteBed(out.File, &i, 5)
 	}

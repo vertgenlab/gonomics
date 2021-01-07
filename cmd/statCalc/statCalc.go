@@ -61,7 +61,7 @@ func usage() {
 			"After defining a distribution, one float64 argument returns the function density at that value. Ex usage: -sampleAfs=0.02,200,1000,1000,0.001,0.999,false\n" +
 			"sampleBeta=alpha,beta,numSamples. Provides a list of values sampled from the beta distribution with a selected alpha and beta parameter.\n" +
 			"sampleGamma=alpha,beta,numSample. Provides a list of values sampled from the gamma distribution with a selected alpha and beta parameter.\n" +
-			"sampleNormal=mu,sigma,numSamples. Provides a list of values sampled from the normal distribution with a selected mu and sigma parameter.\n" +			
+			"sampleNormal=mu,sigma,numSamples. Provides a list of values sampled from the normal distribution with a selected mu and sigma parameter.\n" +
 			"For discrete distributions, two arguments will evaluate the sum between two input values.\n" +
 			"For the binomial distribution summation, the second argument can be set to n or N to evaluate the entire right tailed sum.\n" +
 			"For continuous distributions, two arguments will evaluate an integral between the two input values with the defined distribution as the integrand.\n")
