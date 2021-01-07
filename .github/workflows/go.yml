@@ -15,7 +15,15 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build
-      run: go build -v ./...
+      run:
+        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+        go get -v golang.org/x/image/font &&
+        go get -v golang.org/x/image/math/fixed &&
+        go get -v golang.org/x/image/font/basicfont &&
+        go get -v github.com/biogo/hts/bgzf &&
+        go build ./...
   
   test:
     runs-on: ubuntu-latest
@@ -23,7 +31,15 @@ jobs:
     - uses: actions/checkout@v2
       
     - name: Test
-      run: go test -v ./...
+      run: 
+        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+        go get -v golang.org/x/image/font &&
+        go get -v golang.org/x/image/math/fixed &&
+        go get -v golang.org/x/image/font/basicfont &&
+        go get -v github.com/biogo/hts/bgzf &&
+        go test ./...
         
   format:
     runs-on: ubuntu-latest
