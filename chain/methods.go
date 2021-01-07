@@ -33,7 +33,7 @@ func (ch *Chain) UpdateLift(c string, start int, end int) {
 	if ch.TStrand {
 		ch.TStart = start
 	} else {
-		
+
 	}
 	if ch.TStrand {
 		ch.TEnd = end

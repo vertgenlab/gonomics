@@ -37,7 +37,7 @@ func GoReadGVcf(filename string) *Reader {
 	return ans
 }*/
 
-type GVcf struct {//TODO: Uncommented for now, but this struct needs to be removed soon.
+type GVcf struct { //TODO: Uncommented for now, but this struct needs to be removed soon.
 	Vcf
 	Seq       [][]dna.Base
 	Genotypes []GenomeSample
@@ -47,7 +47,6 @@ type SampleHash struct {
 	Fa     map[string]int16
 	GIndex map[string]int16
 }
-
 
 //TODO: Can only process short variants. Need long term solution for large structural variance.
 func VcfToGvcf(v *Vcf) *GVcf {
@@ -87,15 +86,15 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	return answer
 }*/
 
-
+/*
 func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
 	code := ChromPosToUInt64(int(names[v.Chr]), v.Pos-1)
 	_, ok := mapToVcf[code]
 	if !ok {
-		mapToVcf[code] = v
+		mapToVcf[code] = VcfToGvcf(v)
 	}
 	return mapToVcf
-}
+}*/
 
 /* This function is unannotated and I'm not sure what it's supposed to do. Appears to return only GQ for the first value, but TODO: this should be implemented with new VCF struct, maybe returning a slice of GQ data corresponding to each sample
 func getGQ(v *Vcf) uint8 {
