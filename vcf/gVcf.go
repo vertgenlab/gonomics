@@ -86,7 +86,6 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	return answer
 }*/
 
-
 func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
 	code := ChromPosToUInt64(int(names[v.Chr]), v.Pos-1)
 	_, ok := mapToVcf[code]
