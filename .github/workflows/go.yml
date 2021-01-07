@@ -19,7 +19,10 @@ jobs:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go get -v ./... && echo "Done with downloads" &&
+        go get -v golang.org/x/image/font &&
+        go get -v golang.org/x/image/math/fixed &&
+        go get -v golang.org/x/image/font/basicfont &&
+        go get -v github.com/biogo/hts/bgzf &&
         go build ./...
   
   test:
@@ -32,7 +35,10 @@ jobs:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go get -v ./... && echo "Done with downloads" &&
+        go get -v golang.org/x/image/font &&
+        go get -v golang.org/x/image/math/fixed &&
+        go get -v golang.org/x/image/font/basicfont &&
+        go get -v github.com/biogo/hts/bgzf &&
         go test ./...
         
   format:
