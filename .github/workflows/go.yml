@@ -22,7 +22,7 @@ jobs:
         go get -v golang.org/x/image/font &&
         go get -v golang.org/x/image/math/fixed &&
         go get -v golang.org/x/image/font/basicfont &&
-        go get -v github.com/biogo/hts/ &&
+        go get -v github.com/biogo/hts/bgzf &&
         go build -v ./...
   
   test:
@@ -38,7 +38,7 @@ jobs:
         go get -v golang.org/x/image/font &&
         go get -v golang.org/x/image/math/fixed &&
         go get -v golang.org/x/image/font/basicfont &&
-        go get -v github.com/biogo/hts/ &&
+        go get -v github.com/biogo/hts/bgzf &&
         go test -v ./...
         
   format:
