@@ -131,7 +131,7 @@ func Delete(seq []Base, delStart int64, delEnd int64) []Base {
 }
 
 // DeleteStable is identical to Delete, but conserves the
-// underlying memory of the input destSeq slice
+// underlying memory of the input destSeq slice.
 func DeleteStable(seq *[]Base, delStart int, delEnd int) error {
 	if delStart >= delEnd || delStart < 0 || delEnd > len(*seq) {
 		return ErrInvalidPosition
