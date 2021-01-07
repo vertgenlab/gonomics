@@ -23,14 +23,13 @@ func usage() {
 }
 
 //raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
-//maybe there are existing functions that do this already? I didn't find an existing function that returns seqIdx
-func CountSeqIdx(filename string) int {
+//raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
+func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
-	var seqIdx int = 0 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here
+	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
 	var doneReading bool = false
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+	defer inputFile.Close()
+	for line, doneReading = fileio.EasyNextRealLine(inputFile); !doneReading; line, doneReading = fileio.EasyNextRealLine(inputFile) {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
 		}
@@ -39,7 +38,7 @@ func CountSeqIdx(filename string) int {
 }
 
 func main() {
-	faOut := flag.String("faOut","globalAlignment_result.fa","name of the MSA output file") //raven added this line
+	faOut := flag.String("faOut","","name of the MSA output file") //raven added this line
 	flag.Parse()
 	var expectedNum int = 2
 	if len(flag.Args()) != expectedNum {
@@ -47,8 +46,11 @@ func main() {
 	}
 
 	//read in sequences that should be put in as fasta type files.
-	faOne, faDoneOne := fasta.NextFasta(fileio.EasyOpen(flag.Arg(0)))
-	faTwo, faDoneTwo := fasta.NextFasta(fileio.EasyOpen(flag.Arg(1)))
+	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
+	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
+	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
+	faOne, faDoneOne := fasta.NextFasta(inputFileOne)
+	faTwo, faDoneTwo := fasta.NextFasta(inputFileTwo)
 
 	//fmt.Printf("%v \n %v \n", faOne, faTwo)
 	if faDoneOne || faDoneTwo {
@@ -56,8 +58,8 @@ func main() {
 	}
 
 	//raven added this block
-	numSeqOne := CountSeqIdx(flag.Arg(0))
-	numSeqTwo := CountSeqIdx(flag.Arg(1))
+	numSeqOne := CountSeqIdx(inputFileOne) //changed input from filename string to inputFile EasyReader
+	numSeqTwo := CountSeqIdx(inputFileTwo) //ditto
 	if numSeqOne > 1 || numSeqTwo > 1 {
 		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n",numSeqOne,numSeqTwo)
 	}
@@ -71,17 +73,20 @@ func main() {
 	fmt.Println(visualize)
 
 	//raven added this block to put visualized alignment output into MSA Fasta
-	visualizeOutput := ">" + faOne.Name + "\n" + strings.Split(visualize,"\n")[0] + "\n" + ">" + faTwo.Name + "\n" + strings.Split(visualize,"\n")[1]
 	outFileName := *faOut
-	outFile,err1 := os.Create(outFileName) //fileio.EasyCreate and other fileio tools should work, but I don't really know how to use them
-	if err1 != nil {
-		log.Fatalf("Write to file failed on step 1\n")
+	if outFileName != "" { //only write to file if a filename is given in the faOut command line option
+		outFile,err := os.Create(outFileName) //fileio.EasyCreate and other fileio tools should work, but I don't really know how to use them
+		if err != nil {
+			log.Fatalf("Write to file failed on step 1\n")
+		}
+		defer outFile.Close()
+		visualizeOutput := ">" + faOne.Name + "\n" + strings.Split(visualize,"\n")[0] + "\n" + ">" + faTwo.Name + "\n" + strings.Split(visualize,"\n")[1] + "\n"
+		_,err := outFile.WriteString(visualizeOutput)
+		if err != nil {
+			log.Fatalf("Write to file failed on step 2\n")
+		}
 	}
-	defer outFile.Close()
-	_,err2 := outFile.WriteString(visualizeOutput)
-	if err2 != nil {
-		log.Fatalf("Write to file failed on step 2\n")
-	}
+
 
 	//graph
 	genomeGraph := cigarToGraph(faOne, faTwo, aln)
