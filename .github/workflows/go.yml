@@ -16,7 +16,7 @@ jobs:
 
     - name: Build
       run: 
-        ln -s ./github.com/vertgenlab/ ./
+        ln -s ./github.com/vertgenlab/ ./ \
         go build -v ./...
   
   test:
@@ -26,7 +26,7 @@ jobs:
       
     - name: Test
       run: 
-        ln -s ./github.com/vertgenlab/ ./
+        ln -s ./github.com/vertgenlab/ ./ \
         go test -v ./...
         
   format:
