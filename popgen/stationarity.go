@@ -62,7 +62,7 @@ func VcfToAFS(filename string) AFS {
 	for i := range alpha {
 		currentSeg = &SegSite{i: 0, n: 0}
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-		if !strings.ContainsAny(i.Alt[0], "<>") {//By definition, segregting sites are biallelic, so we only check the first entry in Alt.
+		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregting sites are biallelic, so we only check the first entry in Alt.
 			for j = 0; j < len(i.Samples); j++ {
 				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
 					currentSeg.n = currentSeg.n + 2
@@ -124,7 +124,7 @@ func AfsSampleClosure(n int, k int, alpha float64) func(float64) float64 {
 func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
-		logPart := math.Log((1-math.Exp(-alpha*(1.0-p))) * 2 / (1-math.Exp(-alpha)))
+		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
 		//log.Printf("Expression: %v. LogPart: %v.", expression, logPart)
 		return numbers.MultiplyLog(expression, logPart)
 	}
@@ -162,7 +162,7 @@ func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) floa
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
 func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
-	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
+	var denominator float64 = math.Inf(-1) //denominator begins at -Inf when in log space
 	// j loops over all possible values of i
 	for j := 1; j < n; j++ {
 		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomMap))

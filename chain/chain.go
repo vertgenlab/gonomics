@@ -7,8 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"io"
+	"log"
 	"strings"
 	"sync"
 )
@@ -119,7 +119,7 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderCommen
 	wg.Done()
 }
 
-func WriteToFileHandle(file  io.Writer, rec *Chain) {
+func WriteToFileHandle(file io.Writer, rec *Chain) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", ToString(rec))
 	common.ExitIfError(err)

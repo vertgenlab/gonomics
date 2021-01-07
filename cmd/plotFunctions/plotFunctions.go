@@ -57,7 +57,7 @@ func usage() {
 			"To specify the function, use a function keyword. Then provide the function arguments as a comma separated list in the second argument.\n" +
 			"Usage:\n" +
 			" plotFunctions functionKeyWord functionArgs leftBound rightBound steps outFile\n" +
-			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" + 
+			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" +
 			"For Beta: defined by two parameters (called alpha and beta). ex usage: plotFunctions Beta 0.5,0.5 0.001 0.999 1000 betaPlot.txt\n" +
 			"For Gamma: defined by two parameters (called alpha and beta). ex usage: plotFunctions Gamma 0.5,0.5 0.001 0.999 1000 gammaPlot.txt\n" +
 			"For Normal: defined by two parameters (called mu and sigma). ex usage: plotFunctions Normal 0,0.5 -1 1 1000 normalPlot.txt\n" +

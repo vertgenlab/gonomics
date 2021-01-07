@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 )
 

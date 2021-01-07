@@ -176,8 +176,8 @@ func ReadNewick(filename string) (*Tree, error) {
 	}
 	defer file.Close()
 
-		if !strings.HasPrefix(singleLineTree, "#") {
-			return ParseNewick(singleLineTree[strings.Index(singleLineTree, "("): 1+strings.LastIndex(singleLineTree, ";")])
+	if !strings.HasPrefix(singleLineTree, "#") {
+		return ParseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
 	}
 	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
 }

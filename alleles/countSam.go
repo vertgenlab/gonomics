@@ -57,7 +57,7 @@ func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename 
 			continue
 		}
 
-		if runningCount[i].Pos < int(aln.Pos - 1) {
+		if runningCount[i].Pos < int(aln.Pos-1) {
 			answer <- &Allele{samFilename, currAlleles[*runningCount[i]], runningCount[i]}
 			delete(currAlleles, *runningCount[i])
 
