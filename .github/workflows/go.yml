@@ -15,7 +15,9 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build
-      run: go build -v ./...
+      run: 
+        ln -s ./github.com/vertgenlab/ ./
+        go build -v ./...
   
   test:
     runs-on: ubuntu-latest
@@ -23,7 +25,9 @@ jobs:
     - uses: actions/checkout@v2
       
     - name: Test
-      run: go test -v ./...
+      run: 
+        ln -s ./github.com/vertgenlab/ ./
+        go test -v ./...
         
   format:
     runs-on: ubuntu-latest
