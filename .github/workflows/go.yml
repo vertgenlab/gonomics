@@ -17,11 +17,9 @@ jobs:
     - name: Build
       run:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-        mv ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go build -v ./... &&
-        mv ../gonomics /home/runner/work/gonomics/ &&
-        cd /home/runner/work/gonomics/gonomics
+        go build -v ./...
   
   test:
     runs-on: ubuntu-latest
@@ -31,11 +29,8 @@ jobs:
     - name: Test
       run: 
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-        mv ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go test -v ./... &&
-        mv ../gonomics /home/runner/work/gonomics/ &&
-        cd /home/runner/work/gonomics/gonomics
+        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        go test -v ./...
         
   format:
     runs-on: ubuntu-latest
