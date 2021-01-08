@@ -25,7 +25,7 @@ func Test_reconstruct(t *testing.T) {
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
 		simulate.Simulate("RandGeneOutput.fasta", tre, "testdata/genePred.gp")
 		WriteTreeToFasta(tre, "simOut.fasta")
-		WriteLeavesToFasta(tre, "leavesOnly.Fasta")
+		WriteLeavesToFasta(tre, "leavesOnly.fasta")
 
 		tr := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
 		leaves := expandedTree.GetLeaves(tr)
