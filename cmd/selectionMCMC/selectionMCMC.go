@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/popgen"
+	"log"
 )
 
 func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64) {
