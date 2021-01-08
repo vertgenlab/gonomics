@@ -1,7 +1,7 @@
 package graphReconstruct
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simpleGraph"
@@ -264,48 +264,117 @@ func GraphRecon(root *expandedTree.ETree, position int, graph *simpleGraph.Simpl
 		seq := PathFinder(graph)
 		//make seq a dna.Base and make the va above path
 		for i := 0; i < len(seq); i++ {
-			internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, seq[i])
+			//internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, seq[i])
 		}
 	}
 }
 
 //PathFinder finds the best path from start to finish through the graph
 func PathFinder(g *simpleGraph.SimpleGraph) []*simpleGraph.Node {
-	var path []*simpleGraph.Node
-	var same = true
+	var path map[*simpleGraph.Node]int
+	var bestEdge int
+	//var pathOptions = make(map[int][]float64) //map of paths options that contain a slice of the probs stored at the edges that it passes through
+	var nextNode *simpleGraph.Node
+	//var same = true
+	var visited = make(map[uint32]bool)
+	//var pQ []uint32
+	//var lastNode uint32
+	//lastNode = findLastNode(g)
 
 	for i := 0; i < len(g.Nodes); i++ {
 		in := len(g.Nodes[i].Prev)
+		out := len(g.Nodes[i].Next)
 		if in == 0 {
-			path = append(path, g.Nodes[i])
-		} else if in == 1 {
-			path = append(path, g.Nodes[i])
-
-		} else if in > 1 { //finds a node where multiple paths converge
-			returnPath := findBestPath(g, i)
-			for l := 0; l < len(returnPath); l++ {
-				for p := 0; p < len(path); p++ {
-					if path[p].Id == returnPath[l].Id {
-						same = true
-					} else if path[p].Id != returnPath[l].Id {
-						same = false
-					}
-				}
-				if same == false {
-					path = append(path, returnPath[l])
-				}
-			}
-
+			path[g.Nodes[i]] = 0
+			visited[g.Nodes[i].Id] = true
+		} else if out == 1 {
+			path[g.Nodes[i]] = 0
+			visited[g.Nodes[i].Id] = true
+		}
+		if out > 1 {
+			nextNode, bestEdge = pFHelper(g, i)
+			path[nextNode] = bestEdge
+			visited[g.Nodes[i].Id] = true
+			//start with edge that has highest prob
+			//traverse choosing the highest prob edges to the end.
+			//then start at the beginning and calculate cost, with only the non-highest edges (maybe just loop through and ignore highest prob edge?)
+			//(maybe if node has > 1 out && edge.Dest == !visited of at least one of the out edges)
+			//and take it until it hits the end, if overall prob is lower than the previous traversal, ignore it
+			//trigger exit when all nodes have been visited, but that might happen before all possibilities are calculated
+			//
+			//
+			//and add nodeID to pQ
+			//follow to lastNode using the highest prob edges
+			//go to pQ, check if node.Next.Dest has been visited (if it has the edge that has the highest prob has already been used)
+			//if it has not been visited, i = the position of the []Nodes that this node is, take the most likely path from there to the lastNode
+			//While adding nodes to the pQ if they aren't already there
+			//at end check length of map with visited against number of nodes in graph, if ==, then set all visited bool to true and do conditional return
+			//need to add previous steps of the path into the map key that will hold each path, so as pQ has node added to it, create a new key referring to it,
+			//copy over the existing path that is being built and find a way to carry the variable that corresponds to that key of the map
+			//CornerCase: two edges have equal prob from a node
+			//PathFinder(g)
+			//} else if in > 1 { //finds a node where multiple paths converge
+			//	returnPath := findBestPath(g, i)
+			//	for l := 0; l < len(returnPath); l++ {
+			//		for p := 0; p < len(path); p++ {
+			//			if path[p].Id == returnPath[l].Id {
+			//				same = true
+			//			} else if path[p].Id != returnPath[l].Id {
+			//				same = false
+			//			}
+			//		}
+			//		if same == false {
+			//			path = append(path, returnPath[l])
+			//		}
+			//	}
+			//
 		} else {
 			log.Fatal("unknown number of edges leading to this node")
 		}
 	}
-	return path
+	pathProb := pathCalc(path)
+}
+
+func pathCalc(path map[*simpleGraph.Node]int) float32 {
+	var allNodes []*simpleGraph.Node
+	var allEdges []int
+	var product float32
+	product = 1
+
+	for node, edge := range path {
+		allNodes = append(allNodes, node)
+		allEdges = append(allEdges, edge)
+	}
+	for j := 0; j < len(allNodes); j++ {
+		for k := 0; k < len(allEdges); k++ {
+			product = product * allNodes[j].Next[k].Prob
+		}
+	}
+	return product
+}
+
+func pFHelper(g *simpleGraph.SimpleGraph, n int) (node *simpleGraph.Node, edge int) {
+	var probableNode *simpleGraph.Node
+	var nextNode *simpleGraph.Node
+	var bestEdge float32
+	bestEdge = 0
+	var bE int
+	out := g.Nodes[n].Next
+
+	for e := 0; e < len(out); e++ {
+		if out[e].Prob > bestEdge {
+			bestEdge = out[e].Prob
+			nextNode = out[e].Dest
+			bE = e
+		}
+	}
+	probableNode = nextNode
+	return probableNode, bE
 }
 
 //findBestPath finds the most likely path when there is a divergence in the graph where multiple paths are possible, over the entire length of the divergence
 func findBestPath(graph *simpleGraph.SimpleGraph, n int) []*simpleGraph.Node {
-	var possiblePaths map[int][]*simpleGraph.Node
+	//var possiblePaths map[int][]*simpleGraph.Node
 	var simplePath []*simpleGraph.Node
 	var divergence = false
 
@@ -317,10 +386,22 @@ func findBestPath(graph *simpleGraph.SimpleGraph, n int) []*simpleGraph.Node {
 			divergence = true
 		}
 		if divergence {
-			possiblePaths = make(map[int][]*simpleGraph.Node, out)
+			//possiblePaths = make(map[int][]*simpleGraph.Node, out)
 
 		}
 	}
 
 	return simplePath
+}
+
+//findLastNode goes through all the nodes of a graph and finds a node that has no Next Edges
+func findLastNode(g *simpleGraph.SimpleGraph) uint32 {
+	var lastNode uint32
+	for i := 0; i < len(g.Nodes); i++ {
+		out := g.Nodes[i].Next
+		if out == nil {
+			lastNode = g.Nodes[i].Id
+		}
+	}
+	return lastNode
 }
