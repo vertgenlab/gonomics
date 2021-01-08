@@ -72,7 +72,9 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 func LiftIntervalWithChain(c *chain.Chain, i Lift) (string, int, int) {
 	var newStart, newEnd int
 	newStart = chain.TPosToQPos(c, i.GetChromStart())
-	newEnd = chain.TPosToQPos(c, i.GetChromEnd() - 1) + 1//the minus one/plus one handles when a region ends with a structural variant and ensures correct placement of the end in the new assembly.
+	/* The minus one/plus one handles when a region ends 
+	with a structural variant and ensures correct placement of the end in the new assembly. */
+	newEnd = chain.TPosToQPos(c, i.GetChromEnd() - 1) + 1
 	if !c.QStrand {//valid bed formats must have start < end. So this correction is made for intervals lifted to the negative strand.
 		newStart, newEnd = newEnd, newStart
 		newStart += 1//these lines are corrections for the open/closed interval start and end.
@@ -98,7 +100,9 @@ func MatchProportion(c *chain.Chain, i Interval) (float64, float64) {
 		currPos += c.Alignment[j].Size
 		dT += matchOverlapLen(currPos, currPos + c.Alignment[j].TBases, i.GetChromStart(), i.GetChromEnd())
 		if matchOverlapLen(currPos, currPos + c.Alignment[j].TBases, i.GetChromStart(), i.GetChromEnd()) > 0 {
-			dQ += c.Alignment[j].QBases//this handles a special case where both TBases and QBases are non-zero, as in competing non-aligned bases are present at the same location in target and query.
+			/* This handles a special case where both TBases and QBases are non-zero, 
+				as in competing non-aligned bases are present at the same location in target and query. */
+			dQ += c.Alignment[j].QBases
 		}
 		currPos += c.Alignment[j].TBases
 	}

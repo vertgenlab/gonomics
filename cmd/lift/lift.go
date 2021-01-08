@@ -39,7 +39,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 
 	if faFile != "" {
 		if !vcf.IsVcfFile(inFile) {
-			log.Fatalf("Fasta files should be provided when lifting VCF files. inFile is not a valid VCF file and must end in either .vcf or .vcf.gz.")
+			log.Fatalf("Fasta file is provided but lift file is not a VCF file.")
 		}
 		records = fasta.Read(faFile)
 	}
@@ -50,15 +50,14 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	for i := range inChan {
 		overlap = interval.Query(tree, i, "any")//TODO: verify proper t/q contains
 		if len(overlap) > 1 {
-			fmt.Fprintf(un, "Record below maps multiple chains:\n")
+			fmt.Fprintf(un, "Record below maps to multiple chains:\n")
 			i.WriteToFileHandle(un)
 		} else if len(overlap) == 0 {
 			fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
 			i.WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
 			a, b = interval.MatchProportion(overlap[0].(*chain.Chain), i)
-			fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f:\n", numbers.MinFloat64(a, b))
-			fmt.Fprintf(un, "Here's the corresponding chain: Score: %d.\n", overlap[0].(*chain.Chain).Score)
+			fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
 			i.WriteToFileHandle(un)
 		} else {
 			//DEBUG: interval.PrettyPrint(i)
@@ -68,8 +67,11 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
 				currVcf = i.(*vcf.Vcf)
-				if utf8.RuneCountInString(currVcf.Ref) > 1 {
+				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
 					log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.")//Currently we're causing INDEL records to fatal.
+				}
+				if len(currVcf.Alt) > 1 {
+					log.Fatalf("VCF liftOver is currently only supported for biallelic variants. Variant at %s %v is polyallelic.", currVcf.Chr, currVcf.Pos)
 				}
 				//first question: does the "Ref" match the destination fa at this position.
 				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Ref)) {
@@ -93,7 +95,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	}
 }
 
-//minMatchPass returns true if the interval/chain has over a 95 percent base match, false otherwise.
+//minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
 func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) bool {
 	a, b := interval.MatchProportion(overlap, i)
 	if a < minMatch {
