@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/bed"
-	"testing"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/vcf"
 	"os"
+	"testing"
 )
 
 var LiftTests = []struct {
-	inputFile string
+	inputFile          string
 	expectedOutputFile string
-	chainFile string
-	faFile string
+	chainFile          string
+	faFile             string
 }{
 	{"testdata/input.bed", "testdata/expected.bed", "testdata/test.chain", ""},
 	{"testdata/Pollard.HARs.hg19.trimmed.bed", "testdata/Pollard.HARs.hg38.UCSC.trimmed.bed", "testdata/hg19ToHg38.over.chain", ""},

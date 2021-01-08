@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/chain"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"unicode/utf8"
 )
@@ -48,7 +48,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	inChan := interval.GoReadToLiftChan(inFile)
 	var overlap []interval.Interval
 	for i := range inChan {
-		overlap = interval.Query(tree, i, "any")//TODO: verify proper t/q contains
+		overlap = interval.Query(tree, i, "any") //TODO: verify proper t/q contains
 		if len(overlap) > 1 {
 			fmt.Fprintf(un, "Record below maps to multiple chains:\n")
 			i.WriteToFileHandle(un)
@@ -61,26 +61,26 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 			i.WriteToFileHandle(un)
 		} else {
 			//DEBUG: interval.PrettyPrint(i)
-			i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i))//now i is 1-based and we can assert VCF.
+			i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i)) //now i is 1-based and we can assert VCF.
 			//DEBUG: interval.PrettyPrint(i)
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
 				currVcf = i.(*vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
-					log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.")//Currently we're causing INDEL records to fatal.
+					log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.") //Currently we're causing INDEL records to fatal.
 				}
 				if len(currVcf.Alt) > 1 {
 					log.Fatalf("VCF liftOver is currently only supported for biallelic variants. Variant at %s %v is polyallelic.", currVcf.Chr, currVcf.Pos)
 				}
 				//first question: does the "Ref" match the destination fa at this position.
-				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Ref)) {
+				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) {
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
+					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
 						fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 					}
-				//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
-				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos - 1), dna.StringToBases(currVcf.Alt[0])) {
+					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
+				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
 					i.WriteToFileHandle(un)

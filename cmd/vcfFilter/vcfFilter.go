@@ -6,8 +6,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"strings"
 	"math"
+	"strings"
 )
 
 func vcfFilter(infile string, outfile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64) {
