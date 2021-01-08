@@ -54,7 +54,6 @@ func ChimpAncestorRecon(records []*fasta.Fasta, messyToN bool) *fasta.Fasta {
 	gorilla := records[4]
 
 	for j := 0; j < len(human.Seq); j++ {
-		outputBase = chimp.Seq[j]//this is the default state for output bases
 		if chimp.Seq[j] == dna.N {
 			Ncount++
 			outputBase = chimp.Seq[j]
