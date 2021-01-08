@@ -57,21 +57,21 @@ func ChimpAncestorRecon(records []*fasta.Fasta, messyToN bool) *fasta.Fasta {
 		if chimp.Seq[j] == dna.N {
 			Ncount++
 			outputBase = chimp.Seq[j]
-		} else if chimpInsertion(records, j) {//output base is gap if the chimp sequence is an insertion.
+		} else if chimpInsertion(records, j) { //output base is gap if the chimp sequence is an insertion.
 			outputBase = dna.Gap
-		} else if chimp.Seq[j] != dna.Gap && human.Seq[j] == dna.Gap {//if there is sequence in chimp and either gorilla or orangutan, but no sequence in human, we output N, because we don't want to estimate the longer human to gorilla branch.
+		} else if chimp.Seq[j] != dna.Gap && human.Seq[j] == dna.Gap { //if there is sequence in chimp and either gorilla or orangutan, but no sequence in human, we output N, because we don't want to estimate the longer human to gorilla branch.
 			if messyToN {
 				outputBase = dna.N
 			} else {
 				outputBase = chimp.Seq[j]
 			}
-		} else if gorilla.Seq[j] == dna.Gap && orangutan.Seq[j] == dna.Gap {//no sequence outside the HCA (no gorilla or orangutan, ancestor can't be determined)
+		} else if gorilla.Seq[j] == dna.Gap && orangutan.Seq[j] == dna.Gap { //no sequence outside the HCA (no gorilla or orangutan, ancestor can't be determined)
 			if messyToN {
 				outputBase = dna.N
 			} else {
 				outputBase = chimp.Seq[j]
 			}
-		} else if human.Seq[j] == chimp.Seq[j] {//both descendants match, HCA is same
+		} else if human.Seq[j] == chimp.Seq[j] { //both descendants match, HCA is same
 			outputBase = chimp.Seq[j]
 			allMatch++
 		} else if (human.Seq[j] == gorilla.Seq[j] || human.Seq[j] == orangutan.Seq[j]) && (human.Seq[j] != dna.N && human.Seq[j] != dna.Gap) { //chimp is different from ancestor, human agrees with gorilla and/or orangutan

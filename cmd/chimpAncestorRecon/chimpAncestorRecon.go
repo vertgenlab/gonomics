@@ -17,10 +17,10 @@ func chimpAncestorRecon(inFile string, outFile string, messyToN bool) {
 func usage() {
 	fmt.Print(
 		"chimpAncestorRecon - Like quickPrimateRecon, but returns a chimp-biased HCA estimate from a four-way primate multiFa alignment.\n" +
-		"Must be in the following order: Human, Bonobo, Chimp, Orangutan, Gorilla\n" +
-		"Usage:\n" +
-		"  quickPrimateRecon input.fa output.fa\n" +
-		"options:\n")
+			"Must be in the following order: Human, Bonobo, Chimp, Orangutan, Gorilla\n" +
+			"Usage:\n" +
+			"  quickPrimateRecon input.fa output.fa\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 

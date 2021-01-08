@@ -15,7 +15,7 @@ var Input2 = []*fasta.Fasta{{"hg38", hum2}, {"panPan2", bon2}, {"panTro6", chimp
 
 var ChimpReconTests = []struct {
 	records []*fasta.Fasta
-	answer *fasta.Fasta
+	answer  *fasta.Fasta
 }{
 	{Input2, &fasta.Fasta{"Human_Chimp_Ancestor", dna.StringToBases("AATNA--TNNCGTCTN")}},
 }
