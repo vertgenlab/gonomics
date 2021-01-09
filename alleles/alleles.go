@@ -3,10 +3,10 @@ package alleles
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/common"
 	"strings"
 )
 
@@ -101,7 +101,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			Pos:    loc.Pos + 1,
 			Id:     ".",
 			Ref:    base,
-			Alt:   []string{"A"},
+			Alt:    []string{"A"},
 			Qual:   1,
 			Filter: ".",
 			Info:   Sa[0],
