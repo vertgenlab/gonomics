@@ -14,13 +14,13 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 
 	var answer *axt.Axt = &axt.Axt{
 		RName:      ch.TName,
-		RStart:     int64(ch.TStart) + 1,
-		REnd:       int64(ch.TEnd),
+		RStart:     ch.TStart + 1,
+		REnd:       ch.TEnd,
 		QName:      ch.QName,
-		QStart:     int64(ch.QStart) + 1,
-		QEnd:       int64(ch.QEnd),
+		QStart:     ch.QStart + 1,
+		QEnd:       ch.QEnd,
 		QStrandPos: ch.QStrand,
-		Score:      int64(ch.Score),
+		Score:      ch.Score,
 		RSeq:       make([]dna.Base, 0, tLen),
 		QSeq:       make([]dna.Base, 0, qLen),
 	}

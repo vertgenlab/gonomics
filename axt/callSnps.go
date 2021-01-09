@@ -123,7 +123,7 @@ func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta,
 	query := fasta.FastaMap(qFa)
 	var records []*vcf.Vcf
 	var refIndex int = 0
-	var queryIndex int64 = 0
+	var queryIndex int = 0
 	var lastQuery string = ""
 	var lastChr string = ""
 	var gap *vcf.Vcf
@@ -156,8 +156,8 @@ func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta,
 
 func Filter(records []*Axt) []*Axt {
 	var answer []*Axt = []*Axt{records[0]}
-	var bestQueryLen int64 = records[0].QEnd - records[0].QStart
-	var bestQueryScore int64 = records[0].Score
+	var bestQueryLen int = records[0].QEnd - records[0].QStart
+	var bestQueryScore int = records[0].Score
 	var i int
 	var ok bool
 	for i = 1; i < len(records); i++ {

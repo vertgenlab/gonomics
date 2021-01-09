@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -16,13 +15,13 @@ import (
 // match the UCSC Kent source tree.
 type Axt struct {
 	RName      string
-	RStart     int64
-	REnd       int64
+	RStart     int
+	REnd       int
 	QName      string
-	QStart     int64
-	QEnd       int64
+	QStart     int
+	QEnd       int
 	QStrandPos bool // true is positive strand, false is negative strand
-	Score      int64
+	Score      int
 	RSeq       []dna.Base
 	QSeq       []dna.Base
 }
@@ -31,7 +30,6 @@ type Axt struct {
 func Read(filename string) []*Axt {
 	var answer []*Axt
 	var header, rSeq, qSeq, blank string
-	var err, startErr, endErr error
 	var hDone, rDone, qDone, bDone bool
 	var words []string
 
@@ -55,17 +53,11 @@ func Read(filename string) []*Axt {
 
 		curr := Axt{}
 		curr.RName = words[1]
-		curr.RStart, startErr = strconv.ParseInt(words[2], 10, 64)
-		curr.REnd, endErr = strconv.ParseInt(words[3], 10, 64)
-		if startErr != nil || endErr != nil {
-			log.Fatalf("Error: trouble parsing reference start and end in %s\n", header)
-		}
+		curr.RStart = common.StringToInt(words[2])
+		curr.REnd = common.StringToInt(words[3])
 		curr.QName = words[4]
-		curr.QStart, startErr = strconv.ParseInt(words[5], 10, 64)
-		curr.QEnd, endErr = strconv.ParseInt(words[6], 10, 64)
-		if startErr != nil || endErr != nil {
-			log.Fatalf("Error: trouble parsing query start and end in %s\n", header)
-		}
+		curr.QStart = common.StringToInt(words[5])
+		curr.QEnd = common.StringToInt(words[6])
 		switch words[7] {
 		case "+":
 			curr.QStrandPos = true
@@ -74,10 +66,7 @@ func Read(filename string) []*Axt {
 		default:
 			log.Fatalf("Error: did not recognize strand in %s\n", header)
 		}
-		curr.Score, err = strconv.ParseInt(words[8], 10, 64)
-		if err != nil {
-			log.Fatalf("Error: trouble parsing the score in %s\n", header)
-		}
+		curr.Score = common.StringToInt(words[8])
 		curr.RSeq = dna.StringToBases(rSeq)
 		curr.QSeq = dna.StringToBases(qSeq)
 
@@ -133,13 +122,13 @@ func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
 	}
 	var answer *Axt = &Axt{
 		RName:      words[1],
-		RStart:     common.StringToInt64(words[2]),
-		REnd:       common.StringToInt64(words[3]),
+		RStart:     common.StringToInt(words[2]),
+		REnd:       common.StringToInt(words[3]),
 		QName:      words[4],
-		QStart:     common.StringToInt64(words[5]),
-		QEnd:       common.StringToInt64(words[6]),
+		QStart:     common.StringToInt(words[5]),
+		QEnd:       common.StringToInt(words[6]),
 		QStrandPos: common.StringToStrand(words[7]),
-		Score:      common.StringToInt64(words[8]),
+		Score:      common.StringToInt(words[8]),
 		RSeq:       dna.StringToBases(rSeq),
 		QSeq:       dna.StringToBases(qSeq),
 	}
@@ -175,7 +164,7 @@ func AxtInfo(input *Axt) string {
 }
 
 //SwapBoth will preform a simple swap with target and query records contained inside axt alignment.
-func SwapBoth(in *Axt, tLen int64, qLen int64) *Axt {
+func SwapBoth(in *Axt, tLen int, qLen int) *Axt {
 	in.RSeq, in.QSeq = in.QSeq, in.RSeq
 	in.RName, in.QName = in.QName, in.RName
 	if !in.QStrandPos {
