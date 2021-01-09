@@ -30,15 +30,14 @@ func humanInsertion(mafFile string, outBed_ins string, outBed_del string, specie
 					if assembly_ins != species_ins { //verify line k-1 is indeed species_ins
 						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
 					}
-					if mafRecords[i].Species[k-1].SLine == nil { //if corresponding species_ins line is not an s line
-						continue //move on to the next iteration
-					}
+					if mafRecords[i].Species[k-1].SLine != nil { //if corresponding species_ins line an s line
 
-					//convert maf to bed, continued
-					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
-					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[k-1].SLine.Start, ChromEnd: mafRecords[i].Species[k-1].SLine.Start + mafRecords[i].Species[k-1].SLine.Size, Name: "ins", Score: int64(mafRecords[i].Score)}
-					bedList_del = append(bedList_del, &current_del) //append to growing bed
-					bedList_ins = append(bedList_ins, &current_ins)
+						//convert maf to bed, continued
+						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
+						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[k-1].SLine.Start, ChromEnd: mafRecords[i].Species[k-1].SLine.Start + mafRecords[i].Species[k-1].SLine.Size, Name: "ins", Score: int64(mafRecords[i].Score)}
+						bedList_del = append(bedList_del, &current_del) //append to growing bed
+						bedList_ins = append(bedList_ins, &current_ins)
+					}
 				}
 			}
 		}
