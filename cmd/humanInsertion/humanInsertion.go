@@ -1,110 +1,79 @@
-//template copied from mafFilter.go
+//References
+//cmd/mafFilter/mafFilter.go
+//cmd/mafToBed/mafToBed/go
+//maf/maf.go esp Read function
+//bed/bed.go
+
+//Reminder on relevant structs
+//Maf = {Score,Species []*MafSpecies}
+//MafSpecies = {Src,SLine,ILine,ELine *MafELine}
+//MafELine = {Src,Start,Size,Strand,SrcSize,Status}
+
 package main
 
 import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/maf"
+	"github.com/vertgenlab/gonomics/bed"
 	"log"
 )
 
-//template copied from Read function in maf.go
-func Read(filename string) []*Maf {
-	var answer []*Maf
-	var line, prevLine string
-	var doneReading bool = false
-	var words []string
-	var curr *Maf
-	var currSpecies *MafSpecies
+func humanInsertion(mafFile string, outBed_ins string, outBed_del string, species_ins string, species_del string) {
+	//initialize variables
+	mafRecords := maf.Read(mafFile) //Read entire mafFile. mafRecords has type Maf
+	var bedList_ins []*bed.Bed //initialize 2 bed files
+	var bedList_del []*bed.Bed //1 bed file for ins, 1 bed file for del
 
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
+	//go through each line
+	for i, _ := range mafRecords {//each i is a block
+		for k, _ := range mafRecords[i].Species {//each k is a line
 
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.HasPrefix(line, "a") {
-			if curr != nil {
-				log.Fatalf("Error: no blank line before another 'a' line at line: %s\n", line)
-			}
-			curr = parseMafALine(line)
-		} else if strings.HasPrefix(line, "s") || strings.HasPrefix(line, "i") || strings.HasPrefix(line, "e") {
-			if curr == nil {
-				log.Fatalf("Error: did not find an 'a' line before this, 'sie' line: %s\n", line)
-			}
-			words = strings.Fields(line)
-			currSpecies = FindSpeciesExactMatch(curr, words[1])
-			if currSpecies == nil {
-				currSpecies = &MafSpecies{Src: words[1]}
-				curr.Species = append(curr.Species, currSpecies)
-			}
-			if strings.HasPrefix(line, "s") {
-				if currSpecies.SLine != nil {
-					log.Fatalf("Error: this 's' line looks like a duplicate: %s\n", line)
+			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
+			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src) //start with species_del, get assembly (e.g. panTro6), chrom (e.g. chrI)
+			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k-1].Src) //then find corresponding species_ins line, same block, 1 line above since pairwise maf
+
+			//get eC species_del lines
+			if mafRecords[i].Species[k].ELine != nil {
+				if mafRecords[i].Species[k].ELine.Status=='C' && assembly_del == species_del { //I decided to check for both Status and Src here because they are on the same data level
+
+					//get corresponding s species_ins lines
+					if assembly_ins != species_ins { //verify line k-1 is indeed species_ins
+						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
+					}
+					if mafRecords[i].Species[k-1].SLine == nil { //if corresponding species_ins line is not an s line
+						continue //move on to the next iteration
+					}
+
+					//convert maf to bed, continued
+					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
+					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[k-1].SLine.Start, ChromEnd: mafRecords[i].Species[k-1].SLine.Start + mafRecords[i].Species[k-1].SLine.Size, Name: "ins", Score: int64(mafRecords[i].Score)}
+					bedList_del = append(bedList_del, &current_del) //append to growing bed
+					bedList_ins = append(bedList_ins, &current_ins)
 				}
-				currSpecies.SLine = parseMafSLine(line)
-			} else if strings.HasPrefix(line, "i") {
-				if currSpecies.ILine != nil {
-					log.Fatalf("Error: this 'i' line looks like a duplicate: %s\n", line)
-				}
-				currSpecies.ILine = parseMafILine(line)
-			} else if strings.HasPrefix(line, "e") {
-				if currSpecies.ELine != nil {
-					log.Fatalf("Error: this 'e' line looks like a duplicate: %s\n", line)
-				}
-				currSpecies.ELine = parseMafELine(line)
-			} else {
-				log.Fatalf("Error: trouble parsing maf line: %s\n", line)
 			}
-		} else if line == "" { //blank line at end of maf block
-			answer = append(answer, curr)
-			curr = nil
-		} else {
-			log.Fatalf("Unexpected format in maf file on line: %s\n", line)
-		}
-		prevLine = line
-	}
-	if prevLine != "" {
-		log.Fatalf("Error: maf should have a blank line as the last non-comment line, but found this at end: %s\n", prevLine)
-	}
-	return answer
-}
-
-func mafFilter(inFile string, outFile string, threshold float64) {
-	mafRecords := maf.Read(inFile)
-	var outMaf []*maf.Maf
-
-	for i, _ := range mafRecords {
-		if mafRecords[i].Score >= threshold {
-			outMaf = append(outMaf, mafRecords[i])
 		}
 	}
 
-	maf.Write(outFile, outMaf)
-}
+	//write out bed files
+	bed.Write(outBed_del, bedList_del, 5) //bed file has 5 fields
+	bed.Write(outBed_ins, bedList_ins, 5)
+	}
+
 
 func usage() {
 	fmt.Print(
-		"mafFilter - Filter a maf file to remove entries below a score threshold\n" +
+		"humanInsertion - takes pairwise alignment maf and finds insertions in the reference species not present in the other species but flanked by continuous alignments\n" +
 			"Usage:\n" +
-			" mafFilter mafFile oufMaf\n" +
+			" humanInsertion mafFile outBed referenceSpeciesName\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	//raven started work here
-	//refer to maf/maf.go
-	//read file line by line, use maf.Read
-	if strings.HasPrefix(line,"e") { //line string
-		MafELine=parseMafELine(line)
-		if MafELine.Status=='C' && MafELine.Src=="panTro6" {//eC lines, which should belong to Chimp
-			//add to collection
-		}
-	}
-
-	var expectedNumArgs int = 2
+	var expectedNumArgs int = 5
 
 	flag.Usage = usage
-	var threshold *float64 = flag.Float64("threshold", 0, "Specifies the threshold value")
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
@@ -114,7 +83,10 @@ func main() {
 	}
 
 	mafFile := flag.Arg(0)
-	outMaf := flag.Arg(1)
+	outBed_ins := flag.Arg(1)
+	outBed_del := flag.Arg(2)
+	species_ins := flag.Arg(3) //e.g. hg38
+	species_del := flag.Arg(4) //e.g. panTro6
 
-	mafFilter(mafFile, outMaf, *threshold)
+	humanInsertion(mafFile, outBed_ins, outBed_del, species_ins, species_del)
 }
