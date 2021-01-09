@@ -45,7 +45,7 @@ func vcfLineToBed(v *Vcf) *bed.Bed {
 	}
 	if Del(v) {
 		b.ChromStart = int64(v.Pos)
-		b.ChromEnd = int64(v.Pos + len(dna.StringToBases(v.Ref))-1)
+		b.ChromEnd = int64(v.Pos + len(dna.StringToBases(v.Ref)) - 1)
 	}
 	return b
 }

@@ -68,7 +68,6 @@ func FilterChrom(v *Vcf, chrom string) bool {
 	return true
 }
 
-
 //TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
 func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
@@ -191,7 +190,6 @@ func getListIndex(header *VcfHeader, list []string) []int16 {
 	}
 	return listIndex
 }
-
 
 func ByNames(inChan <-chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
 	var listIndex []int16 = getListIndex(header, list)

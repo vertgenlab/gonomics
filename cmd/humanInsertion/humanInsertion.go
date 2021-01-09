@@ -3,28 +3,28 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/maf"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/maf"
 	"log"
 )
 
 func humanInsertion(mafFile string, outBed_ins string, outBed_del string, species_ins string, species_del string) {
 	//initialize variables
 	mafRecords := maf.Read(mafFile) //Read entire mafFile. mafRecords has type Maf
-	var bedList_ins []*bed.Bed //initialize 2 bed files
-	var bedList_del []*bed.Bed //1 bed file for ins, 1 bed file for del
+	var bedList_ins []*bed.Bed      //initialize 2 bed files
+	var bedList_del []*bed.Bed      //1 bed file for ins, 1 bed file for del
 
 	//go through each line
-	for i, _ := range mafRecords {//each i is a block
-		for k, _ := range mafRecords[i].Species {//each k is a line
+	for i, _ := range mafRecords { //each i is a block
+		for k, _ := range mafRecords[i].Species { //each k is a line
 
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
-			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src) //start with species_del, get assembly (e.g. panTro6), chrom (e.g. chrI)
+			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)   //start with species_del, get assembly (e.g. panTro6), chrom (e.g. chrI)
 			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k-1].Src) //then find corresponding species_ins line, same block, 1 line above since pairwise maf
 
 			//get eC species_del lines
 			if mafRecords[i].Species[k].ELine != nil {
-				if mafRecords[i].Species[k].ELine.Status=='C' && assembly_del == species_del { //I decided to check for both Status and Src here because they are on the same data level
+				if mafRecords[i].Species[k].ELine.Status == 'C' && assembly_del == species_del { //I decided to check for both Status and Src here because they are on the same data level
 
 					//get corresponding s species_ins lines
 					if assembly_ins != species_ins { //verify line k-1 is indeed species_ins
@@ -47,8 +47,7 @@ func humanInsertion(mafFile string, outBed_ins string, outBed_del string, specie
 	//write out bed files
 	bed.Write(outBed_del, bedList_del, 5) //bed file has 5 fields
 	bed.Write(outBed_ins, bedList_ins, 5)
-	}
-
+}
 
 func usage() {
 	fmt.Print(

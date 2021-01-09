@@ -34,7 +34,6 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 		for val := range receive {
 			send <- val
 		}
-	
 
 	case ".vcf":
 		receive, _ := vcf.GoReadToChan(inputFile)
