@@ -1,14 +1,3 @@
-//References
-//cmd/mafFilter/mafFilter.go
-//cmd/mafToBed/mafToBed/go
-//maf/maf.go esp Read function
-//bed/bed.go
-
-//Reminder on relevant structs
-//Maf = {Score,Species []*MafSpecies}
-//MafSpecies = {Src,SLine,ILine,ELine *MafELine}
-//MafELine = {Src,Start,Size,Strand,SrcSize,Status}
-
 package main
 
 import (
@@ -63,9 +52,9 @@ func humanInsertion(mafFile string, outBed_ins string, outBed_del string, specie
 
 func usage() {
 	fmt.Print(
-		"humanInsertion - takes pairwise alignment maf and finds insertions in the reference species not present in the other species but flanked by continuous alignments\n" +
+		"humanInsertion - takes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments\n" +
 			"Usage:\n" +
-			" humanInsertion mafFile outBed referenceSpeciesName\n" +
+			" humanInsertion mafFile outBed_ins outBed_del species_ins species_del\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
