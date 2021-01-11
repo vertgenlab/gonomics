@@ -15,13 +15,14 @@ import (
 
 //Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
 type Bed struct {
-	Chrom      string
-	ChromStart int64
-	ChromEnd   int64
-	Name       string
-	Score      int64
-	Strand     bool
-	Annotation []string //long form for extra fields
+	Chrom             string
+	ChromStart        int64
+	ChromEnd          int64
+	Name              string
+	Score             int64
+	Strand            bool
+	FieldsInitialized int      //number of fields that are initialized, used for smart writing.
+	Annotation        []string //long form for extra fields
 }
 
 //BedToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
@@ -99,7 +100,7 @@ func processBedLine(line string) *Bed {
 	startNum := common.StringToInt64(words[1])
 	endNum := common.StringToInt64(words[2])
 
-	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
