@@ -48,7 +48,7 @@ func (b BedSlice) Write(file string) {
 
 func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
 	//TODO: write max fields that are non-nil?
-	WriteToFileHandle(file, b, 7)
+	WriteToFileHandle(file, b, b.FieldsInitialized) //adaptive field writing seems most flexible for the method
 }
 
 func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
