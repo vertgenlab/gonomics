@@ -62,12 +62,9 @@ func TestGraphRecon(t *testing.T) {
 	log.Print(nodeAlign1.AlignId)
 	log.Print(nodeAlign2.AlignId)
 
-	final := PathFinder(humanGraph)
-	var path []*simpleGraph.Node
-	for _, answer := range final {
-		path = append(path, answer)
-	}
+	path, prob := PathFinder(humanGraph)
 	log.Print(path)
+	log.Print(prob)
 
 }
 
