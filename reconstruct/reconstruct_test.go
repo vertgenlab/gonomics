@@ -3,8 +3,8 @@ package reconstruct
 import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"testing"
 )

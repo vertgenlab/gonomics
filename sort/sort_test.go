@@ -1,8 +1,8 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/simpleGraph"
 	"os"
 	"testing"
 )
