@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"testing"
 )
@@ -41,4 +42,5 @@ func TestReadAndWrite(t *testing.T) {
 	} else {
 		log.Fatal("Error: files are not the same...\n")
 	}
+	fileio.EasyRemove("testdata/giraf.tsv")
 }

@@ -3,6 +3,7 @@ package reconstruct
 import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"testing"
@@ -38,4 +39,8 @@ func Test_reconstruct(t *testing.T) {
 			log.Printf("%s %f \n", name, accuracy)
 		}
 	}
+	fileio.EasyRemove("reconOut.fasta")
+	fileio.EasyRemove("simOut.fasta")
+	fileio.EasyRemove("RandGeneOutput.fasta")
+	fileio.EasyRemove("leavesOnly.fasta")
 }

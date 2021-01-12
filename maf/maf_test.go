@@ -22,9 +22,6 @@ func TestReadWrite(t *testing.T) {
 		if !fileio.AreEqualIgnoreComments(test.filename, tempFile) {
 			t.Errorf("File has changed after reading and writing.")
 		}
-		/*err := os.Remove(tempFile)
-		if err != nil {
-			t.Errorf("Deleting temp file %s gave an error.", tempFile)
-		}*/
+		fileio.EasyRemove(tempFile)
 	}
 }
