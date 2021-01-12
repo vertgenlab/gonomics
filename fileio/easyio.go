@@ -60,6 +60,13 @@ func EasyNextRealLine(file *EasyReader) (string, bool) {
 	return NextRealLine(file.BuffReader)
 }
 
+func EasyRemove(filename string) {
+	err := os.Remove(filename)
+	if err != nil {
+		common.ExitIfError(err)
+	}
+}
+
 func (er *EasyReader) Close() {
 	/*if er.BuffReader != nil {
 		er.BuffReader.Close()

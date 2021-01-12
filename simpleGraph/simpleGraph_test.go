@@ -3,8 +3,8 @@ package simpleGraph
 import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -31,8 +31,8 @@ func TestWorkerWithWriting(t *testing.T) {
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
-	os.Remove("testdata/simReads_R1.fq")
-	os.Remove("testdata/simReads_R2.fq")
+	//os.Remove("testdata/simReads_R1.fq")
+	//os.Remove("testdata/simReads_R2.fq")
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
@@ -54,7 +54,9 @@ func TestWorkerWithWriting(t *testing.T) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-
+	fileio.EasyRemove("testdata/simReads_R1.fq")
+	fileio.EasyRemove("testdata/simReads_R2.fq")
+	fileio.EasyRemove("testdata/pairedTest.giraf")
 }
 
 /*

@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const Profile int = 0
+
 func TestQuickMemPool(t *testing.T) {
 	var tileSize int = 14
 	var stepSize int = 4
@@ -52,12 +54,13 @@ func TestQuickMemPool(t *testing.T) {
 	log.Printf("Starting alignment worker...\n")
 	time.Sleep(5 * time.Second)
 
-	f, err := os.Create("testdata/cpuprofile.data")
-	common.ExitIfError(err)
-	defer f.Close()
-	err = pprof.StartCPUProfile(f)
-	common.ExitIfError(err)
-
+	if Profile > 0 {
+		f, err := os.Create("testdata/cpuprofile.data")
+		common.ExitIfError(err)
+		defer f.Close()
+		err = pprof.StartCPUProfile(f)
+		common.ExitIfError(err)
+	}
 	start := time.Now()
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
@@ -76,6 +79,8 @@ func TestQuickMemPool(t *testing.T) {
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
 	strictCheckFile("testdata/sim.sam", genome)
 	log.Printf("Passed alignment check!!!\n")
+	fileio.EasyRemove("testdata/simReads.fq")
+	fileio.EasyRemove("testdata/sim.sam")
 }
 
 func strictCheckAlignment(aln *sam.SamAln, genome *SimpleGraph) {

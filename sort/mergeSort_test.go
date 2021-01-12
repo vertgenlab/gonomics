@@ -2,6 +2,7 @@ package sort
 
 import (
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
 )
 
@@ -16,4 +17,5 @@ func TestExternalMergeSort(t *testing.T) {
 			t.Errorf("ERROR: Problem with external merge sort of vcf files: \n %v \n is not less than \n %v", sorted[i-1], sorted[i])
 		}
 	}
+	fileio.EasyRemove("sorted.vcf")
 }
