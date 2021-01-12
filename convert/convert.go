@@ -84,7 +84,8 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum, x int64
+	var startNum, endNum int64
+	var x int
 	var i int = 0
 	var doneReading bool = false
 	var current *bed.Bed
@@ -93,7 +94,7 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
-		for x = 0; x < v.Size; x++ {
+		for x = 0; int64(x) < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
 		}
 		wigSlice[i] = &currentWig
@@ -135,7 +136,8 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum, x int64
+	var startNum, endNum int64
+	var x int
 	var i int = 0
 	var doneReading bool = false
 	var current *bed.Bed
@@ -144,7 +146,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
-		for x = 0; x < v.Size; x++ {
+		for x = 0; int64(x) < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
 		}
 		wigSlice[i] = &currentWig
@@ -184,13 +186,12 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
-	var i int = 0
-	var x int64 = 0
+	var i, x int = 0, 0
 	//generate Wig skeleton from reference
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
-		for x = 0; x < v.Size; x++ {
+		for x = 0; int64(x) < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
 		}
 		wigSlice[i] = &currentWig
