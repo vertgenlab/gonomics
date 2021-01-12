@@ -62,9 +62,7 @@ func EasyNextRealLine(file *EasyReader) (string, bool) {
 
 func EasyRemove(filename string) {
 	err := os.Remove(filename)
-	if err != nil {
-		common.ExitIfError(err)
-	}
+	common.ExitIfError(err)
 }
 
 func (er *EasyReader) Close() {
