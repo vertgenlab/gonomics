@@ -231,6 +231,19 @@ func TranslateSeq(b []Base) []AminoAcid {
 	return answer
 }
 
+//TranslateToTer takes a sequence of in-frame DNA bases and translates to the first stop codon. Returns a slice of amino acids the distance to the stop codon in base zero.
+func TranslateToTer(b []Base) []AminoAcid {
+	var answer []AminoAcid
+	codons := BasesToCodons(b)
+	for i := 0; i < len(codons); i++ {
+		answer = append(answer, TranslateCodon(codons[i]))
+		if answer[len(answer)-1] == Stop {
+			break
+		}
+	}
+	return answer
+}
+
 //PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
 func PolypeptideToShortString(a []AminoAcid) string {
 	var answer string
