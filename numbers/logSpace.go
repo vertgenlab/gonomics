@@ -65,6 +65,14 @@ func SubtractLog(x float64, y float64) float64 {
 	return x
 }
 
+//RelativeErrorLog returns the relative error between two log space numbers as a log space number.
+func RelativeErrorLog(actual float64, expected float64) float64 {
+	if actual > expected {
+		return DivideLog(SubtractLog(actual, expected), expected)
+	}
+	return DivideLog(SubtractLog(expected, actual), expected)
+}
+
 //MultiplyLog returns the product of two numbers in logSpace.
 func MultiplyLog(x float64, y float64) float64 {
 	if math.IsInf(x, -1) || math.IsInf(y, -1) {

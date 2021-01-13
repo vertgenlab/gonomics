@@ -38,12 +38,13 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 	log.Printf("eval:%f, %f, %f, %f\n", math.Exp(integrateMe(0.4)), integrateMeNonLog(0.4), integrateMeCareful(0.4), math.Exp(integrateMeCarefulLog(0.4)))
 	log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMe, 0, 1, 1e-10, 1000)))
 	log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeNonLog, 0, 1, 1e-10, 1000))
-	log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeCareful, 0, 1, 1e-10, 1000))
+	//log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeCareful, 0, 1, 1e-10, 1000))
 	log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMeCarefulLog, 0, 1, 1e-10, 1000)))
+	log.Fatalf("DONE")
 
 	var testAlpha, currCalc, ratio float64
 	var shouldBeBest float64 = AFSLikelihood(counts, n, alpha)
-	for testAlpha = alpha - 2; testAlpha <= alpha+3; testAlpha += 0.2 {
+	for testAlpha = alpha - 2; testAlpha <= alpha+3; testAlpha += 0.5 {
 		if alpha == 0 {
 			currCalc = AFSLikelihood(counts, n, 0.03)
 			ratio = math.Exp(currCalc - shouldBeBest)
@@ -57,43 +58,49 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 }
 
 func FIntegralComponentCarefulLog(n int, k int, alpha float64) func(float64) float64 {
-	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		if p == 0 || p == 1 {
+		/*if p == 0 || p == 1 {
 			return math.Inf(-1)
-		}
-		var ans float64 = binomCoeff + float64(k-1)*math.Log(p) + float64(n-k-1)*math.Log(1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
+		}*/
+		var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
+		//var ans float64 = binomCoeff + float64(k-1)*math.Log(p) + float64(n-k-1)*math.Log(1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
+		var ans float64 = binomCoeff + numbers.LogPow(float64(k-1), p) + numbers.LogPow(float64(n-k-1), 1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
 		return ans
 	}
 }
 
 func FIntegralComponentCareful(n int, k int, alpha float64) func(float64) float64 {
-	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		if p == 0 || p == 1 {
+		/*if p == 0 || p == 1 {
 			return 0
-		}
-		var ans float64 = binomCoeff + float64(k-1)*math.Log(p) + float64(n-k-1)*math.Log(1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
+		}*/
+		var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
+		//carefulExpression := numbers.LogPow(float64(k-1), p) + numbers.LogPow(float64(n-k-1), 1.0-p)
+		carefulExpression := numbers.MultiplyLog(numbers.LogPow(float64(k-1), p), numbers.LogPow(float64(n-k-1), 1.0-p))
+		functionExpression := numbers.BinomialExpressionLog(n-2, k-1, p)
+		log.Printf("n: %v. k: %v. alpha: %f. p: %v. carefulExpression: %f. functionExpression: %f.\n", n, k, alpha, p, carefulExpression, functionExpression)
+		var ans float64 = binomCoeff + carefulExpression + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
+		//var ans float64 = binomCoeff + float64(k-1) * math.Log(p) + float64(n-k-1) * math.Log(1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
 		return math.Exp(ans)
 	}
 }
 
 func FIntegralComponentNonLog(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
-		if p == 0 || p == 1 {
+		/*if p == 0 || p == 1 {
 			return 0
-		}
+		}*/
 		ans := math.Exp(numbers.BinomCoefficientLog(n, k)) * math.Pow(p, float64(k-1)) * math.Pow(1-p, float64(n-k-1)) * (1.0 - math.Exp(-1.0*alpha*(1.0-p))) * 2.0 / (1.0 - math.Exp(-1.0*alpha))
 		return ans
 	}
 }
 
 func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
-	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		if p == 0 || p == 1 {
+		/*if p == 0 || p == 1 {
 			return math.Inf(-1)
-		}
+		}*/
+		var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		//expressionTwo := float64(k-1) * math.Log(p) + float64(n-k-1) * math.Log(1.0-p)
 		//if math.Abs(expression-expressionTwo) > 1e-6 {
@@ -105,11 +112,9 @@ func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
 	}
 }
 
+/*
 func ficBinomCoeff(n int, k int, alpha float64, binomCoeff float64) func(float64) float64 {
 	return func(p float64) float64 {
-		if p == 0 || p == 1 {
-			return math.Inf(-1)
-		}
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1.0 - math.Exp(-1.0*alpha*(1.0-p))) * 2.0 / (1.0 - math.Exp(-1.0*alpha)))
 		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
@@ -119,15 +124,12 @@ func ficBinomCoeff(n int, k int, alpha float64, binomCoeff float64) func(float64
 
 func fic(n int, k int, alpha float64, binomCoeff float64) func(float64) float64 {
 	return func(p float64) float64 {
-		if p == 0 || p == 1 {
-			return math.Inf(-1)
-		}
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1.0 - math.Exp(-1.0*alpha*(1.0-p))) * 2.0 / (1.0 - math.Exp(-1.0*alpha)))
 		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
 		//return numbers.MultiplyLog(expression, logPart)
 	}
-}
+}*/
 
 func AFSSampleDensityCarefulLog(n int, k int, alpha float64, start float64, end float64, accuracy float64) float64 {
 	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
@@ -166,7 +168,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, start, end, accurac
 	ans = numbers.DivideLog(numer, denom)
 	ansCareful = numbers.DivideLog(numerCareful, denomCareful)
 	ansCarefulLog = numbers.DivideLog(numerCarefulLog, denomCarefulLog)
-	if math.Abs(ans-ansCareful) > 1e-5 || math.Abs(ans-ansCarefulLog) > 1e-5 { // this is for normal space, but need log space
+	if math.Exp(numbers.RelativeErrorLog(ans, ansCareful)) > 1e-5 || math.Exp(numbers.RelativeErrorLog(ans, ansCarefulLog)) > 1e-5 { // this is for normal space, but need log space
 		log.Printf("%e %e %e\n", ans, ansCareful, ansCarefulLog)
 		log.Printf("%d %d %f\n", n, i, alpha)
 	}
