@@ -11,6 +11,7 @@ func TestGtfToGoGene(t *testing.T) {
 	g := gtf.Read("testdata/test.gtf")
 	f := fasta.Read("testdata/test.fasta")
 	var ok bool
+	var err error
 
 	// Positive posStrand test
 	answerPos := GtfToGene(g["test_gene_id"], f)
@@ -20,8 +21,11 @@ func TestGtfToGoGene(t *testing.T) {
 		cdsStarts:    []int{2, 7, 11},
 		cdsEnds:      []int{4, 9, 13},
 		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
-		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		cdnaSeq:      dna.StringToBases("ACATGCCGTAACG"),
 		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
+		utrFive:      subSeq{start: 0, end: 2, seq: dna.StringToBases("AC")},
+		utrThree:     subSeq{start: 11, end: 13, seq: dna.StringToBases("CG")},
+		codingSeq:    subSeq{start: 2, end: 11, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
 	var correctPos Gene = Gene{
@@ -31,13 +35,16 @@ func TestGtfToGoGene(t *testing.T) {
 		cdsStarts:    []int{2, 7, 11},
 		cdsEnds:      []int{4, 9, 13},
 		genomeSeq:    dna.StringToBases("ACATGCACCGTTAACG"),
-		cdnaSeq:      dna.StringToBases("ATGCCGTAA"),
+		cdnaSeq:      dna.StringToBases("ACATGCCGTAACG"),
 		featureArray: []Feature{-5, -5, 0, 1, 2, -1, -1, 3, 4, 5, -1, 6, 7, 8, -3, -3},
 		orig:         correctBackup,
+		utrFive:      subSeq{start: 0, end: 2, seq: dna.StringToBases("AC")},
+		utrThree:     subSeq{start: 11, end: 13, seq: dna.StringToBases("CG")},
+		codingSeq:    subSeq{start: 2, end: 11, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
-	if ok, _ = equal(answerPos, &correctPos); !ok {
-		t.Error("ERROR: Trouble converting gtf to Gene on positive posStrand")
+	if ok, err = equal(answerPos, &correctPos); !ok {
+		t.Errorf("ERROR: Trouble converting gtf to Gene on positive strand, error is %s", err)
 	}
 
 	// Negative posStrand test
@@ -53,12 +60,14 @@ func TestGtfToGoGene(t *testing.T) {
 		cdnaSeq:      correctPos.cdnaSeq,
 		featureArray: correctPos.featureArray,
 		orig:         correctBackup,
+		utrFive:      correctPos.utrFive,
+		utrThree:     correctPos.utrThree,
+		codingSeq:    correctPos.codingSeq,
 	}
 
 	correctNeg.orig.startPos = 15
-
-	if ok, _ = equal(answerNeg, &correctNeg); !ok {
-		t.Error("ERROR: Trouble converting gtf to Gene on negative posStrand")
+	if ok, err = equal(answerNeg, &correctNeg); !ok {
+		t.Errorf("ERROR: Trouble converting gtf to Gene on negative strand, error is %s", err)
 	}
 }
 

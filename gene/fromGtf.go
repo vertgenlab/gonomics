@@ -22,7 +22,7 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 		fastaMap := fasta.FastaMap(ref)
 		answer.genomeSeq = make([]dna.Base, transcript.End-(transcript.Start-1))
 		copy(answer.genomeSeq, fastaMap[transcript.Chr][transcript.Start-1:transcript.End])
-		answer.cdnaSeq = make([]dna.Base, 0, gtf.CdsLength(transcript))
+		answer.cdnaSeq = make([]dna.Base, 0, len(answer.genomeSeq))
 		answer.featureArray = make([]Feature, len(answer.genomeSeq))
 		answer.cdsStarts = make([]int, 0, len(transcript.Exons))
 		answer.cdsEnds = make([]int, 0, len(transcript.Exons))
@@ -40,11 +40,9 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 				for i = val.FiveUtr.Start - 1 - answer.startPos; i < val.FiveUtr.End-answer.startPos; i++ {
 					answer.featureArray[i] = UtrFive
 				}
-			}
-
-			if val.ThreeUtr != nil {
-				for i = val.ThreeUtr.Start - 1 - answer.startPos; i < val.ThreeUtr.End-answer.startPos; i++ {
-					answer.featureArray[i] = UtrThree
+				answer.cdnaSeq = append(answer.cdnaSeq, fastaMap[transcript.Chr][val.FiveUtr.Start-1:val.FiveUtr.End]...)
+				if val.FiveUtr.End-answer.startPos > answer.utrFive.end {
+					answer.utrFive.end = val.FiveUtr.End - answer.startPos
 				}
 			}
 
@@ -58,6 +56,16 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 					currCdsPos++
 				}
 			}
+
+			if val.ThreeUtr != nil {
+				for i = val.ThreeUtr.Start - 1 - answer.startPos; i < val.ThreeUtr.End-answer.startPos; i++ {
+					answer.featureArray[i] = UtrThree
+				}
+				if answer.utrThree.start == 0 {
+					answer.utrThree.start = len(answer.cdnaSeq)
+				}
+				answer.cdnaSeq = append(answer.cdnaSeq, fastaMap[transcript.Chr][val.ThreeUtr.Start-1:val.ThreeUtr.End]...)
+			}
 		}
 
 	} else { // If on the negative posStrand
@@ -67,7 +75,7 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 		answer.genomeSeq = make([]dna.Base, transcript.End-(transcript.Start-1))
 		copy(answer.genomeSeq, fastaMap[transcript.Chr][transcript.Start-1:transcript.End])
 		dna.ReverseComplement(answer.genomeSeq)
-		answer.cdnaSeq = make([]dna.Base, 0, gtf.CdsLength(transcript))
+		answer.cdnaSeq = make([]dna.Base, 0, len(answer.genomeSeq))
 		answer.featureArray = make([]Feature, len(answer.genomeSeq))
 		answer.cdsStarts = make([]int, 0, len(transcript.Exons))
 		answer.cdsEnds = make([]int, 0, len(transcript.Exons))
@@ -87,11 +95,9 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 				for i = answer.startPos - (val.FiveUtr.End - 1); i < answer.startPos-(val.FiveUtr.Start-2); i++ {
 					answer.featureArray[i] = UtrFive
 				}
-			}
-
-			if val.ThreeUtr != nil {
-				for i = answer.startPos - (val.ThreeUtr.End - 1); i < answer.startPos-(val.ThreeUtr.Start-2); i++ {
-					answer.featureArray[i] = UtrThree
+				answer.cdnaSeq = append(answer.cdnaSeq, answer.genomeSeq[answer.startPos-(val.FiveUtr.End-1):answer.startPos-(val.FiveUtr.Start-2)]...)
+				if answer.utrFive.end < answer.startPos-(val.FiveUtr.Start-2) {
+					answer.utrFive.end = answer.startPos - (val.FiveUtr.Start - 2)
 				}
 			}
 
@@ -105,8 +111,27 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 					currCdsPos++
 				}
 			}
+
+			if val.ThreeUtr != nil {
+				for i = answer.startPos - (val.ThreeUtr.End - 1); i < answer.startPos-(val.ThreeUtr.Start-2); i++ {
+					answer.featureArray[i] = UtrThree
+				}
+				if answer.utrThree.start == 0 {
+					answer.utrThree.start = len(answer.cdnaSeq)
+				}
+				answer.cdnaSeq = append(answer.cdnaSeq, answer.genomeSeq[answer.startPos-(val.ThreeUtr.End-1):answer.startPos-(val.ThreeUtr.Start-2)]...)
+			}
 		}
 	}
+	answer.utrFive.start = 0
+	answer.utrThree.end = len(answer.cdnaSeq)
+	answer.utrFive.seq = answer.cdnaSeq[answer.utrFive.start:answer.utrFive.end]
+	answer.utrThree.seq = answer.cdnaSeq[answer.utrThree.start:answer.utrThree.end]
+	answer.codingSeq.start = answer.utrFive.end
+	answer.codingSeq.end = answer.utrThree.start
+	answer.codingSeq.seq = answer.cdnaSeq[answer.codingSeq.start:answer.codingSeq.end]
+	answer.protSeq = dna.TranslateSeq(answer.codingSeq.seq)
+
 	answer.orig.startPos = answer.startPos
 	answer.orig.cdsStarts = make([]int, len(answer.cdsStarts))
 	copy(answer.orig.cdsStarts, answer.cdsStarts)
@@ -118,5 +143,14 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 	copy(answer.orig.cdnaSeq, answer.cdnaSeq)
 	answer.orig.featureArray = make([]Feature, len(answer.featureArray))
 	copy(answer.orig.featureArray, answer.featureArray)
+	answer.orig.utrFive.start = 0
+	answer.orig.utrFive.end = answer.utrFive.end
+	answer.orig.utrThree.start = answer.utrThree.start
+	answer.orig.utrThree.end = answer.utrThree.end
+	answer.orig.utrFive.seq = answer.orig.cdnaSeq[answer.utrFive.start:answer.utrFive.end]
+	answer.orig.utrThree.seq = answer.orig.cdnaSeq[answer.utrThree.start:answer.utrThree.end]
+	answer.orig.codingSeq.start = answer.utrFive.end
+	answer.orig.codingSeq.end = answer.utrThree.start
+	answer.orig.codingSeq.seq = answer.orig.cdnaSeq[answer.codingSeq.start:answer.codingSeq.end]
 	return answer
 }
