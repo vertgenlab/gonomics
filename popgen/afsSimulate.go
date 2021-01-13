@@ -58,7 +58,7 @@ func SimulateSegSite(alpha float64, n int) *SegSite {
 	return &SegSite{0, 0}
 }
 
-func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
+func SimulateGenotype(alpha float64, n int) ([]vcf.GenomeSample, int) {
 	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
 	s := SimulateSegSite(alpha, n)
 	alleleArray := SegSiteToAlleleArray(s)
@@ -72,7 +72,7 @@ func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
 			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false})
 		}
 	}
-	return answer
+	return answer, s.i
 }
 
 /* This is an outdated version of SimulateGenotype that lacks memory management.
