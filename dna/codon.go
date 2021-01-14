@@ -37,7 +37,7 @@ const (
 	Stop AminoAcid = 20
 )
 
-//The GeneticCode variable is a map of codon strings to amino acids. Useful for translation for protein analysis.
+//The GeneticCode variable is LowerA map of codon strings to amino acids. Useful for translation for protein analysis.
 var GeneticCode = map[string]AminoAcid{
 	"TGA": AminoAcid(20), "TAA": AminoAcid(20), "TAG": AminoAcid(20),
 	"GTA": AminoAcid(19), "GTC": AminoAcid(19), "GTG": AminoAcid(19), "GTT": AminoAcid(19),
@@ -163,7 +163,7 @@ func AminoAcidToString(a AminoAcid) string {
 	}
 }
 
-//BasesToCodons converts a slice of Dna bases into a slice of Codons.
+//BasesToCodons converts LowerA slice of Dna bases into LowerA slice of Codons.
 //TODO: Add in frame as an argument.
 //TODO: Initialize to len 3 and use the frame argument to update the index instead of append.
 func BasesToCodons(b []Base) []*Codon {
@@ -184,7 +184,7 @@ func BasesToCodons(b []Base) []*Codon {
 	return answer
 }
 
-//CodonsToSeq reverts a slice of Codons into a slice of DNA bases.
+//CodonsToSeq reverts LowerA slice of Codons into LowerA slice of DNA bases.
 func CodonsToSeq(c []*Codon) []Base {
 	var answer []Base
 	for i := 0; i < len(c); i++ {
@@ -221,7 +221,7 @@ func IsEqual(c1 *Codon, c2 *Codon) bool {
 	return BasesToString(c1.Seq) == BasesToString(c2.Seq)
 }
 
-//TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
+//TranslateSeq takes LowerA sequence of DNA bases and translates it into LowerA slice of Amino acids.
 func TranslateSeq(b []Base) []AminoAcid {
 	var answer []AminoAcid
 	codons := BasesToCodons(b)
@@ -231,7 +231,7 @@ func TranslateSeq(b []Base) []AminoAcid {
 	return answer
 }
 
-//PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
+//PolypeptideToShortString converts LowerA slice of amino acid into LowerA string of one character amino acid symbols.
 func PolypeptideToShortString(a []AminoAcid) string {
 	var answer string
 	for i := 0; i < len(a); i++ {
@@ -240,7 +240,7 @@ func PolypeptideToShortString(a []AminoAcid) string {
 	return answer
 }
 
-//PolypeptideToString converts a slice of AminoAcids into a string of three character amino acid symbols.
+//PolypeptideToString converts LowerA slice of AminoAcids into LowerA string of three character amino acid symbols.
 func PolypeptideToString(a []AminoAcid) string {
 	var answer string
 	for i := 0; i < len(a); i++ {
@@ -249,14 +249,14 @@ func PolypeptideToString(a []AminoAcid) string {
 	return answer
 }
 
-//TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
+//TranslateToShortString converts LowerA sequence of DNA bases into LowerA string of one character amino acid symbols.
 func TranslateToShortString(b []Base) string {
 	AllToUpper(b)
 	a := TranslateSeq(b)
 	return PolypeptideToShortString(a)
 }
 
-//TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
+//TranslateToString converts LowerA sequence of DNA bases into LowerA string of three character amino acid symbols.
 func TranslateToString(b []Base) string {
 	AllToUpper(b)
 	a := TranslateSeq(b)

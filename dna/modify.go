@@ -1,139 +1,183 @@
 package dna
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"log"
+	"errors"
 )
 
+var (
+	ErrInvalidInterval = errors.New("deletion interval is not valid")
+	ErrInvalidInsertionPosition = errors.New("insertion position is not valid")
+	ErrUnrecognizedBase = errors.New("input base was not recognized")
+)
+
+// ToUpper changes the input base to uppercase.
 func ToUpper(b Base) Base {
-	if b == Gap || b == Dot {
-		return b
-	} else if b > N {
-		return b - 5
-	} else {
+	switch b {
+	case LowerA:
+		return A
+	case LowerC:
+		return C
+	case LowerG:
+		return G
+	case LowerT:
+		return T
+	case LowerN:
+		return N
+	default:
 		return b
 	}
 }
 
+// ToLower changes the input base to lowercase.
 func ToLower(b Base) Base {
-	if b == Gap || b == Dot {
-		return b
-	} else if b < a {
-		return b + 5
-	} else {
+	switch b {
+	case A:
+		return LowerA
+	case C:
+		return LowerC
+	case G:
+		return LowerG
+	case T:
+		return LowerT
+	case N:
+		return LowerN
+	default:
 		return b
 	}
 }
 
-// start is closed, end is open, both are zero-based
+// RangeToUpper changes the bases in a set range to uppercase.
+// start is closed, end is open, both are zero-based.
 func RangeToUpper(bases []Base, start int, end int) {
 	for i := start; i < end; i++ {
 		bases[i] = ToUpper(bases[i])
 	}
 }
 
-// start is closed, end is open, both are zero-based
+// RangeToLower changes the bases in a set range to lowercase.
+// start is closed, end is open, both are zero-based.
 func RangeToLower(bases []Base, start int, end int) {
 	for i := start; i < end; i++ {
 		bases[i] = ToLower(bases[i])
 	}
 }
 
+// AllToUpper changes all bases in a sequence to uppercase.
 func AllToUpper(bases []Base) {
 	RangeToUpper(bases, 0, len(bases))
 }
 
+// AllToLower changes all bases in a sequence to lowercase.
 func AllToLower(bases []Base) {
 	RangeToLower(bases, 0, len(bases))
 }
 
-func ComplementSingleBase(b Base) Base {
+// ComplementSingleBase returns the nucleotide complementary to the input base.
+func ComplementSingleBase(b Base) (Base, error) {
 	switch b {
 	case A:
-		return T
+		return T, nil
 	case C:
-		return G
+		return G, nil
 	case G:
-		return C
+		return C, nil
 	case T:
-		return A
+		return A, nil
 	case N:
-		return N
-	case a:
-		return t
-	case c:
-		return g
-	case g:
-		return c
-	case t:
-		return a
-	case n:
-		return n
+		return N, nil
+	case LowerA:
+		return LowerT, nil
+	case LowerC:
+		return LowerG, nil
+	case LowerG:
+		return LowerC, nil
+	case LowerT:
+		return LowerA, nil
+	case LowerN:
+		return LowerN, nil
 	case Gap:
-		return Gap
+		return Gap, nil
 	case Dot:
-		return Dot
+		return Dot, nil
 	default:
-		common.ExitIfError(fmt.Errorf("Error: trying to reverse ComplementSingleBase an unexpected base %d", b))
-		return N
+		return b, ErrUnrecognizedBase
 	}
 }
 
-func swap(alpha Base, beta Base) (Base, Base) {
-	return beta, alpha
-}
-
-func ReverseComplement(bases []Base) {
+// ReverseComplement reverses a sequence of bases and complements each base.
+// Used to switch strands and maintain 5' -> 3' orientation.
+func ReverseComplement(bases []Base) error {
+	var err error
 	for i, j := 0, len(bases)-1; i <= j; i, j = i+1, j-1 {
-		bases[i], bases[j] = swap(ComplementSingleBase(bases[i]), ComplementSingleBase(bases[j]))
+		bases[i], bases[j], err = complementSwap(bases[i], bases[j])
+		if err != nil {
+			break
+		}
 	}
+	return err
 }
 
-func Complement(bases []Base) {
-	for i := 0; i < len(bases); i++ {
-		bases[i] = ComplementSingleBase(bases[i])
+// Complement all bases in a sequence of bases.
+func Complement(bases []Base) error {
+	var err error
+	for i := range bases {
+		bases[i], err = ComplementSingleBase(bases[i])
+		if err != nil {
+			break
+		}
 	}
+	return err
 }
 
+// complementSwap complements the input bases and swaps their positions in the return.
+func complementSwap(alpha, beta Base) (Base, Base, error) {
+	var err error
+	alpha, err = ComplementSingleBase(alpha)
+	if err != nil {
+		return beta, alpha, err
+	}
+	beta, err = ComplementSingleBase(beta)
+	return beta, alpha, err
+}
+
+// RemoveGaps returns a sequence of bases with no gaps.
 func RemoveGaps(bases []Base) []Base {
-	var ans []Base
-	for i := 0; i < len(bases); i++ {
-		if bases[i] != Gap {
+	return RemoveBase(bases, Gap)
+}
+
+// RemoveBase returns a sequence of bases without any of the designated base.
+func RemoveBase(bases []Base, baseToRemove Base) []Base {
+	ans := make([]Base, 0, len(bases))
+	for i := range bases {
+		if bases[i] != baseToRemove {
 			ans = append(ans, bases[i])
 		}
 	}
 	return ans
 }
 
-func RemoveBase(bases []Base, b Base) []Base {
-	var ans []Base
-	for i := 0; i < len(bases); i++ {
-		if bases[i] != b {
-			ans = append(ans, bases[i])
-		}
+// Delete removes bases from and sequence of bases.
+// all base positions are zero based and left closed, right open.
+func Delete(seq []Base, delStart int, delEnd int) ([]Base, error) {
+	if delStart >= delEnd || delStart < 0 || delEnd > len(seq) {
+		return nil, ErrInvalidInterval
 	}
-	return ans
+	return append(seq[:delStart], seq[delEnd:]...), nil
 }
 
-// all base positions are zero based and left closed, right open
-func Delete(seq []Base, delStart int64, delEnd int64) []Base {
-	if delStart >= delEnd || delStart < 0 || delEnd > int64(len(seq)) {
-		log.Fatalf("Error: deletion interval from %d to %d is not valid.\n", delStart, delEnd)
-	}
-	return append(seq[:delStart], seq[delEnd:]...)
-}
-
+// Insert adds bases to a sequence of bases.
 // base position is zero-based, insertion happens before specified base
-// giving the length of the sequence puts the insertion at the end
-func Insert(seq []Base, insPos int64, insSeq []Base) []Base {
-	if insPos < 0 || insPos > int64(len(seq)) {
-		log.Fatalf("Error: insertion location of %d is not valid.\n", insPos)
+// giving the length of the sequence puts the insertion at the end.
+func Insert(seq []Base, insPos int, insSeq []Base) ([]Base, error) {
+	if insPos < 0 || insPos > len(seq) {
+		return nil, ErrInvalidInsertionPosition
 	}
-	return append(seq[:insPos], append(insSeq, seq[insPos:]...)...)
+	return append(seq[:insPos], append(insSeq, seq[insPos:]...)...), nil
 }
 
-// all base positions are zero based and left closed, right open
-func Replace(seq []Base, start int64, end int64, insSeq []Base) []Base {
+// Replace performs both a deletion and an insertion,
+// replacing the input interval with the input insSeq.
+// all base positions are zero based and left closed, right open.
+func Replace(seq []Base, start int, end int, insSeq []Base) []Base {
 	return append(seq[:start], append(insSeq, seq[end:]...)...)
 }
