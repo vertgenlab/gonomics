@@ -97,36 +97,36 @@ func IsLower(b Base) bool {
 }
 
 // DefineBase returns false if the input base is an N, Gap, Dot, or Nil.
-func DefineBase(b Base) (bool, error) {
+func DefineBase(b Base) bool {
 	switch b {
 	case A:
-		return true, nil
+		return true
 	case C:
-		return true, nil
+		return true
 	case G:
-		return true, nil
+		return true
 	case T:
-		return true, nil
+		return true
 	case N:
-		return false, nil
+		return false
 	case LowerA:
-		return true, nil
+		return true
 	case LowerC:
-		return true, nil
+		return true
 	case LowerG:
-		return true, nil
+		return true
 	case LowerT:
-		return true, nil
+		return true
 	case LowerN:
-		return false, nil
+		return false
 	case Gap:
-		return false, nil
+		return false
 	case Dot:
-		return false, nil
+		return false
 	case Nil:
-		return false, nil
+		return false
 	default:
-		return false, ErrUnrecognizedBase
+		return false
 	}
 }
 
