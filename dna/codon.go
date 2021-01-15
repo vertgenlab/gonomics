@@ -125,32 +125,32 @@ func AminoAcidToString(a AminoAcid) (string, error) {
 // Input expects bases to be in-frame. If the input sequence is not a
 // factor of three, the return codons will not include the remaining
 // bases and will also return an error.
-func BasesToCodons(b []Base) ([]*Codon, error) {
+func BasesToCodons(b []Base) ([]Codon, error) {
 	var err error
 	frame := len(b) % 3
-	answer := make([]*Codon, 0, len(b)/3)
+	answer := make([]Codon, 0, len(b)/3)
 
 	if frame != 0 {
 		err = ErrLenInputSeqNotDivThree
 	}
 	for i := 0; i < len(b)-frame; i += 3 {
-		answer = append(answer, &Codon{b[i], b[i+1], b[i+2]})
+		answer = append(answer, Codon{b[i], b[i+1], b[i+2]})
 	}
 	return answer, err
 }
 
 // CodonsToSeq converts a slice of Codons into a slice of DNA bases.
-func CodonsToSeq(c []*Codon) []Base {
+func CodonsToSeq(c []Codon) []Base {
 	answer := make([]Base, 0, len(c)*3)
 	for i := range c {
-		answer = append(answer, (*c[i])[0], (*c[i])[1], (*c[i])[2])
+		answer = append(answer, c[i][0], c[i][1], c[i][2])
 	}
 	return answer
 }
 
 //TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
-func TranslateCodon(c *Codon) (AminoAcid, error) {
-	val, ok := GeneticCode[*c]
+func TranslateCodon(c Codon) (AminoAcid, error) {
+	val, ok := GeneticCode[c]
 	if ok {
 		return val, nil
 	} else {
@@ -159,22 +159,22 @@ func TranslateCodon(c *Codon) (AminoAcid, error) {
 }
 
 // NonSynonymous compares two Codons and returns true if they encode different AminoAcids.
-func NonSynonymous(c1 *Codon, c2 *Codon) bool {
+func NonSynonymous(c1 Codon, c2 Codon) bool {
 	p1, _ := TranslateCodon(c1)
 	p2, _ := TranslateCodon(c2)
 	return p1 != p2
 }
 
 // Synonymous compares two codons and returns true if the codons code for the same amino acid.
-func Synonymous(c1 *Codon, c2 *Codon) bool {
+func Synonymous(c1 Codon, c2 Codon) bool {
 	p1, _ := TranslateCodon(c1)
 	p2, _ := TranslateCodon(c2)
 	return p1 == p2
 }
 
 // IsEqual compares two Codons and returns true if the underlying sequences are identical.
-func IsEqual(c1 *Codon, c2 *Codon) bool {
-	return *c1 == *c2
+func IsEqual(c1 Codon, c2 Codon) bool {
+	return c1 == c2
 }
 
 // TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
