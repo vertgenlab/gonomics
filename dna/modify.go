@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	ErrInvalidInterval = errors.New("deletion interval is not valid")
+	ErrInvalidInterval          = errors.New("deletion interval is not valid")
 	ErrInvalidInsertionPosition = errors.New("insertion position is not valid")
-	ErrUnrecognizedBase = errors.New("input base was not recognized")
+	ErrUnrecognizedBase         = errors.New("input base was not recognized")
 )
 
 // ToUpper changes the input base to uppercase.
@@ -99,6 +99,8 @@ func ComplementSingleBase(b Base) (Base, error) {
 		return Gap, nil
 	case Dot:
 		return Dot, nil
+	case Nil:
+		return Nil, nil
 	default:
 		return b, ErrUnrecognizedBase
 	}

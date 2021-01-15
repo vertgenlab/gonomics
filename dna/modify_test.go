@@ -92,3 +92,22 @@ func TestReplace(t *testing.T) {
 		}
 	}
 }
+
+func TestComplement(t *testing.T) {
+	expected := []Base{A, C, G, T, LowerA, LowerC, LowerG, LowerT, N, LowerN, Gap, Dot, Nil}
+	input := []Base{T, G, C, A, LowerT, LowerG, LowerC, LowerA, N, LowerN, Gap, Dot, Nil}
+	actual := []Base{T, G, C, A, LowerT, LowerG, LowerC, LowerA, N, LowerN, Gap, Dot, Nil}
+	err := Complement(actual)
+	if err != nil || CompareSeqsCaseSensitive(actual, expected) != 0 {
+		t.Errorf("Complementing %v gave %v when %v was expected.", input, actual, expected)
+	}
+}
+
+func TestRemoveGaps(t *testing.T) {
+	expected := []Base{A, C, G, T, LowerA, LowerC, LowerG, LowerT, N, LowerN, Dot, Nil}
+	input := []Base{A, C, G, T, LowerA, LowerC, LowerG, LowerT, N, LowerN, Gap, Dot, Nil}
+	actual := RemoveGaps(input)
+	if CompareSeqsCaseSensitive(actual, expected) != 0 {
+		t.Errorf("RemoveGaps on %v gave %v when %v was expected", input, actual, expected)
+	}
+}

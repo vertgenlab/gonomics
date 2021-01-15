@@ -1,264 +1,245 @@
 package dna
 
 import (
-	"log"
+	"errors"
+	"strings"
 )
 
-//Codon represents three DNA bases for genetic analysis of proteins and amino acids.
-type Codon struct {
-	Seq []Base
-}
+// Codon is an array of three DNA bases for genetic analysis of proteins and amino acids.
+type Codon [3]Base
 
-//moving Sophie's code for AminoAcid identities and the genetic code to the DNA package.
-//AminoAcid converts the twenty canonical amino acids and stop codon into numberical uiint8 codes.
-type AminoAcid uint8
+// AminoAcid converts the twenty canonical amino acids and stop codon into bytes.
+type AminoAcid byte
 
 const (
-	Ala  AminoAcid = 0
-	Arg  AminoAcid = 1
-	Asn  AminoAcid = 2
-	Asp  AminoAcid = 3
-	Cys  AminoAcid = 4
-	Gln  AminoAcid = 5
-	Glu  AminoAcid = 6
-	Gly  AminoAcid = 7
-	His  AminoAcid = 8
-	Ile  AminoAcid = 9
-	Leu  AminoAcid = 10
-	Lys  AminoAcid = 11
-	Met  AminoAcid = 12
-	Phe  AminoAcid = 13
-	Pro  AminoAcid = 14
-	Ser  AminoAcid = 15
-	Thr  AminoAcid = 16
-	Trp  AminoAcid = 17
-	Tyr  AminoAcid = 18
-	Val  AminoAcid = 19
-	Stop AminoAcid = 20
+	Ala  AminoAcid = 'A'
+	Arg  AminoAcid = 'R'
+	Asn  AminoAcid = 'N'
+	Asp  AminoAcid = 'D'
+	Cys  AminoAcid = 'C'
+	Gln  AminoAcid = 'Q'
+	Glu  AminoAcid = 'E'
+	Gly  AminoAcid = 'G'
+	His  AminoAcid = 'H'
+	Ile  AminoAcid = 'I'
+	Leu  AminoAcid = 'L'
+	Lys  AminoAcid = 'K'
+	Met  AminoAcid = 'M'
+	Phe  AminoAcid = 'F'
+	Pro  AminoAcid = 'P'
+	Ser  AminoAcid = 'S'
+	Thr  AminoAcid = 'T'
+	Trp  AminoAcid = 'W'
+	Tyr  AminoAcid = 'Y'
+	Val  AminoAcid = 'V'
+	Stop AminoAcid = '*'
 )
 
-//The GeneticCode variable is LowerA map of codon strings to amino acids. Useful for translation for protein analysis.
-var GeneticCode = map[string]AminoAcid{
-	"TGA": AminoAcid(20), "TAA": AminoAcid(20), "TAG": AminoAcid(20),
-	"GTA": AminoAcid(19), "GTC": AminoAcid(19), "GTG": AminoAcid(19), "GTT": AminoAcid(19),
-	"TAT": AminoAcid(18), "TAC": AminoAcid(18),
-	"TGG": AminoAcid(17),
-	"ACA": AminoAcid(16), "ACG": AminoAcid(16), "ACT": AminoAcid(16), "ACC": AminoAcid(16),
-	"TCA": AminoAcid(15), "TCC": AminoAcid(15), "TCG": AminoAcid(15), "TCT": AminoAcid(15), "AGT": AminoAcid(15), "AGC": AminoAcid(15),
-	"CCC": AminoAcid(14), "CCT": AminoAcid(14), "CCA": AminoAcid(14), "CCG": AminoAcid(14),
-	"TTT": AminoAcid(13), "TTC": AminoAcid(13),
-	"ATG": AminoAcid(12),
-	"AAA": AminoAcid(11), "AAG": AminoAcid(11),
-	"TTA": AminoAcid(10), "TTG": AminoAcid(10), "CTC": AminoAcid(10), "CTG": AminoAcid(10), "CTA": AminoAcid(10), "CTT": AminoAcid(10),
-	"ATT": AminoAcid(9), "ATC": AminoAcid(9), "ATA": AminoAcid(9),
-	"CAT": AminoAcid(8), "CAC": AminoAcid(8),
-	"GGG": AminoAcid(7), "GGA": AminoAcid(7), "GGT": AminoAcid(7), "GGC": AminoAcid(7),
-	"GAA": AminoAcid(6), "GAG": AminoAcid(6),
-	"CAA": AminoAcid(5), "CAG": AminoAcid(5),
-	"TGT": AminoAcid(4), "TGC": AminoAcid(4),
-	"GAT": AminoAcid(3), "GAC": AminoAcid(3),
-	"AAT": AminoAcid(2), "AAC": AminoAcid(2),
-	"AGA": AminoAcid(1), "AGG": AminoAcid(1), "CGC": AminoAcid(1), "CGG": AminoAcid(1), "CGA": AminoAcid(1), "CGT": AminoAcid(1),
-	"GCA": AminoAcid(0), "GCG": AminoAcid(0), "GCT": AminoAcid(0), "GCC": AminoAcid(0)}
+// GeneticCode is a map of codon arrays to amino acids. Used for translating coding sequences to protein sequences.
+var GeneticCode = map[Codon]AminoAcid{
+	{T, G, A}: Stop, {T, A, A}: Stop, {T, A, G}: Stop,
+	{G, T, A}: Val, {G, T, C}: Val, {G, T, G}: Val, {G, T, T}: Val,
+	{T, A, T}: Tyr, {T, A, C}: Tyr,
+	{T, G, G}: Trp,
+	{A, C, A}: Thr, {A, C, G}: Thr, {A, C, T}: Thr, {A, C, C}: Thr,
+	{T, C, A}: Ser, {T, C, C}: Ser, {T, C, G}: Ser, {T, C, T}: Ser, {A, G, T}: Ser, {A, G, C}: Ser,
+	{C, C, C}: Pro, {C, C, T}: Pro, {C, C, A}: Pro, {C, C, G}: Pro,
+	{T, T, T}: Phe, {T, T, C}: Phe,
+	{A, T, G}: Met,
+	{A, A, A}: Lys, {A, A, G}: Lys,
+	{T, T, A}: Leu, {T, T, G}: Leu, {C, T, C}: Leu, {C, T, G}: Leu, {C, T, A}: Leu, {C, T, T}: Leu,
+	{A, T, T}: Ile, {A, T, C}: Ile, {A, T, A}: Ile,
+	{C, A, T}: His, {C, A, C}: His,
+	{G, G, G}: Gly, {G, G, A}: Gly, {G, G, T}: Gly, {G, G, C}: Gly,
+	{G, A, A}: Glu, {G, A, G}: Glu,
+	{C, A, A}: Gln, {C, A, G}: Gln,
+	{T, G, T}: Cys, {T, G, C}: Cys,
+	{G, A, T}: Asp, {G, A, C}: Asp,
+	{A, A, T}: Asn, {A, A, C}: Asn,
+	{A, G, A}: Arg, {A, G, G}: Arg, {C, G, C}: Arg, {C, G, G}: Arg, {C, G, A}: Arg, {C, G, T}: Arg,
+	{G, C, A}: Ala, {G, C, G}: Ala, {G, C, T}: Ala, {G, C, C}: Ala,
+}
 
-//AminoAcidToShortString converts type AminoAcid into single character amino acid symbols.
+var (
+	ErrUnrecognizedAminoAcid  = errors.New("unrecognized amino acid")
+	ErrCodonNotInMap          = errors.New("codon is not in dna.GeneticCode map")
+	ErrLenInputSeqNotDivThree = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
+)
+
+// AminoAcidToShortString converts type AminoAcid into single character amino acid symbols.
 func AminoAcidToShortString(a AminoAcid) string {
+	return string(a)
+}
+
+// AminoAcidToString converts type AminoAcid into three letter amino acid symbols.
+func AminoAcidToString(a AminoAcid) (string, error) {
 	switch a {
 	case Ala:
-		return "A"
+		return "Ala", nil
 	case Arg:
-		return "R"
+		return "Arg", nil
 	case Asn:
-		return "N"
+		return "Asn", nil
 	case Asp:
-		return "D"
+		return "Asp", nil
 	case Cys:
-		return "C"
+		return "Cys", nil
 	case Gln:
-		return "Q"
+		return "Gln", nil
 	case Glu:
-		return "E"
+		return "Glu", nil
 	case Gly:
-		return "G"
+		return "Gly", nil
 	case His:
-		return "H"
+		return "His", nil
 	case Ile:
-		return "I"
+		return "Ile", nil
 	case Leu:
-		return "L"
+		return "Leu", nil
 	case Lys:
-		return "K"
+		return "Lys", nil
 	case Met:
-		return "M"
+		return "Met", nil
 	case Phe:
-		return "F"
+		return "Phe", nil
 	case Pro:
-		return "P"
+		return "Pro", nil
 	case Ser:
-		return "S"
+		return "Ser", nil
 	case Thr:
-		return "T"
+		return "Thr", nil
 	case Trp:
-		return "W"
+		return "Trp", nil
 	case Tyr:
-		return "Y"
+		return "Tyr", nil
 	case Val:
-		return "V"
+		return "Val", nil
 	case Stop:
-		return "*"
+		return "Ter", nil
 	default:
-		log.Fatalf("Error: unexpected amino acid value %v\n", a)
-		return "X"
+		return "X", ErrUnrecognizedAminoAcid
 	}
 }
 
-//AminoAcidToString converts type AminoAcid into three letter amino acid symbols.
-func AminoAcidToString(a AminoAcid) string {
-	switch a {
-	case Ala:
-		return "Ala"
-	case Arg:
-		return "Arg"
-	case Asn:
-		return "Asn"
-	case Asp:
-		return "Asp"
-	case Cys:
-		return "Cys"
-	case Gln:
-		return "Gln"
-	case Glu:
-		return "Glu"
-	case Gly:
-		return "Gly"
-	case His:
-		return "His"
-	case Ile:
-		return "Ile"
-	case Leu:
-		return "Leu"
-	case Lys:
-		return "Lys"
-	case Met:
-		return "Met"
-	case Phe:
-		return "Phe"
-	case Pro:
-		return "Pro"
-	case Ser:
-		return "Ser"
-	case Thr:
-		return "Thr"
-	case Trp:
-		return "Trp"
-	case Tyr:
-		return "Tyr"
-	case Val:
-		return "Val"
-	case Stop:
-		return "Ter"
-	default:
-		log.Fatalf("Error: unexpected amino acid value %v\n", a)
-		return "X"
+// BasesToCodons converts a slice of DNA bases into a slice of Codons.
+// Input expects bases to be in-frame. If the input sequence is not a
+// factor of three, the return codons will not include the remaining
+// bases and will also return an error.
+func BasesToCodons(b []Base) ([]*Codon, error) {
+	var err error
+	frame := len(b) % 3
+	answer := make([]*Codon, 0, len(b)/3)
+
+	if frame != 0 {
+		err = ErrLenInputSeqNotDivThree
 	}
+	for i := 0; i < len(b)-frame; i += 3 {
+		answer = append(answer, &Codon{b[i], b[i+1], b[i+2]})
+	}
+	return answer, err
 }
 
-//BasesToCodons converts LowerA slice of Dna bases into LowerA slice of Codons.
-//TODO: Add in frame as an argument.
-//TODO: Initialize to len 3 and use the frame argument to update the index instead of append.
-func BasesToCodons(b []Base) []*Codon {
-	var frame int
-	var answer []*Codon
-	var current []Base
-	for i := 0; i < len(b); i++ {
-		if frame == 2 {
-			current = append(current, b[i])
-			answer = append(answer, &Codon{Seq: current})
-			current = make([]Base, 0) //clear current
-			frame = 0
-		} else {
-			current = append(current, b[i])
-			frame++
-		}
-	}
-	return answer
-}
-
-//CodonsToSeq reverts LowerA slice of Codons into LowerA slice of DNA bases.
+// CodonsToSeq converts a slice of Codons into a slice of DNA bases.
 func CodonsToSeq(c []*Codon) []Base {
-	var answer []Base
-	for i := 0; i < len(c); i++ {
-		for j := 0; j < len(c[i].Seq); j++ {
-			answer = append(answer, c[i].Seq[j])
-		}
+	answer := make([]Base, 0, len(c)*3)
+	for i := range c {
+		answer = append(answer, (*c[i])[0], (*c[i])[1], (*c[i])[2])
 	}
 	return answer
 }
 
-//TranslateCodon converts an individual Codon struct into the corresponding AminoAcid type.
-func TranslateCodon(c *Codon) AminoAcid {
-	val, ok := GeneticCode[BasesToString(c.Seq)]
+//TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
+func TranslateCodon(c *Codon) (AminoAcid, error) {
+	val, ok := GeneticCode[*c]
 	if ok {
-		return val
+		return val, nil
 	} else {
-		log.Fatalf("Codon not in map.\n")
-		return val
+		return val, ErrCodonNotInMap
 	}
 }
 
-//NonSynonymous compares two Codon structs and returns true if they encode different AminoAcids.
+// NonSynonymous compares two Codons and returns true if they encode different AminoAcids.
 func NonSynonymous(c1 *Codon, c2 *Codon) bool {
-	return TranslateCodon(c1) != TranslateCodon(c2)
+	p1, _ := TranslateCodon(c1)
+	p2, _ := TranslateCodon(c2)
+	return p1 != p2
 }
 
-//Synonymous compares two codons and returns true if the codones have non-identical sequences that code for the same amino acid.
+// Synonymous compares two codons and returns true if the codons code for the same amino acid.
 func Synonymous(c1 *Codon, c2 *Codon) bool {
-	return TranslateCodon(c1) == TranslateCodon(c2) && !IsEqual(c1, c2)
+	p1, _ := TranslateCodon(c1)
+	p2, _ := TranslateCodon(c2)
+	return p1 == p2
 }
 
-//IsEqual compares two Codons and returns true if tthe underlying sequences are identical.
+// IsEqual compares two Codons and returns true if the underlying sequences are identical.
 func IsEqual(c1 *Codon, c2 *Codon) bool {
-	return BasesToString(c1.Seq) == BasesToString(c2.Seq)
+	return *c1 == *c2
 }
 
-//TranslateSeq takes LowerA sequence of DNA bases and translates it into LowerA slice of Amino acids.
-func TranslateSeq(b []Base) []AminoAcid {
-	var answer []AminoAcid
-	codons := BasesToCodons(b)
-	for i := 0; i < len(codons); i++ {
-		answer = append(answer, TranslateCodon(codons[i]))
+// TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
+func TranslateSeq(b []Base) ([]AminoAcid, error) {
+	answer := make([]AminoAcid, len(b)/3)
+	codons, err := BasesToCodons(b)
+	for i := range codons {
+		answer[i], err = TranslateCodon(codons[i])
 	}
-	return answer
+	return answer, err
 }
 
-//PolypeptideToShortString converts LowerA slice of amino acid into LowerA string of one character amino acid symbols.
+// PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
 func PolypeptideToShortString(a []AminoAcid) string {
-	var answer string
-	for i := 0; i < len(a); i++ {
-		answer = answer + AminoAcidToShortString(a[i])
+	var s strings.Builder
+	s.Grow(len(a))
+	for i := range a {
+		s.WriteByte(byte(a[i]))
+	}
+	return s.String()
+}
+
+// PolypeptideToString converts a slice of AminoAcids into a string of three character amino acid symbols.
+func PolypeptideToString(a []AminoAcid) (string, error) {
+	var s strings.Builder
+	s.Grow(len(a) * 3)
+	var str string
+	var err, finalErr error
+	for i := range a {
+		str, err = AminoAcidToString(a[i])
+		if err != nil {
+			finalErr = err
+		}
+		s.WriteString(str)
+	}
+	return s.String(), finalErr
+}
+
+//TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
+func TranslateToShortString(b []Base) (string, error) {
+	AllToUpper(b)
+	a, err := TranslateSeq(b)
+	return PolypeptideToShortString(a), err
+}
+
+// TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
+func TranslateToString(b []Base) (string, error) {
+	var finalErr error
+	AllToUpper(b)
+	a, err := TranslateSeq(b)
+	if err != nil {
+		finalErr = err
+	}
+	answer, err := PolypeptideToString(a)
+	if err != nil {
+		finalErr = err
+	}
+	return answer, finalErr
+}
+
+// ShortStringToPolypeptide converts a string into a slice of amino acids.
+func ShortStringToPolypeptide(s string) []AminoAcid {
+	answer := make([]AminoAcid, len(s))
+	for i := range s {
+		answer[i] = AminoAcid(s[i])
 	}
 	return answer
-}
-
-//PolypeptideToString converts LowerA slice of AminoAcids into LowerA string of three character amino acid symbols.
-func PolypeptideToString(a []AminoAcid) string {
-	var answer string
-	for i := 0; i < len(a); i++ {
-		answer = answer + AminoAcidToString(a[i])
-	}
-	return answer
-}
-
-//TranslateToShortString converts LowerA sequence of DNA bases into LowerA string of one character amino acid symbols.
-func TranslateToShortString(b []Base) string {
-	AllToUpper(b)
-	a := TranslateSeq(b)
-	return PolypeptideToShortString(a)
-}
-
-//TranslateToString converts LowerA sequence of DNA bases into LowerA string of three character amino acid symbols.
-func TranslateToString(b []Base) string {
-	AllToUpper(b)
-	a := TranslateSeq(b)
-	return PolypeptideToString(a)
 }

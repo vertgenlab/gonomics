@@ -23,7 +23,7 @@ const (
 )
 
 // CreatAllGaps creates a DNA sequence of Gap with length of numGaps
-func CreateAllGaps(numGaps int64) []Base {
+func CreateAllGaps(numGaps int) []Base {
 	answer := make([]Base, numGaps)
 	for i := range answer {
 		answer[i] = Gap
@@ -32,14 +32,13 @@ func CreateAllGaps(numGaps int64) []Base {
 }
 
 // CreatAllN creates a DNA sequence of N with length of numGaps
-func CreateAllNs(numGaps int64) []Base {
-	answer := make([]Base, numGaps)
+func CreateAllNs(numN int) []Base {
+	answer := make([]Base, numN)
 	for i := range answer {
 		answer[i] = N
 	}
 	return answer
 }
-
 
 //BaseToString converts a DNA base to a string by casting a BaseToRune result to a string.
 func BaseToString(b Base) string {
@@ -61,7 +60,7 @@ func BasesToString(bases []Base) string {
 	return s.String()
 }
 
-// ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases with no lowercase bases.
+// ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases.
 func ByteSliceToDnaBases(b []byte) []Base {
 	answer := make([]Base, len(b))
 	for i := range b {
