@@ -223,7 +223,7 @@ func HelperSamplesToString(sample []GenomeSample, i int) string {
 	if len(sample[i].FormatData) > 0 {
 		answer = answer + strings.Join(sample[i].FormatData, ":")
 	}
-	if i != len(sample)-1 {//add a tab unless it's the last entry
+	if i != len(sample)-1 { //add a tab unless it's the last entry
 		answer = answer + "\t"
 	}
 	return answer
