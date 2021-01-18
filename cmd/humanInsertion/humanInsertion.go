@@ -20,12 +20,14 @@ func humanInsertion(mafFile string, outBed_ins string, outBed_del string, specie
 
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
 			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)   //start with species_del, get assembly (e.g. panTro6), chrom (e.g. chrI)
-			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k-1].Src) //then find corresponding species_ins line, same block, 1 line above since pairwise maf
 
 			//get eC species_del lines
 			if mafRecords[i].Species[k].ELine != nil {
 				if mafRecords[i].Species[k].ELine.Status == 'C' && assembly_del == species_del { //I decided to check for both Status and Src here because they are on the same data level
 
+					//to avoid k-1 index error such as k=0,k-1=-1, only start converting maf to bed for species_ins if species_del is confirmed
+					//here I assume species_del is query sequence; species_ins is target sequence; only pairwise alignment
+					assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k-1].Src) //then find corresponding species_ins line, same block, 1 line above since pairwise maf
 					//get corresponding s species_ins lines
 					if assembly_ins != species_ins { //verify line k-1 is indeed species_ins
 						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
