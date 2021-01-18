@@ -18,8 +18,8 @@ var input = []struct {
 
 func TestGraphRecon(t *testing.T) {
 	var humanNode1 = &simpleGraph.Node{Id: 0, Name: "humanNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-	var humanNode2 = &simpleGraph.Node{Id: 0, Name: "humanNode2", Seq: dna.StringToBases("AAA"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("AAA")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-	var humanNode3 = &simpleGraph.Node{Id: 0, Name: "humanNode3", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var humanNode2 = &simpleGraph.Node{Id: 1, Name: "humanNode2", Seq: dna.StringToBases("AAA"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("AAA")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var humanNode3 = &simpleGraph.Node{Id: 2, Name: "humanNode3", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
 	var humanEdge1 = &simpleGraph.Edge{humanNode2, 0.50}
 	var humanEdge2 = &simpleGraph.Edge{humanNode3, 0.50}
@@ -33,7 +33,7 @@ func TestGraphRecon(t *testing.T) {
 	simpleGraph.PrintGraph(humanGraph)
 
 	var chimpNode1 = &simpleGraph.Node{Id: 0, Name: "chimpNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-	var chimpNode2 = &simpleGraph.Node{Id: 0, Name: "chimpNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var chimpNode2 = &simpleGraph.Node{Id: 1, Name: "chimpNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
 	var chimpEdge1 = &simpleGraph.Edge{chimpNode2, 1.00}
 
@@ -44,7 +44,7 @@ func TestGraphRecon(t *testing.T) {
 	simpleGraph.PrintGraph(chimpGraph)
 
 	var gorillaNode1 = &simpleGraph.Node{Id: 0, Name: "gorillaNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-	var gorillaNode2 = &simpleGraph.Node{Id: 0, Name: "gorillaNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var gorillaNode2 = &simpleGraph.Node{Id: 1, Name: "gorillaNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
 	var gorillaEdge1 = &simpleGraph.Edge{Dest: gorillaNode2, Prob: 1.00}
 
@@ -63,7 +63,9 @@ func TestGraphRecon(t *testing.T) {
 	log.Print(nodeAlign2.AlignId)
 
 	path, prob := PathFinder(humanGraph)
+	log.Print("path")
 	log.Print(path)
+	log.Print("prob")
 	log.Print(prob)
 
 }

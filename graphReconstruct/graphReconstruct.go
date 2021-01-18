@@ -272,33 +272,55 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 	var finalPath []uint32
 	var finalProb float32
+	var tempPath = make([]uint32, 0)
+	var tempProb float32
 
 	for n := 0; n < len(g.Nodes); n++ {
-		in := len(g.Nodes[n].Prev)
-		if in == 0 {
-			finalProb, finalPath = bestPath(*g.Nodes[n])
+		if g.Nodes[n].Id == 0 {
+			log.Print("start bestPath")
+			finalProb, finalPath = bestPath(g.Nodes[n], tempProb, tempPath)
 		}
 	}
 
 	return finalPath, finalProb
 }
 
-func bestPath(node simpleGraph.Node) (prob float32, path []uint32) {
+func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32) (prob float32, path []uint32) {
 	currentNode := node
 	var currentProb float32 = 0
-	currentPath := make([]uint32, 0)
+	currentPath := prevPath
+	var tempProb float32 = 1
+	var tempPath []uint32
 
-	if len(currentNode.Next) == 0 {
-		var lastNode []uint32
-		lastNode = append(lastNode, currentNode.Id)
-		return 1, lastNode
+	if prevProb != 0 && len(prevPath) > 0 {
+		tempProb = prevProb
 	}
-	for i, _ := range currentNode.Next {
-		tempProb, tempPath := bestPath(currentNode)
-		if currentNode.Next[i].Prob*tempProb > currentProb {
-			currentProb = currentNode.Next[i].Prob * tempProb
-			currentPath = append(currentPath, currentNode.Id)
-			currentPath = append(currentPath, tempPath...)
+
+	log.Print("in bestPath")
+	if len(currentNode.Next) == 0 {
+		currentPath = append(currentPath, currentNode.Id)
+		log.Print("lastNode")
+		log.Print(currentPath)
+		log.Print(tempProb)
+		return tempProb, currentPath
+	} else { //somehow still passing through this even after we find lastNode
+		for i, _ := range currentNode.Next {
+			log.Print(len(currentNode.Next))
+			log.Print("traverse")
+			//temp prob was holding prob output in recursion, needs to be used to evaluate whether this node is a good choice
+			log.Print(tempProb)
+			log.Print(currentProb)
+			tempPath = append(tempPath, currentPath...)
+			tempPath = append(tempPath, currentNode.Id)
+			if currentNode.Next[i].Prob*tempProb > currentProb {
+				log.Print("in if")
+				log.Print(currentNode.Next[i].Prob)
+				currentProb = currentNode.Next[i].Prob * tempProb
+				currentPath = append(currentPath, currentNode.Id)
+				log.Print(currentPath)
+				bestPath(currentNode.Next[i].Dest, currentProb, currentPath)
+				//somehow the current path that is returned it zero'd out after the last node (which has it correct)
+			}
 		}
 	}
 	return currentProb, currentPath
