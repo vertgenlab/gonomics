@@ -163,7 +163,7 @@ func NodesHeader(ref []*Node) *sam.SamHeader {
 	for i := 0; i < len(ref); i++ {
 		words = fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d", ref[i].Name, ref[i].Id, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
 	}
 	return &header
 }
