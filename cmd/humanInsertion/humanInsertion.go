@@ -19,7 +19,7 @@ func humanInsertion(mafFile string, outBed_ins string, outBed_del string, specie
 		for k, _ := range mafRecords[i].Species { //each k is a line
 
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
-			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)   //start with species_del, get assembly (e.g. panTro6), chrom (e.g. chrI)
+			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src) //start with species_del, get assembly (e.g. panTro6), chrom (e.g. chrI)
 
 			//get eC species_del lines
 			if mafRecords[i].Species[k].ELine != nil {
