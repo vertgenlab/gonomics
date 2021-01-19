@@ -8,67 +8,29 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
-	"os"      //raven added this line for MSA Fasta output
-	"strings" //raven added this line for CountSeqIdx
 )
 
-//raven edited this block to specify only 1 sequnce is expected in each fasta file
 func usage() {
-	fmt.Print(
-		"./globalAlignment - chelsea's global alignment\n" +
-			"Usage:\n" +
-			" Align 2 .fasta files, each with only 1 sequence\n" +
-			"options:\n")
+	fmt.Print("./globalAlignment - chelsea's global alignment \n")
 	flag.PrintDefaults()
 }
 
-//raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
-//raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
-func CountSeqIdx(inputFile *fileio.EasyReader) int {
-	var line string
-	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
-	var doneReading bool = false
-	defer inputFile.Close()
-	for line, doneReading = fileio.EasyNextRealLine(inputFile); !doneReading; line, doneReading = fileio.EasyNextRealLine(inputFile) {
-		if strings.HasPrefix(line, ">") {
-			seqIdx++
-		}
-	}
-	return seqIdx
-}
-
 func main() {
-	faOut := flag.String("faOut", "", "name of the MSA output file") //raven added this line
-	flag.Parse()
 	var expectedNum int = 2
+	flag.Usage = usage
+	flag.Parse()
 	if len(flag.Args()) != expectedNum {
 		log.Fatalf("error, expecting 2 .fasta files to be able to align, only found %d files...\n", len(flag.Args()))
 	}
 
 	//read in sequences that should be put in as fasta type files.
-	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
-	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
-	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
-	faOne, faDoneOne := fasta.NextFasta(inputFileOne)
-	faTwo, faDoneTwo := fasta.NextFasta(inputFileTwo)
-	//faOne, faDoneOne := fasta.NextFasta(fileio.EasyOpen(flag.Arg(0)))
-	//faTwo, faDoneTwo := fasta.NextFasta(fileio.EasyOpen(flag.Arg(1)))
+	faOne, faDoneOne := fasta.NextFasta(fileio.EasyOpen(flag.Arg(0)))
+	faTwo, faDoneTwo := fasta.NextFasta(fileio.EasyOpen(flag.Arg(1)))
 
 	//fmt.Printf("%v \n %v \n", faOne, faTwo)
 	if faDoneOne || faDoneTwo {
 		log.Fatalf("error, unable to read .fa files, check for > symbol before each name and that each fasta entry is only one line. Check to make sure there are only four bases or N, globalAlignment is unable to use anything outside A-T-G-C-N.\n")
 	}
-
-	//raven added this block
-	numSeqOne := CountSeqIdx(inputFileOne) //changed input from filename string to inputFile EasyReader
-	numSeqTwo := CountSeqIdx(inputFileTwo) //ditto
-	if numSeqOne > 1 || numSeqTwo > 1 {
-		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n", numSeqOne, numSeqTwo)
-	}
-	//attempt at Dan's len(faOne) suggestion
-	//if len(string(faOne)) != 1 || len(string(faTwo)) != 1 {
-	//log.Fatalf("multiple sequnces detected in .fa files. This program is designed for .fa files with only 1 sequence in them.\n")
-	//}
 
 	//needleman wunsch (global alignment)
 	bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
@@ -77,22 +39,6 @@ func main() {
 	//visualize
 	visualize := align.View(faOne.Seq, faTwo.Seq, aln)
 	fmt.Println(visualize)
-
-	//raven added this block to put visualized alignment output into MSA Fasta
-	outFileName := *faOut
-	if outFileName != "" { //only write to file if a filename is given in the faOut command line option
-		outFile, err := os.Create(outFileName) //fileio.EasyCreate and other fileio tools should work, but I don't really know how to use them
-		if err != nil {
-			log.Fatalf("Write to file failed on step 1\n")
-		}
-		//defer outFile.Close()
-		visualizeOutput := ">" + faOne.Name + "\n" + strings.Split(visualize, "\n")[0] + "\n" + ">" + faTwo.Name + "\n" + strings.Split(visualize, "\n")[1] + "\n"
-		_, err = outFile.WriteString(visualizeOutput)
-		if err != nil {
-			log.Fatalf("Write to file failed on step 2\n")
-		}
-		outFile.Close() //commented out defer outFile.Close()
-	}
 
 	//graph
 	genomeGraph := cigarToGraph(faOne, faTwo, aln)
