@@ -32,6 +32,7 @@ const (
 // traversal and manipulation of genes on the genomic and mRNA levels.
 type Gene struct {
 	id           string          // Identifier for the transcript the Gene is derived from. In GTF this is the GeneID field.
+	symbol       string          // Human readable gene symbol
 	startPos     int             // Genomic start position of the gene. This should use the coordinate system of the reference fasta, rather than Gene internal genomic coordinates
 	posStrand    bool            // True if gene is on the positive strand, False if on negative strand.
 	cdsStarts    []int           // The start position of each CDS. This value is stored in Gene genomic coordinates (slice index of genomeSeq)
@@ -150,14 +151,14 @@ func GenomicPosToCdna(g *Gene, genomePos int) (int, int, error) {
 	}
 }
 
-// CdnaPosToGenomic converts cDna coordinates to genomic coordinates
+// CodingPosToGenomic converts cDna coordinates to genomic coordinates
 // Input and output positions are zero-based
-func CdnaPosToGenomic(g *Gene, cdnaPos int) (int, error) {
+func CodingPosToGenomic(g *Gene, cdnaPos int) (int, error) {
 	if cdnaPos < 0 {
-		return 0, errors.New("input cDNA position must be positive")
+		return 0, errors.New("input CDS position must be positive")
 	}
 	if cdnaPos > len(g.codingSeq.seq)-1 {
-		return 0, errors.New("input position is greater than the length of the cDNA")
+		return 0, errors.New("input position is greater than the length of the CDS")
 	}
 	var searchStartPos int = g.cdsStarts[0]
 	for _, val := range g.cdsStarts {

@@ -15,7 +15,7 @@ func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
 	var lengthFromEnd int64
 
 	for i := 0; i < len(records); i++ {
-		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
+		lengthFromEnd = int64(ref[records[i].Chrom].Size) - records[i].ChromEnd
 		records[i].Score = numbers.MinInt64(lengthFromEnd, records[i].ChromStart)
 	}
 	bed.Write(outFile, records, 5)
