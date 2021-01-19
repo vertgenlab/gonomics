@@ -76,8 +76,7 @@ func SamChanToFile(incomingSams <-chan *SamAln, filename string, header *SamHead
 }
 
 func processHeaderLine(header *SamHeader, line string) {
-	var err error
-	var chrCount int64 = 0
+	var chrCount int = 0
 
 	header.Text = append(header.Text, line)
 	if strings.HasPrefix(line, "@SQ") && strings.Contains(line, "SN:") && strings.Contains(line, "LN:") {
@@ -90,10 +89,7 @@ func processHeaderLine(header *SamHeader, line string) {
 			case "SN":
 				curr.Name = elements[1]
 			case "LN":
-				curr.Size, err = strconv.ParseInt(elements[1], 10, 64)
-				if err != nil {
-					log.Fatal(fmt.Errorf("Error: was expecting an integer length, but got:%s\n", elements[1]))
-				}
+				curr.Size = common.StringToInt(elements[1])
 			}
 		}
 		if curr.Name == "" || curr.Size == 0 {
@@ -209,8 +205,8 @@ func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
-	var i int64
-	for i = 0; i < int64(len(chromSize)); {
+	var i int
+	for i = 0; i < len(chromSize); {
 		for j := range chromSize {
 			if i == chromSize[j].Order {
 				words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[j].Name, chromSize[j].Size)
@@ -335,7 +331,7 @@ func FastaHeader(ref []*fasta.Fasta) *SamHeader {
 	for i := 0; i < len(ref); i++ {
 		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: int64(len(ref[i].Seq))})
+		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
 	}
 	return &header
 }
