@@ -65,7 +65,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 		if err != nil {
 			log.Fatalf("Write to file failed on step 2\n")
 		}
-			outFile.Close() //commented out defer outFile.Close()
+		outFile.Close() //commented out defer outFile.Close()
 	}
 
 	//cigar to graph
@@ -98,7 +98,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 func usage() {
 	fmt.Print(
 		"./globalAlignment - chelsea's global alignment\n" +
-		" Align 2 .fasta files, each with only 1 sequence\n" +
+			" Align 2 .fasta files, each with only 1 sequence\n" +
 			"Usage:\n" +
 			"	faTarget faQuery\n" +
 			"options:\n" +
@@ -125,5 +125,5 @@ func main() {
 	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
 	outFileName := *faOut
 
-	globalAlignment(inputFileOne,inputFileTwo,outFileName)
+	globalAlignment(inputFileOne, inputFileTwo, outFileName)
 }
