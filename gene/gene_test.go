@@ -102,22 +102,22 @@ func TestPositionConversion(t *testing.T) {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(genePos, 0)
+	answerPos, err = CodingPosToGenomic(genePos, 0)
 	if answerPos != 2 || err != nil {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(genePos, 3)
+	answerPos, err = CodingPosToGenomic(genePos, 3)
 	if answerPos != 7 || err != nil {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(genePos, 6)
+	answerPos, err = CodingPosToGenomic(genePos, 6)
 	if answerPos != 11 || err != nil {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(genePos, 8)
+	answerPos, err = CodingPosToGenomic(genePos, 8)
 	if answerPos != 13 || err != nil {
 		testsPass = false
 	}
@@ -150,22 +150,22 @@ func TestPositionConversion(t *testing.T) {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(geneNeg, 0)
+	answerPos, err = CodingPosToGenomic(geneNeg, 0)
 	if answerPos != 13 || err != nil {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(geneNeg, 3)
+	answerPos, err = CodingPosToGenomic(geneNeg, 3)
 	if answerPos != 8 || err != nil {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(geneNeg, 6)
+	answerPos, err = CodingPosToGenomic(geneNeg, 6)
 	if answerPos != 4 || err != nil {
 		testsPass = false
 	}
 
-	answerPos, err = CdnaPosToGenomic(geneNeg, 8)
+	answerPos, err = CodingPosToGenomic(geneNeg, 8)
 	if answerPos != 2 || err != nil {
 		testsPass = false
 	}

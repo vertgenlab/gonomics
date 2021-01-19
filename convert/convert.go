@@ -67,7 +67,7 @@ func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromIn
 		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = s.Pos - 1
-			answer.ChromEnd = numbers.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
+			answer.ChromEnd = numbers.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), int64(reference[answer.Chrom].Size))
 			answer.Strand = true
 		} else {
 			answer.ChromEnd = s.Pos - 1 + cigar.ReferenceLength(s.Cigar)
@@ -94,7 +94,7 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
-		for x = 0; int64(x) < v.Size; x++ {
+		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
 		}
 		wigSlice[i] = &currentWig
@@ -146,7 +146,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
-		for x = 0; int64(x) < v.Size; x++ {
+		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
 		}
 		wigSlice[i] = &currentWig
@@ -191,7 +191,7 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]*wig.WigValue, v.Size)
-		for x = 0; int64(x) < v.Size; x++ {
+		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
 		}
 		wigSlice[i] = &currentWig
