@@ -20,15 +20,22 @@ func TestGraphRecon(t *testing.T) {
 	var humanNode1 = &simpleGraph.Node{Id: 0, Name: "humanNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 	var humanNode2 = &simpleGraph.Node{Id: 1, Name: "humanNode2", Seq: dna.StringToBases("AAA"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("AAA")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 	var humanNode3 = &simpleGraph.Node{Id: 2, Name: "humanNode3", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var humanNode4 = &simpleGraph.Node{Id: 3, Name: "humanNode4", Seq: dna.StringToBases("CCC"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("CCC")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	var humanNode5 = &simpleGraph.Node{Id: 4, Name: "humanNode5", Seq: dna.StringToBases("GGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("GGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
-	var humanEdge1 = &simpleGraph.Edge{humanNode2, 0.50}
-	var humanEdge2 = &simpleGraph.Edge{humanNode3, 0.50}
+	var humanEdge1 = &simpleGraph.Edge{humanNode2, 0.25}
+	var humanEdge2 = &simpleGraph.Edge{humanNode3, 0.75}
 	var humanEdge3 = &simpleGraph.Edge{humanNode3, 1.00}
+	var humanEdge4 = &simpleGraph.Edge{humanNode4, 0.25}
+	var humanEdge5 = &simpleGraph.Edge{humanNode5, 0.75}
+	var humanEdge6 = &simpleGraph.Edge{humanNode5, 1.00}
 
 	humanNode1.Next = []*simpleGraph.Edge{humanEdge1, humanEdge2}
 	humanNode2.Next = []*simpleGraph.Edge{humanEdge3}
+	humanNode3.Next = []*simpleGraph.Edge{humanEdge4, humanEdge5}
+	humanNode4.Next = []*simpleGraph.Edge{humanEdge6}
 
-	var humanGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{humanNode1, humanNode2, humanNode3}}
+	var humanGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{humanNode1, humanNode2, humanNode3, humanNode4, humanNode5}}
 
 	simpleGraph.PrintGraph(humanGraph)
 
