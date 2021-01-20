@@ -11,6 +11,7 @@ var readWriteTests = []struct {
 }{
 	{"testdata/test.vcf"},
 	{"testdata/GP_DP_Samples.vcf"},
+	{"testdata/SingleHapData.vcf"},
 }
 
 func TestReadToChan(t *testing.T) {
