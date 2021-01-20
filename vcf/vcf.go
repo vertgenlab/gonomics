@@ -11,8 +11,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -123,7 +123,7 @@ func ParseNotes(data string, format []string) []GenomeSample {
 		log.Fatalf("VCF format files with sample information must begin with \"GT\" as the first format column or be marked blank with a period. Here was the first format entry: %s.\nError parsing the line with this Notes column: %s.\n", format[0], data)
 	}
 
-	if format[0] == "." {//if the format column is blank, we do not need to parse further.
+	if format[0] == "." { //if the format column is blank, we do not need to parse further.
 		var blankAnswer []GenomeSample = make([]GenomeSample, 0)
 		return blankAnswer
 	}
