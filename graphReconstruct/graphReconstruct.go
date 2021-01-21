@@ -1,6 +1,7 @@
 package graphReconstruct
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
 	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -268,6 +269,20 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //		}
 //	}
 //}
+
+//seqOfPath takes in a graph and, using PathFinder, returns the seq of the best path through the graph
+func seqOfPath(g *simpleGraph.SimpleGraph) []dna.Base {
+	var seq []dna.Base
+	path, _ := PathFinder(g)
+	for n := 0; n < len(g.Nodes); n++ {
+		for p := 0; p < len(path); p++ {
+			if g.Nodes[n].Id == path[p] {
+				seq = append(seq, g.Nodes[n].Seq...)
+			}
+		}
+	}
+	return seq
+}
 
 //PathFinder takes a graph and returns the most likely path through that graph after checking all possible paths from the first node to the last
 func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
