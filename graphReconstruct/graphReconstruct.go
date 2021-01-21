@@ -269,6 +269,7 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //	}
 //}
 
+//PathFinder takes a graph and returns the most likely path through that graph after checking all possible paths from the first node to the last
 func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 	var finalPath []uint32
 	var finalProb float32
@@ -279,7 +280,6 @@ func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 
 	for n := 0; n < len(g.Nodes); n++ {
 		if g.Nodes[n].Id == 0 {
-			log.Print("start bestPath")
 			finalProb, finalPath = bestPath(g.Nodes[n], tempProb, tempPath, existingPaths)
 		}
 	}
@@ -287,9 +287,9 @@ func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 	return finalPath, finalProb
 }
 
+//bestPath is the helper function for PathFinder, and recursively traverses the graph depth first to determine the most likely path from start to finish
 func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32, existingPaths map[float32][]uint32) (prob float32, path []uint32) {
 	//TODO: same prob values will overwrite existing value if they are equal, i need a way around that
-	//TODO: fix double zero problem, and double node calls of node2 (id = 2) probably a problem with the graph i wrote
 	currentNode := node
 	var currentProb float32 = 0
 	currentPath := prevPath
@@ -302,29 +302,21 @@ func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32, exist
 	if prevProb != 0 && len(prevPath) > 0 {
 		tempProb = prevProb
 	}
-	log.Print("in bestPath")
 	if len(currentNode.Next) == 0 {
 		currentPath = append(currentPath, currentNode.Id)
-		log.Print("lastNode")
-		log.Print(currentPath)
-		log.Print(tempProb)
 		potentialPaths[tempProb] = currentPath
-		log.Print(potentialPaths)
-		log.Print(len(potentialPaths))
 	}
 	for i, _ := range currentNode.Next {
-		log.Print("traverse")
-		log.Print(currentPath)
-		log.Print(tempProb)
-		log.Print(currentProb)
 		tempPath = append(tempPath, currentPath...)
 		tempPath = append(tempPath, currentNode.Id)
 		if currentNode.Next[i].Prob*tempProb > currentProb {
-			log.Print("in if")
-			log.Print(currentNode.Next[i].Prob)
 			currentProb = currentNode.Next[i].Prob * tempProb
-			currentPath = append(currentPath, currentNode.Id)
-			log.Print(currentPath)
+			checkPath := len(currentPath)
+			if checkPath == 0 {
+				currentPath = append(currentPath, currentNode.Id)
+			} else if currentPath[checkPath-1] != currentNode.Id {
+				currentPath = append(currentPath, currentNode.Id)
+			}
 			bestPath(currentNode.Next[i].Dest, currentProb, currentPath, potentialPaths)
 		}
 	}
@@ -337,13 +329,6 @@ func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32, exist
 	}
 	return finalProb, finalPath
 }
-
-//doubleZero path problem in second run
-
-//could store possible paths and prob at end and do a simple compare. because this code is going through all possible paths
-//TODO: somehow slice holding current path is being reset to just the initial value "0" for every run, so in this case final
-//return is [0 0]
-//could store the returns as a map and start with comparison of keys, then len of list values
 
 ////PathFinder finds the best path from start to finish through the graph
 //func PathFinder(g *simpleGraph.SimpleGraph) (finalPath []*simpleGraph.Node, prob float32) {
