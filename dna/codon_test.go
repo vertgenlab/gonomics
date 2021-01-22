@@ -99,17 +99,24 @@ var gdf2LongProt string = "MetCysProGlyAlaLeuTrpValAlaLeuProLeuLeuSerLeuLeuAlaGl
 	"IleSerValLeuTyrLysAspAspMetGlyValProThrLeuLysTyrHisTyrGluGly" +
 	"MetSerValAlaGluCysGlyCysArgTer"
 
-//func TestStress(t *testing.T) {
-//	expectedProt := ShortStringToPolypeptide(gdf2prot)
-//	actualProt, err := TranslateSeq(StringToBases(gdf2mrna))
-//	if !equal(actualProt, expectedProt) || err != nil {
-//		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, actualProt)
-//	}
-//	actualLongProt, err := TranslateToString(StringToBases(gdf2mrna))
-//	if actualLongProt != gdf2LongProt || err != nil {
-//		t.Errorf("stress test failed, expected\n%v, got\n%v", gdf2LongProt, actualLongProt)
-//	}
-//}
+func TestStress(t *testing.T) {
+	expectedProt, err := StringToAminoAcid(gdf2prot, true)
+	if err != nil {
+		t.Errorf("stress test failed, error converting string to amino acid")
+	}
+	actualProt, err := TranslateSeq(StringToBases(gdf2mrna))
+	if !equal(actualProt, expectedProt) || err != nil {
+		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, actualProt)
+	}
+	actualLongProtString, err := TranslateToString(StringToBases(gdf2mrna))
+	if actualLongProtString != gdf2LongProt || err != nil {
+		t.Errorf("stress test failed, expected\n%v, got\n%v", gdf2LongProt, actualLongProtString)
+	}
+	longProt, err := StringToAminoAcid(gdf2LongProt, false)
+	if err != nil || !equal(longProt, actualProt) || !equal(longProt, expectedProt) {
+		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, longProt)
+	}
+}
 
 func equal(alpha []AminoAcid, beta []AminoAcid) bool {
 	if len(alpha) != len(beta) {

@@ -62,10 +62,21 @@ var GeneticCode = map[Codon]AminoAcid{
 }
 
 var (
-	ErrUnrecognizedAminoAcid  = errors.New("unrecognized amino acid")
-	ErrCodonNotInMap          = errors.New("codon is not in dna.GeneticCode map")
-	ErrLenInputSeqNotDivThree = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
+	ErrUnrecognizedAminoAcid     = errors.New("unrecognized amino acid")
+	ErrCodonNotInMap             = errors.New("codon is not in dna.GeneticCode map")
+	ErrLenInputSeqNotDivThree    = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
+	ErrLenInputStringNotDivThree = errors.New("length of amino acid input string is not a factor of three. remaining bases were ignored")
 )
+
+// aaToShortString is an efficient lookup for the rune corresponding to a given amino acid.
+// intended to remain as a private array to help the AminoAcidToShortString function.
+// panics if value input is not a valid AminoAcid.
+var aaToShortString = []byte{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', '*'}
+
+// aaToShortString is an efficient lookup for the 3 letter string corresponding to a given amino acid.
+// intended to remain as a private array to help the AminoAcidToString function.
+// panics if value input is not a valid AminoAcid.
+var aaToLongString = []string{"Ala", "Arg", "Asn", "Asp", "Cys", "Gln", "Glu", "Gly", "His", "Ile", "Leu", "Lys", "Met", "Phe", "Pro", "Ser", "Thr", "Trp", "Tyr", "Val", "Ter"}
 
 // AminoAcidToShortString converts type AminoAcid into single character amino acid symbols.
 func AminoAcidToShortString(a AminoAcid) string {
@@ -113,71 +124,163 @@ func AminoAcidToShortString(a AminoAcid) string {
 	case Stop:
 		return "*"
 	default:
-		log.Fatalf("Error: unexpected amino acid value %v\n", a)
+		log.Panicf("Error: unexpected amino acid value %v\n", a)
 		return "X"
 	}
 }
 
 // AminoAcidToString converts type AminoAcid into three letter amino acid symbols.
-func AminoAcidToString(a AminoAcid) (string, error) {
+func AminoAcidToString(a AminoAcid) string {
 	switch a {
 	case Ala:
-		return "Ala", nil
+		return "Ala"
 	case Arg:
-		return "Arg", nil
+		return "Arg"
 	case Asn:
-		return "Asn", nil
+		return "Asn"
 	case Asp:
-		return "Asp", nil
+		return "Asp"
 	case Cys:
-		return "Cys", nil
+		return "Cys"
 	case Gln:
-		return "Gln", nil
+		return "Gln"
 	case Glu:
-		return "Glu", nil
+		return "Glu"
 	case Gly:
-		return "Gly", nil
+		return "Gly"
 	case His:
-		return "His", nil
+		return "His"
 	case Ile:
-		return "Ile", nil
+		return "Ile"
 	case Leu:
-		return "Leu", nil
+		return "Leu"
 	case Lys:
-		return "Lys", nil
+		return "Lys"
 	case Met:
-		return "Met", nil
+		return "Met"
 	case Phe:
-		return "Phe", nil
+		return "Phe"
 	case Pro:
-		return "Pro", nil
+		return "Pro"
 	case Ser:
-		return "Ser", nil
+		return "Ser"
 	case Thr:
-		return "Thr", nil
+		return "Thr"
 	case Trp:
-		return "Trp", nil
+		return "Trp"
 	case Tyr:
-		return "Tyr", nil
+		return "Tyr"
 	case Val:
-		return "Val", nil
+		return "Val"
 	case Stop:
-		return "Ter", nil
+		return "Ter"
 	default:
-		return "Xxx", ErrUnrecognizedAminoAcid
+		log.Panicf("unrecognized amino acid: %v", a)
+		return ""
 	}
 }
 
-// StringToAminoAcid converts a string into type amino acid.
-// If singleLetter is false, the input string will be processed by the three letter code.
-//func StringToAminoAcid(s string, singleLetter bool) ([]AminoAcid, error) {
-//	var answer []AminoAcid
-//	if singleLetter {
-//		answer = make([]AminoAcid, len(s))
-//	} else {
-//		answer = make([]AminoAcid, len(s)/3)
-//	}
-//}
+var ErrUnrecognizedAminoAcidString = errors.New("unrecognized amino acid string")
+
+// OneLetterToAminoAcid converts a one letter amino acid byte into an AminoAcid type.
+func OneLetterToAminoAcid(b byte) (AminoAcid, error) {
+	switch b {
+	case 'A':
+		return Ala, nil
+	case 'R':
+		return Arg, nil
+	case 'N':
+		return Asn, nil
+	case 'D':
+		return Asp, nil
+	case 'C':
+		return Cys, nil
+	case 'Q':
+		return Gln, nil
+	case 'E':
+		return Glu, nil
+	case 'G':
+		return Gly, nil
+	case 'H':
+		return His, nil
+	case 'I':
+		return Ile, nil
+	case 'L':
+		return Leu, nil
+	case 'K':
+		return Lys, nil
+	case 'M':
+		return Met, nil
+	case 'F':
+		return Phe, nil
+	case 'P':
+		return Pro, nil
+	case 'S':
+		return Ser, nil
+	case 'T':
+		return Thr, nil
+	case 'W':
+		return Trp, nil
+	case 'Y':
+		return Tyr, nil
+	case 'V':
+		return Val, nil
+	case '*':
+		return Stop, nil
+	default:
+		return Stop, ErrUnrecognizedAminoAcidString
+	}
+}
+
+// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type
+func ThreeLetterToAminoAcid(s string) (AminoAcid, error) {
+	switch s {
+	case "Ala":
+		return Ala, nil
+	case "Arg":
+		return Arg, nil
+	case "Asn":
+		return Asn, nil
+	case "Asp":
+		return Asp, nil
+	case "Cys":
+		return Cys, nil
+	case "Gln":
+		return Gln, nil
+	case "Glu":
+		return Glu, nil
+	case "Gly":
+		return Gly, nil
+	case "His":
+		return His, nil
+	case "Ile":
+		return Ile, nil
+	case "Leu":
+		return Leu, nil
+	case "Lys":
+		return Lys, nil
+	case "Met":
+		return Met, nil
+	case "Phe":
+		return Phe, nil
+	case "Pro":
+		return Pro, nil
+	case "Ser":
+		return Ser, nil
+	case "Thr":
+		return Thr, nil
+	case "Trp":
+		return Trp, nil
+	case "Tyr":
+		return Tyr, nil
+	case "Val":
+		return Val, nil
+	case "Ter":
+		return Stop, nil
+	default:
+		return Stop, ErrUnrecognizedAminoAcidString
+	}
+}
 
 // BasesToCodons converts a slice of DNA bases into a slice of Codons.
 // Input expects bases to be in-frame. If the input sequence is not a
@@ -255,25 +358,19 @@ func PolypeptideToShortString(a []AminoAcid) string {
 	var s strings.Builder
 	s.Grow(len(a))
 	for i := range a {
-		s.WriteString(AminoAcidToShortString(a[i]))
+		s.WriteByte(aaToShortString[a[i]])
 	}
 	return s.String()
 }
 
 // PolypeptideToString converts a slice of AminoAcids into a string of three character amino acid symbols.
-func PolypeptideToString(a []AminoAcid) (string, error) {
+func PolypeptideToString(a []AminoAcid) string {
 	var s strings.Builder
 	s.Grow(len(a) * 3)
-	var str string
-	var err, finalErr error
 	for i := range a {
-		str, err = AminoAcidToString(a[i])
-		if err != nil {
-			finalErr = err
-		}
-		s.WriteString(str)
+		s.WriteString(aaToLongString[a[i]])
 	}
-	return s.String(), finalErr
+	return s.String()
 }
 
 //TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
@@ -287,26 +384,40 @@ func TranslateToShortString(b []Base) (string, error) {
 
 // TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
 func TranslateToString(b []Base) (string, error) {
-	var finalErr error
 	bCopy := make([]Base, len(b))
 	copy(bCopy, b)
 	AllToUpper(bCopy)
 	a, err := TranslateSeq(bCopy)
-	if err != nil {
-		finalErr = err
-	}
-	answer, err := PolypeptideToString(a)
-	if err != nil {
-		finalErr = err
-	}
-	return answer, finalErr
+	answer := PolypeptideToString(a)
+	return answer, err
 }
 
-// ShortStringToPolypeptide converts a string into a slice of amino acids.
-func ShortStringToPolypeptide(s string) []AminoAcid {
-	answer := make([]AminoAcid, len(s))
-	for i := range s {
-		answer[i] = AminoAcid(s[i])
+// StringToAminoAcid converts a string into type amino acid.
+// If singleLetter is false, the input string will be processed by the three letter code.
+func StringToAminoAcid(s string, singleLetter bool) ([]AminoAcid, error) {
+	var answer []AminoAcid
+	var lengthErr error
+	var err error
+	if singleLetter { // single letter amino acid parsing
+		answer = make([]AminoAcid, len(s))
+		for i := range s {
+			answer[i], err = OneLetterToAminoAcid(s[i])
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else { // triple letter amino acid parsing
+		answer = make([]AminoAcid, len(s)/3)
+		remainder := len(s) % 3
+		if remainder != 0 {
+			lengthErr = ErrLenInputStringNotDivThree
+		}
+		for i := 0; i < len(s)-remainder; i += 3 {
+			answer[i/3], err = ThreeLetterToAminoAcid(s[i : i+3])
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
-	return answer
+	return answer, lengthErr
 }

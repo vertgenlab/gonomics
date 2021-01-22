@@ -115,8 +115,7 @@ func stringToBasesArray(s string, arr []Base) []Base {
 	return answer
 }
 
-var baseToStringArray = []byte{'A','C','G','T','N','a','c','g','t','n','-','.','*'}
-
+var baseToStringArray = []byte{'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n', '-', '.', '*'}
 
 func makeStringToBaseArray() []Base {
 	var stringToBaseArray = make([]Base, 't'+1)
@@ -136,9 +135,7 @@ func makeStringToBaseArray() []Base {
 	return stringToBaseArray
 }
 
-
-
-var stringBaseMap = map[byte]Base {
+var stringBaseMap = map[byte]Base{
 	'A': A,
 	'C': C,
 	'G': G,

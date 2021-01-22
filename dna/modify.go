@@ -76,7 +76,7 @@ func AllToLower(bases []Base) {
 // complementArray is an efficient lookup for the complement of the input base.
 // intended to remain as a private array to help the Complement functions.
 // panics if value input is not a valid Base.
-var complementArray = []Base{T,G,C,A,N,LowerT,LowerG,LowerC,LowerA,LowerN,Gap,Dot,Nil}
+var complementArray = []Base{T, G, C, A, N, LowerT, LowerG, LowerC, LowerA, LowerN, Gap, Dot, Nil}
 
 // ComplementSingleBase returns the nucleotide complementary to the input base.
 func ComplementSingleBase(b Base) Base {

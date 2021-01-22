@@ -137,7 +137,7 @@ func StringToBases(s string) []Base {
 // intended to remain as a private array to help the BasesToString function.
 // panics if value input is not a valid Base.
 // quicker than BaseToByte by ~5x
-var baseToByteArray = []byte{'A','C','G','T','N','a','c','g','t','n','-','.','*'}
+var baseToByteArray = []byte{'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n', '-', '.', '*'}
 
 //BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
 func BasesToString(bases []Base) string {
