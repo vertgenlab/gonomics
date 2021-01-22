@@ -170,6 +170,13 @@ func TestByteSliceToDnaBases(t *testing.T) {
 	}
 }
 
+// BENCHMARK RESULTS
+// BenchmarkTraditional-4                  30719421                38.4 ns/op
+// BenchmarkRange-4                        30408682                38.5 ns/op
+
+// both ways are pretty much identical in performance
+// stylistically I think we should use ranges for basic looping IMO.
+
 func BenchmarkTraditional(b *testing.B) {
 	dummySlice := make([]Base, 100)
 	var dummyVal Base

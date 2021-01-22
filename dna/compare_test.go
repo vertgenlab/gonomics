@@ -44,3 +44,5 @@ func TestCompare(t *testing.T) {
 		}
 	}
 }
+
+//TODO Compare2DSeqsTests
