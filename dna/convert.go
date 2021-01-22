@@ -4,11 +4,10 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"strings"
-	"unicode/utf8"
 )
 
 //RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
-//Note: '*', used by VCF to denote deleted alleles, becomes a Gap in DNA.
+//Note: '*', used by VCF to denote deleted alleles becomes Nil
 func RuneToBase(r rune) Base {
 	switch r {
 	case 'A':
@@ -22,20 +21,20 @@ func RuneToBase(r rune) Base {
 	case 'N':
 		return N
 	case 'a':
-		return a
+		return LowerA
 	case 'c':
-		return c
+		return LowerC
 	case 'g':
-		return g
+		return LowerG
 	case 't':
-		return t
+		return LowerT
 	case 'n':
-		return n
+		return LowerN
 	case '-':
 		return Gap
-	//VCF uses star to denote a deleted allele
+	// VCF uses star to denote a deleted allele
 	case '*':
-		return Gap
+		return Nil
 	case '.':
 		return Dot
 	default:
@@ -60,19 +59,19 @@ func ByteToBase(b byte) Base {
 	case 'N':
 		return N
 	case 'a':
-		return A
+		return LowerA
 	case 'c':
-		return C
+		return LowerC
 	case 'g':
-		return G
+		return LowerG
 	case 't':
-		return T
+		return LowerT
 	case 'n':
-		return N
+		return LowerN
 	case '-':
 		return Gap
 	case '*':
-		return Gap
+		return Nil
 	case '.':
 		return Dot
 	default:
@@ -94,15 +93,15 @@ func BaseToRune(base Base) rune {
 		return 'T'
 	case N:
 		return 'N'
-	case a:
+	case LowerA:
 		return 'a'
-	case c:
+	case LowerC:
 		return 'c'
-	case g:
+	case LowerG:
 		return 'g'
-	case t:
+	case LowerT:
 		return 't'
-	case n:
+	case LowerN:
 		return 'n'
 	case Gap:
 		return '-'
@@ -115,42 +114,48 @@ func BaseToRune(base Base) rune {
 }
 
 //Extract returns a subsequence of an input slice of DNA bases from an input start and end point.
-func Extract(rec []Base, start int64, end int64) []Base {
+func Extract(rec []Base, start int, end int) []Base {
 	return rec[start:end]
 }
 
 //BaseToString converts a DNA base to a string by casting a BaseToRune result to a string.
 func BaseToString(b Base) string {
-	return string(BaseToRune(b))
+	return string(baseToByteArray[b])
 }
 
 //StringToBases parses a string into a slice of DNA bases
 func StringToBases(s string) []Base {
-	answer := make([]Base, utf8.RuneCountInString(s))
+	answer := make([]Base, len(s))
 
-	for index, runeValue := range s {
-		answer[index] = RuneToBase(runeValue)
+	for index := range s {
+		answer[index] = ByteToBase(s[index])
 	}
 	return answer
 }
+
+// baseToByte is an efficient lookup for the rune corresponding to a given dna.Base.
+// intended to remain as a private array to help the BasesToString function.
+// panics if value input is not a valid Base.
+// quicker than BaseToByte by ~5x
+var baseToByteArray = []byte{'A','C','G','T','N','a','c','g','t','n','-','.','*'}
 
 //BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
 func BasesToString(bases []Base) string {
 	var buffer strings.Builder
 	buffer.Grow(len(bases))
 	var err error
-	for _, b := range bases {
-		_, err = buffer.WriteRune(BaseToRune(b))
+	for i := range bases {
+		err = buffer.WriteByte(baseToByteArray[bases[i]])
 		common.ExitIfError(err)
 	}
 	return buffer.String()
 }
 
-// ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases with no lowercase bases.
+// ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases.
 func ByteSliceToDnaBases(b []byte) []Base {
 	var answer []Base = make([]Base, len(b))
-	for i, byteValue := range b {
-		answer[i] = ByteToBase(byteValue)
+	for i := range b {
+		answer[i] = ByteToBase(b[i])
 	}
 	return answer
 }
