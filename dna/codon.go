@@ -63,9 +63,9 @@ var GeneticCode = map[Codon]AminoAcid{
 
 var (
 	ErrUnrecognizedAminoAcidString = errors.New("unrecognized amino acid string")
-	ErrLenInputSeqNotDivThree    = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
-	ErrLenInputStringNotDivThree = errors.New("length of amino acid input string is not a factor of three. remaining bases were ignored")
-	ErrNonACGT = errors.New("input sequence contains bases other than ACGT. all bases must be uppercase")
+	ErrLenInputSeqNotDivThree      = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
+	ErrLenInputStringNotDivThree   = errors.New("length of amino acid input string is not a factor of three. remaining bases were ignored")
+	ErrNonACGT                     = errors.New("input sequence contains bases other than ACGT. all bases must be uppercase")
 )
 
 // aaToShortString is an efficient lookup for the rune corresponding to a given amino acid.

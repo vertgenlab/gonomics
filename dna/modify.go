@@ -144,7 +144,7 @@ func RemoveBase(bases []Base, baseToRemove Base) []Base {
 	return ans
 }
 
-// Delete removes bases from and sequence of bases.
+// Delete removes bases from a sequence of bases.
 // all base positions are zero based and left closed, right open.
 func Delete(seq []Base, delStart int, delEnd int) ([]Base, error) {
 	if delStart >= delEnd || delStart < 0 || delEnd > len(seq) {

@@ -68,7 +68,7 @@ func baseDist(a Base, b Base) int {
 }
 
 // Dist returns the number of bases that do not match between the input sequences.
-// Input sequences must be the sample length.
+// Input sequences must be the same length.
 func Dist(a []Base, b []Base) (int, error) {
 	if len(a) != len(b) {
 		return 0, ErrInputSeqsDiffLen
