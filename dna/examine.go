@@ -1,11 +1,14 @@
 package dna
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"log"
+	"errors"
 )
 
+var (
+	ErrInputSeqsDiffLen = errors.New("input sequences are not the same length")
+)
+
+// Count returns the number of each base present in the input sequence.
 func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount int, aCount int, cCount int, gCount int, tCount int, nCount int, gapCount int) {
 	ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	for _, b := range seq {
@@ -20,15 +23,15 @@ func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount i
 			TCount++
 		case N:
 			NCount++
-		case a:
+		case LowerA:
 			aCount++
-		case c:
+		case LowerC:
 			cCount++
-		case g:
+		case LowerG:
 			gCount++
-		case t:
+		case LowerT:
 			tCount++
-		case n:
+		case LowerN:
 			nCount++
 		case Gap:
 			gapCount++
@@ -37,6 +40,7 @@ func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount i
 	return ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, NCount, gapCount
 }
 
+// CountMask returns the number of bases that are masked/unmasked (lowercase/uppercase) in the input sequence.
 func CountMask(seq []Base) (unmaskedCount int, maskedCount int, gapCount int) {
 	ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount := Count(seq)
 	unmaskedCount = ACount + CCount + GCount + TCount + NCount
@@ -44,44 +48,55 @@ func CountMask(seq []Base) (unmaskedCount int, maskedCount int, gapCount int) {
 	return unmaskedCount, maskedCount, gapCount
 }
 
+// CountGaps returns the number of gaps present in the input sequence.
 func CountGaps(seq []Base) int {
-	_, _, gapCount := CountMask(seq)
+	var gapCount int
+	for i := range seq {
+		if seq[i] == Gap {
+			gapCount++
+		}
+	}
 	return gapCount
 }
 
-func BaseDist(a Base, b Base) int {
+// baseDist is a helper function for Dist that returns 1 if input bases do not match.
+func baseDist(a Base, b Base) int {
 	if a == b {
 		return 0
 	}
 	return 1
 }
 
-func Dist(a []Base, b []Base) int {
+// Dist returns the number of bases that do not match between the input sequences.
+// Input sequences must be the sample length.
+func Dist(a []Base, b []Base) (int, error) {
 	if len(a) != len(b) {
-		log.Fatalf("Seqs must have the same length to calculate distance.\n")
+		return 0, ErrInputSeqsDiffLen
 	}
-	var sum int = 0
-	for i := 0; i < len(a); i++ {
-		sum = sum + BaseDist(a[i], b[i])
+	var sum int
+	for i := range a {
+		sum = sum + baseDist(a[i], b[i])
 	}
-	return sum
+	return sum, nil
 }
 
+// IsLower returns true if the input base is lowercase.
 func IsLower(b Base) bool {
 	switch b {
-	case a:
+	case LowerA:
 		return true
-	case g:
+	case LowerG:
 		return true
-	case c:
+	case LowerC:
 		return true
-	case t:
+	case LowerT:
 		return true
 	default:
 		return false
 	}
 }
 
+// DefineBase returns false if the input base is an N, Gap, Dot, or Nil.
 func DefineBase(b Base) bool {
 	switch b {
 	case A:
@@ -94,32 +109,37 @@ func DefineBase(b Base) bool {
 		return true
 	case N:
 		return false
-	case a:
+	case LowerA:
 		return true
-	case c:
+	case LowerC:
 		return true
-	case g:
+	case LowerG:
 		return true
-	case t:
+	case LowerT:
 		return true
-	case n:
+	case LowerN:
 		return false
 	case Gap:
 		return false
+	case Dot:
+		return false
+	case Nil:
+		return false
 	default:
-		common.ExitIfError(fmt.Errorf("Error: trying to examine unknown base %d", b))
 		return false
 	}
 }
 
+// CountBase returns the number of the designated base present in the input sequence.
 func CountBase(seq []Base, b Base) int {
 	return CountBaseInterval(seq, b, 0, len(seq))
 }
 
+// CountBaseInterval returns the number of the designated base present in the input range of the sequence.
 func CountBaseInterval(seq []Base, b Base, start int, end int) int {
-	var answer int = 0
+	var answer int
 	if start < 0 || end > len(seq) {
-		log.Fatalf("Error: %d and %d are out of range for a sequence of length %d\n", start, end, len(seq))
+		return answer
 	}
 	for i := start; i < end; i++ {
 		if seq[i] == b {
@@ -127,12 +147,4 @@ func CountBaseInterval(seq []Base, b Base, start int, end int) int {
 		}
 	}
 	return answer
-}
-
-func CompareBase(alpha Base, beta Base) bool {
-	if alpha == beta {
-		return true
-	} else {
-		return false
-	}
 }
