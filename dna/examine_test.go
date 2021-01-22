@@ -2,8 +2,8 @@ package dna
 
 import "testing"
 
-var alpha []Base = StringToBases("ACTGacgtAAACC--ACacgnnnNNNactg")
-var beta []Base = StringToBases("ACGGacgtAATCC--ACacgnnnNCNaCtg")
+var alpha, _ = StringToBases("ACTGacgtAAACC--ACacgnnnNNNactg")
+var beta, _ = StringToBases("ACGGacgtAATCC--ACacgnnnNCNaCtg")
 
 func TestCount(t *testing.T) {
 	ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount := Count(alpha)

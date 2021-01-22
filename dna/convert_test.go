@@ -20,8 +20,8 @@ var equalStringsAndBases = []struct {
 
 func TestStringToBases(t *testing.T) {
 	for _, test := range equalStringsAndBases {
-		actual := StringToBases(test.characters)
-		if CompareSeqsCaseSensitive(actual, test.bases) != 0 {
+		actual, err := StringToBases(test.characters)
+		if CompareSeqsCaseSensitive(actual, test.bases) != 0 || err != nil {
 			t.Errorf("StringToBases(%s): expected %v, actual %v", test.characters, test.bases, actual)
 		}
 	}
@@ -49,7 +49,7 @@ func TestBasesToString(t *testing.T) {
 // highly performance sensitive tasks, an array may be faster than the ByteToBase function.
 
 func BenchmarkBasesToStringViaSwitch(b *testing.B) {
-	seq := StringToBases(gdf2mrna)
+	seq, _ := StringToBases(gdf2mrna)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := range seq {
@@ -59,7 +59,7 @@ func BenchmarkBasesToStringViaSwitch(b *testing.B) {
 }
 
 func BenchmarkBasesToStringViaArray(b *testing.B) {
-	seq := StringToBases(gdf2mrna)
+	seq, _ := StringToBases(gdf2mrna)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := range seq {

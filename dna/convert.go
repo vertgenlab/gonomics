@@ -1,82 +1,79 @@
 package dna
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"strings"
 )
 
 //RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
 //Note: '*', used by VCF to denote deleted alleles becomes Nil
-func RuneToBase(r rune) Base {
+func RuneToBase(r rune) (Base, error) {
 	switch r {
 	case 'A':
-		return A
+		return A, nil
 	case 'C':
-		return C
+		return C, nil
 	case 'G':
-		return G
+		return G, nil
 	case 'T':
-		return T
+		return T, nil
 	case 'N':
-		return N
+		return N, nil
 	case 'a':
-		return LowerA
+		return LowerA, nil
 	case 'c':
-		return LowerC
+		return LowerC, nil
 	case 'g':
-		return LowerG
+		return LowerG, nil
 	case 't':
-		return LowerT
+		return LowerT, nil
 	case 'n':
-		return LowerN
+		return LowerN, nil
 	case '-':
-		return Gap
+		return Gap, nil
 	// VCF uses star to denote a deleted allele
 	case '*':
-		return Nil
+		return Nil, nil
 	case '.':
-		return Dot
+		return Dot, nil
 	default:
-		log.Fatalf("Error: unexpected character in dna %c\n", r)
-		return N
+		return N, ErrUnrecognizedBase
 	}
 }
 
 // ByteToBaseToBase converts a byte into a dna.Base if it matches one of the acceptable DNA characters.
 // Notes: It will also mask the lower case values and return dna.Base as uppercase bases.
 // Note: '*', used by VCF to denote deleted alleles, becomes a Gap in DNA.
-func ByteToBase(b byte) Base {
+func ByteToBase(b byte) (Base, error) {
 	switch b {
 	case 'A':
-		return A
+		return A, nil
 	case 'C':
-		return C
+		return C, nil
 	case 'G':
-		return G
+		return G, nil
 	case 'T':
-		return T
+		return T, nil
 	case 'N':
-		return N
+		return N, nil
 	case 'a':
-		return LowerA
+		return LowerA, nil
 	case 'c':
-		return LowerC
+		return LowerC, nil
 	case 'g':
-		return LowerG
+		return LowerG, nil
 	case 't':
-		return LowerT
+		return LowerT, nil
 	case 'n':
-		return LowerN
+		return LowerN, nil
 	case '-':
-		return Gap
+		return Gap, nil
 	case '*':
-		return Nil
+		return Nil, nil
 	case '.':
-		return Dot
+		return Dot, nil
 	default:
-		log.Fatalf("Error: unexpected character in dna %c\n", b)
-		return N
+		return N, ErrUnrecognizedBase
 	}
 }
 
@@ -108,7 +105,7 @@ func BaseToRune(base Base) rune {
 	case Dot:
 		return '.'
 	default:
-		log.Fatalf("Error: unexpected value in dna Base when converting to rune\n")
+		log.Panicf("Error: unexpected value in dna Base when converting to rune\n")
 		return 'N'
 	}
 }
@@ -124,13 +121,16 @@ func BaseToString(b Base) string {
 }
 
 //StringToBases parses a string into a slice of DNA bases
-func StringToBases(s string) []Base {
+func StringToBases(s string) ([]Base, error) {
 	answer := make([]Base, len(s))
-
+	var err error
 	for index := range s {
-		answer[index] = ByteToBase(s[index])
+		answer[index], err = ByteToBase(s[index])
+		if err != nil {
+			return nil, err
+		}
 	}
-	return answer
+	return answer, err
 }
 
 // baseToByte is an efficient lookup for the rune corresponding to a given dna.Base.
@@ -146,16 +146,22 @@ func BasesToString(bases []Base) string {
 	var err error
 	for i := range bases {
 		err = buffer.WriteByte(baseToByteArray[bases[i]])
-		common.ExitIfError(err)
+		if err != nil {
+			log.Panicf("problem writing byte")
+		}
 	}
 	return buffer.String()
 }
 
 // ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases.
-func ByteSliceToDnaBases(b []byte) []Base {
+func ByteSliceToDnaBases(b []byte) ([]Base, error) {
 	var answer []Base = make([]Base, len(b))
+	var err error
 	for i := range b {
-		answer[i] = ByteToBase(b[i])
+		answer[i], err = ByteToBase(b[i])
+		if err != nil {
+			return nil, err
+		}
 	}
-	return answer
+	return answer, err
 }
