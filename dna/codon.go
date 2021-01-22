@@ -62,10 +62,10 @@ var GeneticCode = map[Codon]AminoAcid{
 }
 
 var (
-	ErrUnrecognizedAminoAcid     = errors.New("unrecognized amino acid")
-	ErrCodonNotInMap             = errors.New("codon is not in dna.GeneticCode map")
+	ErrUnrecognizedAminoAcidString = errors.New("unrecognized amino acid string")
 	ErrLenInputSeqNotDivThree    = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
 	ErrLenInputStringNotDivThree = errors.New("length of amino acid input string is not a factor of three. remaining bases were ignored")
+	ErrNonACGT = errors.New("input sequence contains bases other than ACGT. all bases must be uppercase")
 )
 
 // aaToShortString is an efficient lookup for the rune corresponding to a given amino acid.
@@ -180,8 +180,6 @@ func AminoAcidToString(a AminoAcid) string {
 	}
 }
 
-var ErrUnrecognizedAminoAcidString = errors.New("unrecognized amino acid string")
-
 // OneLetterToAminoAcid converts a one letter amino acid byte into an AminoAcid type.
 func OneLetterToAminoAcid(b byte) (AminoAcid, error) {
 	switch b {
@@ -290,7 +288,9 @@ func BasesToCodons(b []Base) ([]Codon, error) {
 	var err error
 	frame := len(b) % 3
 	answer := make([]Codon, 0, len(b)/3)
-
+	if !IsSeqOfACGT(b) {
+		return nil, ErrNonACGT
+	}
 	if frame != 0 {
 		err = ErrLenInputSeqNotDivThree
 	}
@@ -310,27 +310,18 @@ func CodonsToBases(c []Codon) []Base {
 }
 
 //TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
-func TranslateCodon(c Codon) (AminoAcid, error) {
-	val, ok := GeneticCode[c]
-	if ok {
-		return val, nil
-	} else {
-		return Stop, ErrCodonNotInMap
-	}
+func TranslateCodon(c Codon) AminoAcid {
+	return GeneticCode[c]
 }
 
 // NonSynonymous compares two Codons and returns true if they encode different AminoAcids.
 func NonSynonymous(c1 Codon, c2 Codon) bool {
-	p1, _ := TranslateCodon(c1)
-	p2, _ := TranslateCodon(c2)
-	return p1 != p2
+	return TranslateCodon(c1) != TranslateCodon(c2)
 }
 
 // Synonymous compares two codons and returns true if the codons code for the same amino acid.
 func Synonymous(c1 Codon, c2 Codon) bool {
-	p1, _ := TranslateCodon(c1)
-	p2, _ := TranslateCodon(c2)
-	return p1 == p2
+	return TranslateCodon(c1) == TranslateCodon(c2)
 }
 
 // IsEqual compares two Codons and returns true if the underlying sequences are identical.
@@ -340,17 +331,15 @@ func IsEqual(c1 Codon, c2 Codon) bool {
 
 // TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
 func TranslateSeq(b []Base) ([]AminoAcid, error) {
-	var err error
 	answer := make([]AminoAcid, len(b)/3)
-	codons, finalErr := BasesToCodons(b)
-	for i := range codons {
-		answer[i], err = TranslateCodon(codons[i])
-		if err != nil && finalErr == nil {
-			answer[i] = Stop
-			finalErr = err
-		}
+	codons, err := BasesToCodons(b)
+	if err != nil {
+		return nil, err
 	}
-	return answer, finalErr
+	for i := range codons {
+		answer[i] = TranslateCodon(codons[i])
+	}
+	return answer, nil
 }
 
 // PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.

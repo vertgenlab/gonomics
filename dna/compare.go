@@ -151,8 +151,8 @@ func CompareTwoDSeqsCaseSensitiveIgnoreGaps(alpha [][]Base, beta [][]Base) int {
 	return compare2DSeqs(alpha, beta, false, true)
 }
 
-// IsSeqOfACTG returns true if the input sequences contains only uppercase A/C/G/T.
-func IsSeqOfACTG(seq []Base) bool {
+// IsSeqOfACGT returns true if the input sequences contains only uppercase A/C/G/T.
+func IsSeqOfACGT(seq []Base) bool {
 	for _, val := range seq {
 		if val != A && val != C && val != G && val != T {
 			return false
