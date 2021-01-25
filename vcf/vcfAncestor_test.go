@@ -62,7 +62,7 @@ func TestAncestorFlagToHeader(t *testing.T) {
 	}
 }
 
-var answers [][]dna.Base = [][]dna.Base{dna.StringToBases("A"), dna.StringToBases("T"), dna.StringToBases("A"), dna.StringToBases("CCT"), dna.StringToBases("N")}
+var answers [][]dna.Base = [][]dna.Base{{dna.A}, {dna.T}, {dna.A}, {dna.C, dna.C, dna.T}, {dna.N}}
 
 func TestVcfAnnotateAncestorFromFa(t *testing.T) {
 	reader, _ := GoReadToChan("testdata/TestVcfAnnotateAncestorFromFa.vcf")

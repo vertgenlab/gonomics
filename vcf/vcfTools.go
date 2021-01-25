@@ -3,6 +3,7 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 	"strings"
 )
 
@@ -45,7 +46,11 @@ func vcfLineToBed(v *Vcf) *bed.Bed {
 	}
 	if Del(v) {
 		b.ChromStart = int64(v.Pos)
-		b.ChromEnd = int64(v.Pos + len(dna.StringToBases(v.Ref)) - 1)
+		currBases, err := dna.StringToBases(v.Ref)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		b.ChromEnd = int64(v.Pos + len(currBases) - 1)
 	}
 	return b
 }

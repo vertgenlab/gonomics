@@ -4,6 +4,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+
 	//"log"
 	"strings"
 )
@@ -76,6 +78,7 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 	var ref []dna.Base
 	var alt [][]dna.Base
 	var noN bool
+	var err error
 	for i = 0; i < len(split); i++ {
 		encountered := make(map[int]bool)
 		for j = 0; j < len(split[i]); j++ {
@@ -83,7 +86,10 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 				//do not add
 			} else {
 				encountered[split[i][j].Pos] = true
-				ref = dna.StringToBases(split[i][j].Ref)
+				ref, err = dna.StringToBases(split[i][j].Ref)
+				if err != nil {
+					log.Panicf("error converting to bases")
+				}
 				alt = GetAltBases(split[i][j].Alt)
 				noN = true
 				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 {
@@ -106,14 +112,24 @@ func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
 //FilterNs removes all records from a slice of Vcfs that contain Ns.
 func FilterNs(vcfs []*Vcf) []*Vcf {
 	var answer []*Vcf
+	var currBases []dna.Base
+	var err error
 	var noN bool
 	for i := 0; i < len(vcfs); i++ {
 		noN = true
-		if dna.CountBase(dna.StringToBases(vcfs[i].Ref), dna.N) > 0 {
+		currBases, err = dna.StringToBases(vcfs[i].Ref)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		if dna.CountBase(currBases, dna.N) > 0 {
 			noN = false
 		}
 		for j := 0; j < len(vcfs[i].Alt); j++ {
-			if dna.CountBase(dna.StringToBases(vcfs[i].Alt[j]), dna.N) > 0 {
+			currBases, err = dna.StringToBases(vcfs[i].Alt[j])
+			if err != nil {
+				log.Panicf("error converting to bases")
+			}
+			if dna.CountBase(currBases, dna.N) > 0 {
 				noN = false
 			}
 		}
@@ -208,6 +224,7 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 	var ref []dna.Base
 	var alt [][]dna.Base
 	var containsN bool
+	var err error
 	for _, v := range vcfs {
 		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
 	}
@@ -222,7 +239,10 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 			} else {
 				encountered[curr[i].Pos] = true
 				containsN = false
-				ref = dna.StringToBases(curr[i].Ref)
+				ref, err = dna.StringToBases(curr[i].Ref)
+				if err != nil {
+					log.Panicf("error converting to bases")
+				}
 				alt = GetAltBases(curr[i].Alt)
 				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) != 0 {
 					containsN = true

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 	"strings"
 )
 
@@ -26,7 +27,11 @@ func VcfQueryAncestor(g *Vcf) []dna.Base {
 	for i := 0; i < len(fields); i++ {
 		f = strings.Split(fields[i], "=")
 		if f[0] == "AA" {
-			return dna.StringToBases(f[1])
+			answer, err := dna.StringToBases(f[1])
+			if err != nil {
+				log.Panicf("error converting to bases")
+			}
+			return answer
 		}
 	}
 	return nil

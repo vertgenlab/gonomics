@@ -50,7 +50,11 @@ type SampleHash struct {
 
 //TODO: Can only process short variants. Need long term solution for large structural variance.
 func VcfToGvcf(v *Vcf) *GVcf {
-	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, GetAltBases(v.Alt)...), Genotypes: v.Samples}
+	bases, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{bases}, GetAltBases(v.Alt)...), Genotypes: v.Samples}
 	return gVcf
 }
 
@@ -167,8 +171,14 @@ func PrintSampleNames(header *VcfHeader) string {
 
 func GetAltBases(words []string) [][]dna.Base {
 	var answer [][]dna.Base = make([][]dna.Base, len(words))
+	var currBases []dna.Base
+	var err error
 	for i := 0; i < len(words); i++ {
-		answer[i] = dna.StringToBases(words[i])
+		currBases, err = dna.StringToBases(words[i])
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		answer[i] = currBases
 	}
 	return answer
 }

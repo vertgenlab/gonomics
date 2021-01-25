@@ -3,6 +3,7 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 )
 
 // Current methods satisfy requirements for the following interfaces:
@@ -28,7 +29,10 @@ func (v *Vcf) GetChrom() string {
 // to find the region actually being changed we need to check if it is indel
 // and adjust accordingly
 func (v *Vcf) GetChromStart() int {
-	refBases := dna.StringToBases(v.Ref)
+	refBases, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	if len(refBases) == 1 {
 		return v.Pos - 1
 	} else {
@@ -37,7 +41,10 @@ func (v *Vcf) GetChromStart() int {
 }
 
 func (v *Vcf) GetChromEnd() int {
-	refBases := dna.StringToBases(v.Ref)
+	refBases, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	if len(refBases) == 1 {
 		return v.Pos
 	} else {
