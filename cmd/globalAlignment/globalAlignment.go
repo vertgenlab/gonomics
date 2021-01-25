@@ -28,6 +28,35 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	return seqIdx
 }
 
+//raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
+//faONe is target, faTwo is query
+func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
+	answer := simpleGraph.NewGraph()
+	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
+	var targetEnd, queryEnd int = 0, 0
+	var curr *simpleGraph.Node
+	//TODO: Make sure it can handle non-match at node 0. Fill out annotations for each node (knowing which allele/haplotype).
+	//TODO: Handle multi-entry fasta?
+
+	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence.
+	curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[0], 0)
+	simpleGraph.AddNode(answer, curr)
+	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes.
+	for i := 1; i < len(aln); i++ {
+		curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[i], i)
+		simpleGraph.AddNode(answer, curr)
+		if aln[i].Op == 0 {
+			simpleGraph.AddEdge(answer.Nodes[i-1], curr, 1)
+			simpleGraph.AddEdge(answer.Nodes[i-2], curr, 0.5)
+		} else if aln[i].Op == 1 || aln[i].Op == 2 {
+			simpleGraph.AddEdge(answer.Nodes[i-1], curr, 0.5)
+		} else {
+			log.Fatalf("Error: cigar.Op = %d is unrecognized...\n", aln[i].Op)
+		}
+	}
+	return answer
+}
+
 //raven moved helper functions from main and non-usage functions into this function
 func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyReader, outFileName string) {
 	//make sure files meet the usage requirements of globalAlignment.go
@@ -69,28 +98,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	}
 
 	//cigar to graph
-	genomeGraph := simpleGraph.NewGraph()
-	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
-	var targetEnd, queryEnd int = 0, 0
-	var curr *simpleGraph.Node
-	//TODO: Make sure it can handle non-match at node 0. Fill out annotations for each node (knowing which allele/haplotype).
-	//TODO: Handle multi-entry fasta?
-	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence.
-	curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(faOne, faTwo, targetEnd, queryEnd, aln[0], 0)
-	simpleGraph.AddNode(genomeGraph, curr)
-	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes.
-	for i := 1; i < len(aln); i++ {
-		curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(faOne, faTwo, targetEnd, queryEnd, aln[i], i)
-		simpleGraph.AddNode(genomeGraph, curr)
-		if aln[i].Op == 0 {
-			simpleGraph.AddEdge(genomeGraph.Nodes[i-1], curr, 1)
-			simpleGraph.AddEdge(genomeGraph.Nodes[i-2], curr, 0.5)
-		} else if aln[i].Op == 1 || aln[i].Op == 2 {
-			simpleGraph.AddEdge(genomeGraph.Nodes[i-1], curr, 0.5)
-		} else {
-			log.Fatalf("Error: cigar.Op = %d is unrecognized...\n", aln[i].Op)
-		}
-	}
+	genomeGraph := cigarToGraph(faOne,faTwo,aln)
 	simpleGraph.PrintGraph(genomeGraph)
 }
 
