@@ -98,7 +98,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	}
 
 	//cigar to graph
-	genomeGraph := cigarToGraph(faOne,faTwo,aln)
+	genomeGraph := cigarToGraph(faOne, faTwo, aln)
 	simpleGraph.PrintGraph(genomeGraph)
 }
 
