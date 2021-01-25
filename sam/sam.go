@@ -144,7 +144,10 @@ func processAlignmentLine(line string) *SamAln {
 	if err != nil {
 		log.Fatal(err)
 	}
-	curr.Seq = dna.StringToBases(words[9])
+	curr.Seq, err = dna.StringToBases(words[9])
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	curr.Qual = words[10]
 	if len(words) > 11 {
 		curr.Extra = words[11]
