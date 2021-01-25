@@ -257,18 +257,34 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //	}
 //}
 
-//func GraphRecon(root *expandedTree.ETree, position int, graph simpleGraph.SimpleGraph) {
-//	internalNodes := expandedTree.GetBranch(root)
-//	//SetState(root, position, graph) //don't want a root graph
-//	//loop align columns
-//	for k := 0; k < len(internalNodes); k++ {
-//		path := PathFinder(graph)
-//		//make seq a dna.Base and make the va above path
-//		//for i := 0; i < len(seq); i++ {
-//			//internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, seq[i])
-//		}
-//	}
-//}
+//call for GraphRecon will be a lot like loopNodes call but instead of calling it on each position it will be called for each graph column
+//might not need a graph arg
+func GraphRecon(root *expandedTree.ETree, column graphColumn, graph simpleGraph.SimpleGraph) {
+	internalNodes := expandedTree.GetBranch(root)
+	var rightPresent = false
+	var leftPresent = false
+	if root.Right != nil && root.Left != nil {
+		for c := 0; c < len(column.AlignNodes); c++ {
+			for s := 0; s < len(column.AlignNodes[c]); s++ {
+				if column.AlignNodes[c][s].Name == root.Right.Name { //node names must contain a species name
+					rightPresent = true
+				}
+				if column.AlignNodes[c][s].Name == root.Left.Name {
+					leftPresent = true
+				}
+			}
+		}
+	}
+	if rightPresent && leftPresent {
+		var newNode *simpleGraph.Node
+		var newAlign []*simpleGraph.Node
+		//newNode := *simpleGraph.Node{Id, root.Name, seq, seqTwoBit, Prev, Next, info} //Id should probably be whatever number node this is for this species somehow
+		//seq can just be determined the same way it always has been i guess? using stored and the old logic to determine most likely based at each position, node by node so we don't have to realign
+		simpleGraph.AddNode(&graph, newNode)
+		newAlign = append(newAlign, newNode)
+		column.AlignNodes = append(column.AlignNodes, newAlign)
+	}
+}
 
 //seqOfPath takes in a graph and, using PathFinder, returns the seq of the best path through the graph
 func seqOfPath(g *simpleGraph.SimpleGraph) []dna.Base {
@@ -344,141 +360,3 @@ func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32, exist
 	}
 	return finalProb, finalPath
 }
-
-////PathFinder finds the best path from start to finish through the graph
-//func PathFinder(g *simpleGraph.SimpleGraph) (finalPath []*simpleGraph.Node, prob float32) {
-//	var path map[*simpleGraph.Node]int
-//	var bestEdge int
-//	var bestPath []*simpleGraph.Node
-//	//var pathOptions = make(map[int][]float64) //map of paths options that contain a slice of the probs stored at the edges that it passes through
-//	var nextNode *simpleGraph.Node
-//	//var same = true
-//	var visited = make(map[uint32]bool)
-//	var lastNode = false
-//	//var pQ []uint32
-//	//var lastNode uint32
-//	//lastNode = findLastNode(g)
-//
-//	for i := 0; i < len(g.Nodes); i++ {
-//		in := len(g.Nodes[i].Prev)
-//		out := len(g.Nodes[i].Next)
-//		if in == 0 {
-//			path[g.Nodes[i]] = 0
-//			visited[g.Nodes[i].Id] = true
-//		} else if in == 1 && out == 1 {
-//			path[g.Nodes[i]] = 0
-//			visited[g.Nodes[i].Id] = true
-//		}
-//		if out > 1 {
-//			nextNode, bestEdge = pFHelper(g, i)
-//			path[nextNode] = bestEdge
-//			visited[g.Nodes[i].Id] = true
-//			//start with edge that has highest prob
-//			//traverse choosing the highest prob edges to the end.
-//			//then start at the beginning and calculate cost, with only the non-highest edges (maybe just loop through and ignore highest prob edge?)
-//			//(maybe if node has > 1 out && edge.Dest == !visited OR visited is true but there's more than one edge going into dest node of at least one of the out edges)
-//			//and take it until it hits the end, if overall prob is lower than the previous traversal, ignore it
-//			//trigger exit when all nodes have been visited, but that might happen before all possibilities are calculated
-//			//
-//			//
-//			//and add nodeID to pQ
-//			//follow to lastNode using the highest prob edges
-//			//go to pQ, check if node.Next.Dest has been visited (if it has the edge that has the highest prob has already been used)
-//			//if it has not been visited, i = the position of the []Nodes that this node is, take the most likely path from there to the lastNode
-//			//While adding nodes to the pQ if they aren't already there
-//			//at end check length of map with visited against number of nodes in graph, if ==, then set all visited bool to true and do conditional return
-//			//need to add previous steps of the path into the map key that will hold each path, so as pQ has node added to it, create a new key referring to it,
-//			//copy over the existing path that is being built and find a way to carry the variable that corresponds to that key of the map
-//			//CornerCase: two edges have equal prob from a node
-//			//PathFinder(g)
-//			//} else if in > 1 { //finds a node where multiple paths converge
-//			//	returnPath := findBestPath(g, i)
-//			//	for l := 0; l < len(returnPath); l++ {
-//			//		for p := 0; p < len(path); p++ {
-//			//			if path[p].Id == returnPath[l].Id {
-//			//				same = true
-//			//			} else if path[p].Id != returnPath[l].Id {
-//			//				same = false
-//			//			}
-//			//		}
-//			//		if same == false {
-//			//			path = append(path, returnPath[l])
-//			//		}
-//			//	}
-//			//
-//		} else if out == 0 {
-//			lastNode = true
-//			path[g.Nodes[i]] = -1
-//		} else {
-//			log.Fatal("unknown number of edges leading to this node")
-//		}
-//	}
-//	pathProb := pathCalc(path)
-//	for node, _ := range path {
-//		bestPath = append(bestPath, node)
-//	}
-//
-//	return bestPath, pathProb
-//}
-//
-//func pathCalc(path map[*simpleGraph.Node]int) float32 {
-//	var product float32
-//	product = 1
-//
-//	for node, edge := range path {
-//		product = product * node.Next[edge].Prob
-//	}
-//	return product
-//}
-//
-//func pFHelper(g *simpleGraph.SimpleGraph, n int) (node *simpleGraph.Node, edge int) {
-//	var probableNode *simpleGraph.Node
-//	var nextNode *simpleGraph.Node
-//	var bestEdge float32
-//	var bE int
-//	out := g.Nodes[n].Next
-//
-//	for e := 0; e < len(out); e++ {
-//		if out[e].Prob > bestEdge {
-//			bestEdge = out[e].Prob
-//			nextNode = out[e].Dest //how to dereference Dest in this situation
-//			bE = e
-//		}
-//	}
-//	probableNode = nextNode
-//	return probableNode, bE
-//}
-//
-////findBestPath finds the most likely path when there is a divergence in the graph where multiple paths are possible, over the entire length of the divergence
-//func findBestPath(graph *simpleGraph.SimpleGraph, n int) []*simpleGraph.Node {
-//	//var possiblePaths map[int][]simpleGraph.Node
-//	var simplePath []*simpleGraph.Node
-//	var divergence = false
-//
-//	for k := 0; k < n; k++ {
-//		out := len(graph.Nodes[k].Next)
-//		if out == 1 {
-//			divergence = false
-//		} else if out < 1 {
-//			divergence = true
-//		}
-//		if divergence {
-//			//possiblePaths = make(map[int][]*simpleGraph.Node, out)
-//
-//		}
-//	}
-//
-//	return simplePath
-//}
-//
-////findLastNode goes through all the nodes of a graph and finds a node that has no Next Edges
-//func findLastNode(g *simpleGraph.SimpleGraph) uint32 {
-//	var lastNode uint32
-//	for i := 0; i < len(g.Nodes); i++ {
-//		out := g.Nodes[i].Next
-//		if out == nil {
-//			lastNode = g.Nodes[i].Id
-//		}
-//	}
-//	return lastNode
-//}
