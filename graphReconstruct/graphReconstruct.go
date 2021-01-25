@@ -260,7 +260,7 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //call for GraphRecon will be a lot like loopNodes call but instead of calling it on each position it will be called for each graph column
 //might not need a graph arg
 func GraphRecon(root *expandedTree.ETree, column graphColumn, graph simpleGraph.SimpleGraph) {
-	internalNodes := expandedTree.GetBranch(root)
+	//internalNodes := expandedTree.GetBranch(root)
 	var rightPresent = false
 	var leftPresent = false
 	if root.Right != nil && root.Left != nil {
@@ -278,9 +278,14 @@ func GraphRecon(root *expandedTree.ETree, column graphColumn, graph simpleGraph.
 	if rightPresent && leftPresent {
 		var newNode *simpleGraph.Node
 		var newAlign []*simpleGraph.Node
+		var seq []dna.Base
+		//what if the probability of any base actually being in the seq at the daughter (the probability of observing a given base) is just the probability of passing through that node (i.e. the probability of the prev edge)
+		//then the probability of it occurring in the parent will just be that times the branch length, but this way any base in a single node will have equal prob of being observed
+		//and we won't have to store that info separately. I think this makes sense bc in theory we will be adjusting probability that we travel through a node by branch length
+		//as we create the new node and the new edge that leads to it for an ancestor in the graph
+		//
 		//newNode := *simpleGraph.Node{Id, root.Name, seq, seqTwoBit, Prev, Next, info} //Id should probably be whatever number node this is for this species somehow
-		//seq can just be determined the same way it always has been i guess? using stored and the old logic to determine most likely based at each position, node by node so we don't have to realign
-		simpleGraph.AddNode(&graph, newNode)
+		simpleGraph.AddNode(&graph, newNode) //I think this only adds a node to the end of the graph, which isn't what we want
 		newAlign = append(newAlign, newNode)
 		column.AlignNodes = append(column.AlignNodes, newAlign)
 	}
@@ -304,58 +309,35 @@ func seqOfPath(g *simpleGraph.SimpleGraph) []dna.Base {
 func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 	var finalPath []uint32
 	var finalProb float32
-	//tempPath, tempProb and existingPaths variables are necessary for recursive calls of bestPath
 	var tempPath = make([]uint32, 0)
-	var tempProb float32
-	var existingPaths = make(map[float32][]uint32)
 
 	for n := 0; n < len(g.Nodes); n++ {
 		if g.Nodes[n].Id == 0 {
-			finalProb, finalPath = bestPath(g.Nodes[n], tempProb, tempPath, existingPaths)
+			log.Print("calling bestPath")
+			finalProb, finalPath = bestPath(g.Nodes[n], 1, tempPath)
 		}
 	}
-
 	return finalPath, finalProb
 }
 
 //bestPath is the helper function for PathFinder, and recursively traverses the graph depth first to determine the most likely path from start to finish
-func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32, existingPaths map[float32][]uint32) (prob float32, path []uint32) {
-	//TODO: same prob values will overwrite existing value if they are equal, i need a way around that
-	currentNode := node
-	var currentProb float32 = 0
-	currentPath := prevPath
-	var tempProb float32 = 1
+func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32) (prob float32, path []uint32) {
+	var tempProb float32 = 0
 	var tempPath []uint32
-	potentialPaths := existingPaths
 	var finalProb float32
 	var finalPath []uint32
 
-	if prevProb != 0 && len(prevPath) > 0 {
-		tempProb = prevProb
+	tempPath = append(tempPath, prevPath...)
+	tempPath = append(tempPath, node.Id)
+	if len(node.Next) == 0 {
+		return prevProb, tempPath
 	}
-	if len(currentNode.Next) == 0 {
-		currentPath = append(currentPath, currentNode.Id)
-		potentialPaths[tempProb] = currentPath
-	}
-	for i, _ := range currentNode.Next {
-		tempPath = append(tempPath, currentPath...)
-		tempPath = append(tempPath, currentNode.Id)
-		if currentNode.Next[i].Prob*tempProb > currentProb {
-			currentProb = currentNode.Next[i].Prob * tempProb
-			checkPath := len(currentPath)
-			if checkPath == 0 {
-				currentPath = append(currentPath, currentNode.Id)
-			} else if currentPath[checkPath-1] != currentNode.Id {
-				currentPath = append(currentPath, currentNode.Id)
-			}
-			bestPath(currentNode.Next[i].Dest, currentProb, currentPath, potentialPaths)
-		}
-	}
-	for prob, path := range potentialPaths {
-		if prob > finalProb {
-			finalPath = make([]uint32, 0)
-			finalProb = prob
-			finalPath = append(finalPath, path...)
+	for i, _ := range node.Next {
+		tempProb = node.Next[i].Prob * prevProb
+		currentProb, currentPath := bestPath(node.Next[i].Dest, tempProb, tempPath)
+		if currentProb > finalProb {
+			finalProb = currentProb
+			finalPath = currentPath
 		}
 	}
 	return finalProb, finalPath
