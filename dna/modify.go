@@ -1,14 +1,7 @@
 package dna
 
 import (
-	"errors"
 	"log"
-)
-
-var (
-	ErrInvalidInterval          = errors.New("deletion interval is not valid")
-	ErrInvalidInsertionPosition = errors.New("insertion position is not valid")
-	ErrUnrecognizedBase         = errors.New("input base was not recognized")
 )
 
 // ToUpper changes the input base to uppercase.

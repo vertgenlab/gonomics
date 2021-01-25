@@ -1,12 +1,7 @@
 package dna
 
 import (
-	"errors"
 	"log"
-)
-
-var (
-	ErrInputSeqsDiffLen = errors.New("input sequences are not the same length")
 )
 
 // Count returns the number of each base present in the input sequence.

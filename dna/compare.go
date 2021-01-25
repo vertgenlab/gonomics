@@ -1,9 +1,5 @@
 package dna
 
-import (
-	"github.com/vertgenlab/gonomics/numbers"
-)
-
 // compareBases returns an integer related to the lexographical order of nucleotides.
 // i.e. A < C < a < c < Dot < Gap
 func compareBases(alpha Base, beta Base, ignoreCase bool) int {
@@ -57,7 +53,7 @@ func compareSeqsIgnoreGaps(alpha []Base, beta []Base, ignoreCase bool) int {
 // compareSeqs returns an integer defining the relationship between two input sequences.
 func compareSeqs(alpha []Base, beta []Base, ignoreCase bool) int {
 	var res int
-	stop := numbers.Min(len(alpha), len(beta))
+	stop := min(len(alpha), len(beta))
 	for i := 0; i < stop; i++ {
 		res = compareBases(alpha[i], beta[i], ignoreCase)
 		if res != 0 {
@@ -104,7 +100,7 @@ func CompareSeqsCaseSensitiveIgnoreGaps(alpha []Base, beta []Base) int {
 // compare2DSeqs returns an integer defining the relationship between two input lists of sequences.
 func compare2DSeqs(alpha [][]Base, beta [][]Base, ignoreCase bool, ignoreGaps bool) int {
 	var res int
-	stop := numbers.Min(len(alpha), len(beta))
+	stop := min(len(alpha), len(beta))
 	for i := 0; i < stop; i++ {
 		if ignoreGaps {
 			res = compareSeqsIgnoreGaps(alpha[i], beta[i], ignoreCase)
@@ -159,4 +155,12 @@ func IsSeqOfACGT(seq []Base) bool {
 		}
 	}
 	return true
+}
+
+func min(a int, b int) int {
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
 }
