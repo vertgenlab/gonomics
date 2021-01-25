@@ -12,31 +12,31 @@ var expectedShortProtein string = "MQIFVKTLTGKT*"
 var expectedProtein string = "MetGlnIlePheValLysThrLeuThrGlyLysThrTer"
 
 func TestBasesToCodon(t *testing.T) {
-	input, err := BasesToCodons(testSeq)
+	input := BasesToCodons(testSeq)
 	for i := range input {
-		if input[i] != expected[i] || err != nil {
+		if input[i] != expected[i] {
 			t.Errorf("Do not match. Input: %s. Expected: %s.", input[i], expected[i])
 		}
 	}
 }
 
 func TestTranslateToString(t *testing.T) {
-	input, err := TranslateToString(test2DNA)
-	if input != expectedProtein || err != nil {
+	input := TranslateToString(test2DNA)
+	if input != expectedProtein {
 		t.Errorf("Do not match. Input : %s. Expected: %s.", input, expectedProtein)
 	}
 }
 
 func TestTranslateToShortString(t *testing.T) {
-	input, err := TranslateToShortString(test2DNA)
-	if input != expectedShortProtein || err != nil {
+	input := TranslateToShortString(test2DNA)
+	if input != expectedShortProtein {
 		t.Errorf("Do not match. Input : %s. Expected: %s.", input, expectedShortProtein)
 	}
 }
 
 func TestAminoAcidToShortString(t *testing.T) {
-	input, err := TranslateToShortString(test2DNA)
-	if input != expectedShortProtein || err != nil {
+	input := TranslateToShortString(test2DNA)
+	if input != expectedShortProtein {
 		t.Errorf("Do not match. Input : %s. Expected: %s.", input, expectedShortProtein)
 	}
 }
@@ -102,12 +102,12 @@ var gdf2LongProt string = "MetCysProGlyAlaLeuTrpValAlaLeuProLeuLeuSerLeuLeuAlaGl
 func TestStress(t *testing.T) {
 	seq := StringToBases(gdf2mrna)
 	expectedProt := StringToAminoAcid(gdf2prot, true)
-	actualProt, err := TranslateSeq(seq)
-	if !equal(actualProt, expectedProt) || err != nil {
+	actualProt := TranslateSeq(seq)
+	if !equal(actualProt, expectedProt) {
 		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, actualProt)
 	}
-	actualLongProtString, err := TranslateToString(seq)
-	if actualLongProtString != gdf2LongProt || err != nil {
+	actualLongProtString := TranslateToString(seq)
+	if actualLongProtString != gdf2LongProt {
 		t.Errorf("stress test failed, expected\n%v, got\n%v", gdf2LongProt, actualLongProtString)
 	}
 	longProt := StringToAminoAcid(gdf2LongProt, false)

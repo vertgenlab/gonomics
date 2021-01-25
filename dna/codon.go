@@ -62,10 +62,7 @@ var GeneticCode = map[Codon]AminoAcid{
 }
 
 var (
-	ErrUnrecognizedAminoAcidString = errors.New("unrecognized amino acid string")
-	ErrLenInputSeqNotDivThree      = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
-	ErrLenInputStringNotDivThree   = errors.New("length of amino acid input string is not a factor of three. remaining bases were ignored")
-	ErrNonACGT                     = errors.New("input sequence contains bases other than ACGT. all bases must be uppercase")
+	ErrLenInputSeqNotDivThree = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
 )
 
 // aaToShortString is an efficient lookup for the rune corresponding to a given amino acid.
@@ -284,22 +281,20 @@ func ThreeLetterToAminoAcid(s string) AminoAcid {
 
 // BasesToCodons converts a slice of DNA bases into a slice of Codons.
 // Input expects bases to be in-frame. If the input sequence is not a
-// factor of three, the return codons will not include the remaining
-// bases and will also return an error.
-func BasesToCodons(b []Base) ([]Codon, error) {
-	var err error
+// factor of three the function will panic.
+func BasesToCodons(b []Base) []Codon {
 	frame := len(b) % 3
 	answer := make([]Codon, 0, len(b)/3)
 	if !IsSeqOfACGT(b) {
-		log.Panicf("unrecognized base in sequence: %v", b)
+		log.Panicf("unrecognized base in sequence: %v, all input bases must be uppercase. N's are not allowed", b)
 	}
 	if frame != 0 {
-		err = ErrLenInputSeqNotDivThree
+		log.Panicf("input sequence length is %d. input length must be a factor of 3", len(b))
 	}
 	for i := 0; i < len(b)-frame; i += 3 {
 		answer = append(answer, Codon{b[i], b[i+1], b[i+2]})
 	}
-	return answer, err
+	return answer
 }
 
 // CodonsToBases converts a slice of Codons into a slice of DNA bases.
@@ -333,15 +328,14 @@ func IsEqual(c1 Codon, c2 Codon) bool {
 
 // TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
 // Input expects bases to be in-frame. If the input sequence is not a
-// factor of three, the return codons will not include the remaining
-// bases and will also return an error.
-func TranslateSeq(b []Base) ([]AminoAcid, error) {
+// factor of three the function will panic.
+func TranslateSeq(b []Base) []AminoAcid {
 	answer := make([]AminoAcid, len(b)/3)
-	codons, err := BasesToCodons(b)
+	codons := BasesToCodons(b)
 	for i := range codons {
 		answer[i] = TranslateCodon(codons[i])
 	}
-	return answer, err
+	return answer
 }
 
 // PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
@@ -366,27 +360,25 @@ func PolypeptideToString(a []AminoAcid) string {
 
 // TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
 // Input expects bases to be in-frame. If the input sequence is not a
-// factor of three, the return codons will not include the remaining
-// bases and will also return an error.
-func TranslateToShortString(b []Base) (string, error) {
+// factor of three the function will panic.
+func TranslateToShortString(b []Base) string {
 	bCopy := make([]Base, len(b))
 	copy(bCopy, b)
 	AllToUpper(bCopy)
-	a, err := TranslateSeq(bCopy)
-	return PolypeptideToShortString(a), err
+	a := TranslateSeq(bCopy)
+	return PolypeptideToShortString(a)
 }
 
 // TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
 // Input expects bases to be in-frame. If the input sequence is not a
-// factor of three, the return codons will not include the remaining
-// bases and will also return an error.
-func TranslateToString(b []Base) (string, error) {
+// factor of three the function will panic.
+func TranslateToString(b []Base) string {
 	bCopy := make([]Base, len(b))
 	copy(bCopy, b)
 	AllToUpper(bCopy)
-	a, err := TranslateSeq(bCopy)
+	a := TranslateSeq(bCopy)
 	answer := PolypeptideToString(a)
-	return answer, err
+	return answer
 }
 
 // StringToAminoAcid converts a string into type amino acid.
