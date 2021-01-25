@@ -5,11 +5,19 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
+	"log"
 	"testing"
 )
 
 func TestSamFileConvert(t *testing.T) {
-
+	rBases, err := dna.StringToBases("TCAGCTCATAAATCACCTCC----ACAAGC")
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	qBases, err := dna.StringToBases("TCTG--CATAAACCACCTGCCATGACAAGC")
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	//chr19 3001012 3001075 chr11 70568380 70568443 - 3500
 	var testAxt = &Axt{
 		RName:      "chr19",
@@ -20,11 +28,14 @@ func TestSamFileConvert(t *testing.T) {
 		QEnd:       31,
 		QStrandPos: false,
 		Score:      3500,
-		RSeq:       dna.StringToBases("TCAGCTCATAAATCACCTCC----ACAAGC"),
-		QSeq:       dna.StringToBases("TCTG--CATAAACCACCTGCCATGACAAGC"),
+		RSeq:       rBases,
+		QSeq:       qBases,
 	}
 	samFromAxt := AxtToSam(testAxt)
-
+	currBases, err := dna.StringToBases("TCTGCATAAACCACCTGCCATGACAAGC")
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	var answerSam *sam.SamAln = &sam.SamAln{
 		QName: "chr11",
 		Flag:  16,
@@ -35,7 +46,7 @@ func TestSamFileConvert(t *testing.T) {
 		RNext: "*",
 		PNext: 0,
 		TLen:  29, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
-		Seq:   dna.StringToBases("TCTGCATAAACCACCTGCCATGACAAGC"),
+		Seq:   currBases,
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", 3500, 2, 31),
 	}

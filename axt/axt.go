@@ -67,8 +67,15 @@ func Read(filename string) []*Axt {
 			log.Fatalf("Error: did not recognize strand in %s\n", header)
 		}
 		curr.Score = common.StringToInt(words[8])
-		curr.RSeq = dna.StringToBases(rSeq)
-		curr.QSeq = dna.StringToBases(qSeq)
+		var err error
+		curr.RSeq, err = dna.StringToBases(rSeq)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		curr.QSeq, err = dna.StringToBases(qSeq)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
 
 		answer = append(answer, &curr)
 	}
@@ -120,6 +127,14 @@ func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
 	if len(words) != 9 || rSeq == "" || qSeq == "" {
 		log.Fatalf("Error: missing fields in header or sequences\n")
 	}
+	rBases, err := dna.StringToBases(rSeq)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	qBases, err := dna.StringToBases(qSeq)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	var answer *Axt = &Axt{
 		RName:      words[1],
 		RStart:     common.StringToInt(words[2]),
@@ -129,8 +144,8 @@ func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
 		QEnd:       common.StringToInt(words[6]),
 		QStrandPos: common.StringToStrand(words[7]),
 		Score:      common.StringToInt(words[8]),
-		RSeq:       dna.StringToBases(rSeq),
-		QSeq:       dna.StringToBases(qSeq),
+		RSeq:       rBases,
+		QSeq:       qBases,
 	}
 	return answer
 }
