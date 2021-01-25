@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-var contigOneSeq = dna.StringToBases("ACGTGAGTGAGTAGGACCACGATGACACGANNTGA")
-var contigTwoSeq = dna.StringToBases("GgtAC")
-var contigThreeSeq = dna.StringToBases("GTAGTGAGTGA")
+var contigOneSeq, _ = dna.StringToBases("ACGTGAGTGAGTAGGACCACGATGACACGANNTGA")
+var contigTwoSeq, _ = dna.StringToBases("GgtAC")
+var contigThreeSeq, _ = dna.StringToBases("GTAGTGAGTGA")
 var inputFasta []*Fasta = []*Fasta{{"apple", contigOneSeq}, {"banana", contigTwoSeq}, {"carrot", contigThreeSeq}}
 var expected []int = []int{1, 2, 3, 11, 30}
 

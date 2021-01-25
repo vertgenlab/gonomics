@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-var seqOneA = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
-var seqOneB = dna.StringToBases("acgtACGTACGT")
-var seqOneC = dna.StringToBases("ACGTACGTACGTT")
+var seqOneA, _ = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
+var seqOneB, _ = dna.StringToBases("acgtACGTACGT")
+var seqOneC, _ = dna.StringToBases("ACGTACGTACGTT")
 var readWriteTests = []struct {
 	filename string // input
 	data     []*Fasta

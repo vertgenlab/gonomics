@@ -5,24 +5,24 @@ import (
 	"testing"
 )
 
-var seqThreeA = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
-var seqThreeB = dna.StringToBases("acgtACGTACGT")
-var seqThreeC = dna.StringToBases("ACGTACGTACGTT")
-var rcSeqThreeA = dna.StringToBases("GTAGTAGTAATGATGATGAcgtACGT")
-var rcSeqThreeB = dna.StringToBases("ACGTACGTacgt")
-var rcSeqThreeC = dna.StringToBases("AACGTACGTACGT")
+var seqThreeA, _ = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
+var seqThreeB, _ = dna.StringToBases("acgtACGTACGT")
+var seqThreeC, _ = dna.StringToBases("ACGTACGTACGTT")
+var rcSeqThreeA, _ = dna.StringToBases("GTAGTAGTAATGATGATGAcgtACGT")
+var rcSeqThreeB, _ = dna.StringToBases("ACGTACGTacgt")
+var rcSeqThreeC, _ = dna.StringToBases("AACGTACGTACGT")
 var allRevCompTests = []struct {
 	input    []*Fasta
 	expected []*Fasta
 }{
 	{[]*Fasta{{"apple", seqThreeA}, {"banana", seqThreeB}, {"carrot", seqThreeC}}, []*Fasta{{"apple", rcSeqThreeA}, {"banana", rcSeqThreeB}, {"carrot", rcSeqThreeC}}},
 }
-var segSite1 = dna.StringToBases("AATCCTATTCA")
-var segSite2 = dna.StringToBases("AATCCTAATCA")
-var segSite3 = dna.StringToBases("AATCCTATTCG")
-var expectedSegSite1 = dna.StringToBases("TA")
-var expectedSegSite2 = dna.StringToBases("AA")
-var expectedSegSite3 = dna.StringToBases("TG")
+var segSite1, _ = dna.StringToBases("AATCCTATTCA")
+var segSite2, _ = dna.StringToBases("AATCCTAATCA")
+var segSite3, _ = dna.StringToBases("AATCCTATTCG")
+var expectedSegSite1, _ = dna.StringToBases("TA")
+var expectedSegSite2, _ = dna.StringToBases("AA")
+var expectedSegSite3, _ = dna.StringToBases("TG")
 var segSiteInput = []*Fasta{{"apple", segSite1}, {"banana", segSite2}, {"carrot", segSite3}}
 var segSiteExpected = []*Fasta{{"apple", expectedSegSite1}, {"banana", expectedSegSite2}, {"carrot", expectedSegSite3}}
 

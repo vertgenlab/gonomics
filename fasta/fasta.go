@@ -22,6 +22,7 @@ func Read(filename string) []*Fasta {
 	var answer []*Fasta
 	var seqIdx int64 = -1
 	var doneReading bool = false
+	var err error
 
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -33,7 +34,10 @@ func Read(filename string) []*Fasta {
 			answer = append(answer, &tmp)
 			seqIdx++
 		} else {
-			currSeq = dna.StringToBases(line)
+			currSeq, err = dna.StringToBases(line)
+			if err != nil {
+				log.Panicf("error converting %v to Bases", currSeq)
+			}
 			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
 		}
 	}

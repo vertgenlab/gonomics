@@ -1,6 +1,7 @@
 package fasta
 
 import (
+	"log"
 	"sync"
 	//"io"
 	//"github.com/vertgenlab/gonomics/common"
@@ -42,9 +43,14 @@ func nextSeq(reader *fileio.EasyReader) []dna.Base {
 	var err error
 	var nextBytes []byte
 	var answer []dna.Base
+	var currBases []dna.Base
 	for nextBytes, err = reader.Peek(1); len(nextBytes) > 0 && nextBytes[0] != '>' && err == nil; nextBytes, err = reader.Peek(1) {
 		line, _ = fileio.EasyNextLine(reader)
-		answer = append(answer, dna.StringToBases(line)...)
+		currBases, err = dna.StringToBases(line)
+		if err != nil {
+			log.Panicf("error converting %v to Bases", line)
+		}
+		answer = append(answer, currBases...)
 	}
 	return answer
 }

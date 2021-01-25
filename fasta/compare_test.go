@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-var seqTwoA = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
-var seqTwoB = dna.StringToBases("acgtACGTACGT")
-var seqTwoC = dna.StringToBases("ACGTACGTACGTT")
+var seqTwoA, _ = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")
+var seqTwoB, _ = dna.StringToBases("acgtACGTACGT")
+var seqTwoC, _ = dna.StringToBases("ACGTACGTACGTT")
 var allEqualTests = []struct {
 	dataOne  []*Fasta
 	dataTwo  []*Fasta
