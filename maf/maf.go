@@ -84,13 +84,17 @@ func parseMafSLine(line string) *MafSLine {
 	if !strings.HasPrefix(line, "s") || len(words) != 7 {
 		log.Fatalf("Error: the following line should start with an 's' and have 7 words: %s\n", line)
 	}
+	currBases, err := dna.StringToBases(words[6])
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	curr := MafSLine{
 		Src:     words[1],
 		Start:   common.StringToInt64(words[2]),
 		Size:    common.StringToInt64(words[3]),
 		Strand:  common.StringToStrand(words[4]),
 		SrcSize: common.StringToInt64(words[5]),
-		Seq:     dna.StringToBases(words[6]),
+		Seq:     currBases,
 	}
 	return (&curr)
 }
