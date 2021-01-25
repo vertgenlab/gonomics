@@ -47,6 +47,7 @@ func ToFastqBig(a *Fastq) *FastqBig {
 // and includes a rainbow offset to perform hash look ups in GSW aligner.
 func ReadFqBig(reader *fileio.SimpleReader) (*FastqBig, bool) {
 	answer := FastqBig{}
+	var err error
 	line, done := fileio.ReadLine(reader)
 	if done {
 		return nil, true
@@ -57,7 +58,10 @@ func ReadFqBig(reader *fileio.SimpleReader) (*FastqBig, bool) {
 		return nil, true
 	}
 	//set up sequence and reverse comp
-	answer.Seq = dna.ByteSliceToDnaBases(line.Bytes())
+	answer.Seq, err = dna.ByteSliceToDnaBases(line.Bytes())
+	if err != nil {
+		log.Panicf("error converting to dna bases")
+	}
 	answer.SeqRc = make([]dna.Base, len(answer.Seq))
 	copy(answer.SeqRc, answer.Seq)
 	dna.ReverseComplement(answer.SeqRc)
