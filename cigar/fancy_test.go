@@ -15,8 +15,8 @@ func TestMakeExplicit(t *testing.T) {
 	// Explicit Cigar:      2M1Xt2M2Itt1D5M
 	var expectedCigar string = "2=1Xt2=2Itt1D5="
 
-	var refSeq []dna.Base = dna.StringToBases("ACGTACGTACG")
-	var readSeq []dna.Base = dna.StringToBases("ACTTATTGTACG")
+	var refSeq, _ = dna.StringToBases("ACGTACGTACG")
+	var readSeq, _ = dna.StringToBases("ACTTATTGTACG")
 	var c1 Cigar = Cigar{RunLength: 5, Op: 'M'}
 	var c2 Cigar = Cigar{RunLength: 2, Op: 'I'}
 	var c3 Cigar = Cigar{RunLength: 1, Op: 'D'}
