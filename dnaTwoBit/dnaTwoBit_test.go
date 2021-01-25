@@ -2,6 +2,7 @@ package dnaTwoBit
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 	"testing"
 )
 
@@ -15,7 +16,10 @@ var dnaStrings = []string{
 func TestDnaToFromString(t *testing.T) {
 	var singleBase dna.Base
 	for _, input := range dnaStrings {
-		bases := dna.StringToBases(input)
+		bases, err := dna.StringToBases(input)
+		if err != nil {
+			log.Panicf("error converting string to Bases")
+		}
 		frag := NewTwoBit(bases)
 		singleBase = GetBase(frag, 0)
 		if singleBase != dna.T {
