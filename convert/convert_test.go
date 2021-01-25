@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-var seqA []dna.Base = dna.StringToBases("--TTTC--ATGAATAA")
-var seqB []dna.Base = dna.StringToBases("CCATTCCAA--CAGA-")
+var seqA, _ = dna.StringToBases("--TTTC--ATGAATAA")
+var seqB, _ = dna.StringToBases("CCATTCCAA--CAGA-")
 var inputFa []*fasta.Fasta = []*fasta.Fasta{{"eggplant", seqA}, {"squash", seqB}}
 var var1 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 1, Id: ".", Ref: "T", Alt: strings.Split("A", ","), Qual: 100.0, Filter: "PASS", Info: "."}
 var var2 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 4, Id: ".", Ref: "C", Alt: strings.Split("CCA", ","), Qual: 100.0, Filter: "PASS", Info: "."}

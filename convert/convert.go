@@ -23,7 +23,7 @@ import (
 func singleBedToFasta(b *bed.Bed, ref []*fasta.Fasta) *fasta.Fasta {
 	for i := 0; i < len(ref); i++ {
 		if b.Chrom == ref[i].Name {
-			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
+			return fasta.Extract(ref[i], int(b.ChromStart), int(b.ChromEnd), b.Name)
 		}
 	}
 	log.Fatalf("Chrom not found in fasta")
