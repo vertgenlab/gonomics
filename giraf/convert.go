@@ -21,7 +21,10 @@ func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
 	data := strings.SplitN(line, "\t", 12)
 	if len(data) > 10 {
-
+		currBases, err := dna.StringToBases(data[9])
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
@@ -32,7 +35,7 @@ func stringToGiraf(line string) *Giraf {
 			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
 			AlnScore:  common.StringToInt(data[7]),
 			MapQ:      uint8(common.StringToInt(data[8])),
-			Seq:       dna.StringToBases(data[9]),
+			Seq:       currBases,
 			Qual:      fastq.ToQualUint8([]rune(data[10]))}
 
 		if len(data) == 12 {

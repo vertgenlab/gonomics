@@ -14,6 +14,10 @@ func TestReadAndWrite(t *testing.T) {
 	var numGiraf int = 1
 	girafPath := Path{TStart: 2008, Nodes: []uint32{2015, 2017, 2018}, TEnd: 2020}
 	girafNotes := []Note{Note{Tag: []byte{'B', 'Z'}, Type: 'i', Value: "5"}, Note{Tag: []byte{'G', 'P'}, Type: 'Z', Value: "30,11,35,9,23"}, Note{Tag: []byte("XO"), Type: 'i', Value: "ham5"}}
+	currBases, err := dna.StringToBases("ATGCG")
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	g := &Giraf{
 		QName:     "goldenState",
 		QStart:    2008,
@@ -23,7 +27,7 @@ func TestReadAndWrite(t *testing.T) {
 		Cigar:     []cigar.ByteCigar{{RunLen: 5, Op: 'M'}},
 		AlnScore:  110335,
 		MapQ:      5,
-		Seq:       dna.StringToBases("ATGCG"),
+		Seq:       currBases,
 		Qual:      []uint8{74, 74, 74, 74, 74},
 		Notes:     girafNotes}
 	fmt.Printf("%s\n", GirafToString(g))
