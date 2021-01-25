@@ -52,9 +52,9 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 			}
 		}
 		if speciesBlock == nil || speciesBlock.SLine == nil {
-			aln[i].Seq = dna.Replace(aln[i].Seq, replaceStart, replaceEnd, dna.CreateAllGaps(replaceAlnLength))
+			aln[i].Seq = dna.Replace(aln[i].Seq, int(replaceStart), int(replaceEnd), dna.CreateAllGaps(replaceAlnLength))
 		} else {
-			aln[i].Seq = dna.Replace(aln[i].Seq, replaceStart, replaceEnd, speciesBlock.SLine.Seq)
+			aln[i].Seq = dna.Replace(aln[i].Seq, int(replaceStart), int(replaceEnd), speciesBlock.SLine.Seq)
 		}
 	}
 	return aln
