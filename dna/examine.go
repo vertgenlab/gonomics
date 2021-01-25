@@ -2,6 +2,7 @@ package dna
 
 import (
 	"errors"
+	"log"
 )
 
 var (
@@ -69,15 +70,15 @@ func baseDist(a Base, b Base) int {
 
 // Dist returns the number of bases that do not match between the input sequences.
 // Input sequences must be the same length.
-func Dist(a []Base, b []Base) (int, error) {
+func Dist(a []Base, b []Base) int {
 	if len(a) != len(b) {
-		return 0, ErrInputSeqsDiffLen
+		log.Panicf("input sequence lengths are different")
 	}
 	var sum int
 	for i := range a {
 		sum = sum + baseDist(a[i], b[i])
 	}
-	return sum, nil
+	return sum
 }
 
 // IsLower returns true if the input base is lowercase.

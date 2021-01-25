@@ -2,8 +2,8 @@ package dna
 
 import "testing"
 
-var alpha, _ = StringToBases("ACTGacgtAAACC--ACacgnnnNNNactg")
-var beta, _ = StringToBases("ACGGacgtAATCC--ACacgnnnNCNaCtg")
+var alpha = StringToBases("ACTGacgtAAACC--ACacgnnnNNNactg")
+var beta = StringToBases("ACGGacgtAATCC--ACacgnnnNCNaCtg")
 
 func TestCount(t *testing.T) {
 	ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount := Count(alpha)
@@ -27,8 +27,8 @@ func TestCountGaps(t *testing.T) {
 }
 
 func TestDist(t *testing.T) {
-	actual, err := Dist(alpha, beta)
-	if actual != 4 || err != nil {
+	actual := Dist(alpha, beta)
+	if actual != 4 {
 		t.Errorf("problem with Dist")
 	}
 }

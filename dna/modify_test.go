@@ -63,10 +63,9 @@ func TestRevComp(t *testing.T) {
 
 func TestDel(t *testing.T) {
 	var actual []Base
-	var err error
 	for _, test := range deletionTests {
-		actual, err = Delete(test.input, test.delStart, test.delEnd)
-		if err != nil || CompareSeqsCaseSensitive(actual, test.expected) != 0 {
+		actual = Delete(test.input, test.delStart, test.delEnd)
+		if CompareSeqsCaseSensitive(actual, test.expected) != 0 {
 			t.Errorf("Deleting positions %d to %d of %v gave %v when %v was expected.", test.delStart, test.delEnd, test.input, actual, test.expected)
 		}
 	}
@@ -74,10 +73,9 @@ func TestDel(t *testing.T) {
 
 func TestInsert(t *testing.T) {
 	var actual []Base
-	var err error
 	for _, test := range insertionTests {
-		actual, err = Insert(test.seq, test.pos, test.insSeq)
-		if err != nil || CompareSeqsCaseSensitive(actual, test.expected) != 0 {
+		actual = Insert(test.seq, test.pos, test.insSeq)
+		if CompareSeqsCaseSensitive(actual, test.expected) != 0 {
 			t.Errorf("Inserting %v into %v at position %d gave %v when %v was expected.", test.insSeq, test.seq, test.pos, actual, test.expected)
 		}
 	}

@@ -146,21 +146,21 @@ func RemoveBase(bases []Base, baseToRemove Base) []Base {
 
 // Delete removes bases from a sequence of bases.
 // all base positions are zero based and left closed, right open.
-func Delete(seq []Base, delStart int, delEnd int) ([]Base, error) {
+func Delete(seq []Base, delStart int, delEnd int) []Base {
 	if delStart >= delEnd || delStart < 0 || delEnd > len(seq) {
-		return nil, ErrInvalidInterval
+		log.Panicf("a deletion on sequence of length %d with start of %d and length of %d is invalid", len(seq), delStart, delEnd)
 	}
-	return append(seq[:delStart], seq[delEnd:]...), nil
+	return append(seq[:delStart], seq[delEnd:]...)
 }
 
 // Insert adds bases to a sequence of bases.
 // base position is zero-based, insertion happens before specified base
 // giving the length of the sequence puts the insertion at the end.
-func Insert(seq []Base, insPos int, insSeq []Base) ([]Base, error) {
+func Insert(seq []Base, insPos int, insSeq []Base) []Base {
 	if insPos < 0 || insPos > len(seq) {
-		return nil, ErrInvalidInsertionPosition
+		log.Panicf("an insertion on sequence of length %d with start of %d is invalid", len(seq), insPos)
 	}
-	return append(seq[:insPos], append(insSeq, seq[insPos:]...)...), nil
+	return append(seq[:insPos], append(insSeq, seq[insPos:]...)...)
 }
 
 // Replace performs both a deletion and an insertion,

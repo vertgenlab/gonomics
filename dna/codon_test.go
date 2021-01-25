@@ -5,9 +5,9 @@ import (
 )
 
 var expected []Codon = []Codon{{A, A, G}, {T, G, A}, {A, A, C}}
-var testSeq, _ = StringToBases("AAGTGAAAC")
+var testSeq = StringToBases("AAGTGAAAC")
 
-var test2DNA, _ = StringToBases("atgcagatttttgtgaaaaccctgaccggcaaaacctga")
+var test2DNA = StringToBases("atgcagatttttgtgaaaaccctgaccggcaaaacctga")
 var expectedShortProtein string = "MQIFVKTLTGKT*"
 var expectedProtein string = "MetGlnIlePheValLysThrLeuThrGlyLysThrTer"
 
@@ -100,14 +100,8 @@ var gdf2LongProt string = "MetCysProGlyAlaLeuTrpValAlaLeuProLeuLeuSerLeuLeuAlaGl
 	"MetSerValAlaGluCysGlyCysArgTer"
 
 func TestStress(t *testing.T) {
-	seq, err := StringToBases(gdf2mrna)
-	if err != nil {
-		t.Errorf("trouble with string to bases")
-	}
-	expectedProt, err := StringToAminoAcid(gdf2prot, true)
-	if err != nil {
-		t.Errorf("stress test failed, error converting string to amino acid")
-	}
+	seq := StringToBases(gdf2mrna)
+	expectedProt := StringToAminoAcid(gdf2prot, true)
 	actualProt, err := TranslateSeq(seq)
 	if !equal(actualProt, expectedProt) || err != nil {
 		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, actualProt)
@@ -116,8 +110,8 @@ func TestStress(t *testing.T) {
 	if actualLongProtString != gdf2LongProt || err != nil {
 		t.Errorf("stress test failed, expected\n%v, got\n%v", gdf2LongProt, actualLongProtString)
 	}
-	longProt, err := StringToAminoAcid(gdf2LongProt, false)
-	if err != nil || !equal(longProt, actualProt) || !equal(longProt, expectedProt) {
+	longProt := StringToAminoAcid(gdf2LongProt, false)
+	if !equal(longProt, actualProt) || !equal(longProt, expectedProt) {
 		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, longProt)
 	}
 }
@@ -139,14 +133,14 @@ func equal(alpha []AminoAcid, beta []AminoAcid) bool {
 // BenchmarkCodonNoPtrs-4             68816             16979 ns/op            1856 B/op          2 allocs/op
 
 func BenchmarkCodonPtrs(b *testing.B) {
-	seq, _ := StringToBases(gdf2mrna)
+	seq := StringToBases(gdf2mrna)
 	for i := 0; i < b.N; i++ {
 		translateSeqPtr(seq)
 	}
 }
 
 func BenchmarkCodonNoPtrs(b *testing.B) {
-	seq, _ := StringToBases(gdf2mrna)
+	seq := StringToBases(gdf2mrna)
 	for i := 0; i < b.N; i++ {
 		translateSeqNoPtr(seq)
 	}

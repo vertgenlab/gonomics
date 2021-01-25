@@ -181,102 +181,104 @@ func AminoAcidToString(a AminoAcid) string {
 }
 
 // OneLetterToAminoAcid converts a one letter amino acid byte into an AminoAcid type.
-func OneLetterToAminoAcid(b byte) (AminoAcid, error) {
+func OneLetterToAminoAcid(b byte) AminoAcid {
 	switch b {
 	case 'A':
-		return Ala, nil
+		return Ala
 	case 'R':
-		return Arg, nil
+		return Arg
 	case 'N':
-		return Asn, nil
+		return Asn
 	case 'D':
-		return Asp, nil
+		return Asp
 	case 'C':
-		return Cys, nil
+		return Cys
 	case 'Q':
-		return Gln, nil
+		return Gln
 	case 'E':
-		return Glu, nil
+		return Glu
 	case 'G':
-		return Gly, nil
+		return Gly
 	case 'H':
-		return His, nil
+		return His
 	case 'I':
-		return Ile, nil
+		return Ile
 	case 'L':
-		return Leu, nil
+		return Leu
 	case 'K':
-		return Lys, nil
+		return Lys
 	case 'M':
-		return Met, nil
+		return Met
 	case 'F':
-		return Phe, nil
+		return Phe
 	case 'P':
-		return Pro, nil
+		return Pro
 	case 'S':
-		return Ser, nil
+		return Ser
 	case 'T':
-		return Thr, nil
+		return Thr
 	case 'W':
-		return Trp, nil
+		return Trp
 	case 'Y':
-		return Tyr, nil
+		return Tyr
 	case 'V':
-		return Val, nil
+		return Val
 	case '*':
-		return Stop, nil
+		return Stop
 	default:
-		return Stop, ErrUnrecognizedAminoAcidString
+		log.Panicf("cannot convert unrecognized byte %v to type AminoAcid", b)
+		return Stop
 	}
 }
 
 // ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type
-func ThreeLetterToAminoAcid(s string) (AminoAcid, error) {
+func ThreeLetterToAminoAcid(s string) AminoAcid {
 	switch s {
 	case "Ala":
-		return Ala, nil
+		return Ala
 	case "Arg":
-		return Arg, nil
+		return Arg
 	case "Asn":
-		return Asn, nil
+		return Asn
 	case "Asp":
-		return Asp, nil
+		return Asp
 	case "Cys":
-		return Cys, nil
+		return Cys
 	case "Gln":
-		return Gln, nil
+		return Gln
 	case "Glu":
-		return Glu, nil
+		return Glu
 	case "Gly":
-		return Gly, nil
+		return Gly
 	case "His":
-		return His, nil
+		return His
 	case "Ile":
-		return Ile, nil
+		return Ile
 	case "Leu":
-		return Leu, nil
+		return Leu
 	case "Lys":
-		return Lys, nil
+		return Lys
 	case "Met":
-		return Met, nil
+		return Met
 	case "Phe":
-		return Phe, nil
+		return Phe
 	case "Pro":
-		return Pro, nil
+		return Pro
 	case "Ser":
-		return Ser, nil
+		return Ser
 	case "Thr":
-		return Thr, nil
+		return Thr
 	case "Trp":
-		return Trp, nil
+		return Trp
 	case "Tyr":
-		return Tyr, nil
+		return Tyr
 	case "Val":
-		return Val, nil
+		return Val
 	case "Ter":
-		return Stop, nil
+		return Stop
 	default:
-		return Stop, ErrUnrecognizedAminoAcidString
+		log.Panicf("cannot convert unrecognized string %s into type AminoAcid", s)
+		return Stop
 	}
 }
 
@@ -289,7 +291,7 @@ func BasesToCodons(b []Base) ([]Codon, error) {
 	frame := len(b) % 3
 	answer := make([]Codon, 0, len(b)/3)
 	if !IsSeqOfACGT(b) {
-		return nil, ErrNonACGT
+		log.Panicf("unrecognized base in sequence: %v", b)
 	}
 	if frame != 0 {
 		err = ErrLenInputSeqNotDivThree
@@ -330,16 +332,16 @@ func IsEqual(c1 Codon, c2 Codon) bool {
 }
 
 // TranslateSeq takes a sequence of DNA bases and translates it into a slice of Amino acids.
+// Input expects bases to be in-frame. If the input sequence is not a
+// factor of three, the return codons will not include the remaining
+// bases and will also return an error.
 func TranslateSeq(b []Base) ([]AminoAcid, error) {
 	answer := make([]AminoAcid, len(b)/3)
 	codons, err := BasesToCodons(b)
-	if err != nil {
-		return nil, err
-	}
 	for i := range codons {
 		answer[i] = TranslateCodon(codons[i])
 	}
-	return answer, nil
+	return answer, err
 }
 
 // PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
@@ -362,7 +364,10 @@ func PolypeptideToString(a []AminoAcid) string {
 	return s.String()
 }
 
-//TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
+// TranslateToShortString converts a sequence of DNA bases into a string of one character amino acid symbols.
+// Input expects bases to be in-frame. If the input sequence is not a
+// factor of three, the return codons will not include the remaining
+// bases and will also return an error.
 func TranslateToShortString(b []Base) (string, error) {
 	bCopy := make([]Base, len(b))
 	copy(bCopy, b)
@@ -372,6 +377,9 @@ func TranslateToShortString(b []Base) (string, error) {
 }
 
 // TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
+// Input expects bases to be in-frame. If the input sequence is not a
+// factor of three, the return codons will not include the remaining
+// bases and will also return an error.
 func TranslateToString(b []Base) (string, error) {
 	bCopy := make([]Base, len(b))
 	copy(bCopy, b)
@@ -383,30 +391,22 @@ func TranslateToString(b []Base) (string, error) {
 
 // StringToAminoAcid converts a string into type amino acid.
 // If singleLetter is false, the input string will be processed by the three letter code.
-func StringToAminoAcid(s string, singleLetter bool) ([]AminoAcid, error) {
+func StringToAminoAcid(s string, singleLetter bool) []AminoAcid {
 	var answer []AminoAcid
-	var lengthErr error
-	var err error
 	if singleLetter { // single letter amino acid parsing
 		answer = make([]AminoAcid, len(s))
 		for i := range s {
-			answer[i], err = OneLetterToAminoAcid(s[i])
-			if err != nil {
-				return nil, err
-			}
+			answer[i] = OneLetterToAminoAcid(s[i])
 		}
 	} else { // triple letter amino acid parsing
 		answer = make([]AminoAcid, len(s)/3)
 		remainder := len(s) % 3
 		if remainder != 0 {
-			lengthErr = ErrLenInputStringNotDivThree
+			log.Panicf("length of input string is not a factor of three")
 		}
 		for i := 0; i < len(s)-remainder; i += 3 {
-			answer[i/3], err = ThreeLetterToAminoAcid(s[i : i+3])
-			if err != nil {
-				return nil, err
-			}
+			answer[i/3] = ThreeLetterToAminoAcid(s[i : i+3])
 		}
 	}
-	return answer, lengthErr
+	return answer
 }

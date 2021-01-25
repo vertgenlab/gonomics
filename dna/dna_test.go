@@ -13,9 +13,9 @@ var dnaStrings = []string{
 
 func TestDnaToFromString(t *testing.T) {
 	for _, input := range dnaStrings {
-		bases, err := StringToBases(input)
+		bases := StringToBases(input)
 		answer := BasesToString(bases)
-		if input != answer || err != nil {
+		if input != answer {
 			t.Errorf("Converting %s to bases and back gave %s", input, answer)
 		}
 	}
@@ -164,8 +164,8 @@ func TestBaseToString(t *testing.T) {
 
 func TestByteSliceToDnaBases(t *testing.T) {
 	expected := []Base{A, C, G, T, LowerA, LowerC, LowerG, LowerT, N, LowerN, Gap, Dot, Nil}
-	actual, err := ByteSliceToDnaBases([]byte{'A', 'C', 'G', 'T', 'a', 'c', 'g', 't', 'N', 'n', '-', '.', '*'})
-	if CompareSeqsCaseSensitive(actual, expected) != 0 || err != nil {
+	actual := ByteSliceToDnaBases([]byte{'A', 'C', 'G', 'T', 'a', 'c', 'g', 't', 'N', 'n', '-', '.', '*'})
+	if CompareSeqsCaseSensitive(actual, expected) != 0 {
 		t.Errorf("expected %v, actual %v", expected, actual)
 	}
 }

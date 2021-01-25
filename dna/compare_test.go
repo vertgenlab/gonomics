@@ -24,14 +24,8 @@ var compareTests = []struct {
 
 func TestCompare(t *testing.T) {
 	for _, test := range compareTests {
-		a, err := StringToBases(test.a)
-		if err != nil {
-			t.Errorf("trouble with string to bases")
-		}
-		b, err := StringToBases(test.b)
-		if err != nil {
-			t.Errorf("trouble with string to bases")
-		}
+		a := StringToBases(test.a)
+		b := StringToBases(test.b)
 		answer := CompareSeqsCaseSensitive(a, b)
 		if answer != test.expectedCaseSensitive {
 			t.Errorf("CompareSeqsCaseSensitive: expected %d, got %d when testing %v and %v\n", test.expectedCaseSensitive, answer, a, b)
