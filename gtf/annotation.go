@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 	"math"
 	"strings"
 )
@@ -39,8 +40,14 @@ func cDnaToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 // nonCodingToString inputs intronic variants and generates a cDNA annotation
 func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
-	ref := dna.StringToBases(v.Ref)
-	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) This looks like it was written for biallelic positions originally, I have doubled down on this for now but polyallelic bases should be handled.
+	ref, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	alt, err := dna.StringToBases(v.Alt[0]) //TODO: (riley) This looks like it was written for biallelic positions originally, I have doubled down on this for now but polyallelic bases should be handled.
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	cdsPos, start := getNearestCdsPos(v)
 	cdsDist := getCdsDist(v)
 	if len(ref) == 1 && len(alt) == 1 { // Substitution: c.10-1A>G
@@ -182,8 +189,14 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 // codingToString inputs variants inside the CDS and generates a cDNA annotation
 func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
-	ref := dna.StringToBases(v.Ref)
-	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) see TODO above. Only biallelic bases are supported
+	ref, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	alt, err := dna.StringToBases(v.Alt[0]) //TODO: (riley) see TODO above. Only biallelic bases are supported
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	cdsPos, _ := getNearestCdsPos(v)
 	if v.PosStrand { // For Pos Strand
 		if len(ref) == 1 && len(alt) == 1 { // Substitution c.10A>G
@@ -260,8 +273,14 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 
 // isDuplication returns true if the variant is likely a duplication of surrounding sequence
 func isDuplication(v *vcfEffectPrediction, seq map[string][]dna.Base) bool {
-	ref := dna.StringToBases(v.Ref)
-	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) see previous TODO about polyallelic bases.
+	ref, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	alt, err := dna.StringToBases(v.Alt[0]) //TODO: (riley) see previous TODO about polyallelic bases.
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	if len(ref) > len(alt) {
 		return false
 	}
@@ -321,8 +340,11 @@ func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 		}
 		return answer
 	}
-
-	if v.VariantType == "Missense" && len(v.AaRef) == 1 && len(v.AaAlt) == 0 && len(dna.StringToBases(v.Ref)) > 3 {
+	currBases, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	if v.VariantType == "Missense" && len(v.AaRef) == 1 && len(v.AaAlt) == 0 && len(currBases) > 3 {
 		answer += fmt.Sprintf("%s%ddel", dna.AminoAcidToString(v.AaRef[0]), v.CdnaPos/3)
 		return answer
 	}
@@ -424,12 +446,22 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 		for i := frame; i > 0; i-- {
 			currCodon = append(currCodon, currSeq[int(v.Pos)-1-i])
 		}
-		seqPos := int(v.Pos) + len(dna.StringToBases(v.Ref)) - 1
-		altSeq := dna.StringToBases(v.Alt[0]) //TODO: Does not handle polyallelic bases.
+		currBases, err := dna.StringToBases(v.Ref)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		seqPos := int(v.Pos) + len(currBases) - 1
+		altSeq, err := dna.StringToBases(v.Alt[0]) //TODO: Does not handle polyallelic bases.
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
 		for _, val := range altSeq {
 			currCodon = append(currCodon, val)
 			if len(currCodon)%3 == 0 {
-				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+				if aa, ok := dna.TranslateSeq(currCodon); aa[0] == dna.Stop {
+					if ok != nil {
+						log.Panicf("error translating sequence")
+					}
 					return answer
 				}
 				answer++
@@ -445,7 +477,10 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 			currCodon = append(currCodon, currSeq[seqPos])
 			seqPos++
 			if len(currCodon)%3 == 0 {
-				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+				if aa, ok := dna.TranslateSeq(currCodon); aa[0] == dna.Stop {
+					if ok != nil {
+						log.Panicf("error translating sequence")
+					}
 					return answer
 				}
 				answer++
@@ -453,30 +488,41 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 			}
 		}
 	} else {
-		refLen := len(dna.StringToBases(v.Ref))
-		altSeq := reverse(dna.StringToBases(v.Alt[0])) //TODO: does not handle polyallelic bases
+		refBases, err := dna.StringToBases(v.Ref)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		refLen := len(refBases)
+		altBases, err := dna.StringToBases(v.Alt[0])
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		altSeq := reverse(altBases) //TODO: does not handle polyallelic bases
 
 		if (refLen-1)-originalFrame > 0 {
 			answer -= 1 + (((refLen - 2) - originalFrame) / 3)
 		}
 
-		frame := ((v.NearestCds.End-(int(v.Pos)+len(dna.StringToBases(v.Ref))-1))%3 + ((3 - v.NearestCds.Frame) % 3)) % 3
+		frame := ((v.NearestCds.End-(int(v.Pos)+len(refBases)-1))%3 + ((3 - v.NearestCds.Frame) % 3)) % 3
 		for i := frame; i > 0; i-- {
 			currCodon = append(currCodon, currSeq[int(v.Pos)+i])
 		}
 
 		var seqPos int
-		if len(altSeq) < len(dna.StringToBases(v.Ref)) {
+		if len(altSeq) < len(refBases) {
 			seqPos = int(v.Pos) - 2
 		} else {
-			seqPos = int(v.Pos) - 1 - len(dna.StringToBases(v.Ref))
+			seqPos = int(v.Pos) - 1 - len(refBases)
 		}
 
 		for _, val := range altSeq {
 			currCodon = append(currCodon, val)
 			if len(currCodon)%3 == 0 {
 				dna.Complement(currCodon)
-				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+				if aa, ok := dna.TranslateSeq(currCodon); aa[0] == dna.Stop {
+					if ok != nil {
+						log.Panicf("error translating sequence")
+					}
 					return answer
 				}
 				answer++
@@ -494,7 +540,10 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 			seqPos--
 			if len(currCodon)%3 == 0 {
 				dna.Complement(currCodon)
-				if dna.TranslateSeq(currCodon)[0] == dna.Stop {
+				if aa, ok := dna.TranslateSeq(currCodon); aa[0] == dna.Stop {
+					if ok != nil {
+						log.Panicf("error translating sequence")
+					}
 					return answer
 				}
 				answer++

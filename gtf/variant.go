@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 	"math"
 	"reflect"
 )
@@ -146,8 +147,14 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 
 // findAAChange annotates the Variant struct with the amino acids changed by a given variant
 func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
-	ref := dna.StringToBases(variant.Ref)
-	alt := dna.StringToBases(variant.Alt[0]) //TODO: does not handle polyallelic bases.
+	ref, err := dna.StringToBases(variant.Ref)
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
+	alt, err := dna.StringToBases(variant.Alt[0]) //TODO: does not handle polyallelic bases.
+	if err != nil {
+		log.Panicf("error converting to bases")
+	}
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
@@ -232,8 +239,14 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 			}
 			refBases = append(refBases, seq[variant.Chr][refSeqPos])
 		}
-		variant.AaRef = dna.TranslateSeq(refBases)
-		variant.AaAlt = dna.TranslateSeq(altBases)
+		variant.AaRef, err = dna.TranslateSeq(refBases)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
+		variant.AaAlt, err = dna.TranslateSeq(altBases)
+		if err != nil {
+			log.Panicf("error converting to bases")
+		}
 
 		if (len(ref)-len(alt))%3 != 0 {
 			var codonToAdd []dna.Base
@@ -252,7 +265,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 						codonToAdd = append(codonToAdd, seq[variant.Chr][refSeqPos])
 						refSeqPos++
 					}
-					variant.AaRef = append(variant.AaRef, dna.TranslateSeq(codonToAdd)...)
+					aa, err := dna.TranslateSeq(codonToAdd)
+					if err != nil {
+						log.Panicf("error translating sequence")
+					}
+					variant.AaRef = append(variant.AaRef, aa...)
 				}
 				codonToAdd = nil
 				if len(variant.AaAlt) == 0 {
@@ -264,7 +281,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 						codonToAdd = append(codonToAdd, seq[variant.Chr][altSeqPos])
 						altSeqPos++
 					}
-					variant.AaAlt = append(variant.AaAlt, dna.TranslateSeq(codonToAdd)...)
+					aa, err := dna.TranslateSeq(codonToAdd)
+					if err != nil {
+						log.Panicf("error translating sequence")
+					}
+					variant.AaAlt = append(variant.AaAlt, aa...)
 				}
 			}
 		}
@@ -284,7 +305,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 						}
 						codonToAdd = append(codonToAdd, seq[variant.Chr][(seqPos+offset)+j])
 					}
-					variant.AaRef = append(variant.AaRef, dna.TranslateSeq(codonToAdd)...)
+					aa, err := dna.TranslateSeq(codonToAdd)
+					if err != nil {
+						log.Panicf("error translating sequence")
+					}
+					variant.AaRef = append(variant.AaRef, aa...)
 				}
 			}
 		}
@@ -293,7 +318,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	} else {
 		var trimAA bool
 		seqPos += determineFrame(variant)
-		lenOffset := (len(dna.StringToBases(variant.Ref)) - 1)
+		currBases, err := dna.StringToBases(variant.Ref)
+		if err != nil {
+			log.Panicf("error convering string to Bases")
+		}
+		lenOffset := (len(currBases) - 1)
 
 		for int(variant.Pos-1)+lenOffset > seqPos {
 			seqPos += 3
@@ -320,10 +349,13 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 			refBases = append(refBases, seq[variant.Chr][seqPos])
 			altBases = append(altBases, seq[variant.Chr][seqPos])
 		}
-
-		refBases = append(refBases, reverse(dna.StringToBases(variant.Ref))...)
-		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt[0]))...)
-		seqPos -= len(dna.StringToBases(variant.Ref))
+		firstAltBase, err := dna.StringToBases(variant.Alt[0])
+		if err != nil {
+			log.Panicf("error convering string to Bases")
+		}
+		refBases = append(refBases, reverse(currBases)...)
+		altBases = append(altBases, reverse(firstAltBase)...)
+		seqPos -= len(currBases)
 
 		altCDS := currCDS
 		altSeqPos := seqPos
@@ -346,8 +378,14 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 
 		dna.Complement(refBases)
 		dna.Complement(altBases)
-		variant.AaRef = dna.TranslateSeq(refBases)
-		variant.AaAlt = dna.TranslateSeq(altBases)
+		variant.AaRef, err = dna.TranslateSeq(refBases)
+		if err != nil {
+			log.Panicf("error translating sequence")
+		}
+		variant.AaAlt, err = dna.TranslateSeq(altBases)
+		if err != nil {
+			log.Panicf("error translating sequence")
+		}
 
 		if trimAA && (len(ref)-len(alt))%3 == 0 && variant.AaRef[len(variant.AaRef)-1] == variant.AaAlt[len(variant.AaAlt)-1] {
 			variant.AaAlt = variant.AaAlt[:len(variant.AaAlt)-1]
@@ -376,7 +414,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 						codonToAdd = append(codonToAdd, seq[variant.Chr][(refSeqPos)-j])
 					}
 					dna.Complement(codonToAdd)
-					variant.AaRef = append(variant.AaRef, dna.TranslateSeq(codonToAdd)...)
+					aa, err := dna.TranslateSeq(codonToAdd)
+					if err != nil {
+						log.Panicf("error translating sequence")
+					}
+					variant.AaRef = append(variant.AaRef, aa...)
 				}
 			}
 		} else if !isSynonymous(variant) && len(variant.AaAlt) == 1 && len(variant.AaRef) == 1 && variant.AaAlt[0] == variant.AaRef[0] && len(ref) > len(alt) {
@@ -394,7 +436,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 				codonToAdd = append(codonToAdd, seq[variant.Chr][(refSeqPos)-j])
 			}
 			dna.Complement(codonToAdd)
-			variant.AaRef = append(variant.AaRef, dna.TranslateSeq(codonToAdd)...)
+			aa, err := dna.TranslateSeq(codonToAdd)
+			if err != nil {
+				log.Panicf("error translating sequence")
+			}
+			variant.AaRef = append(variant.AaRef, aa...)
 		}
 
 		if (len(ref)-len(alt))%3 != 0 && len(variant.AaRef) > 0 && len(variant.AaAlt) > 0 && variant.AaRef[0] == variant.AaAlt[0] {
@@ -414,7 +460,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 				}
 			}
 			dna.Complement(codonToAdd)
-			variant.AaRef = append(variant.AaRef, dna.TranslateSeq(codonToAdd)...)
+			aa, err := dna.TranslateSeq(codonToAdd)
+			if err != nil {
+				log.Panicf("error translating sequence")
+			}
+			variant.AaRef = append(variant.AaRef, aa...)
 			codonToAdd = nil
 			for len(codonToAdd) == 0 || len(codonToAdd)%3 != 0 {
 				codonToAdd = append(codonToAdd, seq[variant.Chr][altSeqPos])
@@ -425,7 +475,11 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 				}
 			}
 			dna.Complement(codonToAdd)
-			variant.AaAlt = append(variant.AaAlt, dna.TranslateSeq(codonToAdd)...)
+			aa, err = dna.TranslateSeq(codonToAdd)
+			if err != nil {
+				log.Panicf("error translating sequence")
+			}
+			variant.AaAlt = append(variant.AaAlt, aa...)
 		}
 
 		variant.AaPos = int(math.Round((float64(variant.CdnaPos)/3)+0.4)) + aaPosOffset // Add 0.4 so pos will always round up
@@ -495,8 +549,14 @@ func getCdsDist(v *vcfEffectPrediction) int {
 
 // isFrameshift returns true if the variant shifts the reading frame
 func isFrameshift(v *vcfEffectPrediction) bool {
-	refBases := dna.StringToBases(v.Ref)
-	altBases := dna.StringToBases(v.Alt[0]) //TODO: does not handle polyallelic bases.
+	refBases, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting string to Bases")
+	}
+	altBases, err := dna.StringToBases(v.Alt[0]) //TODO: does not handle polyallelic bases.
+	if err != nil {
+		log.Panicf("error converting string to Bases")
+	}
 
 	start := int(v.Pos)
 	refEnd := start + len(refBases) - 1
@@ -532,7 +592,15 @@ func isNonsense(v *vcfEffectPrediction) bool {
 // isSynonymous returns true if the variant does not change the amino acid sequence
 func isSynonymous(v *vcfEffectPrediction) bool {
 	var answer bool = true
-	if len(v.AaAlt) != len(v.AaRef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt[0])) {
+	refBases, err := dna.StringToBases(v.Ref)
+	if err != nil {
+		log.Panicf("error converting string to Bases")
+	}
+	altBases, err := dna.StringToBases(v.Alt[0])
+	if err != nil {
+		log.Panicf("error converting string to Bases")
+	}
+	if len(v.AaAlt) != len(v.AaRef) || len(refBases) != len(altBases) {
 		return false
 	} else {
 		for i := 0; i < len(v.AaRef); i++ {
