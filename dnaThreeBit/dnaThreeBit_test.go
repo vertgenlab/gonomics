@@ -2,6 +2,7 @@ package dnaThreeBit
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 	"testing"
 )
 
@@ -22,7 +23,10 @@ var dnaStrings = []string{
 func TestGetBaseWithOffset(t *testing.T) {
 	var singleBase dna.Base
 	for _, input := range dnaStrings {
-		bases := dna.StringToBases(input)
+		bases, err := dna.StringToBases(input)
+		if err != nil {
+			log.Panicf("error converting string to Bases")
+		}
 		offset := 1
 		tripleBit := newThreeBitWithOffset(bases, PaddingOne, offset)
 		singleBase = GetBase(tripleBit, 0+offset)
@@ -51,7 +55,10 @@ func TestGetBaseWithOffset(t *testing.T) {
 func TestGetBase(t *testing.T) {
 	var singleBase dna.Base
 	for _, input := range dnaStrings {
-		bases := dna.StringToBases(input)
+		bases, err := dna.StringToBases(input)
+		if err != nil {
+			log.Panicf("error converting string to Bases")
+		}
 		tripleBit := NewThreeBit(bases, PaddingOne)
 		singleBase = GetBase(tripleBit, 0)
 		if singleBase != dna.T {

@@ -2,6 +2,7 @@ package dnaThreeBit
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 	"testing"
 )
 
@@ -17,7 +18,11 @@ var dnaFragments = []string{
 
 func TestRainbow(t *testing.T) {
 	for _, currString := range dnaFragments {
-		rainbowTable := NewThreeBitRainbow(dna.StringToBases(currString), G)
+		currBases, err := dna.StringToBases(currString)
+		if err != nil {
+			log.Panicf("error converting string to Bases")
+		}
+		rainbowTable := NewThreeBitRainbow(currBases, G)
 
 		for i, color := range rainbowTable {
 			shouldBeOriginal := dna.BasesToString(RangeToDnaBases(color, i, i+len(currString)))
