@@ -108,7 +108,7 @@ func usage() {
 		"./globalAlignment - chelsea's global alignment\n" +
 			" Align 2 .fasta files, each with only 1 sequence\n" +
 			"Usage:\n" +
-			"	faTarget faQuery\n" +
+			"	globalAlignment target.fasta query.fasta\n" +
 			"options:\n" +
 			"	-faOut=fasta MSA output filename\n")
 	flag.PrintDefaults()
