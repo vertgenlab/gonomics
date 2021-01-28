@@ -2,7 +2,7 @@ package simulate
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
+	//"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -31,6 +31,7 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 		vcf.WriteVcf(out, current)
 	}
 
+	/*
 	integrateMe := FIntegralComponent(500, 1, -4)
 	integrateMeNonLog := FIntegralComponentNonLog(500, 1, -4)
 	integrateMeCareful := FIntegralComponentCareful(500, 1, -4)
@@ -42,8 +43,6 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 	log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMeCarefulLog, 0, 1, 1e-10, 1000)))
 	//log.Fatalf("DONE")
 
-	//var testAlpha, currCalc, ratio float64
-
 	//var outLier float64 = AFSLikelihood(counts, n, 1)
 	//var outLierBinomInIntegral float64 = AFSLikelihoodBinomInIntegral(counts, n, 1)
 	//log.Printf("like at outlier: %e. With binomInIntegral: %e.\n", outLier, outLierBinomInIntegral)
@@ -52,28 +51,29 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 	log.Printf("density binom outside: %e. density binom inside: %e.\n", outLierDensity, outLierDensityBinomInIntegral)
 
 	log.Fatalf("DONE")
+	*/
 
-/*
-	var shouldBeBest float64 = AFSLikelihood(counts, n, alpha)
-	for testAlpha = alpha - 2; testAlpha <= alpha+3; testAlpha += 0.25 {
-		if alpha == 0 {
-			currCalc = AFSLikelihood(counts, n, 0.03)
-			ratio = math.Exp(currCalc - shouldBeBest)
-			log.Printf("like at %f:%e ratio:%f\n", 0.03, AFSLikelihood(counts, n, 0.03))
+	var testAlpha, currCalc, ratio float64
+	var shouldBeBest float64
+	var accuracy = 1e-8
+
+	//shouldBeBest = AFSLikelihood(counts, n, alpha)
+	shouldBeBest = AFSLikelihoodNew(counts, n, alpha, accuracy)
+	for testAlpha = alpha - 4; testAlpha <= alpha+4; testAlpha += 0.1 {
+		if testAlpha == 0 {
+			log.Fatal("Error: right now alpha can not be zero\n")
 		} else {
-			currCalc = AFSLikelihood(counts, n, testAlpha)
+			//currCalc = AFSLikelihood(counts, n, testAlpha)
+			currCalc = AFSLikelihoodNew(counts, n, testAlpha, accuracy)
 			ratio = math.Exp(currCalc - shouldBeBest)
-			log.Printf("like at %f:%e ratio:%f\n", testAlpha, AFSLikelihood(counts, n, testAlpha), ratio)
+			log.Printf("like at %f:%e ratio:%f\n", testAlpha, currCalc, ratio)
 		}
-	}*/
+	}
 }
-
+/*
 func FIntegralComponentCarefulLog(n int, k int, alpha float64) func(float64) float64 {
 	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		/*if p == 0 || p == 1 {
-			return math.Inf(-1)
-		}*/
 		//var ans float64 = binomCoeff + float64(k-1)*math.Log(p) + float64(n-k-1)*math.Log(1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
 		var ans float64 = binomCoeff + numbers.LogPow(p, float64(k-1)) + numbers.LogPow(1.0 - p, float64(n-k-1)) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
 		return ans
@@ -83,9 +83,6 @@ func FIntegralComponentCarefulLog(n int, k int, alpha float64) func(float64) flo
 func FIntegralComponentCareful(n int, k int, alpha float64) func(float64) float64 {
 	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		/*if p == 0 || p == 1 {
-			return 0
-		}*/
 		//carefulExpression := numbers.LogPow(float64(k-1), p) + numbers.LogPow(float64(n-k-1), 1.0-p)
 		carefulExpression := numbers.MultiplyLog(numbers.LogPow(p, float64(k-1)), numbers.LogPow(1.0-p, float64(n-k-1)))
 		//functionExpression := numbers.BinomialExpressionLog(n-2, k-1, p)
@@ -99,9 +96,6 @@ func FIntegralComponentCareful(n int, k int, alpha float64) func(float64) float6
 func FIntegralComponentNonLog(n int, k int, alpha float64) func(float64) float64 {
 	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		/*if p == 0 || p == 1 {
-			return 0
-		}*/
 		ans := math.Exp(binomCoeff) * math.Pow(p, float64(k-1)) * math.Pow(1-p, float64(n-k-1)) * (1.0 - math.Exp(-1.0*alpha*(1.0-p))) * 2.0 / (1.0 - math.Exp(-1.0*alpha))
 		return ans
 	}
@@ -110,9 +104,6 @@ func FIntegralComponentNonLog(n int, k int, alpha float64) func(float64) float64
 func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
 	//var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
-		/*if p == 0 || p == 1 {
-			return math.Inf(-1)
-		}*/
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		//expressionTwo := float64(k-1) * math.Log(p) + float64(n-k-1) * math.Log(1.0-p)
 		//if math.Abs(expression-expressionTwo) > 1e-6 {
@@ -128,9 +119,6 @@ func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
 func FIntegralComponentBinomInIntegral(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
 		var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
-		/*if p == 0 || p == 1 {
-			return math.Inf(-1)
-		}*/
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		//expressionTwo := float64(k-1) * math.Log(p) + float64(n-k-1) * math.Log(1.0-p)
 		//if math.Abs(expression-expressionTwo) > 1e-6 {
@@ -143,7 +131,6 @@ func FIntegralComponentBinomInIntegral(n int, k int, alpha float64) func(float64
 	}
 }
 
-/*
 func ficBinomCoeff(n int, k int, alpha float64, binomCoeff float64) func(float64) float64 {
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
@@ -160,7 +147,7 @@ func fic(n int, k int, alpha float64, binomCoeff float64) func(float64) float64 
 		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
 		//return numbers.MultiplyLog(expression, logPart)
 	}
-}*/
+}
 
 func AFSSampleDensityCarefulLog(n int, k int, alpha float64, start float64, end float64, accuracy float64) float64 {
 	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
@@ -210,13 +197,6 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, start, end, accurac
 	numer = AFSSampleDensity(n, i, alpha, start, end, accuracy)                     // original answer log, integral log
 	//numerCareful = AFSSampleDensityCareful(n, i, alpha, start, end, accuracy)       // answer log, integral normal
 	//numerCarefulLog = AFSSampleDensityCarefulLog(n, i, alpha, start, end, accuracy) // answer log, integral log
-	/*ans = numbers.DivideLog(numer, denom)
-	ansCareful = numbers.DivideLog(numerCareful, denomCareful)
-	ansCarefulLog = numbers.DivideLog(numerCarefulLog, denomCarefulLog)
-	if math.Exp(numbers.RelativeErrorLog(ans, ansCareful)) > 1e-5 || math.Exp(numbers.RelativeErrorLog(ans, ansCarefulLog)) > 1e-5 { // this is for normal space, but need log space
-		log.Printf("%e %e %e\n", ans, ansCareful, ansCarefulLog)
-		log.Printf("%d %d %f\n", n, i, alpha)
-	}*/
 	log.Printf("For regular: i: %v. numer: %e. denom: %e.\n", i, numer, denom)
 	return numbers.DivideLog(numer, denom)
 }
@@ -236,13 +216,6 @@ func AlleleFrequencyProbabilityBinomInIntegral(i int, n int, alpha float64, star
 	numer = AFSSampleDensityBinomInIntegral(n, i, alpha, start, end, accuracy)                     // original answer log, integral log
 	//numerCareful = AFSSampleDensityCareful(n, i, alpha, start, end, accuracy)       // answer log, integral normal
 	//numerCarefulLog = AFSSampleDensityCarefulLog(n, i, alpha, start, end, accuracy) // answer log, integral log
-	/*ans = numbers.DivideLog(numer, denom)
-	ansCareful = numbers.DivideLog(numerCareful, denomCareful)
-	ansCarefulLog = numbers.DivideLog(numerCarefulLog, denomCarefulLog)
-	if math.Exp(numbers.RelativeErrorLog(ans, ansCareful)) > 1e-5 || math.Exp(numbers.RelativeErrorLog(ans, ansCarefulLog)) > 1e-5 { // this is for normal space, but need log space
-		log.Printf("%e %e %e\n", ans, ansCareful, ansCarefulLog)
-		log.Printf("%d %d %f\n", n, i, alpha)
-	}*/
 	log.Printf("For BinomInIntegral: i: %v. numer: %e. denom: %e.\n", i, numer, denom)
 	return numbers.DivideLog(numer, denom)
 }
@@ -263,3 +236,4 @@ func AFSLikelihoodBinomInIntegral(count []int, totalAlleles int, alpha float64) 
 	}
 	return answer
 }
+*/
