@@ -70,13 +70,12 @@ func TestGraphRecon(t *testing.T) {
 	log.Print(nodeAlign2.AlignId)
 
 	path, prob := PathFinder(humanGraph)
-	//seq := seqOfPath(humanGraph)
 	log.Print("path")
 	log.Print(path)
 	log.Print("prob")
 	log.Print(prob)
-	//log.Print("seq")
-	//log.Print(dna.BasesToString(seq))
+	seq := seqOfPath(humanGraph, path)
+	log.Print(dna.BasesToString(seq))
 
 }
 

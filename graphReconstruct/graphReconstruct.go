@@ -2,6 +2,8 @@ package graphReconstruct
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
+
 	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -258,43 +260,51 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //}
 
 //call for GraphRecon will be a lot like loopNodes call but instead of calling it on each position it will be called for each graph column
-//might not need a graph arg
 func GraphRecon(root *expandedTree.ETree, column graphColumn, graph simpleGraph.SimpleGraph) {
-	//internalNodes := expandedTree.GetBranch(root)
 	var rightPresent = false
 	var leftPresent = false
+	var nodeInfo = make(map[string][]*simpleGraph.Node)
 	if root.Right != nil && root.Left != nil {
 		for c := 0; c < len(column.AlignNodes); c++ {
 			for s := 0; s < len(column.AlignNodes[c]); s++ {
-				if column.AlignNodes[c][s].Name == root.Right.Name { //node names must contain a species name
+				if column.AlignNodes[c][s].Name == root.Right.Name { //node names must contain the species name
 					rightPresent = true
-				}
-				if column.AlignNodes[c][s].Name == root.Left.Name {
+					for name, info := range nodeInfo {
+						if name == column.AlignNodes[c][s].Name {
+							info = append(info, column.AlignNodes[c][s])
+							nodeInfo[column.AlignNodes[c][s].Name] = info
+						}
+					}
+				} else if column.AlignNodes[c][s].Name == root.Left.Name {
 					leftPresent = true
+					for name, info := range nodeInfo {
+						if name == column.AlignNodes[c][s].Name {
+							info = append(info, column.AlignNodes[c][s])
+							nodeInfo[column.AlignNodes[c][s].Name] = info
+						}
+					}
 				}
 			}
 		}
 	}
+	//to assign next and prev i can look for a next/prev with a dest that does not exist in my nodeInfo map or in this align column, and make that the next/prev of the new node
+	//i don't know how to make the new node part of the alignment.
+	//right now I think that it will just add a node with a given seq and it will exist outside the alignment of the rest of the graph
 	if rightPresent && leftPresent {
 		var newNode *simpleGraph.Node
 		var newAlign []*simpleGraph.Node
+		var num uint32
 		var seq []dna.Base
-		//what if the probability of any base actually being in the seq at the daughter (the probability of observing a given base) is just the probability of passing through that node (i.e. the probability of the prev edge)
-		//then the probability of it occurring in the parent will just be that times the branch length, but this way any base in a single node will have equal prob of being observed
-		//and we won't have to store that info separately. I think this makes sense bc in theory we will be adjusting probability that we travel through a node by branch length
-		//as we create the new node and the new edge that leads to it for an ancestor in the graph
-		//
-		//newNode := *simpleGraph.Node{Id, root.Name, seq, seqTwoBit, Prev, Next, info} //Id should probably be whatever number node this is for this species somehow
-		simpleGraph.AddNode(&graph, newNode) //I think this only adds a node to the end of the graph, which isn't what we want
+		newNode = &simpleGraph.Node{Id: num, Name: root.Name, Seq: seq, SeqTwoBit: dnaTwoBit.NewTwoBit(seq), Next: nil, Prev: nil, Info: simpleGraph.Annotation{}} //Id should probably be whatever number node this is for this species somehow
+		simpleGraph.AddNode(&graph, newNode)
 		newAlign = append(newAlign, newNode)
-		column.AlignNodes = append(column.AlignNodes, newAlign)
+		column.AlignNodes = append(column.AlignNodes, newAlign) //adds the new node into this graphColumn
 	}
 }
 
 //seqOfPath takes in a graph and, using PathFinder, returns the seq of the best path through the graph
-func seqOfPath(g *simpleGraph.SimpleGraph) []dna.Base {
+func seqOfPath(g *simpleGraph.SimpleGraph, path []uint32) []dna.Base {
 	var seq []dna.Base
-	path, _ := PathFinder(g)
 	for n := 0; n < len(g.Nodes); n++ {
 		for p := 0; p < len(path); p++ {
 			if g.Nodes[n].Id == path[p] {
