@@ -21,7 +21,7 @@ func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
 			//here I assume only pairwise alignment, not >2 species
 			//here I assume species_ins is target (because the 1st line in the block is a line, target is 2nd line in the block, k=1); species_del is query (3rd line in the block, k=2)
-			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src) //start with species_del, get assembly (e.g. rheMac10), chrom (e.g. chrI)
+			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)   //start with species_del, get assembly (e.g. rheMac10), chrom (e.g. chrI)
 			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k-1].Src) //then find corresponding species_ins line, same block, 1 line above since pairwise maf
 			//TODO: to improve clarity, consider using assembly_k first, and then setting assembly_del:=assembly_k if in fact the k line is a del line
 
@@ -54,9 +54,9 @@ func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed
 func usage() {
 	fmt.Print(
 		"mafIndels - takes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments\n" +
-		"in.maf - here I assume only pairwise alignment, not >2 species\n" + //note my assumptions here
-		"species_ins, species_del - here I assume species_ins is target (1st line in the block, k=0); species_del is query (2nd line in the block, k=1)\n" + //note my assumptions here
-		"outIns.bed, outDel.bed - program outputs 2 bed files for species_ins and species_del coordinates, respectively. Designate filenames here\n" +
+			"in.maf - here I assume only pairwise alignment, not >2 species\n" + //note my assumptions here
+			"species_ins, species_del - here I assume species_ins is target (1st line in the block, k=0); species_del is query (2nd line in the block, k=1)\n" + //note my assumptions here
+			"outIns.bed, outDel.bed - program outputs 2 bed files for species_ins and species_del coordinates, respectively. Designate filenames here\n" +
 			"Usage:\n" +
 			" mafIndels in.maf species_ins species_del outIns.bed outDel.bed\n" +
 			"options:\n")
