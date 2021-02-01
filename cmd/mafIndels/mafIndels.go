@@ -11,12 +11,12 @@ import (
 func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed string, outDel_bed string) {
 	//initialize variables
 	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf
-	var bedList_ins []*bed.Bed      //initialize 2 bed files
-	var bedList_del []*bed.Bed      //1 bed file for ins, 1 bed file for del
+	var bedList_ins []*bed.Bed     //initialize 2 bed files
+	var bedList_del []*bed.Bed     //1 bed file for ins, 1 bed file for del
 
 	//go through each line
 	for i, _ := range mafRecords { //each i is a block
-		for k:=1; k<len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1, so that checking line k-1 starts at 0 and does not index out of range
+		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1, so that checking line k-1 starts at 0 and does not index out of range
 
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
 			//here I assume only pairwise alignment, not >2 species
