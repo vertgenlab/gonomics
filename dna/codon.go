@@ -65,12 +65,12 @@ var (
 	ErrLenInputSeqNotDivThree = errors.New("length of input sequence is not a factor of three. remaining bases were ignored")
 )
 
-// aaToShortString is an efficient lookup for the rune corresponding to a given amino acid.
+// aaToByte is an efficient lookup for the rune corresponding to a given amino acid.
 // intended to remain as a private array to help the AminoAcidToShortString function.
 // panics if value input is not a valid AminoAcid.
-var aaToShortString = []byte{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', '*'}
+var aaToByte = []byte{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', '*'}
 
-// aaToShortString is an efficient lookup for the 3 letter string corresponding to a given amino acid.
+// aaToLongString is an efficient lookup for the 3 letter string corresponding to a given amino acid.
 // intended to remain as a private array to help the AminoAcidToString function.
 // panics if value input is not a valid AminoAcid.
 var aaToLongString = []string{"Ala", "Arg", "Asn", "Asp", "Cys", "Gln", "Glu", "Gly", "His", "Ile", "Leu", "Lys", "Met", "Phe", "Pro", "Ser", "Thr", "Trp", "Tyr", "Val", "Ter"}
@@ -291,7 +291,7 @@ func BasesToCodons(b []Base) []Codon {
 	if frame != 0 {
 		log.Panicf("input sequence length is %d. input length must be a factor of 3", len(b))
 	}
-	for i := 0; i < len(b)-frame; i += 3 {
+	for i := 0; i < len(b); i += 3 {
 		answer = append(answer, Codon{b[i], b[i+1], b[i+2]})
 	}
 	return answer
@@ -308,7 +308,11 @@ func CodonsToBases(c []Codon) []Base {
 
 //TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
 func TranslateCodon(c Codon) AminoAcid {
-	return GeneticCode[c]
+	value, found := GeneticCode[c]
+	if !found {
+		log.Panicf("Error: was not able to translate the codon: %s\n", BasesToString(CodonsToBases([]Codon{c})))
+	}
+	return value
 }
 
 // NonSynonymous compares two Codons and returns true if they encode different AminoAcids.
@@ -343,7 +347,7 @@ func PolypeptideToShortString(a []AminoAcid) string {
 	var s strings.Builder
 	s.Grow(len(a))
 	for i := range a {
-		s.WriteByte(aaToShortString[a[i]])
+		s.WriteByte(aaToByte[a[i]])
 	}
 	return s.String()
 }
