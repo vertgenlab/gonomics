@@ -67,7 +67,7 @@ func pointPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
 		dna.ReverseComplement(log.removed)
 	}
 
-	if !dna.IsSeqOfACTG([]dna.Base{*alt}) {
+	if !dna.IsSeqOfACGT([]dna.Base{*alt}) {
 		return ErrNonACGTBase
 	}
 
@@ -107,9 +107,10 @@ func pointCoding(g *Gene, cdnaIndexPos int, alt dna.Base, answer *EffectPredicti
 	answer.CdnaPos = cdnaIndexPos
 	answer.AaPos = cdnaIndexPos / 3
 	codon, err := CdnaPosToCodon(g, cdnaIndexPos)
-	answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(&codon)}
+	answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(codon)}
 	g.codingSeq.seq[cdnaIndexPos] = alt
-	answer.AaAlt = []dna.AminoAcid{dna.TranslateCodon(&codon)}
+	altCodon, altErr := CdnaPosToCodon(g, cdnaIndexPos)
+	answer.AaAlt = []dna.AminoAcid{dna.TranslateCodon(altCodon)}
 	if answer.AaRef[0] == answer.AaAlt[0] {
 		answer.Consequence = Silent
 	} else {
@@ -125,5 +126,9 @@ func pointCoding(g *Gene, cdnaIndexPos int, alt dna.Base, answer *EffectPredicti
 			answer.Consequence = Missense
 		}
 	}
-	return err
+	if err != nil {
+		return err
+	} else {
+		return altErr
+	}
 }

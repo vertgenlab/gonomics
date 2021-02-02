@@ -1,19 +1,21 @@
 package dna
 
-import "testing"
+import (
+	"testing"
+)
 
-var expected []*Codon = []*Codon{{StringToBases("AAG")}, {StringToBases("TGA")}, {StringToBases("AAC")}}
-var testSeq []Base = StringToBases("AAGTGAAAC")
+var expected []Codon = []Codon{{A, A, G}, {T, G, A}, {A, A, C}}
+var testSeq = StringToBases("AAGTGAAAC")
 
-var test2DNA []Base = StringToBases("atgcagatttttgtgaaaaccctgaccggcaaaacctga")
+var test2DNA = StringToBases("atgcagatttttgtgaaaaccctgaccggcaaaacctga")
 var expectedShortProtein string = "MQIFVKTLTGKT*"
 var expectedProtein string = "MetGlnIlePheValLysThrLeuThrGlyLysThrTer"
 
 func TestBasesToCodon(t *testing.T) {
 	input := BasesToCodons(testSeq)
-	for i := 0; i < len(input); i++ {
-		if BasesToString(input[i].Seq) != BasesToString(expected[i].Seq) {
-			t.Errorf("Do not match. Input: %s. Expected: %s.", BasesToString(input[i].Seq), BasesToString(expected[i].Seq))
+	for i := range input {
+		if input[i] != expected[i] {
+			t.Errorf("Do not match. Input: %s. Expected: %s.", input[i], expected[i])
 		}
 	}
 }
@@ -30,4 +32,162 @@ func TestTranslateToShortString(t *testing.T) {
 	if input != expectedShortProtein {
 		t.Errorf("Do not match. Input : %s. Expected: %s.", input, expectedShortProtein)
 	}
+}
+
+func TestAminoAcidToShortString(t *testing.T) {
+	input := TranslateToShortString(test2DNA)
+	if input != expectedShortProtein {
+		t.Errorf("Do not match. Input : %s. Expected: %s.", input, expectedShortProtein)
+	}
+}
+
+func TestCodonsToSeq(t *testing.T) {
+	input := CodonsToBases(expected)
+	if CompareSeqsCaseSensitive(input, testSeq) != 0 {
+		t.Errorf("Do not match. Input : %s. Expected: %s.", input, testSeq)
+	}
+}
+
+var gdf2mrna string = "ATGTGTCCTGGGGCACTGTGGGTGGCCCTGCCCCTGCTGTCCCTGCTGGCTGGCTCCCTACAGGGGAAGC" +
+	"CACTGCAGAGCTGGGGACGAGGGTCTGCTGGGGGAAACGCCCACAGCCCACTGGGGGTGCCTGGAGGTGG" +
+	"GCTGCCTGAGCACACCTTCAACCTGAAGATGTTTCTGGAGAACGTGAAGGTGGATTTCCTGCGCAGCCTT" +
+	"AACCTGAGTGGGGTCCCTTCGCAGGACAAAACCAGGGTGGAGCCGCCGCAGTACATGATTGACCTGTACA" +
+	"ACAGGTACACGTCCGATAAGTCGACTACGCCAGCGTCCAACATTGTGCGGAGCTTCAGCATGGAAGATGC" +
+	"CATCTCCATAACTGCCACAGAGGACTTCCCCTTCCAGAAGCACATCTTGCTCTTCAACATCTCCATTCCT" +
+	"AGGCATGAGCAGATCACCAGAGCTGAGCTCCGACTCTATGTCTCCTGTCAAAATCACGTGGACCCCTCTC" +
+	"ATGACCTGAAAGGAAGCGTGGTCATTTATGATGTTCTGGATGGAACAGATGCCTGGGATAGTGCTACAGA" +
+	"GACCAAGACCTTCCTGGTGTCCCAGGACATTCAGGATGAGGGCTGGGAGACCTTGGAAGTGTCCAGCGCC" +
+	"GTGAAGCGCTGGGTCCGGTCCGACTCCACCAAGAGCAAAAATAAGCTGGAAGTGACTGTGGAGAGCCACA" +
+	"GGAAGGGCTGCGACACGCTGGACATCAGTGTCCCCCCAGGTTCCAGAAACCTGCCCTTCTTTGTTGTCTT" +
+	"CTCCAATGACCACAGCAGTGGGACCAAGGAGACCAGGCTGGAGCTGAGGGAGATGATCAGCCATGAACAA" +
+	"GAGAGCGTGCTCAAGAAGCTGTCCAAGGACGGCTCCACAGAGGCAGGTGAGAGCAGTCACGAGGAGGACA" +
+	"CGGATGGCCACGTGGCTGCGGGGTCGACTTTAGCCAGGCGGAAAAGGAGCGCCGGGGCTGGCAGCCACTG" +
+	"TCAAAAGACCTCCCTGCGGGTAAACTTCGAGGACATCGGCTGGGACAGCTGGATCATTGCACCCAAGGAG" +
+	"TATGAAGCCTACGAGTGTAAGGGCGGCTGCTTCTTCCCCTTGGCTGACGATGTGACGCCGACGAAACACG" +
+	"CTATCGTGCAGACCCTGGTGCATCTCAAGTTCCCCACAAAGGTGGGCAAGGCCTGCTGTGTGCCCACCAA" +
+	"ACTGAGCCCCATCTCCGTCCTCTACAAGGATGACATGGGGGTGCCCACCCTCAAGTACCATTACGAGGGC" +
+	"ATGAGCGTGGCAGAGTGTGGGTGCAGGTAG"
+
+var gdf2prot string = "MCPGALWVALPLLSLLAGSLQGKPLQSWGRGSAGGNAHSPLGVPGGGLPEHTFNLKMFLENVKVDFLRSL" +
+	"NLSGVPSQDKTRVEPPQYMIDLYNRYTSDKSTTPASNIVRSFSMEDAISITATEDFPFQKHILLFNISIP" +
+	"RHEQITRAELRLYVSCQNHVDPSHDLKGSVVIYDVLDGTDAWDSATETKTFLVSQDIQDEGWETLEVSSA" +
+	"VKRWVRSDSTKSKNKLEVTVESHRKGCDTLDISVPPGSRNLPFFVVFSNDHSSGTKETRLELREMISHEQ" +
+	"ESVLKKLSKDGSTEAGESSHEEDTDGHVAAGSTLARRKRSAGAGSHCQKTSLRVNFEDIGWDSWIIAPKE" +
+	"YEAYECKGGCFFPLADDVTPTKHAIVQTLVHLKFPTKVGKACCVPTKLSPISVLYKDDMGVPTLKYHYEG" +
+	"MSVAECGCR*"
+
+var gdf2LongProt string = "MetCysProGlyAlaLeuTrpValAlaLeuProLeuLeuSerLeuLeuAlaGlySerLeu" +
+	"GlnGlyLysProLeuGlnSerTrpGlyArgGlySerAlaGlyGlyAsnAlaHisSerPro" +
+	"LeuGlyValProGlyGlyGlyLeuProGluHisThrPheAsnLeuLysMetPheLeuGlu" +
+	"AsnValLysValAspPheLeuArgSerLeuAsnLeuSerGlyValProSerGlnAspLys" +
+	"ThrArgValGluProProGlnTyrMetIleAspLeuTyrAsnArgTyrThrSerAspLys" +
+	"SerThrThrProAlaSerAsnIleValArgSerPheSerMetGluAspAlaIleSerIle" +
+	"ThrAlaThrGluAspPheProPheGlnLysHisIleLeuLeuPheAsnIleSerIlePro" +
+	"ArgHisGluGlnIleThrArgAlaGluLeuArgLeuTyrValSerCysGlnAsnHisVal" +
+	"AspProSerHisAspLeuLysGlySerValValIleTyrAspValLeuAspGlyThrAsp" +
+	"AlaTrpAspSerAlaThrGluThrLysThrPheLeuValSerGlnAspIleGlnAspGlu" +
+	"GlyTrpGluThrLeuGluValSerSerAlaValLysArgTrpValArgSerAspSerThr" +
+	"LysSerLysAsnLysLeuGluValThrValGluSerHisArgLysGlyCysAspThrLeu" +
+	"AspIleSerValProProGlySerArgAsnLeuProPhePheValValPheSerAsnAsp" +
+	"HisSerSerGlyThrLysGluThrArgLeuGluLeuArgGluMetIleSerHisGluGln" +
+	"GluSerValLeuLysLysLeuSerLysAspGlySerThrGluAlaGlyGluSerSerHis" +
+	"GluGluAspThrAspGlyHisValAlaAlaGlySerThrLeuAlaArgArgLysArgSer" +
+	"AlaGlyAlaGlySerHisCysGlnLysThrSerLeuArgValAsnPheGluAspIleGly" +
+	"TrpAspSerTrpIleIleAlaProLysGluTyrGluAlaTyrGluCysLysGlyGlyCys" +
+	"PhePheProLeuAlaAspAspValThrProThrLysHisAlaIleValGlnThrLeuVal" +
+	"HisLeuLysPheProThrLysValGlyLysAlaCysCysValProThrLysLeuSerPro" +
+	"IleSerValLeuTyrLysAspAspMetGlyValProThrLeuLysTyrHisTyrGluGly" +
+	"MetSerValAlaGluCysGlyCysArgTer"
+
+func TestStress(t *testing.T) {
+	seq := StringToBases(gdf2mrna)
+	expectedProt := StringToAminoAcid(gdf2prot, true)
+	actualProt := TranslateSeq(seq)
+	if !equal(actualProt, expectedProt) {
+		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, actualProt)
+	}
+	actualLongProtString := TranslateToString(seq)
+	if actualLongProtString != gdf2LongProt {
+		t.Errorf("stress test failed, expected\n%v, got\n%v", gdf2LongProt, actualLongProtString)
+	}
+	longProt := StringToAminoAcid(gdf2LongProt, false)
+	if !equal(longProt, actualProt) || !equal(longProt, expectedProt) {
+		t.Errorf("stress test failed, expected\n%v, got\n%v", expectedProt, longProt)
+	}
+}
+
+func equal(alpha []AminoAcid, beta []AminoAcid) bool {
+	if len(alpha) != len(beta) {
+		return false
+	}
+	for i := range alpha {
+		if alpha[i] != beta[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// Benchmark Results
+// BenchmarkCodonPtrs-4               58269             20774 ns/op            5280 B/op        432 allocs/op
+// BenchmarkCodonNoPtrs-4             68816             16979 ns/op            1856 B/op          2 allocs/op
+
+func BenchmarkCodonPtrs(b *testing.B) {
+	seq := StringToBases(gdf2mrna)
+	for i := 0; i < b.N; i++ {
+		translateSeqPtr(seq)
+	}
+}
+
+func BenchmarkCodonNoPtrs(b *testing.B) {
+	seq := StringToBases(gdf2mrna)
+	for i := 0; i < b.N; i++ {
+		translateSeqNoPtr(seq)
+	}
+}
+
+func basesToCodonsPtr(b []Base) ([]*Codon, error) {
+	var err error
+	frame := len(b) % 3
+	answer := make([]*Codon, 0, len(b)/3)
+
+	if frame != 0 {
+		err = ErrLenInputSeqNotDivThree
+	}
+	for i := 0; i < len(b)-frame; i += 3 {
+		answer = append(answer, &Codon{b[i], b[i+1], b[i+2]})
+	}
+	return answer, err
+}
+
+func translateSeqPtr(b []Base) ([]AminoAcid, error) {
+	answer := make([]AminoAcid, len(b)/3)
+	codons, err := basesToCodonsPtr(b)
+	for i := range codons {
+		answer[i] = GeneticCode[*codons[i]]
+	}
+	return answer, err
+}
+
+func basesToCodonsNoPtr(b []Base) ([]Codon, error) {
+	var err error
+	frame := len(b) % 3
+	answer := make([]Codon, 0, len(b)/3)
+
+	if frame != 0 {
+		err = ErrLenInputSeqNotDivThree
+	}
+	for i := 0; i < len(b)-frame; i += 3 {
+		answer = append(answer, Codon{b[i], b[i+1], b[i+2]})
+	}
+	return answer, err
+}
+
+func translateSeqNoPtr(b []Base) ([]AminoAcid, error) {
+	answer := make([]AminoAcid, len(b)/3)
+	codons, err := basesToCodonsNoPtr(b)
+	for i := range codons {
+		answer[i] = GeneticCode[codons[i]]
+	}
+	return answer, err
 }
