@@ -29,6 +29,7 @@ func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed
 			if mafRecords[i].Species[k].ELine != nil {
 				if mafRecords[i].Species[k].ELine.Status == 'C' && assembly_del == species_del { //I decided to check for both Status and Src here because they are on the same data level
 
+					//TODO: make this code more efficient by moving this block up to a more general level
 					//get corresponding s species_ins lines
 					if assembly_ins != species_ins { //verify line 0 is indeed species_ins
 						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
@@ -36,16 +37,38 @@ func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed
 					if mafRecords[i].Species[0].SLine != nil { //if corresponding species_ins line is an s line
 
 						//convert maf to bed, continued
-						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
-						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins", Score: int64(mafRecords[i].Score)}
+						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eC", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
+						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eC", Score: int64(mafRecords[i].Score)}
 						bedList_del = append(bedList_del, &current_del) //append to growing bed
 						bedList_ins = append(bedList_ins, &current_ins)
+					}
+
+				//get eI species_del lines
+				} else if mafRecords[i].Species[k].ELine.Status == 'I' && assembly_del == species_del {
+
+					//TODO: make this code more efficient by moving this block up to a more general level
+					//get corresponding s species_ins lines
+					if assembly_ins != species_ins { //verify line 0 is indeed species_ins
+						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
+					}
+					if mafRecords[i].Species[0].SLine != nil { //if corresponding species_ins line is an s line
+
+						//test if species_del eI fragment size < 10% corresponding s fragment size
+						//make sure arithmetic is all on float64
+						var threshold float64 = 0.1
+						if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
+
+							//convert maf to bed, continued
+							current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eI", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
+							current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int64(mafRecords[i].Score)}
+							bedList_del = append(bedList_del, &current_del) //append to growing bed
+							bedList_ins = append(bedList_ins, &current_ins)
+						}
 					}
 				}
 			}
 		}
 	}
-
 	//write out bed files
 	bed.Write(outDel_bed, bedList_del, 5) //bed file has 5 fields
 	bed.Write(outIns_bed, bedList_ins, 5)
