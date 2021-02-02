@@ -12,16 +12,7 @@ import (
 	"strings" //raven added this line for CountSeqIdx
 )
 
-//raven edited this block to specify only 1 sequnce is expected in each fasta file
-func usage() {
-	fmt.Print(
-		"./globalAlignment - chelsea's global alignment\n" +
-			"Usage:\n" +
-			" Align 2 .fasta files, each with only 1 sequence\n" +
-			"options:\n")
-	flag.PrintDefaults()
-}
-
+//raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
 //raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
 //raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
 func CountSeqIdx(inputFile *fileio.EasyReader) int {
@@ -37,71 +28,8 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	return seqIdx
 }
 
-func main() {
-	faOut := flag.String("faOut", "", "name of the MSA output file") //raven added this line
-	flag.Parse()
-	var expectedNum int = 2
-	if len(flag.Args()) != expectedNum {
-		log.Fatalf("error, expecting 2 .fasta files to be able to align, only found %d files...\n", len(flag.Args()))
-	}
-
-	//read in sequences that should be put in as fasta type files.
-	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
-	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
-	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
-	faOne, faDoneOne := fasta.NextFasta(inputFileOne)
-	faTwo, faDoneTwo := fasta.NextFasta(inputFileTwo)
-	//faOne, faDoneOne := fasta.NextFasta(fileio.EasyOpen(flag.Arg(0)))
-	//faTwo, faDoneTwo := fasta.NextFasta(fileio.EasyOpen(flag.Arg(1)))
-
-	//fmt.Printf("%v \n %v \n", faOne, faTwo)
-	if faDoneOne || faDoneTwo {
-		log.Fatalf("error, unable to read .fa files, check for > symbol before each name and that each fasta entry is only one line. Check to make sure there are only four bases or N, globalAlignment is unable to use anything outside A-T-G-C-N.\n")
-	}
-
-	//raven added this block
-	numSeqOne := CountSeqIdx(inputFileOne) //changed input from filename string to inputFile EasyReader
-	numSeqTwo := CountSeqIdx(inputFileTwo) //ditto
-	if numSeqOne > 1 || numSeqTwo > 1 {
-		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n", numSeqOne, numSeqTwo)
-	}
-	//attempt at Dan's len(faOne) suggestion
-	//if len(string(faOne)) != 1 || len(string(faTwo)) != 1 {
-	//log.Fatalf("multiple sequnces detected in .fa files. This program is designed for .fa files with only 1 sequence in them.\n")
-	//}
-
-	//needleman wunsch (global alignment)
-	bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
-	fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
-
-	//visualize
-	visualize := align.View(faOne.Seq, faTwo.Seq, aln)
-	fmt.Println(visualize)
-
-	//raven added this block to put visualized alignment output into MSA Fasta
-	outFileName := *faOut
-	if outFileName != "" { //only write to file if a filename is given in the faOut command line option
-		outFile, err := os.Create(outFileName) //fileio.EasyCreate and other fileio tools should work, but I don't really know how to use them
-		if err != nil {
-			log.Fatalf("Write to file failed on step 1\n")
-		}
-		//defer outFile.Close()
-		visualizeOutput := ">" + faOne.Name + "\n" + strings.Split(visualize, "\n")[0] + "\n" + ">" + faTwo.Name + "\n" + strings.Split(visualize, "\n")[1] + "\n"
-		_, err = outFile.WriteString(visualizeOutput)
-		if err != nil {
-			log.Fatalf("Write to file failed on step 2\n")
-		}
-		outFile.Close() //commented out defer outFile.Close()
-	}
-
-	//graph
-	genomeGraph := cigarToGraph(faOne, faTwo, aln)
-	simpleGraph.PrintGraph(genomeGraph)
-
-}
-
-//faOne target, faTwo query
-//cigar to graph takes two fasta files as an input, performs a global alignment, and produces genome graph
+//raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
+//faONe is target, faTwo is query
 func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
 	answer := simpleGraph.NewGraph()
 	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
@@ -127,4 +55,83 @@ func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *s
 		}
 	}
 	return answer
+}
+
+//raven moved helper functions from main and non-usage functions into this function
+func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyReader, outFileName string) {
+	//make sure files meet the usage requirements of globalAlignment.go
+	faOne, faDoneOne := fasta.NextFasta(inputFileOne)
+	faTwo, faDoneTwo := fasta.NextFasta(inputFileTwo)
+	if faDoneOne || faDoneTwo {
+		log.Fatalf("error, unable to read .fa files, check for > symbol before each name and that each fasta entry is only one line. Check to make sure there are only four bases or N, globalAlignment is unable to use anything outside A-T-G-C-N.\n")
+	}
+	numSeqOne := CountSeqIdx(inputFileOne)
+	numSeqTwo := CountSeqIdx(inputFileTwo)
+	if numSeqOne > 1 || numSeqTwo > 1 {
+		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n", numSeqOne, numSeqTwo)
+	}
+	//attempt at Dan's len(faOne) suggestion
+	//if len(string(faOne)) != 1 || len(string(faTwo)) != 1 {
+	//log.Fatalf("multiple sequnces detected in .fa files. This program is designed for .fa files with only 1 sequence in them.\n")
+	//}
+
+	//needleman wunsch (global alignment)
+	bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
+	fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
+
+	//visualize
+	visualize := align.View(faOne.Seq, faTwo.Seq, aln)
+	fmt.Println(visualize)
+
+	//raven added this block to put visualized alignment output into MSA Fasta
+	if outFileName != "" { //only write to file if a filename is given in the faOut command line option
+		outFile, err := os.Create(outFileName) //fileio.EasyCreate and other fileio tools should work, but I don't really know how to use them
+		if err != nil {
+			log.Fatalf("Write to file failed on step 1\n")
+		}
+		visualizeOutput := ">" + faOne.Name + "\n" + strings.Split(visualize, "\n")[0] + "\n" + ">" + faTwo.Name + "\n" + strings.Split(visualize, "\n")[1] + "\n"
+		_, err = outFile.WriteString(visualizeOutput)
+		if err != nil {
+			log.Fatalf("Write to file failed on step 2\n")
+		}
+		outFile.Close() //commented out defer outFile.Close()
+	}
+
+	//cigar to graph
+	genomeGraph := cigarToGraph(faOne, faTwo, aln)
+	simpleGraph.PrintGraph(genomeGraph)
+}
+
+//raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
+func usage() {
+	fmt.Print(
+		"./globalAlignment - chelsea's global alignment\n" +
+			" Align 2 .fasta files, each with only 1 sequence\n" +
+			"Usage:\n" +
+			"	globalAlignment target.fasta query.fasta\n" +
+			"options:\n" +
+			"	-faOut=fasta MSA output filename\n")
+	flag.PrintDefaults()
+}
+
+func main() {
+	var expectedNum int = 2
+
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	faOut := flag.String("faOut", "", "name of the MSA output file") //raven added this line
+	flag.Parse()
+
+	if len(flag.Args()) != expectedNum {
+		flag.Usage()
+		log.Fatalf("error, expecting 2 .fasta files to be able to align, only found %d files...\n", len(flag.Args()))
+	}
+
+	//read in sequences that should be put in as fasta type files.
+	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
+	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
+	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
+	outFileName := *faOut
+
+	globalAlignment(inputFileOne, inputFileTwo, outFileName)
 }
