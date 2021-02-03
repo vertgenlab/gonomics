@@ -61,7 +61,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 		}
 	}
 	line = strings.TrimSuffix(line, "\n")
-	line = strings.TrimSuffix(line, "\r")//data generated from Windows OS contains \r\n as a two byte new line character. 
+	line = strings.TrimSuffix(line, "\r") //data generated from Windows OS contains \r\n as a two byte new line character.
 	//Here we trim off trailing carriage returns. Lines without carriage returns are unaffected.
 	return line, false
 }
