@@ -61,13 +61,19 @@ func TestGraphRecon(t *testing.T) {
 
 	simpleGraph.PrintGraph(gorillaGraph)
 
-	var nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[0]}, []*simpleGraph.Node{chimpGraph.Nodes[0]}, []*simpleGraph.Node{gorillaGraph.Nodes[0]}}}
-	var nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[1]}}}
-	var nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[2]}, []*simpleGraph.Node{chimpGraph.Nodes[1]}, []*simpleGraph.Node{gorillaGraph.Nodes[1]}}}
+	//var nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[0]}, []*simpleGraph.Node{chimpGraph.Nodes[0]}, []*simpleGraph.Node{gorillaGraph.Nodes[0]}}}
+	//var nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[1]}}}
+	//var nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: [][]*simpleGraph.Node{[]*simpleGraph.Node{humanGraph.Nodes[2]}, []*simpleGraph.Node{chimpGraph.Nodes[1]}, []*simpleGraph.Node{gorillaGraph.Nodes[1]}}}
+
+	var nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[0]}, "chimp": []*simpleGraph.Node{chimpGraph.Nodes[0]}, "gorilla": []*simpleGraph.Node{gorillaGraph.Nodes[0]}}}
+	var nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[1]}}}
+	var nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[2]}, "chimp": []*simpleGraph.Node{chimpGraph.Nodes[1]}, "gorilla": []*simpleGraph.Node{gorillaGraph.Nodes[1]}}}
+	var nodeAlign3 = graphColumn{AlignId: 3, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[3], humanGraph.Nodes[4]}}}
 
 	log.Print(nodeAlign0.AlignId)
 	log.Print(nodeAlign1.AlignId)
 	log.Print(nodeAlign2.AlignId)
+	log.Print(nodeAlign3.AlignId)
 
 	path, prob := PathFinder(humanGraph)
 	log.Print("path")

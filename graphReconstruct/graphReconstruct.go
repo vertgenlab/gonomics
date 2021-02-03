@@ -13,7 +13,7 @@ import (
 
 type graphColumn struct {
 	AlignId    int
-	AlignNodes [][]*simpleGraph.Node
+	AlignNodes map[string][]*simpleGraph.Node
 }
 
 //returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
@@ -260,49 +260,77 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 //}
 
 //call for GraphRecon will be a lot like loopNodes call but instead of calling it on each position it will be called for each graph column
-func GraphRecon(root *expandedTree.ETree, column graphColumn, graph simpleGraph.SimpleGraph) {
-	var rightPresent = false
-	var leftPresent = false
-	var nodeInfo = make(map[string][]*simpleGraph.Node)
-	if root.Right != nil && root.Left != nil {
-		for c := 0; c < len(column.AlignNodes); c++ {
-			for s := 0; s < len(column.AlignNodes[c]); s++ {
-				if column.AlignNodes[c][s].Name == root.Right.Name { //node names must contain the species name
-					rightPresent = true
-					for name, info := range nodeInfo {
-						if name == column.AlignNodes[c][s].Name {
-							info = append(info, column.AlignNodes[c][s])
-							nodeInfo[column.AlignNodes[c][s].Name] = info
-						}
-					}
-				} else if column.AlignNodes[c][s].Name == root.Left.Name {
-					leftPresent = true
-					for name, info := range nodeInfo {
-						if name == column.AlignNodes[c][s].Name {
-							info = append(info, column.AlignNodes[c][s])
-							nodeInfo[column.AlignNodes[c][s].Name] = info
-						}
-					}
+//most likely seq = > (branchLength x Prev) checking all Prev in each node of nodeInfo?
+func GraphRecon(root *expandedTree.ETree, column graphColumn) {
+	//var rightPresent = false
+	//var leftPresent = false
+	//nodeInfo the string is every Seq that exists in this alignColumn and the bool is a dummy, these will all become nodes for this species
+	//making own graph for this species, making all possible nodes with all possible seqs (i.e. make a node for every node that exists in the daughters in this column)
+	//if root.Right != nil && root.Left != nil {
+	//	for c := 0; c < len(column.AlignNodes); c++ {
+	//		for s := 0; s < len(column.AlignNodes[c]); s++ {
+	//			if column.AlignNodes[c][s].Name == root.Right.Name { //node names must contain the species name
+	//				rightPresent = true
+	//				for name, info := range nodeInfo {
+	//					if name == column.AlignNodes[c][s].Name {
+	//						info = append(info, column.AlignNodes[c][s])
+	//						nodeInfo[column.AlignNodes[c][s].Name] = info
+	//					}
+	//				}
+	//			} else if column.AlignNodes[c][s].Name == root.Left.Name {
+	//				leftPresent = true
+	//				for name, info := range nodeInfo {
+	//					if name == column.AlignNodes[c][s].Name {
+	//						info = append(info, column.AlignNodes[c][s])
+	//						nodeInfo[column.AlignNodes[c][s].Name] = info
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//to assign next and prev i can look for a next/prev with a dest that does not exist in my nodeInfo map or in this align column, and make that the next/prev of the new node
+	var nodeInfo = make(map[string]bool)
+	for _, nodes := range column.AlignNodes {
+		for n := range nodes {
+			var newSeq = true
+			var stringSeq string
+			var check bool //DEBUG: to make sure we actually check the sequence, rather than fail to enter the loop
+			for seq, _ := range nodeInfo {
+				check = true
+				if dna.BasesToString(nodes[n].Seq) == seq {
+					newSeq = false
+					stringSeq = dna.BasesToString(nodes[n].Seq)
 				}
+			}
+			if newSeq && check { //TODO: remove check after debug
+				nodeInfo[stringSeq] = true
 			}
 		}
 	}
-	//to assign next and prev i can look for a next/prev with a dest that does not exist in my nodeInfo map or in this align column, and make that the next/prev of the new node
-	//i don't know how to make the new node part of the alignment.
-	//right now I think that it will just add a node with a given seq and it will exist outside the alignment of the rest of the graph
-	if rightPresent && leftPresent {
+
+	//create unique num for each node in a graph?
+	var num uint32
+	for seq, _ := range nodeInfo {
+		num += 1
 		var newNode *simpleGraph.Node
-		var newAlign []*simpleGraph.Node
-		var num uint32
-		var seq []dna.Base
-		newNode = &simpleGraph.Node{Id: num, Name: root.Name, Seq: seq, SeqTwoBit: dnaTwoBit.NewTwoBit(seq), Next: nil, Prev: nil, Info: simpleGraph.Annotation{}} //Id should probably be whatever number node this is for this species somehow
-		simpleGraph.AddNode(&graph, newNode)
-		newAlign = append(newAlign, newNode)
-		column.AlignNodes = append(column.AlignNodes, newAlign) //adds the new node into this graphColumn
+		newNode = &simpleGraph.Node{Id: num, Name: root.Name, Seq: dna.StringToBases(seq), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases(seq)), Next: nil, Prev: nil, Info: simpleGraph.Annotation{}}
+		for name, info := range column.AlignNodes { //add a new node to the existing nodes for this species
+			if name == root.Name {
+				info = append(info, newNode)
+				column.AlignNodes[root.Name] = info
+			} else {
+				column.AlignNodes[root.Name] = []*simpleGraph.Node{newNode}
+			}
+		}
 	}
 }
 
-//seqOfPath takes in a graph and, using PathFinder, returns the seq of the best path through the graph
+//TODO: build a graph from a species' nodes in all columns
+//maybe this function can add to it after each column is processed by graphRecon and then the new nodes being added can have their ID's changed
+//according to the context of the whole graph
+
+//seqOfPath takes in a graph and a path specified by the Node IDs and returns the seq of the path through the graph
 func seqOfPath(g *simpleGraph.SimpleGraph, path []uint32) []dna.Base {
 	var seq []dna.Base
 	for n := 0; n < len(g.Nodes); n++ {
@@ -323,7 +351,6 @@ func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 
 	for n := 0; n < len(g.Nodes); n++ {
 		if g.Nodes[n].Id == 0 {
-			log.Print("calling bestPath")
 			finalProb, finalPath = bestPath(g.Nodes[n], 1, tempPath)
 		}
 	}
