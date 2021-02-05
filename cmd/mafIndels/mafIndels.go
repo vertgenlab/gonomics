@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed string, outDel_bed string) {
+func mafIndels(in_maf string, species_ins string, species_del string, threshold float64, outIns_bed string, outDel_bed string) {
 	//initialize variables
 	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf
 	var bedList_ins []*bed.Bed     //initialize 2 bed files
@@ -25,37 +25,27 @@ func mafIndels(in_maf string, species_ins string, species_del string, outIns_bed
 			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src) //then find corresponding species_ins line, which is target, index 0
 			//TODO: to improve clarity, consider using assembly_k first, and then setting assembly_del:=assembly_k if in fact the k line is a del line
 
+			//verify line 0 is indeed species_ins
+			if assembly_ins != species_ins {
+				log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
+			}
+
 			//get eC species_del lines
 			if mafRecords[i].Species[k].ELine != nil {
-				if mafRecords[i].Species[k].ELine.Status == 'C' && assembly_del == species_del { //I decided to check for both Status and Src here because they are on the same data level
-
-					//TODO: make this code more efficient by moving this block up to a more general level
-					//get corresponding s species_ins lines
-					if assembly_ins != species_ins { //verify line 0 is indeed species_ins
-						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
-					}
-					if mafRecords[i].Species[0].SLine != nil { //if corresponding species_ins line is an s line
+				if mafRecords[i].Species[k].ELine.Status == 'C' && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil{ //I decided to check for both Status and Src here because they are on the same data level, as well as get corresponding s species_ins lines
 
 						//convert maf to bed, continued
 						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eC", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
 						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eC", Score: int64(mafRecords[i].Score)}
 						bedList_del = append(bedList_del, &current_del) //append to growing bed
 						bedList_ins = append(bedList_ins, &current_ins)
-					}
 
 				//get eI species_del lines
-				} else if mafRecords[i].Species[k].ELine.Status == 'I' && assembly_del == species_del {
-
-					//TODO: make this code more efficient by moving this block up to a more general level
-					//get corresponding s species_ins lines
-					if assembly_ins != species_ins { //verify line 0 is indeed species_ins
-						log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
-					}
+				} else if mafRecords[i].Species[k].ELine.Status == 'I' && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil{
 					if mafRecords[i].Species[0].SLine != nil { //if corresponding species_ins line is an s line
 
 						//test if species_del eI fragment size < 10% corresponding s fragment size
 						//make sure arithmetic is all on float64
-						var threshold float64 = 0.1
 						if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
 
 							//convert maf to bed, continued
@@ -91,6 +81,7 @@ func main() {
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	eiThreshold := flag.Float64("eiThreshold",0.1,"fraction of insertion size that marks the maximum acceptable threshold of unaligned fragment in species_del")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -103,6 +94,7 @@ func main() {
 	species_del := flag.Arg(2) //e.g. rheMac10
 	outIns_bed := flag.Arg(3)
 	outDel_bed := flag.Arg(4)
+	threshold := *eiThreshold
 
-	mafIndels(in_maf, species_ins, species_del, outIns_bed, outDel_bed)
+	mafIndels(in_maf, species_ins, species_del, threshold, outIns_bed, outDel_bed)
 }
