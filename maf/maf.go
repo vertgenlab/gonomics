@@ -140,6 +140,8 @@ func parseMafEStatus(s string) rune {
 		return 'M'
 	case "n":
 		return 'n'
+	case "T": //raven added the "T" case because maf lines can now start with e and end with T
+		return 'T'
 	default:
 		log.Fatalf("Error: unexpected status for 'e' line in a Maf: %s\n", s)
 		return 'X'

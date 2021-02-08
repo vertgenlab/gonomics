@@ -195,14 +195,13 @@ func HelperSamplesToString(sample []GenomeSample, i int) string {
 	if sample[i].AlleleOne < 0 {
 		answer = "noData"
 	} else {
-		if i == len(sample)-1 {
-			answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
-		} else {
-			answer = fmt.Sprintf("%d%s%d\t", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
-		}
+		answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 	}
 	if len(sample[i].FormatData) > 0 {
 		answer = answer + strings.Join(sample[i].FormatData, ":")
+	}
+	if i != len(sample)-1 { //add a tab unless it's the last entry
+		answer = answer + "\t"
 	}
 	return answer
 }
