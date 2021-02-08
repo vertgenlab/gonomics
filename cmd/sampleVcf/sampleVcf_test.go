@@ -2,8 +2,8 @@ package main
 
 import (
 	"testing"
-	//"os"
-	//"github.com/vertgenlab/gonomics/common"
+	"os"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
@@ -27,9 +27,9 @@ func TestSampleVcf(t *testing.T) {
 		if vcf.CompareHeader(recHeader, expectedHeader) != 0 {
 			t.Errorf("Error in sampleVcf headers.")
 		}
-		//err := os.Remove("tmp.vcf")
-		//if err != nil {
-		//	common.ExitIfError(err)
-		//}
+		err := os.Remove("tmp.vcf")
+		if err != nil {
+			common.ExitIfError(err)
+		}
 	}
 }
