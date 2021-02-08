@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/common"
-	"math/rand"
 	"flag"
-	"log"
-	"github.com/vertgenlab/gonomics/fileio"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"math/rand"
 )
 
 //sampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
@@ -22,18 +22,18 @@ func sampleVcf(inFile string, outFile string, numVariants int, numSamples int, r
 	}
 
 	//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
-	rand.Shuffle(len(records), func(i, j int) {records[i], records[j] = records[j], records[i]})
+	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 	//DEBUG:fmt.Printf("lenRecords before slice: %v.\n", len(records))
-	records = records[:numVariants]//keep only as many results as specified.
+	records = records[:numVariants] //keep only as many results as specified.
 	//DEBUG: fmt.Printf("lenRecords after slice: %v.\n", len(records))
 
 	if numSamples > 0 {
 		if numSamples > len(records[0].Samples) {
-			log.Fatalf("More samples were requested than were present in the input VCF file.")	
+			log.Fatalf("More samples were requested than were present in the input VCF file.")
 		}
 		var sequentialSlice []int = getSequentialSlice(len(records[0].Samples))
-		rand.Shuffle(len(sequentialSlice), func(i, j int) {sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i]})
-		sequentialSlice = sequentialSlice[:numSamples]//now we have a list of samples to keep from each variant.
+		rand.Shuffle(len(sequentialSlice), func(i, j int) { sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i] })
+		sequentialSlice = sequentialSlice[:numSamples] //now we have a list of samples to keep from each variant.
 
 		var outHeaderSampleList []string = make([]string, 0)
 		for _, i := range sequentialSlice {

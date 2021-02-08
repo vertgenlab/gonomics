@@ -8,10 +8,10 @@ import (
 )
 
 var SampleVcfTests = []struct {
-	inputFile	string
-	expectedOutputFile	string
-	numVariants int
-	numSamples int
+	inputFile          string
+	expectedOutputFile string
+	numVariants        int
+	numSamples         int
 }{
 	{"testdata/babyTest.vcf", "testdata/babyTest_expected.vcf", 3, 2},
 }
