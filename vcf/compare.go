@@ -28,6 +28,23 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	return CompareCoord(alpha, beta) //TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
+//CompareHeader compares two VcfHeader structs for sorting or equality testing.
+func CompareHeader(alpha *VcfHeader, beta *VcfHeader) int {
+	if len(alpha.Text) > len(beta.Text) {
+		return 1
+	} else if len(alpha.Text) < len(beta.Text) {
+		return -1
+	}
+	var compareStorage int
+	for i := 0; i < len(alpha.Text); i++ {
+		compareStorage = strings.Compare(alpha.Text[i], beta.Text[i])
+		if compareStorage != 0 {
+			return compareStorage
+		}
+	}
+	return 0
+}
+
 //CompareGenomeSample compares two GenomeSample structs for sorting or equality testing.
 func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
 	var res int
