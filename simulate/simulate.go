@@ -204,9 +204,9 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						//codonExt will be transferred to a codon to check translation against BLOSUM,
 						//but codon version won't be used further so we can preserve final seq order
 						tempOriCodon := CodonExtToCodon(thisCodon)
-						originalAmAc = dna.TranslateCodon(&tempOriCodon)
+						originalAmAc = dna.TranslateCodon(tempOriCodon)
 						tempNewCodon := CodonExtToCodon(newCodon)
-						newAmAc = dna.TranslateCodon(&tempNewCodon)
+						newAmAc = dna.TranslateCodon(tempNewCodon)
 
 						prob := BLOSUM[originalAmAc][newAmAc]
 						r := rand.Float64()
@@ -380,10 +380,9 @@ func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 //CodonExtToCodon converts a since CodonExt to a pointer to a single dna.Codon
 func CodonExtToCodon(cE CodonExt) dna.Codon {
 	var codon dna.Codon
-	codon.Seq = make([]dna.Base, 3)
 
 	for c := 0; c < 3; c++ {
-		codon.Seq[c] = cE.Seq[c].Base
+		codon[c] = cE.Seq[c].Base
 	}
 	return codon
 }
@@ -394,9 +393,8 @@ func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
 	var codon dna.Codon
 
 	for ext := 0; ext < len(cE); ext++ {
-		codon.Seq = make([]dna.Base, 3)
 		for c := 0; c < 3; c++ {
-			codon.Seq[c] = cE[ext].Seq[c].Base
+			codon[c] = cE[ext].Seq[c].Base
 		}
 		codons = append(codons, codon)
 	}

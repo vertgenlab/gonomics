@@ -185,11 +185,11 @@ func CdnaPosToCodon(g *Gene, cdnaPos int) (dna.Codon, error) {
 
 	switch cdnaPos % 3 {
 	case 0:
-		return dna.Codon{Seq: g.codingSeq.seq[cdnaPos : cdnaPos+3]}, nil
+		return dna.BasesToCodons(g.codingSeq.seq[cdnaPos : cdnaPos+3])[0], nil
 	case 1:
-		return dna.Codon{Seq: g.codingSeq.seq[cdnaPos-1 : cdnaPos+2]}, nil
+		return dna.BasesToCodons(g.codingSeq.seq[cdnaPos-1 : cdnaPos+2])[0], nil
 	case 2:
-		return dna.Codon{Seq: g.codingSeq.seq[cdnaPos-2 : cdnaPos+1]}, nil
+		return dna.BasesToCodons(g.codingSeq.seq[cdnaPos-2 : cdnaPos+1])[0], nil
 	default: // never used
 		return answer, errors.New("problem determining frame")
 	}
