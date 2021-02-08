@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
-	"os"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/vcf"
+	"os"
+	"testing"
 )
 
 var SampleVcfTests = []struct {
