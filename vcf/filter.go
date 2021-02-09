@@ -281,9 +281,8 @@ func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples in
 			i.Samples = outSamples
 		}
 	}
-	return records//header is a pointer and does not need to be returned, it is edited in place
+	return records //header is a pointer and does not need to be returned, it is edited in place
 }
-
 
 //returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]
 func getSequentialSlice(n int) []int {
