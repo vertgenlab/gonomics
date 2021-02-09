@@ -4,7 +4,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	//"log"
+	"log"
+	"math/rand"
 	"strings"
 )
 
@@ -237,6 +238,58 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 				}
 			}
 		}
+	}
+	return answer
+}
+
+//SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
+func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples int) []*Vcf {
+	var sampleList []string = HeaderGetSampleList(header)
+
+	if numVariants > len(records) {
+		log.Fatalf("The number of requested sampled variants is greater than the number of variants in the input file.")
+	}
+
+	//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
+	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
+	//DEBUG:fmt.Printf("lenRecords before slice: %v.\n", len(records))
+	records = records[:numVariants] //keep only as many results as specified.
+	//DEBUG: fmt.Printf("lenRecords after slice: %v.\n", len(records))
+
+	if numSamples > 0 {
+		if numSamples > len(records[0].Samples) {
+			log.Fatalf("More samples were requested than were present in the input VCF file.")
+		}
+		var sequentialSlice []int = getSequentialSlice(len(records[0].Samples))
+		rand.Shuffle(len(sequentialSlice), func(i, j int) { sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i] })
+		sequentialSlice = sequentialSlice[:numSamples] //now we have a list of samples to keep from each variant.
+
+		var outHeaderSampleList []string = make([]string, 0)
+		for _, i := range sequentialSlice {
+			outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
+		}
+
+		HeaderUpdateSampleList(header, outHeaderSampleList)
+
+		var outSamples []GenomeSample
+
+		for _, i := range records {
+			outSamples = make([]GenomeSample, 0, len(sequentialSlice))
+			for _, j := range sequentialSlice {
+				outSamples = append(outSamples, i.Samples[j])
+			}
+			i.Samples = outSamples
+		}
+	}
+	return records//header is a pointer and does not need to be returned, it is edited in place
+}
+
+
+//returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]
+func getSequentialSlice(n int) []int {
+	var answer []int = make([]int, n)
+	for i := 0; i < n; i++ {
+		answer[i] = i
 	}
 	return answer
 }
