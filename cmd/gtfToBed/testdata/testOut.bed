@@ -1,0 +1,7 @@
+chr1	173477335	173488815	transcript	0	+	refGene	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; gene_name "PRDX6";
+chr1	173477335	173477492	exon	0	+	refGene	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "1"; exon_id "NM_004905.1"; gene_name "PRDX6";
+chr1	173477335	173477397	5UTR	0	+	refGene	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "1"; exon_id "NM_004905.1"; gene_name "PRDX6";
+chr1	173477398	173477492	CDS	0	+	refGene	.	+	0	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "1"; exon_id "NM_004905.1"; gene_name "PRDX6";
+chr1	173487735	173488815	exon	0	+	refGene	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "5"; exon_id "NM_004905.5"; gene_name "PRDX6";
+chr1	173487735	173487860	CDS	0	+	refGene	.	+	0	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "5"; exon_id "NM_004905.5"; gene_name "PRDX6";
+chr1	173487864	173488815	3UTR	0	+	refGene	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "5"; exon_id "NM_004905.5"; gene_name "PRDX6";
