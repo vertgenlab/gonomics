@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/bed"
-	"strings"
-	"log"
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+	"strings"
 )
 
 func gtfToBed(fileName string, outFile string) {
@@ -24,7 +24,7 @@ func gtfToBed(fileName string, outFile string) {
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
-		annotationStringSlice = make([]string, 1)//annotation contains all fields except the position information and name, so four fields are not used here.
+		annotationStringSlice = make([]string, 1) //annotation contains all fields except the position information and name, so four fields are not used here.
 		annotationStringSlice[0] = words[1]
 		for i := 5; i < len(words); i++ {
 			annotationStringSlice = append(annotationStringSlice, words[i])

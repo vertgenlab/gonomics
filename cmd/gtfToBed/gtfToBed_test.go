@@ -1,15 +1,15 @@
 package main
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"os"
+	"testing"
 )
 
 var GtfToBedTests = []struct {
-	inFile	string
-	expectedFile	string
+	inFile       string
+	expectedFile string
 }{
 	{"testdata/test.gtf", "testdata/testOut.bed"},
 }
