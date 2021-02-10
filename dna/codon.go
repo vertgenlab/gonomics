@@ -305,7 +305,7 @@ func BasesToCodonsIgnoreRemainder(b []Base) []Codon {
 	if !IsSeqOfACGT(b) {
 		log.Panicf("unrecognized base in sequence: %v, all input bases must be uppercase. N's are not allowed", b)
 	}
-	for i := 0; i < len(b) - frame; i += 3 {
+	for i := 0; i < len(b)-frame; i += 3 {
 		answer = append(answer, Codon{b[i], b[i+1], b[i+2]})
 	}
 	return answer
