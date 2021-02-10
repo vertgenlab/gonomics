@@ -9,12 +9,6 @@ import (
 	"testing"
 )
 
-var GCcontent = 0.42
-var input = []struct {
-	treeFilename string // first input
-}{
-	{"testdata/HCGAtree.txt"},
-}
 var allAlign []graphColumn
 
 var humanNode1 = &simpleGraph.Node{Id: 0, Name: "humanNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
