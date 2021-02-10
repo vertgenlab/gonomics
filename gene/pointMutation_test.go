@@ -17,7 +17,7 @@ func TestPointMutation(t *testing.T) {
 	// Positive posStrand test
 	posGene := GtfToGene(g["test_gene_id"], f)
 
-	answerPos, err = PointMutation(posGene, 6, dna.T)
+	answerPos, err = Substitution(posGene, 6, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -32,7 +32,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerPos, err = PointMutation(posGene, 3, dna.A)
+	answerPos, err = Substitution(posGene, 3, dna.A)
 	if err != nil {
 		t.Error(err)
 	}
@@ -50,7 +50,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerPos, err = PointMutation(posGene, 8, dna.A)
+	answerPos, err = Substitution(posGene, 8, dna.A)
 	if err != nil {
 		t.Error(err)
 	}
@@ -68,7 +68,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerPos, err = PointMutation(posGene, 11, dna.A)
+	answerPos, err = Substitution(posGene, 11, dna.A)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +89,7 @@ func TestPointMutation(t *testing.T) {
 	// Negative posStrand test
 	negGene := GtfToGene(g["test_gene_id_negative"], f)
 
-	answerNeg, err = PointMutation(negGene, 9, dna.A)
+	answerNeg, err = Substitution(negGene, 9, dna.A)
 	if err != nil {
 		t.Error(err)
 	}
@@ -104,7 +104,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerNeg, err = PointMutation(negGene, 12, dna.T)
+	answerNeg, err = Substitution(negGene, 12, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,7 +122,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerNeg, err = PointMutation(negGene, 7, dna.T)
+	answerNeg, err = Substitution(negGene, 7, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -140,7 +140,7 @@ func TestPointMutation(t *testing.T) {
 		t.Error(err)
 	}
 
-	answerNeg, err = PointMutation(negGene, 4, dna.T)
+	answerNeg, err = Substitution(negGene, 4, dna.T)
 	if err != nil {
 		t.Error(err)
 	}
@@ -194,17 +194,17 @@ func TestUndoPointMutation(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 11, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
-	_, _ = PointMutation(answerPos, 9, dna.T)
+	_, _ = Substitution(answerPos, 9, dna.T)
 	Reset(answerPos)
 
 	if ok, _ = equal(&correctPos, answerPos); !ok {
 		t.Error("ERROR: Trouble undoing point mutation")
 	}
 
-	_, _ = PointMutation(answerPos, 9, dna.T)
-	_, _ = PointMutation(answerPos, 2, dna.C)
-	_, _ = PointMutation(answerPos, 4, dna.A)
-	_, _ = PointMutation(answerPos, 9, dna.G)
+	_, _ = Substitution(answerPos, 9, dna.T)
+	_, _ = Substitution(answerPos, 2, dna.C)
+	_, _ = Substitution(answerPos, 4, dna.A)
+	_, _ = Substitution(answerPos, 9, dna.G)
 	Reset(answerPos)
 
 	if ok, _ = equal(&correctPos, answerPos); !ok {
@@ -229,7 +229,7 @@ func TestUndoPointMutation(t *testing.T) {
 	// Negative posStrand test
 	answerNeg := GtfToGene(g["test_gene_id_negative"], f)
 
-	_, _ = PointMutation(answerNeg, 9, dna.G)
+	_, _ = Substitution(answerNeg, 9, dna.G)
 	Reset(answerNeg)
 
 	if ok, diff := equal(&correctNeg, answerNeg); !ok {

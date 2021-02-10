@@ -185,7 +185,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	}
 
 	//TODO EffectPrediction
-	g.protSeq = dna.TranslateSeq(g.codingSeq.seq) // TODO improve efficiency by updating the protein as changes are made
+	g.protSeq = dna.TranslateSeqToTer(g.codingSeq.seq) // TODO improve efficiency by updating the protein as changes are made
 	return answer, err
 }
 

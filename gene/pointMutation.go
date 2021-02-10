@@ -5,15 +5,15 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// PointMutation changes a single nucleotide to the desired base, predicts the effect,
+// Substitution changes a single nucleotide to the desired base, predicts the effect,
 // and updates the Gene struct to reflect the change.
 // The position of the mutation should be given in base-zero genomic coordinates.
-func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, error) {
+func Substitution(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, error) {
 	var answer EffectPrediction
 	answer.StopDist = -1
 	var err error
 
-	err = pointPreRunChecks(g, genomePos, &alt)
+	err = substitutionPreRunChecks(g, genomePos, &alt)
 	if err != nil {
 		return EffectPrediction{}, err
 	}
@@ -24,9 +24,9 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 	cdnaIndexPos := int(g.featureArray[genomeIndexPos])
 
 	if cdnaIndexPos >= 0 { // mutation is coding
-		err = pointCoding(g, cdnaIndexPos, alt, &answer)
+		err = substitutionCoding(g, cdnaIndexPos, alt, &answer)
 	} else { // mutation is noncoding
-		err = pointNonCoding(g, genomePos, &answer)
+		err = substitutionNonCoding(g, genomePos, &answer)
 	}
 
 	if err != nil {
@@ -37,21 +37,22 @@ func PointMutation(g *Gene, genomePos int, alt dna.Base) (EffectPrediction, erro
 	return answer, nil
 }
 
-// checkSplice inputs a cDNA offset value and determines if a variant at this site may affect splicing.
-func checkSplice(CdnaOffset int) MutationType {
-	if numbers.AbsInt(CdnaOffset) <= 2 {
+// checkSplice inputs the distance to the nearest E-I boundary for a given INTRONIC variant
+// and determines if a variant at this site may affect splicing.
+func checkSplice(distToIntronExonBoundary int) MutationType {
+	if numbers.AbsInt(distToIntronExonBoundary) <= 2 {
 		return Splice
 	}
 
-	if numbers.AbsInt(CdnaOffset) <= 10 {
+	if numbers.AbsInt(distToIntronExonBoundary) <= 10 {
 		return FarSplice
 	}
 
 	return Intronic
 }
 
-// pointPreRunChecks performs error checking and appends the diff log prior to making a point mutation.
-func pointPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
+// substitutionPreRunChecks performs error checking and appends the diff log prior to making a point mutation.
+func substitutionPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
 	var log diff
 
 	genomeIndexPos := numbers.AbsInt(genomePos - g.startPos) // abs needed to handle negative posStrand
@@ -63,7 +64,7 @@ func pointPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
 	log.added = make([]dna.Base, 1)
 	log.added[0] = *alt
 
-	if !g.posStrand { // so that diff can be undone by another PointMutation call
+	if !g.posStrand { // so that diff can be undone by another Substitution call
 		dna.ReverseComplement(log.removed)
 	}
 
@@ -95,16 +96,16 @@ func pointPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
 	return nil
 }
 
-// pointNonCoding determines the effects of a non-coding point mutation
-func pointNonCoding(g *Gene, genomePos int, answer *EffectPrediction) error {
+// substitutionNonCoding determines the effects of a non-coding point mutation
+func substitutionNonCoding(g *Gene, genomePos int, answer *EffectPrediction) error {
 	var err error
 	answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos)
 	answer.Consequence = checkSplice(answer.CdnaDist)
 	return err
 }
 
-// pointCoding determines the effects of a coding point mutation
-func pointCoding(g *Gene, cdnaIndexPos int, alt dna.Base, answer *EffectPrediction) error {
+// substitutionCoding determines the effects of a coding point mutation
+func substitutionCoding(g *Gene, cdnaIndexPos int, alt dna.Base, answer *EffectPrediction) error {
 	answer.CdnaPos = cdnaIndexPos
 	answer.AaPos = cdnaIndexPos / 3
 	codon, err := CdnaPosToCodon(g, cdnaIndexPos)
