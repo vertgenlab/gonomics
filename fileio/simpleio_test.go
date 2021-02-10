@@ -83,3 +83,17 @@ func ezReaderTest(filename string) []string {
 	}
 	return answer
 }
+
+func TestStringToIntSlice(t *testing.T) {
+	data := "0,1,2,3,4,5,6,7,8,9,"
+	expected := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	answer := StringToIntSlice(data)
+	if len(answer) != 10 {
+		t.Errorf("problem converting string to int slice")
+	}
+	for i := range answer {
+		if answer[i] != expected[i] {
+			t.Errorf("problem converting string to int slice")
+		}
+	}
+}

@@ -129,16 +129,16 @@ func (reader *ByteReader) Close() {
 	}
 }
 
-// StringToIntSlice will process a column data separated by commas, convert the slice into a slice of type int.
+// StringToIntSlice will process a row of data separated by commas, convert the slice into a slice of type int.
 // PSL and genePred formats have a trailing comma we need to account for and the check at the beginning will adjust
 // the length of the working slice.
-func StringToIntSlice(column string) []int {
-	work := strings.Split(column, ",")
+func StringToIntSlice(line string) []int {
+	work := strings.Split(line, ",")
 	var sliceSize int = len(work)
-	if column[len(column)-1] == ',' {
+	if line[len(line)-1] == ',' {
 		sliceSize--
 	}
-	var answer []int = make([]int, len(work))
+	var answer []int = make([]int, sliceSize)
 	var err error
 	for i := 0; i < sliceSize; i++ {
 		answer[i], err = strconv.Atoi(work[i])
