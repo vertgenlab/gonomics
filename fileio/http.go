@@ -25,9 +25,11 @@ func EasyHttp(url string) *EasyReader {
 }
 
 // CatUrl will process a url link and print it out to stdout.
-func CatUrl(url string) {
+func CatUrl(url string) string {
+	var answer string
 	reader := EasyOpen(url)
 	for i, done := EasyNextLine(reader); !done; i, done = EasyNextLine(reader) {
-		fmt.Printf("%s\n", i)
+		answer += fmt.Sprintf("%s\n", i)
 	}
+	return answer
 }

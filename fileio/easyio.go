@@ -86,6 +86,15 @@ func (er *EasyReader) Close() {
 	}
 }
 
+// Read retrieves n bytes from the receiving EasyReader.
+func (er *EasyReader) Read(p []byte) (n int, err error) {
+	if er.internalGzip != nil {
+		return er.internalGzip.Read(p)
+	} else {
+		return er.BuffReader.Read(p)
+	}
+}
+
 // Close the receiving EasyWriter.
 func (ew *EasyWriter) Close() {
 	if ew.internalGzip != nil {

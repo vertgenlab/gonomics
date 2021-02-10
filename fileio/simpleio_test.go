@@ -97,3 +97,12 @@ func TestStringToIntSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestIntSliceToString(t *testing.T) {
+	expected := "0,1,2,3,4,5,6,7,8,9,"
+	data := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	answer := IntSliceToString(data)
+	if answer != expected {
+		t.Errorf("problem converting int slice to string")
+	}
+}

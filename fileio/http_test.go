@@ -1,6 +1,7 @@
 package fileio
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -32,5 +33,15 @@ func TestHttpReader(t *testing.T) {
 			}
 		}
 
+	}
+}
+
+func TestCatUrl(t *testing.T) {
+	answer := CatUrl("https://raw.githubusercontent.com/vertgenlab/gonomics/main/README.md")
+	var expected bytes.Buffer
+	localFile := EasyOpen("../README.md")
+	expected.ReadFrom(localFile)
+	if answer != expected.String() {
+		t.Errorf("problem with CatUrl")
 	}
 }
