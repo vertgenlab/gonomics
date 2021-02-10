@@ -3,6 +3,7 @@ package fileio
 import (
 	"bufio"
 	"compress/gzip"
+	"errors"
 	"os"
 	"strings"
 )
@@ -77,13 +78,14 @@ func EasyRemove(filename string) {
 }
 
 // Close the receiving EasyReader.
-func (er *EasyReader) Close() {
+func (er *EasyReader) Close() error {
 	if er.internalGzip != nil {
-		panicOnErr(er.internalGzip.Close())
+		return er.internalGzip.Close()
 	}
 	if er.File != nil {
-		panicOnErr(er.File.Close())
+		return er.File.Close()
 	}
+	return errors.New("no file found")
 }
 
 // Read retrieves n bytes from the receiving EasyReader.
