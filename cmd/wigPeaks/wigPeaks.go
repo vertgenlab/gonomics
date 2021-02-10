@@ -16,7 +16,7 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) {//threshold is 
   var answer []*bed.Bed = make([]*bed.Bed,0) //to store list of peaks as slice of beds, need legnth argument start iwh 0
   var current bed.Bed //to store the current peak as a bed entry
 
-  for _,v1 := range records { //in range for loop, i is index (0,1,2..) which we don't use in this instance, v is value (content of slice). Record is slice of wig struct, each iteration is slice of wig struct, which is often organized by chromosomes (or part of chromosome), and each wig struct will produce independent peaks
+  for _,v1 := range records { //in range for loop, i is index (0,1,2..) which we don't use in this instance, v is value (content of slice). Record is slice of wig struct, each iteration is slice/object of wig struct, which is often organized by chromosomes (or part of chromosome), and each wig struct will produce independent peaks. The v1 iteration has chr=chrom3,step=100, and a list of WigValues where there are positions+values, values like 11 22 100 etc. 
     for _,v2 := range v1.Values { //each v1 is a wig struct, whose Values is a []*WigValue which contains many Position-Value pairs. Each i2 is index which we don't use, and each v2 is a slice of WigValue, which contains .Position and .Value
 
       if v2.Value >= threshold { //either (from outside of a peak) start a new peak or inside of a peak
