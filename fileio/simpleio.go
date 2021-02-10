@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"io"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -15,10 +15,18 @@ const (
 	defaultBufSize = 4096
 )
 
-// SimpleReader implements the io.Reader interface by providing
+// ByteReader implements the io.Reader interface by providing
 // the Read(b []byte) method. The struct contains an embedded *bufio.Reader
-// and a pointer to os.File for closeure when reading is complete.
-type SimpleReader struct {
+// and a pointer to os.File for closure when reading is complete.
+// The primary advantage of ByteReader over EasyReader is that data
+// is read into a shared bytes.Buffer instead of allocating memory for a
+// string as is done with EasyReader.
+// ByteReader can be be used to efficiently parse files on the byte level
+// which may be significantly faster and require less memory than using
+// strings.Split on a string derived from EasyReader.
+// The drawback is that ByteReader is not as easy to use as EasyReader
+// and should generally be reserved for performance intensive tasks.
+type ByteReader struct {
 	*bufio.Reader
 	close  func() error
 	line   []byte
@@ -27,16 +35,16 @@ type SimpleReader struct {
 
 // Read reads data into p and is a method required to implement the io.Reader interface.
 // It returns the number of bytes read into p.
-func (reader *SimpleReader) Read(b []byte) (n int, err error) {
+func (reader *ByteReader) Read(b []byte) (n int, err error) {
 	return reader.Read(b)
 }
 
 // NewSimpleReader will process a given file and performs error handling if an error occurs.
-// SimpleReader will prcoess gzipped files accordinging by performing a check on the suffix
+// ByteReader will process gzipped files accordingly by performing a check on the suffix
 // of the provided file.
-func NewSimpleReader(filename string) *SimpleReader {
+func NewSimpleReader(filename string) *ByteReader {
 	file := MustOpen(filename)
-	var answer SimpleReader = SimpleReader{
+	var answer ByteReader = ByteReader{
 		//line:   make([]byte, defaultBufSize*2),
 		close:  file.Close,
 		Buffer: &bytes.Buffer{},
@@ -44,7 +52,7 @@ func NewSimpleReader(filename string) *SimpleReader {
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
 		gzipReader, err := gzip.NewReader(file)
-		common.ExitIfError(err)
+		panicOnErr(err)
 		answer.Reader = bufio.NewReader(gzipReader)
 	default:
 		answer.Reader = bufio.NewReader(file)
@@ -55,7 +63,7 @@ func NewSimpleReader(filename string) *SimpleReader {
 // ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
 // the function will read one line at a time, and return bool to continue reading. Important to note the buffer return points to
 // the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
-func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
+func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	var err error
 	reader.line, err = reader.ReadSlice('\n')
 	reader.Buffer.Reset()
@@ -63,7 +71,7 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 		if reader.line[len(reader.line)-1] == '\n' {
 			return BytesToBuffer(reader), false
 		} else {
-			log.Fatalf("Error: end of line did not end with an end of line character...\n")
+			log.Panicf("Error: end of line did not end with an end of line character...\n")
 		}
 	} else {
 		if err == bufio.ErrBufferFull {
@@ -79,20 +87,20 @@ func ReadLine(reader *SimpleReader) (*bytes.Buffer, bool) {
 // readMore is a private helper function to deal with very long lines to
 // avoid alocating too much memory upfront and only resize the size of the buffer
 // only when necessary.
-func readMore(reader *SimpleReader) []byte {
+func readMore(reader *ByteReader) []byte {
 	_, err := reader.Buffer.Write(reader.line)
-	common.ExitIfError(err)
+	panicOnErr(err)
 	reader.line, err = reader.ReadSlice('\n')
 	if err == nil {
 		return reader.line
 	}
 	if err == bufio.ErrBufferFull {
 		_, err = reader.Buffer.Write(reader.line)
-		common.ExitIfError(err)
+		panicOnErr(err)
 		// recursive call to read next bytes until reaching end of line character
 		return readMore(reader)
 	}
-	common.ExitIfError(err)
+	panicOnErr(err)
 	return reader.line
 }
 
@@ -101,23 +109,23 @@ func CatchErrThrowEOF(err error) {
 	if err == io.EOF {
 		return
 	} else {
-		common.ExitIfError(err)
+		panicOnErr(err)
 	}
 }
 
 // BytesToBuffer will parse []byte and return a pointer to the same underlying bytes.Buffer
-func BytesToBuffer(reader *SimpleReader) *bytes.Buffer {
+func BytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	_, err := reader.Buffer.Write(reader.line[:len(reader.line)-1])
-	common.ExitIfError(err)
+	panicOnErr(err)
 	return reader.Buffer
 }
 
 // Close closes the File, rendering it unusable for I/O. On files that support SetDeadline,
 // any pending I/O operations will be canceled and return immediately with an error.
 // Close will return an error if it has already been called.
-func (reader *SimpleReader) Close() {
+func (reader *ByteReader) Close() {
 	if reader != nil {
-		common.ExitIfError(reader.close())
+		panicOnErr(reader.close())
 	}
 }
 
@@ -131,8 +139,10 @@ func StringToIntSlice(column string) []int {
 		sliceSize--
 	}
 	var answer []int = make([]int, len(work))
+	var err error
 	for i := 0; i < sliceSize; i++ {
-		answer[i] = common.StringToInt(work[i])
+		answer[i], err = strconv.Atoi(work[i])
+		panicOnErr(err)
 	}
 	return answer
 }

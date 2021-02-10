@@ -33,9 +33,9 @@ type Psl struct {
 	TList       []int
 }
 
-// PslReader is a struct that contains a SimpleReader with an embedded bufioReader and a 2-D byte slice to reduce memory allocation when reading each line.
+// PslReader is a struct that contains a ByteReader with an embedded bufioReader and a 2-D byte slice to reduce memory allocation when reading each line.
 type PslReader struct {
-	Reader  *fileio.SimpleReader
+	Reader  *fileio.ByteReader
 	curr    Psl
 	columns []string
 	done    bool
