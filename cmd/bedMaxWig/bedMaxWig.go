@@ -10,34 +10,21 @@ import (
 	"log"
 )
 
-func bedMaxWig(infile string, database string, chromsizeFile string, outfile string, windowSize int) {
+func bedMaxWig(infile string, database string, chromsizeFile string, outfile string) {
 	var records []*bed.Bed = bed.Read(infile)
 	var data []*wig.Wig = wig.Read(database)
 	var sizes []*chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
 	var outlist []*bed.Bed
 	var currentBed *bed.Bed = records[0]
 	var chromSlice []float64
-	var currentMax float64
-	var currentStart, recordLength int
-	var i, m int
+	var i int
 
 	for i = 0; i < len(sizes); i++ {
 		chromSlice = WigChromToSlice(data, sizes[i].Size, sizes[i].Name)
 		for k := 0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
-				recordLength = int(records[k].ChromEnd - records[k].ChromStart)
-				if recordLength <= windowSize {
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", sliceRangeAverage(chromSlice, int(records[k].ChromStart), int(records[k].ChromEnd))))
-				} else {
-					currentMax = 0
-					for m = 0; m < (recordLength - windowSize + 1); m++ {
-						currentStart = int(records[k].ChromStart) + m
-						currentMax = numbers.MaxFloat64(currentMax, sliceRangeAverage(chromSlice, currentStart, currentStart+windowSize))
-					}
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", currentMax))
-
-				}
+				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
 				outlist = append(outlist, currentBed)
 			}
 		}
@@ -69,6 +56,14 @@ func sliceRangeAverage(w []float64, start int, end int) float64 {
 	return (sum / float64(length))
 }
 
+func bedRangeMax(w []float64, start int64, end int64) float64 {
+	var max float64
+	for i := start; i < end; i++ {
+		max = numbers.MaxFloat64(max, w[i])
+	}
+	return max
+}
+
 func usage() {
 	fmt.Print(
 		"bedMaxWig - Returns annotated bed with max wig score in bed entry range.\n" +
@@ -80,7 +75,6 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
-	var windowSize *int = flag.Int("windowSize", 200, "Specify the window size")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -96,5 +90,5 @@ func main() {
 	chromsize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	bedMaxWig(infile, database, chromsize, outfile, *windowSize)
+	bedMaxWig(infile, database, chromsize, outfile)
 }

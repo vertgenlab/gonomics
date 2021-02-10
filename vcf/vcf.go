@@ -44,6 +44,20 @@ type VcfHeader struct {
 	Text []string
 }
 
+//Read with header reads VCF structs to a slice and returns the header as a second return.
+func ReadWithHeader(filename string) ([]*Vcf, *VcfHeader) {
+	var answer []*Vcf
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	header := ReadHeader(file)
+	var curr *Vcf
+	var done bool
+	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+		answer = append(answer, curr)
+	}
+	return answer, header
+}
+
 //Read parses a slice of VCF structs from an input filename. Does not store or return the header.
 func Read(filename string) []*Vcf {
 	var answer []*Vcf
