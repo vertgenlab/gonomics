@@ -44,7 +44,7 @@ type PslReader struct {
 // NewPslReader will open a given text file and return a pointer to a PslReader struct.
 func NewPslReader(filename string) *PslReader {
 	return &PslReader{
-		Reader: fileio.NewSimpleReader(filename),
+		Reader: fileio.NewByteReader(filename),
 		curr:   Psl{},
 	}
 }

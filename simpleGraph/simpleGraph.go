@@ -45,7 +45,7 @@ type Annotation struct {
 
 // Read will process a simple graph formated text file and parse the data into graph fields
 func Read(filename string) *SimpleGraph {
-	simpleReader := fileio.NewSimpleReader(filename)
+	simpleReader := fileio.NewByteReader(filename)
 	genome := NewGraph()
 	var currNode *Node
 	var edges map[string]*Node = make(map[string]*Node)

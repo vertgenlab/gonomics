@@ -47,7 +47,7 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 }
 
 func ReadPairBigToChan(fileOne string, fileTwo string, answer chan<- PairedEndBig) {
-	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
+	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
 	for fq, done := ReadFqBigPair(readOne, readTwo); !done; fq, done = ReadFqBigPair(readOne, readTwo) {
 		answer <- *fq
 	}

@@ -39,10 +39,10 @@ func (reader *ByteReader) Read(b []byte) (n int, err error) {
 	return reader.Read(b)
 }
 
-// NewSimpleReader will process a given file and performs error handling if an error occurs.
+// NewByteReader will process a given file and performs error handling if an error occurs.
 // ByteReader will process gzipped files accordingly by performing a check on the suffix
 // of the provided file.
-func NewSimpleReader(filename string) *ByteReader {
+func NewByteReader(filename string) *ByteReader {
 	file := MustOpen(filename)
 	var answer ByteReader = ByteReader{
 		//line:   make([]byte, defaultBufSize*2),

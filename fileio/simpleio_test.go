@@ -6,7 +6,7 @@ import (
 
 func TestSimpleReader(t *testing.T) {
 	answer := ezReaderTest("testdata/big.fa.gz")
-	reader := NewSimpleReader("testdata/big.fa.gz")
+	reader := NewByteReader("testdata/big.fa.gz")
 	var i int = 0
 	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
 		if line.String() != answer[i] {
@@ -18,7 +18,7 @@ func TestSimpleReader(t *testing.T) {
 
 func TestLineExceedsDefaultBufferSize(t *testing.T) {
 	answer := ezReaderTest("testdata/lineExceedsBufferSize.txt")
-	reader := NewSimpleReader("testdata/lineExceedsBufferSize.txt")
+	reader := NewByteReader("testdata/lineExceedsBufferSize.txt")
 	var i int = 0
 	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
 		if line.String() == answer[i] {
@@ -33,7 +33,7 @@ func BenchmarkSimpleReader(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		reader := NewSimpleReader("testdata/big.fa")
+		reader := NewByteReader("testdata/big.fa")
 		for _, done := ReadLine(reader); !done; _, done = ReadLine(reader) {
 			//Nothing to assign, testing pure reading of the file
 		}
@@ -44,7 +44,7 @@ func BenchmarkSimpleReaderGz(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		reader := NewSimpleReader("testdata/big.fa.gz")
+		reader := NewByteReader("testdata/big.fa.gz")
 		for _, done := ReadLine(reader); !done; _, done = ReadLine(reader) {
 			//Nothing to assign, testing pure reading of the file
 		}
