@@ -9,41 +9,43 @@ import (
 	"testing"
 )
 
-var allAlign []graphColumn
+var (
+	allAlign []graphColumn
 
-var humanNode1 = &simpleGraph.Node{Id: 0, Name: "humanNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-var humanNode2 = &simpleGraph.Node{Id: 1, Name: "humanNode2", Seq: dna.StringToBases("AAA"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("AAA")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-var humanNode3 = &simpleGraph.Node{Id: 2, Name: "humanNode3", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-var humanNode4 = &simpleGraph.Node{Id: 3, Name: "humanNode4", Seq: dna.StringToBases("CCC"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("CCC")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-var humanNode5 = &simpleGraph.Node{Id: 4, Name: "humanNode5", Seq: dna.StringToBases("GGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("GGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	humanNode1 = &simpleGraph.Node{Id: 0, Name: "humanNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	humanNode2 = &simpleGraph.Node{Id: 1, Name: "humanNode2", Seq: dna.StringToBases("AAA"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("AAA")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	humanNode3 = &simpleGraph.Node{Id: 2, Name: "humanNode3", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	humanNode4 = &simpleGraph.Node{Id: 3, Name: "humanNode4", Seq: dna.StringToBases("CCC"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("CCC")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	humanNode5 = &simpleGraph.Node{Id: 4, Name: "humanNode5", Seq: dna.StringToBases("GGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("GGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
-var humanEdge1 = &simpleGraph.Edge{humanNode2, 0.25}
-var humanEdge2 = &simpleGraph.Edge{humanNode3, 0.75}
-var humanEdge3 = &simpleGraph.Edge{humanNode3, 1.00}
-var humanEdge4 = &simpleGraph.Edge{humanNode4, 0.25}
-var humanEdge5 = &simpleGraph.Edge{humanNode5, 0.75}
-var humanEdge6 = &simpleGraph.Edge{humanNode5, 1.00}
+	humanEdge1 = &simpleGraph.Edge{humanNode2, 0.25}
+	humanEdge2 = &simpleGraph.Edge{humanNode3, 0.75}
+	humanEdge3 = &simpleGraph.Edge{humanNode3, 1.00}
+	humanEdge4 = &simpleGraph.Edge{humanNode4, 0.25}
+	humanEdge5 = &simpleGraph.Edge{humanNode5, 0.75}
+	humanEdge6 = &simpleGraph.Edge{humanNode5, 1.00}
 
-var humanGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{humanNode1, humanNode2, humanNode3, humanNode4, humanNode5}}
+	humanGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{humanNode1, humanNode2, humanNode3, humanNode4, humanNode5}}
 
-var chimpNode1 = &simpleGraph.Node{Id: 0, Name: "chimpNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-var chimpNode2 = &simpleGraph.Node{Id: 1, Name: "chimpNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	chimpNode1 = &simpleGraph.Node{Id: 0, Name: "chimpNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	chimpNode2 = &simpleGraph.Node{Id: 1, Name: "chimpNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
-var chimpEdge1 = &simpleGraph.Edge{chimpNode2, 1.00}
+	chimpEdge1 = &simpleGraph.Edge{chimpNode2, 1.00}
 
-var chimpGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{chimpNode1, chimpNode2}}
+	chimpGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{chimpNode1, chimpNode2}}
 
-var gorillaNode1 = &simpleGraph.Node{Id: 0, Name: "gorillaNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
-var gorillaNode2 = &simpleGraph.Node{Id: 1, Name: "gorillaNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	gorillaNode1 = &simpleGraph.Node{Id: 0, Name: "gorillaNode1", Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
+	gorillaNode2 = &simpleGraph.Node{Id: 1, Name: "gorillaNode2", Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil, Info: simpleGraph.Annotation{}}
 
-var gorillaEdge1 = &simpleGraph.Edge{Dest: gorillaNode2, Prob: 1.00}
+	gorillaEdge1 = &simpleGraph.Edge{Dest: gorillaNode2, Prob: 1.00}
 
-var gorillaGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{gorillaNode1, gorillaNode2}}
+	gorillaGraph = &simpleGraph.SimpleGraph{Nodes: []*simpleGraph.Node{gorillaNode1, gorillaNode2}}
 
-var nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[0]}, "chimp": []*simpleGraph.Node{chimpGraph.Nodes[0]}, "gorilla": []*simpleGraph.Node{gorillaGraph.Nodes[0]}}}
-var nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[1]}}}
-var nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[2]}, "chimp": []*simpleGraph.Node{chimpGraph.Nodes[1]}, "gorilla": []*simpleGraph.Node{gorillaGraph.Nodes[1]}}}
-var nodeAlign3 = graphColumn{AlignId: 3, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[3], humanGraph.Nodes[4]}}}
+	nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[0]}, "chimp": []*simpleGraph.Node{chimpGraph.Nodes[0]}, "gorilla": []*simpleGraph.Node{gorillaGraph.Nodes[0]}}}
+	nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[1]}}}
+	nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[2]}, "chimp": []*simpleGraph.Node{chimpGraph.Nodes[1]}, "gorilla": []*simpleGraph.Node{gorillaGraph.Nodes[1]}}}
+	nodeAlign3 = graphColumn{AlignId: 3, AlignNodes: map[string][]*simpleGraph.Node{"human": []*simpleGraph.Node{humanGraph.Nodes[3], humanGraph.Nodes[4]}}}
+)
 
 func TestGraphColumn(t *testing.T) {
 	allAlign = append(allAlign, nodeAlign0)
@@ -91,8 +93,8 @@ func TestBuildNodes(t *testing.T) {
 	var id uint32
 	tree, _ := expandedTree.ReadNewick("testdata/HCGAtree.txt")
 	tNodes := expandedTree.GetTree(tree)
-	for t := 0; t < len(tNodes); t++ {
-		var speciesGraph *simpleGraph.SimpleGraph
+	for t := 0; t < len(tNodes); t++ { //i might have to move this within the allAlign loop
+		speciesGraph := simpleGraph.NewGraph()
 		for i := 0; i < len(allAlign); i++ {
 			log.Print(id)
 			id = BuildNodes(tNodes[t], allAlign[i], id)
@@ -103,14 +105,7 @@ func TestBuildNodes(t *testing.T) {
 					log.Print("second nested")
 					if nodes[n].Name == tNodes[t].Name {
 						log.Print("found match")
-						if len(speciesGraph.Nodes) < 1 {
-							log.Print("length if")
-							speciesGraph.Nodes = make([]*simpleGraph.Node, 1)
-							speciesGraph.Nodes = append(speciesGraph.Nodes, nodes[n])
-						} else {
-							log.Print("length else")
-							speciesGraph.Nodes = append(speciesGraph.Nodes, nodes[n])
-						}
+						speciesGraph.Nodes = append(speciesGraph.Nodes, nodes[n])
 					}
 				}
 			}

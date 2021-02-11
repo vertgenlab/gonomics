@@ -3,8 +3,6 @@ package graphReconstruct
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
-
-	//"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/simpleGraph"
 )
