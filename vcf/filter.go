@@ -244,7 +244,10 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 
 //SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
 func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples int) []*Vcf {
-	var sampleList []string = HeaderGetSampleList(header)
+	var sampleList []string
+	if len(header.Text) > 0 {
+		sampleList = HeaderGetSampleList(header)
+	}
 
 	if numVariants > len(records) {
 		log.Fatalf("The number of requested sampled variants is greater than the number of variants in the input file.")
@@ -264,12 +267,14 @@ func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples in
 		rand.Shuffle(len(sequentialSlice), func(i, j int) { sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i] })
 		sequentialSlice = sequentialSlice[:numSamples] //now we have a list of samples to keep from each variant.
 
-		var outHeaderSampleList []string = make([]string, 0)
-		for _, i := range sequentialSlice {
-			outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
-		}
+		if len(header.Text) > 0 {
+			var outHeaderSampleList []string = make([]string, 0)
+			for _, i := range sequentialSlice {
+				outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
+			}
 
-		HeaderUpdateSampleList(header, outHeaderSampleList)
+			HeaderUpdateSampleList(header, outHeaderSampleList)
+		}
 
 		var outSamples []GenomeSample
 
