@@ -301,14 +301,7 @@ func BasesToCodons(b []Base) []Codon {
 // Any bases remaining after all 3-base codons have been assembled will be ignored.
 func BasesToCodonsIgnoreRemainder(b []Base) []Codon {
 	frame := len(b) % 3
-	answer := make([]Codon, 0, len(b)/3)
-	if !IsSeqOfACGT(b) {
-		log.Panicf("unrecognized base in sequence: %v, all input bases must be uppercase. N's are not allowed", b)
-	}
-	for i := 0; i < len(b)-frame; i += 3 {
-		answer = append(answer, Codon{b[i], b[i+1], b[i+2]})
-	}
-	return answer
+	return BasesToCodons(b[:len(b)-frame])
 }
 
 // CodonsToBases converts a slice of Codons into a slice of DNA bases.
@@ -366,7 +359,7 @@ func TranslateSeqToTer(b []Base) []AminoAcid {
 	for i := range codons {
 		answer = append(answer, TranslateCodon(codons[i]))
 		if answer[i] == Stop {
-			break
+			return answer
 		}
 	}
 	return answer

@@ -41,7 +41,7 @@ func TestDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 6, seq: dna.StringToBases("ATAA")},
 	}
 
-	_, err = Deletion(gene, 3, 12)
+	_, err = Deletion(gene, 4, 12)
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
@@ -68,7 +68,7 @@ func TestDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 8, seq: dna.StringToBases("CCGTAA")},
 	}
 
-	_, err = Deletion(gene, 1, 5)
+	_, err = Deletion(gene, 2, 5)
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
@@ -95,7 +95,7 @@ func TestDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 11, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
-	_, err = Deletion(gene, 9, 11)
+	_, err = Deletion(gene, 10, 11)
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
@@ -121,7 +121,7 @@ func TestDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 0, end: 9, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
-	_, err = Deletion(gene, -1, 2)
+	_, err = Deletion(gene, 0, 2)
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
@@ -148,7 +148,7 @@ func TestDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 11, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
-	_, err = Deletion(gene, 13, 16)
+	_, err = Deletion(gene, 14, 16)
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
@@ -188,7 +188,7 @@ func TestDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 6, seq: dna.StringToBases("ATAA")},
 	}
 
-	_, err = Deletion(negGene, 3, 12)
+	_, err = Deletion(negGene, 4, 12)
 	if err != nil {
 		if err != ErrNoStopFound {
 			t.Error(err)
@@ -234,7 +234,7 @@ func TestUndoDeletion(t *testing.T) {
 		codingSeq:    subSeq{start: 2, end: 11, seq: dna.StringToBases("ATGCCGTAA")},
 	}
 
-	_, _ = Deletion(answerPos, 9, 13)
+	_, _ = Deletion(answerPos, 10, 13)
 	Reset(answerPos)
 
 	if dna.CompareSeqsIgnoreCase(correctPos.genomeSeq, answerPos.genomeSeq) != 0 ||
@@ -248,9 +248,9 @@ func TestUndoDeletion(t *testing.T) {
 		}
 	}
 
-	_, _ = Deletion(answerPos, 9, 13)
-	_, _ = Deletion(answerPos, 2, 5)
-	_, _ = Deletion(answerPos, 4, 6)
+	_, _ = Deletion(answerPos, 10, 13)
+	_, _ = Deletion(answerPos, 3, 5)
+	_, _ = Deletion(answerPos, 5, 6)
 
 	Reset(answerPos)
 
