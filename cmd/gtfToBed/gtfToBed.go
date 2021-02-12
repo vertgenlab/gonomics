@@ -18,18 +18,17 @@ func gtfToBed(fileName string, outFile string) {
 	defer out.Close()
 
 	var line string
-	var annotationStringSlice []string
+	var nameString string
 	var currBed bed.Bed
 	var doneReading bool = false
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
-		annotationStringSlice = make([]string, 1) //annotation contains all fields except the position information and name, so four fields are not used here.
-		annotationStringSlice[0] = words[1]
+		nameString = words[1] + ":" + words[2]
 		for i := 5; i < len(words); i++ {
-			annotationStringSlice = append(annotationStringSlice, words[i])
+			nameString = nameString + ":" + words[i]
 		}
-		currBed = bed.Bed{Chrom: words[0], ChromStart: common.StringToInt64(words[3]), ChromEnd: common.StringToInt64(words[4]), Name: words[2], Score: 0, Strand: true, FieldsInitialized: 7, Annotation: annotationStringSlice}
+		currBed = bed.Bed{Chrom: words[0], ChromStart: common.StringToInt64(words[3]), ChromEnd: common.StringToInt64(words[4]), Name: nameString, Score: 0, Strand: true, FieldsInitialized: 6}
 		bed.WriteBed(out.File, &currBed, currBed.FieldsInitialized)
 	}
 }
