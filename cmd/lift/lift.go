@@ -44,6 +44,13 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 		records = fasta.Read(faFile)
 	}
 
+	if vcf.IsVcfFile(inFile) {
+		tmpOpen := fileio.EasyOpen(inFile)
+		header := vcf.ReadHeader(tmpOpen)
+		vcf.NewWriteHeader(out, header)
+		tmpOpen.Close()
+	}
+
 	//second task, read in intervals, find chain, and convert to new interval
 	inChan := interval.GoReadToLiftChan(inFile)
 	var overlap []interval.Interval

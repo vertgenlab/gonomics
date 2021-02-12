@@ -11,9 +11,11 @@ import (
 )
 
 func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string) {
-	ch, _ := vcf.GoReadToChan(infile)
+	ch, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
+
+	vcf.NewWriteHeader(out, header)
 
 	if ensemblToUCSC && UCSCToEnsembl {
 		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
