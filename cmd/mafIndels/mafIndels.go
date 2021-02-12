@@ -31,8 +31,8 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 			}
 
 			//get eC species_del lines
-			if mafRecords[i].Species[k].ELine != nil {
-				if mafRecords[i].Species[k].ELine.Status == 'C' && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil { //I decided to check for both Status and Src here because they are on the same data level, as well as get corresponding s species_ins lines
+			if mafRecords[i].Species[k].ELine != nil && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil { //common checks for both eC and eI lines
+				if mafRecords[i].Species[k].ELine.Status == 'C' { //Check for ELine Status here
 
 					//convert maf to bed, continued
 					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eC", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
@@ -41,19 +41,17 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 					bedList_ins = append(bedList_ins, &current_ins)
 
 					//get eI species_del lines
-				} else if mafRecords[i].Species[k].ELine.Status == 'I' && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil {
-					if mafRecords[i].Species[0].SLine != nil { //if corresponding species_ins line is an s line
+				} else if mafRecords[i].Species[k].ELine.Status == 'I' {
 
-						//test if species_del eI fragment size < 10% corresponding s fragment size
-						//make sure arithmetic is all on float64
-						if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
+					//test if species_del eI fragment size < 10% corresponding s fragment size
+					//make sure arithmetic is all on float64
+					if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
 
-							//convert maf to bed, continued
-							current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eI", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
-							current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int64(mafRecords[i].Score)}
-							bedList_del = append(bedList_del, &current_del) //append to growing bed
-							bedList_ins = append(bedList_ins, &current_ins)
-						}
+						//convert maf to bed, continued
+						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eI", Score: int64(mafRecords[i].Score)} //get chrom,start,end,name,score
+						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int64(mafRecords[i].Score)}
+						bedList_del = append(bedList_del, &current_del) //append to growing bed
+						bedList_ins = append(bedList_ins, &current_ins)
 					}
 				}
 			}
