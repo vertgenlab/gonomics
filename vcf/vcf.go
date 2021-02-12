@@ -236,7 +236,7 @@ func WriteVcf(file io.Writer, input *Vcf) {
 
 //Write writes a []*Vcf to an output filename.
 func Write(filename string, data []*Vcf) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	WriteVcfToFileHandle(file, data)
