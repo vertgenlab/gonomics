@@ -1,22 +1,22 @@
 package main
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/vcf"
 	"os"
+	"testing"
 )
 
 var VcfFilterTests = []struct {
-	inputFile string
+	inputFile          string
 	expectedOutputFile string
-	groupFile string
-	chrom string
-	minPos int
-	maxPos int
-	minQual float64
-	ref string
-	alt string
+	groupFile          string
+	chrom              string
+	minPos             int
+	maxPos             int
+	minQual            float64
+	ref                string
+	alt                string
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", ""},
 }

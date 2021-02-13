@@ -44,7 +44,7 @@ func vcfFilter(infile string, outfile string, groupFile string, chrom string, mi
 
 func filterRecordsSamplesToKeep(recordSamples []vcf.GenomeSample, samplesToKeep []int) []vcf.GenomeSample {
 	var answer []vcf.GenomeSample
-	for i := 0; i < len(samplesToKeep); i ++ {
+	for i := 0; i < len(samplesToKeep); i++ {
 		answer = append(answer, recordSamples[samplesToKeep[i]])
 	}
 

@@ -1,15 +1,15 @@
 package popgen
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 var GroupList []*Group = []*Group{&Group{Name: "apples", Members: strings.Split("Fuji:Honeycrisp:RedDelicious", ":")}, &Group{Name: "bananas", Members: strings.Split("Cavendish:Plantain", ":")}}
 
-var GroupTests =[]struct {
+var GroupTests = []struct {
 	inputFile string
-	expected []*Group
+	expected  []*Group
 }{
 	{"testdata/test.group", GroupList},
 }
