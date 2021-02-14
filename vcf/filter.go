@@ -10,7 +10,7 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool) bool {
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -30,6 +30,9 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 		return false
 	} 
 	if substitutionsOnly && !IsSubstitution(v) {
+		return false
+	}
+	if segregatingSitesOnly && !IsSegregating(v) {
 		return false
 	}
 	return true
@@ -206,6 +209,20 @@ func IsSubstitution(v *Vcf) bool {
 	return true
 }
 
+//IsSegregating returns true if a Vcf record is a segregating site, true if the samples of the record contain at least two allelic states (ex. not all 0 or all 1).
+func IsSegregating(v *Vcf) bool {
+	if len(v.Samples) == 0 {
+		return false //special case, no samples
+	}
+	var firstEncountered int16 = v.Samples[0].AlleleOne
+
+	for _, sample := range v.Samples {
+		if sample.AlleleOne != firstEncountered || sample.AlleleTwo != firstEncountered {
+			return true
+		}
+	}
+	return false
+}
 
 func getListIndex(header *VcfHeader, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)

@@ -19,14 +19,15 @@ var VcfFilterTests = []struct {
 	alt string
 	biAllelicOnly bool
 	substitutionsOnly bool
+	segregatingSitesOnly bool
 }{
-	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", "", true, true},
+	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", "", true, true, true},
 }
 
 func TestVcfFilter(t *testing.T) {
 	var err error
 	for _, v := range VcfFilterTests {
-		vcfFilter(v.inputFile, "tmp.vcf", v.groupFile, v.chrom, v.minPos, v.maxPos, v.ref, v.alt, v.minQual, v.biAllelicOnly, v.substitutionsOnly)
+		vcfFilter(v.inputFile, "tmp.vcf", v.groupFile, v.chrom, v.minPos, v.maxPos, v.ref, v.alt, v.minQual, v.biAllelicOnly, v.substitutionsOnly, v.segregatingSitesOnly)
 		records := vcf.Read("tmp.vcf")
 		expected := vcf.Read(v.expectedOutputFile)
 		if !vcf.AllEqual(records, expected) {
