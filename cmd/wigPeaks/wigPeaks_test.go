@@ -9,9 +9,9 @@ import (
 
 //use struct to specify testdata
 var wigPeaksTests = []struct {
-	in_wig      string
-	out_bed     string
-	threshold   float64
+	in_wig    string
+	out_bed   string
+	threshold float64
 }{
 	{"testdata/in_wig_1.wig", "testdata/out_bed_1.bed", 20},
 	//{"testdata/in_wig_2.wig", "testdata/out_bed_2.bed", 50},
