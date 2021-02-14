@@ -10,7 +10,6 @@ import (
 var VcfFilterTests = []struct {
 	inputFile          string
 	expectedOutputFile string
-<<<<<<< HEAD
 	groupFile string
 	chrom string
 	minPos int
@@ -20,15 +19,6 @@ var VcfFilterTests = []struct {
 	alt string
 	biAllelicOnly bool
 	substitutionsOnly bool
-=======
-	groupFile          string
-	chrom              string
-	minPos             int
-	maxPos             int
-	minQual            float64
-	ref                string
-	alt                string
->>>>>>> c86ce339145ec91f4c13224f045bedf538be2a90
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", "", true, true},
 }
