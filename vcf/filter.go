@@ -25,10 +25,10 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 	}
 	if !FilterQual(v, minQual) {
 		return false
-	} 
+	}
 	if biAllelicOnly && !IsBiallelic(v) {
 		return false
-	} 
+	}
 	if substitutionsOnly && !IsSubstitution(v) {
 		return false
 	}
@@ -205,7 +205,6 @@ func IsSubstitution(v *Vcf) bool {
 	}
 	return true
 }
-
 
 func getListIndex(header *VcfHeader, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
