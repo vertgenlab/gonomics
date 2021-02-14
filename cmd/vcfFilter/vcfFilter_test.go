@@ -8,17 +8,17 @@ import (
 )
 
 var VcfFilterTests = []struct {
-	inputFile          string
-	expectedOutputFile string
-	groupFile string
-	chrom string
-	minPos int
-	maxPos int
-	minQual float64
-	ref string
-	alt string
-	biAllelicOnly bool
-	substitutionsOnly bool
+	inputFile            string
+	expectedOutputFile   string
+	groupFile            string
+	chrom                string
+	minPos               int
+	maxPos               int
+	minQual              float64
+	ref                  string
+	alt                  string
+	biAllelicOnly        bool
+	substitutionsOnly    bool
 	segregatingSitesOnly bool
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", "", true, true, true},
