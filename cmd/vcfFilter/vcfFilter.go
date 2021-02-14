@@ -56,7 +56,7 @@ func filterHeaderSamplesToKeep(samples []string, samplesToKeep []int) []string {
 	for _, v := range samplesToKeep {
 		answer = append(answer, samples[v])
 	}
-	
+
 	return answer
 }
 
