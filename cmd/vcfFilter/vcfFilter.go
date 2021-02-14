@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64) {
+func vcfFilter(infile string, outfile string, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64, biAllelicOnly bool, substitutionsOnly bool) {
 	ch, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
@@ -35,7 +35,7 @@ func vcfFilter(infile string, outfile string, groupFile string, chrom string, mi
 	vcf.NewWriteHeader(out.File, header)
 
 	for v := range ch {
-		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual) {
+		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual, biAllelicOnly, substitutionsOnly) {
 			v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
 			vcf.WriteVcf(out.File, v)
 		}
@@ -44,8 +44,8 @@ func vcfFilter(infile string, outfile string, groupFile string, chrom string, mi
 
 func filterRecordsSamplesToKeep(recordSamples []vcf.GenomeSample, samplesToKeep []int) []vcf.GenomeSample {
 	var answer []vcf.GenomeSample
-	for i := 0; i < len(samplesToKeep); i ++ {
-		answer = append(answer, recordSamples[samplesToKeep[i]])
+	for _, v := range samplesToKeep {
+		answer = append(answer, recordSamples[v])
 	}
 
 	return answer
@@ -53,9 +53,10 @@ func filterRecordsSamplesToKeep(recordSamples []vcf.GenomeSample, samplesToKeep 
 
 func filterHeaderSamplesToKeep(samples []string, samplesToKeep []int) []string {
 	var answer []string
-	for i := 0; i < len(samplesToKeep); i++ {
-		answer = append(answer, samples[samplesToKeep[i]])
+	for _, v := range samplesToKeep {
+		answer = append(answer, samples[v])
 	}
+	
 	return answer
 }
 
@@ -77,6 +78,8 @@ func main() {
 	var minQual *float64 = flag.Float64("minQual", 0.0, "Specifies the minimum quality score.")
 	var ref *string = flag.String("ref", "", "Specifies the reference field.")
 	var alt *string = flag.String("alt", "", "Specifies the alt field.")
+	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file.")
+	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "Retains only substitution variants in the output file (removes INDEL variants).")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -91,5 +94,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFilter(infile, outfile, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual)
+	vcfFilter(infile, outfile, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual, *biAllelicOnly, *substitutionsOnly)
 }

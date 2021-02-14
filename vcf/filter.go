@@ -10,7 +10,7 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64) bool {
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -24,6 +24,12 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 		return false
 	}
 	if !FilterQual(v, minQual) {
+		return false
+	} 
+	if biAllelicOnly && !IsBiallelic(v) {
+		return false
+	} 
+	if substitutionsOnly && !IsSubstitution(v) {
 		return false
 	}
 	return true
@@ -184,6 +190,22 @@ func IsHomozygous(genome GenomeSample) bool {
 	}
 	return false
 }
+
+//IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
+func IsBiallelic(v *Vcf) bool {
+	return len(v.Alt) == 1
+}
+
+//IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
+func IsSubstitution(v *Vcf) bool {
+	for _, alt := range v.Alt {
+		if len(alt) != 1 {
+			return false
+		}
+	}
+	return true
+}
+
 
 func getListIndex(header *VcfHeader, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
