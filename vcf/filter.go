@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
+//Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass. 
 func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
@@ -17,10 +17,10 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 	if !FilterChrom(v, chrom) {
 		return false
 	}
-	if !FilterRef(v, ref) {
+	if len(ref) > 0 && !FilterRef(v, ref) {
 		return false
 	}
-	if !FilterAlt(v, alt) {
+	if len(alt) > 0 && len(alt[0]) > 0 && !FilterAlt(v, alt) {
 		return false
 	}
 	if !FilterQual(v, minQual) {
@@ -49,9 +49,6 @@ func FilterQual(v *Vcf, minQual float64) bool {
 //FilterAlt returns true if the Alt field of a Vcf entry matches a desired input Alt field, false otherwise. Order sensitive.
 func FilterAlt(v *Vcf, alt []string) bool {
 	if len(alt) > 0 && CompareAlt(v.Alt, alt) != 0 {
-		if alt[0] == "" {
-			return true
-		}
 		return false
 	}
 	return true
@@ -59,7 +56,7 @@ func FilterAlt(v *Vcf, alt []string) bool {
 
 //FilterRef returns true if the Ref field of a Vcf record matches an input string, false otherwise.
 func FilterRef(v *Vcf, ref string) bool {
-	if len(ref) > 0 && strings.Compare(v.Ref, ref) != 0 {
+	if strings.Compare(v.Ref, ref) != 0 {
 		return false
 	}
 	return true
