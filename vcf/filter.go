@@ -9,21 +9,30 @@ import (
 	"strings"
 )
 
-//Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64) bool {
+//Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
 	if !FilterChrom(v, chrom) {
 		return false
 	}
-	if !FilterRef(v, ref) {
+	if len(ref) > 0 && !FilterRef(v, ref) {
 		return false
 	}
-	if !FilterAlt(v, alt) {
+	if len(alt) > 0 && len(alt[0]) > 0 && !FilterAlt(v, alt) {
 		return false
 	}
 	if !FilterQual(v, minQual) {
+		return false
+	}
+	if biAllelicOnly && !IsBiallelic(v) {
+		return false
+	}
+	if substitutionsOnly && !IsSubstitution(v) {
+		return false
+	}
+	if segregatingSitesOnly && !IsSegregating(v) {
 		return false
 	}
 	return true
@@ -47,7 +56,7 @@ func FilterAlt(v *Vcf, alt []string) bool {
 
 //FilterRef returns true if the Ref field of a Vcf record matches an input string, false otherwise.
 func FilterRef(v *Vcf, ref string) bool {
-	if len(ref) > 0 && strings.Compare(v.Ref, ref) != 0 {
+	if strings.Compare(v.Ref, ref) != 0 {
 		return false
 	}
 	return true
@@ -178,6 +187,36 @@ func IsHomozygous(genome GenomeSample) bool {
 	}
 	if genome.AlleleOne != genome.AlleleTwo {
 		return false
+	}
+	return false
+}
+
+//IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
+func IsBiallelic(v *Vcf) bool {
+	return len(v.Alt) == 1
+}
+
+//IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
+func IsSubstitution(v *Vcf) bool {
+	for _, alt := range v.Alt {
+		if len(alt) != 1 {
+			return false
+		}
+	}
+	return true
+}
+
+//IsSegregating returns true if a Vcf record is a segregating site, true if the samples of the record contain at least two allelic states (ex. not all 0 or all 1).
+func IsSegregating(v *Vcf) bool {
+	if len(v.Samples) == 0 {
+		return false //special case, no samples
+	}
+	var firstEncountered int16 = v.Samples[0].AlleleOne
+
+	for _, sample := range v.Samples {
+		if sample.AlleleOne != firstEncountered || sample.AlleleTwo != firstEncountered {
+			return true
+		}
 	}
 	return false
 }

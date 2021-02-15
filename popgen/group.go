@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"strings"
+	//DEBUG:"log"
 )
 
 //The Group struct and associated functions provides a system to partition a list of samples or species for subsequent analysis of subsections of the overall data.
@@ -35,6 +36,82 @@ func ReadGroups(filename string) []*Group {
 		}
 	}
 	return answer
+}
+
+//GroupListsAreEqual returns true if all the groups in a list of groups are equal to another list of groups, false otherwise.
+func GroupListsAreEqual(a []*Group, b []*Group) bool {
+	if GroupListsCompare(a, b) != 0 {
+		return false
+	}
+	return true
+}
+
+//GroupListsCompare compares two slices of Groups a and b for sorting and equality testing.
+func GroupListsCompare(a []*Group, b []*Group) int {
+	var res int
+	stop := min(len(a), len(b))
+	for i := 0; i < stop; i++ {
+		res = GroupCompare(a[i], b[i])
+		if res != 0 {
+			return res
+		}
+	}
+	if len(a) < len(b) {
+		return -1
+	} else if len(a) > len(b) {
+		return 1
+	}
+	return 0
+}
+
+//GroupCompare compares two Groups a and b for sorting or equality testing.
+func GroupCompare(a *Group, b *Group) int {
+	if strings.Compare(a.Name, b.Name) != 0 {
+		//DEBUG:log.Printf("It was the names. a: %s. b: %s.", a.Name, b.Name)
+		return strings.Compare(a.Name, b.Name)
+	}
+	var res int
+	stop := min(len(a.Members), len(b.Members))
+	for i := 0; i < stop; i++ {
+		res = strings.Compare(a.Members[i], b.Members[i])
+		if res != 0 {
+			//DEBUG:log.Printf("It was the members. a: %s. b: %s.", a.Members[i], b.Members[i])
+			return res
+		}
+	}
+	if len(a.Members) < len(b.Members) {
+		return -1
+	} else if len(a.Members) > len(b.Members) {
+		return 1
+	}
+	return 0
+}
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+//GroupsContains returns true if any groups within a slice of groups g contains a string s, false otherwise.
+func GroupsContains(g []*Group, s string) bool {
+	for i := 0; i < len(g); i++ {
+		if GroupContains(g[i], s) {
+			return true
+		}
+	}
+	return false
+}
+
+//GroupContains returns true if an input string s is contained within the members of group g, false otherwise.
+func GroupContains(g *Group, s string) bool {
+	for i := 0; i < len(g.Members); i++ {
+		if strings.Compare(g.Members[i], s) == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 //FindMissingGroupMembers returns a string of all of the entries in a Group slice that are not contained in the names of a multiFa alignment.
