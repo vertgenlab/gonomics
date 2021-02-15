@@ -297,6 +297,13 @@ func BasesToCodons(b []Base) []Codon {
 	return answer
 }
 
+// BasesToCodonsIgnoreRemainder converts a slice of DNA bases into a slice of Codons.
+// Any bases remaining after all 3-base codons have been assembled will be ignored.
+func BasesToCodonsIgnoreRemainder(b []Base) []Codon {
+	frame := len(b) % 3
+	return BasesToCodons(b[:len(b)-frame])
+}
+
 // CodonsToBases converts a slice of Codons into a slice of DNA bases.
 func CodonsToBases(c []Codon) []Base {
 	answer := make([]Base, 0, len(c)*3)
@@ -338,6 +345,22 @@ func TranslateSeq(b []Base) []AminoAcid {
 	codons := BasesToCodons(b)
 	for i := range codons {
 		answer[i] = TranslateCodon(codons[i])
+	}
+	return answer
+}
+
+// TranslateSeqToTer takes a sequence of DNA bases and translates it into a slice of Amino acids.
+// The translation will end after the first stop codon is reached and the function will return
+// the protein sequence including the trailing stop codon. Any bases beyond the stop codon,
+// or remaining bases after all 3-base codons have been made will be ignored.
+func TranslateSeqToTer(b []Base) []AminoAcid {
+	answer := make([]AminoAcid, 0, len(b)/3)
+	codons := BasesToCodonsIgnoreRemainder(b)
+	for i := range codons {
+		answer = append(answer, TranslateCodon(codons[i]))
+		if answer[i] == Stop {
+			return answer
+		}
 	}
 	return answer
 }

@@ -16,7 +16,7 @@ func Reset(g *Gene) {
 	if !hasIndel { // Point mutations can be quickly reversed by performing the inverse function
 		for i := len(g.changeLog) - 1; i >= 0; i-- {
 			if len(g.changeLog[i].added) == 1 && len(g.changeLog[i].removed) == 1 {
-				_, err = PointMutation(g, g.changeLog[i].genomePos, g.changeLog[i].removed[0])
+				_, err = Substitution(g, g.changeLog[i].genomePos, g.changeLog[i].removed[0])
 				g.changeLog = g.changeLog[:len(g.changeLog)-2]
 				if err != nil {
 					hasIndel = true
