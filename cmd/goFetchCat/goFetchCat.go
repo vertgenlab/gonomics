@@ -25,5 +25,6 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 	url := flag.Arg(0)
-	fileio.CatUrl(url)
+	str := fileio.CatUrl(url)
+	fmt.Print(str)
 }

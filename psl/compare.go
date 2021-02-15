@@ -57,13 +57,13 @@ func Equal(x, y Psl) bool {
 	if x.BlockCount != y.BlockCount {
 		return false
 	}
-	if numbers.EqualSliceInt(x.BlockSize, y.BlockSize) {
+	if !numbers.EqualSliceInt(x.BlockSize, y.BlockSize) {
 		return false
 	}
-	if numbers.EqualSliceInt(x.QList, y.QList) {
+	if !numbers.EqualSliceInt(x.QList, y.QList) {
 		return false
 	}
-	if numbers.EqualSliceInt(x.TList, y.TList) {
+	if !numbers.EqualSliceInt(x.TList, y.TList) {
 		return false
 	}
 	return true

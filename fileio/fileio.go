@@ -3,37 +3,38 @@ package fileio
 import (
 	"bufio"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"io"
 	"log"
 	"os"
 	"strings"
 )
 
+// MustCreate creates a file with the input name. Panics if not possible.
 func MustCreate(filename string) *os.File {
 	file, err := os.Create(filename)
-	common.ExitIfError(err)
+	panicOnErr(err)
 	return file
 }
 
+// MustOpen opens the input file. Panics if not possible.
 func MustOpen(filename string) *os.File {
 	file, err := os.Open(filename)
-	common.ExitIfError(err)
+	panicOnErr(err)
 	return file
 }
 
-// returns the next line of the file (might be a comment line)
-// returns true if the file is done
+// NextLine returns the next line of the file (might be a comment line).
+// Returns true if the file is done.
 func NextLine(reader *bufio.Reader) (string, bool) {
 	var line string
 	var err error
 	line, err = reader.ReadString('\n')
 	if err != nil && err != io.EOF {
-		common.ExitIfError(err)
+		panicOnErr(err)
 	}
 	if err == io.EOF {
 		if line != "" {
-			log.Fatalf("Error: last line of file didn't end with a newline character: %s\n", line)
+			log.Panicf("Error: last line of file didn't end with a newline character: %s\n", line)
 		} else {
 			return "", true
 		}
@@ -43,19 +44,19 @@ func NextLine(reader *bufio.Reader) (string, bool) {
 	return line, false
 }
 
-// returns the next line of the file that is not a comment line
-// returns true if the file is done
+// NextRealLine returns the next line of the file that is not a comment line.
+// Returns true if the file is done.
 func NextRealLine(reader *bufio.Reader) (string, bool) {
 	var line string
 	var err error
 	for line, err = reader.ReadString('\n'); err == nil && strings.HasPrefix(line, "#"); line, err = reader.ReadString('\n') {
 	}
 	if err != nil && err != io.EOF {
-		common.ExitIfError(err)
+		log.Panic()
 	}
 	if err == io.EOF {
 		if line != "" {
-			log.Fatalf("Error: last line of file didn't end with a newline character: %s\n", line)
+			log.Panicf("Error: last line of file didn't end with a newline character: %s\n", line)
 		} else {
 			return "", true
 		}
@@ -66,6 +67,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	return line, false
 }
 
+// equal returns true if two input files are identical
 func equal(a string, b string, commentsMatter bool) bool {
 	var fileADone, fileBDone = false, false
 	var lineA, lineB string
@@ -96,14 +98,18 @@ func equal(a string, b string, commentsMatter bool) bool {
 	return true
 }
 
+// AreEqualIgnoreComments returns true if input files are equal.
+// Ignores lines beginning with #.
 func AreEqualIgnoreComments(a string, b string) bool {
 	return equal(a, b, false)
 }
 
+// AreEqual returns true if input files are equal.
 func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }
 
+// Read inputs a file and returns each line in the file as a string.
 func Read(filename string) []string {
 	var answer []string
 	file := MustOpen(filename)
@@ -127,4 +133,11 @@ func ReadFileToSingleLineString(filename string) string {
 		catInput = catInput + line
 	}
 	return catInput
+}
+
+// panicOnErr will call a blank panic if the input error != nil
+func panicOnErr(err error) {
+	if err != nil {
+		log.Panic()
+	}
 }

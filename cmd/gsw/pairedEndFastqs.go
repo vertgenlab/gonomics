@@ -73,7 +73,7 @@ func GswToSamPair(ref *simpleGraph.SimpleGraph, readOne string, readTwo string, 
 }
 
 func readFastqGsw(fileOne string, fileTwo string, answer chan<- fastq.PairedEndBig) {
-	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
+	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
 	for fq, done := fastq.ReadFqBigPair(readOne, readTwo); !done; fq, done = fastq.ReadFqBigPair(readOne, readTwo) {
 		answer <- *fq
 	}
