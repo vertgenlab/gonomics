@@ -44,7 +44,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 		records = fasta.Read(faFile)
 	}
 
-	//TODO: General GoReadToChan header returns will allow us to avoid opening the file twice. 
+	//TODO: General GoReadToChan header returns will allow us to avoid opening the file twice.
 	if vcf.IsVcfFile(inFile) {
 		tmpOpen := fileio.EasyOpen(inFile)
 		header := vcf.ReadHeader(tmpOpen)
@@ -122,7 +122,7 @@ func usage() {
 			"lift lift.chain inFile outFile unMapped\n" +
 			"Warning: For Vcf lift, the original headers are retained in the output without modification. Use output header information at your own risk.\n" +
 			"Please note: Vcf lift is not compatable with Unix piping.\n" +
-			"Please note: Vcf lift with fa crossreferencing is currently only supported for biallelic and substitution variants.\n" + 
+			"Please note: Vcf lift with fa crossreferencing is currently only supported for biallelic and substitution variants.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
