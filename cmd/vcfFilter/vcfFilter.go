@@ -36,7 +36,10 @@ func vcfFilter(infile string, outfile string, groupFile string, chrom string, mi
 
 	for v := range ch {
 		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual, biAllelicOnly, substitutionsOnly, segregatingSitesOnly) {
-			v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
+			if groupFile != "" {
+				v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
+			}
+
 			vcf.WriteVcf(out.File, v)
 		}
 	}
