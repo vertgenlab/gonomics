@@ -60,3 +60,11 @@ func SortByName(seqs []*Fasta) {
 func SortBySeq(seqs []*Fasta) {
 	sort.Slice(seqs, func(i, j int) bool { return compareSeqIgnoreCase(seqs[i], seqs[j]) == -1 })
 }
+
+//Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta as the reference, but if you are querying from alignment Fas, you'll want to get the alnIndex before calling this function
+
+//QuerySeq takes in a slice of fastas and a position (name and index) and returns true if a query sequence of bases matches the fasta at this position.
+func QuerySeq(records []*Fasta, chr string, index int, query []dna.Base) bool {
+	chrIndex := GetChromIndex(records, chr)
+	return dna.CompareSeqsIgnoreCaseAndGaps(query, records[chrIndex].Seq[index:index+len(query)]) == 0
+}

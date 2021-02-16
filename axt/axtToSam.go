@@ -16,12 +16,12 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 		QName: axtFmt.QName,
 		Flag:  setStrandFlag(axtFmt.QStrandPos),
 		RName: axtFmt.RName,
-		Pos:   axtFmt.RStart,
+		Pos:   int64(axtFmt.RStart),
 		MapQ:  255, // mapping quality setting to 255 because we are not calculating it
 		Cigar: PairSeqToCigar(axtFmt.RSeq, axtFmt.QSeq),
 		RNext: "*",
 		PNext: 0,
-		TLen:  axtFmt.REnd - axtFmt.RStart, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
+		TLen:  int64(axtFmt.REnd - axtFmt.RStart), //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
 		Seq:   dna.RemoveBase(axtFmt.QSeq, dna.Gap),
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),

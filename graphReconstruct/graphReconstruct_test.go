@@ -99,29 +99,21 @@ func TestBuildNodes(t *testing.T) {
 	for t := 0; t < len(tNodes); t++ {
 		if tNodes[t].Right != nil && tNodes[t].Left != nil {
 			iNodes = append(iNodes, tNodes[t])
-		}
-	}
-	for in := 0; in < len(iNodes); in++ {
-		speciesGraph := simpleGraph.NewGraph()
-		for i := 0; i < len(allAlign); i++ {
-			id = BuildNodes(iNodes[in], allAlign[i], id)
-			for _, nodes := range allAlign[i].AlignNodes {
-				for n := 0; n < len(nodes); n++ {
-					if nodes[n].Name == iNodes[in].Name {
-						//inGraph := false
-						//for j := 0; j < len(idInGraph); j++ {
-						//	if nodes[n].Id == idInGraph[j] {
-						//		inGraph = true
-						//	}
-						//}
-						//log.Print("checking if duplicated")
-						//if !inGraph {
-						speciesGraph.Nodes = append(speciesGraph.Nodes, nodes[n])
-						idInGraph = append(idInGraph, nodes[n].Id)
+			for in := 0; in < len(iNodes); in++ {
+				speciesGraph := simpleGraph.NewGraph()
+				for i := 0; i < len(allAlign); i++ {
+					id = BuildNodes(iNodes[in], allAlign[i], id)
+					for _, nodes := range allAlign[i].AlignNodes {
+						for n := 0; n < len(nodes); n++ {
+							if nodes[n].Name == iNodes[in].Name {
+								speciesGraph.Nodes = append(speciesGraph.Nodes, nodes[n])
+								idInGraph = append(idInGraph, nodes[n].Id)
+							}
+						}
 					}
 				}
+				simpleGraph.PrintGraph(speciesGraph)
 			}
 		}
-		simpleGraph.PrintGraph(speciesGraph)
 	}
 }

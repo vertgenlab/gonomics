@@ -39,6 +39,7 @@ func NextLine(reader *bufio.Reader) (string, bool) {
 		}
 	}
 	line = strings.TrimSuffix(line, "\n")
+	line = strings.TrimSuffix(line, "\r")
 	return line, false
 }
 
@@ -60,6 +61,8 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 		}
 	}
 	line = strings.TrimSuffix(line, "\n")
+	line = strings.TrimSuffix(line, "\r") //data generated from Windows OS contains \r\n as a two byte new line character.
+	//Here we trim off trailing carriage returns. Lines without carriage returns are unaffected.
 	return line, false
 }
 
@@ -112,7 +115,7 @@ func Read(filename string) []string {
 	return answer
 }
 
-//ReadFileToSingleLineString reads in any file type and returns contents without any \n 
+//ReadFileToSingleLineString reads in any file type and returns contents without any \n
 func ReadFileToSingleLineString(filename string) string {
 	var catInput string
 	var line string

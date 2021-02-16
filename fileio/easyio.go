@@ -21,6 +21,9 @@ type EasyWriter struct {
 }
 
 func EasyOpen(filename string) *EasyReader {
+	if strings.Contains(filename, "http") {
+		return EasyHttp(filename)
+	}
 	answer := EasyReader{}
 	answer.File = MustOpen(filename)
 	var err error
@@ -55,6 +58,11 @@ func EasyNextLine(file *EasyReader) (string, bool) {
 
 func EasyNextRealLine(file *EasyReader) (string, bool) {
 	return NextRealLine(file.BuffReader)
+}
+
+func EasyRemove(filename string) {
+	err := os.Remove(filename)
+	common.ExitIfError(err)
 }
 
 func (er *EasyReader) Close() {

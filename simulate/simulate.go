@@ -204,9 +204,9 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						//codonExt will be transferred to a codon to check translation against BLOSUM,
 						//but codon version won't be used further so we can preserve final seq order
 						tempOriCodon := CodonExtToCodon(thisCodon)
-						originalAmAc = dna.TranslateCodon(&tempOriCodon)
+						originalAmAc = dna.TranslateCodon(tempOriCodon)
 						tempNewCodon := CodonExtToCodon(newCodon)
-						newAmAc = dna.TranslateCodon(&tempNewCodon)
+						newAmAc = dna.TranslateCodon(tempNewCodon)
 
 						prob := BLOSUM[originalAmAc][newAmAc]
 						r := rand.Float64()
@@ -336,20 +336,33 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 //BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
 func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
-	var i, j int
-
-	for i = 0; i < len(seq); i++ { //counter to put things back in order
-		for j = 0; j < len(seq); j++ { //counter to check all seq bases before incrementing to look for the next base in the newSeq
-			if seq[j].SeqPos == i {
-				newSequence = append(newSequence, seq[j].Base)
-			}
-		}
-	}
-	if len(newSequence) != len(seq) {
-		log.Fatal("Cannot find order of bases")
-	}
+	newSequence = OrderBaseExtBySeqPos(seq)
 	return newSequence
 }
+
+//SortBaseExtBySeqPos orders a string of BaseExt by seq position
+func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
+	var ordered = make([]dna.Base, len(unordered))
+
+	for i := 0; i < len(unordered); i++ {
+		ordered[unordered[i].SeqPos] = unordered[i].Base
+	}
+	return ordered
+	//sort.Slice(unordered, func(i, j int) bool {
+	//	return Compare(unordered[i], unordered[j]) == -1
+	//})
+}
+
+////Compare returns 0 if the seqPos
+//func Compare(a BaseExt, b BaseExt) int {
+//	if a.SeqPos < b.SeqPos {
+//		return -1
+//	} else if a.SeqPos > b.SeqPos {
+//		return 1
+//	} else {
+//		return 0
+//	}
+//}
 
 //CodonExtToBaseExt converts a slice of CodonExt to a slice of BaseExt
 func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
@@ -367,10 +380,9 @@ func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 //CodonExtToCodon converts a since CodonExt to a pointer to a single dna.Codon
 func CodonExtToCodon(cE CodonExt) dna.Codon {
 	var codon dna.Codon
-	codon.Seq = make([]dna.Base, 3)
 
 	for c := 0; c < 3; c++ {
-		codon.Seq[c] = cE.Seq[c].Base
+		codon[c] = cE.Seq[c].Base
 	}
 	return codon
 }
@@ -381,9 +393,8 @@ func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
 	var codon dna.Codon
 
 	for ext := 0; ext < len(cE); ext++ {
-		codon.Seq = make([]dna.Base, 3)
 		for c := 0; c < 3; c++ {
-			codon.Seq[c] = cE[ext].Seq[c].Base
+			codon[c] = cE[ext].Seq[c].Base
 		}
 		codons = append(codons, codon)
 	}

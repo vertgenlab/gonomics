@@ -47,8 +47,8 @@ func TestWriteAndRead(t *testing.T) {
 
 //TODO: Finish rev. comp sequences for testing swap
 func TestAxtSwap(t *testing.T) {
-	var targetLen int64 = 10
-	var queryLen int64 = 10
+	var targetLen int = 10
+	var queryLen int = 10
 	aTest := &Axt{
 		RName:      "TargetGenome",
 		RStart:     1,

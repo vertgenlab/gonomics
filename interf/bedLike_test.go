@@ -25,7 +25,7 @@ func TestBedLike(t *testing.T) {
 		Chr: "chr1",
 		Pos: 1,
 		Ref: "ACG",
-		Alt: "A"}
+		Alt: []string{"A"}}
 
 	testAxt := &axt.Axt{
 		RName:  "chr1",

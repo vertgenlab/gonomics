@@ -102,7 +102,7 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 	return -1.0
 }
 
-func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64,float64) {
+func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64, float64) {
 	var xSampler, ySampler, y float64
 	for i := 0; i < maxIteration; i++ {
 		xSampler, ySampler = boundingSampler()

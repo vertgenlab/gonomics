@@ -10,6 +10,8 @@ var readWriteTests = []struct {
 	filename string // input
 }{
 	{"testdata/test.vcf"},
+	{"testdata/GP_DP_Samples.vcf"},
+	{"testdata/SingleHapData.vcf"},
 }
 
 func TestReadToChan(t *testing.T) {
@@ -34,7 +36,7 @@ func TestWriteAndRead(t *testing.T) {
 		actual = Read(test.filename)
 		Write(tempFile, actual)
 		alpha := Read(tempFile)
-		beta := Read("testdata/test.vcf")
+		beta := Read(test.filename)
 		log.Printf("Looks good to me!\n")
 		log.Printf("alpha=%d, beta=%d", len(alpha), len(beta))
 		if !AllEqual(alpha, beta) {
@@ -44,6 +46,7 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
+/*
 func TestReadToChanTwo(t *testing.T) {
 	alpha := GoReadGVcf("testdata/test.vcf")
 	var savedFromAlpha []*Vcf
@@ -59,4 +62,4 @@ func TestReadToChanTwo(t *testing.T) {
 		}
 		i++
 	}
-}
+}*/

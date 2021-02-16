@@ -57,7 +57,7 @@ func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename 
 			continue
 		}
 
-		if runningCount[i].Pos < (aln.Pos - 1) {
+		if runningCount[i].Pos < int(aln.Pos-1) {
 			answer <- &Allele{samFilename, currAlleles[*runningCount[i]], runningCount[i]}
 			delete(currAlleles, *runningCount[i])
 
@@ -87,18 +87,17 @@ func countSamRead(aln *sam.SamAln, currAlleles map[Coordinate]*AlleleCount, runn
 		return currAlleles, runningCount
 	}
 
-	var RefIndex, SeqIndex int64
+	var RefIndex, SeqIndex, OrigRefIndex int
 	var currentSeq []dna.Base
 	var i, j, k int
 	var currentIndel Indel
 	var indelSeq []dna.Base
-	var OrigRefIndex int64
 	var Match bool
 
 	// Count the bases
 	progress++
 	SeqIndex = 0
-	RefIndex = aln.Pos - 1
+	RefIndex = int(aln.Pos - 1)
 
 	for i = 0; i < len(aln.Cigar); i++ {
 		currentSeq = aln.Seq
@@ -262,7 +261,7 @@ func countSamRead(aln *sam.SamAln, currAlleles map[Coordinate]*AlleleCount, runn
 				RefIndex++
 			}
 		} else if aln.Cigar[i].Op != 'H' {
-			SeqIndex = SeqIndex + aln.Cigar[i].RunLength
+			SeqIndex = SeqIndex + int(aln.Cigar[i].RunLength)
 		}
 	}
 	return currAlleles, runningCount

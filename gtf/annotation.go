@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"math"
+	"strings"
 )
 
 // VariantToAnnotation generates an annotation which can be appended to the INFO field of a VCF
@@ -39,7 +40,7 @@ func cDnaToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
 	ref := dna.StringToBases(v.Ref)
-	alt := dna.StringToBases(v.Alt)
+	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) This looks like it was written for biallelic positions originally, I have doubled down on this for now but polyallelic bases should be handled.
 	cdsPos, start := getNearestCdsPos(v)
 	cdsDist := getCdsDist(v)
 	if len(ref) == 1 && len(alt) == 1 { // Substitution: c.10-1A>G
@@ -49,7 +50,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 			answer += fmt.Sprintf("%d+%d", cdsPos, cdsDist)
 		}
 		if v.PosStrand {
-			answer += v.Ref + ">" + v.Alt
+			answer += v.Ref + ">" + strings.Join(v.Alt, ",")
 		} else {
 			dna.ReverseComplement(ref)
 			dna.ReverseComplement(alt)
@@ -182,7 +183,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
 	ref := dna.StringToBases(v.Ref)
-	alt := dna.StringToBases(v.Alt)
+	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) see TODO above. Only biallelic bases are supported
 	cdsPos, _ := getNearestCdsPos(v)
 	if v.PosStrand { // For Pos Strand
 		if len(ref) == 1 && len(alt) == 1 { // Substitution c.10A>G
@@ -260,7 +261,7 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 // isDuplication returns true if the variant is likely a duplication of surrounding sequence
 func isDuplication(v *vcfEffectPrediction, seq map[string][]dna.Base) bool {
 	ref := dna.StringToBases(v.Ref)
-	alt := dna.StringToBases(v.Alt)
+	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) see previous TODO about polyallelic bases.
 	if len(ref) > len(alt) {
 		return false
 	}
@@ -424,7 +425,7 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 			currCodon = append(currCodon, currSeq[int(v.Pos)-1-i])
 		}
 		seqPos := int(v.Pos) + len(dna.StringToBases(v.Ref)) - 1
-		altSeq := dna.StringToBases(v.Alt)
+		altSeq := dna.StringToBases(v.Alt[0]) //TODO: Does not handle polyallelic bases.
 		for _, val := range altSeq {
 			currCodon = append(currCodon, val)
 			if len(currCodon)%3 == 0 {
@@ -453,7 +454,7 @@ func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 		}
 	} else {
 		refLen := len(dna.StringToBases(v.Ref))
-		altSeq := reverse(dna.StringToBases(v.Alt))
+		altSeq := reverse(dna.StringToBases(v.Alt[0])) //TODO: does not handle polyallelic bases
 
 		if (refLen-1)-originalFrame > 0 {
 			answer -= 1 + (((refLen - 2) - originalFrame) / 3)

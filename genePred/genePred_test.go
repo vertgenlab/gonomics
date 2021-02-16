@@ -1,6 +1,7 @@
 package genePred
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ var ReadTests = []struct {
 	name string
 	data []*GenePred
 }{
-	{"testGenePred.gpd", genePreds},
+	{"testGenePred.gp", genePreds},
 }
 
 //func TestEqual(t *testing.T) {
@@ -34,8 +35,9 @@ func TestRead(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 	for _, test := range ReadTests {
-		Write("testWriting.gpd", test.data)
+		Write("testWriting.gp", test.data)
 	}
+	fileio.EasyRemove("testWriting.gp")
 }
 
 //func TestCalcExonFrame(t *testing.T) {

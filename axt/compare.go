@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func checkQueryBlock(alpha *Axt, beta *Axt, bestQueryLen int64, bestScore int64, minScore int64) (bool, int64, int64) {
+func checkQueryBlock(alpha *Axt, beta *Axt, bestQueryLen int, bestScore int, minScore int) (bool, int, int) {
 	if beta.Score < minScore {
 		return false, bestQueryLen, bestScore
 	}

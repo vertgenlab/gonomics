@@ -67,7 +67,7 @@ func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromIn
 		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = s.Pos - 1
-			answer.ChromEnd = numbers.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
+			answer.ChromEnd = numbers.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), int64(reference[answer.Chrom].Size))
 			answer.Strand = true
 		} else {
 			answer.ChromEnd = s.Pos - 1 + cigar.ReferenceLength(s.Cigar)
@@ -84,7 +84,8 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum, x int64
+	var startNum, endNum int64
+	var x int
 	var i int = 0
 	var doneReading bool = false
 	var current *bed.Bed
@@ -135,7 +136,8 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum, x int64
+	var startNum, endNum int64
+	var x int
 	var i int = 0
 	var doneReading bool = false
 	var current *bed.Bed
@@ -184,8 +186,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
-	var i int = 0
-	var x int64 = 0
+	var i, x int = 0, 0
 	//generate Wig skeleton from reference
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
@@ -246,7 +247,7 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 		} else if f[0].Seq[i] != f[1].Seq[i] {
 			pastStart = true
 			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: "."})
 			}
 			if f[1].Seq[i] == dna.Gap { //alt is gap (deletion)
 				if !deletion {
@@ -255,20 +256,20 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string) []*vcf.Vcf {
 				deletion = true
 			} else if deletion { //snp immediately follows the end of a deletion
 				deletion = false
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})                                           //then add current diff
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: "."}) //from deletion
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: "."})                                           //then add current diff
 			} else {
-				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], i) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: dna.BaseToString(f[1].Seq[i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+				answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: "."})
 			}
 			insertion = false
 		} else if insertion { //case where ref and alt agree now but previous bases were part of an insertion.
 			pastStart = true
 			insertion = false
-			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1), Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: dna.BasesToString(f[1].Seq[insertionAlnPos:i]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."})
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: "."})
 		} else if deletion {
 			pastStart = true
 			deletion = false
-			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: int64(fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1), Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: dna.BaseToString(f[1].Seq[deletionAlnPos]), Qual: 100.0, Filter: "PASS", Info: ".", Format: ".", Notes: "."}) //from deletion		}
+			answer = append(answer, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: "."}) //from deletion		}
 		}
 	}
 	//DEBUG:

@@ -83,7 +83,7 @@ func workThreadAxtVcf(axtChannel <-chan *axt.Axt, ans chan<- *vcf.Vcf) {
 		//filter for uniq
 		curr = vcf.FilterVcfPos(axt.AxtToVcf(i))
 		for j = 0; j < len(curr); j++ {
-			if !strings.Contains(curr[j].Ref, "N") && !strings.Contains(curr[j].Alt, "N") {
+			if !strings.Contains(curr[j].Ref, "N") && !strings.Contains(curr[j].Alt[0], "N") {
 				ans <- curr[j]
 			}
 		}

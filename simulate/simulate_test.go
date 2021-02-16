@@ -25,6 +25,7 @@ func TestRandGene(t *testing.T) {
 			t.Errorf("expected RandGene to give %v, gave %v", test.length, len(a[0].Seq))
 		}
 		//fmt.Print(dna.BasesToString(a[0].Seq), "\n")
+		//fasta.Write("outputRandGene.fasta", a)
 	}
 }
 
@@ -41,10 +42,12 @@ var MutateSeqTests = []struct {
 //		seq := fasta.Read(test.sequence)
 //		bases := seq[0].Seq
 //		intermediate := BasesToBaseExt(bases)
-//		log.Print(bases)
-//		log.Print(intermediate)
 //		answer := BaseExtToBases(intermediate)
-//		log.Print(answer)
+//		for i := 0; i < len(intermediate); i++ {
+//			if intermediate[i].Base != answer[i] {
+//				log.Fatal("bases are not in the right order")
+//			}
+//		}
 //		if len(answer) != len(bases) {
 //			log.Fatal("Test Base Conversion: answer not written properly")
 //		}
