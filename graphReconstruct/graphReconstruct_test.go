@@ -91,21 +91,33 @@ func TestPathFinder(t *testing.T) {
 
 func TestBuildNodes(t *testing.T) {
 	var id uint32
+	var idInGraph []uint32
+	var iNodes []*expandedTree.ETree
 	tree, _ := expandedTree.ReadNewick("testdata/HCGAtree.txt")
 	tNodes := expandedTree.GetTree(tree)
-	for t := 0; t < len(tNodes); t++ { //i might have to move this within the allAlign loop
+
+	for t := 0; t < len(tNodes); t++ {
+		if tNodes[t].Right != nil && tNodes[t].Left != nil {
+			iNodes = append(iNodes, tNodes[t])
+		}
+	}
+	for in := 0; in < len(iNodes); in++ {
 		speciesGraph := simpleGraph.NewGraph()
 		for i := 0; i < len(allAlign); i++ {
-			log.Print(id)
-			id = BuildNodes(tNodes[t], allAlign[i], id)
-			log.Print("built nodes")
+			id = BuildNodes(iNodes[in], allAlign[i], id)
 			for _, nodes := range allAlign[i].AlignNodes {
-				log.Print("first nested")
-				for n, _ := range nodes {
-					log.Print("second nested")
-					if nodes[n].Name == tNodes[t].Name {
-						log.Print("found match")
+				for n := 0; n < len(nodes); n++ {
+					if nodes[n].Name == iNodes[in].Name {
+						//inGraph := false
+						//for j := 0; j < len(idInGraph); j++ {
+						//	if nodes[n].Id == idInGraph[j] {
+						//		inGraph = true
+						//	}
+						//}
+						//log.Print("checking if duplicated")
+						//if !inGraph {
 						speciesGraph.Nodes = append(speciesGraph.Nodes, nodes[n])
+						idInGraph = append(idInGraph, nodes[n].Id)
 					}
 				}
 			}

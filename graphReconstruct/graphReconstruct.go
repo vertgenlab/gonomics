@@ -25,20 +25,17 @@ func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 
 		id += 1
 		var newNode *simpleGraph.Node
 		newNode = &simpleGraph.Node{Id: id, Name: root.Name, Seq: dna.StringToBases(seq), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases(seq)), Next: nil, Prev: nil, Info: simpleGraph.Annotation{}}
-		for name, info := range column.AlignNodes { //add a new node to the existing nodes for this species
-			if name == root.Name {
-				info = append(info, newNode)
-				column.AlignNodes[root.Name] = info
-			} else { //create a record for this species nodes in GraphColumn
-				column.AlignNodes[root.Name] = []*simpleGraph.Node{newNode}
-			}
-		}
+		column.AlignNodes[root.Name] = append(column.AlignNodes[root.Name], newNode)
 	}
 	return id
 }
 
 //BuildEdges connects the nodes of a species' graph that are stored in GraphColumns
 //func BuildEdges
+//start without prob
+//loop through species in column, go through all nodes
+//check if that node's seq matches the seq of the ancestor node without an edge
+//make the next of that node the same as this node's next
 //FindAncSeq creates a graph from the node records stored in GraphColumns and then calls PathFinder and seqOfPath to determine the most likley seq of the ancestor before assigning that
 //seq to the Fasta field of the ancestors tree node
 //func FindAncSeq will loop through aligncolumns and build a single graph of all of the nodes that belong to the ancestor species after edges are created
