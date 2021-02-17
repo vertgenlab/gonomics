@@ -19,14 +19,14 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) {//threshold is 
 	out := fileio.EasyCreate(out_bed) //instead of answer, use "chan" method to write as we go. out has type EasyCreate defined as a gonomics struct, one of the fields is File which has type *os.File, needed for bed.WriteBed
 	defer out.Close()
 
-  for _,v1 := range records { //in range for loop, i is index (0,1,2..) which we don't use in this instance, v is value (content of slice). Record is slice of wig struct, each iteration is slice/object of wig struct, which is often organized by chromosomes (or part of chromosome), and each wig struct will produce independent peaks. The v1 iteration has chr=chrom3,step=100, and a list of WigValues where there are positions+values, values like 11 22 100 etc.
+  for _,v1 := range records { //in range for loop, i is index (0,1,2..) which we don't use in this instance, v is value (content of slice). Record is slice of wig struct, each iteration is slice/object of wig struct, which looks like a block and is often organized by chromosomes (or part of chromosome), and each wig struct will produce independent peaks. The v1 iteration has chr=chrom3,step=100, and a list of WigValues where there are positions+values, values like 11 22 100 etc.
 		inPeak = false //when entering a new wig struct, set inPeak to false
 		for _,v2 := range v1.Values { //each v1 is a wig struct, whose Values is a []*WigValue which contains many Position-Value pairs. Each i2 is index which we don't use, and each v2 is a slice of WigValue, which contains .Position and .Value
 
       if v2.Value >= threshold { //either (from outside of a peak) start a new peak or inside of a peak
         if !inPeak { //this means start a new peak
           inPeak = true //must remember to set inPeak to reflect Peak status
-          current = &bed.Bed{Chrom: v1.Chrom, ChromStart: int64(v2.Position), ChromEnd: int64(v2.Position)+1, Name: "", Score: int64(v2.Value)} //ChromEnd will be correct once we reach the end of peak OR end the v1 at >threshold (in this program, the position that ends the peak is still >threshold, not the first position that dips <threshold), Score is the max Wig of the bed region, will update when inside the peak
+          current = &bed.Bed{Chrom: v1.Chrom, ChromStart: int64(v2.Position), ChromEnd: int64(v2.Position)+1, Name: "", Score: int64(v2.Value)} //ChromEnd is +1 because bed has [open,closed) interval (note: in this program, the position that ends the peak is still >threshold, not the first position that dips <threshold), Score is the max Wig of the bed region, will update when inside the peak
         } else { //this means already inside peak
           current.ChromEnd = int64(v2.Position)+1 //Update ChromEnd
           if int64(v2.Value) > current.Score { //Update Score if found new max wig score
@@ -37,7 +37,6 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) {//threshold is 
       } else { //either (from inside of a peak) ending a peak or outside of a peak
         if inPeak { //if inside of a peak ending a peak
           inPeak = false //must remember to set inPeak to reflect Peak status
-					//fmt.Print(bed.BedToString(&current,5)+"\n") //DEBUG: print current bed as a string to terminal before append
 					//answer = append(answer, current) //pointer to current bed, add this pointer to answer which is also a pointer to bed slice (a collection of beds)
 					bed.WriteBed(out.File, current, 5) //instead of answer, use "chan" method to write as we go
 				}
