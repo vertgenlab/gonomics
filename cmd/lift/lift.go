@@ -82,7 +82,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 				} else if len(currVcf.Alt) > 1 {
 					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
 					i.WriteToFileHandle(un)
-				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) {//first question: does the "Ref" match the destination fa at this position.
+				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
 					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
 						fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
@@ -101,7 +101,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 				}
 			} else {
 				i.WriteToFileHandle(out)
-			}	
+			}
 		}
 	}
 }
