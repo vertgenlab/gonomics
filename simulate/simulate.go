@@ -536,9 +536,11 @@ func codonContainsDels(codon CodonExt, del dna.Base) bool {
 }
 
 // deleteBase replaces a single random base from provided sequence with deletion symbol(hyphen)
-func deleteBase(seq []dna.Base) []dna.Base{
-	delPos := rand.Intn(len(seq)-3) // select random sequence position for deletion; avoid stop codon
-	if delPos < 3 {delPos = delPos + (3-delPos)} // avoid start codon
+func deleteBase(seq []dna.Base) []dna.Base {
+	delPos := rand.Intn(len(seq) - 3) // select random sequence position for deletion; avoid stop codon
+	if delPos < 3 {
+		delPos = delPos + (3 - delPos)
+	} // avoid start codon
 	seq[delPos] = dna.Gap // replace base at randomized position with gap symbol
 	return seq
 }
