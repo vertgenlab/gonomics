@@ -182,8 +182,14 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 				for codon := 0; codon < len(originalCodons); codon++ {
 					thisCodon := originalCodons[codon]
 					start = CheckStart(geneRecord[g], thisCodon)
+					del := codonContainsDels(thisCodon, dna.Gap) // check if codon already contains deletions
 					stop = CheckStop(geneRecord[g], thisCodon)
 					if start == true {
+						newSequence = append(newSequence, thisCodon.Seq[0])
+						newSequence = append(newSequence, thisCodon.Seq[1])
+						newSequence = append(newSequence, thisCodon.Seq[2])
+					}
+					if del == true { // if deletions are present in codon leave it as is (for simplicities sake; will change at a later date)
 						newSequence = append(newSequence, thisCodon.Seq[0])
 						newSequence = append(newSequence, thisCodon.Seq[1])
 						newSequence = append(newSequence, thisCodon.Seq[2])
@@ -194,7 +200,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						newSequence = append(newSequence, newCodon.Seq[1])
 						newSequence = append(newSequence, newCodon.Seq[2])
 					}
-					if start == false && stop == false {
+					if start == false && stop == false && del == false {
 						var newCodon CodonExt
 						newCodon.Seq = make([]BaseExt, 3)
 						for codonPosition := 0; codonPosition < 3; codonPosition++ {
@@ -229,7 +235,14 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 		}
 
 	}
-	finalSequence = BaseExtToBases(newSequence)
+	mutatedSequence := BaseExtToBases(newSequence)
+	del := seqContainsDels(mutatedSequence, dna.Gap)
+	switch del {
+	case false:
+		finalSequence = deleteBase(mutatedSequence)
+	default:
+		finalSequence = mutatedSequence
+	}
 	return finalSequence
 }
 
@@ -500,4 +513,32 @@ func RemoveAncestors(filename string, tree *expandedTree.ETree, outputFilename s
 	}
 	outFile = outputFilename
 	fasta.Write(outFile, newFastas)
+}
+
+// seqContainsDels checks whether a deletion is present in slice of bases.
+func seqContainsDels(seq []dna.Base, del dna.Base) bool {
+	for _, base := range seq {
+		if base == del {
+			return true
+		}
+	}
+	return false
+}
+
+// codonContainsDels checks whether a deletion is present in codon.
+func codonContainsDels(codon CodonExt, del dna.Base) bool {
+	for _, baseExt := range codon.Seq {
+		if baseExt.Base == del {
+			return true
+		}
+	}
+	return false
+}
+
+// deleteBase replaces a single random base from provided sequence with deletion symbol(hyphen)
+func deleteBase(seq []dna.Base) []dna.Base{
+	delPos := rand.Intn(len(seq)-3) // select random sequence position for deletion; avoid stop codon
+	if delPos < 3 {delPos = delPos + (3-delPos)} // avoid start codon
+	seq[delPos] = dna.Gap // replace base at randomized position with gap symbol
+	return seq
 }
