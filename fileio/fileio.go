@@ -1,8 +1,10 @@
+// Package fileio provides wrappers of the builtin golang Reader/Writer utilities for ease of use and automatic gzip handling.
 package fileio
 
 import (
 	"bufio"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
@@ -12,14 +14,14 @@ import (
 // MustCreate creates a file with the input name. Panics if not possible.
 func MustCreate(filename string) *os.File {
 	file, err := os.Create(filename)
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 	return file
 }
 
 // MustOpen opens the input file. Panics if not possible.
 func MustOpen(filename string) *os.File {
 	file, err := os.Open(filename)
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 	return file
 }
 
@@ -30,7 +32,7 @@ func NextLine(reader *bufio.Reader) (string, bool) {
 	var err error
 	line, err = reader.ReadString('\n')
 	if err != nil && err != io.EOF {
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 	}
 	if err == io.EOF {
 		if line != "" {
@@ -133,11 +135,4 @@ func ReadFileToSingleLineString(filename string) string {
 		catInput = catInput + line
 	}
 	return catInput
-}
-
-// panicOnErr will call a blank panic if the input error != nil
-func panicOnErr(err error) {
-	if err != nil {
-		log.Panic()
-	}
 }
