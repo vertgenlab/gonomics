@@ -169,7 +169,17 @@ func SetState(node *expandedTree.ETree, position int) {
 		SetState(node.Left, position)
 		SetState(node.Right, position)
 		if allZero(node.Left.Stored) && allZero(node.Right.Stored) {
-			log.Fatal("no Stored values passed to internal node")
+			// switch statement below accounts for potential deletions
+			// if there is a deletion at current position, set Stored list to equal probabilities
+			isLeftDel := node.Left.Fasta.Seq[position]
+			isRightDel := node.Right.Fasta.Seq[position]
+			switch isLeftDel == 10 && isRightDel == 10 {
+			case true:
+				node.Left.Stored = []float64{0.25, 0.25, 0.25, 0.25}
+				node.Right.Stored = []float64{0.25, 0.25, 0.25, 0.25}
+			default:
+				log.Fatal("no Stored values passed to internal node")
+			}
 		}
 
 		for i := 0; i < 4; i++ {
