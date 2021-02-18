@@ -18,7 +18,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 	genomeIndexPos, err = insertionPreRunChecks(g, genomePos, alt)
 
 	// Update genome sequence
-	g.genomeSeq = dna.Insert(g.genomeSeq, int64(genomeIndexPos+1), alt)
+	g.genomeSeq = dna.Insert(g.genomeSeq, genomeIndexPos+1, alt)
 
 	// Update CDS starts and ends
 	for idx, val := range g.cdsStarts {
@@ -66,7 +66,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 			if err != nil { //TODO REMOVE
 				log.Panic("ERROR WITH CDNA POS")
 			}
-			answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(&currCodon)}
+			answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(currCodon)}
 		}
 
 		// Update cDNA
@@ -203,8 +203,8 @@ func insertionPreRunChecks(g *Gene, genomePos int, alt []dna.Base) (int, error) 
 	log.added = make([]dna.Base, len(alt))
 	copy(log.added, alt)
 
-	if !dna.IsSeqOfACTG(alt) {
-		return -1, dna.ErrNonStandardBase
+	if !dna.IsSeqOfACGT(alt) {
+		return -1, errors.New("nonstandard base")
 	}
 
 	if genomePos < 0 {
@@ -279,7 +279,7 @@ func insertStable(destSeq *[]dna.Base, insPos int, insSeq []dna.Base) error {
 		return errInvalidPosition
 	}
 	if len(*destSeq)+len(insSeq) > cap(*destSeq) {
-		*destSeq = dna.Insert(*destSeq, int64(insPos), insSeq)
+		*destSeq = dna.Insert(*destSeq, insPos, insSeq)
 		return ErrExceedCapNewSliceCreated
 	}
 	*destSeq = (*destSeq)[:len(*destSeq)+len(insSeq)]                                    // extend the LEN of the slice to include the inserted bases

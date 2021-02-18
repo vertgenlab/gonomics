@@ -73,7 +73,7 @@ func GswToSam(ref *simpleGraph.SimpleGraph, readOne string, output string, threa
 }
 
 func readFqGsw(filename string, answer chan<- fastq.FastqBig) {
-	readOne := fileio.NewSimpleReader(filename)
+	readOne := fileio.NewByteReader(filename)
 	for fq, done := fastq.ReadFqBig(readOne); !done; fq, done = fastq.ReadFqBig(readOne) {
 		answer <- *fq
 	}

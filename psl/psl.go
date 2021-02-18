@@ -33,9 +33,9 @@ type Psl struct {
 	TList       []int
 }
 
-// PslReader is a struct that contains a SimpleReader with an embedded bufioReader and a 2-D byte slice to reduce memory allocation when reading each line.
+// PslReader is a struct that contains a ByteReader with an embedded bufioReader and a 2-D byte slice to reduce memory allocation when reading each line.
 type PslReader struct {
-	Reader  *fileio.SimpleReader
+	Reader  *fileio.ByteReader
 	curr    Psl
 	columns []string
 	done    bool
@@ -44,7 +44,7 @@ type PslReader struct {
 // NewPslReader will open a given text file and return a pointer to a PslReader struct.
 func NewPslReader(filename string) *PslReader {
 	return &PslReader{
-		Reader: fileio.NewSimpleReader(filename),
+		Reader: fileio.NewByteReader(filename),
 		curr:   Psl{},
 	}
 }

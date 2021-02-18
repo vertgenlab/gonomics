@@ -44,6 +44,20 @@ type VcfHeader struct {
 	Text []string
 }
 
+//Read with header reads VCF structs to a slice and returns the header as a second return.
+func ReadWithHeader(filename string) ([]*Vcf, *VcfHeader) {
+	var answer []*Vcf
+	file := fileio.EasyOpen(filename)
+	defer file.Close()
+	header := ReadHeader(file)
+	var curr *Vcf
+	var done bool
+	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
+		answer = append(answer, curr)
+	}
+	return answer, header
+}
+
 //Read parses a slice of VCF structs from an input filename. Does not store or return the header.
 func Read(filename string) []*Vcf {
 	var answer []*Vcf
@@ -122,6 +136,12 @@ func ParseNotes(data string, format []string) []GenomeSample {
 	if format[0] != "GT" && format[0] != "." { //len(format) == 0 checks for when there is info in the notes column but no format specification
 		log.Fatalf("VCF format files with sample information must begin with \"GT\" as the first format column or be marked blank with a period. Here was the first format entry: %s.\nError parsing the line with this Notes column: %s.\n", format[0], data)
 	}
+
+	if format[0] == "." { //if the format column is blank, we do not need to parse further.
+		var blankAnswer []GenomeSample = make([]GenomeSample, 0)
+		return blankAnswer
+	}
+
 	text := strings.Split(data, "\t")
 	var fields []string
 	var alleles []string
@@ -139,12 +159,11 @@ func ParseNotes(data string, format []string) []GenomeSample {
 			alleles = strings.SplitN(fields[0], "/", 2)
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, FormatData: fields}
 		} else {
-			//Deal with single haps. There might be a better soltuion, but I think this should work.
 			n, err = strconv.ParseInt(fields[0], 10, 16)
-			if err != nil && n < int64(len(text)) {
+			if err == nil && n < int64(len(text)) {
 				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false, FormatData: fields}
 			} else {
-				log.Fatalf("Error: Unexpected parsing error...\n")
+				log.Fatalf("Error: Unexpected parsing error on the following line:\n%s", data)
 			}
 		}
 		answer[i].FormatData[0] = "" //clears the genotype from the first other slot, making this a dummy position
@@ -231,7 +250,7 @@ func WriteVcf(file io.Writer, input *Vcf) {
 
 //Write writes a []*Vcf to an output filename.
 func Write(filename string, data []*Vcf) {
-	file := fileio.MustCreate(filename)
+	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	WriteVcfToFileHandle(file, data)

@@ -82,6 +82,55 @@ func WriteMultiSamplesHeader(file io.Writer, header *VcfHeader, listNames []stri
 	}
 }
 
+//Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
+func HeaderToMaps(header *VcfHeader) *SampleHash {
+	var name string
+	var index, hapIdx int16
+	var hash *SampleHash = &SampleHash{Fa: make(map[string]int16), GIndex: make(map[string]int16)}
+	for _, line := range header.Text {
+		if strings.HasPrefix(line, "##contig") {
+			name = strings.Split(strings.Split(line, "=")[2], ",")[0]
+			_, ok := hash.Fa[name]
+			if !ok {
+				hash.Fa[name] = index
+				index++
+			}
+		} else if strings.HasPrefix(line, "#CHROM") {
+			words := strings.Split(line, "\t")[9:]
+			for hapIdx = 0; hapIdx < int16(len(words)); hapIdx++ {
+				hash.GIndex[words[hapIdx]] = hapIdx
+			}
+		}
+	}
+	return hash
+}
+
+//HeaderGetSampleList returns an ordered list of the samples present in the header of a Vcf file. Useful when adding or removing samples from a VCF.
+func HeaderGetSampleList(header *VcfHeader) []string {
+	var answer []string
+	for _, line := range header.Text {
+		if strings.HasPrefix(line, "#CHROM") {
+			return strings.Split(line, "\t")[9:]
+		}
+	}
+	log.Fatalf("No Sample info in VCF line, cannot parse sample names.")
+	return answer
+}
+
+//HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a VcfHeader.
+func HeaderUpdateSampleList(header *VcfHeader, newSamples []string) {
+	var line string
+	for i := 0; i < len(header.Text); i++ {
+		if strings.HasPrefix(header.Text[i], "#CHROM") {
+			line = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT"
+			for j := 0; j < len(newSamples); j++ {
+				line += "\t" + newSamples[j]
+			}
+			header.Text[i] = line
+		}
+	}
+}
+
 func PrintHeader(header *VcfHeader) {
 	for i := 0; i < len(header.Text); i++ {
 		fmt.Println(header.Text[i])

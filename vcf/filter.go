@@ -4,25 +4,35 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	//"log"
+	"log"
+	"math/rand"
 	"strings"
 )
 
-//Filter returns true if a Vcf passes a set of filter criteria, false otherwise.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64) bool {
+//Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
 	if !FilterChrom(v, chrom) {
 		return false
 	}
-	if !FilterRef(v, ref) {
+	if len(ref) > 0 && !FilterRef(v, ref) {
 		return false
 	}
-	if !FilterAlt(v, alt) {
+	if len(alt) > 0 && len(alt[0]) > 0 && !FilterAlt(v, alt) {
 		return false
 	}
 	if !FilterQual(v, minQual) {
+		return false
+	}
+	if biAllelicOnly && !IsBiallelic(v) {
+		return false
+	}
+	if substitutionsOnly && !IsSubstitution(v) {
+		return false
+	}
+	if segregatingSitesOnly && !IsSegregating(v) {
 		return false
 	}
 	return true
@@ -46,7 +56,7 @@ func FilterAlt(v *Vcf, alt []string) bool {
 
 //FilterRef returns true if the Ref field of a Vcf record matches an input string, false otherwise.
 func FilterRef(v *Vcf, ref string) bool {
-	if len(ref) > 0 && strings.Compare(v.Ref, ref) != 0 {
+	if strings.Compare(v.Ref, ref) != 0 {
 		return false
 	}
 	return true
@@ -181,6 +191,36 @@ func IsHomozygous(genome GenomeSample) bool {
 	return false
 }
 
+//IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
+func IsBiallelic(v *Vcf) bool {
+	return len(v.Alt) == 1
+}
+
+//IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
+func IsSubstitution(v *Vcf) bool {
+	for _, alt := range v.Alt {
+		if len(alt) != 1 {
+			return false
+		}
+	}
+	return true
+}
+
+//IsSegregating returns true if a Vcf record is a segregating site, true if the samples of the record contain at least two allelic states (ex. not all 0 or all 1).
+func IsSegregating(v *Vcf) bool {
+	if len(v.Samples) == 0 {
+		return false //special case, no samples
+	}
+	var firstEncountered int16 = v.Samples[0].AlleleOne
+
+	for _, sample := range v.Samples {
+		if sample.AlleleOne != firstEncountered || sample.AlleleTwo != firstEncountered {
+			return true
+		}
+	}
+	return false
+}
+
 func getListIndex(header *VcfHeader, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))
@@ -237,6 +277,62 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 				}
 			}
 		}
+	}
+	return answer
+}
+
+//SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
+func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples int) []*Vcf {
+	var sampleList []string
+	if len(header.Text) > 0 {
+		sampleList = HeaderGetSampleList(header)
+	}
+
+	if numVariants > len(records) {
+		log.Fatalf("The number of requested sampled variants is greater than the number of variants in the input file.")
+	}
+
+	//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
+	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
+	//DEBUG:fmt.Printf("lenRecords before slice: %v.\n", len(records))
+	records = records[:numVariants] //keep only as many results as specified.
+	//DEBUG: fmt.Printf("lenRecords after slice: %v.\n", len(records))
+
+	if numSamples > 0 {
+		if numSamples > len(records[0].Samples) {
+			log.Fatalf("More samples were requested than were present in the input VCF file.")
+		}
+		var sequentialSlice []int = getSequentialSlice(len(records[0].Samples))
+		rand.Shuffle(len(sequentialSlice), func(i, j int) { sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i] })
+		sequentialSlice = sequentialSlice[:numSamples] //now we have a list of samples to keep from each variant.
+
+		if len(header.Text) > 0 {
+			var outHeaderSampleList []string = make([]string, 0)
+			for _, i := range sequentialSlice {
+				outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
+			}
+
+			HeaderUpdateSampleList(header, outHeaderSampleList)
+		}
+
+		var outSamples []GenomeSample
+
+		for _, i := range records {
+			outSamples = make([]GenomeSample, 0, len(sequentialSlice))
+			for _, j := range sequentialSlice {
+				outSamples = append(outSamples, i.Samples[j])
+			}
+			i.Samples = outSamples
+		}
+	}
+	return records //header is a pointer and does not need to be returned, it is edited in place
+}
+
+//returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]
+func getSequentialSlice(n int) []int {
+	var answer []int = make([]int, n)
+	for i := 0; i < n; i++ {
+		answer[i] = i
 	}
 	return answer
 }

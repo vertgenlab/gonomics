@@ -126,29 +126,6 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 	return answer
 }
 
-//Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
-func HeaderToMaps(header *VcfHeader) *SampleHash {
-	var name string
-	var index, hapIdx int16
-	var hash *SampleHash = &SampleHash{Fa: make(map[string]int16), GIndex: make(map[string]int16)}
-	for _, line := range header.Text {
-		if strings.HasPrefix(line, "##contig") {
-			name = strings.Split(strings.Split(line, "=")[2], ",")[0]
-			_, ok := hash.Fa[name]
-			if !ok {
-				hash.Fa[name] = index
-				index++
-			}
-		} else if strings.HasPrefix(line, "#CHROM") {
-			words := strings.Split(line, "\t")[9:]
-			for hapIdx = 0; hapIdx < int16(len(words)); hapIdx++ {
-				hash.GIndex[words[hapIdx]] = hapIdx
-			}
-		}
-	}
-	return hash
-}
-
 //Parse Vcf header to quickly print sample names that appear inside Vcf
 func PrintSampleNames(header *VcfHeader) string {
 	var ans string = ""
@@ -218,14 +195,13 @@ func HelperSamplesToString(sample []GenomeSample, i int) string {
 	if sample[i].AlleleOne < 0 {
 		answer = "noData"
 	} else {
-		if i == len(sample)-1 {
-			answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
-		} else {
-			answer = fmt.Sprintf("%d%s%d\t", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
-		}
+		answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 	}
 	if len(sample[i].FormatData) > 0 {
 		answer = answer + strings.Join(sample[i].FormatData, ":")
+	}
+	if i != len(sample)-1 { //add a tab unless it's the last entry
+		answer = answer + "\t"
 	}
 	return answer
 }

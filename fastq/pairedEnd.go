@@ -47,7 +47,7 @@ func PairEndToChan(readOne string, readTwo string, output chan<- *PairedEnd) {
 }
 
 func ReadPairBigToChan(fileOne string, fileTwo string, answer chan<- PairedEndBig) {
-	readOne, readTwo := fileio.NewSimpleReader(fileOne), fileio.NewSimpleReader(fileTwo)
+	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
 	for fq, done := ReadFqBigPair(readOne, readTwo); !done; fq, done = ReadFqBigPair(readOne, readTwo) {
 		answer <- *fq
 	}
@@ -120,7 +120,7 @@ func GoWriteFqPair(readOne string, readTwo string, data <-chan *PairedEnd) {
 // Note: while this function is return as a pointer, it's purpose is to be deferenced at the next function call.
 // In additon the pointers to read one and read two will also be dereference. When sending a pointer to a struct through
 // a channel, or a struct with pointers inside, memory allocated will be placed on the heap hindering performance.
-func ReadFqBigPair(readerOne *fileio.SimpleReader, readerTwo *fileio.SimpleReader) (*PairedEndBig, bool) {
+func ReadFqBigPair(readerOne *fileio.ByteReader, readerTwo *fileio.ByteReader) (*PairedEndBig, bool) {
 	var doneOne, doneTwo bool
 	var fqOne, fqTwo *FastqBig = &FastqBig{}, &FastqBig{}
 	fqOne, doneOne = ReadFqBig(readerOne)

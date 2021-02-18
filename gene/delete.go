@@ -11,13 +11,16 @@ var (
 
 //TODO EffectPrediction
 // Deletion removes bases from the Gene, predicts the effect, and updates the Gene struct to reflect the change.
-// genomeStartPos should be the base directly BEFORE the deleted bases. genomeEndPos should be the base directly AFTER the deleted bases.
+// genomeStartPos should be the first deleted base. genomeEndPos should be the base directly AFTER the last deleted base. i.e. left closed, right open.
 // All positions should be given as base-zero genomic coordinates.
 func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, error) {
 	var answer EffectPrediction
 	var err error
 
+	// The interval genomeIndexStartPos:genomeIndexEndPos is zero base left closed relative to the start
+	// of the genomic sequence of the gene.
 	genomeIndexStartPos, genomeIndexEndPos, err := deletionPreRunChecks(g, genomeStartPos, genomeEndPos)
+
 	if err != nil {
 		return EffectPrediction{}, err
 	}
@@ -27,38 +30,38 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	origCdsEnd := g.cdsEnds[len(g.cdsEnds)-1]
 
 	// Delete from Genome Sequence
-	copy(g.genomeSeq[genomeIndexStartPos+1:], g.genomeSeq[genomeIndexEndPos:])
-	g.genomeSeq = g.genomeSeq[:len(g.genomeSeq)-(genomeIndexEndPos-(genomeIndexStartPos+1))]
+	copy(g.genomeSeq[genomeIndexStartPos:], g.genomeSeq[genomeIndexEndPos:])
+	g.genomeSeq = g.genomeSeq[:len(g.genomeSeq)-(genomeIndexEndPos-genomeIndexStartPos)]
 
 	// Update startPos if necessary
-	if genomeIndexStartPos == -1 {
-		g.startPos += genomeIndexEndPos - (genomeIndexStartPos + 1)
+	if genomeIndexStartPos == 0 {
+		g.startPos += genomeIndexEndPos
 	}
 
 	// Update CDS starts and ends and calculate how many cDNA bases have been deleted
 	var cdsIndexesToDelete []int
 	var deletedCodingBases int
 	var codingDelStart, codingDelEnd int = -1, -1
-	deletionLen := genomeIndexEndPos - (genomeIndexStartPos + 1)
+	deletionLen := genomeIndexEndPos - genomeIndexStartPos
 	for i := 0; i < len(g.cdsStarts); i++ {
 
 		switch {
 		// if cds is before deletion
-		case genomeIndexStartPos >= g.cdsEnds[i]:
-			codingDelStart = int(g.featureArray[g.cdsEnds[i]])
+		case genomeIndexStartPos > g.cdsEnds[i]:
+			codingDelStart = int(g.featureArray[g.cdsEnds[i]]) + 1
 
 		// If cds exon is fully deleted
-		case genomeIndexStartPos < g.cdsStarts[i] && genomeIndexEndPos > g.cdsEnds[i]:
+		case genomeIndexStartPos <= g.cdsStarts[i] && genomeIndexEndPos > g.cdsEnds[i]:
 			// mark cds for deletion
 			cdsIndexesToDelete = append(cdsIndexesToDelete, i)
 			deletedCodingBases += (g.cdsEnds[i] + 1) - g.cdsStarts[i]
 			if codingDelStart == -1 {
-				codingDelStart = int(g.featureArray[g.cdsStarts[i]]) - 1
+				codingDelStart = int(g.featureArray[g.cdsStarts[i]])
 			}
 			codingDelEnd = int(g.featureArray[g.cdsEnds[i]]) + 1
 
 		// If deletion falls within a cds
-		case genomeIndexStartPos >= g.cdsStarts[i] && genomeIndexStartPos < g.cdsEnds[i] &&
+		case genomeIndexStartPos > g.cdsStarts[i] && genomeIndexStartPos < g.cdsEnds[i] &&
 			genomeIndexEndPos > g.cdsStarts[i] && genomeIndexEndPos <= g.cdsEnds[i]:
 			g.cdsEnds[i] -= deletionLen
 			deletedCodingBases += deletionLen
@@ -66,9 +69,9 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 			codingDelEnd = int(g.featureArray[genomeIndexEndPos])
 
 		// If cds exon is partially deleted on right
-		case genomeIndexStartPos >= g.cdsStarts[i] && genomeIndexStartPos < g.cdsEnds[i]:
-			deletedCodingBases += g.cdsEnds[i] - genomeIndexStartPos
-			g.cdsEnds[i] = genomeIndexStartPos
+		case genomeIndexStartPos > g.cdsStarts[i] && genomeIndexStartPos <= g.cdsEnds[i]:
+			deletedCodingBases += 1 + g.cdsEnds[i] - genomeIndexStartPos
+			g.cdsEnds[i] = genomeIndexStartPos - 1
 			codingDelStart = int(g.featureArray[genomeIndexStartPos])
 
 		// If cds exon is partially deleted on left
@@ -99,7 +102,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 
 	// Delete cDNA
 	if deletedCodingBases > 0 {
-		err = safeDelete(g, &g.codingSeq.seq, codingDelStart+1, codingDelEnd, len(g.utrFive.seq))
+		err = safeDelete(g, &g.codingSeq.seq, codingDelStart, codingDelEnd, len(g.utrFive.seq))
 		if err != nil {
 			return EffectPrediction{}, err
 		}
@@ -108,16 +111,16 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	// Determine UTR bases to delete
 	var utrFiveDelStart, utrFiveDelEnd int = -1, -1
 	var utrThreeDelStart, utrThreeDelEnd int = -1, -1
-	if genomeIndexStartPos+1 < origCdsStart || genomeIndexEndPos > origCdsEnd {
+	if genomeIndexStartPos < origCdsStart || genomeIndexEndPos > origCdsEnd {
 
 		var utrFiveStartOffset, utrFiveEndOffset int = 0, 0
 		var utrThreeStartOffset, utrThreeEndOffset int = 0, 0
 
-		if genomeIndexStartPos+1 < origCdsStart { // mutation overlaps 5' UTR, offset value needed
-			for i := 0; g.featureArray[genomeIndexStartPos+i+1] < 0; i++ {
-				if g.featureArray[genomeIndexStartPos+i+1] == UtrFive {
+		if genomeIndexStartPos < origCdsStart { // mutation overlaps 5' UTR, offset value needed
+			for i := 0; g.featureArray[genomeIndexStartPos+i] < 0; i++ {
+				if g.featureArray[genomeIndexStartPos+i] == UtrFive {
 					utrFiveStartOffset++
-					if genomeIndexStartPos+i+1 > genomeIndexEndPos-1 {
+					if genomeIndexStartPos+i > genomeIndexEndPos-1 {
 						utrFiveEndOffset++
 					}
 				}
@@ -128,7 +131,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 			for i := 0; g.featureArray[(genomeIndexEndPos-i)-1] < 0; i++ {
 				if g.featureArray[(genomeIndexEndPos-i)-1] == UtrThree {
 					utrThreeEndOffset++
-					if (genomeIndexEndPos-i)-1 < genomeIndexStartPos+1 {
+					if (genomeIndexEndPos-i)-1 < genomeIndexStartPos {
 						utrThreeStartOffset++
 					}
 				}
@@ -158,13 +161,13 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	}
 
 	// Update Feature Array
-	copy(g.featureArray[genomeIndexStartPos+1:], g.featureArray[genomeIndexEndPos:])
-	g.featureArray = g.featureArray[:len(g.featureArray)-(genomeIndexEndPos-(genomeIndexStartPos+1))]
+	copy(g.featureArray[genomeIndexStartPos:], g.featureArray[genomeIndexEndPos:])
+	g.featureArray = g.featureArray[:len(g.featureArray)-(genomeIndexEndPos-(genomeIndexStartPos))]
 
-	var j int = genomeIndexStartPos + 1
-	if genomeIndexStartPos+1 < len(g.featureArray) { // check to ensure back portion of the gene was not deleted
-		if g.featureArray[genomeIndexStartPos+1] >= 0 {
-			for j = genomeIndexStartPos + 1; g.featureArray[j] >= 0; j++ {
+	j := genomeIndexStartPos
+	if genomeIndexStartPos < len(g.featureArray) { // check to ensure back portion of the gene was not deleted
+		if g.featureArray[genomeIndexStartPos] >= 0 {
+			for j = genomeIndexStartPos; g.featureArray[j] >= 0; j++ {
 				g.featureArray[j] -= Feature(deletedCodingBases)
 			}
 		} else {
@@ -185,7 +188,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	}
 
 	//TODO EffectPrediction
-	g.protSeq = dna.TranslateSeq(g.codingSeq.seq) // TODO improve efficiency by updating the protein as changes are made
+	g.protSeq = dna.TranslateSeqToTer(g.codingSeq.seq) // TODO improve efficiency by updating the protein as changes are made
 	return answer, err
 }
 
@@ -193,7 +196,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 func deletionPreRunChecks(g *Gene, genomeStartPos int, genomeEndPos int) (int, int, error) {
 	var log diff
 
-	if genomeStartPos < -1 || genomeEndPos < 0 {
+	if genomeStartPos < 0 || genomeEndPos < 0 {
 		return -1, -1, ErrNegativeInputValue
 	}
 
@@ -219,27 +222,27 @@ func deletionPreRunChecks(g *Gene, genomeStartPos int, genomeEndPos int) (int, i
 		}
 	}
 
-	var genomeIndexStartPos, genomeIndexEndPos int
+	var genomeIndexStartPos, genomeIndexEndPos int // left closed, right open
 
 	if g.posStrand {
 		genomeIndexStartPos = genomeStartPos - g.startPos
 		genomeIndexEndPos = genomeEndPos - g.startPos
 	} else { // flipped for neg posStrand. start of deletion, and end of deletion must be flipped
-		genomeIndexStartPos = g.startPos - genomeEndPos
-		genomeIndexEndPos = g.startPos - genomeStartPos
+		genomeIndexStartPos = g.startPos - (genomeEndPos - 1)
+		genomeIndexEndPos = g.startPos - (genomeStartPos - 1)
 	}
 
 	if genomeIndexEndPos > len(g.genomeSeq) {
 		genomeIndexEndPos = len(g.genomeSeq) // if deletion goes past the end of the gene, then trim the value
 	}
-	if genomeIndexStartPos >= len(g.genomeSeq)-1 {
+	if genomeIndexStartPos > len(g.genomeSeq)-1 {
 		return -1, -1, ErrInputPosNotInGene
 	}
 
 	// Fill changeLog
 	log.genomePos = genomeStartPos
-	log.removed = make([]dna.Base, genomeIndexEndPos-(genomeIndexStartPos+1))
-	copy(log.removed, g.genomeSeq[genomeIndexStartPos+1:genomeIndexEndPos])
+	log.removed = make([]dna.Base, genomeIndexEndPos-genomeIndexStartPos)
+	copy(log.removed, g.genomeSeq[genomeIndexStartPos:genomeIndexEndPos])
 	g.changeLog = append(g.changeLog, log)
 	return genomeIndexStartPos, genomeIndexEndPos, nil
 }
@@ -320,7 +323,7 @@ func safeDelete(g *Gene, seq *[]dna.Base, delStart int, delEnd int, offset int) 
 }
 
 var (
-	errInvalidPosition = errors.New("Input position to deleteStable is invalid")
+	errInvalidPosition = errors.New("input position to deleteStable is invalid")
 )
 
 // deleteStable is identical to Delete, but conserves the
