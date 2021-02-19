@@ -21,7 +21,7 @@ func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 
 			nodeInfo[stringSeq] = true
 		}
 	}
-	for seq, _ := range nodeInfo {
+	for seq := range nodeInfo {
 		id += 1
 		var newNode *simpleGraph.Node
 		newNode = &simpleGraph.Node{Id: id, Name: root.Name, Seq: dna.StringToBases(seq), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases(seq)), Next: nil, Prev: nil, Info: simpleGraph.Annotation{}}
@@ -69,20 +69,18 @@ func PathFinder(g *simpleGraph.SimpleGraph) ([]uint32, float32) {
 }
 
 //bestPath is the helper function for PathFinder, and recursively traverses the graph depth first to determine the most likely path from start to finish
-func bestPath(node *simpleGraph.Node, prevProb float32, prevPath []uint32) (prob float32, path []uint32) {
+func bestPath(node *simpleGraph.Node, prevProb float32, path []uint32) (prob float32, pathOut []uint32) {
 	var tempProb float32 = 0
-	var tempPath []uint32
 	var finalProb float32
 	var finalPath []uint32
 
-	tempPath = append(tempPath, prevPath...)
-	tempPath = append(tempPath, node.Id)
+	path = append(path, node.Id)
 	if len(node.Next) == 0 {
-		return prevProb, tempPath
+		return prevProb, path
 	}
-	for i, _ := range node.Next {
+	for i := range node.Next {
 		tempProb = node.Next[i].Prob * prevProb
-		currentProb, currentPath := bestPath(node.Next[i].Dest, tempProb, tempPath)
+		currentProb, currentPath := bestPath(node.Next[i].Dest, tempProb, path)
 		if currentProb > finalProb {
 			finalProb = currentProb
 			finalPath = currentPath
