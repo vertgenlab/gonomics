@@ -9,7 +9,7 @@ import (
 
 type graphColumn struct {
 	AlignId    int
-	AlignNodes map[string][]*simpleGraph.Node
+	AlignNodes map[string][]*simpleGraph.Node //string keys refer to species that key to a slice of pointers to the nodes of that species that fall into a single slignment column
 }
 
 //BuildNodes uses a graphColumn to create nodes for an ancestor's graph seq that represents all the unique sequences in an aligned graph
