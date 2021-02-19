@@ -116,7 +116,12 @@ func CatchErrThrowEOF(err error) {
 
 // BytesToBuffer will parse []byte and return a pointer to the same underlying bytes.Buffer
 func BytesToBuffer(reader *ByteReader) *bytes.Buffer {
-	_, err := reader.Buffer.Write(reader.line[:len(reader.line)-1])
+	var err error
+	if reader.line[len(reader.line)-2] == '\r' {
+		_, err = reader.Buffer.Write(reader.line[:len(reader.line)-2])
+	} else {
+		_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
+	}
 	exception.PanicOnErr(err)
 	return reader.Buffer
 }
