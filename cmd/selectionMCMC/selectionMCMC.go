@@ -8,16 +8,17 @@ import (
 	"log"
 )
 
-func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64) {
+func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool) {
 	common.RngSeed(randSeed, setSeed)
-	data := popgen.VcfToAFS(filename)
+	data := popgen.VcfToAFS(filename, !unPolarized)//VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
 	popgen.MetropolisHastings(data, muZero, sigmaZero, iterations, outFile)
 }
 
 func usage() {
 	fmt.Print(
 		"selectionMCMC - Returns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions.\n" +
-			"Selection calculated from sequence variability from an input gVCF.\n" +
+			"Selection calculated from sequence variability from an input VCF.\n" +
+			"Uses derived allele frequencies from VCFs with ancestor allele annotations by default.\n" +
 			"Implements the Metropolis-Hastings algorithm to evaluate a Markov Chain Monte Carlo approximation of the selection coefficient distribution.\n" +
 			"Usage:\n" +
 			"selectionMCMC input.vcf out.txt\n")
@@ -31,6 +32,7 @@ func main() {
 	var sigmaZero *float64 = flag.Float64("sigmaZero", 1, "Starting value for the selection coefficient distribution variance parameter sigma.")
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -44,5 +46,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed)
+	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed, *unPolarized)
 }

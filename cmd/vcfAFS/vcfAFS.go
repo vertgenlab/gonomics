@@ -8,8 +8,8 @@ import (
 	"log"
 )
 
-func vcfAFS(vcfFile string, outFile string) {
-	g := popgen.VcfToAFS(vcfFile)
+func vcfAFS(vcfFile string, outFile string, unPolarized bool) {
+	g := popgen.VcfToAFS(vcfFile, !unPolarized)//VcfToAFS is written in terms of polarized, so this is inverted here.
 	f := popgen.AFSToFrequency(g)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
@@ -25,6 +25,8 @@ func usage() {
 }
 
 func main() {
+	var unPolarized *bool = flag.Bool("unPolarized", false, "vcfAFS creates polarized derived frequency spectra by default. When true, the cmd returns unpolarized site frequency spectra.")
+
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -37,5 +39,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	vcfAFS(vcfFile, outFile)
+	vcfAFS(vcfFile, outFile, *unPolarized)
 }

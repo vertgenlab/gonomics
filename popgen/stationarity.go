@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math"
-	//DEBUG: "log"
+	"log"
 	"strings"
 	//DEBUG"fmt"
 )
@@ -28,6 +28,10 @@ type AFS struct {
 type SegSite struct {
 	i int //individuals with the allele
 	n int //total number of individuals
+}
+
+func InvertSegSite(s *SegSite) {
+	s.i = s.n - s.i
 }
 
 //MultiFaToAFS constructs an allele frequency spectrum struct from a multiFa alignment block.
@@ -52,8 +56,8 @@ func MultiFaToAFS(aln []*fasta.Fasta) AFS {
 }
 
 //GvcfToAFS reads in a Gvcf file, parses the genotype information, and constructs an AFS struct.
-//TODO: This function will change when we update the gVCF stuff.
-func VcfToAFS(filename string) AFS {
+//Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
+func VcfToAFS(filename string, polarized bool) AFS {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
@@ -62,7 +66,7 @@ func VcfToAFS(filename string) AFS {
 	for i := range alpha {
 		currentSeg = &SegSite{i: 0, n: 0}
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregting sites are biallelic, so we only check the first entry in Alt.
+		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
 			for j = 0; j < len(i.Samples); j++ {
 				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
 					currentSeg.n = currentSeg.n + 2
@@ -75,6 +79,16 @@ func VcfToAFS(filename string) AFS {
 				}
 			}
 			if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
+				if polarized && vcf.HasAncestor(i){
+					if vcf.IsAltAncestor(i) {
+						InvertSegSite(currentSeg)
+					} else if !vcf.IsRefAncestor(i) {
+						continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
+					}	
+				} 
+				if polarized && !vcf.HasAncestor(i) {
+					log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
+				}
 				answer.sites = append(answer.sites, currentSeg)
 			}
 		}

@@ -10,7 +10,7 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) bool {
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -33,6 +33,9 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 		return false
 	}
 	if segregatingSitesOnly && !IsSegregating(v) {
+		return false
+	}
+	if removeNoAncestor && !HasAncestor(v) {
 		return false
 	}
 	return true

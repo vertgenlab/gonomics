@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) {
+func vcfFilter(infile string, outfile string, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool) {
 	ch, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
@@ -35,7 +35,7 @@ func vcfFilter(infile string, outfile string, groupFile string, chrom string, mi
 	vcf.NewWriteHeader(out.File, header)
 
 	for v := range ch {
-		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual, biAllelicOnly, substitutionsOnly, segregatingSitesOnly) {
+		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual, biAllelicOnly, substitutionsOnly, segregatingSitesOnly, removeNoAncestor) {
 			if groupFile != "" {
 				v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
 			}
@@ -84,6 +84,7 @@ func main() {
 	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file.")
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "Retains only substitution variants in the output file (removes INDEL variants).")
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
+	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -98,5 +99,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFilter(infile, outfile, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual, *biAllelicOnly, *substitutionsOnly, *segregatingSitesOnly)
+	vcfFilter(infile, outfile, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual, *biAllelicOnly, *substitutionsOnly, *segregatingSitesOnly, *removeNoAncestor)
 }
