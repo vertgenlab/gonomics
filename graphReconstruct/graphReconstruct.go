@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/simpleGraph"
+	"log"
 )
 
 type graphColumn struct {
@@ -22,10 +23,10 @@ func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 
 		}
 	}
 	for seq := range nodeInfo {
-		id += 1
 		var newNode *simpleGraph.Node
 		newNode = &simpleGraph.Node{Id: id, Name: root.Name, Seq: dna.StringToBases(seq), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases(seq)), Next: nil, Prev: nil, Info: simpleGraph.Annotation{}}
 		column.AlignNodes[root.Name] = append(column.AlignNodes[root.Name], newNode)
+		id += 1
 	}
 	return id
 }
@@ -44,10 +45,15 @@ func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 
 //seqOfPath takes in a graph and a path specified by the Node IDs and returns the seq of the path through the graph
 func seqOfPath(g *simpleGraph.SimpleGraph, path []uint32) []dna.Base {
 	var seq []dna.Base
+	var foundInGraph = false
 	for n := 0; n < len(g.Nodes); n++ {
 		for p := 0; p < len(path); p++ {
 			if g.Nodes[n].Id == path[p] {
+				foundInGraph = true
 				seq = append(seq, g.Nodes[n].Seq...)
+			}
+			if !foundInGraph {
+				log.Fatal("path is invalid")
 			}
 		}
 	}
