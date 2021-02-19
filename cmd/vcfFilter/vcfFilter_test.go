@@ -20,7 +20,7 @@ var VcfFilterTests = []struct {
 	biAllelicOnly        bool
 	substitutionsOnly    bool
 	segregatingSitesOnly bool
-	removeNoAncestor	bool
+	removeNoAncestor     bool
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", "", true, true, true, false},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0.0, "", "", false, false, false, true},

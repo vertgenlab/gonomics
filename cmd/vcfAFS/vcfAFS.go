@@ -9,7 +9,7 @@ import (
 )
 
 func vcfAFS(vcfFile string, outFile string, unPolarized bool) {
-	g := popgen.VcfToAFS(vcfFile, !unPolarized)//VcfToAFS is written in terms of polarized, so this is inverted here.
+	g := popgen.VcfToAFS(vcfFile, !unPolarized) //VcfToAFS is written in terms of polarized, so this is inverted here.
 	f := popgen.AFSToFrequency(g)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
