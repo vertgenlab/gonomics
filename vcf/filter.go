@@ -198,6 +198,9 @@ func IsBiallelic(v *Vcf) bool {
 
 //IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
 func IsSubstitution(v *Vcf) bool {
+	if len(v.Ref) != 1 {
+		return false
+	}
 	for _, alt := range v.Alt {
 		if len(alt) != 1 {
 			return false

@@ -76,29 +76,32 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 				//faFile will be given if we are lifting over VCF data.
 				currVcf = i.(*vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
-					log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.") //Currently we're causing INDEL records to fatal.
-				}
-				if len(currVcf.Alt) > 1 {
-					log.Fatalf("VCF liftOver is currently only supported for biallelic variants. Variant at %s %v is polyallelic.", currVcf.Chr, currVcf.Pos)
-				}
-				//first question: does the "Ref" match the destination fa at this position.
-				if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) {
+					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
+					i.WriteToFileHandle(un)
+					//log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.") //Currently we're causing INDEL records to fatal.
+				} else if len(currVcf.Alt) > 1 {
+					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
+					i.WriteToFileHandle(un)
+				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
 					if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
 						fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 					}
+					i.WriteToFileHandle(out)
 					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
 				} else if fasta.QuerySeq(records, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
 					i.WriteToFileHandle(un)
 					vcf.InvertVcf(currVcf)
+					i.WriteToFileHandle(out)
 				} else {
 					fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
 					i.WriteToFileHandle(un)
 				}
+			} else {
+				i.WriteToFileHandle(out)
 			}
-			i.WriteToFileHandle(out)
 		}
 	}
 }
