@@ -70,7 +70,7 @@ func TestVcfAnnotateAncestorFromFa(t *testing.T) {
 	var i int = 0
 
 	for v := range reader {
-		AnnotateAncestorFromFa(v, records)
+		AnnotateAncestorFromMultiFa(v, records)
 		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
 		if dna.CompareSeqsIgnoreCase(QueryAncestor(v), answers[i]) != 0 {
 			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(QueryAncestor(v)))
