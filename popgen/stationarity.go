@@ -25,11 +25,13 @@ type AFS struct {
 	sites []*SegSite
 }
 
+//SegSite is the basic struct for segregating sites, used to construct allele frequency spectra.
 type SegSite struct {
 	i int //individuals with the allele
 	n int //total number of individuals
 }
 
+//InvertSegSite reverses the polarity of a segregating site.
 func InvertSegSite(s *SegSite) {
 	s.i = s.n - s.i
 }

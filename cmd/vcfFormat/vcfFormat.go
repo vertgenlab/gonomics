@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string) {
+func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string, clearInfo bool) {
 	ch, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
@@ -25,12 +25,18 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 		ref := fasta.FastaMap(fasta.Read(ref))
 		if ensemblToUCSC {
 			for v := range ch {
+				if clearInfo {
+					v.Info = "."
+				}
 				vcf.FixVcf(v, ref)
 				v.Chr = convert.EnsemblToUCSC(v.Chr)
 				vcf.WriteVcf(out.File, v)
 			}
 		} else if UCSCToEnsembl {
 			for v := range ch {
+				if clearInfo {
+					v.Info = "."
+				}
 				vcf.FixVcf(v, ref)
 				v.Chr = convert.UCSCToEnsembl(v.Chr)
 				vcf.WriteVcf(out.File, v)
@@ -39,11 +45,17 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 	} else {
 		if ensemblToUCSC {
 			for v := range ch {
+				if clearInfo {
+					v.Info = "."
+				}
 				v.Chr = convert.EnsemblToUCSC(v.Chr)
 				vcf.WriteVcf(out.File, v)
 			}
 		} else if UCSCToEnsembl {
 			for v := range ch {
+				if clearInfo {
+					v.Info = "."
+				}
 				v.Chr = convert.UCSCToEnsembl(v.Chr)
 				vcf.WriteVcf(out.File, v)
 			}
@@ -64,6 +76,7 @@ func main() {
 	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
+	var clearInfo *bool = flag.Bool("clearInfo", false, "Removes the information in the INFO field and replaces it with a '.'")
 	var fixVcfRecords *bool = flag.Bool("fix", false, "Fixes improperly formatted vcf records (e.g. '-' in ALT field")
 	var ref *string = flag.String("ref", "", "Reference fasta. Only needed if using -fix.")
 
@@ -80,5 +93,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref)
+	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref, *clearInfo)
 }
