@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"math"
 	"log"
+	"math"
 	"strings"
 	//DEBUG"fmt"
 )
@@ -81,13 +81,13 @@ func VcfToAFS(filename string, polarized bool) AFS {
 				}
 			}
 			if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
-				if polarized && vcf.HasAncestor(i){
+				if polarized && vcf.HasAncestor(i) {
 					if vcf.IsAltAncestor(i) {
 						InvertSegSite(currentSeg)
 					} else if !vcf.IsRefAncestor(i) {
 						continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
-					}	
-				} 
+					}
+				}
 				if polarized && !vcf.HasAncestor(i) {
 					log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
 				}

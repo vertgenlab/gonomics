@@ -10,7 +10,7 @@ import (
 
 func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool) {
 	common.RngSeed(randSeed, setSeed)
-	data := popgen.VcfToAFS(filename, !unPolarized)//VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
+	data := popgen.VcfToAFS(filename, !unPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
 	popgen.MetropolisHastings(data, muZero, sigmaZero, iterations, outFile)
 }
 
