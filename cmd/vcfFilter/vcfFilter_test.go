@@ -8,20 +8,20 @@ import (
 )
 
 var VcfFilterTests = []struct {
-	inputFile            string
-	expectedOutputFile   string
-	groupFile            string
-	chrom                string
-	minPos               int
-	maxPos               int
-	minQual              float64
-	ref                  string
-	alt                  string
-	biAllelicOnly        bool
-	substitutionsOnly    bool
-	segregatingSitesOnly bool
-	removeNoAncestor     bool
-	onlyPolarizableAncestors	bool
+	inputFile                string
+	expectedOutputFile       string
+	groupFile                string
+	chrom                    string
+	minPos                   int
+	maxPos                   int
+	minQual                  float64
+	ref                      string
+	alt                      string
+	biAllelicOnly            bool
+	substitutionsOnly        bool
+	segregatingSitesOnly     bool
+	removeNoAncestor         bool
+	onlyPolarizableAncestors bool
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0.0, "", "", true, true, true, false, false},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0.0, "", "", false, false, false, true, false},

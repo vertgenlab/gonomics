@@ -239,7 +239,7 @@ func IsPolarizable(v *Vcf) bool {
 	if len(aa) > 1 || aa == "-" || aa == "N" {
 		return false
 	}
-	if aa != v.Ref && aa != v.Alt[0] {//if ancestral allele is equal to neither the alt or ref allele.
+	if aa != v.Ref && aa != v.Alt[0] { //if ancestral allele is equal to neither the alt or ref allele.
 		return false
 	}
 	return true
