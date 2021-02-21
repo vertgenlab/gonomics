@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -15,6 +16,8 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
 
+	var refMap map[string][]dna.Base
+
 	vcf.NewWriteHeader(out, header)
 
 	if ensemblToUCSC && UCSCToEnsembl {
@@ -22,44 +25,23 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 	}
 
 	if fixVcfRecords {
-		ref := fasta.FastaMap(fasta.Read(ref))
-		if ensemblToUCSC {
-			for v := range ch {
-				if clearInfo {
-					v.Info = "."
-				}
-				vcf.FixVcf(v, ref)
-				v.Chr = convert.EnsemblToUCSC(v.Chr)
-				vcf.WriteVcf(out.File, v)
-			}
-		} else if UCSCToEnsembl {
-			for v := range ch {
-				if clearInfo {
-					v.Info = "."
-				}
-				vcf.FixVcf(v, ref)
-				v.Chr = convert.UCSCToEnsembl(v.Chr)
-				vcf.WriteVcf(out.File, v)
-			}
+		refMap = fasta.FastaMap(fasta.Read(ref))
+	}
+
+	for v := range ch {
+		if clearInfo {
+			v.Info = "."
 		}
-	} else {
-		if ensemblToUCSC {
-			for v := range ch {
-				if clearInfo {
-					v.Info = "."
-				}
-				v.Chr = convert.EnsemblToUCSC(v.Chr)
-				vcf.WriteVcf(out.File, v)
-			}
-		} else if UCSCToEnsembl {
-			for v := range ch {
-				if clearInfo {
-					v.Info = "."
-				}
-				v.Chr = convert.UCSCToEnsembl(v.Chr)
-				vcf.WriteVcf(out.File, v)
-			}
+		if fixVcfRecords {
+			vcf.FixVcf(v, refMap)
 		}
+		if ensemblToUCSC {
+			v.Chr = convert.EnsemblToUCSC(v.Chr)
+		}
+		if UCSCToEnsembl {
+			v.Chr = convert.UCSCToEnsembl(v.Chr)
+		}
+		vcf.WriteVcf(out.File, v)
 	}
 }
 
