@@ -47,9 +47,9 @@ func HasAncestor(g *Vcf) bool {
 	return QueryAncestor(g) != nil
 }
 
-//AnnotateAncestorFromFa adds the ancestral state to a VCF variant by inspecting a pairwise fasta of the reference genome and an ancestor sequence.
+//AnnotateAncestorFromMultiFa adds the ancestral state to a VCF variant by inspecting a pairwise fasta of the reference genome and an ancestor sequence.
 //records is a pairwise multiFa where the first entry is the reference genome and the second entry is the ancestor.
-func AnnotateAncestorFromFa(g *Vcf, records []*fasta.Fasta) {
+func AnnotateAncestorFromMultiFa(g *Vcf, records []*fasta.Fasta) {
 	p := fasta.RefPosToAlnPos(records[0], int(g.Pos)-1) //get the alignment position of the variant
 	//DEBUG: fmt.Printf("RefSeq: %s\n", dna.BasesToString(records[0].Seq))
 	//DEBUG: fmt.Printf("Alignment pos: %v. Base at p: %s. Base at p+1: %s.\n", p, dna.BaseToString(records[0].Seq[p]), dna.BaseToString(records[0].Seq[p+1]))
