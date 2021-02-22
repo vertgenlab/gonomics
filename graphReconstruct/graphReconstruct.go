@@ -46,15 +46,17 @@ func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 
 func seqOfPath(g *simpleGraph.SimpleGraph, path []uint32) []dna.Base {
 	var seq []dna.Base
 	var foundInGraph = false
-	for n := 0; n < len(g.Nodes); n++ {
-		for p := 0; p < len(path); p++ {
+	for p := 0; p < len(path); p++ {
+		foundInGraph = false
+		for n := 0; n < len(g.Nodes) && !foundInGraph; n++ {
 			if g.Nodes[n].Id == path[p] {
 				foundInGraph = true
 				seq = append(seq, g.Nodes[n].Seq...)
+			} else {
 			}
-			if !foundInGraph {
-				log.Fatal("path is invalid")
-			}
+		}
+		if !foundInGraph {
+			log.Fatal("path is invalid")
 		}
 	}
 	return seq
