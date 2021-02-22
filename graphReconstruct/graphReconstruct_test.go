@@ -53,6 +53,78 @@ func TestGraphColumn(t *testing.T) {
 	allAlign = append(allAlign, nodeAlign2)
 	allAlign = append(allAlign, nodeAlign3)
 
+	for _, speciesNodes := range nodeAlign0.AlignNodes {
+		if len(speciesNodes) != 1 {
+			log.Fatal("incorrect number of human nodes")
+		}
+		_, ok := nodeAlign0.AlignNodes["human"]
+		if !ok {
+			log.Fatal("no human in align column")
+		}
+		_, ok = nodeAlign0.AlignNodes["chimp"]
+		if !ok {
+			log.Fatal("no chimp in align column")
+		}
+		_, ok = nodeAlign0.AlignNodes["gorilla"]
+		if !ok {
+			log.Fatal("no gorilla in align column")
+		}
+	}
+
+	for _, speciesNodes := range nodeAlign1.AlignNodes {
+		if len(speciesNodes) != 1 {
+			log.Fatal("incorrect number of human nodes")
+		}
+		_, ok := nodeAlign1.AlignNodes["human"]
+		if !ok {
+			log.Fatal("no human in align column")
+		}
+		_, ok = nodeAlign1.AlignNodes["chimp"]
+		if ok {
+			log.Fatal("chimp in wrong align column")
+		}
+		_, ok = nodeAlign1.AlignNodes["gorilla"]
+		if ok {
+			log.Fatal("gorilla in wrong align column")
+		}
+	}
+
+	for _, speciesNodes := range nodeAlign2.AlignNodes {
+		if len(speciesNodes) != 1 {
+			log.Fatal("incorrect number of human nodes")
+		}
+		_, ok := nodeAlign2.AlignNodes["human"]
+		if !ok {
+			log.Fatal("no human in align column")
+		}
+		_, ok = nodeAlign2.AlignNodes["chimp"]
+		if !ok {
+			log.Fatal("no chimp in align column")
+		}
+		_, ok = nodeAlign2.AlignNodes["gorilla"]
+		if !ok {
+			log.Fatal("no gorilla in align column")
+		}
+	}
+
+	for _, speciesNodes := range nodeAlign3.AlignNodes {
+		if len(speciesNodes) != 2 {
+			log.Fatal("incorrect number of human nodes")
+		}
+		_, ok := nodeAlign3.AlignNodes["human"]
+		if !ok {
+			log.Fatal("no human in align column")
+		}
+		_, ok = nodeAlign3.AlignNodes["chimp"]
+		if ok {
+			log.Fatal("chimp in wrong align column")
+		}
+		_, ok = nodeAlign3.AlignNodes["gorilla"]
+		if ok {
+			log.Fatal("gorilla in wrong align column")
+		}
+	}
+
 	humanNode1.Next = []*simpleGraph.Edge{humanEdge1, humanEdge2}
 	humanNode2.Next = []*simpleGraph.Edge{humanEdge3}
 	humanNode3.Next = []*simpleGraph.Edge{humanEdge4, humanEdge5}
@@ -69,24 +141,28 @@ func TestGraphColumn(t *testing.T) {
 	gorillaNode1.Next = []*simpleGraph.Edge{gorillaEdge1}
 	gorillaNode2.Prev = []*simpleGraph.Edge{gorillaEdge1}
 
-	simpleGraph.PrintGraph(humanGraph)
-	simpleGraph.PrintGraph(chimpGraph)
-	simpleGraph.PrintGraph(gorillaGraph)
-
-	log.Print(nodeAlign0.AlignId)
-	log.Print(nodeAlign1.AlignId)
-	log.Print(nodeAlign2.AlignId)
-	log.Print(nodeAlign3.AlignId)
+	//simpleGraph.PrintGraph(humanGraph)
+	//simpleGraph.PrintGraph(chimpGraph)
+	//simpleGraph.PrintGraph(gorillaGraph)
 }
 
 func TestPathFinder(t *testing.T) {
+	actualSeq := "ACGTTTGGGGG"
+	actualPath := []uint32{0, 2, 4}
 	path, prob := PathFinder(humanGraph)
-	log.Print("path")
-	log.Print(path)
-	log.Print("prob")
-	log.Print(prob)
+	for i := range path {
+		if path[i] != actualPath[i] {
+			log.Fatalf("path output: %v does not match expected path: %v", path, actualPath)
+		}
+	}
+	if prob != 0.5625 {
+		log.Fatal("prob of path is incorrect")
+	}
 	seq := seqOfPath(humanGraph, path)
-	log.Print(dna.BasesToString(seq))
+	if dna.BasesToString(seq) != actualSeq {
+		log.Printf("Sequence outpput: %s does not match expected sequence: %s", dna.BasesToString(seq), actualSeq)
+	}
+	//log.Print(dna.BasesToString(seq))
 }
 
 func TestBuildNodes(t *testing.T) {
@@ -112,6 +188,9 @@ func TestBuildNodes(t *testing.T) {
 				}
 			}
 		}
-		simpleGraph.PrintGraph(speciesGraph)
+		if len(speciesGraph.Nodes) != 5 {
+			log.Fatal("wrong number of nodes in the ancestor's graph")
+		}
+		//simpleGraph.PrintGraph(speciesGraph)
 	}
 }
