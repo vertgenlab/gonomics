@@ -22,11 +22,10 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 
 	// Update CDS starts and ends
 	for idx, val := range g.cdsStarts {
-		if val <= genomeIndexPos && g.cdsEnds[idx] > genomeIndexPos {
-			g.cdsEnds[idx] += len(alt)
-		}
 		if val > genomeIndexPos {
 			g.cdsStarts[idx] += len(alt)
+			g.cdsEnds[idx] += len(alt)
+		} else if g.cdsEnds[idx] > genomeIndexPos {
 			g.cdsEnds[idx] += len(alt)
 		}
 	}
@@ -63,8 +62,8 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 
 		if frame != 0 { // if insertion disrupts a codon, note the codon being changed
 			currCodon, err = CdnaPosToCodon(g, codingPos)
-			if err != nil { //TODO REMOVE
-				log.Panic("ERROR WITH CDNA POS")
+			if err != nil {
+				log.Panic("error with cDNA pos")
 			}
 			answer.AaRef = []dna.AminoAcid{dna.TranslateCodon(currCodon)}
 		}
@@ -108,7 +107,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 			g.protSeq = newProtSeq //TODO append new prot seq to existing seq at point of insertion
 
 		} else { // In-Frame
-			newProtSeq = dna.TranslateToTer(g.codingSeq.seq) //TODO this can be much more efficient
+			newProtSeq = dna.TranslateSeqToTer(g.codingSeq.seq) //TODO this can be much more efficient
 			answer.Consequence = InFrameInsertion
 			if frame != 0 { // Disrupts an existing codon
 				answer.AaAlt = dna.TranslateSeq(g.codingSeq.seq[(codingPos+1)-frame : (codingPos+1)+len(alt)+(3-frame)])
@@ -135,9 +134,6 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 				if g.featureArray[i] == UtrFive {
 					utrFiveOffset++
 				}
-				if i > len(g.featureArray) { // case of no codingSeq
-					break
-				}
 			}
 
 			if utrFiveOffset > -1 { // Update 5' UTR
@@ -154,7 +150,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 				if g.featureArray[i] == UtrThree {
 					utrThreeOffset++
 				}
-				if i <= 0 { // case of no codingSeq
+				if i <= 0 { // case where entire gene is 3' UTR
 					break
 				}
 			}
@@ -177,8 +173,8 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		var endCdnaOffset int
 		answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos+1)
 		_, endCdnaOffset, err = GenomicPosToCdna(g, genomePos+1+(len(alt)-1))
-		if err != nil { //TODO REMOVE
-			log.Panic("ERROR WITH CDNA POS")
+		if err != nil {
+			log.Panic("error with cDNA pos")
 		}
 		if numbers.AbsInt(endCdnaOffset) < numbers.AbsInt(answer.CdnaDist) {
 			answer.Consequence = checkSplice(endCdnaOffset)
@@ -313,10 +309,7 @@ func frameshiftTranslate(shiftedCds []dna.Base, utrThree []dna.Base) []dna.Amino
 
 	remainingUtrThree := utrThree[3-frameOffset:]
 
-	for i := 0; i < len(remainingUtrThree); i += 3 {
-		if i+3 > len(remainingUtrThree) {
-			break
-		}
+	for i := 0; i < len(remainingUtrThree) && i+3 <= len(remainingUtrThree); i += 3 {
 		answer = append(answer, dna.TranslateSeq(remainingUtrThree[i : i+3])[0])
 		if answer[len(answer)-1] == dna.Stop {
 			return answer
