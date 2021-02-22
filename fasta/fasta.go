@@ -1,9 +1,11 @@
+// Package fasta provides functions for reading, writing, and manipulating fasta files.
 package fasta
 
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
@@ -11,33 +13,53 @@ import (
 	"strings"
 )
 
+// Fasta stores the name and sequence of each '>' delimited record in a fasta file.
 type Fasta struct {
 	Name string
 	Seq  []dna.Base
 }
 
+// Read in a fasta file to a []*Fasta struct. File must begin with
 func Read(filename string) []*Fasta {
 	var line string
-	var currSeq []dna.Base
 	var answer []*Fasta
-	var seqIdx int64 = -1
+	var seqIdx int = -1
 	var doneReading bool = false
 
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	//reader := bufio.NewReader(file)
+
+	prefix, err := fileio.EasyPeekReal(file, 1)
+	if err != nil || prefix[0] != '>' {
+		log.Fatalf("ERROR: %s is missing a sequence name (e.g. >chr1)", filename)
+	}
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
-			tmp := Fasta{Name: line[1:len(line)]}
-			answer = append(answer, &tmp)
+			answer = append(answer, &Fasta{Name: line[1:]})
 			seqIdx++
 		} else {
-			currSeq = dna.StringToBases(line)
-			answer[seqIdx].Seq = append(answer[seqIdx].Seq, currSeq...)
+			answer[seqIdx].Seq = append(answer[seqIdx].Seq, dna.StringToBases(line)...)
 		}
 	}
+
+	exception.WarningOnErr(file.Close())
 	return answer
+}
+
+//Dictionary/hash map look up of sequence by name
+func FastaMap(ref []*Fasta) map[string][]dna.Base {
+	m := make(map[string][]dna.Base)
+	var curr *Fasta
+	for i := 0; i < len(ref); i++ {
+		curr = ref[i]
+		_, ok := m[curr.Name]
+		if !ok {
+			m[curr.Name] = curr.Seq
+		} else {
+			log.Fatalf("Fasta slice has duplicate names")
+		}
+	}
+	return m
 }
 
 func WriteToSplitChr(filename string, records []*Fasta) {
@@ -110,20 +132,4 @@ func CreateAllGaps(name string, numGaps int64) *Fasta {
 func CreateAllNs(name string, numGaps int64) *Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllNs(numGaps)}
 	return &answer
-}
-
-//Dictionary/hash map look up of sequence by name
-func FastaMap(ref []*Fasta) map[string][]dna.Base {
-	m := make(map[string][]dna.Base)
-	var curr *Fasta
-	for i := 0; i < len(ref); i++ {
-		curr = ref[i]
-		_, ok := m[curr.Name]
-		if !ok {
-			m[curr.Name] = curr.Seq
-		} else {
-			log.Fatalf("Fasta slice has duplicate names")
-		}
-	}
-	return m
 }

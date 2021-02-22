@@ -72,6 +72,11 @@ func EasyNextRealLine(file *EasyReader) (string, bool) {
 	return NextRealLine(file.BuffReader)
 }
 
+// EasyPeekReal will advance a reader past any lines beginning with '#' and read the first n bytes without advancing the reader.
+func EasyPeekReal(file *EasyReader, n int) ([]byte, error) {
+	return PeekReal(file.BuffReader, n)
+}
+
 // EasyRemove deletes the input file.
 func EasyRemove(filename string) {
 	err := os.Remove(filename)
