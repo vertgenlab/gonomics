@@ -104,16 +104,17 @@ func (er *EasyReader) Read(p []byte) (n int, err error) {
 }
 
 // Close the receiving EasyWriter.
-func (ew *EasyWriter) Close() {
+func (ew *EasyWriter) Close() error {
 	if ew.internalGzip != nil {
-		exception.PanicOnErr(ew.internalGzip.Close())
+		return ew.internalGzip.Close()
 	}
 	if ew.internalBuff != nil {
-		exception.PanicOnErr(ew.internalBuff.Flush())
+		return ew.internalBuff.Flush()
 	}
 	if ew.File != nil {
-		exception.PanicOnErr(ew.File.Close())
+		return ew.File.Close()
 	}
+	return errors.New("no reader detected")
 }
 
 // Write bytes to the receiving EasyWriter.
