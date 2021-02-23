@@ -11,14 +11,15 @@ func setupBlankAln(ref *fasta.Fasta, species []string) []*fasta.Fasta {
 	answer = append(answer, ref)
 	answer[0].Name = species[0]
 	for i := 1; i < len(species); i++ {
-		answer = append(answer, fasta.CreateAllGaps(species[i], int64(len(ref.Seq))))
+		answer = append(answer, fasta.CreateAllGaps(species[i], len(ref.Seq)))
 	}
 	return answer
 }
 
 func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 	var speciesBlock *MafSpecies
-	var replaceStart, replaceEnd, replaceAlnLength int64
+	var replaceStart, replaceEnd int64
+	var replaceAlnLength int
 	if m == nil || len(m.Species) < 1 || len(aln) < 1 {
 		log.Fatalf("Error: empty maf or fasta alignment passed into insertMafBlockIntoFasta\n")
 	}
@@ -35,7 +36,7 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 	}
 	replaceStart = refSLine.Start
 	replaceEnd = refSLine.Start + refSLine.Size
-	replaceAlnLength = int64(len(refSLine.Seq))
+	replaceAlnLength = len(refSLine.Seq)
 
 	//now replace what is in each fasta record for the maf interval
 	for i := 0; i < len(aln); i++ {

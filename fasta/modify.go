@@ -120,16 +120,6 @@ func AllToUpper(records []*Fasta) {
 	}
 }
 
-func GetChromIndex(records []*Fasta, name string) int {
-	for i := 0; i < len(records); i++ {
-		if records[i].Name == name {
-			return i
-		}
-	}
-	log.Fatalf("Chromosome name not found in fasta file.\n")
-	return -1
-}
-
 //In a multiple alignment block, removes any entries comprised only of gaps.
 func RemoveMissingMult(records []*Fasta) []*Fasta {
 	var answer []*Fasta

@@ -8,8 +8,7 @@ import (
 )
 
 func vcfToSimpleGraph(vcfFile, faFile string) *simpleGraph.SimpleGraph {
-	ref := make(chan *fasta.Fasta, 100)
-	go fasta.ReadToChan(faFile, ref)
+	ref := fasta.GoReadToChan(faFile)
 
 	hashByChrom := make(map[string][]*vcf.Vcf)
 	file := fileio.EasyOpen(vcfFile)

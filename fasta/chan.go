@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-//ReadToChan is a helper function of GoReadToChan.
+// ReadToChan is a helper function of GoReadToChan.
 func ReadToChan(file *fileio.EasyReader, data chan<- Fasta, wg *sync.WaitGroup) {
 	for curr, done := NextFasta(file); !done; curr, done = NextFasta(file) {
 		data <- *curr
@@ -14,7 +14,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Fasta, wg *sync.WaitGroup) 
 	wg.Done()
 }
 
-//GoReadToChan reads fasta records from an input filename and returns a channel of Fasta structs.
+// GoReadToChan reads fasta records from an input filename and returns a channel of Fasta structs.
 func GoReadToChan(filename string) <-chan Fasta {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup

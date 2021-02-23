@@ -12,14 +12,14 @@ import (
 	"strings"
 )
 
-func VariantGraph(ref <-chan *fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleGraph {
+func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
 	var filterVcf []*vcf.Vcf = make([]*vcf.Vcf, 0)
 	for chr := range ref {
 		filterVcf = vcfMap[chr.Name]
 		if len(filterVcf) != 0 {
 			vcf.Sort(filterVcf)
-			gg = vChrGraph(gg, chr, filterVcf)
+			gg = vChrGraph(gg, &chr, filterVcf)
 		} else {
 			// Given the input is a vcf containing large structural variance
 			// It is possible for a chromosome to contain no call variants (ex. chrM).

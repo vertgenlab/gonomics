@@ -56,8 +56,7 @@ func axtToSimpleGraph(axtFile, faFile string) *simpleGraph.SimpleGraph {
 	for i := range vcfChannel {
 		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
 	}
-	ref := make(chan *fasta.Fasta)
-	go fasta.ReadToChan(faFile, ref)
+	ref := fasta.GoReadToChan(faFile)
 	var gg *simpleGraph.SimpleGraph = &simpleGraph.SimpleGraph{}
 	gg = simpleGraph.VariantGraph(ref, chrVcfMap)
 	return gg
