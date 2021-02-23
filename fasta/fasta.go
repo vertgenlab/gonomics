@@ -2,6 +2,7 @@
 package fasta
 
 import (
+	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -20,10 +21,8 @@ type Fasta struct {
 // Read in a fasta file to a []*Fasta struct. All sequence records must be preceded by a name line starting with '>'.
 // Each record must have a unique sequence name
 func Read(filename string) []*Fasta {
-	var line string
-	var name string
+	var curr *Fasta
 	var answer []*Fasta
-	var seqIdx int = -1
 	var doneReading bool = false
 	usedSeqNames := make(map[string]bool)
 
@@ -34,23 +33,51 @@ func Read(filename string) []*Fasta {
 		log.Fatalf("ERROR: %s is missing a sequence name (e.g. >chr1)", filename)
 	}
 
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		if strings.HasPrefix(line, ">") {
-			name = line[1:]
-			if usedSeqNames[name] {
-				log.Fatalf("ERROR: %s is used as the name for multiple records. Names must be unique.", name)
-			} else {
-				usedSeqNames[name] = true
-				answer = append(answer, &Fasta{Name: name})
-				seqIdx++
-			}
+	for curr, doneReading = NextFasta(file); !doneReading; curr, doneReading = NextFasta(file) {
+		if usedSeqNames[curr.Name] {
+			log.Fatalf("ERROR: %s is used as the name for multiple records. Names must be unique.", curr.Name)
 		} else {
-			answer[seqIdx].Seq = append(answer[seqIdx].Seq, dna.StringToBases(line)...)
+			usedSeqNames[curr.Name] = true
+			answer = append(answer, curr)
 		}
 	}
 
 	exception.WarningOnErr(file.Close())
 	return answer
+}
+
+// NextFasta reads a single fasta record from an input EasyReader. Returns true when the file is fully read.
+func NextFasta(file *fileio.EasyReader) (*Fasta, bool) {
+	var line string
+	var name string
+	var answer *Fasta
+	var doneReading bool
+	var peek []byte
+	var err error
+
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		if strings.HasPrefix(line, ">") {
+			name = line[1:]
+			answer = &Fasta{Name: name, Seq: make([]dna.Base, 0)}
+		} else {
+			if answer == nil {
+				log.Fatalf("ERROR: %s is missing a sequence name (e.g. >chr1)", file.File.Name())
+			}
+			answer.Seq = append(answer.Seq, dna.StringToBases(line)...)
+		}
+
+		peek, err = fileio.EasyPeekReal(file, 1)
+		if errors.Is(err, io.EOF) {
+			return answer, doneReading // we could return true here, but we do not in order to match the behavior of other Next functions.
+		} else {
+			exception.PanicOnErr(err)
+		}
+
+		if peek[0] == '>' {
+			return answer, doneReading
+		}
+	}
+	return answer, doneReading
 }
 
 // FastaMap converts the output of the Read function to a map of sequences keyed to the sequences name.

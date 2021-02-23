@@ -73,7 +73,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
 	var peek []byte
 	var err error
-	for peek, err = reader.Peek(1); peek[0] == '#' && err == nil; peek, err = reader.Peek(1) {
+	for peek, err = reader.Peek(1); err == nil && peek[0] == '#'; peek, err = reader.Peek(1) {
 		_, err = reader.ReadBytes('\n') // advance reader past comment line
 		if err != nil {
 			return nil, err
