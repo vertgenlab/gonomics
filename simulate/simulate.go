@@ -69,12 +69,12 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string) {
+func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	printSeqForNodes(root, rand1[0].Seq, gene)
+	printSeqForNodes(root, rand1[0].Seq, gene, deletions)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1, unsure how it was calculated
@@ -151,7 +151,7 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 }
 
 //MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths
-func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dna.Base {
+func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool) []dna.Base {
 	//TODO: make sure a genePred can be updated as we go through the tree
 	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
 	var newSequence []BaseExt
@@ -182,14 +182,14 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 				for codon := 0; codon < len(originalCodons); codon++ {
 					thisCodon := originalCodons[codon]
 					start = CheckStart(geneRecord[g], thisCodon)
-					del := codonContainsDels(thisCodon, dna.Gap) // check if codon already contains deletions
+					delFound := codonContainsDels(thisCodon, dna.Gap) // check if codon already contains deletions
 					stop = CheckStop(geneRecord[g], thisCodon)
 					if start == true {
 						newSequence = append(newSequence, thisCodon.Seq[0])
 						newSequence = append(newSequence, thisCodon.Seq[1])
 						newSequence = append(newSequence, thisCodon.Seq[2])
 					}
-					if del == true { // if deletions are present in codon leave it as is (for simplicities sake; will change at a later date)
+					if delFound == true { // if deletions are present in codon leave it as is (for simplicities sake; will change at a later date)
 						newSequence = append(newSequence, thisCodon.Seq[0])
 						newSequence = append(newSequence, thisCodon.Seq[1])
 						newSequence = append(newSequence, thisCodon.Seq[2])
@@ -200,7 +200,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						newSequence = append(newSequence, newCodon.Seq[1])
 						newSequence = append(newSequence, newCodon.Seq[2])
 					}
-					if start == false && stop == false && del == false {
+					if start == false && stop == false && delFound == false {
 						var newCodon CodonExt
 						newCodon.Seq = make([]BaseExt, 3)
 						for codonPosition := 0; codonPosition < 3; codonPosition++ {
@@ -236,11 +236,10 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 
 	}
 	mutatedSequence := BaseExtToBases(newSequence)
-	del := seqContainsDels(mutatedSequence, dna.Gap)
-	switch del {
-	case false:
+	delFound := seqContainsDels(mutatedSequence, dna.Gap)
+	if delFound == true && deletions == true {
 		finalSequence = deleteBase(mutatedSequence)
-	default:
+	} else {
 		finalSequence = mutatedSequence
 	}
 	return finalSequence
@@ -476,22 +475,22 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 //make fastas based off of node and random sequence
-func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string) {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string, deletions bool) {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
 	//var fastaFinal []*fasta.Fasta
 
 	length = node.BranchLength
-	seq = MutateGene(sequence, length, gene)
+	seq = MutateGene(sequence, length, gene, deletions)
 
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	//fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
-		printSeqForNodes(node.Right, seq, gene)
+		printSeqForNodes(node.Right, seq, gene, deletions)
 		//fastaFinal = append(fastaFinal, b...)
-		printSeqForNodes(node.Left, seq, gene)
+		printSeqForNodes(node.Left, seq, gene, deletions)
 		//fastaFinal = append(fastaFinal, a...)
 	}
 }

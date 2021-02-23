@@ -14,7 +14,7 @@ func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile s
 	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
-	simulate.Simulate(rootFastaFile, tree, gp)
+	simulate.Simulate(rootFastaFile, tree, gp, true)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
