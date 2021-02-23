@@ -1,0 +1,62 @@
+
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run:
+        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+        go get -v golang.org/x/image/font &&
+        go get -v golang.org/x/image/math/fixed &&
+        go get -v golang.org/x/image/font/basicfont &&
+        go get -v github.com/biogo/hts/bgzf &&
+        go build ./...
+  
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Test
+      run: 
+        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+        go get -v golang.org/x/image/font &&
+        go get -v golang.org/x/image/math/fixed &&
+        go get -v golang.org/x/image/font/basicfont &&
+        go get -v github.com/biogo/hts/bgzf &&
+        go test ./...
+        
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          ref: ${{ github.head_ref }}
+      - name: go fmt
+        run: go fmt ./...
+      - name: Check for modified files
+        id: git-check
+        run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
+      - name: Push changes
+        if: steps.git-check.outputs.modified == 'true'
+        run: |
+          git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
+          git config --global user.name "AutoFmt Bot"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git commit -am "Automated go fmt"
+          git push
