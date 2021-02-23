@@ -1,6 +1,6 @@
 module github.com/vertgenlab/gonomics
 
-go 1.16
+go 1.15
 
 require (
 	github.com/biogo/hts v1.2.2
