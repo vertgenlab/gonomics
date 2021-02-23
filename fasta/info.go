@@ -34,6 +34,7 @@ func FindFaIndex(subFa []*Fasta, n string) int {
 	}
 	return -1
 }
+
 func IsFasta(filename string) bool {
 	if strings.HasSuffix(filename, ".fasta") || strings.HasSuffix(filename, ".fa") || strings.HasSuffix(filename, ".fasta.gz") || strings.HasSuffix(filename, ".fa.gz") {
 		return true

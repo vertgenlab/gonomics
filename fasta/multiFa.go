@@ -7,29 +7,22 @@ import (
 	"strings"
 )
 
-func AppendToName(record *Fasta, addition string) {
-	record.Name = fmt.Sprintf("%s%s", record.Name, addition)
-}
-
-func AppendToNameAll(records []*Fasta, addition string) {
-	for idx, _ := range records {
-		AppendToName(records[idx], addition)
-	}
-}
-
+// Remove fasta record with index i from slice of fasta.
 func Remove(slice []*Fasta, i int) []*Fasta {
 	if i < 0 || i >= len(slice) {
-		log.Fatalf("Index out of range")
+		log.Panic("Index out of range")
 	}
 	return append(slice[:i], slice[i+1:]...)
 }
 
+// RemoveGaps from all fasta records in a slice.
 func RemoveGaps(records []*Fasta) []*Fasta {
 	for i := 0; i < len(records); i++ {
 		records[i].Seq = dna.RemoveGaps(records[i].Seq)
 	}
 	return records
 }
+
 
 func RefPosToAlnPos(record *Fasta, RefPos int) int {
 	var AlnPos int = 0
