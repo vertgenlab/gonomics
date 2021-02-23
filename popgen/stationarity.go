@@ -1,6 +1,7 @@
 package popgen
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -8,7 +9,6 @@ import (
 	"log"
 	"math"
 	"strings"
-	"fmt"
 )
 
 /*
