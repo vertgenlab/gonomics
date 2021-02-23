@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
+	"github.com/vertgenlab/gonomics/common"
 	"log"
 )
 
 func vcfAFS(vcfFile string, outFile string, unPolarized bool) {
-	g := popgen.VcfToAFS(vcfFile, !unPolarized) //VcfToAFS is written in terms of polarized, so this is inverted here.
-	f := popgen.AFSToFrequency(g)
+	g, err := popgen.VcfToAFS(vcfFile, !unPolarized) //VcfToAFS is written in terms of polarized, so this is inverted here.
+	if err != nil {
+		common.ExitIfError(err)
+	}
+	f := popgen.AFSToFrequency(*g)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 	for i := 0; i < len(f); i++ {

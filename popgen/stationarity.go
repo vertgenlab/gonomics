@@ -8,7 +8,7 @@ import (
 	"log"
 	"math"
 	"strings"
-	//DEBUG"fmt"
+	"fmt"
 )
 
 /*
@@ -59,7 +59,7 @@ func MultiFaToAFS(aln []*fasta.Fasta) AFS {
 
 //GvcfToAFS reads in a Gvcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAFS(filename string, polarized bool) AFS {
+func VcfToAFS(filename string, polarized bool) (*AFS, error) {
 	var answer AFS
 	answer.sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
@@ -80,6 +80,14 @@ func VcfToAFS(filename string, polarized bool) AFS {
 					}
 				}
 			}
+
+			if currentSeg.n == 0 {
+				return nil, fmt.Errorf("Error in VcfToAFS: variant had no sample data.")
+			}
+			if currentSeg.i == 0 || currentSeg.n == currentSeg.i {
+				return nil, fmt.Errorf("Error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1.")
+			}
+
 			if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
 				if polarized && vcf.HasAncestor(i) {
 					if vcf.IsAltAncestor(i) {
@@ -95,7 +103,7 @@ func VcfToAFS(filename string, polarized bool) AFS {
 			}
 		}
 	}
-	return answer
+	return &answer, nil
 }
 
 //AFSToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
