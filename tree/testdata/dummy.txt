@@ -1,2 +1,0 @@
-this file is used to create the testdata dir, which is used
-for writing files during testing
