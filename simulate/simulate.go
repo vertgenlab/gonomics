@@ -237,7 +237,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	}
 	mutatedSequence := BaseExtToBases(newSequence)
 	delFound := seqContainsDels(mutatedSequence, dna.Gap)
-	if delFound == true && deletions == true {
+	if delFound == false && deletions == true {
 		finalSequence = deleteBase(mutatedSequence)
 	} else {
 		finalSequence = mutatedSequence
