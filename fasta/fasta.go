@@ -28,7 +28,7 @@ type FastaMap map[string][]dna.Base
 func Read(filename string) []*Fasta {
 	var curr *Fasta
 	var answer []*Fasta
-	var doneReading bool = false
+	var doneReading bool
 	usedSeqNames := make(map[string]bool)
 
 	file := fileio.EasyOpen(filename)
@@ -107,7 +107,7 @@ func Write(filename string, records []*Fasta) {
 	exception.WarningOnErr(file.Close())
 }
 
-// WriteToFileHanle writes a slice of fasta records to a given io.Writer instead of creating
+// WriteToFileHandle writes a slice of fasta records to a given io.Writer instead of creating
 // a new io.Writer as is done in the Write function.
 func WriteToFileHandle(file io.Writer, records []*Fasta, lineLength int) {
 	for _, rec := range records {

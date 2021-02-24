@@ -40,3 +40,34 @@ func TestWriteAndRead(t *testing.T) {
 		}
 	}
 }
+
+func TestToMap(t *testing.T) {
+	for _, test := range readWriteTests {
+		actual := Read(test.filename)
+		faMap := ToMap(actual)
+		for key, val := range faMap {
+			switch key {
+			case test.data[0].Name:
+				if dna.CompareSeqsCaseSensitive(val, test.data[0].Seq) != 0 {
+					t.Errorf("Problem with ToMap function: seqs do not match\nActual: %s\nExpect: %s\n",
+						dna.BasesToString(val), dna.BasesToString(test.data[0].Seq))
+				}
+
+			case test.data[1].Name:
+				if dna.CompareSeqsCaseSensitive(val, test.data[1].Seq) != 0 {
+					t.Errorf("Problem with ToMap function: seqs do not match\nActual: %s\nExpect: %s\n",
+						dna.BasesToString(val), dna.BasesToString(test.data[1].Seq))
+				}
+
+			case test.data[2].Name:
+				if dna.CompareSeqsCaseSensitive(val, test.data[2].Seq) != 0 {
+					t.Errorf("Problem with ToMap function: seqs do not match\nActual: %s\nExpect: %s\n",
+						dna.BasesToString(val), dna.BasesToString(test.data[2].Seq))
+				}
+
+			default:
+				t.Errorf("Problem with ToMap: map was larger than expected")
+			}
+		}
+	}
+}

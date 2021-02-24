@@ -26,15 +26,6 @@ var expectedSegSite3 = dna.StringToBases("TG")
 var segSiteInput = []*Fasta{{"apple", segSite1}, {"banana", segSite2}, {"carrot", segSite3}}
 var segSiteExpected = []*Fasta{{"apple", expectedSegSite1}, {"banana", expectedSegSite2}, {"carrot", expectedSegSite3}}
 
-func TestReverseComplement(t *testing.T) {
-	for _, test := range allRevCompTests {
-		ReverseComplementAll(test.input)
-		if !AllAreEqual(test.input, test.expected) {
-			t.Errorf("Expected reverse complement to give %v, but got %v.", test.input, test.expected)
-		}
-	}
-}
-
 func TestSegregatingSites(t *testing.T) {
 	input := SegregatingSites(segSiteInput)
 	if !AllAreEqual(input, segSiteExpected) {

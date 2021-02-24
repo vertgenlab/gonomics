@@ -1,6 +1,7 @@
 package fasta
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"sync"
 )
@@ -10,7 +11,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Fasta, wg *sync.WaitGroup) 
 	for curr, done := NextFasta(file); !done; curr, done = NextFasta(file) {
 		data <- *curr
 	}
-	file.Close()
+	exception.WarningOnErr(file.Close())
 	wg.Done()
 }
 

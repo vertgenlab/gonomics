@@ -15,7 +15,9 @@ import (
 func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleGraph {
 	gg := NewGraph()
 	var filterVcf []*vcf.Vcf = make([]*vcf.Vcf, 0)
-	for chr := range ref {
+	for val := range ref {
+		chr := val // not sure this is necessary, but I want to make sure the function does not break
+		// if the fasta being a pointer was important.
 		filterVcf = vcfMap[chr.Name]
 		if len(filterVcf) != 0 {
 			vcf.Sort(filterVcf)

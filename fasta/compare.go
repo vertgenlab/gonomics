@@ -23,8 +23,8 @@ func allEqual(alpha []*Fasta, beta []*Fasta, ignoreOrder bool) bool {
 		SortByName(alpha)
 		SortByName(beta)
 	}
-	for idx, _ := range alpha {
-		if !IsEqual(alpha[idx], beta[idx]) {
+	for i := range alpha {
+		if !IsEqual(alpha[i], beta[i]) {
 			return false
 		}
 	}
