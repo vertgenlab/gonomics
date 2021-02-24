@@ -32,7 +32,7 @@ func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []*fas
 	var progress int // TODO: Make option to print progress
 
 	fasta.AllToUpper(reference)
-	ref := fasta.FastaMap(reference)
+	ref := fasta.ToMap(reference)
 
 	for read := range samChan {
 		runningCount = sendPassedPositionsSam(answer, read, samFilename, runningCount, currAlleles)

@@ -44,7 +44,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 		records = fasta.Read(faFile)
 	}
 
-	faMap := fasta.FastaMap(records)
+	faMap := fasta.ToMap(records)
 
 	//TODO: General GoReadToChan header returns will allow us to avoid opening the file twice.
 	if vcf.IsVcfFile(inFile) {

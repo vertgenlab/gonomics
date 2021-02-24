@@ -101,8 +101,8 @@ func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta
 
 	return &SeqChain{
 		Chains: ans,
-		TSeq:   fasta.FastaMap(target),
-		QSeq:   fasta.FastaMap(query),
+		TSeq:   fasta.ToMap(target),
+		QSeq:   fasta.ToMap(query),
 	}
 }
 

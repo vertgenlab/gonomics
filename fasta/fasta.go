@@ -18,6 +18,11 @@ type Fasta struct {
 	Seq  []dna.Base
 }
 
+// FastaMap stores fasta sequences as a map keyed by the sequence name instead of a slice.
+// This allows for easy fasta lookups of chromosomes provided by other files (e.g. BED files)
+// A FastaMap can be generated using the ToMap function (e.g. fasta.ToMap(fasta.Read('filename')))
+type FastaMap map[string][]dna.Base
+
 // Read in a fasta file to a []*Fasta struct. All sequence records must be preceded by a name line starting with '>'.
 // Each record must have a unique sequence name
 func Read(filename string) []*Fasta {
@@ -80,8 +85,8 @@ func NextFasta(file *fileio.EasyReader) (*Fasta, bool) {
 	return answer, doneReading
 }
 
-// FastaMap converts the output of the Read function to a map of sequences keyed to the sequences name.
-func FastaMap(ref []*Fasta) map[string][]dna.Base {
+// ToMap converts the output of the Read function to a map of sequences keyed to the sequences name.
+func ToMap(ref []*Fasta) map[string][]dna.Base {
 	m := make(map[string][]dna.Base)
 	for i := range ref {
 		_, ok := m[ref[i].Name]

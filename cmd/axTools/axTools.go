@@ -80,7 +80,7 @@ func axtQueryGap(record *axt.Axt) bool {
 
 func axtToFa(input string, output string, target string) {
 	ioWriter := fileio.EasyCreate(output)
-	faMap := fasta.FastaMap(fasta.Read(target))
+	faMap := fasta.ToMap(fasta.Read(target))
 	data := axt.GoReadToChan(input)
 
 	for each := range data {

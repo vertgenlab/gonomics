@@ -58,7 +58,7 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 func processExonsPos(transcript *gtf.Transcript, ref []*fasta.Fasta, answer *Gene) {
 	// set simple values and initialize slices
 	answer.startPos = transcript.Start - 1
-	fastaMap := fasta.FastaMap(ref)
+	fastaMap := fasta.ToMap(ref)
 	answer.genomeSeq = make([]dna.Base, transcript.End-(transcript.Start-1))
 	copy(answer.genomeSeq, fastaMap[transcript.Chr][transcript.Start-1:transcript.End])
 	answer.cdnaSeq = make([]dna.Base, 0, len(answer.genomeSeq))
@@ -126,7 +126,7 @@ func processExonsPos(transcript *gtf.Transcript, ref []*fasta.Fasta, answer *Gen
 func processExonsNeg(transcript *gtf.Transcript, ref []*fasta.Fasta, answer *Gene) {
 	// set simple values and initialize slices
 	answer.startPos = transcript.End - 1
-	fastaMap := fasta.FastaMap(ref)
+	fastaMap := fasta.ToMap(ref)
 	answer.genomeSeq = make([]dna.Base, transcript.End-(transcript.Start-1))
 	copy(answer.genomeSeq, fastaMap[transcript.Chr][transcript.Start-1:transcript.End])
 	dna.ReverseComplement(answer.genomeSeq)
