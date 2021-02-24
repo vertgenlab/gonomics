@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
@@ -11,9 +12,7 @@ import (
 func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool) {
 	common.RngSeed(randSeed, setSeed)
 	data, err := popgen.VcfToAFS(filename, !unPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
-	if err != nil {
-		common.ExitIfError(err)
-	}
+	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, muZero, sigmaZero, iterations, outFile)
 }
 

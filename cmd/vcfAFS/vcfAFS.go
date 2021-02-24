@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
@@ -11,9 +11,7 @@ import (
 
 func vcfAFS(vcfFile string, outFile string, unPolarized bool) {
 	g, err := popgen.VcfToAFS(vcfFile, !unPolarized) //VcfToAFS is written in terms of polarized, so this is inverted here.
-	if err != nil {
-		common.ExitIfError(err)
-	}
+	exception.FatalOnErr(err)
 	f := popgen.AFSToFrequency(*g)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
