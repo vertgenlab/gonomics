@@ -87,20 +87,17 @@ func VcfToAFS(filename string, polarized bool) (*AFS, error) {
 			if currentSeg.i == 0 || currentSeg.n == currentSeg.i {
 				return nil, fmt.Errorf("Error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1.")
 			}
-
-			if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
-				if polarized && vcf.HasAncestor(i) {
-					if vcf.IsAltAncestor(i) {
-						InvertSegSite(currentSeg)
-					} else if !vcf.IsRefAncestor(i) {
-						continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
-					}
+			if polarized && vcf.HasAncestor(i) {
+				if vcf.IsAltAncestor(i) {
+					InvertSegSite(currentSeg)
+				} else if !vcf.IsRefAncestor(i) {
+					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
 				}
-				if polarized && !vcf.HasAncestor(i) {
-					log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
-				}
-				answer.sites = append(answer.sites, currentSeg)
 			}
+			if polarized && !vcf.HasAncestor(i) {
+				log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
+			}
+			answer.sites = append(answer.sites, currentSeg)
 		}
 	}
 	return &answer, nil
