@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func multFaVisualizeBeds(bedFile string, alnFile string, outFormat bool, noMask bool, lineLength int64) {
+func multFaVisualizeBeds(bedFile string, alnFile string, outFormat bool, noMask bool, lineLength int) {
 	b := bed.Read(bedFile)
 	var outFile string
 
@@ -36,7 +36,7 @@ func main() {
 	var expectedNumArgs int = 2
 	var noMask *bool = flag.Bool("noMask", false, "Converts all bases to upper case.")
 	var outFormat *bool = flag.Bool("outFormatName", false, "Uses the name column as the outfile name (name.txt).")
-	var lineLength *int64 = flag.Int64("lineLength", 100, "Sets to length of each alignment line.")
+	var lineLength *int = flag.Int("lineLength", 100, "Sets to length of each alignment line.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()

@@ -38,8 +38,8 @@ func CountCysteine(samFilename string, refFilename string) []*MethylCount {
 			continue
 		}
 
-		var seqIdx int64 = 0
-		var refIdx = aln.Pos - 1
+		var seqIdx int = 0
+		var refIdx int = int(aln.Pos - 1)
 
 		current = &MethylCount{aln.QName, aln.RName, int(aln.Pos), 0, 0, 0, 0, 0, 0}
 
@@ -51,9 +51,9 @@ func CountCysteine(samFilename string, refFilename string) []*MethylCount {
 				seqIdx += aln.Cigar[i].RunLength
 			} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
 
-				for j := 0; int64(j) < aln.Cigar[i].RunLength; j++ {
+				for j := 0; j < aln.Cigar[i].RunLength; j++ {
 
-					if int(seqIdx) > len(aln.Seq)-3 {
+					if seqIdx > len(aln.Seq)-3 {
 						break
 					}
 

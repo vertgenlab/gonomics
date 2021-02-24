@@ -67,7 +67,7 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
 				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
 			}
-			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int64(currSeed.TotalLength), Op: 'M'}), rightAlignment)
+			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
 		}
 	}
@@ -131,15 +131,15 @@ var HumanChimpTwoScoreMatrix = [][]int64{
 }
 
 func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
-	var runLen int64 = cigar.QueryLength(cig)
-	if runLen < int64(lengthOfRead) {
+	var runLen int = cigar.QueryLength(cig)
+	if runLen < lengthOfRead {
 		answer := make([]*cigar.Cigar, 0, len(cig)+2)
 		if front > 0 {
-			answer = append(answer, &cigar.Cigar{RunLength: int64(front), Op: 'S'})
+			answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
 		}
 		answer = append(answer, cig...)
 		if front+int(cigar.QueryLength(cig)) < lengthOfRead {
-			answer = append(answer, &cigar.Cigar{RunLength: int64(lengthOfRead-front) - runLen, Op: 'S'})
+			answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - front - runLen, Op: 'S'})
 		}
 		return answer
 	} else {

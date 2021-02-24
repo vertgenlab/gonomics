@@ -3,19 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
-	"strconv"
 )
 
-func multFaPullSeqs(infile string, outfile string, start int64, end int64) {
+func multFaPullSeqs(infile string, outfile string, start int, end int) {
 	if !(start < end) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
 	records := fasta.Read(infile)
 	var ans []*fasta.Fasta
-	var refCounter int64 = 0
+	var refCounter int = 0
 	var startCounter int = 0
 	var endCounter int = 0
 
@@ -48,6 +48,7 @@ func multFaPullSeqs(infile string, outfile string, start int64, end int64) {
 	fasta.Write(outfile, ans)
 }
 
+//TODO: reorder command line to be inputs first and outputs second
 func usage() {
 	fmt.Print(
 		"multFaPullSeqs - Pull sub-sequence from multiple fasta alignment for each entry. Uses reference indices, treating the first sequence as the reference.\n" +
@@ -72,8 +73,8 @@ func main() {
 
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
-	start, _ := strconv.ParseInt(flag.Arg(2), 10, 64)
-	end, _ := strconv.ParseInt(flag.Arg(3), 10, 64)
+	start := common.StringToInt(flag.Arg(2))
+	end := common.StringToInt(flag.Arg(3))
 
 	multFaPullSeqs(infile, outfile, start, end)
 }

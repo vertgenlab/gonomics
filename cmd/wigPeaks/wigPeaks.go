@@ -25,12 +25,12 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) { //threshold is
 
 			if v2.Value >= threshold { //either (from outside of a peak) start a new peak or inside of a peak
 				if !inPeak { //this means start a new peak
-					inPeak = true                                                                                                                           //must remember to set inPeak to reflect Peak status
-					current = &bed.Bed{Chrom: v1.Chrom, ChromStart: int64(v2.Position), ChromEnd: int64(v2.Position) + 1, Name: "", Score: int64(v2.Value)} //ChromEnd is +1 because bed has [open,closed) interval (note: in this program, the position that ends the peak is still >threshold, not the first position that dips <threshold), Score is the max Wig of the bed region, will update when inside the peak
+					inPeak = true                                                                                                           //must remember to set inPeak to reflect Peak status
+					current = &bed.Bed{Chrom: v1.Chrom, ChromStart: v2.Position, ChromEnd: v2.Position + 1, Name: "", Score: int(v2.Value)} //ChromEnd is +1 because bed has [open,closed) interval (note: in this program, the position that ends the peak is still >threshold, not the first position that dips <threshold), Score is the max Wig of the bed region, will update when inside the peak
 				} else { //this means already inside peak
-					current.ChromEnd = int64(v2.Position) + 1 //Update ChromEnd
-					if int64(v2.Value) > current.Score {      //Update Score if found new max wig score
-						current.Score = int64(v2.Value)
+					current.ChromEnd = v2.Position + 1     //Update ChromEnd
+					if v2.Value > float64(current.Score) { //Update Score if found new max wig score
+						current.Score = int(v2.Value)
 					}
 				}
 

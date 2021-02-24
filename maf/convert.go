@@ -18,8 +18,7 @@ func setupBlankAln(ref *fasta.Fasta, species []string) []*fasta.Fasta {
 
 func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 	var speciesBlock *MafSpecies
-	var replaceStart, replaceEnd int64
-	var replaceAlnLength int
+	var replaceStart, replaceEnd, replaceAlnLength int
 	if m == nil || len(m.Species) < 1 || len(aln) < 1 {
 		log.Fatalf("Error: empty maf or fasta alignment passed into insertMafBlockIntoFasta\n")
 	}
@@ -53,16 +52,16 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 			}
 		}
 		if speciesBlock == nil || speciesBlock.SLine == nil {
-			aln[i].Seq = dna.Replace(aln[i].Seq, int(replaceStart), int(replaceEnd), dna.CreateAllGaps(replaceAlnLength))
+			aln[i].Seq = dna.Replace(aln[i].Seq, replaceStart, replaceEnd, dna.CreateAllGaps(replaceAlnLength))
 		} else {
-			aln[i].Seq = dna.Replace(aln[i].Seq, int(replaceStart), int(replaceEnd), speciesBlock.SLine.Seq)
+			aln[i].Seq = dna.Replace(aln[i].Seq, replaceStart, replaceEnd, speciesBlock.SLine.Seq)
 		}
 	}
 	return aln
 }
 
 func ToFasta(m []*Maf, ref *fasta.Fasta, species []string) []*fasta.Fasta {
-	if int64(len(ref.Seq)) != m[0].Species[0].SLine.SrcSize {
+	if len(ref.Seq) != m[0].Species[0].SLine.SrcSize {
 		log.Fatalf("Error: ref seq supplied as fasta should match the length of the first seq in the first maf block\n")
 	}
 	aln := setupBlankAln(ref, species)

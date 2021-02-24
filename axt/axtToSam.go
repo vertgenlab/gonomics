@@ -34,8 +34,8 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	var align []*cigar.Cigar = make([]*cigar.Cigar, 0)
 	curr := &cigar.Cigar{}
-	var i int64
-	for i = 0; i < int64(len(a)); i++ {
+	var i int
+	for i = 0; i < len(a); i++ {
 		switch true {
 		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]: //match, bases equal
 			curr = equalMatchCigar(a, b, i)
@@ -67,10 +67,10 @@ func AddHardClipCigar(align *sam.SamAln, )  {
 
 //outside function checked for matching so we know the first bases coming in are matches
 //index is the current position of axt sequence
-func equalMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+func equalMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	match := &cigar.Cigar{Op: '=', RunLength: 1}
-	var i int64
-	for i = index + 1; i < int64(len(a)); i++ {
+	var i int
+	for i = index + 1; i < len(a); i++ {
 		if a[i] == b[i] && a[i] != dna.Gap && b[i] != dna.Gap {
 			match.RunLength++
 		} else {
@@ -80,10 +80,10 @@ func equalMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return match
 }
 
-func diffMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+func diffMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	match := &cigar.Cigar{Op: 'X', RunLength: 1}
-	var i int64
-	for i = index + 1; i < int64(len(a)); i++ {
+	var i int
+	for i = index + 1; i < len(a); i++ {
 		if a[i] != b[i] && a[i] != dna.Gap && b[i] != dna.Gap {
 			match.RunLength++
 		} else {
@@ -93,11 +93,11 @@ func diffMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return match
 }
 
-func insertCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+func insertCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	insertion := &cigar.Cigar{Op: 'I', RunLength: 1}
-	var i int64
+	var i int
 	//starting loop at +1 since we already checked in the wrapper function above
-	for i = index + 1; i < int64(len(a)); i++ {
+	for i = index + 1; i < len(a); i++ {
 		if a[i] == dna.Gap {
 			insertion.RunLength++
 		} else {
@@ -107,11 +107,11 @@ func insertCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return insertion
 }
 
-func deletionCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+func deletionCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	deletion := &cigar.Cigar{Op: 'D', RunLength: 1}
-	var i int64
+	var i int
 	//starting loop at +1 since we already checked in the wrapper function above
-	for i = index + 1; i < int64(len(a)); i++ {
+	for i = index + 1; i < len(a); i++ {
 		if b[i] == dna.Gap {
 			deletion.RunLength++
 		} else {
