@@ -221,9 +221,9 @@ func getSeedPath(seed *SeedDev) []uint32 {
 }
 
 func getStartRead(aln *sam.SamAln) int64 {
-	var alignedPos int64 = 0
+	var alignedPos int = 0
 	if aln.Cigar[0].Op == 'S' {
 		alignedPos += aln.Cigar[0].RunLength
 	}
-	return alignedPos
+	return int64(alignedPos)
 }

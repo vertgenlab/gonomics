@@ -5,12 +5,12 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-func TotalAlignedBases(filename string) int64 {
+func TotalAlignedBases(filename string) int {
 	samFile := fileio.EasyOpen(filename)
 	defer samFile.Close()
 	var done bool = false
 	var aln *SamAln
-	var alignedBases int64
+	var alignedBases int
 
 	ReadHeader(samFile)
 

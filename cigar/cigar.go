@@ -14,14 +14,14 @@ import (
 
 //The Cigar struct contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
 type Cigar struct {
-	RunLength int64
+	RunLength int
 	Op        rune
 	Sequence  []dna.Base
 }
 
 //NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
-func NumInsertions(input []*Cigar) int64 {
-	var count int64
+func NumInsertions(input []*Cigar) int {
+	var count int
 	if input[0].Op == '*' {
 		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
 	}
@@ -34,8 +34,8 @@ func NumInsertions(input []*Cigar) int64 {
 }
 
 //NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
-func NumDeletions(input []*Cigar) int64 {
-	var count int64
+func NumDeletions(input []*Cigar) int {
+	var count int
 	if input[0].Op == '*' {
 		log.Fatalf("Cannot calculate NumDeletions from unaligned reads.")
 	}
@@ -74,7 +74,7 @@ func FromString(input string) []*Cigar {
 		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)
 		} else if RuneIsValidCharacter(v) {
-			currentCigar := Cigar{RunLength: common.StringToInt64(currentNumber), Op: v}
+			currentCigar := Cigar{RunLength: common.StringToInt(currentNumber), Op: v}
 			output = append(output, &currentCigar)
 			currentNumber = ""
 		} else {
@@ -85,8 +85,8 @@ func FromString(input string) []*Cigar {
 }
 
 //MatchLength returns the number of bases in a Cigar slice that align to the reference.
-func MatchLength(c []*Cigar) int64 {
-	var ans int64
+func MatchLength(c []*Cigar) int {
+	var ans int
 	if c[0].Op == '*' {
 		log.Fatalf("Cannot calculate MatchLength from unaligned reads.")
 	}
@@ -99,8 +99,8 @@ func MatchLength(c []*Cigar) int64 {
 }
 
 //ReferenceLength calculates the number of reference positions that a Cigar slice spans.
-func ReferenceLength(c []*Cigar) int64 {
-	var ans int64
+func ReferenceLength(c []*Cigar) int {
+	var ans int
 	if c[0].Op == '*' {
 		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
 	}
@@ -113,8 +113,8 @@ func ReferenceLength(c []*Cigar) int64 {
 }
 
 //QueryLength calculates the length of the query read from a slice of Cigar structs.
-func QueryLength(c []*Cigar) int64 {
-	var ans int64
+func QueryLength(c []*Cigar) int {
+	var ans int
 	if c[0].Op == '*' {
 		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
 	}

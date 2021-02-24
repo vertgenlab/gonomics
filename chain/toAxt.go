@@ -56,12 +56,12 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 		//update idx
 		if each.TBases > 0 {
 			answer.RSeq = append(answer.RSeq, getSequence(targetFa, tIndex, each.TBases)...)
-			answer.QSeq = append(answer.QSeq, dna.CreateAllGaps(int64(each.TBases))...)
+			answer.QSeq = append(answer.QSeq, dna.CreateAllGaps(each.TBases)...)
 			tIndex += each.TBases
 		}
 		if each.QBases > 0 {
 			answer.QSeq = append(answer.QSeq, getSequence(queryFa, qIndex, each.QBases)...)
-			answer.RSeq = append(answer.RSeq, dna.CreateAllGaps(int64(each.QBases))...)
+			answer.RSeq = append(answer.RSeq, dna.CreateAllGaps(each.QBases)...)
 			qIndex += each.QBases
 		}
 	}

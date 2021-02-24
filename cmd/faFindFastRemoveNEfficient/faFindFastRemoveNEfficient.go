@@ -93,7 +93,7 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 					}
 				}
 				//generate output bed and add to the list
-				current := bed.Bed{Chrom: *name, ChromStart: int64(alignmentCounter), ChromEnd: int64(alignmentCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+				current := bed.Bed{Chrom: *name, ChromStart: alignmentCounter, ChromEnd: alignmentCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
 				bedList = append(bedList, &current)
 				referenceCounter++
 			} else {
@@ -108,8 +108,8 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 				prevNoN = true
 				diff, gapCount, reachedEnd = countWindowDifference(seq1, seq2, alignmentCounter, windowSize)
 				if !reachedEnd {
-					current := bed.Bed{Chrom: *name, ChromStart: int64(referenceCounter),
-						ChromEnd: int64(referenceCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+					current := bed.Bed{Chrom: *name, ChromStart: referenceCounter,
+						ChromEnd: referenceCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
 					bedList = append(bedList, &current)
 					referenceCounter++
 				}

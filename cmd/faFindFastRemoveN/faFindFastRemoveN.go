@@ -46,8 +46,8 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 			if seqsContainN(seq1, seq2, alignmentCounter, windowSize) {
 				referenceCounter++
 			} else if !reachedEnd {
-				current := bed.Bed{Chrom: *name, ChromStart: int64(referenceCounter),
-					ChromEnd: int64(referenceCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+				current := bed.Bed{Chrom: *name, ChromStart: referenceCounter,
+					ChromEnd: referenceCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
 				bedList = append(bedList, &current)
 				referenceCounter++
 			}

@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func samToBed(samFilename string, bedFilename string, paired bool, fragLength int64) {
+func samToBed(samFilename string, bedFilename string, paired bool, fragLength int) {
 	var aln *sam.SamAln = nil
 	var done bool = false
 
@@ -58,7 +58,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var paired *bool = flag.Bool("pairedEnd", false, "Specifies paired end reads")
-	var fragLength *int64 = flag.Int64("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
+	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
 
 	flag.Usage = usage
 	flag.Parse()

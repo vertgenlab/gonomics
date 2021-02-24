@@ -18,7 +18,7 @@ func MergeBeds(bedFile []*Bed) []*Bed {
 		if !Overlap(bedFile[i], bedFile[i+1]) {
 			i++
 		} else {
-			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score = numbers.MinInt64(bedFile[i].ChromStart, bedFile[i+1].ChromStart), numbers.MaxInt64(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score
+			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart), numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score
 			for j = i + 1; j < len(bedFile)-1; j++ {
 				bedFile[j] = bedFile[j+1]
 			}
@@ -30,7 +30,7 @@ func MergeBeds(bedFile []*Bed) []*Bed {
 
 //Overlap returns true if two input Bed entries have an overlap of any kind.
 func Overlap(alpha *Bed, beta *Bed) bool {
-	if (numbers.MaxInt64(alpha.ChromStart, beta.ChromStart) < numbers.MinInt64(alpha.ChromEnd, beta.ChromEnd)) && strings.Compare(alpha.Chrom, beta.Chrom) == 0 {
+	if (numbers.Max(alpha.ChromStart, beta.ChromStart) < numbers.Min(alpha.ChromEnd, beta.ChromEnd)) && strings.Compare(alpha.Chrom, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
@@ -38,12 +38,12 @@ func Overlap(alpha *Bed, beta *Bed) bool {
 }
 
 //OverlapLength returns the number of bases for which two Bed entries overlap.
-func OverlapLength(a *Bed, b *Bed) int64 {
+func OverlapLength(a *Bed, b *Bed) int {
 	if !Overlap(a, b) {
 		return 0
 	}
-	end := numbers.MinInt64(a.ChromEnd, b.ChromEnd)
-	start := numbers.MaxInt64(a.ChromStart, b.ChromStart)
+	end := numbers.Min(a.ChromEnd, b.ChromEnd)
+	start := numbers.Max(a.ChromStart, b.ChromStart)
 	return end - start
 }
 

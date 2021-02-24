@@ -184,7 +184,7 @@ func Factorial(n int) int {
 	return int(math.Gamma(float64(n + 1)))
 }
 
-func DigitsBaseTen(x int64) int {
+func DigitsBaseTen(x int) int {
 	var count int = 1
 	if x < 0 {
 		x = -1 * x

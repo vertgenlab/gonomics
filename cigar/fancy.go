@@ -13,7 +13,7 @@ import (
 func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*Cigar {
 	var answer []*Cigar
 	var seqIdx, refIdx int
-	var k, runLenCount int64
+	var k, runLenCount int
 
 	if cigar[0].Op == '*' {
 		return nil
@@ -69,10 +69,10 @@ func MakeExplicit(cigar []*Cigar, sequence []dna.Base, reference []dna.Base) []*
 		default:
 			answer = append(answer, cigar[i])
 			if ConsumesReference(cigar[i].Op) {
-				refIdx += int(cigar[i].RunLength)
+				refIdx += cigar[i].RunLength
 			}
 			if ConsumesQuery(cigar[i].Op) {
-				seqIdx += int(cigar[i].RunLength)
+				seqIdx += cigar[i].RunLength
 			}
 		}
 	}
@@ -90,14 +90,14 @@ func GetExplicitSequence(cigar []*Cigar, reference []dna.Base) []dna.Base {
 		case 'I':
 			answer = append(answer, cigar[i].Sequence...)
 		case 'D':
-			refIdx += int(cigar[i].RunLength)
+			refIdx += cigar[i].RunLength
 		case 'X':
 			answer = append(answer, cigar[i].Sequence...)
-			refIdx += int(cigar[i].RunLength)
+			refIdx += cigar[i].RunLength
 		default:
-			answer = append(answer, reference[refIdx:refIdx+int(cigar[i].RunLength)]...)
+			answer = append(answer, reference[refIdx:refIdx+cigar[i].RunLength]...)
 			if ConsumesReference(cigar[i].Op) {
-				refIdx += int(cigar[i].RunLength)
+				refIdx += cigar[i].RunLength
 			}
 		}
 	}

@@ -18,14 +18,12 @@ func calcExtension(seq []dna.Base) int64 {
 }
 
 func LocalView(samLine *sam.SamAln, ref []*Node) string {
-	//var maxI int64
-	//var operations []*Cigar
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar
 	var i int64 = samLine.Pos - 1
 	var j int64 = 0
-	var count int64
+	var count int
 	words := strings.Split(samLine.RName, "_")
 	var alpha []dna.Base = ref[common.StringToInt64(words[1])].Seq
 	var beta []dna.Base = samLine.Seq
