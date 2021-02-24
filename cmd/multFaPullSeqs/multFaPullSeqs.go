@@ -16,8 +16,8 @@ func multFaPullSeqs(infile string, outfile string, start int64, end int64) {
 	records := fasta.Read(infile)
 	var ans []*fasta.Fasta
 	var refCounter int64 = 0
-	var startCounter int64 = 0
-	var endCounter int64 = 0
+	var startCounter int = 0
+	var endCounter int = 0
 
 	for t := 0; refCounter < start; t++ {
 		startCounter++

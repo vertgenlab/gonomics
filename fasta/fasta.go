@@ -19,8 +19,8 @@ type Fasta struct {
 }
 
 // FastaMap stores fasta sequences as a map keyed by the sequence name instead of a slice.
-// This allows for easy fasta lookups of chromosomes provided by other files (e.g. BED files)
-// A FastaMap can be generated using the ToMap function (e.g. fasta.ToMap(fasta.Read('filename')))
+// This allows for easy fasta lookups of chromosomes provided by other files (e.g. BED files).
+// A FastaMap can be generated using the ToMap function (e.g. fasta.ToMap(fasta.Read('filename'))).
 type FastaMap map[string][]dna.Base
 
 // Read in a fasta file to a []*Fasta struct. All sequence records must be preceded by a name line starting with '>'.
@@ -136,6 +136,15 @@ func SplitWrite(filename string, records []*Fasta) {
 	for _, rec := range records {
 		Write(filename+"_"+rec.Name+"_"+".fasta", []*Fasta{rec})
 	}
+}
+
+// Extract will subset a sequence in a fasta file and return a new fasta record with
+// the same name and a subset of the sequence. Input start and end are left-closed right-open.
+func Extract(f *Fasta, start int, end int, name string) *Fasta {
+	var ans Fasta
+	ans.Seq = dna.Extract(f.Seq, start, end)
+	ans.Name = name
+	return &ans
 }
 
 // CreateAllGaps creates a fasta record where the sequence is all gaps of length numGaps.

@@ -7,23 +7,6 @@ import (
 	"strings"
 )
 
-// Remove fasta record with index i from slice of fasta.
-func Remove(slice []*Fasta, i int) []*Fasta {
-	if i < 0 || i >= len(slice) {
-		log.Panic("Index out of range")
-	}
-	return append(slice[:i], slice[i+1:]...)
-}
-
-// RemoveGaps from all fasta records in a slice.
-func RemoveGaps(records []*Fasta) []*Fasta {
-	for i := 0; i < len(records); i++ {
-		records[i].Seq = dna.RemoveGaps(records[i].Seq)
-	}
-	return records
-}
-
-
 func RefPosToAlnPos(record *Fasta, RefPos int) int {
 	var AlnPos int = 0
 	var refCounter int = 0
@@ -76,16 +59,6 @@ func CopySubset(records []*Fasta, start int, end int) []*Fasta {
 	return c
 }
 
-func ReverseComplement(record *Fasta) {
-	dna.ReverseComplement(record.Seq)
-}
-
-func ReverseComplementAll(records []*Fasta) {
-	for idx, _ := range records {
-		ReverseComplement(records[idx])
-	}
-}
-
 func DivideFasta(fa *Fasta, n int) []*Fasta {
 	var answer []*Fasta
 	leftover := len(fa.Seq) % n
@@ -101,16 +74,6 @@ func DivideFastaAll(fa []*Fasta, n int) [][]*Fasta {
 		answer = append(answer, DivideFasta(fa[index], n))
 	}
 	return answer
-}
-
-func ToUpper(fa *Fasta) {
-	dna.AllToUpper(fa.Seq)
-}
-
-func AllToUpper(records []*Fasta) {
-	for i := 0; i < len(records); i++ {
-		ToUpper(records[i])
-	}
 }
 
 //In a multiple alignment block, removes any entries comprised only of gaps.

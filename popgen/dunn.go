@@ -41,15 +41,10 @@ func Dunn(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
 //FindMaxIntra is a helper function of Dunn that calculates the Max pairwise sequence distance between two sequences of a multiFa alignment that are part of the same Group.
 func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 	var answer int = 0
-	var group1index int
-	var group2index int
+	faMap := fasta.ToMap(subFa)
 	for i := 0; i < len(g.Members); i++ {
 		for j := i + 1; j < len(g.Members); j++ {
-			group1index = fasta.FindFaIndex(subFa, g.Members[i])
-			group2index = fasta.FindFaIndex(subFa, g.Members[j])
-			if group1index != -1 && group2index != -1 {
-				answer = numbers.Max(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
-			}
+			answer = numbers.Max(answer, dna.Dist(faMap[g.Members[i]], faMap[g.Members[j]]))
 		}
 	}
 	return answer
@@ -58,15 +53,11 @@ func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 //FindMinInter is a helper function of Dunn that calculates the minimum pairwise sequence distance between two sequences of a multiFa alignment that are part of different groups.
 func FindMinInter(g []*Group, subFa []*fasta.Fasta) int {
 	var answer int = math.MaxInt64
-	var group1index, group2index int
+	faMap := fasta.ToMap(subFa)
 	for i := 0; i < len(g[0].Members); i++ {
 		for j := 0; j < len(g[1].Members); j++ {
-			group1index = fasta.FindFaIndex(subFa, g[0].Members[i])
-			group2index = fasta.FindFaIndex(subFa, g[1].Members[j])
-			if group1index != -1 && group2index != -1 {
-				answer = numbers.Min(answer, dna.Dist(subFa[group1index].Seq, subFa[group2index].Seq))
-			}
+			answer = numbers.Min(answer, dna.Dist(faMap[g[0].Members[i]], faMap[g[1].Members[j]]))
 		}
 	}
-	return int(answer)
+	return answer
 }
