@@ -2,10 +2,10 @@ package convert
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"strings"
 	"testing"
@@ -24,7 +24,7 @@ var expected []*vcf.Vcf = []*vcf.Vcf{&var1, &var2, &var3, &var4, &var5}
 var expectedSubOnly []*vcf.Vcf = []*vcf.Vcf{&var1, &var4, &var5}
 var expectedRetainN []*vcf.Vcf = []*vcf.Vcf{&var1, &var2, &var3, &var4, &var5, &var6}
 
-func TestPairwiseFaToVcf(t *testing.T) {//this test is for the default settings.
+func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings.
 	var err error
 	out := fileio.EasyCreate("tmp.txt")
 	PairwiseFaToVcf(inputFa, "chr1", *out, false, false)
@@ -65,4 +65,3 @@ func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 		exception.PanicOnErr(err)
 	}
 }
-
