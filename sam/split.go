@@ -87,7 +87,7 @@ func CheckAlignment(aln *SamAln) bool {
 	var answer bool = false
 
 	qName := strings.Split(aln.QName, "_")
-	refPos := common.StringToInt64(qName[1])
+	refPos := common.StringToInt(qName[1])
 	queryPos := getStartRead(aln)
 	if queryPos == refPos {
 		return true
@@ -96,8 +96,8 @@ func CheckAlignment(aln *SamAln) bool {
 	return answer
 }
 
-func getStartRead(aln *SamAln) int64 {
-	var alignedPos int64 = aln.Pos
+func getStartRead(aln *SamAln) int {
+	var alignedPos int = int(aln.Pos)
 	if aln.Cigar[0].Op == 'S' {
 		alignedPos += aln.Cigar[0].RunLength
 	}

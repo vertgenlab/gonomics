@@ -14,27 +14,27 @@ import (
 
 type MafSLine struct {
 	Src     string
-	Start   int64
-	Size    int64
+	Start   int
+	Size    int
 	Strand  bool // true for positive strand
-	SrcSize int64
+	SrcSize int
 	Seq     []dna.Base
 }
 
 type MafILine struct {
 	Src         string
 	LeftStatus  rune
-	LeftCount   int64
+	LeftCount   int
 	RightStatus rune
-	RightCount  int64
+	RightCount  int
 }
 
 type MafELine struct {
 	Src     string
-	Start   int64
-	Size    int64
+	Start   int
+	Size    int
 	Strand  bool // true for positive strand
-	SrcSize int64
+	SrcSize int
 	Status  rune
 }
 
@@ -86,10 +86,10 @@ func parseMafSLine(line string) *MafSLine {
 	}
 	curr := MafSLine{
 		Src:     words[1],
-		Start:   common.StringToInt64(words[2]),
-		Size:    common.StringToInt64(words[3]),
+		Start:   common.StringToInt(words[2]),
+		Size:    common.StringToInt(words[3]),
 		Strand:  common.StringToStrand(words[4]),
-		SrcSize: common.StringToInt64(words[5]),
+		SrcSize: common.StringToInt(words[5]),
 		Seq:     dna.StringToBases(words[6]),
 	}
 	return (&curr)
@@ -123,9 +123,9 @@ func parseMafILine(line string) *MafILine {
 	curr := MafILine{
 		Src:         words[1],
 		LeftStatus:  parseMafIStatus(words[2]),
-		LeftCount:   common.StringToInt64(words[3]),
+		LeftCount:   common.StringToInt(words[3]),
 		RightStatus: parseMafIStatus(words[4]),
-		RightCount:  common.StringToInt64(words[5]),
+		RightCount:  common.StringToInt(words[5]),
 	}
 	return (&curr)
 }
@@ -155,10 +155,10 @@ func parseMafELine(line string) *MafELine {
 	}
 	curr := MafELine{
 		Src:     words[1],
-		Start:   common.StringToInt64(words[2]),
-		Size:    common.StringToInt64(words[3]),
+		Start:   common.StringToInt(words[2]),
+		Size:    common.StringToInt(words[3]),
 		Strand:  common.StringToStrand(words[4]),
-		SrcSize: common.StringToInt64(words[5]),
+		SrcSize: common.StringToInt(words[5]),
 		Status:  parseMafEStatus(words[6]),
 	}
 	return (&curr)

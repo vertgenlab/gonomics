@@ -44,7 +44,7 @@ func SamToBed(s *sam.SamAln) *bed.Bed {
 	if s.Cigar[0].Op == '*' {
 		return nil
 	} else {
-		return &bed.Bed{Chrom: s.RName, ChromStart: s.Pos - 1, ChromEnd: s.Pos - 1 + cigar.ReferenceLength(s.Cigar), Name: s.QName}
+		return &bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName}
 	}
 }
 
@@ -58,7 +58,7 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 } */
 
 //SamToBedFrag converts a SamAln entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
-func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromInfo.ChromInfo) *bed.Bed {
+func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]*chromInfo.ChromInfo) *bed.Bed {
 	var answer *bed.Bed
 
 	if s.Cigar[0].Op == '*' {
@@ -66,13 +66,13 @@ func SamToBedFrag(s *sam.SamAln, fragLength int64, reference map[string]*chromIn
 	} else {
 		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
 		if sam.IsPosStrand(s) {
-			answer.ChromStart = s.Pos - 1
-			answer.ChromEnd = numbers.MinInt64(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), int64(reference[answer.Chrom].Size))
+			answer.ChromStart = int(s.Pos - 1)
+			answer.ChromEnd = numbers.Min(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
 			answer.Strand = true
 		} else {
-			answer.ChromEnd = s.Pos - 1 + cigar.ReferenceLength(s.Cigar)
+			answer.ChromEnd = int(s.Pos-1) + cigar.ReferenceLength(s.Cigar)
 			answer.Strand = false
-			answer.ChromStart = numbers.MaxInt64(answer.ChromEnd-(fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar)), 0)
+			answer.ChromStart = numbers.Max(answer.ChromEnd-(fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar)), 0)
 		}
 		return answer
 	}
@@ -84,7 +84,7 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum int64
+	var startNum, endNum int
 	var x int
 	var i int = 0
 	var doneReading bool = false
@@ -109,14 +109,14 @@ func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
-		startNum = common.StringToInt64(words[1])
-		endNum = common.StringToInt64(words[2])
+		startNum = common.StringToInt(words[1])
+		endNum = common.StringToInt(words[2])
 		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
 		if len(words) >= 4 {
 			current.Name = words[3]
 		}
 		if len(words) >= 5 {
-			current.Score = common.StringToInt64(words[4])
+			current.Score = common.StringToInt(words[4])
 		}
 		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
 		midpoint = bedMidpoint(current)
@@ -136,7 +136,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum int64
+	var startNum, endNum int
 	var x int
 	var i int = 0
 	var doneReading bool = false
@@ -161,14 +161,14 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
-		startNum = common.StringToInt64(words[1])
-		endNum = common.StringToInt64(words[2])
+		startNum = common.StringToInt(words[1])
+		endNum = common.StringToInt(words[2])
 		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
 		if len(words) >= 4 {
 			current.Name = words[3]
 		}
 		if len(words) >= 5 {
-			current.Score = common.StringToInt64(words[4])
+			current.Score = common.StringToInt(words[4])
 		}
 		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
 		if wigSlice[chromIndex].Values[midpoint].Value != 0 {

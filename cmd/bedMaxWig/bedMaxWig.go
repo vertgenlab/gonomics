@@ -56,7 +56,7 @@ func sliceRangeAverage(w []float64, start int, end int) float64 {
 	return (sum / float64(length))
 }
 
-func bedRangeMax(w []float64, start int64, end int64) float64 {
+func bedRangeMax(w []float64, start int, end int) float64 {
 	var max float64
 	for i := start; i < end; i++ {
 		max = numbers.MaxFloat64(max, w[i])

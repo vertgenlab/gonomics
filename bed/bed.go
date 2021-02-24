@@ -16,10 +16,10 @@ import (
 //Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
 type Bed struct {
 	Chrom             string
-	ChromStart        int64
-	ChromEnd          int64
+	ChromStart        int
+	ChromEnd          int
 	Name              string
-	Score             int64
+	Score             int
 	Strand            bool
 	FieldsInitialized int      //number of fields that are initialized, used for smart writing.
 	Annotation        []string //long form for extra fields
@@ -97,15 +97,15 @@ func Read(filename string) []*Bed {
 //processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) *Bed {
 	words := strings.Split(line, "\t")
-	startNum := common.StringToInt64(words[1])
-	endNum := common.StringToInt64(words[2])
+	startNum := common.StringToInt(words[1])
+	endNum := common.StringToInt(words[2])
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score = common.StringToInt64(words[4])
+		current.Score = common.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
 		current.Strand = common.StringToStrand(words[5])

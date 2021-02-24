@@ -29,8 +29,8 @@ func CatCigar(cigs []*Cigar, newCigs []*Cigar) []*Cigar {
 	}
 }
 
-func UpdateIndices(cig *Cigar, refIdx int64, queryIdx int64) (int64, int64) {
-	var reference, query int64 = refIdx, queryIdx
+func UpdateIndices(cig *Cigar, refIdx int, queryIdx int) (int, int) {
+	var reference, query int = refIdx, queryIdx
 	if ConsumesReference(cig.Op) {
 		reference += cig.RunLength
 	}
