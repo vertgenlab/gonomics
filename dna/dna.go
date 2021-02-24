@@ -1,3 +1,4 @@
+// Package dna implements a data structure for storage and manipulation of sequences of DNA.
 package dna
 
 // Base stores a single nucleotide as a byte.

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"net/http"
 	"strings"
 )
@@ -12,10 +13,10 @@ import (
 func EasyHttp(url string) *EasyReader {
 	answer := EasyReader{}
 	resp, err := http.Get(url)
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 	if strings.HasSuffix(url, ".gz") {
 		answer.internalGzip, err = gzip.NewReader(resp.Body)
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
 		answer.BuffReader = bufio.NewReader(resp.Body)
