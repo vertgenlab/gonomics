@@ -10,7 +10,7 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool) bool {
+func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -33,6 +33,12 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 		return false
 	}
 	if segregatingSitesOnly && !IsSegregating(v) {
+		return false
+	}
+	if removeNoAncestor && !HasAncestor(v) {
+		return false
+	}
+	if onlyPolarizableAncestors && !IsPolarizable(v) {
 		return false
 	}
 	return true
@@ -222,6 +228,21 @@ func IsSegregating(v *Vcf) bool {
 		}
 	}
 	return false
+}
+
+//IsPolarizable returns true if a variant can be "polarized" in a derived allele frequency spectrum, false otherwise.
+func IsPolarizable(v *Vcf) bool {
+	if !HasAncestor(v) {
+		return false
+	}
+	var aa string = dna.BasesToString(QueryAncestor(v))
+	if len(aa) > 1 || aa == "-" || aa == "N" {
+		return false
+	}
+	if aa != v.Ref && aa != v.Alt[0] { //if ancestral allele is equal to neither the alt or ref allele.
+		return false
+	}
+	return true
 }
 
 func getListIndex(header *VcfHeader, list []string) []int16 {
