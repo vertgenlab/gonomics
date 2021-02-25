@@ -267,7 +267,7 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out *fileio.EasyWriter, subst
 				} else {
 					vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//then add current diff
 				}
-			} else {//this case is for normal substitutions
+			} else { //this case is for normal substitutions
 				if f[0].Seq[i] == dna.N || f[1].Seq[i] == dna.N {
 					if retainN {
 						vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
