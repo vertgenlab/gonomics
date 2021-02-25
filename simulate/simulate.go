@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
 )
@@ -182,7 +183,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 				for codon := 0; codon < len(originalCodons); codon++ {
 					thisCodon := originalCodons[codon]
 					start = CheckStart(geneRecord[g], thisCodon)
-					delFound := codonContainsDels(thisCodon, dna.Gap) // check if codon already contains deletions
+					delFound := codonContainsDels(thisCodon) // check if codon already contains deletions
 					stop = CheckStop(geneRecord[g], thisCodon)
 					if start == true {
 						newSequence = append(newSequence, thisCodon.Seq[0])
@@ -236,9 +237,16 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 
 	}
 	mutatedSequence := BaseExtToBases(newSequence)
-	delFound := seqContainsDels(mutatedSequence, dna.Gap)
+	delFound := seqContainsDels(mutatedSequence)
 	if delFound == false && deletions == true {
-		finalSequence = deleteBase(mutatedSequence)
+		delEvent := rand.Float64()
+		switch {
+		case delEvent <= branchLength :
+			finalSequence = deleteBase(mutatedSequence)
+		default:
+			finalSequence = mutatedSequence
+		}
+
 	} else {
 		finalSequence = mutatedSequence
 	}
@@ -515,9 +523,9 @@ func RemoveAncestors(filename string, tree *expandedTree.ETree, outputFilename s
 }
 
 // seqContainsDels checks whether a deletion is present in slice of bases.
-func seqContainsDels(seq []dna.Base, del dna.Base) bool {
+func seqContainsDels(seq []dna.Base) bool {
 	for _, base := range seq {
-		if base == del {
+		if base == dna.Gap {
 			return true
 		}
 	}
@@ -525,9 +533,9 @@ func seqContainsDels(seq []dna.Base, del dna.Base) bool {
 }
 
 // codonContainsDels checks whether a deletion is present in codon.
-func codonContainsDels(codon CodonExt, del dna.Base) bool {
+func codonContainsDels(codon CodonExt) bool {
 	for _, baseExt := range codon.Seq {
-		if baseExt.Base == del {
+		if baseExt.Base == dna.Gap {
 			return true
 		}
 	}
@@ -536,10 +544,7 @@ func codonContainsDels(codon CodonExt, del dna.Base) bool {
 
 // deleteBase replaces a single random base from provided sequence with deletion symbol(hyphen)
 func deleteBase(seq []dna.Base) []dna.Base {
-	delPos := rand.Intn(len(seq) - 3) // select random sequence position for deletion; avoid stop codon
-	if delPos < 3 {
-		delPos = delPos + (3 - delPos)
-	} // avoid start codon
+	delPos := numbers.RandIntInRange(3, len(seq)-3) // select random sequence position for deletion; avoid start/stop codons
 	seq[delPos] = dna.Gap // replace base at randomized position with gap symbol
 	return seq
 }
