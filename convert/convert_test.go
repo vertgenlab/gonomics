@@ -27,7 +27,8 @@ var expectedRetainN []*vcf.Vcf = []*vcf.Vcf{&var1, &var2, &var3, &var4, &var5, &
 func TestPairwiseFaToVcf(t *testing.T) {//this test is for the default settings.
 	var err error
 	out := fileio.EasyCreate("tmp.txt")
-	PairwiseFaToVcf(inputFa, "chr1", *out, false, false)
+	PairwiseFaToVcf(inputFa, "chr1", out, false, false)
+	out.Close()
 	input := vcf.Read("tmp.txt")
 	if !vcf.AllEqual(input, expected) {
 		t.Errorf("Pairwise VCF results do not match.")
@@ -41,7 +42,8 @@ func TestPairwiseFaToVcf(t *testing.T) {//this test is for the default settings.
 func TestPairwiseFaToVcfRetainN(t *testing.T) {
 	var err error
 	out := fileio.EasyCreate("tmpRetainN.txt")
-	PairwiseFaToVcf(inputFa, "chr1", *out, false, true)
+	PairwiseFaToVcf(inputFa, "chr1", out, false, true)
+	out.Close()
 	input := vcf.Read("tmpRetainN.txt")
 	if !vcf.AllEqual(input, expectedRetainN) {
 		t.Errorf("Pairwise VCF results do not match in retainN test.")
@@ -55,7 +57,8 @@ func TestPairwiseFaToVcfRetainN(t *testing.T) {
 func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 	var err error
 	out := fileio.EasyCreate("tmpSub.txt")
-	PairwiseFaToVcf(inputFa, "chr1", *out, true, false)
+	PairwiseFaToVcf(inputFa, "chr1", out, true, false)
+	out.Close()
 	input := vcf.Read("tmpSub.txt")
 	if !vcf.AllEqual(input, expectedSubOnly) {
 		t.Errorf("Pairwise VCF results do not match in subsitutionsOnly test.")

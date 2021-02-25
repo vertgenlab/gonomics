@@ -228,7 +228,7 @@ func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
 
 //PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first entry as the reference and the second fasta entry as the alt allele.
 //This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
-func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
+func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
 	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
 	var insertion bool = false
 	var deletion bool = false
@@ -247,7 +247,7 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out fileio.EasyWriter, substi
 			pastStart = true
 			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
 				if !substitutionsOnly {
-					vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+					vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 				}
 			}
 			if f[1].Seq[i] == dna.Gap { //alt is gap (deletion)
@@ -258,22 +258,22 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out fileio.EasyWriter, substi
 			} else if deletion { //snp immediately follows the end of a deletion
 				deletion = false
 				if !substitutionsOnly {
-					vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//from deletion
+					vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//from deletion
 				}
 				if f[0].Seq[i] == dna.N || f[1].Seq[i] == dna.N {
 					if retainN {
-						vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//then add current diff
+						vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//then add current diff
 					}
 				} else {
-					vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//then add current diff
+					vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//then add current diff
 				}
 			} else {//this case is for normal substitutions
 				if f[0].Seq[i] == dna.N || f[1].Seq[i] == dna.N {
 					if retainN {
-						vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+						vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 					}
 				} else {
-					vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+					vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 				}
 			}
 			insertion = false
@@ -281,13 +281,13 @@ func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out fileio.EasyWriter, substi
 			pastStart = true
 			insertion = false
 			if !substitutionsOnly {
-				vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+				vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 			}
 		} else if deletion {
 			pastStart = true
 			deletion = false
 			if !substitutionsOnly {
-				vcf.WriteVcf(out.File, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//from deletion	
+				vcf.WriteVcf(out, &vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})//from deletion	
 			}
 		}
 	}

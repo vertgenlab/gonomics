@@ -15,7 +15,7 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 	out := fileio.EasyCreate(outFile)
 	header := vcf.NewHeader("")
 	vcf.NewWriteHeader(out, header)
-	convert.PairwiseFaToVcf(f, chr, *out, substitutionsOnly, retainN)
+	convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
 	out.Close()
 }
 
