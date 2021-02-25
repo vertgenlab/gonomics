@@ -1,7 +1,6 @@
 package fasta
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -13,7 +12,6 @@ func TestGoReadToChan(t *testing.T) {
 			ToAppend := val
 			actual = append(actual, &ToAppend)
 		}
-		fmt.Println(test.data, actual)
 		if !AllAreEqual(test.data, actual) {
 			t.Errorf("The %s file was not read correctly.", test.filename)
 		}

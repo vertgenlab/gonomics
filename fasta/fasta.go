@@ -33,11 +33,6 @@ func Read(filename string) []*Fasta {
 
 	file := fileio.EasyOpen(filename)
 
-	prefix, err := fileio.EasyPeekReal(file, 1)
-	if err != nil || prefix[0] != '>' {
-		log.Fatalf("ERROR: %s is missing a sequence name (e.g. >chr1)", filename)
-	}
-
 	for curr, doneReading = NextFasta(file); !doneReading; curr, doneReading = NextFasta(file) {
 		if usedSeqNames[curr.Name] {
 			log.Fatalf("ERROR: %s is used as the name for multiple records. Names must be unique.", curr.Name)
@@ -47,7 +42,7 @@ func Read(filename string) []*Fasta {
 		}
 	}
 
-	exception.WarningOnErr(file.Close())
+	exception.PanicOnErr(file.Close())
 	return answer
 }
 
@@ -85,7 +80,8 @@ func NextFasta(file *fileio.EasyReader) (*Fasta, bool) {
 	return answer, doneReading
 }
 
-// ToMap converts the output of the Read function to a map of sequences keyed to the sequences name.
+// ToMap converts the a slice of fasta records (e.g. the output of the Read function)
+// to a map of sequences keyed to the sequences name.
 func ToMap(ref []*Fasta) map[string][]dna.Base {
 	m := make(map[string][]dna.Base)
 	for i := range ref {
@@ -104,7 +100,7 @@ func Write(filename string, records []*Fasta) {
 	lineLength := 50
 	file := fileio.EasyCreate(filename)
 	WriteToFileHandle(file, records, lineLength)
-	exception.WarningOnErr(file.Close())
+	exception.PanicOnErr(file.Close())
 }
 
 // WriteToFileHandle writes a slice of fasta records to a given io.Writer instead of creating

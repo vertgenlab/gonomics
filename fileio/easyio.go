@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"github.com/vertgenlab/gonomics/exception"
+	"log"
 	"os"
 	"strings"
 )
@@ -105,16 +106,33 @@ func (er *EasyReader) Read(p []byte) (n int, err error) {
 
 // Close the receiving EasyWriter.
 func (ew *EasyWriter) Close() error {
+	var gzErr, bufErr, fileErr error
 	if ew.internalGzip != nil {
-		return ew.internalGzip.Close()
+		gzErr = ew.internalGzip.Close() // Serious write errors possible.
 	}
 	if ew.internalBuff != nil {
-		return ew.internalBuff.Flush()
+		bufErr = ew.internalBuff.Flush() // Serious write errors possible.
 	}
 	if ew.File != nil {
-		return ew.File.Close()
+		fileErr = ew.File.Close() // The only possible err is that the file has already been closed.
+	} else {
+		return errors.New("no open file")
 	}
-	return errors.New("no reader detected")
+
+	switch { // Handle error returns. Priority is gzErr > bufErr > fileErr
+	case gzErr != nil:
+		return gzErr
+
+	case bufErr != nil:
+		return bufErr
+
+	case fileErr != nil:
+		log.Println("WARNING: attempted to close file, but file already closed")
+		return nil
+
+	default:
+		return nil
+	}
 }
 
 // Write bytes to the receiving EasyWriter.

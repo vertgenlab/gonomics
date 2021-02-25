@@ -38,7 +38,6 @@ func AlnPosToRefPos(record *Fasta, AlnPos int) int {
 
 func FilterName(records []*Fasta, name string) []*Fasta {
 	for i := 0; i < len(records); {
-		fmt.Printf("i: %d. len: %d\n", i, len(records))
 		if strings.Compare(records[i].Name, name) != 0 {
 			records = Remove(records, i)
 		} else {

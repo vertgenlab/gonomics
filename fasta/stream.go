@@ -11,7 +11,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Fasta, wg *sync.WaitGroup) 
 	for curr, done := NextFasta(file); !done; curr, done = NextFasta(file) {
 		data <- *curr
 	}
-	exception.WarningOnErr(file.Close())
+	exception.PanicOnErr(file.Close())
 	wg.Done()
 }
 
