@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
 )
@@ -69,12 +70,12 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 }
 
 //final function to run to simulate based off of the random gene and the tree
-func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string) {
+func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
 	var rand1 []*fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = rand1[0]
-	printSeqForNodes(root, rand1[0].Seq, gene)
+	printSeqForNodes(root, rand1[0].Seq, gene, deletions)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1, unsure how it was calculated
@@ -151,7 +152,7 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 }
 
 //MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths
-func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dna.Base {
+func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool) []dna.Base {
 	//TODO: make sure a genePred can be updated as we go through the tree
 	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
 	var newSequence []BaseExt
@@ -182,8 +183,14 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 				for codon := 0; codon < len(originalCodons); codon++ {
 					thisCodon := originalCodons[codon]
 					start = CheckStart(geneRecord[g], thisCodon)
+					delFound := codonContainsDels(thisCodon) // check if codon already contains deletions
 					stop = CheckStop(geneRecord[g], thisCodon)
 					if start == true {
+						newSequence = append(newSequence, thisCodon.Seq[0])
+						newSequence = append(newSequence, thisCodon.Seq[1])
+						newSequence = append(newSequence, thisCodon.Seq[2])
+					}
+					if delFound == true { // if deletions are present in codon leave it as is (for simplicities sake; will change at a later date)
 						newSequence = append(newSequence, thisCodon.Seq[0])
 						newSequence = append(newSequence, thisCodon.Seq[1])
 						newSequence = append(newSequence, thisCodon.Seq[2])
@@ -194,7 +201,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 						newSequence = append(newSequence, newCodon.Seq[1])
 						newSequence = append(newSequence, newCodon.Seq[2])
 					}
-					if start == false && stop == false {
+					if start == false && stop == false && delFound == false {
 						var newCodon CodonExt
 						newCodon.Seq = make([]BaseExt, 3)
 						for codonPosition := 0; codonPosition < 3; codonPosition++ {
@@ -229,7 +236,20 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string) []dn
 		}
 
 	}
-	finalSequence = BaseExtToBases(newSequence)
+	mutatedSequence := BaseExtToBases(newSequence)
+	delFound := seqContainsDels(mutatedSequence)
+	if delFound == false && deletions == true {
+		delEvent := rand.Float64()
+		switch {
+		case delEvent <= branchLength:
+			finalSequence = deleteBase(mutatedSequence)
+		default:
+			finalSequence = mutatedSequence
+		}
+
+	} else {
+		finalSequence = mutatedSequence
+	}
 	return finalSequence
 }
 
@@ -463,22 +483,22 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 //make fastas based off of node and random sequence
-func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string) {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string, deletions bool) {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
 	//var fastaFinal []*fasta.Fasta
 
 	length = node.BranchLength
-	seq = MutateGene(sequence, length, gene)
+	seq = MutateGene(sequence, length, gene, deletions)
 
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	//fastaFinal = append(fastaFinal, &seqFasta)
 	if node.Left != nil && node.Right != nil {
-		printSeqForNodes(node.Right, seq, gene)
+		printSeqForNodes(node.Right, seq, gene, deletions)
 		//fastaFinal = append(fastaFinal, b...)
-		printSeqForNodes(node.Left, seq, gene)
+		printSeqForNodes(node.Left, seq, gene, deletions)
 		//fastaFinal = append(fastaFinal, a...)
 	}
 }
@@ -500,4 +520,31 @@ func RemoveAncestors(filename string, tree *expandedTree.ETree, outputFilename s
 	}
 	outFile = outputFilename
 	fasta.Write(outFile, newFastas)
+}
+
+// seqContainsDels checks whether a deletion is present in slice of bases.
+func seqContainsDels(seq []dna.Base) bool {
+	for _, base := range seq {
+		if base == dna.Gap {
+			return true
+		}
+	}
+	return false
+}
+
+// codonContainsDels checks whether a deletion is present in codon.
+func codonContainsDels(codon CodonExt) bool {
+	for _, baseExt := range codon.Seq {
+		if baseExt.Base == dna.Gap {
+			return true
+		}
+	}
+	return false
+}
+
+// deleteBase replaces a single random base from provided sequence with deletion symbol(hyphen)
+func deleteBase(seq []dna.Base) []dna.Base {
+	delPos := numbers.RandIntInRange(3, len(seq)-3) // select random sequence position for deletion; avoid start/stop codons
+	seq[delPos] = dna.Gap                           // replace base at randomized position with gap symbol
+	return seq
 }
