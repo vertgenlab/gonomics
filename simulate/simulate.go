@@ -241,7 +241,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	if delFound == false && deletions == true {
 		delEvent := rand.Float64()
 		switch {
-		case delEvent <= branchLength :
+		case delEvent <= branchLength:
 			finalSequence = deleteBase(mutatedSequence)
 		default:
 			finalSequence = mutatedSequence
@@ -545,6 +545,6 @@ func codonContainsDels(codon CodonExt) bool {
 // deleteBase replaces a single random base from provided sequence with deletion symbol(hyphen)
 func deleteBase(seq []dna.Base) []dna.Base {
 	delPos := numbers.RandIntInRange(3, len(seq)-3) // select random sequence position for deletion; avoid start/stop codons
-	seq[delPos] = dna.Gap // replace base at randomized position with gap symbol
+	seq[delPos] = dna.Gap                           // replace base at randomized position with gap symbol
 	return seq
 }
