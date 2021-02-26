@@ -9,19 +9,19 @@ import (
 func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	var answer []*Bed
 	var inRegion bool = false
-	var startIndex = 0
-	for index, _ := range fa.Seq {
+	var startIndex, index int = 0, 0
+	for index = range fa.Seq {
 		if dna.DefineBase(fa.Seq[index]) && inRegion == false {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
-			answer = append(answer, &Bed{Chrom: fa.Name, ChromStart: int64(startIndex), ChromEnd: int64(index)})
+			answer = append(answer, &Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index})
 			inRegion = false
 		}
 
 	}
 	if inRegion == true {
-		answer = append(answer, &Bed{Chrom: fa.Name, ChromStart: int64(startIndex), ChromEnd: int64(len(fa.Seq))})
+		answer = append(answer, &Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq)})
 	}
 	return answer
 }
@@ -29,15 +29,16 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 //UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
 func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	var answer []*Bed
-	for idx, _ := range records {
+	var idx int = 0
+	for idx = range records {
 		answer = append(answer, UngappedRegionsFromFa(records[idx])...)
 	}
 	return answer
 }
 
 //TotalSize gives back to total region covered by bed entry.
-func TotalSize(b []*Bed) int64 {
-	var ans, curLen int64
+func TotalSize(b []*Bed) int {
+	var ans, curLen int
 	for i := 0; i < len(b); i++ {
 		curLen = b[i].ChromEnd - b[i].ChromStart
 		ans += curLen

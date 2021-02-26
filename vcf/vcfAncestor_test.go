@@ -14,7 +14,7 @@ func TestVcfQueryAncestor(t *testing.T) {
 	var input []dna.Base
 	var i int = 0
 	for v := range reader {
-		input = VcfQueryAncestor(v)
+		input = QueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
 			t.Errorf("Error in TestVcfQueryAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
 		}
@@ -30,8 +30,8 @@ func TestVcfAppendAncestor(t *testing.T) {
 
 	for v := range reader {
 		allele[0] = AncestorAlleles[i]
-		VcfAppendAncestor(v, allele)
-		input = VcfQueryAncestor(v)
+		AppendAncestor(v, allele)
+		input = QueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
 			t.Errorf("Error in TestVcfAppendAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
 		}
@@ -70,11 +70,26 @@ func TestVcfAnnotateAncestorFromFa(t *testing.T) {
 	var i int = 0
 
 	for v := range reader {
-		VcfAnnotateAncestorFromFa(v, records)
+		AnnotateAncestorFromMultiFa(v, records)
 		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
-		if dna.CompareSeqsIgnoreCase(VcfQueryAncestor(v), answers[i]) != 0 {
-			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(VcfQueryAncestor(v)))
+		if dna.CompareSeqsIgnoreCase(QueryAncestor(v), answers[i]) != 0 {
+			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(QueryAncestor(v)))
 		}
 		i++
+	}
+}
+
+var IsRefAnswers []bool = []bool{true, false, false}
+var IsAltAnswers []bool = []bool{false, true, false}
+
+func IsAncestorTests(t *testing.T) {
+	records := Read("testdata/IsAncestor.vcf")
+	for i, v := range records {
+		if IsRefAncestor(v) != IsRefAnswers[i] {
+			t.Errorf("Error in IsRefAncestor. Expected: %t. Found: %t.", IsRefAnswers[i], IsRefAncestor(v))
+		}
+		if IsAltAncestor(v) != IsAltAnswers[i] {
+			t.Errorf("Error in IsAltAncestor. Expected: %t. Found: %t.", IsAltAnswers[i], IsAltAncestor(v))
+		}
 	}
 }

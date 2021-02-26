@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
@@ -52,7 +53,7 @@ func NewByteReader(filename string) *ByteReader {
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
 		gzipReader, err := gzip.NewReader(file)
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 		answer.Reader = bufio.NewReader(gzipReader)
 	default:
 		answer.Reader = bufio.NewReader(file)
@@ -89,18 +90,18 @@ func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 // only when necessary.
 func readMore(reader *ByteReader) []byte {
 	_, err := reader.Buffer.Write(reader.line)
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 	reader.line, err = reader.ReadSlice('\n')
 	if err == nil {
 		return reader.line
 	}
 	if err == bufio.ErrBufferFull {
 		_, err = reader.Buffer.Write(reader.line)
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 		// recursive call to read next bytes until reaching end of line character
 		return readMore(reader)
 	}
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 	return reader.line
 }
 
@@ -109,7 +110,7 @@ func CatchErrThrowEOF(err error) {
 	if err == io.EOF {
 		return
 	} else {
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 	}
 }
 
@@ -121,7 +122,7 @@ func BytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	} else {
 		_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
 	}
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 	return reader.Buffer
 }
 
@@ -130,7 +131,7 @@ func BytesToBuffer(reader *ByteReader) *bytes.Buffer {
 // Close will return an error if it has already been called.
 func (reader *ByteReader) Close() {
 	if reader != nil {
-		panicOnErr(reader.close())
+		exception.PanicOnErr(reader.close())
 	}
 }
 
@@ -147,7 +148,7 @@ func StringToIntSlice(line string) []int {
 	var err error
 	for i := 0; i < sliceSize; i++ {
 		answer[i], err = strconv.Atoi(work[i])
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 	}
 	return answer
 }

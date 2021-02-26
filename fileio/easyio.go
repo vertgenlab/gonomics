@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"errors"
+	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"strings"
 )
@@ -36,7 +37,7 @@ func EasyOpen(filename string) *EasyReader {
 
 	if strings.HasSuffix(filename, ".gz") {
 		answer.internalGzip, err = gzip.NewReader(answer.File)
-		panicOnErr(err)
+		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
 		answer.BuffReader = bufio.NewReader(answer.File)
@@ -74,7 +75,7 @@ func EasyNextRealLine(file *EasyReader) (string, bool) {
 // EasyRemove deletes the input file.
 func EasyRemove(filename string) {
 	err := os.Remove(filename)
-	panicOnErr(err)
+	exception.PanicOnErr(err)
 }
 
 // Close the receiving EasyReader.
@@ -100,13 +101,13 @@ func (er *EasyReader) Read(p []byte) (n int, err error) {
 // Close the receiving EasyWriter.
 func (ew *EasyWriter) Close() {
 	if ew.internalGzip != nil {
-		panicOnErr(ew.internalGzip.Close())
+		exception.PanicOnErr(ew.internalGzip.Close())
 	}
 	if ew.internalBuff != nil {
-		panicOnErr(ew.internalBuff.Flush())
+		exception.PanicOnErr(ew.internalBuff.Flush())
 	}
 	if ew.File != nil {
-		panicOnErr(ew.File.Close())
+		exception.PanicOnErr(ew.File.Close())
 	}
 }
 

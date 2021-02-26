@@ -11,7 +11,7 @@ func negatePrevBed(curr *Bed, prev int) (int, *Bed) {
 		log.Fatalf("Error: this helper function does not deal with the 0th base...\n")
 		return 0, nil
 	} else {
-		return int(curr.ChromEnd), &Bed{Chrom: curr.Chrom, ChromStart: int64(prev), ChromEnd: curr.ChromStart}
+		return int(curr.ChromEnd), &Bed{Chrom: curr.Chrom, ChromStart: prev, ChromEnd: curr.ChromStart}
 	}
 }
 
@@ -39,7 +39,7 @@ func InvertRegions(beds []*Bed, chromLen int) []*Bed {
 		if prev == chromLen {
 			return ans
 		} else {
-			ans = append(ans, &Bed{Chrom: beds[len(beds)-1].Chrom, ChromStart: int64(prev), ChromEnd: int64(chromLen)})
+			ans = append(ans, &Bed{Chrom: beds[len(beds)-1].Chrom, ChromStart: prev, ChromEnd: chromLen})
 		}
 	}
 	return ans

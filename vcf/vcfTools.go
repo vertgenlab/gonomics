@@ -38,14 +38,14 @@ func VcfToBed(vcfs []*Vcf) []*bed.Bed {
 func vcfLineToBed(v *Vcf) *bed.Bed {
 	var b *bed.Bed = &bed.Bed{Chrom: v.Chr, Name: v.Id}
 	if Snp(v) {
-		b.ChromStart, b.ChromEnd = int64(v.Pos-1), int64(v.Pos-1)
+		b.ChromStart, b.ChromEnd = v.Pos-1, v.Pos-1
 	}
 	if Ins(v) {
-		b.ChromStart, b.ChromEnd = int64(v.Pos), int64(v.Pos)
+		b.ChromStart, b.ChromEnd = v.Pos, v.Pos
 	}
 	if Del(v) {
-		b.ChromStart = int64(v.Pos)
-		b.ChromEnd = int64(v.Pos + len(dna.StringToBases(v.Ref)) - 1)
+		b.ChromStart = v.Pos
+		b.ChromEnd = v.Pos + len(dna.StringToBases(v.Ref)) - 1
 	}
 	return b
 }

@@ -13,7 +13,7 @@ import (
 
 //MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position.
 //Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
-func MultiFaVisualizer(infile string, outfile string, start int64, end int64, noMask bool, lineLength int64) {
+func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int) {
 	if !(start < end) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
@@ -34,9 +34,9 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 	}
 	long := calculateLongestName(records)
 
-	var refCounter int64 = 0
-	var startCounter int64 = 0
-	var endCounter int64 = 0
+	var refCounter int = 0
+	var startCounter int = 0
+	var endCounter int = 0
 
 	for t := 0; refCounter < start; t++ {
 		startCounter++
@@ -65,12 +65,12 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 
 	for k := startCounter; k < endCounter; k = k + lineLength {
 		fmt.Fprintf(out, "Position: %d\n", chromStart)
-		stop = int(numbers.MinInt64(endCounter, k+lineLength))
+		stop = numbers.Min(endCounter, k+lineLength)
 		for m := 0; m < len(records); m++ {
 			fmt.Fprintf(out, "|%-*s| %s\n", long, records[m].Name, dna.BasesToString(records[m].Seq[k:stop]))
 		}
 		fmt.Fprintf(out, "\n\n")
-		chromStart = chromStart + lineLength - int64(dna.CountGaps(records[0].Seq[k:stop]))
+		chromStart = chromStart + lineLength - int(dna.CountGaps(records[0].Seq[k:stop]))
 	}
 }
 

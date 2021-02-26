@@ -17,7 +17,7 @@ func mafToBed(mafFile string, outBed string, reference string) {
 			assembly, chrom := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)
 			if assembly == reference {
 				if mafRecords[i].Species[k].SLine != nil {
-					current := bed.Bed{Chrom: chrom, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "blank", Score: int64(mafRecords[i].Score)}
+					current := bed.Bed{Chrom: chrom, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "blank", Score: int(mafRecords[i].Score)}
 					bedList = append(bedList, &current)
 				}
 			}

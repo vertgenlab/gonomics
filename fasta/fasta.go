@@ -20,7 +20,7 @@ func Read(filename string) []*Fasta {
 	var line string
 	var currSeq []dna.Base
 	var answer []*Fasta
-	var seqIdx int64 = -1
+	var seqIdx int = -1
 	var doneReading bool = false
 
 	file := fileio.EasyOpen(filename)
@@ -102,12 +102,12 @@ func WriteGroups(filename string, groups [][]*Fasta) error {
 	return nil
 }
 
-func CreateAllGaps(name string, numGaps int64) *Fasta {
+func CreateAllGaps(name string, numGaps int) *Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllGaps(numGaps)}
 	return &answer
 }
 
-func CreateAllNs(name string, numGaps int64) *Fasta {
+func CreateAllNs(name string, numGaps int) *Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllNs(numGaps)}
 	return &answer
 }
