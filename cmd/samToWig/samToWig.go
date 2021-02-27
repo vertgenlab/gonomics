@@ -25,7 +25,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	samFile := fileio.EasyOpen(samFileName)
 	defer samFile.Close()
 	var done bool = false
-	//sam.ReadHeader(samFile)
+	sam.ReadHeader(samFile)
 	var outBed []*bed.Bed
 	var aln *sam.SamAln
 
