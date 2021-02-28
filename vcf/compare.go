@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const debugMode = 0 //set debugMode to 1 to enable prints
+
 //CompareCoord compares two VCF structs by Pos for sorting or equality testing.
 func CompareCoord(alpha *Vcf, beta *Vcf) int {
 	if alpha.Pos < beta.Pos {
@@ -152,10 +154,16 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 //AllEqual returns true if each Vcf in a slice of Vcf structs contain identical information.
 func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
 	if len(alpha) != len(beta) {
+		if debugMode > 0 {
+			log.Printf("AllEqual is false. len(a): %v. len(b): %v.\n", len(alpha), len(beta))
+		}
 		return false
 	}
 	for i := 0; i < len(alpha); i++ {
 		if !isEqual(alpha[i], beta[i]) {
+			if debugMode > 0 {
+				log.Printf("AllEqual is false. Variants at index %v do not match.\n", i)
+			}
 			return false
 		}
 	}

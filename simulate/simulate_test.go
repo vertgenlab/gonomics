@@ -70,7 +70,7 @@ func TestMutateGene(t *testing.T) {
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
-		a := MutateGene(bases, test.branchLength, test.gp)
+		a := MutateGene(bases, test.branchLength, test.gp, true)
 		fmt.Printf("a: %s\n", dna.BasesToString(a))
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
