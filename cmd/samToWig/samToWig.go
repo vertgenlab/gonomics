@@ -38,7 +38,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	if fragLength != int64(-1) {
 		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 			currentBed = convert.SamToBedFrag(aln, fragLength, ref)
-		//} this bracket shouldn't be here! See Line 49 comment
+			//} this bracket shouldn't be here! See Line 49 comment
 			if currentBed != nil {
 				outBed = append(outBed, currentBed)
 			}
@@ -46,7 +46,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	} else {
 		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 			currentBed = convert.SamToBed(aln)
-		//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
+			//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
 			if currentBed != nil {
 				outBed = append(outBed, currentBed)
 			}
