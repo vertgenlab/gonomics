@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"sync"
 )
