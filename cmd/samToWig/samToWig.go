@@ -46,29 +46,17 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	} else {
 		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
 			currentBed = convert.SamToBed(aln)
-<<<<<<< HEAD
 		//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
-=======
-			//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
->>>>>>> c187e164b7c8cf3c0639f9706cf0fceaf68dc929
 			if currentBed != nil {
 				outBed = append(outBed, currentBed)
 			}
 		}
-<<<<<<< HEAD
 	}
-	
+
 	outWig = convert.BedReadsToWig(outBed, ref)
 	log.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
 	//}
-=======
-
-		outWig = convert.BedReadsToWig(outBed, ref)
-		log.Printf("Length of outWig: %d", len(outWig))
-		wig.Write(outfile, outWig)
-	}
->>>>>>> c187e164b7c8cf3c0639f9706cf0fceaf68dc929
 }
 
 func usage() {
