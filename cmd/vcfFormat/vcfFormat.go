@@ -25,7 +25,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 	}
 
 	if fixVcfRecords {
-		refMap = fasta.FastaMap(fasta.Read(ref))
+		refMap = fasta.ToMap(fasta.Read(ref))
 	}
 
 	for v := range ch {

@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"github.com/vertgenlab/gonomics/exception"
+	"log"
 	"os"
 	"strings"
 )
@@ -72,6 +73,11 @@ func EasyNextRealLine(file *EasyReader) (string, bool) {
 	return NextRealLine(file.BuffReader)
 }
 
+// EasyPeekReal will advance a reader past any lines beginning with '#' and read the first n bytes without advancing the reader.
+func EasyPeekReal(file *EasyReader, n int) ([]byte, error) {
+	return PeekReal(file.BuffReader, n)
+}
+
 // EasyRemove deletes the input file.
 func EasyRemove(filename string) {
 	err := os.Remove(filename)
@@ -99,15 +105,33 @@ func (er *EasyReader) Read(p []byte) (n int, err error) {
 }
 
 // Close the receiving EasyWriter.
-func (ew *EasyWriter) Close() {
+func (ew *EasyWriter) Close() error {
+	var gzErr, bufErr, fileErr error
 	if ew.internalGzip != nil {
-		exception.PanicOnErr(ew.internalGzip.Close())
+		gzErr = ew.internalGzip.Close() // Serious write errors possible.
 	}
 	if ew.internalBuff != nil {
-		exception.PanicOnErr(ew.internalBuff.Flush())
+		bufErr = ew.internalBuff.Flush() // Serious write errors possible.
 	}
 	if ew.File != nil {
-		exception.PanicOnErr(ew.File.Close())
+		fileErr = ew.File.Close() // The only possible err is that the file has already been closed.
+	} else {
+		return errors.New("no open file")
+	}
+
+	switch { // Handle error returns. Priority is gzErr > bufErr > fileErr
+	case gzErr != nil:
+		return gzErr
+
+	case bufErr != nil:
+		return bufErr
+
+	case fileErr != nil:
+		log.Println("WARNING: attempted to close file, but file already closed")
+		return nil
+
+	default:
+		return nil
 	}
 }
 

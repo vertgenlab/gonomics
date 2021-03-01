@@ -90,7 +90,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 }
 
 func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []*fasta.Fasta) {
-	ref := fasta.FastaMap(fa)
+	ref := fasta.ToMap(fa)
 	var records []*vcf.Vcf
 	var refIndex int = 0
 	var lastChr string = axtList[0].RName
@@ -119,8 +119,8 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []
 }
 
 func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta, qFa []*fasta.Fasta) {
-	ref := fasta.FastaMap(tFa)
-	query := fasta.FastaMap(qFa)
+	ref := fasta.ToMap(tFa)
+	query := fasta.ToMap(qFa)
 	var records []*vcf.Vcf
 	var refIndex int = 0
 	var queryIndex int = 0

@@ -33,7 +33,7 @@ func TestVcfEffectPrediction(t *testing.T) {
 	f[0].Seq = append(f[0].Seq, cftr[0].Seq...)
 
 	fasta.AllToUpper(f)
-	fastaRecords := fasta.FastaMap(f)
+	fastaRecords := fasta.ToMap(f)
 	gtfRecords := gtf.Read(settings.Gtf)
 	tree := gtf.GenesToIntervalTree(gtfRecords)
 

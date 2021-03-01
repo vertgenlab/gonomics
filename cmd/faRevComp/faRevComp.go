@@ -13,7 +13,9 @@ func faRevComp(inFile string, outFile string, keepName bool) {
 	fasta.ReverseComplementAll(records)
 
 	if keepName == false {
-		fasta.AppendToNameAll(records, "_revComp")
+		for i := range records {
+			records[i].Name = records[i].Name + "_revComp"
+		}
 	}
 
 	fasta.Write(outFile, records)

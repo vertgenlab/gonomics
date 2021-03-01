@@ -147,8 +147,7 @@ func vcfSplitChrNoN(vcfInput string) map[string][]*vcf.Vcf {
 
 func FaVcfChannels(ref string, vcfInput string) *simpleGraph.SimpleGraph {
 	vcfFilteredMap := vcfSplitChrNoN(vcfInput)
-	faReader := make(chan *fasta.Fasta)
-	go fasta.ReadToChan(ref, faReader)
+	faReader := fasta.GoReadToChan(ref)
 	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)
 	return gg
 }

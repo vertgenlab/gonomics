@@ -52,7 +52,7 @@ func AppendAnnotationHeader(header *vcf.VcfHeader) {
 func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.VcfHeader) {
 	f := fasta.Read(settings.Fasta)
 	fasta.AllToUpper(f)
-	fastaRecords := fasta.FastaMap(f)
+	fastaRecords := fasta.ToMap(f)
 	gtfRecords := gtf.Read(settings.Gtf)
 	tree := gtf.GenesToIntervalTree(gtfRecords)
 

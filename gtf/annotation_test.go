@@ -29,7 +29,7 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 	//testVcf := vcf.Read("testdata/TTN.vcf")
 
 	fasta.AllToUpper(f)
-	testFasta := fasta.FastaMap(f)
+	testFasta := fasta.ToMap(f)
 	tree := GenesToIntervalTree(testGtf)
 	var variant *vcfEffectPrediction
 	var words, newWords, newerWords []string
