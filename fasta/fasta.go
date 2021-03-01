@@ -127,13 +127,6 @@ func WriteFasta(file io.Writer, rec *Fasta, lineLength int) {
 	}
 }
 
-// SplitWrite writes each fasta record to its own file.
-func SplitWrite(filename string, records []*Fasta) {
-	for _, rec := range records {
-		Write(filename+"_"+rec.Name+"_"+".fasta", []*Fasta{rec})
-	}
-}
-
 // Extract will subset a sequence in a fasta file and return a new fasta record with
 // the same name and a subset of the sequence. Input start and end are left-closed right-open.
 func Extract(f *Fasta, start int, end int, name string) *Fasta {
