@@ -70,8 +70,8 @@ func TestAffineGapMulti(t *testing.T) {
 	for _, test := range affineAlignTests {
 		basesOne := dna.StringToBases(test.seqOne)
 		basesTwo := dna.StringToBases(test.seqTwo)
-		one := []*fasta.Fasta{{Name: "one", Seq: basesOne}}
-		two := []*fasta.Fasta{{Name: "two", Seq: basesTwo}}
+		one := []fasta.Fasta{{Name: "one", Seq: basesOne}}
+		two := []fasta.Fasta{{Name: "two", Seq: basesTwo}}
 		_, cigar := multipleAffineGap(one, two, DefaultScoreMatrix, -400, -30)
 		answer := mergeMultipleAlignments(one, two, cigar)
 		pretty := fmt.Sprintf("%s\n%s\n", dna.BasesToString(answer[0].Seq), dna.BasesToString(answer[1].Seq))
