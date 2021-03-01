@@ -206,7 +206,7 @@ func FormatToString(format []string) string {
 }
 
 //split vcf into slices to deal with different chromosomes
-func VcfSplit(vcfRecord []*Vcf, fastaRecord []*fasta.Fasta) [][]*Vcf {
+func VcfSplit(vcfRecord []*Vcf, fastaRecord []fasta.Fasta) [][]*Vcf {
 	var answer [][]*Vcf
 	for i := 0; i < len(fastaRecord); i++ {
 		var curr []*Vcf

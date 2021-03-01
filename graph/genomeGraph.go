@@ -74,7 +74,7 @@ func SnpQFrag(alpha []dna.Base, beta []dna.Base, name string, start int64, end i
 	return qDna.PairwiseAverage(qDna.FromDnaToQFrag(alpha, name), qDna.FromDnaToQFrag(beta, name), start, end, name)
 }
 
-func SeqToGraph(vcfFile []*vcf.Vcf, sequence *fasta.Fasta, gsw *GenomeGraph) *GenomeGraph {
+func SeqToGraph(vcfFile []*vcf.Vcf, sequence fasta.Fasta, gsw *GenomeGraph) *GenomeGraph {
 	g := gsw
 	var curr *Node
 	var currMatch *Node
@@ -136,7 +136,7 @@ func SeqToGraph(vcfFile []*vcf.Vcf, sequence *fasta.Fasta, gsw *GenomeGraph) *Ge
 	return g
 }
 
-func RefernceToGraph(vcfFile []*vcf.Vcf, reference []*fasta.Fasta, g *GenomeGraph) *GenomeGraph {
+func RefernceToGraph(vcfFile []*vcf.Vcf, reference []fasta.Fasta, g *GenomeGraph) *GenomeGraph {
 	gsw := g
 	vcfSplit := vcf.VcfSplit(vcfFile, reference)
 	if len(vcfSplit) != len(reference) {

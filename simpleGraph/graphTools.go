@@ -21,7 +21,7 @@ func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleG
 		filterVcf = vcfMap[chr.Name]
 		if len(filterVcf) != 0 {
 			vcf.Sort(filterVcf)
-			gg = vChrGraph(gg, &chr, filterVcf)
+			gg = vChrGraph(gg, chr, filterVcf)
 		} else {
 			// Given the input is a vcf containing large structural variance
 			// It is possible for a chromosome to contain no call variants (ex. chrM).
@@ -34,7 +34,7 @@ func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *SimpleG
 	return gg
 }
 
-func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*SimpleGraph {
+func SplitGraphChr(reference []fasta.Fasta, vcfs []*vcf.Vcf) map[string]*SimpleGraph {
 	gg := make(map[string]*SimpleGraph)
 	vcfSplit := vcf.VcfSplit(vcfs, reference)
 	if len(vcfSplit) != len(reference) {
@@ -47,7 +47,7 @@ func SplitGraphChr(reference []*fasta.Fasta, vcfs []*vcf.Vcf) map[string]*Simple
 	return gg
 }
 
-func vChrGraph(genome *SimpleGraph, chr *fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
+func vChrGraph(genome *SimpleGraph, chr fasta.Fasta, vcfsChr []*vcf.Vcf) *SimpleGraph {
 	vcfsChr = append(vcfsChr, &vcf.Vcf{Chr: chr.Name, Pos: len(chr.Seq)})
 	//log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
 	fasta.ToUpper(chr)
@@ -206,17 +206,17 @@ func GraphToFa(gg *SimpleGraph) []*fasta.Fasta {
 	return answer
 }
 
-func chrSplitByNs(chr *fasta.Fasta) []*fasta.Fasta {
+func chrSplitByNs(chr fasta.Fasta) []fasta.Fasta {
 	unGapped := bed.UngappedRegionsFromFa(chr)
-	var answer []*fasta.Fasta = make([]*fasta.Fasta, len(unGapped))
+	var answer []fasta.Fasta = make([]fasta.Fasta, len(unGapped))
 	for i := 0; i < len(unGapped); i++ {
-		answer[i] = &fasta.Fasta{Name: fmt.Sprintf("%s_%d_%d", unGapped[i].Chrom, unGapped[i].ChromStart, unGapped[i].ChromEnd), Seq: chr.Seq[unGapped[i].ChromStart:unGapped[i].ChromEnd]}
+		answer[i] = fasta.Fasta{Name: fmt.Sprintf("%s_%d_%d", unGapped[i].Chrom, unGapped[i].ChromStart, unGapped[i].ChromEnd), Seq: chr.Seq[unGapped[i].ChromStart:unGapped[i].ChromEnd]}
 	}
 	return answer
 }
 
-func FaSplitByNs(fa []*fasta.Fasta) []*fasta.Fasta {
-	var answer []*fasta.Fasta
+func FaSplitByNs(fa []fasta.Fasta) []fasta.Fasta {
+	var answer []fasta.Fasta
 	for i := 0; i < len(fa); i++ {
 		answer = append(answer, chrSplitByNs(fa[i])...)
 	}
@@ -280,7 +280,7 @@ func getSvEnd(v *vcf.Vcf) int {
 	return 0
 }
 
-func mkInversionNode(genome *SimpleGraph, v *vcf.Vcf, chr *fasta.Fasta) *Node {
+func mkInversionNode(genome *SimpleGraph, v *vcf.Vcf, chr fasta.Fasta) *Node {
 	invSeq := make([]dna.Base, 0)
 	invSeq = append(invSeq, chr.Seq[v.Pos:getSvEnd(v)]...)
 	dna.ReverseComplement(invSeq)

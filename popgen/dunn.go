@@ -13,7 +13,7 @@ import (
 
 //Dunn returns the dunn index as a float64 and missing group members as a string.
 //Mathematical details of the Dunn Index are described at https://en.wikipedia.org/wiki/Dunn_index.
-func Dunn(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
+func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 	var maxIntra int = 0
 	var minInter int = 0
 	var missing string = ""
@@ -41,7 +41,7 @@ func Dunn(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
 }
 
 //FindMaxIntra is a helper function of Dunn that calculates the Max pairwise sequence distance between two sequences of a multiFa alignment that are part of the same Group.
-func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
+func FindMaxIntra(subFa []fasta.Fasta, g *Group, b *bed.Bed) int {
 	var answer int = 0
 	var faI, faJ []dna.Base
 	var faFound bool
@@ -63,7 +63,7 @@ func FindMaxIntra(subFa []*fasta.Fasta, g *Group, b *bed.Bed) int {
 }
 
 //FindMinInter is a helper function of Dunn that calculates the minimum pairwise sequence distance between two sequences of a multiFa alignment that are part of different groups.
-func FindMinInter(g []*Group, subFa []*fasta.Fasta) int {
+func FindMinInter(g []*Group, subFa []fasta.Fasta) int {
 	var answer int = math.MaxInt64
 	faMap := fasta.ToMap(subFa)
 	var faI, faJ []dna.Base

@@ -33,7 +33,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	un := fileio.EasyCreate(unMapped)
 	defer un.Close()
 
-	var records []*fasta.Fasta
+	var records []fasta.Fasta
 	var currVcf *vcf.Vcf
 	var a, b float64
 

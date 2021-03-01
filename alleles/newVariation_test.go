@@ -34,7 +34,7 @@ func addChans(ref interface{}, file string, isNormal bool, alleleChans *[]<-chan
 	//	}
 	//	//log.Println("Started Allele Stream for", file)
 	case ".sam":
-		*alleleChans = append(*alleleChans, GoCountSamAlleles(file, ref.([]*fasta.Fasta), minMapQ))
+		*alleleChans = append(*alleleChans, GoCountSamAlleles(file, ref.([]fasta.Fasta), minMapQ))
 		*samFilesPresent = true
 		if isNormal == true {
 			normalIDs[file] = true

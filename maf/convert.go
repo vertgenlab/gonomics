@@ -6,8 +6,8 @@ import (
 	"log"
 )
 
-func setupBlankAln(ref *fasta.Fasta, species []string) []*fasta.Fasta {
-	var answer []*fasta.Fasta
+func setupBlankAln(ref fasta.Fasta, species []string) []fasta.Fasta {
+	var answer []fasta.Fasta
 	answer = append(answer, ref)
 	answer[0].Name = species[0]
 	for i := 1; i < len(species); i++ {
@@ -16,7 +16,7 @@ func setupBlankAln(ref *fasta.Fasta, species []string) []*fasta.Fasta {
 	return answer
 }
 
-func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
+func insertMafBlockIntoFasta(aln []fasta.Fasta, m *Maf) []fasta.Fasta {
 	var speciesBlock *MafSpecies
 	var replaceStart, replaceEnd, replaceAlnLength int
 	if m == nil || len(m.Species) < 1 || len(aln) < 1 {
@@ -60,7 +60,7 @@ func insertMafBlockIntoFasta(aln []*fasta.Fasta, m *Maf) []*fasta.Fasta {
 	return aln
 }
 
-func ToFasta(m []*Maf, ref *fasta.Fasta, species []string) []*fasta.Fasta {
+func ToFasta(m []*Maf, ref fasta.Fasta, species []string) []fasta.Fasta {
 	if len(ref.Seq) != m[0].Species[0].SLine.SrcSize {
 		log.Fatalf("Error: ref seq supplied as fasta should match the length of the first seq in the first maf block\n")
 	}

@@ -24,7 +24,7 @@ type BaseExt struct {
 var GC float64 = 0.42
 
 // makes random gene with start and stop codon, must be length multiple of 3
-func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
+func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	var AT float64
 	AT = 1 - GCcontent
 	seq := []dna.Base{dna.A, dna.T, dna.G}
@@ -64,17 +64,17 @@ func RandGene(name string, length int, GCcontent float64) []*fasta.Fasta {
 	}
 
 	record := fasta.Fasta{name, seq}
-	var answer []*fasta.Fasta
-	answer = append(answer, &record)
+	var answer []fasta.Fasta
+	answer = append(answer, record)
 	return answer
 }
 
 //final function to run to simulate based off of the random gene and the tree
 func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
-	var rand1 []*fasta.Fasta
+	var rand1 []fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
-	root.Fasta = rand1[0]
+	root.Fasta = &rand1[0]
 	printSeqForNodes(root, rand1[0].Seq, gene, deletions)
 }
 
@@ -504,8 +504,8 @@ func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string
 }
 
 func RemoveAncestors(filename string, tree *expandedTree.ETree, outputFilename string) {
-	var fastas []*fasta.Fasta
-	var newFastas []*fasta.Fasta
+	var fastas []fasta.Fasta
+	var newFastas []fasta.Fasta
 	var outFile string
 
 	fastas = fasta.Read(filename)
