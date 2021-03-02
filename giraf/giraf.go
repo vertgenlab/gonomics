@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"sync"
@@ -125,12 +126,14 @@ func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
 
 // GirafPairChanToFile will write a giraf pair end alignment channel to a file
 func GirafPairChanToFile(filename string, input <-chan GirafPair, wg *sync.WaitGroup) {
-	file := fileio.MustCreate(filename)
-	defer file.Close()
+	var err error
+	file := fileio.EasyCreate(filename)
 	for pair := range input {
 		WriteGirafToFileHandle(file, &pair.Fwd)
 		WriteGirafToFileHandle(file, &pair.Rev)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
