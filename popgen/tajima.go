@@ -9,7 +9,7 @@ import (
 
 //TajimaFromBed calculates Tajima's D from a multiFa alignment at a position set specific by an input bed entry.
 //Requires a gapless alignment.
-func TajimaFromBedNoGroup(b *bed.Bed, aln []*fasta.Fasta) float64 {
+func TajimaFromBedNoGroup(b *bed.Bed, aln []fasta.Fasta) float64 {
 	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
 	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
@@ -21,7 +21,7 @@ func TajimaFromBedNoGroup(b *bed.Bed, aln []*fasta.Fasta) float64 {
 //TajimaFromBed caculates Tajima's D from a multiFa alignment at a position set specified by an input bed entry.
 //This version considers only the alignment entries that are represented in an input Group slice. A second return from this function lists members of the input Group slice not found in the multiFa alignment.
 //Requires a gapless alignment.
-func TajimaFromBed(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string) {
+func TajimaFromBed(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
 	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
@@ -34,7 +34,7 @@ func TajimaFromBed(b *bed.Bed, aln []*fasta.Fasta, g []*Group) (float64, string)
 }
 
 //Tajima calculates Tajima's D from an input multiFa alignment block.
-func Tajima(aln []*fasta.Fasta) float64 {
+func Tajima(aln []fasta.Fasta) float64 {
 	k := calculateTajimaK(aln)
 	SoverA := calculateSoverA(aln)
 	D := (k - SoverA) / calculateDenominator(aln)
@@ -42,7 +42,7 @@ func Tajima(aln []*fasta.Fasta) float64 {
 }
 
 //calculateDenominator is a helper function of Tajima that calculates the denominator of the expression.
-func calculateDenominator(aln []*fasta.Fasta) float64 {
+func calculateDenominator(aln []fasta.Fasta) float64 {
 	n := float64(len(aln))
 	b1 := (n + 1) / (3 * (n - 1))
 	b2 := 2 * (math.Pow(n, 2) + n + 3) / (9 * n * (n - 1))
@@ -59,7 +59,7 @@ func calculateDenominator(aln []*fasta.Fasta) float64 {
 }
 
 //calculateA2 is a helper function of calculateDenominator that returns the value of A2, one parameter of Tajima's D.
-func calculateA2(aln []*fasta.Fasta) float64 {
+func calculateA2(aln []fasta.Fasta) float64 {
 	var a2 float64
 
 	for i := 1; i < (len(aln) - 1); i++ {
@@ -70,7 +70,7 @@ func calculateA2(aln []*fasta.Fasta) float64 {
 }
 
 //calculateA1 is a helper function of calculateDenominator that returns the value of the A1 parameter.
-func calculateA1(aln []*fasta.Fasta) float64 {
+func calculateA1(aln []fasta.Fasta) float64 {
 	var a1 float64
 
 	for i := 1; i < len(aln)-1; i++ {
@@ -80,14 +80,14 @@ func calculateA1(aln []*fasta.Fasta) float64 {
 }
 
 //calculateSoverA is a helper function of Tajima that returns the SoverA approximation of theta.
-func calculateSoverA(aln []*fasta.Fasta) float64 {
+func calculateSoverA(aln []fasta.Fasta) float64 {
 	S := calculateS(aln)
 	a1 := calculateA1(aln)
 	return (float64(S) / a1)
 }
 
 //calculateS returns the number of segregating sites from a multiFa alignment block.
-func calculateS(aln []*fasta.Fasta) int {
+func calculateS(aln []fasta.Fasta) int {
 	S := 0
 	var diff bool
 
@@ -106,7 +106,7 @@ func calculateS(aln []*fasta.Fasta) int {
 }
 
 //calculateTajimaK is a helper function of Tajima that returns the mean pairwise distance between sequences in an input multiFa alignment block.
-func calculateTajimaK(aln []*fasta.Fasta) float64 {
+func calculateTajimaK(aln []fasta.Fasta) float64 {
 	var distList []int
 	for i := 0; i < len(aln); i++ {
 		for j := i + 1; j < len(aln); j++ {

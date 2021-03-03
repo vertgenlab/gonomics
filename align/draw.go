@@ -27,7 +27,7 @@ func incrementOrAdd(list []keyValue, needle string) []keyValue {
 	return append(list, keyValue{Key: needle, Value: 1})
 }
 
-func determineChunkColors(aln []*fasta.Fasta, chunkSize int, palette color.Palette) (map[string]color.Color, error) {
+func determineChunkColors(aln []fasta.Fasta, chunkSize int, palette color.Palette) (map[string]color.Color, error) {
 	answer := make(map[string]color.Color, 0)
 	list := make([]keyValue, 0)
 
@@ -57,7 +57,7 @@ func determineChunkColors(aln []*fasta.Fasta, chunkSize int, palette color.Palet
 	return answer, nil
 }
 
-func drawNames(aln []*fasta.Fasta, vSpacing int) *image.RGBA {
+func drawNames(aln []fasta.Fasta, vSpacing int) *image.RGBA {
 	imageWidth := 200
 	imageHeight := len(aln) * vSpacing
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
@@ -68,7 +68,7 @@ func drawNames(aln []*fasta.Fasta, vSpacing int) *image.RGBA {
 	return img
 }
 
-func DrawAlignedChunks(aln []*fasta.Fasta, chunkSize int, chunkPixelWidth int, chunkPixelHeight int) (*image.RGBA, error) {
+func DrawAlignedChunks(aln []fasta.Fasta, chunkSize int, chunkPixelWidth int, chunkPixelHeight int) (*image.RGBA, error) {
 	imgChunks, err := drawChunks(aln, chunkSize, chunkPixelWidth, chunkPixelHeight)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func DrawAlignedChunks(aln []*fasta.Fasta, chunkSize int, chunkPixelWidth int, c
 	return img, nil
 }
 
-func drawChunks(aln []*fasta.Fasta, chunkSize int, chunkPixelWidth int, chunkPixelHeight int) (*image.RGBA, error) {
+func drawChunks(aln []fasta.Fasta, chunkSize int, chunkPixelWidth int, chunkPixelHeight int) (*image.RGBA, error) {
 	colorMap, err := determineChunkColors(aln, chunkSize, sketch.TrubetskoyPalette[:19])
 	if err != nil {
 		return nil, err

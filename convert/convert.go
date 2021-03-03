@@ -20,19 +20,19 @@ import (
 )
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
-func singleBedToFasta(b *bed.Bed, ref []*fasta.Fasta) *fasta.Fasta {
+func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 	for i := 0; i < len(ref); i++ {
 		if b.Chrom == ref[i].Name {
 			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
 		}
 	}
 	log.Fatalf("Chrom not found in fasta")
-	return nil
+	return fasta.Fasta{}
 }
 
 //BedToFasta extracts subFastas out of a reference fasta slice comprised of the sequences of input bed regions.
-func BedToFasta(b []*bed.Bed, ref []*fasta.Fasta) []*fasta.Fasta {
-	outlist := make([]*fasta.Fasta, len(b))
+func BedToFasta(b []*bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
+	outlist := make([]fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
 		outlist[i] = singleBedToFasta(b[i], ref)
 	}
@@ -228,7 +228,7 @@ func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
 
 //PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first entry as the reference and the second fasta entry as the alt allele.
 //This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
-func PairwiseFaToVcf(f []*fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
+func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
 	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
 	var insertion bool = false
 	var deletion bool = false

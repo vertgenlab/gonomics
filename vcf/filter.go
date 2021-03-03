@@ -85,7 +85,7 @@ func FilterChrom(v *Vcf, chrom string) bool {
 }
 
 //TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
-func FilterAxtVcf(vcfs []*Vcf, fa []*fasta.Fasta) []*Vcf {
+func FilterAxtVcf(vcfs []*Vcf, fa []fasta.Fasta) []*Vcf {
 	split := VcfSplit(vcfs, fa)
 	var answer []*Vcf
 	var i, j int

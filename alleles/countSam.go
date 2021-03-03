@@ -10,7 +10,7 @@ import (
 
 //TODO: Merge with countGiraf functions using interfaces???
 // GoCountSamAlleles is a wrapper for CountSamAlleles that manages channel closure.
-func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int64) <-chan *Allele {
+func GoCountSamAlleles(samFilename string, reference []fasta.Fasta, minMapQ int64) <-chan *Allele {
 	answer := make(chan *Allele)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -25,7 +25,7 @@ func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int
 }
 
 // CountSamAlleles counts the alleles in a sam file aligned to a linear reference (fasta) and sends them to an input channel sending the allele count for each position in the reference covered by the sam file
-func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []*fasta.Fasta, minMapQ int64, wg *sync.WaitGroup) {
+func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []fasta.Fasta, minMapQ int64, wg *sync.WaitGroup) {
 	samChan, _ := sam.GoReadToChan(samFilename)
 	var currAlleles = make(map[Coordinate]*AlleleCount)
 	var runningCount = make([]*Coordinate, 0)

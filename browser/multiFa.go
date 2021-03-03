@@ -75,7 +75,7 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 }
 
 //calculateLongestName is a helper function of MultiFaVisualizer that returns the length of the longest name in a slice of fasta.Fasta structs.
-func calculateLongestName(f []*fasta.Fasta) int {
+func calculateLongestName(f []fasta.Fasta) int {
 	var ans int = 0
 	var temp int
 	for i := 0; i < len(f); i++ {

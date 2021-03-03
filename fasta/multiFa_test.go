@@ -12,10 +12,10 @@ var rcSeqThreeA = dna.StringToBases("GTAGTAGTAATGATGATGAcgtACGT")
 var rcSeqThreeB = dna.StringToBases("ACGTACGTacgt")
 var rcSeqThreeC = dna.StringToBases("AACGTACGTACGT")
 var allRevCompTests = []struct {
-	input    []*Fasta
-	expected []*Fasta
+	input    []Fasta
+	expected []Fasta
 }{
-	{[]*Fasta{{"apple", seqThreeA}, {"banana", seqThreeB}, {"carrot", seqThreeC}}, []*Fasta{{"apple", rcSeqThreeA}, {"banana", rcSeqThreeB}, {"carrot", rcSeqThreeC}}},
+	{[]Fasta{{"apple", seqThreeA}, {"banana", seqThreeB}, {"carrot", seqThreeC}}, []Fasta{{"apple", rcSeqThreeA}, {"banana", rcSeqThreeB}, {"carrot", rcSeqThreeC}}},
 }
 var segSite1 = dna.StringToBases("AATCCTATTCA")
 var segSite2 = dna.StringToBases("AATCCTAATCA")
@@ -23,8 +23,8 @@ var segSite3 = dna.StringToBases("AATCCTATTCG")
 var expectedSegSite1 = dna.StringToBases("TA")
 var expectedSegSite2 = dna.StringToBases("AA")
 var expectedSegSite3 = dna.StringToBases("TG")
-var segSiteInput = []*Fasta{{"apple", segSite1}, {"banana", segSite2}, {"carrot", segSite3}}
-var segSiteExpected = []*Fasta{{"apple", expectedSegSite1}, {"banana", expectedSegSite2}, {"carrot", expectedSegSite3}}
+var segSiteInput = []Fasta{{"apple", segSite1}, {"banana", segSite2}, {"carrot", segSite3}}
+var segSiteExpected = []Fasta{{"apple", expectedSegSite1}, {"banana", expectedSegSite2}, {"carrot", expectedSegSite3}}
 
 func TestSegregatingSites(t *testing.T) {
 	input := SegregatingSites(segSiteInput)

@@ -57,11 +57,11 @@ func main() {
 }
 
 //TODO: Belongs in the fasta package, but bed and fasta becomes an illegal import cycle
-func chrSplitByNs(chr *fasta.Fasta) []*fasta.Fasta {
+func chrSplitByNs(chr fasta.Fasta) []fasta.Fasta {
 	unGapped := bed.UngappedRegionsFromFa(chr)
-	var answer []*fasta.Fasta = make([]*fasta.Fasta, len(unGapped))
+	var answer []fasta.Fasta = make([]fasta.Fasta, len(unGapped))
 	for i := 0; i < len(unGapped); i++ {
-		answer[i] = &fasta.Fasta{Name: fmt.Sprintf("%s_%d_%d", unGapped[i].Chrom, unGapped[i].ChromStart, unGapped[i].ChromEnd), Seq: chr.Seq[unGapped[i].ChromStart:unGapped[i].ChromEnd]}
+		answer[i] = fasta.Fasta{Name: fmt.Sprintf("%s_%d_%d", unGapped[i].Chrom, unGapped[i].ChromStart, unGapped[i].ChromEnd), Seq: chr.Seq[unGapped[i].ChromStart:unGapped[i].ChromEnd]}
 	}
 	return answer
 }

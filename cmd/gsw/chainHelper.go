@@ -91,16 +91,16 @@ func workThreadAxtVcf(axtChannel <-chan *axt.Axt, ans chan<- *vcf.Vcf) {
 	close(ans)
 }
 
-func goFaChannel(ref []*fasta.Fasta) <-chan fasta.Fasta {
+func goFaChannel(ref []fasta.Fasta) <-chan fasta.Fasta {
 	//set up faChan
 	ans := make(chan fasta.Fasta, 100)
 	go faWorker(ref, ans)
 	return ans
 }
 
-func faWorker(ref []*fasta.Fasta, faChan chan<- fasta.Fasta) {
+func faWorker(ref []fasta.Fasta, faChan chan<- fasta.Fasta) {
 	for _, chr := range ref {
-		faChan <- *chr
+		faChan <- chr
 	}
 	close(faChan)
 }

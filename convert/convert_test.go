@@ -13,7 +13,7 @@ import (
 
 var seqA []dna.Base = dna.StringToBases("--TTTC--ATGAATAATCA")
 var seqB []dna.Base = dna.StringToBases("CCATTCCAA--CAGAATNA")
-var inputFa []*fasta.Fasta = []*fasta.Fasta{{"eggplant", seqA}, {"squash", seqB}}
+var inputFa []fasta.Fasta = []fasta.Fasta{{"eggplant", seqA}, {"squash", seqB}}
 var var1 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 1, Id: ".", Ref: "T", Alt: strings.Split("A", ","), Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}
 var var2 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 4, Id: ".", Ref: "C", Alt: strings.Split("CCA", ","), Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}
 var var3 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "ATG", Alt: strings.Split("A", ","), Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}

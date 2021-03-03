@@ -106,22 +106,22 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 
 //write assigned sequences at all nodes to a fasta file
 func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
-	var fastas []*fasta.Fasta
+	var fastas []fasta.Fasta
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
-		fastas = append(fastas, nodes[i].Fasta)
+		fastas = append(fastas, *nodes[i].Fasta)
 	}
 	fasta.Write(outFile, fastas)
 }
 
 //write assigned sequences at leaf nodes to a fasta file
 func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
-	var leafFastas []*fasta.Fasta
+	var leafFastas []fasta.Fasta
 	nodes := expandedTree.GetLeaves(tree)
 
 	for i := 0; i < len(nodes); i++ {
-		leafFastas = append(leafFastas, nodes[i].Fasta)
+		leafFastas = append(leafFastas, *nodes[i].Fasta)
 	}
 	fasta.Write(leafFile, leafFastas)
 }
