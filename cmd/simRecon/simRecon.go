@@ -13,7 +13,10 @@ import (
 
 //SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction
 func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
-	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
+	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
+	if err != nil {
+		log.Printf("Error in ReadTree: %e", err)
+	}
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree, gp, false)
@@ -31,7 +34,10 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 
 //ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
-	tree := expandedTree.ReadTree(newickInput, fastaInput)
+	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
+	if err != nil {
+		log.Printf("Error in ReadTree: %e", err)
+	}
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 	var treeFastas []*fasta.Fasta

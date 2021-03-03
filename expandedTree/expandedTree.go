@@ -26,12 +26,13 @@ type ETree struct {
 }
 
 //read tree from filename and add fastas and up pointers to the tree
-func ReadTree(newickFilename string, fastasFilename string) *ETree {
+func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	tr, err := ReadNewick(newickFilename)
-	if err == nil {
+	if err != nil {
+		return nil, err
 	}
 	AssignFastas(tr, fastasFilename)
-	return tr
+	return tr, nil
 }
 
 //read in tree from filename

@@ -11,7 +11,10 @@ import (
 
 //TODO: option for seeded or unseeded random numbers (include in simulate.go)
 func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
-	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
+	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
+	if err != nil {
+		log.Printf("Error in ReadTree: %e", err)
+	}
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree, gp, true)

@@ -28,7 +28,10 @@ func Test_reconstruct(t *testing.T) {
 		WriteTreeToFasta(tre, "simOut.fasta")
 		WriteLeavesToFasta(tre, "leavesOnly.fasta")
 
-		tr := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
+		tr, err := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
+		if err != nil {
+			log.Printf("Error in ReadTree: %e", err)
+		}
 		leaves := expandedTree.GetLeaves(tr)
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 			LoopNodes(tr, i)
