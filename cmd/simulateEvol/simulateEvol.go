@@ -13,7 +13,7 @@ import (
 func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
 	if err != nil {
-		log.Printf("Error in ReadTree: %e", err)
+		log.Fatalf("Error in ReadTree: %e", err)
 	}
 	var fastas []*fasta.Fasta
 	var leafFastas []*fasta.Fasta
