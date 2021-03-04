@@ -18,3 +18,10 @@ func FatalOnErr(err error) {
 		log.Fatal(err)
 	}
 }
+
+// WarningOnErr will output a warning message (WARNING: err text) if err != nil
+func WarningOnErr(err error) {
+	if err != nil {
+		log.Printf("WARNING: %s", err)
+	}
+}

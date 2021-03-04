@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-//RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
-//Note: '*', used by VCF to denote deleted alleles becomes Nil
+// RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
+// Note: '*', used by VCF to denote deleted alleles becomes Nil
 func RuneToBase(r rune) Base {
 	switch r {
 	case 'A':
@@ -79,7 +79,7 @@ func ByteToBase(b byte) Base {
 	}
 }
 
-//BaseToRune converts a dna.Base type into a rune.
+// BaseToRune converts a dna.Base type into a rune.
 func BaseToRune(base Base) rune {
 	switch base {
 	case A:
@@ -112,17 +112,17 @@ func BaseToRune(base Base) rune {
 	}
 }
 
-//Extract returns a subsequence of an input slice of DNA bases from an input start and end point.
+// Extract returns a subsequence of an input slice of DNA bases from an input start and end point.
 func Extract(rec []Base, start int, end int) []Base {
 	return rec[start:end]
 }
 
-//BaseToString converts a DNA base to a string by casting a BaseToRune result to a string.
+// BaseToString converts a DNA base to a string by casting a BaseToRune result to a string.
 func BaseToString(b Base) string {
 	return string(baseToByteArray[b])
 }
 
-//StringToBases parses a string into a slice of DNA bases
+// StringToBases parses a string into a slice of DNA bases
 func StringToBases(s string) []Base {
 	answer := make([]Base, len(s))
 	for index := range s {
@@ -138,7 +138,7 @@ func StringToBases(s string) []Base {
 // quicker than BaseToByte by ~5x
 var baseToByteArray = []byte{'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n', '-', '.', '*'}
 
-//BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
+// BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
 func BasesToString(bases []Base) string {
 	var buffer strings.Builder
 	buffer.Grow(len(bases))
