@@ -222,7 +222,7 @@ func AssignFastas(root *ETree, fastaFilename string) {
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {
-				leaves[i].Fasta = fastas[j]
+				leaves[i].Fasta = &fastas[j]
 				leaves[i].State = int(leaves[i].Fasta.Seq[0])
 			}
 

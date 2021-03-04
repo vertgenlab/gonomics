@@ -9,7 +9,7 @@ import (
 
 func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int) {
 	records := fasta.Read(infile)
-	var outlist []*fasta.Fasta
+	var outlist []fasta.Fasta
 	var pass bool = true
 
 	if start > end && end != -1 {

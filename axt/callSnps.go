@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func AxtVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta) {
+func AxtVcfToFile(filename string, axtList []*Axt, fa []fasta.Fasta) {
 
 	var records []*vcf.Vcf
 	for i := 0; i < len(axtList); i++ {
@@ -89,7 +89,7 @@ func AxtToVcf(axtFile *Axt) []*vcf.Vcf {
 	return answer
 }
 
-func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []*fasta.Fasta) {
+func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []fasta.Fasta, qfa []*fasta.Fasta) {
 	ref := fasta.ToMap(fa)
 	var records []*vcf.Vcf
 	var refIndex int = 0
@@ -118,7 +118,7 @@ func AxtGapsVcfToFile(filename string, axtList []*Axt, fa []*fasta.Fasta, qfa []
 	vcf.Write(filename, records)
 }
 
-func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []*fasta.Fasta, qFa []*fasta.Fasta) {
+func AxtToVcfQueryInsertion(filename string, axtList []*Axt, tFa []fasta.Fasta, qFa []fasta.Fasta) {
 	ref := fasta.ToMap(tFa)
 	query := fasta.ToMap(qFa)
 	var records []*vcf.Vcf

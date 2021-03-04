@@ -6,7 +6,7 @@ import (
 )
 
 //UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
-func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
+func UngappedRegionsFromFa(fa fasta.Fasta) []*Bed {
 	var answer []*Bed
 	var inRegion bool = false
 	var startIndex, index int = 0, 0
@@ -27,7 +27,7 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 }
 
 //UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
-func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
+func UngappedRegionsAllFromFa(records []fasta.Fasta) []*Bed {
 	var answer []*Bed
 	var idx int = 0
 	for idx = range records {

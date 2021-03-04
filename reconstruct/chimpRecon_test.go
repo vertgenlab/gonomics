@@ -11,13 +11,13 @@ var bon2 = dna.StringToBases("AATNA--TTTCCTCTG")
 var chimp2 = dna.StringToBases("AATNAAATTTCGTATC")
 var gor2 = dna.StringToBases("AATNA--T--CGTCTG")
 var oran2 = dna.StringToBases("AATNA--T--CGTCTG")
-var Input2 = []*fasta.Fasta{{"hg38", hum2}, {"panPan2", bon2}, {"panTro6", chimp2}, {"gorGor5", gor2}, {"ponAbe3", oran2}}
+var Input2 = []fasta.Fasta{{"hg38", hum2}, {"panPan2", bon2}, {"panTro6", chimp2}, {"gorGor5", gor2}, {"ponAbe3", oran2}}
 
 var ChimpReconTests = []struct {
-	records []*fasta.Fasta
-	answer  *fasta.Fasta
+	records []fasta.Fasta
+	answer  fasta.Fasta
 }{
-	{Input2, &fasta.Fasta{"Human_Chimp_Ancestor", dna.StringToBases("AATNA--TNNCGTCTN")}},
+	{Input2, fasta.Fasta{"Human_Chimp_Ancestor", dna.StringToBases("AATNA--TNNCGTCTN")}},
 }
 
 func TestChimpAncestorRecon(t *testing.T) {

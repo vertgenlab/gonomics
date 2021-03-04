@@ -17,7 +17,7 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 
 	// The fasta files were split up to reduce the filesize. The following 6 lines
 	// assemble the fasta files so that everything is in the correct place
-	f := []*fasta.Fasta{{"chr7", make([]dna.Base, 92198968)}}
+	f := []fasta.Fasta{{"chr7", make([]dna.Base, 92198968)}}
 	f[0].Seq = append(f[0].Seq, krit[0].Seq...)
 	for i := 0; i < 117480024-92246100; i++ {
 		f[0].Seq = append(f[0].Seq, dna.N)

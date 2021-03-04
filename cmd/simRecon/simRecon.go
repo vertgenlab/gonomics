@@ -17,15 +17,15 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 	if err != nil {
 		log.Fatalf("Error in ReadTree: %e", err)
 	}
-	var fastas []*fasta.Fasta
-	var leafFastas []*fasta.Fasta
+	var fastas []fasta.Fasta
+	var leafFastas []fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree, gp, false)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
-		fastas = append(fastas, nodes[i].Fasta)
+		fastas = append(fastas, *nodes[i].Fasta)
 		if nodes[i].Left == nil && nodes[i].Right == nil {
-			leafFastas = append(leafFastas, nodes[i].Fasta)
+			leafFastas = append(leafFastas, *nodes[i].Fasta)
 		}
 	}
 	fasta.Write(simOutFile, fastas)
@@ -40,16 +40,16 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	}
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
-	var treeFastas []*fasta.Fasta
+	var treeFastas []fasta.Fasta
 
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 		reconstruct.LoopNodes(tree, i)
 	}
 	for j := 0; j < len(leaves); j++ {
-		treeFastas = append(treeFastas, leaves[j].Fasta)
+		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
 	for k := 0; k < len(branches); k++ {
-		treeFastas = append(treeFastas, branches[k].Fasta)
+		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
 	fasta.Write(outputFilename, treeFastas)
 }

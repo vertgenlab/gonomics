@@ -11,9 +11,9 @@ var seqOneB = dna.StringToBases("acgtACGTACGT")
 var seqOneC = dna.StringToBases("ACGTACGTACGTT")
 var readWriteTests = []struct {
 	filename string // input
-	data     []*Fasta
+	data     []Fasta
 }{
-	{"testdata/testOne.fa", []*Fasta{{"apple", seqOneA}, {"banana", seqOneB}, {"carrot", seqOneC}}},
+	{"testdata/testOne.fa", []Fasta{{"apple", seqOneA}, {"banana", seqOneB}, {"carrot", seqOneC}}},
 }
 
 func TestRead(t *testing.T) {
@@ -26,7 +26,7 @@ func TestRead(t *testing.T) {
 }
 
 func TestWriteAndRead(t *testing.T) {
-	var actual []*Fasta
+	var actual []Fasta
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"
 		Write(tempFile, test.data)

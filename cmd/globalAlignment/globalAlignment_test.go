@@ -9,8 +9,8 @@ import (
 )
 
 //initiate fake fasta files for testing the graph function
-var toad = &fasta.Fasta{Name: "toad", Seq: dna.StringToBases("TTGTTATTC")}
-var ahsoka = &fasta.Fasta{Name: "ahsoka", Seq: dna.StringToBases("TTGTTC")}
+var toad = fasta.Fasta{Name: "toad", Seq: dna.StringToBases("TTGTTATTC")}
+var ahsoka = fasta.Fasta{Name: "ahsoka", Seq: dna.StringToBases("TTGTTC")}
 
 //make needed cigar and graph using the graph function being tested
 var _, aln = align.ConstGap(toad.Seq, ahsoka.Seq, align.HumanChimpTwoScoreMatrix, -430)
@@ -41,7 +41,7 @@ func TestCigarToGraphMatchManual(t *testing.T) {
 //functions below this line were used to execute test functions
 
 //this function makes the manually created graph (called 'manual')
-func buildManualGraph(toad *fasta.Fasta, ahsoka *fasta.Fasta) *simpleGraph.SimpleGraph {
+func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *simpleGraph.SimpleGraph {
 	manual := simpleGraph.NewGraph()
 	nodeOne := &simpleGraph.Node{
 		Id:   0,

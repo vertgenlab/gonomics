@@ -87,7 +87,7 @@ func GoReadToChan(filename string) (<-chan *Chain, *HeaderComments) {
 }
 
 //GoReadSeqChain will wrap a chain file with target and query fasta seqeunces into the SeqChain struct.
-func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
+func GoReadSeqChain(filename string, target []fasta.Fasta, query []fasta.Fasta) *SeqChain {
 	file := fileio.EasyOpen(filename)
 	ans := make(chan *Chain)
 	var wg sync.WaitGroup

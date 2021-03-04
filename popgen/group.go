@@ -115,7 +115,7 @@ func GroupContains(g *Group, s string) bool {
 }
 
 //FindMissingGroupMembers returns a string of all of the entries in a Group slice that are not contained in the names of a multiFa alignment.
-func FindMissingGroupMembers(aln []*fasta.Fasta, g []*Group) string {
+func FindMissingGroupMembers(aln []fasta.Fasta, g []*Group) string {
 	var answer string = "Missing: "
 	var missing bool = false
 	for i := 0; i < len(g); i++ {
@@ -136,8 +136,8 @@ func FindMissingGroupMembers(aln []*fasta.Fasta, g []*Group) string {
 }
 
 //FilterMultByGroup takes in a multiFa alignment returns a multiFa containing only the entries that are contained in an input slice of Group structs.
-func FilterMultByGroup(aln []*fasta.Fasta, g []*Group) []*fasta.Fasta {
-	var answer []*fasta.Fasta
+func FilterMultByGroup(aln []fasta.Fasta, g []*Group) []fasta.Fasta {
+	var answer []fasta.Fasta
 	for i := 0; i < len(aln); i++ {
 		for j := 0; j < len(g); j++ {
 			for k := 0; k < len(g[j].Members); k++ {

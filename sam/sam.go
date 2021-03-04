@@ -323,7 +323,7 @@ func Write(filename string, data *Sam) {
 	}
 }
 
-func FastaHeader(ref []*fasta.Fasta) *SamHeader {
+func FastaHeader(ref []fasta.Fasta) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string

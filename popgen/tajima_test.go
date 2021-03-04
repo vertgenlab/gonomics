@@ -16,7 +16,7 @@ var seqE []dna.Base = dna.StringToBases("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 var seqF []dna.Base = dna.StringToBases("AAAAAAAAAATATAATAAAAAAATAAAAAAAAAAAAAAAA")
 var seqG []dna.Base = dna.StringToBases("AAAAAAAAAATATAAAAAAAAAATAAAAAAAAAATTAAAA")
 var seqH []dna.Base = dna.StringToBases("AAAAAAAAAATATAATAAAAAAATAAAAAAAAAAATAAAA")
-var testFa []*fasta.Fasta = []*fasta.Fasta{{"eggplant", seqA}, {"raddish", seqB}, {"rhubarb", seqC}, {"asparagus", seqD}, {"broccoli", seqE}, {"tomato", seqF}, {"celery", seqG}, {"carrot", seqH}}
+var testFa []fasta.Fasta = []fasta.Fasta{{"eggplant", seqA}, {"raddish", seqB}, {"rhubarb", seqC}, {"asparagus", seqD}, {"broccoli", seqE}, {"tomato", seqF}, {"celery", seqG}, {"carrot", seqH}}
 var expected float64 = -1.296575
 
 var b []*bed.Bed = []*bed.Bed{{Chrom: "chr10", ChromStart: 49396820, ChromEnd: 68756350}, {Chrom: "chr10", ChromStart: 75967636, ChromEnd: 76282688}}
