@@ -9,7 +9,7 @@ import (
 // ReadToChan is a helper function of GoReadToChan.
 func ReadToChan(file *fileio.EasyReader, data chan<- Fasta, wg *sync.WaitGroup) {
 	for curr, done := NextFasta(file); !done; curr, done = NextFasta(file) {
-		data <- *curr
+		data <- curr
 	}
 	exception.PanicOnErr(file.Close())
 	wg.Done()

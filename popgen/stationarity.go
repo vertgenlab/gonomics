@@ -38,7 +38,7 @@ func InvertSegSite(s *SegSite) {
 
 //MultiFaToAFS constructs an allele frequency spectrum struct from a multiFa alignment block.
 //TODO: Ask Craig about derived state here.
-func MultiFaToAFS(aln []*fasta.Fasta) AFS {
+func MultiFaToAFS(aln []fasta.Fasta) AFS {
 	var answer AFS
 	var count int
 	var current dna.Base

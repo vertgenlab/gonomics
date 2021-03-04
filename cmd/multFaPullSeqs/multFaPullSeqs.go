@@ -14,7 +14,7 @@ func multFaPullSeqs(infile string, outfile string, start int, end int) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
 	records := fasta.Read(infile)
-	var ans []*fasta.Fasta
+	var ans []fasta.Fasta
 	var refCounter int = 0
 	var startCounter int = 0
 	var endCounter int = 0

@@ -89,8 +89,8 @@ func axtToFa(input string, output string, target string) {
 }
 
 //if target sequence contains Ns, uses query non N bases to fill Ns
-func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) *fasta.Fasta {
-	concensus := &fasta.Fasta{
+func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) fasta.Fasta {
+	concensus := fasta.Fasta{
 		Name: fmt.Sprintf("%s", axtRecord.RName),
 		Seq:  make([]dna.Base, 0, len(faSeq)),
 	}

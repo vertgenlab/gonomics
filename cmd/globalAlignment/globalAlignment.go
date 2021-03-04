@@ -30,7 +30,7 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 
 //raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
 //faONe is target, faTwo is query
-func cigarToGraph(target *fasta.Fasta, query *fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
+func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
 	answer := simpleGraph.NewGraph()
 	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
 	var targetEnd, queryEnd int = 0, 0

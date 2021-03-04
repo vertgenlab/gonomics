@@ -4,14 +4,14 @@ import "testing"
 
 func TestRemove(t *testing.T) {
 	for _, test := range readWriteTests {
-		rmCopy := *test.data[1]
-		expected := []*Fasta{test.data[0], test.data[2]}
+		rmCopy := test.data[1]
+		expected := []Fasta{test.data[0], test.data[2]}
 		actual := Remove(test.data, 1)
 		if !AllAreEqual(expected, actual) {
 			t.Errorf("The %s file was not read correctly.", test.filename)
 		}
 		// add back so other tests are not broken
-		test.data[1] = &rmCopy
+		test.data[1] = rmCopy
 	}
 }
 

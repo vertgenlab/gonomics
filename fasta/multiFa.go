@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func RefPosToAlnPos(record *Fasta, RefPos int) int {
+func RefPosToAlnPos(record Fasta, RefPos int) int {
 	var AlnPos int = 0
 	var refCounter int = 0
 
@@ -24,7 +24,7 @@ func RefPosToAlnPos(record *Fasta, RefPos int) int {
 
 //AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceeding reference position.
 //0 based.
-func AlnPosToRefPos(record *Fasta, AlnPos int) int {
+func AlnPosToRefPos(record Fasta, AlnPos int) int {
 	var RefPos int = 0
 	for t := 0; t < AlnPos; t++ {
 		if t == len(record.Seq) {
@@ -36,7 +36,7 @@ func AlnPosToRefPos(record *Fasta, AlnPos int) int {
 	return RefPos
 }
 
-func FilterName(records []*Fasta, name string) []*Fasta {
+func FilterName(records []Fasta, name string) []Fasta {
 	for i := 0; i < len(records); {
 		if strings.Compare(records[i].Name, name) != 0 {
 			records = Remove(records, i)
@@ -47,37 +47,37 @@ func FilterName(records []*Fasta, name string) []*Fasta {
 	return records
 }
 
-func CopySubset(records []*Fasta, start int, end int) []*Fasta {
-	c := make([]*Fasta, len(records))
+func CopySubset(records []Fasta, start int, end int) []Fasta {
+	c := make([]Fasta, len(records))
 	length := end - start
 	for i := 0; i < len(records); i++ {
-		c[i] = &Fasta{Name: records[i].Name}
+		c[i] = Fasta{Name: records[i].Name}
 		c[i].Seq = make([]dna.Base, length)
 		copy(c[i].Seq, records[i].Seq[start:end])
 	}
 	return c
 }
 
-func DivideFasta(fa *Fasta, n int) []*Fasta {
-	var answer []*Fasta
+func DivideFasta(fa Fasta, n int) []Fasta {
+	var answer []Fasta
 	leftover := len(fa.Seq) % n
 	for i := 0; i < len(fa.Seq)-leftover; i += n {
-		answer = append(answer, &Fasta{Name: fmt.Sprintf("%s_%d", fa.Name, i), Seq: fa.Seq[i : i+n]})
+		answer = append(answer, Fasta{Name: fmt.Sprintf("%s_%d", fa.Name, i), Seq: fa.Seq[i : i+n]})
 	}
 	return answer
 }
 
-func DivideFastaAll(fa []*Fasta, n int) [][]*Fasta {
-	var answer [][]*Fasta
-	for index, _ := range fa {
+func DivideFastaAll(fa []Fasta, n int) [][]Fasta {
+	var answer [][]Fasta
+	for index := range fa {
 		answer = append(answer, DivideFasta(fa[index], n))
 	}
 	return answer
 }
 
 //In a multiple alignment block, removes any entries comprised only of gaps.
-func RemoveMissingMult(records []*Fasta) []*Fasta {
-	var answer []*Fasta
+func RemoveMissingMult(records []Fasta) []Fasta {
+	var answer []Fasta
 	var missing bool = true
 
 	for i := 0; i < len(records); i++ {
@@ -95,10 +95,10 @@ func RemoveMissingMult(records []*Fasta) []*Fasta {
 }
 
 //returns alignment columns with no gaps or lowercase letters
-func DistColumn(records []*Fasta) []*Fasta {
-	var subFa = make([]*Fasta, len(records))
+func DistColumn(records []Fasta) []Fasta {
+	var subFa = make([]Fasta, len(records))
 	for i := 0; i < len(records); i++ {
-		subFa[i] = &Fasta{Name: records[i].Name, Seq: make([]dna.Base, 0)}
+		subFa[i] = Fasta{Name: records[i].Name, Seq: make([]dna.Base, 0)}
 	}
 
 	for i := 0; i < len(records[0].Seq); i++ {
@@ -123,10 +123,10 @@ func DistColumn(records []*Fasta) []*Fasta {
 }
 
 //This function takes in a multiFa alignment block and returns only the columns that contain segregating sites.
-func SegregatingSites(aln []*Fasta) []*Fasta {
-	var answer = make([]*Fasta, len(aln))
+func SegregatingSites(aln []Fasta) []Fasta {
+	var answer = make([]Fasta, len(aln))
 	for i := 0; i < len(aln); i++ {
-		answer[i] = &Fasta{Name: aln[i].Name, Seq: make([]dna.Base, 0)}
+		answer[i] = Fasta{Name: aln[i].Name, Seq: make([]dna.Base, 0)}
 	}
 	var current dna.Base
 	var isSegregating bool
@@ -147,7 +147,7 @@ func SegregatingSites(aln []*Fasta) []*Fasta {
 	return answer
 }
 
-func ChangePrefix(records []*Fasta, prefix string) {
+func ChangePrefix(records []Fasta, prefix string) {
 	for idx := 0; idx < len(records); idx++ {
 		records[idx].Name = fmt.Sprintf("%s_%d", prefix, idx)
 	}

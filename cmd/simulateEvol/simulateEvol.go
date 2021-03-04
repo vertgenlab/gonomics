@@ -15,15 +15,15 @@ func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile s
 	if err != nil {
 		log.Printf("Error in ReadTree: %e", err)
 	}
-	var fastas []*fasta.Fasta
-	var leafFastas []*fasta.Fasta
+	var fastas []fasta.Fasta
+	var leafFastas []fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree, gp, true)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
-		fastas = append(fastas, nodes[i].Fasta)
+		fastas = append(fastas, *nodes[i].Fasta)
 		if nodes[i].Left == nil && nodes[i].Right == nil {
-			leafFastas = append(leafFastas, nodes[i].Fasta)
+			leafFastas = append(leafFastas, *nodes[i].Fasta)
 		}
 	}
 	fasta.Write(simOutFile, fastas)

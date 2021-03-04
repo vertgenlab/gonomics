@@ -8,7 +8,7 @@ import (
 
 // GtfToGene converts a gtf record into a Gene data structure
 // WARNING: If multiple isoforms are present, only the isoform the longest CDS is used
-func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
+func GtfToGene(g *gtf.Gene, ref []fasta.Fasta) *Gene {
 	answer := new(Gene)
 	gtf.MoveCanonicalToZero(g)
 	transcript := g.Transcripts[0]
@@ -55,7 +55,7 @@ func GtfToGene(g *gtf.Gene, ref []*fasta.Fasta) *Gene {
 	return answer
 }
 
-func processExonsPos(transcript *gtf.Transcript, ref []*fasta.Fasta, answer *Gene) {
+func processExonsPos(transcript *gtf.Transcript, ref []fasta.Fasta, answer *Gene) {
 	// set simple values and initialize slices
 	answer.startPos = transcript.Start - 1
 	fastaMap := fasta.ToMap(ref)
@@ -123,7 +123,7 @@ func processExonsPos(transcript *gtf.Transcript, ref []*fasta.Fasta, answer *Gen
 	}
 }
 
-func processExonsNeg(transcript *gtf.Transcript, ref []*fasta.Fasta, answer *Gene) {
+func processExonsNeg(transcript *gtf.Transcript, ref []fasta.Fasta, answer *Gene) {
 	// set simple values and initialize slices
 	answer.startPos = transcript.End - 1
 	fastaMap := fasta.ToMap(ref)

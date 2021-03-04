@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"sync"
@@ -56,13 +57,17 @@ type GirafPair struct {
 // Read will process a text file, parse the data fields and assign values to the appropriate giraf data fields
 func Read(filename string) []*Giraf {
 	var answer []*Giraf
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	var curr *Giraf
+	var err error
 	var done bool
+	var curr *Giraf
+	var file *fileio.EasyReader
+
+	file = fileio.EasyOpen(filename)
 	for curr, done = NextGiraf(file); !done; curr, done = NextGiraf(file) {
 		answer = append(answer, curr)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
@@ -105,32 +110,46 @@ func NextGiraf(reader *fileio.EasyReader) (*Giraf, bool) {
 
 // Write will write a slice of giraf structs to a file and perform error handling.
 func Write(filename string, gfs []*Giraf) {
-	file := fileio.MustCreate(filename)
-	defer file.Close()
-	for i := 0; i < len(gfs); i++ {
+	var file *fileio.EasyWriter
+	var i int
+	var err error
+
+	file = fileio.EasyCreate(filename)
+	for i = range gfs {
 		WriteGirafToFileHandle(file, gfs[i])
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
 // GirafChanToFile will write a giraf channel to a file
 func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
-	file := fileio.MustCreate(filename)
-	defer file.Close()
+	var curr *Giraf
+	var file *fileio.EasyWriter
+	var err error
 
-	for line := range input {
-		WriteGirafToFileHandle(file, line)
+	file = fileio.EasyCreate(filename)
+	for curr = range input {
+		WriteGirafToFileHandle(file, curr)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
 // GirafPairChanToFile will write a giraf pair end alignment channel to a file
 func GirafPairChanToFile(filename string, input <-chan GirafPair, wg *sync.WaitGroup) {
-	file := fileio.MustCreate(filename)
-	defer file.Close()
-	for pair := range input {
+	var err error
+	var file *fileio.EasyWriter
+	var pair GirafPair
+
+	file = fileio.EasyCreate(filename)
+	for pair = range input {
 		WriteGirafToFileHandle(file, &pair.Fwd)
 		WriteGirafToFileHandle(file, &pair.Rev)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
