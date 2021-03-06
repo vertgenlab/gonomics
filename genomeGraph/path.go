@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func PathToSeq(p giraf.Path, genome *SimpleGraph) []dna.Base {
+func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
 	if len(p.Nodes) == 1 {
 		answer := make([]dna.Base, p.TEnd-p.TStart)
 		copy(answer, genome.Nodes[p.Nodes[0]].Seq[p.TStart:p.TEnd])
@@ -27,7 +27,7 @@ func PathToSeq(p giraf.Path, genome *SimpleGraph) []dna.Base {
 	}
 }
 
-func ViewGraphAlignment(g *giraf.Giraf, genome *SimpleGraph) string {
+func ViewGraphAlignment(g *giraf.Giraf, genome *GenomeGraph) string {
 
 	var seqOne, seqTwo bytes.Buffer
 	var i int = g.Path.TStart

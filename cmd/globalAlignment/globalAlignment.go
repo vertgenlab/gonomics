@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"log"
 	"os"      //raven added this line for MSA Fasta output
 	"strings" //raven added this line for CountSeqIdx
@@ -30,26 +30,26 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 
 //raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
 //faONe is target, faTwo is query
-func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *simpleGraph.SimpleGraph {
-	answer := simpleGraph.NewGraph()
+func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *genomeGraph.GenomeGraph {
+	answer := genomeGraph.EmptyGraph()
 	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
 	var targetEnd, queryEnd int = 0, 0
-	var curr *simpleGraph.Node
+	var curr *genomeGraph.Node
 	//TODO: Make sure it can handle non-match at node 0. Fill out annotations for each node (knowing which allele/haplotype).
 	//TODO: Handle multi-entry fasta?
 
 	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence.
-	curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[0], 0)
-	simpleGraph.AddNode(answer, curr)
+	curr, targetEnd, queryEnd = genomeGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[0], 0)
+	genomeGraph.AddNode(answer, curr)
 	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes.
 	for i := 1; i < len(aln); i++ {
-		curr, targetEnd, queryEnd = simpleGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[i], i)
-		simpleGraph.AddNode(answer, curr)
+		curr, targetEnd, queryEnd = genomeGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[i], i)
+		genomeGraph.AddNode(answer, curr)
 		if aln[i].Op == 0 {
-			simpleGraph.AddEdge(answer.Nodes[i-1], curr, 1)
-			simpleGraph.AddEdge(answer.Nodes[i-2], curr, 0.5)
+			genomeGraph.AddEdge(answer.Nodes[i-1], curr, 1)
+			genomeGraph.AddEdge(answer.Nodes[i-2], curr, 0.5)
 		} else if aln[i].Op == 1 || aln[i].Op == 2 {
-			simpleGraph.AddEdge(answer.Nodes[i-1], curr, 0.5)
+			genomeGraph.AddEdge(answer.Nodes[i-1], curr, 0.5)
 		} else {
 			log.Fatalf("Error: cigar.Op = %d is unrecognized...\n", aln[i].Op)
 		}
@@ -98,8 +98,8 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	}
 
 	//cigar to graph
-	genomeGraph := cigarToGraph(faOne, faTwo, aln)
-	simpleGraph.PrintGraph(genomeGraph)
+	//genomeGraph := cigarToGraph(faOne, faTwo, aln)
+	//genomeGraph.PrintGraph(genomeGraph)
 }
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options

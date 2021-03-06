@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func RandomPairedReads(genome *SimpleGraph, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
+func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
 	var answer []*fastq.PairedEnd = make([]*fastq.PairedEnd, numReads)
 	var seq []dna.Base
 	var path []uint32
@@ -49,12 +49,12 @@ func RandomPairedReads(genome *SimpleGraph, readLength int, numReads int, numCha
 	return answer
 }
 
-func RandLocation(genome *SimpleGraph) (uint32, uint32) {
+func RandLocation(genome *GenomeGraph) (uint32, uint32) {
 	var totalBases int = BasesInGraph(genome)
 	return RandLocationFast(genome, totalBases)
 }
 
-func RandLocationFast(genome *SimpleGraph, totalBases int) (uint32, uint32) {
+func RandLocationFast(genome *GenomeGraph, totalBases int) (uint32, uint32) {
 	var rand int = numbers.RandIntInRange(0, totalBases)
 	for i := 0; i < len(genome.Nodes); i++ {
 		if rand < genome.Nodes[i].SeqTwoBit.Len {
@@ -67,7 +67,7 @@ func RandLocationFast(genome *SimpleGraph, totalBases int) (uint32, uint32) {
 	return 0, 0 //needed for compiler, should not get here
 }
 
-func RandPathFwd(genome *SimpleGraph, nodeIdx uint32, pos uint32, length int) ([]uint32, uint32, []dna.Base) {
+func RandPathFwd(genome *GenomeGraph, nodeIdx uint32, pos uint32, length int) ([]uint32, uint32, []dna.Base) {
 	var answer []dna.Base = make([]dna.Base, 0, length)
 	var i int = 0
 	for i = 0; i < length && int(pos) < genome.Nodes[nodeIdx].SeqTwoBit.Len; i, pos = i+1, pos+1 {
@@ -81,7 +81,7 @@ func RandPathFwd(genome *SimpleGraph, nodeIdx uint32, pos uint32, length int) ([
 	}
 }
 
-func randPathFwdHelper(genome *SimpleGraph, nodeIdx uint32, length int, progress []dna.Base, path []uint32) ([]uint32, uint32, []dna.Base) {
+func randPathFwdHelper(genome *GenomeGraph, nodeIdx uint32, length int, progress []dna.Base, path []uint32) ([]uint32, uint32, []dna.Base) {
 	var pos uint32 = 0
 	for pos = 0; len(progress) < length && int(pos) < genome.Nodes[nodeIdx].SeqTwoBit.Len; pos = pos + 1 {
 		progress = append(progress, dnaTwoBit.GetBase(genome.Nodes[nodeIdx].SeqTwoBit, uint(pos)))
@@ -94,7 +94,7 @@ func randPathFwdHelper(genome *SimpleGraph, nodeIdx uint32, length int, progress
 	}
 }
 
-func RandomReads(genome *SimpleGraph, readLength int, numReads int, numChanges int) []*fastq.Fastq {
+func RandomReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []*fastq.Fastq {
 	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
 	var seq []dna.Base
 	var path []uint32

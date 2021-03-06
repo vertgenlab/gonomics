@@ -1,16 +1,16 @@
-package simpleGraph
+package genomeGraph
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
+//"fmt"
+//"github.com/vertgenlab/gonomics/common"
+//"github.com/vertgenlab/gonomics/dna"
+//"github.com/vertgenlab/gonomics/fileio"
+//"log"
+//"strings"
 )
 
 //TODO: work in progress
-func DotToGraph(input string) *SimpleGraph {
+/*func DotToGraph(input string) *SimpleGraph {
 	var line string
 	var gg *SimpleGraph = NewGraph()
 	var doneReading bool = false
@@ -41,4 +41,4 @@ func DotToGraph(input string) *SimpleGraph {
 		}
 	}
 	return gg
-}
+}*/

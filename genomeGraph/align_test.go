@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"flag"

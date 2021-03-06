@@ -3,10 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	//"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 	"os"
 	"strings"
@@ -89,13 +88,13 @@ func viewAlignmentStdOut(ref string, g string) {
 	if !strings.HasSuffix(ref, ".gg") {
 		log.Fatalf("Error: Apologies, your command prompt was not recognized...\n\n-xoxo GG\n")
 	}
-	gg := simpleGraph.Read(ref)
+	gg := genomeGraph.Read(ref)
 	if strings.HasSuffix(g, ".giraf") {
 
 		file := fileio.EasyOpen(g)
 		defer file.Close()
 		for curr, done := giraf.NextGiraf(file); !done; curr, done = giraf.NextGiraf(file) {
-			log.Printf("%s\n", simpleGraph.ViewGraphAlignment(curr, gg))
+			log.Printf("%s\n", genomeGraph.ViewGraphAlignment(curr, gg))
 		}
 	}
 }

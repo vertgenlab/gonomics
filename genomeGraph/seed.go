@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"github.com/vertgenlab/gonomics/fastq"
@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-func extendCurrSeed(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq, left bool, right bool) {
+func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq, left bool, right bool) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
 	//check to see if begining is at index zero, if so do something like SeedDev.Prev
 	//if newStart < 0
@@ -24,7 +24,7 @@ func extendCurrSeed(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq, left bool
 	}
 }
 
-func toTheRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
+func toTheRight(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
 	//log.Printf("Depth of call is: %d for seed: %d", depth, seed.TargetId)
 	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, false, true)
@@ -53,7 +53,7 @@ func toTheRight(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	return answer
 }
 
-func toTheLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
+func toTheLeft(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
 	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, true, false)
 	//var newTStart, newQStart int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1
@@ -79,7 +79,7 @@ func toTheLeft(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
 	return answer
 }
 
-func extendSeedTogether(seed *SeedDev, gg *SimpleGraph, read *fastq.Fastq) []*SeedDev {
+func extendSeedTogether(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
 	var answer []*SeedDev
 	rightGraph := toTheRight(seed, gg, read)
 

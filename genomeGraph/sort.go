@@ -1,8 +1,8 @@
-package simpleGraph
+package genomeGraph
 
 // SortGraph will reorder nodes in a graph such that the order and Ids of the output graph are topologically sorted
-func SortGraph(g *SimpleGraph) *SimpleGraph {
-	answer := new(SimpleGraph)
+func SortGraph(g *GenomeGraph) *GenomeGraph {
+	answer := &GenomeGraph{}
 	answer.Nodes = make([]*Node, len(g.Nodes))
 	order := GetSortOrder(g)
 	for sortedIdx, originalIdx := range order {
@@ -14,7 +14,7 @@ func SortGraph(g *SimpleGraph) *SimpleGraph {
 }
 
 // GetSortOrder will perform a breadth first search (BFS) on a graph and return an output slice where output[sortedIdx] = originalIdx
-func GetSortOrder(g *SimpleGraph) []uint32 {
+func GetSortOrder(g *GenomeGraph) []uint32 {
 	return breadthFirstSearch(g.Nodes)
 }
 

@@ -49,6 +49,15 @@ func StringToInt(s string) int {
 }
 
 // StringToFloat64 parses a string into a float64 and will exit on error
+func StringToFloat32(s string) float32 {
+	n, err := strconv.ParseFloat(s, 32)
+	if err != nil {
+		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a float32\n", s))
+	}
+	return float32(n)
+}
+
+// StringToFloat64 parses a string into a float64 and will exit on error
 func StringToFloat64(s string) float64 {
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {

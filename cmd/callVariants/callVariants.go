@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/alleles"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"path/filepath"
@@ -35,7 +35,7 @@ func callVariants(linearRef string, graphRef string, expSamples string, normSamp
 	if linearRef != "" {
 		ref = fasta.Read(linearRef)
 	} else if graphRef != "" {
-		ref = simpleGraph.Read(graphRef)
+		ref = genomeGraph.Read(graphRef)
 	}
 	alleleStream, normalIDs := startAlleleStreams(ref, expSamples, normSamples, minMapQ, memBufferSize)
 	answer := alleles.FindNewVariation(alleleStream, normalIDs, afThreshold, sigThreshold, minCov)

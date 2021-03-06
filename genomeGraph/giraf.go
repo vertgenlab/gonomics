@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"math/rand"
 )
 
-func RandGiraf(graph *SimpleGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
+func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
 	answer := make([]*giraf.Giraf, 0)
 	var curr *giraf.Giraf
 
@@ -92,7 +92,7 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 }
 
 //TODO: simulate indels
-func RandSomaticMutations(graph *SimpleGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
+func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
 	var totalBases = BasesInGraph(graph)
 	var mutationNode, mutationPos []uint32
 	var nodeIdx uint32
@@ -137,7 +137,7 @@ func RandSomaticMutations(graph *SimpleGraph, reads []*giraf.Giraf, numSomaticSN
 	return mutationNode, mutationPos
 }
 
-func NodePosToReadPos(graph *SimpleGraph, read *giraf.Giraf, node uint32, pos uint32) uint32 {
+func NodePosToReadPos(graph *GenomeGraph, read *giraf.Giraf, node uint32, pos uint32) uint32 {
 	var posInPath int
 	var readPos uint32 = 0
 

@@ -1,15 +1,14 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
+func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
 	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget int
@@ -60,13 +59,13 @@ func GraphSmithWatermanMemPool(gg *SimpleGraph, read *fastq.FastqBig, seedHash m
 			}
 			currBest.Seq = currSeq // unsure why this line was lost
 			currBest.Qual = string(read.Qual)
-			currBest.RName = gg.Nodes[bestPath[0]].Name
+			currBest.RName = fmt.Sprintf("%d", bestPath[0])
 			currBest.Pos = int64(minTarget) + 1
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
-			if &gg.Nodes[bestPath[0]].Info != nil {
+			/*if &gg.Nodes[bestPath[0]].Info != nil {
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
 				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
-			}
+			}*/
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
 		}
@@ -156,7 +155,7 @@ func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	return perfectScore
 }
 
-func NodesHeader(ref []*Node) *sam.SamHeader {
+/*func NodesHeader(ref []*Node) *sam.SamHeader {
 	var header sam.SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
@@ -166,7 +165,7 @@ func NodesHeader(ref []*Node) *sam.SamHeader {
 		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
 	}
 	return &header
-}
+}*/
 
 func ChromAndPosToNumber(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)

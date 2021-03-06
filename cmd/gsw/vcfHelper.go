@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-func vcfToSimpleGraph(vcfFile, faFile string) *simpleGraph.SimpleGraph {
+func vcfToGenomeGraph(vcfFile, faFile string) *genomeGraph.GenomeGraph {
 	ref := fasta.GoReadToChan(faFile)
 
 	hashByChrom := make(map[string][]*vcf.Vcf)
@@ -19,5 +19,5 @@ func vcfToSimpleGraph(vcfFile, faFile string) *simpleGraph.SimpleGraph {
 		hashByChrom[curr.Chr] = append(hashByChrom[curr.Chr], curr)
 	}
 
-	return simpleGraph.VariantGraph(ref, hashByChrom)
+	return genomeGraph.VariantGraph(ref, hashByChrom)
 }

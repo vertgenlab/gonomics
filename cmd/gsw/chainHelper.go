@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"strings"
 )
@@ -28,7 +28,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 		}
 		file.Close()
 	case "gg":
-		simpleGraph.Write(output, chainToSimpleGraph(chainFile, targetFa, queryFa))
+		genomeGraph.Write(output, chainToGenomeGraph(chainFile, targetFa, queryFa))
 	default:
 		ggToolsUsage()
 		errorMessage()
@@ -50,7 +50,7 @@ func goChainToVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
 	return ans
 }
 
-func chainToSimpleGraph(chainFile, targetFa, queryFa string) *simpleGraph.SimpleGraph {
+func chainToGenomeGraph(chainFile, targetFa, queryFa string) *genomeGraph.GenomeGraph {
 	target, query := fasta.Read(targetFa), fasta.Read(queryFa)
 	chainFa := chain.GoReadSeqChain(chainFile, target, query)
 	axtChannel := make(chan *axt.Axt, 2408)
@@ -65,8 +65,8 @@ func chainToSimpleGraph(chainFile, targetFa, queryFa string) *simpleGraph.Simple
 	}
 	//set up fa channel
 	ref := goFaChannel(target)
-	//return the simple graph
-	return simpleGraph.VariantGraph(ref, chrVcfMap)
+	//return the genome graph
+	return genomeGraph.VariantGraph(ref, chrVcfMap)
 }
 
 func workThreadChainAxt(chFa *chain.SeqChain, ans chan<- *axt.Axt) {

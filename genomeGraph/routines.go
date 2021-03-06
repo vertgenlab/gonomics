@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"github.com/vertgenlab/gonomics/fastq"
@@ -8,7 +8,7 @@ import (
 )
 
 //Goroutine worker functions
-func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- giraf.Giraf, wg *sync.WaitGroup) {
+func RoutineFqToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- giraf.Giraf, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
@@ -21,7 +21,7 @@ func RoutineFqToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int
 	wg.Done()
 }
 
-func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- giraf.GirafPair, wg *sync.WaitGroup) {
+func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- giraf.GirafPair, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
@@ -34,7 +34,7 @@ func RoutineFqPairToGiraf(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen
 	wg.Done()
 }
 
-func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
+func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
@@ -47,7 +47,7 @@ func RoutineGirafToSamSingle(gg *SimpleGraph, seedHash map[uint64][]uint64, seed
 	wg.Done()
 }
 
-func RoutineGirafToSam(gg *SimpleGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
+func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()

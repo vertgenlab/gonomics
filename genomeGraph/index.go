@@ -1,4 +1,4 @@
-package simpleGraph
+package genomeGraph
 
 import (
 	"github.com/vertgenlab/gonomics/dna"

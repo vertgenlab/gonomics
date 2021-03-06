@@ -4,7 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"path/filepath"
 	"strings"
@@ -26,7 +26,7 @@ func convertAxt(axtFile, format, targetFa, output string) {
 		vcf.WriteVcfToFileHandle(file, ans)
 		file.Close()
 	case "gg":
-		simpleGraph.Write(output, axtToSimpleGraph(axtFile, targetFa))
+		genomeGraph.Write(output, axtToGenomeGraph(axtFile, targetFa))
 	default:
 		ggToolsUsage()
 		errorMessage()
@@ -50,14 +50,14 @@ func goChannelAxtVcf(axtFile string) <-chan *vcf.Vcf {
 	return ans
 }
 
-func axtToSimpleGraph(axtFile, faFile string) *simpleGraph.SimpleGraph {
+func axtToGenomeGraph(axtFile, faFile string) *genomeGraph.GenomeGraph {
 	vcfChannel := goChannelAxtVcf(axtFile)
 	chrVcfMap := make(map[string][]*vcf.Vcf)
 	for i := range vcfChannel {
 		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
 	}
 	ref := fasta.GoReadToChan(faFile)
-	var gg *simpleGraph.SimpleGraph = &simpleGraph.SimpleGraph{}
-	gg = simpleGraph.VariantGraph(ref, chrVcfMap)
+	var gg *genomeGraph.GenomeGraph = &genomeGraph.GenomeGraph{}
+	gg = genomeGraph.VariantGraph(ref, chrVcfMap)
 	return gg
 }
