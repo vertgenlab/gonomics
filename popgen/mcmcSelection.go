@@ -13,7 +13,7 @@ import (
 )
 
 //To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
-const verbose int = 1
+const verbose int = 0
 const step float64 = 50.0
 
 type Theta struct {
@@ -127,17 +127,9 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 		log.Println("Hello, I'm about to calculate MCMC.")
 	}
 
-	maxN := findMaxN(data)
-	binomCache := make([][]float64, maxN+1)
-
 	allN := findAllN(data)
-	var n, k int
-	for n = 0; n < len(allN); n++ {
-		binomCache[allN[n]] = make([]float64, allN[n])
-		for k = 1; k < allN[n]; k++ {
-			binomCache[allN[n]][k] = numbers.BinomCoefficientLog(allN[n], k)
-		}
-	}
+
+	binomCache := BuildBinomCache(allN)
 
 	var currAccept bool
 	if verbose > 1 {
@@ -165,6 +157,20 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	}
 }
 
+func BuildBinomCache(allN []int) [][]float64 {
+	binomCache := make([][]float64, numbers.MaxIntSlice(allN)+1)
+
+	var n, k int
+	for n = 0; n < len(allN); n++ {
+		binomCache[allN[n]] = make([]float64, allN[n])
+		for k = 1; k < allN[n]; k++ {
+			binomCache[allN[n]][k] = numbers.BinomCoefficientLog(allN[n], k)
+		}
+	}
+	return binomCache
+}
+
+/*
 //findMaxN is a helper function that aids in the generation of binomCache. In order to determine the proper length of the binomCache, we need to figure out which variant has the largest value of N.
 func findMaxN(data AFS) int {
 	var answer int = 0
@@ -173,6 +179,7 @@ func findMaxN(data AFS) int {
 	}
 	return answer
 }
+*/
 
 func findAllN(data AFS) []int {
 	var answer []int = make([]int, 0)
