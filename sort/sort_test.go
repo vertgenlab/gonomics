@@ -2,14 +2,14 @@ package sort
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"os"
 	"testing"
 )
 
 func TestGirafExternalMergeSort(t *testing.T) {
-	graph := simpleGraph.Read("testdata/mini.gg")
-	sortOrder := simpleGraph.GetSortOrder(graph)
+	graph := genomeGraph.Read("testdata/mini.gg")
+	sortOrder := genomeGraph.GetSortOrder(graph)
 	GirafExternalMergeSort("testdata/miniReads.giraf", sortOrder, 100, "testSort.giraf")
 	fileio.EasyRemove("testSort.giraf")
 	fileio.EasyRemove("testSort.giraf.idx")

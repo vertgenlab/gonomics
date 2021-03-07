@@ -22,7 +22,7 @@ func TestGetSortOrder(t *testing.T) {
 		t.Errorf("Error: Problem with graph sort \n Expected Order : %v \n Received Order : %v", correctOrder, order)
 	}
 
-	var discontiguousGraph *SimpleGraph = MakeDisContigTestGraph()
+	var discontiguousGraph *GenomeGraph = MakeDisContigTestGraph()
 	brokenGraph := BreakNonContiguousGraph(discontiguousGraph.Nodes)
 	if len(brokenGraph) != 2 {
 		t.Errorf("ERROR: Problem with breaking up discontigous graph into subgraphs")
@@ -46,60 +46,55 @@ func TestGetSortOrder(t *testing.T) {
 //                   /
 //                  /
 //               T
-func MakeDisContigTestGraph() *SimpleGraph {
-	graph := NewGraph()
+func MakeDisContigTestGraph() *GenomeGraph {
+	graph := EmptyGraph()
 
 	var n0, n1, n2, n3, n4 *Node
-	var f0, f2, f5, r0, r2, r5 *Edge
+	var f0, f2, f5, r0, r2, r5 Edge
 
 	// Make Nodes
 	n0 = &Node{
-		Id:   0,
-		Name: "n0",
-		Seq:  dna.StringToBases("ATG")}
+		Id:  0,
+		Seq: dna.StringToBases("ATG")}
 
 	n1 = &Node{
-		Id:   1,
-		Name: "n1",
-		Seq:  dna.StringToBases("CG")}
+		Id:  1,
+		Seq: dna.StringToBases("CG")}
 
 	n2 = &Node{
-		Id:   2,
-		Name: "n2",
-		Seq:  dna.StringToBases("A")}
+		Id:  2,
+		Seq: dna.StringToBases("A")}
 
 	n3 = &Node{
-		Id:   3,
-		Name: "n3",
-		Seq:  dna.StringToBases("T")}
+		Id:  3,
+		Seq: dna.StringToBases("T")}
 
 	n4 = &Node{
-		Id:   4,
-		Name: "n4",
-		Seq:  dna.StringToBases("TAA")}
+		Id:  4,
+		Seq: dna.StringToBases("TAA")}
 
 	// Make Edges
-	f0 = &Edge{
+	f0 = Edge{
 		Dest: n1,
 		Prob: 1}
 
-	f2 = &Edge{
+	f2 = Edge{
 		Dest: n4,
 		Prob: 1}
 
-	f5 = &Edge{
+	f5 = Edge{
 		Dest: n4,
 		Prob: 1}
 
-	r0 = &Edge{
+	r0 = Edge{
 		Dest: n0,
 		Prob: 1}
 
-	r2 = &Edge{
+	r2 = Edge{
 		Dest: n2,
 		Prob: 1}
 
-	r5 = &Edge{
+	r5 = Edge{
 		Dest: n3,
 		Prob: 1}
 

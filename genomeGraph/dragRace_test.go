@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -45,11 +44,11 @@ func TestQuickMemPool(t *testing.T) {
 	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
 
-	header := NodesHeader(genome.Nodes)
+	//header := NodesHeader(genome.Nodes)
 
 	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "testdata/sim.sam", header, &writerWaiter)
+	go sam.SamChanToFile(samPipe, "testdata/sim.sam", nil, &writerWaiter)
 
 	log.Printf("Starting alignment worker...\n")
 	time.Sleep(5 * time.Second)
@@ -77,30 +76,6 @@ func TestQuickMemPool(t *testing.T) {
 	log.Printf("Sam writer finished and we are all done\n")
 	duration := stop.Sub(start)
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
-	strictCheckFile("testdata/sim.sam", genome)
-	log.Printf("Passed alignment check!!!\n")
 	fileio.EasyRemove("testdata/simReads.fq")
 	fileio.EasyRemove("testdata/sim.sam")
-}
-
-func strictCheckAlignment(aln *sam.SamAln, genome *SimpleGraph) {
-	qName := strings.Split(aln.QName, "_")
-	if strings.Compare(genome.Nodes[common.StringToUint32(qName[0])].Name, aln.RName) == 0 && aln.Pos == common.StringToInt64(qName[1]) {
-		// do nothing
-	} else {
-		log.Fatalf("Error: Incorrect Alignment\n")
-	}
-}
-
-func strictCheckFile(filename string, genome *SimpleGraph) {
-	var curr *sam.SamAln
-	var done bool
-
-	file := fileio.EasyOpen(filename)
-	sam.ReadHeader(file)
-	defer file.Close()
-
-	for curr, done = sam.NextAlignment(file); done != true; curr, done = sam.NextAlignment(file) {
-		strictCheckAlignment(curr, genome)
-	}
 }

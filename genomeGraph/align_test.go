@@ -94,7 +94,7 @@ func BenchmarkGsw(b *testing.B) {
 
 }
 
-func checkAlignment(aln giraf.Giraf, genome *SimpleGraph) bool {
+func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 	qName := strings.Split(aln.QName, "_")
 	//if len(qName) < 5 {
 	//	log.Fatalf("Error: input giraf file does not match simulation format...\n")
@@ -134,7 +134,7 @@ func percentOfFloat(part int, total int) float64 {
 	return (float64(part) * float64(100)) / float64(total)
 }
 
-func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *SimpleGraph, wg *sync.WaitGroup, numReads int) {
+func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *sync.WaitGroup, numReads int) {
 	var unmapped int = 0
 	for pair := range input {
 		if !checkAlignment(pair.Fwd, genome) {

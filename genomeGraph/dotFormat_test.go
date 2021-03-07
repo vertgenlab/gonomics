@@ -1,10 +1,10 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
-	"log"
-	"testing"
+//"github.com/vertgenlab/gonomics/dna"
+//"github.com/vertgenlab/gonomics/fastq"
+//"log"
+//"testing"
 )
 
 //TODO: consider dot format to graph
@@ -12,6 +12,9 @@ import (
 //node_0          --> node_3             --> node_6
 //     --> node_2           -->  node_5
 
+//TODO: The function this tests has been temporarily removed since it is not being used now and will need
+// some modifications
+/*
 func TestDotFormat(t *testing.T) {
 	gg := DotToGraph("testdata/dotFormat/seed_test.dot")
 	var hippo *fastq.Fastq = &fastq.Fastq{Name: "hippoOne", Seq: dna.StringToBases("CCCATTCTTCCCTCCACAAGATCCAGATCCCCGTGTTTGGACCCCATAAGAATGAGAAGAATCCTCTCCGGTTTTGTTATCTGTTCTGAATGTGAAACTGGGATATCCACGTTGATCTCGGCTAAAATATAACAAACCTAAACAATTTGA"), Qual: fastq.ToQualUint8([]rune("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ"))}
@@ -20,4 +23,4 @@ func TestDotFormat(t *testing.T) {
 	printSeedDev(hits)
 	log.Printf("Number of expanded seeds is: %d", len(hits))
 
-}
+}*/
