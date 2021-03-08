@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
@@ -12,7 +13,7 @@ import (
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
 	if err != nil {
-		log.Fatalf("Error in ReadTree: %e", err)
+		exception.FatalOnErr(err)
 	}
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)

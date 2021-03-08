@@ -1,6 +1,7 @@
 package reconstruct
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -30,7 +31,7 @@ func Test_reconstruct(t *testing.T) {
 
 		tr, err := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
 		if err != nil {
-			log.Fatalf("Error in ReadTree: %e", err)
+			exception.FatalOnErr(err)
 		}
 		leaves := expandedTree.GetLeaves(tr)
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {

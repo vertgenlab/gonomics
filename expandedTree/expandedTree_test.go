@@ -1,6 +1,7 @@
 package expandedTree
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"testing"
 )
@@ -11,16 +12,16 @@ func TestReadTree(t *testing.T) {
 	tree, err := ReadTree("testdata/newick.txt", "testdata/fasta.fasta")
 	treeNodes := GetTree(tree)
 	if err != nil {
-		log.Fatal("Problem in ReadTree")
+		exception.FatalOnErr(err)
 	} else {
 		if tree.Name != actualName {
-			log.Fatal("Incorrect name at root")
+			t.Error("Incorrect name at root")
 		}
 		for b := 0; b < len(treeNodes); b++ {
 			if treeNodes[b].Name == "A" {
 				aFound = true
 				if treeNodes[b].BranchLength != 0.20 {
-					log.Fatal("incorrect branch length assignment")
+					t.Error("incorrect branch length assignment")
 				}
 			}
 		}

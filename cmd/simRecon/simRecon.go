@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -15,7 +16,7 @@ import (
 func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
 	if err != nil {
-		log.Fatalf("Error in ReadTree: %e", err)
+		exception.FatalOnErr(err)
 	}
 	var fastas []fasta.Fasta
 	var leafFastas []fasta.Fasta
