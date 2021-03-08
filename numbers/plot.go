@@ -21,3 +21,14 @@ func Plot(f func(float64) float64, left float64, right float64, bins int, outFil
 		current = current + step
 	}
 }
+
+func PlotBinomCoefficient(n int, outFile string) {
+	out := fileio.EasyCreate(outFile)
+	fmt.Fprintf(out, "i\tProbability\n")
+
+	for i := 1; i < n; i++ { //all possible choose, not including 0 and n as i arguments.
+		fmt.Fprintf(out, "%v\t%v\n", i, BinomCoefficientLog(n, i))
+	}
+
+	out.Close()
+}

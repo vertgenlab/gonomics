@@ -99,3 +99,23 @@ func TripleMin(a int, b int, c int) int {
 		return c
 	}
 }
+
+func MaxIntSlice(a []int) int {
+	var answer int = a[0]
+	for i := 1; i < len(a); i++ {
+		if a[i] > answer {
+			answer = a[i]
+		}
+	}
+	return answer
+}
+
+func MinIntSlice(a []int) int {
+	var answer int = a[0]
+	for i := 1; i < len(a); i++ {
+		if a[i] < answer {
+			answer = a[i]
+		}
+	}
+	return answer
+}
