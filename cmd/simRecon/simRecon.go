@@ -37,7 +37,7 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
 	if err != nil {
-		log.Fatalf("Error in ReadTree: %e", err)
+		exception.FatalOnErr(err)
 	}
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
