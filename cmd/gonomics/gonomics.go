@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 func usage() {
@@ -66,18 +67,15 @@ func getGonomicsFuncs() map[string]bool {
 }
 
 // from https://gist.github.com/hivefans/ffeaf3964924c943dd7ed83b406bbdea
-func streamOutput(stdout io.ReadCloser) {
-	buf := bufio.NewReader(stdout)
+func streamOutput(output io.ReadCloser, wg *sync.WaitGroup) {
+	buf := bufio.NewReader(output)
 	num := 1
-	for {
-		line, _, _ := buf.ReadLine()
-		if num > 3 {
-			os.Exit(0)
-		}
+	for num <= 3 {
+		outline, _, _ := buf.ReadLine()
 		num += 1
-		fmt.Println(string(line))
+		fmt.Println(string(outline))
 	}
-
+	wg.Done()
 }
 
 func main() {
@@ -113,14 +111,10 @@ func main() {
 
 	cmd := exec.Command(binPath + "/" + cmdCalled, flag.Args()[1:]...)
 
-	stdout, err := cmd.StdoutPipe()
-	exception.WarningOnErr(err)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	err = cmd.Start()
-	exception.WarningOnErr(err)
-
-	streamOutput(stdout)
-
-	err = cmd.Wait()
-	exception.WarningOnErr(err)
+	err := cmd.Run()
+	exception.FatalOnErr(err)
 }
