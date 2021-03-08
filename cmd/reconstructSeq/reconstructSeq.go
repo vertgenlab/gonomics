@@ -12,9 +12,8 @@ import (
 
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
-	if err != nil {
-		exception.FatalOnErr(err)
-	}
+	exception.FatalOnErr(err)
+
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 	var treeFastas []fasta.Fasta
