@@ -69,6 +69,24 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	return line, false
 }
 
+// PeekReal will advance a reader past any lines beginning with '#' and read the first n bytes without advancing the reader.
+func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
+	var peek []byte
+	var err error
+	for peek, err = reader.Peek(1); err == nil && peek[0] == '#'; peek, err = reader.Peek(1) {
+		_, err = reader.ReadBytes('\n') // advance reader past comment line
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	} else {
+		return reader.Peek(n)
+	}
+}
+
 // equal returns true if two input files are identical
 func equal(a string, b string, commentsMatter bool) bool {
 	var fileADone, fileBDone = false, false

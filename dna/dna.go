@@ -21,7 +21,7 @@ const (
 )
 
 // CreatAllGaps creates a DNA sequence of Gap with length of numGaps
-func CreateAllGaps(numGaps int64) []Base {
+func CreateAllGaps(numGaps int) []Base {
 	answer := make([]Base, numGaps)
 	for i := range answer {
 		answer[i] = Gap
@@ -30,7 +30,7 @@ func CreateAllGaps(numGaps int64) []Base {
 }
 
 // CreatAllN creates a DNA sequence of N with length of numGaps
-func CreateAllNs(numGaps int64) []Base {
+func CreateAllNs(numGaps int) []Base {
 	answer := make([]Base, numGaps)
 	for i := range answer {
 		answer[i] = N
