@@ -69,10 +69,15 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 1
+	var expectedNumArgs int
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	if len(flag.Args()) == 0 {
+		flag.Usage()
+		log.Fatalf("No arguments inputed, help message printed.\n")
+	}
 
 	if flag.Arg(0) == "AfsProbability" {
 

@@ -2,6 +2,7 @@ package popgen
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -15,7 +16,8 @@ func PlotAfsF(alpha float64, n int, outFile string) {
 	for i := 1; i < n; i++ {
 		fmt.Fprintf(out, "%v\t%e\n", i, AFSSampleDensity(n, i, alpha, binomCache))
 	}
-	out.Close()
+	err := out.Close()
+	exception.PanicOnErr(err)
 }
 
 func PlotAfsPmf(alpha float64, n int, outFile string) {
@@ -32,5 +34,6 @@ func PlotAfsPmf(alpha float64, n int, outFile string) {
 		fmt.Fprintf(out, "%v\t%e\n", i, AlleleFrequencyProbability(i, n, alpha, binomCache))
 	}
 
-	out.Close()
+	err := out.Close()
+	exception.PanicOnErr(err)
 }
