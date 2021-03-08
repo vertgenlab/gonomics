@@ -38,7 +38,7 @@ func getBin() (path string, binExists map[string]bool) {
 	}
 
 	if !binExists["gonomics"] { // check if gonomics is installed by checking for this binary
-		log.Fatalf("ERROR: gonomics binary were not found in %s\n " +
+		log.Fatalf("ERROR: gonomics binary were not found in %s\n "+
 			"Run 'go install ./...' in gonomics directory to compile binary", path)
 	}
 
@@ -99,7 +99,7 @@ func main() {
 		// proceed in main function
 
 	case isGonomicsFunc[cmdCalled] && !binExists[cmdCalled]:
-		log.Fatalf("ERROR: binary for %s was not found. " +
+		log.Fatalf("ERROR: binary for %s was not found. "+
 			"Please run 'go install ./...' in the gonomics directory.", cmdCalled)
 
 	case !isGonomicsFunc[cmdCalled] && binExists[cmdCalled]:
@@ -109,7 +109,7 @@ func main() {
 		log.Fatalf("ERROR: %s does not exist, and is not a gonomics function", cmdCalled)
 	}
 
-	cmd := exec.Command(binPath + "/" + cmdCalled, flag.Args()[1:]...)
+	cmd := exec.Command(binPath+"/"+cmdCalled, flag.Args()[1:]...)
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
