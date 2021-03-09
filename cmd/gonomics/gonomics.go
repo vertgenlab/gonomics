@@ -29,7 +29,7 @@ func getBin() (path string, binExists map[string]bool) {
 		path = os.Getenv("GOPATH") + "/bin" // default to $GOPATH/bin
 
 	default:
-		path = "/usr/local/go/bin" // default install directory
+		path = os.Getenv("HOME") + "/go/bin" // default install directory
 	}
 
 	dir, err := ioutil.ReadDir(path)
@@ -137,10 +137,10 @@ func main() {
 			"Please run 'go install ./...' in the gonomics directory.", cmdCalled)
 
 	case !isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:
-		log.Fatalf("ERROR: %s is not a gonomics function", cmdCalled)
+		log.Fatalf("ERROR: %s is not a gonomics command", cmdCalled)
 
 	default:
-		log.Fatalf("ERROR: %s does not exist, and is not a gonomics function", cmdCalled)
+		log.Fatalf("ERROR: %s does not exist, and is not a gonomics command", cmdCalled)
 	}
 
 	cmd := exec.Command(binPath+"/"+cmdCalled, flag.Args()[1:]...)
