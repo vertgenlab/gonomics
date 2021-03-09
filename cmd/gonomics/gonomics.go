@@ -1,20 +1,22 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"sync"
+	"sort"
+	"strings"
 )
 
 func usage() {
-	flag.PrintDefaults()
+	fmt.Print(
+		"gonomics - A collection of builtin tools that use the gonomics core library.\n\n" +
+			"Usage: gonomics <command> [options]\n\n")
+	printCmdList()
 }
 
 func getBin() (path string, binExists map[string]bool) {
@@ -38,14 +40,14 @@ func getBin() (path string, binExists map[string]bool) {
 	}
 
 	if !binExists["gonomics"] { // check if gonomics is installed by checking for this binary
-		log.Fatalf("ERROR: gonomics binary were not found in %s\n " +
+		log.Fatalf("ERROR: gonomics binary were not found in %s\n "+
 			"Run 'go install ./...' in gonomics directory to compile binary", path)
 	}
 
 	return path, binExists
 }
 
-func getGonomicsFuncs() map[string]bool {
+func getGonomicsCmds() map[string]bool {
 	expectedPath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
 	cmds, err := ioutil.ReadDir(expectedPath)
 	if err != nil {
@@ -66,40 +68,62 @@ func getGonomicsFuncs() map[string]bool {
 	return funcNames
 }
 
-// from https://gist.github.com/hivefans/ffeaf3964924c943dd7ed83b406bbdea
-func streamOutput(output io.ReadCloser, wg *sync.WaitGroup) {
-	buf := bufio.NewReader(output)
-	num := 1
-	for num <= 3 {
-		outline, _, _ := buf.ReadLine()
-		num += 1
-		fmt.Println(string(outline))
+func printCmdList() {
+	binPath, _ := getBin()
+	cmdMap := getGonomicsCmds()
+
+	cmds := make([]string, 0, len(cmdMap))
+	for key := range cmdMap {
+		cmds = append(cmds, key)
 	}
-	wg.Done()
+	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
+
+	var endFirstLineIdx int
+	var rawOutput []byte
+
+	fmt.Println("Commands:")
+	for _, cmdName := range cmds {
+		cmd := exec.Command(binPath + "/" + cmdName)
+		rawOutput, _ = cmd.Output()
+		endFirstLineIdx = strings.Index(string(rawOutput), "\n")
+
+		switch {
+		case endFirstLineIdx > 0: // cmd starts with summary line
+			fmt.Printf("     %s\n", string(rawOutput[:endFirstLineIdx]))
+
+		case len(rawOutput) == 0: // cmd has no usage statement
+			fmt.Printf("     %s\n", cmdName)
+
+		case endFirstLineIdx == -1 && len(rawOutput) > 0: // has output, but no newline
+			fmt.Printf("     %s\n", rawOutput)
+
+		default: // if all else fails, print cmd name
+			fmt.Printf("     %s\n", cmdName)
+		}
+	}
 }
 
 func main() {
-	//var list *bool = flag.Bool("list", false, "List cmds available in gonomics.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
 	if len(flag.Args()) == 0 {
 		flag.Usage()
-		log.Fatal()
+		return
 	}
 
 	cmdCalled := flag.Arg(0) // command called by the user (e.g. 'gonomics faFormat')
 
 	binPath, binExists := getBin()
-	isGonomicsFunc := getGonomicsFuncs()
+	isGonomicsFunc := getGonomicsCmds()
 
 	switch { // Error checks. verbose for clarity
 	case isGonomicsFunc[cmdCalled] && binExists[cmdCalled]:
 		// proceed in main function
 
 	case isGonomicsFunc[cmdCalled] && !binExists[cmdCalled]:
-		log.Fatalf("ERROR: binary for %s was not found. " +
+		log.Fatalf("ERROR: binary for %s was not found. "+
 			"Please run 'go install ./...' in the gonomics directory.", cmdCalled)
 
 	case !isGonomicsFunc[cmdCalled] && binExists[cmdCalled]:
@@ -109,7 +133,7 @@ func main() {
 		log.Fatalf("ERROR: %s does not exist, and is not a gonomics function", cmdCalled)
 	}
 
-	cmd := exec.Command(binPath + "/" + cmdCalled, flag.Args()[1:]...)
+	cmd := exec.Command(binPath+"/"+cmdCalled, flag.Args()[1:]...)
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
