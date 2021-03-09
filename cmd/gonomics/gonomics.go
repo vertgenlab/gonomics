@@ -20,11 +20,16 @@ func usage() {
 }
 
 func getBin() (path string, binExists map[string]bool) {
-	path = os.Getenv("GOBIN")
 
-	if path == "" { // if GOBIN is not set
-		//fmt.Println("WARNING: GOBIN is not set, defaulting to $GOPATH/bin")
+	switch { // Find binary location. Preference is GOBIN > GOPATH > Default go install location
+	case os.Getenv("GOBIN") != "":
+		path = os.Getenv("GOBIN")
+
+	case os.Getenv("GOPATH") != "":
 		path = os.Getenv("GOPATH") + "/bin" // default to $GOPATH/bin
+
+	default:
+		path = "/usr/local/go/bin" // default install directory
 	}
 
 	dir, err := ioutil.ReadDir(path)
@@ -83,6 +88,11 @@ func printCmdList() {
 
 	fmt.Println("Commands:")
 	for _, cmdName := range cmds {
+
+		if cmdName == "gonomics" { // avoid recursive call of the gonomics cmd
+			continue
+		}
+
 		cmd := exec.Command(binPath + "/" + cmdName)
 		rawOutput, _ = cmd.Output()
 		endFirstLineIdx = strings.Index(string(rawOutput), "\n")
@@ -116,17 +126,17 @@ func main() {
 	cmdCalled := flag.Arg(0) // command called by the user (e.g. 'gonomics faFormat')
 
 	binPath, binExists := getBin()
-	isGonomicsFunc := getGonomicsCmds()
+	isGonomicsCmd := getGonomicsCmds()
 
 	switch { // Error checks. verbose for clarity
-	case isGonomicsFunc[cmdCalled] && binExists[cmdCalled]:
+	case isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:
 		// proceed in main function
 
-	case isGonomicsFunc[cmdCalled] && !binExists[cmdCalled]:
+	case isGonomicsCmd[cmdCalled] && !binExists[cmdCalled]:
 		log.Fatalf("ERROR: binary for %s was not found. "+
 			"Please run 'go install ./...' in the gonomics directory.", cmdCalled)
 
-	case !isGonomicsFunc[cmdCalled] && binExists[cmdCalled]:
+	case !isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:
 		log.Fatalf("ERROR: %s is not a gonomics function", cmdCalled)
 
 	default:
