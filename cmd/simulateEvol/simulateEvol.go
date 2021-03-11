@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simulate"
@@ -11,7 +12,8 @@ import (
 
 //TODO: option for seeded or unseeded random numbers (include in simulate.go)
 func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
-	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
+	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
+	exception.FatalOnErr(err)
 	var fastas []fasta.Fasta
 	var leafFastas []fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree, gp, true)

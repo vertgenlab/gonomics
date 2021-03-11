@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -26,12 +25,13 @@ type ETree struct {
 }
 
 //read tree from filename and add fastas and up pointers to the tree
-func ReadTree(newickFilename string, fastasFilename string) *ETree {
+func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	tr, err := ReadNewick(newickFilename)
-	if err == nil {
+	if err != nil {
+		return nil, err
 	}
 	AssignFastas(tr, fastasFilename)
-	return tr
+	return tr, nil
 }
 
 //read in tree from filename
@@ -39,17 +39,7 @@ func ReadNewick(filename string) (*ETree, error) {
 	var singleLineTree string
 	singleLineTree = fileio.ReadFileToSingleLineString(filename)
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	if !strings.HasPrefix(singleLineTree, "#") {
-		return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
-	}
-
-	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
+	return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
 }
 
 // read in tree from string of newick
@@ -162,7 +152,7 @@ func parseNewickHelper(input string) (*ETree, error) {
 	if numOpen != numClosed {
 		return nil, fmt.Errorf("Error: %s does not have an equal number of open and close parentheses\n", input)
 	} else if numOpen != numComma {
-		return nil, fmt.Errorf("Error: %s does not have an a number of commas equal to the number of parenthesis pairs\n", input)
+		return nil, fmt.Errorf("Error: %s does not have an a number of commas equal to the number of parenthesis pairs. Could be caused by a non-bifurcating tree\n", input)
 	} else if len(input) == 0 {
 		return nil, errors.New("Error: can not build tree/node from an empty string")
 	} else if numColon != 0 && (numColon != 2*numComma && lastColon < lastClosed) && (numColon != 2*numComma+1 && lastColon > lastClosed) {

@@ -1,6 +1,7 @@
 package reconstruct
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -28,7 +29,8 @@ func Test_reconstruct(t *testing.T) {
 		WriteTreeToFasta(tre, "simOut.fasta")
 		WriteLeavesToFasta(tre, "leavesOnly.fasta")
 
-		tr := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
+		tr, err := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
+		exception.FatalOnErr(err)
 		leaves := expandedTree.GetLeaves(tr)
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 			LoopNodes(tr, i)

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -13,7 +14,8 @@ import (
 
 //SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction
 func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
-	tree := expandedTree.ReadTree(treeFile, rootFastaFile)
+	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
+	exception.FatalOnErr(err)
 	var fastas []fasta.Fasta
 	var leafFastas []fasta.Fasta
 	simulate.Simulate(rootFastaFile, tree, gp, false)
@@ -31,7 +33,8 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 
 //ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
-	tree := expandedTree.ReadTree(newickInput, fastaInput)
+	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
+	exception.FatalOnErr(err)
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 	var treeFastas []fasta.Fasta
