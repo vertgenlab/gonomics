@@ -10,8 +10,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"io"
 	"log"
 	"strings"
@@ -36,7 +36,7 @@ func NewBinReader(file io.Reader) *BinReader {
 }
 
 // DecompressGiraf will decode a binary giraf file (.giraf.fe) and output a giraf file (.giraf)
-func DecompressGiraf(infilename string, outfilename string, graph *simpleGraph.SimpleGraph) {
+func DecompressGiraf(infilename string, outfilename string, graph *genomeGraph.GenomeGraph) {
 	// Initialize infile
 	infile := fileio.EasyOpen(infilename)
 	defer infile.Close()
@@ -60,7 +60,7 @@ func DecompressGiraf(infilename string, outfilename string, graph *simpleGraph.S
 }
 
 // The Read method for the BinWriter struct decompresses a single giraf record and writes to file
-func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
+func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	var answer giraf.Giraf
 	var bytesRead int
 	var err error
@@ -171,14 +171,14 @@ func ReadGiraf(br *BinReader, g *simpleGraph.SimpleGraph) (giraf.Giraf, error) {
 }
 
 // addFullSeq parses the cigar and the fancySeq fields to retrieve the full length read sequence
-func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *simpleGraph.SimpleGraph) {
+func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *genomeGraph.GenomeGraph) {
 	var fancyBases []dna.Base
 	if fancySeq.Len != 0 {
 		fancyBases = dnaThreeBit.ToDnaBases(fancySeq)
 	}
 	refIdx := answer.Path.TStart
 	var currNodeId int
-	var currNode *simpleGraph.Node = graph.Nodes[answer.Path.Nodes[0]]
+	var currNode *genomeGraph.Node = graph.Nodes[answer.Path.Nodes[0]]
 	var i uint16
 
 	for _, cigar := range answer.Cigar {

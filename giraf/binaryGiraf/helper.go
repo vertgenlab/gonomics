@@ -3,8 +3,8 @@ package binaryGiraf
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"io"
 	"sync"
 )
@@ -14,7 +14,7 @@ import (
 func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 	var answer []giraf.Giraf
 	file := fileio.EasyOpen(giraffeFile)
-	graph := simpleGraph.Read(graphFile)
+	graph := genomeGraph.Read(graphFile)
 	defer file.Close()
 	reader := NewBinReader(file.BuffReader)
 	var curr giraf.Giraf
@@ -36,7 +36,7 @@ func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 
 // ReadToChan will input a fileio.EasyReader and decompress girafs in the file into a stream (channel) of giraf.Giraf.
 // ReadToChan is designed to be run as a goroutine. See GoReadToChan for internally handled goroutines.
-func ReadToChan(file *fileio.EasyReader, graph *simpleGraph.SimpleGraph, data chan<- giraf.Giraf, wg *sync.WaitGroup) {
+func ReadToChan(file *fileio.EasyReader, graph *genomeGraph.GenomeGraph, data chan<- giraf.Giraf, wg *sync.WaitGroup) {
 	var curr giraf.Giraf
 	var err error
 	reader := NewBinReader(file.BuffReader)
@@ -60,7 +60,7 @@ func ReadToChan(file *fileio.EasyReader, graph *simpleGraph.SimpleGraph, data ch
 // into a buffered channel (len 1024) of giraf.Giraf records.
 func GoReadToChan(giraffeFile string, graphFile string) <-chan giraf.Giraf {
 	file := fileio.EasyOpen(giraffeFile)
-	graph := simpleGraph.Read(graphFile)
+	graph := genomeGraph.Read(graphFile)
 	var wg sync.WaitGroup
 	data := make(chan giraf.Giraf, 1024)
 	wg.Add(1)

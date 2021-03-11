@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"log"
 )
 
@@ -16,9 +16,9 @@ func usage() {
 }
 
 func sortGraph(inFile string, outFile string) {
-	graph := simpleGraph.Read(inFile)
-	graph = simpleGraph.SortGraph(graph)
-	simpleGraph.Write(outFile, graph)
+	graph := genomeGraph.Read(inFile)
+	graph = genomeGraph.SortGraph(graph)
+	genomeGraph.Write(outFile, graph)
 }
 
 func main() {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"os"
 	"strings"
 )
@@ -82,7 +82,7 @@ func RunAlignExe() {
 //TODO: add check for too many args or an implementation for multiple fastq pairs
 func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out string, liftover string, args []string) {
 	//should be at most 3 args to add to the input, reference, readOne and/or readTwo
-	var genomeGraph *simpleGraph.SimpleGraph = simpleGraph.Read(args[0])
+	var genomeGraph *genomeGraph.GenomeGraph = genomeGraph.Read(args[0])
 	var readOne string
 	var readTwo string
 

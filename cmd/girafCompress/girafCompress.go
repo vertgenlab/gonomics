@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf/binaryGiraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 	"path/filepath"
 	"strings"
@@ -28,7 +28,7 @@ func compress(infile string) {
 }
 
 func decompress(infile string, graph string) {
-	ref := simpleGraph.Read(graph)
+	ref := genomeGraph.Read(graph)
 	if filepath.Ext(infile) == ".fe" {
 		binaryGiraf.DecompressGiraf(infile, strings.TrimSuffix(infile, ".fe"), ref)
 	}

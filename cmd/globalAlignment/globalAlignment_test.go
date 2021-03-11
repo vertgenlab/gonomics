@@ -4,7 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"testing"
 )
 
@@ -41,33 +41,30 @@ func TestCigarToGraphMatchManual(t *testing.T) {
 //functions below this line were used to execute test functions
 
 //this function makes the manually created graph (called 'manual')
-func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *simpleGraph.SimpleGraph {
-	manual := simpleGraph.NewGraph()
-	nodeOne := &simpleGraph.Node{
-		Id:   0,
-		Name: "toad_0_3",
-		Seq:  toad.Seq[0:3]}
-	nodeTwo := &simpleGraph.Node{
-		Id:   1,
-		Name: "toad_3_6",
-		Seq:  toad.Seq[3:6]}
-	nodeThree := &simpleGraph.Node{
-		Id:   2,
-		Name: "toad_6_9",
-		Seq:  toad.Seq[6:9]}
+func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *genomeGraph.GenomeGraph {
+	manual := genomeGraph.EmptyGraph()
+	nodeOne := &genomeGraph.Node{
+		Id:  0,
+		Seq: toad.Seq[0:3]}
+	nodeTwo := &genomeGraph.Node{
+		Id:  1,
+		Seq: toad.Seq[3:6]}
+	nodeThree := &genomeGraph.Node{
+		Id:  2,
+		Seq: toad.Seq[6:9]}
 
-	simpleGraph.AddNode(manual, nodeOne)
-	simpleGraph.AddNode(manual, nodeTwo)
-	simpleGraph.AddEdge(nodeOne, nodeTwo, 0.5)
-	simpleGraph.AddNode(manual, nodeThree)
-	simpleGraph.AddEdge(nodeTwo, nodeThree, 1.0)
-	simpleGraph.AddEdge(nodeOne, nodeThree, 0.5)
+	genomeGraph.AddNode(manual, nodeOne)
+	genomeGraph.AddNode(manual, nodeTwo)
+	genomeGraph.AddEdge(nodeOne, nodeTwo, 0.5)
+	genomeGraph.AddNode(manual, nodeThree)
+	genomeGraph.AddEdge(nodeTwo, nodeThree, 1.0)
+	genomeGraph.AddEdge(nodeOne, nodeThree, 0.5)
 
 	return manual
 }
 
 //this function compares the sequences at each node, going base by base.
-func compareSeq(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGraph) int {
+func compareSeq(manual *genomeGraph.GenomeGraph, graph *genomeGraph.GenomeGraph) int {
 	var seqCounter int = 0
 	for i := 0; i < len(manual.Nodes); i++ {
 		for j := 0; j < len(manual.Nodes[i].Seq); j++ {
@@ -84,7 +81,7 @@ func compareSeq(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGraph)
 //this function compares the edges (both previous and next) by comparing the name of the node within the prev[] and next[] for each node. As a reminder, the prev[] and next[] are type *Node, so they have all the information of the connecting nodes.
 //TODO: Compare the sequences within each edge between the 'graph' and 'manual'.
 //TODO: Compare the probability of each edge between the 'graph' and 'manual'.
-func compareEdges(manual *simpleGraph.SimpleGraph, graph *simpleGraph.SimpleGraph) int {
+func compareEdges(manual *genomeGraph.GenomeGraph, graph *genomeGraph.GenomeGraph) int {
 	totalManualPrevEdges := 0
 	totalManualNextEdges := 0
 

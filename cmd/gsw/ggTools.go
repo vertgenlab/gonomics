@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"os"
@@ -76,7 +76,7 @@ func RunGgTools() {
 			log.Printf("Input vcf detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 {
 				log.Printf("Converting vcf to %s...\n", ggT.FmtOutput)
-				simpleGraph.Write(ggT.Out, vcfToSimpleGraph(inFile, ggT.TargetFa))
+				genomeGraph.Write(ggT.Out, vcfToGenomeGraph(inFile, ggT.TargetFa))
 			} else {
 				ggT.Cmd.Usage()
 				log.Fatalf("Error: Must specify target reference fasta file...\n")
@@ -145,10 +145,10 @@ func vcfSplitChrNoN(vcfInput string) map[string][]*vcf.Vcf {
 	return chrMap
 }
 
-func FaVcfChannels(ref string, vcfInput string) *simpleGraph.SimpleGraph {
+func FaVcfChannels(ref string, vcfInput string) *genomeGraph.GenomeGraph {
 	vcfFilteredMap := vcfSplitChrNoN(vcfInput)
 	faReader := fasta.GoReadToChan(ref)
-	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)
+	gg := genomeGraph.VariantGraph(faReader, vcfFilteredMap)
 	return gg
 }
 

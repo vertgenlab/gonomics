@@ -3,27 +3,27 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"log"
 	"time"
 )
 
-func simulateGiraf(graph *simpleGraph.SimpleGraph, numReads int, readLen int, randSeed int64, numSomaticSNV int, AlleleFrequency float64, outFile string, outputSam bool) {
-	reads := simpleGraph.RandGiraf(graph, numReads, readLen, randSeed)
+func simulateGiraf(graph *genomeGraph.GenomeGraph, numReads int, readLen int, randSeed int64, numSomaticSNV int, AlleleFrequency float64, outFile string, outputSam bool) {
+	reads := genomeGraph.RandGiraf(graph, numReads, readLen, randSeed)
 	var samReads []*sam.SamAln
 
 	if numSomaticSNV != 0 {
-		simpleGraph.RandSomaticMutations(graph, reads, numSomaticSNV, AlleleFrequency, randSeed)
+		genomeGraph.RandSomaticMutations(graph, reads, numSomaticSNV, AlleleFrequency, randSeed)
 	}
 
 	if outputSam == true {
 		for i := 0; i < len(reads); i++ {
-			samReads = append(samReads, simpleGraph.GirafToSam(reads[i]))
+			samReads = append(samReads, genomeGraph.GirafToSam(reads[i]))
 		}
-		samHeader := simpleGraph.NodesHeader(graph.Nodes)
-		sam.Write(outFile, &sam.Sam{samHeader, samReads})
+		//samHeader := genomeGraph.NodesHeader(graph.Nodes)
+		sam.Write(outFile, &sam.Sam{nil, samReads})
 	} else {
 		giraf.Write(outFile, reads)
 	}
@@ -58,7 +58,7 @@ func main() {
 
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	graph := simpleGraph.Read(inFile)
+	graph := genomeGraph.Read(inFile)
 
 	//TODO add remove block once GirafToSam is complete
 	if *outputSam == true {
