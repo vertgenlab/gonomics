@@ -9,8 +9,14 @@ import (
 	"log"
 )
 
-//returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined
-func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string) map[string]float64 {
+//returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
+//If option = 1 it will also return the percentage of first second and third bases of each codon that were correct
+func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string, option int) (accTotal map[string]float64, accBases map[string][]float64) {
+	var accByBase map[string][]float64
+	if option == 1 {
+		accByBase = ReconAccuracyByBase(simFilename, reconFilename, gpFilename)
+	}
+
 	var allNodes string
 	allNodes = "All Reconstructed Nodes"
 	var found = false
@@ -75,7 +81,6 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 		if found == false {
 			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
 		}
-		//BUG: leaf = true for only B, not D or E, check inside k loop is correct
 		if leaf == false {
 			accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
 			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", total, float64(len(sim)), float64(len(sim[0].Seq)))
@@ -87,7 +92,6 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 			lAcc := 100 - leafAccuracy
 			answer[sim[i].Name+"(leaf)"] = lAcc
 		}
-		//BUG: it seems like exonMistakes and nonCodingMistakes are swapped in simRecon test, but not exonBases or non-CodingBases
 		exonAccuracy := exonMistakes / exonBases * 100.0
 		nonCodingAccuracy := nonCodingMistakes / nonCodingBases * 100.0
 		//DEBUG: log.Printf("Node: %s, nonCodingMistakes: %f, nonCodingBases: %f, exonMistakes: %f, exonBases: %f", sim[i].Name, nonCodingMistakes, nonCodingBases, exonMistakes, exonBases)
@@ -101,6 +105,74 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 	acc := 100 - accuracy
 	answer[allNodes] = acc
 
+	return answer, accByBase
+}
+
+func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename string) map[string][]float64 {
+	sim := fasta.Read(simFilename)
+	recon := fasta.Read(reconFilename)
+	genes := genePred.Read(gpFilename)
+	var exonsProcessed map[int]bool
+	var simCodons []simulate.CodonExt
+	var reconCodons []simulate.CodonExt
+	answer := make(map[string][]float64)
+	var mistakes1 float64
+	var mistakes2 float64
+	var mistakes3 float64
+	var total1 float64
+	var total2 float64
+	var total3 float64
+
+	for s := 0; s < len(sim); s++ {
+		for r := 0; r < len(recon); r++ {
+			var percentage1 float64
+			var percentage2 float64
+			var percentage3 float64
+			if sim[s].Name == recon[r].Name {
+				for i := 0; i < len(sim[s].Seq); i++ {
+					for g := 0; g < len(genes); g++ {
+						inExon, exon := simulate.CheckExon(genes[g], i)
+						if inExon {
+							_, processed := exonsProcessed[exon]
+							if !processed {
+								simCodons = simulate.CreateCodons(simulate.BasesToBaseExt(sim[s].Seq), genes[g], exon)
+								reconCodons = simulate.CreateCodons(simulate.BasesToBaseExt(recon[r].Seq), genes[g], exon)
+								for c := 0; c < len(simCodons); c++ {
+									if simCodons[c].Seq[0].SeqPos == reconCodons[c].Seq[0].SeqPos {
+										for p := 0; p < 3; p++ {
+											if p == 0 {
+												total1 += 1
+												if simCodons[c].Seq[p].Base != reconCodons[c].Seq[p].Base {
+													mistakes1 += 1
+												}
+											} else if p == 1 {
+												total2 += 1
+												if simCodons[c].Seq[p].Base != reconCodons[c].Seq[p].Base {
+													mistakes2 += 1
+												}
+											} else {
+												total3 += 1
+												if simCodons[c].Seq[p].Base != reconCodons[c].Seq[p].Base {
+													mistakes3 += 1
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			percentage1 = (mistakes1 / total1) * 100
+			percentage2 = (mistakes2 / total2) * 100
+			percentage3 = (mistakes3 / total3) * 100
+			answer[sim[s].Name] = append(answer[sim[s].Name], percentage1)
+			answer[sim[s].Name] = append(answer[sim[s].Name], percentage2)
+			answer[sim[s].Name] = append(answer[sim[s].Name], percentage3)
+			log.Print(len(answer[sim[s].Name]))
+		}
+	}
 	return answer
 }
 

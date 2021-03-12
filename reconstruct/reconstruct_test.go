@@ -36,13 +36,34 @@ func Test_reconstruct(t *testing.T) {
 			LoopNodes(tr, i)
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
-		accuracyData := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp")
+		accuracyData, _ := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", 0)
 		for name, accuracy := range accuracyData {
 			log.Printf("%s %f \n", name, accuracy)
 		}
 	}
+	fileio.EasyRemove("RandGeneOutput.fasta")
+}
+
+func TestReconAccuracyByBase(t *testing.T) {
+	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", 1)
+
+	for name, data := range baseAccuracy {
+		for d := range data {
+			log.Print("check")
+			if d == 0 {
+				log.Print("check 1")
+				log.Printf("%s First Base %f \n", name, data[d])
+			} else if d == 1 {
+				log.Print("check 2")
+				log.Printf("%s Second Base %f \n", name, data[d])
+			} else {
+				log.Print("check 3")
+				log.Printf("%s Third Base %f \n", name, data[d])
+			}
+		}
+	}
+
+	fileio.EasyRemove("leavesOnly.fasta")
 	fileio.EasyRemove("reconOut.fasta")
 	fileio.EasyRemove("simOut.fasta")
-	fileio.EasyRemove("RandGeneOutput.fasta")
-	fileio.EasyRemove("leavesOnly.fasta")
 }
