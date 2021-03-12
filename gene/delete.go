@@ -26,14 +26,7 @@ func Deletion(g *Gene, genomeStartPos int, genomeEndPos int) (EffectPrediction, 
 	}
 
 	// determine cDNA position and distance from nearest CDS for effect pred
-	var cdnaDistFromDelStart, cdnaDistFromDelEnd int                   // for effect prediction later
-	_, cdnaDistFromDelStart, err = GenomicPosToCdna(g, genomeStartPos) // from deletion start
-	if g.featureArray[genomeIndexStartPos] > 0 {
-		answer.CdnaPos = int(g.featureArray[genomeIndexStartPos])
-	} else {
-		answer.CdnaDist = numbers.Min(cdnaDistFromDelStart, cdnaDistFromDelEnd)
-	}
-	_, cdnaDistFromDelEnd, err = GenomicPosToCdna(g, genomeEndPos-1) // from deletion end
+	answer, err = deleteGetCdnaDist(g, genomeStartPos, genomeEndPos, genomeIndexStartPos, answer)
 
 	// Save CDS start and stop for later
 	origCdsStart := g.cdsStarts[0]
@@ -403,24 +396,34 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 
 		delFrame := deletedCodingBases % 3
 		if delFrame != 0 { // Deletion causes frameshift
-			frameshiftProtSeq := dna.TranslateSeqToTer(g.cdnaSeq[answer.CdnaPos+len(g.utrFive.seq)-delFrame:])
+			frameshiftProtSeq := dna.TranslateSeqToTer(g.cdnaSeq[answer.CdnaPos+len(g.utrFive.seq)-startFrame:])
 			answer.Consequence = Frameshift
-
 			if frameshiftProtSeq[len(frameshiftProtSeq)-1] == dna.Stop {
 				answer.StopDist = len(frameshiftProtSeq) - 1
 			} else {
 				answer.StopDist = -2
 			}
 
-			for j := 0; frameshiftProtSeq[j] == g.protSeq[answer.AaPos+j]; j++ { // trim matching amino acids from frameshift
+			var j int
+			for j = 0; frameshiftProtSeq[j] == g.protSeq[answer.AaPos+j]; j++ { // trim matching amino acids from frameshift
 				answer.AaPos++
 				if answer.StopDist != -2 {
 					answer.StopDist--
 				}
-				if answer.AaPos >= len(g.protSeq) {
+
+				if answer.AaPos+j+1 >= len(g.protSeq) {
+					j++
 					break
 				}
 			}
+
+			if len(answer.AaRef) > 1 {
+				answer.AaRef = answer.AaRef[j:]
+			} else if len(answer.AaRef) == 1 && len(g.protSeq) > 1 {
+				answer.AaRef[0] = g.protSeq[answer.AaPos]
+			}
+
+			answer.AaAlt = frameshiftProtSeq[j : j+1]
 
 		} else if startFrame != 0 { // In-frame deletion does not fall on codon boundaries
 			newCodonStart := answer.CdnaPos - startFrame
@@ -428,5 +431,30 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 		}
 	}
 
+	return answer, err
+}
+
+// deleteGetCdnaDist determines the nearest CDS from both the start and end of the deletion and fills the EffectPrediction struct
+func deleteGetCdnaDist(g *Gene, genomeStartPos int, genomeEndPos int, genomeIndexStartPos int, answer EffectPrediction) (EffectPrediction, error) {
+	var err error
+	var cdnaDistFromDelStart, cdnaDistFromDelEnd int                   // for effect prediction later
+	_, cdnaDistFromDelStart, err = GenomicPosToCdna(g, genomeStartPos) // from deletion start
+	if err != nil {
+		return answer, err
+	}
+	_, cdnaDistFromDelEnd, err = GenomicPosToCdna(g, genomeEndPos-1) // from deletion end
+	if g.featureArray[genomeIndexStartPos] >= 0 {
+		answer.CdnaPos = int(g.featureArray[genomeIndexStartPos])
+	} else {
+		if numbers.AbsInt(cdnaDistFromDelEnd) == numbers.AbsInt(cdnaDistFromDelStart) { // if equal magnitude, return positive value
+			answer.CdnaDist = numbers.AbsInt(cdnaDistFromDelStart)
+		} else { // else return lowest value
+			if numbers.AbsInt(cdnaDistFromDelStart) < numbers.AbsInt(cdnaDistFromDelEnd) {
+				answer.CdnaDist = cdnaDistFromDelStart
+			} else {
+				answer.CdnaDist = cdnaDistFromDelEnd
+			}
+		}
+	}
 	return answer, err
 }

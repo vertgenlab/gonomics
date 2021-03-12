@@ -294,7 +294,7 @@ func TestDeletionEffectPrediction(t *testing.T) {
 	}
 	Reset(gene)
 
-	// TEST 1: 1bp Deletion in CDS
+	// TEST 2: 1bp Deletion in CDS
 	pred, err = Deletion(gene, 7, 8)
 	if err != nil {
 		if err != ErrNoStopFound {
@@ -306,8 +306,69 @@ func TestDeletionEffectPrediction(t *testing.T) {
 	correctPred.CdnaDist = 0
 	correctPred.AaPos = 1
 	correctPred.AaRef = []dna.AminoAcid{dna.Pro}
-	correctPred.AaAlt = []dna.AminoAcid{}
+	correctPred.AaAlt = []dna.AminoAcid{dna.Arg}
+	correctPred.StopDist = -2
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 3: Delete intron
+	pred, err = Deletion(gene, 5, 7)
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Splice
+	correctPred.CdnaPos = 0
+	correctPred.CdnaDist = 1
+	correctPred.AaPos = 0
+	correctPred.AaRef = nil
+	correctPred.AaAlt = nil
 	correctPred.StopDist = -1
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 4: Frameshift causes premature stop
+	Insertion(gene, 13, []dna.Base{dna.A, dna.A, dna.T, dna.A, dna.A})
+	pred, err = Deletion(gene, 3, 5)
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Frameshift
+	correctPred.CdnaPos = 1
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 0
+	correctPred.AaRef = []dna.AminoAcid{dna.Met}
+	correctPred.AaAlt = []dna.AminoAcid{dna.Thr}
+	correctPred.StopDist = 3
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 5: First change in frameshift makes degenerate codon
+	pred, err = Deletion(gene, 9, 10)
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Frameshift
+	correctPred.CdnaPos = 5
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 2
+	correctPred.AaRef = []dna.AminoAcid{dna.Stop}
+	correctPred.AaAlt = []dna.AminoAcid{dna.Asn}
+	correctPred.StopDist = -2
 
 	if ok, diff := equalPred(&pred, &correctPred); !ok {
 		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
