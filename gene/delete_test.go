@@ -265,3 +265,52 @@ func TestUndoDeletion(t *testing.T) {
 		}
 	}
 }
+
+func TestDeletionEffectPrediction(t *testing.T) {
+	g := gtf.Read("testdata/test.gtf")
+	f := fasta.Read("testdata/test.fasta")
+	var err error
+	var pred, correctPred EffectPrediction
+
+	gene := GtfToGene(g["test_gene_id"], f)
+
+	// TEST 1: In-Frame Exon Deletion
+	pred, err = Deletion(gene, 7, 10)
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = InFrameDeletion
+	correctPred.CdnaPos = 3
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 1
+	correctPred.AaRef = []dna.AminoAcid{dna.Pro}
+	correctPred.AaAlt = []dna.AminoAcid{}
+	correctPred.StopDist = -1
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+
+	// TEST 1: 1bp Deletion in CDS
+	pred, err = Deletion(gene, 7, 8)
+	if err != nil {
+		if err != ErrNoStopFound {
+			t.Error(err)
+		}
+	}
+	correctPred.Consequence = Frameshift
+	correctPred.CdnaPos = 3
+	correctPred.CdnaDist = 0
+	correctPred.AaPos = 1
+	correctPred.AaRef = []dna.AminoAcid{dna.Pro}
+	correctPred.AaAlt = []dna.AminoAcid{}
+	correctPred.StopDist = -1
+
+	if ok, diff := equalPred(&pred, &correctPred); !ok {
+		t.Errorf("trouble with insertion EffectPrediction. Error is in %s", diff)
+	}
+	Reset(gene)
+}

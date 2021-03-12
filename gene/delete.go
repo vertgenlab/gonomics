@@ -393,6 +393,7 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 		return answer, err
 
 	} else { // Deletion affects CDS
+		answer.Consequence = InFrameDeletion // until otherwise noted
 		answer.AaPos = answer.CdnaPos / 3
 		startFrame := answer.CdnaPos % 3                          // Where the start of the deletion is relative to codon boundaries
 		numRemovedAA := (deletedCodingBases + startFrame + 2) / 3 // the +2 is to account for potential partial codon at del end
@@ -402,7 +403,24 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 
 		delFrame := deletedCodingBases % 3
 		if delFrame != 0 { // Deletion causes frameshift
-			answer.AaAlt = dna.TranslateSeqToTer(g.cdnaSeq[answer.CdnaPos+len(g.utrFive.seq)-delFrame:])
+			frameshiftProtSeq := dna.TranslateSeqToTer(g.cdnaSeq[answer.CdnaPos+len(g.utrFive.seq)-delFrame:])
+			answer.Consequence = Frameshift
+
+			if frameshiftProtSeq[len(frameshiftProtSeq)-1] == dna.Stop {
+				answer.StopDist = len(frameshiftProtSeq) - 1
+			} else {
+				answer.StopDist = -2
+			}
+
+			for j := 0; frameshiftProtSeq[j] == g.protSeq[answer.AaPos+j]; j++ { // trim matching amino acids from frameshift
+				answer.AaPos++
+				if answer.StopDist != -2 {
+					answer.StopDist--
+				}
+				if answer.AaPos >= len(g.protSeq) {
+					break
+				}
+			}
 
 		} else if startFrame != 0 { // In-frame deletion does not fall on codon boundaries
 			newCodonStart := answer.CdnaPos - startFrame
