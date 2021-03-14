@@ -84,7 +84,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64, deri
 	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
 
 	if derived {
-		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, 1)//d is hardcoded as 1 for now
+		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, 1) //d is hardcoded as 1 for now
 	} else if ancestral {
 		likelihood = AfsLikelihoodAncestralAscertainment(data, alphaPrime, binomCache, 1)
 	} else {
@@ -112,9 +112,9 @@ func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64, der
 	//answer.probability = numbers.MultiplyLog(p,  math.Log(numbers.UninformativeGamma(s)))
 	//answer.probability = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(m, m, s)))
 	if derived {
-		answer.likelihood = AfsLikelihoodDerivedAscertainment(data, answer.alpha, binomCache, 1)//d is hardcoded as 1 for now.
+		answer.likelihood = AfsLikelihoodDerivedAscertainment(data, answer.alpha, binomCache, 1) //d is hardcoded as 1 for now.
 	} else if ancestral {
-		answer.likelihood = AfsLikelihoodAncestralAscertainment(data, answer.alpha, binomCache, 1)//d is hardcoded as 1 for now.
+		answer.likelihood = AfsLikelihoodAncestralAscertainment(data, answer.alpha, binomCache, 1) //d is hardcoded as 1 for now.
 	} else {
 		answer.likelihood = AFSLikelihood(data, answer.alpha, binomCache)
 	}

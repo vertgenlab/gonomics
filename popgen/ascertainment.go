@@ -14,7 +14,7 @@ func AncestralAscertainmentDenominator(alpha float64, n int, d int, binomCache [
 	var answer float64 = 1.0 //0 in logSpace
 	var iteration float64
 
-	for j := 1; j < n; j++ {//sum from j=1 to n-1
+	for j := 1; j < n; j++ { //sum from j=1 to n-1
 		iteration = numbers.MultiplyLog(AlleleFrequencyProbability(j, n, alpha, binomCache), AncestralAscertainmentProbability(n, j, d))
 		answer = numbers.AddLog(answer, iteration)
 	}
@@ -26,7 +26,7 @@ func DerivedAscertainmentDenominator(alpha float64, n int, d int, binomCache [][
 	var answer float64 = 0.0
 	var iteration float64
 
-	for j := 1; j < n; j++ {//sum from j=1 to n-1
+	for j := 1; j < n; j++ { //sum from j=1 to n-1
 		iteration = numbers.MultiplyLog(AlleleFrequencyProbability(j, n, alpha, binomCache), DerivedAscertainmentProbability(n, j, d))
 		answer = numbers.AddLog(answer, iteration)
 	}
