@@ -63,7 +63,7 @@ func BayesRatio(old Theta, thetaPrime Theta) float64 {
 }
 
 //GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of parameters based on the state of the current parameter set t.
-func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64) Theta {
+func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64, derived bool, ancestral bool) Theta {
 	//sample from uninformative gamma
 	var alphaPrime []float64
 	//var p float64 = 0.0
@@ -82,7 +82,14 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64) Thet
 	}
 	//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
 	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
-	likelihood = AFSLikelihood(data, alphaPrime, binomCache)
+
+	if derived {
+		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, 1)//d is hardcoded as 1 for now
+	} else if ancestral {
+		likelihood = AfsLikelihoodAncestralAscertainment(data, alphaPrime, binomCache, 1)
+	} else {
+		likelihood = AFSLikelihood(data, alphaPrime, binomCache)
+	}
 	if verbose > 1 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
 	}
@@ -90,7 +97,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64) Thet
 }
 
 //InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
-func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64) Theta {
+func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64, derived bool, ancestral bool) Theta {
 	k := len(data.sites)
 	answer := Theta{mu: m, sigma: s}
 	//var p float64 = 0.0
@@ -104,13 +111,23 @@ func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64) The
 	//answer.probability = p * numbers.UninformativeGamma(s) * numbers.NormalDist(m, m, s)
 	//answer.probability = numbers.MultiplyLog(p,  math.Log(numbers.UninformativeGamma(s)))
 	//answer.probability = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(m, m, s)))
-	answer.likelihood = AFSLikelihood(data, answer.alpha, binomCache)
+	if derived {
+		answer.likelihood = AfsLikelihoodDerivedAscertainment(data, answer.alpha, binomCache, 1)//d is hardcoded as 1 for now.
+	} else if ancestral {
+		answer.likelihood = AfsLikelihoodAncestralAscertainment(data, answer.alpha, binomCache, 1)//d is hardcoded as 1 for now.
+	} else {
+		answer.likelihood = AFSLikelihood(data, answer.alpha, binomCache)
+	}
 	return answer
 }
 
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
-func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, outFile string) {
+func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, outFile string, derived bool, ancestral bool) {
+	if derived && ancestral {
+		log.Fatalf("Cannot select corrections for both derived and ancestral allele ascertainment for selectionMCMC.\n")
+	}
+
 	if verbose > 1 {
 		f, err := os.Create("testProfile.prof")
 		if err != nil {
@@ -136,7 +153,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 		log.Println("Hello, I'm about to initialize theta.")
 	}
 	//initialization to uninformative standard normal
-	t := InitializeTheta(muZero, sigmaZero, data, binomCache)
+	t := InitializeTheta(muZero, sigmaZero, data, binomCache, derived, ancestral)
 	if verbose > 1 {
 		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
 	}
@@ -146,7 +163,7 @@ func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations 
 	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
 
 	for i := 0; i < iterations; i++ {
-		tCandidate := GenerateCandidateThetaPrime(t, data, binomCache)
+		tCandidate := GenerateCandidateThetaPrime(t, data, binomCache, derived, ancestral)
 		if MetropolisAccept(t, tCandidate) {
 			t = tCandidate
 			currAccept = true
@@ -169,17 +186,6 @@ func BuildBinomCache(allN []int) [][]float64 {
 	}
 	return binomCache
 }
-
-/*
-//findMaxN is a helper function that aids in the generation of binomCache. In order to determine the proper length of the binomCache, we need to figure out which variant has the largest value of N.
-func findMaxN(data AFS) int {
-	var answer int = 0
-	for i := 0; i < len(data.sites); i++ {
-		answer = numbers.Max(answer, data.sites[i].n)
-	}
-	return answer
-}
-*/
 
 func findAllN(data AFS) []int {
 	var answer []int = make([]int, 0)
