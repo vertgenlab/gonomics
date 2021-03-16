@@ -163,14 +163,14 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 						}
 					}
 				}
+				percentage1 = (mistakes1 / total1) * 100
+				percentage2 = (mistakes2 / total2) * 100
+				percentage3 = (mistakes3 / total3) * 100
+				answer[sim[s].Name] = append(answer[sim[s].Name], percentage1)
+				answer[sim[s].Name] = append(answer[sim[s].Name], percentage2)
+				answer[sim[s].Name] = append(answer[sim[s].Name], percentage3)
+				log.Print(len(answer[sim[s].Name]))
 			}
-			percentage1 = (mistakes1 / total1) * 100
-			percentage2 = (mistakes2 / total2) * 100
-			percentage3 = (mistakes3 / total3) * 100
-			answer[sim[s].Name] = append(answer[sim[s].Name], percentage1)
-			answer[sim[s].Name] = append(answer[sim[s].Name], percentage2)
-			answer[sim[s].Name] = append(answer[sim[s].Name], percentage3)
-			log.Print(len(answer[sim[s].Name]))
 		}
 	}
 	return answer

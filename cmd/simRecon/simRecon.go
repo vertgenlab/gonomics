@@ -52,26 +52,44 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 }
 
 //SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction
-func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string, option int) {
+func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string, option int, baseAccFile string) {
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
 	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
 
-	answer, _ := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp, option)
+	answer, byBaseAnswer := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp, option)
 	out := fileio.EasyCreate(accuracyOutFile)
 	defer out.Close()
 
 	for name, accuracy := range answer {
 		fmt.Fprintf(out, "%s\t%f\n", name, accuracy)
 	}
+	if option == 1 && baseAccFile != "" {
+		baseAccOut := fileio.EasyCreate(baseAccFile)
+		defer baseAccOut.Close()
+		for species, baseAcc := range byBaseAnswer {
+			firstBase := species + " First Base"
+			secondBase := species + " Second Base"
+			thirdBase := species + " Third Base"
+			for b, _ := range baseAcc {
+				if b == 0 {
+					fmt.Fprintf(baseAccOut, "%s\t%f\n", firstBase, baseAcc[b])
+				} else if b == 1 {
+					fmt.Fprintf(baseAccOut, "%s\t%f\n", secondBase, baseAcc[b])
+				} else {
+					fmt.Fprintf(baseAccOut, "%s\t%f\n", thirdBase, baseAcc[b])
+				}
+			}
+		}
+	}
 }
 
 func usage() {
 	fmt.Print(
 		"SimRecon takes in a root fasta file and a tree. It simulates evolution alone the tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node.\n" +
-			"simRecon [-option=int] <rootFile.fasta> <treeFile.txt> <genePred.gp> <simOutFile.fasta> <leafOutFile.fasta> <reconOutFile.fasta> <accuracyOutFile.txt>\n" +
+			"simRecon [-option] <rootFile.fasta> <treeFile.txt> <genePred.gp> <simOutFile.fasta> <leafOutFile.fasta> <reconOutFile.fasta> <accuracyOutFile.txt>\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -79,6 +97,7 @@ func usage() {
 func main() {
 	var expectedNumArgs = 7
 	var option = flag.Int("option", 0, "Specify to 1 to return an accuracy breakdown by base position in codons. Default value is 0, which returns normal output.")
+	var baseAccFile = flag.String("baseAccFile", "", "Specify a filename for the output of accuracy by position of base in codon (if option = 1).")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -98,5 +117,5 @@ func main() {
 	reconOutFile := flag.Arg(5)
 	accuracyOutFile := flag.Arg(6)
 
-	SimRecon(rootFastaFile, treeFile, gp, simOutFile, leafOutFile, reconOutFile, accuracyOutFile, *option)
+	SimRecon(rootFastaFile, treeFile, gp, simOutFile, leafOutFile, reconOutFile, accuracyOutFile, *option, *baseAccFile)
 }
