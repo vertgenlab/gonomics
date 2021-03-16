@@ -100,48 +100,78 @@ func TestSeqToPath(t *testing.T) {
 
 	// test 1
 	query := dna.StringToBases("ATGCGTAA")
-	start, _, err := SeqToPath(query, g.Nodes[0], 0, *g)
+	ids, path, err := SeqToPath(query, g.Nodes[0], 0, *g)
 	if err != nil {
 		t.Error(err)
 	}
-	testSeq := extractSeq(start)
+	testSeq := extractSeq(path.Nodes[ids[0]])
 	expectedRev := dna.StringToBases("TAACGATG")
-	actualRev := getRevNodeSeq(start)
+	actualRev := getRevNodeSeq(path.Nodes[ids[0]])
 
 	if dna.CompareSeqsIgnoreCase(query, testSeq) != 0 ||
 		dna.CompareSeqsIgnoreCase(expectedRev, actualRev) != 0 {
+		t.Error("problem with SeqToPath")
+	}
+
+	for _, id := range ids {
+		if path.Nodes[id].Id != g.Nodes[id].Id {
+			t.Error("problem with SeqToPath")
+		}
+	}
+
+	if countNonNil(path) != len(ids) {
 		t.Error("problem with SeqToPath")
 	}
 
 	// test 2
 	query = dna.StringToBases("TGCG")
-	start, _, err = SeqToPath(query, g.Nodes[0], 1, *g)
+	ids, path, err = SeqToPath(query, g.Nodes[0], 1, *g)
 	if err != nil {
 		t.Error(err)
 	}
-	testSeq = extractSeq(start)
+	testSeq = extractSeq(path.Nodes[ids[0]])
 
 	expectedRev = dna.StringToBases("CGTG")
-	actualRev = getRevNodeSeq(start)
+	actualRev = getRevNodeSeq(path.Nodes[ids[0]])
 
 	if dna.CompareSeqsIgnoreCase(query, testSeq) != 0 ||
 		dna.CompareSeqsIgnoreCase(expectedRev, actualRev) != 0 {
 		t.Error("problem with SeqToPath")
 	}
 
+	for _, id := range ids {
+		if path.Nodes[id].Id != g.Nodes[id].Id {
+			t.Error("problem with SeqToPath")
+		}
+	}
+
+	if countNonNil(path) != len(ids) {
+		t.Error("problem with SeqToPath")
+	}
+
 	// test 3
 	query = dna.StringToBases("ATGCGT")
-	start, _, err = SeqToPath(query, g.Nodes[0], 0, *g)
+	ids, path, err = SeqToPath(query, g.Nodes[0], 0, *g)
 	if err != nil {
 		t.Error(err)
 	}
-	testSeq = extractSeq(start)
+	testSeq = extractSeq(path.Nodes[ids[0]])
 
 	expectedRev = dna.StringToBases("TCGATG")
-	actualRev = getRevNodeSeq(start)
+	actualRev = getRevNodeSeq(path.Nodes[ids[0]])
 
 	if dna.CompareSeqsIgnoreCase(query, testSeq) != 0 ||
 		dna.CompareSeqsIgnoreCase(expectedRev, actualRev) != 0 {
+		t.Error("problem with SeqToPath")
+	}
+
+	for _, id := range ids {
+		if path.Nodes[id].Id != g.Nodes[id].Id {
+			t.Error("problem with SeqToPath")
+		}
+	}
+
+	if countNonNil(path) != len(ids) {
 		t.Error("problem with SeqToPath")
 	}
 }
@@ -170,5 +200,15 @@ func getRevNodeSeq(start *genomeGraph.Node) []dna.Base {
 		currNode = currNode.Prev[0].Dest
 	}
 	answer = append(answer, currNode.Seq...)
+	return answer
+}
+
+func countNonNil(g genomeGraph.GenomeGraph) int {
+	var answer int
+	for i := range g.Nodes {
+		if g.Nodes[i] != nil {
+			answer++
+		}
+	}
 	return answer
 }
