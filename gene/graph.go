@@ -21,12 +21,12 @@ var MatchingPathNotFound = errors.New("error: matching path not found")
 // Path is reported as a new GenomeGraph where each node has exactly 1 next/prev
 // (expect for first and last node). error != nil if and only if a path through
 // the graph with an identical sequence could not be found. On a non-nil error return
-// the path up to the point where a mismatch occurred will be returned.
+// the path up to the node where a mismatch occurred will be returned.
 //
 // NOTE: The first and last nodes in the path may contain a subset of the
 // seq field (no change to seqTwoBit) if the input seq does not encompass the
 // entire node sequence such that Node[0].Seq[0] is the first base of the input
-// sequence and Node[last].Seq[last] is the last base of the input sequence
+// sequence and Node[last].Seq[last] is the last base of the input sequence.
 func SeqToPath(seq []dna.Base, startNode *genomeGraph.Node, startNodeIdx int, graph genomeGraph.GenomeGraph) (start *genomeGraph.Node, answer genomeGraph.GenomeGraph, err error) {
 	answer = genomeGraph.GenomeGraph{Nodes: make([]*genomeGraph.Node, len(graph.Nodes))}
 	var currSeqIdx int = len(startNode.Seq[startNodeIdx:])

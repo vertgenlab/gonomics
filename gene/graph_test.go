@@ -95,46 +95,53 @@ func MakeTestGraph() *genomeGraph.GenomeGraph {
 	return graph
 }
 
-// TODO: check prevs
 func TestSeqToPath(t *testing.T) {
 	g := MakeTestGraph()
 
 	// test 1
-	start, _, err := SeqToPath(dna.StringToBases("ATGCGTAA"), g.Nodes[0], 0, *g)
+	query := dna.StringToBases("ATGCGTAA")
+	start, _, err := SeqToPath(query, g.Nodes[0], 0, *g)
 	if err != nil {
 		t.Error(err)
 	}
-
-	expected := dna.StringToBases("ATGCGTAA")
 	testSeq := extractSeq(start)
+	expectedRev := dna.StringToBases("TAACGATG")
+	actualRev := getRevNodeSeq(start)
 
-	if dna.CompareSeqsIgnoreCase(expected, testSeq) != 0 {
+	if dna.CompareSeqsIgnoreCase(query, testSeq) != 0 ||
+		dna.CompareSeqsIgnoreCase(expectedRev, actualRev) != 0 {
 		t.Error("problem with SeqToPath")
 	}
 
 	// test 2
-	start, _, err = SeqToPath(dna.StringToBases("TGCG"), g.Nodes[0], 1, *g)
+	query = dna.StringToBases("TGCG")
+	start, _, err = SeqToPath(query, g.Nodes[0], 1, *g)
 	if err != nil {
 		t.Error(err)
 	}
-
-	expected = dna.StringToBases("TGCG")
 	testSeq = extractSeq(start)
 
-	if dna.CompareSeqsIgnoreCase(expected, testSeq) != 0 {
+	expectedRev = dna.StringToBases("CGTG")
+	actualRev = getRevNodeSeq(start)
+
+	if dna.CompareSeqsIgnoreCase(query, testSeq) != 0 ||
+		dna.CompareSeqsIgnoreCase(expectedRev, actualRev) != 0 {
 		t.Error("problem with SeqToPath")
 	}
 
 	// test 3
-	start, _, err = SeqToPath(dna.StringToBases("ATGCGT"), g.Nodes[0], 0, *g)
+	query = dna.StringToBases("ATGCGT")
+	start, _, err = SeqToPath(query, g.Nodes[0], 0, *g)
 	if err != nil {
 		t.Error(err)
 	}
-
-	expected = dna.StringToBases("ATGCGT")
 	testSeq = extractSeq(start)
 
-	if dna.CompareSeqsIgnoreCase(expected, testSeq) != 0 {
+	expectedRev = dna.StringToBases("TCGATG")
+	actualRev = getRevNodeSeq(start)
+
+	if dna.CompareSeqsIgnoreCase(query, testSeq) != 0 ||
+		dna.CompareSeqsIgnoreCase(expectedRev, actualRev) != 0 {
 		t.Error("problem with SeqToPath")
 	}
 }
@@ -149,5 +156,19 @@ func extractSeq(start *genomeGraph.Node) []dna.Base {
 		currNode = currNode.Next[0].Dest
 	}
 
+	return answer
+}
+
+func getRevNodeSeq(start *genomeGraph.Node) []dna.Base {
+	currNode := start
+	for currNode.Next != nil { // move to end
+		currNode = currNode.Next[0].Dest
+	}
+	var answer []dna.Base
+	for currNode.Prev != nil {
+		answer = append(answer, currNode.Seq...)
+		currNode = currNode.Prev[0].Dest
+	}
+	answer = append(answer, currNode.Seq...)
 	return answer
 }
