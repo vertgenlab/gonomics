@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 	"math"
 	"strings"
+	"testing"
 )
 
 /*
@@ -57,7 +57,7 @@ func TestIntegrateOverAfs(t *testing.T) {
 		//checkMe = math.Exp(binomInIntegral(n, k, alpha, 0, 1, 1e-10))
 		checkMe = math.Exp(binomInIntegralParts(n, k, alpha, 1e-10))
 
-		relativeError = math.Abs(expected - checkMe) / expected
+		relativeError = math.Abs(expected-checkMe) / expected
 		if relativeError > 0.5 {
 			fmt.Printf("bad: %d %d %f %f (%e) %f (%e) %f\n", n, k, alpha, checkMe, checkMe, expected, expected, relativeError)
 			bad++
@@ -70,4 +70,3 @@ func TestIntegrateOverAfs(t *testing.T) {
 	}
 	fmt.Printf("Good:%d Bad:%d\n", good, bad)
 }
-

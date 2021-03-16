@@ -32,25 +32,25 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 	}
 
 	/*
-	integrateMe := FIntegralComponent(500, 1, -4)
-	integrateMeNonLog := FIntegralComponentNonLog(500, 1, -4)
-	integrateMeCareful := FIntegralComponentCareful(500, 1, -4)
-	integrateMeCarefulLog := FIntegralComponentCarefulLog(500, 1, -4) 
-	log.Printf("eval:%e, %e, %e, %e\n", math.Exp(integrateMe(0.4)), integrateMeNonLog(0.4), integrateMeCareful(0.4), math.Exp(integrateMeCarefulLog(0.4)))
-	log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMe, 0, 1, 1e-10, 1000)))
-	log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeNonLog, 0, 1, 1e-10, 1000))
-	log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeCareful, 0, 1, 1e-10, 1000))
-	log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMeCarefulLog, 0, 1, 1e-10, 1000)))
-	//log.Fatalf("DONE")
+		integrateMe := FIntegralComponent(500, 1, -4)
+		integrateMeNonLog := FIntegralComponentNonLog(500, 1, -4)
+		integrateMeCareful := FIntegralComponentCareful(500, 1, -4)
+		integrateMeCarefulLog := FIntegralComponentCarefulLog(500, 1, -4)
+		log.Printf("eval:%e, %e, %e, %e\n", math.Exp(integrateMe(0.4)), integrateMeNonLog(0.4), integrateMeCareful(0.4), math.Exp(integrateMeCarefulLog(0.4)))
+		log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMe, 0, 1, 1e-10, 1000)))
+		log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeNonLog, 0, 1, 1e-10, 1000))
+		log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeCareful, 0, 1, 1e-10, 1000))
+		log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMeCarefulLog, 0, 1, 1e-10, 1000)))
+		//log.Fatalf("DONE")
 
-	//var outLier float64 = AFSLikelihood(counts, n, 1)
-	//var outLierBinomInIntegral float64 = AFSLikelihoodBinomInIntegral(counts, n, 1)
-	//log.Printf("like at outlier: %e. With binomInIntegral: %e.\n", outLier, outLierBinomInIntegral)
-	var outLierDensity float64 = AFSSampleDensity(100, 3, 1, 0, 1, 1e-10)
-	var outLierDensityBinomInIntegral float64 = AFSSampleDensityBinomInIntegral(100, 3, 1, 0, 1, 1e-10)
-	log.Printf("density binom outside: %e. density binom inside: %e.\n", outLierDensity, outLierDensityBinomInIntegral)
+		//var outLier float64 = AFSLikelihood(counts, n, 1)
+		//var outLierBinomInIntegral float64 = AFSLikelihoodBinomInIntegral(counts, n, 1)
+		//log.Printf("like at outlier: %e. With binomInIntegral: %e.\n", outLier, outLierBinomInIntegral)
+		var outLierDensity float64 = AFSSampleDensity(100, 3, 1, 0, 1, 1e-10)
+		var outLierDensityBinomInIntegral float64 = AFSSampleDensityBinomInIntegral(100, 3, 1, 0, 1, 1e-10)
+		log.Printf("density binom outside: %e. density binom inside: %e.\n", outLierDensity, outLierDensityBinomInIntegral)
 
-	log.Fatalf("DONE")
+		log.Fatalf("DONE")
 	*/
 
 	var testAlpha, currCalc, ratio float64
@@ -70,6 +70,7 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 		}
 	}
 }
+
 /*
 func FIntegralComponentCarefulLog(n int, k int, alpha float64) func(float64) float64 {
 	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
