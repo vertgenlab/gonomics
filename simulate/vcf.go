@@ -34,7 +34,7 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 	integrateMe := FIntegralComponent(500, 1, -4)
 	integrateMeNonLog := FIntegralComponentNonLog(500, 1, -4)
 	integrateMeCareful := FIntegralComponentCareful(500, 1, -4)
-	integrateMeCarefulLog := FIntegralComponentCarefulLog(500, 1, -4) 
+	integrateMeCarefulLog := FIntegralComponentCarefulLog(500, 1, -4)
 	log.Printf("eval:%e, %e, %e, %e\n", math.Exp(integrateMe(0.4)), integrateMeNonLog(0.4), integrateMeCareful(0.4), math.Exp(integrateMeCarefulLog(0.4)))
 	log.Printf("integral:%e\n", math.Exp(numbers.AdaptiveSimpsonsLog(integrateMe, 0, 1, 1e-10, 1000)))
 	log.Printf("integral:%e\n", numbers.AdaptiveSimpsons(integrateMeNonLog, 0, 1, 1e-10, 1000))
@@ -53,19 +53,19 @@ func SimulateVcf(alpha float64, n int, k int, outFile string) {
 
 	log.Fatalf("DONE")
 
-/*
-	var shouldBeBest float64 = AFSLikelihood(counts, n, alpha)
-	for testAlpha = alpha - 2; testAlpha <= alpha+3; testAlpha += 0.25 {
-		if alpha == 0 {
-			currCalc = AFSLikelihood(counts, n, 0.03)
-			ratio = math.Exp(currCalc - shouldBeBest)
-			log.Printf("like at %f:%e ratio:%f\n", 0.03, AFSLikelihood(counts, n, 0.03))
-		} else {
-			currCalc = AFSLikelihood(counts, n, testAlpha)
-			ratio = math.Exp(currCalc - shouldBeBest)
-			log.Printf("like at %f:%e ratio:%f\n", testAlpha, AFSLikelihood(counts, n, testAlpha), ratio)
-		}
-	}*/
+	/*
+		var shouldBeBest float64 = AFSLikelihood(counts, n, alpha)
+		for testAlpha = alpha - 2; testAlpha <= alpha+3; testAlpha += 0.25 {
+			if alpha == 0 {
+				currCalc = AFSLikelihood(counts, n, 0.03)
+				ratio = math.Exp(currCalc - shouldBeBest)
+				log.Printf("like at %f:%e ratio:%f\n", 0.03, AFSLikelihood(counts, n, 0.03))
+			} else {
+				currCalc = AFSLikelihood(counts, n, testAlpha)
+				ratio = math.Exp(currCalc - shouldBeBest)
+				log.Printf("like at %f:%e ratio:%f\n", testAlpha, AFSLikelihood(counts, n, testAlpha), ratio)
+			}
+		}*/
 }
 
 func FIntegralComponentCarefulLog(n int, k int, alpha float64) func(float64) float64 {
@@ -75,7 +75,7 @@ func FIntegralComponentCarefulLog(n int, k int, alpha float64) func(float64) flo
 			return math.Inf(-1)
 		}*/
 		//var ans float64 = binomCoeff + float64(k-1)*math.Log(p) + float64(n-k-1)*math.Log(1.0-p) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
-		var ans float64 = binomCoeff + numbers.LogPow(p, float64(k-1)) + numbers.LogPow(1.0 - p, float64(n-k-1)) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
+		var ans float64 = binomCoeff + numbers.LogPow(p, float64(k-1)) + numbers.LogPow(1.0-p, float64(n-k-1)) + math.Log((1.0-math.Exp(-1.0*alpha*(1.0-p)))*2.0/(1.0-math.Exp(-1.0*alpha)))
 		return ans
 	}
 }
@@ -207,7 +207,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, start, end, accurac
 		//denomCareful = numbers.AddLog(denomCareful, AFSSampleDensityCareful(n, j, alpha, start, end, accuracy))
 		//denomCarefulLog = numbers.AddLog(denomCarefulLog, AFSSampleDensityCarefulLog(n, j, alpha, start, end, accuracy))
 	}
-	numer = AFSSampleDensity(n, i, alpha, start, end, accuracy)                     // original answer log, integral log
+	numer = AFSSampleDensity(n, i, alpha, start, end, accuracy) // original answer log, integral log
 	//numerCareful = AFSSampleDensityCareful(n, i, alpha, start, end, accuracy)       // answer log, integral normal
 	//numerCarefulLog = AFSSampleDensityCarefulLog(n, i, alpha, start, end, accuracy) // answer log, integral log
 	/*ans = numbers.DivideLog(numer, denom)
@@ -233,7 +233,7 @@ func AlleleFrequencyProbabilityBinomInIntegral(i int, n int, alpha float64, star
 		//denomCareful = numbers.AddLog(denomCareful, AFSSampleDensityCareful(n, j, alpha, start, end, accuracy))
 		//denomCarefulLog = numbers.AddLog(denomCarefulLog, AFSSampleDensityCarefulLog(n, j, alpha, start, end, accuracy))
 	}
-	numer = AFSSampleDensityBinomInIntegral(n, i, alpha, start, end, accuracy)                     // original answer log, integral log
+	numer = AFSSampleDensityBinomInIntegral(n, i, alpha, start, end, accuracy) // original answer log, integral log
 	//numerCareful = AFSSampleDensityCareful(n, i, alpha, start, end, accuracy)       // answer log, integral normal
 	//numerCarefulLog = AFSSampleDensityCarefulLog(n, i, alpha, start, end, accuracy) // answer log, integral log
 	/*ans = numbers.DivideLog(numer, denom)
