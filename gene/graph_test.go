@@ -24,7 +24,7 @@ import (
 //             \    /
 //               T
 
-func MakeTestGraph() *genomeGraph.GenomeGraph {
+func MakeTestGraph() genomeGraph.GenomeGraph {
 	graph := genomeGraph.EmptyGraph()
 
 	var n0, n1, n2, n3, n4 *genomeGraph.Node
@@ -92,7 +92,7 @@ func MakeTestGraph() *genomeGraph.GenomeGraph {
 		graph.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(graph.Nodes[i].Seq)
 	}
 
-	return graph
+	return *graph
 }
 
 func TestSeqToPath(t *testing.T) {
@@ -100,7 +100,7 @@ func TestSeqToPath(t *testing.T) {
 
 	// test 1
 	query := dna.StringToBases("ATGCGTAA")
-	ids, path, err := SeqToPath(query, g.Nodes[0], 0, *g)
+	ids, path, err := SeqToPath(query, g, g.Nodes[0], 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -125,7 +125,7 @@ func TestSeqToPath(t *testing.T) {
 
 	// test 2
 	query = dna.StringToBases("TGCG")
-	ids, path, err = SeqToPath(query, g.Nodes[0], 1, *g)
+	ids, path, err = SeqToPath(query, g, g.Nodes[0], 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -151,7 +151,7 @@ func TestSeqToPath(t *testing.T) {
 
 	// test 3
 	query = dna.StringToBases("ATGCGT")
-	ids, path, err = SeqToPath(query, g.Nodes[0], 0, *g)
+	ids, path, err = SeqToPath(query, g, g.Nodes[0], 0)
 	if err != nil {
 		t.Error(err)
 	}

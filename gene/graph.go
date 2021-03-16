@@ -34,6 +34,19 @@ type GeneGraph struct {
 
 var MatchingPathNotFound = errors.New("error: matching path not found")
 
+// CreateGeneGraph uses SeqToPath to find a path through the input graph starting at
+// startNode.Seq[startNodePos] that exactly matches the sequence of gene.genomeSeq.
+// error != nil if and only if a path through the graph with an identical sequence
+// could not be found.
+func CreateGeneGraph(gene *Gene, graph genomeGraph.GenomeGraph, startNode *genomeGraph.Node, startNodePos int) (GeneGraph, error) {
+	var answer GeneGraph
+	var err error
+	answer.Gene = gene
+	answer.Graph = graph
+	answer.PathNodeIds, answer.Path, err = SeqToPath(gene.genomeSeq, graph, startNode, startNodePos)
+	return answer, err
+}
+
 // SeqToPath finds a path through a graph that corresponds to the input
 // sequence starting from startNode.Seq[startNodePos] and following edges.
 // Sequence must be a perfect match (case ignored) to qualify as a valid path.
@@ -47,7 +60,7 @@ var MatchingPathNotFound = errors.New("error: matching path not found")
 // seq field (no change to seqTwoBit) if the input seq does not encompass the
 // entire node sequence such that Node[0].Seq[0] is the first base of the input
 // sequence and Node[last].Seq[last] is the last base of the input sequence.
-func SeqToPath(seq []dna.Base, startNode *genomeGraph.Node, startNodePos int, graph genomeGraph.GenomeGraph) (ids []uint32, answer genomeGraph.GenomeGraph, err error) {
+func SeqToPath(seq []dna.Base, graph genomeGraph.GenomeGraph, startNode *genomeGraph.Node, startNodePos int) (ids []uint32, answer genomeGraph.GenomeGraph, err error) {
 	answer = genomeGraph.GenomeGraph{Nodes: make([]*genomeGraph.Node, len(graph.Nodes))}
 
 	// NOTE: currNode is always a copy of the original node with a subset path
