@@ -75,3 +75,51 @@ func TestGetBase(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkGetBase(b *testing.B) {
+	seq := NewThreeBit(dna.StringToBases("ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"), PaddingOne)
+	seqTwo := make([]dna.Base, seq.Len)
+	b.ResetTimer()
+	var i, j int
+	for i = 0; i < b.N; i++ {
+		for j = 0; j < seq.Len; j++ {
+			seqTwo[j] = GetBase(seq, j)
+		}
+	}
+}
+
+func BenchmarkGetBaseFast(b *testing.B) {
+        seq := NewThreeBit(dna.StringToBases("ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"), PaddingOne)
+	seqTwo := make([]dna.Base, seq.Len)
+        b.ResetTimer()
+        var i, j int
+        for i = 0; i < b.N; i++ {
+                for j = 0; j < seq.Len; j++ {
+                        seqTwo[j] = GetBaseFast(seq, j)
+                }
+        }
+}
+
+func BenchmarkGetBaseFastFast(b *testing.B) {
+        seq := NewThreeBit(dna.StringToBases("ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"), PaddingOne)
+	seqTwo := make([]dna.Base, seq.Len)
+        b.ResetTimer()
+        var i, j int
+        for i = 0; i < b.N; i++ {
+                for j = 0; j < seq.Len; j++ {
+                        seqTwo[j] = GetBaseFastFast(seq, j)
+                }
+        }
+}
+
+func BenchmarkGetBaseNormal(b *testing.B) {
+        seq := dna.StringToBases("ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT")
+	seqTwo := make([]dna.Base, len(seq))
+        b.ResetTimer()
+        var i, j int
+        for i = 0; i < b.N; i++ {
+                for j = 0; j < len(seq); j++ {
+                        seqTwo[j] = seq[j]
+                }
+        }
+}

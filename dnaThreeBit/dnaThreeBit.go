@@ -107,6 +107,94 @@ func GetBase(fragment *ThreeBit, pos int) dna.Base {
 	return dna.Base(GetThreeBitBase(fragment, pos))
 }
 
+func GetBaseFast(fragment *ThreeBit, pos int) dna.Base {
+	const lastBase uint64 = 7 // right-most three bits are one
+	var idx, remainder int
+	var shift uint
+	idx = pos / 21
+	remainder = pos % 21
+	shift = uint(64 - 3*(remainder+1))
+	return dna.Base((fragment.Seq[idx] >> shift) & lastBase)
+}
+
+func GetBaseFastFast(fragment *ThreeBit, pos int) dna.Base {
+	const lastBase uint64 = 7   // right-most three bits are one
+	const lastFiveBits int = 31 // right-most five bits are one
+	var idx, remainder int
+	var shift uint
+	idx = pos / 21
+	remainder = pos & lastFiveBits
+	switch remainder {
+	case 0:
+		shift = 61
+	case 1:
+		shift = 58
+	case 2:
+		shift = 55
+	case 3:
+		shift = 52
+	case 4:
+		shift = 49
+	case 5:
+		shift = 46
+	case 6:
+		shift = 43
+	case 7:
+		shift = 40
+	case 8:
+		shift = 37
+	case 9:
+		shift = 34
+	case 10:
+		shift = 31
+	case 11:
+		shift = 28
+	case 12:
+		shift = 25
+	case 13:
+		shift = 22
+	case 14:
+		shift = 19
+	case 15:
+		shift = 16
+	case 16:
+		shift = 13
+	case 17:
+		shift = 10
+	case 18:
+		shift = 7
+	case 19:
+		shift = 4
+	case 20:
+		shift = 1
+	case 21:
+		shift = 61
+	case 22:
+		shift = 58
+	case 23:
+		shift = 55
+	case 24:
+		shift = 52
+	case 25:
+		shift = 49
+	case 26:
+		shift = 46
+	case 27:
+		shift = 43
+	case 28:
+		shift = 40
+	case 29:
+		shift = 37
+	case 30:
+		shift = 34
+	case 31:
+		shift = 31
+	default:
+		log.Panicf("Bad %d\n", remainder)
+	}
+	return dna.Base((fragment.Seq[idx] >> shift) & lastBase)
+}
+
 // NewThreeBit creates a ThreeBit encoding of inSeq with padding on the end
 func NewThreeBit(inSeq []dna.Base, padding ThreeBitBase) *ThreeBit {
 	var sliceLenNeeded int = (len(inSeq) + 20) / 21
