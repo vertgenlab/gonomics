@@ -33,7 +33,7 @@ func AncestralAscertainmentDenominator(fCache []float64, FCS float64, d int) flo
 	}
 	return answer
 }
-
+//DerivedAscertainmentDenominator is P(Asc | alpha), a constant normalizing factor for P(i | n, alpha) with the derived ascertainment correction.
 func DerivedAscertainmentDenominator(fCache []float64, FCS float64, d int) float64 {
 	var answer float64 = math.Inf(-1)
 	var current float64
@@ -49,10 +49,12 @@ func AncestralAscertainmentProbability(n int, i int, d int) float64 {
 	return numbers.DivideLog(numbers.BinomCoefficientLog(n-i, d), numbers.BinomCoefficientLog(n, d))
 }
 
+//DerivedAscertainmentProbability returns P(Asc | i, alpha) for derived allele ascertainment corrections.
 func DerivedAscertainmentProbability(n int, i int, d int) float64 {
 	return numbers.DivideLog(numbers.BinomCoefficientLog(i, d), numbers.BinomCoefficientLog(n, d))
 }
 
+//AlleleFrequencyProbabilityAncestralAscertainment returns P(i | Asc, alpha) when the variant set has an ancestral allele ascertainment bias.
 func AlleleFrequencyProbabilityAncestralAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64) float64 {
 	fCache := BuildFCache(n, alpha, binomCache)
 	FCS := GetFCacheSum(fCache)
@@ -61,6 +63,7 @@ func AlleleFrequencyProbabilityAncestralAscertainment(alpha float64, i int, n in
 	return numbers.DivideLog(numbers.MultiplyLog(pIgivenAlpha, AncestralAscertainmentProbability(n, i, d)), AncestralAscertainmentDenominator(fCache, FCS, d))
 }
 
+//AlleleFrequencyProbabilityDerivedAscertainment returns P(i | Asc, alpha) when the variant set has a derived allele ascertainment bias.
 func AlleleFrequencyProbabilityDerivedAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64) float64 {
 	fCache := BuildFCache(n, alpha, binomCache)
 	FCS := GetFCacheSum(fCache)
