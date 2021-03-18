@@ -33,6 +33,7 @@ func AncestralAscertainmentDenominator(fCache []float64, FCS float64, d int) flo
 	}
 	return answer
 }
+
 //DerivedAscertainmentDenominator is P(Asc | alpha), a constant normalizing factor for P(i | n, alpha) with the derived ascertainment correction.
 func DerivedAscertainmentDenominator(fCache []float64, FCS float64, d int) float64 {
 	var answer float64 = math.Inf(-1)
