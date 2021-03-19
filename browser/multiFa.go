@@ -17,27 +17,20 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 	if !(start < end) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
-
 	var stop int
 	records := fasta.Read(infile)
-
 	if noMask {
 		fasta.AllToUpper(records)
 	}
-
-	for i := 1; i < len(records); i++ {
-		for j := 0; j < len(records[0].Seq); j++ {
+	for i := range records {
+		for j := range records[0].Seq {
 			if records[i].Seq[j] == records[0].Seq[j] {
 				records[i].Seq[j] = dna.Dot
 			}
 		}
 	}
 	long := calculateLongestName(records)
-
-	var refCounter int = 0
-	var startCounter int = 0
-	var endCounter int = 0
-
+	var refCounter, startCounter, endCounter int = 0, 0, 0
 	for t := 0; refCounter < start; t++ {
 		startCounter++
 		if t == len(records[0].Seq) {
@@ -66,11 +59,11 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 	for k := startCounter; k < endCounter; k = k + lineLength {
 		fmt.Fprintf(out, "Position: %d\n", chromStart)
 		stop = numbers.Min(endCounter, k+lineLength)
-		for m := 0; m < len(records); m++ {
+		for m := range records {
 			fmt.Fprintf(out, "|%-*s| %s\n", long, records[m].Name, dna.BasesToString(records[m].Seq[k:stop]))
 		}
 		fmt.Fprintf(out, "\n\n")
-		chromStart = chromStart + lineLength - int(dna.CountGaps(records[0].Seq[k:stop]))
+		chromStart = chromStart + lineLength - dna.CountGaps(records[0].Seq[k:stop])
 	}
 }
 
@@ -78,7 +71,7 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 func calculateLongestName(f []fasta.Fasta) int {
 	var ans int = 0
 	var temp int
-	for i := 0; i < len(f); i++ {
+	for i := range f {
 		temp = utf8.RuneCountInString(f[i].Name)
 		if temp > ans {
 			ans = temp
