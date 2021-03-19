@@ -168,7 +168,6 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 		prevCds = &currentCDS
 		e.Cds = &currentCDS
 
-
 	case "5UTR":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
 		current5Utr := FiveUtr{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
