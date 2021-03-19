@@ -22,6 +22,7 @@ func Plot(f func(float64) float64, left float64, right float64, bins int, outFil
 	}
 }
 
+//PlotBinomCoefficient writes binomial coefficients (n choose k) from k=1 to k=n-1 to an output file for downstream visualization.
 func PlotBinomCoefficient(n int, outFile string) {
 	out := fileio.EasyCreate(outFile)
 	fmt.Fprintf(out, "i\tProbability\n")
