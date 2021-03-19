@@ -15,7 +15,7 @@ Authors:
 
 
 
-### Instructions for intalling Golang (Go)
+### Instructions for installing Golang (Go)
 
 <p>Instructions are written for bash (common for Linux/masOS). Windows users can follow directions on this website. https://golangdocs.com/install-go-windows </p>
 <br>
