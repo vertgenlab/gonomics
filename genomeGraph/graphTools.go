@@ -1,5 +1,6 @@
 package genomeGraph
 
+/*
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
@@ -331,3 +332,4 @@ func createDEL(sg *GenomeGraph, v *vcf.Vcf, chr string) *Node {
 	AddNode(sg, &curr)
 	return &curr
 }
+*/

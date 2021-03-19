@@ -3,12 +3,11 @@ package genomeGraph
 // SortGraph will reorder nodes in a graph such that the order and Ids of the output graph are topologically sorted
 func SortGraph(g *GenomeGraph) *GenomeGraph {
 	answer := &GenomeGraph{}
-	answer.Nodes = make([]*Node, len(g.Nodes))
+	answer.Nodes = make([]Node, len(g.Nodes))
 	order := GetSortOrder(g)
 	for sortedIdx, originalIdx := range order {
 		answer.Nodes[sortedIdx] = g.Nodes[originalIdx]
 		answer.Nodes[sortedIdx].Id = uint32(sortedIdx)
-
 	}
 	return answer
 }
@@ -20,11 +19,11 @@ func GetSortOrder(g *GenomeGraph) []uint32 {
 
 // TODO: design function to get start positions only
 // breadthFirstSearch performs a breadth first search on a graph and returns a slice correlating the sort order to the original order
-func breadthFirstSearch(nodes []*Node) []uint32 {
+func breadthFirstSearch(nodes []Node) []uint32 {
 	answer := make([]uint32, 0)
 	var inDegree int
 	var node *Node
-	inDegreeTable := make(map[*Node]int)
+	inDegreeTable := make(map[uint32]int)
 
 	// Updated nodes is going to keep track of each node
 	// which has had a change to it's inDegree
@@ -39,7 +38,7 @@ func breadthFirstSearch(nodes []*Node) []uint32 {
 	// loop through each contiguous subGraph
 	for _, nodeSet := range subGraphs {
 		updatedNodes = nil
-		inDegreeTable = make(map[*Node]int)
+		inDegreeTable = make(map[uint32]int)
 		for i := 0; i < len(nodeSet); i++ {
 			inDegreeTable[nodeSet[i]] = len(nodeSet[i].Prev)
 		}
