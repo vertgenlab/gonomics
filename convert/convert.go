@@ -21,7 +21,7 @@ import (
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
 func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
-	for i := 0; i < len(ref); i++ {
+	for i := range ref {
 		if b.Chrom == ref[i].Name {
 			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
 		}
@@ -153,8 +153,6 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 		i++
 	}
 
-	//DEBUG: log.Println("Completed wig skeleton, looping through bed.")
-
 	//loop through bed line at a time
 	file := fileio.EasyOpen(infile)
 	defer file.Close()
@@ -198,26 +196,23 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 		i++
 	}
 
-	for j := 0; j < len(b); j++ {
+	for j := range b {
 		chromIndex = getWigChromIndex(b[j].Chrom, wigSlice)
-		//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
-			//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
 			wigSlice[chromIndex].Values[k].Value++
 		}
-		//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 	}
 	return wigSlice
 }
 
 //bedMidpoint returns the midpoint position of an input bed entry.
 func bedMidpoint(b *bed.Bed) int {
-	return int(b.ChromEnd+b.ChromStart) / 2
+	return (b.ChromEnd + b.ChromStart) / 2
 }
 
 //getWigChromIndex searches a wig slice for the wig entry with a particular name and returns the index of that entry in the slice.
 func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
-	for i := 0; i < len(wigSlice); i++ {
+	for i := range wigSlice {
 		if s == wigSlice[i].Chrom {
 			return i
 		}
@@ -235,7 +230,7 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 	var insertionAlnPos int
 	var deletionAlnPos int
 
-	for i := 0; i < len(f[0].Seq); i++ { //loop through reference alignment positions
+	for i := range f[0].Seq { //loop through reference alignment positions
 		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
 			if pastStart {
 				if !insertion {

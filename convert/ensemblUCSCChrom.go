@@ -4,14 +4,7 @@ import (
 	"log"
 )
 
-func EnsemblToUCSCGeneral(in string) string {
-	//TODO: can we make in a number
-	//then
-	return "chr" + in
-}
-
-//TODO UCSCToEnsemblGeneral
-
+//EnsemblToUCSC converts ensembl-style human chromosome names to the standard UCSC format chromosome names.
 func EnsemblToUCSC(in string) string {
 	switch in {
 	case "1":
@@ -67,6 +60,7 @@ func EnsemblToUCSC(in string) string {
 	return in
 }
 
+//UCSCToEnsembl converts UCSC-style chromosome names to ensembl-format names.
 func UCSCToEnsembl(in string) string {
 	switch in {
 	case "chr1":
