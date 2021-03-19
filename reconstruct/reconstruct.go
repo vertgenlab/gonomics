@@ -116,18 +116,18 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 	var simCodons []simulate.CodonExt
 	var reconCodons []simulate.CodonExt
 	answer := make(map[string][]float64)
-	var mistakes1 float64
-	var mistakes2 float64
-	var mistakes3 float64
-	var total1 float64
-	var total2 float64
-	var total3 float64
 
 	for s := 0; s < len(sim); s++ {
 		for r := 0; r < len(recon); r++ {
 			var percentage1 float64
 			var percentage2 float64
 			var percentage3 float64
+			var mistakes1 float64
+			var mistakes2 float64
+			var mistakes3 float64
+			var total1 float64
+			var total2 float64
+			var total3 float64
 			if sim[s].Name == recon[r].Name {
 				for i := 0; i < len(sim[s].Seq); i++ {
 					for g := 0; g < len(genes); g++ {
@@ -163,13 +163,16 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 						}
 					}
 				}
+				log.Print(mistakes1)
+				log.Print(total1)
+				log.Print(len(simCodons))
+				log.Print(len(reconCodons))
 				percentage1 = (mistakes1 / total1) * 100
 				percentage2 = (mistakes2 / total2) * 100
 				percentage3 = (mistakes3 / total3) * 100
-				answer[sim[s].Name] = append(answer[sim[s].Name], percentage1)
-				answer[sim[s].Name] = append(answer[sim[s].Name], percentage2)
-				answer[sim[s].Name] = append(answer[sim[s].Name], percentage3)
-				log.Print(len(answer[sim[s].Name]))
+				answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage1)
+				answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage2)
+				answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage3)
 			}
 		}
 	}
@@ -355,3 +358,4 @@ func LoopNodes(root *expandedTree.ETree, position int) {
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
 	}
 }
+

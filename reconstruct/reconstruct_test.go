@@ -49,15 +49,11 @@ func TestReconAccuracyByBase(t *testing.T) {
 
 	for name, data := range baseAccuracy {
 		for d := range data {
-			log.Print("check")
 			if d == 0 {
-				log.Print("check 1")
 				log.Printf("%s First Base %f \n", name, data[d])
 			} else if d == 1 {
-				log.Print("check 2")
 				log.Printf("%s Second Base %f \n", name, data[d])
 			} else {
-				log.Print("check 3")
 				log.Printf("%s Third Base %f \n", name, data[d])
 			}
 		}
