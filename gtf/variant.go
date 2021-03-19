@@ -15,7 +15,7 @@ type vcfEffectPrediction struct {
 	RefId          string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
 	Gene           string
 	PosStrand      bool
-	NearestCds     *CDS
+	NearestCds     *Cds
 	CdnaPos        int // 1-base
 	AaPos          int // 1-base
 	AaRef          []dna.AminoAcid
@@ -94,7 +94,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 	return answer
 }
 
-// vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the CDS nearest to the vcf
+// vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the Cds nearest to the vcf
 func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
 	var cdsPos int
 	var exon *Exon
@@ -106,7 +106,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCds = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) <= exon.Cds.End { // variant is before end of this exon
-				if int(v.Pos) < exon.Cds.Start { // Variant is NOT in CDS
+				if int(v.Pos) < exon.Cds.Start { // Variant is NOT in Cds
 					if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[transcriptPosInSlice].Exons[i-1].Cds.Start {
 						answer.NearestCds = exon.Cds
 					} else {
@@ -126,7 +126,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCds = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) >= exon.Cds.Start { // variant is before end of this exon
-				if int(v.Pos) > exon.Cds.End { // Variant is NOT in CDS
+				if int(v.Pos) > exon.Cds.End { // Variant is NOT in Cds
 					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[transcriptPosInSlice].Exons[len(gene.Transcripts[transcriptPosInSlice].Exons)-1-i+1].Cds.Start-int(v.Pos) {
 						answer.NearestCds = exon.Cds
 					} else {
@@ -134,7 +134,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 					}
 					break
 				}
-				// Variant IS in CDS
+				// Variant IS in Cds
 				cdsPos += exon.Cds.End - int(v.Pos) + 1
 				answer.CdnaPos = cdsPos
 				answer.NearestCds = exon.Cds
@@ -151,7 +151,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
-	var currCDS *CDS = variant.NearestCds
+	var currCDS *Cds = variant.NearestCds
 	var aaPosOffset int = 0
 	if variant.PosStrand {
 		seqPos -= determineFrame(variant)
@@ -478,18 +478,18 @@ func determineFrame(v *vcfEffectPrediction) int {
 	}
 }
 
-// getCdsDist determines the distance of the variant from the nearest CDS
-// Returns 0 if the variant is inside the CDS
+// getCdsDist determines the distance of the variant from the nearest Cds
+// Returns 0 if the variant is inside the Cds
 func getCdsDist(v *vcfEffectPrediction) int {
 	switch {
-	case int(v.Pos) >= v.NearestCds.Start && int(v.Pos) <= v.NearestCds.End: // Variant is in CDS
+	case int(v.Pos) >= v.NearestCds.Start && int(v.Pos) <= v.NearestCds.End: // Variant is in Cds
 		return 0
 
-	case int(v.Pos) < v.NearestCds.Start: // Variant is before nearest CDS
+	case int(v.Pos) < v.NearestCds.Start: // Variant is before nearest Cds
 		return v.NearestCds.Start - int(v.Pos)
 
 	default:
-		return int(v.Pos) - v.NearestCds.End // Variant is after nearest CDS
+		return int(v.Pos) - v.NearestCds.End // Variant is after nearest Cds
 	}
 }
 

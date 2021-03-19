@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-var c1 CDS = CDS{Start: 173477398, End: 173477492, Score: -1, Frame: 0}
-var f FiveUTR = FiveUTR{Start: 173477335, End: 173477397, Score: -1}
+var c1 Cds = Cds{Start: 173477398, End: 173477492, Score: -1, Frame: 0}
+var f FiveUtr = FiveUtr{Start: 173477335, End: 173477397, Score: -1}
 
 //var e1 Exon = Exon{Start: 173477335, End: 173477492, Score: -1, ExonNumber: "\"1\"", ExonID: "\"NM_004905.1\"", Cds: &c1, FiveUtr: &f}
 
-var c2 CDS = CDS{Start: 173487735, End: 173487860, Score: -1, Frame: 0}
-var t ThreeUTR = ThreeUTR{Start: 173487864, End: 173488815, Score: -1}
+var c2 Cds = Cds{Start: 173487735, End: 173487860, Score: -1, Frame: 0}
+var t ThreeUtr = ThreeUtr{Start: 173487864, End: 173488815, Score: -1}
 
 //var e2 Exon = Exon{Start: 173487735, End: 173488815, Score: -1, ExonNumber: "\"5\"", ExonID: "\"NM_004905.5\"", Cds: &c2, ThreeUtr: &t}
 //var t1 = Transcript{Chr: "chr1", Source: "refGene", Start: 173477335, End: 173488815, Score: -1, Strand: true, TranscriptID: "\"NM_004905\"", Exons: []*Exon{&e1, &e2}}
