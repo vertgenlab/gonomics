@@ -12,7 +12,8 @@ import (
 	"log"
 )
 
-//SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction
+//SimulateEvolve takes in a root fasta file, a newick tree, and a genePred file and writes two files, one with simulated sequences for every node of the tree
+//and one for simulated sequences on just the leaves of the tree to be used for reconstruction
 func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
 	exception.FatalOnErr(err)
@@ -31,7 +32,7 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 	fasta.Write(leafOutFile, leafFastas)
 }
 
-//ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree
+//ReconstructSeq takes in a newick tree and leaf sequences (output of simulateEvolve) and writes a file containing reconstructed sequences for the whole input tree
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
 	exception.FatalOnErr(err)
@@ -52,25 +53,24 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 }
 
 //SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction
+//output for accuracy is a file with 3 accuracy calculations for each ancestor: exon-specific, non-exon-specific and a total for that ancestor
+//this code is designed for sequences which cannot change in length as they are simulated or reconstructed
 func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string) {
-	//TODO: this code will need to change drastically for sequences of varying lengths.
-	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
-	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
 	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
 
 	answer := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp)
 	out := fileio.EasyCreate(accuracyOutFile)
-	defer out.Close()
 
 	for name, accuracy := range answer {
 		fmt.Fprintf(out, "%s\t%f\n", name, accuracy)
 	}
+	out.Close()
 }
 
 func usage() {
 	fmt.Print(
-		"SimRecon takes in a root fasta file and a tree. It simulates evolution alone the tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node.\n" +
+		"SimRecon takes in a root fasta file and a tree. It simulates evolution along the given tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node. All outputs are written to a file.\n" +
 			"simRecon <rootFile.fasta> <treeFile.txt> <genePred.gp> <simOutFile.fasta> <leafOutFile.fasta> <reconOutFile.fasta> <accuracyOutFile.txt> \n" +
 			"options:\n")
 	flag.PrintDefaults()
