@@ -161,13 +161,15 @@ func AFSSampleClosureOld(n int, k int, alpha float64, binomMap [][]float64) func
 }
 
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
+	var switchPoint float64 = float64(k) / float64(n)
 	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
 	f := FIntegralComponent(n, k, alpha)
 	//log.Printf("f(0): %f. f(0.25): %f. f(0.5): %f. f(1): %f.", f(0.0), f(0.25), f(0.5), f(1))
 	//log.Fatal()
 	//constantComponent := numbers.MultiplyLog(binomMap[n][k], math.Log(2 / (1-math.Exp(-alpha))))
 	constantComponent := binomMap[n][k]
-	return numbers.MultiplyLog(constantComponent, numbers.AdaptiveSimpsonsLog(f, 0.0, 1.0, 1e-8, 100))
+	integral := numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, 1e-8, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, 1e-8, 100))
+	return numbers.MultiplyLog(constantComponent, integral)
 }
 
 //AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
