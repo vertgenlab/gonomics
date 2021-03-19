@@ -37,7 +37,6 @@ func InvertSegSite(s *SegSite) {
 }
 
 //MultiFaToAFS constructs an allele frequency spectrum struct from a multiFa alignment block.
-//TODO: Ask Craig about derived state here.
 func MultiFaToAFS(aln []fasta.Fasta) AFS {
 	var answer AFS
 	var count int
@@ -57,7 +56,7 @@ func MultiFaToAFS(aln []fasta.Fasta) AFS {
 	return answer
 }
 
-//GvcfToAFS reads in a Gvcf file, parses the genotype information, and constructs an AFS struct.
+//VcfToAFS reads in a vcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
 func VcfToAFS(filename string, polarized bool) (*AFS, error) {
 	var answer AFS
@@ -118,17 +117,6 @@ func AFSStationarity(p float64, alpha float64) float64 {
 	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
 }
 
-func DetectionProbability(p float64, n int) float64 {
-	var pNotDetected float64 = numbers.AddLog(numbers.BinomialExpressionLog(n, 0, p), numbers.BinomialExpressionLog(n, n, p))
-	//DEBUG: log.Printf("pNotDetected: %f.", pNotDetected)
-	return numbers.SubtractLog(0, pNotDetected)
-}
-
-func AfsStationarityCorrected(p float64, alpha float64, n int) float64 {
-	//DEBUG: log.Printf("p: %f. n: %d. alpha: %f. Detection: %f. Stationarity: %f.", p, n, alpha, math.Exp(DetectionProbability(p, n)), math.Exp(AFSStationarity(p, alpha)))
-	return numbers.MultiplyLog(DetectionProbability(p, n), AFSStationarity(p, alpha))
-}
-
 //AFSStationarityClosure returns a func(float64)float64 for a stationarity distribution with a fixed alpha value for subsequent integration.
 func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
@@ -136,49 +124,20 @@ func AFSStationarityClosure(alpha float64) func(float64) float64 {
 	}
 }
 
-func AfsSampleClosure(n int, k int, alpha float64) func(float64) float64 {
-	return func(p float64) float64 {
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
-	}
-}
-
+//FIntegralComponent is a helper function of AFSSampleDensity and represents the component within the integral.
 func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
-		//log.Printf("Expression: %v. LogPart: %v.", expression, logPart)
 		return numbers.MultiplyLog(expression, logPart)
 	}
 }
 
-//AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
-func AFSSampleClosureOld(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
-	return func(p float64) float64 {
-		//DEBUG: fmt.Println(binomMap)
-		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialDistLogSlice(n, k, p, binomMap))
-	}
-}
-
+//AFSSampleDensity (also referred to as the F function) is the product of the stationarity and binomial distributions integrated over p, the allele frequency.
 func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
 	f := FIntegralComponent(n, k, alpha)
-	//log.Printf("f(0): %f. f(0.25): %f. f(0.5): %f. f(1): %f.", f(0.0), f(0.25), f(0.5), f(1))
-	//log.Fatal()
-	//constantComponent := numbers.MultiplyLog(binomMap[n][k], math.Log(2 / (1-math.Exp(-alpha))))
 	constantComponent := binomMap[n][k]
 	return numbers.MultiplyLog(constantComponent, numbers.AdaptiveSimpsonsLog(f, 0.0, 1.0, 1e-8, 100))
-}
-
-//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
-func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	f := AFSSampleClosureOld(n, k, alpha, binomMap)
-	//DEBUG prints
-	//fmt.Printf("f(0.1)=%e\n", f(0.1))
-	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
-	//fmt.Printf("N: %v. K: %v. Alpha: %f.\n", n, k, alpha)
-	//n choose k * Definiteintegral(p(1-p secrition)stationaritydensity)
-	return numbers.LogIntegrateIterative(f, 0.000001, 0.9999999, 20, 10e-8)
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
@@ -195,7 +154,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 func AFSLikelihood(afs AFS, alpha []float64, binomMap [][]float64) float64 {
 	var answer float64 = 0.0
 	// loop over all segregating sites
-	for j := 0; j < len(afs.sites); j++ {
+	for j := range afs.sites {
 		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomMap))
 	}
 	return answer

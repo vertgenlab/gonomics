@@ -24,7 +24,6 @@ func ReadGroups(filename string) []*Group {
 	//answer[1] = &Group{Name: "", Members: make([]string, 0)}
 
 	groupFile := fileio.EasyOpen(filename)
-	defer groupFile.Close()
 
 	for line, doneReading = fileio.EasyNextRealLine(groupFile); !doneReading; line, doneReading = fileio.EasyNextRealLine(groupFile) {
 		if strings.HasPrefix(line, ">") {
@@ -35,6 +34,7 @@ func ReadGroups(filename string) []*Group {
 			answer[index].Members = append(answer[index].Members, line)
 		}
 	}
+	groupFile.Close()
 	return answer
 }
 
@@ -87,6 +87,7 @@ func GroupCompare(a *Group, b *Group) int {
 	return 0
 }
 
+//min is a local implmentation of a minimum int function to avoid a numbers import.
 func min(a int, b int) int {
 	if a < b {
 		return a
@@ -96,7 +97,7 @@ func min(a int, b int) int {
 
 //GroupsContains returns true if any groups within a slice of groups g contains a string s, false otherwise.
 func GroupsContains(g []*Group, s string) bool {
-	for i := 0; i < len(g); i++ {
+	for i := range g {
 		if GroupContains(g[i], s) {
 			return true
 		}
@@ -106,7 +107,7 @@ func GroupsContains(g []*Group, s string) bool {
 
 //GroupContains returns true if an input string s is contained within the members of group g, false otherwise.
 func GroupContains(g *Group, s string) bool {
-	for i := 0; i < len(g.Members); i++ {
+	for i := range g.Members {
 		if strings.Compare(g.Members[i], s) == 0 {
 			return true
 		}
@@ -118,9 +119,9 @@ func GroupContains(g *Group, s string) bool {
 func FindMissingGroupMembers(aln []fasta.Fasta, g []*Group) string {
 	var answer string = "Missing: "
 	var missing bool = false
-	for i := 0; i < len(g); i++ {
+	for i := range g {
 		answer = answer + g[i].Name + ": "
-		for j := 0; j < len(g[i].Members); j++ {
+		for j := range g[i].Members {
 			missing = true
 			for k := 0; k < len(aln); k++ {
 				if aln[k].Name == g[i].Members[j] {
@@ -138,8 +139,8 @@ func FindMissingGroupMembers(aln []fasta.Fasta, g []*Group) string {
 //FilterMultByGroup takes in a multiFa alignment returns a multiFa containing only the entries that are contained in an input slice of Group structs.
 func FilterMultByGroup(aln []fasta.Fasta, g []*Group) []fasta.Fasta {
 	var answer []fasta.Fasta
-	for i := 0; i < len(aln); i++ {
-		for j := 0; j < len(g); j++ {
+	for i := range aln {
+		for j := range g {
 			for k := 0; k < len(g[j].Members); k++ {
 				if aln[i].Name == g[j].Members[k] {
 					answer = append(answer, aln[i])

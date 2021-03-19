@@ -30,7 +30,7 @@ func TestVcfToVariant(t *testing.T) {
 			Exons: []*Exon{{
 				Start: 1,
 				End:   3,
-				Cds: &CDS{
+				Cds: &Cds{
 					Start: 1,
 					End:   3,
 					Frame: 0,

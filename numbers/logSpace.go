@@ -6,7 +6,7 @@ import (
 	//DEBUG: "fmt"
 )
 
-//LogCanconvert returns true if the input logSpace number can be converted to a number in normal space without overflow or underflow.
+//LogCanConvert returns true if the input logSpace number can be converted to a number in normal space without overflow or underflow.
 func LogCanConvert(x float64) bool {
 	return x < 709.4 && x > -745.1
 }

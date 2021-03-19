@@ -20,28 +20,25 @@ func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 	bLen := b.ChromEnd - b.ChromStart
 
 	//generate subFa - filters out alignment positions with gaps or complete identity
-	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
-	//fmt.Printf("RePos Done.\n")
-	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
+	alnPos := fasta.RefPosToAlnPos(aln[0], b.ChromStart)
+	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+bLen)
 	tmp2Fa := fasta.RemoveMissingMult(tmpFa)
 	tmp3Fa := FilterMultByGroup(tmp2Fa, g)
-	//fmt.Printf("Filter range ok.\n")
 	subFa := fasta.DistColumn(tmp3Fa)
-	//fmt.Printf("DistBase completed.\n")
 
 	missing = FindMissingGroupMembers(subFa, g)
 
 	for i := 0; i < len(g); i++ {
-		maxIntra = numbers.Max(maxIntra, FindMaxIntra(subFa, g[i], b))
+		maxIntra = numbers.Max(maxIntra, FindMaxIntra(subFa, g[i]))
 	}
 
 	minInter = FindMinInter(g, subFa)
 
-	return (float64(minInter) / float64(maxIntra)), missing
+	return float64(minInter) / float64(maxIntra), missing
 }
 
 //FindMaxIntra is a helper function of Dunn that calculates the Max pairwise sequence distance between two sequences of a multiFa alignment that are part of the same Group.
-func FindMaxIntra(subFa []fasta.Fasta, g *Group, b *bed.Bed) int {
+func FindMaxIntra(subFa []fasta.Fasta, g *Group) int {
 	var answer int = 0
 	var faI, faJ []dna.Base
 	var faFound bool
