@@ -18,13 +18,13 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	branches := expandedTree.GetBranch(tree)
 	var treeFastas []fasta.Fasta
 
-	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
+	for i := range leaves[0].Fasta.Seq {
 		reconstruct.LoopNodes(tree, i)
 	}
-	for j := 0; j < len(leaves); j++ {
+	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
-	for k := 0; k < len(branches); k++ {
+	for k := range branches {
 		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
 	fasta.Write(outputFilename, treeFastas)
