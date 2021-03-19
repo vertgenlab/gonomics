@@ -95,6 +95,7 @@ var logIntegralTests = []struct {
 	{func(x float64) float64 { return math.Log(x * x) }, 2, 11, 6.089044875},
 }
 
+//TODO: The following two functions should be deleted when LogIntegrate is phased out in favor of the adaptive simpson's implementation.
 func TestLogIntegral(t *testing.T) {
 	for _, test := range logIntegralTests {
 		calculated := LogIntegrate(test.f, test.a, test.b, 1000)

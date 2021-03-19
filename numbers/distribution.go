@@ -11,21 +11,22 @@ func NormalDist(x float64, mu float64, sigma float64) float64 {
 	return (1 / (sigma * math.Sqrt(2*math.Pi))) * math.Exp(-0.5*math.Pow((x-mu)/sigma, 2))
 }
 
-//StandardNormalDist returns the probability density associated with a particular x value on a standard normal distribution.
+//StandardNormalDist returns the probability density for an input x value on a standard normal distribution (mu=0, sigma=1).
 func StandardNormalDist(x float64) float64 {
 	return NormalDist(x, 0, 1)
 }
 
-func Bernouilli(n int, k int, p float64) float64 {
-	return math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
-}
-
 //BinomialDist returns the probability mass from a binomial distribution with k successes out of n observations with success probability p.
 func BinomialDist(n int, k int, p float64) float64 {
-	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
+	logAnswer := BinomialDistLog(n, k, p)
+	if LogCanConvert(logAnswer) {
+		return math.Exp(logAnswer)
+	}
+	log.Fatalf("Overflow error detected.")
+	return -1
 }
 
-//ExpDist returns the density of the standard ex
+//ExpDist returns the density of the standard exponential distribution y=e^-x
 func ExpDist(x float64) float64 {
 	return math.Exp(-x)
 }
@@ -55,6 +56,7 @@ func BetaDist(x float64, alpha float64, beta float64) float64 {
 	return math.Pow(x, alpha-1) * math.Pow(1-x, beta-1) / BetaFunc(alpha, beta)
 }
 
+//BetaFunc returns B(x, y), where B is the Beta Function, also known as the Euler integral of the first kind.
 func BetaFunc(x float64, y float64) float64 {
 	return math.Gamma(x) * math.Gamma(y) / math.Gamma(x+y)
 }
@@ -67,25 +69,21 @@ func GammaDist(x float64, alpha float64, beta float64) float64 {
 	return (math.Pow(beta, alpha) / math.Gamma(alpha)) * math.Pow(x, alpha-1) * math.Exp(-beta*x)
 }
 
-func UninformativeGamma(x float64) float64 {
-	return GammaDist(x, 1, 1)
-}
-
-//returns an instantiation of a normal distribution for a particular mean and SD
+//NormalClosure returns an instantiation of a normal distribution for a particular mean mu and standard deviation sigma.
 func NormalClosure(mu float64, sigma float64) func(float64) float64 {
 	return func(x float64) float64 {
 		return NormalDist(x, mu, sigma)
 	}
 }
 
-//BetaClosure returns a BetaDist-like function with fixed alpha and beta parameters.
+//BetaClosure returns an instantiation of a Beta Distribution with fixed alpha and beta parameters.
 func BetaClosure(alpha float64, beta float64) func(float64) float64 {
 	return func(x float64) float64 {
 		return BetaDist(x, alpha, beta)
 	}
 }
 
-//GamaClosure returns a GammaDist-like function with fixed alpha and beta parameters.
+//GamaClosure returns an instantiation of a Gamma Distribution with fixed alpha and beta parameters.
 func GammaClosure(alpha float64, beta float64) func(float64) float64 {
 	return func(x float64) float64 {
 		return GammaDist(x, alpha, beta)
@@ -264,8 +262,6 @@ func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	}
 	return answer
 }
-
-//TODO: No testing on the KL divergence functions.
 
 //ContinuousKullbackLeiblerDivergence measures the divergence between two continuous probability distributions between a specified start and end position.
 func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64) float64, start float64, end float64) float64 {
