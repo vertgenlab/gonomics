@@ -37,21 +37,22 @@ func TajimaZipperVcf(b []*bed.Bed, VcfFile string) []float64 {
 	return answer
 }
 
+//VariantsToIndividualAlleleSlice converts a slice of vcf records into a slice of IndividualAllele structs.
 func VariantsToIndividualAlleleSlice(curr []*vcf.Vcf) []*IndividualAllele {
 	var firstTime bool = false
-	var j int
+	var j, k int
 	var all []*IndividualAllele
-	for i := 0; i < len(curr); i++ {
+	for i := range curr {
 		if !strings.ContainsAny(curr[i].Alt[0], "<>") { //gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 			g := vcf.VcfToGvcf(curr[i])
 			if firstTime {
 				firstTime = false
 				all = make([]*IndividualAllele, len(g.Genotypes)*2)
-				for k := 0; k < len(all); k++ {
+				for k = range all {
 					all[k].sites = make([][]dna.Base, 0)
 				}
 			}
-			for j = 0; j < len(g.Genotypes); j++ {
+			for j = range g.Genotypes {
 				if g.Genotypes[j].AlleleOne == -1 || g.Genotypes[j].AlleleTwo == -1 { //check that data exists for both alleles
 					log.Fatalf("Tajima's D on gVCFs requires complete alignment blocks.")
 				} else {
@@ -72,6 +73,7 @@ func VariantsToIndividualAlleleSlice(curr []*vcf.Vcf) []*IndividualAllele {
 	return all
 }
 
+//helperVcfOverlapsBed checks if a bed and vcf entry are overlapping to avoid imports.
 func helperVcfOverlapsBed(b *bed.Bed, v *vcf.Vcf) bool {
 	if b.Chrom != v.Chr {
 		return false

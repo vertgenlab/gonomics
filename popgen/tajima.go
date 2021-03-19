@@ -91,7 +91,7 @@ func calculateS(aln []fasta.Fasta) int {
 	S := 0
 	var diff bool
 
-	for i := 0; i < len(aln[0].Seq); i++ {
+	for i := range aln[0].Seq {
 		diff = false
 		for j := 1; j < len(aln); j++ {
 			if aln[j].Seq[i] != aln[0].Seq[i] {
@@ -117,7 +117,7 @@ func calculateTajimaK(aln []fasta.Fasta) float64 {
 
 	n := len(distList)
 	var sum int
-	for i := 0; i < len(distList); i++ {
+	for i := range distList {
 		sum += distList[i]
 	}
 

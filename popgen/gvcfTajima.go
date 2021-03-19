@@ -42,7 +42,7 @@ func GVCFCalculateA2(n int) float64 {
 	var answer float64
 
 	for i := 1; i < n; i++ {
-		answer += (1.0 / math.Pow(float64(i), 2))
+		answer += 1.0 / math.Pow(float64(i), 2)
 	}
 	return answer
 }
@@ -52,7 +52,7 @@ func GVCFCalculateA1(n int) float64 {
 	var answer float64
 
 	for i := 1; i < n; i++ {
-		answer += (1.0 / float64(i))
+		answer += 1.0 / float64(i)
 	}
 	return answer
 }
@@ -66,9 +66,10 @@ func CalculatePiTajima(all []*IndividualAllele) float64 {
 			numComparisons++
 		}
 	}
-	return (float64(sumDiffs) / float64(numComparisons))
+	return float64(sumDiffs) / float64(numComparisons)
 }
 
+//CountSegSites returns the number of segregating sites in a slice of IndividualAllele structs.
 func CountSegSites(all []*IndividualAllele) int {
 	var segSites int = 0
 	var found bool = false
@@ -77,7 +78,7 @@ func CountSegSites(all []*IndividualAllele) int {
 		log.Fatalf("Need more than two alleles to count segregating sites\n")
 	}
 
-	for s := 0; s < len(all[0].sites); s++ {
+	for s := range all[0].sites {
 		found = false
 		for i := 0; i < len(all) && found == false; i++ {
 			for j := i + 1; j < len(all) && found == false; j++ {
@@ -116,7 +117,7 @@ func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
 	var firstTime bool = true
 	var intervals []interval.Interval
 	intervals = make([]interval.Interval, len(b))
-	for i := 0; i < len(b); i++ {
+	for i := range b {
 		intervals[i] = b[i]
 	}
 	tree := interval.BuildTree(intervals)
@@ -128,12 +129,12 @@ func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
 					firstTime = false
 					all = make([]*IndividualAllele, len(i.Samples)*2) //makes the individual list, with one entry for each allele
 
-					for k = 0; k < len(all); k++ { //in this loop we initialize all the sites lists
+					for k = range all { //in this loop we initialize all the sites lists
 						currSites := make([][]dna.Base, 0)
 						all[k] = &IndividualAllele{sites: currSites}
 					}
 				}
-				for j = 0; j < len(i.Samples); j++ {
+				for j = range i.Samples {
 					if i.Samples[j].AlleleOne == -1 || i.Samples[j].AlleleTwo == -1 { //check that data exists for both alleles
 						log.Fatalf("Tajima's D on VCFs requires complete alignment blocks.")
 					} else {
