@@ -98,7 +98,7 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64, deri
 }
 
 //InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
-func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64) Theta {
+func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64, derived bool, ancestral bool) Theta {
 	answer := Theta{mu: m, sigma: s}
 	answer.alpha = make([]float64, len(data.sites))
 	for i := range data.sites {
