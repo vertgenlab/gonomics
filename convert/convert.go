@@ -207,7 +207,7 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 
 //bedMidpoint returns the midpoint position of an input bed entry.
 func bedMidpoint(b *bed.Bed) int {
-	return b.ChromEnd+b.ChromStart / 2
+	return b.ChromEnd + b.ChromStart/2
 }
 
 //getWigChromIndex searches a wig slice for the wig entry with a particular name and returns the index of that entry in the slice.
