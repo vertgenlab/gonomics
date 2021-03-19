@@ -13,6 +13,7 @@ func BinomialDistLog(n int, k int, p float64) float64 {
 	return MultiplyLog(coefficient, expression)
 }
 
+//BinomialExpressionLog returns p^n * (1 - p)^n-k, which is also refered to as the binomial expression. The answer is provided in logSpace (
 func BinomialExpressionLog(n int, k int, p float64) float64 {
 	s := LogPow(p, float64(k))
 	f := LogPow(1.0-p, float64(n-k))
