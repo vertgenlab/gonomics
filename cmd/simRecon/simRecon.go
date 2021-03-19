@@ -65,7 +65,8 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	for name, accuracy := range answer {
 		fmt.Fprintf(out, "%s\t%f\n", name, accuracy)
 	}
-	out.Close()
+	err := out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
