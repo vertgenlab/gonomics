@@ -1,11 +1,11 @@
 package sam
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+	"strconv"
 	"strings"
 )
 
@@ -31,10 +31,10 @@ type Metadata struct {
 	Comments []string // tag CO
 }
 
-// Tag is a 2 rune identifier of data encoded in a sam header.
+// Tag is a 2 byte identifier of data encoded in a sam header.
 // Tags occur in sets where each header line begins with a tag
 // which is further split into subtags. e.g. @SQ SN:ref LN:45
-type Tag [2]rune
+type Tag [2]byte
 
 // TagMap organizes all tags into a map where the line tag (e.g. SQ)
 // stores a slice where each element in the slice corresponds to one
@@ -53,6 +53,7 @@ type Tag [2]rune
 // Note that comment lines (line tag 'CO') are not stored in TagMap.
 type TagMap map[Tag][]map[Tag]string
 
+// Sort order defines whether the file is sorted and if so, how it was sorted
 type SortOrder string
 
 const (
@@ -65,6 +66,7 @@ const (
 	Umi             SortOrder = "umi"
 )
 
+// sortOrderMap provides easy lookup of string to SortOrder
 var sortOrderMap = map[string]SortOrder{
 	"unknown":         Unknown,
 	"unsorted":        Unsorted,
@@ -75,6 +77,7 @@ var sortOrderMap = map[string]SortOrder{
 	"umi":             Umi,
 }
 
+// Grouping defines how the reads are grouped, if they are not sorted
 type Grouping string
 
 const (
@@ -83,97 +86,121 @@ const (
 	Reference Grouping = "reference"
 )
 
+// groupingMap provides easy lookup of string to Grouping
 var groupingMap = map[string]Grouping{
 	"none":      None,
 	"query":     Query,
 	"reference": Reference,
 }
 
-func processHeaderLine(header Header, line string) {
-	var chrCount int = 0
+// ReadHeaderBytes processes the contiguous header from a ByteReader
+// and advances the Reader past the header lines.
+func ReadHeaderBytes(br *fileio.ByteReader) Header {
+	var answer Header
+	var buff *bytes.Buffer
+	var done bool
+	for peek, err := br.Peek(1); err == nil && peek[0] == '@' && !done; peek, err = br.Peek(1) {
+		buff, done = fileio.ReadLine(br)
+		answer.Text = append(answer.Text, buff.String())
+	}
 
-	header.Text = append(header.Text, line)
-	if strings.HasPrefix(line, "@SQ") && strings.Contains(line, "SN:") && strings.Contains(line, "LN:") {
-		curr := chromInfo.ChromInfo{Name: "", Size: 0, Order: chrCount}
-		chrCount++
-		words := strings.Fields(line)
-		for i := 1; i < len(words); i++ {
-			elements := strings.Split(words[i], ":")
-			switch elements[0] {
-			case "SN":
-				curr.Name = elements[1]
-			case "LN":
-				curr.Size = common.StringToInt(elements[1])
+	answer.Metadata.AllTags, answer.Metadata.Comments = parseTagsAndComments(answer.Text)
+	answer.Chroms = getChromInfo(answer.Metadata.AllTags)
+	answer.Metadata.Version = getVersion(answer.Metadata.AllTags)
+	answer.Metadata.SortOrder = getSortOrder(answer.Metadata.AllTags)
+	answer.Metadata.Grouping = getGrouping(answer.Metadata.AllTags)
+	return answer
+}
+
+// parseTagsAndComments parses header text into a TagMap and a slice of comment lines
+func parseTagsAndComments(text []string) (tags TagMap, comments []string) {
+	var currTag Tag
+	tags = make(TagMap)
+	for _, line := range text {
+		words := strings.Split(line, "\t")
+
+		if words[0][0] != '@' || len(words[0]) != 3 {
+			log.Fatalf("Error: malformed header line: %s", line)
+		}
+
+		if words[0] == "@CO" {
+			comments = append(comments, line)
+			continue
+		}
+
+		copy(currTag[:], words[0][1:]) // copy Tag
+
+		tags[currTag] = append(tags[currTag], parseSubTags(words[1:]))
+	}
+
+	return
+}
+
+// parseSubTags parses a single line of tab delimited tagsets
+func parseSubTags(tagsets []string) map[Tag]string {
+	var currTag Tag
+	var alreadyUsed bool
+	answer := make(map[Tag]string)
+	for _, tagset := range tagsets {
+		if tagset[2] != ':' {
+			log.Printf("Warning: ignoring malformed tag in header: %s\n", tagset)
+			continue
+		}
+		copy(currTag[:], tagset[0:2]) // copy Tag
+
+		if _, alreadyUsed = answer[currTag]; alreadyUsed {
+			log.Fatalf("Error: same tag used multiple times per line: %s", tagset[0:2])
+		}
+
+		answer[currTag] = tagset[3:]
+	}
+
+	return answer
+}
+
+// getChromInfo further parses tags stored in a TagMap to extract ChromInfo
+func getChromInfo(tags TagMap) []chromInfo.ChromInfo {
+	chroms := tags[[2]byte{'S', 'Q'}]
+	answer := make([]chromInfo.ChromInfo, len(chroms))
+	for idx, chrom := range chroms {
+		size, err := strconv.Atoi(chrom[[2]byte{'L', 'N'}])
+		if err != nil {
+			log.Fatalf("Error: could not convert chromosome size: \"%s\" to an integer in sam header", chrom[[2]byte{'L', 'N'}])
+		}
+		answer[idx] = chromInfo.ChromInfo{
+			Name:  chrom[[2]byte{'S', 'N'}],
+			Size:  size,
+			Order: idx,
+		}
+	}
+	return answer
+}
+
+// getVersion pulls the version number from a TagMap
+func getVersion(tags TagMap) string {
+	return tags[[2]byte{'H', 'D'}][0][[2]byte{'V', 'N'}]
+}
+
+// getSortOrder pulls the sort order from a TagMap
+func getSortOrder(tags TagMap) []SortOrder {
+	var answer []SortOrder
+	order := tags[[2]byte{'H', 'D'}][0][[2]byte{'S', 'O'}]
+	if !strings.Contains(order, ":") { // if only one sort order
+		return append(answer, sortOrderMap[order])
+	} else { // if multiple colon delimited sort orders
+		words := strings.Split(order, ":")
+		for _, word := range words {
+			if _, ok := sortOrderMap[word]; ok {
+				answer = append(answer, sortOrderMap[word])
+			} else {
+				log.Fatalf("Error: unrecognized sort order in sam header: %s", word)
 			}
 		}
-		if curr.Name == "" || curr.Size == 0 {
-			//	log.Fatal(fmt.Errorf("Thought I would get a name and non-zero size on this line: %s\n", line))
-		}
-		header.Chroms = append(header.Chroms, curr)
 	}
+	return answer
 }
 
-func ReadHeader(er *fileio.EasyReader) Header {
-	var line string
-	var err error
-	var nextBytes []byte
-	var header Header
-
-	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '@'; nextBytes, err = er.Peek(1) {
-		line, _ = fileio.EasyNextLine(er)
-		processHeaderLine(header, line)
-	}
-	return header
-}
-
-func WriteHeaderToFileHandle(file *fileio.EasyWriter, header Header) error {
-	var err error
-
-	for i := range header.Text {
-		_, err = fmt.Fprintf(file, "%s\n", header.Text[i])
-		common.ExitIfError(err)
-	}
-	return nil
-}
-
-func ChromInfoSamHeader(chromSize []chromInfo.ChromInfo) Header {
-	var header Header
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-
-	for i := 0; i < len(chromSize); i++ {
-		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[i].Name, chromSize[i].Size)
-		header.Text = append(header.Text, words)
-	}
-	return header
-}
-
-func ChromInfoMapSamHeader(chromSize map[string]chromInfo.ChromInfo) *Header {
-	var header Header
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-	var i int
-	for i = 0; i < len(chromSize); {
-		for j := range chromSize {
-			if i == chromSize[j].Order {
-				words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromSize[j].Name, chromSize[j].Size)
-				header.Text = append(header.Text, words)
-				i++
-			}
-		}
-	}
-	return &header
-}
-
-func FastaHeader(ref []fasta.Fasta) *Header {
-	var header Header
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-
-	for i := 0; i < len(ref); i++ {
-		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
-		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
-	}
-	return &header
+// getGrouping pulls the grouping from a TagMap
+func getGrouping(tags TagMap) Grouping {
+	return groupingMap[tags[[2]byte{'H', 'D'}][0][[2]byte{'G', 'O'}]]
 }
