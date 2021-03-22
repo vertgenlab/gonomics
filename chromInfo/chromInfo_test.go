@@ -11,17 +11,17 @@ func TestReading(t *testing.T) {
 	correctChr3 := ChromInfo{"chr3", 198022430, 2}
 
 	answerSlice := ReadToSlice("testdata/chromInfo.txt")
-	if *(answerSlice[0]) != correctChr1 ||
-		*(answerSlice[1]) != correctChr2 ||
-		*(answerSlice[2]) != correctChr3 {
+	if answerSlice[0] != correctChr1 ||
+		answerSlice[1] != correctChr2 ||
+		answerSlice[2] != correctChr3 {
 		t.Errorf("ERROR: Problem reading chromInfo file to slice")
 	}
 
 	answerMap := ReadToMap("testdata/chromInfo.txt")
 
-	if *(answerMap["chr1"]) != correctChr1 ||
-		*(answerMap["chr2"]) != correctChr2 ||
-		*(answerMap["chr3"]) != correctChr3 {
+	if answerMap["chr1"] != correctChr1 ||
+		answerMap["chr2"] != correctChr2 ||
+		answerMap["chr3"] != correctChr3 {
 		t.Errorf("ERROR: Problem reading chromInfo file to map")
 	}
 
