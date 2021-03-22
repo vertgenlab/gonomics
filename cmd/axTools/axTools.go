@@ -62,7 +62,7 @@ func filterAxt(input string, output string) {
 	}
 }
 
-func axtTargetGap(record *axt.Axt) bool {
+func axtTargetGap(record axt.Axt) bool {
 	if dna.CountBase(record.RSeq, dna.N) != 0 && dna.CountBase(record.QSeq, dna.N) == 0 {
 		return true
 	} else {
@@ -70,7 +70,7 @@ func axtTargetGap(record *axt.Axt) bool {
 	}
 }
 
-func axtQueryGap(record *axt.Axt) bool {
+func axtQueryGap(record axt.Axt) bool {
 	if dna.CountBase(record.QSeq, dna.N) != 0 && dna.CountBase(record.RSeq, dna.N) == 0 {
 		return true
 	} else {
@@ -89,7 +89,7 @@ func axtToFa(input string, output string, target string) {
 }
 
 //if target sequence contains Ns, uses query non N bases to fill Ns
-func axtSeq(axtRecord *axt.Axt, faSeq []dna.Base) fasta.Fasta {
+func axtSeq(axtRecord axt.Axt, faSeq []dna.Base) fasta.Fasta {
 	concensus := fasta.Fasta{
 		Name: fmt.Sprintf("%s", axtRecord.RName),
 		Seq:  make([]dna.Base, 0, len(faSeq)),
@@ -117,10 +117,9 @@ func QuerySwapAll(input string, output string, targetLen string, queryLen string
 	axtReader := axt.GoReadToChan(input)
 
 	var index int = 0
-	var curr *axt.Axt
 	for each := range axtReader {
-		curr = axt.SwapBoth(each, int(targetInfo[each.RName].Size), int(queryInfo[each.QName].Size))
-		axt.WriteToFileHandle(axtWriter, curr, index)
+		axt.Swap(&each, targetInfo[each.RName].Size, queryInfo[each.QName].Size)
+		axt.WriteToFileHandle(axtWriter, each, index)
 		index++
 	}
 	axtWriter.Close()
