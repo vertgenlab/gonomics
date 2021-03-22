@@ -42,7 +42,7 @@ func GswToGirafPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
 
-func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
+func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.Header) {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Paired end reads detected...\n")
 

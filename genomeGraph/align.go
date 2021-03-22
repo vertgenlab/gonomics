@@ -155,8 +155,8 @@ func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	return perfectScore
 }
 
-/*func NodesHeader(ref []*Node) *sam.SamHeader {
-	var header sam.SamHeader
+/*func NodesHeader(ref []*Node) *sam.Header {
+	var header sam.Header
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
 	for i := 0; i < len(ref); i++ {

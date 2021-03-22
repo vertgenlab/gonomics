@@ -35,7 +35,7 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 	} else {
 		inFile, outFile := flag.Arg(0), flag.Arg(1)
-		var headerInfo *sam.SamHeader = nil
+		var headerInfo *sam.Header = nil
 
 		if *chrInfo != "" {
 			headerInfo = chromInfoSamHeader(*chrInfo)
@@ -51,7 +51,7 @@ func main() {
 	}
 }
 
-func axtToSam(axtfile string, header *sam.SamHeader, output string) {
+func axtToSam(axtfile string, header *sam.Header, output string) {
 	reader, writer := fileio.EasyOpen(axtfile), fileio.EasyCreate(output)
 
 	defer reader.Close()
@@ -84,7 +84,7 @@ func axtToSam(axtfile string, header *sam.SamHeader, output string) {
 	writingJob.Wait()
 }
 
-func chromInfoSamHeader(filename string) *sam.SamHeader {
+func chromInfoSamHeader(filename string) *sam.Header {
 	return sam.ChromInfoSamHeader(chromInfo.ReadToSlice(filename))
 }
 
