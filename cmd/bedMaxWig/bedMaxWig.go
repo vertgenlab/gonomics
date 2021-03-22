@@ -13,7 +13,7 @@ import (
 func bedMaxWig(infile string, database string, chromsizeFile string, outfile string) {
 	var records []*bed.Bed = bed.Read(infile)
 	var data []*wig.Wig = wig.Read(database)
-	var sizes []*chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
+	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
 	var outlist []*bed.Bed
 	var currentBed *bed.Bed = records[0]
 	var chromSlice []float64
