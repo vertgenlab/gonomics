@@ -10,9 +10,9 @@ import (
 )
 
 //TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment
-//func AxtToSam(axtFmt *Axt, chromMap map[string]*chromInfo.ChromInfo) *sam.SamAln {
-func AxtToSam(axtFmt *Axt) *sam.SamAln {
-	var answer *sam.SamAln = &sam.SamAln{
+//func AxtToSam(axtFmt *Axt, chromMap map[string]*chromInfo.ChromInfo) *sam.Aln {
+func AxtToSam(axtFmt *Axt) *sam.Aln {
+	var answer *sam.Aln = &sam.Aln{
 		QName: axtFmt.QName,
 		Flag:  setStrandFlag(axtFmt.QStrandPos),
 		RName: axtFmt.RName,
@@ -61,7 +61,7 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 }
 
 /*
-func AddHardClipCigar(align *sam.SamAln, )  {
+func AddHardClipCigar(align *sam.Aln, )  {
 	var answer cig []*cigar.Cigar = []*cigar.Cigar{}
 }*/
 

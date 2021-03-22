@@ -17,7 +17,7 @@ func calcExtension(seq []dna.Base) int64 {
 	return maxScore/600 + int64(len(seq))
 }
 
-func LocalView(samLine *sam.SamAln, ref []*Node) string {
+func LocalView(samLine *sam.Aln, ref []*Node) string {
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar

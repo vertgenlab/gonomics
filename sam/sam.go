@@ -16,10 +16,10 @@ import (
 
 type Sam struct {
 	Header Header
-	Aln    []SamAln
+	Aln    []Aln
 }
 
-type SamAln struct {
+type Aln struct {
 	QName string
 	Flag  int64
 	RName string
@@ -34,7 +34,7 @@ type SamAln struct {
 	Extra string
 }
 
-func ReadToChan(file *fileio.EasyReader, data chan<- SamAln, wg *sync.WaitGroup) {
+func ReadToChan(file *fileio.EasyReader, data chan<- Aln, wg *sync.WaitGroup) {
 	for curr, done := NextAlignment(file); !done; curr, done = NextAlignment(file) {
 		data <- curr
 	}
@@ -42,11 +42,11 @@ func ReadToChan(file *fileio.EasyReader, data chan<- SamAln, wg *sync.WaitGroup)
 	wg.Done()
 }
 
-func GoReadToChan(filename string) (<-chan SamAln, Header) {
+func GoReadToChan(filename string) (<-chan Aln, Header) {
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 	var wg sync.WaitGroup
-	data := make(chan SamAln)
+	data := make(chan Aln)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 
@@ -58,7 +58,7 @@ func GoReadToChan(filename string) (<-chan SamAln, Header) {
 	return data, header
 }
 
-func SamChanToFile(incomingSams <-chan SamAln, filename string, header Header, wg *sync.WaitGroup) {
+func SamChanToFile(incomingSams <-chan Aln, filename string, header Header, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	if header.Text != nil {
@@ -70,8 +70,8 @@ func SamChanToFile(incomingSams <-chan SamAln, filename string, header Header, w
 	wg.Done()
 }
 
-func processAlignmentLine(line string) SamAln {
-	var curr SamAln
+func processAlignmentLine(line string) Aln {
+	var curr Aln
 	var err error
 
 	words := strings.SplitN(line, "\t", 12)
@@ -110,18 +110,18 @@ func processAlignmentLine(line string) SamAln {
 	return curr
 }
 
-func NextAlignment(reader *fileio.EasyReader) (SamAln, bool) {
+func NextAlignment(reader *fileio.EasyReader) (Aln, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	if done {
-		return SamAln{}, true
+		return Aln{}, true
 	}
 	return processAlignmentLine(line), false
 }
 
-func ReadAlignments(er *fileio.EasyReader) []SamAln {
+func ReadAlignments(er *fileio.EasyReader) []Aln {
 	var line string
 	var done bool
-	var answer []SamAln
+	var answer []Aln
 	for line, done = fileio.EasyNextLine(er); !done; line, done = fileio.EasyNextLine(er) {
 		answer = append(answer, processAlignmentLine(line))
 	}
@@ -137,7 +137,7 @@ func Read(filename string) (Sam, error) {
 	return Sam{Header: header, Aln: alnRecords}, nil
 }
 
-func SamAlnToString(aln SamAln) string {
+func SamAlnToString(aln Aln) string {
 	var answer string
 	if aln.Extra == "" {
 		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)
@@ -147,7 +147,7 @@ func SamAlnToString(aln SamAln) string {
 	return answer
 }
 
-func ModifySamToString(aln SamAln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
+func ModifySamToString(aln Aln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
 	var answer string = fmt.Sprintf("%s\n", aln.QName)
 	if samflag {
 		answer += fmt.Sprintf("%d\n", aln.Flag)
@@ -228,7 +228,7 @@ func pathPrettyString(graphPath string) string {
 	return s
 }
 
-func WriteAlnToFileHandle(file *fileio.EasyWriter, aln SamAln) {
+func WriteAlnToFileHandle(file *fileio.EasyWriter, aln Aln) {
 	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
 	common.ExitIfError(err)
 }

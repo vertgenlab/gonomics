@@ -88,7 +88,7 @@ func StringToPath(allPaths string) []uint32 {
 	return answer
 }*/
 
-func addStartChrPos(samfile *sam.SamAln) int64 {
+func addStartChrPos(samfile *sam.Aln) int64 {
 	var answer int64 = 0
 	if strings.Contains(samfile.Extra, "XO:i:") {
 		words := strings.Split(samfile.Extra, "\t")
@@ -97,7 +97,7 @@ func addStartChrPos(samfile *sam.SamAln) int64 {
 	return answer
 }
 
-func ModifySamToString(aln *sam.SamAln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
+func ModifySamToString(aln *sam.Aln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
 	var answer string = fmt.Sprintf("%s\n\n", aln.QName)
 	if samflag {
 		answer += fmt.Sprintf("%d\n", aln.Flag)
@@ -220,7 +220,7 @@ func getSeedPath(seed *SeedDev) []uint32 {
 	return path
 }
 
-func getStartRead(aln *sam.SamAln) int64 {
+func getStartRead(aln *sam.Aln) int64 {
 	var alignedPos int = 0
 	if aln.Cigar[0].Op == 'S' {
 		alignedPos += aln.Cigar[0].RunLength

@@ -63,7 +63,7 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		default:
 			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
-		single = new(sam.SamAln)
+		single = new(sam.Aln)
 
 	case ".giraf":
 		switch sortType {

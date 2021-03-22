@@ -8,8 +8,8 @@ import (
 )
 
 type PairedSamAln struct {
-	FwdSam SamAln
-	RevSam SamAln
+	FwdSam Aln
+	RevSam Aln
 }
 
 func SamChanPairToFile(incomingSams <-chan PairedSamAln, filename string, header Header, wg *sync.WaitGroup) {

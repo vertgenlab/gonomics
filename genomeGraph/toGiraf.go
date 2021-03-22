@@ -136,8 +136,8 @@ func setGirafFlags(pair *giraf.GirafPair) {
 	}
 }
 
-func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
-	curr := sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.QualString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+func GirafToSam(ag *giraf.Giraf) *sam.Aln {
+	curr := sam.Aln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.QualString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
 	//read is unMapped
 	if strings.Compare(ag.Notes[0].Value, "~") == 0 {
 		return &curr
@@ -156,7 +156,7 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 }
 
 func GirafPairToSam(ag giraf.GirafPair) *sam.PairedSamAln {
-	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: &sam.SamAln{}, RevSam: &sam.SamAln{}}
+	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: &sam.Aln{}, RevSam: &sam.Aln{}}
 	mappedPair.FwdSam = GirafToSam(&ag.Fwd)
 	mappedPair.RevSam = GirafToSam(&ag.Rev)
 	mappedPair.FwdSam.Flag += 64 + 2

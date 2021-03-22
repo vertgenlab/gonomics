@@ -51,7 +51,7 @@ func GswToSam(ref *genomeGraph.GenomeGraph, readOne string, output string, threa
 	seedHash := genomeGraph.IndexGenomeIntoMap(ref.Nodes, seedLen, stepSize)
 	var wgAlign, wgWrite sync.WaitGroup
 	fastqPipe := make(chan fastq.FastqBig, 824)
-	samPipe := make(chan *sam.SamAln, 824)
+	samPipe := make(chan *sam.Aln, 824)
 	go readFqGsw(readOne, fastqPipe)
 
 	log.Printf("Scoring matrix used:\n%s\n", genomeGraph.ViewMatrix(scoreMatrix))

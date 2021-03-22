@@ -38,7 +38,7 @@ func TestQuickMemPool(t *testing.T) {
 	fastqPipe := make(chan *fastq.FastqBig, 824)
 
 	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *sam.SamAln, 824)
+	samPipe := make(chan *sam.Aln, 824)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome, readLength, numberOfReads, mutations)

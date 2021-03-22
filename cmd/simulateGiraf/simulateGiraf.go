@@ -12,7 +12,7 @@ import (
 
 func simulateGiraf(graph *genomeGraph.GenomeGraph, numReads int, readLen int, randSeed int64, numSomaticSNV int, AlleleFrequency float64, outFile string, outputSam bool) {
 	reads := genomeGraph.RandGiraf(graph, numReads, readLen, randSeed)
-	var samReads []*sam.SamAln
+	var samReads []*sam.Aln
 
 	if numSomaticSNV != 0 {
 		genomeGraph.RandSomaticMutations(graph, reads, numSomaticSNV, AlleleFrequency, randSeed)
