@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func BarcodeInfoMap(samfile *SamAln) map[string]*giraf.Note {
+func BarcodeInfoMap(samfile SamAln) map[string]*giraf.Note {
 	words := strings.Split(samfile.Extra, "\t")
 	answer := make(map[string]*giraf.Note)
 	var values []string
@@ -21,7 +21,7 @@ func BarcodeInfoMap(samfile *SamAln) map[string]*giraf.Note {
 
 // Barcodes corrected for sequence errors are taged BX, while uncorrected barcodes are labeled RX
 // BX tags do not exist for all reads
-func LinkedReadsBarcode(samLine *SamAln) string {
+func LinkedReadsBarcode(samLine SamAln) string {
 	barcodeInfo := BarcodeInfoMap(samLine)
 	data, ok := barcodeInfo["BX"]
 	if ok {
@@ -35,14 +35,14 @@ func customNoteToString(n *giraf.Note) string {
 	return fmt.Sprintf("%s_%s", n.Tag, n.Value[:len(n.Value)-2])
 }
 
-func switchBxTag(samLine *SamAln) *SamAln {
+func switchBxTag(samLine SamAln) SamAln {
 	samLine.Extra = fmt.Sprintf("RX:Z:%s\t%s", samLine.QName, samLine.Extra)
 	samLine.QName = LinkedReadsBarcode(samLine) //fmt.Sprintf("%s", bxTag)
 	return samLine
 
 }
 
-func BxTagWorker(reader <-chan *SamAln, writer chan<- *SamAln, wg *sync.WaitGroup) {
+func BxTagWorker(reader <-chan SamAln, writer chan<- SamAln, wg *sync.WaitGroup) {
 	for align := range reader {
 		writer <- switchBxTag(align)
 	}
@@ -51,10 +51,10 @@ func BxTagWorker(reader <-chan *SamAln, writer chan<- *SamAln, wg *sync.WaitGrou
 
 //TODO modify a header containing BX barcodes as "reference"
 /*
-func BarcodeHeader(filename string, wg *sync.WaitGroup) *SamHeader {
+func BarcodeHeader(filename string, wg *sync.WaitGroup) *Header {
 	//wg.Add(1)
 	reader := make(chan *SamAln)
-	var header SamHeader
+	var header Header
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	go ReadToChan(filename, reader)
 	bxMap := make(map[string]string)

@@ -57,18 +57,20 @@ func (s SamSlice) Write(filename string) { // Does not write header
 }
 
 func (s *SamAln) WriteToFileHandle(file *fileio.EasyWriter) {
-	WriteAlnToFileHandle(file, s)
+	WriteAlnToFileHandle(file, *s)
 }
 
 func (s *SamAln) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *SamAln
+	var curr SamAln
 	for nextBytes, err := file.Peek(1); next == nil && !done; nextBytes, err = file.Peek(1) {
 		if err == nil && nextBytes[0] == '@' {
 			fileio.EasyNextLine(file)
 			continue
 		}
-		next, done = NextAlignment(file)
+		curr, done = NextAlignment(file)
+		next = &curr
 	}
 	if done {
 		return true
