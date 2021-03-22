@@ -58,7 +58,7 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 } */
 
 //SamToBedFrag converts a SamAln entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
-func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]*chromInfo.ChromInfo) *bed.Bed {
+func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]chromInfo.ChromInfo) *bed.Bed {
 	var answer *bed.Bed
 
 	if s.Cigar[0].Op == '*' {
@@ -79,7 +79,7 @@ func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]*chromInfo
 }
 
 //BedScoreToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is equal to the score of an overlapping bed entry at the bed entry midpoint, and zero if no bed regions overlap.
-func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var line string
 	var chromIndex int
@@ -181,7 +181,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 }
 
 //BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
-func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
 	var i, x int = 0, 0

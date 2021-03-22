@@ -21,7 +21,7 @@ type Sam struct {
 
 type SamHeader struct {
 	Text   []string
-	Chroms []*chromInfo.ChromInfo
+	Chroms []chromInfo.ChromInfo
 }
 
 type SamAln struct {
@@ -95,7 +95,7 @@ func processHeaderLine(header *SamHeader, line string) {
 		if curr.Name == "" || curr.Size == 0 {
 			//	log.Fatal(fmt.Errorf("Thought I would get a name and non-zero size on this line: %s\n", line))
 		}
-		header.Chroms = append(header.Chroms, &curr)
+		header.Chroms = append(header.Chroms, curr)
 	}
 }
 
@@ -189,7 +189,7 @@ func WriteHeaderToFileHandle(file *fileio.EasyWriter, header *SamHeader) error {
 	return nil
 }
 
-func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
+func ChromInfoSamHeader(chromSize []chromInfo.ChromInfo) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
@@ -201,7 +201,7 @@ func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
 	return &header
 }
 
-func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader {
+func ChromInfoMapSamHeader(chromSize map[string]chromInfo.ChromInfo) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
@@ -331,7 +331,7 @@ func FastaHeader(ref []fasta.Fasta) *SamHeader {
 	for i := 0; i < len(ref); i++ {
 		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
+		header.Chroms = append(header.Chroms, chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
 	}
 	return &header
 }
