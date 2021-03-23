@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -29,9 +31,10 @@ const (
 // and should generally be reserved for performance intensive tasks.
 type ByteReader struct {
 	*bufio.Reader
-	close  func() error
-	line   []byte
-	Buffer *bytes.Buffer
+	File         *os.File
+	internalGzip *gzip.Reader
+	line         []byte
+	Buffer       *bytes.Buffer
 }
 
 // Read reads data into p and is a method required to implement the io.Reader interface.
@@ -44,17 +47,16 @@ func (reader *ByteReader) Read(b []byte) (n int, err error) {
 // ByteReader will process gzipped files accordingly by performing a check on the suffix
 // of the provided file.
 func NewByteReader(filename string) *ByteReader {
+	var err error
 	file := MustOpen(filename)
 	var answer ByteReader = ByteReader{
-		//line:   make([]byte, defaultBufSize*2),
-		close:  file.Close,
 		Buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		gzipReader, err := gzip.NewReader(file)
+		answer.internalGzip, err = gzip.NewReader(file)
 		exception.PanicOnErr(err)
-		answer.Reader = bufio.NewReader(gzipReader)
+		answer.Reader = bufio.NewReader(answer.internalGzip)
 	default:
 		answer.Reader = bufio.NewReader(file)
 	}
@@ -70,14 +72,14 @@ func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	reader.Buffer.Reset()
 	if err == nil {
 		if reader.line[len(reader.line)-1] == '\n' {
-			return BytesToBuffer(reader), false
+			return bytesToBuffer(reader), false
 		} else {
 			log.Panicf("Error: end of line did not end with an end of line character...\n")
 		}
 	} else {
 		if err == bufio.ErrBufferFull {
 			reader.line = readMore(reader)
-			return BytesToBuffer(reader), false
+			return bytesToBuffer(reader), false
 		} else {
 			CatchErrThrowEOF(err)
 		}
@@ -114,8 +116,8 @@ func CatchErrThrowEOF(err error) {
 	}
 }
 
-// BytesToBuffer will parse []byte and return a pointer to the same underlying bytes.Buffer
-func BytesToBuffer(reader *ByteReader) *bytes.Buffer {
+// bytesToBuffer will parse []byte and return a pointer to the same underlying bytes.Buffer
+func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	var err error
 	if reader.line[len(reader.line)-2] == '\r' {
 		_, err = reader.Buffer.Write(reader.line[:len(reader.line)-2])
@@ -129,9 +131,27 @@ func BytesToBuffer(reader *ByteReader) *bytes.Buffer {
 // Close closes the File, rendering it unusable for I/O. On files that support SetDeadline,
 // any pending I/O operations will be canceled and return immediately with an error.
 // Close will return an error if it has already been called.
-func (reader *ByteReader) Close() {
-	if reader != nil {
-		exception.PanicOnErr(reader.close())
+func (br *ByteReader) Close() error {
+	var gzErr, fileErr error
+	if br.internalGzip != nil {
+		gzErr = br.internalGzip.Close()
+	}
+	if br.File != nil {
+		fileErr = br.File.Close()
+	} else {
+		return errors.New("no file found")
+	}
+
+	switch { // Handle error returns. Priority is gzErr > fileErr
+	case gzErr != nil:
+		return gzErr
+
+	case fileErr != nil:
+		log.Println("WARNING: attempted to close file, but file already closed")
+		return nil
+
+	default:
+		return nil
 	}
 }
 
