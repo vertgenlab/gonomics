@@ -86,13 +86,27 @@ func EasyRemove(filename string) {
 
 // Close the receiving EasyReader.
 func (er *EasyReader) Close() error {
+	var gzErr, fileErr error
 	if er.internalGzip != nil {
-		return er.internalGzip.Close()
+		gzErr = er.internalGzip.Close()
 	}
 	if er.File != nil {
-		return er.File.Close()
+		fileErr = er.File.Close()
+	} else {
+		return errors.New("no file found")
 	}
-	return errors.New("no file found")
+
+	switch { // Handle error returns. Priority is gzErr > fileErr
+	case gzErr != nil:
+		return gzErr
+
+	case fileErr != nil:
+		log.Println("WARNING: attempted to close file, but file already closed")
+		return nil
+
+	default:
+		return nil
+	}
 }
 
 // Read retrieves n bytes from the receiving EasyReader.
