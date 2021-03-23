@@ -17,7 +17,7 @@ func TestReadingBarcode(t *testing.T) {
 	for read := range reader {
 		bxTag = LinkedReadsBarcode(read)
 		if strings.HasPrefix(bxTag, "BX") || strings.HasPrefix(bxTag, "RX") {
-			log.Printf("Pass: %s\n", bxTag)
+			//log.Printf("Pass: %s\n", bxTag)
 		} else {
 			t.Errorf("Error: Get 10x barcode functions not working properly or not barcode exists\n")
 		}

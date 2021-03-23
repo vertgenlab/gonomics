@@ -93,7 +93,7 @@ var groupingMap = map[string]Grouping{
 
 // ReadHeaderBytes processes the contiguous header from a ByteReader
 // and advances the Reader past the header lines.
-func ReadHeaderBytes(br *fileio.ByteReader) Header {
+func ReadHeaderBR(br *fileio.ByteReader) Header {
 	var answer Header
 	var buff *bytes.Buffer
 	var done bool

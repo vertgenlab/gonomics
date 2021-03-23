@@ -9,7 +9,7 @@ import (
 
 func TestReadHeaderBytes(t *testing.T) {
 	br := fileio.NewByteReader("testdata/test.sam")
-	header := ReadHeaderBytes(br)
+	header := ReadHeaderBR(br)
 
 	printMetadata(header.Metadata)
 	var a Aln
