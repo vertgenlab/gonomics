@@ -49,53 +49,53 @@ func TestGetSortOrder(t *testing.T) {
 func MakeDisContigTestGraph() *GenomeGraph {
 	graph := EmptyGraph()
 
-	var n0, n1, n2, n3, n4 *Node
+	var n0, n1, n2, n3, n4 Node
 	var f0, f2, f5, r0, r2, r5 Edge
 
 	// Make Nodes
-	n0 = &Node{
+	n0 = Node{
 		Id:  0,
 		Seq: dna.StringToBases("ATG")}
 
-	n1 = &Node{
+	n1 = Node{
 		Id:  1,
 		Seq: dna.StringToBases("CG")}
 
-	n2 = &Node{
+	n2 = Node{
 		Id:  2,
 		Seq: dna.StringToBases("A")}
 
-	n3 = &Node{
+	n3 = Node{
 		Id:  3,
 		Seq: dna.StringToBases("T")}
 
-	n4 = &Node{
+	n4 = Node{
 		Id:  4,
 		Seq: dna.StringToBases("TAA")}
 
 	// Make Edges
 	f0 = Edge{
-		Dest: n1,
+		Dest: &n1,
 		Prob: 1}
 
 	f2 = Edge{
-		Dest: n4,
+		Dest: &n4,
 		Prob: 1}
 
 	f5 = Edge{
-		Dest: n4,
+		Dest: &n4,
 		Prob: 1}
 
 	r0 = Edge{
-		Dest: n0,
+		Dest: &n0,
 		Prob: 1}
 
 	r2 = Edge{
-		Dest: n2,
+		Dest: &n2,
 		Prob: 1}
 
 	r5 = Edge{
-		Dest: n3,
+		Dest: &n3,
 		Prob: 1}
 
 	// Define Paths

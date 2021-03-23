@@ -22,7 +22,7 @@ func GetSortOrder(g *GenomeGraph) []uint32 {
 func breadthFirstSearch(nodes []Node) []uint32 {
 	answer := make([]uint32, 0)
 	var inDegree int
-	var node *Node
+	var nodeId uint32
 	inDegreeTable := make(map[uint32]int)
 
 	// Updated nodes is going to keep track of each node
@@ -40,19 +40,19 @@ func breadthFirstSearch(nodes []Node) []uint32 {
 		updatedNodes = nil
 		inDegreeTable = make(map[uint32]int)
 		for i := 0; i < len(nodeSet); i++ {
-			inDegreeTable[nodeSet[i]] = len(nodeSet[i].Prev)
+			inDegreeTable[nodeSet[i].Id] = len(nodeSet[i].Prev)
 		}
 
 		// Find all nodes that start with inDegree zero and add to updatedNodes
-		for node, inDegree = range inDegreeTable {
+		for nodeId, inDegree = range inDegreeTable {
 			if inDegree == 0 {
-				updatedNodes = append(updatedNodes, node)
+				updatedNodes = append(updatedNodes, &nodes[nodeId])
 			}
 		}
 
 		for k := 0; k < len(updatedNodes); k++ {
 			answer = append(answer, updatedNodes[k].Id)
-			delete(inDegreeTable, updatedNodes[k])
+			delete(inDegreeTable, updatedNodes[k].Id)
 			updateTable(inDegreeTable, updatedNodes[k], &updatedNodes)
 		}
 	}
@@ -60,10 +60,10 @@ func breadthFirstSearch(nodes []Node) []uint32 {
 }
 
 // updateTable updates the table of node in degrees
-func updateTable(inDegreeTable map[*Node]int, node *Node, updatedNodes *[]*Node) {
+func updateTable(inDegreeTable map[uint32]int, node *Node, updatedNodes *[]*Node) {
 	for i := 0; i < len(node.Next); i++ {
-		inDegreeTable[node.Next[i].Dest]--
-		if inDegreeTable[node.Next[i].Dest] == 0 {
+		inDegreeTable[node.Next[i].Dest.Id]--
+		if inDegreeTable[node.Next[i].Dest.Id] == 0 {
 			*updatedNodes = append(*updatedNodes, node.Next[i].Dest)
 		}
 	}
@@ -71,24 +71,24 @@ func updateTable(inDegreeTable map[*Node]int, node *Node, updatedNodes *[]*Node)
 
 // TODO: possible to order nodes while breaking discontiguous graphs???
 // BreakNonContiguousGraph will return a slice of graphs ([]*Node) such that each graph in the slice is contiguous
-func BreakNonContiguousGraph(g []*Node) [][]*Node {
+func BreakNonContiguousGraph(g []Node) [][]*Node {
 	answer := make([][]*Node, 0)
 	var contiguousGraph []*Node
-	inDegreeTable := make(map[*Node]int)
+	inDegreeTable := make(map[uint32]int)
 	visited := make([]bool, len(g))
 	var inDegree int
-	var node *Node
+	var nodeId uint32
 
 	for i := 0; i < len(g); i++ {
-		inDegreeTable[g[i]] = len(g[i].Prev)
+		inDegreeTable[g[i].Id] = len(g[i].Prev)
 	}
 
-	for node, inDegree = range inDegreeTable {
-		if inDegree == 0 && !visited[node.Id] {
+	for nodeId, inDegree = range inDegreeTable {
+		if inDegree == 0 && !visited[nodeId] {
 			contiguousGraph = make([]*Node, 1)
-			contiguousGraph[0] = node
-			visited[node.Id] = true
-			traceGraph(node, visited, &contiguousGraph)
+			contiguousGraph[0] = &g[nodeId]
+			visited[nodeId] = true
+			traceGraph(&g[nodeId], visited, &contiguousGraph)
 			answer = append(answer, contiguousGraph)
 		}
 	}

@@ -61,7 +61,7 @@ func Read(filename string) *GenomeGraph {
 		switch true {
 		case strings.HasPrefix(line, ">"):
 			nodeId = common.StringToUint32(line[1:])
-			AddNode(genome, Node{Id: nodeId})
+			AddNode(genome, &Node{Id: nodeId})
 		case strings.Contains(line, "\t"):
 			words = strings.Split(line, "\t")
 			homeNodeIdx = common.StringToUint32(words[0])
@@ -87,21 +87,23 @@ func Read(filename string) *GenomeGraph {
 }
 
 // AddNode will add the values in n to the graph at the index of n.Id
-func AddNode(g *GenomeGraph, n Node) {
-	const positionsToExtend = 1000	// when we need to increase the slice, do this many nodes at a time
-	if int(n.Id) < len(g.Nodes) {	// if the memory for this node has already been allocated
-					// then we can overwrite it as long as it does not already exist
-		if len(g.Nodes[n.Id].Seq) != 0 {      // if the node already exists because data has been written here
+// A pointer to the new location of the node (inside the graph) is returned.
+func AddNode(g *GenomeGraph, n *Node) *Node {
+	const positionsToExtend = 1000 // when we need to increase the slice, do this many nodes at a time
+	if int(n.Id) < len(g.Nodes) {  // if the memory for this node has already been allocated
+		// then we can overwrite it as long as it does not already exist
+		if len(g.Nodes[n.Id].Seq) != 0 { // if the node already exists because data has been written here
 			log.Panicf("Error: tried to add a node of id=%d, when that id already exists\n", n.Id)
 		}
 	} else if int(n.Id) < cap(g.Nodes) { // if we already have the capacity, but not the length
 		g.Nodes = g.Nodes[:n.Id+1]
-	} else {			// if we need to increase capacity
-		futureNodes := make([]Node, numbers.Max(cap(g.Nodes) + positionsToExtend, int(n.Id)+1))
+	} else { // if we need to increase capacity
+		futureNodes := make([]Node, int(n.Id)+1, numbers.Max(cap(g.Nodes)+positionsToExtend, int(n.Id)+1))
 		copy(futureNodes, g.Nodes)
 		g.Nodes = futureNodes
 	}
-	g.Nodes[n.Id] = n
+	g.Nodes[n.Id] = *n
+	return &g.Nodes[n.Id]
 }
 
 // AddEdge will append two edges one forward and one backwards for any two
@@ -174,7 +176,7 @@ func WriteToGraphHandle(file io.Writer, gg *GenomeGraph, lineLength int) {
 func BasesInGraph(g *GenomeGraph) int {
 	var i, baseCount int = 0, 0
 	for i = 0; i < len(g.Nodes); i++ {
-		baseCount += g.Nodes[i].SeqTwoBit.Len
+		baseCount += len(g.Nodes[i].Seq)
 	}
 	return baseCount
 }
