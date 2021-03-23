@@ -19,16 +19,14 @@ type Header struct {
 
 // Metadata stores semi-parsed header data with several explicitly
 // parsed fields (e.g. Version) an the rest of the header encoded in
-// the AllTags field as a TagMap.
+// the AllTags field as a HeaderTagMap.
 type Metadata struct {
 	Version   string      // tag HD - VN
 	SortOrder []SortOrder // tag HD - SO (for len == 1) or HD - SS (for len > 1)
 	Grouping  Grouping    // tag HD - GO
-	AllTags   TagMap      // map of all tags present in file. Contains duplicates of parsed fields
-	// TODO: Additional chromInfo tags
-	// TODO: ReadGroup Parsing
-	// TODO: Program parsing
-	Comments []string // tag CO
+	// TODO: Additional tag parsing (ReadGroup would be good)
+	AllTags  HeaderTagMap // map of all tags present in file. Contains duplicates of parsed fields
+	Comments []string     // tag CO
 }
 
 // Tag is a 2 byte identifier of data encoded in a sam header.
@@ -36,7 +34,7 @@ type Metadata struct {
 // which is further split into subtags. e.g. @SQ SN:ref LN:45
 type Tag [2]byte
 
-// TagMap organizes all tags into a map where the line tag (e.g. SQ)
+// HeaderTagMap organizes all tags into a map where the line tag (e.g. SQ)
 // stores a slice where each element in the slice corresponds to one
 // line that has the keyed line tag. For instance, the line tag 'SQ'
 // occurs once per chromosome. Using the key 'SQ' in the tag map
@@ -46,12 +44,12 @@ type Tag [2]byte
 // present in the line. For example, the data stored in the 'SN' tag
 // of the 5th 'SQ' line would be retrieved by TapMap[SQ][4][SN].
 //
-// For convenience, the TagMap also stores tags that are further parsed
+// For convenience, the HeaderTagMap also stores tags that are further parsed
 // in other fields. e.g. the version number can be retrieved by calling
 // either Metadata.Version or by Metadata.AllTags[HD][0][VN]
 //
-// Note that comment lines (line tag 'CO') are not stored in TagMap.
-type TagMap map[Tag][]map[Tag]string
+// Note that comment lines (line tag 'CO') are not stored in HeaderTagMap.
+type HeaderTagMap map[Tag][]map[Tag]string
 
 // Sort order defines whether the file is sorted and if so, how it was sorted
 type SortOrder string
@@ -112,10 +110,10 @@ func ReadHeaderBytes(br *fileio.ByteReader) Header {
 	return answer
 }
 
-// parseTagsAndComments parses header text into a TagMap and a slice of comment lines
-func parseTagsAndComments(text []string) (tags TagMap, comments []string) {
+// parseTagsAndComments parses header text into a HeaderTagMap and a slice of comment lines
+func parseTagsAndComments(text []string) (tags HeaderTagMap, comments []string) {
 	var currTag Tag
-	tags = make(TagMap)
+	tags = make(HeaderTagMap)
 	for _, line := range text {
 		words := strings.Split(line, "\t")
 
@@ -158,8 +156,8 @@ func parseSubTags(tagsets []string) map[Tag]string {
 	return answer
 }
 
-// getChromInfo further parses tags stored in a TagMap to extract ChromInfo
-func getChromInfo(tags TagMap) []chromInfo.ChromInfo {
+// getChromInfo further parses tags stored in a HeaderTagMap to extract ChromInfo
+func getChromInfo(tags HeaderTagMap) []chromInfo.ChromInfo {
 	chroms := tags[[2]byte{'S', 'Q'}]
 	answer := make([]chromInfo.ChromInfo, len(chroms))
 	for idx, chrom := range chroms {
@@ -176,13 +174,13 @@ func getChromInfo(tags TagMap) []chromInfo.ChromInfo {
 	return answer
 }
 
-// getVersion pulls the version number from a TagMap
-func getVersion(tags TagMap) string {
+// getVersion pulls the version number from a HeaderTagMap
+func getVersion(tags HeaderTagMap) string {
 	return tags[[2]byte{'H', 'D'}][0][[2]byte{'V', 'N'}]
 }
 
-// getSortOrder pulls the sort order from a TagMap
-func getSortOrder(tags TagMap) []SortOrder {
+// getSortOrder pulls the sort order from a HeaderTagMap
+func getSortOrder(tags HeaderTagMap) []SortOrder {
 	var answer []SortOrder
 	order := tags[[2]byte{'H', 'D'}][0][[2]byte{'S', 'O'}]
 	if !strings.Contains(order, ":") { // if only one sort order
@@ -200,7 +198,7 @@ func getSortOrder(tags TagMap) []SortOrder {
 	return answer
 }
 
-// getGrouping pulls the grouping from a TagMap
-func getGrouping(tags TagMap) Grouping {
+// getGrouping pulls the grouping from a HeaderTagMap
+func getGrouping(tags HeaderTagMap) Grouping {
 	return groupingMap[tags[[2]byte{'H', 'D'}][0][[2]byte{'G', 'O'}]]
 }

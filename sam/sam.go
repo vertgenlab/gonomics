@@ -21,14 +21,14 @@ type Sam struct {
 
 type Aln struct {
 	QName string
-	Flag  int64
+	Flag  uint16
+	MapQ  uint8 // mapping quality
 	RName string
-	Pos   int64
-	MapQ  int64 // mapping quality
+	Pos   int
 	Cigar []*cigar.Cigar
 	RNext string
-	PNext int64
-	TLen  int64
+	PNext int
+	TLen  int
 	Seq   []dna.Base
 	Qual  string
 	Extra string
@@ -73,32 +73,35 @@ func SamChanToFile(incomingSams <-chan Aln, filename string, header Header, wg *
 func processAlignmentLine(line string) Aln {
 	var curr Aln
 	var err error
+	var currUint uint64
 
 	words := strings.SplitN(line, "\t", 12)
 	if len(words) < 11 {
 		log.Fatal(fmt.Errorf("Was expecting atleast 11 columns per line, but this line did not:%s\n", line))
 	}
 	curr.QName = words[0]
-	curr.Flag, err = strconv.ParseInt(words[1], 10, 64)
+	currUint, err = strconv.ParseUint(words[1], 10, 16)
 	if err != nil {
 		log.Fatal(err)
 	}
+	curr.Flag = uint16(currUint)
 	curr.RName = words[2]
-	curr.Pos, err = strconv.ParseInt(words[3], 10, 64)
+	curr.Pos, err = strconv.Atoi(words[3])
 	if err != nil {
 		log.Fatal(err)
 	}
-	curr.MapQ, err = strconv.ParseInt(words[4], 10, 64)
+	currUint, err = strconv.ParseUint(words[4], 10, 8)
 	if err != nil {
 		log.Fatal(err)
 	}
+	curr.MapQ = uint8(currUint)
 	curr.Cigar = cigar.FromString(words[5])
 	curr.RNext = words[6]
-	curr.PNext, err = strconv.ParseInt(words[7], 10, 64)
+	curr.PNext, err = strconv.Atoi(words[7])
 	if err != nil {
 		log.Fatal(err)
 	}
-	curr.TLen, err = strconv.ParseInt(words[8], 10, 64)
+	curr.TLen, err = strconv.Atoi(words[8])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -145,87 +148,6 @@ func SamAlnToString(aln Aln) string {
 		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s", aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
 	}
 	return answer
-}
-
-func ModifySamToString(aln Aln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
-	var answer string = fmt.Sprintf("%s\n", aln.QName)
-	if samflag {
-		answer += fmt.Sprintf("%d\n", aln.Flag)
-	}
-	if rname {
-		answer += fmt.Sprintf("%s\t", aln.RName)
-	}
-	if pos {
-		if strings.Contains(aln.Extra, "XO:i:") {
-			words := strings.Split(aln.Extra, "\t")
-			aln.Pos += common.StringToInt64(words[2][5:])
-		}
-		answer += fmt.Sprintf("%d\t", aln.Pos)
-	}
-	if mapq {
-		answer += fmt.Sprintf("%d\t", aln.MapQ)
-	}
-	if cig {
-		answer += fmt.Sprintf("%s\t", cigar.ToString(aln.Cigar))
-	}
-	if rnext {
-		answer += fmt.Sprintf("%s\t", aln.RNext)
-	}
-	if pnext {
-		answer += fmt.Sprintf("%d\t", aln.PNext)
-	}
-	if tlen {
-		answer += fmt.Sprintf("%d\t", aln.TLen)
-	}
-	if seq {
-		answer += fmt.Sprintf("%s\t", dna.BasesToString(aln.Seq))
-	}
-	if qual {
-		answer += fmt.Sprintf("%s\t", string(aln.Qual))
-	}
-	if extra {
-		words := strings.Split(aln.Extra, "\t")
-		for _, text := range words[:len(words)-1] {
-			if strings.Contains(text, "GP:Z:") {
-				answer += fmt.Sprintf("%s", pathPrettyString(text))
-			} else {
-				answer += fmt.Sprintf("%s\n", text)
-			}
-		}
-	}
-	return answer
-}
-
-func pathPrettyString(graphPath string) string {
-	var s string = ""
-	if !strings.Contains(graphPath, "GP:Z:") {
-		return s
-	} else {
-		s = "GP:Z:\n"
-
-		words := strings.Split(graphPath[5:], ":")
-		//log.Printf("%v\n", words)
-		var i int
-		var j int
-		for i = 0; i < len(words); i += 8 {
-			var line string = ""
-			if i+8 > len(words) {
-				line += fmt.Sprintf("%s", words[i])
-				for j = i + 1; j < len(words)-1; j++ {
-					line += fmt.Sprintf(":%s", words[j])
-				}
-				s += fmt.Sprintf("%s\n", line)
-			} else {
-				line += fmt.Sprintf("%s", words[i])
-				for j = i + 1; j < i+8; j++ {
-					line += fmt.Sprintf(":%s", words[j])
-				}
-				s += fmt.Sprintf("%s\n", line)
-			}
-			//s += fmt.Sprintf("\n")
-		}
-	}
-	return s
 }
 
 func WriteAlnToFileHandle(file *fileio.EasyWriter, aln Aln) {

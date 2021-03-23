@@ -22,8 +22,8 @@ func TotalAlignedBases(filename string) int {
 	return alignedBases
 }
 
-func flagTestBit(num int64, bit int64) bool {
-	var dummy int64 = bit & num //bitwise AND
+func flagTestBit(num uint16, bit uint16) bool {
+	var dummy uint16 = bit & num //bitwise AND
 	return dummy == 0
 }
 

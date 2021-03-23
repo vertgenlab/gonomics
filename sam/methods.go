@@ -25,7 +25,7 @@ func (s *Aln) GetChromEnd() int {
 
 func (s *Aln) UpdateLift(c string, start int, end int) {
 	s.RName = c
-	s.Pos = int64(start + 1)
+	s.Pos = start + 1
 }
 
 type SamSlice []*Aln
