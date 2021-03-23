@@ -40,7 +40,7 @@ func BedToFasta(b []*bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 }
 
 //SamToBed extracts the position information from a Aln entry and returns it as a bed entry.
-func SamToBed(s *sam.Aln) *bed.Bed {
+func SamToBed(s sam.Aln) *bed.Bed {
 	if s.Cigar[0].Op == '*' {
 		return nil
 	} else {
@@ -58,7 +58,7 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 } */
 
 //SamToBedFrag converts a Aln entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
-func SamToBedFrag(s *sam.Aln, fragLength int, reference map[string]chromInfo.ChromInfo) *bed.Bed {
+func SamToBedFrag(s sam.Aln, fragLength int, reference map[string]chromInfo.ChromInfo) *bed.Bed {
 	var answer *bed.Bed
 
 	if s.Cigar[0].Op == '*' {

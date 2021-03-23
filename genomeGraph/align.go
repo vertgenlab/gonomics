@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.Aln {
+func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Aln {
 	var currBest sam.Aln = sam.Aln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget int
@@ -60,7 +60,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash m
 			currBest.Seq = currSeq // unsure why this line was lost
 			currBest.Qual = string(read.Qual)
 			currBest.RName = fmt.Sprintf("%d", bestPath[0])
-			currBest.Pos = int64(minTarget) + 1
+			currBest.Pos = minTarget + 1
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
 			/*if &gg.Nodes[bestPath[0]].Info != nil {
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
@@ -73,7 +73,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash m
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
-	return &currBest
+	return currBest
 }
 
 //TODO: what about neg strand?

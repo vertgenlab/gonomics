@@ -240,7 +240,7 @@ func ChromInfoMapSamHeader(chromSize map[string]chromInfo.ChromInfo) *Header {
 	return &header
 }
 
-func FastaHeader(ref []fasta.Fasta) *Header {
+func FastaHeader(ref []fasta.Fasta) Header {
 	var header Header
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
@@ -250,5 +250,5 @@ func FastaHeader(ref []fasta.Fasta) *Header {
 		header.Text = append(header.Text, words)
 		header.Chroms = append(header.Chroms, chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
 	}
-	return &header
+	return header
 }

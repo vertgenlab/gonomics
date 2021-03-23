@@ -38,7 +38,7 @@ func TestQuickMemPool(t *testing.T) {
 	fastqPipe := make(chan *fastq.FastqBig, 824)
 
 	log.Printf("Making sam channel...\n")
-	samPipe := make(chan *sam.Aln, 824)
+	samPipe := make(chan sam.Aln, 824)
 
 	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
@@ -48,7 +48,7 @@ func TestQuickMemPool(t *testing.T) {
 
 	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "testdata/sim.sam", nil, &writerWaiter)
+	go sam.SamChanToFile(samPipe, "testdata/sim.sam", sam.Header{}, &writerWaiter)
 
 	log.Printf("Starting alignment worker...\n")
 	time.Sleep(5 * time.Second)

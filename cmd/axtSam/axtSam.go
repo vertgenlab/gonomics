@@ -35,7 +35,7 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 	} else {
 		inFile, outFile := flag.Arg(0), flag.Arg(1)
-		var headerInfo *sam.Header = nil
+		var headerInfo sam.Header
 
 		if *chrInfo != "" {
 			headerInfo = chromInfoSamHeader(*chrInfo)
@@ -51,14 +51,14 @@ func main() {
 	}
 }
 
-func axtToSam(axtfile string, header *sam.Header, output string) {
+func axtToSam(axtfile string, header sam.Header, output string) {
 	reader, writer := fileio.EasyOpen(axtfile), fileio.EasyCreate(output)
 
 	defer reader.Close()
 	defer writer.Close()
 
 	//setting up channels and wait groups
-	data, results := make(chan *axt.Axt, 824), make(chan *sam.Aln, 824)
+	data, results := make(chan *axt.Axt, 824), make(chan sam.Aln, 824)
 	var working, writingJob sync.WaitGroup
 
 	var wg sync.WaitGroup
@@ -69,7 +69,7 @@ func axtToSam(axtfile string, header *sam.Header, output string) {
 		close(data)
 	}()
 
-	if header != nil {
+	if header.Text != nil {
 		sam.WriteHeaderToFileHandle(writer, header)
 	}
 
@@ -84,13 +84,13 @@ func axtToSam(axtfile string, header *sam.Header, output string) {
 	writingJob.Wait()
 }
 
-func chromInfoSamHeader(filename string) *sam.Header {
+func chromInfoSamHeader(filename string) sam.Header {
 	return sam.ChromInfoSamHeader(chromInfo.ReadToSlice(filename))
 }
 
 //Not sure if this is a potiential speed up, but i have fairly large axt files that come out of chain merge
 //The idea is to provide at least 3 threads with some work, reading, axtToSam, writing
-func routineWorker(readChannel <-chan *axt.Axt, writingChannel chan<- *sam.Aln, wg *sync.WaitGroup) {
+func routineWorker(readChannel <-chan *axt.Axt, writingChannel chan<- sam.Aln, wg *sync.WaitGroup) {
 	var numberComplete int = 0
 	for eachAxt := range readChannel {
 		writingChannel <- axt.AxtToSam(eachAxt)

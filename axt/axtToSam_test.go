@@ -25,7 +25,7 @@ func TestSamFileConvert(t *testing.T) {
 	}
 	samFromAxt := AxtToSam(testAxt)
 
-	var answerSam *sam.Aln = &sam.Aln{
+	var answerSam sam.Aln = sam.Aln{
 		QName: "chr11",
 		Flag:  16,
 		RName: "chr19",

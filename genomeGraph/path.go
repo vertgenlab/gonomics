@@ -88,16 +88,16 @@ func StringToPath(allPaths string) []uint32 {
 	return answer
 }*/
 
-func addStartChrPos(samfile *sam.Aln) int64 {
-	var answer int64 = 0
+func addStartChrPos(samfile sam.Aln) int {
+	var answer int = 0
 	if strings.Contains(samfile.Extra, "XO:i:") {
 		words := strings.Split(samfile.Extra, "\t")
-		answer = common.StringToInt64(words[2][5:])
+		answer = common.StringToInt(words[2][5:])
 	}
 	return answer
 }
 
-func ModifySamToString(aln *sam.Aln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
+func ModifySamToString(aln sam.Aln, samflag bool, rname bool, pos bool, mapq bool, cig bool, rnext bool, pnext bool, tlen bool, seq bool, qual bool, extra bool) string {
 	var answer string = fmt.Sprintf("%s\n\n", aln.QName)
 	if samflag {
 		answer += fmt.Sprintf("%d\n", aln.Flag)

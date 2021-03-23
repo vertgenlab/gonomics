@@ -42,7 +42,7 @@ func GswToGirafPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string
 	log.Printf("Enjoy analyzing your data!\n\n--xoxo GG\n")
 }
 
-func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.Header) {
+func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header sam.Header) {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Paired end reads detected...\n")
 
@@ -51,7 +51,7 @@ func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, 
 	var wgAlign, wgWrite sync.WaitGroup
 	//log.Printf("Setting up read and write channels...\n\n")
 	fastqPipe := make(chan fastq.PairedEndBig, 824)
-	samPipe := make(chan *sam.PairedSamAln, 824)
+	samPipe := make(chan sam.PairedSamAln, 824)
 	go readFastqGsw(readOne, readTwo, fastqPipe)
 
 	log.Printf("Scoring matrix used:\n%s\n", genomeGraph.ViewMatrix(scoreMatrix))

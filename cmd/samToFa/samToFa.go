@@ -33,9 +33,9 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 	samFile := fileio.EasyOpen(samFileName)
 	defer samFile.Close()
 	var done bool = false
-	var RefIndex, SeqIndex int64
+	var RefIndex, SeqIndex int
 	var currentSeq []dna.Base
-	var aln *sam.Aln
+	var aln sam.Aln
 	//var i, k int
 	//fmt.Printf("Vote matrix initialized. Looping through sam.\n")
 	sam.ReadHeader(samFile)
@@ -47,7 +47,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 			for i = 0; i < len(aln.Cigar); i++ {
 				currentSeq = aln.Seq
 				if aln.Cigar[i].Op == 'D' {
-					RefIndex = RefIndex + int64(aln.Cigar[i].RunLength)
+					RefIndex = RefIndex + aln.Cigar[i].RunLength
 				} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
 					for k = 0; k < int(aln.Cigar[i].RunLength); k++ {
 						switch currentSeq[SeqIndex] {
@@ -66,7 +66,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 						RefIndex++
 					}
 				} else if aln.Cigar[i].Op != 'H' {
-					SeqIndex = SeqIndex + int64(aln.Cigar[i].RunLength)
+					SeqIndex = SeqIndex + aln.Cigar[i].RunLength
 				}
 			}
 		}

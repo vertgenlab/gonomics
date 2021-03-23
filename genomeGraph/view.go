@@ -21,7 +21,7 @@ func LocalView(samLine *sam.Aln, ref []*Node) string {
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar
-	var i int64 = samLine.Pos - 1
+	var i int64 = int64(samLine.Pos) - 1
 	var j int64 = 0
 	var count int
 	words := strings.Split(samLine.RName, "_")

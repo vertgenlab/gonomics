@@ -11,17 +11,17 @@ import (
 
 //TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment
 //func AxtToSam(axtFmt *Axt, chromMap map[string]*chromInfo.ChromInfo) *sam.Aln {
-func AxtToSam(axtFmt *Axt) *sam.Aln {
-	var answer *sam.Aln = &sam.Aln{
+func AxtToSam(axtFmt *Axt) sam.Aln {
+	var answer sam.Aln = sam.Aln{
 		QName: axtFmt.QName,
 		Flag:  setStrandFlag(axtFmt.QStrandPos),
 		RName: axtFmt.RName,
-		Pos:   int64(axtFmt.RStart),
+		Pos:   axtFmt.RStart,
 		MapQ:  255, // mapping quality setting to 255 because we are not calculating it
 		Cigar: PairSeqToCigar(axtFmt.RSeq, axtFmt.QSeq),
 		RNext: "*",
 		PNext: 0,
-		TLen:  int64(axtFmt.REnd - axtFmt.RStart), //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
+		TLen:  axtFmt.REnd - axtFmt.RStart, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
 		Seq:   dna.RemoveBase(axtFmt.QSeq, dna.Gap),
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),
@@ -121,7 +121,7 @@ func deletionCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	return deletion
 }
 
-func setStrandFlag(strand bool) int64 {
+func setStrandFlag(strand bool) uint16 {
 	if strand {
 		return 0
 	} else {
