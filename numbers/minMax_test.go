@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+//TODO: Testing functions for min/max functions for other data types.
+
 var maxTests = []struct {
 	a    int // first input
 	b    int // second input

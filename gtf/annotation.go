@@ -179,7 +179,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 	return answer
 }
 
-// codingToString inputs variants inside the CDS and generates a cDNA annotation
+// codingToString inputs variants inside the Cds and generates a cDNA annotation
 func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
 	ref := dna.StringToBases(v.Ref)
@@ -381,10 +381,10 @@ func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	return answer
 }
 
-// getNearestCdsPos determines the cDNA position of the nearest CDS end and whether the reported end is the 5' or 3' end
+// getNearestCdsPos determines the cDNA position of the nearest Cds end and whether the reported end is the 5' or 3' end
 // Used for reporting intronic variants
 func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
-	var currCDS *CDS = v.NearestCds
+	var currCDS *Cds = v.NearestCds
 	if v.PosStrand {
 		if int(v.Pos) < v.NearestCds.Start {
 			pos = 1
@@ -392,7 +392,7 @@ func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
 			pos = v.NearestCds.End - v.NearestCds.Start + 1
 		}
 
-		for currCDS.Prev != nil { // Go to first CDS to begin count
+		for currCDS.Prev != nil { // Go to first Cds to begin count
 			currCDS = currCDS.Prev
 			pos += currCDS.End - currCDS.Start + 1
 		}
@@ -404,7 +404,7 @@ func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
 			pos = v.NearestCds.End - v.NearestCds.Start + 1
 		}
 
-		for currCDS.Next != nil { // Go to first CDS to begin count
+		for currCDS.Next != nil { // Go to first Cds to begin count
 			currCDS = currCDS.Next
 			pos += currCDS.End - currCDS.Start + 1
 		}
