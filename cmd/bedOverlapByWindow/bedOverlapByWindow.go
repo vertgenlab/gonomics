@@ -10,56 +10,40 @@ import (
 	"log"
 )
 
-func bedOverlapByWindow(infile string, chromsizes string, outfile string, windowSize int) {
+func bedOverlapByWindow(inBed string, chromsizes string, outBed string, windowSize int) {
 	cInfo := chromInfo.ReadToSlice(chromsizes)
-	bInfo := bed.Read(infile)
-	out := fileio.EasyCreate(outfile)
-	defer out.Close()
+	bInfo := bed.Read(inBed)
+	out := fileio.EasyCreate(outBed)
 	var positionCounts map[string][]uint32
 	positionCounts = make(map[string][]uint32)
 	var i, b, p, j, x int
 	var thisChrom []uint32
 
 	for i = 0; i < len(cInfo); i++ {
-
 		positionCounts[cInfo[i].Name] = make([]uint32, cInfo[i].Size)
-
 	}
 
-	for b = 0; b < len(bInfo); b++ {
-
+	for b = range bInfo {
 		thisChrom = positionCounts[bInfo[b].Chrom]
-
 		for p = bInfo[b].ChromStart; p < bInfo[b].ChromEnd; p++ {
-
 			for x = numbers.Max(0, p-(windowSize-1)); x < numbers.Min(bInfo[b].ChromEnd, p+1); x++ {
-
-				//for x = numbers.MaxInt64(0, p-(windowSize-1)); x < numbers.MinInt64(bInfo[b].ChromEnd, p+(windowSize-1)); x++{
 				thisChrom[x] += 1
-
 			}
-
 		}
-
 	}
 
-	for i = 0; i < len(cInfo); i++ {
-
+	for i = range cInfo {
 		thisChrom = positionCounts[cInfo[i].Name]
-
-		for j = 0; j < len(thisChrom); j++ {
-
+		for j = range thisChrom {
 			fmt.Fprintf(out, "%s\t%d\t%d\t%s\t%d\n", cInfo[i].Name, j, j+windowSize, ".", thisChrom[j])
-
 		}
-
 	}
-
+	out.Close()
 }
 
 func usage() {
 	fmt.Print(
-		"bedOverlapByWindow takes a sorted bed and counts bp in bed regions within a window size. Default is 5000bp\n" +
+		"bedOverlapByWindow takes a sorted bed and counts bp in bed regions within a window size. Default is 5000bp window\n" +
 			"Usage:\n" +
 			"bedOverlapByWindow input.bed chrom.sizes output.bed\n" +
 			"options:\n")
