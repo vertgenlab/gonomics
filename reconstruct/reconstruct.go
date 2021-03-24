@@ -132,6 +132,7 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 				for i := 0; i < len(sim[s].Seq); i++ {
 					for g := 0; g < len(genes); g++ {
 						inExon, exon := simulate.CheckExon(genes[g], i)
+						//TODO: calculate where the base is (first/second/third) here and do the calculation for accuracy without looping through codons
 						if inExon {
 							_, processed := exonsProcessed[exon]
 							if !processed {
@@ -358,4 +359,3 @@ func LoopNodes(root *expandedTree.ETree, position int) {
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
 	}
 }
-
