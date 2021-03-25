@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func AllAreEqual(a []*GenePred, b []*GenePred) bool {
+func AllAreEqual(a []GenePred, b []GenePred) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -17,7 +17,7 @@ func AllAreEqual(a []*GenePred, b []*GenePred) bool {
 	return true
 }
 
-func Equal(a *GenePred, b *GenePred) bool {
+func Equal(a GenePred, b GenePred) bool {
 	if strings.Compare(a.Id, b.Id) != 0 {
 		log.Print("1")
 		return false
