@@ -15,7 +15,6 @@ func bedOverlapByWindow(inBed string, chromsizes string, outBed string, windowSi
 	bInfo := bed.Read(inBed)
 	out := fileio.EasyCreate(outBed)
 	var positionCounts map[string][]uint32
-	positionCounts = make(map[string][]uint32)
 	var i, b, p, j, x int
 	var thisChrom []uint32
 
