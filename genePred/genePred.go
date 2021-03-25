@@ -25,7 +25,7 @@ type GenePred struct {
 	Score      int
 }
 
-func GenePredToString(g *GenePred) string {
+func GenePredToString(g GenePred) string {
 	var answer string
 
 	answer = fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%v\t%v\t%v\t%v\t%s\t%s\t%s\t%v", g.Id, g.Symbol, g.Chrom, string(g.Strand), g.TxStart, g.TxEnd, g.CdsStart, g.CdsEnd, g.ExonNum, SliceIntToString(g.ExonStarts), SliceIntToString(g.ExonEnds), SliceIntToString(CalcExonFrame(g)), g.Score)
@@ -33,7 +33,7 @@ func GenePredToString(g *GenePred) string {
 }
 
 //WriteToFileHandle writes an input GenePred struct with a specified number of fields to an io.Writer
-func WriteToFileHandle(file io.Writer, records []*GenePred) {
+func WriteToFileHandle(file io.Writer, records []GenePred) {
 	for _, rec := range records { //take out if we need writeSliceToFileHandle
 		var err error
 		_, err = fmt.Fprintf(file, "%s\n", GenePredToString(rec))
@@ -43,16 +43,16 @@ func WriteToFileHandle(file io.Writer, records []*GenePred) {
 }
 
 //Write writes a slice of GenePred structs with a specified number of fields to a specified filename.
-func Write(filename string, records []*GenePred) {
+func Write(filename string, records []GenePred) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
 	WriteToFileHandle(file, records)
 }
 
-func Read(filename string) []*GenePred {
+func Read(filename string) []GenePred {
 	var line string
-	var answer []*GenePred
+	var answer []GenePred
 	var doneReading = false
 
 	file := fileio.EasyOpen(filename)
@@ -65,7 +65,7 @@ func Read(filename string) []*GenePred {
 	return answer
 }
 
-func processGenePredLine(line string) *GenePred {
+func processGenePredLine(line string) GenePred {
 	current := GenePred{}
 
 	words := strings.Split(line, "\t")
@@ -94,7 +94,7 @@ func processGenePredLine(line string) *GenePred {
 		log.Fatal("Exon Ends slice doesn't end in empty string.")
 	}
 	current.ExonEnds = StringToIntSlice(words[9])
-	current.ExonFrames = CalcExonFrame(&current)
+	current.ExonFrames = CalcExonFrame(current)
 	current.Score = 0
 
 	if current.ExonNum != len(current.ExonStarts) {
@@ -106,7 +106,7 @@ func processGenePredLine(line string) *GenePred {
 		log.Fatal("there are not the same number of exon start positions as exon end positions")
 	}
 
-	return &current
+	return current
 }
 
 func StringToIntSlice(text string) []int {
@@ -120,7 +120,7 @@ func StringToIntSlice(text string) []int {
 }
 
 //TODO: May not work with - strand transcripts
-func CalcExonFrame(gene *GenePred) []int {
+func CalcExonFrame(gene GenePred) []int {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds
 	cdsStart := gene.CdsStart
