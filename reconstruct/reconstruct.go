@@ -132,6 +132,7 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 				for i := 0; i < len(sim[s].Seq); i++ {
 					for g := 0; g < len(genes); g++ {
 						inExon, exon := simulate.CheckExon(genes[g], i)
+						loc := findLocationInCodon(genes[g], exon, i)
 						//TODO: calculate where the base is (first/second/third) here and do the calculation for accuracy without looping through codons
 						if inExon {
 							_, processed := exonsProcessed[exon]
@@ -178,6 +179,17 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 		}
 	}
 	return answer
+}
+
+//
+func findLocationInCodon(gene genePred.GenePred, exon int, position int) int {
+	var positionInCodon int
+
+	if gene.ExonFrames[exon] == 0 {
+
+	}
+
+	return positionInCodon
 }
 
 //write assigned sequences at all nodes to a fasta file
