@@ -164,3 +164,14 @@ func min(a int, b int) int {
 		return b
 	}
 }
+
+// Equal checks if two bases are the same and returns a bool
+func Equal(a Base, b Base) bool {
+	var isEqual bool
+	if a == b {
+		isEqual = true
+	} else {
+		isEqual = false
+	}
+	return isEqual
+}
