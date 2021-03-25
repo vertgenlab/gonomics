@@ -1,7 +1,6 @@
 package axt
 
 import (
-	//"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"os"
 	"testing"
@@ -29,12 +28,12 @@ func TestReadToChan(t *testing.T) {
 }
 
 func TestWriteAndRead(t *testing.T) {
-	var actual []*Axt
+	var actual []Axt
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"
 		actual = Read(test.filename)
 		Write(tempFile, actual)
-		if !AllEqual(Read(tempFile), Read("testdata/chrM_gasacu1.axt")) {
+		if !allEqual(Read(tempFile), Read("testdata/chrM_gasacu1.axt")) {
 			t.Errorf("Axt files are not the same")
 		}
 
@@ -49,7 +48,7 @@ func TestWriteAndRead(t *testing.T) {
 func TestAxtSwap(t *testing.T) {
 	var targetLen int = 10
 	var queryLen int = 10
-	aTest := &Axt{
+	aTest := Axt{
 		RName:      "TargetGenome",
 		RStart:     1,
 		REnd:       10,
@@ -61,7 +60,7 @@ func TestAxtSwap(t *testing.T) {
 		//QSeq: dna.StringToBases("CGTCCCTCGA"),
 	}
 
-	ans := &Axt{
+	ans := Axt{
 		RName:      "QueryGenome",
 		RStart:     1,
 		REnd:       10,
@@ -73,10 +72,10 @@ func TestAxtSwap(t *testing.T) {
 		//QSeq: dna.StringToBases("CGTCCCTCGA"),
 	}
 
-	aSwap := SwapBoth(aTest, targetLen, queryLen)
+	Swap(&aTest, targetLen, queryLen)
 	//TODO: Add logic to test that can check reverse complemented sequences
-	if !isEqual(aSwap, ans) {
-		log.Printf("%s", ToString(aSwap, 0))
+	if !isEqual(aTest, ans) {
+		log.Printf("%s", ToString(aTest, 0))
 		log.Printf("%s", ToString(ans, 0))
 		t.Errorf("Error: Swap axt did not yield the expected value...\n")
 	}

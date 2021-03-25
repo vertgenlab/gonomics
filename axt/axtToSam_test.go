@@ -11,7 +11,7 @@ import (
 func TestSamFileConvert(t *testing.T) {
 
 	//chr19 3001012 3001075 chr11 70568380 70568443 - 3500
-	var testAxt = &Axt{
+	var testAxt = Axt{
 		RName:      "chr19",
 		RStart:     1,
 		REnd:       30,
@@ -23,7 +23,7 @@ func TestSamFileConvert(t *testing.T) {
 		RSeq:       dna.StringToBases("TCAGCTCATAAATCACCTCC----ACAAGC"),
 		QSeq:       dna.StringToBases("TCTG--CATAAACCACCTGCCATGACAAGC"),
 	}
-	samFromAxt := AxtToSam(testAxt)
+	samFromAxt := ToSam(testAxt)
 
 	var answerSam *sam.SamAln = &sam.SamAln{
 		QName: "chr11",

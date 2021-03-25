@@ -16,6 +16,6 @@ func TestConvertAxt(t *testing.T) {
 		log.Print("chain format:\n")
 		log.Printf("%s\n", ToString(chainfile[i]))
 		log.Print("axt format:\n")
-		log.Printf("%s\n", axt.ToString(ChainToAxt(chainfile[i], target[chainfile[i].TName], query[chainfile[i].QName]), i))
+		log.Printf("%s\n", axt.ToString(ToAxt(chainfile[i], target[chainfile[i].TName], query[chainfile[i].QName]), i))
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
 func convertAxt(axtFile, format, targetFa, output string) {
@@ -34,16 +33,8 @@ func convertAxt(axtFile, format, targetFa, output string) {
 }
 
 func goChannelAxtVcf(axtFile string) <-chan *vcf.Vcf {
-	file := fileio.EasyOpen(axtFile)
-	var wg sync.WaitGroup
-	axtChannel := make(chan *axt.Axt, 2408)
-	wg.Add(1)
-	go axt.ReadToChan(file, axtChannel, &wg)
-
-	go func() {
-		wg.Wait()
-		close(axtChannel)
-	}()
+	axtChannel := make(chan axt.Axt, 2408)
+	go axt.ReadToChan(axtFile, axtChannel)
 
 	ans := make(chan *vcf.Vcf, 2408)
 	go workThreadAxtVcf(axtChannel, ans)
