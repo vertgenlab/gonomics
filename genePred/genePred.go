@@ -126,7 +126,7 @@ func StringToIntSlice(text string) []int {
 }
 
 // CaclExonFame calculates the frame of each exon in a genePred based on the information in the fields for exonStarts, exonStops and cdsStarts
-//May not work with - strand transcripts
+//TODO: May not work with - strand transcripts
 func CalcExonFrame(gene GenePred) []int {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds

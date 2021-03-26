@@ -1,61 +1,65 @@
 package genePred
 
 import (
-	"log"
 	"strings"
 )
 
-func AllAreEqual(a []GenePred, b []GenePred) bool {
+func AllAreEqual(a []GenePred, b []GenePred) (bool, []int) {
+	var fields []int
+	var equal bool
+
 	if len(a) != len(b) {
-		return false
+		return false, fields
 	}
 	for i := 0; i < len(a); i++ {
-		if !Equal(a[i], b[i]) {
-			return false
-		}
+		equal, fields = Equal(a[i], b[i])
+		return equal, fields
 	}
-	return true
+	return equal, fields
 }
 
-func Equal(a GenePred, b GenePred) bool {
+func Equal(a GenePred, b GenePred) (bool, []int) {
+	var isEqual = true
+	var fields = make([]int, 9)
+
 	if strings.Compare(a.Id, b.Id) != 0 {
-		log.Print("1")
-		return false
+		fields[0] = 1
+		isEqual = false
 	}
 	if strings.Compare(a.Chrom, b.Chrom) != 0 {
-		log.Print("2")
-		return false
+		fields[1] = 1
+		isEqual = false
 	}
 	if a.Strand != b.Strand {
-		log.Print("3")
-		return false
+		fields[2] = 1
+		isEqual = false
 	}
 	if a.TxStart != b.TxStart {
-		log.Print("4")
-		return false
+		fields[3] = 1
+		isEqual = false
 	}
 	if a.TxEnd != b.TxEnd {
-		log.Print("5")
-		return false
+		fields[4] = 1
+		isEqual = false
 	}
 	if a.CdsStart != b.CdsStart {
-		log.Print("6")
-		return false
+		fields[5] = 1
+		isEqual = false
 	}
 	if a.CdsEnd != b.CdsEnd {
-		log.Print("7")
-		return false
+		fields[6] = 1
+		isEqual = false
 	}
 	//exon ends must have the same number of values as exon starts
 	for i := 0; i < len(a.ExonStarts); i++ {
 		if a.ExonStarts[i] != b.ExonStarts[i] {
-			log.Print("9")
-			return false
+			fields[8] = 1
+			isEqual = false
 		}
 		if b.ExonEnds[i] != b.ExonEnds[i] {
-			log.Print("10")
-			return false
+			fields[9] = 1
+			isEqual = false
 		}
 	}
-	return true
+	return isEqual, fields
 }
