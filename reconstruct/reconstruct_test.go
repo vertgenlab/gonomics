@@ -15,7 +15,7 @@ var input = []struct {
 	newickFilename string // first input
 	length         int    // second input
 }{
-	{"testdata/newickLongBranches.txt", 1005},
+	{"testdata/newickLongBranches.txt", 9},
 }
 
 func Test_reconstruct(t *testing.T) {
@@ -25,7 +25,7 @@ func Test_reconstruct(t *testing.T) {
 			log.Fatal("Couldn't read file")
 		}
 		fasta.Write("RandGeneOutput.fasta", simulate.RandGene("test", test.length, GCcontent)) //galGal6 GC
-		simulate.Simulate("RandGeneOutput.fasta", tre, "testdata/genePred.gp", false)
+		simulate.Simulate("RandGeneOutput.fasta", tre, "testdata/shortGenePred.gp", false)
 		WriteTreeToFasta(tre, "simOut.fasta")
 		WriteLeavesToFasta(tre, "leavesOnly.fasta")
 
@@ -36,7 +36,7 @@ func Test_reconstruct(t *testing.T) {
 			LoopNodes(tr, i)
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
-		accuracyData, _ := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", 0)
+		accuracyData, _ := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/shortGenePred.gp", 0)
 		for name, accuracy := range accuracyData {
 			log.Printf("%s %f \n", name, accuracy)
 		}
@@ -45,7 +45,7 @@ func Test_reconstruct(t *testing.T) {
 }
 
 func TestReconAccuracyByBase(t *testing.T) {
-	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", 1)
+	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/shortGenePred.gp", 1)
 
 	for name, data := range baseAccuracy {
 		for d := range data {

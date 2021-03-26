@@ -112,9 +112,6 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
 	genes := genePred.Read(gpFilename)
-	var exonsProcessed map[int]bool
-	var simCodons []simulate.CodonExt
-	var reconCodons []simulate.CodonExt
 	answer := make(map[string][]float64)
 
 	for s := 0; s < len(sim); s++ {
@@ -132,43 +129,30 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 				for i := 0; i < len(sim[s].Seq); i++ {
 					for g := 0; g < len(genes); g++ {
 						inExon, exon := simulate.CheckExon(genes[g], i)
-						loc := findLocationInCodon(genes[g], exon, i)
-						//TODO: calculate where the base is (first/second/third) here and do the calculation for accuracy without looping through codons
 						if inExon {
-							_, processed := exonsProcessed[exon]
-							if !processed {
-								simCodons = simulate.CreateCodons(simulate.BasesToBaseExt(sim[s].Seq), genes[g], exon)
-								reconCodons = simulate.CreateCodons(simulate.BasesToBaseExt(recon[r].Seq), genes[g], exon)
-								for c := 0; c < len(simCodons); c++ {
-									if simCodons[c].Seq[0].SeqPos == reconCodons[c].Seq[0].SeqPos {
-										for p := 0; p < 3; p++ {
-											if p == 0 {
-												total1 += 1
-												if simCodons[c].Seq[p].Base != reconCodons[c].Seq[p].Base {
-													mistakes1 += 1
-												}
-											} else if p == 1 {
-												total2 += 1
-												if simCodons[c].Seq[p].Base != reconCodons[c].Seq[p].Base {
-													mistakes2 += 1
-												}
-											} else {
-												total3 += 1
-												if simCodons[c].Seq[p].Base != reconCodons[c].Seq[p].Base {
-													mistakes3 += 1
-												}
-											}
-										}
-									}
+							loc := findLocationInCodon(genes[g], exon, i)
+							if loc == 1 {
+								total1 += 1
+								if sim[s].Seq[i] != recon[r].Seq[i] {
+									mistakes1 += 1
+								}
+							} else if loc == 2 {
+								total2 += 1
+								if sim[s].Seq[i] != recon[r].Seq[i] {
+									mistakes2 += 1
+								}
+							} else if loc == 3 {
+								total3 += 1
+								if sim[s].Seq[i] != recon[r].Seq[i] {
+									mistakes3 += 1
 								}
 							}
 						}
+						//TODO: calculate where the base is (first/second/third) here and do the calculation for accuracy without looping through codons
 					}
 				}
-				log.Print(mistakes1)
-				log.Print(total1)
-				log.Print(len(simCodons))
-				log.Print(len(reconCodons))
+				log.Print(mistakes2)
+				log.Print(total2)
 				percentage1 = (mistakes1 / total1) * 100
 				percentage2 = (mistakes2 / total2) * 100
 				percentage3 = (mistakes3 / total3) * 100
@@ -181,17 +165,34 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 	return answer
 }
 
-//
-func findLocationInCodon(gene genePred.GenePred, exon int, position int) int {
+// findLocationInCodon returns what position in a codon a given base inhabits (first, second or third).
+func findLocationInCodon(gene *genePred.GenePred, exon int, position int) int {
 	var positionInCodon int
 
 	if gene.ExonFrames[exon] == 0 {
 		location := position - gene.ExonStarts[exon]
 		if location%3 != 0 {
-
+			positionInCodon = location % 3
+		} else {
+			positionInCodon = 3
 		}
+	} else if gene.ExonFrames[exon] == 1 {
+		location := position - gene.ExonStarts[exon] + 1
+		if location%3 != 0 {
+			positionInCodon = location % 3
+		} else {
+			positionInCodon = 3
+		}
+	} else if gene.ExonFrames[exon] == 2 {
+		location := position - gene.ExonStarts[exon] + 2
+		if location%3 != 0 {
+			positionInCodon = location % 3
+		} else {
+			positionInCodon = 3
+		}
+	} else {
+		log.Panic("Exon Frame is not 0, 1 or 2")
 	}
-
 	return positionInCodon
 }
 
