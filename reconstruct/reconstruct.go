@@ -131,6 +131,7 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 						inExon, exon := simulate.CheckExon(genes[g], i)
 						if inExon {
 							loc := findLocationInCodon(genes[g], exon, i)
+							//TODO: remove pointers to genePreds once clean up is merged
 							if loc == 1 {
 								total1 += 1
 								if sim[s].Seq[i] != recon[r].Seq[i] {
@@ -148,11 +149,8 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 								}
 							}
 						}
-						//TODO: calculate where the base is (first/second/third) here and do the calculation for accuracy without looping through codons
 					}
 				}
-				log.Print(mistakes2)
-				log.Print(total2)
 				percentage1 = (mistakes1 / total1) * 100
 				percentage2 = (mistakes2 / total2) * 100
 				percentage3 = (mistakes3 / total3) * 100
