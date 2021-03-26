@@ -27,6 +27,7 @@ func ReadToChanBR(filename string, data chan<- Aln) {
 func GoReadToChanBR(filename string) <-chan Aln {
 	data := make(chan Aln, 1000)
 	go ReadToChanBR(filename, data)
+	val := <-data
 	return data
 }
 
