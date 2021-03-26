@@ -20,18 +20,18 @@ type Sam struct {
 }
 
 type Aln struct {
-	QName string
-	Flag  uint16
-	MapQ  uint8 // mapping quality
-	RName string
-	Pos   int
-	Cigar []*cigar.Cigar
-	RNext string
-	PNext int
-	TLen  int
-	Seq   []dna.Base
-	Qual  string
-	Extra string
+	QName string         // query template name: [!-?A-~]{1,254}
+	Flag  uint16         // bitwise flag, bits defined in info.go
+	MapQ  uint8          // mapping quality
+	RName string         // reference sequence name: \*|[:rname:∧ *=][:rname:]*
+	Pos   int            // 1-based leftmost mapping position
+	Cigar []*cigar.Cigar // parsed cigar: originally string with \*|([0-9]+[MIDNSHPX=])+
+	RNext string         // reference name of the mate/next read: \*|=|[:rname:∧ *=][:rname:]*
+	PNext int            // position of the mate/next read
+	TLen  int            // observed template length
+	Seq   []dna.Base     // parsed sequence: originally string with \*|[A-Za-z=.]+
+	Qual  string         // ASCII of Phred-scaled base quality+33: [!-~]+
+	Extra string         // TODO parse to map or slice w/ index embedded in header???
 }
 
 func ReadToChan(file *fileio.EasyReader, data chan<- Aln, wg *sync.WaitGroup) {
