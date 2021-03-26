@@ -27,9 +27,9 @@ var ReadTests = []struct {
 func TestRead(t *testing.T) {
 	for _, test := range ReadTests {
 		actual := Read(test.name)
-		equal, _ := AllAreEqual(test.data, actual)
+		equal, fields := AllAreEqual(test.data, actual)
 		if !equal {
-			t.Errorf("The %s file was not read correctly, or does not match genePred literals.", test.name)
+			t.Errorf("The %s file was not read correctly, or does not match genePred literals. Fields that did not match: %v", test.name, fields)
 		}
 	}
 }
