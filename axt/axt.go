@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"sync"
 )
 
 // Axt struct: Naming convention is hard here because UCSC website does not
@@ -44,29 +45,39 @@ func Read(filename string) []Axt {
 	return answer
 }
 
-// ReadToChan takes a filename and a channel.  The function will read all remaining Axt records
+// ReadToChan takes an EasyReader and a channel.  The function will read all remaining Axt records
 // from the open file into the channel.  The function will then close the file and close the channel.
-func ReadToChan(filename string, data chan<- Axt) {
-	var file *fileio.EasyReader
+func ReadToChan(file *fileio.EasyReader, data chan<- Axt, wg *sync.WaitGroup) {
 	var curr Axt
 	var done bool
-	var err error
 
-	file = fileio.EasyOpen(filename)
 	for curr, done = ReadNext(file); !done; curr, done = ReadNext(file) {
 		data <- curr
 	}
-	err = file.Close()
-	exception.PanicOnErr(err)
-	close(data)
+
+	wg.Done()
 }
 
 // GoReadToChan takes a filename and returns a channel.  GoReadToChan
 // will launch a Go routine to read all the alignments from the file into the channel
 // and then close the channel.
-func GoReadToChan(filename string) <-chan Axt {
+func GoReadToChan(filename string) <-chan Axt { // filetypes w/ header would have another return here
+	var file *fileio.EasyReader
+	var err error
+	var wg sync.WaitGroup
+	file = fileio.EasyOpen(filename)
+
 	data := make(chan Axt, 1000)
-	go ReadToChan(filename, data)
+
+	wg.Add(1)
+	go func() { // spawn a goroutine that closes the file and channel when ReadToChan is finished
+		wg.Wait()
+		err = file.Close()
+		exception.PanicOnErr(err)
+		close(data)
+	}()
+
+	go ReadToChan(file, data, &wg)
 	return data
 }
 

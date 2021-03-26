@@ -52,7 +52,7 @@ func main() {
 }
 
 func axtToSam(axtfile string, header *sam.SamHeader, output string) {
-	writer := fileio.EasyCreate(output)
+	reader, writer := fileio.EasyOpen(axtfile), fileio.EasyCreate(output)
 
 	defer writer.Close()
 
@@ -60,7 +60,13 @@ func axtToSam(axtfile string, header *sam.SamHeader, output string) {
 	data, results := make(chan axt.Axt, 824), make(chan *sam.SamAln, 824)
 	var working, writingJob sync.WaitGroup
 
-	go axt.ReadToChan(axtfile, data)
+	var wg sync.WaitGroup
+	go axt.ReadToChan(reader, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
 
 	if header != nil {
 		sam.WriteHeaderToFileHandle(writer, header)
