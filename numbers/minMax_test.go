@@ -50,8 +50,8 @@ func TestMaxInt32(t *testing.T) {
 
 //like maxTests but for uint types.
 var uMaxTests = []struct {
-	a uint // first input
-	b	uint // second input
+	a    uint // first input
+	b    uint // second input
 	expt uint // expected result
 }{
 	{1, 2, 2},
@@ -132,11 +132,11 @@ func TestMinUint32(t *testing.T) {
 var tripleMinTests = []struct {
 	a    int // first input
 	b    int // second input
-	c 	int //third input
+	c    int //third input
 	expt int // expected result
 }{
 	{1, 2, 10, 1},
-	{3, 7, 1,1},
+	{3, 7, 1, 1},
 	{100, 99, 2000, 99},
 }
 
@@ -152,11 +152,11 @@ func TestTripleMin(t *testing.T) {
 var tripleMaxTests = []struct {
 	a    int // first input
 	b    int // second input
-	c 	int //third input
+	c    int //third input
 	expt int // expected result
 }{
 	{1, 2, 10, 10},
-	{3, 7, 1,7},
+	{3, 7, 1, 7},
 	{100, 99, 2000, 2000},
 }
 
@@ -170,7 +170,7 @@ func TestTripleMax(t *testing.T) {
 }
 
 var minIntSliceTests = []struct {
-	a []int
+	a    []int
 	expt int
 }{
 	{[]int{20, 30, 40}, 20},
@@ -187,7 +187,7 @@ func TestMinIntSlice(t *testing.T) {
 }
 
 var maxIntSliceTests = []struct {
-	a []int
+	a    []int
 	expt int
 }{
 	{[]int{20, 30, 40}, 40},
