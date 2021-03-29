@@ -14,7 +14,9 @@ func AllAreEqual(a []GenePred, b []GenePred) (bool, []int) {
 	}
 	for i := 0; i < len(a); i++ {
 		equal, fields = Equal(a[i], b[i])
-		return equal, fields
+		if !equal {
+			return equal, fields
+		}
 	}
 	return equal, fields
 }
@@ -59,7 +61,7 @@ func Equal(a GenePred, b GenePred) (bool, []int) {
 			fields = append(fields, 9)
 			isEqual = false
 		}
-		if b.ExonEnds[i] != b.ExonEnds[i] {
+		if a.ExonEnds[i] != b.ExonEnds[i] {
 			fields = append(fields, 10)
 			isEqual = false
 		}
