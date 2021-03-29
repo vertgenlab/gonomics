@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-//PlotAfsF writes the Allele Frequency F function (AFSSampleDensity) to an output file for downstream visualization.
+//PlotAfsF writes the Allele Frequency F function (AfsSampleDensity) to an output file for downstream visualization.
 func PlotAfsF(alpha float64, n int, outFile string) {
 	out := fileio.EasyCreate(outFile)
 	allN := []int{n}
@@ -15,7 +15,7 @@ func PlotAfsF(alpha float64, n int, outFile string) {
 	fmt.Fprintf(out, "Frequency\tF\n")
 
 	for i := 1; i < n; i++ {
-		fmt.Fprintf(out, "%v\t%e\n", i, AFSSampleDensity(n, i, alpha, binomCache))
+		fmt.Fprintf(out, "%v\t%e\n", i, AfsSampleDensity(n, i, alpha, binomCache))
 	}
 	err := out.Close()
 	exception.PanicOnErr(err)

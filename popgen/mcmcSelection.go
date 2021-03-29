@@ -64,7 +64,7 @@ func BayesRatio(old Theta, thetaPrime Theta) float64 {
 }
 
 //GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of parameters based on the state of the current parameter set t.
-func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64, derived bool, ancestral bool) Theta {
+func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, derived bool, ancestral bool) Theta {
 	//sample from uninformative gamma
 	var alphaPrime []float64
 	//var p float64 = 0.0
@@ -98,10 +98,10 @@ func GenerateCandidateThetaPrime(t Theta, data AFS, binomCache [][]float64, deri
 }
 
 //InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
-func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64, derived bool, ancestral bool) Theta {
+func InitializeTheta(m float64, s float64, data Afs, binomCache [][]float64, derived bool, ancestral bool) Theta {
 	answer := Theta{mu: m, sigma: s}
-	answer.alpha = make([]float64, len(data.sites))
-	for i := range data.sites {
+	answer.alpha = make([]float64, len(data.Sites))
+	for i := range data.Sites {
 		answer.alpha[i] = numbers.SampleInverseNormal(m, s)
 	}
 	if derived {
@@ -116,7 +116,7 @@ func InitializeTheta(m float64, s float64, data AFS, binomCache [][]float64, der
 
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
-func MetropolisHastings(data AFS, muZero float64, sigmaZero float64, iterations int, outFile string, derived bool, ancestral bool) {
+func MetropolisHastings(data Afs, muZero float64, sigmaZero float64, iterations int, outFile string, derived bool, ancestral bool) {
 	if derived && ancestral {
 		log.Fatalf("Cannot select corrections for both derived and ancestral allele ascertainment for selectionMCMC.\n")
 	}
@@ -178,12 +178,12 @@ func BuildBinomCache(allN []int) [][]float64 {
 	return binomCache
 }
 
-//findAllN is a helper function of Metropolis Hastings that returns all the unique values of N present in an input AFS struct.
-func findAllN(data AFS) []int {
+//findAllN is a helper function of Metropolis Hastings that returns all the unique values of N present in an input Afs struct.
+func findAllN(data Afs) []int {
 	var answer []int = make([]int, 0)
-	for i := 0; i < len(data.sites); i++ {
-		if !common.IntSliceContains(answer, data.sites[i].n) {
-			answer = append(answer, data.sites[i].n)
+	for i := 0; i < len(data.Sites); i++ {
+		if !common.IntSliceContains(answer, data.Sites[i].N) {
+			answer = append(answer, data.Sites[i].N)
 		}
 	}
 	return answer

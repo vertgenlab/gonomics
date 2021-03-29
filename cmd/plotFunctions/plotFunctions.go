@@ -17,7 +17,7 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 			log.Fatalf("A stationarity distribution is defined by one parameter, received %d.", len(words))
 		}
 		alpha := common.StringToFloat64(words[0])
-		f := popgen.AFSStationarityClosure(alpha)
+		f := popgen.AfsStationarityClosure(alpha)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Beta" {
 		words := strings.Split(functionArgs, ",")

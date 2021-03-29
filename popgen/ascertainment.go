@@ -9,7 +9,7 @@ import (
 func BuildFCache(n int, alpha float64, binomCache [][]float64) []float64 {
 	var answer []float64 = make([]float64, n, n)
 	for j := 1; j < n; j++ {
-		answer[j] = AFSSampleDensity(n, j, alpha, binomCache)
+		answer[j] = AfsSampleDensity(n, j, alpha, binomCache)
 	}
 	return answer
 }
@@ -73,23 +73,23 @@ func AlleleFrequencyProbabilityDerivedAscertainment(alpha float64, i int, n int,
 	return numbers.DivideLog(numbers.MultiplyLog(pIGivenAlpha, DerivedAscertainmentProbability(n, i, d)), DerivedAscertainmentDenominator(fCache, fCacheSum, d))
 }
 
-//AfsLikelihoodDerivedAscertainment is like AFSLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for derived alleles between two groups of d individuals.
+//AfsLikelihoodDerivedAscertainment is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for derived alleles between two groups of d individuals.
 //More explanation can be found in Katzman et al, this is the inverse of Eq. 11 in the methods.
-func AfsLikelihoodDerivedAscertainment(afs AFS, alpha []float64, binomMap [][]float64, d int) float64 {
+func AfsLikelihoodDerivedAscertainment(afs Afs, alpha []float64, binomMap [][]float64, d int) float64 {
 	var answer float64 = 0.0
 	// loop over all segregating sites
-	for j := 0; j < len(afs.sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.sites[j].i, afs.sites[j].n, d, binomMap))
+	for j := 0; j < len(afs.Sites); j++ {
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap))
 	}
 	return answer
 }
 
-//AfsLikelihoodAncestralAscertainment is like AFSLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for ancestral alleles (as in conserved regions like UCEs). d is the number of genomes from each group in the ascertainment process.
-func AfsLikelihoodAncestralAscertainment(afs AFS, alpha []float64, binomMap [][]float64, d int) float64 {
+//AfsLikelihoodAncestralAscertainment is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for ancestral alleles (as in conserved regions like UCEs). d is the number of genomes from each group in the ascertainment process.
+func AfsLikelihoodAncestralAscertainment(afs Afs, alpha []float64, binomMap [][]float64, d int) float64 {
 	var answer float64 = 0.0
 	//loop over all segregating sites
-	for j := 0; j < len(afs.sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.sites[j].i, afs.sites[j].n, d, binomMap))
+	for j := 0; j < len(afs.Sites); j++ {
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap))
 	}
 	return answer
 }
