@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -93,39 +92,63 @@ func processAlignmentLine(line string) Aln {
 
 	words := strings.SplitN(line, "\t", 12)
 	if len(words) < 11 {
-		log.Fatal(fmt.Errorf("Was expecting atleast 11 columns per line, but this line did not:%s\n", line))
+		log.Fatalf("malformed sam file: was expecting at least 11 columns per line, but this line did not:\n%s\n", line)
 	}
+
+	// QName
 	curr.QName = words[0]
+
+	// Flag parsing
 	currUint, err = strconv.ParseUint(words[1], 10, 16)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[1])
 	}
 	curr.Flag = uint16(currUint)
+
+	// RName
 	curr.RName = words[2]
+
+	// Pos parsing
 	currUint, err = strconv.ParseUint(words[3], 10, 32)
-	curr.Pos = uint32(currUint)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[3])
 	}
+	curr.Pos = uint32(currUint)
+
+	// MapQ parsing
 	currUint, err = strconv.ParseUint(words[4], 10, 8)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[4])
 	}
 	curr.MapQ = uint8(currUint)
+
+	// Cigar parsing
 	curr.Cigar = cigar.FromString(words[5])
+
+	// RNext
 	curr.RNext = words[6]
+
+	// PNext parsing
 	currUint, err = strconv.ParseUint(words[7], 10, 32)
+	if err != nil {
+		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[7])
+	}
 	curr.PNext = uint32(currUint)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	// TLen parsing
 	currInt, err = strconv.ParseInt(words[8], 10, 32)
-	curr.TLen = int32(currInt)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error processing sam record: could not parse '%s' to an integer", words[8])
 	}
+	curr.TLen = int32(currInt)
+
+	// Seq parsing
 	curr.Seq = dna.StringToBases(words[9])
+
+	// Qual parsing
 	curr.Qual = words[10]
+
+	// Additional Tag fields
 	if len(words) > 11 {
 		curr.Extra = words[11]
 	}
@@ -154,13 +177,14 @@ func ReadHeader(file *fileio.EasyReader) Header {
 // SamChanToFile writes an incoming channel of Aln structs to a file.
 func SamChanToFile(incomingSams <-chan Aln, filename string, header Header, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 	if header.Text != nil {
 		WriteHeaderToFileHandle(file, header)
 	}
 	for alignedRead := range incomingSams {
-		WriteAlnToFileHandle(file, alignedRead)
+		WriteToFileHandle(file, alignedRead)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
@@ -179,6 +203,8 @@ func FastaHeader(ref []fasta.Fasta) Header {
 	return header
 }
 
+// TODO: consolidate with FastaHeader?
+// ChromInfoSamHeader generates a sam header from input chrominfo.
 func ChromInfoSamHeader(chromSize []chromInfo.ChromInfo) Header {
 	var header Header
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
@@ -194,26 +220,31 @@ func makeHeaderRefLine(chromName string, chromSize int) string {
 	return fmt.Sprintf("@SQ\tSN:%s\tLN:%d", chromName, chromSize)
 }
 
-func WriteAlnToFileHandle(file *fileio.EasyWriter, aln Aln) {
-	_, err := fmt.Fprintf(file, "%s\n", SamAlnToString(aln))
+// Write a header and sam alignments to a file. Note that this requires
+// the entire slice of alignments to be present in memory at the same time.
+// This can be avoided by repeated calls to WriteToFileHandle on alignments
+// retrieved from a channel, such as the output from GoReadToChan.
+func Write(filename string, data []Aln, header Header) {
+	file := fileio.EasyCreate(filename)
+	WriteHeaderToFileHandle(file, header)
+	for i := range data {
+		WriteToFileHandle(file, data[i])
+	}
+	err := file.Close()
 	exception.PanicOnErr(err)
 }
 
-func Write(filename string, data []Aln, header Header) {
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	WriteHeaderToFileHandle(file, header)
-	for i := range data {
-		WriteAlnToFileHandle(file, data[i])
-	}
+// WriteToFileHandle writes a single Aln struct to the input file.
+func WriteToFileHandle(file *fileio.EasyWriter, aln Aln) {
+	_, err := fmt.Fprintln(file, ToString(aln))
+	exception.PanicOnErr(err)
 }
 
-func WriteHeaderToFileHandle(file *fileio.EasyWriter, header Header) error {
+// WriteHeaderToFileHandle writes a sam header to the input file.
+func WriteHeaderToFileHandle(file *fileio.EasyWriter, header Header) {
 	var err error
-
 	for i := range header.Text {
-		_, err = fmt.Fprintf(file, "%s\n", header.Text[i])
-		common.ExitIfError(err)
+		_, err = fmt.Fprintln(file, header.Text[i])
+		exception.PanicOnErr(err)
 	}
-	return nil
 }

@@ -36,7 +36,8 @@ type Header struct {
 	Chroms   []chromInfo.ChromInfo // tags SQ - SN and SQ - LN
 }
 
-func SamAlnToString(aln Aln) string {
+// ToString converts an Aln struct to a tab delimited string per file specs.
+func ToString(aln Aln) string {
 	var answer string
 	if aln.Extra == "" {
 		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s",

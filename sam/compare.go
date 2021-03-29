@@ -3,44 +3,17 @@ package sam
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"sort"
-	"strings"
 )
 
-func compareName(alpha Aln, beta Aln) int {
-	return strings.Compare(alpha.RName, beta.RName)
-}
-
-func SortByName(alignments []Aln) {
-	sort.Slice(alignments, func(i, j int) bool { return compareName(alignments[i], alignments[j]) == -1 })
-}
-
-func SortByCoord(samRecords []Aln) {
-	sort.Slice(samRecords, func(i, j int) bool { return Compare(samRecords[i], samRecords[j]) == -1 })
-}
-
-func Compare(a Aln, b Aln) int {
-	chrName := strings.Compare(a.RName, b.RName)
-	if chrName != 0 {
-		return chrName
-	}
-	if a.Pos < b.Pos {
-		return -1
-	}
-	if a.Pos > b.Pos {
-		return 1
-	}
-	return 0
-}
-
-func IsEqual(a Aln, b Aln) bool {
-	if strings.Compare(a.QName, b.QName) != 0 {
+// Equal returns true if the two input Aln structs are identical.
+func Equal(a Aln, b Aln) bool {
+	if a.QName != b.QName {
 		return false
 	}
 	if a.Flag != b.Flag {
 		return false
 	}
-	if strings.Compare(a.RName, b.RName) != 0 {
+	if a.RName != b.RName {
 		return false
 	}
 	if a.Pos != b.Pos {
@@ -49,10 +22,10 @@ func IsEqual(a Aln, b Aln) bool {
 	if a.MapQ != b.MapQ {
 		return false
 	}
-	if strings.Compare(cigar.ToString(a.Cigar), cigar.ToString(b.Cigar)) != 0 {
+	if cigar.ToString(a.Cigar) != cigar.ToString(b.Cigar) {
 		return false
 	}
-	if strings.Compare(a.RNext, b.RNext) != 0 {
+	if a.RNext != b.RNext {
 		return false
 	}
 	if a.PNext != b.PNext {
@@ -64,20 +37,11 @@ func IsEqual(a Aln, b Aln) bool {
 	if dna.CompareSeqsIgnoreCase(a.Seq, b.Seq) != 0 {
 		return false
 	}
-	if strings.Compare(a.Qual, b.Qual) != 0 {
+	if a.Qual != b.Qual {
 		return false
 	}
-	if strings.Compare(a.Extra, b.Extra) != 0 {
+	if a.Extra != b.Extra {
 		return false
 	}
 	return true
-}
-
-func SplitSamByChr(samRecords []Aln) map[string][]Aln {
-	SortByCoord(samRecords)
-	genome := make(map[string][]Aln)
-	for _, alignedRead := range samRecords {
-		genome[alignedRead.RName] = append(genome[alignedRead.RName], alignedRead)
-	}
-	return genome
 }

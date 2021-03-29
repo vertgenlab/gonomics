@@ -144,7 +144,7 @@ func GirafToSam(ag *giraf.Giraf) sam.Aln {
 	} else {
 		target := strings.Split(ag.Notes[0].Value, "=")
 		curr.RName = target[0]
-		curr.Pos = ag.Path.TStart + common.StringToInt(target[1])
+		curr.Pos = uint32(ag.Path.TStart + common.StringToInt(target[1]))
 		curr.Flag = getSamFlags(ag)
 		if len(ag.Notes) == 2 {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:i:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))

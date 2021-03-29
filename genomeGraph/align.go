@@ -60,7 +60,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash m
 			currBest.Seq = currSeq // unsure why this line was lost
 			currBest.Qual = string(read.Qual)
 			currBest.RName = fmt.Sprintf("%d", bestPath[0])
-			currBest.Pos = minTarget + 1
+			currBest.Pos = uint32(minTarget + 1)
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
 			/*if &gg.Nodes[bestPath[0]].Info != nil {
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)

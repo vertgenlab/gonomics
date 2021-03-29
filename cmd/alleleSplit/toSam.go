@@ -91,9 +91,9 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 		}
 		switch true {
 		case parentAllele1 > parentAllele2:
-			sam.WriteAlnToFileHandle(childOne, read)
+			sam.WriteToFileHandle(childOne, read)
 		case parentAllele2 > parentAllele1:
-			sam.WriteAlnToFileHandle(childTwo, read)
+			sam.WriteToFileHandle(childTwo, read)
 		}
 	}
 }

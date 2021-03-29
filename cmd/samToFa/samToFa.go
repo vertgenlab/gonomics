@@ -43,7 +43,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			SeqIndex = 0
-			RefIndex = aln.Pos - 1
+			RefIndex = int(aln.Pos - 1)
 			for i = 0; i < len(aln.Cigar); i++ {
 				currentSeq = aln.Seq
 				if aln.Cigar[i].Op == 'D' {

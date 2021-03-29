@@ -106,7 +106,7 @@ func ModifySamToString(aln sam.Aln, samflag bool, rname bool, pos bool, mapq boo
 		answer += fmt.Sprintf("%s\t", aln.RName)
 	}
 	if pos {
-		aln.Pos += addStartChrPos(aln)
+		aln.Pos += uint32(addStartChrPos(aln))
 		answer += fmt.Sprintf("%d\t", aln.Pos)
 	}
 	if mapq {

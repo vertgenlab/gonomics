@@ -1,30 +1,28 @@
 package sam
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"sync"
 )
 
+// PairedSamAln wraps to mate pair alignments into a single struct.
 type PairedSamAln struct {
 	FwdSam Aln
 	RevSam Aln
 }
 
+// SamChaPairToFile writes a channel of PairedSamAln to a file.
 func SamChanPairToFile(incomingSams <-chan PairedSamAln, filename string, header Header, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 	if header.Text != nil {
 		WriteHeaderToFileHandle(file, header)
 	}
 	for alignedRead := range incomingSams {
-		WriteAlnPairToFileHandle(file, alignedRead)
+		WriteToFileHandle(file, alignedRead.FwdSam)
+		WriteToFileHandle(file, alignedRead.RevSam)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
-}
-
-func WriteAlnPairToFileHandle(file *fileio.EasyWriter, aln PairedSamAln) {
-	_, err := fmt.Fprintf(file, "%s\n%s\n", SamAlnToString(aln.FwdSam), SamAlnToString(aln.RevSam))
-	common.ExitIfError(err)
 }

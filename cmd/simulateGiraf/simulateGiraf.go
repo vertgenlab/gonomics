@@ -23,7 +23,7 @@ func simulateGiraf(graph *genomeGraph.GenomeGraph, numReads int, readLen int, ra
 			samReads = append(samReads, genomeGraph.GirafToSam(reads[i]))
 		}
 		//samHeader := genomeGraph.NodesHeader(graph.Nodes)
-		sam.Write(outFile, sam.Sam{sam.Header{}, samReads})
+		sam.Write(outFile, samReads, sam.Header{})
 	} else {
 		giraf.Write(outFile, reads)
 	}

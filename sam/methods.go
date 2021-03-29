@@ -57,7 +57,7 @@ func (s SamSlice) Write(filename string) { // Does not write header
 }
 
 func (s *Aln) WriteToFileHandle(file *fileio.EasyWriter) {
-	WriteAlnToFileHandle(file, *s)
+	WriteToFileHandle(file, *s)
 }
 
 func (s *Aln) NextRealRecord(file *fileio.EasyReader) bool {

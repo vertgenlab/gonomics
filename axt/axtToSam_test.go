@@ -39,7 +39,7 @@ func TestSamFileConvert(t *testing.T) {
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", 3500, 2, 31),
 	}
-	if !sam.IsEqual(samFromAxt, answerSam) {
+	if !sam.Equal(samFromAxt, answerSam) {
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
 
