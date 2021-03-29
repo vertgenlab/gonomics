@@ -193,7 +193,7 @@ func BenchmarkRange(b *testing.B) {
 	var dummyVal Base
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for j, _ := range dummySlice {
+		for j := range dummySlice {
 			dummySlice[j] = dummyVal
 		}
 	}

@@ -41,10 +41,10 @@ var (
 
 	gorillaEdge1 = genomeGraph.Edge{Dest: gorillaNode2, Prob: 1.00}
 
-	nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: map[string][]*genomeGraph.Node{"human": []*genomeGraph.Node{&humanGraph.Nodes[0]}, "chimp": []*genomeGraph.Node{&chimpGraph.Nodes[0]}, "gorilla": []*genomeGraph.Node{&gorillaGraph.Nodes[0]}}}
-	nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: map[string][]*genomeGraph.Node{"human": []*genomeGraph.Node{&humanGraph.Nodes[1]}}}
-	nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: map[string][]*genomeGraph.Node{"human": []*genomeGraph.Node{&humanGraph.Nodes[2]}, "chimp": []*genomeGraph.Node{&chimpGraph.Nodes[1]}, "gorilla": []*genomeGraph.Node{&gorillaGraph.Nodes[1]}}}
-	nodeAlign3 = graphColumn{AlignId: 3, AlignNodes: map[string][]*genomeGraph.Node{"human": []*genomeGraph.Node{&humanGraph.Nodes[3], &humanGraph.Nodes[4]}}}
+	nodeAlign0 = graphColumn{AlignId: 0, AlignNodes: map[string][]*genomeGraph.Node{"human": {&humanGraph.Nodes[0]}, "chimp": {&chimpGraph.Nodes[0]}, "gorilla": {&gorillaGraph.Nodes[0]}}}
+	nodeAlign1 = graphColumn{AlignId: 1, AlignNodes: map[string][]*genomeGraph.Node{"human": {&humanGraph.Nodes[1]}}}
+	nodeAlign2 = graphColumn{AlignId: 2, AlignNodes: map[string][]*genomeGraph.Node{"human": {&humanGraph.Nodes[2]}, "chimp": {&chimpGraph.Nodes[1]}, "gorilla": {&gorillaGraph.Nodes[1]}}}
+	nodeAlign3 = graphColumn{AlignId: 3, AlignNodes: map[string][]*genomeGraph.Node{"human": {&humanGraph.Nodes[3], &humanGraph.Nodes[4]}}}
 )
 
 func TestGraphColumn(t *testing.T) {

@@ -11,7 +11,7 @@ func mafFilterScore(inFile string, outFile string, threshold float64) {
 	mafRecords := maf.Read(inFile)
 	var outMaf []*maf.Maf
 
-	for i, _ := range mafRecords {
+	for i := range mafRecords {
 		if mafRecords[i].Score >= threshold {
 			outMaf = append(outMaf, mafRecords[i])
 		}
