@@ -88,7 +88,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 
 func usage() {
 	fmt.Print(
-		"SimRecon takes in a root fasta file and a tree. It simulates evolution alone the tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node.\n" +
+		"SimRecon takes in a root fasta file and a tree. It simulates evolution along the tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node.\n" +
 			"simRecon [-option] <rootFile.fasta> <treeFile.txt> <genePred.gp> <simOutFile.fasta> <leafOutFile.fasta> <reconOutFile.fasta> <accuracyOutFile.txt>\n" +
 			"options:\n")
 	flag.PrintDefaults()

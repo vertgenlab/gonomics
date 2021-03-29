@@ -9,8 +9,8 @@ import (
 	"log"
 )
 
-//returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
-//If option = 1 it will also return the percentage of first second and third bases of each codon that were correct
+// ReconAccuracy returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
+// If option = 1 it will also return the percentage of first second and third bases of each codon that were correct
 func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string, option int) (accTotal map[string]float64, accBases map[string][]float64) {
 	var accByBase map[string][]float64
 	if option == 1 {
@@ -108,6 +108,7 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 	return answer, accByBase
 }
 
+// ReconAccuracyByBase will run if the option given to ReconAccuracy = 1. This function calculates the percentage of first, second and third bases in codons that were correct.
 func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename string) map[string][]float64 {
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
@@ -131,7 +132,6 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 						inExon, exon := simulate.CheckExon(genes[g], i)
 						if inExon {
 							loc := findLocationInCodon(genes[g], exon, i)
-							//TODO: remove pointers to genePreds once clean up is merged
 							if loc == 1 {
 								total1 += 1
 								if sim[s].Seq[i] != recon[r].Seq[i] {
@@ -164,7 +164,7 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 }
 
 // findLocationInCodon returns what position in a codon a given base inhabits (first, second or third).
-func findLocationInCodon(gene *genePred.GenePred, exon int, position int) int {
+func findLocationInCodon(gene genePred.GenePred, exon int, position int) int {
 	var positionInCodon int
 
 	if gene.ExonFrames[exon] == 0 {
