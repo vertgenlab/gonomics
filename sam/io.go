@@ -166,11 +166,14 @@ func ReadHeader(file *fileio.EasyReader) Header {
 		answer.Text = append(answer.Text, line)
 	}
 
-	answer.Metadata.AllTags, answer.Metadata.Comments = parseTagsAndComments(answer.Text)
-	answer.Chroms = getChromInfo(answer.Metadata.AllTags)
-	answer.Metadata.Version = getVersion(answer.Metadata.AllTags)
-	answer.Metadata.SortOrder = getSortOrder(answer.Metadata.AllTags)
-	answer.Metadata.Grouping = getGrouping(answer.Metadata.AllTags)
+	if answer.Text != nil {
+		answer.Metadata.AllTags, answer.Metadata.Comments = parseTagsAndComments(answer.Text)
+		answer.Chroms = getChromInfo(answer.Metadata.AllTags)
+		answer.Metadata.Version = getVersion(answer.Metadata.AllTags)
+		answer.Metadata.SortOrder = getSortOrder(answer.Metadata.AllTags)
+		answer.Metadata.Grouping = getGrouping(answer.Metadata.AllTags)
+	}
+
 	return answer
 }
 

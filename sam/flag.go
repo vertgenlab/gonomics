@@ -3,7 +3,7 @@ package sam
 // flagTestBit tests a single bit in the sam Flag.
 func flagTestBit(num uint16, bit uint16) bool {
 	var dummy uint16 = bit & num //bitwise AND
-	return dummy == 0
+	return dummy == bit
 }
 
 // IsPaired returns true if the input record has a mate pair.
@@ -55,11 +55,11 @@ func IsReverseRead(sam Aln) bool {
 // IsNotPrimaryAlign returns true if the input record is a secondary
 // alignment according to the aligner.
 func IsNotPrimaryAlign(sam Aln) bool {
-	return flagTestBit(sam.Flag, 265)
+	return flagTestBit(sam.Flag, 256)
 }
 
-// ReadFailsQC returns true if the input record failed quality control.
-func ReadFailsQC(sam Aln) bool {
+// ReadFailsQc returns true if the input record failed quality control.
+func ReadFailsQc(sam Aln) bool {
 	return flagTestBit(sam.Flag, 512)
 }
 
@@ -69,8 +69,8 @@ func IsDuplicate(sam Aln) bool {
 	return flagTestBit(sam.Flag, 1024)
 }
 
-// IsSupplementaryAlignment returns true if the input record was
+// IsSupplementaryAlign returns true if the input record was
 // identified as a supplementary alignment by the aligner.
-func IsSupplementaryAlignment(sam Aln) bool {
+func IsSupplementaryAlign(sam Aln) bool {
 	return flagTestBit(sam.Flag, 2048)
 }
