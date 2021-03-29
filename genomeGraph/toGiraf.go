@@ -155,15 +155,15 @@ func GirafToSam(ag *giraf.Giraf) sam.Aln {
 	return curr
 }
 
-func GirafPairToSam(ag giraf.GirafPair) sam.PairedSamAln {
-	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: sam.Aln{}, RevSam: sam.Aln{}}
-	mappedPair.FwdSam = GirafToSam(&ag.Fwd)
-	mappedPair.RevSam = GirafToSam(&ag.Rev)
-	mappedPair.FwdSam.Flag += 64 + 2
-	mappedPair.RevSam.Flag += 128 + 2
+func GirafPairToSam(ag giraf.GirafPair) sam.MatePair {
+	var mappedPair sam.MatePair = sam.MatePair{Fwd: sam.Aln{}, Rev: sam.Aln{}}
+	mappedPair.Fwd = GirafToSam(&ag.Fwd)
+	mappedPair.Rev = GirafToSam(&ag.Rev)
+	mappedPair.Fwd.Flag += 64 + 2
+	mappedPair.Rev.Flag += 128 + 2
 	if isProperPairAlign(&ag) {
-		mappedPair.FwdSam.Flag += 1
-		mappedPair.RevSam.Flag += 1
+		mappedPair.Fwd.Flag += 1
+		mappedPair.Rev.Flag += 1
 	}
 	return mappedPair
 }

@@ -13,6 +13,16 @@ const (
 	samSpecVersion = "1.6" // Version of sam this package is built on
 )
 
+// MatePair wraps to paired alignments into a single struct.
+type MatePair struct {
+	Fwd Aln
+	Rev Aln
+}
+
+// Aln stores fields of a sam record in the corresponding data type
+// denoted in the sam file specifications. The cigar and sequence
+// fields are further parsed into a more complex data structure to
+// facilitate ease of use.
 type Aln struct {
 	QName string         // query template name: [!-?A-~]{1,254}
 	Flag  uint16         // bitwise flag, bits defined in info.go

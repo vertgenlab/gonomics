@@ -88,13 +88,13 @@ func parseTagsAndComments(text []string) (tags HeaderTagMap, comments []string) 
 	for _, line := range text {
 		words := strings.Split(line, "\t")
 
-		if words[0][0] != '@' || len(words[0]) != 3 {
-			log.Fatalf("Error: malformed header line: %s", line)
-		}
-
-		if words[0] == "@CO" {
+		if words[0][:3] == "@CO" {
 			comments = append(comments, line)
 			continue
+		}
+
+		if words[0][0] != '@' || len(words[0]) != 3 {
+			log.Fatalf("malformed sam header line: %s", line)
 		}
 
 		copy(currTag[:], words[0][1:]) // copy Tag
