@@ -21,7 +21,7 @@ type Sam struct {
 
 type SamHeader struct {
 	Text   []string
-	Chroms []*chromInfo.ChromInfo
+	Chroms []chromInfo.ChromInfo
 }
 
 type SamAln struct {
@@ -95,7 +95,7 @@ func processHeaderLine(header *SamHeader, line string) {
 		if curr.Name == "" || curr.Size == 0 {
 			//	log.Fatal(fmt.Errorf("Thought I would get a name and non-zero size on this line: %s\n", line))
 		}
-		header.Chroms = append(header.Chroms, &curr)
+		header.Chroms = append(header.Chroms, curr)
 	}
 }
 
@@ -182,14 +182,14 @@ func Read(filename string) (*Sam, error) {
 func WriteHeaderToFileHandle(file *fileio.EasyWriter, header *SamHeader) error {
 	var err error
 
-	for i, _ := range header.Text {
+	for i := range header.Text {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[i])
 		common.ExitIfError(err)
 	}
 	return nil
 }
 
-func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
+func ChromInfoSamHeader(chromSize []chromInfo.ChromInfo) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
@@ -201,7 +201,7 @@ func ChromInfoSamHeader(chromSize []*chromInfo.ChromInfo) *SamHeader {
 	return &header
 }
 
-func ChromInfoMapSamHeader(chromSize map[string]*chromInfo.ChromInfo) *SamHeader {
+func ChromInfoMapSamHeader(chromSize map[string]chromInfo.ChromInfo) *SamHeader {
 	var header SamHeader
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
@@ -318,7 +318,7 @@ func Write(filename string, data *Sam) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	WriteHeaderToFileHandle(file, data.Header)
-	for i, _ := range data.Aln {
+	for i := range data.Aln {
 		WriteAlnToFileHandle(file, data.Aln[i])
 	}
 }
@@ -331,7 +331,7 @@ func FastaHeader(ref []fasta.Fasta) *SamHeader {
 	for i := 0; i < len(ref); i++ {
 		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
 		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
+		header.Chroms = append(header.Chroms, chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
 	}
 	return &header
 }

@@ -9,11 +9,11 @@ import (
 	"log"
 )
 
-func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool) {
+func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool, derived bool, ancestral bool) {
 	common.RngSeed(randSeed, setSeed)
 	data, err := popgen.VcfToAFS(filename, !unPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
-	popgen.MetropolisHastings(*data, muZero, sigmaZero, iterations, outFile)
+	popgen.MetropolisHastings(*data, muZero, sigmaZero, iterations, outFile, derived, ancestral)
 }
 
 func usage() {
@@ -35,6 +35,8 @@ func main() {
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
+	var derived *bool = flag.Bool("derived", false, "Make a divergence-based ascertainment correction for regions enriched for derived alleles (i.e. HAQERs, HARs, or other fast-evolving regions).")
+	var ancestral *bool = flag.Bool("ancestral", false, "Make a divergence-based ascertainment correction for regions enriched for ancestral alleles (i.e. UCEs or other highly conserved regions).")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -48,5 +50,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed, *unPolarized)
+	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed, *unPolarized, *derived, *ancestral)
 }

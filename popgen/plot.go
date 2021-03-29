@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+//PlotAfsF writes the Allele Frequency F function (AFSSampleDensity) to an output file for downstream visualization.
 func PlotAfsF(alpha float64, n int, outFile string) {
 	out := fileio.EasyCreate(outFile)
 	allN := []int{n}
@@ -20,6 +21,7 @@ func PlotAfsF(alpha float64, n int, outFile string) {
 	exception.PanicOnErr(err)
 }
 
+//PlotAfsPmf writes the allele frequency probability mass function (AlleleFrequencyProbability) to an output file for downstream visualization.
 func PlotAfsPmf(alpha float64, n int, outFile string) {
 	out := fileio.EasyCreate(outFile)
 

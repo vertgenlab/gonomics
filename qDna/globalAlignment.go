@@ -16,8 +16,8 @@ func ConstGap(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen float64)
 	}
 
 	var i, j, routeIdx int
-	for i, _ = range m {
-		for j, _ = range m[0] {
+	for i = range m {
+		for j = range m[0] {
 			if i == 0 && j == 0 {
 				m[i][j] = 0
 			} else if i == 0 {
@@ -60,8 +60,8 @@ func ConstGap(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen float64)
 
 func AffineGap(alpha []*QBase, beta []*QBase, scores [][]float64, gapOpen float64, gapExtend float64) (float64, []align.Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha), len(beta))
-	for i, _ := range m[0] {
-		for j, _ := range m[0][0] {
+	for i := range m[0] {
+		for j := range m[0][0] {
 			if i == 0 && j == 0 {
 				m[0][i][j] = 0
 				m[1][i][j] = gapOpen
@@ -129,10 +129,10 @@ func affineTrace(m [][][]float64, trace [][][]align.ColType) (float64, []align.C
 func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][][]float64, [][][]align.ColType) {
 	m := make([][][]float64, 3)
 	trace := make([][][]align.ColType, 3)
-	for k, _ := range m {
+	for k := range m {
 		m[k] = make([][]float64, firstSeqLen+1)
 		trace[k] = make([][]align.ColType, firstSeqLen+1)
-		for i, _ := range m[0] {
+		for i := range m[0] {
 			m[k][i] = make([]float64, secondSeqLen+1)
 			trace[k][i] = make([]align.ColType, secondSeqLen+1)
 		}

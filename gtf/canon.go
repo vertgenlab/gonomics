@@ -11,7 +11,7 @@ func CdnaLength(t *Transcript) int {
 	return answer
 }
 
-// Returns length of CDS in nucleotides
+// Returns length of Cds in nucleotides
 func CdsLength(t *Transcript) int {
 	var answer int = 0
 	for i := 0; i < len(t.Exons); i++ {

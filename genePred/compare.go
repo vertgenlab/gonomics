@@ -1,61 +1,70 @@
 package genePred
 
 import (
-	"log"
 	"strings"
 )
 
-func AllAreEqual(a []*GenePred, b []*GenePred) bool {
+// AllAreEqual examines if two genePred files are the same entry by entry. The first unequal record will be returned with a slice of ints that refer to which fields are unequal.
+func AllAreEqual(a []GenePred, b []GenePred) (bool, []int) {
+	var fields []int
+	var equal bool
+
 	if len(a) != len(b) {
-		return false
+		return false, fields
 	}
 	for i := 0; i < len(a); i++ {
-		if !Equal(a[i], b[i]) {
-			return false
+		equal, fields = Equal(a[i], b[i])
+		if !equal {
+			return equal, fields
 		}
 	}
-	return true
+	return equal, fields
 }
 
-func Equal(a *GenePred, b *GenePred) bool {
+// Equal checks if two genePred entires are identical. This will return a bool of whether the whole entries are identical, and a slice of ints that refer to which fields did not match.
+//Ex: if one or more exonStart positions do not match fields will contain a 9.
+func Equal(a GenePred, b GenePred) (bool, []int) {
+	var isEqual = true
+	var fields []int
+
 	if strings.Compare(a.Id, b.Id) != 0 {
-		log.Print("1")
-		return false
+		fields = append(fields, 1)
+		isEqual = false
 	}
 	if strings.Compare(a.Chrom, b.Chrom) != 0 {
-		log.Print("2")
-		return false
+		fields = append(fields, 2)
+		isEqual = false
 	}
 	if a.Strand != b.Strand {
-		log.Print("3")
-		return false
+		fields = append(fields, 3)
+		isEqual = false
 	}
 	if a.TxStart != b.TxStart {
-		log.Print("4")
-		return false
+		fields = append(fields, 4)
+		isEqual = false
 	}
 	if a.TxEnd != b.TxEnd {
-		log.Print("5")
-		return false
+		fields = append(fields, 5)
+		isEqual = false
 	}
 	if a.CdsStart != b.CdsStart {
-		log.Print("6")
-		return false
+		fields = append(fields, 6)
+		isEqual = false
 	}
 	if a.CdsEnd != b.CdsEnd {
-		log.Print("7")
-		return false
+		fields = append(fields, 7)
+		isEqual = false
 	}
 	//exon ends must have the same number of values as exon starts
 	for i := 0; i < len(a.ExonStarts); i++ {
 		if a.ExonStarts[i] != b.ExonStarts[i] {
-			log.Print("9")
-			return false
+			fields = append(fields, 9)
+			isEqual = false
 		}
-		if b.ExonEnds[i] != b.ExonEnds[i] {
-			log.Print("10")
-			return false
+		if a.ExonEnds[i] != b.ExonEnds[i] {
+			fields = append(fields, 10)
+			isEqual = false
 		}
 	}
-	return true
+	return isEqual, fields
 }

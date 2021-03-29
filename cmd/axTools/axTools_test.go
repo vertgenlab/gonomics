@@ -11,7 +11,7 @@ import (
 
 func TestAxtToFasta(t *testing.T) {
 	log.SetFlags(0)
-	var testAxt = &axt.Axt{
+	var testAxt = axt.Axt{
 		RName:      "chr19",
 		RStart:     11,
 		REnd:       40,

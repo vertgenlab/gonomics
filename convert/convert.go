@@ -21,7 +21,7 @@ import (
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
 func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
-	for i := 0; i < len(ref); i++ {
+	for i := range ref {
 		if b.Chrom == ref[i].Name {
 			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
 		}
@@ -58,7 +58,7 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 } */
 
 //SamToBedFrag converts a SamAln entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
-func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]*chromInfo.ChromInfo) *bed.Bed {
+func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]chromInfo.ChromInfo) *bed.Bed {
 	var answer *bed.Bed
 
 	if s.Cigar[0].Op == '*' {
@@ -79,7 +79,7 @@ func SamToBedFrag(s *sam.SamAln, fragLength int, reference map[string]*chromInfo
 }
 
 //BedScoreToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is equal to the score of an overlapping bed entry at the bed entry midpoint, and zero if no bed regions overlap.
-func BedScoreToWig(infile string, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var line string
 	var chromIndex int
@@ -153,8 +153,6 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 		i++
 	}
 
-	//DEBUG: log.Println("Completed wig skeleton, looping through bed.")
-
 	//loop through bed line at a time
 	file := fileio.EasyOpen(infile)
 	defer file.Close()
@@ -183,7 +181,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 }
 
 //BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
-func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*wig.Wig {
+func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []*wig.Wig {
 	wigSlice := make([]*wig.Wig, len(reference))
 	var chromIndex int
 	var i, x int = 0, 0
@@ -198,26 +196,23 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]*chromInfo.ChromInfo) []*w
 		i++
 	}
 
-	for j := 0; j < len(b); j++ {
+	for j := range b {
 		chromIndex = getWigChromIndex(b[j].Chrom, wigSlice)
-		//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
-			//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
 			wigSlice[chromIndex].Values[k].Value++
 		}
-		//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, j: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, j, len(wigSlice[chromIndex].Values))
 	}
 	return wigSlice
 }
 
 //bedMidpoint returns the midpoint position of an input bed entry.
 func bedMidpoint(b *bed.Bed) int {
-	return int(b.ChromEnd+b.ChromStart) / 2
+	return (b.ChromEnd + b.ChromStart) / 2
 }
 
 //getWigChromIndex searches a wig slice for the wig entry with a particular name and returns the index of that entry in the slice.
 func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
-	for i := 0; i < len(wigSlice); i++ {
+	for i := range wigSlice {
 		if s == wigSlice[i].Chrom {
 			return i
 		}
@@ -235,7 +230,7 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 	var insertionAlnPos int
 	var deletionAlnPos int
 
-	for i := 0; i < len(f[0].Seq); i++ { //loop through reference alignment positions
+	for i := range f[0].Seq { //loop through reference alignment positions
 		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
 			if pastStart {
 				if !insertion {

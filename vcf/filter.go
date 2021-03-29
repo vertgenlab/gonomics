@@ -2,7 +2,6 @@ package vcf
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math/rand"
@@ -82,41 +81,6 @@ func FilterChrom(v *Vcf, chrom string) bool {
 		return false
 	}
 	return true
-}
-
-//TODO: This is re-implemented andf optimized on line 169. Once I can confirm the functions behave the same way, this will be removed.
-func FilterAxtVcf(vcfs []*Vcf, fa []fasta.Fasta) []*Vcf {
-	split := VcfSplit(vcfs, fa)
-	var answer []*Vcf
-	var i, j int
-	var ref []dna.Base
-	var alt [][]dna.Base
-	var noN bool
-	for i = 0; i < len(split); i++ {
-		encountered := make(map[int]bool)
-		for j = 0; j < len(split[i]); j++ {
-			if encountered[split[i][j].Pos] == true {
-				//do not add
-			} else {
-				encountered[split[i][j].Pos] = true
-				ref = dna.StringToBases(split[i][j].Ref)
-				alt = GetAltBases(split[i][j].Alt)
-				noN = true
-				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) == 0 {
-					for k := 0; k < len(alt); k++ {
-						if dna.CountBaseInterval(alt[k], dna.N, 0, len(alt)) != 0 {
-							noN = false
-						}
-					}
-					if noN {
-						answer = append(answer, split[i][j])
-					}
-				}
-			}
-		}
-	}
-	Sort(answer)
-	return answer
 }
 
 //FilterNs removes all records from a slice of Vcfs that contain Ns.

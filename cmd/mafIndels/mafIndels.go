@@ -20,7 +20,7 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 	defer out_del.Close() //Check if defer will work for 2 files at the same time. Seems to have worked
 
 	//go through each line
-	for i, _ := range mafRecords { //each i is a block
+	for i := range mafRecords { //each i is a block
 		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
 
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del

@@ -10,28 +10,29 @@ import (
 	"os"
 )
 
-func drawIndTree(inFile string, outFile string, imgWidth int, imgHeight int) {
+//drawNewickTree takes in a newick file and returns a png of the newick tree, where the image's width and height are as specified, or default to 1500
+func drawNewickTree(newickFile string, pngFile string, imgWidth int, imgHeight int) {
 	var nt *tree.Tree
 	var err error
 	var img *image.RGBA
 	var imgOutFile *os.File
 
-	nt, err = tree.ReadNewick(inFile)
+	nt, err = tree.ReadNewick(newickFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	img, err = tree.Draw(nt, imgWidth, imgHeight)
 	if err != nil {
-		log.Fatalf("Error in Draw")
+		log.Panicf("Error in Draw")
 	}
-	imgOutFile, err = os.Create(outFile)
+	imgOutFile, err = os.Create(pngFile)
 	if err != nil {
-		log.Fatalf("Error in Create")
+		log.Panicf("Error in Create")
 	}
 	defer imgOutFile.Close()
 	err = png.Encode(imgOutFile, img)
 	if err != nil {
-		log.Fatalf("Error in png.Encode")
+		log.Panicf("Error in png.Encode")
 	}
 }
 
@@ -62,5 +63,5 @@ func main() {
 	infile := flag.Arg(0)
 	imgOutFile := flag.Arg(1)
 
-	drawIndTree(infile, imgOutFile, *imgWidth, *imgHeight)
+	drawNewickTree(infile, imgOutFile, *imgWidth, *imgHeight)
 }

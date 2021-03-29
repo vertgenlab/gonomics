@@ -39,53 +39,53 @@ import (
 func MakeTestGraph() *GenomeGraph {
 	graph := EmptyGraph()
 
-	var n0, n1, n2, n3, n4 *Node
+	var n0, n1, n2, n3, n4 Node
 	var e0, e1, e2, e3, e4, e5 Edge
 
 	// Make Nodes
-	n0 = &Node{
+	n0 = Node{
 		Id:  0,
 		Seq: dna.StringToBases("ATG")}
 
-	n1 = &Node{
+	n1 = Node{
 		Id:  1,
 		Seq: dna.StringToBases("CG")}
 
-	n2 = &Node{
+	n2 = Node{
 		Id:  2,
 		Seq: dna.StringToBases("A")}
 
-	n3 = &Node{
+	n3 = Node{
 		Id:  3,
 		Seq: dna.StringToBases("T")}
 
-	n4 = &Node{
+	n4 = Node{
 		Id:  4,
 		Seq: dna.StringToBases("TAA")}
 
 	// Make Edges
 	e0 = Edge{
-		Dest: n1,
+		Dest: &n1,
 		Prob: 1}
 
 	e1 = Edge{
-		Dest: n2,
+		Dest: &n2,
 		Prob: 0.05}
 
 	e2 = Edge{
-		Dest: n4,
+		Dest: &n4,
 		Prob: 1}
 
 	e3 = Edge{
-		Dest: n4,
+		Dest: &n4,
 		Prob: 0.8}
 
 	e4 = Edge{
-		Dest: n3,
+		Dest: &n3,
 		Prob: 0.15}
 
 	e5 = Edge{
-		Dest: n4,
+		Dest: &n4,
 		Prob: 1}
 
 	// Define Paths
