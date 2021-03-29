@@ -6,31 +6,31 @@ import (
 )
 
 const (
-	paired int = 1
+	paired          int = 1
 	properlyAligned int = 2
-	unmapped int = 4
-	mateUnmapped int = 8
-	posStrand int = 16
+	unmapped        int = 4
+	mateUnmapped    int = 8
+	posStrand       int = 16
 	mateIsPosStrand int = 32
-	forwardRead int = 64
-	reverseRead int = 128
+	forwardRead     int = 64
+	reverseRead     int = 128
 	notPrimeryAlign int = 256
-	readFailsQc int = 512
-	isDuplicate int = 1024
-	suppAlign int = 2048
+	readFailsQc     int = 512
+	isDuplicate     int = 1024
+	suppAlign       int = 2048
 )
 
-var testMap = map[int]func(sam Aln) bool {
-	1: IsPaired,
-	2: ProperlyAligned,
-	4: IsUnmapped,
-	8: MateIsUnmapped,
-	16: IsPosStrand,
-	32: MateIsPosStrand,
-	64: IsForwardRead,
-	128: IsReverseRead,
-	256: IsNotPrimaryAlign,
-	512: ReadFailsQc,
+var testMap = map[int]func(sam Aln) bool{
+	1:    IsPaired,
+	2:    ProperlyAligned,
+	4:    IsUnmapped,
+	8:    MateIsUnmapped,
+	16:   IsPosStrand,
+	32:   MateIsPosStrand,
+	64:   IsForwardRead,
+	128:  IsReverseRead,
+	256:  IsNotPrimaryAlign,
+	512:  ReadFailsQc,
 	1024: IsDuplicate,
 	2048: IsSupplementaryAlign,
 }
@@ -66,7 +66,7 @@ func TestFlagFuncs(t *testing.T) {
 
 	if !testFlags([]int{paired, properlyAligned, unmapped, mateUnmapped,
 		posStrand, mateIsPosStrand, forwardRead, reverseRead, notPrimeryAlign, readFailsQc,
-	    isDuplicate, suppAlign}) {
+		isDuplicate, suppAlign}) {
 		t.Errorf("error with flag funcs")
 	}
 

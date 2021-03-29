@@ -62,7 +62,8 @@ func ReadNext(reader *fileio.EasyReader) (Aln, bool) {
 	var done bool
 
 	// read first non-header line
-	for line, done = fileio.EasyNextLine(reader); !done && line[0] == '@'; line, done = fileio.EasyNextLine(reader) {}
+	for line, done = fileio.EasyNextLine(reader); !done && line[0] == '@'; line, done = fileio.EasyNextLine(reader) {
+	}
 
 	if done {
 		return Aln{}, true

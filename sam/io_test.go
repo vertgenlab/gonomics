@@ -8,93 +8,93 @@ import (
 	"testing"
 )
 
-var r001 = Aln {
+var r001 = Aln{
 	QName: "r001",
-	Flag: 99,
-	MapQ: 30,
+	Flag:  99,
+	MapQ:  30,
 	RName: "ref",
-	Pos: 7,
+	Pos:   7,
 	Cigar: cigar.FromString("8M2I4M1D3M"),
 	RNext: "=",
 	PNext: 37,
-	TLen: 39,
-	Seq: dna.StringToBases("TTAGATAAAGGATACTG"),
-	Qual: "*",
+	TLen:  39,
+	Seq:   dna.StringToBases("TTAGATAAAGGATACTG"),
+	Qual:  "*",
 	Extra: "",
 }
 
-var r002 = Aln {
+var r002 = Aln{
 	QName: "r002",
-	Flag: 0,
-	MapQ: 30,
+	Flag:  0,
+	MapQ:  30,
 	RName: "ref",
-	Pos: 9,
+	Pos:   9,
 	Cigar: cigar.FromString("3S6M1P1I4M"),
 	RNext: "*",
 	PNext: 0,
-	TLen: 0,
-	Seq: dna.StringToBases("AAAAGATAAGGATA"),
-	Qual: "*",
+	TLen:  0,
+	Seq:   dna.StringToBases("AAAAGATAAGGATA"),
+	Qual:  "*",
 	Extra: "",
 }
 
-var r003 = Aln {
+var r003 = Aln{
 	QName: "r003",
-	Flag: 0,
-	MapQ: 30,
+	Flag:  0,
+	MapQ:  30,
 	RName: "ref",
-	Pos: 9,
+	Pos:   9,
 	Cigar: cigar.FromString("5S6M"),
 	RNext: "*",
 	PNext: 0,
-	TLen: 0,
-	Seq: dna.StringToBases("GCCTAAGCTAA"),
-	Qual: "*",
+	TLen:  0,
+	Seq:   dna.StringToBases("GCCTAAGCTAA"),
+	Qual:  "*",
 	Extra: "SA:Z:ref,29,-,6H5M,17,0;",
 }
 
-var r004 = Aln {
+var r004 = Aln{
 	QName: "r004",
-	Flag: 0,
-	MapQ: 30,
+	Flag:  0,
+	MapQ:  30,
 	RName: "ref",
-	Pos: 16,
+	Pos:   16,
 	Cigar: cigar.FromString("6M14N5M"),
 	RNext: "*",
 	PNext: 0,
-	TLen: 0,
-	Seq: dna.StringToBases("ATAGCTTCAGC"),
-	Qual: "*",
+	TLen:  0,
+	Seq:   dna.StringToBases("ATAGCTTCAGC"),
+	Qual:  "*",
 	Extra: "",
 }
 
-var r003Supplemental = Aln {
+var r003Supplemental = Aln{
 	QName: "r003",
-	Flag: 2064,
-	MapQ: 17,
+	Flag:  2064,
+	MapQ:  17,
 	RName: "ref",
-	Pos: 29,
+	Pos:   29,
 	Cigar: cigar.FromString("6H5M"),
 	RNext: "*",
 	PNext: 0,
-	TLen: 0,
-	Seq: dna.StringToBases("TAGGC"),
-	Qual: "*",
+	TLen:  0,
+	Seq:   dna.StringToBases("TAGGC"),
+	Qual:  "*",
 	Extra: "SA:Z:ref,9,+,5S6M,30,1;",
 }
 
-var r001Supplemental = Aln {
+var r001Supplemental = Aln{
 	QName: "r001",
-	Flag: 147,
-	MapQ: 30,
+	Flag:  147,
+	MapQ:  30,
 	RName: "ref",
-	Pos: 37,
+	Pos:   37,
 	Cigar: cigar.FromString("9M"),
 	RNext: "=",
 	PNext: 7,
-	TLen: -39,
-	Seq: dna.StringToBases("CAGCGGCAT"),
-	Qual: "*",
+	TLen:  -39,
+	Seq:   dna.StringToBases("CAGCGGCAT"),
+	Qual:  "*",
 	Extra: "NM:i:1",
 }
 
