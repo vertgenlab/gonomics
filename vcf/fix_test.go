@@ -9,7 +9,7 @@ import (
 func TestFixVcf(t *testing.T) {
 
 	ref := map[string][]dna.Base{
-		"test": []dna.Base{dna.A, dna.C, dna.G, dna.T}}
+		"test": {dna.A, dna.C, dna.G, dna.T}}
 	vcfTest := Vcf{
 		Chr: "test",
 		Pos: 2,

@@ -10,7 +10,7 @@ func ReverseComplement(record *Fastq) {
 }
 
 func ReverseComplementAll(records []*Fastq) {
-	for idx, _ := range records {
+	for idx := range records {
 		ReverseComplement(records[idx])
 	}
 }

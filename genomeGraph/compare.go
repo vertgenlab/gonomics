@@ -39,7 +39,7 @@ func allEqual(alpha []*Node, beta []*Node, ignoreOrder bool) bool {
 		SortById(alpha)
 		SortById(beta)
 	}
-	for idx, _ := range alpha {
+	for idx := range alpha {
 		if !isEqual(alpha[idx], beta[idx]) {
 			return false
 		}

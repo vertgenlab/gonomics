@@ -9,7 +9,7 @@ func AllAreEqual(a map[string]*Gene, b map[string]*Gene) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for k, _ := range b {
+	for k := range b {
 		if _, ok := a[k]; !ok {
 			return false
 		} else {
