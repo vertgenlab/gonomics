@@ -70,16 +70,16 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 func FaSeqToNode(target fasta.Fasta, query fasta.Fasta, tStart int, qStart int, cigar align.Cigar, index int) (*Node, int, int) {
 	switch cigar.Op {
 	case align.ColM:
-		curr := Node{Id: uint32(index), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
-		return &curr, tStart + int(cigar.RunLength), qStart + int(cigar.RunLength)
+		curr := &Node{Id: uint32(index), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
+		return curr, tStart + int(cigar.RunLength), qStart + int(cigar.RunLength)
 	case align.ColI:
-		ins := Node{Id: uint32(index), Seq: query.Seq[qStart : qStart+int(cigar.RunLength)]}
-		return &ins, tStart, qStart + int(cigar.RunLength)
+		ins := &Node{Id: uint32(index), Seq: query.Seq[qStart : qStart+int(cigar.RunLength)]}
+		return ins, tStart, qStart + int(cigar.RunLength)
 	case align.ColD:
-		del := Node{Id: uint32(index), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
-		return &del, tStart + int(cigar.RunLength), qStart
+		del := &Node{Id: uint32(index), Seq: target.Seq[tStart : tStart+int(cigar.RunLength)]}
+		return del, tStart + int(cigar.RunLength), qStart
 	default:
 		log.Fatalf("Error: Did not recognize cigar op %d...\n", cigar.Op)
+		return nil, 0, 0
 	}
-	return nil, 0, 0
 }

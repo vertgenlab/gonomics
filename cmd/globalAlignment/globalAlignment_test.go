@@ -22,7 +22,7 @@ var manual = buildManualGraph(toad, ahsoka)
 //Did graph and manual end up with the same number of nodes?
 func TestAddNode(t *testing.T) {
 	if len(graph.Nodes) != len(aln) {
-		t.Errorf("Number of nodes does not match with the cigar")
+		t.Errorf("Number of nodes does not match with the cigar: %d %d", len(graph.Nodes), len(aln))
 	}
 }
 
@@ -53,10 +53,10 @@ func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *genomeGraph.GenomeG
 		Id:  2,
 		Seq: toad.Seq[6:9]}
 
-	genomeGraph.AddNode(manual, nodeOne)
-	genomeGraph.AddNode(manual, nodeTwo)
+	nodeOne = genomeGraph.AddNode(manual, nodeOne)
+	nodeTwo = genomeGraph.AddNode(manual, nodeTwo)
 	genomeGraph.AddEdge(nodeOne, nodeTwo, 0.5)
-	genomeGraph.AddNode(manual, nodeThree)
+	nodeThree = genomeGraph.AddNode(manual, nodeThree)
 	genomeGraph.AddEdge(nodeTwo, nodeThree, 1.0)
 	genomeGraph.AddEdge(nodeOne, nodeThree, 0.5)
 
