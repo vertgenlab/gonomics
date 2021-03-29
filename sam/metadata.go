@@ -81,6 +81,19 @@ var groupingMap = map[string]Grouping{
 	"reference": Reference,
 }
 
+// ParseHeaderText parses the raw text of in the header struct and
+// fills the appropriate fields in the rest of the header struct.
+func ParseHeaderText(h Header) Header {
+	if h.Text != nil {
+		h.Metadata.AllTags, h.Metadata.Comments = parseTagsAndComments(h.Text)
+		h.Chroms = getChromInfo(h.Metadata.AllTags)
+		h.Metadata.Version = getVersion(h.Metadata.AllTags)
+		h.Metadata.SortOrder = getSortOrder(h.Metadata.AllTags)
+		h.Metadata.Grouping = getGrouping(h.Metadata.AllTags)
+	}
+	return h
+}
+
 // parseTagsAndComments parses header text into a HeaderTagMap and a slice of comment lines
 func parseTagsAndComments(text []string) (tags HeaderTagMap, comments []string) {
 	var currTag Tag

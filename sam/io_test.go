@@ -5,6 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
+	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -135,6 +137,42 @@ func TestReadToChan(t *testing.T) {
 			t.Error("problem reading sam to channel")
 		}
 		i++
+	}
+}
+
+func TestWriteFromChan(t *testing.T) {
+	data, header := GoReadToChan("testdata/small.sam")
+	var wg sync.WaitGroup
+	wg.Add(1)
+	WriteFromChan(data, "testdata/small.sam.tmp", header, &wg)
+	wg.Wait()
+	if !fileio.AreEqual("testdata/small.sam", "testdata/small.sam.tmp") {
+		t.Error("problem with WriteFromChan")
+	}
+	err := os.Remove("testdata/small.sam.tmp")
+	if err != nil {
+		t.Errorf("Deleting temp file %s gave an error.", "testdata/small.sam.tmp")
+	}
+}
+
+func TestGenerateHeader(t *testing.T) {
+	_, expected := Read("testdata/small.sam")
+	actual := GenerateHeader(expected.Chroms, expected.Text[2:], Coordinate, Reference)
+	if len(actual.Text) != len(expected.Text) {
+		t.Error("problem with generate header")
+	}
+
+	for i := range actual.Text {
+		if actual.Text[i] != expected.Text[i] {
+			t.Error("problem with generate header")
+		}
+	}
+
+	// messy check to make sure that they were parsed equally
+	// should always be true since the input text was identical
+	// per the above check
+	if !reflect.DeepEqual(actual, expected) {
+		t.Error("generate header was parsed differently from the expected header")
 	}
 }
 

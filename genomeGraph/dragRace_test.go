@@ -48,7 +48,7 @@ func TestQuickMemPool(t *testing.T) {
 
 	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
 	writerWaiter.Add(1)
-	go sam.SamChanToFile(samPipe, "testdata/sim.sam", sam.Header{}, &writerWaiter)
+	go sam.WriteFromChan(samPipe, "testdata/sim.sam", sam.Header{}, &writerWaiter)
 
 	log.Printf("Starting alignment worker...\n")
 	time.Sleep(5 * time.Second)

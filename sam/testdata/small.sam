@@ -1,4 +1,4 @@
-@HD	VN:1.6	SO:coordinate:queryname	GO:reference
+@HD	VN:1.6	SO:coordinate	GO:reference
 @SQ	SN:ref	LN:45
 @TS	SS:this is a test	XQ:777
 @CO	this is a comment line and	may	have	tabs

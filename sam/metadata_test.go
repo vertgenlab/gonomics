@@ -29,9 +29,8 @@ func TestReadHeaderBytes(t *testing.T) {
 		t.Error("problem with reading sam header")
 	}
 
-	if len(header.Metadata.SortOrder) != 2 ||
-		header.Metadata.SortOrder[0] != Coordinate ||
-		header.Metadata.SortOrder[1] != QueryName {
+	if len(header.Metadata.SortOrder) != 1 ||
+		header.Metadata.SortOrder[0] != Coordinate {
 		t.Error("problem with reading sam header")
 	}
 

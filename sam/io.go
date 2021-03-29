@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strconv"
@@ -176,55 +175,46 @@ func ReadHeader(file *fileio.EasyReader) Header {
 		answer.Text = append(answer.Text, line)
 	}
 
-	if answer.Text != nil {
-		answer.Metadata.AllTags, answer.Metadata.Comments = parseTagsAndComments(answer.Text)
-		answer.Chroms = getChromInfo(answer.Metadata.AllTags)
-		answer.Metadata.Version = getVersion(answer.Metadata.AllTags)
-		answer.Metadata.SortOrder = getSortOrder(answer.Metadata.AllTags)
-		answer.Metadata.Grouping = getGrouping(answer.Metadata.AllTags)
-	}
-
+	answer = ParseHeaderText(answer)
 	return answer
 }
 
-// SamChanToFile writes an incoming channel of Aln structs to a file.
-func SamChanToFile(incomingSams <-chan Aln, filename string, header Header, wg *sync.WaitGroup) {
+// WriteFromChan writes an incoming channel of Aln structs to a file.
+// The input wait group will be decremented once the write finishes.
+// This is necessary to ensure the main thread will not terminate
+// before the write has finished. Note that the function sending Aln
+// to the data channel and WriteFromChan must not be run on the same
+// thread, or else the process will deadlock.
+func WriteFromChan(data <-chan Aln, filename string, header Header, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	if header.Text != nil {
 		WriteHeaderToFileHandle(file, header)
 	}
-	for alignedRead := range incomingSams {
-		WriteToFileHandle(file, alignedRead)
+	for record := range data {
+		WriteToFileHandle(file, record)
 	}
 	err := file.Close()
 	exception.PanicOnErr(err)
 	wg.Done()
 }
 
-// TODO: improved header creation + building of additional fields in Header
-// FastaHeader converts a set of fasta sequences to a generic Sam Header for write.
-func FastaHeader(ref []fasta.Fasta) Header {
+// GenerateHeader creates a header given some information about the input sam.
+// The chromSize can be either from a chromsizes file or by calling fasta.ToChromInfo
+// on a []Fasta. The sortOrder and groupings are defined in metadata.go. Often
+// the most relevant are sam.Unsorted (for sortOrder) and sam.None (for grouping) respectively.
+// Additional tag information should be generated prior to calling this function and
+// passed as a []string which will be appended to the raw text, and parsed into a HeaderTagMap.
+func GenerateHeader(chromSize []chromInfo.ChromInfo, additional []string, sortOrder SortOrder, grouping Grouping) Header {
 	var header Header
-	header.Text = append(header.Text, fmt.Sprintf("@HD\t%s\tSO:unsorted", samSpecVersion))
-	var words string
-
-	for i := 0; i < len(ref); i++ {
-		words = fmt.Sprintf("@SQ\tSN:%s\tLN:%d", ref[i].Name, len(ref[i].Seq))
-		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
+	header.Text = append(header.Text, fmt.Sprintf("@HD\tVN:%s\tSO:%s", samSpecVersion, sortOrder))
+	if grouping != None {
+		header.Text[0] += fmt.Sprintf("\tGO:%s", grouping)
 	}
-	return header
-}
-
-// TODO: consolidate with FastaHeader?
-// ChromInfoSamHeader generates a sam header from input chrominfo.
-func ChromInfoSamHeader(chromSize []chromInfo.ChromInfo) Header {
-	var header Header
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	for i := 0; i < len(chromSize); i++ {
 		header.Text = append(header.Text, makeHeaderRefLine(chromSize[i].Name, chromSize[i].Size))
 	}
-	return header
+	header.Text = append(header.Text, additional...)
+	return ParseHeaderText(header)
 }
 
 // makeHeaderRefLine creates an @SQ tagged line to store information about ref sequences

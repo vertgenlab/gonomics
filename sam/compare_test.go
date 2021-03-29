@@ -20,6 +20,7 @@ func TestEqual(t *testing.T) {
 		t.Error("problem with equal function")
 	}
 
+	// nominal test for each field
 	if Equal(Aln{QName: "test"}, Aln{}) ||
 		Equal(Aln{Flag: 7}, Aln{}) ||
 		Equal(Aln{RName: "test"}, Aln{}) ||

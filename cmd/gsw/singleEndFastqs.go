@@ -63,7 +63,7 @@ func GswToSam(ref *genomeGraph.GenomeGraph, readOne string, output string, threa
 		go genomeGraph.RoutineGirafToSamSingle(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
-	go sam.SamChanToFile(samPipe, output, header, &wgWrite)
+	go sam.WriteFromChan(samPipe, output, header, &wgWrite)
 	wgAlign.Wait()
 	stop := time.Now()
 	close(samPipe)
