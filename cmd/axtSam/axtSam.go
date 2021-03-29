@@ -51,7 +51,6 @@ func main() {
 	}
 }
 
-
 func axtToSam(axtfile string, header sam.Header, output string) {
 	writer := fileio.EasyCreate(output)
 

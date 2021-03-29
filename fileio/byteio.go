@@ -50,7 +50,7 @@ func NewByteReader(filename string) *ByteReader {
 	var err error
 	file := MustOpen(filename)
 	var answer ByteReader = ByteReader{
-		File: file,
+		File:   file,
 		Buffer: &bytes.Buffer{},
 	}
 	switch true {
