@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// AllAreEqual examines if two genePred files are the same entry by entry.
+// AllAreEqual examines if two genePred files are the same entry by entry. The first unequal record will be returned with a slice of ints that refer to which fields are unequal.
 func AllAreEqual(a []GenePred, b []GenePred) (bool, []int) {
 	var fields []int
 	var equal bool
