@@ -5,15 +5,15 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-func (s *Aln) GetChrom() string {
+func (s *Sam) GetChrom() string {
 	return s.RName
 }
 
-func (s *Aln) GetChromStart() int {
+func (s *Sam) GetChromStart() int {
 	return int(s.Pos - 1)
 }
 
-func (s *Aln) GetChromEnd() int {
+func (s *Sam) GetChromEnd() int {
 	var runlength int = 0
 	for i := 0; i < len(s.Cigar); i++ {
 		if cigar.ConsumesReference(s.Cigar[i].Op) {
@@ -23,19 +23,19 @@ func (s *Aln) GetChromEnd() int {
 	return s.GetChromStart() + runlength
 }
 
-func (s *Aln) UpdateLift(c string, start int, end int) {
+func (s *Sam) UpdateLift(c string, start int, end int) {
 	s.RName = c
 	s.Pos = uint32(start) + 1
 }
 
-type SamSlice []*Aln
+type SamSlice []*Sam
 
 func (v SamSlice) Len() int { return len(v) }
 
 func (v SamSlice) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
 
 func (v *SamSlice) Push(x interface{}) {
-	answer := x.(*Aln)
+	answer := x.(*Sam)
 	*v = append(*v, answer)
 }
 
@@ -56,14 +56,14 @@ func (s SamSlice) Write(filename string) { // Does not write header
 	}
 }
 
-func (s *Aln) WriteToFileHandle(file *fileio.EasyWriter) {
+func (s *Sam) WriteToFileHandle(file *fileio.EasyWriter) {
 	WriteToFileHandle(file, *s)
 }
 
-func (s *Aln) NextRealRecord(file *fileio.EasyReader) bool {
+func (s *Sam) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
-	var next *Aln
-	var curr Aln
+	var next *Sam
+	var curr Sam
 	for nextBytes, err := file.Peek(1); next == nil && !done; nextBytes, err = file.Peek(1) {
 		if err == nil && nextBytes[0] == '@' {
 			fileio.EasyNextLine(file)
@@ -79,8 +79,8 @@ func (s *Aln) NextRealRecord(file *fileio.EasyReader) bool {
 	return done
 }
 
-func (s *Aln) Copy() interface{} {
-	var answer *Aln = new(Aln)
+func (s *Sam) Copy() interface{} {
+	var answer *Sam = new(Sam)
 	*answer = *s
 	return answer
 }

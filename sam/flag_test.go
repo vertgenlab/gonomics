@@ -20,7 +20,7 @@ const (
 	suppAlign       int = 2048
 )
 
-var testMap = map[int]func(sam Aln) bool{
+var testMap = map[int]func(sam Sam) bool{
 	1:    IsPaired,
 	2:    ProperlyAligned,
 	4:    IsUnmapped,
@@ -35,7 +35,7 @@ var testMap = map[int]func(sam Aln) bool{
 	2048: IsSupplementaryAlign,
 }
 
-func flagPasses(r Aln, trueBits map[int]bool) bool {
+func flagPasses(r Sam, trueBits map[int]bool) bool {
 	for testedBit, testFunc := range testMap {
 		if testFunc(r) != trueBits[testedBit] {
 			fmt.Println(r, trueBits)
@@ -47,14 +47,14 @@ func flagPasses(r Aln, trueBits map[int]bool) bool {
 	return true
 }
 
-func makeTestRead(trueBits []int) (Aln, map[int]bool) {
+func makeTestRead(trueBits []int) (Sam, map[int]bool) {
 	var flag uint16
 	truthMap := make(map[int]bool)
 	for _, bit := range trueBits {
 		flag += uint16(bit)
 		truthMap[bit] = true
 	}
-	return Aln{Flag: flag}, truthMap
+	return Sam{Flag: flag}, truthMap
 }
 
 func testFlags(toTest []int) bool {

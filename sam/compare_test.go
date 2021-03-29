@@ -13,26 +13,26 @@ func TestEqual(t *testing.T) {
 		Equal(r003, r002) ||
 		!Equal(r002, r002) ||
 		Equal(r003Supplemental, r003) ||
-		Equal(Aln{}, r002) ||
+		Equal(Sam{}, r002) ||
 		Equal(r004, r002) ||
 		Equal(r003, r001Supplemental) ||
-		!Equal(Aln{}, Aln{}) {
+		!Equal(Sam{}, Sam{}) {
 		t.Error("problem with equal function")
 	}
 
 	// nominal test for each field
-	if Equal(Aln{QName: "test"}, Aln{}) ||
-		Equal(Aln{Flag: 7}, Aln{}) ||
-		Equal(Aln{RName: "test"}, Aln{}) ||
-		Equal(Aln{Pos: 7}, Aln{}) ||
-		Equal(Aln{MapQ: 7}, Aln{}) ||
-		Equal(Aln{Cigar: cigar.FromString("7M")}, Aln{}) ||
-		Equal(Aln{RNext: "test"}, Aln{}) ||
-		Equal(Aln{PNext: 7}, Aln{}) ||
-		Equal(Aln{TLen: 7}, Aln{}) ||
-		Equal(Aln{Seq: dna.StringToBases("ATG")}, Aln{}) ||
-		Equal(Aln{Qual: "FFF"}, Aln{}) ||
-		Equal(Aln{Extra: "SA:8"}, Aln{}) {
+	if Equal(Sam{QName: "test"}, Sam{}) ||
+		Equal(Sam{Flag: 7}, Sam{}) ||
+		Equal(Sam{RName: "test"}, Sam{}) ||
+		Equal(Sam{Pos: 7}, Sam{}) ||
+		Equal(Sam{MapQ: 7}, Sam{}) ||
+		Equal(Sam{Cigar: cigar.FromString("7M")}, Sam{}) ||
+		Equal(Sam{RNext: "test"}, Sam{}) ||
+		Equal(Sam{PNext: 7}, Sam{}) ||
+		Equal(Sam{TLen: 7}, Sam{}) ||
+		Equal(Sam{Seq: dna.StringToBases("ATG")}, Sam{}) ||
+		Equal(Sam{Qual: "FFF"}, Sam{}) ||
+		Equal(Sam{Extra: "SA:8"}, Sam{}) {
 		t.Error("problem with equal function")
 	}
 }

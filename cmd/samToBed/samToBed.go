@@ -12,7 +12,7 @@ import (
 )
 
 func samToBed(samFilename string, bedFilename string, paired bool, fragLength int) {
-	var aln sam.Aln
+	var aln sam.Sam
 	var done bool = false
 
 	//sam file to read

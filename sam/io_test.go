@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var r001 = Aln{
+var r001 = Sam{
 	QName: "r001",
 	Flag:  99,
 	MapQ:  30,
@@ -25,7 +25,7 @@ var r001 = Aln{
 	Extra: "",
 }
 
-var r002 = Aln{
+var r002 = Sam{
 	QName: "r002",
 	Flag:  0,
 	MapQ:  30,
@@ -40,7 +40,7 @@ var r002 = Aln{
 	Extra: "",
 }
 
-var r003 = Aln{
+var r003 = Sam{
 	QName: "r003",
 	Flag:  0,
 	MapQ:  30,
@@ -55,7 +55,7 @@ var r003 = Aln{
 	Extra: "SA:Z:ref,29,-,6H5M,17,0;",
 }
 
-var r004 = Aln{
+var r004 = Sam{
 	QName: "r004",
 	Flag:  0,
 	MapQ:  30,
@@ -70,7 +70,7 @@ var r004 = Aln{
 	Extra: "",
 }
 
-var r003Supplemental = Aln{
+var r003Supplemental = Sam{
 	QName: "r003",
 	Flag:  2064,
 	MapQ:  17,
@@ -85,7 +85,7 @@ var r003Supplemental = Aln{
 	Extra: "SA:Z:ref,9,+,5S6M,30,1;",
 }
 
-var r001Supplemental = Aln{
+var r001Supplemental = Sam{
 	QName: "r001",
 	Flag:  147,
 	MapQ:  30,
@@ -106,7 +106,7 @@ func TestRead(t *testing.T) {
 	if len(actual) != 6 {
 		t.Error("problem reading sam")
 	} else {
-		expected := []Aln{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
+		expected := []Sam{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
 		for i := range actual {
 			if !Equal(actual[i], expected[i]) {
 				t.Error("problem reading sam")
@@ -118,7 +118,7 @@ func TestRead(t *testing.T) {
 
 func TestReadNextIntactHeader(t *testing.T) {
 	file := fileio.EasyOpen("testdata/small.sam")
-	expected := []Aln{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
+	expected := []Sam{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
 	var i int
 	for val, done := ReadNext(file); !done; val, done = ReadNext(file) {
 		if !Equal(val, expected[i]) {
@@ -130,7 +130,7 @@ func TestReadNextIntactHeader(t *testing.T) {
 
 func TestReadToChan(t *testing.T) {
 	samChan, _ := GoReadToChan("testdata/small.sam")
-	expected := []Aln{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
+	expected := []Sam{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
 	var i int
 	for val := range samChan {
 		if !Equal(val, expected[i]) {

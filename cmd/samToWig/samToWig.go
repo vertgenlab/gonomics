@@ -27,7 +27,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	var done bool = false
 	sam.ReadHeader(samFile)
 	var outBed []*bed.Bed
-	var aln sam.Aln
+	var aln sam.Sam
 
 	//records, err := sam.Read(infile)    old version
 	//common.ExitIfError(err)

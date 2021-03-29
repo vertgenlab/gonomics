@@ -15,15 +15,15 @@ const (
 
 // MatePair wraps to paired alignments into a single struct.
 type MatePair struct {
-	Fwd Aln
-	Rev Aln
+	Fwd Sam
+	Rev Sam
 }
 
-// Aln stores fields of a sam record in the corresponding data type
+// Sam stores fields of a sam record in the corresponding data type
 // denoted in the sam file specifications. The cigar and sequence
 // fields are further parsed into a more complex data structure to
 // facilitate ease of use.
-type Aln struct {
+type Sam struct {
 	QName string         // query template name: [!-?A-~]{1,254}
 	Flag  uint16         // bitwise flag, bits defined in info.go
 	MapQ  uint8          // mapping quality
@@ -46,8 +46,8 @@ type Header struct {
 	Chroms   []chromInfo.ChromInfo // tags SQ - SN and SQ - LN
 }
 
-// ToString converts an Aln struct to a tab delimited string per file specs.
-func ToString(aln Aln) string {
+// ToString converts an Sam struct to a tab delimited string per file specs.
+func ToString(aln Sam) string {
 	var answer string
 	if aln.Extra == "" {
 		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s",

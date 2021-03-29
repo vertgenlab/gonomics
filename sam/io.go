@@ -19,9 +19,9 @@ import (
 // channel will be closed. The header can be retrieved by `header := <-headerChan`.
 // Records will continuously stream to the input data channel until the end of the
 // file is reached at which point the data channel will be closed.
-func ReadToChan(filename string, data chan<- Aln, header chan<- Header) {
+func ReadToChan(filename string, data chan<- Sam, header chan<- Header) {
 	var file *fileio.EasyReader
-	var curr Aln
+	var curr Sam
 	var done bool
 	var err error
 
@@ -43,8 +43,8 @@ func ReadToChan(filename string, data chan<- Aln, header chan<- Header) {
 // of the file is kept in memory at a time. This function wraps the
 // ReadToChan function to automatically handle channel creation,
 // goroutine spawning, and header retrieval.
-func GoReadToChan(filename string) (<-chan Aln, Header) {
-	data := make(chan Aln, 1000)
+func GoReadToChan(filename string) (<-chan Sam, Header) {
+	data := make(chan Sam, 1000)
 	header := make(chan Header)
 	go ReadToChan(filename, data, header)
 	return data, <-header
@@ -53,10 +53,10 @@ func GoReadToChan(filename string) (<-chan Aln, Header) {
 // ReadNext takes a ByteReader and returns the next Sam record as well as a boolean flag
 // indicating if the file is finished being read. If there is a Sam record to process
 // the function will return the Sam record and 'false'. After processing all Sam records
-// in the file, the function will return a blank Aln and 'true'. ReadNext will advance
+// in the file, the function will return a blank Sam and 'true'. ReadNext will advance
 // the reader past all header lines beginning with '@'.
-func ReadNext(reader *fileio.EasyReader) (Aln, bool) {
-	var answer Aln
+func ReadNext(reader *fileio.EasyReader) (Sam, bool) {
+	var answer Sam
 	var line string
 	var done bool
 
@@ -65,7 +65,7 @@ func ReadNext(reader *fileio.EasyReader) (Aln, bool) {
 	}
 
 	if done {
-		return Aln{}, true
+		return Sam{}, true
 	}
 
 	answer = processAlignmentLine(line)
@@ -73,13 +73,13 @@ func ReadNext(reader *fileio.EasyReader) (Aln, bool) {
 }
 
 // Read the entire file into a Sam struct where each record
-// is an index in Sam.Aln. Note that sam files can get very large
+// is an index in Sam.Sam. Note that sam files can get very large
 // such that storing the entire file in memory is not feasible. Most
 // sam files should be read using the GoReadToChan function which
 // streams sam records so only a small portion of the file is kept
 // in memory at any given time.
-func Read(filename string) ([]Aln, Header) {
-	var alignments []Aln
+func Read(filename string) ([]Sam, Header) {
+	var alignments []Sam
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 
@@ -92,9 +92,9 @@ func Read(filename string) ([]Aln, Header) {
 	return alignments, header
 }
 
-// processAlignmentLine parses a string representation of a sam file into a single Aln struct.
-func processAlignmentLine(line string) Aln {
-	var curr Aln
+// processAlignmentLine parses a string representation of a sam file into a single Sam struct.
+func processAlignmentLine(line string) Sam {
+	var curr Sam
 	var err error
 	var currUint uint64
 	var currInt int64
@@ -179,13 +179,13 @@ func ReadHeader(file *fileio.EasyReader) Header {
 	return answer
 }
 
-// WriteFromChan writes an incoming channel of Aln structs to a file.
+// WriteFromChan writes an incoming channel of Sam structs to a file.
 // The input wait group will be decremented once the write finishes.
 // This is necessary to ensure the main thread will not terminate
-// before the write has finished. Note that the function sending Aln
+// before the write has finished. Note that the function sending Sam
 // to the data channel and WriteFromChan must not be run on the same
 // thread, or else the process will deadlock.
-func WriteFromChan(data <-chan Aln, filename string, header Header, wg *sync.WaitGroup) {
+func WriteFromChan(data <-chan Sam, filename string, header Header, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	if header.Text != nil {
 		WriteHeaderToFileHandle(file, header)
@@ -227,7 +227,7 @@ func makeHeaderRefLine(chromName string, chromSize int) string {
 // the entire slice of alignments to be present in memory at the same time.
 // This can be avoided by repeated calls to WriteToFileHandle on alignments
 // retrieved from a channel, such as the output from GoReadToChan.
-func Write(filename string, data []Aln, header Header) {
+func Write(filename string, data []Sam, header Header) {
 	file := fileio.EasyCreate(filename)
 	WriteHeaderToFileHandle(file, header)
 	for i := range data {
@@ -237,8 +237,8 @@ func Write(filename string, data []Aln, header Header) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle writes a single Aln struct to the input file.
-func WriteToFileHandle(file *fileio.EasyWriter, aln Aln) {
+// WriteToFileHandle writes a single Sam struct to the input file.
+func WriteToFileHandle(file *fileio.EasyWriter, aln Sam) {
 	_, err := fmt.Fprintln(file, ToString(aln))
 	exception.PanicOnErr(err)
 }

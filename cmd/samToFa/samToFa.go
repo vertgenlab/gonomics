@@ -35,7 +35,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 	var done bool = false
 	var RefIndex, SeqIndex int
 	var currentSeq []dna.Base
-	var aln sam.Aln
+	var aln sam.Sam
 	//var i, k int
 	//fmt.Printf("Vote matrix initialized. Looping through sam.\n")
 	sam.ReadHeader(samFile)

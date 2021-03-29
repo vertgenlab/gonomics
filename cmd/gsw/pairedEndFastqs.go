@@ -51,7 +51,7 @@ func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, 
 	var wgAlign, wgWrite sync.WaitGroup
 	//log.Printf("Setting up read and write channels...\n\n")
 	fastqPipe := make(chan fastq.PairedEndBig, 824)
-	samPipe := make(chan sam.Aln, 824)
+	samPipe := make(chan sam.Sam, 824)
 	go readFastqGsw(readOne, readTwo, fastqPipe)
 
 	log.Printf("Scoring matrix used:\n%s\n", genomeGraph.ViewMatrix(scoreMatrix))

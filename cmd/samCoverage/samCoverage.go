@@ -15,7 +15,7 @@ func totalAlignedBases(filename string) int {
 	samFile := fileio.EasyOpen(filename)
 	defer samFile.Close()
 	var done bool = false
-	var aln sam.Aln
+	var aln sam.Sam
 	var alignedBases int
 
 	sam.ReadHeader(samFile)

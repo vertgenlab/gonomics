@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-// Equal returns true if the two input Aln structs are identical.
-func Equal(a Aln, b Aln) bool {
+// Equal returns true if the two input Sam structs are identical.
+func Equal(a Sam, b Sam) bool {
 	if a.QName != b.QName {
 		return false
 	}
