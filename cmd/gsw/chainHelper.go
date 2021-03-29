@@ -35,10 +35,10 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 	}
 }
 
-func goChainToAxt(chainFile, targetFa, queryFa string) <-chan *axt.Axt {
+func goChainToAxt(chainFile, targetFa, queryFa string) <-chan axt.Axt {
 	target, query := fasta.Read(targetFa), fasta.Read(queryFa)
 	chainFa := chain.GoReadSeqChain(chainFile, target, query)
-	ans := make(chan *axt.Axt, 2408)
+	ans := make(chan axt.Axt, 2408)
 	go workThreadChainAxt(chainFa, ans)
 	return ans
 }
@@ -53,7 +53,7 @@ func goChainToVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
 func chainToGenomeGraph(chainFile, targetFa, queryFa string) *genomeGraph.GenomeGraph {
 	target, query := fasta.Read(targetFa), fasta.Read(queryFa)
 	chainFa := chain.GoReadSeqChain(chainFile, target, query)
-	axtChannel := make(chan *axt.Axt, 2408)
+	axtChannel := make(chan axt.Axt, 2408)
 	go workThreadChainAxt(chainFa, axtChannel)
 
 	vcfChannel := make(chan *vcf.Vcf, 2408)
@@ -69,19 +69,19 @@ func chainToGenomeGraph(chainFile, targetFa, queryFa string) *genomeGraph.Genome
 	return genomeGraph.VariantGraph(ref, chrVcfMap)
 }
 
-func workThreadChainAxt(chFa *chain.SeqChain, ans chan<- *axt.Axt) {
+func workThreadChainAxt(chFa *chain.SeqChain, ans chan<- axt.Axt) {
 	for i := range chFa.Chains {
-		ans <- chain.ChainToAxt(i, chFa.TSeq[i.TName], chFa.QSeq[i.QName])
+		ans <- chain.ToAxt(i, chFa.TSeq[i.TName], chFa.QSeq[i.QName])
 	}
 	close(ans)
 }
 
-func workThreadAxtVcf(axtChannel <-chan *axt.Axt, ans chan<- *vcf.Vcf) {
+func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- *vcf.Vcf) {
 	var j int = 0
 	var curr []*vcf.Vcf
 	for i := range axtChannel {
 		//filter for uniq
-		curr = vcf.FilterVcfPos(axt.AxtToVcf(i))
+		curr = vcf.FilterVcfPos(axt.ToVcf(i))
 		for j = 0; j < len(curr); j++ {
 			if !strings.Contains(curr[j].Ref, "N") && !strings.Contains(curr[j].Alt[0], "N") {
 				ans <- curr[j]

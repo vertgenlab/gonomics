@@ -121,7 +121,7 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	return answer
 }
 
-func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
 	const basesPerInt int64 = 32
 	var currHits []uint64
 	var codedNodeCoord uint64
@@ -151,11 +151,11 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 
 			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
-			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
+			tempSeeds = extendToTheRight(&nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
 			//log.Printf("After extendToTheRight fwd:\n")
 			//printSeedDev(tempSeeds)
 			for _, tempSeed = range tempSeeds {
-				finalSeeds = append(finalSeeds, extendToTheLeft(nodes[nodeIdx], read, tempSeed)...)
+				finalSeeds = append(finalSeeds, extendToTheLeft(&nodes[nodeIdx], read, tempSeed)...)
 			}
 			//log.Printf("After extendToTheLeft fwd:\n")
 			//printSeedDev(finalSeeds)
@@ -199,12 +199,12 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []*Node,
 
 			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
 			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
-			tempSeeds = extendToTheRight(nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
+			tempSeeds = extendToTheRight(&nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
 			//log.Printf("After extendToTheRight rev:\n")
 			//printSeedDev(tempSeeds)
 			for _, tempSeed = range tempSeeds {
 				//log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
-				finalSeeds = append(finalSeeds, extendToTheLeft(nodes[nodeIdx], read, tempSeed)...)
+				finalSeeds = append(finalSeeds, extendToTheLeft(&nodes[nodeIdx], read, tempSeed)...)
 			}
 			//log.Printf("After extendToTheLeft rev:\n")
 			//printSeedDev(finalSeeds)

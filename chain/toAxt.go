@@ -4,15 +4,14 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	//"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
 //TODO: Next to figure out a better way to pass in target and query
-func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
+func ToAxt(ch *Chain, target []dna.Base, query []dna.Base) axt.Axt {
 	var tLen, qLen int = ch.TEnd - ch.TStart, ch.QEnd - ch.QStart
 
-	var answer *axt.Axt = &axt.Axt{
+	var answer axt.Axt = axt.Axt{
 		RName:      ch.TName,
 		RStart:     ch.TStart + 1,
 		REnd:       ch.TEnd,

@@ -12,11 +12,11 @@ func VariantArrayOverlap(v *vcf.Vcf, a map[string][]bool) bool {
 //returns a map of chromosome names to bool arrays, true if that position lies in an exon
 func ExonBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
-	for k, _ := range c {
+	for k := range c {
 		answer[k] = make([]bool, c[k].Size)
 	}
 
-	for k, _ := range g {
+	for k := range g {
 		for i := 0; i < len(g[k].Transcripts); i++ {
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				//End is not minus 1 because the 1 basing is cancelled out by the closed right interval of gtf.
@@ -31,11 +31,11 @@ func ExonBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[st
 
 func CdsBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
-	for k, _ := range c {
+	for k := range c {
 		answer[k] = make([]bool, c[k].Size)
 	}
 
-	for k, _ := range g {
+	for k := range g {
 		for i := 0; i < len(g[k].Transcripts); i++ {
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				if g[k].Transcripts[i].Exons[j].Cds != nil {
@@ -51,11 +51,11 @@ func CdsBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[str
 
 func FiveUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
-	for k, _ := range c {
+	for k := range c {
 		answer[k] = make([]bool, c[k].Size)
 	}
 
-	for k, _ := range g {
+	for k := range g {
 		for i := 0; i < len(g[k].Transcripts); i++ {
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				if g[k].Transcripts[i].Exons[j].FiveUtr != nil {
@@ -71,11 +71,11 @@ func FiveUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map
 
 func ThreeUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
-	for k, _ := range c {
+	for k := range c {
 		answer[k] = make([]bool, c[k].Size)
 	}
 
-	for k, _ := range g {
+	for k := range g {
 		for i := 0; i < len(g[k].Transcripts); i++ {
 			for j := 0; j < len(g[k].Transcripts[i].Exons); j++ {
 				if g[k].Transcripts[i].Exons[j].ThreeUtr != nil {

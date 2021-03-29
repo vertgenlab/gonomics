@@ -178,7 +178,7 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 	}
 	refIdx := answer.Path.TStart
 	var currNodeId int
-	var currNode *genomeGraph.Node = graph.Nodes[answer.Path.Nodes[0]]
+	var currNode genomeGraph.Node = graph.Nodes[answer.Path.Nodes[0]]
 	var i uint16
 
 	for _, cigar := range answer.Cigar {

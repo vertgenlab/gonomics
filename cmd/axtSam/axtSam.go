@@ -51,23 +51,17 @@ func main() {
 	}
 }
 
-func axtToSam(axtfile string, header sam.Header, output string) {
-	reader, writer := fileio.EasyOpen(axtfile), fileio.EasyCreate(output)
 
-	defer reader.Close()
+func axtToSam(axtfile string, header sam.Header, output string) {
+	writer := fileio.EasyCreate(output)
+
 	defer writer.Close()
 
 	//setting up channels and wait groups
-	data, results := make(chan *axt.Axt, 824), make(chan sam.Sam, 824)
+	data, results := make(chan axt.Axt, 824), make(chan sam.Sam, 824)
 	var working, writingJob sync.WaitGroup
 
-	var wg sync.WaitGroup
-	go axt.ReadToChan(reader, data, &wg)
-
-	go func() {
-		wg.Wait()
-		close(data)
-	}()
+	go axt.ReadToChan(axtfile, data)
 
 	if header.Text != nil {
 		sam.WriteHeaderToFileHandle(writer, header)
@@ -90,10 +84,10 @@ func chromInfoSamHeader(filename string) sam.Header {
 
 //Not sure if this is a potiential speed up, but i have fairly large axt files that come out of chain merge
 //The idea is to provide at least 3 threads with some work, reading, axtToSam, writing
-func routineWorker(readChannel <-chan *axt.Axt, writingChannel chan<- sam.Sam, wg *sync.WaitGroup) {
+func routineWorker(readChannel <-chan axt.Axt, writingChannel chan<- sam.Sam, wg *sync.WaitGroup) {
 	var numberComplete int = 0
 	for eachAxt := range readChannel {
-		writingChannel <- axt.AxtToSam(eachAxt)
+		writingChannel <- axt.ToSam(eachAxt)
 		numberComplete++
 	}
 	wg.Done()

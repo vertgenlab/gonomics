@@ -6,7 +6,7 @@ import (
 )
 
 func printSeedDev(a []*SeedDev) {
-	for i, _ := range a {
+	for i := range a {
 		log.Printf("tId:%d\ttStart:%d\tqStart:%d\tLen:%d\ttotalLen:%d\tposStrand:%t\n", a[i].TargetId, a[i].TargetStart, a[i].QueryStart, a[i].Length, a[i].TotalLength, a[i].PosStrand)
 	}
 }

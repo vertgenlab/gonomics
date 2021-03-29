@@ -39,7 +39,7 @@ func MakeTestGraph() *genomeGraph.GenomeGraph {
 	}
 
 	return &genomeGraph.GenomeGraph{
-		Nodes: []*genomeGraph.Node{&n0, &n1, &n2},
+		Nodes: []genomeGraph.Node{n0, n1, n2},
 	}
 }
 
