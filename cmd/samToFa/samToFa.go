@@ -40,7 +40,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 	//fmt.Printf("Vote matrix initialized. Looping through sam.\n")
 	sam.ReadHeader(samFile)
 
-	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			SeqIndex = 0
 			RefIndex = aln.Pos - 1
