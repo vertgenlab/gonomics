@@ -162,7 +162,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	newCodon.Seq = make([]BaseExt, 3)
 	var originalAmAc dna.AminoAcid
 	var newAmAc dna.AminoAcid
-	var geneRecord []*genePred.GenePred
+	var geneRecord []genePred.GenePred
 	var start bool
 	var stop bool
 	var increment int
@@ -254,7 +254,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 }
 
 //CreateCodons takes a sequence and it's gene structure in genePred format, compensates for non-zero exon frame and returns all codons that correspond to a single exon
-func CreateCodons(seq []BaseExt, gene *genePred.GenePred, exon int) []CodonExt {
+func CreateCodons(seq []BaseExt, gene genePred.GenePred, exon int) []CodonExt {
 	var codon CodonExt
 	codon.Seq = make([]BaseExt, 3)
 	var allCodons []CodonExt
@@ -422,7 +422,7 @@ func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
 }
 
 //CheckExon takes in a genePred and a position and determines if the base at that position is in an exon. It returns a bool and the int that refers to the exon the base is in
-func CheckExon(gene *genePred.GenePred, position int) (bool, int) {
+func CheckExon(gene genePred.GenePred, position int) (bool, int) {
 	var answer bool
 	var exonNum int
 	for i := 0; i < len(gene.ExonStarts); i++ {
@@ -436,7 +436,7 @@ func CheckExon(gene *genePred.GenePred, position int) (bool, int) {
 }
 
 //CheckStart determines if a base is the beginning of a start codon by comparing it to the start position of the genePred CDS
-func CheckStart(gene *genePred.GenePred, codon CodonExt) bool {
+func CheckStart(gene genePred.GenePred, codon CodonExt) bool {
 
 	if codon.Seq[0].SeqPos == gene.CdsStart {
 		return true
@@ -446,7 +446,7 @@ func CheckStart(gene *genePred.GenePred, codon CodonExt) bool {
 }
 
 //CheckStop determines if a base is the beginning of a stop codon by comparing it to the end position of the genePred CDS
-func CheckStop(gene *genePred.GenePred, codon CodonExt) bool {
+func CheckStop(gene genePred.GenePred, codon CodonExt) bool {
 
 	if codon.Seq[0].SeqPos == (gene.CdsEnd - 3) {
 		return true

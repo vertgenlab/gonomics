@@ -7,11 +7,11 @@ import (
 
 var genePred1 = GenePred{Id: "test", Chrom: "0", Strand: '+', TxStart: 0, TxEnd: 1001, CdsStart: 0, CdsEnd: 901, ExonNum: 4, ExonStarts: []int{0, 18, 500, 800}, ExonEnds: []int{3, 21, 503, 803}}
 var genePred2 = GenePred{Id: "test", Chrom: "1", Strand: '+', TxStart: 0, TxEnd: 1001, CdsStart: 0, CdsEnd: 901, ExonNum: 4, ExonStarts: []int{0, 18, 500, 800}, ExonEnds: []int{3, 58, 602, 832}}
-var genePreds []*GenePred = []*GenePred{&genePred1, &genePred2}
+var genePreds = []GenePred{genePred1, genePred2}
 
 var ReadTests = []struct {
 	name string
-	data []*GenePred
+	data []GenePred
 }{
 	{"testGenePred.gp", genePreds},
 }
@@ -27,8 +27,9 @@ var ReadTests = []struct {
 func TestRead(t *testing.T) {
 	for _, test := range ReadTests {
 		actual := Read(test.name)
-		if !AllAreEqual(test.data, actual) {
-			t.Errorf("The %s file was not read correctly.", test.name)
+		equal, fields := AllAreEqual(test.data, actual)
+		if !equal {
+			t.Errorf("The %s file was not read correctly, or does not match genePred literals. Fields that did not match: %v", test.name, fields)
 		}
 	}
 }
