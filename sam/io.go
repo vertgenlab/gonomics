@@ -54,13 +54,22 @@ func GoReadToChan(filename string) (<-chan Aln, Header) {
 // ReadNext takes a ByteReader and returns the next Sam record as well as a boolean flag
 // indicating if the file is finished being read. If there is a Sam record to process
 // the function will return the Sam record and 'false'. After processing all Sam records
-// in the file, the function will return a blank Aln and 'true'.
+// in the file, the function will return a blank Aln and 'true'. ReadNext will advance
+// the reader past all header lines beginning with '@'.
 func ReadNext(reader *fileio.EasyReader) (Aln, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	var answer Aln
+	var line string
+	var done bool
+
+	// read first non-header line
+	for line, done = fileio.EasyNextLine(reader); !done && line[0] == '@'; line, done = fileio.EasyNextLine(reader) {}
+
 	if done {
 		return Aln{}, true
 	}
-	return processAlignmentLine(line), false
+
+	answer = processAlignmentLine(line)
+	return answer, done
 }
 
 // Read the entire file into a Sam struct where each record
