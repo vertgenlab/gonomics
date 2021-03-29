@@ -12,10 +12,10 @@ import (
 func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][][]int64, [][][]ColType) {
 	m := make([][][]int64, 3)
 	trace := make([][][]ColType, 3)
-	for k, _ := range m {
+	for k := range m {
 		m[k] = make([][]int64, firstSeqLen+1)
 		trace[k] = make([][]ColType, firstSeqLen+1)
-		for i, _ := range m[0] {
+		for i := range m[0] {
 			m[k][i] = make([]int64, secondSeqLen+1)
 			trace[k][i] = make([]ColType, secondSeqLen+1)
 		}
@@ -58,15 +58,15 @@ func affineTrace(m [][][]int64, trace [][][]ColType) (int64, []Cigar) {
 }
 
 func expandCigarRunLength(route []Cigar, chunkSize int64) {
-	for i, _ := range route {
+	for i := range route {
 		route[i].RunLength *= chunkSize
 	}
 }
 
 func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha), len(beta))
-	for i, _ := range m[0] {
-		for j, _ := range m[0][0] {
+	for i := range m[0] {
+		for j := range m[0][0] {
 			if i == 0 && j == 0 {
 				m[0][i][j] = 0
 				m[1][i][j] = gapOpen
@@ -107,8 +107,8 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 	m, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
 
 	var chunkScore int64
-	for i, _ := range m[0] {
-		for j, _ := range m[0][0] {
+	for i := range m[0] {
+		for j := range m[0][0] {
 			if i == 0 && j == 0 {
 				m[0][i][j] = 0
 				m[1][i][j] = gapOpen
@@ -141,8 +141,8 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	m, trace := initAffineScoringAndTrace(len(alpha[0].Seq), len(beta[0].Seq))
 
-	for i, _ := range m[0] {
-		for j, _ := range m[0][0] {
+	for i := range m[0] {
+		for j := range m[0][0] {
 			if i == 0 && j == 0 {
 				m[0][i][j] = 0
 				m[1][i][j] = gapOpen
@@ -183,8 +183,8 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 	m, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
 
 	var chunkScore int64
-	for i, _ := range m[0] {
-		for j, _ := range m[0][0] {
+	for i := range m[0] {
+		for j := range m[0][0] {
 			if i == 0 && j == 0 {
 				m[0][i][j] = 0
 				m[1][i][j] = gapOpen
@@ -220,7 +220,7 @@ func scoreAffineAln(alpha fasta.Fasta, beta fasta.Fasta, scores [][]int64, gapOp
 	}
 	var score int64 = 0
 	alphaInGap, betaInGap := false, false
-	for i, _ := range alpha.Seq {
+	for i := range alpha.Seq {
 		if alpha.Seq[i] != dna.Gap && beta.Seq[i] != dna.Gap {
 			score += scores[alpha.Seq[i]][beta.Seq[i]]
 		}

@@ -25,7 +25,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		MapQ:      255,
 		Seq:       read.Seq,
 		Qual:      read.Qual,
-		Notes:     []giraf.Note{giraf.Note{Tag: []byte{'X', 'O'}, Type: 'Z', Value: "~"}},
+		Notes:     []giraf.Note{{Tag: []byte{'X', 'O'}, Type: 'Z', Value: "~"}},
 	}
 	resetScoreKeeper(sk)
 	sk.perfectScore = perfectMatchBig(&read, scoreMatrix)
@@ -137,7 +137,7 @@ func setGirafFlags(pair *giraf.GirafPair) {
 }
 
 func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
-	curr := sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{&cigar.Cigar{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.QualString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+	curr := sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.QualString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
 	//read is unMapped
 	if strings.Compare(ag.Notes[0].Value, "~") == 0 {
 		return &curr

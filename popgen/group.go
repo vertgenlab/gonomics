@@ -27,7 +27,7 @@ func ReadGroups(filename string) []*Group {
 
 	for line, doneReading = fileio.EasyNextRealLine(groupFile); !doneReading; line, doneReading = fileio.EasyNextRealLine(groupFile) {
 		if strings.HasPrefix(line, ">") {
-			tmp := Group{Name: line[1:len(line)], Members: make([]string, 0)}
+			tmp := Group{Name: line[1:], Members: make([]string, 0)}
 			answer = append(answer, &tmp)
 			index++
 		} else {

@@ -85,7 +85,7 @@ func reverseCigar(alpha []Cigar) {
 
 func countAlignmentColumns(route []Cigar) int64 {
 	var count int64 = 0
-	for i, _ := range route {
+	for i := range route {
 		count += route[i].RunLength
 	}
 	return count

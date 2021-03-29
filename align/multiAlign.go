@@ -9,7 +9,7 @@ import (
 
 func fastaListToIndividualGroups(records []fasta.Fasta) [][]fasta.Fasta {
 	answer := make([][]fasta.Fasta, len(records))
-	for i, _ := range answer {
+	for i := range answer {
 		answer[i] = make([]fasta.Fasta, 1)
 		answer[i][0] = records[i]
 	}
@@ -77,8 +77,8 @@ func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int
 //maybe there should be a small penalty for gaps so that gaps will tend to be in the same location
 func scoreColumnMatch(alpha []fasta.Fasta, beta []fasta.Fasta, alphaCol int, betaCol int, scores [][]int64) int64 {
 	var sum, count int64 = 0, 0
-	for alphaSeqIdx, _ := range alpha {
-		for betaSeqIdx, _ := range beta {
+	for alphaSeqIdx := range alpha {
+		for betaSeqIdx := range beta {
 			if alpha[alphaSeqIdx].Seq[alphaCol] != dna.Gap && beta[betaSeqIdx].Seq[betaCol] != dna.Gap {
 				sum += scores[alpha[alphaSeqIdx].Seq[alphaCol]][beta[betaSeqIdx].Seq[betaCol]]
 				count++
@@ -100,7 +100,7 @@ func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []Ci
 	answer := make([]fasta.Fasta, len(alpha)+len(beta))
 	totalCols := countAlignmentColumns(route)
 
-	for i, _ := range answer {
+	for i := range answer {
 		if i < len(alpha) {
 			answer[i] = fasta.Fasta{Name: alpha[i].Name, Seq: make([]dna.Base, totalCols)}
 		} else {
@@ -109,9 +109,9 @@ func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []Ci
 	}
 
 	var alphaCol, betaCol, ansCol int = 0, 0, 0
-	for i, _ := range route {
+	for i := range route {
 		for j := 0; j < int(route[i].RunLength); j++ {
-			for k, _ := range answer {
+			for k := range answer {
 				if k < len(alpha) {
 					if route[i].Op == ColM || route[i].Op == ColD {
 						answer[k].Seq[ansCol] = alpha[k].Seq[alphaCol]
