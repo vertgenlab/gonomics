@@ -70,7 +70,7 @@ func PathFinder(g *genomeGraph.GenomeGraph) ([]uint32, float32) {
 
 	for n := 0; n < len(g.Nodes); n++ {
 		if g.Nodes[n].Id == 0 {
-			finalProb, finalPath = bestPath(g.Nodes[n], 1, tempPath)
+			finalProb, finalPath = bestPath(&g.Nodes[n], 1, tempPath)
 		}
 	}
 	return finalPath, finalProb

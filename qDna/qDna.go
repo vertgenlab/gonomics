@@ -1,7 +1,5 @@
 package qDna
 
-import ()
-
 type QBase struct {
 	A float64
 	C float64

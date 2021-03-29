@@ -191,23 +191,23 @@ func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int,
 	case dna.A:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = []string{"A"}
-		answer.Samples = []vcf.GenomeSample{vcf.GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseAF + allele.Count.BaseAR)}}}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseAF + allele.Count.BaseAR)}}}
 	case dna.C:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = []string{"C"}
-		answer.Samples = []vcf.GenomeSample{vcf.GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseCF + allele.Count.BaseCR)}}}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseCF + allele.Count.BaseCR)}}}
 	case dna.G:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = []string{"G"}
-		answer.Samples = []vcf.GenomeSample{vcf.GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseGF + allele.Count.BaseGR)}}}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseGF + allele.Count.BaseGR)}}}
 	case dna.T:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
 		answer.Alt = []string{"T"}
-		answer.Samples = []vcf.GenomeSample{vcf.GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseTF + allele.Count.BaseTR)}}}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseTF + allele.Count.BaseTR)}}}
 	case dna.Gap:
 		answer.Ref = dna.BasesToString(allele.Count.Indel[indelSlicePos].Ref)
 		answer.Alt = []string{dna.BasesToString(allele.Count.Indel[indelSlicePos].Alt)}
-		answer.Samples = []vcf.GenomeSample{vcf.GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.Indel[indelSlicePos].CountF + allele.Count.Indel[indelSlicePos].CountR)}}}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.Indel[indelSlicePos].CountF + allele.Count.Indel[indelSlicePos].CountR)}}}
 	}
 	return answer
 }

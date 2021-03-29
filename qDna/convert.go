@@ -28,7 +28,7 @@ func FromBase(b dna.Base) *QBase {
 
 func FromDna(in []dna.Base) []*QBase {
 	answer := make([]*QBase, len(in))
-	for i, _ := range in {
+	for i := range in {
 		answer[i] = FromBase(in[i])
 	}
 	return answer
@@ -56,7 +56,7 @@ func FromFasta(in *fasta.Fasta) *QFrag {
 
 func FromFastaSlice(in []*fasta.Fasta) []*QFrag {
 	answer := make([]*QFrag, len(in))
-	for i, _ := range in {
+	for i := range in {
 		answer[i] = FromFasta(in[i])
 	}
 	return answer
@@ -76,7 +76,7 @@ func mostLikelyBase(b *QBase) dna.Base {
 
 func mostLikelySeq(in []*QBase) []dna.Base {
 	answer := make([]dna.Base, len(in))
-	for i, _ := range in {
+	for i := range in {
 		answer[i] = mostLikelyBase(in[i])
 	}
 	return answer
@@ -94,7 +94,7 @@ func ToFasta(in *QFrag) *fasta.Fasta {
 // for testing right now.  Does not follow links
 func toFastaList(in []*QFrag) []*fasta.Fasta {
 	answer := make([]*fasta.Fasta, len(in))
-	for i, _ := range in {
+	for i := range in {
 		answer[i] = ToFasta(in[i])
 	}
 	return answer

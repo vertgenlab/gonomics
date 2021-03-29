@@ -17,7 +17,7 @@ type SeedDev struct {
 	NextPart    *SeedDev
 }
 
-func IndexGenomeIntoMap(genome []*Node, seedLen int, seedStep int) map[uint64][]uint64 {
+func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]uint64 {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
 	}
@@ -55,7 +55,7 @@ func indexGenomeIntoMapHelper(prevSeq []dna.Base, currNode *Node, locationCode u
 	}
 }
 
-func indexGenomeIntoSlice(genome []*Node, seedLen int, seedStep int) [][]uint64 {
+func indexGenomeIntoSlice(genome []Node, seedLen int, seedStep int) [][]uint64 {
 	if seedLen < 2 || seedLen > 16 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 17.  Got: %d\n", seedLen)
 	}

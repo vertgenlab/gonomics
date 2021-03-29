@@ -182,7 +182,7 @@ func Read(filename string) (*Sam, error) {
 func WriteHeaderToFileHandle(file *fileio.EasyWriter, header *SamHeader) error {
 	var err error
 
-	for i, _ := range header.Text {
+	for i := range header.Text {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[i])
 		common.ExitIfError(err)
 	}
@@ -318,7 +318,7 @@ func Write(filename string, data *Sam) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	WriteHeaderToFileHandle(file, data.Header)
-	for i, _ := range data.Aln {
+	for i := range data.Aln {
 		WriteAlnToFileHandle(file, data.Aln[i])
 	}
 }
