@@ -14,7 +14,7 @@ func TotalAlignedBases(filename string) int {
 
 	ReadHeader(samFile)
 
-	for aln, done = NextAlignment(samFile); done != true; aln, done = NextAlignment(samFile) {
+	for aln, done = ReadNext(samFile); done != true; aln, done = ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			alignedBases += cigar.MatchLength(aln.Cigar)
 		}

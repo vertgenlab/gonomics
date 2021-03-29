@@ -1,21 +1,11 @@
 package sam
 
 import (
-	"bytes"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strconv"
 	"strings"
 )
-
-// Header encodes the header of a sam file as both the raw header (Text),
-// and semi-parsed fields (Metadata and Chroms).
-type Header struct {
-	Text     []string
-	Metadata Metadata
-	Chroms   []chromInfo.ChromInfo // tags SQ - SN and SQ - LN
-}
 
 // Metadata stores semi-parsed header data with several explicitly
 // parsed fields (e.g. Version) an the rest of the header encoded in
@@ -89,25 +79,6 @@ var groupingMap = map[string]Grouping{
 	"none":      None,
 	"query":     Query,
 	"reference": Reference,
-}
-
-// ReadHeaderBytes processes the contiguous header from a ByteReader
-// and advances the Reader past the header lines.
-func ReadHeaderBR(br *fileio.ByteReader) Header {
-	var answer Header
-	var buff *bytes.Buffer
-	var done bool
-	for peek, err := br.Peek(1); err == nil && peek[0] == '@' && !done; peek, err = br.Peek(1) {
-		buff, done = fileio.ReadLine(br)
-		answer.Text = append(answer.Text, buff.String())
-	}
-
-	answer.Metadata.AllTags, answer.Metadata.Comments = parseTagsAndComments(answer.Text)
-	answer.Chroms = getChromInfo(answer.Metadata.AllTags)
-	answer.Metadata.Version = getVersion(answer.Metadata.AllTags)
-	answer.Metadata.SortOrder = getSortOrder(answer.Metadata.AllTags)
-	answer.Metadata.Grouping = getGrouping(answer.Metadata.AllTags)
-	return answer
 }
 
 // parseTagsAndComments parses header text into a HeaderTagMap and a slice of comment lines

@@ -4,16 +4,13 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
-	"unsafe"
 )
 
 func TestReadHeaderBytes(t *testing.T) {
-	br := fileio.NewByteReader("testdata/test.sam")
-	header := ReadHeaderBR(br)
+	br := fileio.EasyOpen("testdata/test.sam")
+	header := ReadHeader(br)
 
 	printMetadata(header.Metadata)
-	var a Aln
-	fmt.Println("Sam Size is: ", unsafe.Sizeof(a))
 }
 
 func printMetadata(m Metadata) {

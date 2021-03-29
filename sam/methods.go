@@ -25,7 +25,7 @@ func (s *Aln) GetChromEnd() int {
 
 func (s *Aln) UpdateLift(c string, start int, end int) {
 	s.RName = c
-	s.Pos = start + 1
+	s.Pos = uint32(start) + 1
 }
 
 type SamSlice []*Aln
@@ -69,7 +69,7 @@ func (s *Aln) NextRealRecord(file *fileio.EasyReader) bool {
 			fileio.EasyNextLine(file)
 			continue
 		}
-		curr, done = NextAlignment(file)
+		curr, done = ReadNext(file)
 		next = &curr
 	}
 	if done {
