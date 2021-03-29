@@ -49,8 +49,6 @@ jobs:
           ref: ${{ github.head_ref }}
       - name: go fmt
         run: gofmt -s -w ./*/*.go
-      - name: go fmt cmd
-        run: gofmt -s -w ./*/*/*.go
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
