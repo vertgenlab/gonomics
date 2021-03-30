@@ -62,15 +62,12 @@ func (s *Sam) WriteToFileHandle(file *fileio.EasyWriter) {
 
 func (s *Sam) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
-	var next *Sam
 	var curr Sam
 	curr, done = ReadNext(file)
-	next = &curr
-
 	if done {
 		return true
 	}
-	*s = *next
+	*s = curr
 	return done
 }
 
