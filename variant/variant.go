@@ -4,8 +4,12 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
+type Mutater interface {
+	Mutate() ([]dna.Base, error)
+}
+
 // Substitution describes a single base change.
-// Pos is the 0-base position of the change base.
+// Pos is the 0-base position of the changed base.
 // (e.g. ATG sub 1 T>C -> ACG)
 type Substitution struct {
 	Chr		string
@@ -32,7 +36,7 @@ type Deletion struct {
 	End 	int
 }
 
-// Indel describes an insertion and a deletion of
+// Indel describes a combined insertion and a deletion of
 // a sequence. Useful for describing complex variants.
 type Indel struct {
 	Insertion
