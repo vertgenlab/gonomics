@@ -51,7 +51,7 @@ func GoReadToChan(filename string) (<-chan Sam, Header) {
 	return data, <-header
 }
 
-// ReadNext takes a ByteReader and returns the next Sam record as well as a boolean flag
+// ReadNext takes an EasyReader and returns the next Sam record as well as a boolean flag
 // indicating if the file is finished being read. If there is a Sam record to process
 // the function will return the Sam record and 'false'. After processing all Sam records
 // in the file, the function will return a blank Sam and 'true'. ReadNext will advance
@@ -165,7 +165,7 @@ func processAlignmentLine(line string) Sam {
 	return curr
 }
 
-// ReadHeaderBytes processes the contiguous header from an EasyReader
+// ReadHeader processes the contiguous header from an EasyReader
 // and advances the Reader past the header lines.
 func ReadHeader(file *fileio.EasyReader) Header {
 	var answer Header

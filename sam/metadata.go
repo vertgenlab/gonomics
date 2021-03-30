@@ -8,7 +8,7 @@ import (
 )
 
 // Metadata stores semi-parsed header data with several explicitly
-// parsed fields (e.g. Version) an the rest of the header encoded in
+// parsed fields (e.g. Version) and the rest of the header encoded in
 // the AllTags field as a HeaderTagMap.
 type Metadata struct {
 	Version   string      // tag HD - VN
@@ -30,7 +30,7 @@ type Tag [2]byte
 // occurs once per chromosome. Using the key 'SQ' in the tag map
 // gives each SQ line as a slice indexed by order of occurrence.
 //
-// Each element in the resulting struct is itself a map keyed by Tags
+// Each element in the resulting slice is itself a map keyed by Tags
 // present in the line. For example, the data stored in the 'SN' tag
 // of the 5th 'SQ' line would be retrieved by TapMap[SQ][4][SN].
 //

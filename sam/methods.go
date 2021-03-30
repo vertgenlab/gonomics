@@ -64,14 +64,9 @@ func (s *Sam) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next *Sam
 	var curr Sam
-	for nextBytes, err := file.Peek(1); next == nil && !done; nextBytes, err = file.Peek(1) {
-		if err == nil && nextBytes[0] == '@' {
-			fileio.EasyNextLine(file)
-			continue
-		}
-		curr, done = ReadNext(file)
-		next = &curr
-	}
+	curr, done = ReadNext(file)
+	next = &curr
+
 	if done {
 		return true
 	}
