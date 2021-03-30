@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/sam"
 	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -13,7 +14,6 @@ import (
 
 func totalAlignedBases(filename string) int {
 	samFile := fileio.EasyOpen(filename)
-	defer samFile.Close()
 	var done bool = false
 	var aln sam.Sam
 	var alignedBases int
@@ -25,6 +25,9 @@ func totalAlignedBases(filename string) int {
 			alignedBases += cigar.MatchLength(aln.Cigar)
 		}
 	}
+
+	err := samFile.Close()
+	exception.PanicOnErr(err)
 	return alignedBases
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
 	"strconv"
 	"strings"
@@ -238,13 +239,13 @@ func Write(filename string, data []Sam, header Header) {
 }
 
 // WriteToFileHandle writes a single Sam struct to the input file.
-func WriteToFileHandle(file *fileio.EasyWriter, aln Sam) {
+func WriteToFileHandle(file io.Writer, aln Sam) {
 	_, err := fmt.Fprintln(file, ToString(aln))
 	exception.PanicOnErr(err)
 }
 
 // WriteHeaderToFileHandle writes a sam header to the input file.
-func WriteHeaderToFileHandle(file *fileio.EasyWriter, header Header) {
+func WriteHeaderToFileHandle(file io.Writer, header Header) {
 	var err error
 	for i := range header.Text {
 		_, err = fmt.Fprintln(file, header.Text[i])
