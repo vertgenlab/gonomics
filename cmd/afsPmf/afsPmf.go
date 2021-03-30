@@ -10,7 +10,7 @@ import (
 )
 
 func afsPmf(vcfFile string, outFile string, unPolarized bool) {
-	g, err := popgen.VcfToAfs(vcfFile, !unPolarized)//VcfToAfs is written in terms of polarized, so this is inverted here.
+	g, err := popgen.VcfToAfs(vcfFile, !unPolarized) //VcfToAfs is written in terms of polarized, so this is inverted here.
 	exception.FatalOnErr(err)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
@@ -25,7 +25,7 @@ func afsPmf(vcfFile string, outFile string, unPolarized bool) {
 	fmt.Fprintf(out, "AlleleFrequency\tNumAlleles\tDensity\n")
 
 	for i := 1; i < len(frequencySlice); i++ {
-		fmt.Fprintf(out, "%v\t%v\t%f\n", i, frequencySlice[i], float64(frequencySlice[i]) / float64(len(g.Sites)))
+		fmt.Fprintf(out, "%v\t%v\t%f\n", i, frequencySlice[i], float64(frequencySlice[i])/float64(len(g.Sites)))
 	}
 }
 
