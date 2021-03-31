@@ -11,9 +11,9 @@ import (
 
 // ReconAccuracy returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
 // If option = 1 it will also return the percentage of first second and third bases of each codon that were correct
-func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string, option int) (accTotal map[string]float64, accBases map[string][]float64) {
+func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string, calcBaseAcc bool) (accTotal map[string]float64, accBases map[string][]float64) {
 	var accByBase map[string][]float64
-	if option == 1 {
+	if calcBaseAcc {
 		accByBase = ReconAccuracyByBase(simFilename, reconFilename, gpFilename)
 	}
 
@@ -111,85 +111,62 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 // ReconAccuracyByBase will run if the option given to ReconAccuracy = 1. This function calculates the percentage of first, second and third bases in codons that were correct.
 func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename string) map[string][]float64 {
 	sim := fasta.Read(simFilename)
-	recon := fasta.Read(reconFilename)
+	rec := fasta.Read(reconFilename)
+	recon := fasta.ToMap(rec)
 	genes := genePred.Read(gpFilename)
 	answer := make(map[string][]float64)
 
 	for s := 0; s < len(sim); s++ {
-		for r := 0; r < len(recon); r++ {
-			var percentage1 float64
-			var percentage2 float64
-			var percentage3 float64
-			var mistakes1 float64
-			var mistakes2 float64
-			var mistakes3 float64
-			var total1 float64
-			var total2 float64
-			var total3 float64
-			if sim[s].Name == recon[r].Name {
-				for i := 0; i < len(sim[s].Seq); i++ {
-					for g := 0; g < len(genes); g++ {
-						inExon, exon := simulate.CheckExon(genes[g], i)
-						if inExon {
-							loc := findLocationInCodon(genes[g], exon, i)
-							if loc == 1 {
-								total1 += 1
-								if sim[s].Seq[i] != recon[r].Seq[i] {
-									mistakes1 += 1
-								}
-							} else if loc == 2 {
-								total2 += 1
-								if sim[s].Seq[i] != recon[r].Seq[i] {
-									mistakes2 += 1
-								}
-							} else if loc == 3 {
-								total3 += 1
-								if sim[s].Seq[i] != recon[r].Seq[i] {
-									mistakes3 += 1
-								}
+		var percentage0, percentage1, percentage2 float64
+		var mistakes0, mistakes1, mistakes2 float64
+		var total0, total1, total2 float64
+		rSeq, ok := recon[sim[s].Name]
+		if ok {
+			for i := 0; i < len(sim[s].Seq); i++ {
+				for g := 0; g < len(genes); g++ {
+					inExon, exon := simulate.CheckExon(genes[g], i)
+					if inExon {
+						loc := calcLocationInCodon(genes[g], exon, i)
+						switch loc {
+						case 0:
+							total0 += 1
+							if sim[s].Seq[i] != rSeq[i] {
+								mistakes0 += 1
+							}
+						case 1:
+							total1 += 1
+							if sim[s].Seq[i] != rSeq[i] {
+								mistakes1 += 1
+							}
+						case 2:
+							total2 += 1
+							if sim[s].Seq[i] != rSeq[i] {
+								mistakes2 += 1
 							}
 						}
 					}
 				}
-				percentage1 = (mistakes1 / total1) * 100
-				percentage2 = (mistakes2 / total2) * 100
-				percentage3 = (mistakes3 / total3) * 100
-				answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage1)
-				answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage2)
-				answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage3)
 			}
+			percentage0 = (mistakes0 / total0) * 100
+			percentage1 = (mistakes1 / total1) * 100
+			percentage2 = (mistakes2 / total2) * 100
+			answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage0)
+			answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage1)
+			answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage2)
 		}
 	}
 	return answer
 }
 
-// findLocationInCodon returns what position in a codon a given base inhabits (first, second or third).
-func findLocationInCodon(gene genePred.GenePred, exon int, position int) int {
+// findLocationInCodon returns what position in a codon a given base inhabits (0, 1, 2)
+func calcLocationInCodon(gene genePred.GenePred, exon int, position int) int {
 	var positionInCodon int
 
-	if gene.ExonFrames[exon] == 0 {
-		location := position - gene.ExonStarts[exon]
-		if location%3 != 0 {
-			positionInCodon = location % 3
-		} else {
-			positionInCodon = 3
-		}
-	} else if gene.ExonFrames[exon] == 1 {
-		location := position - gene.ExonStarts[exon] + 1
-		if location%3 != 0 {
-			positionInCodon = location % 3
-		} else {
-			positionInCodon = 3
-		}
-	} else if gene.ExonFrames[exon] == 2 {
-		location := position - gene.ExonStarts[exon] + 2
-		if location%3 != 0 {
-			positionInCodon = location % 3
-		} else {
-			positionInCodon = 3
-		}
+	location := position - gene.ExonStarts[exon] + gene.ExonFrames[exon]
+	if location%3 != 0 {
+		positionInCodon = location % 3
 	} else {
-		log.Panic("Exon Frame is not 0, 1 or 2")
+		positionInCodon = 0
 	}
 	return positionInCodon
 }

@@ -51,22 +51,29 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	fasta.Write(outputFilename, treeFastas)
 }
 
-//SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction
-func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string, option int, baseAccFile string) {
+//SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction in two ways
+//default accuracy calculation will calculate both exonic and non-exonic accuracy for each node, and it's total accuracy
+//if there is a specified baseAccFile, this function will also return a file that contains 3 numbers:
+//the accuracy for all nodes for the first, second and third base of every codon
+func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string, baseAccFile string) {
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
 	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
+	var calcBaseAcc = false
+	if baseAccFile != "" {
+		calcBaseAcc = true
+	}
 
-	answer, byBaseAnswer := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp, option)
+	answer, byBaseAnswer := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp, calcBaseAcc)
 	out := fileio.EasyCreate(accuracyOutFile)
 	defer out.Close()
 
 	for name, accuracy := range answer {
 		fmt.Fprintf(out, "%s\t%f\n", name, accuracy)
 	}
-	if option == 1 && baseAccFile != "" {
+	if baseAccFile != "" {
 		baseAccOut := fileio.EasyCreate(baseAccFile)
 		defer baseAccOut.Close()
 		for species, baseAcc := range byBaseAnswer {
@@ -96,8 +103,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs = 7
-	var option = flag.Int("option", 0, "Specify to 1 to return an accuracy breakdown by base position in codons. Default value is 0, which returns normal output.")
-	var baseAccFile = flag.String("baseAccFile", "", "Specify a filename for the output of accuracy by position of base in codon (if option = 1).")
+	var baseAccFile = flag.String("baseAccFile", "", "Specify a filename for the output of accuracy by position of a base in a codon.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -117,5 +123,5 @@ func main() {
 	reconOutFile := flag.Arg(5)
 	accuracyOutFile := flag.Arg(6)
 
-	SimRecon(rootFastaFile, treeFile, gp, simOutFile, leafOutFile, reconOutFile, accuracyOutFile, *option, *baseAccFile)
+	SimRecon(rootFastaFile, treeFile, gp, simOutFile, leafOutFile, reconOutFile, accuracyOutFile, *baseAccFile)
 }

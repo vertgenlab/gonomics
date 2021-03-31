@@ -36,7 +36,7 @@ func Test_reconstruct(t *testing.T) {
 			LoopNodes(tr, i)
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
-		accuracyData, _ := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", 0)
+		accuracyData, _ := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", false)
 		for name, accuracy := range accuracyData {
 			log.Printf("%s %f \n", name, accuracy)
 		}
@@ -45,7 +45,7 @@ func Test_reconstruct(t *testing.T) {
 }
 
 func TestReconAccuracyByBase(t *testing.T) {
-	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", 1)
+	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", true)
 
 	for name, data := range baseAccuracy {
 		for d := range data {
