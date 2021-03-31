@@ -18,9 +18,11 @@ func afsPmf(vcfFile string, outFile string, unPolarized bool) {
 	frequencySlice := make([]int, numAlleles)
 
 	for _, site := range g.Sites {
-		frequencySlice[site.I]++
+		if site.N == numAlleles {
+			frequencySlice[site.I]++
+		}
 	}
-	_, err = fmt.Fprintf(out, "AlleleFrequency\tNumAlleles\n")
+	_, err = fmt.Fprintf(out, "AlleleFrequency\tNumAlleles\tFloatFrequency\n")
 	exception.PanicOnErr(err)
 	for i := 1; i < len(frequencySlice); i++ {
 		_, err = fmt.Fprintf(out, "%v\t%v\t%f\n", i, frequencySlice[i], float64(frequencySlice[i])/float64(len(g.Sites)))
