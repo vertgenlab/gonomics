@@ -10,7 +10,7 @@ import (
 )
 
 // ReconAccuracy returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
-// If option = 1 it will also return the percentage of first second and third bases of each codon that were correct
+// If calcBaseAcc = true it will also return the percentage of first second and third bases of each codon that were correct
 func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string, calcBaseAcc bool) (accTotal map[string]float64, accBases map[string][]float64) {
 	var accByBase map[string][]float64
 	if calcBaseAcc {
@@ -22,14 +22,9 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 	var found = false
 	var leaf = false
 	var exon = false
-	var total float64
-	total = 0.0
-	var mistakes float64
-	var leafMistakes float64
-	var exonMistakes float64
-	var nonCodingMistakes float64
-	var exonBases float64
-	var nonCodingBases float64
+	var total = 0.0
+	var mistakes, leafMistakes, exonMistakes, nonCodingMistakes float64
+	var exonBases, nonCodingBases float64
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
 	leaves := fasta.Read(leavesOnlyFile)

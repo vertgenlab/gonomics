@@ -19,6 +19,8 @@ var input = []struct {
 }
 
 func Test_reconstruct(t *testing.T) {
+	var leaves []*expandedTree.ETree
+	var accuracyData map[string]float64
 	for _, test := range input {
 		tre, er := expandedTree.ReadNewick(test.newickFilename)
 		if er != nil {
@@ -31,16 +33,21 @@ func Test_reconstruct(t *testing.T) {
 
 		tr, err := expandedTree.ReadTree(test.newickFilename, "leavesOnly.fasta")
 		exception.FatalOnErr(err)
-		leaves := expandedTree.GetLeaves(tr)
+		leaves = expandedTree.GetLeaves(tr)
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 			LoopNodes(tr, i)
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
-		accuracyData, _ := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", false)
+		accuracyData, _ = ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", false)
 		for name, accuracy := range accuracyData {
 			log.Printf("%s %f \n", name, accuracy)
 		}
 	}
+
+	if accuracyData[leaves[0].Name] != 100 {
+
+	}
+
 	fileio.EasyRemove("RandGeneOutput.fasta")
 }
 
