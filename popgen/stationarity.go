@@ -125,21 +125,20 @@ func AfsStationarityClosure(alpha float64) func(float64) float64 {
 }
 
 //FIntegralComponent is a helper function of AfsSampleDensity and represents the component within the integral.
-func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
+func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
+	var binomCoeff float64 = binomMap[n][k]
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
-		return numbers.MultiplyLog(expression, logPart)
+		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
 	}
 }
 
 //AfsSampleDensity (also referred to as the F function) is the product of the stationarity and binomial distributions integrated over p, the allele frequency.
 func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	var switchPoint float64 = float64(k) / float64(n)
-	f := FIntegralComponent(n, k, alpha)
-	constantComponent := binomMap[n][k]
-	integral := numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, 1e-8, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, 1e-8, 100))
-	return numbers.MultiplyLog(constantComponent, integral)
+	f := FIntegralComponent(n, k, alpha, binomMap)
+	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, 1e-7, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, 1e-7, 100))
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
