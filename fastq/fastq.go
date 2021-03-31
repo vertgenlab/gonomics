@@ -15,61 +15,59 @@ type Fastq struct {
 	Qual []uint8
 }
 
-func Read(filename string) []*Fastq {
+func Read(filename string) []Fastq {
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
-	answer := ReadFastqs(file)
+	var curr Fastq
+        var done bool
+        var answer []Fastq
+        for curr, done = NextFastq(file); !done; curr, done = NextFastq(file) {
+                answer = append(answer, curr)
+        }
+	err := file.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
-func ReadToChan(file *fileio.EasyReader, data chan<- *Fastq, wg *sync.WaitGroup) {
+func ReadToChan(filename string, data chan<- Fastq) {
+	file := fileio.EasyOpen(filename)
 	for curr, done := NextFastq(file); !done; curr, done = NextFastq(file) {
 		data <- curr
 	}
-	file.Close()
-	wg.Done()
+	close(data)
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
-func GoReadToChan(filename string) <-chan *Fastq {
-	file := fileio.EasyOpen(filename)
-	var wg sync.WaitGroup
-	data := make(chan *Fastq)
-	wg.Add(1)
-	go ReadToChan(file, data, &wg)
-
-	go func() {
-		wg.Wait()
-		close(data)
-	}()
-
+func GoReadToChan(filename string) <-chan Fastq {
+	data := make(chan *Fastq, 1000)
+	go ReadToChan(filename, data)
 	return data
 }
 
-func Write(filename string, records []*Fastq) {
+func Write(filename string, records []Fastq) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
-	for _, fq := range records {
-		WriteToFileHandle(file, fq)
+	for i := range records {
+		WriteToFileHandle(file, records[i])
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
-func WriteToFileHandle(file *fileio.EasyWriter, fq *Fastq) {
+func WriteToFileHandle(file *fileio.EasyWriter, fq Fastq) {
 	var err error
-	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
-	common.ExitIfError(err)
+	_, err = fmt.Fprintf(file, "%s", ToString(fq))
+	exception.PanicOnErr(err)
 }
 
-func processFastqRecord(line1 string, line2 string, line3 string, line4 string) *Fastq {
-	var curr *Fastq
+func processFastqRecord(line1 string, line2 string, line3 string, line4 string) Fastq {
 	if line3 != "+" {
-		log.Fatalf("Error: This line should be a + (plus) sign \n")
+		log.Fatalf("Error: This line should be a + (plus) sign:\n%s\n", line3)
 	}
-	curr = &Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQual([]byte(line4))}
+	curr := Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQual([]byte(line4))}
 	return curr
 }
 
-func NextFastq(reader *fileio.EasyReader) (*Fastq, bool) {
+func NextFastq(reader *fileio.EasyReader) (Fastq, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	line2, done2 := fileio.EasyNextLine(reader)
 	line3, done3 := fileio.EasyNextLine(reader)
@@ -78,19 +76,9 @@ func NextFastq(reader *fileio.EasyReader) (*Fastq, bool) {
 		return nil, true
 	}
 	if done2 || done3 || done4 {
-		log.Fatalf("Error: There is an empty line in this fastq record\n")
+		log.Panicf("Error: Lines in fastq file should be a multiple of 4.\n", )
 	}
 	return processFastqRecord(line, line2, line3, line4), false
-}
-
-func ReadFastqs(er *fileio.EasyReader) []*Fastq {
-	var curr *Fastq
-	var done bool
-	var answer []*Fastq
-	for curr, done = NextFastq(er); !done; curr, done = NextFastq(er) {
-		answer = append(answer, curr)
-	}
-	return answer
 }
 
 func Copy(a *Fastq) *Fastq {
@@ -100,11 +88,9 @@ func Copy(a *Fastq) *Fastq {
 	return &answer
 }
 
-func PrintFastq(fq []*Fastq) {
-	for i := 0; i < len(fq); i++ {
-		readName := "@" + fq[i].Name
-		read := dna.BasesToString(fq[i].Seq)
-		quality := QualString(fq[i].Qual)
-		fmt.Printf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
-	}
+func ToString(fq Fastq) string {
+	readName := "@" + fq[i].Name
+	read := dna.BasesToString(fq[i].Seq)
+	quality := QualString(fq[i].Qual)
+	return fmt.Sprintf("%s\n%s\n%s\n%s\n", readName, read, "+", quality)
 }
