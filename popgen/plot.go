@@ -21,6 +21,16 @@ func PlotAfsF(alpha float64, n int, outFile string) {
 	exception.PanicOnErr(err)
 }
 
+func PlotAfsFCareful(alpha float64, n int, outFile string) {
+	out := fileio.EasyCreate(outFile)
+	fmt.Fprintf(out, "Frequency\tF\n")
+	for i := 1; i < n; i++ {
+		fmt.Fprintf(out, "%v\t%e\n", i, AfsSampleDensityCareful(n, i, alpha))
+	}
+	err := out.Close()
+	exception.PanicOnErr(err)
+}
+
 //PlotAfsPmf writes the allele frequency probability mass function (AlleleFrequencyProbability) to an output file for downstream visualization.
 func PlotAfsPmf(alpha float64, n int, outFile string) {
 	out := fileio.EasyCreate(outFile)

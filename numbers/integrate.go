@@ -173,7 +173,7 @@ func adaptiveSimpsonsLogHelper(f func(float64) float64, a, b, midpoint, fa, fb, 
 	} else if MultiplyLog(errorThresh, logHalf) == errorThresh {
 		log.Fatalf("Error in integration: the error threshold has gotten too small after many recursive calls\n")
 	} else if a == leftMidpoint {
-		log.Fatalf("Error in integration: the left side and midpoint have gotten too close to each other. a: %f. b: %f. Midpoint: %f. LeftMidpoint:%f. MaxDepth: %d.\n", a, b, midpoint, leftMidpoint, maxDepth)
+		log.Fatalf("Error in integration: the left side and midpoint have gotten too close to each other. a: %e. b: %e. Midpoint: %e. LeftMidpoint:%e. Fa: %e. Fb: %e. MaxDepth: %d.\n", a, b, midpoint, leftMidpoint, fa, fb, maxDepth)
 	}
 
 	fLeftMidpoint = f(leftMidpoint)

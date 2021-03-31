@@ -59,6 +59,7 @@ func usage() {
 			" plotFunctions functionKeyWord functionArgs leftBound rightBound steps outFile\n" +
 			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" +
 			"For AfsF: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsF 0.5,200 afsFPlot.txt\n" +
+			"For AfsFCareful: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsFCareful 0.5,200 afsFPlot.txt\n" +
 			"For AfsProbability: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsProbability 0.5,200 afsProbabilityPlot.txt\n" +
 			"For Beta: defined by two parameters (called alpha and beta). ex usage: plotFunctions Beta 0.5,0.5 0.001 0.999 1000 betaPlot.txt\n" +
 			"For Gamma: defined by two parameters (called alpha and beta). ex usage: plotFunctions Gamma 0.5,0.5 0.001 0.999 1000 gammaPlot.txt\n" +
@@ -120,6 +121,21 @@ func main() {
 		alpha := common.StringToFloat64(words[0])
 		n := common.StringToInt(words[1])
 		popgen.PlotAfsF(alpha, n, outFile)
+	} else if flag.Arg(0) == "AfsFCareful" {
+		expectedNumArgs = 3
+		if len(flag.Args()) != expectedNumArgs {
+			flag.Usage()
+			log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+		}
+		functionArgs := flag.Arg(1)
+		outFile := flag.Arg(2)
+		words := strings.Split(functionArgs, ",")
+		if len(words) != 2 {
+			log.Fatalf("An allele frequency F function is defined by two parameters, received %d.", len(words))
+		}
+		alpha := common.StringToFloat64(words[0])
+		n := common.StringToInt(words[1])
+		popgen.PlotAfsFCareful(alpha, n, outFile)
 	} else {
 		expectedNumArgs = 6
 		if len(flag.Args()) != expectedNumArgs {
