@@ -80,7 +80,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 			firstBase := species + " First Base"
 			secondBase := species + " Second Base"
 			thirdBase := species + " Third Base"
-			for b, _ := range baseAcc {
+			for b := range baseAcc {
 				if b == 0 {
 					fmt.Fprintf(baseAccOut, "%s\t%f\n", firstBase, baseAcc[b])
 				} else if b == 1 {
