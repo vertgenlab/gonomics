@@ -80,8 +80,7 @@ func EasyPeekReal(file *EasyReader, n int) ([]byte, error) {
 
 // EasyRemove deletes the input file.
 func EasyRemove(filename string) {
-	err := os.Remove(filename)
-	exception.PanicOnErr(err)
+	MustRemove(filename)
 }
 
 // Close the receiving EasyReader.

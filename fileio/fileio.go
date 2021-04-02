@@ -3,6 +3,7 @@ package fileio
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"io"
@@ -11,18 +12,39 @@ import (
 	"strings"
 )
 
-// MustCreate creates a file with the input name. Panics if not possible.
+// MustCreate creates a file with the input name.
+// Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	file, err := os.Create(filename)
-	exception.PanicOnErr(err)
+	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
+		log.Fatal(err.Error())
+	} else {
+		exception.PanicOnErr(err)
+	}
 	return file
 }
 
-// MustOpen opens the input file. Panics if not possible.
+// MustOpen opens the input file.
+// Fatal/Panics when appropriate.
 func MustOpen(filename string) *os.File {
 	file, err := os.Open(filename)
-	exception.PanicOnErr(err)
+	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
+		log.Fatal(err.Error())
+	} else {
+		exception.PanicOnErr(err)
+	}
 	return file
+}
+
+// MustRemove deletes the input file.
+// Fatal/Panics when appropriate.
+func MustRemove(filename string) {
+	err := os.Remove(filename)
+	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
+		log.Fatal(err.Error())
+	} else {
+		exception.PanicOnErr(err)
+	}
 }
 
 // NextLine returns the next line of the file (might be a comment line).
