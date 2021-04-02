@@ -9,11 +9,11 @@ import (
 	"log"
 )
 
-func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool, derived bool, ancestral bool) {
+func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool, derived bool, ancestral bool, muStep float64, sigmaStep float64) {
 	common.RngSeed(randSeed, setSeed)
 	data, err := popgen.VcfToAfs(filename, !unPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
-	popgen.MetropolisHastings(*data, muZero, sigmaZero, iterations, outFile, derived, ancestral)
+	popgen.MetropolisHastings(*data, muZero, sigmaZero, iterations, outFile, derived, ancestral, muStep, sigmaStep)
 }
 
 func usage() {
@@ -32,6 +32,8 @@ func main() {
 	var iterations *int = flag.Int("iterations", 100, "Number of MCMC iterations.")
 	var muZero *float64 = flag.Float64("muZero", 0, "Starting position for the mean selection coefficient parameter mu.")
 	var sigmaZero *float64 = flag.Float64("sigmaZero", 1, "Starting value for the selection coefficient distribution variance parameter sigma.")
+	var muStep *float64 = flag.Float64("muStep", 0.2, "Step size for the mean selection coefficient parameter mu.")
+	var sigmaStep *float64 = flag.Float64("sigmaStep", 50, "Step size for the selection coefficient variance parameter sigma.")
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
@@ -50,5 +52,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed, *unPolarized, *derived, *ancestral)
+	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed, *unPolarized, *derived, *ancestral, *muStep, *sigmaStep)
 }
