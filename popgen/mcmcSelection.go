@@ -48,8 +48,8 @@ func MetropolisAccept(old Theta, thetaPrime Theta) bool {
 //HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta) float64 {
 	var newGivenOld, oldGivenNew float64
-	newGivenOld = numbers.NormalDist(tNew.mu, tOld.mu, tOld.sigma) * numbers.GammaDist(tNew.sigma, step, step/tOld.sigma)
-	oldGivenNew = numbers.NormalDist(tOld.mu, tNew.mu, tNew.sigma) * numbers.GammaDist(tOld.sigma, step, step/tNew.sigma)
+	newGivenOld = numbers.GammaDist(tNew.sigma, step, step/tOld.sigma)
+	oldGivenNew = numbers.GammaDist(tOld.sigma, step, step/tNew.sigma)
 	return math.Log(oldGivenNew / newGivenOld)
 }
 
