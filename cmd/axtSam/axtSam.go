@@ -35,12 +35,12 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 	} else {
 		inFile, outFile := flag.Arg(0), flag.Arg(1)
-		var headerInfo *sam.SamHeader = nil
+		var headerInfo sam.Header
 
 		if *chrInfo != "" {
 			headerInfo = chromInfoSamHeader(*chrInfo)
 		} else if *faSeq != "" {
-			headerInfo = sam.FastaHeader(fasta.Read(*faSeq))
+			headerInfo = sam.GenerateHeader(fasta.ToChromInfo(fasta.Read(*faSeq)), nil, sam.Unsorted, sam.None)
 		} else {
 			log.Printf("Warning: no files were detected to support writing a proper sam header. Converted alignment formats will not be compatible with samtools\n")
 		}
@@ -51,18 +51,18 @@ func main() {
 	}
 }
 
-func axtToSam(axtfile string, header *sam.SamHeader, output string) {
+func axtToSam(axtfile string, header sam.Header, output string) {
 	writer := fileio.EasyCreate(output)
 
 	defer writer.Close()
 
 	//setting up channels and wait groups
-	data, results := make(chan axt.Axt, 824), make(chan *sam.SamAln, 824)
+	data, results := make(chan axt.Axt, 824), make(chan sam.Sam, 824)
 	var working, writingJob sync.WaitGroup
 
 	go axt.ReadToChan(axtfile, data)
 
-	if header != nil {
+	if header.Text != nil {
 		sam.WriteHeaderToFileHandle(writer, header)
 	}
 
@@ -70,20 +70,20 @@ func axtToSam(axtfile string, header *sam.SamHeader, output string) {
 	go routineWorker(data, results, &working)
 
 	writingJob.Add(1)
-	go sam.SamChanToFile(results, output, header, &writingJob)
+	go sam.WriteFromChan(results, output, header, &writingJob)
 
 	working.Wait()
 	close(results)
 	writingJob.Wait()
 }
 
-func chromInfoSamHeader(filename string) *sam.SamHeader {
-	return sam.ChromInfoSamHeader(chromInfo.ReadToSlice(filename))
+func chromInfoSamHeader(filename string) sam.Header {
+	return sam.GenerateHeader(chromInfo.ReadToSlice(filename), nil, sam.Unsorted, sam.None)
 }
 
 //Not sure if this is a potiential speed up, but i have fairly large axt files that come out of chain merge
 //The idea is to provide at least 3 threads with some work, reading, axtToSam, writing
-func routineWorker(readChannel <-chan axt.Axt, writingChannel chan<- *sam.SamAln, wg *sync.WaitGroup) {
+func routineWorker(readChannel <-chan axt.Axt, writingChannel chan<- sam.Sam, wg *sync.WaitGroup) {
 	var numberComplete int = 0
 	for eachAxt := range readChannel {
 		writingChannel <- axt.ToSam(eachAxt)

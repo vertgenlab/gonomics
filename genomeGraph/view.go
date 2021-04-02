@@ -17,11 +17,11 @@ func calcExtension(seq []dna.Base) int64 {
 	return maxScore/600 + int64(len(seq))
 }
 
-func LocalView(samLine *sam.SamAln, ref []*Node) string {
+func LocalView(samLine *sam.Sam, ref []*Node) string {
 	var seqOne, seqTwo bytes.Buffer
 
 	var operations []*cigar.Cigar = samLine.Cigar
-	var i int64 = samLine.Pos - 1
+	var i int64 = int64(samLine.Pos) - 1
 	var j int64 = 0
 	var count int
 	words := strings.Split(samLine.RName, "_")

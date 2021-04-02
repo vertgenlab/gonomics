@@ -34,7 +34,7 @@ func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen
 	wg.Done()
 }
 
-func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- *sam.SamAln, wg *sync.WaitGroup) {
+func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- sam.Sam, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
@@ -47,15 +47,18 @@ func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seed
 	wg.Done()
 }
 
-func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- *sam.PairedSamAln, wg *sync.WaitGroup) {
+func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, input <-chan fastq.PairedEndBig, output chan<- sam.Sam, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 	seedBuildHelper := newSeedBuilder()
+	var pair sam.MatePair
 	for read := range input {
-		output <- GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
+		pair = GirafPairToSam(WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
+		output <- pair.Fwd
+		output <- pair.Rev
 	}
 	wg.Done()
 }

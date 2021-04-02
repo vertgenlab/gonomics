@@ -36,7 +36,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 
 	var gV *vcf.Vcf
 	var alleles [][]dna.Base
-	for read, done := sam.NextAlignment(samFile); done != true; read, done = sam.NextAlignment(samFile) {
+	for read, done := sam.ReadNext(samFile); done != true; read, done = sam.ReadNext(samFile) {
 		parentAllele1, parentAllele2 = 0, 0
 		target = int(read.Pos - 1)
 		query = 0
@@ -91,9 +91,9 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 		}
 		switch true {
 		case parentAllele1 > parentAllele2:
-			sam.WriteAlnToFileHandle(childOne, read)
+			sam.WriteToFileHandle(childOne, read)
 		case parentAllele2 > parentAllele1:
-			sam.WriteAlnToFileHandle(childTwo, read)
+			sam.WriteToFileHandle(childTwo, read)
 		}
 	}
 }

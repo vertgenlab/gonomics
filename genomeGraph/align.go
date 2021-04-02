@@ -8,8 +8,8 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) *sam.SamAln {
-	var currBest sam.SamAln = sam.SamAln{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
+func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Sam {
+	var currBest sam.Sam = sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget int
 	var minQuery int
@@ -60,7 +60,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash m
 			currBest.Seq = currSeq // unsure why this line was lost
 			currBest.Qual = string(read.Qual)
 			currBest.RName = fmt.Sprintf("%d", bestPath[0])
-			currBest.Pos = int64(minTarget) + 1
+			currBest.Pos = uint32(minTarget + 1)
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
 			/*if &gg.Nodes[bestPath[0]].Info != nil {
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
@@ -73,7 +73,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash m
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
-	return &currBest
+	return currBest
 }
 
 //TODO: what about neg strand?
@@ -155,8 +155,8 @@ func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
 	return perfectScore
 }
 
-/*func NodesHeader(ref []*Node) *sam.SamHeader {
-	var header sam.SamHeader
+/*func NodesHeader(ref []*Node) *sam.Header {
+	var header sam.Header
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
 	var words string
 	for i := 0; i < len(ref); i++ {
