@@ -53,8 +53,10 @@ func Test_reconstruct(t *testing.T) {
 
 func TestReconAccuracyByBase(t *testing.T) {
 	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", true)
+	var name string
+	var data []float64
 
-	for name, data := range baseAccuracy {
+	for name, data = range baseAccuracy {
 		for d := range data {
 			if d == 0 {
 				log.Printf("%s First Base %f \n", name, data[d])
@@ -63,6 +65,23 @@ func TestReconAccuracyByBase(t *testing.T) {
 			} else {
 				log.Printf("%s Third Base %f \n", name, data[d])
 			}
+		}
+	}
+
+	data, ok := baseAccuracy["A"]
+	if !ok {
+		t.Error("node A not found in baseAccuracy data, check tree input.")
+	} else {
+		if data[0] < 97.0 {
+			t.Errorf("First base accuracy for A in tree should be 97.910448, but is %f.", data[0])
+		}
+	}
+	data, ok = baseAccuracy["D"]
+	if !ok {
+		t.Error("Node D not found in baseAccuracy data, check tree input.")
+	} else {
+		if data[0] != 100 {
+			t.Errorf("First base accuracy for D should be 100.0, but if %f.", data[0])
 		}
 	}
 
