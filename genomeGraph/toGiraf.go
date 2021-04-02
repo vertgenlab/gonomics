@@ -136,15 +136,15 @@ func setGirafFlags(pair *giraf.GirafPair) {
 	}
 }
 
-func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
-	curr := sam.SamAln{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.QualString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
+func GirafToSam(ag *giraf.Giraf) sam.Sam {
+	curr := sam.Sam{QName: ag.QName, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: ag.Seq, Qual: fastq.QualString(ag.Qual), Extra: "BZ:i:0\tGP:Z:-1\tXO:Z:~"}
 	//read is unMapped
 	if strings.Compare(ag.Notes[0].Value, "~") == 0 {
-		return &curr
+		return curr
 	} else {
 		target := strings.Split(ag.Notes[0].Value, "=")
 		curr.RName = target[0]
-		curr.Pos = int64(ag.Path.TStart) + common.StringToInt64(target[1])
+		curr.Pos = uint32(ag.Path.TStart + common.StringToInt(target[1]))
 		curr.Flag = getSamFlags(ag)
 		if len(ag.Notes) == 2 {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:i:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))
@@ -152,20 +152,20 @@ func GirafToSam(ag *giraf.Giraf) *sam.SamAln {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:i:%d", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart)
 		}
 	}
-	return &curr
+	return curr
 }
 
-func GirafPairToSam(ag giraf.GirafPair) *sam.PairedSamAln {
-	var mappedPair sam.PairedSamAln = sam.PairedSamAln{FwdSam: &sam.SamAln{}, RevSam: &sam.SamAln{}}
-	mappedPair.FwdSam = GirafToSam(&ag.Fwd)
-	mappedPair.RevSam = GirafToSam(&ag.Rev)
-	mappedPair.FwdSam.Flag += 64 + 2
-	mappedPair.RevSam.Flag += 128 + 2
+func GirafPairToSam(ag giraf.GirafPair) sam.MatePair {
+	var mappedPair sam.MatePair = sam.MatePair{Fwd: sam.Sam{}, Rev: sam.Sam{}}
+	mappedPair.Fwd = GirafToSam(&ag.Fwd)
+	mappedPair.Rev = GirafToSam(&ag.Rev)
+	mappedPair.Fwd.Flag += 64 + 2
+	mappedPair.Rev.Flag += 128 + 2
 	if isProperPairAlign(&ag) {
-		mappedPair.FwdSam.Flag += 1
-		mappedPair.RevSam.Flag += 1
+		mappedPair.Fwd.Flag += 1
+		mappedPair.Rev.Flag += 1
 	}
-	return &mappedPair
+	return mappedPair
 }
 
 func isProperPairAlign(mappedPair *giraf.GirafPair) bool {
@@ -191,8 +191,8 @@ func getGirafFlags(ag *giraf.Giraf) uint8 {
 	return answer
 }
 
-func getSamFlags(ag *giraf.Giraf) int64 {
-	var answer int64
+func getSamFlags(ag *giraf.Giraf) uint16 {
+	var answer uint16
 	if !ag.PosStrand {
 		answer += 16
 	}

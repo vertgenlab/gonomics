@@ -25,7 +25,7 @@ func TestSamFileConvert(t *testing.T) {
 	}
 	samFromAxt := ToSam(testAxt)
 
-	var answerSam *sam.SamAln = &sam.SamAln{
+	var answerSam sam.Sam = sam.Sam{
 		QName: "chr11",
 		Flag:  16,
 		RName: "chr19",
@@ -39,7 +39,7 @@ func TestSamFileConvert(t *testing.T) {
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", 3500, 2, 31),
 	}
-	if !sam.IsEqual(samFromAxt, answerSam) {
+	if !sam.Equal(samFromAxt, answerSam) {
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
 

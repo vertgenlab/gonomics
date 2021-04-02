@@ -4,16 +4,37 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/sam"
 	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
 
+func totalAlignedBases(filename string) int {
+	samFile := fileio.EasyOpen(filename)
+	var done bool = false
+	var aln sam.Sam
+	var alignedBases int
+
+	sam.ReadHeader(samFile)
+
+	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
+		if aln.Cigar[0].Op != '*' {
+			alignedBases += cigar.MatchLength(aln.Cigar)
+		}
+	}
+
+	err := samFile.Close()
+	exception.PanicOnErr(err)
+	return alignedBases
+}
+
 func samCoverage(samFileName string, noGapFileName string, outFile string) {
 	noGap := bed.Read(noGapFileName)
 	genomeSize := bed.TotalSize(noGap)
-	alignedBases := sam.TotalAlignedBases(samFileName)
+	alignedBases := totalAlignedBases(samFileName)
 
 	coverage := (float64(alignedBases) / float64(genomeSize))
 	out := fileio.EasyCreate(outFile)

@@ -46,7 +46,7 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 	case ".sam":
 		receive, _ := sam.GoReadToChan(inputFile)
 		for val := range receive {
-			send <- val
+			send <- &val
 		}
 	case ".chain":
 		receive, _ := chain.GoReadToChan(inputFile)

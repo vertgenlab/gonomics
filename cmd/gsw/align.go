@@ -99,7 +99,7 @@ func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out s
 		GswToGirafPair(genomeGraph, readOne, readTwo, out, cpus, seedNum, stepSize, selectScoreMatrix(score))
 	case strings.HasSuffix(liftover, ".sizes"):
 		chrSize := chromInfo.ReadToSlice(liftover)
-		header := sam.ChromInfoSamHeader(chrSize)
+		header := sam.GenerateHeader(chrSize, nil, sam.Unsorted, sam.None)
 		if len(args) == 2 {
 			GswToSam(genomeGraph, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
 		}

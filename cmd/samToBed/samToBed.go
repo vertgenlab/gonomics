@@ -12,7 +12,7 @@ import (
 )
 
 func samToBed(samFilename string, bedFilename string, paired bool, fragLength int) {
-	var aln *sam.SamAln = nil
+	var aln sam.Sam
 	var done bool = false
 
 	//sam file to read
@@ -25,7 +25,7 @@ func samToBed(samFilename string, bedFilename string, paired bool, fragLength in
 	bedFile := fileio.EasyCreate(bedFilename)
 	defer bedFile.Close()
 
-	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			if fragLength != -1 {
 				bed.WriteToFileHandle(bedFile, convert.SamToBedFrag(aln, fragLength, chroms), 4)

@@ -10,17 +10,17 @@ import (
 
 // ToSam converts an Axt record into a Sam (sam.SamAln) record
 // TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment
-func ToSam(axtFmt Axt) *sam.SamAln {
-	var answer *sam.SamAln = &sam.SamAln{
+func ToSam(axtFmt Axt) sam.Sam {
+	var answer sam.Sam = sam.Sam{
 		QName: axtFmt.QName,
 		Flag:  setStrandFlag(axtFmt.QStrandPos),
 		RName: axtFmt.RName,
-		Pos:   int64(axtFmt.RStart),
+		Pos:   uint32(axtFmt.RStart),
 		MapQ:  255, // mapping quality setting to 255 because we are not calculating it
 		Cigar: PairSeqToCigar(axtFmt.RSeq, axtFmt.QSeq),
 		RNext: "*",
 		PNext: 0,
-		TLen:  int64(axtFmt.REnd - axtFmt.RStart),
+		TLen:  int32(axtFmt.REnd - axtFmt.RStart),
 		Seq:   dna.RemoveBase(axtFmt.QSeq, dna.Gap),
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),
@@ -122,7 +122,7 @@ func deletionCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 // setStrandFlag is a helper function for ToSam which sets
 // the correct bit in the flag based on if we are aligning
 // to the positive or negative strand.
-func setStrandFlag(strand bool) int64 {
+func setStrandFlag(strand bool) uint16 {
 	if strand {
 		return 0
 	} else {
