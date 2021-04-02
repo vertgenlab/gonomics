@@ -15,6 +15,7 @@ import (
 //To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
 const verbose int = 0
 const step float64 = 50.0
+const muStep float64 = 0.5
 
 //The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
 type Theta struct {
@@ -75,14 +76,10 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, deri
 	//mean of a gamma dist is alpha / beta, so mean = alpha / beta = sigma**2 / sigma = sigma
 	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
 	sigmaPrime, _ := numbers.RandGamma(step, step/t.sigma)
-	muPrime := numbers.SampleInverseNormal(t.mu, sigmaPrime)
+	muPrime := numbers.SampleInverseNormal(t.mu, muStep)
 	for i := range t.alpha {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
-		//p = p * numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)
-		//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(alphaPrime[i], muPrime, sigmaPrime)))
 	}
-	//p = numbers.MultiplyLog(p, math.Log(numbers.NormalDist(muPrime, t.mu, sigmaPrime)))
-	//p = numbers.MultiplyLog(p, math.Log(numbers.UninformativeGamma(sigmaPrime)))
 
 	if derived {
 		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, 1) //d is hardcoded as 1 for now

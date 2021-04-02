@@ -138,6 +138,7 @@ func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(
 func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponent(n, k, alpha, binomMap)
+	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
 	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, 1e-7, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, 1e-7, 100))
 }
 

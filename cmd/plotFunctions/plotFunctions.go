@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+//TODO: The careless option should eventually be removed, but I need it for now for debugging.
+
 func plotContinuousFunctions(function string, functionArgs string, left float64, right float64, bins int, outFile string) {
 	if function == "AfsStationarity" {
 		words := strings.Split(functionArgs, ",")
@@ -59,7 +61,7 @@ func usage() {
 			" plotFunctions functionKeyWord functionArgs leftBound rightBound steps outFile\n" +
 			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" +
 			"For AfsF: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsF 0.5,200 afsFPlot.txt\n" +
-			"For AfsFCareful: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsFCareful 0.5,200 afsFPlot.txt\n" +
+			"For AfsFCareless: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsFCareless 0.5,200 afsFPlot.txt\n" +
 			"For AfsProbability: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsProbability 0.5,200 afsProbabilityPlot.txt\n" +
 			"For Beta: defined by two parameters (called alpha and beta). ex usage: plotFunctions Beta 0.5,0.5 0.001 0.999 1000 betaPlot.txt\n" +
 			"For Gamma: defined by two parameters (called alpha and beta). ex usage: plotFunctions Gamma 0.5,0.5 0.001 0.999 1000 gammaPlot.txt\n" +
@@ -121,7 +123,7 @@ func main() {
 		alpha := common.StringToFloat64(words[0])
 		n := common.StringToInt(words[1])
 		popgen.PlotAfsF(alpha, n, outFile)
-	} else if flag.Arg(0) == "AfsFCareful" {
+	} else if flag.Arg(0) == "AfsFCareless" {
 		expectedNumArgs = 3
 		if len(flag.Args()) != expectedNumArgs {
 			flag.Usage()
@@ -135,7 +137,7 @@ func main() {
 		}
 		alpha := common.StringToFloat64(words[0])
 		n := common.StringToInt(words[1])
-		popgen.PlotAfsFCareful(alpha, n, outFile)
+		popgen.PlotAfsFCareless(alpha, n, outFile)
 	} else {
 		expectedNumArgs = 6
 		if len(flag.Args()) != expectedNumArgs {

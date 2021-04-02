@@ -21,11 +21,12 @@ func PlotAfsF(alpha float64, n int, outFile string) {
 	exception.PanicOnErr(err)
 }
 
-func PlotAfsFCareful(alpha float64, n int, outFile string) {
+//PlotAfsFCareless plots the old version of AfsF, which lacks the "careful" integration. Used for plotting and debugging. TODO: Delete eventually.
+func PlotAfsFCareless(alpha float64, n int, outFile string) {
 	out := fileio.EasyCreate(outFile)
 	fmt.Fprintf(out, "Frequency\tF\n")
 	for i := 1; i < n; i++ {
-		fmt.Fprintf(out, "%v\t%e\n", i, AfsSampleDensityCareful(n, i, alpha))
+		fmt.Fprintf(out, "%v\t%e\n", i, AfsSampleDensityCareless(n, i, alpha))
 	}
 	err := out.Close()
 	exception.PanicOnErr(err)
