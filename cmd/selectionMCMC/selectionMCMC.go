@@ -9,11 +9,11 @@ import (
 	"log"
 )
 
-func selectionMCMC(filename string, outFile string, muZero float64, sigmaZero float64, iterations int, randSeed bool, setSeed int64, unPolarized bool, derived bool, ancestral bool, muStep float64, sigmaStep float64) {
-	common.RngSeed(randSeed, setSeed)
-	data, err := popgen.VcfToAfs(filename, !unPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
+func selectionMCMC(filename string, outFile string, s popgen.McmcSettings) {
+	common.RngSeed(s.RandSeed, s.SetSeed)
+	data, err := popgen.VcfToAfs(filename, !s.UnPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
-	popgen.MetropolisHastings(*data, muZero, sigmaZero, iterations, outFile, derived, ancestral, muStep, sigmaStep)
+	popgen.MetropolisHastings(*data, outFile, s)
 }
 
 func usage() {
@@ -39,6 +39,21 @@ func main() {
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
 	var derived *bool = flag.Bool("derived", false, "Make a divergence-based ascertainment correction for regions enriched for derived alleles (i.e. HAQERs, HARs, or other fast-evolving regions).")
 	var ancestral *bool = flag.Bool("ancestral", false, "Make a divergence-based ascertainment correction for regions enriched for ancestral alleles (i.e. UCEs or other highly conserved regions).")
+	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
+
+	options := &popgen.McmcSettings{
+		Iterations:	*iterations,
+		MuStep: *muStep,
+		MuZero: *muZero,
+		SigmaStep: *sigmaStep,
+		SigmaZero: *sigmaZero,
+		RandSeed: *randSeed,
+		SetSeed: *setSeed,
+		UnPolarized: *unPolarized,
+		Derived: *derived,
+		Ancestral: *ancestral,
+		IntegralError: *integralError,
+	}
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -52,5 +67,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, *muZero, *sigmaZero, *iterations, *randSeed, *setSeed, *unPolarized, *derived, *ancestral, *muStep, *sigmaStep)
+	selectionMCMC(vcfFile, outFile, *options)
 }

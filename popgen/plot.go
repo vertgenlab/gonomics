@@ -7,7 +7,7 @@ import (
 )
 
 //PlotAfsF writes the Allele Frequency F function (AfsSampleDensity) to an output file for downstream visualization.
-func PlotAfsF(alpha float64, n int, outFile string) {
+func PlotAfsF(alpha float64, n int, outFile string, integralError float64) {
 	out := fileio.EasyCreate(outFile)
 	allN := []int{n}
 	binomCache := BuildBinomCache(allN)
@@ -15,7 +15,7 @@ func PlotAfsF(alpha float64, n int, outFile string) {
 	fmt.Fprintf(out, "Frequency\tF\n")
 
 	for i := 1; i < n; i++ {
-		fmt.Fprintf(out, "%v\t%e\n", i, AfsSampleDensity(n, i, alpha, binomCache))
+		fmt.Fprintf(out, "%v\t%e\n", i, AfsSampleDensity(n, i, alpha, binomCache, integralError))
 	}
 	err := out.Close()
 	exception.PanicOnErr(err)
@@ -33,7 +33,7 @@ func PlotAfsFCareless(alpha float64, n int, outFile string) {
 }
 
 //PlotAfsPmf writes the allele frequency probability mass function (AlleleFrequencyProbability) to an output file for downstream visualization.
-func PlotAfsPmf(alpha float64, n int, outFile string) {
+func PlotAfsPmf(alpha float64, n int, outFile string, integralError float64) {
 	out := fileio.EasyCreate(outFile)
 
 	allN := []int{n}
@@ -44,7 +44,7 @@ func PlotAfsPmf(alpha float64, n int, outFile string) {
 	fmt.Fprintf(out, "Frequency\tProbability\n")
 	//for each possible allele frequency for a segregating site, we calculate the probability to the file
 	for i := 1; i < n; i++ {
-		fmt.Fprintf(out, "%v\t%e\n", i, AlleleFrequencyProbability(i, n, alpha, binomCache))
+		fmt.Fprintf(out, "%v\t%e\n", i, AlleleFrequencyProbability(i, n, alpha, binomCache, integralError))
 	}
 
 	err := out.Close()
