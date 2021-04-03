@@ -42,16 +42,16 @@ func main() {
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
 
 	options := &popgen.McmcSettings{
-		Iterations:	*iterations,
-		MuStep: *muStep,
-		MuZero: *muZero,
-		SigmaStep: *sigmaStep,
-		SigmaZero: *sigmaZero,
-		RandSeed: *randSeed,
-		SetSeed: *setSeed,
-		UnPolarized: *unPolarized,
-		Derived: *derived,
-		Ancestral: *ancestral,
+		Iterations:    *iterations,
+		MuStep:        *muStep,
+		MuZero:        *muZero,
+		SigmaStep:     *sigmaStep,
+		SigmaZero:     *sigmaZero,
+		RandSeed:      *randSeed,
+		SetSeed:       *setSeed,
+		UnPolarized:   *unPolarized,
+		Derived:       *derived,
+		Ancestral:     *ancestral,
 		IntegralError: *integralError,
 	}
 

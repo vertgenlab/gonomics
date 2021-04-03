@@ -17,16 +17,16 @@ const verbose int = 0
 
 //The McmcSettings type stores settings for the various Mcmc helper functions.`
 type McmcSettings struct {
-	Iterations int
-	MuStep float64
-	MuZero float64
-	SigmaStep float64
-	SigmaZero float64
-	RandSeed bool
-	SetSeed int64
-	UnPolarized bool
-	Derived bool
-	Ancestral bool
+	Iterations    int
+	MuStep        float64
+	MuZero        float64
+	SigmaStep     float64
+	SigmaZero     float64
+	RandSeed      bool
+	SetSeed       int64
+	UnPolarized   bool
+	Derived       bool
+	Ancestral     bool
 	IntegralError float64
 }
 
