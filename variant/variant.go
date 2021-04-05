@@ -32,15 +32,24 @@ type Deletion struct {
 	End   int
 }
 
-// Indel describes a combined insertion and a deletion of
+// Delins describes a combined insertion and a deletion of
 // a sequence. Useful for describing complex variants.
-type Indel struct {
-	Insertion
-	Deletion
+// Start and End are the 0-base left-closed right-open interval
+// being deleted (e.g. ATG del [1,3) ins C -> AC).
+type Delins struct {
+	Chr    string
+	Start  int
+	End    int
+	InsSeq []dna.Base
 }
 
+// TODO break into multiple types???
 // Structural is a catch-all for large variants including
 // complex rearrangements, large insertions/deletions, and
 // transposition of mobile elements.
 type Structural struct {
 }
+
+// TODO Duplication???
+
+// TODO Inversion???
