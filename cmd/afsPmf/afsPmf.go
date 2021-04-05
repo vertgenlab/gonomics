@@ -10,28 +10,31 @@ import (
 )
 
 func afsPmf(vcfFile string, outFile string, unPolarized bool) {
-	g, err := popgen.VcfToAfs(vcfFile, !unPolarized)//VcfToAfs is written in terms of polarized, so this is inverted here.
+	g, err := popgen.VcfToAfs(vcfFile, !unPolarized) //VcfToAfs is written in terms of polarized, so this is inverted here.
 	exception.FatalOnErr(err)
 	out := fileio.EasyCreate(outFile)
-	defer out.Close()
 
 	numAlleles := g.Sites[0].N
 	frequencySlice := make([]int, numAlleles)
 
 	for _, site := range g.Sites {
-		frequencySlice[site.I]++
+		if site.N == numAlleles {
+			frequencySlice[site.I]++
+		}
 	}
-
-	fmt.Fprintf(out, "AlleleFrequency\tNumAlleles")
-
-	for i := range frequencySlice {
-		fmt.Fprintf(out, "%v\t%v\n", i, frequencySlice[i])
+	_, err = fmt.Fprintf(out, "AlleleFrequency\tNumAlleles\tFloatFrequency\n")
+	exception.PanicOnErr(err)
+	for i := 1; i < len(frequencySlice); i++ {
+		_, err = fmt.Fprintf(out, "%v\t%v\t%f\n", i, frequencySlice[i], float64(frequencySlice[i])/float64(len(g.Sites)))
+		exception.PanicOnErr(err)
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
 	fmt.Print(
-		"afsPmf - Returns the probability mass function of the allele frequency spectrum in an input vcf file. All segregating sites must have the same value for N. Useful for graphing.\n" +
+		"afsPmf - Returns the probability mass function of the allele frequency spectrum in an input vcf file.\n All segregating sites must have the same value for N. Useful for graphing.\n" +
 			"afsPmf in.vcf out.txt\n")
 }
 

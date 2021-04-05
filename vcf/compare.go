@@ -80,7 +80,7 @@ func CompareFormatData(alpha []string, beta []string) int {
 	return CompareAlt(alpha, beta) //both functions compare slice of strings for equality, but I made this a separate function for readability
 }
 
-//CompareGenoeSamples compares a slice of GenomeSample structs which underlies the VCF struct
+//CompareGenomeSamples compares a slice of GenomeSample structs which underlies the VCF struct
 func CompareGenomeSamples(alpha []GenomeSample, beta []GenomeSample) int {
 	var res int
 	stop := numbers.Min(len(alpha), len(beta))
@@ -98,7 +98,7 @@ func CompareGenomeSamples(alpha []GenomeSample, beta []GenomeSample) int {
 	return 0
 }
 
-//CompareAlt compares the two slice of string Alt fields from a VCF lexigraphically.
+//CompareAlt compares the two slice of string Alt fields from a VCF lexicographically.
 func CompareAlt(alpha []string, beta []string) int {
 	var res int
 	stop := numbers.Min(len(alpha), len(beta))

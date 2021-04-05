@@ -125,39 +125,39 @@ func AfsStationarityClosure(alpha float64) func(float64) float64 {
 }
 
 //FIntegralComponent is a helper function of AfsSampleDensity and represents the component within the integral.
-func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
+func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
+	var binomCoeff float64 = binomMap[n][k]
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
-		return numbers.MultiplyLog(expression, logPart)
+		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
 	}
 }
 
 //AfsSampleDensity (also referred to as the F function) is the product of the stationarity and binomial distributions integrated over p, the allele frequency.
-func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
+func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integralError float64) float64 {
 	var switchPoint float64 = float64(k) / float64(n)
-	f := FIntegralComponent(n, k, alpha)
-	constantComponent := binomMap[n][k]
-	integral := numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, 1e-8, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, 1e-8, 100))
-	return numbers.MultiplyLog(constantComponent, integral)
+	f := FIntegralComponent(n, k, alpha, binomMap)
+	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
+	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
-func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
+func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64, integralError float64) float64 {
 	var denominator float64 = math.Inf(-1) //denominator begins at -Inf when in log space
 	// j loops over all possible values of i
 	for j := 1; j < n; j++ {
-		denominator = numbers.AddLog(denominator, AfsSampleDensity(n, j, alpha, binomMap))
+		denominator = numbers.AddLog(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
 	}
-	return numbers.DivideLog(AfsSampleDensity(n, i, alpha, binomMap), denominator)
+	return numbers.DivideLog(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
-func AFSLikelihood(afs Afs, alpha []float64, binomMap [][]float64) float64 {
+func AFSLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError float64) float64 {
 	var answer float64 = 0.0
 	// loop over all segregating sites
 	for j := range afs.Sites {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap))
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
 	}
 	return answer
 }
