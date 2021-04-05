@@ -6,10 +6,10 @@ import (
 )
 
 //BuildFCache builds a slice of len(n) where each index i contains log(F(i | n, alpha)), where F is popgen.AFSSampleDensity
-func BuildFCache(n int, alpha float64, binomCache [][]float64) []float64 {
+func BuildFCache(n int, alpha float64, binomCache [][]float64, integralError float64) []float64 {
 	var answer []float64 = make([]float64, n, n)
 	for j := 1; j < n; j++ {
-		answer[j] = AFSSampleDensity(n, j, alpha, binomCache)
+		answer[j] = AfsSampleDensity(n, j, alpha, binomCache, integralError)
 	}
 	return answer
 }
@@ -56,8 +56,8 @@ func DerivedAscertainmentProbability(n int, i int, d int) float64 {
 }
 
 //AlleleFrequencyProbabilityAncestralAscertainment returns P(i | Asc, alpha) when the variant set has an ancestral allele ascertainment bias.
-func AlleleFrequencyProbabilityAncestralAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64) float64 {
-	fCache := BuildFCache(n, alpha, binomCache)
+func AlleleFrequencyProbabilityAncestralAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64, integralError float64) float64 {
+	fCache := BuildFCache(n, alpha, binomCache, integralError)
 	FCS := GetFCacheSum(fCache)
 	pIgivenAlpha := numbers.DivideLog(fCache[i], FCS)
 
@@ -65,31 +65,31 @@ func AlleleFrequencyProbabilityAncestralAscertainment(alpha float64, i int, n in
 }
 
 //AlleleFrequencyProbabilityDerivedAscertainment returns P(i | Asc, alpha) when the variant set has a derived allele ascertainment bias.
-func AlleleFrequencyProbabilityDerivedAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64) float64 {
-	fCache := BuildFCache(n, alpha, binomCache)
+func AlleleFrequencyProbabilityDerivedAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64, integralError float64) float64 {
+	fCache := BuildFCache(n, alpha, binomCache, integralError)
 	fCacheSum := GetFCacheSum(fCache)
 	pIGivenAlpha := numbers.DivideLog(fCache[i], fCacheSum)
 
 	return numbers.DivideLog(numbers.MultiplyLog(pIGivenAlpha, DerivedAscertainmentProbability(n, i, d)), DerivedAscertainmentDenominator(fCache, fCacheSum, d))
 }
 
-//AfsLikelihoodDerivedAscertainment is like AFSLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for derived alleles between two groups of d individuals.
+//AfsLikelihoodDerivedAscertainment is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for derived alleles between two groups of d individuals.
 //More explanation can be found in Katzman et al, this is the inverse of Eq. 11 in the methods.
-func AfsLikelihoodDerivedAscertainment(afs AFS, alpha []float64, binomMap [][]float64, d int) float64 {
+func AfsLikelihoodDerivedAscertainment(afs Afs, alpha []float64, binomMap [][]float64, d int, integralError float64) float64 {
 	var answer float64 = 0.0
 	// loop over all segregating sites
-	for j := 0; j < len(afs.sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.sites[j].i, afs.sites[j].n, d, binomMap))
+	for j := 0; j < len(afs.Sites); j++ {
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError))
 	}
 	return answer
 }
 
-//AfsLikelihoodAncestralAscertainment is like AFSLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for ancestral alleles (as in conserved regions like UCEs). d is the number of genomes from each group in the ascertainment process.
-func AfsLikelihoodAncestralAscertainment(afs AFS, alpha []float64, binomMap [][]float64, d int) float64 {
+//AfsLikelihoodAncestralAscertainment is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for ancestral alleles (as in conserved regions like UCEs). d is the number of genomes from each group in the ascertainment process.
+func AfsLikelihoodAncestralAscertainment(afs Afs, alpha []float64, binomMap [][]float64, d int, integralError float64) float64 {
 	var answer float64 = 0.0
 	//loop over all segregating sites
-	for j := 0; j < len(afs.sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.sites[j].i, afs.sites[j].n, d, binomMap))
+	for j := 0; j < len(afs.Sites); j++ {
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError))
 	}
 	return answer
 }

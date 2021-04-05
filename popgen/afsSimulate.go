@@ -16,7 +16,7 @@ func SimulateSegSite(alpha float64, n int) *SegSite {
 	var count, i int
 
 	bound := numbers.ScaledBetaSampler(0.001, 0.5, 5000)
-	f := AFSStationarityClosure(alpha)
+	f := AfsStationarityClosure(alpha)
 
 	for i = 0; i < fatalCount; i++ {
 		count = 0
@@ -57,8 +57,8 @@ func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
 //SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i values set to 1 and n-i values set to 0.
 //The array is then shuffled and returned.
 func SegSiteToAlleleArray(s *SegSite) []int16 {
-	var answer []int16 = make([]int16, s.n)
-	for j := 0; j < s.i; j++ {
+	var answer []int16 = make([]int16, s.N)
+	for j := 0; j < s.I; j++ {
 		answer[j] = 1
 	}
 	rand.Shuffle(len(answer), func(i, j int) { answer[i], answer[j] = answer[j], answer[i] })
@@ -68,6 +68,6 @@ func SegSiteToAlleleArray(s *SegSite) []int16 {
 //StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity
 //distribution with selection parameter alpha.
 func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64) []float64 {
-	f := AFSStationarityClosure(alpha)
+	f := AfsStationarityClosure(alpha)
 	return numbers.FastRejectionSampler(xLeft, xRight, f, bins, maxSampleDepth, samples)
 }
