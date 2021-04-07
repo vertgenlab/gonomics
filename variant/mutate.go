@@ -37,17 +37,18 @@ type Mutator interface {
 // a different variable.
 func (s Substitution) Mutate(seq []dna.Base, offsetStart int, offsetEnd int) ([]dna.Base, error) {
 	offsetPos := s.Pos + offsetStart
+	var err error
 
 	if offsetPos < 0 {
 		return nil, ErrNegPos
 	}
 
 	if seq[offsetPos] != s.Ref {
-		return nil, ErrRefMatch
-	} else {
-		seq[offsetPos] = s.Alt
+		err = ErrRefMatch
 	}
-	return seq, nil
+	seq[offsetPos] = s.Alt
+
+	return seq, err
 }
 
 // Mutate for Insertion attempts to make the insertion directly in the input

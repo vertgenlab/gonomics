@@ -126,16 +126,16 @@ func (i Insertion) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) 
 	case len(i.Seq)%3 != 0: // frameshift
 		answer.Type = Frameshift
 		shiftedSeq := make([]dna.Base, len(i.Seq)+len(codingSeq[codonStart:]))
-		copy(shiftedSeq[:frame], codingSeq[codonStart:offsetPos]) // add bases before insertion
-		copy(shiftedSeq[frame:frame+len(i.Seq)], i.Seq)                           // add inserted bases
-		copy(shiftedSeq[frame+len(i.Seq):], codingSeq[offsetPos:])           // add bases after insertion
+		copy(shiftedSeq[:frame], codingSeq[codonStart:offsetPos])  // add bases before insertion
+		copy(shiftedSeq[frame:frame+len(i.Seq)], i.Seq)            // add inserted bases
+		copy(shiftedSeq[frame+len(i.Seq):], codingSeq[offsetPos:]) // add bases after insertion
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:], shiftedSeq)
 
 	case frame != 0: // disrupts a codon
 		answer.Type = InFrameInsertion
 		insSeq := make([]dna.Base, len(i.Seq)+3)
-		copy(insSeq[:frame], codingSeq[codonStart:offsetPos])   // add bases before insertion
-		copy(insSeq[frame:frame+len(i.Seq)], i.Seq)                             // add inserted sequence
+		copy(insSeq[:frame], codingSeq[codonStart:offsetPos])              // add bases before insertion
+		copy(insSeq[frame:frame+len(i.Seq)], i.Seq)                        // add inserted sequence
 		copy(insSeq[frame+len(i.Seq):], codingSeq[offsetPos:codonStart+3]) // add bases after insertion
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:codonStart+3], insSeq)
 
@@ -182,8 +182,8 @@ func (d Deletion) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (
 	case offsetStartPos%3 != 0: // disrupts a codon
 		answer.Type = InFrameDeletion
 		newCodon := make([]dna.Base, 3)
-		copy(newCodon[:startFrame], codingSeq[codonStart:offsetStartPos])          // add bases before deletion
-		copy(newCodon[startFrame:], codingSeq[offsetEndPos:codonEnd]) // add bases after deletion
+		copy(newCodon[:startFrame], codingSeq[codonStart:offsetStartPos]) // add bases before deletion
+		copy(newCodon[startFrame:], codingSeq[offsetEndPos:codonEnd])     // add bases after deletion
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:codonEnd], newCodon)
 
 	default: // in frame & does not disrupt a codon
@@ -223,9 +223,9 @@ func (di Delins) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (C
 	case lenDiff%3 != 0: // frameshift
 		answer.Type = Frameshift
 		shiftedSeq := make([]dna.Base, len(codingSeq[codonStart:])+lenDiff)
-		copy(shiftedSeq[:startFrame], codingSeq[codonStart:offsetStartPos]) // add bases before delins
-		copy(shiftedSeq[startFrame:startFrame+len(di.InsSeq)], di.InsSeq)                            // add inserted sequence
-		copy(shiftedSeq[startFrame+len(di.InsSeq):], codingSeq[offsetEndPos:])             // add bases after delins
+		copy(shiftedSeq[:startFrame], codingSeq[codonStart:offsetStartPos])    // add bases before delins
+		copy(shiftedSeq[startFrame:startFrame+len(di.InsSeq)], di.InsSeq)      // add inserted sequence
+		copy(shiftedSeq[startFrame+len(di.InsSeq):], codingSeq[offsetEndPos:]) // add bases after delins
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:], shiftedSeq)
 
 	case offsetStartPos%3 != 0: // disrupts a codon
@@ -235,9 +235,9 @@ func (di Delins) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (C
 			answer.Type = InFrameDeletion
 		}
 		insSeq := make([]dna.Base, len(codingSeq[codonStart:codonEnd])+lenDiff)
-		copy(insSeq[:startFrame], codingSeq[codonStart:offsetStartPos]) // add bases before insertion
-		copy(insSeq[startFrame:startFrame+len(di.InsSeq)], di.InsSeq)                            // add inserted sequence
-		copy(insSeq[startFrame+len(di.InsSeq):], codingSeq[offsetEndPos:codonEnd])     // add bases after insertion
+		copy(insSeq[:startFrame], codingSeq[codonStart:offsetStartPos])            // add bases before insertion
+		copy(insSeq[startFrame:startFrame+len(di.InsSeq)], di.InsSeq)              // add inserted sequence
+		copy(insSeq[startFrame+len(di.InsSeq):], codingSeq[offsetEndPos:codonEnd]) // add bases after insertion
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:codonEnd], insSeq)
 
 	default: // in frame & does not disrupt a codon
