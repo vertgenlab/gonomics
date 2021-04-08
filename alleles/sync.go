@@ -73,7 +73,7 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 // nextPos inputs a []*fasta.Fasta or a *genomeGraph.GenomeGraph and increments currLoc
 func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 	switch r := reference.(type) {
-	case []*fasta.Fasta:
+	case []fasta.Fasta:
 
 		if currLoc.Location.Chr == "dummy" {
 			currLoc.Location.Chr = r[0].Name
