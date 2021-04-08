@@ -165,7 +165,7 @@ func (d Deletion) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (
 		return answer, ErrInvalidPosition
 	}
 
-	delLen := offsetEndPos - offsetEndPos
+	delLen := offsetEndPos - offsetStartPos
 	startFrame := offsetStartPos % 3
 	endFrame := (offsetEndPos - 1) % 3
 	codonStart := offsetStartPos - startFrame       // start of first codon affected (closed)
@@ -212,13 +212,12 @@ func (di Delins) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (C
 		return answer, ErrInvalidPosition
 	}
 
-	delLen := offsetEndPos - offsetEndPos
+	delLen := offsetEndPos - offsetStartPos
 	lenDiff := len(di.InsSeq) - delLen
 	startFrame := offsetStartPos % 3
 	endFrame := (offsetEndPos - 1) % 3
 	codonStart := offsetStartPos - startFrame       // start of first codon affected (closed)
 	codonEnd := ((offsetEndPos - 1) - endFrame) + 3 // end of last codon affected (open)
-
 	switch {
 	case lenDiff%3 != 0: // frameshift
 		answer.Type = Frameshift
@@ -243,10 +242,16 @@ func (di Delins) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (C
 	default: // in frame & does not disrupt a codon
 		if lenDiff > 0 {
 			answer.Type = InFrameInsertion
-		} else {
+		} else if lenDiff < 0 {
 			answer.Type = InFrameDeletion
+		} else {
+			answer.Type = Missense
 		}
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:codonEnd], di.InsSeq)
+
+		if len(answer.AddedAa) == 0 && len(answer.RemovedAa) == 0 {
+			answer.Type = Silent
+		}
 	}
 
 	answer.ProteinPos += protOffset

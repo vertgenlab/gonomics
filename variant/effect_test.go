@@ -75,3 +75,45 @@ func TestInsertionEffect(t *testing.T) {
 		}
 	}
 }
+
+var deletionEffectTests = []EffectorTest{
+	{delTest1, delTest1ExpEff},
+	{delTest2, delTest2ExpEff},
+	{delTest3, delTest3ExpEff},
+	{delTest4, delTest4ExpEff},
+	{delTest5, delTest5ExpEff},
+}
+
+func TestDeletionEffect(t *testing.T) {
+	for _, test := range deletionEffectTests {
+		actual, err := test.Effect(ref()[2:], -2, -2)
+		if !equalEffects(actual, test.ExpectedEffect) {
+			t.Errorf("problem with deletion effects.\n"+
+				"Expect: %v\n"+
+				"Actual: %v\n"+
+				"Error: %s\n",
+				test.ExpectedEffect, actual, err)
+		}
+	}
+}
+
+var delinsEffectTests = []EffectorTest{
+	{delinsTest1, delinsTest1ExpEff},
+	{delinsTest2, delinsTest2ExpEff},
+	{delinsTest3, delinsTest3ExpEff},
+	{delinsTest4, delinsTest4ExpEff},
+	{delinsTest5, delinsTest5ExpEff},
+}
+
+func TestDelinsEffect(t *testing.T) {
+	for _, test := range delinsEffectTests {
+		actual, err := test.Effect(ref()[2:], -2, -2)
+		if !equalEffects(actual, test.ExpectedEffect) {
+			t.Errorf("problem with delins effects.\n"+
+				"Expect: %v\n"+
+				"Actual: %v\n"+
+				"Error: %s\n",
+				test.ExpectedEffect, actual, err)
+		}
+	}
+}
