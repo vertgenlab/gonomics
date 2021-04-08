@@ -59,6 +59,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
+	var err error
 	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
 	var calcBaseAcc = false
@@ -68,29 +69,35 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 
 	answer, byBaseAnswer := reconstruct.ReconAccuracy(simOutFile, reconOutFile, leafOutFile, gp, calcBaseAcc)
 	out := fileio.EasyCreate(accuracyOutFile)
-	defer out.Close()
 
 	for name, accuracy := range answer {
 		fmt.Fprintf(out, "%s\t%f\n", name, accuracy)
 	}
+
 	if baseAccFile != "" {
 		baseAccOut := fileio.EasyCreate(baseAccFile)
-		defer baseAccOut.Close()
 		for species, baseAcc := range byBaseAnswer {
 			firstBase := species + " First Base"
 			secondBase := species + " Second Base"
 			thirdBase := species + " Third Base"
 			for b := range baseAcc {
 				if b == 0 {
-					fmt.Fprintf(baseAccOut, "%s\t%f\n", firstBase, baseAcc[b])
+					_, err = fmt.Fprintf(baseAccOut, "%s\t%f\n", firstBase, baseAcc[b])
+					exception.PanicOnErr(err)
 				} else if b == 1 {
-					fmt.Fprintf(baseAccOut, "%s\t%f\n", secondBase, baseAcc[b])
+					_, err = fmt.Fprintf(baseAccOut, "%s\t%f\n", secondBase, baseAcc[b])
+					exception.PanicOnErr(err)
 				} else {
-					fmt.Fprintf(baseAccOut, "%s\t%f\n", thirdBase, baseAcc[b])
+					_, err = fmt.Fprintf(baseAccOut, "%s\t%f\n", thirdBase, baseAcc[b])
+					exception.PanicOnErr(err)
 				}
 			}
 		}
+		err = baseAccOut.Close()
+		exception.PanicOnErr(err)
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
