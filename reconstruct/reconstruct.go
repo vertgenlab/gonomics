@@ -148,6 +148,8 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 			answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage0)
 			answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage1)
 			answer[sim[s].Name] = append(answer[sim[s].Name], 100-percentage2)
+		} else {
+			log.Panicf("Cannot find a reconstructed sequence match for simulated sequence: %s.", sim[s].Name)
 		}
 	}
 	return answer
@@ -158,11 +160,7 @@ func calcLocationInCodon(gene genePred.GenePred, exon int, position int) int {
 	var positionInCodon int
 
 	location := position - gene.ExonStarts[exon] + gene.ExonFrames[exon]
-	if location%3 != 0 {
-		positionInCodon = location % 3
-	} else {
-		positionInCodon = 0
-	}
+	positionInCodon = location % 3
 	return positionInCodon
 }
 
