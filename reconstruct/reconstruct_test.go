@@ -44,10 +44,6 @@ func Test_reconstruct(t *testing.T) {
 		}
 	}
 
-	if accuracyData[leaves[0].Name] != 100 {
-
-	}
-
 	fileio.EasyRemove("RandGeneOutput.fasta")
 }
 
