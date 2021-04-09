@@ -60,8 +60,8 @@ func usage() {
 			"Usage:\n" +
 			" plotFunctions functionKeyWord functionArgs leftBound rightBound steps outFile\n" +
 			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" +
-			"For AfsF: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsF 0.5,200 afsFPlot.txt\n" +
-			"For AfsFCareless: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsFCareless 0.5,200,1e-7 afsFPlot.txt\n" +
+			"For AfsF: defined by three parameters (alpha, n, and integralError: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsF 0.5,200,1e-7 afsFPlot.txt\n" +
+			"For AfsFCareless: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsFCareless 0.5,200 afsFCarelessPlot.txt\n" +
 			"For AfsProbability: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsProbability 0.5,200,1e-7 afsProbabilityPlot.txt\n" +
 			"For Beta: defined by two parameters (called alpha and beta). ex usage: plotFunctions Beta 0.5,0.5 0.001 0.999 1000 betaPlot.txt\n" +
 			"For Gamma: defined by two parameters (called alpha and beta). ex usage: plotFunctions Gamma 0.5,0.5 0.001 0.999 1000 gammaPlot.txt\n" +

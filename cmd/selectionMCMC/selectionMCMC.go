@@ -11,7 +11,7 @@ import (
 
 func selectionMCMC(filename string, outFile string, s popgen.McmcSettings) {
 	common.RngSeed(s.RandSeed, s.SetSeed)
-	data, err := popgen.VcfToAfs(filename, !s.UnPolarized) //VcfToAFS is writted with polarized as the argument for clarity, so the bool is flipped here.
+	data, err := popgen.VcfToAfs(filename, !s.UnPolarized) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)
 }
@@ -41,7 +41,12 @@ func main() {
 	var ancestral *bool = flag.Bool("ancestral", false, "Make a divergence-based ascertainment correction for regions enriched for ancestral alleles (i.e. UCEs or other highly conserved regions).")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
 
-	options := &popgen.McmcSettings{
+	flag.Usage = usage
+	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetFlags(0)
+	flag.Parse()
+
+	options := popgen.McmcSettings{
 		Iterations:    *iterations,
 		MuStep:        *muStep,
 		MuZero:        *muZero,
@@ -55,11 +60,6 @@ func main() {
 		IntegralError: *integralError,
 	}
 
-	flag.Usage = usage
-	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	log.SetFlags(0)
-	flag.Parse()
-
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -67,5 +67,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, *options)
+	selectionMCMC(vcfFile, outFile, options)
 }
