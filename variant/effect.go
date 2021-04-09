@@ -144,6 +144,10 @@ func (i Insertion) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) 
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(nil, i.Seq)
 	}
 
+	if len(answer.RemovedAa) == 0 && len(answer.AddedAa) == 0 {
+		answer.Type = Silent
+	}
+
 	answer.ProteinPos += protOffset
 	return answer, nil
 }
@@ -189,6 +193,10 @@ func (d Deletion) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (
 	default: // in frame & does not disrupt a codon
 		answer.Type = InFrameDeletion
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:codonEnd], nil)
+	}
+
+	if len(answer.AddedAa) == 0 && len(answer.RemovedAa) == 0 {
+		answer.Type = Silent
 	}
 
 	answer.ProteinPos += protOffset
@@ -248,10 +256,10 @@ func (di Delins) Effect(codingSeq []dna.Base, offsetStart int, offsetEnd int) (C
 			answer.Type = Missense
 		}
 		answer.RemovedAa, answer.AddedAa, protOffset = aaChange(codingSeq[codonStart:codonEnd], di.InsSeq)
+	}
 
-		if len(answer.AddedAa) == 0 && len(answer.RemovedAa) == 0 {
-			answer.Type = Silent
-		}
+	if len(answer.AddedAa) == 0 && len(answer.RemovedAa) == 0 {
+		answer.Type = Silent
 	}
 
 	answer.ProteinPos += protOffset
