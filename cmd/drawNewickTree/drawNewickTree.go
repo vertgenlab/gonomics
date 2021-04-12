@@ -40,7 +40,7 @@ func usage() {
 	fmt.Print(
 		"drawNewickTree takes in a newick format text file and outputs a png for tree visualization. If image width and height aren't specified they will default to 1500\n" +
 			"Usage:\n" +
-			"drawNewicktree [-option int] <input.txt> <output.png>\n" +
+			"drawNewicktree [-option=int] <input.txt> <output.png>\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
