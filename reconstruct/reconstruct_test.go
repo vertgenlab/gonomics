@@ -39,8 +39,15 @@ func Test_reconstruct(t *testing.T) {
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
 		accuracyData, _ = ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", false)
-		for name, accuracy := range accuracyData {
-			log.Printf("%s %f \n", name, accuracy)
+		//DEBUG://for name, accuracy := range accuracyData {
+		//	log.Printf("%s %f \n", name, accuracy)
+		//}
+	}
+	for name, acc := range accuracyData {
+		if name == "D(leaf)" || name == "E(leaf)" || name == "B(leaf)" {
+			if acc != 100 {
+				t.Errorf("Accuracy for D, E and B should be 100, but accuracy for %s is: %f.", name, acc)
+			}
 		}
 	}
 
@@ -49,20 +56,20 @@ func Test_reconstruct(t *testing.T) {
 
 func TestReconAccuracyByBase(t *testing.T) {
 	_, baseAccuracy := ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", true)
-	var name string
+	//var name string
 	var data []float64
 
-	for name, data = range baseAccuracy {
-		for d := range data {
-			if d == 0 {
-				log.Printf("%s First Base %f \n", name, data[d])
-			} else if d == 1 {
-				log.Printf("%s Second Base %f \n", name, data[d])
-			} else {
-				log.Printf("%s Third Base %f \n", name, data[d])
-			}
-		}
-	}
+	//DEBUG://for name, data = range baseAccuracy {
+	//	for d := range data {
+	//		if d == 0 {
+	//			log.Printf("%s First Base %f \n", name, data[d])
+	//		} else if d == 1 {
+	//			log.Printf("%s Second Base %f \n", name, data[d])
+	//		} else {
+	//			log.Printf("%s Third Base %f \n", name, data[d])
+	//		}
+	//	}
+	//}
 
 	data, ok := baseAccuracy["A"]
 	if !ok {
