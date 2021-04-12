@@ -71,32 +71,54 @@ func GoChanToVariants(c <-chan Vcf) SmallVariantChans {
 // Substitution, Insertion, Deletion, or Delins; parses the data to the appropriate
 // variant type, and sends on the respective channel.
 func sendVariant(sendChans SmallVariantChans, chr string, pos int, refSeq []dna.Base, altSeq []dna.Base) {
+	var matchingOffset int
+	refSeq, altSeq, matchingOffset = trimMatchingBases(refSeq, altSeq)
+	pos += matchingOffset
+	pos -= 1 // from 1-base to 0-base
+
 	switch {
 	case len(refSeq) == 1 && len(altSeq) == 1: // Substitution
-		sendChans.Substitutions <- variant.Substitution{Chr: chr, Pos: pos - 1, Ref: refSeq[0], Alt: altSeq[0]}
+		sendChans.Substitutions <- variant.Substitution{Chr: chr, Pos: pos, Ref: refSeq[0], Alt: altSeq[0]}
 
-	case len(refSeq) < len(altSeq) && len(refSeq) == 1: // Insertion
+	case len(refSeq) < len(altSeq) && len(refSeq) == 0: // Insertion
 		// e.g. ATG -> ATCG
 		// VCF: pos = 2; ref = T; alt = TC
 		// Desired: pos = 2; insSeq = C
-		sendChans.Insertions <- variant.Insertion{Chr: chr, Pos: pos, Seq: altSeq[1:]} // No -1 on pos since first base trimmed
+		sendChans.Insertions <- variant.Insertion{Chr: chr, Pos: pos, Seq: altSeq}
 
-	case len(refSeq) > len(altSeq) && len(altSeq) == 1: // Deletion
+	case len(refSeq) > len(altSeq) && len(altSeq) == 0: // Deletion
 		// e.g. ATG -> AG
 		// VCF: pos = 1; ref = AT; alt = A
 		// Desired: start = 1; end = 2
-		sendChans.Deletions <- variant.Deletion{Chr: chr, Start: pos, End: pos + len(refSeq[1:])}
+		sendChans.Deletions <- variant.Deletion{Chr: chr, Start: pos, End: pos + len(refSeq)}
 
-	case len(refSeq) > 1 && len(altSeq) > 1: // Delins
+	case len(refSeq) > 0 && len(altSeq) > 0: // Delins
 		// e.g. ATG -> AC
 		// VCF: pos = 1; ref = ATG; alt = AC
 		// Desired: start = 1; end = 3; insSeq = C
-		sendChans.Delins <- variant.Delins{Chr: chr, Start: pos, End: pos + len(refSeq[1:]), InsSeq: altSeq[1:]}
+		sendChans.Delins <- variant.Delins{Chr: chr, Start: pos, End: pos + len(refSeq), InsSeq: altSeq}
 
 	default:
 		log.Panicf("could not parse identity of following variant\nChr: %s\nPos: %d\nRef: %s\nAlt: %s",
 			chr, pos, dna.BasesToString(refSeq), dna.BasesToString(altSeq))
 	}
+}
+
+func trimMatchingBases(a, b []dna.Base) (aNew []dna.Base, bNew []dna.Base, offset int) {
+	aNew, bNew = a, b
+	for len(aNew) > 0 && len(bNew) > 0 {
+		if aNew[0] == bNew[0] {
+			aNew = aNew[1:]
+			bNew = bNew[1:]
+			offset++
+		} else {
+			break
+		}
+	}
+	if len(aNew) == 0 && len(bNew) == 0 {
+		log.Panicf("error, all bases match trimmed in\n%s\nand\n%s", dna.BasesToString(a), dna.BasesToString(b))
+	}
+	return
 }
 
 // canParseToBases determines if a given string from a vcf file can be parsed to a []dna.Base
