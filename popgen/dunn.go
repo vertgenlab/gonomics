@@ -5,8 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-
 	//"log"
 	"math"
 )
@@ -41,19 +39,15 @@ func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 func FindMaxIntra(subFa []fasta.Fasta, g *Group) int {
 	var answer int = 0
 	var faI, faJ []dna.Base
-	var faFound bool
+	var faFoundI, faFoundJ bool
 	faMap := fasta.ToMap(subFa)
 	for i := 0; i < len(g.Members); i++ {
 		for j := i + 1; j < len(g.Members); j++ {
-			faI, faFound = faMap[g.Members[i]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g.Members[i])
+			faI, faFoundI = faMap[g.Members[i]]
+			faJ, faFoundJ = faMap[g.Members[j]]
+			if faFoundI && faFoundJ {
+				answer = numbers.Max(answer, dna.Dist(faI, faJ))
 			}
-			faJ, faFound = faMap[g.Members[j]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g.Members[i])
-			}
-			answer = numbers.Max(answer, dna.Dist(faI, faJ))
 		}
 	}
 	return answer
@@ -64,18 +58,14 @@ func FindMinInter(g []*Group, subFa []fasta.Fasta) int {
 	var answer int = math.MaxInt64
 	faMap := fasta.ToMap(subFa)
 	var faI, faJ []dna.Base
-	var faFound bool
+	var faFoundI, faFoundJ bool
 	for i := 0; i < len(g[0].Members); i++ {
 		for j := 0; j < len(g[1].Members); j++ {
-			faI, faFound = faMap[g[0].Members[i]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g[0].Members[i])
+			faI, faFoundI = faMap[g[0].Members[i]]
+			faJ, faFoundJ = faMap[g[1].Members[j]]
+			if faFoundI && faFoundJ {
+				answer = numbers.Min(answer, dna.Dist(faI, faJ))
 			}
-			faJ, faFound = faMap[g[1].Members[j]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g[1].Members[j])
-			}
-			answer = numbers.Min(answer, dna.Dist(faI, faJ))
 		}
 	}
 	return answer
