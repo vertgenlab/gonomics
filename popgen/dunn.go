@@ -23,7 +23,7 @@ func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 	tmp2Fa := fasta.RemoveMissingMult(tmpFa)
 	tmp3Fa := FilterMultByGroup(tmp2Fa, g)
 	if len(tmp3Fa) == 0 {
-		return -1.0, missing//dunn could not be calculated
+		return -1.0, missing //dunn could not be calculated
 	}
 	subFa := fasta.DistColumn(tmp3Fa)
 
