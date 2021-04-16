@@ -200,4 +200,3 @@ func canParseACGT(s string) bool {
 	}
 	return true
 }
-
