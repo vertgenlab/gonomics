@@ -3,6 +3,7 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/variant"
+	"strings"
 	"testing"
 )
 
@@ -166,3 +167,37 @@ func equalIns(a variant.Insertion, b variant.Insertion) bool {
 func equalDelins(a variant.Delins, b variant.Delins) bool {
 	return a.Chr == b.Chr && a.Start == b.Start && a.End == b.End && dna.CompareSeqsCaseSensitive(a.InsSeq, b.InsSeq) == 0
 }
+
+var testParse1 string = "."
+var testParse2 string = "ACGT"
+var testParse3 string = "AC]GT["
+
+func BenchmarkCanParseSymbol(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		canParseSymbol(testParse1)
+		canParseSymbol(testParse2)
+		canParseSymbol(testParse3)
+	}
+}
+
+func BenchmarkCanParseBase(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		canParseACGT(testParse1)
+		canParseACGT(testParse2)
+		canParseACGT(testParse3)
+	}
+}
+
+func canParseSymbol(s string) bool {
+	return !strings.ContainsAny(s, ":>[.")
+}
+
+func canParseACGT(s string) bool {
+	for i := range s {
+		if !validBase(s[i]) {
+			return false
+		}
+	}
+	return true
+}
+

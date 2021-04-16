@@ -4,7 +4,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/variant"
 	"log"
-	"strings"
 )
 
 // SmallVariantChans wraps channels for all of the small variants that
@@ -38,14 +37,17 @@ func NewSmallVariantChans(buffSize int) SmallVariantChans {
 }
 
 // ChanToVariants splits an incoming channel of VCFs to a channel of variant types.
-// Must be run as a goroutine else the thread will deadlock.
+// Must be run as a goroutine else the thread will deadlock. Skips any vcf records
+// where the ref/alt fields contains any of (:>[.). These records cannot be parsed
+// into simple variants.
+//
 // See documentation for SmallVariantChans for more information on variant channels.
 func ChanToVariants(c <-chan Vcf, sendChans SmallVariantChans) {
+	var refSeq, altSeq []dna.Base
 	for v := range c {
 		if !canParseToBases(v.Ref) {
 			continue // cannot parse vcf record so skip
 		}
-		var refSeq, altSeq []dna.Base
 		refSeq = dna.StringToBases(v.Ref)
 		for altIdx := range v.Alt {
 			if !canParseToBases(v.Alt[altIdx]) {
@@ -104,26 +106,57 @@ func sendVariant(sendChans SmallVariantChans, chr string, pos int, refSeq []dna.
 	}
 }
 
-func trimMatchingBases(a, b []dna.Base) (aNew []dna.Base, bNew []dna.Base, offset int) {
-	aNew, bNew = a, b
-	for len(aNew) > 0 && len(bNew) > 0 {
-		if aNew[0] == bNew[0] {
-			aNew = aNew[1:]
-			bNew = bNew[1:]
+// trimMatchingBases removed all left-aligned matching bases in ref and alt fields.
+// returns the trimmed slices and the number of bases trimmed
+func trimMatchingBases(a, b []dna.Base) ([]dna.Base, []dna.Base, int) {
+	var offset int
+	for len(a) > 0 && len(b) > 0 {
+		if a[0] == b[0] {
+			a = a[1:]
+			b = b[1:]
 			offset++
 		} else {
 			break
 		}
 	}
-	if len(aNew) == 0 && len(bNew) == 0 {
+	if len(a) == 0 && len(b) == 0 {
 		log.Panicf("error, all bases match trimmed in\n%s\nand\n%s", dna.BasesToString(a), dna.BasesToString(b))
 	}
-	return
+	return a, b, offset
 }
 
 // canParseToBases determines if a given string from a vcf file can be parsed to a []dna.Base
 func canParseToBases(s string) bool {
-	return !strings.ContainsAny(s, ":>[.")
+	for i := range s {
+		if !validBase(s[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// validBase checks if a byte can be parsed to a dna.Base
+func validBase(b byte) bool {
+	switch b {
+	case 'A':
+		return true
+	case 'C':
+		return true
+	case 'G':
+		return true
+	case 'T':
+		return true
+	case 'a':
+		return true
+	case 'c':
+		return true
+	case 'g':
+		return true
+	case 't':
+		return true
+	default:
+		return false
+	}
 }
 
 // closeSmallVariantChans closes all channels wrapped by SmallVariantChans
