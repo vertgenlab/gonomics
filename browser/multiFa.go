@@ -22,7 +22,7 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 	if noMask {
 		fasta.AllToUpper(records)
 	}
-	for i := range records {
+	for i := 1; i < len(records); i++ {
 		for j := range records[0].Seq {
 			if records[i].Seq[j] == records[0].Seq[j] {
 				records[i].Seq[j] = dna.Dot
