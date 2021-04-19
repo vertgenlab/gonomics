@@ -329,7 +329,7 @@ func Write(filename string, data []*Maf) {
 
 	_, err = fmt.Fprint(file, "##maf version=1\n")
 	common.ExitIfError(err)
-	for i, _ := range data {
+	for i := range data {
 		WriteToFileHandle(file, data[i])
 	}
 }

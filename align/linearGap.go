@@ -14,8 +14,8 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	}
 
 	var i, j, routeIdx int
-	for i, _ = range m {
-		for j, _ = range m[0] {
+	for i = range m {
+		for j = range m[0] {
 			if i == 0 && j == 0 {
 				m[i][j] = 0
 			} else if i == 0 {

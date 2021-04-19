@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var GroupList []*Group = []*Group{&Group{Name: "apples", Members: strings.Split("Fuji:Honeycrisp:RedDelicious", ":")}, &Group{Name: "bananas", Members: strings.Split("Cavendish:Plantain", ":")}}
+var GroupList []*Group = []*Group{{Name: "apples", Members: strings.Split("Fuji:Honeycrisp:RedDelicious", ":")}, {Name: "bananas", Members: strings.Split("Cavendish:Plantain", ":")}}
 
 var GroupTests = []struct {
 	inputFile string

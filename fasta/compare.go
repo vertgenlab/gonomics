@@ -35,7 +35,7 @@ func allEqual(alpha []*Fasta, beta []*Fasta, ignoreOrder bool) bool {
 		SortByName(alpha)
 		SortByName(beta)
 	}
-	for idx, _ := range alpha {
+	for idx := range alpha {
 		if !IsEqual(alpha[idx], beta[idx]) {
 			return false
 		}

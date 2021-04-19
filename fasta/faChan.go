@@ -31,7 +31,7 @@ func NextFasta(reader *fileio.EasyReader) (*Fasta, bool) {
 		return nil, true
 	} else {
 		if strings.HasPrefix(line, ">") {
-			fa = Fasta{Name: line[1:len(line)], Seq: nextSeq(reader)}
+			fa = Fasta{Name: line[1:], Seq: nextSeq(reader)}
 		}
 	}
 	return &fa, false

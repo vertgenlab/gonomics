@@ -65,7 +65,7 @@ func processFastqRecord(line1 string, line2 string, line3 string, line4 string) 
 	if line3 != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
-	curr = &Fastq{Name: line1[1:len(line1)], Seq: dna.StringToBases(line2), Qual: ToQual([]byte(line4))}
+	curr = &Fastq{Name: line1[1:], Seq: dna.StringToBases(line2), Qual: ToQual([]byte(line4))}
 	return curr
 }
 

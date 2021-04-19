@@ -12,7 +12,7 @@ func AppendToName(record *Fasta, addition string) {
 }
 
 func AppendToNameAll(records []*Fasta, addition string) {
-	for idx, _ := range records {
+	for idx := range records {
 		AppendToName(records[idx], addition)
 	}
 }
@@ -88,7 +88,7 @@ func ReverseComplement(record *Fasta) {
 }
 
 func ReverseComplementAll(records []*Fasta) {
-	for idx, _ := range records {
+	for idx := range records {
 		ReverseComplement(records[idx])
 	}
 }
@@ -104,7 +104,7 @@ func DivideFasta(fa *Fasta, n int) []*Fasta {
 
 func DivideFastaAll(fa []*Fasta, n int) [][]*Fasta {
 	var answer [][]*Fasta
-	for index, _ := range fa {
+	for index := range fa {
 		answer = append(answer, DivideFasta(fa[index], n))
 	}
 	return answer

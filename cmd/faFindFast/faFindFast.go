@@ -102,7 +102,7 @@ func countTotalDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta) int {
 	var seq1Indel bool = false
 	var seq2Indel bool = false
 
-	for i, _ := range seq1.Seq {
+	for i := range seq1.Seq {
 		if seq1.Seq[i] == seq2.Seq[i] {
 			seq1Indel = false
 			seq2Indel = false

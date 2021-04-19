@@ -96,7 +96,7 @@ func SeqToGraph(vcfFile []*vcf.Vcf, sequence *fasta.Fasta, gsw *GenomeGraph) *Ge
 			snps = nil
 			g.AddNode(currMatch)
 			bases := dna.StringToBases(vcfFile[i].Alt[0])
-			curr = &Node{QSeq: qDna.QFragCoord(bases[1:len(bases)], sequence.Name, lastPos+1, lastPos+1), NodeID: g.NumNode}
+			curr = &Node{QSeq: qDna.QFragCoord(bases[1:], sequence.Name, lastPos+1, lastPos+1), NodeID: g.NumNode}
 			g.AddNode(curr)
 			lastPos++
 			if lastMatch != nil {
@@ -115,7 +115,7 @@ func SeqToGraph(vcfFile []*vcf.Vcf, sequence *fasta.Fasta, gsw *GenomeGraph) *Ge
 			g.AddNode(currMatch)
 
 			bases := dna.StringToBases(vcfFile[i].Ref)
-			curr = &Node{QSeq: qDna.QFragCoord(bases[1:len(bases)], sequence.Name, int64(vcfFile[i].Pos+1), int64(vcfFile[i].Pos)+int64(len(bases))-1), NodeID: g.NumNode}
+			curr = &Node{QSeq: qDna.QFragCoord(bases[1:], sequence.Name, int64(vcfFile[i].Pos+1), int64(vcfFile[i].Pos)+int64(len(bases))-1), NodeID: g.NumNode}
 			g.AddNode(curr)
 			lastPos = int64(vcfFile[i].Pos) + int64(len(bases)) - 1
 			if lastMatch != nil {

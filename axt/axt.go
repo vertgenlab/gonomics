@@ -151,7 +151,7 @@ func Write(filename string, data []*Axt) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 
-	for i, _ := range data {
+	for i := range data {
 		WriteToFileHandle(file, data[i], i)
 	}
 }

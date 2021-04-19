@@ -29,7 +29,7 @@ func Read(filename string) []*Fasta {
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, ">") {
-			tmp := Fasta{Name: line[1:len(line)]}
+			tmp := Fasta{Name: line[1:]}
 			answer = append(answer, &tmp)
 			seqIdx++
 		} else {
@@ -94,7 +94,7 @@ func WriteGroups(filename string, groups [][]*Fasta) error {
 	}
 	defer file.Close()
 
-	for i, _ := range groups {
+	for i := range groups {
 		WriteToFileHandle(file, groups[i], lineLength)
 		_, err = fmt.Fprint(file, "\n")
 		common.ExitIfError(err)

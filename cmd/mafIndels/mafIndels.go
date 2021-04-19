@@ -15,7 +15,7 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 	var bedList_del []*bed.Bed     //1 bed file for ins, 1 bed file for del
 
 	//go through each line
-	for i, _ := range mafRecords { //each i is a block
+	for i := range mafRecords { //each i is a block
 		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
 
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del

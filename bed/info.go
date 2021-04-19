@@ -10,7 +10,7 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 	var answer []*Bed
 	var inRegion bool = false
 	var startIndex = 0
-	for index, _ := range fa.Seq {
+	for index := range fa.Seq {
 		if dna.DefineBase(fa.Seq[index]) && inRegion == false {
 			inRegion = true
 			startIndex = index
@@ -29,7 +29,7 @@ func UngappedRegionsFromFa(fa *fasta.Fasta) []*Bed {
 //UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
 func UngappedRegionsAllFromFa(records []*fasta.Fasta) []*Bed {
 	var answer []*Bed
-	for idx, _ := range records {
+	for idx := range records {
 		answer = append(answer, UngappedRegionsFromFa(records[idx])...)
 	}
 	return answer
