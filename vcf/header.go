@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func processHeader(header *VcfHeader, line string) {
+func processHeader(header Header, line string) {
 	if strings.HasPrefix(line, "#") {
 		header.Text = append(header.Text, line)
 	} else {
@@ -21,8 +21,8 @@ func processHeader(header *VcfHeader, line string) {
 //If you have multiple samples to add to the header, use strings.Join(samples[], "\t") as an argument that combines multiple samples by tabs
 //Name input is strictly used to push in a name for the sample column.
 
-func NewHeader(name string) *VcfHeader {
-	var header *VcfHeader = &VcfHeader{}
+func NewHeader(name string) *Header {
+	var header *Header = &Header{}
 	t := time.Now()
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
 	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))
@@ -51,7 +51,7 @@ var text string =
 
 */
 
-func AddContigHeader(header *VcfHeader, fa []*fasta.Fasta) *VcfHeader {
+func AddContigHeader(header *Header, fa []*fasta.Fasta) *Header {
 	var text string = ""
 	for i := 0; i < len(fa); i++ {
 		text += fmt.Sprintf("##contig=<ID=%s,length=%d>\n", fa[i].Name, len(fa[i].Seq))
@@ -60,7 +60,7 @@ func AddContigHeader(header *VcfHeader, fa []*fasta.Fasta) *VcfHeader {
 	return header
 }
 
-func NewWriteHeader(file io.Writer, header *VcfHeader) {
+func NewWriteHeader(file io.Writer, header *Header) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
@@ -68,7 +68,7 @@ func NewWriteHeader(file io.Writer, header *VcfHeader) {
 	}
 }
 
-func WriteMultiSamplesHeader(file io.Writer, header *VcfHeader, listNames []string) {
+func WriteMultiSamplesHeader(file io.Writer, header *Header, listNames []string) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
 		if strings.Contains(header.Text[h], "#CHROM\t") {
@@ -83,7 +83,7 @@ func WriteMultiSamplesHeader(file io.Writer, header *VcfHeader, listNames []stri
 }
 
 //Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
-func HeaderToMaps(header *VcfHeader) *SampleHash {
+func HeaderToMaps(header *Header) *SampleHash {
 	var name string
 	var index, hapIdx int16
 	var hash *SampleHash = &SampleHash{Fa: make(map[string]int16), GIndex: make(map[string]int16)}
@@ -106,7 +106,7 @@ func HeaderToMaps(header *VcfHeader) *SampleHash {
 }
 
 //HeaderGetSampleList returns an ordered list of the samples present in the header of a Vcf file. Useful when adding or removing samples from a VCF.
-func HeaderGetSampleList(header *VcfHeader) []string {
+func HeaderGetSampleList(header *Header) []string {
 	var answer []string
 	for _, line := range header.Text {
 		if strings.HasPrefix(line, "#CHROM") {
@@ -117,8 +117,8 @@ func HeaderGetSampleList(header *VcfHeader) []string {
 	return answer
 }
 
-//HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a VcfHeader.
-func HeaderUpdateSampleList(header *VcfHeader, newSamples []string) {
+//HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a Header.
+func HeaderUpdateSampleList(header *Header, newSamples []string) {
 	var line string
 	for i := 0; i < len(header.Text); i++ {
 		if strings.HasPrefix(header.Text[i], "#CHROM") {
@@ -131,7 +131,7 @@ func HeaderUpdateSampleList(header *VcfHeader, newSamples []string) {
 	}
 }
 
-func PrintHeader(header *VcfHeader) {
+func PrintHeader(header *Header) {
 	for i := 0; i < len(header.Text); i++ {
 		fmt.Println(header.Text[i])
 	}

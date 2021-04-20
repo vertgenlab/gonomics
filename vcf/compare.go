@@ -30,8 +30,8 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	return CompareCoord(alpha, beta) //TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
-//CompareHeader compares two VcfHeader structs for sorting or equality testing.
-func CompareHeader(alpha *VcfHeader, beta *VcfHeader) int {
+//CompareHeader compares two Header structs for sorting or equality testing.
+func CompareHeader(alpha *Header, beta *Header) int {
 	if len(alpha.Text) > len(beta.Text) {
 		return 1
 	} else if len(alpha.Text) < len(beta.Text) {

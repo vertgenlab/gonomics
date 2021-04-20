@@ -12,7 +12,7 @@ import (
 //sampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
 func sampleVcf(inFile string, outFile string, numVariants int, numSamples int, randSeed bool, setSeed int64) {
 	common.RngSeed(randSeed, setSeed)
-	records, header := vcf.ReadWithHeader(inFile)
+	records, header := vcf.Read(inFile)
 
 	records = vcf.SampleVcf(records, header, numVariants, numSamples)
 

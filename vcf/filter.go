@@ -209,7 +209,7 @@ func IsPolarizable(v *Vcf) bool {
 	return true
 }
 
-func getListIndex(header *VcfHeader, list []string) []int16 {
+func getListIndex(header *Header, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))
 	for i := 0; i < len(listIndex); i++ {
@@ -219,7 +219,7 @@ func getListIndex(header *VcfHeader, list []string) []int16 {
 	return listIndex
 }
 
-func ByNames(inChan <-chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
+func ByNames(inChan <-chan *Vcf, header *Header, list []string, writer *fileio.EasyWriter) {
 	var listIndex []int16 = getListIndex(header, list)
 
 	for record := range inChan {
@@ -270,7 +270,7 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 }
 
 //SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
-func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples int) []*Vcf {
+func SampleVcf(records []*Vcf, header *Header, numVariants int, numSamples int) []*Vcf {
 	var sampleList []string
 	if len(header.Text) > 0 {
 		sampleList = HeaderGetSampleList(header)

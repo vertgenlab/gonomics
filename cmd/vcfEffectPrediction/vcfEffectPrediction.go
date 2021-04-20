@@ -34,7 +34,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func AppendAnnotationHeader(header *vcf.VcfHeader) {
+func AppendAnnotationHeader(header *vcf.Header) {
 	var columnIDs string
 	if strings.HasPrefix(header.Text[len(header.Text)-1], "#CHROM\t") {
 		columnIDs = header.Text[len(header.Text)-1]
@@ -49,7 +49,7 @@ func AppendAnnotationHeader(header *vcf.VcfHeader) {
 	}
 }
 
-func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.VcfHeader) {
+func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.Header) {
 	f := fasta.Read(settings.Fasta)
 	fasta.AllToUpper(f)
 	fastaRecords := fasta.ToMap(f)

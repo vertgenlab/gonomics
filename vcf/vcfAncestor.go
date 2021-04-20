@@ -72,7 +72,7 @@ func AnnotateAncestorFromMultiFa(g *Vcf, records []fasta.Fasta) {
 }
 
 //AncestorFlagToHeader adds an ##INFO line to a vcfHeader to include information about the AA flag for ancestral alleles.
-func AncestorFlagToHeader(h *VcfHeader) {
+func AncestorFlagToHeader(h *Header) {
 	var lastInfoIndex int
 	var firstFormatIndex int = -1
 	var seenInfo, seenFormat, firstTime bool

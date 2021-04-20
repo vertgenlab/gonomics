@@ -19,8 +19,8 @@ var SampleVcfTests = []struct {
 func TestSampleVcf(t *testing.T) {
 	for _, v := range SampleVcfTests {
 		sampleVcf(v.inputFile, "tmp.vcf", v.numVariants, v.numSamples, false, 0)
-		records, recHeader := vcf.ReadWithHeader("tmp.vcf")
-		expected, expectedHeader := vcf.ReadWithHeader(v.expectedOutputFile)
+		records, recHeader := vcf.Read("tmp.vcf")
+		expected, expectedHeader := vcf.Read(v.expectedOutputFile)
 		if !vcf.AllEqual(records, expected) {
 			t.Errorf("Error in sampleVcf.")
 		}

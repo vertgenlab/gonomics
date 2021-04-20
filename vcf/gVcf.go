@@ -14,7 +14,7 @@ import (
 /*
 type Reader struct {
 	File   *fileio.EasyReader
-	Header *VcfHeader
+	Header *Header
 	Vcfs   chan *Vcf
 	SyncWg *sync.WaitGroup
 }
@@ -127,7 +127,7 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 }
 
 //Parse Vcf header to quickly print sample names that appear inside Vcf
-func PrintSampleNames(header *VcfHeader) string {
+func PrintSampleNames(header *Header) string {
 	var ans string = ""
 	for _, line := range header.Text {
 		if strings.HasPrefix(line, "#CHROM") {
