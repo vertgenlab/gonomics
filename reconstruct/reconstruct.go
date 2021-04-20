@@ -295,10 +295,15 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 				if prevNode.Up != nil {
 					if prevNode == node.Left { //scrap is equal to one position of prevNode.Stored (Left or Right)
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Right.Stored[k]
+						//the way this is written it's redoing the calculation that was already done recursively by SetState at this parent node.
+						//There shouldn't be a node.Right consideration in this term bc we want to see the impact of the parent's sequence on the daughter,
+						//not the impact of both daughters on the parent again
+						//What I think this term should be: Prob(i, j, node.Left.BranchLength)*scrap[j] * Prob(j, i, node.Left.BranchLength)*node.Stored[i]
 					} else if prevNode == node.Right {
 						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Left.Stored[j]
+						//What I think this term should be: Prob(i, k, node.Right.BranchLength)*scrap[k] * Prob(k, i, node.Left.BranchLength)*node.Stored[i]
 					}
-				} else if prevNode.Up == nil {
+				} else if prevNode.Up == nil { //if up is nil we should have already hit this node when we did SetState and this calculation was done then.
 					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[j]*node.Right.Stored[k]
 				}
 			}
