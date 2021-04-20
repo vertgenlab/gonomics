@@ -50,7 +50,7 @@ func (v *Vcf) UpdateLift(c string, start int, end int) {
 	v.Pos = start + 1 //TODO: Is this the best way to handle this???
 }
 
-type VcfSlice []*Vcf
+type VcfSlice []Vcf
 
 func (v VcfSlice) Len() int { return len(v) }
 
@@ -58,7 +58,7 @@ func (v VcfSlice) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
 
 func (v *VcfSlice) Push(x interface{}) {
 	answer := x.(*Vcf)
-	*v = append(*v, answer)
+	*v = append(*v, *answer)
 }
 
 func (v *VcfSlice) Pop() interface{} {
@@ -74,19 +74,19 @@ func (v VcfSlice) Write(file string) {
 }
 
 func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
-	WriteVcf(file, v)
+	WriteVcf(file, *v)
 }
 
 func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
-	var next *Vcf
-	for next == nil && !done {
+	var next Vcf
+	for next.Chr == "" && !done {
 		next, done = NextVcf(file)
 	}
 	if done {
 		return true
 	}
-	*v = *next
+	*v = next
 	return done
 }
 

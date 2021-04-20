@@ -8,7 +8,7 @@ func TestASFilter(t *testing.T) {
 	reader, header := GoReadToChan("testdata/multiSampleTest.vcf")
 	sampleHash := HeaderToMaps(header)
 
-	var passFilter []*Vcf
+	var passFilter []Vcf
 	var parentalOne, parentalTwo, fOne int16 = sampleHash.GIndex["LITC"], sampleHash.GIndex["MATA"], sampleHash.GIndex["CL12_wgs_merged"]
 	for each := range reader {
 		if ASFilter(each, parentalOne, parentalTwo, fOne) {

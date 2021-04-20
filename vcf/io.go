@@ -141,7 +141,7 @@ func ReadHeader(er *fileio.EasyReader) Header {
 	var header Header
 	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
-		processHeader(header, line)
+		header = processHeader(header, line)
 	}
 	return header
 }
@@ -211,4 +211,3 @@ func IsVcfFile(filename string) bool {
 		return false
 	}
 }
-

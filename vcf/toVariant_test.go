@@ -89,48 +89,48 @@ func TestGoChanToVariants(t *testing.T) {
 
 	actualSub = <-answer.Substitutions
 	recdVcf = <-answer.Records
-	if actualSub != expSub0 || !isEqual(&testSub, &recdVcf) {
+	if actualSub != expSub0 || !isEqual(testSub, recdVcf) {
 		t.Errorf("problem with expSub0")
 	}
 	actualSub = <-answer.Substitutions
 	recdVcf = <-answer.Records
-	if actualSub != expSub1 || !isEqual(&testSub, &recdVcf) {
+	if actualSub != expSub1 || !isEqual(testSub, recdVcf) {
 		t.Errorf("problem with expSub1")
 	}
 
 	actualSub = <-answer.Substitutions
 	recdVcf = <-answer.Records
-	if actualSub != expSub2 || !isEqual(&testSub, &recdVcf) {
+	if actualSub != expSub2 || !isEqual(testSub, recdVcf) {
 		t.Errorf("problem with expSub2")
 	}
 
 	actualIns = <-answer.Insertions
 	recdVcf = <-answer.Records
-	if !equalIns(actualIns, expIns) || !isEqual(&testIns, &recdVcf) {
+	if !equalIns(actualIns, expIns) || !isEqual(testIns, recdVcf) {
 		t.Errorf("problem with expIns")
 	}
 
 	actualDel = <-answer.Deletions
 	recdVcf = <-answer.Records
-	if actualDel != expDel || !isEqual(&testDel, &recdVcf) {
+	if actualDel != expDel || !isEqual(testDel, recdVcf) {
 		t.Errorf("problem with expDel")
 	}
 
 	actualDelins = <-answer.Delins
 	recdVcf = <-answer.Records
-	if !equalDelins(actualDelins, expDelins0) || !isEqual(&testDelins, &recdVcf) {
+	if !equalDelins(actualDelins, expDelins0) || !isEqual(testDelins, recdVcf) {
 		t.Errorf("problem with expDelins0")
 	}
 
 	actualDel = <-answer.Deletions
 	recdVcf = <-answer.Records
-	if actualDel != expDelins1 || !isEqual(&testDelins, &recdVcf) {
+	if actualDel != expDelins1 || !isEqual(testDelins, recdVcf) {
 		t.Errorf("problem with expDelins1")
 	}
 
 	actualIns, moreToRead := <-answer.Insertions
 	recdVcf = <-answer.Records
-	if !equalIns(actualIns, expDelins2) || !isEqual(&testDelins, &recdVcf) {
+	if !equalIns(actualIns, expDelins2) || !isEqual(testDelins, recdVcf) {
 		t.Errorf("problem with expDelins2")
 	}
 
