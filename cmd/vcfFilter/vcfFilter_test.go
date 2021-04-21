@@ -32,8 +32,8 @@ func TestVcfFilter(t *testing.T) {
 	var err error
 	for _, v := range VcfFilterTests {
 		vcfFilter(v.inputFile, "tmp.vcf", v.groupFile, v.chrom, v.minPos, v.maxPos, v.ref, v.alt, v.minQual, v.biAllelicOnly, v.substitutionsOnly, v.segregatingSitesOnly, v.removeNoAncestor, v.onlyPolarizableAncestors)
-		records := vcf.Read("tmp.vcf")
-		expected := vcf.Read(v.expectedOutputFile)
+		records, _ := vcf.Read("tmp.vcf")
+		expected, _ := vcf.Read(v.expectedOutputFile)
 		if !vcf.AllEqual(records, expected) {
 			t.Errorf("Error in vcfFilter.")
 		}

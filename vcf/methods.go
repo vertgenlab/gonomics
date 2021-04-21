@@ -50,7 +50,7 @@ func (v *Vcf) UpdateLift(c string, start int, end int) {
 	v.Pos = start + 1 //TODO: Is this the best way to handle this???
 }
 
-type VcfSlice []Vcf
+type VcfSlice []*Vcf
 
 func (v VcfSlice) Len() int { return len(v) }
 
@@ -58,7 +58,7 @@ func (v VcfSlice) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
 
 func (v *VcfSlice) Push(x interface{}) {
 	answer := x.(*Vcf)
-	*v = append(*v, *answer)
+	*v = append(*v, answer)
 }
 
 func (v *VcfSlice) Pop() interface{} {
@@ -70,7 +70,16 @@ func (v *VcfSlice) Pop() interface{} {
 }
 
 func (v VcfSlice) Write(file string) {
-	Write(file, v)
+	Write(file, convertToNonPtr(v))
+}
+
+//TODO remove this function once interval is updated
+func convertToNonPtr(v []*Vcf) []Vcf {
+	answer := make([]Vcf, len(v))
+	for i := range v {
+		answer[i] = *v[i]
+	}
+	return answer
 }
 
 func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {

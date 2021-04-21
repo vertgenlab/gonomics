@@ -11,7 +11,7 @@ import (
 
 func TestVariantToAnnotationLarge(t *testing.T) {
 	testGtf := Read("testdata/test.gtf")
-	testVcf := vcf.Read("testdata/test.vcf")
+	testVcf, _ := vcf.Read("testdata/test.vcf")
 	krit := fasta.Read("testdata/krit1.fa")
 	cftr := fasta.Read("testdata/cftr.fa")
 

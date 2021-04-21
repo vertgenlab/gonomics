@@ -12,7 +12,7 @@ import (
 func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string, parentTwo, prefix string) {
 	reader, vcfHeader := vcf.GoReadToChan(genotypeVcf)
 	sampleHash := vcf.HeaderToMaps(vcfHeader)
-	snpDb := make(map[uint64]*vcf.Vcf)
+	snpDb := make(map[uint64]vcf.Vcf)
 	for genotype := range reader {
 		if vcf.ASFilter(genotype, sampleHash.GIndex[parentOne], sampleHash.GIndex[parentTwo], sampleHash.GIndex[fOne]) {
 			vcf.BuildGenotypeMap(genotype, sampleHash.Fa, snpDb)
@@ -34,7 +34,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 	var ok bool
 	var code uint64
 
-	var gV *vcf.Vcf
+	var gV vcf.Vcf
 	var alleles [][]dna.Base
 	for read, done := sam.ReadNext(samFile); done != true; read, done = sam.ReadNext(samFile) {
 		parentAllele1, parentAllele2 = 0, 0

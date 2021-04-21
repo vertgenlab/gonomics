@@ -270,7 +270,7 @@ func FilterVcfPos(vcfs []Vcf) []Vcf {
 }
 
 //SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
-func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) []Vcf {
+func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([]Vcf, Header) {
 	var sampleList []string
 	if len(header.Text) > 0 {
 		sampleList = HeaderGetSampleList(header)
@@ -300,20 +300,20 @@ func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) []
 				outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
 			}
 
-			HeaderUpdateSampleList(header, outHeaderSampleList)
+			header = HeaderUpdateSampleList(header, outHeaderSampleList)
 		}
 
 		var outSamples []GenomeSample
 
-		for _, i := range records {
+		for i := range records {
 			outSamples = make([]GenomeSample, 0, len(sequentialSlice))
 			for _, j := range sequentialSlice {
-				outSamples = append(outSamples, i.Samples[j])
+				outSamples = append(outSamples, records[i].Samples[j])
 			}
-			i.Samples = outSamples
+			records[i].Samples = outSamples
 		}
 	}
-	return records //header is a pointer and does not need to be returned, it is edited in place
+	return records, header
 }
 
 //returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]

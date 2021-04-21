@@ -10,9 +10,9 @@ import (
 	"strings"
 )
 
-func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]*vcf.Vcf) *GenomeGraph {
+func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]vcf.Vcf) *GenomeGraph {
 	gg := EmptyGraph()
-	var filterVcf []*vcf.Vcf = make([]*vcf.Vcf, 0)
+	var filterVcf []vcf.Vcf = make([]vcf.Vcf, 0)
 	for val := range ref {
 		chr := val // not sure this is necessary, but I want to make sure the function does not break
 		// if the fasta being a pointer was important.
@@ -47,8 +47,8 @@ func SplitGraphChr(reference []fasta.Fasta, vcfs []*vcf.Vcf) map[string]*GenomeG
 }
 */
 
-func vChrGraph(genome *GenomeGraph, chr fasta.Fasta, vcfsChr []*vcf.Vcf) *GenomeGraph {
-	vcfsChr = append(vcfsChr, &vcf.Vcf{Chr: chr.Name, Pos: len(chr.Seq)})
+func vChrGraph(genome *GenomeGraph, chr fasta.Fasta, vcfsChr []vcf.Vcf) *GenomeGraph {
+	vcfsChr = append(vcfsChr, vcf.Vcf{Chr: chr.Name, Pos: len(chr.Seq)})
 	//log.Printf("Found %d variants on %s", len(vcfsChr), chr.Name)
 	fasta.ToUpper(chr)
 	var currMatch *Node = &Node{}
@@ -211,7 +211,7 @@ func FaSplitByNs(fa []fasta.Fasta) []fasta.Fasta {
 
 //TODO move these vcf helper functions to vcf
 //new nodes are treated as insertion
-func isINV(v *vcf.Vcf) bool {
+func isINV(v vcf.Vcf) bool {
 	var truth bool = false
 	data := strings.Split(v.Info, ";")
 	if strings.Compare(v.Alt[0], "<INV>") == 0 || strings.Compare(data[0], "SVTYPE=INV") == 0 {
@@ -220,7 +220,7 @@ func isINV(v *vcf.Vcf) bool {
 	return truth
 }
 
-func isDup(v *vcf.Vcf) bool {
+func isDup(v vcf.Vcf) bool {
 	var truth bool = false
 	if strings.Contains(v.Info, "SVTYPE=DUP") {
 		truth = true
@@ -228,7 +228,7 @@ func isDup(v *vcf.Vcf) bool {
 	return truth
 }
 
-func isCNV(v *vcf.Vcf) bool {
+func isCNV(v vcf.Vcf) bool {
 	var truth bool = false
 	if strings.Contains(v.Info, "SVTYPE=CNV") {
 		truth = true
@@ -236,7 +236,7 @@ func isCNV(v *vcf.Vcf) bool {
 	return truth
 }
 
-func getSvEnd(v *vcf.Vcf) int {
+func getSvEnd(v vcf.Vcf) int {
 	if !strings.Contains(v.Info, "END=") {
 		log.Fatalf("Error: Vcf might not be from PBSV...")
 	} else {
@@ -251,7 +251,7 @@ func getSvEnd(v *vcf.Vcf) int {
 	return 0
 }
 
-func mkInversionNode(genome *GenomeGraph, v *vcf.Vcf, chr fasta.Fasta) *Node {
+func mkInversionNode(genome *GenomeGraph, v vcf.Vcf, chr fasta.Fasta) *Node {
 	invSeq := make([]dna.Base, 0)
 	invSeq = append(invSeq, chr.Seq[v.Pos:getSvEnd(v)]...)
 	dna.ReverseComplement(invSeq)
@@ -327,7 +327,7 @@ func createINS(sg *GenomeGraph, v *vcf.Vcf, chr string) *Node {
 }
 */
 
-func isHaplotypeBlock(v *vcf.Vcf) bool {
+func isHaplotypeBlock(v vcf.Vcf) bool {
 	if strings.Contains(v.Info, "SVTYPE=SNP;INS") || strings.Contains(v.Info, "SVTYPE=SNP;DEL") || strings.Contains(v.Info, "SVTYPE=HAP") {
 		return true
 	} else {

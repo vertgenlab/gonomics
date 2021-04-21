@@ -34,7 +34,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func AppendAnnotationHeader(header *vcf.Header) {
+func AppendAnnotationHeader(header vcf.Header) vcf.Header {
 	var columnIDs string
 	if strings.HasPrefix(header.Text[len(header.Text)-1], "#CHROM\t") {
 		columnIDs = header.Text[len(header.Text)-1]
@@ -47,9 +47,11 @@ func AppendAnnotationHeader(header *vcf.Header) {
 	if columnIDs != "" {
 		header.Text = append(header.Text, columnIDs)
 	}
+
+	return header
 }
 
-func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.Header) {
+func vcfEffectPrediction(settings *Settings) (<-chan vcf.Vcf, vcf.Header) {
 	f := fasta.Read(settings.Fasta)
 	fasta.AllToUpper(f)
 	fastaRecords := fasta.ToMap(f)
@@ -57,7 +59,7 @@ func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.Header) {
 	tree := gtf.GenesToIntervalTree(gtfRecords)
 
 	vcfChan, vcfHeader := vcf.GoReadToChan(settings.Vcf)
-	answer := make(chan *vcf.Vcf, 1000)
+	answer := make(chan vcf.Vcf, 1000)
 	var wg sync.WaitGroup
 
 	for i := 0; i < settings.Threads; i++ {
@@ -70,11 +72,11 @@ func vcfEffectPrediction(settings *Settings) (<-chan *vcf.Vcf, *vcf.Header) {
 		close(answer)
 	}()
 
-	AppendAnnotationHeader(vcfHeader)
+	vcfHeader = AppendAnnotationHeader(vcfHeader)
 	return answer, vcfHeader
 }
 
-func annotationWorker(wg *sync.WaitGroup, tree map[string]*interval.IntervalNode, fasta map[string][]dna.Base, vcfChan <-chan *vcf.Vcf, answer chan<- *vcf.Vcf, allTranscripts bool) {
+func annotationWorker(wg *sync.WaitGroup, tree map[string]*interval.IntervalNode, fasta map[string][]dna.Base, vcfChan <-chan vcf.Vcf, answer chan<- vcf.Vcf, allTranscripts bool) {
 	var annotation string
 	for vcfRecord := range vcfChan {
 		variant, _ := gtf.VcfToVariant(vcfRecord, tree, fasta, allTranscripts) //TODO: make gtf.vcfEffectPrediciton a public struct and declare outside of loop

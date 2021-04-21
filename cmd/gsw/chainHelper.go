@@ -43,8 +43,8 @@ func goChainToAxt(chainFile, targetFa, queryFa string) <-chan axt.Axt {
 	return ans
 }
 
-func goChainToVcf(chainFile, targetFa, queryFa string) <-chan *vcf.Vcf {
-	ans := make(chan *vcf.Vcf, 2408)
+func goChainToVcf(chainFile, targetFa, queryFa string) <-chan vcf.Vcf {
+	ans := make(chan vcf.Vcf, 2408)
 	axtChannel := goChainToAxt(chainFile, targetFa, queryFa)
 	go workThreadAxtVcf(axtChannel, ans)
 	return ans
@@ -56,10 +56,10 @@ func chainToGenomeGraph(chainFile, targetFa, queryFa string) *genomeGraph.Genome
 	axtChannel := make(chan axt.Axt, 2408)
 	go workThreadChainAxt(chainFa, axtChannel)
 
-	vcfChannel := make(chan *vcf.Vcf, 2408)
+	vcfChannel := make(chan vcf.Vcf, 2408)
 	go workThreadAxtVcf(axtChannel, vcfChannel)
 
-	chrVcfMap := make(map[string][]*vcf.Vcf)
+	chrVcfMap := make(map[string][]vcf.Vcf)
 	for i := range vcfChannel {
 		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
 	}
@@ -76,9 +76,9 @@ func workThreadChainAxt(chFa *chain.SeqChain, ans chan<- axt.Axt) {
 	close(ans)
 }
 
-func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- *vcf.Vcf) {
+func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- vcf.Vcf) {
 	var j int = 0
-	var curr []*vcf.Vcf
+	var curr []vcf.Vcf
 	for i := range axtChannel {
 		//filter for uniq
 		curr = vcf.FilterVcfPos(axt.ToVcf(i))

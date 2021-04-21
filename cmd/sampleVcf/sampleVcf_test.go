@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/vcf"
 	"os"
@@ -22,6 +23,8 @@ func TestSampleVcf(t *testing.T) {
 		records, recHeader := vcf.Read("tmp.vcf")
 		expected, expectedHeader := vcf.Read(v.expectedOutputFile)
 		if !vcf.AllEqual(records, expected) {
+			fmt.Println(records)
+			fmt.Println(expected)
 			t.Errorf("Error in sampleVcf.")
 		}
 		if vcf.CompareHeader(recHeader, expectedHeader) != 0 {

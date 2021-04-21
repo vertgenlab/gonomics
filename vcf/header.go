@@ -109,7 +109,7 @@ func HeaderGetSampleList(header Header) []string {
 }
 
 //HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a Header.
-func HeaderUpdateSampleList(header Header, newSamples []string) {
+func HeaderUpdateSampleList(header Header, newSamples []string) Header {
 	var line string
 	for i := 0; i < len(header.Text); i++ {
 		if strings.HasPrefix(header.Text[i], "#CHROM") {
@@ -120,4 +120,5 @@ func HeaderUpdateSampleList(header Header, newSamples []string) {
 			header.Text[i] = line
 		}
 	}
+	return header
 }

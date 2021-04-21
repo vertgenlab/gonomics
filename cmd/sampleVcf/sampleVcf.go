@@ -14,7 +14,7 @@ func sampleVcf(inFile string, outFile string, numVariants int, numSamples int, r
 	common.RngSeed(randSeed, setSeed)
 	records, header := vcf.Read(inFile)
 
-	records = vcf.SampleVcf(records, header, numVariants, numSamples)
+	records, header = vcf.SampleVcf(records, header, numVariants, numSamples)
 
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()

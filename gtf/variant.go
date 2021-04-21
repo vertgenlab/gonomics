@@ -40,11 +40,11 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 // VcfToVariant determines the effects of a variant on the cDNA and amino acid sequence by querying genes in the tree made by GenesToIntervalTree
 // Note that if multiple genes are found to overlap a variant this function will return the variant based on the first queried gene and throw an error
 // All bases in fasta record must be uppercase
-func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
+func VcfToVariant(v vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
 	var answer *vcfEffectPrediction
 	var err error
 
-	overlappingGenes := interval.Query(tree, v, "any")
+	overlappingGenes := interval.Query(tree, &v, "any")
 
 	if len(overlappingGenes) > 1 {
 		err = errors.New(fmt.Sprintf("Variant overlaps with multiple genes. Mutation will be based on first gene."))
@@ -55,15 +55,15 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 		annotatingGene = overlappingGenes[0].(*Gene)
 		answer = vcfToVariant(v, annotatingGene, seq, allTranscripts)
 	} else {
-		answer = &vcfEffectPrediction{Vcf: *v}
+		answer = &vcfEffectPrediction{Vcf: v}
 	}
 	return answer, err
 }
 
 // vcfToVariant is a helper function that annotates the Variant struct with information from the Vcf and Gtf input
-func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscripts bool) *vcfEffectPrediction {
+func vcfToVariant(v vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscripts bool) *vcfEffectPrediction {
 	answer := new(vcfEffectPrediction)
-	answer.Vcf = *v
+	answer.Vcf = v
 	answer.RefId = gene.Transcripts[0].TranscriptID
 	answer.Gene = gene.GeneID
 	answer.PosStrand = gene.Transcripts[0].Strand
@@ -77,7 +77,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 		var prev *vcfEffectPrediction = answer
 		for i := 1; i < len(gene.Transcripts); i++ {
 			additionalTranscript := new(vcfEffectPrediction)
-			additionalTranscript.Vcf = *v
+			additionalTranscript.Vcf = v
 			additionalTranscript.RefId = gene.Transcripts[i].TranscriptID
 			additionalTranscript.Gene = gene.GeneID
 			additionalTranscript.PosStrand = gene.Transcripts[i].Strand
@@ -95,7 +95,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 }
 
 // vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the Cds nearest to the vcf
-func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
+func vcfCdsIntersect(v vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
 	var cdsPos int
 	var exon *Exon
 	//TODO: this code may be able to be compressed

@@ -29,12 +29,11 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	tree := interval.BuildTree(chainIntervals)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
-
 	un := fileio.EasyCreate(unMapped)
 	defer un.Close()
 
 	var records []fasta.Fasta
-	var currVcf *vcf.Vcf
+	var currVcf vcf.Vcf
 	var a, b float64
 
 	if faFile != "" {
@@ -60,12 +59,16 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	for i := range inChan {
 		overlap = interval.Query(tree, i, "any") //TODO: verify proper t/q contains
 		if len(overlap) > 1 {
+			fmt.Println("a")
 			fmt.Fprintf(un, "Record below maps to multiple chains:\n")
 			i.WriteToFileHandle(un)
 		} else if len(overlap) == 0 {
+			fmt.Println("b")
 			fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
 			i.WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
+			fmt.Println("c")
+			fmt.Println(i)
 			a, b = interval.MatchProportion(overlap[0].(*chain.Chain), i)
 			fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
 			i.WriteToFileHandle(un)
@@ -76,7 +79,8 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
-				currVcf = i.(*vcf.Vcf)
+				currVcf = *i.(*vcf.Vcf)
+				fmt.Println(currVcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
 					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
 					i.WriteToFileHandle(un)
@@ -95,7 +99,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
 					i.WriteToFileHandle(un)
-					vcf.InvertVcf(currVcf)
+					currVcf = vcf.InvertVcf(currVcf)
 					i.WriteToFileHandle(out)
 				} else {
 					fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")

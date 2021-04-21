@@ -130,13 +130,13 @@ func chainToAxt(chainFmt string, axtFmt string) {
 
 }*/
 
-func vcfSplitChrNoN(vcfInput string) map[string][]*vcf.Vcf {
+func vcfSplitChrNoN(vcfInput string) map[string][]vcf.Vcf {
 	reader := fileio.EasyOpen(vcfInput)
 	defer reader.Close()
 	vcf.ReadHeader(reader)
-	var data *vcf.Vcf
+	var data vcf.Vcf
 	var done bool
-	chrMap := make(map[string][]*vcf.Vcf)
+	chrMap := make(map[string][]vcf.Vcf)
 	for data, done = vcf.NextVcf(reader); !done; data, done = vcf.NextVcf(reader) {
 		if !strings.Contains(data.Ref, "N") && !strings.Contains(data.Alt[0], "N") {
 			chrMap[data.Chr] = append(chrMap[data.Chr], data)
