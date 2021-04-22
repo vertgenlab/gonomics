@@ -25,6 +25,11 @@ type Bed struct {
 	Annotation        []string //long form for extra fields
 }
 
+// String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
+func (b *Bed) String() string {
+	return BedToString(b, b.FieldsInitialized)
+}
+
 //BedToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
 func BedToString(bunk *Bed, fields int) string {
 	switch fields {
