@@ -24,7 +24,7 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 }
 
 //RefPosToAlnPosCounter is like RefPosToAlnPos, but the starting AlnPos and refCounter can be set.
-func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int{
+func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	for t := alnStart; refStart < RefPos; t++ {
 		alnStart++
 		if t == len(record.Seq) {
