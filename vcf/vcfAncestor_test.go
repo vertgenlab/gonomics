@@ -68,10 +68,11 @@ func TestVcfAnnotateAncestorFromFa(t *testing.T) {
 	reader, _ := GoReadToChan("testdata/TestVcfAnnotateAncestorFromFa.vcf")
 	records := fasta.Read("testdata/testAncestorSequence.fa")
 	var i int = 0
+	var currRef, currAln int = 0, 0
 
 	for v := range reader {
-		AnnotateAncestorFromMultiFa(v, records)
-		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
+		currRef, currAln = AnnotateAncestorFromMultiFa(v, records, currRef, currAln)
+		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. RefPos: %v. AlnPos:%v.\n", dna.BasesToString(QueryAncestor(v)), dna.BasesToString(answers[i]), currRef, currAln)
 		if dna.CompareSeqsIgnoreCase(QueryAncestor(v), answers[i]) != 0 {
 			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(QueryAncestor(v)))
 		}
