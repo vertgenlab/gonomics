@@ -8,17 +8,17 @@ import (
 )
 
 var FaFilterTests = []struct {
-	inputFile				string
-	outputFile				string
-	expectedFile			string
-	name					string
-	notName					string
-	refPositions			bool
-	start 					int
-	end 					int
-	minSize					int
+	inputFile    string
+	outputFile   string
+	expectedFile string
+	name         string
+	notName      string
+	refPositions bool
+	start        int
+	end          int
+	minSize      int
 }{
-	{"testdata/minSizeTest.fa","testdata/minSizeOutput.fa","testdata/minSizeExpected.fa", "","",false,0,-1,10 },
+	{"testdata/minSizeTest.fa", "testdata/minSizeOutput.fa", "testdata/minSizeExpected.fa", "", "", false, 0, -1, 10},
 }
 
 func TestFaFilter(t *testing.T) {
