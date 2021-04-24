@@ -92,7 +92,7 @@ func PlotDerivedAscertainmentProbability(outFile string, n int, d int) {
 	fmt.Fprintf(out, "Frequency\tProbability\n")
 
 	for i := 1; i < n; i++ {
-		fmt.Fprintf(out, "%v\t%e\n", i, DerivedAscertainmentProbability(n, i , d))
+		fmt.Fprintf(out, "%v\t%e\n", i, DerivedAscertainmentProbability(n, i, d))
 	}
 
 	err := out.Close()
@@ -104,7 +104,7 @@ func PlotAncestralAscertainmentProbability(outFile string, n int, d int) {
 	fmt.Fprintf(out, "Frequency\tProbability\n")
 
 	for i := 1; i < n; i++ {
-		fmt.Fprintf(out, "%v\t%e\n", i, AncestralAscertainmentProbability(n, i , d))
+		fmt.Fprintf(out, "%v\t%e\n", i, AncestralAscertainmentProbability(n, i, d))
 	}
 
 	err := out.Close()

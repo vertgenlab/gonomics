@@ -110,17 +110,17 @@ func main() {
 		if len(flag.Args()) != 3 {
 			flag.Usage()
 			log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-			}
-			functionArgs := flag.Arg(1)
-			outFile := flag.Arg(2)
-			words := strings.Split(functionArgs, ",")
-			if len(words) != expectedNumArgs {
-				log.Fatalf("An allele frequency probability mass function is defined by three parameters, received %d.", len(words))
-			}
-			alpha := common.StringToFloat64(words[0])
-			n := common.StringToInt(words[1])
-			integralError := common.StringToFloat64(words[2])
-			popgen.PlotAfsPmfAncestral(alpha, n, outFile, integralError)
+		}
+		functionArgs := flag.Arg(1)
+		outFile := flag.Arg(2)
+		words := strings.Split(functionArgs, ",")
+		if len(words) != expectedNumArgs {
+			log.Fatalf("An allele frequency probability mass function is defined by three parameters, received %d.", len(words))
+		}
+		alpha := common.StringToFloat64(words[0])
+		n := common.StringToInt(words[1])
+		integralError := common.StringToFloat64(words[2])
+		popgen.PlotAfsPmfAncestral(alpha, n, outFile, integralError)
 	} else if flag.Arg(0) == "AfsProbabilityDerived" {
 		expectedNumArgs = 3
 		if len(flag.Args()) != expectedNumArgs {
