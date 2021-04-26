@@ -17,7 +17,7 @@ func vcfInfo(filename string) {
 	var GaptoA, GaptoC, GaptoT, GaptoG int32
 	var NtoGap, GaptoN int32
 
-	v := vcf.Read(filename)
+	v, _ := vcf.Read(filename)
 	fmt.Printf("len: %d", len(v))
 
 	for _, current := range v {

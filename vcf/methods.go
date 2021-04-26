@@ -70,23 +70,32 @@ func (v *VcfSlice) Pop() interface{} {
 }
 
 func (v VcfSlice) Write(file string) {
-	Write(file, v)
+	Write(file, convertToNonPtr(v))
+}
+
+//TODO remove this function once interval is updated
+func convertToNonPtr(v []*Vcf) []Vcf {
+	answer := make([]Vcf, len(v))
+	for i := range v {
+		answer[i] = *v[i]
+	}
+	return answer
 }
 
 func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
-	WriteVcf(file, v)
+	WriteVcf(file, *v)
 }
 
 func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
-	var next *Vcf
-	for next == nil && !done {
+	var next Vcf
+	for next.Chr == "" && !done {
 		next, done = NextVcf(file)
 	}
 	if done {
 		return true
 	}
-	*v = *next
+	*v = next
 	return done
 }
 

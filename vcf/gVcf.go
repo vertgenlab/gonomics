@@ -14,7 +14,7 @@ import (
 /*
 type Reader struct {
 	File   *fileio.EasyReader
-	Header *VcfHeader
+	Header *Header
 	Vcfs   chan *Vcf
 	SyncWg *sync.WaitGroup
 }
@@ -49,8 +49,8 @@ type SampleHash struct {
 }
 
 //TODO: Can only process short variants. Need long term solution for large structural variance.
-func VcfToGvcf(v *Vcf) *GVcf {
-	gVcf := &GVcf{Vcf: *v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, GetAltBases(v.Alt)...), Genotypes: v.Samples}
+func VcfToGvcf(v Vcf) GVcf {
+	gVcf := GVcf{Vcf: v, Seq: append([][]dna.Base{dna.StringToBases(v.Ref)}, GetAltBases(v.Alt)...), Genotypes: v.Samples}
 	return gVcf
 }
 
@@ -86,7 +86,7 @@ func GetAlleleGenotype(v *Vcf) []GenomeSample {
 	return answer
 }*/
 
-func BuildGenotypeMap(v *Vcf, names map[string]int16, mapToVcf map[uint64]*Vcf) map[uint64]*Vcf {
+func BuildGenotypeMap(v Vcf, names map[string]int16, mapToVcf map[uint64]Vcf) map[uint64]Vcf {
 	code := ChromPosToUInt64(int(names[v.Chr]), v.Pos-1)
 	_, ok := mapToVcf[code]
 	if !ok {
@@ -127,7 +127,7 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 }
 
 //Parse Vcf header to quickly print sample names that appear inside Vcf
-func PrintSampleNames(header *VcfHeader) string {
+func PrintSampleNames(header Header) string {
 	var ans string = ""
 	for _, line := range header.Text {
 		if strings.HasPrefix(line, "#CHROM") {
@@ -167,7 +167,7 @@ func PhasedToString(phased bool) string {
 }
 
 //ReorderSampleColumns reorganizes the Samples slice based on a samples []int16 specification list.
-func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
+func ReorderSampleColumns(input Vcf, samples []int16) Vcf {
 	outSamples := make([]GenomeSample, 0, len(samples))
 	for i := 0; i < len(samples); i++ {
 		outSamples = append(outSamples, input.Samples[samples[i]])
@@ -176,7 +176,7 @@ func ReorderSampleColumns(input *Vcf, samples []int16) *Vcf {
 	return input
 }
 
-func PrintReOrder(v *Vcf, samples []int16) {
+func PrintReOrder(v Vcf, samples []int16) {
 	vReorder := ReorderSampleColumns(v, samples)
 	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, SamplesToString(vReorder.Samples))
 }
@@ -206,6 +206,6 @@ func HelperSamplesToString(sample []GenomeSample, i int) string {
 	return answer
 }
 
-func vcfPrettyPrint(v *Vcf) {
+func vcfPrettyPrint(v Vcf) {
 	fmt.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, SamplesToString(v.Samples))
 }

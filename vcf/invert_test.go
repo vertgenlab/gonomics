@@ -27,9 +27,10 @@ var InvertVcfTests = []struct {
 }
 
 func TestInvertVcf(t *testing.T) {
+	var answer Vcf
 	for _, v := range InvertVcfTests {
-		InvertVcf(&v.Input)
-		if !isEqual(&v.Input, &v.Expected) {
+		answer = InvertVcf(v.Input)
+		if !isEqual(answer, v.Expected) {
 			t.Errorf("Error in InvertVCF. Input Ref: %s. Expected Ref: %s.", v.Input.Ref, v.Expected.Ref)
 		}
 	}

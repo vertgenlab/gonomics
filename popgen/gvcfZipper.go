@@ -17,8 +17,8 @@ func TajimaZipperVcf(b []*bed.Bed, VcfFile string) []float64 {
 	alpha, _ := vcf.GoReadToChan(VcfFile) //must be sorted beforehand
 	sort.Sort(bed.ByGenomicCoordinates{b})
 	var currBedIndex int = 0
-	var currVariants []*vcf.Vcf
-	currVariants = make([]*vcf.Vcf, 0)
+	var currVariants []vcf.Vcf
+	currVariants = make([]vcf.Vcf, 0)
 	for i := range alpha {
 		for 1 > 0 { //infinite condition for break loop
 			if helperVcfOverlapsBed(b[currBedIndex], i) {
@@ -38,7 +38,7 @@ func TajimaZipperVcf(b []*bed.Bed, VcfFile string) []float64 {
 }
 
 //VariantsToIndividualAlleleSlice converts a slice of vcf records into a slice of IndividualAllele structs.
-func VariantsToIndividualAlleleSlice(curr []*vcf.Vcf) []*IndividualAllele {
+func VariantsToIndividualAlleleSlice(curr []vcf.Vcf) []*IndividualAllele {
 	var firstTime bool = false
 	var j, k int
 	var all []*IndividualAllele
@@ -74,7 +74,7 @@ func VariantsToIndividualAlleleSlice(curr []*vcf.Vcf) []*IndividualAllele {
 }
 
 //helperVcfOverlapsBed checks if a bed and vcf entry are overlapping to avoid imports.
-func helperVcfOverlapsBed(b *bed.Bed, v *vcf.Vcf) bool {
+func helperVcfOverlapsBed(b *bed.Bed, v vcf.Vcf) bool {
 	if b.Chrom != v.Chr {
 		return false
 	}

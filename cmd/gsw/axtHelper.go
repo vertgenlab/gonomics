@@ -17,7 +17,7 @@ func convertAxt(axtFile, format, targetFa, output string) {
 		file := fileio.EasyCreate(output)
 		header := vcf.NewHeader(strings.TrimSuffix(targetFa, filepath.Ext(targetFa)))
 		vcf.NewWriteHeader(file, header)
-		var ans []*vcf.Vcf
+		var ans []vcf.Vcf
 		for i := range vcfChannel {
 			ans = append(ans, i)
 		}
@@ -32,18 +32,18 @@ func convertAxt(axtFile, format, targetFa, output string) {
 	}
 }
 
-func goChannelAxtVcf(axtFile string) <-chan *vcf.Vcf {
+func goChannelAxtVcf(axtFile string) <-chan vcf.Vcf {
 	axtChannel := make(chan axt.Axt, 2408)
 	go axt.ReadToChan(axtFile, axtChannel)
 
-	ans := make(chan *vcf.Vcf, 2408)
+	ans := make(chan vcf.Vcf, 2408)
 	go workThreadAxtVcf(axtChannel, ans)
 	return ans
 }
 
 func axtToGenomeGraph(axtFile, faFile string) *genomeGraph.GenomeGraph {
 	vcfChannel := goChannelAxtVcf(axtFile)
-	chrVcfMap := make(map[string][]*vcf.Vcf)
+	chrVcfMap := make(map[string][]vcf.Vcf)
 	for i := range vcfChannel {
 		chrVcfMap[i.Chr] = append(chrVcfMap[i.Chr], i)
 	}

@@ -38,7 +38,7 @@ func TestVcfEffectPrediction(t *testing.T) {
 	tree := gtf.GenesToIntervalTree(gtfRecords)
 
 	vcfChan, _ := vcf.GoReadToChan(settings.Vcf)
-	answer := make(chan *vcf.Vcf, 1000)
+	answer := make(chan vcf.Vcf, 1000)
 	var wg sync.WaitGroup
 
 	for i := 0; i < settings.Threads; i++ {

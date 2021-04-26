@@ -10,7 +10,7 @@ import (
 func vcfToGenomeGraph(vcfFile, faFile string) *genomeGraph.GenomeGraph {
 	ref := fasta.GoReadToChan(faFile)
 
-	hashByChrom := make(map[string][]*vcf.Vcf)
+	hashByChrom := make(map[string][]vcf.Vcf)
 	file := fileio.EasyOpen(vcfFile)
 	defer file.Close()
 	vcf.ReadHeader(file)
