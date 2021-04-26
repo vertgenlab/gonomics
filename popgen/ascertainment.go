@@ -58,10 +58,10 @@ func DerivedAscertainmentProbability(n int, i int, d int) float64 {
 //AlleleFrequencyProbabilityAncestralAscertainment returns P(i | Asc, alpha) when the variant set has an ancestral allele ascertainment bias.
 func AlleleFrequencyProbabilityAncestralAscertainment(alpha float64, i int, n int, d int, binomCache [][]float64, integralError float64) float64 {
 	fCache := BuildFCache(n, alpha, binomCache, integralError)
-	FCS := GetFCacheSum(fCache)
-	pIgivenAlpha := numbers.DivideLog(fCache[i], FCS)
+	fCacheSum := GetFCacheSum(fCache)
+	pIGivenAlpha := numbers.DivideLog(fCache[i], fCacheSum)
 
-	return numbers.DivideLog(numbers.MultiplyLog(pIgivenAlpha, AncestralAscertainmentProbability(n, i, d)), AncestralAscertainmentDenominator(fCache, FCS, d))
+	return numbers.DivideLog(numbers.MultiplyLog(pIGivenAlpha, AncestralAscertainmentProbability(n, i, d)), AncestralAscertainmentDenominator(fCache, fCacheSum, d))
 }
 
 //AlleleFrequencyProbabilityDerivedAscertainment returns P(i | Asc, alpha) when the variant set has a derived allele ascertainment bias.
