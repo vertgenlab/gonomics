@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int) {
+func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int, minSize int) {
 	records := fasta.Read(infile)
 	var outlist []fasta.Fasta
 	var pass bool = true
@@ -27,6 +27,9 @@ func faFilter(infile string, outfile string, name string, notName string, refPos
 			pass = false
 		}
 		if notName != "" && records[i].Name == notName {
+			pass = false
+		}
+		if len(records[i].Seq) < minSize {
 			pass = false
 		}
 		if pass {
@@ -57,6 +60,7 @@ func main() {
 	var end *int = flag.Int("end", -1, "Retains the sequence before this position.")
 	var name *string = flag.String("name", "", "Specifies the fasta record name.")
 	var notName *string = flag.String("notName", "", "Returns all fasta records except for this input.")
+	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -71,5 +75,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFilter(inFile, outFile, *name, *notName, *refPositions, *start, *end)
+	faFilter(inFile, outFile, *name, *notName, *refPositions, *start, *end, *minSize)
 }
