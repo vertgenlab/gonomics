@@ -29,12 +29,11 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	tree := interval.BuildTree(chainIntervals)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
-
 	un := fileio.EasyCreate(unMapped)
 	defer un.Close()
 
 	var records []fasta.Fasta
-	var currVcf *vcf.Vcf
+	var currVcf vcf.Vcf
 	var a, b float64
 
 	if faFile != "" {
@@ -76,7 +75,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
-				currVcf = i.(*vcf.Vcf)
+				currVcf = *i.(*vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
 					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
 					i.WriteToFileHandle(un)
@@ -95,7 +94,8 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
 					i.WriteToFileHandle(un)
-					vcf.InvertVcf(currVcf)
+					currVcf = vcf.InvertVcf(currVcf)
+					i = &currVcf
 					i.WriteToFileHandle(out)
 				} else {
 					fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")

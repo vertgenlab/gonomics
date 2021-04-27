@@ -7,7 +7,7 @@ import (
 )
 
 func TestVcfToVariant(t *testing.T) {
-	var inVcf *vcf.Vcf = new(vcf.Vcf)
+	var inVcf vcf.Vcf
 	var inGtf map[string]*Gene = make(map[string]*Gene)
 	var inSeq map[string][]dna.Base = make(map[string][]dna.Base)
 

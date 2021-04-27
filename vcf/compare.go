@@ -11,7 +11,7 @@ import (
 const debugMode = 0 //set debugMode to 1 to enable prints
 
 //CompareCoord compares two VCF structs by Pos for sorting or equality testing.
-func CompareCoord(alpha *Vcf, beta *Vcf) int {
+func CompareCoord(alpha Vcf, beta Vcf) int {
 	if alpha.Pos < beta.Pos {
 		return -1
 	}
@@ -22,7 +22,7 @@ func CompareCoord(alpha *Vcf, beta *Vcf) int {
 }
 
 //CompareVcf compares two Vcf structs for sorting or equality testing.
-func CompareVcf(alpha *Vcf, beta *Vcf) int {
+func CompareVcf(alpha Vcf, beta Vcf) int {
 	compareStorage := strings.Compare(alpha.Chr, beta.Chr)
 	if compareStorage != 0 {
 		return compareStorage
@@ -30,8 +30,8 @@ func CompareVcf(alpha *Vcf, beta *Vcf) int {
 	return CompareCoord(alpha, beta) //TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
-//CompareHeader compares two VcfHeader structs for sorting or equality testing.
-func CompareHeader(alpha *VcfHeader, beta *VcfHeader) int {
+//CompareHeader compares two Header structs for sorting or equality testing.
+func CompareHeader(alpha Header, beta Header) int {
 	if len(alpha.Text) > len(beta.Text) {
 		return 1
 	} else if len(alpha.Text) < len(beta.Text) {
@@ -117,12 +117,12 @@ func CompareAlt(alpha []string, beta []string) int {
 }
 
 //Sort sorts a slice of Vcf structs in place.
-func Sort(vcfFile []*Vcf) {
+func Sort(vcfFile []Vcf) {
 	sort.Slice(vcfFile, func(i, j int) bool { return CompareVcf(vcfFile[i], vcfFile[j]) == -1 })
 }
 
 //isEqual returns true if two input Vcf structs contain identical information, false otherwise.
-func isEqual(alpha *Vcf, beta *Vcf) bool {
+func isEqual(alpha Vcf, beta Vcf) bool {
 	if strings.Compare(alpha.Chr, beta.Chr) != 0 {
 		return false
 	}
@@ -152,7 +152,7 @@ func isEqual(alpha *Vcf, beta *Vcf) bool {
 }
 
 //AllEqual returns true if each Vcf in a slice of Vcf structs contain identical information.
-func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
+func AllEqual(alpha []Vcf, beta []Vcf) bool {
 	if len(alpha) != len(beta) {
 		if debugMode > 0 {
 			log.Printf("AllEqual is false. len(a): %v. len(b): %v.\n", len(alpha), len(beta))
@@ -171,7 +171,7 @@ func AllEqual(alpha []*Vcf, beta []*Vcf) bool {
 }
 
 //LogEqual prints which two corresponding entries in two slices of Vcf structs are unequal and fatals out.
-func LogEqual(alpha []*Vcf, beta []*Vcf) {
+func LogEqual(alpha []Vcf, beta []Vcf) {
 	if len(alpha) != len(beta) {
 		log.Fatalf("len=%v and len=%v are not equal\n", len(alpha), len(beta))
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
-func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) bool {
+func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -44,7 +44,7 @@ func Filter(v *Vcf, chrom string, minPos int, maxPos int, ref string, alt []stri
 }
 
 //FilterQual returns true if a Vcf quality is above an input minQual score, false otherwise.
-func FilterQual(v *Vcf, minQual float64) bool {
+func FilterQual(v Vcf, minQual float64) bool {
 	if v.Qual < minQual {
 		return false
 	}
@@ -52,7 +52,7 @@ func FilterQual(v *Vcf, minQual float64) bool {
 }
 
 //FilterAlt returns true if the Alt field of a Vcf entry matches a desired input Alt field, false otherwise. Order sensitive.
-func FilterAlt(v *Vcf, alt []string) bool {
+func FilterAlt(v Vcf, alt []string) bool {
 	if len(alt) > 0 && CompareAlt(v.Alt, alt) != 0 {
 		return false
 	}
@@ -60,7 +60,7 @@ func FilterAlt(v *Vcf, alt []string) bool {
 }
 
 //FilterRef returns true if the Ref field of a Vcf record matches an input string, false otherwise.
-func FilterRef(v *Vcf, ref string) bool {
+func FilterRef(v Vcf, ref string) bool {
 	if strings.Compare(v.Ref, ref) != 0 {
 		return false
 	}
@@ -68,7 +68,7 @@ func FilterRef(v *Vcf, ref string) bool {
 }
 
 //FilterRange returns true if a Vcf position lies between an input minimum and maximum position (inclusive for both min and max), false otherwise.
-func FilterRange(v *Vcf, minPos int, maxPos int) bool {
+func FilterRange(v Vcf, minPos int, maxPos int) bool {
 	if v.Pos < minPos || v.Pos > maxPos {
 		return false
 	}
@@ -76,7 +76,7 @@ func FilterRange(v *Vcf, minPos int, maxPos int) bool {
 }
 
 //FilterChrom returns true if the Chrom field of a Vcf record matches an input string, false otherwise.
-func FilterChrom(v *Vcf, chrom string) bool {
+func FilterChrom(v Vcf, chrom string) bool {
 	if chrom != "" && v.Chr != chrom {
 		return false
 	}
@@ -84,8 +84,8 @@ func FilterChrom(v *Vcf, chrom string) bool {
 }
 
 //FilterNs removes all records from a slice of Vcfs that contain Ns.
-func FilterNs(vcfs []*Vcf) []*Vcf {
-	var answer []*Vcf
+func FilterNs(vcfs []Vcf) []Vcf {
+	var answer []Vcf
 	var noN bool
 	for i := 0; i < len(vcfs); i++ {
 		noN = true
@@ -104,7 +104,7 @@ func FilterNs(vcfs []*Vcf) []*Vcf {
 	return answer
 }
 
-func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
+func ASFilter(v Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 	if IsHomozygous(v.Samples[parentOne]) && IsHomozygous(v.Samples[parentTwo]) && IsHeterozygous(v.Samples[F1]) && v.Samples[parentOne].AlleleOne != v.Samples[parentTwo].AlleleOne {
 		return true
 	} else {
@@ -112,8 +112,8 @@ func ASFilter(v *Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
 	}
 }
 
-func mergeSimilarVcf(a *Vcf, b *Vcf) *Vcf {
-	mergeRecord := &Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: a.Format, Samples: a.Samples}
+func mergeSimilarVcf(a Vcf, b Vcf) Vcf {
+	mergeRecord := Vcf{Chr: a.Chr, Pos: a.Pos, Id: a.Id, Ref: "", Qual: a.Qual, Filter: "Merged:SNP:INDEL", Info: a.Info, Format: a.Format, Samples: a.Samples}
 	if len(a.Ref) < len(b.Ref) {
 		mergeRecord.Ref += b.Ref
 	} else {
@@ -162,12 +162,12 @@ func IsHomozygous(genome GenomeSample) bool {
 }
 
 //IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
-func IsBiallelic(v *Vcf) bool {
+func IsBiallelic(v Vcf) bool {
 	return len(v.Alt) == 1
 }
 
 //IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
-func IsSubstitution(v *Vcf) bool {
+func IsSubstitution(v Vcf) bool {
 	if len(v.Ref) != 1 {
 		return false
 	}
@@ -180,7 +180,7 @@ func IsSubstitution(v *Vcf) bool {
 }
 
 //IsSegregating returns true if a Vcf record is a segregating site, true if the samples of the record contain at least two allelic states (ex. not all 0 or all 1).
-func IsSegregating(v *Vcf) bool {
+func IsSegregating(v Vcf) bool {
 	if len(v.Samples) == 0 {
 		return false //special case, no samples
 	}
@@ -195,7 +195,7 @@ func IsSegregating(v *Vcf) bool {
 }
 
 //IsPolarizable returns true if a variant can be "polarized" in a derived allele frequency spectrum, false otherwise.
-func IsPolarizable(v *Vcf) bool {
+func IsPolarizable(v Vcf) bool {
 	if !HasAncestor(v) {
 		return false
 	}
@@ -209,7 +209,7 @@ func IsPolarizable(v *Vcf) bool {
 	return true
 }
 
-func getListIndex(header *VcfHeader, list []string) []int16 {
+func getListIndex(header Header, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))
 	for i := 0; i < len(listIndex); i++ {
@@ -219,7 +219,7 @@ func getListIndex(header *VcfHeader, list []string) []int16 {
 	return listIndex
 }
 
-func ByNames(inChan <-chan *Vcf, header *VcfHeader, list []string, writer *fileio.EasyWriter) {
+func ByNames(inChan <-chan Vcf, header Header, list []string, writer *fileio.EasyWriter) {
 	var listIndex []int16 = getListIndex(header, list)
 
 	for record := range inChan {
@@ -228,10 +228,10 @@ func ByNames(inChan <-chan *Vcf, header *VcfHeader, list []string, writer *filei
 }
 
 //FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
-func FilterVcfPos(vcfs []*Vcf) []*Vcf {
+func FilterVcfPos(vcfs []Vcf) []Vcf {
 	Sort(vcfs)
-	var answer []*Vcf
-	chrVcfMap := make(map[string][]*Vcf)
+	var answer []Vcf
+	chrVcfMap := make(map[string][]Vcf)
 
 	var ref []dna.Base
 	var alt [][]dna.Base
@@ -240,7 +240,7 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
 	}
 	var i int
-	var curr []*Vcf
+	var curr []Vcf
 	for key := range chrVcfMap {
 		curr = chrVcfMap[key]
 		encountered := make(map[int]bool)
@@ -270,7 +270,7 @@ func FilterVcfPos(vcfs []*Vcf) []*Vcf {
 }
 
 //SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
-func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples int) []*Vcf {
+func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([]Vcf, Header) {
 	var sampleList []string
 	if len(header.Text) > 0 {
 		sampleList = HeaderGetSampleList(header)
@@ -300,20 +300,20 @@ func SampleVcf(records []*Vcf, header *VcfHeader, numVariants int, numSamples in
 				outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
 			}
 
-			HeaderUpdateSampleList(header, outHeaderSampleList)
+			header = HeaderUpdateSampleList(header, outHeaderSampleList)
 		}
 
 		var outSamples []GenomeSample
 
-		for _, i := range records {
+		for i := range records {
 			outSamples = make([]GenomeSample, 0, len(sequentialSlice))
 			for _, j := range sequentialSlice {
-				outSamples = append(outSamples, i.Samples[j])
+				outSamples = append(outSamples, records[i].Samples[j])
 			}
-			i.Samples = outSamples
+			records[i].Samples = outSamples
 		}
 	}
-	return records //header is a pointer and does not need to be returned, it is edited in place
+	return records, header
 }
 
 //returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]

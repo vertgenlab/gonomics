@@ -51,9 +51,9 @@ type Allele struct {
 type SampleMap map[Coordinate]*AlleleCount
 
 // AllelesToVcf converts a SampleMap to a VCF
-func AllelesToVcf(input SampleMap) []*vcf.Vcf {
-	var answer []*vcf.Vcf
-	var current *vcf.Vcf
+func AllelesToVcf(input SampleMap) []vcf.Vcf {
+	var answer []vcf.Vcf
+	var current vcf.Vcf
 	var base string
 	var RefCount, RefCountF, RefCountR int32
 	var i int
@@ -96,7 +96,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		Sa := make([]string, 1)
 		Sa[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseAF+alleles.BaseAR, alleles.BaseAF, alleles.BaseAR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
@@ -113,7 +113,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		Sc := make([]string, 1)
 		Sc[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseCF+alleles.BaseCR, alleles.BaseCF, alleles.BaseCR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
@@ -130,7 +130,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		Sg := make([]string, 1)
 		Sg[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseGF+alleles.BaseGR, alleles.BaseGF, alleles.BaseGR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
@@ -147,7 +147,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		St := make([]string, 1)
 		St[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseTF+alleles.BaseTR, alleles.BaseTF, alleles.BaseTR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
@@ -173,7 +173,7 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			Sindel[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.Indel[i].CountF+alleles.Indel[i].CountR, alleles.Indel[i].CountF, alleles.Indel[i].CountR, alleles.Counts)
 			Sindels[i] = Sindel
 
-			current = &vcf.Vcf{
+			current = vcf.Vcf{
 				Chr:    loc.Chr,
 				Pos:    loc.Pos,
 				Id:     ".",

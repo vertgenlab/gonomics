@@ -30,7 +30,7 @@ func TestVcfAppendAncestor(t *testing.T) {
 
 	for v := range reader {
 		allele[0] = AncestorAlleles[i]
-		AppendAncestor(v, allele)
+		v = AppendAncestor(v, allele)
 		input = QueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
 			t.Errorf("Error in TestVcfAppendAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
@@ -44,7 +44,7 @@ func TestVcfAppendAncestor(t *testing.T) {
 func TestAncestorFlagToHeader(t *testing.T) {
 	_, header := GoReadToChan("testdata/Ancestor_No_Annotation.vcf")
 	before := len(header.Text)
-	AncestorFlagToHeader(header)
+	header = AncestorFlagToHeader(header)
 	after := len(header.Text)
 	//DEBUG: PrintHeader(header)
 	if after-before != 1 {
@@ -54,7 +54,7 @@ func TestAncestorFlagToHeader(t *testing.T) {
 	//now we test a file that has no info columns in the header
 	_, header = GoReadToChan("testdata/Ancestor_No_Info.vcf")
 	before = len(header.Text)
-	AncestorFlagToHeader(header)
+	header = AncestorFlagToHeader(header)
 	after = len(header.Text)
 	//DEBUG: PrintHeader(header)
 	if after-before != 1 {
@@ -84,7 +84,7 @@ var IsRefAnswers []bool = []bool{true, false, false}
 var IsAltAnswers []bool = []bool{false, true, false}
 
 func IsAncestorTests(t *testing.T) {
-	records := Read("testdata/IsAncestor.vcf")
+	records, _ := Read("testdata/IsAncestor.vcf")
 	for i, v := range records {
 		if IsRefAncestor(v) != IsRefAnswers[i] {
 			t.Errorf("Error in IsRefAncestor. Expected: %t. Found: %t.", IsRefAnswers[i], IsRefAncestor(v))

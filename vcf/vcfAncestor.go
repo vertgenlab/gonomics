@@ -8,26 +8,27 @@ import (
 )
 
 //AppendAncestor adds the ancestral allele state (defined by input bases) to the INFO column of a vcf entry.
-func AppendAncestor(g *Vcf, b []dna.Base) {
+func AppendAncestor(g Vcf, b []dna.Base) Vcf {
 	if g.Info == "." {
 		g.Info = fmt.Sprintf("AA=%s", dna.BasesToString(b))
 	} else {
 		g.Info = fmt.Sprintf("%s;AA=%s", g.Info, dna.BasesToString(b))
 	}
+	return g
 }
 
 //IsRefAncestor returns true if the reference allele in the record matches the ancestral allele in the Info annotation, false otherwise.
-func IsRefAncestor(g *Vcf) bool {
+func IsRefAncestor(g Vcf) bool {
 	return dna.BasesToString(QueryAncestor(g)) == g.Ref
 }
 
 //IsAltAncestor returns true if the first alt allele in the record matches the ancestral allele in the Info annotation, false otherwise.
-func IsAltAncestor(g *Vcf) bool {
+func IsAltAncestor(g Vcf) bool {
 	return dna.BasesToString(QueryAncestor(g)) == g.Alt[0]
 }
 
 //QueryAncestor finds the AA INFO from a VCF struct and returns the base of the ancestral allele.
-func QueryAncestor(g *Vcf) []dna.Base {
+func QueryAncestor(g Vcf) []dna.Base {
 	if g.Info == "." {
 		return nil //or should this log.Fatalf out? Depends on whether we have vcf with partial annotation
 	}
@@ -43,7 +44,7 @@ func QueryAncestor(g *Vcf) []dna.Base {
 }
 
 //HasAncestor returns true if a VCF record is annotated with an ancestor allele in the Info column, false otherwise.
-func HasAncestor(g *Vcf) bool {
+func HasAncestor(g Vcf) bool {
 	return QueryAncestor(g) != nil
 }
 
@@ -74,7 +75,7 @@ func AnnotateAncestorFromMultiFa(g *Vcf, records []fasta.Fasta, RefStart int, Al
 }
 
 //AncestorFlagToHeader adds an ##INFO line to a vcfHeader to include information about the AA flag for ancestral alleles.
-func AncestorFlagToHeader(h *VcfHeader) {
+func AncestorFlagToHeader(h Header) Header {
 	var lastInfoIndex int
 	var firstFormatIndex int = -1
 	var seenInfo, seenFormat, firstTime bool
@@ -108,4 +109,5 @@ func AncestorFlagToHeader(h *VcfHeader) {
 		//DEBUG: fmt.Printf("Length of header: %v. LastInfoIndex: %v.\n", len(h.Text), lastInfoIndex)
 		h.Text = append(h.Text[:lastInfoIndex], append(AncestorLineSlice, h.Text[lastInfoIndex:]...)...)
 	}
+	return h
 }

@@ -10,7 +10,7 @@ import (
 
 func countAlleles(inFile string, outFile string, refFile string, coverageThreshold int, minMapQ int, concurrentThreads int) {
 
-	var datavcf []*vcf.Vcf
+	var datavcf []vcf.Vcf
 	var data alleles.SampleMap
 
 	if refFile == "" {

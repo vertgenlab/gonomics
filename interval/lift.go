@@ -43,7 +43,8 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 	case ".vcf":
 		receive, _ := vcf.GoReadToChan(inputFile)
 		for val := range receive {
-			send <- val
+			curr := val
+			send <- &curr
 		}
 	}
 	/* These data types are theoretically compatible with Lift but not fully implemented.

@@ -5,15 +5,13 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-
 	//"log"
 	"math"
 )
 
 //Dunn returns the dunn index as a float64 and missing group members as a string.
 //Mathematical details of the Dunn Index are described at https://en.wikipedia.org/wiki/Dunn_index.
-func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
+func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, int, string) {
 	var maxIntra int = 0
 	var minInter int = 0
 	var missing string = ""
@@ -24,6 +22,9 @@ func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+bLen)
 	tmp2Fa := fasta.RemoveMissingMult(tmpFa)
 	tmp3Fa := FilterMultByGroup(tmp2Fa, g)
+	if len(tmp3Fa) == 0 {
+		return -1.0, 0, missing //dunn could not be calculated
+	}
 	subFa := fasta.DistColumn(tmp3Fa)
 
 	missing = FindMissingGroupMembers(subFa, g)
@@ -34,26 +35,22 @@ func Dunn(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 
 	minInter = FindMinInter(g, subFa)
 
-	return float64(minInter) / float64(maxIntra), missing
+	return float64(minInter) / float64(maxIntra), fasta.NumSegregatingSites(subFa), missing
 }
 
 //FindMaxIntra is a helper function of Dunn that calculates the Max pairwise sequence distance between two sequences of a multiFa alignment that are part of the same Group.
 func FindMaxIntra(subFa []fasta.Fasta, g *Group) int {
 	var answer int = 0
 	var faI, faJ []dna.Base
-	var faFound bool
+	var faFoundI, faFoundJ bool
 	faMap := fasta.ToMap(subFa)
 	for i := 0; i < len(g.Members); i++ {
 		for j := i + 1; j < len(g.Members); j++ {
-			faI, faFound = faMap[g.Members[i]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g.Members[i])
+			faI, faFoundI = faMap[g.Members[i]]
+			faJ, faFoundJ = faMap[g.Members[j]]
+			if faFoundI && faFoundJ {
+				answer = numbers.Max(answer, dna.Dist(faI, faJ))
 			}
-			faJ, faFound = faMap[g.Members[j]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g.Members[i])
-			}
-			answer = numbers.Max(answer, dna.Dist(faI, faJ))
 		}
 	}
 	return answer
@@ -64,18 +61,14 @@ func FindMinInter(g []*Group, subFa []fasta.Fasta) int {
 	var answer int = math.MaxInt64
 	faMap := fasta.ToMap(subFa)
 	var faI, faJ []dna.Base
-	var faFound bool
+	var faFoundI, faFoundJ bool
 	for i := 0; i < len(g[0].Members); i++ {
 		for j := 0; j < len(g[1].Members); j++ {
-			faI, faFound = faMap[g[0].Members[i]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g[0].Members[i])
+			faI, faFoundI = faMap[g[0].Members[i]]
+			faJ, faFoundJ = faMap[g[1].Members[j]]
+			if faFoundI && faFoundJ {
+				answer = numbers.Min(answer, dna.Dist(faI, faJ))
 			}
-			faJ, faFound = faMap[g[1].Members[j]]
-			if !faFound {
-				log.Panicf("%s not found in fasta map", g[1].Members[j])
-			}
-			answer = numbers.Min(answer, dna.Dist(faI, faJ))
 		}
 	}
 	return answer

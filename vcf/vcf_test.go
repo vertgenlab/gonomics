@@ -14,8 +14,8 @@ var readWriteTests = []struct {
 }
 
 func TestReadToChan(t *testing.T) {
-	alpha := Read("testdata/test.vcf")
-	var beta []*Vcf
+	alpha, _ := Read("testdata/test.vcf")
+	var beta []Vcf
 	vcfPipe, _ := GoReadToChan("testdata/test.vcf")
 
 	for vcfs := range vcfPipe {
@@ -27,13 +27,13 @@ func TestReadToChan(t *testing.T) {
 }
 
 func TestWriteAndRead(t *testing.T) {
-	var actual []*Vcf
+	var actual []Vcf
 	for _, test := range readWriteTests {
 		tempFile := "tmp"
-		actual = Read(test.filename)
+		actual, _ = Read(test.filename)
 		Write(tempFile, actual)
-		alpha := Read(tempFile)
-		beta := Read(test.filename)
+		alpha, _ := Read(tempFile)
+		beta, _ := Read(test.filename)
 		if !AllEqual(alpha, beta) {
 			t.Errorf("Error: Read and write files do not match\n")
 		}

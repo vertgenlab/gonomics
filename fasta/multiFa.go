@@ -153,6 +153,14 @@ func SegregatingSites(aln []Fasta) []Fasta {
 	return answer
 }
 
+//NumSegregatingSites returns the number of sites in an alignment block that are segregating.
+func NumSegregatingSites(aln []Fasta) int {
+	if len(SegregatingSites(aln)) == 0 {
+		return 0
+	}
+	return len(SegregatingSites(aln)[0].Seq)
+}
+
 func ChangePrefix(records []Fasta, prefix string) {
 	for idx := 0; idx < len(records); idx++ {
 		records[idx].Name = fmt.Sprintf("%s_%d", prefix, idx)

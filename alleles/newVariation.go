@@ -10,8 +10,8 @@ import (
 )
 
 // FindNewVariation calls variants from a set of samples and normals that DO NOT already exist in the graph structure.
-func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) <-chan *vcf.Vcf {
-	answer := make(chan *vcf.Vcf)
+func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) <-chan vcf.Vcf {
+	answer := make(chan vcf.Vcf)
 
 	// To make the normal IDs option if the value is nil, just initialize empty map so all samples
 	// are treated as experimental. The call would look like FindNewVariation(alleleStream, nil, afThreshold ...)
@@ -25,7 +25,7 @@ func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, 
 
 // scoreAlleles is Designed to be run as a goroutine that accepts alleles from the alleleStream channel,
 // computes the p value and makes a VCF, then sends the vcf record on the answer channel
-func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) {
+func scoreAlleles(answer chan<- vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) {
 	minCov := int32(minCoverage)
 	for alleles := range alleleStream {
 		if len(alleles) == 1 {
@@ -171,14 +171,14 @@ func findMatchingIndel(queryIndel *Indel, subjectSlice []Indel) *Indel {
 }
 
 // alleleToVcf converts a *Allele to a vcf record
-func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int, warnings []string) *vcf.Vcf {
-	var answer *vcf.Vcf
+func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int, warnings []string) vcf.Vcf {
+	var answer vcf.Vcf
 
 	filename := path.Base(allele.Sample)
 	ext := filepath.Ext(filename)
 	name := filename[0 : len(filename)-len(ext)]
 
-	answer = &vcf.Vcf{
+	answer = vcf.Vcf{
 		Chr:    allele.Location.Chr,
 		Pos:    allele.Location.Pos,
 		Id:     ".",

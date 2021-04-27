@@ -20,16 +20,16 @@ var var3 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 5, Id: ".", Ref: "ATG", Alt: string
 var var4 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 8, Id: ".", Ref: "A", Alt: strings.Split("C", ","), Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}
 var var5 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 10, Id: ".", Ref: "T", Alt: strings.Split("G", ","), Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}
 var var6 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 14, Id: ".", Ref: "C", Alt: strings.Split("N", ","), Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}
-var expected []*vcf.Vcf = []*vcf.Vcf{&var1, &var2, &var3, &var4, &var5}
-var expectedSubOnly []*vcf.Vcf = []*vcf.Vcf{&var1, &var4, &var5}
-var expectedRetainN []*vcf.Vcf = []*vcf.Vcf{&var1, &var2, &var3, &var4, &var5, &var6}
+var expected []vcf.Vcf = []vcf.Vcf{var1, var2, var3, var4, var5}
+var expectedSubOnly []vcf.Vcf = []vcf.Vcf{var1, var4, var5}
+var expectedRetainN []vcf.Vcf = []vcf.Vcf{var1, var2, var3, var4, var5, var6}
 
 func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings.
 	var err error
 	out := fileio.EasyCreate("tmp.txt")
 	PairwiseFaToVcf(inputFa, "chr1", out, false, false)
 	out.Close()
-	input := vcf.Read("tmp.txt")
+	input, _ := vcf.Read("tmp.txt")
 	if !vcf.AllEqual(input, expected) {
 		t.Errorf("Pairwise VCF results do not match.")
 	}
@@ -44,7 +44,7 @@ func TestPairwiseFaToVcfRetainN(t *testing.T) {
 	out := fileio.EasyCreate("tmpRetainN.txt")
 	PairwiseFaToVcf(inputFa, "chr1", out, false, true)
 	out.Close()
-	input := vcf.Read("tmpRetainN.txt")
+	input, _ := vcf.Read("tmpRetainN.txt")
 	if !vcf.AllEqual(input, expectedRetainN) {
 		t.Errorf("Pairwise VCF results do not match in retainN test.")
 	}
@@ -59,7 +59,7 @@ func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 	out := fileio.EasyCreate("tmpSub.txt")
 	PairwiseFaToVcf(inputFa, "chr1", out, true, false)
 	out.Close()
-	input := vcf.Read("tmpSub.txt")
+	input, _ := vcf.Read("tmpSub.txt")
 	if !vcf.AllEqual(input, expectedSubOnly) {
 		t.Errorf("Pairwise VCF results do not match in subsitutionsOnly test.")
 	}

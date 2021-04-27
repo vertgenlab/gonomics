@@ -122,7 +122,7 @@ func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
 	}
 	tree := interval.BuildTree(intervals)
 	for i := range alpha {
-		if len(interval.Query(tree, i, "any")) > 0 { //in other words, if the variant overlaps any of the beds
+		if len(interval.Query(tree, &i, "any")) > 0 { //in other words, if the variant overlaps any of the beds
 			if !strings.ContainsAny(i.Alt[0], "<>") { //We convert the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 				//DEBUG: fmt.Printf("Len: %v.\n", len(g.Genotypes))
 				if firstTime {

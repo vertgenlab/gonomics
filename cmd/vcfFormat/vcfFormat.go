@@ -41,7 +41,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 		if UCSCToEnsembl {
 			v.Chr = convert.UCSCToEnsembl(v.Chr)
 		}
-		vcf.WriteVcf(out.File, v)
+		vcf.WriteVcf(out, v)
 	}
 }
 

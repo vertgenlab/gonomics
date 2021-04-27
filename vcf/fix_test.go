@@ -22,9 +22,9 @@ func TestFixVcf(t *testing.T) {
 		Ref: "AC",
 		Alt: strings.Split("A", ",")}
 
-	FixVcf(&vcfTest, ref)
+	vcfTest = FixVcf(vcfTest, ref)
 
-	if !isEqual(&vcfTest, &correctAnswer) {
+	if !isEqual(vcfTest, correctAnswer) {
 		t.Errorf("ERROR: Problem fixing VCF. Expected %v, got %v", correctAnswer, vcfTest)
 	}
 }
