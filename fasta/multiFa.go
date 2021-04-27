@@ -15,7 +15,7 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 //RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	if refStart > RefPos {
-		refStart, alnStart = 0, 0//in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
+		refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
 	}
 	for t := alnStart; refStart < RefPos; t++ {
 		alnStart++
