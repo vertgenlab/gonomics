@@ -19,7 +19,7 @@ func vcfAncestorAnnotation(inFile string, faFile string, outFile string) {
 	vcf.NewWriteHeader(out, header)
 
 	for v := range ch {
-		currRef, currAln = vcf.AnnotateAncestorFromMultiFa(v, records, currRef, currAln)
+		v, currRef, currAln = vcf.AnnotateAncestorFromMultiFa(v, records, currRef, currAln)
 		vcf.WriteVcf(out, v)
 	}
 }
