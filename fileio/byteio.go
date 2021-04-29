@@ -3,15 +3,16 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 const (
@@ -32,15 +33,40 @@ const (
 type ByteReader struct {
 	*bufio.Reader
 	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *GunzipReader
 	line         []byte
 	Buffer       *bytes.Buffer
 }
 
-// Read reads data into p and is a method required to implement the io.Reader interface.
+// GunzipReader uses the native gunzip program on your computer
+// to unzip compressed files
+type GunzipReader struct {
+	Unzip io.Reader
+	Cmd   *exec.Cmd
+}
+
+// Read is a method required to implement the io.Reader interface.
 // It returns the number of bytes read into p.
 func (reader *ByteReader) Read(b []byte) (n int, err error) {
-	return reader.Read(b)
+	if reader.internalGzip == nil {
+		return reader.Read(b)
+	} else {
+		return reader.internalGzip.Read(b)
+	}
+}
+
+// Read is a method required to implement the io.Reader interface
+// used by the native system gunzip
+func (gz GunzipReader) Read(data []byte) (int, error) {
+	var err error
+
+	var offset int
+	var read_len int
+
+	for offset = 0; offset < len(data) && err == nil; read_len, err = gz.Unzip.Read(data[offset:]) {
+		offset += read_len
+	}
+	return offset, err
 }
 
 // NewByteReader will process a given file and performs error handling if an error occurs.
@@ -48,20 +74,30 @@ func (reader *ByteReader) Read(b []byte) (n int, err error) {
 // of the provided file.
 func NewByteReader(filename string) *ByteReader {
 	var err error
-	file := MustOpen(filename)
+
 	var answer ByteReader = ByteReader{
-		File:   file,
+		//File:   file,
 		Buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		answer.internalGzip, err = gzip.NewReader(file)
+		answer.internalGzip, err = NewGunzipReader(filename)
 		exception.PanicOnErr(err)
 		answer.Reader = bufio.NewReader(answer.internalGzip)
 	default:
-		answer.Reader = bufio.NewReader(file)
+		answer.File = MustOpen(filename)
+		answer.Reader = bufio.NewReader(answer.File)
 	}
 	return &answer
+}
+
+// NewGunzipReader initiates the the struct setting and basic error handling of native gunzip reader
+func NewGunzipReader(filename string) (*GunzipReader, error) {
+	cmd := exec.Command("gunzip", "-c", filename)
+	stdout, err := cmd.StdoutPipe()
+	exception.PanicOnErr(err)
+	err = cmd.Start()
+	return &GunzipReader{Unzip: stdout, Cmd: cmd}, err
 }
 
 // ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
@@ -154,6 +190,13 @@ func (br *ByteReader) Close() error {
 	default:
 		return nil
 	}
+}
+
+// Close is a method the GunzipReader calls wto close files. Upon finishing,
+// waits for any any pending I/O operations like copying to or from stdin/stdout to complete
+func (gz GunzipReader) Close() error {
+	gz.Unzip.(io.ReadCloser).Close()
+	return gz.Cmd.Wait()
 }
 
 // StringToIntSlice will process a row of data separated by commas, convert the slice into a slice of type int.
