@@ -1,7 +1,10 @@
 package fileio
 
 import (
+	"bufio"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 func TestSimpleReader(t *testing.T) {
@@ -104,5 +107,18 @@ func TestIntSliceToString(t *testing.T) {
 	answer := IntSliceToString(data)
 	if answer != expected {
 		t.Errorf("problem converting int slice to string")
+	}
+}
+
+func BenchmarkGunzip(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		gunzip, err := NewGunzipReader("testdata/big.fa.gz")
+		exception.PanicOnErr(err)
+		reader := bufio.NewReader(gunzip)
+		for _, done := NextRealLine(reader); !done; _, done = NextRealLine(reader) {
+			//Nothing to assign, testing pure reading of the file
+		}
 	}
 }
