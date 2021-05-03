@@ -14,11 +14,12 @@ func vcfAncestorAnnotation(inFile string, faFile string, outFile string) {
 	records := fasta.Read(faFile)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
+	var currRef, currAln int = 0, 0
 
 	vcf.NewWriteHeader(out, header)
 
 	for v := range ch {
-		vcf.AnnotateAncestorFromMultiFa(v, records)
+		v, currRef, currAln = vcf.AnnotateAncestorFromMultiFa(v, records, currRef, currAln)
 		vcf.WriteVcf(out, v)
 	}
 }

@@ -50,10 +50,11 @@ func HasAncestor(g Vcf) bool {
 
 //AnnotateAncestorFromMultiFa adds the ancestral state to a VCF variant by inspecting a pairwise fasta of the reference genome and an ancestor sequence.
 //records is a pairwise multiFa where the first entry is the reference genome and the second entry is the ancestor.
-func AnnotateAncestorFromMultiFa(g Vcf, records []fasta.Fasta) Vcf {
-	p := fasta.RefPosToAlnPos(records[0], int(g.Pos)-1) //get the alignment position of the variant
+//Returns the refPos and alnPos of the current record.
+func AnnotateAncestorFromMultiFa(g Vcf, records []fasta.Fasta, RefStart int, AlnStart int) (Vcf, int, int) {
+	p := fasta.RefPosToAlnPosCounter(records[0], int(g.Pos)-1, RefStart, AlnStart) //get the alignment position of the variant
 	//DEBUG: fmt.Printf("RefSeq: %s\n", dna.BasesToString(records[0].Seq))
-	//DEBUG: fmt.Printf("Alignment pos: %v. Base at p: %s. Base at p+1: %s.\n", p, dna.BaseToString(records[0].Seq[p]), dna.BaseToString(records[0].Seq[p+1]))
+	//DEBUG: fmt.Printf("Alignment pos: %v. Ref Pos: %v. Base at p: %s. Base at p+1: %s.\n", p, g.Pos-1, dna.BaseToString(records[0].Seq[p]), dna.BaseToString(records[0].Seq[p+1]))
 	var AncestralAllele []dna.Base
 	var insertionEnd int
 	if records[0].Seq[p+1] == dna.Gap { //true in the case of insertions, as there is a gap in the reference after the variant position.
@@ -70,7 +71,7 @@ func AnnotateAncestorFromMultiFa(g Vcf, records []fasta.Fasta) Vcf {
 		AncestralAllele = records[1].Seq[p : p+1]
 	}
 	g = AppendAncestor(g, AncestralAllele)
-	return g
+	return g, g.Pos - 1, p
 }
 
 //AncestorFlagToHeader adds an ##INFO line to a vcfHeader to include information about the AA flag for ancestral alleles.

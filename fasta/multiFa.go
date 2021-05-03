@@ -7,19 +7,25 @@ import (
 	"strings"
 )
 
+//RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
 func RefPosToAlnPos(record Fasta, RefPos int) int {
-	var AlnPos int = 0
-	var refCounter int = 0
+	return RefPosToAlnPosCounter(record, RefPos, 0, 0)
+}
 
-	for t := 0; refCounter < RefPos; t++ {
-		AlnPos++
+//RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
+	if refStart > RefPos {
+		refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
+	}
+	for t := alnStart; refStart < RefPos; t++ {
+		alnStart++
 		if t == len(record.Seq) {
 			log.Fatalf("Ran out of chromosome.")
 		} else if record.Seq[t] != dna.Gap {
-			refCounter++
+			refStart++
 		}
 	}
-	return AlnPos
+	return alnStart
 }
 
 //AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceeding reference position.
