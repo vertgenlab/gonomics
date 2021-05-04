@@ -6,14 +6,15 @@ import (
 	"os"
 	"testing"
 )
+
 var FaFormatTests = []struct {
-	inputFile string
-	outputFile string
+	inputFile    string
+	outputFile   string
 	expectedFile string
-	lineLength int
-	trimName bool
+	lineLength   int
+	trimName     bool
 }{
-	{"testdata/trimNameTest.fa", "testdata/trimNameOutput.fa", "testdata/trimNameExpected.fa",50, true },
+	{"testdata/trimNameTest.fa", "testdata/trimNameOutput.fa", "testdata/trimNameExpected.fa", 50, true},
 }
 
 func TestFaFormat(t *testing.T) {
