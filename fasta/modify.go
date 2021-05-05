@@ -2,6 +2,7 @@ package fasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"strings"
 )
 
 // Remove fasta record with index i from slice of fasta.
@@ -32,6 +33,13 @@ func ReverseComplementAll(records []Fasta) {
 // ToUpper converts all bases in a fasta sequence to uppercase.
 func ToUpper(fa Fasta) {
 	dna.AllToUpper(fa.Seq)
+}
+
+// TrimName retains the first space delimited field of a fasta name.
+func TrimName(fa Fasta) Fasta {
+	fields := strings.Split(fa.Name, " ")
+	fa.Name = fields[0]
+	return fa
 }
 
 // AllToUpper converts all bases to uppercase in all sequences
