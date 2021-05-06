@@ -1,3 +1,5 @@
+// Package interval provides functions for manipulating and analyzing intervals including
+// sorting, calculating overlaps, and liftover functions.
 package interval
 
 // Adapted from Mao, Eran & Luo 2019
@@ -5,7 +7,7 @@ package interval
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"sort"
 )
 
@@ -13,8 +15,7 @@ type Interval interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
-	//TODO: Change write to file handle to input io.Writer
-	WriteToFileHandle(*fileio.EasyWriter)
+	WriteToFileHandle(io.Writer)
 }
 
 type IntervalNode struct {
@@ -318,7 +319,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	return answer // 42. return S
 }
 
-//PrettyPrint displayes the chrom, chromstart, and chromend on a line as a print for debugging.
+//PrettyPrint displays the chrom, chromstart, and chromend on a line as a print for debugging.
 func PrettyPrint(q Interval) {
 	fmt.Printf("Interval. Chrom: %s. ChromStart: %d. ChromEnd: %d.\n", q.GetChrom(), q.GetChromStart(), q.GetChromEnd())
 }

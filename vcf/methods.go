@@ -3,6 +3,7 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 // Current methods satisfy requirements for the following interfaces:
@@ -82,7 +83,7 @@ func convertToNonPtr(v []*Vcf) []Vcf {
 	return answer
 }
 
-func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
+func (v *Vcf) WriteToFileHandle(file io.Writer) {
 	WriteVcf(file, *v)
 }
 

@@ -3,6 +3,7 @@ package giraf
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 func (g *Giraf) GetChrom() string {
@@ -44,9 +45,8 @@ func (g GirafSlice) Write(filename string) {
 	Write(filename, g)
 }
 
-func (g *Giraf) WriteToFileHandle(file *fileio.EasyWriter) {
-	//TODO: change WriteGirafToFileHandle to operate on fileio.EasyReader instead of os.File
-	WriteGirafToFileHandle(file.File, g)
+func (g *Giraf) WriteToFileHandle(file io.Writer) {
+	WriteGirafToFileHandle(file, g)
 }
 
 func (g *Giraf) NextRealRecord(file *fileio.EasyReader) bool {

@@ -1,7 +1,7 @@
 package interval
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 type AggregateInterval struct {
@@ -22,7 +22,7 @@ func (a *AggregateInterval) GetChromEnd() int {
 }
 
 // Write all intervals in the merge interval, should not be used for most queries
-func (a *AggregateInterval) WriteToFileHandle(file *fileio.EasyWriter) {
+func (a *AggregateInterval) WriteToFileHandle(file io.Writer) {
 	for _, tree := range a.tree {
 		for _, val := range tree.data {
 			val.WriteToFileHandle(file)

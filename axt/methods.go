@@ -1,6 +1,9 @@
 package axt
 
-import "github.com/vertgenlab/gonomics/fileio"
+import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"io"
+)
 
 func (a Axt) GetChrom() string {
 	return a.RName
@@ -41,7 +44,7 @@ func (a AxtSlice) Write(file string) {
 	Write(file, a)
 }
 
-func (a Axt) WriteToFileHandle(file *fileio.EasyWriter) {
+func (a Axt) WriteToFileHandle(file io.Writer) {
 	//TODO: what to do with alnNumber???
 	WriteToFileHandle(file, a, 0)
 }

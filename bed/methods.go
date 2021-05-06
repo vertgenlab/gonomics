@@ -1,6 +1,9 @@
 package bed
 
-import "github.com/vertgenlab/gonomics/fileio"
+import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"io"
+)
 
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
@@ -46,7 +49,7 @@ func (b BedSlice) Write(file string) {
 	Write(file, b, 7)
 }
 
-func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
+func (b *Bed) WriteToFileHandle(file io.Writer) {
 	//TODO: write max fields that are non-nil?
 	WriteToFileHandle(file, b, b.FieldsInitialized) //adaptive field writing seems most flexible for the method
 }

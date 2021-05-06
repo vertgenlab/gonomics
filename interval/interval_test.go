@@ -2,8 +2,8 @@ package interval
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"io"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -280,7 +280,7 @@ func (t *testInterval) GetChromStart() int {
 func (t *testInterval) GetChromEnd() int {
 	return t.end
 }
-func (t *testInterval) WriteToFileHandle(file *fileio.EasyWriter) {
+func (t *testInterval) WriteToFileHandle(file io.Writer) {
 	return
 }
 

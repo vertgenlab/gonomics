@@ -3,9 +3,9 @@ package interval
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chain"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"log"
 	"path"
 )
@@ -14,7 +14,7 @@ type Lift interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
-	WriteToFileHandle(*fileio.EasyWriter)
+	WriteToFileHandle(io.Writer)
 	UpdateLift(string, int, int)
 }
 
