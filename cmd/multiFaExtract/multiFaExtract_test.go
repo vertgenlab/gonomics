@@ -8,12 +8,12 @@ import (
 )
 
 var MultiFaExtractTests = []struct {
-	inputFile string
-	outputFile string
+	inputFile    string
+	outputFile   string
 	expectedFile string
-	removeGaps bool
-	start int
-	end int
+	removeGaps   bool
+	start        int
+	end          int
 }{
 	{"testdata/testInput.fa", "testdata/testOut.fa", "testdata/testOut.10to200.fa", false, 10, 200},
 	{"testdata/testInput.fa", "testdata/testOut.fa", "testdata/testOut.10to200.RemoveGaps.fa", true, 10, 200},
