@@ -8,18 +8,18 @@ import (
 )
 
 var RandSeqTests = []struct {
-	outFile string
+	outFile      string
 	expectedFile string
-	GC float64
-	numSeq int
-	lenSeq int
-	randSeed bool
-	setSeed int64
+	GC           float64
+	numSeq       int
+	lenSeq       int
+	randSeed     bool
+	setSeed      int64
 }{
-	{"testdata/test.fa", "testdata/expected.fa",0.41, 10, 500, false, 10},
-	{"testdata/test.fa", "testdata/expectedHighGC.fa",0.60, 10, 500, false, 10},
-	{"testdata/test.fa", "testdata/expectedShort.fa",0.41, 10, 20, false, 10},
-	{"testdata/test.fa", "testdata/expectedNumSeq.fa",0.41, 3, 500, false, 10},
+	{"testdata/test.fa", "testdata/expected.fa", 0.41, 10, 500, false, 10},
+	{"testdata/test.fa", "testdata/expectedHighGC.fa", 0.60, 10, 500, false, 10},
+	{"testdata/test.fa", "testdata/expectedShort.fa", 0.41, 10, 20, false, 10},
+	{"testdata/test.fa", "testdata/expectedNumSeq.fa", 0.41, 3, 500, false, 10},
 }
 
 func TestRandSeq(t *testing.T) {

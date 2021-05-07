@@ -12,4 +12,3 @@ func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	}
 	return answer
 }
-
