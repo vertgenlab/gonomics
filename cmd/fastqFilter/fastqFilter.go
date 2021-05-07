@@ -13,18 +13,18 @@ import (
 )
 
 type Settings struct {
-	InFile string
-	OutFile string
-	R1InFile	string
-	R2InFile	string
-	R1OutFile	string
-	R2OutFile	string
-	PairedEnd 	bool
-	SubSet	float64
-	RandSeed bool
-	SetSeed int64
-	MinSize int
-	MaxSize int
+	InFile    string
+	OutFile   string
+	R1InFile  string
+	R2InFile  string
+	R1OutFile string
+	R2OutFile string
+	PairedEnd bool
+	SubSet    float64
+	RandSeed  bool
+	SetSeed   int64
+	MinSize   int
+	MaxSize   int
 }
 
 func fastqFilter(s Settings) {
@@ -83,11 +83,11 @@ func fastqFilter(s Settings) {
 func usage() {
 	fmt.Print(
 		"fastqFilter - Returns a filtered fastq based on option parameters.\n" +
-		"Usage:\n" +
-		"fastqFilter input.fastq output.fastq\n" +
-		"OR\n" +
-		"fastqFilter -pairedEnd R1.fastq R2.fastq out1.fastq out2.fastq\n" +
-		"options:\n")
+			"Usage:\n" +
+			"fastqFilter input.fastq output.fastq\n" +
+			"OR\n" +
+			"fastqFilter -pairedEnd R1.fastq R2.fastq out1.fastq out2.fastq\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -118,18 +118,18 @@ func main() {
 	}
 
 	s := Settings{
-		InFile: "",
-		OutFile: "",
-		R1InFile: "",
-		R2InFile: "",
+		InFile:    "",
+		OutFile:   "",
+		R1InFile:  "",
+		R2InFile:  "",
 		R1OutFile: "",
 		R2OutFile: "",
 		PairedEnd: *pairedEnd,
-		SubSet: *subSet,
-		RandSeed: *randSeed,
-		SetSeed: *setSeed,
-		MinSize: *minSize,
-		MaxSize: *maxSize,
+		SubSet:    *subSet,
+		RandSeed:  *randSeed,
+		SetSeed:   *setSeed,
+		MinSize:   *minSize,
+		MaxSize:   *maxSize,
 	}
 
 	if *pairedEnd {

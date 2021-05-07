@@ -9,26 +9,26 @@ import (
 )
 
 var FastqFilterTests = []struct {
-	inputFile string
-	outputFile string
-	expectedFile string
-	R1InFile string
-	R2InFile string
-	R1OutFile string
-	R2OutFile string
+	inputFile      string
+	outputFile     string
+	expectedFile   string
+	R1InFile       string
+	R2InFile       string
+	R1OutFile      string
+	R2OutFile      string
 	R1ExpectedFile string
 	R2ExpectedFile string
-	PairedEnd bool
-	SubSet float64
-	RandSeed bool
-	SetSeed int64
-	MinSize int
-	MaxSize int
+	PairedEnd      bool
+	SubSet         float64
+	RandSeed       bool
+	SetSeed        int64
+	MinSize        int
+	MaxSize        int
 }{
 	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedReadWrite.fastq", "", "", "", "", "", "", false, 1, false, 10, 0, numbers.MaxInt},
 	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedHalf.fastq", "", "", "", "", "", "", false, 0.5, false, 10, 0, numbers.MaxInt},
-	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1ReadWrite.fastq", "testdata/expectedR2ReadWrite.fastq", true, 1, false, 10, 0, numbers.MaxInt},//~/go/bin/fastqFilter -pairedEnd -setSeed 10 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1ReadWrite.fastq testdata/expectedR2ReadWrite.fastq
-	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1Half.fastq", "testdata/expectedR2Half.fastq", true, 0.5, false, 10, 0, numbers.MaxInt},//~/go/bin/fastqFilter -pairedEnd -setSeed 10 -subSet 0.5 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1Half.fastq testdata/expectedR2Half.fastq
+	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1ReadWrite.fastq", "testdata/expectedR2ReadWrite.fastq", true, 1, false, 10, 0, numbers.MaxInt}, //~/go/bin/fastqFilter -pairedEnd -setSeed 10 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1ReadWrite.fastq testdata/expectedR2ReadWrite.fastq
+	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1Half.fastq", "testdata/expectedR2Half.fastq", true, 0.5, false, 10, 0, numbers.MaxInt},         //~/go/bin/fastqFilter -pairedEnd -setSeed 10 -subSet 0.5 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1Half.fastq testdata/expectedR2Half.fastq
 }
 
 func TestFastqFilter(t *testing.T) {
@@ -36,18 +36,18 @@ func TestFastqFilter(t *testing.T) {
 	var s Settings
 	for _, v := range FastqFilterTests {
 		s = Settings{
-			InFile: v.inputFile,
-			OutFile: v.outputFile,
-			R1InFile: v.R1InFile,
-			R2InFile: v.R2InFile,
+			InFile:    v.inputFile,
+			OutFile:   v.outputFile,
+			R1InFile:  v.R1InFile,
+			R2InFile:  v.R2InFile,
 			R1OutFile: v.R1OutFile,
 			R2OutFile: v.R2OutFile,
 			PairedEnd: v.PairedEnd,
-			SubSet: v.SubSet,
-			RandSeed: v.RandSeed,
-			SetSeed: v.SetSeed,
-			MinSize: v.MinSize,
-			MaxSize: v.MaxSize,
+			SubSet:    v.SubSet,
+			RandSeed:  v.RandSeed,
+			SetSeed:   v.SetSeed,
+			MinSize:   v.MinSize,
+			MaxSize:   v.MaxSize,
 		}
 		fastqFilter(s)
 		if v.PairedEnd {
