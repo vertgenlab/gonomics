@@ -1,6 +1,9 @@
 package sort
 
-import "github.com/vertgenlab/gonomics/fileio"
+import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"io"
+)
 
 // Interface for generic merge sort of file types
 type MergeSort interface {
@@ -13,7 +16,7 @@ type MergeSort interface {
 }
 
 type MergeSortSingle interface {
-	WriteToFileHandle(*fileio.EasyWriter)   // Write receiver to input file
+	WriteToFileHandle(io.Writer)            // Write receiver to input file
 	NextRealRecord(*fileio.EasyReader) bool // Must skip any comment lines, cannot return nil
 	Copy() interface{}                      // Copies value in receiver pointer to the to interface
 }

@@ -3,12 +3,13 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
-func (v *Vcf) GetChrom() string {
+func (v Vcf) GetChrom() string {
 	return v.Chr
 }
 
@@ -27,7 +28,7 @@ func (v *Vcf) GetChrom() string {
 // for indels, vcf records the startpos as the base prior to the change
 // to find the region actually being changed we need to check if it is indel
 // and adjust accordingly
-func (v *Vcf) GetChromStart() int {
+func (v Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
 		return v.Pos - 1
@@ -36,7 +37,7 @@ func (v *Vcf) GetChromStart() int {
 	}
 }
 
-func (v *Vcf) GetChromEnd() int {
+func (v Vcf) GetChromEnd() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
 		return v.Pos
@@ -82,8 +83,8 @@ func convertToNonPtr(v []*Vcf) []Vcf {
 	return answer
 }
 
-func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
-	WriteVcf(file, *v)
+func (v Vcf) WriteToFileHandle(file io.Writer) {
+	WriteVcf(file, v)
 }
 
 func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
@@ -92,10 +93,10 @@ func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
 	for next.Chr == "" && !done {
 		next, done = NextVcf(file)
 	}
+	*v = next
 	if done {
 		return true
 	}
-	*v = next
 	return done
 }
 

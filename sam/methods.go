@@ -3,6 +3,7 @@ package sam
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 func (s *Sam) GetChrom() string {
@@ -56,7 +57,7 @@ func (s SamSlice) Write(filename string) { // Does not write header
 	}
 }
 
-func (s *Sam) WriteToFileHandle(file *fileio.EasyWriter) {
+func (s *Sam) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, *s)
 }
 

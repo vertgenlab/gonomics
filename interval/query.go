@@ -40,7 +40,7 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 	case ".vcf":
 		receive, _ := vcf.GoReadToChan(inputFile)
 		for val := range receive {
-			send <- &val
+			send <- val
 		}
 
 	case ".sam":
