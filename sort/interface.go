@@ -16,7 +16,7 @@ type MergeSort interface {
 }
 
 type MergeSortSingle interface {
-	WriteToFileHandle(io.Writer)   // Write receiver to input file
+	WriteToFileHandle(io.Writer)            // Write receiver to input file
 	NextRealRecord(*fileio.EasyReader) bool // Must skip any comment lines, cannot return nil
 	Copy() interface{}                      // Copies value in receiver pointer to the to interface
 }
