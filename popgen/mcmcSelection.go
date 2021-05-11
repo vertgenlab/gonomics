@@ -27,6 +27,8 @@ type McmcSettings struct {
 	UnPolarized   bool
 	Derived       bool
 	Ancestral     bool
+	FixedSigma	bool
+	D	int //D is the size of the ascertainment subset.
 	IntegralError float64
 }
 
@@ -41,30 +43,28 @@ type Theta struct {
 
 //MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
 func MetropolisAccept(old Theta, thetaPrime Theta, sigmaStep float64) bool {
-	var pAccept, bayes, hastings, yRand float64
+	var pAccept, yRand float64
 	yRand = math.Log(rand.Float64())
 	var decision bool
-	bayes = BayesRatio(old, thetaPrime)
-	hastings = HastingsRatio(old, thetaPrime, sigmaStep)
-	pAccept = numbers.MultiplyLog(bayes, hastings)
-	decision = pAccept > yRand
-	//pAccept = numbers.MinFloat64(1.0, BayesRatio(old, thetaPrime)*HastingsRatio(old, thetaPrime))
-	if verbose > 1 {
-		log.Printf("bayesRatio: %e, hastingsRatio: %e, log(likelihoodRatio): %e, log(rand): %e, decision: %t\n", bayes, hastings, pAccept, yRand, decision)
+	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 {//if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
+		return false
 	}
+	pAccept = BayesRatio(old, thetaPrime)
+	decision = pAccept > yRand
+
 	if verbose == 1 {
 		log.Printf("%e\t%e\t%e\t%e\t%e\t%e\t%t\n", old.mu, thetaPrime.mu, old.likelihood, thetaPrime.likelihood, pAccept, yRand, decision)
 	}
 	return decision
 }
-
+/*
 //HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta, sigmaStep float64) float64 {
 	var newGivenOld, oldGivenNew float64
 	newGivenOld = numbers.GammaDist(tNew.sigma, sigmaStep, sigmaStep/tOld.sigma)
 	oldGivenNew = numbers.GammaDist(tOld.sigma, sigmaStep, sigmaStep/tNew.sigma)
 	return math.Log(oldGivenNew / newGivenOld)
-}
+}*/
 
 //BayesRatio is a helper function of MetropolisAccept taht returns the ratio of likelihoods of parameter sets
 func BayesRatio(old Theta, thetaPrime Theta) float64 {
@@ -82,22 +82,18 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 	//sample from uninformative gamma
 	var alphaPrime []float64
 	//var p float64 = 0.0
-	var likelihood float64
+	var likelihood, muPrime, sigmaPrime float64
 	alphaPrime = make([]float64, len(t.alpha))
-
-	//sample new sigma from a gamma function where the mean is always the current sigma value
-	//mean of a gamma dist is alpha / beta, so mean = alpha / beta = sigma**2 / sigma = sigma
-	//other condition is that the variance is fixed at 1 (var = alpha / beta**2 = sigma**2 / sigma**2
-	sigmaPrime, _ := numbers.RandGamma(s.SigmaStep, s.SigmaStep/t.sigma)
-	muPrime := numbers.SampleInverseNormal(t.mu, s.MuStep)
+	sigmaPrime = numbers.SampleInverseNormal(t.sigma, s.SigmaStep)
+	muPrime = numbers.SampleInverseNormal(t.mu, s.MuStep)
 	for i := range t.alpha {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
 	}
 
 	if s.Derived {
-		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, 1, s.IntegralError) //d is hardcoded as 1 for now
+		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, s.D, s.IntegralError)
 	} else if s.Ancestral {
-		likelihood = AfsLikelihoodAncestralAscertainment(data, alphaPrime, binomCache, 1, s.IntegralError)
+		likelihood = AfsLikelihoodAncestralAscertainment(data, alphaPrime, binomCache, s.D, s.IntegralError)
 	} else {
 		likelihood = AFSLikelihood(data, alphaPrime, binomCache, s.IntegralError)
 	}
@@ -115,9 +111,9 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 		answer.alpha[i] = numbers.SampleInverseNormal(m, sig)
 	}
 	if s.Derived {
-		answer.likelihood = AfsLikelihoodDerivedAscertainment(data, answer.alpha, binomCache, 1, s.IntegralError) //d is hardcoded as 1 for now.
+		answer.likelihood = AfsLikelihoodDerivedAscertainment(data, answer.alpha, binomCache, s.D, s.IntegralError) //d is hardcoded as 1 for now.
 	} else if s.Ancestral {
-		answer.likelihood = AfsLikelihoodAncestralAscertainment(data, answer.alpha, binomCache, 1, s.IntegralError) //d is hardcoded as 1 for now.
+		answer.likelihood = AfsLikelihoodAncestralAscertainment(data, answer.alpha, binomCache, s.D, s.IntegralError) //d is hardcoded as 1 for now.
 	} else {
 		answer.likelihood = AFSLikelihood(data, answer.alpha, binomCache, s.IntegralError)
 	}

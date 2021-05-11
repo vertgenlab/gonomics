@@ -39,6 +39,7 @@ func main() {
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
 	var derived *bool = flag.Bool("derived", false, "Make a divergence-based ascertainment correction for regions enriched for derived alleles (i.e. HAQERs, HARs, or other fast-evolving regions).")
 	var ancestral *bool = flag.Bool("ancestral", false, "Make a divergence-based ascertainment correction for regions enriched for ancestral alleles (i.e. UCEs or other highly conserved regions).")
+	var fixedSigma *bool = flag.Bool("fixedSigma", false, "When true, the selection coefficient variance parameter sigma stays fixed at sigmaZero and is not treated as an independent hyperparameter.")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
 
 	flag.Usage = usage
@@ -57,6 +58,8 @@ func main() {
 		UnPolarized:   *unPolarized,
 		Derived:       *derived,
 		Ancestral:     *ancestral,
+		FixedSigma: *fixedSigma,
+		D: 1,//D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError: *integralError,
 	}
 
