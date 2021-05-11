@@ -58,8 +58,8 @@ func main() {
 		UnPolarized:   *unPolarized,
 		Derived:       *derived,
 		Ancestral:     *ancestral,
-		FixedSigma: *fixedSigma,
-		D: 1,//D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
+		FixedSigma:    *fixedSigma,
+		D:             1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError: *integralError,
 	}
 

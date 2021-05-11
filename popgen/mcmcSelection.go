@@ -27,8 +27,8 @@ type McmcSettings struct {
 	UnPolarized   bool
 	Derived       bool
 	Ancestral     bool
-	FixedSigma	bool
-	D	int //D is the size of the ascertainment subset.
+	FixedSigma    bool
+	D             int //D is the size of the ascertainment subset.
 	IntegralError float64
 }
 
@@ -46,7 +46,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, sigmaStep float64) bool {
 	var pAccept, yRand float64
 	yRand = math.Log(rand.Float64())
 	var decision bool
-	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 {//if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
+	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 { //if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
 		return false
 	}
 	pAccept = BayesRatio(old, thetaPrime)
@@ -57,6 +57,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, sigmaStep float64) bool {
 	}
 	return decision
 }
+
 /*
 //HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta, sigmaStep float64) float64 {
