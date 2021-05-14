@@ -10,8 +10,8 @@ import (
 )
 
 func fqFormat(inFileFwd string, inFileRev string, barcodeLength int, umiLength int, outFileFwd string, outFileRev string) {
-	TenXPairChan := make(chan *fastq.TenXPair)
-	go fastq.ReadToChanTenXPair(inFileFwd, inFileRev, barcodeLength, umiLength, TenXPairChan)
+	scPairChan := make(chan fastq.SingleCellPair)
+	go fastq.ReadToChanSingleCellPair(inFileFwd, inFileRev, barcodeLength, umiLength, scPairChan)
 
 	fileFwd := fileio.EasyCreate(outFileFwd)
 	defer fileFwd.Close()
@@ -22,15 +22,15 @@ func fqFormat(inFileFwd string, inFileRev string, barcodeLength int, umiLength i
 
 	var currentUmi string
 
-	for i := range TenXPairChan {
+	for i := range scPairChan {
 		currentUmi = dna.BasesToString(i.Umi)
 		count, found := UMImap[currentUmi]
 
 		if !found {
 			UMImap[currentUmi] = 1
 
-			fastq.WriteToFileHandle(fileFwd, i.Fwd)
-			fastq.WriteToFileHandle(fileRev, i.Rev)
+			fastq.WriteToFileHandle(fileFwd, i.Reads.Fwd)
+			fastq.WriteToFileHandle(fileRev, i.Reads.Rev)
 		} else {
 			UMImap[currentUmi] = count + 1
 		}

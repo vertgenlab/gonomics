@@ -73,7 +73,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 func readFastqGsw(fileOne string, fileTwo string, answer chan<- fastq.PairedEndBig) {
 	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
 	for fq, done := fastq.ReadFqBigPair(readOne, readTwo); !done; fq, done = fastq.ReadFqBigPair(readOne, readTwo) {
-		answer <- *fq
+		answer <- fq
 	}
 	close(answer)
 }

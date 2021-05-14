@@ -27,27 +27,27 @@ func TestTrimmingBarcodes(t *testing.T) {
 	var seqTwoRev []dna.Base = dna.StringToBases("NTACAACTCTACATCTACAACTCTACATCTCTGCATCTACAACTCTACATCTACAACTCTACATCTACAACTCTCCATCTACAACTCTCTACATCTACATCTATACATCAACAACTACATACAAATCTAACACTACAACTCTCCACAACT")
 	var qualTwoRev []byte = ToQual([]byte("#AAAFFJJJJJJJJJJJJJJFJAFJFFJJJJJJFJFFAFAJJJJJF-AFJJJJJJFJFAJ7FJFAJ<7F-7FJF---77A-AF----A7-7---7-7FF-7-7---7<--<-------7<--7---<------7---7-----)7)----"))
 
-	var linkedReadOne TenXPair = TenXPair{}
-	linkedReadOne.Fwd = &Fastq{Name: nameOneFwd, Seq: seqOneFwd, Qual: qualOneFwd}
-	linkedReadOne.Rev = &Fastq{Name: nameOneRev, Seq: seqOneRev, Qual: qualOneRev}
+	var linkedReadOne SingleCellPair = SingleCellPair{}
+	linkedReadOne.Reads.Fwd = &Fastq{Name: nameOneFwd, Seq: seqOneFwd, Qual: qualOneFwd}
+	linkedReadOne.Reads.Rev = &Fastq{Name: nameOneRev, Seq: seqOneRev, Qual: qualOneRev}
 	linkedReadOne.Bx = bxOne
 	linkedReadOne.Umi = umiOne
-	var linkedReadTwo TenXPair = TenXPair{}
-	linkedReadTwo.Fwd = &Fastq{Name: nameTwoFwd, Seq: seqTwoFwd, Qual: qualTwoFwd}
-	linkedReadTwo.Rev = &Fastq{Name: nameTwoRev, Seq: seqTwoRev, Qual: qualTwoRev}
+	var linkedReadTwo SingleCellPair = SingleCellPair{}
+	linkedReadTwo.Reads.Fwd = &Fastq{Name: nameTwoFwd, Seq: seqTwoFwd, Qual: qualTwoFwd}
+	linkedReadTwo.Reads.Rev = &Fastq{Name: nameTwoRev, Seq: seqTwoRev, Qual: qualTwoRev}
 	linkedReadTwo.Bx = bxTwo
 	linkedReadTwo.Umi = umiTwo
 
 	var readPairNumber int = 0
-	tenX := make(chan *TenXPair)
+	scChan := make(chan SingleCellPair)
 	var barcodeLength, umiLength int = 16, 6
-	go ReadToChanTenXPair("testdata/barcode10x_R1.fastq", "testdata/barcode10x_R2.fastq", barcodeLength, umiLength, tenX)
+	go ReadToChanSingleCellPair("testdata/barcode10x_R1.fastq", "testdata/barcode10x_R2.fastq", barcodeLength, umiLength, scChan)
 
-	for fq := range tenX {
-		if readPairNumber == 0 && !reflect.DeepEqual(fq, &linkedReadOne) {
+	for fq := range scChan {
+		if readPairNumber == 0 && !reflect.DeepEqual(fq, linkedReadOne) {
 			t.Errorf("Error: linked reads were not equal\n")
 		}
-		if readPairNumber == 1 && !reflect.DeepEqual(fq, &linkedReadTwo) {
+		if readPairNumber == 1 && !reflect.DeepEqual(fq, linkedReadTwo) {
 			t.Errorf("Error: linked reads were not equal\n")
 		}
 		readPairNumber++

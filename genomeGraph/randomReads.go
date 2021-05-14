@@ -10,8 +10,8 @@ import (
 	"log"
 )
 
-func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
-	var answer []*fastq.PairedEnd = make([]*fastq.PairedEnd, numReads)
+func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []fastq.PairedEnd {
+	var answer []fastq.PairedEnd = make([]fastq.PairedEnd, numReads)
 	var seq []dna.Base
 	var path []uint32
 	var nodeIdx, start1, endPos uint32
@@ -42,7 +42,7 @@ func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numCha
 			}
 			mutate(curr.Fwd.Seq, numChanges)
 			mutate(curr.Rev.Seq, numChanges)
-			answer[i] = &curr
+			answer[i] = curr
 			i++
 		}
 	}
