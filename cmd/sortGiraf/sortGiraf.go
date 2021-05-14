@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/sort"
 	"log"
 )
@@ -18,8 +18,8 @@ func usage() {
 }
 
 func sortGiraf(girafFile string, graphFile string, linesPerChunk int, outFile string) {
-	graph := simpleGraph.Read(graphFile)
-	topoOrder := simpleGraph.GetSortOrder(graph)
+	graph := genomeGraph.Read(graphFile)
+	topoOrder := genomeGraph.GetSortOrder(graph)
 	sort.GirafExternalMergeSort(girafFile, topoOrder, linesPerChunk, outFile)
 }
 

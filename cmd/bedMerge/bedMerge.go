@@ -20,7 +20,7 @@ func bedMerge(infile string, outfile string) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}
-			currentMax.ChromEnd = numbers.MaxInt64(records[i].ChromEnd, currentMax.ChromEnd)
+			currentMax.ChromEnd = numbers.Max(records[i].ChromEnd, currentMax.ChromEnd)
 		} else {
 			outlist = append(outlist, currentMax)
 			currentMax = records[i]

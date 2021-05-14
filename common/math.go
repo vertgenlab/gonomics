@@ -3,9 +3,9 @@ package common
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"time"
-	"math/rand"
 )
 
 //RngSeed sets the rand seed global variable using the randSeed and setSeed arguments
@@ -49,6 +49,15 @@ func StringToInt(s string) int {
 }
 
 // StringToFloat64 parses a string into a float64 and will exit on error
+func StringToFloat32(s string) float32 {
+	n, err := strconv.ParseFloat(s, 32)
+	if err != nil {
+		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a float32\n", s))
+	}
+	return float32(n)
+}
+
+// StringToFloat64 parses a string into a float64 and will exit on error
 func StringToFloat64(s string) float64 {
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
@@ -68,7 +77,7 @@ func StringToInt8(s string) int8 {
 
 // StringToInt16 parses a string into an int16 and will exit on error
 func StringToInt16(s string) int16 {
-	n, err := strconv.ParseUint(s, 10, 16)
+	n, err := strconv.ParseInt(s, 10, 16)
 	if err != nil {
 		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int16\n", s))
 	}
@@ -77,7 +86,7 @@ func StringToInt16(s string) int16 {
 
 // StringToInt32 parses a string into an int32 and will exit on error
 func StringToInt32(s string) int32 {
-	n, err := strconv.ParseUint(s, 10, 32)
+	n, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
 		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int32\n", s))
 	}

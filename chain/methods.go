@@ -2,6 +2,7 @@ package chain
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 //Perform operations on target, chains are one based
@@ -33,7 +34,7 @@ func (ch *Chain) UpdateLift(c string, start int, end int) {
 	if ch.TStrand {
 		ch.TStart = start
 	} else {
-		
+
 	}
 	if ch.TStrand {
 		ch.TEnd = end
@@ -41,7 +42,7 @@ func (ch *Chain) UpdateLift(c string, start int, end int) {
 }*/
 
 //WriteToFileHandle was added in order to implement the Interval and Lift interfaces.
-func (ch *Chain) WriteToFileHandle(file *fileio.EasyWriter) {
+func (ch *Chain) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, ch)
 }
 

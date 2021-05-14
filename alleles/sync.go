@@ -2,11 +2,11 @@ package alleles
 
 import (
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	//"github.com/vertgenlab/gonomics/genomeGraph"
 )
 
 // SyncAlleleStreams syncs allele streams output from SamToAlleles and returns a []*Allele with the Allele struct for each sample at position n.
-// The reference input variable should be either a []*fasta.Fasta or a *simpleGraph.SimpleGraph
+// The reference input variable should be either a []*fasta.Fasta or a *genomeGraph.GenomeGraph
 //TODO: still needs to tested with graph input
 func SyncAlleleStreams(reference interface{}, memBufferSize int, alleleStreams ...<-chan *Allele) <-chan []*Allele {
 	answer := make(chan []*Allele)
@@ -70,10 +70,10 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 	close(answer)
 }
 
-// nextPos inputs a []*fasta.Fasta or a *simpleGraph.SimpleGraph and increments currLoc
+// nextPos inputs a []*fasta.Fasta or a *genomeGraph.GenomeGraph and increments currLoc
 func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 	switch r := reference.(type) {
-	case []*fasta.Fasta:
+	case []fasta.Fasta:
 
 		if currLoc.Location.Chr == "dummy" {
 			currLoc.Location.Chr = r[0].Name
@@ -93,25 +93,28 @@ func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 			}
 		}
 
-	case *simpleGraph.SimpleGraph:
+		//TODO: Fix after Name removed from genome graph node
+		/*
+			case *genomeGraph.GenomeGraph:
 
-		if currLoc.Location.Chr == "dummy" {
-			currLoc.Location.Chr = r.Nodes[0].Name
-			currLoc.Location.Pos = 0
-			return true
-		} else {
-			if int(currLoc.Location.Pos) < len(r.Nodes[*refIdx].Seq) { // Increment Position
-				currLoc.Location.Pos++
-				return true
-			} else if *refIdx < len(r.Nodes) { // Increment Node
-				*refIdx++
-				currLoc.Location.Chr = r.Nodes[*refIdx].Name
-				currLoc.Location.Pos = 0
-				return true
-			} else { // Report end of reference
-				return false
-			}
-		}
+				if currLoc.Location.Chr == "dummy" {
+					currLoc.Location.Chr = r.Nodes[0].Name
+					currLoc.Location.Pos = 0
+					return true
+				} else {
+					if int(currLoc.Location.Pos) < len(r.Nodes[*refIdx].Seq) { // Increment Position
+						currLoc.Location.Pos++
+						return true
+					} else if *refIdx < len(r.Nodes) { // Increment Node
+						*refIdx++
+						currLoc.Location.Chr = r.Nodes[*refIdx].Name
+						currLoc.Location.Pos = 0
+						return true
+					} else { // Report end of reference
+						return false
+					}
+				}
+		*/
 	}
 	return false
 }

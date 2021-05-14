@@ -180,11 +180,13 @@ func BinomCoefficientLog(n int, k int) float64 {
 	return DivideLog(numer, denom)
 }
 
+//Factorial returns n! in normal space.
 func Factorial(n int) int {
 	return int(math.Gamma(float64(n + 1)))
 }
 
-func DigitsBaseTen(x int64) int {
+//DigitsBaseTen returns the
+func DigitsBaseTen(x int) int {
 	var count int = 1
 	if x < 0 {
 		x = -1 * x
@@ -195,4 +197,13 @@ func DigitsBaseTen(x int64) int {
 		count++
 	}
 	return count
+}
+
+//AbsInt returns the absolute value of an input of type int.
+func AbsInt(x int) int {
+	if x < 0 {
+		return -x
+	} else {
+		return x
+	}
 }

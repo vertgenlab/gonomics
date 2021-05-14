@@ -3,31 +3,19 @@ package fasta
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"sort"
-	"strings"
 )
 
-func compareName(alpha *Fasta, beta *Fasta) int {
-	return strings.Compare(alpha.Name, beta.Name)
-}
-
-func compareSeq(alpha *Fasta, beta *Fasta) int {
-	return dna.CompareSeqsCaseSensitive(alpha.Seq, beta.Seq)
-}
-
-func compareSeqIgnoreCase(alpha *Fasta, beta *Fasta) int {
-	return dna.CompareSeqsIgnoreCase(alpha.Seq, beta.Seq)
-}
-
-//IsEqual returns true if two input Fasta structs have an equal name and sequence.
-func IsEqual(alpha *Fasta, beta *Fasta) bool {
-	if compareName(alpha, beta) == 0 && compareSeq(alpha, beta) == 0 {
+// IsEqual returns true if two input Fasta structs have an equal name and sequence.
+func IsEqual(alpha Fasta, beta Fasta) bool {
+	if alpha.Name == beta.Name && dna.CompareSeqsCaseSensitive(alpha.Seq, beta.Seq) == 0 {
 		return true
 	} else {
 		return false
 	}
 }
 
-func allEqual(alpha []*Fasta, beta []*Fasta, ignoreOrder bool) bool {
+// allEqual determines if two slices of fasta records are equivalent.
+func allEqual(alpha []Fasta, beta []Fasta, ignoreOrder bool) bool {
 	if len(alpha) != len(beta) {
 		return false
 	}
@@ -35,28 +23,30 @@ func allEqual(alpha []*Fasta, beta []*Fasta, ignoreOrder bool) bool {
 		SortByName(alpha)
 		SortByName(beta)
 	}
-	for idx, _ := range alpha {
-		if !IsEqual(alpha[idx], beta[idx]) {
+	for i := range alpha {
+		if !IsEqual(alpha[i], beta[i]) {
 			return false
 		}
 	}
 	return true
 }
 
-//AllAreEqual returns true if every entry in a slice of Fasta structs passes IsEqual. Sensitive to order in the slice.
-func AllAreEqual(alpha []*Fasta, beta []*Fasta) bool {
+// AllAreEqual returns true if every entry in a slice of Fasta structs passes IsEqual. Sensitive to order in the slice.
+func AllAreEqual(alpha []Fasta, beta []Fasta) bool {
 	return allEqual(alpha, beta, false)
 }
 
-//AllAreEqualIgnoreOrder returns true if every entry in a slice of Fasta structs passes IsEqual. Not sensitive to order in the slice.
-func AllAreEqualIgnoreOrder(alpha []*Fasta, beta []*Fasta) bool {
+// AllAreEqualIgnoreOrder returns true if every entry in a slice of Fasta structs passes IsEqual. Not sensitive to order in the slice.
+func AllAreEqualIgnoreOrder(alpha []Fasta, beta []Fasta) bool {
 	return allEqual(alpha, beta, true)
 }
 
-func SortByName(seqs []*Fasta) {
-	sort.Slice(seqs, func(i, j int) bool { return compareName(seqs[i], seqs[j]) == -1 })
+// SortByName sorts fasta records lexicographically.
+func SortByName(seqs []Fasta) {
+	sort.Slice(seqs, func(i, j int) bool { return seqs[i].Name < seqs[j].Name })
 }
 
-func SortBySeq(seqs []*Fasta) {
-	sort.Slice(seqs, func(i, j int) bool { return compareSeqIgnoreCase(seqs[i], seqs[j]) == -1 })
+// SortBySeq sorts fasta records by sequence.
+func SortBySeq(seqs []Fasta) {
+	sort.Slice(seqs, func(i, j int) bool { return dna.CompareSeqsIgnoreCase(seqs[i].Seq, seqs[j].Seq) == -1 })
 }

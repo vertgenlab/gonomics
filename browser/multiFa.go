@@ -13,31 +13,24 @@ import (
 
 //MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position.
 //Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
-func MultiFaVisualizer(infile string, outfile string, start int64, end int64, noMask bool, lineLength int64) {
+func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int) {
 	if !(start < end) {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
-
 	var stop int
 	records := fasta.Read(infile)
-
 	if noMask {
 		fasta.AllToUpper(records)
 	}
-
 	for i := 1; i < len(records); i++ {
-		for j := 0; j < len(records[0].Seq); j++ {
+		for j := range records[0].Seq {
 			if records[i].Seq[j] == records[0].Seq[j] {
 				records[i].Seq[j] = dna.Dot
 			}
 		}
 	}
 	long := calculateLongestName(records)
-
-	var refCounter int64 = 0
-	var startCounter int64 = 0
-	var endCounter int64 = 0
-
+	var refCounter, startCounter, endCounter int = 0, 0, 0
 	for t := 0; refCounter < start; t++ {
 		startCounter++
 		if t == len(records[0].Seq) {
@@ -65,20 +58,20 @@ func MultiFaVisualizer(infile string, outfile string, start int64, end int64, no
 
 	for k := startCounter; k < endCounter; k = k + lineLength {
 		fmt.Fprintf(out, "Position: %d\n", chromStart)
-		stop = int(numbers.MinInt64(endCounter, k+lineLength))
-		for m := 0; m < len(records); m++ {
+		stop = numbers.Min(endCounter, k+lineLength)
+		for m := range records {
 			fmt.Fprintf(out, "|%-*s| %s\n", long, records[m].Name, dna.BasesToString(records[m].Seq[k:stop]))
 		}
 		fmt.Fprintf(out, "\n\n")
-		chromStart = chromStart + lineLength - int64(dna.CountGaps(records[0].Seq[k:stop]))
+		chromStart = chromStart + lineLength - dna.CountGaps(records[0].Seq[k:stop])
 	}
 }
 
 //calculateLongestName is a helper function of MultiFaVisualizer that returns the length of the longest name in a slice of fasta.Fasta structs.
-func calculateLongestName(f []*fasta.Fasta) int {
+func calculateLongestName(f []fasta.Fasta) int {
 	var ans int = 0
 	var temp int
-	for i := 0; i < len(f); i++ {
+	for i := range f {
 		temp = utf8.RuneCountInString(f[i].Name)
 		if temp > ans {
 			ans = temp

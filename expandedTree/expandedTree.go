@@ -1,12 +1,11 @@
 package expandedTree
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"os"
+	"github.com/vertgenlab/gonomics/fileio"
 	"strconv"
 	"strings"
 )
@@ -17,7 +16,7 @@ type ETree struct {
 	BranchLength float64
 	OnlyTopology bool
 	Fasta        *fasta.Fasta //assigning fastas to nodes
-	State        int          //corresponds to a base same numbering encoded by dna.Base
+	State        int          //corresponds to a base
 	Stored       []float64    //a list of probabilities for each base at any given site of the genome
 	Scrap        float64
 	Left         *ETree
@@ -26,32 +25,21 @@ type ETree struct {
 }
 
 //read tree from filename and add fastas and up pointers to the tree
-func ReadTree(newickFilename string, fastasFilename string) *ETree {
+func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	tr, err := ReadNewick(newickFilename)
-	if err == nil {
+	if err != nil {
+		return nil, err
 	}
 	AssignFastas(tr, fastasFilename)
-	return tr
+	return tr, nil
 }
 
 //read in tree from filename
 func ReadNewick(filename string) (*ETree, error) {
-	var line string
+	var singleLineTree string
+	singleLineTree = fileio.ReadFileToSingleLineString(filename)
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line = scanner.Text()
-		if !strings.HasPrefix(line, "#") {
-			return parseNewick(line[strings.Index(line, "("):(1 + strings.LastIndex(line, ";"))])
-		}
-	}
-	return nil, errors.New("Error: tree file is either empty or has no non-comment lines")
+	return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
 }
 
 // read in tree from string of newick
@@ -164,7 +152,7 @@ func parseNewickHelper(input string) (*ETree, error) {
 	if numOpen != numClosed {
 		return nil, fmt.Errorf("Error: %s does not have an equal number of open and close parentheses\n", input)
 	} else if numOpen != numComma {
-		return nil, fmt.Errorf("Error: %s does not have an a number of commas equal to the number of parenthesis pairs\n", input)
+		return nil, fmt.Errorf("Error: %s does not have an a number of commas equal to the number of parenthesis pairs. Could be caused by a non-bifurcating tree\n", input)
 	} else if len(input) == 0 {
 		return nil, errors.New("Error: can not build tree/node from an empty string")
 	} else if numColon != 0 && (numColon != 2*numComma && lastColon < lastClosed) && (numColon != 2*numComma+1 && lastColon > lastClosed) {
@@ -223,7 +211,7 @@ func AssignFastas(root *ETree, fastaFilename string) {
 	for i := 0; i < len(leaves); i++ {
 		for j := 0; j < len(fastas); j++ {
 			if leaves[i].Name == fastas[j].Name {
-				leaves[i].Fasta = fastas[j]
+				leaves[i].Fasta = &fastas[j]
 				leaves[i].State = int(leaves[i].Fasta.Seq[0])
 			}
 

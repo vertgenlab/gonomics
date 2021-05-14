@@ -10,8 +10,8 @@ import (
 )
 
 // FindNewVariation calls variants from a set of samples and normals that DO NOT already exist in the graph structure.
-func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) <-chan *vcf.Vcf {
-	answer := make(chan *vcf.Vcf)
+func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) <-chan vcf.Vcf {
+	answer := make(chan vcf.Vcf)
 
 	// To make the normal IDs option if the value is nil, just initialize empty map so all samples
 	// are treated as experimental. The call would look like FindNewVariation(alleleStream, nil, afThreshold ...)
@@ -25,7 +25,7 @@ func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, 
 
 // scoreAlleles is Designed to be run as a goroutine that accepts alleles from the alleleStream channel,
 // computes the p value and makes a VCF, then sends the vcf record on the answer channel
-func scoreAlleles(answer chan<- *vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) {
+func scoreAlleles(answer chan<- vcf.Vcf, alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) {
 	minCov := int32(minCoverage)
 	for alleles := range alleleStream {
 		if len(alleles) == 1 {
@@ -171,43 +171,43 @@ func findMatchingIndel(queryIndel *Indel, subjectSlice []Indel) *Indel {
 }
 
 // alleleToVcf converts a *Allele to a vcf record
-func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int, warnings []string) *vcf.Vcf {
-	var answer *vcf.Vcf
+func alleleToVcf(allele *Allele, p float64, altBase dna.Base, indelSlicePos int, warnings []string) vcf.Vcf {
+	var answer vcf.Vcf
 
 	filename := path.Base(allele.Sample)
 	ext := filepath.Ext(filename)
 	name := filename[0 : len(filename)-len(ext)]
 
-	answer = &vcf.Vcf{
+	answer = vcf.Vcf{
 		Chr:    allele.Location.Chr,
 		Pos:    allele.Location.Pos,
 		Id:     ".",
 		Qual:   0,
 		Filter: delimitStringSlice(warnings, ":"),
 		Info:   fmt.Sprintf("Sample=%s:p=%.2e", name, p),
-		Format: fmt.Sprintf("DP:AC")}
+		Format: []string{"GT", "DP", "AC"}}
 
 	switch altBase {
 	case dna.A:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
-		answer.Alt = "A"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseAF+allele.Count.BaseAR)
+		answer.Alt = []string{"A"}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseAF + allele.Count.BaseAR)}}}
 	case dna.C:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
-		answer.Alt = "C"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseCF+allele.Count.BaseCR)
+		answer.Alt = []string{"C"}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseCF + allele.Count.BaseCR)}}}
 	case dna.G:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
-		answer.Alt = "G"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseGF+allele.Count.BaseGR)
+		answer.Alt = []string{"G"}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseGF + allele.Count.BaseGR)}}}
 	case dna.T:
 		answer.Ref = dna.BaseToString(allele.Count.Ref)
-		answer.Alt = "T"
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.BaseTF+allele.Count.BaseTR)
+		answer.Alt = []string{"T"}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.BaseTF + allele.Count.BaseTR)}}}
 	case dna.Gap:
 		answer.Ref = dna.BasesToString(allele.Count.Indel[indelSlicePos].Ref)
-		answer.Alt = dna.BasesToString(allele.Count.Indel[indelSlicePos].Alt)
-		answer.Notes = fmt.Sprintf("%d:%d", allele.Count.Counts, allele.Count.Indel[indelSlicePos].CountF+allele.Count.Indel[indelSlicePos].CountR)
+		answer.Alt = []string{dna.BasesToString(allele.Count.Indel[indelSlicePos].Alt)}
+		answer.Samples = []vcf.GenomeSample{{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: []string{fmt.Sprint(allele.Count.Counts), fmt.Sprint(allele.Count.Indel[indelSlicePos].CountF + allele.Count.Indel[indelSlicePos].CountR)}}}
 	}
 	return answer
 }

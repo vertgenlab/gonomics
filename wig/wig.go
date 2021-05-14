@@ -15,14 +15,14 @@ import (
 type Wig struct {
 	StepType string
 	Chrom    string
-	Start    int64
-	Step     int64
+	Start    int
+	Step     int
 	Values   []*WigValue //{position, score}
 }
 
 //WigValue is an internal struct of the Wig data structure that contains information on the Wig value at an individual genomic postion.
 type WigValue struct {
-	Position int64
+	Position int
 	Value    float64
 }
 
@@ -63,9 +63,9 @@ func Read(filename string) []*Wig {
 			var chromList []string = strings.Split(lineFields[1], "=")
 			currentWig.Chrom = chromList[1]
 			var startList []string = strings.Split(lineFields[2], "=")
-			currentWig.Start = common.StringToInt64(startList[1])
+			currentWig.Start = common.StringToInt(startList[1])
 			var stepList []string = strings.Split(lineFields[3], "=")
-			currentWig.Step = common.StringToInt64(stepList[1])
+			currentWig.Step = common.StringToInt(stepList[1])
 			currentWig.StepType = "fixedStep"
 
 		} else {
@@ -76,10 +76,10 @@ func Read(filename string) []*Wig {
 			if len(lineFields) == 1 {
 				//fixedStep
 				currentValue.Value = common.StringToFloat64(lineFields[0])
-				currentValue.Position = currentWig.Start + int64(len(currentWig.Values))*currentWig.Step
+				currentValue.Position = currentWig.Start + len(currentWig.Values)*currentWig.Step
 			} else if len(lineFields) == 2 {
 				//variableStep
-				currentValue.Position = common.StringToInt64(lineFields[0])
+				currentValue.Position = common.StringToInt(lineFields[0])
 				currentValue.Value = common.StringToFloat64(lineFields[1])
 			}
 

@@ -2,18 +2,23 @@ package numbers
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
 
 //All expected values are calculated from online calculator tools or in the R programming language.
 
+func ExplicitBinomialDist(n int, k int, p float64) float64 {
+	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
+}
+
 func TestBinomialDist(t *testing.T) {
-	input1 := BinomialDist(20, 4, 0.6)
-	expected1 := 2.696862e-04
-	input2 := BinomialDist(20, 20, 0.6)
-	expected2 := 3.656158e-05
-	input3 := BinomialDist(20, 0, 0.6)
-	expected3 := 1.099512e-08
+	input1 := ExplicitBinomialDist(20, 4, 0.6)
+	expected1 := BinomialDist(20, 4, 0.6)
+	input2 := ExplicitBinomialDist(20, 20, 0.6)
+	expected2 := BinomialDist(20, 20, 0.6)
+	input3 := ExplicitBinomialDist(20, 0, 0.6)
+	expected3 := BinomialDist(20, 0, 0.6)
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
@@ -158,4 +163,11 @@ func TestGammaIntegral(t *testing.T) {
 	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
+}
+
+//TODO: Testing for KL Divergence is incomplete
+//Expected values are calculated with the R package LaplacesDemon using the KLD function.
+func TestKullbackLeiblerDivergence(t *testing.T) {
+	//input1 := ContinuousKullbackLeiblerDivergence(NormalClosure(0, 1), NormalClosure(1, 1), -100, 100)
+	//fmt.Printf("%v\n", input1)
 }

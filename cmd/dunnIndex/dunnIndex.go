@@ -13,13 +13,13 @@ func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile str
 	b := bed.Read(bedFile)
 	aln := fasta.Read(alnFile)
 	g := popgen.ReadGroups(groupFileName)
-	//fmt.Printf("Reading is done.\n")
 
 	for i := 0; i < len(b); i++ {
-		b[i].Annotation = make([]string, 2)
-		dunn, missing := popgen.Dunn(b[i], aln, g)
+		b[i].Annotation = make([]string, 3)
+		dunn, S, missing := popgen.Dunn(b[i], aln, g)
 		b[i].Annotation[0] = fmt.Sprintf("%f", dunn)
-		b[i].Annotation[1] = missing
+		b[i].Annotation[1] = fmt.Sprintf("%v", S)
+		b[i].Annotation[2] = missing
 	}
 	bed.Write(outFile, b, 7)
 }
@@ -28,7 +28,7 @@ func usage() {
 	fmt.Print(
 		"dunnIndex - Computes the Dunn Index based on variable SNPs for each input bed region of a multiple alignment.\n" +
 			"Groups should be specified in a .list file with group names on lines beginning with a 'greater than' symbol and all group members on the following lines.\n" +
-			"Returns a bed file with the Dunn Index in the score column.\n" +
+			"Returns a bed file with the Dunn Index, number of segregating sites, and missing individuals in the annotation columns as tab separated fields.\n" +
 			"Usage:\n" +
 			"dunnIndex regions.bed aln.multi.fa  groups.list outfile.bed\n" +
 			"options:\n")

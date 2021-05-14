@@ -5,36 +5,7 @@ import (
 	"strings"
 )
 
-func checkQueryBlock(alpha *Axt, beta *Axt, bestQueryLen int64, bestScore int64, minScore int64) (bool, int64, int64) {
-	if beta.Score < minScore {
-		return false, bestQueryLen, bestScore
-	}
-	if CompareRName(alpha, beta) != 0 {
-		bestQueryLen = beta.QEnd - beta.QStart
-		bestScore = beta.Score
-		return true, bestQueryLen, bestScore
-	} else {
-		if CompareRName(alpha, beta) == 0 {
-			if CompareQName(alpha, beta) != 0 {
-				if (beta.QEnd-beta.QStart > bestQueryLen) && (beta.Score > bestScore) {
-					bestQueryLen = beta.QEnd - beta.QStart
-					bestScore = beta.Score
-					return true, bestQueryLen, bestScore
-				} else {
-					return false, bestQueryLen, bestScore
-				}
-			}
-			if CompareQName(alpha, beta) == 0 {
-				bestQueryLen = bestQueryLen + beta.QEnd - beta.QStart
-				bestScore = bestScore + beta.Score
-				return true, bestQueryLen, bestScore
-			}
-		}
-	}
-	return false, bestQueryLen, bestScore
-}
-
-func CompareRCoord(alpha *Axt, beta *Axt) int {
+func compareRCoord(alpha Axt, beta Axt) int {
 	if alpha.RStart < beta.RStart {
 		return -1
 	}
@@ -50,15 +21,15 @@ func CompareRCoord(alpha *Axt, beta *Axt) int {
 	return 0
 }
 
-func CompareRName(alpha *Axt, beta *Axt) int {
+func compareRName(alpha Axt, beta Axt) int {
 	return strings.Compare(alpha.RName, beta.RName)
 }
 
-func CompareQName(alpha *Axt, beta *Axt) int {
+func compareQName(alpha Axt, beta Axt) int {
 	return strings.Compare(alpha.QName, beta.QName)
 }
 
-func CompareScore(alpha *Axt, beta *Axt) int {
+func compareScore(alpha Axt, beta Axt) int {
 	if alpha.Score < beta.Score {
 		return 1
 	}
@@ -68,24 +39,24 @@ func CompareScore(alpha *Axt, beta *Axt) int {
 	return 0
 }
 
-func CompareRNameCoord(alpha *Axt, beta *Axt) int {
-	compareStorage := CompareRName(alpha, beta)
+func compareRNameCoord(alpha Axt, beta Axt) int {
+	compareStorage := compareRName(alpha, beta)
 	if compareStorage != 0 {
 		return compareStorage
 	} else {
-		return CompareRCoord(alpha, beta)
+		return compareRCoord(alpha, beta)
 	}
 }
 
-func SortByRNameCoord(axts []*Axt) {
-	sort.Slice(axts, func(i, j int) bool { return CompareRNameCoord(axts[i], axts[j]) == -1 })
+func SortByRNameCoord(axts []Axt) {
+	sort.Slice(axts, func(i, j int) bool { return compareRNameCoord(axts[i], axts[j]) == -1 })
 }
 
-func SortByScore(axts []*Axt) {
-	sort.Slice(axts, func(i, j int) bool { return CompareScore(axts[i], axts[j]) == -1 })
+func SortByScore(axts []Axt) {
+	sort.Slice(axts, func(i, j int) bool { return compareScore(axts[i], axts[j]) == -1 })
 }
 
-func isEqual(alpha *Axt, beta *Axt) bool {
+func isEqual(alpha Axt, beta Axt) bool {
 	if strings.Compare(alpha.RName, beta.RName) != 0 {
 		return false
 	}
@@ -129,7 +100,7 @@ func isEqual(alpha *Axt, beta *Axt) bool {
 	return true
 }
 
-func AllEqual(alpha []*Axt, beta []*Axt) bool {
+func allEqual(alpha []Axt, beta []Axt) bool {
 	if len(alpha) != len(beta) {
 		return false
 	}

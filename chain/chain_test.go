@@ -21,7 +21,6 @@ func TestReaderAndWriter(t *testing.T) {
 		//2nd pass: read back and write using goroutines
 		file := fileio.EasyOpen(writeToFile)
 		reader := make(chan *Chain)
-		defer file.Close()
 		goHashTags := ReadHeaderComments(file)
 
 		var wg2 sync.WaitGroup

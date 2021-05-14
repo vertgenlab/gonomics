@@ -12,11 +12,11 @@ import (
 func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
 	records := bed.Read(inFile)
 	ref := chromInfo.ReadToMap(chromFile)
-	var lengthFromEnd int64
+	var lengthFromEnd int
 
 	for i := 0; i < len(records); i++ {
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
-		records[i].Score = numbers.MinInt64(lengthFromEnd, records[i].ChromStart)
+		records[i].Score = numbers.Min(lengthFromEnd, records[i].ChromStart)
 	}
 	bed.Write(outFile, records, 5)
 }

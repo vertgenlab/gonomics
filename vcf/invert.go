@@ -5,17 +5,9 @@ import (
 	//DEBUG: "fmt"
 )
 
-//TODO: Integrate GVcf into new updated Vcf struct. Also, handle phasing (if we do not adjust all records, some haplotypes could become unphased if some variants but not others are flipped.)
-//InvertGVcf inverts the reference and alt of a biallelic GVcf record.
-func InvertGVcf(g *GVcf) {
-	InvertVcf(&g.Vcf)
-	//Tuple assignment flips the reference and alt sequence.
-	g.Seq[0], g.Seq[1] = g.Seq[1], g.Seq[0]
-	InvertAlleles(g.Genotypes)
-}
-
 //InvertGenomeSample inverts the ancestral/derived state for each allele in a GenomeSample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
-func InvertGenomeSample(g *GenomeSample) {
+//TODO: this is currently only supported for biallelic bases.
+func InvertGenomeSample(g GenomeSample) GenomeSample {
 	if g.AlleleOne == 0 {
 		g.AlleleOne = 1
 	} else if g.AlleleOne == 1 {
@@ -30,18 +22,26 @@ func InvertGenomeSample(g *GenomeSample) {
 	} else {
 		log.Fatalf("Error in InvertGenomeSample: bases must be biallele to be inverted.")
 	}
+
+	return g
 }
 
 //InvertAlleles inverts the Genotype for each entry in a slice of GenomeSample structs.
-func InvertAlleles(g []GenomeSample) {
+func InvertAlleles(g []GenomeSample) []GenomeSample {
 	for i := 0; i < len(g); i++ {
-		InvertGenomeSample(&g[i])
+		g[i] = InvertGenomeSample(g[i])
 	}
+	return g
 }
 
 //InvertVcf inverts the reference and alt variants in a Vcf record. Currently does not update other fields, but this functionality may be added.
-func InvertVcf(v *Vcf) {
+func InvertVcf(v Vcf) Vcf {
+	if len(v.Alt) > 1 {
+		log.Fatalf("InvertVCF is not currently supported for polyallelic bases.")
+	}
 	//DEBUG: fmt.Printf("v.Ref before inversion: %s.\n", v.Ref)
-	v.Ref, v.Alt = v.Alt, v.Ref
+	v.Ref, v.Alt[0] = v.Alt[0], v.Ref
+	v.Samples = InvertAlleles(v.Samples)
 	//DEBUG: fmt.Printf("v.Ref after inversion: %s.\n", v.Ref)
+	return v
 }

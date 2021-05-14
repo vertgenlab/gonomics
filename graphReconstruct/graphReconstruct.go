@@ -2,230 +2,97 @@ package graphReconstruct
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/expandedTree"
-	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"log"
 )
 
-//returns the percentage accuracy by base returned by reconstruct of each node and of all nodes combined (usage in reconstruct_test.go)
-func ReconAccuracy(simFilename string, reconFilename string) map[string]float64 {
-	var allNodes string
-	allNodes = "all Nodes"
-	var found bool = false
-	var total float64
-	total = 0.0
-	var mistakes float64
-	sim := fasta.Read(simFilename)
-	recon := fasta.Read(reconFilename)
+type graphColumn struct {
+	AlignId    int
+	AlignNodes map[string][]*genomeGraph.Node //string keys refer to species that key to a slice of pointers to the nodes of that species that fall into a single slignment column
+}
 
-	answer := make(map[string]float64)
+//BuildNodes uses a graphColumn to create nodes for an ancestor's graph seq that represents all the unique sequences in an aligned graph
+func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 {
+	var nodeInfo = make(map[string]bool)
+	for _, nodes := range column.AlignNodes { //nodes is all nodes for an individual species
+		for n := range nodes { //n is an individual node of an individual species
+			stringSeq := dna.BasesToString(nodes[n].Seq)
+			nodeInfo[stringSeq] = true
+		}
+	}
+	for seq := range nodeInfo {
+		var newNode *genomeGraph.Node
+		newNode = &genomeGraph.Node{Id: id, Seq: dna.StringToBases(seq), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases(seq)), Next: nil, Prev: nil}
+		column.AlignNodes[root.Name] = append(column.AlignNodes[root.Name], newNode)
+		id += 1
+	}
+	return id
+}
 
-	for i := 0; i < len(sim); i++ {
-		mistakes = 0.0
-		found = false
-		for j := 0; j < len(recon); j++ {
-			if sim[i].Name == recon[j].Name {
-				found = true
-				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
-				for k := 0; k < len(sim[0].Seq); k++ {
-					if sim[i].Seq[k] != recon[j].Seq[k] {
-						mistakes = mistakes + 1
-					}
-				}
+//BuildEdges connects the nodes of a species' graph that are stored in GraphColumns
+//func BuildEdges
+//start without prob
+//loop through species in column, go through all nodes
+//check if that node's seq matches the seq of the ancestor node without an edge
+//make the next of that node the same as this node's next
+//FindAncSeq creates a graph from the node records stored in GraphColumns and then calls PathFinder and seqOfPath to determine the most likley seq of the ancestor before assigning that
+//seq to the Fasta field of the ancestors tree node
+//func FindAncSeq will loop through aligncolumns and build a single graph of all of the nodes that belong to the ancestor species after edges are created
+//run PathFinder on the graph for the anc, run seqOfPath, then turn that to a fasta for that node of the tree
+
+//seqOfPath takes in a graph and a path specified by the Node IDs and returns the seq of the path through the graph
+func seqOfPath(g *genomeGraph.GenomeGraph, path []uint32) []dna.Base {
+	var seq []dna.Base
+	var foundInGraph = false
+	for p := 0; p < len(path); p++ {
+		foundInGraph = false
+		for n := 0; n < len(g.Nodes) && !foundInGraph; n++ {
+			if g.Nodes[n].Id == path[p] {
+				foundInGraph = true
+				seq = append(seq, g.Nodes[n].Seq...)
+			} else {
 			}
 		}
-		if found == false {
-			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
+		if !foundInGraph {
+			log.Fatal("path is invalid")
 		}
-		accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
-		//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
-		acc := 100 - accuracy
-		answer[sim[i].Name] = acc
-		total = total + mistakes
 	}
-	accuracy := total / (float64(len(sim)) * float64(len(sim[0].Seq))) * 100.0
-	//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", tot, float64(len(sim)), float64(len(sim[0].Seq)))
-	acc := 100 - accuracy
-	answer[allNodes] = acc
-	return answer
+	return seq
 }
 
-//write assigned sequences at all nodes to a fasta file
-func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
-	var fastas []*fasta.Fasta
-	nodes := expandedTree.GetTree(tree)
+//PathFinder takes a graph and returns the most likely path through that graph after checking all possible paths from the first node to the last
+func PathFinder(g *genomeGraph.GenomeGraph) ([]uint32, float32) {
+	var finalPath []uint32
+	var finalProb float32
+	var tempPath = make([]uint32, 0)
 
-	for i := 0; i < len(nodes); i++ {
-		fastas = append(fastas, nodes[i].Fasta)
+	for n := 0; n < len(g.Nodes); n++ {
+		if g.Nodes[n].Id == 0 {
+			finalProb, finalPath = bestPath(&g.Nodes[n], 1, tempPath)
+		}
 	}
-	fasta.Write(outFile, fastas)
+	return finalPath, finalProb
 }
 
-//write assigned sequences at leaf nodes to a fasta file
-func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
-	var leafFastas []*fasta.Fasta
-	nodes := expandedTree.GetLeaves(tree)
+//bestPath is the helper function for PathFinder, and recursively traverses the graph depth first to determine the most likely path from start to finish
+func bestPath(node *genomeGraph.Node, prevProb float32, path []uint32) (prob float32, pathOut []uint32) {
+	var tempProb float32 = 0
+	var finalProb float32
+	var finalPath []uint32
 
-	for i := 0; i < len(nodes); i++ {
-		leafFastas = append(leafFastas, nodes[i].Fasta)
+	path = append(path, node.Id)
+	if len(node.Next) == 0 {
+		return prevProb, path
 	}
-	fasta.Write(leafFile, leafFastas)
-}
-
-//calculate probability of switching from one base to another
-func Prob(a int, b int, t float64) float64 {
-	var p float64
-	switch {
-	case a > 3 || b > 3:
-		p = 0
-	case a == b:
-		p = 1 - t
-	default:
-		p = t / 3
-	}
-	return p
-}
-
-//take in probability of all 4 bases return integer value of the most likely base
-func Yhat(r []float64) int {
-	var n float64
-	n = 0
-	var pos int
-	for p, v := range r {
-		if v > n {
-			n = v
-			pos = p
+	for i := range node.Next {
+		tempProb = node.Next[i].Prob * prevProb
+		currentProb, currentPath := bestPath(node.Next[i].Dest, tempProb, path)
+		if currentProb > finalProb {
+			finalProb = currentProb
+			finalPath = currentPath
 		}
 	}
-	return pos
-}
-
-func allZero(r []float64) bool {
-	for _, v := range r {
-		if v != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-//set up Stored list for each node in the tree with probability of each base
-func SetState(node *expandedTree.ETree, position int) {
-	if node.Left != nil && node.Right != nil {
-		SetState(node.Left, position)
-		SetState(node.Right, position)
-		if allZero(node.Left.Stored) && allZero(node.Right.Stored) {
-			log.Fatal("no Stored values passed to internal node")
-		}
-
-		for i := 0; i < 4; i++ {
-			sum := 0.0
-			for j := 0; j < 4; j++ {
-				for k := 0; k < 4; k++ {
-					sum = sum + Prob(i, j, node.Left.BranchLength)*node.Left.Stored[j]*Prob(i, k, node.Right.BranchLength)*node.Right.Stored[k]
-				}
-			} //branch length (transition probability) times the probability of a base appearing given the context of the lower tree nodes
-			node.Stored[i] = sum
-		}
-	} else if node.Left != nil {
-		SetState(node.Left, position)
-		if node.Left.Stored == nil {
-			log.Fatal("no Stored values passed to internal node, left branch")
-		}
-		for i := 0; i < 4; i++ {
-			sum := 0.0
-			for j := 0; j < 4; j++ {
-				sum = sum + Prob(i, j, node.Left.BranchLength)*node.Left.Stored[j]
-			} //branch length (transition probability) times the probability of a base appearing given the context of the lower tree nodes
-			node.Stored[i] = sum
-		}
-	} else if node.Right != nil {
-		SetState(node.Right, position)
-		if node.Right.Stored == nil {
-			log.Fatal("no Stored values passed to internal node, right branch")
-		}
-		for i := 0; i < 4; i++ {
-			sum := 0.0
-			for k := 0; k < 4; k++ {
-				sum = sum + Prob(i, k, node.Right.BranchLength)*node.Right.Stored[k]
-			}
-			node.Stored[i] = sum
-		}
-	} else if node.Right == nil && node.Left == nil {
-		node.State = 4 // starts as N
-		node.Stored = []float64{0, 0, 0, 0}
-
-		if len(node.Fasta.Seq) <= position {
-			log.Fatal("position specified is out of range of sequence \n")
-		} else if len(node.Fasta.Seq) > position {
-			node.State = int(node.Fasta.Seq[position])
-			for i := 0; i < 4; i++ {
-				if i == node.State {
-					node.Stored[i] = 1
-				} else {
-					node.Stored[i] = 0
-				}
-			}
-		}
-	}
-}
-
-//Bubble up the tree using the memory of the previous nodes
-func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
-	tot := 0.0
-	scrapNew := []float64{0, 0, 0, 0}
-	for i := 0; i < 4; i++ {
-		sum := 0.0
-		for j := 0; j < 4; j++ {
-			for k := 0; k < 4; k++ {
-				if prevNode.Up != nil {
-					if prevNode == node.Left { //scrap is equal to one position of prevNode.Stored (Left or Right)
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Right.Stored[k]
-					} else if prevNode == node.Right {
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Left.Stored[j]
-					}
-				} else if prevNode.Up == nil {
-					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[j]*node.Right.Stored[k]
-				}
-			}
-		}
-		scrapNew[i] = sum
-	}
-	if node.Up != nil {
-		BubbleUp(node.Up, node, scrapNew)
-	} else if node.Up == nil {
-		tot = scrapNew[0] + scrapNew[1] + scrapNew[2] + scrapNew[3]
-		node.Scrap = tot
-	}
-}
-
-//fix each node and return the probabilities for each base at that site
-func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
-	ans := []float64{0, 0, 0, 0}
-
-	for i := 0; i < 4; i++ {
-		scrap := []float64{0, 0, 0, 0} //checking one base at a time each time you call BubbleUp
-		scrap[i] = node.Stored[i]
-		if node.Up != nil {
-			//Bubble up the tree using the memory of the previous node in relation to changing position taking in probabilities of bases
-			//(node will be BubbleUp prevNode and node.Up will be the node being operated on)
-			BubbleUp(node.Up, node, scrap) //node becomes PrevNode and scrap is set to one value of prevNode.Stored in BubbleUp
-			ans[i] = root.Scrap            //root.Stored has previously assigned values (SetInternalState), you want to use whatever is returned by BubbleUp instead
-		} else if node.Up == nil {
-			ans[i] = root.Stored[i]
-		}
-	}
-
-	return ans
-}
-
-//called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree to return most probable base to the Fasta
-func LoopNodes(root *expandedTree.ETree, position int) {
-	internalNodes := expandedTree.GetBranch(root) //does this logic look like it will get leaves as well? We may want to use GetLeaves, which looks like it gets everything
-	SetState(root, position)
-	for k := 0; k < len(internalNodes); k++ {
-		fix := FixFc(root, internalNodes[k])
-		yHat := Yhat(fix)
-		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
-	}
+	return finalProb, finalPath
 }

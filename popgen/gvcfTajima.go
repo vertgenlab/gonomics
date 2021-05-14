@@ -42,7 +42,7 @@ func GVCFCalculateA2(n int) float64 {
 	var answer float64
 
 	for i := 1; i < n; i++ {
-		answer += (1.0 / math.Pow(float64(i), 2))
+		answer += 1.0 / math.Pow(float64(i), 2)
 	}
 	return answer
 }
@@ -52,7 +52,7 @@ func GVCFCalculateA1(n int) float64 {
 	var answer float64
 
 	for i := 1; i < n; i++ {
-		answer += (1.0 / float64(i))
+		answer += 1.0 / float64(i)
 	}
 	return answer
 }
@@ -66,9 +66,10 @@ func CalculatePiTajima(all []*IndividualAllele) float64 {
 			numComparisons++
 		}
 	}
-	return (float64(sumDiffs) / float64(numComparisons))
+	return float64(sumDiffs) / float64(numComparisons)
 }
 
+//CountSegSites returns the number of segregating sites in a slice of IndividualAllele structs.
 func CountSegSites(all []*IndividualAllele) int {
 	var segSites int = 0
 	var found bool = false
@@ -77,7 +78,7 @@ func CountSegSites(all []*IndividualAllele) int {
 		log.Fatalf("Need more than two alleles to count segregating sites\n")
 	}
 
-	for s := 0; s < len(all[0].sites); s++ {
+	for s := range all[0].sites {
 		found = false
 		for i := 0; i < len(all) && found == false; i++ {
 			for j := i + 1; j < len(all) && found == false; j++ {
@@ -109,37 +110,44 @@ func TajimaGVCF(all []*IndividualAllele) float64 {
 
 //TajimaGVCFBedSet is designed to calculate Tajima's D from a
 //gVCF file for variants falling in a particular set of bed regions. Returns one value for the whole set. Limited to SNPs.
-func TajimaGVCFBedSet(b []*bed.Bed, gVCFFile string) float64 {
-	alpha := vcf.GoReadGVcf(gVCFFile)
+func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
+	alpha, _ := vcf.GoReadToChan(VcfFile)
 	var all []*IndividualAllele
 	var j, k int
 	var firstTime bool = true
 	var intervals []interval.Interval
 	intervals = make([]interval.Interval, len(b))
-	for i := 0; i < len(b); i++ {
+	for i := range b {
 		intervals[i] = b[i]
 	}
 	tree := interval.BuildTree(intervals)
-	for i := range alpha.Vcfs {
-		if len(interval.Query(tree, i, "any")) > 0 { //in other words, if the variant overlaps any of the beds
-			if !strings.ContainsAny(i.Alt, "<>") { //gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-				g := vcf.VcfToGvcf(i)
+	for i := range alpha {
+		if len(interval.Query(tree, &i, "any")) > 0 { //in other words, if the variant overlaps any of the beds
+			if !strings.ContainsAny(i.Alt[0], "<>") { //We convert the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 				//DEBUG: fmt.Printf("Len: %v.\n", len(g.Genotypes))
 				if firstTime {
 					firstTime = false
-					all = make([]*IndividualAllele, len(g.Genotypes)*2) //makes the individual list, with one entry for each allele
+					all = make([]*IndividualAllele, len(i.Samples)*2) //makes the individual list, with one entry for each allele
 
-					for k = 0; k < len(all); k++ { //in this loop we initialize all the sites lists
+					for k = range all { //in this loop we initialize all the sites lists
 						currSites := make([][]dna.Base, 0)
 						all[k] = &IndividualAllele{sites: currSites}
 					}
 				}
-				for j = 0; j < len(g.Genotypes); j++ {
-					if g.Genotypes[j].AlleleOne == -1 || g.Genotypes[j].AlleleTwo == -1 { //check that data exists for both alleles
-						log.Fatalf("Tajima's D on gVCFs requires complete alignment blocks.")
+				for j = range i.Samples {
+					if i.Samples[j].AlleleOne == -1 || i.Samples[j].AlleleTwo == -1 { //check that data exists for both alleles
+						log.Fatalf("Tajima's D on VCFs requires complete alignment blocks.")
 					} else {
-						all[2*j].sites = append(all[2*j].sites, g.Seq[g.Genotypes[j].AlleleOne])
-						all[2*j+1].sites = append(all[2*j+1].sites, g.Seq[g.Genotypes[j].AlleleTwo])
+						if i.Samples[j].AlleleOne == 0 {
+							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Ref))
+						} else {
+							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Alt[0])) //TODO: (riley) currently only handles biallelic positions.
+						}
+						if i.Samples[j].AlleleTwo == 0 {
+							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Ref))
+						} else {
+							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Alt[0]))
+						}
 					}
 				}
 			}

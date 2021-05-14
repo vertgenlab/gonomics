@@ -3,8 +3,8 @@ package binaryGiraf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/simpleGraph"
 	"io"
 	"reflect"
 	"testing"
@@ -14,32 +14,32 @@ var nodeSeq []dna.Base = dna.StringToBases("ATGCGATGCG" +
 	"ATGCGATGCGATGCGATGCGATGCGATGCGATGCGATGCGATGCGATGCGATGCG" +
 	"ATGCGATGCGATGCGATGCGATGCGATGCGATGCG") // 100mer of "ATGCG" repeats
 
-func MakeTestGraph() *simpleGraph.SimpleGraph {
-	var n0, n1, n2 simpleGraph.Node
-	var e1, e2 simpleGraph.Edge
+func MakeTestGraph() *genomeGraph.GenomeGraph {
+	var n0, n1, n2 genomeGraph.Node
+	var e1, e2 genomeGraph.Edge
 
-	n1 = simpleGraph.Node{
+	n1 = genomeGraph.Node{
 		Id:   1,
 		Seq:  nodeSeq,
-		Next: []*simpleGraph.Edge{&e1},
+		Next: []genomeGraph.Edge{e1},
 	}
 
-	n2 = simpleGraph.Node{
+	n2 = genomeGraph.Node{
 		Id:   2,
 		Seq:  nodeSeq,
-		Prev: []*simpleGraph.Edge{&e2},
+		Prev: []genomeGraph.Edge{e2},
 	}
 
-	e1 = simpleGraph.Edge{
+	e1 = genomeGraph.Edge{
 		Dest: &n2,
 	}
 
-	e2 = simpleGraph.Edge{
+	e2 = genomeGraph.Edge{
 		Dest: &n1,
 	}
 
-	return &simpleGraph.SimpleGraph{
-		Nodes: []*simpleGraph.Node{&n0, &n1, &n2},
+	return &genomeGraph.GenomeGraph{
+		Nodes: []genomeGraph.Node{n0, n1, n2},
 	}
 }
 

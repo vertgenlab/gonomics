@@ -1,181 +1,149 @@
-//Package axt provides the struct and functions that operate on axt alignment formats.
+// Package axt provides the struct and functions that operate on alignments in Axt format.
 package axt
 
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 	"log"
-	"strconv"
 	"strings"
-	"sync"
 )
 
 // Axt struct: Naming convention is hard here because UCSC website does not
 // match the UCSC Kent source tree.
 type Axt struct {
 	RName      string
-	RStart     int64
-	REnd       int64
+	RStart     int
+	REnd       int
 	QName      string
-	QStart     int64
-	QEnd       int64
+	QStart     int
+	QEnd       int
 	QStrandPos bool // true is positive strand, false is negative strand
-	Score      int64
+	Score      int
 	RSeq       []dna.Base
 	QSeq       []dna.Base
 }
 
-//Read is a function enabling the processing of axt text files into a data structure used by gonomics.
-func Read(filename string) []*Axt {
-	var answer []*Axt
-	var header, rSeq, qSeq, blank string
-	var err, startErr, endErr error
-	var hDone, rDone, qDone, bDone bool
-	var words []string
+// Read takes a filename and returns a slice of all Axt records found in the file.
+func Read(filename string) []Axt {
+	var answer []Axt
+	var curr Axt
+	var done bool
+	var err error
+	var file *fileio.EasyReader
 
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	for header, hDone = fileio.EasyNextRealLine(file); !hDone; header, hDone = fileio.EasyNextRealLine(file) {
-		rSeq, rDone = fileio.EasyNextRealLine(file)
-		qSeq, qDone = fileio.EasyNextRealLine(file)
-		blank, bDone = fileio.EasyNextRealLine(file)
-		if rDone || qDone || bDone {
-			log.Fatalf("Error: lines in %s, must be a multiple of four\n", filename)
-		}
-		if blank != "" {
-			log.Fatalf("Error: every fourth line in %s should be blank\n", filename)
-		}
-
-		words = strings.Split(header, " ")
-		if len(words) != 9 {
-			log.Fatalf("Error: sequences in %s should be the same length\n", header)
-		}
-
-		curr := Axt{}
-		curr.RName = words[1]
-		curr.RStart, startErr = strconv.ParseInt(words[2], 10, 64)
-		curr.REnd, endErr = strconv.ParseInt(words[3], 10, 64)
-		if startErr != nil || endErr != nil {
-			log.Fatalf("Error: trouble parsing reference start and end in %s\n", header)
-		}
-		curr.QName = words[4]
-		curr.QStart, startErr = strconv.ParseInt(words[5], 10, 64)
-		curr.QEnd, endErr = strconv.ParseInt(words[6], 10, 64)
-		if startErr != nil || endErr != nil {
-			log.Fatalf("Error: trouble parsing query start and end in %s\n", header)
-		}
-		switch words[7] {
-		case "+":
-			curr.QStrandPos = true
-		case "-":
-			curr.QStrandPos = false
-		default:
-			log.Fatalf("Error: did not recognize strand in %s\n", header)
-		}
-		curr.Score, err = strconv.ParseInt(words[8], 10, 64)
-		if err != nil {
-			log.Fatalf("Error: trouble parsing the score in %s\n", header)
-		}
-		curr.RSeq = dna.StringToBases(rSeq)
-		curr.QSeq = dna.StringToBases(qSeq)
-
-		answer = append(answer, &curr)
+	file = fileio.EasyOpen(filename)
+	for curr, done = ReadNext(file); !done; curr, done = ReadNext(file) {
+		answer = append(answer, curr)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
-//ReadToChan is a function that takes an EasyReader, which uses type os.File as an input to read axt alignments into an Axt channel.
-func ReadToChan(file *fileio.EasyReader, data chan<- *Axt, wg *sync.WaitGroup) {
-	for curr, done := NextAxt(file); !done; curr, done = NextAxt(file) {
+// ReadToChan takes a filename and a channel.  The function will read all remaining Axt records
+// from the open file into the channel.  The function will then close the file and close the channel.
+func ReadToChan(filename string, data chan<- Axt) {
+	var file *fileio.EasyReader
+	var curr Axt
+	var done bool
+	var err error
+
+	file = fileio.EasyOpen(filename)
+	for curr, done = ReadNext(file); !done; curr, done = ReadNext(file) {
 		data <- curr
 	}
-	file.Close()
-	wg.Done()
+	err = file.Close()
+	exception.PanicOnErr(err)
+	close(data)
 }
 
-func GoReadToChan(filename string) <-chan *Axt {
-	file := fileio.EasyOpen(filename)
-	var wg sync.WaitGroup
-	data := make(chan *Axt)
-	wg.Add(1)
-	go ReadToChan(file, data, &wg)
-
-	go func() {
-		wg.Wait()
-		close(data)
-	}()
-
+// GoReadToChan takes a filename and returns a channel.  GoReadToChan
+// will launch a Go routine to read all the alignments from the file into the channel
+// and then close the channel.
+func GoReadToChan(filename string) <-chan Axt {
+	data := make(chan Axt, 1000)
+	go ReadToChan(filename, data)
 	return data
 }
 
-//NextAxt processes the next Axt alignment in the provided input.
-func NextAxt(reader *fileio.EasyReader) (*Axt, bool) {
+// ReadNext takes an EasyReader and returns the next Axt record as well as a boolean flag
+// indicating if we are done reading the file.  If there
+// is an Axt record left in the file, it will be returned along with "false."  If we are done reading the file
+// a blank Axt record will be returned along with "true."
+func ReadNext(reader *fileio.EasyReader) (Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
+	if hDone {
+		return Axt{}, true
+	}
 	rSeq, rDone := fileio.EasyNextRealLine(reader)
 	qSeq, qDone := fileio.EasyNextRealLine(reader)
 	blank, bDone := fileio.EasyNextRealLine(reader)
 	if blank != "" {
-		log.Fatalf("Error: every fourth line should be blank\n")
+		log.Fatalf("Error: every fourth line in an axt file should be blank\n")
 	}
-	if hDone || rDone || qDone || bDone {
-		return nil, true
+	if rDone || qDone || bDone {
+		log.Fatalf("Error: number of lines in an axt file must be a multiple of four\n")
 	}
-	return axtHelper(header, rSeq, qSeq, blank), false
+	return axtHelper(header, rSeq, qSeq), false
 }
 
-//axtHelper is a helper function to process individual axt alignments.
-func axtHelper(header string, rSeq string, qSeq string, blank string) *Axt {
+// axtHelper is a helper function to process individual axt records.
+func axtHelper(header string, rSeq string, qSeq string) Axt {
 	var words []string = strings.Split(header, " ")
-	if len(words) != 9 || rSeq == "" || qSeq == "" {
-		log.Fatalf("Error: missing fields in header or sequences\n")
+	if len(words) != 9 {
+		log.Fatalf("Error: expecting 9 space-separated fields in the first line of each axt record.  Found:%d in line:\n%s\n", len(words), header)
 	}
-	var answer *Axt = &Axt{
+	if rSeq == "" || qSeq == "" {
+		log.Fatalf("Error: missing reference seq or query seq in axt record:\n%s\n", header)
+	}
+	var answer Axt = Axt{
 		RName:      words[1],
-		RStart:     common.StringToInt64(words[2]),
-		REnd:       common.StringToInt64(words[3]),
+		RStart:     common.StringToInt(words[2]),
+		REnd:       common.StringToInt(words[3]),
 		QName:      words[4],
-		QStart:     common.StringToInt64(words[5]),
-		QEnd:       common.StringToInt64(words[6]),
+		QStart:     common.StringToInt(words[5]),
+		QEnd:       common.StringToInt(words[6]),
 		QStrandPos: common.StringToStrand(words[7]),
-		Score:      common.StringToInt64(words[8]),
+		Score:      common.StringToInt(words[8]),
 		RSeq:       dna.StringToBases(rSeq),
 		QSeq:       dna.StringToBases(qSeq),
 	}
 	return answer
 }
 
-//WriteToFileHandle writes a given axt record to file as well as handling possible errors.
-func WriteToFileHandle(file *fileio.EasyWriter, input *Axt, alnNumber int) {
+// WriteToFileHandle writes a given axt record to a file.  Axt records are numbered in files, so
+// a number must also be given.  These numbers usually start at zero and count up throughout the file.
+func WriteToFileHandle(file io.Writer, input Axt, alnNumber int) {
 	_, err := fmt.Fprintf(file, "%s", ToString(input, alnNumber))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
-//ToString converts an Axt alignment struct into a string.
-func ToString(input *Axt, id int) string {
+// ToString converts an Axt alignment struct into a string.  Axt records are numbered in files, so
+// a number must be provided that will be used as this id.
+func ToString(input Axt, id int) string {
 	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, common.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 }
 
-//Write is a wrapper function that will loop over a slice of axt alignments and writes each record to a file.
-func Write(filename string, data []*Axt) {
-	file := fileio.EasyCreate(filename)
-	defer file.Close()
+// Write is a wrapper function that will loop over a slice of axt alignments and writes each record to a file.
+func Write(filename string, data []Axt) {
+	var file *fileio.EasyWriter
+	var err error
+	var i int
 
-	for i, _ := range data {
+	file = fileio.EasyCreate(filename)
+	for i = range data {
 		WriteToFileHandle(file, data[i], i)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
-//AxtInfo is a pretty print function that will return a string that contains only the header info from axt record without sequences from target and/or query.
-func AxtInfo(input *Axt) string {
-	var text string = ""
-	text = fmt.Sprintf("%s;%d;%d;%s;%d;%d;%t;%d", input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, input.QStrandPos, input.Score)
-	return text
-}
-
-//SwapBoth will preform a simple swap with target and query records contained inside axt alignment.
-func SwapBoth(in *Axt, tLen int64, qLen int64) *Axt {
+// Swap will swap reference and query in the alignment.
+func Swap(in *Axt, tLen int, qLen int) {
 	in.RSeq, in.QSeq = in.QSeq, in.RSeq
 	in.RName, in.QName = in.QName, in.RName
 	if !in.QStrandPos {
@@ -188,10 +156,9 @@ func SwapBoth(in *Axt, tLen int64, qLen int64) *Axt {
 		in.QStart, in.QEnd = in.RStart, in.REnd
 	}
 	in.RSeq, in.QSeq = in.QSeq, in.RSeq
-	return in
 }
 
-//IsAxtFile checks suffix of file name to confirm axt format
+// IsAxtFile returns true of filename ends in .axt or .axt.gz
 func IsAxtFile(filename string) bool {
 	if strings.HasSuffix(filename, ".axt") || strings.HasSuffix(filename, ".axt.gz") {
 		return true

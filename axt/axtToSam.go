@@ -6,22 +6,21 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
-	//"github.com/vertgenlab/gonomics/chromInfo"
 )
 
-//TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment
-//func AxtToSam(axtFmt *Axt, chromMap map[string]*chromInfo.ChromInfo) *sam.SamAln {
-func AxtToSam(axtFmt *Axt) *sam.SamAln {
-	var answer *sam.SamAln = &sam.SamAln{
+// ToSam converts an Axt record into a Sam (sam.SamAln) record
+// TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment
+func ToSam(axtFmt Axt) sam.Sam {
+	var answer sam.Sam = sam.Sam{
 		QName: axtFmt.QName,
 		Flag:  setStrandFlag(axtFmt.QStrandPos),
 		RName: axtFmt.RName,
-		Pos:   axtFmt.RStart,
+		Pos:   uint32(axtFmt.RStart),
 		MapQ:  255, // mapping quality setting to 255 because we are not calculating it
 		Cigar: PairSeqToCigar(axtFmt.RSeq, axtFmt.QSeq),
 		RNext: "*",
 		PNext: 0,
-		TLen:  axtFmt.REnd - axtFmt.RStart, //Could leave at zero or make TLen be the length of alignment, start and end (not sure if i can get target length from an axt)
+		TLen:  int32(axtFmt.REnd - axtFmt.RStart),
 		Seq:   dna.RemoveBase(axtFmt.QSeq, dna.Gap),
 		Qual:  "*",
 		Extra: fmt.Sprintf("AS:i:%d\tXS:i:%d\tXE:i:%d", axtFmt.Score, axtFmt.QStart, axtFmt.QEnd),
@@ -31,11 +30,13 @@ func AxtToSam(axtFmt *Axt) *sam.SamAln {
 	return answer
 }
 
+// PairSeqToCigar takes in two sequences representing an alignment between the two
+// sequences and outputs a slice of cigars describing the input alignment.
 func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	var align []*cigar.Cigar = make([]*cigar.Cigar, 0)
 	curr := &cigar.Cigar{}
-	var i int64
-	for i = 0; i < int64(len(a)); i++ {
+	var i int
+	for i = 0; i < len(a); i++ {
 		switch true {
 		case a[i] != dna.Gap && b[i] != dna.Gap && a[i] == b[i]: //match, bases equal
 			curr = equalMatchCigar(a, b, i)
@@ -60,17 +61,11 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 	return align
 }
 
-/*
-func AddHardClipCigar(align *sam.SamAln, )  {
-	var answer cig []*cigar.Cigar = []*cigar.Cigar{}
-}*/
-
-//outside function checked for matching so we know the first bases coming in are matches
-//index is the current position of axt sequence
-func equalMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+// equalMatchCigar is a helper function for PairSeqToCigar
+func equalMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	match := &cigar.Cigar{Op: '=', RunLength: 1}
-	var i int64
-	for i = index + 1; i < int64(len(a)); i++ {
+	var i int
+	for i = index + 1; i < len(a); i++ {
 		if a[i] == b[i] && a[i] != dna.Gap && b[i] != dna.Gap {
 			match.RunLength++
 		} else {
@@ -80,10 +75,11 @@ func equalMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return match
 }
 
-func diffMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+// diffMatchCigar is a helper function for PairSeqToCigar
+func diffMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	match := &cigar.Cigar{Op: 'X', RunLength: 1}
-	var i int64
-	for i = index + 1; i < int64(len(a)); i++ {
+	var i int
+	for i = index + 1; i < len(a); i++ {
 		if a[i] != b[i] && a[i] != dna.Gap && b[i] != dna.Gap {
 			match.RunLength++
 		} else {
@@ -93,11 +89,12 @@ func diffMatchCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return match
 }
 
-func insertCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+// insertCigar is a helper function for PairSeqToCigar
+func insertCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	insertion := &cigar.Cigar{Op: 'I', RunLength: 1}
-	var i int64
+	var i int
 	//starting loop at +1 since we already checked in the wrapper function above
-	for i = index + 1; i < int64(len(a)); i++ {
+	for i = index + 1; i < len(a); i++ {
 		if a[i] == dna.Gap {
 			insertion.RunLength++
 		} else {
@@ -107,11 +104,12 @@ func insertCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return insertion
 }
 
-func deletionCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
+// deletionCigar is a helper function for PairSeqToCigar
+func deletionCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 	deletion := &cigar.Cigar{Op: 'D', RunLength: 1}
-	var i int64
+	var i int
 	//starting loop at +1 since we already checked in the wrapper function above
-	for i = index + 1; i < int64(len(a)); i++ {
+	for i = index + 1; i < len(a); i++ {
 		if b[i] == dna.Gap {
 			deletion.RunLength++
 		} else {
@@ -121,7 +119,10 @@ func deletionCigar(a []dna.Base, b []dna.Base, index int64) *cigar.Cigar {
 	return deletion
 }
 
-func setStrandFlag(strand bool) int64 {
+// setStrandFlag is a helper function for ToSam which sets
+// the correct bit in the flag based on if we are aligning
+// to the positive or negative strand.
+func setStrandFlag(strand bool) uint16 {
 	if strand {
 		return 0
 	} else {

@@ -39,14 +39,14 @@ func FastqPairToTenXPair(fqPair *PairedEnd, barcodeLength int, umiLength int) *T
 	return &tenXG
 }
 
-//trims fastq bases and quals given a start and end position zero base
+//TrimFastq trims fastq bases and quals given a start and end position zero base
 func TrimFastq(fq *Fastq, start int, end int) *Fastq {
 	fq.Seq = fq.Seq[start:end]
 	fq.Qual = fq.Qual[start:end]
 	return fq
 }
 
-//copies a subset of the given fastq record, at start and and end sites, zero base
+//GetBarcode copies a subset of the given fastq record, at start and and end sites, zero base
 //could be a UMI or 10x barcode
 func GetBarcode(fq *Fastq, start int, end int) []dna.Base {
 	answer := make([]dna.Base, end-start)

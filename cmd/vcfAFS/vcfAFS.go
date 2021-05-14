@@ -3,14 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
 )
 
-func vcfAFS(vcfFile string, outFile string) {
-	g := popgen.GVCFToAFS(vcfFile)
-	f := popgen.AFSToFrequency(g)
+func vcfAfs(vcfFile string, outFile string, unPolarized bool) {
+	g, err := popgen.VcfToAfs(vcfFile, !unPolarized) //VcfToAFS is written in terms of polarized, so this is inverted here.
+	exception.FatalOnErr(err)
+	f := popgen.AfsToFrequency(*g)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 	for i := 0; i < len(f); i++ {
@@ -20,11 +22,13 @@ func vcfAFS(vcfFile string, outFile string) {
 
 func usage() {
 	fmt.Print(
-		"vcfAFS - Returns allele frequency spectrum information in a text file for graphing.\n" +
-			"vcfAFS - vcfFile.vcf outFile.txt\n")
+		"vcfAfs - Returns allele frequency spectrum information in a text file for graphing.\n" +
+			"vcfAfs - vcfFile.vcf outFile.txt\n")
 }
 
 func main() {
+	var unPolarized *bool = flag.Bool("unPolarized", false, "vcfAfs creates polarized derived frequency spectra by default. When true, the cmd returns unpolarized site frequency spectra.")
+
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -37,5 +41,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	vcfAFS(vcfFile, outFile)
+	vcfAfs(vcfFile, outFile, *unPolarized)
 }

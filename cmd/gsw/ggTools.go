@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/simpleGraph"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"os"
@@ -76,7 +76,7 @@ func RunGgTools() {
 			log.Printf("Input vcf detected...\n")
 			if strings.Compare(ggT.TargetFa, "") != 0 {
 				log.Printf("Converting vcf to %s...\n", ggT.FmtOutput)
-				simpleGraph.Write(ggT.Out, vcfToSimpleGraph(inFile, ggT.TargetFa))
+				genomeGraph.Write(ggT.Out, vcfToGenomeGraph(inFile, ggT.TargetFa))
 			} else {
 				ggT.Cmd.Usage()
 				log.Fatalf("Error: Must specify target reference fasta file...\n")
@@ -130,26 +130,25 @@ func chainToAxt(chainFmt string, axtFmt string) {
 
 }*/
 
-func vcfSplitChrNoN(vcfInput string) map[string][]*vcf.Vcf {
+func vcfSplitChrNoN(vcfInput string) map[string][]vcf.Vcf {
 	reader := fileio.EasyOpen(vcfInput)
 	defer reader.Close()
 	vcf.ReadHeader(reader)
-	var data *vcf.Vcf
+	var data vcf.Vcf
 	var done bool
-	chrMap := make(map[string][]*vcf.Vcf)
+	chrMap := make(map[string][]vcf.Vcf)
 	for data, done = vcf.NextVcf(reader); !done; data, done = vcf.NextVcf(reader) {
-		if !strings.Contains(data.Ref, "N") && !strings.Contains(data.Alt, "N") {
+		if !strings.Contains(data.Ref, "N") && !strings.Contains(data.Alt[0], "N") {
 			chrMap[data.Chr] = append(chrMap[data.Chr], data)
 		}
 	}
 	return chrMap
 }
 
-func FaVcfChannels(ref string, vcfInput string) *simpleGraph.SimpleGraph {
+func FaVcfChannels(ref string, vcfInput string) *genomeGraph.GenomeGraph {
 	vcfFilteredMap := vcfSplitChrNoN(vcfInput)
-	faReader := make(chan *fasta.Fasta)
-	go fasta.ReadToChan(ref, faReader)
-	gg := simpleGraph.VariantGraph(faReader, vcfFilteredMap)
+	faReader := fasta.GoReadToChan(ref)
+	gg := genomeGraph.VariantGraph(faReader, vcfFilteredMap)
 	return gg
 }
 

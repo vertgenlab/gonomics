@@ -7,8 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"io"
+	"log"
 	"strings"
 	"sync"
 )
@@ -87,7 +87,7 @@ func GoReadToChan(filename string) (<-chan *Chain, *HeaderComments) {
 }
 
 //GoReadSeqChain will wrap a chain file with target and query fasta seqeunces into the SeqChain struct.
-func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta) *SeqChain {
+func GoReadSeqChain(filename string, target []fasta.Fasta, query []fasta.Fasta) *SeqChain {
 	file := fileio.EasyOpen(filename)
 	ans := make(chan *Chain)
 	var wg sync.WaitGroup
@@ -101,8 +101,8 @@ func GoReadSeqChain(filename string, target []*fasta.Fasta, query []*fasta.Fasta
 
 	return &SeqChain{
 		Chains: ans,
-		TSeq:   fasta.FastaMap(target),
-		QSeq:   fasta.FastaMap(query),
+		TSeq:   fasta.ToMap(target),
+		QSeq:   fasta.ToMap(query),
 	}
 }
 
@@ -119,7 +119,7 @@ func WriteToFile(filename string, chaining <-chan *Chain, comments *HeaderCommen
 	wg.Done()
 }
 
-func WriteToFileHandle(file  io.Writer, rec *Chain) {
+func WriteToFileHandle(file io.Writer, rec *Chain) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", ToString(rec))
 	common.ExitIfError(err)

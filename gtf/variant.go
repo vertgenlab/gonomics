@@ -15,7 +15,7 @@ type vcfEffectPrediction struct {
 	RefId          string // e.g. NC_000023.10, LRG_199, NG_012232.1, NM_004006.2, LRG-199t1, NR_002196.1, NP_003997.1, etc.
 	Gene           string
 	PosStrand      bool
-	NearestCds     *CDS
+	NearestCds     *Cds
 	CdnaPos        int // 1-base
 	AaPos          int // 1-base
 	AaRef          []dna.AminoAcid
@@ -40,11 +40,11 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 // VcfToVariant determines the effects of a variant on the cDNA and amino acid sequence by querying genes in the tree made by GenesToIntervalTree
 // Note that if multiple genes are found to overlap a variant this function will return the variant based on the first queried gene and throw an error
 // All bases in fasta record must be uppercase
-func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
+func VcfToVariant(v vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
 	var answer *vcfEffectPrediction
 	var err error
 
-	overlappingGenes := interval.Query(tree, v, "any")
+	overlappingGenes := interval.Query(tree, &v, "any")
 
 	if len(overlappingGenes) > 1 {
 		err = errors.New(fmt.Sprintf("Variant overlaps with multiple genes. Mutation will be based on first gene."))
@@ -55,15 +55,15 @@ func VcfToVariant(v *vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[st
 		annotatingGene = overlappingGenes[0].(*Gene)
 		answer = vcfToVariant(v, annotatingGene, seq, allTranscripts)
 	} else {
-		answer = &vcfEffectPrediction{Vcf: *v}
+		answer = &vcfEffectPrediction{Vcf: v}
 	}
 	return answer, err
 }
 
 // vcfToVariant is a helper function that annotates the Variant struct with information from the Vcf and Gtf input
-func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscripts bool) *vcfEffectPrediction {
+func vcfToVariant(v vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscripts bool) *vcfEffectPrediction {
 	answer := new(vcfEffectPrediction)
-	answer.Vcf = *v
+	answer.Vcf = v
 	answer.RefId = gene.Transcripts[0].TranscriptID
 	answer.Gene = gene.GeneID
 	answer.PosStrand = gene.Transcripts[0].Strand
@@ -77,7 +77,7 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 		var prev *vcfEffectPrediction = answer
 		for i := 1; i < len(gene.Transcripts); i++ {
 			additionalTranscript := new(vcfEffectPrediction)
-			additionalTranscript.Vcf = *v
+			additionalTranscript.Vcf = v
 			additionalTranscript.RefId = gene.Transcripts[i].TranscriptID
 			additionalTranscript.Gene = gene.GeneID
 			additionalTranscript.PosStrand = gene.Transcripts[i].Strand
@@ -94,8 +94,8 @@ func vcfToVariant(v *vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscri
 	return answer
 }
 
-// vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the CDS nearest to the vcf
-func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
+// vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the Cds nearest to the vcf
+func vcfCdsIntersect(v vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
 	var cdsPos int
 	var exon *Exon
 	//TODO: this code may be able to be compressed
@@ -106,7 +106,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCds = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) <= exon.Cds.End { // variant is before end of this exon
-				if int(v.Pos) < exon.Cds.Start { // Variant is NOT in CDS
+				if int(v.Pos) < exon.Cds.Start { // Variant is NOT in Cds
 					if exon.Cds.Prev == nil || exon.Cds.Start-int(v.Pos) < int(v.Pos)-gene.Transcripts[transcriptPosInSlice].Exons[i-1].Cds.Start {
 						answer.NearestCds = exon.Cds
 					} else {
@@ -126,7 +126,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 				cdsPos += exon.Cds.End - exon.Cds.Start + 1
 				answer.NearestCds = exon.Cds // Store most recent exon and move on // Catches variants past the last exon
 			} else if exon.Cds != nil && int(v.Pos) >= exon.Cds.Start { // variant is before end of this exon
-				if int(v.Pos) > exon.Cds.End { // Variant is NOT in CDS
+				if int(v.Pos) > exon.Cds.End { // Variant is NOT in Cds
 					if exon.Cds.Next == nil || int(v.Pos)-exon.Cds.End < gene.Transcripts[transcriptPosInSlice].Exons[len(gene.Transcripts[transcriptPosInSlice].Exons)-1-i+1].Cds.Start-int(v.Pos) {
 						answer.NearestCds = exon.Cds
 					} else {
@@ -134,7 +134,7 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 					}
 					break
 				}
-				// Variant IS in CDS
+				// Variant IS in Cds
 				cdsPos += exon.Cds.End - int(v.Pos) + 1
 				answer.CdnaPos = cdsPos
 				answer.NearestCds = exon.Cds
@@ -147,11 +147,11 @@ func vcfCdsIntersect(v *vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transc
 // findAAChange annotates the Variant struct with the amino acids changed by a given variant
 func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	ref := dna.StringToBases(variant.Ref)
-	alt := dna.StringToBases(variant.Alt)
+	alt := dna.StringToBases(variant.Alt[0]) //TODO: does not handle polyallelic bases.
 	var refBases = make([]dna.Base, 0)
 	var altBases = make([]dna.Base, 0)
 	var seqPos int = int(variant.Pos) - 1
-	var currCDS *CDS = variant.NearestCds
+	var currCDS *Cds = variant.NearestCds
 	var aaPosOffset int = 0
 	if variant.PosStrand {
 		seqPos -= determineFrame(variant)
@@ -180,7 +180,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 			}
 
 			variant.CdnaPos += duplicateOffset
-			variant.Pos += int64(duplicateOffset)
+			variant.Pos += duplicateOffset
 			seqPos = int(variant.Pos) - 1
 			seqPos -= determineFrame(variant)
 		}
@@ -322,7 +322,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 		}
 
 		refBases = append(refBases, reverse(dna.StringToBases(variant.Ref))...)
-		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt))...)
+		altBases = append(altBases, reverse(dna.StringToBases(variant.Alt[0]))...)
 		seqPos -= len(dna.StringToBases(variant.Ref))
 
 		altCDS := currCDS
@@ -478,25 +478,25 @@ func determineFrame(v *vcfEffectPrediction) int {
 	}
 }
 
-// getCdsDist determines the distance of the variant from the nearest CDS
-// Returns 0 if the variant is inside the CDS
+// getCdsDist determines the distance of the variant from the nearest Cds
+// Returns 0 if the variant is inside the Cds
 func getCdsDist(v *vcfEffectPrediction) int {
 	switch {
-	case int(v.Pos) >= v.NearestCds.Start && int(v.Pos) <= v.NearestCds.End: // Variant is in CDS
+	case int(v.Pos) >= v.NearestCds.Start && int(v.Pos) <= v.NearestCds.End: // Variant is in Cds
 		return 0
 
-	case int(v.Pos) < v.NearestCds.Start: // Variant is before nearest CDS
+	case int(v.Pos) < v.NearestCds.Start: // Variant is before nearest Cds
 		return v.NearestCds.Start - int(v.Pos)
 
 	default:
-		return int(v.Pos) - v.NearestCds.End // Variant is after nearest CDS
+		return int(v.Pos) - v.NearestCds.End // Variant is after nearest Cds
 	}
 }
 
 // isFrameshift returns true if the variant shifts the reading frame
 func isFrameshift(v *vcfEffectPrediction) bool {
 	refBases := dna.StringToBases(v.Ref)
-	altBases := dna.StringToBases(v.Alt)
+	altBases := dna.StringToBases(v.Alt[0]) //TODO: does not handle polyallelic bases.
 
 	start := int(v.Pos)
 	refEnd := start + len(refBases) - 1
@@ -532,7 +532,7 @@ func isNonsense(v *vcfEffectPrediction) bool {
 // isSynonymous returns true if the variant does not change the amino acid sequence
 func isSynonymous(v *vcfEffectPrediction) bool {
 	var answer bool = true
-	if len(v.AaAlt) != len(v.AaRef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt)) {
+	if len(v.AaAlt) != len(v.AaRef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt[0])) {
 		return false
 	} else {
 		for i := 0; i < len(v.AaRef); i++ {

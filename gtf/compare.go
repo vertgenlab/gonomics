@@ -9,7 +9,7 @@ func AllAreEqual(a map[string]*Gene, b map[string]*Gene) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	for k, _ := range b {
+	for k := range b {
 		if _, ok := a[k]; !ok {
 			return false
 		} else {
@@ -113,17 +113,17 @@ func EqualExon(a *Exon, b *Exon) bool {
 	return true
 }
 
-//EqualGene returns true if two input FiveUTR structs contain the same information, false otherwise.
-func EqualFiveUtr(a *FiveUTR, b *FiveUTR) bool {
+//EqualGene returns true if two input FiveUtr structs contain the same information, false otherwise.
+func EqualFiveUtr(a *FiveUtr, b *FiveUtr) bool {
 	return a.Start == b.Start && a.End == b.End && a.Score == b.Score
 }
 
-//EqualGene returns true if two input CDS structs contain the same information, false otherwise.
-func EqualCds(a *CDS, b *CDS) bool {
+//EqualGene returns true if two input Cds structs contain the same information, false otherwise.
+func EqualCds(a *Cds, b *Cds) bool {
 	return a.Start == b.Start && a.End == b.End && a.Score == b.Score && a.Frame == b.Frame
 }
 
-//EqualGene returns true if two input ThreeUTR structs contain the same information, false otherwise.
-func EqualThreeUtr(a *ThreeUTR, b *ThreeUTR) bool {
+//EqualGene returns true if two input ThreeUtr structs contain the same information, false otherwise.
+func EqualThreeUtr(a *ThreeUtr, b *ThreeUtr) bool {
 	return a.Start == b.Start && a.End == b.End && a.Score == b.Score
 }

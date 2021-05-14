@@ -1,14 +1,14 @@
 package popgen
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 	"math"
-	//DEBUG: "log"
 	"strings"
-	//DEBUG"fmt"
 )
 
 /*
@@ -21,23 +21,28 @@ Equations from this thesis that are replicated here are marked.
 const IntegralBound float64 = 1e-12
 
 //k is len(sites)
-type AFS struct {
-	sites []*SegSite
+type Afs struct {
+	Sites []*SegSite
 }
 
+//SegSite is the basic struct for segregating sites, used to construct allele frequency spectra.
 type SegSite struct {
-	i int //individuals with the allele
-	n int //total number of individuals
+	I int //individuals with the allele
+	N int //total number of individuals
 }
 
-//MultiFaToAFS constructs an allele frequency spectrum struct from a multiFa alignment block.
-//TODO: Ask Craig about derived state here.
-func MultiFaToAFS(aln []*fasta.Fasta) AFS {
-	var answer AFS
+//InvertSegSite reverses the polarity of a segregating site.
+func InvertSegSite(s *SegSite) {
+	s.I = s.N - s.I
+}
+
+//MultiFaToAfs constructs an allele frequency spectrum struct from a multiFa alignment block.
+func MultiFaToAfs(aln []fasta.Fasta) Afs {
+	var answer Afs
 	var count int
 	var current dna.Base
 	aln = fasta.SegregatingSites(aln)
-	answer.sites = make([]*SegSite, len(aln[0].Seq))
+	answer.Sites = make([]*SegSite, len(aln[0].Seq))
 	for i := 0; i < len(aln[0].Seq); i++ {
 		count = 0
 		current = aln[0].Seq[i]
@@ -46,137 +51,113 @@ func MultiFaToAFS(aln []*fasta.Fasta) AFS {
 				count++
 			}
 		}
-		answer.sites = append(answer.sites, &SegSite{count, len(aln)})
+		answer.Sites = append(answer.Sites, &SegSite{count, len(aln)})
 	}
 	return answer
 }
 
-//GvcfToAFS reads in a Gvcf file, parses the genotype information, and constructs an AFS struct.
-//TODO: This function will change when we update the gVCF stuff.
-func GVCFToAFS(filename string) AFS {
-	var answer AFS
-	answer.sites = make([]*SegSite, 0)
-	alpha := vcf.GoReadGVcf(filename)
+//VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
+//Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
+func VcfToAfs(filename string, polarized bool) (*Afs, error) {
+	var answer Afs
+	answer.Sites = make([]*SegSite, 0)
+	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
 	var j int
-	for i := range alpha.Vcfs {
-		currentSeg = &SegSite{i: 0, n: 0}
+	for i := range alpha {
+		currentSeg = &SegSite{I: 0, N: 0}
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-		if !strings.ContainsAny(i.Alt, "<>") {
-			g := vcf.VcfToGvcf(i)
-			for j = 0; j < len(g.Genotypes); j++ {
-				if g.Genotypes[j].AlleleOne != -1 && g.Genotypes[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
-					currentSeg.n = currentSeg.n + 2
-					if g.Genotypes[j].AlleleOne > 0 {
-						currentSeg.i++
+		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
+			for j = 0; j < len(i.Samples); j++ {
+				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
+					currentSeg.N = currentSeg.N + 2
+					if i.Samples[j].AlleleOne > 0 {
+						currentSeg.I++
 					}
-					if g.Genotypes[j].AlleleTwo > 0 {
-						currentSeg.i++
+					if i.Samples[j].AlleleTwo > 0 {
+						currentSeg.I++
 					}
 				}
 			}
-			if currentSeg.n != 0 { //catches variants where there is no data from the samples (can happen when filtering columns)
-				answer.sites = append(answer.sites, currentSeg)
+
+			if currentSeg.N == 0 {
+				return nil, fmt.Errorf("Error in VcfToAFS: variant had no sample data.")
 			}
+			if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
+				return nil, fmt.Errorf("Error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1.")
+			}
+			if polarized && vcf.HasAncestor(i) {
+				if vcf.IsAltAncestor(i) {
+					InvertSegSite(currentSeg)
+				} else if !vcf.IsRefAncestor(i) {
+					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
+				}
+			}
+			if polarized && !vcf.HasAncestor(i) {
+				log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
+			}
+			answer.Sites = append(answer.Sites, currentSeg)
 		}
 	}
-	return answer
+	return &answer, nil
 }
 
-//AFSToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
-func AFSToFrequency(a AFS) []float64 {
+//AfsToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
+func AfsToFrequency(a Afs) []float64 {
 	var answer []float64
-	answer = make([]float64, len(a.sites))
-	for x := 0; x < len(a.sites); x++ {
-		answer[x] = float64(a.sites[x].i) / float64(a.sites[x].n)
+	answer = make([]float64, len(a.Sites))
+	for x := 0; x < len(a.Sites); x++ {
+		answer[x] = float64(a.Sites[x].I) / float64(a.Sites[x].N)
 	}
 	return answer
 }
 
-//AFSStationarity returns the function value from a stationarity distribution with selection parameter alpha from a particular input allele frequency p.
-func AFSStationarity(p float64, alpha float64) float64 {
+//AfsStationarity returns the function value from a stationarity distribution with selection parameter alpha from a particular input allele frequency p.
+func AfsStationarity(p float64, alpha float64) float64 {
 	return (1 - math.Exp(-alpha*(1-p))) * 2 / ((1 - math.Exp(-alpha)) * p * (1 - p))
 }
 
-func DetectionProbability(p float64, n int) float64 {
-	var pNotDetected float64 = numbers.AddLog(numbers.BinomialExpressionLog(n, 0, p), numbers.BinomialExpressionLog(n, n, p))
-	//DEBUG: log.Printf("pNotDetected: %f.", pNotDetected)
-	return numbers.SubtractLog(0, pNotDetected)
-}
-
-func AfsStationarityCorrected(p float64, alpha float64, n int) float64 {
-	//DEBUG: log.Printf("p: %f. n: %d. alpha: %f. Detection: %f. Stationarity: %f.", p, n, alpha, math.Exp(DetectionProbability(p, n)), math.Exp(AFSStationarity(p, alpha)))
-	return numbers.MultiplyLog(DetectionProbability(p, n), AFSStationarity(p, alpha))
-}
-
-//AFSStationarityClosure returns a func(float64)float64 for a stationarity distribution with a fixed alpha value for subsequent integration.
-func AFSStationarityClosure(alpha float64) func(float64) float64 {
+//AfsStationarityClosure returns a func(float64)float64 for a stationarity distribution with a fixed alpha value for subsequent integration.
+func AfsStationarityClosure(alpha float64) func(float64) float64 {
 	return func(p float64) float64 {
-		return AFSStationarity(p, alpha)
+		return AfsStationarity(p, alpha)
 	}
 }
 
-func AfsSampleClosure(n int, k int, alpha float64) func(float64) float64 {
-	return func(p float64) float64 {
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialExpressionLog(n, k, p))
-	}
-}
-
-func FIntegralComponent(n int, k int, alpha float64) func(float64) float64 {
+//FIntegralComponent is a helper function of AfsSampleDensity and represents the component within the integral.
+func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
+	var binomCoeff float64 = binomMap[n][k]
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
-		logPart := math.Log((1-math.Exp(-alpha*(1.0-p))) * 2 / (1-math.Exp(-alpha)))
-		//log.Printf("Expression: %v. LogPart: %v.", expression, logPart)
-		return numbers.MultiplyLog(expression, logPart)
+		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
+		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
 	}
 }
 
-//AFSSampleClosure returns a func(float64)float64 for integration based on a stationarity distribution with a fixed alpha selection parameter, sampled with n alleles with k occurances.
-func AFSSampleClosureOld(n int, k int, alpha float64, binomMap [][]float64) func(float64) float64 {
-	return func(p float64) float64 {
-		//DEBUG: fmt.Println(binomMap)
-		//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(p, alpha), numbers.BinomialDist(n, k, p))
-		return numbers.MultiplyLog(math.Log(AFSStationarity(p, alpha)), numbers.BinomialDistLogSlice(n, k, p, binomMap))
-	}
-}
-
-func AFSSampleDensity(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	//DEBUG: log.Printf("n: %d. k: %d. alpha: %v.", n, k, alpha)
-	f := FIntegralComponent(n, k, alpha)
-	//log.Printf("f(0): %f. f(0.25): %f. f(0.5): %f. f(1): %f.", f(0.0), f(0.25), f(0.5), f(1))
-	//log.Fatal()
-	//constantComponent := numbers.MultiplyLog(binomMap[n][k], math.Log(2 / (1-math.Exp(-alpha))))
-	constantComponent := binomMap[n][k]
-	return numbers.MultiplyLog(constantComponent, numbers.AdaptiveSimpsonsLog(f, 0.0, 1.0, 1e-8, 100))
-}
-
-//AFSSAmpleDensity returns the integral of AFSSampleClosure between 0 and 1.
-func AFSSampleDensityOld(n int, k int, alpha float64, binomMap [][]float64) float64 {
-	f := AFSSampleClosureOld(n, k, alpha, binomMap)
-	//DEBUG prints
-	//fmt.Printf("f(0.1)=%e\n", f(0.1))
-	//fmt.Printf("AFS: %e.\tBinomial:%e\n", AFSStationarity(0.1, alpha), numbers.BinomialDist(n, k, 0.1))
-	//fmt.Printf("N: %v. K: %v. Alpha: %f.\n", n, k, alpha)
-	//n choose k * Definiteintegral(p(1-p secrition)stationaritydensity)
-	return numbers.LogIntegrateIterative(f, 0.000001, 0.9999999, 20, 10e-8)
+//AfsSampleDensity (also referred to as the F function) is the product of the stationarity and binomial distributions integrated over p, the allele frequency.
+func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integralError float64) float64 {
+	var switchPoint float64 = float64(k) / float64(n)
+	f := FIntegralComponent(n, k, alpha, binomMap)
+	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
+	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
-func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64) float64 {
-	var denominator float64 = math.Inf(-1)//denominator begins at -Inf when in log space
+func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float64, integralError float64) float64 {
+	var denominator float64 = math.Inf(-1) //denominator begins at -Inf when in log space
 	// j loops over all possible values of i
 	for j := 1; j < n; j++ {
-		denominator = numbers.AddLog(denominator, AFSSampleDensity(n, j, alpha, binomMap))
+		denominator = numbers.AddLog(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
 	}
-	return numbers.DivideLog(AFSSampleDensity(n, i, alpha, binomMap), denominator)
+	return numbers.DivideLog(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
-func AFSLikelihood(afs AFS, alpha []float64, binomMap [][]float64) float64 {
+func AFSLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError float64) float64 {
 	var answer float64 = 0.0
 	// loop over all segregating sites
-	for j := 0; j < len(afs.sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.sites[j].i, afs.sites[j].n, alpha[j], binomMap))
+	for j := range afs.Sites {
+		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
 	}
 	return answer
 }

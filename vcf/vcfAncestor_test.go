@@ -14,7 +14,7 @@ func TestVcfQueryAncestor(t *testing.T) {
 	var input []dna.Base
 	var i int = 0
 	for v := range reader {
-		input = VcfQueryAncestor(v)
+		input = QueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
 			t.Errorf("Error in TestVcfQueryAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
 		}
@@ -30,8 +30,8 @@ func TestVcfAppendAncestor(t *testing.T) {
 
 	for v := range reader {
 		allele[0] = AncestorAlleles[i]
-		VcfAppendAncestor(v, allele)
-		input = VcfQueryAncestor(v)
+		v = AppendAncestor(v, allele)
+		input = QueryAncestor(v)
 		if input[0] != AncestorAlleles[i] {
 			t.Errorf("Error in TestVcfAppendAncestor. Input: %s. Expected: %s.", dna.BaseToString(input[0]), dna.BaseToString(AncestorAlleles[i]))
 		}
@@ -44,7 +44,7 @@ func TestVcfAppendAncestor(t *testing.T) {
 func TestAncestorFlagToHeader(t *testing.T) {
 	_, header := GoReadToChan("testdata/Ancestor_No_Annotation.vcf")
 	before := len(header.Text)
-	AncestorFlagToHeader(header)
+	header = AncestorFlagToHeader(header)
 	after := len(header.Text)
 	//DEBUG: PrintHeader(header)
 	if after-before != 1 {
@@ -54,7 +54,7 @@ func TestAncestorFlagToHeader(t *testing.T) {
 	//now we test a file that has no info columns in the header
 	_, header = GoReadToChan("testdata/Ancestor_No_Info.vcf")
 	before = len(header.Text)
-	AncestorFlagToHeader(header)
+	header = AncestorFlagToHeader(header)
 	after = len(header.Text)
 	//DEBUG: PrintHeader(header)
 	if after-before != 1 {
@@ -68,13 +68,30 @@ func TestVcfAnnotateAncestorFromFa(t *testing.T) {
 	reader, _ := GoReadToChan("testdata/TestVcfAnnotateAncestorFromFa.vcf")
 	records := fasta.Read("testdata/testAncestorSequence.fa")
 	var i int = 0
+	var currRef, currAln int = 0, 0
+	var currVcf Vcf
 
 	for v := range reader {
-		VcfAnnotateAncestorFromFa(v, records)
-		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. \n", dna.BasesToString(GVcfQueryAncestor(v)), dna.BasesToString(answers[i]))
-		if dna.CompareSeqsIgnoreCase(VcfQueryAncestor(v), answers[i]) != 0 {
-			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(VcfQueryAncestor(v)))
+		currVcf, currRef, currAln = AnnotateAncestorFromMultiFa(v, records, currRef, currAln)
+		//DEBUG: fmt.Printf("Answer: %s. Expected:%s. RefPos: %v. AlnPos:%v.\n", dna.BasesToString(QueryAncestor(v)), dna.BasesToString(answers[i]), currRef, currAln)
+		if dna.CompareSeqsIgnoreCase(QueryAncestor(currVcf), answers[i]) != 0 {
+			t.Errorf("Error in TestVcfAnnotateAncestorFromFa. Expected: %s. Found: %s.", dna.BasesToString(answers[i]), dna.BasesToString(QueryAncestor(v)))
 		}
 		i++
+	}
+}
+
+var IsRefAnswers []bool = []bool{true, false, false}
+var IsAltAnswers []bool = []bool{false, true, false}
+
+func IsAncestorTests(t *testing.T) {
+	records, _ := Read("testdata/IsAncestor.vcf")
+	for i, v := range records {
+		if IsRefAncestor(v) != IsRefAnswers[i] {
+			t.Errorf("Error in IsRefAncestor. Expected: %t. Found: %t.", IsRefAnswers[i], IsRefAncestor(v))
+		}
+		if IsAltAncestor(v) != IsAltAnswers[i] {
+			t.Errorf("Error in IsAltAncestor. Expected: %t. Found: %t.", IsAltAnswers[i], IsAltAncestor(v))
+		}
 	}
 }

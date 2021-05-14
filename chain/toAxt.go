@@ -4,23 +4,22 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	//"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
 //TODO: Next to figure out a better way to pass in target and query
-func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
+func ToAxt(ch *Chain, target []dna.Base, query []dna.Base) axt.Axt {
 	var tLen, qLen int = ch.TEnd - ch.TStart, ch.QEnd - ch.QStart
 
-	var answer *axt.Axt = &axt.Axt{
+	var answer axt.Axt = axt.Axt{
 		RName:      ch.TName,
-		RStart:     int64(ch.TStart) + 1,
-		REnd:       int64(ch.TEnd),
+		RStart:     ch.TStart + 1,
+		REnd:       ch.TEnd,
 		QName:      ch.QName,
-		QStart:     int64(ch.QStart) + 1,
-		QEnd:       int64(ch.QEnd),
+		QStart:     ch.QStart + 1,
+		QEnd:       ch.QEnd,
 		QStrandPos: ch.QStrand,
-		Score:      int64(ch.Score),
+		Score:      ch.Score,
 		RSeq:       make([]dna.Base, 0, tLen),
 		QSeq:       make([]dna.Base, 0, qLen),
 	}
@@ -56,12 +55,12 @@ func ChainToAxt(ch *Chain, target []dna.Base, query []dna.Base) *axt.Axt {
 		//update idx
 		if each.TBases > 0 {
 			answer.RSeq = append(answer.RSeq, getSequence(targetFa, tIndex, each.TBases)...)
-			answer.QSeq = append(answer.QSeq, dna.CreateAllGaps(int64(each.TBases))...)
+			answer.QSeq = append(answer.QSeq, dna.CreateAllGaps(each.TBases)...)
 			tIndex += each.TBases
 		}
 		if each.QBases > 0 {
 			answer.QSeq = append(answer.QSeq, getSequence(queryFa, qIndex, each.QBases)...)
-			answer.RSeq = append(answer.RSeq, dna.CreateAllGaps(int64(each.QBases))...)
+			answer.RSeq = append(answer.RSeq, dna.CreateAllGaps(each.QBases)...)
 			qIndex += each.QBases
 		}
 	}

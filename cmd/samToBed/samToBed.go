@@ -11,8 +11,8 @@ import (
 	"log"
 )
 
-func samToBed(samFilename string, bedFilename string, paired bool, fragLength int64) {
-	var aln *sam.SamAln = nil
+func samToBed(samFilename string, bedFilename string, paired bool, fragLength int) {
+	var aln sam.Sam
 	var done bool = false
 
 	//sam file to read
@@ -25,7 +25,7 @@ func samToBed(samFilename string, bedFilename string, paired bool, fragLength in
 	bedFile := fileio.EasyCreate(bedFilename)
 	defer bedFile.Close()
 
-	for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			if fragLength != -1 {
 				bed.WriteToFileHandle(bedFile, convert.SamToBedFrag(aln, fragLength, chroms), 4)
@@ -58,7 +58,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var paired *bool = flag.Bool("pairedEnd", false, "Specifies paired end reads")
-	var fragLength *int64 = flag.Int64("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
+	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
 
 	flag.Usage = usage
 	flag.Parse()

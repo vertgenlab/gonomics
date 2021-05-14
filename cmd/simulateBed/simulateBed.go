@@ -4,19 +4,19 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 )
 
-func simulateBed(regionCount int, simLength int64, noGapFile string, outFile string, randSeed bool, setSeed int64) {
+func simulateBed(regionCount int, simLength int, noGapFile string, outFile string, randSeed bool, setSeed int64) {
 	common.RngSeed(randSeed, setSeed)
 	noGap := bed.Read(noGapFile)
 	c := simulate.GoSimulateBed(noGap, regionCount, simLength)
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
-	
+
 	for i := range c {
 		bed.WriteBed(out.File, &i, 5)
 	}
@@ -33,7 +33,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var Length *int64 = flag.Int64("L", 1000, "Specifies the length of simulated regions.")
+	var Length *int = flag.Int("L", 1000, "Specifies the length of simulated regions.")
 	var regionCount *int = flag.Int("N", 10, "Specifies the number of simulated bed regions.")
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")

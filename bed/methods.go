@@ -1,6 +1,9 @@
 package bed
 
-import "github.com/vertgenlab/gonomics/fileio"
+import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"io"
+)
 
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
@@ -19,8 +22,8 @@ func (b *Bed) GetChromEnd() int {
 
 func (b *Bed) UpdateLift(c string, start int, end int) {
 	b.Chrom = c
-	b.ChromStart = int64(start)
-	b.ChromEnd = int64(end)
+	b.ChromStart = start
+	b.ChromEnd = end
 }
 
 type BedSlice []*Bed
@@ -46,9 +49,9 @@ func (b BedSlice) Write(file string) {
 	Write(file, b, 7)
 }
 
-func (b *Bed) WriteToFileHandle(file *fileio.EasyWriter) {
+func (b *Bed) WriteToFileHandle(file io.Writer) {
 	//TODO: write max fields that are non-nil?
-	WriteToFileHandle(file, b, 7)
+	WriteToFileHandle(file, b, b.FieldsInitialized) //adaptive field writing seems most flexible for the method
 }
 
 func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {

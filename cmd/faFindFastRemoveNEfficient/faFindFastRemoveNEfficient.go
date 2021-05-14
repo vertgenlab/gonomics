@@ -30,7 +30,7 @@ func faFindFast(inFile string, outFile string, windowSize int, chromName *string
 	bed.Write(outFile, bedList, 5)
 }
 
-func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name *string) []*bed.Bed {
+func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string) []*bed.Bed {
 	var bedList []*bed.Bed
 	var alignmentStart, referenceCounter int
 	var reachedEnd bool = false
@@ -93,7 +93,7 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 					}
 				}
 				//generate output bed and add to the list
-				current := bed.Bed{Chrom: *name, ChromStart: int64(alignmentCounter), ChromEnd: int64(alignmentCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+				current := bed.Bed{Chrom: *name, ChromStart: alignmentCounter, ChromEnd: alignmentCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
 				bedList = append(bedList, &current)
 				referenceCounter++
 			} else {
@@ -108,8 +108,8 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 				prevNoN = true
 				diff, gapCount, reachedEnd = countWindowDifference(seq1, seq2, alignmentCounter, windowSize)
 				if !reachedEnd {
-					current := bed.Bed{Chrom: *name, ChromStart: int64(referenceCounter),
-						ChromEnd: int64(referenceCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+					current := bed.Bed{Chrom: *name, ChromStart: referenceCounter,
+						ChromEnd: referenceCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
 					bedList = append(bedList, &current)
 					referenceCounter++
 				}
@@ -119,7 +119,7 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 	return bedList
 }
 
-func seqsContainN(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize int) (bool, int, int) {
+func seqsContainN(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) (bool, int, int) {
 	var gapCount int = 0
 	var i int
 	for i = start; i < windowSize && i < len(seq1.Seq); i++ {
@@ -136,7 +136,7 @@ func seqsContainN(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize in
 	return false, i, gapCount
 }
 
-func countWindowDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize int) (int, int, bool) {
+func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) (int, int, bool) {
 	diff := 0
 	baseCount := 0
 	var gapCount int = 0
@@ -184,12 +184,12 @@ func countWindowDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, wind
 	return diff, gapCount, reachedEnd
 }
 
-func countTotalDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta) (int, int) {
+func countTotalDifference(seq1 fasta.Fasta, seq2 fasta.Fasta) (int, int) {
 	var diff, denominator int
 	var seq1Indel bool = false
 	var seq2Indel bool = false
 
-	for i, _ := range seq1.Seq {
+	for i := range seq1.Seq {
 		if seq1.Seq[i] != dna.N || seq2.Seq[i] != dna.N {
 			if seq1.Seq[i] == seq2.Seq[i] {
 				seq1Indel = false

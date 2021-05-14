@@ -17,12 +17,12 @@ func vcfInfo(filename string) {
 	var GaptoA, GaptoC, GaptoT, GaptoG int32
 	var NtoGap, GaptoN int32
 
-	v := vcf.Read(filename)
+	v, _ := vcf.Read(filename)
 	fmt.Printf("len: %d", len(v))
 
 	for _, current := range v {
 		if current.Ref == "A" {
-			switch current.Alt {
+			switch current.Alt[0] {
 			case "N":
 				AtoN++
 			case "T":
@@ -35,7 +35,7 @@ func vcfInfo(filename string) {
 				AtoGap++
 			}
 		} else if current.Ref == "C" {
-			switch current.Alt {
+			switch current.Alt[0] {
 			case "N":
 				CtoN++
 			case "T":
@@ -48,7 +48,7 @@ func vcfInfo(filename string) {
 				CtoGap++
 			}
 		} else if current.Ref == "G" {
-			switch current.Alt {
+			switch current.Alt[0] {
 			case "N":
 				GtoN++
 			case "C":
@@ -61,7 +61,7 @@ func vcfInfo(filename string) {
 				GtoGap++
 			}
 		} else if current.Ref == "T" {
-			switch current.Alt {
+			switch current.Alt[0] {
 			case "N":
 				TtoN++
 			case "A":
@@ -74,7 +74,7 @@ func vcfInfo(filename string) {
 				TtoGap++
 			}
 		} else if current.Ref == "N" {
-			switch current.Alt {
+			switch current.Alt[0] {
 			case "T":
 				NtoT++
 			case "G":
@@ -87,7 +87,7 @@ func vcfInfo(filename string) {
 				NtoGap++
 			}
 		} else if current.Ref == "-" {
-			switch current.Alt {
+			switch current.Alt[0] {
 			case "A":
 				GaptoA++
 			case "T":

@@ -8,8 +8,15 @@ import (
 	"log"
 )
 
-func faFormat(inFile string, outFile string, lineLength int) {
+func faFormat(inFile string, outFile string, lineLength int, trimName bool) {
 	records := fasta.Read(inFile)
+
+	for i := range records {
+		if trimName {
+			records[i] = fasta.TrimName(records[i])
+		}
+
+	}
 
 	file := fileio.EasyCreate(outFile)
 	defer file.Close()
@@ -29,6 +36,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var lineLength *int = flag.Int("lineLength", 50, "wrap sequence lines after this many characters")
+	var trimName *bool = flag.Bool("trimName", false, "if a fasta name contains spaces, retains only the first space delimited field")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -41,5 +49,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFormat(inFile, outFile, *lineLength)
+	faFormat(inFile, outFile, *lineLength, *trimName)
 }

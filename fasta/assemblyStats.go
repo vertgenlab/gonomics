@@ -40,7 +40,7 @@ func CalculateN50(contigList []int, halfGenome int) int {
 	return -1
 }
 
-func MakeContigList(records []*Fasta, countLowerAsGaps bool) []int {
+func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 	var contigLen int = 0
 	var contig bool = false
 	var contigList []int

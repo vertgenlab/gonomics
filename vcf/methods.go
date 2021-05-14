@@ -3,12 +3,13 @@ package vcf
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
-func (v *Vcf) GetChrom() string {
+func (v Vcf) GetChrom() string {
 	return v.Chr
 }
 
@@ -27,27 +28,27 @@ func (v *Vcf) GetChrom() string {
 // for indels, vcf records the startpos as the base prior to the change
 // to find the region actually being changed we need to check if it is indel
 // and adjust accordingly
-func (v *Vcf) GetChromStart() int {
+func (v Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
-		return int(v.Pos - 1)
+		return v.Pos - 1
 	} else {
-		return int(v.Pos)
+		return v.Pos
 	}
 }
 
-func (v *Vcf) GetChromEnd() int {
+func (v Vcf) GetChromEnd() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
-		return int(v.Pos)
+		return v.Pos
 	} else {
-		return int(v.Pos) + len(refBases) - 1
+		return v.Pos + len(refBases) - 1
 	}
 }
 
 func (v *Vcf) UpdateLift(c string, start int, end int) {
 	v.Chr = c
-	v.Pos = int64(start + 1) //TODO: Is this the best way to handle this???
+	v.Pos = start + 1 //TODO: Is this the best way to handle this???
 }
 
 type VcfSlice []*Vcf
@@ -70,23 +71,32 @@ func (v *VcfSlice) Pop() interface{} {
 }
 
 func (v VcfSlice) Write(file string) {
-	Write(file, v)
+	Write(file, convertToNonPtr(v))
 }
 
-func (v *Vcf) WriteToFileHandle(file *fileio.EasyWriter) {
+//TODO remove this function once interval is updated
+func convertToNonPtr(v []*Vcf) []Vcf {
+	answer := make([]Vcf, len(v))
+	for i := range v {
+		answer[i] = *v[i]
+	}
+	return answer
+}
+
+func (v Vcf) WriteToFileHandle(file io.Writer) {
 	WriteVcf(file, v)
 }
 
 func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
-	var next *Vcf
-	for next == nil && !done {
+	var next Vcf
+	for next.Chr == "" && !done {
 		next, done = NextVcf(file)
 	}
+	*v = next
 	if done {
 		return true
 	}
-	*v = *next
 	return done
 }
 

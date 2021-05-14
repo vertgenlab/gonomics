@@ -13,10 +13,10 @@ import (
 	"log"
 )
 
-func samToWig(samFileName string, reference string, outfile string, paired bool, fragLength int64) {
+func samToWig(samFileName string, reference string, outfile string, paired bool, fragLength int) {
 	log.Printf("Paired: %t\n", paired)
 	log.Printf("fragLength: %d\n", fragLength)
-	if paired && fragLength != int64(-1) {
+	if paired && fragLength != -1 {
 		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
 	}
 
@@ -25,9 +25,9 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	samFile := fileio.EasyOpen(samFileName)
 	defer samFile.Close()
 	var done bool = false
-	//sam.ReadHeader(samFile)
+	sam.ReadHeader(samFile)
 	var outBed []*bed.Bed
-	var aln *sam.SamAln
+	var aln sam.Sam
 
 	//records, err := sam.Read(infile)    old version
 	//common.ExitIfError(err)
@@ -35,25 +35,28 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	var outWig []*wig.Wig
 	var currentBed *bed.Bed
 
-	if fragLength != int64(-1) {
-		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+	if fragLength != -1 {
+		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 			currentBed = convert.SamToBedFrag(aln, fragLength, ref)
-		}
-		if currentBed != nil {
-			outBed = append(outBed, currentBed)
+			//} this bracket shouldn't be here! See Line 49 comment
+			if currentBed != nil {
+				outBed = append(outBed, currentBed)
+			}
 		}
 	} else {
-		for aln, done = sam.NextAlignment(samFile); done != true; aln, done = sam.NextAlignment(samFile) {
+		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 			currentBed = convert.SamToBed(aln)
-		}
-		if currentBed != nil {
-			outBed = append(outBed, currentBed)
+			//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
+			if currentBed != nil {
+				outBed = append(outBed, currentBed)
+			}
 		}
 	}
 
 	outWig = convert.BedReadsToWig(outBed, ref)
 	log.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
+	//}
 }
 
 func usage() {
@@ -69,7 +72,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 3
 	var paired *bool = flag.Bool("paired", false, "Specifies paired end reads")
-	var fragLength *int64 = flag.Int64("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
+	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
 
 	flag.Usage = usage
 

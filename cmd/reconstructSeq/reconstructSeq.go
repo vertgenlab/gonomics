@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
@@ -10,19 +11,21 @@ import (
 )
 
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
-	tree := expandedTree.ReadTree(newickInput, fastaInput)
+	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
+	exception.FatalOnErr(err)
+
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
-	var treeFastas []*fasta.Fasta
+	var treeFastas []fasta.Fasta
 
-	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
+	for i := range leaves[0].Fasta.Seq {
 		reconstruct.LoopNodes(tree, i)
 	}
-	for j := 0; j < len(leaves); j++ {
-		treeFastas = append(treeFastas, leaves[j].Fasta)
+	for j := range leaves {
+		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
-	for k := 0; k < len(branches); k++ {
-		treeFastas = append(treeFastas, branches[k].Fasta)
+	for k := range branches {
+		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
 	fasta.Write(outputFilename, treeFastas)
 }

@@ -10,7 +10,7 @@ import (
 
 //TODO: Merge with countGiraf functions using interfaces???
 // GoCountSamAlleles is a wrapper for CountSamAlleles that manages channel closure.
-func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int64) <-chan *Allele {
+func GoCountSamAlleles(samFilename string, reference []fasta.Fasta, minMapQ int64) <-chan *Allele {
 	answer := make(chan *Allele)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -25,14 +25,14 @@ func GoCountSamAlleles(samFilename string, reference []*fasta.Fasta, minMapQ int
 }
 
 // CountSamAlleles counts the alleles in a sam file aligned to a linear reference (fasta) and sends them to an input channel sending the allele count for each position in the reference covered by the sam file
-func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []*fasta.Fasta, minMapQ int64, wg *sync.WaitGroup) {
+func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []fasta.Fasta, minMapQ int64, wg *sync.WaitGroup) {
 	samChan, _ := sam.GoReadToChan(samFilename)
 	var currAlleles = make(map[Coordinate]*AlleleCount)
 	var runningCount = make([]*Coordinate, 0)
 	var progress int // TODO: Make option to print progress
 
 	fasta.AllToUpper(reference)
-	ref := fasta.FastaMap(reference)
+	ref := fasta.ToMap(reference)
 
 	for read := range samChan {
 		runningCount = sendPassedPositionsSam(answer, read, samFilename, runningCount, currAlleles)
@@ -42,7 +42,7 @@ func CountSamAlleles(answer chan<- *Allele, samFilename string, reference []*fas
 }
 
 // sendPassedPositionsSam sends positions that have been passed in the file
-func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename string, runningCount []*Coordinate, currAlleles map[Coordinate]*AlleleCount) []*Coordinate {
+func sendPassedPositionsSam(answer chan<- *Allele, aln sam.Sam, samFilename string, runningCount []*Coordinate, currAlleles map[Coordinate]*AlleleCount) []*Coordinate {
 	for i := 0; i < len(runningCount); i++ {
 
 		if runningCount[i].Chr != aln.RName {
@@ -57,7 +57,7 @@ func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename 
 			continue
 		}
 
-		if runningCount[i].Pos < (aln.Pos - 1) {
+		if runningCount[i].Pos < int(aln.Pos-1) {
 			answer <- &Allele{samFilename, currAlleles[*runningCount[i]], runningCount[i]}
 			delete(currAlleles, *runningCount[i])
 
@@ -77,28 +77,27 @@ func sendPassedPositionsSam(answer chan<- *Allele, aln *sam.SamAln, samFilename 
 }
 
 // countSamRead adds the bases in a single sam read to the currAlleles map
-func countSamRead(aln *sam.SamAln, currAlleles map[Coordinate]*AlleleCount, runningCount []*Coordinate, ref map[string][]dna.Base, minMapQ int64, progress int) (map[Coordinate]*AlleleCount, []*Coordinate) {
+func countSamRead(aln sam.Sam, currAlleles map[Coordinate]*AlleleCount, runningCount []*Coordinate, ref map[string][]dna.Base, minMapQ int64, progress int) (map[Coordinate]*AlleleCount, []*Coordinate) {
 
 	if aln.Cigar[0].Op == '*' {
 		return currAlleles, runningCount
 	}
 
-	if aln.MapQ < minMapQ {
+	if int64(aln.MapQ) < minMapQ {
 		return currAlleles, runningCount
 	}
 
-	var RefIndex, SeqIndex int64
+	var RefIndex, SeqIndex, OrigRefIndex int
 	var currentSeq []dna.Base
 	var i, j, k int
 	var currentIndel Indel
 	var indelSeq []dna.Base
-	var OrigRefIndex int64
 	var Match bool
 
 	// Count the bases
 	progress++
 	SeqIndex = 0
-	RefIndex = aln.Pos - 1
+	RefIndex = int(aln.Pos - 1)
 
 	for i = 0; i < len(aln.Cigar); i++ {
 		currentSeq = aln.Seq
@@ -262,7 +261,7 @@ func countSamRead(aln *sam.SamAln, currAlleles map[Coordinate]*AlleleCount, runn
 				RefIndex++
 			}
 		} else if aln.Cigar[i].Op != 'H' {
-			SeqIndex = SeqIndex + aln.Cigar[i].RunLength
+			SeqIndex = SeqIndex + int(aln.Cigar[i].RunLength)
 		}
 	}
 	return currAlleles, runningCount

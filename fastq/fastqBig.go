@@ -45,7 +45,7 @@ func ToFastqBig(a *Fastq) *FastqBig {
 
 // ReadFqBig returns a FastqBig struct that is converted to dnaTwoBit format
 // and includes a rainbow offset to perform hash look ups in GSW aligner.
-func ReadFqBig(reader *fileio.SimpleReader) (*FastqBig, bool) {
+func ReadFqBig(reader *fileio.ByteReader) (*FastqBig, bool) {
 	answer := FastqBig{}
 	line, done := fileio.ReadLine(reader)
 	if done {

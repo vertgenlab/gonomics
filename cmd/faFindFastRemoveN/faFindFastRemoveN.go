@@ -27,7 +27,7 @@ func faFindFast(inFile string, outFile string, windowSize int, chromName *string
 	bed.Write(outFile, bedList, 5)
 }
 
-func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name *string) []*bed.Bed {
+func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string) []*bed.Bed {
 
 	var bedList []*bed.Bed
 	var referenceCounter = 0
@@ -46,8 +46,8 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 			if seqsContainN(seq1, seq2, alignmentCounter, windowSize) {
 				referenceCounter++
 			} else if !reachedEnd {
-				current := bed.Bed{Chrom: *name, ChromStart: int64(referenceCounter),
-					ChromEnd: int64(referenceCounter + windowSize), Name: fmt.Sprintf("%d", referenceCounter), Score: int64(diff)}
+				current := bed.Bed{Chrom: *name, ChromStart: referenceCounter,
+					ChromEnd: referenceCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
 				bedList = append(bedList, &current)
 				referenceCounter++
 			}
@@ -56,7 +56,7 @@ func windowDifference(windowSize int, seq1 *fasta.Fasta, seq2 *fasta.Fasta, name
 	return bedList
 }
 
-func seqsContainN(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize int) bool {
+func seqsContainN(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) bool {
 	for i := start; i < windowSize && i < len(seq1.Seq); i++ {
 		if seq1.Seq[i] == dna.N {
 			return true
@@ -67,7 +67,7 @@ func seqsContainN(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize in
 	return false
 }
 
-func countWindowDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, windowSize int) (int, bool) {
+func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) (int, bool) {
 	diff := 0
 	baseCount := 0
 	var seq1Indel bool = false
@@ -111,12 +111,12 @@ func countWindowDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta, start int, wind
 	return diff, reachedEnd
 }
 
-func countTotalDifference(seq1 *fasta.Fasta, seq2 *fasta.Fasta) int {
+func countTotalDifference(seq1 fasta.Fasta, seq2 fasta.Fasta) int {
 	diff := 0
 	var seq1Indel bool = false
 	var seq2Indel bool = false
 
-	for i, _ := range seq1.Seq {
+	for i := range seq1.Seq {
 		if seq1.Seq[i] == seq2.Seq[i] {
 			seq1Indel = false
 			seq2Indel = false

@@ -24,7 +24,7 @@ func targetOverlap(alpha *Chain, beta *bed.Bed) bool {
 	} else {
 		tStart, tEnd = alpha.TStart, alpha.TEnd
 	}
-	if (numbers.MaxInt64(int64(tStart), beta.ChromStart) < numbers.MinInt64(int64(tEnd), beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
+	if (numbers.Max(tStart, beta.ChromStart) < numbers.Min(tEnd, beta.ChromEnd)) && strings.Compare(alpha.TName, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
@@ -38,7 +38,7 @@ func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
 	} else {
 		qStart, qEnd = alpha.QStart, alpha.TEnd
 	}
-	if (numbers.MaxInt64(int64(qStart), beta.ChromStart) < numbers.MinInt64(int64(qEnd), beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
+	if (numbers.Max(qStart, beta.ChromStart) < numbers.Min(qEnd, beta.ChromEnd)) && strings.Compare(alpha.QName, beta.Chrom) == 0 {
 		return true
 	} else {
 		return false
@@ -56,7 +56,7 @@ func ChainToBed(ch *Chain, checkTarget bool) *bed.Bed {
 //helper functions to convert 4 different cases target, positive strand and reverse. query positive strand and reverse
 func convertTargetBed(ch *Chain) *bed.Bed {
 	if ch.TStrand {
-		return &bed.Bed{Chrom: ch.TName, ChromStart: int64(ch.TStart), ChromEnd: int64(ch.TEnd), Name: ch.QName, Score: int64(ch.Score)}
+		return &bed.Bed{Chrom: ch.TName, ChromStart: ch.TStart, ChromEnd: ch.TEnd, Name: ch.QName, Score: ch.Score}
 	} else {
 		return reverseTStrandBed(ch)
 	}
@@ -64,7 +64,7 @@ func convertTargetBed(ch *Chain) *bed.Bed {
 
 func convertQueryBed(ch *Chain) *bed.Bed {
 	if ch.TStrand {
-		return &bed.Bed{Chrom: ch.TName, ChromStart: int64(ch.TStart), ChromEnd: int64(ch.TEnd), Name: ch.QName, Score: int64(ch.Score)}
+		return &bed.Bed{Chrom: ch.TName, ChromStart: ch.TStart, ChromEnd: ch.TEnd, Name: ch.QName, Score: ch.Score}
 	} else {
 		return reverseQStrandBed(ch)
 	}
@@ -76,7 +76,7 @@ func convertQueryBed(ch *Chain) *bed.Bed {
 //still runs the same way i believe
 func reverseTStrandBed(ch *Chain) *bed.Bed {
 	if !ch.TStrand {
-		return &bed.Bed{Chrom: ch.TName, ChromStart: int64(ch.TSize - ch.TEnd), ChromEnd: int64(ch.TSize - ch.TStart), Name: ch.QName, Score: int64(ch.Score)}
+		return &bed.Bed{Chrom: ch.TName, ChromStart: ch.TSize - ch.TEnd, ChromEnd: ch.TSize - ch.TStart, Name: ch.QName, Score: ch.Score}
 	} else {
 		log.Fatalf("Error: Found a target alignment with positive strand, please check input...\n")
 		return nil
@@ -87,7 +87,7 @@ func reverseTStrandBed(ch *Chain) *bed.Bed {
 //However, the more important condition is checked first
 func reverseQStrandBed(ch *Chain) *bed.Bed {
 	if !ch.QStrand {
-		return &bed.Bed{Chrom: ch.QName, ChromStart: int64(ch.QSize - ch.QEnd), ChromEnd: int64(ch.QSize - ch.QStart), Name: ch.TName, Score: int64(ch.Score)}
+		return &bed.Bed{Chrom: ch.QName, ChromStart: ch.QSize - ch.QEnd, ChromEnd: ch.QSize - ch.QStart, Name: ch.TName, Score: ch.Score}
 	} else {
 		log.Fatalf("Error: Found a query alignment with positive strand, please check input...\n")
 		return nil

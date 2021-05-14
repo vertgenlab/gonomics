@@ -2,28 +2,29 @@ package vcf
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"strings"
 	"testing"
 )
 
 func TestFixVcf(t *testing.T) {
 
 	ref := map[string][]dna.Base{
-		"test": []dna.Base{dna.A, dna.C, dna.G, dna.T}}
+		"test": {dna.A, dna.C, dna.G, dna.T}}
 	vcfTest := Vcf{
 		Chr: "test",
 		Pos: 2,
 		Ref: "C",
-		Alt: "-"}
+		Alt: strings.Split("-", ",")}
 
 	correctAnswer := Vcf{
 		Chr: "test",
 		Pos: 1,
 		Ref: "AC",
-		Alt: "A"}
+		Alt: strings.Split("A", ",")}
 
-	FixVcf(&vcfTest, ref)
+	vcfTest = FixVcf(vcfTest, ref)
 
-	if vcfTest != correctAnswer {
+	if !isEqual(vcfTest, correctAnswer) {
 		t.Errorf("ERROR: Problem fixing VCF. Expected %v, got %v", correctAnswer, vcfTest)
 	}
 }

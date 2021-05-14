@@ -100,6 +100,7 @@ func main() {
 
 		output := fileio.EasyCreate(options.Output)
 		writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
+		output.Close()
 	}
 }
 

@@ -3,10 +3,10 @@ package alleles
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strconv"
 	"strings"
 )
 
@@ -37,7 +37,7 @@ type Indel struct {
 // The Coordinate struct encodes the a genomic position on a linear or graph genome. In the case of a graph genome the Chr field corresponds to the node name.
 type Coordinate struct {
 	Chr string // or node
-	Pos int64
+	Pos int
 }
 
 // The Allele struct wraps a genomic location an allele count and a sample name into a single struct for conversion into a VCF record.
@@ -51,9 +51,9 @@ type Allele struct {
 type SampleMap map[Coordinate]*AlleleCount
 
 // AllelesToVcf converts a SampleMap to a VCF
-func AllelesToVcf(input SampleMap) []*vcf.Vcf {
-	var answer []*vcf.Vcf
-	var current *vcf.Vcf
+func AllelesToVcf(input SampleMap) []vcf.Vcf {
+	var answer []vcf.Vcf
+	var current vcf.Vcf
 	var base string
 	var RefCount, RefCountF, RefCountR int32
 	var i int
@@ -96,17 +96,16 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		Sa := make([]string, 1)
 		Sa[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseAF+alleles.BaseAR, alleles.BaseAF, alleles.BaseAR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
 			Ref:    base,
-			Alt:    "A",
+			Alt:    []string{"A"},
 			Qual:   1,
 			Filter: ".",
-			Info:   ".",
-			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Notes:  Sa[0]}
+			Info:   Sa[0],
+			Format: []string{"RefCount,For,Rev:AltCount,For,Rev:Cov"}}
 
 		answer = append(answer, current)
 
@@ -114,17 +113,16 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		Sc := make([]string, 1)
 		Sc[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseCF+alleles.BaseCR, alleles.BaseCF, alleles.BaseCR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
 			Ref:    base,
-			Alt:    "C",
+			Alt:    []string{"C"},
 			Qual:   1,
 			Filter: ".",
-			Info:   ".",
-			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Notes:  Sc[0]}
+			Info:   Sc[0],
+			Format: []string{"RefCount,For,Rev:AltCount,For,Rev:Cov"}}
 
 		answer = append(answer, current)
 
@@ -132,17 +130,16 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		Sg := make([]string, 1)
 		Sg[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseGF+alleles.BaseGR, alleles.BaseGF, alleles.BaseGR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
 			Ref:    base,
-			Alt:    "G",
+			Alt:    []string{"G"},
 			Qual:   1,
 			Filter: ".",
-			Info:   ".",
-			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Notes:  Sg[0]}
+			Info:   Sg[0],
+			Format: []string{"RefCount,For,Rev:AltCount,For,Rev:Cov"}}
 
 		answer = append(answer, current)
 
@@ -150,17 +147,16 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 		St := make([]string, 1)
 		St[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.BaseTF+alleles.BaseTR, alleles.BaseTF, alleles.BaseTR, alleles.Counts)
 
-		current = &vcf.Vcf{
+		current = vcf.Vcf{
 			Chr:    loc.Chr,
 			Pos:    loc.Pos + 1,
 			Id:     ".",
 			Ref:    base,
-			Alt:    "T",
+			Alt:    []string{"T"},
 			Qual:   1,
 			Filter: ".",
-			Info:   ".",
-			Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
-			Notes:  St[0]}
+			Info:   St[0],
+			Format: []string{"RefCount,For,Rev:AltCount,For,Rev:Cov"}}
 
 		answer = append(answer, current)
 
@@ -177,17 +173,16 @@ func AllelesToVcf(input SampleMap) []*vcf.Vcf {
 			Sindel[0] = fmt.Sprintf("%d,%d,%d:%d,%d,%d:%d", RefCount, RefCountF, RefCountR, alleles.Indel[i].CountF+alleles.Indel[i].CountR, alleles.Indel[i].CountF, alleles.Indel[i].CountR, alleles.Counts)
 			Sindels[i] = Sindel
 
-			current = &vcf.Vcf{
+			current = vcf.Vcf{
 				Chr:    loc.Chr,
 				Pos:    loc.Pos,
 				Id:     ".",
 				Ref:    RefSeq[i],
-				Alt:    AltSeq[i],
+				Alt:    []string{AltSeq[i]},
 				Qual:   1,
 				Filter: ".",
-				Info:   ".",
-				Format: "RefCount,For,Rev:AltCount,For,Rev:Cov",
-				Notes:  Sindels[i][0]}
+				Info:   Sindels[i][0],
+				Format: []string{"RefCount,For,Rev:AltCount,For,Rev:Cov"}}
 
 			answer = append(answer, current)
 		}
@@ -213,7 +208,7 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 	var doneReading = false
 	var RefSeq, AltSeq []dna.Base
 	var UknFmt, AltCountString []string
-	var AltCountF, AltCountR, Counts, Pos int64
+	var AltCountF, AltCountR, Counts, Pos int
 	var currentIndel Indel
 
 	file := fileio.EasyOpen(inFilename)
@@ -245,10 +240,10 @@ func ReadVcfToAlleleCounts(inFilename string) SampleMap {
 			AltSeq = dna.StringToBases(words[4])
 			UknFmt = strings.Split(words[9], ":")
 			AltCountString = strings.Split(UknFmt[1], ",")
-			AltCountF, _ = strconv.ParseInt(AltCountString[1], 10, 32)
-			AltCountR, _ = strconv.ParseInt(AltCountString[2], 10, 32)
-			Counts, _ = strconv.ParseInt(UknFmt[2], 10, 32)
-			Pos, _ = strconv.ParseInt(words[1], 10, 64)
+			AltCountF = common.StringToInt(AltCountString[1])
+			AltCountR = common.StringToInt(AltCountString[2])
+			Counts = common.StringToInt(UknFmt[2])
+			Pos = common.StringToInt(words[1])
 
 			// If point mutation
 			if len(RefSeq) == 1 && len(AltSeq) == 1 {

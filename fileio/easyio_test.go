@@ -2,7 +2,7 @@ package fileio
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
 	"testing"
@@ -13,7 +13,7 @@ func writeDnaFile(file *os.File) {
 	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", fakeDna)
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // example using io.Writer
@@ -21,7 +21,7 @@ func writeDnaIo(file io.Writer) {
 	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", fakeDna)
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // example using fileio.EasyWriter
@@ -29,7 +29,7 @@ func writeDnaFileio(file *EasyWriter) {
 	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", fakeDna)
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // used to uncompress the file in the repo
@@ -47,7 +47,7 @@ func copyFile(inputFilename string, outputFilename string) {
 
 	for line, done = EasyNextLine(er); !done; line, done = EasyNextLine(er) {
 		_, err = fmt.Fprintf(ew, "%s\n", line)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 }
 
@@ -126,7 +126,7 @@ func BenchmarkWriteIoGz(b *testing.B) {
 func BenchmarkWriteFile(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		osf, err := os.Create("testdata/testWrite.dna")
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaFile(osf)

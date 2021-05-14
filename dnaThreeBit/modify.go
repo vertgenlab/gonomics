@@ -1,7 +1,5 @@
 package dnaThreeBit
 
-import ()
-
 // Append adds "b" to the end of "fragment."
 // "fragment" can be nil.
 func Append(fragment *ThreeBit, b ThreeBitBase) *ThreeBit { // too confusing to have Append and append (from std lib) in this package?
@@ -36,7 +34,7 @@ func Copy(a *ThreeBit) *ThreeBit {
 	if a == nil {
 		return nil
 	}
-	answer := &ThreeBit{Seq: make([]uint64, a.Len), Len: a.Len}
+	answer := &ThreeBit{Seq: make([]uint64, len(a.Seq)), Len: a.Len}
 	copy(answer.Seq, a.Seq)
 	return answer
 }

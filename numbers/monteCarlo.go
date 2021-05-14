@@ -56,6 +56,7 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 	return answer
 }
 
+//RejectionSampleChooseBin is a helper function of FAstRejectionSampler.
 func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64) float64 {
 	var x, y float64
 	var currBin int
@@ -102,7 +103,8 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 	return -1.0
 }
 
-func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64,float64) {
+//BoundedRejectionSample returns a rejection sample of a function f using a bounding function boundingSampler between a specified left and right bound.
+func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64, float64) {
 	var xSampler, ySampler, y float64
 	for i := 0; i < maxIteration; i++ {
 		xSampler, ySampler = boundingSampler()
@@ -156,6 +158,7 @@ func RandExp() (float64, float64) {
 	return a + umin*q[0], ExpDist(a + umin*q[0])
 }
 
+//ScaledBetaSampler returns an instatiation of RandBeta where the returned density has been scaled by the input variable 'multiplier'.
 func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		answer := RandBeta(a, b)
@@ -163,6 +166,7 @@ func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64
 	}
 }
 
+//BetaSampler returns an instantiation of RandBeta for a specified a and b parameter.
 func BetaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		answer := RandBeta(a, b)
@@ -225,6 +229,7 @@ func RandGamma(a float64, b float64) (float64, float64) {
 	return b * d * v, GammaDist(a, b, b*d*v)
 }
 
+//GammaSampler returns an instantiation of RandGamma for specified a and b parameters.
 func GammaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		return RandGamma(a, b)

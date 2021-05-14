@@ -1,7 +1,7 @@
 package gtf
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
+	"io"
 )
 
 func (g *Gene) GetChrom() string {
@@ -16,6 +16,6 @@ func (g *Gene) GetChromEnd() int {
 	return g.Transcripts[0].End
 }
 
-func (g *Gene) WriteToFileHandle(file *fileio.EasyWriter) {
+func (g *Gene) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, g)
 }

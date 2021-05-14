@@ -7,13 +7,13 @@ import (
 )
 
 func TestVcfToVariant(t *testing.T) {
-	var inVcf *vcf.Vcf = new(vcf.Vcf)
+	var inVcf vcf.Vcf
 	var inGtf map[string]*Gene = make(map[string]*Gene)
 	var inSeq map[string][]dna.Base = make(map[string][]dna.Base)
 
 	inVcf.Chr = "DummyChr"
 	inVcf.Ref = "A"
-	inVcf.Alt = "C"
+	inVcf.Alt = []string{"C"}
 	inVcf.Pos = 2
 
 	inSeq["DummyChr"] = []dna.Base{dna.C, dna.A, dna.T}
@@ -30,7 +30,7 @@ func TestVcfToVariant(t *testing.T) {
 			Exons: []*Exon{{
 				Start: 1,
 				End:   3,
-				Cds: &CDS{
+				Cds: &Cds{
 					Start: 1,
 					End:   3,
 					Frame: 0,
