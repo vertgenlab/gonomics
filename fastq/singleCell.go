@@ -8,8 +8,8 @@ import (
 
 type SingleCellPair struct {
 	Reads PairedEnd
-	Bx  []dna.Base
-	Umi []dna.Base
+	Bx    []dna.Base
+	Umi   []dna.Base
 }
 
 func ReadToChanSingleCellPair(fileOne string, fileTwo string, barcodeLength int, umiLength int, tenXg chan<- SingleCellPair) {
