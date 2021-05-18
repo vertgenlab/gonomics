@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []*SeedDev {
+func extendToTheRight(node *Node, read fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []*SeedDev {
 	const basesPerInt int = 32
 	var nodeOffset int = nodeStart % basesPerInt
 	var readOffset int = 31 - ((readStart - nodeOffset + 31) % 32)
@@ -48,7 +48,7 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, readStart int, nodeStart
 	return answer
 }
 
-func extendToTheLeft(node *Node, read *fastq.FastqBig, currPart *SeedDev) []*SeedDev {
+func extendToTheLeft(node *Node, read fastq.FastqBig, currPart *SeedDev) []*SeedDev {
 	var answer, prevParts []*SeedDev
 	var i int
 	var readBase dna.Base
@@ -74,7 +74,7 @@ func extendToTheLeft(node *Node, read *fastq.FastqBig, currPart *SeedDev) []*See
 	}
 }
 
-func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) []*SeedDev {
+func extendToTheLeftHelper(node *Node, read fastq.FastqBig, nextPart *SeedDev) []*SeedDev {
 	const basesPerInt int = 32
 	var nodePos int = node.SeqTwoBit.Len - 1
 	var readPos int = int(nextPart.QueryStart) - 1
@@ -121,7 +121,7 @@ func extendToTheLeftHelper(node *Node, read *fastq.FastqBig, nextPart *SeedDev) 
 	return answer
 }
 
-func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []Node, read fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
 	const basesPerInt int64 = 32
 	var currHits []uint64
 	var codedNodeCoord uint64

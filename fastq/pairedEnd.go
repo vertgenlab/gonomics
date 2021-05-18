@@ -12,8 +12,8 @@ import (
 
 //PairedEnd is a struct that contains two paired Fastq structs, marked Fwd and Rev.
 type PairedEnd struct {
-	Fwd *Fastq
-	Rev *Fastq
+	Fwd Fastq
+	Rev Fastq
 }
 
 //PairedEndBig is a struct that contains two paired FastqBig structs, marked Fwd and Rev.
@@ -68,7 +68,7 @@ func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (Pair
 	} else if done1 || done2 {
 		return PairedEnd{}, true
 	}
-	curr := PairedEnd{Fwd: nil, Rev: nil}
+	curr := PairedEnd{Fwd: Fastq{}, Rev: Fastq{}}
 	curr.Fwd, curr.Rev = fqOne, fqTwo
 	curr.Fwd.Name, curr.Rev.Name = strings.Split(fqOne.Name, " ")[0], strings.Split(fqTwo.Name, " ")[0]
 	return curr, false
@@ -133,11 +133,11 @@ func GoWriteFqPair(readOne string, readTwo string, data <-chan PairedEnd) {
 // a channel, or a struct with pointers inside, memory allocated will be placed on the heap hindering performance.
 func ReadFqBigPair(readerOne *fileio.ByteReader, readerTwo *fileio.ByteReader) (PairedEndBig, bool) {
 	var doneOne, doneTwo bool
-	var fqOne, fqTwo *FastqBig = &FastqBig{}, &FastqBig{}
+	var fqOne, fqTwo FastqBig = FastqBig{}, FastqBig{}
 	fqOne, doneOne = ReadFqBig(readerOne)
 	fqTwo, doneTwo = ReadFqBig(readerTwo)
 	if !doneOne && !doneTwo {
-		return PairedEndBig{Fwd: *fqOne, Rev: *fqTwo}, false
+		return PairedEndBig{Fwd: fqOne, Rev: fqTwo}, false
 	} else if doneOne && doneTwo {
 		return PairedEndBig{}, true
 	} else {
