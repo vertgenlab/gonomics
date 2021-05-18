@@ -8,21 +8,21 @@ import (
 )
 
 var FastqFormatTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedOutFile string
-	R1InFile  string
-	R2InFile  string
-	R1OutFile string
-	R2OutFile string
+	InFile            string
+	OutFile           string
+	ExpectedOutFile   string
+	R1InFile          string
+	R2InFile          string
+	R1OutFile         string
+	R2OutFile         string
 	ExpectedR1OutFile string
 	ExpectedR2OutFile string
-	PairedEnd bool
-	SingleCell bool
-	BarcodeLength int
-	UmiLength int
+	PairedEnd         bool
+	SingleCell        bool
+	BarcodeLength     int
+	UmiLength         int
 }{
-	{"","","","testdata/TestR1.fastq", "testdata/TestR2.fastq", "tmpR1.fastq", "tmpR2.fastq", "testdata/ExpectedR1.fastq", "testdata/ExpectedR2.fastq", true, true, 16, 12},
+	{"", "", "", "testdata/TestR1.fastq", "testdata/TestR2.fastq", "tmpR1.fastq", "tmpR2.fastq", "testdata/ExpectedR1.fastq", "testdata/ExpectedR2.fastq", true, true, 16, 12},
 }
 
 func TestFastqFormat(t *testing.T) {
@@ -30,16 +30,16 @@ func TestFastqFormat(t *testing.T) {
 	var s Settings
 	for _, v := range FastqFormatTests {
 		s = Settings{
-			InFile: s.InFile,
-			OutFile: s.OutFile,
-			R1InFile:  v.R1InFile,
-			R2InFile:  v.R2InFile,
-			R1OutFile: v.R1OutFile,
-			R2OutFile: v.R2OutFile,
-			PairedEnd: v.PairedEnd,
-			SingleCell: v.SingleCell,
+			InFile:        s.InFile,
+			OutFile:       s.OutFile,
+			R1InFile:      v.R1InFile,
+			R2InFile:      v.R2InFile,
+			R1OutFile:     v.R1OutFile,
+			R2OutFile:     v.R2OutFile,
+			PairedEnd:     v.PairedEnd,
+			SingleCell:    v.SingleCell,
 			BarcodeLength: v.BarcodeLength,
-			UmiLength: v.UmiLength,
+			UmiLength:     v.UmiLength,
 		}
 		fastqFormat(s)
 		if v.PairedEnd {
