@@ -13,21 +13,21 @@ import (
 )
 
 type Settings struct {
-	InFile    string
-	OutFile   string
-	R1InFile  string
-	R2InFile  string
-	R1OutFile string
-	R2OutFile string
-	PairedEnd bool
-	SubSet    float64
-	RandSeed  bool
-	SetSeed   int64
-	MinSize   int
-	MaxSize   int
-	CollapseUmi bool
+	InFile        string
+	OutFile       string
+	R1InFile      string
+	R2InFile      string
+	R1OutFile     string
+	R2OutFile     string
+	PairedEnd     bool
+	SubSet        float64
+	RandSeed      bool
+	SetSeed       int64
+	MinSize       int
+	MaxSize       int
+	CollapseUmi   bool
 	BarcodeLength int
-	UmiLength int
+	UmiLength     int
 }
 
 func fastqFilter(s Settings) {
@@ -56,7 +56,7 @@ func fastqFilter(s Settings) {
 			if len(i.Rev.Seq) > s.MaxSize {
 				continue
 			}
-			if s.SubSet < 1{
+			if s.SubSet < 1 {
 				r = rand.Float64()
 				if r > s.SubSet {
 					continue
@@ -116,7 +116,6 @@ func main() {
 	var barcodeLength *int = flag.Int("barcodeLength", 16, "Sets the length of the barcode for single-cell reads.")
 	var umiLength *int = flag.Int("umiLength", 12, "Sets the UMI length for single-cell reads.")
 
-
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -140,21 +139,21 @@ func main() {
 	}
 
 	s := Settings{
-		InFile:    "",
-		OutFile:   "",
-		R1InFile:  "",
-		R2InFile:  "",
-		R1OutFile: "",
-		R2OutFile: "",
-		PairedEnd: *pairedEnd,
-		SubSet:    *subSet,
-		RandSeed:  *randSeed,
-		SetSeed:   *setSeed,
-		MinSize:   *minSize,
-		MaxSize:   *maxSize,
-		CollapseUmi: *collapseUmi,
+		InFile:        "",
+		OutFile:       "",
+		R1InFile:      "",
+		R2InFile:      "",
+		R1OutFile:     "",
+		R2OutFile:     "",
+		PairedEnd:     *pairedEnd,
+		SubSet:        *subSet,
+		RandSeed:      *randSeed,
+		SetSeed:       *setSeed,
+		MinSize:       *minSize,
+		MaxSize:       *maxSize,
+		CollapseUmi:   *collapseUmi,
 		BarcodeLength: *barcodeLength,
-		UmiLength: *umiLength,
+		UmiLength:     *umiLength,
 	}
 
 	if *pairedEnd {
