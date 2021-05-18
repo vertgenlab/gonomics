@@ -15,7 +15,7 @@ var readWriteTests = []struct {
 func TestReadToChan(t *testing.T) {
 	for _, test := range readWriteTests {
 		file := Read(test.filename)
-		reader := GoReadToChan(test.filename)
+		reader, _ := GoReadToChan(test.filename)
 		var index int = 0
 		for each := range reader {
 			if !isEqual(each, file[index]) {

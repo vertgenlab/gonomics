@@ -78,6 +78,10 @@ func EasyPeekReal(file *EasyReader, n int) ([]byte, error) {
 	return PeekReal(file.BuffReader, n)
 }
 
+func EasyReadHeader(file *EasyReader) ([]string, error) {
+	return ReadHeader(file.BuffReader)
+}
+
 // EasyRemove deletes the input file.
 func EasyRemove(filename string) {
 	MustRemove(filename)

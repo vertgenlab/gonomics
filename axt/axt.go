@@ -44,30 +44,40 @@ func Read(filename string) []Axt {
 	return answer
 }
 
-// ReadToChan takes a filename and a channel.  The function will read all remaining Axt records
+// ReadToChan takes a filename, a channel for the axt structs, and a channel for
+// the header text.  The function will read all remaining Axt records
 // from the open file into the channel.  The function will then close the file and close the channel.
-func ReadToChan(filename string, data chan<- Axt) {
+func ReadToChan(filename string, data chan<- Axt, header chan<- []string) {
 	var file *fileio.EasyReader
 	var curr Axt
 	var done bool
 	var err error
+	var headerLines []string
 
 	file = fileio.EasyOpen(filename)
+
+	headerLines, err = fileio.EasyReadHeader(file)
+	exception.PanicOnErr(err)
+	header <- headerLines
+	close(header)
+
 	for curr, done = ReadNext(file); !done; curr, done = ReadNext(file) {
 		data <- curr
 	}
+
 	err = file.Close()
 	exception.PanicOnErr(err)
 	close(data)
 }
 
-// GoReadToChan takes a filename and returns a channel.  GoReadToChan
+// GoReadToChan takes a filename and returns a channel and header text.  GoReadToChan
 // will launch a Go routine to read all the alignments from the file into the channel
 // and then close the channel.
-func GoReadToChan(filename string) <-chan Axt {
+func GoReadToChan(filename string) (<-chan Axt, []string) {
 	data := make(chan Axt, 1000)
-	go ReadToChan(filename, data)
-	return data
+	header := make(chan []string)
+	go ReadToChan(filename, data, header)
+	return data, <-header
 }
 
 // ReadNext takes an EasyReader and returns the next Axt record as well as a boolean flag
