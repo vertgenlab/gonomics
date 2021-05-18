@@ -6,12 +6,14 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+//SingleCellPair is a struct that contains single-cell sequencing information, including a pairedEnd read, barcode, and UMI.
 type SingleCellPair struct {
 	Reads PairedEnd
 	Bx    []dna.Base
 	Umi   []dna.Base
 }
 
+//ReadToChanSingleCellPair takes two files, corresponding to R1 and R2, and returns a channel of SingleCellPair structs. It parses the barcode and UMI to user-specified lengths.
 func ReadToChanSingleCellPair(fileOne string, fileTwo string, barcodeLength int, umiLength int, tenXg chan<- SingleCellPair) {
 	fwd, rev := fileio.EasyOpen(fileOne), fileio.EasyOpen(fileTwo)
 	defer fwd.Close()
@@ -23,12 +25,7 @@ func ReadToChanSingleCellPair(fileOne string, fileTwo string, barcodeLength int,
 	close(tenXg)
 }
 
-//10x linked-read library construct are modifications only on forward or read one, read two remains unchanged:
-//1) first 16 bases: 10x barcode labeled either Bx or Rx tags
-//2) Next 6 bases is a 6 base Umi
-//3) finally adaptors and genomic sequence
-//10x scRNA-seq is also a 16bp barcode (for the cell), and then UMIs of various lengths
-//TODO: consider trimming off adapter sequences too
+//PairedEndToSingleCellPair takes a PairedEnd read struct and parses a SingleCellPair with user-specified barcode and Umi lengths.
 func PairedEndToSingleCellPair(fqPair PairedEnd, barcodeLength int, umiLength int) SingleCellPair {
 	sc := SingleCellPair{Reads: fqPair, Bx: GetBarcode(fqPair.Fwd, 0, barcodeLength), Umi: GetBarcode(fqPair.Fwd, barcodeLength, barcodeLength+umiLength)}
 	sc.Reads.Fwd = TrimFastq(fqPair.Fwd, barcodeLength+umiLength, len(fqPair.Fwd.Seq))
