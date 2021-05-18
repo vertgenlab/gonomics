@@ -40,16 +40,16 @@ func usage() {
 }
 
 type Settings struct {
-	InFile string
-	OutFile string
-	R1InFile  string
-	R2InFile  string
-	R1OutFile string
-	R2OutFile string
-	PairedEnd bool
-	SingleCell bool
+	InFile        string
+	OutFile       string
+	R1InFile      string
+	R2InFile      string
+	R1OutFile     string
+	R2OutFile     string
+	PairedEnd     bool
+	SingleCell    bool
 	BarcodeLength int
-	UmiLength int
+	UmiLength     int
 }
 
 func main() {
@@ -71,17 +71,17 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	s := Settings {
-		InFile: "",
-		OutFile: "",
-		R1InFile: "",
-		R2InFile: "",
-		R1OutFile: "",
-		R2OutFile: "",
-		PairedEnd: *pairedEnd,
-		SingleCell: *singleCell,
+	s := Settings{
+		InFile:        "",
+		OutFile:       "",
+		R1InFile:      "",
+		R2InFile:      "",
+		R1OutFile:     "",
+		R2OutFile:     "",
+		PairedEnd:     *pairedEnd,
+		SingleCell:    *singleCell,
 		BarcodeLength: *barcodeLength,
-		UmiLength: *umiLength,
+		UmiLength:     *umiLength,
 	}
 
 	if s.PairedEnd {

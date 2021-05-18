@@ -24,9 +24,9 @@ var FastqFilterTests = []struct {
 	SetSeed        int64
 	MinSize        int
 	MaxSize        int
-	CollapseUmi bool
-	BarcodeLength int
-	UmiLength int
+	CollapseUmi    bool
+	BarcodeLength  int
+	UmiLength      int
 }{
 	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedReadWrite.fastq", "", "", "", "", "", "", false, 1, false, 10, 0, numbers.MaxInt, false, 16, 12},
 	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedHalf.fastq", "", "", "", "", "", "", false, 0.5, false, 10, 0, numbers.MaxInt, false, 16, 12},
@@ -40,21 +40,21 @@ func TestFastqFilter(t *testing.T) {
 	var s Settings
 	for _, v := range FastqFilterTests {
 		s = Settings{
-			InFile:    v.inputFile,
-			OutFile:   v.outputFile,
-			R1InFile:  v.R1InFile,
-			R2InFile:  v.R2InFile,
-			R1OutFile: v.R1OutFile,
-			R2OutFile: v.R2OutFile,
-			PairedEnd: v.PairedEnd,
-			SubSet:    v.SubSet,
-			RandSeed:  v.RandSeed,
-			SetSeed:   v.SetSeed,
-			MinSize:   v.MinSize,
-			MaxSize:   v.MaxSize,
-			CollapseUmi: v.CollapseUmi,
+			InFile:        v.inputFile,
+			OutFile:       v.outputFile,
+			R1InFile:      v.R1InFile,
+			R2InFile:      v.R2InFile,
+			R1OutFile:     v.R1OutFile,
+			R2OutFile:     v.R2OutFile,
+			PairedEnd:     v.PairedEnd,
+			SubSet:        v.SubSet,
+			RandSeed:      v.RandSeed,
+			SetSeed:       v.SetSeed,
+			MinSize:       v.MinSize,
+			MaxSize:       v.MaxSize,
+			CollapseUmi:   v.CollapseUmi,
 			BarcodeLength: v.BarcodeLength,
-			UmiLength: v.UmiLength,
+			UmiLength:     v.UmiLength,
 		}
 		fastqFilter(s)
 		if v.PairedEnd {
