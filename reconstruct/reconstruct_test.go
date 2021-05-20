@@ -39,7 +39,7 @@ func Test_reconstruct(t *testing.T) {
 		}
 		WriteTreeToFasta(tr, "reconOut.fasta")
 		accuracyData, _ = ReconAccuracy("simOut.fasta", "reconOut.fasta", "leavesOnly.fasta", "testdata/genePred.gp", false)
-		//DEBUG://for name, accuracy := range accuracyData {
+		//for name, accuracy := range accuracyData {
 		//	log.Printf("%s %f \n", name, accuracy)
 		//}
 	}
@@ -59,7 +59,7 @@ func TestReconAccuracyByBase(t *testing.T) {
 	//var name string
 	var data []float64
 
-	//DEBUG://for name, data = range baseAccuracy {
+	//for name, data = range baseAccuracy {
 	//	for d := range data {
 	//		if d == 0 {
 	//			log.Printf("%s First Base %f \n", name, data[d])
