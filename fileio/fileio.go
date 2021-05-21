@@ -114,15 +114,12 @@ func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
 // the first non-comment line
 func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	var peek []byte
-	var peekErr, lineErr error
+	var peekErr error
 	var header []string
 	var line string
 	for peek, peekErr = reader.Peek(1); peekErr == nil && peek[0] == '#'; peek, peekErr = reader.Peek(1) {
-		line, lineErr = reader.ReadString('\n')
+		line, _ = NextLine(reader)
 		header = append(header, line)
-		if lineErr != nil {
-			return header, lineErr
-		}
 	}
 
 	if peekErr == io.EOF {
