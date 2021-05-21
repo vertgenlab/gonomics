@@ -51,7 +51,7 @@ func main() {
 
 func filterAxt(input string, output string) {
 	ioWriter := fileio.EasyCreate(output)
-	data := axt.GoReadToChan(input)
+	data, _ := axt.GoReadToChan(input)
 
 	var index int = 0
 	for each := range data {
@@ -81,7 +81,7 @@ func axtQueryGap(record axt.Axt) bool {
 func axtToFa(input string, output string, target string) {
 	ioWriter := fileio.EasyCreate(output)
 	faMap := fasta.ToMap(fasta.Read(target))
-	data := axt.GoReadToChan(input)
+	data, _ := axt.GoReadToChan(input)
 
 	for each := range data {
 		fasta.WriteFasta(ioWriter, axtSeq(each, faMap[each.RName]), 50)
@@ -114,7 +114,7 @@ func QuerySwapAll(input string, output string, targetLen string, queryLen string
 	queryInfo := chromInfo.ReadToMap(queryLen)
 
 	axtWriter := fileio.EasyCreate(output)
-	axtReader := axt.GoReadToChan(input)
+	axtReader, _ := axt.GoReadToChan(input)
 
 	var index int = 0
 	for each := range axtReader {

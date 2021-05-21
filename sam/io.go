@@ -179,8 +179,8 @@ func ReadHeader(file *fileio.EasyReader) Header {
 		answer.Text = append(answer.Text, line)
 	}
 
-	if err != io.EOF {
-		log.Fatalf("Error while reading the sam header\n")
+	if err != nil && err != io.EOF {
+		log.Fatalf("Error: had the following problem while reading the sam header: %s\n", err)
 	}
 
 	answer = ParseHeaderText(answer)

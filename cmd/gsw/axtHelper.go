@@ -33,8 +33,7 @@ func convertAxt(axtFile, format, targetFa, output string) {
 }
 
 func goChannelAxtVcf(axtFile string) <-chan vcf.Vcf {
-	axtChannel := make(chan axt.Axt, 2408)
-	go axt.ReadToChan(axtFile, axtChannel)
+	axtChannel, _ := axt.GoReadToChan(axtFile)
 
 	ans := make(chan vcf.Vcf, 2408)
 	go workThreadAxtVcf(axtChannel, ans)
