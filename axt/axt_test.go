@@ -18,7 +18,6 @@ func TestReadToChan(t *testing.T) {
 		file := Read(test.filename)
 		reader, headerLines := GoReadToChan(test.filename)
 		if len(headerLines) != 15 || headerLines[0] != "# header test start" || headerLines[len(headerLines)-1] != "#   header test end" {
-			t.Errorf("%d %shi\n", len(headerLines), headerLines[0])
 			t.Errorf("Error: header was not as expected\n")
 		}
 		index = 0
