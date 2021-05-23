@@ -13,9 +13,9 @@ var FaFormatTests = []struct {
 	expectedFile string
 	lineLength   int
 	trimName     bool
-	toUpper	bool
-	revComp bool
-	noGaps bool
+	toUpper      bool
+	revComp      bool
+	noGaps       bool
 }{
 	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, true, true, false, true},
 	{"testdata/revCompTest.fa", "testdata/revCompOutput.fa", "testdata/revCompExpected.fa", 50, false, false, true, false},
@@ -25,13 +25,13 @@ func TestFaFormat(t *testing.T) {
 	var err error
 	for _, v := range FaFormatTests {
 		s := Settings{
-			InFile: v.inputFile,
-			OutFile: v.outputFile,
+			InFile:     v.inputFile,
+			OutFile:    v.outputFile,
 			LineLength: v.lineLength,
-			TrimName: v.trimName,
-			ToUpper: v.toUpper,
-			RevComp: v.revComp,
-			NoGaps: v.noGaps,
+			TrimName:   v.trimName,
+			ToUpper:    v.toUpper,
+			RevComp:    v.revComp,
+			NoGaps:     v.noGaps,
 		}
 		faFormat(s)
 		records := fasta.Read(v.outputFile)

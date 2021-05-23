@@ -9,13 +9,13 @@ import (
 )
 
 type Settings struct {
-	InFile string
-	OutFile string
+	InFile     string
+	OutFile    string
 	LineLength int
-	TrimName bool
-	ToUpper bool
-	RevComp bool
-	NoGaps bool
+	TrimName   bool
+	ToUpper    bool
+	RevComp    bool
+	NoGaps     bool
 }
 
 func faFormat(s Settings) {
@@ -73,13 +73,13 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile: inFile,
-		OutFile: outFile,
+		InFile:     inFile,
+		OutFile:    outFile,
 		LineLength: *lineLength,
-		TrimName: *trimName,
-		RevComp: *revComp,
-		ToUpper: *toUpper,
-		NoGaps: *noGaps,
+		TrimName:   *trimName,
+		RevComp:    *revComp,
+		ToUpper:    *toUpper,
+		NoGaps:     *noGaps,
 	}
 
 	faFormat(s)
