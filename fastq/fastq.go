@@ -102,3 +102,8 @@ func ReadFastqs(er *fileio.EasyReader) []Fastq {
 	}
 	return answer
 }
+
+//String converts a fastq struct to a string so it will be automatically formatted when printing with the fmt format.
+func (fq *Fastq) String() string {
+	return fmt.Sprintf("@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
+}

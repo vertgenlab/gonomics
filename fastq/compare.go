@@ -12,14 +12,14 @@ const debugMode = 0 //set debugMode to 1 to enable prints
 func AllAreEqual(alpha []Fastq, beta []Fastq) bool {
 	if len(alpha) != len(beta) {
 		if debugMode > 0 {
-			log.Printf("AllAreEqual is false. len(alpha): %v. len(beta): %v.\n", len(alpha), len(beta))
+			log.Printf("AllAreEqual is false. len(alpha): %d. len(beta): %d.\n", len(alpha), len(beta))
 		}
 		return false
 	}
 	for i := range alpha {
 		if !IsEqual(alpha[i], beta[i]) {
 			if debugMode > 0 {
-				log.Printf("AllAreEqual is false. Entries at index %v do not match.", i)
+				log.Printf("AllAreEqual is false. Entries at index %d do not match.", i)
 			}
 			return false
 		}

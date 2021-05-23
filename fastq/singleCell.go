@@ -16,12 +16,12 @@ type SingleCellPair struct {
 //ReadToChanSingleCellPair takes two files, corresponding to R1 and R2, and returns a channel of SingleCellPair structs. It parses the barcode and UMI to user-specified lengths.
 func ReadToChanSingleCellPair(fileOne string, fileTwo string, barcodeLength int, umiLength int, tenXg chan<- SingleCellPair) {
 	fwd, rev := fileio.EasyOpen(fileOne), fileio.EasyOpen(fileTwo)
-	defer fwd.Close()
-	defer rev.Close()
 
 	for curr, done := NextFastqPair(fwd, rev); !done; curr, done = NextFastqPair(fwd, rev) {
 		tenXg <- PairedEndToSingleCellPair(curr, barcodeLength, umiLength)
 	}
+	fwd.Close()
+	rev.Close()
 	close(tenXg)
 }
 
@@ -36,7 +36,7 @@ func PairedEndToSingleCellPair(fqPair PairedEnd, barcodeLength int, umiLength in
 	return sc
 }
 
-//TrimFastq trims fastq bases and quals given a start and end position zero base
+//TrimFastq trims fastq bases and quals given a start and end position zero base. Left-closed right-open.
 func TrimFastq(fq Fastq, start int, end int) Fastq {
 	fq.Seq = fq.Seq[start:end]
 	fq.Qual = fq.Qual[start:end]
