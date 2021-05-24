@@ -171,9 +171,16 @@ func ReadHeader(file *fileio.EasyReader) Header {
 	var answer Header
 	var done bool
 	var line string
-	for peek, err := file.Peek(1); err == nil && peek[0] == '@' && !done; peek, err = file.Peek(1) {
+	var err error
+	var peek []byte
+
+	for peek, err = file.Peek(1); err == nil && peek[0] == '@' && !done; peek, err = file.Peek(1) {
 		line, done = fileio.EasyNextLine(file)
 		answer.Text = append(answer.Text, line)
+	}
+
+	if err != nil && err != io.EOF {
+		log.Fatalf("Error: had the following problem while reading the sam header: %s\n", err)
 	}
 
 	answer = ParseHeaderText(answer)
