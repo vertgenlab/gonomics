@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-var fq *Fastq = Read("testdata/10x.barcoded_test.fastq")[0]
+var fq Fastq = Read("testdata/10x.barcoded_test.fastq")[0]
 
 func TestQualToString(t *testing.T) {
 	if QualString(fq.Qual) != Uint8QualToString(fq.Qual) {

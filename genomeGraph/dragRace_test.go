@@ -35,7 +35,7 @@ func TestQuickMemPool(t *testing.T) {
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan *fastq.FastqBig, 824)
+	fastqPipe := make(chan fastq.FastqBig, 824)
 
 	log.Printf("Making sam channel...\n")
 	samPipe := make(chan sam.Sam, 824)
