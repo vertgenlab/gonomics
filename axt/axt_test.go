@@ -13,10 +13,14 @@ var readWriteTests = []struct {
 }
 
 func TestReadToChan(t *testing.T) {
+	var index int
 	for _, test := range readWriteTests {
 		file := Read(test.filename)
-		reader := GoReadToChan(test.filename)
-		var index int = 0
+		reader, headerLines := GoReadToChan(test.filename)
+		if len(headerLines) != 15 || headerLines[0] != "# header test start" || headerLines[len(headerLines)-1] != "#   header test end" {
+			t.Errorf("Error: header was not as expected\n")
+		}
+		index = 0
 		for each := range reader {
 			if !isEqual(each, file[index]) {
 				t.Errorf("Error: Read to chan function does not equal standard read funtion\n")
