@@ -47,7 +47,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 	var pAccept, yRand float64
 	yRand = math.Log(rand.Float64())
 	var decision bool
-	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 {//if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
+	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 { //if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
 		return false
 	}
 	pAccept = BayesRatio(old, thetaPrime, s)
@@ -58,6 +58,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 	}
 	return decision
 }
+
 /*
 //HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
 func HastingsRatio(tOld Theta, tNew Theta, sigmaStep float64) float64 {
