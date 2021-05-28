@@ -13,36 +13,37 @@ import (
 )
 
 type Settings struct {
-	InFile    string
-	OutFile   string
-	R1InFile  string
-	R2InFile  string
-	R1OutFile string
-	R2OutFile string
-	PairedEnd bool
-	SubSet    float64
-	RandSeed  bool
-	SetSeed   int64
-	MinSize   int
-	MaxSize   int
+	InFile        string
+	OutFile       string
+	R1InFile      string
+	R2InFile      string
+	R1OutFile     string
+	R2OutFile     string
+	PairedEnd     bool
+	SubSet        float64
+	RandSeed      bool
+	SetSeed       int64
+	MinSize       int
+	MaxSize       int
+	CollapseUmi   bool
+	BarcodeLength int
+	UmiLength     int
 }
 
 func fastqFilter(s Settings) {
 	common.RngSeed(s.RandSeed, s.SetSeed)
 	var r float64
+	var currSc fastq.SingleCellPair
 
 	if s.PairedEnd {
-		ReadCh := make(chan *fastq.PairedEnd, 100000)
-		WriteCh := make(chan *fastq.PairedEnd, 100000)
+		umiMap := make(map[string]int)
+		ReadCh := make(chan fastq.PairedEnd, 100000)
+		WriteCh := make(chan fastq.PairedEnd, 100000)
 		var wg sync.WaitGroup
 		wg.Add(1)
-		go fastq.PairEndToChan(s.R1InFile, s.R2InFile, ReadCh)
+		go fastq.PairedEndToChan(s.R1InFile, s.R2InFile, ReadCh)
 		go fastq.WritingChan(s.R1OutFile, s.R2OutFile, WriteCh, &wg)
 		for i := range ReadCh {
-			r = rand.Float64()
-			if r > s.SubSet {
-				continue
-			}
 			if len(i.Fwd.Seq) < s.MinSize {
 				continue
 			}
@@ -54,6 +55,18 @@ func fastqFilter(s Settings) {
 			}
 			if len(i.Rev.Seq) > s.MaxSize {
 				continue
+			}
+			if s.SubSet < 1 {
+				r = rand.Float64()
+				if r > s.SubSet {
+					continue
+				}
+			}
+			if s.CollapseUmi {
+				currSc = fastq.PairedEndToSingleCellPair(i, s.BarcodeLength, s.UmiLength)
+				if fastq.UmiCollision(currSc, umiMap) {
+					continue
+				}
 			}
 			WriteCh <- i
 		}
@@ -99,6 +112,10 @@ func main() {
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var minSize *int = flag.Int("minSize", 0, "Retain fastq reads above this size.")
 	var maxSize *int = flag.Int("maxSize", numbers.MaxInt, "Retain fastq reads below this size.")
+	var collapseUmi *bool = flag.Bool("collapseUmi", false, "Removes UMI duplicates from single-cell format reads. R1: barcode and UMI. R2: mRNA sequence.")
+	var barcodeLength *int = flag.Int("barcodeLength", 16, "Sets the length of the barcode for single-cell reads.")
+	var umiLength *int = flag.Int("umiLength", 12, "Sets the UMI length for single-cell reads.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -111,6 +128,10 @@ func main() {
 		expectedNumArgs = 4
 	}
 
+	if *collapseUmi && !*pairedEnd {
+		log.Fatalf("To collapse UMIs from single-cell reads, select pairedEnd AND collapseUmi.")
+	}
+
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -118,18 +139,21 @@ func main() {
 	}
 
 	s := Settings{
-		InFile:    "",
-		OutFile:   "",
-		R1InFile:  "",
-		R2InFile:  "",
-		R1OutFile: "",
-		R2OutFile: "",
-		PairedEnd: *pairedEnd,
-		SubSet:    *subSet,
-		RandSeed:  *randSeed,
-		SetSeed:   *setSeed,
-		MinSize:   *minSize,
-		MaxSize:   *maxSize,
+		InFile:        "",
+		OutFile:       "",
+		R1InFile:      "",
+		R2InFile:      "",
+		R1OutFile:     "",
+		R2OutFile:     "",
+		PairedEnd:     *pairedEnd,
+		SubSet:        *subSet,
+		RandSeed:      *randSeed,
+		SetSeed:       *setSeed,
+		MinSize:       *minSize,
+		MaxSize:       *maxSize,
+		CollapseUmi:   *collapseUmi,
+		BarcodeLength: *barcodeLength,
+		UmiLength:     *umiLength,
 	}
 
 	if *pairedEnd {

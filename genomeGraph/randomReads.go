@@ -10,8 +10,8 @@ import (
 	"log"
 )
 
-func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []*fastq.PairedEnd {
-	var answer []*fastq.PairedEnd = make([]*fastq.PairedEnd, numReads)
+func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []fastq.PairedEnd {
+	var answer []fastq.PairedEnd = make([]fastq.PairedEnd, numReads)
 	var seq []dna.Base
 	var path []uint32
 	var nodeIdx, start1, endPos uint32
@@ -25,7 +25,7 @@ func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numCha
 		path, endPos, seq = RandPathFwd(genome, nodeIdx, start1, fragLen)
 
 		if (len(seq) == fragLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLength) == 0) {
-			curr := fastq.PairedEnd{Fwd: &fastq.Fastq{}, Rev: &fastq.Fastq{}}
+			curr := fastq.PairedEnd{Fwd: fastq.Fastq{}, Rev: fastq.Fastq{}}
 			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 1", path[0], start1, path[len(path)-1], start1+uint32(readLength), common.StrandToRune(strand))
 			curr.Fwd.Seq = make([]dna.Base, readLength)
 			copy(curr.Fwd.Seq, seq[:readLength])
@@ -42,7 +42,7 @@ func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numCha
 			}
 			mutate(curr.Fwd.Seq, numChanges)
 			mutate(curr.Rev.Seq, numChanges)
-			answer[i] = &curr
+			answer[i] = curr
 			i++
 		}
 	}
@@ -94,8 +94,8 @@ func randPathFwdHelper(genome *GenomeGraph, nodeIdx uint32, length int, progress
 	}
 }
 
-func RandomReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []*fastq.Fastq {
-	var answer []*fastq.Fastq = make([]*fastq.Fastq, numReads)
+func RandomReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []fastq.Fastq {
+	var answer []fastq.Fastq = make([]fastq.Fastq, numReads)
 	var seq []dna.Base
 	var path []uint32
 	var nodeIdx, pos, endPos uint32
@@ -114,7 +114,7 @@ func RandomReads(genome *GenomeGraph, readLength int, numReads int, numChanges i
 				dna.ReverseComplement(curr.Seq)
 			}
 			mutate(curr.Seq, numChanges)
-			answer[i] = &curr
+			answer[i] = curr
 			i++
 		}
 	}

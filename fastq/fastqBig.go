@@ -17,9 +17,9 @@ type FastqBig struct {
 	RainbowRc []dnaTwoBit.TwoBit
 }
 
-func ReadBigToChan(filename string, output chan<- *FastqBig) {
-	var curr *Fastq
-	var currBig *FastqBig
+func ReadBigToChan(filename string, output chan<- FastqBig) {
+	var curr Fastq
+	var currBig FastqBig
 	var done bool
 	file := fileio.EasyOpen(filename)
 	defer file.Close()
@@ -30,8 +30,8 @@ func ReadBigToChan(filename string, output chan<- *FastqBig) {
 	close(output)
 }
 
-func ToFastqBig(a *Fastq) *FastqBig {
-	answer := &FastqBig{}
+func ToFastqBig(a Fastq) FastqBig {
+	answer := FastqBig{}
 	answer.Name = a.Name
 	answer.Seq = a.Seq
 	answer.SeqRc = make([]dna.Base, len(answer.Seq))
@@ -45,16 +45,16 @@ func ToFastqBig(a *Fastq) *FastqBig {
 
 // ReadFqBig returns a FastqBig struct that is converted to dnaTwoBit format
 // and includes a rainbow offset to perform hash look ups in GSW aligner.
-func ReadFqBig(reader *fileio.ByteReader) (*FastqBig, bool) {
+func ReadFqBig(reader *fileio.ByteReader) (FastqBig, bool) {
 	answer := FastqBig{}
 	line, done := fileio.ReadLine(reader)
 	if done {
-		return nil, true
+		return FastqBig{}, true
 	}
 	answer.Name = strings.Split(string(line.String()[1:]), " ")[0]
 	line, done = fileio.ReadLine(reader)
 	if done {
-		return nil, true
+		return FastqBig{}, true
 	}
 	//set up sequence and reverse comp
 	answer.Seq = dna.ByteSliceToDnaBases(line.Bytes())
@@ -68,15 +68,15 @@ func ReadFqBig(reader *fileio.ByteReader) (*FastqBig, bool) {
 
 	line, done = fileio.ReadLine(reader)
 	if done {
-		return nil, true
+		return FastqBig{}, true
 	}
 	if line.String() != "+" {
 		log.Fatalf("Error: This line should be a + (plus) sign \n")
 	}
 	line, done = fileio.ReadLine(reader)
 	if done {
-		return nil, true
+		return FastqBig{}, true
 	}
 	answer.Qual = ToQual(line.Bytes())
-	return &answer, false
+	return answer, false
 }

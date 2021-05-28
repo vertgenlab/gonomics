@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Sam {
+func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Sam {
 	var currBest sam.Sam = sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
 	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
 	var minTarget int
@@ -77,7 +77,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read *fastq.FastqBig, seedHash m
 }
 
 //TODO: what about neg strand?
-func perfectMatchBig(read *fastq.FastqBig, scoreMatrix [][]int64) int64 {
+func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {
 		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
@@ -93,7 +93,7 @@ func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int6
 	return score
 }
 
-func scoreSeedFastqBig(seed *SeedDev, read *fastq.FastqBig, scoreMatrix [][]int64) int64 {
+func scoreSeedFastqBig(seed *SeedDev, read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
 		if seed.PosStrand {
@@ -105,7 +105,7 @@ func scoreSeedFastqBig(seed *SeedDev, read *fastq.FastqBig, scoreMatrix [][]int6
 	return score
 }
 
-func scoreSeedPart(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {
+func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
 		score += scoreMatrix[read.Seq[i]][read.Seq[i]]
@@ -113,7 +113,7 @@ func scoreSeedPart(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int6
 	return score
 }
 
-func scoreSeed(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {
+func scoreSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for ; seed != nil; seed = seed.NextPart {
 		score += scoreSeedPart(seed, read, scoreMatrix)
@@ -147,7 +147,7 @@ func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
 }
 
 //perfect match
-func perfectMatch(read *fastq.Fastq, scoreMatrix [][]int64) int64 {
+func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {
 		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
