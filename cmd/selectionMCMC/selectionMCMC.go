@@ -11,7 +11,7 @@ import (
 
 func selectionMCMC(filename string, outFile string, s popgen.McmcSettings) {
 	common.RngSeed(s.RandSeed, s.SetSeed)
-	data, err := popgen.VcfToAfs(filename, !s.UnPolarized) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
+	data, err := popgen.VcfToAfs(filename, s) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)
 }
@@ -37,10 +37,10 @@ func main() {
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
-	var derived *bool = flag.Bool("derived", false, "Make a divergence-based ascertainment correction for regions enriched for derived alleles (i.e. HAQERs, HARs, or other fast-evolving regions).")
-	var ancestral *bool = flag.Bool("ancestral", false, "Make a divergence-based ascertainment correction for regions enriched for ancestral alleles (i.e. UCEs or other highly conserved regions).")
+	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Make a divergence-based ascertainment correction.")
 	var fixedSigma *bool = flag.Bool("fixedSigma", false, "When true, the selection coefficient variance parameter sigma stays fixed at sigmaZero and is not treated as an independent hyperparameter.")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 or 2 to reveal different levels of debug print statements to standard output.")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -56,11 +56,11 @@ func main() {
 		RandSeed:      *randSeed,
 		SetSeed:       *setSeed,
 		UnPolarized:   *unPolarized,
-		Derived:       *derived,
-		Ancestral:     *ancestral,
+		DivergenceAscertainment:       *divergenceAscertainment,
 		FixedSigma: *fixedSigma,
 		D: 1,//D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError: *integralError,
+		Verbose: *verbose,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {

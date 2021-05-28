@@ -20,6 +20,14 @@ Equations from this thesis that are replicated here are marked.
 
 const IntegralBound float64 = 1e-12
 
+type LikelihoodFunction byte
+
+const (
+	Uncorrected LikelihoodFunction = 0
+	Ancestral LikelihoodFunction = 1
+	Derived LikelihoodFunction = 2
+)
+
 //k is len(sites)
 type Afs struct {
 	Sites []*SegSite
@@ -29,6 +37,7 @@ type Afs struct {
 type SegSite struct {
 	I int //individuals with the allele
 	N int //total number of individuals
+	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
 }
 
 //InvertSegSite reverses the polarity of a segregating site.
@@ -51,21 +60,21 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 				count++
 			}
 		}
-		answer.Sites = append(answer.Sites, &SegSite{count, len(aln)})
+		answer.Sites = append(answer.Sites, &SegSite{count, len(aln), Uncorrected})//hardcoded to default likelihood for now.
 	}
 	return answer
 }
 
 //VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAfs(filename string, polarized bool) (*Afs, error) {
+func VcfToAfs(filename string, s McmcSettings) (*Afs, error) {
 	var answer Afs
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
 	var j int
 	for i := range alpha {
-		currentSeg = &SegSite{I: 0, N: 0}
+		currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
 			for j = 0; j < len(i.Samples); j++ {
@@ -81,19 +90,25 @@ func VcfToAfs(filename string, polarized bool) (*Afs, error) {
 			}
 
 			if currentSeg.N == 0 {
-				return nil, fmt.Errorf("Error in VcfToAFS: variant had no sample data.")
+				return nil, fmt.Errorf("error in VcfToAFS: variant had no sample data")
 			}
 			if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
-				return nil, fmt.Errorf("Error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1.")
+				return nil, fmt.Errorf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
 			}
-			if polarized && vcf.HasAncestor(i) {
+			if !s.UnPolarized && vcf.HasAncestor(i) {
+				if vcf.IsRefAncestor(i) && s.DivergenceAscertainment {
+					currentSeg.L = Ancestral
+				}
 				if vcf.IsAltAncestor(i) {
 					InvertSegSite(currentSeg)
+					if s.DivergenceAscertainment {
+						currentSeg.L = Derived
+					}
 				} else if !vcf.IsRefAncestor(i) {
 					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
 				}
 			}
-			if polarized && !vcf.HasAncestor(i) {
+			if !s.UnPolarized && !vcf.HasAncestor(i) {
 				log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
 			}
 			answer.Sites = append(answer.Sites, currentSeg)
@@ -153,7 +168,7 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
-func AFSLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError float64) float64 {
+func AfsLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError float64) float64 {
 	var answer float64 = 0.0
 	// loop over all segregating sites
 	for j := range afs.Sites {

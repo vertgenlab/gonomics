@@ -9,8 +9,8 @@ import (
 	"log"
 )
 
-func afsPmf(vcfFile string, outFile string, unPolarized bool) {
-	g, err := popgen.VcfToAfs(vcfFile, !unPolarized) //VcfToAfs is written in terms of polarized, so this is inverted here.
+func afsPmf(vcfFile string, outFile string, s popgen.McmcSettings) {
+	g, err := popgen.VcfToAfs(vcfFile, s) //VcfToAfs is written in terms of polarized, so this is inverted here.
 	exception.FatalOnErr(err)
 	out := fileio.EasyCreate(outFile)
 
@@ -51,7 +51,12 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
 	}
+
+	s := popgen.McmcSettings{
+		UnPolarized: *unPolarized,
+		DivergenceAscertainment: false,
+	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	afsPmf(vcfFile, outFile, *unPolarized)
+	afsPmf(vcfFile, outFile, s)
 }

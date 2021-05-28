@@ -3,6 +3,7 @@ package popgen
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
@@ -25,11 +26,11 @@ type McmcSettings struct {
 	RandSeed      bool
 	SetSeed       int64
 	UnPolarized   bool
-	Derived       bool
-	Ancestral     bool
+	DivergenceAscertainment bool
 	FixedSigma	bool
 	D	int //D is the size of the ascertainment subset.
 	IntegralError float64
+	Verbose int
 }
 
 //The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
@@ -42,17 +43,17 @@ type Theta struct {
 }
 
 //MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
-func MetropolisAccept(old Theta, thetaPrime Theta, sigmaStep float64) bool {
+func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 	var pAccept, yRand float64
 	yRand = math.Log(rand.Float64())
 	var decision bool
 	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 {//if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
 		return false
 	}
-	pAccept = BayesRatio(old, thetaPrime)
+	pAccept = BayesRatio(old, thetaPrime, s)
 	decision = pAccept > yRand
 
-	if verbose == 1 {
+	if s.Verbose == 1 {
 		log.Printf("%e\t%e\t%e\t%e\t%e\t%e\t%t\n", old.mu, thetaPrime.mu, old.likelihood, thetaPrime.likelihood, pAccept, yRand, decision)
 	}
 	return decision
@@ -67,11 +68,11 @@ func HastingsRatio(tOld Theta, tNew Theta, sigmaStep float64) float64 {
 }*/
 
 //BayesRatio is a helper function of MetropolisAccept taht returns the ratio of likelihoods of parameter sets
-func BayesRatio(old Theta, thetaPrime Theta) float64 {
+func BayesRatio(old Theta, thetaPrime Theta, s McmcSettings) float64 {
 	like := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
 	//prob := numbers.DivideLog(thetaPrime.probability, old.probability)
 	//prob = 0 //trick for debug
-	if verbose > 1 {
+	if s.Verbose > 1 {
 		log.Printf("Old log(like): %e, New log(like): %e, likeRatio: %f", old.likelihood, thetaPrime.likelihood, math.Exp(like))
 	}
 	return like
@@ -90,14 +91,12 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
 	}
 
-	if s.Derived {
-		likelihood = AfsLikelihoodDerivedAscertainment(data, alphaPrime, binomCache, s.D, s.IntegralError)
-	} else if s.Ancestral {
-		likelihood = AfsLikelihoodAncestralAscertainment(data, alphaPrime, binomCache, s.D, s.IntegralError)
+	if s.DivergenceAscertainment {
+		likelihood = AfsDivergenceAscertainmentLikelihood(data, alphaPrime, binomCache, s.D, s.IntegralError)
 	} else {
-		likelihood = AFSLikelihood(data, alphaPrime, binomCache, s.IntegralError)
+		likelihood = AfsLikelihood(data, alphaPrime, binomCache, s.IntegralError)
 	}
-	if verbose > 1 {
+	if s.Verbose > 1 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
 	}
 	return Theta{alphaPrime, muPrime, sigmaPrime, likelihood}
@@ -110,12 +109,10 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 	for i := range data.Sites {
 		answer.alpha[i] = numbers.SampleInverseNormal(m, sig)
 	}
-	if s.Derived {
-		answer.likelihood = AfsLikelihoodDerivedAscertainment(data, answer.alpha, binomCache, s.D, s.IntegralError) //d is hardcoded as 1 for now.
-	} else if s.Ancestral {
-		answer.likelihood = AfsLikelihoodAncestralAscertainment(data, answer.alpha, binomCache, s.D, s.IntegralError) //d is hardcoded as 1 for now.
+	if s.DivergenceAscertainment {
+		answer.likelihood = AfsDivergenceAscertainmentLikelihood(data, answer.alpha, binomCache, s.D, s.IntegralError)
 	} else {
-		answer.likelihood = AFSLikelihood(data, answer.alpha, binomCache, s.IntegralError)
+		answer.likelihood = AfsLikelihood(data, answer.alpha, binomCache, s.IntegralError)
 	}
 	return answer
 }
@@ -123,54 +120,60 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 //MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
 //muZero and sigmaZero represent the starting hyperparameter values.
 func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
-	if s.Derived && s.Ancestral {
-		log.Fatalf("Cannot select corrections for both derived and ancestral allele ascertainment for selectionMCMC.\n")
-	}
-
-	if verbose > 1 {
+	var err error
+	if s.Verbose > 1 {
 		f, err := os.Create("testProfile.prof")
 		if err != nil {
-			log.Fatal(err)
+			exception.PanicOnErr(err)
 		}
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			exception.PanicOnErr(err)
+		}
 		defer pprof.StopCPUProfile()
 	}
 
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 
-	if verbose > 1 {
+	if s.Verbose > 1 {
 		log.Println("Hello, I'm about to calculate MCMC.")
 	}
 	allN := findAllN(data)
 	binomCache := BuildBinomCache(allN)
 
 	var currAccept bool
-	if verbose > 1 {
+	if s.Verbose > 1 {
 		log.Println("Hello, I'm about to initialize theta.")
 	}
 	//initialization to uninformative standard normal
 	t := InitializeTheta(s.MuZero, s.SigmaZero, data, binomCache, s)
-	if verbose > 1 {
+	if s.Verbose > 1 {
 		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
 	}
-	if verbose == 1 {
+	if s.Verbose == 1 {
 		log.Printf("OldMu\tNewMu\tOldLikelihood\tNewLikelihood\tpAccept\tlogRand\tDecision\n")
 	}
-	fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
-
+	_, err = fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
+	if err != nil {
+		exception.PanicOnErr(err)
+	}
 	for i := 0; i < s.Iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t, data, binomCache, s)
-		if MetropolisAccept(t, tCandidate, s.SigmaStep) {
+		if MetropolisAccept(t, tCandidate, s) {
 			t = tCandidate
 			currAccept = true
 		} else {
 			currAccept = false
 		}
-		fmt.Fprintf(out, "%v\t%e\t%e\t%t\n", i, t.mu, t.sigma, currAccept)
+		_, err = fmt.Fprintf(out, "%v\t%e\t%e\t%t\n", i, t.mu, t.sigma, currAccept)
+		if err != nil {
+			exception.PanicOnErr(err)
+		}
 	}
 }
 
+//BuildBinomCache makes a 2D matrix where each entry binomCache[n][k] is equal to [n choose k] in logSpace.
 func BuildBinomCache(allN []int) [][]float64 {
 	binomCache := make([][]float64, numbers.MaxIntSlice(allN)+1)
 

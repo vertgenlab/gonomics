@@ -2,6 +2,7 @@ package popgen
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 	"math"
 )
 
@@ -73,23 +74,20 @@ func AlleleFrequencyProbabilityDerivedAscertainment(alpha float64, i int, n int,
 	return numbers.DivideLog(numbers.MultiplyLog(pIGivenAlpha, DerivedAscertainmentProbability(n, i, d)), DerivedAscertainmentDenominator(fCache, fCacheSum, d))
 }
 
-//AfsLikelihoodDerivedAscertainment is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for derived alleles between two groups of d individuals.
-//More explanation can be found in Katzman et al, this is the inverse of Eq. 11 in the methods.
-func AfsLikelihoodDerivedAscertainment(afs Afs, alpha []float64, binomMap [][]float64, d int, integralError float64) float64 {
+func AfsDivergenceAscertainmentLikelihood(afs Afs, alpha []float64, binomMap [][]float64, d int, integralError float64) float64 {
 	var answer float64 = 0.0
-	// loop over all segregating sites
 	for j := 0; j < len(afs.Sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError))
-	}
-	return answer
-}
-
-//AfsLikelihoodAncestralAscertainment is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for ancestral alleles (as in conserved regions like UCEs). d is the number of genomes from each group in the ascertainment process.
-func AfsLikelihoodAncestralAscertainment(afs Afs, alpha []float64, binomMap [][]float64, d int, integralError float64) float64 {
-	var answer float64 = 0.0
-	//loop over all segregating sites
-	for j := 0; j < len(afs.Sites); j++ {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError))
+		var currLikelihood float64
+		if afs.Sites[j].L == Uncorrected {
+			currLikelihood = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError)
+		} else if afs.Sites[j].L == Ancestral {
+			currLikelihood = AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
+		} else if afs.Sites[j].L == Derived {
+			currLikelihood = AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
+		} else {
+			log.Fatalf("invalid likelihood field in segregating site struct")
+		}
+		answer = numbers.MultiplyLog(answer, currLikelihood)
 	}
 	return answer
 }
