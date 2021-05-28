@@ -53,7 +53,7 @@ func main() {
 	}
 
 	s := popgen.McmcSettings{
-		UnPolarized: *unPolarized,
+		UnPolarized:             *unPolarized,
 		DivergenceAscertainment: false,
 	}
 	vcfFile := flag.Arg(0)

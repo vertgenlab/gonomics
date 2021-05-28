@@ -24,8 +24,8 @@ type LikelihoodFunction byte
 
 const (
 	Uncorrected LikelihoodFunction = 0
-	Ancestral LikelihoodFunction = 1
-	Derived LikelihoodFunction = 2
+	Ancestral   LikelihoodFunction = 1
+	Derived     LikelihoodFunction = 2
 )
 
 //k is len(sites)
@@ -35,8 +35,8 @@ type Afs struct {
 
 //SegSite is the basic struct for segregating sites, used to construct allele frequency spectra.
 type SegSite struct {
-	I int //individuals with the allele
-	N int //total number of individuals
+	I int                //individuals with the allele
+	N int                //total number of individuals
 	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
 }
 
@@ -60,7 +60,7 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 				count++
 			}
 		}
-		answer.Sites = append(answer.Sites, &SegSite{count, len(aln), Uncorrected})//hardcoded to default likelihood for now.
+		answer.Sites = append(answer.Sites, &SegSite{count, len(aln), Uncorrected}) //hardcoded to default likelihood for now.
 	}
 	return answer
 }

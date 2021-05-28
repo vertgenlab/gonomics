@@ -42,7 +42,6 @@ func main() {
 
 	s := popgen.McmcSettings{
 		UnPolarized: *unPolarized,
-
 	}
 
 	vcfFile := flag.Arg(0)

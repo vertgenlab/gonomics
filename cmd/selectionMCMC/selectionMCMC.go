@@ -48,19 +48,19 @@ func main() {
 	flag.Parse()
 
 	options := popgen.McmcSettings{
-		Iterations:    *iterations,
-		MuStep:        *muStep,
-		MuZero:        *muZero,
-		SigmaStep:     *sigmaStep,
-		SigmaZero:     *sigmaZero,
-		RandSeed:      *randSeed,
-		SetSeed:       *setSeed,
-		UnPolarized:   *unPolarized,
-		DivergenceAscertainment:       *divergenceAscertainment,
-		FixedSigma: *fixedSigma,
-		D: 1,//D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
-		IntegralError: *integralError,
-		Verbose: *verbose,
+		Iterations:              *iterations,
+		MuStep:                  *muStep,
+		MuZero:                  *muZero,
+		SigmaStep:               *sigmaStep,
+		SigmaZero:               *sigmaZero,
+		RandSeed:                *randSeed,
+		SetSeed:                 *setSeed,
+		UnPolarized:             *unPolarized,
+		DivergenceAscertainment: *divergenceAscertainment,
+		FixedSigma:              *fixedSigma,
+		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
+		IntegralError:           *integralError,
+		Verbose:                 *verbose,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {

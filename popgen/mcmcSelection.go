@@ -18,19 +18,19 @@ const verbose int = 0
 
 //The McmcSettings type stores settings for the various Mcmc helper functions.`
 type McmcSettings struct {
-	Iterations    int
-	MuStep        float64
-	MuZero        float64
-	SigmaStep     float64
-	SigmaZero     float64
-	RandSeed      bool
-	SetSeed       int64
-	UnPolarized   bool
+	Iterations              int
+	MuStep                  float64
+	MuZero                  float64
+	SigmaStep               float64
+	SigmaZero               float64
+	RandSeed                bool
+	SetSeed                 int64
+	UnPolarized             bool
 	DivergenceAscertainment bool
-	FixedSigma	bool
-	D	int //D is the size of the ascertainment subset.
-	IntegralError float64
-	Verbose int
+	FixedSigma              bool
+	D                       int //D is the size of the ascertainment subset.
+	IntegralError           float64
+	Verbose                 int
 }
 
 //The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
