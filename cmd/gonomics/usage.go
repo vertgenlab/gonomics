@@ -6,7 +6,7 @@ package main
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -86,7 +86,7 @@ func getCache() (cache *os.File) {
 
 // printCmdList prints the cache file
 func printCmdList(cache *os.File) {
-	toPrint, err := io.ReadAll(cache)
+	toPrint, err := ioutil.ReadAll(cache)
 	cache.Close()
 	if err != nil {
 		log.Panic(err)
