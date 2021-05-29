@@ -59,7 +59,8 @@ func usage() {
 	fmt.Print(
 		Yellow + "gonomics - A collection of tools that use the gonomics core library.\n\n" +
 			"Usage: gonomics <command> [options]\n\n" + Reset)
-	fmt.Print(Red + "Commands:" + Reset)
+	fmt.Println(Red + "Commands:" + Reset)
+	fmt.Print(hline)
 	printCmdList(cache)
 	fmt.Println(hline)
 }
