@@ -1,3 +1,5 @@
+// Command Group: "Genome Graph Tools"
+
 package main
 
 import (

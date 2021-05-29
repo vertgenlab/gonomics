@@ -1,3 +1,6 @@
+// Command Group: "Genome Graph Tools"
+// Command Usage: "Genome Graph Creation, Alignment, and Manipulation"
+
 package main
 
 import (

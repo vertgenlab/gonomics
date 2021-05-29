@@ -1,3 +1,5 @@
+// Command Group: "General Tools"
+
 package main
 
 import (

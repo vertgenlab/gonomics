@@ -41,6 +41,7 @@ func getBin() (path string, binExists map[string]bool) {
 	return path, binExists
 }
 
+// getGonomicsCmds parses the gonomics source code to return a set of cmd names
 func getGonomicsCmds() map[string]bool {
 	expectedPath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
 	cmds, err := ioutil.ReadDir(expectedPath)
@@ -75,7 +76,7 @@ func main() {
 	cmdCalled := flag.Arg(0) // command called by the user (e.g. 'gonomics faFormat')
 
 	binPath, binExists := getBin()
-	isGonomicsCmd := getGonomicsCmds()
+	isGonomicsCmd := getGonomicsCmds() // TODO change this so that gonomics cmd can be run without source code
 
 	switch { // Error checks. verbose for clarity
 	case isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:
