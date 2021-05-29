@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"text/tabwriter"
 )
 
 var Reset = "\033[0m"
@@ -25,7 +26,7 @@ var Cyan = "\033[36m"
 var Gray = "\033[37m"
 var White = "\033[97m"
 
-const hline = "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+const hline = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 // init prevents color characters if running Windows.
 // Windows does not allow colored terminal output by
@@ -60,7 +61,7 @@ func usage() {
 			"Usage: gonomics <command> [options]\n\n" + Reset)
 	fmt.Print(Red + "Commands:" + Reset)
 	printCmdList(cache)
-	fmt.Print(hline)
+	fmt.Println(hline)
 }
 
 // getCache returns a cache file ('go bin path'/.cmdcache) listing the cmd usage statements.
@@ -141,6 +142,14 @@ func writeCache(binPath string, groupMap map[string][]CmdInfo) {
 		log.Panic(err)
 	}
 
+	// initialize tabwriter
+	w := new(tabwriter.Writer)
+
+	// minwidth, tabwidth, padding, padchar, flags
+	w.Init(cacheWriter, 4, 8, 0, ' ', 0)
+
+	defer w.Flush()
+
 	var allGroups [][]CmdInfo
 	for _, cmds := range groupMap {
 		allGroups = append(allGroups, cmds)
@@ -157,12 +166,13 @@ func writeCache(binPath string, groupMap map[string][]CmdInfo) {
 	})
 
 	for _, cmds := range allGroups {
-		_, err = fmt.Fprintf(cacheWriter, "%s\n%s\n", hline, Red+cmds[0].Group+Reset)
+		_, err = fmt.Fprintf(w, "\t\n%s\t\t\n", Red+cmds[0].Group+Reset)
 		if err != nil {
 			log.Panic(err)
 		}
+
 		for _, cmd := range cmds {
-			_, err = fmt.Fprintf(cacheWriter, "     %s - %s\n", Green+cmd.Name+Reset, Cyan+cmd.Usage+Reset)
+			_, err = fmt.Fprintf(w, "     %s\t%s\n", Green+cmd.Name+Reset, Cyan+cmd.Usage+Reset)
 			if err != nil {
 				log.Panic(err)
 			}
