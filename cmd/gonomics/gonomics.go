@@ -2,25 +2,14 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"sort"
-	"strings"
 )
 
-func usage() {
-	fmt.Print(
-		"gonomics - A collection of builtin tools that use the gonomics core library.\n\n" +
-			"Usage: gonomics <command> [options]\n\n")
-	printCmdList()
-}
-
 func getBin() (path string, binExists map[string]bool) {
-
 	switch { // Find binary location. Preference is GOBIN > GOPATH > Default go install location
 	case os.Getenv("GOBIN") != "":
 		path = os.Getenv("GOBIN")
@@ -71,46 +60,6 @@ func getGonomicsCmds() map[string]bool {
 	}
 
 	return funcNames
-}
-
-func printCmdList() {
-	binPath, _ := getBin()
-	cmdMap := getGonomicsCmds()
-
-	cmds := make([]string, 0, len(cmdMap))
-	for key := range cmdMap {
-		cmds = append(cmds, key)
-	}
-	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
-
-	var endFirstLineIdx int
-	var rawOutput []byte
-
-	fmt.Println("Commands:")
-	for _, cmdName := range cmds {
-
-		if cmdName == "gonomics" { // avoid recursive call of the gonomics cmd
-			continue
-		}
-
-		cmd := exec.Command(binPath + "/" + cmdName)
-		rawOutput, _ = cmd.Output()
-		endFirstLineIdx = strings.Index(string(rawOutput), "\n")
-
-		switch {
-		case endFirstLineIdx > 0: // cmd starts with summary line
-			fmt.Printf("     %s\n", string(rawOutput[:endFirstLineIdx]))
-
-		case len(rawOutput) == 0: // cmd has no usage statement
-			fmt.Printf("     %s\n", cmdName)
-
-		case endFirstLineIdx == -1 && len(rawOutput) > 0: // has output, but no newline
-			fmt.Printf("     %s\n", rawOutput)
-
-		default: // if all else fails, print cmd name
-			fmt.Printf("     %s\n", cmdName)
-		}
-	}
 }
 
 func main() {
