@@ -32,7 +32,7 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 		}
 
 	case ".axt":
-		receive := axt.GoReadToChan(inputFile)
+		receive, _ := axt.GoReadToChan(inputFile)
 		for val := range receive {
 			send <- val
 		}

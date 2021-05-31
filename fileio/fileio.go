@@ -105,8 +105,27 @@ func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	} else {
-		return reader.Peek(n)
+		return peek, err
 	}
+}
+
+// ReadHeader will advance a reader past initial lines that begin with '#',
+// returning a slice of these comments lines and leaving the reader at
+// the first non-comment line
+func ReadHeader(reader *bufio.Reader) ([]string, error) {
+	var peek []byte
+	var peekErr error
+	var header []string
+	var line string
+	for peek, peekErr = reader.Peek(1); peekErr == nil && peek[0] == '#'; peek, peekErr = reader.Peek(1) {
+		line, _ = NextLine(reader)
+		header = append(header, line)
+	}
+
+	if peekErr == io.EOF {
+		return header, nil
+	}
+	return header, peekErr
 }
 
 // equal returns true if two input files are identical
