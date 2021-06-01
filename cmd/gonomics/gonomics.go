@@ -43,7 +43,13 @@ func getBin() (path string, binExists map[string]bool) {
 
 // getGonomicsCmds parses the gonomics source code to return a set of cmd names
 func getGonomicsCmds() map[string]bool {
-	expectedPath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
+	var expectedPath string
+	if os.Getenv("GOPATH") != "" {
+		expectedPath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
+	} else {
+		expectedPath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd"
+	}
+
 	cmds, err := ioutil.ReadDir(expectedPath)
 	if err != nil {
 		log.Printf("ERROR: could not find gonomics cmd folder in expected path: %s\n", expectedPath)
