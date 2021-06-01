@@ -69,8 +69,7 @@ func usage() {
 // Retrieves the file if it exists, else builds a new cache.
 func getCache() (cache *os.File) {
 	binPath, _ := getBin()
-
-	cmdStat, _ := os.Stat(os.Args[0])                          // stat binary for this file
+	cmdStat, _ := os.Stat(binPath + "/gonomics")               // stat binary for this file
 	cacheStat, cacheStatErr := os.Stat(binPath + "/.cmdcache") // stat cache file
 
 	// Build a cache if cache does not exist OR if the cache is older than the gonomics cmd binary
@@ -106,7 +105,13 @@ func buildCmdCache(binPath string) {
 	}
 	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
 
-	cmdSourcePath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
+	var cmdSourcePath string
+	if os.Getenv("GOPATH") != "" {
+		cmdSourcePath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
+	} else {
+		cmdSourcePath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd/"
+	}
+
 	var cmdGroup, cmdUsage string
 
 	groupMap := make(map[string][]CmdInfo) // key: group, value: all cmds in group
