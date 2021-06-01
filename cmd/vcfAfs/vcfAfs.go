@@ -10,7 +10,7 @@ import (
 )
 
 func vcfAfs(vcfFile string, outFile string, UnPolarized bool) {
-	g, err := popgen.VcfToAfs(vcfFile, UnPolarized, false)//hardcoded DivergenceAscertainment to false
+	g, err := popgen.VcfToAfs(vcfFile, UnPolarized, false) //hardcoded DivergenceAscertainment to false
 	exception.FatalOnErr(err)
 	f := popgen.AfsToFrequency(*g)
 	out := fileio.EasyCreate(outFile)

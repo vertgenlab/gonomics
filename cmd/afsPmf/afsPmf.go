@@ -10,7 +10,7 @@ import (
 )
 
 func afsPmf(vcfFile string, outFile string, UnPolarized bool) {
-	g, err := popgen.VcfToAfs(vcfFile, UnPolarized, false)//divergenceAscertainment hardcoded to false.
+	g, err := popgen.VcfToAfs(vcfFile, UnPolarized, false) //divergenceAscertainment hardcoded to false.
 	exception.FatalOnErr(err)
 	out := fileio.EasyCreate(outFile)
 
