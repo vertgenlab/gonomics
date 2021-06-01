@@ -12,7 +12,7 @@ import (
 
 func bedMaxWig(infile string, database string, chromsizeFile string, outfile string) {
 	var records []*bed.Bed = bed.Read(infile)
-	var data []*wig.Wig = wig.Read(database)
+	var wigData []wig.Wig = wig.Read(database)
 	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
 	var outlist []*bed.Bed
 	var currentBed *bed.Bed = records[0]
@@ -20,7 +20,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 	var i int
 
 	for i = 0; i < len(sizes); i++ {
-		chromSlice = WigChromToSlice(data, sizes[i].Size, sizes[i].Name)
+		chromSlice = WigChromToSlice(wigData, sizes[i].Size, sizes[i].Name)
 		for k := 0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
@@ -31,17 +31,14 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 	}
 	bed.Write(outfile, outlist, 7)
 }
-
-func WigChromToSlice(w []*wig.Wig, size int, chrom string) []float64 {
+//this WigChromToSLice will be removed once wig updates are complete to help with mem.
+func WigChromToSlice(w []wig.Wig, size int, chrom string) []float64 {
 	output := make([]float64, size)
 	for _, v := range w {
 		if v.Chrom == chrom {
-			for i := 0; i < len(output); i++ {
-				output[i] = v.Values[i].Value
-			}
+			output = v.Values
 		}
 	}
-
 	return output
 }
 

@@ -24,7 +24,7 @@ func TestWigPeaks(t *testing.T) {
 		records := bed.Read("out_bed_tmp.bed")
 		expected := bed.Read(v.out_bed)
 		if !bed.AllAreEqual(records, expected) {
-			t.Errorf("Error in wigPeaks.")
+			t.Errorf("Error in wigPeaks, created bed and test bed are not equal.")
 		}
 		err := os.Remove("out_bed_tmp.bed")
 		if err != nil {

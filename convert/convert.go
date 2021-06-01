@@ -79,8 +79,8 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 }
 
 //BedScoreToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is equal to the score of an overlapping bed entry at the bed entry midpoint, and zero if no bed regions overlap.
-func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []*wig.Wig {
-	wigSlice := make([]*wig.Wig, len(reference))
+func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []wig.Wig {
+	wigSlice := make([]wig.Wig, len(reference))
 	var line string
 	var chromIndex int
 	var midpoint int
@@ -93,11 +93,11 @@ func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []*w
 	//generate Wig skeleton from reference
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
-		currentWig.Values = make([]*wig.WigValue, v.Size)
+		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
+			currentWig.Values[x] = 0}
 		}
-		wigSlice[i] = &currentWig
+		wigSlice[i] = currentWig
 		i++
 	}
 
@@ -140,16 +140,16 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 	var x int
 	var i int = 0
 	var doneReading bool = false
-	var current *bed.Bed
+	var current bed.Bed
 
 	//generate Wig skeleton from reference
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
-		currentWig.Values = make([]*wig.WigValue, v.Size)
+		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
+			currentWig.Values[x] = 0}
 		}
-		wigSlice[i] = &currentWig
+		wigSlice[i] = currentWig
 		i++
 	}
 
@@ -181,25 +181,25 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 }
 
 //BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
-func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []*wig.Wig {
-	wigSlice := make([]*wig.Wig, len(reference))
+func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
+	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
 	var i, x int = 0, 0
 	//generate Wig skeleton from reference
 	for _, v := range reference {
 		currentWig := wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
-		currentWig.Values = make([]*wig.WigValue, v.Size)
+		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = &wig.WigValue{Position: x, Value: 0}
+			currentWig.Values[x] = 0}
 		}
-		wigSlice[i] = &currentWig
+		wigSlice[i] = currentWig
 		i++
 	}
 
 	for j := range b {
 		chromIndex = getWigChromIndex(b[j].Chrom, wigSlice)
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
-			wigSlice[chromIndex].Values[k].Value++
+			wigSlice[chromIndex].Values[k]++
 		}
 	}
 	return wigSlice
@@ -211,7 +211,7 @@ func bedMidpoint(b *bed.Bed) int {
 }
 
 //getWigChromIndex searches a wig slice for the wig entry with a particular name and returns the index of that entry in the slice.
-func getWigChromIndex(s string, wigSlice []*wig.Wig) int {
+func getWigChromIndex(s string, wigSlice []wig.Wig) int {
 	for i := range wigSlice {
 		if s == wigSlice[i].Chrom {
 			return i

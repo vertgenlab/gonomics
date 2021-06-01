@@ -5,9 +5,9 @@ package wig
 
 import (
 	"errors"
-	"github.com/vertgenlab/gonomics/exception"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
@@ -24,7 +24,7 @@ type Wig struct {
 }
 
 //TODO: ReadToChan() and GoReadToChan () ; write these. Check out fastq or bed or sam for examples of these ReadToChan and GoReadToChan(), these are the memory
-//effecient ways to read things in. Funny things with weight groups (which handle the order of things) (concurrency in Go youtube).
+//efficient ways to read things in. Funny things with weight groups (which handle the order of things) (concurrency in Go youtube).
 
 //Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
 func Read(filename string) []Wig {
@@ -89,7 +89,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 //Prints the first record in a Wig struct. Mainly used for debugging.
 func PrintFirst(rec []Wig) {
 	if len(rec) == 0 {
-		fmt.Println("Empty Wig; length of innput was zero.")
+		fmt.Println("Empty Wig; length of input was zero.")
 	} else {
 		fmt.Printf("StepType=%s Chrom=%s Start=%d Step=%d\n", rec[0].StepType, rec[0].Chrom,
 			rec[0].Start, rec[0].Step)
