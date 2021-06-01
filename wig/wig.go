@@ -85,7 +85,6 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	return currentWig, doneReading
 }
 
-
 //Prints the first record in a Wig struct. Mainly used for debugging.
 func PrintFirst(rec []Wig) {
 	if len(rec) == 0 {
@@ -132,9 +131,9 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 				_, err = fmt.Fprintf(file, "0\n") //will turn a 0.000000 to a 0 to save mem
 			} else {
 				_, err = fmt.Fprintf(file, "%f\n", rec.Values[i])
-			}//Only print significant figures to some capacity? rpkm
+			} //Only print significant figures to some capacity? rpkm
 			// We want to make this as concise as possible.
-						// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
+			// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
 			common.ExitIfError(err)
 		}
 

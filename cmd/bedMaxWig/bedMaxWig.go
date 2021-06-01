@@ -31,6 +31,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 	}
 	bed.Write(outfile, outlist, 7)
 }
+
 //this WigChromToSLice will be removed once wig updates are complete to help with mem.
 func WigChromToSlice(w []wig.Wig, size int, chrom string) []float64 {
 	output := make([]float64, size)

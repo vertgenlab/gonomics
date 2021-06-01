@@ -20,16 +20,16 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) { //threshold is
 	defer out.Close()
 
 	for _, v1 := range records { //in range for loop, i is index (0,1,2..) which we don't use in this instance, v is value (content of slice). Record is slice of wig struct, each iteration is slice/object of wig struct, which looks like a block and is often organized by chromosomes (or part of chromosome), and each wig struct will produce independent peaks. The v1 iteration has chr=chrom3,step=100, and a list of WigValues where there are positions+values, values like 11 22 100 etc.
-		inPeak = false                 //when entering a new wig struct, set inPeak to false
+		inPeak = false //when entering a new wig struct, set inPeak to false
 		var wigPosition = v1.Start
 		for _, v2 := range v1.Values { //each v1 is a wig struct, whose Values is a []float64 which contains the value at each position. Each i2 is index which we don't use, and each v2 is a float64.
 			if v2 >= threshold { //either (from outside of a peak) start a new peak or inside of a peak
 				if !inPeak { //this means start a new peak if this is currently set to false.
-					inPeak = true                                                                                                           //must remember to set inPeak to reflect Peak status
+					inPeak = true                                                                                                     //must remember to set inPeak to reflect Peak status
 					current = &bed.Bed{Chrom: v1.Chrom, ChromStart: wigPosition, ChromEnd: wigPosition + 1, Name: "", Score: int(v2)} //ChromEnd is +1 because bed has [open,closed) interval (note: in this program, the position that ends the peak is still >threshold, not the first position that dips <threshold), Score is the max Wig of the bed region, will update when inside the peak
 				} else { //this means already inside peak
-					current.ChromEnd = wigPosition + 1     //Update ChromEnd
-					if v2 > float64(current.Score) { //Update Score if found new max wig score
+					current.ChromEnd = wigPosition + 1 //Update ChromEnd
+					if v2 > float64(current.Score) {   //Update Score if found new max wig score
 						current.Score = int(v2)
 					}
 				}
