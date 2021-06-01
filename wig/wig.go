@@ -128,8 +128,11 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 	for i := range rec.Values {
 
 		if rec.StepType == "fixedStep" {
-			_, err = fmt.Fprintf(file, "%f\n", rec.Values[i]) //thing where we want an extra line to make the 0.0000000 to be just a "0".
-			//Only print significant figures to some capacity? rpkm
+			if rec.Values[i] == 0 {
+				_, err = fmt.Fprintf(file, "0\n") //will turn a 0.000000 to a 0 to save mem
+			} else {
+				_, err = fmt.Fprintf(file, "%f\n", rec.Values[i])
+			}//Only print significant figures to some capacity? rpkm
 			// We want to make this as concise as possible.
 						// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
 			common.ExitIfError(err)
