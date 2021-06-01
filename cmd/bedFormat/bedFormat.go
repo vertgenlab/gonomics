@@ -1,3 +1,5 @@
+// Command Group: "BED Tools"
+
 package main
 
 import (
@@ -31,7 +33,7 @@ func bedFormat(infile string, outfile string, fields int, ensemblToUCSC bool, UC
 
 func usage() {
 	fmt.Print(
-		"bedFormat: Options alter bed formatting.\n" +
+		"bedFormat - Options alter bed formatting.\n" +
 			"Usage:\n" +
 			"bedFormat input.bed output.bed\n" +
 			"options:\n")
