@@ -156,9 +156,7 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 		log.Printf("OldMu\tNewMu\tOldLikelihood\tNewLikelihood\tpAccept\tlogRand\tDecision\n")
 	}
 	_, err = fmt.Fprintf(out, "Iteration\tMu\tSigma\tAccept\n")
-	if err != nil {
-		exception.PanicOnErr(err)
-	}
+	exception.PanicOnErr(err)
 	for i := 0; i < s.Iterations; i++ {
 		tCandidate := GenerateCandidateThetaPrime(t, data, binomCache, s)
 		if MetropolisAccept(t, tCandidate, s) {
@@ -168,9 +166,7 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 			currAccept = false
 		}
 		_, err = fmt.Fprintf(out, "%v\t%e\t%e\t%t\n", i, t.mu, t.sigma, currAccept)
-		if err != nil {
-			exception.PanicOnErr(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }
 

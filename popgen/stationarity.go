@@ -67,7 +67,7 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 
 //VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAfs(filename string, s McmcSettings) (*Afs, error) {
+func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (*Afs, error) {
 	var answer Afs
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
@@ -95,20 +95,20 @@ func VcfToAfs(filename string, s McmcSettings) (*Afs, error) {
 			if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
 				return nil, fmt.Errorf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
 			}
-			if !s.UnPolarized && vcf.HasAncestor(i) {
-				if vcf.IsRefAncestor(i) && s.DivergenceAscertainment {
+			if !UnPolarized && vcf.HasAncestor(i) {
+				if vcf.IsRefAncestor(i) && DivergenceAscertainment {
 					currentSeg.L = Ancestral
 				}
 				if vcf.IsAltAncestor(i) {
 					InvertSegSite(currentSeg)
-					if s.DivergenceAscertainment {
+					if DivergenceAscertainment {
 						currentSeg.L = Derived
 					}
 				} else if !vcf.IsRefAncestor(i) {
 					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
 				}
 			}
-			if !s.UnPolarized && !vcf.HasAncestor(i) {
+			if !UnPolarized && !vcf.HasAncestor(i) {
 				log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
 			}
 			answer.Sites = append(answer.Sites, currentSeg)

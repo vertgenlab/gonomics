@@ -9,8 +9,8 @@ import (
 	"log"
 )
 
-func vcfAfs(vcfFile string, outFile string, s popgen.McmcSettings) {
-	g, err := popgen.VcfToAfs(vcfFile, s)
+func vcfAfs(vcfFile string, outFile string, UnPolarized bool) {
+	g, err := popgen.VcfToAfs(vcfFile, UnPolarized, false)//hardcoded DivergenceAscertainment to false
 	exception.FatalOnErr(err)
 	f := popgen.AfsToFrequency(*g)
 	out := fileio.EasyCreate(outFile)
@@ -40,11 +40,7 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	s := popgen.McmcSettings{
-		UnPolarized: *unPolarized,
-	}
-
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	vcfAfs(vcfFile, outFile, s)
+	vcfAfs(vcfFile, outFile, *unPolarized)
 }

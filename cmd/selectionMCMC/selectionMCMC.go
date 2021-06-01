@@ -11,7 +11,7 @@ import (
 
 func selectionMCMC(filename string, outFile string, s popgen.McmcSettings) {
 	common.RngSeed(s.RandSeed, s.SetSeed)
-	data, err := popgen.VcfToAfs(filename, s) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
+	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)
 }
