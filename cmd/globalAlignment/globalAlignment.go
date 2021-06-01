@@ -1,3 +1,5 @@
+// Command Group: "Linear Alignment Tools"
+
 package main
 
 import (

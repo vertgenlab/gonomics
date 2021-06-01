@@ -1,3 +1,5 @@
+// Command Group: "Variant Calling & Annotation"
+
 package main
 
 import (

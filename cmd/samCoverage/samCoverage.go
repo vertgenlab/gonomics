@@ -1,3 +1,5 @@
+// Command Group: "SAM Tools"
+
 package main
 
 import (

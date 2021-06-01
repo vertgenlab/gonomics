@@ -1,3 +1,5 @@
+// Command Group: "FASTQ Tools"
+
 package main
 
 import (
