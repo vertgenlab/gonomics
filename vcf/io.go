@@ -109,7 +109,7 @@ func ParseNotes(data string, format []string) []GenomeSample {
 			alleles = strings.SplitN(fields[0], "|", 2)
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, FormatData: fields}
 		} else if strings.Contains(fields[0], "/") {
-			alleles = strings.SplitN(fields[0], "/", 2)
+			alleles = strings.Split(fields[0], "/")
 			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, FormatData: fields}
 		} else {
 			n, err = strconv.ParseInt(fields[0], 10, 16)
@@ -131,19 +131,6 @@ func NextVcf(reader *fileio.EasyReader) (Vcf, bool) {
 		return Vcf{}, true
 	}
 	return processVcfLine(line), false
-}
-
-// ReadHeader is a helper function of GoReadToChan. Parses a VCF header with a reader.
-func ReadHeader(er *fileio.EasyReader) Header {
-	var line string
-	var err error
-	var nextBytes []byte
-	var header Header
-	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
-		line, _ = fileio.EasyNextLine(er)
-		header = processHeader(header, line)
-	}
-	return header
 }
 
 // FormatToString converts the []string Format struct into a string by concatenating with a colon delimiter.
