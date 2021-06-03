@@ -27,6 +27,24 @@ type Header struct {
 // infoType stores the type of variable that a field in the Header holds.
 type infoType byte
 
+func (t infoType) String() string {
+	switch t {
+	case typeInteger:
+		return "Integer"
+	case typeFloat:
+		return "Float"
+	case typeFlag:
+		return "Flag"
+	case typeString:
+		return "string"
+	case typeCharacter:
+		return "Character"
+	default:
+		log.Panicln("unknown type")
+		return ""
+	}
+}
+
 const (
 	typeInteger infoType = iota
 	typeFloat
