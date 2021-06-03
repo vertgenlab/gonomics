@@ -24,22 +24,28 @@ type Header struct {
 	Text       []string                       // raw text
 }
 
-// InfoType stores the type of variable that a field in the Header holds.
-type InfoType byte
+// infoType stores the type of variable that a field in the Header holds.
+type infoType byte
 
 const (
-	Integer InfoType = iota
-	Float
-	Flag
-	Character
-	String
+	typeInteger infoType = iota
+	typeFloat
+	typeFlag
+	typeCharacter
+	typeString
 )
+
+// Key is the identifying information for a given info field.
+type Key struct {
+	Id       string
+	number   string // numeral or 'A', 'G', 'R', '.'
+	dataType infoType
+	isFormat bool // true if this key is for a Format field, false for Info
+}
 
 // InfoHeader contains info encoded by header lines beginning in ##INFO.
 type InfoHeader struct {
-	Id          string
-	Number      string // numeral or 'A', 'G', 'R', '.'
-	Type        InfoType
+	Key
 	Description string
 	Source      string
 	Version     string
@@ -53,9 +59,7 @@ type FilterHeader struct {
 
 // FormatHeader contains info encoded by header lines beginning in ##FORMAT.
 type FormatHeader struct {
-	Id          string
-	Number      string // numeral or 'A', 'G', 'R', '.'
-	Type        InfoType
+	Key
 	Description string
 }
 
@@ -151,41 +155,41 @@ func parseChromsFromHeader(line string, chroms map[string]chromInfo.ChromInfo, c
 
 // parseInfoFromHeader parses a line beginning with ##INFO to a map keying the ID to the info fields information.
 func parseInfoFromHeader(line string, info map[string]InfoHeader) map[string]InfoHeader {
-	var fmt InfoHeader
-	fmt.Id, fmt.Number, fmt.Type, fmt.Description, fmt.Source, fmt.Version = parseHeaderFields(line)
+	var format InfoHeader
+	format.Id, format.number, format.dataType, format.Description, format.Source, format.Version = parseHeaderFields(line)
 
-	if _, duplicateId := info[fmt.Id]; duplicateId {
-		log.Fatalf("duplicate ID in info header: '%s'", fmt.Id)
+	if _, duplicateId := info[format.Id]; duplicateId {
+		log.Fatalf("duplicate ID in info header: '%s'", format.Id)
 	}
 
-	info[fmt.Id] = fmt
+	info[format.Id] = format
 	return info
 }
 
 // parseFilterFromHeader parses a line beginning with ##FILTER to a map keying the ID to the filter information.
 func parseFilterFromHeader(line string, filter map[string]FilterHeader) map[string]FilterHeader {
-	var fmt FilterHeader
-	fmt.Id, _, _, fmt.Description, _, _ = parseHeaderFields(line)
+	var format FilterHeader
+	format.Id, _, _, format.Description, _, _ = parseHeaderFields(line)
 
-	if _, duplicateId := filter[fmt.Id]; duplicateId {
-		log.Fatalf("duplicate ID in filter header: '%s'", fmt.Id)
+	if _, duplicateId := filter[format.Id]; duplicateId {
+		log.Fatalf("duplicate ID in filter header: '%s'", format.Id)
 	}
 
-	filter[fmt.Id] = fmt
+	filter[format.Id] = format
 	return filter
 }
 
 // parseFormatFromHeader parses a line beginning with ##FORMAT to a map keying the ID to the format information.
-func parseFormatFromHeader(line string, format map[string]FormatHeader) map[string]FormatHeader {
-	var fmt FormatHeader
-	fmt.Id, fmt.Number, fmt.Type, fmt.Description, _, _ = parseHeaderFields(line)
+func parseFormatFromHeader(line string, formatData map[string]FormatHeader) map[string]FormatHeader {
+	var format FormatHeader
+	format.Id, format.number, format.dataType, format.Description, _, _ = parseHeaderFields(line)
 
-	if _, duplicateId := format[fmt.Id]; duplicateId {
-		log.Fatalf("duplicate ID in format header: '%s'", fmt.Id)
+	if _, duplicateId := formatData[format.Id]; duplicateId {
+		log.Fatalf("duplicate ID in format header: '%s'", format.Id)
 	}
 
-	format[fmt.Id] = fmt
-	return format
+	formatData[format.Id] = format
+	return formatData
 }
 
 // parseSamplesFromHeader reads samples from the column names in the final line of the header. Returns a
@@ -222,7 +226,7 @@ func getHeaderFields(line string) []string {
 
 // parseHeaderFields returns the Id, Number, Type, Description, Source, and Version present
 // in a header line (if field is applicable, returns zero value otherwise).
-func parseHeaderFields(line string) (Id string, Number string, Type InfoType, Description string, Source string, Version string) {
+func parseHeaderFields(line string) (Id string, Number string, Type infoType, Description string, Source string, Version string) {
 	fields := getHeaderFields(line)
 	for i := range fields {
 		switch {
@@ -235,15 +239,15 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 		case strings.HasPrefix(fields[i], "Type="):
 			switch fields[i][5:] {
 			case "Integer":
-				Type = Integer
+				Type = typeInteger
 			case "Float":
-				Type = Float
+				Type = typeFloat
 			case "Flag":
-				Type = Flag
+				Type = typeFlag
 			case "Character":
-				Type = Character
+				Type = typeCharacter
 			case "String":
-				Type = String
+				Type = typeString
 			}
 
 		case strings.HasPrefix(fields[i], "Description="):

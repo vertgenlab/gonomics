@@ -1,7 +1,6 @@
 package vcf
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"testing"
 )
@@ -17,12 +16,12 @@ func expectedHeader() Header {
 		"FilterD": {Id: "FilterD", Description: "Dea"},
 	}
 	h.Info = map[string]InfoHeader{
-		"InfoA": {Id: "InfoA", Number: "1", Type: Integer, Description: "Aye"},
-		"InfoB": {Id: "InfoB", Number: "R", Type: Float, Description: "Bee"},
+		"InfoA": {Key: Key{Id: "InfoA", number: "1", dataType: typeInteger}, Description: "Aye"},
+		"InfoB": {Key: Key{Id: "InfoB", number: "R", dataType: typeFloat}, Description: "Bee"},
 	}
 	h.Format = map[string]FormatHeader{
-		"GT":      {Id: "GT", Number: "R", Type: Integer, Description: "Eey"},
-		"FormatF": {Id: "FormatF", Number: "1", Type: Flag, Description: "Eff"},
+		"GT":      {Key: Key{Id: "GT", number: "R", dataType: typeInteger}, Description: "Eey"},
+		"FormatF": {Key: Key{Id: "FormatF", number: "1", dataType: typeFlag}, Description: "Eff"},
 	}
 	h.Samples = map[string]int{
 		"SampleA": 0,
@@ -46,9 +45,6 @@ func TestHeaderReading(t *testing.T) {
 		len(aH.Samples) != len(eH.Format) {
 		t.Errorf("problem with header maps")
 	}
-
-	fmt.Println(aH)
-	fmt.Println(eH)
 
 	for key := range aH.Chroms {
 		if aH.Chroms[key] != eH.Chroms[key] {
