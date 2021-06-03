@@ -6,7 +6,7 @@
 ##INFO=<ID=InfoB,Number=R,Type=Float,Description="Bee">
 ##FILTER=<ID=FilterC,Description="Sea">
 ##FILTER=<ID=FilterD,Description="Dea">
-##FORMAT=<ID=GT,Number=R,Type=Integer,Description="Eey">
-##FORMAT=<ID=FormatF,Number=1,Type=Flag,Description="Eff">
+##FORMAT=<ID=GT,Number=1,Type=Integer,Description="Eey">
+##FORMAT=<ID=FormatF,Number=1,Type=Integer,Description="Eff">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SampleA	SampleB
-chrA	5	.	G	C	0.5	.	InfoA=10	GT:FormatF	1|2:1	2|4:2
+chrA	5	.	G	C	0.5	.	InfoA=10;InfoB=1,2	GT:FormatF	1|2:1	2|4:2

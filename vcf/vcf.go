@@ -1,7 +1,12 @@
 // Package vcf contains functions for reading, writing, and manipulating VCF format files. More information on the VCF file format can be found
-// in its official documentation at https://samtools.github.io/hts-specs/VCFv4.2.pdf. This file is parsed into a struct containing header information
+// in its official documentation at https://samtools.github.io/hts-specs/VCFv4.3.pdf. This file is parsed into a struct containing header information
 // as well as a Vcf struct containing the information from each data line.
 package vcf
+
+import (
+	"fmt"
+	"strings"
+)
 
 const Version = "VCFv4.3"
 
@@ -17,6 +22,12 @@ type Vcf struct {
 	Info    string
 	Format  []string
 	Samples []GenomeSample
+
+	// parsedInfo and parsedFormat store data in Info and Format fields keyed by ID.
+	// nil until initialized with ParseInfo and ParseFormat respectively.
+	// These fields should only be accessed by Query functions (e.g. QueryInt).
+	parsedInfo   map[string]interface{}
+	parsedFormat map[string]interface{}
 }
 
 // GenomeSample is a substruct of Vcf, and contains information about each sample represented in a VCF line.
@@ -26,4 +37,8 @@ type GenomeSample struct {
 	AlleleTwo  int16    // Second allele in genotype, same number format as above.
 	Phased     bool     // True for phased genotype, false for unphased.
 	FormatData []string // FormatData contains additional sample fields after the genotype, which are parsed into a slice delimited by colons. Currently contains a dummy empty string in FormatData[0] corresponding to "GT" in Format, so indices in FormatData will match the indices in Format.
+}
+
+func (v Vcf) String() string {
+	return fmt.Sprintf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Id, v.Ref, strings.Join(v.Alt, ","), v.Qual, v.Filter, v.Info, v.Format, SamplesToString(v.Samples))
 }

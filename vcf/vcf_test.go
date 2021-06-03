@@ -40,3 +40,19 @@ func TestWriteAndRead(t *testing.T) {
 		os.Remove(tempFile)
 	}
 }
+
+func BenchmarkRead(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		data, _ := GoReadToChan("testdata/test.vcf")
+		for _ = range data { // stall
+		}
+	}
+}
+
+func BenchmarkWrite(b *testing.B) {
+	records, _ := Read("testdata/test.vcf")
+	for i := 0; i < b.N; i++ {
+		Write("tmp", records)
+	}
+	os.Remove("tmp")
+}

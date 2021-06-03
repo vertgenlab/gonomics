@@ -1,7 +1,9 @@
 package vcf
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -32,7 +34,7 @@ func ParseInfo(v Vcf, header Header) Vcf {
 			continue
 		}
 
-		v.parsedInfo[tagValuePair[0]] = parseValue(tagValuePair[1:], tag.Key)
+		v.parsedInfo[tagValuePair[0]] = parseValue(v, tagValuePair[1:], tag.Key)
 	}
 	return v
 }
@@ -56,12 +58,12 @@ func ParseFormat(v Vcf, header Header) Vcf {
 			currValues[j] = v.Samples[j].FormatData[i]
 		}
 
-		tag, ok := header.Info[v.Format[i]]
+		tag, ok := header.Format[v.Format[i]]
 		if !ok {
 			log.Fatalf("Format tag '%s' is not described in file header", v.Format[i])
 		}
 
-		v.parsedFormat[v.Format[i]] = parseValue(currValues, tag.Key)
+		v.parsedFormat[v.Format[i]] = parseValue(v, currValues, tag.Key)
 	}
 	return v
 }
@@ -69,8 +71,9 @@ func ParseFormat(v Vcf, header Header) Vcf {
 // parseValue parses a []string according to the number and type defined in the header.
 // each element in the slice corresponds to the value for a sample when query the Format field.
 // len of s is always 1 when querying the Info field.
-func parseValue(s []string, k Key) interface{} {
+func parseValue(v Vcf, s []string, k Key) interface{} {
 	var stringValues []string
+	var err error
 	switch k.dataType {
 	case typeInteger:
 		data := make([][]int, len(s))
@@ -78,26 +81,110 @@ func parseValue(s []string, k Key) interface{} {
 		for i := range s {
 			stringValues = strings.Split(s[i], ",")
 			for j := range stringValues {
-
+				val, err = strconv.Atoi(stringValues[j])
+				exception.PanicOnErr(err)
+				data[i] = append(data[i], val)
 			}
 		}
+
+		for i := range data {
+			if !checkNumber(v, k, len(data[i])) {
+				log.Panicf("unexpected number of values")
+			}
+		}
+
+		return data
 
 	case typeFloat:
 		var val float64
 		data := make([][]float64, len(s))
+		for i := range s {
+			stringValues = strings.Split(s[i], ",")
+			for j := range stringValues {
+				val, err = strconv.ParseFloat(stringValues[j], 64)
+				exception.PanicOnErr(err)
+				data[i] = append(data[i], val)
+			}
+		}
+
+		for i := range data {
+			if !checkNumber(v, k, len(data[i])) {
+				log.Panicf("unexpected number of values")
+			}
+		}
+
+		return data
 
 	case typeString:
-		var val string
 		data := make([][]string, len(s))
+		for i := range s {
+			stringValues = strings.Split(s[i], ",")
+			data[i] = stringValues
+		}
+
+		for i := range data {
+			if !checkNumber(v, k, len(data[i])) {
+				log.Panicf("unexpected number of values")
+			}
+		}
+
+		return data
 
 	case typeCharacter:
-		var val rune
 		data := make([][]rune, len(s))
+		for i := range s {
+			stringValues = strings.Split(s[i], ",")
+			for j := range stringValues {
+				if len(stringValues[j]) > 1 {
+					log.Panicf("could not convert %s to a rune\n", stringValues[j])
+				}
+				data[i] = append(data[i], rune(stringValues[j][0]))
+			}
+		}
+
+		for i := range data {
+			if !checkNumber(v, k, len(data[i])) {
+				log.Panicf("unexpected number of values")
+			}
+		}
+
+		return data
 
 	default:
 		log.Panicln("unknown type")
-		return ""
+		return nil
 	}
+}
+
+func checkNumber(v Vcf, k Key, length int) bool {
+	switch k.number {
+	case "A": // == num alt alleles
+		if length != len(v.Alt) {
+			return false
+		}
+
+	case "R": // == num ref + alt alleles
+		if length != len(v.Alt) + 1 {
+			return false
+		}
+
+	case "G": // one value for each possible genotype
+	// TODO I think changes to the way GT is parsed is needed before ploidy can be determined
+		return true
+
+	case ".": // wildcard. they never make it easy do they...
+		return true
+
+	default:
+		num, err := strconv.Atoi(k.number)
+		if err != nil {
+			log.Panicf("'%s' is not a valid number for header info", k.number)
+		}
+		if length != num {
+			return false
+		}
+	}
+	return true
 }
 
 // QueryInt retrieves integer values stored in the Info or Format fields of a vcf record.
