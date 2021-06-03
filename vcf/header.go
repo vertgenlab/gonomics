@@ -155,40 +155,41 @@ func parseChromsFromHeader(line string, chroms map[string]chromInfo.ChromInfo, c
 
 // parseInfoFromHeader parses a line beginning with ##INFO to a map keying the ID to the info fields information.
 func parseInfoFromHeader(line string, info map[string]InfoHeader) map[string]InfoHeader {
-	var format InfoHeader
-	format.Id, format.number, format.dataType, format.Description, format.Source, format.Version = parseHeaderFields(line)
+	var answer InfoHeader
+	answer.Id, answer.number, answer.dataType, answer.Description, answer.Source, answer.Version = parseHeaderFields(line)
 
-	if _, duplicateId := info[format.Id]; duplicateId {
-		log.Fatalf("duplicate ID in info header: '%s'", format.Id)
+	if _, duplicateId := info[answer.Id]; duplicateId {
+		log.Fatalf("duplicate ID in info header: '%s'", answer.Id)
 	}
-
-	info[format.Id] = format
+	answer.isFormat = false
+	info[answer.Id] = answer
 	return info
 }
 
 // parseFilterFromHeader parses a line beginning with ##FILTER to a map keying the ID to the filter information.
 func parseFilterFromHeader(line string, filter map[string]FilterHeader) map[string]FilterHeader {
-	var format FilterHeader
-	format.Id, _, _, format.Description, _, _ = parseHeaderFields(line)
+	var answer FilterHeader
+	answer.Id, _, _, answer.Description, _, _ = parseHeaderFields(line)
 
-	if _, duplicateId := filter[format.Id]; duplicateId {
-		log.Fatalf("duplicate ID in filter header: '%s'", format.Id)
+	if _, duplicateId := filter[answer.Id]; duplicateId {
+		log.Fatalf("duplicate ID in filter header: '%s'", answer.Id)
 	}
 
-	filter[format.Id] = format
+	filter[answer.Id] = answer
 	return filter
 }
 
 // parseFormatFromHeader parses a line beginning with ##FORMAT to a map keying the ID to the format information.
 func parseFormatFromHeader(line string, formatData map[string]FormatHeader) map[string]FormatHeader {
-	var format FormatHeader
-	format.Id, format.number, format.dataType, format.Description, _, _ = parseHeaderFields(line)
+	var answer FormatHeader
+	answer.Id, answer.number, answer.dataType, answer.Description, _, _ = parseHeaderFields(line)
 
-	if _, duplicateId := formatData[format.Id]; duplicateId {
-		log.Fatalf("duplicate ID in format header: '%s'", format.Id)
+	if _, duplicateId := formatData[answer.Id]; duplicateId {
+		log.Fatalf("duplicate ID in answer header: '%s'", answer.Id)
 	}
 
-	formatData[format.Id] = format
+	answer.isFormat = true
+	formatData[answer.Id] = answer
 	return formatData
 }
 

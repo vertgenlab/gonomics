@@ -16,12 +16,12 @@ func expectedHeader() Header {
 		"FilterD": {Id: "FilterD", Description: "Dea"},
 	}
 	h.Info = map[string]InfoHeader{
-		"InfoA": {Key: Key{Id: "InfoA", number: "1", dataType: typeInteger}, Description: "Aye"},
-		"InfoB": {Key: Key{Id: "InfoB", number: "R", dataType: typeFloat}, Description: "Bee"},
+		"InfoA": {Key: Key{Id: "InfoA", number: "1", dataType: typeInteger, isFormat: false}, Description: "Aye"},
+		"InfoB": {Key: Key{Id: "InfoB", number: "R", dataType: typeFloat, isFormat: false}, Description: "Bee"},
 	}
 	h.Format = map[string]FormatHeader{
-		"GT":      {Key: Key{Id: "GT", number: "R", dataType: typeInteger}, Description: "Eey"},
-		"FormatF": {Key: Key{Id: "FormatF", number: "1", dataType: typeFlag}, Description: "Eff"},
+		"GT":      {Key: Key{Id: "GT", number: "R", dataType: typeInteger, isFormat: true}, Description: "Eey"},
+		"FormatF": {Key: Key{Id: "FormatF", number: "1", dataType: typeFlag, isFormat: true}, Description: "Eff"},
 	}
 	h.Samples = map[string]int{
 		"SampleA": 0,
