@@ -16,12 +16,17 @@ func expectedHeader() Header {
 		"FilterD": {Id: "FilterD", Description: "Dea"},
 	}
 	h.Info = map[string]InfoHeader{
-		"InfoA": {Key: Key{Id: "InfoA", number: "1", dataType: typeInteger, isFormat: false}, Description: "Aye"},
-		"InfoB": {Key: Key{Id: "InfoB", number: "R", dataType: typeFloat, isFormat: false}, Description: "Bee"},
+		"InfoA":      {Key: Key{Id: "InfoA", number: "1", dataType: typeInteger, isFormat: false}, Description: "Aye"},
+		"InfoB":      {Key: Key{Id: "InfoB", number: "R", dataType: typeFloat, isFormat: false}, Description: "Bee"},
+		"InfoChar":   {Key: Key{Id: "InfoChar", number: "2", dataType: typeCharacter, isFormat: false}, Description: "Gee"},
+		"InfoString": {Key: Key{Id: "InfoString", number: "A", dataType: typeString, isFormat: false}, Description: "Ach"},
+		"InfoFlag":   {Key: Key{Id: "InfoFlag", number: "0", dataType: typeFlag, isFormat: false}, Description: "Eye"},
 	}
 	h.Format = map[string]FormatHeader{
 		"GT":      {Key: Key{Id: "GT", number: "1", dataType: typeInteger, isFormat: true}, Description: "Eey"},
 		"FormatF": {Key: Key{Id: "FormatF", number: "1", dataType: typeInteger, isFormat: true}, Description: "Eff"},
+		"FormatJ": {Key: Key{Id: "FormatJ", number: "2", dataType: typeCharacter, isFormat: true}, Description: "Jay"},
+		"FormatK": {Key: Key{Id: "FormatK", number: ".", dataType: typeString, isFormat: true}, Description: "Kay"},
 	}
 	h.Samples = map[string]int{
 		"SampleA": 0,
@@ -42,7 +47,7 @@ func TestHeaderReading(t *testing.T) {
 		len(aH.Info) != len(eH.Info) ||
 		len(aH.Filter) != len(eH.Filter) ||
 		len(aH.Format) != len(eH.Format) ||
-		len(aH.Samples) != len(eH.Format) {
+		len(aH.Samples) != len(eH.Samples) {
 		t.Errorf("problem with header maps")
 	}
 

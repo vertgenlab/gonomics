@@ -20,7 +20,7 @@ func ParseInfo(v Vcf, header Header) Vcf {
 	for i := range fields {
 		tagValuePair = strings.Split(fields[i], "=")
 		if len(tagValuePair) > 2 {
-			log.Fatalf("literal '=' is illegal within an info field.\n" +
+			log.Fatalf("literal '=' is illegal within an info field.\n"+
 				"Found in following line:\n%s\n", v)
 		}
 
@@ -164,12 +164,12 @@ func checkNumber(v Vcf, k Key, length int) bool {
 		}
 
 	case "R": // == num ref + alt alleles
-		if length != len(v.Alt) + 1 {
+		if length != len(v.Alt)+1 {
 			return false
 		}
 
 	case "G": // one value for each possible genotype
-	// TODO I think changes to the way GT is parsed is needed before ploidy can be determined
+		// TODO I think changes to the way GT is parsed is needed before ploidy can be determined
 		return true
 
 	case ".": // wildcard. they never make it easy do they...
@@ -200,10 +200,10 @@ func QueryInt(v Vcf, k Key) [][]int {
 		log.Panicf("requested QueryInt but key records data type as '%s'", k.dataType)
 	}
 
-	interfValue := query(v, k) // query value and store resulting interface
+	interfValue := query(v, k)         // query value and store resulting interface
 	value, ok := interfValue.([][]int) // assert value to the expected type
-	if !ok { // panic if interfValue type does not match the expected type
-		log.Panicf("value for tag '%s' in vcf at position '%d' " +
+	if !ok {                           // panic if interfValue type does not match the expected type
+		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]int as expected by header", k.Id, v.Pos)
 	}
 	return value
@@ -222,10 +222,10 @@ func QueryFloat(v Vcf, k Key) [][]float64 {
 		log.Panicf("requested QueryFloat but key records data type as '%s'", k.dataType)
 	}
 
-	interfValue := query(v, k) // query value and store resulting interface
+	interfValue := query(v, k)             // query value and store resulting interface
 	value, ok := interfValue.([][]float64) // assert value to the expected type
-	if !ok { // panic if interfValue type does not match the expected type
-		log.Panicf("value for tag '%s' in vcf at position '%d' " +
+	if !ok {                               // panic if interfValue type does not match the expected type
+		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]float64 as expected by header", k.Id, v.Pos)
 	}
 	return value
@@ -242,10 +242,10 @@ func QueryFlag(v Vcf, k Key) bool {
 		log.Panicf("requested QueryFlag but key records data type as '%s'", k.dataType)
 	}
 
-	interfValue := query(v, k) // query value and store resulting interface
+	interfValue := query(v, k)      // query value and store resulting interface
 	value, ok := interfValue.(bool) // assert value to the expected type
-	if !ok { // panic if interfValue type does not match the expected type
-		log.Panicf("value for tag '%s' in vcf at position '%d' " +
+	if !ok {                        // panic if interfValue type does not match the expected type
+		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a bool as expected by header", k.Id, v.Pos)
 	}
 	return value
@@ -264,10 +264,10 @@ func QueryString(v Vcf, k Key) [][]string {
 		log.Panicf("requested QueryString but key records data type as '%s'", k.dataType)
 	}
 
-	interfValue := query(v, k) // query value and store resulting interface
+	interfValue := query(v, k)            // query value and store resulting interface
 	value, ok := interfValue.([][]string) // assert value to the expected type
-	if !ok { // panic if interfValue type does not match the expected type
-		log.Panicf("value for tag '%s' in vcf at position '%d' " +
+	if !ok {                              // panic if interfValue type does not match the expected type
+		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]string as expected by header", k.Id, v.Pos)
 	}
 	return value
@@ -286,10 +286,10 @@ func QueryRune(v Vcf, k Key) [][]rune {
 		log.Panicf("requested QueryRune but key records data type as '%s'", k.dataType)
 	}
 
-	interfValue := query(v, k) // query value and store resulting interface
+	interfValue := query(v, k)          // query value and store resulting interface
 	value, ok := interfValue.([][]rune) // assert value to the expected type
-	if !ok { // panic if interfValue type does not match the expected type
-		log.Panicf("value for tag '%s' in vcf at position '%d' " +
+	if !ok {                            // panic if interfValue type does not match the expected type
+		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]rune as expected by header", k.Id, v.Pos)
 	}
 	return value
