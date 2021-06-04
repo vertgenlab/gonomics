@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Header contains all of the information present in the header section of a VCf.
+// Header contains all of the information present in the header section of a VCF.
 // Info, Filter, Format, and Contig lines are parsed into maps keyed by ID.
 type Header struct {
 	FileFormat string                         // ##fileformat=VCFv4.3
@@ -36,7 +36,7 @@ func (t infoType) String() string {
 	case typeFlag:
 		return "Flag"
 	case typeString:
-		return "string"
+		return "String"
 	case typeCharacter:
 		return "Character"
 	default:
@@ -54,6 +54,8 @@ const (
 )
 
 // Key is the identifying information for a given info field.
+// (e.g. the genotype field in format would be {"GT", "1", Integer, true}.)
+// (e.g. a read counter may be {"ReadCount", "R", Integer, true}.)
 type Key struct {
 	Id       string
 	number   string // numeral or 'A', 'G', 'R', '.'
@@ -120,17 +122,17 @@ func parseHeader(text []string) Header {
 			header.FileFormat = parseFileFormatFromHeader(text[i])
 
 		case "contig":
-			header.Chroms = parseChromsFromHeader(text[i], header.Chroms, chromIdx)
+			parseChromsFromHeader(text[i], header.Chroms, chromIdx)
 			chromIdx++
 
 		case "INFO":
-			header.Info = parseInfoFromHeader(text[i], header.Info)
+			parseInfoFromHeader(text[i], header.Info)
 
 		case "FILTER":
-			header.Filter = parseFilterFromHeader(text[i], header.Filter)
+			parseFilterFromHeader(text[i], header.Filter)
 
 		case "FORMAT":
-			header.Format = parseFormatFromHeader(text[i], header.Format)
+			parseFormatFromHeader(text[i], header.Format)
 		}
 	}
 	header.Samples = parseSamplesFromHeader(text[len(text)-1])
@@ -143,7 +145,7 @@ func parseFileFormatFromHeader(line string) string {
 }
 
 // parseChromsFromHeader parses a line beginning with ##contig to a map keying the chrom name to the chromInfo.
-func parseChromsFromHeader(line string, chroms map[string]chromInfo.ChromInfo, chromIdx int) map[string]chromInfo.ChromInfo {
+func parseChromsFromHeader(line string, chroms map[string]chromInfo.ChromInfo, chromIdx int) {
 	fields := getHeaderFields(line)
 	var chrom chromInfo.ChromInfo
 	chrom.Order = chromIdx
@@ -164,51 +166,51 @@ func parseChromsFromHeader(line string, chroms map[string]chromInfo.ChromInfo, c
 	}
 
 	// Add chrom to map
-	if _, alreadySawChrom := chroms[chrom.Name]; alreadySawChrom {
+	_, alreadySawChrom := chroms[chrom.Name]
+	if alreadySawChrom {
 		log.Fatalf("ERROR: contig names in header must be unique. Saw %s multiple times", chrom.Name)
 	}
 	chroms[chrom.Name] = chrom
-	return chroms
 }
 
 // parseInfoFromHeader parses a line beginning with ##INFO to a map keying the ID to the info fields information.
-func parseInfoFromHeader(line string, info map[string]InfoHeader) map[string]InfoHeader {
+func parseInfoFromHeader(line string, info map[string]InfoHeader) {
 	var answer InfoHeader
 	answer.Id, answer.number, answer.dataType, answer.Description, answer.Source, answer.Version = parseHeaderFields(line)
 
-	if _, duplicateId := info[answer.Id]; duplicateId {
+	_, duplicateId := info[answer.Id]
+	if duplicateId {
 		log.Fatalf("duplicate ID in info header: '%s'", answer.Id)
 	}
 	answer.isFormat = false
 	info[answer.Id] = answer
-	return info
 }
 
 // parseFilterFromHeader parses a line beginning with ##FILTER to a map keying the ID to the filter information.
-func parseFilterFromHeader(line string, filter map[string]FilterHeader) map[string]FilterHeader {
+func parseFilterFromHeader(line string, filter map[string]FilterHeader) {
 	var answer FilterHeader
 	answer.Id, _, _, answer.Description, _, _ = parseHeaderFields(line)
 
-	if _, duplicateId := filter[answer.Id]; duplicateId {
+	_, duplicateId := filter[answer.Id]
+	if duplicateId {
 		log.Fatalf("duplicate ID in filter header: '%s'", answer.Id)
 	}
 
 	filter[answer.Id] = answer
-	return filter
 }
 
 // parseFormatFromHeader parses a line beginning with ##FORMAT to a map keying the ID to the format information.
-func parseFormatFromHeader(line string, formatData map[string]FormatHeader) map[string]FormatHeader {
+func parseFormatFromHeader(line string, formatData map[string]FormatHeader) {
 	var answer FormatHeader
 	answer.Id, answer.number, answer.dataType, answer.Description, _, _ = parseHeaderFields(line)
 
-	if _, duplicateId := formatData[answer.Id]; duplicateId {
+	_, duplicateId := formatData[answer.Id]
+	if duplicateId {
 		log.Fatalf("duplicate ID in answer header: '%s'", answer.Id)
 	}
 
 	answer.isFormat = true
 	formatData[answer.Id] = answer
-	return formatData
 }
 
 // parseSamplesFromHeader reads samples from the column names in the final line of the header. Returns a
@@ -225,7 +227,8 @@ func parseSamplesFromHeader(line string) map[string]int {
 	samples := colNames[9:]
 	var nameExists bool
 	for i := range samples {
-		if _, nameExists = sampleMap[samples[i]]; nameExists {
+		_, nameExists = sampleMap[samples[i]]
+		if nameExists {
 			log.Fatalf("ERROR: cannot have duplicate sample names. Sample %s was present more than once.\n", samples[i])
 		}
 		sampleMap[samples[i]] = i
