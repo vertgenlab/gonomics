@@ -14,7 +14,6 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
-
 	//"os"
 	//"math/rand"
 )
