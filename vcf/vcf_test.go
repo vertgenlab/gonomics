@@ -49,6 +49,16 @@ func BenchmarkRead(b *testing.B) {
 	}
 }
 
+func BenchmarkReadParsed(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		data, header := GoReadToChan("testdata/test.vcf")
+		for v := range data { // stall
+			v = ParseFormat(v, header)
+			v = ParseInfo(v, header)
+		}
+	}
+}
+
 func BenchmarkWrite(b *testing.B) {
 	records, _ := Read("testdata/test.vcf")
 	for i := 0; i < b.N; i++ {

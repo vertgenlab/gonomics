@@ -4,13 +4,13 @@ import (
 	"testing"
 )
 
-var expectedFormat = map[string]interface{} {
+var expectedFormat = map[string]interface{}{
 	"FormatF": [][]int{{1}, {2}},
-	"FormatJ": [][]rune{{'F', 'E'},{'D','A'}},
-	"FormatK": [][]string{{"the","quick","brown","fox"},{"jumps","over","the","lazy","dog"}},
+	"FormatJ": [][]rune{{'F', 'E'}, {'D', 'A'}},
+	"FormatK": [][]string{{"the", "quick", "brown", "fox"}, {"jumps", "over", "the", "lazy", "dog"}},
 }
 
-var expectedInfo = map[string]interface{} {
+var expectedInfo = map[string]interface{}{
 	"InfoA":      [][]int{{10}},
 	"InfoB":      [][]float64{{1, 2}},
 	"InfoChar":   [][]rune{{'R', 'L'}},
