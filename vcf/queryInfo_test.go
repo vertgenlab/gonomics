@@ -194,3 +194,62 @@ func equalBool(a, b interface{}) bool {
 	}
 	return true
 }
+
+func TestQueryInt(t *testing.T) {
+	data, header := Read("testdata/headerTest.vcf")
+	v := ParseFormat(data[0], header)
+	v = ParseInfo(v, header)
+
+	if !equalInt(QueryInt(v, header.Info["InfoA"].Key), expectedInfo["InfoA"]) {
+		t.Errorf("troble querying read info")
+	}
+	if !equalInt(QueryInt(v, header.Format["FormatF"].Key), expectedFormat["FormatF"]) {
+		t.Errorf("troble querying read info")
+	}
+}
+
+func TestQueryRune(t *testing.T) {
+	data, header := Read("testdata/headerTest.vcf")
+	v := ParseFormat(data[0], header)
+	v = ParseInfo(v, header)
+
+	if !equalRune(QueryRune(v, header.Info["InfoChar"].Key), expectedInfo["InfoChar"]) {
+		t.Errorf("troble querying read info")
+	}
+	if !equalRune(QueryRune(v, header.Format["FormatJ"].Key), expectedFormat["FormatJ"]) {
+		t.Errorf("troble querying read info")
+	}
+}
+
+func TestQueryString(t *testing.T) {
+	data, header := Read("testdata/headerTest.vcf")
+	v := ParseFormat(data[0], header)
+	v = ParseInfo(v, header)
+
+	if !equalString(QueryString(v, header.Info["InfoString"].Key), expectedInfo["InfoString"]) {
+		t.Errorf("troble querying read info")
+	}
+	if !equalString(QueryString(v, header.Format["FormatK"].Key), expectedFormat["FormatK"]) {
+		t.Errorf("troble querying read info")
+	}
+}
+
+func TestQueryFloat(t *testing.T) {
+	data, header := Read("testdata/headerTest.vcf")
+	v := ParseFormat(data[0], header)
+	v = ParseInfo(v, header)
+
+	if !equalFloat(QueryFloat(v, header.Info["InfoB"].Key), expectedInfo["InfoB"]) {
+		t.Errorf("troble querying read info")
+	}
+}
+
+func TestQueryFlag(t *testing.T) {
+	data, header := Read("testdata/headerTest.vcf")
+	v := ParseFormat(data[0], header)
+	v = ParseInfo(v, header)
+
+	if !equalBool(QueryFlag(v, header.Info["InfoFlag"].Key), expectedInfo["InfoFlag"]) {
+		t.Errorf("troble querying read info")
+	}
+}

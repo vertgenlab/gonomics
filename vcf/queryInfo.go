@@ -218,7 +218,7 @@ func QueryInt(v Vcf, k Key) [][]int {
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
 func QueryFloat(v Vcf, k Key) [][]float64 {
-	if k.dataType != typeInteger {
+	if k.dataType != typeFloat {
 		log.Panicf("requested QueryFloat but key records data type as '%s'", k.dataType)
 	}
 
@@ -238,7 +238,7 @@ func QueryFloat(v Vcf, k Key) [][]float64 {
 //
 // Note that flags are not valid in the Format field, so this query is only for Info.
 func QueryFlag(v Vcf, k Key) bool {
-	if k.dataType != typeInteger {
+	if k.dataType != typeFlag {
 		log.Panicf("requested QueryFlag but key records data type as '%s'", k.dataType)
 	}
 
@@ -260,7 +260,7 @@ func QueryFlag(v Vcf, k Key) bool {
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
 func QueryString(v Vcf, k Key) [][]string {
-	if k.dataType != typeInteger {
+	if k.dataType != typeString {
 		log.Panicf("requested QueryString but key records data type as '%s'", k.dataType)
 	}
 
@@ -282,7 +282,7 @@ func QueryString(v Vcf, k Key) [][]string {
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
 func QueryRune(v Vcf, k Key) [][]rune {
-	if k.dataType != typeInteger {
+	if k.dataType != typeCharacter {
 		log.Panicf("requested QueryRune but key records data type as '%s'", k.dataType)
 	}
 
