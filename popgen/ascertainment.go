@@ -74,6 +74,7 @@ func AlleleFrequencyProbabilityDerivedAscertainment(alpha float64, i int, n int,
 	return numbers.DivideLog(numbers.MultiplyLog(pIGivenAlpha, DerivedAscertainmentProbability(n, i, d)), DerivedAscertainmentDenominator(fCache, fCacheSum, d))
 }
 
+//AfsDivergenceAscertainmentLikelihood is like AfsLikelihood, but makes a correction for divergence-based ascertainment when variant sets were selected for divergence or identity between two groups of d individuals.
 func AfsDivergenceAscertainmentLikelihood(afs Afs, alpha []float64, binomMap [][]float64, d int, integralError float64) float64 {
 	var answer float64 = 0.0
 	for j := 0; j < len(afs.Sites); j++ {

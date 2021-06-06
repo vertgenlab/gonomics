@@ -124,13 +124,9 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 	var err error
 	if s.Verbose > 1 {
 		f, err := os.Create("testProfile.prof")
-		if err != nil {
-			exception.PanicOnErr(err)
-		}
+		exception.PanicOnErr(err)
 		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			exception.PanicOnErr(err)
-		}
+		exception.PanicOnErr(err)
 		defer pprof.StopCPUProfile()
 	}
 

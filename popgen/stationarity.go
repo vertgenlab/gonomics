@@ -23,9 +23,9 @@ const IntegralBound float64 = 1e-12
 type LikelihoodFunction byte
 
 const (
-	Uncorrected LikelihoodFunction = 0
-	Ancestral   LikelihoodFunction = 1
-	Derived     LikelihoodFunction = 2
+	Uncorrected LikelihoodFunction = iota
+	Ancestral
+	Derived
 )
 
 //k is len(sites)
