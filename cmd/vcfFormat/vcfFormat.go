@@ -1,3 +1,5 @@
+// Command Group: "VCF Tools"
+
 package main
 
 import (
@@ -47,7 +49,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 
 func usage() {
 	fmt.Print(
-		"vcfFormat: Options alter VCF formatting.\n" +
+		"vcfFormat - Options alter VCF formatting.\n" +
 			"Usage:\n" +
 			"vcfFormat input.vcf output.vcf\n" +
 			"options:\n")

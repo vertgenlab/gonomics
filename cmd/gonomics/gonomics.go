@@ -2,25 +2,14 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"sort"
-	"strings"
 )
 
-func usage() {
-	fmt.Print(
-		"gonomics - A collection of builtin tools that use the gonomics core library.\n\n" +
-			"Usage: gonomics <command> [options]\n\n")
-	printCmdList()
-}
-
 func getBin() (path string, binExists map[string]bool) {
-
 	switch { // Find binary location. Preference is GOBIN > GOPATH > Default go install location
 	case os.Getenv("GOBIN") != "":
 		path = os.Getenv("GOBIN")
@@ -52,8 +41,15 @@ func getBin() (path string, binExists map[string]bool) {
 	return path, binExists
 }
 
+// getGonomicsCmds parses the gonomics source code to return a set of cmd names
 func getGonomicsCmds() map[string]bool {
-	expectedPath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
+	var expectedPath string
+	if os.Getenv("GOPATH") != "" {
+		expectedPath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
+	} else {
+		expectedPath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd"
+	}
+
 	cmds, err := ioutil.ReadDir(expectedPath)
 	if err != nil {
 		log.Printf("ERROR: could not find gonomics cmd folder in expected path: %s\n", expectedPath)
@@ -73,46 +69,6 @@ func getGonomicsCmds() map[string]bool {
 	return funcNames
 }
 
-func printCmdList() {
-	binPath, _ := getBin()
-	cmdMap := getGonomicsCmds()
-
-	cmds := make([]string, 0, len(cmdMap))
-	for key := range cmdMap {
-		cmds = append(cmds, key)
-	}
-	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
-
-	var endFirstLineIdx int
-	var rawOutput []byte
-
-	fmt.Println("Commands:")
-	for _, cmdName := range cmds {
-
-		if cmdName == "gonomics" { // avoid recursive call of the gonomics cmd
-			continue
-		}
-
-		cmd := exec.Command(binPath + "/" + cmdName)
-		rawOutput, _ = cmd.Output()
-		endFirstLineIdx = strings.Index(string(rawOutput), "\n")
-
-		switch {
-		case endFirstLineIdx > 0: // cmd starts with summary line
-			fmt.Printf("     %s\n", string(rawOutput[:endFirstLineIdx]))
-
-		case len(rawOutput) == 0: // cmd has no usage statement
-			fmt.Printf("     %s\n", cmdName)
-
-		case endFirstLineIdx == -1 && len(rawOutput) > 0: // has output, but no newline
-			fmt.Printf("     %s\n", rawOutput)
-
-		default: // if all else fails, print cmd name
-			fmt.Printf("     %s\n", cmdName)
-		}
-	}
-}
-
 func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -126,7 +82,7 @@ func main() {
 	cmdCalled := flag.Arg(0) // command called by the user (e.g. 'gonomics faFormat')
 
 	binPath, binExists := getBin()
-	isGonomicsCmd := getGonomicsCmds()
+	isGonomicsCmd := getGonomicsCmds() // TODO change this so that gonomics cmd can be run without source code
 
 	switch { // Error checks. verbose for clarity
 	case isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:

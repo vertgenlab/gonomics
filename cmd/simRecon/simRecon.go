@@ -1,3 +1,6 @@
+// Command Group: "Sequence Evolution & Reconstruction"
+// Command Usage: "Simulate evolution along a tree and perform ancestral reconstruction"
+
 package main
 
 import (

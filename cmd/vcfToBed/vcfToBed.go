@@ -1,3 +1,5 @@
+// Command Group: "Data Conversion"
+
 package main
 
 import (
@@ -28,7 +30,7 @@ func vcfToBed(infile string, outfile string, delimiter string) {
 
 func usage() {
 	fmt.Print(
-		"vcfToBed: Converts vcf to bed format. Intended for subsequent use for vcf LiftOver.\n" +
+		"vcfToBed - Converts vcf to bed format. Intended for subsequent use for vcf LiftOver.\n" +
 			"Usage:\n" +
 			"bedFilter input.vcf output.bed\n" +
 			"options:\n")

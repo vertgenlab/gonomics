@@ -1,3 +1,5 @@
+// Command Group: "VCF Tools"
+
 package main
 
 import (

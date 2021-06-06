@@ -1,3 +1,5 @@
+// Command Group: "BED Tools"
+
 package main
 
 import (

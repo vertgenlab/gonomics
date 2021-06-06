@@ -1,3 +1,6 @@
+// Command Group: "WIG Tools"
+// Command Usage: "Identifies peaks in a WIG file"
+
 package main
 
 import (

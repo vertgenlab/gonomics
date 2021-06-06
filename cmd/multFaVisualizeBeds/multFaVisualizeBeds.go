@@ -1,3 +1,5 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
 package main
 
 import (
