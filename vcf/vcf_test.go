@@ -44,7 +44,7 @@ func TestWriteAndRead(t *testing.T) {
 func BenchmarkRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		data, _ := GoReadToChan("testdata/test.vcf")
-		for _ = range data { // stall
+		for range data { // stall
 		}
 	}
 }
