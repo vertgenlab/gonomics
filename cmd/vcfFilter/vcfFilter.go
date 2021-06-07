@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) {
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) (total, removed int){
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
@@ -35,6 +35,7 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 	vcf.NewWriteHeader(out.File, header)
 
 	for v := range records {
+		total++
 		if groupFile != "" {
 			v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
 		}
@@ -48,6 +49,7 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		}
 
 		if !passesTests(v, tests) {
+			removed++
 			continue
 		}
 
@@ -58,6 +60,7 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 	if err != nil {
 		log.Panic(err)
 	}
+	return
 }
 
 func filterRecordsSamplesToKeep(recordSamples []vcf.GenomeSample, samplesToKeep []int) []vcf.GenomeSample {
@@ -231,8 +234,8 @@ func main() {
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
 	var onlyPolarizableAncestors *bool = flag.Bool("onlyPolarizableAncestors", false, "Retains only variants that can be used to construct a derived allele frequency spectrum. Must have a subsitution where the ancestral allele matches either alt or ref.")
-	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\")."+
-		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'.For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\"."+
+	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\"). "+
+		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'. For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\". "+
 		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
 	var infoExp *string = flag.String("info", "", "Identical to the 'format' tag, but tests the info field. The values of type 'Flag' in the info field"+
 		"can be tested by including just the flag ID in the expression. E.g. To select all records with the flag 'GG' you would use the expression \"GG\".")
@@ -279,5 +282,6 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo)
+	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo)
+	fmt.Printf("Processed  %d variants\nRemoved    %d variants\n", total, removed)
 }
