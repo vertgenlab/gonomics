@@ -13,10 +13,10 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string) {
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) {
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
-	tests := getTests(c)
+	tests := getTests(c, header)
 
 	var samplesToKeep []int = make([]int, 0) //this var holds all of the indices from samples (defined below as the sample list in the header) that we want to keep in the output file.
 	if groupFile != "" {
@@ -35,12 +35,20 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string) {
 	vcf.NewWriteHeader(out.File, header)
 
 	for v := range records {
-		if !passesTests(v, tests) {
-			continue
-		}
-
 		if groupFile != "" {
 			v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
+		}
+
+		if parseFormat {
+			v = vcf.ParseFormat(v, header)
+		}
+
+		if parseInfo {
+			v = vcf.ParseInfo(v, header)
+		}
+
+		if !passesTests(v, tests) {
+			continue
 		}
 
 		vcf.WriteVcf(out.File, v)
@@ -79,6 +87,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+// criteria by which vcf records are filtered.
 type criteria struct {
 	chrom                    string
 	groupFile                string
@@ -92,10 +101,14 @@ type criteria struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
+	formatExp                string
+	infoExp                  string
 }
 
+// testingFuncs are a set of functions that must all return true to escape filter.
 type testingFuncs []func(vcf.Vcf) bool
 
+// passesTests runs all testingFuncs on a vcf record and returns true if all tests pass.
 func passesTests(v vcf.Vcf, t testingFuncs) bool {
 	for i := range t {
 		if !t[i](v) {
@@ -105,8 +118,17 @@ func passesTests(v vcf.Vcf, t testingFuncs) bool {
 	return true
 }
 
-func getTests(c criteria) testingFuncs {
+// getTests parses the criteria struct to determine the testingFuncs.
+func getTests(c criteria, header vcf.Header) testingFuncs {
 	var answer testingFuncs
+
+	if c.formatExp != "" {
+		answer = append(answer, parseExpression(c.formatExp, header, true)...)
+	}
+
+	if c.infoExp != "" {
+		answer = append(answer, parseExpression(c.infoExp, header, false)...)
+	}
 
 	if c.chrom != "" {
 		answer = append(answer,
@@ -209,6 +231,11 @@ func main() {
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
 	var onlyPolarizableAncestors *bool = flag.Bool("onlyPolarizableAncestors", false, "Retains only variants that can be used to construct a derived allele frequency spectrum. Must have a subsitution where the ancestral allele matches either alt or ref.")
+	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\")."+
+		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'.For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\"."+
+		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
+	var infoExp *string = flag.String("info", "", "Identical to the 'format' tag, but tests the info field. The values of type 'Flag' in the info field"+
+		"can be tested by including just the flag ID in the expression. E.g. To select all records with the flag 'GG' you would use the expression \"GG\".")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -221,7 +248,6 @@ func main() {
 
 	c := criteria{
 		chrom:                    *chrom,
-		groupFile:                *groupFile,
 		minPos:                   *minPos,
 		maxPos:                   *maxPos,
 		minQual:                  *minQual,
@@ -232,6 +258,16 @@ func main() {
 		segregatingSitesOnly:     *segregatingSitesOnly,
 		removeNoAncestor:         *removeNoAncestor,
 		onlyPolarizableAncestors: *onlyPolarizableAncestors,
+		formatExp:                *formatExp,
+		infoExp:                  *infoExp,
+	}
+
+	var parseFormat, parseInfo bool
+	if *formatExp != "" {
+		parseFormat = true
+	}
+	if *infoExp != "" {
+		parseInfo = true
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -243,5 +279,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFilter(infile, outfile, c, *groupFile)
+	vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo)
 }

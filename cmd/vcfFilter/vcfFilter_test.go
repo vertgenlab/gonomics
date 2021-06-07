@@ -52,7 +52,7 @@ func TestVcfFilter(t *testing.T) {
 			onlyPolarizableAncestors: v.onlyPolarizableAncestors,
 		}
 
-		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile)
+		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)
 		records, _ := vcf.Read("tmp.vcf")
 		expected, _ := vcf.Read(v.expectedOutputFile)
 		if !vcf.AllEqual(records, expected) {

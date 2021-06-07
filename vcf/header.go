@@ -24,20 +24,20 @@ type Header struct {
 	Text       []string                       // raw text
 }
 
-// infoType stores the type of variable that a field in the Header holds.
-type infoType byte
+// InfoType stores the type of variable that a field in the Header holds.
+type InfoType byte
 
-func (t infoType) String() string {
+func (t InfoType) String() string {
 	switch t {
-	case typeInteger:
+	case Integer:
 		return "Integer"
-	case typeFloat:
+	case Float:
 		return "Float"
-	case typeFlag:
+	case Flag:
 		return "Flag"
-	case typeString:
+	case String:
 		return "string"
-	case typeCharacter:
+	case Character:
 		return "Character"
 	default:
 		log.Panicln("unknown type")
@@ -46,19 +46,19 @@ func (t infoType) String() string {
 }
 
 const (
-	typeInteger infoType = iota
-	typeFloat
-	typeFlag
-	typeCharacter
-	typeString
+	Integer InfoType = iota
+	Float
+	Flag
+	Character
+	String
 )
 
 // Key is the identifying information for a given info field.
 type Key struct {
 	Id       string
-	number   string // numeral or 'A', 'G', 'R', '.'
-	dataType infoType
-	isFormat bool // true if this key is for a Format field, false for Info
+	Number   string // numeral or 'A', 'G', 'R', '.'
+	DataType InfoType
+	IsFormat bool // true if this key is for a Format field, false for Info
 }
 
 // InfoHeader contains info encoded by header lines beginning in ##INFO.
@@ -174,12 +174,12 @@ func parseChromsFromHeader(line string, chroms map[string]chromInfo.ChromInfo, c
 // parseInfoFromHeader parses a line beginning with ##INFO to a map keying the ID to the info fields information.
 func parseInfoFromHeader(line string, info map[string]InfoHeader) map[string]InfoHeader {
 	var answer InfoHeader
-	answer.Id, answer.number, answer.dataType, answer.Description, answer.Source, answer.Version = parseHeaderFields(line)
+	answer.Id, answer.Number, answer.DataType, answer.Description, answer.Source, answer.Version = parseHeaderFields(line)
 
 	if _, duplicateId := info[answer.Id]; duplicateId {
 		log.Fatalf("duplicate ID in info header: '%s'", answer.Id)
 	}
-	answer.isFormat = false
+	answer.IsFormat = false
 	info[answer.Id] = answer
 	return info
 }
@@ -200,13 +200,13 @@ func parseFilterFromHeader(line string, filter map[string]FilterHeader) map[stri
 // parseFormatFromHeader parses a line beginning with ##FORMAT to a map keying the ID to the format information.
 func parseFormatFromHeader(line string, formatData map[string]FormatHeader) map[string]FormatHeader {
 	var answer FormatHeader
-	answer.Id, answer.number, answer.dataType, answer.Description, _, _ = parseHeaderFields(line)
+	answer.Id, answer.Number, answer.DataType, answer.Description, _, _ = parseHeaderFields(line)
 
 	if _, duplicateId := formatData[answer.Id]; duplicateId {
 		log.Fatalf("duplicate ID in answer header: '%s'", answer.Id)
 	}
 
-	answer.isFormat = true
+	answer.IsFormat = true
 	formatData[answer.Id] = answer
 	return formatData
 }
@@ -245,7 +245,7 @@ func getHeaderFields(line string) []string {
 
 // parseHeaderFields returns the Id, Number, Type, Description, Source, and Version present
 // in a header line (if field is applicable, returns zero value otherwise).
-func parseHeaderFields(line string) (Id string, Number string, Type infoType, Description string, Source string, Version string) {
+func parseHeaderFields(line string) (Id string, Number string, Type InfoType, Description string, Source string, Version string) {
 	fields := getHeaderFields(line)
 	for i := range fields {
 		switch {
@@ -258,15 +258,15 @@ func parseHeaderFields(line string) (Id string, Number string, Type infoType, De
 		case strings.HasPrefix(fields[i], "Type="):
 			switch fields[i][5:] {
 			case "Integer":
-				Type = typeInteger
+				Type = Integer
 			case "Float":
-				Type = typeFloat
+				Type = Float
 			case "Flag":
-				Type = typeFlag
+				Type = Flag
 			case "Character":
-				Type = typeCharacter
+				Type = Character
 			case "String":
-				Type = typeString
+				Type = String
 			}
 
 		case strings.HasPrefix(fields[i], "Description="):
