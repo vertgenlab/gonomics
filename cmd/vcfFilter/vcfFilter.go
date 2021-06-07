@@ -283,5 +283,6 @@ func main() {
 	outfile := flag.Arg(1)
 
 	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo)
-	fmt.Printf("Processed  %d variants\nRemoved    %d variants\n", total, removed)
+	log.Printf("Processed  %d variants\n", total)
+	log.Printf("Removed    %d variants\n", removed)
 }
