@@ -13,14 +13,12 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) {
-	ch, header := vcf.GoReadToChan(infile)
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) {
+	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
-	defer out.Close()
-	altSlice := strings.Split(alt, ",")
+	tests := getTests(c)
 
 	var samplesToKeep []int = make([]int, 0) //this var holds all of the indices from samples (defined below as the sample list in the header) that we want to keep in the output file.
-
 	if groupFile != "" {
 		groups := popgen.ReadGroups(groupFile)
 		samples := vcf.HeaderGetSampleList(header)
@@ -36,14 +34,21 @@ func vcfFilter(infile string, outfile string, groupFile string, chrom string, mi
 
 	vcf.NewWriteHeader(out.File, header)
 
-	for v := range ch {
-		if vcf.Filter(v, chrom, minPos, maxPos, ref, altSlice, minQual, biAllelicOnly, substitutionsOnly, segregatingSitesOnly, removeNoAncestor, onlyPolarizableAncestors) {
-			if groupFile != "" {
-				v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
-			}
-
-			vcf.WriteVcf(out.File, v)
+	for v := range records {
+		if !passesTests(v, tests) {
+			continue
 		}
+
+		if groupFile != "" {
+			v.Samples = filterRecordsSamplesToKeep(v.Samples, samplesToKeep)
+		}
+
+		vcf.WriteVcf(out.File, v)
+	}
+
+	err := out.Close()
+	if err != nil {
+		log.Panic(err)
 	}
 }
 
@@ -67,20 +72,137 @@ func filterHeaderSamplesToKeep(samples []string, samplesToKeep []int) []string {
 
 func usage() {
 	fmt.Print(
-		"vcfFilter\n" +
+		"vcfFilter - Filter vcf records.\n\n" +
 			"Usage:\n" +
-			"vcfFilter input.vcf output.vcf\n" +
-			"options:\n")
+			"  vcfFilter [options] input.vcf output.vcf\n\n" +
+			"Options:\n\n")
 	flag.PrintDefaults()
+}
+
+type criteria struct {
+	chrom                    string
+	groupFile                string
+	minPos                   int
+	maxPos                   int
+	minQual                  float64
+	ref                      string
+	alt                      []string
+	biAllelicOnly            bool
+	substitutionsOnly        bool
+	segregatingSitesOnly     bool
+	removeNoAncestor         bool
+	onlyPolarizableAncestors bool
+}
+
+type testingFuncs []func(vcf.Vcf) bool
+
+func passesTests(v vcf.Vcf, t testingFuncs) bool {
+	for i := range t {
+		if !t[i](v) {
+			return false
+		}
+	}
+	return true
+}
+
+func getTests(c criteria) testingFuncs {
+	var answer testingFuncs
+
+	if c.chrom != "" {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Chr != c.chrom {
+					return false
+				}
+				return true
+			})
+	}
+
+	if c.minPos != 0 {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Pos < c.minPos {
+					return false
+				}
+				return true
+			})
+	}
+
+	if c.maxPos != math.MaxInt64 {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Pos > c.maxPos {
+					return false
+				}
+				return true
+			})
+	}
+
+	if c.minQual != 0 {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Qual < c.minQual {
+					return false
+				}
+				return true
+			})
+	}
+
+	if c.ref != "" {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Ref != c.ref {
+					return false
+				}
+				return true
+			})
+	}
+
+	if c.alt != nil {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if len(v.Alt) != len(c.alt) {
+					return false
+				}
+				for i := range v.Alt {
+					if v.Alt[i] != c.alt[i] {
+						return false
+					}
+				}
+				return true
+			})
+	}
+
+	if c.biAllelicOnly {
+		answer = append(answer, vcf.IsBiallelic)
+	}
+
+	if c.substitutionsOnly {
+		answer = append(answer, vcf.IsSubstitution)
+	}
+
+	if c.segregatingSitesOnly {
+		answer = append(answer, vcf.IsSegregating)
+	}
+
+	if c.removeNoAncestor {
+		answer = append(answer, vcf.HasAncestor)
+	}
+
+	if c.onlyPolarizableAncestors {
+		answer = append(answer, vcf.IsPolarizable)
+	}
+
+	return answer
 }
 
 func main() {
 	var expectedNumArgs int = 2
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var groupFile *string = flag.String("groupFile", "", "Retains alleles from individuals in the input group file.")
-	var minPos *int = flag.Int("minPos", math.MinInt64, "Specifies the minimum position of the variant.")
+	var minPos *int = flag.Int("minPos", 0, "Specifies the minimum position of the variant.")
 	var maxPos *int = flag.Int("maxPos", math.MaxInt64, "Specifies the maximum position of the variant.")
-	var minQual *float64 = flag.Float64("minQual", 0.0, "Specifies the minimum quality score.")
+	var minQual *float64 = flag.Float64("minQual", 0, "Specifies the minimum quality score.")
 	var ref *string = flag.String("ref", "", "Specifies the reference field.")
 	var alt *string = flag.String("alt", "", "Specifies the alt field.")
 	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file.")
@@ -93,6 +215,26 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
+	var altSlice []string
+	if *alt != "" {
+		altSlice = strings.Split(*alt, ",")
+	}
+
+	c := criteria{
+		chrom:                    *chrom,
+		groupFile:                *groupFile,
+		minPos:                   *minPos,
+		maxPos:                   *maxPos,
+		minQual:                  *minQual,
+		ref:                      *ref,
+		alt:                      altSlice,
+		biAllelicOnly:            *biAllelicOnly,
+		substitutionsOnly:        *substitutionsOnly,
+		segregatingSitesOnly:     *segregatingSitesOnly,
+		removeNoAncestor:         *removeNoAncestor,
+		onlyPolarizableAncestors: *onlyPolarizableAncestors,
+	}
+
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -102,5 +244,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFilter(infile, outfile, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual, *biAllelicOnly, *substitutionsOnly, *segregatingSitesOnly, *removeNoAncestor, *onlyPolarizableAncestors)
+	vcfFilter(infile, outfile, c, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual, *biAllelicOnly, *substitutionsOnly, *segregatingSitesOnly, *removeNoAncestor, *onlyPolarizableAncestors)
 }
