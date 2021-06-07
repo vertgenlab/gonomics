@@ -1,0 +1,12 @@
+##fileformat=VCFv4.3
+##reference=dantheman.fa
+##contig=<ID=chrA,length=10>
+##contig=<ID=chrB,length=20>
+##INFO=<ID=InfoA,Number=1,Type=Integer,Description="Aye">
+##INFO=<ID=InfoB,Number=R,Type=Float,Description="Bee">
+##FILTER=<ID=FilterC,Description="Sea">
+##FILTER=<ID=FilterD,Description="Dea">
+##FORMAT=<ID=GT,Number=R,Type=Integer,Description="Eey">
+##FORMAT=<ID=FormatF,Number=1,Type=Flag,Description="Eff">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SampleA	SampleB
+chrA	5	.	G	C	0.5	.	InfoA=10	GT:FormatF	1|2:1	2|4:2

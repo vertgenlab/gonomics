@@ -13,6 +13,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"strings"
 	//"os"
 	//"math/rand"
 )
@@ -76,7 +77,7 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 
 	outFile := fileio.EasyCreate(vcfFile)
 	defer outFile.Close()
-	fmt.Fprintf(outFile, "%s\n", vcf.NewHeader(samFileName))
+	fmt.Fprintf(outFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
 	var current dna.Base
 	//fmt.Printf("Voting matrix complete, time to vote.\n")
 	var maxList []dna.Base

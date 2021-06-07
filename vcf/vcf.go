@@ -3,6 +3,8 @@
 // as well as a Vcf struct containing the information from each data line.
 package vcf
 
+const Version = "VCFv4.3"
+
 // Vcf contains information for each line of a VCF format file, corresponding to variants at one position of a reference genome.
 type Vcf struct {
 	Chr     string
@@ -24,9 +26,4 @@ type GenomeSample struct {
 	AlleleTwo  int16    // Second allele in genotype, same number format as above.
 	Phased     bool     // True for phased genotype, false for unphased.
 	FormatData []string // FormatData contains additional sample fields after the genotype, which are parsed into a slice delimited by colons. Currently contains a dummy empty string in FormatData[0] corresponding to "GT" in Format, so indices in FormatData will match the indices in Format.
-}
-
-// Header contains all of the information present in the header section of a VCf, delimited by line to form a slice of strings.
-type Header struct {
-	Text []string
 }
