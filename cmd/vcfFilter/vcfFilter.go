@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, chrom string, minPos int, maxPos int, ref string, alt string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) {
+func vcfFilter(infile string, outfile string, c criteria, groupFile string) {
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c)
@@ -192,7 +192,6 @@ func getTests(c criteria) testingFuncs {
 	if c.onlyPolarizableAncestors {
 		answer = append(answer, vcf.IsPolarizable)
 	}
-
 	return answer
 }
 
@@ -244,5 +243,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	vcfFilter(infile, outfile, c, *groupFile, *chrom, *minPos, *maxPos, *ref, *alt, *minQual, *biAllelicOnly, *substitutionsOnly, *segregatingSitesOnly, *removeNoAncestor, *onlyPolarizableAncestors)
+	vcfFilter(infile, outfile, c, *groupFile)
 }
