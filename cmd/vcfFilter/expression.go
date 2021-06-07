@@ -81,7 +81,7 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 	}
 
 	if tagKey.Number != "1" && tagKey.Number != "0" {
-		log.Fatalf("Error: cannot use expressions for tags with multiple values. Tag '%s' has '%s' fields.", tag, tagKey.Number)
+		log.Printf("WARNING: expressions for tags with multiple values will be true if any value passes filter. Tag '%s' has '%s' fields.", tag, tagKey.Number)
 	}
 
 	switch tagKey.DataType {
@@ -92,7 +92,13 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 			log.Fatalf("Error: value '%s' is not an integer as expected for tag '%s'.", value, tag)
 		}
 		return func(v vcf.Vcf) bool {
-			return test(vcf.QueryInt(v, tagKey)[0][0], val) //TODO test for other samples???
+			var answer bool = true
+			for _, recordVal := range vcf.QueryInt(v, tagKey)[0] {
+				if !test(recordVal, val) {
+					answer = false
+				}
+			}
+			return answer
 		}
 
 	case vcf.Float:
@@ -102,7 +108,13 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 			log.Fatalf("Error: value '%s' is not a float as expected for tag '%s'.", value, tag)
 		}
 		return func(v vcf.Vcf) bool {
-			return test(vcf.QueryFloat(v, tagKey)[0][0], val) //TODO test for other samples???
+			var answer bool = true
+			for _, recordVal := range vcf.QueryFloat(v, tagKey)[0] {
+				if !test(recordVal, val) {
+					answer = false
+				}
+			}
+			return answer
 		}
 
 	case vcf.Character:
@@ -111,13 +123,25 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 			log.Fatalf("Error: value '%s' is not a character as expected for tag '%s'.", value, tag)
 		}
 		return func(v vcf.Vcf) bool {
-			return test(vcf.QueryRune(v, tagKey)[0][0], rune(value[0])) //TODO test for other samples???
+			var answer bool = true
+			for _, recordVal := range vcf.QueryRune(v, tagKey)[0] {
+				if !test(recordVal, rune(value[0])) {
+					answer = false
+				}
+			}
+			return answer
 		}
 
 	case vcf.String:
 		test := r.TestString()
 		return func(v vcf.Vcf) bool {
-			return test(vcf.QueryString(v, tagKey)[0][0], value) //TODO test for other samples???
+			var answer bool = true
+			for _, recordVal := range vcf.QueryString(v, tagKey)[0] {
+				if !test(recordVal, value) {
+					answer = false
+				}
+			}
+			return answer
 		}
 
 	case vcf.Flag:

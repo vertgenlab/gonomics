@@ -118,15 +118,17 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 	case String:
 		data := make([][]string, len(s))
 		for i := range s {
-			stringValues = strings.Split(s[i], ",")
-			data[i] = stringValues
+			//stringValues = strings.Split(s[i], ",")
+			//data[i] = stringValues
+			data[i] = []string{s[i]} // many fields ignore specifications and use literal commas
 		}
 
-		for i := range data {
-			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected Number of values")
-			}
-		}
+		// Illegal string fields are common, so we will suppress this check.
+		//for i := range data {
+		//	if !checkNumber(v, k, len(data[i])) {
+		//		log.Panicf("unexpected Number of values")
+		//	}
+		//}
 
 		return data
 
