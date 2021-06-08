@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) (total, removed int){
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) (total, removed int) {
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
@@ -106,6 +106,7 @@ type criteria struct {
 	onlyPolarizableAncestors bool
 	formatExp                string
 	infoExp                  string
+	includeMissingInfo       bool
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -126,11 +127,11 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	var answer testingFuncs
 
 	if c.formatExp != "" {
-		answer = append(answer, parseExpression(c.formatExp, header, true)...)
+		answer = append(answer, parseExpression(c.formatExp, header, true, c.includeMissingInfo)...)
 	}
 
 	if c.infoExp != "" {
-		answer = append(answer, parseExpression(c.infoExp, header, false)...)
+		answer = append(answer, parseExpression(c.infoExp, header, false, c.includeMissingInfo)...)
 	}
 
 	if c.chrom != "" {
@@ -239,6 +240,7 @@ func main() {
 		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
 	var infoExp *string = flag.String("info", "", "Identical to the 'format' tag, but tests the info field. The values of type 'Flag' in the info field"+
 		"can be tested by including just the flag ID in the expression. E.g. To select all records with the flag 'GG' you would use the expression \"GG\".")
+	var includeMissingInfo *bool = flag.Bool("includeMissingInfo", false, "When querying the records using the \"-info\" tag, include records where the queried tags are not present.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -263,6 +265,7 @@ func main() {
 		onlyPolarizableAncestors: *onlyPolarizableAncestors,
 		formatExp:                *formatExp,
 		infoExp:                  *infoExp,
+		includeMissingInfo:       *includeMissingInfo,
 	}
 
 	var parseFormat, parseInfo bool

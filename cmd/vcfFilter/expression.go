@@ -21,7 +21,7 @@ const (
 
 // TODO complex expression parsing
 // parseExpression parses a ';' delimited string to a slice of boolean functions to test a vcf record.
-func parseExpression(input string, header vcf.Header, isFormatElseInfo bool) testingFuncs {
+func parseExpression(input string, header vcf.Header, isFormatElseInfo bool, includeMissingInfo bool) testingFuncs {
 	var answer testingFuncs
 	input = strings.Trim(input, "\"") // trim quotations from the ends
 	expSlice := strings.Split(input, ";")
@@ -39,7 +39,7 @@ func parseExpression(input string, header vcf.Header, isFormatElseInfo bool) tes
 		if len(tagValuePair) == 2 {
 			value = strings.Trim(tagValuePair[1], " ")
 		}
-		answer = append(answer, getRelationshipTest(tag, value, op, header, isFormatElseInfo))
+		answer = append(answer, getRelationshipTest(tag, value, op, header, isFormatElseInfo, includeMissingInfo))
 	}
 	return answer
 }
@@ -72,7 +72,7 @@ func searchOp(exp string) operator {
 	return present
 }
 
-func getRelationshipTest(tag string, value string, r operator, header vcf.Header, isFormatElseInfo bool) func(vcf.Vcf) bool {
+func getRelationshipTest(tag string, value string, r operator, header vcf.Header, isFormatElseInfo bool, includeMissingInfo bool) func(vcf.Vcf) bool {
 	var tagKey vcf.Key
 	if isFormatElseInfo {
 		tagKey = header.Format[tag].Key
@@ -93,7 +93,11 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 		}
 		return func(v vcf.Vcf) bool {
 			var answer bool = true
-			for _, recordVal := range vcf.QueryInt(v, tagKey)[0] {
+			queryResult, found := vcf.QueryInt(v, tagKey)
+			if !found {
+				return includeMissingInfo
+			}
+			for _, recordVal := range queryResult[0] {
 				if !test(recordVal, val) {
 					answer = false
 				}
@@ -109,7 +113,11 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 		}
 		return func(v vcf.Vcf) bool {
 			var answer bool = true
-			for _, recordVal := range vcf.QueryFloat(v, tagKey)[0] {
+			queryResult, found := vcf.QueryFloat(v, tagKey)
+			if !found {
+				return includeMissingInfo
+			}
+			for _, recordVal := range queryResult[0] {
 				if !test(recordVal, val) {
 					answer = false
 				}
@@ -124,7 +132,11 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 		}
 		return func(v vcf.Vcf) bool {
 			var answer bool = true
-			for _, recordVal := range vcf.QueryRune(v, tagKey)[0] {
+			queryResult, found := vcf.QueryRune(v, tagKey)
+			if !found {
+				return includeMissingInfo
+			}
+			for _, recordVal := range queryResult[0] {
 				if !test(recordVal, rune(value[0])) {
 					answer = false
 				}
@@ -136,7 +148,11 @@ func getRelationshipTest(tag string, value string, r operator, header vcf.Header
 		test := r.TestString()
 		return func(v vcf.Vcf) bool {
 			var answer bool = true
-			for _, recordVal := range vcf.QueryString(v, tagKey)[0] {
+			queryResult, found := vcf.QueryString(v, tagKey)
+			if !found {
+				return includeMissingInfo
+			}
+			for _, recordVal := range queryResult[0] {
 				if !test(recordVal, value) {
 					answer = false
 				}
