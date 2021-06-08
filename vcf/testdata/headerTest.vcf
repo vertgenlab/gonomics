@@ -4,9 +4,14 @@
 ##contig=<ID=chrB,length=20>
 ##INFO=<ID=InfoA,Number=1,Type=Integer,Description="Aye">
 ##INFO=<ID=InfoB,Number=R,Type=Float,Description="Bee">
+##INFO=<ID=InfoChar,Number=2,Type=Character,Description="Gee">
+##INFO=<ID=InfoString,Number=A,Type=String,Description="Ach">
+##INFO=<ID=InfoFlag,Number=0,Type=Flag,Description="Eye">
 ##FILTER=<ID=FilterC,Description="Sea">
 ##FILTER=<ID=FilterD,Description="Dea">
-##FORMAT=<ID=GT,Number=R,Type=Integer,Description="Eey">
-##FORMAT=<ID=FormatF,Number=1,Type=Flag,Description="Eff">
+##FORMAT=<ID=GT,Number=1,Type=Integer,Description="Eey">
+##FORMAT=<ID=FormatF,Number=1,Type=Integer,Description="Eff">
+##FORMAT=<ID=FormatJ,Number=2,Type=Character,Description="Jay">
+##FORMAT=<ID=FormatK,Number=.,Type=String,Description="Kay">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SampleA	SampleB
-chrA	5	.	G	C	0.5	.	InfoA=10	GT:FormatF	1|2:1	2|4:2
+chrA	5	.	G	C	0.5	.	InfoA=10;InfoB=1,2;InfoChar=R,L;InfoString=Howdy;InfoFlag	GT:FormatF:FormatJ:FormatK	1|2:1:F,E:the,quick,brown,fox	2|4:2:D,A:jumps,over,the,lazy,dog
