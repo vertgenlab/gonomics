@@ -7,7 +7,7 @@ import (
 var expectedFormat = map[string]interface{}{
 	"FormatF": [][]int{{1}, {2}},
 	"FormatJ": [][]rune{{'F', 'E'}, {'D', 'A'}},
-	"FormatK": [][]string{{"the", "quick", "brown", "fox"}, {"jumps", "over", "the", "lazy", "dog"}},
+	"FormatK": [][]string{{"the,quick,brown,fox"}, {"jumps,over,the,lazy,dog"}},
 }
 
 var expectedInfo = map[string]interface{}{

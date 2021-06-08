@@ -34,7 +34,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	//records, err := sam.Read(infile)    old version
 	//common.ExitIfError(err)
 
-	var outWig []*wig.Wig
+	var outWig []wig.Wig
 	var currentBed *bed.Bed
 
 	if fragLength != -1 {

@@ -30,10 +30,10 @@ func SimulateSegSite(alpha float64, n int) *SegSite {
 		if count < 1 || count == n {
 			continue
 		}
-		return &SegSite{count, n}
+		return &SegSite{count, n, Uncorrected}
 	}
 	log.Fatalf("Error in simulateSegSite: unable to produce non-zero allele frequency for alpha:%f and %v alleles in 10000 iterations.", alpha, n)
-	return &SegSite{0, 0}
+	return &SegSite{0, 0, Uncorrected}
 }
 
 //SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.

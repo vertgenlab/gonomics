@@ -35,11 +35,11 @@ func TestTreeDraw(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		defer imgOutFile.Close()
 		err = png.Encode(imgOutFile, img)
 		if err != nil {
 			t.Error(err)
 		}
+		imgOutFile.Close()
 		os.Remove(test.tmpFilename)
 	}
 }
