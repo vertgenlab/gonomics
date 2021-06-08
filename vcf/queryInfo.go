@@ -197,18 +197,23 @@ func checkNumber(v Vcf, k Key, length int) bool {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryInt(v Vcf, k Key) [][]int {
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryInt(v Vcf, k Key) ([][]int, bool) {
 	if k.DataType != Integer {
 		log.Panicf("requested QueryInt but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)         // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]int) // assert value to the expected type
 	if !ok {                           // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]int as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // QueryFloat retrieves float64 values stored in the Info or Format fields of a vcf record.
@@ -219,18 +224,23 @@ func QueryInt(v Vcf, k Key) [][]int {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryFloat(v Vcf, k Key) [][]float64 {
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryFloat(v Vcf, k Key) ([][]float64, bool) {
 	if k.DataType != Float {
 		log.Panicf("requested QueryFloat but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)             // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]float64) // assert value to the expected type
 	if !ok {                               // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]float64 as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // QueryFlag retrieves boolean value stored in the Info or Format fields of a vcf record.
@@ -244,7 +254,10 @@ func QueryFlag(v Vcf, k Key) bool {
 		log.Panicf("requested QueryFlag but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)      // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return found
+	}
 	value, ok := interfValue.(bool) // assert value to the expected type
 	if !ok {                        // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
@@ -261,18 +274,23 @@ func QueryFlag(v Vcf, k Key) bool {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryString(v Vcf, k Key) [][]string {
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryString(v Vcf, k Key) ([][]string, bool) {
 	if k.DataType != String {
 		log.Panicf("requested QueryString but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)            // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]string) // assert value to the expected type
 	if !ok {                              // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]string as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // QueryRune retrieves rune values stored in the Info or Format fields of a vcf record.
@@ -283,23 +301,29 @@ func QueryString(v Vcf, k Key) [][]string {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryRune(v Vcf, k Key) [][]rune {
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryRune(v Vcf, k Key) ([][]rune, bool) {
 	if k.DataType != Character {
 		log.Panicf("requested QueryRune but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)          // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]rune) // assert value to the expected type
 	if !ok {                            // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]rune as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // query performs the initial look and returns a value to
 // a wrapper function that handles the type assertion.
-func query(v Vcf, k Key) interface{} {
+// The second return is false if the requested value is not present.
+func query(v Vcf, k Key) (interface{}, bool) {
 	var queryMap map[string]interface{}
 	if k.IsFormat {
 		queryMap = v.parsedFormat
@@ -312,5 +336,6 @@ func query(v Vcf, k Key) interface{} {
 			"The Info and Format fields must be initialized with " +
 			"ParseInfo/ParseFormat before querying the respective field.\n")
 	}
-	return queryMap[k.Id]
+	val, found := queryMap[k.Id]
+	return val, found
 }
