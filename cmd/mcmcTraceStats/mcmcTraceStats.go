@@ -35,7 +35,6 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-
 func main() {
 	var expectedNumArgs int = 2
 	var hdiProportion *float64 = flag.Float64("hdiProportion", 0.95, "Set the proportion of density contained in the hdi credible interval.")

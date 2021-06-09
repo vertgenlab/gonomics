@@ -8,11 +8,11 @@ import (
 )
 
 var McmcTraceStatsTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedFile string
+	InFile        string
+	OutFile       string
+	ExpectedFile  string
 	HdiProportion float64
-	BurnIn int
+	BurnIn        int
 	ParameterName string
 }{
 	{"testdata/Rand.trace.txt", "tmp.txt", "testdata/Rand.trace.stats.txt", 0.95, 5000, "Mu"},

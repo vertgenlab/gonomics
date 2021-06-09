@@ -11,7 +11,7 @@ import (
 
 //McmcTrace is a general struct for Mcmc trace output. Used for discarding burn-in and calculating the mean and credible interval.
 type McmcTrace struct {
-	Parameter []float64//Parameter state, where Parameter[i] is the value of Parameter in the ith iteration.
+	Parameter []float64 //Parameter state, where Parameter[i] is the value of Parameter in the ith iteration.
 }
 
 func ReadMcmcTrace(inFile string, parameterName string) McmcTrace {
@@ -38,7 +38,7 @@ func parseMcmcTraceHeader(in *fileio.EasyReader, parameterName string) int {
 	var headerLine string
 	var doneReading bool
 	var words []string
-	var ParameterIndex int = -1//stores the column index that stores the parameter to analyze.
+	var ParameterIndex int = -1 //stores the column index that stores the parameter to analyze.
 
 	headerLine, doneReading = fileio.EasyNextLine(in)
 	if doneReading {
@@ -69,14 +69,14 @@ func HighestDensityInterval(t McmcTrace, proportion float64) (float64, float64) 
 	var minStart, minEnd float64
 	var tmp []float64 = make([]float64, len(t.Parameter))
 	copy(tmp, t.Parameter)
-	sort.Float64s(tmp)//sorts low to high
+	sort.Float64s(tmp) //sorts low to high
 
-	var pIndex int = int(math.Ceil(proportion*float64(len(tmp))))-1//returns the index of the highest value at the left-tailed credible interval.
+	var pIndex int = int(math.Ceil(proportion*float64(len(tmp)))) - 1 //returns the index of the highest value at the left-tailed credible interval.
 	minStart, minEnd = tmp[0], tmp[pIndex]
 	var minDistance float64 = minEnd - minStart
 	var currDistance float64
 
-	for i := 1; i < len(tmp)-pIndex; i++ {//loop through all possible 95% credible intervals
+	for i := 1; i < len(tmp)-pIndex; i++ { //loop through all possible 95% credible intervals
 		currDistance = tmp[pIndex+i] - tmp[i]
 		if currDistance < minDistance {
 			minStart, minEnd = tmp[i], tmp[pIndex+i]
@@ -91,6 +91,3 @@ func HighestDensityInterval(t McmcTrace, proportion float64) (float64, float64) 
 func MeanMcmcTrace(t McmcTrace) float64 {
 	return AverageFloat64(t.Parameter)
 }
-
-
-
