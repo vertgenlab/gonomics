@@ -25,7 +25,7 @@ func TestInvertBedRegions(t *testing.T) {
 	//log.Printf("len=%d\n", len(testSl))
 	for i, b := range testSlice {
 		if !Equal(b, ans[i]) {
-			log.Printf("Bed=%s\n", BedToString(b, 3))
+			log.Printf("Bed=%s\n", ToString(b, 3))
 		}
 	}
 }

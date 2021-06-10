@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-var b1 Bed = Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200}
-var b2 Bed = Bed{Chrom: "chr2", ChromStart: 400, ChromEnd: 900}
-var b3 Bed = Bed{Chrom: "chr3", ChromStart: 945, ChromEnd: 1000}
+var b1 Bed = Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, Name: "First", Score: 1, Strand: '+'}
+var b2 Bed = Bed{Chrom: "chr2", ChromStart: 400, ChromEnd: 900, Name: "Second", Score: 5, Strand: '-'}
+var b3 Bed = Bed{Chrom: "chr3", ChromStart: 945, ChromEnd: 1000, Name: "Third", Score: 10, Strand: '.'}
 var beds []*Bed = []*Bed{&b1, &b2, &b3}
 
 var readWriteTests = []struct {

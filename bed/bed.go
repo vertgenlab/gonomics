@@ -13,6 +13,7 @@ import (
 	"sync"
 )
 
+
 //Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
 type Bed struct {
 	Chrom             string
@@ -20,18 +21,28 @@ type Bed struct {
 	ChromEnd          int
 	Name              string
 	Score             int
-	Strand            bool
+	Strand            Strand
 	FieldsInitialized int      //number of fields that are initialized, used for smart writing.
 	Annotation        []string //long form for extra fields
 }
 
+//Strand stores strand state, which can be positive, negative, or none.
+type Strand rune
+
+const (
+	Positive Strand = '+'
+	Negative Strand = '-'
+	None Strand = '.'
+)
+
+
 // String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b *Bed) String() string {
-	return BedToString(b, b.FieldsInitialized)
+	return ToString(b, b.FieldsInitialized)
 }
 
-//BedToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
-func BedToString(bunk *Bed, fields int) string {
+//ToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
+func ToString(bunk *Bed, fields int) string {
 	switch fields {
 	case 3:
 		return fmt.Sprintf("%s\t%d\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd)
@@ -40,9 +51,9 @@ func BedToString(bunk *Bed, fields int) string {
 	case 5:
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score)
 	case 6:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, common.StrandToRune(bunk.Strand))
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, bunk.Strand)
 	case 7:
-		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, common.StrandToRune(bunk.Strand))
+		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, bunk.Strand)
 		for i := 0; i < len(bunk.Annotation); i++ {
 			out = fmt.Sprintf("%s\t%s", out, bunk.Annotation[i])
 		}
@@ -56,14 +67,14 @@ func BedToString(bunk *Bed, fields int) string {
 //WriteBed writes an input Bed struct to an os.File with a specified number of Bed fields.
 func WriteBed(file *os.File, input *Bed, fields int) {
 	var err error
-	_, err = fmt.Fprintf(file, "%s\n", BedToString(input, fields))
+	_, err = fmt.Fprintf(file, "%s\n", ToString(input, fields))
 	common.ExitIfError(err)
 }
 
 //WriteToFileHandle writes an input Bed struct with a specified number of fields to an io.Writer
 func WriteToFileHandle(file io.Writer, rec *Bed, fields int) {
 	var err error
-	_, err = fmt.Fprintf(file, "%s\n", BedToString(rec, fields))
+	_, err = fmt.Fprintf(file, "%s\n", ToString(rec, fields))
 	common.ExitIfError(err)
 }
 
@@ -113,7 +124,7 @@ func processBedLine(line string) *Bed {
 		current.Score = common.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
-		current.Strand = common.StringToStrand(words[5])
+		current.Strand = StringToStrand(words[5])
 	}
 	if len(words) >= 7 {
 		for i := 6; i < len(words); i++ {
@@ -121,6 +132,21 @@ func processBedLine(line string) *Bed {
 		}
 	}
 	return &current
+}
+
+//StringToStrand parses a bed.Strand struct from an input string.
+func StringToStrand(s string) Strand {
+	switch s {
+	case "+":
+		return Positive
+	case "-":
+		return Negative
+	case ".":
+		return None
+	default:
+		log.Fatalf("Error: expected %s to be a strand that is either '+', '-', or '.'.\n", s)
+		return None
+	}
 }
 
 //NextBed returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.

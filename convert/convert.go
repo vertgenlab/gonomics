@@ -68,10 +68,10 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = int(s.Pos - 1)
 			answer.ChromEnd = numbers.Min(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
-			answer.Strand = true
+			answer.Strand = bed.Positive
 		} else {
 			answer.ChromEnd = int(s.Pos-1) + cigar.ReferenceLength(s.Cigar)
-			answer.Strand = false
+			answer.Strand = bed.Negative
 			answer.ChromStart = numbers.Max(answer.ChromEnd-(fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar)), 0)
 		}
 		return answer
