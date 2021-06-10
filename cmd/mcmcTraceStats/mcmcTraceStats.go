@@ -22,9 +22,9 @@ func mcmcTraceStats(inFile string, outFile string, hdiProportion float64, burnIn
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 
-	_, err = fmt.Fprintf(out, "Posterior mean: %f.\n", m)
+	_, err = fmt.Fprintf(out, "FILENAME\tMEAN\tPROPORTION\tSTART\tEND\n")
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "HDI Credible Interval. Proportion: %f. Start: %f. End: %f.\n", hdiProportion, s, e)
+	_, err = fmt.Fprintf(out, "%s\t%v\t%f\t%f\t%f\n", inFile, m, hdiProportion, s, e)
 }
 
 func usage() {

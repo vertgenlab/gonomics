@@ -1,2 +1,2 @@
-Posterior mean: -1.337539.
-HDI Credible Interval. Proportion: 0.950000. Start: -1.855471. End: -0.842156.
+FILENAME	MEAN	PROPORTION	START	END
+testdata/Rand.trace.txt	-1.3375392026279938	0.950000	-1.855471	-0.842156
