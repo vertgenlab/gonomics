@@ -202,12 +202,12 @@ func TestQueryInt(t *testing.T) {
 
 	val, found := QueryInt(v, header.Info["InfoA"].Key)
 	if !found || !equalInt(val, expectedInfo["InfoA"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 
 	val, found = QueryInt(v, header.Format["FormatF"].Key)
 	if !found || !equalInt(val, expectedFormat["FormatF"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 }
 
@@ -218,11 +218,11 @@ func TestQueryRune(t *testing.T) {
 
 	val, found := QueryRune(v, header.Info["InfoChar"].Key)
 	if !found || !equalRune(val, expectedInfo["InfoChar"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 	val, found = QueryRune(v, header.Format["FormatJ"].Key)
 	if !found || !equalRune(val, expectedFormat["FormatJ"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 }
 
@@ -233,11 +233,11 @@ func TestQueryString(t *testing.T) {
 
 	val, found := QueryString(v, header.Info["InfoString"].Key)
 	if !found || !equalString(val, expectedInfo["InfoString"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 	val, found = QueryString(v, header.Format["FormatK"].Key)
 	if !found || !equalString(val, expectedFormat["FormatK"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 }
 
@@ -248,7 +248,7 @@ func TestQueryFloat(t *testing.T) {
 
 	val, found := QueryFloat(v, header.Info["InfoB"].Key)
 	if !found || !equalFloat(val, expectedInfo["InfoB"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 }
 
@@ -258,6 +258,6 @@ func TestQueryFlag(t *testing.T) {
 	v = ParseInfo(v, header)
 
 	if !equalBool(QueryFlag(v, header.Info["InfoFlag"].Key), expectedInfo["InfoFlag"]) {
-		t.Errorf("troble querying read info")
+		t.Errorf("trouble querying read info")
 	}
 }
