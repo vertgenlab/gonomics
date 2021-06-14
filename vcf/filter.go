@@ -277,7 +277,7 @@ func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([
 	}
 
 	if numVariants > len(records) {
-		log.Fatalf("The number of requested sampled variants is greater than the number of variants in the input file.")
+		log.Fatalf("The Number of requested sampled variants is greater than the Number of variants in the input file.")
 	}
 
 	//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.

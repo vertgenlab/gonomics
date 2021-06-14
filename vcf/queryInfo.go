@@ -29,7 +29,7 @@ func ParseInfo(v Vcf, header Header) Vcf {
 			log.Fatalf("Info tag '%s' is not described in file header", tagValuePair[0])
 		}
 
-		if tag.number == "0" { // all Flag values must have number == 0
+		if tag.Number == "0" { // all Flag values must have Number == 0
 			v.parsedInfo[tagValuePair[0]] = true
 			continue
 		}
@@ -68,14 +68,14 @@ func ParseFormat(v Vcf, header Header) Vcf {
 	return v
 }
 
-// parseValue parses a []string according to the number and type defined in the header.
+// parseValue parses a []string according to the Number and type defined in the header.
 // each element in the slice corresponds to the value for a sample when query the Format field.
 // len of s is always 1 when querying the Info field.
 func parseValue(v Vcf, s []string, k Key) interface{} {
 	var stringValues []string
 	var err error
-	switch k.dataType {
-	case typeInteger:
+	switch k.DataType {
+	case Integer:
 		data := make([][]int, len(s))
 		var val int
 		for i := range s {
@@ -89,13 +89,13 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 
 		for i := range data {
 			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected number of values")
+				log.Panicf("unexpected Number of values")
 			}
 		}
 
 		return data
 
-	case typeFloat:
+	case Float:
 		var val float64
 		data := make([][]float64, len(s))
 		for i := range s {
@@ -109,28 +109,30 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 
 		for i := range data {
 			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected number of values")
+				log.Panicf("unexpected Number of values")
 			}
 		}
 
 		return data
 
-	case typeString:
+	case String:
 		data := make([][]string, len(s))
 		for i := range s {
-			stringValues = strings.Split(s[i], ",")
-			data[i] = stringValues
+			//stringValues = strings.Split(s[i], ",")
+			//data[i] = stringValues
+			data[i] = []string{s[i]} // many fields ignore specifications and use literal commas
 		}
 
-		for i := range data {
-			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected number of values")
-			}
-		}
+		// Illegal string fields are common, so we will suppress this check.
+		//for i := range data {
+		//	if !checkNumber(v, k, len(data[i])) {
+		//		log.Panicf("unexpected Number of values")
+		//	}
+		//}
 
 		return data
 
-	case typeCharacter:
+	case Character:
 		data := make([][]rune, len(s))
 		for i := range s {
 			stringValues = strings.Split(s[i], ",")
@@ -144,7 +146,7 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 
 		for i := range data {
 			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected number of values")
+				log.Panicf("unexpected Number of values")
 			}
 		}
 
@@ -157,7 +159,7 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 }
 
 func checkNumber(v Vcf, k Key, length int) bool {
-	switch k.number {
+	switch k.Number {
 	case "A": // == num alt alleles
 		if length != len(v.Alt) {
 			return false
@@ -176,9 +178,9 @@ func checkNumber(v Vcf, k Key, length int) bool {
 		return true
 
 	default:
-		num, err := strconv.Atoi(k.number)
+		num, err := strconv.Atoi(k.Number)
 		if err != nil {
-			log.Panicf("'%s' is not a valid number for header info", k.number)
+			log.Panicf("'%s' is not a valid Number for header info", k.Number)
 		}
 		if length != num {
 			return false
@@ -195,18 +197,23 @@ func checkNumber(v Vcf, k Key, length int) bool {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryInt(v Vcf, k Key) [][]int {
-	if k.dataType != typeInteger {
-		log.Panicf("requested QueryInt but key records data type as '%s'", k.dataType)
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryInt(v Vcf, k Key) ([][]int, bool) {
+	if k.DataType != Integer {
+		log.Panicf("requested QueryInt but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)         // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]int) // assert value to the expected type
 	if !ok {                           // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]int as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // QueryFloat retrieves float64 values stored in the Info or Format fields of a vcf record.
@@ -217,18 +224,23 @@ func QueryInt(v Vcf, k Key) [][]int {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryFloat(v Vcf, k Key) [][]float64 {
-	if k.dataType != typeFloat {
-		log.Panicf("requested QueryFloat but key records data type as '%s'", k.dataType)
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryFloat(v Vcf, k Key) ([][]float64, bool) {
+	if k.DataType != Float {
+		log.Panicf("requested QueryFloat but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)             // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]float64) // assert value to the expected type
 	if !ok {                               // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]float64 as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // QueryFlag retrieves boolean value stored in the Info or Format fields of a vcf record.
@@ -238,11 +250,14 @@ func QueryFloat(v Vcf, k Key) [][]float64 {
 //
 // Note that flags are not valid in the Format field, so this query is only for Info.
 func QueryFlag(v Vcf, k Key) bool {
-	if k.dataType != typeFlag {
-		log.Panicf("requested QueryFlag but key records data type as '%s'", k.dataType)
+	if k.DataType != Flag {
+		log.Panicf("requested QueryFlag but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)      // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return found
+	}
 	value, ok := interfValue.(bool) // assert value to the expected type
 	if !ok {                        // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
@@ -259,18 +274,23 @@ func QueryFlag(v Vcf, k Key) bool {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryString(v Vcf, k Key) [][]string {
-	if k.dataType != typeString {
-		log.Panicf("requested QueryString but key records data type as '%s'", k.dataType)
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryString(v Vcf, k Key) ([][]string, bool) {
+	if k.DataType != String {
+		log.Panicf("requested QueryString but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)            // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]string) // assert value to the expected type
 	if !ok {                              // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]string as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // QueryRune retrieves rune values stored in the Info or Format fields of a vcf record.
@@ -281,25 +301,31 @@ func QueryString(v Vcf, k Key) [][]string {
 // The return is a slice of slices where the first slice corresponds to the sample
 // (this is always len == 1 when querying the Info field) and the second slice corresponds
 // to multiple values that may be present for the given tag (e.g. ref/alt read depth may be "9,1").
-func QueryRune(v Vcf, k Key) [][]rune {
-	if k.dataType != typeCharacter {
-		log.Panicf("requested QueryRune but key records data type as '%s'", k.dataType)
+//
+// The second return is false if the requested value is not present in the input record.
+func QueryRune(v Vcf, k Key) ([][]rune, bool) {
+	if k.DataType != Character {
+		log.Panicf("requested QueryRune but key records data type as '%s'", k.DataType)
 	}
 
-	interfValue := query(v, k)          // query value and store resulting interface
+	interfValue, found := query(v, k) // query value and store resulting interface
+	if !found {
+		return nil, found
+	}
 	value, ok := interfValue.([][]rune) // assert value to the expected type
 	if !ok {                            // panic if interfValue type does not match the expected type
 		log.Panicf("value for tag '%s' in vcf at position '%d' "+
 			"is not a [][]rune as expected by header", k.Id, v.Pos)
 	}
-	return value
+	return value, found
 }
 
 // query performs the initial look and returns a value to
 // a wrapper function that handles the type assertion.
-func query(v Vcf, k Key) interface{} {
+// The second return is false if the requested value is not present.
+func query(v Vcf, k Key) (interface{}, bool) {
 	var queryMap map[string]interface{}
-	if k.isFormat {
+	if k.IsFormat {
 		queryMap = v.parsedFormat
 	} else {
 		queryMap = v.parsedInfo
@@ -310,5 +336,6 @@ func query(v Vcf, k Key) interface{} {
 			"The Info and Format fields must be initialized with " +
 			"ParseInfo/ParseFormat before querying the respective field.\n")
 	}
-	return queryMap[k.Id]
+	val, found := queryMap[k.Id]
+	return val, found
 }
