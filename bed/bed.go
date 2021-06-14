@@ -13,7 +13,6 @@ import (
 	"sync"
 )
 
-
 //Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
 type Bed struct {
 	Chrom             string
@@ -32,9 +31,8 @@ type Strand byte
 const (
 	Positive Strand = '+'
 	Negative Strand = '-'
-	None Strand = '.'
+	None     Strand = '.'
 )
-
 
 // String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b *Bed) String() string {
