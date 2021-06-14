@@ -27,7 +27,7 @@ type Bed struct {
 }
 
 //Strand stores strand state, which can be positive, negative, or none.
-type Strand rune
+type Strand byte
 
 const (
 	Positive Strand = '+'
@@ -116,7 +116,7 @@ func processBedLine(line string) *Bed {
 	startNum := common.StringToInt(words[1])
 	endNum := common.StringToInt(words[2])
 
-	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, FieldsInitialized: len(words)}
+	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
