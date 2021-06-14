@@ -12,24 +12,27 @@ import (
 )
 
 func mcmcTraceStats(inFile string, outFile string, hdiProportion float64, burnIn int, parameterName string) {
-	var t numbers.McmcTrace
+	var trace numbers.McmcTrace
 	var err error
-	t = numbers.ReadMcmcTrace(inFile, parameterName)
-	numbers.DiscardBurnIn(t, burnIn)
-	s, e := numbers.HighestDensityInterval(t, hdiProportion)
-	m := numbers.MeanMcmcTrace(t)
+	trace = numbers.ReadMcmcTrace(inFile, parameterName)
+	numbers.DiscardBurnIn(trace, burnIn)
+	start, end := numbers.HighestDensityInterval(trace, hdiProportion)
+	mean := numbers.MeanMcmcTrace(trace)
 
 	out := fileio.EasyCreate(outFile)
 	defer out.Close()
 
-	_, err = fmt.Fprintf(out, "FILENAME\tMEAN\tPROPORTION\tSTART\tEND\n")
+	_, err = fmt.Fprintf(out, "#FILENAME\tMEAN\tPROPORTION\tSTART\tEND\n")
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "%s\t%v\t%f\t%f\t%f\n", inFile, m, hdiProportion, s, e)
+	_, err = fmt.Fprintf(out, "%s\t%v\t%f\t%f\t%f\n", inFile, mean, hdiProportion, start, end)
+	exception.PanicOnErr(err)
 }
 
 func usage() {
 	fmt.Print(
 		"mcmcTraceStats - Returns summary statistics on an MCMC trace file produced by selectionMCMC.\n" +
+			"Trace files will be tab-separated files in which the first column will list the iteration number and subsequent columns will list parameter or likelihood values.\n"+
+			"Header lines for trace files are of the form 'Iteration ParameterName1 ParameterName2'.\n"+
 			"Usage:\n" +
 			"mcmcTraceStats trace.txt out.txt\n")
 	flag.PrintDefaults()
