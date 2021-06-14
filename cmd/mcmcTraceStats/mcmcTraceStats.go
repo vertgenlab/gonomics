@@ -31,8 +31,8 @@ func mcmcTraceStats(inFile string, outFile string, hdiProportion float64, burnIn
 func usage() {
 	fmt.Print(
 		"mcmcTraceStats - Returns summary statistics on an MCMC trace file produced by selectionMCMC.\n" +
-			"Trace files will be tab-separated files in which the first column will list the iteration number and subsequent columns will list parameter or likelihood values.\n"+
-			"Header lines for trace files are of the form 'Iteration ParameterName1 ParameterName2'.\n"+
+			"Trace files will be tab-separated files in which the first column will list the iteration number and subsequent columns will list parameter or likelihood values.\n" +
+			"Header lines for trace files are of the form 'Iteration ParameterName1 ParameterName2'.\n" +
 			"Usage:\n" +
 			"mcmcTraceStats trace.txt out.txt\n")
 	flag.PrintDefaults()
