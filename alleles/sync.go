@@ -1,34 +1,30 @@
 package alleles
 
-import (
-	"github.com/vertgenlab/gonomics/fasta"
-	//"github.com/vertgenlab/gonomics/genomeGraph"
-)
-
-// SyncAlleleStreams syncs allele streams output from SamToAlleles and returns a []*Allele with the Allele struct for each sample at position n.
-// The reference input variable should be either a []*fasta.Fasta or a *genomeGraph.GenomeGraph
+/*
+// SyncAlleleStreams syncs allele streams output from SamToAlleles and returns a []Allele with the Allele struct for each sample at position n.
+// The reference input variable should be either a []fasta.Fasta or a *genomeGraph.GenomeGraph
 //TODO: still needs to tested with graph input
-func SyncAlleleStreams(reference interface{}, memBufferSize int, alleleStreams ...<-chan *Allele) <-chan []*Allele {
-	answer := make(chan []*Allele)
+func SyncAlleleStreams(reference interface{}, memBufferSize int, alleleStreams ...<-chan Allele) <-chan []Allele {
+	answer := make(chan []Allele)
 	go syncAlleles(reference, memBufferSize, alleleStreams, answer)
 	return answer
 }
 
 // syncAlleles is the helper functions for SyncAlleleStreams and manages the component streams to keep in sync.
-func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-chan *Allele, answer chan<- []*Allele) {
+func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-chan Allele, answer chan<- []Allele) {
 	var i int
 	var refIdx int = 0
 	// To get alleles for each position we increment through the reference (whether linear or graph) and request alleles for each position
 	// currLoc stores the current location we are asking for and begins with a dummy value to start for the nextPos function
-	var currLoc *Allele = &Allele{Location: &Coordinate{"dummy", 0}}
+	var currLoc Allele = Allele{Location: Coordinate{"dummy", 0}}
 	// The currAlleles data structure is arranged as [SampleStream][Allele (length = memBufferSize)]
 	// currAlleles transiently stores data read from each alleleStream and allows for a variable buffer size depending on the desired memory allocation
-	var currAlleles [][]*Allele = make([][]*Allele, len(alleleStreams))
-	var currAnswer []*Allele
+	var currAlleles [][]Allele = make([][]Allele, len(alleleStreams))
+	var currAnswer []Allele
 
 	// Make the second dimension of currAlleles for each alleleStream
 	for i = 0; i < len(alleleStreams); i++ {
-		currAlleles[i] = make([]*Allele, 0)
+		currAlleles[i] = make([]Allele, 0)
 	}
 
 	// Loop through each position in the reference
@@ -54,7 +50,7 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 			}
 
 			// If the location we are asking for is the same as the first allele stored in currAlleles[i]
-			if *currAlleles[i][0].Location == *currLoc.Location {
+			if currAlleles[i][0].Location == currLoc.Location {
 				// Append value to answer and delete allele from currAlleles
 				currAnswer = append(currAnswer, currAlleles[i][0])
 				currAlleles[i] = currAlleles[i][1:]
@@ -70,8 +66,8 @@ func syncAlleles(reference interface{}, memBufferSize int, alleleStreams []<-cha
 	close(answer)
 }
 
-// nextPos inputs a []*fasta.Fasta or a *genomeGraph.GenomeGraph and increments currLoc
-func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
+// nextPos inputs a []fasta.Fasta or a genomeGraph.GenomeGraph and increments currLoc
+func nextPos(reference interface{}, currLoc Allele, refIdx int) bool {
 	switch r := reference.(type) {
 	case []fasta.Fasta:
 
@@ -85,7 +81,7 @@ func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 				return true
 			} else if *refIdx < (len(r) - 1) { // Increment Chromosome
 				*refIdx++
-				currLoc.Location.Chr = r[*refIdx].Name
+				currLoc.Location.Chr = r[refIdx].Name
 				currLoc.Location.Pos = 0
 				return true
 			} else { // Report end of reference
@@ -94,7 +90,7 @@ func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 		}
 
 		//TODO: Fix after Name removed from genome graph node
-		/*
+
 			case *genomeGraph.GenomeGraph:
 
 				if currLoc.Location.Chr == "dummy" {
@@ -114,7 +110,9 @@ func nextPos(reference interface{}, currLoc *Allele, refIdx *int) bool {
 						return false
 					}
 				}
-		*/
+
 	}
 	return false
 }
+
+*/

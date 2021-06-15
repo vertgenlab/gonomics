@@ -1,14 +1,6 @@
 package alleles
 
-import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
-	"path"
-	"path/filepath"
-)
-
+/*
 // FindNewVariation calls variants from a set of samples and normals that DO NOT already exist in the graph structure.
 func FindNewVariation(alleleStream <-chan []*Allele, normalIDs map[string]bool, afThreshold float64, sigThreshold float64, minCoverage int) <-chan vcf.Vcf {
 	answer := make(chan vcf.Vcf)
@@ -321,3 +313,5 @@ func passesStrandBias(alpha int32, beta int32) bool {
 		return false
 	}
 }
+
+ */
