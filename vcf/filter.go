@@ -211,7 +211,7 @@ func IsPolarizable(v Vcf) bool {
 
 //IsWeakToStrong returns true if an input biallelic substitution variant is a weak to strong variant, false otherwise.
 func IsWeakToStrong(v Vcf) bool {
-	if !IsBiallelic(v) || !IsSubstitution(v){
+	if !IsBiallelic(v) || !IsSubstitution(v) {
 		return false
 	}
 	if v.Ref == "A" || v.Ref == "T" {
@@ -229,7 +229,7 @@ func IsWeakToStrong(v Vcf) bool {
 
 //IsNotWeakToStrong returns true if an input biallelic substitution variant is not a weak to strong variant, false otherwise.
 func IsNotWeakToStrong(v Vcf) bool {
-	if !IsBiallelic(v) || !IsSubstitution(v){//ensures the answer is false if we do not match this initial exclusion criteria.
+	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
 		return false
 	}
 	return !IsWeakToStrong(v)

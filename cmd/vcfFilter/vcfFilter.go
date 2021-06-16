@@ -104,8 +104,8 @@ type criteria struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
-	weakToStrongOnly	bool
-	noWeakToStrong	bool
+	weakToStrongOnly         bool
+	noWeakToStrong           bool
 	formatExp                string
 	infoExp                  string
 	includeMissingInfo       bool
@@ -277,8 +277,8 @@ func main() {
 		formatExp:                *formatExp,
 		infoExp:                  *infoExp,
 		includeMissingInfo:       *includeMissingInfo,
-		weakToStrongOnly: *weakToStrongOnly,
-		noWeakToStrong: *noWeakToStrong,
+		weakToStrongOnly:         *weakToStrongOnly,
+		noWeakToStrong:           *noWeakToStrong,
 	}
 
 	var parseFormat, parseInfo bool

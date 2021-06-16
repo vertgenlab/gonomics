@@ -23,8 +23,8 @@ var VcfFilterTests = []struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
-	weakToStrongOnly bool
-	noWeakToStrong bool
+	weakToStrongOnly         bool
+	noWeakToStrong           bool
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false},
@@ -53,8 +53,8 @@ func TestVcfFilter(t *testing.T) {
 			segregatingSitesOnly:     v.segregatingSitesOnly,
 			removeNoAncestor:         v.removeNoAncestor,
 			onlyPolarizableAncestors: v.onlyPolarizableAncestors,
-			weakToStrongOnly: v.weakToStrongOnly,
-			noWeakToStrong: v.noWeakToStrong,
+			weakToStrongOnly:         v.weakToStrongOnly,
+			noWeakToStrong:           v.noWeakToStrong,
 		}
 
 		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)
