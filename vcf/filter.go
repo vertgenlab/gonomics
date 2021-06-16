@@ -219,6 +219,11 @@ func IsWeakToStrong(v Vcf) bool {
 			return true
 		}
 	}
+	if v.Ref == "C" || v.Ref == "G" {
+		if v.Alt[0] == "A" || v.Alt[0] == "T" {
+			return true
+		}
+	}
 	return false
 }
 
