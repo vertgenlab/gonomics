@@ -3,7 +3,8 @@ package bgzf
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/hex"
+	"crypto/md5"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"log"
@@ -21,7 +22,10 @@ func TestWrite(t *testing.T) {
 	w := NewWriter(tmpfile)
 
 	for err = r.ReadBlock(b); err != io.EOF; err = r.ReadBlock(b) {
-		_, WriteErr := w.Write(b.Bytes())
+		n, WriteErr := w.Write(b.Bytes())
+		if n != b.Len() {
+			t.Error("write size differs")
+		}
 		if WriteErr != nil {
 			t.Error("problem writing BGZF file")
 		}
@@ -40,77 +44,101 @@ func TestWrite(t *testing.T) {
 		log.Panic(err)
 	}
 
-	//r = NewReader("testdata/tmp.bam")
-	//fmt.Println(r.decompressor.Header.Extra)
-	//err = r.ReadBlock(b)
-	//fmt.Println(b.Len())
-	////fmt.Println(string(b.Bytes()))
-	//
-	//fmt.Println(r.decompressor.Header.Extra)
-	//err = r.ReadBlock(b)
-	//fmt.Println(b.Len())
-	////fmt.Println(string(b.Bytes()))
-	//
-	//fmt.Println(r.decompressor.Header.Extra)
-	//err = r.ReadBlock(b)
-	//fmt.Println(b.Len())
-	////fmt.Println(string(b.Bytes()))
+	r = NewReader("testdata/tmp.bam")
 
-	if !equalFiles("testdata/test.bam", "testdata/tmp.bam") {
-		t.Error("problem writing BGZF file")
+	if len(r.decompressor.Header.Extra) < 6 {
+		t.Error("bgzf header was not written")
+	}
+	b1Offset := getHeaderOffset(r) + 1
+	err = r.ReadBlock(b)
+	if err != nil || md5.Sum(b.Bytes()) != block1hash {
+		t.Error("problem reading BGZF file")
 	}
 
-	//err = os.Remove("testdata/tmp.bam")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-}
-
-func equalFiles(aname, bname string) bool {
-	ablk := NewBlock()
-	bblk := NewBlock()
-	a := NewReader(aname)
-	b := NewReader(bname)
-	var adata, bdata []byte
-	var aErr, bErr error
-	for {
-		fmt.Println("A: ", a.decompressor.Header.Extra)
-		fmt.Println("B: ", b.decompressor.Header.Extra)
-		aErr = a.ReadBlock(ablk)
-		bErr = b.ReadBlock(bblk)
-		fmt.Println()
-
-		fmt.Println(aErr, bErr)
-		if aErr != bErr {
-			return false
-		}
-
-		if aErr == bErr && aErr == io.EOF {
-			return true
-		}
-
-		fmt.Println(ablk.Len(), bblk.Len())
-		if ablk.Len() != bblk.Len() {
-			return false
-		}
-		adata = ablk.Bytes()
-		bdata = ablk.Bytes()
-		for i := range adata {
-			if adata[i] != bdata[i] {
-				return false
-			}
-		}
+	if len(r.decompressor.Header.Extra) < 6 {
+		t.Error("bgzf header was not written")
 	}
+	b2Offset := getHeaderOffset(r) + 1 + b1Offset
+	err = r.ReadBlock(b)
+	if err != nil || md5.Sum(b.Bytes()) != block2hash {
+		t.Error("problem reading BGZF file")
+	}
+
+	if len(r.decompressor.Header.Extra) < 6 {
+		t.Error("bgzf header was not written")
+	}
+	err = r.ReadBlock(b)
+	if err != io.EOF {
+		t.Error("problem reading BGZF file")
+	}
+
+	//Seek tests
+	_, err = r.Seek(b1Offset, io.SeekStart)
+	if err != nil {
+		t.Error("problem with BGZF seek")
+	}
+	err = r.ReadBlock(b)
+	if err != nil || md5.Sum(b.Bytes()) != block2hash {
+		t.Error("problem with BGZF seek")
+	}
+
+	_, err = r.Seek(b2Offset, io.SeekStart)
+	if err != nil {
+		t.Error("problem with BGZF seek")
+	}
+	err = r.ReadBlock(b)
+	if err != io.EOF {
+		t.Error("problem with BGZF seek")
+	}
+
+	_, err = r.Seek(0, io.SeekStart)
+	if err != nil {
+		t.Errorf("problem with BGZF seek")
+	}
+	err = r.ReadBlock(b)
+	if err != nil || md5.Sum(b.Bytes()) != block1hash {
+		t.Error("problem with BGZF seek")
+	}
+
+	err = r.Close()
+	if err != nil {
+		t.Error("problem reading BGZF file")
+	}
+
+	tmpfile.Close()
+	os.Remove("testdata/tmp.bam")
 }
 
-func TestCompress(t *testing.T) {
+func TestSimpleCompress(t *testing.T) {
 	var a bytes.Buffer
-	zr, _ := gzip.NewWriterLevel(&a, gzip.DefaultCompression)
-	zr.Reset(&a)
-	fmt.Println(zr.Header)
-	zr.Header.Extra = []byte{66,67,2,0,27,0}
-	zr.Write([]byte{})
-	zr.Close()
-	fmt.Println("empty compress is size: ", a.Len())
-	fmt.Println(hex.EncodeToString(a.Bytes()))
+	var data []byte = []byte("hello\n")
+	r := NewWriter(&a)
+	n, err := r.Write(data)
+	if err != nil {
+		fmt.Printf("input %d byte, wrote %d bytes\n", len(data), n)
+		t.Error("trouble writing: ", err)
+	}
+	err = r.Close()
+	if err != nil {
+		t.Error("trouble writing: ", err)
+	}
+
+	nr, err := gzip.NewReader(&a)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var b bytes.Buffer
+	_, err = io.Copy(&b, nr)
+	if err != nil {
+		t.Error(err)
+	}
+	if b.String() != "hello\n" {
+		t.Error("problem with bgzf compression")
+	}
+}
+
+func getHeaderOffset(r Reader) int64 {
+	extra := r.decompressor.Header.Extra
+	return int64(binary.LittleEndian.Uint16(extra[4:6]))
 }

@@ -3,62 +3,114 @@ package bgzf
 import (
 	"compress/gzip"
 	"encoding/binary"
+	"encoding/hex"
+	"fmt"
 	"io"
 	"log"
 	"math"
 )
 
+// magicHexEOF is a particular empty bgzf block that marks the true EOF.
+const magicHexEOF string = "1f8b08040000000000ff0600424302001b0003000000000000000000"
+
+// Writer moves data -> compressor -> zipBlock -> file writer
 type Writer struct {
-	w io.Writer
+	w          io.Writer
 	compressor *gzip.Writer
-	bufCompressor *gzip.Writer
-	zipBlock *Block
+	zipBlock   *Block
 }
 
+// NewWriter creates a bgzf writer from any input writer.
 func NewWriter(w io.Writer) Writer {
+	var err error
 	var zw Writer
 	zw.w = w
 	zw.zipBlock = NewBlock()
-	zw.compressor = gzip.NewWriter(zw.w)
-	zw.bufCompressor = gzip.NewWriter(zw.zipBlock)
-	//zw.bufCompressor.Write([]byte("init"))
-	//zw.zipBlock.Reset()
-	return zw
-}
-
-func (w Writer) Write(b []byte) (n int, err error) {
-	w.bufCompressor.Reset(w.zipBlock)
-	w.zipBlock.Reset()
-	_, err = w.bufCompressor.Write(b)
+	zw.compressor = gzip.NewWriter(zw.zipBlock)
+	_, err = zw.compressor.Write([]byte{}) // write header
 	if err != nil {
 		log.Panic(err)
 	}
-	w.bufCompressor.Flush()
+	zw.zipBlock.Reset()
+	return zw
+}
 
-	w.compressor.Reset(w.w)
-	w.compressor.Extra = append(w.compressor.Extra, getExtraTag(w.zipBlock.Len())...)
-	n, err = w.compressor.Write(b)
-	w.compressor.Close()
+// Write input bytes as a single bgzf block.
+func (w Writer) Write(p []byte) (n int, err error) {
+	w.compressor.Reset(w.zipBlock)
+
+	// ******
+	// TODO better way around this?
+	// The gzip writer tries to write a header smartly at the time of
+	// data write, however bgzf requires custom header fields which
+	// require knowing the compressed size of the block, which can only
+	// be determined after compression. Therefore we cannot use the
+	// default gzip header behavior. The code below performs an empty
+	// write to make the gzip writer 'think' it has written a header.
+	// We then trash the default header and write a custom header below.
+	_, err = w.compressor.Write([]byte{}) // trash gzip default header
+	if err != nil {
+		log.Panic(err)
+	}
+	w.zipBlock.Reset() // reset written trashed header
+	// end of code block for discarding default gzip header
+	// ******
+
+	n, err = w.compressor.Write(p) // compress p into write buffer
+	if n != len(p) || err != nil {
+		fmt.Printf("input %d bytes, wrote %d bytes\n", len(p), n)
+		log.Panic(err)
+	}
+	err = w.compressor.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	w.writeHeader(w.zipBlock.Len())        // write block header to file based on compressed size
+	_, err = w.w.Write(w.zipBlock.Bytes()) // write buffer to file
 	return
 }
 
-func getExtraTag(len int) []byte {
-	if len > math.MaxUint16 {
-		log.Panic("buffer is too big")
+// Close bgzf writer and add the magic EOF marker to the end of the file.
+func (w Writer) Close() error {
+	err := w.compressor.Close()
+	if err != nil {
+		log.Panic(err)
 	}
-	answer := make([]byte, 6)
-	answer[0] = 'B' // ID[0]
-	answer[1] = 'C' // ID[1]
-	answer[2] = 2 // payload size uint16[0]
-	answer[3] = 0 // payload size uint16[1]
-	binary.LittleEndian.PutUint16(answer[4:6], uint16(len) - 1)
-	return answer
+	_, err = w.w.Write(magicEOF())
+	return err
 }
 
-func (w Writer) Close() error {
-	w.Write([]byte{})
-	//w.compressor.Reset(w.w)
-	//w.compressor.Extra = append(w.compressor.Extra, getExtraTag(28)...)
-	//w.compressor.Write([]byte{})
-	return w.compressor.Close()
+// writeHeader for custom bgzf header.
+func (w Writer) writeHeader(compSize int) {
+	var header [18]byte
+	header[0] = 31  // gzip ID 1
+	header[1] = 139 // gzip ID 2
+	header[2] = 8   // gzip compression method
+	header[3] = 4   // gzip flags
+	// header[4:8] = mod time uint32
+	// header[8] = extra flags (0 for bgzf)
+	header[9] = 255                                 // OS = unknown
+	binary.LittleEndian.PutUint16(header[10:12], 6) // extra len in bytes
+	header[12] = 66                                 // bgzf extra ID 1
+	header[13] = 67                                 // bgzf extra ID 2
+	binary.LittleEndian.PutUint16(header[14:16], 2) // bgzf extra payload size
+	if compSize > math.MaxUint16 {
+		log.Panic("block size overflow")
+	}
+	binary.LittleEndian.PutUint16(header[16:18], uint16(compSize+len(header)-1)) // bgzf compressed block size
+	n, err := w.w.Write(header[:])
+	if n != 18 || err != nil {
+		log.Panic(err)
+	}
+}
+
+// magicEOF generates the magic EOF byte slice from the hex const.
+func magicEOF() []byte {
+	// empty gzip block per sam specs
+	answer, err := hex.DecodeString(magicHexEOF)
+	if err != nil {
+		log.Panic(err)
+	}
+	return answer
 }
