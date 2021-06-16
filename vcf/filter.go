@@ -209,6 +209,27 @@ func IsPolarizable(v Vcf) bool {
 	return true
 }
 
+//IsWeakToStrong returns true if an input biallelic substitution variant is a weak to strong variant, false otherwise.
+func IsWeakToStrong(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v){
+		return false
+	}
+	if v.Ref == "A" || v.Ref == "T" {
+		if v.Alt[0] == "C" || v.Alt[0] == "G" {
+			return true
+		}
+	}
+	return false
+}
+
+//IsNotWeakToStrong returns true if an input biallelic substitution variant is not a weak to strong variant, false otherwise.
+func IsNotWeakToStrong(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v){//ensures the answer is false if we do not match this initial exclusion criteria.
+		return false
+	}
+	return !IsWeakToStrong(v)
+}
+
 func getListIndex(header Header, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))
