@@ -184,7 +184,7 @@ func AfsLikelihoodFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, integ
 	var answer float64 = 0.0
 	likelihoodCache := BuildLikelihoodCache(allN)
 	for j := range afs.Sites {
-		if likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {//if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
+		if likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
 			likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
 		}
 		answer = numbers.MultiplyLog(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
@@ -201,9 +201,9 @@ func AfsLikelihoodFixedAlphaClosure(afs Afs, binomMap [][]float64, integralError
 
 //BuildLikelihoodCache constructs a cache of likelihood values for MLE. likelihoodCache[n][i] stores the likelihood for a segregating site of n alleles with i in the derived state for a particular selection parameter alpha.
 func BuildLikelihoodCache(allN []int) [][]float64 {
-	answer := make([][]float64, numbers.MaxIntSlice(allN)+1)//make the first dimension the output matrix large enough to hold the highest observed N.
+	answer := make([][]float64, numbers.MaxIntSlice(allN)+1) //make the first dimension the output matrix large enough to hold the highest observed N.
 	for n := range allN {
-		answer[allN[n]] = make([]float64, allN[n])//for each N value in the AFS, set the second dimension to the length of possible i values.
+		answer[allN[n]] = make([]float64, allN[n]) //for each N value in the AFS, set the second dimension to the length of possible i values.
 	}
 	return answer
 }

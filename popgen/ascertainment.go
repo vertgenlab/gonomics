@@ -104,7 +104,7 @@ func AfsDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binomMap [][]f
 	for j := range afs.Sites {
 		switch afs.Sites[j].L {
 		case Uncorrected:
-			if uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {//if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
+			if uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
 				uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
 			}
 			answer = numbers.MultiplyLog(answer, uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])

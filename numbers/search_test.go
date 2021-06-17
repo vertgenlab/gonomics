@@ -17,10 +17,10 @@ func negativeGammaClosure(alpha float64, beta float64) func(float64) float64 {
 }
 
 var GgsMaxTests = []struct {
-	f func(float64) float64
-	a float64
-	b float64
-	epsilon float64
+	f        func(float64) float64
+	a        float64
+	b        float64
+	epsilon  float64
 	expected float64
 }{
 	{NormalClosure(1.0, 0.1), -10, 10, 1e-5, 1.0},
@@ -28,10 +28,10 @@ var GgsMaxTests = []struct {
 }
 
 var GgsMinTests = []struct {
-	f func(float64) float64
-	a float64
-	b float64
-	epsilon float64
+	f        func(float64) float64
+	a        float64
+	b        float64
+	epsilon  float64
 	expected float64
 }{
 	{negativeNormalClosure(1.0, 0.1), -10.0, 10.0, 1e-5, 1.0},

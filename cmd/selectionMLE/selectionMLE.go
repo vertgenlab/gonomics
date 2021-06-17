@@ -14,7 +14,7 @@ func selectionMLE(inFile string, outFile string, s popgen.MleSettings) {
 	exception.FatalOnErr(err)
 	answer := popgen.SelectionMaximumLikelihoodEstimate(*data, s)
 	out := fileio.EasyCreate(outFile)
-	_, err = fmt.Fprintf(out,"#FILENAME\tMaximumLikelihood\n")
+	_, err = fmt.Fprintf(out, "#FILENAME\tMaximumLikelihood\n")
 	exception.PanicOnErr(err)
 	_, err = fmt.Fprintf(out, "%s\t%e\n", inFile, answer)
 	exception.PanicOnErr(err)
@@ -48,9 +48,9 @@ func main() {
 	flag.Parse()
 
 	options := popgen.MleSettings{
-		Left: *leftBound,
-		Right: *rightBound,
-		Error: *errorThreshold,
+		Left:                    *leftBound,
+		Right:                   *rightBound,
+		Error:                   *errorThreshold,
 		UnPolarized:             *unPolarized,
 		DivergenceAscertainment: *divergenceAscertainment,
 		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
@@ -67,4 +67,3 @@ func main() {
 	outFile := flag.Arg(1)
 	selectionMLE(vcfFile, outFile, options)
 }
-
