@@ -1,16 +1,29 @@
 package sam
 
 import (
-	"fmt"
 	"testing"
 )
 
-const bigFile string = "/Users/danielsnellings/Desktop/Ex_01_Results/final/Ex_01_01.grouped.bam.bai"
+const testfile string = "../bgzf/testdata/test.bam.bai"
 
 func TestReadBai(t *testing.T) {
-	bai := ReadBai(bigFile)
+	bai := ReadBai(testfile)
 
-	for _, bin := range bai.refs[50].bins {
-		fmt.Sprintln(bin.id, bin.refStart, bin.refEnd)
+	if len(bai.refs) != 84 {
+		t.Errorf("problem reading bai file")
 	}
+
+	tRef := bai.refs[0]
+
+	if tRef.head.children[0].id != 4681 {
+		t.Errorf("problem reading bai file")
+	}
+
+	if tRef.bins[0].parent.id != tRef.head.id {
+		t.Errorf("problem reading bai file")
+	}
+
+	// TODO more and better tests, especially of the tree structure
+	// making these tests should be easier once a bam reader is
+	// implemented so we can test seek behavior and virtual offsets.
 }

@@ -33,7 +33,8 @@ type reference struct {
 	noCoord     noCoordBin
 }
 
-// bin containing all reads that are contained within a variable genomic size
+// bin containing all reads that are contained within a variable genomic size.
+// bins are organized into a tree structure for efficient queries by genomic coordinates.
 type bin struct {
 	sliceIdx uint32 // index in reference.bins
 	id       uint32 // distinct bin id (only unique within reference). see const for id -> size.
@@ -63,19 +64,6 @@ type noCoordBin struct {
 	numUnmapped uint64
 }
 
-// binSize denotes one of 6 distinct genomic sizes that are
-// valid for a bin in the bai format.
-type binSize byte
-
-const (
-	mbp512 binSize = iota // 512Mbp  bin 0
-	mbp64                 // 64Mbp   bin 1-8
-	mbp8                  // 8Mbp    bin 9-72
-	mbp1                  // 1Mbp    bin 73-584
-	kbp128                // 128kbp  bin 585-4680
-	kbp16                 // 16kbp   bin 4681-37448
-)
-
 // ReadBai reads an entire bai file into a bytes buffer and parses
 // the buffer into a Bai struct which can be used for efficient
 // random access of reads in a bam file.
@@ -93,7 +81,7 @@ func ReadBai(filename string) Bai {
 
 	bai := parseBai(r)
 
-	if r.Len() == 8 {
+	if r.Len() == 8 { // check for presence of optional field
 		bai.hasNoCoordReads = true
 		bai.noCoordReads = le.Uint64(r.Next(8))
 	}
@@ -290,6 +278,7 @@ func assembleTree(r reference) reference {
 	return r
 }
 
+// size returns the genomic size a bin.
 func (b bin) size() uint32 {
 	return b.refEnd - b.refStart
 }
