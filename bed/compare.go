@@ -13,12 +13,12 @@ func SortByCoord(bedFile []*Bed) {
 
 //SortBySize sorts in place a slice of Bed structs by their size from low to high.
 func SortBySize(bedFile []*Bed) {
-	sort.Slice(bedFile, func(i, j int) bool {return CompareSize(bedFile[i], bedFile[j]) == -1})
+	sort.Slice(bedFile, func(i, j int) bool { return CompareSize(bedFile[i], bedFile[j]) == -1 })
 }
 
 //SortByChromEndByChrom sorts in place a slice of Bed structs by their chrom, and then by chromEnd, but not by chromStart.
 func SortByChromEndByChrom(bedFile []*Bed) {
-	sort.Slice(bedFile, func(i, j int) bool {return CompareChromEndByChrom(bedFile[i], bedFile[j]) == -1})
+	sort.Slice(bedFile, func(i, j int) bool { return CompareChromEndByChrom(bedFile[i], bedFile[j]) == -1 })
 }
 
 func MergeBeds(bedFile []*Bed) []*Bed {
