@@ -11,7 +11,7 @@ import (
 )
 
 // magicHexEOF is a particular empty bgzf block that marks the true EOF.
-const magicHexEOF string = "1f8b08040000000000ff0600424302001b0003000000000000000000"
+var magicEOF []byte = makeMagicEOF()
 
 // Writer moves data -> compressor -> zipBlock -> file writer
 type Writer struct {
@@ -22,16 +22,10 @@ type Writer struct {
 
 // NewWriter creates a bgzf writer from any input writer.
 func NewWriter(w io.Writer) Writer {
-	var err error
 	var zw Writer
 	zw.w = w
 	zw.zipBlock = NewBlock()
 	zw.compressor = gzip.NewWriter(zw.zipBlock)
-	_, err = zw.compressor.Write([]byte{}) // write header
-	if err != nil {
-		log.Panic(err)
-	}
-	zw.zipBlock.Reset()
 	return zw
 }
 
@@ -77,7 +71,7 @@ func (w Writer) Close() error {
 	if err != nil {
 		log.Panic(err)
 	}
-	_, err = w.w.Write(magicEOF())
+	_, err = w.w.Write(magicEOF)
 	return err
 }
 
@@ -106,8 +100,9 @@ func (w Writer) writeHeader(compSize int) {
 }
 
 // magicEOF generates the magic EOF byte slice from the hex const.
-func magicEOF() []byte {
+func makeMagicEOF() []byte {
 	// empty gzip block per sam specs
+	var magicHexEOF string = "1f8b08040000000000ff0600424302001b0003000000000000000000"
 	answer, err := hex.DecodeString(magicHexEOF)
 	if err != nil {
 		log.Panic(err)
