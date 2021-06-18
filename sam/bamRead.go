@@ -31,7 +31,7 @@ type BamReader struct {
 // next returns the next n bytes from the bgzf block.
 // next handles reading new block if more bytes are
 // requested than are in the currently store block.
-func (r BamReader) next(n int) []byte {
+func (r *BamReader) next(n int) []byte {
 	// we have enough bytes in intermediate
 	if r.intermediate.Len() >= n {
 		return r.intermediate.Next(n)
@@ -70,8 +70,8 @@ func (r BamReader) next(n int) []byte {
 // BamReader allocated with a bgzf Block. The second return is
 // a Header struct parsed from plain header text which is stored
 // in the bam file.
-func OpenBam(filename string) (BamReader, Header) {
-	var r BamReader
+func OpenBam(filename string) (*BamReader, Header) {
+	r := new(BamReader)
 	r.zr = bgzf.NewReader(filename)
 	r.blk = bgzf.NewBlock()
 	err := r.zr.ReadBlock(r.blk)
@@ -91,7 +91,7 @@ func OpenBam(filename string) (BamReader, Header) {
 
 // parseBamHeader parses all header information in a bam file
 // and returns the ref data as ChromInfo structs and header text.
-func parseBamHeader(r BamReader) ([]chromInfo.ChromInfo, []string) {
+func parseBamHeader(r *BamReader) ([]chromInfo.ChromInfo, []string) {
 	// check for magic bytes
 	if string(r.next(4)) != magicBam {
 		log.Fatal("missing magic bytes, bam file may be malformed")
@@ -128,27 +128,28 @@ func parseBamHeader(r BamReader) ([]chromInfo.ChromInfo, []string) {
 // excludes block size uint32.
 var staticBamAlnSize int = 32
 
-// NextBam decodes a single Sam from a bgzf Block. The input
+// DecodeBam decodes a single Sam from a bgzf Block. The input
 // block should be the output of a bgzf.ReadBlock either intact
 // or with bytes discarded as determined by a virtual offset
 // from a bai file. Regardless, the first byte in the input
 // block should be the first byte in an alignment record.
 //
-// The second return from NextBam is the binId that the decoded
+// The second return from DecodeBam is the binId that the decoded
 // Sam was derived from. See sam.Bai for more information about
 // bins and bam indexing. For most use cases, this value can be ignored.
 //
-// NextBam will return ErrNonStdBase if the input record contains
+// DecodeBam will return ErrNonStdBase if the input record contains
 // bases other than A, C, G, T, or N. The sam return will still be
 // fully parsed and can be used downstream, however all unsupported
 // bases will be set to dna.Nil.
 //
-// At the end of the file, NextBam will return an empty sam and io.EOF.
-func NextBam(r BamReader) (s Sam, binId uint32, err error) {
+// At the end of the file, DecodeBam will return an empty sam and io.EOF.
+func DecodeBam(r *BamReader) (s Sam, binId uint32, err error) {
+	blkSizeBytes := r.next(4) // bytes are read before using them to trigger EOF check
 	if r.eof {
 		return Sam{}, 0, io.EOF
 	}
-	blkSize := int(le.Uint32(r.next(4))) // le is an alias for binary.LittleEndian
+	blkSize := int(le.Uint32(blkSizeBytes)) // le is an alias for binary.LittleEndian
 	refIdx := int32(le.Uint32(r.next(4)))
 	if refIdx != -1 {
 		s.RName = r.refs[refIdx].Name
@@ -162,7 +163,10 @@ func NextBam(r BamReader) (s Sam, binId uint32, err error) {
 	lenSeq := int(le.Uint32(r.next(4)))
 	refIdx = int32(le.Uint32(r.next(4)))
 	if refIdx != -1 {
-		s.RName = r.refs[refIdx].Name
+		s.RNext = r.refs[refIdx].Name
+	}
+	if s.RNext == s.RName {
+		s.RNext = "="
 	}
 	s.PNext = le.Uint32(r.next(4)) + 1 // sam is 1 based
 	s.TLen = int32(le.Uint32(r.next(4)))
@@ -184,7 +188,12 @@ func NextBam(r BamReader) (s Sam, binId uint32, err error) {
 	// ******
 	s.Seq = make([]dna.Base, lenSeq)
 	err = readSeq(r, s.Seq)
-	s.Qual = string(r.next(lenSeq))
+
+	qual := r.next(lenSeq)
+	for i := range qual {
+		qual[i] += 33 // ascii offset for printable characters
+	}
+	s.Qual = string(qual)
 
 	// The sam.Extra field is not parsed here as it would require parsing tags to their value, then
 	// casting that value to a string. That would be excessively wasteful, so instead the bytes are
@@ -192,7 +201,7 @@ func NextBam(r BamReader) (s Sam, binId uint32, err error) {
 	// bytes if and only if they need access to the tag fields. This should also make bam reading a
 	// fair bit faster.
 	s.unparsedExtra = r.next(blkSize - (staticBamAlnSize +
-		lenReadName + (4 * numCigarOps) + ((lenSeq)+1)/2) + lenSeq) // to get remaining bytes in alignment
+		lenReadName + (4 * numCigarOps) + (((lenSeq) + 1) / 2) + lenSeq)) // to get remaining bytes in alignment
 	return
 }
 
@@ -204,12 +213,12 @@ var ErrNonStdBase error = errors.New("sequence contains bases other than A,C,G,T
 
 // readSeq reads bytes from r to fill the len of s with bases.
 // Data in r are expected to be encoded with 4 bits per base.
-func readSeq(r BamReader, s []dna.Base) error {
+func readSeq(r *BamReader, s []dna.Base) error {
 	var err error
 	var b byte
 	var i int
-	// limit is > len(s) - 2 so we can handle extra bits from odd lengths
-	for i := 0; i > len(s)-2; i += 2 {
+	// limit is < len(s) - 2 so we can handle extra bits from odd lengths
+	for i = 0; i < len(s)-2; i += 2 {
 		b = r.next(1)[0]
 		s[i] = baseDecoder[b>>4]
 		s[i+1] = baseDecoder[b&0xf]
@@ -223,7 +232,6 @@ func readSeq(r BamReader, s []dna.Base) error {
 	if len(s)%2 == 0 { // seq is even, add both bases
 		s[i+1] = baseDecoder[b&0xf]
 	} // else extra bits are discarded
-
 	return err
 }
 
