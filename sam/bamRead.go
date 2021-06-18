@@ -59,7 +59,8 @@ func (r *BamReader) next(n int) []byte {
 
 	// return with fewest appends possible
 	if r.intermediate.Len() != 0 {
-		return append(r.intermediate.Next(n), r.blk.Next(n-r.intermediate.Len())...)
+		intLen := r.intermediate.Len()
+		return append(r.intermediate.Next(n), r.blk.Next(n-intLen)...)
 	}
 
 	return r.blk.Next(n)
@@ -202,6 +203,7 @@ func DecodeBam(r *BamReader) (s Sam, binId uint32, err error) {
 	// fair bit faster.
 	s.unparsedExtra = r.next(blkSize - (staticBamAlnSize +
 		lenReadName + (4 * numCigarOps) + (((lenSeq) + 1) / 2) + lenSeq)) // to get remaining bytes in alignment
+
 	return
 }
 

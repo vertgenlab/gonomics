@@ -1,6 +1,7 @@
 package sam
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
@@ -43,6 +44,7 @@ func TestReadBam(t *testing.T) {
 		if err == io.EOF {
 			break
 		}
+		fmt.Sprintln(curr)
 		actual = append(actual, curr)
 	}
 
