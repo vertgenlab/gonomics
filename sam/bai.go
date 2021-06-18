@@ -10,16 +10,22 @@ import (
 	"sort"
 )
 
+// bai files are an index format for bam files
+// Specs for bai can be found in section 5.2 on page 19 of:
+// https://raw.githubusercontent.com/samtools/hts-specs/master/SAMv1.pdf
+
 // magicBai is a 4 byte sequence at the start of a bai file
 const magicBai string = "BAI\u0001"
+
+// alias for ease of use and readability
+var le = binary.LittleEndian
 
 // Bai is an index of the BAM format that allows for efficient
 // random access of reads given a query genomic range. The Bai
 // struct should not be accessed directly, but used through
 // query functions present within the sam package of gonomics.
 type Bai struct {
-	refs []reference
-
+	refs            []reference
 	hasNoCoordReads bool   // true if optional field below exists
 	noCoordReads    uint64 // number of unplaced unmapped reads
 }
@@ -97,14 +103,11 @@ func ReadBai(filename string) Bai {
 	return bai
 }
 
-// alias for ease of use and readability
-var le = binary.LittleEndian
-
 // parseBai processes the bytes buffer (after reading the magic bytes)
 // to generate a Bai struct.
 func parseBai(r *bytes.Buffer) Bai {
 	var bai Bai
-	numRefs := le.Uint32(r.Next(4))
+	numRefs := le.Uint32(r.Next(4)) // note le is an alias for binary.LittleEndian
 	bai.refs = make([]reference, numRefs)
 
 	var i uint32
@@ -118,7 +121,7 @@ func parseBai(r *bytes.Buffer) Bai {
 // parseReference processes the bytes buffer to generate a reference struct.
 func parseReference(r *bytes.Buffer) reference {
 	var ref reference
-	numBins := le.Uint32(r.Next(4))
+	numBins := le.Uint32(r.Next(4)) // note le is an alias for binary.LittleEndian
 	ref.bins = make([]bin, numBins)
 
 	var i uint32
@@ -152,7 +155,7 @@ func parseReference(r *bytes.Buffer) reference {
 // parseBin processes the bytes buffer to generate a bin struct.
 func parseBin(r *bytes.Buffer) bin {
 	var b bin
-	b.id = le.Uint32(r.Next(4))
+	b.id = le.Uint32(r.Next(4)) // note le is an alias for binary.LittleEndian
 	numChunks := le.Uint32(r.Next(4))
 	b.chunks = make([]chunk, numChunks)
 
@@ -167,14 +170,14 @@ func parseBin(r *bytes.Buffer) bin {
 // parseChunk processes the bytes buffer to generate a chunk struct.
 func parseChunk(r *bytes.Buffer) chunk {
 	var c chunk
-	c.start = le.Uint64(r.Next(8))
+	c.start = le.Uint64(r.Next(8)) // note le is an alias for binary.LittleEndian
 	c.end = le.Uint64(r.Next(8))
 	return c
 }
 
 // parseIntervalOffset processes the bytes buffer to generate an interval offset.
 func parseIntervalOffset(r *bytes.Buffer) uint64 {
-	return le.Uint64(r.Next(8))
+	return le.Uint64(r.Next(8)) // note le is an alias for binary.LittleEndian
 }
 
 // to reduce chance of errors in the following function
