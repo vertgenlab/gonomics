@@ -14,43 +14,48 @@ func TestRead(t *testing.T) {
 	r := NewReader("testdata/test.bam")
 	var err error
 
+	b1Offset := getHeaderOffset(r) + 1
 	err = r.ReadBlock(b)
 	if err != nil || md5.Sum(b.Bytes()) != block1hash {
-		t.Errorf("problem reading BGZF file")
+		t.Error("problem reading BGZF file")
 	}
 
+	b2Offset := getHeaderOffset(r) + 1 + b1Offset
 	err = r.ReadBlock(b)
 	if err != nil || md5.Sum(b.Bytes()) != block2hash {
-		t.Errorf("problem reading BGZF file")
+		t.Error("problem reading BGZF file")
 	}
 
 	err = r.ReadBlock(b)
 	if err != io.EOF {
-		t.Errorf("problem reading BGZF file")
+		t.Error("problem reading BGZF file")
 	}
-}
 
-func TestSeek(t *testing.T) {
-	b := NewBlock()
-	r := NewReader("testdata/test.bam")
-	var err error
-
-	_, err = r.Seek(2299, io.SeekStart)
+	err = r.Close()
 	if err != nil {
-		t.Errorf("problem with BGZF seek")
+		t.Error("problem reading BGZF file")
+	}
+
+	// Seek tests
+	b = NewBlock()
+	r = NewReader("testdata/test.bam")
+
+	_, err = r.Seek(b1Offset, io.SeekStart)
+	if err != nil {
+		t.Error("problem with BGZF seek")
 	}
 	err = r.ReadBlock(b)
 	if err != nil || md5.Sum(b.Bytes()) != block2hash {
-		t.Errorf("problem with BGZF seek")
+		t.Error("problem with BGZF seek")
 	}
 
-	_, err = r.Seek(2299+1217, io.SeekStart)
+	_, err = r.Seek(b2Offset, io.SeekStart)
 	if err != nil {
-		t.Errorf("problem with BGZF seek")
+		t.Error("problem with BGZF seek")
 	}
 	err = r.ReadBlock(b)
 	if err != io.EOF {
-		t.Errorf("problem with BGZF seek")
+		t.Error("problem with BGZF seek")
 	}
 
 	_, err = r.Seek(0, io.SeekStart)
@@ -59,6 +64,11 @@ func TestSeek(t *testing.T) {
 	}
 	err = r.ReadBlock(b)
 	if err != nil || md5.Sum(b.Bytes()) != block1hash {
-		t.Errorf("problem with BGZF seek")
+		t.Error("problem with BGZF seek")
+	}
+
+	err = r.Close()
+	if err != nil {
+		t.Error("problem reading BGZF file")
 	}
 }

@@ -73,7 +73,7 @@ func (r Reader) Seek(offset int64, whence int) (ret int64, err error) {
 	r.buf.Reset(r.file)
 	resetErr := r.decompressor.Reset(r.buf)
 	if resetErr != nil {
-		log.Panic(err)
+		log.Panic(resetErr)
 	}
 	return
 }
