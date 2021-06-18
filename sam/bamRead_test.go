@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -16,7 +15,6 @@ func TestReadBam(t *testing.T) {
 
 	for i := range chroms {
 		if chroms[i] != header.Chroms[i] {
-			fmt.Println(len(chroms[i].Name), len(header.Chroms[i].Name))
 			t.Errorf("plain text and bam header chroms do not match")
 		}
 	}

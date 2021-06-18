@@ -13,7 +13,7 @@ const magicBam string = "BAM\u0001"
 
 // BamReader wraps a bgzf.Reader with a fully allocated bgzf.Block.
 type BamReader struct {
-	bgzf.Reader
+	zr  bgzf.Reader
 	blk *bgzf.Block
 }
 
@@ -26,9 +26,9 @@ type BamReader struct {
 // text header is missing ref information in the bam file.
 func OpenBam(filename string) (BamReader, Header, []chromInfo.ChromInfo) {
 	var r BamReader
-	r.Reader = bgzf.NewReader(filename)
+	r.zr = bgzf.NewReader(filename)
 	r.blk = bgzf.NewBlock()
-	err := r.ReadBlock(r.blk)
+	err := r.zr.ReadBlock(r.blk)
 
 	if err != nil && err != io.EOF { // EOF handled downstream
 		log.Panic(err)
@@ -64,7 +64,8 @@ func parseBamHeader(r BamReader) ([]chromInfo.ChromInfo, []string) {
 	for i := 0; i < numRefs; i++ {
 		refs[i].Order = i
 		refNameLen = int(le.Uint32(r.blk.Next(4)))
-		refs[i].Name = string(r.blk.Next(refNameLen))
+		// trim null from name
+		refs[i].Name = strings.Trim(string(r.blk.Next(refNameLen)), "\u0000")
 		refs[i].Size = int(le.Uint32(r.blk.Next(4)))
 	}
 
@@ -83,7 +84,7 @@ func parseBamHeader(r BamReader) ([]chromInfo.ChromInfo, []string) {
 // or with bytes discarded as determined by a virtual offset
 // from a bai file. Regardless, the first byte in the input
 // block should be the first byte in an alignment record.
-func DecodeBam(r bgzf.Block) Sam {
+func DecodeBam(r BamReader) Sam {
 	var s Sam
 
 	return s
