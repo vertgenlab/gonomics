@@ -105,3 +105,15 @@ func TestSortBySize(t *testing.T) {
 	}
 }
 
+func TestSortByChromEndByChrom(t *testing.T) {
+	var input, expectedChromEnd []*Bed
+	for _, v := range SortTests {
+		input = Read(v.inputFile)
+		expectedChromEnd = Read(v.expectedByChromEndByChromFile)
+		SortByChromEndByChrom(input)
+		if !AllAreEqual(input, expectedChromEnd) {
+			t.Errorf("Error in SortByChromEndbyChrom.")
+		}
+	}
+}
+
