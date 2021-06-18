@@ -266,9 +266,20 @@ func assembleTree(r reference) reference {
 		case prev.size() < proxy[i].size(): // bin size increased. parents shrinks
 			// any node without a direct parent, should point to the head node
 			// so we should never trim the head node from the parents slice.
-			if len(parents) > 1 {
+			for len(parents) > 1 {
 				parents = parents[:len(parents)-1]   // trim last parent
 				currParent = parents[len(parents)-1] // set curr parent
+
+				// The following statement handles cases where bin size increases
+				// by multiple increments. e.g. if we went from bin size of
+				// 64Mbp -> 8Mbp -> 128kbp -> 512Mbp, the parents slice arriving at
+				// the final position would be: [head, 64bin, 8bin]. Without the below
+				// line (and the for loop) we would calculate that the parent of the
+				// 512Mbp bin is the 64Mbp bin (as 8bin gets trimmed) which is incorrect.
+				// Instead we continue to trim by 1 until the parent size > current bin size.
+				if currParent.size() > proxy[i].size() {
+					break
+				}
 			}
 		}
 		proxy[i].parent = currParent
