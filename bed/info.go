@@ -49,7 +49,7 @@ func TotalSize(b []*Bed) int {
 //IsNonOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
 //b must be presorted with SortByCoord.
 func IsSelfOverlapping(b []*Bed) bool {
-	for i := 0; i < len(b) -1; i++ {
+	for i := 0; i < len(b)-1; i++ {
 		if Overlap(b[i], b[i+1]) {
 			return true
 		}

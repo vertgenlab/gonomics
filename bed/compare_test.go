@@ -5,9 +5,9 @@ import (
 )
 
 var OverlapTests = []struct {
-	A *Bed
-	B *Bed
-	expected bool
+	A              *Bed
+	B              *Bed
+	expected       bool
 	expectedLength int
 }{
 	{A: &Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: &Bed{"chr4", 4, 12, "", 0, Positive, 3, nil}, expected: true, expectedLength: 6},
@@ -29,8 +29,8 @@ func TestOverlap(t *testing.T) {
 var OverlapCountTests = []struct {
 	elements1File string
 	elements2File string
-	expected int
-	expectedSum int
+	expected      int
+	expectedSum   int
 }{
 	{"testdata/elements1.bed", "testdata/elements2.bed", 1, 2},
 }
@@ -73,9 +73,9 @@ func TestOverlapLengthSum(t *testing.T) {
 }
 
 var SortTests = []struct {
-	inputFile string
-	expectedByCoordFile string
-	expectedBySizeFile string
+	inputFile                     string
+	expectedByCoordFile           string
+	expectedBySizeFile            string
 	expectedByChromEndByChromFile string
 }{
 	{"testdata/sortInput.bed", "testdata/expectedSortByCoord.bed", "testdata/expectedSortBySize.bed", "testdata/expectedSortByChromEndByChrom.bed"},
@@ -104,4 +104,3 @@ func TestSortBySize(t *testing.T) {
 		}
 	}
 }
-

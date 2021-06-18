@@ -37,7 +37,7 @@ func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile 
 	out := fileio.EasyCreate(outFile)
 	_, err = fmt.Fprintf(out, "#Filename1\tFilename2\tLenElements1\tLenElements2\tOverlapCount\tDebugCheck\tExpectedOverlap\tEnrichment\tpValue\n")
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "%s\t%s\t%d\t%d\t%d\t%f\t%f\t%f\t%e\n", inFile, secondFile, len(elementsOne), len(elementsTwo), overlapCount, summarySlice[0], summarySlice[1], float64(overlapCount) / summarySlice[1], summarySlice[2])
+	_, err = fmt.Fprintf(out, "%s\t%s\t%d\t%d\t%d\t%f\t%f\t%f\t%e\n", inFile, secondFile, len(elementsOne), len(elementsTwo), overlapCount, summarySlice[0], summarySlice[1], float64(overlapCount)/summarySlice[1], summarySlice[2])
 	exception.PanicOnErr(err)
 	err = out.Close()
 	exception.PanicOnErr(err)
@@ -45,7 +45,7 @@ func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile 
 
 func usage() {
 	fmt.Print(
-		"bedEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input bed files.\n"+
+		"bedEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input bed files.\n" +
 			"noGap.bed represents a bed of all regions in the search space of the genome.\n" +
 			"out.txt is in the form of a tab-separated value file with a header line starting with '#'." +
 			"Usage:\n" +

@@ -18,8 +18,8 @@ func subtractFromBedCoord(b []*Bed, subStart int, subEnd int, bClone []*Bed) {
 			prevEnd = 0
 		}
 		bClone[i].Chrom = b[i].Chrom
-		bClone[i].ChromStart = numbers.Max(prevEnd, b[i].ChromStart - subStart)
-		bClone[i].ChromEnd = numbers.Max(b[i].ChromStart, b[i].ChromEnd - subEnd)
+		bClone[i].ChromStart = numbers.Max(prevEnd, b[i].ChromStart-subStart)
+		bClone[i].ChromEnd = numbers.Max(b[i].ChromStart, b[i].ChromEnd-subEnd)
 		prevEnd = bClone[i].ChromEnd
 	}
 }
@@ -27,8 +27,8 @@ func subtractFromBedCoord(b []*Bed, subStart int, subEnd int, bClone []*Bed) {
 //overlapProbability calculates the probability that an element of len 'length' overlaps a set of genomic 'elements' in a genome represented by 'noGapRegions'.
 //tempElements and tempNoGap represent cloned slices of elements and noGapRegions which are used for memory optimization.
 func overlapProbability(elements []*Bed, tempElements []*Bed, length int, noGapRegions []*Bed, tempNoGap []*Bed) float64 {
-	subtractFromBedCoord(elements, length - 1, 0, tempElements)
-	subtractFromBedCoord(noGapRegions, 0, length - 1, tempNoGap)
+	subtractFromBedCoord(elements, length-1, 0, tempElements)
+	subtractFromBedCoord(noGapRegions, 0, length-1, tempNoGap)
 	return float64(OverlapLengthSum(tempElements, tempNoGap)) / float64(TotalSize(tempNoGap))
 }
 
@@ -44,7 +44,7 @@ func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegion
 	for i := range tempElements2 {
 		currLen = tempElements2[i].ChromEnd - tempElements2[i].ChromStart
 		if currLen == prevLen {
-			answer[i] = answer[i]-1
+			answer[i] = answer[i] - 1
 		} else {
 			answer[i] = overlapProbability(elements1, tempElements1, currLen, noGapRegions, tempNoGap)
 			prevLen = currLen
@@ -67,9 +67,9 @@ func EnrichmentPValue(elementOverlapProbs []float64, numTrials int, overlapCount
 
 	for t := 1; t < numTrials; t++ {
 		prevCol, currCol = currCol, prevCol
-		currCol[0] = prevCol[0] + math.Log(1 - elementOverlapProbs[t])
+		currCol[0] = prevCol[0] + math.Log(1-elementOverlapProbs[t])
 		for s = 1; s <= t; s++ {
-			currCol[s] = numbers.AddLog(prevCol[s] + math.Log(1 - elementOverlapProbs[t]), prevCol[s-1] + math.Log(elementOverlapProbs[t]))
+			currCol[s] = numbers.AddLog(prevCol[s]+math.Log(1-elementOverlapProbs[t]), prevCol[s-1]+math.Log(elementOverlapProbs[t]))
 		}
 		currCol[t+1] = prevCol[t] + math.Log(elementOverlapProbs[t])
 	}
@@ -81,7 +81,7 @@ func EnrichmentPValue(elementOverlapProbs []float64, numTrials int, overlapCount
 		if s == 1 {
 			expected = currCol[s]
 		} else {
-			expected = numbers.AddLog(expected, currCol[s] + math.Log(float64(s)))
+			expected = numbers.AddLog(expected, currCol[s]+math.Log(float64(s)))
 		}
 	}
 
@@ -90,7 +90,7 @@ func EnrichmentPValue(elementOverlapProbs []float64, numTrials int, overlapCount
 		pValue = numbers.AddLog(pValue, currCol[s])
 	}
 
-	answer[0] = math.Exp(check)//TODO: Or should we return logSpace answers?
+	answer[0] = math.Exp(check) //TODO: Or should we return logSpace answers?
 	answer[1] = math.Exp(pValue)
 	answer[2] = math.Exp(expected)
 	return answer
