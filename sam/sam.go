@@ -36,6 +36,13 @@ type Sam struct {
 	Seq   []dna.Base     // parsed sequence: originally string with \*|[A-Za-z=.]+
 	Qual  string         // ASCII of Phred-scaled base quality+33: [!-~]+ // TODO: parse to []Qual???
 	Extra string         // TODO: parse to map or slice w/ index embedded in header???
+
+	// TODO make the parse function
+	// unparsedExtra is the Extra bytes from a bam file. If unparsedExtra != nil then
+	// Extra is empty (by default). unparsedExtra can be parsed to values to access tag
+	// field. If the struct was read directly from a sam file, unparsedExtra is never
+	// used, therefore tag info must be parsed from the Extra field.
+	unparsedExtra []byte
 }
 
 // Header encodes the header of a sam file as both the raw header (Text),
