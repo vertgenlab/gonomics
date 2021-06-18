@@ -59,7 +59,6 @@ func NewReader(filename string) Reader {
 		log.Panic(err)
 	}
 
-	r.decompressor.Multistream(false)
 	return r
 }
 
