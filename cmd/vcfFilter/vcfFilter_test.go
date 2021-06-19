@@ -9,22 +9,22 @@ import (
 )
 
 var VcfFilterTests = []struct {
-	inputFile                string
-	expectedOutputFile       string
-	groupFile                string
-	chrom                    string
-	minPos                   int
-	maxPos                   int
-	minQual                  float64
-	ref                      string
-	alt                      string
-	biAllelicOnly            bool
-	substitutionsOnly        bool
-	segregatingSitesOnly     bool
-	removeNoAncestor         bool
-	onlyPolarizableAncestors bool
-	weakToStrongOrStrongToWeakOnly         bool
-	noWeakToStrongOrStrongToWeak           bool
+	inputFile                      string
+	expectedOutputFile             string
+	groupFile                      string
+	chrom                          string
+	minPos                         int
+	maxPos                         int
+	minQual                        float64
+	ref                            string
+	alt                            string
+	biAllelicOnly                  bool
+	substitutionsOnly              bool
+	segregatingSitesOnly           bool
+	removeNoAncestor               bool
+	onlyPolarizableAncestors       bool
+	weakToStrongOrStrongToWeakOnly bool
+	noWeakToStrongOrStrongToWeak   bool
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false},
@@ -41,20 +41,20 @@ func TestVcfFilter(t *testing.T) {
 			altSlice = strings.Split(v.alt, ",")
 		}
 		c := criteria{
-			chrom:                    v.chrom,
-			groupFile:                v.groupFile,
-			minPos:                   v.minPos,
-			maxPos:                   v.maxPos,
-			minQual:                  v.minQual,
-			ref:                      v.ref,
-			alt:                      altSlice,
-			biAllelicOnly:            v.biAllelicOnly,
-			substitutionsOnly:        v.substitutionsOnly,
-			segregatingSitesOnly:     v.segregatingSitesOnly,
-			removeNoAncestor:         v.removeNoAncestor,
-			onlyPolarizableAncestors: v.onlyPolarizableAncestors,
-			weakToStrongOrStrongToWeakOnly:         v.weakToStrongOrStrongToWeakOnly,
-			noWeakToStrongOrStrongToWeak:           v.noWeakToStrongOrStrongToWeak,
+			chrom:                          v.chrom,
+			groupFile:                      v.groupFile,
+			minPos:                         v.minPos,
+			maxPos:                         v.maxPos,
+			minQual:                        v.minQual,
+			ref:                            v.ref,
+			alt:                            altSlice,
+			biAllelicOnly:                  v.biAllelicOnly,
+			substitutionsOnly:              v.substitutionsOnly,
+			segregatingSitesOnly:           v.segregatingSitesOnly,
+			removeNoAncestor:               v.removeNoAncestor,
+			onlyPolarizableAncestors:       v.onlyPolarizableAncestors,
+			weakToStrongOrStrongToWeakOnly: v.weakToStrongOrStrongToWeakOnly,
+			noWeakToStrongOrStrongToWeak:   v.noWeakToStrongOrStrongToWeak,
 		}
 
 		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)

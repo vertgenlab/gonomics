@@ -92,23 +92,23 @@ func usage() {
 
 // criteria by which vcf records are filtered.
 type criteria struct {
-	chrom                    string
-	groupFile                string
-	minPos                   int
-	maxPos                   int
-	minQual                  float64
-	ref                      string
-	alt                      []string
-	biAllelicOnly            bool
-	substitutionsOnly        bool
-	segregatingSitesOnly     bool
-	removeNoAncestor         bool
-	onlyPolarizableAncestors bool
-	weakToStrongOrStrongToWeakOnly         bool
-	noWeakToStrongOrStrongToWeak           bool
-	formatExp                string
-	infoExp                  string
-	includeMissingInfo       bool
+	chrom                          string
+	groupFile                      string
+	minPos                         int
+	maxPos                         int
+	minQual                        float64
+	ref                            string
+	alt                            []string
+	biAllelicOnly                  bool
+	substitutionsOnly              bool
+	segregatingSitesOnly           bool
+	removeNoAncestor               bool
+	onlyPolarizableAncestors       bool
+	weakToStrongOrStrongToWeakOnly bool
+	noWeakToStrongOrStrongToWeak   bool
+	formatExp                      string
+	infoExp                        string
+	includeMissingInfo             bool
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -263,22 +263,22 @@ func main() {
 	}
 
 	c := criteria{
-		chrom:                    *chrom,
-		minPos:                   *minPos,
-		maxPos:                   *maxPos,
-		minQual:                  *minQual,
-		ref:                      *ref,
-		alt:                      altSlice,
-		biAllelicOnly:            *biAllelicOnly,
-		substitutionsOnly:        *substitutionsOnly,
-		segregatingSitesOnly:     *segregatingSitesOnly,
-		removeNoAncestor:         *removeNoAncestor,
-		onlyPolarizableAncestors: *onlyPolarizableAncestors,
-		formatExp:                *formatExp,
-		infoExp:                  *infoExp,
-		includeMissingInfo:       *includeMissingInfo,
-		weakToStrongOrStrongToWeakOnly:         *weakToStrongOrStrongToWeakOnly,
-		noWeakToStrongOrStrongToWeak:           *noWeakToStrongOrStrongToWeak,
+		chrom:                          *chrom,
+		minPos:                         *minPos,
+		maxPos:                         *maxPos,
+		minQual:                        *minQual,
+		ref:                            *ref,
+		alt:                            altSlice,
+		biAllelicOnly:                  *biAllelicOnly,
+		substitutionsOnly:              *substitutionsOnly,
+		segregatingSitesOnly:           *segregatingSitesOnly,
+		removeNoAncestor:               *removeNoAncestor,
+		onlyPolarizableAncestors:       *onlyPolarizableAncestors,
+		formatExp:                      *formatExp,
+		infoExp:                        *infoExp,
+		includeMissingInfo:             *includeMissingInfo,
+		weakToStrongOrStrongToWeakOnly: *weakToStrongOrStrongToWeakOnly,
+		noWeakToStrongOrStrongToWeak:   *noWeakToStrongOrStrongToWeak,
 	}
 
 	var parseFormat, parseInfo bool
