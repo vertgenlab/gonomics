@@ -10,8 +10,8 @@ import (
 var BedEnrichmentsTests = []struct {
 	elements1File string
 	elements2File string
-	noGapFile string
-	expectedFile string
+	noGapFile     string
+	expectedFile  string
 }{
 	{"testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt"},
 	{"testdata/elements1.bed", "testdata/elements1.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements1.enrichment.txt"},
