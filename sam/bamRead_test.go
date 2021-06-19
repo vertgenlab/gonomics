@@ -127,7 +127,7 @@ func BenchmarkGonomicsBamRead(b *testing.B) {
 func BenchmarkBiogoBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		file, _ := os.Open(bigBam)
-		r, _ := bgBam.NewReader(file, 0)
+		r, _ := bgBam.NewReader(file, 5)
 		var s *bgSam.Record
 		var err error
 		for {
@@ -138,19 +138,17 @@ func BenchmarkBiogoBamRead(b *testing.B) {
 			fmt.Fprint(ioutil.Discard, s)
 		}
 		r.Close()
+		file.Close()
 	}
 }
 
 func BenchmarkGoFishBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, samChan := gfBam.BamToSam(bigBam)
-		file, _ := os.Open(bigBam)
-		r, _ := bgBam.NewReader(file, 1)
 		var s gfBam.Sam
 		for s = range samChan {
 			fmt.Fprintf(ioutil.Discard, gfBam.ToString(&s))
 		}
-		r.Close()
 	}
 }
 
