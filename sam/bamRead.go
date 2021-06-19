@@ -42,7 +42,8 @@ func (r *BamReader) next(n int) []byte {
 		if r.intermediate.Len() == 0 {
 			return r.blk.Next(n)
 		} else {
-			return append(r.intermediate.Next(n), r.blk.Next(n-r.intermediate.Len())...)
+			blkLen := r.intermediate.Len()
+			return append(r.intermediate.Next(n), r.blk.Next(n-blkLen)...)
 		}
 	}
 
