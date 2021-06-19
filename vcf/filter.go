@@ -9,7 +9,8 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
-func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) bool {
+//raven's note: added id (rsID), can upgrade to []string in the future
+func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool, id string) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -38,6 +39,11 @@ func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []strin
 		return false
 	}
 	if onlyPolarizableAncestors && !IsPolarizable(v) {
+		return false
+	}
+	//raven's note: added a check for id
+	//TODO: make idMap, build function below
+	if value, exist := idMap[id]; !exist { //raven's note: if id doesn't exist as a key in idMap, then remove from output
 		return false
 	}
 	return true

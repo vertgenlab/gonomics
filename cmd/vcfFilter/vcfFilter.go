@@ -107,6 +107,7 @@ type criteria struct {
 	formatExp                string
 	infoExp                  string
 	includeMissingInfo       bool
+	id											 string //raven's note: added id (rsID), can upgrade to []string in the future
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
