@@ -104,20 +104,6 @@ func equalExceptExtra(a, b []Sam) bool {
 
 const bigBam string = "/Users/danielsnellings/Desktop/1k.bam"
 
-func TestBigBam(t *testing.T) {
-	r, _ := OpenBam(bigBam)
-	var s Sam
-	var err error
-	for {
-		s, _, err = DecodeBam(r)
-		if err == io.EOF {
-			break
-		}
-		fmt.Fprint(ioutil.Discard, s)
-	}
-	r.Close()
-}
-
 func BenchmarkGonomicsBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r, _ := OpenBam(bigBam)
