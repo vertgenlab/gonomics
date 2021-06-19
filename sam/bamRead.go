@@ -28,6 +28,11 @@ type BamReader struct {
 	eof          bool
 }
 
+// Close the BamReader and all underlying io.Readers.
+func (r *BamReader) Close() error {
+	return r.zr.Close()
+}
+
 // next returns the next n bytes from the bgzf block.
 // next handles reading new block if more bytes are
 // requested than are in the currently store block.

@@ -5,6 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
+	"io/ioutil"
+	"os/exec"
 	"testing"
 )
 
@@ -51,6 +53,11 @@ func TestReadBam(t *testing.T) {
 	if !equalExceptExtra(actual, expected) {
 		t.Errorf("problem reading bam")
 	}
+
+	err = r.Close()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 }
 
 func equalExceptExtra(a, b []Sam) bool {
@@ -93,4 +100,50 @@ func equalExceptExtra(a, b []Sam) bool {
 		}
 	}
 	return true
+}
+
+const bigBam string = "/Users/danielsnellings/Desktop/1k.bam"
+
+func TestBigBam(t *testing.T) {
+	r, _ := OpenBam(bigBam)
+	var s Sam
+	var err error
+	for {
+		s, _, err = DecodeBam(r)
+		if err == io.EOF {
+			break
+		}
+		fmt.Fprint(ioutil.Discard, s)
+	}
+	r.Close()
+}
+
+func BenchmarkGonomicsBamRead(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r, _ := OpenBam(bigBam)
+		var s Sam
+		var err error
+		for {
+			s, _, err = DecodeBam(r)
+			if err == io.EOF {
+				break
+			}
+			fmt.Fprint(ioutil.Discard, s)
+		}
+		r.Close()
+	}
+}
+
+func BenchmarkSamtoolsBamRead(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		cmd := exec.Command("samtools", "view", bigBam)
+		cmd.Stdout = ioutil.Discard
+
+		b.StartTimer()
+		err := cmd.Run()
+		if err != nil {
+			panic(err)
+		}
+		b.StopTimer()
+	}
 }

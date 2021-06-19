@@ -53,6 +53,11 @@ type Header struct {
 	Chroms   []chromInfo.ChromInfo // tags SQ - SN and SQ - LN
 }
 
+// String converts Sam to a string to satisfy the fmt.Stringer interface.
+func (s Sam) String() string {
+	return ToString(s)
+}
+
 // ToString converts an Sam struct to a tab delimited string per file specs.
 func ToString(aln Sam) string {
 	var answer string
