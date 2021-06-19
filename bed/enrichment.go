@@ -56,7 +56,30 @@ func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegion
 	return answer
 }
 
-func EnrichmentPValue(elementOverlapProbs []float64, numTrials int, overlapCount int) []float64 {
+func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount int) []float64 {
+	var answer []float64 = make([]float64, 3)
+	var mu, sigma float64 = 0, 0
+
+	for i := range elementOverlapProbs {
+		mu += elementOverlapProbs[i]
+		sigma = sigma + elementOverlapProbs[i]*(1 - elementOverlapProbs[i])
+	}
+
+	answer[0] = 1.0
+	answer[1] = mu//mu represents the expected value
+
+	//calculate pValue approximation
+	pValue := math.Log(numbers.NormalDist(float64(overlapCount), mu, sigma))
+	for s := overlapCount + 1; s <= len(elementOverlapProbs); s++ {
+		pValue = numbers.AddLog(pValue, math.Log(numbers.NormalDist(float64(s), mu, sigma)))
+	}
+	answer[2] = math.Exp(pValue)
+
+	return answer
+}
+
+func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64 {
+	var numTrials = len(elementOverlapProbs)
 	var answer []float64 = make([]float64, 3)
 	var prevCol []float64 = make([]float64, numTrials+1)
 	var currCol []float64 = make([]float64, numTrials+1)
