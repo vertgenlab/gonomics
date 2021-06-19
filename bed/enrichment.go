@@ -62,11 +62,11 @@ func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount i
 
 	for i := range elementOverlapProbs {
 		mu += elementOverlapProbs[i]
-		sigma = sigma + elementOverlapProbs[i]*(1 - elementOverlapProbs[i])
+		sigma = sigma + elementOverlapProbs[i]*(1-elementOverlapProbs[i])
 	}
 
 	answer[0] = 1.0
-	answer[1] = mu//mu represents the expected value
+	answer[1] = mu //mu represents the expected value
 
 	//calculate pValue approximation
 	pValue := math.Log(numbers.NormalDist(float64(overlapCount), mu, sigma))
