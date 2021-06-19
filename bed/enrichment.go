@@ -33,7 +33,9 @@ func overlapProbability(elements []*Bed, tempElements []*Bed, length int, noGapR
 }
 
 func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed) []float64 {
-	var tempElements1, tempElements2, tempNoGap []*Bed
+	var tempElements1 []*Bed = make([]*Bed, len(elements1))
+	var tempElements2 []*Bed = make([]*Bed, len(elements2))
+	var tempNoGap []*Bed = make([]*Bed, len(noGapRegions))
 	var answer []float64 = make([]float64, len(elements2))
 	copy(tempElements1, elements1)
 	copy(tempNoGap, noGapRegions)
@@ -44,7 +46,7 @@ func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegion
 	for i := range tempElements2 {
 		currLen = tempElements2[i].ChromEnd - tempElements2[i].ChromStart
 		if currLen == prevLen {
-			answer[i] = answer[i] - 1
+			answer[i] = answer[i-1]
 		} else {
 			answer[i] = overlapProbability(elements1, tempElements1, currLen, noGapRegions, tempNoGap)
 			prevLen = currLen
@@ -58,10 +60,13 @@ func EnrichmentPValue(elementOverlapProbs []float64, numTrials int, overlapCount
 	var answer []float64 = make([]float64, 3)
 	var prevCol []float64 = make([]float64, numTrials+1)
 	var currCol []float64 = make([]float64, numTrials+1)
+
+	//for one trial (a bed input with a single element)
 	prevCol[0] = math.Log(1 - elementOverlapProbs[0])
 	currCol[0] = prevCol[0]
 	prevCol[1] = math.Log(elementOverlapProbs[0])
 	currCol[1] = math.Log(elementOverlapProbs[0])
+
 	var s int
 	var expected, pValue float64
 
@@ -90,8 +95,8 @@ func EnrichmentPValue(elementOverlapProbs []float64, numTrials int, overlapCount
 		pValue = numbers.AddLog(pValue, currCol[s])
 	}
 
-	answer[0] = math.Exp(check) //TODO: Or should we return logSpace answers?
-	answer[1] = math.Exp(pValue)
-	answer[2] = math.Exp(expected)
+	answer[0] = math.Exp(check)
+	answer[2] = math.Exp(pValue)
+	answer[1] = math.Exp(expected)
 	return answer
 }

@@ -57,7 +57,7 @@ func OverlapCount(a []*Bed, b []*Bed) int {
 		if Overlap(a[aIndex], b[bIndex]) {
 			count++
 			aIndex++
-		} else if CompareChromEnd(a[aIndex], b[bIndex]) < 0 {
+		} else if CompareChromEndByChrom(a[aIndex], b[bIndex]) < 0 {
 			aIndex++
 		} else {
 			bIndex++
@@ -76,7 +76,7 @@ func OverlapLengthSum(a []*Bed, b []*Bed) int {
 		if oLen != 0 {
 			sum += oLen
 			aIndex++
-		} else if CompareChromEnd(a[aIndex], b[bIndex]) < 0 {
+		} else if CompareChromEndByChrom(a[aIndex], b[bIndex]) < 0 {
 			aIndex++
 		} else {
 			bIndex++

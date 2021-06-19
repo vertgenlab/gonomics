@@ -47,7 +47,7 @@ func usage() {
 	fmt.Print(
 		"bedEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input bed files.\n" +
 			"noGap.bed represents a bed of all regions in the search space of the genome.\n" +
-			"out.txt is in the form of a tab-separated value file with a header line starting with '#'." +
+			"out.txt is in the form of a tab-separated value file with a header line starting with '#'.\n" +
 			"Usage:\n" +
 			"bedEnrichments elements1.bed elements2.bed noGap.bed out.txt\n")
 	flag.PrintDefaults()
