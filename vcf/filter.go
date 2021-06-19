@@ -219,6 +219,14 @@ func IsWeakToStrong(v Vcf) bool {
 			return true
 		}
 	}
+	return false
+}
+
+//IsStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant, false otherwise.
+func IsStrongToWeak(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) {
+		return false
+	}
 	if v.Ref == "C" || v.Ref == "G" {
 		if v.Alt[0] == "A" || v.Alt[0] == "T" {
 			return true
@@ -227,12 +235,30 @@ func IsWeakToStrong(v Vcf) bool {
 	return false
 }
 
+//IsNotStrongToWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
+func IsNotStrongToWeak(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
+		return false
+	}
+	return !IsStrongToWeak(v)
+}
+
 //IsNotWeakToStrong returns true if an input biallelic substitution variant is not a weak to strong variant, false otherwise.
 func IsNotWeakToStrong(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
 		return false
 	}
 	return !IsWeakToStrong(v)
+}
+
+//IsWeakToStrongOrStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant or a weak to strong variant, false otherwise.
+func IsWeakToStrongOrStrongToWeak(v Vcf) bool {
+	return IsStrongToWeak(v) || IsWeakToStrong(v)
+}
+
+//IsNotWeakToStrongOrStrongToWeak returns true if a variant is neither a weak to strong variant nor a strong to weak variant, false otherwise.
+func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
+	return IsNotWeakToStrong(v) && IsNotStrongToWeak(v)
 }
 
 func getListIndex(header Header, list []string) []int16 {

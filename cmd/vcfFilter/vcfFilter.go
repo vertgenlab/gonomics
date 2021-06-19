@@ -104,8 +104,8 @@ type criteria struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
-	weakToStrongOnly         bool
-	noWeakToStrong           bool
+	weakToStrongOrStrongToWeakOnly         bool
+	noWeakToStrongOrStrongToWeak           bool
 	formatExp                string
 	infoExp                  string
 	includeMissingInfo       bool
@@ -221,11 +221,11 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 		answer = append(answer, vcf.IsPolarizable)
 	}
 
-	if c.noWeakToStrong {
-		answer = append(answer, vcf.IsNotWeakToStrong)
+	if c.noWeakToStrongOrStrongToWeak {
+		answer = append(answer, vcf.IsNotWeakToStrongOrStrongToWeak)
 	}
-	if c.weakToStrongOnly {
-		answer = append(answer, vcf.IsWeakToStrong)
+	if c.weakToStrongOrStrongToWeakOnly {
+		answer = append(answer, vcf.IsWeakToStrongOrStrongToWeak)
 	}
 	return answer
 }
@@ -244,8 +244,8 @@ func main() {
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
 	var onlyPolarizableAncestors *bool = flag.Bool("onlyPolarizableAncestors", false, "Retains only variants that can be used to construct a derived allele frequency spectrum. Must have a subsitution where the ancestral allele matches either alt or ref.")
-	var weakToStrongOnly *bool = flag.Bool("weakToStrongOnly", false, "Retains only variants that are weak to strong mutations.")
-	var noWeakToStrong *bool = flag.Bool("noWeakToStrong", false, "Removes weak to strong variants.")
+	var weakToStrongOrStrongToWeakOnly *bool = flag.Bool("weakToStrongOrStrongToWeakOnly", false, "Retains only variants that are weak to strong or strong to weak mutations.")
+	var noWeakToStrongOrStrongToWeak *bool = flag.Bool("noWeakToStrongOrStrongToWeak", false, "Removes weak to strong variants and strong to weak variants.")
 	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\"). "+
 		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'. For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\". "+
 		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
@@ -277,8 +277,8 @@ func main() {
 		formatExp:                *formatExp,
 		infoExp:                  *infoExp,
 		includeMissingInfo:       *includeMissingInfo,
-		weakToStrongOnly:         *weakToStrongOnly,
-		noWeakToStrong:           *noWeakToStrong,
+		weakToStrongOrStrongToWeakOnly:         *weakToStrongOrStrongToWeakOnly,
+		noWeakToStrongOrStrongToWeak:           *noWeakToStrongOrStrongToWeak,
 	}
 
 	var parseFormat, parseInfo bool
