@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	//"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
+	"os"
 	"testing"
 )
 
@@ -23,7 +25,7 @@ var SelectionMleTests = []struct {
 }
 
 func TestSelectionMle(t *testing.T) {
-	//var err error
+	var err error
 	for _, v := range SelectionMleTests {
 		s := popgen.MleSettings{
 			Left:                    v.left,
@@ -39,7 +41,7 @@ func TestSelectionMle(t *testing.T) {
 		if !fileio.AreEqual(v.expectedOutputFile, v.outFile) {
 			t.Errorf("Error in SelectionMLE.")
 		}
-		//err = os.Remove(v.outFile)
-		//exception.PanicOnErr(err)
+		err = os.Remove(v.outFile)
+		exception.PanicOnErr(err)
 	}
 }
