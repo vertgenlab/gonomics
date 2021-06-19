@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile string) {
+func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile string, approximateMethod bool) {
 	var err error
 	elementsOne := bed.ReadLite(inFile)
 	elementsTwo := bed.ReadLite(secondFile)
@@ -32,8 +32,13 @@ func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile 
 
 	overlapCount := bed.OverlapCount(elementsOne, elementsTwo)
 	probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-	summarySlice := bed.EnrichmentPValue(probs, overlapCount)
-	approximateSlice := bed.EnrichmentPValueApproximation(probs, overlapCount)
+
+	var summarySlice []float64
+	if approximateMethod {
+		summarySlice = bed.EnrichmentPValueApproximation(probs, overlapCount)
+	} else {
+		summarySlice = bed.EnrichmentPValue(probs, overlapCount)
+	}
 
 	out := fileio.EasyCreate(outFile)
 	_, err = fmt.Fprintf(out, "#Filename1\tFilename2\tLenElements1\tLenElements2\tOverlapCount\tDebugCheck\tExpectedOverlap\tEnrichment\tpValue\n")
@@ -58,6 +63,8 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 4
 
+	var approximateMethod *bool = flag.Bool("approximateMethod", false, "Use a normal approximation of the binomial distribution instead of an explicit calculation. Much faster for large bed files.")
+
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	log.SetFlags(0)
@@ -73,5 +80,5 @@ func main() {
 	noGapFile := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	bedEnrichments(inFile, secondFile, noGapFile, outFile)
+	bedEnrichments(inFile, secondFile, noGapFile, outFile, *approximateMethod)
 }
