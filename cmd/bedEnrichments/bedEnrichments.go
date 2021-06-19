@@ -10,6 +10,7 @@ import (
 )
 
 func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile string) {
+	var err error
 	elementsOne := bed.ReadLite(inFile)
 	elementsTwo := bed.ReadLite(secondFile)
 	noGapRegions := bed.ReadLite(noGapFile)
@@ -31,14 +32,15 @@ func bedEnrichments(inFile string, secondFile string, noGapFile string, outFile 
 
 	overlapCount := bed.OverlapCount(elementsOne, elementsTwo)
 	probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-	summarySlice := bed.EnrichmentPValue(probs, len(elementsTwo), overlapCount)
+	summarySlice := bed.EnrichmentPValue(probs, overlapCount)
+	approximateSlice := bed.EnrichmentPValueApproximation(probs, overlapCount)
 
-	var err error
 	out := fileio.EasyCreate(outFile)
 	_, err = fmt.Fprintf(out, "#Filename1\tFilename2\tLenElements1\tLenElements2\tOverlapCount\tDebugCheck\tExpectedOverlap\tEnrichment\tpValue\n")
 	exception.PanicOnErr(err)
 	_, err = fmt.Fprintf(out, "%s\t%s\t%d\t%d\t%d\t%f\t%f\t%f\t%e\n", inFile, secondFile, len(elementsOne), len(elementsTwo), overlapCount, summarySlice[0], summarySlice[1], float64(overlapCount)/summarySlice[1], summarySlice[2])
 	exception.PanicOnErr(err)
+
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
