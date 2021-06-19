@@ -2,10 +2,14 @@ package sam
 
 import (
 	"fmt"
+	bgBam "github.com/biogo/hts/bam"
+	bgSam "github.com/biogo/hts/sam"
+	gfBam "github.com/edotau/goFish/bam"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"testing"
 )
@@ -102,7 +106,7 @@ func equalExceptExtra(a, b []Sam) bool {
 	return true
 }
 
-const bigBam string = "/Users/danielsnellings/Desktop/1k.bam"
+const bigBam string = "/Users/danielsnellings/Desktop/10k.bam"
 
 func BenchmarkGonomicsBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -115,6 +119,36 @@ func BenchmarkGonomicsBamRead(b *testing.B) {
 				break
 			}
 			fmt.Fprint(ioutil.Discard, s)
+		}
+		r.Close()
+	}
+}
+
+func BenchmarkBiogoBamRead(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		file, _ := os.Open(bigBam)
+		r, _ := bgBam.NewReader(file, 0)
+		var s *bgSam.Record
+		var err error
+		for {
+			s, err = r.Read()
+			if err == io.EOF {
+				break
+			}
+			fmt.Fprint(ioutil.Discard, s)
+		}
+		r.Close()
+	}
+}
+
+func BenchmarkGoFishBamRead(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, samChan := gfBam.BamToSam(bigBam)
+		file, _ := os.Open(bigBam)
+		r, _ := bgBam.NewReader(file, 1)
+		var s gfBam.Sam
+		for s = range samChan {
+			fmt.Fprintf(ioutil.Discard, gfBam.ToString(&s))
 		}
 		r.Close()
 	}
