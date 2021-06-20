@@ -104,10 +104,10 @@ type criteria struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
+	id											 string //raven's note: added id (rsID), can upgrade to []string in the future
 	formatExp                string
 	infoExp                  string
 	includeMissingInfo       bool
-	id											 string //raven's note: added id (rsID), can upgrade to []string in the future
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -219,6 +219,17 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.onlyPolarizableAncestors {
 		answer = append(answer, vcf.IsPolarizable)
 	}
+
+	if c.id != "" { //raven's note: not sure what getTests is for and if c.id (modeled after c.chrom) is right
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Id != c.id {
+					return false
+				}
+				return true
+			})
+	}
+
 	return answer
 }
 
@@ -236,6 +247,7 @@ func main() {
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
 	var onlyPolarizableAncestors *bool = flag.Bool("onlyPolarizableAncestors", false, "Retains only variants that can be used to construct a derived allele frequency spectrum. Must have a subsitution where the ancestral allele matches either alt or ref.")
+	var id *string = flag.String("id", "", "Specifies the rsID") //raven's note: added id string
 	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\"). "+
 		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'. For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\". "+
 		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
@@ -264,6 +276,7 @@ func main() {
 		segregatingSitesOnly:     *segregatingSitesOnly,
 		removeNoAncestor:         *removeNoAncestor,
 		onlyPolarizableAncestors: *onlyPolarizableAncestors,
+		id:												*id, //raven's note: added id
 		formatExp:                *formatExp,
 		infoExp:                  *infoExp,
 		includeMissingInfo:       *includeMissingInfo,
