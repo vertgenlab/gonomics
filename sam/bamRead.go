@@ -135,13 +135,12 @@ func parseBamHeader(r *BamReader) ([]chromInfo.ChromInfo, []string) {
 // excludes block size uint32.
 var staticBamAlnSize int = 32
 
-// DecodeBam decodes a single Sam from a bgzf Block. The input
-// block should be the output of a bgzf.ReadBlock either intact
-// or with bytes discarded as determined by a virtual offset
-// from a bai file. Regardless, the first byte in the input
-// block should be the first byte in an alignment record.
+// DecodeBam decodes a single Sam from a bgzf Block and stores the
+// decoded sam in to input *Sam. Note that this overwrites all fields
+// in the input sam, therefore if any information must be saved between
+// decode calls, the values should be copied (e.g. copy slices instead of :=)
 //
-// The second return from DecodeBam is the binId that the decoded
+// The first return from DecodeBam is the binId that the decoded
 // Sam was derived from. See sam.Bai for more information about
 // bins and bam indexing. For most use cases, this value can be ignored.
 //
