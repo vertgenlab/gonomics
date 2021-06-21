@@ -63,7 +63,6 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	exception.PanicOnErr(err)
 }
 
-
 func usage() {
 	fmt.Print(
 		"bedEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input bed files.\n" +

@@ -136,7 +136,7 @@ func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 		pValue = numbers.AddLog(pValue, numbers.BinomialDistLog(numTrials, s, prob))
 	}
 
-	answer[0] = 1//hardcoded for now, we don't do the check with this method.
+	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
 	answer[2] = math.Exp(pValue)
 	answer[1] = prob * float64(numTrials)
 	return answer
@@ -155,7 +155,7 @@ func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 		pValue = numbers.AddLog(pValue, numbers.BinomialDistLog(numTrials, s, prob))
 	}
 
-	answer[0] = 1//hardcoded for now, we don't do the check with this method.
+	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
 	answer[2] = math.Exp(pValue)
 	answer[1] = prob * float64(numTrials)
 	return answer
@@ -165,7 +165,7 @@ func findLargestBedLength(b []*Bed) int {
 	var maxLength int = b[0].ChromEnd - b[0].ChromStart
 
 	for i := 1; i < len(b); i++ {
-		if b[i].ChromEnd - b[i].ChromStart > maxLength {
+		if b[i].ChromEnd-b[i].ChromStart > maxLength {
 			maxLength = b[i].ChromEnd - b[i].ChromStart
 		}
 	}
@@ -175,7 +175,7 @@ func findLargestBedLength(b []*Bed) int {
 func findShortestBedLength(b []*Bed) int {
 	var minLength int = b[0].ChromEnd - b[0].ChromStart
 	for i := 1; i < len(b); i++ {
-		if b[i].ChromEnd - b[i].ChromStart < minLength {
+		if b[i].ChromEnd-b[i].ChromStart < minLength {
 			minLength = b[i].ChromEnd - b[i].ChromStart
 		}
 	}

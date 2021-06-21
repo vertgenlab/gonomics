@@ -8,14 +8,14 @@ import (
 )
 
 var BedEnrichmentsTests = []struct {
-	method string
-	elements1File     string
-	elements2File     string
-	noGapFile         string
-	expectedFile      string
+	method        string
+	elements1File string
+	elements2File string
+	noGapFile     string
+	expectedFile  string
 }{
-	{"exact","testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt"},
-	{"exact","testdata/elements1.bed", "testdata/elements1.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements1.enrichment.txt"},
+	{"exact", "testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt"},
+	{"exact", "testdata/elements1.bed", "testdata/elements1.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements1.enrichment.txt"},
 }
 
 func TestBedEnrichments(t *testing.T) {
