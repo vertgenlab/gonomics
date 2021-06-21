@@ -65,7 +65,7 @@ func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount i
 		sigma = sigma + elementOverlapProbs[i]*(1-elementOverlapProbs[i])
 	}
 
-	sigma = math.Sqrt(sigma)//sigma will represent the standard deviation for our normal approximation. the above sum gives us the variance.
+	sigma = math.Sqrt(sigma) //sigma will represent the standard deviation for our normal approximation. the above sum gives us the variance.
 
 	answer[0] = 1.0
 	answer[1] = mu //mu represents the expected value
