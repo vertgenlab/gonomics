@@ -25,10 +25,10 @@ var VcfFilterTests = []struct {
 	onlyPolarizableAncestors       bool
 	weakToStrongOrStrongToWeakOnly bool
 	noWeakToStrongOrStrongToWeak   bool
-	refWeakAltStrongOnly bool
-	refStrongAltWeakOnly bool
-	notRefStrongAltWeak bool
-	notRefWeakAltStrong bool
+	refWeakAltStrongOnly           bool
+	refStrongAltWeakOnly           bool
+	notRefStrongAltWeak            bool
+	notRefWeakAltStrong            bool
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false, false, false, false, false},
@@ -60,10 +60,10 @@ func TestVcfFilter(t *testing.T) {
 			onlyPolarizableAncestors:       v.onlyPolarizableAncestors,
 			weakToStrongOrStrongToWeakOnly: v.weakToStrongOrStrongToWeakOnly,
 			noWeakToStrongOrStrongToWeak:   v.noWeakToStrongOrStrongToWeak,
-			refWeakAltStrongOnly: v.refWeakAltStrongOnly,
-			refStrongAltWeakOnly: v.refStrongAltWeakOnly,
-			notRefStrongAltWeak: v.notRefStrongAltWeak,
-			notRefWeakAltStrong: v.notRefWeakAltStrong,
+			refWeakAltStrongOnly:           v.refWeakAltStrongOnly,
+			refStrongAltWeakOnly:           v.refStrongAltWeakOnly,
+			notRefStrongAltWeak:            v.notRefStrongAltWeak,
+			notRefWeakAltStrong:            v.notRefWeakAltStrong,
 		}
 
 		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)

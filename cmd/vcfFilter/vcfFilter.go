@@ -106,10 +106,10 @@ type criteria struct {
 	onlyPolarizableAncestors       bool
 	weakToStrongOrStrongToWeakOnly bool
 	noWeakToStrongOrStrongToWeak   bool
-	refWeakAltStrongOnly	bool
-	refStrongAltWeakOnly	bool
-	notRefWeakAltStrong bool
-	notRefStrongAltWeak bool
+	refWeakAltStrongOnly           bool
+	refStrongAltWeakOnly           bool
+	notRefWeakAltStrong            bool
+	notRefStrongAltWeak            bool
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
@@ -299,10 +299,10 @@ func main() {
 		includeMissingInfo:             *includeMissingInfo,
 		weakToStrongOrStrongToWeakOnly: *weakToStrongOrStrongToWeakOnly,
 		noWeakToStrongOrStrongToWeak:   *noWeakToStrongOrStrongToWeak,
-		refWeakAltStrongOnly: *refWeakAltStrongOnly,
-		refStrongAltWeakOnly: *refStrongAltWeakOnly,
-		notRefStrongAltWeak: *NotRefStrongAltWeak,
-		notRefWeakAltStrong: *NotRefWeakAltStrong,
+		refWeakAltStrongOnly:           *refWeakAltStrongOnly,
+		refStrongAltWeakOnly:           *refStrongAltWeakOnly,
+		notRefStrongAltWeak:            *NotRefStrongAltWeak,
+		notRefWeakAltStrong:            *NotRefWeakAltStrong,
 	}
 
 	var parseFormat, parseInfo bool
