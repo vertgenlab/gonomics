@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"unsafe"
 )
 
 // bam is a binary version of sam compressed as a bgzf file
@@ -82,7 +83,6 @@ func OpenBam(filename string) (*BamReader, Header) {
 	r.zr = bgzf.NewReader(filename)
 	r.blk = bgzf.NewBlock()
 	err := r.zr.ReadBlock(r.blk)
-
 	if err != nil && err != io.EOF { // EOF handled downstream
 		log.Panic(err)
 	}
@@ -151,10 +151,10 @@ var staticBamAlnSize int = 32
 // bases will be set to dna.Nil.
 //
 // At the end of the file, DecodeBam will return an empty sam and io.EOF.
-func DecodeBam(r *BamReader) (s Sam, binId uint32, err error) {
+func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	blkSizeBytes := r.next(4) // bytes are read before using them to trigger EOF check
 	if r.eof {
-		return Sam{}, 0, io.EOF
+		return 0, io.EOF
 	}
 	blkSize := int(le.Uint32(blkSizeBytes)) // le is an alias for binary.LittleEndian
 	refIdx := int32(le.Uint32(r.next(4)))
@@ -177,30 +177,39 @@ func DecodeBam(r *BamReader) (s Sam, binId uint32, err error) {
 	}
 	s.PNext = le.Uint32(r.next(4)) + 1 // sam is 1 based
 	s.TLen = int32(le.Uint32(r.next(4)))
-	s.QName = trimNulOrPanic(string(r.next(lenReadName)))
-	cigs := make([]uint32, numCigarOps)
-	for i := 0; i < numCigarOps; i++ {
-		cigs[i] = le.Uint32(r.next(4))
-	}
-	byteCigs := cigar.Uint32ToByteCigar(cigs)
-	// ******
-	// TODO remove byte cigar -> cigar once byte cigar is added to sam
-	s.Cigar = make([]*cigar.Cigar, numCigarOps)
-	for i := range byteCigs {
-		s.Cigar[i] = &cigar.Cigar{
-			Op:        rune(byteCigs[i].Op),
-			RunLength: int(byteCigs[i].RunLen),
+
+	//s.QName = trimNulOrPanic(unsafeByteToString(r.next(lenReadName))) // unsafe version
+	s.QName = trimNulOrPanic(string(r.next(lenReadName))) // safe version
+
+	if cap(s.Cigar) >= numCigarOps {
+		s.Cigar = s.Cigar[:numCigarOps]
+	} else {
+		s.Cigar = make([]*cigar.Cigar, numCigarOps)
+		for i := 0; i < len(s.Cigar); i++ {
+			s.Cigar[i] = new(cigar.Cigar)
 		}
 	}
-	// ******
-	s.Seq = make([]dna.Base, lenSeq)
+	var cigint uint32
+	for i := 0; i < numCigarOps; i++ {
+		cigint = le.Uint32(r.next(4))
+		s.Cigar[i].Op = cigLookup[cigint&0xf]
+		s.Cigar[i].RunLength = int(cigint >> 4)
+	}
+
+	if cap(s.Seq) >= lenSeq {
+		s.Seq = s.Seq[:lenSeq]
+	} else {
+		s.Seq = make([]dna.Base, lenSeq)
+	}
 	err = readSeq(r, s.Seq)
 
 	qual := r.next(lenSeq)
 	for i := range qual {
 		qual[i] += 33 // ascii offset for printable characters
 	}
-	s.Qual = string(qual)
+
+	// s.Qual = unsafeByteToString(qual) // unsafe version
+	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
 
 	// The sam.Extra field is not parsed here as it would require parsing tags to their value, then
 	// casting that value to a string. That would be excessively wasteful, so instead the bytes are
@@ -212,6 +221,9 @@ func DecodeBam(r *BamReader) (s Sam, binId uint32, err error) {
 
 	return
 }
+
+// integer to cigar look quick lookup
+var cigLookup = []rune{'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', '*'}
 
 // baseDecoder is for 4-bit to dna.Base decoding.
 // gonomics does not support all 16 options in bam.
@@ -250,4 +262,12 @@ func trimNulOrPanic(s string) string {
 		log.Panicf("string '%s' is not NUL terminated. bam may be malformed", s)
 	}
 	return strings.TrimRight(s, "\u0000")
+}
+
+// unsafeByteToString provides a copy-free conversion of a []byte to
+// a string. This functions uses the unsafe package and should be
+// removed if/when the sam struct is changed. Note that this code
+// is lifted directly from strings.Builder.String().
+func unsafeByteToString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }

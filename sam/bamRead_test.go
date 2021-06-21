@@ -17,6 +17,7 @@ const bamTestfile string = "../bgzf/testdata/test.bam"
 const samTestfile string = "../bgzf/testdata/test.sam"
 
 func TestReadBam(t *testing.T) {
+	var err error
 	r, header := OpenBam(bamTestfile)
 	expected, expHeader := Read(samTestfile)
 
@@ -41,16 +42,14 @@ func TestReadBam(t *testing.T) {
 		}
 	}
 
-	var err error
-	var curr Sam
 	var actual []Sam
 	for {
-		curr, _, err = DecodeBam(r)
+		var newSam Sam
+		_, err = DecodeBam(r, &newSam)
 		if err == io.EOF {
 			break
 		}
-		fmt.Sprintln(curr)
-		actual = append(actual, curr)
+		actual = append(actual, newSam)
 	}
 
 	if !equalExceptExtra(actual, expected) {
@@ -105,7 +104,30 @@ func equalExceptExtra(a, b []Sam) bool {
 	return true
 }
 
-const bigBam string = "/Users/danielsnellings/Desktop/10k.bam"
+const bigBam string = "/Users/danielsnellings/Desktop/1mil.bam"
+
+func BenchmarkBamOpenClose(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		r, _ := OpenBam(bigBam)
+		r.Close()
+	}
+}
+
+func BenchmarkBamAllocs(b *testing.B) {
+	r, _ := OpenBam(bigBam)
+	var s Sam
+	for i := 0; i < b.N; i++ {
+		_, _ = DecodeBam(r, &s)
+		s.RName = ""
+		b.StopTimer()
+		if i%9000 == 0 {
+			r.Close()
+			r, _ = OpenBam(bigBam)
+		}
+		b.StartTimer()
+	}
+	r.Close()
+}
 
 func BenchmarkGonomicsBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -113,7 +135,7 @@ func BenchmarkGonomicsBamRead(b *testing.B) {
 		var s Sam
 		var err error
 		for {
-			s, _, err = DecodeBam(r)
+			_, err = DecodeBam(r, &s)
 			if err == io.EOF {
 				break
 			}
@@ -152,5 +174,19 @@ func BenchmarkSamtoolsBamRead(b *testing.B) {
 			panic(err)
 		}
 		b.StopTimer()
+	}
+}
+
+func BenchmarkPrint(b *testing.B) {
+	var a uint32 = 10
+	for i := 0; i < b.N; i++ {
+		print(a)
+	}
+}
+
+func BenchmarkFmtPrint(b *testing.B) {
+	var a uint32 = 10
+	for i := 0; i < b.N; i++ {
+		fmt.Print(a)
 	}
 }
