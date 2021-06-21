@@ -23,7 +23,7 @@ var VcfFilterTests = []struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
-	id											 string //raven's note: added id, and added field in corresponding tests below
+	id                       string //raven's note: added id, and added field in corresponding tests below
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, ""},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, ""},
@@ -52,7 +52,7 @@ func TestVcfFilter(t *testing.T) {
 			segregatingSitesOnly:     v.segregatingSitesOnly,
 			removeNoAncestor:         v.removeNoAncestor,
 			onlyPolarizableAncestors: v.onlyPolarizableAncestors,
-			id:												v.id, //raven's note: added id
+			id:                       v.id, //raven's note: added id
 		}
 
 		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)

@@ -104,7 +104,7 @@ type criteria struct {
 	segregatingSitesOnly     bool
 	removeNoAncestor         bool
 	onlyPolarizableAncestors bool
-	id											 string //raven's note: added id (rsID), can upgrade to []string in the future
+	id                       string //raven's note: added id (rsID), can upgrade to []string in the future
 	formatExp                string
 	infoExp                  string
 	includeMissingInfo       bool
@@ -276,7 +276,7 @@ func main() {
 		segregatingSitesOnly:     *segregatingSitesOnly,
 		removeNoAncestor:         *removeNoAncestor,
 		onlyPolarizableAncestors: *onlyPolarizableAncestors,
-		id:												*id, //raven's note: added id
+		id:                       *id, //raven's note: added id
 		formatExp:                *formatExp,
 		infoExp:                  *infoExp,
 		includeMissingInfo:       *includeMissingInfo,
