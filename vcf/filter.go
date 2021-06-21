@@ -209,8 +209,8 @@ func IsPolarizable(v Vcf) bool {
 	return true
 }
 
-//IsWeakToStrong returns true if an input biallelic substitution variant is a weak to strong variant, false otherwise.
-func IsWeakToStrong(v Vcf) bool {
+//IsRefWeakAltStrong returns true if an input biallelic substitution variant has a weak Ref allele and a strong Alt allele, false otherwise.
+func IsRefWeakAltStrong(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) {
 		return false
 	}
@@ -222,8 +222,8 @@ func IsWeakToStrong(v Vcf) bool {
 	return false
 }
 
-//IsStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant, false otherwise.
-func IsStrongToWeak(v Vcf) bool {
+//IsStrongToWeak returns true if an input biallelic substitution variant has a strong Ref allele and a weak Alt allele, false otherwise.
+func IsRefStrongAltWeak(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) {
 		return false
 	}
@@ -235,30 +235,30 @@ func IsStrongToWeak(v Vcf) bool {
 	return false
 }
 
-//IsNotStrongToWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
-func IsNotStrongToWeak(v Vcf) bool {
+//IsNotRefStrongAltWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
+func IsNotRefStrongAltWeak(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
 		return false
 	}
-	return !IsStrongToWeak(v)
+	return !IsRefStrongAltWeak(v)
 }
 
-//IsNotWeakToStrong returns true if an input biallelic substitution variant is not a weak to strong variant, false otherwise.
-func IsNotWeakToStrong(v Vcf) bool {
+//IsNotRefWeakAltStrong returns true if an input biallelic substitution variant does not have a weak Ref allele and a strong Alt allele, false otherwise.
+func IsNotRefWeakAltStrong(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
 		return false
 	}
-	return !IsWeakToStrong(v)
+	return !IsRefWeakAltStrong(v)
 }
 
 //IsWeakToStrongOrStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant or a weak to strong variant, false otherwise.
 func IsWeakToStrongOrStrongToWeak(v Vcf) bool {
-	return IsStrongToWeak(v) || IsWeakToStrong(v)
+	return IsRefStrongAltWeak(v) || IsRefWeakAltStrong(v)
 }
 
 //IsNotWeakToStrongOrStrongToWeak returns true if a variant is neither a weak to strong variant nor a strong to weak variant, false otherwise.
 func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
-	return IsNotWeakToStrong(v) && IsNotStrongToWeak(v)
+	return IsNotRefWeakAltStrong(v) && IsNotRefStrongAltWeak(v)
 }
 
 func getListIndex(header Header, list []string) []int16 {

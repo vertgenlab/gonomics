@@ -106,6 +106,10 @@ type criteria struct {
 	onlyPolarizableAncestors       bool
 	weakToStrongOrStrongToWeakOnly bool
 	noWeakToStrongOrStrongToWeak   bool
+	refWeakAltStrongOnly	bool
+	refStrongAltWeakOnly	bool
+	notRefWeakAltStrong bool
+	notRefStrongAltWeak bool
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
@@ -227,6 +231,18 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.weakToStrongOrStrongToWeakOnly {
 		answer = append(answer, vcf.IsWeakToStrongOrStrongToWeak)
 	}
+	if c.refWeakAltStrongOnly {
+		answer = append(answer, vcf.IsRefWeakAltStrong)
+	}
+	if c.refStrongAltWeakOnly {
+		answer = append(answer, vcf.IsRefStrongAltWeak)
+	}
+	if c.notRefWeakAltStrong {
+		answer = append(answer, vcf.IsNotRefWeakAltStrong)
+	}
+	if c.notRefStrongAltWeak {
+		answer = append(answer, vcf.IsNotRefStrongAltWeak)
+	}
 	return answer
 }
 
@@ -246,6 +262,10 @@ func main() {
 	var onlyPolarizableAncestors *bool = flag.Bool("onlyPolarizableAncestors", false, "Retains only variants that can be used to construct a derived allele frequency spectrum. Must have a subsitution where the ancestral allele matches either alt or ref.")
 	var weakToStrongOrStrongToWeakOnly *bool = flag.Bool("weakToStrongOrStrongToWeakOnly", false, "Retains only variants that are weak to strong or strong to weak mutations.")
 	var noWeakToStrongOrStrongToWeak *bool = flag.Bool("noWeakToStrongOrStrongToWeak", false, "Removes weak to strong variants and strong to weak variants.")
+	var refWeakAltStrongOnly *bool = flag.Bool("refWeakAltStrongOnly", false, "Retains only variants that have a weak Ref allele and a strong Alt allele.")
+	var refStrongAltWeakOnly *bool = flag.Bool("refStrongAltWeakOnly", false, "Retains only variants that have a strong Ref allele and a weak Alt allele.")
+	var NotRefStrongAltWeak *bool = flag.Bool("notRefStrongAltWeak", false, "Removes variants that have a strong Ref alleles AND weak Alt alleles.")
+	var NotRefWeakAltStrong *bool = flag.Bool("notRefWeakAltStrong", false, "Removes variants that have weak Ref allele AND a strong Alt allele.")
 	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\"). "+
 		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'. For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\". "+
 		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
@@ -279,6 +299,10 @@ func main() {
 		includeMissingInfo:             *includeMissingInfo,
 		weakToStrongOrStrongToWeakOnly: *weakToStrongOrStrongToWeakOnly,
 		noWeakToStrongOrStrongToWeak:   *noWeakToStrongOrStrongToWeak,
+		refWeakAltStrongOnly: *refWeakAltStrongOnly,
+		refStrongAltWeakOnly: *refStrongAltWeakOnly,
+		notRefStrongAltWeak: *NotRefStrongAltWeak,
+		notRefWeakAltStrong: *NotRefWeakAltStrong,
 	}
 
 	var parseFormat, parseInfo bool
