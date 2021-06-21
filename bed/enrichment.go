@@ -33,13 +33,10 @@ func overlapProbability(elements []*Bed, tempElements []*Bed, length int, noGapR
 }
 
 func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed) []float64 {
-	var tempElements1 []*Bed = make([]*Bed, len(elements1))
-	var tempElements2 []*Bed = make([]*Bed, len(elements2))
-	var tempNoGap []*Bed = make([]*Bed, len(noGapRegions))
 	var answer []float64 = make([]float64, len(elements2))
-	copy(tempElements1, elements1)
-	copy(tempNoGap, noGapRegions)
-	copy(tempElements2, elements2)
+	tempElements1 := Clone(elements1)
+	tempNoGap := Clone(noGapRegions)
+	tempElements2 := Clone(elements2)
 	SortBySize(tempElements2)
 	var currLen, prevLen int = 0, 0
 
@@ -123,5 +120,77 @@ func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64
 	answer[0] = math.Exp(check)
 	answer[2] = math.Exp(pValue)
 	answer[1] = math.Exp(expected)
+	return answer
+}
+
+func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int) []float64 {
+	var numTrials int = len(elements2)
+	var answer []float64 = make([]float64, 3)
+	tempElements1 := Clone(elements1)
+	tempNoGap := Clone(noGapRegions)
+	minElements2 := findLargestBedLength(elements2)
+	prob := overlapProbability(elements1, tempElements1, minElements2, noGapRegions, tempNoGap)
+	pValue := numbers.BinomialDistLog(numTrials, overlapCount, prob)
+
+	for s := overlapCount + 1; s <= numTrials; s++ {
+		pValue = numbers.AddLog(pValue, numbers.BinomialDistLog(numTrials, s, prob))
+	}
+
+	answer[0] = 1//hardcoded for now, we don't do the check with this method.
+	answer[2] = math.Exp(pValue)
+	answer[1] = prob * float64(numTrials)
+	return answer
+}
+
+func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int) []float64 {
+	var numTrials int = len(elements2)
+	var answer []float64 = make([]float64, 3)
+	tempElements1 := Clone(elements1)
+	tempNoGap := Clone(noGapRegions)
+	minElements2 := findShortestBedLength(elements2)
+	prob := overlapProbability(elements1, tempElements1, minElements2, noGapRegions, tempNoGap)
+	pValue := numbers.BinomialDistLog(numTrials, overlapCount, prob)
+
+	for s := overlapCount + 1; s <= numTrials; s++ {
+		pValue = numbers.AddLog(pValue, numbers.BinomialDistLog(numTrials, s, prob))
+	}
+
+	answer[0] = 1//hardcoded for now, we don't do the check with this method.
+	answer[2] = math.Exp(pValue)
+	answer[1] = prob * float64(numTrials)
+	return answer
+}
+
+func findLargestBedLength(b []*Bed) int {
+	var maxLength int = b[0].ChromEnd - b[0].ChromStart
+
+	for i := 1; i < len(b); i++ {
+		if b[i].ChromEnd - b[i].ChromStart > maxLength {
+			maxLength = b[i].ChromEnd - b[i].ChromStart
+		}
+	}
+	return maxLength
+}
+
+func findShortestBedLength(b []*Bed) int {
+	var minLength int = b[0].ChromEnd - b[0].ChromStart
+	for i := 1; i < len(b); i++ {
+		if b[i].ChromEnd - b[i].ChromStart < minLength {
+			minLength = b[i].ChromEnd - b[i].ChromStart
+		}
+	}
+	return minLength
+}
+
+//Clone creates a memory copy of an input slice of pointers to Beds. TODO: will be deleted when we convert read to []Bed instead of []*Bed. This function is sort of a band-aid.
+func Clone(b []*Bed) []*Bed {
+	var answer []*Bed = make([]*Bed, len(b))
+
+	for i := range b {
+		answer[i] = &Bed{Chrom: b[i].Chrom, ChromStart: b[i].ChromStart, ChromEnd: b[i].ChromEnd, Name: b[i].Name, Score: b[i].Score, Strand: b[i].Strand, FieldsInitialized: b[i].FieldsInitialized}
+		answer[i].Annotation = make([]string, len(b[i].Annotation))
+		copy(answer[i].Annotation, b[i].Annotation)
+	}
+
 	return answer
 }
