@@ -128,7 +128,7 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	var answer testingFuncs
 
 	if c.formatExp != "" {
-		answer = append(answer, parseExpression(c.formatExp, header, true, c.includeMissingInfo)...)
+		answer = append(answer, parseExpression(c.formatExp, header, true, c.includeMissingInfo)...) //raven's note: when tried to go run, got parseExpression undefined error. parseExpression is defined in cmd/vcfFilter/expression.go
 	}
 
 	if c.infoExp != "" {
