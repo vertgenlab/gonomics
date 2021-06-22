@@ -24,7 +24,7 @@ type Settings struct {
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
 	var err error
-	g, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, false) //hardcoded DivergenceAscertainment to false
+	g, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment)
 	exception.FatalOnErr(err)
 	f := popgen.AfsToFrequency(*g)
 	out := fileio.EasyCreate(outFile)
