@@ -17,7 +17,7 @@ var VcfAfsTests = []struct {
 	numberOfPoints          int
 	integralError           float64
 }{
-	{"testdata/simulate.N100.S100.Seed19.Alpha0.01.vcf", "testdata/test.AFS.txt", true, "", -10, 10, 100, 1e-5},
+	{"testdata/simulate.N100.S100.Seed19.Alpha0.01.vcf", "testdata/test.afs.txt", true, "", -10, 10, 100, 1e-5},
 }
 
 func TestVcfAfs(t *testing.T) {
