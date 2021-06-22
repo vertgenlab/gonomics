@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 const (
@@ -44,11 +45,14 @@ type Sam struct {
 	unparsedExtra []byte
 
 	// parsedExtra stores the tag information keying each tag (e.g. RG, RX, NM) to that
-	// tags value. The map returns an interface, however the underlying value can be:
-	// uint8, int8, uint16, int16, uint32, int32, float32, or a string.
-	// parsedExtra is nil until the first QueryTag call which will trigger the parsing
-	// of unparsedExtra.
-	parsedExtra map[Tag]interface{}
+	// tags value. The map returns an integer that corresponds to the index in parsedExtra,
+	// which stores the underlying value of either: uint8, int8, uint16, int16, uint32,
+	// int32, float32, or a string. parsedExtra is nil until the first QueryTag call which
+	// will trigger the parsing of unparsedExtra.
+	parsedExtraIdx   map[Tag]int
+	parsedExtraTags  []Tag
+	parsedExtraTypes [][]byte // first idx is idx in parsed extra, second index is for B is any of "cCsSiIfZH"
+	parsedExtra      []interface{}
 }
 
 // Header encodes the header of a sam file as both the raw header (Text),
@@ -67,6 +71,13 @@ func (s Sam) String() string {
 // ToString converts an Sam struct to a tab delimited string per file specs.
 func ToString(aln Sam) string {
 	var answer string
+	var err error
+	if len(aln.unparsedExtra) > 0 {
+		aln, err = parseExtra(aln)
+		exception.PanicOnErr(err)
+		aln.Extra = parsedExtraToString(&aln)
+	}
+
 	if aln.Extra == "" {
 		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s",
 			aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)

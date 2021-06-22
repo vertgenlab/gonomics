@@ -60,6 +60,16 @@ func TestReadBam(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
+
+	if len(actual) != len(expected) {
+		t.Error("problem reading bam")
+	}
+
+	for i := range actual {
+		if actual[i].String() != expected[i].String() {
+			t.Error("problem reading bam")
+		}
+	}
 }
 
 func equalExceptExtra(a, b []Sam) bool {
@@ -104,7 +114,7 @@ func equalExceptExtra(a, b []Sam) bool {
 	return true
 }
 
-const bigBam string = "/Users/danielsnellings/Desktop/1mil.bam"
+const bigBam string = "/Users/danielsnellings/Desktop/10k.bam"
 
 func BenchmarkBamOpenClose(b *testing.B) {
 	for i := 0; i < b.N; i++ {
