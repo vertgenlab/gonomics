@@ -118,7 +118,8 @@ func main() {
 		}
 		if len(flag.Args()) == 1 {
 			i := common.StringToInt(flag.Arg(0))
-			fmt.Printf("%e\n", numbers.BinomialDist(n, i, p))
+			answer, _ := numbers.BinomialDist(n, i, p)
+			fmt.Printf("%e\n", answer)
 		} else if len(flag.Args()) == 2 {
 			left := common.StringToInt(flag.Arg(0))
 			if flag.Arg(1) == "N" || flag.Arg(1) == "n" {

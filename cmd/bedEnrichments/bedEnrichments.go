@@ -9,20 +9,32 @@ import (
 	"log"
 )
 
-func bedEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string) {
+func bedEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int) {
 	var err error
 
 	if method != "exact" && method != "normalApproximate" && method != "upperBound" && method != "lowerBound" {
 		log.Fatalf("Error: unknown method. Found: %s.", method)
 	}
 
+	if verbose > 0 {
+		log.Println("Reading bed files.")
+	}
+
 	elementsOne := bed.ReadLite(inFile)
 	elementsTwo := bed.ReadLite(secondFile)
 	noGapRegions := bed.ReadLite(noGapFile)
 
+	if verbose > 0 {
+		log.Println("Sorting bed files.")
+	}
+
 	bed.SortByCoord(elementsOne)
 	bed.SortByCoord(elementsTwo)
 	bed.SortByCoord(noGapRegions)
+
+	if verbose > 0 {
+		log.Println("Running preflight checks.")
+	}
 
 	//preflight checks: check for error in user input. Beds should not be self-overlapping.
 	if bed.IsSelfOverlapping(elementsOne) {
@@ -38,6 +50,10 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	var summarySlice []float64
 	overlapCount := bed.OverlapCount(elementsOne, elementsTwo)
 
+	if verbose > 0 {
+		log.Println("Calculating enrichment probabilities.")
+	}
+
 	switch method {
 	case "exact":
 		probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
@@ -46,11 +62,15 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 		probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
 		summarySlice = bed.EnrichmentPValueApproximation(probs, overlapCount)
 	case "upperBound":
-		summarySlice = bed.EnrichmentPValueUpperBound(elementsOne, elementsTwo, noGapRegions, overlapCount)
+		summarySlice = bed.EnrichmentPValueUpperBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
 	case "lowerBound":
-		summarySlice = bed.EnrichmentPValueLowerBound(elementsOne, elementsTwo, noGapRegions, overlapCount)
+		summarySlice = bed.EnrichmentPValueLowerBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
 	default:
 		log.Fatalf("Error: unknown method. Found: %s.", method)
+	}
+
+	if verbose > 0 {
+		log.Println("Done calculating enrichment. Writing to output.")
 	}
 
 	out := fileio.EasyCreate(outFile)
@@ -82,6 +102,9 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 5
+
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.")
+
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	log.SetFlags(0)
@@ -98,5 +121,5 @@ func main() {
 	noGapFile := flag.Arg(3)
 	outFile := flag.Arg(4)
 
-	bedEnrichments(method, inFile, secondFile, noGapFile, outFile)
+	bedEnrichments(method, inFile, secondFile, noGapFile, outFile, *verbose)
 }

@@ -2,6 +2,7 @@ package bed
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 	"math"
 	"strings"
 )
@@ -68,11 +69,11 @@ func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount i
 	answer[1] = mu //mu represents the expected value
 
 	//calculate pValue approximation
-	pValue := math.Log(numbers.NormalDist(float64(overlapCount), mu, sigma))
+	pValue := numbers.NormalDist(float64(overlapCount), mu, sigma)
 	for s := overlapCount + 1; s <= len(elementOverlapProbs); s++ {
-		pValue = numbers.AddLog(pValue, math.Log(numbers.NormalDist(float64(s), mu, sigma)))
+		pValue += numbers.NormalDist(float64(s), mu, sigma)
 	}
-	answer[2] = math.Exp(pValue)
+	answer[2] = pValue
 
 	return answer
 }
@@ -123,40 +124,78 @@ func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64
 	return answer
 }
 
-func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int) []float64 {
+func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
 	tempElements1 := Clone(elements1)
 	tempNoGap := Clone(noGapRegions)
 	minElements2 := findLargestBedLength(elements2)
-	prob := overlapProbability(elements1, tempElements1, minElements2, noGapRegions, tempNoGap)
-	pValue := numbers.BinomialDistLog(numTrials, overlapCount, prob)
+	var curr float64
 
-	for s := overlapCount + 1; s <= numTrials; s++ {
-		pValue = numbers.AddLog(pValue, numbers.BinomialDistLog(numTrials, s, prob))
+	if verbose > 0 {
+		log.Println("Calculating overlapProbability.")
+	}
+	prob := overlapProbability(elements1, tempElements1, minElements2, noGapRegions, tempNoGap)
+
+	if verbose > 0 {
+		log.Println("Calculating the pValue.")
+	}
+
+	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
+	if underflow {
+		answer[2] = 0.0
+		if verbose > 0 {
+			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
+		}
+	} else {
+		for s := overlapCount + 1; s <= numTrials; s++ {
+			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
+			if underflow {
+				break
+			}
+			pValue += curr
+		}
 	}
 
 	answer[0] = 1//hardcoded for now, we don't do the check with this method.
-	answer[2] = math.Exp(pValue)
+	answer[2] = pValue
 	answer[1] = prob * float64(numTrials)
 	return answer
 }
 
-func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int) []float64 {
+func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
 	tempElements1 := Clone(elements1)
 	tempNoGap := Clone(noGapRegions)
 	minElements2 := findShortestBedLength(elements2)
+	if verbose > 0 {
+		log.Println("Calculating overlapProbability.")
+	}
 	prob := overlapProbability(elements1, tempElements1, minElements2, noGapRegions, tempNoGap)
-	pValue := numbers.BinomialDistLog(numTrials, overlapCount, prob)
 
-	for s := overlapCount + 1; s <= numTrials; s++ {
-		pValue = numbers.AddLog(pValue, numbers.BinomialDistLog(numTrials, s, prob))
+	if verbose > 0 {
+		log.Println("Calculating the pValue.")
+	}
+	var curr float64
+	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
+	if underflow {
+		answer[2] = 0.0
+		if verbose > 0 {
+			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
+		}
+	} else {
+		for s := overlapCount + 1; s <= numTrials; s++ {
+			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
+			if underflow {
+				break
+			}
+			pValue += curr
+		}
 	}
 
 	answer[0] = 1//hardcoded for now, we don't do the check with this method.
-	answer[2] = math.Exp(pValue)
+	answer[2] = pValue
 	answer[1] = prob * float64(numTrials)
 	return answer
 }

@@ -21,7 +21,7 @@ var BedEnrichmentsTests = []struct {
 func TestBedEnrichments(t *testing.T) {
 	var err error
 	for _, v := range BedEnrichmentsTests {
-		bedEnrichments(v.method, v.elements1File, v.elements2File, v.noGapFile, "testdata/tmp.txt")
+		bedEnrichments(v.method, v.elements1File, v.elements2File, v.noGapFile, "testdata/tmp.txt", 0)
 		if !fileio.AreEqual("testdata/tmp.txt", v.expectedFile) {
 			t.Errorf("Error in bedEnrichments.")
 		}
