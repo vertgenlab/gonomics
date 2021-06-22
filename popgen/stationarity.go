@@ -176,3 +176,34 @@ func AfsLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError
 	}
 	return answer
 }
+
+//AfsLikelihoodFixedAlpha calculates the likelihood of observing a particular frequency spectrum for a given alpha, a selection parameter.
+//This represents the special case where every segregating site has the same value for selection, which enables faster, more simplified calculation.
+func AfsLikelihoodFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, integralError float64) float64 {
+	allN := findAllN(afs)
+	var answer float64 = 0.0
+	likelihoodCache := BuildLikelihoodCache(allN)
+	for j := range afs.Sites {
+		if likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
+			likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
+		}
+		answer = numbers.MultiplyLog(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+	}
+	return answer
+}
+
+//AfsLikelihoodFixedAlphaClosure returns a func(float64) float64 representing the likelihood function for a specific derived allele frequency spectrum with a single selection parameter alpha.
+func AfsLikelihoodFixedAlphaClosure(afs Afs, binomMap [][]float64, integralError float64) func(float64) float64 {
+	return func(alpha float64) float64 {
+		return AfsLikelihoodFixedAlpha(afs, alpha, binomMap, integralError)
+	}
+}
+
+//BuildLikelihoodCache constructs a cache of likelihood values for MLE. likelihoodCache[n][i] stores the likelihood for a segregating site of n alleles with i in the derived state for a particular selection parameter alpha.
+func BuildLikelihoodCache(allN []int) [][]float64 {
+	answer := make([][]float64, numbers.MaxIntSlice(allN)+1) //make the first dimension the output matrix large enough to hold the highest observed N.
+	for n := range allN {
+		answer[allN[n]] = make([]float64, allN[n]) //for each N value in the AFS, set the second dimension to the length of possible i values.
+	}
+	return answer
+}

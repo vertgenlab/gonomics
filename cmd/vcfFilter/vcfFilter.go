@@ -110,6 +110,7 @@ type criteria struct {
 	refStrongAltWeakOnly           bool
 	notRefWeakAltStrong            bool
 	notRefStrongAltWeak            bool
+  id  string//raven's note: added id (rsID), can upgrade to []string in the future
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
@@ -133,7 +134,7 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	var answer testingFuncs
 
 	if c.formatExp != "" {
-		answer = append(answer, parseExpression(c.formatExp, header, true, c.includeMissingInfo)...)
+		answer = append(answer, parseExpression(c.formatExp, header, true, c.includeMissingInfo)...) //raven's note: when tried to go run, got parseExpression undefined error. parseExpression is defined in cmd/vcfFilter/expression.go
 	}
 
 	if c.infoExp != "" {
@@ -224,7 +225,6 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.onlyPolarizableAncestors {
 		answer = append(answer, vcf.IsPolarizable)
 	}
-
 	if c.noWeakToStrongOrStrongToWeak {
 		answer = append(answer, vcf.IsNotWeakToStrongOrStrongToWeak)
 	}
@@ -242,6 +242,15 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	}
 	if c.notRefStrongAltWeak {
 		answer = append(answer, vcf.IsNotRefStrongAltWeak)
+	}
+	if c.id != "" { //raven's note: not sure what getTests is for and if c.id (modeled after c.chrom) is right
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				if v.Id != c.id {
+					return false
+				}
+				return true
+			})
 	}
 	return answer
 }
@@ -266,6 +275,7 @@ func main() {
 	var refStrongAltWeakOnly *bool = flag.Bool("refStrongAltWeakOnly", false, "Retains only variants that have a strong Ref allele and a weak Alt allele.")
 	var NotRefStrongAltWeak *bool = flag.Bool("notRefStrongAltWeak", false, "Removes variants that have a strong Ref alleles AND weak Alt alleles.")
 	var NotRefWeakAltStrong *bool = flag.Bool("notRefWeakAltStrong", false, "Removes variants that have weak Ref allele AND a strong Alt allele.")
+	var id *string = flag.String("id", "", "Specifies the rsID") //raven's note: added id string
 	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\"). "+
 		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'. For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\". "+
 		"This tag is currently not supported for tags that have multiple values. When testing a vcf with multiple samples, the expression will only be tested on the first sample.")
@@ -303,6 +313,10 @@ func main() {
 		refStrongAltWeakOnly:           *refStrongAltWeakOnly,
 		notRefStrongAltWeak:            *NotRefStrongAltWeak,
 		notRefWeakAltStrong:            *NotRefWeakAltStrong,
+    id:                       *id, //raven's note: added id
+		formatExp:                *formatExp,
+		infoExp:                  *infoExp,
+		includeMissingInfo:       *includeMissingInfo,
 	}
 
 	var parseFormat, parseInfo bool

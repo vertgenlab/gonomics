@@ -23,8 +23,8 @@ type McmcSettings struct {
 	MuZero                  float64
 	SigmaStep               float64
 	SigmaZero               float64
-	RandSeed                bool
-	SetSeed                 int64
+	RandSeed                bool  //pseudorandom number generation control: set the seed as current unix time
+	SetSeed                 int64 //pseudorandom number generation control: set the seed to a user-specified int64.
 	UnPolarized             bool
 	DivergenceAscertainment bool
 	FixedSigma              bool
