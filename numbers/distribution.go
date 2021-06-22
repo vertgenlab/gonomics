@@ -241,7 +241,7 @@ func BinomialSum(left int, right int, n int, p float64) float64 {
 	var answer float64 = 0
 	var curr float64
 	for i := left; i <= right; i++ {
-		curr, _ = BinomialDist(n, i , p)
+		curr, _ = BinomialDist(n, i, p)
 		answer += curr
 	}
 	return answer

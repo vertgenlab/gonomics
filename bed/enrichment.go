@@ -157,7 +157,7 @@ func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 		}
 	}
 
-	answer[0] = 1//hardcoded for now, we don't do the check with this method.
+	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
 	answer[2] = pValue
 	answer[1] = prob * float64(numTrials)
 	return answer
@@ -194,7 +194,7 @@ func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 		}
 	}
 
-	answer[0] = 1//hardcoded for now, we don't do the check with this method.
+	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
 	answer[2] = pValue
 	answer[1] = prob * float64(numTrials)
 	return answer
