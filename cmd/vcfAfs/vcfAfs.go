@@ -12,14 +12,14 @@ import (
 )
 
 type Settings struct {
-	UnPolarized bool
+	UnPolarized             bool
 	PlotSelectionLikelihood string
-	LeftBound float64
-	RightBound float64
-	NumberOfPoints int
-	IntegralError float64
+	LeftBound               float64
+	RightBound              float64
+	NumberOfPoints          int
+	IntegralError           float64
 	DivergenceAscertainment bool
-	D int//size of the ascertainment subset
+	D                       int //size of the ascertainment subset
 }
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
@@ -68,14 +68,14 @@ func main() {
 	}
 
 	s := Settings{
-		UnPolarized: *unPolarized,
+		UnPolarized:             *unPolarized,
 		PlotSelectionLikelihood: *plotSelectionLikelihood,
-		LeftBound: *leftBound,
-		RightBound: *rightBound,
-		NumberOfPoints: *numberOfPoints,
-		IntegralError: *integralError,
+		LeftBound:               *leftBound,
+		RightBound:              *rightBound,
+		NumberOfPoints:          *numberOfPoints,
+		IntegralError:           *integralError,
 		DivergenceAscertainment: *divergenceAscertainment,
-		D: 1,//hardcoded for now
+		D:                       1, //hardcoded for now
 	}
 
 	vcfFile := flag.Arg(0)

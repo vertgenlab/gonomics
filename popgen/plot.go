@@ -109,11 +109,11 @@ func PlotAfsLikelihood(afs Afs, outFile string, leftBound float64, rightBound fl
 	allN := findAllN(afs)
 	binomMap := BuildBinomCache(allN)
 
-	_, err = fmt.Fprintf(out,"Alpha\tLikelihood\n")
+	_, err = fmt.Fprintf(out, "Alpha\tLikelihood\n")
 	exception.PanicOnErr(err)
 
 	for i := 0; i <= numPoints; i++ {
-		alpha = leftBound + (float64(i) / float64(numPoints)) * (rightBound - leftBound)
+		alpha = leftBound + (float64(i)/float64(numPoints))*(rightBound-leftBound)
 		if divergenceAscertainment {
 			_, err = fmt.Fprintf(out, "%e\t%e\n", alpha, AfsDivergenceAscertainmentFixedAlpha(afs, alpha, binomMap, D, integralError))
 		} else {
