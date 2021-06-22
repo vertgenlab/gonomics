@@ -101,7 +101,7 @@ func PlotAfsPmf(alpha float64, n int, outFile string, integralError float64) {
 }
 
 //PlotAfsLikelihood
-func PlotAfsLikelihood(afs Afs, outFile string, leftBound float64, rightBound float64, numPoints int, integralError float64) {
+func PlotAfsLikelihood(afs Afs, outFile string, leftBound float64, rightBound float64, numPoints int, integralError float64, divergenceAscertainment bool, D int) {
 	var err error
 	var alpha float64
 	out := fileio.EasyCreate(outFile)
@@ -114,7 +114,11 @@ func PlotAfsLikelihood(afs Afs, outFile string, leftBound float64, rightBound fl
 
 	for i := 0; i <= numPoints; i++ {
 		alpha = leftBound + (float64(i) / float64(numPoints)) * (rightBound - leftBound)
-		_, err = fmt.Fprintf(out, "%e\t%e\n", alpha, AfsLikelihoodFixedAlpha(afs, alpha, binomMap, integralError))
+		if divergenceAscertainment {
+			_, err = fmt.Fprintf(out, "%e\t%e\n", alpha, AfsDivergenceAscertainmentFixedAlpha(afs, alpha, binomMap, D, integralError))
+		} else {
+			_, err = fmt.Fprintf(out, "%e\t%e\n", alpha, AfsLikelihoodFixedAlpha(afs, alpha, binomMap, integralError))
+		}
 	}
 
 	err = out.Close()

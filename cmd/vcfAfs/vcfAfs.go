@@ -18,6 +18,8 @@ type Settings struct {
 	RightBound float64
 	NumberOfPoints int
 	IntegralError float64
+	DivergenceAscertainment bool
+	D int//size of the ascertainment subset
 }
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
@@ -34,7 +36,7 @@ func vcfAfs(vcfFile string, outFile string, s Settings) {
 	exception.PanicOnErr(err)
 
 	if s.PlotSelectionLikelihood != "" {
-		popgen.PlotAfsLikelihood(*g, s.PlotSelectionLikelihood, s.LeftBound, s.RightBound, s.NumberOfPoints, s.IntegralError)
+		popgen.PlotAfsLikelihood(*g, s.PlotSelectionLikelihood, s.LeftBound, s.RightBound, s.NumberOfPoints, s.IntegralError, s.DivergenceAscertainment, s.D)
 	}
 }
 
@@ -53,6 +55,7 @@ func main() {
 	var rightBound *float64 = flag.Float64("rightBound", 10.0, "Right bound for plotting of the likelihood function.")
 	var numberOfPoints *int = flag.Int("numberOfPoints", 100, "Set the number of points at which to evaluate the likelihood function.")
 	var integralError *float64 = flag.Float64("integralError", 1e-5, "Sets the error threshold for integral calculations in the likelihood calculation.")
+	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Corrects for divergence-based ascertainment bias in the likelihood calculation.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -71,6 +74,8 @@ func main() {
 		RightBound: *rightBound,
 		NumberOfPoints: *numberOfPoints,
 		IntegralError: *integralError,
+		DivergenceAscertainment: *divergenceAscertainment,
+		D: 1,//hardcoded for now
 	}
 
 	vcfFile := flag.Arg(0)
