@@ -92,22 +92,28 @@ func usage() {
 
 // criteria by which vcf records are filtered.
 type criteria struct {
-	chrom                    string
-	groupFile                string
-	minPos                   int
-	maxPos                   int
-	minQual                  float64
-	ref                      string
-	alt                      []string
-	biAllelicOnly            bool
-	substitutionsOnly        bool
-	segregatingSitesOnly     bool
-	removeNoAncestor         bool
-	onlyPolarizableAncestors bool
-	id                       string //raven's note: added id (rsID), can upgrade to []string in the future
-	formatExp                string
-	infoExp                  string
-	includeMissingInfo       bool
+	chrom                          string
+	groupFile                      string
+	minPos                         int
+	maxPos                         int
+	minQual                        float64
+	ref                            string
+	alt                            []string
+	biAllelicOnly                  bool
+	substitutionsOnly              bool
+	segregatingSitesOnly           bool
+	removeNoAncestor               bool
+	onlyPolarizableAncestors       bool
+	weakToStrongOrStrongToWeakOnly bool
+	noWeakToStrongOrStrongToWeak   bool
+	refWeakAltStrongOnly           bool
+	refStrongAltWeakOnly           bool
+	notRefWeakAltStrong            bool
+	notRefStrongAltWeak            bool
+	id                             string //raven's note: added id (rsID), can upgrade to []string in the future
+	formatExp                      string
+	infoExp                        string
+	includeMissingInfo             bool
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -219,7 +225,24 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.onlyPolarizableAncestors {
 		answer = append(answer, vcf.IsPolarizable)
 	}
-
+	if c.noWeakToStrongOrStrongToWeak {
+		answer = append(answer, vcf.IsNotWeakToStrongOrStrongToWeak)
+	}
+	if c.weakToStrongOrStrongToWeakOnly {
+		answer = append(answer, vcf.IsWeakToStrongOrStrongToWeak)
+	}
+	if c.refWeakAltStrongOnly {
+		answer = append(answer, vcf.IsRefWeakAltStrong)
+	}
+	if c.refStrongAltWeakOnly {
+		answer = append(answer, vcf.IsRefStrongAltWeak)
+	}
+	if c.notRefWeakAltStrong {
+		answer = append(answer, vcf.IsNotRefWeakAltStrong)
+	}
+	if c.notRefStrongAltWeak {
+		answer = append(answer, vcf.IsNotRefStrongAltWeak)
+	}
 	if c.id != "" { //raven's note: not sure what getTests is for and if c.id (modeled after c.chrom) is right
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
@@ -229,7 +252,6 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 				return true
 			})
 	}
-
 	return answer
 }
 
@@ -247,6 +269,12 @@ func main() {
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
 	var onlyPolarizableAncestors *bool = flag.Bool("onlyPolarizableAncestors", false, "Retains only variants that can be used to construct a derived allele frequency spectrum. Must have a subsitution where the ancestral allele matches either alt or ref.")
+	var weakToStrongOrStrongToWeakOnly *bool = flag.Bool("weakToStrongOrStrongToWeakOnly", false, "Retains only variants that are weak to strong or strong to weak mutations.")
+	var noWeakToStrongOrStrongToWeak *bool = flag.Bool("noWeakToStrongOrStrongToWeak", false, "Removes weak to strong variants and strong to weak variants.")
+	var refWeakAltStrongOnly *bool = flag.Bool("refWeakAltStrongOnly", false, "Retains only variants that have a weak Ref allele and a strong Alt allele.")
+	var refStrongAltWeakOnly *bool = flag.Bool("refStrongAltWeakOnly", false, "Retains only variants that have a strong Ref allele and a weak Alt allele.")
+	var NotRefStrongAltWeak *bool = flag.Bool("notRefStrongAltWeak", false, "Removes variants that have a strong Ref alleles AND weak Alt alleles.")
+	var NotRefWeakAltStrong *bool = flag.Bool("notRefWeakAltStrong", false, "Removes variants that have weak Ref allele AND a strong Alt allele.")
 	var id *string = flag.String("id", "", "Specifies the rsID") //raven's note: added id string
 	var formatExp *string = flag.String("format", "", "A logical expression (or a series of semicolon ';' delimited expressions) consisting of a tag and value present in the format field. Must be in double quotes (\"). "+
 		"Expression can use the operators '>' '<' '=' '!=' '<=' '>'. For example, you can filter for variants with read depth greater than 100 and mapping quality greater or equal to 20 with the expression: \"DP > 100 ; MQ > 20\". "+
@@ -265,21 +293,27 @@ func main() {
 	}
 
 	c := criteria{
-		chrom:                    *chrom,
-		minPos:                   *minPos,
-		maxPos:                   *maxPos,
-		minQual:                  *minQual,
-		ref:                      *ref,
-		alt:                      altSlice,
-		biAllelicOnly:            *biAllelicOnly,
-		substitutionsOnly:        *substitutionsOnly,
-		segregatingSitesOnly:     *segregatingSitesOnly,
-		removeNoAncestor:         *removeNoAncestor,
-		onlyPolarizableAncestors: *onlyPolarizableAncestors,
-		id:                       *id, //raven's note: added id
-		formatExp:                *formatExp,
-		infoExp:                  *infoExp,
-		includeMissingInfo:       *includeMissingInfo,
+		chrom:                          *chrom,
+		minPos:                         *minPos,
+		maxPos:                         *maxPos,
+		minQual:                        *minQual,
+		ref:                            *ref,
+		alt:                            altSlice,
+		biAllelicOnly:                  *biAllelicOnly,
+		substitutionsOnly:              *substitutionsOnly,
+		segregatingSitesOnly:           *segregatingSitesOnly,
+		removeNoAncestor:               *removeNoAncestor,
+		onlyPolarizableAncestors:       *onlyPolarizableAncestors,
+		weakToStrongOrStrongToWeakOnly: *weakToStrongOrStrongToWeakOnly,
+		noWeakToStrongOrStrongToWeak:   *noWeakToStrongOrStrongToWeak,
+		refWeakAltStrongOnly:           *refWeakAltStrongOnly,
+		refStrongAltWeakOnly:           *refStrongAltWeakOnly,
+		notRefStrongAltWeak:            *NotRefStrongAltWeak,
+		notRefWeakAltStrong:            *NotRefWeakAltStrong,
+		id:                             *id, //raven's note: added id
+		formatExp:                      *formatExp,
+		infoExp:                        *infoExp,
+		includeMissingInfo:             *includeMissingInfo,
 	}
 
 	var parseFormat, parseInfo bool
