@@ -204,7 +204,7 @@ func findLargestBedLength(b []*Bed) int {
 	var maxLength int = b[0].ChromEnd - b[0].ChromStart
 
 	for i := 1; i < len(b); i++ {
-		if b[i].ChromEnd - b[i].ChromStart > maxLength {
+		if b[i].ChromEnd-b[i].ChromStart > maxLength {
 			maxLength = b[i].ChromEnd - b[i].ChromStart
 		}
 	}
@@ -214,7 +214,7 @@ func findLargestBedLength(b []*Bed) int {
 func findShortestBedLength(b []*Bed) int {
 	var minLength int = b[0].ChromEnd - b[0].ChromStart
 	for i := 1; i < len(b); i++ {
-		if b[i].ChromEnd - b[i].ChromStart < minLength {
+		if b[i].ChromEnd-b[i].ChromStart < minLength {
 			minLength = b[i].ChromEnd - b[i].ChromStart
 		}
 	}
