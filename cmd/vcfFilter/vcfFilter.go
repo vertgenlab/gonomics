@@ -110,7 +110,7 @@ type criteria struct {
 	refStrongAltWeakOnly           bool
 	notRefWeakAltStrong            bool
 	notRefStrongAltWeak            bool
-  id  string//raven's note: added id (rsID), can upgrade to []string in the future
+	id                             string //raven's note: added id (rsID), can upgrade to []string in the future
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
@@ -313,10 +313,10 @@ func main() {
 		refStrongAltWeakOnly:           *refStrongAltWeakOnly,
 		notRefStrongAltWeak:            *NotRefStrongAltWeak,
 		notRefWeakAltStrong:            *NotRefWeakAltStrong,
-    id:                       *id, //raven's note: added id
-		formatExp:                *formatExp,
-		infoExp:                  *infoExp,
-		includeMissingInfo:       *includeMissingInfo,
+		id:                             *id, //raven's note: added id
+		formatExp:                      *formatExp,
+		infoExp:                        *infoExp,
+		includeMissingInfo:             *includeMissingInfo,
 	}
 
 	var parseFormat, parseInfo bool

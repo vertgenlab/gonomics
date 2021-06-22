@@ -29,7 +29,7 @@ var VcfFilterTests = []struct {
 	refStrongAltWeakOnly           bool
 	notRefStrongAltWeak            bool
 	notRefWeakAltStrong            bool
-  id  string //raven's note: added id, and added field in corresponding tests below
+	id                             string //raven's note: added id, and added field in corresponding tests below
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, ""},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false, false, false, false, false, ""},
@@ -66,7 +66,7 @@ func TestVcfFilter(t *testing.T) {
 			refStrongAltWeakOnly:           v.refStrongAltWeakOnly,
 			notRefStrongAltWeak:            v.notRefStrongAltWeak,
 			notRefWeakAltStrong:            v.notRefWeakAltStrong,
-			id:                       v.id, //raven's note: added id
+			id:                             v.id, //raven's note: added id
 		}
 
 		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)
