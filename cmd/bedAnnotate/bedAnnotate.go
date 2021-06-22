@@ -10,8 +10,8 @@ import (
 )
 
 func bedAnnotate(in string, rec string, outfile string, field *int, prefix string) {
-	var records []*bed.Bed = bed.Read(rec)
-	var infile []*bed.Bed = bed.Read(in)
+	var records []bed.Bed = bed.Read(rec)
+	var infile []bed.Bed = bed.Read(in)
 
 	for i := 0; i < len(infile); i++ {
 		for j := 0; j < len(records); j++ {
@@ -21,7 +21,7 @@ func bedAnnotate(in string, rec string, outfile string, field *int, prefix strin
 		}
 	}
 
-	bed.Write(outfile, infile, 7)
+	bed.Write(outfile, infile)
 }
 
 func usage() {
@@ -33,7 +33,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
+func overlap(bed1 bed.Bed, bed2 bed.Bed) bool {
 	if bed1.Chrom != bed2.Chrom {
 		return false
 	} else if bed1.ChromEnd < bed2.ChromStart || bed2.ChromEnd < bed1.ChromStart {

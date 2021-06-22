@@ -12,7 +12,7 @@ import (
 )
 
 func bedToFasta(fastaFile string, bedFile string, outfile string) {
-	var records []*bed.Bed = bed.Read(bedFile)
+	var records []bed.Bed = bed.Read(bedFile)
 	var reference []fasta.Fasta = fasta.Read(fastaFile)
 	var outlist []fasta.Fasta = convert.BedToFasta(records, reference)
 	fasta.Write(outfile, outlist)

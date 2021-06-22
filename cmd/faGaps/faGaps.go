@@ -14,7 +14,7 @@ import (
 func faNoGap(inFile string, outFile string) {
 	records := fasta.Read(inFile)
 	beds := bed.UngappedRegionsAllFromFa(records)
-	bed.Write(outFile, beds, 3)
+	bed.Write(outFile, beds)
 }
 
 func faSplitByNs(filename string, outFile string) {

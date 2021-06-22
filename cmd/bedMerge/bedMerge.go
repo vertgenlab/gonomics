@@ -11,9 +11,9 @@ import (
 )
 
 func bedMerge(infile string, outfile string) {
-	var records []*bed.Bed = bed.Read(infile)
-	var outlist []*bed.Bed
-	var currentMax *bed.Bed = records[0]
+	var records []bed.Bed = bed.Read(infile)
+	var outlist []bed.Bed
+	var currentMax bed.Bed = records[0]
 
 	//assumes sorted bed
 
@@ -29,10 +29,10 @@ func bedMerge(infile string, outfile string) {
 		}
 	}
 	outlist = append(outlist, currentMax)
-	bed.Write(outfile, outlist, 5)
+	bed.Write(outfile, outlist)
 }
 
-func overlap(bed1 *bed.Bed, bed2 *bed.Bed) bool {
+func overlap(bed1 bed.Bed, bed2 bed.Bed) bool {
 	if bed1.Chrom != bed2.Chrom {
 		return false
 	} else if bed1.ChromEnd < bed2.ChromStart || bed2.ChromEnd < bed1.ChromStart {
