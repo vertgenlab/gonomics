@@ -4,16 +4,16 @@ package bed
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
 
-//Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
+// Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
 type Bed struct {
 	Chrom             string
 	ChromStart        int
@@ -25,7 +25,7 @@ type Bed struct {
 	Annotation        []string //long form for extra fields
 }
 
-//Strand stores strand state, which can be positive, negative, or none.
+// Strand stores strand state, which can be positive, negative, or none.
 type Strand byte
 
 const (
@@ -35,12 +35,12 @@ const (
 )
 
 // String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
-func (b *Bed) String() string {
+func (b Bed) String() string {
 	return ToString(b, b.FieldsInitialized)
 }
 
-//ToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
-func ToString(bunk *Bed, fields int) string {
+// ToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
+func ToString(bunk Bed, fields int) string {
 	switch fields {
 	case 3:
 		return fmt.Sprintf("%s\t%d\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd)
@@ -62,64 +62,65 @@ func ToString(bunk *Bed, fields int) string {
 	return ""
 }
 
-//WriteBed writes an input Bed struct to an os.File with a specified number of Bed fields.
-func WriteBed(file *os.File, input *Bed, fields int) {
+// WriteBed writes an input Bed struct to an io.Writer with a specified number of Bed fields.
+func WriteBed(file io.Writer, input Bed) {
 	var err error
-	_, err = fmt.Fprintf(file, "%s\n", ToString(input, fields))
-	common.ExitIfError(err)
+	_, err = fmt.Fprintf(file, "%s\n", input)
+	exception.PanicOnErr(err)
 }
 
-//WriteToFileHandle writes an input Bed struct with a specified number of fields to an io.Writer
-func WriteToFileHandle(file io.Writer, rec *Bed, fields int) {
+// WriteToFileHandle writes an input Bed struct with a specified number of fields to an io.Writer
+func WriteToFileHandle(file io.Writer, rec Bed) {
 	var err error
-	_, err = fmt.Fprintf(file, "%s\n", ToString(rec, fields))
-	common.ExitIfError(err)
-}
-
-//WriteSliceToFileHandle writes a slice of Bed structs with a specified number of fields to an io.Writer
-func WriteSliceToFileHandle(file io.Writer, records []*Bed, fields int) {
-	for _, rec := range records {
-		WriteToFileHandle(file, rec, fields)
-	}
+	_, err = fmt.Fprintf(file, "%s\n", rec)
+	exception.PanicOnErr(err)
 }
 
 //Write writes a slice of Bed structs with a specified number of fields to a specified filename.
-func Write(filename string, records []*Bed, fields int) {
+func Write(filename string, records []Bed) {
+	var err error
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 
-	WriteSliceToFileHandle(file, records, fields)
+	for i := range records {
+		WriteToFileHandle(file, records[i])
+	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
 //Read returns a slice of Bed structs from an input filename.
-func Read(filename string) []*Bed {
+func Read(filename string) []Bed {
 	var line string
-	var answer []*Bed
-	var doneReading bool = false
+	var answer []Bed
+	var err error
+	var doneReading bool
 
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	//reader := bufio.NewReader(file)
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		current := processBedLine(line)
 		answer = append(answer, current)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
 //processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
-func processBedLine(line string) *Bed {
+func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
-	startNum := common.StringToInt(words[1])
-	endNum := common.StringToInt(words[2])
+	startNum, err := strconv.Atoi(words[1])
+	exception.PanicOnErr(err)
+	endNum, err := strconv.Atoi(words[2])
+	exception.PanicOnErr(err)
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score = common.StringToInt(words[4])
+		current.Score, err = strconv.Atoi(words[4])
+		exception.PanicOnErr(err)
 	}
 	if len(words) >= 6 {
 		current.Strand = StringToStrand(words[5])
@@ -129,7 +130,7 @@ func processBedLine(line string) *Bed {
 			current.Annotation = append(current.Annotation, words[i])
 		}
 	}
-	return &current
+	return current
 }
 
 //StringToStrand parses a bed.Strand struct from an input string.
@@ -148,28 +149,29 @@ func StringToStrand(s string) Strand {
 }
 
 //NextBed returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
-func NextBed(reader *fileio.EasyReader) (*Bed, bool) {
+func NextBed(reader *fileio.EasyReader) (Bed, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	if done {
-		return nil, true
+		return Bed{}, true
 	}
 	return processBedLine(line), false
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- *Bed.
-func ReadToChan(file *fileio.EasyReader, data chan<- *Bed, wg *sync.WaitGroup) {
+//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- Bed.
+func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 	for curr, done := NextBed(file); !done; curr, done = NextBed(file) {
 		data <- curr
 	}
-	file.Close()
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
 //GoReadToChan reads Bed entries from an input filename to a <-chan *Bed.
-func GoReadToChan(filename string) <-chan *Bed {
+func GoReadToChan(filename string) <-chan Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
-	data := make(chan *Bed)
+	data := make(chan Bed)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 

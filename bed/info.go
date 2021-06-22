@@ -6,8 +6,8 @@ import (
 )
 
 //UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
-func UngappedRegionsFromFa(fa fasta.Fasta) []*Bed {
-	var answer []*Bed
+func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
+	var answer []Bed
 	var inRegion bool = false
 	var startIndex, index int = 0, 0
 	for index = range fa.Seq {
@@ -15,20 +15,20 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []*Bed {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
-			answer = append(answer, &Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index})
+			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index})
 			inRegion = false
 		}
 
 	}
 	if inRegion == true {
-		answer = append(answer, &Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq)})
+		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq)})
 	}
 	return answer
 }
 
 //UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
-func UngappedRegionsAllFromFa(records []fasta.Fasta) []*Bed {
-	var answer []*Bed
+func UngappedRegionsAllFromFa(records []fasta.Fasta) []Bed {
+	var answer []Bed
 	var idx int = 0
 	for idx = range records {
 		answer = append(answer, UngappedRegionsFromFa(records[idx])...)
@@ -37,7 +37,7 @@ func UngappedRegionsAllFromFa(records []fasta.Fasta) []*Bed {
 }
 
 //TotalSize gives back to total region covered by bed entry.
-func TotalSize(b []*Bed) int {
+func TotalSize(b []Bed) int {
 	var ans, curLen int
 	for i := 0; i < len(b); i++ {
 		curLen = b[i].ChromEnd - b[i].ChromStart
@@ -47,7 +47,7 @@ func TotalSize(b []*Bed) int {
 }
 
 //Splits fasta regions by using bed regions and concatenate fasta sequences by filling 100 Ns in between
-func MakeContigFromBed(fa *fasta.Fasta, beds []*Bed) *fasta.Fasta {
+func MakeContigFromBed(fa *fasta.Fasta, beds []Bed) *fasta.Fasta {
 	var ans *fasta.Fasta = &fasta.Fasta{Name: fa.Name, Seq: make([]dna.Base, 0)}
 	for i, b := range beds {
 		ans.Seq = append(ans.Seq, fa.Seq[b.ChromStart:b.ChromEnd]...)
