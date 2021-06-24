@@ -12,24 +12,24 @@ import (
 
 func bedMerge(infile string, outfile string) {
 	var records []bed.Bed = bed.Read(infile)
-	var outlist []bed.Bed
+	var outList []bed.Bed
 	var currentMax bed.Bed = records[0]
 
 	bed.SortByCoord(records)
 
-	for i := 0; i < len(records); i++ {
+	for i := 1; i < len(records); i++ {
 		if bed.Overlap(currentMax, records[i]) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}
 			currentMax.ChromEnd = numbers.Max(records[i].ChromEnd, currentMax.ChromEnd)
 		} else {
-			outlist = append(outlist, currentMax)
+			outList = append(outList, currentMax)
 			currentMax = records[i]
 		}
 	}
-	outlist = append(outlist, currentMax)
-	bed.Write(outfile, outlist)
+	outList = append(outList, currentMax)
+	bed.Write(outfile, outList)
 }
 
 func usage() {
