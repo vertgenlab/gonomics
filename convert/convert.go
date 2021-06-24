@@ -95,9 +95,6 @@ func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []wi
 	for _, v := range reference {
 		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]float64, v.Size)
-		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = 0
-		}
 		wigSlice[i] = currentWig
 		i++
 	}
@@ -119,65 +116,21 @@ func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []wi
 		if len(words) >= 5 {
 			current.Score = common.StringToInt(words[4])
 		}
+		if len(words) < 5 {
+			log.Fatalf("Did not provide values in the score field (fifth column)")
+		}
 		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
 		midpoint = bedMidpoint(current)
 		if wigSlice[chromIndex].Values[midpoint] != 0 {
 			log.Fatalf("Multiple scores for one position.")
 		}
 
-		wigSlice[chromIndex].Values[midpoint] = float64(current.Score)
-
-	}
-	return wigSlice
-}
-
-//BedScoreToWigRange uses bed entries from an input file to construct a Wig data structure where the Wig value at each position is equal to the score of an overlapping bed entry, and zero if no bed regions overlap.
-func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo) []wig.Wig {
-	wigSlice := make([]wig.Wig, len(reference))
-	var line string
-	var chromIndex int
-	var midpoint int
-	var startNum, endNum int
-	var x int
-	var i int = 0
-	var doneReading bool = false
-	var current *bed.Bed
-	var currentWig wig.Wig
-
-	//generate Wig skeleton from reference
-	for _, v := range reference {
-		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
-		currentWig.Values = make([]float64, v.Size)
-		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = 0
-		}
-		wigSlice[i] = currentWig
-		i++
-	}
-
-	//loop through bed line at a time
-	file := fileio.EasyOpen(infile)
-	defer file.Close()
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		words := strings.Split(line, "\t")
-		startNum = common.StringToInt(words[1])
-		endNum = common.StringToInt(words[2])
-		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
-		if len(words) >= 4 {
-			current.Name = words[3]
-		}
-		if len(words) >= 5 {
-			current.Score = common.StringToInt(words[4])
-		}
-		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
-		if wigSlice[chromIndex].Values[midpoint] != 0 {
-			log.Fatalf("Multiple scores for one position.")
-		}
-		for k := current.ChromStart; k < current.ChromEnd; k++ {
+		for k := current.ChromStart; k < current.ChromEnd; k++ { /// this was in the function I removed instead of stuff on line 132, not sure which we want??? TODO
 			//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
 			wigSlice[chromIndex].Values[k+1] = float64(current.Score)
 		}
+		wigSlice[chromIndex].Values[midpoint] = float64(current.Score)
+
 	}
 	return wigSlice
 }
