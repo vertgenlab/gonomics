@@ -84,7 +84,6 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
 	}
 
-
 	var summarySlice []float64
 	overlapCount := bed.OverlapCount(elementsOne, elementsTwo)
 
