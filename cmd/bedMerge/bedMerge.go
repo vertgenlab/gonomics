@@ -15,7 +15,7 @@ func bedMerge(infile string, outfile string) {
 	var outlist []bed.Bed
 	var currentMax bed.Bed = records[0]
 
-	//assumes sorted bed
+	bed.SortByCoord(records)
 
 	for i := 0; i < len(records); i++ {
 		if overlap(currentMax, records[i]) {
@@ -43,7 +43,7 @@ func overlap(bed1 bed.Bed, bed2 bed.Bed) bool {
 
 func usage() {
 	fmt.Print(
-		"bedMerge - Combines overlapping bed entries, keeping max score. Must be sorted.\n" +
+		"bedMerge - Combines overlapping bed entries, keeping max score. Output will be sorted by genome coordinate.\n" +
 			"Usage:\n" +
 			"bedMerge input.bed output.bed\n" +
 			"options:\n")
