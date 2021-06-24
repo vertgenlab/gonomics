@@ -37,7 +37,7 @@ func ReadToLiftChan(inputFile string, send chan<- Lift) {
 	case ".bed":
 		receive := bed.GoReadToChan(inputFile)
 		for val := range receive {
-			send <- val
+			send <- &val
 		}
 
 	case ".vcf":

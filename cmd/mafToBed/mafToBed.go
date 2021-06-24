@@ -12,7 +12,7 @@ import (
 
 func mafToBed(mafFile string, outBed string, reference string) {
 	mafRecords := maf.Read(mafFile)
-	var bedList []*bed.Bed
+	var bedList []bed.Bed
 
 	for i := range mafRecords {
 		for k := range mafRecords[i].Species {
@@ -20,12 +20,12 @@ func mafToBed(mafFile string, outBed string, reference string) {
 			if assembly == reference {
 				if mafRecords[i].Species[k].SLine != nil {
 					current := bed.Bed{Chrom: chrom, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "blank", Score: int(mafRecords[i].Score)}
-					bedList = append(bedList, &current)
+					bedList = append(bedList, current)
 				}
 			}
 		}
 	}
-	bed.Write(outBed, bedList, 5)
+	bed.Write(outBed, bedList)
 }
 
 func usage() {

@@ -5,7 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-func GoSimulateBed(searchSpace []*bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
+func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
 	var Length, tmp, chromWindows int
 	var totalWindows int
 	c := make(chan bed.Bed, 1000)

@@ -7,11 +7,11 @@ import (
 )
 
 //SortByCoord sorts in place a slice of Bed structs by their genomic position.
-func SortByCoord(bedFile []*Bed) {
+func SortByCoord(bedFile []Bed) {
 	sort.Slice(bedFile, func(i, j int) bool { return Compare(bedFile[i], bedFile[j]) == -1 })
 }
 
-func MergeBeds(bedFile []*Bed) []*Bed {
+func MergeBeds(bedFile []Bed) []Bed {
 	SortByCoord(bedFile)
 	var i, j int
 	for i = 0; i < len(bedFile)-1; {
@@ -29,7 +29,7 @@ func MergeBeds(bedFile []*Bed) []*Bed {
 }
 
 //Overlap returns true if two input Bed entries have an overlap of any kind.
-func Overlap(alpha *Bed, beta *Bed) bool {
+func Overlap(alpha Bed, beta Bed) bool {
 	if (numbers.Max(alpha.ChromStart, beta.ChromStart) < numbers.Min(alpha.ChromEnd, beta.ChromEnd)) && strings.Compare(alpha.Chrom, beta.Chrom) == 0 {
 		return true
 	} else {
@@ -38,7 +38,7 @@ func Overlap(alpha *Bed, beta *Bed) bool {
 }
 
 //OverlapLength returns the number of bases for which two Bed entries overlap.
-func OverlapLength(a *Bed, b *Bed) int {
+func OverlapLength(a Bed, b Bed) int {
 	if !Overlap(a, b) {
 		return 0
 	}
@@ -48,7 +48,7 @@ func OverlapLength(a *Bed, b *Bed) int {
 }
 
 //Compare returns zero for equal beds and otherwise returns the ordering of the two Bed entries. Used for SortByCoord.
-func Compare(a *Bed, b *Bed) int {
+func Compare(a Bed, b Bed) int {
 	chromComp := strings.Compare(a.Chrom, b.Chrom)
 	if chromComp != 0 {
 		return chromComp
@@ -69,7 +69,7 @@ func Compare(a *Bed, b *Bed) int {
 }
 
 //AllAreEqual returns true if two input slices of Beds contain Bed entries that all return true for Equal.
-func AllAreEqual(a []*Bed, b []*Bed) bool {
+func AllAreEqual(a []Bed, b []Bed) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -82,7 +82,7 @@ func AllAreEqual(a []*Bed, b []*Bed) bool {
 }
 
 //Equal returns true if two input Bed entries have the same Chrom, ChromStart, and ChromEnd. False otherwise.
-func Equal(a *Bed, b *Bed) bool {
+func Equal(a Bed, b Bed) bool {
 	if strings.Compare(a.Chrom, b.Chrom) != 0 {
 		return false
 	}

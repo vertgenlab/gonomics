@@ -9,7 +9,7 @@ import (
 
 //TajimaFromBed calculates Tajima's D from a multiFa alignment at a position set specific by an input bed entry.
 //Requires a gapless alignment.
-func TajimaFromBedNoGroup(b *bed.Bed, aln []fasta.Fasta) float64 {
+func TajimaFromBedNoGroup(b bed.Bed, aln []fasta.Fasta) float64 {
 	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
 	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
@@ -21,7 +21,7 @@ func TajimaFromBedNoGroup(b *bed.Bed, aln []fasta.Fasta) float64 {
 //TajimaFromBed caculates Tajima's D from a multiFa alignment at a position set specified by an input bed entry.
 //This version considers only the alignment entries that are represented in an input Group slice. A second return from this function lists members of the input Group slice not found in the multiFa alignment.
 //Requires a gapless alignment.
-func TajimaFromBed(b *bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
+func TajimaFromBed(b bed.Bed, aln []fasta.Fasta, g []*Group) (float64, string) {
 	bLen := b.ChromEnd - b.ChromStart
 	alnPos := fasta.RefPosToAlnPos(aln[0], int(b.ChromStart))
 	tmpFa := fasta.CopySubset(aln, alnPos, alnPos+int(bLen))
