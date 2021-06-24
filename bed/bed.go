@@ -42,16 +42,16 @@ func (b Bed) String() string {
 
 // ToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
 func ToString(bunk Bed, fields int) string {
-	switch fields {
-	case 3:
+	switch {
+	case fields == 3:
 		return fmt.Sprintf("%s\t%d\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd)
-	case 4:
+	case fields == 4:
 		return fmt.Sprintf("%s\t%d\t%d\t%s", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name)
-	case 5:
+	case fields == 5:
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score)
-	case 6:
+	case fields == 6:
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, bunk.Strand)
-	case 7:
+	case fields >= 7:
 		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, bunk.Strand)
 		for i := 0; i < len(bunk.Annotation); i++ {
 			out = fmt.Sprintf("%s\t%s", out, bunk.Annotation[i])
