@@ -6,10 +6,11 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/interval"
 	"log"
 )
 
-func bedEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int) {
+func bedEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int, trimToRefGenome bool) {
 	var err error
 
 	if method != "exact" && method != "normalApproximate" && method != "upperBound" && method != "lowerBound" {
@@ -23,6 +24,32 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	elementsOne := bed.ReadLite(inFile)
 	elementsTwo := bed.ReadLite(secondFile)
 	noGapRegions := bed.ReadLite(noGapFile)
+
+	if trimToRefGenome {
+		var trimmedE1 []bed.Bed = make([]bed.Bed, 0)
+		var trimmedE2 []bed.Bed = make([]bed.Bed, 0)
+
+		var refIntervals []interval.Interval
+		for val := range noGapRegions {
+			refIntervals = append(refIntervals, noGapRegions[val])
+		}
+		tree := interval.BuildTree(refIntervals)
+		var overlap []interval.Interval
+		for i := range elementsOne {
+			overlap = interval.Query(tree, elementsOne[i], "within")
+			if len(overlap) > 0 {
+				trimmedE1 = append(trimmedE1, elementsOne[i])
+			}
+		}
+		for i := range elementsTwo {
+			overlap = interval.Query(tree, elementsTwo[i], "within")
+			if len(overlap) > 0 {
+				trimmedE2 = append(trimmedE2, elementsTwo[i])
+			}
+		}
+		elementsOne = trimmedE1
+		elementsTwo = trimmedE2
+	}
 
 	if verbose > 0 {
 		log.Println("Sorting bed files.")
@@ -103,6 +130,7 @@ func main() {
 	var expectedNumArgs int = 5
 
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.")
+	var trimToRefGenome *bool = flag.Bool("trimToRefGenome", false, "Ignores elements that do not lie within the reference genome, as defined by the noGap.bed file.")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -120,5 +148,5 @@ func main() {
 	noGapFile := flag.Arg(3)
 	outFile := flag.Arg(4)
 
-	bedEnrichments(method, inFile, secondFile, noGapFile, outFile, *verbose)
+	bedEnrichments(method, inFile, secondFile, noGapFile, outFile, *verbose, *trimToRefGenome)
 }
