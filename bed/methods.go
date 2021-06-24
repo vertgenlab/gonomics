@@ -46,24 +46,27 @@ func (b *BedSlice) Pop() interface{} {
 }
 
 func (b BedSlice) Write(file string) {
-	Write(file, b, 7)
+	a := make([]Bed, len(b))
+	for i := range b {
+		a[i] = *b[i]
+	}
+	Write(file, a)
 }
 
 func (b *Bed) WriteToFileHandle(file io.Writer) {
-	//TODO: write max fields that are non-nil?
-	WriteToFileHandle(file, b, b.FieldsInitialized) //adaptive field writing seems most flexible for the method
+	WriteToFileHandle(file, *b) //adaptive field writing seems most flexible for the method
 }
 
 func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
-	var next *Bed
-	for next == nil && !done {
+	var next Bed
+	for next.Chrom == "" && !done {
 		next, done = NextBed(file)
 	}
 	if done {
 		return done
 	}
-	*b = *next
+	*b = next
 	return done
 }
 

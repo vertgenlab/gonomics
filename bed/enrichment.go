@@ -9,7 +9,7 @@ import (
 
 //subtractFromBedCoord is a helper function of overlapProbability that subtracts the values subStart and subEnd from entries in a slice of Bed b.
 //bClone is a clone of b used to save on memory allocation.
-func subtractFromBedCoord(b []*Bed, subStart int, subEnd int, bClone []*Bed) {
+func subtractFromBedCoord(b []Bed, subStart int, subEnd int, bClone []Bed) {
 	var prevEnd int = 0
 	var prevChrom string = ""
 
@@ -27,17 +27,20 @@ func subtractFromBedCoord(b []*Bed, subStart int, subEnd int, bClone []*Bed) {
 
 //overlapProbability calculates the probability that an element of len 'length' overlaps a set of genomic 'elements' in a genome represented by 'noGapRegions'.
 //tempElements and tempNoGap represent cloned slices of elements and noGapRegions which are used for memory optimization.
-func overlapProbability(elements []*Bed, tempElements []*Bed, length int, noGapRegions []*Bed, tempNoGap []*Bed) float64 {
+func overlapProbability(elements []Bed, tempElements []Bed, length int, noGapRegions []Bed, tempNoGap []Bed) float64 {
 	subtractFromBedCoord(elements, length-1, 0, tempElements)
 	subtractFromBedCoord(noGapRegions, 0, length-1, tempNoGap)
 	return float64(OverlapLengthSum(tempElements, tempNoGap)) / float64(TotalSize(tempNoGap))
 }
 
-func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed) []float64 {
+func ElementOverlapProbabilities(elements1 []Bed, elements2 []Bed, noGapRegions []Bed) []float64 {
 	var answer []float64 = make([]float64, len(elements2))
-	tempElements1 := Clone(elements1)
-	tempNoGap := Clone(noGapRegions)
-	tempElements2 := Clone(elements2)
+	var tempElements1 []Bed = make([]Bed, len(elements1))
+	copy(tempElements1, elements1)
+	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	copy(tempNoGap, noGapRegions)
+	var tempElements2 []Bed = make([]Bed, len(elements2))
+	copy(tempElements2, elements2)
 	SortBySize(tempElements2)
 	var currLen, prevLen int = 0, 0
 
@@ -124,11 +127,13 @@ func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64
 	return answer
 }
 
-func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int, verbose int) []float64 {
+func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
-	tempElements1 := Clone(elements1)
-	tempNoGap := Clone(noGapRegions)
+	var tempElements1 []Bed = make([]Bed, len(elements1))
+	copy(tempElements1, elements1)
+	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	copy(tempNoGap, noGapRegions)
 	minElements2 := findLargestBedLength(elements2)
 	var curr float64
 
@@ -163,11 +168,13 @@ func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 	return answer
 }
 
-func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int, verbose int) []float64 {
+func EnrichmentPValueLowerBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
-	tempElements1 := Clone(elements1)
-	tempNoGap := Clone(noGapRegions)
+	var tempElements1 []Bed = make([]Bed, len(elements1))
+	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	copy(tempElements1, elements1)
+	copy(tempNoGap, noGapRegions)
 	minElements2 := findShortestBedLength(elements2)
 	if verbose > 0 {
 		log.Println("Calculating overlapProbability.")
@@ -200,7 +207,7 @@ func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 	return answer
 }
 
-func findLargestBedLength(b []*Bed) int {
+func findLargestBedLength(b []Bed) int {
 	var maxLength int = b[0].ChromEnd - b[0].ChromStart
 
 	for i := 1; i < len(b); i++ {
@@ -211,7 +218,7 @@ func findLargestBedLength(b []*Bed) int {
 	return maxLength
 }
 
-func findShortestBedLength(b []*Bed) int {
+func findShortestBedLength(b []Bed) int {
 	var minLength int = b[0].ChromEnd - b[0].ChromStart
 	for i := 1; i < len(b); i++ {
 		if b[i].ChromEnd-b[i].ChromStart < minLength {
@@ -219,17 +226,4 @@ func findShortestBedLength(b []*Bed) int {
 		}
 	}
 	return minLength
-}
-
-//Clone creates a memory copy of an input slice of pointers to Beds. TODO: will be deleted when we convert read to []Bed instead of []*Bed. This function is sort of a band-aid.
-func Clone(b []*Bed) []*Bed {
-	var answer []*Bed = make([]*Bed, len(b))
-
-	for i := range b {
-		answer[i] = &Bed{Chrom: b[i].Chrom, ChromStart: b[i].ChromStart, ChromEnd: b[i].ChromEnd, Name: b[i].Name, Score: b[i].Score, Strand: b[i].Strand, FieldsInitialized: b[i].FieldsInitialized}
-		answer[i].Annotation = make([]string, len(b[i].Annotation))
-		copy(answer[i].Annotation, b[i].Annotation)
-	}
-
-	return answer
 }

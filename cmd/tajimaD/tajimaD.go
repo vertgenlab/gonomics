@@ -28,7 +28,7 @@ func tajimaD(inFile string, alnFile string, groupFile string, outFile string) {
 			b[i].Annotation[1] = missing
 		}
 	}
-	bed.Write(outFile, b, 7)
+	bed.Write(outFile, b)
 }
 
 func usage() {

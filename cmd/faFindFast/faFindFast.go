@@ -26,12 +26,12 @@ func faFindFast(inFile string, outFile string, windowSize int, chromName *string
 	fmt.Printf("I found %d total differences.\n", diff)
 
 	bedList := windowDifference(windowSize, records[0], records[1], chromName)
-	bed.Write(outFile, bedList, 5)
+	bed.Write(outFile, bedList)
 }
 
-func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string) []*bed.Bed {
+func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string) []bed.Bed {
 
-	var bedList []*bed.Bed
+	var bedList []bed.Bed
 	var referenceCounter = 0
 	var reachedEnd bool = false
 	var diff int = 0
@@ -46,7 +46,7 @@ func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *
 			if !reachedEnd {
 				current := bed.Bed{Chrom: *name, ChromStart: referenceCounter,
 					ChromEnd: referenceCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff}
-				bedList = append(bedList, &current)
+				bedList = append(bedList, current)
 				referenceCounter++
 			}
 		}

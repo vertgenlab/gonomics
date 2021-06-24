@@ -14,13 +14,13 @@ import (
 )
 
 func bedFilter(infile string, outfile string, minScore int, maxScore int, minLength int, maxLength int, minStart int, maxStart int, minEnd int, maxEnd int, chrom string) {
-	var outlist []*bed.Bed
+	var outlist []bed.Bed
 	var line string
 	var startNum, endNum, length int
 	var doneReading bool = false
 	var pass bool = false
 	var numFields int
-	var current *bed.Bed
+	var current bed.Bed
 	file := fileio.EasyOpen(infile)
 	defer file.Close()
 
@@ -63,19 +63,19 @@ func bedFilter(infile string, outfile string, minScore int, maxScore int, minLen
 		}
 		if pass {
 			if len(words) == 3 {
-				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+				current = bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
 				numFields = numbers.Max(3, numFields)
 			} else if len(words) == 4 {
-				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[3]}
+				current = bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[3]}
 				numFields = numbers.Max(4, numFields)
 			} else {
-				current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[3], Score: common.StringToInt(words[4])}
+				current = bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Name: words[3], Score: common.StringToInt(words[4])}
 				numFields = numbers.Max(5, numFields)
 			}
 			outlist = append(outlist, current)
 		}
 	}
-	bed.Write(outfile, outlist, numFields)
+	bed.Write(outfile, outlist)
 }
 
 func usage() {

@@ -5,15 +5,15 @@ import (
 )
 
 var OverlapTests = []struct {
-	A              *Bed
-	B              *Bed
+	A              Bed
+	B              Bed
 	expected       bool
 	expectedLength int
 }{
-	{A: &Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: &Bed{"chr4", 4, 12, "", 0, Positive, 3, nil}, expected: true, expectedLength: 6},
-	{A: &Bed{"chr5", 1, 10, "", 0, Positive, 3, nil}, B: &Bed{"chr4", 4, 12, "", 0, Positive, 3, nil}, expected: false, expectedLength: 0},
-	{A: &Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: &Bed{"chr4", 13, 15, "", 0, Positive, 3, nil}, expected: false, expectedLength: 0},
-	{A: &Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: &Bed{"chr4", 10, 12, "", 0, Positive, 3, nil}, expected: false, expectedLength: 0},
+	{A: Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: Bed{"chr4", 4, 12, "", 0, Positive, 3, nil}, expected: true, expectedLength: 6},
+	{A: Bed{"chr5", 1, 10, "", 0, Positive, 3, nil}, B: Bed{"chr4", 4, 12, "", 0, Positive, 3, nil}, expected: false, expectedLength: 0},
+	{A: Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: Bed{"chr4", 13, 15, "", 0, Positive, 3, nil}, expected: false, expectedLength: 0},
+	{A: Bed{"chr4", 1, 10, "", 0, Positive, 3, nil}, B: Bed{"chr4", 10, 12, "", 0, Positive, 3, nil}, expected: false, expectedLength: 0},
 }
 
 func TestOverlap(t *testing.T) {
@@ -36,7 +36,7 @@ var OverlapCountTests = []struct {
 }
 
 func TestOverlapCount(t *testing.T) {
-	var elements1, elements2 []*Bed
+	var elements1, elements2 []Bed
 	var actual int
 
 	for _, v := range OverlapCountTests {
@@ -60,7 +60,7 @@ func TestOverlapLength(t *testing.T) {
 }
 
 func TestOverlapLengthSum(t *testing.T) {
-	var elements1, elements2 []*Bed
+	var elements1, elements2 []Bed
 	var actual int
 	for _, v := range OverlapCountTests {
 		elements1 = Read(v.elements1File)
@@ -82,7 +82,7 @@ var SortTests = []struct {
 }
 
 func TestSortByCoord(t *testing.T) {
-	var input, expectedCoord []*Bed
+	var input, expectedCoord []Bed
 	for _, v := range SortTests {
 		input = Read(v.inputFile)
 		expectedCoord = Read(v.expectedByCoordFile)
@@ -94,7 +94,7 @@ func TestSortByCoord(t *testing.T) {
 }
 
 func TestSortBySize(t *testing.T) {
-	var input, expectedSize []*Bed
+	var input, expectedSize []Bed
 	for _, v := range SortTests {
 		input = Read(v.inputFile)
 		expectedSize = Read(v.expectedBySizeFile)
@@ -106,7 +106,7 @@ func TestSortBySize(t *testing.T) {
 }
 
 func TestSortByChromEndByChrom(t *testing.T) {
-	var input, expectedChromEnd []*Bed
+	var input, expectedChromEnd []Bed
 	for _, v := range SortTests {
 		input = Read(v.inputFile)
 		expectedChromEnd = Read(v.expectedByChromEndByChromFile)

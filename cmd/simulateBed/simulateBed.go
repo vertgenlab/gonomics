@@ -20,7 +20,7 @@ func simulateBed(regionCount int, simLength int, noGapFile string, outFile strin
 	defer out.Close()
 
 	for i := range c {
-		bed.WriteBed(out.File, &i, 5)
+		bed.WriteBed(out.File, i)
 	}
 }
 

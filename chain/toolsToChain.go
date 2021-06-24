@@ -45,7 +45,7 @@ func queryOverlap(alpha *Chain, beta *bed.Bed) bool {
 	}
 }
 
-func ChainToBed(ch *Chain, checkTarget bool) *bed.Bed {
+func ChainToBed(ch *Chain, checkTarget bool) bed.Bed {
 	if checkTarget {
 		return convertTargetBed(ch)
 	} else {
@@ -54,17 +54,17 @@ func ChainToBed(ch *Chain, checkTarget bool) *bed.Bed {
 }
 
 //helper functions to convert 4 different cases target, positive strand and reverse. query positive strand and reverse
-func convertTargetBed(ch *Chain) *bed.Bed {
+func convertTargetBed(ch *Chain) bed.Bed {
 	if ch.TStrand {
-		return &bed.Bed{Chrom: ch.TName, ChromStart: ch.TStart, ChromEnd: ch.TEnd, Name: ch.QName, Score: ch.Score}
+		return bed.Bed{Chrom: ch.TName, ChromStart: ch.TStart, ChromEnd: ch.TEnd, Name: ch.QName, Score: ch.Score}
 	} else {
 		return reverseTStrandBed(ch)
 	}
 }
 
-func convertQueryBed(ch *Chain) *bed.Bed {
+func convertQueryBed(ch *Chain) bed.Bed {
 	if ch.TStrand {
-		return &bed.Bed{Chrom: ch.TName, ChromStart: ch.TStart, ChromEnd: ch.TEnd, Name: ch.QName, Score: ch.Score}
+		return bed.Bed{Chrom: ch.TName, ChromStart: ch.TStart, ChromEnd: ch.TEnd, Name: ch.QName, Score: ch.Score}
 	} else {
 		return reverseQStrandBed(ch)
 	}
@@ -74,22 +74,22 @@ func convertQueryBed(ch *Chain) *bed.Bed {
 //let me know what you think about me separating these two log.Fatals
 //i could do if !ch.TStrand || !ch.QStrand { but i was worry about not catching ch.TStrand && ch.QStrand case
 //still runs the same way i believe
-func reverseTStrandBed(ch *Chain) *bed.Bed {
+func reverseTStrandBed(ch *Chain) bed.Bed {
 	if !ch.TStrand {
-		return &bed.Bed{Chrom: ch.TName, ChromStart: ch.TSize - ch.TEnd, ChromEnd: ch.TSize - ch.TStart, Name: ch.QName, Score: ch.Score}
+		return bed.Bed{Chrom: ch.TName, ChromStart: ch.TSize - ch.TEnd, ChromEnd: ch.TSize - ch.TStart, Name: ch.QName, Score: ch.Score}
 	} else {
 		log.Fatalf("Error: Found a target alignment with positive strand, please check input...\n")
-		return nil
+		return bed.Bed{}
 	}
 }
 
 //Just want to point out that it might be weird checking the false statement first
 //However, the more important condition is checked first
-func reverseQStrandBed(ch *Chain) *bed.Bed {
+func reverseQStrandBed(ch *Chain) bed.Bed {
 	if !ch.QStrand {
-		return &bed.Bed{Chrom: ch.QName, ChromStart: ch.QSize - ch.QEnd, ChromEnd: ch.QSize - ch.QStart, Name: ch.TName, Score: ch.Score}
+		return bed.Bed{Chrom: ch.QName, ChromStart: ch.QSize - ch.QEnd, ChromEnd: ch.QSize - ch.QStart, Name: ch.TName, Score: ch.Score}
 	} else {
 		log.Fatalf("Error: Found a query alignment with positive strand, please check input...\n")
-		return nil
+		return bed.Bed{}
 	}
 }

@@ -20,7 +20,7 @@ func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
 		records[i].Score = numbers.Min(lengthFromEnd, records[i].ChromStart)
 	}
-	bed.Write(outFile, records, 5)
+	bed.Write(outFile, records)
 }
 
 func usage() {
