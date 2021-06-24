@@ -46,11 +46,10 @@ func (b *BedSlice) Pop() interface{} {
 }
 
 func (b BedSlice) Write(file string) {
-	a := make([]Bed, len(b))
+	f := fileio.EasyCreate(file)
 	for i := range b {
-		a[i] = *b[i]
+		WriteBed(f, *b[i])
 	}
-	Write(file, a)
 }
 
 func (b Bed) WriteToFileHandle(file io.Writer) {
@@ -60,7 +59,7 @@ func (b Bed) WriteToFileHandle(file io.Writer) {
 func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next Bed
-	for next.Chrom == "" && !done {
+	for next.FieldsInitialized == 0 && !done {
 		next, done = NextBed(file)
 	}
 	if done {

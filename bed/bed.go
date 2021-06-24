@@ -63,21 +63,21 @@ func ToString(bunk Bed, fields int) string {
 	return ""
 }
 
-// WriteBed writes an input Bed struct to an io.Writer with a specified number of Bed fields.
+// WriteBed writes an input Bed struct to an io.Writer.
 func WriteBed(file io.Writer, input Bed) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", input)
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle writes an input Bed struct with a specified number of fields to an io.Writer
+// WriteToFileHandle writes an input Bed struct to an io.Writer
 func WriteToFileHandle(file io.Writer, rec Bed) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)
 	exception.PanicOnErr(err)
 }
 
-//Write writes a slice of Bed structs with a specified number of fields to a specified filename.
+//Write writes a slice of Bed structs to a specified filename.
 func Write(filename string, records []Bed) {
 	var err error
 	file := fileio.EasyCreate(filename)
