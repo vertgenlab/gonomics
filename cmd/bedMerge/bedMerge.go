@@ -18,7 +18,7 @@ func bedMerge(infile string, outfile string) {
 	bed.SortByCoord(records)
 
 	for i := 0; i < len(records); i++ {
-		if overlap(currentMax, records[i]) {
+		if bed.Overlap(currentMax, records[i]) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}
@@ -30,15 +30,6 @@ func bedMerge(infile string, outfile string) {
 	}
 	outlist = append(outlist, currentMax)
 	bed.Write(outfile, outlist)
-}
-
-func overlap(bed1 bed.Bed, bed2 bed.Bed) bool {
-	if bed1.Chrom != bed2.Chrom {
-		return false
-	} else if bed1.ChromEnd < bed2.ChromStart || bed2.ChromEnd < bed1.ChromStart {
-		return false
-	}
-	return true
 }
 
 func usage() {
