@@ -17,8 +17,8 @@ var BedEnrichmentsTests = []struct {
 }{
 	{"exact", "testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt", false},
 	{"exact", "testdata/elements1.bed", "testdata/elements1.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements1.enrichment.txt", false},
-	{"exact", "testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt", true},//should have no effect to trim to ref Genome if all elements are in the genome.
-	{"exact", "testdata/elements1.bed", "testdata/elements3.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements3.enrichment.txt", true},//elements3 is elements2 with extra elements outside the genome, should be the same answer as the previous check.
+	{"exact", "testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt", true}, //should have no effect to trim to ref Genome if all elements are in the genome.
+	{"exact", "testdata/elements1.bed", "testdata/elements3.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements3.enrichment.txt", true}, //elements3 is elements2 with extra elements outside the genome, should be the same answer as the previous check.
 }
 
 func TestBedEnrichments(t *testing.T) {
