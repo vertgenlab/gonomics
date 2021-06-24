@@ -71,16 +71,19 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 		log.Println("Running preflight checks.")
 	}
 
+	if bed.IsSelfOverlapping(noGapRegions) {
+		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", noGapFile)
+	}
+
 	//preflight checks: check for error in user input. Beds should not be self-overlapping.
 	if bed.IsSelfOverlapping(elementsOne) {
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", inFile)
 	}
+
 	if bed.IsSelfOverlapping(elementsTwo) {
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
 	}
-	if bed.IsSelfOverlapping(noGapRegions) {
-		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", noGapFile)
-	}
+
 
 	var summarySlice []float64
 	overlapCount := bed.OverlapCount(elementsOne, elementsTwo)
