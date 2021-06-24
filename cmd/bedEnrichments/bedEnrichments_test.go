@@ -8,11 +8,11 @@ import (
 )
 
 var BedEnrichmentsTests = []struct {
-	method        string
-	elements1File string
-	elements2File string
-	noGapFile     string
-	expectedFile  string
+	method          string
+	elements1File   string
+	elements2File   string
+	noGapFile       string
+	expectedFile    string
 	trimToRefGenome bool
 }{
 	{"exact", "testdata/elements1.bed", "testdata/elements2.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements2.enrichment.txt", false},
