@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
 	"testing"
 )
 
 var BedMergeTests = []struct {
-	InFile string
+	InFile       string
 	ExpectedFile string
 }{
 	{"testdata/test.bed", "testdata/test.merged.bed"},
