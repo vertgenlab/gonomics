@@ -26,25 +26,33 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	noGapRegions := bed.ReadLite(noGapFile)
 
 	if trimToRefGenome {
+		var overlap1, overlap2 []interval.Interval
 		var trimmedE1 []bed.Bed = make([]bed.Bed, 0)
 		var trimmedE2 []bed.Bed = make([]bed.Bed, 0)
 
-		var refIntervals []interval.Interval
-		for val := range noGapRegions {
-			refIntervals = append(refIntervals, noGapRegions[val])
-		}
-		tree := interval.BuildTree(refIntervals)
-		var overlap []interval.Interval
+		var e1Intervals []interval.Interval
 		for i := range elementsOne {
-			overlap = interval.Query(tree, elementsOne[i], "within")
-			if len(overlap) > 0 {
-				trimmedE1 = append(trimmedE1, elementsOne[i])
-			}
+			e1Intervals = append(e1Intervals, elementsOne[i])
 		}
+		tree1 := interval.BuildTree(e1Intervals)
+		var e2Intervals []interval.Interval
 		for i := range elementsTwo {
-			overlap = interval.Query(tree, elementsTwo[i], "within")
-			if len(overlap) > 0 {
-				trimmedE2 = append(trimmedE2, elementsTwo[i])
+			e2Intervals = append(e2Intervals, elementsTwo[i])
+		}
+		tree2 := interval.BuildTree(e2Intervals)
+
+		for i := range noGapRegions {
+			overlap1 = interval.Query(tree1, noGapRegions[i], "within")
+			if overlap1 != nil {
+				for j := range overlap1 {
+					trimmedE1 = append(trimmedE1, overlap1[j].(bed.Bed))
+				}
+			}
+			overlap2 = interval.Query(tree2, noGapRegions[i], "within")
+			if overlap2 != nil {
+				for j := range overlap2 {
+					trimmedE2 = append(trimmedE2, overlap2[j].(bed.Bed))
+				}
 			}
 		}
 		elementsOne = trimmedE1
