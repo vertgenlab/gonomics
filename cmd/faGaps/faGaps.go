@@ -30,7 +30,7 @@ func faSplitByNs(filename string, outFile string) {
 func faNoGapThreshold(inFile string, outFile string, windowSize int, ungappedBaseThreshold int) {
 	reader := fileio.EasyOpen(inFile)
 	writer := fileio.EasyCreate(outFile)
-	var currBatch []bed.Bed//UngappedRegionsThresholdFromFa returns all ungapped beds for each chromosome, so we write them in batches.
+	var currBatch []bed.Bed //UngappedRegionsThresholdFromFa returns all ungapped beds for each chromosome, so we write them in batches.
 
 	for fa, done := fasta.NextFasta(reader); !done; fa, done = fasta.NextFasta(reader) {
 		currBatch = bed.UngappedRegionsThresholdFromFa(fa, windowSize, ungappedBaseThreshold)
