@@ -1,9 +1,9 @@
 package bed
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"fmt"
 )
 
 //UngappedRegionsThresholdFromFa finds all regions with at least 'threshold' bases out of 'windowSize' that are ungapped (not '-' or 'N')
@@ -18,7 +18,7 @@ func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold in
 			continue
 		} else if inUnGappedRegion {
 			if unGappedThresholdCheck(fa, alnCounter, windowSize, threshold) {
-				curr.ChromEnd = refCounter+windowSize
+				curr.ChromEnd = refCounter + windowSize
 			} else {
 				inUnGappedRegion = false
 				answer = append(answer, curr)
@@ -33,7 +33,7 @@ func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold in
 			refCounter++
 		}
 	}
-	if inUnGappedRegion {//if we ended in an ungapped region, we need to add the last one to the output slice.
+	if inUnGappedRegion { //if we ended in an ungapped region, we need to add the last one to the output slice.
 		answer = append(answer, curr)
 	}
 	return answer
