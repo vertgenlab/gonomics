@@ -13,7 +13,6 @@ func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold in
 	var curr Bed
 	var refCounter int = 0
 	var regionCounter int = 0
-
 	for alnCounter := 0; alnCounter < len(fa.Seq) - windowSize; alnCounter++ {
 		if fa.Seq[alnCounter] == '-'{
 			continue
@@ -34,23 +33,19 @@ func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold in
 			refCounter++
 		}
 	}
-
 	if inUnGappedRegion {//if we ended in an ungapped region, we need to add the last one to the output slice.
 		answer = append(answer, curr)
 	}
-
 	return answer
 }
 
 func unGappedThresholdCheck(fa fasta.Fasta, alnCounter int, windowSize int, threshold int) bool {
 	var unGappedCounter int = 0
-
 	for i := alnCounter; i < alnCounter + windowSize; i++ {
-		if fa.Seq[i] != dna.N && fa.Seq[i] != dna.LowerN && fa.Seq[i] != dna.Gap && fa.Seq[i] != dna.Dot && fa.Seq[i] != dna.Nil {
+		if !dna.DefineBase(fa.Seq[i]) {
 			unGappedCounter++
 		}
 	}
-
 	return unGappedCounter > threshold
 }
 
@@ -64,13 +59,12 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
-			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index})
+			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index, FieldsInitialized: 3})
 			inRegion = false
 		}
-
 	}
 	if inRegion == true {
-		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq)})
+		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq), FieldsInitialized: 3})
 	}
 	return answer
 }
