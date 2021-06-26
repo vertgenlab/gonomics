@@ -4,7 +4,6 @@ package bed
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
@@ -89,23 +88,6 @@ func Write(filename string, records []Bed) {
 	exception.PanicOnErr(err)
 }
 
-//ReadLite reads a whole Bed file into memory, but only reads positional information (fields 1 to 3).
-func ReadLite(filename string) []Bed {
-	var line string
-	var answer []Bed
-	var doneReading bool = false
-
-	file := fileio.EasyOpen(filename)
-	defer file.Close()
-	//reader := bufio.NewReader(file)
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		current := processBedLineLite(line)
-		answer = append(answer, current)
-	}
-	return answer
-}
-
 //Read returns a slice of Bed structs from an input filename.
 func Read(filename string) []Bed {
 	var line string
@@ -122,14 +104,6 @@ func Read(filename string) []Bed {
 	err = file.Close()
 	exception.PanicOnErr(err)
 	return answer
-}
-
-//processBedLineLite is like processBedLine, but only parses the first three fields of a Bed line.
-func processBedLineLite(line string) Bed {
-	words := strings.Split(line, "\t")
-	startNum := common.StringToInt(words[1])
-	endNum := common.StringToInt(words[2])
-	return Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, FieldsInitialized: 3}
 }
 
 //processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.

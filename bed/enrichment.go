@@ -33,6 +33,7 @@ func overlapProbability(elements []Bed, tempElements []Bed, length int, noGapReg
 	return float64(OverlapLengthSum(tempElements, tempNoGap)) / float64(TotalSize(tempNoGap))
 }
 
+//ElementOverlapProbabilities returns a slice of float64 representing the probabilities that an element in elements2 overlaps an element in elements1.
 func ElementOverlapProbabilities(elements1 []Bed, elements2 []Bed, noGapRegions []Bed) []float64 {
 	var answer []float64 = make([]float64, len(elements2))
 	var tempElements1 []Bed = make([]Bed, len(elements1))
@@ -57,6 +58,9 @@ func ElementOverlapProbabilities(elements1 []Bed, elements2 []Bed, noGapRegions 
 	return answer
 }
 
+//EnrichmentPValueApproximation performs a calculation of enrichment based on a set of overlap probabilities and the observed overlap count.
+//Uses a normal approximation of the resulting binomial distribution. Very fast and should converge on the correct answer. This is the preferred method.
+//Returns a slice of three values. The first represents a debug check (hardcoded to one), the second is the expected number of overlaps, and the third is the pValue of the observed overlap.
 func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount int) []float64 {
 	var answer []float64 = make([]float64, 3)
 	var mu, sigma float64 = 0, 0
@@ -81,7 +85,10 @@ func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount i
 	return answer
 }
 
-func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64 {
+//EnrichmentPValueExact performs an exact calculation fo enrichment bgaased on a set of overlap probabilities and the observed overlap count.
+//The exact method is non-polynomial, and is thus not recommended for large datasets.
+//Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []float64 {
 	var numTrials = len(elementOverlapProbs)
 	var answer []float64 = make([]float64, 3)
 	var prevCol []float64 = make([]float64, numTrials+1)
@@ -127,6 +134,8 @@ func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64
 	return answer
 }
 
+//EnrichmentPValueUpperBound, together with EnrichmentPValueLowerBound, provide a range of possible values for the pValue of overlap.
+//Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
 func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
@@ -147,19 +156,9 @@ func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions [
 	}
 
 	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
-	if underflow {
-		answer[2] = 0.0
-		if verbose > 0 {
-			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
-		}
-	} else {
-		for s := overlapCount + 1; s <= numTrials; s++ {
-			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
-			if underflow {
-				break
-			}
-			pValue += curr
-		}
+	for s := overlapCount + 1; s <= numTrials && !(underflow && float64(s) > float64(numTrials) * prob); s++ {
+		curr, underflow = numbers.BinomialDist(numTrials, s, prob)
+		pValue += curr
 	}
 
 	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
@@ -168,6 +167,8 @@ func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions [
 	return answer
 }
 
+//EnrichmentPValueLowerBound, together with EnrichmentPValueUpperBound, provide a range of possible values for the pValue of overlap.
+//Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
 func EnrichmentPValueLowerBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
@@ -207,6 +208,7 @@ func EnrichmentPValueLowerBound(elements1 []Bed, elements2 []Bed, noGapRegions [
 	return answer
 }
 
+//helperfunction that returns an int corresponding to the longest distance between chromstart and chromEnd from an input set of bed entries.
 func findLargestBedLength(b []Bed) int {
 	var maxLength int = b[0].ChromEnd - b[0].ChromStart
 
@@ -218,6 +220,7 @@ func findLargestBedLength(b []Bed) int {
 	return maxLength
 }
 
+//helperfunction that returns an int corresponding to the shortest distance between chromstart and chromEnd from an input set of bed entries.
 func findShortestBedLength(b []Bed) int {
 	var minLength int = b[0].ChromEnd - b[0].ChromStart
 	for i := 1; i < len(b); i++ {

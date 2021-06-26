@@ -21,9 +21,9 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 		log.Println("Reading bed files.")
 	}
 
-	elementsOne := bed.ReadLite(inFile)
-	elementsTwo := bed.ReadLite(secondFile)
-	noGapRegions := bed.ReadLite(noGapFile)
+	elementsOne := bed.Read(inFile)
+	elementsTwo := bed.Read(secondFile)
+	noGapRegions := bed.Read(noGapFile)
 
 	if trimToRefGenome {
 		var overlap1, overlap2 []interval.Interval
@@ -43,16 +43,12 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 
 		for i := range noGapRegions {
 			overlap1 = interval.Query(tree1, noGapRegions[i], "within")
-			if overlap1 != nil {
-				for j := range overlap1 {
-					trimmedE1 = append(trimmedE1, overlap1[j].(bed.Bed))
-				}
+			for j := range overlap1 {
+				trimmedE1 = append(trimmedE1, overlap1[j].(bed.Bed))
 			}
 			overlap2 = interval.Query(tree2, noGapRegions[i], "within")
-			if overlap2 != nil {
-				for j := range overlap2 {
-					trimmedE2 = append(trimmedE2, overlap2[j].(bed.Bed))
-				}
+			for j := range overlap2 {
+				trimmedE2 = append(trimmedE2, overlap2[j].(bed.Bed))
 			}
 		}
 		elementsOne = trimmedE1
@@ -85,7 +81,7 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	}
 
 	var summarySlice []float64
-	overlapCount := bed.OverlapCount(elementsOne, elementsTwo)
+	overlapCount := bed.OverlapCount(elementsTwo, elementsOne)
 
 	if verbose > 0 {
 		log.Println("Calculating enrichment probabilities.")
@@ -94,7 +90,7 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	switch method {
 	case "exact":
 		probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-		summarySlice = bed.EnrichmentPValue(probs, overlapCount)
+		summarySlice = bed.EnrichmentPValueExact(probs, overlapCount)
 	case "normalApproximate":
 		probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
 		summarySlice = bed.EnrichmentPValueApproximation(probs, overlapCount)
@@ -125,6 +121,8 @@ func usage() {
 		"bedEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input bed files.\n" +
 			"noGap.bed represents a bed of all regions in the search space of the genome.\n" +
 			"out.txt is in the form of a tab-separated value file with a header line starting with '#'.\n" +
+			"Calculates enrichment of the number of elements in set 2 that have any overlap in set 1.\n" +
+			"Number of overlaps reported is the number of elements in set 2 that have any overlap with set 1. This will be asymmetric if sets one and two are swapped as arguments.\n" +
 			"Method specifies the type of calculation. Must match one of the following strings: 'exact', 'normalApproximate', 'upperBound', or 'lowerBound'\n" +
 			"A brief explanation of each method of calculation is described starting on the next line.\n" +
 			"exact: Calculates the exact p Value for enrichment between two bed files. NP-hard, computationally intractable for large datasets.\n" +
