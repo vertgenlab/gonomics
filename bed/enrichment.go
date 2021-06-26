@@ -156,7 +156,7 @@ func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions [
 	}
 
 	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
-	for s := overlapCount + 1; s <= numTrials && !(underflow && float64(s) > float64(numTrials) * prob); s++ {
+	for s := overlapCount + 1; s <= numTrials && !(underflow && float64(s) > float64(numTrials)*prob); s++ {
 		curr, underflow = numbers.BinomialDist(numTrials, s, prob)
 		pValue += curr
 	}
