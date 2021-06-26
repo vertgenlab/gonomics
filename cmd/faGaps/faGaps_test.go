@@ -1,14 +1,14 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var BedOutTests = []struct {
-	inFile string
+	inFile       string
 	expectedFile string
 }{
 	{"testdata/testBedOut.fa", "testdata/testBedOut.noGap.bed"},

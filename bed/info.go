@@ -13,8 +13,8 @@ func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold in
 	var curr Bed
 	var refCounter int = 0
 	var regionCounter int = 0
-	for alnCounter := 0; alnCounter < len(fa.Seq) - windowSize; alnCounter++ {
-		if fa.Seq[alnCounter] == '-'{
+	for alnCounter := 0; alnCounter < len(fa.Seq)-windowSize; alnCounter++ {
+		if fa.Seq[alnCounter] == '-' {
 			continue
 		} else if inUnGappedRegion {
 			if unGappedThresholdCheck(fa, alnCounter, windowSize, threshold) {
@@ -41,7 +41,7 @@ func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold in
 
 func unGappedThresholdCheck(fa fasta.Fasta, alnCounter int, windowSize int, threshold int) bool {
 	var unGappedCounter int = 0
-	for i := alnCounter; i < alnCounter + windowSize; i++ {
+	for i := alnCounter; i < alnCounter+windowSize; i++ {
 		if !dna.DefineBase(fa.Seq[i]) {
 			unGappedCounter++
 		}
