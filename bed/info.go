@@ -3,7 +3,56 @@ package bed
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"fmt"
 )
+
+//UngappedRegionsThresholdFromFa finds all regions with at least 'threshold' bases out of 'windowSize' that are ungapped (not '-' or 'N')
+func UngappedRegionsThresholdFromFa(fa fasta.Fasta, windowSize int, threshold int) []Bed {
+	var inUnGappedRegion bool = false
+	var answer []Bed
+	var curr Bed
+	var refCounter int = 0
+	var regionCounter int = 0
+
+	for alnCounter := 0; alnCounter < len(fa.Seq) - windowSize; alnCounter++ {
+		if fa.Seq[alnCounter] == '-'{
+			continue
+		} else if inUnGappedRegion {
+			if unGappedThresholdCheck(fa, alnCounter, windowSize, threshold) {
+				curr.ChromEnd = refCounter+windowSize
+			} else {
+				inUnGappedRegion = false
+				answer = append(answer, curr)
+			}
+			refCounter++
+		} else {
+			if unGappedThresholdCheck(fa, alnCounter, windowSize, threshold) {
+				curr = Bed{fa.Name, refCounter, refCounter + windowSize, fmt.Sprintf("Region_%d", regionCounter), 0, None, 7, nil}
+				regionCounter++
+				inUnGappedRegion = true
+			}
+			refCounter++
+		}
+	}
+
+	if inUnGappedRegion {//if we ended in an ungapped region, we need to add the last one to the output slice.
+		answer = append(answer, curr)
+	}
+
+	return answer
+}
+
+func unGappedThresholdCheck(fa fasta.Fasta, alnCounter int, windowSize int, threshold int) bool {
+	var unGappedCounter int = 0
+
+	for i := alnCounter; i < alnCounter + windowSize; i++ {
+		if fa.Seq[i] != dna.N && fa.Seq[i] != dna.LowerN && fa.Seq[i] != dna.Gap && fa.Seq[i] != dna.Dot && fa.Seq[i] != dna.Nil {
+			unGappedCounter++
+		}
+	}
+
+	return unGappedCounter > threshold
+}
 
 //UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
 func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
