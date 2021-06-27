@@ -34,7 +34,6 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 		}
 	}
 
-
 	for i = 0; i < len(sizes); i++ {
 		chromSlice = WigChromToSlice(wigData, sizes[i].Size, sizes[i].Name)
 		for k := 0; k < len(records); k++ {
@@ -42,7 +41,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 				currentBed = records[k]
 				if *norm == true {
 					maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
-					normMaxWig := maxWig/wigTotal
+					normMaxWig := maxWig / wigTotal
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%e", normMaxWig))
 				} else {
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
@@ -109,7 +108,7 @@ func main() {
 	database := flag.Arg(1)
 	chromsize := flag.Arg(2)
 	outfile := flag.Arg(3)
-	
+
 	bedMaxWig(infile, database, chromsize, outfile, norm)
 
 }
