@@ -109,11 +109,7 @@ func main() {
 	database := flag.Arg(1)
 	chromsize := flag.Arg(2)
 	outfile := flag.Arg(3)
-
-	if *norm {
-		bedMaxWig(infile, database, chromsize, outfile, norm)
-		return
-	}
+	
 	bedMaxWig(infile, database, chromsize, outfile, norm)
 
 }
