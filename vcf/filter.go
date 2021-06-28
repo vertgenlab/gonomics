@@ -9,7 +9,8 @@ import (
 )
 
 //Filter returns true if a Vcf passes a set of filter criteria, false otherwise. Special empty strings "" for alt and ref automatically pass.
-func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool) bool {
+//raven's note: added id (rsID), can upgrade to []string in the future
+func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []string, minQual float64, biAllelicOnly bool, substitutionsOnly bool, segregatingSitesOnly bool, removeNoAncestor bool, onlyPolarizableAncestors bool, id string) bool {
 	if !FilterRange(v, minPos, maxPos) {
 		return false
 	}
@@ -38,6 +39,10 @@ func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []strin
 		return false
 	}
 	if onlyPolarizableAncestors && !IsPolarizable(v) {
+		return false
+	}
+	//raven's note: added a check for id
+	if !FilterId(v, id) {
 		return false
 	}
 	return true
@@ -102,6 +107,18 @@ func FilterNs(vcfs []Vcf) []Vcf {
 		}
 	}
 	return answer
+}
+
+//FilterId returns true if the Id field of a Vcf record matches an input string, false otherwise.
+//TODO: to upgrade to []string, make idMap
+//if value, exist := idMap[id]; !exist { //raven's note: if id doesn't exist as a key in idMap, then remove from output
+//	return false
+//}
+func FilterId(v Vcf, id string) bool {
+	if id != "" && v.Id != id {
+		return false
+	}
+	return true
 }
 
 func ASFilter(v Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
@@ -207,6 +224,58 @@ func IsPolarizable(v Vcf) bool {
 		return false
 	}
 	return true
+}
+
+//IsRefWeakAltStrong returns true if an input biallelic substitution variant has a weak Ref allele and a strong Alt allele, false otherwise.
+func IsRefWeakAltStrong(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) {
+		return false
+	}
+	if v.Ref == "A" || v.Ref == "T" {
+		if v.Alt[0] == "C" || v.Alt[0] == "G" {
+			return true
+		}
+	}
+	return false
+}
+
+//IsStrongToWeak returns true if an input biallelic substitution variant has a strong Ref allele and a weak Alt allele, false otherwise.
+func IsRefStrongAltWeak(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) {
+		return false
+	}
+	if v.Ref == "C" || v.Ref == "G" {
+		if v.Alt[0] == "A" || v.Alt[0] == "T" {
+			return true
+		}
+	}
+	return false
+}
+
+//IsNotRefStrongAltWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
+func IsNotRefStrongAltWeak(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
+		return false
+	}
+	return !IsRefStrongAltWeak(v)
+}
+
+//IsNotRefWeakAltStrong returns true if an input biallelic substitution variant does not have a weak Ref allele and a strong Alt allele, false otherwise.
+func IsNotRefWeakAltStrong(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
+		return false
+	}
+	return !IsRefWeakAltStrong(v)
+}
+
+//IsWeakToStrongOrStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant or a weak to strong variant, false otherwise.
+func IsWeakToStrongOrStrongToWeak(v Vcf) bool {
+	return IsRefStrongAltWeak(v) || IsRefWeakAltStrong(v)
+}
+
+//IsNotWeakToStrongOrStrongToWeak returns true if a variant is neither a weak to strong variant nor a strong to weak variant, false otherwise.
+func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
+	return IsNotRefWeakAltStrong(v) && IsNotRefStrongAltWeak(v)
 }
 
 func getListIndex(header Header, list []string) []int16 {

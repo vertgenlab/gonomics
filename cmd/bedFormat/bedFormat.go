@@ -27,7 +27,7 @@ func bedFormat(infile string, outfile string, fields int, ensemblToUCSC bool, UC
 		if UCSCToEnsembl {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
 		}
-		bed.WriteBed(out.File, v, fields)
+		bed.WriteBed(out.File, v)
 	}
 }
 

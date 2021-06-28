@@ -1,0 +1,2 @@
+#FILENAME	MaximumLikelihood
+testdata/simulated.alpha4.N100.S100.seed19.vcf	3.893977e+00

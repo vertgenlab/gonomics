@@ -92,3 +92,41 @@ func AfsDivergenceAscertainmentLikelihood(afs Afs, alpha []float64, binomMap [][
 	}
 	return answer
 }
+
+//AfsDivergenceAscertainmentFixedAlpha returns the likelihood of observing a particular derived allele frequency spectrum for a given selection parameter alpha.
+//This is the special case where every segregating site has the same value for selection. Also applies a correction for divergence-based ascertainment bias.
+func AfsDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, d int, integralError float64) float64 {
+	allN := findAllN(afs)
+	var answer float64 = 0.0
+	uncorrectedLikelihoodCache := BuildLikelihoodCache(allN)
+	ancestralLikelihoodCache := BuildLikelihoodCache(allN)
+	derivedLikelihoodCache := BuildLikelihoodCache(allN)
+	for j := range afs.Sites {
+		switch afs.Sites[j].L {
+		case Uncorrected:
+			if uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
+				uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		case Ancestral:
+			if ancestralLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
+				ancestralLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityAncestralAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, ancestralLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		case Derived:
+			if derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
+				derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityDerivedAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		}
+	}
+	return answer
+}
+
+//AfsDivergenceAscertainmentFixedAlphaClosure returns a func(float64) float64 representing the likelihood function for a specific derived allele frequency spectrum with a single selection parameter alpha.
+//Incorporates a site-by-site correction for divergence-based ascertainment bias.
+func AfsDivergenceAscertainmentFixedAlphaClosure(afs Afs, binomMap [][]float64, d int, integralError float64) func(float64) float64 {
+	return func(alpha float64) float64 {
+		return AfsDivergenceAscertainmentFixedAlpha(afs, alpha, binomMap, d, integralError)
+	}
+}

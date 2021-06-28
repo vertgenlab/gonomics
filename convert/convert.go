@@ -20,7 +20,7 @@ import (
 )
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
-func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
+func singleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 	for i := range ref {
 		if b.Chrom == ref[i].Name {
 			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
@@ -31,7 +31,7 @@ func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 }
 
 //BedToFasta extracts subFastas out of a reference fasta slice comprised of the sequences of input bed regions.
-func BedToFasta(b []*bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
+func BedToFasta(b []bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 	outlist := make([]fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
 		outlist[i] = singleBedToFasta(b[i], ref)
@@ -40,11 +40,11 @@ func BedToFasta(b []*bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 }
 
 //SamToBed extracts the position information from a Sam entry and returns it as a bed entry.
-func SamToBed(s sam.Sam) *bed.Bed {
+func SamToBed(s sam.Sam) bed.Bed {
 	if s.Cigar[0].Op == '*' {
-		return nil
+		return bed.Bed{}
 	} else {
-		return &bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName}
+		return bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName}
 	}
 }
 
@@ -58,13 +58,13 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 } */
 
 //SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
-func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) *bed.Bed {
-	var answer *bed.Bed
+func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
+	var answer bed.Bed
 
 	if s.Cigar[0].Op == '*' {
-		return nil
+		return bed.Bed{}
 	} else {
-		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
+		answer = bed.Bed{Chrom: s.RName, Name: s.QName}
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = int(s.Pos - 1)
 			answer.ChromEnd = numbers.Min(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
@@ -183,7 +183,7 @@ func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo
 }
 
 //BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
-func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
+func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
 	var i, x int = 0, 0

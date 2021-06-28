@@ -28,20 +28,20 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	defer samFile.Close()
 	var done bool = false
 	sam.ReadHeader(samFile)
-	var outBed []*bed.Bed
+	var outBed []bed.Bed
 	var aln sam.Sam
 
 	//records, err := sam.Read(infile)    old version
 	//common.ExitIfError(err)
 
 	var outWig []wig.Wig
-	var currentBed *bed.Bed
+	var currentBed bed.Bed
 
 	if fragLength != -1 {
 		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 			currentBed = convert.SamToBedFrag(aln, fragLength, ref)
 			//} this bracket shouldn't be here! See Line 49 comment
-			if currentBed != nil {
+			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
 			}
 		}
@@ -49,7 +49,7 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 			currentBed = convert.SamToBed(aln)
 			//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
-			if currentBed != nil {
+			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
 			}
 		}
