@@ -57,7 +57,7 @@ func ToString(bunk Bed, fields int) string {
 		}
 		return out
 	default:
-		log.Fatalf("Error: expecting a request to print 3 to 7 bed fields, but got: %d\n", fields)
+		log.Fatalf("Error: expecting a request to print at least 3 bed fields, but got: %d\n", fields)
 	}
 	return ""
 }
