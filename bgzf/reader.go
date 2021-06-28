@@ -79,6 +79,7 @@ func (r Reader) Seek(offset int64, whence int) (ret int64, err error) {
 }
 
 // ReadBlock reads the next block into the input Block.
+// Returns io.EOF at the end of the file.
 func (r Reader) ReadBlock(b *Block) error {
 	r.decompressor.Multistream(false) // parse each bgzf block separately
 	b.Reset()                         // remove anything left in the input block
