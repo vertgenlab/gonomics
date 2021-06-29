@@ -99,7 +99,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 		if aln[i].Op == 0 && aln[i+1].Op == 1 { //if there is an M before I, then write to bed
 			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1                                  //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
 			ChromEnd = ChromStart + int(aln[i+1].RunLength)                                        //get the last position that is I
-			ins := bed.Bed{Chrom: "chr1", ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins"} //TODO: now just write "chr1", but find a way to grab from fasta header?
+			ins := bed.Bed{Chrom: "chr1", ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4} //TODO: now just write "chr1", but find a way to grab from fasta header?
 			bed.WriteBed(insBed.File, ins)
 		}
 		if aln[i].Op != 2 { //in insertion bed, only need to update ChromCurrent if the cigar fragment is M or I, not D
@@ -117,7 +117,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 		if aln[i].Op == 0 && aln[i+1].Op == 1 {
 			ChromStart = ChromCurrent + int(aln[i].RunLength) //the position before I starts
 			ChromEnd = ChromStart + 1                         //add 1 so that the length of the bed entry is 1
-			del := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "del"}
+			del := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "del", FieldsInitialized: 4}
 			bed.WriteBed(delBed.File, del)
 		}
 		if aln[i].Op != 1 { //in deletion bed, only update ChromCurrent if the cigar fragment is M or D, not I
