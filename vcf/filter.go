@@ -42,7 +42,7 @@ func Filter(v Vcf, chrom string, minPos int, maxPos int, ref string, alt []strin
 		return false
 	}
 	//raven's note: added a check for id
-	if !FilterId(v, id) {
+	if id != "" && !IsIdMatch(v, id) {
 		return false
 	}
 	return true
@@ -109,12 +109,12 @@ func FilterNs(vcfs []Vcf) []Vcf {
 	return answer
 }
 
-//FilterId returns true if the Id field of a Vcf record matches an input string, false otherwise.
+//IsIdMatch returns true if an id filter exists, and the Id field of a Vcf record matches an input string, false otherwise.
 //TODO: to upgrade to []string, make idMap
 //if value, exist := idMap[id]; !exist { //raven's note: if id doesn't exist as a key in idMap, then remove from output
 //	return false
 //}
-func FilterId(v Vcf, id string) bool {
+func IsIdMatch(v Vcf, id string) bool {
 	if id != "" && v.Id != id {
 		return false
 	}
