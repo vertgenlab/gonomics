@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"log"
+	"reflect"
 	"strings"
 	"unsafe"
 )
@@ -177,7 +178,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	s.PNext = le.Uint32(r.next(4)) + 1 // sam is 1 based
 	s.TLen = int32(le.Uint32(r.next(4)))
 
-	//s.QName = trimNulOrPanic(unsafeByteToString(r.next(lenReadName))) // unsafe version
+	//s.QName = trimNulOrPanic(unsafeByteToString(s.QName, r.next(lenReadName))) // unsafe version
 	s.QName = trimNulOrPanic(string(r.next(lenReadName))) // safe version
 
 	if cap(s.Cigar) >= numCigarOps {
@@ -207,7 +208,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 		qual[i] += 33 // ascii offset for printable characters
 	}
 
-	// s.Qual = unsafeByteToString(qual) // unsafe version
+	//s.Qual = unsafeByteToString(s.Qual, qual) // unsafe version
 	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
 
 	// The sam.Extra field is not parsed here as it would require parsing tags to their value, then
@@ -215,9 +216,14 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	// saved in the unparsedExtra field of sam, such that a user may call a function to parse these
 	// bytes if and only if they need access to the tag fields. This should also make bam reading a
 	// fair bit faster.
-	s.unparsedExtra = r.next(blkSize - (staticBamAlnSize +
+	ex := r.next(blkSize - (staticBamAlnSize +
 		lenReadName + (4 * numCigarOps) + (((lenSeq) + 1) / 2) + lenSeq)) // to get remaining bytes in alignment
-
+	if cap(s.unparsedExtra) < len(ex) {
+		s.unparsedExtra = make([]byte, len(ex))
+		copy(s.unparsedExtra[:len(ex)], ex)
+	}
+	s.unparsedExtra = s.unparsedExtra[:len(ex)]
+	copy(s.unparsedExtra, ex)
 	return
 }
 
@@ -263,10 +269,24 @@ func trimNulOrPanic(s string) string {
 	return strings.TrimRight(s, "\u0000")
 }
 
-// unsafeByteToString provides a copy-free conversion of a []byte to
+// unsafeByteToString provides a allocation-free conversion of a []byte to
 // a string. This functions uses the unsafe package and should be
 // removed if/when the sam struct is changed. Note that this code
 // is lifted directly from strings.Builder.String().
-func unsafeByteToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
+func unsafeByteToString(s string, toCopy []byte) string {
+	header := (*reflect.StringHeader)(unsafe.Pointer(&s)) // get the header from s
+	bytesHeader := &reflect.SliceHeader{                  // convert to a byte slice header
+		Data: header.Data,
+		Len:  header.Len,
+		Cap:  header.Len,
+	}
+	if bytesHeader.Cap < len(toCopy) { // make a new slice if existing one is not big enough
+		return string(toCopy)
+	}
+
+	b := *(*[]byte)(unsafe.Pointer(bytesHeader)) // convert byte slice header to a literal []byte
+	header.Len = len(toCopy)                     // reduce len of slice header to actual len of toCopy
+	b = b[:len(toCopy)]                          // reduce len of literal byte slice conversion to len of toCopy
+	copy(b, toCopy)                              // mutate s
+	return s
 }

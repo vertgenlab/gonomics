@@ -253,3 +253,41 @@ func TestGoReadToChanBam(t *testing.T) {
 		i++
 	}
 }
+
+//func TestBig(t *testing.T) {
+//	receiveChan, _ := GoReadToChan(bigBam)
+//	actual, _ := GoReadToChan(bigSam)
+//	var i int
+//	for val := range receiveChan {
+//		a := <-actual
+//		if a.String() != val.String() { // string tests since extra in bam is different than sam
+//			t.Error("problem reading sam to channel")
+//		}
+//		i++
+//	}
+//}
+
+func BenchmarkRecycleBam(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		receiveChan, recycleChan, _ := GoReadToChanRecycle(bigBam, 1)
+		var read *Sam
+		var firstBase dna.Base
+		for read = range receiveChan {
+			firstBase = read.Seq[0]
+			_ = firstBase
+			recycleChan <- read
+		}
+	}
+}
+
+func BenchmarkNocycleBam(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		receiveChan, _ := GoReadToChan(bigBam)
+		var read Sam
+		var firstBase dna.Base
+		for read = range receiveChan {
+			firstBase = read.Seq[0]
+			_ = firstBase
+		}
+	}
+}
