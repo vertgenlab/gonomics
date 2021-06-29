@@ -82,7 +82,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	//bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
 	//fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
 	//raven's edit: try AffineGap in align/affineGap.go, with diffrent gapOpen and gapExtend penalty, since gapExtend<gapOpen, encourages big gap in order to align better in unbroken chunks
-	bestScore, aln := align.AffineGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -600,-150)
+	bestScore, aln := align.AffineGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -600, -150)
 	fmt.Printf("Using AffineGap, Alignment score is %d, cigar is %v \n", bestScore, aln)
 
 	//TODO: raven's cigarToBed main body starts here
@@ -92,17 +92,17 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	insBed := fileio.EasyCreate(outIns_bed)
 	defer insBed.Close()
 	//TODO: now have to write FirstPos, but find a way to grab from fasta header
-	ChromCurrent := FirstPos_InsBed-1 //initialize a variable to keep track of current position on chromosome
-	ChromStart := FirstPos_InsBed-1 //initialize variables for ChromStart and ChromEnd, will need to set them equal to one another during updates, but may be more efficient to have fewer variables
-	ChromEnd := FirstPos_InsBed-1
+	ChromCurrent := FirstPos_InsBed - 1 //initialize a variable to keep track of current position on chromosome
+	ChromStart := FirstPos_InsBed - 1   //initialize variables for ChromStart and ChromEnd, will need to set them equal to one another during updates, but may be more efficient to have fewer variables
+	ChromEnd := FirstPos_InsBed - 1
 	for i := 0; i < len(aln)-1; i++ { //loop through each entry in the []cigar, start from 0, end at len-2 so can still assess aln[i+1]
 		if aln[i].Op == 0 && aln[i+1].Op == 1 { //if there is an M before I, then write to bed
-			ChromStart = ChromCurrent+int(aln[i].RunLength)+1 //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
-			ChromEnd = ChromStart+int(aln[i+1].RunLength) //get the last position that is I
+			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1                                  //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
+			ChromEnd = ChromStart + int(aln[i+1].RunLength)                                        //get the last position that is I
 			ins := bed.Bed{Chrom: "chr1", ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins"} //TODO: now just write "chr1", but find a way to grab from fasta header?
 			bed.WriteBed(insBed.File, &ins, 4)
 		}
-		if aln[i].Op !=2 { //in insertion bed, only need to update ChromCurrent if the cigar fragment is M or I, not D
+		if aln[i].Op != 2 { //in insertion bed, only need to update ChromCurrent if the cigar fragment is M or I, not D
 			ChromCurrent += int(aln[i].RunLength)
 		}
 	}
@@ -110,13 +110,13 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	delBed := fileio.EasyCreate(outDel_bed) //TODO: add flag for output file name
 	defer delBed.Close()
 	//TODO: now have to write FirstPos, but find a way to grab from fasta header
-	ChromCurrent = FirstPos_DelBed-1 //reset the same 3 variables for position
-	ChromStart = FirstPos_DelBed-1
-	ChromEnd = FirstPos_DelBed-1
+	ChromCurrent = FirstPos_DelBed - 1 //reset the same 3 variables for position
+	ChromStart = FirstPos_DelBed - 1
+	ChromEnd = FirstPos_DelBed - 1
 	for i := 0; i < len(aln)-1; i++ {
 		if aln[i].Op == 0 && aln[i+1].Op == 1 {
-			ChromStart = ChromCurrent+int(aln[i].RunLength) //the position before I starts
-			ChromEnd = ChromStart+1 //add 1 so that the length of the bed entry is 1
+			ChromStart = ChromCurrent + int(aln[i].RunLength) //the position before I starts
+			ChromEnd = ChromStart + 1                         //add 1 so that the length of the bed entry is 1
 			del := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "del"}
 			bed.WriteBed(delBed.File, &del, 4)
 		}
@@ -171,11 +171,11 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	faOut := flag.String("faOut", "", "name of the MSA output file") //raven added this line
-	insBedOut := flag.String("insBedOut","ins.bed","insertion bed output filename")
-	delBedOut := flag.String("delBedOut","del.bed","deletion bed output filename")
-	FirstPos_Ins := flag.Int("FirstPos_Ins",1,"first base position of the query sequence, which will be used to make the insertion bed")
-	FirstPos_Del := flag.Int("FirstPos_Del",1,"first base position of the target sequence, which will be used to make the deletion bed")
-	Chr := flag.String("Chr","chr1","chromosome name")
+	insBedOut := flag.String("insBedOut", "ins.bed", "insertion bed output filename")
+	delBedOut := flag.String("delBedOut", "del.bed", "deletion bed output filename")
+	FirstPos_Ins := flag.Int("FirstPos_Ins", 1, "first base position of the query sequence, which will be used to make the insertion bed")
+	FirstPos_Del := flag.Int("FirstPos_Del", 1, "first base position of the target sequence, which will be used to make the deletion bed")
+	Chr := flag.String("Chr", "chr1", "chromosome name")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {

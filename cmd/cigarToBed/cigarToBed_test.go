@@ -9,15 +9,14 @@ import (
 )
 
 var CigarToBedTests = []struct {
-	inputFileOne_Name string
-	inputFileTwo_Name string
-	outFa string
-	FirstPos_InsBed int
-	FirstPos_DelBed int
-	Chrom string
+	inputFileOne_Name   string
+	inputFileTwo_Name   string
+	outFa               string
+	FirstPos_InsBed     int
+	FirstPos_DelBed     int
+	Chrom               string
 	outIns_bed_expected string
 	outDel_bed_expected string
-
 }{
 	{"testdata/sethvsraven/seth.fa", "testdata/sethvsraven/raven.fa", "", 1, 1, "chr1", "testdata/sethvsraven/affineGap_sethvsraven_ins.bed", "testdata/sethvsraven/affineGap_sethvsraven_del.bed"},
 	{"testdata/firstTest/testRegion10kb_PanTro6.fa", "testdata/firstTest/testRegion10kb_hg38.fa", "", 119320000, 116703287, "chr1", "testdata/firstTest/affineGap_PanTro6vshg38_ins.bed", "testdata/firstTest/affineGap_PanTro6vshg38_del.bed"},
