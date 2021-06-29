@@ -204,3 +204,52 @@ func TestReadAndWriteReal(t *testing.T) {
 		}
 	}
 }
+
+func TestGoReadToChanRecycleSam(t *testing.T) {
+	receiveChan, recycleChan, _ := GoReadToChanRecycle("testdata/small.sam", 1)
+	expected := []Sam{r001, r002, r003, r004, r003Supplemental, r001Supplemental}
+	var i int
+	for val := range receiveChan {
+		if !Equal(*val, expected[i]) {
+			t.Error("problem reading sam to channel")
+		}
+		recycleChan <- val
+		i++
+	}
+
+	// buff size 10 test
+	receiveChan, recycleChan, _ = GoReadToChanRecycle("testdata/small.sam", 10)
+	i = 0
+	for val := range receiveChan {
+		if !Equal(*val, expected[i]) {
+			t.Error("problem reading sam to channel")
+		}
+		recycleChan <- val
+		i++
+	}
+}
+
+func TestGoReadToChanRecycleBam(t *testing.T) {
+	receiveChan, recycleChan, _ := GoReadToChanRecycle("../bgzf/testdata/test.bam", 1)
+	expected, _ := Read("../bgzf/testdata/test.sam")
+	var i int
+	for val := range receiveChan {
+		if val.String() != expected[i].String() { // string tests since extra in bam is different than sam
+			t.Error("problem reading sam to channel")
+		}
+		recycleChan <- val
+		i++
+	}
+}
+
+func TestGoReadToChanBam(t *testing.T) {
+	receiveChan, _ := GoReadToChan("../bgzf/testdata/test.bam")
+	expected, _ := Read("../bgzf/testdata/test.sam")
+	var i int
+	for val := range receiveChan {
+		if val.String() != expected[i].String() { // string tests since extra in bam is different than sam
+			t.Error("problem reading sam to channel")
+		}
+		i++
+	}
+}
