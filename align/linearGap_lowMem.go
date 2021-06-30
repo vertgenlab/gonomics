@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
+func ConstGap_lowMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	//make matrices for m (score) and trace (traceback with directions)
 	//m := make([][]int64, len(alpha)+1)
 	mRowCurrent := make([]int64,len(beta)+1)
