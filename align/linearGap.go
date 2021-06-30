@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
+func ConstGap_testing(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	m := make([][]int64, len(alpha)+1)
 	trace := make([][]ColType, len(alpha)+1)
 	for idx := range m {
