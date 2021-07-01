@@ -219,7 +219,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	// 9. Perform binary search on vsplit.data for y1 by y-value,
 	// find the index i of the smallest element no less than y1 in vsplit.data.
 	i := sort.Search(len(vSplit.data), func(i int) bool {
-		return float32(vSplit.data[i].GetChromEnd()) >= y1
+		return float64(vSplit.data[i].GetChromEnd()) >= y1
 	})
 
 	ri := i // save this value for later
@@ -232,11 +232,11 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	v, i = vSplit.lChild, vSplit.iLeft[i] // 10. vsplit = vsplit.lchild, i = vsplit.lfc[i]
 
 	for v.val == nil && i != -1 { // 11. while v is not a leaf and i ≠ 1 do // ADDED MODIFICATION TO 11
-		if x1 <= float32(v.xMid) { // 12. if x1 ≤ v.x then
+		if x1 <= float64(v.xMid) { // 12. if x1 ≤ v.x then
 			j := v.iRight[i] // 13. j = v.rfc[i]
 
 			// 14. while j ≠ −1 and v.rchild.data[j].y ≤ y2 and j ≤ v.rchild.data.size do
-			for j != -1 && j < len(v.rChild.data) && float32(v.rChild.data[j].GetChromEnd()) <= y2 {
+			for j != -1 && j < len(v.rChild.data) && float64(v.rChild.data[j].GetChromEnd()) <= y2 {
 				if relationship == "m" || relationship == "mi" {
 					if v.rChild.data[j].GetChromStart() != v.rChild.data[j].GetChromEnd() {
 						switch z := v.rChild.data[j].(type) {
@@ -275,11 +275,11 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	v, i = vSplit.rChild, vSplit.iRight[ri] // 26. v = vsplit. rchild, i = vsplit. rcf[i]
 
 	for v.val == nil && i != -1 { // 27. while v is not a leaf and i≠−1 do
-		if x2 >= float32(v.xMid) { // 28. if x2 ≥ v. x then
+		if x2 >= float64(v.xMid) { // 28. if x2 ≥ v. x then
 			j := v.iLeft[i] // 29. j = v. lfc[i]
 
 			// 30. while j ≠ −1 and v. lchild. data[j]. y ≤ y2 and j ≤ v. lchild. data. size do
-			for j != -1 && j < len(v.lChild.data) && float32(v.lChild.data[j].GetChromEnd()) <= y2 {
+			for j != -1 && j < len(v.lChild.data) && float64(v.lChild.data[j].GetChromEnd()) <= y2 {
 				if relationship == "m" || relationship == "mi" {
 					if v.lChild.data[j].GetChromStart() != v.lChild.data[j].GetChromEnd() {
 						switch z := v.lChild.data[j].(type) {
@@ -324,9 +324,9 @@ func PrettyPrint(q Interval) {
 	fmt.Printf("Interval. Chrom: %s. ChromStart: %d. ChromEnd: %d.\n", q.GetChrom(), q.GetChromStart(), q.GetChromEnd())
 }
 
-func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
-	q1 := float32(q.GetChromStart())
-	q2 := float32(q.GetChromEnd())
+func withinRange(q Interval, relationship string, x1, x2, y1, y2 float64) bool {
+	q1 := float64(q.GetChromStart())
+	q2 := float64(q.GetChromEnd())
 	if relationship == "m" || relationship == "mi" {
 		if q1 == q2 {
 			return false
@@ -335,15 +335,15 @@ func withinRange(q Interval, relationship string, x1, x2, y1, y2 float32) bool {
 	return (q1 >= x1 && q1 <= x2) && (q2 >= y1 && q2 <= y2)
 }
 
-func findSplit(x1, x2 float32, node *IntervalNode) *IntervalNode {
+func findSplit(x1, x2 float64, node *IntervalNode) *IntervalNode {
 	if node.val != nil { // Handles case where only 1 node is present in tree
 		return node
 	}
 
 	for node.val == nil {
-		if float32(node.xMid) < x1 {
+		if float64(node.xMid) < x1 {
 			node = node.rChild
-		} else if x2 < float32(node.xMid) {
+		} else if x2 < float64(node.xMid) {
 			node = node.lChild
 		} else {
 			return node
