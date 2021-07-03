@@ -7,9 +7,9 @@ import (
 
 func ConstGap_lowMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	//make matrices for m (score, broken down into mRowCurrent,mRowPrevious and mColumn to save memory) and trace (traceback with directions)
-	mRowCurrent := make([]int64,len(beta)+1)
-	mRowPrevious := make([]int64,len(beta)+1)
-	var mColumn int = len(alpha)+1
+	mRowCurrent := make([]int64, len(beta)+1)
+	mRowPrevious := make([]int64, len(beta)+1)
+	var mColumn int = len(alpha) + 1
 	trace := make([][]ColType, len(alpha)+1)
 	for idx := 0; idx < mColumn; idx++ {
 		trace[idx] = make([]ColType, len(beta)+1)
@@ -32,7 +32,7 @@ func ConstGap_lowMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			}
 		}
 		if i < mColumn-1 {
-			mRowPrevious,mRowCurrent=mRowCurrent,mRowPrevious  //reuse mRow variables to save memory, swap slices rather than copy(mRowPrevious,mRowCurrent) for easy update, but only up until the second to last row
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious //reuse mRow variables to save memory, swap slices rather than copy(mRowPrevious,mRowCurrent) for easy update, but only up until the second to last row
 		}
 	}
 
