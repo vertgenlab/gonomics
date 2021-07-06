@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception" //raven added this line for file Close, exception.PanicOnErr
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"github.com/vertgenlab/gonomics/exception" //raven added this line for file Close, exception.PanicOnErr
 	"log"
 	"os"      //raven added this line for MSA Fasta output
 	"strings" //raven added this line for CountSeqIdx
@@ -90,11 +90,11 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	ChromCurrent := FirstPos_InsBed - 1 //initialize a variable to keep track of current position on chromosome
 	ChromStart := FirstPos_InsBed - 1   //initialize variables for ChromStart and ChromEnd, will need to set them equal to one another during updates, but may be more efficient to have fewer variables
 	ChromEnd := FirstPos_InsBed - 1
-	BedEntry :=bed.Bed {Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4} //TODO: now just write "chr1", but find a way to grab from fasta header?
-	for i := 0; i < len(aln)-1; i++ { //loop through each entry in the []cigar, start from 0, end at len-2 so can still assess aln[i+1]
+	BedEntry := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4} //TODO: now just write "chr1", but find a way to grab from fasta header?
+	for i := 0; i < len(aln)-1; i++ {                                                                                //loop through each entry in the []cigar, start from 0, end at len-2 so can still assess aln[i+1]
 		if aln[i].Op == align.ColM && aln[i+1].Op == align.ColI { //if there is an M before I, then write to bed
-			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1                                                       //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
-			ChromEnd = ChromStart + int(aln[i+1].RunLength)                                                             //get the last position that is I
+			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1 //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
+			ChromEnd = ChromStart + int(aln[i+1].RunLength)       //get the last position that is I
 			BedEntry = bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4}
 			bed.WriteBed(insBed.File, BedEntry)
 		}
