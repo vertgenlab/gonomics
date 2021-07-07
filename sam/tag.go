@@ -194,7 +194,7 @@ func getVals(typ byte, r *bytes.Buffer, count int) interface{} {
 		}
 
 	default:
-		log.Panic("unrecognized value type in bam file")
+		log.Panicf("unrecognized value type in bam file '%s'", string(typ))
 		return nil
 	}
 }

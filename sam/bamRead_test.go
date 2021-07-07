@@ -78,36 +78,47 @@ func equalExceptExtra(a, b []Sam) bool {
 	}
 	for i := range a {
 		if a[i].QName != b[i].QName {
+			fmt.Println("qname")
 			return false
 		}
 		if a[i].Flag != b[i].Flag {
+			fmt.Println("name")
 			return false
 		}
 		if a[i].RName != b[i].RName {
+			fmt.Println("rname")
 			return false
 		}
 		if a[i].Pos != b[i].Pos {
+			fmt.Println("pos")
 			return false
 		}
 		if a[i].MapQ != b[i].MapQ {
+			fmt.Println("mapq")
 			return false
 		}
 		if cigar.ToString(a[i].Cigar) != cigar.ToString(b[i].Cigar) {
+			fmt.Println("cig")
 			return false
 		}
 		if a[i].RNext != b[i].RNext {
+			fmt.Println("rnext")
 			return false
 		}
 		if a[i].PNext != b[i].PNext {
+			fmt.Println("p")
 			return false
 		}
 		if a[i].TLen != b[i].TLen {
+			fmt.Println("t")
 			return false
 		}
 		if dna.CompareSeqsIgnoreCase(a[i].Seq, b[i].Seq) != 0 {
+			fmt.Println("seq")
 			return false
 		}
 		if a[i].Qual != b[i].Qual {
+			fmt.Println("qual")
 			return false
 		}
 	}
@@ -115,6 +126,7 @@ func equalExceptExtra(a, b []Sam) bool {
 }
 
 const bigBam string = "/Users/danielsnellings/Desktop/10k.bam"
+const bigSam string = "/Users/danielsnellings/Desktop/10k.sam"
 
 func BenchmarkBamOpenClose(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -128,7 +140,6 @@ func BenchmarkBamAllocs(b *testing.B) {
 	var s Sam
 	for i := 0; i < b.N; i++ {
 		_, _ = DecodeBam(r, &s)
-		s.RName = ""
 		b.StopTimer()
 		if i%9000 == 0 {
 			r.Close()
@@ -187,16 +198,16 @@ func BenchmarkSamtoolsBamRead(b *testing.B) {
 	}
 }
 
-func BenchmarkPrint(b *testing.B) {
-	var a uint32 = 10
-	for i := 0; i < b.N; i++ {
-		print(a)
-	}
-}
-
-func BenchmarkFmtPrint(b *testing.B) {
-	var a uint32 = 10
-	for i := 0; i < b.N; i++ {
-		fmt.Print(a)
-	}
-}
+//func BenchmarkPrint(b *testing.B) {
+//	var a uint32 = 10
+//	for i := 0; i < b.N; i++ {
+//		print(a)
+//	}
+//}
+//
+//func BenchmarkFmtPrint(b *testing.B) {
+//	var a uint32 = 10
+//	for i := 0; i < b.N; i++ {
+//		fmt.Print(a)
+//	}
+//}
