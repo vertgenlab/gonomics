@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
+	//"github.com/vertgenlab/gonomics/bed" //only needed for bed.AllAreEqual
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
@@ -28,20 +28,22 @@ func TestCigarToBed(t *testing.T) {
 		inputFileTwo := fileio.EasyOpen(v.inputFileTwo_Name)
 		GlobalAlignment_CigarToBed(inputFileOne, inputFileTwo, v.outFa, "ins_tmp.bed", "del_tmp.bed", v.FirstPos_InsBed, v.FirstPos_DelBed, v.Chrom)
 
-		records_ins := bed.Read("ins_tmp.bed")
-		expected_ins := bed.Read(v.outIns_bed_expected)
-		if !bed.AllAreEqual(records_ins, expected_ins) {
-			t.Errorf("Error in mafIndels for outIns.")
+		//records_ins := bed.Read("ins_tmp.bed") //only needed for bed.AllAreEqual
+		//expected_ins := bed.Read(v.outIns_bed_expected)
+		//if !bed.AllAreEqual(records_ins, expected_ins) { //bed.AllAreEqual only checks the first 3 columns of the bed for now. Until it can check all fields, use fileio.AreEqual
+		if !fileio.AreEqual("ins_tmp.bed", v.outIns_bed_expected) {
+			t.Errorf("Error in cigarToBed for outIns.")
 		}
 		err := os.Remove("ins_tmp.bed")
 		if err != nil {
 			common.ExitIfError(err)
 		}
 
-		records_del := bed.Read("del_tmp.bed")
-		expected_del := bed.Read(v.outDel_bed_expected)
-		if !bed.AllAreEqual(records_del, expected_del) {
-			t.Errorf("Error in mafIndels for outDel.")
+		//records_del := bed.Read("del_tmp.bed")
+		//expected_del := bed.Read(v.outDel_bed_expected)
+		//if !bed.AllAreEqual(records_del, expected_del) {
+		if !fileio.AreEqual("del_tmp.bed", v.outDel_bed_expected) {
+			t.Errorf("Error in cigarToBed for outDel.")
 		}
 		err = os.Remove("del_tmp.bed")
 		if err != nil {

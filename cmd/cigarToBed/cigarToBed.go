@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/bed" //TODO: raven added this line for cigarToBed
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception" //raven added this line for file Close, exception.PanicOnErr
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
@@ -20,12 +21,13 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
 	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
 	var doneReading bool = false
-	defer inputFile.Close()
 	for line, doneReading = fileio.EasyNextRealLine(inputFile); !doneReading; line, doneReading = fileio.EasyNextRealLine(inputFile) {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
 		}
 	}
+	err := inputFile.Close()
+	exception.PanicOnErr(err)
 	return seqIdx
 }
 
@@ -44,10 +46,10 @@ func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *gen
 	for i := 1; i < len(aln); i++ {
 		curr, targetEnd, queryEnd = genomeGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[i], i)
 		curr = genomeGraph.AddNode(answer, curr)
-		if aln[i].Op == 0 {
+		if aln[i].Op == align.ColM {
 			genomeGraph.AddEdge(&answer.Nodes[i-1], curr, 1)
 			genomeGraph.AddEdge(&answer.Nodes[i-2], curr, 0.5)
-		} else if aln[i].Op == 1 || aln[i].Op == 2 {
+		} else if aln[i].Op == align.ColI || aln[i].Op == align.ColD {
 			genomeGraph.AddEdge(&answer.Nodes[i-1], curr, 0.5)
 		} else {
 			log.Fatalf("Error: cigar.Op = %d is unrecognized...\n", aln[i].Op)
@@ -71,10 +73,6 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	if numSeqOne > 1 || numSeqTwo > 1 {
 		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n", numSeqOne, numSeqTwo)
 	}
-	//attempt at Dan's len(faOne) suggestion
-	//if len(string(faOne)) != 1 || len(string(faTwo)) != 1 {
-	//log.Fatalf("multiple sequnces detected in .fa files. This program is designed for .fa files with only 1 sequence in them.\n")
-	//}
 
 	//needleman wunsch (global alignment)
 	//raven's note: scoring matrices are in align/align.go, e.g. HumanChimp matrix, same as what UCSC Genome Browser uses
@@ -85,45 +83,47 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	bestScore, aln := align.AffineGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -600, -150)
 	fmt.Printf("Using AffineGap, Alignment score is %d, cigar is %v \n", bestScore, aln)
 
-	//TODO: raven's cigarToBed main body starts here
-	//type definitions: Cigar is defined in align/align.go; aln is a []cigar, according to ConstGap defined in align/linearGap.go
-	//modeled after: mafIndels.go, wigPeaks.go
+	//raven's cigarToBed main body starts here
 	//insertion bed
 	insBed := fileio.EasyCreate(outIns_bed)
-	defer insBed.Close()
 	//TODO: now have to write FirstPos, but find a way to grab from fasta header
 	ChromCurrent := FirstPos_InsBed - 1 //initialize a variable to keep track of current position on chromosome
 	ChromStart := FirstPos_InsBed - 1   //initialize variables for ChromStart and ChromEnd, will need to set them equal to one another during updates, but may be more efficient to have fewer variables
 	ChromEnd := FirstPos_InsBed - 1
-	for i := 0; i < len(aln)-1; i++ { //loop through each entry in the []cigar, start from 0, end at len-2 so can still assess aln[i+1]
-		if aln[i].Op == 0 && aln[i+1].Op == 1 { //if there is an M before I, then write to bed
-			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1                                                       //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
-			ChromEnd = ChromStart + int(aln[i+1].RunLength)                                                             //get the last position that is I
-			ins := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4} //TODO: now just write "chr1", but find a way to grab from fasta header?
-			bed.WriteBed(insBed.File, ins)
+	BedEntry := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4} //TODO: now just write "chr1", but find a way to grab from fasta header?
+	for i := 0; i < len(aln)-1; i++ {                                                                                //loop through each entry in the []cigar, start from 0, end at len-2 so can still assess aln[i+1]
+		if aln[i].Op == align.ColM && aln[i+1].Op == align.ColI { //if there is an M before I, then write to bed
+			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1 //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
+			ChromEnd = ChromStart + int(aln[i+1].RunLength)       //get the last position that is I
+			BedEntry = bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4}
+			bed.WriteBed(insBed.File, BedEntry)
 		}
-		if aln[i].Op != 2 { //in insertion bed, only need to update ChromCurrent if the cigar fragment is M or I, not D
+		if aln[i].Op != align.ColD { //in insertion bed, only need to update ChromCurrent if the cigar fragment is M or I, not D
 			ChromCurrent += int(aln[i].RunLength)
 		}
 	}
+	err := insBed.Close()
+	exception.PanicOnErr(err)
+
 	//deletion bed
 	delBed := fileio.EasyCreate(outDel_bed) //TODO: add flag for output file name
-	defer delBed.Close()
 	//TODO: now have to write FirstPos, but find a way to grab from fasta header
 	ChromCurrent = FirstPos_DelBed - 1 //reset the same 3 variables for position
 	ChromStart = FirstPos_DelBed - 1
 	ChromEnd = FirstPos_DelBed - 1
 	for i := 0; i < len(aln)-1; i++ {
-		if aln[i].Op == 0 && aln[i+1].Op == 1 {
+		if aln[i].Op == align.ColM && aln[i+1].Op == align.ColI {
 			ChromStart = ChromCurrent + int(aln[i].RunLength) //the position before I starts
 			ChromEnd = ChromStart + 1                         //add 1 so that the length of the bed entry is 1
-			del := bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "del", FieldsInitialized: 4}
-			bed.WriteBed(delBed.File, del)
+			BedEntry = bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "del", FieldsInitialized: 4}
+			bed.WriteBed(delBed.File, BedEntry)
 		}
-		if aln[i].Op != 1 { //in deletion bed, only update ChromCurrent if the cigar fragment is M or D, not I
+		if aln[i].Op != align.ColI { //in deletion bed, only update ChromCurrent if the cigar fragment is M or D, not I
 			ChromCurrent += int(aln[i].RunLength)
 		}
 	}
+	err = delBed.Close()
+	exception.PanicOnErr(err)
 
 	//visualize
 	visualize := align.View(faOne.Seq, faTwo.Seq, aln)
@@ -155,13 +155,7 @@ func usage() {
 			" Uses globalAlignment, affineGap (instead of constGap) to align 2 .fasta files, each with only 1 sequence, then convert cigars to ins and del beds\n" +
 			"Usage:\n" +
 			" cigartobed target.fasta query.fasta\n" +
-			"options:\n" +
-			"	-faOut=fasta MSA output filename\n" +
-			" -insBedOut=insertion bed output filename\n" +
-			" -delBedOut=deletion bed output filename\n" +
-			" -FirstPos_Ins=first base position of the query sequence, which will be used to make the insertion bed\n" +
-			" -FirstPos_Del=first base position of the target sequence, which will be used to make the deletion bed\n" +
-			" -Chr=chromosome name\n")
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -170,7 +164,7 @@ func main() {
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	faOut := flag.String("faOut", "", "name of the MSA output file") //raven added this line
+	faOut := flag.String("faOut", "", "fasta MSA output filename")
 	insBedOut := flag.String("insBedOut", "ins.bed", "insertion bed output filename")
 	delBedOut := flag.String("delBedOut", "del.bed", "deletion bed output filename")
 	FirstPos_Ins := flag.Int("FirstPos_Ins", 1, "first base position of the query sequence, which will be used to make the insertion bed")
@@ -187,12 +181,6 @@ func main() {
 	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
 	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
 	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
-	outFa := *faOut
-	outIns_bed := *insBedOut
-	outDel_bed := *delBedOut
-	FirstPos_InsBed := *FirstPos_Ins
-	FirstPos_DelBed := *FirstPos_Del
-	Chrom := *Chr
 
-	GlobalAlignment_CigarToBed(inputFileOne, inputFileTwo, outFa, outIns_bed, outDel_bed, FirstPos_InsBed, FirstPos_DelBed, Chrom)
+	GlobalAlignment_CigarToBed(inputFileOne, inputFileTwo, *faOut, *insBedOut, *delBedOut, *FirstPos_Ins, *FirstPos_Del, *Chr)
 }
