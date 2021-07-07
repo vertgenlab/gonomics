@@ -26,6 +26,9 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 		for k := 0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
+				if currentBed.FieldsInitialized < 7 {
+					currentBed.FieldsInitialized = 7
+				}
 				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
 				outlist = append(outlist, currentBed)
 			}
