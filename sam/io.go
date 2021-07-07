@@ -174,13 +174,10 @@ func GoReadToChanRecycle(filename string, bufferSize int) (parsedRecords <-chan 
 		go readSamToChanRecycle(filename, parsedRecordsInit, recycledStructsInit, headerChan)
 	}
 
-	// spawn a temporary goroutine that will allocate bufferSize number of
-	// Sam structs and send them to the readToChan function for reading.
-	go func(chan<- *Sam) {
-		for i := 0; i < bufferSize; i++ {
-			recycledStructsInit <- new(Sam)
-		}
-	}(recycledStructsInit)
+	// allocate Sam structs and send them to the buffer
+	for i := 0; i < bufferSize; i++ {
+		recycledStructsInit <- new(Sam)
+	}
 
 	// these values are initiated as a seperate variable so that we can have
 	// both named return values and send/receive protected channels as the
@@ -254,74 +251,9 @@ func Read(filename string) ([]Sam, Header) {
 
 // processAlignmentLine parses a string representation of a sam file into a single Sam struct.
 func processAlignmentLine(line string) Sam {
-	var curr Sam
-	var err error
-	var currUint uint64
-	var currInt int64
-
-	words := strings.SplitN(line, "\t", 12)
-	if len(words) < 11 {
-		log.Fatalf("malformed sam file: was expecting at least 11 columns per line, but this line did not:\n%s\n", line)
-	}
-
-	// QName
-	curr.QName = words[0]
-
-	// Flag parsing
-	currUint, err = strconv.ParseUint(words[1], 10, 16)
-	if err != nil {
-		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[1])
-	}
-	curr.Flag = uint16(currUint)
-
-	// RName
-	curr.RName = words[2]
-
-	// Pos parsing
-	currUint, err = strconv.ParseUint(words[3], 10, 32)
-	if err != nil {
-		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[3])
-	}
-	curr.Pos = uint32(currUint)
-
-	// MapQ parsing
-	currUint, err = strconv.ParseUint(words[4], 10, 8)
-	if err != nil {
-		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[4])
-	}
-	curr.MapQ = uint8(currUint)
-
-	// Cigar parsing
-	curr.Cigar = cigar.FromString(words[5])
-
-	// RNext
-	curr.RNext = words[6]
-
-	// PNext parsing
-	currUint, err = strconv.ParseUint(words[7], 10, 32)
-	if err != nil {
-		log.Fatalf("error processing sam record: could not parse '%s' to a non-negative integer", words[7])
-	}
-	curr.PNext = uint32(currUint)
-
-	// TLen parsing
-	currInt, err = strconv.ParseInt(words[8], 10, 32)
-	if err != nil {
-		log.Fatalf("error processing sam record: could not parse '%s' to an integer", words[8])
-	}
-	curr.TLen = int32(currInt)
-
-	// Seq parsing
-	curr.Seq = dna.StringToBases(words[9])
-
-	// Qual parsing
-	curr.Qual = words[10]
-
-	// Additional Tag fields
-	if len(words) > 11 {
-		curr.Extra = words[11]
-	}
-	return curr
+	var answer Sam
+	processAlignmentLineRecycle(line, &answer)
+	return answer
 }
 
 // processAlignmentLineRecycle parses a string representation of a sam file into a single Sam struct.

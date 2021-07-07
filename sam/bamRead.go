@@ -9,7 +9,9 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"log"
+	"reflect"
 	"strings"
+	"unsafe"
 )
 
 // bam is a binary version of sam compressed as a bgzf file
@@ -221,14 +223,12 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 
 	// ******
 	// Unsafe String Conversion
-	/*
-		s.Qual = unsafeByteToString(s.Qual, qual) // unsafe version
-	*/
+	s.Qual = unsafeByteToString(s.Qual, qual) // unsafe version
 	// ******
 
 	// ******
 	// Safe String Conversion
-	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
+	//s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
 	// ******
 
 	// The sam.Extra field is not parsed here as it would require parsing tags to their value, then
@@ -240,7 +240,6 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 		lenReadName + (4 * numCigarOps) + (((lenSeq) + 1) / 2) + lenSeq)) // to get remaining bytes in alignment
 	if cap(s.unparsedExtra) < len(ex) {
 		s.unparsedExtra = make([]byte, len(ex))
-		copy(s.unparsedExtra[:len(ex)], ex)
 	}
 	s.unparsedExtra = s.unparsedExtra[:len(ex)]
 	copy(s.unparsedExtra, ex)
@@ -289,7 +288,7 @@ func trimNulOrPanic(s string) string {
 	return strings.TrimRight(s, "\u0000")
 }
 
-/* // Uncomment to use unsafe string conversion
+// Uncomment to use unsafe string conversion
 // unsafeByteToString mutates the input string s to the string formed by
 // calling `string(toCopy)`. This makes s unsafe for use between calls to
 // DecodeBam unless s is copied to a new variable.
@@ -310,4 +309,3 @@ func unsafeByteToString(s string, toCopy []byte) string {
 	copy(b, toCopy)                              // mutate s
 	return s
 }
-*/

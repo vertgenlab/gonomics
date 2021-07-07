@@ -291,3 +291,21 @@ func BenchmarkNocycleBam(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkStringToByte(b *testing.B) {
+	a := string([]byte("hello world"))
+	var bt []byte
+	for i := 0; i < b.N; i++ {
+		bt = []byte(a)
+		bt[0] = 0
+	}
+}
+
+func BenchmarkStringToByteStatic(b *testing.B) {
+	a := "hello world"
+	var bt []byte
+	for i := 0; i < b.N; i++ {
+		bt = []byte(a)
+		bt[0] = 0
+	}
+}
