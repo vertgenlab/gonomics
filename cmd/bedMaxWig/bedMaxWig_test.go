@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
 )
@@ -23,9 +23,7 @@ func TestBedMaxWig(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigTests {
 		bedMaxWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile)
-		records := bed.Read(v.outputFile)
-		expected := bed.Read(v.expectedFile)
-		if !bed.AllAreEqual(records, expected) {
+		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in bedMaxWig, the output beds is not as expected")
 		}
 		err = os.Remove(v.outputFile)
