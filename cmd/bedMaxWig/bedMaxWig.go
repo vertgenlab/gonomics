@@ -12,7 +12,7 @@ import (
 	"log"
 )
 
-func bedMaxWig(infile string, database string, chromsizeFile string, outfile string, norm *bool) {
+func bedMaxWig(infile string, database string, chromsizeFile string, outfile string, norm bool) {
 	var records []bed.Bed = bed.Read(infile)
 	var wigData []wig.Wig = wig.Read(database)
 	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
@@ -22,12 +22,12 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 	var i int
 	var wigTotal float64 = 0
 
-	if *norm == true {
+	if norm == true { //TODO: This assumes fixedStep. Either should check for fixedStep or be able to handle both cases (fixedStep and variableStep)
 		for i := 0; i < len(wigData); i++ { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
 			var wigCounterByChrom float64 = 0
 			for k := 0; k < len(wigData[i].Values); k++ { //Cycle through each value in the float64[]
 				var chromValueMultiplyByStep float64 = 0
-				chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[i] // multiply each value by the step for that chrom
+				chromValueMultiplyByStep = (float64(wigData[i].Step) * wigData[i].Values[k]) // multiply each value by the step for that chrom
 				wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
 			}
 			wigTotal = wigTotal + wigCounterByChrom
@@ -39,20 +39,19 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 		for k := 0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
-				if *norm == true {
-					maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
-					normMaxWig := maxWig / wigTotal
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%e", normMaxWig))
-				} else {
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
-					outlist = append(outlist, currentBed)
-				}
-
 				if currentBed.FieldsInitialized < 7 {
 					currentBed.FieldsInitialized = 7
 				}
-				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
-				outlist = append(outlist, currentBed)
+				if norm == true {
+					maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
+					normMaxWig := maxWig / wigTotal
+					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", float64(normMaxWig))) // %f will round to 6th decimal place
+					outlist = append(outlist, currentBed)
+				} else {
+					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
+					outlist = append(outlist, currentBed)
+
+				}
 			}
 		}
 	}
@@ -90,7 +89,7 @@ func bedRangeMax(w []float64, start int, end int) float64 {
 
 func usage() {
 	fmt.Print(
-		"bedMaxWig - Returns annotated bed with max wig score in bed entry range.\n" +
+		"bedMaxWig - Returns annotated bed with max wig score in bed entry range. Currently can only handle fixedStep, Start = 1, Step =1 wig files.\n" +
 			"Usage:\n" +
 			"bedMaxWig input.bed database.wig chrom.sizes output.bed\n" +
 			"options:\n")
@@ -115,6 +114,6 @@ func main() {
 	chromsize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	bedMaxWig(infile, database, chromsize, outfile, norm)
+	bedMaxWig(infile, database, chromsize, outfile, *norm)
 
 }
