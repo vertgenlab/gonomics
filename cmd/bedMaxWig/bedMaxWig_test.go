@@ -33,13 +33,12 @@ func TestBedMaxWig(t *testing.T) {
 	}
 }
 
-
 var bedMaxWigNormFlagTest = []struct {
-	inputBed			string
-	inputWig			string
-	inputChromSizes		string
-	outputFileNorm		string
-	expectedFileNorm	string
+	inputBed         string
+	inputWig         string
+	inputChromSizes  string
+	outputFileNorm   string
+	expectedFileNorm string
 }{
 	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutputNorm.bed", "testdata/testBMWExpectedNormFlagStep1.bed"},
 }
