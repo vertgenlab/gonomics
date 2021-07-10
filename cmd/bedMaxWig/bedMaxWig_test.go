@@ -22,11 +22,35 @@ var bedMaxWigTests = []struct {
 func TestBedMaxWig(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigTests {
-		bedMaxWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile)
+		bedMaxWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in bedMaxWig, the output beds is not as expected")
 		}
 		err = os.Remove(v.outputFile)
+		if err != nil {
+			common.ExitIfError(err)
+		}
+	}
+}
+
+var bedMaxWigNormFlagTest = []struct {
+	inputBed         string
+	inputWig         string
+	inputChromSizes  string
+	outputFileNorm   string
+	expectedFileNorm string
+}{
+	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutputNorm.bed", "testdata/testBMWExpectedNormFlagStep1.bed"},
+}
+
+func TestBedMaxWigNormFlag(t *testing.T) {
+	var err error
+	for _, v := range bedMaxWigNormFlagTest {
+		bedMaxWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFileNorm, true)
+		if !fileio.AreEqual(v.outputFileNorm, v.expectedFileNorm) {
+			t.Errorf("Error in bedMaxWig, the output bed with norm flag is not as expected")
+		}
+		err = os.Remove(v.outputFileNorm) //Remove and see what the file looks like. Change expected file to have dots.
 		if err != nil {
 			common.ExitIfError(err)
 		}
