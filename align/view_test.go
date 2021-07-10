@@ -30,11 +30,5 @@ func TestConstGap(t *testing.T) {
 		if prettyAlignment != test.aln {
 			t.Errorf("The alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
 		}
-		//raven added the below section to test ConstGap_lowMem
-		_, cigar = ConstGap_lowMem(basesOne, basesTwo, DefaultScoreMatrix, -430)
-		prettyAlignment = View(basesOne, basesTwo, cigar)
-		if prettyAlignment != test.aln {
-			t.Errorf("The ConstGap_lowMem alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
-		}
 	}
 }
