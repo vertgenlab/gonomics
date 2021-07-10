@@ -27,7 +27,7 @@ func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, []
 
 func affineTrace(mRowCurrent [][]int64, mRowPrevious [][]int64, mColumn int, trace [][][]ColType) (int64, []Cigar) {
 	route := make([]Cigar, 1)
-	lastI := mColumn - 1 //the last I
+	lastI := mColumn - 1             //the last I
 	lastJ := len(mRowCurrent[0]) - 1 //the last J
 	maxScore, k := tripleMaxTrace(mRowCurrent[0][lastJ], mRowCurrent[1][lastJ], mRowCurrent[2][lastJ])
 	for i, j, routeIdx := lastI, lastJ, 0; i > 0 || j > 0; {
