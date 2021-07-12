@@ -7,8 +7,8 @@ import (
 	"log"
 )
 
-// the data structure is a 3d slice where the first index is 0,1,2 and represents
-// the match, gap in x (first seq), and gap in y (second seq).
+// the trace data structure is a 3d slice where the first index is 0,1,2 and represents the match, gap in x (first seq), and gap in y (second seq).
+// m used to have the same data structure as trace, but has been simplified into a 2d slice, where the second index for mColumn is removed in order to recycle memory by rows
 func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, [][]int64, int, [][][]ColType) {
 	mRowCurrent := make([][]int64, 3)
 	mRowPrevious := make([][]int64, 3)
@@ -25,7 +25,7 @@ func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, []
 	return mRowCurrent, mRowPrevious, mColumn, trace
 }
 
-func affineTrace(mRowCurrent [][]int64, mRowPrevious [][]int64, mColumn int, trace [][][]ColType) (int64, []Cigar) {
+func affineTrace(mRowCurrent [][]int64, mColumn int, trace [][][]ColType) (int64, []Cigar) {
 	route := make([]Cigar, 1)
 	lastI := mColumn - 1             //the last I
 	lastJ := len(mRowCurrent[0]) - 1 //the last J
@@ -93,7 +93,7 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		}
 	}
-	maxScore, route := affineTrace(mRowCurrent, mRowPrevious, mColumn, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 
 	return maxScore, route
 }
@@ -139,7 +139,7 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		}
 	}
-	maxScore, route := affineTrace(mRowCurrent, mRowPrevious, mColumn, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 	expandCigarRunLength(route, chunkSize)
 
 	return maxScore, route
@@ -174,7 +174,7 @@ func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		}
 	}
-	maxScore, route := affineTrace(mRowCurrent, mRowPrevious, mColumn, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 
 	return maxScore, route
 }
@@ -220,7 +220,7 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		}
 	}
-	maxScore, route := affineTrace(mRowCurrent, mRowPrevious, mColumn, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 	expandCigarRunLength(route, chunkSize)
 
 	return maxScore, route
