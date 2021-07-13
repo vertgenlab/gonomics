@@ -1,0 +1,2 @@
+#Method	Filename1	Filename2	LenElements1	LenElements2	OverlapCount	DebugCheck	ExpectedOverlap	Enrichment	pValue
+exact	testdata/elements1.bed	testdata/elements1.bed	4	4	4	1.000000	0.628850	6.360813	4.694413e-04

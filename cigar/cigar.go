@@ -49,6 +49,9 @@ func NumDeletions(input []*Cigar) int {
 
 //ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
 func ToString(c []*Cigar) string {
+	if len(c) == 0 {
+		return "*"
+	}
 	var output string = ""
 	for _, v := range c {
 		if v.Op == '*' {

@@ -7,27 +7,29 @@ import (
 	"log"
 )
 
-// the data structure is a 3d slice where the first index is 0,1,2 and represents
-// the match, gap in x (first seq), and gap in y (second seq).
-func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][][]int64, [][][]ColType) {
-	m := make([][][]int64, 3)
+// the trace data structure is a 3d slice where the first index is 0,1,2 and represents the match, gap in x (first seq), and gap in y (second seq).
+// m used to have the same data structure as trace, but has been simplified into a 2d slice, where the second index for mColumn is removed in order to recycle memory by rows
+func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, [][]int64, int, [][][]ColType) {
+	mRowCurrent := make([][]int64, 3)
+	mRowPrevious := make([][]int64, 3)
+	var mColumn int = firstSeqLen + 1
 	trace := make([][][]ColType, 3)
-	for k := range m {
-		m[k] = make([][]int64, firstSeqLen+1)
+	for k := range trace { //k ranges through 3 numbers (0,1,2)
 		trace[k] = make([][]ColType, firstSeqLen+1)
-		for i := range m[0] {
-			m[k][i] = make([]int64, secondSeqLen+1)
+		mRowCurrent[k] = make([]int64, secondSeqLen+1)
+		mRowPrevious[k] = make([]int64, secondSeqLen+1)
+		for i := range trace[0] {
 			trace[k][i] = make([]ColType, secondSeqLen+1)
 		}
 	}
-	return m, trace
+	return mRowCurrent, mRowPrevious, mColumn, trace
 }
 
-func affineTrace(m [][][]int64, trace [][][]ColType) (int64, []Cigar) {
+func affineTrace(mRowCurrent [][]int64, mColumn int, trace [][][]ColType) (int64, []Cigar) {
 	route := make([]Cigar, 1)
-	lastI := len(m[0]) - 1
-	lastJ := len(m[0][0]) - 1
-	maxScore, k := tripleMaxTrace(m[0][lastI][lastJ], m[1][lastI][lastJ], m[2][lastI][lastJ])
+	lastI := mColumn - 1             //the last I
+	lastJ := len(mRowCurrent[0]) - 1 //the last J
+	maxScore, k := tripleMaxTrace(mRowCurrent[0][lastJ], mRowCurrent[1][lastJ], mRowCurrent[2][lastJ])
 	for i, j, routeIdx := lastI, lastJ, 0; i > 0 || j > 0; {
 		if route[routeIdx].RunLength == 0 {
 			route[routeIdx].RunLength = 1
@@ -64,31 +66,34 @@ func expandCigarRunLength(route []Cigar, chunkSize int64) {
 }
 
 func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
-	m, trace := initAffineScoringAndTrace(len(alpha), len(beta))
-	for i := range m[0] {
-		for j := range m[0][0] {
+	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(len(alpha), len(beta))
+	for i := 0; i < mColumn; i++ {
+		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
-				m[0][i][j] = 0
-				m[1][i][j] = gapOpen
-				m[2][i][j] = gapOpen
+				mRowCurrent[0][j] = 0
+				mRowCurrent[1][j] = gapOpen
+				mRowCurrent[2][j] = gapOpen
 			} else if i == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = gapExtend + m[1][i][j-1]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = gapExtend + mRowCurrent[1][j-1]
 				trace[1][i][j] = ColI /*new*/
-				m[2][i][j] = veryNegNum
+				mRowCurrent[2][j] = veryNegNum
 			} else if j == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = veryNegNum
-				m[2][i][j] = gapExtend + m[2][i-1][j]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = veryNegNum
+				mRowCurrent[2][j] = gapExtend + mRowPrevious[2][j]
 				trace[2][i][j] = ColD /*new*/
 			} else {
-				m[0][i][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+m[0][i-1][j-1], scores[alpha[i-1]][beta[j-1]]+m[1][i-1][j-1], scores[alpha[i-1]][beta[j-1]]+m[2][i-1][j-1])
-				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i][j-1], gapExtend+m[1][i][j-1], gapOpen+gapExtend+m[2][i][j-1])
-				m[2][i][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i-1][j], gapOpen+gapExtend+m[1][i-1][j], gapExtend+m[2][i-1][j])
+				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
+				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
 			}
 		}
+		if i < mColumn-1 {
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
+		}
 	}
-	maxScore, route := affineTrace(m, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 
 	return maxScore, route
 }
@@ -104,68 +109,73 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen
 	alphaChunks := alphaSize / chunkSize
 	betaChunks := betaSize / chunkSize
 
-	m, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
+	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
 
 	var chunkScore int64
-	for i := range m[0] {
-		for j := range m[0][0] {
+	for i := 0; i < mColumn; i++ {
+		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
-				m[0][i][j] = 0
-				m[1][i][j] = gapOpen
-				m[2][i][j] = gapOpen
+				mRowCurrent[0][j] = 0
+				mRowCurrent[1][j] = gapOpen
+				mRowCurrent[2][j] = gapOpen
 			} else if i == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = gapExtend*chunkSize + m[1][i][j-1]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = gapExtend*chunkSize + mRowCurrent[1][j-1]
 				trace[1][i][j] = ColI
-				m[2][i][j] = veryNegNum
+				mRowCurrent[2][j] = veryNegNum
 			} else if j == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = veryNegNum
-				m[2][i][j] = gapExtend*chunkSize + m[2][i-1][j]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = veryNegNum
+				mRowCurrent[2][j] = gapExtend*chunkSize + mRowPrevious[2][j]
 				trace[2][i][j] = ColD
 			} else {
 				chunkScore = ungappedRegionScore(alpha, int64(i-1)*chunkSize, beta, int64(j-1)*chunkSize, chunkSize, scores)
-				m[0][i][j], trace[0][i][j] = tripleMaxTrace(chunkScore+m[0][i-1][j-1], chunkScore+m[1][i-1][j-1], chunkScore+m[2][i-1][j-1])
-				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+m[0][i][j-1], gapExtend*chunkSize+m[1][i][j-1], gapOpen+gapExtend*chunkSize+m[2][i][j-1])
-				m[2][i][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+m[0][i-1][j], gapOpen+gapExtend*chunkSize+m[1][i-1][j], gapExtend*chunkSize+m[2][i-1][j])
+				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(chunkScore+mRowPrevious[0][j-1], chunkScore+mRowPrevious[1][j-1], chunkScore+mRowPrevious[2][j-1])
+				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+mRowCurrent[0][j-1], gapExtend*chunkSize+mRowCurrent[1][j-1], gapOpen+gapExtend*chunkSize+mRowCurrent[2][j-1])
+				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+mRowPrevious[0][j], gapOpen+gapExtend*chunkSize+mRowPrevious[1][j], gapExtend*chunkSize+mRowPrevious[2][j])
 			}
 		}
+		if i < mColumn-1 {
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
+		}
 	}
-
-	maxScore, route := affineTrace(m, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 	expandCigarRunLength(route, chunkSize)
 
 	return maxScore, route
 }
 
 func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
-	m, trace := initAffineScoringAndTrace(len(alpha[0].Seq), len(beta[0].Seq))
+	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(len(alpha[0].Seq), len(beta[0].Seq))
 
-	for i := range m[0] {
-		for j := range m[0][0] {
+	for i := 0; i < mColumn; i++ {
+		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
-				m[0][i][j] = 0
-				m[1][i][j] = gapOpen
-				m[2][i][j] = gapOpen
+				mRowCurrent[0][j] = 0
+				mRowCurrent[1][j] = gapOpen
+				mRowCurrent[2][j] = gapOpen
 			} else if i == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = gapExtend + m[1][i][j-1]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = gapExtend + mRowCurrent[1][j-1]
 				trace[1][i][j] = ColI
-				m[2][i][j] = veryNegNum
+				mRowCurrent[2][j] = veryNegNum
 			} else if j == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = veryNegNum
-				m[2][i][j] = gapExtend + m[2][i-1][j]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = veryNegNum
+				mRowCurrent[2][j] = gapExtend + mRowPrevious[2][j]
 				trace[2][i][j] = ColD
 			} else {
-				m[0][i][j], trace[0][i][j] = tripleMaxTrace(scoreColumnMatch(alpha, beta, i-1, j-1, scores)+m[0][i-1][j-1], scoreColumnMatch(alpha, beta, i-1, j-1, scores)+m[1][i-1][j-1], scoreColumnMatch(alpha, beta, i-1, j-1, scores)+m[2][i-1][j-1])
-				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i][j-1], gapExtend+m[1][i][j-1], gapOpen+gapExtend+m[2][i][j-1])
-				m[2][i][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+m[0][i-1][j], gapOpen+gapExtend+m[1][i-1][j], gapExtend+m[2][i-1][j])
+				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(scoreColumnMatch(alpha, beta, i-1, j-1, scores)+mRowPrevious[0][j-1], scoreColumnMatch(alpha, beta, i-1, j-1, scores)+mRowPrevious[1][j-1], scoreColumnMatch(alpha, beta, i-1, j-1, scores)+mRowPrevious[2][j-1])
+				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
 			}
 		}
+		if i < mColumn-1 {
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
+		}
 	}
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 
-	maxScore, route := affineTrace(m, trace)
 	return maxScore, route
 }
 
@@ -180,35 +190,37 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 	alphaChunks := alphaSize / chunkSize
 	betaChunks := betaSize / chunkSize
 
-	m, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
+	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
 
 	var chunkScore int64
-	for i := range m[0] {
-		for j := range m[0][0] {
+	for i := 0; i < mColumn; i++ {
+		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
-				m[0][i][j] = 0
-				m[1][i][j] = gapOpen
-				m[2][i][j] = gapOpen
+				mRowCurrent[0][j] = 0
+				mRowCurrent[1][j] = gapOpen
+				mRowCurrent[2][j] = gapOpen
 			} else if i == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = gapExtend*chunkSize + m[1][i][j-1]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = gapExtend*chunkSize + mRowCurrent[1][j-1]
 				trace[1][i][j] = ColI
-				m[2][i][j] = veryNegNum
+				mRowCurrent[2][j] = veryNegNum
 			} else if j == 0 {
-				m[0][i][j] = veryNegNum
-				m[1][i][j] = veryNegNum
-				m[2][i][j] = gapExtend*chunkSize + m[2][i-1][j]
+				mRowCurrent[0][j] = veryNegNum
+				mRowCurrent[1][j] = veryNegNum
+				mRowCurrent[2][j] = gapExtend*chunkSize + mRowPrevious[2][j]
 				trace[2][i][j] = ColD
 			} else {
 				chunkScore = ungappedRegionColumnScore(alpha, (i-1)*int(chunkSize), beta, (j-1)*int(chunkSize), int(chunkSize), scores)
-				m[0][i][j], trace[0][i][j] = tripleMaxTrace(chunkScore+m[0][i-1][j-1], chunkScore+m[1][i-1][j-1], chunkScore+m[2][i-1][j-1])
-				m[1][i][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+m[0][i][j-1], gapExtend*chunkSize+m[1][i][j-1], gapOpen+gapExtend*chunkSize+m[2][i][j-1])
-				m[2][i][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+m[0][i-1][j], gapOpen+gapExtend*chunkSize+m[1][i-1][j], gapExtend*chunkSize+m[2][i-1][j])
+				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(chunkScore+mRowPrevious[0][j-1], chunkScore+mRowPrevious[1][j-1], chunkScore+mRowPrevious[2][j-1])
+				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+mRowCurrent[0][j-1], gapExtend*chunkSize+mRowCurrent[1][j-1], gapOpen+gapExtend*chunkSize+mRowCurrent[2][j-1])
+				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+mRowPrevious[0][j], gapOpen+gapExtend*chunkSize+mRowPrevious[1][j], gapExtend*chunkSize+mRowPrevious[2][j])
 			}
 		}
+		if i < mColumn-1 {
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
+		}
 	}
-
-	maxScore, route := affineTrace(m, trace)
+	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
 	expandCigarRunLength(route, chunkSize)
 
 	return maxScore, route
