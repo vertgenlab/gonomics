@@ -46,7 +46,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 				if norm == true {
 					maxWig = maxWig / wigTotal
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%e", float64(maxWig))) // %e will have 6 decimals in scientific notation (eg; 1.234456e+78)
-				}else {
+				} else {
 					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", float64(maxWig))) // %f will round to 6th decimal place
 				}
 				outlist = append(outlist, currentBed)
