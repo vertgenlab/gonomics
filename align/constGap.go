@@ -6,32 +6,39 @@ import (
 )
 
 func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
-	m := make([][]int64, len(alpha)+1)
+	//make matrices for m (score, broken down into mRowCurrent,mRowPrevious and mColumn to save memory) and trace (traceback with directions)
+	mRowCurrent := make([]int64, len(beta)+1)
+	mRowPrevious := make([]int64, len(beta)+1)
+	var mColumn int = len(alpha) + 1
 	trace := make([][]ColType, len(alpha)+1)
-	for idx := range m {
-		m[idx] = make([]int64, len(beta)+1)
+	for idx := 0; idx < mColumn; idx++ {
 		trace[idx] = make([]ColType, len(beta)+1)
 	}
 
+	//fill out matrices for m and trace
 	var i, j, routeIdx int
-	for i = range m {
-		for j = range m[0] {
+	for i = 0; i < mColumn; i++ {
+		for j = range mRowCurrent {
 			if i == 0 && j == 0 {
-				m[i][j] = 0
+				mRowCurrent[j] = 0
 			} else if i == 0 {
-				m[i][j] = m[i][j-1] + gapPen
+				mRowCurrent[j] = mRowCurrent[j-1] + gapPen
 				trace[i][j] = 1
 			} else if j == 0 {
-				m[i][j] = m[i-1][j] + gapPen
+				mRowCurrent[j] = mRowPrevious[j] + gapPen
 				trace[i][j] = 2
 			} else {
-				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				mRowCurrent[j], trace[i][j] = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
 			}
+		}
+		if i < mColumn-1 {
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious //reuse mRow variables to save memory, swap slices rather than copy(mRowPrevious,mRowCurrent) for easy update, but only up until the second to last row
 		}
 	}
 
+	//write cigar
 	route := make([]Cigar, 1)
-	for i, j, routeIdx = len(trace)-1, len(trace[0])-1, 0; i > 0 || j > 0; {
+	for i, j, routeIdx = mColumn-1, len(mRowCurrent)-1, 0; i > 0 || j > 0; {
 		if route[routeIdx].RunLength == 0 {
 			route[routeIdx].RunLength = 1
 			route[routeIdx].Op = trace[i][j]
@@ -53,5 +60,5 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 		}
 	}
 	reverseCigar(route)
-	return m[len(m)-1][len(m[0])-1], route
+	return mRowCurrent[len(mRowCurrent)-1], route
 }
