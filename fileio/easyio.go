@@ -32,8 +32,13 @@ func EasyOpen(filename string) *EasyReader {
 	if strings.Contains(filename, "http") {
 		return EasyHttp(filename)
 	}
+
 	answer := EasyReader{}
-	answer.File = MustOpen(filename)
+	if filename == "stdin" {
+		answer.File = os.Stdin
+	} else {
+		answer.File = MustOpen(filename)
+	}
 	var err error
 
 	if strings.HasSuffix(filename, ".gz") {
@@ -50,7 +55,16 @@ func EasyOpen(filename string) *EasyReader {
 // EasyCreate creates a file with the input name. Panics if errors are encountered.
 func EasyCreate(filename string) *EasyWriter {
 	answer := EasyWriter{}
-	answer.File = MustCreate(filename)
+
+	switch filename {
+	case "stdout":
+		answer.File = os.Stdout
+	case "stderr":
+		answer.File = os.Stderr
+	default:
+		answer.File = MustCreate(filename)
+	}
+
 	answer.internalBuff = bufio.NewWriter(answer.File)
 
 	if strings.HasSuffix(filename, ".gz") {
