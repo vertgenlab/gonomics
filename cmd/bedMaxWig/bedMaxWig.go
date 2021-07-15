@@ -45,10 +45,10 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 				maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
 				if norm == true {
 					maxWig = maxWig / wigTotal
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%e", float64(maxWig))) // %e will have 6 decimals in scientific notation (eg; 1.234456e+78)
-				} else {
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", float64(maxWig))) // %f will round to 6th decimal place
 				}
+				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", float64(maxWig))) // %g will
+				// print %e for large exponents, %f otherwise.
+				// Precision for %g; it is the smallest number of digits necessary to identify the value uniquely.
 				outlist = append(outlist, currentBed)
 			}
 		}
