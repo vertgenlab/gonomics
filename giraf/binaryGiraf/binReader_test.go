@@ -52,7 +52,6 @@ func TestRead(t *testing.T) {
 
 	// Initialize outfile
 	outfile := fileio.EasyCreate("testdata/readtest.giraf")
-	defer outfile.Close()
 
 	// Read info until EOF
 	var curr giraf.Giraf
@@ -69,6 +68,13 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	err = outfile.Close()
+	if err != nil {
+                t.Error(err)
+        }
+	fileio.EasyRemove("testdata/readtest.giraf")	
+
 }
 
 func TestReadAndWrite(t *testing.T) {
