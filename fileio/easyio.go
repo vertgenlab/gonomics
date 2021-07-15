@@ -34,7 +34,7 @@ func EasyOpen(filename string) *EasyReader {
 	}
 
 	answer := EasyReader{}
-	if filename == "stdin" {
+	if strings.HasPrefix(filename, "stdin") {
 		answer.File = os.Stdin
 	} else {
 		answer.File = MustOpen(filename)
@@ -56,10 +56,10 @@ func EasyOpen(filename string) *EasyReader {
 func EasyCreate(filename string) *EasyWriter {
 	answer := EasyWriter{}
 
-	switch filename {
-	case "stdout":
+	switch {
+	case strings.HasPrefix(filename, "stdout"):
 		answer.File = os.Stdout
-	case "stderr":
+	case strings.HasPrefix(filename, "stderr"):
 		answer.File = os.Stderr
 	default:
 		answer.File = MustCreate(filename)
