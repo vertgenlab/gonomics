@@ -71,9 +71,9 @@ func TestRead(t *testing.T) {
 
 	err = outfile.Close()
 	if err != nil {
-                t.Error(err)
-        }
-	fileio.EasyRemove("testdata/readtest.giraf")	
+		t.Error(err)
+	}
+	fileio.EasyRemove("testdata/readtest.giraf")
 
 }
 
