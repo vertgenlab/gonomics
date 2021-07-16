@@ -38,13 +38,7 @@ func checkMagic(r io.ReadSeeker, b []byte) bool {
 	exception.PanicOnErr(err)
 
 	// check readBytes against b
-	for i := range b {
-		if readBytes[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
+	return bytes.Equal(readBytes, b)
 }
 
 // newStdinMagicReader creates a reader with an internal buffer of len(magic) that
