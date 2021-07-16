@@ -84,6 +84,10 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	// refID
 	idx, ok := bw.refMap[s.RName]
 	if !ok {
+		log.Fatalf("ERROR (WriteToBamFileHandle): Ref name '%s' "+
+			"was present in read as RName, but not in header.", s.RName)
+	}
+	if s.RName == "*" {
 		idx = -1
 	}
 	le.PutUint32(bw.u32[:4], uint32(idx))
@@ -116,12 +120,21 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.Write(bw.u32[:4])
 
 	// next ref id
-	if s.RNext != "=" {
-		idx, ok = bw.refMap[s.RNext]
-	}
-	if !ok {
+	switch s.RNext {
+	case "=": // same as RName
+		// idx does not change
+
+	case "*": // unmapped
 		idx = -1
+
+	default:
+		idx, ok = bw.refMap[s.RNext]
+		if !ok {
+			log.Fatalf("ERROR (WriteToBamFileHandle): Ref name '%s' "+
+				"was present in read as RNext, but not in header.", s.RName)
+		}
 	}
+
 	le.PutUint32(bw.u32[:4], uint32(idx))
 	bw.recordBuf.Write(bw.u32[:4])
 
@@ -224,6 +237,7 @@ func opToUint32(r rune) uint32 {
 	case 'X':
 		return 8
 	default:
+		log.Fatalf("ERROR (opToUint32): Unrecognized cigar op '%v'", r)
 		return 0 // unreachable
 	}
 }
