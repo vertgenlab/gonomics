@@ -83,13 +83,13 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 
 	// refID
 	idx, ok := bw.refMap[s.RName]
-	if !ok {
+	if s.RName == "*" {
+		idx = -1
+	} else if !ok {
 		log.Fatalf("ERROR (WriteToBamFileHandle): Ref name '%s' "+
 			"was present in read as RName, but not in header.", s.RName)
 	}
-	if s.RName == "*" {
-		idx = -1
-	}
+
 	le.PutUint32(bw.u32[:4], uint32(idx))
 	bw.recordBuf.Write(bw.u32[:4])
 
