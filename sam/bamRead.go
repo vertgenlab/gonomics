@@ -19,9 +19,9 @@ import (
 // magicBam is a 4 byte sequence at the start of a bam file
 const magicBam string = "BAM\u0001"
 
-// BamReader wraps a bgzf.Reader with a fully allocated bgzf.Block.
+// BamReader wraps a bgzf.BlockReader with a fully allocated bgzf.Block.
 type BamReader struct {
-	zr           bgzf.Reader
+	zr           *bgzf.BlockReader
 	blk          *bgzf.Block
 	intermediate bytes.Buffer
 	refs         []chromInfo.ChromInfo
@@ -79,7 +79,7 @@ func (r *BamReader) next(n int) []byte {
 // in the bam file.
 func OpenBam(filename string) (*BamReader, Header) {
 	r := new(BamReader)
-	r.zr = bgzf.NewReader(filename)
+	r.zr = bgzf.NewBlockReader(filename)
 	r.blk = bgzf.NewBlock()
 	err := r.zr.ReadBlock(r.blk)
 	if err != nil && err != io.EOF { // EOF handled downstream

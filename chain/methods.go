@@ -67,7 +67,7 @@ func (ch *ChainSlice) Pop() interface{} {
 
 //TODO: Not sure how Dan wants this setup. What is the best way to implement the write in cases where we require headers and other arguments
 /*
-func (ch *Chain) WriteToFileHandle(file io.Writer, comments *HeaderComments) {
+func (ch *Chain) WriteToFileHandle(file io.BlockWriter, comments *HeaderComments) {
 	WriteChain(file, ch, comments)
 }
 
