@@ -1,4 +1,4 @@
-// Package fileio provides wrappers of the builtin golang Reader/BlockWriter utilities for ease of use and automatic gzip handling.
+// Package fileio provides wrappers of the builtin golang Reader/Writer utilities for ease of use and automatic gzip handling.
 package fileio
 
 import (
