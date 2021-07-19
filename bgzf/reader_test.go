@@ -83,7 +83,7 @@ func TestByteReadWrite(t *testing.T) {
 	actual.Close()
 
 	// write actual bytes to bgzf writer
-	tmpFile, _ := ioutil.TempFile("","")
+	tmpFile, _ := ioutil.TempFile("", "")
 	writer := NewWriter(tmpFile)
 	writer.Write(actualBytes.Bytes())
 	err := writer.Close()
