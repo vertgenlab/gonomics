@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"github.com/vertgenlab/gonomics/exception"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -34,21 +35,45 @@ func EasyOpen(filename string) *EasyReader {
 	}
 
 	answer := EasyReader{}
+	var hasMagicGzip bool
+	var readerInput io.Reader
+
 	if strings.HasPrefix(filename, "stdin") {
+		// when reading stdin we will assume the input is gzipped
+		// if the file begins with the two magic gzip bytes 1f8d.
+		// If it does, append .gz to the filename so it is parsed
+		// as gzip in the following switch case.
 		answer.File = os.Stdin
+		readerInput, hasMagicGzip = newStdinMagicReader(magicGzip)
+		if hasMagicGzip {
+			filename += ".gz"
+		}
 	} else {
 		answer.File = MustOpen(filename)
+		hasMagicGzip = IsGzip(answer.File)
+		readerInput = answer.File
 	}
-	var err error
 
-	if strings.HasSuffix(filename, ".gz") {
-		answer.internalGzip, err = gzip.NewReader(answer.File)
+	var err error
+	switch {
+	case strings.HasSuffix(filename, ".gz") && hasMagicGzip:
+		answer.internalGzip, err = gzip.NewReader(readerInput)
 		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
-	} else {
-		answer.BuffReader = bufio.NewReader(answer.File)
-		answer.internalGzip = nil
+
+	case strings.HasSuffix(filename, ".gz"):
+		log.Fatalf("ERROR: input file '%s' has the .gz suffix, but is not a gzip file", filename)
+
+	case hasMagicGzip:
+		log.Printf("WARNING: The input file '%s' looks like it may be gzipped, "+
+			"but does not have the .gz suffix. Processing as a non-gzip file. Add the .gz "+
+			"suffix to process as a gzip file.", filename)
+		fallthrough
+
+	default:
+		answer.BuffReader = bufio.NewReader(readerInput)
 	}
+
 	return &answer
 }
 
