@@ -13,10 +13,8 @@ import (
 // Requires the graph (.gg) file used to generate the giraf for decompression
 func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 	var answer []giraf.Giraf
-	file := fileio.EasyOpen(giraffeFile)
 	graph := genomeGraph.Read(graphFile)
-	defer file.Close()
-	reader := NewBinReader(file.BuffReader)
+	reader := NewBinReader(giraffeFile)
 	var curr giraf.Giraf
 	var err error
 	for curr, err = ReadGiraf(reader, graph); err == nil; curr, err = ReadGiraf(reader, graph) {
@@ -39,7 +37,7 @@ func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 func ReadToChan(file *fileio.EasyReader, graph *genomeGraph.GenomeGraph, data chan<- giraf.Giraf, wg *sync.WaitGroup) {
 	var curr giraf.Giraf
 	var err error
-	reader := NewBinReader(file.BuffReader)
+	reader := NewBinReader(file.File.Name())
 	for curr, err = ReadGiraf(reader, graph); err == nil; curr, err = ReadGiraf(reader, graph) {
 		data <- curr
 	}

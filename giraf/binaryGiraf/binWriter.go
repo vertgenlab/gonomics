@@ -3,7 +3,7 @@ package binaryGiraf
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/biogo/hts/bgzf"
+	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -25,7 +25,7 @@ type BinWriter struct {
 // NewBinWriter creates a new BinWriter
 func NewBinWriter(file io.Writer) *BinWriter {
 	return &BinWriter{
-		bg: bgzf.NewWriter(file, 1), //TODO: Play with different levels of concurrency
+		bg: bgzf.NewWriter(file),
 	}
 }
 
