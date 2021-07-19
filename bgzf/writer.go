@@ -22,7 +22,7 @@ type BlockWriter struct {
 }
 
 type Writer struct {
-	bw *BlockWriter
+	bw  *BlockWriter
 	buf bytes.Buffer
 }
 

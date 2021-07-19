@@ -22,10 +22,10 @@ type BlockReader struct {
 }
 
 type Reader struct {
-	br 	*BlockReader
+	br           *BlockReader
 	blk          *Block
 	intermediate bytes.Buffer
-	eof bool
+	eof          bool
 }
 
 // Next returns the next n bytes from the bgzf block.
