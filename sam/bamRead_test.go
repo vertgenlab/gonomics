@@ -2,13 +2,12 @@ package sam
 
 import (
 	"fmt"
-	bgBam "github.com/biogo/hts/bam"
-	bgSam "github.com/biogo/hts/sam"
+	//bgBam "github.com/biogo/hts/bam"
+	//bgSam "github.com/biogo/hts/sam"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"testing"
 )
@@ -166,23 +165,23 @@ func BenchmarkGonomicsBamRead(b *testing.B) {
 	}
 }
 
-func BenchmarkBiogoBamRead(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		file, _ := os.Open(bigBam)
-		r, _ := bgBam.NewReader(file, 0)
-		var s *bgSam.Record
-		var err error
-		for {
-			s, err = r.Read()
-			if err == io.EOF {
-				break
-			}
-			fmt.Fprint(ioutil.Discard, s)
-		}
-		r.Close()
-		file.Close()
-	}
-}
+//func BenchmarkBiogoBamRead(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		file, _ := os.Open(bigBam)
+//		r, _ := bgBam.NewReader(file, 0)
+//		var s *bgSam.Record
+//		var err error
+//		for {
+//			s, err = r.Read()
+//			if err == io.EOF {
+//				break
+//			}
+//			fmt.Fprint(ioutil.Discard, s)
+//		}
+//		r.Close()
+//		file.Close()
+//	}
+//}
 
 func BenchmarkSamtoolsBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
