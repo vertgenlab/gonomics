@@ -14,12 +14,12 @@ import (
 
 func TestWrite(t *testing.T) {
 	b := NewBlock()
-	r := NewReader("testdata/test.bam")
+	r := NewBlockReader("testdata/test.bam")
 	tmpfile, err := os.Create("testdata/tmp.bam")
 	if err != nil {
 		log.Panic(err)
 	}
-	w := NewWriter(tmpfile)
+	w := NewBlockWriter(tmpfile)
 
 	for err = r.ReadBlock(b); err != io.EOF; err = r.ReadBlock(b) {
 		n, WriteErr := w.Write(b.Bytes())
@@ -44,7 +44,7 @@ func TestWrite(t *testing.T) {
 		log.Panic(err)
 	}
 
-	r = NewReader("testdata/tmp.bam")
+	r = NewBlockReader("testdata/tmp.bam")
 
 	if len(r.decompressor.Header.Extra) < 6 {
 		t.Error("bgzf header was not written")
@@ -112,7 +112,7 @@ func TestWrite(t *testing.T) {
 func TestSimpleCompress(t *testing.T) {
 	var a bytes.Buffer
 	var data []byte = []byte("hello\n")
-	r := NewWriter(&a)
+	r := NewBlockWriter(&a)
 	n, err := r.Write(data)
 	if err != nil {
 		fmt.Printf("input %d byte, wrote %d bytes\n", len(data), n)
@@ -138,7 +138,7 @@ func TestSimpleCompress(t *testing.T) {
 	}
 }
 
-func getHeaderOffset(r Reader) int64 {
+func getHeaderOffset(r *BlockReader) int64 {
 	extra := r.decompressor.Header.Extra
 	return int64(binary.LittleEndian.Uint16(extra[4:6]))
 }

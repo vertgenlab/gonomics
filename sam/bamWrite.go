@@ -12,10 +12,10 @@ import (
 	"strings"
 )
 
-// BamWriter wraps a bgzf.Writer and provides functions to write
+// BamWriter wraps a bgzf.BlockWriter and provides functions to write
 // a Sam struct to a binary Bam file, including WriteToBamFileHandle.
 type BamWriter struct {
-	bgzf.Writer
+	*bgzf.BlockWriter
 	buf       bytes.Buffer // for storage between records
 	recordBuf bytes.Buffer // for use within 1 record
 	refMap    map[string]int
@@ -30,7 +30,7 @@ const (
 // The magic bam bytes and header are immediately written to the BamWriter.
 func NewBamWriter(w io.Writer, h Header) *BamWriter {
 	var bw BamWriter
-	bw.Writer = bgzf.NewWriter(w)
+	bw.BlockWriter = bgzf.NewBlockWriter(w)
 	bw.buf.WriteString(magicBam)
 
 	// write len of header text
@@ -67,14 +67,14 @@ func NewBamWriter(w io.Writer, h Header) *BamWriter {
 }
 
 // Close writes any data remaining in the buffer and closes
-// the underlying bgzf.Writer.
+// the underlying bgzf.BlockWriter.
 func (bw *BamWriter) Close() error {
 	bytesRemain := bw.buf.Len()
 	n, err := bw.Write(bw.buf.Bytes())
 	if n != bytesRemain || err != nil {
 		log.Panic(err)
 	}
-	return bw.Writer.Close()
+	return bw.BlockWriter.Close()
 }
 
 // WriteToBamFileHandle writes a single Sam struct to a bam file.
