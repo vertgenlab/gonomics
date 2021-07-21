@@ -25,10 +25,10 @@ type BlockReader struct {
 // that automatically read a new block when the previous block has
 // been completely read.
 type Reader struct {
-	br 	*BlockReader
+	br           *BlockReader
 	blk          *Block
 	intermediate bytes.Buffer
-	eof bool
+	eof          bool
 }
 
 // Next returns the next n bytes from the bgzf block.
