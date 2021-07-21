@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-// BlockReader is the decompressor for BGZF files which is at it's core
+// BlockReader is the decompressor for BGZF files which is at its core
 // a gzip reader. The BGZF reader retains a *os.File to use for
 // seek functionality as well as a *bufio.Reader to implement the
 // io.ByteReader interface, required for reading gzip files as
@@ -21,6 +21,9 @@ type BlockReader struct {
 	decompressor *gzip.Reader
 }
 
+// Read wraps a BlockReader and provides the Next and Read functions
+// that automatically read a new block when the previous block has
+// been completely read.
 type Reader struct {
 	br 	*BlockReader
 	blk          *Block
