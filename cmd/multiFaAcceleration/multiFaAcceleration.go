@@ -36,6 +36,9 @@ func multiFaAcceleration(inFile string, chromName string, velOut string, accelOu
 	var solved [][]float64
 
 	for alignmentCounter := 0; reachedEnd == false; alignmentCounter++ {
+		if alignmentCounter%1000000 == 0 {
+			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
+		}
 		if records[0].Seq[alignmentCounter] != dna.Gap {
 			piS0S1, reachedEnd = countWindowDifference(records[0], records[1], alignmentCounter, windowSize)
 			piS0S2, _ = countWindowDifference(records[0], records[2], alignmentCounter, windowSize)
