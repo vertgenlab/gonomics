@@ -22,13 +22,12 @@ func multiFaAcceleration(inFile string, chromName string, velOut string, accelOu
 		log.Fatalf("Error. All records must be of the same sequence length.")
 	}
 
-
 	velWig := wig.Wig{StepType: "fixedStep", Chrom: chromName, Start: 1, Step: 1, Values: make([]float64, len(records[0].Seq))}
 	accelWig := wig.Wig{StepType: "fixedStep", Chrom: chromName, Start: 1, Step: 1, Values: make([]float64, len(records[0].Seq))}
 	constraintWig := wig.Wig{StepType: "fixedStep", Chrom: chromName, Start: 1, Step: 1, Values: make([]float64, len(records[0].Seq))}
 
 	//set up the system of equations as a blank matrix, with pairwise differences set by default to -1.
-	var mat [][]float64 = [][]float64{{1, 1, 0, 0, 0, -1},{1, 0, 1, 1, 0, -1},{0, 1, 1, 1, 0, -1},{1, 0, 1, 0, 1, -1},{0, 1, 1, 0, 1, -1},{0, 0, 0, 1, 1, -1}}
+	var mat [][]float64 = [][]float64{{1, 1, 0, 0, 0, -1}, {1, 0, 1, 1, 0, -1}, {0, 1, 1, 1, 0, -1}, {1, 0, 1, 0, 1, -1}, {0, 1, 1, 0, 1, -1}, {0, 0, 0, 1, 1, -1}}
 
 	var piS0S1, piS0S2, piS1S2, piS0S3, piS1S3, piS2S3 int
 	var referenceCounter int = 0
@@ -57,9 +56,9 @@ func multiFaAcceleration(inFile string, chromName string, velOut string, accelOu
 			b4 = solved[3][5]
 			b5 = solved[4][5]
 			if !reachedEnd {
-				velWig.Values[referenceCounter+(windowSize / 2)] = b1
-				accelWig.Values[referenceCounter+(windowSize / 2)] = b2 - b1
-				constraintWig.Values[referenceCounter+(windowSize / 2)] = 1.0 / (b2 + b3 + b4 + b5)
+				velWig.Values[referenceCounter+(windowSize/2)] = b1
+				accelWig.Values[referenceCounter+(windowSize/2)] = b2 - b1
+				constraintWig.Values[referenceCounter+(windowSize/2)] = 1.0 / (b2 + b3 + b4 + b5)
 				referenceCounter++
 			}
 		}
@@ -69,7 +68,6 @@ func multiFaAcceleration(inFile string, chromName string, velOut string, accelOu
 	wig.Write(accelOut, []wig.Wig{accelWig})
 	wig.Write(constraintOut, []wig.Wig{constraintWig})
 }
-
 
 func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) (int, bool) {
 	diff := 0
