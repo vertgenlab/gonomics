@@ -139,8 +139,8 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	inFile := flag.Arg(0)
-	chromName := flag.Arg(1)
+	chromName := flag.Arg(0)
+	inFile := flag.Arg(1)
 	velOut := flag.Arg(2)
 	accelOut := flag.Arg(3)
 	constraintOut := flag.Arg(4)
