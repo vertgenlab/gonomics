@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func multiFaAcceleration(inFile string, chromName string, velOut string, accelOut string, constraintOut string, windowSize int) {
+func multiFaAcceleration(inFile string, chromName string, velOut string, accelOut string, constraintOut string, windowSize int, verbose bool) {
 	records := fasta.Read(inFile)
 
 	//a couple of safety checks
@@ -36,10 +36,10 @@ func multiFaAcceleration(inFile string, chromName string, velOut string, accelOu
 	var solved [][]float64
 
 	for alignmentCounter := 0; reachedEnd == false; alignmentCounter++ {
-		if alignmentCounter%1000000 == 0 {
+		if alignmentCounter%1000000 == 0 && verbose {
 			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}
-		if records[0].Seq[alignmentCounter] != dna.Gap {
+		if records[0].Seq[alignmentCounter] != dna.Gap && verbose {
 			piS0S1, reachedEnd = countWindowDifference(records[0], records[1], alignmentCounter, windowSize)
 			piS0S2, _ = countWindowDifference(records[0], records[2], alignmentCounter, windowSize)
 			piS1S2, _ = countWindowDifference(records[1], records[2], alignmentCounter, windowSize)
@@ -130,6 +130,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 5
 	var windowSize *int = flag.Int("windowSize", 500, "Set the size of the sliding window.")
+	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -146,5 +147,5 @@ func main() {
 	accelOut := flag.Arg(3)
 	constraintOut := flag.Arg(4)
 
-	multiFaAcceleration(inFile, chromName, velOut, accelOut, constraintOut, *windowSize)
+	multiFaAcceleration(inFile, chromName, velOut, accelOut, constraintOut, *windowSize, *verbose)
 }
