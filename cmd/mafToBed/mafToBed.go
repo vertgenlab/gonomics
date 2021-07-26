@@ -44,7 +44,7 @@ func mafToBed(mafFile string, outBed string, reference string) {
 
 func usage() {
 	fmt.Print(
-		"mafToBed - convert a maf alignment into a bed, where the bed score is the alignment score\n" +
+		"mafToBed - convert a maf alignment into a bed, where the bed score is the alignment score. The Bed Name field will include a semicolon delimited list of references found in that maf block.\n" +
 			"Usage:\n" +
 			" mafToBed mafFile outBed referenceSpeciesName\n" +
 			"options:\n")
