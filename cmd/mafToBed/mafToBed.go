@@ -13,17 +13,31 @@ import (
 func mafToBed(mafFile string, outBed string, reference string) {
 	mafRecords := maf.Read(mafFile)
 	var bedList []bed.Bed
+	var speciesString string
+	var current bed.Bed
+	var foundReference bool = false
 
 	for i := range mafRecords {
+		speciesString = ""
 		for k := range mafRecords[i].Species {
 			assembly, chrom := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)
+			if speciesString == "" {
+				speciesString += assembly
+			} else {
+				speciesString += ";" + assembly
+			}
 			if assembly == reference {
+				foundReference = true
 				if mafRecords[i].Species[k].SLine != nil {
-					current := bed.Bed{Chrom: chrom, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "blank", Score: int(mafRecords[i].Score)}
-					bedList = append(bedList, current)
+					current = bed.Bed{Chrom: chrom, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "blank", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 				}
 			}
 		}
+		if foundReference {
+			current.Name = speciesString
+			bedList = append(bedList, current)
+		}
+		foundReference = false
 	}
 	bed.Write(outBed, bedList)
 }
