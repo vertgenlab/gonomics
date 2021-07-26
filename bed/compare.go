@@ -43,7 +43,7 @@ func Adjacent(alpha Bed, beta Bed) bool {
 	if alpha.Chrom != beta.Chrom {
 		return false
 	}
-	if alpha.ChromEnd == beta.ChromStart || alpha.ChromStart == beta.ChromEnd {//adjacency for these quantities is equality as bed coordinates are half-open (contains start, does not contain end).
+	if alpha.ChromEnd == beta.ChromStart || alpha.ChromStart == beta.ChromEnd { //adjacency for these quantities is equality as bed coordinates are half-open (contains start, does not contain end).
 		return true
 	}
 	return false

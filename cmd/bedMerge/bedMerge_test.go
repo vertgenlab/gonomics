@@ -8,8 +8,8 @@ import (
 )
 
 var BedMergeTests = []struct {
-	InFile       string
-	ExpectedFile string
+	InFile        string
+	ExpectedFile  string
 	MergeAdjacent bool
 }{
 	{"testdata/test.bed", "testdata/test.merged.bed", false},
