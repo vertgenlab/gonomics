@@ -12,8 +12,8 @@ import (
 	"log"
 )
 
-func bedToWig(method string, inFile string, reference string, outFile string, missing float64) {
-	ref := chromInfo.ReadToMap(reference)
+func bedToWig(method string, inFile string, refFile string, outFile string, missing float64) {
+	ref := chromInfo.ReadToMap(refFile)
 	var outWig []wig.Wig
 	if method == "Score" {
 		outWig = convert.BedScoreToWig(inFile, ref)
@@ -33,6 +33,10 @@ func usage() {
 		"bedScoreToWig - Converts bed score to wig\n" +
 			"Usage:\n" +
 			"bedScoreToWig method input.bed reference.chrom.sizes output.wig\n" +
+			"Method must be one of the following:\n" +
+			"Score: Use the bed score column to set the wig value at the bed entry midpoint.\n" +
+			"Reads: Use the bed region count to set the wig values across the entire range of the bed entry.\n" +
+			"Name: Use the bed name column to set the wig value at the bed entry midpoint.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
