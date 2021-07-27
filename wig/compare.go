@@ -1,8 +1,8 @@
 package wig
 
 import (
-	"strings"
 	"sort"
+	"strings"
 )
 
 //isEqual returns true if two Wig data structures contain the exact same data and returns false otherwise.
@@ -65,5 +65,5 @@ func Compare(alpha Wig, beta Wig) int {
 
 //SortByCoord sorts in place a slice of Wig structs by their genomic position.
 func SortByCoord(w []Wig) {
-	sort.Slice(w, func(i, j int) bool { return Compare(w[i], w[j]) == -1})
+	sort.Slice(w, func(i, j int) bool { return Compare(w[i], w[j]) == -1 })
 }
