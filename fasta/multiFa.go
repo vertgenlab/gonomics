@@ -252,5 +252,3 @@ func PairwiseMutationDistanceInRange(seq1 Fasta, seq2 Fasta, alnStart int, alnEn
 
 	return diff
 }
-
-
