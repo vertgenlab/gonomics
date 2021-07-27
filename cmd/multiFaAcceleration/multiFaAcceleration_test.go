@@ -20,7 +20,21 @@ var multiFaAccelerationTests = []struct {
 	VelExpected           string
 	AccelExpected         string
 	InitialVelExpected    string
-}{}
+}{
+	{"testdata/test.fa",
+		"chr1",
+		"testdata/test.vel.bed",
+		"testdata/test.accel.bed",
+		"testdata/test.initialVel.bed",
+		"",
+		0.5,
+		50,
+		false,
+		"testdata/test.vel.expected.bed",
+		"testdata/test.accel.expected.bed",
+		"testdata/test.initialVel.expected.bed",
+	},
+}
 
 func TestMultiFaAcceleration(t *testing.T) {
 	var err error

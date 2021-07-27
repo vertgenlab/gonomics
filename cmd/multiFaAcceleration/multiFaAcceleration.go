@@ -179,7 +179,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 5
-	var searchSpaceBed *string = flag.String("searchSpaceBed", "", "Limits the generation of data to regions contained within these regions.")
+	var searchSpaceBed *string = flag.String("searchSpaceBed", "", "Limits the generation of data to windows contained within these regions.")
 	var searchSpaceProportion *float64 = flag.Float64("searchSpaceProportion", 0.5, "Proportion of window that must overlap search space in order to be evaluated.")
 	var windowSize *int = flag.Int("windowSize", 500, "Set the size of the sliding window.")
 	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
