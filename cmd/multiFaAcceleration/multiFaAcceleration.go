@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -66,7 +67,7 @@ func multiFaAcceleration(s Settings) {
 	var reachedEnd bool = false
 	var b1, b2 float64
 	var solved [][]float64
-	var currCount int
+	var currCount, alnEnd int
 	var pass bool
 
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
@@ -76,12 +77,12 @@ func multiFaAcceleration(s Settings) {
 		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)
 		if records[0].Seq[alignmentCounter] != dna.Gap {
 			if pass {
-				piS0S1, reachedEnd = countWindowDifference(records[0], records[1], alignmentCounter, s.WindowSize)
-				piS0S2, _ = countWindowDifference(records[0], records[2], alignmentCounter, s.WindowSize)
-				piS1S2, _ = countWindowDifference(records[1], records[2], alignmentCounter, s.WindowSize)
-				piS0S3, _ = countWindowDifference(records[0], records[3], alignmentCounter, s.WindowSize)
-				piS1S3, _ = countWindowDifference(records[1], records[3], alignmentCounter, s.WindowSize)
-				piS2S3, _ = countWindowDifference(records[2], records[3], alignmentCounter, s.WindowSize)
+				piS0S1, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
+				piS0S2 = fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd)
+				piS1S2 = fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd)
+				piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
+				piS1S3 = fasta.PairwiseMutationDistanceInRange(records[1], records[3], alignmentCounter, alnEnd)
+				piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
 				mat[0][5] = float64(piS0S1)
 				mat[1][5] = float64(piS0S2)
 				mat[2][5] = float64(piS1S2)
@@ -100,9 +101,14 @@ func multiFaAcceleration(s Settings) {
 			referenceCounter++
 		}
 	}
-	velBed.Close()
-	accelBed.Close()
-	initialVelBed.Close()
+
+	var err error
+	err = velBed.Close()
+	exception.PanicOnErr(err)
+	err = accelBed.Close()
+	exception.PanicOnErr(err)
+	err = initialVelBed.Close()
+	exception.PanicOnErr(err)
 }
 
 //bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
@@ -124,50 +130,6 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 		}
 	}
 	return currCount, currCount >= threshold
-}
-
-func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) (int, bool) {
-	diff := 0
-	baseCount := 0
-	var seq1Indel bool = false
-	var seq2Indel bool = false
-	var reachedEnd bool = false
-	var i int = 0
-
-	for i = start; baseCount < windowSize && i < len(seq1.Seq); i++ {
-		if seq1.Seq[i] == seq2.Seq[i] {
-			if seq1.Seq[i] != dna.Gap {
-				seq1Indel = false
-				seq2Indel = false
-				baseCount++
-			}
-		} else if seq1.Seq[i] == dna.Gap {
-			seq2Indel = false
-			if !seq1Indel {
-				seq1Indel = true
-				diff++
-			}
-		} else if seq2.Seq[i] == dna.Gap {
-			baseCount++
-			seq1Indel = false
-			if !seq2Indel {
-				seq2Indel = true
-				diff++
-			}
-		} else if seq1.Seq[i] != seq2.Seq[i] {
-			seq1Indel = false
-			seq2Indel = false
-			baseCount++
-			diff++
-		} else {
-			log.Fatalf("Something went horribly wrong.")
-		}
-	}
-
-	if baseCount != windowSize {
-		reachedEnd = true
-	}
-	return diff, reachedEnd
 }
 
 func usage() {
