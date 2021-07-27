@@ -25,6 +25,7 @@ func bedToWig(method string, inFile string, refFile string, outFile string, miss
 	} else {
 		log.Fatalf("Unrecognized method.")
 	}
+	wig.SortByCoord(outWig)
 	wig.Write(outFile, outWig)
 }
 

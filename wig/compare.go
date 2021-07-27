@@ -2,6 +2,7 @@ package wig
 
 import (
 	"strings"
+	"sort"
 )
 
 //isEqual returns true if two Wig data structures contain the exact same data and returns false otherwise.
@@ -39,4 +40,30 @@ func AllEqual(alpha []Wig, beta []Wig) bool {
 		}
 	}
 	return true
+}
+
+//Compare returns zero for equal wigs and otherwise returns the ordering of the two wig entries. Used for SortByCoord.
+func Compare(alpha Wig, beta Wig) int {
+	chromComp := strings.Compare(alpha.Chrom, beta.Chrom)
+	if chromComp != 0 {
+		return chromComp
+	}
+	if alpha.Start < beta.Start {
+		return -1
+	}
+	if alpha.Start > beta.Start {
+		return 1
+	}
+	if len(alpha.Values) < len(beta.Values) {
+		return -1
+	}
+	if len(alpha.Values) > len(beta.Values) {
+		return 1
+	}
+	return 0
+}
+
+//SortByCoord sorts in place a slice of Wig structs by their genomic position.
+func SortByCoord(w []Wig) {
+	sort.Slice(w, func(i, j int) bool { return Compare(w[i], w[j]) == -1})
 }
