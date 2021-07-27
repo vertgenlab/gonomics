@@ -34,6 +34,19 @@ var multiFaAccelerationTests = []struct {
 		"testdata/test.accel.expected.bed",
 		"testdata/test.initialVel.expected.bed",
 	},
+	{"testdata/test.fa",
+		"chr1",
+		"testdata/test.vel.bed",
+		"testdata/test.accel.bed",
+		"testdata/test.initialVel.bed",
+		"testdata/test.searchspace.bed",
+		0.5,
+		50,
+		false,
+		"testdata/test.vel.searchspace.expected.bed",
+		"testdata/test.accel.searchspace.expected.bed",
+		"testdata/test.initialVel.searchspace.expected.bed",
+	},
 }
 
 func TestMultiFaAcceleration(t *testing.T) {

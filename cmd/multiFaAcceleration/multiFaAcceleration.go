@@ -43,9 +43,10 @@ func multiFaAcceleration(s Settings) {
 		log.Fatalf("Error. All records must be of the same sequence length.")
 	}
 
+	referenceLength = fasta.AlnPosToRefPos(records[0], len(records[0].Seq)-1)
+
 	if s.SearchSpaceBed != "" {
 		searchSpace = bed.Read(s.SearchSpaceBed)
-		referenceLength = fasta.AlnPosToRefPos(records[0], len(records[0].Seq)-1)
 		bitArray = make([]byte, referenceLength)
 		for i = range searchSpace {
 			if searchSpace[i].Chrom == s.ChromName {
@@ -66,33 +67,37 @@ func multiFaAcceleration(s Settings) {
 	var b1, b2 float64
 	var solved [][]float64
 	var currCount int
+	var pass bool
 
-	for alignmentCounter := 0; reachedEnd == false; alignmentCounter++ {
+	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
 			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}
-		if records[0].Seq[alignmentCounter] != dna.Gap && thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter) {
-			piS0S1, reachedEnd = countWindowDifference(records[0], records[1], alignmentCounter, s.WindowSize)
-			piS0S2, _ = countWindowDifference(records[0], records[2], alignmentCounter, s.WindowSize)
-			piS1S2, _ = countWindowDifference(records[1], records[2], alignmentCounter, s.WindowSize)
-			piS0S3, _ = countWindowDifference(records[0], records[3], alignmentCounter, s.WindowSize)
-			piS1S3, _ = countWindowDifference(records[1], records[3], alignmentCounter, s.WindowSize)
-			piS2S3, _ = countWindowDifference(records[2], records[3], alignmentCounter, s.WindowSize)
-			mat[0][5] = float64(piS0S1)
-			mat[1][5] = float64(piS0S2)
-			mat[2][5] = float64(piS1S2)
-			mat[3][5] = float64(piS0S3)
-			mat[4][5] = float64(piS1S3)
-			mat[5][5] = float64(piS2S3)
-			solved = numbers.Rref(mat)
-			b1 = solved[0][5]
-			b2 = solved[1][5]
-			if !reachedEnd {
-				bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1), FieldsInitialized: 4})
-				bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2-b1), FieldsInitialized: 4})
-				bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2), FieldsInitialized: 4})
-				referenceCounter++
+		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)
+		if records[0].Seq[alignmentCounter] != dna.Gap {
+			if pass {
+				piS0S1, reachedEnd = countWindowDifference(records[0], records[1], alignmentCounter, s.WindowSize)
+				piS0S2, _ = countWindowDifference(records[0], records[2], alignmentCounter, s.WindowSize)
+				piS1S2, _ = countWindowDifference(records[1], records[2], alignmentCounter, s.WindowSize)
+				piS0S3, _ = countWindowDifference(records[0], records[3], alignmentCounter, s.WindowSize)
+				piS1S3, _ = countWindowDifference(records[1], records[3], alignmentCounter, s.WindowSize)
+				piS2S3, _ = countWindowDifference(records[2], records[3], alignmentCounter, s.WindowSize)
+				mat[0][5] = float64(piS0S1)
+				mat[1][5] = float64(piS0S2)
+				mat[2][5] = float64(piS1S2)
+				mat[3][5] = float64(piS0S3)
+				mat[4][5] = float64(piS1S3)
+				mat[5][5] = float64(piS2S3)
+				solved = numbers.Rref(mat)
+				b1 = solved[0][5]
+				b2 = solved[1][5]
+				if !reachedEnd {
+					bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1), FieldsInitialized: 4})
+					bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2-b1), FieldsInitialized: 4})
+					bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2), FieldsInitialized: 4})
+				}
 			}
+			referenceCounter++
 		}
 	}
 	velBed.Close()
@@ -101,9 +106,9 @@ func multiFaAcceleration(s Settings) {
 }
 
 //bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
-func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []byte, referenceCounter int) bool {
+func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []byte, referenceCounter int) (int, bool) {
 	if s.SearchSpaceBed == "" { //no search space file, no need to look further
-		return true
+		return 0, true
 	}
 	if referenceCounter == 0 {
 		currCount = 0
@@ -111,15 +116,14 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 			currCount += int(bitArray[i])
 		}
 	} else {
-		if bitArray[referenceCounter-1] < 1 {
+		if bitArray[referenceCounter-1] == 1 {
 			currCount--
 		}
-		if bitArray[referenceCounter+s.WindowSize] > 0 {
+		if bitArray[referenceCounter+s.WindowSize-1] > 0 {
 			currCount++
 		}
 	}
-
-	return currCount >= threshold
+	return currCount, currCount >= threshold
 }
 
 func countWindowDifference(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) (int, bool) {
