@@ -78,6 +78,49 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
+//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted nameof an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
+func BedNameToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64) []wig.Wig {
+	wigSlice := make([]wig.Wig, len(reference))
+	var line string
+	var chromIndex int
+	var midpoint int
+	var startNum, endNum int
+	var x int
+	var i int = 0
+	var doneReading bool = false
+	var current *bed.Bed
+	var currentWig wig.Wig
+	//generate Wig skeleton from reference
+	for _, v := range reference {
+		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
+		currentWig.Values = make([]float64, v.Size)
+		for x = 0; x < v.Size; x++ {
+			currentWig.Values[x] = Missing
+		}
+		wigSlice[i] = currentWig
+		i++
+	}
+	//loop through bed line at a time
+	file := fileio.EasyOpen(inFile)
+	defer file.Close()
+	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
+		words := strings.Split(line, "\t")
+		startNum = common.StringToInt(words[1])
+		endNum = common.StringToInt(words[2])
+		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
+		if len(words) >= 4 {
+			current.Name = words[3]
+		}
+		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
+		midpoint = bedMidpoint(current)
+		if wigSlice[chromIndex].Values[midpoint] != Missing {
+			log.Fatalf("Multiple scores for one position.")
+		}
+		wigSlice[chromIndex].Values[midpoint] = common.StringToFloat64(current.Name)
+	}
+	return wigSlice
+}
+
 //BedScoreToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is equal to the score of an overlapping bed entry at the bed entry midpoint, and zero if no bed regions overlap.
 func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
