@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
+	"testing"
 )
 
 var multiFaAccelerationTests = []struct {
@@ -17,25 +17,24 @@ var multiFaAccelerationTests = []struct {
 	SearchSpaceProportion float64
 	WindowSize            int
 	Verbose               bool
-	VelExpected string
-	AccelExpected string
-	InitialVelExpected string
-}{
-}
+	VelExpected           string
+	AccelExpected         string
+	InitialVelExpected    string
+}{}
 
 func TestMultiFaAcceleration(t *testing.T) {
 	var err error
 	for _, v := range multiFaAccelerationTests {
 		s := Settings{
-			InFile: v.InFile,
-			ChromName: v.ChromName,
-			VelOut: v.VelOut,
-			AccelOut: v.AccelOut,
-			InitialVelOut: v.InitialVelOut,
-			SearchSpaceBed: v.SearchSpaceBed,
+			InFile:                v.InFile,
+			ChromName:             v.ChromName,
+			VelOut:                v.VelOut,
+			AccelOut:              v.AccelOut,
+			InitialVelOut:         v.InitialVelOut,
+			SearchSpaceBed:        v.SearchSpaceBed,
 			SearchSpaceProportion: v.SearchSpaceProportion,
-			WindowSize: v.WindowSize,
-			Verbose: v.Verbose,
+			WindowSize:            v.WindowSize,
+			Verbose:               v.Verbose,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {

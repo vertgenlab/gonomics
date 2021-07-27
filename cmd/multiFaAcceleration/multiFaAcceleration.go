@@ -5,24 +5,24 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
 type Settings struct {
-	InFile string
-	ChromName string
-	VelOut string
-	AccelOut string
-	InitialVelOut string
-	SearchSpaceBed string
+	InFile                string
+	ChromName             string
+	VelOut                string
+	AccelOut              string
+	InitialVelOut         string
+	SearchSpaceBed        string
 	SearchSpaceProportion float64
-	WindowSize int
-	Verbose bool
+	WindowSize            int
+	Verbose               bool
 }
 
 func multiFaAcceleration(s Settings) {
@@ -88,9 +88,9 @@ func multiFaAcceleration(s Settings) {
 			b1 = solved[0][5]
 			b2 = solved[1][5]
 			if !reachedEnd {
-				bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter+s.WindowSize, Name: fmt.Sprintf("%e", b1), FieldsInitialized: 4})
-				bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter+s.WindowSize, Name: fmt.Sprintf("%e", b2-b1), FieldsInitialized: 4})
-				bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter+s.WindowSize, Name: fmt.Sprintf("%e", b2), FieldsInitialized: 4})
+				bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1), FieldsInitialized: 4})
+				bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2-b1), FieldsInitialized: 4})
+				bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2), FieldsInitialized: 4})
 				referenceCounter++
 			}
 		}
@@ -102,7 +102,7 @@ func multiFaAcceleration(s Settings) {
 
 //bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
 func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []byte, referenceCounter int) bool {
-	if s.SearchSpaceBed == "" {//no search space file, no need to look further
+	if s.SearchSpaceBed == "" { //no search space file, no need to look further
 		return true
 	}
 	if referenceCounter == 0 {
@@ -200,15 +200,15 @@ func main() {
 	initialVOut := flag.Arg(4)
 
 	s := Settings{
-		InFile: inFile,
-		ChromName: chromName,
-		VelOut: velOut,
-		AccelOut: accelOut,
-		InitialVelOut: initialVOut,
-		SearchSpaceBed: *searchSpaceBed,
+		InFile:                inFile,
+		ChromName:             chromName,
+		VelOut:                velOut,
+		AccelOut:              accelOut,
+		InitialVelOut:         initialVOut,
+		SearchSpaceBed:        *searchSpaceBed,
 		SearchSpaceProportion: *searchSpaceProportion,
-		WindowSize: *windowSize,
-		Verbose: *verbose,
+		WindowSize:            *windowSize,
+		Verbose:               *verbose,
 	}
 
 	multiFaAcceleration(s)
