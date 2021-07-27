@@ -62,4 +62,3 @@ func main() {
 
 	bedToWig(method, inFile, reference, outFile, *missing)
 }
-
