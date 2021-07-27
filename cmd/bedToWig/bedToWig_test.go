@@ -1,19 +1,19 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var bedToWigTests = []struct {
-	inFile string
-	refFile string
-	outFile string
+	inFile       string
+	refFile      string
+	outFile      string
 	expectedFile string
-	method string
-	missing float64
+	method       string
+	missing      float64
 }{
 	{"testdata/test.bed", "testdata/ref.chrom.sizes", "testdata/test.Score.wig", "testdata/score.Expected.wig", "Score", 0},
 	{"testdata/test.bed", "testdata/ref.chrom.sizes", "testdata/test.Reads.wig", "testdata/reads.Expected.wig", "Reads", 0},
