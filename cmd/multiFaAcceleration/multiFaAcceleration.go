@@ -94,7 +94,7 @@ func multiFaAcceleration(s Settings) {
 				b2 = solved[1][5]
 				if !reachedEnd {
 					bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1), FieldsInitialized: 4})
-					bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2-b1), FieldsInitialized: 4})
+					bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1-b2), FieldsInitialized: 4})
 					bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2), FieldsInitialized: 4})
 				}
 			}
