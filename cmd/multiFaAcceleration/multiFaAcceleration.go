@@ -10,7 +10,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -26,11 +25,15 @@ type Settings struct {
 	Verbose               bool
 }
 
+type BranchCache struct {
+	ChromStart int
+	ChromEnd int
+	b1 float64
+	b3 float64
+}
+
 func multiFaAcceleration(s Settings) {
 	records := fasta.Read(s.InFile)
-	velBed := fileio.EasyCreate(s.VelOut)
-	accelBed := fileio.EasyCreate(s.AccelOut)
-	initialVelBed := fileio.EasyCreate(s.InitialVelOut)
 	var searchSpace []bed.Bed
 	var referenceLength, i, j, threshold int
 	var bitArray []byte
@@ -39,7 +42,6 @@ func multiFaAcceleration(s Settings) {
 	if len(records) != 4 {
 		log.Fatalf("multiFaAcceleration accepts a multiFa file with 4 records, found %v.", len(records))
 	}
-
 	if len(records[1].Seq) != len(records[0].Seq) || len(records[2].Seq) != len(records[0].Seq) || len(records[3].Seq) != len(records[0].Seq) {
 		log.Fatalf("Error. All records must be of the same sequence length.")
 	}
@@ -59,16 +61,16 @@ func multiFaAcceleration(s Settings) {
 		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize))
 	}
 
-	//set up the system of equations as a blank matrix, with pairwise differences set by default to -1.
-	var mat [][]float64 = [][]float64{{1, 1, 0, 0, 0, -1}, {1, 0, 1, 1, 0, -1}, {0, 1, 1, 1, 0, -1}, {1, 0, 1, 0, 1, -1}, {0, 1, 1, 0, 1, -1}, {0, 0, 0, 1, 1, -1}}
-
-	var piS0S1, piS0S2, piS1S2, piS0S3, piS1S3, piS2S3 int
+	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3 int
 	var referenceCounter int = 0
 	var reachedEnd bool = false
-	var b1, b2 float64
-	var solved [][]float64
+	var b1, b3 float64
 	var currCount, alnEnd int
 	var pass bool
+
+	//variables for normalization
+	var velSum, initialSum float64 = 0, 0
+	var branchCacheSlice = make([]BranchCache, 0)
 
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
@@ -81,28 +83,38 @@ func multiFaAcceleration(s Settings) {
 				piS0S2 = fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd)
 				piS1S2 = fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd)
 				piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
-				piS1S3 = fasta.PairwiseMutationDistanceInRange(records[1], records[3], alignmentCounter, alnEnd)
 				piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
-				mat[0][5] = float64(piS0S1)
-				mat[1][5] = float64(piS0S2)
-				mat[2][5] = float64(piS1S2)
-				mat[3][5] = float64(piS0S3)
-				mat[4][5] = float64(piS1S3)
-				mat[5][5] = float64(piS2S3)
-				solved = numbers.Rref(mat)
-				b1 = solved[0][5]
-				b2 = solved[1][5]
+				b1 = float64(piS0S1 + piS0S2 - piS1S2) / 2.0
+				b3 = (float64(piS1S2 + piS0S3 + piS2S3 - piS0S1) / 2.0) - float64(piS2S3)
+
 				if !reachedEnd {
-					bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1), FieldsInitialized: 4})
-					bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b1-b2), FieldsInitialized: 4})
-					bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: referenceCounter, ChromEnd: referenceCounter + s.WindowSize, Name: fmt.Sprintf("%e", b2), FieldsInitialized: 4})
+					velSum += b1
+					initialSum += b3
+					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, b1, b3})
 				}
 			}
 			referenceCounter++
 		}
 	}
 
+	var averageVel, averageInitialVel, b1Normal, b3Normal float64
+
+	averageVel = velSum / float64(len(branchCacheSlice))
+	averageInitialVel = initialSum / float64(len(branchCacheSlice))
+
 	var err error
+	velBed := fileio.EasyCreate(s.VelOut)
+	accelBed := fileio.EasyCreate(s.AccelOut)
+	initialVelBed := fileio.EasyCreate(s.InitialVelOut)
+
+	for i := range branchCacheSlice {
+		b1Normal = branchCacheSlice[i].b1 / averageVel
+		b3Normal = branchCacheSlice[i].b3 / averageInitialVel
+		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
+		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
+		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal - b3Normal), FieldsInitialized: 4})
+	}
+
 	err = velBed.Close()
 	exception.PanicOnErr(err)
 	err = accelBed.Close()
