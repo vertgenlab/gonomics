@@ -27,9 +27,9 @@ type Settings struct {
 
 type BranchCache struct {
 	ChromStart int
-	ChromEnd int
-	b1 float64
-	b3 float64
+	ChromEnd   int
+	b1         float64
+	b3         float64
 }
 
 func multiFaAcceleration(s Settings) {
@@ -84,8 +84,8 @@ func multiFaAcceleration(s Settings) {
 				piS1S2 = fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd)
 				piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
 				piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
-				b1 = float64(piS0S1 + piS0S2 - piS1S2) / 2.0
-				b3 = (float64(piS1S2 + piS0S3 + piS2S3 - piS0S1) / 2.0) - float64(piS2S3)
+				b1 = float64(piS0S1+piS0S2-piS1S2) / 2.0
+				b3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
 
 				if !reachedEnd {
 					velSum += b1
@@ -112,7 +112,7 @@ func multiFaAcceleration(s Settings) {
 		b3Normal = branchCacheSlice[i].b3 / averageInitialVel
 		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
 		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
-		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal - b3Normal), FieldsInitialized: 4})
+		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal-b3Normal), FieldsInitialized: 4})
 	}
 
 	err = velBed.Close()
