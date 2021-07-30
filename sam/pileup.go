@@ -1,6 +1,7 @@
 package sam
 
 import (
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
@@ -14,6 +15,8 @@ type Pile struct {
 	Pos uint32
 	Count [13]int // Count[dna.Base] == Number of observed dna.Base
 	InsCount map[string]int // key is insertion sequence as string
+
+	touched bool // true if Count or InsCount has been modified
 }
 
 // GoPileup inputs a channel of coordinate sorted Sam structs and generates
@@ -34,10 +37,12 @@ func GoPileup(reads <-chan Sam, header Header, includeNoData bool, filters []fun
 // pileup generates multiple Pile based on the input reads and sends the Pile when passed.
 func pileup(send chan<- Pile, reads <-chan Sam, header Header, includeNoData bool, filters []func(s Sam) bool) {
 	pb := newPileBuffer()
+	refmap := chromInfo.SliceToMap(header.Chroms)
 	for read := range reads {
 		if !passesFilters(read, filters) {
 			continue
 		}
+		pb.sendPassed(read, header, includeNoData, refmap, send)
 		updatePile(pb, read)
 	}
 	close(send)
@@ -113,14 +118,6 @@ type pileBuffer struct {
 	idx int // index in s of lowest pos
 }
 
-func (pb *pileBuffer) addBase(pos uint32, base dna.Base) {
-
-}
-
-func (pb *pileBuffer) addIns(pos uint32, seq string) {
-
-}
-
 // newPileBuffer creates a newPileBuffer with len of 300
 func newPileBuffer() *pileBuffer {
 	pb := pileBuffer{
@@ -138,6 +135,66 @@ func resetPile(p *Pile) {
 	p.Pos = 0
 	for i := range p.Count {
 		p.Count[i] = 0
+	}
+}
+
+// sendPassed sends any Piles with a position before the start of s
+func (pb *pileBuffer) sendPassed(s Sam, h Header, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) {
+	var done bool
+	// starting from pb.idx to the end
+	for i := pb.idx; i < len(pb.s); i++ {
+		done = pb.checkSend(i, s, includeNoData, refmap, send)
+		if done {
+			return
+		}
+	}
+
+	// starting from start to pb.idx
+	for i := 0; i < pb.idx; i++ {
+		done = pb.checkSend(i, s, includeNoData, refmap, send)
+		if done {
+			return
+		}
+	}
+}
+
+func (pb *pileBuffer) checkSend(i int, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) (done bool) {
+	if pb.s[i].RefIdx == -1 {
+		return
+	}
+	if pb.s[i].RefIdx < refmap[s.RName].Order {
+		if pb.s[i].touched || includeNoData {
+			send <- pb.s[i]
+		}
+		resetPile(&pb.s[i])
+		return
+	}
+	if pb.s[i].Pos >= s.Pos {
+		pb.idx = i
+		return true
+	}
+	if pb.s[i].touched || includeNoData {
+		send <- pb.s[i]
+	}
+	resetPile(&pb.s[i])
+	return
+}
+
+// addBase to the pileBuffer at the input position
+func (pb *pileBuffer) addBase(pos uint32, base dna.Base) {
+	pb.getIdx(pos).Count[base]++
+}
+
+// addIns to the pileBuffer at the input position
+func (pb *pileBuffer) addIns(pos uint32, seq string) {
+	pb.getIdx(pos).InsCount[seq]++
+}
+
+// getIdx returns a pointer to the pile at index pos in s
+func (pb *pileBuffer) getIdx(pos uint32) *Pile {
+	queryIdx := int(pos - pb.s[pb.idx].Pos)
+	if queryIdx > len(pb.s) {
+
 	}
 }
 
