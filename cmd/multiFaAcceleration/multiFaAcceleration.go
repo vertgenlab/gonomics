@@ -87,6 +87,10 @@ func multiFaAcceleration(s Settings) {
 				b1 = float64(piS0S1+piS0S2-piS1S2) / 2.0
 				b3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
 
+				if s.Verbose && b1 < 0 || b3 < 0 {
+					log.Printf("b1: %e. b3: %e. piS0S1: %v. piS0S2: %v. piS1S2: %v. piS0S3: %v. piS2S3: %v.", b1, b3, piS0S1, piS0S2, piS1S2, piS0S3, piS2S3)
+				}
+
 				if !reachedEnd {
 					velSum += b1
 					initialSum += b3
