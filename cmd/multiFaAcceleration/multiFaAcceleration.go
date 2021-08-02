@@ -22,6 +22,7 @@ type Settings struct {
 	SearchSpaceBed        string
 	SearchSpaceProportion float64
 	WindowSize            int
+	UseSnpDistance	bool
 	Verbose               bool
 }
 
@@ -79,15 +80,19 @@ func multiFaAcceleration(s Settings) {
 		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)
 		if records[0].Seq[alignmentCounter] != dna.Gap {
 			if pass {
-				piS0S1, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
-				piS0S2 = fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd)
-				piS1S2 = fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd)
-				piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
-				piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
+				if s.UseSnpDistance {
+					piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, reachedEnd = fourWaySnpDistances(records, alignmentCounter, s.WindowSize)
+				} else {
+					piS0S1, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
+					piS0S2 = fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd)
+					piS1S2 = fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd)
+					piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
+					piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
+				}
 				b1 = float64(piS0S1+piS0S2-piS1S2) / 2.0
 				b3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
 
-				if s.Verbose && b1 < 0 || b3 < 0 {
+				if s.Verbose && (b1 < 0 || b3 < 0) {
 					log.Printf("b1: %e. b3: %e. piS0S1: %v. piS0S2: %v. piS1S2: %v. piS0S3: %v. piS2S3: %v.", b1, b3, piS0S1, piS0S2, piS1S2, piS0S3, piS2S3)
 				}
 
@@ -148,6 +153,58 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 	return currCount, currCount >= threshold
 }
 
+func fourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, windowSize int) (int, int, int, int, int, bool) {
+	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, baseCount, i int = 0,0,0,0,0, 0, 0
+	var reachedEnd bool = false
+
+	if len(records) != 4 {
+		log.Fatalf("multiFaAcceleration must take in a four-way multiple alignment.")
+	}
+
+	for i = alignmentCounter;baseCount < windowSize && i < len(records[0].Seq); i++ {
+		if records[0].Seq[i] != dna.Gap {
+			baseCount++
+		}
+		if isUngappedColumn(records, i) {
+			if records[0].Seq[i] != records[1].Seq[i] {
+				piS0S1++
+			}
+			if records[0].Seq[i] != records[2].Seq[i] {
+				piS0S2++
+			}
+			if records[0].Seq[i] != records[3].Seq[i] {
+				piS0S3++
+			}
+			if records[2].Seq[i] != records[3].Seq[i] {
+				piS2S3++
+			}
+		}
+	}
+	if baseCount != windowSize {
+		reachedEnd = true
+	}
+	return piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, reachedEnd
+}
+
+func isUngappedColumn(records []fasta.Fasta, index int) bool {
+	for i := range records {
+		if !isUngappedBase(records[i].Seq[index]) {
+			return false
+		}
+	}
+	return true
+}
+
+func isUngappedBase(b dna.Base) bool {
+	if b == dna.A || b == dna.T || b == dna.C || b == dna.G {
+		return true
+	}
+	if b == dna.LowerA || b == dna.LowerC || b == dna.LowerG || b == dna.LowerT {
+		return true
+	}
+	return false
+}
+
 func usage() {
 	fmt.Print(
 		"multiFaAcceleration - Performs velocity and acceleration on a four way multiple alignment in multiFa format." +
@@ -164,6 +221,7 @@ func main() {
 	var searchSpaceBed *string = flag.String("searchSpaceBed", "", "Limits the generation of data to windows contained within these regions.")
 	var searchSpaceProportion *float64 = flag.Float64("searchSpaceProportion", 0.5, "Proportion of window that must overlap search space in order to be evaluated.")
 	var windowSize *int = flag.Int("windowSize", 500, "Set the size of the sliding window.")
+	var useSnpDistance *bool = flag.Bool("UseSnpDistance", false, "Calculate pairwise distances with SNPs instead of the default mutation distance, which counts INDELs.")
 	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
 
 	flag.Usage = usage
@@ -189,6 +247,7 @@ func main() {
 		InitialVelOut:         initialVOut,
 		SearchSpaceBed:        *searchSpaceBed,
 		SearchSpaceProportion: *searchSpaceProportion,
+		UseSnpDistance: *useSnpDistance,
 		WindowSize:            *windowSize,
 		Verbose:               *verbose,
 	}
