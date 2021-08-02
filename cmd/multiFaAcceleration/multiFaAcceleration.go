@@ -72,7 +72,6 @@ func multiFaAcceleration(s Settings) {
 	//variables for normalization
 	var velSum, initialSum float64 = 0, 0
 	var branchCacheSlice = make([]BranchCache, 0)
-
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
 			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
@@ -116,7 +115,7 @@ func multiFaAcceleration(s Settings) {
 	accelBed := fileio.EasyCreate(s.AccelOut)
 	initialVelBed := fileio.EasyCreate(s.InitialVelOut)
 
-	for i := range branchCacheSlice {
+	for i = range branchCacheSlice {
 		b1Normal = branchCacheSlice[i].b1 / averageVel
 		b3Normal = branchCacheSlice[i].b3 / averageInitialVel
 		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
@@ -221,7 +220,7 @@ func main() {
 	var searchSpaceBed *string = flag.String("searchSpaceBed", "", "Limits the generation of data to windows contained within these regions.")
 	var searchSpaceProportion *float64 = flag.Float64("searchSpaceProportion", 0.5, "Proportion of window that must overlap search space in order to be evaluated.")
 	var windowSize *int = flag.Int("windowSize", 500, "Set the size of the sliding window.")
-	var useSnpDistance *bool = flag.Bool("UseSnpDistance", false, "Calculate pairwise distances with SNPs instead of the default mutation distance, which counts INDELs.")
+	var useSnpDistance *bool = flag.Bool("useSnpDistance", false, "Calculate pairwise distances with SNPs instead of the default mutation distance, which counts INDELs.")
 	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
 
 	flag.Usage = usage
