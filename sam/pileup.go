@@ -13,9 +13,9 @@ import (
 // The number of a particular base can be retrieved by using the dna.Base
 // as the index for Pile.Count. E.g. the number of reads with A is Count[dna.A].
 type Pile struct {
-	RefIdx int
-	Pos uint32
-	Count [13]int // Count[dna.Base] == Number of observed dna.Base
+	RefIdx   int
+	Pos      uint32
+	Count    [13]int        // Count[dna.Base] == Number of observed dna.Base
 	InsCount map[string]int // key is insertion sequence as string
 
 	touched bool // true if Count or InsCount has been modified
@@ -68,7 +68,7 @@ func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 	for i := range s.Cigar {
 		switch s.Cigar[i].Op {
 		case 'M', '=', 'X': // Match
-			addMatch(pb, refidx, refPos, s.Seq[seqPos:seqPos + s.Cigar[i].RunLength])
+			addMatch(pb, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
 			refPos += uint32(s.Cigar[i].RunLength)
 			seqPos += s.Cigar[i].RunLength
 
@@ -77,7 +77,7 @@ func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 			refPos += uint32(s.Cigar[i].RunLength)
 
 		case 'I': // Insertion
-			addInsertion(pb, refidx, refPos-1, s.Seq[seqPos:seqPos + s.Cigar[i].RunLength])
+			addInsertion(pb, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
 			seqPos += s.Cigar[i].RunLength
 
 		default:
@@ -94,7 +94,7 @@ func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 // addMatch to pileBuffer
 func addMatch(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
 	for i := range seq {
-		pb.addBase(refidx, startPos + uint32(i), seq[i])
+		pb.addBase(refidx, startPos+uint32(i), seq[i])
 	}
 }
 
@@ -102,7 +102,7 @@ func addMatch(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
 func addDeletion(pb *pileBuffer, refidx int, startPos uint32, length int) {
 	var i uint32
 	for i = 0; i < uint32(length); i++ {
-		pb.addBase(refidx, startPos + i, dna.Gap)
+		pb.addBase(refidx, startPos+i, dna.Gap)
 	}
 }
 
@@ -111,13 +111,12 @@ func addInsertion(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
 	pb.addIns(refidx, startPos, dna.BasesToString(seq))
 }
 
-
 // ****** pileBuffer functions below ****** //
 
 // pileBuffer stores a slice of piles for efficient reuse.
 type pileBuffer struct {
-	s []Pile // discontinuous positions are not allowed
-	idx int // index in s of lowest pos
+	s   []Pile // discontinuous positions are not allowed
+	idx int    // index in s of lowest pos
 }
 
 // newPileBuffer creates a newPileBuffer with input size
@@ -247,7 +246,7 @@ func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
 	if pos < pb.s[pb.idx].Pos {
 		log.Panic("tried to retrieve past position. unsorted input?")
 	}
-	queryIdx := int(pos - pb.s[pb.idx].Pos) + pb.idx
+	queryIdx := int(pos-pb.s[pb.idx].Pos) + pb.idx
 
 	// calc if queryIdx wraps around to start of buffer
 	if queryIdx >= len(pb.s) {
@@ -269,7 +268,7 @@ func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
 		pb.initializeFromEmpty(pos, refidx)
 		return &pb.s[pb.idx]
 
-	case pb.s[pb.decrementIdx()].RefIdx == -1 : // buffer is partially full (case 2)
+	case pb.s[pb.decrementIdx()].RefIdx == -1: // buffer is partially full (case 2)
 		pb.fillFromPartial()
 		return pb.getIdx(refidx, pos)
 
@@ -282,7 +281,7 @@ func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
 
 // initializeFromEmpty fills an empty pileBuffer starting with the position of s.Seq[0]
 func (pb *pileBuffer) initializeFromEmpty(pos uint32, refidx int) {
-	for ;pb.s[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
+	for ; pb.s[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
 		pb.s[pb.idx].Pos = pos
 		pb.s[pb.idx].RefIdx = refidx
 		pos++
@@ -326,7 +325,7 @@ func (pb *pileBuffer) incrementIdx() int {
 func (pb *pileBuffer) decrementIdx() int {
 	newidx := pb.idx - 1
 	if newidx == -1 {
-		return len(pb.s)-1
+		return len(pb.s) - 1
 	}
 	return newidx
 }
@@ -335,8 +334,8 @@ func (pb *pileBuffer) decrementIdx() int {
 func (pb *pileBuffer) String() string {
 	s := new(strings.Builder)
 	s.WriteString(fmt.Sprintf(
-		"\nCap: %d\n" +
-			"Idx: %d\n" +
+		"\nCap: %d\n"+
+			"Idx: %d\n"+
 			"Data starting from 0:\n", len(pb.s), pb.idx))
 
 	for i, val := range pb.s {
@@ -350,4 +349,3 @@ func (pb *pileBuffer) String() string {
 func (p *Pile) String() string {
 	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCount: %v\tInsCount:%v", p.RefIdx, p.Pos, p.Count, p.InsCount)
 }
-

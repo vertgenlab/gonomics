@@ -125,8 +125,8 @@ var pRef2 = Sam{
 	Seq:   dna.StringToBases("GGG"),
 }
 
-var pRefMap = map[string]chromInfo.ChromInfo {
-	"ref": {Order: 0, Size: 30},
+var pRefMap = map[string]chromInfo.ChromInfo{
+	"ref":  {Order: 0, Size: 30},
 	"ref2": {Order: 1, Size: 10},
 }
 
