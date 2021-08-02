@@ -1,10 +1,12 @@
 package sam
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"strings"
 )
 
 // Pile stores the number of each base observed across multiple reads.
@@ -42,7 +44,7 @@ func pileup(send chan<- Pile, reads <-chan Sam, header Header, includeNoData boo
 		if !passesFilters(read, filters) {
 			continue
 		}
-		pb.sendPassed(read, header, includeNoData, refmap, send)
+		pb.sendPassed(read, includeNoData, refmap, send)
 		updatePile(pb, read, refmap)
 	}
 	close(send)
@@ -67,15 +69,15 @@ func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 		switch s.Cigar[i].Op {
 		case 'M', '=', 'X': // Match
 			addMatch(pb, refidx, refPos, s.Seq[seqPos:seqPos + s.Cigar[i].RunLength])
-			refPos++
-			seqPos++
+			refPos += uint32(s.Cigar[i].RunLength)
+			seqPos += s.Cigar[i].RunLength
 
 		case 'D': // Deletion
 			addDeletion(pb, refidx, refPos, s.Cigar[i].RunLength)
 			refPos += uint32(s.Cigar[i].RunLength)
 
 		case 'I': // Insertion
-			addInsertion(pb, refidx, refPos, s.Seq[seqPos:seqPos + s.Cigar[i].RunLength])
+			addInsertion(pb, refidx, refPos-1, s.Seq[seqPos:seqPos + s.Cigar[i].RunLength])
 			seqPos += s.Cigar[i].RunLength
 
 		default:
@@ -91,9 +93,8 @@ func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 
 // addMatch to pileBuffer
 func addMatch(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
-	var i uint32
-	for i = range seq {
-		pb.addBase(refidx, startPos + i, seq[i])
+	for i := range seq {
+		pb.addBase(refidx, startPos + uint32(i), seq[i])
 	}
 }
 
@@ -126,6 +127,7 @@ func newPileBuffer(size int) *pileBuffer {
 	}
 	for i := range pb.s {
 		pb.s[i].RefIdx = -1
+		pb.s[i].InsCount = make(map[string]int)
 	}
 	return &pb
 }
@@ -137,10 +139,11 @@ func resetPile(p *Pile) {
 	for i := range p.Count {
 		p.Count[i] = 0
 	}
+	p.InsCount = make(map[string]int)
 }
 
 // sendPassed sends any Piles with a position before the start of s
-func (pb *pileBuffer) sendPassed(s Sam, h Header, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) {
+func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) {
 	var done bool
 	var lastPos uint32
 	var lastRefIdx int
@@ -173,7 +176,17 @@ func (pb *pileBuffer) sendPassed(s Sam, h Header, includeNoData bool, refmap map
 
 	// send missing chromosome data
 	dummyPile := Pile{}
-	for lastRefIdx <= refmap[s.RName].Order {
+	for lastRefIdx < refmap[s.RName].Order {
+		for i := lastPos + 1; int(i) < refmap[s.RName].Size; i++ {
+			dummyPile.RefIdx = lastRefIdx
+			dummyPile.Pos = i
+			send <- dummyPile
+		}
+		lastPos = 0
+		lastRefIdx++
+	}
+
+	for lastRefIdx == refmap[s.RName].Order {
 		for i := lastPos + 1; i < s.Pos; i++ {
 			dummyPile.RefIdx = lastRefIdx
 			dummyPile.Pos = i
@@ -224,6 +237,9 @@ func (pb *pileBuffer) addIns(refidx int, pos uint32, seq string) {
 
 // getIdx returns a pointer to the pile at index pos in s
 func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
+	if pos < pb.s[pb.idx].Pos {
+		log.Panic("tried to retrieve past position. unsorted input?")
+	}
 	queryIdx := int(pos - pb.s[pb.idx].Pos) + pb.idx
 
 	// calc if queryIdx wraps around to start of buffer
@@ -259,7 +275,7 @@ func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
 
 // initializeFromEmpty fills an empty pileBuffer starting with the position of s.Seq[0]
 func (pb *pileBuffer) initializeFromEmpty(pos uint32, refidx int) {
-	for pb.idx = pb.incrementIdx(); pb.s[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
+	for ;pb.s[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
 		pb.s[pb.idx].Pos = pos
 		pb.s[pb.idx].RefIdx = refidx
 		pos++
@@ -306,5 +322,25 @@ func (pb *pileBuffer) decrementIdx() int {
 		return len(pb.s)-1
 	}
 	return newidx
+}
+
+// String for debug
+func (pb *pileBuffer) String() string {
+	s := new(strings.Builder)
+	s.WriteString(fmt.Sprintf(
+		"\nCap: %d\n" +
+			"Idx: %d\n" +
+			"Data starting from 0:\n", len(pb.s), pb.idx))
+
+	for i, val := range pb.s {
+		s.WriteString(fmt.Sprintf("Idx: %d\t%s\n", i, val.String()))
+	}
+
+	return s.String()
+}
+
+// String for debug
+func (p *Pile) String() string {
+	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCount: %v\tInsCount:%v", p.RefIdx, p.Pos, p.Count, p.InsCount)
 }
 
