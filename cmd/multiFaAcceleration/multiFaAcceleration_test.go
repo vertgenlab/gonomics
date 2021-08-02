@@ -20,6 +20,7 @@ var multiFaAccelerationTests = []struct {
 	VelExpected           string
 	AccelExpected         string
 	InitialVelExpected    string
+	UseSnpDistance bool
 }{
 	{"testdata/test.fa",
 		"chr1",
@@ -33,6 +34,7 @@ var multiFaAccelerationTests = []struct {
 		"testdata/test.vel.expected.bed",
 		"testdata/test.accel.expected.bed",
 		"testdata/test.initialVel.expected.bed",
+		false,
 	},
 	{"testdata/test.fa",
 		"chr1",
@@ -46,6 +48,21 @@ var multiFaAccelerationTests = []struct {
 		"testdata/test.vel.searchspace.expected.bed",
 		"testdata/test.accel.searchspace.expected.bed",
 		"testdata/test.initialVel.searchspace.expected.bed",
+		false,
+	},
+	{"testdata/test.fa",
+		"chr1",
+		"testdata/test.vel.bed",
+		"testdata/test.accel.bed",
+		"testdata/test.initialVel.bed",
+		"testdata/test.searchspace.bed",
+		0.5,
+		50,
+		false,
+		"testdata/test.vel.snpDistance.expected.bed",
+		"testdata/test.accel.snpDistance.expected.bed",
+		"testdata/test.initialVel.snpDistance.expected.bed",
+		true,
 	},
 }
 
@@ -62,6 +79,7 @@ func TestMultiFaAcceleration(t *testing.T) {
 			SearchSpaceProportion: v.SearchSpaceProportion,
 			WindowSize:            v.WindowSize,
 			Verbose:               v.Verbose,
+			UseSnpDistance: v.UseSnpDistance,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {
