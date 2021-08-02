@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func bedMerge(infile string, outfile string) {
+func bedMerge(infile string, outfile string, mergeAdjacent bool) {
 	var records []bed.Bed = bed.Read(infile)
 	var outList []bed.Bed
 	var currentMax bed.Bed = records[0]
@@ -18,7 +18,7 @@ func bedMerge(infile string, outfile string) {
 	bed.SortByCoord(records)
 
 	for i := 1; i < len(records); i++ {
-		if bed.Overlap(currentMax, records[i]) {
+		if bed.Overlap(currentMax, records[i]) || mergeAdjacent && bed.Adjacent(currentMax, records[i]) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}
@@ -43,6 +43,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
+	var mergeAdjacent *bool = flag.Bool("mergeAdjacent", false, "Merge non-overlapping entries with direct adjacency.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -56,5 +57,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	bedMerge(infile, outfile)
+	bedMerge(infile, outfile, *mergeAdjacent)
 }

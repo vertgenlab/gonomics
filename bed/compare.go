@@ -38,6 +38,17 @@ func MergeBeds(bedFile []Bed) []Bed {
 	return bedFile
 }
 
+//Adjacent returns true if two input Bed entries are adjacent (one immediately follows the other).
+func Adjacent(alpha Bed, beta Bed) bool {
+	if alpha.Chrom != beta.Chrom {
+		return false
+	}
+	if alpha.ChromEnd == beta.ChromStart || alpha.ChromStart == beta.ChromEnd { //adjacency for these quantities is equality as bed coordinates are half-open (contains start, does not contain end).
+		return true
+	}
+	return false
+}
+
 //Overlap returns true if two input Bed entries have an overlap of any kind.
 func Overlap(alpha Bed, beta Bed) bool {
 	if (numbers.Max(alpha.ChromStart, beta.ChromStart) < numbers.Min(alpha.ChromEnd, beta.ChromEnd)) && strings.Compare(alpha.Chrom, beta.Chrom) == 0 {
