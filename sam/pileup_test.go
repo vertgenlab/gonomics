@@ -7,6 +7,75 @@ import (
 	"testing"
 )
 
+func TestPeakPileup(t *testing.T) {
+	reads, header := GoReadToChan("testdata/peak.bam")
+	piles := GoPileup(reads, header, false, nil)
+	for pile := range piles {
+		switch pile.Pos {
+		case 130592024:
+			if pile.Count[dna.A] != 243 ||
+				pile.InsCount["GAAG"] != 2 ||
+				pile.Count[dna.Gap] != 4 {
+				t.Error("problem with pileup")
+			}
+
+		case 130592002:
+			if pile.Count[dna.A] != 238 {
+				t.Error("problem with pileup")
+			}
+
+		case 130592001:
+			if pile.Count[dna.G] != 239 || pile.Count[dna.C] != 1 {
+				t.Error("problem with pileup")
+			}
+
+		case 130592072:
+			if pile.Count[dna.G] != 237 || pile.Count[dna.C] != 1 {
+				t.Error("problem with pileup")
+			}
+
+		case 130592095:
+			if pile.Count[dna.C] != 234 {
+				t.Error("problem with pileup")
+			}
+		}
+	}
+}
+
+func TestRandPileup(t *testing.T) {
+	reads, header := GoReadToChan("testdata/rand.bam")
+	refmap := chromInfo.SliceToMap(header.Chroms)
+	piles := GoPileup(reads, header, false, nil)
+	for pile := range piles {
+		switch {
+		case pile.Pos == 130592072 && pile.RefIdx == refmap["chr9"].Order:
+			if pile.Count[dna.G] != 2 {
+				t.Error("problem with pileup")
+			}
+
+		case pile.Pos == 31624960 && pile.RefIdx == refmap["chr18"].Order:
+			if pile.Count[dna.G] != 2 {
+				t.Error("problem with pileup")
+			}
+
+		case pile.Pos == 24954689 && pile.RefIdx == refmap["chrX"].Order:
+			if pile.Count[dna.C] != 2 {
+				t.Error("problem with pileup")
+			}
+
+		case pile.Pos == 45795462 && pile.RefIdx == refmap["chr12"].Order:
+			if pile.Count[dna.T] != 1 {
+				t.Error("problem with pileup")
+			}
+
+		case pile.Pos == 91864875 && pile.RefIdx == refmap["chr7"].Order:
+			if pile.Count[dna.T] != 2 {
+				t.Error("problem with pileup")
+			}
+		}
+	}
+}
+
 var p1 = Sam{
 	RName: "ref",
 	Pos:   1,

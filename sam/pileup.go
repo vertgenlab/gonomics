@@ -32,7 +32,7 @@ func GoPileup(reads <-chan Sam, header Header, includeNoData bool, filters []fun
 		log.Fatal("ERROR: (GoPileup) input sam/bam must be coordinate sorted")
 	}
 	pileChan := make(chan Pile, 1000)
-	pileup(pileChan, reads, header, includeNoData, filters)
+	go pileup(pileChan, reads, header, includeNoData, filters)
 	return pileChan
 }
 
@@ -136,14 +136,21 @@ func newPileBuffer(size int) *pileBuffer {
 func resetPile(p *Pile) {
 	p.RefIdx = -1
 	p.Pos = 0
+	if !p.touched {
+		return
+	}
 	for i := range p.Count {
 		p.Count[i] = 0
 	}
 	p.InsCount = make(map[string]int)
+	p.touched = false
 }
 
 // sendPassed sends any Piles with a position before the start of s
 func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) {
+	if pb.s[pb.idx].RefIdx == -1 {
+		return // buffer is empty
+	}
 	var done bool
 	var lastPos uint32
 	var lastRefIdx int
