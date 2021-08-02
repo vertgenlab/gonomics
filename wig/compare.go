@@ -42,8 +42,8 @@ func AllEqual(alpha []Wig, beta []Wig) bool {
 	return true
 }
 
-//Compare returns zero for equal wigs and otherwise returns the ordering of the two wig entries. Used for SortByCoord.
-func Compare(alpha Wig, beta Wig) int {
+//compare returns zero for equal wigs and otherwise returns the ordering of the two wig entries. Order is based on start position and then by length of values. Used for SortByCoord.
+func compare(alpha Wig, beta Wig) int {
 	chromComp := strings.Compare(alpha.Chrom, beta.Chrom)
 	if chromComp != 0 {
 		return chromComp
@@ -63,7 +63,7 @@ func Compare(alpha Wig, beta Wig) int {
 	return 0
 }
 
-//SortByCoord sorts in place a slice of Wig structs by their genomic position.
+//SortByCoord sorts in place a slice of Wig structs by their genomic position with secondary sorting by the number of values.
 func SortByCoord(w []Wig) {
-	sort.Slice(w, func(i, j int) bool { return Compare(w[i], w[j]) == -1 })
+	sort.Slice(w, func(i, j int) bool { return compare(w[i], w[j]) == -1 })
 }

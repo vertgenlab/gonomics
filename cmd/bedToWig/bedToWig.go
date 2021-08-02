@@ -15,13 +15,11 @@ import (
 func bedToWig(method string, inFile string, refFile string, outFile string, missing float64) {
 	ref := chromInfo.ReadToMap(refFile)
 	var outWig []wig.Wig
-	if method == "Score" {
-		outWig = convert.BedScoreToWig(inFile, ref)
-	} else if method == "Reads" {
+	if method == "Reads" {
 		rec := bed.Read(inFile)
 		outWig = convert.BedReadsToWig(rec, ref)
-	} else if method == "Name" {
-		outWig = convert.BedNameToWig(inFile, ref, missing)
+	} else if method == "Name" || method == "Score"{
+		outWig = convert.BedValuesToWig(inFile, ref, missing, method)
 	} else {
 		log.Fatalf("Unrecognized method.")
 	}
