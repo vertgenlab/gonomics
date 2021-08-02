@@ -25,35 +25,46 @@ type Pile struct {
 // a Pile for each base. The Pile is send through the return channel when
 // the Pile position is no longer being updated.
 //
-// The input filter functions must all be true for a read to be included.
-// All reads are included if filters == nil.
-func GoPileup(reads <-chan Sam, header Header, includeNoData bool, filters []func(s Sam) bool) <-chan Pile {
+// The input readFilter functions must all be true for a read to be included.
+// The input pileFilter functions can be likewise be used to filter the output.
+// All reads/piles are included if filters == nil.
+func GoPileup(reads <-chan Sam, header Header, includeNoData bool, readFilters []func(s Sam) bool, pileFilters []func(p Pile) bool) <-chan Pile {
 	if header.Metadata.SortOrder[0] != Coordinate {
 		log.Fatal("ERROR: (GoPileup) input sam/bam must be coordinate sorted")
 	}
 	pileChan := make(chan Pile, 1000)
-	go pileup(pileChan, reads, header, includeNoData, filters)
+	go pileup(pileChan, reads, header, includeNoData, readFilters, pileFilters)
 	return pileChan
 }
 
 // pileup generates multiple Pile based on the input reads and sends the Pile when passed.
-func pileup(send chan<- Pile, reads <-chan Sam, header Header, includeNoData bool, filters []func(s Sam) bool) {
+func pileup(send chan<- Pile, reads <-chan Sam, header Header, includeNoData bool, readFilters []func(s Sam) bool, pileFilters []func(p Pile) bool) {
 	pb := newPileBuffer(300) // initialize to 2x std read size
 	refmap := chromInfo.SliceToMap(header.Chroms)
 	for read := range reads {
-		if !passesFilters(read, filters) {
+		if !passesReadFilters(read, readFilters) {
 			continue
 		}
-		pb.sendPassed(read, includeNoData, refmap, send)
+		pb.sendPassed(read, includeNoData, refmap, send, pileFilters)
 		updatePile(pb, read, refmap)
 	}
 	close(send)
 }
 
-// passesFilters returns true if input Sam is true for all functions in filters.
-func passesFilters(s Sam, filters []func(s Sam) bool) bool {
+// passesReadFilters returns true if input Sam is true for all functions in filters.
+func passesReadFilters(s Sam, filters []func(s Sam) bool) bool {
 	for _, f := range filters {
 		if !f(s) {
+			return false
+		}
+	}
+	return true
+}
+
+// passesPileFilters returns true if input Sam is true for all functions in filters.
+func passesPileFilters(p Pile, filters []func(p Pile) bool) bool {
+	for _, f := range filters {
+		if !f(p) {
 			return false
 		}
 	}
@@ -146,7 +157,7 @@ func resetPile(p *Pile) {
 }
 
 // sendPassed sends any Piles with a position before the start of s
-func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) {
+func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) {
 	if pb.s[pb.idx].RefIdx == -1 {
 		return // buffer is empty
 	}
@@ -157,7 +168,7 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 	for i := pb.idx; i < len(pb.s); i++ {
 		lastPos = pb.s[i].Pos
 		lastRefIdx = pb.s[i].RefIdx
-		done = pb.checkSend(i, s, includeNoData, refmap, send)
+		done = pb.checkSend(i, s, includeNoData, refmap, send, pileFilters)
 		if done {
 			return
 		}
@@ -167,7 +178,7 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 	for i := 0; i < pb.idx; i++ {
 		lastPos = pb.s[i].Pos
 		lastRefIdx = pb.s[i].RefIdx
-		done = pb.checkSend(i, s, includeNoData, refmap, send)
+		done = pb.checkSend(i, s, includeNoData, refmap, send, pileFilters)
 		if done {
 			return
 		}
@@ -203,12 +214,12 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 }
 
 // checkSend checks if pb.s[i] is before the start of s and sends if true. returns true when no more records to send.
-func (pb *pileBuffer) checkSend(i int, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile) (done bool) {
+func (pb *pileBuffer) checkSend(i int, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (done bool) {
 	if pb.s[i].RefIdx == -1 {
 		return
 	}
 	if pb.s[i].RefIdx < refmap[s.RName].Order {
-		if pb.s[i].touched || includeNoData {
+		if (pb.s[i].touched && passesPileFilters(pb.s[i], pileFilters)) || includeNoData {
 			send <- pb.s[i]
 		}
 		pb.incrementIdx()
@@ -219,7 +230,7 @@ func (pb *pileBuffer) checkSend(i int, s Sam, includeNoData bool, refmap map[str
 		pb.idx = i
 		return true
 	}
-	if pb.s[i].touched || includeNoData {
+	if (pb.s[i].touched && passesPileFilters(pb.s[i], pileFilters)) || includeNoData {
 		send <- pb.s[i]
 	}
 	pb.incrementIdx()
