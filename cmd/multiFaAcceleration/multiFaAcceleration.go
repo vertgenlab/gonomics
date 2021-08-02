@@ -22,7 +22,7 @@ type Settings struct {
 	SearchSpaceBed        string
 	SearchSpaceProportion float64
 	WindowSize            int
-	UseSnpDistance	bool
+	UseSnpDistance        bool
 	Verbose               bool
 }
 
@@ -153,14 +153,14 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 }
 
 func fourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, windowSize int) (int, int, int, int, int, bool) {
-	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, baseCount, i int = 0,0,0,0,0, 0, 0
+	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, baseCount, i int = 0, 0, 0, 0, 0, 0, 0
 	var reachedEnd bool = false
 
 	if len(records) != 4 {
 		log.Fatalf("multiFaAcceleration must take in a four-way multiple alignment.")
 	}
 
-	for i = alignmentCounter;baseCount < windowSize && i < len(records[0].Seq); i++ {
+	for i = alignmentCounter; baseCount < windowSize && i < len(records[0].Seq); i++ {
 		if records[0].Seq[i] != dna.Gap {
 			baseCount++
 		}
@@ -246,7 +246,7 @@ func main() {
 		InitialVelOut:         initialVOut,
 		SearchSpaceBed:        *searchSpaceBed,
 		SearchSpaceProportion: *searchSpaceProportion,
-		UseSnpDistance: *useSnpDistance,
+		UseSnpDistance:        *useSnpDistance,
 		WindowSize:            *windowSize,
 		Verbose:               *verbose,
 	}
