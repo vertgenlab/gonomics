@@ -9,7 +9,7 @@ import (
 
 func TestPeakPileup(t *testing.T) {
 	reads, header := GoReadToChan("testdata/peak.bam")
-	piles := GoPileup(reads, header, false, nil)
+	piles := GoPileup(reads, header, false, nil, nil)
 	for pile := range piles {
 		switch pile.Pos {
 		case 130592024:
@@ -45,7 +45,7 @@ func TestPeakPileup(t *testing.T) {
 func TestRandPileup(t *testing.T) {
 	reads, header := GoReadToChan("testdata/rand.bam")
 	refmap := chromInfo.SliceToMap(header.Chroms)
-	piles := GoPileup(reads, header, false, nil)
+	piles := GoPileup(reads, header, false, nil, nil)
 	for pile := range piles {
 		switch {
 		case pile.Pos == 130592072 && pile.RefIdx == refmap["chr9"].Order:
@@ -147,7 +147,7 @@ func TestPileBuffer(t *testing.T) {
 		t.Error("problem with pile buffer")
 	}
 
-	pb.sendPassed(p3, false, pRefMap, testChan) // should send pos 1:5 and set new pb.idx
+	pb.sendPassed(p3, false, pRefMap, testChan, nil) // should send pos 1:5 and set new pb.idx
 	if len(testChan) != 4 || pb.s[pb.idx].Pos != 5 {
 		t.Error("problem with pile buffer sendPassed")
 	}
@@ -179,7 +179,7 @@ func TestPileBufferSending(t *testing.T) {
 	updatePile(pb, p4, pRefMap)
 	updatePile(pb, p5, pRefMap) // leave untouched base at pos 19
 
-	pb.sendPassed(pRef2, false, pRefMap, testChan) // should send 10 piles
+	pb.sendPassed(pRef2, false, pRefMap, testChan, nil) // should send 10 piles
 	if len(testChan) != 10 {
 		t.Error("problem with pile buffer sendPassed")
 	}
@@ -190,7 +190,7 @@ func TestPileBufferSending(t *testing.T) {
 	updatePile(pb, p4, pRefMap)
 	updatePile(pb, p5, pRefMap) // leave untouched base at pos 19
 
-	pb.sendPassed(pRef2, true, pRefMap, testChan) // should send 10 piles
+	pb.sendPassed(pRef2, true, pRefMap, testChan, nil) // should send 10 piles
 
 	close(testChan)
 	var foundMissing bool
