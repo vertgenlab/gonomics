@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -74,7 +75,7 @@ func multiFaAcceleration(s Settings) {
 	var branchCacheSlice = make([]BranchCache, 0)
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
-			fmt.Printf("alignmentCounter: %v\n", alignmentCounter)
+			log.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}
 		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)
 		if records[0].Seq[alignmentCounter] != dna.Gap {
@@ -88,9 +89,9 @@ func multiFaAcceleration(s Settings) {
 					piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
 					piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
 				}
-				b1 = float64(piS0S1+piS0S2-piS1S2) / 2.0
+				b1 = numbers.MaxFloat64(0.0, float64(piS0S1+piS0S2-piS1S2) / 2.0)
+				//b3 = numbers.MaxFloat64(0.0, (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3))
 				b3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
-
 				if s.Verbose && (b1 < 0 || b3 < 0) {
 					log.Printf("b1: %e. b3: %e. piS0S1: %v. piS0S2: %v. piS1S2: %v. piS0S3: %v. piS2S3: %v.", b1, b3, piS0S1, piS0S2, piS1S2, piS0S3, piS2S3)
 				}
