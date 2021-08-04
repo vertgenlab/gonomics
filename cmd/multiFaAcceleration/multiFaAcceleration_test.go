@@ -20,7 +20,7 @@ var multiFaAccelerationTests = []struct {
 	VelExpected           string
 	AccelExpected         string
 	InitialVelExpected    string
-	UseSnpDistance bool
+	UseSnpDistance        bool
 }{
 	{"testdata/test.fa",
 		"chr1",
@@ -79,7 +79,7 @@ func TestMultiFaAcceleration(t *testing.T) {
 			SearchSpaceProportion: v.SearchSpaceProportion,
 			WindowSize:            v.WindowSize,
 			Verbose:               v.Verbose,
-			UseSnpDistance: v.UseSnpDistance,
+			UseSnpDistance:        v.UseSnpDistance,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {

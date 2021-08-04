@@ -15,19 +15,19 @@ import (
 )
 
 type Settings struct {
-	InFile string
-	OutFile string
-	MinScore int
-	MaxScore int
-	MinLength int
-	MaxLength int
-	MinStart int
-	MaxStart int
-	MinEnd int
-	MaxEnd int
+	InFile       string
+	OutFile      string
+	MinScore     int
+	MaxScore     int
+	MinLength    int
+	MaxLength    int
+	MinStart     int
+	MaxStart     int
+	MinEnd       int
+	MaxEnd       int
 	MinNameFloat float64
 	MaxNameFloat float64
-	Chrom string
+	Chrom        string
 }
 
 func bedFilter(s Settings) {
@@ -63,7 +63,7 @@ func bedFilter(s Settings) {
 		if i.ChromEnd > s.MaxEnd {
 			pass = false
 		}
-		if s.MinNameFloat != -1 * math.MaxFloat64 {
+		if s.MinNameFloat != -1*math.MaxFloat64 {
 			if common.StringToFloat64(i.Name) < s.MinNameFloat {
 				pass = false
 			}
@@ -99,7 +99,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var minScore *int = flag.Int("minScore", -1 * numbers.MaxInt, "Specifies the minimum score in the fourth field.")
+	var minScore *int = flag.Int("minScore", -1*numbers.MaxInt, "Specifies the minimum score in the fourth field.")
 	var maxScore *int = flag.Int("maxScore", numbers.MaxInt, "Specifies the maximum score in the fourth field.")
 	var minLength *int = flag.Int("minLength", 0, "Specifies the minimum length of the region.")
 	var maxLength *int = flag.Int("maxLength", numbers.MaxInt, "Specifies the maximum length of the region.")
@@ -107,7 +107,7 @@ func main() {
 	var maxStart *int = flag.Int("maxStart", numbers.MaxInt, "Specifies the maximum starting position of the region.")
 	var minEnd *int = flag.Int("minEnd", 0, "Specifies the minimum ending position of the region.")
 	var maxEnd *int = flag.Int("maxEnd", numbers.MaxInt, "Specifies the maximum ending position of the region.")
-	var minNameFloat *float64 = flag.Float64("minNameFloat", -1 * math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the name field.")
+	var minNameFloat *float64 = flag.Float64("minNameFloat", -1*math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the name field.")
 	var maxNameFloat *float64 = flag.Float64("maxNameFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the name field.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 
@@ -125,19 +125,19 @@ func main() {
 	outfile := flag.Arg(1)
 
 	s := Settings{
-		InFile: infile,
-		OutFile: outfile,
-		MinScore: *minScore,
-		MinLength: *minLength,
-		MaxScore: *maxScore,
-		MaxLength: *maxLength,
-		MinStart: *minStart,
-		MaxStart: *maxStart,
-		MinEnd: *minEnd,
-		MaxEnd: *maxEnd,
+		InFile:       infile,
+		OutFile:      outfile,
+		MinScore:     *minScore,
+		MinLength:    *minLength,
+		MaxScore:     *maxScore,
+		MaxLength:    *maxLength,
+		MinStart:     *minStart,
+		MaxStart:     *maxStart,
+		MinEnd:       *minEnd,
+		MaxEnd:       *maxEnd,
 		MinNameFloat: *minNameFloat,
 		MaxNameFloat: *maxNameFloat,
-		Chrom: *chrom,
+		Chrom:        *chrom,
 	}
 	bedFilter(s)
 }
