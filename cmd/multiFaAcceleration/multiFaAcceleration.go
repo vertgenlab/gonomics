@@ -89,7 +89,7 @@ func multiFaAcceleration(s Settings) {
 					piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
 					piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
 				}
-				b1 = numbers.MaxFloat64(0.0, float64(piS0S1+piS0S2-piS1S2) / 2.0)
+				b1 = numbers.MaxFloat64(0.0, float64(piS0S1+piS0S2-piS1S2)/2.0)
 				//b3 = numbers.MaxFloat64(0.0, (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3))
 				b3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
 				if s.Verbose && (b1 < 0 || b3 < 0) {
