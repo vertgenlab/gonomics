@@ -71,7 +71,7 @@ func multiFaAcceleration(s Settings) {
 	var pass bool
 
 	//variables for normalization
-	var velSum, initialSum, OldB3Sum float64 = 0, 0
+	var velSum, initialSum, OldB3Sum float64 = 0, 0, 0
 	var branchCacheSlice = make([]BranchCache, 0)
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
