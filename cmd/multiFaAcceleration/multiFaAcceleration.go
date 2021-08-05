@@ -66,12 +66,12 @@ func multiFaAcceleration(s Settings) {
 	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3 int
 	var referenceCounter int = 0
 	var reachedEnd bool = false
-	var b1, b3 float64
+	var b1, b3, OldB3 float64
 	var currCount, alnEnd int
 	var pass bool
 
 	//variables for normalization
-	var velSum, initialSum float64 = 0, 0
+	var velSum, initialSum, OldB3Sum float64 = 0, 0
 	var branchCacheSlice = make([]BranchCache, 0)
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
@@ -91,7 +91,12 @@ func multiFaAcceleration(s Settings) {
 				}
 				b1 = numbers.MaxFloat64(0.0, float64(piS0S1+piS0S2-piS1S2)/2.0)
 				b3 = numbers.MaxFloat64(0.0, (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3))
-				//b3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
+				OldB3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
+
+				if b3 != OldB3 && OldB3 >= 0.0 {
+					log.Printf("OldB3: %e. B3: %e. Doesn't make sense.\n", OldB3, b3)
+				}
+
 				if s.Verbose && (b1 < 0 || b3 < 0) {
 					log.Printf("b1: %e. b3: %e. piS0S1: %v. piS0S2: %v. piS1S2: %v. piS0S3: %v. piS2S3: %v.", b1, b3, piS0S1, piS0S2, piS1S2, piS0S3, piS2S3)
 				}
@@ -99,6 +104,12 @@ func multiFaAcceleration(s Settings) {
 				if !reachedEnd {
 					velSum += b1
 					initialSum += b3
+					OldB3Sum += OldB3
+
+					if OldB3Sum > initialSum {
+						log.Printf("b1: %e. b3: %e. OldB3: %e. RefCounter: %v.\n", b1, b3, OldB3, referenceCounter)
+					}
+
 					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, b1, b3})
 				}
 			}
@@ -107,6 +118,8 @@ func multiFaAcceleration(s Settings) {
 	}
 
 	var averageVel, averageInitialVel, b1Normal, b3Normal float64
+
+	log.Printf("Sums: velSum: %e. initialSum: %e. OldInitialSum: %e.\n", velSum, initialSum, OldB3Sum)
 
 	averageVel = velSum / float64(len(branchCacheSlice))
 	averageInitialVel = initialSum / float64(len(branchCacheSlice))
