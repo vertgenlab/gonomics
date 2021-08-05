@@ -96,7 +96,6 @@ func multiFaAcceleration(s Settings) {
 				if b3 != OldB3 && OldB3 >= 0.0 {
 					log.Printf("OldB3: %e. B3: %e. Doesn't make sense.\n", OldB3, b3)
 				}
-
 				if s.Verbose && (b1 < 0 || b3 < 0) {
 					log.Printf("b1: %e. b3: %e. piS0S1: %v. piS0S2: %v. piS1S2: %v. piS0S3: %v. piS2S3: %v.", b1, b3, piS0S1, piS0S2, piS1S2, piS0S3, piS2S3)
 				}
