@@ -25,8 +25,8 @@ type Settings struct {
 	WindowSize            int
 	UseSnpDistance        bool
 	Verbose               bool
-	Epsilon float64
-	AllowNegative bool
+	Epsilon               float64
+	AllowNegative         bool
 }
 
 type BranchCache struct {
@@ -57,9 +57,9 @@ type SubTree struct {
 	Dab float64
 	Dac float64
 	Dbc float64
-	va float64
-	vb float64
-	vc float64
+	va  float64
+	vb  float64
+	vc  float64
 }
 
 func multiFaAcceleration(s Settings) {
@@ -115,7 +115,7 @@ func multiFaAcceleration(s Settings) {
 					reachedEnd = fourWayMutationDistances(records, alignmentCounter, s, &currDistances)
 				}
 
-				if _, containedInMap = distanceCache[currDistances]; !containedInMap {//if this tree has not been seen before, calculate branch lengths
+				if _, containedInMap = distanceCache[currDistances]; !containedInMap { //if this tree has not been seen before, calculate branch lengths
 					distanceCache[currDistances] = alternatingLeastSquares(currDistances, s)
 				}
 
@@ -165,7 +165,7 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 	var nextQ float64
 	var currDiff float64 = s.Epsilon + 1 //set currDiff to something larger than epsilon so that we make it into the loop the first time.
 	var sub SubTree
-	var maxIteration, i =  1000, 0
+	var maxIteration, i = 1000, 0
 
 	for currDiff > s.Epsilon && i < maxIteration {
 		pruneLeft(d, answer, &sub)
@@ -185,7 +185,7 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 	return answer
 }
 
-func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64){
+func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64) {
 	sub.va = (sub.Dab + sub.Dac - sub.Dbc) / 2.0
 	sub.vb = (sub.Dab + sub.Dbc - sub.Dac) / 2.0
 	sub.vc = (sub.Dac + sub.Dbc - sub.Dac) / 2.0
@@ -208,9 +208,9 @@ func pruneLeft(d Distances, b BranchLengths, sub *SubTree) {
 			sub.Dac = (1.0 / math.Pow(d.D02, 2)) * (d.D02 - b.B4) / (1.0 / math.Pow(d.D02, 2))
 		}
 	} else if d.D02 == 0 {
-		sub.Dac = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5)) / (1.0 / math.Pow(d.D03, 2))
+		sub.Dac = ((1.0 / math.Pow(d.D03, 2)) * (d.D03 - b.B5)) / (1.0 / math.Pow(d.D03, 2))
 	} else {
-		sub.Dac = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B4) + (1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D02, 2)))
+		sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B4) + (1.0/math.Pow(d.D03, 2))*(d.D03-b.B5)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D02, 2)))
 	}
 
 	if d.D13 == 0 {
@@ -220,9 +220,9 @@ func pruneLeft(d Distances, b BranchLengths, sub *SubTree) {
 			sub.Dbc = (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B4) / (1.0 / math.Pow(d.D12, 2))
 		}
 	} else if d.D12 == 0 {
-		sub.Dbc = (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5) / (1.0 / math.Pow(d.D13, 2))
+		sub.Dbc = (1.0 / math.Pow(d.D13, 2)) * (d.D13 - b.B5) / (1.0 / math.Pow(d.D13, 2))
 	} else {
-		sub.Dbc = ((1.0 / math.Pow(d.D12, 2))*(d.D12 - b.B4) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + (1.0 / math.Pow(d.D12, 2)))
+		sub.Dbc = ((1.0/math.Pow(d.D12, 2))*(d.D12-b.B4) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 }
 
@@ -236,9 +236,9 @@ func pruneRight(d Distances, b BranchLengths, sub *SubTree) {
 			sub.Dac = (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B2) / (1.0 / math.Pow(d.D12, 2))
 		}
 	} else if d.D12 == 0 {
-		sub.Dac = (1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) / (1.0 / math.Pow(d.D02, 2))
+		sub.Dac = (1.0 / math.Pow(d.D02, 2)) * (d.D02 - b.B1) / (1.0 / math.Pow(d.D02, 2))
 	} else {
-		sub.Dab = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) + (1.0 / math.Pow(d.D12, 2))*(d.D12 - b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + (1.0 / math.Pow(d.D12, 2)))
+		sub.Dab = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B1) + (1.0/math.Pow(d.D12, 2))*(d.D12-b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 
 	if d.D03 == 0 {
@@ -248,32 +248,32 @@ func pruneRight(d Distances, b BranchLengths, sub *SubTree) {
 			sub.Dbc = (1.0 / math.Pow(d.D13, 2)) * (d.D13 - b.B2) / (1.0 / math.Pow(d.D13, 2))
 		}
 	} else if d.D13 == 0 {
-		sub.Dbc = (1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) / (1.0 / math.Pow(d.D03, 2))
+		sub.Dbc = (1.0 / math.Pow(d.D03, 2)) * (d.D03 - b.B1) / (1.0 / math.Pow(d.D03, 2))
 	} else {
-		sub.Dbc = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D13, 2)))
+		sub.Dbc = ((1.0/math.Pow(d.D03, 2))*(d.D03-b.B1) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D13, 2)))
 	}
 }
 
 func calculateQ(d Distances, b BranchLengths) float64 {
 	var sum float64 = 0
 
-	if d.D01 != 0 {//avoid divide by zero error
-		sum += math.Pow(d.D01 - b.B1 - b.B2,2) / math.Pow(d.D01, 2)
+	if d.D01 != 0 { //avoid divide by zero error
+		sum += math.Pow(d.D01-b.B1-b.B2, 2) / math.Pow(d.D01, 2)
 	}
 	if d.D02 != 0 {
-		sum += math.Pow(d.D02 - b.B1 - b.B3 - b.B4,2) / math.Pow(d.D02, 2)
+		sum += math.Pow(d.D02-b.B1-b.B3-b.B4, 2) / math.Pow(d.D02, 2)
 	}
 	if d.D03 != 0 {
-		sum += math.Pow(d.D03 - b.B1 - b.B3 - b.B5,2) / math.Pow(d.D03, 2)
+		sum += math.Pow(d.D03-b.B1-b.B3-b.B5, 2) / math.Pow(d.D03, 2)
 	}
 	if d.D12 != 0 {
-		sum += math.Pow(d.D12 - b.B2 - b.B3 - b.B4,2) / math.Pow(d.D12, 2)
+		sum += math.Pow(d.D12-b.B2-b.B3-b.B4, 2) / math.Pow(d.D12, 2)
 	}
 	if d.D13 != 0 {
-		sum += math.Pow(d.D13 - b.B2 - b.B3 - b.B5,2) / math.Pow(d.D13, 2)
+		sum += math.Pow(d.D13-b.B2-b.B3-b.B5, 2) / math.Pow(d.D13, 2)
 	}
 	if d.D23 != 0 {
-		sum += math.Pow(d.D23 - b.B4 - b.B5,2) / math.Pow(d.D23, 2)
+		sum += math.Pow(d.D23-b.B4-b.B5, 2) / math.Pow(d.D23, 2)
 	}
 	return sum
 }
@@ -299,7 +299,7 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 	return currCount, currCount >= threshold
 }
 
-func fourWayMutationDistances(records[]fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
+func fourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
 	//first we clear the values in d.
 	d.D01, d.D02, d.D03, d.D12, d.D13, d.D23 = 0, 0, 0, 0, 0, 0
 	var d01tmp int
@@ -421,8 +421,8 @@ func main() {
 		UseSnpDistance:        *useSnpDistance,
 		WindowSize:            *windowSize,
 		Verbose:               *verbose,
-		Epsilon:	*epsilon,
-		AllowNegative: *allowNegative,
+		Epsilon:               *epsilon,
+		AllowNegative:         *allowNegative,
 	}
 
 	multiFaAcceleration(s)
