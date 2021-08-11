@@ -10,8 +10,8 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
+	"math"
 )
 
 type Settings struct {
@@ -25,6 +25,8 @@ type Settings struct {
 	WindowSize            int
 	UseSnpDistance        bool
 	Verbose               bool
+	Epsilon float64
+	AllowNegative bool
 }
 
 type BranchCache struct {
@@ -32,6 +34,32 @@ type BranchCache struct {
 	ChromEnd   int
 	b1         float64
 	b3         float64
+}
+
+type Distances struct {
+	D01 float64
+	D02 float64
+	D03 float64
+	D12 float64
+	D13 float64
+	D23 float64
+}
+
+type BranchLengths struct {
+	B1 float64
+	B2 float64
+	B3 float64
+	B4 float64
+	B5 float64
+}
+
+type SubTree struct {
+	Dab float64
+	Dac float64
+	Dbc float64
+	va float64
+	vb float64
+	vc float64
 }
 
 func multiFaAcceleration(s Settings) {
@@ -63,15 +91,16 @@ func multiFaAcceleration(s Settings) {
 		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize))
 	}
 
-	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3 int
+	var currDistances Distances
+	var distanceCache = make(map[Distances]BranchLengths)
 	var referenceCounter int = 0
 	var reachedEnd bool = false
-	var b1, b3, OldB3 float64
-	var currCount, alnEnd int
-	var pass bool
+	var b1, b3 float64
+	var currCount int
+	var pass, containedInMap bool
 
 	//variables for normalization
-	var velSum, initialSum, OldB3Sum float64 = 0, 0, 0
+	var velSum, initialSum float64 = 0, 0
 	var branchCacheSlice = make([]BranchCache, 0)
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
@@ -81,33 +110,21 @@ func multiFaAcceleration(s Settings) {
 		if records[0].Seq[alignmentCounter] != dna.Gap {
 			if pass {
 				if s.UseSnpDistance {
-					piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, reachedEnd = fourWaySnpDistances(records, alignmentCounter, s.WindowSize)
+					reachedEnd = fourWaySnpDistances(records, alignmentCounter, s, &currDistances)
 				} else {
-					piS0S1, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
-					piS0S2 = fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd)
-					piS1S2 = fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd)
-					piS0S3 = fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd)
-					piS2S3 = fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd)
+					reachedEnd = fourWayMutationDistances(records, alignmentCounter, s, &currDistances)
 				}
-				b1 = numbers.MaxFloat64(0.0, float64(piS0S1+piS0S2-piS1S2)/2.0)
-				b3 = numbers.MaxFloat64(0.0, (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3))
-				OldB3 = (float64(piS1S2+piS0S3+piS2S3-piS0S1) / 2.0) - float64(piS2S3)
 
-				if b3 != OldB3 && OldB3 >= 0.0 {
-					log.Printf("OldB3: %e. B3: %e. Doesn't make sense.\n", OldB3, b3)
+				if _, containedInMap = distanceCache[currDistances]; !containedInMap {//if this tree has not been seen before, calculate branch lengths
+					distanceCache[currDistances] = alternatingLeastSquares(currDistances, s)
 				}
-				if s.Verbose && (b1 < 0 || b3 < 0) {
-					log.Printf("b1: %e. b3: %e. piS0S1: %v. piS0S2: %v. piS1S2: %v. piS0S3: %v. piS2S3: %v.", b1, b3, piS0S1, piS0S2, piS1S2, piS0S3, piS2S3)
-				}
+
+				b1 = distanceCache[currDistances].B1
+				b3 = distanceCache[currDistances].B3
 
 				if !reachedEnd {
 					velSum += b1
 					initialSum += b3
-					OldB3Sum += OldB3
-
-					if OldB3Sum > initialSum {
-						log.Printf("b1: %e. b3: %e. OldB3: %e. RefCounter: %v.\n", b1, b3, OldB3, referenceCounter)
-					}
 
 					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, b1, b3})
 				}
@@ -115,11 +132,9 @@ func multiFaAcceleration(s Settings) {
 			referenceCounter++
 		}
 	}
+	fmt.Printf("DEBUG: velSum: %v. initialVelSum: %v.\n", velSum, initialSum)
 
 	var averageVel, averageInitialVel, b1Normal, b3Normal float64
-
-	log.Printf("Sums: velSum: %e. initialSum: %e. OldInitialSum: %e.\n", velSum, initialSum, OldB3Sum)
-
 	averageVel = velSum / float64(len(branchCacheSlice))
 	averageInitialVel = initialSum / float64(len(branchCacheSlice))
 
@@ -144,6 +159,125 @@ func multiFaAcceleration(s Settings) {
 	exception.PanicOnErr(err)
 }
 
+func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
+	var answer = BranchLengths{1, 1, 1, 1, 1}
+	var Q float64 = calculateQ(d, answer)
+	var nextQ float64
+	var currDiff float64 = s.Epsilon + 1 //set currDiff to something larger than epsilon so that we make it into the loop the first time.
+	var sub SubTree
+	var maxIteration, i =  1000, 0
+
+	for currDiff > s.Epsilon && i < maxIteration {
+		pruneLeft(d, answer, &sub)
+		answer.B1, answer.B2, answer.B3 = optimizeSubtree(&sub, s)
+		pruneRight(d, answer, &sub)
+		answer.B4, answer.B5, answer.B3 = optimizeSubtree(&sub, s)
+		nextQ = calculateQ(d, answer)
+		currDiff = math.Abs(nextQ - Q)
+		Q = nextQ
+		i++
+	}
+
+	if i >= maxIteration {
+		log.Fatalf("Failed to converge.")
+	}
+	fmt.Printf("In alternatingLeastSquares: b1: %f. b3: %f.\n", answer.B1, answer.B3)
+	return answer
+}
+
+func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64){
+	sub.va = (sub.Dab + sub.Dac - sub.Dbc) / 2.0
+	sub.vb = (sub.Dab + sub.Dbc - sub.Dac) / 2.0
+	sub.vc = (sub.Dac + sub.Dbc - sub.Dac) / 2.0
+
+	if s.AllowNegative {
+		return sub.va, sub.vb, sub.vc
+	}
+	//TODO: here we need to set negative branch lengths to zero and recalculate other optimal branches.
+
+	return sub.va, sub.vb, sub.vc
+}
+
+func pruneLeft(d Distances, b BranchLengths, sub *SubTree) {
+	sub.Dab = d.D01
+
+	if d.D03 == 0 { //catch the divide by zero case.
+		if d.D02 == 0 {
+			sub.Dac = 0 //both branches are length zero, thus the subbranch is set to zero.
+		} else {
+			sub.Dac = (1.0 / math.Pow(d.D02, 2)) * (d.D02 - b.B4) / (1.0 / math.Pow(d.D02, 2))
+		}
+	} else if d.D02 == 0 {
+		sub.Dac = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5)) / (1.0 / math.Pow(d.D03, 2))
+	} else {
+		sub.Dac = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B4) + (1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D02, 2)))
+	}
+
+	if d.D13 == 0 {
+		if d.D12 == 0 {
+			sub.Dbc = 0
+		} else {
+			sub.Dbc = (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B4) / (1.0 / math.Pow(d.D12, 2))
+		}
+	} else if d.D12 == 0 {
+		sub.Dbc = (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5) / (1.0 / math.Pow(d.D13, 2))
+	} else {
+		sub.Dbc = ((1.0 / math.Pow(d.D12, 2))*(d.D12 - b.B4) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + (1.0 / math.Pow(d.D12, 2)))
+	}
+}
+
+func pruneRight(d Distances, b BranchLengths, sub *SubTree) {
+	sub.Dac = d.D23
+
+	if d.D02 == 0 {
+		if d.D12 == 0 {
+			sub.Dac = 0
+		} else {
+			sub.Dac = (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B2) / (1.0 / math.Pow(d.D12, 2))
+		}
+	} else if d.D12 == 0 {
+		sub.Dac = (1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) / (1.0 / math.Pow(d.D02, 2))
+	} else {
+		sub.Dab = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) + (1.0 / math.Pow(d.D12, 2))*(d.D12 - b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + (1.0 / math.Pow(d.D12, 2)))
+	}
+
+	if d.D03 == 0 {
+		if d.D13 == 0 {
+			sub.Dbc = 0
+		} else {
+			sub.Dbc = (1.0 / math.Pow(d.D13, 2)) * (d.D13 - b.B2) / (1.0 / math.Pow(d.D13, 2))
+		}
+	} else if d.D13 == 0 {
+		sub.Dbc = (1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) / (1.0 / math.Pow(d.D03, 2))
+	} else {
+		sub.Dbc = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D13, 2)))
+	}
+}
+
+func calculateQ(d Distances, b BranchLengths) float64 {
+	var sum float64 = 0
+
+	if d.D01 != 0 {//avoid divide by zero error
+		sum += math.Pow(d.D01 - b.B1 - b.B2,2) / math.Pow(d.D01, 2)
+	}
+	if d.D02 != 0 {
+		sum += math.Pow(d.D02 - b.B1 - b.B3 - b.B4,2) / math.Pow(d.D02, 2)
+	}
+	if d.D03 != 0 {
+		sum += math.Pow(d.D03 - b.B1 - b.B3 - b.B5,2) / math.Pow(d.D03, 2)
+	}
+	if d.D12 != 0 {
+		sum += math.Pow(d.D12 - b.B2 - b.B3 - b.B4,2) / math.Pow(d.D12, 2)
+	}
+	if d.D13 != 0 {
+		sum += math.Pow(d.D13 - b.B2 - b.B3 - b.B5,2) / math.Pow(d.D13, 2)
+	}
+	if d.D23 != 0 {
+		sum += math.Pow(d.D23 - b.B4 - b.B5,2) / math.Pow(d.D23, 2)
+	}
+	return sum
+}
+
 //bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
 func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []byte, referenceCounter int) (int, bool) {
 	if s.SearchSpaceBed == "" { //no search space file, no need to look further
@@ -165,37 +299,60 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 	return currCount, currCount >= threshold
 }
 
-func fourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, windowSize int) (int, int, int, int, int, bool) {
-	var piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, baseCount, i int = 0, 0, 0, 0, 0, 0, 0
+func fourWayMutationDistances(records[]fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
+	//first we clear the values in d.
+	d.D01, d.D02, d.D03, d.D12, d.D13, d.D23 = 0, 0, 0, 0, 0, 0
+	var d01tmp int
+	var reachedEnd bool
+	var alnEnd int
+	d01tmp, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
+	d.D01 = float64(d01tmp)
+	d.D02 = float64(fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd))
+	d.D03 = float64(fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd))
+	d.D12 = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd))
+	d.D13 = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[3], alignmentCounter, alnEnd))
+	d.D23 = float64(fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd))
+	return reachedEnd
+}
+
+func fourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
+	//first we clear the values in d.
+	d.D01, d.D02, d.D03, d.D12, d.D13, d.D23 = 0, 0, 0, 0, 0, 0
+	var baseCount, i int = 0, 0
 	var reachedEnd bool = false
 
 	if len(records) != 4 {
 		log.Fatalf("multiFaAcceleration must take in a four-way multiple alignment.")
 	}
-
-	for i = alignmentCounter; baseCount < windowSize && i < len(records[0].Seq); i++ {
+	for i = alignmentCounter; baseCount < s.WindowSize && i < len(records[0].Seq); i++ {
 		if records[0].Seq[i] != dna.Gap {
 			baseCount++
 		}
 		if isUngappedColumn(records, i) {
 			if records[0].Seq[i] != records[1].Seq[i] {
-				piS0S1++
+				d.D01++
 			}
 			if records[0].Seq[i] != records[2].Seq[i] {
-				piS0S2++
+				d.D02++
 			}
 			if records[0].Seq[i] != records[3].Seq[i] {
-				piS0S3++
+				d.D03++
+			}
+			if records[1].Seq[i] != records[2].Seq[i] {
+				d.D12++
+			}
+			if records[1].Seq[i] != records[3].Seq[i] {
+				d.D13++
 			}
 			if records[2].Seq[i] != records[3].Seq[i] {
-				piS2S3++
+				d.D23++
 			}
 		}
 	}
-	if baseCount != windowSize {
+	if baseCount != s.WindowSize {
 		reachedEnd = true
 	}
-	return piS0S1, piS0S2, piS1S2, piS0S3, piS2S3, reachedEnd
+	return reachedEnd
 }
 
 func isUngappedColumn(records []fasta.Fasta, index int) bool {
@@ -235,6 +392,8 @@ func main() {
 	var windowSize *int = flag.Int("windowSize", 500, "Set the size of the sliding window.")
 	var useSnpDistance *bool = flag.Bool("useSnpDistance", false, "Calculate pairwise distances with SNPs instead of the default mutation distance, which counts INDELs.")
 	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
+	var epsilon *float64 = flag.Float64("epsilon", 1e-8, "Set the error threshold for alternating least squares branch length calculation.")
+	var allowNegative *bool = flag.Bool("allowNegative", false, "Allow the algorithm to evaluate negative branch lengths. This program will constrain the optimal solution to non-negative branch lengths by default.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -262,6 +421,8 @@ func main() {
 		UseSnpDistance:        *useSnpDistance,
 		WindowSize:            *windowSize,
 		Verbose:               *verbose,
+		Epsilon:	*epsilon,
+		AllowNegative: *allowNegative,
 	}
 
 	multiFaAcceleration(s)
