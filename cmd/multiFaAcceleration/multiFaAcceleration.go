@@ -16,18 +16,18 @@ import (
 )
 
 type Settings struct {
-	InFile                string
-	ChromName             string
-	VelOut                string
-	AccelOut              string
-	InitialVelOut         string
-	SearchSpaceBed        string
-	SearchSpaceProportion float64
-	WindowSize            int
-	UseSnpDistance        bool
-	Verbose               bool
-	Epsilon float64
-	AllowNegative bool
+	InFile                     string
+	ChromName                  string
+	VelOut                     string
+	AccelOut                   string
+	InitialVelOut              string
+	SearchSpaceBed             string
+	SearchSpaceProportion      float64
+	WindowSize                 int
+	UseSnpDistance             bool
+	Verbose                    bool
+	Epsilon                    float64
+	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
 }
 
@@ -228,38 +228,38 @@ func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64) {
 func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, s Settings) float64 {
 	if d1 == 0 {
 		if d2 == 0 {
-			return numbers.MaxFloat64(0, (s.ZeroDistanceWeightConstant*(d1-v1) + s.ZeroDistanceWeightConstant*(d2-v2)) / (2*s.ZeroDistanceWeightConstant))
+			return numbers.MaxFloat64(0, (s.ZeroDistanceWeightConstant*(d1-v1)+s.ZeroDistanceWeightConstant*(d2-v2))/(2*s.ZeroDistanceWeightConstant))
 		} else {
-			return numbers.MaxFloat64(0, s.ZeroDistanceWeightConstant*(d1-v1) + (1.0/math.Pow(d2, 2)*(d2-v2))) / (s.ZeroDistanceWeightConstant + (1.0/math.Pow(d2, 2)))
+			return numbers.MaxFloat64(0, s.ZeroDistanceWeightConstant*(d1-v1)+(1.0/math.Pow(d2, 2)*(d2-v2))) / (s.ZeroDistanceWeightConstant + (1.0 / math.Pow(d2, 2)))
 		}
 	} else if d2 == 0 {
-		return numbers.MaxFloat64(0, (1.0 / (math.Pow(d1, 2))*(d1-v1) + s.ZeroDistanceWeightConstant*(d2-v2)) / ((1.0 / math.Pow(d1, 2)) + s.ZeroDistanceWeightConstant))
+		return numbers.MaxFloat64(0, (1.0/(math.Pow(d1, 2))*(d1-v1)+s.ZeroDistanceWeightConstant*(d2-v2))/((1.0/math.Pow(d1, 2))+s.ZeroDistanceWeightConstant))
 	}
-	return numbers.MaxFloat64(0, (1.0 / (math.Pow(d1, 2))*(d1-v1) + (1.0/math.Pow(d2, 2)*(d2-v2))) / ((1.0 / math.Pow(d1, 2)) + (1.0/math.Pow(d2, 2))))
+	return numbers.MaxFloat64(0, (1.0/(math.Pow(d1, 2))*(d1-v1)+(1.0/math.Pow(d2, 2)*(d2-v2)))/((1.0/math.Pow(d1, 2))+(1.0/math.Pow(d2, 2))))
 }
 
 func pruneLeft(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 	sub.Dab = d.D01
 	if d.D03 == 0 {
 		if d.D02 == 0 {
-			sub.Dac = (s.ZeroDistanceWeightConstant * (d.D02 - b.B4) + s.ZeroDistanceWeightConstant * (d.D03 - b.B5)) / (2*s.ZeroDistanceWeightConstant)
+			sub.Dac = (s.ZeroDistanceWeightConstant*(d.D02-b.B4) + s.ZeroDistanceWeightConstant*(d.D03-b.B5)) / (2 * s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dac = ((1.0 / math.Pow(d.D02, 2)) * (d.D02 - b.B4) + (s.ZeroDistanceWeightConstant * (d.D03 - b.B5))) / (s.ZeroDistanceWeightConstant + (1.0 / math.Pow(d.D02, 2)))
+			sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B4) + (s.ZeroDistanceWeightConstant * (d.D03 - b.B5))) / (s.ZeroDistanceWeightConstant + (1.0 / math.Pow(d.D02, 2)))
 		}
 	} else if d.D02 == 0 {
-		sub.Dac = (s.ZeroDistanceWeightConstant * (d.D02 - b.B4) + ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5))) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dac = (s.ZeroDistanceWeightConstant*(d.D02-b.B4) + ((1.0 / math.Pow(d.D03, 2)) * (d.D03 - b.B5))) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B4) + (1.0/math.Pow(d.D03, 2))*(d.D03-b.B5)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D02, 2)))
 	}
 
 	if d.D13 == 0 {
 		if d.D12 == 0 {
-			sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D12 - b.B4) + s.ZeroDistanceWeightConstant * (d.D13 - b.B5)) / (2*s.ZeroDistanceWeightConstant)
+			sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D12-b.B4) + s.ZeroDistanceWeightConstant*(d.D13-b.B5)) / (2 * s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D13 - b.B5) + (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B4)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
+			sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D13-b.B5) + (1.0/math.Pow(d.D12, 2))*(d.D12-b.B4)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
 		}
 	} else if d.D12 == 0 {
-		sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D12 - b.B4) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D12-b.B4) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dbc = ((1.0/math.Pow(d.D12, 2))*(d.D12-b.B4) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
@@ -270,24 +270,24 @@ func pruneRight(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 
 	if d.D02 == 0 {
 		if d.D12 == 0 {
-			sub.Dac = (s.ZeroDistanceWeightConstant * (d.D02 - b.B1) + s.ZeroDistanceWeightConstant * (d.D12 - b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
+			sub.Dac = (s.ZeroDistanceWeightConstant*(d.D02-b.B1) + s.ZeroDistanceWeightConstant*(d.D12-b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dac = ((1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B2) + s.ZeroDistanceWeightConstant * (d.D02 - b.B1)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
+			sub.Dac = ((1.0/math.Pow(d.D12, 2))*(d.D12-b.B2) + s.ZeroDistanceWeightConstant*(d.D02-b.B1)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
 		}
 	} else if d.D12 == 0 {
-		sub.Dac = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) + s.ZeroDistanceWeightConstant * (d.D12 - b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B1) + s.ZeroDistanceWeightConstant*(d.D12-b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dab = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B1) + (1.0/math.Pow(d.D12, 2))*(d.D12-b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 
 	if d.D03 == 0 {
 		if d.D13 == 0 {
-			sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D03 - b.B1) + s.ZeroDistanceWeightConstant * (d.D13 - b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
+			sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D03-b.B1) + s.ZeroDistanceWeightConstant*(d.D13-b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dbc = ((1.0 / math.Pow(d.D13, 2)) * (d.D13 - b.B2) + s.ZeroDistanceWeightConstant * (d.D03 - b.B1)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
+			sub.Dbc = ((1.0/math.Pow(d.D13, 2))*(d.D13-b.B2) + s.ZeroDistanceWeightConstant*(d.D03-b.B1)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
 		}
 	} else if d.D13 == 0 {
-		sub.Dbc = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) + s.ZeroDistanceWeightConstant * (d.D13 - b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dbc = ((1.0/math.Pow(d.D03, 2))*(d.D03-b.B1) + s.ZeroDistanceWeightConstant*(d.D13-b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dbc = ((1.0/math.Pow(d.D03, 2))*(d.D03-b.B1) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D13, 2)))
 	}
@@ -295,35 +295,35 @@ func pruneRight(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 
 func calculateQ(d Distances, b BranchLengths, s Settings) float64 {
 	var sum float64 = 0
-	if d.D01 != 0 {//avoid divide by zero error
-		sum += math.Pow(d.D01 - b.B1 - b.B2,2) / math.Pow(d.D01, 2)
+	if d.D01 != 0 { //avoid divide by zero error
+		sum += math.Pow(d.D01-b.B1-b.B2, 2) / math.Pow(d.D01, 2)
 	} else {
-		sum += math.Pow(d.D01 - b.B1 - b.B2, 2) * s.ZeroDistanceWeightConstant
+		sum += math.Pow(d.D01-b.B1-b.B2, 2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D02 != 0 {
-		sum += math.Pow(d.D02 - b.B1 - b.B3 - b.B4,2) / math.Pow(d.D02, 2)
+		sum += math.Pow(d.D02-b.B1-b.B3-b.B4, 2) / math.Pow(d.D02, 2)
 	} else {
-		sum += math.Pow(d.D02 - b.B1 - b.B3 - b.B4,2) * s.ZeroDistanceWeightConstant
+		sum += math.Pow(d.D02-b.B1-b.B3-b.B4, 2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D03 != 0 {
-		sum += math.Pow(d.D03 - b.B1 - b.B3 - b.B5,2) / math.Pow(d.D03, 2)
+		sum += math.Pow(d.D03-b.B1-b.B3-b.B5, 2) / math.Pow(d.D03, 2)
 	} else {
-		sum += math.Pow(d.D03 - b.B1 - b.B3 - b.B5,2) * s.ZeroDistanceWeightConstant
+		sum += math.Pow(d.D03-b.B1-b.B3-b.B5, 2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D12 != 0 {
-		sum += math.Pow(d.D12 - b.B2 - b.B3 - b.B4,2) / math.Pow(d.D12, 2)
+		sum += math.Pow(d.D12-b.B2-b.B3-b.B4, 2) / math.Pow(d.D12, 2)
 	} else {
-		sum += math.Pow(d.D12 - b.B2 - b.B3 - b.B4,2) * s.ZeroDistanceWeightConstant
+		sum += math.Pow(d.D12-b.B2-b.B3-b.B4, 2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D13 != 0 {
-		sum += math.Pow(d.D13 - b.B2 - b.B3 - b.B5,2) / math.Pow(d.D13, 2)
+		sum += math.Pow(d.D13-b.B2-b.B3-b.B5, 2) / math.Pow(d.D13, 2)
 	} else {
-		sum += math.Pow(d.D13 - b.B2 - b.B3 - b.B5,2) * s.ZeroDistanceWeightConstant
+		sum += math.Pow(d.D13-b.B2-b.B3-b.B5, 2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D23 != 0 {
-		sum += math.Pow(d.D23 - b.B4 - b.B5,2) / math.Pow(d.D23, 2)
+		sum += math.Pow(d.D23-b.B4-b.B5, 2) / math.Pow(d.D23, 2)
 	} else {
-		sum += math.Pow(d.D23 - b.B4 - b.B5,2) * s.ZeroDistanceWeightConstant
+		sum += math.Pow(d.D23-b.B4-b.B5, 2) * s.ZeroDistanceWeightConstant
 	}
 	return sum
 }
@@ -462,18 +462,18 @@ func main() {
 	initialVOut := flag.Arg(4)
 
 	s := Settings{
-		InFile:                inFile,
-		ChromName:             chromName,
-		VelOut:                velOut,
-		AccelOut:              accelOut,
-		InitialVelOut:         initialVOut,
-		SearchSpaceBed:        *searchSpaceBed,
-		SearchSpaceProportion: *searchSpaceProportion,
-		UseSnpDistance:        *useSnpDistance,
-		WindowSize:            *windowSize,
-		Verbose:               *verbose,
-		Epsilon:	*epsilon,
-		AllowNegative: *allowNegative,
+		InFile:                     inFile,
+		ChromName:                  chromName,
+		VelOut:                     velOut,
+		AccelOut:                   accelOut,
+		InitialVelOut:              initialVOut,
+		SearchSpaceBed:             *searchSpaceBed,
+		SearchSpaceProportion:      *searchSpaceProportion,
+		UseSnpDistance:             *useSnpDistance,
+		WindowSize:                 *windowSize,
+		Verbose:                    *verbose,
+		Epsilon:                    *epsilon,
+		AllowNegative:              *allowNegative,
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
 	}
 

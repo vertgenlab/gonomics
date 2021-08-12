@@ -8,19 +8,19 @@ import (
 )
 
 var multiFaAccelerationTests = []struct {
-	InFile                string
-	ChromName             string
-	VelOut                string
-	AccelOut              string
-	InitialVelOut         string
-	SearchSpaceBed        string
-	SearchSpaceProportion float64
-	WindowSize            int
-	Verbose               bool
-	VelExpected           string
-	AccelExpected         string
-	InitialVelExpected    string
-	UseSnpDistance        bool
+	InFile                     string
+	ChromName                  string
+	VelOut                     string
+	AccelOut                   string
+	InitialVelOut              string
+	SearchSpaceBed             string
+	SearchSpaceProportion      float64
+	WindowSize                 int
+	Verbose                    bool
+	VelExpected                string
+	AccelExpected              string
+	InitialVelExpected         string
+	UseSnpDistance             bool
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
@@ -82,18 +82,18 @@ func TestMultiFaAcceleration(t *testing.T) {
 	var err error
 	for _, v := range multiFaAccelerationTests {
 		s := Settings{
-			InFile:                v.InFile,
-			ChromName:             v.ChromName,
-			VelOut:                v.VelOut,
-			AccelOut:              v.AccelOut,
-			InitialVelOut:         v.InitialVelOut,
-			SearchSpaceBed:        v.SearchSpaceBed,
-			SearchSpaceProportion: v.SearchSpaceProportion,
-			WindowSize:            v.WindowSize,
-			Verbose:               v.Verbose,
-			UseSnpDistance:        v.UseSnpDistance,
-			Epsilon: v.Epsilon,
-			AllowNegative: v.AllowNegative,
+			InFile:                     v.InFile,
+			ChromName:                  v.ChromName,
+			VelOut:                     v.VelOut,
+			AccelOut:                   v.AccelOut,
+			InitialVelOut:              v.InitialVelOut,
+			SearchSpaceBed:             v.SearchSpaceBed,
+			SearchSpaceProportion:      v.SearchSpaceProportion,
+			WindowSize:                 v.WindowSize,
+			Verbose:                    v.Verbose,
+			UseSnpDistance:             v.UseSnpDistance,
+			Epsilon:                    v.Epsilon,
+			AllowNegative:              v.AllowNegative,
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
 		}
 		multiFaAcceleration(s)
