@@ -23,14 +23,14 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 	var wigTotal float64 = 0
 
 	if norm == true { //TODO: This assumes fixedStep. Either should check for fixedStep or be able to handle both cases (fixedStep and variableStep)
-		for i := 0; i < len(wigData); i++ { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
+		for i := range wigData { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
 			var wigCounterByChrom float64 = 0
-			for k := 0; k < len(wigData[i].Values); k++ { //Cycle through each value in the float64[]
+			for k := range wigData[i].Values { //Cycle through each value in the float64[]
 				var chromValueMultiplyByStep float64 = 0
 				chromValueMultiplyByStep = (float64(wigData[i].Step) * wigData[i].Values[k]) // multiply each value by the step for that chrom
 				wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
 			}
-			wigTotal = wigTotal + wigCounterByChrom
+			wigTotal += wigCounterByChrom
 		}
 	}
 
@@ -42,16 +42,14 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 				if currentBed.FieldsInitialized < 7 {
 					currentBed.FieldsInitialized = 7
 				}
+				maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
 				if norm == true {
-					maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
-					normMaxWig := maxWig / wigTotal
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", float64(normMaxWig))) // %f will round to 6th decimal place
-					outlist = append(outlist, currentBed)
-				} else {
-					currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%f", bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)))
-					outlist = append(outlist, currentBed)
-
+					maxWig = maxWig / wigTotal
 				}
+				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", float64(maxWig))) // %g will
+				// print %e for large exponents, %f otherwise.
+				// Precision for %g; it is the smallest number of digits necessary to identify the value uniquely.
+				outlist = append(outlist, currentBed)
 			}
 		}
 	}

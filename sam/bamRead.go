@@ -9,9 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"log"
-	"reflect"
 	"strings"
-	"unsafe"
 )
 
 // bam is a binary version of sam compressed as a bgzf file
@@ -21,9 +19,9 @@ import (
 // magicBam is a 4 byte sequence at the start of a bam file
 const magicBam string = "BAM\u0001"
 
-// BamReader wraps a bgzf.Reader with a fully allocated bgzf.Block.
+// BamReader wraps a bgzf.BlockReader with a fully allocated bgzf.Block.
 type BamReader struct {
-	zr           bgzf.Reader
+	zr           *bgzf.BlockReader
 	blk          *bgzf.Block
 	intermediate bytes.Buffer
 	refs         []chromInfo.ChromInfo
@@ -81,7 +79,7 @@ func (r *BamReader) next(n int) []byte {
 // in the bam file.
 func OpenBam(filename string) (*BamReader, Header) {
 	r := new(BamReader)
-	r.zr = bgzf.NewReader(filename)
+	r.zr = bgzf.NewBlockReader(filename)
 	r.blk = bgzf.NewBlock()
 	err := r.zr.ReadBlock(r.blk)
 	if err != nil && err != io.EOF { // EOF handled downstream
@@ -169,6 +167,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	s.Flag = le.Uint16(r.next(2))
 	lenSeq := int(le.Uint32(r.next(4)))
 	refIdx = int32(le.Uint32(r.next(4)))
+	s.RNext = "*"
 	if refIdx != -1 {
 		s.RNext = r.refs[refIdx].Name
 	}
@@ -223,12 +222,18 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 
 	// ******
 	// Unsafe String Conversion
-	s.Qual = unsafeByteToString(s.Qual, qual) // unsafe version
+	//s.Qual = unsafeByteToString(s.Qual, qual) // unsafe version
+	//if s.Qual[0] == 0xff {
+	//	s.Qual = "*"
+	//}
 	// ******
 
 	// ******
 	// Safe String Conversion
-	//s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
+	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
+	if qual[0]-33 == 0xff {
+		s.Qual = "*"
+	}
 	// ******
 
 	// The sam.Extra field is not parsed here as it would require parsing tags to their value, then
@@ -292,20 +297,20 @@ func trimNulOrPanic(s string) string {
 // unsafeByteToString mutates the input string s to the string formed by
 // calling `string(toCopy)`. This makes s unsafe for use between calls to
 // DecodeBam unless s is copied to a new variable.
-func unsafeByteToString(s string, toCopy []byte) string {
-	header := (*reflect.StringHeader)(unsafe.Pointer(&s)) // get the header from s
-	bytesHeader := &reflect.SliceHeader{                  // convert to a byte slice header
-		Data: header.Data,
-		Len:  header.Len,
-		Cap:  header.Len,
-	}
-	if bytesHeader.Cap < len(toCopy) { // make a new slice if existing one is not big enough
-		return string(toCopy)
-	}
-
-	b := *(*[]byte)(unsafe.Pointer(bytesHeader)) // convert byte slice header to a literal []byte
-	header.Len = len(toCopy)                     // reduce len of slice header to actual len of toCopy
-	b = b[:len(toCopy)]                          // reduce len of literal byte slice conversion to len of toCopy
-	copy(b, toCopy)                              // mutate s
-	return s
-}
+//func unsafeByteToString(s string, toCopy []byte) string {
+//	header := (*reflect.StringHeader)(unsafe.Pointer(&s)) // get the header from s
+//	bytesHeader := &reflect.SliceHeader{                  // convert to a byte slice header
+//		Data: header.Data,
+//		Len:  header.Len,
+//		Cap:  header.Len,
+//	}
+//	if bytesHeader.Cap < len(toCopy) { // make a new slice if existing one is not big enough
+//		return string(toCopy)
+//	}
+//
+//	b := *(*[]byte)(unsafe.Pointer(bytesHeader)) // convert byte slice header to a literal []byte
+//	header.Len = len(toCopy)                     // reduce len of slice header to actual len of toCopy
+//	b = b[:len(toCopy)]                          // reduce len of literal byte slice conversion to len of toCopy
+//	copy(b, toCopy)                              // mutate s
+//	return s
+//}
