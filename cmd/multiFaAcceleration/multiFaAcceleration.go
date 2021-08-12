@@ -167,15 +167,20 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 	var currDiff float64 = s.Epsilon + 1 //set currDiff to something larger than epsilon so that we make it into the loop the first time.
 	var sub SubTree
 	var maxIteration, i = 1000, 0
+	var oldAnswer = BranchLengths{1, 1, 1, 1, 1}
 
 	for currDiff > s.Epsilon && i < maxIteration {
+		oldAnswer = answer
 		pruneLeft(d, answer, &sub, s)
 		answer.B1, answer.B2, answer.B3 = optimizeSubtree(&sub, s)
 		pruneRight(d, answer, &sub, s)
 		answer.B4, answer.B5, answer.B3 = optimizeSubtree(&sub, s)
 		nextQ = calculateQ(d, answer, s)
-		log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths: %f. %f. %f. %f. %f.", nextQ, currDiff, answer.B1, answer.B2, answer.B3, answer.B4, answer.B5)
-		currDiff = math.Abs(nextQ - Q)
+		//DEBUG: log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths: %f. %f. %f. %f. %f.", nextQ, currDiff, answer.B1, answer.B2, answer.B3, answer.B4, answer.B5)
+		currDiff = math.Abs(Q - nextQ)
+		if nextQ > Q {//nextQ is higher than Q, which means we got "worse"
+			answer = oldAnswer//we will exit the loop next time, so we want the old answer, which has the lower of the two terminal Q estimates.
+		}
 		Q = nextQ
 		i++
 	}
