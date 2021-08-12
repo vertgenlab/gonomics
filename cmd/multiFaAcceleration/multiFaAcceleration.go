@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math"
 )
@@ -27,6 +28,7 @@ type Settings struct {
 	Verbose               bool
 	Epsilon float64
 	AllowNegative bool
+	ZeroDistanceWeightConstant float64
 }
 
 type BranchCache struct {
@@ -132,7 +134,6 @@ func multiFaAcceleration(s Settings) {
 			referenceCounter++
 		}
 	}
-	fmt.Printf("DEBUG: velSum: %v. initialVelSum: %v.\n", velSum, initialSum)
 
 	var averageVel, averageInitialVel, b1Normal, b3Normal float64
 	averageVel = velSum / float64(len(branchCacheSlice))
@@ -161,27 +162,25 @@ func multiFaAcceleration(s Settings) {
 
 func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 	var answer = BranchLengths{1, 1, 1, 1, 1}
-	var Q float64 = calculateQ(d, answer)
+	var Q float64 = calculateQ(d, answer, s)
 	var nextQ float64
 	var currDiff float64 = s.Epsilon + 1 //set currDiff to something larger than epsilon so that we make it into the loop the first time.
 	var sub SubTree
 	var maxIteration, i =  1000, 0
 
 	for currDiff > s.Epsilon && i < maxIteration {
-		pruneLeft(d, answer, &sub)
+		pruneLeft(d, answer, &sub, s)
 		answer.B1, answer.B2, answer.B3 = optimizeSubtree(&sub, s)
-		pruneRight(d, answer, &sub)
+		pruneRight(d, answer, &sub, s)
 		answer.B4, answer.B5, answer.B3 = optimizeSubtree(&sub, s)
-		nextQ = calculateQ(d, answer)
+		nextQ = calculateQ(d, answer, s)
 		currDiff = math.Abs(nextQ - Q)
 		Q = nextQ
 		i++
 	}
-
 	if i >= maxIteration {
 		log.Fatalf("Failed to converge.")
 	}
-	fmt.Printf("In alternatingLeastSquares: b1: %f. b3: %f.\n", answer.B1, answer.B3)
 	return answer
 }
 
@@ -193,87 +192,139 @@ func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64){
 	if s.AllowNegative {
 		return sub.va, sub.vb, sub.vc
 	}
-	//TODO: here we need to set negative branch lengths to zero and recalculate other optimal branches.
-
+	if sub.va < 0 && sub.vb < 0 && sub.vc < 0 {
+		if s.Verbose {
+			log.Printf("WARNING: All branches are negative.")
+		}
+		sub.va, sub.vb, sub.vc = 0, 0, 0
+	} else if sub.va < 0 && sub.vb < 0 {
+		sub.va = 0
+		sub.vb = 0
+		sub.vc = nonNegativeApproximation(sub.Dac, sub.Dbc, sub.va, sub.vb, s)
+	} else if sub.va < 0 && sub.vc < 0 {
+		sub.va = 0
+		sub.vc = 0
+		sub.vb = nonNegativeApproximation(sub.Dbc, sub.Dab, sub.vc, sub.va, s)
+	} else if sub.vb < 0 && sub.vc < 0 {
+		sub.vb = 0
+		sub.vc = 0
+		sub.va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.vb, sub.vc, s)
+	} else if sub.va < 0 {
+		sub.va = 0
+		sub.vb = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.va, sub.vc, s)
+		sub.vc = nonNegativeApproximation(sub.Dac, sub.Dbc, sub.va, sub.vb, s)
+	} else if sub.vb < 0 {
+		sub.vb = 0
+		sub.va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.vb, sub.vc, s)
+		sub.vc = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.va, sub.vc, s)
+	} else if sub.vc < 0 {
+		sub.vc = 0
+		sub.va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.vb, sub.vc, s)
+		sub.vb = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.va, sub.vc, s)
+	}
 	return sub.va, sub.vb, sub.vc
 }
 
-func pruneLeft(d Distances, b BranchLengths, sub *SubTree) {
-	sub.Dab = d.D01
-
-	if d.D03 == 0 { //catch the divide by zero case.
-		if d.D02 == 0 {
-			sub.Dac = 0 //both branches are length zero, thus the subbranch is set to zero.
+func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, s Settings) float64 {
+	if d1 == 0 {
+		if d2 == 0 {
+			return numbers.MaxFloat64(0, (s.ZeroDistanceWeightConstant*(d1-v1) + s.ZeroDistanceWeightConstant*(d2-v2)) / (2*s.ZeroDistanceWeightConstant))
 		} else {
-			sub.Dac = (1.0 / math.Pow(d.D02, 2)) * (d.D02 - b.B4) / (1.0 / math.Pow(d.D02, 2))
+			return numbers.MaxFloat64(0, s.ZeroDistanceWeightConstant*(d1-v1) + (1.0/math.Pow(d2, 2)*(d2-v2))) / (s.ZeroDistanceWeightConstant + (1.0/math.Pow(d2, 2)))
+		}
+	} else if d2 == 0 {
+		return numbers.MaxFloat64(0, (1.0 / (math.Pow(d1, 2))*(d1-v1) + s.ZeroDistanceWeightConstant*(d2-v2)) / ((1.0 / math.Pow(d1, 2)) + s.ZeroDistanceWeightConstant))
+	}
+	return numbers.MaxFloat64(0, (1.0 / (math.Pow(d1, 2))*(d1-v1) + (1.0/math.Pow(d2, 2)*(d2-v2))) / ((1.0 / math.Pow(d1, 2)) + (1.0/math.Pow(d2, 2))))
+}
+
+func pruneLeft(d Distances, b BranchLengths, sub *SubTree, s Settings) {
+	sub.Dab = d.D01
+	if d.D03 == 0 {
+		if d.D02 == 0 {
+			sub.Dac = (s.ZeroDistanceWeightConstant * (d.D02 - b.B4) + s.ZeroDistanceWeightConstant * (d.D03 - b.B5)) / (2*s.ZeroDistanceWeightConstant)
+		} else {
+			sub.Dac = ((1.0 / math.Pow(d.D02, 2)) * (d.D02 - b.B4) + (s.ZeroDistanceWeightConstant * (d.D03 - b.B5))) / (s.ZeroDistanceWeightConstant + (1.0 / math.Pow(d.D02, 2)))
 		}
 	} else if d.D02 == 0 {
-		sub.Dac = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5)) / (1.0 / math.Pow(d.D03, 2))
+		sub.Dac = (s.ZeroDistanceWeightConstant * (d.D02 - b.B4) + ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5))) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dac = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B4) + (1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B5)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D02, 2)))
 	}
 
 	if d.D13 == 0 {
 		if d.D12 == 0 {
-			sub.Dbc = 0
+			sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D12 - b.B4) + s.ZeroDistanceWeightConstant * (d.D13 - b.B5)) / (2*s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dbc = (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B4) / (1.0 / math.Pow(d.D12, 2))
+			sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D13 - b.B5) + (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B4)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
 		}
 	} else if d.D12 == 0 {
-		sub.Dbc = (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5) / (1.0 / math.Pow(d.D13, 2))
+		sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D12 - b.B4) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dbc = ((1.0 / math.Pow(d.D12, 2))*(d.D12 - b.B4) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 }
 
-func pruneRight(d Distances, b BranchLengths, sub *SubTree) {
+func pruneRight(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 	sub.Dac = d.D23
 
 	if d.D02 == 0 {
 		if d.D12 == 0 {
-			sub.Dac = 0
+			sub.Dac = (s.ZeroDistanceWeightConstant * (d.D02 - b.B1) + s.ZeroDistanceWeightConstant * (d.D12 - b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dac = (1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B2) / (1.0 / math.Pow(d.D12, 2))
+			sub.Dac = ((1.0 / math.Pow(d.D12, 2)) * (d.D12 - b.B2) + s.ZeroDistanceWeightConstant * (d.D02 - b.B1)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
 		}
 	} else if d.D12 == 0 {
-		sub.Dac = (1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) / (1.0 / math.Pow(d.D02, 2))
+		sub.Dac = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) + s.ZeroDistanceWeightConstant * (d.D12 - b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dab = ((1.0 / math.Pow(d.D02, 2))*(d.D02 - b.B1) + (1.0 / math.Pow(d.D12, 2))*(d.D12 - b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 
 	if d.D03 == 0 {
 		if d.D13 == 0 {
-			sub.Dbc = 0
+			sub.Dbc = (s.ZeroDistanceWeightConstant * (d.D03 - b.B1) + s.ZeroDistanceWeightConstant * (d.D13 - b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
 		} else {
-			sub.Dbc = (1.0 / math.Pow(d.D13, 2)) * (d.D13 - b.B2) / (1.0 / math.Pow(d.D13, 2))
+			sub.Dbc = ((1.0 / math.Pow(d.D13, 2)) * (d.D13 - b.B2) + s.ZeroDistanceWeightConstant * (d.D03 - b.B1)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
 		}
 	} else if d.D13 == 0 {
-		sub.Dbc = (1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) / (1.0 / math.Pow(d.D03, 2))
+		sub.Dbc = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) + s.ZeroDistanceWeightConstant * (d.D13 - b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
 	} else {
 		sub.Dbc = ((1.0 / math.Pow(d.D03, 2))*(d.D03 - b.B1) + (1.0 / math.Pow(d.D13, 2))*(d.D13 - b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D13, 2)))
 	}
 }
 
-func calculateQ(d Distances, b BranchLengths) float64 {
+func calculateQ(d Distances, b BranchLengths, s Settings) float64 {
 	var sum float64 = 0
 
 	if d.D01 != 0 {//avoid divide by zero error
 		sum += math.Pow(d.D01 - b.B1 - b.B2,2) / math.Pow(d.D01, 2)
+	} else {
+		sum += math.Pow(d.D01 - b.B1 - b.B2, 2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D02 != 0 {
 		sum += math.Pow(d.D02 - b.B1 - b.B3 - b.B4,2) / math.Pow(d.D02, 2)
+	} else {
+		sum += math.Pow(d.D02 - b.B1 - b.B3 - b.B4,2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D03 != 0 {
 		sum += math.Pow(d.D03 - b.B1 - b.B3 - b.B5,2) / math.Pow(d.D03, 2)
+	} else {
+		sum += math.Pow(d.D03 - b.B1 - b.B3 - b.B5,2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D12 != 0 {
 		sum += math.Pow(d.D12 - b.B2 - b.B3 - b.B4,2) / math.Pow(d.D12, 2)
+	} else {
+		sum += math.Pow(d.D12 - b.B2 - b.B3 - b.B4,2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D13 != 0 {
 		sum += math.Pow(d.D13 - b.B2 - b.B3 - b.B5,2) / math.Pow(d.D13, 2)
+	} else {
+		sum += math.Pow(d.D13 - b.B2 - b.B3 - b.B5,2) * s.ZeroDistanceWeightConstant
 	}
 	if d.D23 != 0 {
 		sum += math.Pow(d.D23 - b.B4 - b.B5,2) / math.Pow(d.D23, 2)
+	} else {
+		sum += math.Pow(d.D23 - b.B4 - b.B5,2) * s.ZeroDistanceWeightConstant
 	}
 	return sum
 }
@@ -394,6 +445,7 @@ func main() {
 	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
 	var epsilon *float64 = flag.Float64("epsilon", 1e-8, "Set the error threshold for alternating least squares branch length calculation.")
 	var allowNegative *bool = flag.Bool("allowNegative", false, "Allow the algorithm to evaluate negative branch lengths. This program will constrain the optimal solution to non-negative branch lengths by default.")
+	var zeroDistanceWeightConstant *float64 = flag.Float64("zeroDistanceWeightConstant", 1000, "Set the relative error weight applied to pairs of species with a pairwise distance of zero.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -423,6 +475,7 @@ func main() {
 		Verbose:               *verbose,
 		Epsilon:	*epsilon,
 		AllowNegative: *allowNegative,
+		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
 	}
 
 	multiFaAcceleration(s)
