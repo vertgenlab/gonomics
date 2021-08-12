@@ -179,7 +179,7 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 		i++
 	}
 	if i >= maxIteration {
-		log.Fatalf("Failed to converge.")
+		log.Fatalf("Failed to converge on a tree with these distances. D01: %f, D02: %f, D03: %f, D12: %f, D13: %f, D23: %f.", d.D01, d.D02, d.D03, d.D12, d.D13, d.D23)
 	}
 	return answer
 }
