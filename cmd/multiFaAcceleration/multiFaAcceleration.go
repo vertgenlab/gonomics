@@ -174,6 +174,7 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 		pruneRight(d, answer, &sub, s)
 		answer.B4, answer.B5, answer.B3 = optimizeSubtree(&sub, s)
 		nextQ = calculateQ(d, answer, s)
+		log.Printf("nextQ: %e. currDiff: %e.", nextQ, currDiff)
 		currDiff = math.Abs(nextQ - Q)
 		Q = nextQ
 		i++
