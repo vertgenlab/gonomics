@@ -9,21 +9,21 @@ import (
 )
 
 var BedFilterTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
-	MinScore int
-	MaxScore int
-	MinLength int
-	MaxLength int
-	MinStart int
-	MaxStart int
-	MinEnd int
-	MaxEnd int
-	Chrom string
-	SubSet float64
-	RandSeed bool
-	SetSeed int64
+	MinScore     int
+	MaxScore     int
+	MinLength    int
+	MaxLength    int
+	MinStart     int
+	MaxStart     int
+	MinEnd       int
+	MaxEnd       int
+	Chrom        string
+	SubSet       float64
+	RandSeed     bool
+	SetSeed      int64
 }{
 	{"testdata/test.bed",
 		"testdata/tmp.bed",
@@ -44,7 +44,7 @@ var BedFilterTests = []struct {
 	{"testdata/test.bed",
 		"testdata/tmp.bed",
 		"testdata/expected.SubSet.bed",
-		-1*numbers.MaxInt,
+		-1 * numbers.MaxInt,
 		numbers.MaxInt,
 		0,
 		numbers.MaxInt,
@@ -64,20 +64,20 @@ func TestBedFilter(t *testing.T) {
 	var s Settings
 	for _, v := range BedFilterTests {
 		s = Settings{
-			InFile: v.InFile,
-			OutFile: v.OutFile,
-			MinScore: v.MinScore,
-			MaxScore: v.MaxScore,
+			InFile:    v.InFile,
+			OutFile:   v.OutFile,
+			MinScore:  v.MinScore,
+			MaxScore:  v.MaxScore,
 			MinLength: v.MinLength,
 			MaxLength: v.MaxLength,
-			MinStart: v.MinStart,
-			MaxStart: v.MaxStart,
-			MinEnd: v.MinEnd,
-			MaxEnd: v.MaxEnd,
-			Chrom: v.Chrom,
-			SubSet: v.SubSet,
-			RandSeed: v.RandSeed,
-			SetSeed: v.SetSeed,
+			MinStart:  v.MinStart,
+			MaxStart:  v.MaxStart,
+			MinEnd:    v.MinEnd,
+			MaxEnd:    v.MaxEnd,
+			Chrom:     v.Chrom,
+			SubSet:    v.SubSet,
+			RandSeed:  v.RandSeed,
+			SetSeed:   v.SetSeed,
 		}
 		bedFilter(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

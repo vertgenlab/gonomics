@@ -81,25 +81,25 @@ func usage() {
 }
 
 type Settings struct {
-	InFile string
-	OutFile string
-	MinScore int
-	MaxScore int
+	InFile    string
+	OutFile   string
+	MinScore  int
+	MaxScore  int
 	MinLength int
 	MaxLength int
-	MinStart int
-	MaxStart int
-	MinEnd int
-	MaxEnd int
-	Chrom string
-	SubSet float64
-	RandSeed	bool
-	SetSeed int64
+	MinStart  int
+	MaxStart  int
+	MinEnd    int
+	MaxEnd    int
+	Chrom     string
+	SubSet    float64
+	RandSeed  bool
+	SetSeed   int64
 }
 
 func main() {
 	var expectedNumArgs int = 2
-	var minScore *int = flag.Int("minScore", -1 * numbers.MaxInt, "Specifies the minimum score in the fourth field.")
+	var minScore *int = flag.Int("minScore", -1*numbers.MaxInt, "Specifies the minimum score in the fourth field.")
 	var maxScore *int = flag.Int("maxScore", numbers.MaxInt, "Specifies the maximum score in the fourth field.")
 	var minLength *int = flag.Int("minLength", 0, "Specifies the minimum length of the region.")
 	var maxLength *int = flag.Int("maxLength", numbers.MaxInt, "Specifies the maximum length of the region.")
@@ -123,20 +123,20 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 	s := Settings{
-		InFile: infile,
-		OutFile: outfile,
-		MinScore: *minScore,
-		MaxScore: *maxScore,
+		InFile:    infile,
+		OutFile:   outfile,
+		MinScore:  *minScore,
+		MaxScore:  *maxScore,
 		MinLength: *minLength,
 		MaxLength: *maxLength,
-		MinStart: *minStart,
-		MaxStart: *maxStart,
-		MinEnd: *minEnd,
-		MaxEnd: *maxEnd,
-		Chrom: *chrom,
-		SubSet: *subSet,
-		RandSeed: *randSeed,
-		SetSeed: *setSeed,
+		MinStart:  *minStart,
+		MaxStart:  *maxStart,
+		MinEnd:    *minEnd,
+		MaxEnd:    *maxEnd,
+		Chrom:     *chrom,
+		SubSet:    *subSet,
+		RandSeed:  *randSeed,
+		SetSeed:   *setSeed,
 	}
 	bedFilter(s)
 }
