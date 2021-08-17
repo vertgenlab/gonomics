@@ -15,6 +15,7 @@ import (
 	"math"
 )
 
+//Settings contains all program arguments and options, and is passed throughout helper functions to aid readability.
 type Settings struct {
 	InFile                     string
 	ChromName                  string
@@ -31,6 +32,7 @@ type Settings struct {
 	ZeroDistanceWeightConstant float64
 }
 
+//Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
 type BranchCache struct {
 	ChromStart int
 	ChromEnd   int
@@ -38,6 +40,7 @@ type BranchCache struct {
 	b3         float64
 }
 
+//A set of all observed pairwise distances between the four species. While these numbers must be integers, we store them as float64 to avoid casting in other functions as a way to improve readability.
 type Distances struct {
 	D01 float64
 	D02 float64
@@ -47,6 +50,7 @@ type Distances struct {
 	D23 float64
 }
 
+//The set of branch lengths corresponding to a particular distance matrix.
 type BranchLengths struct {
 	B1 float64
 	B2 float64
@@ -55,6 +59,7 @@ type BranchLengths struct {
 	B5 float64
 }
 
+//SubTree is a tree with three leaves and three branches, joined at the single internal node.
 type SubTree struct {
 	Dab float64
 	Dac float64
@@ -81,6 +86,7 @@ func multiFaAcceleration(s Settings) {
 	referenceLength = fasta.AlnPosToRefPos(records[0], len(records[0].Seq)-1)
 
 	if s.SearchSpaceBed != "" {
+		//if we want to limit our search to a particular set of regions, we populate the bitArray with 1s instead of 0s at positions overlapping the input bed entries.
 		searchSpace = bed.Read(s.SearchSpaceBed)
 		bitArray = make([]byte, referenceLength)
 		for i = range searchSpace {
@@ -90,7 +96,7 @@ func multiFaAcceleration(s Settings) {
 				}
 			}
 		}
-		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize))
+		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize))//the minimum number of bases at which a window must overlap the search space in order to be considered a valid window.
 	}
 
 	var currDistances Distances
@@ -104,12 +110,13 @@ func multiFaAcceleration(s Settings) {
 	//variables for normalization
 	var velSum, initialSum float64 = 0, 0
 	var branchCacheSlice = make([]BranchCache, 0)
+
 	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
 			log.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}
-		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)
-		if records[0].Seq[alignmentCounter] != dna.Gap {
+		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)//first we see if we have a valid window.
+		if records[0].Seq[alignmentCounter] != dna.Gap {//and if we are at a reference position.
 			if pass {
 				if s.UseSnpDistance {
 					reachedEnd = fourWaySnpDistances(records, alignmentCounter, s, &currDistances)
@@ -120,14 +127,13 @@ func multiFaAcceleration(s Settings) {
 				if _, containedInMap = distanceCache[currDistances]; !containedInMap { //if this tree has not been seen before, calculate branch lengths
 					distanceCache[currDistances] = alternatingLeastSquares(currDistances, s)
 				}
-
+				//no our distances should be in the cache, and we can do a simple lookup.
 				b1 = distanceCache[currDistances].B1
 				b3 = distanceCache[currDistances].B3
 
-				if !reachedEnd {
+				if !reachedEnd {//if we haven't run out of chromosome, we have another valid window to appear in our output.
 					velSum += b1
 					initialSum += b3
-
 					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, b1, b3})
 				}
 			}
@@ -144,6 +150,7 @@ func multiFaAcceleration(s Settings) {
 	accelBed := fileio.EasyCreate(s.AccelOut)
 	initialVelBed := fileio.EasyCreate(s.InitialVelOut)
 
+	//with our normalization parameters calculated, we can normalize the branch lengths for each window and write to file.
 	for i = range branchCacheSlice {
 		b1Normal = branchCacheSlice[i].b1 / averageVel
 		b3Normal = branchCacheSlice[i].b3 / averageInitialVel
@@ -160,6 +167,7 @@ func multiFaAcceleration(s Settings) {
 	exception.PanicOnErr(err)
 }
 
+//this helper function calculates the optimal branch lengths for a given set of distances. See readme for a detailed description of this algorithm.
 func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 	var answer = BranchLengths{1, 1, 1, 1, 1}
 	var Q float64 = calculateQ(d, answer, s)
@@ -190,6 +198,7 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 	return answer
 }
 
+//a helper function of alternatingLeastSquares. Calculates the optimal branch lengths for the three branches in a subtree.
 func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64) {
 	sub.va = (sub.Dab + sub.Dac - sub.Dbc) / 2.0
 	sub.vb = (sub.Dab + sub.Dbc - sub.Dac) / 2.0
@@ -231,6 +240,7 @@ func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64) {
 	return sub.va, sub.vb, sub.vc
 }
 
+//If we constrain branch lengths to be nonNegative, we apply this correction when the minimum Q is achieved at negative branch lengths for a subtree.
 func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, s Settings) float64 {
 	if d1 == 0 {
 		if d2 == 0 {
@@ -244,6 +254,7 @@ func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, s 
 	return numbers.MaxFloat64(0, (1.0/(math.Pow(d1, 2))*(d1-v1)+(1.0/math.Pow(d2, 2)*(d2-v2)))/((1.0/math.Pow(d1, 2))+(1.0/math.Pow(d2, 2))))
 }
 
+//Reduce the four species tree to the subtree containing species 0, 1, and the ancestor of 2/3.
 func pruneLeft(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 	sub.Dab = d.D01
 	if d.D03 == 0 {
@@ -271,6 +282,7 @@ func pruneLeft(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 	}
 }
 
+//Reduce the four species tree to the subtree containing 2, 3, and the ancestor of 0/1.
 func pruneRight(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 	sub.Dac = d.D23
 
@@ -299,6 +311,7 @@ func pruneRight(d Distances, b BranchLengths, sub *SubTree, s Settings) {
 	}
 }
 
+//For a set of distances and corresponding branch lengths, determine the value of Q, the Fitch-Margoliash least squares error.
 func calculateQ(d Distances, b BranchLengths, s Settings) float64 {
 	var sum float64 = 0
 	if d.D01 != 0 { //avoid divide by zero error
@@ -355,6 +368,7 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 	return currCount, currCount >= threshold
 }
 
+//Generate distances from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
 func fourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
 	//first we clear the values in d.
 	d.D01, d.D02, d.D03, d.D12, d.D13, d.D23 = 0, 0, 0, 0, 0, 0
@@ -371,6 +385,7 @@ func fourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, s Set
 	return reachedEnd
 }
 
+//Generate distances from SNP distance, which includes only SNPs.
 func fourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
 	//first we clear the values in d.
 	d.D01, d.D02, d.D03, d.D12, d.D13, d.D23 = 0, 0, 0, 0, 0, 0
@@ -411,6 +426,7 @@ func fourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, s Settings
 	return reachedEnd
 }
 
+//a helper function of fourWaySnpDistances, determines if an alignment column is comprised of bases (not gaps) for each species.
 func isUngappedColumn(records []fasta.Fasta, index int) bool {
 	for i := range records {
 		if !isUngappedBase(records[i].Seq[index]) {
@@ -420,6 +436,7 @@ func isUngappedColumn(records []fasta.Fasta, index int) bool {
 	return true
 }
 
+//a helper function of isUngappedColumn. True if a dna.Base is a base, not an N, gap, or dot.
 func isUngappedBase(b dna.Base) bool {
 	if b == dna.A || b == dna.T || b == dna.C || b == dna.G {
 		return true
