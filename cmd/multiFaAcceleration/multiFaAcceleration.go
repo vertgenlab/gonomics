@@ -96,7 +96,7 @@ func multiFaAcceleration(s Settings) {
 				}
 			}
 		}
-		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize))//the minimum number of bases at which a window must overlap the search space in order to be considered a valid window.
+		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize)) //the minimum number of bases at which a window must overlap the search space in order to be considered a valid window.
 	}
 
 	var currDistances Distances
@@ -115,8 +115,8 @@ func multiFaAcceleration(s Settings) {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
 			log.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}
-		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter)//first we see if we have a valid window.
-		if records[0].Seq[alignmentCounter] != dna.Gap {//and if we are at a reference position.
+		currCount, pass = thresholdCheckPasses(s, currCount, threshold, bitArray, referenceCounter) //first we see if we have a valid window.
+		if records[0].Seq[alignmentCounter] != dna.Gap {                                            //and if we are at a reference position.
 			if pass {
 				if s.UseSnpDistance {
 					reachedEnd = fourWaySnpDistances(records, alignmentCounter, s, &currDistances)
@@ -131,7 +131,7 @@ func multiFaAcceleration(s Settings) {
 				b1 = distanceCache[currDistances].B1
 				b3 = distanceCache[currDistances].B3
 
-				if !reachedEnd {//if we haven't run out of chromosome, we have another valid window to appear in our output.
+				if !reachedEnd { //if we haven't run out of chromosome, we have another valid window to appear in our output.
 					velSum += b1
 					initialSum += b3
 					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, b1, b3})
