@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
+	"math"
 	"math/rand"
 )
 
@@ -50,6 +51,16 @@ func bedFilter(s Settings) {
 		}
 		if curr.ChromEnd > s.MaxEnd {
 			pass = false
+		}
+		if s.MinNameFloat != -1*math.MaxFloat64 {
+			if common.StringToFloat64(curr.Name) < s.MinNameFloat {
+				pass = false
+			}
+		}
+		if s.MaxNameFloat != math.MaxFloat64 {
+			if common.StringToFloat64(curr.Name) > s.MaxNameFloat {
+				pass = false
+			}
 		}
 		if s.Chrom != "" {
 			if curr.Chrom != s.Chrom {
@@ -91,6 +102,8 @@ type Settings struct {
 	MaxStart  int
 	MinEnd    int
 	MaxEnd    int
+	MinNameFloat float64
+	MaxNameFloat float64
 	Chrom     string
 	SubSet    float64
 	RandSeed  bool
@@ -107,6 +120,8 @@ func main() {
 	var maxStart *int = flag.Int("maxStart", numbers.MaxInt, "Specifies the maximum starting position of the region.")
 	var minEnd *int = flag.Int("minEnd", 0, "Specifies the minimum ending position of the region.")
 	var maxEnd *int = flag.Int("maxEnd", numbers.MaxInt, "Specifies the maximum ending position of the region.")
+	var minNameFloat *float64 = flag.Float64("minNameFloat", -1*math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the name field.")
+	var maxNameFloat *float64 = flag.Float64("maxNameFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the name field.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var subSet *float64 = flag.Float64("subSet", 1.0, "Proportion of entries to retain in output, range from 0 to 1.")
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
@@ -133,6 +148,8 @@ func main() {
 		MaxStart:  *maxStart,
 		MinEnd:    *minEnd,
 		MaxEnd:    *maxEnd,
+		MinNameFloat: *minNameFloat,
+		MaxNameFloat: *maxNameFloat,
 		Chrom:     *chrom,
 		SubSet:    *subSet,
 		RandSeed:  *randSeed,
