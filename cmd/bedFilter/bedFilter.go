@@ -92,22 +92,22 @@ func usage() {
 }
 
 type Settings struct {
-	InFile    string
-	OutFile   string
-	MinScore  int
-	MaxScore  int
-	MinLength int
-	MaxLength int
-	MinStart  int
-	MaxStart  int
-	MinEnd    int
-	MaxEnd    int
+	InFile       string
+	OutFile      string
+	MinScore     int
+	MaxScore     int
+	MinLength    int
+	MaxLength    int
+	MinStart     int
+	MaxStart     int
+	MinEnd       int
+	MaxEnd       int
 	MinNameFloat float64
 	MaxNameFloat float64
-	Chrom     string
-	SubSet    float64
-	RandSeed  bool
-	SetSeed   int64
+	Chrom        string
+	SubSet       float64
+	RandSeed     bool
+	SetSeed      int64
 }
 
 func main() {
@@ -138,22 +138,22 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 	s := Settings{
-		InFile:    infile,
-		OutFile:   outfile,
-		MinScore:  *minScore,
-		MaxScore:  *maxScore,
-		MinLength: *minLength,
-		MaxLength: *maxLength,
-		MinStart:  *minStart,
-		MaxStart:  *maxStart,
-		MinEnd:    *minEnd,
-		MaxEnd:    *maxEnd,
+		InFile:       infile,
+		OutFile:      outfile,
+		MinScore:     *minScore,
+		MaxScore:     *maxScore,
+		MinLength:    *minLength,
+		MaxLength:    *maxLength,
+		MinStart:     *minStart,
+		MaxStart:     *maxStart,
+		MinEnd:       *minEnd,
+		MaxEnd:       *maxEnd,
 		MinNameFloat: *minNameFloat,
 		MaxNameFloat: *maxNameFloat,
-		Chrom:     *chrom,
-		SubSet:    *subSet,
-		RandSeed:  *randSeed,
-		SetSeed:   *setSeed,
+		Chrom:        *chrom,
+		SubSet:       *subSet,
+		RandSeed:     *randSeed,
+		SetSeed:      *setSeed,
 	}
 	bedFilter(s)
 }

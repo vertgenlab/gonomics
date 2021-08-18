@@ -71,22 +71,22 @@ func TestBedFilter(t *testing.T) {
 	var s Settings
 	for _, v := range BedFilterTests {
 		s = Settings{
-			InFile:    v.InFile,
-			OutFile:   v.OutFile,
-			MinScore:  v.MinScore,
-			MaxScore:  v.MaxScore,
-			MinLength: v.MinLength,
-			MaxLength: v.MaxLength,
-			MinStart:  v.MinStart,
-			MaxStart:  v.MaxStart,
-			MinEnd:    v.MinEnd,
-			MaxEnd:    v.MaxEnd,
+			InFile:       v.InFile,
+			OutFile:      v.OutFile,
+			MinScore:     v.MinScore,
+			MaxScore:     v.MaxScore,
+			MinLength:    v.MinLength,
+			MaxLength:    v.MaxLength,
+			MinStart:     v.MinStart,
+			MaxStart:     v.MaxStart,
+			MinEnd:       v.MinEnd,
+			MaxEnd:       v.MaxEnd,
 			MinNameFloat: v.MinNameFloat,
 			MaxNameFloat: v.MaxNameFloat,
-			Chrom:     v.Chrom,
-			SubSet:    v.SubSet,
-			RandSeed:  v.RandSeed,
-			SetSeed:   v.SetSeed,
+			Chrom:        v.Chrom,
+			SubSet:       v.SubSet,
+			RandSeed:     v.RandSeed,
+			SetSeed:      v.SetSeed,
 		}
 		bedFilter(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
