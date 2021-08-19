@@ -7,7 +7,7 @@ import (
 )
 
 //e.g. constGap_alignTests_8. len(alpha)=10,len(beta)=14
-func ConstGap_testing3(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
+func ConstGap_testing2(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	//make matrices for m (score, broken down into mRowCurrent,mRowPrevious and mColumn to save memory)
 	//and trace (traceback with directions. Make prep matrix for every checkersize, and trace matrix representing checkersize * len(beta) box)
 	var checkersize int
