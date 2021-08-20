@@ -135,25 +135,25 @@ func TestPileBuffer(t *testing.T) {
 	pb := newPileBuffer(10)
 	updatePile(pb, p1, pRefMap) // intialize new buffer
 	updatePile(pb, p2, pRefMap)
-	if len(pb.s) != 10 {
+	if len(pb.buf) != 10 {
 		t.Error("problem with pile buffer")
 	}
 	updatePile(pb, p3, pRefMap) // should expand cap to 20 to make space
-	if len(pb.s) != 20 {
+	if len(pb.buf) != 20 {
 		t.Error("problem with pile buffer")
 	}
 	updatePile(pb, p4, pRefMap) // should fill existing space without cap change
-	if len(pb.s) != 20 {
+	if len(pb.buf) != 20 {
 		t.Error("problem with pile buffer")
 	}
 
 	pb.sendPassed(p3, false, pRefMap, testChan, nil) // should send pos 1:5 and set new pb.idx
-	if len(testChan) != 4 || pb.s[pb.idx].Pos != 5 {
+	if len(testChan) != 4 || pb.buf[pb.idx].Pos != 5 {
 		t.Error("problem with pile buffer sendPassed")
 	}
 
 	updatePile(pb, p5, pRefMap) // should wrap to start of buffer
-	if pb.s[0].Pos != 21 {
+	if pb.buf[0].Pos != 21 {
 		t.Error("problem with pile buffer wrapping")
 	}
 
@@ -168,7 +168,7 @@ func TestPileBuffer(t *testing.T) {
 	}
 
 	updatePile(pb, p6, pRefMap) // should expand buffer and reorder starting at 0
-	if pb.s[0].Pos != 5 || len(pb.s) != 40 {
+	if pb.buf[0].Pos != 5 || len(pb.buf) != 40 {
 		t.Error("problem with pile buffer expansion")
 	}
 }

@@ -354,7 +354,7 @@ func (pb *pileBuffer) String() string {
 			"Data starting from 0:\n", len(pb.buf), pb.idx))
 
 	for i, val := range pb.buf {
-		s.WriteString(fmt.Sprintf("Idx: %d\t%buf\n", i, val.String()))
+		s.WriteString(fmt.Sprintf("Idx: %d\t%s\n", i, val.String()))
 	}
 
 	return s.String()
