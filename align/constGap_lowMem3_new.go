@@ -24,7 +24,7 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	route := make([]Cigar, 1)
 	var routeIdx_max int = 0
 
-	for k1, k2 = len(trace_prep_i)-1, len(trace_prep_j)-1; k1 >= 0 || k2 >= 0; { //while loop. TODO: is the end condition right? Is this the end of traceback? Also, replace initial k1 and k2 with int(score_highest_i/checkersize). Worked for example 1
+	for k1, k2 = len(trace_prep_i)-1, len(trace_prep_j)-1; k1 >= 0 || k2 >= 0; { //while loop. TODO: is the end condition right? Is this the end of traceback? Worked for test example1. Also, replace initial k1 and k2 with int(score_highest_i/checkersize)
 		//Step 2
 		trace, i_inChecker_max, j_inChecker_max = FillTraceback(alpha, beta, scores, gapPen, checkersize, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2)
 		//Step 3
@@ -83,9 +83,9 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 				}
 			}
 		}
-		fmt.Printf("Before fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO: why does trace_prep_i change before fill? are ifs executed in parallel? is "=" not one-time?
+		fmt.Printf("Before fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO: why does trace_prep_i change before fill? are ifs executed in parallel? is "=" not one-time? Maybe pointer memory operation in the background.
 		if i % checkersize == 0 && i < mColumn-1 {
-			trace_prep_i[i/checkersize] = mRowCurrent
+			copy(trace_prep_i[i/checkersize],mRowCurrent) //by coping value, instead of assigning "trace_prep_i[i/checkersize] = mRowCurrent", solves trace_prep_i problem
 			fmt.Printf("After fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		} else if i < mColumn-1 {
@@ -95,13 +95,8 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	score_highest := mRowCurrent[len(mRowCurrent)-1]
 	score_highest_i := mColumn-1
 	score_highest_j := len(mRowCurrent)-1
-	trace_prep_i[0][0] = 0
-	trace_prep_i[0][1] = -430
-	trace_prep_i[0][2] = -860
-	trace_prep_i[0][3] = -1290
-	trace_prep_i[0][4] = -1720 //TODO: remove this chunk after debugging mysterious trace_prep_i fill
 	fmt.Printf("score_highest: %d\n", score_highest) //TODO: remove after debugging. PASSED
-	fmt.Printf("trace_prep_i: %v\n", trace_prep_i) //TODO: remove after debugging
+	fmt.Printf("trace_prep_i: %v\n", trace_prep_i) //TODO: remove after debugging. PASSED
 	fmt.Printf("trace_prep_j: %v\n", trace_prep_j) //TODO: remove after debugging. PASSED
 
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
@@ -111,22 +106,7 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 func FillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int) ([][]ColType, int, int) {
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
-	mRowPrevious = trace_prep_i[k1] //TODO: uncomment after debugging
-	//if k1==1 && k2==1 { //TODO: remove this chunk after debugging mysterious trace_prep_i and trace_prep_j fill
-	//	mRowPrevious[0] = -1290
-	//	mRowPrevious[1] = -769
-	//	mRowPrevious[2] = -239
-	//	mRowPrevious[3] = 291
-	//	mRowPrevious[4] = -139
-	//	mRowCurrent[3] = -139
-	//} else if k1==0 && k2==0 { //TODO: remove this chunk after debugging mysterious trace_prep_i and trace_prep_j fill
-	//	mRowPrevious[0] = 0
-	//	mRowPrevious[1] = -430
-	//	mRowPrevious[2] = -860
-	//	mRowPrevious[3] = -1290
-	//	mRowPrevious[4] = -1720
-	//	mRowCurrent[0] = -430
-	//}
+	mRowPrevious = trace_prep_i[k1]
 	var i, j int
 	var i_inChecker, j_inChecker int
 	var i_inChecker_max, j_inChecker_max int //to keep track of i and j max in a checkerboard
@@ -147,7 +127,6 @@ func FillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 			mRowCurrent[j], trace[i_inChecker][j_inChecker] = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen) //it is ok if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard
 			fmt.Printf("filled checkerboard: k1, k2, i, j, i_inChecker, j_inChecker, alpha[i-1], beta[j-1], mRowCurrent[j], trace[i_inChecker][j_inChecker]: %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n", k1, k2, i, j, i_inChecker, j_inChecker, alpha[i-1], beta[j-1], mRowCurrent[j], trace[i_inChecker][j_inChecker]) //TODO: remove after debugging
 			//fmt.Printf("mRowPrevious[j-1], scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1], gapPen, mRowPrevious[j]: %d, %d, %d, %d, %d\n", mRowPrevious[j-1], scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1], gapPen, mRowPrevious[j])
-			//TODO: remove fmt after debugging. Magically, now example 1 mCurrent and trace PASSED! Matrix fill success
 		}
 		if i <= checkersize*(k1+1)-1 && i <= score_highest_i-1 {
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
