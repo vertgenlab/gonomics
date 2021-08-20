@@ -19,6 +19,10 @@ type Pile struct {
 	InsCount map[string]int // key is insertion sequence as string
 
 	touched bool // true if Count or InsCount has been modified
+	// touched is used as a quick check to see whether a pile struct
+	// has been used. This value is used to avoid unnecessary allocations
+	// in resetPile, and is used in checkSend to avoid sending zeroed structs
+	// that happen to pass the user-defined filters.
 }
 
 // GoPileup inputs a channel of coordinate sorted Sam structs and generates
@@ -71,7 +75,7 @@ func passesPileFilters(p Pile, filters []func(p Pile) bool) bool {
 	return true
 }
 
-// updatePile updates the input pileBuffer with the data in s
+// updatePile updates the input pileBuffer with the data in buf
 func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 	var seqPos int
 	refPos := s.Pos
@@ -126,18 +130,18 @@ func addInsertion(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
 
 // pileBuffer stores a slice of piles for efficient reuse.
 type pileBuffer struct {
-	s   []Pile // discontinuous positions are not allowed
-	idx int    // index in s of lowest pos
+	buf []Pile // discontinuous positions are not allowed
+	idx int    // index in buf of lowest pos
 }
 
 // newPileBuffer creates a newPileBuffer with input size
 func newPileBuffer(size int) *pileBuffer {
 	pb := pileBuffer{
-		s: make([]Pile, size), // initialize to len of 2 standard reads
+		buf: make([]Pile, size), // initialize to len of 2 standard reads
 	}
-	for i := range pb.s {
-		pb.s[i].RefIdx = -1
-		pb.s[i].InsCount = make(map[string]int)
+	for i := range pb.buf {
+		pb.buf[i].RefIdx = -1
+		pb.buf[i].InsCount = make(map[string]int)
 	}
 	return &pb
 }
@@ -156,18 +160,18 @@ func resetPile(p *Pile) {
 	p.touched = false
 }
 
-// sendPassed sends any Piles with a position before the start of s
+// sendPassed sends any Piles with a position before the start of buf
 func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) {
-	if pb.s[pb.idx].RefIdx == -1 {
+	if pb.buf[pb.idx].RefIdx == -1 {
 		return // buffer is empty
 	}
 	var done bool
 	var lastPos uint32
 	var lastRefIdx int
 	// starting from pb.idx to the end
-	for i := pb.idx; i < len(pb.s); i++ {
-		lastPos = pb.s[i].Pos
-		lastRefIdx = pb.s[i].RefIdx
+	for i := pb.idx; i < len(pb.buf); i++ {
+		lastPos = pb.buf[i].Pos
+		lastRefIdx = pb.buf[i].RefIdx
 		done = pb.checkSend(i, s, includeNoData, refmap, send, pileFilters)
 		if done {
 			return
@@ -176,8 +180,8 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 
 	// starting from start to pb.idx
 	for i := 0; i < pb.idx; i++ {
-		lastPos = pb.s[i].Pos
-		lastRefIdx = pb.s[i].RefIdx
+		lastPos = pb.buf[i].Pos
+		lastRefIdx = pb.buf[i].RefIdx
 		done = pb.checkSend(i, s, includeNoData, refmap, send, pileFilters)
 		if done {
 			return
@@ -185,7 +189,7 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 	}
 
 	// if we have not returned by this point, there are positions with no data
-	// between the last position send, and the beginning of s
+	// between the last position send, and the beginning of buf
 	pb.idx = 0
 	if !includeNoData {
 		return
@@ -213,28 +217,28 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 	}
 }
 
-// checkSend checks if pb.s[i] is before the start of s and sends if true. returns true when no more records to send.
+// checkSend checks if pb.buf[i] is before the start of buf and sends if true. returns true when no more records to send.
 func (pb *pileBuffer) checkSend(i int, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (done bool) {
-	if pb.s[i].RefIdx == -1 {
+	if pb.buf[i].RefIdx == -1 {
 		return
 	}
-	if pb.s[i].RefIdx < refmap[s.RName].Order {
-		if (pb.s[i].touched && passesPileFilters(pb.s[i], pileFilters)) || includeNoData {
-			send <- pb.s[i]
+	if pb.buf[i].RefIdx < refmap[s.RName].Order {
+		if (pb.buf[i].touched && passesPileFilters(pb.buf[i], pileFilters)) || includeNoData {
+			send <- pb.buf[i]
 		}
 		pb.incrementIdx()
-		resetPile(&pb.s[i])
+		resetPile(&pb.buf[i])
 		return
 	}
-	if pb.s[i].Pos >= s.Pos {
+	if pb.buf[i].Pos >= s.Pos {
 		pb.idx = i
 		return true
 	}
-	if (pb.s[i].touched && passesPileFilters(pb.s[i], pileFilters)) || includeNoData {
-		send <- pb.s[i]
+	if (pb.buf[i].touched && passesPileFilters(pb.buf[i], pileFilters)) || includeNoData {
+		send <- pb.buf[i]
 	}
 	pb.incrementIdx()
-	resetPile(&pb.s[i])
+	resetPile(&pb.buf[i])
 	return
 }
 
@@ -252,21 +256,21 @@ func (pb *pileBuffer) addIns(refidx int, pos uint32, seq string) {
 	pile.touched = true
 }
 
-// getIdx returns a pointer to the pile at index pos in s
+// getIdx returns a pointer to the pile at index pos in buf
 func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
-	if pos < pb.s[pb.idx].Pos {
+	if pos < pb.buf[pb.idx].Pos {
 		log.Panic("tried to retrieve past position. unsorted input?")
 	}
-	queryIdx := int(pos-pb.s[pb.idx].Pos) + pb.idx
+	queryIdx := int(pos-pb.buf[pb.idx].Pos) + pb.idx
 
 	// calc if queryIdx wraps around to start of buffer
-	if queryIdx >= len(pb.s) {
-		queryIdx -= len(pb.s)
+	if queryIdx >= len(pb.buf) {
+		queryIdx -= len(pb.buf)
 	}
 
 	// check position for correct data, return if found
-	if queryIdx < len(pb.s) && pb.s[queryIdx].Pos == pos {
-		return &pb.s[queryIdx]
+	if queryIdx < len(pb.buf) && pb.buf[queryIdx].Pos == pos {
+		return &pb.buf[queryIdx]
 	}
 
 	// at this point, one of the following is true:
@@ -275,11 +279,11 @@ func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
 	// 3: the buffer is full and needs to be expanded
 
 	switch {
-	case pb.s[pb.idx].RefIdx == -1: // buffer is empty (case 1)
+	case pb.buf[pb.idx].RefIdx == -1: // buffer is empty (case 1)
 		pb.initializeFromEmpty(pos, refidx)
-		return &pb.s[pb.idx]
+		return &pb.buf[pb.idx]
 
-	case pb.s[pb.decrementIdx()].RefIdx == -1: // buffer is partially full (case 2)
+	case pb.buf[pb.decrementIdx()].RefIdx == -1: // buffer is partially full (case 2)
 		pb.fillFromPartial()
 		return pb.getIdx(refidx, pos)
 
@@ -290,11 +294,11 @@ func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
 
 }
 
-// initializeFromEmpty fills an empty pileBuffer starting with the position of s.Seq[0]
+// initializeFromEmpty fills an empty pileBuffer starting with the position of buf.Seq[0]
 func (pb *pileBuffer) initializeFromEmpty(pos uint32, refidx int) {
-	for ; pb.s[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
-		pb.s[pb.idx].Pos = pos
-		pb.s[pb.idx].RefIdx = refidx
+	for ; pb.buf[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
+		pb.buf[pb.idx].Pos = pos
+		pb.buf[pb.idx].RefIdx = refidx
 		pos++
 	}
 }
@@ -302,12 +306,12 @@ func (pb *pileBuffer) initializeFromEmpty(pos uint32, refidx int) {
 // fillFromPartial fills a partially filled pileBuffer
 func (pb *pileBuffer) fillFromPartial() {
 	start := pb.idx
-	refidx := pb.s[pb.idx].RefIdx
-	pos := pb.s[pb.idx].Pos + 1
+	refidx := pb.buf[pb.idx].RefIdx
+	pos := pb.buf[pb.idx].Pos + 1
 	for pb.idx = pb.incrementIdx(); pb.idx != start; pb.idx = pb.incrementIdx() {
-		if pb.s[pb.idx].RefIdx == -1 {
-			pb.s[pb.idx].RefIdx = refidx
-			pb.s[pb.idx].Pos = pos
+		if pb.buf[pb.idx].RefIdx == -1 {
+			pb.buf[pb.idx].RefIdx = refidx
+			pb.buf[pb.idx].Pos = pos
 		}
 		pos++
 	}
@@ -315,9 +319,9 @@ func (pb *pileBuffer) fillFromPartial() {
 
 // expand the pileBuffer by 2x its current size
 func (pb *pileBuffer) expand() {
-	newpb := newPileBuffer(len(pb.s) * 2)
-	for i := 0; i < len(pb.s); i++ {
-		newpb.s[i] = pb.s[pb.idx]
+	newpb := newPileBuffer(len(pb.buf) * 2)
+	for i := 0; i < len(pb.buf); i++ {
+		newpb.buf[i] = pb.buf[pb.idx]
 		pb.idx = pb.incrementIdx()
 	}
 	*pb = *newpb
@@ -326,7 +330,7 @@ func (pb *pileBuffer) expand() {
 // incrementIdx returns the idx of the pile after pb.idx
 func (pb *pileBuffer) incrementIdx() int {
 	newidx := pb.idx + 1
-	if newidx == len(pb.s) {
+	if newidx == len(pb.buf) {
 		return 0
 	}
 	return newidx
@@ -336,7 +340,7 @@ func (pb *pileBuffer) incrementIdx() int {
 func (pb *pileBuffer) decrementIdx() int {
 	newidx := pb.idx - 1
 	if newidx == -1 {
-		return len(pb.s) - 1
+		return len(pb.buf) - 1
 	}
 	return newidx
 }
@@ -347,10 +351,10 @@ func (pb *pileBuffer) String() string {
 	s.WriteString(fmt.Sprintf(
 		"\nCap: %d\n"+
 			"Idx: %d\n"+
-			"Data starting from 0:\n", len(pb.s), pb.idx))
+			"Data starting from 0:\n", len(pb.buf), pb.idx))
 
-	for i, val := range pb.s {
-		s.WriteString(fmt.Sprintf("Idx: %d\t%s\n", i, val.String()))
+	for i, val := range pb.buf {
+		s.WriteString(fmt.Sprintf("Idx: %d\t%buf\n", i, val.String()))
 	}
 
 	return s.String()

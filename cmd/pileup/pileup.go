@@ -16,6 +16,10 @@ import (
 func usage() {
 	fmt.Print(
 		"pileup - Count bases from sequencing data\n\n" +
+			"pileup prints to stdout by default, but can be redirected with the -o flag.\n" +
+			"The output format is a tab-separated file with columns defined as:\n" +
+			"Chr\tPos\t#A\t#C\t#G\t#T\t#N\t#DEL\tINS_array\n" +
+			"INS_array is an array of observed insertions with format insSeq:readCount\n\n" +
 			"Usage:\n" +
 			"  pileup [options] in.bam\n\n" +
 			"Options:\n")
@@ -27,16 +31,16 @@ type Settings struct {
 }
 
 // pileFilters parses the Settings struct to make functions to filter the output piles.
-func pileFilters(s Settings) []func(p sam.Pile) bool {
-	var filters []func(p sam.Pile) bool
+func pileFilters(s Settings) []func(pile sam.Pile) bool {
+	var filters []func(pile sam.Pile) bool
 
 	if s.minDp > 0 {
-		filters = append(filters, func(p sam.Pile) bool {
+		filters = append(filters, func(pile sam.Pile) bool {
 			var count int
-			for i := range p.Count {
-				count += p.Count[i]
+			for i := range pile.Count {
+				count += pile.Count[i]
 			}
-			for _, i := range p.InsCount {
+			for _, i := range pile.InsCount {
 				count += i
 			}
 			return count >= s.minDp
@@ -46,7 +50,8 @@ func pileFilters(s Settings) []func(p sam.Pile) bool {
 	return filters
 }
 
-func pileup(infile string, outfile string, s Settings) {
+func pileup(infile string, outfile string, settings Settings) {
+	sBuilder := new(strings.Builder)
 	reads, recycle, header := sam.GoReadToChanRecycle(infile, 1000)
 	sendChan := make(chan sam.Sam) // no buffer to satisfy recycle contract
 
@@ -64,14 +69,14 @@ func pileup(infile string, outfile string, s Settings) {
 		close(sendChan)
 	}(reads, recycle, sendChan)
 
-	pileChan := sam.GoPileup(sendChan, header, false, nil, pileFilters(s))
+	pileChan := sam.GoPileup(sendChan, header, false, nil, pileFilters(settings))
 
 	var err error
 	output := fileio.EasyCreate(outfile)
-	_, err = fmt.Fprintln(output, "Chr\tPos\tA\tC\tG\tT\tN\tDEL\tINS")
+	_, err = fmt.Fprintln(output, "#Chr\tPos\tA\tC\tG\tT\tN\tDEL\tINS")
 	exception.PanicOnErr(err)
 	for pile := range pileChan {
-		_, err = fmt.Fprintln(output, fmtOutput(pile, header))
+		_, err = fmt.Fprintln(output, fmtOutput(pile, header, sBuilder))
 		exception.PanicOnErr(err)
 	}
 	err = output.Close()
@@ -79,20 +84,14 @@ func pileup(infile string, outfile string, s Settings) {
 }
 
 // fmtOutput formats each bases pile for writing. Subject to change.
-func fmtOutput(pile sam.Pile, h sam.Header) string {
-	s.Reset()
-	s.WriteString(fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d", h.Chroms[pile.RefIdx].Name, pile.Pos,
+func fmtOutput(pile sam.Pile, header sam.Header, builder *strings.Builder) string {
+	builder.Reset()
+	builder.WriteString(fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d", header.Chroms[pile.RefIdx].Name, pile.Pos,
 		pile.Count[dna.A], pile.Count[dna.C], pile.Count[dna.G], pile.Count[dna.T], pile.Count[dna.N], pile.Count[dna.Gap]))
 	for seq, count := range pile.InsCount {
-		s.WriteString(fmt.Sprintf("\t%s:%d", seq, count))
+		builder.WriteString(fmt.Sprintf("\t%s:%d", seq, count))
 	}
-	return s.String()
-}
-
-var s *strings.Builder
-
-func init() {
-	s = new(strings.Builder)
+	return builder.String()
 }
 
 func main() {
