@@ -6,12 +6,19 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
-	"strings"
 )
 
 // Pile stores the number of each base observed across multiple reads.
 // The number of a particular base can be retrieved by using the dna.Base
 // as the index for Pile.Count. E.g. the number of reads with A is Count[dna.A].
+//
+// Linked list mechanics:
+// In the pileup function the Pile struct is part of a circular doubly-linked
+// list in which Pile.next/prev is the next/prev contiguous position. Discontiguous
+// positions are not allowed. When adding base information to the pile struct, the
+// pointer to the start of the read position should be kept, and a second pointer
+// will increment along the list as bases are added. The pointer to the beginning
+// of the list should only be incremented when a position is passed and set to zero.
 type Pile struct {
 	RefIdx   int
 	Pos      uint32
@@ -23,6 +30,9 @@ type Pile struct {
 	// has been used. This value is used to avoid unnecessary allocations
 	// in resetPile, and is used in checkSend to avoid sending zeroed structs
 	// that happen to pass the user-defined filters.
+
+	next *Pile
+	prev *Pile
 }
 
 // GoPileup inputs a channel of coordinate sorted Sam structs and generates
@@ -37,22 +47,8 @@ func GoPileup(reads <-chan Sam, header Header, includeNoData bool, readFilters [
 		log.Fatal("ERROR: (GoPileup) input sam/bam must be coordinate sorted")
 	}
 	pileChan := make(chan Pile, 1000)
-	go pileup(pileChan, reads, header, includeNoData, readFilters, pileFilters)
+	go pileupLinked(pileChan, reads, header, includeNoData, readFilters, pileFilters)
 	return pileChan
-}
-
-// pileup generates multiple Pile based on the input reads and sends the Pile when passed.
-func pileup(send chan<- Pile, reads <-chan Sam, header Header, includeNoData bool, readFilters []func(s Sam) bool, pileFilters []func(p Pile) bool) {
-	pb := newPileBuffer(300) // initialize to 2x std read size
-	refmap := chromInfo.SliceToMap(header.Chroms)
-	for read := range reads {
-		if !passesReadFilters(read, readFilters) {
-			continue
-		}
-		pb.sendPassed(read, includeNoData, refmap, send, pileFilters)
-		updatePile(pb, read, refmap)
-	}
-	close(send)
 }
 
 // passesReadFilters returns true if input Sam is true for all functions in filters.
@@ -75,24 +71,73 @@ func passesPileFilters(p Pile, filters []func(p Pile) bool) bool {
 	return true
 }
 
-// updatePile updates the input pileBuffer with the data in buf
-func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
+func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoData bool, readFilters []func(s Sam) bool, pileFilters []func(p Pile) bool) {
+	start := newLinkedPileBuffer(300) // initialize to 2x std read size
+	refmap := chromInfo.SliceToMap(header.Chroms)
+	for read := range reads {
+		if !passesReadFilters(read, readFilters) {
+			continue
+		}
+		start = sendPassedLinked(start, read, includeNoData, refmap, send, pileFilters)
+		updateLinkedPile(start, read, refmap)
+	}
+	close(send)
+}
+
+// newLinkedPilebuffer creates size Pile structs as a doubly-linked list and returns the start.
+func newLinkedPileBuffer(size int) (start *Pile) {
+	buf := make([]Pile, size)
+
+	for i := range buf {
+		buf[i].RefIdx = -1
+
+		switch i {
+		case 0: // first in slice
+			buf[i].next = &buf[i+1]
+			buf[i].prev = &buf[len(buf)-1]
+
+		case len(buf) - 1: // last in slice
+			buf[i].next = &buf[0]
+			buf[i].prev = &buf[i-1]
+
+		default:
+			buf[i].next = &buf[i+1]
+			buf[i].prev = &buf[i-1]
+		}
+	}
+	return &buf[0]
+}
+
+// expandLinkedPileBuffer adds toAdd new Piles to the list directly after start.
+func expandLinkedPileBuffer(start *Pile, toAdd int) {
+	end := start.next
+	newStart := newLinkedPileBuffer(toAdd)
+	newEnd := newStart.prev
+
+	start.next = newStart
+	newStart.prev = start
+	end.prev = newEnd
+	newEnd.next = end
+}
+
+// updateLinkedPile updates the linked list with the data in s.
+func updateLinkedPile(start *Pile, s Sam, refmap map[string]chromInfo.ChromInfo) {
 	var seqPos int
 	refPos := s.Pos
 	refidx := refmap[s.RName].Order
 	for i := range s.Cigar {
 		switch s.Cigar[i].Op {
 		case 'M', '=', 'X': // Match
-			addMatch(pb, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
+			addMatchLinked(start, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
 			refPos += uint32(s.Cigar[i].RunLength)
 			seqPos += s.Cigar[i].RunLength
 
 		case 'D': // Deletion
-			addDeletion(pb, refidx, refPos, s.Cigar[i].RunLength)
+			addDeletionLinked(start, refidx, refPos, s.Cigar[i].RunLength)
 			refPos += uint32(s.Cigar[i].RunLength)
 
 		case 'I': // Insertion
-			addInsertion(pb, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
+			addInsertionLinked(start, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
 			seqPos += s.Cigar[i].RunLength
 
 		default:
@@ -106,93 +151,81 @@ func updatePile(pb *pileBuffer, s Sam, refmap map[string]chromInfo.ChromInfo) {
 	}
 }
 
-// addMatch to pileBuffer
-func addMatch(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
+func addMatchLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base) *Pile {
 	for i := range seq {
-		pb.addBase(refidx, startPos+uint32(i), seq[i])
+		start = getPile(start, refidx, startPos+uint32(i))
+		start.Count[seq[i]]++
+		start.touched = true
 	}
+	return start
 }
 
-// addDeletion to pileBuffer
-func addDeletion(pb *pileBuffer, refidx int, startPos uint32, length int) {
+func addDeletionLinked(start *Pile, refidx int, startPos uint32, length int) *Pile {
 	var i uint32
 	for i = 0; i < uint32(length); i++ {
-		pb.addBase(refidx, startPos+i, dna.Gap)
+		start = getPile(start, refidx, startPos+i)
+		start.Count[dna.Gap]++
+		start.touched = true
 	}
+	return start
 }
 
-// addInsertion to pileBuffer
-func addInsertion(pb *pileBuffer, refidx int, startPos uint32, seq []dna.Base) {
-	pb.addIns(refidx, startPos, dna.BasesToString(seq))
+func addInsertionLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base) *Pile {
+	start = getPile(start, refidx, startPos)
+	if start.InsCount == nil { // only make the map when we need it
+		start.InsCount = make(map[string]int)
+	}
+	start.InsCount[dna.BasesToString(seq)]++
+	start.touched = true
+	return start
 }
 
-// ****** pileBuffer functions below ****** //
+func getPile(start *Pile, refidx int, pos uint32) *Pile {
+	for start.RefIdx != refidx && start.Pos != pos {
+		switch {
+		case start.prev.RefIdx == -1 && start.RefIdx == -1: // no data in buffer, start at pos
+			start.RefIdx = refidx
+			start.Pos = pos
+			return start
 
-// pileBuffer stores a slice of piles for efficient reuse.
-type pileBuffer struct {
-	buf []Pile // discontinuous positions are not allowed
-	idx int    // index in buf of lowest pos
-}
+		case start.RefIdx == -1: // previous has data, current is empty. update from previous
+			start.RefIdx = start.prev.RefIdx
+			start.Pos = start.prev.Pos + 1
 
-// newPileBuffer creates a newPileBuffer with input size
-func newPileBuffer(size int) *pileBuffer {
-	pb := pileBuffer{
-		buf: make([]Pile, size), // initialize to len of 2 standard reads
-	}
-	for i := range pb.buf {
-		pb.buf[i].RefIdx = -1
-		pb.buf[i].InsCount = make(map[string]int)
-	}
-	return &pb
-}
+		case start.Pos < start.prev.Pos: // looped to start of buffer. need to expand
+			start = start.prev // back up to end of buffer
+			expandLinkedPileBuffer(start, 300)
+			start = start.next // move into start of newly added buffer
 
-// resetPile sets a Pile to the default state
-func resetPile(p *Pile) {
-	p.RefIdx = -1
-	p.Pos = 0
-	if !p.touched {
-		return
-	}
-	for i := range p.Count {
-		p.Count[i] = 0
-	}
-	p.InsCount = make(map[string]int)
-	p.touched = false
-}
-
-// sendPassed sends any Piles with a position before the start of buf
-func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) {
-	if pb.buf[pb.idx].RefIdx == -1 {
-		return // buffer is empty
-	}
-	var done bool
-	var lastPos uint32
-	var lastRefIdx int
-	// starting from pb.idx to the end
-	for i := pb.idx; i < len(pb.buf); i++ {
-		lastPos = pb.buf[i].Pos
-		lastRefIdx = pb.buf[i].RefIdx
-		done = pb.checkSend(i, s, includeNoData, refmap, send, pileFilters)
-		if done {
-			return
+		default:
+			start = start.next
 		}
 	}
+	return start
+}
 
-	// starting from start to pb.idx
-	for i := 0; i < pb.idx; i++ {
-		lastPos = pb.buf[i].Pos
-		lastRefIdx = pb.buf[i].RefIdx
-		done = pb.checkSend(i, s, includeNoData, refmap, send, pileFilters)
-		if done {
-			return
+func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
+	var lastRefIdx int
+	var lastPos uint32
+	for start.RefIdx != refmap[s.RName].Order && start.Pos != s.Pos {
+		if start.RefIdx == -1 {
+			break
+		}
+
+		if (start.touched || includeNoData) && passesPileFilters(*start, pileFilters) {
+			lastRefIdx = start.RefIdx
+			lastPos = start.Pos
+
+			send <- *start
+			resetPile(start)
+			start = start.next
 		}
 	}
 
 	// if we have not returned by this point, there are positions with no data
 	// between the last position send, and the beginning of buf
-	pb.idx = 0
 	if !includeNoData {
-		return
+		return start
 	}
 
 	// send missing chromosome data
@@ -215,152 +248,26 @@ func (pb *pileBuffer) sendPassed(s Sam, includeNoData bool, refmap map[string]ch
 		}
 		lastRefIdx++
 	}
+
+	return start
 }
 
-// checkSend checks if pb.buf[i] is before the start of buf and sends if true. returns true when no more records to send.
-func (pb *pileBuffer) checkSend(i int, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (done bool) {
-	if pb.buf[i].RefIdx == -1 {
+// resetPile sets a Pile to the default state
+func resetPile(p *Pile) {
+	p.RefIdx = -1
+	p.Pos = 0
+	if !p.touched {
 		return
 	}
-	if pb.buf[i].RefIdx < refmap[s.RName].Order {
-		if (pb.buf[i].touched && passesPileFilters(pb.buf[i], pileFilters)) || includeNoData {
-			send <- pb.buf[i]
-		}
-		pb.incrementIdx()
-		resetPile(&pb.buf[i])
-		return
-	}
-	if pb.buf[i].Pos >= s.Pos {
-		pb.idx = i
-		return true
-	}
-	if (pb.buf[i].touched && passesPileFilters(pb.buf[i], pileFilters)) || includeNoData {
-		send <- pb.buf[i]
-	}
-	pb.incrementIdx()
-	resetPile(&pb.buf[i])
-	return
-}
-
-// addBase to the pileBuffer at the input position
-func (pb *pileBuffer) addBase(refidx int, pos uint32, base dna.Base) {
-	pile := pb.getIdx(refidx, pos)
-	pile.Count[base]++
-	pile.touched = true
-}
-
-// addIns to the pileBuffer at the input position
-func (pb *pileBuffer) addIns(refidx int, pos uint32, seq string) {
-	pile := pb.getIdx(refidx, pos)
-	pile.InsCount[seq]++
-	pile.touched = true
-}
-
-// getIdx returns a pointer to the pile at index pos in buf
-func (pb *pileBuffer) getIdx(refidx int, pos uint32) *Pile {
-	if pos < pb.buf[pb.idx].Pos {
-		log.Panic("tried to retrieve past position. unsorted input?")
-	}
-	queryIdx := int(pos-pb.buf[pb.idx].Pos) + pb.idx
-
-	// calc if queryIdx wraps around to start of buffer
-	if queryIdx >= len(pb.buf) {
-		queryIdx -= len(pb.buf)
+	for i := range p.Count {
+		p.Count[i] = 0
 	}
 
-	// check position for correct data, return if found
-	if queryIdx < len(pb.buf) && pb.buf[queryIdx].Pos == pos {
-		return &pb.buf[queryIdx]
-	}
-
-	// at this point, one of the following is true:
-	// 1: the buffer is empty and needs to be filled
-	// 2: the buffer is partially full and can be filled to pos
-	// 3: the buffer is full and needs to be expanded
-
-	switch {
-	case pb.buf[pb.idx].RefIdx == -1: // buffer is empty (case 1)
-		pb.initializeFromEmpty(pos, refidx)
-		return &pb.buf[pb.idx]
-
-	case pb.buf[pb.decrementIdx()].RefIdx == -1: // buffer is partially full (case 2)
-		pb.fillFromPartial()
-		return pb.getIdx(refidx, pos)
-
-	default: // buffer is full (case 3)
-		pb.expand()
-		return pb.getIdx(refidx, pos)
-	}
-
-}
-
-// initializeFromEmpty fills an empty pileBuffer starting with the position of buf.Seq[0]
-func (pb *pileBuffer) initializeFromEmpty(pos uint32, refidx int) {
-	for ; pb.buf[pb.idx].RefIdx == -1; pb.idx = pb.incrementIdx() {
-		pb.buf[pb.idx].Pos = pos
-		pb.buf[pb.idx].RefIdx = refidx
-		pos++
-	}
-}
-
-// fillFromPartial fills a partially filled pileBuffer
-func (pb *pileBuffer) fillFromPartial() {
-	start := pb.idx
-	refidx := pb.buf[pb.idx].RefIdx
-	pos := pb.buf[pb.idx].Pos + 1
-	for pb.idx = pb.incrementIdx(); pb.idx != start; pb.idx = pb.incrementIdx() {
-		if pb.buf[pb.idx].RefIdx == -1 {
-			pb.buf[pb.idx].RefIdx = refidx
-			pb.buf[pb.idx].Pos = pos
-		}
-		pos++
-	}
-}
-
-// expand the pileBuffer by 2x its current size
-func (pb *pileBuffer) expand() {
-	newpb := newPileBuffer(len(pb.buf) * 2)
-	for i := 0; i < len(pb.buf); i++ {
-		newpb.buf[i] = pb.buf[pb.idx]
-		pb.idx = pb.incrementIdx()
-	}
-	*pb = *newpb
-}
-
-// incrementIdx returns the idx of the pile after pb.idx
-func (pb *pileBuffer) incrementIdx() int {
-	newidx := pb.idx + 1
-	if newidx == len(pb.buf) {
-		return 0
-	}
-	return newidx
-}
-
-// decrementIdx returns the idx of the pile before pb.idx
-func (pb *pileBuffer) decrementIdx() int {
-	newidx := pb.idx - 1
-	if newidx == -1 {
-		return len(pb.buf) - 1
-	}
-	return newidx
-}
-
-// String for debug
-func (pb *pileBuffer) String() string {
-	s := new(strings.Builder)
-	s.WriteString(fmt.Sprintf(
-		"\nCap: %d\n"+
-			"Idx: %d\n"+
-			"Data starting from 0:\n", len(pb.buf), pb.idx))
-
-	for i, val := range pb.buf {
-		s.WriteString(fmt.Sprintf("Idx: %d\t%s\n", i, val.String()))
-	}
-
-	return s.String()
+	p.InsCount = nil // only make map when we need it
+	p.touched = false
 }
 
 // String for debug
 func (p *Pile) String() string {
-	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCount: %v\tInsCount:%v", p.RefIdx, p.Pos, p.Count, p.InsCount)
+	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCount: %v\tInsCount:%v\tNext:%p\tPrev:%p", p.RefIdx, p.Pos, p.Count, p.InsCount, p.next, p.prev)
 }
