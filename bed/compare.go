@@ -159,6 +159,24 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 	}
 	return CompareChromEnd(a, b)
 }
+//CompareDistance compares beds by chromStart and chromEnd and returns the minimum distance between the two beds.
+func CompareDistance(a Bed, b Bed) int {
+	chromComp := strings.Compare(a.Chrom, b.Chrom)
+	if chromComp != 0 {
+		return chromComp  //maybe this should flag to tell the user the chrom are not the same, otherwise it just gives back a "-1" or "1".
+		// This also a potential problem for "func compare" starting at line 110 above.
+	}
+	if Overlap (a, b) {
+		return 0
+	}
+	if a.ChromStart - b.ChromEnd > 0 { //only positive if bed "a" is downstream of "b" bed.
+		return int(a.ChromStart - b.ChromEnd)
+	}
+	if b.ChromStart - a.ChromEnd > 0 { //only positive if bed "b" is downstream of "a" bed.
+		return int(b.ChromStart - a.ChromEnd)
+	}
+	return ??? // I dont know what to return here?
+}
 
 //AllAreEqual returns true if two input slices of Beds contain Bed entries that all return true for Equal.
 func AllAreEqual(a []Bed, b []Bed) bool {
