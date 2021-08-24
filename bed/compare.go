@@ -160,6 +160,7 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 	}
 	return CompareChromEnd(a, b)
 }
+
 //CompareDistance compares beds by chromStart and chromEnd and returns the minimum distance between
 //the two beds. return options; -1 (different chromosomes, no distance calculated),
 //0 (overlap, minimum distance is 0), >=0 is the minimum distance.
@@ -168,13 +169,13 @@ func CompareDistance(a Bed, b Bed) int {
 	if chromComp == 0 {
 		return -1
 	}
-	if Overlap (a, b) {
+	if Overlap(a, b) {
 		return 0
 	}
-	if a.ChromStart - b.ChromEnd > 0 { //only positive if bed "a" is downstream of "b" bed.
+	if a.ChromStart-b.ChromEnd > 0 { //only positive if bed "a" is downstream of "b" bed.
 		return a.ChromStart - b.ChromEnd
 	}
-	if b.ChromStart - a.ChromEnd > 0 { //only positive if bed "b" is downstream of "a" bed.
+	if b.ChromStart-a.ChromEnd > 0 { //only positive if bed "b" is downstream of "a" bed.
 		return b.ChromStart - a.ChromEnd
 	}
 	log.Panic("something went wrong")
