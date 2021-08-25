@@ -141,7 +141,7 @@ func CompareSize(a Bed, b Bed) int {
 	return 0
 }
 
-//Compare returns zero for beds with an equal ChromEnd position and otherwise returns the ordering of the two Bed entries by chromEnd.
+//CompareChromEnd returns zero for beds with an equal ChromEnd position and otherwise returns the ordering of the two Bed entries by chromEnd.
 func CompareChromEnd(a Bed, b Bed) int {
 	if a.ChromEnd < b.ChromEnd {
 		return -1
@@ -164,20 +164,20 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 //the two beds. return options; -1 (different chromosomes, no distance calculated),
 //0 (overlap, minimum distance is 0), >=0 is the minimum distance.
 func CompareDistance(a Bed, b Bed) int {
-	chromComp := strings.Compare(a.Chrom, b.Chrom)
-	if chromComp == 0 {
-		return -1
+	if a.Chrom != b.Chrom {
+		log.Panic("chromosomes do not match between input beds")
+		return -1 //when I run a test on this it only returns the panic statement and not the "-1".
 	}
 	if Overlap (a, b) {
 		return 0
 	}
-	if a.ChromStart - b.ChromEnd > 0 { //only positive if bed "a" is downstream of "b" bed.
-		return a.ChromStart - b.ChromEnd
+	if a.ChromStart - b.ChromEnd >= 0 { //only positive if bed "a" is downstream of "b" bed.
+		return a.ChromStart - b.ChromEnd +1
 	}
-	if b.ChromStart - a.ChromEnd > 0 { //only positive if bed "b" is downstream of "a" bed.
-		return b.ChromStart - a.ChromEnd
+	if b.ChromStart - a.ChromEnd >= 0 { //only positive if bed "b" is downstream of "a" bed.
+		return b.ChromStart - a.ChromEnd +1
 	}
-	log.Panic("something went wrong")
+	log.Panic("something went wrong with CompareDistance")
 	return -1 // maybe just return -1 here to indicate that we can't count a distance?
 }
 
