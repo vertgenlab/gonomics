@@ -23,7 +23,7 @@ type Pile struct {
 	RefIdx   int
 	Pos      uint32
 	Count    [13]int        // Count[dna.Base] == Number of observed dna.Base
-	InsCount map[string]int // key is insertion sequence as string
+	InsCount map[string]int // key is insertion sequence as string, value is number of observations
 
 	touched bool // true if Count or InsCount has been modified
 	// touched is used as a quick check to see whether a pile struct
@@ -36,7 +36,7 @@ type Pile struct {
 }
 
 // GoPileup inputs a channel of coordinate sorted Sam structs and generates
-// a Pile for each base. The Pile is send through the return channel when
+// a Pile for each base. The Pile is sent through the return channel when
 // the Pile position is no longer being updated.
 //
 // The input readFilter functions must all be true for a read to be included.
