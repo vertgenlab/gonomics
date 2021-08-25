@@ -160,6 +160,7 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 	}
 	return CompareChromEnd(a, b)
 }
+
 //CompareDistance compares beds by chromStart and chromEnd and returns the minimum distance between
 //the two beds. return options; -1 (different chromosomes, no distance calculated),
 //0 (overlap, minimum distance is 0), >=0 is the minimum distance.
@@ -168,14 +169,22 @@ func CompareDistance(a Bed, b Bed) int {
 		log.Panic("chromosomes do not match between input beds")
 		return -1 //when I run a test on this it only returns the panic statement and not the "-1".
 	}
-	if Overlap (a, b) {
+	if Overlap(a, b) {
 		return 0
 	}
+<<<<<<< HEAD
 	if a.ChromStart - b.ChromEnd >= 0 { //only positive if bed "a" is downstream of "b" bed.
 		return a.ChromStart - b.ChromEnd +1
 	}
 	if b.ChromStart - a.ChromEnd >= 0 { //only positive if bed "b" is downstream of "a" bed.
 		return b.ChromStart - a.ChromEnd +1
+=======
+	if a.ChromStart-b.ChromEnd > 0 { //only positive if bed "a" is downstream of "b" bed.
+		return a.ChromStart - b.ChromEnd
+	}
+	if b.ChromStart-a.ChromEnd > 0 { //only positive if bed "b" is downstream of "a" bed.
+		return b.ChromStart - a.ChromEnd
+>>>>>>> 78955c2e47bfb178283b7ff6c9a09395e6a3f7ad
 	}
 	log.Panic("something went wrong with CompareDistance")
 	return -1 // maybe just return -1 here to indicate that we can't count a distance?
