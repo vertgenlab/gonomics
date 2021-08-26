@@ -67,7 +67,7 @@ func bedFilter(s Settings) {
 				pass = false
 			}
 		}
-		if s.SubSet < 1.0 {
+		if pass && s.SubSet < 1.0 {
 			r = rand.Float64()
 			if r > s.SubSet {
 				pass = false
