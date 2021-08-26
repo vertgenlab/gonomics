@@ -33,6 +33,8 @@ func bedFilter(s Settings) {
 			if curr.Score > s.MaxScore {
 				pass = false
 			}
+		} else if s.MinScore != -1*numbers.MaxInt || s.MaxScore != numbers.MaxInt {//if the scores are not the default options but the entry has no score, the entry will not be retained.
+			 pass = false
 		}
 		if length < s.MinLength {
 			pass = false
