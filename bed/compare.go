@@ -172,19 +172,12 @@ func CompareDistance(a Bed, b Bed) int {
 	if Overlap(a, b) {
 		return 0
 	}
-<<<<<<< HEAD
 	if a.ChromStart - b.ChromEnd >= 0 { //only positive if bed "a" is downstream of "b" bed.
 		return a.ChromStart - b.ChromEnd +1
 	}
 	if b.ChromStart - a.ChromEnd >= 0 { //only positive if bed "b" is downstream of "a" bed.
 		return b.ChromStart - a.ChromEnd +1
-=======
-	if a.ChromStart-b.ChromEnd > 0 { //only positive if bed "a" is downstream of "b" bed.
-		return a.ChromStart - b.ChromEnd
-	}
-	if b.ChromStart-a.ChromEnd > 0 { //only positive if bed "b" is downstream of "a" bed.
-		return b.ChromStart - a.ChromEnd
->>>>>>> 78955c2e47bfb178283b7ff6c9a09395e6a3f7ad
+
 	}
 	log.Panic("something went wrong with CompareDistance")
 	return -1 // maybe just return -1 here to indicate that we can't count a distance?
