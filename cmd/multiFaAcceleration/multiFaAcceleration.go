@@ -60,6 +60,7 @@ type BranchLengths struct {
 }
 
 //SubTree is a tree with three leaves and three branches, joined at the single internal node.
+//Dij represent the observed pairwise distances between two species. vi represents the length of the branch between a species i and the internal node at the current stage of optimization.
 type SubTree struct {
 	Dab float64
 	Dac float64
@@ -73,7 +74,7 @@ func multiFaAcceleration(s Settings) {
 	records := fasta.Read(s.InFile)
 	var searchSpace []bed.Bed
 	var referenceLength, i, j, threshold int
-	var bitArray []byte
+	var bitArray []bool
 
 	//a couple of safety checks
 	if len(records) != 4 {
@@ -88,11 +89,11 @@ func multiFaAcceleration(s Settings) {
 	if s.SearchSpaceBed != "" {
 		//if we want to limit our search to a particular set of regions, we populate the bitArray with 1s instead of 0s at positions overlapping the input bed entries.
 		searchSpace = bed.Read(s.SearchSpaceBed)
-		bitArray = make([]byte, referenceLength)
+		bitArray = make([]bool, referenceLength)
 		for i = range searchSpace {
 			if searchSpace[i].Chrom == s.ChromName {
 				for j = searchSpace[i].ChromStart; j < searchSpace[i].ChromEnd; j++ {
-					bitArray[j] = 1
+					bitArray[j] = true
 				}
 			}
 		}
@@ -127,7 +128,7 @@ func multiFaAcceleration(s Settings) {
 				if _, containedInMap = distanceCache[currDistances]; !containedInMap { //if this tree has not been seen before, calculate branch lengths
 					distanceCache[currDistances] = alternatingLeastSquares(currDistances, s)
 				}
-				//no our distances should be in the cache, and we can do a simple lookup.
+				//now our distances should be in the cache, and we can do a simple lookup.
 				b1 = distanceCache[currDistances].B1
 				b3 = distanceCache[currDistances].B3
 
@@ -348,20 +349,22 @@ func calculateQ(d Distances, b BranchLengths, s Settings) float64 {
 }
 
 //bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
-func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []byte, referenceCounter int) (int, bool) {
+func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []bool, referenceCounter int) (int, bool) {
 	if s.SearchSpaceBed == "" { //no search space file, no need to look further
 		return 0, true
 	}
 	if referenceCounter == 0 {
 		currCount = 0
 		for i := 0; i < s.WindowSize; i++ {
-			currCount += int(bitArray[i])
+			if bitArray[i] {
+				currCount++
+			}
 		}
 	} else {
-		if bitArray[referenceCounter-1] == 1 {
+		if bitArray[referenceCounter-1] {
 			currCount--
 		}
-		if bitArray[referenceCounter+s.WindowSize-1] > 0 {
+		if bitArray[referenceCounter+s.WindowSize-1] {
 			currCount++
 		}
 	}
@@ -369,19 +372,19 @@ func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []b
 }
 
 //Generate distances from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
-func fourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, s Settings, d *Distances) bool {
-	//first we clear the values in d.
-	d.D01, d.D02, d.D03, d.D12, d.D13, d.D23 = 0, 0, 0, 0, 0, 0
-	var d01tmp int
+func fourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, s Settings, D *Distances) bool {
+	//first we clear the values in D.
+	D.D01, D.D02, D.D03, D.D12, D.D13, D.D23 = 0, 0, 0, 0, 0, 0
+	var D01tmp int
 	var reachedEnd bool
 	var alnEnd int
-	d01tmp, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
-	d.D01 = float64(d01tmp)
-	d.D02 = float64(fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd))
-	d.D03 = float64(fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd))
-	d.D12 = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd))
-	d.D13 = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[3], alignmentCounter, alnEnd))
-	d.D23 = float64(fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd))
+	D01tmp, reachedEnd, alnEnd = fasta.PairwiseMutationDistanceReferenceWindow(records[0], records[1], alignmentCounter, s.WindowSize)
+	D.D01 = float64(D01tmp)
+	D.D02 = float64(fasta.PairwiseMutationDistanceInRange(records[0], records[2], alignmentCounter, alnEnd))
+	D.D03 = float64(fasta.PairwiseMutationDistanceInRange(records[0], records[3], alignmentCounter, alnEnd))
+	D.D12 = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd))
+	D.D13 = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[3], alignmentCounter, alnEnd))
+	D.D23 = float64(fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd))
 	return reachedEnd
 }
 
