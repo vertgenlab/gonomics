@@ -25,22 +25,36 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	var routeIdx_max int = 0
 
 	for k1, k2 = len(trace_prep_i)-1, len(trace_prep_j)-1; k1 >= 0 || k2 >= 0; { //while loop. TODO: is the end condition right? Is this the end of traceback? Worked for test example1. Also, replace initial k1 and k2 with int(score_highest_i/checkersize)
+		//Try to fix test2 by skipping when last lines are multiples of checkersize
+		//if checkersize*k1+1 != score_highest_i { //TODO: should delete when make sure it's not needed. Pretty sure it's not needed
 		//Step 2
 		trace, i_inChecker_max, j_inChecker_max = FillTraceback(alpha, beta, scores, gapPen, checkersize, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2)
-		//Step 3
-		route, routeIdx_max, i_inChecker_min, j_inChecker_min = WriteCigar(trace, i_inChecker_max, j_inChecker_max, route, routeIdx_max)
-		//Update k1,k2
-		if i_inChecker_min == 0 && j_inChecker_min == 0 { //when cigar is done, find out how while loop ended, and update k1, k2
-			// go to the next checkerboard with lower i, lower j
-			k1, k2 = k1-1, k2-1
-		} else if i_inChecker_min == 0 { //but j_inChecker != 0
-			// go to the next checkerboard with lower i, same j
-			k1 -= 1
-		} else if j_inChecker_min == 0 { //but i_inChecker != 0
+
+		//Try updating k1, k2 based on i_inChecker_max too, not just i_inChecker_min like below
+		if j_inChecker_max == 0 { //it's impossible that both i and j inChecker max are 0, because then there won't be a checkerboard. j_inChecker_max==0 is the sitaution in test2, need to directly update k because can't get useful cigar
 			// go to the next checkerboard with lower j, same i
 			k2 -= 1
+		//} else if i_inChecker_max == 0 { //but j_inChecker_max != 0, but this doesn't seem to matter based on how I wrote mRowCurrent, like this can still be put into WriteCigar and get useful cigar
+			// go to the next checkerboard with lower i, same j
+		//	k1 -= 1
+		} else {
+
+			//Step 3
+			route, routeIdx_max, i_inChecker_min, j_inChecker_min = WriteCigar(trace, i_inChecker_max, j_inChecker_max, route, routeIdx_max)
+			//}
+			//Update k1,k2
+			if i_inChecker_min == 0 && j_inChecker_min == 0 { //when cigar is done, find out how while loop ended, and update k1, k2
+				// go to the next checkerboard with lower i, lower j
+				k1, k2 = k1-1, k2-1
+			} else if i_inChecker_min == 0 { //but j_inChecker != 0
+				// go to the next checkerboard with lower i, same j
+				k1 -= 1
+			} else if j_inChecker_min == 0 { //but i_inChecker != 0
+				// go to the next checkerboard with lower j, same i
+				k2 -= 1
+			}
+			//TODO: add another feature, instead of always filling up an entire checkerboard, fill up to the highest/rightest box indicated by the last checkerboard's i_inChecker_min and j_inChecker_min
 		}
-		//TODO: add another feature, instead of always filling up an entire checkerboard, fill up to the highest/rightest box indicated by the last checkerboard's i_inChecker_min and j_inChecker_min
 	}
 
 	//After Step 3 ends
