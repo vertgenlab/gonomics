@@ -24,17 +24,19 @@ var FastqFilterTests = []struct {
 	SetSeed        int64
 	MinSize        int
 	MaxSize        int
-	NamesList	string
+	RetainNamesList	string
+	DiscardNamesList string
 	CollapseUmi    bool
 	BarcodeLength  int
 	UmiLength      int
 }{
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedReadWrite.fastq", "", "", "", "", "", "", false, 1, false, 10, 0, numbers.MaxInt, "", false, 16, 12},
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedHalf.fastq", "", "", "", "", "", "", false, 0.5, false, 10, 0, numbers.MaxInt, "",false, 16, 12},
-	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1ReadWrite.fastq", "testdata/expectedR2ReadWrite.fastq", true, 1, false, 10, 0, numbers.MaxInt, "",false, 16, 12}, //~/go/bin/fastqFilter -pairedEnd -setSeed 10 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1ReadWrite.fastq testdata/expectedR2ReadWrite.fastq
-	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1Half.fastq", "testdata/expectedR2Half.fastq", true, 0.5, false, 10, 0, numbers.MaxInt, "",false, 16, 12},         //~/go/bin/fastqFilter -pairedEnd -setSeed 10 -subSet 0.5 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1Half.fastq testdata/expectedR2Half.fastq
-	{"", "", "", "testdata/UmiTest_R1.fastq", "testdata/UmiTest_R2.fastq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedUmi_R1.fastq", "testdata/expectedUmi_R2.fastq", true, 1, false, 10, 0, numbers.MaxInt, "",true, 16, 12},//~/go/bin/fastqFilter -setSeed 10 -namesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedNamesFilter.fastq
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedNamesFilter.fastq", "", "","","","","", false, 1, false, 10, 0, numbers.MaxInt, "testdata/namesList.txt", false, 16, 12},
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedReadWrite.fastq", "", "", "", "", "", "", false, 1, false, 10, 0, numbers.MaxInt, "", "",false, 16, 12},
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedHalf.fastq", "", "", "", "", "", "", false, 0.5, false, 10, 0, numbers.MaxInt, "","", false, 16, 12},
+	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1ReadWrite.fastq", "testdata/expectedR2ReadWrite.fastq", true, 1, false, 10, 0, numbers.MaxInt, "","",false, 16, 12}, //~/go/bin/fastqFilter -pairedEnd -setSeed 10 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1ReadWrite.fastq testdata/expectedR2ReadWrite.fastq
+	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1Half.fastq", "testdata/expectedR2Half.fastq", true, 0.5, false, 10, 0, numbers.MaxInt, "","", false, 16, 12},         //~/go/bin/fastqFilter -pairedEnd -setSeed 10 -subSet 0.5 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1Half.fastq testdata/expectedR2Half.fastq
+	{"", "", "", "testdata/UmiTest_R1.fastq", "testdata/UmiTest_R2.fastq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedUmi_R1.fastq", "testdata/expectedUmi_R2.fastq", true, 1, false, 10, 0, numbers.MaxInt, "", "",true, 16, 12},
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedNamesFilter.fastq", "", "","","","","", false, 1, false, 10, 0, numbers.MaxInt, "testdata/namesList.txt", "",false, 16, 12},//~/go/bin/fastqFilter -setSeed 10 -retainNamesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedNamesFilter.fastq
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedDiscardNamesFilter.fastq", "", "","","","","", false, 1, false, 10, 0, numbers.MaxInt, "", "testdata/namesList.txt",false, 16, 12},//~/go/bin/fastqFilter -setSeed 10 -discardNamesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedDiscardNamesFilter.fastq
 }
 
 func TestFastqFilter(t *testing.T) {
@@ -54,7 +56,8 @@ func TestFastqFilter(t *testing.T) {
 			SetSeed:       v.SetSeed,
 			MinSize:       v.MinSize,
 			MaxSize:       v.MaxSize,
-			NamesList: v.NamesList,
+			RetainNamesList: v.RetainNamesList,
+			DiscardNamesList: v.DiscardNamesList,
 			CollapseUmi:   v.CollapseUmi,
 			BarcodeLength: v.BarcodeLength,
 			UmiLength:     v.UmiLength,
