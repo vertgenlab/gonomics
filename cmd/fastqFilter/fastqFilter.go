@@ -95,7 +95,7 @@ func fastqFilter(s Settings) {
 			if s.RetainNamesList != "" {
 				if _, FwdInMap = namesMap[i.Fwd.Name]; !FwdInMap {
 					if _, RevInMap = namesMap[i.Rev.Name]; !RevInMap {
-						continue//continue if neither the forward or reverse read is in the map
+						continue //continue if neither the forward or reverse read is in the map
 					}
 				}
 			}
