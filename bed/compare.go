@@ -165,23 +165,23 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 //CompareDistance compares beds by chromStart and chromEnd and returns the minimum distance between
 //the two beds. return options; -1 (different chromosomes, no distance calculated),
 //0 (overlap, minimum distance is 0), >=0 is the minimum distance.
-func CompareDistance(a Bed, b Bed) int {
+func CompareDistance(a Bed, b Bed) (n int, err error) {
 	if a.Chrom != b.Chrom {
-		myError := errors.New("Could not calculate distance, different chromosomes")
-		return myError
+		diffChromError := errors.New("Could not calculate distance, different chromosomes")
+		return -1, diffChromError
 	}
 	if Overlap(a, b) {
-		return 0
+		return 0, nil
 	}
 	if a.ChromStart-b.ChromEnd >= 0 { //only positive if bed "a" is downstream of "b" bed.
-		return a.ChromStart - b.ChromEnd + 1
+		return (a.ChromStart - b.ChromEnd + 1), nil
 	}
 	if b.ChromStart-a.ChromEnd >= 0 { //only positive if bed "b" is downstream of "a" bed.
-		return b.ChromStart - a.ChromEnd + 1
+		return (b.ChromStart - a.ChromEnd + 1), nil
 
 	}
 	log.Panic("something went wrong with CompareDistance")
-	return -1 // maybe just return -1 here to indicate that we can't count a distance?
+	return -1, nil
 }
 
 //AllAreEqual returns true if two input slices of Beds contain Bed entries that all return true for Equal.

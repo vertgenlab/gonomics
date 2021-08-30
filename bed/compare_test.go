@@ -5,23 +5,34 @@ import (
 )
 
 var CompareDistanceTests = []struct {
-	A                Bed
-	B                Bed
-	expectedDistance int
+	A                	Bed
+	B                	Bed
+	expectedDistance 	int
+	expectedError		bool
 }{
-
-	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: ""}, expectedDistance: 0},  //test layered coordinates
-	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 20, ChromEnd: 30, Name: ""}, expectedDistance: 1},  //test layered coordinates
-	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 30, ChromEnd: 40, Name: ""}, expectedDistance: 11}, //A upstream
-	{A: Bed{Chrom: "chr1", ChromStart: 30, ChromEnd: 40, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, expectedDistance: 11}, //B upstream
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr2", ChromStart: 21, ChromEnd: 30, Name: ""}, expectedDistance: -1, expectedError: true},  //test if input beds are on diff chrom
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: ""}, expectedDistance: 0, expectedError: false},  //test layered coordinates
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 20, ChromEnd: 30, Name: ""}, expectedDistance: 1, expectedError: false},  //test layered coordinates
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 30, ChromEnd: 40, Name: ""}, expectedDistance: 11, expectedError: false}, //A upstream
+	{A: Bed{Chrom: "chr1", ChromStart: 30, ChromEnd: 40, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, expectedDistance: 11, expectedError: false}, //B upstream
 }
 
 func TestCompareDistance(t *testing.T) {
 	var distance int
+	var err error
+	var boolForError bool //to help test if the error returned is as expected
 	for _, v := range CompareDistanceTests {
-		distance = CompareDistance(v.A, v.B)
+		distance, err = CompareDistance(v.A, v.B)
 		if distance != v.expectedDistance {
 			t.Errorf("Error in CompareDistance. Expected: %v. Actual %v.", v.expectedDistance, distance)
+		}
+		if err == nil {
+			boolForError = false
+		}else {
+			boolForError = true
+		}
+		if boolForError != v.expectedError {
+			t.Errorf("Error in CompareDistance. Expected error: %t. Actual error: %t", v.expectedError, boolForError)
 		}
 	}
 }
