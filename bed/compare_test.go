@@ -10,10 +10,10 @@ var CompareDistanceTests = []struct {
 	expectedDistance int
 }{
 
-	{A: Bed{Chrom:"chr1", ChromStart:10, ChromEnd:20, Name:""}, B: Bed{Chrom:"chr1", ChromStart:15, ChromEnd:30, Name:""}, expectedDistance: 0}, //test layered coordinates
-	{A: Bed{Chrom:"chr1", ChromStart:10, ChromEnd:20, Name:""}, B: Bed{Chrom:"chr1", ChromStart:20, ChromEnd:30, Name:""}, expectedDistance: 1}, //test layered coordinates
-	{A: Bed{Chrom:"chr1", ChromStart:10, ChromEnd:20, Name:""}, B: Bed{Chrom:"chr1", ChromStart:30, ChromEnd:40, Name:""}, expectedDistance: 11}, //A upstream
-	{A: Bed{Chrom:"chr1", ChromStart:30, ChromEnd:40, Name:""}, B: Bed{Chrom:"chr1", ChromStart:10, ChromEnd:20, Name:""}, expectedDistance: 11}, //B upstream
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: ""}, expectedDistance: 0},  //test layered coordinates
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 20, ChromEnd: 30, Name: ""}, expectedDistance: 1},  //test layered coordinates
+	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 30, ChromEnd: 40, Name: ""}, expectedDistance: 11}, //A upstream
+	{A: Bed{Chrom: "chr1", ChromStart: 30, ChromEnd: 40, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, expectedDistance: 11}, //B upstream
 }
 
 func TestCompareDistance(t *testing.T) {
