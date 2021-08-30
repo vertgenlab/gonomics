@@ -5,10 +5,10 @@ import (
 )
 
 var CompareDistanceTests = []struct {
-	A                	Bed
-	B                	Bed
-	expectedDistance 	int
-	expectedError		bool
+	A                Bed
+	B                Bed
+	expectedDistance int
+	expectedError    bool
 }{
 	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr2", ChromStart: 21, ChromEnd: 30, Name: ""}, expectedDistance: -1, expectedError: true},  //test if input beds are on diff chrom
 	{A: Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: ""}, B: Bed{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: ""}, expectedDistance: 0, expectedError: false},  //test layered coordinates
@@ -28,7 +28,7 @@ func TestCompareDistance(t *testing.T) {
 		}
 		if err == nil {
 			boolForError = false
-		}else {
+		} else {
 			boolForError = true
 		}
 		if boolForError != v.expectedError {
