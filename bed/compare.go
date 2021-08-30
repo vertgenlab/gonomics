@@ -1,6 +1,7 @@
 package bed
 
 import (
+	"errors"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
@@ -166,8 +167,8 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 //0 (overlap, minimum distance is 0), >=0 is the minimum distance.
 func CompareDistance(a Bed, b Bed) int {
 	if a.Chrom != b.Chrom {
-		log.Panic("chromosomes do not match between input beds")
-		return -1 //when I run a test on this it only returns the panic statement and not the "-1".
+		myError := errors.New("Could not calculate distance, different chromosomes")
+		return myError
 	}
 	if Overlap(a, b) {
 		return 0
