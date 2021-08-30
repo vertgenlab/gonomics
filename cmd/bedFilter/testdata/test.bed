@@ -1,0 +1,10 @@
+chr1	10	20	ShouldPass	10
+chr1	10	20	ScoreTooLow	-300
+chr1	10	20	ScoreTooHigh	1000000
+chr1	3	20	StartTooLow	10
+chr1	1000000	1000010	StartTooHigh	10
+chr1	10	11	LengthTooSmall	10
+chr1	5	999999	LengthTooBig	10
+chr1	5	7	EndTooLow	10
+chr1	999999	1000011	EndTooHigh	10
+chr4	10	20	WrongChrom	10
