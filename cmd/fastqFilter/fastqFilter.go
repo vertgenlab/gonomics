@@ -99,6 +99,14 @@ func fastqFilter(s Settings) {
 					}
 				}
 			}
+			if s.DiscardNamesList != "" {
+				if _, FwdInMap = namesMap[i.Fwd.Name]; FwdInMap {
+					continue
+				}
+				if _, RevInMap = namesMap[i.Rev.Name]; !RevInMap {
+					continue
+				}
+			}
 			if s.CollapseUmi {
 				currSc = fastq.PairedEndToSingleCellPair(i, s.BarcodeLength, s.UmiLength)
 				if fastq.UmiCollision(currSc, umiMap) {
@@ -126,6 +134,11 @@ func fastqFilter(s Settings) {
 			}
 			if s.RetainNamesList != "" {
 				if _, NameInMap = namesMap[i.Name]; !NameInMap {
+					continue
+				}
+			}
+			if s.DiscardNamesList != "" {
+				if _, NameInMap = namesMap[i.Name]; NameInMap {
 					continue
 				}
 			}
