@@ -36,8 +36,8 @@ type Settings struct {
 type BranchCache struct {
 	ChromStart int
 	ChromEnd   int
-	b1         float64
-	b3         float64
+	B1         float64
+	B3         float64
 }
 
 //A set of all observed pairwise distances between the four species. While these numbers must be integers, we store them as float64 to avoid casting in other functions as a way to improve readability.
@@ -65,9 +65,9 @@ type SubTree struct {
 	Dab float64
 	Dac float64
 	Dbc float64
-	va  float64
-	vb  float64
-	vc  float64
+	Va  float64
+	Vb  float64
+	Vc  float64
 }
 
 func multiFaAcceleration(s Settings) {
@@ -153,8 +153,8 @@ func multiFaAcceleration(s Settings) {
 
 	//with our normalization parameters calculated, we can normalize the branch lengths for each window and write to file.
 	for i = range branchCacheSlice {
-		b1Normal = branchCacheSlice[i].b1 / averageVel
-		b3Normal = branchCacheSlice[i].b3 / averageInitialVel
+		b1Normal = branchCacheSlice[i].B1 / averageVel
+		b3Normal = branchCacheSlice[i].B3 / averageInitialVel
 		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
 		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
 		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal-b3Normal), FieldsInitialized: 4})
@@ -180,9 +180,9 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 
 	for currDiff > s.Epsilon && i < maxIteration {
 		oldAnswer = answer
-		pruneLeft(d, answer, &sub, s)
+		pruneLeft(d, answer, &sub, s.ZeroDistanceWeightConstant)
 		answer.B1, answer.B2, answer.B3 = optimizeSubtree(&sub, s)
-		pruneRight(d, answer, &sub, s)
+		pruneRight(d, answer, &sub, s.ZeroDistanceWeightConstant)
 		answer.B4, answer.B5, answer.B3 = optimizeSubtree(&sub, s)
 		nextQ = calculateQ(d, answer, s)
 		//DEBUG: log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths: %f. %f. %f. %f. %f.", nextQ, currDiff, answer.B1, answer.B2, answer.B3, answer.B4, answer.B5)
@@ -201,112 +201,112 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 
 //a helper function of alternatingLeastSquares. Calculates the optimal branch lengths for the three branches in a subtree.
 func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64) {
-	sub.va = (sub.Dab + sub.Dac - sub.Dbc) / 2.0
-	sub.vb = (sub.Dab + sub.Dbc - sub.Dac) / 2.0
-	sub.vc = (sub.Dac + sub.Dbc - sub.Dac) / 2.0
+	sub.Va = (sub.Dab + sub.Dac - sub.Dbc) / 2.0
+	sub.Vb = (sub.Dab + sub.Dbc - sub.Dac) / 2.0
+	sub.Vc = (sub.Dac + sub.Dbc - sub.Dac) / 2.0
 
 	if s.AllowNegative {
-		return sub.va, sub.vb, sub.vc
+		return sub.Va, sub.Vb, sub.Vc
 	}
-	if sub.va < 0 && sub.vb < 0 && sub.vc < 0 {
+	if sub.Va < 0 && sub.Vb < 0 && sub.Vc < 0 {
 		if s.Verbose {
-			log.Printf("WARNING: All branches are negative.")
+			log.Printf("WARNING: All branches are negative.")//TODO: Should this error out?
 		}
-		sub.va, sub.vb, sub.vc = 0, 0, 0
-	} else if sub.va < 0 && sub.vb < 0 {
-		sub.va = 0
-		sub.vb = 0
-		sub.vc = nonNegativeApproximation(sub.Dac, sub.Dbc, sub.va, sub.vb, s)
-	} else if sub.va < 0 && sub.vc < 0 {
-		sub.va = 0
-		sub.vc = 0
-		sub.vb = nonNegativeApproximation(sub.Dbc, sub.Dab, sub.vc, sub.va, s)
-	} else if sub.vb < 0 && sub.vc < 0 {
-		sub.vb = 0
-		sub.vc = 0
-		sub.va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.vb, sub.vc, s)
-	} else if sub.va < 0 {
-		sub.va = 0
-		sub.vb = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.va, sub.vc, s)
-		sub.vc = nonNegativeApproximation(sub.Dac, sub.Dbc, sub.va, sub.vb, s)
-	} else if sub.vb < 0 {
-		sub.vb = 0
-		sub.va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.vb, sub.vc, s)
-		sub.vc = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.va, sub.vc, s)
-	} else if sub.vc < 0 {
-		sub.vc = 0
-		sub.va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.vb, sub.vc, s)
-		sub.vb = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.va, sub.vc, s)
+		sub.Va, sub.Vb, sub.Vc = 0, 0, 0
+	} else if sub.Va < 0 && sub.Vb < 0 {
+		sub.Va = 0
+		sub.Vb = 0
+		sub.Vc = nonNegativeApproximation(sub.Dac, sub.Dbc, sub.Va, sub.Vb, s.ZeroDistanceWeightConstant)
+	} else if sub.Va < 0 && sub.Vc < 0 {
+		sub.Va = 0
+		sub.Vc = 0
+		sub.Vb = nonNegativeApproximation(sub.Dbc, sub.Dab, sub.Vc, sub.Va, s.ZeroDistanceWeightConstant)
+	} else if sub.Vb < 0 && sub.Vc < 0 {
+		sub.Vb = 0
+		sub.Vc = 0
+		sub.Va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.Vb, sub.Vc, s.ZeroDistanceWeightConstant)
+	} else if sub.Va < 0 {
+		sub.Va = 0
+		sub.Vb = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.Va, sub.Vc, s.ZeroDistanceWeightConstant)
+		sub.Vc = nonNegativeApproximation(sub.Dac, sub.Dbc, sub.Va, sub.Vb, s.ZeroDistanceWeightConstant)
+	} else if sub.Vb < 0 {
+		sub.Vb = 0
+		sub.Va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.Vb, sub.Vc, s.ZeroDistanceWeightConstant)
+		sub.Vc = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.Va, sub.Vc, s.ZeroDistanceWeightConstant)
+	} else if sub.Vc < 0 {
+		sub.Vc = 0
+		sub.Va = nonNegativeApproximation(sub.Dab, sub.Dac, sub.Vb, sub.Vc, s.ZeroDistanceWeightConstant)
+		sub.Vb = nonNegativeApproximation(sub.Dab, sub.Dbc, sub.Va, sub.Vc, s.ZeroDistanceWeightConstant)
 	}
-	return sub.va, sub.vb, sub.vc
+	return sub.Va, sub.Vb, sub.Vc
 }
 
 //If we constrain branch lengths to be nonNegative, we apply this correction when the minimum Q is achieved at negative branch lengths for a subtree.
-func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, s Settings) float64 {
+func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, ZeroDistanceWeightConstant float64) float64 {
 	if d1 == 0 {
 		if d2 == 0 {
-			return numbers.MaxFloat64(0, (s.ZeroDistanceWeightConstant*(d1-v1)+s.ZeroDistanceWeightConstant*(d2-v2))/(2*s.ZeroDistanceWeightConstant))
+			return numbers.MaxFloat64(0, (ZeroDistanceWeightConstant*(d1-v1)+ZeroDistanceWeightConstant*(d2-v2))/(2*ZeroDistanceWeightConstant))
 		} else {
-			return numbers.MaxFloat64(0, s.ZeroDistanceWeightConstant*(d1-v1)+(1.0/math.Pow(d2, 2)*(d2-v2))) / (s.ZeroDistanceWeightConstant + (1.0 / math.Pow(d2, 2)))
+			return numbers.MaxFloat64(0, ZeroDistanceWeightConstant*(d1-v1)+(1.0/math.Pow(d2, 2)*(d2-v2))) / (ZeroDistanceWeightConstant + (1.0 / math.Pow(d2, 2)))
 		}
 	} else if d2 == 0 {
-		return numbers.MaxFloat64(0, (1.0/(math.Pow(d1, 2))*(d1-v1)+s.ZeroDistanceWeightConstant*(d2-v2))/((1.0/math.Pow(d1, 2))+s.ZeroDistanceWeightConstant))
+		return numbers.MaxFloat64(0, (1.0/(math.Pow(d1, 2))*(d1-v1)+ZeroDistanceWeightConstant*(d2-v2))/((1.0/math.Pow(d1, 2))+ZeroDistanceWeightConstant))
 	}
 	return numbers.MaxFloat64(0, (1.0/(math.Pow(d1, 2))*(d1-v1)+(1.0/math.Pow(d2, 2)*(d2-v2)))/((1.0/math.Pow(d1, 2))+(1.0/math.Pow(d2, 2))))
 }
 
 //Reduce the four species tree to the subtree containing species 0, 1, and the ancestor of 2/3.
-func pruneLeft(d Distances, b BranchLengths, sub *SubTree, s Settings) {
+func pruneLeft(d Distances, b BranchLengths, sub *SubTree, ZeroDistanceWeightConstant float64) {
 	sub.Dab = d.D01
 	if d.D03 == 0 {
 		if d.D02 == 0 {
-			sub.Dac = (s.ZeroDistanceWeightConstant*(d.D02-b.B4) + s.ZeroDistanceWeightConstant*(d.D03-b.B5)) / (2 * s.ZeroDistanceWeightConstant)
+			sub.Dac = (ZeroDistanceWeightConstant*(d.D02-b.B4) + ZeroDistanceWeightConstant*(d.D03-b.B5)) / (2 * ZeroDistanceWeightConstant)
 		} else {
-			sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B4) + (s.ZeroDistanceWeightConstant * (d.D03 - b.B5))) / (s.ZeroDistanceWeightConstant + (1.0 / math.Pow(d.D02, 2)))
+			sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B4) + (ZeroDistanceWeightConstant * (d.D03 - b.B5))) / (ZeroDistanceWeightConstant + (1.0 / math.Pow(d.D02, 2)))
 		}
 	} else if d.D02 == 0 {
-		sub.Dac = (s.ZeroDistanceWeightConstant*(d.D02-b.B4) + ((1.0 / math.Pow(d.D03, 2)) * (d.D03 - b.B5))) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dac = (ZeroDistanceWeightConstant*(d.D02-b.B4) + ((1.0 / math.Pow(d.D03, 2)) * (d.D03 - b.B5))) / ((1.0 / math.Pow(d.D03, 2)) + ZeroDistanceWeightConstant)
 	} else {
 		sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B4) + (1.0/math.Pow(d.D03, 2))*(d.D03-b.B5)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D02, 2)))
 	}
 
 	if d.D13 == 0 {
 		if d.D12 == 0 {
-			sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D12-b.B4) + s.ZeroDistanceWeightConstant*(d.D13-b.B5)) / (2 * s.ZeroDistanceWeightConstant)
+			sub.Dbc = (ZeroDistanceWeightConstant*(d.D12-b.B4) + ZeroDistanceWeightConstant*(d.D13-b.B5)) / (2 * ZeroDistanceWeightConstant)
 		} else {
-			sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D13-b.B5) + (1.0/math.Pow(d.D12, 2))*(d.D12-b.B4)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
+			sub.Dbc = (ZeroDistanceWeightConstant*(d.D13-b.B5) + (1.0/math.Pow(d.D12, 2))*(d.D12-b.B4)) / ((1.0 / math.Pow(d.D12, 2)) + ZeroDistanceWeightConstant)
 		}
 	} else if d.D12 == 0 {
-		sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D12-b.B4) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dbc = (ZeroDistanceWeightConstant*(d.D12-b.B4) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + ZeroDistanceWeightConstant)
 	} else {
 		sub.Dbc = ((1.0/math.Pow(d.D12, 2))*(d.D12-b.B4) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B5)) / ((1.0 / math.Pow(d.D13, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 }
 
 //Reduce the four species tree to the subtree containing 2, 3, and the ancestor of 0/1.
-func pruneRight(d Distances, b BranchLengths, sub *SubTree, s Settings) {
+func pruneRight(d Distances, b BranchLengths, sub *SubTree, ZeroDistanceWeightConstant float64) {
 	sub.Dac = d.D23
 
 	if d.D02 == 0 {
 		if d.D12 == 0 {
-			sub.Dac = (s.ZeroDistanceWeightConstant*(d.D02-b.B1) + s.ZeroDistanceWeightConstant*(d.D12-b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
+			sub.Dac = (ZeroDistanceWeightConstant*(d.D02-b.B1) + ZeroDistanceWeightConstant*(d.D12-b.B2)) / (2.0 * ZeroDistanceWeightConstant)
 		} else {
-			sub.Dac = ((1.0/math.Pow(d.D12, 2))*(d.D12-b.B2) + s.ZeroDistanceWeightConstant*(d.D02-b.B1)) / ((1.0 / math.Pow(d.D12, 2)) + s.ZeroDistanceWeightConstant)
+			sub.Dac = ((1.0/math.Pow(d.D12, 2))*(d.D12-b.B2) + ZeroDistanceWeightConstant*(d.D02-b.B1)) / ((1.0 / math.Pow(d.D12, 2)) + ZeroDistanceWeightConstant)
 		}
 	} else if d.D12 == 0 {
-		sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B1) + s.ZeroDistanceWeightConstant*(d.D12-b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dac = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B1) + ZeroDistanceWeightConstant*(d.D12-b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + ZeroDistanceWeightConstant)
 	} else {
 		sub.Dab = ((1.0/math.Pow(d.D02, 2))*(d.D02-b.B1) + (1.0/math.Pow(d.D12, 2))*(d.D12-b.B2)) / ((1.0 / math.Pow(d.D02, 2)) + (1.0 / math.Pow(d.D12, 2)))
 	}
 
 	if d.D03 == 0 {
 		if d.D13 == 0 {
-			sub.Dbc = (s.ZeroDistanceWeightConstant*(d.D03-b.B1) + s.ZeroDistanceWeightConstant*(d.D13-b.B2)) / (2.0 * s.ZeroDistanceWeightConstant)
+			sub.Dbc = (ZeroDistanceWeightConstant*(d.D03-b.B1) + ZeroDistanceWeightConstant*(d.D13-b.B2)) / (2.0 * ZeroDistanceWeightConstant)
 		} else {
-			sub.Dbc = ((1.0/math.Pow(d.D13, 2))*(d.D13-b.B2) + s.ZeroDistanceWeightConstant*(d.D03-b.B1)) / ((1.0 / math.Pow(d.D13, 2)) + s.ZeroDistanceWeightConstant)
+			sub.Dbc = ((1.0/math.Pow(d.D13, 2))*(d.D13-b.B2) + ZeroDistanceWeightConstant*(d.D03-b.B1)) / ((1.0 / math.Pow(d.D13, 2)) + ZeroDistanceWeightConstant)
 		}
 	} else if d.D13 == 0 {
-		sub.Dbc = ((1.0/math.Pow(d.D03, 2))*(d.D03-b.B1) + s.ZeroDistanceWeightConstant*(d.D13-b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + s.ZeroDistanceWeightConstant)
+		sub.Dbc = ((1.0/math.Pow(d.D03, 2))*(d.D03-b.B1) + ZeroDistanceWeightConstant*(d.D13-b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + ZeroDistanceWeightConstant)
 	} else {
 		sub.Dbc = ((1.0/math.Pow(d.D03, 2))*(d.D03-b.B1) + (1.0/math.Pow(d.D13, 2))*(d.D13-b.B2)) / ((1.0 / math.Pow(d.D03, 2)) + (1.0 / math.Pow(d.D13, 2)))
 	}
