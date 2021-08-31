@@ -16,23 +16,23 @@ import (
 )
 
 type Settings struct {
-	InFile        string
-	OutFile       string
-	R1InFile      string
-	R2InFile      string
-	R1OutFile     string
-	R2OutFile     string
-	PairedEnd     bool
-	SubSet        float64
-	RandSeed      bool
-	SetSeed       int64
-	MinSize       int
-	MaxSize       int
-	RetainNamesList string
+	InFile           string
+	OutFile          string
+	R1InFile         string
+	R2InFile         string
+	R1OutFile        string
+	R2OutFile        string
+	PairedEnd        bool
+	SubSet           float64
+	RandSeed         bool
+	SetSeed          int64
+	MinSize          int
+	MaxSize          int
+	RetainNamesList  string
 	DiscardNamesList string
-	CollapseUmi   bool
-	BarcodeLength int
-	UmiLength     int
+	CollapseUmi      bool
+	BarcodeLength    int
+	UmiLength        int
 }
 
 func fastqFilter(s Settings) {
@@ -197,23 +197,23 @@ func main() {
 	}
 
 	s := Settings{
-		InFile:        "",
-		OutFile:       "",
-		R1InFile:      "",
-		R2InFile:      "",
-		R1OutFile:     "",
-		R2OutFile:     "",
-		PairedEnd:     *pairedEnd,
-		SubSet:        *subSet,
-		RandSeed:      *randSeed,
-		SetSeed:       *setSeed,
-		MinSize:       *minSize,
-		MaxSize:       *maxSize,
-		RetainNamesList: *retainNamesList,
+		InFile:           "",
+		OutFile:          "",
+		R1InFile:         "",
+		R2InFile:         "",
+		R1OutFile:        "",
+		R2OutFile:        "",
+		PairedEnd:        *pairedEnd,
+		SubSet:           *subSet,
+		RandSeed:         *randSeed,
+		SetSeed:          *setSeed,
+		MinSize:          *minSize,
+		MaxSize:          *maxSize,
+		RetainNamesList:  *retainNamesList,
 		DiscardNamesList: *discardNamesList,
-		CollapseUmi:   *collapseUmi,
-		BarcodeLength: *barcodeLength,
-		UmiLength:     *umiLength,
+		CollapseUmi:      *collapseUmi,
+		BarcodeLength:    *barcodeLength,
+		UmiLength:        *umiLength,
 	}
 
 	if *pairedEnd {
