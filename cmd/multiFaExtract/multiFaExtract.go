@@ -55,11 +55,11 @@ func usage() {
 }
 
 type Settings struct {
-	InFile string
-	OutFile string
-	Start int
-	End int
-	Bed string
+	InFile     string
+	OutFile    string
+	Start      int
+	End        int
+	Bed        string
 	RemoveGaps bool
 }
 
@@ -84,21 +84,21 @@ func main() {
 	}
 
 	if *bed == "" {
-		s = Settings {
-			InFile: flag.Arg(0),
-			OutFile: flag.Arg(1),
-			Start: common.StringToInt(flag.Arg(2)),
-			End: common.StringToInt(flag.Arg(3)),
-			Bed: *bed,
+		s = Settings{
+			InFile:     flag.Arg(0),
+			OutFile:    flag.Arg(1),
+			Start:      common.StringToInt(flag.Arg(2)),
+			End:        common.StringToInt(flag.Arg(3)),
+			Bed:        *bed,
 			RemoveGaps: *removeGaps,
 		}
 	} else {
-		s = Settings {
-			InFile: flag.Arg(0),
-			OutFile: "",
-			Start: -1,
-			End: -1,
-			Bed: *bed,
+		s = Settings{
+			InFile:     flag.Arg(0),
+			OutFile:    "",
+			Start:      -1,
+			End:        -1,
+			Bed:        *bed,
 			RemoveGaps: *removeGaps,
 		}
 	}

@@ -210,7 +210,7 @@ func optimizeSubtree(sub *SubTree, s Settings) (float64, float64, float64) {
 	}
 	if sub.Va < 0 && sub.Vb < 0 && sub.Vc < 0 {
 		if s.Verbose {
-			log.Printf("WARNING: All branches are negative.")//TODO: Should this error out?
+			log.Printf("WARNING: All branches are negative.") //TODO: Should this error out?
 		}
 		sub.Va, sub.Vb, sub.Vc = 0, 0, 0
 	} else if sub.Va < 0 && sub.Vb < 0 {
