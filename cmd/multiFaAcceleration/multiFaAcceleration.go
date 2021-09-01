@@ -189,6 +189,7 @@ func alternatingLeastSquares(d Distances, s Settings) BranchLengths {
 		currDiff = math.Abs(Q - nextQ)
 		if nextQ > Q { //nextQ is higher than Q, which means we got "worse"
 			answer = oldAnswer //we will exit the loop next time, so we want the old answer, which has the lower of the two terminal Q estimates.
+			currDiff = 0
 		}
 		Q = nextQ
 		i++
