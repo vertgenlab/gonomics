@@ -103,7 +103,7 @@ func fastqFilter(s Settings) {
 				if _, FwdInMap = namesMap[i.Fwd.Name]; FwdInMap {
 					continue
 				}
-				if _, RevInMap = namesMap[i.Rev.Name]; !RevInMap {
+				if _, RevInMap = namesMap[i.Rev.Name]; RevInMap {
 					continue
 				}
 			}
