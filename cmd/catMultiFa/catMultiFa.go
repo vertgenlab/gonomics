@@ -45,6 +45,8 @@ func usage() {
 			"For large number of files, use the list option to avoid the command character limit. Default to standard output.\n" +
 			"Usage:\n" +
 			"catMultiFa multi.fa ...\n" +
+			"OR\n" +
+			"catMultiFa -list file.list" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -52,8 +54,8 @@ func usage() {
 func main() {
 	var minNumArgs int = 2
 	var o *string = flag.String("o", "stdout", "Redirect the output to a user-given filename.")
-	var list *string = flag.String("list", "", "")
-	var lineLength *int = flag.Int("lineLength", 50, "Specify the linelength in the output file.")
+	var list *string = flag.String("list", "", "User may supply a line-delimited list of files to concatenate instead of providing them as arguments.")
+	var lineLength *int = flag.Int("lineLength", 50, "Specify the line length in the output file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -70,10 +72,7 @@ func main() {
 	var fileList []string
 	var err error
 	if *list == "" {
-		fileList = make([]string, len(flag.Args()))
-		for i := range flag.Args() {
-			fileList[i] = flag.Arg(i)
-		}
+		fileList = flag.Args()
 	} else {
 		file := fileio.EasyOpen(*list)
 		fileList = make([]string, 0)
