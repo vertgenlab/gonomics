@@ -8,10 +8,10 @@ import (
 )
 
 var CatMultiFaTests = []struct {
-	FileList []string
-	O	string
+	FileList   []string
+	O          string
 	LineLength int
-	Expected string
+	Expected   string
 }{
 	{[]string{"testdata/file1.fa", "testdata/file2.fa", "testdata/file3.fa"}, "testdata/tmp.fa", 50, "testdata/expected.fa"},
 }
