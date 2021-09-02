@@ -22,7 +22,7 @@ func catMultiFa(fileList []string, o string, lineLength int) {
 	for i := 1; i < len(fileList); i++ {
 		curr = fasta.Read(fileList[i])
 		if len(curr) != len(ans) {
-			log.Fatalf("Each file to be concatenated must have the same number of entries. Expected %v, found %v in the file named %s.\n", len(ans), len(curr), fileList[i])
+			log.Fatalf("Each file to be concatenated must have the same number of entries. Expected %d, found %d in the file named %s.\n", len(ans), len(curr), fileList[i])
 		}
 		for j := range curr {
 			if curr[j].Name != ans[j].Name {
@@ -62,27 +62,18 @@ func main() {
 	flag.Parse()
 
 	if *list != "" {
-		minNumArgs = 0
-	}
-
-	if len(flag.Args()) < minNumArgs {
+		if len(flag.Args()) > 0 {
+			log.Fatalf("catMultiFa accepts either files as arguments or a list of files with the -list option. However, it does not support the simultaneous usage of arguments and a file list.")
+		}
+	} else if len(flag.Args()) < minNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting at least %d arguments, but got %d\n", minNumArgs, len(flag.Args()))
 	}
 	var fileList []string
-	var err error
 	if *list == "" {
 		fileList = flag.Args()
 	} else {
-		file := fileio.EasyOpen(*list)
-		fileList = make([]string, 0)
-		var line string
-		var doneReading bool
-		for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-			fileList = append(fileList, line)
-		}
-		err = file.Close()
-		exception.PanicOnErr(err)
+		fileList = fileio.Read(*list)
 	}
 	catMultiFa(fileList, *o, *lineLength)
 }
