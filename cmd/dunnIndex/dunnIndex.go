@@ -23,7 +23,7 @@ func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile str
 		b[i].Annotation[1] = fmt.Sprintf("%v", S)
 		b[i].Annotation[2] = missing
 	}
-	bed.Write(outFile, b, 7)
+	bed.Write(outFile, b)
 }
 
 func usage() {

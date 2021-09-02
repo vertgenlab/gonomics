@@ -1,8 +1,11 @@
 package bgzf
 
 import (
+	"bytes"
 	"crypto/md5"
 	"io"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -11,7 +14,7 @@ var block2hash = [16]byte{218, 54, 146, 68, 164, 54, 39, 51, 148, 255, 120, 50, 
 
 func TestRead(t *testing.T) {
 	b := NewBlock()
-	r := NewReader("testdata/test.bam")
+	r := NewBlockReader("testdata/test.bam")
 	var err error
 
 	b1Offset := getHeaderOffset(r) + 1
@@ -38,7 +41,7 @@ func TestRead(t *testing.T) {
 
 	// Seek tests
 	b = NewBlock()
-	r = NewReader("testdata/test.bam")
+	r = NewBlockReader("testdata/test.bam")
 
 	_, err = r.Seek(b1Offset, io.SeekStart)
 	if err != nil {
@@ -71,4 +74,35 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Error("problem reading BGZF file")
 	}
+}
+
+func TestByteReadWrite(t *testing.T) {
+	actual, _ := os.Open("testdata/test.sam")
+	var actualBytes, readBytes bytes.Buffer
+	io.Copy(&actualBytes, actual)
+	actual.Close()
+
+	// write actual bytes to bgzf writer
+	tmpFile, _ := ioutil.TempFile("", "")
+	writer := NewWriter(tmpFile)
+	writer.Write(actualBytes.Bytes())
+	err := writer.Close()
+	if err != nil {
+		t.Errorf("problem with bgzf byte writer")
+	}
+	tmpFile.Close()
+
+	// read written bytes
+	testFile := NewReader(tmpFile.Name())
+	io.Copy(&readBytes, testFile)
+	err = testFile.Close()
+	if err != nil {
+		t.Errorf("problem with bgzf byte reader")
+	}
+
+	if !bytes.Equal(actualBytes.Bytes(), readBytes.Bytes()) {
+		t.Errorf("problem with bgzf byte reader")
+	}
+
+	os.Remove(tmpFile.Name())
 }

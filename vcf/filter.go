@@ -226,6 +226,58 @@ func IsPolarizable(v Vcf) bool {
 	return true
 }
 
+//IsRefWeakAltStrong returns true if an input biallelic substitution variant has a weak Ref allele and a strong Alt allele, false otherwise.
+func IsRefWeakAltStrong(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) {
+		return false
+	}
+	if v.Ref == "A" || v.Ref == "T" {
+		if v.Alt[0] == "C" || v.Alt[0] == "G" {
+			return true
+		}
+	}
+	return false
+}
+
+//IsStrongToWeak returns true if an input biallelic substitution variant has a strong Ref allele and a weak Alt allele, false otherwise.
+func IsRefStrongAltWeak(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) {
+		return false
+	}
+	if v.Ref == "C" || v.Ref == "G" {
+		if v.Alt[0] == "A" || v.Alt[0] == "T" {
+			return true
+		}
+	}
+	return false
+}
+
+//IsNotRefStrongAltWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
+func IsNotRefStrongAltWeak(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
+		return false
+	}
+	return !IsRefStrongAltWeak(v)
+}
+
+//IsNotRefWeakAltStrong returns true if an input biallelic substitution variant does not have a weak Ref allele and a strong Alt allele, false otherwise.
+func IsNotRefWeakAltStrong(v Vcf) bool {
+	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
+		return false
+	}
+	return !IsRefWeakAltStrong(v)
+}
+
+//IsWeakToStrongOrStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant or a weak to strong variant, false otherwise.
+func IsWeakToStrongOrStrongToWeak(v Vcf) bool {
+	return IsRefStrongAltWeak(v) || IsRefWeakAltStrong(v)
+}
+
+//IsNotWeakToStrongOrStrongToWeak returns true if a variant is neither a weak to strong variant nor a strong to weak variant, false otherwise.
+func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
+	return IsNotRefWeakAltStrong(v) && IsNotRefStrongAltWeak(v)
+}
+
 func getListIndex(header Header, list []string) []int16 {
 	sampleHash := HeaderToMaps(header)
 	var listIndex []int16 = make([]int16, len(list))

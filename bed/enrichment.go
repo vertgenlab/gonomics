@@ -9,7 +9,7 @@ import (
 
 //subtractFromBedCoord is a helper function of overlapProbability that subtracts the values subStart and subEnd from entries in a slice of Bed b.
 //bClone is a clone of b used to save on memory allocation.
-func subtractFromBedCoord(b []*Bed, subStart int, subEnd int, bClone []*Bed) {
+func subtractFromBedCoord(b []Bed, subStart int, subEnd int, bClone []Bed) {
 	var prevEnd int = 0
 	var prevChrom string = ""
 
@@ -27,17 +27,21 @@ func subtractFromBedCoord(b []*Bed, subStart int, subEnd int, bClone []*Bed) {
 
 //overlapProbability calculates the probability that an element of len 'length' overlaps a set of genomic 'elements' in a genome represented by 'noGapRegions'.
 //tempElements and tempNoGap represent cloned slices of elements and noGapRegions which are used for memory optimization.
-func overlapProbability(elements []*Bed, tempElements []*Bed, length int, noGapRegions []*Bed, tempNoGap []*Bed) float64 {
+func overlapProbability(elements []Bed, tempElements []Bed, length int, noGapRegions []Bed, tempNoGap []Bed) float64 {
 	subtractFromBedCoord(elements, length-1, 0, tempElements)
 	subtractFromBedCoord(noGapRegions, 0, length-1, tempNoGap)
 	return float64(OverlapLengthSum(tempElements, tempNoGap)) / float64(TotalSize(tempNoGap))
 }
 
-func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed) []float64 {
+//ElementOverlapProbabilities returns a slice of float64 representing the probabilities that an element in elements2 overlaps an element in elements1.
+func ElementOverlapProbabilities(elements1 []Bed, elements2 []Bed, noGapRegions []Bed) []float64 {
 	var answer []float64 = make([]float64, len(elements2))
-	tempElements1 := Clone(elements1)
-	tempNoGap := Clone(noGapRegions)
-	tempElements2 := Clone(elements2)
+	var tempElements1 []Bed = make([]Bed, len(elements1))
+	copy(tempElements1, elements1)
+	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	copy(tempNoGap, noGapRegions)
+	var tempElements2 []Bed = make([]Bed, len(elements2))
+	copy(tempElements2, elements2)
 	SortBySize(tempElements2)
 	var currLen, prevLen int = 0, 0
 
@@ -54,6 +58,9 @@ func ElementOverlapProbabilities(elements1 []*Bed, elements2 []*Bed, noGapRegion
 	return answer
 }
 
+//EnrichmentPValueApproximation performs a calculation of enrichment based on a set of overlap probabilities and the observed overlap count.
+//Uses a normal approximation of the resulting binomial distribution. Very fast and should converge on the correct answer. This is the preferred method.
+//Returns a slice of three values. The first represents a debug check (hardcoded to one), the second is the expected number of overlaps, and the third is the pValue of the observed overlap.
 func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount int) []float64 {
 	var answer []float64 = make([]float64, 3)
 	var mu, sigma float64 = 0, 0
@@ -78,7 +85,10 @@ func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount i
 	return answer
 }
 
-func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64 {
+//EnrichmentPValueExact performs an exact calculation fo enrichment bgaased on a set of overlap probabilities and the observed overlap count.
+//The exact method is non-polynomial, and is thus not recommended for large datasets.
+//Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []float64 {
 	var numTrials = len(elementOverlapProbs)
 	var answer []float64 = make([]float64, 3)
 	var prevCol []float64 = make([]float64, numTrials+1)
@@ -124,11 +134,15 @@ func EnrichmentPValue(elementOverlapProbs []float64, overlapCount int) []float64
 	return answer
 }
 
-func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int, verbose int) []float64 {
+//EnrichmentPValueUpperBound, together with EnrichmentPValueLowerBound, provide a range of possible values for the pValue of overlap.
+//Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
-	tempElements1 := Clone(elements1)
-	tempNoGap := Clone(noGapRegions)
+	var tempElements1 []Bed = make([]Bed, len(elements1))
+	copy(tempElements1, elements1)
+	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	copy(tempNoGap, noGapRegions)
 	minElements2 := findLargestBedLength(elements2)
 	var curr float64
 
@@ -142,19 +156,9 @@ func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 	}
 
 	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
-	if underflow {
-		answer[2] = 0.0
-		if verbose > 0 {
-			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
-		}
-	} else {
-		for s := overlapCount + 1; s <= numTrials; s++ {
-			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
-			if underflow {
-				break
-			}
-			pValue += curr
-		}
+	for s := overlapCount + 1; s <= numTrials && !(underflow && float64(s) > float64(numTrials)*prob); s++ {
+		curr, underflow = numbers.BinomialDist(numTrials, s, prob)
+		pValue += curr
 	}
 
 	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
@@ -163,11 +167,15 @@ func EnrichmentPValueUpperBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 	return answer
 }
 
-func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions []*Bed, overlapCount int, verbose int) []float64 {
+//EnrichmentPValueLowerBound, together with EnrichmentPValueUpperBound, provide a range of possible values for the pValue of overlap.
+//Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+func EnrichmentPValueLowerBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
-	tempElements1 := Clone(elements1)
-	tempNoGap := Clone(noGapRegions)
+	var tempElements1 []Bed = make([]Bed, len(elements1))
+	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	copy(tempElements1, elements1)
+	copy(tempNoGap, noGapRegions)
 	minElements2 := findShortestBedLength(elements2)
 	if verbose > 0 {
 		log.Println("Calculating overlapProbability.")
@@ -200,7 +208,8 @@ func EnrichmentPValueLowerBound(elements1 []*Bed, elements2 []*Bed, noGapRegions
 	return answer
 }
 
-func findLargestBedLength(b []*Bed) int {
+//helperfunction that returns an int corresponding to the longest distance between chromstart and chromEnd from an input set of bed entries.
+func findLargestBedLength(b []Bed) int {
 	var maxLength int = b[0].ChromEnd - b[0].ChromStart
 
 	for i := 1; i < len(b); i++ {
@@ -211,7 +220,8 @@ func findLargestBedLength(b []*Bed) int {
 	return maxLength
 }
 
-func findShortestBedLength(b []*Bed) int {
+//helperfunction that returns an int corresponding to the shortest distance between chromstart and chromEnd from an input set of bed entries.
+func findShortestBedLength(b []Bed) int {
 	var minLength int = b[0].ChromEnd - b[0].ChromStart
 	for i := 1; i < len(b); i++ {
 		if b[i].ChromEnd-b[i].ChromStart < minLength {
@@ -219,17 +229,4 @@ func findShortestBedLength(b []*Bed) int {
 		}
 	}
 	return minLength
-}
-
-//Clone creates a memory copy of an input slice of pointers to Beds. TODO: will be deleted when we convert read to []Bed instead of []*Bed. This function is sort of a band-aid.
-func Clone(b []*Bed) []*Bed {
-	var answer []*Bed = make([]*Bed, len(b))
-
-	for i := range b {
-		answer[i] = &Bed{Chrom: b[i].Chrom, ChromStart: b[i].ChromStart, ChromEnd: b[i].ChromEnd, Name: b[i].Name, Score: b[i].Score, Strand: b[i].Strand, FieldsInitialized: b[i].FieldsInitialized}
-		answer[i].Annotation = make([]string, len(b[i].Annotation))
-		copy(answer[i].Annotation, b[i].Annotation)
-	}
-
-	return answer
 }

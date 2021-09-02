@@ -16,11 +16,10 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
-	"strings"
 )
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
-func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
+func singleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 	for i := range ref {
 		if b.Chrom == ref[i].Name {
 			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
@@ -31,7 +30,7 @@ func singleBedToFasta(b *bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 }
 
 //BedToFasta extracts subFastas out of a reference fasta slice comprised of the sequences of input bed regions.
-func BedToFasta(b []*bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
+func BedToFasta(b []bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 	outlist := make([]fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
 		outlist[i] = singleBedToFasta(b[i], ref)
@@ -40,11 +39,11 @@ func BedToFasta(b []*bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 }
 
 //SamToBed extracts the position information from a Sam entry and returns it as a bed entry.
-func SamToBed(s sam.Sam) *bed.Bed {
+func SamToBed(s sam.Sam) bed.Bed {
 	if s.Cigar[0].Op == '*' {
-		return nil
+		return bed.Bed{}
 	} else {
-		return &bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName}
+		return bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName}
 	}
 }
 
@@ -58,13 +57,13 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 } */
 
 //SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
-func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) *bed.Bed {
-	var answer *bed.Bed
+func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
+	var answer bed.Bed
 
 	if s.Cigar[0].Op == '*' {
-		return nil
+		return bed.Bed{}
 	} else {
-		answer = &bed.Bed{Chrom: s.RName, Name: s.QName}
+		answer = bed.Bed{Chrom: s.RName, Name: s.QName}
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = int(s.Pos - 1)
 			answer.ChromEnd = numbers.Min(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
@@ -78,112 +77,44 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
-//BedScoreToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is equal to the score of an overlapping bed entry at the bed entry midpoint, and zero if no bed regions overlap.
-func BedScoreToWig(infile string, reference map[string]chromInfo.ChromInfo) []wig.Wig {
+//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted nameof an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
+func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
-	var line string
 	var chromIndex int
 	var midpoint int
-	var startNum, endNum int
 	var x int
 	var i int = 0
-	var doneReading bool = false
-	var current *bed.Bed
 	var currentWig wig.Wig
-
 	//generate Wig skeleton from reference
 	for _, v := range reference {
 		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
 		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = 0
+			currentWig.Values[x] = Missing
 		}
 		wigSlice[i] = currentWig
 		i++
 	}
-
-	//DEBUG: log.Println("Completed wig skeleton, looping through bed.")
-
-	//loop through bed line at a time
-	file := fileio.EasyOpen(infile)
-	defer file.Close()
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		words := strings.Split(line, "\t")
-		startNum = common.StringToInt(words[1])
-		endNum = common.StringToInt(words[2])
-		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
-		if len(words) >= 4 {
-			current.Name = words[3]
+	bedChan := bed.GoReadToChan(inFile)
+	for b := range bedChan {
+		chromIndex = getWigChromIndex(b.Chrom, wigSlice)
+		midpoint = bedMidpoint(b)
+		if wigSlice[chromIndex].Values[midpoint] != Missing {
+			log.Fatalf("Two bed entries share the same midpoint. Unable to resolve ambiguous value assignment.")
 		}
-		if len(words) >= 5 {
-			current.Score = common.StringToInt(words[4])
-		}
-		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
-		midpoint = bedMidpoint(current)
-		if wigSlice[chromIndex].Values[midpoint] != 0 {
-			log.Fatalf("Multiple scores for one position.")
-		}
-
-		wigSlice[chromIndex].Values[midpoint] = float64(current.Score)
-
-	}
-	return wigSlice
-}
-
-//BedScoreToWigRange uses bed entries from an input file to construct a Wig data structure where the Wig value at each position is equal to the score of an overlapping bed entry, and zero if no bed regions overlap.
-func BedScoreToWigRange(infile string, reference map[string]*chromInfo.ChromInfo) []wig.Wig {
-	wigSlice := make([]wig.Wig, len(reference))
-	var line string
-	var chromIndex int
-	var midpoint int
-	var startNum, endNum int
-	var x int
-	var i int = 0
-	var doneReading bool = false
-	var current *bed.Bed
-	var currentWig wig.Wig
-
-	//generate Wig skeleton from reference
-	for _, v := range reference {
-		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
-		currentWig.Values = make([]float64, v.Size)
-		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = 0
-		}
-		wigSlice[i] = currentWig
-		i++
-	}
-
-	//loop through bed line at a time
-	file := fileio.EasyOpen(infile)
-	defer file.Close()
-
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		words := strings.Split(line, "\t")
-		startNum = common.StringToInt(words[1])
-		endNum = common.StringToInt(words[2])
-		current = &bed.Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum}
-		if len(words) >= 4 {
-			current.Name = words[3]
-		}
-		if len(words) >= 5 {
-			current.Score = common.StringToInt(words[4])
-		}
-		chromIndex = getWigChromIndex(current.Chrom, wigSlice)
-		if wigSlice[chromIndex].Values[midpoint] != 0 {
-			log.Fatalf("Multiple scores for one position.")
-		}
-		for k := current.ChromStart; k < current.ChromEnd; k++ {
-			//DEBUG: fmt.Printf("b[j].Chrom: %s, b[j].ChromStart: %d, b[j].ChromEnd: %d, k: %d, len(wigSlice[chromIndex].Values) %d\n", b[j].Chrom, b[j].ChromStart, b[j].ChromEnd, k, len(wigSlice[chromIndex].Values))
-			wigSlice[chromIndex].Values[k+1] = float64(current.Score)
+		if method == "Name" {
+			wigSlice[chromIndex].Values[midpoint] = common.StringToFloat64(b.Name)
+		} else if method == "Score" {
+			wigSlice[chromIndex].Values[midpoint] = float64(b.Score)
+		} else {
+			log.Fatalf("Unrecognized method.")
 		}
 	}
 	return wigSlice
 }
 
 //BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
-func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
+func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
 	var i, x int = 0, 0
@@ -210,7 +141,7 @@ func BedReadsToWig(b []*bed.Bed, reference map[string]chromInfo.ChromInfo) []wig
 }
 
 //bedMidpoint returns the midpoint position of an input bed entry.
-func bedMidpoint(b *bed.Bed) int {
+func bedMidpoint(b bed.Bed) int {
 	return (b.ChromEnd + b.ChromStart) / 2
 }
 

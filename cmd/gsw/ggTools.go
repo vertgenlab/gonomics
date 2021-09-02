@@ -110,7 +110,7 @@ func chainToBed(chainFmt, bedFmt string, target bool, out string) {
 	outFile := fileio.MustCreate(out)
 	defer outFile.Close()
 	for each := range reader {
-		bed.WriteBed(outFile, chain.ChainToBed(each, target), 5)
+		bed.WriteBed(outFile, chain.ChainToBed(each, target))
 	}
 }
 

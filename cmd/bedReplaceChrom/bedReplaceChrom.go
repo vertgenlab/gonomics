@@ -10,12 +10,12 @@ import (
 )
 
 func bedReplaceChrom(infile string, outfile string, chromName string) {
-	var records []*bed.Bed = bed.Read(infile)
+	var records []bed.Bed = bed.Read(infile)
 
 	for i := 0; i < len(records); i++ {
 		records[i].Chrom = chromName
 	}
-	bed.Write(outfile, records, 5)
+	bed.Write(outfile, records)
 }
 
 func usage() {

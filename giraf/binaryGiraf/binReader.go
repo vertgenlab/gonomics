@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/biogo/hts/bgzf"
+	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -25,11 +25,9 @@ type BinReader struct {
 }
 
 // NewBinReader creates a new BinReader
-func NewBinReader(file io.Reader) *BinReader {
-	reader, err := bgzf.NewReader(file, 1) //TODO: Play with different levels of concurrency
-	common.ExitIfError(err)
+func NewBinReader(filename string) *BinReader {
 	return &BinReader{
-		bg:       reader,
+		bg:       bgzf.NewReader(filename),
 		currData: &bytes.Buffer{},
 		readBffr: make([]byte, 0),
 	}
@@ -40,7 +38,7 @@ func DecompressGiraf(infilename string, outfilename string, graph *genomeGraph.G
 	// Initialize infile
 	infile := fileio.EasyOpen(infilename)
 	defer infile.Close()
-	reader := NewBinReader(infile.BuffReader)
+	reader := NewBinReader(infilename)
 	var err error
 
 	// Initialize outfile

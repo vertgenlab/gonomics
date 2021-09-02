@@ -11,7 +11,7 @@ var TotalSizeTests = []struct {
 }
 
 func TestTotalSize(t *testing.T) {
-	var b []*Bed
+	var b []Bed
 	var actual int
 	for _, v := range TotalSizeTests {
 		b = Read(v.filename)
@@ -31,7 +31,7 @@ var SelfOverlappingTests = []struct {
 }
 
 func TestIsSelfOverlapping(t *testing.T) {
-	var b []*Bed
+	var b []Bed
 	var actual bool
 	for _, v := range SelfOverlappingTests {
 		b = Read(v.filename)
