@@ -30,7 +30,7 @@ func multiFaExtract(s Settings) {
 			if s.RemoveGaps {
 				ans = fasta.RemoveGaps(ans)
 			}
-			fasta.Write(fmt.Sprintf("%s.%v.%v.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
+			fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
 		}
 	}
 }
@@ -66,7 +66,7 @@ type Settings struct {
 func main() {
 	var expectedNumArgs int = 4
 	var removeGaps *bool = flag.Bool("removeGaps", false, "Removes gaps from the output sequences. Note that the output will no longer be in valid multiFa format.")
-	var bed *string = flag.String("bed", "", "Extract all regions from start and end positions specified by the input bed file. All regions must be on the same chromosome as the multiFa (remember this is byChrom). Output files will be named according to the coordinates of the bed entry.")
+	var bed *string = flag.String("bed", "", "Extract all regions from start and end positions specified by the input bed file. Ignores the chrom field, so format the input bed file to contain only entries matching the multiFa chromosome. Output files will be named according to the coordinates of the bed entry.")
 	var s Settings
 
 	flag.Usage = usage
