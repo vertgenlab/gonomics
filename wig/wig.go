@@ -105,7 +105,7 @@ func Write(filename string, rec []Wig) {
 	file := fileio.EasyCreate(filename)
 	defer file.Close()
 	for i := range rec {
-		log.Printf("Printing wig object: %d\n", i)
+		//log.Printf("Printing wig object: %d\n", i)
 		WriteToFileHandle(file, rec[i])
 	}
 }
@@ -114,7 +114,7 @@ func Write(filename string, rec []Wig) {
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
-		fmt.Println("Printing header")
+		//fmt.Println("Printing header")
 		_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
 			rec.Start, rec.Step)
 		common.ExitIfError(err)
