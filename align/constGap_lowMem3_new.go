@@ -3,6 +3,7 @@ package align
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"math" //needed for min
 	"fmt" //TODO: remove after debugging
 )
 
@@ -33,7 +34,7 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 
 		//Step 2
 		//TODO: add another feature to Step 2, which is already in Step 3 (essential to step 3, improves memory for step 2). Instead of always filling up an entire checkerboard, fill up to the highest/rightest box indicated by the last checkerboard's i_inChecker_min and j_inChecker_min
-		trace, i_inChecker_max, j_inChecker_max = FillTraceback(alpha, beta, scores, gapPen, checkersize, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2)
+		trace, i_inChecker_max, j_inChecker_max = FillTraceback(alpha, beta, scores, gapPen, checkersize, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2, i_inChecker_min, j_inChecker_min)
 
 		//Try updating k1, k2 based on i_inChecker_max too, not just i_inChecker_min like below
 		//if j_inChecker_max == 0 { //it's impossible that both i and j inChecker max are 0, because then there won't be a checkerboard. j_inChecker_max==0 is the sitaution in test2, need to directly update k because can't get useful cigar
@@ -136,25 +137,38 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 }
 
 //Step 2
-func FillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int) ([][]ColType, int, int) {
+func FillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int) ([][]ColType, int, int) {
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	mRowPrevious = trace_prep_i[k1]
 	var i, j int
 	var i_inChecker, j_inChecker int
 	var i_inChecker_max, j_inChecker_max int //to keep track of i and j max in a checkerboard
+	var i_end, j_end int //TODO: actually probably the same as i_inChecker_max and j_inChecker_max
 	trace := make([][]ColType, checkersize)
 	for idx := 0; idx < len(trace); idx++ {
 		trace[idx] = make([]ColType, checkersize)
 	}
 
-	for i = checkersize*k1+1; i <= checkersize*(k1+1) && i <= score_highest_i; i++ { //TODO: make i and j endpoints here a function of i_inChecker_min_Previous like in Step 3
+	if i_inChecker_min_Previous >= 0 {
+		i_end = checkersize*k1+1+i_inChecker_min_Previous
+	} else {
+		i_end = int(math.Min(float64(checkersize*(k1+1)), float64(score_highest_i)))
+	}
+	if j_inChecker_min_Previous >= 0 {
+		j_end = checkersize*k2+1+j_inChecker_min_Previous
+	} else {
+		j_end = int(math.Min(float64(checkersize*(k2+1)), float64(score_highest_j)))
+	}
+	fmt.Printf("i_inChecker_min_Previous, j_inChecker_min_Previous, i_end, j_end: %d, %d, %d, %d\n", i_inChecker_min_Previous, j_inChecker_min_Previous, i_end, j_end)
+
+	for i = checkersize*k1+1; i <= i_end; i++ { //TODO: make i and j endpoints here a function of i_inChecker_min_Previous like in Step 3
 		i_inChecker = (i-1) % checkersize
-		i_inChecker_max = i_inChecker //update i_inChecker_max. TODO: can I, and is it better to get this data outside of loop?
+		i_inChecker_max = i_inChecker //update i_inChecker_max. TODO: can I, and is it better to get this data outside of loop? TODO: actually I think i_inChecker_end is the same as i_inChecker_max
 		mRowCurrent[checkersize*k2] = trace_prep_j[k2][checkersize*k1+1+i_inChecker]
 		fmt.Printf("initialize checkerboard: k1, k2, i, trace_prep_i[k1], mRowPrevious, mRowCurrent: %d, %d, %d, %v, %v, %v\n", k1, k2, i, trace_prep_i[k1], mRowPrevious, mRowCurrent) //TODO
 
-		for j = checkersize*k2+1; j <= checkersize*(k2+1) && j <= score_highest_j; j++ {
+		for j = checkersize*k2+1; j <= j_end; j++ {
 			j_inChecker = (j-1) % checkersize
 			j_inChecker_max = j_inChecker
 			mRowCurrent[j], trace[i_inChecker][j_inChecker] = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen) //it is ok if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard
