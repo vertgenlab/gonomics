@@ -53,7 +53,7 @@ func main() {
 	var plotSelectionLikelihood *string = flag.String("plotSelectionLikelihood", "", "Plots the likelihood function for the selection parameter from this VCF to a specified output file.")
 	var leftBound *float64 = flag.Float64("leftBound", -10.0, "Left bound for plotting of the likelihood function.")
 	var rightBound *float64 = flag.Float64("rightBound", 10.0, "Right bound for plotting of the likelihood function.")
-	var numberOfPoints *int = flag.Int("numberOfPoints", 100, "Set the number of points at which to evaluate the likelihood function.")
+	var numberOfPoints *int = flag.Int("numberOfPoints", 99, "Set the number of points at which to evaluate the likelihood function.")
 	var integralError *float64 = flag.Float64("integralError", 1e-5, "Sets the error threshold for integral calculations in the likelihood calculation.")
 	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Corrects for divergence-based ascertainment bias in the likelihood calculation.")
 
