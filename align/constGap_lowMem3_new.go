@@ -17,6 +17,8 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	var k1, k2 int
 	var i_inChecker_max, j_inChecker_max int
 	var i_inChecker_min, j_inChecker_min int
+	i_inChecker_min = -2 //initialize so that i_inChecker_min != 0, the first ever step 3 will not interfere with i_inChecker_start
+	j_inChecker_min = -2
 	trace := make([][]ColType, checkersize)
 	for idx := 0; idx < len(trace); idx++ {
 		trace[idx] = make([]ColType, checkersize)
@@ -47,13 +49,13 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 		//}
 
 			//Update k1,k2
-			if i_inChecker_min <= 0 && j_inChecker_min <= 0 { //when cigar is done, find out how while loop ended, and update k1, k2
+			if i_inChecker_min < 0 && j_inChecker_min < 0 { //when cigar is done, find out how while loop ended, and update k1, k2
 				// go to the next checkerboard with lower i, lower j
 				k1, k2 = k1-1, k2-1
-			} else if i_inChecker_min <= 0 { //but j_inChecker != 0
+			} else if i_inChecker_min < 0 { //but j_inChecker != 0
 				// go to the next checkerboard with lower i, same j
 				k1 -= 1
-			} else if j_inChecker_min <= 0 { //but i_inChecker != 0
+			} else if j_inChecker_min < 0 { //but i_inChecker != 0
 				// go to the next checkerboard with lower j, same i
 				k2 -= 1
 			}
@@ -114,10 +116,10 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 				}
 			}
 		}
-		fmt.Printf("Before fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO: why does trace_prep_i change before fill? are ifs executed in parallel? is "=" not one-time? Maybe pointer memory operation in the background.
+		//fmt.Printf("Before fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO: why does trace_prep_i change before fill? are ifs executed in parallel? is "=" not one-time? Maybe pointer memory operation in the background.
 		if i % checkersize == 0 && i < mColumn-1 {
 			copy(trace_prep_i[i/checkersize],mRowCurrent) //by coping value, instead of assigning "trace_prep_i[i/checkersize] = mRowCurrent", solves trace_prep_i problem
-			fmt.Printf("After fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO
+			//fmt.Printf("After fill: i, i_remainder_checkersize, mRowCurrent, trace_prep_i : %d, %d, %v, %v\n", i, i%checkersize, mRowCurrent, trace_prep_i) //TODO
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		} else if i < mColumn-1 {
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious //reuse mRow variables to save memory, but only up until the second to last row
@@ -126,9 +128,9 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	score_highest := mRowCurrent[len(mRowCurrent)-1]
 	score_highest_i := mColumn-1
 	score_highest_j := len(mRowCurrent)-1
-	fmt.Printf("score_highest: %d\n", score_highest) //TODO: remove after debugging. PASSED
-	fmt.Printf("trace_prep_i: %v\n", trace_prep_i) //TODO: remove after debugging. PASSED
-	fmt.Printf("trace_prep_j: %v\n", trace_prep_j) //TODO: remove after debugging. PASSED
+	//fmt.Printf("score_highest: %d\n", score_highest) //TODO: remove after debugging. PASSED
+	//fmt.Printf("trace_prep_i: %v\n", trace_prep_i) //TODO: remove after debugging. PASSED
+	//fmt.Printf("trace_prep_j: %v\n", trace_prep_j) //TODO: remove after debugging. PASSED
 
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
@@ -146,7 +148,7 @@ func FillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 		trace[idx] = make([]ColType, checkersize)
 	}
 
-	for i = checkersize*k1+1; i <= checkersize*(k1+1) && i <= score_highest_i; i++ {
+	for i = checkersize*k1+1; i <= checkersize*(k1+1) && i <= score_highest_i; i++ { //TODO: make i and j endpoints here a function of i_inChecker_min_Previous like in Step 3
 		i_inChecker = (i-1) % checkersize
 		i_inChecker_max = i_inChecker //update i_inChecker_max. TODO: can I, and is it better to get this data outside of loop?
 		mRowCurrent[checkersize*k2] = trace_prep_j[k2][checkersize*k1+1+i_inChecker]
@@ -175,18 +177,19 @@ func WriteCigar(trace [][]ColType, i_inChecker_max int, j_inChecker_max int, rou
 	route_updated := route
 
 	//Note that we use min_Previous to determine where to start cigar in the current checkerboard. Essential for getting correct cigar
-	if i_inChecker_min_Previous > 0 {
+	if i_inChecker_min_Previous >= 0 {
 		i_inChecker_start = i_inChecker_min_Previous
 	} else {
 		i_inChecker_start = i_inChecker_max
 	}
-	if j_inChecker_min_Previous > 0 {
+	if j_inChecker_min_Previous >= 0 {
 		j_inChecker_start = j_inChecker_min_Previous
 	} else {
 		j_inChecker_start = j_inChecker_max
 	}
 
 	fmt.Printf("entered WriteCigar: i_inChecker_max, j_inChecker_max, routeIdx_current: %d, %d, %d\n", i_inChecker_max, j_inChecker_max, routeIdx_current)
+	fmt.Printf("entered WriteCigar: i_inChecker_min_Previous, j_inChecker_min_Previous, i_inChecker_start, j_inChecker_start: %d, %d, %d, %d\n", i_inChecker_min_Previous, j_inChecker_min_Previous, i_inChecker_start, j_inChecker_start)
 	for i_inChecker, j_inChecker, routeIdx = i_inChecker_start, j_inChecker_start, routeIdx_current; i_inChecker >= 0 && j_inChecker >= 0; {
 
 		if route_updated[routeIdx].RunLength == 0 {
