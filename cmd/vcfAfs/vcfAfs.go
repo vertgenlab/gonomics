@@ -24,9 +24,9 @@ type Settings struct {
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
 	var err error
-	g, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment)
+	genotypes, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment)
 	exception.FatalOnErr(err)
-	f := popgen.AfsToFrequency(*g)
+	f := popgen.AfsToFrequency(*genotypes)
 	out := fileio.EasyCreate(outFile)
 	for i := 0; i < len(f); i++ {
 		_, err = fmt.Fprintf(out, "%f\n", f[i])
@@ -36,7 +36,7 @@ func vcfAfs(vcfFile string, outFile string, s Settings) {
 	exception.PanicOnErr(err)
 
 	if s.PlotSelectionLikelihood != "" {
-		popgen.PlotAfsLikelihood(*g, s.PlotSelectionLikelihood, s.LeftBound, s.RightBound, s.NumberOfPoints, s.IntegralError, s.DivergenceAscertainment, s.D)
+		popgen.PlotAfsLikelihood(*genotypes, s.PlotSelectionLikelihood, s.LeftBound, s.RightBound, s.NumberOfPoints, s.IntegralError, s.DivergenceAscertainment, s.D)
 	}
 }
 
@@ -54,7 +54,7 @@ func main() {
 	var leftBound *float64 = flag.Float64("leftBound", -10.0, "Left bound for plotting of the likelihood function.")
 	var rightBound *float64 = flag.Float64("rightBound", 10.0, "Right bound for plotting of the likelihood function.")
 	var numberOfPoints *int = flag.Int("numberOfPoints", 99, "Set the number of points at which to evaluate the likelihood function.")
-	var integralError *float64 = flag.Float64("integralError", 1e-5, "Sets the error threshold for integral calculations in the likelihood calculation.")
+	var integralError *float64 = flag.Float64("integralError", 1e-7, "Sets the error threshold for integral calculations in the likelihood calculation.")
 	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Corrects for divergence-based ascertainment bias in the likelihood calculation.")
 
 	flag.Usage = usage

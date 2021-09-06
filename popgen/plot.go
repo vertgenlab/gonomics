@@ -91,9 +91,11 @@ func PlotAfsPmf(alpha float64, n int, outFile string, integralError float64) {
 
 	//a short header is written to the file
 	_, err = fmt.Fprintf(out, "Frequency\tProbability\n")
+	exception.PanicOnErr(err)
 	//for each possible allele frequency for a segregating site, we calculate the probability to the file
 	for i := 1; i < n; i++ {
 		_, err = fmt.Fprintf(out, "%v\t%e\n", i, AlleleFrequencyProbability(i, n, alpha, binomCache, integralError))
+		exception.PanicOnErr(err)
 	}
 
 	err = out.Close()
@@ -116,8 +118,10 @@ func PlotAfsLikelihood(afs Afs, outFile string, leftBound float64, rightBound fl
 		alpha = leftBound + (float64(i)/float64(numPoints))*(rightBound-leftBound)
 		if divergenceAscertainment {
 			_, err = fmt.Fprintf(out, "%e\t%e\n", alpha, AfsDivergenceAscertainmentFixedAlpha(afs, alpha, binomMap, D, integralError))
+			exception.PanicOnErr(err)
 		} else {
 			_, err = fmt.Fprintf(out, "%e\t%e\n", alpha, AfsLikelihoodFixedAlpha(afs, alpha, binomMap, integralError))
+			exception.PanicOnErr(err)
 		}
 	}
 
