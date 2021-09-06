@@ -87,7 +87,7 @@ func ParseHeaderText(h Header) Header {
 	if h.Text != nil {
 		h.Metadata.AllTags, h.Metadata.Comments = parseTagsAndComments(h.Text)
 		h.Chroms = getChromInfo(h.Metadata.AllTags)
-		if _, ok := h.Metadata.AllTags[[2]byte{'H','D'}]; ok {
+		if _, ok := h.Metadata.AllTags[[2]byte{'H', 'D'}]; ok {
 			h.Metadata.Version = getVersion(h.Metadata.AllTags)
 			h.Metadata.SortOrder = getSortOrder(h.Metadata.AllTags)
 			h.Metadata.Grouping = getGrouping(h.Metadata.AllTags)

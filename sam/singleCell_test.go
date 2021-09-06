@@ -6,8 +6,8 @@ import (
 )
 
 var singleCellTests = []struct {
-	InFile string
-	ExpectedBx []string
+	InFile      string
+	ExpectedBx  []string
 	ExpectedUmi []string
 }{
 	{"testdata/singleCell.sam", []string{"AGTGCACGTGGAGGCT", "AGTGCACGTGGAGGCT", "AGTGCACGTGGAGGCT", "GGACAGTTAGACAAGT", "GCTAGGACAATGAGTA", "CAGGACTGAGTGACCA"}, []string{"AGGTGGACGCTA", "AGGTGGACGCTA", "AGGTGGACGCTA", "GGACAGTGATGA", "CAGTGAGCAGTA", "AGGTGGACGCTA"}},

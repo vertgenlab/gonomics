@@ -8,15 +8,15 @@ import (
 
 type SingleCellAlignment struct {
 	Aln Sam
-	Bx	[]dna.Base
-	Umi	[]dna.Base
+	Bx  []dna.Base
+	Umi []dna.Base
 }
 
 func ToSingleCellAlignment(s Sam) SingleCellAlignment {
 	Bx, Umi := parseBxAndUmiFromAln(s)
 	return SingleCellAlignment{
 		Aln: s,
-		Bx: Bx,
+		Bx:  Bx,
 		Umi: Umi,
 	}
 }
@@ -46,4 +46,3 @@ func parseBxAndUmiFromAln(s Sam) ([]dna.Base, []dna.Base) {
 	}
 	return Bx, Umi
 }
-
