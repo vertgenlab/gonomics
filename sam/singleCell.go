@@ -6,12 +6,14 @@ import (
 	"strings"
 )
 
+//SingleCellAlignment includes a Sam struct along with the parsed barcode and UMI for single-cell reads.
 type SingleCellAlignment struct {
 	Aln Sam
 	Bx  []dna.Base
 	Umi []dna.Base
 }
 
+//ToSingleCellAlignment parses the barcode and UMI from the QNAME field of an input sam from a single-cell read formatted with fastqFormat -singleCell.
 func ToSingleCellAlignment(s Sam) SingleCellAlignment {
 	Bx, Umi := parseBxAndUmiFromAln(s)
 	return SingleCellAlignment{
