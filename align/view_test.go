@@ -10,7 +10,7 @@ var alignTests = []struct {
 	seqTwo string
 	aln    string
 }{
-	{"ACGT", "ACGT", "ACGT\nACGT\n"}, //TODO: uncomment the other tests after debugging
+	{"ACGT", "ACGT", "ACGT\nACGT\n"},
 	{"ACGT", "CGT", "ACGT\n-CGT\n"},
 	{"ACGT", "ACG", "ACGT\nACG-\n"},
 	{"CGT", "ACGT", "-CGT\nACGT\n"},
