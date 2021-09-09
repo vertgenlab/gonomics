@@ -204,9 +204,9 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 
 	if vSplit.val != nil { // 4. if vsplit is a leaf node then
 		// 5. if vsplit. interval. x ∈ [x1, x2] and vsplit. interval. y ∈ [y1, y2] then
-		if withinRange(tree.val, relationship, x1, x2, y1, y2) {
+		if withinRange(vSplit.val, relationship, x1, x2, y1, y2) {
 			// 6. Report the interval in vsplit, S = S ∪ {vsplit. interval}
-			switch z := tree.val.(type) {
+			switch z := vSplit.val.(type) {
 			case *AggregateInterval:
 				answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
 			default:
@@ -349,5 +349,5 @@ func findSplit(x1, x2 float64, node *IntervalNode) *IntervalNode {
 			return node
 		}
 	}
-	return nil
+	return node
 }
