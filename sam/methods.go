@@ -2,6 +2,8 @@ package sam
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
@@ -51,10 +53,12 @@ func (v *SamSlice) Pop() interface{} {
 // TODO: modify sort/mergeSort.go to look for a header and save for output
 func (s SamSlice) Write(filename string) { // Does not write header
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 	for i := 0; i < s.Len(); i++ {
 		s[i].WriteToFileHandle(file)
 	}
+	var err error
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
 func (s *Sam) WriteToFileHandle(file io.Writer) {
@@ -96,6 +100,19 @@ func (g ByGenomicCoordinates) Less(i, j int) bool {
 				return true
 			}
 		}
+	}
+	return false
+}
+
+type SingleCellBx struct {
+	SamSlice
+}
+
+func (g SingleCellBx) Less(i, j int) bool {
+	iSingle := ToSingleCellAlignment(*g.SamSlice[i])
+	jSingle := ToSingleCellAlignment(*g.SamSlice[j])
+	if dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx) {
+		return true
 	}
 	return false
 }

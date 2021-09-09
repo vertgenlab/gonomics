@@ -98,27 +98,46 @@ func ParseNotes(data string, format []string) []GenomeSample {
 	text := strings.Split(data, "\t")
 	var fields []string
 	var alleles []string
+	var currAlleleOne, currAlleleTwo int16
+	var currPhased bool
 	var err error
 	var n int64
 	var answer []GenomeSample = make([]GenomeSample, len(text))
 	for i := 0; i < len(text); i++ {
 		fields = strings.Split(text[i], ":")
-		if strings.Compare(fields[0], "./.") == 0 || strings.Compare(fields[0], ".|.") == 0 {
-			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: fields}
-		} else if strings.Contains(fields[0], "|") {
+
+		if strings.Contains(fields[0], "|") {
 			alleles = strings.SplitN(fields[0], "|", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, FormatData: fields}
-		} else if strings.Contains(fields[0], "/") {
-			alleles = strings.Split(fields[0], "/")
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, FormatData: fields}
+			currPhased = true
+		} else if strings.Contains(fields[0], "/"){
+			alleles = strings.SplitN(fields[0], "/", 2)
+			currPhased = false
 		} else {
 			n, err = strconv.ParseInt(fields[0], 10, 16)
 			if err == nil && n < int64(len(text)) {
 				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false, FormatData: fields}
+				answer[i].FormatData[0] = "" //clears the genotype from the first other slot, making this a dummy position
+				continue
+			} else if fields[0] == "." {
+				answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: fields}
+				answer[i].FormatData[0] = "" //clears the genotype from the first other slot, making this a dummy position
+				continue
 			} else {
 				log.Fatalf("Error: Unexpected parsing error on the following line:\n%s", data)
 			}
 		}
+		if alleles[0] == "." {
+			currAlleleOne = -1
+		} else {
+			currAlleleOne = common.StringToInt16(alleles[0])
+		}
+		if alleles[1] == "." {
+			currAlleleTwo = -1
+		} else {
+			currAlleleTwo = common.StringToInt16(alleles[1])
+		}
+
+		answer[i] = GenomeSample{AlleleOne: currAlleleOne, AlleleTwo: currAlleleTwo, Phased: currPhased, FormatData: fields}
 		answer[i].FormatData[0] = "" //clears the genotype from the first other slot, making this a dummy position
 	}
 	return answer

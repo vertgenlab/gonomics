@@ -400,9 +400,16 @@ func makeHeaderRefLine(chromName string, chromSize int) string {
 // retrieved from a channel, such as the output from GoReadToChan.
 func Write(filename string, data []Sam, header Header) {
 	file := fileio.EasyCreate(filename)
-	WriteHeaderToFileHandle(file, header)
-	for i := range data {
-		WriteToFileHandle(file, data[i])
+	if strings.HasSuffix(filename, ".bam") {
+		wr := NewBamWriter(file, header)
+		for i := range data {
+			WriteToBamFileHandle(wr, data[i], 0)
+		}
+	} else {
+		WriteHeaderToFileHandle(file, header)
+		for i := range data {
+			WriteToFileHandle(file, data[i])
+		}
 	}
 	err := file.Close()
 	exception.PanicOnErr(err)
@@ -410,12 +417,20 @@ func Write(filename string, data []Sam, header Header) {
 
 // WriteToFileHandle writes a single Sam struct to the input file.
 func WriteToFileHandle(file io.Writer, aln Sam) {
-	_, err := fmt.Fprintln(file, ToString(aln))
-	exception.PanicOnErr(err)
+	if bamWriter, ok := file.(*BamWriter); ok {
+		WriteToBamFileHandle(bamWriter, aln, 0)
+	} else {
+		_, err := fmt.Fprintln(file, ToString(aln))
+		exception.PanicOnErr(err)
+	}
 }
 
 // WriteHeaderToFileHandle writes a sam header to the input file.
 func WriteHeaderToFileHandle(file io.Writer, header Header) {
+	if _, ok := file.(*BamWriter); ok {
+		return//for bam files, the header is written by WriteToFileHandle already, so we can ignore manual calls to the writeHeaderToFileHandle function.
+		//this is a bit messy, excited to hear other people's thoughts at code review
+	}
 	var err error
 	for i := range header.Text {
 		_, err = fmt.Fprintln(file, header.Text[i])

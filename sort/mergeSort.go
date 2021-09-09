@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
@@ -60,6 +61,8 @@ func chooseDataType(filetype string, sortType string) (MergeSort, MergeSortSingl
 		switch sortType {
 		case "byGenomicCoordinates":
 			answer = new(sam.ByGenomicCoordinates)
+		case "singleCellBx":
+			answer = new(sam.SingleCellBx)
 		default:
 			log.Fatalf("ERROR: Sorting %s has not been implemented for %s", sortType, filetype)
 		}
@@ -105,22 +108,17 @@ func ExternalMergeSort(filename string, linesPerChunk int, tmpFilePrefix string,
 	var tmpFilename string
 	var tmpFileId int = 0
 	var currChunk MergeSort
-
 	// Read files into sorted chunk until reached EOF
 	for currChunk, done = readChunk(file, linesPerChunk, filetype, sortType); currChunk.Len() != 0; currChunk, done = readChunk(file, linesPerChunk, filetype, sortType) {
 		if tmpFileId == maxTmpFilesAllowed {
 			log.Fatalln("ERROR: Exceeded maximum number of tmp files, increase -chunkSize")
 		}
-
 		sort.Sort(currChunk) // Sort the incoming chunk to be written
-
 		// Handle naming of tmp file and keep a record of it
 		tmpFilename = fmt.Sprintf("%s_%d", tmpFilePrefix, tmpFileId)
 		tmpFiles = append(tmpFiles, tmpFilename)
 		tmpFileId++
-
 		currChunk.Write(tmpFilename) // Write the sorted chunk to a tmp file
-
 		if done {
 			break
 		}
@@ -167,7 +165,9 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string, sortTyp
 	for i := 0; i < len(tmpFiles); i++ {
 		fileReaders[i] = fileio.EasyOpen(tmpFiles[i])
 		done = curr.NextRealRecord(fileReaders[i])
-
+		if done {
+			continue
+		}
 		valueToAdd := curr.Copy()                   // Copy the curr value to a new memory address
 		writeVal := (valueToAdd).(MergeSortSingle)  // Assert the type of the empty interface valueToAdd
 		priorityQueue.Push(writeVal)                // Push the copied pointer to the heap
@@ -180,7 +180,6 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string, sortTyp
 	var currVal MergeSortSingle
 	var currFile *fileio.EasyReader
 	outFile := fileio.EasyCreate(outFilename)
-	defer outFile.Close()
 	// Pop heap until all tmp files are exhausted
 	for priorityQueue.Len() > 0 {
 		done = false
@@ -192,11 +191,15 @@ func mergeChunks(tmpFiles []string, outFilename string, filetype string, sortTyp
 		done = currVal.NextRealRecord(currFile) // Get the next value from the origin file
 
 		if done { // if done then close and remove the tmp file
-			currFile.Close()
-			err := os.Remove(currFile.File.Name())
+			err := currFile.Close()
+			exception.PanicOnErr(err)
+			err = os.Remove(currFile.File.Name())
 			common.ExitIfError(err)
 		} else {
 			heap.Push(priorityQueue, currVal) // push the new value onto the heap
 		}
 	}
+	var err error
+	err = outFile.Close()
+	exception.PanicOnErr(err)
 }
