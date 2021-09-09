@@ -109,7 +109,7 @@ func ParseNotes(data string, format []string) []GenomeSample {
 		if strings.Contains(fields[0], "|") {
 			alleles = strings.SplitN(fields[0], "|", 2)
 			currPhased = true
-		} else if strings.Contains(fields[0], "/"){
+		} else if strings.Contains(fields[0], "/") {
 			alleles = strings.SplitN(fields[0], "/", 2)
 			currPhased = false
 		} else {
