@@ -22,8 +22,8 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	//i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 WriteCigar, either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
 	//j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 WriteCigar
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2 //initialize i_inChecker_min != 0, so that the first ever Step 3 WriteCigar will not interfere with i_inChecker_max
-	j_inChecker_min = -2 //ditto for j
+	i_inChecker_min = -2                    //initialize i_inChecker_min != 0, so that the first ever Step 3 WriteCigar will not interfere with i_inChecker_max
+	j_inChecker_min = -2                    //ditto for j
 	trace := make([][]ColType, checkersize) //trace matrix size is checkersize*checkersize
 	for idx := 0; idx < len(trace); idx++ {
 		trace[idx] = make([]ColType, checkersize)
@@ -52,7 +52,7 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 
 	//Step 4: write the last cigar entry
 	//This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
- if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
+	if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
 		route, routeIdx_current = LastCigar(route, routeIdx_current, 2)
 	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
 		route, routeIdx_current = LastCigar(route, routeIdx_current, 1)
@@ -69,8 +69,8 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	var mColumn int = len(alpha) + 1
-	trace_prep_i := make([][]int64,int(len(alpha)/checkersize)+1) //trace_prep_i saves all rows (i) that are needed to initialize checkerboard tracebacks
-	trace_prep_j := make([][]int64,int(len(beta)/checkersize)+1) //trace_prep_j saves all columns (j) that are needed to initialize checkerboard tracebacks
+	trace_prep_i := make([][]int64, int(len(alpha)/checkersize)+1) //trace_prep_i saves all rows (i) that are needed to initialize checkerboard tracebacks
+	trace_prep_j := make([][]int64, int(len(beta)/checkersize)+1)  //trace_prep_j saves all columns (j) that are needed to initialize checkerboard tracebacks
 	for idx := 0; idx < len(trace_prep_i); idx++ {
 		trace_prep_i[idx] = make([]int64, len(beta)+1)
 	}
@@ -87,7 +87,7 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 				trace_prep_j[j/checkersize][i] = mRowCurrent[j] //it is implied here that j%checkersize==0. It must be saved in trace_prep_j
 			} else if i == 0 {
 				mRowCurrent[j] = mRowCurrent[j-1] + gapPen
-				if j % checkersize == 0 {
+				if j%checkersize == 0 {
 					trace_prep_j[j/checkersize][i] = mRowCurrent[j]
 				}
 			} else if j == 0 {
@@ -95,14 +95,14 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 				trace_prep_j[j/checkersize][i] = mRowCurrent[j] //it is implied that j%checkersize==0. It must be saved in trace_prep_j
 			} else {
 				mRowCurrent[j], _ = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
-				if j % checkersize == 0 {
+				if j%checkersize == 0 {
 					trace_prep_j[j/checkersize][i] = mRowCurrent[j]
 				}
 			}
 		}
 
-		if i % checkersize == 0 && i < mColumn-1 {
-			copy(trace_prep_i[i/checkersize],mRowCurrent) //copy instead of assign values to avoid pointers automatically updating/synchronizing the 2 matrices
+		if i%checkersize == 0 && i < mColumn-1 {
+			copy(trace_prep_i[i/checkersize], mRowCurrent) //copy instead of assign values to avoid pointers automatically updating/synchronizing the 2 matrices
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		} else if i < mColumn-1 {
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious //reuse mRow variables to save memory, but only up until the second to last row
@@ -110,8 +110,8 @@ func HighestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	}
 
 	score_highest := mRowCurrent[len(mRowCurrent)-1]
-	score_highest_i := mColumn-1
-	score_highest_j := len(mRowCurrent)-1
+	score_highest_i := mColumn - 1
+	score_highest_j := len(mRowCurrent) - 1
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
 
@@ -126,29 +126,29 @@ func FillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	var i, j, i_inChecker, j_inChecker, i_inChecker_max, j_inChecker_max, i_max, j_max int
 	if i_inChecker_min_Previous >= 0 {
 		//use the i_inChecker_min_Previous from the previous k1/k2 loop iteration's Step 3 WriteCigar to find the i_max at which to stop filling the trace matrix
-		i_max = checkersize*k1+1+i_inChecker_min_Previous
+		i_max = checkersize*k1 + 1 + i_inChecker_min_Previous
 	} else {
 		//otherwise, since no restriction from previous k1/k2 loop Step 3 WriteCigar, find the minimum value between "where the next checkerboard starts" and "the i of the highest score", and that is where to stop filing the trace matrix
 		i_max = int(math.Min(float64(checkersize*(k1+1)), float64(score_highest_i)))
 	}
 	if j_inChecker_min_Previous >= 0 {
-		j_max = checkersize*k2+1+j_inChecker_min_Previous
+		j_max = checkersize*k2 + 1 + j_inChecker_min_Previous
 	} else {
 		j_max = int(math.Min(float64(checkersize*(k2+1)), float64(score_highest_j)))
 	}
-	i_inChecker_max = (i_max-1) % checkersize
-	j_inChecker_max = (j_max-1) % checkersize
+	i_inChecker_max = (i_max - 1) % checkersize
+	j_inChecker_max = (j_max - 1) % checkersize
 	trace := make([][]ColType, checkersize)
 	for idx := 0; idx < len(trace); idx++ {
 		trace[idx] = make([]ColType, checkersize)
 	}
 
-	for i = checkersize*k1+1; i <= i_max; i++ {
-		i_inChecker = (i-1) % checkersize
+	for i = checkersize*k1 + 1; i <= i_max; i++ {
+		i_inChecker = (i - 1) % checkersize
 		mRowCurrent[checkersize*k2] = trace_prep_j[k2][checkersize*k1+1+i_inChecker]
 
-		for j = checkersize*k2+1; j <= j_max; j++ {
-			j_inChecker = (j-1) % checkersize
+		for j = checkersize*k2 + 1; j <= j_max; j++ {
+			j_inChecker = (j - 1) % checkersize
 			mRowCurrent[j], trace[i_inChecker][j_inChecker] = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen) //it is ok even if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard traceback and writing cigar
 		}
 
@@ -217,7 +217,7 @@ func LastCigar(route []Cigar, routeIdx_current int, Op_end ColType) ([]Cigar, in
 	if route[routeIdx_current].Op == Op_end {
 		route[routeIdx_current].RunLength += 1
 	} else {
-		route=append(route, Cigar{RunLength: 1, Op: Op_end})
+		route = append(route, Cigar{RunLength: 1, Op: Op_end})
 		routeIdx_current++
 	}
 
