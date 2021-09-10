@@ -1,3 +1,7 @@
+// Command Group: "SAM Tools"
+
+//TODO: Input-normalization.
+
 package main
 
 import (
@@ -44,6 +48,7 @@ func scCount(s Settings) {
 			continue
 		}
 		if len(overlap) > 1 {
+			//TODO: Some transcripts overlap, but we can figure out from exon lines which gene to assign a read to.
 			log.Fatalf("The following input SAM record maps to multiple genes in the gtf file:\n%v.", sam.ToString(i))
 		}
 		currGene = getGeneName(overlap[0].(*gtf.Gene))
@@ -67,7 +72,6 @@ func getGeneName(g *gtf.Gene) string {
 }
 
 func printRow(out io.Writer, r Row) {
-	fmt.Printf("Len Counts: %v.\n", len(r.Counts))
 	var countString string = fmt.Sprintf("%g", r.Counts[0])
 	for i := 1; i < len(r.Counts); i++ {
 		countString = countString + fmt.Sprintf("\t%g", r.Counts[i])
