@@ -428,7 +428,7 @@ func WriteToFileHandle(file io.Writer, aln Sam) {
 // WriteHeaderToFileHandle writes a sam header to the input file.
 func WriteHeaderToFileHandle(file io.Writer, header Header) {
 	if _, ok := file.(*BamWriter); ok {
-		return//for bam files, the header is written by WriteToFileHandle already, so we can ignore manual calls to the writeHeaderToFileHandle function.
+		return //for bam files, the header is written by WriteToFileHandle already, so we can ignore manual calls to the writeHeaderToFileHandle function.
 		//this is a bit messy, excited to hear other people's thoughts at code review
 	}
 	var err error

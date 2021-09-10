@@ -33,7 +33,7 @@ func scCount(s Settings) {
 		count++
 	}
 	out := fileio.EasyCreate(s.OutFile)
-	_, err = fmt.Fprintf(out,"%s\n", headerString)
+	_, err = fmt.Fprintf(out, "%s\n", headerString)
 	exception.PanicOnErr(err)
 	tree := interval.BuildTree(geneIntervals)
 	var overlap []interval.Interval
@@ -60,9 +60,9 @@ func scCount(s Settings) {
 			}
 			currRow = Row{dna.BasesToString(sc.Bx), make([]float64, len(geneIndex))}
 		}
-		currRow.Counts[geneIndex[currGene]]++//increment count for gene in currLine
+		currRow.Counts[geneIndex[currGene]]++ //increment count for gene in currLine
 	}
-	printRow(out, currRow)//print the last cell
+	printRow(out, currRow) //print the last cell
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
@@ -76,13 +76,13 @@ func printRow(out io.Writer, r Row) {
 	for i := 1; i < len(r.Counts); i++ {
 		countString = countString + fmt.Sprintf("\t%g", r.Counts[i])
 	}
-	_, err := fmt.Fprintf(out,"%s\t%s\n", r.Bx, countString)
+	_, err := fmt.Fprintf(out, "%s\t%s\n", r.Bx, countString)
 	exception.PanicOnErr(err)
 }
 
 //Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
 type Row struct {
-	Bx	string
+	Bx     string
 	Counts []float64
 }
 
@@ -97,9 +97,9 @@ func usage() {
 }
 
 type Settings struct {
-	InFile string
+	InFile   string
 	GeneFile string
-	OutFile string
+	OutFile  string
 }
 
 func main() {
@@ -113,9 +113,9 @@ func main() {
 	}
 
 	s := Settings{
-		InFile: flag.Arg(0),
+		InFile:   flag.Arg(0),
 		GeneFile: flag.Arg(1),
-		OutFile: flag.Arg(2),
+		OutFile:  flag.Arg(2),
 	}
 
 	scCount(s)
