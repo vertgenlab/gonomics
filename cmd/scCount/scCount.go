@@ -34,7 +34,7 @@ func scCount(s Settings) {
 		geneIdSlice = append(geneIdSlice, g)
 	}
 	sort.Strings(geneIdSlice)
-	for c, g := range geneIdSlice {//c for count, g for gene
+	for c, g := range geneIdSlice { //c for count, g for gene
 		headerString += fmt.Sprintf("\t%s", g)
 		geneIndex[genes[g].GeneID] = c
 		geneIntervals = append(geneIntervals, genes[g])
@@ -90,7 +90,7 @@ func scCount(s Settings) {
 		}
 		currRow.Counts[geneIndex[currGene]]++ //increment count for gene in currLine
 	}
-	printRow(out, currRow, normalizationMap, geneIdSlice, normFlag)//print the last cell
+	printRow(out, currRow, normalizationMap, geneIdSlice, normFlag) //print the last cell
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
@@ -100,11 +100,11 @@ func getGeneName(g *gtf.Gene) string {
 }
 
 func printRow(out io.Writer, r Row, normalizationMap map[string]float64, geneIdSlice []string, normFlag bool) {
-	if normFlag {//if the user passed in a normalization file, we normalize the count for each gene.
+	if normFlag { //if the user passed in a normalization file, we normalize the count for each gene.
 		var ok bool
 		var val float64
 		for i := range r.Counts {
-			if val, ok = normalizationMap[geneIdSlice[i]]; ok {//if the current gene is in the normalization map.
+			if val, ok = normalizationMap[geneIdSlice[i]]; ok { //if the current gene is in the normalization map.
 				r.Counts[i] = r.Counts[i] * val
 			}
 		}
@@ -139,9 +139,9 @@ func usage() {
 }
 
 type Settings struct {
-	InFile   string
-	GeneFile string
-	OutFile string
+	InFile               string
+	GeneFile             string
+	OutFile              string
 	ExpNormalizationFile string
 }
 
@@ -156,9 +156,9 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 	s := Settings{
-		InFile:   flag.Arg(0),
-		GeneFile: flag.Arg(1),
-		OutFile: flag.Arg(2),
+		InFile:               flag.Arg(0),
+		GeneFile:             flag.Arg(1),
+		OutFile:              flag.Arg(2),
 		ExpNormalizationFile: *expNormFile,
 	}
 	scCount(s)
