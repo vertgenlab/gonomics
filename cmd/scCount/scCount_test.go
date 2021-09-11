@@ -8,8 +8,8 @@ import (
 )
 
 var ScCountTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
 	GeneFile string
 	ExpNormalizationFile string
@@ -23,8 +23,8 @@ func TestScCount(t *testing.T) {
 	var s Settings
 	for _, v := range ScCountTests {
 		s = Settings{
-			InFile: v.InFile,
-			OutFile: v.OutFile,
+			InFile:   v.InFile,
+			OutFile:  v.OutFile,
 			GeneFile: v.GeneFile,
 			ExpNormalizationFile: v.ExpNormalizationFile,
 		}

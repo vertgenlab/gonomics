@@ -25,14 +25,14 @@ func usage() {
 }
 
 type Settings struct {
-	OutFile string
-	Alpha float64
-	NumAlleles int
-	NumSites int
-	RandSeed bool
-	SetSeed int64
-	BoundAlpha float64
-	BoundBeta float64
+	OutFile         string
+	Alpha           float64
+	NumAlleles      int
+	NumSites        int
+	RandSeed        bool
+	SetSeed         int64
+	BoundAlpha      float64
+	BoundBeta       float64
 	BoundMultiplier float64
 }
 
@@ -58,14 +58,14 @@ func main() {
 	outFile := flag.Arg(0)
 
 	s := Settings{
-		OutFile: outFile,
-		Alpha: *alpha,
-		NumAlleles: *numAlleles,
-		NumSites: *numSites,
-		RandSeed: *randSeed,
-		SetSeed: *setSeed,
-		BoundAlpha: *boundAlpha,
-		BoundBeta: *boundBeta,
+		OutFile:         outFile,
+		Alpha:           *alpha,
+		NumAlleles:      *numAlleles,
+		NumSites:        *numSites,
+		RandSeed:        *randSeed,
+		SetSeed:         *setSeed,
+		BoundAlpha:      *boundAlpha,
+		BoundBeta:       *boundBeta,
 		BoundMultiplier: *boundMultiplier,
 	}
 

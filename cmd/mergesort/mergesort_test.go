@@ -8,12 +8,12 @@ import (
 )
 
 var MergeSortTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedFile string
-	TmpFilePrefix string
+	InFile           string
+	OutFile          string
+	ExpectedFile     string
+	TmpFilePrefix    string
 	NumLinesPerChunk int
-	SortCriteria string
+	SortCriteria     string
 }{
 	{"testdata/bedFileTest.bed", "testdata/out.bed", "testdata/expectedSortByCoord.bed", "tmp", 1000000, "byGenomicCoordinates"},
 	{"testdata/small.sam", "testdata/out.sam", "testdata/expected.small.sam", "tmp", 1000000, "byGenomicCoordinates"},
