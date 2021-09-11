@@ -12,8 +12,10 @@ var ScCountTests = []struct {
 	OutFile string
 	ExpectedFile string
 	GeneFile string
+	ExpNormalizationFile string
 }{
-	{"testdata/test.sam", "testdata/out.tsv", "testdata/expected.tsv", "testdata/test.gtf"},
+	{"testdata/test.sam", "testdata/out.tsv", "testdata/expected.tsv", "testdata/test.gtf", ""},
+	{"testdata/test.sam", "testdata/out.tsv", "testdata/expected.norm.tsv", "testdata/test.gtf", "testdata/norm.tsv"},
 }
 
 func TestScCount(t *testing.T) {
@@ -24,6 +26,7 @@ func TestScCount(t *testing.T) {
 			InFile: v.InFile,
 			OutFile: v.OutFile,
 			GeneFile: v.GeneFile,
+			ExpNormalizationFile: v.ExpNormalizationFile,
 		}
 		scCount(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
