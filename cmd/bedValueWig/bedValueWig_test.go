@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
@@ -22,13 +22,12 @@ var bedMaxWigTests = []struct {
 func TestBedMaxWig(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigTests {
-		bedMaxWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false)
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, false)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in bedMaxWig, the output beds is not as expected")
-		}
-		err = os.Remove(v.outputFile)
-		if err != nil {
-			common.ExitIfError(err)
+		} else {
+			err = os.Remove(v.outputFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
@@ -46,13 +45,35 @@ var bedMaxWigNormFlagTest = []struct {
 func TestBedMaxWigNormFlag(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigNormFlagTest {
-		bedMaxWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFileNorm, true)
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFileNorm, true, false)
 		if !fileio.AreEqual(v.outputFileNorm, v.expectedFileNorm) {
 			t.Errorf("Error in bedMaxWig, the output bed with norm flag is not as expected")
+		} else {
+			err = os.Remove(v.outputFileNorm) //Remove and see what the file looks like. Change expected file to have dots.
+			exception.PanicOnErr(err)
 		}
-		err = os.Remove(v.outputFileNorm) //Remove and see what the file looks like. Change expected file to have dots.
-		if err != nil {
-			common.ExitIfError(err)
+	}
+}
+
+var bedMinWigTest = []struct {
+	inputBed        string
+	inputWig        string
+	inputChromSizes string
+	outputFile      string
+	expectedFile    string
+}{
+	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testMinOutput.bed", "testdata/testMinExpected.bed"},
+}
+
+func TestBedMinWig(t *testing.T) {
+	var err error
+	for _, v := range bedMinWigTest {
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, true)
+		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
+			t.Errorf("Error in bedMinWig, the output bed is not as expected.")
+		} else {
+			err = os.Remove(v.outputFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }

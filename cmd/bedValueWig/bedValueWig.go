@@ -12,12 +12,13 @@ import (
 	"log"
 )
 
-func bedMaxWig(infile string, database string, chromsizeFile string, outfile string, norm bool) {
+func bedValueWig(infile string, database string, chromsizeFile string, outfile string, norm bool, bedMinWigFlag bool) {
 	var records []bed.Bed = bed.Read(infile)
 	var wigData []wig.Wig = wig.Read(database)
 	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
-	var outlist []bed.Bed
+	var outList []bed.Bed
 	var currentBed bed.Bed = records[0]
+	var currValue float64
 	var chromSlice []float64
 	var i int
 	var wigTotal float64 = 0
@@ -27,7 +28,7 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 			var wigCounterByChrom float64 = 0
 			for k := range wigData[i].Values { //Cycle through each value in the float64[]
 				var chromValueMultiplyByStep float64 = 0
-				chromValueMultiplyByStep = (float64(wigData[i].Step) * wigData[i].Values[k]) // multiply each value by the step for that chrom
+				chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
 				wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
 			}
 			wigTotal += wigCounterByChrom
@@ -42,18 +43,22 @@ func bedMaxWig(infile string, database string, chromsizeFile string, outfile str
 				if currentBed.FieldsInitialized < 7 {
 					currentBed.FieldsInitialized = 7
 				}
-				maxWig := bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
-				if norm == true {
-					maxWig = maxWig / wigTotal
+				if bedMinWigFlag {
+					currValue = bedRangeMin(chromSlice, records[k].ChromStart, records[k].ChromEnd)
+				} else {
+					currValue = bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
 				}
-				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", float64(maxWig))) // %g will
+				if norm == true {
+					currValue = currValue / wigTotal
+				}
+				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", currValue)) // %g will
 				// print %e for large exponents, %f otherwise.
 				// Precision for %g; it is the smallest number of digits necessary to identify the value uniquely.
-				outlist = append(outlist, currentBed)
+				outList = append(outList, currentBed)
 			}
 		}
 	}
-	bed.Write(outfile, outlist)
+	bed.Write(outfile, outList)
 }
 
 func WigChromToSlice(w []wig.Wig, size int, chrom string) []float64 {
@@ -66,15 +71,12 @@ func WigChromToSlice(w []wig.Wig, size int, chrom string) []float64 {
 	return output
 }
 
-func sliceRangeAverage(w []float64, start int, end int) float64 {
-	length := end - start
-	var sum float64
-	var i int
-
-	for i = 0; i < length; i++ {
-		sum = sum + w[i+start]
+func bedRangeMin(w []float64, start int, end int) float64 {
+	var min = w[start]
+	for i := start; i < end; i++ {
+		min = numbers.MinFloat64(min, w[i])
 	}
-	return (sum / float64(length))
+	return min
 }
 
 func bedRangeMax(w []float64, start int, end int) float64 {
@@ -87,15 +89,17 @@ func bedRangeMax(w []float64, start int, end int) float64 {
 
 func usage() {
 	fmt.Print(
-		"bedMaxWig - Returns annotated bed with max wig score in bed entry range. Currently can only handle fixedStep, Start = 1, Step =1 wig files.\n" +
+		"bedValueWig - Returns bed file with entries annotated based on the values corresponding to the region in a wig file. Currently can only handle fixedStep, Start = 1, Step =1 wig files." +
+			"bedValueWig returns the maximum wig value overlapping a bed region by default.\n" +
 			"Usage:\n" +
-			"bedMaxWig input.bed database.wig chrom.sizes output.bed\n" +
+			"bedValueWig input.bed database.wig chrom.sizes output.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 4
+	var min *bool = flag.Bool("bedMinWig", false, "Annotate bed entries with the minimum wig value instead of the maximum.")
 	var norm *bool = flag.Bool("normalize", false, "When true, will normalize the bedMaxWig output by dividing value by total wig hits.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -109,9 +113,8 @@ func main() {
 
 	infile := flag.Arg(0)
 	database := flag.Arg(1)
-	chromsize := flag.Arg(2)
+	chromSize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	bedMaxWig(infile, database, chromsize, outfile, *norm)
-
+	bedValueWig(infile, database, chromSize, outfile, *norm, *min)
 }
