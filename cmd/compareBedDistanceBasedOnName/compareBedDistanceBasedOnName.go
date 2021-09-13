@@ -16,15 +16,10 @@ func compareBedDistanceBasedOnName (inputBed string, genomeBed string, outBed st
 	genomeMap := make(map[string][]bed.Bed)
 	var i int
 
-<<<<<<< HEAD
+
 	for i = range genome {
 		genomeMap[genome[i].Name] = append(genomeMap[genome[i].Name], genome[i])
 		}
-=======
-	for i = range geneInfo {
-		geneInfoMap[geneInfo[i].Name] = append(geneInfoMap[geneInfo[i].Name], geneInfo[i])
-	}
->>>>>>> b5e923e7c080f84de875f0c3452de83a9debe3f3
 
 	var inputNameField []bed.Bed
 	var found bool
