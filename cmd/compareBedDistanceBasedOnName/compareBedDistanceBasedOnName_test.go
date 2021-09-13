@@ -20,7 +20,7 @@ var CompareBedDistanceOnNameTests = []struct {
 func TestCompareBedDistanceOnName(t *testing.T) {
 	var err error
 	for _, v := range CompareBedDistanceOnNameTests {
-		compareBedOnName(v.inputBed, v.genomeBed, v.outputBed)
+		compareBedDistanceBasedOnName(v.inputBed, v.genomeBed, v.outputBed)
 		if !fileio.AreEqual(v.expectedBed, v.outputBed) {
 			t.Errorf("Error in compareBedDistanceBasedOnName")
 		} else {
