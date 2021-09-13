@@ -18,7 +18,7 @@ func compareBedOnName(eStrBed string, geneInfoBed string, outFile string) {
 
 	for i = range geneInfo {
 		geneInfoMap[geneInfo[i].Name] = append(geneInfoMap[geneInfo[i].Name], geneInfo[i])
-		}
+	}
 
 	var eStrGene []bed.Bed
 	var found bool
@@ -54,10 +54,10 @@ func compareBedOnName(eStrBed string, geneInfoBed string, outFile string) {
 		eStr[i].Score = lowestDistanceTss
 		bed.WriteToFileHandle(out, eStr[i])
 	}
-		err = out.Close()
-		if err != nil{
-			log.Fatalf("File unable to close properly, error is: %s", err)
-		}
+	err = out.Close()
+	if err != nil {
+		log.Fatalf("File unable to close properly, error is: %s", err)
+	}
 }
 
 func usage() {
