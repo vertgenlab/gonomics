@@ -9,13 +9,13 @@ import (
 )
 
 //SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
-func SimulateSegSite(alpha float64, n int) *SegSite {
+func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) *SegSite {
 	var fatalCount int = 1000000
 	var maxIteration int = 10000
 	var r, x float64
 	var count, i int
 
-	bound := numbers.ScaledBetaSampler(0.001, 0.5, 5000)
+	bound := numbers.ScaledBetaSampler(boundAlpha, boundBeta, boundMultiplier)
 	f := AfsStationarityClosure(alpha)
 
 	for i = 0; i < fatalCount; i++ {
@@ -37,9 +37,9 @@ func SimulateSegSite(alpha float64, n int) *SegSite {
 }
 
 //SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
-func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
+func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) []vcf.GenomeSample {
 	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
-	s := SimulateSegSite(alpha, n)
+	s := SimulateSegSite(alpha, n, boundAlpha, boundBeta, boundMultiplier)
 	alleleArray := SegSiteToAlleleArray(s)
 	var d int
 	for c := 0; c < n; c += 2 {

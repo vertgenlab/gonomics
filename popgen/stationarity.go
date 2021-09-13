@@ -151,6 +151,9 @@ func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(
 
 //AfsSampleDensity (also referred to as the F function) is the product of the stationarity and binomial distributions integrated over p, the allele frequency.
 func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integralError float64) float64 {
+	if alpha == 0 {
+		log.Fatalf("The stationarity distribution cannot be evaluated with an alpha parameter of exactly zero.")
+	}
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponent(n, k, alpha, binomMap)
 	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
