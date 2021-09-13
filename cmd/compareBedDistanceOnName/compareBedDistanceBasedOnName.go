@@ -8,42 +8,38 @@ import (
 	"log"
 )
 
-func compareBedOnName(eStrBed string, geneInfoBed string, outFile string) {
-	out := fileio.EasyCreate(outFile)
-	eStr := bed.Read(eStrBed)
-	geneInfo := bed.Read(geneInfoBed)
+func compareBedDistanceBasedOnName (inputBed string, genomeBed string, outBed string) {
+	out := fileio.EasyCreate(outBed)
+	input := bed.Read(inputBed)
+	genome := bed.Read(genomeBed)
 
-	geneInfoMap := make(map[string][]bed.Bed)
+	genomeMap := make(map[string][]bed.Bed)
 	var i int
 
-	for i = range geneInfo {
-		geneInfoMap[geneInfo[i].Name] = append(geneInfoMap[geneInfo[i].Name], geneInfo[i])
+	for i = range genome {
+		genomeMap[genome[i].Name] = append(genomeMap[genome[i].Name], genome[i])
 		}
 
-	var eStrGene []bed.Bed
+	var inputNameField []bed.Bed
 	var found bool
-	var distanceTss int
-	var lowestDistanceTss int
+	var distance int
+	var lowestDistance int
 	var err error
 	var j int
 
-	for i := 0; i < len(eStr); i++ {
-		lowestDistanceTss = 0
-		eStrGene, found = geneInfoMap[eStr[i].Name]
+	for i := 0; i < len(input); i++ {
+		lowestDistance = 0
+		inputNameField, found = genomeMap[input[i].Name]
 		if found != true {
-			log.Fatalf("Did not find %s", eStr[i].Name)
+			log.Fatalf("Did not find %s", input[i].Name)
 		}
-		for j = range eStrGene {
-			log.Println(eStrGene[j])
-			log.Printf("%v", j)
-			distanceTss, err = bed.CompareDistance(eStrGene[j], eStr[i])
-			log.Printf("%v", distanceTss)
+		for j = range inputNameField {
+			distance, err = bed.CompareDistance(inputNameField[j], input[i])
 			if j == 0 {
-				lowestDistanceTss = distanceTss
-				log.Printf("%v", lowestDistanceTss)
+				lowestDistance = distance
 			} else {
-				if distanceTss < lowestDistanceTss {
-					lowestDistanceTss = distanceTss
+				if distance < lowestDistance {
+					lowestDistance = distance
 				}
 			}
 		}
@@ -51,8 +47,11 @@ func compareBedOnName(eStrBed string, geneInfoBed string, outFile string) {
 		if err != nil {
 			log.Fatalf("Unable to compare distance, error message: %s", err)
 		}
-		eStr[i].Score = lowestDistanceTss
-		bed.WriteToFileHandle(out, eStr[i])
+		input[i].Score = lowestDistance
+		if input[i].FieldsInitialized < 5 {
+			input[i].FieldsInitialized = 5
+		}
+		bed.WriteToFileHandle(out, input[i])
 	}
 		err = out.Close()
 		if err != nil{
@@ -62,18 +61,24 @@ func compareBedOnName(eStrBed string, geneInfoBed string, outFile string) {
 
 func usage() {
 	fmt.Print(
-		"compareBedDistanceBasedOnName - Compares the Name fields between two bed files, and if they match,\n" +
-			"the minimum distance between those coordinates is calculated.\n" +
-			"The second bed must include at least every Name included in the first bed. This second bed can \n" +
-			"have more names than the ones that are being compared.\n" +
-			"For example the second bed might be the coordinates for every gene, genome wide\n" +
-			"while the first bed includes a list of bed coordinates you are interested in studying.\n" +
-			"The output file will be the first input bed file where the minimum distance is reported in the Score column.\n" +
+		"compareBedDistanceBasedOnName - Compares the Name fields between \n" +
+			"two bed files, and if they match, the minimum distance between those\n" +
+			"coordinates is calculated.\n" +
+			"The first bed is iterated over line by line and the second bed is\n" +
+			"searched for the entries that match the Name field.\n" +
+			"Every entry in the first bed is expected to have at least one corresponding\n" +
+			"bed entry in the second bed, where more than one matching bed entry is allowed\n" +
+			"If there is more than one bed entry in the second bed that matches an entry in" +
+			"the first bed, the distance between the coordinates will be calculated pairwise\n" +
+			"and the lowest value will be reported (first bed paired with each matching entry from the second bed).\n" +
+			"Thus, the second bed must include at least every Name included in the first bed.\n" +
+			"For example the second bed might be the coordinates for every gene, genome wide (genomeBed)\n" +
+			"while the first bed includes a list of bed coordinates you are interested in studying (inputBed).\n" +
+			"The output file will be the inputBed file with the minimum distance reported in the Score column.\n" +
 			"No headers allowed in input files.\n" +
-			"Must have a zero in the score field for the first bed, for gonomics to be able to write the distance to this field.\n" +
 			"This program was originally written for comparing eSTR coordinates to gene coordinates.\n" +
 			"Usage:\n" +
-			"eStr.bed geneInfo.bed out.bed\n")
+			"input.bed genome.bed out.bed\n")
 	flag.PrintDefaults()
 }
 
@@ -88,10 +93,10 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	eStrBed := flag.Arg(0)
-	geneInfoBed := flag.Arg(1)
-	outFile := flag.Arg(2)
+	inputBed := flag.Arg(0)
+	genomeBed := flag.Arg(1)
+	outBed := flag.Arg(2)
 
-	compareBedOnName(eStrBed, geneInfoBed, outFile)
+	compareBedDistanceBasedOnName(inputBed, genomeBed, outBed)
 
 }
