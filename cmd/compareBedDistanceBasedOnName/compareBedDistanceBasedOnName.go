@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func compareBedDistanceBasedOnName (inputBed string, genomeBed string, outBed string) {
+func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed string) {
 	out := fileio.EasyCreate(outBed)
 	input := bed.Read(inputBed)
 	genome := bed.Read(genomeBed)
@@ -16,10 +16,9 @@ func compareBedDistanceBasedOnName (inputBed string, genomeBed string, outBed st
 	genomeMap := make(map[string][]bed.Bed)
 	var i int
 
-
 	for i = range genome {
 		genomeMap[genome[i].Name] = append(genomeMap[genome[i].Name], genome[i])
-		}
+	}
 
 	var inputNameField []bed.Bed
 	var found bool
