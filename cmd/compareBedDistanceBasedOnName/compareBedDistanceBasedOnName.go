@@ -27,7 +27,7 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 	var err error
 	var j int
 
-	for i := 0; i < len(input); i++ {
+	for i = range input {
 		lowestDistance = 0
 		inputNameField, found = genomeMap[input[i].Name]
 		if found != true {
@@ -35,6 +35,9 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 		}
 		for j = range inputNameField {
 			distance, err = bed.CompareDistance(inputNameField[j], input[i])
+			if err != nil {
+				log.Fatalf("Unable to compare distance, error message: %s", err)
+			}
 			if j == 0 {
 				lowestDistance = distance
 			} else {
@@ -42,10 +45,6 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 					lowestDistance = distance
 				}
 			}
-		}
-
-		if err != nil {
-			log.Fatalf("Unable to compare distance, error message: %s", err)
 		}
 		input[i].Score = lowestDistance
 		if input[i].FieldsInitialized < 5 {
