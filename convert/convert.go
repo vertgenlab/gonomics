@@ -87,7 +87,7 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 	var currentWig wig.Wig
 	//generate Wig skeleton from reference
 	for _, v := range reference {
-		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
+		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1}
 		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = Missing
@@ -122,7 +122,7 @@ func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.
 
 	//generate Wig skeleton from reference
 	for _, v := range reference {
-		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1}
+		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1}
 		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = 0

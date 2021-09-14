@@ -46,7 +46,7 @@ func Read(filename string) []Wig {
 
 func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	var line string
-	var currentWig Wig = Wig{Span: -1}
+	var currentWig Wig
 	var doneReading bool
 	var peek []byte
 	var err error
@@ -68,6 +68,8 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 			if len(lineFields) == 5 {
 				spanList = strings.Split(lineFields[4], "=")
 				currentWig.Span = common.StringToInt(spanList[1])
+			} else {
+				currentWig.Span = -1//signify missing
 			}
 		} else if strings.HasPrefix(line, "variableStep") {
 			log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", file.File.Name())
