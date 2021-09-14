@@ -106,7 +106,7 @@ func bedRangeMax(w []float64, start int, end int) float64 {
 
 func usage() {
 	fmt.Print(
-		"bedValueWig - Returns bed file with entries annotated based on the values corresponding to the region in a wig file. Currently can only handle fixedStep, Start = 1, Step =1 wig files." +
+		"bedValueWig - Returns bed file with entries annotated based on the values corresponding to the region in a wig file. Currently can only handle fixedStep, Start = 1, Step =1 wig files.\n" +
 			"bedValueWig returns the maximum wig value overlapping a bed region by default.\n" +
 			"Usage:\n" +
 			"bedValueWig input.bed database.wig chrom.sizes output.bed\n" +
@@ -125,8 +125,7 @@ func main() {
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(flag.Args()))
+		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
 	infile := flag.Arg(0)
