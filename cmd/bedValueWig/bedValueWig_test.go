@@ -100,4 +100,3 @@ func TestBedAverageWig(t *testing.T) {
 		}
 	}
 }
-
