@@ -69,7 +69,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 				spanList = strings.Split(lineFields[4], "=")
 				currentWig.Span = common.StringToInt(spanList[1])
 			} else {
-				currentWig.Span = -1//signify missing
+				currentWig.Span = -1 //signify missing
 			}
 		} else if strings.HasPrefix(line, "variableStep") {
 			log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", file.File.Name())
