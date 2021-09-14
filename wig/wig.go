@@ -20,7 +20,7 @@ type Wig struct {
 	Chrom    string
 	Start    int
 	Step     int
-	Span int
+	Span     int
 	Values   []float64
 }
 
@@ -55,7 +55,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, "fixedStep") {
 			lineFields = strings.Fields(line)
-			if len(lineFields) > 5 || len(lineFields) < 4{
+			if len(lineFields) > 5 || len(lineFields) < 4 {
 				log.Fatalf("Invalid number of arguments, expecting 4 or 5, received %d\n", len(lineFields))
 			}
 			currentWig.StepType = "fixedStep"
@@ -124,7 +124,7 @@ func Write(filename string, rec []Wig) {
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
-		if rec.Span != -1 {//if there was a span in the header line
+		if rec.Span != -1 { //if there was a span in the header line
 			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d span=%d\n", rec.StepType, rec.Chrom,
 				rec.Start, rec.Step, rec.Span)
 		} else {
