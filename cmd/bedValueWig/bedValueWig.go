@@ -23,7 +23,7 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 	var outList []bed.Bed
 	var currentBed bed.Bed = records[0]
 	var currValue float64
-	var chromSlice []float64
+	var chromIndex int
 	var i int
 	var wigTotal float64 = 0
 
@@ -40,7 +40,7 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 	}
 
 	for i = 0; i < len(sizes); i++ {
-		chromSlice = WigChromToSlice(wigData, sizes[i].Size, sizes[i].Name)
+		chromIndex = getWigIndex(wigData, sizes[i].Name)
 		for k := 0; k < len(records); k++ {
 			if records[k].Chrom == sizes[i].Name {
 				currentBed = records[k]
@@ -48,11 +48,11 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 					currentBed.FieldsInitialized = 7
 				}
 				if bedMinWigFlag {
-					currValue = bedRangeMin(chromSlice, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeMin(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
 				} else if bedAverageWigFlag {
-					currValue = bedRangeAverage(chromSlice, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeAverage(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
 				} else {
-					currValue = bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
 				}
 				if norm == true {
 					currValue = currValue / wigTotal
@@ -67,14 +67,14 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 	bed.Write(outfile, outList)
 }
 
-func WigChromToSlice(w []wig.Wig, size int, chrom string) []float64 {
-	output := make([]float64, size)
-	for _, v := range w {
+func getWigIndex(w []wig.Wig, chrom string) int {
+	for i, v := range w {
 		if v.Chrom == chrom {
-			output = v.Values
+			return i
 		}
 	}
-	return output
+	log.Fatalf("Chromosome with name: %v not found in wig.", chrom)
+	return -1
 }
 
 func bedRangeAverage(w []float64, start int, end int) float64 {
@@ -85,7 +85,7 @@ func bedRangeAverage(w []float64, start int, end int) float64 {
 	for i = 0; i < length; i++ {
 		sum = sum + w[i+start]
 	}
-	return (sum / float64(length))
+	return sum / float64(length)
 }
 
 func bedRangeMin(w []float64, start int, end int) float64 {
