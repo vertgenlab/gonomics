@@ -12,7 +12,11 @@ import (
 	"log"
 )
 
-func bedValueWig(infile string, database string, chromsizeFile string, outfile string, norm bool, bedMinWigFlag bool) {
+func bedValueWig(infile string, database string, chromsizeFile string, outfile string, norm bool, bedMinWigFlag bool, bedAverageWigFlag bool) {
+	if bedMinWigFlag && bedAverageWigFlag {
+		log.Fatalf("Cannot select both min and average in the same operation.")
+	}
+
 	var records []bed.Bed = bed.Read(infile)
 	var wigData []wig.Wig = wig.Read(database)
 	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
@@ -45,6 +49,8 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 				}
 				if bedMinWigFlag {
 					currValue = bedRangeMin(chromSlice, records[k].ChromStart, records[k].ChromEnd)
+				} else if bedAverageWigFlag {
+					currValue = bedRangeAverage(chromSlice, records[k].ChromStart, records[k].ChromEnd)
 				} else {
 					currValue = bedRangeMax(chromSlice, records[k].ChromStart, records[k].ChromEnd)
 				}
@@ -69,6 +75,17 @@ func WigChromToSlice(w []wig.Wig, size int, chrom string) []float64 {
 		}
 	}
 	return output
+}
+
+func bedRangeAverage(w []float64, start int, end int) float64 {
+	length := end - start
+	var sum float64
+	var i int
+
+	for i = 0; i < length; i++ {
+		sum = sum + w[i+start]
+	}
+	return (sum / float64(length))
 }
 
 func bedRangeMin(w []float64, start int, end int) float64 {
@@ -99,7 +116,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
-	var min *bool = flag.Bool("bedMinWig", false, "Annotate bed entries with the minimum wig value instead of the maximum.")
+	var min *bool = flag.Bool("min", false, "Annotate bed entries with the minimum wig value instead of the maximum.")
+	var average *bool = flag.Bool("average", false, "Annotate bed entries with the average wig value instead of the maximum.")
 	var norm *bool = flag.Bool("normalize", false, "When true, will normalize the bedMaxWig output by dividing value by total wig hits.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -116,5 +134,5 @@ func main() {
 	chromSize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	bedValueWig(infile, database, chromSize, outfile, *norm, *min)
+	bedValueWig(infile, database, chromSize, outfile, *norm, *min, *average)
 }

@@ -22,7 +22,7 @@ var bedMaxWigTests = []struct {
 func TestBedMaxWig(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigTests {
-		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, false)
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, false, false)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in bedMaxWig, the output beds is not as expected")
 		} else {
@@ -45,7 +45,7 @@ var bedMaxWigNormFlagTest = []struct {
 func TestBedMaxWigNormFlag(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigNormFlagTest {
-		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFileNorm, true, false)
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFileNorm, true, false, false)
 		if !fileio.AreEqual(v.outputFileNorm, v.expectedFileNorm) {
 			t.Errorf("Error in bedMaxWig, the output bed with norm flag is not as expected")
 		} else {
@@ -68,7 +68,7 @@ var bedMinWigTest = []struct {
 func TestBedMinWig(t *testing.T) {
 	var err error
 	for _, v := range bedMinWigTest {
-		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, true)
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, true, false)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in bedMinWig, the output bed is not as expected.")
 		} else {
@@ -77,3 +77,27 @@ func TestBedMinWig(t *testing.T) {
 		}
 	}
 }
+
+var bedAverageWigTest = []struct {
+	inputBed        string
+	inputWig        string
+	inputChromSizes string
+	outputFile      string
+	expectedFile    string
+}{
+	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testAverageOutput.bed", "testdata/testAverageExpected.bed"},
+}
+
+func TestBedAverageWig(t *testing.T) {
+	var err error
+	for _, v := range bedAverageWigTest {
+		bedValueWig(v.inputBed, v.inputWig, v.inputChromSizes, v.outputFile, false, false, true)
+		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
+			t.Errorf("Error in bedAverageWig, the output bed is not as expected.")
+		} else {
+			err = os.Remove(v.outputFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
