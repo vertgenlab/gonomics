@@ -1,9 +1,11 @@
 package main
 
-import (
+import
+(
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
@@ -53,9 +55,7 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 		bed.WriteToFileHandle(out, input[i])
 	}
 	err = out.Close()
-	if err != nil {
-		log.Fatalf("File unable to close properly, error is: %s", err)
-	}
+	exception.PanicOnErr(err)
 }
 
 func usage() {
