@@ -17,13 +17,16 @@ func (s *Sam) GetChromStart() int {
 }
 
 func (s *Sam) GetChromEnd() int {
-	var runlength int = 0
+	var runLength int = 0
+	if s.Cigar[0].Op == '*' {
+		return s.GetChromStart()
+	}
 	for i := 0; i < len(s.Cigar); i++ {
 		if cigar.ConsumesReference(s.Cigar[i].Op) {
-			runlength += int(s.Cigar[i].RunLength)
+			runLength += int(s.Cigar[i].RunLength)
 		}
 	}
-	return s.GetChromStart() + runlength
+	return s.GetChromStart() + runLength
 }
 
 func (s *Sam) UpdateLift(c string, start int, end int) {
