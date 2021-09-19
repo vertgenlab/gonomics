@@ -122,7 +122,7 @@ var check = giraf.Giraf{
 	Notes:     nil}
 
 func TestRandGiraf(t *testing.T) {
-	var seed int64 = 777
+	var seed int = 777
 
 	// Uncomment following line for random reads
 	//seed = time.Now().UnixNano()

@@ -115,8 +115,8 @@ func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out s
 	}
 }
 
-func selectScoreMatrix(score string) [][]int64 {
-	var scoreMatrix [][]int64
+func selectScoreMatrix(score string) [][]int {
+	var scoreMatrix [][]int
 	switch {
 	case strings.Contains(score, "humanChimp"):
 		scoreMatrix = align.HumanChimpTwoScoreMatrix

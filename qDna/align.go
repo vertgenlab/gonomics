@@ -57,7 +57,7 @@ func QDnaFasterScore(alpha *QBase, beta *QBase, scoreMatrix [][]float64) float64
 	return sum
 }
 
-func PairwiseAverage(alpha *QFrag, beta *QFrag, start int64, end int64, name string) *QFrag {
+func PairwiseAverage(alpha *QFrag, beta *QFrag, start int, end int, name string) *QFrag {
 
 	answer := &QFrag{Seq: nil, From: []*Location{{Assembly: "", Chr: name, Start: start, End: end}}, Fwd: nil, Rev: nil}
 	//Max or min, haven't decided if it's necessary.
@@ -79,8 +79,8 @@ func reverseCigar(alpha []align.Cigar) {
 	}
 }
 
-func UngappedAlignLen(cig []align.Cigar) int64 {
-	var reds int64
+func UngappedAlignLen(cig []align.Cigar) int {
+	var reds int
 	for i := 0; i < len(cig); i++ {
 		if cig[i].Op != align.ColD {
 			reds = reds + cig[i].RunLength
@@ -89,8 +89,8 @@ func UngappedAlignLen(cig []align.Cigar) int64 {
 	return reds
 }
 
-func UngappedQueryLen(cig []align.Cigar) int64 {
-	var reds int64
+func UngappedQueryLen(cig []align.Cigar) int {
+	var reds int
 	for i := 0; i < len(cig); i++ {
 		if cig[i].Op != align.ColI {
 			reds = reds + cig[i].RunLength
@@ -106,14 +106,14 @@ func UngappedQueryLen(cig []align.Cigar) int64 {
 	//var reverse []*qDna.QBase
 	var score float64
 	var alignment []align.Cigar
-	var lowRef, lowQuery, highQuery int64
+	var lowRef, lowQuery, highQuery int
 	var reverseFastq *fastq.Fastq
 
 	var bestScore float64 = 0
-	//var minI, minJ, maxJ int64
+	//var minI, minJ, maxJ int
 	//var qualBase []rune
 	//var sequence string
-	//var flag int64
+	//var flag int
 	var i, j int
 	var currRead []*QBase
 	for i = 0; i < len(reads); i++ {

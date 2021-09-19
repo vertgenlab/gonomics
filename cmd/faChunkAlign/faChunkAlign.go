@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-func faChunkAlign(inFile string, chunkSize int, gapOpen int64, gapExtend int64, outFile string) {
+func faChunkAlign(inFile string, chunkSize int, gapOpen int, gapExtend int, outFile string) {
 	log.Printf("Reading %s...\n", inFile)
 	records := fasta.Read(inFile)
 	log.Printf("Successfully read %d sequences from fasta file.\n", len(records))
@@ -39,8 +39,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 3
-	var gapOpen *int64 = flag.Int64("gapOpen", 300, "Penalty for opening a gap")
-	var gapExtend *int64 = flag.Int64("gapExtend", 40, "Penalty for extending a gap")
+	var gapOpen *int = flag.Int("gapOpen", 300, "Penalty for opening a gap")
+	var gapExtend *int = flag.Int("gapExtend", 40, "Penalty for extending a gap")
 	flag.Usage = usage
 	flag.Parse()
 

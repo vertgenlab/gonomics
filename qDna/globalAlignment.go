@@ -150,4 +150,4 @@ func tripleMaxTrace(a float64, b float64, c float64) (float64, align.ColType) {
 	}
 }
 
-//var veryNegNum float64 = float64(math.MinInt64 / 2)
+//var veryNegNum float64 = float64(math.MinInt / 2)

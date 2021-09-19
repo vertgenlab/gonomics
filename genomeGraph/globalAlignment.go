@@ -8,17 +8,17 @@ import (
 	"log"
 )
 
-func nmMatrixSetup(size int64) ([][]int64, [][]rune) {
-	m := make([][]int64, size)
+func nmMatrixSetup(size int) ([][]int, [][]rune) {
+	m := make([][]int, size)
 	trace := make([][]rune, size)
 	for idx := range m {
-		m[idx] = make([]int64, size)
+		m[idx] = make([]int, size)
 		trace[idx] = make([]rune, size)
 	}
 	return m, trace
 }
 
-func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar) {
+func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int, gapPen int, m [][]int, trace [][]rune) (int, []*cigar.Cigar) {
 	var i, j, routeIdx int
 	for i = 0; i < len(alpha)+1; i++ {
 		for j = 0; j < len(beta)+1; j++ {

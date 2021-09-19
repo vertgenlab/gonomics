@@ -22,6 +22,6 @@ type QAdj struct {
 type Location struct {
 	Assembly string
 	Chr      string
-	Start    int64
-	End      int64
+	Start    int
+	End      int
 }
