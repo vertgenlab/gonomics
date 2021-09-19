@@ -33,7 +33,7 @@ func PrintCigar(operations []Cigar) string {
 func View(alpha []dna.Base, beta []dna.Base, operations []Cigar) string {
 	var seqOne, seqTwo bytes.Buffer
 	var i, j int
-	var count int64
+	var count int
 	for _, operation := range operations {
 		for count = 0; count < operation.RunLength; count++ {
 			switch operation.Op {
@@ -55,18 +55,18 @@ func View(alpha []dna.Base, beta []dna.Base, operations []Cigar) string {
 	return seqOne.String() + "\n" + seqTwo.String() + "\n"
 }
 
-func LocalView(alpha []dna.Base, beta []dna.Base, operations []Cigar, maxI int64) string {
+func LocalView(alpha []dna.Base, beta []dna.Base, operations []Cigar, maxI int) string {
 	var seqOne, seqTwo bytes.Buffer
 	var i, j int
-	var count int64
-	var alignLen int64
+	var count int
+	var alignLen int
 	for k := 0; k < len(operations); k++ {
 		alignLen += operations[k].RunLength
 	}
-	var startCig int64
-	var endCig int64
-	endCig = int64(len(alpha)) - int64(maxI)
-	startCig = int64(len(alpha)) - alignLen - endCig
+	var startCig int
+	var endCig int
+	endCig = int(len(alpha)) - int(maxI)
+	startCig = int(len(alpha)) - alignLen - endCig
 	if startCig != 0 {
 
 		operations = append([]Cigar{{RunLength: startCig, Op: ColD}}, operations...)

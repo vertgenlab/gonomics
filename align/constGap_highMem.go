@@ -5,10 +5,10 @@ import (
 	"log"
 )
 
-func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
+func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int, gapPen int) (int, []Cigar) {
 	//make matrices for m (score, broken down into mRowCurrent,mRowPrevious and mColumn to save memory) and trace (traceback with directions)
-	mRowCurrent := make([]int64, len(beta)+1)
-	mRowPrevious := make([]int64, len(beta)+1)
+	mRowCurrent := make([]int, len(beta)+1)
+	mRowPrevious := make([]int, len(beta)+1)
 	var mColumn int = len(alpha) + 1
 	trace := make([][]ColType, len(alpha)+1)
 	for idx := 0; idx < mColumn; idx++ {
