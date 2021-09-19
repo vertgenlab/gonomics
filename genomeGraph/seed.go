@@ -95,7 +95,7 @@ func getLastPart(a *SeedDev) *SeedDev {
 	return a
 }
 
-func CompareBlastScore(a *SeedDev, b *SeedDev, read fastq.Fastq, scoreMatrix [][]int) int {
+func CompareBlastScore(a *SeedDev, b *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int {
 	if BlastSeed(a, read, scoreMatrix) == BlastSeed(b, read, scoreMatrix) {
 		return 0
 	} else if BlastSeed(a, read, scoreMatrix) < BlastSeed(b, read, scoreMatrix) {
@@ -108,11 +108,11 @@ func CompareBlastScore(a *SeedDev, b *SeedDev, read fastq.Fastq, scoreMatrix [][
 	}
 }
 
-func SortBlastz(seeds []*SeedDev, read fastq.Fastq, scoreMatrix [][]int) {
+func SortBlastz(seeds []*SeedDev, read fastq.Fastq, scoreMatrix [][]int64) {
 	sort.Slice(seeds, func(i, j int) bool { return CompareBlastScore(seeds[i], seeds[j], read, scoreMatrix) == 1 })
 }
 
-func BlastSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int) int {
+func BlastSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	if seed.NextPart == nil {
 		return scoreSeed(seed, read, scoreMatrix)
 	} else {

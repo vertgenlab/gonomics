@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-//func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int, gapPen int, m [][]int, trace [][]rune) (int, []*cigar.Cigar, int, int, int, int)
+//func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int64, int64, int64, int64)
 
 func TestRightLocal(t *testing.T) {
 	var seqOneA = dna.StringToBases("TTTTTTTTTTTTTTTTAGC")

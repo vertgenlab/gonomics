@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	//"math"
+	"math"
 )
 
 func fastaListToIndividualGroups(records []fasta.Fasta) [][]fasta.Fasta {
@@ -23,10 +23,10 @@ func mergeFastaGroups(groups [][]fasta.Fasta, x int, y int, route []Cigar) [][]f
 	return groups
 }
 
-func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int, gapOpen int, gapExtend int) (bestX int, bestY int, bestScore int, bestRoute []Cigar) {
+func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) (bestX int, bestY int, bestScore int64, bestRoute []Cigar) {
 	var route []Cigar
-	var score int
-	bestScore = -9223372036854775808 //TODO: fix bestScore = math.MinInt
+	var score int64
+	bestScore = math.MinInt64
 	for x := 0; x < len(groups)-1; x++ {
 		for y := x + 1; y < len(groups); y++ {
 			score, route = multipleAffineGap(groups[x], groups[y], scoreMatrix, gapOpen, gapExtend)
@@ -38,13 +38,13 @@ func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int, gapOpen int, gap
 	return bestX, bestY, bestScore, bestRoute
 }
 
-func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int, gapOpen int, gapExtend int, chunkSize int) (bestX int, bestY int, bestScore int, bestRoute []Cigar) {
+func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) (bestX int, bestY int, bestScore int64, bestRoute []Cigar) {
 	var route []Cigar
-	var score int
-	bestScore = -9223372036854775808 //TODO: fix bestScore = math.MinInt
+	var score int64
+	bestScore = math.MinInt64
 	for x := 0; x < len(groups)-1; x++ {
 		for y := x + 1; y < len(groups); y++ {
-			score, route = multipleAffineGapChunk(groups[x], groups[y], scoreMatrix, gapOpen, gapExtend, int(chunkSize))
+			score, route = multipleAffineGapChunk(groups[x], groups[y], scoreMatrix, gapOpen, gapExtend, int64(chunkSize))
 			if score > bestScore {
 				bestX, bestY, bestScore, bestRoute = x, y, score, route
 			}
@@ -53,7 +53,7 @@ func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int, gapOpen int
 	return bestX, bestY, bestScore, bestRoute
 }
 
-func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int, gapOpen int, gapExtend int) []fasta.Fasta {
+func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {
 		x, y, _, route := nearestGroups(groups, scoreMatrix, gapOpen, gapExtend)
@@ -63,7 +63,7 @@ func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int, gapOpen int, gapEx
 }
 
 //align sequences
-func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int, gapOpen int, gapExtend int, chunkSize int) []fasta.Fasta {
+func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {
 		x, y, score, route := nearestGroupsChunk(groups, scoreMatrix, gapOpen, gapExtend, chunkSize)
@@ -75,8 +75,8 @@ func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int, gapOpen int, 
 
 //average of pairs scoring scheme where gaps are ignored
 //maybe there should be a small penalty for gaps so that gaps will tend to be in the same location
-func scoreColumnMatch(alpha []fasta.Fasta, beta []fasta.Fasta, alphaCol int, betaCol int, scores [][]int) int {
-	var sum, count int = 0, 0
+func scoreColumnMatch(alpha []fasta.Fasta, beta []fasta.Fasta, alphaCol int, betaCol int, scores [][]int64) int64 {
+	var sum, count int64 = 0, 0
 	for alphaSeqIdx := range alpha {
 		for betaSeqIdx := range beta {
 			if alpha[alphaSeqIdx].Seq[alphaCol] != dna.Gap && beta[betaSeqIdx].Seq[betaCol] != dna.Gap {
@@ -88,8 +88,8 @@ func scoreColumnMatch(alpha []fasta.Fasta, beta []fasta.Fasta, alphaCol int, bet
 	return sum / count
 }
 
-func ungappedRegionColumnScore(alpha []fasta.Fasta, alphaStart int, beta []fasta.Fasta, betaStart int, length int, scores [][]int) int {
-	var answer int = 0
+func ungappedRegionColumnScore(alpha []fasta.Fasta, alphaStart int, beta []fasta.Fasta, betaStart int, length int, scores [][]int64) int64 {
+	var answer int64 = 0
 	for i, j := alphaStart, betaStart; i < alphaStart+length; i, j = i+1, j+1 {
 		answer += scoreColumnMatch(alpha, beta, i, j, scores)
 	}

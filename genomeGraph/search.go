@@ -27,7 +27,7 @@ type memoryPool struct {
 }
 
 type MatrixAln struct {
-	m     [][]int
+	m     [][]int64
 	trace [][]byte
 }
 
@@ -38,14 +38,14 @@ type dnaPool struct {
 	queryEnd    int
 	targetStart int
 	targetEnd   int
-	currScore   int
+	currScore   int64
 }
 
 type dynamicScoreKeeper struct {
 	i        int
 	j        int
 	routeIdx int
-	currMax  int
+	currMax  int64
 	route    []cigar.ByteCigar
 }
 
@@ -55,11 +55,11 @@ type scoreKeeper struct {
 	queryStart   int
 	queryEnd     int
 	extension    int
-	currScore    int
-	seedScore    int
-	perfectScore int
-	leftScore    int
-	rightScore   int
+	currScore    int64
+	seedScore    int64
+	perfectScore int64
+	leftScore    int64
+	rightScore   int64
 	leftPath     []uint32
 	rightPath    []uint32
 	leftSeq      []dna.Base
@@ -110,11 +110,11 @@ func NewSwMatrix(size int) MatrixAln {
 	return sw
 }
 
-func MatrixSetup(size int) ([][]int, [][]byte) {
-	m := make([][]int, size)
+func MatrixSetup(size int) ([][]int64, [][]byte) {
+	m := make([][]int64, size)
 	trace := make([][]byte, size)
 	for idx := range m {
-		m[idx] = make([]int, size)
+		m[idx] = make([]int64, size)
 		trace[idx] = make([]byte, size)
 	}
 	return m, trace
@@ -162,7 +162,7 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
 }*/
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int, int, int, []uint32) {
+func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	//if len(seq) >= extension {
 	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
 	//}
@@ -180,7 +180,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath
 	} else {
 		//A very negative number
-		sk.leftScore = -9223372036854775808 //TODO: fix math.MinInt
+		sk.leftScore = math.MinInt64
 		for _, i := range n.Prev {
 			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, extension, read, scores, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.leftScore {
@@ -198,7 +198,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	}
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int, int, int, []uint32) {
+func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	//if len(seq) >= extension {
 	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
 	//}
@@ -213,7 +213,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 		pool.Put(s)
 		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.queryEnd, sk.rightPath
 	} else {
-		sk.rightScore = -9223372036854775808 //TODO: fix math.MinInt64
+		sk.rightScore = math.MinInt64
 		for _, i := range n.Next {
 			dynamicScore.route, s.currScore, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, extension, read, scoreMatrix, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.rightScore {
@@ -230,7 +230,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 	}
 }
 
-func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int, matrix *MatrixAln, gapPen int, dynamicScore dynamicScoreKeeper) (int, []cigar.ByteCigar, int, int) {
+func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
 	resetDynamicScore(dynamicScore)
 	for dynamicScore.i = 0; dynamicScore.i < len(alpha)+1; dynamicScore.i++ {
 		matrix.m[dynamicScore.i][0] = 0
@@ -272,7 +272,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int, matrix *M
 	return matrix.m[len(alpha)][len(beta)], dynamicScore.route, dynamicScore.i, dynamicScore.j
 }
 
-func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int, matrix *MatrixAln, gapPen int, dynamicScore dynamicScoreKeeper) (int, []cigar.ByteCigar, int, int) {
+func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
 	resetDynamicScore(dynamicScore)
 	var maxI int
 	var maxJ int
@@ -418,7 +418,7 @@ type seedHelper struct {
 	seqKey                                    uint64
 	keyShift                                  uint
 	keyIdx, keyOffset, readOffset, nodeOffset int
-	nodeIdx, nodePos                          int
+	nodeIdx, nodePos                          int64
 	leftMatches                               int
 	rightMatches                              int
 	tempSeed                                  SeedDev
@@ -547,9 +547,9 @@ func restartSeedHelper(helper *seedHelper) {
 	helper.leftMatches = 0
 }
 
-//seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int = 0, 0
-func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int, scoreMatrix [][]int, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
-	const basesPerInt int = 32
+//seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0
+func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
+	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)
 	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
 

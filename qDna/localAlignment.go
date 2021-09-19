@@ -8,7 +8,7 @@ import (
 	//"github.com/vertgenlab/gonomics/common"
 )
 
-func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen float64) (float64, []align.Cigar, int, int, int, int) {
+func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen float64) (float64, []align.Cigar, int64, int64, int64, int64) {
 
 	m := make([][]float64, len(alpha)+1)
 	trace := make([][]align.ColType, len(alpha)+1)
@@ -17,26 +17,26 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 		trace[idx] = make([]align.ColType, len(beta)+1)
 	}
 	var currMax float64
-	var maxI int
-	var maxJ int
-	var i, j, routeIdx int
+	var maxI int64
+	var maxJ int64
+	var i, j, routeIdx int64
 
 	//setting up the first rows and columns
-	for i = 0; i < int(len(m)); i++ {
+	for i = 0; i < int64(len(m)); i++ {
 		m[i][0] = 0
 	}
-	for j = 0; j < int(len(m[0])); j++ {
+	for j = 0; j < int64(len(m[0])); j++ {
 		m[0][j] = 0
 	}
 	//seting up the rest of the matrix
 	//var diagScore, upScore, leftScore float64
-	for i = 1; i < int(len(m)); i++ {
-		for j = 1; j < int(len(m[0])); j++ {
+	for i = 1; i < int64(len(m)); i++ {
+		for j = 1; j < int64(len(m[0])); j++ {
 			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1]+QDnaScore(alpha[i-1], beta[j-1], scores), m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			if m[i][j] > currMax {
 				currMax = m[i][j]
-				maxI = int(i)
-				maxJ = int(j)
+				maxI = int64(i)
+				maxJ = int64(j)
 			}
 			if m[i][j] < 0 {
 				m[i][j] = 0
@@ -44,7 +44,7 @@ func SmithWaterman(alpha []*QBase, beta []*QBase, scores [][]float64, gapPen flo
 		}
 	}
 	route := make([]align.Cigar, 1)
-	var minI, minJ int
+	var minI, minJ int64
 	var refStart int
 	for i, j, routeIdx = maxI, maxJ, 0; m[i][j] > 0; {
 		if route[routeIdx].RunLength == 0 {

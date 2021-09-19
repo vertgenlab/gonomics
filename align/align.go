@@ -1,10 +1,10 @@
 package align
 
 import (
-//"math" //TODO: fix math.MinInt
+	"math"
 )
 
-var veryNegNum int = -9223372036854775808 / 2 //TODO: fix math.MinInt
+var veryNegNum int64 = math.MinInt64 / 2
 
 // these are relative to the first seq.
 // e.g. colI is an insertion in the second seq, relative to the first
@@ -17,12 +17,12 @@ const (
 )
 
 type Cigar struct {
-	RunLength int
+	RunLength int64
 	Op        ColType
 }
 
 // O=400 E=30
-var DefaultScoreMatrix = [][]int{
+var DefaultScoreMatrix = [][]int64{
 	{91, -114, -31, -123, -44},
 	{-114, 100, -125, -31, -43},
 	{-31, -125, 100, -114, -43},
@@ -31,7 +31,7 @@ var DefaultScoreMatrix = [][]int{
 }
 
 // O=400 E=30
-var HoxD55ScoreMatrix = [][]int{
+var HoxD55ScoreMatrix = [][]int64{
 	{91, -114, -31, -123, 0},
 	{-114, 100, -125, -31, 0},
 	{-31, -125, 100, -114, 0},
@@ -40,7 +40,7 @@ var HoxD55ScoreMatrix = [][]int{
 }
 
 // O=600 E=55
-var MouseRatScoreMatrix = [][]int{
+var MouseRatScoreMatrix = [][]int64{
 	{91, -114, -31, -123, 0},
 	{-114, 100, -125, -31, 0},
 	{-31, -125, 100, -114, 0},
@@ -49,7 +49,7 @@ var MouseRatScoreMatrix = [][]int{
 }
 
 // O=600 E=150
-var HumanChimpTwoScoreMatrix = [][]int{
+var HumanChimpTwoScoreMatrix = [][]int64{
 	{90, -330, -236, -356, -208},
 	{-330, 100, -318, -236, -196},
 	{-236, -318, 100, -330, -196},
@@ -58,7 +58,7 @@ var HumanChimpTwoScoreMatrix = [][]int{
 }
 
 /*
-var StrictScoreMatrix = [][]int{
+var StrictScoreMatrix = [][]int64{
         {91, -114, -31, -123, -44},
         {-114, 100, -125, -31, -43},
         {-31, -125, 100, -114, -43},
@@ -67,7 +67,7 @@ var StrictScoreMatrix = [][]int{
 }
 */
 
-func tripleMaxTrace(a int, b int, c int) (int, ColType) {
+func tripleMaxTrace(a int64, b int64, c int64) (int64, ColType) {
 	if a >= b && a >= c {
 		return a, ColM
 	} else if b >= c {
@@ -83,8 +83,8 @@ func reverseCigar(alpha []Cigar) {
 	}
 }
 
-func countAlignmentColumns(route []Cigar) int {
-	var count int = 0
+func countAlignmentColumns(route []Cigar) int64 {
+	var count int64 = 0
 	for i := range route {
 		count += route[i].RunLength
 	}

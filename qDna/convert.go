@@ -42,7 +42,7 @@ func FromDnaToQFrag(in []dna.Base, s string) *QFrag {
 }
 
 //Convert Bases straight to QFrag --added by eric
-func QFragCoord(in []dna.Base, s string, start int, end int) *QFrag {
+func QFragCoord(in []dna.Base, s string, start int64, end int64) *QFrag {
 	loc := Location{Assembly: "", Chr: s, Start: start, End: end}
 	answer := QFrag{Seq: FromDna(in), From: []*Location{&loc}, Fwd: nil, Rev: nil}
 	return &answer

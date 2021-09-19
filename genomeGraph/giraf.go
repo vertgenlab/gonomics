@@ -10,7 +10,7 @@ import (
 	"math/rand"
 )
 
-func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int) []*giraf.Giraf {
+func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
 	answer := make([]*giraf.Giraf, 0)
 	var curr *giraf.Giraf
 
@@ -92,7 +92,7 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 }
 
 //TODO: simulate indels
-func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int) ([]uint32, []uint32) {
+func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
 	var totalBases = BasesInGraph(graph)
 	var mutationNode, mutationPos []uint32
 	var nodeIdx uint32

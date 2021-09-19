@@ -17,7 +17,7 @@ import (
 
 //TODO: finish writing matrix helper function
 func TestScoreMatrixHelper(t *testing.T) {
-	var scoreMatrixSlice [][][]int = [][][]int{align.HumanChimpTwoScoreMatrix, align.HoxD55ScoreMatrix, align.MouseRatScoreMatrix}
+	var scoreMatrixSlice [][][]int64 = [][][]int64{align.HumanChimpTwoScoreMatrix, align.HoxD55ScoreMatrix, align.MouseRatScoreMatrix}
 	for i := 0; i < len(scoreMatrixSlice);i++ {
 		help := getScoreMatrixHelp(scoreMatrixSlice[i])
 		maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange := help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange

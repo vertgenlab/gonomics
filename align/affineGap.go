@@ -9,15 +9,15 @@ import (
 
 // the trace data structure is a 3d slice where the first index is 0,1,2 and represents the match, gap in x (first seq), and gap in y (second seq).
 // m used to have the same data structure as trace, but has been simplified into a 2d slice, where the second index for mColumn is removed in order to recycle memory by rows
-func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int, [][]int, int, [][][]ColType) {
-	mRowCurrent := make([][]int, 3)
-	mRowPrevious := make([][]int, 3)
+func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, [][]int64, int, [][][]ColType) {
+	mRowCurrent := make([][]int64, 3)
+	mRowPrevious := make([][]int64, 3)
 	var mColumn int = firstSeqLen + 1
 	trace := make([][][]ColType, 3)
 	for k := range trace { //k ranges through 3 numbers (0,1,2)
 		trace[k] = make([][]ColType, firstSeqLen+1)
-		mRowCurrent[k] = make([]int, secondSeqLen+1)
-		mRowPrevious[k] = make([]int, secondSeqLen+1)
+		mRowCurrent[k] = make([]int64, secondSeqLen+1)
+		mRowPrevious[k] = make([]int64, secondSeqLen+1)
 		for i := range trace[0] {
 			trace[k][i] = make([]ColType, secondSeqLen+1)
 		}
@@ -25,7 +25,7 @@ func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int, [][]
 	return mRowCurrent, mRowPrevious, mColumn, trace
 }
 
-func affineTrace(mRowCurrent [][]int, mColumn int, trace [][][]ColType) (int, []Cigar) {
+func affineTrace(mRowCurrent [][]int64, mColumn int, trace [][][]ColType) (int64, []Cigar) {
 	route := make([]Cigar, 1)
 	lastI := mColumn - 1             //the last I
 	lastJ := len(mRowCurrent[0]) - 1 //the last J
@@ -59,13 +59,13 @@ func affineTrace(mRowCurrent [][]int, mColumn int, trace [][][]ColType) (int, []
 	return maxScore, route
 }
 
-func expandCigarRunLength(route []Cigar, chunkSize int) {
+func expandCigarRunLength(route []Cigar, chunkSize int64) {
 	for i := range route {
 		route[i].RunLength *= chunkSize
 	}
 }
 
-func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int, gapOpen int, gapExtend int) (int, []Cigar) {
+func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(len(alpha), len(beta))
 	for i := 0; i < mColumn; i++ {
 		for j := range mRowCurrent[0] {
@@ -98,8 +98,8 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int, gapOpen int, g
 	return maxScore, route
 }
 
-func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int, gapOpen int, gapExtend int, chunkSize int) (int, []Cigar) {
-	var alphaSize, betaSize int = int(len(alpha)), int(len(beta))
+func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
+	var alphaSize, betaSize int64 = int64(len(alpha)), int64(len(beta))
 	if alphaSize%chunkSize != 0 {
 		log.Fatalf(fmt.Sprintf("Error: the first sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(alpha), alphaSize, chunkSize))
 	}
@@ -111,7 +111,7 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int, gapOpen i
 
 	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
 
-	var chunkScore int
+	var chunkScore int64
 	for i := 0; i < mColumn; i++ {
 		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
@@ -129,7 +129,7 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int, gapOpen i
 				mRowCurrent[2][j] = gapExtend*chunkSize + mRowPrevious[2][j]
 				trace[2][i][j] = ColD
 			} else {
-				chunkScore = ungappedRegionScore(alpha, int(i-1)*chunkSize, beta, int(j-1)*chunkSize, chunkSize, scores)
+				chunkScore = ungappedRegionScore(alpha, int64(i-1)*chunkSize, beta, int64(j-1)*chunkSize, chunkSize, scores)
 				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(chunkScore+mRowPrevious[0][j-1], chunkScore+mRowPrevious[1][j-1], chunkScore+mRowPrevious[2][j-1])
 				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+mRowCurrent[0][j-1], gapExtend*chunkSize+mRowCurrent[1][j-1], gapOpen+gapExtend*chunkSize+mRowCurrent[2][j-1])
 				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend*chunkSize+mRowPrevious[0][j], gapOpen+gapExtend*chunkSize+mRowPrevious[1][j], gapExtend*chunkSize+mRowPrevious[2][j])
@@ -145,7 +145,7 @@ func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int, gapOpen i
 	return maxScore, route
 }
 
-func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int, gapOpen int, gapExtend int) (int, []Cigar) {
+func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(len(alpha[0].Seq), len(beta[0].Seq))
 
 	for i := 0; i < mColumn; i++ {
@@ -179,8 +179,8 @@ func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int, 
 	return maxScore, route
 }
 
-func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int, gapOpen int, gapExtend int, chunkSize int) (int, []Cigar) {
-	var alphaSize, betaSize int = int(len(alpha[0].Seq)), int(len(beta[0].Seq))
+func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
+	var alphaSize, betaSize int64 = int64(len(alpha[0].Seq)), int64(len(beta[0].Seq))
 	if alphaSize%chunkSize != 0 {
 		log.Fatalf(fmt.Sprintf("Error: the first subalignment has a length of %d, when it should be a multiple of %d\n", alphaSize, chunkSize))
 	}
@@ -192,7 +192,7 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 
 	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(int(alphaChunks), int(betaChunks))
 
-	var chunkScore int
+	var chunkScore int64
 	for i := 0; i < mColumn; i++ {
 		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
@@ -226,11 +226,11 @@ func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]
 	return maxScore, route
 }
 
-func scoreAffineAln(alpha fasta.Fasta, beta fasta.Fasta, scores [][]int, gapOpen int, gapExtend int) (int, error) {
+func scoreAffineAln(alpha fasta.Fasta, beta fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64) (int64, error) {
 	if len(alpha.Seq) != len(beta.Seq) {
 		return 0, fmt.Errorf("Error: alignment being scored has sequences of unequal length: %d, %d\n", len(alpha.Seq), len(beta.Seq))
 	}
-	var score int = 0
+	var score int64 = 0
 	alphaInGap, betaInGap := false, false
 	for i := range alpha.Seq {
 		if alpha.Seq[i] != dna.Gap && beta.Seq[i] != dna.Gap {

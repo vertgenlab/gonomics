@@ -57,13 +57,13 @@ func ViewGraphAlignment(g *giraf.Giraf, genome *GenomeGraph) string {
 			}
 		}
 	} /*
-		var lineLength int = 50
+		var lineLength int64 = 50
 		var k, pos int
 		var prettySeq string = ""
 		pos = addStartChrPos(samLine) + samLine.Pos
-		for k = 0; k < int(len(seqOne.String())); k += lineLength {
+		for k = 0; k < int64(len(seqOne.String())); k += lineLength {
 
-			if k+lineLength > int(len(seqOne.String())) && k+lineLength > int(len(seqTwo.String())) {
+			if k+lineLength > int64(len(seqOne.String())) && k+lineLength > int64(len(seqTwo.String())) {
 
 				prettySeq += fmt.Sprintf("%s:\t[%d-%d]\n", samLine.RName, k+pos, k+lineLength+pos) + fmt.Sprintf("%s\n", seqOne.String()[k:]) + fmt.Sprintf("%s\n", seqTwo.String()[k:])
 			} else {
@@ -220,10 +220,10 @@ func getSeedPath(seed *SeedDev) []uint32 {
 	return path
 }
 
-func getStartRead(aln *sam.Sam) int {
+func getStartRead(aln *sam.Sam) int64 {
 	var alignedPos int = 0
 	if aln.Cigar[0].Op == 'S' {
 		alignedPos += aln.Cigar[0].RunLength
 	}
-	return int(alignedPos)
+	return int64(alignedPos)
 }

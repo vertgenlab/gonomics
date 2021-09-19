@@ -270,9 +270,9 @@ func createSNP(sg *GenomeGraph, snp *vcf.Vcf, chr string) (*Node, *Node) {
 */
 
 /*
-func NodeSplitByNs(sg *GenomeGraph, currMatch *Node, chr *fasta.Fasta, index int, end int) *Node {
+func NodeSplitByNs(sg *GenomeGraph, currMatch *Node, chr *fasta.Fasta, index int64, end int64) *Node {
 	var inRegion bool = false
-	var start int = 0
+	var start int64 = 0
 	for ; index < end; index++ {
 		if dna.DefineBase(chr.Seq[start]) && inRegion == false {
 			inRegion = false
@@ -298,7 +298,7 @@ type noNsBed struct {
 */
 
 /*
-func findUngap(fa *fasta.Fasta, index int, end int) []*noNsBed {
+func findUngap(fa *fasta.Fasta, index int64, end int64) []*noNsBed {
 	var answer []*noNsBed
 	var inRegion bool = false
 	var startIndex int32 = 0

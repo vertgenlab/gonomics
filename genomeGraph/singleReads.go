@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int, header *sam.SamHeader) {
+func GswSingleReadWrap(ref *SimpleGraph, readOne string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64, header *sam.SamHeader) {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Paired end reads detected...\n")
 	log.Printf("Indexing the genome...\n\n")
