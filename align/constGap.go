@@ -24,8 +24,8 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int, gapPen int) (in
 	//i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
 	//j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2                    //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2                    //ditto for j
+	i_inChecker_min = -2                                   //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                   //ditto for j
 	trace_size_i := numbers.Min(len(alpha), checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(len(beta), checkersize_j)
 	trace := make([][]ColType, trace_size_i)
@@ -81,8 +81,8 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	//i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
 	//j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2                    //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2                    //ditto for j
+	i_inChecker_min = -2                                   //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                   //ditto for j
 	trace_size_i := numbers.Min(len(alpha), checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(len(beta), checkersize_j)
 	trace := make([][]ColType, trace_size_i)

@@ -1,7 +1,7 @@
 package align
 
 import (
-	//"math" //TODO: fix math.MinInt
+//"math" //TODO: fix math.MinInt
 )
 
 var veryNegNum int = -9223372036854775808 / 2 //TODO: fix math.MinInt
