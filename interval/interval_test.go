@@ -11,9 +11,9 @@ import (
 
 func TestQuery(t *testing.T) {
 	type testQuery struct {
-		query      *bed.Bed
-		relationship  string
-		hasOverlap bool
+		query        *bed.Bed
+		relationship string
+		hasOverlap   bool
 	}
 
 	var targetIntervals []Interval = []Interval{
@@ -31,66 +31,66 @@ func TestQuery(t *testing.T) {
 	}
 
 	var queries []testQuery = []testQuery{
-		testQuery{
-			query:      &bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 5},
-			relationship:  "e",
-			hasOverlap: true,
+		{
+			query:        &bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 5},
+			relationship: "e",
+			hasOverlap:   true,
 		},
-		testQuery{
-			query:      &bed.Bed{Chrom: "chr2", ChromStart: 3, ChromEnd: 4},
-			relationship:  "any",
-			hasOverlap: false,
+		{
+			query:        &bed.Bed{Chrom: "chr2", ChromStart: 3, ChromEnd: 4},
+			relationship: "any",
+			hasOverlap:   false,
 		},
-		testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 98, ChromEnd: 101},
-                        relationship:  "o",
-                        hasOverlap: true,
-                },
-		testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 12},
-                        relationship:  "oi",
-                        hasOverlap: true,
-                },
-		testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 101},
-                        relationship:  "d",
-                        hasOverlap: true,
-                },
-                testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 11, ChromEnd: 99},
-                        relationship:  "di",
-                        hasOverlap: true,
-                },
-		testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 99, ChromEnd: 101},
-                        relationship:  "m",
-                        hasOverlap: true,
-                },
-                testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 11},
-                        relationship:  "mi",
-                        hasOverlap: true,
-                },
-		testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 101},
-                        relationship:  "s",
-                        hasOverlap: true,
-                },
-                testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 99},
-                        relationship:  "si",
-                        hasOverlap: true,
-                },
-		testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 100},
-                        relationship:  "f",
-                        hasOverlap: true,
-                },
-                testQuery{
-                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 11, ChromEnd: 100},
-                        relationship:  "fi",
-                        hasOverlap: true,
-                },
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 98, ChromEnd: 101},
+			relationship: "o",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 12},
+			relationship: "oi",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 101},
+			relationship: "d",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 11, ChromEnd: 99},
+			relationship: "di",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 99, ChromEnd: 101},
+			relationship: "m",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 11},
+			relationship: "mi",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 101},
+			relationship: "s",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 99},
+			relationship: "si",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 100},
+			relationship: "f",
+			hasOverlap:   true,
+		},
+		{
+			query:        &bed.Bed{Chrom: "chr3", ChromStart: 11, ChromEnd: 100},
+			relationship: "fi",
+			hasOverlap:   true,
+		},
 	}
 
 	tree := BuildTree(targetIntervals)

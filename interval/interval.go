@@ -326,7 +326,7 @@ func PrettyPrint(q Interval) {
 
 func withinRange(q Interval, relationship string, x1, x2, y1, y2 float64) bool {
 	q1 := float64(q.GetChromStart())
-	q2 := float64(q.GetChromEnd()-1)
+	q2 := float64(q.GetChromEnd() - 1)
 	if relationship == "m" || relationship == "mi" {
 		if q1 == q2 {
 			return false
