@@ -28,7 +28,7 @@ func main() {
 	expectedNumArgs := 2
 	var tmpFilePrefix *string = flag.String("prefix", "tmp", "Prefix to use when writing temporary files (e.g. tmp_0).``")
 	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "The number of records to read into memory before writing to a tmp file.``")
-	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort Criteria for single-cell sam records: Bx -> Chromosome -> STartPos -> EndPos.")
+	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort single-cell sam records by barcode.")
 	var sortCriteria string = "byGenomicCoordinates" //default the genomicCoordinates criteria.
 
 	if *singleCellBx {
