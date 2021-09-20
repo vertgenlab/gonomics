@@ -5,30 +5,105 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"math/rand"
-	"reflect"
 	"testing"
 	"time"
 )
 
 func TestQuery(t *testing.T) {
-	var testIntervals []Interval = []Interval{
+	type testQuery struct {
+		query      *bed.Bed
+		relationship  string
+		hasOverlap bool
+	}
+
+	var targetIntervals []Interval = []Interval{
 		&bed.Bed{Chrom: "1", ChromStart: 1, ChromEnd: 8},
 		&bed.Bed{Chrom: "1", ChromStart: 3, ChromEnd: 5},
-		&bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 4},
+		&bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 5},
 		&bed.Bed{Chrom: "1", ChromStart: 5, ChromEnd: 9},
 		&bed.Bed{Chrom: "1", ChromStart: 6, ChromEnd: 11},
-		&bed.Bed{Chrom: "1", ChromStart: 7, ChromEnd: 7},
+		&bed.Bed{Chrom: "1", ChromStart: 7, ChromEnd: 8},
 		&bed.Bed{Chrom: "1", ChromStart: 8, ChromEnd: 10},
 		&bed.Bed{Chrom: "1", ChromStart: 9, ChromEnd: 10},
+		&bed.Bed{Chrom: "chr2", ChromStart: 1, ChromEnd: 3},
+		&bed.Bed{Chrom: "chr2", ChromStart: 4, ChromEnd: 10},
+		&bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 100},
 	}
-	tree := BuildTree(testIntervals)
 
-	q := &bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 4}
+	var queries []testQuery = []testQuery{
+		testQuery{
+			query:      &bed.Bed{Chrom: "1", ChromStart: 4, ChromEnd: 5},
+			relationship:  "e",
+			hasOverlap: true,
+		},
+		testQuery{
+			query:      &bed.Bed{Chrom: "chr2", ChromStart: 3, ChromEnd: 4},
+			relationship:  "any",
+			hasOverlap: false,
+		},
+		testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 98, ChromEnd: 101},
+                        relationship:  "o",
+                        hasOverlap: true,
+                },
+		testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 12},
+                        relationship:  "oi",
+                        hasOverlap: true,
+                },
+		testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 101},
+                        relationship:  "d",
+                        hasOverlap: true,
+                },
+                testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 11, ChromEnd: 99},
+                        relationship:  "di",
+                        hasOverlap: true,
+                },
+		testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 99, ChromEnd: 101},
+                        relationship:  "m",
+                        hasOverlap: true,
+                },
+                testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 11},
+                        relationship:  "mi",
+                        hasOverlap: true,
+                },
+		testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 101},
+                        relationship:  "s",
+                        hasOverlap: true,
+                },
+                testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 10, ChromEnd: 99},
+                        relationship:  "si",
+                        hasOverlap: true,
+                },
+		testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 9, ChromEnd: 100},
+                        relationship:  "f",
+                        hasOverlap: true,
+                },
+                testQuery{
+                        query:      &bed.Bed{Chrom: "chr3", ChromStart: 11, ChromEnd: 100},
+                        relationship:  "fi",
+                        hasOverlap: true,
+                },
+	}
+
+	tree := BuildTree(targetIntervals)
+	var answer []Interval
 
 	//TODO: build in more types of relationship tests
-	answer := Query(tree, q, "e")
-	if !reflect.DeepEqual(answer[0].(*bed.Bed), q) {
-		t.Errorf("ERROR: Problem with querying tree")
+	for _, q := range queries {
+		answer = Query(tree, q.query, q.relationship)
+		if q.hasOverlap && len(answer) == 0 {
+			t.Errorf("Error: did not find interval during query of tree: %s %d %d", q.query.Chrom, q.query.ChromStart, q.query.ChromEnd)
+		} else if !q.hasOverlap && len(answer) != 0 {
+			t.Errorf("Error: found something when you should not have during query of tree.")
+		}
 	}
 }
 
