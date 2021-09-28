@@ -148,11 +148,11 @@ type Settings struct {
 }
 
 func main() {
-	var expNormFile *string = flag.String("expNormalizationFile", "", "Filename for input-normalization.\n" +
-		"An expression normalization file must have two columns: the first containing geneIDs, and the second containing a normalization multiplier that can be parsed as a float.\n" +
-		"Genes without a normalization entry will have a normalization factor of 1 applied by default." +
-		"An example expression normalization file is shown below:\n" +
-		"\tgene1\t1.2\n" +
+	var expNormFile *string = flag.String("expNormalizationFile", "", "Filename for input-normalization.\n"+
+		"An expression normalization file must have two columns: the first containing geneIDs, and the second containing a normalization multiplier that can be parsed as a float.\n"+
+		"Genes without a normalization entry will have a normalization factor of 1 applied by default."+
+		"An example expression normalization file is shown below:\n"+
+		"\tgene1\t1.2\n"+
 		"\tgene2\t1.1\n")
 	var expectedNumArgs int = 3
 	flag.Usage = usage
