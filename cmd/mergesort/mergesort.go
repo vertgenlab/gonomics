@@ -30,14 +30,13 @@ func main() {
 	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "The number of records to read into memory before writing to a tmp file.``")
 	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort single-cell sam records by barcode.")
 	var sortCriteria string = "byGenomicCoordinates" //default the genomicCoordinates criteria.
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
 
 	if *singleCellBx {
 		sortCriteria = "singleCellBx"
 	}
-
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
