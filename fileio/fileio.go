@@ -202,7 +202,6 @@ func WriteToFileHandle(file io.Writer, rec string) {
 	exception.PanicOnErr(err)
 }
 
-
 //Write writes a file
 func Write(filename string, records []string) {
 	var err error

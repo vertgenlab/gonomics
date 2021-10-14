@@ -8,12 +8,11 @@ import (
 )
 
 var findAndReplaceTestsColumnSpecific = []struct {
-	inFile				string
-	findAndReplaceFile	string
-	outFile				string
-	expectedFile		string
-	columnNumber		int
-
+	inFile             string
+	findAndReplaceFile string
+	outFile            string
+	expectedFile       string
+	columnNumber       int
 }{
 	{"testdata/inputFileFake.tsv", "testdata/findReplaceFake.tsv", "testdata/outputFileCreatedColumn0.tsv",
 		"testdata/outputFileExpectedColumn0.tsv", 0},
@@ -21,40 +20,38 @@ var findAndReplaceTestsColumnSpecific = []struct {
 		"testdata/outputFileExpectedColumn1.tsv", 1},
 	{"testdata/inputFileFake.tsv", "testdata/findReplaceFake.tsv", "testdata/outputFileCreatedColumn2.tsv",
 		"testdata/outputFileExpectedColumn2.tsv", 2},
-
 }
+
 func TestFindAndReplaceColumnSpecific(t *testing.T) {
 	var err error
-	for _, v := range findAndReplaceTestsColumnSpecific{
+	for _, v := range findAndReplaceTestsColumnSpecific {
 		findAndReplace(v.inFile, v.findAndReplaceFile, v.outFile, v.columnNumber)
-		if !fileio.AreEqual(v.outFile, v.expectedFile){
+		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in findAndReplace")
-		}else{
+		} else {
 			err = os.Remove(v.outFile)
 			exception.PanicOnErr(err)
 		}
 	}
 }
 
-
-
 var findAndReplaceTestWholeFileScan = []struct {
-	inFile				string
-	findAndReplaceFile	string
-	outFile				string
-	expectedFile		string
-	defaultColumnNumber		int
+	inFile              string
+	findAndReplaceFile  string
+	outFile             string
+	expectedFile        string
+	defaultColumnNumber int
 }{
 	{"testdata/inputFileFake.tsv", "testdata/findReplaceFake.tsv", "testdata/outputFileCreatedWholeFile.tsv", "testdata/outputFileExpectedWholeFile.tsv", -1},
 }
 
 func TestFindAndReplaceWholeFileScan(t *testing.T) {
 	var err error
-	for _, v := range findAndReplaceTestWholeFileScan{
+	for _, v := range findAndReplaceTestWholeFileScan {
 		findAndReplace(v.inFile, v.findAndReplaceFile, v.outFile, v.defaultColumnNumber)
-		if !fileio.AreEqual(v.outFile, v.expectedFile){
+		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in findAndReplace")
-		}else{
+		} else {
 			err = os.Remove(v.outFile)
 			exception.PanicOnErr(err)
 		}

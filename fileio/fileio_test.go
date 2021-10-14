@@ -67,11 +67,11 @@ func TestWrite(t *testing.T) {
 	var createdFile string
 	var err error
 	createdFile = "test.txt"
-	var fileContent []string = []string {line1, line2, line3}
+	var fileContent []string = []string{line1, line2, line3}
 	Write(createdFile, fileContent)
 	if !AreEqual(testfile, createdFile) {
 		t.Errorf("problem with fileio.Write()")
-	}else {
+	} else {
 		err = os.Remove("test.txt")
 		exception.PanicOnErr(err)
 	}

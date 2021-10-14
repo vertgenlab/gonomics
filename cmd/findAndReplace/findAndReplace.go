@@ -8,11 +8,9 @@ import (
 	"strings"
 )
 
-
 //TODO
 // findAndReplace to handle both int and string? Currently just strings
 // handle both tab delimited and space delimited files, currently only tsv.
-
 
 func findAndReplace(inFile string, findReplaceFile string, outFile string, columnNumber int) {
 	inputFile := fileio.Read(inFile) //reads input file and returns each line in file as a string
@@ -39,12 +37,12 @@ func findAndReplace(inFile string, findReplaceFile string, outFile string, colum
 		}
 		fileio.Write(outFile, outFileStrings)
 
-	}else { // find and replace throughout the whole file, not column specific.
+	} else { // find and replace throughout the whole file, not column specific.
 		for i = range inputFile {
 			words = strings.Split(inputFile[i], "\t")
 			for j = range words {
 				if val, ok := findReplaceMap[words[j]]; ok { // if this string is in the map
-					words[j] = val  //replace it's value
+					words[j] = val //replace it's value
 				}
 			}
 			outString = strings.Join(words, "\t")
