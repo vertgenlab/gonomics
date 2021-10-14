@@ -50,3 +50,24 @@ func TestEqual(t *testing.T) {
 		t.Errorf("problem with equal")
 	}
 }
+
+func TestRead(t *testing.T) {
+	file := Read(testfile)
+	if file[0] != line2 {
+		t.Errorf("problem with read")
+	}
+	if file[1] != line3 {
+		t.Errorf("problem with read")
+	}
+}
+
+func TestWrite(t *testing.T) {
+	var createdFile string
+	createdFile = "test.txt"
+	var fileContent []string = []string {line1, line2, line3}
+	Write(createdFile, fileContent)
+	if !AreEqual(testfile, createdFile) {
+		t.Errorf("problem with fileio.Write()")
+	}
+
+}

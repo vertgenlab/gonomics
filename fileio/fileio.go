@@ -195,3 +195,22 @@ func ReadFileToSingleLineString(filename string) string {
 	}
 	return catInput
 }
+
+func WriteToFileHandle(file io.Writer, rec string) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", rec)
+	exception.PanicOnErr(err)
+}
+
+
+//Write writes a file
+func Write(filename string, records []string) {
+	var err error
+	file := EasyCreate(filename)
+
+	for i := range records {
+		WriteToFileHandle(file, records[i])
+	}
+	err = file.Close()
+	exception.PanicOnErr(err)
+}
