@@ -1,6 +1,7 @@
 package fileio
 
 import (
+	"os"
 	"testing"
 )
 
@@ -69,5 +70,5 @@ func TestWrite(t *testing.T) {
 	if !AreEqual(testfile, createdFile) {
 		t.Errorf("problem with fileio.Write()")
 	}
-
+	os.Remove("test.txt")
 }
