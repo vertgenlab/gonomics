@@ -80,9 +80,6 @@ func EasyOpen(filename string) *EasyReader {
 // EasyCreate creates a file with the input name. Panics if errors are encountered.
 func EasyCreate(filename string) *EasyWriter {
 	answer := EasyWriter{}
-	if filename == "" {
-		log.Fatalf("Must write to a non-empty filename")
-	}
 
 	switch {
 	case strings.HasPrefix(filename, "stdout"):

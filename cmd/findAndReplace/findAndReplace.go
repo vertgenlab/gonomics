@@ -9,8 +9,8 @@ import (
 )
 
 //TODO
-// findAndReplace to handle both int and string? Currently just strings
 // handle both tab delimited and space delimited files, currently only tsv.
+// process changing internal strings and numbers in a column. ie, change all "5"s to "9"s including when value = 5 --> 9, 65 --> 69, or 256 --> 296
 
 func findAndReplace(inFile string, findReplaceFile string, outFile string, columnNumber int) {
 	inputFile := fileio.Read(inFile) //reads input file and returns each line in file as a string
@@ -54,7 +54,7 @@ func findAndReplace(inFile string, findReplaceFile string, outFile string, colum
 
 func usage() {
 	fmt.Print(
-		"findAndReplace - finds values in a file and replaces them. Currently, can only handle strings. \n" +
+		"findAndReplace - finds values in a file and replaces them, processes the input as a string.\n" +
 			"Usage:\n" +
 			"findAndReplace inFile.tsv findReplaceFile.tsv outFile.tsv\n" +
 			"inFile must be a tab-separated file\n" +
