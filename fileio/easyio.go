@@ -125,7 +125,6 @@ func EasyRemove(filename string) {
 	MustRemove(filename)
 }
 
-
 // Read inputs a file and returns each line in the file as a string.
 func Read(filename string) []string {
 	var answer []string
