@@ -192,4 +192,3 @@ func WriteToFileHandle(file io.Writer, rec string) {
 	_, err = fmt.Fprintf(file, "%s\n", rec)
 	exception.PanicOnErr(err)
 }
-
