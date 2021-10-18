@@ -173,18 +173,6 @@ func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }
 
-// Read inputs a file and returns each line in the file as a string.
-func Read(filename string) []string {
-	var answer []string
-	file := MustOpen(filename)
-	defer file.Close()
-	reader := bufio.NewReader(file)
-	for line, doneReading := NextRealLine(reader); !doneReading; line, doneReading = NextRealLine(reader) {
-		answer = append(answer, line)
-	}
-	return answer
-}
-
 //ReadFileToSingleLineString reads in any file type and returns contents without any \n
 func ReadFileToSingleLineString(filename string) string {
 	var catInput string
@@ -205,14 +193,3 @@ func WriteToFileHandle(file io.Writer, rec string) {
 	exception.PanicOnErr(err)
 }
 
-//Write writes a file
-func Write(filename string, records []string) {
-	var err error
-	file := EasyCreate(filename)
-
-	for i := range records {
-		WriteToFileHandle(file, records[i])
-	}
-	err = file.Close()
-	exception.PanicOnErr(err)
-}
