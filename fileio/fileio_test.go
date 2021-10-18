@@ -9,7 +9,6 @@ var line1 string = "#shhhh this line is a secret"
 var line2 string = "Hello World"
 var line3 string = "I am a gopher"
 
-
 func TestNextLine(t *testing.T) {
 	file := EasyOpen(testfile)
 	l1, done := NextLine(file.BuffReader)
@@ -51,4 +50,3 @@ func TestEqual(t *testing.T) {
 		t.Errorf("problem with equal")
 	}
 }
-
