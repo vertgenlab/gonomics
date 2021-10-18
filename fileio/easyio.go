@@ -3,6 +3,7 @@ package fileio
 import (
 	"bufio"
 	"compress/gzip"
+	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
@@ -137,6 +138,12 @@ func Read(filename string) []string {
 	err = file.Close()
 	exception.PanicOnErr(err)
 	return answer
+}
+
+func WriteToFileHandle(file io.Writer, rec string) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", rec)
+	exception.PanicOnErr(err)
 }
 
 //Write writes a file

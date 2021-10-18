@@ -186,9 +186,3 @@ func ReadFileToSingleLineString(filename string) string {
 	}
 	return catInput
 }
-
-func WriteToFileHandle(file io.Writer, rec string) {
-	var err error
-	_, err = fmt.Fprintf(file, "%s\n", rec)
-	exception.PanicOnErr(err)
-}
