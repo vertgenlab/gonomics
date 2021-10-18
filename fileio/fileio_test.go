@@ -1,8 +1,6 @@
 package fileio
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"os"
 	"testing"
 )
 
@@ -10,6 +8,7 @@ var testfile string = "testdata/smallTest"
 var line1 string = "#shhhh this line is a secret"
 var line2 string = "Hello World"
 var line3 string = "I am a gopher"
+
 
 func TestNextLine(t *testing.T) {
 	file := EasyOpen(testfile)
@@ -53,27 +52,3 @@ func TestEqual(t *testing.T) {
 	}
 }
 
-func TestRead(t *testing.T) {
-	file := Read(testfile)
-	if file[0] != line2 {
-		t.Errorf("problem with read")
-	}
-	if file[1] != line3 {
-		t.Errorf("problem with read")
-	}
-}
-
-func TestWrite(t *testing.T) {
-	var createdFile string
-	var err error
-	createdFile = "test.txt"
-	var fileContent []string = []string{line1, line2, line3}
-	Write(createdFile, fileContent)
-	if !AreEqual(testfile, createdFile) {
-		t.Errorf("problem with fileio.Write()")
-	} else {
-		err = os.Remove("test.txt")
-		exception.PanicOnErr(err)
-	}
-
-}

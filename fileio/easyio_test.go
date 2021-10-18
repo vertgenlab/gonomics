@@ -134,3 +134,34 @@ func BenchmarkWriteFile(b *testing.B) {
 		osf.Close()
 	}
 }
+
+var testfile2 string = "testdata/smallTest"
+var line4 string = "#shhhh this line is a secret"
+var line5 string = "Hello World"
+var line6 string = "I am a gopher"
+
+func TestRead(t *testing.T) {
+	file := Read(testfile2)
+	if file[0] != line5 {
+		t.Errorf("problem with read")
+	}
+	if file[1] != line6 {
+		t.Errorf("problem with read")
+	}
+}
+
+func TestWrite(t *testing.T) {
+	var createdFile string
+	var err error
+	createdFile = "test.txt"
+	var fileContent []string = []string{line4, line5, line6}
+	Write(createdFile, fileContent)
+	if !AreEqual(testfile, createdFile) {
+		t.Errorf("problem with fileio.Write()")
+	} else {
+		err = os.Remove("test.txt")
+		exception.PanicOnErr(err)
+	}
+
+}
+
