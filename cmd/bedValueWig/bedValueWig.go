@@ -119,15 +119,15 @@ func usage() {
 }
 
 type Settings struct {
-	Infile string
-	WigFile string
-	SizesFile string
-	OutFile string
-	NormFlag bool
+	Infile      string
+	WigFile     string
+	SizesFile   string
+	OutFile     string
+	NormFlag    bool
 	AverageFlag bool
-	MinFlag bool
-	TrimLeft int
-	TrimRight int
+	MinFlag     bool
+	TrimLeft    int
+	TrimRight   int
 }
 
 func main() {
@@ -152,16 +152,16 @@ func main() {
 	chromSize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	s := Settings {
-		Infile: infile,
-		WigFile: database,
-		SizesFile: chromSize,
-		OutFile: outfile,
-		NormFlag: *norm,
+	s := Settings{
+		Infile:      infile,
+		WigFile:     database,
+		SizesFile:   chromSize,
+		OutFile:     outfile,
+		NormFlag:    *norm,
 		AverageFlag: *average,
-		MinFlag: *min,
-		TrimLeft: *trimLeft,
-		TrimRight: *trimRight,
+		MinFlag:     *min,
+		TrimLeft:    *trimLeft,
+		TrimRight:   *trimRight,
 	}
 
 	bedValueWig(s)

@@ -3,15 +3,15 @@ package bed
 import "testing"
 
 var TrimTests = []struct {
-	InFile string
+	InFile       string
 	ExpectedFile string
-	TrimLeft int
-	TrimRight int
+	TrimLeft     int
+	TrimRight    int
 }{
 	{"testdata/testTrim.bed", "testdata/expectedTrim.bed", 10, 10},
 }
 
-func TestTrim (t *testing.T) {
+func TestTrim(t *testing.T) {
 	var b, expected []Bed
 	for _, v := range TrimTests {
 		b = Read(v.InFile)

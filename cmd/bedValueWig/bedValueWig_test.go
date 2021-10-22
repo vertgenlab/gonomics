@@ -13,9 +13,9 @@ var bedMaxWigTests = []struct {
 	inputChromSizes string
 	outputFile      string
 	expectedFile    string
-	minFlag bool
-	averageFlag bool
-	normFlag bool
+	minFlag         bool
+	averageFlag     bool
+	normFlag        bool
 }{
 	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutput.bed", "testdata/testBMWExpected.bed", false, false, false},
 	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutputNorm.bed", "testdata/testBMWExpectedNormFlagStep1.bed", false, false, true},
@@ -26,14 +26,14 @@ var bedMaxWigTests = []struct {
 func TestBedValueWig(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigTests {
-		s := Settings {
-			Infile: v.inputBed,
-			WigFile: v.inputWig,
-			SizesFile: v.inputChromSizes,
-			OutFile: v.outputFile,
-			MinFlag: v.minFlag,
+		s := Settings{
+			Infile:      v.inputBed,
+			WigFile:     v.inputWig,
+			SizesFile:   v.inputChromSizes,
+			OutFile:     v.outputFile,
+			MinFlag:     v.minFlag,
 			AverageFlag: v.averageFlag,
-			NormFlag: v.normFlag,
+			NormFlag:    v.normFlag,
 		}
 		bedValueWig(s)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
