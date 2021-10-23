@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
+	"math"
 )
 
 func bedValueWig(s Settings) {
@@ -35,9 +36,11 @@ func bedValueWig(s Settings) {
 		for i := range wigData { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
 			var wigCounterByChrom float64 = 0
 			for k := range wigData[i].Values { //Cycle through each value in the float64[]
-				var chromValueMultiplyByStep float64 = 0
-				chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
-				wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
+				if wigData[i].Values[k] != s.NoDataValue {
+					var chromValueMultiplyByStep float64 = 0
+					chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
+					wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
+				}
 			}
 			wigTotal += wigCounterByChrom
 		}
@@ -52,11 +55,11 @@ func bedValueWig(s Settings) {
 					currentBed.FieldsInitialized = 7
 				}
 				if s.MinFlag {
-					currValue = bedRangeMin(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeMin(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
 				} else if s.AverageFlag {
-					currValue = bedRangeAverage(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeAverage(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
 				} else {
-					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
 				}
 				if s.NormFlag == true {
 					currValue = currValue / wigTotal
@@ -81,29 +84,55 @@ func getWigIndex(w []wig.Wig, chrom string) int {
 	return -1
 }
 
-func bedRangeAverage(w []float64, start int, end int) float64 {
+func bedRangeAverage(w []float64, start int, end int, noDataValue float64) float64 {
 	length := end - start
 	var sum float64
-	var i int
+	var i, dataCount int //dataCount measures the number of positions for which there is data (positions where wig score is not equal to the missing data value)
 
 	for i = 0; i < length; i++ {
-		sum = sum + w[i+start]
+		if w[i+start] != noDataValue {
+			sum = sum + w[i+start]
+			dataCount++
+		}
 	}
-	return sum / float64(length)
+	if dataCount == 0 {//if there were no positions with data in the wig overlapping the bed, return the noData value
+		return noDataValue
+	}
+	return sum / float64(dataCount)//average the sum of values to the number of positions with data in the wig overlapping the bed entry.
 }
 
-func bedRangeMin(w []float64, start int, end int) float64 {
-	var min = w[start]
+func bedRangeMin(w []float64, start int, end int, noDataValue float64) float64 {
+	var min float64
+	var encounteredData bool = false
 	for i := start; i < end; i++ {
-		min = numbers.MinFloat64(min, w[i])
+		if w[i] != noDataValue {
+			if !encounteredData {//if this is the first value we've seen that's not the noData value in the wig, we set the min the that value and set encounteredData to true
+				min = w[i]
+				encounteredData = true
+			}
+			min = numbers.MinFloat64(min, w[i])
+		}
+	}
+	if !encounteredData {
+		return noDataValue
 	}
 	return min
 }
 
-func bedRangeMax(w []float64, start int, end int) float64 {
+func bedRangeMax(w []float64, start int, end int, noDataValue float64) float64 {
 	var max float64
+	var encounteredData bool = false
 	for i := start; i < end; i++ {
-		max = numbers.MaxFloat64(max, w[i])
+		if w[i] != noDataValue {
+			if !encounteredData {
+				max = w[i]
+				encounteredData = true
+			}
+			max = numbers.MaxFloat64(max, w[i])
+		}
+	}
+	if !encounteredData {
+		return noDataValue
 	}
 	return max
 }
@@ -128,6 +157,7 @@ type Settings struct {
 	MinFlag     bool
 	TrimLeft    int
 	TrimRight   int
+	NoDataValue float64
 }
 
 func main() {
@@ -137,6 +167,7 @@ func main() {
 	var norm *bool = flag.Bool("normalize", false, "When true, will normalize the bedMaxWig output by dividing value by total wig hits.")
 	var trimLeft *int = flag.Int("trimLeft", 0, "Exclude values on the left most edge of the bed region for consideration.")
 	var trimRight *int = flag.Int("trimRight", 0, "Exclude values on the right most edge of the bed region for consideration.")
+	var noDataValue *float64 = flag.Float64("noDataValue", math.MaxFloat64, "Exclude positions marked with the noData value, provided by the user, from consideration for value calculations.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -162,6 +193,7 @@ func main() {
 		MinFlag:     *min,
 		TrimLeft:    *trimLeft,
 		TrimRight:   *trimRight,
+		NoDataValue: *noDataValue,
 	}
 
 	bedValueWig(s)
