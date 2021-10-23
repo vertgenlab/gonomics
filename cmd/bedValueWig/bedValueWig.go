@@ -95,10 +95,10 @@ func bedRangeAverage(w []float64, start int, end int, noDataValue float64) float
 			dataCount++
 		}
 	}
-	if dataCount == 0 {//if there were no positions with data in the wig overlapping the bed, return the noData value
+	if dataCount == 0 { //if there were no positions with data in the wig overlapping the bed, return the noData value
 		return noDataValue
 	}
-	return sum / float64(dataCount)//average the sum of values to the number of positions with data in the wig overlapping the bed entry.
+	return sum / float64(dataCount) //average the sum of values to the number of positions with data in the wig overlapping the bed entry.
 }
 
 func bedRangeMin(w []float64, start int, end int, noDataValue float64) float64 {
@@ -106,7 +106,7 @@ func bedRangeMin(w []float64, start int, end int, noDataValue float64) float64 {
 	var encounteredData bool = false
 	for i := start; i < end; i++ {
 		if w[i] != noDataValue {
-			if !encounteredData {//if this is the first value we've seen that's not the noData value in the wig, we set the min the that value and set encounteredData to true
+			if !encounteredData { //if this is the first value we've seen that's not the noData value in the wig, we set the min the that value and set encounteredData to true
 				min = w[i]
 				encounteredData = true
 			}

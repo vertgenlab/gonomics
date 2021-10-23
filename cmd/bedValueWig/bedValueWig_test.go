@@ -17,7 +17,7 @@ var bedMaxWigTests = []struct {
 	minFlag         bool
 	averageFlag     bool
 	normFlag        bool
-	noDataValue	float64
+	noDataValue     float64
 }{
 	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutput.bed", "testdata/testBMWExpected.bed", false, false, false, math.MaxFloat64},
 	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutputNorm.bed", "testdata/testBMWExpectedNormFlagStep1.bed", false, false, true, math.MaxFloat64},
