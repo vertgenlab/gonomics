@@ -38,7 +38,6 @@ func bedValueWig(s Settings) {
 			wigCounterByChrom = 0
 			for k := range wigData[i].Values { //Cycle through each value in the float64[]
 				if wigData[i].Values[k] != s.NoDataValue {
-					chromValueMultiplyByStep = 0
 					chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
 					wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
 				}
