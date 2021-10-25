@@ -23,7 +23,7 @@ func bedValueWig(s Settings) {
 	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(s.SizesFile)
 	var outList []bed.Bed
 	var currentBed bed.Bed = records[0]
-	var currValue float64
+	var currValue, chromValueMultiplyByStep float64
 	var chromIndex int
 	var i int
 	var wigTotal float64 = 0
@@ -33,11 +33,12 @@ func bedValueWig(s Settings) {
 	}
 
 	if s.NormFlag == true {
+		var wigCounterByChrom float64
 		for i := range wigData { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
-			var wigCounterByChrom float64 = 0
+			wigCounterByChrom = 0
 			for k := range wigData[i].Values { //Cycle through each value in the float64[]
 				if wigData[i].Values[k] != s.NoDataValue {
-					var chromValueMultiplyByStep float64 = 0
+					chromValueMultiplyByStep = 0
 					chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
 					wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
 				}
