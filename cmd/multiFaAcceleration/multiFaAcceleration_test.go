@@ -29,10 +29,10 @@ var multiFaAccelerationTests = []struct {
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
-	B1Out	string
-	B3Out	string
-	B1Expected string
-	B3Expected string
+	B1Out                      string
+	B3Out                      string
+	B1Expected                 string
+	B3Expected                 string
 }{
 	{"testdata/test.fa",
 		"chr1",
