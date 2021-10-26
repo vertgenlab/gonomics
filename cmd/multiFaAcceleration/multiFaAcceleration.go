@@ -205,8 +205,8 @@ func main() {
 	var epsilon *float64 = flag.Float64("epsilon", 1e-8, "Set the error threshold for alternating least squares branch length calculation.")
 	var allowNegative *bool = flag.Bool("allowNegative", false, "Allow the algorithm to evaluate negative branch lengths. This program will constrain the optimal solution to non-negative branch lengths by default.")
 	var zeroDistanceWeightConstant *float64 = flag.Float64("zeroDistanceWeightConstant", 1000, "Set the relative error weight applied to pairs of species with a pairwise distance of zero.")
-	var rawVelBranchLength *string = flag.String("rawVelBranchLength", "", "Set an output file name to return the raw branch length for the branch associated with the velocity score.")
-	var rawInitialVelBranchLength *string = flag.String("rawInitialVelBranchLength", "", "Set an output file name to return the raw branch length for the branch associated with the initial velocity score.")
+	var rawVelBranchLength *string = flag.String("rawVelBranchLengths", "", "Set an output file name to return the raw branch length for the branch associated with the velocity score.")
+	var rawInitialVelBranchLength *string = flag.String("rawInitialVelBranchLengths", "", "Set an output file name to return the raw branch length for the branch associated with the initial velocity score.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
