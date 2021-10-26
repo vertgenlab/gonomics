@@ -29,8 +29,8 @@ type Settings struct {
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
-	B1Out	string
-	B3Out	string
+	B1Out                      string
+	B3Out                      string
 }
 
 //Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
@@ -137,10 +137,10 @@ func multiFaAcceleration(s Settings) {
 		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
 		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal-b3Normal), FieldsInitialized: 4})
 		if s.B1Out != "" {
-			bed.WriteBed(b1OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name:fmt.Sprintf("%e", branchCacheSlice[i].B1), FieldsInitialized: 4})
+			bed.WriteBed(b1OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].B1), FieldsInitialized: 4})
 		}
 		if s.B3Out != "" {
-			bed.WriteBed(b3OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name:fmt.Sprintf("%e", branchCacheSlice[i].B3), FieldsInitialized: 4})
+			bed.WriteBed(b3OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].B3), FieldsInitialized: 4})
 		}
 	}
 
@@ -237,8 +237,8 @@ func main() {
 		Epsilon:                    *epsilon,
 		AllowNegative:              *allowNegative,
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
-		B1Out: *rawVelBranchLength,
-		B3Out: *rawInitialVelBranchLength,
+		B1Out:                      *rawVelBranchLength,
+		B3Out:                      *rawInitialVelBranchLength,
 	}
 
 	multiFaAcceleration(s)

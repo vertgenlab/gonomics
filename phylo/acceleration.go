@@ -1,11 +1,11 @@
 package phylo
 
 import (
-	"log"
-	"math"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
+	"math"
 )
 
 //AccelDistances represents a set of all observed pairwise distances between the four species used for acceleration analysis.
@@ -112,7 +112,6 @@ func AccelFourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, windo
 	return reachedEnd
 }
 
-
 //AccelFourWayMutationDistances generates an AccelDistances struct from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
 func AccelFourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, windowSize int, D *AccelDistances) bool {
 	//first we clear the values in D.
@@ -150,7 +149,6 @@ func isUngappedBase(b dna.Base) bool {
 	}
 	return false
 }
-
 
 //a helper function of BranchLengthsAlternatingLeastSquares. Calculates the optimal branch lengths for the three branches in a subtree.
 func optimizeSubtree(sub *AccelSubTree, allowNegative bool, verbose bool, zeroDistanceWeightConstant float64) (float64, float64, float64) {
@@ -301,5 +299,3 @@ func calculateQ(d AccelDistances, b AccelBranchLengths, zeroDistanceWeightConsta
 	}
 	return sum
 }
-
-
