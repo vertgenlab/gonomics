@@ -85,7 +85,7 @@ func AccelFourWaySnpDistances(records []fasta.Fasta, alignmentCounter int, windo
 		if records[0].Seq[i] != dna.Gap {
 			baseCount++
 		}
-		if isUngappedColumn(records, i) {
+		if IsUngappedColumn(records, i) {
 			if records[0].Seq[i] != records[1].Seq[i] {
 				d.D01++
 			}
@@ -129,8 +129,8 @@ func AccelFourWayMutationDistances(records []fasta.Fasta, alignmentCounter int, 
 	return reachedEnd
 }
 
-//a helper function of fourWaySnpDistances, determines if an alignment column is comprised of bases (not gaps) for each species.
-func isUngappedColumn(records []fasta.Fasta, index int) bool {
+//IsUngappedColumn determines if an alignment column is comprised of bases (not gaps) for each species.
+func IsUngappedColumn(records []fasta.Fasta, index int) bool {
 	for i := range records {
 		if !isUngappedBase(records[i].Seq[index]) {
 			return false

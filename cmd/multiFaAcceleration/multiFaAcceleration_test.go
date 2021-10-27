@@ -50,10 +50,10 @@ var multiFaAccelerationTests = []struct {
 		1e-8,
 		false,
 		1000,
-		"",
-		"",
-		"",
-		"",
+		"testdata/test.RawVel.bed",
+		"testdata/test.RawInitial.bed",
+		"testdata/expected.RawVel.bed",
+		"testdata/expected.RawInitial.bed",
 	},
 	{"testdata/test.fa",
 		"chr1",
@@ -116,6 +116,8 @@ func TestMultiFaAcceleration(t *testing.T) {
 			Epsilon:                    v.Epsilon,
 			AllowNegative:              v.AllowNegative,
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
+			B1Out: v.B1Out,
+			B3Out: v.B3Out,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {

@@ -43,8 +43,7 @@ type BranchCache struct {
 
 func multiFaAcceleration(s Settings) {
 	records := fasta.Read(s.InFile)
-	var searchSpace []bed.Bed
-	var referenceLength, i, j, threshold int
+	var referenceLength, i, threshold int
 	var bitArray []bool
 
 	//a couple of safety checks
@@ -58,16 +57,7 @@ func multiFaAcceleration(s Settings) {
 	referenceLength = fasta.AlnPosToRefPos(records[0], len(records[0].Seq)-1)
 
 	if s.SearchSpaceBed != "" {
-		//if we want to limit our search to a particular set of regions, we populate the bitArray with 1s instead of 0s at positions overlapping the input bed entries.
-		searchSpace = bed.Read(s.SearchSpaceBed)
-		bitArray = make([]bool, referenceLength)
-		for i = range searchSpace {
-			if searchSpace[i].Chrom == s.ChromName {
-				for j = searchSpace[i].ChromStart; j < searchSpace[i].ChromEnd; j++ {
-					bitArray[j] = true
-				}
-			}
-		}
+		bitArray = phylo.MakeBitArrayFromSearchSpaceBed(s.SearchSpaceBed, referenceLength, s.ChromName)
 		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize)) //the minimum number of bases at which a window must overlap the search space in order to be considered a valid window.
 	}
 
@@ -162,6 +152,7 @@ func multiFaAcceleration(s Settings) {
 
 //this helper function returns true if a sufficient number of positions in the candidate window overlap the search space, as measured by non-zero values in the bitArray.
 //bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
+//the first return corresponds to the number of positions that overlap the search space.
 func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []bool, referenceCounter int) (int, bool) {
 	if s.SearchSpaceBed == "" { //no search space file, no need to look further
 		return 0, true
