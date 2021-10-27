@@ -31,7 +31,7 @@ func bedFormat(s Settings) {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
 		}
 		if s.ScaleNameFloat != math.MaxFloat64 {
-			v.Name = fmt.Sprintf("%f", s.ScaleNameFloat * common.StringToFloat64(v.Name))
+			v.Name = fmt.Sprintf("%f", s.ScaleNameFloat*common.StringToFloat64(v.Name))
 		}
 		bed.WriteBed(out.File, v)
 	}
@@ -50,10 +50,10 @@ func usage() {
 }
 
 type Settings struct {
-	InFile string
-	OutFile string
-	UCSCToEnsembl bool
-	EnsemblToUCSC bool
+	InFile         string
+	OutFile        string
+	UCSCToEnsembl  bool
+	EnsemblToUCSC  bool
 	ScaleNameFloat float64
 }
 
@@ -77,10 +77,10 @@ func main() {
 	outfile := flag.Arg(1)
 
 	s := Settings{
-		InFile: infile,
-		OutFile: outfile,
-		UCSCToEnsembl: *UCSCToEnsembl,
-		EnsemblToUCSC: *ensemblToUCSC,
+		InFile:         infile,
+		OutFile:        outfile,
+		UCSCToEnsembl:  *UCSCToEnsembl,
+		EnsemblToUCSC:  *ensemblToUCSC,
 		ScaleNameFloat: *scaleNameFloat,
 	}
 
