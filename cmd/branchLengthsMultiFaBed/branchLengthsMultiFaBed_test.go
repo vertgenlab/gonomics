@@ -8,22 +8,22 @@ import (
 )
 
 var BranchLengthsMultiFaBedTests = []struct {
-	Chrom string
-	InFaFile string
-	InBedFile string
-	VelLengthBedFile string
-	InitialLengthBedFile string
-	NumUngappedSitesBedFile string
-	SearchSpaceBed string
-	SearchSpaceProportion float64
-	UseSnpDistance bool
-	Verbose bool
-	Epsilon float64
-	AllowNegative bool
+	Chrom                      string
+	InFaFile                   string
+	InBedFile                  string
+	VelLengthBedFile           string
+	InitialLengthBedFile       string
+	NumUngappedSitesBedFile    string
+	SearchSpaceBed             string
+	SearchSpaceProportion      float64
+	UseSnpDistance             bool
+	Verbose                    bool
+	Epsilon                    float64
+	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
-	VelLengthBedExpected string
-	InitialLengthBedExpected string
-	NumUngappedSitesExpected string
+	VelLengthBedExpected       string
+	InitialLengthBedExpected   string
+	NumUngappedSitesExpected   string
 }{
 	{"chr1",
 		"testdata/test.fa",
@@ -48,19 +48,19 @@ func TestBranchLengthsMultiFaBed(t *testing.T) {
 	var err error
 	var s Settings
 	for _, v := range BranchLengthsMultiFaBedTests {
-		s = Settings {
-			Chrom: v.Chrom,
-			InFaFile: v.InFaFile,
-			InBedFile: v.InBedFile,
-			VelLengthBedFile: v.VelLengthBedFile,
-			InitialLengthBedFile: v.InitialLengthBedFile,
-			NumUngappedSitesBedFile: v.NumUngappedSitesBedFile,
-			SearchSpaceBed: v.SearchSpaceBed,
-			SearchSpaceProportion: v.SearchSpaceProportion,
-			UseSnpDistance: v.UseSnpDistance,
-			Verbose: v.Verbose,
-			Epsilon: v.Epsilon,
-			AllowNegative: v.AllowNegative,
+		s = Settings{
+			Chrom:                      v.Chrom,
+			InFaFile:                   v.InFaFile,
+			InBedFile:                  v.InBedFile,
+			VelLengthBedFile:           v.VelLengthBedFile,
+			InitialLengthBedFile:       v.InitialLengthBedFile,
+			NumUngappedSitesBedFile:    v.NumUngappedSitesBedFile,
+			SearchSpaceBed:             v.SearchSpaceBed,
+			SearchSpaceProportion:      v.SearchSpaceProportion,
+			UseSnpDistance:             v.UseSnpDistance,
+			Verbose:                    v.Verbose,
+			Epsilon:                    v.Epsilon,
+			AllowNegative:              v.AllowNegative,
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
 		}
 		branchLengthsMultiFaBed(s)

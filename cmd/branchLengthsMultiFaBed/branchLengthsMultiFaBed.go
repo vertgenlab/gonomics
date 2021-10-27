@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -12,18 +12,18 @@ import (
 )
 
 type Settings struct {
-	Chrom string
-	InFaFile string
-	InBedFile string
-	VelLengthBedFile string
-	InitialLengthBedFile string
-	NumUngappedSitesBedFile string
-	SearchSpaceBed string
-	SearchSpaceProportion float64
-	UseSnpDistance bool
-	Verbose bool
-	Epsilon float64
-	AllowNegative bool
+	Chrom                      string
+	InFaFile                   string
+	InBedFile                  string
+	VelLengthBedFile           string
+	InitialLengthBedFile       string
+	NumUngappedSitesBedFile    string
+	SearchSpaceBed             string
+	SearchSpaceProportion      float64
+	UseSnpDistance             bool
+	Verbose                    bool
+	Epsilon                    float64
+	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
 }
 
@@ -44,7 +44,7 @@ func branchLengthsMultiFaBed(s Settings) {
 		log.Fatalf("Error. All records must be of the same sequence length.")
 	}
 
-	referenceLength := fasta.AlnPosToRefPos(records[0], len(records[0].Seq) - 1)
+	referenceLength := fasta.AlnPosToRefPos(records[0], len(records[0].Seq)-1)
 	if s.SearchSpaceBed != "" {
 		bitArray = phylo.MakeBitArrayFromSearchSpaceBed(s.SearchSpaceBed, referenceLength, s.Chrom)
 	}
@@ -58,8 +58,8 @@ func branchLengthsMultiFaBed(s Settings) {
 	for i := 0; i < len(regions); i++ {
 		if passesSearchSpaceTest(regions[i], bitArray, s) {
 			currSize = regions[i].ChromEnd - regions[i].ChromStart
-			currAln = fasta.RefPosToAlnPosCounter(records[0], regions[i].ChromStart, currRef, currAln)//we update the currAln to the position of the next bed entry, using the cached ref and aln from the last iteration
-			currRef = regions[i].ChromStart//now we can safely update currRef to the position of the current bed entry.
+			currAln = fasta.RefPosToAlnPosCounter(records[0], regions[i].ChromStart, currRef, currAln) //we update the currAln to the position of the next bed entry, using the cached ref and aln from the last iteration
+			currRef = regions[i].ChromStart                                                            //now we can safely update currRef to the position of the current bed entry.
 			if s.UseSnpDistance {
 				reachedEnd = phylo.AccelFourWaySnpDistances(records, currAln, currSize, &currDistance)
 			} else {
@@ -108,7 +108,7 @@ func passesSearchSpaceTest(b bed.Bed, bitArray []bool, s Settings) bool {
 			count++
 		}
 	}
-	proportion := float64(count) / float64(b.ChromEnd - b.ChromStart)
+	proportion := float64(count) / float64(b.ChromEnd-b.ChromStart)
 	return proportion >= s.SearchSpaceProportion
 }
 
@@ -147,19 +147,19 @@ func main() {
 	initialLengthBedFile := flag.Arg(4)
 	numUngappedSitesBedFile := flag.Arg(5)
 
-	s := Settings {
-		Chrom: chromName,
-		InFaFile: inFaFile,
-		InBedFile: inBedFile,
-		VelLengthBedFile: veLengthBedFile,
-		InitialLengthBedFile: initialLengthBedFile,
-		NumUngappedSitesBedFile: numUngappedSitesBedFile,
-		SearchSpaceBed: *searchSpaceBed,
-		SearchSpaceProportion: *searchSpaceProportion,
-		UseSnpDistance: *useSnpDistance,
-		Verbose: *verbose,
-		Epsilon: *epsilon,
-		AllowNegative: *allowNegative,
+	s := Settings{
+		Chrom:                      chromName,
+		InFaFile:                   inFaFile,
+		InBedFile:                  inBedFile,
+		VelLengthBedFile:           veLengthBedFile,
+		InitialLengthBedFile:       initialLengthBedFile,
+		NumUngappedSitesBedFile:    numUngappedSitesBedFile,
+		SearchSpaceBed:             *searchSpaceBed,
+		SearchSpaceProportion:      *searchSpaceProportion,
+		UseSnpDistance:             *useSnpDistance,
+		Verbose:                    *verbose,
+		Epsilon:                    *epsilon,
+		AllowNegative:              *allowNegative,
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
 	}
 
