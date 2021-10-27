@@ -114,7 +114,11 @@ func passesSearchSpaceTest(b bed.Bed, bitArray []bool, s Settings) bool {
 
 func usage() {
 	fmt.Print(
-		"branchLengthsMultiFaBed \n" +
+		"branchLengthsMultiFaBed - Using a four-way multiple alignment (including the reference species followed by three successive outgroups),\n" +
+			"this program calculates branch lengths in units of estimate substitutions for regions in the alignment specified by an input bed file.\n" +
+			"Two branches are returned: the branch for the 'vel' branch which separates the reference from\n" +
+			"the common ancestor with the first outspecies, and the 'initial' branch length, which separates the first common ancestor from the common ancestor with the second\n" +
+			"outspecies. Uses the Fitch-Margoliash method for branch length estimation. \n" +
 			"Usage:\n" +
 			"branchLengthsMultiFaBed chromName in.fa in.bed velLength.bed initialLength.bed NumUngappedSites.bed\n" +
 			"options:\n")
