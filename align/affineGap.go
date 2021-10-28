@@ -66,6 +66,7 @@ func expandCigarRunLength(route []Cigar, chunkSize int64) {
 }
 
 func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
+	//fmt.Printf("alpha, beta: %v, %v\n", alpha, beta) //TODO: remove after writing tests
 	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(len(alpha), len(beta))
 	for i := 0; i < mColumn; i++ {
 		for j := range mRowCurrent[0] {
@@ -88,12 +89,14 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
 				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
 			}
+			//fmt.Printf("i, j, mRowCurrent, trace: %d, %d, %v, %v\n", i, j, mRowCurrent, trace) //TODO: remove after writing tests
 		}
 		if i < mColumn-1 {
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		}
 	}
 	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
+	fmt.Printf("maxScore, route: %v, %v\n", maxScore, route) //TODO: remove after writing tests
 
 	return maxScore, route
 }
