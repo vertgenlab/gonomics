@@ -59,10 +59,12 @@ func TestAffineGap_lowMem(t *testing.T) {
 	for _, test := range affineAlignTests {
 		basesOne := dna.StringToBases(test.seqOne)
 		basesTwo := dna.StringToBases(test.seqTwo)
-		score_highest := AffineGap_step1_testing (basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		score_highest, _, _, _, _ := AffineGap_step1(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
 		if score_highest != 382 {
 			t.Errorf("score_highest gave %d, but %d was expected", score_highest, 382)
 		}
+		route := AffineGap_step234_testing(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		fmt.Printf("route: %v\n", route)
 	}
 }
 
