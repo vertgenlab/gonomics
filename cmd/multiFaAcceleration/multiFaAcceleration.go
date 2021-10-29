@@ -29,8 +29,8 @@ type Settings struct {
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
-	B1Out                      string
-	B3Out                      string
+	RawVelOut                  string
+	RawInitialOut              string
 }
 
 //Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
@@ -115,11 +115,11 @@ func multiFaAcceleration(s Settings) {
 	accelBed := fileio.EasyCreate(s.AccelOut)
 	initialVelBed := fileio.EasyCreate(s.InitialVelOut)
 	var b1OutBed, b3OutBed *fileio.EasyWriter
-	if s.B1Out != "" {
-		b1OutBed = fileio.EasyCreate(s.B1Out)
+	if s.RawVelOut != "" {
+		b1OutBed = fileio.EasyCreate(s.RawVelOut)
 	}
-	if s.B3Out != "" {
-		b3OutBed = fileio.EasyCreate(s.B3Out)
+	if s.RawInitialOut != "" {
+		b3OutBed = fileio.EasyCreate(s.RawInitialOut)
 	}
 
 	//with our normalization parameters calculated, we can normalize the branch lengths for each window and write to file.
@@ -129,10 +129,10 @@ func multiFaAcceleration(s Settings) {
 		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
 		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
 		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal-b3Normal), FieldsInitialized: 4})
-		if s.B1Out != "" {
+		if s.RawVelOut != "" {
 			bed.WriteBed(b1OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].BhumHca), FieldsInitialized: 4})
 		}
-		if s.B3Out != "" {
+		if s.RawInitialOut != "" {
 			bed.WriteBed(b3OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].BhcaHga), FieldsInitialized: 4})
 		}
 	}
@@ -143,11 +143,11 @@ func multiFaAcceleration(s Settings) {
 	exception.PanicOnErr(err)
 	err = initialVelBed.Close()
 	exception.PanicOnErr(err)
-	if s.B1Out != "" {
+	if s.RawVelOut != "" {
 		err = b1OutBed.Close()
 		exception.PanicOnErr(err)
 	}
-	if s.B3Out != "" {
+	if s.RawInitialOut != "" {
 		err = b3OutBed.Close()
 		exception.PanicOnErr(err)
 	}
@@ -231,8 +231,8 @@ func main() {
 		Epsilon:                    *epsilon,
 		AllowNegative:              *allowNegative,
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
-		B1Out:                      *rawVelBranchLength,
-		B3Out:                      *rawInitialVelBranchLength,
+		RawVelOut:                  *rawVelBranchLength,
+		RawInitialOut:              *rawInitialVelBranchLength,
 	}
 
 	multiFaAcceleration(s)

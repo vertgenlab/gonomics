@@ -3,12 +3,14 @@ package phylo
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math"
 )
 
-//AccelDistances represents a set of all observed pairwise distances between the four species used for acceleration analysis.
-//While these numbers must be integers, we store them as float64 to avoid casting in other functions as a way to improve readability.
+//AccelDistancesAndWeights represents a set of all observed pairwise distances between the four species used for acceleration analysis.
+//While distances are integers, we store them as float64 to avoid casting in other functions as a way to improve readability.
+//The six weight fields are the corresponding weights for each distance (w = 1/ (D^2))
 type AccelDistancesAndWeights struct {
 	DhumChimp   float64
 	DhumGor     float64
@@ -33,8 +35,9 @@ type AccelBranchLengths struct {
 	BhgaOrang float64
 }
 
-//SubTree is a tree with three leaves and three branches, joined at the single internal node.
+//AccelSubTreeLeft is a tree with three leaves and three branches, joined at the single internal node.
 //Dij represent the observed pairwise distances between two species. vi represents the length of the branch between a species i and the internal node at the current stage of optimization.
+//Wij are the weight constants corresponding to each distance Dij such that Wij = 1 / (Dij^2)
 type AccelSubTreeLeft struct {
 	DhumChimp float64
 	DhumHga   float64
@@ -47,6 +50,9 @@ type AccelSubTreeLeft struct {
 	WchimpHga float64
 }
 
+//AccelSubTreeRight is a tree with three leaves and three branches, joined at the single internal node.
+//Dij represent the observed pairwise distances between two species. vi represents the length of the branch between a species i and the internal node at the current stage of optimization.
+//Wij are the weight constants corresponding to each distance Dij such that Wij = 1 / (Dij^2)
 type AccelSubTreeRight struct {
 	DgorOrang float64
 	DhcaGor   float64
@@ -92,7 +98,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 	return answer
 }
 
-//AccelFourWaySnpDistances generates an AccelDistances struct from SNP distance, which includes only SNPs.
+//AccelFourWaySnpDistancesAndweights generates an AccelDistancesAndWeights struct from SNP distance, which includes only SNPs.
 //Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang
 func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64) bool {
 	//first we clear the values in d.
@@ -135,7 +141,7 @@ func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter 
 	return reachedEnd
 }
 
-//AccelFourWayMutationDistances generates an AccelDistances struct from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
+//AccelFourWayMutationDistancesAndWeights generates an AccelDistancesAndWeights struct from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
 //Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang
 func AccelFourWayMutationDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64) bool {
 	//first we clear the values in D.
@@ -154,6 +160,7 @@ func AccelFourWayMutationDistancesAndWeights(records []fasta.Fasta, alignmentCou
 	return reachedEnd
 }
 
+//calculateWeights is a helper function of the distanceAndWeights functions, produces the weight constant for each distance.
 func calculateWeights(d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64) {
 	d.WhumChimp = calculateWeight(d.DhumChimp, zeroDistanceWeightConstant)
 	d.WhumGor = calculateWeight(d.DhumGor, zeroDistanceWeightConstant)
@@ -163,6 +170,7 @@ func calculateWeights(d *AccelDistancesAndWeights, zeroDistanceWeightConstant fl
 	d.WgorOrang = calculateWeight(d.DgorOrang, zeroDistanceWeightConstant)
 }
 
+//calculateWeight is a helper function of calculateWeights, and performs each individual weight calculation.
 func calculateWeight(d float64, zeroDistanceWeightConstant float64) float64 {
 	if d == 0 {
 		return zeroDistanceWeightConstant
@@ -180,7 +188,7 @@ func IsUngappedColumn(records []fasta.Fasta, index int) bool {
 	return true
 }
 
-//a helper function of isUngappedColumn. True if a dna.Base is a base, not an N, gap, or dot.
+//isUngappedBase is a helper function of isUngappedColumn. True if a dna.Base is a base, not an N, gap, or dot.
 func isUngappedBase(b dna.Base) bool {
 	if b == dna.A || b == dna.T || b == dna.C || b == dna.G {
 		return true
@@ -213,6 +221,7 @@ func pruneRight(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubT
 	sub.WhcaOrang = sub.DhcaOrang
 }
 
+//optimizeSubtreeLeft is a helper function of BranchLengthsAlternatingLeastSquares and computes the optimal branch lengths for the left subtree at a particular iteration.
 func optimizeSubtreeLeft(sub *AccelSubTreeLeft, allowNegative bool, verbose bool, answer *AccelBranchLengths) {
 	sub.VhumHca = (sub.DhumChimp + sub.DhumHga - sub.DchimpHga) / 2.0
 	sub.VchimpHca = (sub.DhumChimp + sub.DchimpHga - sub.DhumHga) / 2.0
@@ -261,6 +270,7 @@ func optimizeSubtreeLeft(sub *AccelSubTreeLeft, allowNegative bool, verbose bool
 	answer.BhcaHga = sub.VhcaHga
 }
 
+//optimizeSubtreeRight is a helper function of BranchLengthsAlternatingLeastSquares and computes the optimal branch lengths for the right subtree at a particular iteration.
 func optimizeSubtreeRight(sub *AccelSubTreeRight, allowNegative bool, verbose bool, answer *AccelBranchLengths) {
 	sub.VhcaHga = (sub.DhcaGor + sub.DhcaOrang - sub.DgorOrang) / 2.0
 	sub.VhgaGor = (sub.DhcaGor + sub.DgorOrang - sub.DhcaOrang) / 2.0
@@ -313,7 +323,7 @@ func optimizeSubtreeRight(sub *AccelSubTreeRight, allowNegative bool, verbose bo
 //a helper function of optimizeSubtree.
 //If we constrain branch lengths to be nonNegative, we apply this correction when the minimum Q is achieved at negative branch lengths for a subtree.
 func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, w1 float64, w2 float64) float64 {
-	return (w1*(d1-v1) + w2*(d2-v2)) / (w1 + w2)
+	return numbers.MaxFloat64((w1*(d1-v1) + w2*(d2-v2)) / (w1 + w2), 0)//ensures the estimate is non-negative
 }
 
 //For a set of distances and corresponding branch lengths, determine the value of Q, the Fitch-Margoliash least squares error term.

@@ -116,8 +116,8 @@ func TestMultiFaAcceleration(t *testing.T) {
 			Epsilon:                    v.Epsilon,
 			AllowNegative:              v.AllowNegative,
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
-			B1Out:                      v.B1Out,
-			B3Out:                      v.B3Out,
+			RawVelOut:                  v.B1Out,
+			RawInitialOut:              v.B3Out,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {
