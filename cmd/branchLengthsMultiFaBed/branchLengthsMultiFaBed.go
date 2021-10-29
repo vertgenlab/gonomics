@@ -30,10 +30,10 @@ type Settings struct {
 func branchLengthsMultiFaBed(s Settings) {
 	records := fasta.Read(s.InFaFile)
 	var bitArray []bool
-	var reachedEnd bool = false
+	var reachedEnd = false
 	var currLengths phylo.AccelBranchLengths
-	var currSize, currAln, currRef, currUngappedCount int = 0, 0, 0, 0
-	var currDistance phylo.AccelDistances = phylo.AccelDistances{0, 0, 0, 0, 0, 0}
+	var currSize, currAln, currRef, currUngappedCount = 0, 0, 0, 0
+	var currDistance = phylo.AccelDistancesAndWeights{}
 	var err error
 
 	//a couple of safety checks
@@ -61,9 +61,9 @@ func branchLengthsMultiFaBed(s Settings) {
 			currAln = fasta.RefPosToAlnPosCounter(records[0], regions[i].ChromStart, currRef, currAln) //we update the currAln to the position of the next bed entry, using the cached ref and aln from the last iteration
 			currRef = regions[i].ChromStart                                                            //now we can safely update currRef to the position of the current bed entry.
 			if s.UseSnpDistance {
-				reachedEnd = phylo.AccelFourWaySnpDistances(records, currAln, currSize, &currDistance)
+				reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant)
 			} else {
-				reachedEnd = phylo.AccelFourWayMutationDistances(records, currAln, currSize, &currDistance)
+				reachedEnd = phylo.AccelFourWayMutationDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant)
 			}
 			if reachedEnd {
 				log.Fatalf("Error: bed entry ran off the end of the multiple alignment chromosome. Offending entry starts at position %s\t%v", regions[i].Chrom, regions[i].ChromStart)
@@ -71,8 +71,8 @@ func branchLengthsMultiFaBed(s Settings) {
 			currLengths = phylo.BranchLengthsAlternatingLeastSquares(currDistance, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon)
 			currUngappedCount = numUngappedInBedRange(records, currAln, currSize)
 
-			bed.WriteBed(VelOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.B1), FieldsInitialized: 4})
-			bed.WriteBed(InitialOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.B3), FieldsInitialized: 4})
+			bed.WriteBed(VelOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.BhumHca), FieldsInitialized: 4})
+			bed.WriteBed(InitialOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.BhcaHga), FieldsInitialized: 4})
 			bed.WriteBed(UngappedBasesOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currUngappedCount), FieldsInitialized: 4})
 		}
 	}
