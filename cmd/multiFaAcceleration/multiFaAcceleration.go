@@ -37,8 +37,8 @@ type Settings struct {
 type BranchCache struct {
 	ChromStart int
 	ChromEnd   int
-	B1         float64
-	B3         float64
+	BhumHca         float64
+	BhcaHga         float64
 }
 
 func multiFaAcceleration(s Settings) {
@@ -61,11 +61,11 @@ func multiFaAcceleration(s Settings) {
 		threshold = int(s.SearchSpaceProportion * float64(s.WindowSize)) //the minimum number of bases at which a window must overlap the search space in order to be considered a valid window.
 	}
 
-	var currDistances phylo.AccelDistances
-	var distanceCache = make(map[phylo.AccelDistances]phylo.AccelBranchLengths)
+	var currDistances phylo.AccelDistancesAndWeights
+	var distanceCache = make(map[phylo.AccelDistancesAndWeights]phylo.AccelBranchLengths)
 	var referenceCounter int = 0
 	var reachedEnd bool = false
-	var b1, b3 float64
+	var BhumHca, BhcaHga float64
 	var currCount int
 	var pass, containedInMap bool
 
@@ -81,22 +81,25 @@ func multiFaAcceleration(s Settings) {
 		if records[0].Seq[alignmentCounter] != dna.Gap {                                            //and if we are at a reference position.
 			if pass {
 				if s.UseSnpDistance {
-					reachedEnd = phylo.AccelFourWaySnpDistances(records, alignmentCounter, s.WindowSize, &currDistances)
+					reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, alignmentCounter, s.WindowSize, &currDistances, s.ZeroDistanceWeightConstant)
 				} else {
-					reachedEnd = phylo.AccelFourWayMutationDistances(records, alignmentCounter, s.WindowSize, &currDistances)
+					reachedEnd = phylo.AccelFourWayMutationDistancesAndWeights(records, alignmentCounter, s.WindowSize, &currDistances, s.ZeroDistanceWeightConstant)
 				}
 
 				if _, containedInMap = distanceCache[currDistances]; !containedInMap { //if this tree has not been seen before, calculate branch lengths
 					distanceCache[currDistances] = phylo.BranchLengthsAlternatingLeastSquares(currDistances, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon)
 				}
+				if s.Verbose {
+					fmt.Printf("RefPos: %v\tDistances: %v\t Branches: %v.\n", referenceCounter, currDistances, distanceCache[currDistances])
+				}
 				//now our distances should be in the cache, and we can do a simple lookup.
-				b1 = distanceCache[currDistances].B1
-				b3 = distanceCache[currDistances].B3
+				BhumHca = distanceCache[currDistances].BhumHca
+				BhcaHga = distanceCache[currDistances].BhcaHga
 
 				if !reachedEnd { //if we haven't run out of chromosome, we have another valid window to appear in our output.
-					velSum += b1
-					initialSum += b3
-					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, b1, b3})
+					velSum += BhumHca
+					initialSum += BhcaHga
+					branchCacheSlice = append(branchCacheSlice, BranchCache{referenceCounter, referenceCounter + s.WindowSize, BhumHca, BhcaHga})
 				}
 			}
 			referenceCounter++
@@ -121,16 +124,16 @@ func multiFaAcceleration(s Settings) {
 
 	//with our normalization parameters calculated, we can normalize the branch lengths for each window and write to file.
 	for i = range branchCacheSlice {
-		b1Normal = branchCacheSlice[i].B1 / averageVel
-		b3Normal = branchCacheSlice[i].B3 / averageInitialVel
+		b1Normal = branchCacheSlice[i].BhumHca / averageVel
+		b3Normal = branchCacheSlice[i].BhcaHga / averageInitialVel
 		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
 		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
 		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal-b3Normal), FieldsInitialized: 4})
 		if s.B1Out != "" {
-			bed.WriteBed(b1OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].B1), FieldsInitialized: 4})
+			bed.WriteBed(b1OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].BhumHca), FieldsInitialized: 4})
 		}
 		if s.B3Out != "" {
-			bed.WriteBed(b3OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].B3), FieldsInitialized: 4})
+			bed.WriteBed(b3OutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].BhcaHga), FieldsInitialized: 4})
 		}
 	}
 
