@@ -10,26 +10,26 @@ import (
 //AccelDistances represents a set of all observed pairwise distances between the four species used for acceleration analysis.
 //While these numbers must be integers, we store them as float64 to avoid casting in other functions as a way to improve readability.
 type AccelDistancesAndWeights struct {
-	DhumChimp float64
-	DhumGor float64
-	DhumOrang float64
-	DchimpGor float64
+	DhumChimp   float64
+	DhumGor     float64
+	DhumOrang   float64
+	DchimpGor   float64
 	DchimpOrang float64
-	DgorOrang float64
-	WhumChimp float64
-	WhumGor float64
-	WhumOrang float64
-	WchimpGor float64
+	DgorOrang   float64
+	WhumChimp   float64
+	WhumGor     float64
+	WhumOrang   float64
+	WchimpGor   float64
 	WchimpOrang float64
-	WgorOrang float64
+	WgorOrang   float64
 }
 
 //AccelBranchLengths represents the set of branch lengths corresponding to a particular distance matrix used for acceleration analysis on a 4-species alingment.
 type AccelBranchLengths struct {
-	BhumHca float64
+	BhumHca   float64
 	BchimpHca float64
-	BhcaHga float64
-	BhgaGor float64
+	BhcaHga   float64
+	BhgaGor   float64
 	BhgaOrang float64
 }
 
@@ -37,25 +37,25 @@ type AccelBranchLengths struct {
 //Dij represent the observed pairwise distances between two species. vi represents the length of the branch between a species i and the internal node at the current stage of optimization.
 type AccelSubTreeLeft struct {
 	DhumChimp float64
-	DhumHga float64
+	DhumHga   float64
 	DchimpHga float64
-	VhumHca  float64
-	VchimpHca  float64
-	VhcaHga  float64
+	VhumHca   float64
+	VchimpHca float64
+	VhcaHga   float64
 	WhumChimp float64
-	WhumHga float64
+	WhumHga   float64
 	WchimpHga float64
 }
 
 type AccelSubTreeRight struct {
 	DgorOrang float64
-	DhcaGor float64
+	DhcaGor   float64
 	DhcaOrang float64
-	VhcaHga float64
-	VhgaGor float64
+	VhcaHga   float64
+	VhgaGor   float64
 	VhgaOrang float64
 	WgorOrang float64
-	WhcaGor float64
+	WhcaGor   float64
 	WhcaOrang float64
 }
 
@@ -75,7 +75,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 		pruneLeft(d, answer, &leftSub, zeroDistanceWeightConstant)
 		optimizeSubtreeLeft(&leftSub, allowNegative, verbose, &answer)
 		pruneRight(d, answer, &rightSub, zeroDistanceWeightConstant)
-	 	optimizeSubtreeRight(&rightSub, allowNegative, verbose, &answer)
+		optimizeSubtreeRight(&rightSub, allowNegative, verbose, &answer)
 		nextQ = calculateQ(d, answer)
 		//DEBUG: log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths: %f. %f. %f. %f. %f.", nextQ, currDiff, answer.B1, answer.B2, answer.B3, answer.B4, answer.B5)
 		currDiff = math.Abs(Q - nextQ)
@@ -167,7 +167,7 @@ func calculateWeight(d float64, zeroDistanceWeightConstant float64) float64 {
 	if d == 0 {
 		return zeroDistanceWeightConstant
 	}
-	return 1.0/math.Pow(d, 2)
+	return 1.0 / math.Pow(d, 2)
 }
 
 //IsUngappedColumn determines if an alignment column is comprised of bases (not gaps) for each species.
@@ -194,8 +194,8 @@ func isUngappedBase(b dna.Base) bool {
 //A helper function of BranchLengthsAlternatingLeastSquares. Reduce the four species tree to the subtree containing species 0, 1, and the ancestor of 2/3.
 func pruneLeft(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTreeLeft, ZeroDistanceWeightConstant float64) {
 	sub.DhumChimp = d.DhumChimp
-	sub.DhumHga = (d.WhumGor * (d.DhumGor - b.BhgaGor) + d.WhumOrang * (d.DhumOrang - b.BhgaOrang)) / (d.WhumGor + d.WhumOrang)
-	sub.DchimpHga = (d.WchimpGor * (d.DchimpGor - b.BhgaGor) + d.WchimpOrang * (d.DchimpOrang - b.BhgaOrang)) / (d.WchimpGor + d.WchimpOrang)
+	sub.DhumHga = (d.WhumGor*(d.DhumGor-b.BhgaGor) + d.WhumOrang*(d.DhumOrang-b.BhgaOrang)) / (d.WhumGor + d.WhumOrang)
+	sub.DchimpHga = (d.WchimpGor*(d.DchimpGor-b.BhgaGor) + d.WchimpOrang*(d.DchimpOrang-b.BhgaOrang)) / (d.WchimpGor + d.WchimpOrang)
 
 	sub.WhumChimp = calculateWeight(sub.DhumChimp, ZeroDistanceWeightConstant)
 	sub.WhumHga = calculateWeight(sub.DhumHga, ZeroDistanceWeightConstant)
@@ -205,8 +205,8 @@ func pruneLeft(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTr
 //A helper function of BranchLengthsAlternatingLeastSquares. Reduce the four species tree to the subtree containing 2, 3, and the ancestor of 0/1.
 func pruneRight(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTreeRight, ZeroDistanceWeightConstant float64) {
 	sub.DgorOrang = d.DgorOrang
-	sub.DhcaGor = (d.WhumGor * (d.DhumGor - b.BhumHca) + d.WchimpGor * (d.DchimpGor - b.BchimpHca)) / (d.WhumGor + d.WchimpGor)
-	sub.DhcaOrang = (d.WhumOrang * (d.DhumOrang - b.BhumHca) + d.WchimpOrang * (d.DchimpOrang - b.BchimpHca)) / (d.WhumOrang + d.WchimpOrang)
+	sub.DhcaGor = (d.WhumGor*(d.DhumGor-b.BhumHca) + d.WchimpGor*(d.DchimpGor-b.BchimpHca)) / (d.WhumGor + d.WchimpGor)
+	sub.DhcaOrang = (d.WhumOrang*(d.DhumOrang-b.BhumHca) + d.WchimpOrang*(d.DchimpOrang-b.BchimpHca)) / (d.WhumOrang + d.WchimpOrang)
 
 	sub.WgorOrang = d.DgorOrang
 	sub.WhcaGor = sub.DhcaGor
@@ -313,17 +313,17 @@ func optimizeSubtreeRight(sub *AccelSubTreeRight, allowNegative bool, verbose bo
 //a helper function of optimizeSubtree.
 //If we constrain branch lengths to be nonNegative, we apply this correction when the minimum Q is achieved at negative branch lengths for a subtree.
 func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, w1 float64, w2 float64) float64 {
-	return (w1 * (d1 - v1) + w2 * (d2 - v2)) / (w1 + w2)
+	return (w1*(d1-v1) + w2*(d2-v2)) / (w1 + w2)
 }
 
 //For a set of distances and corresponding branch lengths, determine the value of Q, the Fitch-Margoliash least squares error term.
 func calculateQ(d AccelDistancesAndWeights, b AccelBranchLengths) float64 {
 	var sum float64 = 0
-	sum += d.WhumChimp * math.Pow(d.DhumChimp - (b.BchimpHca + b.BchimpHca), 2)
-	sum += d.WhumGor * math.Pow(d.DhumGor - (b.BhumHca + b.BhcaHga + b.BhgaGor), 2)
-	sum += d.WhumOrang * math.Pow(d.DhumOrang - (b.BhumHca + b.BhcaHga + b.BhgaOrang), 2)
-	sum += d.WchimpGor * math.Pow(d.DchimpGor - (b.BchimpHca + b.BhcaHga + b.BhgaGor), 2)
-	sum += d.WchimpOrang * math.Pow(d.DchimpOrang - (b.BchimpHca + b.BhcaHga + b.BhgaOrang), 2)
-	sum += d.WgorOrang * math.Pow(d.DgorOrang - (b.BhgaGor + b.BhgaOrang), 2)
+	sum += d.WhumChimp * math.Pow(d.DhumChimp-(b.BchimpHca+b.BchimpHca), 2)
+	sum += d.WhumGor * math.Pow(d.DhumGor-(b.BhumHca+b.BhcaHga+b.BhgaGor), 2)
+	sum += d.WhumOrang * math.Pow(d.DhumOrang-(b.BhumHca+b.BhcaHga+b.BhgaOrang), 2)
+	sum += d.WchimpGor * math.Pow(d.DchimpGor-(b.BchimpHca+b.BhcaHga+b.BhgaGor), 2)
+	sum += d.WchimpOrang * math.Pow(d.DchimpOrang-(b.BchimpHca+b.BhcaHga+b.BhgaOrang), 2)
+	sum += d.WgorOrang * math.Pow(d.DgorOrang-(b.BhgaGor+b.BhgaOrang), 2)
 	return sum
 }

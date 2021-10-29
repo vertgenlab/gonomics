@@ -37,8 +37,8 @@ type Settings struct {
 type BranchCache struct {
 	ChromStart int
 	ChromEnd   int
-	BhumHca         float64
-	BhcaHga         float64
+	BhumHca    float64
+	BhcaHga    float64
 }
 
 func multiFaAcceleration(s Settings) {
