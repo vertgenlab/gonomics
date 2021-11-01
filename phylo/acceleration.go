@@ -216,9 +216,9 @@ func pruneRight(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubT
 	sub.DhcaGor = (d.WhumGor*(d.DhumGor-b.BhumHca) + d.WchimpGor*(d.DchimpGor-b.BchimpHca)) / (d.WhumGor + d.WchimpGor)
 	sub.DhcaOrang = (d.WhumOrang*(d.DhumOrang-b.BhumHca) + d.WchimpOrang*(d.DchimpOrang-b.BchimpHca)) / (d.WhumOrang + d.WchimpOrang)
 
-	sub.WgorOrang = d.DgorOrang
-	sub.WhcaGor = sub.DhcaGor
-	sub.WhcaOrang = sub.DhcaOrang
+	sub.WgorOrang = calculateWeight(sub.DgorOrang, ZeroDistanceWeightConstant)
+	sub.WhcaGor = calculateWeight(sub.DhcaGor, ZeroDistanceWeightConstant)
+	sub.WhcaOrang = calculateWeight(sub.DhcaOrang, ZeroDistanceWeightConstant)
 }
 
 //optimizeSubtreeLeft is a helper function of BranchLengthsAlternatingLeastSquares and computes the optimal branch lengths for the left subtree at a particular iteration.
