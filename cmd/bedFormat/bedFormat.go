@@ -30,7 +30,7 @@ func bedFormat(s Settings) {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
 		}
 		if s.ScaleNameFloat != 1 {
-			v.Name = fmt.Sprintf("%f", s.ScaleNameFloat * common.StringToFloat64(v.Name))
+			v.Name = fmt.Sprintf("%f", s.ScaleNameFloat*common.StringToFloat64(v.Name))
 		}
 		bed.WriteBed(out.File, v)
 	}
