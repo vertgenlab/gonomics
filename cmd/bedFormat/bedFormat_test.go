@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"math"
 	"os"
 	"testing"
 )
@@ -28,14 +27,14 @@ var BedFormatTests = []struct {
 		"testdata/expected.Ensembl.bed",
 		true,
 		false,
-		math.MaxFloat64,
+		1,
 	},
 	{"testdata/test.Ensembl.bed",//this test is for UCSCToEnsembl
 		"testdata/test.out.bed",
 		"testdata/expected.UCSC.bed",
 		false,
 		true,
-		math.MaxFloat64,
+		1,
 	},
 }
 

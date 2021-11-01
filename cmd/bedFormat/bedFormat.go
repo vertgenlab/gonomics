@@ -11,7 +11,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"math"
 )
 
 func bedFormat(s Settings) {
@@ -30,7 +29,7 @@ func bedFormat(s Settings) {
 		if s.UCSCToEnsembl {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
 		}
-		if s.ScaleNameFloat != math.MaxFloat64 {
+		if s.ScaleNameFloat != 1 {
 			v.Name = fmt.Sprintf("%f", s.ScaleNameFloat * common.StringToFloat64(v.Name))
 		}
 		bed.WriteBed(out.File, v)
@@ -61,7 +60,7 @@ func main() {
 	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
-	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", math.MaxFloat64, "If float values are held in the name field, scale those values by this constant multiplier.")
+	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", 1, "If float values are held in the name field, scale those values by this constant multiplier.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
