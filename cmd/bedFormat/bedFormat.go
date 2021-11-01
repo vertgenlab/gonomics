@@ -49,10 +49,10 @@ func usage() {
 }
 
 type Settings struct {
-	InFile string
-	OutFile string
-	UCSCToEnsembl bool
-	EnsemblToUCSC bool
+	InFile         string
+	OutFile        string
+	UCSCToEnsembl  bool
+	EnsemblToUCSC  bool
 	ScaleNameFloat float64
 }
 
@@ -76,10 +76,10 @@ func main() {
 	outfile := flag.Arg(1)
 
 	s := Settings{
-		InFile: infile,
-		OutFile: outfile,
-		UCSCToEnsembl: *UCSCToEnsembl,
-		EnsemblToUCSC: *ensemblToUCSC,
+		InFile:         infile,
+		OutFile:        outfile,
+		UCSCToEnsembl:  *UCSCToEnsembl,
+		EnsemblToUCSC:  *ensemblToUCSC,
 		ScaleNameFloat: *scaleNameFloat,
 	}
 
