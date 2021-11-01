@@ -3,12 +3,12 @@ package phylo
 import "testing"
 
 var BranchLengthsAlternatingLeastSquaresTests = []struct {
-	D AccelDistancesAndWeights
-	AllowNegative bool
-	Epsilon float64
+	D                     AccelDistancesAndWeights
+	AllowNegative         bool
+	Epsilon               float64
 	ExpectedBranchLengths AccelBranchLengths
 }{
-	{AccelDistancesAndWeights{//This particular test was one that on genome-wide data failed to converge at 1000 iterations. Slowly descends on minimum, achieves in 10k iterations.
+	{AccelDistancesAndWeights{ //This particular test was one that on genome-wide data failed to converge at 1000 iterations. Slowly descends on minimum, achieves in 10k iterations.
 		62,
 		67,
 		37,
