@@ -73,7 +73,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 	var currDiff float64 = epsilon + 1 //set currDiff to something larger than epsilon so that we make it into the loop the first time.
 	var leftSub AccelSubTreeLeft
 	var rightSub AccelSubTreeRight
-	var maxIteration, i = 1000, 0
+	var maxIteration, i = 100000, 0
 	var oldAnswer = AccelBranchLengths{1, 1, 1, 1, 1}
 
 	for currDiff > epsilon && i < maxIteration {
@@ -83,7 +83,9 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 		pruneRight(d, answer, &rightSub, zeroDistanceWeightConstant)
 		optimizeSubtreeRight(&rightSub, allowNegative, verbose, &answer)
 		nextQ = calculateQ(d, answer)
-		//DEBUG: log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths: %f. %f. %f. %f. %f.", nextQ, currDiff, answer.B1, answer.B2, answer.B3, answer.B4, answer.B5)
+		if verbose {
+			log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths. BhumHca:%f. BchimpHca: %f. BhcaHga: %f. BhgaGor: %f. BhgaOrang: %f.", nextQ, currDiff, answer.BhumHca, answer.BchimpHca, answer.BhcaHga, answer.BhgaGor, answer.BhgaOrang)
+		}
 		currDiff = math.Abs(Q - nextQ)
 		if nextQ > Q { //nextQ is higher than Q, which means we got "worse"
 			answer = oldAnswer //we will exit the loop next time, so we want the old answer, which has the lower of the two terminal Q estimates.
@@ -93,7 +95,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 		i++
 	}
 	if i >= maxIteration {
-		log.Fatalf("Failed to converge on a tree with these distances. DhumHca: %f, DhumGor: %f, DhumOrang: %f, DchimpGor: %f, DchimpOrang: %f, DgorOrang: %f.", d.DhumChimp, d.DhumGor, d.DhumOrang, d.DchimpGor, d.DchimpOrang, d.DgorOrang)
+		log.Fatalf("Failed to converge on a tree with these distances. DhumChimp: %f, DhumGor: %f, DhumOrang: %f, DchimpGor: %f, DchimpOrang: %f, DgorOrang: %f.", d.DhumChimp, d.DhumGor, d.DhumOrang, d.DchimpGor, d.DchimpOrang, d.DgorOrang)
 	}
 	return answer
 }
