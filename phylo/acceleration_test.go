@@ -21,7 +21,7 @@ var BranchLengthsAlternatingLeastSquaresTests = []struct {
 		calculateWeight(31, 1000),
 		calculateWeight(63, 1000),
 		calculateWeight(71, 1000),
-	}, false, 1e-8, AccelBranchLengths{1, 1, 1, 1, 1}},
+	}, false, 1e-8, AccelBranchLengths{24.179037634841176, 19.55544803664856, 0, 18.710259085171323, 21.978125070026614}},
 }
 
 func TestBranchLengthsAlternatingLeastSquares(t *testing.T) {
