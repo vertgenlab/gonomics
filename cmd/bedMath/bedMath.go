@@ -14,10 +14,10 @@ import (
 type Operation byte
 
 const (
-	Add Operation = 0
+	Add      Operation = 0
 	Subtract Operation = 1
 	Multiply Operation = 2
-	Divide Operation = 3
+	Divide   Operation = 3
 )
 
 func bedMath(s Settings) {
@@ -42,9 +42,9 @@ func bedMath(s Settings) {
 		if sameCoords(currA, currB) {
 			bed.WriteBed(out, doBedMath(currA, currB, Op))
 			currA, done = bed.NextBed(aReader)
-		} else if bed.Compare(currA, currB) < 0 {//if a is less than b, we need another a
+		} else if bed.Compare(currA, currB) < 0 { //if a is less than b, we need another a
 			currA, done = bed.NextBed(aReader)
-		} else if bed.Compare(currA, currB) > 0 {//than a is greater than b, so we need another b
+		} else if bed.Compare(currA, currB) > 0 { //than a is greater than b, so we need another b
 			currB, done = bed.NextBed(bReader)
 		}
 	}
@@ -56,13 +56,13 @@ func doBedMath(a bed.Bed, b bed.Bed, Op Operation) bed.Bed {
 	var aFloat = common.StringToFloat64(a.Name)
 	var bFloat = common.StringToFloat64(b.Name)
 	if Op == Add {
-		a.Name = fmt.Sprintf("%f", aFloat + bFloat)
+		a.Name = fmt.Sprintf("%f", aFloat+bFloat)
 	} else if Op == Subtract {
-		a.Name = fmt.Sprintf("%f", aFloat - bFloat)
+		a.Name = fmt.Sprintf("%f", aFloat-bFloat)
 	} else if Op == Multiply {
-		a.Name = fmt.Sprintf("%f", aFloat * bFloat)
+		a.Name = fmt.Sprintf("%f", aFloat*bFloat)
 	} else if Op == Divide {
-		a.Name = fmt.Sprintf("%f", aFloat / bFloat)
+		a.Name = fmt.Sprintf("%f", aFloat/bFloat)
 	}
 	return a
 }
@@ -97,9 +97,9 @@ func parseOp(op string) Operation {
 }
 
 type Settings struct {
-	Afile string
-	Bfile string
-	Op string
+	Afile   string
+	Bfile   string
+	Op      string
 	OutFile string
 }
 
@@ -134,9 +134,9 @@ func main() {
 	outFile := flag.Arg(4)
 
 	s := Settings{
-		Afile: aFile,
-		Bfile: bFile,
-		Op: op,
+		Afile:   aFile,
+		Bfile:   bFile,
+		Op:      op,
 		OutFile: outFile,
 	}
 

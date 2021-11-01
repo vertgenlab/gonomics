@@ -8,11 +8,11 @@ import (
 )
 
 var BedMathTests = []struct {
-	Afile string
-	Bfile string
-	Outfile string
+	Afile        string
+	Bfile        string
+	Outfile      string
 	ExpectedFile string
-	Op string
+	Op           string
 }{
 	{"testdata/testA.bed", "testdata/testB.bed", "testdata/test.Add.bed", "testdata/expected.Add.bed", "Add"},
 	{"testdata/testA.bed", "testdata/testB.bed", "testdata/test.Sub.bed", "testdata/expected.Sub.bed", "Subtract"},
@@ -24,11 +24,11 @@ func TestBedMath(t *testing.T) {
 	var err error
 	var s Settings
 	for _, v := range BedMathTests {
-		s = Settings {
-			Afile: v.Afile,
-			Bfile: v.Bfile,
+		s = Settings{
+			Afile:   v.Afile,
+			Bfile:   v.Bfile,
 			OutFile: v.Outfile,
-			Op: v.Op,
+			Op:      v.Op,
 		}
 		bedMath(s)
 		if !fileio.AreEqual(v.Outfile, v.ExpectedFile) {
