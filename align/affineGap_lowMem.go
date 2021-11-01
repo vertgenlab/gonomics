@@ -1,7 +1,7 @@
 package align
 
 import (
-	"fmt"
+	//"fmt" //TODO: remove after debugging
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	//"github.com/vertgenlab/gonomics/fasta" //TODO: uncomment later, when use
@@ -111,10 +111,10 @@ func AffineGap_step1(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpe
 	score_highest_j := len(mRowCurrent[0]) - 1 //TODO: remove this note to self after debugging - the "last J" in affineGap_highMem.go
 	score_highest, _ := tripleMaxTrace(mRowCurrent[0][score_highest_j], mRowCurrent[1][score_highest_j], mRowCurrent[2][score_highest_j]) //TODO: remove this note to self after debugging - "maxScore" in affineGap_highMem.go, thd 2nd value tells you direction of "maxScore"
 	//TODO: remove these prints
-	fmt.Printf("score_highest: %d\n", score_highest)
-	fmt.Printf("score_highest_i, score_highest_j: %d, %d\n", score_highest_i, score_highest_j)
-	fmt.Printf("trace_prep_i: %v\n", trace_prep_i)
-	fmt.Printf("trace_prep_j: %v\n", trace_prep_j)
+	//fmt.Printf("score_highest: %d\n", score_highest)
+	//fmt.Printf("score_highest_i, score_highest_j: %d, %d\n", score_highest_i, score_highest_j)
+	//fmt.Printf("trace_prep_i: %v\n", trace_prep_i)
+	//fmt.Printf("trace_prep_j: %v\n", trace_prep_j)
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
 
@@ -141,17 +141,21 @@ func AffineGap_step234_testing(alpha []dna.Base, beta []dna.Base, scores [][]int
 	route := make([]Cigar, 1) //initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 	//for affineGap, make a variable to hold k_inChecker_max, outside of for loop
-	var k_inChecker_max ColType
+	var k_inChecker_max, k_inChecker_min ColType
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
 
 		//Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
 		//for affineGap, step 2 can be almost the same as constGap, just have 3 dimensions, use gapOpen and gapExtend instead of gapPen, add k_inChecker_max
 		trace, i_inChecker_max, j_inChecker_max, k_inChecker_max = fillTraceback_affineGap(alpha, beta, scores, gapOpen, gapExtend, checkersize_i, checkersize_j, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2, i_inChecker_min, j_inChecker_min, trace)
+		//fmt.Printf("k_inChecker_max: %d\n", k_inChecker_max) //TODO: remove after debugging
 
 		//Step 3: for a checkerboard, use traceback to write cigar (update route and routeIdx), as well as find the min i and j when the checkerboard cigar ends
 		//for affineGap, rewrite step 3 to deal with 3D trace
-		route, routeIdx_current, i_inChecker_min, j_inChecker_min = writeCigar_affineGap(trace, i_inChecker_max, j_inChecker_max, route, routeIdx_current, i_inChecker_min, j_inChecker_min, k_inChecker_max)
+		route, routeIdx_current, i_inChecker_min, j_inChecker_min, k_inChecker_min = writeCigar_affineGap(trace, i_inChecker_max, j_inChecker_max, k_inChecker_max, route, routeIdx_current, i_inChecker_min, j_inChecker_min, k_inChecker_min)
+
+		//TODO: remove after debugging
+		//fmt.Printf("k1, k2, route: %d, %d, %v\n", k1, k2, route)
 
 		//Use Step 3's i_inChecker_min and j_inChecker_min to find the next checkerboard to go to and where to start in that checkerboard (update k1, k2)
 		if i_inChecker_min < 0 && j_inChecker_min < 0 {
@@ -222,6 +226,7 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 			mRowCurrent[1][j], trace[1][i_inChecker][j_inChecker] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
 			mRowCurrent[2][j], trace[2][i_inChecker][j_inChecker] = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
 			//it is ok even if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard traceback and writing cigar
+			//fmt.Printf("i, j, mRowCurrent: %d, %d, %v\n", i, j, mRowCurrent) //TODO: remove after debugging
 		}
 
 		if i <= checkersize_i*(k1+1)-1 && i <= score_highest_i-1 {
@@ -232,6 +237,7 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 	//for affineGap, return another variable k_inChecker_max, based on mRowCurrent and j_max
 	_, k_inChecker_max := tripleMaxTrace(mRowCurrent[0][j_max], mRowCurrent[1][j_max], mRowCurrent[2][j_max])
 
+	//fmt.Printf("trace: %v\n", trace) //TODO: remove after debugging
 	return trace, i_inChecker_max, j_inChecker_max, k_inChecker_max
 }
 
@@ -240,9 +246,11 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 //				the growing route describing the collection of cigars of the entire alignment, the index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
 //outputs: the updated grown route describine the collection of cigars of the entire alignment, the updated index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min which describe where Step 3 (writeCigar) stopped in the current checkerboard that just went through Step 3 (writeCigar)
 //for affineGap, made changes for 3D trace
-func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, k_inChecker_max ColType) ([]Cigar, int, int, int) {
+func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, k_inChecker_max_Previous ColType, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, k_inChecker_min_Previous ColType) ([]Cigar, int, int, int, ColType) {
 
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int
+	var k_inChecker, k_inChecker_min ColType
+
 	route_updated := route
 
 	//use the i_inChecker_min_Previous from the previous k1/k2 loop iteration's Step 3 writeCigar to find the i_inChecker_max at which to start writing cigar
@@ -256,30 +264,35 @@ func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_i
 	} else {
 		j_inChecker_max = j_inChecker_max_Previous
 	}
+	if i_inChecker_min_Previous >= 0 && j_inChecker_max_Previous >= 0 {
+		k_inChecker = k_inChecker_min_Previous
+	} else {
+		k_inChecker = k_inChecker_max_Previous
+	}
 
 	for i_inChecker, j_inChecker, routeIdx = i_inChecker_max, j_inChecker_max, routeIdx_current; i_inChecker >= 0 && j_inChecker >= 0; {
 
 		//write cigar segment
 		if route_updated[routeIdx].RunLength == 0 {
 			route_updated[routeIdx].RunLength = 1
-			route_updated[routeIdx].Op = k_inChecker_max //trace[i_inChecker][j_inChecker] in constGap.go
-		} else if route_updated[routeIdx].Op == k_inChecker_max { //trace[i_inChecker][j_inChecker] in constGap.go
+			route_updated[routeIdx].Op = k_inChecker //trace[i_inChecker][j_inChecker] in constGap.go
+		} else if route_updated[routeIdx].Op == k_inChecker { //trace[i_inChecker][j_inChecker] in constGap.go
 			route_updated[routeIdx].RunLength += 1
 		} else {
-			route_updated = append(route_updated, Cigar{RunLength: 1, Op: k_inChecker_max}) //trace[i_inChecker][j_inChecker] in constGap.go
+			route_updated = append(route_updated, Cigar{RunLength: 1, Op: k_inChecker}) //trace[i_inChecker][j_inChecker] in constGap.go
 			routeIdx++
 		}
 
 		//update i_inChecker and j_inChecker
-		switch k_inChecker_max { //trace[i_inChecker][j_inChecker] in constGap.go
+		switch k_inChecker { //trace[i_inChecker][j_inChecker] in constGap.go
 		case 0:
-			k_inChecker_max = trace[k_inChecker_max][i_inChecker][j_inChecker] //k = trace[k][i][j] in affineGap.go. This is a step to update k_inChecker_max unique to affineGap.go
+			k_inChecker = trace[k_inChecker][i_inChecker][j_inChecker] //k = trace[k][i][j] in affineGap.go. This is a step to update k_inChecker unique to affineGap.go
 			i_inChecker, j_inChecker = i_inChecker-1, j_inChecker-1
 		case 1:
-			k_inChecker_max = trace[k_inChecker_max][i_inChecker][j_inChecker]
+			k_inChecker = trace[k_inChecker][i_inChecker][j_inChecker]
 			j_inChecker -= 1
 		case 2:
-			k_inChecker_max = trace[k_inChecker_max][i_inChecker][j_inChecker]
+			k_inChecker = trace[k_inChecker][i_inChecker][j_inChecker]
 			i_inChecker -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback")
@@ -287,10 +300,12 @@ func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_i
 
 		i_inChecker_min = i_inChecker
 		j_inChecker_min = j_inChecker
+		k_inChecker_min = k_inChecker
 
 	}
 
-	return route_updated, routeIdx, i_inChecker_min, j_inChecker_min //return the routeIdx that was updated in the loop, not the function input "routeIdx_current"
+	return route_updated, routeIdx, i_inChecker_min, j_inChecker_min, k_inChecker_min //return the routeIdx that was updated in the loop, not the function input "routeIdx_current"
+	//also return the updated k_inChecker_min for the next step3
 }
 
 //Step 4

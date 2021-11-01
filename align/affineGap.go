@@ -96,7 +96,7 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 		}
 	}
 	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
-	fmt.Printf("maxScore, route: %v, %v\n", maxScore, route) //TODO: remove after writing tests
+	//fmt.Printf("maxScore, route: %v, %v\n", maxScore, route) //TODO: remove after writing tests
 
 	return maxScore, route
 }
