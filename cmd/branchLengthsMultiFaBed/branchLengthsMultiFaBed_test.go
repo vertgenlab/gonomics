@@ -76,5 +76,11 @@ func TestBranchLengthsMultiFaBed(t *testing.T) {
 			err = os.Remove(v.InitialLengthBedFile)
 			exception.PanicOnErr(err)
 		}
+		if !fileio.AreEqual(v.NumUngappedSitesBedFile, v.NumUngappedSitesExpected) {
+			t.Errorf("Error in branchLengthsMultiFaBed. NumUngappedSitesBedFile did not match expected.")
+		} else {
+			err = os.Remove(v.NumUngappedSitesBedFile)
+			exception.PanicOnErr(err)
+		}
 	}
 }

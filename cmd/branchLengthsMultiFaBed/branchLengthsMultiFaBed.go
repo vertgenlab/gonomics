@@ -91,6 +91,7 @@ func numUngappedInBedRange(records []fasta.Fasta, currAln int, currSize int) int
 		if phylo.IsUngappedColumn(records, i) {
 			unGappedCount++
 		}
+		baseCount++
 	}
 	return unGappedCount
 }
