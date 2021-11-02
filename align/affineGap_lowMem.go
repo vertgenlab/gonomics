@@ -20,8 +20,8 @@ func initAffineScoring(firstSeqLen int, secondSeqLen int, checkersize_i int, che
 	for k := range mRowCurrent { //k ranges through 3 numbers (0,1,2)
 		mRowCurrent[k] = make([]int64, secondSeqLen+1)
 		mRowPrevious[k] = make([]int64, secondSeqLen+1)
-		trace_prep_i[k] = make([][]int64, int(firstSeqLen/checkersize_i)+1) //trace_prep_i saves all rows (i) that are needed to initialize checkerboard tracebacks
-		trace_prep_j[k] = make([][]int64, int(secondSeqLen/checkersize_j)+1)  //trace_prep_j saves all columns (j) that are needed to initialize checkerboard tracebacks
+		trace_prep_i[k] = make([][]int64, int(firstSeqLen/checkersize_i)+1)  //trace_prep_i saves all rows (i) that are needed to initialize checkerboard tracebacks
+		trace_prep_j[k] = make([][]int64, int(secondSeqLen/checkersize_j)+1) //trace_prep_j saves all columns (j) that are needed to initialize checkerboard tracebacks
 		for idx := range trace_prep_i[0] {
 			trace_prep_i[k][idx] = make([]int64, secondSeqLen+1)
 		}
@@ -32,7 +32,7 @@ func initAffineScoring(firstSeqLen int, secondSeqLen int, checkersize_i int, che
 	return mRowCurrent, mRowPrevious, mColumn, trace_prep_i, trace_prep_j
 }
 
-func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) ([][][]ColType) {
+func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) [][][]ColType {
 	trace_size_i := numbers.Min(firstSeqLen, checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(secondSeqLen, checkersize_j)
 	trace := make([][][]ColType, 3)
@@ -108,7 +108,7 @@ func AffineGap_step1(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpe
 		}
 	}
 	score_highest_i := mColumn - 1
-	score_highest_j := len(mRowCurrent[0]) - 1 //TODO: remove this note to self after debugging - the "last J" in affineGap_highMem.go
+	score_highest_j := len(mRowCurrent[0]) - 1                                                                                            //TODO: remove this note to self after debugging - the "last J" in affineGap_highMem.go
 	score_highest, _ := tripleMaxTrace(mRowCurrent[0][score_highest_j], mRowCurrent[1][score_highest_j], mRowCurrent[2][score_highest_j]) //TODO: remove this note to self after debugging - "maxScore" in affineGap_highMem.go, thd 2nd value tells you direction of "maxScore"
 	//TODO: remove these prints
 	//fmt.Printf("score_highest: %d\n", score_highest)
@@ -118,7 +118,7 @@ func AffineGap_step1(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpe
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
 
-func AffineGap_step234_testing(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64)([]Cigar) { //input=same as AffineGap_step1 for now, output=route
+func AffineGap_step234_testing(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) []Cigar { //input=same as AffineGap_step1 for now, output=route
 	//initialize checkersizes here. TODO: make default 10000, and have version where we can change checkersize
 	checkersize_i := 3
 	checkersize_j := 3
@@ -135,10 +135,10 @@ func AffineGap_step234_testing(alpha []dna.Base, beta []dna.Base, scores [][]int
 	//i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
 	//j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2                                   //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2                                   //ditto for j
+	i_inChecker_min = -2                                                          //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                                          //ditto for j
 	trace := initAffineTrace(len(alpha), len(beta), checkersize_i, checkersize_j) //for affineGap, use initAffineTrace function to initialize trace
-	route := make([]Cigar, 1) //initialie cigar route and routeIdx
+	route := make([]Cigar, 1)                                                     //initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 	//for affineGap, make a variable to hold k_inChecker_max, outside of for loop
 	var k_inChecker_max, k_inChecker_min ColType

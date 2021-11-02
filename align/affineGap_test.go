@@ -20,7 +20,7 @@ var affineAlignTests = []struct {
 	{"ACG", "ACGT", "ACG-\nACGT\n"},
 	{"AGT", "ACGT", "A-GT\nACGT\n"}, //TODO: error seems to be fixed?
 	{"ACT", "ACGT", "AC-T\nACGT\n"},
-	{"CGCGCGCGCG", "CGCGCGTTTTCGCG", "CGCGCG----CGCG\nCGCGCGTTTTCGCG\n"}, //TODO: error seems to be fixed?
+	{"CGCGCGCGCG", "CGCGCGTTTTCGCG", "CGCGCG----CGCG\nCGCGCGTTTTCGCG\n"},             //TODO: error seems to be fixed?
 	{"CGCGCGCGCG", "CGAAAACGCGTTTTCGCG", "CG----CGCG----CGCG\nCGAAAACGCGTTTTCGCG\n"}, //TODO: error seems to be fixed?
 }
 
