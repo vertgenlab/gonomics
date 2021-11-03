@@ -31,7 +31,7 @@ type Settings struct {
 	ZeroDistanceWeightConstant float64
 	RawVelOut                  string
 	RawInitialOut              string
-	CavalliSforzaQ	bool
+	CavalliSforzaQ             bool
 }
 
 //Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
@@ -235,7 +235,7 @@ func main() {
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
 		RawVelOut:                  *rawVelBranchLength,
 		RawInitialOut:              *rawInitialVelBranchLength,
-		CavalliSforzaQ: *cavalliSforzaQ,
+		CavalliSforzaQ:             *cavalliSforzaQ,
 	}
 
 	multiFaAcceleration(s)

@@ -26,7 +26,7 @@ type Settings struct {
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
-	CavalliSforzaEdwardsQ	bool
+	CavalliSforzaEdwardsQ      bool
 }
 
 func branchLengthsMultiFaBed(s Settings) {
@@ -185,7 +185,7 @@ func main() {
 		Epsilon:                    *epsilon,
 		AllowNegative:              *allowNegative,
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
-		CavalliSforzaEdwardsQ: *cavalliSforzaQ,
+		CavalliSforzaEdwardsQ:      *cavalliSforzaQ,
 	}
 
 	branchLengthsMultiFaBed(s)
