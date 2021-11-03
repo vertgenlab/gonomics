@@ -33,6 +33,7 @@ var multiFaAccelerationTests = []struct {
 	RawInitialOut              string
 	RawVelExpected             string
 	RawInitialExpected         string
+	CavalliSforzaQ bool
 }{
 	{"testdata/test.fa",
 		"chr1",
@@ -54,6 +55,7 @@ var multiFaAccelerationTests = []struct {
 		"testdata/test.RawInitial.bed",
 		"testdata/expected.RawVel.bed",
 		"testdata/expected.RawInitial.bed",
+		false,
 	},
 	{"testdata/test.fa",
 		"chr1",
@@ -75,6 +77,7 @@ var multiFaAccelerationTests = []struct {
 		"",
 		"",
 		"",
+		false,
 	},
 	{"testdata/test.fa",
 		"chr1",
@@ -96,6 +99,7 @@ var multiFaAccelerationTests = []struct {
 		"",
 		"",
 		"",
+		false,
 	},
 }
 
@@ -118,6 +122,7 @@ func TestMultiFaAcceleration(t *testing.T) {
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
 			RawVelOut:                  v.RawVelOut,
 			RawInitialOut:              v.RawInitialOut,
+			CavalliSforzaQ: v.CavalliSforzaQ,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {

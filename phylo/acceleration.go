@@ -66,7 +66,7 @@ type AccelSubTreeRight struct {
 }
 
 //BranchLengthsAlternatingLeastSquares calculates the optimal branch lengths for a given set of distances. See the multiFaAcceleration readme for a detailed theoretical description of this algorithm.
-func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegative bool, verbose bool, zeroDistanceWeightConstant float64, epsilon float64) AccelBranchLengths {
+func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegative bool, verbose bool, zeroDistanceWeightConstant float64, epsilon float64, CavalliSforzaWeight bool) AccelBranchLengths {
 	var answer = AccelBranchLengths{1, 1, 1, 1, 1}
 	var Q float64 = CalculateQ(d, answer)
 	var nextQ float64
@@ -78,9 +78,9 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 
 	for currDiff > epsilon && i < maxIteration {
 		oldAnswer = answer
-		pruneLeft(d, answer, &leftSub, zeroDistanceWeightConstant)
+		pruneLeft(d, answer, &leftSub, zeroDistanceWeightConstant, CavalliSforzaWeight)
 		optimizeSubtreeLeft(&leftSub, allowNegative, verbose, &answer)
-		pruneRight(d, answer, &rightSub, zeroDistanceWeightConstant)
+		pruneRight(d, answer, &rightSub, zeroDistanceWeightConstant, CavalliSforzaWeight)
 		optimizeSubtreeRight(&rightSub, allowNegative, verbose, &answer)
 		nextQ = CalculateQ(d, answer)
 		if verbose {
@@ -102,7 +102,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 
 //AccelFourWaySnpDistancesAndweights generates an AccelDistancesAndWeights struct from SNP distance, which includes only SNPs.
 //Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang
-func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64) bool {
+func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) bool {
 	//first we clear the values in d.
 	d.DhumChimp, d.DhumGor, d.DhumOrang, d.DchimpGor, d.DchimpOrang, d.DgorOrang = 0, 0, 0, 0, 0, 0
 	var baseCount, i int = 0, 0
@@ -139,13 +139,13 @@ func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter 
 	if baseCount != windowSize {
 		reachedEnd = true
 	}
-	calculateWeights(d, zeroDistanceWeightConstant)
+	calculateWeights(d, zeroDistanceWeightConstant, CavalliSforzaWeight)
 	return reachedEnd
 }
 
 //AccelFourWayMutationDistancesAndWeights generates an AccelDistancesAndWeights struct from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
 //Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang
-func AccelFourWayMutationDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64) bool {
+func AccelFourWayMutationDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) bool {
 	//first we clear the values in D.
 	d.DhumChimp, d.DhumGor, d.DhumOrang, d.DchimpGor, d.DchimpOrang, d.DgorOrang = 0, 0, 0, 0, 0, 0
 	var DhumChimptmp int
@@ -158,22 +158,25 @@ func AccelFourWayMutationDistancesAndWeights(records []fasta.Fasta, alignmentCou
 	d.DchimpGor = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[2], alignmentCounter, alnEnd))
 	d.DchimpOrang = float64(fasta.PairwiseMutationDistanceInRange(records[1], records[3], alignmentCounter, alnEnd))
 	d.DgorOrang = float64(fasta.PairwiseMutationDistanceInRange(records[2], records[3], alignmentCounter, alnEnd))
-	calculateWeights(d, zeroDistanceWeightConstant)
+	calculateWeights(d, zeroDistanceWeightConstant, CavalliSforzaWeight)
 	return reachedEnd
 }
 
 //calculateWeights is a helper function of the distanceAndWeights functions, produces the weight constant for each distance.
-func calculateWeights(d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64) {
-	d.WhumChimp = calculateWeight(d.DhumChimp, zeroDistanceWeightConstant)
-	d.WhumGor = calculateWeight(d.DhumGor, zeroDistanceWeightConstant)
-	d.WhumOrang = calculateWeight(d.DhumOrang, zeroDistanceWeightConstant)
-	d.WchimpGor = calculateWeight(d.DchimpGor, zeroDistanceWeightConstant)
-	d.WchimpOrang = calculateWeight(d.DchimpOrang, zeroDistanceWeightConstant)
-	d.WgorOrang = calculateWeight(d.DgorOrang, zeroDistanceWeightConstant)
+func calculateWeights(d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) {
+	d.WhumChimp = calculateWeight(d.DhumChimp, zeroDistanceWeightConstant, CavalliSforzaWeight)
+	d.WhumGor = calculateWeight(d.DhumGor, zeroDistanceWeightConstant, CavalliSforzaWeight)
+	d.WhumOrang = calculateWeight(d.DhumOrang, zeroDistanceWeightConstant, CavalliSforzaWeight)
+	d.WchimpGor = calculateWeight(d.DchimpGor, zeroDistanceWeightConstant, CavalliSforzaWeight)
+	d.WchimpOrang = calculateWeight(d.DchimpOrang, zeroDistanceWeightConstant, CavalliSforzaWeight)
+	d.WgorOrang = calculateWeight(d.DgorOrang, zeroDistanceWeightConstant, CavalliSforzaWeight)
 }
 
 //calculateWeight is a helper function of calculateWeights, and performs each individual weight calculation.
-func calculateWeight(d float64, zeroDistanceWeightConstant float64) float64 {
+func calculateWeight(d float64, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) float64 {
+	if CavalliSforzaWeight {
+		return 1
+	}
 	if d == 0 {
 		return zeroDistanceWeightConstant
 	}
@@ -202,25 +205,25 @@ func isUngappedBase(b dna.Base) bool {
 }
 
 //A helper function of BranchLengthsAlternatingLeastSquares. Reduce the four species tree to the subtree containing species 0, 1, and the ancestor of 2/3.
-func pruneLeft(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTreeLeft, ZeroDistanceWeightConstant float64) {
+func pruneLeft(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTreeLeft, ZeroDistanceWeightConstant float64, CavalliSforzaWeight bool) {
 	sub.DhumChimp = d.DhumChimp
 	sub.DhumHga = (d.WhumGor*(d.DhumGor-b.BhgaGor) + d.WhumOrang*(d.DhumOrang-b.BhgaOrang)) / (d.WhumGor + d.WhumOrang)
 	sub.DchimpHga = (d.WchimpGor*(d.DchimpGor-b.BhgaGor) + d.WchimpOrang*(d.DchimpOrang-b.BhgaOrang)) / (d.WchimpGor + d.WchimpOrang)
 
-	sub.WhumChimp = calculateWeight(sub.DhumChimp, ZeroDistanceWeightConstant)
-	sub.WhumHga = calculateWeight(sub.DhumHga, ZeroDistanceWeightConstant)
-	sub.WchimpHga = calculateWeight(sub.DchimpHga, ZeroDistanceWeightConstant)
+	sub.WhumChimp = calculateWeight(sub.DhumChimp, ZeroDistanceWeightConstant, CavalliSforzaWeight)
+	sub.WhumHga = calculateWeight(sub.DhumHga, ZeroDistanceWeightConstant, CavalliSforzaWeight)
+	sub.WchimpHga = calculateWeight(sub.DchimpHga, ZeroDistanceWeightConstant, CavalliSforzaWeight)
 }
 
 //A helper function of BranchLengthsAlternatingLeastSquares. Reduce the four species tree to the subtree containing 2, 3, and the ancestor of 0/1.
-func pruneRight(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTreeRight, ZeroDistanceWeightConstant float64) {
+func pruneRight(d AccelDistancesAndWeights, b AccelBranchLengths, sub *AccelSubTreeRight, ZeroDistanceWeightConstant float64, CavalliSforzaWeight bool) {
 	sub.DgorOrang = d.DgorOrang
 	sub.DhcaGor = (d.WhumGor*(d.DhumGor-b.BhumHca) + d.WchimpGor*(d.DchimpGor-b.BchimpHca)) / (d.WhumGor + d.WchimpGor)
 	sub.DhcaOrang = (d.WhumOrang*(d.DhumOrang-b.BhumHca) + d.WchimpOrang*(d.DchimpOrang-b.BchimpHca)) / (d.WhumOrang + d.WchimpOrang)
 
-	sub.WgorOrang = calculateWeight(sub.DgorOrang, ZeroDistanceWeightConstant)
-	sub.WhcaGor = calculateWeight(sub.DhcaGor, ZeroDistanceWeightConstant)
-	sub.WhcaOrang = calculateWeight(sub.DhcaOrang, ZeroDistanceWeightConstant)
+	sub.WgorOrang = calculateWeight(sub.DgorOrang, ZeroDistanceWeightConstant, CavalliSforzaWeight)
+	sub.WhcaGor = calculateWeight(sub.DhcaGor, ZeroDistanceWeightConstant, CavalliSforzaWeight)
+	sub.WhcaOrang = calculateWeight(sub.DhcaOrang, ZeroDistanceWeightConstant, CavalliSforzaWeight)
 }
 
 //optimizeSubtreeLeft is a helper function of BranchLengthsAlternatingLeastSquares and computes the optimal branch lengths for the left subtree at a particular iteration.

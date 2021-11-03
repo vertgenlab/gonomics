@@ -26,6 +26,7 @@ type Settings struct {
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
+	CavalliSforzaEdwardsQ	bool
 }
 
 func branchLengthsMultiFaBed(s Settings) {
@@ -68,14 +69,14 @@ func branchLengthsMultiFaBed(s Settings) {
 			currAln = fasta.RefPosToAlnPosCounter(records[0], regions[i].ChromStart, currRef, currAln) //we update the currAln to the position of the next bed entry, using the cached ref and aln from the last iteration
 			currRef = regions[i].ChromStart                                                            //now we can safely update currRef to the position of the current bed entry.
 			if s.UseSnpDistance {
-				reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant)
+				reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant, s.CavalliSforzaEdwardsQ)
 			} else {
-				reachedEnd = phylo.AccelFourWayMutationDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant)
+				reachedEnd = phylo.AccelFourWayMutationDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant, s.CavalliSforzaEdwardsQ)
 			}
 			if reachedEnd {
 				log.Fatalf("Error: bed entry ran off the end of the multiple alignment chromosome. Offending entry starts at position %s\t%v", regions[i].Chrom, regions[i].ChromStart)
 			}
-			currLengths = phylo.BranchLengthsAlternatingLeastSquares(currDistance, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon)
+			currLengths = phylo.BranchLengthsAlternatingLeastSquares(currDistance, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon, s.CavalliSforzaEdwardsQ)
 			currUngappedCount = numUngappedInBedRange(records, currAln, currSize)
 			if s.QOutFile != "" {
 				currQ = phylo.CalculateQ(currDistance, currLengths)
@@ -151,6 +152,7 @@ func main() {
 	var allowNegative *bool = flag.Bool("allowNegative", false, "Allow the algorithm to evaluate negative branch lengths. This program will constrain the optimal solution to non-negative branch lengths by default.")
 	var zeroDistanceWeightConstant *float64 = flag.Float64("zeroDistanceWeightConstant", 1000, "Set the relative error weight applied to pairs of species with a pairwise distance of zero.")
 	var qOutFile *string = flag.String("qOutFile", "", "Returns the value of Q, the Fitch-Margoliash least squares error term, for each region in a separate bed file.")
+	var cavalliSforzaQ *bool = flag.Bool("CavalliSforzaEdwardsQ", false, "Usees the CavalliSforza-Edwards error term Q instead of the Fitch-Margoliash error term.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -183,6 +185,7 @@ func main() {
 		Epsilon:                    *epsilon,
 		AllowNegative:              *allowNegative,
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
+		CavalliSforzaEdwardsQ: *cavalliSforzaQ,
 	}
 
 	branchLengthsMultiFaBed(s)

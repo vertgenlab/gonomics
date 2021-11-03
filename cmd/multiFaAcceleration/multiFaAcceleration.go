@@ -31,6 +31,7 @@ type Settings struct {
 	ZeroDistanceWeightConstant float64
 	RawVelOut                  string
 	RawInitialOut              string
+	CavalliSforzaQ	bool
 }
 
 //Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
@@ -81,13 +82,13 @@ func multiFaAcceleration(s Settings) {
 		if records[0].Seq[alignmentCounter] != dna.Gap {                                            //and if we are at a reference position.
 			if pass {
 				if s.UseSnpDistance {
-					reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, alignmentCounter, s.WindowSize, &currDistances, s.ZeroDistanceWeightConstant)
+					reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, alignmentCounter, s.WindowSize, &currDistances, s.ZeroDistanceWeightConstant, s.CavalliSforzaQ)
 				} else {
-					reachedEnd = phylo.AccelFourWayMutationDistancesAndWeights(records, alignmentCounter, s.WindowSize, &currDistances, s.ZeroDistanceWeightConstant)
+					reachedEnd = phylo.AccelFourWayMutationDistancesAndWeights(records, alignmentCounter, s.WindowSize, &currDistances, s.ZeroDistanceWeightConstant, s.CavalliSforzaQ)
 				}
 
 				if _, containedInMap = distanceCache[currDistances]; !containedInMap { //if this tree has not been seen before, calculate branch lengths
-					distanceCache[currDistances] = phylo.BranchLengthsAlternatingLeastSquares(currDistances, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon)
+					distanceCache[currDistances] = phylo.BranchLengthsAlternatingLeastSquares(currDistances, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon, s.CavalliSforzaQ)
 				}
 				if s.Verbose {
 					fmt.Printf("RefPos: %v\tDistances: %v\t Branches: %v.\n", referenceCounter, currDistances, distanceCache[currDistances])
@@ -201,6 +202,7 @@ func main() {
 	var zeroDistanceWeightConstant *float64 = flag.Float64("zeroDistanceWeightConstant", 1000, "Set the relative error weight applied to pairs of species with a pairwise distance of zero.")
 	var rawVelBranchLength *string = flag.String("rawVelBranchLengths", "", "Set an output file name to return the raw branch length for the branch associated with the velocity score.")
 	var rawInitialVelBranchLength *string = flag.String("rawInitialVelBranchLengths", "", "Set an output file name to return the raw branch length for the branch associated with the initial velocity score.")
+	var cavalliSforzaQ *bool = flag.Bool("CavalliSforzaEdwardsQ", false, "Usees the CavalliSforza-Edwards error term Q instead of the Fitch-Margoliash error term.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -233,6 +235,7 @@ func main() {
 		ZeroDistanceWeightConstant: *zeroDistanceWeightConstant,
 		RawVelOut:                  *rawVelBranchLength,
 		RawInitialOut:              *rawInitialVelBranchLength,
+		CavalliSforzaQ: *cavalliSforzaQ,
 	}
 
 	multiFaAcceleration(s)

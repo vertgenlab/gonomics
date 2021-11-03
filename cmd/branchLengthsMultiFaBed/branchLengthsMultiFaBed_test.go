@@ -26,6 +26,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 	InitialLengthBedExpected   string
 	NumUngappedSitesExpected   string
 	QoutExpected string
+	CavalliSforzaQ bool
 }{
 	{"chr1",
 		"testdata/test.fa",
@@ -45,6 +46,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 		"testdata/expected.Initial.bed",
 		"testdata/expected.NumUngapped.bed",
 		"testdata/QoutExpected.bed",
+		false,
 	},
 }
 
@@ -67,6 +69,7 @@ func TestBranchLengthsMultiFaBed(t *testing.T) {
 			Epsilon:                    v.Epsilon,
 			AllowNegative:              v.AllowNegative,
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
+			CavalliSforzaEdwardsQ: v.CavalliSforzaQ,
 		}
 		branchLengthsMultiFaBed(s)
 		if !fileio.AreEqual(v.VelLengthBedFile, v.VelLengthBedExpected) {
