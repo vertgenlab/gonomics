@@ -16,21 +16,21 @@ var BedFormatTests = []struct {
 	ScaleNameFloat float64
 }{
 	{"testdata/test.bed", //this test is for scaleNameFloat
-		"testdata/test.out.bed",
+		"testdata/test.outFloat.bed",
 		"testdata/expected.NameFloat.bed",
 		false,
 		false,
 		10,
 	},
 	{"testdata/test.bed", //this test is for UCSCToEnsembl
-		"testdata/test.out.bed",
+		"testdata/test.outEnsembl.bed",
 		"testdata/expected.Ensembl.bed",
 		true,
 		false,
 		1,
 	},
 	{"testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
-		"testdata/test.out.bed",
+		"testdata/test.outUCSC.bed",
 		"testdata/expected.UCSC.bed",
 		false,
 		true,
