@@ -18,6 +18,7 @@ type Settings struct {
 	VelLengthBedFile           string
 	InitialLengthBedFile       string
 	NumUngappedSitesBedFile    string
+	QOutFile	string
 	SearchSpaceBed             string
 	SearchSpaceProportion      float64
 	UseSnpDistance             bool
@@ -33,6 +34,7 @@ func branchLengthsMultiFaBed(s Settings) {
 	var reachedEnd = false
 	var currLengths phylo.AccelBranchLengths
 	var currSize, currAln, currRef, currUngappedCount = 0, 0, 0, 0
+	var currQ float64
 	var currDistance = phylo.AccelDistancesAndWeights{}
 	var err error
 
@@ -55,6 +57,11 @@ func branchLengthsMultiFaBed(s Settings) {
 	InitialOut := fileio.EasyCreate(s.InitialLengthBedFile)
 	UngappedBasesOut := fileio.EasyCreate(s.NumUngappedSitesBedFile)
 
+	var qOut *fileio.EasyWriter
+	if s.QOutFile != "" {
+		qOut = fileio.EasyCreate(s.QOutFile)
+	}
+
 	for i := 0; i < len(regions); i++ {
 		if passesSearchSpaceTest(regions[i], bitArray, s) {
 			currSize = regions[i].ChromEnd - regions[i].ChromStart
@@ -70,6 +77,10 @@ func branchLengthsMultiFaBed(s Settings) {
 			}
 			currLengths = phylo.BranchLengthsAlternatingLeastSquares(currDistance, s.AllowNegative, s.Verbose, s.ZeroDistanceWeightConstant, s.Epsilon)
 			currUngappedCount = numUngappedInBedRange(records, currAln, currSize)
+			if s.QOutFile != "" {
+				currQ = phylo.CalculateQ(currDistance, currLengths)
+				bed.WriteBed(qOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%e", currQ), FieldsInitialized: 4})
+			}
 
 			bed.WriteBed(VelOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.BhumHca), FieldsInitialized: 4})
 			bed.WriteBed(InitialOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.BhcaHga), FieldsInitialized: 4})
@@ -83,6 +94,10 @@ func branchLengthsMultiFaBed(s Settings) {
 	exception.PanicOnErr(err)
 	err = UngappedBasesOut.Close()
 	exception.PanicOnErr(err)
+	if s.QOutFile != "" {
+		err = qOut.Close()
+		exception.PanicOnErr(err)
+	}
 }
 
 func numUngappedInBedRange(records []fasta.Fasta, currAln int, currSize int) int {
@@ -135,6 +150,7 @@ func main() {
 	var epsilon *float64 = flag.Float64("epsilon", 1e-8, "Set the error threshold for alternating least squares branch length calculation.")
 	var allowNegative *bool = flag.Bool("allowNegative", false, "Allow the algorithm to evaluate negative branch lengths. This program will constrain the optimal solution to non-negative branch lengths by default.")
 	var zeroDistanceWeightConstant *float64 = flag.Float64("zeroDistanceWeightConstant", 1000, "Set the relative error weight applied to pairs of species with a pairwise distance of zero.")
+	var qOutFile *string = flag.String("qOutFile", "", "Returns the value of Q, the Fitch-Margoliash least squares error term, for each region in a separate bed file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -159,6 +175,7 @@ func main() {
 		VelLengthBedFile:           veLengthBedFile,
 		InitialLengthBedFile:       initialLengthBedFile,
 		NumUngappedSitesBedFile:    numUngappedSitesBedFile,
+		QOutFile: *qOutFile,
 		SearchSpaceBed:             *searchSpaceBed,
 		SearchSpaceProportion:      *searchSpaceProportion,
 		UseSnpDistance:             *useSnpDistance,

@@ -68,7 +68,7 @@ type AccelSubTreeRight struct {
 //BranchLengthsAlternatingLeastSquares calculates the optimal branch lengths for a given set of distances. See the multiFaAcceleration readme for a detailed theoretical description of this algorithm.
 func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegative bool, verbose bool, zeroDistanceWeightConstant float64, epsilon float64) AccelBranchLengths {
 	var answer = AccelBranchLengths{1, 1, 1, 1, 1}
-	var Q float64 = calculateQ(d, answer)
+	var Q float64 = CalculateQ(d, answer)
 	var nextQ float64
 	var currDiff float64 = epsilon + 1 //set currDiff to something larger than epsilon so that we make it into the loop the first time.
 	var leftSub AccelSubTreeLeft
@@ -82,7 +82,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 		optimizeSubtreeLeft(&leftSub, allowNegative, verbose, &answer)
 		pruneRight(d, answer, &rightSub, zeroDistanceWeightConstant)
 		optimizeSubtreeRight(&rightSub, allowNegative, verbose, &answer)
-		nextQ = calculateQ(d, answer)
+		nextQ = CalculateQ(d, answer)
 		if verbose {
 			log.Printf("nextQ: %e. currDiff: %e. Here were the branch lengths. BhumHca:%f. BchimpHca: %f. BhcaHga: %f. BhgaGor: %f. BhgaOrang: %f.", nextQ, currDiff, answer.BhumHca, answer.BchimpHca, answer.BhcaHga, answer.BhgaGor, answer.BhgaOrang)
 		}
@@ -328,8 +328,8 @@ func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, w1
 	return numbers.MaxFloat64((w1*(d1-v1)+w2*(d2-v2))/(w1+w2), 0) //ensures the estimate is non-negative
 }
 
-//For a set of distances and corresponding branch lengths, determine the value of Q, the Fitch-Margoliash least squares error term.
-func calculateQ(d AccelDistancesAndWeights, b AccelBranchLengths) float64 {
+//CalculateQ: for a set of distances and corresponding branch lengths and weights, determine the value of Q, the Fitch-Margoliash least squares error term.
+func CalculateQ(d AccelDistancesAndWeights, b AccelBranchLengths) float64 {
 	var sum float64 = 0
 	sum += d.WhumChimp * math.Pow(d.DhumChimp-(b.BchimpHca+b.BchimpHca), 2)
 	sum += d.WhumGor * math.Pow(d.DhumGor-(b.BhumHca+b.BhcaHga+b.BhgaGor), 2)

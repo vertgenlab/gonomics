@@ -14,6 +14,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 	VelLengthBedFile           string
 	InitialLengthBedFile       string
 	NumUngappedSitesBedFile    string
+	QOutFile string
 	SearchSpaceBed             string
 	SearchSpaceProportion      float64
 	UseSnpDistance             bool
@@ -24,6 +25,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 	VelLengthBedExpected       string
 	InitialLengthBedExpected   string
 	NumUngappedSitesExpected   string
+	QoutExpected string
 }{
 	{"chr1",
 		"testdata/test.fa",
@@ -31,6 +33,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 		"testdata/test.Vel.bed",
 		"testdata/test.Initial.bed",
 		"testdata/test.UngappedSites.bed",
+		"testdata/qOut.bed",
 		"",
 		0.5,
 		false,
@@ -41,6 +44,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 		"testdata/expected.Vel.bed",
 		"testdata/expected.Initial.bed",
 		"testdata/expected.NumUngapped.bed",
+		"testdata/QoutExpected.bed",
 	},
 }
 
@@ -55,6 +59,7 @@ func TestBranchLengthsMultiFaBed(t *testing.T) {
 			VelLengthBedFile:           v.VelLengthBedFile,
 			InitialLengthBedFile:       v.InitialLengthBedFile,
 			NumUngappedSitesBedFile:    v.NumUngappedSitesBedFile,
+			QOutFile: v.QOutFile,
 			SearchSpaceBed:             v.SearchSpaceBed,
 			SearchSpaceProportion:      v.SearchSpaceProportion,
 			UseSnpDistance:             v.UseSnpDistance,
@@ -80,6 +85,12 @@ func TestBranchLengthsMultiFaBed(t *testing.T) {
 			t.Errorf("Error in branchLengthsMultiFaBed. NumUngappedSitesBedFile did not match expected.")
 		} else {
 			err = os.Remove(v.NumUngappedSitesBedFile)
+			exception.PanicOnErr(err)
+		}
+		if !fileio.AreEqual(v.QOutFile, v.QoutExpected) {
+			t.Errorf("Error in branchLengthsMultiFaBed. QoutFile did not match expected.")
+		} else {
+			err = os.Remove(v.QOutFile)
 			exception.PanicOnErr(err)
 		}
 	}
