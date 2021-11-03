@@ -131,7 +131,7 @@ func main() {
 	aFile := flag.Arg(0)
 	op := flag.Arg(1)
 	bFile := flag.Arg(2)
-	outFile := flag.Arg(4)
+	outFile := flag.Arg(3)
 
 	s := Settings{
 		Afile:   aFile,
