@@ -10,30 +10,37 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
+	"math"
 )
 
-func bedValueWig(infile string, database string, chromsizeFile string, outfile string, norm bool, bedMinWigFlag bool, bedAverageWigFlag bool) {
-	if bedMinWigFlag && bedAverageWigFlag {
+func bedValueWig(s Settings) {
+	if s.MinFlag && s.AverageFlag {
 		log.Fatalf("Cannot select both min and average in the same operation.")
 	}
 
-	var records []bed.Bed = bed.Read(infile)
-	var wigData []wig.Wig = wig.Read(database)
-	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(chromsizeFile)
+	var records []bed.Bed = bed.Read(s.Infile)
+	var wigData []wig.Wig = wig.Read(s.WigFile)
+	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(s.SizesFile)
 	var outList []bed.Bed
 	var currentBed bed.Bed = records[0]
-	var currValue float64
+	var currValue, chromValueMultiplyByStep float64
 	var chromIndex int
 	var i int
 	var wigTotal float64 = 0
 
-	if norm == true { //TODO: This assumes fixedStep. Either should check for fixedStep or be able to handle both cases (fixedStep and variableStep)
+	if s.TrimLeft > 0 || s.TrimRight > 0 {
+		bed.Trim(records, s.TrimLeft, s.TrimRight)
+	}
+
+	if s.NormFlag == true {
+		var wigCounterByChrom float64
 		for i := range wigData { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
-			var wigCounterByChrom float64 = 0
+			wigCounterByChrom = 0
 			for k := range wigData[i].Values { //Cycle through each value in the float64[]
-				var chromValueMultiplyByStep float64 = 0
-				chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
-				wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
+				if wigData[i].Values[k] != s.NoDataValue {
+					chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
+					wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
+				}
 			}
 			wigTotal += wigCounterByChrom
 		}
@@ -47,14 +54,14 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 				if currentBed.FieldsInitialized < 7 {
 					currentBed.FieldsInitialized = 7
 				}
-				if bedMinWigFlag {
-					currValue = bedRangeMin(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
-				} else if bedAverageWigFlag {
-					currValue = bedRangeAverage(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
+				if s.MinFlag {
+					currValue = bedRangeMin(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
+				} else if s.AverageFlag {
+					currValue = bedRangeAverage(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
 				} else {
-					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd)
+					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
 				}
-				if norm == true {
+				if s.NormFlag == true {
 					currValue = currValue / wigTotal
 				}
 				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", currValue)) // %g will
@@ -64,7 +71,7 @@ func bedValueWig(infile string, database string, chromsizeFile string, outfile s
 			}
 		}
 	}
-	bed.Write(outfile, outList)
+	bed.Write(s.OutFile, outList)
 }
 
 func getWigIndex(w []wig.Wig, chrom string) int {
@@ -77,29 +84,55 @@ func getWigIndex(w []wig.Wig, chrom string) int {
 	return -1
 }
 
-func bedRangeAverage(w []float64, start int, end int) float64 {
+func bedRangeAverage(w []float64, start int, end int, noDataValue float64) float64 {
 	length := end - start
 	var sum float64
-	var i int
+	var i, dataCount int //dataCount measures the number of positions for which there is data (positions where wig score is not equal to the missing data value)
 
 	for i = 0; i < length; i++ {
-		sum = sum + w[i+start]
+		if w[i+start] != noDataValue {
+			sum = sum + w[i+start]
+			dataCount++
+		}
 	}
-	return sum / float64(length)
+	if dataCount == 0 { //if there were no positions with data in the wig overlapping the bed, return the noData value
+		return noDataValue
+	}
+	return sum / float64(dataCount) //average the sum of values to the number of positions with data in the wig overlapping the bed entry.
 }
 
-func bedRangeMin(w []float64, start int, end int) float64 {
-	var min = w[start]
+func bedRangeMin(w []float64, start int, end int, noDataValue float64) float64 {
+	var min float64
+	var encounteredData bool = false
 	for i := start; i < end; i++ {
-		min = numbers.MinFloat64(min, w[i])
+		if w[i] != noDataValue {
+			if !encounteredData { //if this is the first value we've seen that's not the noData value in the wig, we set the min the that value and set encounteredData to true
+				min = w[i]
+				encounteredData = true
+			}
+			min = numbers.MinFloat64(min, w[i])
+		}
+	}
+	if !encounteredData {
+		return noDataValue
 	}
 	return min
 }
 
-func bedRangeMax(w []float64, start int, end int) float64 {
+func bedRangeMax(w []float64, start int, end int, noDataValue float64) float64 {
 	var max float64
+	var encounteredData bool = false
 	for i := start; i < end; i++ {
-		max = numbers.MaxFloat64(max, w[i])
+		if w[i] != noDataValue {
+			if !encounteredData {
+				max = w[i]
+				encounteredData = true
+			}
+			max = numbers.MaxFloat64(max, w[i])
+		}
+	}
+	if !encounteredData {
+		return noDataValue
 	}
 	return max
 }
@@ -114,11 +147,28 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+type Settings struct {
+	Infile      string
+	WigFile     string
+	SizesFile   string
+	OutFile     string
+	NormFlag    bool
+	AverageFlag bool
+	MinFlag     bool
+	TrimLeft    int
+	TrimRight   int
+	NoDataValue float64
+}
+
 func main() {
 	var expectedNumArgs int = 4
 	var min *bool = flag.Bool("min", false, "Annotate bed entries with the minimum wig value instead of the maximum.")
 	var average *bool = flag.Bool("average", false, "Annotate bed entries with the average wig value instead of the maximum.")
 	var norm *bool = flag.Bool("normalize", false, "When true, will normalize the bedMaxWig output by dividing value by total wig hits.")
+	var trimLeft *int = flag.Int("trimLeft", 0, "Exclude values on the left most edge of the bed region for consideration.")
+	var trimRight *int = flag.Int("trimRight", 0, "Exclude values on the right most edge of the bed region for consideration.")
+	var noDataValue *float64 = flag.Float64("noDataValue", math.MaxFloat64, "Exclude positions marked with the noData value, provided by the user, from consideration for value calculations.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -133,5 +183,18 @@ func main() {
 	chromSize := flag.Arg(2)
 	outfile := flag.Arg(3)
 
-	bedValueWig(infile, database, chromSize, outfile, *norm, *min, *average)
+	s := Settings{
+		Infile:      infile,
+		WigFile:     database,
+		SizesFile:   chromSize,
+		OutFile:     outfile,
+		NormFlag:    *norm,
+		AverageFlag: *average,
+		MinFlag:     *min,
+		TrimLeft:    *trimLeft,
+		TrimRight:   *trimRight,
+		NoDataValue: *noDataValue,
+	}
+
+	bedValueWig(s)
 }
