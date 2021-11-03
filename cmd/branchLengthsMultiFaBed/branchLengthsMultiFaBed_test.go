@@ -14,7 +14,7 @@ var BranchLengthsMultiFaBedTests = []struct {
 	VelLengthBedFile           string
 	InitialLengthBedFile       string
 	NumUngappedSitesBedFile    string
-	QOutFile string
+	QOutFile                   string
 	SearchSpaceBed             string
 	SearchSpaceProportion      float64
 	UseSnpDistance             bool
@@ -61,7 +61,7 @@ func TestBranchLengthsMultiFaBed(t *testing.T) {
 			VelLengthBedFile:           v.VelLengthBedFile,
 			InitialLengthBedFile:       v.InitialLengthBedFile,
 			NumUngappedSitesBedFile:    v.NumUngappedSitesBedFile,
-			QOutFile: v.QOutFile,
+			QOutFile:                   v.QOutFile,
 			SearchSpaceBed:             v.SearchSpaceBed,
 			SearchSpaceProportion:      v.SearchSpaceProportion,
 			UseSnpDistance:             v.UseSnpDistance,

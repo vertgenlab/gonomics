@@ -18,7 +18,7 @@ type Settings struct {
 	VelLengthBedFile           string
 	InitialLengthBedFile       string
 	NumUngappedSitesBedFile    string
-	QOutFile	string
+	QOutFile                   string
 	SearchSpaceBed             string
 	SearchSpaceProportion      float64
 	UseSnpDistance             bool
@@ -177,7 +177,7 @@ func main() {
 		VelLengthBedFile:           veLengthBedFile,
 		InitialLengthBedFile:       initialLengthBedFile,
 		NumUngappedSitesBedFile:    numUngappedSitesBedFile,
-		QOutFile: *qOutFile,
+		QOutFile:                   *qOutFile,
 		SearchSpaceBed:             *searchSpaceBed,
 		SearchSpaceProportion:      *searchSpaceProportion,
 		UseSnpDistance:             *useSnpDistance,
