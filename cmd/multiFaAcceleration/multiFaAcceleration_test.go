@@ -29,10 +29,10 @@ var multiFaAccelerationTests = []struct {
 	Epsilon                    float64
 	AllowNegative              bool
 	ZeroDistanceWeightConstant float64
-	B1Out                      string
-	B3Out                      string
-	B1Expected                 string
-	B3Expected                 string
+	RawVelOut                      string
+	RawInitialOut                      string
+	RawVelExpected                 string
+	RawInitialExpected                 string
 }{
 	{"testdata/test.fa",
 		"chr1",
@@ -116,8 +116,8 @@ func TestMultiFaAcceleration(t *testing.T) {
 			Epsilon:                    v.Epsilon,
 			AllowNegative:              v.AllowNegative,
 			ZeroDistanceWeightConstant: v.ZeroDistanceWeightConstant,
-			RawVelOut:                  v.B1Out,
-			RawInitialOut:              v.B3Out,
+			RawVelOut:                  v.RawVelOut,
+			RawInitialOut:              v.RawInitialOut,
 		}
 		multiFaAcceleration(s)
 		if !fileio.AreEqual(v.VelOut, v.VelExpected) {
@@ -138,19 +138,19 @@ func TestMultiFaAcceleration(t *testing.T) {
 			err = os.Remove(v.InitialVelOut)
 			exception.PanicOnErr(err)
 		}
-		if v.B1Out != "" {
-			if !fileio.AreEqual(v.B1Out, v.B1Expected) {
+		if v.RawVelOut != "" {
+			if !fileio.AreEqual(v.RawVelOut, v.RawVelExpected) {
 				t.Errorf("Error in multiFaAcceleration, B1Out did not match expected.")
 			} else {
-				err = os.Remove(v.B1Out)
+				err = os.Remove(v.RawVelOut)
 				exception.PanicOnErr(err)
 			}
 		}
-		if v.B3Out != "" {
-			if !fileio.AreEqual(v.B3Out, v.B3Expected) {
+		if v.RawInitialOut != "" {
+			if !fileio.AreEqual(v.RawInitialOut, v.RawInitialExpected) {
 				t.Errorf("Error in multiFaAcceleration, B3Out did not match expected.")
 			} else {
-				err = os.Remove(v.B3Out)
+				err = os.Remove(v.RawInitialOut)
 				exception.PanicOnErr(err)
 			}
 		}
