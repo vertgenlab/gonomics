@@ -14,14 +14,14 @@ var affineAlignTests = []struct {
 	aln    string
 }{
 	{"ACGT", "ACGT", "ACGT\nACGT\n"},
-	{"ACGT", "CGT", "ACGT\n-CGT\n"}, //TODO: uncomment all tests after debugging
+	{"ACGT", "CGT", "ACGT\n-CGT\n"},
 	{"ACGT", "ACG", "ACGT\nACG-\n"},
-	{"CGT", "ACGT", "-CGT\nACGT\n"}, //TODO: error seems to be fixed?
+	{"CGT", "ACGT", "-CGT\nACGT\n"},
 	{"ACG", "ACGT", "ACG-\nACGT\n"},
-	{"AGT", "ACGT", "A-GT\nACGT\n"}, //TODO: error seems to be fixed?
+	{"AGT", "ACGT", "A-GT\nACGT\n"},
 	{"ACT", "ACGT", "AC-T\nACGT\n"},
-	{"CGCGCGCGCG", "CGCGCGTTTTCGCG", "CGCGCG----CGCG\nCGCGCGTTTTCGCG\n"}, //TODO: error seems to be fixed?
-	{"CGCGCGCGCG", "CGAAAACGCGTTTTCGCG", "CG----CGCG----CGCG\nCGAAAACGCGTTTTCGCG\n"}, //TODO: error seems to be fixed?
+	{"CGCGCGCGCG", "CGCGCGTTTTCGCG", "CGCGCG----CGCG\nCGCGCGTTTTCGCG\n"},
+	{"CGCGCGCGCG", "CGAAAACGCGTTTTCGCG", "CG----CGCG----CGCG\nCGAAAACGCGTTTTCGCG\n"},
 }
 
 var affineAlignChunkTests = []struct {
@@ -46,7 +46,7 @@ func TestAffineGap(t *testing.T) {
 	for _, test := range affineAlignTests {
 		basesOne := dna.StringToBases(test.seqOne)
 		basesTwo := dna.StringToBases(test.seqTwo)
-		_, cigar := AffineGap(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		_, cigar := AffineGap_highMem(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
 			t.Errorf("The affine gap alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
@@ -54,26 +54,29 @@ func TestAffineGap(t *testing.T) {
 	}
 }
 
-//this part is for testing affineGap_lowMem.go work in progress
 func TestAffineGap_lowMem(t *testing.T) {
 	for _, test := range affineAlignTests {
 		basesOne := dna.StringToBases(test.seqOne)
 		basesTwo := dna.StringToBases(test.seqTwo)
-		score_highest_highMem, route_highMem := AffineGap(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
-		score_highest_lowMem, _, _, _, _ := AffineGap_step1(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
-		route_lowMem := AffineGap_step234_testing(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
-		fmt.Printf("score_highest_highMem, route_highMem: %d, %v\n", score_highest_highMem, route_highMem)
-		fmt.Printf("score_highest_lowMem, route_lowMem: %d, %v\n", score_highest_lowMem, route_lowMem)
+		score_highest_highMem, route_highMem := AffineGap_highMem(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		score_highest_lowMem, route_lowMem := AffineGap(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		score_highest_lowMem_customizeCheckersize, route_lowMem_customizeCheckersize := AffineGap_customizeCheckersize(basesOne, basesTwo, DefaultScoreMatrix, -400, -30, 3, 3)
 		if score_highest_lowMem != score_highest_highMem {
-			t.Errorf("score_highest_lowMem, score_highest_highMem: %d, %d\n", score_highest_lowMem, score_highest_highMem)
+			t.Errorf("score_highest_lowMem gave %d, but expected it to be the same as score_highest_highMem which gave %d\n", score_highest_lowMem, score_highest_highMem)
+		}
+		if score_highest_lowMem_customizeCheckersize != score_highest_highMem {
+			t.Errorf("score_highest_lowMem_customizeCheckersize gave %d, but expected it to be the same as score_highest_highMem which gave %d\n", score_highest_lowMem_customizeCheckersize, score_highest_highMem)
 		}
 		for i := range route_lowMem {
 			if route_lowMem[i] != route_highMem[i] {
-				t.Errorf("route_lowMem, route_highMem: %v, %v\n", route_lowMem, route_highMem)
+				t.Errorf("route_lowMem gave %v, but expected it to be the same as route_highMem which gave %v\n", route_lowMem, route_highMem)
 			}
 		}
-		//score_highest_constGap, route_constGap := ConstGap_customizeCheckersize(basesOne, basesTwo, DefaultScoreMatrix, -430, 3, 3)
-		//fmt.Printf("score_highest_constGap, route_constGap: %d, %v\n", score_highest_constGap, route_constGap)
+		for i := range route_lowMem_customizeCheckersize {
+			if route_lowMem_customizeCheckersize[i] != route_highMem[i] {
+				t.Errorf("route_lowMem_customizeCheckersize gave %v, but expected it to be the same as route_highMem which gave %v\n", route_lowMem_customizeCheckersize, route_highMem)
+			}
+		}
 	}
 }
 
