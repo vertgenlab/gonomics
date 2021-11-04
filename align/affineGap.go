@@ -36,7 +36,7 @@ func initAffineScoring(firstSeqLen int, secondSeqLen int, checkersize_i int, che
 
 //"Step 0"
 //make data structures for tracing
-func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) ([][][]ColType) {
+func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) [][][]ColType {
 	trace_size_i := numbers.Min(firstSeqLen, checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(secondSeqLen, checkersize_j)
 	trace := make([][][]ColType, 3)
@@ -50,7 +50,7 @@ func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, check
 }
 
 //This version of AffineGap has a fixed checkersize of 10000*10000
-func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64)(int64, []Cigar) {
+func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	var checkersize_i, checkersize_j int
 	checkersize_i = 10000
 	checkersize_j = 10000
@@ -69,10 +69,10 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 	//k_inChecker_min: the k-index (out of 0,1,2) of the min i and j in the current checkerboard during Step 3 (writeCigar)
 	//note that k1 amd k2 (coordinates for checkerboads) are not related to k_inChecker_max and k_inChecker_min (out of 0,1,2). Also note that k_inCkecer_max and k_inChecker_min do not determine traceback path (e.g. determine the next k1 and k2 to go to), but influence cigar route
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2 //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2 //ditto for j
+	i_inChecker_min = -2                                                          //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                                          //ditto for j
 	trace := initAffineTrace(len(alpha), len(beta), checkersize_i, checkersize_j) //for affineGap, use initAffineTrace function to initialize trace
-	route := make([]Cigar, 1) //initialie cigar route and routeIdx
+	route := make([]Cigar, 1)                                                     //initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 	var k_inChecker_max, k_inChecker_min ColType //for affineGap, make a variable to hold k_inChecker_max, outside of for loop
 
@@ -111,7 +111,7 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 }
 
 //This version of AffineGap needs additional inputs and allows customization of checkersize_i and checkersize_j
-func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int)(int64, []Cigar) { //input=same as AffineGap_step1 for now, output=route
+func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int) (int64, []Cigar) { //input=same as AffineGap_step1 for now, output=route
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
 	score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j := highestScore_affineGap(alpha, beta, scores, gapOpen, gapExtend, checkersize_i, checkersize_j)
 
@@ -126,10 +126,10 @@ func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores []
 	//k_inChecker_min: the k-index (out of 0,1,2) of the min i and j in the current checkerboard during Step 3 (writeCigar)
 	//note that k1 amd k2 (coordinates for checkerboads) are not related to k_inChecker_max and k_inChecker_min (out of 0,1,2). Also note that k_inCkecer_max and k_inChecker_min do not determine traceback path (e.g. determine the next k1 and k2 to go to), but influence cigar route
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2 //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2 //ditto for j
+	i_inChecker_min = -2                                                          //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                                          //ditto for j
 	trace := initAffineTrace(len(alpha), len(beta), checkersize_i, checkersize_j) //for affineGap, use initAffineTrace function to initialize trace
-	route := make([]Cigar, 1) //initialie cigar route and routeIdx
+	route := make([]Cigar, 1)                                                     //initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 	var k_inChecker_max, k_inChecker_min ColType //for affineGap, make a variable to hold k_inChecker_max, outside of for loop
 
@@ -224,7 +224,7 @@ func highestScore_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64,
 		}
 	}
 	score_highest_i := mColumn - 1
-	score_highest_j := len(mRowCurrent[0]) - 1 //score_highest_j was denoted with "last J" in affineGap_highMem.go
+	score_highest_j := len(mRowCurrent[0]) - 1                                                                                            //score_highest_j was denoted with "last J" in affineGap_highMem.go
 	score_highest, _ := tripleMaxTrace(mRowCurrent[0][score_highest_j], mRowCurrent[1][score_highest_j], mRowCurrent[2][score_highest_j]) //denoted by "maxScore" in affineGap_highMem.go. The 2nd output variable is its direction (0,1,2)
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
