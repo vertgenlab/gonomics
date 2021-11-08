@@ -22,9 +22,9 @@ const (
 
 func bedMath(s Settings) {
 	var err error
-	var done = false
+	var done bool = false
 	var currA, currB bed.Bed
-	var Op = parseOp(s.Op)
+	var Op Operation = parseOp(s.Op)
 	aReader := fileio.EasyOpen(s.Afile)
 	bReader := fileio.EasyOpen(s.Bfile)
 	out := fileio.EasyCreate(s.OutFile)
@@ -56,13 +56,13 @@ func doBedMath(a bed.Bed, b bed.Bed, Op Operation) bed.Bed {
 	var aFloat = common.StringToFloat64(a.Name)
 	var bFloat = common.StringToFloat64(b.Name)
 	if Op == Add {
-		a.Name = fmt.Sprintf("%e", aFloat+bFloat)
+		a.Name = fmt.Sprintf("%.8g", aFloat+bFloat)
 	} else if Op == Subtract {
-		a.Name = fmt.Sprintf("%e", aFloat-bFloat)
+		a.Name = fmt.Sprintf("%.8g", aFloat-bFloat)
 	} else if Op == Multiply {
-		a.Name = fmt.Sprintf("%e", aFloat*bFloat)
+		a.Name = fmt.Sprintf("%.8g", aFloat*bFloat)
 	} else if Op == Divide {
-		a.Name = fmt.Sprintf("%e", aFloat/bFloat)
+		a.Name = fmt.Sprintf("%.8g", aFloat/bFloat)
 	}
 	return a
 }
