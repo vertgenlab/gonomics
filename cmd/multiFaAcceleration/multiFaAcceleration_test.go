@@ -145,7 +145,7 @@ func TestMultiFaAcceleration(t *testing.T) {
 		}
 		if v.RawVelOut != "" {
 			if !fileio.AreEqual(v.RawVelOut, v.RawVelExpected) {
-				t.Errorf("Error in multiFaAcceleration, B1Out did not match expected.")
+				t.Errorf("Error in multiFaAcceleration, RawVel did not match expected.")
 			} else {
 				err = os.Remove(v.RawVelOut)
 				exception.PanicOnErr(err)
@@ -153,7 +153,7 @@ func TestMultiFaAcceleration(t *testing.T) {
 		}
 		if v.RawInitialOut != "" {
 			if !fileio.AreEqual(v.RawInitialOut, v.RawInitialExpected) {
-				t.Errorf("Error in multiFaAcceleration, B3Out did not match expected.")
+				t.Errorf("Error in multiFaAcceleration, RawInitial did not match expected.")
 			} else {
 				err = os.Remove(v.RawInitialOut)
 				exception.PanicOnErr(err)

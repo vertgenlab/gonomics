@@ -127,14 +127,14 @@ func multiFaAcceleration(s Settings) {
 	for i = range branchCacheSlice {
 		b1Normal = branchCacheSlice[i].BhumHca / averageVel
 		b3Normal = branchCacheSlice[i].BhcaHga / averageInitialVel
-		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal), FieldsInitialized: 4})
-		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b3Normal), FieldsInitialized: 4})
-		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", b1Normal-b3Normal), FieldsInitialized: 4})
+		bed.WriteBed(velBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%g", b1Normal), FieldsInitialized: 4})
+		bed.WriteBed(initialVelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%g", b3Normal), FieldsInitialized: 4})
+		bed.WriteBed(accelBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%g", b1Normal-b3Normal), FieldsInitialized: 4})
 		if s.RawVelOut != "" {
-			bed.WriteBed(RawVelOutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].BhumHca), FieldsInitialized: 4})
+			bed.WriteBed(RawVelOutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%g", branchCacheSlice[i].BhumHca), FieldsInitialized: 4})
 		}
 		if s.RawInitialOut != "" {
-			bed.WriteBed(RawInitialOutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%e", branchCacheSlice[i].BhcaHga), FieldsInitialized: 4})
+			bed.WriteBed(RawInitialOutBed, bed.Bed{Chrom: s.ChromName, ChromStart: branchCacheSlice[i].ChromStart, ChromEnd: branchCacheSlice[i].ChromEnd, Name: fmt.Sprintf("%g", branchCacheSlice[i].BhcaHga), FieldsInitialized: 4})
 		}
 	}
 

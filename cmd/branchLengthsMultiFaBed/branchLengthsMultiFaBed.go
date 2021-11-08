@@ -80,11 +80,11 @@ func branchLengthsMultiFaBed(s Settings) {
 			currUngappedCount = numUngappedInBedRange(records, currAln, currSize)
 			if s.QOutFile != "" {
 				currQ = phylo.CalculateQ(currDistance, currLengths)
-				bed.WriteBed(qOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%e", currQ), FieldsInitialized: 4})
+				bed.WriteBed(qOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%g", currQ), FieldsInitialized: 4})
 			}
 
-			bed.WriteBed(VelOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.BhumHca), FieldsInitialized: 4})
-			bed.WriteBed(InitialOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currLengths.BhcaHga), FieldsInitialized: 4})
+			bed.WriteBed(VelOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%g", currLengths.BhumHca), FieldsInitialized: 4})
+			bed.WriteBed(InitialOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%g", currLengths.BhcaHga), FieldsInitialized: 4})
 			bed.WriteBed(UngappedBasesOut, bed.Bed{Chrom: s.Chrom, ChromStart: regions[i].ChromStart, ChromEnd: regions[i].ChromEnd, Name: fmt.Sprintf("%v", currUngappedCount), FieldsInitialized: 4})
 		}
 	}
