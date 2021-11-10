@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
+	"math/rand"
 	"strings"
 )
 
@@ -114,6 +115,7 @@ type criteria struct {
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
+	subSet	float64
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -252,6 +254,16 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 				return true
 			})
 	}
+	if c.subSet < 1 {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				r := rand.Float64()
+				if r > c.subSet {
+					return false
+				}
+				return true
+			})
+	}
 	return answer
 }
 
@@ -282,6 +294,7 @@ func main() {
 	var infoExp *string = flag.String("info", "", "Identical to the 'format' tag, but tests the info field. The values of type 'Flag' in the info field"+
 		"can be tested by including just the flag ID in the expression. E.g. To select all records with the flag 'GG' you would use the expression \"GG\".")
 	var includeMissingInfo *bool = flag.Bool("includeMissingInfo", false, "When querying the records using the \"-info\" tag, include records where the queried tags are not present.")
+	var subSet *float64 = flag.Float64("subSet", 1, "Proportion of variants to retain in output. Value must be between 0 and 1.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -314,6 +327,7 @@ func main() {
 		formatExp:                      *formatExp,
 		infoExp:                        *infoExp,
 		includeMissingInfo:             *includeMissingInfo,
+		subSet: *subSet,
 	}
 
 	var parseFormat, parseInfo bool
