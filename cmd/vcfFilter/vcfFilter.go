@@ -115,7 +115,7 @@ type criteria struct {
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
-	subSet	float64
+	subSet                         float64
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -327,7 +327,7 @@ func main() {
 		formatExp:                      *formatExp,
 		infoExp:                        *infoExp,
 		includeMissingInfo:             *includeMissingInfo,
-		subSet: *subSet,
+		subSet:                         *subSet,
 	}
 
 	var parseFormat, parseInfo bool

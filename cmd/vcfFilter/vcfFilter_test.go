@@ -31,7 +31,7 @@ var VcfFilterTests = []struct {
 	notRefStrongAltWeak            bool
 	notRefWeakAltStrong            bool
 	id                             string
-	subSet float64
+	subSet                         float64
 }{
 	{"testdata/test.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, "", 1},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false, false, false, false, false, "", 1},
@@ -70,7 +70,7 @@ func TestVcfFilter(t *testing.T) {
 			notRefStrongAltWeak:            v.notRefStrongAltWeak,
 			notRefWeakAltStrong:            v.notRefWeakAltStrong,
 			id:                             v.id,
-			subSet: v.subSet,
+			subSet:                         v.subSet,
 		}
 
 		vcfFilter(v.inputFile, "tmp.vcf", c, v.groupFile, false, false)
