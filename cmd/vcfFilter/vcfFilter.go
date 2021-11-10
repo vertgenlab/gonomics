@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -14,7 +15,8 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) (total, removed int) {
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, randSeed bool, setSeed int64) (total, removed int) {
+	common.RngSeed(randSeed, setSeed)
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
@@ -111,7 +113,7 @@ type criteria struct {
 	refStrongAltWeakOnly           bool
 	notRefWeakAltStrong            bool
 	notRefStrongAltWeak            bool
-	id                             string //raven's note: added id (rsID), can upgrade to []string in the future
+	id                             string
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
@@ -245,7 +247,7 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.notRefStrongAltWeak {
 		answer = append(answer, vcf.IsNotRefStrongAltWeak)
 	}
-	if c.id != "" { //raven's note: not sure what getTests is for and if c.id (modeled after c.chrom) is right
+	if c.id != "" {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
 				if v.Id != c.id {
@@ -269,6 +271,8 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 
 func main() {
 	var expectedNumArgs int = 2
+	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
+	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var groupFile *string = flag.String("groupFile", "", "Retains alleles from individuals in the input group file.")
 	var minPos *int = flag.Int("minPos", 0, "Specifies the minimum position of the variant.")
@@ -323,7 +327,7 @@ func main() {
 		refStrongAltWeakOnly:           *refStrongAltWeakOnly,
 		notRefStrongAltWeak:            *NotRefStrongAltWeak,
 		notRefWeakAltStrong:            *NotRefWeakAltStrong,
-		id:                             *id, //raven's note: added id
+		id:                             *id,
 		formatExp:                      *formatExp,
 		infoExp:                        *infoExp,
 		includeMissingInfo:             *includeMissingInfo,
@@ -347,7 +351,7 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo)
+	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo, *randSeed, *setSeed)
 	log.Printf("Processed  %d variants\n", total)
 	log.Printf("Removed    %d variants\n", removed)
 }
