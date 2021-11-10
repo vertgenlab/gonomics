@@ -11,7 +11,7 @@ import (
 
 var VcfFilterTests = []struct {
 	inputFile                      string
-	tmpOutFile string
+	tmpOutFile                     string
 	expectedOutputFile             string
 	groupFile                      string
 	chrom                          string
@@ -33,14 +33,14 @@ var VcfFilterTests = []struct {
 	notRefWeakAltStrong            bool
 	id                             string
 	subSet                         float64
-	randSeed	bool
-	setSeed int64
+	randSeed                       bool
+	setSeed                        int64
 }{
 	{"testdata/test.vcf", "testdata/tmp.Out.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, "", 1, false, 10},
 	{"testdata/test_removeNoAncestor.vcf", "testdata/tmp.removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false, false, false, false, false, "", 1, false, 10},
 	{"testdata/test_onlyPolarizable.vcf", "testdata/tmp.OnlyPolarizable.vcf", "testdata/expected_onlyPolarizable.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, true, false, false, false, false, false, false, "", 1, false, 10},
 	{"testdata/test_weakToStrong.vcf", "testdata/tmp.weakToStrong.vcf", "testdata/expected_noWeakToStrongOrStrongToWeak.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, true, false, false, false, false, "", 1, false, 10},
-	{"testdata/test_weakToStrong.vcf", "tmp.refWeakAltStrong.vcf", "testdata/expected_refWeakAltStrongOnly.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, false, true, false, false, false, "", 1, false ,10},
+	{"testdata/test_weakToStrong.vcf", "tmp.refWeakAltStrong.vcf", "testdata/expected_refWeakAltStrongOnly.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, false, true, false, false, false, "", 1, false, 10},
 	{"testdata/test_id.vcf", "testdata/tmp.id.vcf", "testdata/expected_id.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, "TestingId", 1, false, 10},
 	{"testdata/test.vcf", "testdata/tmp.subset.vcf", "testdata/expectedSubSet.vcf", "", "chr3", 0, numbers.MaxInt, 0, "", "", false, false, false, false, false, false, false, false, false, false, false, "", 0.5, false, 20},
 }
