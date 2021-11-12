@@ -3,12 +3,24 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"net/http"
 	"strings"
 )
+
+func usage() {
+	fmt.Print(
+		"vcfWebAnnotate - Annotate a vcf file by querying various databases via CellBase.\n\n" +
+			"Usage:\n" +
+			"  vcfWebAnnotate [options] in.vcf\n\n" +
+			"Options:\n\n")
+	flag.PrintDefaults()
+}
 
 // Example of JSON layout can be found in the link below
 // http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/chr1%3A878884%3AC%3AT,chr1%3A878917%3AT%3AA,chr1%3A878920%3AT%3AA,chr1%3A878991%3AGTGTT%3AG,chr1%3A879229%3AA%3AT,chr1%3A879231%3AA%3AC,chr1%3A879897%3AT%3AC,chr1%3A879957%3AG%3AT/annotation?assembly=grch38
@@ -99,23 +111,19 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf) 
 	close(emptyBufChan)
 }
 
-func main() {
-	var bufferSize int = 200
-	var numBuffers int = 2
-	data, _ := vcf.GoReadToChan("short.vcf")
-
+func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, batchSize int, numBuffers int) {
 	filledBufChan := make(chan []vcf.Vcf, numBuffers)
 	emptyBufChan := make(chan []vcf.Vcf, numBuffers)
 
 	for i := 0; i < numBuffers-1; i++ {
-		emptyBufChan <- make([]vcf.Vcf, 0, bufferSize) // send all but 1 buffer to empty
+		emptyBufChan <- make([]vcf.Vcf, 0, batchSize) // send all but 1 buffer to empty
 	}
-	buf := make([]vcf.Vcf, 0, bufferSize)
+	buf := make([]vcf.Vcf, 0, batchSize)
 
 	go queryWorker(filledBufChan, emptyBufChan)
 
 	for v := range data {
-		if len(buf) == bufferSize {
+		if len(buf) == batchSize {
 			filledBufChan <- buf
 			buf = <-emptyBufChan
 			buf = buf[:0]
@@ -130,4 +138,22 @@ func main() {
 
 	for _ = range emptyBufChan { // stall until queryWorker is finished
 	}
+}
+
+func main() {
+	var outfile *string = flag.String("o", "stdout", "output to vcf file")
+	var batchSize *int= flag.Int("batchSize", 200, "number of variants to pool before querying web")
+	var numBuffer *int= flag.Int("bufferSize", 2, "number of batchSize buffers to keep in memory")
+	flag.Parse()
+	flag.Usage = usage
+
+	var infile string = flag.Arg(0)
+	if infile == "" {
+		usage()
+		return
+	}
+
+	vcfs, header := vcf.GoReadToChan(infile)
+	out := fileio.EasyCreate(*outfile)
+	vcfWebAnnotate(vcfs, header, out, *batchSize, *numBuffer)
 }
