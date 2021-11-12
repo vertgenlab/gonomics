@@ -1,3 +1,5 @@
+// Command Group: "Variant Calling & Annotation"
+
 package main
 
 import (
@@ -25,15 +27,15 @@ func usage() {
 // Example of JSON layout can be found in the link below
 // http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/chr1%3A878884%3AC%3AT,chr1%3A878917%3AT%3AA,chr1%3A878920%3AT%3AA,chr1%3A878991%3AGTGTT%3AG,chr1%3A879229%3AA%3AT,chr1%3A879231%3AA%3AC,chr1%3A879897%3AT%3AC,chr1%3A879957%3AG%3AT/annotation?assembly=grch38
 
-type Responses struct {
+type Responses struct { // the response for each variant queried
 	Responses []Response `json:"response"`
 }
 
-type Response struct {
+type Response struct { // all the results for a single variant (e.g. multiple transcripts)
 	Results []Result `json:"result"`
 }
 
-type Result struct {
+type Result struct { // data on a particular variant on a particular transcript
 	Chr             string          `json:"chromosome"`
 	Start           int             `json:"start"`
 	Ref             string          `json:"reference"`
@@ -51,14 +53,14 @@ type Result struct {
 	// repeat
 }
 
-type PopAlleleFreq struct {
+type PopAlleleFreq struct { // pop allele frequency from gnomAD and 1kgp
 	Study      string  `json:"study"`
 	Population string  `json:"population"`
 	RefAf      float64 `json:"refAlleleFreq"`
 	AltAf      float64 `json:"altAlleleFreq"`
 }
 
-type Consequence struct {
+type Consequence struct { // information about variant effect
 	GeneName           string            `json:"geneName"`
 	GeneId             string            `json:"ensemblGeneId"`
 	TranscriptId       string            `json:"ensemblTranscriptId"`
@@ -67,20 +69,20 @@ type Consequence struct {
 	ProteinAnnotations ProteinAnnotation `json:"proteinVariantAnnotation"`
 }
 
-type ProteinAnnotation struct {
+type ProteinAnnotation struct { // variants effect on protein
 	Pos                int                  `json:"position"`
 	Ref                string               `json:"reference"`
 	Alt                string               `json:"alternate"`
 	SubstitutionScores []SubstitutionScores `json:"substitutionScores"`
 }
 
-type SubstitutionScores struct {
+type SubstitutionScores struct { // sift & polyphen scores
 	Source      string  `json:"source"`
 	Score       float64 `json:"score"`
 	Description string  `json:"description"`
 }
 
-func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf) {
+func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf, outfile io.Writer) {
 	baseUrl := "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/"
 	queryUrl := new(strings.Builder)
 	var responses Responses
@@ -89,7 +91,7 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf) 
 	for buf := range filledBufChan { // get a slice of vcfs to query
 		queryUrl.Reset()
 		queryUrl.WriteString(baseUrl) // start building query url
-		for i := range buf {          // generates a comma seperated list of variants in the url
+		for i := range buf {          // generates a comma separated list of variants in the url
 			if i > 0 {
 				queryUrl.WriteByte(',')
 			}
@@ -98,7 +100,6 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf) 
 		queryUrl.WriteString("/annotation?assembly=grch38")
 		response, err := http.Get(queryUrl.String()) // query
 		exception.PanicOnErr(err)
-		emptyBufChan <- buf // return buffer for reuse
 
 		data.Reset()
 		_, err = data.ReadFrom(response.Body)
@@ -106,12 +107,19 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf) 
 		err = json.Unmarshal(data.Bytes(), &responses)
 		exception.PanicOnErr(err)
 
-		fmt.Println(responses)
+		annotateVcfs(buf, responses)
+		vcf.WriteVcfToFileHandle(outfile, buf)
+		emptyBufChan <- buf // return buffer for reuse
 	}
 	close(emptyBufChan)
 }
 
+func annotateVcfs(vcfs []vcf.Vcf, ann Responses) {
+
+}
+
 func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, batchSize int, numBuffers int) {
+	vcf.NewWriteHeader(outfile, header)
 	filledBufChan := make(chan []vcf.Vcf, numBuffers)
 	emptyBufChan := make(chan []vcf.Vcf, numBuffers)
 
@@ -120,9 +128,9 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 	}
 	buf := make([]vcf.Vcf, 0, batchSize)
 
-	go queryWorker(filledBufChan, emptyBufChan)
+	go queryWorker(filledBufChan, emptyBufChan, outfile)
 
-	for v := range data {
+	for v := range data { // read vcfs until you have a full batch then send for annotation
 		if len(buf) == batchSize {
 			filledBufChan <- buf
 			buf = <-emptyBufChan
@@ -131,7 +139,7 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 		buf = append(buf, v)
 	}
 
-	if len(buf) > 0 {
+	if len(buf) > 0 { // send any variants remaining in the buffer
 		filledBufChan <- buf
 	}
 	close(filledBufChan)
@@ -156,4 +164,6 @@ func main() {
 	vcfs, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(*outfile)
 	vcfWebAnnotate(vcfs, header, out, *batchSize, *numBuffer)
+	err := out.Close()
+	exception.PanicOnErr(err)
 }
