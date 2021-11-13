@@ -61,11 +61,11 @@ type PopAlleleFreq struct { // pop allele frequency from gnomAD and 1kgp
 }
 
 type Consequence struct { // information about variant effect
-	GeneName           string            `json:"geneName"`
-	GeneId             string            `json:"ensemblGeneId"`
-	TranscriptId       string            `json:"ensemblTranscriptId"`
-	Strand             string            `json:"strand"`
-	Biotype            string            `json:"biotype"`
+	GeneName          string            `json:"geneName"`
+	GeneId            string            `json:"ensemblGeneId"`
+	TranscriptId      string            `json:"ensemblTranscriptId"`
+	Strand            string            `json:"strand"`
+	Biotype           string            `json:"biotype"`
 	ProteinAnnotation ProteinAnnotation `json:"proteinVariantAnnotation"`
 }
 
@@ -176,10 +176,6 @@ func addAnnotationHeader(header vcf.Header) vcf.Header {
 	savedHeader := make([]string, len(header.Text[insertLocation:]))
 	copy(savedHeader, header.Text[insertLocation:])
 	header.Text = header.Text[:insertLocation]
-	fmt.Println(header.Text)
-	fmt.Println()
-	fmt.Println(savedHeader)
-	fmt.Println()
 
 	// MaxPopAF
 	header.Text = append(header.Text,
@@ -234,8 +230,8 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 
 func main() {
 	var outfile *string = flag.String("o", "stdout", "output to vcf file")
-	var batchSize *int= flag.Int("batchSize", 200, "number of variants to pool before querying web")
-	var numBuffer *int= flag.Int("bufferSize", 2, "number of batchSize buffers to keep in memory")
+	var batchSize *int = flag.Int("batchSize", 200, "number of variants to pool before querying web")
+	var numBuffer *int = flag.Int("bufferSize", 2, "number of batchSize buffers to keep in memory")
 	//TODO species
 	//TODO assembly
 	//TODO desired annotation fields
