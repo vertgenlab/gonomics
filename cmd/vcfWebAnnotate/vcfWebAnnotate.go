@@ -66,7 +66,7 @@ type Consequence struct { // information about variant effect
 	TranscriptId       string            `json:"ensemblTranscriptId"`
 	Strand             string            `json:"strand"`
 	Biotype            string            `json:"biotype"`
-	ProteinAnnotations ProteinAnnotation `json:"proteinVariantAnnotation"`
+	ProteinAnnotation ProteinAnnotation `json:"proteinVariantAnnotation"`
 }
 
 type ProteinAnnotation struct { // variants effect on protein
@@ -114,11 +114,95 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf, 
 	close(emptyBufChan)
 }
 
-func annotateVcfs(vcfs []vcf.Vcf, ann Responses) {
+func annotateVcfs(vcfs []vcf.Vcf, res Responses) {
+	var ann []string
+	var consequence Consequence
+	var proteinAnn ProteinAnnotation
+	var maxAf float64
+	for i := range vcfs {
+		ann = ann[:0] // reset
 
+		consequence = res.Responses[i].Results[0].Consequences[0]
+
+		maxAf = getMaxPopAf(res.Responses[i])
+		if maxAf != -1 {
+			ann = append(ann, fmt.Sprintf("MaxPopAF=%.2g", maxAf))
+		}
+
+		if res.Responses[i].Results[0].ConsequenceType != "" {
+			ann = append(ann, fmt.Sprintf("Consequence=%s", res.Responses[i].Results[0].ConsequenceType))
+		}
+
+		if consequence.GeneName != "" {
+			ann = append(ann, fmt.Sprintf("Gene=%s", consequence.GeneName))
+		}
+
+		if consequence.TranscriptId != "" {
+			ann = append(ann, fmt.Sprintf("Transcript=%s", consequence.TranscriptId))
+		}
+
+		if consequence.ProteinAnnotation.Ref != "" {
+			proteinAnn = consequence.ProteinAnnotation
+			ann = append(ann, fmt.Sprintf("ProteinEffect=%s",
+				fmt.Sprintf("%s%d%s", strings.ToLower(proteinAnn.Ref[1:]), proteinAnn.Pos, strings.ToLower(proteinAnn.Alt[1:]))))
+		}
+
+		if vcfs[i].Info == "." {
+			vcfs[i].Info = strings.Join(ann, ";")
+		} else {
+			vcfs[i].Info += ";" + strings.Join(ann, ";")
+		}
+	}
+}
+
+func getMaxPopAf(r Response) float64 {
+	var maxAf float64 = -1
+	for _, p := range r.Results[0].PopAlleleFreqs {
+		if p.Study != "" && p.AltAf > maxAf {
+			maxAf = p.AltAf
+		}
+	}
+	return maxAf
+}
+
+func addAnnotationHeader(header vcf.Header) vcf.Header {
+	var insertLocation int
+	for insertLocation = range header.Text {
+		if strings.HasPrefix(header.Text[insertLocation], "##contig") {
+			break
+		}
+	}
+
+	savedHeader := make([]string, len(header.Text[insertLocation:]))
+	copy(savedHeader, header.Text[insertLocation:])
+	header.Text = header.Text[:insertLocation]
+	fmt.Println(header.Text)
+	fmt.Println()
+	fmt.Println(savedHeader)
+	fmt.Println()
+
+	// MaxPopAF
+	header.Text = append(header.Text,
+		"##INFO=<ID=MaxPopAf,Number=1,Type=Float,Description=\"Maximum allele frequency of any population in CellBase\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
+	// Consequence
+	header.Text = append(header.Text,
+		"##INFO=<ID=Consequence,Number=1,Type=String,Description=\"Variant consequence\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
+	// Gene
+	header.Text = append(header.Text,
+		"##INFO=<ID=Gene,Number=1,Type=String,Description=\"Nearest gene\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
+	// Transcript
+	header.Text = append(header.Text,
+		"##INFO=<ID=Transcript,Number=1,Type=String,Description=\"Ensembl transcript id\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
+	// ProteinEffect
+	header.Text = append(header.Text,
+		"##INFO=<ID=ProteinEffect,Number=1,Type=String,Description=\"Effect of variant on protein\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
+
+	header.Text = append(header.Text, savedHeader...)
+	return header
 }
 
 func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, batchSize int, numBuffers int) {
+	header = addAnnotationHeader(header)
 	vcf.NewWriteHeader(outfile, header)
 	filledBufChan := make(chan []vcf.Vcf, numBuffers)
 	emptyBufChan := make(chan []vcf.Vcf, numBuffers)
