@@ -231,7 +231,7 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 
 func main() {
 	var outfile *string = flag.String("o", "stdout", "output to vcf file")
-	var batchSize *int = flag.Int("batchSize", 200, "number of variants to pool before querying web")
+	var batchSize *int = flag.Int("batchSize", 1000, "number of variants to pool before querying web")
 	var numBuffer *int = flag.Int("bufferSize", 2, "number of batchSize buffers to keep in memory")
 	//TODO species
 	//TODO assembly
