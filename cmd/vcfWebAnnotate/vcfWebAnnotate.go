@@ -83,22 +83,20 @@ type SubstitutionScores struct { // sift & polyphen scores
 }
 
 func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf, outfile io.Writer) {
-	baseUrl := "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/"
-	queryUrl := new(strings.Builder)
+	baseUrl := "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/annotation?assembly=grch38"
+	query := new(bytes.Buffer)
 	var responses Responses
 	data := new(bytes.Buffer)
 
 	for buf := range filledBufChan { // get a slice of vcfs to query
-		queryUrl.Reset()
-		queryUrl.WriteString(baseUrl) // start building query url
-		for i := range buf {          // generates a comma separated list of variants in the url
+		query.Reset()
+		for i := range buf { // generates a comma separated list of variants in the url
 			if i > 0 {
-				queryUrl.WriteByte(',')
+				query.WriteByte(',')
 			}
-			queryUrl.WriteString(fmt.Sprintf("%s%%3A%d%%3A%s%%3A%s", buf[i].Chr, buf[i].Pos, buf[i].Ref, buf[i].Alt[0]))
+			query.WriteString(fmt.Sprintf("%s:%d:%s:%s", buf[i].Chr, buf[i].Pos, buf[i].Ref, buf[i].Alt[0]))
 		}
-		queryUrl.WriteString("/annotation?assembly=grch38")
-		response, err := http.Get(queryUrl.String()) // query
+		response, err := http.Post(baseUrl, "text/plain", query) // query
 		exception.PanicOnErr(err)
 
 		data.Reset()
@@ -122,12 +120,15 @@ func annotateVcfs(vcfs []vcf.Vcf, res Responses) {
 	for i := range vcfs {
 		ann = ann[:0] // reset
 
-		consequence = res.Responses[i].Results[0].Consequences[0]
-
 		maxAf = getMaxPopAf(res.Responses[i])
 		if maxAf != -1 {
 			ann = append(ann, fmt.Sprintf("MaxPopAF=%.2g", maxAf))
 		}
+
+		if len(res.Responses[i].Results[0].Consequences) == 0 {
+			continue
+		}
+		consequence = res.Responses[i].Results[0].Consequences[0]
 
 		if res.Responses[i].Results[0].ConsequenceType != "" {
 			ann = append(ann, fmt.Sprintf("Consequence=%s", res.Responses[i].Results[0].ConsequenceType))
@@ -144,7 +145,7 @@ func annotateVcfs(vcfs []vcf.Vcf, res Responses) {
 		if consequence.ProteinAnnotation.Ref != "" {
 			proteinAnn = consequence.ProteinAnnotation
 			ann = append(ann, fmt.Sprintf("ProteinEffect=%s",
-				fmt.Sprintf("%s%d%s", strings.ToLower(proteinAnn.Ref[1:]), proteinAnn.Pos, strings.ToLower(proteinAnn.Alt[1:]))))
+				fmt.Sprintf("%s%d%s", proteinAnn.Ref, proteinAnn.Pos, proteinAnn.Alt)))
 		}
 
 		if vcfs[i].Info == "." {
