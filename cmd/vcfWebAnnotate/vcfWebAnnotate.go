@@ -51,7 +51,7 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 	}
 	close(filledBufChan)
 
-	for _ = range emptyBufChan { // stall until queryWorker is finished
+	for range emptyBufChan { // stall until queryWorker is finished
 	}
 }
 
