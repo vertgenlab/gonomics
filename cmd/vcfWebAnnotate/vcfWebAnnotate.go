@@ -5,19 +5,24 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
 
+var errNoData error = errors.New("NA")
+
 func usage() {
 	fmt.Print(
-		"vcfWebAnnotate - Annotate a vcf file by querying various databases via CellBase.\n\n" +
+		"vcfWebAnnotate - Annotate a vcf file by querying various databases via CellBase.\n" +
+			"Note that this tool currently only works with VCFs for human hg38 (GRCh38).\n" +
 			"Usage:\n" +
 			"  vcfWebAnnotate [options] in.vcf\n\n" +
 			"Options:\n\n")
@@ -35,6 +40,9 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 	}
 	buf := make([]vcf.Vcf, 0, batchSize)
 
+	// queryWorker reads vcfs from filledBufChan and returns the slice to emptyBufChan
+	// to be reused. queryWorker also currently handles annotation and writing.
+	// TODO delegate annotation and writing to maximize query throughput
 	go queryWorker(filledBufChan, emptyBufChan, outfile)
 
 	for v := range data { // read vcfs until you have a full batch then send for annotation
@@ -74,6 +82,9 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf, 
 
 		data.Reset()
 		_, err = data.ReadFrom(response.Body)
+		if response.StatusCode != 200 { // code 200 is a successful request
+			log.Fatal(response.Status) // kill program and report failure code
+		}
 		exception.PanicOnErr(err)
 		err = json.Unmarshal(data.Bytes(), &responses)
 		exception.PanicOnErr(err)
@@ -90,11 +101,12 @@ func annotateVcfs(vcfs []vcf.Vcf, res Responses) {
 	var consequence Consequence
 	var proteinAnn ProteinAnnotation
 	var maxAf float64
+	var err error
 	for i := range vcfs {
 		ann = ann[:0] // reset
 
-		maxAf = getMaxPopAf(res.Responses[i])
-		if maxAf != -1 {
+		maxAf, err = getMaxPopAf(res.Responses[i])
+		if err != errNoData {
 			ann = append(ann, fmt.Sprintf("MaxPopAF=%.2g", maxAf))
 		}
 
@@ -129,14 +141,20 @@ func annotateVcfs(vcfs []vcf.Vcf, res Responses) {
 	}
 }
 
-func getMaxPopAf(r Response) float64 {
+func getMaxPopAf(r Response) (float64, error) {
 	var maxAf float64 = -1
 	for _, p := range r.Results[0].PopAlleleFreqs {
-		if p.Study != "" && p.AltAf > maxAf {
+		if p.Study == "" {
+			return -1, errNoData
+		}
+		if p.AltAf > maxAf {
 			maxAf = p.AltAf
 		}
 	}
-	return maxAf
+	if maxAf == -1 {
+		return -1, errNoData
+	}
+	return maxAf, nil
 }
 
 func addAnnotationHeader(header vcf.Header) vcf.Header {
