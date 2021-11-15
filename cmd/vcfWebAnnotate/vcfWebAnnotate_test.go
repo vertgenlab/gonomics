@@ -1,20 +1,35 @@
 package main
 
 import (
+	"bytes"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
 )
 
 func TestVcfWebAnnotate(t *testing.T) {
+	baseUrl := "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/annotation?assembly=grch38"
+	pingQuery := new(bytes.Buffer)
+	pingQuery.WriteString("19:45411941:T:C")
+	for i := 0; i < 200; i++ {
+		pingQuery.WriteString(",19:45411941:T:C")
+	}
+	response, err := http.Post(baseUrl, "text/plain", pingQuery)
+	if err != nil || response.StatusCode != 200 { // server not available, pass with warning
+		log.Println("Could not test vcfWebAnnotate as server unavailable")
+		return
+	}
+
 	testfile := "tmp_testfile.vcf"
 	vcfs, header := vcf.GoReadToChan("testdata/short.vcf")
 	testout := fileio.EasyCreate(testfile)
 	vcfWebAnnotate(vcfs, header, testout, 200, 2)
-	err := testout.Close()
+	err = testout.Close()
 	exception.PanicOnErr(err)
 
 	actualRecords, actualHeader := vcf.Read(testfile)

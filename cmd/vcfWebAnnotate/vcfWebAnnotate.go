@@ -23,6 +23,7 @@ func usage() {
 	fmt.Print(
 		"vcfWebAnnotate - Annotate a vcf file by querying various databases via CellBase.\n" +
 			"Note that this tool currently only works with VCFs for human hg38 (GRCh38).\n" +
+			"Currently only the annotation for the first overlapping transcript is reported\n\n" +
 			"Usage:\n" +
 			"  vcfWebAnnotate [options] in.vcf\n\n" +
 			"Options:\n\n")
@@ -79,12 +80,12 @@ func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf, 
 		}
 		response, err := http.Post(baseUrl, "text/plain", query) // query
 		exception.PanicOnErr(err)
-
-		data.Reset()
-		_, err = data.ReadFrom(response.Body)
 		if response.StatusCode != 200 { // code 200 is a successful request
 			log.Fatal(response.Status) // kill program and report failure code
 		}
+
+		data.Reset()
+		_, err = data.ReadFrom(response.Body)
 		exception.PanicOnErr(err)
 		err = json.Unmarshal(data.Bytes(), &responses)
 		exception.PanicOnErr(err)
@@ -196,6 +197,7 @@ func main() {
 	//TODO species
 	//TODO assembly
 	//TODO desired annotation fields
+	//TODO data for all transcripts
 	flag.Parse()
 	flag.Usage = usage
 
