@@ -67,10 +67,10 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 func queryWorker(filledBufChan <-chan []vcf.Vcf, emptyBufChan chan<- []vcf.Vcf, outfile io.Writer) {
 	baseUrl := "http://bioinfo.hpc.cam.ac.uk/cellbase/webservices/rest/v4/hsapiens/genomic/variant/annotation?assembly=grch38"
 	query := new(bytes.Buffer)
-	var responses Responses
 	data := new(bytes.Buffer)
 
 	for buf := range filledBufChan { // get a slice of vcfs to query
+		var responses Responses
 		query.Reset()
 		for i := range buf { // generates a comma separated list of variants in the url
 			if i > 0 {
