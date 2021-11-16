@@ -104,6 +104,11 @@ func ParseNotes(data string, format []string) []GenomeSample {
 	var n int64
 	var answer []GenomeSample = make([]GenomeSample, len(text))
 	for i := 0; i < len(text); i++ {
+		if text[i] == "." {
+			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: nil}
+			continue
+		}
+
 		fields = strings.Split(text[i], ":")
 
 		if strings.Contains(fields[0], "|") {

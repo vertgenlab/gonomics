@@ -172,7 +172,7 @@ func addAnnotationHeader(header vcf.Header) vcf.Header {
 
 	// MaxPopAF
 	header.Text = append(header.Text,
-		"##INFO=<ID=MaxPopAf,Number=1,Type=Float,Description=\"Maximum allele frequency of any population in CellBase\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
+		"##INFO=<ID=MaxPopAF,Number=1,Type=Float,Description=\"Maximum allele frequency of any population in CellBase\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
 	// Consequence
 	header.Text = append(header.Text,
 		"##INFO=<ID=Consequence,Number=1,Type=String,Description=\"Variant consequence\",Source=\"bioinfo.hpc.cam.ac.uk/cellbase/webservices\",Version=\"v4\">")
