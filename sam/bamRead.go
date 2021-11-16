@@ -53,14 +53,18 @@ func (r *BamReader) next(n int) []byte {
 	}
 
 	// not enough bytes in the currently stored block
-	_, err := r.intermediate.ReadFrom(r.blk)
-	if err != nil {
-		log.Panic(err)
-	}
+	// read from multiple blocks if needed
+	for r.intermediate.Len()+r.blk.Len() < n {
+		_, err := r.intermediate.ReadFrom(r.blk)
+		if err != nil {
+			log.Panic(err)
+		}
 
-	err = r.zr.ReadBlock(r.blk)
-	if err == io.EOF {
-		r.eof = true
+		err = r.zr.ReadBlock(r.blk)
+		if err == io.EOF {
+			r.eof = true
+			break
+		}
 	}
 
 	// return with fewest appends possible
