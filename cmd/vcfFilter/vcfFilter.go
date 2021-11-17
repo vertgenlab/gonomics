@@ -5,15 +5,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
+	"math/rand"
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool) (total, removed int) {
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, randSeed bool, setSeed int64) (total, removed int) {
+	common.RngSeed(randSeed, setSeed)
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
@@ -110,10 +113,11 @@ type criteria struct {
 	refStrongAltWeakOnly           bool
 	notRefWeakAltStrong            bool
 	notRefStrongAltWeak            bool
-	id                             string //raven's note: added id (rsID), can upgrade to []string in the future
+	id                             string
 	formatExp                      string
 	infoExp                        string
 	includeMissingInfo             bool
+	subSet                         float64
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -243,10 +247,20 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.notRefStrongAltWeak {
 		answer = append(answer, vcf.IsNotRefStrongAltWeak)
 	}
-	if c.id != "" { //raven's note: not sure what getTests is for and if c.id (modeled after c.chrom) is right
+	if c.id != "" {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
 				if v.Id != c.id {
+					return false
+				}
+				return true
+			})
+	}
+	if c.subSet < 1 {
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				r := rand.Float64()
+				if r > c.subSet {
 					return false
 				}
 				return true
@@ -257,6 +271,8 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 
 func main() {
 	var expectedNumArgs int = 2
+	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
+	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var groupFile *string = flag.String("groupFile", "", "Retains alleles from individuals in the input group file.")
 	var minPos *int = flag.Int("minPos", 0, "Specifies the minimum position of the variant.")
@@ -282,6 +298,7 @@ func main() {
 	var infoExp *string = flag.String("info", "", "Identical to the 'format' tag, but tests the info field. The values of type 'Flag' in the info field"+
 		"can be tested by including just the flag ID in the expression. E.g. To select all records with the flag 'GG' you would use the expression \"GG\".")
 	var includeMissingInfo *bool = flag.Bool("includeMissingInfo", false, "When querying the records using the \"-info\" tag, include records where the queried tags are not present.")
+	var subSet *float64 = flag.Float64("subSet", 1, "Proportion of variants to retain in output. Value must be between 0 and 1.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -310,10 +327,11 @@ func main() {
 		refStrongAltWeakOnly:           *refStrongAltWeakOnly,
 		notRefStrongAltWeak:            *NotRefStrongAltWeak,
 		notRefWeakAltStrong:            *NotRefWeakAltStrong,
-		id:                             *id, //raven's note: added id
+		id:                             *id,
 		formatExp:                      *formatExp,
 		infoExp:                        *infoExp,
 		includeMissingInfo:             *includeMissingInfo,
+		subSet:                         *subSet,
 	}
 
 	var parseFormat, parseInfo bool
@@ -333,7 +351,7 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo)
+	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo, *randSeed, *setSeed)
 	log.Printf("Processed  %d variants\n", total)
 	log.Printf("Removed    %d variants\n", removed)
 }
