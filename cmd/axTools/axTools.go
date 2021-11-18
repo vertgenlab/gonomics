@@ -32,6 +32,7 @@ func main() {
 	var qLen *string = flag.String("qLen", "", "query `chrom.sizes` file containing query sequence lengths")
 
 	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
+	var minScore *int = flag.Int("minScore", 0, "filter axt alignments by minimum score")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
@@ -43,6 +44,8 @@ func main() {
 		axtToFa(input, output, *concensus)
 	} else if *querySwap {
 		QuerySwapAll(input, output, *tLen, *qLen)
+	} else if *minScore != 0 {
+		filterAxtScore(input, output, *minScore)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -87,6 +90,19 @@ func axtToFa(input string, output string, target string) {
 
 	for each := range data {
 		fasta.WriteFasta(ioWriter, axtSeq(each, faMap[each.RName]), 50)
+	}
+}
+
+func filterAxtScore(input string, output string, minScore int) {
+	ioWriter := fileio.EasyCreate(output)
+	data, _ := axt.GoReadToChan(input)
+
+	var index int
+	for each := range data {
+		if each.Score >= minScore {
+			axt.WriteToFileHandle(ioWriter, each, index)
+			index++
+		}
 	}
 }
 
