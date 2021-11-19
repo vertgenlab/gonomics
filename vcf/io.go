@@ -107,10 +107,10 @@ func ParseNotes(data string, format []string) []GenomeSample {
 		fields = strings.Split(text[i], ":")
 
 		if strings.Contains(fields[0], "|") {
-			alleles = strings.SplitN(fields[0], "|", 2)
+			alleles = strings.Split(fields[0], "|")
 			currPhased = true
 		} else if strings.Contains(fields[0], "/") {
-			alleles = strings.SplitN(fields[0], "/", 2)
+			alleles = strings.Split(fields[0], "/")
 			currPhased = false
 		} else {
 			n, err = strconv.ParseInt(fields[0], 10, 16)
