@@ -46,9 +46,9 @@ func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float6
 		d = c + 1
 		//if we have an odd number of alleles, we make one haploid entry
 		if d >= n {
-			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: -1, Phased: false})
+			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: -1, Phased: false, FormatData: make([]string, 0)})
 		} else {
-			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false})
+			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false, FormatData: make([]string, 0)})
 		}
 	}
 	return answer
