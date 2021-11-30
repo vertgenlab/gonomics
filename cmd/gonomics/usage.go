@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -261,12 +262,20 @@ func getHeaderCommentLines(filepath string) []string {
 
 // getCachedSrcDir retrieves the source code directory stored in the first line of the cache file
 func getCachedSrcDir(cacheFile string) string {
-	file := fileio.EasyOpen(cacheFile)
-	line, _ := fileio.EasyNextLine(file)
+	file, err := os.Open(cacheFile)
+	defer file.Close()
+	if err == os.ErrNotExist {
+		return ""
+	} else if err != nil {
+		log.Panic(err)
+	}
+
+	s := bufio.NewScanner(file)
+	s.Scan()
+	line := s.Text()
 	if strings.HasPrefix(line, "##SourceDir:") {
 		return strings.TrimPrefix(line, "##SourceDir:")
 	}
-	err := file.Close()
 	exception.PanicOnErr(err)
 	return ""
 }
