@@ -282,10 +282,11 @@ func getCachedSrcDir(cacheFile string) string {
 func buildFromPath(gonomicsPath, binPath string) {
 	gonomicsPath = strings.TrimRight(gonomicsPath, "/") + "/cmd/"
 	file, err := os.Create(binPath + "/.cmdcache")
-	defer file.Close()
 	exception.PanicOnErr(err)
 	_, err = fmt.Fprintf(file, "##SourceDir:%s\n", gonomicsPath)
 	if err != nil {
 		log.Panic(err)
 	}
+	file.Close()
+	buildCmdCache(binPath)
 }
