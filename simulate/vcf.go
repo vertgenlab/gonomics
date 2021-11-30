@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
@@ -20,6 +21,7 @@ func Vcf(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha
 		genotype = popgen.SimulateGenotype(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier)
 		//most fields are hardcoded but can be filled in later
 		current = vcf.Vcf{Chr: "chr1", Pos: i + 1, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
+		current = vcf.AppendAncestor(current, dna.StringToBases(current.Ref))
 		vcf.WriteVcf(out, current)
 	}
 	var err error

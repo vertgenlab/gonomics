@@ -11,7 +11,7 @@ import (
 //SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
 func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) *SegSite {
 	var fatalCount int = 1000000
-	var maxIteration int = 10000
+	var maxIteration int = 10000000
 	var r, x float64
 	var count, i int
 
