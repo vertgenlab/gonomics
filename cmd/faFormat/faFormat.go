@@ -19,7 +19,7 @@ type Settings struct {
 	ToUpper    bool
 	RevComp    bool
 	NoGaps     bool
-	NoGapBed	string
+	NoGapBed   string
 }
 
 func faFormat(s Settings) {
@@ -90,7 +90,7 @@ func main() {
 		RevComp:    *revComp,
 		ToUpper:    *toUpper,
 		NoGaps:     *noGaps,
-		NoGapBed: *noGapBed,
+		NoGapBed:   *noGapBed,
 	}
 
 	faFormat(s)

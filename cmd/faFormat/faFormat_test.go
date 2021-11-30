@@ -9,15 +9,15 @@ import (
 )
 
 var FaFormatTests = []struct {
-	inputFile    string
-	outputFile   string
-	expectedFile string
-	lineLength   int
-	trimName     bool
-	toUpper      bool
-	revComp      bool
-	noGaps       bool
-	noGapBed	string
+	inputFile        string
+	outputFile       string
+	expectedFile     string
+	lineLength       int
+	trimName         bool
+	toUpper          bool
+	revComp          bool
+	noGaps           bool
+	noGapBed         string
 	noGapBedExpected string
 }{
 	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, true, true, false, true, "testdata/test.NoGap.bed", "testdata/expected.NoGap.bed"},
@@ -35,7 +35,7 @@ func TestFaFormat(t *testing.T) {
 			ToUpper:    v.toUpper,
 			RevComp:    v.revComp,
 			NoGaps:     v.noGaps,
-			NoGapBed:	v.noGapBed,
+			NoGapBed:   v.noGapBed,
 		}
 		faFormat(s)
 		records := fasta.Read(v.outputFile)
