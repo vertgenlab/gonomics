@@ -58,10 +58,9 @@ func getGonomicsCmds() map[string]bool {
 
 	cmds, err := ioutil.ReadDir(expectedPath)
 	if err != nil {
-		log.Printf("ERROR: could not find gonomics cmd folder in expected path: %s\n"+
+		log.Fatalf("ERROR: could not find gonomics cmd folder in expected path: %s\n"+
 			"Please use the '-setpath' followed by the path to the gonomics directory\n"+
 			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n", expectedPath)
-		log.Fatal(err)
 	}
 
 	funcNames := make(map[string]bool)
