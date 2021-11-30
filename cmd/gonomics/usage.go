@@ -264,10 +264,8 @@ func getHeaderCommentLines(filepath string) []string {
 func getCachedSrcDir(cacheFile string) string {
 	file, err := os.Open(cacheFile)
 	defer file.Close()
-	if err == os.ErrNotExist {
+ 	if err != nil {
 		return ""
-	} else if err != nil {
-		log.Panic(err)
 	}
 
 	s := bufio.NewScanner(file)
