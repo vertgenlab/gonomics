@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io/ioutil"
 	"log"
@@ -106,9 +107,13 @@ func buildCmdCache(binPath string) {
 	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
 
 	var cmdSourcePath string
-	if os.Getenv("GOPATH") != "" {
+	var cachedSrcPath string = getCachedSrcDir(binPath + "/.cmdcache")
+	switch {
+	case cachedSrcPath != "":
+		cmdSourcePath = cachedSrcPath
+	case os.Getenv("GOPATH") != "":
 		cmdSourcePath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
-	} else {
+	default:
 		cmdSourcePath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd/"
 	}
 
@@ -136,14 +141,20 @@ func buildCmdCache(binPath string) {
 
 		groupMap[info.Group] = append(groupMap[info.Group], info)
 	}
-	writeCache(binPath, groupMap)
+	writeCache(binPath, groupMap, cmdSourcePath)
 }
 
 // writeCache writes a groupMap to file
 // TODO change so cache is added to gonomics cmd binary
-func writeCache(binPath string, groupMap map[string][]CmdInfo) {
+func writeCache(binPath string, groupMap map[string][]CmdInfo, srcPath string) {
 	cacheWriter, err := os.Create(binPath + "/.cmdcache")
 	defer cacheWriter.Close()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// write source directory line to cache
+	_, err = fmt.Fprintf(cacheWriter, "##SourceDir:%s\n", srcPath)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -246,4 +257,28 @@ func getHeaderCommentLines(filepath string) []string {
 		log.Panic(err)
 	}
 	return answer
+}
+
+// getCachedSrcDir retrieves the source code directory stored in the first line of the cache file
+func getCachedSrcDir(cacheFile string) string {
+	file := fileio.EasyOpen(cacheFile)
+	line, _ := fileio.EasyNextLine(file)
+	if strings.HasPrefix(line, "##SourceDir:") {
+		return strings.TrimPrefix(line, "##SourceDir:")
+	}
+	err := file.Close()
+	exception.PanicOnErr(err)
+	return ""
+}
+
+// buildFromPath is run when setpath is called and write a new cache file with specified gonomicsPath
+func buildFromPath(gonomicsPath, binPath string) {
+	gonomicsPath = strings.TrimRight(gonomicsPath, "/") + "/cmd/"
+	file, err := os.Create(binPath + "/.cmdcache")
+	defer file.Close()
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(file, "##SourceDir:%s\n", gonomicsPath)
+	if err != nil {
+		log.Panic(err)
+	}
 }
