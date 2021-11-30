@@ -5,6 +5,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -92,6 +93,11 @@ func printCmdList(cache *os.File) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	if bytes.HasPrefix(toPrint, []byte("##SourceDir:")) {
+		toPrint = bytes.SplitN(toPrint, []byte("\n"), 2)[1]
+	}
+
 	fmt.Print(string(toPrint))
 }
 
@@ -264,7 +270,7 @@ func getHeaderCommentLines(filepath string) []string {
 func getCachedSrcDir(cacheFile string) string {
 	file, err := os.Open(cacheFile)
 	defer file.Close()
- 	if err != nil {
+	if err != nil {
 		return ""
 	}
 
