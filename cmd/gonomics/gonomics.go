@@ -85,7 +85,7 @@ func main() {
 
 	if *gonomicsPath != "" {
 		binPath, _ := getBin()
-		buildFromPath(*gonomicsPath, binPath+"/.cmdcache")
+		buildFromPath(*gonomicsPath, binPath)
 		return
 	}
 
