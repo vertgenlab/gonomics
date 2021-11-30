@@ -10,6 +10,7 @@ Authors:
 * Riley J. Mangan
 * Chelsea R. Shoben
 * Daniel A. Snellings
+* Seth Weaver
 
 
 
