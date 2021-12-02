@@ -83,7 +83,7 @@ func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (
 
 //VcfSampleToSegSite returns a SegSite struct from an input Vcf entry. Enables flag for divergenceBasedAscertainment correction conditions and the unPolarized condition.
 //Two returns: a pointer to the SegSite struct, and a bool that is true if the SegSite was made without issue, false for soft errors.
-func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool) (*SegSite, bool){
+func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool) (*SegSite, bool) {
 	var currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
 	var j int
 	//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.

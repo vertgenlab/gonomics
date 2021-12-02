@@ -29,11 +29,11 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 				count++
 			}
 		}
-		if count < 1 || count == n {//if the simulated site was not segregating, try again.
+		if count < 1 || count == n { //if the simulated site was not segregating, try again.
 			continue
 		}
 
-		r= rand.Float64()
+		r = rand.Float64()
 		if r < derivedFrequency {
 			divergent = true
 		} else {
