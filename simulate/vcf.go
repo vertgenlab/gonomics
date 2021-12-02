@@ -14,14 +14,20 @@ import (
 func Vcf(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64) {
 	out := fileio.EasyCreate(outFile)
 	var genotype []vcf.GenomeSample
+	var divergent bool
 
 	var current vcf.Vcf
 	//for each segregating site, we make a vcf entry and write out
 	for i := 0; i < numSites; i++ {
-		genotype = popgen.SimulateGenotype(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier)
+		genotype, divergent = popgen.SimulateGenotype(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier)
 		//most fields are hardcoded but can be filled in later
 		current = vcf.Vcf{Chr: "chr1", Pos: i + 1, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
-		current = vcf.AppendAncestor(current, dna.StringToBases(current.Ref))
+		if divergent {
+			current = vcf.AppendAncestor(current, dna.StringToBases(current.Alt[0]))
+		} else {
+			current = vcf.AppendAncestor(current, dna.StringToBases(current.Ref))
+		}
+
 		vcf.WriteVcf(out, current)
 	}
 	var err error

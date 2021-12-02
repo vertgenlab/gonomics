@@ -1,7 +1,6 @@
 package popgen
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -72,49 +71,60 @@ func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
-	var j int
+	var pass bool
 	for i := range alpha {
-		currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
-		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
-			for j = 0; j < len(i.Samples); j++ {
-				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
-					currentSeg.N = currentSeg.N + 2
-					if i.Samples[j].AlleleOne > 0 {
-						currentSeg.I++
-					}
-					if i.Samples[j].AlleleTwo > 0 {
-						currentSeg.I++
-					}
-				}
-			}
-
-			if currentSeg.N == 0 {
-				return nil, fmt.Errorf("error in VcfToAFS: variant had no sample data")
-			}
-			if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
-				return nil, fmt.Errorf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
-			}
-			if !UnPolarized && vcf.HasAncestor(i) {
-				if vcf.IsRefAncestor(i) && DivergenceAscertainment {
-					currentSeg.L = Ancestral
-				}
-				if vcf.IsAltAncestor(i) {
-					InvertSegSite(currentSeg)
-					if DivergenceAscertainment {
-						currentSeg.L = Derived
-					}
-				} else if !vcf.IsRefAncestor(i) {
-					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
-				}
-			}
-			if !UnPolarized && !vcf.HasAncestor(i) {
-				log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
-			}
+		currentSeg, pass = VcfSampleToSegSite(i, DivergenceAscertainment, UnPolarized)
+		if pass {
 			answer.Sites = append(answer.Sites, currentSeg)
 		}
 	}
 	return &answer, nil
+}
+
+//VcfSampleToSegSite returns a SegSite struct from an input Vcf entry. Enables flag for divergenceBasedAscertainment correction conditions and the unPolarized condition.
+//Two returns: a pointer to the SegSite struct, and a bool that is true if the SegSite was made without issue, false for soft errors.
+func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool) (*SegSite, bool){
+	var currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
+	var j int
+	//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
+	if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
+		for j = 0; j < len(i.Samples); j++ {
+			if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
+				currentSeg.N = currentSeg.N + 2
+				if i.Samples[j].AlleleOne > 0 {
+					currentSeg.I++
+				}
+				if i.Samples[j].AlleleTwo > 0 {
+					currentSeg.I++
+				}
+			}
+		}
+
+		if currentSeg.N == 0 {
+			log.Fatalf("error in VcfToAFS: variant had no sample data")
+		}
+		if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
+			log.Fatalf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
+		}
+		if !UnPolarized && vcf.HasAncestor(i) {
+			if vcf.IsRefAncestor(i) && DivergenceAscertainment {
+				currentSeg.L = Ancestral
+			}
+			if vcf.IsAltAncestor(i) {
+				InvertSegSite(currentSeg)
+				if DivergenceAscertainment {
+					currentSeg.L = Derived
+				}
+			} else if !vcf.IsRefAncestor(i) {
+				return nil, false //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. In VcfAfs, these positions are not represented in the output.
+			}
+		}
+		if !UnPolarized && !vcf.HasAncestor(i) {
+			log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
+		}
+	}
+
+	return currentSeg, true
 }
 
 //AfsToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
