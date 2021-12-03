@@ -12,7 +12,7 @@ import (
 
 func simulateVcf(s Settings) {
 	common.RngSeed(s.RandSeed, s.SetSeed)
-	simulate.Vcf(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier)
+	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier)
 }
 
 func usage() {
