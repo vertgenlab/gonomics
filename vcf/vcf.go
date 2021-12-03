@@ -29,7 +29,7 @@ type Vcf struct {
 // Indexes in Alleles are set to -1 if no genotype data is present.
 type GenomeSample struct {
 	Alleles    []int16  // Alleles present in genotype, 0 for reference, 1 for Alt[0], 2 for Alt[1], etc.
-	Phase      []int16  // True for phased genotype, false for unphased. len(Phase) == len(Alleles). Phase[0] == true if and only if Phase[1:] == true
+	Phase      []bool  // True for phased genotype, false for unphased. len(Phase) == len(Alleles). Phase[0] == true if and only if Phase[1:] == true
 	FormatData []string // FormatData contains additional sample fields after the genotype, which are parsed into a slice delimited by colons.
 	// FormatData currently contains a dummy empty string in FormatData[0] corresponding to "GT" in Format, so indices in FormatData will match the indices in Format.
 }
