@@ -8,19 +8,19 @@ import (
 )
 
 var SimulateDivergentWindowsVcfTests = []struct {
-	ExpectedUpper string
-	ExpectedLower string
-	TmpUpper string
-	TmpLower string
-	Alpha float64
-	NumAlleles int
-	NumTotalSites int
-	NumWindowSites int
-	NumWindows int
-	RandSeed bool
-	SetSeed int64
-	BoundAlpha float64
-	BoundBeta float64
+	ExpectedUpper   string
+	ExpectedLower   string
+	TmpUpper        string
+	TmpLower        string
+	Alpha           float64
+	NumAlleles      int
+	NumTotalSites   int
+	NumWindowSites  int
+	NumWindows      int
+	RandSeed        bool
+	SetSeed         int64
+	BoundAlpha      float64
+	BoundBeta       float64
 	BoundMultiplier float64
 	UpperPercentile float64
 	LowerPercentile float64
@@ -41,25 +41,25 @@ var SimulateDivergentWindowsVcfTests = []struct {
 		10000,
 		0.9,
 		0.1,
-		},
+	},
 }
 
 func TestSimulateDivergentWindowsVcf(t *testing.T) {
 	var err error
 	var s Settings
 	for _, v := range SimulateDivergentWindowsVcfTests {
-		s = Settings {
-			UpperOut: v.TmpUpper,
-			LowerOut: v.TmpLower,
-			Alpha: v.Alpha,
-			NumAlleles: v.NumAlleles,
-			NumTotalSites: v.NumTotalSites,
-			NumWindowSites: v.NumWindowSites,
-			NumWindows: v.NumWindows,
-			RandSeed: v.RandSeed,
-			SetSeed: v.SetSeed,
-			BoundAlpha: v.BoundAlpha,
-			BoundBeta: v.BoundBeta,
+		s = Settings{
+			UpperOut:        v.TmpUpper,
+			LowerOut:        v.TmpLower,
+			Alpha:           v.Alpha,
+			NumAlleles:      v.NumAlleles,
+			NumTotalSites:   v.NumTotalSites,
+			NumWindowSites:  v.NumWindowSites,
+			NumWindows:      v.NumWindows,
+			RandSeed:        v.RandSeed,
+			SetSeed:         v.SetSeed,
+			BoundAlpha:      v.BoundAlpha,
+			BoundBeta:       v.BoundBeta,
 			BoundMultiplier: v.BoundMultiplier,
 			UpperPercentile: v.UpperPercentile,
 			LowerPercentile: v.LowerPercentile,
