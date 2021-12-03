@@ -15,13 +15,13 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
-			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index})
+			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index, FieldsInitialized: 3})
 			inRegion = false
 		}
 
 	}
 	if inRegion == true {
-		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq)})
+		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq), FieldsInitialized: 3})
 	}
 	return answer
 }
