@@ -38,7 +38,7 @@ type Settings struct {
 
 func main() {
 	var expectedNumArgs int = 1
-	var numSites *int = flag.Int("numSites", 10, "Specifies the number of simulated bed regions.")
+	var numSites *int = flag.Int("numSites", 10, "Specifies the number of simulated variants.")
 	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var alpha *float64 = flag.Float64("alpha", 0.01, "Specifies the selection parameter alpha for drawing individual gVCF alleles from a stationarity distribution.")
