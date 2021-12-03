@@ -15,7 +15,7 @@ import (
 
 type Window struct {
 	NumDivergent int
-	Variants []vcf.Vcf
+	Variants     []vcf.Vcf
 }
 
 func simulateDivergentWindowsVcf(s Settings) {
@@ -34,24 +34,24 @@ func simulateDivergentWindowsVcf(s Settings) {
 	var TotalSites []vcf.Vcf = make([]vcf.Vcf, s.NumTotalSites)
 	var windows []Window = make([]Window, s.NumWindows)
 
-	for i := 0; i< s.NumTotalSites; i++ {
+	for i := 0; i < s.NumTotalSites; i++ {
 		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1)
 	}
 
 	for i := 0; i < s.NumWindows; i++ {
 		windows[i].Variants = make([]vcf.Vcf, s.NumWindowSites)
 		//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
-		rand.Seed(s.SetSeed*int64(i))
-		rand.Shuffle(len(TotalSites), func(i, j int) {TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i]})
+		rand.Seed(s.SetSeed * int64(i))
+		rand.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
 		copy(windows[i].Variants, TotalSites[:s.NumWindowSites]) //keep only as many results as specified
 		windows[i].NumDivergent = countDivergent(windows[i].Variants)
 	}
 
 	//now sort the windows by the number of divergent sites from low to high
-	sort.Slice(windows, func(i, j int) bool {return windows[i].NumDivergent < windows[j].NumDivergent})
+	sort.Slice(windows, func(i, j int) bool { return windows[i].NumDivergent < windows[j].NumDivergent })
 	lowerOut := fileio.EasyCreate(s.LowerOut)
 
-	for i := 0; i < int(s.LowerPercentile * float64(s.NumWindows)); i++ {
+	for i := 0; i < int(s.LowerPercentile*float64(s.NumWindows)); i++ {
 		for j := range windows[i].Variants {
 			vcf.WriteVcf(lowerOut, windows[i].Variants[j])
 		}
@@ -90,17 +90,17 @@ func usage() {
 }
 
 type Settings struct {
-	UpperOut string
-	LowerOut string
-	Alpha float64
-	NumAlleles int
-	NumTotalSites int
-	NumWindowSites int
-	NumWindows int
-	RandSeed bool
-	SetSeed int64
-	BoundAlpha float64
-	BoundBeta float64
+	UpperOut        string
+	LowerOut        string
+	Alpha           float64
+	NumAlleles      int
+	NumTotalSites   int
+	NumWindowSites  int
+	NumWindows      int
+	RandSeed        bool
+	SetSeed         int64
+	BoundAlpha      float64
+	BoundBeta       float64
 	BoundMultiplier float64
 	UpperPercentile float64
 	LowerPercentile float64
@@ -121,7 +121,6 @@ func main() {
 	var upperPercentile *float64 = flag.Float64("upperPercentile", 0.99, "Set the percentile for variants in the upper divergence set.")
 	var lowerPercentile *float64 = flag.Float64("lowerPercentile", 0.01, "Set the percentile for variants in the lower divergence set.")
 
-
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -134,13 +133,13 @@ func main() {
 	lowerOut := flag.Arg(1)
 
 	s := Settings{
-		UpperOut: upperOut,
-		LowerOut: lowerOut,
+		UpperOut:        upperOut,
+		LowerOut:        lowerOut,
 		Alpha:           *alpha,
 		NumAlleles:      *numAlleles,
-		NumTotalSites:        *numTotalSites,
-		NumWindowSites: *numWindowSites,
-		NumWindows: *numWindows,
+		NumTotalSites:   *numTotalSites,
+		NumWindowSites:  *numWindowSites,
+		NumWindows:      *numWindows,
 		RandSeed:        *randSeed,
 		SetSeed:         *setSeed,
 		BoundAlpha:      *boundAlpha,
@@ -152,5 +151,3 @@ func main() {
 
 	simulateDivergentWindowsVcf(s)
 }
-
-

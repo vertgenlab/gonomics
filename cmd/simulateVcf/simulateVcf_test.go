@@ -26,7 +26,7 @@ func TestSimulateVcf(t *testing.T) {
 	var err error
 	var s Settings
 	for _, v := range SimulateVcfTests {
-		s = Settings {
+		s = Settings{
 			OutFile:         v.OutFile,
 			Alpha:           v.Alpha,
 			NumSites:        v.NumSites,
