@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
@@ -18,10 +19,16 @@ type Settings struct {
 	ToUpper    bool
 	RevComp    bool
 	NoGaps     bool
+	NoGapBed   string
 }
 
 func faFormat(s Settings) {
 	records := fasta.Read(s.InFile)
+
+	if s.NoGapBed != "" {
+		beds := bed.UngappedRegionsAllFromFa(records)
+		bed.Write(s.NoGapBed, beds)
+	}
 
 	if s.NoGaps {
 		fasta.RemoveGaps(records)
@@ -61,6 +68,7 @@ func main() {
 	var toUpper *bool = flag.Bool("toUpper", false, "Convert all DNA bases to upper case.")
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
+	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -82,6 +90,7 @@ func main() {
 		RevComp:    *revComp,
 		ToUpper:    *toUpper,
 		NoGaps:     *noGaps,
+		NoGapBed:   *noGapBed,
 	}
 
 	faFormat(s)
