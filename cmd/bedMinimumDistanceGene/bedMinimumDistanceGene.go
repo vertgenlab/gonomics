@@ -9,7 +9,7 @@ import
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
-
+// TODO: change func name
 func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed string) {
 	out := fileio.EasyCreate(outBed)
 	input := bed.Read(inputBed)
@@ -18,6 +18,8 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 	genomeMap := make(map[string][]bed.Bed)
 	var i int
 
+	//Create a map of all the genes given in the genomeBed for easy reference.
+	//Assumes gene name is in the "Name" field of the genomeBed.
 	for i = range genome {
 		genomeMap[genome[i].Name] = append(genomeMap[genome[i].Name], genome[i])
 	}
@@ -31,12 +33,12 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 
 	for i = range input {
 		lowestDistance = 0
-		inputNameField, found = genomeMap[input[i].Name]
+		inputNameField, found = genomeMap[input[i].Name] //grab the bed entries that corresponds to the gene.
 		if found != true {
 			log.Fatalf("Did not find %s", input[i].Name)
 		}
 		for j = range inputNameField {
-			distance, err = bed.CompareDistance(inputNameField[j], input[i])
+			distance, err = bed.MinimumDistance(inputNameField[j], input[i])
 			if err != nil {
 				log.Fatalf("Unable to compare distance, error message: %s", err)
 			}
@@ -57,7 +59,7 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
-
+//TODO: update usage statement
 func usage() {
 	fmt.Print(
 		"compareBedDistanceBasedOnName - Compares the Name fields between \n" +

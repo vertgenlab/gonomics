@@ -15,6 +15,7 @@ var CompareBedDistanceOnNameTests = []struct {
 }{
 	{"testdata/inputBed1.bed", "testdata/genomeBed1.bed", "testdata/outputBed1.bed", "testdata/expectedBed1.bed"},
 	{"testdata/inputBed2.bed", "testdata/genomeBed2.bed", "testdata/outputBed2.bed", "testdata/expectedBed2.bed"},
+	{"testdata/inputBed3.bed", "testdata/genomeBed2.bed", "testdata/outputBed3.bed", "testdata/expectedBed3.bed"},
 }
 
 func TestCompareBedDistanceOnName(t *testing.T) {
