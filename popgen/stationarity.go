@@ -20,14 +20,6 @@ Equations from this thesis that are replicated here are marked.
 
 const IntegralBound float64 = 1e-12
 
-type LikelihoodFunction byte
-
-const (
-	Uncorrected LikelihoodFunction = iota
-	Ancestral
-	Derived
-)
-
 //k is len(sites)
 type Afs struct {
 	Sites []*SegSite
@@ -35,9 +27,9 @@ type Afs struct {
 
 //SegSite is the basic struct for segregating sites, used to construct allele frequency spectra.
 type SegSite struct {
-	I int                //individuals with the allele
+	I int                //individuals with the derived allele
 	N int                //total number of individuals
-	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
+	Divergent bool		//true if the ref base is the derived state. When false I/N = alt frequency. When true, I/N = ref frequency.
 }
 
 //InvertSegSite reverses the polarity of a segregating site.
@@ -60,21 +52,21 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 				count++
 			}
 		}
-		answer.Sites = append(answer.Sites, &SegSite{count, len(aln), Uncorrected}) //hardcoded to default likelihood for now.
+		answer.Sites = append(answer.Sites, &SegSite{count, len(aln), false}) //hardcoded to ancestral for now.
 	}
 	return answer
 }
 
 //VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
-//Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (*Afs, error) {
+//Returns a polarized, derived allele frequency spectrum by default. Unpolarized option, when true, returns the unpolarized site frequency spectrum.
+func VcfToAfs(filename string, UnPolarized bool) (*Afs, error) {
 	var answer Afs
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
 	var j int
 	for i := range alpha {
-		currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
+		currentSeg = &SegSite{I: 0, N: 0, Divergent: false}
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
 			for j = 0; j < len(i.Samples); j++ {
@@ -96,14 +88,12 @@ func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (
 				return nil, fmt.Errorf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
 			}
 			if !UnPolarized && vcf.HasAncestor(i) {
-				if vcf.IsRefAncestor(i) && DivergenceAscertainment {
-					currentSeg.L = Ancestral
+				if vcf.IsRefAncestor(i) {
+					currentSeg.Divergent = false
 				}
 				if vcf.IsAltAncestor(i) {
 					InvertSegSite(currentSeg)
-					if DivergenceAscertainment {
-						currentSeg.L = Derived
-					}
+					currentSeg.Divergent = true
 				} else if !vcf.IsRefAncestor(i) {
 					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
 				}

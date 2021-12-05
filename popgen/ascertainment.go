@@ -2,7 +2,6 @@ package popgen
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 	"math"
 )
 
@@ -79,14 +78,10 @@ func AfsDivergenceAscertainmentLikelihood(afs Afs, alpha []float64, binomMap [][
 	var answer float64 = 0.0
 	for j := 0; j < len(afs.Sites); j++ {
 		var currLikelihood float64
-		if afs.Sites[j].L == Uncorrected {
-			currLikelihood = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError)
-		} else if afs.Sites[j].L == Ancestral {
-			currLikelihood = AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
-		} else if afs.Sites[j].L == Derived {
+		if afs.Sites[j].Divergent {
 			currLikelihood = AlleleFrequencyProbabilityDerivedAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
 		} else {
-			log.Fatalf("invalid likelihood field in segregating site struct")
+			currLikelihood = AlleleFrequencyProbabilityAncestralAscertainment(alpha[j], afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
 		}
 		answer = numbers.MultiplyLog(answer, currLikelihood)
 	}
@@ -98,22 +93,15 @@ func AfsDivergenceAscertainmentLikelihood(afs Afs, alpha []float64, binomMap [][
 func AfsDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, d int, integralError float64) float64 {
 	allN := findAllN(afs)
 	var answer float64 = 0.0
-	uncorrectedLikelihoodCache := BuildLikelihoodCache(allN)
 	ancestralLikelihoodCache := BuildLikelihoodCache(allN)
 	derivedLikelihoodCache := BuildLikelihoodCache(allN)
 	for j := range afs.Sites {
-		switch afs.Sites[j].L {
-		case Uncorrected:
-			if uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
-				uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
-			}
-			answer = numbers.MultiplyLog(answer, uncorrectedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
-		case Ancestral:
+		if afs.Sites[j].Divergent {
 			if ancestralLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
 				ancestralLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityAncestralAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
 			}
 			answer = numbers.MultiplyLog(answer, ancestralLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
-		case Derived:
+		} else {
 			if derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
 				derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityDerivedAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
 			}
@@ -121,6 +109,60 @@ func AfsDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binomMap [][]f
 		}
 	}
 	return answer
+}
+
+func AfsDerivedDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, d int, integralError float64) float64 {
+	allN := findAllN(afs)
+	var answer float64 = 0.0
+	derivedLikelihoodCache := BuildLikelihoodCache(allN)
+	uncorrectedCache := BuildLikelihoodCache(allN)
+	for j := range afs.Sites {
+		if afs.Sites[j].Divergent {
+			if derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
+				derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityDerivedAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		} else {
+			if uncorrectedCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
+				uncorrectedCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, uncorrectedCache[afs.Sites[j].N][afs.Sites[j].I])
+		}
+	}
+	return answer
+}
+
+func AfsAncestralDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, d int, integralError float64) float64 {
+	allN := findAllN(afs)
+	var answer float64 = 0.0
+	derivedLikelihoodCache := BuildLikelihoodCache(allN)
+	uncorrectedCache := BuildLikelihoodCache(allN)
+	for j := range afs.Sites {
+		if !afs.Sites[j].Divergent {//site is not divergent, i.e. ref is ancestral state
+			if derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
+				derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityAncestralAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		} else {
+			if uncorrectedCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
+				uncorrectedCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
+			}
+			answer = numbers.MultiplyLog(answer, uncorrectedCache[afs.Sites[j].N][afs.Sites[j].I])
+		}
+	}
+	return answer
+}
+
+func AfsDerivedDivergenceAscertainmentFixedAlphaClosure(afs Afs, binomMap [][]float64, d int, integralError float64) func(float64) float64 {
+	return func(alpha float64) float64 {
+		return AfsDerivedDivergenceAscertainmentFixedAlpha(afs, alpha, binomMap, d, integralError)
+	}
+}
+
+func AfsAncestralDivergenceAscertainmentFixedAlphaClosure(afs Afs, binomMap [][]float64, d int, integralError float64) func(float64) float64 {
+	return func(alpha float64) float64 {
+		return AfsAncestralDivergenceAscertainmentFixedAlpha(afs, alpha, binomMap, d, integralError)
+	}
 }
 
 //AfsDivergenceAscertainmentFixedAlphaClosure returns a func(float64) float64 representing the likelihood function for a specific derived allele frequency spectrum with a single selection parameter alpha.

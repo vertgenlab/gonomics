@@ -24,7 +24,7 @@ type Settings struct {
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
 	var err error
-	genotypes, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment)
+	genotypes, err := popgen.VcfToAfs(vcfFile, s.UnPolarized)
 	exception.FatalOnErr(err)
 	f := popgen.AfsToFrequency(*genotypes)
 	out := fileio.EasyCreate(outFile)

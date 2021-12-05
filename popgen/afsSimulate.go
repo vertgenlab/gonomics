@@ -9,6 +9,7 @@ import (
 )
 
 //SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
+//Divergent flag, which signals a difference between reference genomes, is false by default, but can be inverted to true at later steps.
 func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) *SegSite {
 	var fatalCount int = 1000000
 	var maxIteration int = 10000000
@@ -30,10 +31,10 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 		if count < 1 || count == n {
 			continue
 		}
-		return &SegSite{count, n, Uncorrected}
+		return &SegSite{count, n, false}
 	}
 	log.Fatalf("Error in simulateSegSite: unable to produce non-zero allele frequency for alpha:%f and %v alleles in 10000 iterations.", alpha, n)
-	return &SegSite{0, 0, Uncorrected}
+	return &SegSite{0, 0, false}
 }
 
 //SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.

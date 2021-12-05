@@ -10,7 +10,7 @@ import (
 )
 
 func selectionMLE(inFile string, outFile string, s popgen.MleSettings) {
-	data, err := popgen.VcfToAfs(inFile, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
+	data, err := popgen.VcfToAfs(inFile, s.UnPolarized) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	answer := popgen.SelectionMaximumLikelihoodEstimate(*data, s)
 	out := fileio.EasyCreate(outFile)
@@ -38,7 +38,9 @@ func main() {
 	var errorThreshold *float64 = flag.Float64("errorThreshold", 1e-5, "Set the desired level of accuracy in the maximum likelihood estimate.")
 	var expectedNumArgs int = 2
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
-	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Make a divergence-based ascertainment correction.")
+	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Make a divergence-based ascertainment bias correction.")
+	var derivedDivergenceAscertainment *bool = flag.Bool("deriveDivergenceAscertainment", false, "Make a divergence-based ascertainment bias correction, but only for bases in the derived state.")
+	var ancestralDivergenceAscertainment *bool = flag.Bool("ancestralDivergenceAscertainment", false, "Make a divergence-based ascertainment bias correction, but only for bases in the ancestral state.")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 or 2 to reveal different levels of debug print statements to standard output. Currently none available.")
 
@@ -56,6 +58,8 @@ func main() {
 		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError:           *integralError,
 		Verbose:                 *verbose,
+		DerivedDivergenceAscertainment: *derivedDivergenceAscertainment,
+		AncestralDivergenceAscertainment: *ancestralDivergenceAscertainment,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
