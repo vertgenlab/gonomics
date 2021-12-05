@@ -27,9 +27,9 @@ type Afs struct {
 
 //SegSite is the basic struct for segregating sites, used to construct allele frequency spectra.
 type SegSite struct {
-	I int                //individuals with the derived allele
-	N int                //total number of individuals
-	Divergent bool		//true if the ref base is the derived state. When false I/N = alt frequency. When true, I/N = ref frequency.
+	I         int  //individuals with the derived allele
+	N         int  //total number of individuals
+	Divergent bool //true if the ref base is the derived state. When false I/N = alt frequency. When true, I/N = ref frequency.
 }
 
 //InvertSegSite reverses the polarity of a segregating site.

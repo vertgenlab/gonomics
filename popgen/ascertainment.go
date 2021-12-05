@@ -138,7 +138,7 @@ func AfsAncestralDivergenceAscertainmentFixedAlpha(afs Afs, alpha float64, binom
 	derivedLikelihoodCache := BuildLikelihoodCache(allN)
 	uncorrectedCache := BuildLikelihoodCache(allN)
 	for j := range afs.Sites {
-		if !afs.Sites[j].Divergent {//site is not divergent, i.e. ref is ancestral state
+		if !afs.Sites[j].Divergent { //site is not divergent, i.e. ref is ancestral state
 			if derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 {
 				derivedLikelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbabilityAncestralAscertainment(alpha, afs.Sites[j].I, afs.Sites[j].N, d, binomMap, integralError)
 			}

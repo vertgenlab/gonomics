@@ -50,15 +50,15 @@ func main() {
 	flag.Parse()
 
 	options := popgen.MleSettings{
-		Left:                    *leftBound,
-		Right:                   *rightBound,
-		Error:                   *errorThreshold,
-		UnPolarized:             *unPolarized,
-		DivergenceAscertainment: *divergenceAscertainment,
-		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
-		IntegralError:           *integralError,
-		Verbose:                 *verbose,
-		DerivedDivergenceAscertainment: *derivedDivergenceAscertainment,
+		Left:                             *leftBound,
+		Right:                            *rightBound,
+		Error:                            *errorThreshold,
+		UnPolarized:                      *unPolarized,
+		DivergenceAscertainment:          *divergenceAscertainment,
+		D:                                1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
+		IntegralError:                    *integralError,
+		Verbose:                          *verbose,
+		DerivedDivergenceAscertainment:   *derivedDivergenceAscertainment,
 		AncestralDivergenceAscertainment: *ancestralDivergenceAscertainment,
 	}
 
