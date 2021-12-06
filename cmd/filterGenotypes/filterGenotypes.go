@@ -19,6 +19,32 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+func ASFilter(v vcf.Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
+	if vcf.IsHomozygous(v.Samples[parentOne]) && vcf.IsHomozygous(v.Samples[parentTwo]) && vcf.IsHeterozygous(v.Samples[F1]) && v.Samples[parentOne].Alleles[0] != v.Samples[parentTwo].Alleles[1] {
+		return true
+	} else {
+		return false
+	}
+}
+
+func getListIndex(header vcf.Header, list []string) []int16 {
+	sampleHash := vcf.HeaderToMaps(header)
+	var listIndex []int16 = make([]int16, len(list))
+	for i := 0; i < len(listIndex); i++ {
+		//look up alt allele index belonging to each string
+		listIndex[i] = sampleHash.GIndex[list[i]]
+	}
+	return listIndex
+}
+
+func ByNames(inChan <-chan vcf.Vcf, header vcf.Header, list []string, writer *fileio.EasyWriter) {
+	var listIndex []int16 = getListIndex(header, list)
+
+	for record := range inChan {
+		vcf.WriteVcf(writer, vcf.ReorderSampleColumns(record, listIndex))
+	}
+}
+
 func main() {
 	var expectedNumArgs int = 2
 	flag.Usage = usage
@@ -54,7 +80,7 @@ func main() {
 
 			//write header
 			vcf.WriteMultiSamplesHeader(writer, header, samples)
-			vcf.ByNames(gvcf, header, samples, writer)
+			ByNames(gvcf, header, samples, writer)
 
 			writer.Close()
 
@@ -71,7 +97,7 @@ func main() {
 			defer writer.Close()
 			log.SetFlags(0)
 			for each := range reader {
-				if vcf.ASFilter(each, parentalOne, parentalTwo, fOne) {
+				if ASFilter(each, parentalOne, parentalTwo, fOne) {
 					//TODO: Need to chanch logic for this log print feature.
 					//vcf.PrintReOrder(each, []int16{parentalOne, parentalTwo, fOne})
 					vcf.WriteVcf(writer, each)

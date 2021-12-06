@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chain"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
@@ -81,7 +82,7 @@ func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- vcf.Vcf) {
 	var curr []vcf.Vcf
 	for i := range axtChannel {
 		//filter for uniq
-		curr = vcf.FilterVcfPos(axt.ToVcf(i))
+		curr = filterVcfPos(axt.ToVcf(i))
 		for j = 0; j < len(curr); j++ {
 			if !strings.Contains(curr[j].Ref, "N") && !strings.Contains(curr[j].Alt[0], "N") {
 				ans <- curr[j]
@@ -89,6 +90,48 @@ func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- vcf.Vcf) {
 		}
 	}
 	close(ans)
+}
+
+//FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
+func filterVcfPos(vcfs []vcf.Vcf) []vcf.Vcf {
+	vcf.Sort(vcfs)
+	var answer []vcf.Vcf
+	chrVcfMap := make(map[string][]vcf.Vcf)
+
+	var ref []dna.Base
+	var alt [][]dna.Base
+	var containsN bool
+	for _, v := range vcfs {
+		chrVcfMap[v.Chr] = append(chrVcfMap[v.Chr], v)
+	}
+	var i int
+	var curr []vcf.Vcf
+	for key := range chrVcfMap {
+		curr = chrVcfMap[key]
+		encountered := make(map[int]bool)
+		for i = 0; i < len(curr); i++ {
+			if encountered[curr[i].Pos] == true {
+				//do not add
+			} else {
+				encountered[curr[i].Pos] = true
+				containsN = false
+				ref = dna.StringToBases(curr[i].Ref)
+				alt = vcf.GetAltBases(curr[i].Alt)
+				if dna.CountBaseInterval(ref, dna.N, 0, len(ref)) != 0 {
+					containsN = true
+				}
+				for j := 0; j < len(alt); j++ {
+					if dna.CountBaseInterval(alt[j], dna.N, 0, len(alt[j])) != 0 {
+						containsN = true
+					}
+				}
+				if !containsN {
+					answer = append(answer, curr[i])
+				}
+			}
+		}
+	}
+	return answer
 }
 
 func goFaChannel(ref []fasta.Fasta) <-chan fasta.Fasta {

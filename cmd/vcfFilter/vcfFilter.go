@@ -66,8 +66,8 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 	return
 }
 
-func filterRecordsSamplesToKeep(recordSamples []vcf.GenomeSample, samplesToKeep []int) []vcf.GenomeSample {
-	var answer []vcf.GenomeSample
+func filterRecordsSamplesToKeep(recordSamples []vcf.Sample, samplesToKeep []int) []vcf.Sample {
+	var answer []vcf.Sample
 	for _, v := range samplesToKeep {
 		answer = append(answer, recordSamples[v])
 	}
