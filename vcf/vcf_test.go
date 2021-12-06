@@ -21,6 +21,7 @@ func TestReadToChan(t *testing.T) {
 	for vcfs := range vcfPipe {
 		beta = append(beta, vcfs)
 	}
+
 	if !AllEqual(alpha, beta) {
 		t.Errorf("Error there might be a bug in the ReadToChan implementation\n")
 	}
@@ -34,6 +35,15 @@ func TestWriteAndRead(t *testing.T) {
 		Write(tempFile, actual)
 		alpha, _ := Read(tempFile)
 		beta, _ := Read(test.filename)
+
+		for i := range alpha {
+			if !isEqual(alpha[i], beta[i]) {
+				//fmt.Println(alpha[i])
+				//fmt.Println(len(alpha[i].Samples), len(beta[i].Samples))
+				//fmt.Println(beta[i])
+				//fmt.Println()
+			}
+		}
 		if !AllEqual(alpha, beta) {
 			t.Errorf("Error: Read and write files do not match\n")
 		}

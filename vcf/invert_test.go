@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-var IG1 Sample = Sample{1, 0, false, []string{""}}
-var IG2 Sample = Sample{0, 0, false, []string{""}}
-var IG3 Sample = Sample{1, 1, false, []string{""}}
+var IG1 Sample = Sample{[]int16{1, 0}, []bool{false, false}, []string{""}}
+var IG2 Sample = Sample{[]int16{0, 0}, []bool{false, false}, []string{""}}
+var IG3 Sample = Sample{[]int16{1, 1}, []bool{false, false}, []string{""}}
 
-var EG1 Sample = Sample{0, 1, false, []string{""}}
-var EG2 Sample = Sample{1, 1, false, []string{""}}
-var EG3 Sample = Sample{0, 0, false, []string{""}}
+var EG1 Sample = Sample{[]int16{0, 1}, []bool{false, false}, []string{""}}
+var EG2 Sample = Sample{[]int16{1, 1}, []bool{false, false}, []string{""}}
+var EG3 Sample = Sample{[]int16{0, 0}, []bool{false, false}, []string{""}}
 
 var FirstInputSamples []Sample = []Sample{IG1, IG2, IG3}
 var FirstExpectedSamples []Sample = []Sample{EG1, EG2, EG3}

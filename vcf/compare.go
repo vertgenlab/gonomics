@@ -21,8 +21,8 @@ func CompareCoord(alpha Vcf, beta Vcf) int {
 	return 0
 }
 
-//CompareVcf compares two Vcf structs for sorting or equality testing.
-func CompareVcf(alpha Vcf, beta Vcf) int {
+//compareVcf compares two Vcf structs for sorting or equality testing.
+func compareVcf(alpha Vcf, beta Vcf) int {
 	compareStorage := strings.Compare(alpha.Chr, beta.Chr)
 	if compareStorage != 0 {
 		return compareStorage
@@ -67,30 +67,30 @@ func CompareAlt(alpha []string, beta []string) int {
 
 //Sort sorts a slice of Vcf structs in place.
 func Sort(vcfFile []Vcf) {
-	sort.Slice(vcfFile, func(i, j int) bool { return CompareVcf(vcfFile[i], vcfFile[j]) == -1 })
+	sort.Slice(vcfFile, func(i, j int) bool { return compareVcf(vcfFile[i], vcfFile[j]) == -1 })
 }
 
 //isEqual returns true if two input Vcf structs contain identical information, false otherwise.
 func isEqual(alpha Vcf, beta Vcf) bool {
-	if alpha.Chr == beta.Chr {
+	if alpha.Chr != beta.Chr {
 		return false
 	}
 	if alpha.Pos != beta.Pos {
 		return false
 	}
-	if alpha.Id == beta.Id {
+	if alpha.Id != beta.Id {
 		return false
 	}
-	if alpha.Ref == beta.Ref {
+	if alpha.Ref != beta.Ref {
 		return false
 	}
 	if CompareAlt(alpha.Alt, beta.Alt) != 0 {
 		return false
 	}
-	if alpha.Filter == beta.Filter {
+	if alpha.Filter != beta.Filter {
 		return false
 	}
-	if alpha.Info == beta.Info {
+	if alpha.Info != beta.Info {
 		return false
 	}
 	if !equalSamples(alpha.Samples, beta.Samples) {

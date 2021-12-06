@@ -90,11 +90,11 @@ func processVcfLine(line string) Vcf {
 // parseSamples is a helper function of processVcfLine. Generates a slice of Sample structs from a VCF data line.
 func parseSamples(samples []string, format []string, line string) []Sample {
 	//DEBUG: fmt.Printf("Format: %s. Format[0]: %s.\n", format, format[0])
-	answer := make([]Sample, len(samples))
 	if format[0] == "." || len(format) == 0 {
 		return nil
 	}
 
+	answer := make([]Sample, len(samples))
 	for i := range samples {
 		var text []string // redeclare each loop
 		text = strings.Split(samples[i], ":")
@@ -117,9 +117,12 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 
 	// split GT by '/' or '|'
 	text := strings.FieldsFunc(gt, func(r rune) bool { return r == '/' || r == '|' })
+	if len(text) == 0 {
+		return
+	}
 
 	alleles = make([]int16, 0, (len(text)+1)/2)
-	phase = make([]bool, 1, len(alleles)) // phase starts at size 1 for first alleles phase which is set at the end
+	phase = make([]bool, 1, cap(alleles)) // phase starts at size 1 for first alleles phase which is set at the end
 
 	for i := range text {
 		if i%2 == 0 { // is allele id

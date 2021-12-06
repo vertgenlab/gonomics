@@ -8,9 +8,14 @@ import (
 	"strings"
 )
 
-// String implements the fmt.Stringer interface for easy printing with the fmt package.
+// String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package.
 func (v Vcf) String() string {
 	return fmt.Sprintf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Id, v.Ref, strings.Join(v.Alt, ","), v.Qual, v.Filter, v.Info, v.Format, SamplesToString(v.Samples))
+}
+
+// String implements the fmt.Stringer interface for easy printing of Sample with the fmt package.
+func (s Sample) String() string {
+	return sampleToString(s)
 }
 
 func (v Vcf) GetChrom() string {
