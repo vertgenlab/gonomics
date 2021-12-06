@@ -40,7 +40,7 @@ func GoReadGVcf(filename string) *Reader {
 type GVcf struct { //TODO: Uncommented for now, but this struct needs to be removed soon.
 	Vcf
 	Seq       [][]dna.Base
-	Genotypes []GenomeSample
+	Genotypes []Sample
 }
 
 type SampleHash struct {
@@ -56,28 +56,28 @@ func VcfToGvcf(v Vcf) GVcf {
 
 /*
 //This function has now been incorporated into ParseNotes in vcf.go
-func GetAlleleGenotype(v *Vcf) []GenomeSample {
+func GetAlleleGenotype(v *Vcf) []Sample {
 	text := strings.Split(v.Notes, "\t")
 	var hap string
 	var alleles []string
 	var err error
 	var n int64
-	var answer []GenomeSample = make([]GenomeSample, len(text))
+	var answer []Sample = make([]Sample, len(text))
 	for i := 0; i < len(text); i++ {
 		hap = strings.Split(text[i], ":")[0]
 		if strings.Compare(hap, "./.") == 0 || strings.Compare(hap, ".|.") == 0 {
-			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
+			answer[i] = Sample{AlleleOne: -1, AlleleTwo: -1, Phased: false}
 		} else if strings.Contains(hap, "|") {
 			alleles = strings.SplitN(hap, "|", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true}
+			answer[i] = Sample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true}
 		} else if strings.Contains(hap, "/") {
 			alleles = strings.SplitN(hap, "/", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false}
+			answer[i] = Sample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false}
 		} else {
 			//Deal with single haps. There might be a better soltuion, but I think this should work.
 			n, err = strconv.ParseInt(alleles[0], 10, 16)
 			if err != nil && n < int64(len(text)) {
-				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false}
+				answer[i] = Sample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false}
 			} else {
 				log.Fatalf("Error: Unexpected parsing error...\n")
 			}
@@ -168,7 +168,7 @@ func PhasedToString(phased bool) string {
 
 //ReorderSampleColumns reorganizes the Samples slice based on a samples []int16 specification list.
 func ReorderSampleColumns(input Vcf, samples []int16) Vcf {
-	outSamples := make([]GenomeSample, 0, len(samples))
+	outSamples := make([]Sample, 0, len(samples))
 	for i := 0; i < len(samples); i++ {
 		outSamples = append(outSamples, input.Samples[samples[i]])
 	}
@@ -181,7 +181,7 @@ func PrintReOrder(v Vcf, samples []int16) {
 	log.Printf("%s\t%d\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Ref, v.Alt, SamplesToString(vReorder.Samples))
 }
 
-func SamplesToString(sample []GenomeSample) string {
+func SamplesToString(sample []Sample) string {
 	var answer string = ""
 	for i := 0; i < len(sample); i++ {
 		answer += HelperSamplesToString(sample, i)
@@ -189,8 +189,8 @@ func SamplesToString(sample []GenomeSample) string {
 	return answer
 }
 
-//helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
-func HelperSamplesToString(sample []GenomeSample, i int) string {
+//helperGenotypeToStringNew uses just an array of Sample structs to write to a string for simple gVCFs with just the allele info in notes.
+func HelperSamplesToString(sample []Sample, i int) string {
 	var answer string
 	if sample[i].FormatData == nil {
 		if i != len(sample)-1 {

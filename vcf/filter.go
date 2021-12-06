@@ -144,7 +144,7 @@ func mergeSimilarVcf(a Vcf, b Vcf) Vcf {
 	return mergeRecord
 }
 
-func LowQual(genome GenomeSample) bool {
+func LowQual(genome Sample) bool {
 	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
 		return true
 	} else {
@@ -152,7 +152,7 @@ func LowQual(genome GenomeSample) bool {
 	}
 }
 
-func IsHeterozygous(genome GenomeSample) bool {
+func IsHeterozygous(genome Sample) bool {
 	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
 		return false
 	}
@@ -165,7 +165,7 @@ func IsHeterozygous(genome GenomeSample) bool {
 	return false
 }
 
-func IsHomozygous(genome GenomeSample) bool {
+func IsHomozygous(genome Sample) bool {
 	if genome.AlleleOne < 0 || genome.AlleleTwo < 0 {
 		return false
 	}
@@ -364,10 +364,10 @@ func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([
 			header = HeaderUpdateSampleList(header, outHeaderSampleList)
 		}
 
-		var outSamples []GenomeSample
+		var outSamples []Sample
 
 		for i := range records {
-			outSamples = make([]GenomeSample, 0, len(sequentialSlice))
+			outSamples = make([]Sample, 0, len(sequentialSlice))
 			for _, j := range sequentialSlice {
 				outSamples = append(outSamples, records[i].Samples[j])
 			}

@@ -5,9 +5,9 @@ import (
 	//DEBUG: "fmt"
 )
 
-//InvertGenomeSample inverts the ancestral/derived state for each allele in a GenomeSample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
+//InvertGenomeSample inverts the ancestral/derived state for each allele in a Sample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
 //TODO: this is currently only supported for biallelic bases.
-func InvertGenomeSample(g GenomeSample) GenomeSample {
+func InvertGenomeSample(g Sample) Sample {
 	if g.AlleleOne == 0 {
 		g.AlleleOne = 1
 	} else if g.AlleleOne == 1 {
@@ -26,8 +26,8 @@ func InvertGenomeSample(g GenomeSample) GenomeSample {
 	return g
 }
 
-//InvertAlleles inverts the Genotype for each entry in a slice of GenomeSample structs.
-func InvertAlleles(g []GenomeSample) []GenomeSample {
+//InvertAlleles inverts the Genotype for each entry in a slice of Sample structs.
+func InvertAlleles(g []Sample) []Sample {
 	for i := 0; i < len(g); i++ {
 		g[i] = InvertGenomeSample(g[i])
 	}

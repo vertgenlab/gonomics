@@ -16,7 +16,7 @@ func TestASFilter(t *testing.T) {
 			passFilter = append(passFilter, each)
 		}
 	}
-	var currGt []GenomeSample
+	var currGt []Sample
 	for i := 0; i < len(passFilter); i++ {
 		currGt = passFilter[i].Samples
 		if IsHeterozygous(currGt[parentalOne]) || IsHeterozygous(currGt[parentalTwo]) || IsHomozygous(currGt[fOne]) {

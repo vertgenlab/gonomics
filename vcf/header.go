@@ -20,7 +20,7 @@ type Header struct {
 	Filter     map[string]FilterHeader        // key=ID
 	Format     map[string]FormatHeader        // key=ID
 	Chroms     map[string]chromInfo.ChromInfo // key=chrom name
-	Samples    map[string]int                 // key=samplename val=index in GenomeSample
+	Samples    map[string]int                 // key=samplename val=index in Sample
 	Text       []string                       // raw text
 }
 

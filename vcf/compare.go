@@ -47,57 +47,6 @@ func CompareHeader(alpha Header, beta Header) int {
 	return 0
 }
 
-//CompareGenomeSample compares two GenomeSample structs for sorting or equality testing.
-func CompareGenomeSample(alpha GenomeSample, beta GenomeSample) int {
-	var res int
-	if alpha.AlleleOne != beta.AlleleOne {
-		if alpha.AlleleOne < beta.AlleleOne {
-			return -1
-		}
-		return 1
-	}
-	if alpha.AlleleTwo != beta.AlleleTwo {
-		if alpha.AlleleTwo < beta.AlleleTwo {
-			return -1
-		}
-		return 1
-	}
-	if alpha.Phased != beta.Phased {
-		if !alpha.Phased {
-			return -1
-		}
-		return 1
-	}
-	res = CompareFormatData(alpha.FormatData, beta.FormatData)
-	if res != 0 {
-		return res
-	}
-	return 0
-}
-
-//CompareFormatData compares the FormatData field of a VCF GenomeSample
-func CompareFormatData(alpha []string, beta []string) int {
-	return CompareAlt(alpha, beta) //both functions compare slice of strings for equality, but I made this a separate function for readability
-}
-
-//CompareGenomeSamples compares a slice of GenomeSample structs which underlies the VCF struct
-func CompareGenomeSamples(alpha []GenomeSample, beta []GenomeSample) int {
-	var res int
-	stop := numbers.Min(len(alpha), len(beta))
-	for i := 0; i < stop; i++ {
-		res = CompareGenomeSample(alpha[i], beta[i])
-		if res != 0 {
-			return res
-		}
-	}
-	if len(alpha) < len(beta) {
-		return -1
-	} else if len(alpha) > len(beta) {
-		return 1
-	}
-	return 0
-}
-
 //CompareAlt compares the two slice of string Alt fields from a VCF lexicographically.
 func CompareAlt(alpha []string, beta []string) int {
 	var res int
@@ -123,32 +72,69 @@ func Sort(vcfFile []Vcf) {
 
 //isEqual returns true if two input Vcf structs contain identical information, false otherwise.
 func isEqual(alpha Vcf, beta Vcf) bool {
-	if strings.Compare(alpha.Chr, beta.Chr) != 0 {
+	if alpha.Chr == beta.Chr {
 		return false
 	}
 	if alpha.Pos != beta.Pos {
 		return false
 	}
-	if strings.Compare(alpha.Id, beta.Id) != 0 {
+	if alpha.Id == beta.Id {
 		return false
 	}
-	if strings.Compare(alpha.Ref, beta.Ref) != 0 {
+	if alpha.Ref == beta.Ref {
 		return false
 	}
 	if CompareAlt(alpha.Alt, beta.Alt) != 0 {
 		return false
 	}
-	if strings.Compare(alpha.Filter, beta.Filter) != 0 {
+	if alpha.Filter == beta.Filter {
 		return false
 	}
-	if strings.Compare(alpha.Info, beta.Info) != 0 {
+	if alpha.Info == beta.Info {
 		return false
 	}
-	if CompareGenomeSamples(alpha.Samples, beta.Samples) != 0 {
+	if !equalSamples(alpha.Samples, beta.Samples) {
 		return false
 	}
 	return true
 
+}
+
+// equalSamples returns true if input samples are equivalent
+func equalSamples(alpha, beta []Sample) bool {
+	if len(alpha) != len(beta) {
+		return false
+	}
+	for i := range alpha {
+		if len(alpha[i].Alleles) != len(beta[i].Alleles) {
+			return false
+		}
+		if len(alpha[i].Phase) != len(beta[i].Phase) {
+			return false
+		}
+		if len(alpha[i].FormatData) != len(beta[i].FormatData) {
+			return false
+		}
+
+		for j := range alpha[i].Alleles {
+			if alpha[i].Alleles[j] != beta[i].Alleles[j] {
+				return false
+			}
+		}
+
+		for j := range alpha[i].Phase {
+			if alpha[i].Phase[j] != beta[i].Phase[j] {
+				return false
+			}
+		}
+
+		for j := range alpha[i].FormatData {
+			if alpha[i].FormatData[j] != beta[i].FormatData[j] {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 //AllEqual returns true if each Vcf in a slice of Vcf structs contain identical information.
@@ -168,16 +154,4 @@ func AllEqual(alpha []Vcf, beta []Vcf) bool {
 		}
 	}
 	return true
-}
-
-//LogEqual prints which two corresponding entries in two slices of Vcf structs are unequal and fatals out.
-func LogEqual(alpha []Vcf, beta []Vcf) {
-	if len(alpha) != len(beta) {
-		log.Fatalf("len=%v and len=%v are not equal\n", len(alpha), len(beta))
-	}
-	for i := 0; i < len(alpha); i++ {
-		if !isEqual(alpha[i], beta[i]) {
-			log.Fatalf("%v and %v are not equal\n", alpha[i], beta[i])
-		}
-	}
 }
