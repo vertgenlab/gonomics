@@ -118,23 +118,23 @@ func vcfInfo(filename string, outFile string, printNumDivergent bool) {
 		}
 	}
 
-	_, err = fmt.Fprintf(out,"Variant statistics on file: %s\n\n", filename)
+	_, err = fmt.Fprintf(out,"Variant statistics on file:\t%s\n\n", filename)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Transitions\nA to G: %d. G to A: %d. C to T: %d. T to C: %d.\n\n", AtoG, GtoA, CtoT, TtoC)
+	_, err = fmt.Fprintf(out,"Transitions\nA to G:\t%d\nG to A:\t%d\nC to T:\t%d\nT to C:\t%d\n\n", AtoG, GtoA, CtoT, TtoC)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Transversions\nA to C: %d. C to A: %d. G to T: %d. T to G: %d. A to T: %d. T to A: %d. C to G: %d. G to C: %d.\n\n", AtoC, CtoA, GtoT, TtoG, AtoT, TtoA, CtoG, GtoC)
+	_, err = fmt.Fprintf(out,"Transversions\nA to C:\t%d\nC to A:\t%d\nG to T:\t%d\nT to G:\t%d\nA to T:\t%d\nT to A:\t%d\nC to G:\t%d\nG to C:\t%d\n\n", AtoC, CtoA, GtoT, TtoG, AtoT, TtoA, CtoG, GtoC)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Gaps Introduced\nA to Gap: %d. G to Gap: %d. C to Gap: %d. T to Gap: %d. N to Gap: %d.\n\n", AtoGap, GtoGap, CtoGap, TtoGap, NtoGap)
+	_, err = fmt.Fprintf(out,"Gaps Introduced\nA to Gap:\t%d\nG to Gap:\t%d\nC to Gap:\t%d\nT to Gap:\t%d\nN to Gap:\t%d\n\n", AtoGap, GtoGap, CtoGap, TtoGap, NtoGap)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Gaps resolved\nGap to A: %d. Gap to C: %d. Gap to T: %d. Gap To G: %d. Gap to N: %d.\n\n", GapToA, GapToC, GapToT, GapToG, GapToN)
+	_, err = fmt.Fprintf(out,"Gaps resolved\nGap to A:\t%d\nGap to C:\t%d\nGap to T:\t%d\nGap To G:\t%d\nGap to N:\t%d\n\n", GapToA, GapToC, GapToT, GapToG, GapToN)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "N's introduced\nA to N: %d. T to N: %d. G to N: %d. C to N: %d.\n\n", AtoN, TtoN, GtoN, CtoN)
+	_, err = fmt.Fprintf(out, "N's introduced\nA to N:\t%d\nT to N:\t%d\nG to N:\t%d\nC to N:\t%d\n\n", AtoN, TtoN, GtoN, CtoN)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"N's resolved\nN to A: %d. N to G: %d. N to T: %d. N to C: %d.\n", NtoA, NtoG, NtoT, NtoC)
+	_, err = fmt.Fprintf(out,"N's resolved\nN to A:\t%d\nN to G:\t%d\nN to T:\t%d\nN to C:\t%d\n\n", NtoA, NtoG, NtoT, NtoC)
 	exception.PanicOnErr(err)
 
 	if printNumDivergent {
-		_, err = fmt.Fprintf(out, "Number of Divergent Sites: %v. Number of non-divergent sites: %v.\n", numDivergent, numNotDivergent)
+		_, err = fmt.Fprintf(out, "Number of Divergent Sites:\t%v\nNumber of non-divergent sites:\t%v\n", numDivergent, numNotDivergent)
 	}
 
 	err = out.Close()
