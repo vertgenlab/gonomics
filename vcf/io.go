@@ -96,13 +96,11 @@ func parseSamples(samples []string, format []string, line string) []Sample {
 
 	answer := make([]Sample, len(samples))
 	for i := range samples {
-		var text []string // redeclare each loop
-		text = strings.Split(samples[i], ":")
+		answer[i].FormatData = strings.Split(samples[i], ":")
 		if format[0] == "GT" {
-			parseGenotype(text[0], line)
-			text[0] = ""
+			answer[i].Alleles, answer[i].Phase = parseGenotype(answer[i].FormatData[0], line)
+			answer[i].FormatData[0] = ""
 		}
-		answer[i].FormatData = text
 	}
 	return answer
 }
@@ -116,7 +114,7 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	}
 
 	// split GT by '/' or '|'
-	text := strings.FieldsFunc(gt, func(r rune) bool { return r == '/' || r == '|' })
+	text := splitGenotype(gt)
 	if len(text) == 0 {
 		return
 	}
@@ -153,6 +151,21 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	}
 	phase[0] = allPhased
 	return
+}
+
+// splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1")
+func splitGenotype(gt string) []string {
+	answer := make([]string, 0, len(gt))
+	for i := 0; i < len(gt); i++ {
+		if gt[i] == '/' || gt[i] == '|' {
+			answer = append(answer, gt[:i])
+			answer = append(answer, string(gt[i]))
+			gt = gt[i+1:]
+			i = 0
+		}
+	}
+	answer = append(answer, gt)
+	return answer
 }
 
 // NextVcf is a helper function of Read and GoReadToChan. Checks a reader for additional data lines and parses a Vcf line if more lines exist.

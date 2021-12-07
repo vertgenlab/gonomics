@@ -78,12 +78,12 @@ func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (
 		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
 		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
 			for j = 0; j < len(i.Samples); j++ {
-				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
+				if len(i.Samples[j].Alleles) == 2 && i.Samples[j].Alleles[0] != -1 && i.Samples[j].Alleles[1] != -1 { //check data for both alleles exist for sample.
 					currentSeg.N = currentSeg.N + 2
-					if i.Samples[j].AlleleOne > 0 {
+					if i.Samples[j].Alleles[0] > 0 {
 						currentSeg.I++
 					}
-					if i.Samples[j].AlleleTwo > 0 {
+					if i.Samples[j].Alleles[1] > 0 {
 						currentSeg.I++
 					}
 				}

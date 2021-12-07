@@ -36,9 +36,9 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 	return &SegSite{0, 0, Uncorrected}
 }
 
-//SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
-func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) []vcf.GenomeSample {
-	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
+//SimulateGenotype returns a slice of type vcf.Sample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
+func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) []vcf.Sample {
+	var answer []vcf.Sample = make([]vcf.Sample, 0)
 	s := SimulateSegSite(alpha, n, boundAlpha, boundBeta, boundMultiplier)
 	alleleArray := SegSiteToAlleleArray(s)
 	var d int
@@ -46,9 +46,9 @@ func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float6
 		d = c + 1
 		//if we have an odd number of alleles, we make one haploid entry
 		if d >= n {
-			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: -1, Phased: false, FormatData: make([]string, 0)})
+			answer = append(answer, vcf.Sample{Alleles: []int16{alleleArray[c], -1}, Phase: []bool{false, false}, FormatData: make([]string, 0)})
 		} else {
-			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false, FormatData: make([]string, 0)})
+			answer = append(answer, vcf.Sample{Alleles: []int16{alleleArray[c], alleleArray[d]}, Phase: []bool{false, false}, FormatData: make([]string, 0)})
 		}
 	}
 	return answer
