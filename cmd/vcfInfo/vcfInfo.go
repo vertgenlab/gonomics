@@ -5,24 +5,38 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 )
 
-func vcfInfo(filename string) {
-	var AtoN, TtoN, GtoN, CtoN int32
-	var NtoA, NtoT, NtoG, NtoC int32
-	var AtoG, AtoT, AtoC, AtoGap int32
-	var TtoA, TtoC, TtoG, TtoGap int32
-	var GtoA, GtoC, GtoT, GtoGap int32
-	var CtoA, CtoT, CtoG, CtoGap int32
-	var GaptoA, GaptoC, GaptoT, GaptoG int32
-	var NtoGap, GaptoN int32
+func vcfInfo(filename string, outFile string, printNumDivergent bool) {
+	var AtoN, TtoN, GtoN, CtoN int
+	var NtoA, NtoT, NtoG, NtoC int
+	var AtoG, AtoT, AtoC, AtoGap int
+	var TtoA, TtoC, TtoG, TtoGap int
+	var GtoA, GtoC, GtoT, GtoGap int
+	var CtoA, CtoT, CtoG, CtoGap int
+	var GapToA, GapToC, GapToT, GapToG int
+	var NtoGap, GapToN int
+	var numDivergent, numNotDivergent int = 0, 0
+	var err error
 
-	v, _ := vcf.Read(filename)
-	fmt.Printf("len: %d", len(v))
+	v, _ := vcf.GoReadToChan(filename)
+	out := fileio.EasyCreate(outFile)
 
-	for _, current := range v {
+	for current := range v {
+		if printNumDivergent {
+			if !vcf.HasAncestor(current) {
+				log.Fatalf("Divergence can only be evaluated for VCF files with annotated ancestral alleles.")
+			}
+			if vcf.IsAltAncestor(current) {
+				numDivergent++
+			} else {
+				numNotDivergent++
+			}
+		}
 		if current.Ref == "A" {
 			switch current.Alt[0] {
 			case "N":
@@ -91,45 +105,54 @@ func vcfInfo(filename string) {
 		} else if current.Ref == "-" {
 			switch current.Alt[0] {
 			case "A":
-				GaptoA++
+				GapToA++
 			case "T":
-				GaptoT++
+				GapToT++
 			case "G":
-				GaptoG++
+				GapToG++
 			case "C":
-				GaptoC++
+				GapToC++
 			case "N":
-				GaptoN++
+				GapToN++
 			}
 		}
 	}
 
-	fmt.Printf("Variant statistics on file: %s\n\n", filename)
-	fmt.Printf("Transitions\n")
-	fmt.Printf("A to G: %d. G to A: %d. C to T: %d. T to C: %d.\n\n", AtoG, GtoA, CtoT, TtoC)
-	fmt.Printf("Transversions\n")
-	fmt.Printf("A to C: %d. C to A: %d. G to T: %d. T to G: %d. A to T: %d. T to A: %d. C to G: %d. G to C: %d.\n\n", AtoC, CtoA, GtoT, TtoG, AtoT, TtoA, CtoG, GtoC)
-	fmt.Printf("Gaps Introduced\n")
-	fmt.Printf("A to Gap: %d. G to Gap: %d. C to Gap: %d. T to Gap: %d. N to Gap: %d.\n\n", AtoGap, GtoGap, CtoGap, TtoGap, NtoGap)
-	fmt.Printf("Gaps resolved\n")
-	fmt.Printf("Gap to A: %d. Gap to C: %d. Gap to T: %d. Gap To G: %d. Gap to N: %d.\n\n", GaptoA, GaptoC, GaptoT, GaptoG, GaptoN)
-	fmt.Printf("N's introduced\n")
-	fmt.Printf("A to N: %d. T to N: %d. G to N: %d. C to N: %d.\n\n", AtoN, TtoN, GtoN, CtoN)
-	fmt.Printf("N's resolved\n")
-	fmt.Printf("N to A: %d. N to G: %d. N to T: %d. N to C: %d.\n", NtoA, NtoG, NtoT, NtoC)
+	_, err = fmt.Fprintf(out,"Variant statistics on file: %s\n\n", filename)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out,"Transitions\nA to G: %d. G to A: %d. C to T: %d. T to C: %d.\n\n", AtoG, GtoA, CtoT, TtoC)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out,"Transversions\nA to C: %d. C to A: %d. G to T: %d. T to G: %d. A to T: %d. T to A: %d. C to G: %d. G to C: %d.\n\n", AtoC, CtoA, GtoT, TtoG, AtoT, TtoA, CtoG, GtoC)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out,"Gaps Introduced\nA to Gap: %d. G to Gap: %d. C to Gap: %d. T to Gap: %d. N to Gap: %d.\n\n", AtoGap, GtoGap, CtoGap, TtoGap, NtoGap)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out,"Gaps resolved\nGap to A: %d. Gap to C: %d. Gap to T: %d. Gap To G: %d. Gap to N: %d.\n\n", GapToA, GapToC, GapToT, GapToG, GapToN)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "N's introduced\nA to N: %d. T to N: %d. G to N: %d. C to N: %d.\n\n", AtoN, TtoN, GtoN, CtoN)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out,"N's resolved\nN to A: %d. N to G: %d. N to T: %d. N to C: %d.\n", NtoA, NtoG, NtoT, NtoC)
+	exception.PanicOnErr(err)
+
+	if printNumDivergent {
+		_, err = fmt.Fprintf(out, "Number of Divergent Sites: %v. Number of non-divergent sites: %v.\n", numDivergent, numNotDivergent)
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
 	fmt.Print(
 		"vcfInfo - Provides summary statistics on an input VCF file.\n" +
 			"Usage:\n" +
-			"vcfInfo file.vcf\n" +
+			"vcfInfo file.vcf out.txt\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 1
+	var expectedNumArgs int = 2
+	var printNumDivergent *bool = flag.Bool("printNumDivergent", false, "Parse the ancestral allele information and return the number of divergent and non-divergent sites in the file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -142,6 +165,7 @@ func main() {
 	}
 
 	infile := flag.Arg(0)
+	outFile := flag.Arg(1)
 
-	vcfInfo(infile)
+	vcfInfo(infile, outFile, *printNumDivergent)
 }
