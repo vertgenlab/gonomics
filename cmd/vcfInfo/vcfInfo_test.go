@@ -1,16 +1,16 @@
 package main
 
 import (
-	"testing"
-	"os"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var VcfInfoTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedFile string
+	InFile            string
+	OutFile           string
+	ExpectedFile      string
 	printNumDivergent bool
 }{
 	{"testdata/test.vcf", "testdata/tmp.txt", "testdata/expected.txt", false},
