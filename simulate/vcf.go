@@ -12,7 +12,7 @@ import (
 //maybe we can combine these?
 func Vcf(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64) {
 	out := fileio.EasyCreate(outFile)
-	var genotype []vcf.GenomeSample
+	var genotype []vcf.Sample
 
 	var current vcf.Vcf
 	//for each segregating site, we make a vcf entry and write out
