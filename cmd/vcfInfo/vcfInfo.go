@@ -118,19 +118,19 @@ func vcfInfo(filename string, outFile string, printNumDivergent bool) {
 		}
 	}
 
-	_, err = fmt.Fprintf(out,"Variant statistics on file:\t%s\n\n", filename)
+	_, err = fmt.Fprintf(out, "Variant statistics on file:\t%s\n\n", filename)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Transitions\nA to G:\t%d\nG to A:\t%d\nC to T:\t%d\nT to C:\t%d\n\n", AtoG, GtoA, CtoT, TtoC)
+	_, err = fmt.Fprintf(out, "Transitions\nA to G:\t%d\nG to A:\t%d\nC to T:\t%d\nT to C:\t%d\n\n", AtoG, GtoA, CtoT, TtoC)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Transversions\nA to C:\t%d\nC to A:\t%d\nG to T:\t%d\nT to G:\t%d\nA to T:\t%d\nT to A:\t%d\nC to G:\t%d\nG to C:\t%d\n\n", AtoC, CtoA, GtoT, TtoG, AtoT, TtoA, CtoG, GtoC)
+	_, err = fmt.Fprintf(out, "Transversions\nA to C:\t%d\nC to A:\t%d\nG to T:\t%d\nT to G:\t%d\nA to T:\t%d\nT to A:\t%d\nC to G:\t%d\nG to C:\t%d\n\n", AtoC, CtoA, GtoT, TtoG, AtoT, TtoA, CtoG, GtoC)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Gaps Introduced\nA to Gap:\t%d\nG to Gap:\t%d\nC to Gap:\t%d\nT to Gap:\t%d\nN to Gap:\t%d\n\n", AtoGap, GtoGap, CtoGap, TtoGap, NtoGap)
+	_, err = fmt.Fprintf(out, "Gaps Introduced\nA to Gap:\t%d\nG to Gap:\t%d\nC to Gap:\t%d\nT to Gap:\t%d\nN to Gap:\t%d\n\n", AtoGap, GtoGap, CtoGap, TtoGap, NtoGap)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"Gaps resolved\nGap to A:\t%d\nGap to C:\t%d\nGap to T:\t%d\nGap To G:\t%d\nGap to N:\t%d\n\n", GapToA, GapToC, GapToT, GapToG, GapToN)
+	_, err = fmt.Fprintf(out, "Gaps resolved\nGap to A:\t%d\nGap to C:\t%d\nGap to T:\t%d\nGap To G:\t%d\nGap to N:\t%d\n\n", GapToA, GapToC, GapToT, GapToG, GapToN)
 	exception.PanicOnErr(err)
 	_, err = fmt.Fprintf(out, "N's introduced\nA to N:\t%d\nT to N:\t%d\nG to N:\t%d\nC to N:\t%d\n\n", AtoN, TtoN, GtoN, CtoN)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out,"N's resolved\nN to A:\t%d\nN to G:\t%d\nN to T:\t%d\nN to C:\t%d\n\n", NtoA, NtoG, NtoT, NtoC)
+	_, err = fmt.Fprintf(out, "N's resolved\nN to A:\t%d\nN to G:\t%d\nN to T:\t%d\nN to C:\t%d\n\n", NtoA, NtoG, NtoT, NtoC)
 	exception.PanicOnErr(err)
 
 	if printNumDivergent {
