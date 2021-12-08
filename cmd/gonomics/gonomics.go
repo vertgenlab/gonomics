@@ -42,18 +42,25 @@ func getBin() (path string, binExists map[string]bool) {
 }
 
 // getGonomicsCmds parses the gonomics source code to return a set of cmd names
+// path input pointing to gonomics directory overrides autodetection
 func getGonomicsCmds() map[string]bool {
 	var expectedPath string
-	if os.Getenv("GOPATH") != "" {
-		expectedPath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd"
-	} else {
-		expectedPath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd"
+	binPath, _ := getBin()
+	var cachedSrcPath string = getCachedSrcDir(binPath + "/.cmdcache")
+	switch {
+	case cachedSrcPath != "":
+		expectedPath = cachedSrcPath
+	case os.Getenv("GOPATH") != "":
+		expectedPath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
+	default:
+		expectedPath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd/"
 	}
 
 	cmds, err := ioutil.ReadDir(expectedPath)
 	if err != nil {
-		log.Printf("ERROR: could not find gonomics cmd folder in expected path: %s\n", expectedPath)
-		log.Fatal(err)
+		log.Fatalf("ERROR: could not find gonomics cmd folder in expected path: %s\n"+
+			"Please use the '-setpath' followed by the path to the gonomics directory\n"+
+			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n", expectedPath)
 	}
 
 	funcNames := make(map[string]bool)
@@ -70,9 +77,16 @@ func getGonomicsCmds() map[string]bool {
 }
 
 func main() {
+	gonomicsPath := flag.String("setpath", "", "path to gonomics directory")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	if *gonomicsPath != "" {
+		binPath, _ := getBin()
+		buildFromPath(*gonomicsPath, binPath)
+		return
+	}
 
 	if len(flag.Args()) == 0 {
 		flag.Usage()
