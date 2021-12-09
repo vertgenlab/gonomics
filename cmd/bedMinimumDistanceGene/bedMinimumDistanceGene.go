@@ -9,7 +9,8 @@ import (
 	"log"
 )
 // TODO: change func name
-func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed string) {
+// TODO add description for the online thing of gonomics.
+func bedMinimumDistanceGene(inputBed string, genomeBed string, outBed string) {
 	out := fileio.EasyCreate(outBed)
 	input := bed.Read(inputBed)
 	genome := bed.Read(genomeBed)
@@ -42,7 +43,7 @@ func compareBedDistanceBasedOnName(inputBed string, genomeBed string, outBed str
 				log.Fatalf("Unable to compare distance, error message: %s", err)
 			}
 			if j == 0 {
-				lowestDistance = distance
+				lowestDistance = distance  //after this would grab the gene sense and the upstream downstream. 
 			} else {
 				if distance < lowestDistance {
 					lowestDistance = distance
@@ -97,6 +98,6 @@ func main() {
 	genomeBed := flag.Arg(1)
 	outBed := flag.Arg(2)
 
-	compareBedDistanceBasedOnName(inputBed, genomeBed, outBed)
+	bedMinimumDistanceGene(inputBed, genomeBed, outBed)
 
 }
