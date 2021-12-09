@@ -1,6 +1,7 @@
 package bed
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
@@ -46,10 +47,13 @@ func (b *BedSlice) Pop() interface{} {
 }
 
 func (b BedSlice) Write(file string) {
+	var err error
 	f := fileio.EasyCreate(file)
 	for i := range b {
 		WriteBed(f, *b[i])
 	}
+	err = f.Close()
+	exception.PanicOnErr(err)
 }
 
 func (b Bed) WriteToFileHandle(file io.Writer) {

@@ -338,37 +338,29 @@ func FilterVcfPos(vcfs []Vcf) []Vcf {
 	return answer
 }
 
-//SampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
+//SampleVcf takes a set of Vcf records and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
 func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([]Vcf, Header) {
 	var sampleList []string
 	if len(header.Text) > 0 {
 		sampleList = HeaderGetSampleList(header)
 	}
-
 	if numVariants > len(records) {
 		log.Fatalf("The Number of requested sampled variants is greater than the Number of variants in the input file.")
 	}
-
 	//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
 	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
-	//DEBUG:fmt.Printf("lenRecords before slice: %v.\n", len(records))
-	records = records[:numVariants] //keep only as many results as specified.
-	//DEBUG: fmt.Printf("lenRecords after slice: %v.\n", len(records))
-
+	records = records[:numVariants] //keep only as many results as specified
 	if numSamples > 0 {
 		if numSamples > len(records[0].Samples) {
 			log.Fatalf("More samples were requested than were present in the input VCF file.")
 		}
-		var sequentialSlice []int = getSequentialSlice(len(records[0].Samples))
-		rand.Shuffle(len(sequentialSlice), func(i, j int) { sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i] })
-		sequentialSlice = sequentialSlice[:numSamples] //now we have a list of samples to keep from each variant.
+		var sequentialSlice []int = getSampleKeepList(len(records[0].Samples), numSamples)
 
 		if len(header.Text) > 0 {
 			var outHeaderSampleList []string = make([]string, 0)
 			for _, i := range sequentialSlice {
 				outHeaderSampleList = append(outHeaderSampleList, sampleList[i])
 			}
-
 			header = HeaderUpdateSampleList(header, outHeaderSampleList)
 		}
 
@@ -383,6 +375,13 @@ func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([
 		}
 	}
 	return records, header
+}
+
+func getSampleKeepList(n int, numSamples int) []int {
+	var sequentialSlice []int = getSequentialSlice(n)
+	rand.Shuffle(len(sequentialSlice), func(i, j int) { sequentialSlice[i], sequentialSlice[j] = sequentialSlice[j], sequentialSlice[i] })
+	sequentialSlice = sequentialSlice[:numSamples] //now we have a list of samples to keep from each variant.
+	return sequentialSlice
 }
 
 //returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]

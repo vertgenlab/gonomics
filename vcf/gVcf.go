@@ -192,8 +192,14 @@ func SamplesToString(sample []GenomeSample) string {
 //helperGenotypeToStringNew uses just an array of GenomeSample structs to write to a string for simple gVCFs with just the allele info in notes.
 func HelperSamplesToString(sample []GenomeSample, i int) string {
 	var answer string
+	if sample[i].FormatData == nil {
+		if i != len(sample)-1 {
+			return ".\t"
+		}
+		return "."
+	}
 	if sample[i].AlleleOne < 0 {
-		answer = "noData"
+		answer = "."
 	} else {
 		answer = fmt.Sprintf("%d%s%d", sample[i].AlleleOne, PhasedToString(sample[i].Phased), sample[i].AlleleTwo)
 	}

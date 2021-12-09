@@ -1,7 +1,6 @@
 package main
 
-import
-(
+import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"

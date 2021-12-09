@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -15,13 +16,14 @@ import (
 func sampleVcf(inFile string, outFile string, numVariants int, numSamples int, randSeed bool, setSeed int64) {
 	common.RngSeed(randSeed, setSeed)
 	records, header := vcf.Read(inFile)
-
 	records, header = vcf.SampleVcf(records, header, numVariants, numSamples)
 
 	out := fileio.EasyCreate(outFile)
-	defer out.Close()
 	vcf.NewWriteHeader(out, header)
 	vcf.WriteVcfToFileHandle(out, records)
+	var err error
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {

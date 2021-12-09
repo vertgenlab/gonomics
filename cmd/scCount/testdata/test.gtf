@@ -1,0 +1,3 @@
+chr1	test	transcript	10	50	.	+	.	gene_id "apples"; transcript_id "apples"; gene_name "apples";
+chr1	test	transcript	80	90	.	+	.	gene_id "pear"; transcript_id "pear"; gene_name "pear";
+chr2	test	transcript	1	50	.	+	.	gene_id "banana"; transcript_id "banana"; gene_name "banana";

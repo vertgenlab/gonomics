@@ -6,29 +6,37 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
 
-func bedFormat(infile string, outfile string, fields int, ensemblToUCSC bool, UCSCToEnsembl bool) {
-	ch := bed.GoReadToChan(infile)
-	out := fileio.EasyCreate(outfile)
-	defer out.Close()
+func bedFormat(s Settings) {
+	var err error
+	ch := bed.GoReadToChan(s.InFile)
+	out := fileio.EasyCreate(s.OutFile)
 
-	if ensemblToUCSC && UCSCToEnsembl {
+	if s.EnsemblToUCSC && s.UCSCToEnsembl {
 		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
 	}
 
 	for v := range ch {
-		if ensemblToUCSC {
+		if s.EnsemblToUCSC {
 			v.Chrom = convert.EnsemblToUCSC(v.Chrom)
 		}
-		if UCSCToEnsembl {
+		if s.UCSCToEnsembl {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
+		}
+		if s.ScaleNameFloat != 1 {
+			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*common.StringToFloat64(v.Name))
 		}
 		bed.WriteBed(out.File, v)
 	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
@@ -40,11 +48,19 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+type Settings struct {
+	InFile         string
+	OutFile        string
+	UCSCToEnsembl  bool
+	EnsemblToUCSC  bool
+	ScaleNameFloat float64
+}
+
 func main() {
 	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
-	var fields *int = flag.Int("fields", 4, "Specify the number of bed fields.")
+	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", 1, "If float values are held in the name field, scale those values by this constant multiplier.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -59,5 +75,13 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	bedFormat(infile, outfile, *fields, *ensemblToUCSC, *UCSCToEnsembl)
+	s := Settings{
+		InFile:         infile,
+		OutFile:        outfile,
+		UCSCToEnsembl:  *UCSCToEnsembl,
+		EnsemblToUCSC:  *ensemblToUCSC,
+		ScaleNameFloat: *scaleNameFloat,
+	}
+
+	bedFormat(s)
 }
