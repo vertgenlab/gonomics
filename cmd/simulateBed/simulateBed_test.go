@@ -8,12 +8,12 @@ import (
 )
 
 var SimulateBedTests = []struct {
-	RegionCount int
-	SimLength int
-	NoGapFile string
-	OutFile string
-	RandSeed bool
-	SetSeed int64
+	RegionCount  int
+	SimLength    int
+	NoGapFile    string
+	OutFile      string
+	RandSeed     bool
+	SetSeed      int64
 	ExpectedFile string
 }{
 	{10, 1000, "testdata/test.noGap.bed", "testdata/tmp.bed", false, 10, "testdata/expected.bed"},
