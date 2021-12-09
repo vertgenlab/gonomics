@@ -8,9 +8,9 @@ import (
 )
 
 var MafFilterTests = []struct {
-	Infile string
-	Outfile string
-	Threshold float64
+	Infile       string
+	Outfile      string
+	Threshold    float64
 	ExpectedFile string
 }{
 	{"testdata/chr22.test.maf", "testdata/tmp.maf", 10000, "testdata/expected.chr22.maf"},

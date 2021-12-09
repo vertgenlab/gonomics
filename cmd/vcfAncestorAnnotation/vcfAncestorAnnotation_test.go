@@ -1,17 +1,17 @@
 package main
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
+	"testing"
 )
 
 var VcfAncestorAnnotationTests = []struct {
-	Infile string
-	Outfile string
+	Infile       string
+	Outfile      string
 	ExpectedFile string
-	FaFile string
+	FaFile       string
 }{
 	{"testdata/in.vcf", "testdata/tmpOut.vcf", "testdata/expected.vcf", "testdata/test.fa"},
 }
