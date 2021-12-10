@@ -18,7 +18,7 @@ var BedMinimumDistanceNameTests = []struct {
 	{"testdata/inputBed3.bed", "testdata/genomeBed3.bed", "testdata/outputBed3.bed", "testdata/expectedBed3.bed"},
 }
 
-func TestCompareBedDistanceOnName(t *testing.T) {
+func TestBedMinimumDistanceName(t *testing.T) {
 	var err error
 	for _, v := range BedMinimumDistanceNameTests {
 		bedMinimumDistanceName(v.inputBed, v.genomeBed, v.outputBed)
