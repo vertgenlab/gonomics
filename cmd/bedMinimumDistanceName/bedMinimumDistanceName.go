@@ -10,7 +10,7 @@ import (
 )
 // TODO: change func name
 // TODO add description for the online thing of gonomics.
-func bedMinimumDistanceGene(inputBed string, genomeBed string, outBed string) {
+func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 	out := fileio.EasyCreate(outBed)
 	input := bed.Read(inputBed)
 	genome := bed.Read(genomeBed)
@@ -31,7 +31,7 @@ func bedMinimumDistanceGene(inputBed string, genomeBed string, outBed string) {
 	var err error
 	var j int
 
-	for i = range input {
+	for i = range input { //range over the inputTrBed
 		lowestDistance = 0
 		inputNameField, found = genomeMap[input[i].Name] //grab the bed entries that corresponds to the gene.
 		if found != true {
@@ -98,6 +98,6 @@ func main() {
 	genomeBed := flag.Arg(1)
 	outBed := flag.Arg(2)
 
-	bedMinimumDistanceGene(inputBed, genomeBed, outBed)
+	bedMinimumDistanceName(inputBed, genomeBed, outBed)
 
 }
