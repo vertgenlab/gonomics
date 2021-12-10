@@ -18,48 +18,78 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 	genomeMap := make(map[string][]bed.Bed)
 	var i int
 
-	//Create a map of all the genes given in the genomeBed for easy reference.
-	//Assumes gene name is in the "Name" field of the genomeBed.
+	//Create a map of all the locations given in the genomeBed for easy reference.
+	//Assumes location name defined by the "Name" field of the genomeBed.
 	for i = range genome {
 		genomeMap[genome[i].Name] = append(genomeMap[genome[i].Name], genome[i])
 	}
 
-	var inputNameField []bed.Bed
+	var genomeBedMatchingNameField []bed.Bed
 	var found bool
 	var distance int
 	var lowestDistance int
+	var upstreamDownstreamIndicator bed.Strand
 	var err error
 	var j int
 
-	for i = range input { //range over the inputTrBed
-		lowestDistance = 0
-		inputNameField, found = genomeMap[input[i].Name] //grab the bed entries that corresponds to the gene.
+	for i = range input { //range over the inputBed
+		//lowestDistance = 0
+		genomeBedMatchingNameField, found = genomeMap[input[i].Name] //grab all gene bed entries that match on the "Name" field.
 		if found != true {
 			log.Fatalf("Did not find %s", input[i].Name)
 		}
-		for j = range inputNameField {
-			distance, err = bed.MinimumDistance(inputNameField[j], input[i])
+		for j = range genomeBedMatchingNameField {
+			distance, err = bed.MinimumDistance(genomeBedMatchingNameField[j], input[i])
 			if err != nil {
 				log.Fatalf("Unable to compare distance, error message: %s", err)
 			}
 			if j == 0 {
-				lowestDistance = distance  //after this would grab the gene sense and the upstream downstream. 
+				lowestDistance = distance  //after this would grab the gene sense and the upstream downstream.
+				upstreamDownstreamIndicator = determineUpstreamDownstream(input[i], genomeBedMatchingNameField[j])
 			} else {
 				if distance < lowestDistance {
 					lowestDistance = distance
+					upstreamDownstreamIndicator = determineUpstreamDownstream(input[i], genomeBedMatchingNameField[j])
 				}
 			}
 		}
 		input[i].Score = lowestDistance
-		if input[i].FieldsInitialized < 5 {
-			input[i].FieldsInitialized = 5
+		input[i].Strand = upstreamDownstreamIndicator
+		if input[i].FieldsInitialized < 6 {
+			input[i].FieldsInitialized = 6
 		}
 		bed.WriteToFileHandle(out, input[i])
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
-//TODO: update usage statement
+
+
+func determineUpstreamDownstream (inputBed bed.Bed, genomeBed bed.Bed) bed.Strand{
+	var outputStrand bed.Strand
+	if genomeBed.Strand == '+' {
+		if (inputBed.ChromStart < genomeBed.ChromStart) || (inputBed.ChromStart == genomeBed.ChromStart) {
+			outputStrand = '-'
+		}
+		if inputBed.ChromStart > genomeBed.ChromStart {
+			outputStrand = '+'
+		}
+	} else if genomeBed.Strand == '-' {
+		if (inputBed.ChromEnd > genomeBed.ChromEnd) || (inputBed.ChromEnd == genomeBed.ChromEnd) {
+			outputStrand = '-'
+		}
+		if inputBed.ChromEnd < genomeBed.ChromEnd {
+			outputStrand = '+'
+		}
+	} else {
+		outputStrand = '.'
+	}
+	return outputStrand
+}
+
+
+
+//TODO: update usage statement. Explain that genomeBed needs strand.
 func usage() {
 	fmt.Print(
 		"compareBedDistanceBasedOnName - Compares the Name fields between \n" +
