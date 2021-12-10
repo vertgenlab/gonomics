@@ -30,4 +30,3 @@ func TestCompareBedDistanceOnName(t *testing.T) {
 		}
 	}
 }
-
