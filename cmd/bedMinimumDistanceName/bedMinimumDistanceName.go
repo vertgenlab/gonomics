@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
+
 // TODO: change func name
 // TODO add description for the online thing of gonomics.
 func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
@@ -44,7 +45,7 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 				log.Fatalf("Unable to compare distance, error message: %s", err)
 			}
 			if j == 0 {
-				lowestDistance = distance  //after this would grab the gene sense and the upstream downstream.
+				lowestDistance = distance //after this would grab the gene sense and the upstream downstream.
 				upstreamDownstreamIndicator = determineUpstreamDownstream(input[i], genomeBedMatchingNameField[j])
 			} else {
 				if distance < lowestDistance {
@@ -64,8 +65,7 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 	exception.PanicOnErr(err)
 }
 
-
-func determineUpstreamDownstream (inputBed bed.Bed, genomeBed bed.Bed) bed.Strand{
+func determineUpstreamDownstream(inputBed bed.Bed, genomeBed bed.Bed) bed.Strand {
 	var outputStrand bed.Strand
 	if genomeBed.Strand == '+' {
 		if (inputBed.ChromStart < genomeBed.ChromStart) || (inputBed.ChromStart == genomeBed.ChromStart) {
@@ -86,8 +86,6 @@ func determineUpstreamDownstream (inputBed bed.Bed, genomeBed bed.Bed) bed.Stran
 	}
 	return outputStrand
 }
-
-
 
 //TODO: update usage statement. Explain that genomeBed needs strand.
 func usage() {

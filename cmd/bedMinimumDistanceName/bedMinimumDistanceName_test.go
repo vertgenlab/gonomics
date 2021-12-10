@@ -30,4 +30,3 @@ func TestBedMinimumDistanceName(t *testing.T) {
 		}
 	}
 }
-
