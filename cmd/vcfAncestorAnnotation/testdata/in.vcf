@@ -1,0 +1,12 @@
+##fileformat=VCFv4.2
+##fileDate=20211130
+##source=github.com/vertgenlab/gonomics
+##phasing=none
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant: DEL, INS, DUP, INV, CNV, BND">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant described in this record">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample1	Sample2	Sample3	
+chr1	2	.	A	C	100	PASS	.	GT	0|0	0|1	1|0
+chr1	10	.	A	T	100	PASS	.	GT	1|0	0|0	0|0
+chr1	23	.	C	T	100	PASS	.	GT	0|0	1|1	0|1
