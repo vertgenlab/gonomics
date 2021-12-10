@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
@@ -20,6 +21,7 @@ type Settings struct {
 	RevComp    bool
 	NoGaps     bool
 	NoGapBed   string
+	Index      bool
 }
 
 func faFormat(s Settings) {
@@ -47,9 +49,18 @@ func faFormat(s Settings) {
 	}
 
 	file := fileio.EasyCreate(s.OutFile)
-	defer file.Close()
-
 	fasta.WriteToFileHandle(file, records, s.LineLength)
+	err := file.Close()
+	exception.PanicOnErr(err)
+
+	if s.Index {
+		idx := fasta.CreateIndex(s.OutFile)
+		idxFile := fileio.EasyCreate(s.OutFile + ".fai")
+		_, err = fmt.Fprint(idxFile, idx)
+		exception.PanicOnErr(err)
+		err = idxFile.Close()
+		exception.PanicOnErr(err)
+	}
 }
 
 func usage() {
@@ -69,6 +80,7 @@ func main() {
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
 	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
+	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -91,6 +103,7 @@ func main() {
 		ToUpper:    *toUpper,
 		NoGaps:     *noGaps,
 		NoGapBed:   *noGapBed,
+		Index:      *createIndex,
 	}
 
 	faFormat(s)
