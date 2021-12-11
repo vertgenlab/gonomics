@@ -8,9 +8,19 @@ import (
 	"os"
 )
 
+// Seeker enables random access of fasta sequences using a pre-computed index.
 type Seeker struct {
-	file io.ReadSeekCloser
+	file readSeekCloser
 	idx  Index
+}
+
+// TODO
+// readSeekCloser is a TEMPORARY github actions is updated as the io.ReadSeekCloser
+// was added to the builtin io package in 2020.
+type readSeekCloser interface {
+	io.Reader
+	io.Seeker
+	io.Closer
 }
 
 // NewSeeker opens a fasta file and an fai index file and enables
