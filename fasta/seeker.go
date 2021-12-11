@@ -14,6 +14,11 @@ type Seeker struct {
 	idx  Index
 }
 
+// Close the Seeker.
+func (rs *Seeker) Close() error {
+	return rs.file.Close()
+}
+
 // TODO
 // readSeekCloser is a TEMPORARY github actions is updated as the io.ReadSeekCloser
 // was added to the builtin io package in 2020.
