@@ -94,6 +94,13 @@ func parseSamples(samples []string, format []string, line string) []Sample {
 		return nil
 	}
 
+	for i := 1; i < len(format); i++ {
+		if format[i] == "GT" {
+			log.Fatalf("ERROR: The format key GT is reserved for genotype information. VCF specifications require GT to be present as"+
+				"the first format key if it is present. GT key is misplaced in the following line:\n%s\n", line)
+		}
+	}
+
 	answer := make([]Sample, len(samples))
 	for i := range samples {
 		answer[i].FormatData = strings.Split(samples[i], ":")
