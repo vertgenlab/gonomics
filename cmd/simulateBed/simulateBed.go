@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
@@ -17,11 +18,13 @@ func simulateBed(regionCount int, simLength int, noGapFile string, outFile strin
 	noGap := bed.Read(noGapFile)
 	c := simulate.GoSimulateBed(noGap, regionCount, simLength)
 	out := fileio.EasyCreate(outFile)
-	defer out.Close()
+	var err error
 
 	for i := range c {
 		bed.WriteBed(out.File, i)
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
