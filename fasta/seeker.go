@@ -10,7 +10,7 @@ import (
 
 // Seeker enables random access of fasta sequences using a pre-computed index.
 type Seeker struct {
-	file readSeekCloser
+	file readSeekCloser // TODO change to io.ReadSeekCloser after update
 	idx  Index
 }
 
@@ -20,8 +20,9 @@ func (rs *Seeker) Close() error {
 }
 
 // TODO
-// readSeekCloser is a TEMPORARY github actions is updated as the io.ReadSeekCloser
-// was added to the builtin io package in 2020.
+// readSeekCloser is a TEMPORARY interface until github actions
+// is updated to the newer version of Go as the io.ReadSeekCloser
+// interface was added to the builtin io package in 2020.
 type readSeekCloser interface {
 	io.Reader
 	io.Seeker
@@ -59,7 +60,7 @@ func SeekByName(sr *Seeker, chr string, start, end int) []dna.Base {
 }
 
 // SeekByIndex returns a portion of a fasta sequence identified by chromosome index (order in file).
-// Input start and end should be 0-based start-open end-closed.
+// Input start and end should be 0-based start-closed end-open.
 func SeekByIndex(sr *Seeker, chr, start, end int) []dna.Base {
 	return seek(sr, sr.idx.chroms[chr], start, end)
 }
