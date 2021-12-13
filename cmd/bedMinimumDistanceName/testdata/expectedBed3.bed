@@ -1,4 +1,4 @@
-chr1	3	10	gene1	11	-
+chr1	3	10	gene1	21	-
 chr2	3	16	gene3	0	-
-chr1	20	58	gene4	0	+
-chr2	2	15	gene3	0	-
+chr1	58	70	gene4	3	-
+chr2	1	3	gene3	0	+

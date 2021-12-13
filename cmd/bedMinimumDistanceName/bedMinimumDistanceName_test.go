@@ -23,7 +23,7 @@ func TestBedMinimumDistanceName(t *testing.T) {
 	for _, v := range BedMinimumDistanceNameTests {
 		bedMinimumDistanceName(v.inputBed, v.genomeBed, v.outputBed)
 		if !fileio.AreEqual(v.expectedBed, v.outputBed) {
-			t.Errorf("Error in bedMinimumDistanceName")
+			t.Errorf("Error in bedMinimumDistanceName, expectedBed != outputBed")
 		} else {
 			err = os.Remove(v.outputBed)
 			exception.PanicOnErr(err)
