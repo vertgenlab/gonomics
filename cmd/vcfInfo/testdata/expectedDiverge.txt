@@ -1,0 +1,46 @@
+Variant statistics on file:	testdata/test.vcf
+
+Transitions
+A to G:	3
+G to A:	7
+C to T:	2
+T to C:	6
+
+Transversions
+A to C:	1
+C to A:	0
+G to T:	1
+T to G:	0
+A to T:	0
+T to A:	3
+C to G:	0
+G to C:	1
+
+Gaps Introduced
+A to Gap:	0
+G to Gap:	0
+C to Gap:	0
+T to Gap:	0
+N to Gap:	0
+
+Gaps resolved
+Gap to A:	0
+Gap to C:	0
+Gap to T:	0
+Gap To G:	0
+Gap to N:	0
+
+N's introduced
+A to N:	0
+T to N:	2
+G to N:	0
+C to N:	0
+
+N's resolved
+N to A:	1
+N to G:	0
+N to T:	1
+N to C:	0
+
+Number of Divergent Sites:	2
+Number of non-divergent sites:	28
