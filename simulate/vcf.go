@@ -28,7 +28,7 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 
 //SingleVcf returns a single simulated Vcf from a user-specified selection parameter alpha.
 func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
-	var genotype []vcf.GenomeSample
+	var genotype []vcf.Sample
 	var divergent bool
 	var answer vcf.Vcf
 	genotype, divergent = popgen.SimulateGenotype(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier)

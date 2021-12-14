@@ -1,6 +1,7 @@
 package popgen
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/interval"
@@ -135,15 +136,16 @@ func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
 					}
 				}
 				for j = range i.Samples {
-					if i.Samples[j].AlleleOne == -1 || i.Samples[j].AlleleTwo == -1 { //check that data exists for both alleles
+					if len(i.Samples[j].Alleles) != 2 || i.Samples[j].Alleles[0] == -1 || i.Samples[j].Alleles[1] == -1 { //check that data exists for both alleles
+						fmt.Println(i)
 						log.Fatalf("Tajima's D on VCFs requires complete alignment blocks.")
 					} else {
-						if i.Samples[j].AlleleOne == 0 {
+						if i.Samples[j].Alleles[0] == 0 {
 							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Ref))
 						} else {
 							all[2*j].sites = append(all[2*j].sites, dna.StringToBases(i.Alt[0])) //TODO: (riley) currently only handles biallelic positions.
 						}
-						if i.Samples[j].AlleleTwo == 0 {
+						if i.Samples[j].Alleles[1] == 0 {
 							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Ref))
 						} else {
 							all[2*j+1].sites = append(all[2*j+1].sites, dna.StringToBases(i.Alt[0]))
