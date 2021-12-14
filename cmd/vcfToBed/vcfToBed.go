@@ -21,7 +21,7 @@ func vcfToBed(infile string, outfile string, delimiter string) {
 	for v := range ch {
 		note = ""
 		for i := 0; i < len(v.Samples); i++ {
-			note = note + delimiter + vcf.HelperSamplesToString(v.Samples, i)
+			note = note + delimiter + fmt.Sprintf("%s", v.Samples[i])
 		}
 		_, err = fmt.Fprintf(out, "%s\t%v\t%v\t%s%s%s%s%s%s%v%s%s%s%s%s%s%s%s\n", v.Chr, v.Pos-1, v.Pos, v.Id, delimiter, v.Ref, delimiter, v.Alt, delimiter, v.Qual, delimiter, v.Filter, delimiter, v.Info, delimiter, v.Format, delimiter, note)
 		common.ExitIfError(err)
