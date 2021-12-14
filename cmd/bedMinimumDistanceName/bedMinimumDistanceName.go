@@ -9,7 +9,6 @@ import (
 	"log"
 )
 
-
 func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 	out := fileio.EasyCreate(outBed)
 	input := bed.Read(inputBed)
@@ -22,8 +21,8 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 	//Create a map of all the "Names" in the genomeBed for easy reference.
 	//Assumes all genomeBed entries have unique "Name" fields.
 	for i = range genome {
-		if _ , ok = genomeMap[genome[i].Name]; ok {
-			log.Fatalf("The following entry (Name field) is found twice in the bed: %s", genome[i].Name )
+		if _, ok = genomeMap[genome[i].Name]; ok {
+			log.Fatalf("The following entry (Name field) is found twice in the bed: %s", genome[i].Name)
 		}
 		genomeMap[genome[i].Name] = append(genomeMap[genome[i].Name], genome[i])
 	}
@@ -59,7 +58,7 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 	exception.PanicOnErr(err)
 }
 
-func determineUpstreamDownstream(inputBed bed.Bed, genomeBed bed.Bed) (bed.Strand) {
+func determineUpstreamDownstream(inputBed bed.Bed, genomeBed bed.Bed) bed.Strand {
 	var outputStrand bed.Strand
 	if genomeBed.Strand == '+' {
 		if (inputBed.ChromStart < genomeBed.ChromStart) || (inputBed.ChromStart == genomeBed.ChromStart) {
@@ -91,7 +90,7 @@ func usage() {
 			"The outputBed is the inputBed, with minimum distance reported in the 'Score' field and the \n" +
 			"upstream/downstream labeling reported in the 'Strand' field. \n" +
 			"Both 'Score' and 'Strand' fields will be overwritten from the inputBed if these \n" +
-			"fields are not blank.\n"+
+			"fields are not blank.\n" +
 			"inputBed expectations: \n" +
 			"\t - must have Chr, ChromStart, ChromEnd, and Name field\n" +
 			"\t - optional to have Score and Strand but these will be rewritten\n" +
