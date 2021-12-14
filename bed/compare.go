@@ -162,7 +162,7 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 	return CompareChromEnd(a, b)
 }
 
-//MinimumcDistance compares beds by chromStart and chromEnd and returns the minimum distance between
+//MinimumDistance compares beds by chromStart and chromEnd and returns the minimum distance between
 //the two beds. return options; -1 (different chromosomes, no distance calculated),
 //0 (overlap, minimum distance is 0), >=0 is the minimum distance.
 func MinimumDistance(a Bed, b Bed) (n int, err error) {
