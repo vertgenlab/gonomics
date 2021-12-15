@@ -10,7 +10,7 @@ import (
 
 var SamToWigTests = []struct {
 	inFile           string
-	reference	string
+	reference        string
 	outFile_expected string
 	fragLength       int
 }{
