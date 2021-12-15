@@ -11,21 +11,33 @@ import (
 	"log"
 )
 
-func bedDistanceFromEnds(inFile string, chromFile string, outFile string) {
+func bedDistanceFromChrEnds(inFile string, chromFile string, outFile string) {
 	records := bed.Read(inFile)
 	ref := chromInfo.ReadToMap(chromFile)
 	var lengthFromEnd int
+	var found bool
 
-	for i := 0; i < len(records); i++ {
+	for i := range records {
+		_, found = ref[records[i].Chrom]
+		if found != true {
+			log.Fatalf("Did not find '%s' in the chrom.sizes file", records[i].Chrom)
+		}
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
+		if lengthFromEnd < 0 {
+			log.Fatalf("inputBed coordinates are outside chrom.sizes coordinate range, %s", records[i])
+		}
 		records[i].Score = numbers.Min(lengthFromEnd, records[i].ChromStart)
+		if records[i].FieldsInitialized < 5 {
+			records[i].FieldsInitialized = 5
+		}
 	}
 	bed.Write(outFile, records)
 }
 
 func usage() {
 	fmt.Print(
-		"bedDistanceFromEnds - Returns a bed file with the score containing the distance from the end of the chromosome.\n" +
+		"bedDistanceFromChrEnds - Returns a bed file with the Score field containing the minimum\n" +
+			"distance from the end of the chromosome.\n" +
 			"Usage:\n" +
 			"bedDistanceFromEnds input.bed reference.chrom.sizes output.bed\n" +
 			"options:\n")
@@ -49,5 +61,5 @@ func main() {
 	chromFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	bedDistanceFromEnds(inFile, chromFile, outFile)
+	bedDistanceFromChrEnds(inFile, chromFile, outFile)
 }
