@@ -15,8 +15,13 @@ func bedDistanceFromChrEnds(inFile string, chromFile string, outFile string) {
 	records := bed.Read(inFile)
 	ref := chromInfo.ReadToMap(chromFile)
 	var lengthFromEnd int
+	var found bool
 
 	for i := range records {
+		_ , found = ref[records[i].Chrom]
+		if found != true {
+			log.Fatalf("Did not find '%s' in the chrom.sizes file", records[i].Chrom)
+		}
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
 		if lengthFromEnd < 0 {
 			log.Fatalf("inputBed coordinates are outside chrom.sizes coordinate range, %s", records[i])
