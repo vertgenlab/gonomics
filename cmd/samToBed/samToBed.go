@@ -47,14 +47,14 @@ func samToBed(samFilename string, bedFilename string, fragLength int) {
 			outBed = convert.SamToBed(records)
 		}*/
 	/* When paired command is ready, add a flag in main
-		var paired *bool = flag.Bool("pairedEnd", false, "Specifies paired end reads")
-		log.Printf("Paired: %t\n", *paired)
-		if paired && (*fragLength != -1) {
-						log.Fatalf("Error: cannot be both paired and have a fixed frag size.")
-		}
-		samToBed(inFile, outFile, *paired, *fragLength)
-		Change function samToBed to include paired flag
-		Update samToBed_test.go
+	var paired *bool = flag.Bool("pairedEnd", false, "Specifies paired end reads")
+	log.Printf("Paired: %t\n", *paired)
+	if paired && (*fragLength != -1) {
+					log.Fatalf("Error: cannot be both paired and have a fixed frag size.")
+	}
+	samToBed(inFile, outFile, *paired, *fragLength)
+	Change function samToBed to include paired flag
+	Update samToBed_test.go
 	*/
 }
 

@@ -59,7 +59,7 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 //SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
 func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
 	//fatal if fragLength is shorter than sam read length
-	if (fragLength <  len(s.Seq)) {
+	if fragLength < len(s.Seq) {
 		log.Fatalf("Error: fragLength is %d, which is shorter than the sam read length %d\n", fragLength, len(s.Seq))
 	}
 
