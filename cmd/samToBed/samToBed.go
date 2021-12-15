@@ -13,7 +13,7 @@ import (
 	"log"
 )
 
-func samToBed(samFilename string, bedFilename string, paired bool, fragLength int) {
+func samToBed(samFilename string, bedFilename string, fragLength int) {
 	var aln sam.Sam
 	var done bool = false
 
@@ -46,6 +46,16 @@ func samToBed(samFilename string, bedFilename string, paired bool, fragLength in
 		} else {
 			outBed = convert.SamToBed(records)
 		}*/
+	/* When paired command is ready, add a flag in main
+		var paired *bool = flag.Bool("pairedEnd", false, "Specifies paired end reads")
+		log.Printf("Paired: %t\n", *paired)
+		if paired && (*fragLength != -1) {
+						log.Fatalf("Error: cannot be both paired and have a fixed frag size.")
+		}
+		samToBed(inFile, outFile, *paired, *fragLength)
+		Change function samToBed to include paired flag
+		Update samToBed_test.go
+	*/
 }
 
 func usage() {
@@ -59,8 +69,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var paired *bool = flag.Bool("pairedEnd", false, "Specifies paired end reads")
-	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
+	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq, must be greater than or equal to read length")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -75,12 +84,7 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	log.Printf("Paired: %t\n", *paired)
 	log.Printf("fragLength: %d\n", *fragLength)
 
-	/*if paired && (*fragLength != -1) {
-	        log.Fatalf("Error: cannot be both paired and have a fixed frag size.")
-	}*/
-
-	samToBed(inFile, outFile, *paired, *fragLength)
+	samToBed(inFile, outFile, *fragLength)
 }
