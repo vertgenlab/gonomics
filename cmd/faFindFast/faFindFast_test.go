@@ -1,19 +1,19 @@
 package main
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
+	"testing"
 )
 
 var FaFindFastTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedFile string
-	WindowSize int
-	ChromName string
-	RemoveN bool
+	InFile              string
+	OutFile             string
+	ExpectedFile        string
+	WindowSize          int
+	ChromName           string
+	RemoveN             bool
 	LongWindowEfficient bool
 }{
 	{"testdata/test_indel.fa", "testdata/tmp.out.bed", "testdata/expected.bed", 10, "chr1", false, false},

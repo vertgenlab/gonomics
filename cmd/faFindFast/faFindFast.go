@@ -62,7 +62,7 @@ func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *
 }
 
 func seqsContainN(seq1 fasta.Fasta, seq2 fasta.Fasta, start int, windowSize int) bool {
-	for i := start; i < start + windowSize && i < len(seq1.Seq); i++ {
+	for i := start; i < start+windowSize && i < len(seq1.Seq); i++ {
 		if seq1.Seq[i] == dna.N {
 			return true
 		} else if seq2.Seq[i] == dna.N {
