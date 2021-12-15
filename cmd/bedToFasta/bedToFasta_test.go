@@ -1,16 +1,16 @@
 package main
 
 import (
-	"testing"
-	"os"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var BedToFastaTests = []struct {
-	FastaFile string
-	BedFile string
-	OutFile string
+	FastaFile    string
+	BedFile      string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/test.fa", "testdata/test.bed", "testdata/out.fa", "testdata/expected.fa"},
