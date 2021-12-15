@@ -16,6 +16,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
+	"sort"
 )
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
@@ -142,6 +143,12 @@ func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.
 			wigSlice[chromIndex].Values[k]++
 		}
 	}
+
+	//stable sort the wigSlice by Chrom
+	//so that each wig output will be the same as long as input is the same
+	//otherwise wig output will shift even if input is the same, due to the reference map
+	sort.SliceStable(wigSlice, func(i, j int) bool { return wigSlice[i].Chrom < wigSlice[j].Chrom })
+
 	return wigSlice
 }
 

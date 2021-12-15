@@ -55,6 +55,7 @@ func samToBed(samFilename string, bedFilename string, fragLength int) {
 	samToBed(inFile, outFile, *paired, *fragLength)
 	Change function samToBed to include paired flag
 	Update samToBed_test.go
+	Update samToWig.go
 	*/
 }
 
