@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 )
 
@@ -20,7 +21,8 @@ func samToWig(samFileName string, reference string, outfile string, fragLength i
 	ref := chromInfo.ReadToMap(reference)
 
 	samFile := fileio.EasyOpen(samFileName)
-	defer samFile.Close()
+	var err error
+
 	var done bool = false
 	sam.ReadHeader(samFile)
 	var outBed []bed.Bed
@@ -44,6 +46,8 @@ func samToWig(samFileName string, reference string, outfile string, fragLength i
 			}
 		}
 	}
+	err = samFile.Close()
+	exception.PanicOnErr(err)
 
 	outWig = convert.BedReadsToWig(outBed, ref)
 	log.Printf("Length of outWig: %d", len(outWig))
