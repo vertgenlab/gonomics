@@ -19,6 +19,9 @@ func faInfo(inFile string, outFile string) {
 	totalA, totalT, totalC, totalG, totalGap, totalN := 0, 0, 0, 0, 0, 0
 	var err error
 
+	_, err = fmt.Fprintf(out, "Name\tA\tT\tC\tG\tGap\tN\n") // create the header line.
+	exception.PanicOnErr(err)
+
 	for i := range records {
 		recordA, recordT, recordC, recordG, recordGap, recordN = 0, 0, 0, 0, 0, 0
 		for k := range records[i].Seq {
@@ -44,10 +47,10 @@ func faInfo(inFile string, outFile string) {
 				log.Fatalf("Character '%s' encountered in the fasta. This is an illegal character.", dna.BaseToString(records[i].Seq[k]))
 			}
 		}
-		_, err = fmt.Fprintf(out, "Name:%s\tA:%d\tT:%d\tC:%d\tG:%d\tGap:%d\tN:%d\n", records[i].Name, recordA, recordT, recordC, recordG, recordGap, recordN)
+		_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%d\t%d\t%d\t%d\n", records[i].Name, recordA, recordT, recordC, recordG, recordGap, recordN)
 		exception.PanicOnErr(err)
 	}
-	_, err = fmt.Fprintf(out, "fileTotal:\tA:%d\tT:%d\tC:%d\tG:%d\tGap:%d\tN:%d\n", totalA, totalT, totalC, totalG, totalGap, totalN)
+	_, err = fmt.Fprintf(out, "total\t%d\t%d\t%d\t%d\t%d\t%d\n", totalA, totalT, totalC, totalG, totalGap, totalN)
 	exception.PanicOnErr(err)
 	err = out.Close()
 	exception.PanicOnErr(err)
