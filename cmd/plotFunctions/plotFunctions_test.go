@@ -11,12 +11,12 @@ import (
 //the popgen package.
 
 var PlotFunctionsTests = []struct {
-	Function string
+	Function     string
 	FunctionArgs string
-	Left float64
-	Right float64
-	Bins int
-	OutFile string
+	Left         float64
+	Right        float64
+	Bins         int
+	OutFile      string
 	ExpectedFile string
 }{
 	{"AfsStationarity", "0.001", 0.001, 0.999, 100, "testdata/tmp.afsStationarity.txt", "testdata/expected.afsStationarity.txt"},
@@ -27,7 +27,7 @@ var PlotFunctionsTests = []struct {
 
 func TestPlotFunctions(t *testing.T) {
 	var err error
-	for _,v := range PlotFunctionsTests {
+	for _, v := range PlotFunctionsTests {
 		plotContinuousFunctions(v.Function, v.FunctionArgs, v.Left, v.Right, v.Bins, v.OutFile)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in plotFunctions, continuous functions. Output did not match expected.")
