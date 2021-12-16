@@ -12,17 +12,18 @@ import (
 
 func usage() {
 	fmt.Print(
-		"sortGiraf - External sort of giraf records based on topological ordering of nodes in input graph.\n" +
+		"girafSort - External sort of giraf records based on topological ordering of nodes in input graph.\n" +
 			"Usage:\n" +
-			" sortGiraf -o output.giraf -g graph.gg [options] input.giraf graphReference.gg output.giraf \n" +
+			" girafSort -o output.giraf -g graph.gg [options] input.giraf graphReference.gg output.giraf \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
-func sortGiraf(girafFile string, graphFile string, linesPerChunk int, outFile string) {
+func girafSort(girafFile string, graphFile string, linesPerChunk int, outFile string) []uint32 {
 	graph := genomeGraph.Read(graphFile)
 	topoOrder := genomeGraph.GetSortOrder(graph)
 	sort.GirafExternalMergeSort(girafFile, topoOrder, linesPerChunk, outFile)
+	return topoOrder // topo order is not deterministic so we have a return for testing purposes only
 }
 
 func main() {
@@ -42,5 +43,5 @@ func main() {
 	graph := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	sortGiraf(inFile, graph, *linesPerChunk, outFile)
+	girafSort(inFile, graph, *linesPerChunk, outFile)
 }
