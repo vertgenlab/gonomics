@@ -20,7 +20,7 @@ func bedToFasta(fastaFile string, bedFile string, outfile string) {
 
 func usage() {
 	fmt.Print(
-		"bedToFasta - Combines overlapping bed entries, keeping max score. Must be sorted.\n" +
+		"bedToFasta - Extracts sequences from a fasta file from regions specified by an input bed.\n" +
 			"Usage:\n" +
 			"bedToFasta reference.fa intput.bed output.fa\n" +
 			"options:\n")
