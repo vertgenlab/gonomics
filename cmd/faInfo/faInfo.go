@@ -19,7 +19,7 @@ func faInfo(inFile string, outFile string) {
 	totalA, totalT, totalC, totalG, totalGap, totalN := 0, 0, 0, 0, 0, 0
 	var err error
 
-	_, err = fmt.Fprintf(out, "Name\tA\tT\tC\tG\tGap\tN\n") // create the header line.
+	_, err = fmt.Fprintf(out, "#Name\tA\tT\tC\tG\tGap\tN\n") // create the header line.
 	exception.PanicOnErr(err)
 
 	for i := range records {
