@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -16,7 +17,7 @@ import (
 func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string, clearInfo bool) {
 	ch, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
-	defer out.Close()
+	var err error
 
 	var refMap map[string][]dna.Base
 
@@ -35,7 +36,7 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 			v.Info = "."
 		}
 		if fixVcfRecords {
-			vcf.FixVcf(v, refMap)
+			v = vcf.FixVcf(v, refMap)
 		}
 		if ensemblToUCSC {
 			v.Chr = convert.EnsemblToUCSC(v.Chr)
@@ -45,6 +46,9 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 		}
 		vcf.WriteVcf(out, v)
 	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {

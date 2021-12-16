@@ -22,7 +22,7 @@ func TestCompareDistance(t *testing.T) {
 	var err error
 	var boolForError bool //to help test if the error returned is as expected
 	for _, v := range CompareDistanceTests {
-		distance, err = CompareDistance(v.A, v.B)
+		distance, err = MinimumDistance(v.A, v.B)
 		if distance != v.expectedDistance {
 			t.Errorf("Error in CompareDistance. Expected: %v. Actual %v.", v.expectedDistance, distance)
 		}

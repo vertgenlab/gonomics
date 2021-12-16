@@ -1,0 +1,25 @@
+##fileformat=VCFv4.2
+##fileDate=20211216
+##source=github.com/vertgenlab/gonomics
+##phasing=none
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant: DEL, INS, DUP, INV, CNV, BND">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant described in this record">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	testdata/test.sam
+chr1	7	nil	A	T	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	8	nil	A	T	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	9	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	10	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	12	nil	A	T	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	14	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	15	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	16	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	18	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	20	nil	A	C	nil	0	nil	SVTYPE=SNP	nil	nil
+chr1	22	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
+chr2	29	nil	G	T	nil	0	nil	SVTYPE=SNP	nil	nil
+chr2	30	nil	C	A	nil	0	nil	SVTYPE=SNP	nil	nil
+chr2	31	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
+chr2	32	nil	A	G	nil	0	nil	SVTYPE=SNP	nil	nil
+chr2	33	nil	A	C	nil	0	nil	SVTYPE=SNP	nil	nil

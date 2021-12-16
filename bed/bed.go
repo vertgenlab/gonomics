@@ -1,4 +1,4 @@
-//package bed provides functions for reading, writing, and manipulating Browser Extinsible Data (BED) format files.
+//Package bed provides functions for reading, writing, and manipulating Browser Extensible Data (BED) format files.
 //More information on the BED file format can be found at https://genome.ucsc.edu/FAQ/FAQformat.html#format1
 package bed
 

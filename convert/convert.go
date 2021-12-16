@@ -16,6 +16,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
+	"sort"
 )
 
 //singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
@@ -43,7 +44,7 @@ func SamToBed(s sam.Sam) bed.Bed {
 	if s.Cigar[0].Op == '*' {
 		return bed.Bed{}
 	} else {
-		return bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName}
+		return bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName, FieldsInitialized: 4}
 	}
 }
 
@@ -58,12 +59,17 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 
 //SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
 func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
+	//fatal if fragLength is shorter than sam read length
+	if fragLength < len(s.Seq) {
+		log.Fatalf("Error: fragLength is %d, which is shorter than the sam read length %d\n", fragLength, len(s.Seq))
+	}
+
 	var answer bed.Bed
 
 	if s.Cigar[0].Op == '*' {
 		return bed.Bed{}
 	} else {
-		answer = bed.Bed{Chrom: s.RName, Name: s.QName}
+		answer = bed.Bed{Chrom: s.RName, Name: s.QName, FieldsInitialized: 4}
 		if sam.IsPosStrand(s) {
 			answer.ChromStart = int(s.Pos - 1)
 			answer.ChromEnd = numbers.Min(answer.ChromStart+fragLength-cigar.NumInsertions(s.Cigar)+cigar.NumDeletions(s.Cigar), reference[answer.Chrom].Size)
@@ -137,6 +143,12 @@ func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.
 			wigSlice[chromIndex].Values[k]++
 		}
 	}
+
+	//stable sort the wigSlice by Chrom
+	//so that each wig output will be the same as long as input is the same
+	//otherwise wig output will shift even if input is the same, due to the reference map
+	sort.SliceStable(wigSlice, func(i, j int) bool { return wigSlice[i].Chrom < wigSlice[j].Chrom })
+
 	return wigSlice
 }
 

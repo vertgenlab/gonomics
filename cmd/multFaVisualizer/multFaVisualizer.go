@@ -14,7 +14,6 @@ func multFaVisualizer(infile string, outfile string, start int, end int, noMask 
 	browser.MultiFaVisualizer(infile, outfile, start, end, noMask, lineLength)
 }
 
-//TODO: reorder this command line to be inputs first and outputs second
 func usage() {
 	fmt.Print(
 		"multFaVisualizer - Provides human-readable multiple alignment from a given multiFa.\n" +

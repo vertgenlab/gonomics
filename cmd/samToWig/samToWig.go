@@ -8,19 +8,14 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
-	//"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 )
 
-func samToWig(samFileName string, reference string, outfile string, paired bool, fragLength int) {
-	log.Printf("Paired: %t\n", paired)
+func samToWig(samFileName string, reference string, outfile string, fragLength int) {
 	log.Printf("fragLength: %d\n", fragLength)
-	if paired && fragLength != -1 {
-		log.Fatalf("Invalid entry. Cannot be both paired and have a fixed frag size.")
-	}
 
 	ref := chromInfo.ReadToMap(reference)
 
@@ -31,16 +26,12 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	var outBed []bed.Bed
 	var aln sam.Sam
 
-	//records, err := sam.Read(infile)    old version
-	//common.ExitIfError(err)
-
 	var outWig []wig.Wig
 	var currentBed bed.Bed
 
 	if fragLength != -1 {
 		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 			currentBed = convert.SamToBedFrag(aln, fragLength, ref)
-			//} this bracket shouldn't be here! See Line 49 comment
 			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
 			}
@@ -48,7 +39,6 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	} else {
 		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 			currentBed = convert.SamToBed(aln)
-			//} this bracket shouldn't be here! checking currentBed != nil should happen within for loop. Otherwise check will happen AFTER the entire sam file was read, and only the last read will be appended to outBed, leading to mostly 0 in the bed and wig files
 			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
 			}
@@ -58,7 +48,6 @@ func samToWig(samFileName string, reference string, outfile string, paired bool,
 	outWig = convert.BedReadsToWig(outBed, ref)
 	log.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
-	//}
 }
 
 func usage() {
@@ -73,8 +62,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 3
-	var paired *bool = flag.Bool("paired", false, "Specifies paired end reads")
-	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq")
+	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq, must be greater than or equal to read length")
 
 	flag.Usage = usage
 
@@ -90,5 +78,5 @@ func main() {
 	reference := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	samToWig(inFile, reference, outFile, *paired, *fragLength)
+	samToWig(inFile, reference, outFile, *fragLength)
 }
