@@ -18,7 +18,7 @@ import (
 	//"math/rand"
 )
 
-func samToFa(samFileName string, refFile string, outfile string, vcfFile string) {
+func samToFa(samFileName string, refFile string, outFile string, vcfFile string) {
 	//fmt.Printf("Reading fasta.\n")
 	ref := fasta.Read(refFile)
 	fasta.AllToUpper(ref)
@@ -75,9 +75,9 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 		}
 	}
 
-	outFile := fileio.EasyCreate(vcfFile)
-	defer outFile.Close()
-	fmt.Fprintf(outFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
+	outVcfFile := fileio.EasyCreate(vcfFile)
+	defer outVcfFile.Close()
+	fmt.Fprintf(outVcfFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
 	var current dna.Base
 	//fmt.Printf("Voting matrix complete, time to vote.\n")
 	var maxList []dna.Base
@@ -87,13 +87,13 @@ func samToFa(samFileName string, refFile string, outfile string, vcfFile string)
 			if current == dna.N && ref[i].Seq[k] != dna.N {
 				current = dna.ToLower(ref[i].Seq[k])
 			} else if current != ref[i].Seq[k] {
-				fmt.Fprintf(outFile, "%s\t%d\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), "nil", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), "nil", 0, "nil", "SVTYPE=SNP", "nil", "nil")
+				fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), "nil", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), "nil", 0, "nil", "SVTYPE=SNP", "nil", "nil")
 			}
 			ref[i].Seq[k] = current
 		}
 	}
 	//fmt.Printf("Voting complete, writing output file.\n")
-	fasta.Write(outfile, ref)
+	fasta.Write(outFile, ref)
 }
 
 func voter(v *voteBase, maxList []dna.Base) dna.Base {
@@ -170,9 +170,9 @@ type voteBase struct {
 
 func usage() {
 	fmt.Print(
-		"samToFa - Generate a fasta file from a sam over a refrence sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
+		"samToFa - Generate a fasta file and accompanying vcf from a sam over a refrence sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
 			"Usage:\n" +
-			"samToFa individual.sam ref.fa output.fa variantList.vcf\n" +
+			"samToFa individual.sam ref.fa output.fa outputVariantList.vcf\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -189,10 +189,10 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	infile := flag.Arg(0)
+	inFile := flag.Arg(0)
 	refFile := flag.Arg(1)
-	outfile := flag.Arg(2)
+	outFile := flag.Arg(2)
 	vcfFile := flag.Arg(3)
 
-	samToFa(infile, refFile, outfile, vcfFile)
+	samToFa(inFile, refFile, outFile, vcfFile)
 }
