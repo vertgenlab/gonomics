@@ -1,0 +1,20 @@
+##maf version=1 scoring=roast.v3.3
+a score=3102873.0
+s hg38.chr22                          5    5 +       35 GAA------TG
+s panPan2.chr15                44370668 3670 + 99763055 GAATTATTGTT
+s panTro6.chrUn_NW_019933054v1   152160 3636 +   200388 GAATTCTTGTG
+s gorGor5.CYUI01005671v1           1772 3637 -    24701 GAATTCTTGTG
+
+a score=3102873.0
+s hg38.chr22                         15    9 +       35 G--TTCTTGTG
+s panPan2.chr15                44370668 3670 + 99763055 GAA--ATTGTT
+s gorGor5.CYUI01005671v1           1772 3637 -    24701 GAATT--TGTG
+s ponAbe3.chr15                27011215 3631 + 82547911 --ATACTTGTG
+
+a score=3102873.0
+s hg38.chr22                         27    4 +       35 GAA------T
+s panPan2.chr15                44370668 3670 + 99763055 GAATTATTGT
+s panTro6.chrUn_NW_019933054v1   152160 3636 +   200388 GAATTCTTGT
+s gorGor5.CYUI01005671v1           1772 3637 -    24701 G----CTTGT
+s ponAbe3.chr15                27011215 3631 + 82547911 GAATACTTGT
+
