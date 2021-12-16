@@ -14,7 +14,7 @@ func TestGirafSort(t *testing.T) {
 	outFile, err := ioutil.TempFile("", "GirafSortTest")
 	exception.PanicOnErr(err)
 	outFile.Close()
-	topoOrder := girafSort(readsFile, graphFile, 100, outFile)
+	topoOrder := girafSort(readsFile, graphFile, 100, outFile.Name())
 	actual := giraf.Read(outFile.Name())
 	relabelIdBySortOrder(topoOrder, actual)
 
