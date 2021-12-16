@@ -1,0 +1,5 @@
+Name:fasta1	A:4	T:3	C:3	G:0	Gap:0	N:0
+Name:fasta2	A:0	T:0	C:2	G:2	Gap:0	N:0
+Name:fasta3	A:3	T:3	C:0	G:3	Gap:3	N:0
+Name:fasta4	A:0	T:0	C:4	G:4	Gap:0	N:3
+fileTotal:	A:7	T:6	C:9	G:9	Gap:3	N:3
