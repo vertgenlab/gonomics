@@ -177,7 +177,7 @@ type voteBase struct {
 
 func usage() {
 	fmt.Print(
-		"samConsensus - Generate a fasta file and accompanying vcf from a sam over a refrence sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
+		"samConsensus - Generate a fasta file and accompanying vcf from a sam over a reference sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
 			"Usage:\n" +
 			"samConsensus individual.sam ref.fa output.fa outputVariantList.vcf\n" +
 			"options:\n")
