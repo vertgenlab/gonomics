@@ -25,12 +25,12 @@ func samToFa(samFileName string, refFile string, outFile string, vcfFile string)
 	fasta.AllToUpper(ref)
 
 	//fmt.Printf("Initializing voting matrix.\n")
-	votingMatrix := make(map[string][]*voteBase, len(ref))
+	votingMatrix := make(map[string][]voteBase, len(ref))
 	var i, k int
 	for i = 0; i < len(ref); i++ {
-		votingMatrix[ref[i].Name] = make([]*voteBase, len(ref[i].Seq))
+		votingMatrix[ref[i].Name] = make([]voteBase, len(ref[i].Seq))
 		for k = 0; k < len(ref[i].Seq); k++ {
-			votingMatrix[ref[i].Name][k] = &voteBase{0, 0, 0, 0, 0}
+			votingMatrix[ref[i].Name][k] = voteBase{0, 0, 0, 0, 0}
 		}
 	}
 
@@ -103,7 +103,7 @@ func samToFa(samFileName string, refFile string, outFile string, vcfFile string)
 	fasta.Write(outFile, ref)
 }
 
-func voter(v *voteBase, maxList []dna.Base) dna.Base {
+func voter(v voteBase, maxList []dna.Base) dna.Base {
 	if v.A+v.G+v.T+v.C+v.Gap == 0 {
 		return dna.N
 	}
