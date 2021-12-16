@@ -1,17 +1,21 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
+	"io/ioutil"
 	"testing"
 )
 
 func TestGirafSort(t *testing.T) {
 	graphFile := "../../sort/testdata/mini.gg"
 	readsFile := "../../sort/testdata/miniReads.giraf"
-	outFile := "miniReads_sorted_test.giraf"
+	outFile, err := ioutil.TempFile("", "GirafSortTest")
+	exception.PanicOnErr(err)
+	outFile.Close()
 	topoOrder := girafSort(readsFile, graphFile, 100, outFile)
-	actual := giraf.Read(outFile)
+	actual := giraf.Read(outFile.Name())
 	relabelIdBySortOrder(topoOrder, actual)
 
 	var lastId uint32
@@ -25,8 +29,8 @@ func TestGirafSort(t *testing.T) {
 		lastId = actual[i].Path.Nodes[0]
 	}
 
-	fileio.EasyRemove(outFile)
-	fileio.EasyRemove(outFile + ".idx")
+	fileio.EasyRemove(outFile.Name())
+	fileio.EasyRemove(outFile.Name() + ".idx")
 }
 
 func relabelIdBySortOrder(topoOrder []uint32, reads []*giraf.Giraf) {
