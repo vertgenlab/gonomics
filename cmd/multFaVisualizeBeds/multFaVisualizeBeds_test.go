@@ -8,18 +8,17 @@ import (
 )
 
 var MultFaVisualizeBedsTests = []struct {
-	BedFile string
-	MultiFaFile string
-	OutFormat bool
-	NoMask bool
-	LineLength int
-	OutFiles []string
+	BedFile       string
+	MultiFaFile   string
+	OutFormat     bool
+	NoMask        bool
+	LineLength    int
+	OutFiles      []string
 	ExpectedFiles []string
 }{
 	{"testdata/test.bed", "testdata/test.fa", false, false, 50, []string{"testdata/chr1_10_100.txt", "testdata/chr1_490_500.txt", "testdata/chr1_5_10.txt"}, []string{"testdata/expected.chr1_10_100.txt", "testdata/expected.chr1_490_500.txt", "testdata/expected.chr1_5_10.txt"}},
 	{"testdata/test.bed", "testdata/test.fa", false, false, 100, []string{"testdata/chr1_10_100.txt", "testdata/chr1_490_500.txt", "testdata/chr1_5_10.txt"}, []string{"testdata/expected.long.chr1_10_100.txt", "testdata/expected.chr1_490_500.txt", "testdata/expected.chr1_5_10.txt"}},
 }
-
 
 func TestMultFaVisualizeBeds(t *testing.T) {
 	var err error
