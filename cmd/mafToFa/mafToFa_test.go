@@ -8,11 +8,11 @@ import (
 )
 
 var mafToFaTests = []struct {
-	mafFile	string
-	refFile	string
-	speciesFile string
+	mafFile          string
+	refFile          string
+	speciesFile      string
 	outFile_expected string
-	noMask bool
+	noMask           bool
 }{
 	{"testdata/test1.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.mfa", false},
 	{"testdata/test2.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.mfa", true},

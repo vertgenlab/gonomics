@@ -8,10 +8,10 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 )
 
