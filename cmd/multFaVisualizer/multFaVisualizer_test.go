@@ -20,6 +20,7 @@ var MultFaVisualizerTests = []struct {
 	{"testdata/test.fa", "testdata/tmp.noMask.txt", "testdata/expected.noMask.txt", 1, 500, true, 50},
 	{"testdata/test.fa", "testdata/tmp.lineLength.txt", "testdata/expected.lineLength.txt", 1, 500, false, 100},
 	{"testdata/test.fa", "testdata/tmp.short.txt", "testdata/expected.short.txt", 350, 400, false, 50},
+	{"testdata/test.fa", "testdata/tmp.realShort.txt", "testdata/expected.realShort.txt", 4, 9, false, 50},
 }
 
 func TestMultFaVisualizer(t *testing.T) {
