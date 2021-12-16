@@ -8,10 +8,10 @@ import (
 )
 
 var SamToFaTests = []struct {
-	inFile	string
-	refFile string
+	inFile           string
+	refFile          string
 	outFile_expected string
-	vcfFile_expected	string
+	vcfFile_expected string
 }{
 	{"testdata/test.sam", "testdata/test.ref.fa", "testdata/test.out.fa", "testdata/test.out.vcf"},
 }
