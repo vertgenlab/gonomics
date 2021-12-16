@@ -8,14 +8,14 @@ import (
 )
 
 var VcfFormatTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedFile string
+	InFile        string
+	OutFile       string
+	ExpectedFile  string
 	EnsemblToUCSC bool
 	UCSCToEnsembl bool
 	FixVcfRecords bool
-	Ref string
-	ClearInfo bool
+	Ref           string
+	ClearInfo     bool
 }{
 	{"testdata/test.UCSC.vcf", "testdata/tmp.UCSCtoEnsembl.vcf", "testdata/test.Ensembl.vcf", false, true, false, "", false},
 	{"testdata/test.Ensembl.vcf", "testdata/tmp.EnsemblToUCSC.vcf", "testdata/test.UCSC.vcf", true, false, false, "", false},
