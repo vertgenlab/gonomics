@@ -19,7 +19,7 @@ import (
 	//"math/rand"
 )
 
-func samToFa(samFileName string, refFile string, outFile string, vcfFile string) {
+func samConsensus(samFileName string, refFile string, outFile string, vcfFile string) {
 	//fmt.Printf("Reading fasta.\n")
 	ref := fasta.Read(refFile)
 	fasta.AllToUpper(ref)
@@ -177,9 +177,9 @@ type voteBase struct {
 
 func usage() {
 	fmt.Print(
-		"samToFa - Generate a fasta file and accompanying vcf from a sam over a refrence sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
+		"samConsensus - Generate a fasta file and accompanying vcf from a sam over a refrence sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
 			"Usage:\n" +
-			"samToFa individual.sam ref.fa output.fa outputVariantList.vcf\n" +
+			"samConsensus individual.sam ref.fa output.fa outputVariantList.vcf\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -201,5 +201,5 @@ func main() {
 	outFile := flag.Arg(2)
 	vcfFile := flag.Arg(3)
 
-	samToFa(inFile, refFile, outFile, vcfFile)
+	samConsensus(inFile, refFile, outFile, vcfFile)
 }
