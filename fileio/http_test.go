@@ -36,8 +36,8 @@ func TestHttpReader(t *testing.T) {
 }
 
 func TestCatUrl(t *testing.T) {
-	answer := CatUrl("https://raw.githubusercontent.com/vertgenlab/gonomics/main/README.md")
-	localFile := EasyOpen("../README.md")
+	answer := CatUrl("https://raw.githubusercontent.com/vertgenlab/gonomics/main/fileio/testdata/humanGenomeAbstract.txt")
+	localFile := EasyOpen("testdata/humanGenomeAbstract.txt")
 	var expected string
 	for data, done := EasyNextLine(localFile); !done; data, done = EasyNextLine(localFile) {
 		expected = expected + data + "\n"
