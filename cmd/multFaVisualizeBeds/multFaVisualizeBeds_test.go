@@ -26,7 +26,7 @@ func TestMultFaVisualizeBeds(t *testing.T) {
 		multFaVisualizeBeds(v.BedFile, v.MultiFaFile, v.OutFormat, v.NoMask, v.LineLength, "testdata/")
 		for i := range v.OutFiles {
 			if !fileio.AreEqual(v.OutFiles[i], v.ExpectedFiles[i]) {
-				t.Errorf("ERror in multFaVisualizeBeds. Output did not match expected.")
+				t.Errorf("Error in multFaVisualizeBeds. Output did not match expected.")
 			} else {
 				err = os.Remove(v.OutFiles[i])
 				exception.PanicOnErr(err)
