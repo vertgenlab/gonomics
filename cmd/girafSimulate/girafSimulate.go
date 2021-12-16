@@ -9,13 +9,11 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
-	"time"
 )
 
-func simulateGiraf(graph *genomeGraph.GenomeGraph, numReads int, readLen int, randSeed int64, numSomaticSNV int, AlleleFrequency float64, outFile string, outputSam bool) {
+func girafSimulate(graph *genomeGraph.GenomeGraph, numReads int, readLen int, randSeed int64, numSomaticSNV int, AlleleFrequency float64, outFile string, outputSam bool) {
 	reads := genomeGraph.RandGiraf(graph, numReads, readLen, randSeed)
 	var samReads []sam.Sam
-
 	if numSomaticSNV != 0 {
 		genomeGraph.RandSomaticMutations(graph, reads, numSomaticSNV, AlleleFrequency, randSeed)
 	}
@@ -33,19 +31,18 @@ func simulateGiraf(graph *genomeGraph.GenomeGraph, numReads int, readLen int, ra
 
 func usage() {
 	fmt.Print(
-		"simulateGiraf - Returns a file of giraf alignments for a input genome graph.\n" +
+		"girafSimulate - Returns a file of giraf alignments for a input genome graph.\n" +
 			"Usage:\n" +
-			" simulateGiraf [options] input.gg \n" +
+			" girafSimulate [options] input.gg \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var time = time.Now().UnixNano()
 	var expectedNumArgs int = 2
 	var numReads *int = flag.Int("numReads", 100, "Number of giraf alignments to simulate.")
 	var readLen *int = flag.Int("readLen", 150, "Length of each alignment.")
-	var seed *int64 = flag.Int64("seed", time, "Seed used to generate alignments, default is time-based seed")
+	var seed *int64 = flag.Int64("seed", 0, "Seed used to generate alignments, default is time-based seed")
 	var numSomaticSNV *int = flag.Int("somaticSNV", 0, "Number of simulated somatic SNVs.")
 	var AlleleFrequency *float64 = flag.Float64("somaticAF", 0.2, "Approx. allele frequency of simulated somatic mutations.")
 	var outputSam *bool = flag.Bool("outputSam", false, "Output file in sam format")
@@ -67,5 +64,5 @@ func main() {
 		log.Fatalln("ERROR: Sam output is still in development")
 	}
 
-	simulateGiraf(graph, *numReads, *readLen, *seed, *numSomaticSNV, *AlleleFrequency, outFile, *outputSam)
+	girafSimulate(graph, *numReads, *readLen, *seed, *numSomaticSNV, *AlleleFrequency, outFile, *outputSam)
 }
