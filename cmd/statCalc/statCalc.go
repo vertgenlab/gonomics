@@ -251,7 +251,8 @@ func usage() {
 			"Usage:\t" +
 			" statCalc [options] \n" +
 			"options:\n" +
-			"-outFile. Redirect the output to a file. Default to stdout.\n" +
+			"-outFile. Redirect the output to a file. Default to stdout.\n\n" +
+			"Enter one of the following options:\n" +
 			" -normal=mu,sigma. Defines a normal distribution with mean mu and standard deviation sigma. Ex Usage: -normal=0,1 1 or -normal=0,1 2 inf\n" +
 			" -binomial=n,p. Defines a binomial distribution with n experiments and success probability p. Ex Usage: -binomial=10,0.5 3 or -binomial=10, 0.5 6 n\n" +
 			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
