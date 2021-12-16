@@ -71,6 +71,8 @@ jobs:
           cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
           go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage to Codecov
+        run:
           curl -Os https://uploader.codecov.io/latest/linux/codecov
           chmod +x codecov
           ./codecov
+
