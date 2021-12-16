@@ -63,7 +63,11 @@ jobs:
         with:
           go-version: '1.16'
       - name: Run coverage
-        run: go test -race -coverprofile=coverage.out -covermode=atomic
+        run: 
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go test -race -coverprofile=coverage.out -covermode=atomic
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
 
