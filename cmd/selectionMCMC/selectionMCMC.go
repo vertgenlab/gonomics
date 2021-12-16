@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func selectionMCMC(filename string, outFile string, s popgen.McmcSettings) {
+func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {
 	common.RngSeed(s.RandSeed, s.SetSeed)
 	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
@@ -49,7 +49,7 @@ func main() {
 	log.SetFlags(0)
 	flag.Parse()
 
-	options := popgen.McmcSettings{
+	s := popgen.McmcSettings{
 		Iterations:              *iterations,
 		MuStep:                  *muStep,
 		MuZero:                  *muZero,
@@ -72,5 +72,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMCMC(vcfFile, outFile, options)
+	selectionMcmc(vcfFile, outFile, s)
 }
