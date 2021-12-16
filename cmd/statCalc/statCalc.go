@@ -35,7 +35,7 @@ func statCalc(s Settings) {
 			_, err = fmt.Fprintf(out, "%e\n", numbers.NormalDist(x, mu, sigma))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
-			_, err = fmt.Fprintf(out,"%e\n", numbers.NormalAdaptiveIntegral(s.Args[0], s.Args[1], mu, sigma))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.NormalAdaptiveIntegral(s.Args[0], s.Args[1], mu, sigma))
 			exception.PanicOnErr(err)
 		}
 	} else if s.Binomial != "" {
@@ -52,7 +52,7 @@ func statCalc(s Settings) {
 		if len(s.Args) == 1 {
 			i := common.StringToInt(s.Args[0])
 			answer, _ := numbers.BinomialDist(n, i, p)
-			_, err = fmt.Fprintf(out,"%e\n", answer)
+			_, err = fmt.Fprintf(out, "%e\n", answer)
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
 			left := common.StringToInt(s.Args[0])
@@ -61,16 +61,16 @@ func statCalc(s Settings) {
 					_, err = fmt.Fprintf(out, "%e\n", 1.00000)
 					exception.PanicOnErr(err)
 				} else {
-					_, err = fmt.Fprintf(out,"%e\n", numbers.BinomialRightSummation(n, left, p))
+					_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialRightSummation(n, left, p))
 					exception.PanicOnErr(err)
 				}
 			} else if left == 0 {
 				right := common.StringToInt(s.Args[1])
-				_, err = fmt.Fprintf(out,"%e\n", numbers.BinomialLeftSummation(n, right, p))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialLeftSummation(n, right, p))
 				exception.PanicOnErr(err)
 			} else {
 				right := common.StringToInt(s.Args[1])
-				_, err = fmt.Fprintf(out,"%e\n", numbers.BinomialSum(left, right, n, p))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialSum(left, right, n, p))
 				exception.PanicOnErr(err)
 			}
 		}
@@ -82,17 +82,17 @@ func statCalc(s Settings) {
 		}
 		if len(s.Args) == 1 {
 			k := common.StringToInt(s.Args[0])
-			_, err = fmt.Fprintf(out,"%e\n", numbers.PoissonDist(k, lambda))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.PoissonDist(k, lambda))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
 			if s.Args[1] == "INF" || s.Args[1] == "inf" || s.Args[1] == "Inf" {
 				k := common.StringToInt(s.Args[0])
-				_, err = fmt.Fprintf(out,"%e\n", numbers.PoissonRightSummation(k, lambda))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.PoissonRightSummation(k, lambda))
 				exception.PanicOnErr(err)
 			} else {
 				left := common.StringToInt(s.Args[0])
 				right := common.StringToInt(s.Args[1])
-				_, err = fmt.Fprintf(out,"%e\n", numbers.PoissonSum(left, right, lambda))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.PoissonSum(left, right, lambda))
 				exception.PanicOnErr(err)
 			}
 		}
@@ -110,12 +110,12 @@ func statCalc(s Settings) {
 		}
 		if len(s.Args) == 1 {
 			x := common.StringToFloat64(s.Args[0])
-			_, err = fmt.Fprintf(out,"%e\n", numbers.BetaDist(x, alpha, beta))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.BetaDist(x, alpha, beta))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
 			left := common.StringToFloat64(s.Args[0])
 			right := common.StringToFloat64(s.Args[1])
-			_, err = fmt.Fprintf(out,"%e\n", numbers.BetaIntegral(left, right, alpha, beta))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.BetaIntegral(left, right, alpha, beta))
 			exception.PanicOnErr(err)
 		}
 	} else if s.Gamma != "" {
@@ -131,16 +131,16 @@ func statCalc(s Settings) {
 		}
 		if len(s.Args) == 1 {
 			x := common.StringToFloat64(s.Args[0])
-			_, err = fmt.Fprintf(out,"%e\n", numbers.GammaDist(x, alpha, beta))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.GammaDist(x, alpha, beta))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
 			left := common.StringToFloat64(s.Args[0])
 			if s.Args[1] == "INF" || s.Args[1] == "inf" || s.Args[1] == "Inf" {
-				_, err = fmt.Fprintf(out,"%e\n", numbers.GammaRightIntegral(left, alpha, beta))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.GammaRightIntegral(left, alpha, beta))
 				exception.PanicOnErr(err)
 			} else {
 				right := common.StringToFloat64(s.Args[1])
-				_, err = fmt.Fprintf(out,"%e\n", numbers.GammaIntegral(left, right, alpha, beta))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.GammaIntegral(left, right, alpha, beta))
 				exception.PanicOnErr(err)
 			}
 		}
@@ -157,7 +157,7 @@ func statCalc(s Settings) {
 		xRight := common.StringToFloat64(words[5])
 		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight)
 		for i := 0; i < len(answer); i++ {
-			_, err = fmt.Fprintf(out,"%e\n", answer[i])
+			_, err = fmt.Fprintf(out, "%e\n", answer[i])
 			exception.PanicOnErr(err)
 		}
 	} else if s.SampleBeta != "" {
@@ -172,7 +172,7 @@ func statCalc(s Settings) {
 		var current float64
 		for i := 0; i < numSamples; i++ {
 			current, _ = sampler()
-			_, err = fmt.Fprintf(out,"%e\n", current)
+			_, err = fmt.Fprintf(out, "%e\n", current)
 			exception.PanicOnErr(err)
 		}
 	} else if s.SampleGamma != "" {
@@ -199,7 +199,7 @@ func statCalc(s Settings) {
 		sigma := common.StringToFloat64(words[1])
 		numSamples := common.StringToInt(words[2])
 		for i := 0; i < numSamples; i++ {
-			_, err = fmt.Fprintf(out,"%e\n", numbers.SampleInverseNormal(mu, sigma))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.SampleInverseNormal(mu, sigma))
 			exception.PanicOnErr(err)
 		}
 	} else {
@@ -269,19 +269,19 @@ func usage() {
 }
 
 type Settings struct {
-	Args []string
-	Normal string
-	Binomial string
-	Poisson string
-	Beta string
-	Gamma string
-	SampleAfs string
-	SampleBeta string
-	SampleGamma string
+	Args         []string
+	Normal       string
+	Binomial     string
+	Poisson      string
+	Beta         string
+	Gamma        string
+	SampleAfs    string
+	SampleBeta   string
+	SampleGamma  string
 	SampleNormal string
-	RandSeed bool
-	SetSeed int64
-	OutFile string
+	RandSeed     bool
+	SetSeed      int64
+	OutFile      string
 }
 
 func main() {
@@ -302,20 +302,20 @@ func main() {
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	s := Settings {
-		Args: flag.Args(),
-		Normal: *Normal,
-		Binomial: *Binomial,
-		Poisson: *Poisson,
-		Beta: *Beta,
-		Gamma: *Gamma,
-		SampleAfs: *SampleAfs,
-		SampleBeta: *SampleBeta,
-		SampleGamma: *SampleGamma,
+	s := Settings{
+		Args:         flag.Args(),
+		Normal:       *Normal,
+		Binomial:     *Binomial,
+		Poisson:      *Poisson,
+		Beta:         *Beta,
+		Gamma:        *Gamma,
+		SampleAfs:    *SampleAfs,
+		SampleBeta:   *SampleBeta,
+		SampleGamma:  *SampleGamma,
 		SampleNormal: *SampleNormal,
-		RandSeed: *randSeed,
-		SetSeed: *setSeed,
-		OutFile: *outFile,
+		RandSeed:     *randSeed,
+		SetSeed:      *setSeed,
+		OutFile:      *outFile,
 	}
 
 	statCalc(s)
