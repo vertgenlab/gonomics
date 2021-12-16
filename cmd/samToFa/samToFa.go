@@ -12,6 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"strings"
 	//"os"
@@ -34,7 +35,8 @@ func samToFa(samFileName string, refFile string, outFile string, vcfFile string)
 	}
 
 	samFile := fileio.EasyOpen(samFileName)
-	defer samFile.Close()
+	var err error
+
 	var done bool = false
 	var RefIndex, SeqIndex int
 	var currentSeq []dna.Base
@@ -74,9 +76,11 @@ func samToFa(samFileName string, refFile string, outFile string, vcfFile string)
 			}
 		}
 	}
+	err = samFile.Close()
+	exception.PanicOnErr(err)
 
 	outVcfFile := fileio.EasyCreate(vcfFile)
-	defer outVcfFile.Close()
+
 	fmt.Fprintf(outVcfFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
 	var current dna.Base
 	//fmt.Printf("Voting matrix complete, time to vote.\n")
@@ -92,6 +96,9 @@ func samToFa(samFileName string, refFile string, outFile string, vcfFile string)
 			ref[i].Seq[k] = current
 		}
 	}
+	err = outVcfFile.Close()
+	exception.PanicOnErr(err)
+
 	//fmt.Printf("Voting complete, writing output file.\n")
 	fasta.Write(outFile, ref)
 }

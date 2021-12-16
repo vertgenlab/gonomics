@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 )
 
@@ -19,13 +20,13 @@ func samToBed(samFilename string, bedFilename string, fragLength int) {
 
 	//sam file to read
 	samFile := fileio.EasyOpen(samFilename)
-	defer samFile.Close()
+	var err error
+
 	header := sam.ReadHeader(samFile)
 	chroms := chromInfo.SliceToMap(header.Chroms)
 
 	//bed file to write
 	bedFile := fileio.EasyCreate(bedFilename)
-	defer bedFile.Close()
 
 	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
@@ -36,6 +37,11 @@ func samToBed(samFilename string, bedFilename string, fragLength int) {
 			}
 		}
 	}
+	err = samFile.Close()
+	exception.PanicOnErr(err)
+	err = bedFile.Close()
+	exception.PanicOnErr(err)
+
 	/* TODO: Write paired command
 	if paired {
 		outBed = convert.SamToBedPaired(records)
