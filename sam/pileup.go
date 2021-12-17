@@ -68,14 +68,16 @@ func syncPileups(samples []<-chan Pile, output chan<- []Pile) {
 		data := make([]Pile, len(samples))
 		minRefIdx, minPos = getMinPileCoords(buf)
 		for i := range buf { // check for matching records in the buffer
-			if buf[i].RefIdx != minRefIdx || buf[i].Pos != minPos {
+			if buf[i].RefIdx != minRefIdx || buf[i].Pos != minPos || samples[i] == nil {
 				data[i].RefIdx = -1 // mark as no data in output
 				continue
 			}
+
 			data[i] = buf[i]              // save matching Pile to output data
 			buf[i], isOpen = <-samples[i] // replace Pile in buf
 
 			if !isOpen { // set channel to nil once closed
+				buf[i].RefIdx = -1
 				samples[i] = nil
 				if allChannelsClosed(samples) { // each time a channel is closed, check if they are all closed
 					allClosed = true
