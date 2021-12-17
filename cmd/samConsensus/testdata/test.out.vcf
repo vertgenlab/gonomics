@@ -1,18 +1,18 @@
 ##fileformat=VCFv4.2
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	testdata/test.sam
-chr1	7	nil	A	T	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	8	nil	A	T	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	9	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	10	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	12	nil	A	T	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	14	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	15	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	16	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	18	nil	T	A	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	20	nil	A	C	nil	0	nil	SVTYPE=SNP	nil	nil
-chr1	22	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
-chr2	29	nil	G	T	nil	0	nil	SVTYPE=SNP	nil	nil
-chr2	30	nil	C	A	nil	0	nil	SVTYPE=SNP	nil	nil
-chr2	31	nil	T	G	nil	0	nil	SVTYPE=SNP	nil	nil
-chr2	32	nil	A	G	nil	0	nil	SVTYPE=SNP	nil	nil
-chr2	33	nil	A	C	nil	0	nil	SVTYPE=SNP	nil	nil
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+chr1	7	.	A	T	.	.	.	.
+chr1	8	.	A	T	.	.	.	.
+chr1	9	.	T	A	.	.	.	.
+chr1	10	.	T	G	.	.	.	.
+chr1	12	.	A	T	.	.	.	.
+chr1	14	.	T	A	.	.	.	.
+chr1	15	.	T	G	.	.	.	.
+chr1	16	.	T	A	.	.	.	.
+chr1	18	.	T	A	.	.	.	.
+chr1	20	.	A	C	.	.	.	.
+chr1	22	.	T	G	.	.	.	.
+chr2	29	.	G	T	.	.	.	.
+chr2	30	.	C	A	.	.	.	.
+chr2	31	.	T	G	.	.	.	.
+chr2	32	.	A	G	.	.	.	.
+chr2	33	.	A	C	.	.	.	.
