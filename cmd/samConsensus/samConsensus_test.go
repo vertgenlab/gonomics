@@ -28,7 +28,7 @@ func TestSamConsensus(t *testing.T) {
 		}
 		exception.PanicOnErr(err)
 
-		if !fileio.AreEqualIgnoreComments("vcfFile_tmp.vcf", v.vcfFile_expected) {
+		if !fileio.AreEqual("vcfFile_tmp.vcf", v.vcfFile_expected) {
 			t.Errorf("Error in samConsensus: generating output vcf file")
 		} else {
 			err = os.Remove("vcfFile_tmp.vcf")
