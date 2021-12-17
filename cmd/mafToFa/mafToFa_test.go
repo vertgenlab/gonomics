@@ -14,8 +14,8 @@ var mafToFaTests = []struct {
 	outFile_expected string
 	noMask bool
 }{
-	{"testdata/test1.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.mfa", false},
-	{"testdata/test2.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.mfa", true},
+	{"testdata/test1.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.out.fa", false},
+	{"testdata/test2.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.out.fa", true},
 }
 
 func TestMafToFa(t *testing.T) {
