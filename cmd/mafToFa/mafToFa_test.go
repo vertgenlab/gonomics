@@ -21,12 +21,12 @@ var mafToFaTests = []struct {
 func TestMafToFa(t *testing.T) {
 	var err error
 	for _, v := range mafToFaTests {
-		mafToFa(v.mafFile, v.refFile, v.speciesFile, "outFile_tmp.mfa", v.noMask)
+		mafToFa(v.mafFile, v.refFile, v.speciesFile, "outFile_tmp.fa", v.noMask)
 
-		if !fileio.AreEqual("outFile_tmp.mfa", v.outFile_expected) {
+		if !fileio.AreEqual("outFile_tmp.fa", v.outFile_expected) {
 			t.Errorf("Error in mafToFa")
 		} else {
-			err = os.Remove("outFile_tmp.mfa")
+			err = os.Remove("outFile_tmp.fa")
 		}
 		exception.PanicOnErr(err)
 	}
