@@ -20,29 +20,25 @@ import (
 )
 
 func samConsensus(samFileName string, refFile string, outFile string, vcfFile string) {
-	//fmt.Printf("Reading fasta.\n")
 	ref := fasta.Read(refFile)
 	fasta.AllToUpper(ref)
 
-	//fmt.Printf("Initializing voting matrix.\n")
 	votingMatrix := make(map[string][]voteBase, len(ref))
 	var i, k int
-	for i = 0; i < len(ref); i++ {
+	for i := range ref {
 		votingMatrix[ref[i].Name] = make([]voteBase, len(ref[i].Seq))
-		for k = 0; k < len(ref[i].Seq); k++ {
+		for k := range ref[i].Seq {
 			votingMatrix[ref[i].Name][k] = voteBase{0, 0, 0, 0, 0}
 		}
 	}
 
 	samFile := fileio.EasyOpen(samFileName)
 	var err error
-
 	var done bool = false
 	var RefIndex, SeqIndex int
 	var currentSeq []dna.Base
 	var aln sam.Sam
-	//var i, k int
-	//fmt.Printf("Vote matrix initialized. Looping through sam.\n")
+
 	sam.ReadHeader(samFile)
 
 	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
@@ -83,15 +79,14 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 
 	fmt.Fprintf(outVcfFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
 	var current dna.Base
-	//fmt.Printf("Voting matrix complete, time to vote.\n")
 	var maxList []dna.Base
-	for i = 0; i < len(ref); i++ {
-		for k = 0; k < len(ref[i].Seq); k++ {
+	for i := range ref {
+		for k := range ref[i].Seq {
 			current = voter(votingMatrix[ref[i].Name][k], maxList)
 			if current == dna.N && ref[i].Seq[k] != dna.N {
 				current = dna.ToLower(ref[i].Seq[k])
 			} else if current != ref[i].Seq[k] {
-				fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), "nil", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), "nil", 0, "nil", "SVTYPE=SNP", "nil", "nil")
+				fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), ".", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), ".", ".", ".")
 			}
 			ref[i].Seq[k] = current
 		}
@@ -99,7 +94,6 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 	err = outVcfFile.Close()
 	exception.PanicOnErr(err)
 
-	//fmt.Printf("Voting complete, writing output file.\n")
 	fasta.Write(outFile, ref)
 }
 
@@ -162,11 +156,6 @@ func voter(v voteBase, maxList []dna.Base) dna.Base {
 	return maxList[numbers.RandIntInRange(0, len(maxList))]
 }
 
-/* MOVED TO COMMON/MATH.GO
-func RandIntInRange(x int, y int) int {
-	return int(rand.Float64()*float64(y-x)) + x
-}
-*/
 type voteBase struct {
 	A   int32
 	C   int32
@@ -177,7 +166,8 @@ type voteBase struct {
 
 func usage() {
 	fmt.Print(
-		"samConsensus - Generate a fasta file and accompanying vcf from a sam over a reference sequence. Uncovered sequences are converted to lowercase reference sequences.\n" +
+		"samConsensus - Generates a fasta file and accompanying vcf from a sam over a reference sequence.\n" +
+			"Uncovered sequences are converted to lowercase reference sequences.\n" +
 			"Usage:\n" +
 			"samConsensus individual.sam ref.fa output.fa outputVariantList.vcf\n" +
 			"options:\n")
