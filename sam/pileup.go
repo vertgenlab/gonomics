@@ -181,7 +181,7 @@ func addInsertionLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base
 }
 
 func getPile(start *Pile, refidx int, pos uint32) *Pile {
-	for start.RefIdx != refidx && start.Pos != pos {
+	for start.RefIdx != refidx || start.Pos != pos {
 		switch {
 		case start.prev.RefIdx == -1 && start.RefIdx == -1: // no data in buffer, start at pos
 			start.RefIdx = refidx
@@ -207,7 +207,7 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
 	var lastRefIdx int
 	var lastPos uint32
-	for start.RefIdx != refmap[s.RName].Order && start.Pos != s.Pos {
+	for start.RefIdx != refmap[s.RName].Order || start.Pos != s.Pos {
 		if start.RefIdx == -1 {
 			break
 		}
