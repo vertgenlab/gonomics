@@ -32,7 +32,7 @@ func usage() {
 
 func main() {
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "Retain only substitutions in the output VCF.")
-	var retainN *bool = flag.Bool("retainN", false, "By default, multiFaToVcf does not retain positions with N in the \n" +
+	var retainN *bool = flag.Bool("retainN", false, "By default, multiFaToVcf does not retain positions with N in the \n"+
 		"alt or ref in the output VCF. This option overrides this behavior.")
 	var expectedNumArgs int = 3
 	flag.Usage = usage

@@ -86,7 +86,7 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 			if current == dna.N && ref[i].Seq[k] != dna.N {
 				current = dna.ToLower(ref[i].Seq[k])
 			} else if current != ref[i].Seq[k] {
-				fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), ".", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), ".", ".", ".",".")
+				fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), ".", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), ".", ".", ".", ".")
 			}
 			ref[i].Seq[k] = current
 		}
