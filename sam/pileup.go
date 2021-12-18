@@ -286,19 +286,19 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
 	var lastRefIdx int
 	var lastPos uint32
-	for start.RefIdx != refmap[s.RName].Order || start.Pos != s.Pos {
+	for start.RefIdx != refmap[s.RName].Order || start.Pos < s.Pos {
 		if start.RefIdx == -1 {
 			break
 		}
-
 		if (start.touched || includeNoData) && passesPileFilters(*start, pileFilters) {
 			lastRefIdx = start.RefIdx
 			lastPos = start.Pos
 
 			send <- *start
-			resetPile(start)
-			start = start.next
 		}
+
+		resetPile(start)
+		start = start.next
 	}
 
 	// if we have not returned by this point, there are positions with no data
