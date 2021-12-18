@@ -25,7 +25,7 @@ func TestMultiFaVcf(t *testing.T) {
 	for _, v := range MultiFaToVcfTests {
 		multiFaToVcf(v.inputFa, v.chromName, v.outputVcf, v.substitutionsOnlyFlag, v.retainNFlag)
 		if !fileio.AreEqual(v.expectedVcf, v.outputVcf) {
-			t.Errorf("Error in multiFaToUcf.go, expected.vcf != output.vcf")
+			t.Errorf("Error in multiFaToVcf.go, expected.vcf != output.vcf")
 		} else {
 			err = os.Remove(v.outputVcf)
 			exception.PanicOnErr(err)
