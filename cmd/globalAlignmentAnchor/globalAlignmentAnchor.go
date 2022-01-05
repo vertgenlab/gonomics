@@ -16,8 +16,8 @@ import (
 	"strings"
 )
 
-//TODO: copied from mafIndels, modify
-func mafIndels(in_maf string, species_ins string, species_del string, threshold float64, outIns_bed string, outDel_bed string) {
+//TODO: copied from mafIndels, modify. Get S line start and size maybe save as bed entry, but what to do about strand
+func mafToAnchor(in_maf string, species_ins string, species_del string, outIns_bed string, outDel_bed string) {
 	//initialize variables
 	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf. Maf has no ReadToChan function for now
 	//var bedList_ins []*bed.Bed     //initialize 2 bed files
