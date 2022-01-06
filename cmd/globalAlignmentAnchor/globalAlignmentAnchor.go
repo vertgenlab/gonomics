@@ -5,17 +5,55 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/genomeGraph"
+	//"github.com/vertgenlab/gonomics/align"
+	//"github.com/vertgenlab/gonomics/exception"
+	//"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fileio"
+	//"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/maf"
 	"log"
-	"os"
+	//"os"
 	"strings"
 )
 
+//Step 1: Filter maf to remove S lines we don't trust, creating filtered maf
+//not to be confused with cmd/mafFilter, which filters for scores above a threshold
+func mafToAnchor(in_maf string, species_ins string, species_del string) {
+	//read in_maf and generate a container for mafFiltered
+	mafRecords := maf.Read(in_maf)
+	var mafFiltered []*maf.Maf
+
+	//go through each line
+	//here I assume only pairwise alignment, not >2 species
+	//here I assume species_ins is target; species_del is query
+	for i := range mafRecords { //each i is a maf block
+		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
+			//get assembly (e.g. rheMac10), chrom (e.g. chrI)
+			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)
+			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src)
+
+			//verify line 0 is indeed species_ins
+			if assembly_ins != species_ins {
+				log.Fatalf("species_ins was incorrect. Please check that you have a pairwise maf file, and entered species_ins and species_del correctly")
+			}
+
+			//get s lines
+			if mafRecords[i].Species[k].SLine != nil && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil {
+				//filter out only s lines that we trust to save to filtered maf
+				//chrom should be the same between species_ins and species_del
+				if chrom_del == chrom_ins {
+					mafFiltered = append(mafFiltered, mafRecords[i])
+				}
+			}
+		}
+	}
+
+	//generate out_maf filename and write mafFiltered to it
+	out_maf := strings.Replace(in_maf, ".maf", ".filtered.maf", 1)
+	maf.Write(out_maf, mafFiltered)
+}
+
+/*
 //TODO: copied from mafIndels, modify. Get S line start and size maybe save as bed entry, but what to do about strand
 func mafToAnchor(in_maf string, species_ins string, species_del string, outIns_bed string, outDel_bed string) {
 	//initialize variables
@@ -165,6 +203,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	//genomeGraph := cigarToGraph(faOne, faTwo, aln)
 	//genomeGraph.PrintGraph(genomeGraph)
 }
+*/
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
 func usage() {
@@ -187,11 +226,11 @@ func usage() {
 }
 
 func main() {
-	var expectedNum int = 2
+	var expectedNum int = 3
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	faOut := flag.String("faOut", "", "fasta MSA output filename")
+	//faOut := flag.String("faOut", "", "fasta MSA output filename")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
@@ -201,8 +240,9 @@ func main() {
 
 	//read in sequences that should be put in as fasta type files.
 	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
-	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
-	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
+	in_maf := flag.Arg(0)
+	species_ins := flag.Arg(1)
+	species_del := flag.Arg(2)
 
-	globalAlignment(inputFileOne, inputFileTwo, *faOut)
+	mafToAnchor(in_maf, species_ins, species_del)
 }
