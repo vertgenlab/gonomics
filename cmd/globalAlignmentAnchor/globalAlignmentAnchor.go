@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-//Step 1: Filter maf to remove S lines we don't trust, creating filtered maf
+//Step 1: Filter maf to remove S lines we don't trust, creating filtered maf aka anchors
 //not to be confused with cmd/mafFilter, which filters for scores above a threshold
 func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	//read in_maf and generate a container for mafFiltered
@@ -53,9 +53,9 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	maf.Write(out_maf, mafFiltered)
 }
 
-/*
-//TODO: copied from mafIndels, modify. Get S line start and size maybe save as bed entry, but what to do about strand
-func mafToAnchor(in_maf string, species_ins string, species_del string, outIns_bed string, outDel_bed string) {
+//Step 2: Use anchors aka filtered maf to calculate coordinates that still need to be aligned
+//TODO: save as bed entry, but what to do about strand
+func anchorToCoordinates(in_maf string, species_ins string, species_del string, ins_genome string, del_genome string) {
 	//initialize variables
 	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf. Maf has no ReadToChan function for now
 	//var bedList_ins []*bed.Bed     //initialize 2 bed files
@@ -117,6 +117,7 @@ func mafToAnchor(in_maf string, species_ins string, species_del string, outIns_b
 	//bed.Write(outIns_bed, bedList_ins, 5)
 }
 
+//Step 3: globalAlignment lowMem for non-anchor sequences
 //raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
 //raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
 //raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
@@ -203,7 +204,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	//genomeGraph := cigarToGraph(faOne, faTwo, aln)
 	//genomeGraph.PrintGraph(genomeGraph)
 }
-*/
+
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
 func usage() {
