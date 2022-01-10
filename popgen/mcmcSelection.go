@@ -56,7 +56,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 	decision = pAccept > yRand
 
 	if s.Verbose == 1 {
-		log.Printf("%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%t\n", old.mu, thetaPrime.mu, old.likelihood, thetaPrime.likelihood, old.prior, thetaPrime.prior, pAccept, yRand, decision)
+		log.Printf("%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%t\n", old.mu, thetaPrime.mu, old.sigma, thetaPrime.sigma, old.likelihood, thetaPrime.likelihood, old.prior, thetaPrime.prior, pAccept, yRand, decision)
 		//log.Printf("%g\t%g\t%g\t%g\t%g\t%g\t%t\n", old.mu, thetaPrime.mu, math.Exp(numbers.DivideLog(old.likelihood, thetaPrime.likelihood)), math.Exp(numbers.DivideLog(old.prior, thetaPrime.prior)), math.Exp(pAccept), math.Exp(yRand), decision)
 	}
 	return decision
@@ -87,14 +87,14 @@ func priorProb(mu float64, sigma float64) float64 {
 	var sigmaPrior, muPrior float64
 
 	//prior on sigma is a uniform distribution between zero and 0.5
-	if sigma < 0 || sigma > 0.5 {
+	if sigma < 0 {
 		return math.Inf(-1) // prior probability is zero
 	} else {
-		sigmaPrior = 2
+		sigmaPrior = numbers.GammaDist(sigma, 2, 10)
 	}
 
-	//prior on alpha is normal with a mean of zero and a stdev of 4
-	muPrior = numbers.NormalDist(mu, 0, 2)
+	//prior on alpha is normal with a mean of zero and a stdev of 3
+	muPrior = numbers.NormalDist(mu, 0, 3)
 
 	return math.Log(muPrior * sigmaPrior)
 }

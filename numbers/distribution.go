@@ -61,7 +61,8 @@ func BetaFunc(x float64, y float64) float64 {
 	return math.Gamma(x) * math.Gamma(y) / math.Gamma(x+y)
 }
 
-//GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
+// GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
+// alpha is the shape parameter and beta is the rate parameter
 func GammaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha < 0 || beta < 0 || x < 0 {
 		log.Fatalf("Alpha, beta parameters and input value must be greater than or equal to 0 in the gamma distribution.")
