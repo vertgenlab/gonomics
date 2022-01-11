@@ -31,19 +31,19 @@ type McmcSettings struct {
 	D                       int //D is the size of the ascertainment subset.
 	IntegralError           float64
 	Verbose                 int
-	SigmaPriorAlpha	float64 //defines the alpha parameter for the prior distribution for the Theta hyperparameter sigma.
-	SigmaPriorBeta float64 //defines the beta parameter for the prior distribution for the Theta hyperparameter sigma.
-	MuPriorMean float64 //defines the mean of the prior distribution for the Theta hyperparameter mu.
-	MuPriorSigma float64 //defines the standard deviation of the prior distribution for the Theta hyperparameter mu.
+	SigmaPriorAlpha         float64 //defines the alpha parameter for the prior distribution for the Theta hyperparameter sigma.
+	SigmaPriorBeta          float64 //defines the beta parameter for the prior distribution for the Theta hyperparameter sigma.
+	MuPriorMean             float64 //defines the mean of the prior distribution for the Theta hyperparameter mu.
+	MuPriorSigma            float64 //defines the standard deviation of the prior distribution for the Theta hyperparameter mu.
 }
 
 // The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
 type Theta struct {
-	alpha      []float64 //defines the vector of selction parameters alpha for each segregating site.
-	mu         float64 //hyperparameter to generate alpha. Defines the mean of the distribution of alpha values.
-	sigma      float64 //hyperparameter to generate alpha. Defines the standard deviation of the distribution of alpha values.
-	priorDensity      float64 //density of the prior distribution for a particular theta set.
-	likelihood float64 //likelihood value for a particular Theta set.
+	alpha        []float64 //defines the vector of selction parameters alpha for each segregating site.
+	mu           float64   //hyperparameter to generate alpha. Defines the mean of the distribution of alpha values.
+	sigma        float64   //hyperparameter to generate alpha. Defines the standard deviation of the distribution of alpha values.
+	priorDensity float64   //density of the prior distribution for a particular theta set.
+	likelihood   float64   //likelihood value for a particular Theta set.
 }
 
 // MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
