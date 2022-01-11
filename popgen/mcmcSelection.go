@@ -31,15 +31,19 @@ type McmcSettings struct {
 	D                       int //D is the size of the ascertainment subset.
 	IntegralError           float64
 	Verbose                 int
+	SigmaPriorAlpha	float64 //defines the alpha parameter for the prior distribution for the Theta hyperparameter sigma.
+	SigmaPriorBeta float64 //defines the beta parameter for the prior distribution for the Theta hyperparameter sigma.
+	MuPriorMean float64 //defines the mean of the prior distribution for the Theta hyperparameter mu.
+	MuPriorSigma float64 //defines the standard deviation of the prior distribution for the Theta hyperparameter mu.
 }
 
 // The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
 type Theta struct {
-	alpha      []float64
-	mu         float64
-	sigma      float64
-	prior      float64
-	likelihood float64
+	alpha      []float64 //defines the vector of selction parameters alpha for each segregating site.
+	mu         float64 //hyperparameter to generate alpha. Defines the mean of the distribution of alpha values.
+	sigma      float64 //hyperparameter to generate alpha. Defines the standard deviation of the distribution of alpha values.
+	priorDensity      float64 //density of the prior distribution for a particular theta set.
+	likelihood float64 //likelihood value for a particular Theta set.
 }
 
 // MetropolisAccept is a helper function of MetropolisHastings that determines whether to accept or reject a candidate parameter set.
@@ -56,26 +60,20 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 	decision = pAccept > yRand
 
 	if s.Verbose == 1 {
-		log.Printf("%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%t\n", old.mu, thetaPrime.mu, old.sigma, thetaPrime.sigma, old.likelihood, thetaPrime.likelihood, old.prior, thetaPrime.prior, pAccept, yRand, decision)
+		log.Printf("%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%t\n", old.mu, thetaPrime.mu, old.sigma, thetaPrime.sigma, old.likelihood, thetaPrime.likelihood, old.priorDensity, thetaPrime.priorDensity, pAccept, yRand, decision)
 		//log.Printf("%g\t%g\t%g\t%g\t%g\t%g\t%t\n", old.mu, thetaPrime.mu, math.Exp(numbers.DivideLog(old.likelihood, thetaPrime.likelihood)), math.Exp(numbers.DivideLog(old.prior, thetaPrime.prior)), math.Exp(pAccept), math.Exp(yRand), decision)
 	}
 	return decision
 }
 
-/*
-//HastingsRatio is a helper function of MetropolisAccept that returns the Hastings Ratio (logspace) between two parameter sets.
-func HastingsRatio(tOld Theta, tNew Theta, sigmaStep float64) float64 {
-	var newGivenOld, oldGivenNew float64
-	newGivenOld = numbers.GammaDist(tNew.sigma, sigmaStep, sigmaStep/tOld.sigma)
-	oldGivenNew = numbers.GammaDist(tOld.sigma, sigmaStep, sigmaStep/tNew.sigma)
-	return math.Log(oldGivenNew / newGivenOld)
-}*/
-
 // PosteriorOdds is a helper function of MetropolisAccept that returns the Bayes Factor times the Prior Odds
 // this should be the probability of accepting (can be greater than 1) if the Hastings Ratio is one.
 func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
+	if thetaPrime.priorDensity == math.Inf(-1) {//avoid divide by -Inf error when the candidate set is overdispersed.
+		return math.Inf(-1)
+	}
 	bayesFactor := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
-	priorOdds := numbers.DivideLog(thetaPrime.prior, old.prior)
+	priorOdds := numbers.DivideLog(thetaPrime.priorDensity, old.priorDensity)
 	posteriorOdds := numbers.MultiplyLog(bayesFactor, priorOdds)
 	return posteriorOdds
 }
@@ -83,18 +81,16 @@ func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
 // prior returns log(probability) of having meanAlpha and sigma as mean
 // and standard deviation of the function that will be generating the individual
 // alpha values
-func priorProb(mu float64, sigma float64) float64 {
+func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
 	var sigmaPrior, muPrior float64
 
-	//prior on sigma is a uniform distribution between zero and 0.5
 	if sigma < 0 {
 		return math.Inf(-1) // prior probability is zero
 	} else {
-		sigmaPrior = numbers.GammaDist(sigma, 2, 10)
+		sigmaPrior = numbers.GammaDist(sigma, s.SigmaPriorAlpha, s.SigmaPriorBeta)
 	}
 
-	//prior on alpha is normal with a mean of zero and a stdev of 3
-	muPrior = numbers.NormalDist(mu, 0, 3)
+	muPrior = numbers.NormalDist(mu, s.MuPriorMean, s.MuPriorSigma)
 
 	return math.Log(muPrior * sigmaPrior)
 }
@@ -103,7 +99,6 @@ func priorProb(mu float64, sigma float64) float64 {
 // parameters based on the state of the current parameter set t.
 // TODO: We could avoid some memory allocations by passing in an "old" theta and overwriting the values
 func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s McmcSettings) Theta {
-	//sample from uninformative gamma
 	var alphaPrime []float64
 	var prior, likelihood, muPrime, sigmaPrime float64
 	alphaPrime = make([]float64, len(t.alpha))
@@ -125,7 +120,7 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 		likelihood = AfsLikelihood(data, alphaPrime, binomCache, s.IntegralError)
 	}
 
-	prior = priorProb(muPrime, sigmaPrime)
+	prior = priorProb(muPrime, sigmaPrime, s)
 
 	if s.Verbose > 1 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
@@ -145,7 +140,10 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 	} else {
 		answer.likelihood = AfsLikelihood(data, answer.alpha, binomCache, s.IntegralError)
 	}
-	answer.prior = priorProb(answer.mu, answer.sigma)
+	answer.priorDensity = priorProb(answer.mu, answer.sigma, s)
+	if answer.priorDensity == math.Inf(-1) {
+		log.Fatalf("Initial theta set is too overdispersed to have a finite prior density in logSpace.")
+	}
 	return answer
 }
 
@@ -162,7 +160,6 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 	}
 
 	out := fileio.EasyCreate(outFile)
-	defer out.Close()
 
 	if s.Verbose > 1 {
 		log.Println("Hello, I'm about to calculate MCMC.")
@@ -174,7 +171,6 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 	if s.Verbose > 1 {
 		log.Println("Hello, I'm about to initialize theta.")
 	}
-	//initialization to uninformative standard normal
 	t := InitializeTheta(s.MuZero, s.SigmaZero, data, binomCache, s)
 	if s.Verbose > 1 {
 		log.Printf("Initial Theta: mu: %f. sigma: %f. LogLikelihood: %e.", t.mu, t.sigma, t.likelihood)
@@ -195,6 +191,9 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 		_, err = fmt.Fprintf(out, "%v\t%e\t%e\t%t\n", i, t.mu, t.sigma, currAccept)
 		exception.PanicOnErr(err)
 	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 //BuildBinomCache makes a 2D matrix where each entry binomCache[n][k] is equal to [n choose k] in logSpace.
@@ -213,7 +212,7 @@ func BuildBinomCache(allN []int) [][]float64 {
 
 //findAllN is a helper function of Metropolis Hastings that returns all the unique values of N present in an input Afs struct.
 func findAllN(data Afs) []int {
-	var answer []int = make([]int, 0)
+	var answer = make([]int, 0)
 	for i := 0; i < len(data.Sites); i++ {
 		if !common.IntSliceContains(answer, data.Sites[i].N) {
 			answer = append(answer, data.Sites[i].N)
