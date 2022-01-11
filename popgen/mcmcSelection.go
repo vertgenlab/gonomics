@@ -63,7 +63,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 // PosteriorOdds is a helper function of MetropolisAccept that returns the Bayes Factor times the Prior Odds
 // this should be the probability of accepting (can be greater than 1) if the Hastings Ratio is one.
 func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
-	if thetaPrime.priorDensity == math.Inf(-1) || thetaPrime.likelihood == math.Inf(-1) {//avoid divide by -Inf error when the candidate set is overdispersed.
+	if thetaPrime.priorDensity == math.Inf(-1) || thetaPrime.likelihood == math.Inf(-1) { //avoid divide by -Inf error when the candidate set is overdispersed.
 		return math.Inf(-1)
 	}
 	bayesFactor := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
