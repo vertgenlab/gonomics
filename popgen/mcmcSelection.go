@@ -51,17 +51,11 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 	var pAccept, yRand float64
 	yRand = math.Log(rand.Float64())
 	var decision bool
-
-	/* I think the prior calculations can now handle this
-	if thetaPrime.sigma < 0 || thetaPrime.sigma > 0.5 { //if sigma dips below zero or above 0.5, the candidate set is automatically discarded.
-		return false
-	}*/
 	pAccept = PosteriorOdds(old, thetaPrime)
 	decision = pAccept > yRand
 
 	if s.Verbose == 1 {
 		log.Printf("%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%t\n", old.mu, thetaPrime.mu, old.sigma, thetaPrime.sigma, old.likelihood, thetaPrime.likelihood, old.priorDensity, thetaPrime.priorDensity, pAccept, yRand, decision)
-		//log.Printf("%g\t%g\t%g\t%g\t%g\t%g\t%t\n", old.mu, thetaPrime.mu, math.Exp(numbers.DivideLog(old.likelihood, thetaPrime.likelihood)), math.Exp(numbers.DivideLog(old.prior, thetaPrime.prior)), math.Exp(pAccept), math.Exp(yRand), decision)
 	}
 	return decision
 }
@@ -69,7 +63,7 @@ func MetropolisAccept(old Theta, thetaPrime Theta, s McmcSettings) bool {
 // PosteriorOdds is a helper function of MetropolisAccept that returns the Bayes Factor times the Prior Odds
 // this should be the probability of accepting (can be greater than 1) if the Hastings Ratio is one.
 func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
-	if thetaPrime.priorDensity == math.Inf(-1) {//avoid divide by -Inf error when the candidate set is overdispersed.
+	if thetaPrime.priorDensity == math.Inf(-1) || thetaPrime.likelihood == math.Inf(-1) {//avoid divide by -Inf error when the candidate set is overdispersed.
 		return math.Inf(-1)
 	}
 	bayesFactor := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
@@ -78,7 +72,7 @@ func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
 	return posteriorOdds
 }
 
-// prior returns log(probability) of having meanAlpha and sigma as mean
+// priorProb returns log(probability) of having meanAlpha and sigma as mean
 // and standard deviation of the function that will be generating the individual
 // alpha values
 func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
@@ -113,14 +107,15 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 	for i := range t.alpha {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
 	}
+	prior = priorProb(muPrime, sigmaPrime, s)
 
-	if s.DivergenceAscertainment {
+	if prior == math.Inf(-1) {
+		likelihood = math.Inf(-1)
+	} else if s.DivergenceAscertainment {
 		likelihood = AfsDivergenceAscertainmentLikelihood(data, alphaPrime, binomCache, s.D, s.IntegralError)
 	} else {
 		likelihood = AfsLikelihood(data, alphaPrime, binomCache, s.IntegralError)
 	}
-
-	prior = priorProb(muPrime, sigmaPrime, s)
 
 	if s.Verbose > 1 {
 		log.Printf("Candidate Theta. Mu: %f. Sigma:%f. LogLikelihood: %e.\n", muPrime, sigmaPrime, likelihood)
@@ -135,15 +130,15 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 	for i := range data.Sites {
 		answer.alpha[i] = numbers.SampleInverseNormal(m, sig)
 	}
-	if s.DivergenceAscertainment {
+	answer.priorDensity = priorProb(answer.mu, answer.sigma, s)
+	if answer.priorDensity == math.Inf(-1) {
+		log.Fatalf("Initial theta set is too overdispersed to have a finite prior density in logSpace.")
+	} else if s.DivergenceAscertainment {
 		answer.likelihood = AfsDivergenceAscertainmentLikelihood(data, answer.alpha, binomCache, s.D, s.IntegralError)
 	} else {
 		answer.likelihood = AfsLikelihood(data, answer.alpha, binomCache, s.IntegralError)
 	}
-	answer.priorDensity = priorProb(answer.mu, answer.sigma, s)
-	if answer.priorDensity == math.Inf(-1) {
-		log.Fatalf("Initial theta set is too overdispersed to have a finite prior density in logSpace.")
-	}
+
 	return answer
 }
 
