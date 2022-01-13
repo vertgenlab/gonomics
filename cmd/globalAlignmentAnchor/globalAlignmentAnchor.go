@@ -55,11 +55,23 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 
 //Step 2: Use anchors aka filtered maf to calculate coordinates that still need to be aligned
 //TODO: save as bed entry, but what to do about strand
-func anchorToCoordinates(in_maf string, species_ins string, species_del string, ins_genome string, del_genome string) {
+func anchorToCoordinates(in_maf string, species_ins string, species_del string, ins_genome_fa string, del_genome_fa string) {
 	//initialize variables
 	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf. Maf has no ReadToChan function for now
 	//var bedList_ins []*bed.Bed     //initialize 2 bed files
 	//var bedList_del []*bed.Bed     //1 bed file for ins, 1 bed file for del
+
+	//started work for anchorToCoordinates here
+	//template is cmd/faFilter
+	//read genome files, which are fastas
+	ins_genome := fasta.Read(ins_genome_fa)
+	del_genome := fasta.Read(del_genome_fa)
+	for i := 0; i < len(ins_genome); i++ {
+		if records[i].Name == name { //replace "name" with chr
+			return records[i].Seq[start:end] //replace "start:end" with positions that are not s. I believe Seq starts index at 0, according to fasta.go WriteFasta function
+		}
+	}
+
 	out_ins := fileio.EasyCreate(outIns_bed) //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
 	defer out_ins.Close()
 	out_del := fileio.EasyCreate(outDel_bed)
