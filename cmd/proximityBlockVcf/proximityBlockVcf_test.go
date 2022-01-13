@@ -8,11 +8,11 @@ import (
 )
 
 var ProximityBlockVcfTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
-	Distance int
-	SetSeed int64
+	Distance     int
+	SetSeed      int64
 }{
 	{"testdata/test.vcf", "testdata/tmp.vcf", "testdata/expectedSeedMinus1.vcf", 10, -1},
 	{"testdata/test.vcf", "testdata/tmp.vcf", "testdata/expectedSeed10.vcf", 10, 10},

@@ -15,7 +15,7 @@ func proximityBlockVcf(inFile string, outFile string, distance int, randSeed boo
 	var err error
 	common.RngSeed(randSeed, setSeed)
 	records, header := vcf.Read(inFile)
-	rand.Shuffle(len(records), func(i, j int) {records[i], records[j] = records[j], records[i]})
+	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 
 	//make an output slice and put the first entry in it.
 	var retainedVcfs []vcf.Vcf = make([]vcf.Vcf, 1)
@@ -40,11 +40,11 @@ func vcfPassesDistanceThreshold(retainedVcfs []vcf.Vcf, i vcf.Vcf, distanceThres
 	for _, j := range retainedVcfs {
 		if i.Chr == j.Chr {
 			if i.Pos < j.Pos {
-				if j.Pos - i.Pos < distanceThreshold {
+				if j.Pos-i.Pos < distanceThreshold {
 					return false
 				}
 			} else {
-				if i.Pos - j.Pos < distanceThreshold {
+				if i.Pos-j.Pos < distanceThreshold {
 					return false
 				}
 			}
