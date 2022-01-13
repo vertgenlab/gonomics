@@ -75,18 +75,23 @@ func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
 // priorProb returns log(probability) of having meanAlpha and sigma as mean
 // and standard deviation of the function that will be generating the individual
 // alpha values
-func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
-	var sigmaPrior, muPrior float64
+func priorProb(alpha []float64, mu float64, sigma float64, s McmcSettings) float64 {
+	var sigmaPrior, muPrior, alphaPrior float64
+	alphaPrior = 0 //logSpace 1 initialization.
 
 	if sigma < 0 {
 		return math.Inf(-1) // prior probability is zero
 	} else {
-		sigmaPrior = numbers.GammaDist(sigma, s.SigmaPriorAlpha, s.SigmaPriorBeta)
+		sigmaPrior = math.Log(numbers.GammaDist(sigma, s.SigmaPriorAlpha, s.SigmaPriorBeta))
 	}
 
-	muPrior = numbers.NormalDist(mu, s.MuPriorMean, s.MuPriorSigma)
+	muPrior = math.Log(numbers.NormalDist(mu, s.MuPriorMean, s.MuPriorSigma))
 
-	return math.Log(muPrior * sigmaPrior)
+	for i := range alpha {
+		alphaPrior = numbers.MultiplyLog(alphaPrior, math.Log(numbers.NormalDist(alpha[i], mu, sigma)))
+	}
+
+	return numbers.MultiplyLog(numbers.MultiplyLog(muPrior, sigmaPrior), alphaPrior)
 }
 
 // GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of
@@ -107,7 +112,7 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 	for i := range t.alpha {
 		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
 	}
-	prior = priorProb(muPrime, sigmaPrime, s)
+	prior = priorProb(alphaPrime, muPrime, sigmaPrime, s)
 
 	if prior == math.Inf(-1) {
 		likelihood = math.Inf(-1)
@@ -130,7 +135,7 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 	for i := range data.Sites {
 		answer.alpha[i] = numbers.SampleInverseNormal(m, sig)
 	}
-	answer.priorDensity = priorProb(answer.mu, answer.sigma, s)
+	answer.priorDensity = priorProb(answer.alpha, answer.mu, answer.sigma, s)
 	if answer.priorDensity == math.Inf(-1) {
 		log.Fatalf("Initial theta set is too overdispersed to have a finite prior density in logSpace.")
 	} else if s.DivergenceAscertainment {
