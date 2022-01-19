@@ -13,7 +13,7 @@ import (
 
 func proximityBlockVcf(inFile string, outFile string, distance int, setSeed int64) {
 	var err error
-	common.RngSeed(setSeed)
+	rand.Seed(setSeed)
 	records, header := vcf.Read(inFile)
 	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 

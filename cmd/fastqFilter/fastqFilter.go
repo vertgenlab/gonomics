@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -35,7 +34,7 @@ type Settings struct {
 }
 
 func fastqFilter(s Settings) {
-	common.RngSeed(s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var r float64
 	var err error
 	var doneReading, FwdInMap, RevInMap, NameInMap bool

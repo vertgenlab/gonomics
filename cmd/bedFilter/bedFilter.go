@@ -16,7 +16,7 @@ import (
 )
 
 func bedFilter(s Settings) {
-	common.RngSeed(s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var length int
 	var pass bool = false
 	var r float64

@@ -3,16 +3,8 @@ package common
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
 )
-
-//RngSeed sets the rand seed global variable using the setSeed argument
-func RngSeed(setSeed int64) {
-	if setSeed != -1 {
-		rand.Seed(setSeed)
-	}
-}
 
 //IntSliceContains returns true if a slice of ints a containts an int b, false otherwise.
 func IntSliceContains(a []int, b int) bool {

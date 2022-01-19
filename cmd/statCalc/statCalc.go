@@ -11,12 +11,13 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
+	"math/rand"
 	"strings"
 )
 
 func statCalc(s Settings) {
 	MultipleOptionErrorCheck(s.Normal, s.Binomial, s.Poisson, s.Beta, s.Gamma, s.SampleAfs, s.SampleBeta, s.SampleGamma, s.SampleNormal)
-	common.RngSeed(s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var err error
 	out := fileio.EasyCreate(s.OutFile)
 	if s.Normal != "" {

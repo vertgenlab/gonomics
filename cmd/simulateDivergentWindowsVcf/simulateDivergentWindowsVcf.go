@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
@@ -29,7 +28,7 @@ func simulateDivergentWindowsVcf(s Settings) {
 		log.Fatalf("LowerPercentile argument must be between one and zero.")
 	}
 
-	common.RngSeed(s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var err error
 	var TotalSites []vcf.Vcf = make([]vcf.Vcf, s.NumTotalSites)
 	var windows []Window = make([]Window, s.NumWindows)

@@ -6,15 +6,15 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"math/rand"
 )
 
 func simulateBed(regionCount int, simLength int, noGapFile string, outFile string, setSeed int64) {
-	common.RngSeed(setSeed)
+	rand.Seed(setSeed)
 	noGap := bed.Read(noGapFile)
 	c := simulate.GoSimulateBed(noGap, regionCount, simLength)
 	out := fileio.EasyCreate(outFile)

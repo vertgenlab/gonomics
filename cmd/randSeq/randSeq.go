@@ -5,15 +5,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"math/rand"
 )
 
 func randSeq(outFile string, GC float64, numSeq int, lenSeq int, setSeed int64) {
-	common.RngSeed(setSeed)
+	rand.Seed(setSeed)
 	file := fileio.EasyCreate(outFile)
 	defer file.Close()
 	for i := 0; i < numSeq; i++ {

@@ -5,13 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"math/rand"
 )
 
 func simulateVcf(s Settings) {
-	common.RngSeed(s.SetSeed)
+	rand.Seed(s.SetSeed)
 	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier)
 }
 
