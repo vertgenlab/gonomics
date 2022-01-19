@@ -18,7 +18,7 @@ var RandSeqTests = []struct {
 	{"testdata/test.fa", "testdata/expected.fa", 0.41, 10, 500, 10},
 	{"testdata/test.fa", "testdata/expectedHighGC.fa", 0.60, 10, 500, 10},
 	{"testdata/test.fa", "testdata/expectedShort.fa", 0.41, 10, 20, 10},
-	{"testdata/test.fa", "testdata/expectedNumSeq.fa", 0.41, 3, 500,10},
+	{"testdata/test.fa", "testdata/expectedNumSeq.fa", 0.41, 3, 500, 10},
 }
 
 func TestRandSeq(t *testing.T) {
