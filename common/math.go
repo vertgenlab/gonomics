@@ -5,17 +5,11 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
-	"time"
 )
 
-//RngSeed sets the rand seed global variable using the randSeed and setSeed arguments
-func RngSeed(randSeed bool, setSeed int64) {
-	if randSeed && setSeed != -1 {
-		log.Fatalf("Cannot use a set seed and also a random seed.")
-	}
-	if randSeed {
-		rand.Seed(time.Now().UnixNano())
-	} else if setSeed != -1 {
+//RngSeed sets the rand seed global variable using the setSeed argument
+func RngSeed(setSeed int64) {
+	if setSeed != -1 {
 		rand.Seed(setSeed)
 	}
 }

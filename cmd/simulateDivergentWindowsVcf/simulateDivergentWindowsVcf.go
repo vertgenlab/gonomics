@@ -29,7 +29,7 @@ func simulateDivergentWindowsVcf(s Settings) {
 		log.Fatalf("LowerPercentile argument must be between one and zero.")
 	}
 
-	common.RngSeed(s.RandSeed, s.SetSeed)
+	common.RngSeed(s.SetSeed)
 	var err error
 	var TotalSites []vcf.Vcf = make([]vcf.Vcf, s.NumTotalSites)
 	var windows []Window = make([]Window, s.NumWindows)
@@ -97,7 +97,6 @@ type Settings struct {
 	NumTotalSites   int
 	NumWindowSites  int
 	NumWindows      int
-	RandSeed        bool
 	SetSeed         int64
 	BoundAlpha      float64
 	BoundBeta       float64
@@ -111,7 +110,6 @@ func main() {
 	var numTotalSites *int = flag.Int("numTotalSites", 10000, "Specifies the total number of simulated variants used to pick windows. Must be larger than NumWindowSites.")
 	var numWindowSites *int = flag.Int("numWindowSites", 100, "Specifies the number of segregating sites per window.")
 	var numWindows *int = flag.Int("numWindows", 1000, "Specifies the number of windows.")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var alpha *float64 = flag.Float64("alpha", 0.01, "Specifies the selection parameter alpha for drawing individual gVCF alleles from a stationarity distribution.")
 	var numAlleles *int = flag.Int("numAlleles", 100, "Specifies the number of alleles for gVCF samples.")
@@ -140,7 +138,6 @@ func main() {
 		NumTotalSites:   *numTotalSites,
 		NumWindowSites:  *numWindowSites,
 		NumWindows:      *numWindows,
-		RandSeed:        *randSeed,
 		SetSeed:         *setSeed,
 		BoundAlpha:      *boundAlpha,
 		BoundBeta:       *boundBeta,

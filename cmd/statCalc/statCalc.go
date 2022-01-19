@@ -16,7 +16,7 @@ import (
 
 func statCalc(s Settings) {
 	MultipleOptionErrorCheck(s.Normal, s.Binomial, s.Poisson, s.Beta, s.Gamma, s.SampleAfs, s.SampleBeta, s.SampleGamma, s.SampleNormal)
-	common.RngSeed(s.RandSeed, s.SetSeed)
+	common.RngSeed(s.SetSeed)
 	var err error
 	out := fileio.EasyCreate(s.OutFile)
 	if s.Normal != "" {
@@ -280,7 +280,6 @@ type Settings struct {
 	SampleBeta   string
 	SampleGamma  string
 	SampleNormal string
-	RandSeed     bool
 	SetSeed      int64
 	OutFile      string
 }
@@ -295,7 +294,6 @@ func main() {
 	var SampleBeta *string = flag.String("sampleBeta", "", "")
 	var SampleGamma *string = flag.String("sampleGamma", "", "")
 	var SampleNormal *string = flag.String("sampleNormal", "", "")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var outFile *string = flag.String("outFile", "stdout", "Redirect the output to a file. Default to stdout.")
 
@@ -314,7 +312,6 @@ func main() {
 		SampleBeta:   *SampleBeta,
 		SampleGamma:  *SampleGamma,
 		SampleNormal: *SampleNormal,
-		RandSeed:     *randSeed,
 		SetSeed:      *setSeed,
 		OutFile:      *outFile,
 	}
