@@ -10,17 +10,17 @@ import (
 	"log"
 )
 
-func quickPrimateRecon(infile string, outfile string, messyToN bool) {
+func primateRecon(infile string, outfile string, messyToN bool) {
 	records := fasta.Read(infile)
-	output := append(records, reconstruct.QuickPrimateRecon(records, messyToN))
+	output := append(records, reconstruct.PrimateRecon(records, messyToN))
 	fasta.Write(outfile, output)
 }
 
 func usage() {
 	fmt.Print(
-		"quickPrimateRecon - Returns maximum likelihood sequence from an HBCGO primate alignment\n" +
+		"primateRecon - Returns maximum likelihood sequence from an HBCGO primate alignment\n" +
 			"Usage:\n" +
-			"  quickPrimateRecon input.fa output.fa\n" +
+			"primateRecon input.fa output.fa\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -41,5 +41,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	quickPrimateRecon(inFile, outFile, *messyToN)
+	primateRecon(inFile, outFile, *messyToN)
 }
