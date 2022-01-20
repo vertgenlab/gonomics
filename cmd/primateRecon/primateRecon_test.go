@@ -8,10 +8,10 @@ import (
 )
 
 var PrimateReconTests = []struct {
-	Infile string
-	Outfile string
+	Infile       string
+	Outfile      string
 	ExpectedFile string
-	MessyToN bool
+	MessyToN     bool
 }{
 	{"testdata/in.fa", "testdata/tmp.fa", "testdata/expected.fa", true},
 }
