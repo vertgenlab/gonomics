@@ -13,16 +13,16 @@ import (
 // the sequences are assumed to be all uppercase DNA
 // the function returns:
 // 1) the next alignment position with a reference base, which is usually alignmentIndex+1, but can be greater due to gaps
+//        this value will be equal to len(seqOne) if we were unable to find another reference base
 // 2) true if we opened and closed a gap in the ref
 // 3) true if a gap was opened in the (query) second sequence
 // 4) true if gap was closed in the (query) second sequence
 // 5) int that is the number of Ns in the reference after this increment (0 or 1)
 // 6) int that is the number of Ns in the query (second) sequence after this increment (can be more than 1 due to gaps in ref)
-// 7) true if the new base we incremented to is a substitution (mismatch)
-// 8) true if done (could not find another reference base position)
-func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int, bool, bool, bool, int, int, bool, bool) {
-	var alnIdxOrig, nextRefPos, numRefNs, numQueryNs int
-	var gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, isSubst bool
+// 7) int that is the number of substitutions/mismatches (0 or 1)
+func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int, bool, bool, bool, int, int, int) {
+	var alnIdxOrig, nextRefPos, numRefNs, numQueryNs, numSubst int
+	var gapOpenCloseRef, gapOpenedQuery, gapClosedQuery bool
 	alnIdxOrig = alnIdx
 
 	// increment alnIdx to the next ref position (next non-gap pos in seqOne)
@@ -37,7 +37,7 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int,
 
 	// if we ran off the end of seqOne when looking for the next ref base
 	if alnIdx == len(seqOne) {
-		return alnIdx, false, false, false, 0, numQueryNs, false, true
+		return alnIdx, false, false, false, 0, numQueryNs, 0
 	}
 
 	// did we add another reference N when moving the window one reference base
@@ -50,7 +50,7 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int,
 	}
 	// is this a substitution?
 	if seqOne[alnIdx] != seqTwo[alnIdx] && dna.DefineBase(seqOne[alnIdx]) && dna.DefineBase(seqTwo[alnIdx]) {
-		isSubst = true
+		numSubst++
 	}
 	// did we open a gap in the query sequence when moving the window edge?
 	if alnIdxOrig != -1 && seqTwo[alnIdxOrig] != dna.Gap && seqTwo[alnIdx] == dna.Gap {
@@ -60,15 +60,39 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int,
 	if alnIdxOrig != -1 && seqTwo[alnIdxOrig] == dna.Gap && seqTwo[alnIdx] != dna.Gap {
 		gapClosedQuery = true
 	}
-	return alnIdx, gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNs, isSubst, false
+	return alnIdx, gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNs, numSubst
 }
 
-func speedyWindowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string, verbose bool) []bed.Bed {
-	var alnIdx, refIdx int
-	var done false
+func speedyWindowDifference(windowSize int, seqOne fasta.Fasta, seqTwo fasta.Fasta, name *string, verbose bool) []bed.Bed {
+	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1 // these are the two edges of the sliding window in "alignment coordinates"
+	var refIdxBeforeWindow, lastRefIdxOfWindow int = -1, -1 // these are the two edges of the sliding window in "reference (no gaps) coordinates"
+	var totalGaps, totalNs, totalSubst int // this is the data we need to keep track of that describes the current window
+	var gapOpenCloseRef, gapOpenQuery, isSubst, gapClosedQuery, done bool // bools we will get back when moving the window one ref base
+	var numRefNs, numQueryNs int // ints we will get back when moving the window one ref base
 
-	for alnIdx=-1, refIdx=0; alnIdx < len(seqOne); refIdx++ {
-		alnIdx, gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNs, isSubst, done
+	for lastAlnIdxOfWindow < len(seqOne.Seq) { // this check could also be "!done", I am not sure what is more clear
+		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
+		// all this stuff is now inside the current window
+		lastAlnIdxOfWindow, gapOpenCloseRef, gapOpenQuery, _, numRefNs, numQueryNs, numSubst = incrementWindowEdge(seqOne.Seq, seqTwo.Seq, lastAlnIdxOfWindow)
+		lastRefIdxOfWindow++
+		totalGaps += gapOpenCloseRef + gapOpenQuery
+		totalNs += numRefNs + numQueryNs
+		totalSubst += numSubst
+
+		// usually increment the baseBeforeWindow, but not at the beginning when we have not yet incremented the end
+		// enough to have a full "windowSize" of bases in the window
+		if lastRefIdxOfWindow - refIdxBeforeWindow < windowSize {
+			alnIdxBeforeWindow, gapOpenCloseRef, _, gapClosedQuery, numRefNs, numQueryNs, numSubst = incrementWindowEdge(seqOne.Seq, seqTwo.Seq, alnIdxBeforeWindow)
+			refIdxBeforeWindow++
+			totalGaps -= gapOpenCloseRef + gapClosedQuery
+			totalNs -= numRefNs + numQueryNs
+			totalSubst -= numSubst
+		}
+
+		// we check to make sure we are not at the very beginning or end, where we would have partial or illegal windows
+		if lastRefIdxOfWindow - refIdxBeforeWindow == windowSize && lastAlnIdx < len(seqOne.Seq) {
+			fmt.Fprintf()
+		}
 	}
 }
 
