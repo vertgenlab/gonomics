@@ -13,13 +13,12 @@ var SimulateVcfTests = []struct {
 	Alpha           float64
 	NumAlleles      int
 	NumSites        int
-	RandSeed        bool
 	SetSeed         int64
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
 }{
-	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, false, 11, 0.001, 0.001, 10000},
+	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000},
 }
 
 func TestSimulateVcf(t *testing.T) {
@@ -31,7 +30,6 @@ func TestSimulateVcf(t *testing.T) {
 			Alpha:           v.Alpha,
 			NumSites:        v.NumSites,
 			NumAlleles:      v.NumAlleles,
-			RandSeed:        v.RandSeed,
 			SetSeed:         v.SetSeed,
 			BoundAlpha:      v.BoundAlpha,
 			BoundBeta:       v.BoundBeta,

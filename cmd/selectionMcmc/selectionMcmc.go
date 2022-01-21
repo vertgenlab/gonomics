@@ -5,14 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
+	"math/rand"
 )
 
 func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {
-	common.RngSeed(s.RandSeed, s.SetSeed)
+	rand.Seed(s.SetSeed)
 	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)
@@ -36,7 +36,6 @@ func main() {
 	var sigmaZero *float64 = flag.Float64("sigmaZero", 0.1, "Starting value for the selection coefficient distribution variance parameter sigma.")
 	var muStep *float64 = flag.Float64("muStep", 0.2, "Step size for the mean selection coefficient parameter mu.")
 	var sigmaStep *float64 = flag.Float64("sigmaStep", 0.1, "Step size for the selection coefficient variance parameter sigma.")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
 	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Make a divergence-based ascertainment correction.")
@@ -59,7 +58,6 @@ func main() {
 		MuZero:                  *muZero,
 		SigmaStep:               *sigmaStep,
 		SigmaZero:               *sigmaZero,
-		RandSeed:                *randSeed,
 		SetSeed:                 *setSeed,
 		UnPolarized:             *unPolarized,
 		DivergenceAscertainment: *divergenceAscertainment,

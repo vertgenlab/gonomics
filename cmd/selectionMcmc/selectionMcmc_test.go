@@ -17,7 +17,6 @@ var SelectionMcmcTests = []struct {
 	SigmaZero               float64
 	MuStep                  float64
 	SigmaStep               float64
-	RandSeed                bool
 	SetSeed                 int64
 	UnPolarized             bool
 	DivergenceAscertainment bool
@@ -37,8 +36,7 @@ var SelectionMcmcTests = []struct {
 		0.1,
 		0.2,
 		0.1,
-		false,
-		-1,
+		1,
 		false,
 		false,
 		false,
@@ -61,7 +59,6 @@ func TestSelectionMcmc(t *testing.T) {
 			MuZero:                  v.MuZero,
 			SigmaStep:               v.SigmaStep,
 			SigmaZero:               v.SigmaZero,
-			RandSeed:                v.RandSeed,
 			SetSeed:                 v.SetSeed,
 			UnPolarized:             v.UnPolarized,
 			DivergenceAscertainment: v.DivergenceAscertainment,

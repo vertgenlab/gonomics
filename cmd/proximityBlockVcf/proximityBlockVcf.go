@@ -11,9 +11,9 @@ import (
 	"math/rand"
 )
 
-func proximityBlockVcf(inFile string, outFile string, distance int, randSeed bool, setSeed int64) {
+func proximityBlockVcf(inFile string, outFile string, distance int, setSeed int64) {
 	var err error
-	common.RngSeed(randSeed, setSeed)
+	rand.Seed(setSeed)
 	records, header := vcf.Read(inFile)
 	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 
@@ -67,7 +67,6 @@ func usage() {
 }
 
 func main() {
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 
 	var expectedNumArgs int = 3
@@ -83,5 +82,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 	distance := common.StringToInt(flag.Arg(2))
-	proximityBlockVcf(inFile, outFile, distance, *randSeed, *setSeed)
+	proximityBlockVcf(inFile, outFile, distance, *setSeed)
 }
