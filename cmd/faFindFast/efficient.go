@@ -8,6 +8,70 @@ import (
 	"log"
 )
 
+// incrementWindowEdge takes two aligned fasta sequences and a current index into the alignment.
+// the current index can be -1 for when we want to "increment" to the first position in the alignment.
+// the sequences are assumed to be all uppercase DNA
+// the function returns:
+// 1) the next alignment position with a reference base, which is usually alignmentIndex+1, but can be greater due to gaps
+// 2) true if we opened and closed a gap in the ref
+// 3) true if a gap was opened in the (query) second sequence
+// 4) true if gap was closed in the (query) second sequence
+// 5) int that is the number of Ns in the reference after this increment (0 or 1)
+// 6) int that is the number of Ns in the query (second) sequence after this increment (can be more than 1 due to gaps in ref)
+// 7) true if the new base we incremented to is a substitution (mismatch)
+// 8) true if done (could not find another reference base position)
+func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int, bool, bool, bool, int, int, bool, bool) {
+	var alnIdxOrig, nextRefPos, numRefNs, numQueryNs int
+	var gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, isSubst bool
+	alnIdxOrig = alnIdx
+
+	// increment alnIdx to the next ref position (next non-gap pos in seqOne)
+	for alnIdx++; alnIdx < len(seqOne) && seqOne[alnIdx] == dna.Gap; alnIdx++ {
+		if seqTwo[alnIdx] == dna.Gap {
+			numQueryNs++
+		}
+		if seqTwo[alnIdx] != dna.Gap {
+			gapOpenCloseRef = true
+		}
+	}
+
+	// if we ran off the end of seqOne when looking for the next ref base
+	if alnIdx == len(seqOne) {
+		return alnIdx, false, false, false, 0, numQueryNs, false, true
+	}
+
+	// did we add another reference N when moving the window one reference base
+	if seqOne[alnIdx] == dna.N {
+		numRefNs++
+	}
+	// do we add another N to the query count of Ns
+	if seqTwo[alnIdx] == dna.N {
+		numQueryNs++
+	}
+	// is this a substitution?
+	if seqOne[alnIdx] != seqTwo[alnIdx] && dna.DefineBase(seqOne[alnIdx]) && dna.DefineBase(seqTwo[alnIdx]) {
+		isSubst = true
+	}
+	// did we open a gap in the query sequence when moving the window edge?
+	if alnIdxOrig != -1 && seqTwo[alnIdxOrig] != dna.Gap && seqTwo[alnIdx] == dna.Gap {
+		gapOpenedQuery = true
+	}
+	// did we close a gap in the query when moving the window edge?
+	if alnIdxOrig != -1 && seqTwo[alnIdxOrig] == dna.Gap && seqTwo[alnIdx] != dna.Gap {
+		gapClosedQuery = true
+	}
+	return alnIdx, gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNs, isSubst, false
+}
+
+func speedyWindowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string, verbose bool) []bed.Bed {
+	var alnIdx, refIdx int
+	var done false
+
+	for alnIdx=-1, refIdx=0; alnIdx < len(seqOne); refIdx++ {
+		alnIdx, gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNs, isSubst, done
+	}
+}
+
 func efficientWindowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string, verbose bool) []bed.Bed {
 	var bedList []bed.Bed
 	var alignmentStart, referenceCounter int
