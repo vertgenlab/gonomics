@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 )
 
-func faFindFast(inFile string, outFile string, windowSize int, chromName *string, removeN bool, longWindowEfficient bool, verbose bool) {
+func faFindFast(inFile string, outFile string, windowSize int, chromName string, removeN bool, longWindowEfficient bool, verbose bool) {
 	records := fasta.Read(inFile)
 
 	if len(records) != 2 {
@@ -22,21 +24,24 @@ func faFindFast(inFile string, outFile string, windowSize int, chromName *string
 		log.Fatalf("Sequences are not of equal length")
 	}
 
-	diff, denominator := countTotalDifference(records[0], records[1])
 	if verbose {
+		diff, denominator := countTotalDifference(records[0], records[1])
 		log.Printf("I found %d total differences in %d aligned bases.\n", diff, denominator)
 	}
 
 	var bedList []bed.Bed
 	if longWindowEfficient {
-		bedList = efficientWindowDifference(windowSize, records[0], records[1], chromName, verbose)
+		file := fileio.EasyCreate(outFile)
+		speedyWindowDifference(windowSize, records[0].Seq, records[1].Seq, chromName, removeN, verbose, file)
+		err := file.Close()
+		exception.PanicOnErr(err)
 	} else {
 		bedList = windowDifference(windowSize, records[0], records[1], chromName, removeN, verbose)
+		bed.Write(outFile, bedList)
 	}
-	bed.Write(outFile, bedList)
 }
 
-func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *string, removeN bool, verbose bool) []bed.Bed {
+func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name string, removeN bool, verbose bool) []bed.Bed {
 	var bedList []bed.Bed
 	var referenceCounter = 0
 	var reachedEnd bool = false
@@ -51,7 +56,7 @@ func windowDifference(windowSize int, seq1 fasta.Fasta, seq2 fasta.Fasta, name *
 			if removeN && seqsContainN(seq1, seq2, alignmentCounter, windowSize) {
 				referenceCounter++
 			} else if !reachedEnd {
-				current := bed.Bed{Chrom: *name, ChromStart: referenceCounter,
+				current := bed.Bed{Chrom: name, ChromStart: referenceCounter,
 					ChromEnd: referenceCounter + windowSize, Name: fmt.Sprintf("%d", referenceCounter), Score: diff, FieldsInitialized: 5}
 				bedList = append(bedList, current)
 				referenceCounter++
@@ -191,5 +196,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFindFast(inFile, outFile, *windowSize, chromName, *removeN, *longWindowEfficient, *verbose)
+	faFindFast(inFile, outFile, *windowSize, *chromName, *removeN, *longWindowEfficient, *verbose)
 }
