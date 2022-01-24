@@ -273,10 +273,12 @@ func SetState(node *expandedTree.ETree, position int) {
 
 		if len(node.Fasta.Seq) <= position {
 			log.Fatal("position specified is out of range of sequence \n")
-		} else if len(node.Fasta.Seq) > position {
+		} else {
 			node.State = int(node.Fasta.Seq[position])
 			for i := 0; i < 4; i++ {
-				if i == node.State {
+				if node.Fasta.Seq[position] == dna.N || node.Fasta.Seq[position] == dna.Gap {
+					node.Stored[i] = 0.25
+				} else if i == node.State {
 					node.Stored[i] = 1
 				} else {
 					node.Stored[i] = 0

@@ -224,3 +224,26 @@ func AssignFastas(root *ETree, fastaFilename string) {
 		branches[i].Fasta = &f
 	}
 }
+
+func FindNodeName(node *ETree, findMe string) *ETree {
+	var searchResult *ETree
+	if node == nil {
+		return nil
+	}
+	if node.Name == findMe {
+		return node
+	}
+	if node.Left != nil {
+		searchResult = FindNodeName(node.Left, findMe)
+		if searchResult != nil {
+			return searchResult
+		}
+	}
+	if node.Right != nil {
+		searchResult = FindNodeName(node.Right, findMe)
+		if searchResult != nil {
+			return searchResult
+		}
+	}
+	return nil
+}

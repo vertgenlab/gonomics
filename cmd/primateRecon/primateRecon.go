@@ -10,6 +10,89 @@ import (
 	"log"
 )
 
+// likelihoodsToBase takes the un-normalized likelihoods for A, C, G, T as well
+// as the index of the human base (0 for A, 1 for C, etc), and the probability
+// threshold for when we will call it the mle base instead of the human base
+// and gives back the reconstructed base for the hca
+func likelihoodsToBase(likes []float64, humanBase dna.Base, probThreshold float64) dna.Base {
+	var total, bestProb float64
+	var i int
+	var answer dna.Base
+
+	answer = humanBase
+
+	for i = range likes {
+		total += likes[i]
+	}
+	for i = range likes {
+		if likes[i]/total >= probThreshold && likes[i] > bestProb {
+			bestProb = likes[i]
+			answer = dna.Base(i)
+		}
+	}
+	return answer
+}
+
+func hcaIsPresent(human, bonobo, chimp, gorilla, organutan dna.Base) bool {
+	if dna.DefineBase(human) && (dna.DefineBase(bonobo) || dna.DefineBase(chimp)) {
+		return true
+	}
+	if (dna.DefineBase(human) || dna.DefineBase(bonobo) || dna.DefineBase(chimp)) && (dna.DefineBase(gorilla) || dna.DefineBase(organutan)) {
+		return true
+	}
+	return false
+}
+
+func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64) {
+	SetState(root, position)
+	likelihoods := FixFc(root, nodeToRecon)
+	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, likelihoodsToBase(likelihoods))
+}
+
+func primateReconMle(inFastaFilename string, inTreeFilename string, messyToN bool, outFastaFilename string) {
+	var tree, humanNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hcaNode *expandedTree.ETree
+	var err error
+	var i int
+
+	tree, err = expandedTree.ReadTree(newickInput, fastaInput)
+	exception.FatalOnErr(err)
+
+	// roll call to make sure everyone is here and will need them later
+	humanNode = expandedTree.FindNodeName(tree, "hg38")
+	if humanNode == nil {
+		log.Fatalf("Didn't find hg38 in the tree\n")
+	}
+	bonoboNode = expandedTree.FindNodeName(tree, "panPan2")
+	if bonoboNode == nil {
+		log.Fatalf("Didn't find panPan2 in the tree\n")
+	}
+	chimpNode = expandedTree.FindNodeName(tree, "panTro6")
+	if chimpNode == nil {
+		log.Fatalf("Didn't find panTro6 in the tree\n")
+	}
+	gorillaNode = expandedTree.FindNodeName(tree, "gorGor3")
+	if gorillaNode == nil {
+		log.Fatalf("Didn't find gorGor3 in the tree\n")
+	}
+	orangutanNode = expandedTree.FindNodeName(tree, "ponAbe4")
+	if orangutanNode == nil {
+		log.Fatalf("Didn't find ponAbe4 in the tree\n")
+	}
+	hcaNode = expandedTree.FindNodeName(tree, "hca")
+	if hcaNode == nil {
+		log.Fatalf("Didn't find hca in the tree\n")
+	}
+
+	for i = range humanNode.Fasta.Seq {
+		if hcaIsPresent(humanNode.Fasta.Seq[i], bonoboNode.Fasta.Seq[i], chimpNode.Fasta.Seq[i], gorillaNode.Fasta.Seq[i], organutanNode.Fasta.Seq[i]) {
+			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold)
+		} else {
+			nodeToRecon.Fasta.Seq = append(hcaNode.Fasta.Seq, dna.Gap)
+		}
+	}
+	fasta.Write(outputFilename, []fasta.Fasta{humanNode.Fasta, hcaNode.Fasta})
+}
+
 func primateRecon(infile string, outfile string, messyToN bool) {
 	records := fasta.Read(infile)
 	output := append(records, reconstruct.PrimateRecon(records, messyToN))
@@ -28,6 +111,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var messyToN *bool = flag.Bool("messyToN", false, "Sets messy bases to Ns in the output file.")
+	var mle *string = flag.String("mle", "", "Does a maximum likelihood estimate if newick tree filename provided.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -41,5 +125,9 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	primateRecon(inFile, outFile, *messyToN)
+	if *mle != "" {
+		primateReconMle(inFile, *mle, *messyToN, outFile)
+	} else {
+		primateRecon(inFile, outFile, *messyToN)
+	}
 }
