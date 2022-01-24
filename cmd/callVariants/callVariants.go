@@ -5,16 +5,24 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
 )
 
-func callVariants(experimentalFiles, normalFiles []string, outfile string) {
+func callVariants(experimentalFiles, normalFiles []string, reffile, outfile string, maxP float64) {
+	out := fileio.EasyCreate(outfile)
+	outHeader := vcf.NewHeader(strings.Join(append(experimentalFiles, normalFiles...), "\t"))
+	vcf.NewWriteHeader(out, outHeader)
+	ref := fasta.NewSeeker(reffile, "")
+
 	expHeaders, expPiles := startPileup(experimentalFiles)
 	normHeaders, normPiles := startPileup(normalFiles)
+
 	isExperimental := make([]bool, len(experimentalFiles)+len(normalFiles))
 	for i := 0; i < len(experimentalFiles); i++ {
 		isExperimental[i] = true
@@ -24,11 +32,23 @@ func callVariants(experimentalFiles, normalFiles []string, outfile string) {
 	exception.FatalOnErr(err)
 
 	synced := sam.GoSyncPileups(append(expPiles, normPiles...))
+
+	var v vcf.Vcf
+	var keepVar bool
 	for piles := range synced {
-		fmt.Println(piles)
+		v, keepVar = getVariant(piles[:len(experimentalFiles)], piles[len(experimentalFiles):], ref, expHeaders[0].Chroms, maxP)
+		if keepVar {
+			vcf.WriteVcf(out, v)
+		}
 	}
+
+	err = ref.Close()
+	exception.PanicOnErr(err)
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
+// startPileup for each input file
 func startPileup(files []string) (headers []sam.Header, piles []<-chan sam.Pile) {
 	headers = make([]sam.Header, len(files))
 	piles = make([]<-chan sam.Pile, len(files))
@@ -44,6 +64,7 @@ func startPileup(files []string) (headers []sam.Header, piles []<-chan sam.Pile)
 	return
 }
 
+// checkHeadersMatch verifies that all input files use the same reference
 func checkHeadersMatch(headers []sam.Header) error {
 	ref := headers[0].Chroms
 	for i := 1; i < len(headers); i++ {
@@ -59,12 +80,15 @@ func checkHeadersMatch(headers []sam.Header) error {
 	return nil
 }
 
+// inputFiles is a custom type that gets filled by flag.Parse()
 type inputFiles []string
 
+// String to satisfy flag.Value interface
 func (i *inputFiles) String() string {
 	return strings.Join(*i, " ")
 }
 
+// Set to satisfy flag.Value interface
 func (i *inputFiles) Set(value string) error {
 	*i = append(*i, value)
 	return nil
@@ -75,8 +99,10 @@ func main() {
 	flag.Var(&experimentalFiles, "i", "Input experimental files , may be declared more than once (.bam, .sam)")
 	flag.Var(&normalFiles, "n", "Input normal files, may be declared more than once (.bam, .sam)")
 
+	maxP := flag.Float64("p", 0.05, "Maximum p-value for output")
+	reffile := flag.String("r", "", "Reference fasta file (.fa). Must be indexed (.fai)")
 	outfile := flag.String("o", "stdout", "Output file (.vcf)")
 	flag.Parse()
 
-	callVariants(experimentalFiles, normalFiles, *outfile)
+	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP)
 }
