@@ -7,6 +7,17 @@ import (
 	//DEBUG: "fmt"
 )
 
+// PrimateReconMle
+func LoopNodes(root *expandedTree.ETree, position int) {
+	internalNodes := expandedTree.GetBranch(root)
+	SetState(root, position)
+	for k := 0; k < len(internalNodes); k++ {
+		fix := FixFc(root, internalNodes[k])
+		yHat := Yhat(fix)
+		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
+	}
+}
+
 //PrimateRecon returns a human-biased conservative human-chimp ancestor estimate from an input multiFa alignment in the order Human-Chimp-Bonoboo-Orangutan-Gorilla. MessyToN, when true, turns ambiguous bases to Ns in the output.
 func PrimateRecon(records []fasta.Fasta, messyToN bool) fasta.Fasta {
 	answer := fasta.Fasta{Name: "Human_Chimp_Ancestor"}
