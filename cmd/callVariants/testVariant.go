@@ -54,7 +54,7 @@ func getVariant(exp, norm []sam.Pile, ref *fasta.Seeker, chroms []chromInfo.Chro
 				altPvalues[i][j] = 1
 				continue
 			}
-			altPvalues[i][j] = fishersExactTest(possibleAlts[i], exp[j], bkgd, hasNorm)
+			altPvalues[i][j] = fishersExactTest(possibleAlts[i], refBases[0], exp[j], bkgd, hasNorm)
 		}
 	}
 
@@ -126,7 +126,15 @@ func getFormatData(s, bkgd sam.Pile, sIdx int, hasNorm bool, ref dna.Base, alts 
 		genotypeAlleles = append(genotypeAlleles, genotypeAlleles[0])
 	}
 
-	pVal = 0.01
+	pVal = 1
+	for i := range altPvalues {
+		if sIdx > len(altPvalues[i])-1 {
+			break
+		}
+		if altPvalues[i][sIdx] < pVal {
+			pVal = altPvalues[i][sIdx]
+		}
+	}
 	return
 }
 
@@ -206,6 +214,17 @@ func getPassingAlts(possibleAlts []string, altPvalues [][]float64, maxP float64)
 	return
 }
 
-func fishersExactTest(alt string, exp sam.Pile, bkgd sam.Pile, hasNorm bool) float64 {
+func fishersExactTest(alt string, ref dna.Base, exp sam.Pile, bkgd sam.Pile, hasNorm bool) float64 {
+	// Begin gathering parameters for Fishers Exact Test done in the numbers package
+	// test is for the matrix:
+	// [a b]
+	// [c d]
+	// a = Experimental Ref Allele Count
+	// b = Background Ref Allele Count - Samples Ref Allele Count
+	// c = Experimental Alt Allele Count
+	// d = Background Alt Allele Count - Samples Alt Allele Count
+
+	var a, b, c, d int
+
 	return 0.001 //TODO
 }
