@@ -257,7 +257,7 @@ func getPossibleAlts(exp []sam.Pile, ref dna.Base) ([]string, []bool) {
 	}
 
 	// sort if multiple insertion sequences are present for stable output
-	if len(possibleAlts) > insertionStartIdx + 1 {
+	if len(possibleAlts) > insertionStartIdx+1 {
 		toSort := possibleAlts[insertionStartIdx:]
 		sort.Slice(toSort, func(i, j int) bool {
 			if len(toSort[i]) == len(toSort[j]) {
