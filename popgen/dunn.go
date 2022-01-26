@@ -194,7 +194,7 @@ func calculateTajimaK(aln []fasta.Fasta) float64 {
 
 	return float64(sum) / float64(n)
 }
- */
+*/
 
 //Below are the testing files for the unused Tajima's D implementation.
 //I'm not certain of the accuracy of this program, so I would suggest additional tests if anyone wants to pick this back up.
@@ -238,7 +238,7 @@ func TestVCFTajima(t *testing.T) {
 		t.Errorf("Do not match. Input: %f. Expected: %f.", input, expected)
 	}
 }
- */
+*/
 
 //Here's the outdata gVCF implementation of Tajima's D as well.
 /*
@@ -400,4 +400,4 @@ func TajimaGVCFBedSet(b []*bed.Bed, VcfFile string) float64 {
 	return TajimaGVCF(all)
 }
 
- */
+*/
