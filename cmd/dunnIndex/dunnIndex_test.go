@@ -8,10 +8,10 @@ import (
 )
 
 var DunnIndexTests = []struct {
-	InputBed string
-	InputFa string
-	InputGroup string
-	OutFile string
+	InputBed     string
+	InputFa      string
+	InputGroup   string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/test.bed", "testdata/test.fa", "testdata/groups.list", "testdata/tmp.bed", "testdata/expected.bed"},

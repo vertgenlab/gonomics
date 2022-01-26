@@ -20,7 +20,7 @@ func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile str
 		if b[i].FieldsInitialized >= 7 {
 			log.Fatalf("Bed already contains annotation information that would be overwritten by dunnIndex.")
 		}
-		b[i].FieldsInitialized = 7//set FieldsInitialized to append annotations.
+		b[i].FieldsInitialized = 7 //set FieldsInitialized to append annotations.
 		b[i].Annotation = make([]string, 3)
 		dunn, S, missing := popgen.Dunn(b[i], aln, g)
 		b[i].Annotation[0] = fmt.Sprintf("%f", dunn)
