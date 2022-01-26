@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -24,7 +23,6 @@ type Settings struct {
 	R2OutFile        string
 	PairedEnd        bool
 	SubSet           float64
-	RandSeed         bool
 	SetSeed          int64
 	MinSize          int
 	MaxSize          int
@@ -36,7 +34,7 @@ type Settings struct {
 }
 
 func fastqFilter(s Settings) {
-	common.RngSeed(s.RandSeed, s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var r float64
 	var err error
 	var doneReading, FwdInMap, RevInMap, NameInMap bool
@@ -164,7 +162,6 @@ func main() {
 	var expectedNumArgs int = 2
 	var pairedEnd *bool = flag.Bool("pairedEnd", false, "Paired end reads, use two input and output fastq files.")
 	var subSet *float64 = flag.Float64("subSet", 1.0, "Proportion of reads to retain in output.")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var minSize *int = flag.Int("minSize", 0, "Retain fastq reads above this size.")
 	var maxSize *int = flag.Int("maxSize", numbers.MaxInt, "Retain fastq reads below this size.")
@@ -205,7 +202,6 @@ func main() {
 		R2OutFile:        "",
 		PairedEnd:        *pairedEnd,
 		SubSet:           *subSet,
-		RandSeed:         *randSeed,
 		SetSeed:          *setSeed,
 		MinSize:          *minSize,
 		MaxSize:          *maxSize,

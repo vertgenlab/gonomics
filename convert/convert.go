@@ -83,7 +83,8 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
-//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted nameof an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
+//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted name
+//of an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
 func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int

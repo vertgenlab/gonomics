@@ -25,7 +25,6 @@ var BedFilterTests = []struct {
 	MaxNameFloat float64
 	Chrom        string
 	SubSet       float64
-	RandSeed     bool
 	SetSeed      int64
 }{
 	{"testdata/test.bed",
@@ -43,7 +42,6 @@ var BedFilterTests = []struct {
 		math.MaxFloat64,
 		"chr1",
 		1.0,
-		false,
 		0,
 	},
 	{"testdata/test.bed",
@@ -61,7 +59,6 @@ var BedFilterTests = []struct {
 		math.MaxFloat64,
 		"",
 		0.5,
-		false,
 		0,
 	},
 }
@@ -85,7 +82,6 @@ func TestBedFilter(t *testing.T) {
 			MaxNameFloat: v.MaxNameFloat,
 			Chrom:        v.Chrom,
 			SubSet:       v.SubSet,
-			RandSeed:     v.RandSeed,
 			SetSeed:      v.SetSeed,
 		}
 		bedFilter(s)

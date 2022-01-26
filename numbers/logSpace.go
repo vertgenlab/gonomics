@@ -37,12 +37,12 @@ func AddLog(x float64, y float64) float64 {
 	}
 	if x >= y {
 		if LogCanConvert(y - x) {
-			return x + math.Log(1+math.Exp(y-x))
+			return x + math.Log1p(math.Exp(y-x))
 		}
 		return x
 	}
 	if LogCanConvert(y - x) {
-		return y + math.Log(1+math.Exp(x-y))
+		return y + math.Log1p(math.Exp(x-y))
 	}
 	return y
 }

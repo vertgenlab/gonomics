@@ -12,17 +12,16 @@ var SimulateBedTests = []struct {
 	SimLength    int
 	NoGapFile    string
 	OutFile      string
-	RandSeed     bool
 	SetSeed      int64
 	ExpectedFile string
 }{
-	{10, 1000, "testdata/test.noGap.bed", "testdata/tmp.bed", false, 10, "testdata/expected.bed"},
+	{10, 1000, "testdata/test.noGap.bed", "testdata/tmp.bed", 10, "testdata/expected.bed"},
 }
 
 func TestSimulateBed(t *testing.T) {
 	var err error
 	for _, v := range SimulateBedTests {
-		simulateBed(v.RegionCount, v.SimLength, v.NoGapFile, v.OutFile, v.RandSeed, v.SetSeed)
+		simulateBed(v.RegionCount, v.SimLength, v.NoGapFile, v.OutFile, v.SetSeed)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in SimulateBed. Output did not match expected.")
 		} else {

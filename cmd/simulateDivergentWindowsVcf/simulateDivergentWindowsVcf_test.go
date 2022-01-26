@@ -17,7 +17,6 @@ var SimulateDivergentWindowsVcfTests = []struct {
 	NumTotalSites   int
 	NumWindowSites  int
 	NumWindows      int
-	RandSeed        bool
 	SetSeed         int64
 	BoundAlpha      float64
 	BoundBeta       float64
@@ -34,7 +33,6 @@ var SimulateDivergentWindowsVcfTests = []struct {
 		1000,
 		10,
 		100,
-		false,
 		11,
 		0.001,
 		0.001,
@@ -56,7 +54,6 @@ func TestSimulateDivergentWindowsVcf(t *testing.T) {
 			NumTotalSites:   v.NumTotalSites,
 			NumWindowSites:  v.NumWindowSites,
 			NumWindows:      v.NumWindows,
-			RandSeed:        v.RandSeed,
 			SetSeed:         v.SetSeed,
 			BoundAlpha:      v.BoundAlpha,
 			BoundBeta:       v.BoundBeta,

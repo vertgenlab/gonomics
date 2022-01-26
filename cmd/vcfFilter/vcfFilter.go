@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -15,8 +14,8 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, randSeed bool, setSeed int64) (total, removed int) {
-	common.RngSeed(randSeed, setSeed)
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
+	rand.Seed(setSeed)
 	records, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
@@ -271,7 +270,6 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 
 func main() {
 	var expectedNumArgs int = 2
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var groupFile *string = flag.String("groupFile", "", "Retains alleles from individuals in the input group file.")
@@ -351,7 +349,7 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo, *randSeed, *setSeed)
+	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo, *setSeed)
 	log.Printf("Processed  %d variants\n", total)
 	log.Printf("Removed    %d variants\n", removed)
 }

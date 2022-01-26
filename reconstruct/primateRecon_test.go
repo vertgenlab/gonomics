@@ -22,9 +22,9 @@ var QuickPrimateReconTests = []struct {
 
 func TestQuickPrimateRecon(t *testing.T) {
 	for _, test := range QuickPrimateReconTests {
-		calculated := QuickPrimateRecon(test.records, true)
+		calculated := PrimateRecon(test.records, true)
 		if !fasta.IsEqual(test.answer, calculated) {
-			t.Errorf("Problem in QuickPrimateRecon. Expected: %s. Calculated: %s.", dna.BasesToString(test.answer.Seq), dna.BasesToString(calculated.Seq))
+			t.Errorf("Problem in PrimateRecon. Expected: %s. Calculated: %s.", dna.BasesToString(test.answer.Seq), dna.BasesToString(calculated.Seq))
 		}
 	}
 }

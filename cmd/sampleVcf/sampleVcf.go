@@ -5,16 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"math/rand"
 )
 
 //sampleVcf takes a VCF file and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
-func sampleVcf(inFile string, outFile string, numVariants int, numSamples int, randSeed bool, setSeed int64) {
-	common.RngSeed(randSeed, setSeed)
+func sampleVcf(inFile string, outFile string, numVariants int, numSamples int, setSeed int64) {
+	rand.Seed(setSeed)
 	records, header := vcf.Read(inFile)
 	records, header = vcf.SampleVcf(records, header, numVariants, numSamples)
 
@@ -37,7 +37,6 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var numVariants *int = flag.Int("numVariants", 1, "Specifies the number of variants to return from file.")
 	var numSamples *int = flag.Int("numSamples", -1, "Specifies the number of samples (diploid allele pairs) to retain in the output sample.")
@@ -54,5 +53,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	sampleVcf(inFile, outFile, *numVariants, *numSamples, *randSeed, *setSeed)
+	sampleVcf(inFile, outFile, *numVariants, *numSamples, *setSeed)
 }

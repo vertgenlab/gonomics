@@ -51,7 +51,7 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 		f := numbers.NormalClosure(mu, sigma)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else { //here you can add more else ifs to add additional functions for plotting
-		fmt.Printf("Unrecognized function: %s.\n", function)
+		log.Fatalf("Unrecognized function: %s.\n", function)
 	}
 }
 
