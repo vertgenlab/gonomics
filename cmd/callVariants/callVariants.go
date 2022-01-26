@@ -43,7 +43,7 @@ func callVariants(experimentalFiles, normalFiles []string, reffile, outfile stri
 	err := checkHeadersMatch(append(expHeaders, normHeaders...))
 	exception.FatalOnErr(err)
 
-	synced := sam.GoSyncPileups(append(expPiles, normPiles...))
+	synced := sam.GoSyncPileups(append(expPiles, normPiles...)...)
 
 	var v vcf.Vcf
 	var keepVar bool

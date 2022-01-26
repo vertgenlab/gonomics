@@ -40,7 +40,7 @@ type Pile struct {
 // The returned slice maintains the order of the input slice. Any of the input
 // samples that have no data for the returned position will have the RefIdx
 // field set to -1.
-func GoSyncPileups(samples []<-chan Pile) <-chan []Pile {
+func GoSyncPileups(samples ...<-chan Pile) <-chan []Pile {
 	synced := make(chan []Pile, 1000)
 	go syncPileups(samples, synced)
 	return synced
