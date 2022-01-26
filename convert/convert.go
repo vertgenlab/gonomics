@@ -230,6 +230,7 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 			pastStart = true
 			deletion = false
 			if !substitutionsOnly && deletionAlnPos >= 0 {
+				//TODO: we do not currently save deletions if they occur at the start of an alignment.
 				vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //from deletion
 			}
 		}
