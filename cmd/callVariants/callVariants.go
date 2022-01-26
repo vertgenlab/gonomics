@@ -5,18 +5,30 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
-func callVariants(experimentalFiles, normalFiles []string, reffile, outfile string, maxP float64) {
+func usage() {
+	fmt.Print(
+		"callVariants - A tool to find variation between multiple alignment files.\n\n" +
+			"Usage:\n" +
+			"  callVariants [options] -i file1.bam -i file2.bam -n normal.bam -r reference.fasta\n\n" +
+			"Options:\n\n")
+	flag.PrintDefaults()
+}
+
+func callVariants(experimentalFiles, normalFiles []string, reffile, outfile string, maxP, minAf float64, minCoverage int) {
 	out := fileio.EasyCreate(outfile)
-	outHeader := vcf.NewHeader(strings.Join(append(experimentalFiles, normalFiles...), "\t"))
+	outHeader := makeOutputHeader(append(experimentalFiles, normalFiles...))
 	vcf.NewWriteHeader(out, outHeader)
 	ref := fasta.NewSeeker(reffile, "")
 
@@ -36,7 +48,7 @@ func callVariants(experimentalFiles, normalFiles []string, reffile, outfile stri
 	var v vcf.Vcf
 	var keepVar bool
 	for piles := range synced {
-		v, keepVar = getVariant(piles[:len(experimentalFiles)], piles[len(experimentalFiles):], ref, expHeaders[0].Chroms, maxP)
+		v, keepVar = getVariant(piles[:len(experimentalFiles)], piles[len(experimentalFiles):], ref, expHeaders[0].Chroms, maxP, minAf, minCoverage)
 		if keepVar {
 			vcf.WriteVcf(out, v)
 		}
@@ -80,6 +92,26 @@ func checkHeadersMatch(headers []sam.Header) error {
 	return nil
 }
 
+// makeOutputHeader produces a header for the output vcf file
+func makeOutputHeader(filenames []string) vcf.Header {
+	var header vcf.Header
+	sampleNames := make([]string, len(filenames))
+	for i := range filenames {
+		sampleNames[i] = strings.TrimSuffix(filepath.Base(filenames[i]), filepath.Ext(filenames[i]))
+	}
+	t := time.Now()
+	header.Text = append(header.Text, "##fileformat=VCFv4.2")
+	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))
+	header.Text = append(header.Text, "##source=github.com/vertgenlab/gonomics")
+	header.Text = append(header.Text, "##phasing=none")
+	header.Text = append(header.Text, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
+	header.Text = append(header.Text, "##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
+	header.Text = append(header.Text, "##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Depth of Each Allele\">")
+	header.Text = append(header.Text, "##FORMAT=<ID=PV,Number=A,Type=Floatg,Description=\"p value for Each Alternate Allele\">")
+	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s", strings.Join(sampleNames, "\t")))
+	return header
+}
+
 // inputFiles is a custom type that gets filled by flag.Parse()
 type inputFiles []string
 
@@ -96,13 +128,21 @@ func (i *inputFiles) Set(value string) error {
 
 func main() {
 	var experimentalFiles, normalFiles inputFiles
-	flag.Var(&experimentalFiles, "i", "Input experimental files , may be declared more than once (.bam, .sam)")
-	flag.Var(&normalFiles, "n", "Input normal files, may be declared more than once (.bam, .sam)")
+	flag.Var(&experimentalFiles, "i", "Input experimental files. May be declared more than once (.bam, .sam)")
+	flag.Var(&normalFiles, "n", "Input normal files. May be declared more than once (.bam, .sam)")
 
-	maxP := flag.Float64("p", 0.05, "Maximum p-value for output")
+	maxP := flag.Float64("p", 0.001, "Maximum p-value for output")
+	minAf := flag.Float64("af", 0.01, "Minimum allele frequency of variants")
+	minCoverage := flag.Int("minCoverage", 10, "Minimum coverage for site to be considered.")
 	reffile := flag.String("r", "", "Reference fasta file (.fa). Must be indexed (.fai)")
 	outfile := flag.String("o", "stdout", "Output file (.vcf)")
 	flag.Parse()
+	flag.Usage = usage
 
-	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP)
+	if len(experimentalFiles) == 0 {
+		flag.Usage()
+		log.Fatalln("ERROR: must declare at least 1 experimental sample with -i")
+	}
+
+	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP, *minAf, *minCoverage)
 }
