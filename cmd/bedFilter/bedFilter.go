@@ -16,7 +16,7 @@ import (
 )
 
 func bedFilter(s Settings) {
-	common.RngSeed(s.RandSeed, s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var length int
 	var pass bool = false
 	var r float64
@@ -108,7 +108,6 @@ type Settings struct {
 	MaxNameFloat float64
 	Chrom        string
 	SubSet       float64
-	RandSeed     bool
 	SetSeed      int64
 }
 
@@ -126,7 +125,6 @@ func main() {
 	var maxNameFloat *float64 = flag.Float64("maxNameFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the name field.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var subSet *float64 = flag.Float64("subSet", 1.0, "Proportion of entries to retain in output, range from 0 to 1.")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 
 	flag.Usage = usage
@@ -154,7 +152,6 @@ func main() {
 		MaxNameFloat: *maxNameFloat,
 		Chrom:        *chrom,
 		SubSet:       *subSet,
-		RandSeed:     *randSeed,
 		SetSeed:      *setSeed,
 	}
 	bedFilter(s)

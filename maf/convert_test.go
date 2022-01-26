@@ -11,7 +11,7 @@ var toFastaTests = []struct {
 	inputSpecies []string
 	expected     string
 }{
-	{"testdata/toFastaTest.maf", "testdata/toFastaTest.fa", []string{"hg38", "panPan2", "panTro6", "gorGor5", "ponAbe3"}, "testdata/toFastaTest.mfa"},
+	{"testdata/toFastaTest.maf", "testdata/toFastaTest.fa", []string{"hg38", "panPan2", "panTro6", "gorGor5", "ponAbe3"}, "testdata/toFastaTest.out.fa"},
 }
 
 func TestToFasta(t *testing.T) {

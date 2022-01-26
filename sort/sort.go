@@ -116,6 +116,7 @@ func GirafExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPer
 	go girafMergeChunks(writeChan, chunkIDs, sortOrderMap)
 	wg.Add(1)
 	giraf.GirafChanToFile(outFile, writeChan, &wg)
+	wg.Wait()
 	writeIdx(outFile, nodeIdSortOrder)
 }
 

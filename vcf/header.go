@@ -9,7 +9,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Header contains all of the information present in the header section of a VCF.
@@ -299,16 +298,8 @@ func processHeader(header Header, line string) Header {
 
 func NewHeader(name string) Header {
 	var header Header
-	t := time.Now()
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
-	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))
-	header.Text = append(header.Text, "##source=github.com/vertgenlab/gonomics")
-	header.Text = append(header.Text, "##phasing=none")
-	header.Text = append(header.Text, "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">")
-	header.Text = append(header.Text, "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">")
-	header.Text = append(header.Text, "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">")
-	header.Text = append(header.Text, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
-	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s", name))
+	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT"))
 	return header
 }
 
