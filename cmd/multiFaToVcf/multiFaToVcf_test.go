@@ -19,7 +19,7 @@ var MultiFaToVcfTests = []struct {
 	{"testdata/inputMulti.fa", "chr2", "testdata/output.vcf", "testdata/expectedSubOnly.vcf", true, false},
 	{"testdata/inputMulti.fa", "chr2", "testdata/output.vcf", "testdata/expectedRetainN.vcf", false, true},
 	{"testdata/inputStartWithGap.fa", "chr2", "testdata/startGapTmp.vcf", "testdata/expectedStartGap.vcf", false, false},
-	{"testdata/inputAltStartWithGap.fa", "chr2", "testdata/startGapAltTmp.vcf", "testdata/expectedAltStartsWithGap.vcf", false, false},//TODO: This expected file does not contain a deletion at position 1, as our parser cannot handle this case.
+	{"testdata/inputAltStartWithGap.fa", "chr2", "testdata/startGapAltTmp.vcf", "testdata/expectedAltStartsWithGap.vcf", false, false}, //TODO: This expected file does not contain a deletion at position 1, as our parser cannot handle this case.
 }
 
 func TestMultiFaVcf(t *testing.T) {
