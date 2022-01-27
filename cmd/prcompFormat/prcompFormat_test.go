@@ -8,8 +8,8 @@ import (
 )
 
 var PrcompFormatTests = []struct {
-	Infile string
-	Outfile string
+	Infile       string
+	Outfile      string
 	ExpectedFile string
 }{
 	{"testdata/test.fa", "testdata/tmp.tsv", "testdata/expected.tsv"},

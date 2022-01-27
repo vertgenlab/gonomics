@@ -8,10 +8,10 @@ import (
 )
 
 var FormatIdeogramTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
-	NoScore bool
+	NoScore      bool
 }{
 	{"testdata/test.bed", "testdata/tmp.txt", "testdata/expected.Score.txt", false},
 	{"testdata/test.bed", "testdata/tmp.txt", "testdata/expected.NoScore.txt", true},
