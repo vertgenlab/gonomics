@@ -22,7 +22,7 @@ func formatIdeogram(inBed string, outTxt string, noScore bool) {
 	var doneReading bool = false
 	var startNum, endNum, midpoint int64
 	var chrom string
-	var outIdeogram []*IdeogramPoint
+	var outIdeogram []IdeogramPoint
 	var err error
 
 	file := fileio.EasyOpen(inBed)
@@ -35,13 +35,13 @@ func formatIdeogram(inBed string, outTxt string, noScore bool) {
 		endNum = common.StringToInt64(words[2])
 		midpoint = (startNum + endNum) / int64(2)
 
-		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint - int64(1), Score: int64(1)})
+		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint - int64(1), Score: int64(1)})
 		if noScore {
-			outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: 10})
+			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: 10})
 		} else {
-			outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
+			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
 		}
-		outIdeogram = append(outIdeogram, &IdeogramPoint{Chrom: chrom, Position: midpoint + int64(1), Score: int64(1)})
+		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint + int64(1), Score: int64(1)})
 	}
 
 	outfile := fileio.EasyCreate(outTxt)
