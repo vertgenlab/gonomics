@@ -5,8 +5,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
@@ -21,17 +21,16 @@ import (
 	Next, the output fasta, once constructed, is converted into a binary matrix for input for PCA.
 */
 
-func prcompFormat(infile string, outfile string) {
+func prcompFormat(infile string, outfile string, verbose bool) {
 	records := fasta.Read(infile)
 	fasta.AllToUpper(records)
 	var subFa = make([]fasta.Fasta, len(records))
 	var allMatch, allValid bool
 	var currentBase dna.Base
-	//fmt.Printf("Len Seq: %d\n", len(records[0].Seq))
-	//fmt.Printf("Len Rec: %d\n", len(records))
+	var err error
 
 	//add species name to subFa
-	for i := 0; i < len(records); i++ {
+	for i := range records {
 		subFa[i].Name = records[i].Name
 	}
 
@@ -42,9 +41,11 @@ func prcompFormat(infile string, outfile string) {
 		allValid = true
 		if !(currentBase == dna.N || currentBase == dna.Gap) {
 			for j := 1; j < len(records); j++ {
-				//fmt.Printf("i = %d, j = %d\n", i, j)
 				if records[j].Seq[i] != currentBase && records[j].Seq[i] != dna.Gap && records[j].Seq[i] != dna.N {
-					fmt.Printf("i = %d, j = %d\n", i, j)
+					if verbose {
+						_, err = fmt.Printf("i = %d, j = %d\n", i, j)
+						exception.PanicOnErr(err)
+					}
 					allMatch = false
 				}
 				if records[j].Seq[i] == dna.Gap || records[j].Seq[i] == dna.N {
@@ -62,21 +63,23 @@ func prcompFormat(infile string, outfile string) {
 
 	//expand bases to binary values while writing to the outfile
 	file := fileio.EasyCreate(outfile)
-	defer file.Close()
 	var outline string
 
 	//print header
-	var headerstring string = "Sample"
+	var headerString string = "Sample"
 	for n := 0; n < (4 * len(subFa[0].Seq)); n++ {
-		headerstring = headerstring + fmt.Sprintf("\tVar_%d", n)
+		headerString = headerString + fmt.Sprintf("\tVar_%d", n)
 	}
 
-	_, err := fmt.Fprintf(file, "%s\n", headerstring)
-	common.ExitIfError(err)
+	_, err = fmt.Fprintf(file, "%s\n", headerString)
+	exception.PanicOnErr(err)
 
 	for i := 0; i < len(subFa); i++ {
 		outline = subFa[i].Name
-		fmt.Println(len(subFa[i].Seq))
+		if verbose {
+			_, err = fmt.Println(len(subFa[i].Seq))
+			exception.PanicOnErr(err)
+		}
 		for j := 0; j < len(subFa[0].Seq); j++ {
 			if subFa[i].Seq[j] == dna.A {
 				outline = outline + "\t1\t0\t0\t0"
@@ -87,14 +90,15 @@ func prcompFormat(infile string, outfile string) {
 			} else if subFa[i].Seq[j] == dna.T {
 				outline = outline + "\t0\t0\t0\t1"
 			} else {
-				fmt.Printf("Base: %d\n", subFa[i].Seq[j])
-				common.ExitIfError(fmt.Errorf("Critical Failure!!\n"))
+				log.Fatalf("Base: %d\n", subFa[i].Seq[j])
 			}
 		}
 		outline = outline + "\n"
-		_, err := fmt.Fprintf(file, "%s", outline)
-		common.ExitIfError(err)
+		_, err = fmt.Fprintf(file, "%s", outline)
+		exception.PanicOnErr(err)
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
@@ -107,6 +111,8 @@ func usage() {
 }
 
 func main() {
+	var verbose *bool = flag.Bool("verbose", false, "enable debug prints.")
+
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -121,5 +127,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	prcompFormat(infile, outfile)
+	prcompFormat(infile, outfile, *verbose)
 }
