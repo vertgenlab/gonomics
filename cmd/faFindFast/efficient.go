@@ -51,7 +51,7 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int,
 		numSubst++
 	}
 	// did we open a gap in the query sequence when moving the window edge?
-	if alnIdxOrig != -1 && seqTwo[alnIdxOrig] != dna.Gap && seqTwo[alnIdx] == dna.Gap {
+	if ((alnIdxOrig != -1 && seqTwo[alnIdxOrig] != dna.Gap) || alnIdxOrig == -1) && seqTwo[alnIdx] == dna.Gap {
 		gapOpenedQuery++
 	}
 	// did we close a gap in the query when moving the window edge?
