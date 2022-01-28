@@ -8,12 +8,12 @@ import (
 )
 
 var FaFindFastTests = []struct {
-	InFile              string
-	OutFile             string
-	ExpectedFile        string
-	WindowSize          int
-	ChromName           string
-	RemoveN             bool
+	InFile       string
+	OutFile      string
+	ExpectedFile string
+	WindowSize   int
+	ChromName    string
+	RemoveN      bool
 }{
 	{"testdata/test_indel.fa", "testdata/tmp.out.bed", "testdata/expected.bed", 10, "chr1", false},
 	{"testdata/test_indel.fa", "testdata/tmp.noN.bed", "testdata/expected.noN.bed", 10, "chr1", true},
