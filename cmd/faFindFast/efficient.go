@@ -97,7 +97,7 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 		if lastRefIdxOfWindow-refIdxBeforeWindow == windowSize && lastAlnIdxOfWindow < len(reference) {
 			// an option/flag can tell us not to print if there are Ns in the query or target
 			if !noPrintIfN || totalNs == 0 {
-				fmt.Fprintf(out, "%s\t%d\t%d\t%d\t%d\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refIdxBeforeWindow+1, totalSubst+totalGaps)
+				fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps)
 			}
 		}
 	}
