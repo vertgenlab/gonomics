@@ -34,7 +34,7 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (
 
 	// if we ran off the end of seqOne when looking for the next ref base
 	if alnIdx == len(seqOne) {
-		return alnIdx, 0, 0, 0, 0, numQueryNsGap, 0, 0
+		return
 	}
 
 	// did we add another reference N when moving the window one reference base
@@ -59,7 +59,7 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (
 		gapClosedQuery++
 	}
 
-	return alnIdx, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst
+	return
 }
 
 func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Base, refChrName string, noPrintIfN bool, verbose bool, out io.Writer) {
