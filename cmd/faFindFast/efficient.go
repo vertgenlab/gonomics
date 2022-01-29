@@ -86,8 +86,10 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 			//totalGaps -= gapOpenCloseRef + gapClosedQuery
 			totalNs -= numRefNs + numQueryNsMatch
 			totalSubst -= numSubst
+		}
 
-			// the trailing window needs to "look ahead" to see what happens before the next ref base
+		// the trailing window needs to "look ahead" to see what happens before the next ref base
+		if lastRefIdxOfWindow-refIdxBeforeWindow == windowSize {
 			_, gapOpenCloseRef, _, gapClosedQuery, _, numQueryNsGap, _, _ = incrementWindowEdge(reference, query, alnIdxBeforeWindow)
 			totalGaps -= gapOpenCloseRef + gapClosedQuery
 			totalNs -= numQueryNsGap

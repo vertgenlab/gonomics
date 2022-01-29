@@ -17,7 +17,9 @@ var FaFindFastTests = []struct {
 }{
 	{"testdata/test_indel.fa", "testdata/tmp.out.bed", "testdata/expected.bed", 10, "chr1", false},
 	{"testdata/test_indel.fa", "testdata/tmp.noN.bed", "testdata/expected.noN.bed", 10, "chr1", true},
-	{"testdata/test_indel.endGaps.fa", "testdata/tmp.outEndGaps.bed", "testdata/expected.endGaps.bed", 10, "chr1", false},
+	{"testdata/test.endDoubleGaps.fa", "testdata/tmp.doubleGaps.bed", "testdata/expected.bed", 10, "chr1", false},
+	{"testdata/test.endGapsQuery.fa", "testdata/tmp.queryGaps.bed", "testdata/expected.endGapsQuery.bed", 10, "chr1", false},
+	{"testdata/test.endGapsRef.fa", "testdata/tmp.refGaps.bed", "testdata/expected.endGapsRef.bed", 10, "chr1", false},
 }
 
 func TestFaFindFast(t *testing.T) {
