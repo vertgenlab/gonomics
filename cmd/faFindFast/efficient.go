@@ -19,9 +19,8 @@ import (
 // 6) int that is the number of Ns in the query (second) sequence after this increment from matches
 // 7) int that is the number of Ns in the query (second) sequence after this increment from gaps in the reference
 // 8) int that is the number of substitutions/mismatches (0 or 1)
-func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdx int) (int, int, int, int, int, int, int, int) {
-	var alnIdxOrig, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery int
-	alnIdxOrig = alnIdx
+func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int) {
+	alnIdx = alnIdxOrig
 
 	// increment alnIdx to the next ref position (next non-gap pos in seqOne)
 	for alnIdx++; alnIdx < len(seqOne) && seqOne[alnIdx] == dna.Gap; alnIdx++ {
