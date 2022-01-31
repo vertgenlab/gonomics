@@ -13,16 +13,38 @@ import (
 	"log"
 )
 
-// likelihoodsToBase takes the un-normalized likelihoods for A, C, G, T as well
+// likelihoodsToBaseUnbiased takes the un-normalized likelihoods for A, C, G, T as well
+// and the probability
+// threshold for when we will call it the mle base instead of N
+// and gives back the reconstructed base for the hca
+func likelihoodsToBaseUnbiased(likes []float64, probThreshold float64) dna.Base {
+	var total, bestProb float64
+	var i int
+	var answer dna.Base = dna.N
+
+	for i = range likes {
+		total += likes[i]
+	}
+
+	for i = range likes {
+		if likes[i]/total >= probThreshold && likes[i] > bestProb {
+			bestProb = likes[i]
+			answer = dna.Base(i)
+		}
+	}
+	return answer
+}
+
+// likelihoodsToBaseHumanBias takes the un-normalized likelihoods for A, C, G, T as well
 // as the index of the human base (0 for A, 1 for C, etc), and the probability
 // threshold for when we will call it the mle base instead of the human base
 // and gives back the reconstructed base for the hca
-func likelihoodsToBase(likes []float64, humanBase dna.Base, probThreshold float64, nonHumanProbThreshold float64, messyToN bool) dna.Base {
+func likelihoodsToBaseHumanBias(likes []float64, humanBase dna.Base, probThreshold float64, nonHumanProbThreshold float64) dna.Base {
 	var total, nonHumanTotal, bestProb float64
 	var i int
 	var answer dna.Base
 
-	if messyToN || humanBase == dna.Gap {
+	if humanBase == dna.Gap {
 		answer = dna.N
 	} else {
 		answer = humanBase
@@ -61,13 +83,13 @@ func hcaIsPresent(human, bonobo, chimp, gorilla, organutan dna.Base) bool {
 	return false
 }
 
-func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonHumanProbThreshold float64, messyToN bool) {
+func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonHumanProbThreshold float64) {
 	reconstruct.SetState(root, position)
 	likelihoods := reconstruct.FixFc(root, nodeToRecon)
-	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, likelihoodsToBase(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonHumanProbThreshold, messyToN))
+	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, likelihoodsToBase(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonHumanProbThreshold))
 }
 
-func primateReconMle(inFastaFilename string, inTreeFilename string, probThreshold float64, nonHumanProbThreshold float64, messyToN bool, outputFastaFilename string) {
+func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string) {
 	var tree, humanNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hcaNode *expandedTree.ETree
 	var err error
 	var i int
@@ -103,7 +125,7 @@ func primateReconMle(inFastaFilename string, inTreeFilename string, probThreshol
 
 	for i = range humanNode.Fasta.Seq {
 		if hcaIsPresent(humanNode.Fasta.Seq[i], bonoboNode.Fasta.Seq[i], chimpNode.Fasta.Seq[i], gorillaNode.Fasta.Seq[i], orangutanNode.Fasta.Seq[i]) {
-			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold, nonHumanProbThreshold, messyToN)
+			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold, nonHumanProbThreshold)
 		} else {
 			hcaNode.Fasta.Seq = append(hcaNode.Fasta.Seq, dna.Gap)
 		}
@@ -129,7 +151,9 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var messyToN *bool = flag.Bool("messyToN", false, "Sets messy bases to Ns in the output file.")
-	var mle *string = flag.String("mle", "", "Does a maximum likelihood estimate if newick tree filename provided.  Must have the anticipated assembly names and the hca.")
+	var mleUnbiased *bool = flag.Bool("mleUnbiased", false, "Default is an N, unless a base passes the probThreshold threshold.")
+	var mleHumanBiased *bool = flag.Bool("mleHumanBiased", false, "Default is the human base, unless the non-human bases, collectively and individually, pass nonHumanProbThreshold and probThreshold.")
+	var tree *string = flag.String("mle", "", "Filename for newick tree with branch lengths.  Must have the anticipated assembly names and the hca.")
 	var probThreshold *float64 = flag.Float64("probThreshold", 0.0, "The probability that a base other than human must pass to be considered a true change in the hca.")
 	var nonHumanProbThreshold *float64 = flag.Float64("nonHumanProbThreshold", 0.0, "The sumation of all non-human bases must pass this threshold for a non-human base to be considered in the hca.")
 	flag.Usage = usage
@@ -145,8 +169,26 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	if *mle != "" {
-		primateReconMle(inFile, *mle, *probThreshold, *nonHumanProbThreshold, *messyToN, outFile)
+	// some error check on flags provided
+	if *messyToN && (*mleUnbiased || *mleHumanBiased) {
+		log.Fatal("Error: -messyToN can not be used with mle estimates\n")
+	}
+	if !(*tree) && (*mleUnbiased || *mleHumanBiased) {
+		log.Fatal("Error: you need to provide a tree when using an mle estimate\n")
+	}
+	if *mleUnbiased && *mleHumanBiased {
+		log.Fatal("Error: Can not do both a biased and unbiased mle estimate\n")
+	}
+	if (*probThreshold || *nonHumanProbThreshold) && !(*mleUnbiased || *mleHumanBiased) {
+		log.Fatal("Error: Can not use probability threshold flags without also using an mle estimate\n")
+	}
+	if *nonHumanProbThreshold && *mleUnbiased {
+		log.Fatal("Error: Can not do a nonHumanProbThreshold when also doing an unbiased estimate\n")
+	}
+
+	if *mleUnbiased || *mleHumanBiased != "" {
+		// at this point we know that xor of the two mle flags is true, so we only pass one
+		primateReconMle(inFile, *tree, *mleHumanBiased, *probThreshold, *nonHumanProbThreshold, outFile)
 	} else {
 		primateRecon(inFile, outFile, *messyToN)
 	}
