@@ -103,7 +103,9 @@ func prcompFormat(infile string, outfile string, verbose bool) {
 
 func usage() {
 	fmt.Print(
-		"prcompFormat - Generates a binary input matrix for PCA in R.\n" +
+		"prcompFormat - Generates a binary input matrix for PCA.\n" +
+			"Please see https://github.com/vertgenlab/vglDocumentation for a detailed explanation of\n" +
+			"how to turn the output text file from this program into a PCA plot using R.\n" +
 			"Usage:\n" +
 			"prcompFormat infile.fa outfile.tsv\n" +
 			"options:\n")
