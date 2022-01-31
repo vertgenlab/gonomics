@@ -13,14 +13,14 @@ import (
 
 type IdeogramPoint struct {
 	Chrom    string
-	Position int64
-	Score    int64
+	Position int
+	Score    int
 }
 
 func formatIdeogram(inBed string, outTxt string, noScore bool) {
 	var line string
 	var doneReading bool = false
-	var startNum, endNum, midpoint int64
+	var startNum, endNum, midpoint int
 	var chrom string
 	var outIdeogram []IdeogramPoint
 	var err error
@@ -31,17 +31,17 @@ func formatIdeogram(inBed string, outTxt string, noScore bool) {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
 		chrom = words[0]
-		startNum = common.StringToInt64(words[1])
-		endNum = common.StringToInt64(words[2])
-		midpoint = (startNum + endNum) / int64(2)
+		startNum = common.StringToInt(words[1])
+		endNum = common.StringToInt(words[2])
+		midpoint = (startNum + endNum) / 2
 
-		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint - int64(1), Score: int64(1)})
+		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint - 1, Score: 1})
 		if noScore {
 			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: 10})
 		} else {
-			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt64(words[4])})
+			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt(words[4])})
 		}
-		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint + int64(1), Score: int64(1)})
+		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint + 1, Score: 1})
 	}
 
 	outfile := fileio.EasyCreate(outTxt)
