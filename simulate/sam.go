@@ -30,6 +30,10 @@ func simulatePairedSam(refName string, ref []dna.Base, numPairs, readLen, avgIns
 
 		reads[i] = generateSamReadNoFlag(fmt.Sprintf("Read:%d", i/2), refName, ref, startFor, endFor, true)
 		reads[i+1] = generateSamReadNoFlag(fmt.Sprintf("Read:%d", i/2), refName, ref, startRev, endRev, false)
+		if reads[i].Cigar == nil && reads[i+1].Cigar == nil {
+			i -= 2 // retry
+			continue
+		}
 		addPairedFlags(&reads[i], &reads[i+1])
 		if reads[i].Cigar != nil && reads[i+1].Cigar != nil {
 			reads[i].RNext = "="
