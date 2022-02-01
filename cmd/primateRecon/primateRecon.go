@@ -83,10 +83,17 @@ func hcaIsPresent(human, bonobo, chimp, gorilla, organutan dna.Base) bool {
 	return false
 }
 
-func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonHumanProbThreshold float64) {
+func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonHumanProbThreshold float64, humanBias bool) {
+	var likelihoods []float64
+	var nextBase dna.Base
 	reconstruct.SetState(root, position)
-	likelihoods := reconstruct.FixFc(root, nodeToRecon)
-	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, likelihoodsToBase(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonHumanProbThreshold))
+	likelihoods = reconstruct.FixFc(root, nodeToRecon)
+	if humanBias {
+		nextBase = likelihoodsToBaseHumanBias(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonHumanProbThreshold)
+	} else {
+		nextBase = likelihoodsToBaseUnbiased(likelihoods, probThreshold)
+	}
+	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, nextBase)
 }
 
 func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string) {
@@ -125,7 +132,7 @@ func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bo
 
 	for i = range humanNode.Fasta.Seq {
 		if hcaIsPresent(humanNode.Fasta.Seq[i], bonoboNode.Fasta.Seq[i], chimpNode.Fasta.Seq[i], gorillaNode.Fasta.Seq[i], orangutanNode.Fasta.Seq[i]) {
-			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold, nonHumanProbThreshold)
+			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold, nonHumanProbThreshold, humanBias)
 		} else {
 			hcaNode.Fasta.Seq = append(hcaNode.Fasta.Seq, dna.Gap)
 		}
@@ -173,20 +180,20 @@ func main() {
 	if *messyToN && (*mleUnbiased || *mleHumanBiased) {
 		log.Fatal("Error: -messyToN can not be used with mle estimates\n")
 	}
-	if !(*tree) && (*mleUnbiased || *mleHumanBiased) {
+	if (*tree == "") && (*mleUnbiased || *mleHumanBiased) {
 		log.Fatal("Error: you need to provide a tree when using an mle estimate\n")
 	}
 	if *mleUnbiased && *mleHumanBiased {
 		log.Fatal("Error: Can not do both a biased and unbiased mle estimate\n")
 	}
-	if (*probThreshold || *nonHumanProbThreshold) && !(*mleUnbiased || *mleHumanBiased) {
+	if (*probThreshold != 0 || *nonHumanProbThreshold != 0) && !(*mleUnbiased || *mleHumanBiased) {
 		log.Fatal("Error: Can not use probability threshold flags without also using an mle estimate\n")
 	}
-	if *nonHumanProbThreshold && *mleUnbiased {
+	if *nonHumanProbThreshold != 0 && *mleUnbiased {
 		log.Fatal("Error: Can not do a nonHumanProbThreshold when also doing an unbiased estimate\n")
 	}
 
-	if *mleUnbiased || *mleHumanBiased != "" {
+	if *mleUnbiased || *mleHumanBiased {
 		// at this point we know that xor of the two mle flags is true, so we only pass one
 		primateReconMle(inFile, *tree, *mleHumanBiased, *probThreshold, *nonHumanProbThreshold, outFile)
 	} else {
