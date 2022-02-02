@@ -23,7 +23,8 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 
 func usage() {
 	fmt.Print(
-		"multiFaToVcf - Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference.\n" +
+		"multiFaToVcf - Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference." +
+			"Note that deletions in the first position of an alignment will not appear in the output Vcf.\n" +
 			"Usage:\n" +
 			"multiFaToVcf multi.Fa chromName out.vcf \n" +
 			"options:\n")

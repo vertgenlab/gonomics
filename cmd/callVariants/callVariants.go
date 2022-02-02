@@ -26,11 +26,11 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(experimentalFiles, normalFiles []string, reffile, outfile string, maxP, minAf float64, minCoverage int) {
-	out := fileio.EasyCreate(outfile)
+func callVariants(experimentalFiles, normalFiles []string, refFile, outFile string, maxP, minAf float64, minCoverage int) {
+	out := fileio.EasyCreate(outFile)
 	outHeader := makeOutputHeader(append(experimentalFiles, normalFiles...))
 	vcf.NewWriteHeader(out, outHeader)
-	ref := fasta.NewSeeker(reffile, "")
+	ref := fasta.NewSeeker(refFile, "")
 
 	expHeaders, expPiles := startPileup(experimentalFiles)
 	normHeaders, normPiles := startPileup(normalFiles)
@@ -48,7 +48,7 @@ func callVariants(experimentalFiles, normalFiles []string, reffile, outfile stri
 	var v vcf.Vcf
 	var keepVar bool
 	for piles := range synced {
-		v, keepVar = getVariant(piles[:len(experimentalFiles)], piles[len(experimentalFiles):], ref, expHeaders[0].Chroms, maxP, minAf, minCoverage)
+		v, keepVar = getVariant(piles[:len(experimentalFiles)], piles[len(experimentalFiles):], expHeaders[0], ref, maxP, minAf, minCoverage)
 		if keepVar {
 			vcf.WriteVcf(out, v)
 		}
