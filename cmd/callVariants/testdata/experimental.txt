@@ -1,3 +1,0 @@
-#TEST PREFIX
-testdata/human_chrM.sam
-testdata/human_chrM2.sam

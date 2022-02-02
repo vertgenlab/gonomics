@@ -28,6 +28,22 @@ func BenchmarkPileupLinkedList(b *testing.B) {
 	}
 }
 
+func TestSyncPileup(t *testing.T) {
+	alphaReads, alphaHeader := GoReadToChan("testdata/peak.bam")
+	alpha := GoPileup(alphaReads, alphaHeader, false, nil, nil)
+	betaReads, betaHeader := GoReadToChan("testdata/peak.bam")
+	beta := GoPileup(betaReads, betaHeader, false, nil, nil)
+	syncedPilesChan := GoSyncPileups(alpha, beta)
+	for syncedPiles := range syncedPilesChan {
+		if len(syncedPiles) != 2 {
+			t.Error("problem syncing piles")
+		}
+		if syncedPiles[0].Count != syncedPiles[1].Count {
+			t.Error("problem syncing piles")
+		}
+	}
+}
+
 func TestPeakPileup(t *testing.T) {
 	reads, header := GoReadToChan("testdata/peak.bam")
 	piles := GoPileup(reads, header, false, nil, nil)
