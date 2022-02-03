@@ -1,9 +1,9 @@
 package simulate
 
 import (
-	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"math/rand"
+	"os"
 	"testing"
 	//"fmt"
 )
@@ -16,6 +16,12 @@ var RandGeneTests = []struct {
 	GC     float64
 }{
 	{"testingRandGene", 102, GCcontent},
+}
+
+func TestMain(m *testing.M) {
+	rand.Seed(1)
+	code := m.Run()
+	os.Exit(code)
 }
 
 func TestRandGene(t *testing.T) {
@@ -71,7 +77,6 @@ func TestMutateGene(t *testing.T) {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
 		a := MutateGene(bases, test.branchLength, test.gp, true)
-		fmt.Printf("a: %s\n", dna.BasesToString(a))
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
 		}
