@@ -21,7 +21,7 @@ import (
 // of the list should only be incremented when a position is passed and set to zero.
 type Pile struct {
 	RefIdx   int
-	Pos      uint32
+	Pos      uint32         // 1-base (like Sam)
 	Count    [13]int        // Count[dna.Base] == Number of observed dna.Base
 	InsCount map[string]int // key is insertion sequence as string, value is number of observations
 
