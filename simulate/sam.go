@@ -28,8 +28,8 @@ func simulatePairedSam(refName string, ref []dna.Base, numPairs, readLen, avgIns
 		startRev = midpoint + (insertSize / 2)
 		endRev = startRev + readLen
 
-		reads[i] = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i/2), refName, ref, startFor, endFor, true)
-		reads[i+1] = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i/2), refName, ref, startRev, endRev, false)
+		reads[i] = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i/2), refName, ref, startFor, endFor)
+		reads[i+1] = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i/2), refName, ref, startRev, endRev)
 		if reads[i].Cigar == nil && reads[i+1].Cigar == nil {
 			i -= 2 // retry
 			continue
@@ -51,7 +51,7 @@ func simulatePairedSam(refName string, ref []dna.Base, numPairs, readLen, avgIns
 
 // generateSamReadNoFlag generates a sam record for the input position.
 // Soft clips sequence that is off template and does not generate Flag, RNext, or PNext.
-func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, isFor bool) sam.Sam {
+func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int) sam.Sam {
 	var s sam.Sam
 	s.QName = readName
 	s.Seq = make([]dna.Base, end-start)
