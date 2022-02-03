@@ -35,6 +35,85 @@ type Pile struct {
 	prev *Pile
 }
 
+// GoSyncPileups inputs a slice of channels receiving Pile structs and syncs
+// their outputs to a new output channel that organizes Piles into a slice.
+// The returned slice maintains the order of the input slice. Any of the input
+// samples that have no data for the returned position will have the RefIdx
+// field set to -1.
+func GoSyncPileups(samples ...<-chan Pile) <-chan []Pile {
+	synced := make(chan []Pile, 1000)
+	go syncPileups(samples, synced)
+	return synced
+}
+
+// syncPileups performs syncs positions from an input slice of pile channels
+// to an output channel of []Pile.
+func syncPileups(samples []<-chan Pile, output chan<- []Pile) {
+	var allClosed, isOpen bool
+	buf := make([]Pile, len(samples))
+
+	// fill buffer with 1 element from each channel
+	for i := range samples {
+		buf[i], isOpen = <-samples[i]
+		if !isOpen {
+			buf[i].RefIdx = -1
+			samples[i] = nil
+		}
+	}
+
+	// loop until all channels are closed
+	var minRefIdx int
+	var minPos uint32
+	for !allClosed {
+		data := make([]Pile, len(samples))
+		minRefIdx, minPos = getMinPileCoords(buf)
+		for i := range buf { // check for matching records in the buffer
+			if buf[i].RefIdx != minRefIdx || buf[i].Pos != minPos || samples[i] == nil {
+				data[i].RefIdx = -1 // mark as no data in output
+				continue
+			}
+
+			data[i] = buf[i]              // save matching Pile to output data
+			buf[i], isOpen = <-samples[i] // replace Pile in buf
+
+			if !isOpen { // set channel to nil once closed
+				buf[i].RefIdx = -1
+				samples[i] = nil
+				if allChannelsClosed(samples) { // each time a channel is closed, check if they are all closed
+					allClosed = true
+				}
+			}
+		}
+		output <- data
+	}
+	close(output)
+}
+
+// getMinPileCoords returns the RefIdx and Pos of the Pile with the lowest coordinates.
+func getMinPileCoords(p []Pile) (int, uint32) {
+	var minIdx int
+	for i := 1; i < len(p); i++ {
+		if p[minIdx].RefIdx == -1 { // handles case where first index has no data
+			minIdx = i
+			continue
+		}
+		if p[i].RefIdx >= 0 && p[i].RefIdx <= p[minIdx].RefIdx && p[i].Pos < p[minIdx].Pos {
+			minIdx = i
+		}
+	}
+	return p[minIdx].RefIdx, p[minIdx].Pos
+}
+
+// allChanelsClosed returns true if all input channels are set to nil (closed).
+func allChannelsClosed(c []<-chan Pile) bool {
+	for i := range c {
+		if c[i] != nil {
+			return false
+		}
+	}
+	return true
+}
+
 // GoPileup inputs a channel of coordinate sorted Sam structs and generates
 // a Pile for each base. The Pile is sent through the return channel when
 // the Pile position is no longer being updated.
@@ -181,7 +260,7 @@ func addInsertionLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base
 }
 
 func getPile(start *Pile, refidx int, pos uint32) *Pile {
-	for start.RefIdx != refidx && start.Pos != pos {
+	for start.RefIdx != refidx || start.Pos != pos {
 		switch {
 		case start.prev.RefIdx == -1 && start.RefIdx == -1: // no data in buffer, start at pos
 			start.RefIdx = refidx
@@ -207,19 +286,19 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
 	var lastRefIdx int
 	var lastPos uint32
-	for start.RefIdx != refmap[s.RName].Order && start.Pos != s.Pos {
+	for start.RefIdx != refmap[s.RName].Order || start.Pos < s.Pos {
 		if start.RefIdx == -1 {
 			break
 		}
-
 		if (start.touched || includeNoData) && passesPileFilters(*start, pileFilters) {
 			lastRefIdx = start.RefIdx
 			lastPos = start.Pos
 
 			send <- *start
-			resetPile(start)
-			start = start.next
 		}
+
+		resetPile(start)
+		start = start.next
 	}
 
 	// if we have not returned by this point, there are positions with no data
