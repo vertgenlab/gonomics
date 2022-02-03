@@ -116,15 +116,8 @@ func TestRead(t *testing.T) {
 
 	actual, _ = Read("testdata/peak.bam")
 	expected, _ := Read("testdata/peak.sam")
-
-	if len(actual) != len(expected) {
+	if !equalExceptExtra(actual, expected) {
 		t.Error("problem reading sam")
-	} else {
-		for i := range actual {
-			if !Equal(actual[i], expected[i]) {
-				t.Error("problem reading sam")
-			}
-		}
 	}
 }
 
