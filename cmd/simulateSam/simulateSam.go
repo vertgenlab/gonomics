@@ -12,6 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"math/rand"
+	"sort"
 )
 
 func usage() {
@@ -37,19 +38,10 @@ func simulateSam(refFile, outFile string, numReads int, bamOutput bool) {
 		sam.WriteHeaderToFileHandle(out, header)
 	}
 
-	var totalLen int
-	for i := range ref {
-		totalLen += len(ref[i].Seq)
-	}
-
-	var proportionOfReads float64
-	var readsPerContig int
+	var readsPerContig []int = getReadsPerContig(ref, numReads)
 	var reads []sam.Sam
 	for i := range ref {
-		proportionOfReads = float64(len(ref[i].Seq)) / float64(totalLen)
-		readsPerContig = int(float64(numReads) * proportionOfReads)
-		reads = simulate.IlluminaSam(ref[i].Name, ref[i].Seq, readsPerContig)
-
+		reads = simulate.IlluminaSam(ref[i].Name, ref[i].Seq, readsPerContig[i])
 		if bamOutput {
 			for i := range reads {
 				sam.WriteToBamFileHandle(bw, reads[i], 0)
@@ -68,6 +60,38 @@ func simulateSam(refFile, outFile string, numReads int, bamOutput bool) {
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)
+}
+
+func getReadsPerContig(ref []fasta.Fasta, numReads int) []int {
+	// get probability weights for each contig based on length
+	var totalLen int
+	for i := range ref {
+		totalLen += len(ref[i].Seq)
+	}
+
+	contigWeights := make([]float64, len(ref))
+	for i := range ref {
+		contigWeights[i] = float64(len(ref[i].Seq)) / float64(totalLen)
+	}
+
+	// make cumulative distribution
+	cdf := make([]float64, len(contigWeights))
+	cdf[0] = contigWeights[0]
+	for i := 1; i < len(contigWeights); i++ {
+		cdf[i] = cdf[i-1] + contigWeights[i]
+	}
+
+	// make random pulls from cumulative distribution
+	readsPerContig := make([]int, len(ref))
+	var chosenContig int
+	var val float64
+	for i := 0; i < numReads; i++ {
+		val = rand.Float64()
+		// binary search for smallest index with cumulative sum > random value
+		chosenContig = sort.Search(len(cdf), func(i int) bool { return cdf[i] > val })
+		readsPerContig[chosenContig]++
+	}
+	return readsPerContig
 }
 
 func main() {

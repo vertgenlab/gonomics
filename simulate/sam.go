@@ -22,7 +22,8 @@ func simulatePairedSam(refName string, ref []dna.Base, numPairs, readLen, avgIns
 	var insertSize, midpoint, startFor, startRev, endFor, endRev int
 	for i := 0; i < len(reads); i += 2 {
 		insertSize = int(numbers.SampleInverseNormal(float64(avgInsertSize), avgInsertSizeStdDev))
-		midpoint = numbers.RandIntInRange(-2*readLen, len(ref)+(2*readLen))
+		midpoint = numbers.RandIntInRange(0, len(ref)) // tapered coverage at ends of contig
+		//midpoint = numbers.RandIntInRange(-2*readLen, len(ref)+(2*readLen)) // even coverage across entire contig
 		startFor = midpoint - (readLen + (insertSize / 2))
 		endFor = startFor + readLen
 		startRev = midpoint + (insertSize / 2)
