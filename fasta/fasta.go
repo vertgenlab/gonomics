@@ -103,6 +103,22 @@ func Write(filename string, records []Fasta) {
 	exception.PanicOnErr(file.Close())
 }
 
+// Write a fasta to input filename. Output fastas have line length of 50.
+func WriteMap(filename string, records FastaMap) {
+	var lineLength int = 50
+	var currRecord Fasta = Fasta{}
+	var seq []dna.Base
+	var name string
+
+	outFile := fileio.EasyCreate(filename)
+	for name, seq = range records {
+		currRecord.Name = name
+		currRecord.Seq = seq
+		WriteFasta(outFile, currRecord, lineLength)
+	}
+	exception.PanicOnErr(outFile.Close())
+}
+
 // WriteToFileHandle writes a slice of fasta records to a given io.Writer instead of creating
 // a new io.Writer as is done in the Write function.
 func WriteToFileHandle(file io.Writer, records []Fasta, lineLength int) {
