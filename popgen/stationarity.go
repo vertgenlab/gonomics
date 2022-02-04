@@ -66,14 +66,15 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 
 //VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (*Afs, error) {
+//IncludeRef, when true, uses the reference genome as an additional data point for the output AFS.
+func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool, IncludeRef bool) (*Afs, error) {
 	var answer Afs
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
 	var pass bool
 	for i := range alpha {
-		currentSeg, pass = VcfSampleToSegSite(i, DivergenceAscertainment, UnPolarized)
+		currentSeg, pass = VcfSampleToSegSite(i, DivergenceAscertainment, UnPolarized, IncludeRef)
 		if pass {
 			answer.Sites = append(answer.Sites, currentSeg)
 		}
@@ -83,7 +84,8 @@ func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (
 
 //VcfSampleToSegSite returns a SegSite struct from an input Vcf entry. Enables flag for divergenceBasedAscertainment correction conditions and the unPolarized condition.
 //Two returns: a pointer to the SegSite struct, and a bool that is true if the SegSite was made without issue, false for soft errors.
-func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool) (*SegSite, bool) {
+//If IncludeRef is true, adds the reference allele as an extra data point to the SegSite.
+func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool, IncludeRef bool) (*SegSite, bool) {
 	var currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
 	var j int
 	//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
@@ -98,6 +100,13 @@ func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized boo
 					currentSeg.I++
 				}
 			}
+		}
+
+		if IncludeRef {
+			if vcf.IsAltAncestor(i) {//if the reference base is in the derived state.
+				currentSeg.I++
+			}
+			currentSeg.N++
 		}
 
 		if currentSeg.N == 0 {

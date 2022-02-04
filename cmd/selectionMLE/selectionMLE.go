@@ -9,8 +9,8 @@ import (
 	"log"
 )
 
-func selectionMLE(inFile string, outFile string, s popgen.MleSettings) {
-	data, err := popgen.VcfToAfs(inFile, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
+func selectionMle(inFile string, outFile string, s popgen.MleSettings) {
+	data, err := popgen.VcfToAfs(inFile, s.UnPolarized, s.DivergenceAscertainment, s.IncludeRef) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	answer := popgen.SelectionMaximumLikelihoodEstimate(*data, s)
 	out := fileio.EasyCreate(outFile)
@@ -24,11 +24,11 @@ func selectionMLE(inFile string, outFile string, s popgen.MleSettings) {
 
 func usage() {
 	fmt.Print(
-		"selectionMLE - Performs maximum likelihood estimation of selection on variants from an input VCF format file.\n" +
+		"selectionMle - Performs maximum likelihood estimation of selection on variants from an input VCF format file.\n" +
 			"All bases are assumed to have the  same selection parameter, and the maximum of the likelihood function is found with\n" +
 			"golden-segment search.\n" +
 			"Usage:\n" +
-			"selectionMLE input.vcf out.txt\n")
+			"selectionMle input.vcf out.txt\n")
 	flag.PrintDefaults()
 }
 
@@ -41,6 +41,7 @@ func main() {
 	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Make a divergence-based ascertainment correction.")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 or 2 to reveal different levels of debug print statements to standard output. Currently none available.")
+	var includeRef *bool = flag.Bool("includeRef", false, "Includes the reference genome allele in the derived allele frequency spectrum.")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -56,6 +57,7 @@ func main() {
 		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError:           *integralError,
 		Verbose:                 *verbose,
+		IncludeRef: *includeRef,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -65,5 +67,5 @@ func main() {
 	}
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	selectionMLE(vcfFile, outFile, options)
+	selectionMle(vcfFile, outFile, options)
 }

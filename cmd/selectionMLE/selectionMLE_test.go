@@ -20,8 +20,30 @@ var SelectionMleTests = []struct {
 	divergenceAscertainment bool
 	integralError           float64
 	verbose                 int
+	IncludeRef	bool
 }{
-	{"testdata/simulated.alpha4.N100.S100.seed19.vcf", "tmp.txt", "testdata/expected4.txt", -10, 10, 1e-5, true, false, 1e-5, 0},
+	{"testdata/simulated.alpha4.N100.S100.seed19.vcf",
+		"testdata/tmp.txt",
+		"testdata/expected4.txt",
+		-10,
+		10,
+		1e-5,
+		true,
+		false,
+		1e-5,
+		0,
+		false},
+	{"testdata/simulated.alpha4.N100.S100.seed19.vcf",
+		"testdata/tmp.includeRef.txt",
+		"testdata/expected.includeRef.txt",
+		-10,
+		10,
+		1e-5,
+		true,
+		false,
+		1e-5,
+		0,
+		true},
 }
 
 func TestSelectionMle(t *testing.T) {
@@ -36,8 +58,9 @@ func TestSelectionMle(t *testing.T) {
 			D:                       1,
 			IntegralError:           v.integralError,
 			Verbose:                 v.verbose,
+			IncludeRef: v.IncludeRef,
 		}
-		selectionMLE(v.inputFile, v.outFile, s)
+		selectionMle(v.inputFile, v.outFile, s)
 		if !fileio.AreEqual(v.expectedOutputFile, v.outFile) {
 			t.Errorf("Error in SelectionMLE.")
 		}

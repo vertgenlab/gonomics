@@ -20,11 +20,12 @@ type Settings struct {
 	IntegralError           float64
 	DivergenceAscertainment bool
 	D                       int //size of the ascertainment subset
+	IncludeRef bool //Includes the reference genome allele as a datapoint in the derived allele frequency spectrum. Incompatable with "UnPolarized".
 }
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
 	var err error
-	genotypes, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment)
+	genotypes, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment, s.IncludeRef)
 	exception.FatalOnErr(err)
 	f := popgen.AfsToFrequency(*genotypes)
 	out := fileio.EasyCreate(outFile)
@@ -56,6 +57,7 @@ func main() {
 	var numberOfPoints *int = flag.Int("numberOfPoints", 99, "Set the number of points at which to evaluate the likelihood function.")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Sets the error threshold for integral calculations in the likelihood calculation.")
 	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Corrects for divergence-based ascertainment bias in the likelihood calculation.")
+	var includeRef *bool = flag.Bool("includeRef", false, "Includes the reference genome allele as a datapoint in the derived allele frequency spectrum.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -76,6 +78,7 @@ func main() {
 		IntegralError:           *integralError,
 		DivergenceAscertainment: *divergenceAscertainment,
 		D:                       1, //hardcoded for now
+		IncludeRef: *includeRef,
 	}
 
 	vcfFile := flag.Arg(0)
