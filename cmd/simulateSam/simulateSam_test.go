@@ -23,11 +23,11 @@ func TestSimulateSam(t *testing.T) {
 
 	if len(bamA) != len(bamB) {
 		t.Error("problem simulating bam")
-	}
-
-	for i := range bamA {
-		if !sam.Equal(bamA[i], bamB[i]) {
-			t.Error("problem simulating bam")
+	} else {
+		for i := range bamA {
+			if !sam.Equal(bamA[i], bamB[i]) {
+				t.Error("problem simulating bam")
+			}
 		}
 	}
 
