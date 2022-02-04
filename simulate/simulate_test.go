@@ -3,7 +3,6 @@ package simulate
 import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"math/rand"
-	"os"
 	"testing"
 	//"fmt"
 )
@@ -18,13 +17,8 @@ var RandGeneTests = []struct {
 	{"testingRandGene", 102, GCcontent},
 }
 
-func TestMain(m *testing.M) {
-	rand.Seed(1)
-	code := m.Run()
-	os.Exit(code)
-}
-
 func TestRandGene(t *testing.T) {
+	rand.Seed(1)
 	for _, test := range RandGeneTests {
 		a := RandGene(test.name, test.length, test.GC)
 		if len(a[0].Seq) != test.length {
@@ -73,6 +67,7 @@ var MutateSeqTests = []struct {
 //}
 
 func TestMutateGene(t *testing.T) {
+	rand.Seed(1)
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
