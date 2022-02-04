@@ -39,7 +39,11 @@ func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, us
 		}
 	}
 
-	fasta.WriteMap(outFaFilename, seqsLookup)
+	// Even though we edited sequences in the map, we did not do any insertions, so we
+	// know that the location is memory did not change.  If in the future this program
+	// does insertions to the starting sequences, we will need to update the slice to
+	// point to the sequences in the map
+	fasta.Write(outFaFilename, seqsOrdered)
 }
 
 func usage() {
@@ -68,6 +72,10 @@ func main() {
 	inVcfFilename := flag.Arg(0)
 	inFaFilename := flag.Arg(1)
 	outFaFilename := flag.Arg(2)
+
+	if !(*useAlt) {
+		log.Fatal("Error: you must use at least one option or the fasta file will have no edits\n")
+	}
 
 	vcfToFa(inVcfFilename, inFaFilename, outFaFilename, *useAlt)
 }
