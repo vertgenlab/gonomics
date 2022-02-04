@@ -70,7 +70,7 @@ func main() {
 		SigmaPriorBeta:          *sigmaPriorBeta,
 		MuPriorMean:             *muPriorMean,
 		MuPriorSigma:            *muPriorSigma,
-		IncludeRef: *includeRef,
+		IncludeRef:              *includeRef,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {

@@ -14,7 +14,7 @@ type MleSettings struct {
 	D                       int     //for DivergenceAscertainment, set the size of the ascertainment subset.
 	IntegralError           float64 //set the acceptable error in the internal integral calculations in the likelihood function.
 	Verbose                 int     //default 0. When set to 1, debug prints appear in standard output.
-	IncludeRef bool //Includes the reference genome allele state in the derived allele frequency spectrum.
+	IncludeRef              bool    //Includes the reference genome allele state in the derived allele frequency spectrum.
 }
 
 //SelectionMaximumLikelihoodEstimate performs MLE on an input allele frequency spectrum and writes the result to an output file.

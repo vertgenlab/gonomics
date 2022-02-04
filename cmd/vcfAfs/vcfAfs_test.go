@@ -9,7 +9,7 @@ import (
 
 var VcfAfsTests = []struct {
 	inputFile               string
-	outputFile string
+	outputFile              string
 	expectedFile            string
 	unPolarized             bool
 	plotSelectionLikelihood string
@@ -17,7 +17,7 @@ var VcfAfsTests = []struct {
 	rightBound              float64
 	numberOfPoints          int
 	integralError           float64
-	includeRef	bool
+	includeRef              bool
 }{
 	{"testdata/simulate.N100.S100.Seed19.Alpha0.01.vcf",
 		"testdata/tmp.txt",
@@ -51,7 +51,7 @@ func TestVcfAfs(t *testing.T) {
 			RightBound:              v.rightBound,
 			NumberOfPoints:          v.numberOfPoints,
 			IntegralError:           v.integralError,
-			IncludeRef: v.includeRef,
+			IncludeRef:              v.includeRef,
 		}
 		vcfAfs(v.inputFile, v.outputFile, s)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {

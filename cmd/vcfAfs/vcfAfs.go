@@ -19,8 +19,8 @@ type Settings struct {
 	NumberOfPoints          int
 	IntegralError           float64
 	DivergenceAscertainment bool
-	D                       int //size of the ascertainment subset
-	IncludeRef bool //Includes the reference genome allele as a datapoint in the derived allele frequency spectrum. Incompatable with "UnPolarized".
+	D                       int  //size of the ascertainment subset
+	IncludeRef              bool //Includes the reference genome allele as a datapoint in the derived allele frequency spectrum. Incompatable with "UnPolarized".
 }
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {
@@ -78,7 +78,7 @@ func main() {
 		IntegralError:           *integralError,
 		DivergenceAscertainment: *divergenceAscertainment,
 		D:                       1, //hardcoded for now
-		IncludeRef: *includeRef,
+		IncludeRef:              *includeRef,
 	}
 
 	vcfFile := flag.Arg(0)

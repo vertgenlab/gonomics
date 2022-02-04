@@ -103,7 +103,7 @@ func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized boo
 		}
 
 		if IncludeRef {
-			if vcf.IsAltAncestor(i) {//if the reference base is in the derived state.
+			if vcf.IsAltAncestor(i) { //if the reference base is in the derived state.
 				currentSeg.I++
 			}
 			currentSeg.N++

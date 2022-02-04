@@ -27,7 +27,7 @@ var SelectionMcmcTests = []struct {
 	SigmaPriorBeta          float64
 	MuPriorMean             float64
 	MuPriorSigma            float64
-	IncludeRef	bool
+	IncludeRef              bool
 }{
 	{"testdata/N100.S20.AlphaMinus10.Seed20.vcf",
 		"testdata/tmp.trace.txt",
@@ -92,7 +92,7 @@ func TestSelectionMcmc(t *testing.T) {
 			SigmaPriorBeta:          v.SigmaPriorBeta,
 			MuPriorMean:             v.MuPriorMean,
 			MuPriorSigma:            v.MuPriorSigma,
-			IncludeRef: v.IncludeRef,
+			IncludeRef:              v.IncludeRef,
 		}
 		selectionMcmc(v.VcfFile, v.OutFile, s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

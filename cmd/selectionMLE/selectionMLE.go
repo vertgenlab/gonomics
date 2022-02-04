@@ -57,7 +57,7 @@ func main() {
 		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError:           *integralError,
 		Verbose:                 *verbose,
-		IncludeRef: *includeRef,
+		IncludeRef:              *includeRef,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
