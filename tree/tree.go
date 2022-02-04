@@ -42,7 +42,7 @@ func ParseDot(input string, verbose bool) *Tree {
 	defer file.Close()
 
 	var m map[string]*Tree
-	m = make(map[string]*Tree)//map of nodes found in the tree
+	m = make(map[string]*Tree) //map of nodes found in the tree
 	var prev *Tree
 	var current *Tree
 	var n int = 0
@@ -53,7 +53,7 @@ func ParseDot(input string, verbose bool) *Tree {
 		words := strings.Split(line, " -> ")
 
 		for i := range words {
-			words[i] = strings.Split(words[i], ";")[0]//trim off the trailing semicolon from all Dot lines.
+			words[i] = strings.Split(words[i], ";")[0] //trim off the trailing semicolon from all Dot lines.
 		}
 
 		if len(words) < 2 {

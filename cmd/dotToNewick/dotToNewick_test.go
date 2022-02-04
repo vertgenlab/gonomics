@@ -8,10 +8,10 @@ import (
 )
 
 var DotToNewickTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
-	Verbose bool
+	Verbose      bool
 }{
 	{"testdata/primate.dot", "testdata/tmp.nh", "testdata/expected.nh", false},
 }
