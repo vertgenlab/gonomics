@@ -39,6 +39,19 @@ type SegSite struct {
 	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
 }
 
+func segSitesAreEqual(a SegSite, b SegSite) bool {
+	if a.I != b.I {
+		return false
+	}
+	if a.N != b.N {
+		return false
+	}
+	if a.L != b.L {
+		return false
+	}
+	return true
+}
+
 //InvertSegSite reverses the polarity of a segregating site.
 func InvertSegSite(s *SegSite) {
 	s.I = s.N - s.I
