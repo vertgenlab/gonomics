@@ -60,7 +60,8 @@ func TestAllPossibleOneHuman(t *testing.T) {
 	}
 
 	species = []fasta.Fasta{hum, chi, bon, gor, ora}
-	fasta.Write("testdata/allPossible.fa", species)
+	fasta.Write("testdata/allPossible.oneHuman.fa", species)
+	primateReconMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, 0.0, 0.8, "testdata/out.humanBiased.fa")
 }
 
 func TestAllPossibleTwoHumans(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAllPossibleTwoHumans(t *testing.T) {
 			for _, g = range possibleBases {
 				for _, o = range possibleBases {
 					hum.Seq = append(hum.Seq, h)
-					humAlt.Seq = append(hum.Seq, hA)
+					humAlt.Seq = append(humAlt.Seq, hA)
 					chi.Seq = append(chi.Seq, c)
 					bon.Seq = append(bon.Seq, b)
 					gor.Seq = append(gor.Seq, g)
@@ -93,5 +94,7 @@ func TestAllPossibleTwoHumans(t *testing.T) {
 	}
 
 	species = []fasta.Fasta{hum, humAlt, chi, bon, gor, ora}
-	fasta.Write("testdata/allPossible.fa", species)
+	fasta.Write("testdata/allPossible.twoHumans.fa", species)
+	primateReconMle("testdata/allPossible.twoHumans.fa", "testdata/4d.2h.mod", false, 0.90, 0.0, "testdata/out.unbiased90.fa")
+	primateReconMle("testdata/allPossible.twoHumans.fa", "testdata/4d.2h.mod", false, 0.99, 0.0, "testdata/out.unbiased99.fa")
 }
