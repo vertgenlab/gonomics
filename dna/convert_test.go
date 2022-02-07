@@ -36,6 +36,40 @@ func TestBasesToString(t *testing.T) {
 	}
 }
 
+var equalStringAndBase = []struct {
+	character string
+	base      Base
+}{
+	{"A", A},
+	{"C", C},
+	{"G", G},
+	{"T", T},
+	{"N", N},
+	{"a", LowerA},
+	{"c", LowerC},
+	{"g", LowerG},
+	{"t", LowerT},
+	{"n", LowerN},
+}
+
+func TestStringToBase(t *testing.T) {
+	for _, test := range equalStringAndBase {
+		actual := StringToBase(test.character)
+		if actual != test.base {
+			t.Errorf("StringToBase(%s): expected %d, actual %d", test.character, test.base, actual)
+		}
+	}
+}
+
+func TestBaseToString(t *testing.T) {
+	for _, test := range equalStringAndBase {
+		actual := BaseToString(test.base)
+		if actual != test.character {
+			t.Errorf("BaseToString(%d): expected %s, actual %s", test.base, test.character, actual)
+		}
+	}
+}
+
 // BENCHMARK RESULTS
 // BenchmarkBasesToStringViaSwitch-4         313066              3900 ns/op
 // BenchmarkBasesToStringViaArray-4         1543102               763 ns/op
