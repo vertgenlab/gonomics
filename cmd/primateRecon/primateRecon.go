@@ -97,7 +97,7 @@ func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int
 }
 
 func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string) {
-	var tree, humanNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hcaNode *expandedTree.ETree
+	var tree, humanNode, humanAltNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hcaNode *expandedTree.ETree
 	var err error
 	var i int
 
@@ -130,6 +130,13 @@ func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bo
 		log.Fatalf("Didn't find hca in the tree\n")
 	}
 
+	if !humanBias {
+		humanAltNode = expandedTree.FindNodeName(tree, "hg38alt")
+		if humanAltNode == nil {
+			log.Fatalf("Didn't find hg38alt in the tree\n")
+		}
+	}
+
 	for i = range humanNode.Fasta.Seq {
 		if hcaIsPresent(humanNode.Fasta.Seq[i], bonoboNode.Fasta.Seq[i], chimpNode.Fasta.Seq[i], gorillaNode.Fasta.Seq[i], orangutanNode.Fasta.Seq[i]) {
 			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold, nonHumanProbThreshold, humanBias)
@@ -137,7 +144,11 @@ func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bo
 			hcaNode.Fasta.Seq = append(hcaNode.Fasta.Seq, dna.Gap)
 		}
 	}
-	fasta.Write(outputFastaFilename, []fasta.Fasta{*humanNode.Fasta, *hcaNode.Fasta})
+	if humanBias {
+		fasta.Write(outputFastaFilename, []fasta.Fasta{*humanNode.Fasta, *chimpNode.Fasta, *bonoboNode.Fasta, *gorillaNode.Fasta, *orangutanNode.Fasta, *hcaNode.Fasta})
+	} else {
+		fasta.Write(outputFastaFilename, []fasta.Fasta{*humanNode.Fasta, *humanAltNode.Fasta, *chimpNode.Fasta, *bonoboNode.Fasta, *gorillaNode.Fasta, *orangutanNode.Fasta, *hcaNode.Fasta})
+	}
 }
 
 func primateRecon(infile string, outfile string, messyToN bool) {

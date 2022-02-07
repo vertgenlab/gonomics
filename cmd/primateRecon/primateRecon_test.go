@@ -9,31 +9,10 @@ import (
 	"testing"
 )
 
-var PrimateReconTests = []struct {
-	Infile       string
-	Outfile      string
-	ExpectedFile string
-	MessyToN     bool
-}{
-	{"testdata/in.fa", "testdata/tmp.fa", "testdata/expected.fa", true},
-}
-
-func TestPrimateRecon(t *testing.T) {
-	var err error
-	for _, v := range PrimateReconTests {
-		primateRecon(v.Infile, v.Outfile, v.MessyToN)
-		if !fileio.AreEqual(v.Outfile, v.ExpectedFile) {
-			t.Errorf("Error in primateRecon. Output did not match expected.")
-		} else {
-			err = os.Remove(v.Outfile)
-			exception.PanicOnErr(err)
-		}
-	}
-}
-
 // primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string)
 
 func TestAllPossibleOneHuman(t *testing.T) {
+	var err error
 	var hum fasta.Fasta = fasta.Fasta{Name: "hg38"}
 	var chi fasta.Fasta = fasta.Fasta{Name: "panTro6"}
 	var bon fasta.Fasta = fasta.Fasta{Name: "panPan2"}
@@ -61,10 +40,36 @@ func TestAllPossibleOneHuman(t *testing.T) {
 
 	species = []fasta.Fasta{hum, chi, bon, gor, ora}
 	fasta.Write("testdata/allPossible.oneHuman.fa", species)
-	primateReconMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, 0.0, 0.8, "testdata/out.humanBiased.fa")
+
+	primateRecon("testdata/allPossible.oneHuman.fa", "testdata/out.humanBiasedParsimony.fa", false)
+	if !fileio.AreEqual("testdata/out.humanBiasedParsimony.fa", "testdata/expected.humanBiasedParsimony.fa") {
+		t.Errorf("Error in primateRecon, human biased manual algorithm. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.humanBiasedParsimony.fa")
+		exception.PanicOnErr(err)
+	}
+
+	primateRecon("testdata/allPossible.oneHuman.fa", "testdata/out.ParsimonyMessyToN.fa", true)
+	if !fileio.AreEqual("testdata/out.ParsimonyMessyToN.fa", "testdata/expected.ParsimonyMessyToN.fa") {
+		t.Errorf("Error in primateRecon, human biased manual algorithm. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.ParsimonyMessyToN.fa")
+		exception.PanicOnErr(err)
+	}
+
+	primateReconMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, 0.0, 0.8, "testdata/out.humanBiasedMle.fa")
+	if !fileio.AreEqual("testdata/out.humanBiasedMle.fa", "testdata/expected.humanBiasedMle.fa") {
+		t.Errorf("Error in primateRecon, human biased version. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.humanBiasedMle.fa")
+		exception.PanicOnErr(err)
+		err = os.Remove("testdata/allPossible.oneHuman.fa")//we delete allPossible only if all the tests have passed.
+		exception.PanicOnErr(err)
+	}
 }
 
 func TestAllPossibleTwoHumans(t *testing.T) {
+	var err error
 	var hum fasta.Fasta = fasta.Fasta{Name: "hg38"}
 	var humAlt fasta.Fasta = fasta.Fasta{Name: "hg38alt"}
 	var chi fasta.Fasta = fasta.Fasta{Name: "panTro6"}
@@ -96,5 +101,19 @@ func TestAllPossibleTwoHumans(t *testing.T) {
 	species = []fasta.Fasta{hum, humAlt, chi, bon, gor, ora}
 	fasta.Write("testdata/allPossible.twoHumans.fa", species)
 	primateReconMle("testdata/allPossible.twoHumans.fa", "testdata/4d.2h.mod", false, 0.90, 0.0, "testdata/out.unbiased90.fa")
+	if !fileio.AreEqual("testdata/out.unbiased90.fa", "testdata/expected.unbiased90.fa") {
+		t.Errorf("Error in primateRecon, unbiased 90. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.unbiased90.fa")
+		exception.PanicOnErr(err)
+	}
 	primateReconMle("testdata/allPossible.twoHumans.fa", "testdata/4d.2h.mod", false, 0.99, 0.0, "testdata/out.unbiased99.fa")
+	if !fileio.AreEqual("testdata/out.unbiased99.fa", "testdata/expected.unbiased99.fa") {
+		t.Errorf("Error in primateRecon, unbiased 99. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.unbiased99.fa")
+		exception.PanicOnErr(err)
+		err = os.Remove("testdata/allPossible.twoHumans.fa")
+		exception.PanicOnErr(err)
+	}
 }
