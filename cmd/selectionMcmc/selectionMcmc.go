@@ -13,7 +13,7 @@ import (
 
 func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {
 	rand.Seed(s.SetSeed)
-	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
+	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment, s.IncludeRef) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)
 }
@@ -46,6 +46,7 @@ func main() {
 	var sigmaPriorBeta *float64 = flag.Float64("sigmaPriorBeta", 10, "Sets the beta parameter for the Gamma-distributed prior distribution for the hyperparameter sigma.")
 	var muPriorMean *float64 = flag.Float64("muPriorMean", 0, "Sets the mean of the normally-distributed prior distribution for the hyperparameter mu.")
 	var muPriorSigma *float64 = flag.Float64("muPriorSigma", 3, "Sets the standard deviation of he normally-distributed prior distribution for the hyperparameter mu.")
+	var includeRef *bool = flag.Bool("includeRef", false, "Include the reference genome allele state as a datapoint in the allele frequency spectrum.")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -69,6 +70,7 @@ func main() {
 		SigmaPriorBeta:          *sigmaPriorBeta,
 		MuPriorMean:             *muPriorMean,
 		MuPriorSigma:            *muPriorSigma,
+		IncludeRef:              *includeRef,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {

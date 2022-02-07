@@ -35,6 +35,7 @@ type McmcSettings struct {
 	SigmaPriorBeta          float64 //defines the beta parameter for the prior distribution for the Theta hyperparameter sigma.
 	MuPriorMean             float64 //defines the mean of the prior distribution for the Theta hyperparameter mu.
 	MuPriorSigma            float64 //defines the standard deviation of the prior distribution for the Theta hyperparameter mu.
+	IncludeRef              bool    //If true, includes the reference genome allele state as a datapoint in the allele frequency spectrum.
 }
 
 // The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.

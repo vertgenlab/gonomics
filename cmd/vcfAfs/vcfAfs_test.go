@@ -9,6 +9,7 @@ import (
 
 var VcfAfsTests = []struct {
 	inputFile               string
+	outputFile              string
 	expectedFile            string
 	unPolarized             bool
 	plotSelectionLikelihood string
@@ -16,8 +17,28 @@ var VcfAfsTests = []struct {
 	rightBound              float64
 	numberOfPoints          int
 	integralError           float64
+	includeRef              bool
 }{
-	{"testdata/simulate.N100.S100.Seed19.Alpha0.01.vcf", "testdata/test.afs.txt", true, "", -10, 10, 100, 1e-5},
+	{"testdata/simulate.N100.S100.Seed19.Alpha0.01.vcf",
+		"testdata/tmp.txt",
+		"testdata/expected.afs.txt",
+		false,
+		"",
+		-10,
+		10,
+		100,
+		1e-5,
+		false},
+	{"testdata/simulate.N100.S100.Seed19.Alpha0.01.vcf",
+		"testdata/tmp.IncludeRef.txt",
+		"testdata/expected.IncludeRef.afs.txt",
+		false,
+		"",
+		-10,
+		10,
+		100,
+		1e-5,
+		true},
 }
 
 func TestVcfAfs(t *testing.T) {
@@ -30,12 +51,13 @@ func TestVcfAfs(t *testing.T) {
 			RightBound:              v.rightBound,
 			NumberOfPoints:          v.numberOfPoints,
 			IntegralError:           v.integralError,
+			IncludeRef:              v.includeRef,
 		}
-		vcfAfs(v.inputFile, "tmp.txt", s)
-		if !fileio.AreEqual("tmp.txt", v.expectedFile) {
+		vcfAfs(v.inputFile, v.outputFile, s)
+		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in VcfAfs.")
 		} else {
-			err = os.Remove("tmp.txt")
+			err = os.Remove(v.outputFile)
 			exception.PanicOnErr(err)
 		}
 	}
