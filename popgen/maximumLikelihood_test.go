@@ -25,7 +25,7 @@ var MaximumLikelihoodTests = []struct {
 		DivergenceAscertainment: false,
 		IntegralError:           1e-5,
 		Verbose:                 0,
-		ExpectedValue:           3.893977e+00,
+		ExpectedValue:           3.893977236832579,
 	},
 }
 
@@ -49,7 +49,7 @@ func TestMaximumLikelihood(t *testing.T) {
 		exception.PanicOnErr(err)
 		testValue = SelectionMaximumLikelihoodEstimate(*data, s)
 		if testValue != v.ExpectedValue {
-			t.Errorf("Error in MaximumLikelihood. Value is not as expected.")
+			t.Errorf("Error in MaximumLikelihood. Value %v is not as expected.", testValue)
 		}
 	}
 }
