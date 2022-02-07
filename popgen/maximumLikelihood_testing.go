@@ -45,7 +45,7 @@ func TestMaximumLikelihood(t *testing.T) {
 			IntegralError:           v.IntegralError,
 			Verbose:                 v.Verbose,
 		}
-		data, err = VcfToAfs(v.VcfFile, v.UnPolarized, v.DivergenceAscertainment)
+		data, err = VcfToAfs(v.VcfFile, v.UnPolarized, v.DivergenceAscertainment, false)
 		exception.PanicOnErr(err)
 		testValue = SelectionMaximumLikelihoodEstimate(*data, s)
 		if testValue != v.ExpectedValue {
