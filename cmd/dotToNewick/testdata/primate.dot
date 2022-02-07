@@ -1,0 +1,7 @@
+digraph {
+root -> hga -> hca -> Human;
+root -> Orangutan;
+hga -> Gorilla;
+hca -> panAncestor -> Chimpanzee;
+panAncestor -> Bonobo;
+}
