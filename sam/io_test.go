@@ -114,6 +114,11 @@ func TestRead(t *testing.T) {
 		}
 	}
 
+	actual, _ = Read("testdata/peak.bam")
+	expected, _ := Read("testdata/peak.sam")
+	if !equalExceptExtra(actual, expected) {
+		t.Error("problem reading sam")
+	}
 }
 
 func TestReadNextIntactHeader(t *testing.T) {

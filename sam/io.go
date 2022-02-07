@@ -234,9 +234,23 @@ func readNextRecycle(reader *fileio.EasyReader, s *Sam) bool {
 // such that storing the entire file in memory is not feasible. Most
 // sam files should be read using the GoReadToChan function which
 // streams sam records so only a small portion of the file is kept
-// in memory at any given time.
+// in memory at any given time. Reads as a bam if .bam suffix is present.
 func Read(filename string) ([]Sam, Header) {
+	var err error
 	var alignments []Sam
+	if strings.HasSuffix(filename, ".bam") {
+		br, header := OpenBam(filename)
+		for err != io.EOF {
+			var curr Sam
+			_, err = DecodeBam(br, &curr)
+			if err == nil {
+				alignments = append(alignments, curr)
+			}
+		}
+		return alignments, header
+	}
+
+	// else process as a sam
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 
@@ -244,7 +258,7 @@ func Read(filename string) ([]Sam, Header) {
 		alignments = append(alignments, curr)
 	}
 
-	err := file.Close()
+	err = file.Close()
 	exception.PanicOnErr(err)
 	return alignments, header
 }
