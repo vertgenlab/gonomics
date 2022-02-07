@@ -32,17 +32,17 @@ var DunnTests = []struct {
 }
 
 var myAln []fasta.Fasta = []fasta.Fasta{
-	fasta.Fasta{Name: "honeycrisp", Seq: dna.StringToBases("AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
-	fasta.Fasta{Name: "pinkLady", Seq: dna.StringToBases("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
-	fasta.Fasta{Name: "gala", Seq: dna.StringToBases("AATAAAAAAAAAAAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
-	fasta.Fasta{Name: "sanMarzano", Seq: dna.StringToBases("AAAGAAAAATTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
-	fasta.Fasta{Name: "roma", Seq: dna.StringToBases("AAAGAAAAATTTGTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
-	fasta.Fasta{Name: "cherry", Seq: dna.StringToBases("AAATTAAAATTGTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
+	{Name: "honeycrisp", Seq: dna.StringToBases("AACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
+	{Name: "pinkLady", Seq: dna.StringToBases("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
+	{Name: "gala", Seq: dna.StringToBases("AATAAAAAAAAAAAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
+	{Name: "sanMarzano", Seq: dna.StringToBases("AAAGAAAAATTTTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
+	{Name: "roma", Seq: dna.StringToBases("AAAGAAAAATTTGTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
+	{Name: "cherry", Seq: dna.StringToBases("AAATTAAAATTGTTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")},
 }
 
 var myGroups []*Group = []*Group{
-	&Group{Name: "Apple", Members: []string{"honeycrisp", "pinkLady", "gala"}},
-	&Group{Name: "Tomato", Members: []string{"sanMarzano", "roma", "cherry"}},
+	{Name: "Apple", Members: []string{"honeycrisp", "pinkLady", "gala"}},
+	{Name: "Tomato", Members: []string{"sanMarzano", "roma", "cherry"}},
 }
 
 func TestDunn(t *testing.T) {

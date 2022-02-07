@@ -1,31 +1,31 @@
 package popgen
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/exception"
+	"testing"
 )
 
 var MaximumLikelihoodTests = []struct {
-	VcfFile string
-	Left	float64
-	Right float64
-	Error float64
-	UnPolarized bool
+	VcfFile                 string
+	Left                    float64
+	Right                   float64
+	Error                   float64
+	UnPolarized             bool
 	DivergenceAscertainment bool
-	D int
-	IntegralError float64
-	Verbose int
-	ExpectedValue float64
+	D                       int
+	IntegralError           float64
+	Verbose                 int
+	ExpectedValue           float64
 }{
 	{VcfFile: "testdata/simulated.alpha4.N100.S100.seed19.vcf",
-	Left: -10,
-	Right: 10,
-	Error: 1e-5,
-	UnPolarized: true,
-	DivergenceAscertainment: false,
-	IntegralError: 1e-5,
-	Verbose: 0,
-	ExpectedValue: 3.893977e+00,
+		Left:                    -10,
+		Right:                   10,
+		Error:                   1e-5,
+		UnPolarized:             true,
+		DivergenceAscertainment: false,
+		IntegralError:           1e-5,
+		Verbose:                 0,
+		ExpectedValue:           3.893977e+00,
 	},
 }
 
@@ -35,15 +35,15 @@ func TestMaximumLikelihood(t *testing.T) {
 	var err error
 	var s MleSettings
 	for _, v := range MaximumLikelihoodTests {
-		s = MleSettings {
-			Left: v.Left,
-			Right: v.Right,
-			Error: v.Error,
-			UnPolarized: v.UnPolarized,
+		s = MleSettings{
+			Left:                    v.Left,
+			Right:                   v.Right,
+			Error:                   v.Error,
+			UnPolarized:             v.UnPolarized,
 			DivergenceAscertainment: v.DivergenceAscertainment,
-			D: v.D,
-			IntegralError: v.IntegralError,
-			Verbose: v.Verbose,
+			D:                       v.D,
+			IntegralError:           v.IntegralError,
+			Verbose:                 v.Verbose,
 		}
 		data, err = VcfToAfs(v.VcfFile, v.UnPolarized, v.DivergenceAscertainment)
 		exception.PanicOnErr(err)
