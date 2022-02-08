@@ -260,6 +260,9 @@ func addInsertionLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base
 }
 
 func getPile(start *Pile, refidx int, pos uint32) *Pile {
+	if pos < start.Pos {
+		log.Panicf("sent a record for writing before all the data was present. something went horribly wrong")
+	}
 	for start.RefIdx != refidx || start.Pos != pos {
 		switch {
 		case start.prev.RefIdx == -1 && start.RefIdx == -1: // no data in buffer, start at pos
@@ -272,9 +275,9 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 			start.Pos = start.prev.Pos + 1
 
 		case start.Pos < start.prev.Pos: // looped to start of buffer. need to expand
-			start = start.prev // back up to end of buffer
-			expandLinkedPileBuffer(start, 300)
-			start = start.next // move into start of newly added buffer
+			start = start.prev                 // back up to end of buffer
+			expandLinkedPileBuffer(start, 300) // TODO: POTENTIAL MEMORY LEAK. HARD CAP???
+			start = start.next                 // move into start of newly added buffer
 
 		default:
 			start = start.next
@@ -286,7 +289,7 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
 	var lastRefIdx int
 	var lastPos uint32
-	for start.RefIdx != refmap[s.RName].Order || start.Pos < s.Pos {
+	for start.RefIdx != refmap[s.RName].Order || start.Pos < s.Pos-1 { // the -1 on s.Pos is to handle cases where a read begins with an insertion
 		if start.RefIdx == -1 {
 			break
 		}
