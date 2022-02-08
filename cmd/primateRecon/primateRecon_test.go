@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-// primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string)
-
 func TestAllPossibleOneHuman(t *testing.T) {
 	var err error
 	var hum fasta.Fasta = fasta.Fasta{Name: "hg38"}
@@ -57,11 +55,19 @@ func TestAllPossibleOneHuman(t *testing.T) {
 		exception.PanicOnErr(err)
 	}
 
-	primateReconMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, 0.0, 0.8, "testdata/out.humanBiasedMle.fa")
-	if !fileio.AreEqual("testdata/out.humanBiasedMle.fa", "testdata/expected.humanBiasedMle.fa") {
-		t.Errorf("Error in primateRecon, human biased version. Output was not as expected.")
+	primateReconMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, 0.0, 0.99, "testdata/out.humanBiasedMle99.fa")
+	if !fileio.AreEqual("testdata/out.humanBiasedMle99.fa", "testdata/expected.humanBiasedMle99.fa") {
+		t.Errorf("Error in primateRecon, human biased version nonHumanProb 99. Output was not as expected.")
 	} else {
-		err = os.Remove("testdata/out.humanBiasedMle.fa")
+		err = os.Remove("testdata/out.humanBiasedMle99.fa")
+		exception.PanicOnErr(err)
+	}
+
+	primateReconMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, 0.0, 0.8, "testdata/out.humanBiasedMle80.fa")
+	if !fileio.AreEqual("testdata/out.humanBiasedMle80.fa", "testdata/expected.humanBiasedMle80.fa") {
+		t.Errorf("Error in primateRecon, human biased version nonHumanProb 80. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.humanBiasedMle80.fa")
 		exception.PanicOnErr(err)
 		err = os.Remove("testdata/allPossible.oneHuman.fa") //we delete allPossible only if all the tests have passed.
 		exception.PanicOnErr(err)
