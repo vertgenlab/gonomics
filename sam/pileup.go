@@ -97,7 +97,7 @@ func getMinPileCoords(p []Pile) (int, uint32) {
 			minIdx = i
 			continue
 		}
-		if (p[i].RefIdx >= 0 && p[i].RefIdx <= p[minIdx].RefIdx) || (p[i].RefIdx == p[minIdx].RefIdx && p[i].Pos < p[minIdx].Pos) {
+		if (p[i].RefIdx >= 0 && p[i].RefIdx < p[minIdx].RefIdx) || (p[i].RefIdx == p[minIdx].RefIdx && p[i].Pos < p[minIdx].Pos) {
 			minIdx = i
 		}
 	}
