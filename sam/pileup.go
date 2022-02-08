@@ -160,6 +160,7 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 		start = sendPassedLinked(start, read, includeNoData, refmap, send, pileFilters)
 		updateLinkedPile(start, read, refmap)
 	}
+	sendRemaining(start, send, includeNoData, pileFilters)
 	close(send)
 }
 
@@ -284,6 +285,16 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 		}
 	}
 	return start
+}
+
+func sendRemaining(start *Pile, send chan<- Pile, includeNoData bool, pileFilters []func(p Pile) bool) {
+	for start.RefIdx != -1 {
+		if (start.touched || includeNoData) && passesPileFilters(*start, pileFilters) {
+			send <- *start
+		}
+		start.RefIdx = -1
+		start = start.next
+	}
 }
 
 func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
