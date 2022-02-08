@@ -8,9 +8,10 @@ import (
 	//"github.com/vertgenlab/gonomics/align"
 	//"github.com/vertgenlab/gonomics/exception"
 	//"github.com/vertgenlab/gonomics/fasta"
-	//"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/fileio"
 	//"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/maf"
+	"github.com/vertgenlab/gonomics/bed"
 	"log"
 	//"os"
 	"strings"
@@ -22,6 +23,11 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	//read in_maf and generate a container for mafFiltered
 	mafRecords := maf.Read(in_maf)
 	var mafFiltered []*maf.Maf
+
+	out_ins := fileio.EasyCreate("outIns.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
+	defer out_ins.Close()
+	out_del := fileio.EasyCreate("outDel.bed")
+	defer out_del.Close()
 
 	//go through each line
 	//here I assume only pairwise alignment, not >2 species
@@ -43,6 +49,11 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 				//chrom should be the same between species_ins and species_del
 				if chrom_del == chrom_ins {
 					mafFiltered = append(mafFiltered, mafRecords[i])
+					//TODO: get coordinates here as well
+					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "del_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
+					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
+					bed.WriteBed(out_ins.File, current_ins)
+					bed.WriteBed(out_del.File, current_del)
 				}
 			}
 		}
@@ -53,6 +64,7 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	maf.Write(out_maf, mafFiltered)
 }
 
+/*
 //Step 2: Use anchors aka filtered maf to calculate coordinates that still need to be aligned
 //TODO: save as bed entry, but what to do about strand
 func anchorToCoordinates(in_maf string, species_ins string, species_del string, ins_genome_fa string, del_genome_fa string) {
@@ -63,11 +75,11 @@ func anchorToCoordinates(in_maf string, species_ins string, species_del string, 
 
 	//started work for anchorToCoordinates here
 	//template is cmd/faFilter
-	//read genome files, which are fastas
+	//read genome files, which are fastas containing each chromosome
 	ins_genome := fasta.Read(ins_genome_fa)
 	del_genome := fasta.Read(del_genome_fa)
 	for i := 0; i < len(ins_genome); i++ {
-		if records[i].Name == name { //replace "name" with chr
+		if ins_genome[i].Name == del_genome[i].Name { // if chromosomes match
 			return records[i].Seq[start:end] //replace "start:end" with positions that are not s. I believe Seq starts index at 0, according to fasta.go WriteFasta function
 		}
 	}
@@ -216,7 +228,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	//genomeGraph := cigarToGraph(faOne, faTwo, aln)
 	//genomeGraph.PrintGraph(genomeGraph)
 }
-
+*/
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
 func usage() {
