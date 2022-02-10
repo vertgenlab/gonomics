@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -30,9 +31,11 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, batchSize int, numBuffers int) {
-	header = addAnnotationHeader(header)
-	vcf.NewWriteHeader(outfile, header)
+func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, batchSize int, numBuffers int, resume bool) {
+	if !resume {
+		header = addAnnotationHeader(header)
+		vcf.NewWriteHeader(outfile, header)
+	}
 	filledBufChan := make(chan []vcf.Vcf, numBuffers)
 	emptyBufChan := make(chan []vcf.Vcf, numBuffers)
 
@@ -190,10 +193,22 @@ func addAnnotationHeader(header vcf.Header) vcf.Header {
 	return header
 }
 
+func burnRecords(input, partial <-chan vcf.Vcf) {
+	var lastProcessedRecord vcf.Vcf
+	for lastProcessedRecord = range partial {
+	} // read through partially written file to get last record
+	for v := range input {
+		if v.Pos == lastProcessedRecord.Pos {
+			return
+		}
+	}
+}
+
 func main() {
 	var outfile *string = flag.String("o", "stdout", "output to vcf file")
 	var batchSize *int = flag.Int("batchSize", 1000, "number of variants to pool before querying web")
 	var numBuffer *int = flag.Int("bufferSize", 2, "number of batchSize buffers to keep in memory")
+	var resume *bool = flag.Bool("resume", false, "resume a partially completed annotation. -o must be specified.")
 	//TODO species
 	//TODO assembly
 	//TODO desired annotation fields
@@ -207,9 +222,30 @@ func main() {
 		return
 	}
 
+	if *resume && *outfile == "stdout" {
+		usage()
+		log.Fatal("ERROR: output file (-o) must be specified to use -resume")
+	}
+
+	var out io.WriteCloser
+	var err error
 	vcfs, header := vcf.GoReadToChan(infile)
-	out := fileio.EasyCreate(*outfile)
-	vcfWebAnnotate(vcfs, header, out, *batchSize, *numBuffer)
-	err := out.Close()
+
+	if !*resume {
+		out = fileio.EasyCreate(*outfile)
+	} else {
+		_, err = os.Stat(*outfile)
+		if err != nil {
+			log.Fatalf("ERROR: could not open %s. %s must exist to use -resume.", *outfile, *outfile)
+		}
+		partial, _ := vcf.GoReadToChan(*outfile)
+		burnRecords(vcfs, partial)
+		out, err = os.OpenFile(*outfile, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+		exception.FatalOnErr(err)
+	}
+
+	defer out.Close() // ensure file closure, even on panic. double close is ok
+	vcfWebAnnotate(vcfs, header, out, *batchSize, *numBuffer, *resume)
+	err = out.Close()
 	exception.PanicOnErr(err)
 }
