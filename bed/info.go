@@ -3,6 +3,7 @@ package bed
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"fmt"
 )
 
 //UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
@@ -51,6 +52,8 @@ func TotalSize(b []Bed) int {
 func IsSelfOverlapping(b []Bed) bool {
 	for i := 0; i < len(b)-1; i++ {
 		if Overlap(b[i], b[i+1]) {
+			fmt.Printf("first bed: %v\n", b[i])
+			fmt.Printf("second bed: %v\n", b[i+1])
 			return true
 		}
 	}
