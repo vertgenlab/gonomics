@@ -1,9 +1,9 @@
 package bed
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"fmt"
 )
 
 //UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
