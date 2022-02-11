@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 )
@@ -20,7 +21,7 @@ func StandardNormalDist(x float64) float64 {
 //The second return is false if no overflow/underflow was detected. If underflow was detected, the program returns 0 and true.
 func BinomialDist(n int, k int, p float64) (float64, bool) {
 	logAnswer := BinomialDistLog(n, k, p)
-	if LogCanConvert(logAnswer) {
+	if logspace.CanConvert(logAnswer) {
 		return math.Exp(logAnswer), false
 	}
 	return 0, true

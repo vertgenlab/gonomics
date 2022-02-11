@@ -2,6 +2,7 @@ package bed
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 	"strings"
@@ -107,7 +108,7 @@ func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []fl
 		prevCol, currCol = currCol, prevCol
 		currCol[0] = prevCol[0] + math.Log(1-elementOverlapProbs[t])
 		for s = 1; s <= t; s++ {
-			currCol[s] = numbers.AddLog(prevCol[s]+math.Log(1-elementOverlapProbs[t]), prevCol[s-1]+math.Log(elementOverlapProbs[t]))
+			currCol[s] = logspace.Add(prevCol[s]+math.Log(1-elementOverlapProbs[t]), prevCol[s-1]+math.Log(elementOverlapProbs[t]))
 		}
 		currCol[t+1] = prevCol[t] + math.Log(elementOverlapProbs[t])
 	}
@@ -115,17 +116,17 @@ func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []fl
 	//Now we check whether our probabilities add to 1.
 	check := currCol[0]
 	for s = 1; s <= numTrials; s++ {
-		check = numbers.AddLog(check, currCol[s])
+		check = logspace.Add(check, currCol[s])
 		if s == 1 {
 			expected = currCol[s]
 		} else {
-			expected = numbers.AddLog(expected, currCol[s]+math.Log(float64(s)))
+			expected = logspace.Add(expected, currCol[s]+math.Log(float64(s)))
 		}
 	}
 
 	pValue = currCol[overlapCount]
 	for s = overlapCount + 1; s <= numTrials; s++ {
-		pValue = numbers.AddLog(pValue, currCol[s])
+		pValue = logspace.Add(pValue, currCol[s])
 	}
 
 	answer[0] = math.Exp(check)
