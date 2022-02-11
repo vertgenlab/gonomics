@@ -6,17 +6,14 @@ package cigar
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
-	"strings"
 	"unicode"
 )
 
-// The Cigar struct contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
+// Cigar contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
 type Cigar struct {
 	RunLength int
 	Op        rune
-	Sequence  []dna.Base
 }
 
 //NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
@@ -25,9 +22,9 @@ func NumInsertions(input []Cigar) int {
 	if input[0].Op == '*' {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
-	for i := 0; i < len(input); i++ {
+	for i := range input {
 		if !ConsumesReference(input[i].Op) && ConsumesQuery(input[i].Op) {
-			count = count + input[i].RunLength
+			count += input[i].RunLength
 		}
 	}
 	return count
@@ -39,9 +36,9 @@ func NumDeletions(input []Cigar) int {
 	if input[0].Op == '*' {
 		log.Panic("Cannot calculate NumDeletions from unaligned reads.")
 	}
-	for i := 0; i < len(input); i++ {
+	for i := range input {
 		if ConsumesReference(input[i].Op) && !ConsumesQuery(input[i].Op) {
-			count = count + input[i].RunLength
+			count += input[i].RunLength
 		}
 	}
 	return count
@@ -58,8 +55,7 @@ func ToString(c []Cigar) string {
 			output = "*"
 			break
 		}
-		printSeq := dna.BasesToString(v.Sequence)
-		output = output + fmt.Sprintf("%v%c%s", v.RunLength, v.Op, strings.ToLower(printSeq))
+		output += fmt.Sprintf("%v%c", v.RunLength, v.Op)
 	}
 	return output
 }
@@ -133,54 +129,20 @@ func QueryLength(c []Cigar) int {
 //validOp returns true if a particular input rune matches any of the acceptable Cigar operation characters.
 func validOp(r rune) bool {
 	switch r {
-	case 'M':
+	case 'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X':
 		return true
-	case 'I':
-		return true
-	case 'D':
-		return true
-	case 'N':
-		return true
-	case 'S':
-		return true
-	case 'H':
-		return true
-	case 'P':
-		return true
-	case '=':
-		return true
-	case 'X':
-		return true
+	default:
+		return false
 	}
-	return false
-}
-
-//CigarConsumesReference returns true if the Cigar operation is reference consuming, false otherwise.
-func CigarConsumesReference(c Cigar) bool {
-	return ConsumesReference(c.Op)
 }
 
 //ConsumesReference returns true of the rune matches an operation character that is reference consuming for Cigars.
 func ConsumesReference(r rune) bool {
 	switch r {
-	case 'M':
+	case 'M', 'D', 'N', '=', 'X':
 		return true
-	case 'I':
+	case 'I', 'S', 'H', 'P':
 		return false
-	case 'D':
-		return true
-	case 'N':
-		return true
-	case 'S':
-		return false
-	case 'H':
-		return false
-	case 'P':
-		return false
-	case '=':
-		return true
-	case 'X':
-		return true
 	}
 	log.Panicf("Invalid rune: %c", r)
 	return false
@@ -189,24 +151,10 @@ func ConsumesReference(r rune) bool {
 //ConsumesQuery returns true for input runes that match query consuming characters for Cigars.
 func ConsumesQuery(r rune) bool {
 	switch r {
-	case 'M':
+	case 'M', 'I', 'S', '=', 'X':
 		return true
-	case 'I':
-		return true
-	case 'D':
+	case 'D', 'N', 'H', 'P':
 		return false
-	case 'N':
-		return false
-	case 'S':
-		return true
-	case 'H':
-		return false
-	case 'P':
-		return false
-	case '=':
-		return true
-	case 'X':
-		return true
 	}
 	log.Panicf("Invalid rune: %c", r)
 	return false
