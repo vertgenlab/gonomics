@@ -48,18 +48,21 @@ func TotalSize(b []Bed) int {
 }
 
 //IsNonOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
-//b must be presorted with SortByCoord.
-func IsSelfOverlapping(b []Bed) bool {
+//b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
+func IsSelfOverlapping(b []Bed, verbose int) bool {
 	for i := 0; i < len(b)-1; i++ {
 		if Overlap(b[i], b[i+1]) {
-			fmt.Printf("first bed: %v\n", b[i])
-			fmt.Printf("second bed: %v\n", b[i+1])
+			if verbose > 0 {
+				fmt.Printf("first bed: %v\n", b[i])
+				fmt.Printf("second bed: %v\n", b[i+1])
+			}
 			return true
 		}
 	}
 	return false
 }
 
+/*Commenting out unused function.
 //Splits fasta regions by using bed regions and concatenate fasta sequences by filling 100 Ns in between
 func MakeContigFromBed(fa *fasta.Fasta, beds []Bed) *fasta.Fasta {
 	var ans *fasta.Fasta = &fasta.Fasta{Name: fa.Name, Seq: make([]dna.Base, 0)}
@@ -72,3 +75,4 @@ func MakeContigFromBed(fa *fasta.Fasta, beds []Bed) *fasta.Fasta {
 	}
 	return ans
 }
+*/
