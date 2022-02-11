@@ -24,9 +24,9 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	mafRecords := maf.Read(in_maf)
 	var mafFiltered []*maf.Maf
 
-	out_ins := fileio.EasyCreate("outIns.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
+	out_ins := fileio.EasyCreate("outIns_match.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
 	defer out_ins.Close()
-	out_del := fileio.EasyCreate("outDel.bed")
+	out_del := fileio.EasyCreate("outDel_match.bed")
 	defer out_del.Close()
 
 	//go through each line
@@ -49,7 +49,7 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 				//chrom should be the same between species_ins and species_del
 				if chrom_del == chrom_ins {
 					mafFiltered = append(mafFiltered, mafRecords[i])
-					//TODO: get coordinates here as well
+					// get trusted coordinates here as well. Output into bed file. Should not beyond chromosome start and end positions
 					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "del_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
 					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 					bed.WriteBed(out_ins.File, current_ins)
@@ -64,81 +64,72 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	maf.Write(out_maf, mafFiltered)
 }
 
-/*
-//Step 2: Use anchors aka filtered maf to calculate coordinates that still need to be aligned
-//TODO: save as bed entry, but what to do about strand
-func anchorToCoordinates(in_maf string, species_ins string, species_del string, ins_genome_fa string, del_genome_fa string) {
-	//initialize variables
-	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf. Maf has no ReadToChan function for now
-	//var bedList_ins []*bed.Bed     //initialize 2 bed files
-	//var bedList_del []*bed.Bed     //1 bed file for ins, 1 bed file for del
-
-	//started work for anchorToCoordinates here
-	//template is cmd/faFilter
+//Step 2: Use anchors to calculate coordinates that still need to be aligned
+func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_genome_fa string, del_genome_fa string) {
+	//read bed files
+	ins_bed := bed.Read(ins_bed_filename)
+	del_bed := bed.Read(del_bed_filename)
 	//read genome files, which are fastas containing each chromosome
 	ins_genome := fasta.Read(ins_genome_fa)
 	del_genome := fasta.Read(del_genome_fa)
-	for i := 0; i < len(ins_genome); i++ {
-		if ins_genome[i].Name == del_genome[i].Name { // if chromosomes match
-			return records[i].Seq[start:end] //replace "start:end" with positions that are not s. I believe Seq starts index at 0, according to fasta.go WriteFasta function
-		}
-	}
-
-	out_ins := fileio.EasyCreate(outIns_bed) //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
+	//initialize variables to keep track of chromosome, position
+	var chr_prev := "" //initialize chr_prev as an empty string
+	var chr_curr := "" //initialize chr_curr as an empty string
+	var pos_ins := 1 //initialize pos as 1. TODO: check boundaries for bed and fa
+	var pos_del := 1
+	//for now, put coordinates into bed file. In the future, can just be bed object
+	out_ins := fileio.EasyCreate("outIns_gap.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
 	defer out_ins.Close()
-	out_del := fileio.EasyCreate(outDel_bed)
-	defer out_del.Close() //Check if defer will work for 2 files at the same time. Seems to have worked
+	out_del := fileio.EasyCreate("outDel_gap.bed")
+	defer out_del.Close()
 
-	//go through each line
-	for i := range mafRecords { //each i is a block
-		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
+	//loop through bed. ins_bed and del_bed should have the same number of records
+	for i := range ins_bed {
+		chr_curr = ins_bed[i].Chrom //set chr_curr to the new record
+		//calculate the unaligned/gap chunk before we get to the aligned s line
+		if i == 1 { //if this is the first entry
+			current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
+			current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
+			bed.WriteBed(out_ins.File, current_ins)
+			bed.WriteBed(out_del.File, current_del)
+		} else if chr_curr != chr_prev { //if this is not the first entry, but we encounter new chr
+			//first finish off the previous chr
+			current_del := bed.Bed{Chrom: del_bed[i-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome_fa[del_bed[i-1].Chrom]), Name: "del_gap", FieldsInitialized: 4} //ins_genome_fa should be "FastaMap" to look up sequence name
+			current_ins := bed.Bed{Chrom: chr_prev, ChromStart: pos_ins, ChromEnd: len(ins_genome_fa[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
+			bed.WriteBed(out_ins.File, current_ins)
+			bed.WriteBed(out_del.File, current_del)
 
-			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
-			//here I assume only pairwise alignment, not >2 species
-			//here I assume species_ins is target (the 1st line in the block is a line but not included in mafRecords[i].Species, target is 2nd line in the block but 1st line in mafRecords[i].Species, index 0); species_del is query (3rd line in the block but 2nd line in mafRecords[i].Species, index 1 or higher)
-			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src) //start with species_del, get assembly (e.g. rheMac10), chrom (e.g. chrI)
-			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src) //then find corresponding species_ins line, which is target, index 0
-			//TODO: to improve clarity, consider using assembly_k first, and then setting assembly_del:=assembly_k if in fact the k line is a del line
-
-			//verify line 0 is indeed species_ins
-			if assembly_ins != species_ins {
-				log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
-			}
-
-			//get eC species_del lines
-			if mafRecords[i].Species[k].ELine != nil && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil { //common checks for both eC and eI lines
-				if mafRecords[i].Species[k].ELine.Status == 'C' { //Check for ELine Status here
-
-					//convert maf to bed, continued
-					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
-					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-					//bedList_del = append(bedList_del, &current_del) //append to growing bed
-					//bedList_ins = append(bedList_ins, &current_ins)
-					bed.WriteBed(out_ins.File, current_ins)
-					bed.WriteBed(out_del.File, current_del)
-
-					//get eI species_del lines
-				} else if mafRecords[i].Species[k].ELine.Status == 'I' {
-
-					//test if species_del eI fragment size < 10% corresponding s fragment size
-					//make sure arithmetic is all on float64
-					if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
-
-						//convert maf to bed, continued
-						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
-						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-						//bedList_del = append(bedList_del, &current_del) //append to growing bed
-						//bedList_ins = append(bedList_ins, &current_ins)
-						bed.WriteBed(out_ins.File, current_ins)
-						bed.WriteBed(out_del.File, current_del)
-					}
-				}
-			}
+			//then start the current chr
+			pos_ins = 1
+			pos_del = 1
+		} else { //if we have existing chr
+			//write continued entry
+			current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
+			current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
+			bed.WriteBed(out_ins.File, current_ins)
+			bed.WriteBed(out_del.File, current_del)
 		}
+		current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
+		current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
+		bed.WriteBed(out_ins.File, current_ins)
+		bed.WriteBed(out_del.File, current_del)
+
+		//update variables at the end of each iteration
+		copy(pos_ins, ins_bed[i].ChromEnd)
+		copy(pos_del, del_bed[i].ChromEnd)
+		copy(chr_curr, chr_prev)
+
 	}
-	//write out bed files
-	//bed.Write(outDel_bed, bedList_del, 5) //bed file has 5 fields
-	//bed.Write(outIns_bed, bedList_ins, 5)
+	//put last entry here
+	current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
+	current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
+	bed.WriteBed(out_ins.File, current_ins)
+	bed.WriteBed(out_del.File, current_del)
+
+
+//resources
+	ins_genome[i].Name
+	records[i].Seq[start:end] // I believe Seq starts index at 0, according to fasta.go WriteFasta function
 }
 
 //Step 3: globalAlignment lowMem for non-anchor sequences
@@ -228,7 +219,6 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	//genomeGraph := cigarToGraph(faOne, faTwo, aln)
 	//genomeGraph.PrintGraph(genomeGraph)
 }
-*/
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
 func usage() {
