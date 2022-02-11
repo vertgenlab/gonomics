@@ -18,7 +18,7 @@ func TestCallVariants(t *testing.T) {
 	maxP := 1.1
 	minAf := 0.0
 	minCoverage := 0
-	callVariants(exp, norm, ref, outFile, maxP, minAf, minCoverage)
+	callVariants(exp, norm, ref, outFile, maxP, minAf, minCoverage, 1)
 
 	if !fileio.AreEqualIgnoreComments(outFile, expectedFile) {
 		t.Error("problem with variant calling")
