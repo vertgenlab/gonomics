@@ -1,15 +1,14 @@
 package bed
 
 import (
-
 	"testing"
 )
 
 var ElementOverlapProbabilityTests = []struct {
-	elements1File string
-	elements2File string
+	elements1File    string
+	elements2File    string
 	NoGapRegionsFile string
-	Expected []float64
+	Expected         []float64
 }{
 	{"testdata/EnrichmentElement1.bed",
 		"testdata/EnrichmentElement2.bed",
@@ -32,7 +31,7 @@ func TestElementOverlapProbabilities(t *testing.T) {
 		noGap = Read(v.NoGapRegionsFile)
 		observed = ElementOverlapProbabilities(e1, e2, noGap)
 		if !sliceEqual(observed, v.Expected) {
-			t.Errorf("Error in ElementOverlapProbabilities. Output" +
+			t.Errorf("Error in ElementOverlapProbabilities. Output"+
 				"not as expected. Observed: %v.", observed)
 		}
 	}
@@ -51,15 +50,15 @@ func sliceEqual(a []float64, b []float64) bool {
 }
 
 var EnrichmentPValueTests = []struct {
-	OverlapProbs []float64
-	OverlapCount int
-	ExpectedExact []float64
+	OverlapProbs              []float64
+	OverlapCount              int
+	ExpectedExact             []float64
 	ExpectedNormalApproximate []float64
 }{
 	{[]float64{0, 0, 0.1, 0.2},
 		1,
-	[]float64{1, 0.30000000000000004, 0.28},
-	[]float64{1, 0.30000000000000004, 0.3019197410818303},
+		[]float64{1, 0.30000000000000004, 0.28},
+		[]float64{1, 0.30000000000000004, 0.3019197410818303},
 	},
 }
 
@@ -78,13 +77,13 @@ func TestEnrichmentPValue(t *testing.T) {
 }
 
 var EnrichmentPValueUpperLowerTests = []struct {
-		elements1File string
-		elements2File string
-		noGapFile string
-		overlapCount int
-		verbose int
-		expectedUpper []float64
-		expectedLower []float64
+	elements1File string
+	elements2File string
+	noGapFile     string
+	overlapCount  int
+	verbose       int
+	expectedUpper []float64
+	expectedLower []float64
 }{
 	{"testdata/EnrichmentElement1.bed",
 		"testdata/EnrichmentElement2.bed",
