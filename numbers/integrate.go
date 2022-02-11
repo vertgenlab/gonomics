@@ -1,9 +1,9 @@
 package numbers
 
 import (
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
-	//DEBUG: "fmt"
 )
 
 //LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
@@ -18,14 +18,14 @@ func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 
 	var answer float64
 	//first time, sets answer as the area of the first rectangle
 	var nextLeftEval float64 = f(currRight)
-	answer = MultiplyLog(MidpointLog(f(currLeft), nextLeftEval), logDeltaX)
+	answer = logspace.Multiply(logspace.Average(f(currLeft), nextLeftEval), logDeltaX)
 	var rightEval float64
 
 	for i := 1; i < n; i++ {
 		currLeft += deltaX
 		currRight += deltaX
 		rightEval = f(currRight)
-		answer = AddLog(answer, MultiplyLog(MidpointLog(nextLeftEval, rightEval), logDeltaX))
+		answer = logspace.Add(answer, logspace.Multiply(logspace.Average(nextLeftEval, rightEval), logDeltaX))
 		nextLeftEval = rightEval
 	}
 	return answer
@@ -170,7 +170,7 @@ func adaptiveSimpsonsLogHelper(f func(float64) float64, a, b, midpoint, fa, fb, 
 
 	if maxDepth < 0 {
 		log.Fatalf("Error in integration: exceeded maximum depth\n")
-	} else if MultiplyLog(errorThresh, logHalf) == errorThresh {
+	} else if logspace.Multiply(errorThresh, logHalf) == errorThresh {
 		log.Fatalf("Error in integration: the error threshold has gotten too small after many recursive calls\n")
 	} else if a == leftMidpoint {
 		log.Fatalf("Error in integration: the left side and midpoint have gotten too close to each other. a: %e. b: %e. Midpoint: %e. LeftMidpoint:%e. Fa: %e. Fb: %e. MaxDepth: %d.\n", a, b, midpoint, leftMidpoint, fa, fb, maxDepth)
@@ -180,24 +180,24 @@ func adaptiveSimpsonsLogHelper(f func(float64) float64, a, b, midpoint, fa, fb, 
 	fRightMidpoint = f(rightMidpoint)
 	//DEBUG: log.Printf("fLeftMidpoint: %e. fRightMidpoint: %e.\n", fLeftMidpoint, fRightMidpoint)
 	logHOverSix = math.Log(h / 6)
-	leftEstimate = MultiplyLog(logHOverSix, AddLog(AddLog(fa, MultiplyLog(logFour, fLeftMidpoint)), fMidpoint))
-	rightEstimate = MultiplyLog(logHOverSix, AddLog(AddLog(fMidpoint, MultiplyLog(logFour, fRightMidpoint)), fb))
-	estimateFromHalves = AddLog(leftEstimate, rightEstimate)
+	leftEstimate = logspace.Multiply(logHOverSix, logspace.Add(logspace.Add(fa, logspace.Multiply(logFour, fLeftMidpoint)), fMidpoint))
+	rightEstimate = logspace.Multiply(logHOverSix, logspace.Add(logspace.Add(fMidpoint, logspace.Multiply(logFour, fRightMidpoint)), fb))
+	estimateFromHalves = logspace.Add(leftEstimate, rightEstimate)
 
 	//log.Printf("maxDepth:%d, left:%f, right:%f, fromHalves:%f, whole:%f\n", maxDepth, math.Exp(leftEstimate), math.Exp(rightEstimate), math.Exp(estimateFromHalves), math.Exp(estimateFromHalves))
 
 	if estimateFromHalves > wholeEstimate {
-		delta = SubtractLog(estimateFromHalves, wholeEstimate)
-		if delta <= MultiplyLog(logFifteen, errorThresh) {
-			return AddLog(AddLog(leftEstimate, rightEstimate), DivideLog(delta, logFifteen))
+		delta = logspace.Subtract(estimateFromHalves, wholeEstimate)
+		if delta <= logspace.Multiply(logFifteen, errorThresh) {
+			return logspace.Add(logspace.Add(leftEstimate, rightEstimate), logspace.Divide(delta, logFifteen))
 		}
 	} else if wholeEstimate > estimateFromHalves {
-		delta = SubtractLog(wholeEstimate, estimateFromHalves)
-		if delta <= MultiplyLog(logFifteen, errorThresh) {
-			return AddLog(AddLog(leftEstimate, rightEstimate), DivideLog(delta, logFifteen))
+		delta = logspace.Subtract(wholeEstimate, estimateFromHalves)
+		if delta <= logspace.Multiply(logFifteen, errorThresh) {
+			return logspace.Add(logspace.Add(leftEstimate, rightEstimate), logspace.Divide(delta, logFifteen))
 		}
 	}
-	return AddLog(adaptiveSimpsonsLogHelper(f, a, midpoint, leftMidpoint, fa, fMidpoint, fLeftMidpoint, leftEstimate, MultiplyLog(errorThresh, logHalf), maxDepth-1), adaptiveSimpsonsLogHelper(f, midpoint, b, rightMidpoint, fMidpoint, fb, fRightMidpoint, rightEstimate, MultiplyLog(errorThresh, logHalf), maxDepth-1))
+	return logspace.Add(adaptiveSimpsonsLogHelper(f, a, midpoint, leftMidpoint, fa, fMidpoint, fLeftMidpoint, leftEstimate, logspace.Multiply(errorThresh, logHalf), maxDepth-1), adaptiveSimpsonsLogHelper(f, midpoint, b, rightMidpoint, fMidpoint, fb, fRightMidpoint, rightEstimate, logspace.Multiply(errorThresh, logHalf), maxDepth-1))
 }
 
 // AdaptiveSimpsons returns the log of the integral from a to b of g(x), where f(x) = log(g(x))
@@ -211,6 +211,6 @@ func AdaptiveSimpsonsLog(f func(float64) float64, a float64, b float64, errorThr
 	fa = f(a)
 	fb = f(b)
 	fMidpoint = f(midpoint)
-	s = MultiplyLog(math.Log(h/6), AddLog(AddLog(fa, MultiplyLog(logFour, fMidpoint)), fb))
+	s = logspace.Multiply(math.Log(h/6), logspace.Add(logspace.Add(fa, logspace.Multiply(logFour, fMidpoint)), fb))
 	return adaptiveSimpsonsLogHelper(f, a, b, midpoint, fa, fb, fMidpoint, s, math.Log(errorThreshold), maxDepth)
 }
