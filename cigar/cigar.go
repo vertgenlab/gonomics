@@ -1,4 +1,4 @@
-//Package cigar contains functions to manipulate cigar data in the SAM file format.
+// Package cigar contains functions to manipulate cigar data in the SAM file format.
 //More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
 
 package cigar
@@ -12,7 +12,7 @@ import (
 	"unicode"
 )
 
-//The Cigar struct contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
+// The Cigar struct contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
 type Cigar struct {
 	RunLength int
 	Op        rune

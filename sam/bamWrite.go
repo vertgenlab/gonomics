@@ -208,7 +208,7 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 var baseEncoder = []uint8{1, 2, 4, 8, 15, 1, 2, 4, 8, 15, 15, 15, 15, 15, 15, 15}
 
 // getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op
-func getCigUint32(c *cigar.Cigar) uint32 {
+func getCigUint32(c cigar.Cigar) uint32 {
 	var cigint uint32
 	cigint = uint32(c.RunLength) << 4  // move 4 bits to the left
 	cigint = cigint | opToUint32(c.Op) // bitwise OR with op
