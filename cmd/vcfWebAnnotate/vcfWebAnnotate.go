@@ -193,6 +193,9 @@ func addAnnotationHeader(header vcf.Header) vcf.Header {
 	return header
 }
 
+// burnRecords reads through the patially written output file and figures out what the last record is.
+// It then reads through the input file until it sees the last record from the parital out put files, and
+// resumes the annotation.
 func burnRecords(input, partial <-chan vcf.Vcf) {
 	var lastProcessedRecord vcf.Vcf
 	for lastProcessedRecord = range partial {
