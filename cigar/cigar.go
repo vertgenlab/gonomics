@@ -20,10 +20,10 @@ type Cigar struct {
 }
 
 //NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
-func NumInsertions(input []*Cigar) int {
+func NumInsertions(input []Cigar) int {
 	var count int
 	if input[0].Op == '*' {
-		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for i := 0; i < len(input); i++ {
 		if !ConsumesReference(input[i].Op) && ConsumesQuery(input[i].Op) {
@@ -34,10 +34,10 @@ func NumInsertions(input []*Cigar) int {
 }
 
 //NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
-func NumDeletions(input []*Cigar) int {
+func NumDeletions(input []Cigar) int {
 	var count int
 	if input[0].Op == '*' {
-		log.Fatalf("Cannot calculate NumDeletions from unaligned reads.")
+		log.Panic("Cannot calculate NumDeletions from unaligned reads.")
 	}
 	for i := 0; i < len(input); i++ {
 		if ConsumesReference(input[i].Op) && !ConsumesQuery(input[i].Op) {
@@ -48,7 +48,7 @@ func NumDeletions(input []*Cigar) int {
 }
 
 //ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
-func ToString(c []*Cigar) string {
+func ToString(c []Cigar) string {
 	if len(c) == 0 {
 		return "*"
 	}
@@ -65,33 +65,34 @@ func ToString(c []*Cigar) string {
 }
 
 //FromString parses an input string into a slice of Cigar structs.
-func FromString(input string) []*Cigar {
-	var output []*Cigar
+func FromString(input string) []Cigar {
+	var output []Cigar
 	var currentNumber string
+	var currentCigar Cigar
 	if input == "*" || input == "**" {
-		currentCigar := Cigar{RunLength: 0, Op: '*'}
-		return append(output, &currentCigar)
+		currentCigar = Cigar{RunLength: 0, Op: '*'}
+		return append(output, currentCigar)
 	}
 
 	for _, v := range input {
 		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)
-		} else if RuneIsValidCharacter(v) {
+		} else if validOp(v) {
 			currentCigar := Cigar{RunLength: common.StringToInt(currentNumber), Op: v}
-			output = append(output, &currentCigar)
+			output = append(output, currentCigar)
 			currentNumber = ""
 		} else {
-			log.Fatalf("Invalid character: %c", v)
+			log.Panicf("Invalid character: %c", v)
 		}
 	}
 	return output
 }
 
 //MatchLength returns the number of bases in a Cigar slice that align to the reference.
-func MatchLength(c []*Cigar) int {
+func MatchLength(c []Cigar) int {
 	var ans int
 	if c[0].Op == '*' {
-		log.Fatalf("Cannot calculate MatchLength from unaligned reads.")
+		log.Panic("Cannot calculate MatchLength from unaligned reads.")
 	}
 	for _, v := range c {
 		if ConsumesReference(v.Op) && ConsumesQuery(v.Op) {
@@ -102,10 +103,10 @@ func MatchLength(c []*Cigar) int {
 }
 
 //ReferenceLength calculates the number of reference positions that a Cigar slice spans.
-func ReferenceLength(c []*Cigar) int {
+func ReferenceLength(c []Cigar) int {
 	var ans int
 	if c[0].Op == '*' {
-		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
 		if ConsumesReference(v.Op) {
@@ -116,10 +117,10 @@ func ReferenceLength(c []*Cigar) int {
 }
 
 //QueryLength calculates the length of the query read from a slice of Cigar structs.
-func QueryLength(c []*Cigar) int {
+func QueryLength(c []Cigar) int {
 	var ans int
 	if c[0].Op == '*' {
-		log.Fatalf("Cannot calculate NumInsertions from unaligned reads.")
+		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
 		if ConsumesQuery(v.Op) {
@@ -129,8 +130,8 @@ func QueryLength(c []*Cigar) int {
 	return ans
 }
 
-//RuneIsValidCharacter returns true if a particular input rune matches any of the acceptable Cigar operation characters.
-func RuneIsValidCharacter(r rune) bool {
+//validOp returns true if a particular input rune matches any of the acceptable Cigar operation characters.
+func validOp(r rune) bool {
 	switch r {
 	case 'M':
 		return true
@@ -181,7 +182,7 @@ func ConsumesReference(r rune) bool {
 	case 'X':
 		return true
 	}
-	log.Fatalf("Invalid rune: %c", r)
+	log.Panicf("Invalid rune: %c", r)
 	return false
 }
 
@@ -207,6 +208,6 @@ func ConsumesQuery(r rune) bool {
 	case 'X':
 		return true
 	}
-	log.Fatalf("Invalid rune: %c", r)
+	log.Panicf("Invalid rune: %c", r)
 	return false
 }
