@@ -61,18 +61,3 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 	}
 	return false
 }
-
-/*Commenting out unused function.
-//Splits fasta regions by using bed regions and concatenate fasta sequences by filling 100 Ns in between
-func MakeContigFromBed(fa *fasta.Fasta, beds []Bed) *fasta.Fasta {
-	var ans *fasta.Fasta = &fasta.Fasta{Name: fa.Name, Seq: make([]dna.Base, 0)}
-	for i, b := range beds {
-		ans.Seq = append(ans.Seq, fa.Seq[b.ChromStart:b.ChromEnd]...)
-		//adds 100n in between bed regions
-		if i < len(beds)-2 {
-			ans.Seq = append(ans.Seq, dna.CreateAllNs(100)...)
-		}
-	}
-	return ans
-}
-*/
