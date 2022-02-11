@@ -50,3 +50,10 @@ func TestSrcToAssemblyAndChrom(t *testing.T) {
 		}
 	}
 }
+
+func TestParse(t *testing.T) {
+	aLine := parseMafALine(parseTests[0].line)
+	if !MafsAreEqual(*aLine, parseTests[0].expected) {
+		t.Errorf("parseMafALine failed. actual &aLine: %v, expected: %v", &aLine, parseTests[0].expected)
+	}
+}
