@@ -101,6 +101,7 @@ func getMinPileCoords(p []Pile) (int, uint32) {
 			minIdx = i
 		}
 	}
+	//fmt.Println(minIdx, p)
 	return p[minIdx].RefIdx, p[minIdx].Pos
 }
 
