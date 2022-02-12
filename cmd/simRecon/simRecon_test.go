@@ -27,7 +27,6 @@ func accEqual(a string, b string) bool {
 }
 
 var (
-	err      error
 	root     = "testdata/debug.fasta"
 	newick   = "testdata/newickShortBranches.txt"
 	gene     = "testdata/debug.gp"
