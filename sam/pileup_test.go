@@ -6,8 +6,10 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func BenchmarkPileupSlice(b *testing.B) {
@@ -25,6 +27,29 @@ func BenchmarkPileupLinkedList(b *testing.B) {
 		reads, header := GoReadToChan("testdata/peak.bam")
 		b.StartTimer()
 		GoPileup(reads, header, false, nil, nil)
+	}
+}
+
+func TestReadBeginsWithInsertion(t *testing.T) {
+	reads, header := GoReadToChan("testdata/memtest.bam")
+	piles := GoPileup(reads, header, false, nil, nil)
+	m := new(runtime.MemStats)
+	ticker := time.NewTicker(100 * time.Millisecond)
+
+	var open bool
+	for {
+		select {
+		case <-ticker.C:
+			runtime.ReadMemStats(m)
+			if m.TotalAlloc > 100000000 { // 100MB
+				t.Error("pileup taking too much memory, potential memory leak, see sam/pileup.go func getPile for potential culprit")
+				t.FailNow()
+			}
+		case _, open = <-piles:
+			if !open {
+				return
+			}
+		}
 	}
 }
 
