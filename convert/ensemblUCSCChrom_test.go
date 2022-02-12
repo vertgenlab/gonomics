@@ -6,7 +6,7 @@ import (
 )
 
 var ChromNameTests = []struct {
-	Ucsc string
+	Ucsc    string
 	Ensembl string
 }{
 	{"chr1", "1"},
