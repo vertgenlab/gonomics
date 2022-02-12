@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
@@ -177,7 +178,7 @@ func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
-		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
+		return logspace.Multiply(binomCoeff, logspace.Multiply(expression, logPart))
 	}
 }
 
@@ -189,7 +190,7 @@ func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integra
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponent(n, k, alpha, binomMap)
 	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
-	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
+	return logspace.Add(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
@@ -197,9 +198,9 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 	var denominator float64 = math.Inf(-1) //denominator begins at -Inf when in log space
 	// j loops over all possible values of i
 	for j := 1; j < n; j++ {
-		denominator = numbers.AddLog(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
+		denominator = logspace.Add(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
 	}
-	return numbers.DivideLog(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
+	return logspace.Divide(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
@@ -207,7 +208,7 @@ func AfsLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError
 	var answer float64 = 0.0
 	// loop over all segregating sites
 	for j := range afs.Sites {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
+		answer = logspace.Multiply(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
 	}
 	return answer
 }
@@ -222,7 +223,7 @@ func AfsLikelihoodFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, integ
 		if likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
 			likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
 		}
-		answer = numbers.MultiplyLog(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		answer = logspace.Multiply(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
 	}
 	return answer
 }

@@ -14,6 +14,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -26,14 +27,15 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(experimentalFiles, normalFiles []string, refFile, outFile string, maxP, minAf float64, minCoverage int) {
+func callVariants(experimentalFiles, normalFiles []string, refFile, outFile string, maxP, minAf float64, minCoverage, workers int) {
 	out := fileio.EasyCreate(outFile)
 	outHeader := makeOutputHeader(append(experimentalFiles, normalFiles...))
 	vcf.NewWriteHeader(out, outHeader)
-	ref := fasta.NewSeeker(refFile, "")
+	//ref := fasta.NewSeeker(refFile, "")
 
-	expHeaders, expPiles := startPileup(experimentalFiles)
-	normHeaders, normPiles := startPileup(normalFiles)
+	pileFilters := getPileFilters(minCoverage)
+	expHeaders, expPiles := startPileup(experimentalFiles, pileFilters)
+	normHeaders, normPiles := startPileup(normalFiles, pileFilters)
 
 	isExperimental := make([]bool, len(experimentalFiles)+len(normalFiles))
 	for i := 0; i < len(experimentalFiles); i++ {
@@ -45,23 +47,45 @@ func callVariants(experimentalFiles, normalFiles []string, refFile, outFile stri
 
 	synced := sam.GoSyncPileups(append(expPiles, normPiles...)...)
 
-	var v vcf.Vcf
-	var keepVar bool
-	for piles := range synced {
-		v, keepVar = getVariant(piles[:len(experimentalFiles)], piles[len(experimentalFiles):], expHeaders[0], ref, maxP, minAf, minCoverage)
-		if keepVar {
-			vcf.WriteVcf(out, v)
-		}
+	// start goroutines to process synced piles independently and send results to writeChan
+	writeChan := make(chan vcf.Vcf, 1000)
+	wg := new(sync.WaitGroup)
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go startWorker(wg, writeChan, synced, len(experimentalFiles), expHeaders[0], fasta.NewSeeker(refFile, ""), maxP, minAf, minCoverage)
 	}
 
-	err = ref.Close()
-	exception.PanicOnErr(err)
+	// spawn a goroutine that waits until all the goroutines are done then closes writeChan.
+	go func(*sync.WaitGroup, chan vcf.Vcf) {
+		wg.Wait()
+		close(writeChan)
+	}(wg, writeChan)
+
+	// write the vcf files as they come in
+	for v := range writeChan {
+		vcf.WriteVcf(out, v)
+	}
+
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
 
+func startWorker(wg *sync.WaitGroup, writeChan chan<- vcf.Vcf, synced <-chan []sam.Pile, numExpFiles int, header sam.Header, ref *fasta.Seeker, maxP, minAf float64, minCoverage int) {
+	var keepVar bool
+	for piles := range synced {
+		var v vcf.Vcf
+		v, keepVar = getVariant(piles[:numExpFiles], piles[numExpFiles:], header, ref, maxP, minAf, minCoverage)
+		if keepVar {
+			writeChan <- v
+		}
+	}
+	err := ref.Close()
+	exception.PanicOnErr(err)
+	wg.Done()
+}
+
 // startPileup for each input file
-func startPileup(files []string) (headers []sam.Header, piles []<-chan sam.Pile) {
+func startPileup(files []string, pileFilters []func(p sam.Pile) bool) (headers []sam.Header, piles []<-chan sam.Pile) {
 	headers = make([]sam.Header, len(files))
 	piles = make([]<-chan sam.Pile, len(files))
 
@@ -71,7 +95,7 @@ func startPileup(files []string) (headers []sam.Header, piles []<-chan sam.Pile)
 		if len(headers[i].Text) == 0 {
 			log.Fatal("ERROR: sam/bam files must have headers")
 		}
-		piles[i] = sam.GoPileup(samChan, headers[i], false, nil, nil)
+		piles[i] = sam.GoPileup(samChan, headers[i], false, nil, pileFilters)
 	}
 	return
 }
@@ -126,6 +150,14 @@ func (i *inputFiles) Set(value string) error {
 	return nil
 }
 
+func getPileFilters(minCoverage int) []func(p sam.Pile) bool {
+	var answer []func(p sam.Pile) bool
+	answer = append(answer, func(p sam.Pile) bool {
+		return calcDepth(p) >= minCoverage
+	})
+	return answer
+}
+
 func main() {
 	var experimentalFiles, normalFiles inputFiles
 	flag.Var(&experimentalFiles, "i", "Input experimental files. May be declared more than once (.bam, .sam)")
@@ -136,6 +168,7 @@ func main() {
 	minCoverage := flag.Int("minCoverage", 10, "Minimum coverage for site to be considered.")
 	reffile := flag.String("r", "", "Reference fasta file (.fa). Must be indexed (.fai)")
 	outfile := flag.String("o", "stdout", "Output file (.vcf)")
+	workers := flag.Int("t", 1, "Number of threads used for calling variants. Note that additional threads are automatically generated for io.")
 	flag.Parse()
 	flag.Usage = usage
 
@@ -144,5 +177,5 @@ func main() {
 		log.Fatalln("ERROR: must declare at least 1 experimental sample with -i")
 	}
 
-	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP, *minAf, *minCoverage)
+	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP, *minAf, *minCoverage, *workers)
 }

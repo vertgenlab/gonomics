@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 	"math/rand"
@@ -67,9 +68,9 @@ func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
 	if thetaPrime.priorDensity == math.Inf(-1) || thetaPrime.likelihood == math.Inf(-1) { //avoid divide by -Inf error when the candidate set is overdispersed.
 		return math.Inf(-1)
 	}
-	bayesFactor := numbers.DivideLog(thetaPrime.likelihood, old.likelihood)
-	priorOdds := numbers.DivideLog(thetaPrime.priorDensity, old.priorDensity)
-	posteriorOdds := numbers.MultiplyLog(bayesFactor, priorOdds)
+	bayesFactor := logspace.Divide(thetaPrime.likelihood, old.likelihood)
+	priorOdds := logspace.Divide(thetaPrime.priorDensity, old.priorDensity)
+	posteriorOdds := logspace.Multiply(bayesFactor, priorOdds)
 	return posteriorOdds
 }
 
