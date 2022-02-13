@@ -14,29 +14,29 @@ var readWriteTests = []struct {
 }
 
 var srcToAssemblyAndChromTests = []struct {
-	src string
+	src               string
 	assembly_expected string
-	chrom_expected string
+	chrom_expected    string
 }{
 	{"hg38.chr22", "hg38", "chr22"},
 }
 
 var parseMafALineTests = []struct {
-	line string
+	line     string
 	expected Maf
 }{
 	{"a score=407709.000000", Maf{Score: 407709.000000, Species: nil}},
 }
 
 var parseMafSLineTests = []struct {
-	line string
+	line     string
 	expected MafSLine
 }{
 	{"s hg38.chr6_GL000254v2_alt      331 38 +   4827813 CTGTAGTCTGTCAGATATGGGTGGAGTGGGGGTGGGGG", MafSLine{Src: "hg38.chr6_GL000254v2_alt", Start: 331, Size: 38, Strand: true, SrcSize: 4827813, Seq: dna.StringToBases("CTGTAGTCTGTCAGATATGGGTGGAGTGGGGGTGGGGG")}},
 }
 
 var parseMafIStatusTests = []struct {
-	s string
+	s        string
 	expected rune
 }{
 	{"C", 'C'},
@@ -48,14 +48,14 @@ var parseMafIStatusTests = []struct {
 }
 
 var parseMafILineTests = []struct {
-	line string
+	line     string
 	expected MafILine
 }{
 	{"i rheMac10.chr1               N 0 I 35", MafILine{Src: "rheMac10.chr1", LeftStatus: 'N', LeftCount: 0, RightStatus: 'I', RightCount: 35}},
 }
 
 var parseMafEStatusTests = []struct {
-	s string
+	s        string
 	expected rune
 }{
 	{"C", 'C'},
@@ -66,7 +66,7 @@ var parseMafEStatusTests = []struct {
 }
 
 var parseMafELineTests = []struct {
-	line string
+	line     string
 	expected MafELine
 }{
 	{"e rheMac10.chr1               122101540 35 - 223616942 I", MafELine{Src: "rheMac10.chr1", Start: 122101540, Size: 35, Strand: false, SrcSize: 223616942, Status: 'I'}},
