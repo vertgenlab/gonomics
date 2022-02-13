@@ -7,7 +7,7 @@ import (
 )
 
 func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {
-	if strings.Compare(a.Src, b.Src) != 0 {
+	if a.Src != b.Src {
 		return false
 	}
 	if a.Start != b.Start {
@@ -29,7 +29,7 @@ func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {
 }
 
 func MafILinesAreEqual(a MafILine, b MafILine) bool {
-	if strings.Compare(a.Src, b.Src) != 0 {
+	if a.Src != b.Src {
 		return false
 	}
 	if a.LeftStatus != b.LeftStatus {
@@ -48,7 +48,7 @@ func MafILinesAreEqual(a MafILine, b MafILine) bool {
 }
 
 func MafELinesAreEqual(a MafELine, b MafELine) bool {
-	if strings.Compare(a.Src, b.Src) != 0 {
+	if a.Src != b.Src {
 		return false
 	}
 	if a.Start != b.Start {
@@ -70,7 +70,7 @@ func MafELinesAreEqual(a MafELine, b MafELine) bool {
 }
 
 func MafSpeciesAreEqual(a MafSpecies, b MafSpecies) bool {
-	if strings.Compare(a.Src, b.Src) != 0 {
+	if a.Src != b.Src {
 		return false
 	}
 	if !MafSLinesAreEqual(*a.SLine, *b.SLine) { //a.SLine has type *MafSLine, so compare &a.SLine
