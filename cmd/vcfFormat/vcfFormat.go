@@ -85,7 +85,7 @@ func main() {
 	var clearInfo *bool = flag.Bool("clearInfo", false, "Removes the information in the INFO field and replaces it with a '.'")
 	var fixVcfRecords *bool = flag.Bool("fix", false, "Fixes improperly formatted vcf records (e.g. '-' in ALT field")
 	var ref *string = flag.String("ref", "", "Reference fasta. Only needed if using -fix.")
-	var tableOutput *bool = flag.Bool("tsv", false, "Output as TSV file for spreadsheet analysis. Requires well-formed header.")
+	var tableOutput *bool = flag.Bool("csv", false, "Output as CSV file for spreadsheet analysis. Requires well-formed header.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

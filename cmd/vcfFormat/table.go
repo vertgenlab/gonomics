@@ -17,25 +17,25 @@ func writeTableHeader(outfile io.Writer, header vcf.Header, maxAlts int) (infoOr
 	}
 
 	// write common header components
-	s.WriteString("Chromosome\tPosition\tID\tReference")
+	s.WriteString("Chromosome,Position,ID,Reference")
 	if maxAlts == 1 {
-		s.WriteString("\tAlternate")
+		s.WriteString(",Alternate")
 	} else {
 		for i := 0; i < maxAlts; i++ {
-			s.WriteString("\tAlternate_" + fmt.Sprintf("%d", i))
+			s.WriteString(",Alternate_" + fmt.Sprintf("%d", i))
 		}
 	}
-	s.WriteString("\tQuality\tFilter")
+	s.WriteString(",Quality,Filter")
 
 	// write INFO field
 	var numFields int
 	for key, val := range header.Info {
 		numFields = numberOfFields(maxAlts, val.Key)
 		if numFields == 1 {
-			s.WriteString("\t" + key)
+			s.WriteString("," + key)
 		} else {
 			for i := 0; i < numFields; i++ {
-				s.WriteString("\t" + key + fmt.Sprintf("_%d", i))
+				s.WriteString("," + key + fmt.Sprintf("_%d", i))
 			}
 		}
 		infoOrder = append(infoOrder, val)
@@ -53,14 +53,14 @@ func writeTableHeader(outfile io.Writer, header vcf.Header, maxAlts int) (infoOr
 	}
 
 	// write format per sample
-	for _, sample := range sampleOrder {
-		for _, fmtHeader := range formatOrder {
+	for _, fmtHeader := range formatOrder {
+		for _, sample := range sampleOrder {
 			numFields = numberOfFields(maxAlts, fmtHeader.Key)
 			if numFields == 1 {
-				s.WriteString("\t" + fmtHeader.Id + "_" + sample)
+				s.WriteString("," + fmtHeader.Id + "_" + sample)
 			} else {
 				for i := 0; i < numFields; i++ {
-					s.WriteString("\t" + fmtHeader.Id + "_" + sample + fmt.Sprintf("_%d", i))
+					s.WriteString("," + fmtHeader.Id + "_" + sample + fmt.Sprintf("_%d", i))
 				}
 			}
 		}
@@ -75,19 +75,23 @@ func writeAsTable(s *strings.Builder, outfile io.Writer, v vcf.Vcf, header vcf.H
 	s.Reset()
 
 	// write basic data
-	s.WriteString(fmt.Sprintf("%s\t%d\t%s\t%s\t%s\t%g\t%s",
-		v.Chr, v.Pos, v.Id, v.Ref, strings.Join(v.Alt, "\t"), v.Qual, v.Filter))
+	s.WriteString(fmt.Sprintf("%s,%d,%s,%s,%s",
+		v.Chr, v.Pos, v.Id, v.Ref, strings.Join(v.Alt, ",")))
+	for i := len(v.Alt); i < maxAlts; i++ {
+		s.WriteString(",")
+	}
+	s.WriteString(fmt.Sprintf(",%g,%s", v.Qual, v.Filter))
 
 	// write info data
 	v = vcf.ParseInfo(v, header)
 	for i := range infoOrder {
-		writeData(s, v, infoOrder[i].Key, numberOfFields(maxAlts, infoOrder[i].Key))
+		writeData(s, v, infoOrder[i].Key, numberOfFields(maxAlts, infoOrder[i].Key), 1)
 	}
 
 	// write format data
 	v = vcf.ParseFormat(v, header)
 	for i := range formatOrder {
-		writeData(s, v, infoOrder[i].Key, numberOfFields(maxAlts, infoOrder[i].Key)*len(v.Samples))
+		writeData(s, v, formatOrder[i].Key, numberOfFields(maxAlts, infoOrder[i].Key), len(v.Samples))
 	}
 
 	_, err := fmt.Fprintln(outfile, s.String())
@@ -129,8 +133,8 @@ func numberOfFields(maxAlts int, k vcf.Key) int {
 	}
 }
 
-func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFields int) {
-	var fieldsWritten int
+func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSample int, repeats int) {
+	var innerFieldsWritten, fieldsWritten, i, j int
 
 	switch key.DataType {
 	case vcf.Integer:
@@ -138,11 +142,16 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFields int) {
 		if !found {
 			break
 		}
-		for i := range ints { // per sample data
-			for j := range ints[i] { // per field data
-				s.WriteString(fmt.Sprintf("\t%d", ints[i][j]))
+		for i = range ints { // per sample data
+			for j = range ints[i] { // per field data
+				s.WriteString(fmt.Sprintf(",%d", ints[i][j]))
 				fieldsWritten++
+				innerFieldsWritten++
 			}
+			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
+				s.WriteString(",")
+			}
+			innerFieldsWritten = 0
 		}
 
 	case vcf.Float:
@@ -150,11 +159,17 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFields int) {
 		if !found {
 			break
 		}
-		for i := range flts { // per sample data
-			for j := range flts[i] { // per field data
-				s.WriteString(fmt.Sprintf("\t%g", flts[i][j]))
+		fmt.Println(flts, numberOfFieldsPerSample)
+		for i = range flts { // per sample data
+			for j = range flts[i] { // per field data
+				s.WriteString(fmt.Sprintf(",%g", flts[i][j]))
 				fieldsWritten++
+				innerFieldsWritten++
 			}
+			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
+				s.WriteString(",")
+			}
+			innerFieldsWritten = 0
 		}
 
 	case vcf.String:
@@ -162,11 +177,16 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFields int) {
 		if !found {
 			break
 		}
-		for i := range strs { // per sample data
-			for j := range strs[i] { // per field data
-				s.WriteString(fmt.Sprintf("\t%s", strs[i][j]))
+		for i = range strs { // per sample data
+			for j = range strs[i] { // per field data
+				s.WriteString(fmt.Sprintf(",%s", strs[i][j]))
 				fieldsWritten++
+				innerFieldsWritten++
 			}
+			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
+				s.WriteString(",")
+			}
+			innerFieldsWritten = 0
 		}
 
 	case vcf.Character:
@@ -174,26 +194,34 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFields int) {
 		if !found {
 			break
 		}
-		for i := range chars { // per sample data
-			for j := range chars[i] { // per field data
-				s.WriteString(fmt.Sprintf("\t%c", chars[i][j]))
+		for i = range chars { // per sample data
+			for j = range chars[i] { // per field data
+				s.WriteString(fmt.Sprintf(",%c", chars[i][j]))
 				fieldsWritten++
+				innerFieldsWritten++
 			}
+			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
+				s.WriteString(",")
+			}
+			innerFieldsWritten = 0
 		}
 
 	case vcf.Flag:
 		found := vcf.QueryFlag(v, key)
 		if found {
-			s.WriteString("\tTRUE")
+			s.WriteString(",TRUE")
 		} else {
-			s.WriteString("\tFALSE")
+			s.WriteString(",FALSE")
 		}
 		fieldsWritten++
+		innerFieldsWritten++
+		for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
+			s.WriteString(",")
+		}
+		innerFieldsWritten = 0
 	}
 
-	if fieldsWritten < numberOfFields {
-		for i := fieldsWritten; i < numberOfFields; i++ {
-			s.WriteString("\t")
-		}
+	for j = fieldsWritten; j < numberOfFieldsPerSample*repeats; j++ {
+		s.WriteString(",")
 	}
 }

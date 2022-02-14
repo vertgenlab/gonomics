@@ -12,7 +12,7 @@
 ##INFO=<ID=Transcript,Number=1,Type=String,Description="Ensembl transcript id",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
 ##INFO=<ID=ProteinEffect,Number=1,Type=String,Description="Effect of variant on protein",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	S2007.recal	S2032.recal	S4322.recal	S4388.recal	S4390.recal
-chr1	14997	.	A	C	0	NO_NORMAL	Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:DP:AD:PV	0/1:797:795,1:1	0/0:111:111,0:1	0/1:981:975,3:1	0/1:653:625,28:3e-17	0/0:982:981,0:1
+chr1	14997	.	A	C,T	0	NO_NORMAL	Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:DP:AD:PV	0/1:797:795,1,1:1,1	0/0:111:111,0,0:1,1	0/1:981:975,3,0:1,1	0/1:653:625,28,0:3e-17,1	0/0:982:981,0,0:1,1
 chr1	17606	.	A	G	0	NO_NORMAL	MaxPopAF=0.0043;Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:DP:AD:PV	0/0:1477:1472,0:1	0/1:111:97,12:2e-19	0/0:1560:1549,0:1	0/0:862:854,0:1	0/1:1581:1574,2:1
 chr1	69231	.	C	G	0	NO_NORMAL	Consequence=missense_variant;Gene=OR4F5;Transcript=ENST00000641515;ProteinEffect=HIS47GLN	GT:DP:AD:PV	0/1:1095:1082,11:0.0005	0/0:146:146,0:1	0/0:1362:1360,0:1	0/0:767:767,0:1	0/1:1846:1837,8:1
 chr1	69356	.	G	T	0	NO_NORMAL	Consequence=missense_variant;Gene=OR4F5;Transcript=ENST00000641515;ProteinEffect=GLY89VAL	GT:DP:AD:PV	0/0:494:494,0:1	0/0:137:137,0:1	0/1:607:600,7:6e-06	0/0:566:566,0:1	0/0:1566:1566,0:1
