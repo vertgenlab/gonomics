@@ -91,7 +91,7 @@ func writeAsTable(s *strings.Builder, outfile io.Writer, v vcf.Vcf, header vcf.H
 	// write format data
 	v = vcf.ParseFormat(v, header)
 	for i := range formatOrder {
-		writeData(s, v, formatOrder[i].Key, numberOfFields(maxAlts, infoOrder[i].Key), len(v.Samples))
+		writeData(s, v, formatOrder[i].Key, numberOfFields(maxAlts, formatOrder[i].Key), len(v.Samples))
 	}
 
 	_, err := fmt.Fprintln(outfile, s.String())
@@ -150,6 +150,7 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSamp
 			}
 			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
 				s.WriteString(",")
+				fieldsWritten++
 			}
 			innerFieldsWritten = 0
 		}
@@ -159,7 +160,6 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSamp
 		if !found {
 			break
 		}
-		fmt.Println(flts, numberOfFieldsPerSample)
 		for i = range flts { // per sample data
 			for j = range flts[i] { // per field data
 				s.WriteString(fmt.Sprintf(",%g", flts[i][j]))
@@ -168,6 +168,7 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSamp
 			}
 			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
 				s.WriteString(",")
+				fieldsWritten++
 			}
 			innerFieldsWritten = 0
 		}
@@ -185,6 +186,7 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSamp
 			}
 			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
 				s.WriteString(",")
+				fieldsWritten++
 			}
 			innerFieldsWritten = 0
 		}
@@ -202,6 +204,7 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSamp
 			}
 			for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
 				s.WriteString(",")
+				fieldsWritten++
 			}
 			innerFieldsWritten = 0
 		}
@@ -217,6 +220,7 @@ func writeData(s *strings.Builder, v vcf.Vcf, key vcf.Key, numberOfFieldsPerSamp
 		innerFieldsWritten++
 		for j = innerFieldsWritten; j < numberOfFieldsPerSample; j++ {
 			s.WriteString(",")
+			fieldsWritten++
 		}
 		innerFieldsWritten = 0
 	}

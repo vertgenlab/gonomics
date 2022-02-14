@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -33,5 +35,65 @@ func TestVcfFormat(t *testing.T) {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
 		}
+	}
+}
+
+//TODO: better table tests
+func TestVcfTable(t *testing.T) {
+	infile := "testdata/test_table.vcf"
+	outfile := "testdata/actual_table.csv"
+	expected := "testdata/table_expected.csv"
+	vcfFormat(infile, outfile, false, false, false, "", false, true)
+
+	actualFile := fileio.EasyOpen(outfile)
+	expectedFile := fileio.EasyOpen(expected)
+	actualReader := csv.NewReader(actualFile)
+	expectedReader := csv.NewReader(expectedFile)
+
+	var actualData, expectedData [][]string
+	var err error
+	expectedData, err = expectedReader.ReadAll()
+	exception.PanicOnErr(err)
+	actualData, err = actualReader.ReadAll()
+	if err != nil {
+		t.Error("problem writing csv file")
+	}
+
+	var actualOrdering []int = make([]int, len(expectedData[0]))
+
+	// get order to deal with map randomness
+	for i := range expectedData[0] {
+		for j := range actualData[0] {
+			if expectedData[0][i] == actualData[0][j] {
+				actualOrdering[i] = j
+			}
+		}
+	}
+
+	// reorder actual
+	for i := range actualData {
+		for j := range actualData[i] {
+			actualData[i][j], actualData[i][actualOrdering[j]] = actualData[i][actualOrdering[j]], actualData[i][j]
+		}
+	}
+
+	if len(expectedData) != len(actualData) {
+		t.Error("problem writing csv file")
+	}
+
+	for i := range expectedData {
+		if strings.Join(expectedData[i], "") != strings.Join(actualData[i], "") {
+			t.Error("problem with vcf formatting to csv")
+		}
+	}
+
+	err = actualFile.Close()
+	exception.PanicOnErr(err)
+	err = expectedFile.Close()
+	exception.PanicOnErr(err)
+
+	if !t.Failed() {
+		err = os.Remove(outfile)
+		exception.PanicOnErr(err)
 	}
 }
