@@ -18,7 +18,7 @@ import (
 	//"math/rand"
 )
 
-func samConsensus(samFileName string, refFile string, outFile string, vcfFile string) {
+func samConsensus(samFileName string, refFile string, outFile string, vcfFile string, skipGappedConsensus bool) {
 	ref := fasta.Read(refFile)
 	var err error
 	for i := range ref {
@@ -38,6 +38,14 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 	for p := range piles {
 		consensusBase = maxBase(p)
 		if consensusBase == dna.Gap { // original code had commented out gap case
+			if skipGappedConsensus { // ignore gapped position
+				continue
+			} else { // ignore gapped reads
+				p.Count[dna.Gap] = 0
+				consensusBase = maxBase(p)
+			}
+		}
+		if p.Count[consensusBase] == 0 { // skip if no data present
 			continue
 		}
 		refName = header.Chroms[p.RefIdx].Name
@@ -116,6 +124,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
+	var skipGappedConsensus *bool = flag.Bool("skipGappedConsensus", false, "skipGappedConsensus skips regions where the consensus indicated a gapped position."+
+		"This reports the position it would if no data were present. When false, this ignored gapped reads, but still determines the consensus sequence of any ungapped reads at that position.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -131,5 +141,5 @@ func main() {
 	outFile := flag.Arg(2)
 	vcfFile := flag.Arg(3)
 
-	samConsensus(inFile, refFile, outFile, vcfFile)
+	samConsensus(inFile, refFile, outFile, vcfFile, *skipGappedConsensus)
 }
