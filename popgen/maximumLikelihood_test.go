@@ -21,11 +21,11 @@ var MaximumLikelihoodTests = []struct {
 		Left:                    -10,
 		Right:                   10,
 		Error:                   1e-5,
-		UnPolarized:             true,
+		UnPolarized:             false,
 		DivergenceAscertainment: false,
 		IntegralError:           1e-5,
 		Verbose:                 0,
-		ExpectedValue:           3.893977236832579,
+		ExpectedValue:           3.0846085573799993,
 	},
 }
 
