@@ -1,0 +1,22 @@
+F nonCoding	100.000000
+C nonCoding	100.000000
+D(leaf)	100.000000
+D nonCoding	100.000000
+E exon	100.000000
+G(leaf)	100.000000
+G nonCoding	100.000000
+E(leaf)	100.000000
+A	100.000000
+A nonCoding	100.000000
+F exon	100.000000
+C	100.000000
+E nonCoding	100.000000
+All Reconstructed Nodes	97.619048
+A exon	100.000000
+B	92.857143
+B exon	91.666667
+B nonCoding	100.000000
+G exon	100.000000
+F(leaf)	100.000000
+C exon	100.000000
+D exon	100.000000
