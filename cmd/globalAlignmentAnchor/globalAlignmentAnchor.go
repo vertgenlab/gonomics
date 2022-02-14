@@ -7,7 +7,7 @@ import (
 	"fmt"
 	//"github.com/vertgenlab/gonomics/align"
 	//"github.com/vertgenlab/gonomics/exception"
-	//"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	//"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/maf"
@@ -70,8 +70,13 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 	ins_bed := bed.Read(ins_bed_filename)
 	del_bed := bed.Read(del_bed_filename)
 	//read genome files, which are fastas containing each chromosome
-	//ins_genome := fasta.ToMap(fasta.Read(ins_genome_fa)) //TODO: make into fastamap
-	//del_genome := fasta.ToMap(fasta.Read(del_genome_fa))
+	ins_genome_intermdiate := fasta.Read(ins_genome_fa)
+	ins_genome := fasta.ToMap(ins_genome_intermdiate)
+	del_genome_intermediate := fasta.Read(del_genome_fa)
+	del_genome := fasta.ToMap(del_genome_intermediate)
+	fmt.Printf("try to index ins_genome chr, ins_genome[chr1]: %v\n", ins_genome["chr1"])
+	fmt.Printf("try to index ins_genome base, ins_genome[chr1][3]: %v\n", ins_genome["chr1"][3])
+	fmt.Printf("try to index ins_genome length, len(ins_genome[chr1]): %v\n", len(ins_genome["chr1"]))
 	//initialize variables to keep track of chromosome, position
 	chr_prev := "" //initialize chr_prev as an empty string
 	chr_curr := "" //initialize chr_curr as an empty string
@@ -91,11 +96,11 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 			continue
 		} else if chr_curr != chr_prev { //if this is not the first entry, but we encounter new chr
 			//first finish off the previous chr
-			fmt.Printf("i, del_bed[i-1].Chrom: %v, %v", i, del_bed[i-1].Chrom) //TODO: remove after debugging
-			//current_del := bed.Bed{Chrom: del_bed[i-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome_fa[del_bed[i-1].Chrom]), Name: "del_gap", FieldsInitialized: 4} //ins_genome_fa should be "FastaMap" to look up sequence name
-			//current_ins := bed.Bed{Chrom: chr_prev, ChromStart: pos_ins, ChromEnd: len(ins_genome_fa[chr_prev][1]), Name: "ins_gap", FieldsInitialized: 4}
-			//bed.WriteBed(out_ins.File, current_ins)
-			//bed.WriteBed(out_del.File, current_del)
+			//fmt.Printf("i, del_bed[i-1].Chrom: %v, %v", i, del_bed[i-1].Chrom) //TODO: remove after debugging
+			current_del := bed.Bed{Chrom: del_bed[i-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome[del_bed[i-1].Chrom]), Name: "del_gap", FieldsInitialized: 4} //ins_genome_fa should be "FastaMap" to look up sequence name
+			current_ins := bed.Bed{Chrom: chr_prev, ChromStart: pos_ins, ChromEnd: len(ins_genome[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
+			bed.WriteBed(out_ins.File, current_ins)
+			bed.WriteBed(out_del.File, current_del)
 
 			//then start the current chr
 			pos_ins = 1
@@ -120,10 +125,10 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 
 	}
 	//put last entry here
-	//current_del := bed.Bed{Chrom: del_bed[len(del_bed)-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome_fa[del_bed[len(del_bed)-1].Chrom]), Name: "del_gap", FieldsInitialized: 4}
-	//current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: len(ins_genome_fa[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
-	//bed.WriteBed(out_ins.File, current_ins)
-	//bed.WriteBed(out_del.File, current_del)
+	current_del := bed.Bed{Chrom: del_bed[len(del_bed)-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome[del_bed[len(del_bed)-1].Chrom]), Name: "del_gap", FieldsInitialized: 4}
+	current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: len(ins_genome[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
+	bed.WriteBed(out_ins.File, current_ins)
+	bed.WriteBed(out_del.File, current_del)
 }
 
 /*
