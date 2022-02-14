@@ -26,7 +26,7 @@ var VcfFormatTests = []struct {
 func TestVcfFormat(t *testing.T) {
 	var err error
 	for _, v := range VcfFormatTests {
-		vcfFormat(v.InFile, v.OutFile, v.EnsemblToUCSC, v.UCSCToEnsembl, v.FixVcfRecords, v.Ref, v.ClearInfo)
+		vcfFormat(v.InFile, v.OutFile, v.EnsemblToUCSC, v.UCSCToEnsembl, v.FixVcfRecords, v.Ref, v.ClearInfo, false)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in VcfFormat. Output does not match expected.")
 		} else {

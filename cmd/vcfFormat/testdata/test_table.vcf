@@ -1,0 +1,100 @@
+##fileformat=VCFv4.2
+##fileDate=20220209
+##source=github.com/vertgenlab/gonomics
+##phasing=none
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Depth of Each Allele">
+##FORMAT=<ID=PV,Number=A,Type=Float,Description="p value for Each Alternate Allele">
+##INFO=<ID=MaxPopAF,Number=1,Type=Float,Description="Maximum allele frequency of any population in CellBase",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=Consequence,Number=1,Type=String,Description="Variant consequence",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=Gene,Number=1,Type=String,Description="Nearest gene",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=Transcript,Number=1,Type=String,Description="Ensembl transcript id",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=ProteinEffect,Number=1,Type=String,Description="Effect of variant on protein",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	S2007.recal	S2032.recal	S4322.recal	S4388.recal	S4390.recal
+chr1	14997	.	A	C	0	NO_NORMAL	Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:DP:AD:PV	0/1:797:795,1:1	0/0:111:111,0:1	0/1:981:975,3:1	0/1:653:625,28:3e-17	0/0:982:981,0:1
+chr1	17606	.	A	G	0	NO_NORMAL	MaxPopAF=0.0043;Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:DP:AD:PV	0/0:1477:1472,0:1	0/1:111:97,12:2e-19	0/0:1560:1549,0:1	0/0:862:854,0:1	0/1:1581:1574,2:1
+chr1	69231	.	C	G	0	NO_NORMAL	Consequence=missense_variant;Gene=OR4F5;Transcript=ENST00000641515;ProteinEffect=HIS47GLN	GT:DP:AD:PV	0/1:1095:1082,11:0.0005	0/0:146:146,0:1	0/0:1362:1360,0:1	0/0:767:767,0:1	0/1:1846:1837,8:1
+chr1	69356	.	G	T	0	NO_NORMAL	Consequence=missense_variant;Gene=OR4F5;Transcript=ENST00000641515;ProteinEffect=GLY89VAL	GT:DP:AD:PV	0/0:494:494,0:1	0/0:137:137,0:1	0/1:607:600,7:6e-06	0/0:566:566,0:1	0/0:1566:1566,0:1
+chr1	69369	.	G	A	0	NO_NORMAL	MaxPopAF=0.0005;Consequence=synonymous_variant;Gene=OR4F5;Transcript=ENST00000641515;ProteinEffect=GLN93GLN	GT:DP:AD:PV	0/0:399:399,0:1	0/0:135:134,0:1	0/1:477:412,64:1e-55	0/0:582:582,0:1	0/0:1645:1645,0:1
+chr1	69437	.	A	G	0	NO_NORMAL	Consequence=missense_variant;Gene=OR4F5;Transcript=ENST00000641515;ProteinEffect=TYR116CYS	GT:DP:AD:PV	0/0:62:61,0:1	0/0:188:188,0:1	0/1:63:61,2:0.0003	0/0:803:803,0:1	0/0:2508:2505,0:1
+chr1	137334	.	C	T	0	NO_NORMAL	MaxPopAF=0.0036;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:56:56,0:1	.:0:0,0:1	0/0:62:62,0:1	.:0:0,0:1	0/1:77:64,13:3e-06
+chr1	137377	.	G	T	0	NO_NORMAL	MaxPopAF=0.0091;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:91:91,0:1	.:0:0,0:1	0/0:107:107,0:1	0/0:73:73,0:1	0/1:123:116,7:0.0003
+chr1	137411	.	G	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:117:117,0:1	.:0:0,0:1	0/1:137:125,12:5e-08	0/0:105:105,0:1	0/0:179:179,0:1
+chr1	137486	.	A	G	0	NO_NORMAL	MaxPopAF=0.0015;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:168:168,0:1	.:0:0,0:1	0/0:206:204,0:1	0/1:128:115,11:2e-09	0/0:282:281,0:1
+chr1	137487	.	A	C	0	NO_NORMAL	MaxPopAF=0.0015;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:169:169,0:1	.:0:0,0:1	0/1:206:203,3:1	0/1:129:116,13:5e-08	0/1:284:283,1:1
+chr1	137552	.	T	C	0	NO_NORMAL	MaxPopAF=0.0014;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:177:176,0:1	.:0:0,0:1	0/0:185:184,0:1	0/0:119:119,0:1	0/1:302:270,30:2e-13
+chr1	137560	.	GC	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:183:183,0:1	.:0:0,0:1	0/0:178:178,0:1	0/0:115:115,0:1	0/1:295:268,27:3e-12
+chr1	137987	.	G	A	0	NO_NORMAL	MaxPopAF=0.00014;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:77:76,0:1	.:0:0,0:1	0/0:79:79,0:1	0/1:69:64,5:0.0003	0/0:126:126,0:1
+chr1	138864	.	G	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:622:621,0:1	0/1:63:61,2:0.0004	0/0:589:586,0:1	0/0:542:542,0:1	0/0:1229:1227,0:1
+chr1	138875	.	G	A	0	NO_NORMAL	MaxPopAF=0.00017;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:646:646,0:1	0/0:65:64,0:1	0/0:598:596,0:1	0/1:572:563,9:2e-06	0/1:1267:1263,1:1
+chr1	138909	.	C	T	0	NO_NORMAL	MaxPopAF=0.0089;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:711:711,0:1	0/0:58:58,0:1	0/1:649:622,27:1e-20	0/0:651:650,0:1	0/0:1415:1413,0:1
+chr1	138955	.	G	T	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:814:814,0:1	0/0:90:90,0:1	0/0:740:740,0:1	0/1:811:800,11:1e-08	0/0:1792:1792,0:1
+chr1	138980	.	G	T	0	NO_NORMAL	MaxPopAF=0.00091;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:832:801,31:1e-05	0/0:102:102,0:1	0/1:764:734,29:2e-05	0/1:912:899,13:1	0/1:1989:1981,8:1
+chr1	139054	.	T	C	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:855:853,0:1	0/1:135:133,2:0.0007	0/0:686:686,0:1	0/0:1034:1033,0:1	0/0:2296:2293,0:1
+chr1	139115	.	G	T	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:977:976,1:1	0/1:110:107,3:0.0002	0/0:810:810,0:1	0/1:1098:1097,1:1	0/1:2321:2320,1:1
+chr1	139132	.	G	T	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:989:989,0:1	0/1:105:102,3:0.0006	0/1:874:873,1:1	0/1:1079:1074,3:1	0/1:2327:2323,2:1
+chr1	139191	.	C	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:1056:1055,1:1	0/1:101:98,3:0.0003	0/0:1163:1161,0:1	0/1:1190:1189,1:1	0/1:2295:2292,3:1
+chr1	139200	.	G	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:1076:1076,0:1	0/0:94:93,0:1	0/1:1209:1189,19:3e-05	0/1:1184:1172,11:1	0/1:2321:2313,7:1
+chr1	139208	.	G	A	0	NO_NORMAL	MaxPopAF=0.00023;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:1074:1074,0:1	0/0:91:91,0:1	0/1:1225:1208,17:2e-12	0/0:1171:1170,0:1	0/0:2323:2322,0:1
+chr1	139356	.	T	C	0	NO_NORMAL	MaxPopAF=0.0039;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:792:789,1:1	0/0:72:72,0:1	0/1:754:733,18:5e-12	0/0:749:749,0:1	0/1:1780:1776,1:1
+chr1	139363	.	T	C	0	NO_NORMAL	MaxPopAF=0.0019;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:767:760,1:1	0/0:64:64,0:1	0/1:730:719,10:2e-06	0/0:717:716,0:1	0/1:1720:1717,1:1
+chr1	139415	.	G	T	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:632:632,0:1	0/0:67:67,0:1	0/0:577:577,0:1	0/1:594:588,6:3e-05	0/0:1463:1461,0:1
+chr1	139491	.	G	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:593:589,2:1	0/1:68:64,4:3e-06	0/0:586:586,0:1	0/0:553:552,0:1	0/0:1401:1397,0:1
+chr1	139666	.	T	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/1:280:271,9:1	.:0:0,0:1	0/1:328:315,13:0.4	0/1:272:250,22:0.0001	0/1:747:730,16:1
+chr1	139685	.	G	A	0	NO_NORMAL	MaxPopAF=0.0011;Consequence=2KB_upstream_variant;Gene=CICP27;Transcript=ENST00000442987	GT:DP:AD:PV	0/0:220:219,0:1	.:0:0,0:1	0/0:278:277,0:1	0/0:214:214,0:1	0/1:645:625,15:1e-05
+chr1	177463	.	A	G	0	NO_NORMAL	Consequence=upstream_gene_variant;Gene=AL627309.5;Transcript=ENST00000466557	GT:DP:AD:PV	0/0:391:391,0:1	.:0:0,0:1	0/0:371:370,0:1	0/0:224:224,0:1	0/1:446:409,37:6e-20
+chr1	182441	.	T	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:76:68,8:0.3	.:0:0,0:1	0/1:60:48,12:0.0009	.:0:0,0:1	0/0:93:93,0:1
+chr1	182529	.	G	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/0:303:303,0:1	.:0:0,0:1	0/0:222:222,0:1	0/0:153:153,0:1	0/1:271:263,8:4e-05
+chr1	182631	.	A	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:1023:1021,1:1	0/0:60:60,0:1	0/0:869:867,0:1	0/0:640:639,0:1	0/1:923:790,133:3e-79
+chr1	182640	.	C	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:1087:1082,5:1	0/1:62:58,4:0.0002	0/1:943:940,2:1	0/0:700:700,0:1	0/1:971:964,7:1
+chr1	182668	.	T	C	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:1135:1133,2:1	0/1:62:58,4:4e-05	0/1:995:991,3:1	0/0:737:737,0:1	0/1:977:973,4:1
+chr1	182678	.	A	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:1167:1164,2:1	0/1:55:52,3:0.0004	0/1:1009:1006,2:1	0/0:753:753,0:1	0/1:971:967,4:1
+chr1	182686	.	A	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:1183:975,207:1e-08	0/0:51:51,0:1	0/1:1004:844,154:0.004	0/1:747:600,144:1e-08	0/0:955:952,0:1
+chr1	182688	.	A	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:1184:1180,2:1	0/1:50:47,3:0.0003	0/1:1009:1005,2:1	0/0:747:747,0:1	0/1:963:957,4:1
+chr1	184246	.	T	C	0	NO_NORMAL	Consequence=2KB_downstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/0:392:391,0:1	.:0:0,0:1	0/0:332:332,0:1	0/1:197:178,19:3e-16	0/0:315:315,0:1
+chr1	185194	.	G	C	0	NO_NORMAL	Consequence=2KB_downstream_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:448:209,238:3e-17	.:0:0,0:1	0/1:338:219,119:1	0/1:243:154,89:1	0/1:314:259,55:1
+chr1	188130	.	A	G	0	NO_NORMAL	Consequence=splice_region_variant;Gene=FO538757.2;Transcript=ENST00000624431	GT:DP:AD:PV	0/1:751:744,2:1	0/1:61:52,9:1e-14	0/0:942:941,0:1	0/0:538:534,0:1	0/0:882:880,0:1
+chr1	195425	.	C	G	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.1;Transcript=ENST00000623083	GT:DP:AD:PV	0/1:82:47,35:0.0005	.:0:0,0:1	0/1:58:37,21:0.1	.:0:0,0:1	0/1:97:85,12:1
+chr1	195438	.	T	A	0	NO_NORMAL	Consequence=2KB_upstream_variant;Gene=FO538757.1;Transcript=ENST00000623083	GT:DP:AD:PV	0/0:74:74,0:1	.:0:0,0:1	0/0:53:53,0:1	.:0:0,0:1	0/1:82:74,8:0.0005
+chr1	199681	.	C	T	0	NO_NORMAL	Consequence=upstream_gene_variant;Gene=FO538757.1;Transcript=ENST00000623083	GT:DP:AD:PV	0/1:65:62,3:1	.:0:0,0:1	0/1:76:60,16:3e-05	.:0:0,0:1	0/1:106:100,3:1
+chr1	199869	.	C	T	0	NO_NORMAL	Consequence=upstream_gene_variant;Gene=FO538757.1;Transcript=ENST00000623083	GT:DP:AD:PV	0/1:69:59,10:3e-06	.:0:0,0:1	0/0:56:56,0:1	.:0:0,0:1	0/0:107:107,0:1
+chr1	199878	.	T	C	0	NO_NORMAL	Consequence=upstream_gene_variant;Gene=FO538757.1;Transcript=ENST00000623083	GT:DP:AD:PV	0/1:67:62,2:1	.:0:0,0:1	0/1:56:45,11:2e-05	.:0:0,0:1	0/1:105:103,1:1
+chr1	200960	.	T	C	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/0:179:179,0:1	.:0:0,0:1	0/0:247:246,0:1	0/0:184:184,0:1	0/1:351:278,72:2e-34
+chr1	205549	.	G	C	0	NO_NORMAL	Consequence=TF_binding_site_variant	GT:DP:AD:PV	0/0:118:118,0:1	.:0:0,0:1	0/1:148:135,13:2e-07	0/0:77:77,0:1	0/0:130:130,0:1
+chr1	205611	.	C	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:269:226,43:0.0007	.:0:0,0:1	0/1:367:337,30:1	0/1:201:184,17:1	0/1:298:270,28:1
+chr1	205688	.	G	A	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:631:523,107:3e-09	0/1:61:60,1:1	0/1:644:642,1:1	0/1:477:443,34:1	0/1:664:547,117:2e-11
+chr1	205748	.	G	C	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:817:650,164:2e-08	0/1:77:73,4:1	0/0:685:683,0:1	0/1:616:553,61:1	0/1:874:669,204:4e-19
+chr1	205757	.	C	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:833:586,245:1	0/1:75:51,24:0.5	0/1:705:449,256:0.0005	0/1:641:463,173:1	0/1:878:598,277:0.4
+chr1	205818	.	C	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:799:553,245:1	0/1:89:60,29:1	0/1:701:406,293:1e-06	0/1:607:424,183:1	0/1:862:562,298:0.4
+chr1	205855	.	T	C	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:650:445,202:1	0/1:62:42,20:1	0/1:610:357,252:4e-05	0/1:454:308,146:1	0/1:714:473,240:1
+chr1	205873	.	G	A	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/0:561:560,0:1	0/1:56:54,2:0.0007	0/0:539:537,0:1	0/0:388:387,0:1	0/0:627:627,0:1
+chr1	205882	.	T	C	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:538:296,241:1	0/1:52:28,24:1	0/1:516:307,208:1	0/1:366:174,191:0.04	0/1:589:265,322:5e-05
+chr1	205918	.	A	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:446:444,1:1	.:0:0,0:1	0/1:435:431,1:1	0/1:282:266,16:4e-11	0/0:496:496,0:1
+chr1	205931	.	A	G	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:386:350,32:0.1	.:0:0,0:1	0/1:389:387,1:1	0/1:236:223,12:1	0/1:439:384,54:2e-07
+chr1	205932	.	A	G	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:386:355,29:0.2	.:0:0,0:1	0/0:386:383,0:1	0/1:235:223,12:1	0/1:434:378,54:2e-08
+chr1	205980	.	C	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/0:282:282,0:1	.:0:0,0:1	0/1:269:223,45:5e-28	0/0:163:163,0:1	0/0:307:307,0:1
+chr1	206076	.	TC	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/0:422:420,0:1	.:0:0,0:1	0/0:377:377,0:1	0/1:259:252,6:2e-05	0/0:445:445,0:1
+chr1	206154	.	C	T	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/0:549:548,0:1	.:0:0,0:1	0/0:539:539,0:1	0/1:354:349,4:0.0009	0/0:621:619,0:1
+chr1	206436	.	C	G	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:56:39,17:0.0001	.:0:0,0:1	.:0:0,0:1	.:0:0,0:1	0/1:57:55,2:1
+chr1	206443	.	G	A	0	NO_NORMAL	Consequence=intergenic_variant	GT:DP:AD:PV	0/1:50:35,15:0.0003	.:0:0,0:1	.:0:0,0:1	.:0:0,0:1	0/1:54:52,2:1
+chr1	450790	.	C	A	0	NO_NORMAL	Consequence=missense_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/1:693:692,1:1	.:0:0,0:1	0/0:958:958,0:1	0/1:586:579,7:6e-05	0/0:805:805,0:1
+chr1	450942	.	A	G	0	NO_NORMAL	Consequence=missense_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/1:894:893,1:1	0/1:59:50,9:5e-16	0/1:1384:1381,1:1	0/0:766:766,0:1	0/0:1156:1154,0:1
+chr1	451360	.	C	T	0	NO_NORMAL	Consequence=missense_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/0:950:948,0:1	.:0:0,0:1	0/1:1137:1111,23:1	0/1:335:307,27:2e-10	0/1:837:816,20:0.3
+chr1	451466	.	T	G	0	NO_NORMAL	Consequence=missense_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/0:1067:1066,0:1	0/1:55:53,2:0.0005	0/1:1230:1229,1:1	0/0:568:567,0:1	0/0:1088:1085,0:1
+chr1	451475	.	G	A	0	NO_NORMAL	Consequence=synonymous_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/0:1059:1056,0:1	0/0:56:56,0:1	0/1:1225:1132,92:6e-45	0/1:607:604,3:1	0/0:1114:1113,0:1
+chr1	451532	.	C	T	0	NO_NORMAL	Consequence=synonymous_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/0:958:956,0:1	0/1:60:52,8:2e-15	0/0:1166:1164,0:1	0/0:634:634,0:1	0/0:1097:1096,0:1
+chr1	451584	.	G	A	0	NO_NORMAL	Consequence=missense_variant;Gene=AL732372.2;Transcript=ENST00000455207	GT:DP:AD:PV	0/0:737:734,0:1	0/0:51:51,0:1	0/1:922:853,68:8e-34	0/0:505:504,0:1	0/1:843:841,2:1
+chr1	492762	.	GC	G	0	NO_NORMAL	Consequence=splice_region_variant;Gene=AL732372.2;Transcript=ENST00000455464	GT:DP:AD:PV	0/0:95:95,0:1	.:0:0,0:1	0/0:140:139,0:1	0/0:88:88,0:1	0/1:122:114,8:3e-05
+chr1	492769	.	G	A	0	NO_NORMAL	Consequence=splice_region_variant;Gene=AL732372.2;Transcript=ENST00000455464	GT:DP:AD:PV	0/0:94:94,0:1	.:0:0,0:1	0/0:141:141,0:1	0/1:87:82,5:0.0003	0/0:126:126,0:1
+chr1	498046	.	C	T	0	NO_NORMAL	Consequence=splice_donor_variant;Gene=AL732372.2;Transcript=ENST00000455464	GT:DP:AD:PV	0/1:105:36,68:1e-07	.:0:0,0:1	0/1:140:66,73:0.003	0/1:86:56,30:1	0/1:176:134,42:1
+chr1	685802	.	C	A	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:852:852,0:1	0/1:59:57,2:0.0007	0/0:1232:1232,0:1	0/0:703:702,0:1	0/1:1032:1031,1:1
+chr1	685883	.	A	T	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:960:960,0:1	0/1:70:68,2:0.0007	0/0:1462:1462,0:1	0/1:785:784,1:1	0/0:1285:1285,0:1
+chr1	685918	.	A	G	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:889:886,0:1	0/1:53:42,10:6e-19	0/0:1284:1280,0:1	0/1:713:711,1:1	0/0:1183:1182,0:1
+chr1	686174	.	GC	G	0	NO_NORMAL	Consequence=frameshift_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:707:704,0:1	.:0:0,0:1	0/0:1048:1042,0:1	0/1:539:533,6:2e-05	0/0:971:969,0:1
+chr1	686266	.	A	C	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:920:917,0:1	0/1:59:40,19:2e-34	0/1:1114:1109,1:1	0/0:434:432,0:1	0/0:975:975,0:1
+chr1	686281	.	G	C	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:951:950,0:1	0/1:63:60,2:0.0009	0/1:1122:1119,1:1	0/0:408:407,0:1	0/0:972:966,0:1
+chr1	686390	.	G	A	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:1032:1032,0:1	0/1:56:48,8:2e-15	0/0:1160:1158,0:1	0/0:409:408,0:1	0/0:1045:1044,0:1
+chr1	686415	.	C	G	0	NO_NORMAL	Consequence=missense_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:1061:1061,0:1	0/1:59:57,2:0.0002	0/0:1187:1186,0:1	0/0:455:454,0:1	0/0:1129:1129,0:1
+chr1	686451	.	G	A	0	NO_NORMAL	Consequence=synonymous_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/0:1127:1127,0:1	0/0:70:70,0:1	0/1:1269:1196,69:2e-37	0/0:539:538,0:1	0/0:1228:1226,0:1
+chr1	686508	.	C	T	0	NO_NORMAL	Consequence=synonymous_variant;Gene=AL669831.3;Transcript=ENST00000419394	GT:DP:AD:PV	0/1:1024:1021,3:1	0/1:76:60,16:4e-26	0/0:1214:1214,0:1	0/0:585:585,0:1	0/0:1180:1180,0:1

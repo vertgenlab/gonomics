@@ -81,6 +81,10 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 		for i := range s {
 			stringValues = strings.Split(s[i], ",")
 			for j := range stringValues {
+				if stringValues[j] == "." {
+					data[i] = append(data[i], 0) // TODO not ideal
+					continue
+				}
 				val, err = strconv.Atoi(stringValues[j])
 				exception.PanicOnErr(err)
 				data[i] = append(data[i], val)
@@ -101,6 +105,10 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 		for i := range s {
 			stringValues = strings.Split(s[i], ",")
 			for j := range stringValues {
+				if stringValues[j] == "." {
+					data[i] = append(data[i], 0) // TODO not ideal
+					continue
+				}
 				val, err = strconv.ParseFloat(stringValues[j], 64)
 				exception.PanicOnErr(err)
 				data[i] = append(data[i], val)
