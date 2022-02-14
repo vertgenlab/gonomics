@@ -70,13 +70,13 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 	ins_bed := bed.Read(ins_bed_filename)
 	del_bed := bed.Read(del_bed_filename)
 	//read genome files, which are fastas containing each chromosome
-	ins_genome := fasta.Read(ins_genome_fa)
-	del_genome := fasta.Read(del_genome_fa)
+	//ins_genome := fasta.ToMap(fasta.Read(ins_genome_fa)) //TODO: make into fastamap
+	//del_genome := fasta.ToMap(fasta.Read(del_genome_fa))
 	//initialize variables to keep track of chromosome, position
-	var chr_prev := "" //initialize chr_prev as an empty string
-	var chr_curr := "" //initialize chr_curr as an empty string
-	var pos_ins := 1 //initialize pos as 1. TODO: check boundaries for bed and fa
-	var pos_del := 1
+	chr_prev := "" //initialize chr_prev as an empty string
+	chr_curr := "" //initialize chr_curr as an empty string
+	pos_ins := 1 //initialize pos as 1. TODO: check boundaries for bed and fa. Also, maybe call from fa rather than assume start is 1
+	pos_del := 1
 	//for now, put coordinates into bed file. In the future, can just be bed object
 	out_ins := fileio.EasyCreate("outIns_gap.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
 	defer out_ins.Close()
@@ -87,27 +87,22 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 	for i := range ins_bed {
 		chr_curr = ins_bed[i].Chrom //set chr_curr to the new record
 		//calculate the unaligned/gap chunk before we get to the aligned s line
-		if i == 1 { //if this is the first entry
-			current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
-			current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
-			bed.WriteBed(out_ins.File, current_ins)
-			bed.WriteBed(out_del.File, current_del)
+		if i == 0 { //if this is the first entry
+			continue
 		} else if chr_curr != chr_prev { //if this is not the first entry, but we encounter new chr
 			//first finish off the previous chr
-			current_del := bed.Bed{Chrom: del_bed[i-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome_fa[del_bed[i-1].Chrom]), Name: "del_gap", FieldsInitialized: 4} //ins_genome_fa should be "FastaMap" to look up sequence name
-			current_ins := bed.Bed{Chrom: chr_prev, ChromStart: pos_ins, ChromEnd: len(ins_genome_fa[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
-			bed.WriteBed(out_ins.File, current_ins)
-			bed.WriteBed(out_del.File, current_del)
+			fmt.Printf("i, del_bed[i-1].Chrom: %v, %v", i, del_bed[i-1].Chrom) //TODO: remove after debugging
+			//current_del := bed.Bed{Chrom: del_bed[i-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome_fa[del_bed[i-1].Chrom]), Name: "del_gap", FieldsInitialized: 4} //ins_genome_fa should be "FastaMap" to look up sequence name
+			//current_ins := bed.Bed{Chrom: chr_prev, ChromStart: pos_ins, ChromEnd: len(ins_genome_fa[chr_prev][1]), Name: "ins_gap", FieldsInitialized: 4}
+			//bed.WriteBed(out_ins.File, current_ins)
+			//bed.WriteBed(out_del.File, current_del)
 
 			//then start the current chr
 			pos_ins = 1
 			pos_del = 1
 		} else { //if we have existing chr
 			//write continued entry
-			current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
-			current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
-			bed.WriteBed(out_ins.File, current_ins)
-			bed.WriteBed(out_del.File, current_del)
+			continue
 		}
 		current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
 		current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
@@ -115,27 +110,30 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 		bed.WriteBed(out_del.File, current_del)
 
 		//update variables at the end of each iteration
-		copy(pos_ins, ins_bed[i].ChromEnd)
-		copy(pos_del, del_bed[i].ChromEnd)
-		copy(chr_curr, chr_prev)
+		pos_ins = ins_bed[i].ChromEnd
+		pos_del = del_bed[i].ChromEnd
+		chr_prev = chr_curr
+		//copy is for slices, so just use equal
+		//copy(pos_ins, ins_bed[i].ChromEnd)
+		//copy(pos_del, del_bed[i].ChromEnd)
+		//copy(chr_curr, chr_prev)
 
 	}
 	//put last entry here
-	current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
-	current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
-	bed.WriteBed(out_ins.File, current_ins)
-	bed.WriteBed(out_del.File, current_del)
-
-
-//resources
-	ins_genome[i].Name
-	records[i].Seq[start:end] // I believe Seq starts index at 0, according to fasta.go WriteFasta function
+	//current_del := bed.Bed{Chrom: del_bed[len(del_bed)-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome_fa[del_bed[len(del_bed)-1].Chrom]), Name: "del_gap", FieldsInitialized: 4}
+	//current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: len(ins_genome_fa[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
+	//bed.WriteBed(out_ins.File, current_ins)
+	//bed.WriteBed(out_del.File, current_del)
 }
 
+/*
 //Step 3: globalAlignment lowMem for non-anchor sequences
 //raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
 //raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
 //raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
+//resources
+	ins_genome[i].Name
+	records[i].Seq[start:end] // I believe Seq starts index at 0, according to fasta.go WriteFasta function
 func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
 	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
@@ -219,6 +217,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	//genomeGraph := cigarToGraph(faOne, faTwo, aln)
 	//genomeGraph.PrintGraph(genomeGraph)
 }
+*/
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
 func usage() {
@@ -260,4 +259,5 @@ func main() {
 	species_del := flag.Arg(2)
 
 	mafToAnchor(in_maf, species_ins, species_del)
+	anchorToCoordinates("testdata/insForStep2.bed", "testdata/delForStep2.bed", "testdata/species1.fa", "testdata/species2.fa")
 }
