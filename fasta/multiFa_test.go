@@ -61,15 +61,15 @@ func TestPairwiseMutationDistanceInRange(t *testing.T) {
 }
 
 var DistFaInput = []Fasta{
-	Fasta{"apple", dna.StringToBases("AAAAAAAAAAAAAAA")},
-	Fasta{"grape", dna.StringToBases("AAaaAAAAATAAAAA")},
-	Fasta{"fruit", dna.StringToBases("AAAAAAAA-AAA--A")},
+	{"apple", dna.StringToBases("AAAAAAAAAAAAAAA")},
+	{"grape", dna.StringToBases("AAaaAAAAATAAAAA")},
+	{"fruit", dna.StringToBases("AAAAAAAA-AAA--A")},
 }
 
 var DistFaExpected = []Fasta{
-	Fasta{"apple", dna.StringToBases("AAAAAAAAAA")},
-	Fasta{"grape", dna.StringToBases("AAAAAATAAA")},
-	Fasta{"fruit", dna.StringToBases("AAAAAAAAAA")},
+	{"apple", dna.StringToBases("AAAAAAAAAA")},
+	{"grape", dna.StringToBases("AAAAAATAAA")},
+	{"fruit", dna.StringToBases("AAAAAAAAAA")},
 }
 
 func TestDistColumn(t *testing.T) {
@@ -80,14 +80,14 @@ func TestDistColumn(t *testing.T) {
 }
 
 var MissingMultInput = []Fasta{
-	Fasta{"apple", dna.StringToBases("AAAAAAAAAAAAAAA")},
-	Fasta{"grape", dna.StringToBases("AATCAAAAATAAAAA")},
-	Fasta{"fruit", dna.StringToBases("---------------")},
+	{"apple", dna.StringToBases("AAAAAAAAAAAAAAA")},
+	{"grape", dna.StringToBases("AATCAAAAATAAAAA")},
+	{"fruit", dna.StringToBases("---------------")},
 }
 
 var MissingMultExpected = []Fasta{
-	Fasta{"apple", dna.StringToBases("AAAAAAAAAAAAAAA")},
-	Fasta{"grape", dna.StringToBases("AATCAAAAATAAAAA")},
+	{"apple", dna.StringToBases("AAAAAAAAAAAAAAA")},
+	{"grape", dna.StringToBases("AATCAAAAATAAAAA")},
 }
 
 func TestRemoveMissingMult(t *testing.T) {
@@ -98,15 +98,15 @@ func TestRemoveMissingMult(t *testing.T) {
 }
 
 var CopySubSetInput = []Fasta{
-	Fasta{"apple", dna.StringToBases("AAAAAAAAAA")},
-	Fasta{"grape", dna.StringToBases("AAAAAATAAA")},
-	Fasta{"fruit", dna.StringToBases("AAAAAAAAAA")},
+	{"apple", dna.StringToBases("AAAAAAAAAA")},
+	{"grape", dna.StringToBases("AAAAAATAAA")},
+	{"fruit", dna.StringToBases("AAAAAAAAAA")},
 }
 
 var CopySubSetExpected = []Fasta{
-	Fasta{"apple", dna.StringToBases("AAAAAA")},
-	Fasta{"grape", dna.StringToBases("AAAATA")},
-	Fasta{"fruit", dna.StringToBases("AAAAAA")},
+	{"apple", dna.StringToBases("AAAAAA")},
+	{"grape", dna.StringToBases("AAAATA")},
+	{"fruit", dna.StringToBases("AAAAAA")},
 }
 
 func TestCopySubset(t *testing.T) {
@@ -133,4 +133,3 @@ func TestRefPosToAlnPos(t *testing.T) {
 		t.Errorf("Error in refPosToAlnPos. Expected: %v. Found: %v.", 8, tmp)
 	}
 }
-
