@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+//Checks if two accuracy files match, even when order is not matching
 func accEqual(a string, b string) bool {
 	var ok = false
 	fileA := fileio.Read(a)
@@ -14,6 +15,7 @@ func accEqual(a string, b string) bool {
 
 	for A := range fileA {
 		wordsA := strings.Split(fileA[A], "\t")
+		ok = false
 		for B := range fileB {
 			wordsB := strings.Split(fileB[B], "\t")
 			if strings.Compare(wordsA[0], wordsB[0]) == 0 {
@@ -21,6 +23,9 @@ func accEqual(a string, b string) bool {
 					ok = true
 				}
 			}
+		}
+		if !ok {
+			return ok
 		}
 	}
 	return ok
@@ -46,10 +51,11 @@ func TestSimRecon(t *testing.T) {
 	baseAccOk := accEqual(baseAcc, "testdata/baseAccOutT.txt")
 	if simOk && leafOk && reconOk && accOk && baseAccOk != true {
 		t.Errorf("one or more testing files did not match expected values, SimMatch: %v, LeafMatch: %v, ReconMatch: %v, AccuracyMatch: %v, BaseAccuracyMatch: %v", simOk, leafOk, reconOk, accOk, baseAccOk)
+	} else {
+		fileio.EasyRemove("testdata/simOut.fasta")
+		fileio.EasyRemove("testdata/leafOut.fasta")
+		fileio.EasyRemove("testdata/reconOut.fasta")
+		fileio.EasyRemove("testdata/accOut.txt")
+		fileio.EasyRemove("testdata/baseAcc.txt")
 	}
-	fileio.EasyRemove("testdata/simOut.fasta")
-	fileio.EasyRemove("testdata/leafOut.fasta")
-	fileio.EasyRemove("testdata/reconOut.fasta")
-	fileio.EasyRemove("testdata/accOut.txt")
-	fileio.EasyRemove("testdata/baseAcc.txt")
 }
