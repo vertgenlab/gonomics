@@ -9,12 +9,21 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"sort"
+	"strconv"
 	"strings"
+)
+
+type variantType int
+
+const (
+	singleNucleotide = iota
+	insertion
+	deletion
 )
 
 // getVariant finds variants between the experimental and normal samples with p < maxP via fishers exact test.
 // returns a vcf record for the input position and a bool that is false if the returned variant should be discarded.
-func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, maxP float64, minAf float64, minCoverage int) (vcf.Vcf, bool) {
+func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, maxP, minAf, maxAf, maxStrandBias float64, minCoverage, minAltReads int) (vcf.Vcf, bool) {
 	var warnings []string
 	var bkgd sam.Pile // background allele count for fishers exact testing
 	var hasNorm bool
@@ -33,21 +42,21 @@ func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, m
 	// pull the base before, as well as the current base in case an anchor is need for an indel
 	// len(refBases) always == 2
 	chrName := samHeader.Chroms[bkgd.RefIdx].Name
-	refBases := getRef(int(bkgd.Pos)-1, chrName, ref)
+	refBases := getRef(int(bkgd.Pos)-1, int(bkgd.Pos), chrName, ref)
 
 	var alts []string
 	var altPvalues [][]float64
-	var altIsInsertion []bool
-	alts, altPvalues, altIsInsertion = getAlts(exp, bkgd, refBases, hasNorm, minAf, minCoverage, maxP)
+	var altVarTypes []variantType
+	alts, altPvalues, altVarTypes = getAlts(exp, bkgd, refBases, hasNorm, minAf, maxAf, maxStrandBias, minCoverage, minAltReads, maxP)
 	if len(alts) == 0 {
 		return vcf.Vcf{}, false
 	}
 
-	return makeVcf(exp, norm, bkgd, chrName, warnings, refBases, alts, altPvalues, altIsInsertion), true
+	return makeVcf(exp, norm, bkgd, chrName, warnings, refBases, alts, altPvalues, altVarTypes, ref), true
 }
 
 // addFmtField assembles the piles and p values into the format field of the vcf
-func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, passingAltPvalues [][]float64, passingIsInsertion []bool) vcf.Vcf {
+func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, passingAltPvalues [][]float64, passingVarType []variantType) vcf.Vcf {
 	var genotypeAlleles []int16
 	var depth int
 	var alleleCounts []int
@@ -55,7 +64,7 @@ func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, p
 
 	allSamples := append(exp, norm...)
 	for i := range allSamples {
-		genotypeAlleles, depth, alleleCounts, pVals = getFormatData(allSamples[i], i, ref, alts, passingAltPvalues, passingIsInsertion)
+		genotypeAlleles, depth, alleleCounts, pVals = getFormatData(allSamples[i], i, ref, alts, passingAltPvalues, passingVarType)
 		if i >= len(exp) { // is normal
 			pVals = []float64{-1}
 		}
@@ -78,23 +87,34 @@ func calcDepth(s sam.Pile) int {
 	for _, val := range s.InsCountR {
 		depth += val
 	}
+	// Note that DelCount does NOT count towards depth
 	return depth
 }
 
 // getFormatData gathers all information for the FORMAT field of a vcf record.
-func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAltPvalues [][]float64, passingIsInsertion []bool) (genotypeAlleles []int16, depth int, alleleCounts []int, pVals []float64) {
+func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAltPvalues [][]float64, passingVarType []variantType) (genotypeAlleles []int16, depth int, alleleCounts []int, pVals []float64) {
 	depth = calcDepth(s)
 	pVals = make([]float64, len(alts))
+	var err error
+	var delInt int
 
 	// add ref to altcounts
 	alleleCounts = append(alleleCounts, s.CountF[int(ref)]+s.CountR[int(ref)])
 
 	for i := range alts {
-		if !passingIsInsertion[i] { // not insertion
+		switch passingVarType[i] {
+		case singleNucleotide:
 			alleleCounts = append(alleleCounts, s.CountF[int(dna.RuneToBase(rune(alts[i][0])))]+s.CountR[int(dna.RuneToBase(rune(alts[i][0])))])
-		} else { // is insertion
+
+		case insertion:
 			alleleCounts = append(alleleCounts, s.InsCountF[alts[i]]+s.InsCountR[alts[i]])
+
+		case deletion:
+			delInt, err = strconv.Atoi(alts[i]) // this is wicked lame
+			exception.PanicOnErr(err)
+			alleleCounts = append(alleleCounts, s.DelCountF[delInt]+s.DelCountR[delInt])
 		}
+
 		if sIdx < len(passingAltPvalues[i]) { // get p-value only if it is an experimental sample
 			pVals[i] = passingAltPvalues[i][sIdx]
 		}
@@ -143,6 +163,8 @@ func sumPiles(p []sam.Pile) sam.Pile {
 	var answer sam.Pile
 	answer.InsCountF = make(map[string]int)
 	answer.InsCountR = make(map[string]int)
+	answer.DelCountF = make(map[int]int)
+	answer.DelCountR = make(map[int]int)
 	answer.RefIdx = -1
 
 	for i := range p {
@@ -160,15 +182,21 @@ func sumPiles(p []sam.Pile) sam.Pile {
 		for key, val := range p[i].InsCountR {
 			answer.InsCountR[key] += val
 		}
+		for key, val := range p[i].DelCountF {
+			answer.DelCountF[key] += val
+		}
+		for key, val := range p[i].DelCountR {
+			answer.DelCountR[key] += val
+		}
 	}
 	return answer
 }
 
 // getAlts returns a slice of all qualifying alternate alleles, their p values, and whether they are an insertion.
-func getAlts(exp []sam.Pile, bkgd sam.Pile, refBases []dna.Base, hasNorm bool, minAf float64, minCoverage int, maxP float64) (passingAlts []string, passingAltPvalues [][]float64, isInsertion []bool) {
+func getAlts(exp []sam.Pile, bkgd sam.Pile, refBases []dna.Base, hasNorm bool, minAf, maxAf, maxStrandBias float64, minCoverage, minAltReads int, maxP float64) (passingAlts []string, passingAltPvalues [][]float64, variantTypes []variantType) {
 	var possibleAlts []string
-	possibleAlts, isInsertion = getPossibleAlts(exp, refBases[1]) // determine alts with min 1 alt read
-	altPvalues := make([][]float64, len(possibleAlts))            // first slice is possibleAlts, second slice is experimental samples
+	possibleAlts, variantTypes = getPossibleAlts(exp, refBases[1]) // determine alts with min 1 alt read
+	altPvalues := make([][]float64, len(possibleAlts))             // first slice is possibleAlts, second slice is experimental samples
 	for i := range altPvalues {
 		altPvalues[i] = make([]float64, len(exp))
 	}
@@ -178,28 +206,44 @@ func getAlts(exp []sam.Pile, bkgd sam.Pile, refBases []dna.Base, hasNorm bool, m
 				altPvalues[i][j] = 1
 				continue
 			}
-			altPvalues[i][j] = fishersExactTest(possibleAlts[i], exp[j], bkgd, hasNorm, minAf, minCoverage, isInsertion[i])
+			altPvalues[i][j] = fishersExactTest(possibleAlts[i], exp[j], bkgd, hasNorm, minAf, maxAf, maxStrandBias, minCoverage, minAltReads, variantTypes[i])
 		}
 	}
 
-	return getPassingAlts(possibleAlts, altPvalues, isInsertion, maxP)
+	return getPassingAlts(possibleAlts, altPvalues, variantTypes, maxP)
 }
 
 // getPossibleAlts returns a slice of strings containing every non-reference allele with at least 1 supporting read.
-func getPossibleAlts(exp []sam.Pile, ref dna.Base) ([]string, []bool) {
+func getPossibleAlts(exp []sam.Pile, ref dna.Base) ([]string, []variantType) {
 	if len(exp) == 0 {
 		return nil, nil
 	}
 	var possibleAlts []string
-	var isInsertion []bool
+	var variantTypes []variantType
 	sum := sumPiles(exp)
 	for i := range sum.CountF { // find possible bases
-		if i == int(ref) { // ignore ref base
+		if i == int(ref) || i == int(dna.Gap) { // ignore ref base and dna.Gap
 			continue
 		}
 		if sum.CountF[i] > 0 || sum.CountR[i] > 0 {
 			possibleAlts = append(possibleAlts, string(dna.BaseToRune(dna.Base(i))))
-			isInsertion = append(isInsertion, false)
+			variantTypes = append(variantTypes, singleNucleotide)
+		}
+	}
+
+	for key, count := range sum.DelCountF { // find possible deletions
+		if count > 0 {
+			possibleAlts = append(possibleAlts, fmt.Sprintf("%d", key)) // lame
+			variantTypes = append(variantTypes, deletion)
+		}
+	}
+
+	var presentInForward bool
+	for key, count := range sum.DelCountR {
+		_, presentInForward = sum.DelCountF[key]
+		if !presentInForward && count > 0 {
+			possibleAlts = append(possibleAlts, fmt.Sprintf("%d", key)) // lame
+			variantTypes = append(variantTypes, deletion)
 		}
 	}
 
@@ -207,16 +251,15 @@ func getPossibleAlts(exp []sam.Pile, ref dna.Base) ([]string, []bool) {
 	for key, count := range sum.InsCountF { // find possible insertions
 		if count > 0 {
 			possibleAlts = append(possibleAlts, key)
-			isInsertion = append(isInsertion, true)
+			variantTypes = append(variantTypes, insertion)
 		}
 	}
 
-	var presentInForward bool
 	for key, count := range sum.InsCountR {
 		_, presentInForward = sum.InsCountF[key]
 		if !presentInForward && count > 0 {
 			possibleAlts = append(possibleAlts, key)
-			isInsertion = append(isInsertion, true)
+			variantTypes = append(variantTypes, insertion)
 		}
 	}
 
@@ -231,14 +274,14 @@ func getPossibleAlts(exp []sam.Pile, ref dna.Base) ([]string, []bool) {
 		})
 	}
 
-	return possibleAlts, isInsertion
+	return possibleAlts, variantTypes
 }
 
 // getPassingAlts returns a slice of strings with all alternate alleles with at least 1 samples with a significant p values
 // as well as a slice of p values for all samples for each passing alternate allele.
-func getPassingAlts(possibleAlts []string, altPvalues [][]float64, isInsertion []bool, maxP float64) (passingAlts []string, passingAltPvalues [][]float64, passingIsInsertion []bool) {
+func getPassingAlts(possibleAlts []string, altPvalues [][]float64, variantTypes []variantType, maxP float64) (passingAlts []string, passingAltPvalues [][]float64, passingVariantTypes []variantType) {
 	var pass bool
-	passingIsInsertion = make([]bool, 0, len(isInsertion))
+	passingVariantTypes = make([]variantType, 0, len(variantTypes))
 	for i := range altPvalues { // first slice is possibleAlts, second slice is experimental samples
 		pass = false
 		for j := range altPvalues[i] {
@@ -250,14 +293,14 @@ func getPassingAlts(possibleAlts []string, altPvalues [][]float64, isInsertion [
 		if pass {
 			passingAlts = append(passingAlts, possibleAlts[i])
 			passingAltPvalues = append(passingAltPvalues, altPvalues[i])
-			passingIsInsertion = append(passingIsInsertion, isInsertion[i])
+			passingVariantTypes = append(passingVariantTypes, variantTypes[i])
 		}
 	}
 	return
 }
 
 // fishersExactTest returns the p value for the alternate allele present in the exp pile, based on the bkgd pile.
-func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm bool, minAf float64, minCoverage int, isInsertion bool) float64 {
+func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm bool, minAf, maxAf, maxStrandBias float64, minCoverage, minAltReads int, varType variantType) float64 {
 	// Begin gathering parameters for Fishers Exact Test done in the numbers package
 	// test is for the matrix:
 	// [a b]
@@ -268,14 +311,29 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	// d = Background Alt Allele Count
 
 	var a, b, c, d int
+	var fwdStrandBias float64
 
-	if !isInsertion { // alt in single base
+	switch varType {
+	case singleNucleotide: // alt is single base
 		alt := int(dna.RuneToBase(rune(altString[0])))
 		c = exp.CountF[alt] + exp.CountR[alt]
 		d = bkgd.CountF[alt] + bkgd.CountR[alt]
-	} else { // alt in insertion
+		fwdStrandBias = float64(exp.CountF[alt]) / float64(c)
+
+	case insertion:
 		c = exp.InsCountF[altString] + exp.InsCountR[altString]
 		d = bkgd.InsCountF[altString] + bkgd.InsCountR[altString]
+		fwdStrandBias = float64(exp.InsCountF[altString]) / float64(c)
+
+	case deletion:
+		delInt, err := strconv.Atoi(altString) // this is wicked lame
+		exception.PanicOnErr(err)
+		c = exp.DelCountF[delInt] + exp.DelCountR[delInt]
+		d = bkgd.DelCountF[delInt] + bkgd.DelCountR[delInt]
+	}
+
+	if fwdStrandBias > maxStrandBias || fwdStrandBias < 1-maxStrandBias {
+		return 1
 	}
 
 	a = calcDepth(exp) - c
@@ -291,8 +349,9 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	// Check exclusion cases to avoid actually doing the test
 	var p float64
 	switch {
-	// If alternate allele is zero then there is no variant and score is 1
-	case c == 0:
+
+	// If alternate allele is less than minimum reads then p is 1
+	case c < minAltReads:
 		p = 1
 
 	// If a = b and c = d then it is testing itself and should return 1
@@ -307,8 +366,8 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	case a+c < minCoverage:
 		p = 1
 
-	// If the allele frequency is less than the threshold then p is noted as 1 so as to be excluded
-	case float64(c)/float64(c+a) < minAf:
+	// If the allele frequency is outside the threshold then p is noted as 1 so as to be excluded
+	case float64(c)/float64(c+a) < minAf || float64(c)/float64(c+a) > maxAf:
 		p = 1
 
 	// If no exclusion conditions are met, then calculate p value
@@ -329,11 +388,11 @@ func dataPresent(p []sam.Pile) bool {
 }
 
 // getRef pulls the requested base and the base before the requested base to use as an anchor for deletions.
-// Note that the input pos is zero-based.
-func getRef(pos int, chrName string, ref *fasta.Seeker) []dna.Base {
+// Note that the input pos is zero-based, left-closed, right-open.
+func getRef(start, end int, chrName string, ref *fasta.Seeker) []dna.Base {
 	var seekStart, seekEnd int
-	seekStart = pos - 1
-	seekEnd = pos + 1
+	seekStart = start - 1
+	seekEnd = end
 	if seekStart == -1 {
 		seekStart = 0 // TODO get some logic to add the base after a start-of-chromosome deletion for anchor
 	}
@@ -350,7 +409,7 @@ func getRef(pos int, chrName string, ref *fasta.Seeker) []dna.Base {
 }
 
 // makeVcf asembles a vcf from the input values.
-func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []string, refBases []dna.Base, passingAlts []string, passingAltPvalues [][]float64, passingIsInsertion []bool) vcf.Vcf {
+func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []string, refBases []dna.Base, passingAlts []string, passingAltPvalues [][]float64, passingVarTypes []variantType, ref *fasta.Seeker) vcf.Vcf {
 	// assemble vcf
 	var v vcf.Vcf
 	v.Samples = make([]vcf.Sample, len(exp)+len(norm))
@@ -360,30 +419,53 @@ func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []str
 	v.Id = "."
 	v.Format = []string{"GT", "DP", "AD", "PV"} // GT = genotype, DP = total reads, AD = reads per allele, PV = p value
 	v.Info = "."
-	v = addFmtField(v, exp, norm, refBases[1], passingAlts, passingAltPvalues, passingIsInsertion)
+	v = addFmtField(v, exp, norm, refBases[1], passingAlts, passingAltPvalues, passingVarTypes)
 	v.Ref = dna.BaseToString(refBases[1]) // an anchor base may be prepended later in the case of deletion
-	v.Alt = passingAlts
+	v.Alt = passingAlts                   // will transform deletions later
 
-	var containsDeletion bool
-	for i := range v.Alt {
-		if v.Alt[i] == "-" {
-			containsDeletion = true
+	deletionIndexes := make([]int, 0, len(passingAlts))
+	for i := range passingVarTypes {
+		if passingVarTypes[i] == deletion {
+			deletionIndexes = append(deletionIndexes, i)
 		}
-		if passingIsInsertion[i] {
+		if passingVarTypes[i] == insertion {
 			v.Alt[i] = v.Ref + v.Alt[i]
 		}
 	}
 
-	if containsDeletion {
-		// TODO get some logic to add the base after a start-of-chromosome deletion for anchor
-		v.Ref = dna.BaseToString(refBases[0]) + v.Ref // prepend anchor base
-		for i := range v.Alt {
-			if v.Alt[i] == "-" { // replace with previous base
-				v.Alt[i] = v.Ref[:1]
-			} else { // prepend previous base
-				v.Alt[i] = v.Ref[:1] + v.Alt[i]
-			}
+	if len(deletionIndexes) > 0 {
+		v = adjustVcfForDeletions(v, deletionIndexes, ref)
+	}
+	return v
+}
+
+// adjustVcfForDeletions alters the ref and alt fields for deletions
+func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, ref *fasta.Seeker) vcf.Vcf {
+	var longestDeletion int
+	delLens := make([]int, len(deletionIndexes))
+	var err error
+	for i := range deletionIndexes {
+		delLens[i], err = strconv.Atoi(v.Alt[deletionIndexes[i]])
+		exception.PanicOnErr(err)
+		if delLens[i] > longestDeletion {
+			longestDeletion = delLens[i]
 		}
 	}
+
+	refBases := getRef(v.Pos-1, v.Pos-1+longestDeletion, v.Chr, ref)
+	v.Ref = dna.BasesToString(refBases)
+
+	var idxDelIdx int
+	for i := range v.Alt {
+		if i != deletionIndexes[idxDelIdx] && len(v.Alt[i]) == 1 { // is an SNV, insertions are already handled
+			v.Alt[i] = v.Ref[:1] + v.Alt[i] // prepend first ref base
+			continue
+		}
+
+		// else is a deletion
+		v.Alt[i] = v.Ref[:len(v.Ref)-delLens[idxDelIdx]]
+		idxDelIdx++
+	}
+
 	return v
 }

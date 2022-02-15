@@ -17,8 +17,12 @@ func TestCallVariants(t *testing.T) {
 	expectedFile := "testdata/test_expected.vcf"
 	maxP := 1.1
 	minAf := 0.0
+	maxAf := 1.0
+	maxStrandBias := 1.0
 	minCoverage := 0
-	callVariants(exp, norm, ref, outFile, maxP, minAf, minCoverage, 1)
+	minMapQ := 0
+	minAltReads := 0
+	callVariants(exp, norm, ref, outFile, maxP, minAf, maxAf, maxStrandBias, minCoverage, minMapQ, minAltReads, 1)
 
 	if !fileio.AreEqualIgnoreComments(outFile, expectedFile) {
 		t.Error("problem with variant calling")
