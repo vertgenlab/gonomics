@@ -65,16 +65,18 @@ func TestVcfTable(t *testing.T) {
 	for i := range expectedData[0] {
 		for j := range actualData[0] {
 			if expectedData[0][i] == actualData[0][j] {
-				actualOrdering[i] = j
+				actualOrdering[j] = i
 			}
 		}
 	}
 
 	// reorder actual
 	for i := range actualData {
+		newLine := make([]string, len(actualData[i]))
 		for j := range actualData[i] {
-			actualData[i][j], actualData[i][actualOrdering[j]] = actualData[i][actualOrdering[j]], actualData[i][j]
+			newLine[actualOrdering[j]] = actualData[i][j]
 		}
+		actualData[i] = newLine
 	}
 
 	if len(expectedData) != len(actualData) {
