@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	//"github.com/vertgenlab/gonomics/align"
-	//"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	//"github.com/vertgenlab/gonomics/genomeGraph"
@@ -17,43 +17,41 @@ import (
 	"strings"
 )
 
-//Step 1: Filter maf to remove S lines we don't trust, creating filtered maf aka anchors
-//not to be confused with cmd/mafFilter, which filters for scores above a threshold
-func mafToAnchor(in_maf string, species_ins string, species_del string) {
-	//read in_maf and generate a container for mafFiltered
-	mafRecords := maf.Read(in_maf)
-	var mafFiltered []*maf.Maf
-
-	out_ins := fileio.EasyCreate("outIns_match.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
-	defer out_ins.Close()
-	out_del := fileio.EasyCreate("outDel_match.bed")
-	defer out_del.Close()
+// Step 1: Filter maf to remove S lines we don't trust, creating filtered maf aka anchors
+// not to be confused with cmd/mafFilter, which filters for scores above a threshold
+func mafToAnchor(in_maf string, species1 string, species2 string) {
+	mafRecords := maf.Read(in_maf) // read input maf
+	var mafFiltered []*maf.Maf // generate a container for filtered maf
+	// open output bed files to write line-by-line and create variable for error
+	out_species1 := fileio.EasyCreate("out_species1_match.bed")
+	out_species2 := fileio.EasyCreate("out_species2_match.bed")
+	var err error
 
 	//go through each line
 	//here I assume only pairwise alignment, not >2 species
-	//here I assume species_ins is target; species_del is query
+	//here I assume species1 is target; species2 is query
 	for i := range mafRecords { //each i is a maf block
-		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
+		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species2, which is query
 			//get assembly (e.g. rheMac10), chrom (e.g. chrI)
-			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)
-			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src)
+			assembly_species2, chrom_species2 := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)
+			assembly_species1, chrom_species1 := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src)
 
-			//verify line 0 is indeed species_ins
-			if assembly_ins != species_ins {
-				log.Fatalf("species_ins was incorrect. Please check that you have a pairwise maf file, and entered species_ins and species_del correctly")
+			//verify line 0 is indeed species1
+			if assembly_species1 != species1 {
+				log.Fatalf("species1 was incorrect. Please check that you have a pairwise maf file, and entered species1 and species2 correctly")
 			}
 
 			//get s lines
-			if mafRecords[i].Species[k].SLine != nil && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil {
+			if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
 				//filter out only s lines that we trust to save to filtered maf
-				//chrom should be the same between species_ins and species_del
-				if chrom_del == chrom_ins {
+				//chrom should be the same between species1 and species2
+				if chrom_species2 == chrom_species1 {
 					mafFiltered = append(mafFiltered, mafRecords[i])
 					// get trusted coordinates here as well. Output into bed file. Should not beyond chromosome start and end positions
-					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "del_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
-					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-					bed.WriteBed(out_ins.File, current_ins)
-					bed.WriteBed(out_del.File, current_del)
+					current_species2 := bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
+					current_species1 := bed.Bed{Chrom: chrom_species1, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "species1_s_filtered", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
+					bed.WriteBed(out_species1.File, current_species1)
+					bed.WriteBed(out_species2.File, current_species2)
 				}
 			}
 		}
@@ -62,73 +60,73 @@ func mafToAnchor(in_maf string, species_ins string, species_del string) {
 	//generate out_maf filename and write mafFiltered to it
 	out_maf := strings.Replace(in_maf, ".maf", ".filtered.maf", 1)
 	maf.Write(out_maf, mafFiltered)
+	// close output bed files and check for errors
+	err = out_species1.Close()
+	exception.PanicOnErr(err)
+	err = out_species2.Close()
+	exception.PanicOnErr(err)
 }
 
 //Step 2: Use anchors to calculate coordinates that still need to be aligned
-func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_genome_fa string, del_genome_fa string) {
+func anchorToCoordinates(species1_match_bed_filename string, species2_match_bed_filename string, species1_genome_fa string, species2_genome_fa string) {
 	//read bed files
-	ins_bed := bed.Read(ins_bed_filename)
-	del_bed := bed.Read(del_bed_filename)
+	species1_bed := bed.Read(species1_match_bed_filename)
+	species2_match_bed := bed.Read(species2_match_bed_filename)
 	//read genome files, which are fastas containing each chromosome
-	ins_genome_intermdiate := fasta.Read(ins_genome_fa)
-	ins_genome := fasta.ToMap(ins_genome_intermdiate)
-	del_genome_intermediate := fasta.Read(del_genome_fa)
-	del_genome := fasta.ToMap(del_genome_intermediate)
-	fmt.Printf("try to index ins_genome chr, ins_genome[chr1]: %v\n", ins_genome["chr1"])
-	fmt.Printf("try to index ins_genome base, ins_genome[chr1][3]: %v\n", ins_genome["chr1"][3])
-	fmt.Printf("try to index ins_genome length, len(ins_genome[chr1]): %v\n", len(ins_genome["chr1"]))
+	species1_genome_fasta := fasta.Read(species1_genome_fa)
+	species1_genome_fastaMap := fasta.ToMap(species1_genome_fasta)
+	species2_genome_fasta := fasta.Read(species2_genome_fa)
+	species2_genome_fastaMap := fasta.ToMap(species2_genome_fasta)
+	fmt.Printf("try to index species1_genome_fastaMap chr, species1_genome_fastaMap[chr1]: %v\n", species1_genome_fastaMap["chr1"])
+	fmt.Printf("try to index species1_genome_fastaMap base, species1_genome_fastaMap[chr1][3]: %v\n", species1_genome_fastaMap["chr1"][3])
+	fmt.Printf("try to index species1_genome_fastaMap length, len(species1_genome_fastaMap[chr1]): %v\n", len(species1_genome_fastaMap["chr1"]))
 	//initialize variables to keep track of chromosome, position
 	chr_prev := "" //initialize chr_prev as an empty string
 	chr_curr := "" //initialize chr_curr as an empty string
-	pos_ins := 1 //initialize pos as 1. TODO: check boundaries for bed and fa. Also, maybe call from fa rather than assume start is 1
-	pos_del := 1
+	pos_species1 := 1 //initialize pos as 1. TODO: check boundaries for bed and fa. Also, maybe call from fa rather than assume start is 1
+	pos_species2 := 1
 	//for now, put coordinates into bed file. In the future, can just be bed object
-	out_ins := fileio.EasyCreate("outIns_gap.bed") //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
-	defer out_ins.Close()
-	out_del := fileio.EasyCreate("outDel_gap.bed")
-	defer out_del.Close()
+	out_species1 := fileio.EasyCreate("out_species1_gap.bed") //rather than bedlist, write bed line by line, 1 bed for species1, 1 bed for species2
+	defer out_species1.Close()
+	out_species2 := fileio.EasyCreate("out_species2_gap.bed")
+	defer out_species2.Close()
 
-	//loop through bed. ins_bed and del_bed should have the same number of records
-	for i := range ins_bed {
-		chr_curr = ins_bed[i].Chrom //set chr_curr to the new record
+	//loop through bed. species1_bed and species2_match_bed should have the same number of records
+	for i := range species1_bed {
+		chr_curr = species1_bed[i].Chrom //set chr_curr to the new record
 		//calculate the unaligned/gap chunk before we get to the aligned s line
-		if i == 0 { //if this is the first entry
-			continue
-		} else if chr_curr != chr_prev { //if this is not the first entry, but we encounter new chr
+		if i != 0 && chr_curr != chr_prev { //if this is not the first entry, but we encounter new chr
 			//first finish off the previous chr
-			//fmt.Printf("i, del_bed[i-1].Chrom: %v, %v", i, del_bed[i-1].Chrom) //TODO: remove after debugging
-			current_del := bed.Bed{Chrom: del_bed[i-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome[del_bed[i-1].Chrom]), Name: "del_gap", FieldsInitialized: 4} //ins_genome_fa should be "FastaMap" to look up sequence name
-			current_ins := bed.Bed{Chrom: chr_prev, ChromStart: pos_ins, ChromEnd: len(ins_genome[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
-			bed.WriteBed(out_ins.File, current_ins)
-			bed.WriteBed(out_del.File, current_del)
+			//fmt.Printf("i, species2_match_bed[i-1].Chrom: %v, %v", i, species2_match_bed[i-1].Chrom) //TODO: remove after debugging
+			current_species2 := bed.Bed{Chrom: species2_match_bed[i-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[i-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4} //species1_genome_fa should be "FastaMap" to look up sequence name
+			current_species1 := bed.Bed{Chrom: chr_prev, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
+			bed.WriteBed(out_species1.File, current_species1)
+			bed.WriteBed(out_species2.File, current_species2)
 
 			//then start the current chr
-			pos_ins = 1
-			pos_del = 1
-		} else { //if we have existing chr
-			//write continued entry
-			continue
-		}
-		current_del := bed.Bed{Chrom: del_bed[i].Chrom, ChromStart: pos_del, ChromEnd: del_bed[i].ChromStart, Name: "del_gap", FieldsInitialized: 4}
-		current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: ins_bed[i].ChromStart, Name: "ins_gap", FieldsInitialized: 4}
-		bed.WriteBed(out_ins.File, current_ins)
-		bed.WriteBed(out_del.File, current_del)
+			pos_species1 = 1
+			pos_species2 = 1
+		} // "else" encompasses "first entry", and "if we have existing chr"
+		current_species2 := bed.Bed{Chrom: species2_match_bed[i].Chrom, ChromStart: pos_species2, ChromEnd: species2_match_bed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
+		current_species1 := bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: species1_bed[i].ChromStart, Name: "species1_gap", FieldsInitialized: 4}
+		bed.WriteBed(out_species1.File, current_species1)
+		bed.WriteBed(out_species2.File, current_species2)
 
 		//update variables at the end of each iteration
-		pos_ins = ins_bed[i].ChromEnd
-		pos_del = del_bed[i].ChromEnd
+		pos_species1 = species1_bed[i].ChromEnd
+		pos_species2 = species2_match_bed[i].ChromEnd
 		chr_prev = chr_curr
 		//copy is for slices, so just use equal
-		//copy(pos_ins, ins_bed[i].ChromEnd)
-		//copy(pos_del, del_bed[i].ChromEnd)
+		//copy(pos_species1, species1_bed[i].ChromEnd)
+		//copy(pos_species2, species2_match_bed[i].ChromEnd)
 		//copy(chr_curr, chr_prev)
 
 	}
 	//put last entry here
-	current_del := bed.Bed{Chrom: del_bed[len(del_bed)-1].Chrom, ChromStart: pos_del, ChromEnd: len(del_genome[del_bed[len(del_bed)-1].Chrom]), Name: "del_gap", FieldsInitialized: 4}
-	current_ins := bed.Bed{Chrom: chr_curr, ChromStart: pos_ins, ChromEnd: len(ins_genome[chr_prev]), Name: "ins_gap", FieldsInitialized: 4}
-	bed.WriteBed(out_ins.File, current_ins)
-	bed.WriteBed(out_del.File, current_del)
+	current_species2 := bed.Bed{Chrom: species2_match_bed[len(species2_match_bed)-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
+	current_species1 := bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
+	bed.WriteBed(out_species1.File, current_species1)
+	bed.WriteBed(out_species2.File, current_species2)
 }
 
 /*
@@ -137,7 +135,7 @@ func anchorToCoordinates(ins_bed_filename string, del_bed_filename string, ins_g
 //raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
 //raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
 //resources
-	ins_genome[i].Name
+	species1_genome_fastaMap[i].Name
 	records[i].Seq[start:end] // I believe Seq starts index at 0, according to fasta.go WriteFasta function
 func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
@@ -163,7 +161,7 @@ func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *gen
 	//TODO: Make sure it can handle non-match at node 0. Fill out annotations for each node (knowing which allele/haplotype).
 	//TODO: Handle multi-entry fasta?
 
-	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:insertion, or 2:deletion. All indels are relative to the target sequence.
+	//Creating the first node. This is done independent of all other number because this node has no 'previous' nodes.  All following code leverages the cigar output (second number printed in the Op position of the struct {}) to determine if the alignment returned a 0:match, 1:species1ertion, or 2:species2etion. All inspecies2s are relative to the target sequence.
 	curr, targetEnd, queryEnd = genomeGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[0], 0)
 	curr = genomeGraph.AddNode(answer, curr)
 	//Drawing the remaining nodes and all edges. Method for adding edges is based on previous nodes.
@@ -232,14 +230,14 @@ func usage() {
 			"Usage:\n" +
 			"	globalAlignment target.fasta query.fasta\n" +
 			"options:\n")
-	//TODO: copied from copied from mafIndels, modify
+	//TODO: copied from copied from mafInspecies2s, modify
 	fmt.Print(
-		"mafIndels - takes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments\n" +
+		"mafInspecies2s - takes pairwise alignment maf and finds species1ertions in species1 not present in species2 but flanked by continuous alignments\n" +
 			"in.maf - here I assume only pairwise alignment, not >2 species\n" + //note my assumptions here
-			"species_ins, species_del - here I assume species_ins is target (1st line in the block, k=0); species_del is query (2nd line in the block, k=1)\n" + //note my assumptions here
-			"outIns.bed, outDel.bed - program outputs 2 bed files for species_ins and species_del coordinates, respectively. Designate filenames here\n" +
+			"species1, species2 - here I assume species1 is target (1st line in the block, k=0); species2 is query (2nd line in the block, k=1)\n" + //note my assumptions here
+			"out_species1.bed, out_species2.bed - program outputs 2 bed files for species1 and species2 coordinates, respectively. Designate filenames here\n" +
 			"Usage:\n" +
-			" mafIndels in.maf species_ins species_del outIns.bed outDel.bed\n" +
+			" mafInspecies2s in.maf species1 species2 out_species1.bed out_species2.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -260,9 +258,9 @@ func main() {
 	//read in sequences that should be put in as fasta type files.
 	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
 	in_maf := flag.Arg(0)
-	species_ins := flag.Arg(1)
-	species_del := flag.Arg(2)
+	species1 := flag.Arg(1)
+	species2 := flag.Arg(2)
 
-	mafToAnchor(in_maf, species_ins, species_del)
-	anchorToCoordinates("testdata/insForStep2.bed", "testdata/delForStep2.bed", "testdata/species1.fa", "testdata/species2.fa")
+	mafToAnchor(in_maf, species1, species2)
+	anchorToCoordinates("testdata/species1ForStep2.bed", "testdata/species2ForStep2.bed", "testdata/species1.fa", "testdata/species2.fa")
 }
