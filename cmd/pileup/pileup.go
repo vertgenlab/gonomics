@@ -90,10 +90,17 @@ func pileup(infile string, outfile string, settings Settings) {
 func fmtOutput(pile sam.Pile, header sam.Header, builder *strings.Builder) string {
 	builder.Reset()
 	builder.WriteString(fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d", header.Chroms[pile.RefIdx].Name, pile.Pos,
-		pile.CountF[dna.A] + pile.CountR[dna.A], pile.CountF[dna.C] + pile.CountR[dna.C], pile.CountF[dna.G] + pile.CountR[dna.G],
-		pile.CountF[dna.T] + pile.CountR[dna.T], pile.Count[dna.N], pile.Count[dna.Gap]))
-	for seq, count := range pile.InsCount {
-		builder.WriteString(fmt.Sprintf("\t%s:%d", seq, count))
+		pile.CountF[dna.A]+pile.CountR[dna.A], pile.CountF[dna.C]+pile.CountR[dna.C], pile.CountF[dna.G]+pile.CountR[dna.G],
+		pile.CountF[dna.T]+pile.CountR[dna.T], pile.CountF[dna.N]+pile.CountR[dna.N], pile.CountF[dna.Gap]+pile.CountR[dna.Gap]))
+	for seq, _ := range pile.InsCountF {
+		builder.WriteString(fmt.Sprintf("\t%s:%d", seq, pile.InsCountF[seq]+pile.InsCountR[seq]))
+	}
+	var presentInForward bool
+	for seq, _ := range pile.InsCountR {
+		_, presentInForward = pile.InsCountF[seq]
+		if !presentInForward {
+			builder.WriteString(fmt.Sprintf("\t%s:%d", seq, pile.InsCountR[seq]))
+		}
 	}
 	return builder.String()
 }
