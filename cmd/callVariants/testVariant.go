@@ -69,10 +69,13 @@ func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, p
 // calcDepth returns the number of reads in the input pile
 func calcDepth(s sam.Pile) int {
 	var depth int
-	for i := range s.Count {
-		depth += s.Count[i]
+	for i := range s.CountF {
+		depth += s.CountF[i] + s.CountR[i]
 	}
-	for _, val := range s.InsCount {
+	for _, val := range s.InsCountF {
+		depth += val
+	}
+	for _, val := range s.InsCountR {
 		depth += val
 	}
 	return depth
@@ -84,13 +87,13 @@ func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAlt
 	pVals = make([]float64, len(alts))
 
 	// add ref to altcounts
-	alleleCounts = append(alleleCounts, s.Count[int(ref)])
+	alleleCounts = append(alleleCounts, s.CountF[int(ref)]+s.CountR[int(ref)])
 
 	for i := range alts {
 		if !passingIsInsertion[i] { // not insertion
-			alleleCounts = append(alleleCounts, s.Count[int(dna.RuneToBase(rune(alts[i][0])))])
+			alleleCounts = append(alleleCounts, s.CountF[int(dna.RuneToBase(rune(alts[i][0])))]+s.CountR[int(dna.RuneToBase(rune(alts[i][0])))])
 		} else { // is insertion
-			alleleCounts = append(alleleCounts, s.InsCount[alts[i]])
+			alleleCounts = append(alleleCounts, s.InsCountF[alts[i]]+s.InsCountR[alts[i]])
 		}
 		if sIdx < len(passingAltPvalues[i]) { // get p-value only if it is an experimental sample
 			pVals[i] = passingAltPvalues[i][sIdx]
@@ -138,7 +141,8 @@ func sprintPV(pv []float64) string {
 // sumPiles outputs a Pile with counts equal to the sum of all per-base counts of Piles in p.
 func sumPiles(p []sam.Pile) sam.Pile {
 	var answer sam.Pile
-	answer.InsCount = make(map[string]int)
+	answer.InsCountF = make(map[string]int)
+	answer.InsCountR = make(map[string]int)
 	answer.RefIdx = -1
 
 	for i := range p {
@@ -146,11 +150,15 @@ func sumPiles(p []sam.Pile) sam.Pile {
 			answer.RefIdx = p[i].RefIdx
 			answer.Pos = p[i].Pos
 		}
-		for j := range answer.Count {
-			answer.Count[j] += p[i].Count[j]
+		for j := range answer.CountF {
+			answer.CountF[j] += p[i].CountF[j]
+			answer.CountR[j] += p[i].CountR[j]
 		}
-		for key, val := range p[i].InsCount {
-			answer.InsCount[key] += val
+		for key, val := range p[i].InsCountF {
+			answer.InsCountF[key] += val
+		}
+		for key, val := range p[i].InsCountR {
+			answer.InsCountR[key] += val
 		}
 	}
 	return answer
@@ -185,19 +193,28 @@ func getPossibleAlts(exp []sam.Pile, ref dna.Base) ([]string, []bool) {
 	var possibleAlts []string
 	var isInsertion []bool
 	sum := sumPiles(exp)
-	for i := range sum.Count { // find possible bases
+	for i := range sum.CountF { // find possible bases
 		if i == int(ref) { // ignore ref base
 			continue
 		}
-		if sum.Count[i] > 0 {
+		if sum.CountF[i] > 0 || sum.CountR[i] > 0 {
 			possibleAlts = append(possibleAlts, string(dna.BaseToRune(dna.Base(i))))
 			isInsertion = append(isInsertion, false)
 		}
 	}
 
 	insertionStartIdx := len(possibleAlts)
-	for key, count := range sum.InsCount { // find possible insertions
+	for key, count := range sum.InsCountF { // find possible insertions
 		if count > 0 {
+			possibleAlts = append(possibleAlts, key)
+			isInsertion = append(isInsertion, true)
+		}
+	}
+
+	var presentInForward bool
+	for key, count := range sum.InsCountR {
+		_, presentInForward = sum.InsCountF[key]
+		if !presentInForward && count > 0 {
 			possibleAlts = append(possibleAlts, key)
 			isInsertion = append(isInsertion, true)
 		}
@@ -254,11 +271,11 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 
 	if !isInsertion { // alt in single base
 		alt := int(dna.RuneToBase(rune(altString[0])))
-		c = exp.Count[alt]
-		d = bkgd.Count[alt]
+		c = exp.CountF[alt] + exp.CountR[alt]
+		d = bkgd.CountF[alt] + bkgd.CountR[alt]
 	} else { // alt in insertion
-		c = exp.InsCount[altString]
-		d = bkgd.InsCount[altString]
+		c = exp.InsCountF[altString] + exp.InsCountR[altString]
+		d = bkgd.InsCountF[altString] + bkgd.InsCountR[altString]
 	}
 
 	a = calcDepth(exp) - c
