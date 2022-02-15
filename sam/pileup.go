@@ -20,10 +20,18 @@ import (
 // will increment along the list as bases are added. The pointer to the beginning
 // of the list should only be incremented when a position is passed and set to zero.
 type Pile struct {
-	RefIdx   int
-	Pos      uint32         // 1-base (like Sam)
-	Count    [13]int        // Count[dna.Base] == Number of observed dna.Base
-	InsCount map[string]int // key is insertion sequence as string, value is number of observations
+	RefIdx    int
+	Pos       uint32         // 1-base (like Sam)
+	CountF    [13]int        // Count[dna.Base] == Number of observed dna.Base, forward reads
+	CountR    [13]int        // Count[dna.Base] == Number of observed dna.Base
+	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads
+	InsCountR map[string]int // key is insertion sequence as string, value is number of observations
+
+	// Note that DelCountF/R DO NOT contribute to the total depth of a particular base.
+	// They are only included to preserve multi-base deletion structure for downstream use.
+	// Further note that DelCount is only recorded for the 5'-most base in the deletion.
+	DelCountF map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, forward reads
+	DelCountR map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, forward reads
 
 	touched bool // true if Count or InsCount has been modified
 	// touched is used as a quick check to see whether a pile struct
@@ -152,16 +160,19 @@ func passesPileFilters(p Pile, filters []func(p Pile) bool) bool {
 }
 
 func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoData bool, readFilters []func(s Sam) bool, pileFilters []func(p Pile) bool) {
+	var lastSentRefIdx int
+	var lastSentPos uint32
 	start := newLinkedPileBuffer(300) // initialize to 2x std read size
 	refmap := chromInfo.SliceToMap(header.Chroms)
-	for read := range reads {
+	var read Sam
+	for read = range reads {
 		if !passesReadFilters(read, readFilters) {
 			continue
 		}
-		start = sendPassedLinked(start, read, includeNoData, refmap, send, pileFilters)
+		start, lastSentRefIdx, lastSentPos = sendPassedLinked(start, read, includeNoData, refmap, send, pileFilters, lastSentRefIdx, lastSentPos)
 		updateLinkedPile(start, read, refmap)
 	}
-	sendRemaining(start, send, includeNoData, pileFilters)
+	sendRemaining(start, send, includeNoData, pileFilters, lastSentRefIdx, lastSentPos, refmap[read.RName])
 	close(send)
 }
 
@@ -204,21 +215,22 @@ func expandLinkedPileBuffer(start *Pile, toAdd int) {
 // updateLinkedPile updates the linked list with the data in s.
 func updateLinkedPile(start *Pile, s Sam, refmap map[string]chromInfo.ChromInfo) {
 	var seqPos int
+	var readIsForward bool = !IsPaired(s) || IsForwardRead(s) // record unpaired as forward
 	refPos := s.Pos
 	refidx := refmap[s.RName].Order
 	for i := range s.Cigar {
 		switch s.Cigar[i].Op {
 		case 'M', '=', 'X': // Match
-			addMatchLinked(start, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
+			addMatchLinked(start, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
 			refPos += uint32(s.Cigar[i].RunLength)
 			seqPos += s.Cigar[i].RunLength
 
 		case 'D': // Deletion
-			addDeletionLinked(start, refidx, refPos, s.Cigar[i].RunLength)
+			addDeletionLinked(start, refidx, refPos, s.Cigar[i].RunLength, readIsForward)
 			refPos += uint32(s.Cigar[i].RunLength)
 
 		case 'I': // Insertion
-			addInsertionLinked(start, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength])
+			addInsertionLinked(start, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
 			seqPos += s.Cigar[i].RunLength
 
 		default:
@@ -232,31 +244,60 @@ func updateLinkedPile(start *Pile, s Sam, refmap map[string]chromInfo.ChromInfo)
 	}
 }
 
-func addMatchLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base) *Pile {
+func addMatchLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base, readIsForward bool) *Pile {
 	for i := range seq {
 		start = getPile(start, refidx, startPos+uint32(i))
-		start.Count[seq[i]]++
+		if readIsForward {
+			start.CountF[seq[i]]++
+		} else {
+			start.CountR[seq[i]]++
+		}
 		start.touched = true
 	}
 	return start
 }
 
-func addDeletionLinked(start *Pile, refidx int, startPos uint32, length int) *Pile {
+func addDeletionLinked(start *Pile, refidx int, startPos uint32, length int, readIsForward bool) *Pile {
+	start = getPile(start, refidx, startPos)
+	if start.DelCountF == nil { // only make the map when we need it
+		start.DelCountF = make(map[int]int)
+	}
+	if start.DelCountR == nil { // only make the map when we need it
+		start.DelCountR = make(map[int]int)
+	}
+	if readIsForward {
+		start.DelCountF[length]++
+	} else {
+		start.DelCountR[length]++
+	}
+
 	var i uint32
 	for i = 0; i < uint32(length); i++ {
 		start = getPile(start, refidx, startPos+i)
-		start.Count[dna.Gap]++
+		if readIsForward {
+			start.CountF[dna.Gap]++
+		} else {
+			start.CountR[dna.Gap]++
+		}
+
 		start.touched = true
 	}
 	return start
 }
 
-func addInsertionLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base) *Pile {
+func addInsertionLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base, readIsForward bool) *Pile {
 	start = getPile(start, refidx, startPos)
-	if start.InsCount == nil { // only make the map when we need it
-		start.InsCount = make(map[string]int)
+	if start.InsCountF == nil { // only make the map when we need it
+		start.InsCountF = make(map[string]int)
 	}
-	start.InsCount[dna.BasesToString(seq)]++
+	if start.InsCountR == nil { // only make the map when we need it
+		start.InsCountR = make(map[string]int)
+	}
+	if readIsForward {
+		start.InsCountF[dna.BasesToString(seq)]++
+	} else {
+		start.InsCountR[dna.BasesToString(seq)]++
+	}
 	start.touched = true
 	return start
 }
@@ -288,7 +329,7 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 	return start
 }
 
-func sendRemaining(start *Pile, send chan<- Pile, includeNoData bool, pileFilters []func(p Pile) bool) {
+func sendRemaining(start *Pile, send chan<- Pile, includeNoData bool, pileFilters []func(p Pile) bool, lastRefIdx int, lastPos uint32, ref chromInfo.ChromInfo) {
 	for start.RefIdx != -1 {
 		if (start.touched || includeNoData) && passesPileFilters(*start, pileFilters) {
 			send <- *start
@@ -296,11 +337,23 @@ func sendRemaining(start *Pile, send chan<- Pile, includeNoData bool, pileFilter
 		start.RefIdx = -1
 		start = start.next
 	}
+
+	// if we have not returned by this point, there are positions with no data
+	// between the last position send, and the beginning of buf
+	if !includeNoData {
+		return
+	}
+
+	// send missing chromosome data
+	dummyPile := Pile{}
+	for i := lastPos + 1; i <= uint32(ref.Size); i++ {
+		dummyPile.RefIdx = lastRefIdx
+		dummyPile.Pos = i
+		send <- dummyPile
+	}
 }
 
-func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool) (newStart *Pile) {
-	var lastRefIdx int
-	var lastPos uint32
+func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]chromInfo.ChromInfo, send chan<- Pile, pileFilters []func(p Pile) bool, lastRefIdx int, lastPos uint32) (newStart *Pile, lastSentRefIdx int, lastSentPos uint32) {
 	for start.RefIdx != refmap[s.RName].Order || start.Pos < s.Pos-1 { // the -1 on s.Pos is to handle cases where a read begins with an insertion
 		if start.RefIdx == -1 {
 			break
@@ -319,7 +372,7 @@ func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]
 	// if we have not returned by this point, there are positions with no data
 	// between the last position send, and the beginning of buf
 	if !includeNoData {
-		return start
+		return start, lastRefIdx, lastPos
 	}
 
 	// send missing chromosome data
@@ -343,7 +396,7 @@ func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]
 		lastRefIdx++
 	}
 
-	return start
+	return start, lastRefIdx, lastPos
 }
 
 // resetPile sets a Pile to the default state
@@ -353,15 +406,20 @@ func resetPile(p *Pile) {
 	if !p.touched {
 		return
 	}
-	for i := range p.Count {
-		p.Count[i] = 0
+	for i := range p.CountF {
+		p.CountF[i] = 0
+		p.CountR[i] = 0
 	}
 
-	p.InsCount = nil // only make map when we need it
+	p.InsCountF = nil // only make maps when we need them
+	p.InsCountR = nil
+	p.DelCountF = nil
+	p.DelCountR = nil
 	p.touched = false
 }
 
 // String for debug
 func (p *Pile) String() string {
-	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCount: %v\tInsCount:%v\tNext:%p\tPrev:%p", p.RefIdx, p.Pos, p.Count, p.InsCount, p.next, p.prev)
+	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCountF: %v\tCountR: %v\tInsCountF: %v\tInsCountR: %v\tDelCountF: %v\tDelCountR: %v\tNext: %p\tPrev: %p",
+		p.RefIdx, p.Pos, p.CountF, p.CountR, p.InsCountF, p.InsCountR, p.DelCountF, p.DelCountR, p.next, p.prev)
 }
