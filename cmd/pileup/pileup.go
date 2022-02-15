@@ -37,10 +37,13 @@ func pileFilters(s Settings) []func(pile sam.Pile) bool {
 	if s.minDp > 0 {
 		filters = append(filters, func(pile sam.Pile) bool {
 			var count int
-			for i := range pile.Count {
-				count += pile.Count[i]
+			for i := range pile.CountF {
+				count += pile.CountF[i] + pile.CountR[i]
 			}
-			for _, i := range pile.InsCount {
+			for _, i := range pile.InsCountF {
+				count += i
+			}
+			for _, i := range pile.InsCountR {
 				count += i
 			}
 			return count >= s.minDp
@@ -87,7 +90,8 @@ func pileup(infile string, outfile string, settings Settings) {
 func fmtOutput(pile sam.Pile, header sam.Header, builder *strings.Builder) string {
 	builder.Reset()
 	builder.WriteString(fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d", header.Chroms[pile.RefIdx].Name, pile.Pos,
-		pile.Count[dna.A], pile.Count[dna.C], pile.Count[dna.G], pile.Count[dna.T], pile.Count[dna.N], pile.Count[dna.Gap]))
+		pile.CountF[dna.A] + pile.CountR[dna.A], pile.CountF[dna.C] + pile.CountR[dna.C], pile.CountF[dna.G] + pile.CountR[dna.G],
+		pile.CountF[dna.T] + pile.CountR[dna.T], pile.Count[dna.N], pile.Count[dna.Gap]))
 	for seq, count := range pile.InsCount {
 		builder.WriteString(fmt.Sprintf("\t%s:%d", seq, count))
 	}
