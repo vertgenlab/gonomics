@@ -12,6 +12,8 @@ import (
 	"unicode/utf8"
 )
 
+// pointers are retained in the maf package because they are needed for null checks
+
 type MafSLine struct {
 	Src     string
 	Start   int
