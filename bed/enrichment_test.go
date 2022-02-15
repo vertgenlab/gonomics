@@ -42,7 +42,7 @@ func sliceEqual(a []float64, b []float64) bool {
 		return false
 	}
 	for i := range a {
-		if (a[i] - b[i]) / b[i] > 0.00001 {
+		if (a[i]-b[i])/b[i] > 0.00001 {
 			return false
 		}
 	}
