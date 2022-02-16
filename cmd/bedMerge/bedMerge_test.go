@@ -11,7 +11,7 @@ var BedMergeTests = []struct {
 	InFile        string
 	ExpectedFile  string
 	MergeAdjacent bool
-	LowMem bool
+	LowMem        bool
 }{
 	{"testdata/test.bed", "testdata/test.merged.bed", false, false},
 	{"testdata/test.bed", "testdata/test.adjacent.merged.bed", true, false},
