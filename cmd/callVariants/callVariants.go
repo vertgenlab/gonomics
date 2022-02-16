@@ -131,7 +131,7 @@ func makeOutputHeader(filenames []string) vcf.Header {
 	header.Text = append(header.Text, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 	header.Text = append(header.Text, "##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
 	header.Text = append(header.Text, "##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Depth of Each Allele\">")
-	header.Text = append(header.Text, "##FORMAT=<ID=PV,Number=A,Type=Floatg,Description=\"p value for Each Alternate Allele\">")
+	header.Text = append(header.Text, "##FORMAT=<ID=PV,Number=A,Type=Float,Description=\"p value for Each Alternate Allele\">")
 	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s", strings.Join(sampleNames, "\t")))
 	return header
 }

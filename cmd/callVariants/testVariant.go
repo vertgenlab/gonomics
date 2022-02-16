@@ -456,6 +456,7 @@ func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, ref *fasta.Seeker) 
 
 	refBases := getRef(v.Pos-1, v.Pos-1+longestDeletion, v.Chr, ref)
 	v.Ref = dna.BasesToString(refBases)
+	v.Pos-- // since anchor base was added
 
 	var idxDelIdx int
 	for i := range v.Alt {
