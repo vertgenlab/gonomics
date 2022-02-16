@@ -28,10 +28,6 @@ func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, m
 	var bkgd sam.Pile // background allele count for fishers exact testing
 	var hasNorm bool
 
-	if exp[0].Pos == 17359 {
-		fmt.Println(exp)
-	}
-
 	if !dataPresent(exp) { // return empty struct if there are no experimental samples for the input site
 		return vcf.Vcf{}, false
 	}
@@ -470,7 +466,9 @@ func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, ref *fasta.Seeker) 
 
 		// else is a deletion
 		v.Alt[i] = v.Ref[:len(v.Ref)-delLens[idxDelIdx]]
-		idxDelIdx++
+		if idxDelIdx != len(deletionIndexes)-1 { // dont increment past len
+			idxDelIdx++
+		}
 	}
 
 	return v
