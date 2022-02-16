@@ -28,6 +28,10 @@ func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, m
 	var bkgd sam.Pile // background allele count for fishers exact testing
 	var hasNorm bool
 
+	if exp[0].Pos == 17359 {
+		fmt.Println(exp)
+	}
+
 	if !dataPresent(exp) { // return empty struct if there are no experimental samples for the input site
 		return vcf.Vcf{}, false
 	}
@@ -48,6 +52,7 @@ func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, m
 	var altPvalues [][]float64
 	var altVarTypes []variantType
 	alts, altPvalues, altVarTypes = getAlts(exp, bkgd, refBases, hasNorm, minAf, maxAf, maxStrandBias, minCoverage, minAltReads, maxP)
+
 	if len(alts) == 0 {
 		return vcf.Vcf{}, false
 	}
@@ -330,6 +335,7 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 		exception.PanicOnErr(err)
 		c = exp.DelCountF[delInt] + exp.DelCountR[delInt]
 		d = bkgd.DelCountF[delInt] + bkgd.DelCountR[delInt]
+		fwdStrandBias = float64(exp.DelCountF[delInt]) / float64(c)
 	}
 
 	if fwdStrandBias > maxStrandBias || fwdStrandBias < 1-maxStrandBias {
