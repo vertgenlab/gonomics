@@ -430,19 +430,22 @@ func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []str
 		if passingVarTypes[i] == deletion {
 			deletionIndexes = append(deletionIndexes, i)
 		}
-		if passingVarTypes[i] == insertion {
-			v.Alt[i] = v.Ref + v.Alt[i]
-		}
 	}
 
-	if len(deletionIndexes) > 0 {
-		v = adjustVcfForDeletions(v, deletionIndexes, ref)
+	if v.Pos == 964629 || v.Pos == 964630 {
+		fmt.Println(v)
+		fmt.Println(exp)
+		fmt.Println(passingAlts)
+		fmt.Println(passingAltPvalues)
+		fmt.Println(passingVarTypes)
 	}
+
+	v = adjustVcfForDeletions(v, deletionIndexes, passingVarTypes, ref)
 	return v
 }
 
 // adjustVcfForDeletions alters the ref and alt fields for deletions
-func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, ref *fasta.Seeker) vcf.Vcf {
+func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, varTypes []variantType, ref *fasta.Seeker) vcf.Vcf {
 	var longestDeletion int
 	delLens := make([]int, len(deletionIndexes))
 	var err error
@@ -454,23 +457,64 @@ func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, ref *fasta.Seeker) 
 		}
 	}
 
-	refBases := getRef(v.Pos-1, v.Pos-1+longestDeletion, v.Chr, ref)
-	v.Ref = dna.BasesToString(refBases)
-	v.Pos-- // since anchor base was added
+	var hasAnchor bool
+	if len(deletionIndexes) > 0 {
+		v.Pos-- // since anchor base must be added
+		refBases := getRef(v.Pos, v.Pos+longestDeletion, v.Chr, ref)
+		v.Ref = dna.BasesToString(refBases)
+		hasAnchor = true
+	}
 
-	var idxDelIdx int
+	var delLenIdx int
+	s := new(strings.Builder)
 	for i := range v.Alt {
-		if i != deletionIndexes[idxDelIdx] && len(v.Alt[i]) == 1 { // is an SNV, insertions are already handled
-			v.Alt[i] = v.Ref[:1] + v.Alt[i] // prepend first ref base
-			continue
-		}
+		switch varTypes[i] {
+		case singleNucleotide:
+			v.Alt[i] = getSnvAltString(s, v.Ref, v.Alt[i], hasAnchor)
 
-		// else is a deletion
-		v.Alt[i] = v.Ref[:len(v.Ref)-delLens[idxDelIdx]]
-		if idxDelIdx != len(deletionIndexes)-1 { // dont increment past len
-			idxDelIdx++
+		case insertion:
+			v.Alt[i] = getInsAltString(s, v.Ref, v.Alt[i], hasAnchor)
+
+		case deletion:
+			v.Alt[i] = getDelAltString(s, v.Ref, delLens[delLenIdx])
+			delLenIdx++
 		}
 	}
 
+	fmt.Println(v)
+
 	return v
+}
+
+func getSnvAltString(s *strings.Builder, ref, alt string, hasAnchor bool) string {
+	s.Reset()
+	if hasAnchor {
+		s.WriteByte(ref[0])
+	}
+	s.WriteByte(alt[0])
+	return s.String()
+}
+
+func getInsAltString(s *strings.Builder, ref, insSeq string, hasAnchor bool) string {
+	s.Reset()
+	if !hasAnchor { // if no anchor, then no deletion is present and simple return
+		return ref + insSeq
+	}
+
+	// deletion is present, must work around
+	s.WriteString(ref[:2] + insSeq) // anchor + refbase + inserted sequence
+	if len(ref) > 2 {
+		s.WriteString(ref[2:]) // remaining bases
+	}
+	return s.String()
+}
+
+func getDelAltString(s *strings.Builder, ref string, delLen int) string {
+	s.Reset()
+	// deletions will always have an anchor
+	s.WriteByte(ref[0])      // anchor base
+	if len(ref) > delLen+1 { // this happens if there is a longer deletion present at the same position
+		s.WriteString(ref[2+delLen:]) // the +2 is for the base after the delLen and after the anchor base
+	}
+	return s.String()
 }
