@@ -480,9 +480,12 @@ func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, varTypes []variantT
 func getSnvAltString(s *strings.Builder, ref, alt string, hasAnchor bool) string {
 	s.Reset()
 	if hasAnchor {
-		s.WriteByte(ref[0])
+		s.WriteByte(ref[0]) // anchor if present
 	}
-	s.WriteByte(alt[0])
+	s.WriteByte(alt[0]) // alt base
+	if len(ref) > 2 {
+		s.WriteString(ref[2:]) // any remaining bases
+	}
 	return s.String()
 }
 
