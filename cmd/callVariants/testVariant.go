@@ -459,6 +459,7 @@ func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, varTypes []variantT
 
 	var delLenIdx int
 	s := new(strings.Builder)
+
 	for i := range v.Alt {
 		switch varTypes[i] {
 		case singleNucleotide:
@@ -504,7 +505,7 @@ func getDelAltString(s *strings.Builder, ref string, delLen int) string {
 	// deletions will always have an anchor
 	s.WriteByte(ref[0])      // anchor base
 	if len(ref) > delLen+1 { // this happens if there is a longer deletion present at the same position
-		s.WriteString(ref[2+delLen:]) // the +2 is for the base after the delLen and after the anchor base
+		s.WriteString(ref[delLen+1:]) // the +1 is for the base after the delLen and after the anchor base
 	}
 	return s.String()
 }
