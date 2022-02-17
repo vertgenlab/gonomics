@@ -432,14 +432,6 @@ func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []str
 		}
 	}
 
-	if v.Pos == 964629 || v.Pos == 964630 {
-		fmt.Println(v)
-		fmt.Println(exp)
-		fmt.Println(passingAlts)
-		fmt.Println(passingAltPvalues)
-		fmt.Println(passingVarTypes)
-	}
-
 	v = adjustVcfForDeletions(v, deletionIndexes, passingVarTypes, ref)
 	return v
 }
@@ -480,8 +472,6 @@ func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, varTypes []variantT
 			delLenIdx++
 		}
 	}
-
-	fmt.Println(v)
 
 	return v
 }
