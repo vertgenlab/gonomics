@@ -432,12 +432,12 @@ func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []str
 		}
 	}
 
-	v = adjustVcfForDeletions(v, deletionIndexes, passingVarTypes, ref)
+	v = adjustAlts(v, deletionIndexes, passingVarTypes, ref)
 	return v
 }
 
-// adjustVcfForDeletions alters the ref and alt fields for deletions
-func adjustVcfForDeletions(v vcf.Vcf, deletionIndexes []int, varTypes []variantType, ref *fasta.Seeker) vcf.Vcf {
+// adjustAlts alters the ref and alt fields depending on the variant type
+func adjustAlts(v vcf.Vcf, deletionIndexes []int, varTypes []variantType, ref *fasta.Seeker) vcf.Vcf {
 	var longestDeletion int
 	delLens := make([]int, len(deletionIndexes))
 	var err error
