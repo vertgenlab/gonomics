@@ -34,7 +34,7 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		vcf.HeaderUpdateSampleList(header, outSamples)
 	}
 
-	vcf.NewWriteHeader(out.File, header)
+	vcf.NewWriteHeader(out, header)
 
 	for v := range records {
 		total++
@@ -55,7 +55,7 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 			continue
 		}
 
-		vcf.WriteVcf(out.File, v)
+		vcf.WriteVcf(out, v)
 	}
 
 	err := out.Close()
