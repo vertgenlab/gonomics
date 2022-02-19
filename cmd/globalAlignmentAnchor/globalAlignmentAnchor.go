@@ -14,9 +14,28 @@ import (
 	"github.com/vertgenlab/gonomics/maf"
 	"github.com/vertgenlab/gonomics/bed"
 	"log"
+	"io"
 	//"os"
 	"strings"
 )
+
+// helper functions to write to file
+func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score int64, cigar []align.Cigar) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\t%s\t%d\t%v\n", species1, species2, score, cigar)
+	exception.PanicOnErr(err)
+}
+
+//func write(filename string, records []Bed) {
+	//var err error
+	//file := fileio.EasyCreate(filename)
+
+	//for i := range records {
+	//	WriteToFileHandle(file, records[i])
+	//}
+	//err = file.Close()
+	//exception.PanicOnErr(err)
+//}
 
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf aka anchors
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold
@@ -140,14 +159,14 @@ func coordinatesToAlignment(species1_gap_bed_filename string, species2_gap_bed_f
 	species2_genome_fasta := fasta.Read(species2_genome_fa)
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fasta)
 
+	output := fileio.EasyCreate("out_alignment.tsv")
+	var err error
 	var species1_seq, species2_seq []dna.Base
 
 	for i := range species1_gap_bed {
 		species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][species1_gap_bed[i].ChromStart:species1_gap_bed[i].ChromEnd] // I believe Seq starts index at 0, according to fasta.go WriteFasta function
-		//species1_seq = dna.StringToBases("ACGT") //TODO: remove after debugging
-		dna.AllToUpper(species1_seq)
+		dna.AllToUpper(species1_seq) //convert all bases to uppercase, otherwise get index out of range error in scoring matrix
 		species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][species2_gap_bed[i].ChromStart:species2_gap_bed[i].ChromEnd]
-		//species2_seq = dna.StringToBases("ACG") //TODO: remove after debugging
 		dna.AllToUpper(species2_seq)
 
 		//alignment with affineGap
@@ -159,7 +178,13 @@ func coordinatesToAlignment(species1_gap_bed_filename string, species2_gap_bed_f
 		//visualize
 		visualize := align.View(species1_seq, species2_seq, aln)
 		fmt.Println(visualize)
+
+		//write to file
+		writeToFileHandle(output, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 	}
+
+	err = output.Close()
+	exception.PanicOnErr(err)
 }
 
 //raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
