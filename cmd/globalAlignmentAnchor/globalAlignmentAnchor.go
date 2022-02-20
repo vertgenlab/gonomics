@@ -128,11 +128,21 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			// then start the current chr
 			pos_species1 = 1
 			pos_species2 = 1
-		} // "else" encompasses "first entry", OR "if there is existing chr", OR the normal action "when encounter new chr"
+		}
+
+		// "else" encompasses "first entry", OR "if there is existing chr", OR the normal action "when encounter new chr"
 		current_species1 = bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: species1_match_bed[i].ChromStart, Name: "species1_gap", FieldsInitialized: 4}
 		current_species2 = bed.Bed{Chrom: species2_match_bed[i].Chrom, ChromStart: pos_species2, ChromEnd: species2_match_bed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
-		bed.WriteBed(out_species1.File, current_species1)
-		bed.WriteBed(out_species2.File, current_species2)
+
+		// before writing bed, make sure that
+		// in either species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
+		// gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
+		if current_species1.ChromStart < current_species2.ChromEnd{
+			bed.WriteBed(out_species1.File, current_species1)
+		}
+		if current_species2.ChromStart < current_species2.ChromEnd {
+			bed.WriteBed(out_species2.File, current_species2)
+		}
 
 		// update variables at the end of each iteration
 		pos_species1 = species1_match_bed[i].ChromEnd
@@ -174,14 +184,14 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 
 	// loop through input gap beds
 	for i := range species1_gap_bed {
-		// obtain sequences from the genome
-		species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][species1_gap_bed[i].ChromStart:species1_gap_bed[i].ChromEnd]
+		// obtain sequences from the genome. To convert bed region (1-based, [closed,open)) to fasta index (0-based, [closed,closed]), subtract 1 from both ChromStart and ChromEnd.
+		species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][(species1_gap_bed[i].ChromStart - 1):(species1_gap_bed[i].ChromEnd - 1)]
 		dna.AllToUpper(species1_seq) // convert all bases to uppercase, otherwise get index out of range error in scoring matrix
-		species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][species2_gap_bed[i].ChromStart:species2_gap_bed[i].ChromEnd]
+		species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][(species2_gap_bed[i].ChromStart - 1):(species2_gap_bed[i].ChromEnd - 1)]
 		dna.AllToUpper(species2_seq)
 
 		// align with affineGap, customizeCheckersize, DefaultScoreMatrix
-		bestScore, aln := align.AffineGap_customizeCheckersize(species1_seq, species2_seq, align.DefaultScoreMatrix, -400, -30, 10000, 10000)
+		bestScore, aln := align.AffineGap_customizeCheckersize(species1_seq, species2_seq, align.HumanChimpTwoScoreMatrix, -600, -150, 10000, 10000)
 
 		// optional: print results to terminal
 		// print alignment score, cigar
