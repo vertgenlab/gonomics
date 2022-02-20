@@ -240,6 +240,6 @@ func main() {
 	species2 := flag.Arg(2)
 
 	mafToMatch(in_maf, species1, species2)
-	matchToGap(species1, species2, "testdata/out_species1_match_forStep2.bed", "testdata/out_species1_match_forStep2.bed", "testdata/species1.fa", "testdata/species2.fa")
+	matchToGap(species1, species2, "testdata/out_hg38_match.bed", "testdata/out_rheMac10_match.bed", "testdata/species1.fa", "testdata/species2.fa")
 	gapToAlignment("testdata/out_hg38_gap.bed", "testdata/out_rheMac10_gap.bed", "testdata/species1.fa", "testdata/species2.fa")
 }
