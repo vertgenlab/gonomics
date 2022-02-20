@@ -12,9 +12,9 @@ var VcfToFaTests = []struct {
 	inputFaFile        string
 	actualOutputFile   string
 	expectedOutputFile string
-	useAlt bool
-	multiFaMode bool
-	multiFaChromName string
+	useAlt             bool
+	multiFaMode        bool
+	multiFaChromName   string
 }{
 	//{"testdata/testInput.vcf", "testdata/testInput.fa", "testdata/actual.fa", "testdata/expected.fa", true, false, ""},
 	//{"testdata/testInput.vcf", "testdata/testInput.fa", "testdata/actualNoAlt.fa", "testdata/testInput.fa", false, false, ""},//should just produce the input file.
