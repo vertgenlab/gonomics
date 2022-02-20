@@ -14,6 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/maf"
 	"io"
 	"log"
+	"path"
 	"strings"
 )
 
@@ -31,8 +32,8 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 
 	// open output files to write line-by-line and create variable for error
 	out_maf_filename := strings.Replace(in_maf, ".maf", ".filtered.maf", 1)
-	out_species1_filename := strings.Replace("out_species1_match.bed", "species1", species1, 1)
-	out_species2_filename := strings.Replace("out_species2_match.bed", "species2", species2, 1)
+	out_species1_filename := strings.Replace(in_maf, path.Base(in_maf), "out_" + species1 + "_match.bed", 1)
+	out_species2_filename := strings.Replace(in_maf, path.Base(in_maf), "out_" + species2 + "_match.bed", 1)
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
@@ -96,8 +97,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_species1_filename := strings.Replace("out_species1_gap.bed", "species1", species1, 1)
-	out_species2_filename := strings.Replace("out_species2_gap.bed", "species2", species2, 1)
+	out_species1_filename := strings.Replace(in_species1_match, "match", "gap", 1)
+	out_species2_filename := strings.Replace(in_species2_match, "match", "gap", 1)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
 	var err error
@@ -163,7 +164,8 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_alignment := fileio.EasyCreate("out_alignment.tsv")
+	out_alignment_filename := strings.Replace(in_species1_gap, path.Base(in_species1_gap), "out_alignment.tsv", 1)
+	out_alignment := fileio.EasyCreate(out_alignment_filename)
 	var err error
 
 	// initialize variables before loop
@@ -197,49 +199,46 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	exception.PanicOnErr(err)
 }
 
-//TODO: start editing here
-//raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
+// main function: assembles all steps
+func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string) {
+	mafToMatch(in_maf, species1, species2)
+	in_species1_match := strings.Replace(in_maf, path.Base(in_maf), "out_" + species1 + "_match.bed", 1)
+	in_species2_match := strings.Replace(in_maf, path.Base(in_maf), "out_" + species2 + "_match.bed", 1)
+	matchToGap(species1, species2, in_species1_match, in_species2_match, species1_genome, species2_genome)
+	in_species1_gap := strings.Replace(in_species1_match, "match", "gap", 1)
+	in_species2_gap := strings.Replace(in_species2_match, "match", "gap", 1)
+	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome)
+}
+
 func usage() {
 	fmt.Print(
-		"./globalAlignment - chelsea's global alignment\n" +
-			" Align 2 .fasta files, each with only 1 sequence\n" +
+		"globalAlignmentAnchor - takes pairwise alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)\n" +
+			"in_maf - maf file. Pairwise alignment, not >2 species\n" +
+			"species1, species2 - species names, e.g. hg38. Species1 is target (first line in each maf block); species2 is query (second line in each maf block)\n" +
+			"species1_genome, species2_genome - fasta files containing the whole genome of each species. Each fasta sequence is 1 chromosome\n" +
 			"Usage:\n" +
-			"	globalAlignment target.fasta query.fasta\n" +
-			"options:\n")
-	//TODO: copied from copied from mafInspecies2s, modify
-	//note whole genome fasta with all chromosomes
-	// align "gap" sequences with affineGap, customizeCheckersize, DefaultScoreMatrix
-	fmt.Print(
-		"mafInspecies2s - takes pairwise alignment maf and finds species1ertions in species1 not present in species2 but flanked by continuous alignments\n" +
-			"in.maf - here I assume only pairwise alignment, not >2 species\n" +
-			"species1, species2 - here I assume species1 is target (1st line in the block, k=0); species2 is query (2nd line in the block, k=1)\n" +
-			"out_species1.bed, out_species2.bed - program outputs 2 bed files for species1 and species2 coordinates, respectively. Designate filenames here\n" +
-			"Usage:\n" +
-			" mafInspecies2s in.maf species1 species2 out_species1.bed out_species2.bed\n" +
+			"	globalAlignmentAnchor in_maf species1 species2 species1_genome species2_genome\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNum int = 3
+	var expectedNum int = 5
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	//faOut := flag.String("faOut", "", "fasta MSA output filename")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
 		flag.Usage()
-		log.Fatalf("error, expecting 2 .fasta files to be able to align, only found %d files...\n", len(flag.Args()))
+		log.Fatalf("error, expecting 5 command line arguments, only found %d\n", len(flag.Args()))
 	}
 
-	//read in sequences that should be put in as fasta type files.
-	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
 	in_maf := flag.Arg(0)
 	species1 := flag.Arg(1)
 	species2 := flag.Arg(2)
+	species1_genome := flag.Arg(3)
+	species2_genome := flag.Arg(4)
 
-	mafToMatch(in_maf, species1, species2)
-	matchToGap(species1, species2, "testdata/out_hg38_match.bed", "testdata/out_rheMac10_match.bed", "testdata/species1.fa", "testdata/species2.fa")
-	gapToAlignment("testdata/out_hg38_gap.bed", "testdata/out_rheMac10_gap.bed", "testdata/species1.fa", "testdata/species2.fa")
+	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome)
 }
