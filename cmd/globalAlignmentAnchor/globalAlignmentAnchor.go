@@ -32,8 +32,8 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 
 	// open output files to write line-by-line and create variable for error
 	out_maf_filename := strings.Replace(in_maf, ".maf", ".filtered.maf", 1)
-	out_species1_filename := strings.Replace(in_maf, path.Base(in_maf), "out_" + species1 + "_match.bed", 1)
-	out_species2_filename := strings.Replace(in_maf, path.Base(in_maf), "out_" + species2 + "_match.bed", 1)
+	out_species1_filename := strings.Replace(in_maf, path.Base(in_maf), "out_"+species1+"_match.bed", 1)
+	out_species2_filename := strings.Replace(in_maf, path.Base(in_maf), "out_"+species2+"_match.bed", 1)
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
@@ -137,7 +137,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		// before writing bed, make sure that
 		// in either species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
 		// gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
-		if current_species1.ChromStart < current_species2.ChromEnd{
+		if current_species1.ChromStart < current_species2.ChromEnd {
 			bed.WriteBed(out_species1.File, current_species1)
 		}
 		if current_species2.ChromStart < current_species2.ChromEnd {
@@ -212,8 +212,8 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 // main function: assembles all steps
 func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string) {
 	mafToMatch(in_maf, species1, species2)
-	in_species1_match := strings.Replace(in_maf, path.Base(in_maf), "out_" + species1 + "_match.bed", 1)
-	in_species2_match := strings.Replace(in_maf, path.Base(in_maf), "out_" + species2 + "_match.bed", 1)
+	in_species1_match := strings.Replace(in_maf, path.Base(in_maf), "out_"+species1+"_match.bed", 1)
+	in_species2_match := strings.Replace(in_maf, path.Base(in_maf), "out_"+species2+"_match.bed", 1)
 	matchToGap(species1, species2, in_species1_match, in_species2_match, species1_genome, species2_genome)
 	in_species1_gap := strings.Replace(in_species1_match, "match", "gap", 1)
 	in_species2_gap := strings.Replace(in_species2_match, "match", "gap", 1)
