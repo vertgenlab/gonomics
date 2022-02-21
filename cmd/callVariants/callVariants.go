@@ -27,15 +27,15 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func callVariants(experimentalFiles, normalFiles []string, refFile, outFile string, maxP, minAf float64, minCoverage, workers int) {
+func callVariants(experimentalFiles, normalFiles []string, refFile, outFile string, maxP, minAf, maxAf, maxStrandBias float64, minCoverage, minMapQ, minAltReads, workers int) {
 	out := fileio.EasyCreate(outFile)
 	outHeader := makeOutputHeader(append(experimentalFiles, normalFiles...))
 	vcf.NewWriteHeader(out, outHeader)
-	//ref := fasta.NewSeeker(refFile, "")
 
+	readFilters := getReadFilters(uint8(minMapQ))
 	pileFilters := getPileFilters(minCoverage)
-	expHeaders, expPiles := startPileup(experimentalFiles, pileFilters)
-	normHeaders, normPiles := startPileup(normalFiles, pileFilters)
+	expHeaders, expPiles := startPileup(experimentalFiles, readFilters, pileFilters)
+	normHeaders, normPiles := startPileup(normalFiles, readFilters, pileFilters)
 
 	isExperimental := make([]bool, len(experimentalFiles)+len(normalFiles))
 	for i := 0; i < len(experimentalFiles); i++ {
@@ -52,7 +52,7 @@ func callVariants(experimentalFiles, normalFiles []string, refFile, outFile stri
 	wg := new(sync.WaitGroup)
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
-		go startWorker(wg, writeChan, synced, len(experimentalFiles), expHeaders[0], fasta.NewSeeker(refFile, ""), maxP, minAf, minCoverage)
+		go startWorker(wg, writeChan, synced, len(experimentalFiles), expHeaders[0], fasta.NewSeeker(refFile, ""), maxP, minAf, maxAf, maxStrandBias, minCoverage, minAltReads)
 	}
 
 	// spawn a goroutine that waits until all the goroutines are done then closes writeChan.
@@ -70,11 +70,11 @@ func callVariants(experimentalFiles, normalFiles []string, refFile, outFile stri
 	exception.PanicOnErr(err)
 }
 
-func startWorker(wg *sync.WaitGroup, writeChan chan<- vcf.Vcf, synced <-chan []sam.Pile, numExpFiles int, header sam.Header, ref *fasta.Seeker, maxP, minAf float64, minCoverage int) {
+func startWorker(wg *sync.WaitGroup, writeChan chan<- vcf.Vcf, synced <-chan []sam.Pile, numExpFiles int, header sam.Header, ref *fasta.Seeker, maxP, minAf, maxAf, maxStrandBias float64, minCoverage, minAltReads int) {
 	var keepVar bool
 	for piles := range synced {
 		var v vcf.Vcf
-		v, keepVar = getVariant(piles[:numExpFiles], piles[numExpFiles:], header, ref, maxP, minAf, minCoverage)
+		v, keepVar = getVariant(piles[:numExpFiles], piles[numExpFiles:], header, ref, maxP, minAf, maxAf, maxStrandBias, minCoverage, minAltReads)
 		if keepVar {
 			writeChan <- v
 		}
@@ -85,7 +85,7 @@ func startWorker(wg *sync.WaitGroup, writeChan chan<- vcf.Vcf, synced <-chan []s
 }
 
 // startPileup for each input file
-func startPileup(files []string, pileFilters []func(p sam.Pile) bool) (headers []sam.Header, piles []<-chan sam.Pile) {
+func startPileup(files []string, readFilters []func(s sam.Sam) bool, pileFilters []func(p sam.Pile) bool) (headers []sam.Header, piles []<-chan sam.Pile) {
 	headers = make([]sam.Header, len(files))
 	piles = make([]<-chan sam.Pile, len(files))
 
@@ -95,7 +95,7 @@ func startPileup(files []string, pileFilters []func(p sam.Pile) bool) (headers [
 		if len(headers[i].Text) == 0 {
 			log.Fatal("ERROR: sam/bam files must have headers")
 		}
-		piles[i] = sam.GoPileup(samChan, headers[i], false, nil, pileFilters)
+		piles[i] = sam.GoPileup(samChan, headers[i], false, readFilters, pileFilters)
 	}
 	return
 }
@@ -131,7 +131,7 @@ func makeOutputHeader(filenames []string) vcf.Header {
 	header.Text = append(header.Text, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 	header.Text = append(header.Text, "##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
 	header.Text = append(header.Text, "##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Depth of Each Allele\">")
-	header.Text = append(header.Text, "##FORMAT=<ID=PV,Number=A,Type=Floatg,Description=\"p value for Each Alternate Allele\">")
+	header.Text = append(header.Text, "##FORMAT=<ID=PV,Number=A,Type=Float,Description=\"p value for Each Alternate Allele\">")
 	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s", strings.Join(sampleNames, "\t")))
 	return header
 }
@@ -158,14 +158,27 @@ func getPileFilters(minCoverage int) []func(p sam.Pile) bool {
 	return answer
 }
 
+func getReadFilters(minMapQ uint8) []func(s sam.Sam) bool {
+	var answer []func(s sam.Sam) bool
+	answer = append(answer, func(s sam.Sam) bool {
+		return s.MapQ >= minMapQ
+	})
+	return answer
+}
+
 func main() {
 	var experimentalFiles, normalFiles inputFiles
 	flag.Var(&experimentalFiles, "i", "Input experimental files. May be declared more than once (.bam, .sam)")
 	flag.Var(&normalFiles, "n", "Input normal files. May be declared more than once (.bam, .sam)")
 
 	maxP := flag.Float64("p", 0.001, "Maximum p-value for output")
-	minAf := flag.Float64("af", 0.01, "Minimum allele frequency of variants")
+	minAf := flag.Float64("minAF", 0.01, "Minimum allele frequency of variants")
+	maxAf := flag.Float64("maxAF", 1, "Maximum allele frequency of variants")
+	maxStrandBias := flag.Float64("maxStrandBias", 0.9, "Maximum allowable strand imbalance of reads supporting the alternate allele. "+
+		"When set to 0.9, any variants where >90% of reads supporting the alternate allele are on the forward/reverse strand, that variant will be discarded.")
 	minCoverage := flag.Int("minCoverage", 10, "Minimum coverage for site to be considered.")
+	minMapQ := flag.Int("minMapQ", 10, "Minimum mapping quality for read to be considered")
+	minAltReads := flag.Int("minAltReads", 1, "Minimum reads supporting the alternate allele for variant to be considered")
 	reffile := flag.String("r", "", "Reference fasta file (.fa). Must be indexed (.fai)")
 	outfile := flag.String("o", "stdout", "Output file (.vcf)")
 	workers := flag.Int("t", 1, "Number of threads used for calling variants. Note that additional threads are automatically generated for io.")
@@ -177,5 +190,10 @@ func main() {
 		log.Fatalln("ERROR: must declare at least 1 experimental sample with -i")
 	}
 
-	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP, *minAf, *minCoverage, *workers)
+	if *reffile == "" {
+		flag.Usage()
+		log.Fatalln("ERROR: must input an indexed fasta file with -r")
+	}
+
+	callVariants(experimentalFiles, normalFiles, *reffile, *outfile, *maxP, *minAf, *maxAf, *maxStrandBias, *minCoverage, *minMapQ, *minAltReads, *workers)
 }
