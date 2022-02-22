@@ -61,7 +61,7 @@ func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, us
 			if v.Chr == multiFaChromName && useAlt { //only consider variants with the correct chrom name.
 				currAlnPos = fasta.RefPosToAlnPosCounter(seqsOrdered[outIndex], v.Pos-1, prevRefPos, prevAlnPos)
 				if seqsLookup[multiFaAppendName][currAlnPos] != dna.StringToBase(v.Ref) {
-					log.Fatalf("Error: base in fasta didn't match ref base from VCF record.\n" +
+					log.Fatalf("Error: base in fasta didn't match ref base from VCF record.\n"+
 						"CurrAlnPos: %v. VarPos(1base): %v. SequenceFound: %v. v.Ref: %v.\n", currAlnPos, v.Pos, dna.BaseToString(seqsLookup[multiFaAppendName][currAlnPos]), v.Ref)
 				}
 				if useAlt {
