@@ -269,6 +269,8 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 				Type = Character
 			case "String":
 				Type = String
+			default:
+				log.Panicf("Unrecognized type in vcf header: %s", fields[i][5:])
 			}
 
 		case strings.HasPrefix(fields[i], "Description="):
