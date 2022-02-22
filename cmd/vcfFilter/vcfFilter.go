@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -16,11 +17,34 @@ import (
 
 func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
 	rand.Seed(setSeed)
-	records, header := vcf.GoReadToChan(infile)
+	var records <-chan vcf.Vcf
+	var header vcf.Header
+	var err error
+	var mapContains bool
+	var sitesSeen map[string]map[int]uint8 = make(map[string]map[int]uint8, 0)//uint8 is the number of times this site is seen in the vcf file.
+
+	if c.biAllelicOnly {
+		records, _ = vcf.GoReadToChan(infile)
+		for v := range records {
+			if _, mapContains = sitesSeen[v.Chr]; mapContains {//if an entry in the map for the current chrom exists
+				if _, mapContains = sitesSeen[v.Chr][v.Pos]; mapContains {
+					sitesSeen[v.Chr][v.Pos]++
+				} else {
+					sitesSeen[v.Chr][v.Pos] = 1
+				}
+			} else {
+				sitesSeen[v.Chr] = make(map[int]uint8)
+				sitesSeen[v.Chr][v.Pos] = 1
+			}
+		}
+	}
+
+	records, header = vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
 
 	var samplesToKeep []int = make([]int, 0) //this var holds all of the indices from samples (defined below as the sample list in the header) that we want to keep in the output file.
+
 	if groupFile != "" {
 		groups := popgen.ReadGroups(groupFile)
 		samples := vcf.HeaderGetSampleList(header)
@@ -33,7 +57,6 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		outSamples := filterHeaderSamplesToKeep(samples, samplesToKeep)
 		vcf.HeaderUpdateSampleList(header, outSamples)
 	}
-
 	vcf.NewWriteHeader(out, header)
 
 	for v := range records {
@@ -44,6 +67,15 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 
 		if parseFormat {
 			v = vcf.ParseFormat(v, header)
+		}
+
+		if c.biAllelicOnly {
+			if sitesSeen[v.Chr][v.Pos] < 1 {
+				log.Panicf("Current variant not found in sitesSeen map. Something went horribly wrong. %v.\n", v)
+			} else if sitesSeen[v.Chr][v.Pos] > 1 {
+				removed++
+				continue
+			}
 		}
 
 		if parseInfo {
@@ -58,10 +90,8 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		vcf.WriteVcf(out, v)
 	}
 
-	err := out.Close()
-	if err != nil {
-		log.Panic(err)
-	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 	return
 }
 
