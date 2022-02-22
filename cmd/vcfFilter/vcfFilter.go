@@ -21,12 +21,12 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 	var header vcf.Header
 	var err error
 	var mapContains bool
-	var sitesSeen map[string]map[int]uint8 = make(map[string]map[int]uint8, 0)//uint8 is the number of times this site is seen in the vcf file.
+	var sitesSeen map[string]map[int]uint8 = make(map[string]map[int]uint8, 0) //uint8 is the number of times this site is seen in the vcf file.
 
 	if c.biAllelicOnly {
 		records, _ = vcf.GoReadToChan(infile)
 		for v := range records {
-			if _, mapContains = sitesSeen[v.Chr]; mapContains {//if an entry in the map for the current chrom exists
+			if _, mapContains = sitesSeen[v.Chr]; mapContains { //if an entry in the map for the current chrom exists
 				if _, mapContains = sitesSeen[v.Chr][v.Pos]; mapContains {
 					sitesSeen[v.Chr][v.Pos]++
 				} else {
