@@ -141,6 +141,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		if current_species1.ChromStart < current_species2.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd {
 			bed.WriteBed(out_species1.File, current_species1)
 			bed.WriteBed(out_species2.File, current_species2)
+		} else {
+			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
 		}
 
 		// update variables at the end of each iteration
