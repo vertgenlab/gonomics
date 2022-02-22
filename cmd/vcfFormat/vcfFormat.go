@@ -72,14 +72,13 @@ func usage() {
 	fmt.Print(
 		"vcfFormat - Options alter VCF formatting.\n" +
 			"Usage:\n" +
-			"vcfFormat input.vcf\n" +
+			"vcfFormat input.vcf output.vcf\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 1
-	var outfile *string = flag.String("o", "stdout", "Output file")
+	var expectedNumArgs int = 2
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
 	var clearInfo *bool = flag.Bool("clearInfo", false, "Removes the information in the INFO field and replaces it with a '.'")
@@ -98,5 +97,6 @@ func main() {
 	}
 
 	infile := flag.Arg(0)
-	vcfFormat(infile, *outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref, *clearInfo, *tableOutput)
+	outfile := flag.Arg(1)
+	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref, *clearInfo, *tableOutput)
 }
