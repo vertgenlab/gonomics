@@ -66,8 +66,9 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 			if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
 
 				// filter out only s lines that we trust to save to filtered maf
-				// chrom should be the same between species1 and species2
-				if chrom_species2 == chrom_species1 {
+				// chrom should be the same between species1 and species2 (special case: panTro6 chr2A, chr2B both count as a match to hg38 chr2)
+				pT6_hg38_chr2 := ((assembly_species1 == "hg38" && assembly_species2 == "panTro6" && chrom_species1 == "chr2" && ((chrom_species2 == "chr2A") || (chrom_species2 == "chr2B"))) || (assembly_species1 == "panTro6" && assembly_species2 == "hg38" && ((chrom_species1 == "chr2A") || (chrom_species1 == "chr2B")) && chrom_species2 == "chr2")) // the special case written as a bool variable
+				if chrom_species2 == chrom_species1 || pT6_hg38_chr2 {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 					bed.WriteBed(out_species1.File, bed_species1)
@@ -135,12 +136,10 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		current_species2 = bed.Bed{Chrom: species2_match_bed[i].Chrom, ChromStart: pos_species2, ChromEnd: species2_match_bed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
 
 		// before writing bed, make sure that
-		// in either species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
-		// gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
-		if current_species1.ChromStart < current_species2.ChromEnd{
+		// in each species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
+		// in each species, gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
+		if current_species1.ChromStart < current_species2.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd {
 			bed.WriteBed(out_species1.File, current_species1)
-		}
-		if current_species2.ChromStart < current_species2.ChromEnd {
 			bed.WriteBed(out_species2.File, current_species2)
 		}
 
