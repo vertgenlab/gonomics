@@ -10,17 +10,17 @@ import (
 )
 
 var globalAlignmentAnchorTests = []struct {
-	in_maf string
-	species1 string
-	species2 string
-	species1_genome string
-	species2_genome string
-	out_maf_expected string
+	in_maf                      string
+	species1                    string
+	species2                    string
+	species1_genome             string
+	species2_genome             string
+	out_maf_expected            string
 	species1_match_bed_expected string
 	species2_match_bed_expected string
-	species1_gap_bed_expected string
-	species2_gap_bed_expected string
-	out_alignment_expected string
+	species1_gap_bed_expected   string
+	species2_gap_bed_expected   string
+	out_alignment_expected      string
 }{
 	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.expected.bed", "testdata/out_rheMac10_gap.expected.bed", "testdata/out_alignment.expected.tsv"},
 }
@@ -31,10 +31,10 @@ func TestGlobalAlignmentAnchorTests(t *testing.T) {
 
 	for _, test := range globalAlignmentAnchorTests {
 		out_maf = strings.Replace(test.in_maf, ".maf", ".filtered.maf", 1)
-		species1_match = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_" + test.species1 + "_match.bed", 1)
-		species2_match = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_" + test.species2 + "_match.bed", 1)
-		species1_gap = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_" + test.species1 + "_gap.bed", 1)
-		species2_gap = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_" + test.species2 + "_gap.bed", 1)
+		species1_match = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_"+test.species1+"_match.bed", 1)
+		species2_match = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_"+test.species2+"_match.bed", 1)
+		species1_gap = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_"+test.species1+"_gap.bed", 1)
+		species2_gap = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_"+test.species2+"_gap.bed", 1)
 		out_alignment = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_alignment.tsv", 1)
 		globalAlignmentAnchor(test.in_maf, test.species1, test.species2, test.species1_genome, test.species2_genome)
 
