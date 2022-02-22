@@ -30,8 +30,7 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 //0 based.
 func AlnPosToRefPos(record Fasta, AlnPos int) int {
 	var RefPos int = 0
-	for t := 0; t < AlnPos; AlnPos++ {
-		t++
+	for t := 0; t < AlnPos; t++ {
 		if t == len(record.Seq) {
 			log.Fatalf("Ran out of chromosome.")
 		} else if record.Seq[t] != dna.Gap {
