@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"io"
 	"sync"
 )
 
@@ -26,6 +27,10 @@ type queryAnswer struct {
 	answer []interval.Interval
 }
 
+type fileWriter interface {
+	WriteToFileHandle(io.Writer)
+}
+
 func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interval.IntervalNode {
 	if aggregate {
 		interval.MergeIntervals(intervals)
@@ -46,22 +51,22 @@ func writeToFile(answerChan <-chan *queryAnswer, outfile *fileio.EasyWriter, mer
 	if mergedOutput {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
-				val.query.WriteToFileHandle(outfile)
+				val.query.(fileWriter).WriteToFileHandle(outfile)
 				for _, curr := range val.answer {
-					curr.WriteToFileHandle(outfile)
+					curr.(fileWriter).WriteToFileHandle(outfile)
 				}
 			}
 		}
 	} else if nonoverlap {
 		for val := range answerChan {
 			if len(val.answer) == 0 {
-				val.query.WriteToFileHandle(outfile)
+				val.query.(fileWriter).WriteToFileHandle(outfile)
 			}
 		}
 	} else {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
-				val.query.WriteToFileHandle(outfile)
+				val.query.(fileWriter).WriteToFileHandle(outfile)
 			}
 		}
 	}
