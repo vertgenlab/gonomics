@@ -41,11 +41,12 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 			if skipGappedConsensus { // ignore gapped position
 				continue
 			} else { // ignore gapped reads
-				p.Count[dna.Gap] = 0
+				p.CountF[dna.Gap] = 0
+				p.CountR[dna.Gap] = 0
 				consensusBase = maxBase(p)
 			}
 		}
-		if p.Count[consensusBase] == 0 { // skip if no data present
+		if p.CountF[consensusBase] == 0 && p.CountR[consensusBase] == 0 { // skip if no data present
 			continue
 		}
 		refName = header.Chroms[p.RefIdx].Name
@@ -64,44 +65,44 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 }
 
 func maxBase(p sam.Pile) dna.Base {
-	var max int = p.Count[0]
+	var max int = p.CountF[dna.A] + p.CountR[dna.A]
 	var outBase dna.Base = dna.A
 
-	if p.Count[dna.G] > max {
-		max = p.Count[dna.G]
+	if p.CountF[dna.G]+p.CountR[dna.G] > max {
+		max = p.CountF[dna.G] + p.CountR[dna.G]
 		outBase = dna.G
 	}
 
-	if p.Count[dna.C] > max {
-		max = p.Count[dna.C]
+	if p.CountF[dna.C]+p.CountR[dna.C] > max {
+		max = p.CountF[dna.C] + p.CountR[dna.C]
 		outBase = dna.C
 	}
 
-	if p.Count[dna.T] > max {
-		max = p.Count[dna.T]
+	if p.CountF[dna.T]+p.CountR[dna.T] > max {
+		max = p.CountF[dna.T] + p.CountR[dna.T]
 		outBase = dna.T
 	}
 
-	if p.Count[dna.Gap] > max {
-		max = p.Count[dna.Gap]
+	if p.CountF[dna.Gap]+p.CountR[dna.Gap] > max {
+		max = p.CountF[dna.Gap] + p.CountR[dna.Gap]
 		outBase = dna.Gap
 	}
 
 	//now we check for ties
 	candidateBases := make([]int, 0, 5)
-	if p.Count[dna.A] == max {
+	if p.CountF[dna.A]+p.CountR[dna.A] == max {
 		candidateBases = append(candidateBases, int(dna.A))
 	}
-	if p.Count[dna.C] == max {
+	if p.CountF[dna.C]+p.CountR[dna.C] == max {
 		candidateBases = append(candidateBases, int(dna.C))
 	}
-	if p.Count[dna.T] == max {
+	if p.CountF[dna.T]+p.CountR[dna.T] == max {
 		candidateBases = append(candidateBases, int(dna.T))
 	}
-	if p.Count[dna.G] == max {
+	if p.CountF[dna.G]+p.CountR[dna.G] == max {
 		candidateBases = append(candidateBases, int(dna.G))
 	}
-	if p.Count[dna.Gap] == max {
+	if p.CountF[dna.Gap]+p.CountR[dna.Gap] == max {
 		candidateBases = append(candidateBases, int(dna.Gap))
 	}
 
