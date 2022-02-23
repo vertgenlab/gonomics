@@ -191,7 +191,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 		species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][(species2_gap_bed[i].ChromStart - 1):(species2_gap_bed[i].ChromEnd - 1)]
 		dna.AllToUpper(species2_seq)
 
-		// align with affineGap, customizeCheckersize, DefaultScoreMatrix
+		// align with affineGap, customizeCheckersize, HumanChimpTwoScoreMatrix
 		bestScore, aln := align.AffineGap_customizeCheckersize(species1_seq, species2_seq, align.HumanChimpTwoScoreMatrix, -600, -150, 10000, 10000)
 
 		// optional: print results to terminal
