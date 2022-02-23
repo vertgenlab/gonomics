@@ -7,7 +7,6 @@ package interval
 
 import (
 	"fmt"
-	"io"
 	"sort"
 )
 
@@ -15,7 +14,6 @@ type Interval interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
-	WriteToFileHandle(io.Writer)
 }
 
 type IntervalNode struct {
