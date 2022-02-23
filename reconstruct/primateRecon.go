@@ -7,8 +7,8 @@ import (
 	//DEBUG: "fmt"
 )
 
-//QuickPrimateRecon returns a human-biased conservative human-chimp ancestor estimate from an input multiFa alignment in the order Human-Chimp-Bonoboo-Orangutan-Gorilla. MessyToN, when true, turns ambiguous bases to Ns in the output.
-func QuickPrimateRecon(records []fasta.Fasta, messyToN bool) fasta.Fasta {
+//PrimateRecon returns a human-biased conservative human-chimp ancestor estimate from an input multiFa alignment in the order Human-Chimp-Bonoboo-Orangutan-Gorilla. MessyToN, when true, turns ambiguous bases to Ns in the output.
+func PrimateRecon(records []fasta.Fasta, messyToN bool) fasta.Fasta {
 	answer := fasta.Fasta{Name: "Human_Chimp_Ancestor"}
 
 	var outputBase dna.Base
@@ -83,11 +83,6 @@ func QuickPrimateRecon(records []fasta.Fasta, messyToN bool) fasta.Fasta {
 		}
 		answer.Seq = append(answer.Seq, outputBase)
 	}
-	//DEBUG:
-	//var humanLength int = len(human.Seq)
-	//fmt.Printf("Read %v bases, NCount: %v. allMatch: %v. humanMatchChimporBonobo: %v. humanChange: %v. gorillaVote: %v. orangutanVote: %v. messyBase: %v.\n",
-	//	humanLength, Ncount, allMatch, humanMatchChimporBonobo, humanChange, gorillaVote, orangutanVote, messyBase)
-
 	return answer
 }
 

@@ -154,14 +154,6 @@ func TestCreateAllNs(t *testing.T) {
 	}
 }
 
-func TestBaseToString(t *testing.T) {
-	expected := "A"
-	actual := BaseToString(A)
-	if expected != actual {
-		t.Errorf("expected %s, actual %s", expected, actual)
-	}
-}
-
 func TestByteSliceToDnaBases(t *testing.T) {
 	expected := []Base{A, C, G, T, LowerA, LowerC, LowerG, LowerT, N, LowerN, Gap, Dot, Nil}
 	actual := ByteSliceToDnaBases([]byte{'A', 'C', 'G', 'T', 'a', 'c', 'g', 't', 'N', 'n', '-', '.', '*'})

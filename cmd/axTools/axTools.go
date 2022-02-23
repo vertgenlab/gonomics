@@ -1,3 +1,5 @@
+// Command Group: "General Tools"
+
 package main
 
 import (
@@ -30,6 +32,7 @@ func main() {
 	var qLen *string = flag.String("qLen", "", "query `chrom.sizes` file containing query sequence lengths")
 
 	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
+	var minScore *int = flag.Int("minScore", 0, "filter axt alignments by minimum score")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
@@ -41,6 +44,8 @@ func main() {
 		axtToFa(input, output, *concensus)
 	} else if *querySwap {
 		QuerySwapAll(input, output, *tLen, *qLen)
+	} else if *minScore != 0 {
+		filterAxtScore(input, output, *minScore)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -51,7 +56,7 @@ func main() {
 
 func filterAxt(input string, output string) {
 	ioWriter := fileio.EasyCreate(output)
-	data := axt.GoReadToChan(input)
+	data, _ := axt.GoReadToChan(input)
 
 	var index int = 0
 	for each := range data {
@@ -81,10 +86,23 @@ func axtQueryGap(record axt.Axt) bool {
 func axtToFa(input string, output string, target string) {
 	ioWriter := fileio.EasyCreate(output)
 	faMap := fasta.ToMap(fasta.Read(target))
-	data := axt.GoReadToChan(input)
+	data, _ := axt.GoReadToChan(input)
 
 	for each := range data {
 		fasta.WriteFasta(ioWriter, axtSeq(each, faMap[each.RName]), 50)
+	}
+}
+
+func filterAxtScore(input string, output string, minScore int) {
+	ioWriter := fileio.EasyCreate(output)
+	data, _ := axt.GoReadToChan(input)
+
+	var index int
+	for each := range data {
+		if each.Score >= minScore {
+			axt.WriteToFileHandle(ioWriter, each, index)
+			index++
+		}
 	}
 }
 
@@ -114,7 +132,7 @@ func QuerySwapAll(input string, output string, targetLen string, queryLen string
 	queryInfo := chromInfo.ReadToMap(queryLen)
 
 	axtWriter := fileio.EasyCreate(output)
-	axtReader := axt.GoReadToChan(input)
+	axtReader, _ := axt.GoReadToChan(input)
 
 	var index int = 0
 	for each := range axtReader {

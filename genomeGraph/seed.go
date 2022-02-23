@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq, left bool, right bool) {
+func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, left bool, right bool) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
 	//check to see if begining is at index zero, if so do something like SeedDev.Prev
 	//if newStart < 0
@@ -24,7 +24,7 @@ func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq, left bool
 	}
 }
 
-func toTheRight(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
+func toTheRight(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq) []*SeedDev {
 	//log.Printf("Depth of call is: %d for seed: %d", depth, seed.TargetId)
 	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, false, true)
@@ -53,7 +53,7 @@ func toTheRight(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
 	return answer
 }
 
-func toTheLeft(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
+func toTheLeft(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq) []*SeedDev {
 	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, true, false)
 	//var newTStart, newQStart int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1
@@ -79,7 +79,7 @@ func toTheLeft(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
 	return answer
 }
 
-func extendSeedTogether(seed *SeedDev, gg *GenomeGraph, read *fastq.Fastq) []*SeedDev {
+func extendSeedTogether(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq) []*SeedDev {
 	var answer []*SeedDev
 	rightGraph := toTheRight(seed, gg, read)
 
@@ -95,7 +95,7 @@ func getLastPart(a *SeedDev) *SeedDev {
 	return a
 }
 
-func CompareBlastScore(a *SeedDev, b *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int {
+func CompareBlastScore(a *SeedDev, b *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int {
 	if BlastSeed(a, read, scoreMatrix) == BlastSeed(b, read, scoreMatrix) {
 		return 0
 	} else if BlastSeed(a, read, scoreMatrix) < BlastSeed(b, read, scoreMatrix) {
@@ -108,11 +108,11 @@ func CompareBlastScore(a *SeedDev, b *SeedDev, read *fastq.Fastq, scoreMatrix []
 	}
 }
 
-func SortBlastz(seeds []*SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) {
+func SortBlastz(seeds []*SeedDev, read fastq.Fastq, scoreMatrix [][]int64) {
 	sort.Slice(seeds, func(i, j int) bool { return CompareBlastScore(seeds[i], seeds[j], read, scoreMatrix) == 1 })
 }
 
-func BlastSeed(seed *SeedDev, read *fastq.Fastq, scoreMatrix [][]int64) int64 {
+func BlastSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	if seed.NextPart == nil {
 		return scoreSeed(seed, read, scoreMatrix)
 	} else {

@@ -54,73 +54,124 @@ func GoReadToChan(filename string) (<-chan Vcf, Header) {
 // processVcfLine is a helper function of NextVcf that parses a VCF struct from an input line of a VCF file provided as a string.
 func processVcfLine(line string) Vcf {
 	var curr Vcf
-	data := strings.SplitN(line, "\t", 10)
-	//switch {
-	//case strings.HasPrefix(line, "#"):
-	//don't do anything
-	//case len(data) == 1:
-	//these lines are sequences, and we are not recording them
-	//case len(line) == 0:
-	//blank line
+	var err error
+	data := strings.Split(line, "\t")
+	if len(data) < 8 {
+		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
+	}
+
+	curr.Chr = data[0]
+	curr.Pos, err = strconv.Atoi(data[1])
+	if err != nil {
+		log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+	}
+	curr.Id = data[2]
+	curr.Ref = data[3]
+	curr.Alt = strings.Split(data[4], ",")
+	curr.Qual = 255
+	if data[5] != "." {
+		curr.Qual, err = strconv.ParseFloat(data[5], 64)
+		if err != nil {
+			log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+		}
+	}
+	curr.Filter = data[6]
+	curr.Info = data[7]
+
 	if len(data) < 9 {
-		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 9 columns", line)
+		// return if no format field found
+		return curr
 	}
-	curr = Vcf{Chr: data[0], Pos: common.StringToInt(data[1]), Id: data[2], Ref: data[3], Alt: strings.Split(data[4], ","), Filter: data[6], Info: data[7], Format: strings.Split(data[8], ":")}
-	if strings.Compare(data[5], ".") == 0 {
-		curr.Qual = 255
-	} else {
-		curr.Qual = common.StringToFloat64(data[5])
-	}
-	if len(data) > 9 {
-		//DEBUG: fmt.Println(line)
-		curr.Samples = ParseNotes(data[9], curr.Format)
-	}
+	curr.Format = strings.Split(data[8], ":")
+	curr.Samples = parseSamples(data[9:], curr.Format, line)
 	return curr
 }
 
-// ParseNotes is a helper function of processVcfLine. Generates a slice of GenomeSample structs from a VCF data line.
-func ParseNotes(data string, format []string) []GenomeSample {
+// parseSamples is a helper function of processVcfLine. Generates a slice of Sample structs from a VCF data line.
+func parseSamples(samples []string, format []string, line string) []Sample {
 	//DEBUG: fmt.Printf("Format: %s. Format[0]: %s.\n", format, format[0])
-	if len(format) == 0 {
-		log.Fatalf("Parsing error: cannot parse notes without formatting information.")
-	}
-	//firstFormat := format[0]
-	//fmt.Println(firstFormat)
-	if format[0] != "GT" && format[0] != "." { //len(format) == 0 checks for when there is info in the notes column but no format specification
-		log.Fatalf("VCF format files with sample information must begin with \"GT\" as the first format column or be marked blank with a period. Here was the first format entry: %s.\nError parsing the line with this Notes column: %s.\n", format[0], data)
+	if format[0] == "." || len(format) == 0 {
+		return nil
 	}
 
-	if format[0] == "." { //if the format column is blank, we do not need to parse further.
-		var blankAnswer []GenomeSample = make([]GenomeSample, 0)
-		return blankAnswer
-	}
-
-	text := strings.Split(data, "\t")
-	var fields []string
-	var alleles []string
-	var err error
-	var n int64
-	var answer []GenomeSample = make([]GenomeSample, len(text))
-	for i := 0; i < len(text); i++ {
-		fields = strings.Split(text[i], ":")
-		if strings.Compare(fields[0], "./.") == 0 || strings.Compare(fields[0], ".|.") == 0 {
-			answer[i] = GenomeSample{AlleleOne: -1, AlleleTwo: -1, Phased: false, FormatData: fields}
-		} else if strings.Contains(fields[0], "|") {
-			alleles = strings.SplitN(fields[0], "|", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: true, FormatData: fields}
-		} else if strings.Contains(fields[0], "/") {
-			alleles = strings.SplitN(fields[0], "/", 2)
-			answer[i] = GenomeSample{AlleleOne: common.StringToInt16(alleles[0]), AlleleTwo: common.StringToInt16(alleles[1]), Phased: false, FormatData: fields}
-		} else {
-			n, err = strconv.ParseInt(fields[0], 10, 16)
-			if err == nil && n < int64(len(text)) {
-				answer[i] = GenomeSample{AlleleOne: int16(n), AlleleTwo: -1, Phased: false, FormatData: fields}
-			} else {
-				log.Fatalf("Error: Unexpected parsing error on the following line:\n%s", data)
-			}
+	for i := 1; i < len(format); i++ {
+		if format[i] == "GT" {
+			log.Fatalf("ERROR: The format key GT is reserved for genotype information. VCF specifications require GT to be present as"+
+				"the first format key if it is present. GT key is misplaced in the following line:\n%s\n", line)
 		}
-		answer[i].FormatData[0] = "" //clears the genotype from the first other slot, making this a dummy position
 	}
+
+	answer := make([]Sample, len(samples))
+	for i := range samples {
+		answer[i].FormatData = strings.Split(samples[i], ":")
+		if format[0] == "GT" {
+			answer[i].Alleles, answer[i].Phase = parseGenotype(answer[i].FormatData[0], line)
+			answer[i].FormatData[0] = ""
+		}
+	}
+	return answer
+}
+
+// parseGenotype returns the alleles and phase parsed from the GT field in Samples
+func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
+	var alleleId int64
+	var err error
+	if gt == "." || gt == "./." {
+		return nil, nil
+	}
+
+	// split GT by '/' or '|'
+	text := splitGenotype(gt)
+	if len(text) == 0 {
+		return
+	}
+
+	alleles = make([]int16, 0, (len(text)+1)/2)
+	phase = make([]bool, 1, cap(alleles)) // phase starts at size 1 for first alleles phase which is set at the end
+
+	for i := range text {
+		if i%2 == 0 { // is allele id
+			if text[i] == "." {
+				alleles = append(alleles, -1)
+				continue
+			}
+			alleleId, err = strconv.ParseInt(text[i], 10, 16)
+			if err != nil {
+				log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
+			}
+			alleles = append(alleles, int16(alleleId))
+
+		} else { // is phase info
+			phase = append(phase, text[i] == "|")
+		}
+	}
+
+	// check to see if all the alleles so far are phased.
+	// if all are phased then alleles[0] is also phased.
+	// if any are false, then alleles[0] is not phased.
+	var allPhased bool = true
+	for i := range phase {
+		if !phase[i] {
+			allPhased = false
+			break
+		}
+	}
+	phase[0] = allPhased
+	return
+}
+
+// splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1")
+func splitGenotype(gt string) []string {
+	answer := make([]string, 0, len(gt))
+	for i := 0; i < len(gt); i++ {
+		if gt[i] == '/' || gt[i] == '|' {
+			answer = append(answer, gt[:i])
+			answer = append(answer, string(gt[i]))
+			gt = gt[i+1:]
+			i = 0
+		}
+	}
+	answer = append(answer, gt)
 	return answer
 }
 
@@ -131,19 +182,6 @@ func NextVcf(reader *fileio.EasyReader) (Vcf, bool) {
 		return Vcf{}, true
 	}
 	return processVcfLine(line), false
-}
-
-// ReadHeader is a helper function of GoReadToChan. Parses a VCF header with a reader.
-func ReadHeader(er *fileio.EasyReader) Header {
-	var line string
-	var err error
-	var nextBytes []byte
-	var header Header
-	for nextBytes, err = er.Peek(1); err == nil && nextBytes[0] == '#'; nextBytes, err = er.Peek(1) {
-		line, _ = fileio.EasyNextLine(er)
-		header = processHeader(header, line)
-	}
-	return header
 }
 
 // FormatToString converts the []string Format struct into a string by concatenating with a colon delimiter.

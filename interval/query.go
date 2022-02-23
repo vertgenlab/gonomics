@@ -28,11 +28,12 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 	case ".bed":
 		receive := bed.GoReadToChan(inputFile)
 		for val := range receive {
-			send <- val
+			newVal := val
+			send <- &newVal
 		}
 
 	case ".axt":
-		receive := axt.GoReadToChan(inputFile)
+		receive, _ := axt.GoReadToChan(inputFile)
 		for val := range receive {
 			send <- val
 		}

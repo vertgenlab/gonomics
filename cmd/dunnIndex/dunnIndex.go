@@ -1,3 +1,5 @@
+// Command Group: "Statistics & Population Genetics"
+
 package main
 
 import (
@@ -15,13 +17,17 @@ func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile str
 	g := popgen.ReadGroups(groupFileName)
 
 	for i := 0; i < len(b); i++ {
+		if b[i].FieldsInitialized >= 7 {
+			log.Fatalf("Bed already contains annotation information that would be overwritten by dunnIndex.")
+		}
+		b[i].FieldsInitialized = 7 //set FieldsInitialized to append annotations.
 		b[i].Annotation = make([]string, 3)
 		dunn, S, missing := popgen.Dunn(b[i], aln, g)
 		b[i].Annotation[0] = fmt.Sprintf("%f", dunn)
 		b[i].Annotation[1] = fmt.Sprintf("%v", S)
 		b[i].Annotation[2] = missing
 	}
-	bed.Write(outFile, b, 7)
+	bed.Write(outFile, b)
 }
 
 func usage() {

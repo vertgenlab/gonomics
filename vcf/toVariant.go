@@ -107,7 +107,7 @@ func sendVariant(sendChans SmallVariantChans, chr string, pos int, refSeq []dna.
 }
 
 // trimMatchingBases removed all left-aligned matching bases in ref and alt fields.
-// returns the trimmed slices and the number of bases trimmed
+// returns the trimmed slices and the Number of bases trimmed
 func trimMatchingBases(a, b []dna.Base) ([]dna.Base, []dna.Base, int) {
 	var offset int
 	for len(a) > 0 && len(b) > 0 {

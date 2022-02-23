@@ -1,3 +1,7 @@
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/vertgenlab/gonomics)](https://goreportcard.com/report/github.com/vertgenlab/gonomics)
+[![codecov](https://codecov.io/gh/vertgenlab/gonomics/branch/main/graph/badge.svg?token=SLasptsu7B)](https://codecov.io/gh/vertgenlab/gonomics)
+
 # gonomics
 A collection of genomics software tools written in Go (golang).
 Authors:
@@ -10,10 +14,7 @@ Authors:
 * Riley J. Mangan
 * Chelsea R. Shoben
 * Daniel A. Snellings
-
-
-
-
+* Seth Weaver
 
 ### Instructions for installing Golang (Go)
 

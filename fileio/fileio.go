@@ -15,6 +15,9 @@ import (
 // MustCreate creates a file with the input name.
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
+	if filename == "" {
+		log.Fatalf("Must write to a non-empty filename")
+	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
 		log.Fatal(err.Error())
@@ -105,8 +108,27 @@ func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	} else {
-		return reader.Peek(n)
+		return peek, err
 	}
+}
+
+// ReadHeader will advance a reader past initial lines that begin with '#',
+// returning a slice of these comments lines and leaving the reader at
+// the first non-comment line
+func ReadHeader(reader *bufio.Reader) ([]string, error) {
+	var peek []byte
+	var peekErr error
+	var header []string
+	var line string
+	for peek, peekErr = reader.Peek(1); peekErr == nil && peek[0] == '#'; peek, peekErr = reader.Peek(1) {
+		line, _ = NextLine(reader)
+		header = append(header, line)
+	}
+
+	if peekErr == io.EOF {
+		return header, nil
+	}
+	return header, peekErr
 }
 
 // equal returns true if two input files are identical
@@ -149,18 +171,6 @@ func AreEqualIgnoreComments(a string, b string) bool {
 // AreEqual returns true if input files are equal.
 func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
-}
-
-// Read inputs a file and returns each line in the file as a string.
-func Read(filename string) []string {
-	var answer []string
-	file := MustOpen(filename)
-	defer file.Close()
-	reader := bufio.NewReader(file)
-	for line, doneReading := NextRealLine(reader); !doneReading; line, doneReading = NextRealLine(reader) {
-		answer = append(answer, line)
-	}
-	return answer
 }
 
 //ReadFileToSingleLineString reads in any file type and returns contents without any \n

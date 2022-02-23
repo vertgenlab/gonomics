@@ -45,14 +45,11 @@ func MakeTestGraph() *genomeGraph.GenomeGraph {
 
 func TestRead(t *testing.T) {
 	// Initialize infile
-	infile := fileio.EasyOpen("testdata/test.giraf.fe")
-	defer infile.Close()
-	reader := NewBinReader(infile.BuffReader)
+	reader := NewBinReader("testdata/test.giraf.fe")
 	var err error
 
 	// Initialize outfile
 	outfile := fileio.EasyCreate("testdata/readtest.giraf")
-	defer outfile.Close()
 
 	// Read info until EOF
 	var curr giraf.Giraf
@@ -69,6 +66,13 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	err = outfile.Close()
+	if err != nil {
+		t.Error(err)
+	}
+	fileio.EasyRemove("testdata/readtest.giraf")
+
 }
 
 func TestReadAndWrite(t *testing.T) {
@@ -76,9 +80,7 @@ func TestReadAndWrite(t *testing.T) {
 	CompressGiraf("testdata/test.giraf", "testdata/test.giraf.fe")
 
 	// Initialize infile
-	infile := fileio.EasyOpen("testdata/test.giraf.fe")
-	defer infile.Close()
-	reader := NewBinReader(infile.BuffReader)
+	reader := NewBinReader("testdata/test.giraf.fe")
 	var err error
 
 	// Read info until EOF

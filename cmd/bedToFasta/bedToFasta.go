@@ -1,3 +1,5 @@
+// Command Group: "Data Conversion"
+
 package main
 
 import (
@@ -10,7 +12,7 @@ import (
 )
 
 func bedToFasta(fastaFile string, bedFile string, outfile string) {
-	var records []*bed.Bed = bed.Read(bedFile)
+	var records []bed.Bed = bed.Read(bedFile)
 	var reference []fasta.Fasta = fasta.Read(fastaFile)
 	var outlist []fasta.Fasta = convert.BedToFasta(records, reference)
 	fasta.Write(outfile, outlist)
@@ -18,7 +20,7 @@ func bedToFasta(fastaFile string, bedFile string, outfile string) {
 
 func usage() {
 	fmt.Print(
-		"bedToFasta - Combines overlapping bed entries, keeping max score. Must be sorted.\n" +
+		"bedToFasta - Extracts sequences from a fasta file from regions specified by an input bed.\n" +
 			"Usage:\n" +
 			"bedToFasta reference.fa intput.bed output.fa\n" +
 			"options:\n")

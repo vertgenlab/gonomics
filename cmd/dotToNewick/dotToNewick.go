@@ -1,3 +1,5 @@
+// Command Group: "Sequence Evolution & Reconstruction"
+
 package main
 
 import (
@@ -8,9 +10,8 @@ import (
 	"log"
 )
 
-func dotToNewick(inFile string, outFile string) {
-	t := tree.ParseDot(inFile)
-
+func dotToNewick(inFile string, outFile string, verbose bool) {
+	t := tree.ParseDot(inFile, verbose)
 	secondErr := tree.WriteNewick(outFile, t)
 	common.ExitIfError(secondErr)
 }
@@ -25,6 +26,7 @@ func usage() {
 }
 
 func main() {
+	var verbose *bool = flag.Bool("verbose", false, "Enables debug prints.")
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -39,5 +41,5 @@ func main() {
 	infile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	dotToNewick(infile, outFile)
+	dotToNewick(infile, outFile, *verbose)
 }

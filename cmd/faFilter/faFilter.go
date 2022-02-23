@@ -1,3 +1,5 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
 package main
 
 import (
@@ -46,9 +48,9 @@ func faFilter(infile string, outfile string, name string, notName string, refPos
 
 func usage() {
 	fmt.Print(
-		"faFilter - Returns a filtered fasta based on argument parameters.\n" +
+		"faFilter - Returns a filtered fasta based on option parameters.\n" +
 			"Usage:\n" +
-			" faFindFast input.fa output.fa\n" +
+			"faFilter input.fa output.fa\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }

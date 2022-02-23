@@ -1,3 +1,5 @@
+// Command Group: "Data Conversion"
+
 package main
 
 import (
@@ -57,10 +59,10 @@ func axtToSam(axtfile string, header sam.Header, output string) {
 	defer writer.Close()
 
 	//setting up channels and wait groups
-	data, results := make(chan axt.Axt, 824), make(chan sam.Sam, 824)
+	results := make(chan sam.Sam, 824)
 	var working, writingJob sync.WaitGroup
 
-	go axt.ReadToChan(axtfile, data)
+	data, _ := axt.GoReadToChan(axtfile)
 
 	if header.Text != nil {
 		sam.WriteHeaderToFileHandle(writer, header)

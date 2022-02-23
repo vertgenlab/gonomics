@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 )
@@ -17,13 +18,13 @@ func StandardNormalDist(x float64) float64 {
 }
 
 //BinomialDist returns the probability mass from a binomial distribution with k successes out of n observations with success probability p.
-func BinomialDist(n int, k int, p float64) float64 {
+//The second return is false if no overflow/underflow was detected. If underflow was detected, the program returns 0 and true.
+func BinomialDist(n int, k int, p float64) (float64, bool) {
 	logAnswer := BinomialDistLog(n, k, p)
-	if LogCanConvert(logAnswer) {
-		return math.Exp(logAnswer)
+	if logspace.CanConvert(logAnswer) {
+		return math.Exp(logAnswer), false
 	}
-	log.Fatalf("Overflow error detected.")
-	return -1
+	return 0, true
 }
 
 //ExpDist returns the density of the standard exponential distribution y=e^-x
@@ -61,7 +62,8 @@ func BetaFunc(x float64, y float64) float64 {
 	return math.Gamma(x) * math.Gamma(y) / math.Gamma(x+y)
 }
 
-//GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
+// GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
+// alpha is the shape parameter and beta is the rate parameter
 func GammaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha < 0 || beta < 0 || x < 0 {
 		log.Fatalf("Alpha, beta parameters and input value must be greater than or equal to 0 in the gamma distribution.")
@@ -239,8 +241,10 @@ func BinomialSum(left int, right int, n int, p float64) float64 {
 		log.Fatalf("BinomialSum failed. Right side value must be greater than the left side value.")
 	}
 	var answer float64 = 0
+	var curr float64
 	for i := left; i <= right; i++ {
-		answer = answer + BinomialDist(n, i, p)
+		curr, _ = BinomialDist(n, i, p)
+		answer += curr
 	}
 	return answer
 }
@@ -248,8 +252,10 @@ func BinomialSum(left int, right int, n int, p float64) float64 {
 //evaluateRightBinomialSum is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the right of an input k value, inclusive.
 func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
+	var curr float64
 	for i := k; i <= n; i++ {
-		answer = answer + BinomialDist(n, i, p)
+		curr, _ = BinomialDist(n, i, p)
+		answer += curr
 	}
 	return answer
 }
@@ -257,8 +263,10 @@ func evaluateRightBinomialSum(n int, k int, p float64) float64 {
 //evaluateLeftBinomialSum is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the left of an input k value, inclusive.
 func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
 	var answer float64 = 0
+	var curr float64
 	for i := 0; i < k+1; i++ {
-		answer = answer + BinomialDist(n, i, p)
+		curr, _ = BinomialDist(n, i, p)
+		answer += curr
 	}
 	return answer
 }

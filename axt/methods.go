@@ -1,6 +1,7 @@
 package axt
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
@@ -23,29 +24,36 @@ func (a *Axt) UpdateLift(c string, start int, end int) {
 	a.REnd = end
 }
 
-type AxtSlice []Axt
+type AxtSlice []*Axt
 
 func (a AxtSlice) Len() int { return len(a) }
 
 func (a AxtSlice) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
-func (a AxtSlice) Push(x interface{}) {
-	answer := x.(Axt)
-	a = append(a, answer)
+func (a *AxtSlice) Push(x interface{}) {
+	answer := x.(*Axt)
+	*a = append(*a, answer)
 }
 
-func (a AxtSlice) Pop() interface{} {
-	answer := a[len(a)-1]
-	a = a[:len(a)-1]
+func (a *AxtSlice) Pop() interface{} {
+	oldQueue := *a
+	n := len(oldQueue)
+	answer := oldQueue[n-1]
+	*a = oldQueue[:n-1]
 	return answer
 }
 
 func (a AxtSlice) Write(file string) {
-	Write(file, a)
+	var err error
+	f := fileio.EasyCreate(file)
+	for i := range a {
+		WriteToFileHandle(f, *a[i], i)
+	}
+	err = f.Close()
+	exception.PanicOnErr(err)
 }
 
 func (a Axt) WriteToFileHandle(file io.Writer) {
-	//TODO: what to do with alnNumber???
 	WriteToFileHandle(file, a, 0)
 }
 

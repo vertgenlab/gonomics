@@ -8,7 +8,7 @@ var httpTestingLookUp = []struct {
 	local    string
 	internet string
 }{
-	{"../README.md", "https://raw.githubusercontent.com/vertgenlab/gonomics/main/README.md"},
+	{"testdata/humanGenomeAbstract.txt", "https://raw.githubusercontent.com/vertgenlab/gonomics/main/fileio/testdata/humanGenomeAbstract.txt"},
 }
 
 // TestHttpReader will parse a local text file and a file uploaded to an internew server and compare the lines
@@ -36,8 +36,8 @@ func TestHttpReader(t *testing.T) {
 }
 
 func TestCatUrl(t *testing.T) {
-	answer := CatUrl("https://raw.githubusercontent.com/vertgenlab/gonomics/main/README.md")
-	localFile := EasyOpen("../README.md")
+	answer := CatUrl("https://raw.githubusercontent.com/vertgenlab/gonomics/main/fileio/testdata/humanGenomeAbstract.txt")
+	localFile := EasyOpen("testdata/humanGenomeAbstract.txt")
 	var expected string
 	for data, done := EasyNextLine(localFile); !done; data, done = EasyNextLine(localFile) {
 		expected = expected + data + "\n"

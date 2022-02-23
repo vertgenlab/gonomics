@@ -1,3 +1,6 @@
+// Command Group: "Sequence Evolution & Reconstruction"
+// Command Usage: "Create PNG of Newick tree"
+
 package main
 
 import (

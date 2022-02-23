@@ -36,9 +36,9 @@ func TestValidRelationship(op string) bool {
 	return true
 }
 
-func transform(query Interval, op string) (x1, x2, y1, y2 float32) {
-	var x float32 = float32(query.GetChromStart())
-	var y float32 = float32(query.GetChromEnd())
+func transform(query Interval, op string) (x1, x2, y1, y2 float64) {
+	var x float64 = float64(query.GetChromStart())
+	var y float64 = float64(query.GetChromEnd() - 1)
 
 	switch op {
 	case "o":

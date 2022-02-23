@@ -46,10 +46,36 @@ func TestAffineGap(t *testing.T) {
 	for _, test := range affineAlignTests {
 		basesOne := dna.StringToBases(test.seqOne)
 		basesTwo := dna.StringToBases(test.seqTwo)
-		_, cigar := AffineGap(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		_, cigar := AffineGap_highMem(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
 			t.Errorf("The affine gap alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
+		}
+	}
+}
+
+func TestAffineGap_lowMem(t *testing.T) {
+	for _, test := range affineAlignTests {
+		basesOne := dna.StringToBases(test.seqOne)
+		basesTwo := dna.StringToBases(test.seqTwo)
+		score_highest_highMem, route_highMem := AffineGap_highMem(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		score_highest_lowMem, route_lowMem := AffineGap(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
+		score_highest_lowMem_customizeCheckersize, route_lowMem_customizeCheckersize := AffineGap_customizeCheckersize(basesOne, basesTwo, DefaultScoreMatrix, -400, -30, 3, 3)
+		if score_highest_lowMem != score_highest_highMem {
+			t.Errorf("score_highest_lowMem gave %d, but expected it to be the same as score_highest_highMem which gave %d\n", score_highest_lowMem, score_highest_highMem)
+		}
+		if score_highest_lowMem_customizeCheckersize != score_highest_highMem {
+			t.Errorf("score_highest_lowMem_customizeCheckersize gave %d, but expected it to be the same as score_highest_highMem which gave %d\n", score_highest_lowMem_customizeCheckersize, score_highest_highMem)
+		}
+		for i := range route_lowMem {
+			if route_lowMem[i] != route_highMem[i] {
+				t.Errorf("route_lowMem gave %v, but expected it to be the same as route_highMem which gave %v\n", route_lowMem, route_highMem)
+			}
+		}
+		for i := range route_lowMem_customizeCheckersize {
+			if route_lowMem_customizeCheckersize[i] != route_highMem[i] {
+				t.Errorf("route_lowMem_customizeCheckersize gave %v, but expected it to be the same as route_highMem which gave %v\n", route_lowMem_customizeCheckersize, route_highMem)
+			}
 		}
 	}
 }

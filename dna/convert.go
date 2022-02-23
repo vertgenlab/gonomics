@@ -122,6 +122,14 @@ func BaseToString(b Base) string {
 	return string(baseToByteArray[b])
 }
 
+// StringToBase parses a string into a single DNA base
+func StringToBase(s string) Base {
+	if len(s) != 1 {
+		log.Panic("String with a length other than 1 can not be turned into a dna.Base\n")
+	}
+	return ByteToBase(s[0])
+}
+
 // StringToBases parses a string into a slice of DNA bases
 func StringToBases(s string) []Base {
 	answer := make([]Base, len(s))

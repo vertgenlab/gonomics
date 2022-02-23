@@ -19,10 +19,6 @@ jobs:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go get -v golang.org/x/image/font &&
-        go get -v golang.org/x/image/math/fixed &&
-        go get -v golang.org/x/image/font/basicfont &&
-        go get -v github.com/biogo/hts/bgzf &&
         go build ./...
   
   test:
@@ -35,10 +31,6 @@ jobs:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go get -v golang.org/x/image/font &&
-        go get -v golang.org/x/image/math/fixed &&
-        go get -v golang.org/x/image/font/basicfont &&
-        go get -v github.com/biogo/hts/bgzf &&
         go test ./...
         
   format:
@@ -62,3 +54,27 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git commit -am "Automated go fmt"
           git push
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Run coverage
+        run: 
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go test -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          files: /home/runner/go/src/github.com/vertgenlab/gonomics/coverage.txt
+          verbose: true
+
