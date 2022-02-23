@@ -66,51 +66,33 @@ func samConsensus(samFileName string, refFile string, outFile string, vcfFile st
 
 func maxBase(p sam.Pile) dna.Base {
 	var max int = p.CountF[dna.A] + p.CountR[dna.A]
-	var outBase dna.Base = dna.A
+	tiedBases := make([]dna.Base, 1) // zero value is dna.A
 
-	if p.CountF[dna.G]+p.CountR[dna.G] > max {
-		max = p.CountF[dna.G] + p.CountR[dna.G]
-		outBase = dna.G
-	}
+	max, tiedBases = getMax(p, max, dna.C, tiedBases)
+	max, tiedBases = getMax(p, max, dna.G, tiedBases)
+	max, tiedBases = getMax(p, max, dna.T, tiedBases)
+	max, tiedBases = getMax(p, max, dna.Gap, tiedBases)
 
-	if p.CountF[dna.C]+p.CountR[dna.C] > max {
-		max = p.CountF[dna.C] + p.CountR[dna.C]
-		outBase = dna.C
-	}
-
-	if p.CountF[dna.T]+p.CountR[dna.T] > max {
-		max = p.CountF[dna.T] + p.CountR[dna.T]
-		outBase = dna.T
+	if len(tiedBases) == 1 {
+		return tiedBases[0]
 	}
 
-	if p.CountF[dna.Gap]+p.CountR[dna.Gap] > max {
-		max = p.CountF[dna.Gap] + p.CountR[dna.Gap]
-		outBase = dna.Gap
+	return tiedBases[numbers.RandIntInRange(0, len(tiedBases))]
+}
+
+func getMax(p sam.Pile, currMax int, testBase dna.Base, tiedBases []dna.Base) (int, []dna.Base) {
+	var count int = p.CountF[testBase] + p.CountR[testBase]
+	if count > currMax {
+		tiedBases = tiedBases[:1] // reset tied bases
+		tiedBases[0] = testBase
+		return count, tiedBases
 	}
 
-	//now we check for ties
-	candidateBases := make([]int, 0, 5)
-	if p.CountF[dna.A]+p.CountR[dna.A] == max {
-		candidateBases = append(candidateBases, int(dna.A))
-	}
-	if p.CountF[dna.C]+p.CountR[dna.C] == max {
-		candidateBases = append(candidateBases, int(dna.C))
-	}
-	if p.CountF[dna.T]+p.CountR[dna.T] == max {
-		candidateBases = append(candidateBases, int(dna.T))
-	}
-	if p.CountF[dna.G]+p.CountR[dna.G] == max {
-		candidateBases = append(candidateBases, int(dna.G))
-	}
-	if p.CountF[dna.Gap]+p.CountR[dna.Gap] == max {
-		candidateBases = append(candidateBases, int(dna.Gap))
+	if count == currMax {
+		tiedBases = append(tiedBases, testBase)
 	}
 
-	if len(candidateBases) == 1 {
-		return outBase
-	}
-
-	return dna.Base(candidateBases[numbers.RandIntInRange(0, len(candidateBases))])
+	return currMax, tiedBases
 }
 
 func usage() {
