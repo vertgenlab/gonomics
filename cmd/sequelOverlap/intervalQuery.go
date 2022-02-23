@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"io"
 	"sync"
@@ -47,7 +46,7 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 	wg.Done()
 }
 
-func writeToFile(answerChan <-chan *queryAnswer, outfile *fileio.EasyWriter, mergedOutput bool, nonoverlap bool) {
+func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput bool, nonoverlap bool) {
 	if mergedOutput {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
