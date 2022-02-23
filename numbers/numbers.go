@@ -2,6 +2,7 @@
 package numbers
 
 import (
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 )
@@ -172,12 +173,12 @@ func BinomCoefficientLog(n int, k int) float64 {
 	var x, y int
 	var numer, denom float64 = 0.0, 0.0
 	for x = k + 1; x < n+1; x++ {
-		numer = MultiplyLog(numer, math.Log(float64(x)))
+		numer = logspace.Multiply(numer, math.Log(float64(x)))
 	}
 	for y = 2; y < n-k+1; y++ {
-		denom = MultiplyLog(denom, math.Log(float64(y)))
+		denom = logspace.Multiply(denom, math.Log(float64(y)))
 	}
-	return DivideLog(numer, denom)
+	return logspace.Divide(numer, denom)
 }
 
 //Factorial returns n! in normal space.

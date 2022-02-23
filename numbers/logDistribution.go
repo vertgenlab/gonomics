@@ -1,8 +1,8 @@
 package numbers
 
 import (
-//DEBUG: "fmt"
-//DEBUG"log"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"math"
 )
 
 //BinomialDistLog returns log(BinomialDist), where log is the natural logarithm.
@@ -10,15 +10,15 @@ import (
 func BinomialDistLog(n int, k int, p float64) float64 {
 	coefficient := BinomCoefficientLog(n, k)
 	expression := BinomialExpressionLog(n, k, p)
-	return MultiplyLog(coefficient, expression)
+	return logspace.Multiply(coefficient, expression)
 }
 
 //BinomialExpressionLog returns p^n * (1 - p)^n-k, which is also refered to as the binomial expression. The answer is provided in logSpace (
 func BinomialExpressionLog(n int, k int, p float64) float64 {
-	s := LogPow(p, float64(k))
-	f := LogPow(1.0-p, float64(n-k))
+	s := logspace.Pow(math.Log(p), float64(k))
+	f := logspace.Pow(math.Log(1.0-p), float64(n-k))
 	//DEBUG:log.Printf("n: %d. k: %d. p: %f. s: %e. f: %e.\n",n, k, p, s, f)
-	return MultiplyLog(s, f)
+	return logspace.Multiply(s, f)
 }
 
 //BinomialDistLogMap returns log(BinomialDist), where log is the natural logarithm.
@@ -30,10 +30,10 @@ func BinomialDistLogSlice(n int, k int, p float64, binomCache [][]float64) float
 	if binomCache[n] == nil {
 		binomCache[n] = AddBinomMapEntry(n)
 	}
-	s := LogPow(p, float64(k))
-	f := LogPow(1.0-p, float64(n-k))
-	expression := MultiplyLog(s, f)
-	return MultiplyLog(expression, binomCache[n][k])
+	s := logspace.Pow(math.Log(p), float64(k))
+	f := logspace.Pow(math.Log(1.0-p), float64(n-k))
+	expression := logspace.Multiply(s, f)
+	return logspace.Multiply(expression, binomCache[n][k])
 }
 
 //AddBinomMapEntry adds an entry to a binomMap containing a slice of binomial coefficients in logSpace for a particular n value.
