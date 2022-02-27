@@ -12,25 +12,38 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
+	"strings"
 )
 
-func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string, clearInfo bool) {
+func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string, clearInfo bool, tableOutput bool) {
+	if ensemblToUCSC && UCSCToEnsembl {
+		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
+	}
+
+	var maxAlts int
+	if tableOutput {
+		maxAlts = getMaxAltCount(infile)
+	}
+
 	ch, header := vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	var err error
 
 	var refMap map[string][]dna.Base
+	var infoOrder []vcf.InfoHeader
+	var formatOrder []vcf.FormatHeader
 
-	vcf.NewWriteHeader(out, header)
-
-	if ensemblToUCSC && UCSCToEnsembl {
-		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
+	if tableOutput {
+		infoOrder, formatOrder = writeTableHeader(out, header, maxAlts)
+	} else { // normal vcf output
+		vcf.NewWriteHeader(out, header)
 	}
 
 	if fixVcfRecords {
 		refMap = fasta.ToMap(fasta.Read(ref))
 	}
 
+	s := new(strings.Builder)
 	for v := range ch {
 		if clearInfo {
 			v.Info = "."
@@ -44,7 +57,11 @@ func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl 
 		if UCSCToEnsembl {
 			v.Chr = convert.UCSCToEnsembl(v.Chr)
 		}
-		vcf.WriteVcf(out, v)
+		if tableOutput {
+			writeAsTable(s, out, v, header, infoOrder, formatOrder, maxAlts)
+		} else { // normal vcf output
+			vcf.WriteVcf(out, v)
+		}
 	}
 
 	err = out.Close()
@@ -67,6 +84,7 @@ func main() {
 	var clearInfo *bool = flag.Bool("clearInfo", false, "Removes the information in the INFO field and replaces it with a '.'")
 	var fixVcfRecords *bool = flag.Bool("fix", false, "Fixes improperly formatted vcf records (e.g. '-' in ALT field")
 	var ref *string = flag.String("ref", "", "Reference fasta. Only needed if using -fix.")
+	var tableOutput *bool = flag.Bool("csv", false, "Output as CSV file for spreadsheet analysis. Requires well-formed header.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -80,6 +98,5 @@ func main() {
 
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
-
-	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref, *clearInfo)
+	vcfFormat(infile, outfile, *ensemblToUCSC, *UCSCToEnsembl, *fixVcfRecords, *ref, *clearInfo, *tableOutput)
 }
