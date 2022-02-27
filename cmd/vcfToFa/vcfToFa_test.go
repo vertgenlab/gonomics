@@ -26,7 +26,11 @@ var VcfToFaTests = []struct {
 func TestVcfToFa(t *testing.T) {
 	var err error
 	for _, v := range VcfToFaTests {
-		vcfToFa(v.inputVcfFile, v.inputFaFile, v.actualOutputFile, v.useAlt, v.multiFaMode, v.multiFaChromName)
+		if v.multiFaMode {
+			vcfToMultiFa(v.inputVcfFile, v.inputFaFile, v.actualOutputFile, v.multiFaChromName, v.useAlt)
+		} else {
+			vcfToFa(v.inputVcfFile, v.inputFaFile, v.actualOutputFile, v.useAlt)
+		}
 		if !fileio.AreEqual(v.actualOutputFile, v.expectedOutputFile) {
 			t.Errorf("VcfToFa output did not match expected output.")
 		} else {

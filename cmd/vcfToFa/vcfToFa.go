@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, useAlt bool, multiFaMode bool, multiFaChromName string) {
+func vcfToMultiFa(inVcfFilename string, inFaFilename string, outFaFilename string, chromName string, useAlt bool) {
 	var seqsOrdered []fasta.Fasta
 	var seqsLookup fasta.FastaMap
 	var vcfRecords <-chan vcf.Vcf
@@ -22,11 +22,13 @@ func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, us
 	var outIndex int
 	var prevRefPos, prevAlnPos int = 0, 0
 
-	// We hang on to the ordered version of the fasta sequences so that we could
-	// output the edited sequences (those in the map) in the same order that
-	// we originally read them, but we do not have that currently
+	if chromName == "" {
+		log.Fatalf("Must specify a chrom name when using multiFa mode.")
+	}
+
 	seqsOrdered = fasta.Read(inFaFilename)
-	if multiFaMode && useAlt {
+
+	if useAlt {
 		var refSeqCopy []dna.Base
 		if len(seqsOrdered) == 0 {
 			log.Fatalf("Input fasta must contain at least one record in multiFaMode.")
@@ -38,49 +40,62 @@ func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, us
 		outIndex = len(seqsOrdered) - 1 //index of the output sequence.
 	}
 	seqsLookup = fasta.ToMap(seqsOrdered)
-
-	// we could do some sort of header check here to make sure the fa matches the vcf
 	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
-
 	for v := range vcfRecords {
-		//first a block of code to enforce sorted order in multiFaMode.
-		if firstTime && multiFaMode && v.Chr == multiFaChromName { //only check if in multiFaMode and we have the right chrom
+		//first a block of code to enforce sorted order.
+		if firstTime && v.Chr == chromName { //only check if we have the right chrom
 			firstTime = false
 			prevPos = v.Pos
-		} else if multiFaMode {
-			if v.Pos <= prevPos && v.Chr == multiFaChromName {
-				log.Fatalf("Input VCF variants must be in sorted order in multiFaMode.")
-			}
+		} else if v.Pos <= prevPos && v.Chr == chromName {
+			log.Fatalf("Input VCF variants must be in sorted order in multiFaMode.")
 		}
 
 		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
 			log.Fatal("Error: currently we only handle biallelic substitutions\n")
 		}
-
-		if multiFaMode {
-			if v.Chr == multiFaChromName && useAlt { //only consider variants with the correct chrom name.
-				currAlnPos = fasta.RefPosToAlnPosCounter(seqsOrdered[outIndex], v.Pos-1, prevRefPos, prevAlnPos)
-				if seqsLookup[multiFaAppendName][currAlnPos] != dna.StringToBase(v.Ref) {
-					log.Fatalf("Error: base in fasta didn't match ref base from VCF record.\n"+
-						"CurrAlnPos: %v. VarPos(1base): %v. SequenceFound: %v. v.Ref: %v.\n", currAlnPos, v.Pos, dna.BaseToString(seqsLookup[multiFaAppendName][currAlnPos]), v.Ref)
-				}
-				if useAlt {
-					seqsLookup[multiFaAppendName][currAlnPos] = dna.StringToBase(v.Alt[0])
-				}
-
-				//update the ref/aln pos pair
-				prevRefPos = v.Pos - 1 //move to 0 base from 1-based vcf
-				prevAlnPos = currAlnPos
+		if v.Chr == chromName && useAlt { //only consider variants with the correct chrom name.
+			currAlnPos = fasta.RefPosToAlnPosCounter(seqsOrdered[outIndex], v.Pos-1, prevRefPos, prevAlnPos)
+			if seqsLookup[multiFaAppendName][currAlnPos] != dna.StringToBase(v.Ref) {
+				log.Fatalf("Error: base in fasta didn't match ref base from VCF record.\n"+
+					"CurrAlnPos: %v. VarPos(1base): %v. SequenceFound: %v. v.Ref: %v.\n", currAlnPos, v.Pos, dna.BaseToString(seqsLookup[multiFaAppendName][currAlnPos]), v.Ref)
 			}
-		} else {
-			// check to make sure the fa matches the vcf before we edit
-			if seqsLookup[v.Chr][v.Pos-1] != dna.StringToBase(v.Ref) {
-				log.Fatal("Error: base in fasta didn't match ref base from VCF record\n")
-			}
-
 			if useAlt {
-				seqsLookup[v.Chr][v.Pos-1] = dna.StringToBase(v.Alt[0])
+				seqsLookup[multiFaAppendName][currAlnPos] = dna.StringToBase(v.Alt[0])
 			}
+
+			//update the ref/aln pos pair
+			prevRefPos = v.Pos - 1 //move to 0 base from 1-based vcf
+			prevAlnPos = currAlnPos
+		}
+	}
+	fasta.Write(outFaFilename, seqsOrdered)
+}
+
+func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, useAlt bool) {
+	var seqsOrdered []fasta.Fasta
+	var seqsLookup fasta.FastaMap
+	var vcfRecords <-chan vcf.Vcf
+
+	// We hang on to the ordered version of the fasta sequences so that we could
+	// output the edited sequences (those in the map) in the same order that
+	// we originally read them, but we do not have that currently
+	seqsOrdered = fasta.Read(inFaFilename)
+	seqsLookup = fasta.ToMap(seqsOrdered)
+
+	// we could do some sort of header check here to make sure the fa matches the vcf
+	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
+	for v := range vcfRecords {
+		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
+			log.Fatal("Error: currently we only handle biallelic substitutions\n")
+		}
+
+		// check to make sure the fa matches the vcf before we edit
+		if seqsLookup[v.Chr][v.Pos-1] != dna.StringToBase(v.Ref) {
+			log.Fatal("Error: base in fasta didn't match ref base from VCF record\n")
+		}
+
+		if useAlt {
+			seqsLookup[v.Chr][v.Pos-1] = dna.StringToBase(v.Alt[0])
 		}
 	}
 
@@ -126,5 +141,9 @@ func main() {
 		log.Fatal("Error: you must use at least one option or the fasta file will have no edits\n")
 	}
 
-	vcfToFa(inVcfFilename, inFaFilename, outFaFilename, *useAlt, *multiFaMode, *multiFaChromName)
+	if *multiFaMode {
+		vcfToMultiFa(inVcfFilename, inFaFilename, outFaFilename, *multiFaChromName, *useAlt)
+	} else {
+		vcfToFa(inVcfFilename, inFaFilename, outFaFilename, *useAlt)
+	}
 }

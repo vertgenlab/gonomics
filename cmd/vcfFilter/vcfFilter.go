@@ -15,28 +15,34 @@ import (
 	"strings"
 )
 
+//coordinate is a chrom/pos pair, refering to a specific place in the genome.
+type coordinate struct {
+	Chr string
+	Pos int
+}
+
+func getSitesSeen(filename string) map[coordinate]uint8 {
+	var sitesSeen map[coordinate]uint8 = make(map[coordinate]uint8, 0)
+	var records <-chan vcf.Vcf
+	records, _ = vcf.GoReadToChan(filename)
+	var currentCoord coordinate
+	for v := range records {
+		currentCoord = coordinate{v.Chr, v.Pos}
+		sitesSeen[currentCoord]++
+	}
+	return sitesSeen
+}
+
 func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
 	rand.Seed(setSeed)
 	var records <-chan vcf.Vcf
 	var header vcf.Header
 	var err error
-	var mapContains bool
-	var sitesSeen map[string]map[int]uint8 = make(map[string]map[int]uint8, 0) //uint8 is the number of times this site is seen in the vcf file.
+	var currentCoord coordinate
+	var sitesSeen map[coordinate]uint8 = make(map[coordinate]uint8, 0) //uint8 is the number of times this site is seen in the vcf file.
 
 	if c.biAllelicOnly {
-		records, _ = vcf.GoReadToChan(infile)
-		for v := range records {
-			if _, mapContains = sitesSeen[v.Chr]; mapContains { //if an entry in the map for the current chrom exists
-				if _, mapContains = sitesSeen[v.Chr][v.Pos]; mapContains {
-					sitesSeen[v.Chr][v.Pos]++
-				} else {
-					sitesSeen[v.Chr][v.Pos] = 1
-				}
-			} else {
-				sitesSeen[v.Chr] = make(map[int]uint8)
-				sitesSeen[v.Chr][v.Pos] = 1
-			}
-		}
+		sitesSeen = getSitesSeen(infile)
 	}
 
 	records, header = vcf.GoReadToChan(infile)
@@ -70,9 +76,10 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		}
 
 		if c.biAllelicOnly {
-			if sitesSeen[v.Chr][v.Pos] < 1 {
+			currentCoord = coordinate{v.Chr, v.Pos}
+			if sitesSeen[currentCoord] < 1 {
 				log.Panicf("Current variant not found in sitesSeen map. Something went horribly wrong. %v.\n", v)
-			} else if sitesSeen[v.Chr][v.Pos] > 1 {
+			} else if sitesSeen[currentCoord] > 1 {
 				removed++
 				continue
 			}
