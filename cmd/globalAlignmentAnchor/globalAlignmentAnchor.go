@@ -139,13 +139,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		// in each species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
 		// in each species, gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
 		// the size of the gaps are practical for our alignment algorithm. The 2 sequences' product should be <=1E10. Calculate gap size product
-<<<<<<< HEAD
 		gapSizeProduct := (current_species1.ChromEnd - current_species1.ChromStart)*(current_species2.ChromEnd - current_species2.ChromStart)
 		if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
-=======
-		gapSizeProduct := (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
-		if !(current_species1.ChromStart < current_species2.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
->>>>>>> f770643a576b035e9c962bd96d971314eb4fab17
 			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
 		} else if gapSizeProduct > 10000000000 {
 			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
