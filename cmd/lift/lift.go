@@ -12,11 +12,16 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"log"
 	"unicode/utf8"
 )
 
 const Verbose int = 0
+
+type fileWriter interface {
+	WriteToFileHandle(io.Writer)
+}
 
 func lift(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64) {
 	if minMatch < 0.0 || minMatch > 1.0 {
@@ -62,14 +67,14 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 		overlap = interval.Query(tree, i, "any") //TODO: verify proper t/q contains
 		if len(overlap) > 1 {
 			fmt.Fprintf(un, "Record below maps to multiple chains:\n")
-			i.WriteToFileHandle(un)
+			i.(fileWriter).WriteToFileHandle(un)
 		} else if len(overlap) == 0 {
 			fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
-			i.WriteToFileHandle(un)
+			i.(fileWriter).WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
 			a, b = interval.MatchProportion(overlap[0].(*chain.Chain), i)
 			fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
-			i.WriteToFileHandle(un)
+			i.(fileWriter).WriteToFileHandle(un)
 		} else {
 			//DEBUG: interval.PrettyPrint(i)
 			i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i)) //now i is 1-based and we can assert VCF.
@@ -80,31 +85,31 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 				currVcf = *i.(*vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
 					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
-					i.WriteToFileHandle(un)
+					i.(fileWriter).WriteToFileHandle(un)
 					//log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.") //Currently we're causing INDEL records to fatal.
 				} else if len(currVcf.Alt) > 1 {
 					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
-					i.WriteToFileHandle(un)
+					i.(fileWriter).WriteToFileHandle(un)
 				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
 					if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
 						fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 					}
-					i.WriteToFileHandle(out)
+					i.(fileWriter).WriteToFileHandle(out)
 					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
 				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
 					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
-					i.WriteToFileHandle(un)
+					i.(fileWriter).WriteToFileHandle(un)
 					currVcf = vcf.InvertVcf(currVcf)
 					i = &currVcf
-					i.WriteToFileHandle(out)
+					i.(fileWriter).WriteToFileHandle(out)
 				} else {
 					fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
-					i.WriteToFileHandle(un)
+					i.(fileWriter).WriteToFileHandle(un)
 				}
 			} else {
-				i.WriteToFileHandle(out)
+				i.(fileWriter).WriteToFileHandle(out)
 			}
 		}
 	}
