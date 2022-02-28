@@ -1,0 +1,12 @@
+a score=160590.0
+s hg38.chr1     10 10 +  700 cctaacccta
+s rheMac10.chr1 15  5 - 1300 ccagg
+
+a score=22358.0
+s hg38.chr1     30 10 +  700 ctaaccctaa
+s rheMac10.chr1 30  5 + 1300 gtggc
+
+a score=98078.0
+s hg38.chr2     5 30 + 550 GAACGGAGCAGCTGGTGATGTGTGGGCCCA
+s rheMac10.chr2 8 12 + 850 TGTGATACGTGG
+
