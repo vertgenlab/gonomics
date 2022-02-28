@@ -25,9 +25,10 @@ func getSitesSeen(filename string) map[coordinate]uint8 {
 	var sitesSeen map[coordinate]uint8 = make(map[coordinate]uint8, 0)
 	var records <-chan vcf.Vcf
 	records, _ = vcf.GoReadToChan(filename)
-	var currentCoord coordinate
+	var currentCoord coordinate = coordinate{"", 0}
 	for v := range records {
-		currentCoord = coordinate{v.Chr, v.Pos}
+		currentCoord.Chr = v.Chr
+		currentCoord.Pos = v.Pos
 		sitesSeen[currentCoord]++
 	}
 	return sitesSeen
@@ -315,7 +316,7 @@ func main() {
 	var minQual *float64 = flag.Float64("minQual", 0, "Specifies the minimum quality score.")
 	var ref *string = flag.String("ref", "", "Specifies the reference field.")
 	var alt *string = flag.String("alt", "", "Specifies the alt field.")
-	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file.")
+	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file. Not compatible with stdin.")
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "Retains only substitution variants in the output file (removes INDEL variants).")
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
