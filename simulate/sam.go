@@ -91,11 +91,11 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 
 	// assemble cigar
 	if realSeqStartIdx > start {
-		s.Cigar = append(s.Cigar, &cigar.Cigar{RunLength: realSeqStartIdx - start, Op: 'S', Sequence: nil})
+		s.Cigar = append(s.Cigar, cigar.Cigar{RunLength: realSeqStartIdx - start, Op: 'S'})
 	}
-	s.Cigar = append(s.Cigar, &cigar.Cigar{RunLength: realSeqEndIdx - realSeqStartIdx, Op: 'M', Sequence: nil})
+	s.Cigar = append(s.Cigar, cigar.Cigar{RunLength: realSeqEndIdx - realSeqStartIdx, Op: 'M'})
 	if realSeqEndIdx < end {
-		s.Cigar = append(s.Cigar, &cigar.Cigar{RunLength: end - realSeqEndIdx, Op: 'S', Sequence: nil})
+		s.Cigar = append(s.Cigar, cigar.Cigar{RunLength: end - realSeqEndIdx, Op: 'S'})
 	}
 
 	return s

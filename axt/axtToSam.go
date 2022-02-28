@@ -32,9 +32,9 @@ func ToSam(axtFmt Axt) sam.Sam {
 
 // PairSeqToCigar takes in two sequences representing an alignment between the two
 // sequences and outputs a slice of cigars describing the input alignment.
-func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
-	var align []*cigar.Cigar = make([]*cigar.Cigar, 0)
-	curr := &cigar.Cigar{}
+func PairSeqToCigar(a []dna.Base, b []dna.Base) []cigar.Cigar {
+	var align []cigar.Cigar = make([]cigar.Cigar, 0)
+	curr := cigar.Cigar{}
 	var i int
 	for i = 0; i < len(a); i++ {
 		switch true {
@@ -62,8 +62,8 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []*cigar.Cigar {
 }
 
 // equalMatchCigar is a helper function for PairSeqToCigar
-func equalMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
-	match := &cigar.Cigar{Op: '=', RunLength: 1}
+func equalMatchCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
+	match := cigar.Cigar{Op: '=', RunLength: 1}
 	var i int
 	for i = index + 1; i < len(a); i++ {
 		if a[i] == b[i] && a[i] != dna.Gap && b[i] != dna.Gap {
@@ -76,8 +76,8 @@ func equalMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 }
 
 // diffMatchCigar is a helper function for PairSeqToCigar
-func diffMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
-	match := &cigar.Cigar{Op: 'X', RunLength: 1}
+func diffMatchCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
+	match := cigar.Cigar{Op: 'X', RunLength: 1}
 	var i int
 	for i = index + 1; i < len(a); i++ {
 		if a[i] != b[i] && a[i] != dna.Gap && b[i] != dna.Gap {
@@ -90,8 +90,8 @@ func diffMatchCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 }
 
 // insertCigar is a helper function for PairSeqToCigar
-func insertCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
-	insertion := &cigar.Cigar{Op: 'I', RunLength: 1}
+func insertCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
+	insertion := cigar.Cigar{Op: 'I', RunLength: 1}
 	var i int
 	//starting loop at +1 since we already checked in the wrapper function above
 	for i = index + 1; i < len(a); i++ {
@@ -105,8 +105,8 @@ func insertCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
 }
 
 // deletionCigar is a helper function for PairSeqToCigar
-func deletionCigar(a []dna.Base, b []dna.Base, index int) *cigar.Cigar {
-	deletion := &cigar.Cigar{Op: 'D', RunLength: 1}
+func deletionCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
+	deletion := cigar.Cigar{Op: 'D', RunLength: 1}
 	var i int
 	//starting loop at +1 since we already checked in the wrapper function above
 	for i = index + 1; i < len(a); i++ {

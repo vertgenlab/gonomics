@@ -52,7 +52,7 @@ func BenchmarkCigarToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		ToString([]*Cigar{&c1, &c2, &c3})
+		ToString([]Cigar{c1, c2, c3})
 	}
 }
 
