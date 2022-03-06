@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -19,149 +18,81 @@ import (
 	//"math/rand"
 )
 
-func samConsensus(samFileName string, refFile string, outFile string, vcfFile string) {
+func samConsensus(samFileName string, refFile string, outFile string, vcfFile string, skipGappedConsensus bool) {
 	ref := fasta.Read(refFile)
-	fasta.AllToUpper(ref)
-
-	votingMatrix := make(map[string][]voteBase, len(ref))
-	var i, k int
-	for i := range ref {
-		votingMatrix[ref[i].Name] = make([]voteBase, len(ref[i].Seq))
-		for k := range ref[i].Seq {
-			votingMatrix[ref[i].Name][k] = voteBase{0, 0, 0, 0, 0}
-		}
-	}
-
-	samFile := fileio.EasyOpen(samFileName)
 	var err error
-	var done bool = false
-	var RefIndex, SeqIndex int
-	var currentSeq []dna.Base
-	var aln sam.Sam
-
-	sam.ReadHeader(samFile)
-
-	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
-		if aln.Cigar[0].Op != '*' {
-			SeqIndex = 0
-			RefIndex = int(aln.Pos - 1)
-			for i = 0; i < len(aln.Cigar); i++ {
-				currentSeq = aln.Seq
-				if aln.Cigar[i].Op == 'D' {
-					RefIndex = RefIndex + aln.Cigar[i].RunLength
-				} else if cigar.CigarConsumesReference(*aln.Cigar[i]) {
-					for k = 0; k < int(aln.Cigar[i].RunLength); k++ {
-						switch currentSeq[SeqIndex] {
-						case dna.A:
-							votingMatrix[aln.RName][RefIndex].A++
-						case dna.T:
-							votingMatrix[aln.RName][RefIndex].T++
-						case dna.G:
-							votingMatrix[aln.RName][RefIndex].G++
-						case dna.C:
-							votingMatrix[aln.RName][RefIndex].C++
-							//case dna.Gap:
-							// votingMatrix[aln.RName][RefIndex].Gap++
-						}
-						SeqIndex++
-						RefIndex++
-					}
-				} else if aln.Cigar[i].Op != 'H' {
-					SeqIndex = SeqIndex + aln.Cigar[i].RunLength
-				}
-			}
-		}
+	for i := range ref {
+		dna.AllToLower(ref[i].Seq)
 	}
-	err = samFile.Close()
-	exception.PanicOnErr(err)
+	refMap := fasta.ToMap(ref)
 
+	reads, header := sam.GoReadToChan(samFileName)
+	piles := sam.GoPileup(reads, header, false, nil, nil)
 	outVcfFile := fileio.EasyCreate(vcfFile)
 
-	fmt.Fprintf(outVcfFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
-	var current dna.Base
-	var maxList []dna.Base
-	for i := range ref {
-		for k := range ref[i].Seq {
-			current = voter(votingMatrix[ref[i].Name][k], maxList)
-			if current == dna.N && ref[i].Seq[k] != dna.N {
-				current = dna.ToLower(ref[i].Seq[k])
-			} else if current != ref[i].Seq[k] {
-				fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", ref[i].Name, int64(k+1), ".", dna.BaseToString(ref[i].Seq[k]), dna.BaseToString(current), ".", ".", ".", ".")
+	_, err = fmt.Fprintf(outVcfFile, "%s\n", strings.Join(vcf.NewHeader(samFileName).Text, "\n"))
+	exception.PanicOnErr(err)
+
+	var consensusBase, refBase dna.Base
+	var refName string
+	for p := range piles {
+		consensusBase = maxBase(p)
+		if consensusBase == dna.Gap { // original code had commented out gap case
+			if skipGappedConsensus { // ignore gapped position
+				continue
+			} else { // ignore gapped reads
+				p.CountF[dna.Gap] = 0
+				p.CountR[dna.Gap] = 0
+				consensusBase = maxBase(p)
 			}
-			ref[i].Seq[k] = current
+		}
+		if p.CountF[consensusBase] == 0 && p.CountR[consensusBase] == 0 { // skip if no data present
+			continue
+		}
+		refName = header.Chroms[p.RefIdx].Name
+		refBase = dna.ToUpper(refMap[refName][p.Pos-1])
+		refMap[header.Chroms[p.RefIdx].Name][p.Pos-1] = consensusBase
+		if refBase != consensusBase {
+			_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", refName, int64(p.Pos), ".", dna.BaseToString(refBase), dna.BaseToString(consensusBase), ".", ".", ".", ".")
+			exception.PanicOnErr(err)
 		}
 	}
+
 	err = outVcfFile.Close()
 	exception.PanicOnErr(err)
 
 	fasta.Write(outFile, ref)
 }
 
-func voter(v voteBase, maxList []dna.Base) dna.Base {
-	if v.A+v.G+v.T+v.C+v.Gap == 0 {
-		return dna.N
+func maxBase(p sam.Pile) dna.Base {
+	var max int = p.CountF[dna.A] + p.CountR[dna.A]
+	tiedBases := make([]dna.Base, 1) // zero value is dna.A
+
+	max, tiedBases = getMax(p, max, dna.C, tiedBases)
+	max, tiedBases = getMax(p, max, dna.G, tiedBases)
+	max, tiedBases = getMax(p, max, dna.T, tiedBases)
+	max, tiedBases = getMax(p, max, dna.Gap, tiedBases)
+
+	if len(tiedBases) == 1 {
+		return tiedBases[0]
 	}
 
-	var max int32 = v.A
-	var outBase dna.Base = dna.A
-
-	if v.G > max {
-		max = v.G
-		outBase = dna.G
-	}
-
-	if v.C > max {
-		max = v.C
-		outBase = dna.C
-	}
-
-	if v.T > max {
-		max = v.T
-		outBase = dna.T
-	}
-
-	if v.Gap > max {
-		max = v.Gap
-		outBase = dna.Gap
-	}
-
-	//now we check for ties
-	var maxCount int32 = 0
-
-	if v.A == max {
-		maxCount++
-		maxList = append(maxList, dna.A)
-	}
-	if v.C == max {
-		maxCount++
-		maxList = append(maxList, dna.C)
-	}
-	if v.T == max {
-		maxCount++
-		maxList = append(maxList, dna.T)
-	}
-	if v.G == max {
-		maxCount++
-		maxList = append(maxList, dna.G)
-	}
-	if v.Gap == max {
-		maxCount++
-		maxList = append(maxList, dna.Gap)
-	}
-
-	if maxCount < 2 {
-		return outBase
-	}
-
-	return maxList[numbers.RandIntInRange(0, len(maxList))]
+	return tiedBases[numbers.RandIntInRange(0, len(tiedBases))]
 }
 
-type voteBase struct {
-	A   int32
-	C   int32
-	G   int32
-	T   int32
-	Gap int32
+func getMax(p sam.Pile, currMax int, testBase dna.Base, tiedBases []dna.Base) (int, []dna.Base) {
+	var count int = p.CountF[testBase] + p.CountR[testBase]
+	if count > currMax {
+		tiedBases = tiedBases[:1] // reset tied bases
+		tiedBases[0] = testBase
+		return count, tiedBases
+	}
+
+	if count == currMax {
+		tiedBases = append(tiedBases, testBase)
+	}
+
+	return currMax, tiedBases
 }
 
 func usage() {
@@ -176,6 +107,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
+	var skipGappedConsensus *bool = flag.Bool("skipGappedConsensus", false, "skipGappedConsensus skips regions where the consensus indicated a gapped position."+
+		"This reports the position it would if no data were present. When false, this ignored gapped reads, but still determines the consensus sequence of any ungapped reads at that position.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -191,5 +124,5 @@ func main() {
 	outFile := flag.Arg(2)
 	vcfFile := flag.Arg(3)
 
-	samConsensus(inFile, refFile, outFile, vcfFile)
+	samConsensus(inFile, refFile, outFile, vcfFile, *skipGappedConsensus)
 }

@@ -1,0 +1,34 @@
+##maf version=1 scoring=blastz
+a score=508369.000000
+s hg38.chr1     1 8 +     700 taacccta
+s rheMac10.chr2               2 9 + 800 taacccta
+i rheMac10.chr2               N 0 N 0
+
+a score=160590.000000
+s hg38.chr1     10 10 +     700 cctaacccta
+s rheMac10.chr1               15 5 - 1300 ccagg
+i rheMac10.chr1               N 0 I 35
+
+a score=22358.000000
+s hg38.chr1     30 10 +     700 ctaaccctaa
+s rheMac10.chr1               30 5 + 1300 gtggc
+i rheMac10.chr1               I 35 I 20
+
+a score=0.000000
+s hg38.chr1     500 100 +     700 TACCACAACCAGGCATAGGGGAAAGATTGGAGGAAAGATGAGTGAGAGCATCAACTTCTCTCACAACCTAGGCCAGTAAGTAGTGCTTGTGCTCATCT
+e rheMac10.chr1               1100 10 - 1300 I
+
+a score=98078.000000
+s hg38.chr2    5 30 +     550 GAACGGAGCAGCTGGTGATGTGTGGGCCCA
+s rheMac10.chr2               8 12 + 850 TGTGATACGTGG
+i rheMac10.chr2               I 20 N 0
+
+a score=0.000000
+s hg38.chr2    35 100 +     550 AAAAGAAAGAGACAACTggccgggcgcggtggctcacgcctgtaatcccaacactttgggagaccgaggcgggcggatcacgaggtcagatgaagaccac
+e rheMac10.chr2               120   0 - 850 C
+
+a score=2942.000000
+s hg38.chr1_KI270713v1_random     21 51 +     40745 CCAGG-GTAGAAAGGGAAGAGCTGAGCGGA
+s rheMac10.chr2               800 30 - 850 CCCCGCATAGAAAGGGAAGAGCTGTGCGGC
+i rheMac10.chr2               N 0 N 0
+

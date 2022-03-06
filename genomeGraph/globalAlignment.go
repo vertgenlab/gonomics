@@ -18,7 +18,7 @@ func nmMatrixSetup(size int64) ([][]int64, [][]rune) {
 	return m, trace
 }
 
-func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar) {
+func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar) {
 	var i, j, routeIdx int
 	for i = 0; i < len(alpha)+1; i++ {
 		for j = 0; j < len(beta)+1; j++ {
@@ -35,8 +35,8 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			}
 		}
 	}
-	var route []*cigar.Cigar
-	route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[len(alpha)][len(beta)]})
+	var route []cigar.Cigar
+	route = append(route, cigar.Cigar{RunLength: 0, Op: trace[len(alpha)][len(beta)]})
 	for i, j, routeIdx = len(alpha)-1, len(beta)-1, 0; i > 0 || j > 0; {
 		if route[routeIdx].RunLength == 0 {
 			route[routeIdx].RunLength = 1
@@ -44,7 +44,7 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 		} else if route[routeIdx].Op == trace[i][j] {
 			route[routeIdx].RunLength += 1
 		} else {
-			route = append(route, &cigar.Cigar{RunLength: 1, Op: trace[i][j]})
+			route = append(route, cigar.Cigar{RunLength: 1, Op: trace[i][j]})
 			routeIdx++
 		}
 		switch trace[i][j] {

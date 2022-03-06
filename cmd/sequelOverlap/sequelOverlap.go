@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"log"
@@ -102,16 +103,7 @@ func main() {
 
 		output := fileio.EasyCreate(options.Output)
 		writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
-		output.Close()
+		err := output.Close()
+		exception.PanicOnErr(err)
 	}
 }
-
-/*
-Considering how many options we might have I think we should make this separate from the main function
-func overlapSelect(flag string) {
-	switch flag {
-	case:
-
-	case:
-	}
-}*/

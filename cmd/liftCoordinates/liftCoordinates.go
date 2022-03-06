@@ -14,9 +14,14 @@ import (
 	"github.com/vertgenlab/gonomics/interval/lift"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
+	"io"
 	"log"
 	"unicode/utf8"
 )
+
+type fileWriter interface {
+	WriteToFileHandle(io.Writer)
+}
 
 func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, verbose int) {
 	var err error
@@ -93,7 +98,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 						_, err = fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 						exception.PanicOnErr(err)
 					}
-					i.WriteToFileHandle(out)
+					i.(fileWriter).WriteToFileHandle(out)
 					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
 				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
 					_, err = fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
@@ -101,14 +106,14 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 					i.WriteToFileHandle(un)
 					currVcf = vcf.InvertVcf(currVcf)
 					i = &currVcf
-					i.WriteToFileHandle(out)
+					i.(fileWriter).WriteToFileHandle(out)
 				} else {
 					_, err = fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
 				}
 			} else {
-				i.WriteToFileHandle(out)
+				i.(fileWriter).WriteToFileHandle(out)
 			}
 		}
 	}
@@ -145,8 +150,8 @@ func usage() {
 			"Usage:\n" +
 			"liftCoordinates lift.chain inFile outFile unMapped\n" +
 			"Warning: For Vcf lift, the original headers are retained in the output without modification. Use output header information at your own risk.\n" +
-			"Please note: Vcf lift is not compatable with Unix piping.\n" +
-			"Please note: Vcf lift with fa crossreferencing is currently only supported for biallelic and substitution variants.\n" +
+			"Please note: Vcf lift is not compatible with Unix piping.\n" +
+			"Please note: Vcf lift with fa cross-referencing is currently only supported for biallelic and substitution variants.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
