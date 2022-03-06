@@ -6,7 +6,7 @@ import (
 )
 
 var ReadingTests = []struct {
-	Infile string
+	Infile   string
 	Expected []Lift
 }{
 	{"testdata/elements1.bed", []Lift{bed.Bed{Chrom: "chr1", ChromStart: 2, ChromEnd: 10}, bed.Bed{Chrom: "chr1", ChromStart: 13, ChromEnd: 15}, bed.Bed{Chrom: "chr1", ChromStart: 50, ChromEnd: 500}}},

@@ -188,11 +188,11 @@ func subtractFromCoord(regions []Lift, subStart int, subEnd int, regionClone []L
 	var prevChrom string = ""
 
 	for i := range regions {
-		if (strings.Compare(prevChrom, "") == 0 || strings.Compare(prevChrom, regionClone[i].GetChrom()) != 0) {
+		if strings.Compare(prevChrom, "") == 0 || strings.Compare(prevChrom, regionClone[i].GetChrom()) != 0 {
 			prevChrom = regionClone[i].GetChrom()
 			prevEnd = 0
 		}
-		regionClone[i] = regionClone[i].UpdateCoord(regions[i].GetChrom(), numbers.Max(prevEnd, regions[i].GetChromStart() - subStart), numbers.Max(regions[i].GetChromStart(), regions[i].GetChromEnd()-subEnd)).(Lift)
+		regionClone[i] = regionClone[i].UpdateCoord(regions[i].GetChrom(), numbers.Max(prevEnd, regions[i].GetChromStart()-subStart), numbers.Max(regions[i].GetChromStart(), regions[i].GetChromEnd()-subEnd)).(Lift)
 		prevEnd = regionClone[i].GetChromEnd()
 	}
 }

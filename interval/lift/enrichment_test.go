@@ -112,4 +112,3 @@ func sliceEqual(a []float64, b []float64) bool {
 	}
 	return true
 }
-

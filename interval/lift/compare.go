@@ -34,7 +34,7 @@ func equal(a Lift, b Lift) bool {
 
 //sortBySize sorts Lift interfaces based on their size.
 func sortBySize(l []Lift) {
-	sort.Slice(l, func(i, j int) bool {return compareSize(l[i], l[j]) == -1})
+	sort.Slice(l, func(i, j int) bool { return compareSize(l[i], l[j]) == -1 })
 }
 
 //compareByCoord is the comparison for Lift interfaces based on genomic coordinate. Used in SortByCoord.
@@ -93,5 +93,5 @@ func compareChromEndByChrom(a Lift, b Lift) int {
 
 //SortByCoord sorts a slice of Lift interfaces by their coordinates.
 func SortByCoord(b []Lift) {
-	sort.Slice(b, func(i, j int) bool {return compareByCoord(b[i], b[j]) == -1})
+	sort.Slice(b, func(i, j int) bool { return compareByCoord(b[i], b[j]) == -1 })
 }

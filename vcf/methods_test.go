@@ -3,21 +3,21 @@ package vcf
 import "testing"
 
 var VcfMethodsTests = []struct {
-	v Vcf
-	expectedChr string
+	v             Vcf
+	expectedChr   string
 	expectedStart int
-	expectedEnd int
-	newChr string
-	newStart int
-	newEnd int
+	expectedEnd   int
+	newChr        string
+	newStart      int
+	newEnd        int
 }{
-	{v : Vcf{Chr: "chr1", Pos: 2, Ref: "A", Alt: []string{"T"}},
-		expectedChr: "chr1",
+	{v: Vcf{Chr: "chr1", Pos: 2, Ref: "A", Alt: []string{"T"}},
+		expectedChr:   "chr1",
 		expectedStart: 1,
-		expectedEnd: 2,
-		newChr: "chr10",
-		newStart: 5,
-		newEnd: 6,
+		expectedEnd:   2,
+		newChr:        "chr10",
+		newStart:      5,
+		newEnd:        6,
 	},
 }
 

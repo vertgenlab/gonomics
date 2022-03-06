@@ -3,22 +3,22 @@ package bed
 import "testing"
 
 var BedMethodTests = []struct {
-	b Bed
-	expectedChrom string
+	b                  Bed
+	expectedChrom      string
 	expectedChromStart int
-	expectedChromEnd int
-	newChrom string
-	newStart int
-	newEnd int
+	expectedChromEnd   int
+	newChrom           string
+	newStart           int
+	newEnd             int
 }{
 	{b: Bed{Chrom: "chr1", ChromStart: 12, ChromEnd: 15},
-	expectedChrom: "chr1",
-	expectedChromStart: 12,
-	expectedChromEnd: 15,
-	newChrom: "chrX",
-	newStart: 50,
-	newEnd: 60,
-		},
+		expectedChrom:      "chr1",
+		expectedChromStart: 12,
+		expectedChromEnd:   15,
+		newChrom:           "chrX",
+		newStart:           50,
+		newEnd:             60,
+	},
 }
 
 //note that methods take a special style of function name for testing.
