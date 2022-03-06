@@ -1,4 +1,4 @@
-package bed
+package lift
 
 import (
 	"github.com/vertgenlab/gonomics/numbers"
@@ -8,46 +8,20 @@ import (
 	"strings"
 )
 
-// subtractFromBedCoord is a helper function of overlapProbability that subtracts the values subStart and subEnd from entries in a slice of Bed b.
-// bClone is a clone of b used to save on memory allocation.
-func subtractFromBedCoord(b []Bed, subStart int, subEnd int, bClone []Bed) {
-	var prevEnd int = 0
-	var prevChrom string = ""
-
-	for i := range b {
-		if strings.Compare(prevChrom, "") == 0 || strings.Compare(prevChrom, bClone[i].Chrom) != 0 {
-			prevChrom = bClone[i].Chrom
-			prevEnd = 0
-		}
-		bClone[i].Chrom = b[i].Chrom
-		bClone[i].ChromStart = numbers.Max(prevEnd, b[i].ChromStart-subStart)
-		bClone[i].ChromEnd = numbers.Max(b[i].ChromStart, b[i].ChromEnd-subEnd)
-		prevEnd = bClone[i].ChromEnd
-	}
-}
-
-// overlapProbability calculates the probability that an element of len 'length' overlaps a set of genomic 'elements' in a genome represented by 'noGapRegions'.
-// tempElements and tempNoGap represent cloned slices of elements and noGapRegions which are used for memory optimization.
-func overlapProbability(elements []Bed, tempElements []Bed, length int, noGapRegions []Bed, tempNoGap []Bed) float64 {
-	subtractFromBedCoord(elements, length-1, 0, tempElements)
-	subtractFromBedCoord(noGapRegions, 0, length-1, tempNoGap)
-	return float64(OverlapLengthSum(tempElements, tempNoGap)) / float64(TotalSize(tempNoGap))
-}
-
 // ElementOverlapProbabilities returns a slice of float64 representing the probabilities that an element in elements2 overlaps an element in elements1.
-func ElementOverlapProbabilities(elements1 []Bed, elements2 []Bed, noGapRegions []Bed) []float64 {
+func ElementOverlapProbabilities(elements1 []Lift, elements2 []Lift, noGapRegions []Lift) []float64 {
 	var answer []float64 = make([]float64, len(elements2))
-	var tempElements1 []Bed = make([]Bed, len(elements1))
+	var tempElements1 []Lift = make([]Lift, len(elements1))
 	copy(tempElements1, elements1)
-	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
 	copy(tempNoGap, noGapRegions)
-	var tempElements2 []Bed = make([]Bed, len(elements2))
+	var tempElements2 []Lift = make([]Lift, len(elements2))
 	copy(tempElements2, elements2)
-	SortBySize(tempElements2)
+	sortBySize(tempElements2)
 	var currLen, prevLen int = 0, 0
 
 	for i := range tempElements2 {
-		currLen = tempElements2[i].ChromEnd - tempElements2[i].ChromStart
+		currLen = tempElements2[i].GetChromEnd() - tempElements2[i].GetChromStart()
 		if currLen == prevLen {
 			answer[i] = answer[i-1]
 		} else {
@@ -137,14 +111,14 @@ func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []fl
 
 // EnrichmentPValueUpperBound, together with EnrichmentPValueLowerBound, provide a range of possible values for the pValue of overlap.
 // Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
-func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
+func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions []Lift, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
-	var tempElements1 []Bed = make([]Bed, len(elements1))
+	var tempElements1 []Lift = make([]Lift, len(elements1))
 	copy(tempElements1, elements1)
-	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
 	copy(tempNoGap, noGapRegions)
-	minElements2 := findLargestBedLength(elements2)
+	minElements2 := findLargestLength(elements2)
 	var curr float64
 
 	if verbose > 0 {
@@ -170,14 +144,14 @@ func EnrichmentPValueUpperBound(elements1 []Bed, elements2 []Bed, noGapRegions [
 
 // EnrichmentPValueLowerBound, together with EnrichmentPValueUpperBound, provide a range of possible values for the pValue of overlap.
 // Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
-func EnrichmentPValueLowerBound(elements1 []Bed, elements2 []Bed, noGapRegions []Bed, overlapCount int, verbose int) []float64 {
+func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions []Lift, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 3)
-	var tempElements1 []Bed = make([]Bed, len(elements1))
-	var tempNoGap []Bed = make([]Bed, len(noGapRegions))
+	var tempElements1 []Lift = make([]Lift, len(elements1))
+	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
 	copy(tempElements1, elements1)
 	copy(tempNoGap, noGapRegions)
-	minElements2 := findShortestBedLength(elements2)
+	minElements2 := findShortestLength(elements2)
 	if verbose > 0 {
 		log.Println("Calculating overlapProbability.")
 	}
@@ -209,25 +183,16 @@ func EnrichmentPValueLowerBound(elements1 []Bed, elements2 []Bed, noGapRegions [
 	return answer
 }
 
-// helperfunction that returns an int corresponding to the longest distance between chromstart and chromEnd from an input set of bed entries.
-func findLargestBedLength(b []Bed) int {
-	var maxLength int = b[0].ChromEnd - b[0].ChromStart
+func subtractFromCoord(regions []Lift, subStart int, subEnd int, regionClone []Lift) {
+	var prevEnd int = 0
+	var prevChrom string = ""
 
-	for i := 1; i < len(b); i++ {
-		if b[i].ChromEnd-b[i].ChromStart > maxLength {
-			maxLength = b[i].ChromEnd - b[i].ChromStart
+	for i := range regions {
+		if (strings.Compare(prevChrom, "") == 0 || strings.Compare(prevChrom, regionClone[i].GetChrom()) != 0) {
+			prevChrom = regionClone[i].GetChrom()
+			prevEnd = 0
 		}
+		regionClone[i] = regionClone[i].UpdateCoord(regions[i].GetChrom(), numbers.Max(prevEnd, regions[i].GetChromStart() - subStart), numbers.Max(regions[i].GetChromStart(), regions[i].GetChromEnd()-subEnd)).(Lift)
+		prevEnd = regionClone[i].GetChromEnd()
 	}
-	return maxLength
-}
-
-// helperfunction that returns an int corresponding to the shortest distance between chromstart and chromEnd from an input set of bed entries.
-func findShortestBedLength(b []Bed) int {
-	var minLength int = b[0].ChromEnd - b[0].ChromStart
-	for i := 1; i < len(b); i++ {
-		if b[i].ChromEnd-b[i].ChromStart < minLength {
-			minLength = b[i].ChromEnd - b[i].ChromStart
-		}
-	}
-	return minLength
 }

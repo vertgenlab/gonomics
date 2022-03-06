@@ -1,4 +1,4 @@
-package bed
+package lift
 
 import (
 	"testing"
@@ -23,30 +23,18 @@ var ElementOverlapProbabilityTests = []struct {
 }
 
 func TestElementOverlapProbabilities(t *testing.T) {
-	var e1, e2, noGap []Bed
+	var e1, e2, noGap []Lift
 	var observed []float64
 	for _, v := range ElementOverlapProbabilityTests {
-		e1 = Read(v.elements1File)
-		e2 = Read(v.elements2File)
-		noGap = Read(v.NoGapRegionsFile)
+		e1 = GoRead(v.elements1File)
+		e2 = GoRead(v.elements2File)
+		noGap = GoRead(v.NoGapRegionsFile)
 		observed = ElementOverlapProbabilities(e1, e2, noGap)
 		if !sliceEqual(observed, v.Expected) {
 			t.Errorf("Error in ElementOverlapProbabilities. Output"+
 				"not as expected. Observed: %v.", observed)
 		}
 	}
-}
-
-func sliceEqual(a []float64, b []float64) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if (a[i]-b[i])/b[i] > 0.00001 {
-			return false
-		}
-	}
-	return true
 }
 
 var EnrichmentPValueTests = []struct {
@@ -96,12 +84,12 @@ var EnrichmentPValueUpperLowerTests = []struct {
 }
 
 func TestEnrichmentPValueUpperLower(t *testing.T) {
-	var e1, e2, noGap []Bed
+	var e1, e2, noGap []Lift
 	var observedUpper, observedLower []float64
 	for _, v := range EnrichmentPValueUpperLowerTests {
-		e1 = Read(v.elements1File)
-		e2 = Read(v.elements2File)
-		noGap = Read(v.noGapFile)
+		e1 = GoRead(v.elements1File)
+		e2 = GoRead(v.elements2File)
+		noGap = GoRead(v.noGapFile)
 		observedUpper = EnrichmentPValueUpperBound(e1, e2, noGap, v.overlapCount, v.verbose)
 		if !sliceEqual(observedUpper, v.expectedUpper) {
 			t.Errorf("Error in EnrichmentPValueUpperBound. Observed not as expected. Observed: %v.", observedUpper)
@@ -112,3 +100,16 @@ func TestEnrichmentPValueUpperLower(t *testing.T) {
 		}
 	}
 }
+
+func sliceEqual(a []float64, b []float64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if (a[i]-b[i])/b[i] > 0.00001 {
+			return false
+		}
+	}
+	return true
+}
+
