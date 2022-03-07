@@ -77,7 +77,7 @@ func vcfToMultiFa(inVcfFilename string, inFaFilename string, outFaFilename strin
 	}
 	if useSamples {
 		sampleSeqIdxOffset = len(seqsOrdered)
-		for sampleName, _ = range vcfHeader.Samples {
+		for sampleName = range vcfHeader.Samples {
 			seqsOrdered = addAnotherCopyOfRef(seqsOrdered, sampleName)
 			if !haploid {
 				seqsOrdered = addAnotherCopyOfRef(seqsOrdered, sampleName+"_secondAllele")
