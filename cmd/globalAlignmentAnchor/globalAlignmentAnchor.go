@@ -180,12 +180,23 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 
 	// open output files to write line-by-line and create variable for error
 	out_alignment_filename := strings.Replace(in_species1_gap, path.Base(in_species1_gap), "out_alignment.tsv", 1)
+	out_species1_filename := strings.Replace(in_species1_gap, "gap", "alignment", 1)
+	out_species2_filename := strings.Replace(in_species2_gap, "gap", "alignment", 1)
 	out_alignment := fileio.EasyCreate(out_alignment_filename)
+	out_species1 := fileio.EasyCreate(out_species1_filename)
+	out_species2 := fileio.EasyCreate(out_species2_filename)
 	var err error
 
 	// initialize variables before loop
 	// keep track of sequences
 	var species1_seq, species2_seq []dna.Base
+	// variables to generate output bed entries
+	chr_species1 := ""
+	chr_species2 := ""
+	pos_species1 := 1
+	pos_species2 := 1
+	// containers for entries to write to ouput bed files
+	var current_species1, current_species2 bed.Bed
 
 	// loop through input gap beds
 	for i := range species1_gap_bed {
@@ -206,11 +217,42 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 		//fmt.Println(visualize)
 
 		// write to output file
+		// both species alignment
 		writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
+		// species1 and species2 algnment files
+		chr_species1 = species1_gap_bed[i].Chrom
+		chr_species2 = species2_gap_bed[i].Chrom
+		pos_species1 = species1_gap_bed[i].ChromStart
+		pos_species2 = species2_gap_bed[i].ChromStart
+		for j := 0; j < len(aln); j++ {
+			switch aln[j].Op {
+			case align.ColM:
+				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1+int(aln[j].RunLength), Name: "species1_Match", FieldsInitialized: 4}
+				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2+int(aln[j].RunLength), Name: "species2_Match", FieldsInitialized: 4}
+				bed.WriteBed(out_species1.File, current_species1)
+				bed.WriteBed(out_species2.File, current_species2)
+				pos_species1 += int(aln[j].RunLength)
+				pos_species2 += int(aln[j].RunLength)
+			case align.ColI:
+				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2+int(aln[j].RunLength), Name: "species2_Insertion", FieldsInitialized: 4}
+				bed.WriteBed(out_species2.File, current_species2)
+				pos_species2 += int(aln[j].RunLength)
+			case align.ColD:
+				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1+int(aln[j].RunLength), Name: "species1_Insertion", FieldsInitialized: 4}
+				bed.WriteBed(out_species1.File, current_species1)
+				pos_species1 += int(aln[j].RunLength)
+			default:
+				log.Fatalf("Unexpected cigar parsing.")
+			}
+		}
 	}
 
 	// close output files and check for errors
 	err = out_alignment.Close()
+	exception.PanicOnErr(err)
+	err = out_species1.Close()
+	exception.PanicOnErr(err)
+	err = out_species2.Close()
 	exception.PanicOnErr(err)
 }
 
