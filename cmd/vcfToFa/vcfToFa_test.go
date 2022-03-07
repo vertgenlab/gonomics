@@ -13,8 +13,6 @@ var VcfToFaTests = []struct {
 	actualOutputFile   string
 	expectedOutputFile string
 	useAlt             bool
-	useSamples         bool
-	haploid            bool
 	multiFaMode        bool
 	multiFaChromName   string
 }{
@@ -22,14 +20,14 @@ var VcfToFaTests = []struct {
 	//{"testdata/testInput.vcf", "testdata/testInput.fa", "testdata/actualNoAlt.fa", "testdata/testInput.fa", false, false, ""},//should just produce the input file.
 	//{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiNoAlt.fa", "testdata/expectedMultiNoAlt.fa", false, true, "chr1"},//should also produce the input file
 	//{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiAlt.fa", "testdata/expectedMultiAlt.fa", true, true, "chr1"},
-	{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiAltchr2.fa", "testdata/expectedMultiAltchr2.fa", true, false, false, true, "chr2"},
+	{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiAltchr2.fa", "testdata/expectedMultiAltchr2.fa", true, true, "chr2"},
 }
 
 func TestVcfToFa(t *testing.T) {
 	var err error
 	for _, v := range VcfToFaTests {
 		if v.multiFaMode {
-			vcfToMultiFa(v.inputVcfFile, v.inputFaFile, v.actualOutputFile, v.multiFaChromName, v.useAlt, v.useSamples, v.haploid)
+			vcfToMultiFa(v.inputVcfFile, v.inputFaFile, v.actualOutputFile, v.multiFaChromName, v.useAlt)
 		} else {
 			vcfToFa(v.inputVcfFile, v.inputFaFile, v.actualOutputFile, v.useAlt)
 		}
