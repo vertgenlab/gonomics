@@ -100,8 +100,12 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	// open output files to write line-by-line and create variable for error
 	out_species1_filename := strings.Replace(in_species1_match, "match", "gap", 1)
 	out_species2_filename := strings.Replace(in_species2_match, "match", "gap", 1)
+	out_species1_doNotCalculate_filename := strings.Replace(in_species1_match, path.Base(in_species1_match), "out_"+species1+"_gap_doNotCalculate.bed", 1)
+	out_species2_doNotCalculate_filename := strings.Replace(in_species2_match, path.Base(in_species2_match), "out_"+species2+"_gap_doNotCalculate.bed", 1)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
+	out_species1_doNotCalculate := fileio.EasyCreate(out_species1_doNotCalculate_filename)
+	out_species2_doNotCalculate := fileio.EasyCreate(out_species2_doNotCalculate_filename)
 	var err error
 
 	// initialize variables before loop
@@ -142,8 +146,16 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		gapSizeProduct := (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
 		if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
 			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
+			current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
+			current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
+			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
+			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
 		} else if gapSizeProduct > 10000000000 {
 			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
+			current_species1.Name = "species1_gap,doNotCalculate_large"
+			current_species2.Name = "species2_gap,doNotCalculate_large"
+			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
+			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
 		} else {
 			bed.WriteBed(out_species1.File, current_species1)
 			bed.WriteBed(out_species2.File, current_species2)
@@ -156,15 +168,23 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	}
 
 	// after loop, need to write the last entry to output files
-	current_species1 = bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
-	current_species2 = bed.Bed{Chrom: species2_match_bed[len(species2_match_bed)-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-	bed.WriteBed(out_species1.File, current_species1)
-	bed.WriteBed(out_species2.File, current_species2)
+	// unless the second to last entry (from the loop) ends at the end of the last chromosome in both species
+	// otherwise, write the last entry for both species, so as to keep the number of lines the same between species1 and species2
+	if pos_species1 < len(species1_genome_fastaMap[chr_prev]) || pos_species2 < len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]) {
+		current_species1 = bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
+		current_species2 = bed.Bed{Chrom: species2_match_bed[len(species2_match_bed)-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
+		bed.WriteBed(out_species1.File, current_species1)
+		bed.WriteBed(out_species2.File, current_species2)
+	}
 
 	// close output files and check for errors
 	err = out_species1.Close()
 	exception.PanicOnErr(err)
 	err = out_species2.Close()
+	exception.PanicOnErr(err)
+	err = out_species1_doNotCalculate.Close()
+	exception.PanicOnErr(err)
+	err = out_species2_doNotCalculate.Close()
 	exception.PanicOnErr(err)
 }
 
