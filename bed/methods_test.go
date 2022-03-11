@@ -39,27 +39,34 @@ func TestBed_GetChromEnd(t *testing.T) {
 	}
 }
 
-
-
-
-
-
-/*
-func TestBedSlice_Len(t *testing.T) {
-	bedFile := Read("bedFileTest.bed") // this is a type []Bed and I want []*Bed
-	if bedFile.Len() != 3 {
-		//error here
+func TestBed_UpdateLift(t *testing.T) {
+	for _, v := range BedStructTests {
+		v.bed.UpdateLift("chr4", 3, 4)
+		if (v.bed.Chrom != "chr4") && (v.bed.ChromStart != 3) && (v.bed.ChromEnd != 4) {
+			t.Errorf("Error in bed methods.go UpdateLift(), Expected chr4, 3, 4 Actual: %v, %v, %v", v.bed.Chrom, v.bed.ChromStart, v.bed.ChromEnd)
+		}
 	}
 }
-*/
 
 func TestBedSlice_Len(t *testing.T) {
 	var allBed BedSlice
 	for _, v := range BedStructTests {
 		pointer := &v.bed
 		allBed = append(allBed, pointer)
-		if allBed.Len() != 3 {
-			t.Errorf("Error in bed methods.go Len(); Expected %v Actual %v.", 3, allBed.Len())
-		}
+	}
+	if allBed.Len() != 3 {
+		t.Errorf("Error in bed methods.go Len(); Expected: %v Actual: %v.", 3, allBed.Len())
+	}
+}
+
+func TestBedSlice_Swap(t *testing.T) {
+	var allBed BedSlice
+	for _, v := range BedStructTests {
+		pointer := &v.bed
+		allBed = append(allBed, pointer)
+	}
+	allBed.Swap(1, 2)
+	if allBed[1].Chrom != "chr12" {
+		t.Errorf("Error in bed methods.go Swap(); Expected: chr12 Actual: %v.", allBed[1].Chrom)
 	}
 }
