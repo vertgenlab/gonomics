@@ -3,7 +3,7 @@
 package convert
 
 import (
-	//DEBUG: "fmt"
+	//"fmt" //DEBUG
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
@@ -83,7 +83,8 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
-//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted nameof an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
+//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted name
+//of an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
 func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
@@ -228,7 +229,8 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 		} else if deletion {
 			pastStart = true
 			deletion = false
-			if !substitutionsOnly {
+			if !substitutionsOnly && deletionAlnPos >= 0 {
+				//TODO: we do not currently save deletions if they occur at the start of an alignment.
 				vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //from deletion
 			}
 		}

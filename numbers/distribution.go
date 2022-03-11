@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 )
@@ -20,7 +21,7 @@ func StandardNormalDist(x float64) float64 {
 //The second return is false if no overflow/underflow was detected. If underflow was detected, the program returns 0 and true.
 func BinomialDist(n int, k int, p float64) (float64, bool) {
 	logAnswer := BinomialDistLog(n, k, p)
-	if LogCanConvert(logAnswer) {
+	if logspace.CanConvert(logAnswer) {
 		return math.Exp(logAnswer), false
 	}
 	return 0, true
@@ -61,7 +62,8 @@ func BetaFunc(x float64, y float64) float64 {
 	return math.Gamma(x) * math.Gamma(y) / math.Gamma(x+y)
 }
 
-//GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
+// GammaDist returns the probability density of a gamma distribution with parameters alpha and beta at position x.
+// alpha is the shape parameter and beta is the rate parameter
 func GammaDist(x float64, alpha float64, beta float64) float64 {
 	if alpha < 0 || beta < 0 || x < 0 {
 		log.Fatalf("Alpha, beta parameters and input value must be greater than or equal to 0 in the gamma distribution.")

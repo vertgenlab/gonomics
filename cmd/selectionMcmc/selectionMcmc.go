@@ -5,15 +5,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
+	"math/rand"
 )
 
 func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {
-	common.RngSeed(s.RandSeed, s.SetSeed)
-	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
+	rand.Seed(s.SetSeed)
+	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment, s.IncludeRef) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)
 }
@@ -33,16 +33,20 @@ func main() {
 	var expectedNumArgs int = 2
 	var iterations *int = flag.Int("iterations", 100, "Number of MCMC iterations.")
 	var muZero *float64 = flag.Float64("muZero", 0, "Starting position for the mean selection coefficient parameter mu.")
-	var sigmaZero *float64 = flag.Float64("sigmaZero", 1, "Starting value for the selection coefficient distribution variance parameter sigma.")
+	var sigmaZero *float64 = flag.Float64("sigmaZero", 0.1, "Starting value for the selection coefficient distribution variance parameter sigma.")
 	var muStep *float64 = flag.Float64("muStep", 0.2, "Step size for the mean selection coefficient parameter mu.")
-	var sigmaStep *float64 = flag.Float64("sigmaStep", 50, "Step size for the selection coefficient variance parameter sigma.")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
+	var sigmaStep *float64 = flag.Float64("sigmaStep", 0.1, "Step size for the selection coefficient variance parameter sigma.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var unPolarized *bool = flag.Bool("unPolarized", false, "Disable the requirement for ancestor annotation and use unpolarized site frequency spectrum. Use with caution.")
 	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Make a divergence-based ascertainment correction.")
 	var fixedSigma *bool = flag.Bool("fixedSigma", false, "When true, the selection coefficient variance parameter sigma stays fixed at sigmaZero and is not treated as an independent hyperparameter.")
 	var integralError *float64 = flag.Float64("integralError", 1e-7, "Set the error threshold for numerical integration.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 or 2 to reveal different levels of debug print statements to standard output.")
+	var sigmaPriorAlpha *float64 = flag.Float64("sigmaPriorAlpha", 2, "Sets the alpha parameter for the Gamma-distributed prior distribution for the hyperparameter sigma.")
+	var sigmaPriorBeta *float64 = flag.Float64("sigmaPriorBeta", 10, "Sets the beta parameter for the Gamma-distributed prior distribution for the hyperparameter sigma.")
+	var muPriorMean *float64 = flag.Float64("muPriorMean", 0, "Sets the mean of the normally-distributed prior distribution for the hyperparameter mu.")
+	var muPriorSigma *float64 = flag.Float64("muPriorSigma", 3, "Sets the standard deviation of he normally-distributed prior distribution for the hyperparameter mu.")
+	var includeRef *bool = flag.Bool("includeRef", false, "Include the reference genome allele state as a datapoint in the allele frequency spectrum.")
 
 	flag.Usage = usage
 	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -55,7 +59,6 @@ func main() {
 		MuZero:                  *muZero,
 		SigmaStep:               *sigmaStep,
 		SigmaZero:               *sigmaZero,
-		RandSeed:                *randSeed,
 		SetSeed:                 *setSeed,
 		UnPolarized:             *unPolarized,
 		DivergenceAscertainment: *divergenceAscertainment,
@@ -63,6 +66,11 @@ func main() {
 		D:                       1, //D is hardcoded as 1 for now. This represents the size of the ascertainment subset.
 		IntegralError:           *integralError,
 		Verbose:                 *verbose,
+		SigmaPriorAlpha:         *sigmaPriorAlpha,
+		SigmaPriorBeta:          *sigmaPriorBeta,
+		MuPriorMean:             *muPriorMean,
+		MuPriorSigma:            *muPriorSigma,
+		IncludeRef:              *includeRef,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {

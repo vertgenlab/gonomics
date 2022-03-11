@@ -1,0 +1,8 @@
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	First	Second	Third	Fourth
+chr1	1	Testing1	A	T	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	10	Testing2	C	G	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr2	3	Testing3	A	T	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr2	4	Testing4	C	G	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr2	7	Testing5	G	C	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr3	5	Testing6	A	T	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr3	8	Testing7	C	G	100.0	PASS	.	GT:DP	0|0:10	0|0:250	0|0:3	0|0:0

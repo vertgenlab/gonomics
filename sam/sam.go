@@ -25,18 +25,18 @@ type MatePair struct {
 // fields are further parsed into a more complex data structure to
 // facilitate ease of use.
 type Sam struct {
-	QName string         // query template name: [!-?A-~]{1,254}
-	Flag  uint16         // bitwise flag, bits defined in info.go
-	MapQ  uint8          // mapping quality
-	RName string         // reference sequence name: \*|[:rname:∧ *=][:rname:]*
-	Pos   uint32         // 1-based leftmost mapping position
-	Cigar []*cigar.Cigar // parsed cigar: originally string with \*|([0-9]+[MIDNSHPX=])+
-	RNext string         // reference name of the mate/next read: \*|=|[:rname:∧ *=][:rname:]*
-	PNext uint32         // position of the mate/next read
-	TLen  int32          // observed template length
-	Seq   []dna.Base     // parsed sequence: originally string with \*|[A-Za-z=.]+
-	Qual  string         // ASCII of Phred-scaled base quality+33: [!-~]+ // TODO: parse to []Qual???
-	Extra string         // TODO: parse to map or slice w/ index embedded in header???
+	QName string        // query template name: [!-?A-~]{1,254}
+	Flag  uint16        // bitwise flag, bits defined in info.go
+	MapQ  uint8         // mapping quality
+	RName string        // reference sequence name: \*|[:rname:∧ *=][:rname:]*
+	Pos   uint32        // 1-based leftmost mapping position
+	Cigar []cigar.Cigar // parsed cigar: originally string with \*|([0-9]+[MIDNSHPX=])+
+	RNext string        // reference name of the mate/next read: \*|=|[:rname:∧ *=][:rname:]*
+	PNext uint32        // position of the mate/next read
+	TLen  int32         // observed template length
+	Seq   []dna.Base    // parsed sequence: originally string with \*|[A-Za-z=.]+
+	Qual  string        // ASCII of Phred-scaled base quality+33: [!-~]+ // TODO: parse to []Qual???
+	Extra string        // TODO: parse to map or slice w/ index embedded in header???
 
 	// unparsedExtra is the Extra bytes from a bam file. If unparsedExtra != nil then
 	// Extra is empty (by default). unparsedExtra can be parsed to values to access tag

@@ -17,13 +17,17 @@ var SelectionMcmcTests = []struct {
 	SigmaZero               float64
 	MuStep                  float64
 	SigmaStep               float64
-	RandSeed                bool
 	SetSeed                 int64
 	UnPolarized             bool
 	DivergenceAscertainment bool
 	FixedSigma              bool
 	IntegralError           float64
 	Verbose                 int
+	SigmaPriorAlpha         float64
+	SigmaPriorBeta          float64
+	MuPriorMean             float64
+	MuPriorSigma            float64
+	IncludeRef              bool
 }{
 	{"testdata/N100.S20.AlphaMinus10.Seed20.vcf",
 		"testdata/tmp.trace.txt",
@@ -32,14 +36,39 @@ var SelectionMcmcTests = []struct {
 		-5,
 		0.1,
 		0.2,
-		5,
-		false,
-		-1,
+		0.1,
+		1,
 		false,
 		false,
 		false,
 		1e-7,
-		0},
+		0,
+		2,
+		10,
+		0,
+		3,
+		false,
+	},
+	{"testdata/N100.S20.AlphaMinus10.Seed20.vcf",
+		"testdata/tmp.includeRef.trace.txt",
+		"testdata/expected.includeRef.trace.txt",
+		100,
+		-5,
+		0.1,
+		0.2,
+		0.1,
+		1,
+		false,
+		false,
+		false,
+		1e-7,
+		0,
+		2,
+		10,
+		0,
+		3,
+		true,
+	},
 }
 
 func TestSelectionMcmc(t *testing.T) {
@@ -52,7 +81,6 @@ func TestSelectionMcmc(t *testing.T) {
 			MuZero:                  v.MuZero,
 			SigmaStep:               v.SigmaStep,
 			SigmaZero:               v.SigmaZero,
-			RandSeed:                v.RandSeed,
 			SetSeed:                 v.SetSeed,
 			UnPolarized:             v.UnPolarized,
 			DivergenceAscertainment: v.DivergenceAscertainment,
@@ -60,6 +88,11 @@ func TestSelectionMcmc(t *testing.T) {
 			D:                       1,
 			IntegralError:           v.IntegralError,
 			Verbose:                 v.Verbose,
+			SigmaPriorAlpha:         v.SigmaPriorAlpha,
+			SigmaPriorBeta:          v.SigmaPriorBeta,
+			MuPriorMean:             v.MuPriorMean,
+			MuPriorSigma:            v.MuPriorSigma,
+			IncludeRef:              v.IncludeRef,
 		}
 		selectionMcmc(v.VcfFile, v.OutFile, s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

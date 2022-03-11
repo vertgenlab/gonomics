@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
@@ -39,6 +40,19 @@ type SegSite struct {
 	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
 }
 
+func segSitesAreEqual(a SegSite, b SegSite) bool {
+	if a.I != b.I {
+		return false
+	}
+	if a.N != b.N {
+		return false
+	}
+	if a.L != b.L {
+		return false
+	}
+	return true
+}
+
 //InvertSegSite reverses the polarity of a segregating site.
 func InvertSegSite(s *SegSite) {
 	s.I = s.N - s.I
@@ -66,14 +80,15 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 
 //VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (*Afs, error) {
+//IncludeRef, when true, uses the reference genome as an additional data point for the output AFS.
+func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool, IncludeRef bool) (*Afs, error) {
 	var answer Afs
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
 	var pass bool
 	for i := range alpha {
-		currentSeg, pass = VcfSampleToSegSite(i, DivergenceAscertainment, UnPolarized)
+		currentSeg, pass = VcfSampleToSegSite(i, DivergenceAscertainment, UnPolarized, IncludeRef)
 		if pass {
 			answer.Sites = append(answer.Sites, currentSeg)
 		}
@@ -83,7 +98,8 @@ func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (
 
 //VcfSampleToSegSite returns a SegSite struct from an input Vcf entry. Enables flag for divergenceBasedAscertainment correction conditions and the unPolarized condition.
 //Two returns: a pointer to the SegSite struct, and a bool that is true if the SegSite was made without issue, false for soft errors.
-func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool) (*SegSite, bool) {
+//If IncludeRef is true, adds the reference allele as an extra data point to the SegSite.
+func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool, IncludeRef bool) (*SegSite, bool) {
 	var currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
 	var j int
 	//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
@@ -98,6 +114,13 @@ func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized boo
 					currentSeg.I++
 				}
 			}
+		}
+
+		if IncludeRef {
+			if vcf.IsAltAncestor(i) { //if the reference base is in the derived state.
+				currentSeg.I++
+			}
+			currentSeg.N++
 		}
 
 		if currentSeg.N == 0 {
@@ -155,7 +178,7 @@ func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
-		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
+		return logspace.Multiply(binomCoeff, logspace.Multiply(expression, logPart))
 	}
 }
 
@@ -167,7 +190,7 @@ func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integra
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponent(n, k, alpha, binomMap)
 	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
-	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
+	return logspace.Add(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
@@ -175,9 +198,9 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 	var denominator float64 = math.Inf(-1) //denominator begins at -Inf when in log space
 	// j loops over all possible values of i
 	for j := 1; j < n; j++ {
-		denominator = numbers.AddLog(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
+		denominator = logspace.Add(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
 	}
-	return numbers.DivideLog(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
+	return logspace.Divide(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
@@ -185,7 +208,7 @@ func AfsLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError
 	var answer float64 = 0.0
 	// loop over all segregating sites
 	for j := range afs.Sites {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
+		answer = logspace.Multiply(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
 	}
 	return answer
 }
@@ -200,7 +223,7 @@ func AfsLikelihoodFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, integ
 		if likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
 			likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
 		}
-		answer = numbers.MultiplyLog(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		answer = logspace.Multiply(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
 	}
 	return answer
 }

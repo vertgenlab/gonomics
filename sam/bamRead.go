@@ -200,10 +200,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	if cap(s.Cigar) >= numCigarOps {
 		s.Cigar = s.Cigar[:numCigarOps]
 	} else {
-		s.Cigar = make([]*cigar.Cigar, numCigarOps)
-		for i := 0; i < len(s.Cigar); i++ {
-			s.Cigar[i] = new(cigar.Cigar)
-		}
+		s.Cigar = make([]cigar.Cigar, numCigarOps)
 	}
 	var cigint uint32
 	for i := 0; i < numCigarOps; i++ {

@@ -33,16 +33,16 @@ var VcfFilterTests = []struct {
 	notRefWeakAltStrong            bool
 	id                             string
 	subSet                         float64
-	randSeed                       bool
 	setSeed                        int64
 }{
-	{"testdata/test.vcf", "testdata/tmp.Out.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, "", 1, false, 10},
-	{"testdata/test_removeNoAncestor.vcf", "testdata/tmp.removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false, false, false, false, false, "", 1, false, 10},
-	{"testdata/test_onlyPolarizable.vcf", "testdata/tmp.OnlyPolarizable.vcf", "testdata/expected_onlyPolarizable.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, true, false, false, false, false, false, false, "", 1, false, 10},
-	{"testdata/test_weakToStrong.vcf", "testdata/tmp.weakToStrong.vcf", "testdata/expected_noWeakToStrongOrStrongToWeak.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, true, false, false, false, false, "", 1, false, 10},
-	{"testdata/test_weakToStrong.vcf", "tmp.refWeakAltStrong.vcf", "testdata/expected_refWeakAltStrongOnly.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, false, true, false, false, false, "", 1, false, 10},
-	{"testdata/test_id.vcf", "testdata/tmp.id.vcf", "testdata/expected_id.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, "TestingId", 1, false, 10},
-	{"testdata/test.vcf", "testdata/tmp.subset.vcf", "testdata/expectedSubSet.vcf", "", "chr3", 0, numbers.MaxInt, 0, "", "", false, false, false, false, false, false, false, false, false, false, false, "", 0.5, false, 20},
+	{"testdata/test.vcf", "testdata/tmp.Out.vcf", "testdata/expectedOut.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", true, true, true, false, false, false, false, false, false, false, false, "", 1, 10},
+	{"testdata/test_removeNoAncestor.vcf", "testdata/tmp.removeNoAncestor.vcf", "testdata/expected_removeNoAncestor.vcf", "", "", 0, 100, 0, "", "", false, false, false, true, false, false, false, false, false, false, false, "", 1, 10},
+	{"testdata/test_onlyPolarizable.vcf", "testdata/tmp.OnlyPolarizable.vcf", "testdata/expected_onlyPolarizable.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, true, false, false, false, false, false, false, "", 1, 10},
+	{"testdata/test_weakToStrong.vcf", "testdata/tmp.weakToStrong.vcf", "testdata/expected_noWeakToStrongOrStrongToWeak.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, true, false, false, false, false, "", 1, 10},
+	{"testdata/test_weakToStrong.vcf", "tmp.refWeakAltStrong.vcf", "testdata/expected_refWeakAltStrongOnly.vcf", "", "", 0, 100, 0, "", "", false, false, false, false, false, false, false, true, false, false, false, "", 1, 10},
+	{"testdata/test_id.vcf", "testdata/tmp.id.vcf", "testdata/expected_id.vcf", "testdata/test.group", "chr3", 10, 1000, 0, "", "", false, true, true, false, false, false, false, false, false, false, false, "TestingId", 1, 10},
+	{"testdata/test.vcf", "testdata/tmp.subset.vcf", "testdata/expectedSubSet.vcf", "", "chr3", 0, numbers.MaxInt, 0, "", "", false, false, false, false, false, false, false, false, false, false, false, "", 0.5, 20},
+	{"testdata/testDuplicatePos.vcf", "testdata/tmp.duplicatePos.vcf", "testdata/expectedDuplicatePos.vcf", "", "", 0, numbers.MaxInt, 0, "", "", true, false, false, false, false, false, false, false, false, false, false, "", 1, 10},
 }
 
 func TestVcfFilter(t *testing.T) {
@@ -76,11 +76,11 @@ func TestVcfFilter(t *testing.T) {
 			subSet:                         v.subSet,
 		}
 
-		vcfFilter(v.inputFile, v.tmpOutFile, c, v.groupFile, false, false, v.randSeed, v.setSeed)
+		vcfFilter(v.inputFile, v.tmpOutFile, c, v.groupFile, false, false, v.setSeed)
 		records, _ := vcf.Read(v.tmpOutFile)
 		expected, _ := vcf.Read(v.expectedOutputFile)
 		if !vcf.AllEqual(records, expected) {
-			t.Errorf("Error in vcfFilter.")
+			t.Errorf("Error in vcfFilter. Tmp: %v. Expected: %v.", v.tmpOutFile, v.expectedOutputFile)
 		} else {
 			err = os.Remove(v.tmpOutFile)
 		}

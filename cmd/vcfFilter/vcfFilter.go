@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -15,13 +15,43 @@ import (
 	"strings"
 )
 
-func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, randSeed bool, setSeed int64) (total, removed int) {
-	common.RngSeed(randSeed, setSeed)
-	records, header := vcf.GoReadToChan(infile)
+//coordinate is a chrom/pos pair, refering to a specific place in the genome.
+type coordinate struct {
+	Chr string
+	Pos int
+}
+
+func getSitesSeen(filename string) map[coordinate]uint8 {
+	var sitesSeen map[coordinate]uint8 = make(map[coordinate]uint8, 0)
+	var records <-chan vcf.Vcf
+	records, _ = vcf.GoReadToChan(filename)
+	var currentCoord coordinate = coordinate{"", 0}
+	for v := range records {
+		currentCoord.Chr = v.Chr
+		currentCoord.Pos = v.Pos
+		sitesSeen[currentCoord]++
+	}
+	return sitesSeen
+}
+
+func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
+	rand.Seed(setSeed)
+	var records <-chan vcf.Vcf
+	var header vcf.Header
+	var err error
+	var currentCoord coordinate
+	var sitesSeen map[coordinate]uint8 = make(map[coordinate]uint8, 0) //uint8 is the number of times this site is seen in the vcf file.
+
+	if c.biAllelicOnly {
+		sitesSeen = getSitesSeen(infile)
+	}
+
+	records, header = vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
 
 	var samplesToKeep []int = make([]int, 0) //this var holds all of the indices from samples (defined below as the sample list in the header) that we want to keep in the output file.
+
 	if groupFile != "" {
 		groups := popgen.ReadGroups(groupFile)
 		samples := vcf.HeaderGetSampleList(header)
@@ -34,8 +64,7 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		outSamples := filterHeaderSamplesToKeep(samples, samplesToKeep)
 		vcf.HeaderUpdateSampleList(header, outSamples)
 	}
-
-	vcf.NewWriteHeader(out.File, header)
+	vcf.NewWriteHeader(out, header)
 
 	for v := range records {
 		total++
@@ -47,6 +76,16 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 			v = vcf.ParseFormat(v, header)
 		}
 
+		if c.biAllelicOnly {
+			currentCoord = coordinate{v.Chr, v.Pos}
+			if sitesSeen[currentCoord] < 1 {
+				log.Panicf("Current variant not found in sitesSeen map. Something went horribly wrong. %v.\n", v)
+			} else if sitesSeen[currentCoord] > 1 {
+				removed++
+				continue
+			}
+		}
+
 		if parseInfo {
 			v = vcf.ParseInfo(v, header)
 		}
@@ -56,13 +95,11 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 			continue
 		}
 
-		vcf.WriteVcf(out.File, v)
+		vcf.WriteVcf(out, v)
 	}
 
-	err := out.Close()
-	if err != nil {
-		log.Panic(err)
-	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 	return
 }
 
@@ -271,7 +308,6 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 
 func main() {
 	var expectedNumArgs int = 2
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var groupFile *string = flag.String("groupFile", "", "Retains alleles from individuals in the input group file.")
@@ -280,7 +316,7 @@ func main() {
 	var minQual *float64 = flag.Float64("minQual", 0, "Specifies the minimum quality score.")
 	var ref *string = flag.String("ref", "", "Specifies the reference field.")
 	var alt *string = flag.String("alt", "", "Specifies the alt field.")
-	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file.")
+	var biAllelicOnly *bool = flag.Bool("biAllelicOnly", false, "Retains only biallelic variants in the output file. Not compatible with stdin.")
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "Retains only substitution variants in the output file (removes INDEL variants).")
 	var segregatingSitesOnly *bool = flag.Bool("segregatingSitesOnly", false, "Retains only variants that are segregating in at least one sample.")
 	var removeNoAncestor *bool = flag.Bool("removeNoAncestor", false, "Retains only variants with an ancestor allele annotated in the info column.")
@@ -351,7 +387,7 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo, *randSeed, *setSeed)
+	total, removed := vcfFilter(infile, outfile, c, *groupFile, parseFormat, parseInfo, *setSeed)
 	log.Printf("Processed  %d variants\n", total)
 	log.Printf("Removed    %d variants\n", removed)
 }

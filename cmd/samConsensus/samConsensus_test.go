@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"math/rand"
 	"os"
 	"testing"
 )
@@ -17,9 +18,10 @@ var samConsensusTests = []struct {
 }
 
 func TestSamConsensus(t *testing.T) {
+	rand.Seed(1)
 	var err error
 	for _, v := range samConsensusTests {
-		samConsensus(v.inFile, v.refFile, "outFile_tmp.fa", "vcfFile_tmp.vcf")
+		samConsensus(v.inFile, v.refFile, "outFile_tmp.fa", "vcfFile_tmp.vcf", false)
 
 		if !fileio.AreEqual("outFile_tmp.fa", v.outFile_expected) {
 			t.Errorf("Error in samConsensus: generating output fa file")

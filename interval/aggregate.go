@@ -1,9 +1,5 @@
 package interval
 
-import (
-	"io"
-)
-
 type AggregateInterval struct {
 	chr   string
 	start int
@@ -19,15 +15,6 @@ func (a *AggregateInterval) GetChromStart() int {
 }
 func (a *AggregateInterval) GetChromEnd() int {
 	return a.end
-}
-
-// Write all intervals in the merge interval, should not be used for most queries
-func (a *AggregateInterval) WriteToFileHandle(file io.Writer) {
-	for _, tree := range a.tree {
-		for _, val := range tree.data {
-			val.WriteToFileHandle(file)
-		}
-	}
 }
 
 func MergeIntervals(intervals []Interval) []Interval {

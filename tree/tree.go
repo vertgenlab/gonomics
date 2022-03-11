@@ -33,7 +33,7 @@ func splittingCommaIndex(input string) int {
 	return -1
 }
 
-func ParseDot(input string) *Tree {
+func ParseDot(input string, verbose bool) *Tree {
 	var line string
 	var root *Tree
 	var doneReading bool = false
@@ -42,33 +42,46 @@ func ParseDot(input string) *Tree {
 	defer file.Close()
 
 	var m map[string]*Tree
-	m = make(map[string]*Tree)
+	m = make(map[string]*Tree) //map of nodes found in the tree
 	var prev *Tree
 	var current *Tree
 	var n int = 0
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		fmt.Printf("Line number: %d\n", n)
 		n++
 		prev = nil
 		words := strings.Split(line, " -> ")
+
+		for i := range words {
+			words[i] = strings.Split(words[i], ";")[0] //trim off the trailing semicolon from all Dot lines.
+		}
+
 		if len(words) < 2 {
 			if words[0] == "}" {
-				fmt.Printf("End Line.\n")
+				if verbose {
+					fmt.Printf("End Line.\n")
+				}
 			} else {
 				wordSpace := strings.Split(words[0], " ")
 				if wordSpace[0] == "digraph" {
-					fmt.Printf("header line.\n")
+					if verbose {
+						fmt.Printf("header line.\n")
+					}
 				} else {
-					log.Fatalf("Invalid line.\n")
+					log.Fatalf("Invalid line: %s.\n", words[0])
 				}
 			}
 		} else {
 			for i := 0; i < len(words); i++ {
 				if _, ok := m[words[i]]; !ok { //if current is not in the map already
+					if verbose {
+						fmt.Printf("Current species not found in map before: %s.\n", words[i])
+					}
 					current = &Tree{Name: words[i], OnlyTopology: true, BranchLength: 0, Left: nil, Right: nil}
 					if len(m) == 0 { //root check, first entry is root
-						fmt.Println(current.Name)
+						if verbose {
+							fmt.Printf("Root Name: %s.\n", current.Name)
+						}
 						root = current
 					}
 					m[words[i]] = current
@@ -80,9 +93,15 @@ func ParseDot(input string) *Tree {
 						if prev.Right != nil {
 							log.Fatalf("Trees must be binary.")
 						} else {
+							if verbose {
+								fmt.Printf("Right Child of %s set to %s.\n", prev.Name, current.Name)
+							}
 							prev.Right = current
 						}
 					} else {
+						if verbose {
+							fmt.Printf("Left Child of %s set to %s.\n", prev.Name, current.Name)
+						}
 						prev.Left = current
 					}
 				}

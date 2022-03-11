@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"io"
 	"log"
 	"path"
 )
@@ -14,7 +13,6 @@ type Lift interface {
 	GetChrom() string
 	GetChromStart() int
 	GetChromEnd() int
-	WriteToFileHandle(io.Writer)
 	UpdateLift(string, int, int)
 }
 

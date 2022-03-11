@@ -20,7 +20,7 @@ func calcExtension(seq []dna.Base) int64 {
 func LocalView(samLine *sam.Sam, ref []*Node) string {
 	var seqOne, seqTwo bytes.Buffer
 
-	var operations []*cigar.Cigar = samLine.Cigar
+	var operations []cigar.Cigar = samLine.Cigar
 	var i int64 = int64(samLine.Pos) - 1
 	var j int64 = 0
 	var count int

@@ -1,0 +1,100 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=LowQual,Description="Low quality">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=BaseQRankSum,Number=1,Type=Float,Description="Z-score from Wilcoxon rank sum test of Alt Vs. Ref base qualities">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
+##INFO=<ID=DS,Number=0,Type=Flag,Description="Were any of the samples downsampled?">
+##INFO=<ID=ExcessHet,Number=1,Type=Float,Description="Phred-scaled p-value for exact test of excess heterozygosity">
+##INFO=<ID=FS,Number=1,Type=Float,Description="Phred-scaled p-value using Fisher's exact test to detect strand bias">
+##INFO=<ID=InbreedingCoeff,Number=1,Type=Float,Description="Inbreeding coefficient as estimated from the genotype likelihoods per-sample when compared against the Hardy-Weinberg expectation">
+##INFO=<ID=MLEAC,Number=A,Type=Integer,Description="Maximum likelihood expectation (MLE) for the allele counts (not necessarily the same as the AC), for each ALT allele, in the same order as listed">
+##INFO=<ID=MLEAF,Number=A,Type=Float,Description="Maximum likelihood expectation (MLE) for the allele frequency (not necessarily the same as the AF), for each ALT allele, in the same order as listed">
+##INFO=<ID=MQ,Number=1,Type=Float,Description="RMS Mapping Quality">
+##INFO=<ID=MQRankSum,Number=1,Type=Float,Description="Z-score From Wilcoxon rank sum test of Alt vs. Ref read mapping qualities">
+##INFO=<ID=QD,Number=1,Type=Float,Description="Variant Confidence/Quality by Depth">
+##INFO=<ID=ReadPosRankSum,Number=1,Type=Float,Description="Z-score from Wilcoxon rank sum test of Alt vs. Ref read position bias">
+##INFO=<ID=SOR,Number=1,Type=Float,Description="Symmetric Odds Ratio of 2x2 contingency table to detect strand bias">
+##INFO=<ID=MaxPopAf,Number=1,Type=Float,Description="Maximum allele frequency of any population in CellBase",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=Consequence,Number=1,Type=String,Description="Variant consequence",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=Gene,Number=1,Type=String,Description="Nearest gene",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=Transcript,Number=1,Type=String,Description="Ensembl transcript id",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##INFO=<ID=ProteinEffect,Number=1,Type=String,Description="Effect of variant on protein",Source="bioinfo.hpc.cam.ac.uk/cellbase/webservices",Version="v4">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##contig=<ID=chr6,length=170805979>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr8,length=145138636>
+##contig=<ID=chr9,length=138394717>
+##contig=<ID=chr10,length=133797422>
+##contig=<ID=chr11,length=135086622>
+##contig=<ID=chr12,length=133275309>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr14,length=107043718>
+##contig=<ID=chr15,length=101991189>
+##contig=<ID=chr16,length=90338345>
+##contig=<ID=chr17,length=83257441>
+##contig=<ID=chr18,length=80373285>
+##contig=<ID=chr19,length=58617616>
+##contig=<ID=chr20,length=64444167>
+##contig=<ID=chr21,length=46709983>
+##contig=<ID=chr22,length=50818468>
+##contig=<ID=chrX,length=156040895>
+##contig=<ID=chrY,length=57227415>
+##contig=<ID=chrM,length=16569>
+##contig=<ID=chrEBV,length=171823>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	F138_2557	F138_2570	F138_2575	F138_2585	F138_2597
+chr1	10403	.	ACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC	A	107.79	.	AC=1;AF=0.500;AN=2;BaseQRankSum=0.000;DP=15;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=38.29;MQRankSum=-1.150;QD=17.96;ReadPosRankSum=-1.150;SOR=2.093;Consequence=2KB_upstream_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	.	0/1:3,3:6:99:112,0,117	.
+chr1	10440	.	C	*,A	36.28	.	AC=1,1;AF=0.500,0.500;AN=2;DP=14;ExcessHet=3.0103;FS=0.000;MLEAC=2,2;MLEAF=1.00,1.00;MQ=39.11;QD=7.26;SOR=1.981;Consequence=2KB_upstream_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	.	1/2:0,3,2:5:43:183,43,108,124,0,220	.
+chr1	13273	.	G	C	285.44	.	AC=1;AF=0.167;AN=6;BaseQRankSum=0.641;DP=63;ExcessHet=3.0103;FS=1.352;MLEAC=1;MLEAF=0.167;MQ=37.40;MQRankSum=-0.020;QD=15.02;ReadPosRankSum=-1.148;SOR=0.416;MaxPopAF=0.15;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	0/0:23,0:23:69:0,69,764	0/1:9,10:19:99:293,0,247	0/0:21,0:21:63:0,63,683
+chr1	13417	.	C	CGAGA	100.59	.	AC=1;AF=0.167;AN=6;BaseQRankSum=-1.268;DP=24;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.167;MQ=37.66;MQRankSum=-1.021;QD=11.18;ReadPosRankSum=-1.416;SOR=0.582;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	0/0:4,0:4:12:0,12,255	0/1:6,3:9:99:108,0,354	0/0:10,0:10:30:0,30,636
+chr1	14860	.	G	T	71.51	.	AC=1;AF=0.167;AN=6;BaseQRankSum=-1.068;DP=7;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.167;MQ=25.76;MQRankSum=0.566;QD=17.88;ReadPosRankSum=-1.006;SOR=0.086;MaxPopAF=0.0032;Consequence=intron_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	0/0:2,0:2:6:0,6,51	0/1:1,3:4:22:78,0,22	0/0:1,0:1:3:0,3,26
+chr1	15903	.	G	GC	134.36	.	AC=2;AF=1.00;AN=2;DP=4;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=40.00;QD=33.59;SOR=1.609;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	.	1/1:0,4:4:12:143,12,0	.
+chr1	16378	.	T	C	32.89	.	AC=1;AF=0.250;AN=4;BaseQRankSum=-1.620;DP=18;ExcessHet=3.0103;FS=2.884;MLEAC=2;MLEAF=0.500;MQ=41.69;MQRankSum=-1.746;QD=1.93;ReadPosRankSum=-1.484;SOR=2.179;MaxPopAF=0.58;Consequence=intron_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	.	0/1:14,3:17:38:38,0,454	0/0:1,0:1:3:0,3,10
+chr1	16487	.	T	C	188.79	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-1.368;DP=13;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=38.46;MQRankSum=1.304;QD=14.52;ReadPosRankSum=2.288;SOR=0.859;MaxPopAF=0.022;Consequence=intron_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	.	0/1:6,7:13:99:193,0,197	.
+chr1	16682	.	G	A	65.3	.	AC=4;AF=1.00;AN=4;DP=3;ExcessHet=3.0103;FS=0.000;MLEAC=4;MLEAF=1.00;MQ=30.92;QD=32.65;SOR=2.833;MaxPopAF=0.11;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	.	.	.	1/1:0,1:1:3:38,3,0	1/1:0,2:2:6:36,6,0
+chr1	17358	.	ACTT	A	137.23	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-1.050;DP=142;ExcessHet=3.0103;FS=4.086;MLEAC=1;MLEAF=0.100;MQ=41.18;MQRankSum=0.083;QD=5.28;ReadPosRankSum=-0.793;SOR=0.066;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:16,0:16:48:0,48,724	0/1:21,5:26:99:147,0,858	0/0:21,0:21:63:0,63,968	0/0:47,0:47:99:0,141,2157	0/0:30,0:30:90:0,90,1394
+chr1	17365	.	C	G	38.23	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-1.043;DP=148;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.100;MQ=41.75;MQRankSum=-1.600;QD=0.75;ReadPosRankSum=0.803;SOR=0.242;MaxPopAF=0.32;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:17,0:17:51:0,51,814	0/0:27,0:27:90:0,90,1390	0/0:22,0:22:69:0,69,1139	0/1:48,3:51:48:48,0,2221	0/0:31,0:31:93:0,93,1521
+chr1	17375	.	A	G	48.23	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-0.292;DP=183;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.100;MQ=43.29;MQRankSum=-1.674;QD=0.80;ReadPosRankSum=-1.031;SOR=0.378;MaxPopAF=0.062;Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:23,0:23:69:0,69,1007	0/0:35,0:35:99:0,105,1570	0/0:30,0:30:90:0,90,1356	0/1:54,6:60:58:58,0,2407	0/0:35,0:35:99:0,105,1685
+chr1	17385	.	G	A	489.86	.	AC=4;AF=0.400;AN=10;BaseQRankSum=-1.940;DP=205;ExcessHet=7.2016;FS=0.000;MLEAC=3;MLEAF=0.300;MQ=43.46;MQRankSum=0.585;QD=2.83;ReadPosRankSum=0.293;SOR=0.735;MaxPopAF=0.26;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/1:18,12:30:99:319,0,486	0/1:32,8:40:99:134,0,992	0/0:32,0:32:96:0,96,1167	0/1:60,6:66:1:1,0,1937	0/1:32,5:37:47:47,0,1034
+chr1	17408	.	C	G	72.23	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-0.252;DP=243;ExcessHet=3.0103;FS=5.526;MLEAC=1;MLEAF=0.100;MQ=44.56;MQRankSum=-1.614;QD=1.02;ReadPosRankSum=-0.060;SOR=1.717;MaxPopAF=0.0088;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:36,0:36:99:0,108,1201	0/0:52,0:52:99:0,156,1706	0/0:40,0:40:99:0,120,1429	0/1:62,9:71:82:82,0,1990	0/0:44,0:44:99:0,132,1523
+chr1	17452	.	C	T	212.23	.	AC=1;AF=0.100;AN=10;BaseQRankSum=0.669;DP=298;ExcessHet=3.0103;FS=0.980;MLEAC=1;MLEAF=0.100;MQ=46.23;MQRankSum=-4.273;QD=2.59;ReadPosRankSum=-0.987;SOR=0.859;MaxPopAF=0.089;Consequence=intron_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:46,0:46:99:0,138,1451	0/0:60,0:60:99:0,179,1909	0/0:54,0:54:99:0,162,1816	0/1:66,16:82:99:222,0,1842	0/0:56,0:56:99:0,168,1791
+chr1	17556	.	C	T	223.23	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-2.079;DP=253;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.100;MQ=45.31;MQRankSum=0.204;QD=4.65;ReadPosRankSum=0.016;SOR=0.642;MaxPopAF=0.014;Consequence=intron_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:33,0:33:99:0,99,1185	0/1:36,12:48:99:233,0,1081	0/0:45,0:45:99:0,135,1675	0/0:80,0:80:99:0,241,2869	0/0:47,0:47:99:0,141,1625
+chr1	17697	.	G	C	83.26	.	AC=1;AF=0.100;AN=10;BaseQRankSum=0.300;DP=85;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.100;MQ=37.96;MQRankSum=-1.385;QD=4.16;ReadPosRankSum=0.146;SOR=0.008;MaxPopAF=0.17;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:5,0:5:15:0,15,215	0/1:16,4:20:93:93,0,586	0/0:17,0:17:51:0,51,710	0/0:33,2:35:41:0,41,1116	0/0:8,0:8:24:0,24,304
+chr1	17728	.	G	T	64.32	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-1.479;DP=72;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.100;MQ=37.71;MQRankSum=0.931;QD=4.59;ReadPosRankSum=0.430;SOR=0.005;MaxPopAF=0.0035;Consequence=non_coding_transcript_exon_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:4,0:4:12:0,12,167	0/0:13,0:13:39:0,39,489	0/1:10,4:14:74:74,0,323	0/0:36,0:36:99:0,108,1193	0/0:5,0:5:15:0,15,191
+chr1	17746	.	A	G	187.2	.	AC=2;AF=0.200;AN=10;BaseQRankSum=1.014;DP=53;ExcessHet=3.5218;FS=0.000;MLEAC=2;MLEAF=0.200;MQ=37.73;MQRankSum=-1.832;QD=9.85;ReadPosRankSum=0.302;SOR=0.029;MaxPopAF=0.41;Consequence=splice_region_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:4,0:4:12:0,12,170	0/1:7,2:9:40:40,0,245	0/1:5,5:10:99:160,0,184	0/0:26,0:26:78:0,78,960	0/0:4,0:4:12:0,12,157
+chr1	17753	.	C	T	108.35	.	AC=1;AF=0.100;AN=10;BaseQRankSum=-1.299;DP=50;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.100;MQ=38.12;MQRankSum=-0.446;QD=10.83;ReadPosRankSum=0.394;SOR=0.011;MaxPopAF=0.0026;Consequence=intron_variant;Gene=DDX11L1;Transcript=ENST00000456328	GT:AD:DP:GQ:PL	0/0:3,0:3:12:0,12,302	0/0:9,0:9:27:0,27,545	0/1:6,4:10:99:118,0,374	0/0:24,0:24:75:0,75,1644	0/0:4,0:4:12:0,12,269
+chr1	20144	.	G	A	89.79	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-0.524;DP=5;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=36.99;MQRankSum=0.842;QD=17.96;ReadPosRankSum=-0.253;SOR=1.022;MaxPopAF=0.32;Consequence=intron_variant;Gene=WASH7P;Transcript=ENST00000488147	GT:AD:DP:GQ:PL	.	.	.	0/1:2,3:5:47:94,0,47	.
+chr1	20321	.	A	C	169.64	.	AC=2;AF=1.00;AN=2;DP=5;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=38.87;QD=33.93;SOR=3.611;MaxPopAF=0.54;Consequence=intron_variant;Gene=WASH7P;Transcript=ENST00000488147	GT:AD:DP:GQ:PL	.	.	.	1/1:0,5:5:15:178,15,0	.
+chr1	39230	.	G	A	59.64	.	AC=2;AF=0.500;AN=4;BaseQRankSum=-1.150;DP=4;ExcessHet=0.7918;FS=0.000;MLEAC=2;MLEAF=0.500;MQ=37.03;MQRankSum=1.150;QD=19.88;ReadPosRankSum=0.319;SOR=0.916;MaxPopAF=0.4;Consequence=upstream_gene_variant;Gene=FAM138A;Transcript=ENST00000417324	GT:AD:DP:GQ:PL	0/0:1,0:1:3:0,3,26	.	.	1/1:0,3:3:9:70,9,0	.
+chr1	39261	.	T	C	103.94	.	AC=4;AF=1.00;AN=4;DP=4;ExcessHet=3.0103;FS=0.000;MLEAC=4;MLEAF=1.00;MQ=37.03;QD=34.65;SOR=0.693;MaxPopAF=0.59;Consequence=upstream_gene_variant;Gene=FAM138A;Transcript=ENST00000417324	GT:AD:DP:GQ:PL	1/1:0,1:1:3:26,3,0	.	.	1/1:0,3:3:9:87,9,0	.
+chr1	49243	.	G	A	68.09	.	AC=2;AF=1.00;AN=2;DP=3;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=21.00;QD=22.70;SOR=2.833;MaxPopAF=0.057;Consequence=upstream_gene_variant;Gene=AL627309.6;Transcript=ENST00000606857	GT:AD:DP:GQ:PL	.	.	.	1/1:0,3:3:9:77,9,0	.
+chr1	49448	.	A	G	68.09	.	AC=2;AF=1.00;AN=2;DP=3;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=21.00;QD=22.70;SOR=2.833;MaxPopAF=0.38;Consequence=upstream_gene_variant;Gene=AL627309.6;Transcript=ENST00000606857	GT:AD:DP:GQ:PL	.	.	.	1/1:0,3:3:9:77,9,0	.
+chr1	51898	.	C	A	104.09	.	AC=2;AF=1.00;AN=2;DP=3;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=40.00;QD=34.70;SOR=2.833;MaxPopAF=0.29;Consequence=2KB_upstream_variant;Gene=AL627309.6;Transcript=ENST00000606857	GT:AD:DP:GQ:PL	.	.	.	1/1:0,3:3:9:113,9,0	.
+chr1	51928	.	G	A	133.29	.	AC=2;AF=1.00;AN=2;DP=4;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=40.00;QD=33.32;SOR=3.258;MaxPopAF=0.34;Consequence=2KB_upstream_variant;Gene=AL627309.6;Transcript=ENST00000606857	GT:AD:DP:GQ:PL	.	.	.	1/1:0,4:4:12:142,12,0	.
+chr1	52058	.	G	C	262.36	.	AC=2;AF=1.00;AN=2;DP=8;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=38.00;QD=32.80;SOR=4.407;MaxPopAF=0.35;Consequence=2KB_upstream_variant;Gene=AL627309.6;Transcript=ENST00000606857	GT:AD:DP:GQ:PL	.	.	.	1/1:0,8:8:24:270,24,0	.
+chr1	52238	.	T	G	555.51	.	AC=2;AF=1.00;AN=2;DP=17;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=36.50;QD=32.68;SOR=0.804;MaxPopAF=1;Consequence=2KB_upstream_variant;Gene=AL627309.6;Transcript=ENST00000606857	GT:AD:DP:GQ:PL	.	.	.	1/1:0,17:17:51:563,51,0	.
+chr1	54586	.	T	C	323.49	.	AC=2;AF=0.500;AN=4;BaseQRankSum=2.362;DP=11;ExcessHet=0.7918;FS=0.000;MLEAC=3;MLEAF=0.750;MQ=41.77;MQRankSum=-2.362;QD=25.36;ReadPosRankSum=0.447;SOR=4.615;MaxPopAF=0.2;Consequence=upstream_gene_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	0/0:2,0:2:6:0,6,49	.	1/1:0,9:9:27:334,27,0	.
+chr1	54844	.	G	A	128.29	.	AC=2;AF=1.00;AN=2;DP=4;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=55.68;QD=32.07;SOR=0.693;MaxPopAF=0.49;Consequence=upstream_gene_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,4:4:12:137,12,0	.
+chr1	55085	.	T	A	105.29	.	AC=2;AF=1.00;AN=2;DP=4;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=27.03;QD=26.32;SOR=1.609;MaxPopAF=0.45;Consequence=upstream_gene_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,4:4:12:114,12,0	.
+chr1	56987	.	C	CA	78.17	.	AC=2;AF=1.00;AN=2;DP=5;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=37.48;QD=26.06;SOR=2.833;Consequence=2KB_upstream_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,3:3:9:87,9,0	.
+chr1	57856	.	T	A	388.49	.	AC=2;AF=1.00;AN=2;DP=11;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=42.91;QD=28.73;SOR=3.442;MaxPopAF=0.53;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,11:11:33:396,33,0	.
+chr1	58771	.	T	C	99.09	.	AC=2;AF=1.00;AN=2;DP=3;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=40.07;QD=33.03;SOR=1.179;MaxPopAF=0.47;Consequence=non_coding_transcript_exon_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,3:3:9:108,9,0	.
+chr1	61442	.	A	G	58.27	.	AC=2;AF=1.00;AN=2;DP=2;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=37.48;QD=29.14;SOR=0.693;MaxPopAF=1;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,2:2:6:66,6,0	.
+chr1	61718	.	CA	C	43.79	.	AC=1;AF=0.500;AN=2;BaseQRankSum=-1.981;DP=7;ExcessHet=3.0103;FS=5.441;MLEAC=2;MLEAF=1.00;MQ=37.67;MQRankSum=-1.981;QD=6.26;ReadPosRankSum=0.431;SOR=0.027;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	0/1:5,2:7:48:48,0,147	.
+chr1	61851	.	T	A	221	.	AC=2;AF=1.00;AN=2;DP=6;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=39.52;QD=30.97;SOR=3.912;MaxPopAF=0.36;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,6:6:18:229,18,0	.
+chr1	61871	.	C	CT	221.43	.	AC=2;AF=1.00;AN=2;DP=8;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=41.24;QD=27.68;SOR=2.833;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,8:8:24:229,24,0	.
+chr1	61987	.	A	G	1224.51	.	AC=2;AF=1.00;AN=2;DP=26;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=56.53;QD=27.24;SOR=1.220;MaxPopAF=0.56;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,26:26:84:1232,84,0	.
+chr1	61989	.	G	C	1224.51	.	AC=2;AF=1.00;AN=2;DP=28;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=56.79;QD=28.20;SOR=1.179;MaxPopAF=0.56;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,28:28:84:1232,84,0	.
+chr1	62203	.	T	C	613.51	.	AC=2;AF=1.00;AN=2;DP=18;ExcessHet=3.0103;FS=0.000;MLEAC=3;MLEAF=1.00;MQ=44.84;QD=34.08;SOR=1.863;MaxPopAF=0.51;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	.	1/1:0,18:18:54:621,54,0	.
+chr1	62239	.	TAC	T	367.44	.	AC=2;AF=0.500;AN=4;BaseQRankSum=1.638;DP=15;ExcessHet=0.7918;FS=0.000;MLEAC=3;MLEAF=0.750;MQ=43.61;MQRankSum=2.212;QD=25.00;ReadPosRankSum=1.755;SOR=1.447;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	0/0:1,0:1:3:0,3,37	1/1:0,10:10:30:377,30,0	.
+chr1	62271	.	A	G	287.35	.	AC=2;AF=0.500;AN=4;BaseQRankSum=-1.593;DP=9;ExcessHet=0.7918;FS=0.000;MLEAC=3;MLEAF=0.750;MQ=42.89;MQRankSum=1.593;QD=29.56;ReadPosRankSum=-1.593;SOR=0.916;MaxPopAF=0.25;Consequence=intron_variant;Gene=OR4G11P;Transcript=ENST00000642116	GT:AD:DP:GQ:PL	.	.	0/0:1,0:1:3:0,3,26	1/1:0,8:8:24:297,24,0	.

@@ -23,7 +23,8 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 
 func usage() {
 	fmt.Print(
-		"multiFaToVcf - Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference.\n" +
+		"multiFaToVcf - Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference." +
+			"Note that deletions in the first position of an alignment will not appear in the output Vcf.\n" +
 			"Usage:\n" +
 			"multiFaToVcf multi.Fa chromName out.vcf \n" +
 			"options:\n")
@@ -32,7 +33,8 @@ func usage() {
 
 func main() {
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "Retain only substitutions in the output VCF.")
-	var retainN *bool = flag.Bool("retainN", false, "By default, multiFaToVcf does not retain positions with N in the alt or ref in the output VCF. This option overrides this behavior.")
+	var retainN *bool = flag.Bool("retainN", false, "By default, multiFaToVcf does not retain positions with N in the \n"+
+		"alt or ref in the output VCF. This option overrides this behavior.")
 	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

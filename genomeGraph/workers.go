@@ -11,7 +11,7 @@ import (
 func gswNothingWorker(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, incomingFastqs <-chan fastq.FastqBig, outgoingSams chan<- *sam.Sam, wg *sync.WaitGroup) {
 	var curr *sam.Sam
 	for read := range incomingFastqs {
-		curr = &sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
+		curr = &sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: string(read.Qual), Extra: "BZ:i:0"}
 		outgoingSams <- curr
 	}
 	wg.Done()

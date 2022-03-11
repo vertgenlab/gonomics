@@ -35,7 +35,7 @@ func TestIsSelfOverlapping(t *testing.T) {
 	var actual bool
 	for _, v := range SelfOverlappingTests {
 		b = Read(v.filename)
-		actual = IsSelfOverlapping(b)
+		actual = IsSelfOverlapping(b, 0)
 		if actual != v.expected {
 			t.Errorf("Error in IsSelfOverlapping. Expected: %t. Actual: %t.", v.expected, actual)
 		}
