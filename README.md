@@ -2,6 +2,7 @@
 A collection of genomics software tools written in Go (golang).
 Authors:
 * Eric Au
+* Luke C. Bartelt
 * Olivier Boivin
 * Sophie Campione
 * Christiana Fauci
