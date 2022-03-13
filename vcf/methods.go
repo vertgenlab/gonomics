@@ -55,9 +55,10 @@ func (v Vcf) GetChromEnd() int {
 	}
 }
 
-func (v *Vcf) UpdateLift(c string, start int, end int) {
+func (v Vcf) UpdateCoord(c string, start int, end int) interface{} {
 	v.Chr = c
-	v.Pos = start + 1 //TODO: Is this the best way to handle this???
+	v.Pos = start + 1
+	return v
 }
 
 type VcfSlice []*Vcf

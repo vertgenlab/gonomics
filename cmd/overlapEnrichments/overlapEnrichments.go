@@ -7,10 +7,11 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/interval/lift"
 	"log"
 )
 
-func bedEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int, trimToRefGenome bool) {
+func overlapEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int, trimToRefGenome bool) {
 	var err error
 
 	if method != "exact" && method != "normalApproximate" && method != "upperBound" && method != "lowerBound" {
@@ -18,17 +19,17 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	}
 
 	if verbose > 0 {
-		log.Println("Reading bed files.")
+		log.Println("Reading files.")
 	}
 
-	elementsOne := bed.Read(inFile)
-	elementsTwo := bed.Read(secondFile)
-	noGapRegions := bed.Read(noGapFile)
+	elementsOne := lift.GoRead(inFile)
+	elementsTwo := lift.GoRead(secondFile)
+	noGapRegions := lift.GoRead(noGapFile)
 
 	if trimToRefGenome {
-		var overlap1, overlap2 []interval.Interval
-		var trimmedE1 []bed.Bed = make([]bed.Bed, 0)
-		var trimmedE2 []bed.Bed = make([]bed.Bed, 0)
+		var overlap1, overlap2 []lift.Lift
+		var trimmedE1 []lift.Lift = make([]lift.Lift, 0)
+		var trimmedE2 []lift.Lift = make([]lift.Lift, 0)
 
 		var e1Intervals []interval.Interval
 		for i := range elementsOne {
@@ -42,13 +43,13 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 		tree2 := interval.BuildTree(e2Intervals)
 
 		for i := range noGapRegions {
-			overlap1 = interval.Query(tree1, noGapRegions[i], "within")
+			overlap1 = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], "within"))
 			for j := range overlap1 {
-				trimmedE1 = append(trimmedE1, overlap1[j].(bed.Bed))
+				trimmedE1 = append(trimmedE1, overlap1[j])
 			}
-			overlap2 = interval.Query(tree2, noGapRegions[i], "within")
+			overlap2 = lift.IntervalSliceToLift(interval.Query(tree2, noGapRegions[i], "within"))
 			for j := range overlap2 {
-				trimmedE2 = append(trimmedE2, overlap2[j].(bed.Bed))
+				trimmedE2 = append(trimmedE2, overlap2[j])
 			}
 		}
 		elementsOne = trimmedE1
@@ -59,29 +60,29 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 		log.Println("Sorting bed files.")
 	}
 
-	bed.SortByCoord(elementsOne)
-	bed.SortByCoord(elementsTwo)
-	bed.SortByCoord(noGapRegions)
+	lift.SortByCoord(elementsOne)
+	lift.SortByCoord(elementsTwo)
+	lift.SortByCoord(noGapRegions)
 
 	if verbose > 0 {
 		log.Println("Running preflight checks.")
 	}
 
-	if bed.IsSelfOverlapping(noGapRegions, verbose) {
+	if lift.IsSelfOverlapping(noGapRegions, verbose) {
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", noGapFile)
 	}
 
 	//preflight checks: check for error in user input. Beds should not be self-overlapping.
-	if bed.IsSelfOverlapping(elementsOne, verbose) {
+	if lift.IsSelfOverlapping(elementsOne, verbose) {
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", inFile)
 	}
 
-	if bed.IsSelfOverlapping(elementsTwo, verbose) {
+	if lift.IsSelfOverlapping(elementsTwo, verbose) {
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
 	}
 
 	var summarySlice []float64
-	overlapCount := bed.OverlapCount(elementsTwo, elementsOne)
+	overlapCount := lift.OverlapCount(elementsTwo, elementsOne)
 
 	if verbose > 0 {
 		log.Println("Calculating enrichment probabilities.")
@@ -89,15 +90,15 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 
 	switch method {
 	case "exact":
-		probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-		summarySlice = bed.EnrichmentPValueExact(probs, overlapCount)
+		probs := lift.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
+		summarySlice = lift.EnrichmentPValueExact(probs, overlapCount)
 	case "normalApproximate":
-		probs := bed.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-		summarySlice = bed.EnrichmentPValueApproximation(probs, overlapCount)
+		probs := lift.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
+		summarySlice = lift.EnrichmentPValueApproximation(probs, overlapCount)
 	case "upperBound":
-		summarySlice = bed.EnrichmentPValueUpperBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
+		summarySlice = lift.EnrichmentPValueUpperBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
 	case "lowerBound":
-		summarySlice = bed.EnrichmentPValueLowerBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
+		summarySlice = lift.EnrichmentPValueLowerBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
 	default:
 		log.Fatalf("Error: unknown method. Found: %s.", method)
 	}
@@ -116,21 +117,29 @@ func bedEnrichments(method string, inFile string, secondFile string, noGapFile s
 	exception.PanicOnErr(err)
 }
 
+func castToBedForTesting(l []lift.Lift) []bed.Bed {
+	var answer []bed.Bed = make([]bed.Bed, len(l))
+	for i := range l {
+		answer[i] = l[i].(bed.Bed)
+	}
+	return answer
+}
+
 func usage() {
 	fmt.Print(
-		"bedEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input bed files.\n" +
-			"noGap.bed represents a bed of all regions in the search space of the genome.\n" +
+		"overlapEnrichments - Returns the p-value of enrichment for overlaps between the elements in two input files.\n" +
+			"noGap.lift represents a lift compatable file (usually a bed file) of all regions in the search space of the genome.\n" +
 			"out.txt is in the form of a tab-separated value file with a header line starting with '#'.\n" +
 			"Calculates enrichment of the number of elements in set 2 that have any overlap in set 1.\n" +
 			"Number of overlaps reported is the number of elements in set 2 that have any overlap with set 1. This will be asymmetric if sets one and two are swapped as arguments.\n" +
 			"Method specifies the type of calculation. Must match one of the following strings: 'exact', 'normalApproximate', 'upperBound', or 'lowerBound'\n" +
 			"A brief explanation of each method of calculation is described starting on the next line.\n" +
-			"exact: Calculates the exact p Value for enrichment between two bed files. NP-hard, computationally intractable for large datasets.\n" +
-			"normalApproximate: (Recommended) Uses a normal approximation of the binomial distribution for the p Value. For large datasets, this method is rapid and should converge on the true p value, unless the p value is extremely small.\n" +
-			"upperBound: Returns the most conservative exact estimate of the p value. Rapid, but the true p value is guaranteed to fall below this value.\n" +
-			"lowerBound: Returns the lower bound exact estimate of the p value. Rapid, and the true p value is guaranteed to be above this value.\n" +
+			"exact: Calculates the exact p Value for enrichment between two files. NP-hard, computationally intractable for large datasets.\n" +
+			"normalApproximate: (Recommended) Uses a normal approximation of the binomial distribution for the p-Value. For large datasets, this method is rapid and should converge on the true p value, unless the p value is extremely small.\n" +
+			"upperBound: Returns the most conservative exact estimate of the p-Value. Rapid, but the true p-Value is guaranteed to fall below this value.\n" +
+			"lowerBound: Returns the lower bound exact estimate of the p-Value. Rapid, and the true p value is guaranteed to be above this value.\n" +
 			"Usage:\n" +
-			"bedEnrichments method elements1.bed elements2.bed noGap.bed out.txt\n")
+			"bedEnrichments method elements1.lift elements2.lift noGap.lift out.txt\n")
 	flag.PrintDefaults()
 }
 
@@ -156,5 +165,5 @@ func main() {
 	noGapFile := flag.Arg(3)
 	outFile := flag.Arg(4)
 
-	bedEnrichments(method, inFile, secondFile, noGapFile, outFile, *verbose, *trimToRefGenome)
+	overlapEnrichments(method, inFile, secondFile, noGapFile, outFile, *verbose, *trimToRefGenome)
 }

@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/interval/lift"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"io"
@@ -17,13 +19,12 @@ import (
 	"unicode/utf8"
 )
 
-const Verbose int = 0
-
 type fileWriter interface {
 	WriteToFileHandle(io.Writer)
 }
 
-func lift(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64) {
+func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, verbose int) {
+	var err error
 	if minMatch < 0.0 || minMatch > 1.0 {
 		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", minMatch)
 	}
@@ -35,9 +36,7 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 	}
 	tree := interval.BuildTree(chainIntervals)
 	out := fileio.EasyCreate(outFile)
-	defer out.Close()
 	un := fileio.EasyCreate(unMapped)
-	defer un.Close()
 
 	var records []fasta.Fasta
 	var currVcf vcf.Vcf
@@ -52,67 +51,76 @@ func lift(chainFile string, inFile string, outFile string, faFile string, unMapp
 
 	faMap := fasta.ToMap(records)
 
-	//TODO: General GoReadToChan header returns will allow us to avoid opening the file twice.
 	if vcf.IsVcfFile(inFile) {
 		tmpOpen := fileio.EasyOpen(inFile)
 		header := vcf.ReadHeader(tmpOpen)
 		vcf.NewWriteHeader(out, header)
-		tmpOpen.Close()
+		err = tmpOpen.Close()
+		exception.PanicOnErr(err)
 	}
 
 	//second task, read in intervals, find chain, and convert to new interval
-	inChan := interval.GoReadToLiftChan(inFile)
+	inChan := lift.GoReadToChan(inFile)
 	var overlap []interval.Interval
 	for i := range inChan {
-		overlap = interval.Query(tree, i, "any") //TODO: verify proper t/q contains
+		overlap = interval.Query(tree, i, "any")
 		if len(overlap) > 1 {
-			fmt.Fprintf(un, "Record below maps to multiple chains:\n")
-			i.(fileWriter).WriteToFileHandle(un)
+			_, err = fmt.Fprintf(un, "Record below maps to multiple chains:\n")
+			exception.PanicOnErr(err)
+			i.WriteToFileHandle(un)
 		} else if len(overlap) == 0 {
-			fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
-			i.(fileWriter).WriteToFileHandle(un)
+			_, err = fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
+			exception.PanicOnErr(err)
+			i.WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
 			a, b = interval.MatchProportion(overlap[0].(*chain.Chain), i)
-			fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
-			i.(fileWriter).WriteToFileHandle(un)
+			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
+			exception.PanicOnErr(err)
+			i.WriteToFileHandle(un)
 		} else {
-			//DEBUG: interval.PrettyPrint(i)
-			i.UpdateLift(interval.LiftIntervalWithChain(overlap[0].(*chain.Chain), i)) //now i is 1-based and we can assert VCF.
-			//DEBUG: interval.PrettyPrint(i)
+			i = i.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(*chain.Chain), i)).(lift.Lift) //now i is 1-based and we can assert VCF.
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
-				currVcf = *i.(*vcf.Vcf)
+				currVcf = i.(vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
-					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
-					i.(fileWriter).WriteToFileHandle(un)
+					_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
+					exception.PanicOnErr(err)
+					i.WriteToFileHandle(un)
 					//log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.") //Currently we're causing INDEL records to fatal.
 				} else if len(currVcf.Alt) > 1 {
-					fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
-					i.(fileWriter).WriteToFileHandle(un)
+					_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
+					exception.PanicOnErr(err)
+					i.WriteToFileHandle(un)
 				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-					if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && Verbose > 0 {
-						fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
+					if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
+						_, err = fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
+						exception.PanicOnErr(err)
 					}
 					i.(fileWriter).WriteToFileHandle(out)
 					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
 				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
-					fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
-					//DEBUG:log.Printf("currVcf Pos -1: %d. records base: %s.", currVcf.Pos-1, dna.BaseToString(records[0].Seq[int(currVcf.Pos-1)]))
-					i.(fileWriter).WriteToFileHandle(un)
+					_, err = fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
+					exception.PanicOnErr(err)
+					i.WriteToFileHandle(un)
 					currVcf = vcf.InvertVcf(currVcf)
 					i = &currVcf
 					i.(fileWriter).WriteToFileHandle(out)
 				} else {
-					fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
-					i.(fileWriter).WriteToFileHandle(un)
+					_, err = fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
+					exception.PanicOnErr(err)
+					i.WriteToFileHandle(un)
 				}
 			} else {
 				i.(fileWriter).WriteToFileHandle(out)
 			}
 		}
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+	err = un.Close()
+	exception.PanicOnErr(err)
 }
 
 // QuerySeq takes in a slice of Fasta and a position (name and index) and returns true if a query
@@ -138,12 +146,12 @@ func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) b
 
 func usage() {
 	fmt.Print(
-		"lift - Moves an interval interface compatable file format between assemblies.\n" +
+		"liftCoordinates - Lifts a Lift interface compatable file format between assembly coordinates.\n" +
 			"Usage:\n" +
-			"lift lift.chain inFile outFile unMapped\n" +
+			"liftCoordinates lift.chain inFile outFile unMapped\n" +
 			"Warning: For Vcf lift, the original headers are retained in the output without modification. Use output header information at your own risk.\n" +
-			"Please note: Vcf lift is not compatable with Unix piping.\n" +
-			"Please note: Vcf lift with fa crossreferencing is currently only supported for biallelic and substitution variants.\n" +
+			"Please note: Vcf lift is not compatible with Unix piping.\n" +
+			"Please note: Vcf lift with fa cross-referencing is currently only supported for biallelic and substitution variants.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -152,6 +160,7 @@ func main() {
 	var expectedNumArgs int = 4
 	var faFile *string = flag.String("faFile", "", "Specify a fasta file for Lifting VCF format files. This fasta should correspond to the destination assembly.")
 	var minMatch *float64 = flag.Float64("minMatch", 0.95, "Specify the minimum proportion of matching bases required for a successful lift operation.")
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable debug prints.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -167,5 +176,5 @@ func main() {
 	inFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 	unMapped := flag.Arg(3)
-	lift(chainFile, inFile, outFile, *faFile, unMapped, *minMatch)
+	liftCoordinates(chainFile, inFile, outFile, *faFile, unMapped, *minMatch, *verbose)
 }

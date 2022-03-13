@@ -167,7 +167,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Bed entries from an input filename to a <-chan *Bed.
+//GoReadToChan reads Bed entries from an input filename to a <-chan Bed.
 func GoReadToChan(filename string) <-chan Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
