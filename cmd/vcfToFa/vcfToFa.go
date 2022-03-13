@@ -95,7 +95,7 @@ func vcfToMultiFa(inVcfFilename string, inFaFilename string, outFaFilename strin
 		}
 
 		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
-			log.Fatal("Error: currently we only handle biallelic substitutions\n")
+			log.Fatal("Error: currently we only handle biallelic substitutions.  You can filter the vcf for these with vcfFilter.\n")
 		}
 		if v.Chr == chromName { //only consider variants with the correct chrom name.
 			currAlnPos = fasta.RefPosToAlnPosCounter(seqsOrdered[outIndex], v.Pos-1, prevRefPos, prevAlnPos)
@@ -154,7 +154,7 @@ func vcfToFa(inVcfFilename string, inFaFilename string, outFaFilename string, us
 
 func usage() {
 	fmt.Print(
-		"vcfToFa - Use the variant data in the vcf to edit an input fasta of the reference.\n\n" +
+		"vcfToFa - Use the variant data in the vcf to edit an input fasta of the reference.  Assumes diploid organisms unless the haploid flag is given..\n\n" +
 			"Usage:\n" +
 			"  vcfToFa [options] input.vcf input.fa output.fa\n\n" +
 			"Options:\n\n")
