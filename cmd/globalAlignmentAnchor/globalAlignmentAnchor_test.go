@@ -10,21 +10,21 @@ import (
 )
 
 var globalAlignmentAnchorTests = []struct {
-	in_maf                      string
-	species1                    string
-	species2                    string
-	species1_genome             string
-	species2_genome             string
-	out_maf_expected            string
-	species1_match_bed_expected string
-	species2_match_bed_expected string
-	species1_gap_bed_expected   string
-	species2_gap_bed_expected   string
+	in_maf                                   string
+	species1                                 string
+	species2                                 string
+	species1_genome                          string
+	species2_genome                          string
+	out_maf_expected                         string
+	species1_match_bed_expected              string
+	species2_match_bed_expected              string
+	species1_gap_bed_expected                string
+	species2_gap_bed_expected                string
 	species1_gap_doNotCalculate_bed_expected string
 	species2_gap_doNotCalculate_bed_expected string
-	out_alignment_expected      string
-	out_species1_alignment_expected	string
-	out_species2_alignment_expected	string
+	out_alignment_expected                   string
+	out_species1_alignment_expected          string
+	out_species2_alignment_expected          string
 }{
 	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.expected.bed", "testdata/out_rheMac10_gap.expected.bed", "testdata/out_hg38_gap_doNotCalculate.bed", "testdata/out_rheMac10_gap_doNotCalculate.bed", "testdata/out_alignment.expected.tsv", "testdata/out_hg38_alignment.expected.bed", "testdata/out_rheMac10_alignment.expected.bed"},
 }

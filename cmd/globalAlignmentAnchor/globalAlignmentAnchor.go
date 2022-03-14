@@ -247,18 +247,18 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 		for j := 0; j < len(aln); j++ {
 			switch aln[j].Op {
 			case align.ColM:
-				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1+int(aln[j].RunLength), Name: "species1_Match", FieldsInitialized: 4}
-				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2+int(aln[j].RunLength), Name: "species2_Match", FieldsInitialized: 4}
+				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Match", FieldsInitialized: 4}
+				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Match", FieldsInitialized: 4}
 				bed.WriteBed(out_species1.File, current_species1)
 				bed.WriteBed(out_species2.File, current_species2)
 				pos_species1 += int(aln[j].RunLength)
 				pos_species2 += int(aln[j].RunLength)
 			case align.ColI:
-				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2+int(aln[j].RunLength), Name: "species2_Insertion", FieldsInitialized: 4}
+				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Insertion", FieldsInitialized: 4}
 				bed.WriteBed(out_species2.File, current_species2)
 				pos_species2 += int(aln[j].RunLength)
 			case align.ColD:
-				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1+int(aln[j].RunLength), Name: "species1_Insertion", FieldsInitialized: 4}
+				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Insertion", FieldsInitialized: 4}
 				bed.WriteBed(out_species1.File, current_species1)
 				pos_species1 += int(aln[j].RunLength)
 			default:
