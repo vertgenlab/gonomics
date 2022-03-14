@@ -116,5 +116,5 @@ chr1	1294	1300	species2_Match
 chr2	1	2	species2_Match
 chr2	2	5	species2_Insertion
 chr2	5	8	species2_Match
-chr2	20	21	species2_Insertion
-chr2	21	536	species2_Match
+chr2	20	335	species2_Insertion
+chr2	335	850	species2_Match
