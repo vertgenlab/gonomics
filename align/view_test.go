@@ -19,6 +19,7 @@ var alignTests = []struct {
 	{"ACT", "ACGT", "AC-T\nACGT\n"},
 	{"CGCGCGCGCG", "CGCGCGTTTTCGCG", "CGCGCG----CGCG\nCGCGCGTTTTCGCG\n"},
 	{"CGCGCGCGCG", "CGAAAACGCGTTTTCGCG", "CG----CGCG----CGCG\nCGAAAACGCGTTTTCGCG\n"},
+	{"AA", "GGGAATT", "---AA--\nGGGAATT\n"},
 }
 
 func TestConstGap(t *testing.T) {
