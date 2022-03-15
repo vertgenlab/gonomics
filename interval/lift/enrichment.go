@@ -175,7 +175,6 @@ func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions
 	var tempElements1 []Lift = make([]Lift, len(elements1))
 	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
 	var enrichPValue, depletePValue float64
-	var underflow bool
 	var s int
 
 	copy(tempElements1, elements1)
@@ -192,36 +191,16 @@ func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions
 		log.Println("Calculating the pValue.")
 	}
 	var curr float64
-	enrichPValue, underflow = numbers.BinomialDist(numTrials, overlapCount, prob)
-	if underflow {
-		answer[2] = 0.0
-		if verbose > 0 {
-			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
-		}
-	} else {
-		for s = overlapCount + 1; s <= numTrials; s++ {
-			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
-			if underflow {
-				break
-			}
-			enrichPValue += curr
-		}
+	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount + 1; s <= numTrials; s++ {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		enrichPValue += curr
 	}
 
-	depletePValue, underflow = numbers.BinomialDist(numTrials, overlapCount, prob)
-	if underflow {
-		answer[2] = 0.0
-		if verbose > 0 {
-			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
-		}
-	} else {
-		for s = overlapCount - 1; s >= 0; s-- {
-			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
-			if underflow {
-				break
-			}
-			depletePValue += curr
-		}
+	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount - 1; s >= 0; s-- {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		depletePValue += curr
 	}
 
 	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
