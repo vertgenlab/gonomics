@@ -71,8 +71,8 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 				if chrom_species2 == chrom_species1 || pT6_hg38_chr2 {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-					bed.WriteBed(out_species1.File, bed_species1)
-					bed.WriteBed(out_species2.File, bed_species2)
+					bed.WriteBed(out_species1, bed_species1)
+					bed.WriteBed(out_species2, bed_species2)
 				}
 			}
 		}
@@ -123,8 +123,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			// first finish off the previous chr
 			current_species1 = bed.Bed{Chrom: chr_prev, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
 			current_species2 = bed.Bed{Chrom: species2_match_bed[i-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[i-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-			bed.WriteBed(out_species1.File, current_species1)
-			bed.WriteBed(out_species2.File, current_species2)
+			bed.WriteBed(out_species1, current_species1)
+			bed.WriteBed(out_species2, current_species2)
 
 			// then start the current chr
 			pos_species1 = 1
@@ -145,8 +145,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		} else if gapSizeProduct > 10000000000 {
 			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
 		} else {
-			bed.WriteBed(out_species1.File, current_species1)
-			bed.WriteBed(out_species2.File, current_species2)
+			bed.WriteBed(out_species1, current_species1)
+			bed.WriteBed(out_species2, current_species2)
 		}
 
 		// update variables at the end of each iteration
@@ -158,8 +158,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	// after loop, need to write the last entry to output files
 	current_species1 = bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
 	current_species2 = bed.Bed{Chrom: species2_match_bed[len(species2_match_bed)-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-	bed.WriteBed(out_species1.File, current_species1)
-	bed.WriteBed(out_species2.File, current_species2)
+	bed.WriteBed(out_species1, current_species1)
+	bed.WriteBed(out_species2, current_species2)
 
 	// close output files and check for errors
 	err = out_species1.Close()
