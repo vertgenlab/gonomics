@@ -133,7 +133,6 @@ func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions
 	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
 	var curr, enrichPValue, depletePValue float64
 	var s int
-	var underflow bool
 
 	copy(tempElements1, elements1)
 	copy(tempNoGap, noGapRegions)
@@ -149,15 +148,15 @@ func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions
 		log.Println("Calculating the pValue.")
 	}
 
-	enrichPValue, underflow = numbers.BinomialDist(numTrials, overlapCount, prob)
-	for s = overlapCount + 1; s <= numTrials && !(underflow && float64(s) > float64(numTrials)*prob); s++ {
-		curr, underflow = numbers.BinomialDist(numTrials, s, prob)
+	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount + 1; s <= numTrials; s++ {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
 		enrichPValue += curr
 	}
 
-	depletePValue, underflow = numbers.BinomialDist(numTrials, overlapCount, prob)
-	for s = overlapCount - 1; s >= 0 && (!underflow && float64(s) > float64(numTrials)*prob); s-- {
-		curr, underflow = numbers.BinomialDist(numTrials, s, prob)
+	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount - 1; s >= 0; s-- {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
 		depletePValue += curr
 	}
 
