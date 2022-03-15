@@ -32,7 +32,7 @@ func bedFormat(s Settings) {
 		if s.ScaleNameFloat != 1 {
 			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*common.StringToFloat64(v.Name))
 		}
-		bed.WriteBed(out.File, v)
+		bed.WriteBed(out, v)
 	}
 
 	err = out.Close()

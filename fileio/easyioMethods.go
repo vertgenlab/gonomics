@@ -48,8 +48,8 @@ func (ew *EasyWriter) Close() error {
 	if ew.internalBuff != nil {
 		bufErr = ew.internalBuff.Flush() // Serious write errors possible.
 	}
-	if ew.File != nil {
-		fileErr = ew.File.Close() // The only possible err is that the file has already been closed.
+	if ew.file != nil {
+		fileErr = ew.file.Close() // The only possible err is that the file has already been closed.
 	} else {
 		return errors.New("no open file")
 	}
