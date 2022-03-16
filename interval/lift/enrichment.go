@@ -35,10 +35,12 @@ func ElementOverlapProbabilities(elements1 []Lift, elements2 []Lift, noGapRegion
 
 // EnrichmentPValueApproximation performs a calculation of enrichment based on a set of overlap probabilities and the observed overlap count.
 // Uses a normal approximation of the resulting binomial distribution. Very fast and should converge on the correct answer. This is the preferred method.
-// Returns a slice of three values. The first represents a debug check (hardcoded to one), the second is the expected number of overlaps, and the third is the pValue of the observed overlap.
+// Returns a slice of four values. The first represents a debug check (hardcoded to one), the second is the expected number of overlaps, and the third and fourth represent the pValues for enrichment and depletion, respectively.
 func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount int) []float64 {
-	var answer []float64 = make([]float64, 3)
+	var answer []float64 = make([]float64, 4)
 	var mu, sigma float64 = 0, 0
+	var enrichPValue, depletePValue float64
+	var s int
 
 	for i := range elementOverlapProbs {
 		mu += elementOverlapProbs[i]
@@ -51,21 +53,27 @@ func EnrichmentPValueApproximation(elementOverlapProbs []float64, overlapCount i
 	answer[1] = mu //mu represents the expected value
 
 	//calculate pValue approximation
-	pValue := numbers.NormalDist(float64(overlapCount), mu, sigma)
-	for s := overlapCount + 1; s <= len(elementOverlapProbs); s++ {
-		pValue += numbers.NormalDist(float64(s), mu, sigma)
+	enrichPValue = numbers.NormalDist(float64(overlapCount), mu, sigma)
+	for s = overlapCount + 1; s <= len(elementOverlapProbs); s++ {
+		enrichPValue += numbers.NormalDist(float64(s), mu, sigma)
 	}
-	answer[2] = pValue
+	answer[2] = enrichPValue
+
+	depletePValue = numbers.NormalDist(float64(overlapCount), mu, sigma)
+	for s = overlapCount - 1; s >= 0; s-- {
+		depletePValue += numbers.NormalDist(float64(s), mu, sigma)
+	}
+	answer[3] = depletePValue
 
 	return answer
 }
 
 // EnrichmentPValueExact performs an exact calculation fo enrichment bgaased on a set of overlap probabilities and the observed overlap count.
 // The exact method is non-polynomial, and is thus not recommended for large datasets.
-// Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+// Returns a slice of four values. The first is the debug check, the second is the expected number of overlaps, and the third and fourth represent the pValues for enrichment and depletion, respectively.
 func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []float64 {
 	var numTrials = len(elementOverlapProbs)
-	var answer []float64 = make([]float64, 3)
+	var answer []float64 = make([]float64, 4)
 	var prevCol []float64 = make([]float64, numTrials+1)
 	var currCol []float64 = make([]float64, numTrials+1)
 
@@ -76,7 +84,7 @@ func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []fl
 	currCol[1] = math.Log(elementOverlapProbs[0])
 
 	var s int
-	var expected, pValue float64
+	var expected, enrichPValue, depletePValue float64
 
 	for t := 1; t < numTrials; t++ {
 		prevCol, currCol = currCol, prevCol
@@ -98,28 +106,38 @@ func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []fl
 		}
 	}
 
-	pValue = currCol[overlapCount]
+	enrichPValue = currCol[overlapCount]
 	for s = overlapCount + 1; s <= numTrials; s++ {
-		pValue = logspace.Add(pValue, currCol[s])
+		enrichPValue = logspace.Add(enrichPValue, currCol[s])
+	}
+
+	depletePValue = currCol[overlapCount]
+	for s = overlapCount - 1; s >= 0; s-- {
+		depletePValue = logspace.Add(depletePValue, currCol[s])
 	}
 
 	answer[0] = math.Exp(check)
-	answer[2] = math.Exp(pValue)
 	answer[1] = math.Exp(expected)
+	answer[2] = math.Exp(enrichPValue)
+	answer[3] = math.Exp(depletePValue)
+
 	return answer
 }
 
 // EnrichmentPValueUpperBound, together with EnrichmentPValueLowerBound, provide a range of possible values for the pValue of overlap.
-// Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+// Returns a slice of four values. The first is the debug check, the second is the expected number of overlaps, and the third and fourth represent the pValues for enrichment and depletion, respectively.
 func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions []Lift, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
-	var answer []float64 = make([]float64, 3)
+	var answer []float64 = make([]float64, 4)
 	var tempElements1 []Lift = make([]Lift, len(elements1))
-	copy(tempElements1, elements1)
 	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
+	var curr, enrichPValue, depletePValue float64
+	var s int
+
+	copy(tempElements1, elements1)
 	copy(tempNoGap, noGapRegions)
+
 	minElements2 := findLargestLength(elements2)
-	var curr float64
 
 	if verbose > 0 {
 		log.Println("Calculating overlapProbability.")
@@ -130,28 +148,40 @@ func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions
 		log.Println("Calculating the pValue.")
 	}
 
-	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
-	for s := overlapCount + 1; s <= numTrials && !(underflow && float64(s) > float64(numTrials)*prob); s++ {
-		curr, underflow = numbers.BinomialDist(numTrials, s, prob)
-		pValue += curr
+	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount + 1; s <= numTrials; s++ {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		enrichPValue += curr
+	}
+
+	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount - 1; s >= 0; s-- {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		depletePValue += curr
 	}
 
 	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
-	answer[2] = pValue
 	answer[1] = prob * float64(numTrials)
+	answer[2] = enrichPValue
+	answer[3] = depletePValue
 	return answer
 }
 
 // EnrichmentPValueLowerBound, together with EnrichmentPValueUpperBound, provide a range of possible values for the pValue of overlap.
-// Returns a slice of three values. The first is the debug check, the second is the expected number of overlaps, and the third is the pValue of the observed number of overlaps.
+// Returns a slice of four values. The first is the debug check, the second is the expected number of overlaps, and the third and fourth represent the pValues for enrichment and depletion, respectively.
 func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions []Lift, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
-	var answer []float64 = make([]float64, 3)
+	var answer []float64 = make([]float64, 4)
 	var tempElements1 []Lift = make([]Lift, len(elements1))
 	var tempNoGap []Lift = make([]Lift, len(noGapRegions))
+	var enrichPValue, depletePValue float64
+	var s int
+
 	copy(tempElements1, elements1)
 	copy(tempNoGap, noGapRegions)
+
 	minElements2 := findShortestLength(elements2)
+
 	if verbose > 0 {
 		log.Println("Calculating overlapProbability.")
 	}
@@ -161,25 +191,23 @@ func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions
 		log.Println("Calculating the pValue.")
 	}
 	var curr float64
-	pValue, underflow := numbers.BinomialDist(numTrials, overlapCount, prob)
-	if underflow {
-		answer[2] = 0.0
-		if verbose > 0 {
-			log.Println("Underflow detected in the binomial distribution at overlapCount. p value is too small to detect.")
-		}
-	} else {
-		for s := overlapCount + 1; s <= numTrials; s++ {
-			curr, underflow = numbers.BinomialDist(numTrials, s, prob)
-			if underflow {
-				break
-			}
-			pValue += curr
-		}
+	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount + 1; s <= numTrials; s++ {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		enrichPValue += curr
+	}
+
+	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	for s = overlapCount - 1; s >= 0; s-- {
+		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		depletePValue += curr
 	}
 
 	answer[0] = 1 //hardcoded for now, we don't do the check with this method.
-	answer[2] = pValue
 	answer[1] = prob * float64(numTrials)
+	answer[2] = enrichPValue
+	answer[3] = depletePValue
+
 	return answer
 }
 

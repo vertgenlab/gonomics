@@ -73,7 +73,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
-			a, b = interval.MatchProportion(overlap[0].(*chain.Chain), i)
+			a, b = lift.MatchProportion(overlap[0].(*chain.Chain), i)
 			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
@@ -134,7 +134,7 @@ func QuerySeq(faMap map[string][]dna.Base, chr string, index int, query []dna.Ba
 
 //minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
 func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) bool {
-	a, b := interval.MatchProportion(overlap, i)
+	a, b := lift.MatchProportion(overlap, i)
 	if a < minMatch {
 		return false
 	}
@@ -146,7 +146,8 @@ func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) b
 
 func usage() {
 	fmt.Print(
-		"liftCoordinates - Lifts a Lift interface compatable file format between assembly coordinates.\n" +
+		"liftCoordinates - Lifts a compatible file format between assembly coordinates.\n" +
+			"Current support for bed and vcf format files.\n" +
 			"Usage:\n" +
 			"liftCoordinates lift.chain inFile outFile unMapped\n" +
 			"Warning: For Vcf lift, the original headers are retained in the output without modification. Use output header information at your own risk.\n" +
