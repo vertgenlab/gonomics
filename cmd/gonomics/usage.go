@@ -121,7 +121,7 @@ func buildCmdCache(binPath string) {
 	case os.Getenv("GOPATH") != "":
 		cmdSourcePath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
 	default:
-		cmdSourcePath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd/"
+		cmdSourcePath = os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
 	}
 
 	var cmdGroup, cmdUsage string

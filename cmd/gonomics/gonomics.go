@@ -53,7 +53,7 @@ func getGonomicsCmds() map[string]bool {
 	case os.Getenv("GOPATH") != "":
 		expectedPath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
 	default:
-		expectedPath = os.Getenv("HOME") + "/src/github.com/vertgenlab/gonomics/cmd/"
+		expectedPath = os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
 	}
 
 	cmds, err := ioutil.ReadDir(expectedPath)
