@@ -10,6 +10,7 @@ import (
 )
 
 var globalAlignmentAnchorTests = []struct {
+<<<<<<< HEAD
 	in_maf                      string
 	species1                    string
 	species2                    string
@@ -21,11 +22,23 @@ var globalAlignmentAnchorTests = []struct {
 	species2_match_bed_expected string
 	species1_gap_bed_expected   string
 	species2_gap_bed_expected   string
+=======
+	in_maf                                   string
+	species1                                 string
+	species2                                 string
+	species1_genome                          string
+	species2_genome                          string
+	out_maf_expected                         string
+	species1_match_bed_expected              string
+	species2_match_bed_expected              string
+	species1_gap_bed_expected                string
+	species2_gap_bed_expected                string
+>>>>>>> 4611a7fed162903e420c7aa2ab440e5efbb1d658
 	species1_gap_doNotCalculate_bed_expected string
 	species2_gap_doNotCalculate_bed_expected string
-	out_alignment_expected      string
-	out_species1_alignment_expected	string
-	out_species2_alignment_expected	string
+	out_alignment_expected                   string
+	out_species1_alignment_expected          string
+	out_species2_alignment_expected          string
 }{
 	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", 10000000000, "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.expected.bed", "testdata/out_rheMac10_gap.expected.bed", "testdata/out_hg38_gap_doNotCalculate.expected.bed", "testdata/out_rheMac10_gap_doNotCalculate.expected.bed", "testdata/out_alignment.expected.tsv", "testdata/out_hg38_alignment.expected.bed", "testdata/out_rheMac10_alignment.expected.bed"},
 	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", 100, "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.2.expected.bed", "testdata/out_rheMac10_gap.2.expected.bed", "testdata/out_hg38_gap_doNotCalculate.2.expected.bed", "testdata/out_rheMac10_gap_doNotCalculate.2.expected.bed", "testdata/out_alignment.2.expected.tsv", "testdata/out_hg38_alignment.2.expected.bed", "testdata/out_rheMac10_alignment.2.expected.bed"},
