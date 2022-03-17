@@ -10,7 +10,6 @@ import (
 )
 
 var globalAlignmentAnchorTests = []struct {
-<<<<<<< HEAD
 	in_maf                      string
 	species1                    string
 	species2                    string
@@ -22,18 +21,6 @@ var globalAlignmentAnchorTests = []struct {
 	species2_match_bed_expected string
 	species1_gap_bed_expected   string
 	species2_gap_bed_expected   string
-=======
-	in_maf                                   string
-	species1                                 string
-	species2                                 string
-	species1_genome                          string
-	species2_genome                          string
-	out_maf_expected                         string
-	species1_match_bed_expected              string
-	species2_match_bed_expected              string
-	species1_gap_bed_expected                string
-	species2_gap_bed_expected                string
->>>>>>> 4611a7fed162903e420c7aa2ab440e5efbb1d658
 	species1_gap_doNotCalculate_bed_expected string
 	species2_gap_doNotCalculate_bed_expected string
 	out_alignment_expected                   string
