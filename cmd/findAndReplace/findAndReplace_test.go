@@ -25,6 +25,8 @@ var findAndReplaceColumnTests = []struct {
 		"testdata/outputFileExpectedColumn2.tsv", 2, false},
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedWholeFile.tsv",
 		"testdata/outputFileExpectedWholeFile.tsv", -1, false},
+	{"testdata/inputOne.txt", "\t", "testdata/findReplaceOne.txt", "\t", "testdata/temp.txt",
+                "testdata/expectedOne.txt", -1, true},
 }
 
 func TestFindAndReplaceColumnSpecific(t *testing.T) {
