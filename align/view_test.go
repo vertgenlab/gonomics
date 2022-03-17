@@ -20,6 +20,8 @@ var alignTests = []struct {
 	{"CGCGCGCGCG", "CGCGCGTTTTCGCG", "CGCGCG----CGCG\nCGCGCGTTTTCGCG\n"},
 	{"CGCGCGCGCG", "CGAAAACGCGTTTTCGCG", "CG----CGCG----CGCG\nCGAAAACGCGTTTTCGCG\n"},
 	{"AA", "GGGAATT", "---AA--\nGGGAATT\n"},
+	{"GGGAATT", "AA", "GGGAATT\n---AA--\n"},
+	{"AGTACGT", "ACGTACG", "A-GTACGT\nACGTACG-\n"},
 }
 
 func TestConstGap(t *testing.T) {
@@ -29,7 +31,7 @@ func TestConstGap(t *testing.T) {
 		_, cigar := ConstGap(basesOne, basesTwo, DefaultScoreMatrix, -430)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
-			t.Errorf("The alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
+			t.Errorf("The alignment of %s and %s gave\n%s\n, but this was expected\n%s\n", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
 		}
 	}
 }

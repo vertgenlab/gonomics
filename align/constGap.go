@@ -283,19 +283,26 @@ func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int,
 	//Calculate the size of final runlength
 	var TotalRunLength, LastRunLength int64
 	TotalRunLength = 0
-	for routeIdx := range route {
-		TotalRunLength += route[routeIdx].RunLength
-	}
-	LastRunLength = 0
 	switch Op_end {
-	case 1:
+	case 1: //Op_end==1=ColI=Insertion=unique sequence in sequenceTwo beta
+		for routeIdx := range route {
+			if route[routeIdx].Op == 0 || route[routeIdx].Op == 1 {
+				TotalRunLength += route[routeIdx].RunLength
+			}
+		}
 		LastRunLength = int64(len_beta) - TotalRunLength
-	case 2:
+	case 2: //Op_end==2=ColD=Deletion=unique seuqnece in sequenceOne alpha
+		for routeIdx := range route {
+			if route[routeIdx].Op == 0 || route[routeIdx].Op == 2 {
+				TotalRunLength += route[routeIdx].RunLength
+			}
+		}
 		LastRunLength = int64(len_alpha) - TotalRunLength
 	default:
 		log.Fatalf("Error: unexpected lastCigar traceback")
 	}
 
+	//Write the last cigar based on final runlength and second-to-last cigar Op
 	if route[routeIdx_current].Op == Op_end {
 		route[routeIdx_current].RunLength += LastRunLength
 	} else {
