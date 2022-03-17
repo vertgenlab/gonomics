@@ -17,6 +17,17 @@ var readWriteTests = []struct {
 	{"testdata/bedFileTest.bed", beds},
 }
 
+func TestGetChrom(t *testing.T) {
+	for _, test := range readWriteTests {
+		actual := Read(test.filename)
+		for i := range actual {
+			if actual[i].GetChrom() != actual[i].Chrom {
+				t.Error()
+			}
+		}
+	}
+}
+
 func TestRead(t *testing.T) {
 	for _, test := range readWriteTests {
 		actual := Read(test.filename)

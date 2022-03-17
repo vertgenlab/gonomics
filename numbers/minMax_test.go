@@ -4,8 +4,6 @@ import (
 	"testing"
 )
 
-//TODO: Testing functions for min/max functions for other data types.
-
 var maxTests = []struct {
 	a    int // first input
 	b    int // second input
@@ -26,44 +24,6 @@ func TestMax(t *testing.T) {
 		actual := Max(test.a, test.b)
 		if actual != test.expt {
 			t.Errorf("Max(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
-		}
-	}
-}
-
-func TestMaxInt64(t *testing.T) {
-	for _, test := range maxTests {
-		actual := MaxInt64(int64(test.a), int64(test.b))
-		if actual != int64(test.expt) {
-			t.Errorf("MaxInt64(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
-		}
-	}
-}
-
-func TestMaxInt32(t *testing.T) {
-	for _, test := range maxTests {
-		actual := MaxInt32(int32(test.a), int32(test.b))
-		if actual != int32(test.expt) {
-			t.Errorf("MaxInt32(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
-		}
-	}
-}
-
-//like maxTests but for uint types.
-var uMaxTests = []struct {
-	a    uint // first input
-	b    uint // second input
-	expt uint // expected result
-}{
-	{1, 2, 2},
-	{3, 7, 7},
-	{100, 99, 100},
-}
-
-func TestMaxUint32(t *testing.T) {
-	for _, test := range uMaxTests {
-		actual := MaxUint32(uint32(test.a), uint32(test.b))
-		if actual != uint32(test.expt) {
-			t.Errorf("MaxUint32(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
 		}
 	}
 }
@@ -92,43 +52,6 @@ func TestMin(t *testing.T) {
 	}
 }
 
-func TestMinInt32(t *testing.T) {
-	for _, test := range minTests {
-		actual := MinInt32(int32(test.a), int32(test.b))
-		if actual != int32(test.expt) {
-			t.Errorf("MinInt32(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
-		}
-	}
-}
-
-func TestMinInt64(t *testing.T) {
-	for _, test := range minTests {
-		actual := MinInt64(int64(test.a), int64(test.b))
-		if actual != int64(test.expt) {
-			t.Errorf("MinInt64(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
-		}
-	}
-}
-
-var uMinTests = []struct {
-	a    uint // first input
-	b    uint // second input
-	expt uint // expected result
-}{
-	{1, 2, 1},
-	{3, 7, 3},
-	{100, 99, 99},
-}
-
-func TestMinUint32(t *testing.T) {
-	for _, test := range uMinTests {
-		actual := MinUint32(uint32(test.a), uint32(test.b))
-		if actual != uint32(test.expt) {
-			t.Errorf("MinUint32(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
-		}
-	}
-}
-
 var tripleMinTests = []struct {
 	a    int // first input
 	b    int // second input
@@ -142,7 +65,7 @@ var tripleMinTests = []struct {
 
 func TestTripleMin(t *testing.T) {
 	for _, test := range tripleMinTests {
-		actual := TripleMin(test.a, test.b, test.c)
+		actual := Min(test.a, test.b, test.c)
 		if actual != test.expt {
 			t.Errorf("TripleMin(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
 		}
@@ -162,7 +85,7 @@ var tripleMaxTests = []struct {
 
 func TestTripleMax(t *testing.T) {
 	for _, test := range tripleMaxTests {
-		actual := TripleMax(test.a, test.b, test.c)
+		actual := Max(test.a, test.b, test.c)
 		if actual != test.expt {
 			t.Errorf("TripleMax(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
 		}
@@ -179,7 +102,7 @@ var minIntSliceTests = []struct {
 
 func TestMinIntSlice(t *testing.T) {
 	for _, test := range minIntSliceTests {
-		actual := MinIntSlice(test.a)
+		actual := Min(test.a...)
 		if actual != test.expt {
 			t.Errorf("MinIntSlice(%v): expected: %d, actual %d.", test.a, test.expt, actual)
 		}
@@ -196,7 +119,7 @@ var maxIntSliceTests = []struct {
 
 func TestMaxIntSlice(t *testing.T) {
 	for _, test := range maxIntSliceTests {
-		actual := MaxIntSlice(test.a)
+		actual := Max(test.a...)
 		if actual != test.expt {
 			t.Errorf("MaxIntSlice(%v): expected: %d, actual %d.", test.a, test.expt, actual)
 		}

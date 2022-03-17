@@ -2,11 +2,11 @@ package popgen
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"golang.org/x/exp/slices"
 	"log"
 	"math"
 	"math/rand"
@@ -193,7 +193,7 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 
 //BuildBinomCache makes a 2D matrix where each entry binomCache[n][k] is equal to [n choose k] in logSpace.
 func BuildBinomCache(allN []int) [][]float64 {
-	binomCache := make([][]float64, numbers.MaxIntSlice(allN)+1)
+	binomCache := make([][]float64, numbers.Max(allN...)+1)
 
 	var n, k int
 	for n = range allN {
@@ -209,7 +209,7 @@ func BuildBinomCache(allN []int) [][]float64 {
 func findAllN(data Afs) []int {
 	var answer = make([]int, 0)
 	for i := 0; i < len(data.Sites); i++ {
-		if !common.IntSliceContains(answer, data.Sites[i].N) {
+		if !slices.Contains(answer, data.Sites[i].N) {
 			answer = append(answer, data.Sites[i].N)
 		}
 	}
