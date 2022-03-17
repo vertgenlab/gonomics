@@ -65,7 +65,7 @@ var tripleMinTests = []struct {
 
 func TestTripleMin(t *testing.T) {
 	for _, test := range tripleMinTests {
-		actual := Min(test.a, test.b, test.c)
+		actual := MinMany(test.a, test.b, test.c)
 		if actual != test.expt {
 			t.Errorf("TripleMin(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
 		}
@@ -85,7 +85,7 @@ var tripleMaxTests = []struct {
 
 func TestTripleMax(t *testing.T) {
 	for _, test := range tripleMaxTests {
-		actual := Max(test.a, test.b, test.c)
+		actual := MaxMany(test.a, test.b, test.c)
 		if actual != test.expt {
 			t.Errorf("TripleMax(%d, %d): expected %d, actual %d", test.a, test.b, test.expt, actual)
 		}
@@ -102,7 +102,7 @@ var minIntSliceTests = []struct {
 
 func TestMinIntSlice(t *testing.T) {
 	for _, test := range minIntSliceTests {
-		actual := Min(test.a...)
+		actual := MinMany(test.a...)
 		if actual != test.expt {
 			t.Errorf("MinIntSlice(%v): expected: %d, actual %d.", test.a, test.expt, actual)
 		}
@@ -119,9 +119,21 @@ var maxIntSliceTests = []struct {
 
 func TestMaxIntSlice(t *testing.T) {
 	for _, test := range maxIntSliceTests {
-		actual := Max(test.a...)
+		actual := MaxMany(test.a...)
 		if actual != test.expt {
 			t.Errorf("MaxIntSlice(%v): expected: %d, actual %d.", test.a, test.expt, actual)
 		}
+	}
+}
+
+func BenchmarkTwoMin(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Min(2, 1)
+	}
+}
+
+func BenchmarkAnyMin(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		MinMany(2, 1)
 	}
 }

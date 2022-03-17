@@ -193,7 +193,7 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 
 //BuildBinomCache makes a 2D matrix where each entry binomCache[n][k] is equal to [n choose k] in logSpace.
 func BuildBinomCache(allN []int) [][]float64 {
-	binomCache := make([][]float64, numbers.Max(allN...)+1)
+	binomCache := make([][]float64, numbers.MaxMany(allN...)+1)
 
 	var n, k int
 	for n = range allN {
