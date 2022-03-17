@@ -31,7 +31,7 @@ func gtfToBed(fileName string, outFile string) {
 			nameString = nameString + ":" + words[i]
 		}
 		currBed = bed.Bed{Chrom: words[0], ChromStart: common.StringToInt(words[3]), ChromEnd: common.StringToInt(words[4]), Name: nameString, Score: 0, Strand: bed.Positive, FieldsInitialized: 6}
-		bed.WriteBed(out.File, currBed)
+		bed.WriteBed(out, currBed)
 	}
 }
 

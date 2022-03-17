@@ -14,17 +14,18 @@ func (b Bed) GetChrom() string {
 }
 
 func (b Bed) GetChromStart() int {
-	return int(b.ChromStart)
+	return b.ChromStart
 }
 
 func (b Bed) GetChromEnd() int {
-	return int(b.ChromEnd)
+	return b.ChromEnd
 }
 
-func (b Bed) UpdateLift(c string, start int, end int) {
+func (b Bed) UpdateCoord(c string, start int, end int) interface{} {
 	b.Chrom = c
 	b.ChromStart = start
 	b.ChromEnd = end
+	return b
 }
 
 type BedSlice []*Bed

@@ -23,7 +23,7 @@ type EasyReader struct {
 // Will silently gzip output files when the input filename ends with '.gz'.
 // EasyWriter is a valid io.Writer.
 type EasyWriter struct {
-	File         *os.File
+	file         *os.File
 	internalBuff *bufio.Writer
 	internalGzip *gzip.Writer
 }
@@ -83,14 +83,14 @@ func EasyCreate(filename string) *EasyWriter {
 
 	switch {
 	case strings.HasPrefix(filename, "stdout"):
-		answer.File = os.Stdout
+		answer.file = os.Stdout
 	case strings.HasPrefix(filename, "stderr"):
-		answer.File = os.Stderr
+		answer.file = os.Stderr
 	default:
-		answer.File = MustCreate(filename)
+		answer.file = MustCreate(filename)
 	}
 
-	answer.internalBuff = bufio.NewWriter(answer.File)
+	answer.internalBuff = bufio.NewWriter(answer.file)
 
 	if strings.HasSuffix(filename, ".gz") {
 		answer.internalGzip = gzip.NewWriter(answer.internalBuff)

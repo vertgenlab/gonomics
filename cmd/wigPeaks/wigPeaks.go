@@ -40,7 +40,7 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) { //threshold is
 				if inPeak { //if inside of a peak ending a peak
 					inPeak = false //must remember to set inPeak to reflect Peak status
 					//answer = append(answer, current) //pointer to current bed, add this pointer to answer which is also a pointer to bed slice (a collection of beds)
-					bed.WriteBed(out.File, current) //instead of answer, use "chan" method to write as we go
+					bed.WriteBed(out, current) //instead of answer, use "chan" method to write as we go
 				}
 				//if outside of a peak, nothing to do
 			}
@@ -49,7 +49,7 @@ func wigPeaks(in_wig string, out_bed string, threshold float64) { //threshold is
 		if inPeak { //after wig struct ends, if inPeak is still true (i.e. ended on a value>threshold), should end peak and append current
 			inPeak = false //redundant since this will happen when enter a new wig struct
 			//answer = append(answer, current)
-			bed.WriteBed(out.File, current) //instead of answer, use "chan" method to write as we go
+			bed.WriteBed(out, current) //instead of answer, use "chan" method to write as we go
 		}
 	}
 

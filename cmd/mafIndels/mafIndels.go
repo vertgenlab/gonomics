@@ -46,8 +46,8 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 					//bedList_del = append(bedList_del, &current_del) //append to growing bed
 					//bedList_ins = append(bedList_ins, &current_ins)
-					bed.WriteBed(out_ins.File, current_ins)
-					bed.WriteBed(out_del.File, current_del)
+					bed.WriteBed(out_ins, current_ins)
+					bed.WriteBed(out_del, current_del)
 
 					//get eI species_del lines
 				} else if mafRecords[i].Species[k].ELine.Status == 'I' {
@@ -61,8 +61,8 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 						//bedList_del = append(bedList_del, &current_del) //append to growing bed
 						//bedList_ins = append(bedList_ins, &current_ins)
-						bed.WriteBed(out_ins.File, current_ins)
-						bed.WriteBed(out_del.File, current_del)
+						bed.WriteBed(out_ins, current_ins)
+						bed.WriteBed(out_del, current_del)
 					}
 				}
 			}
