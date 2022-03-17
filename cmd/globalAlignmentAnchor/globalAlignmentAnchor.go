@@ -25,6 +25,24 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 	exception.PanicOnErr(err)
 }
 
+// helper function: check if gap bed entry passes checks
+func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, gapSizeLimit int) (bool, string, string) {
+	pass := true
+	species1_Name := "species1_gap"
+	species2_Name := "species2_gap"
+	gapSizeProduct := (species1_ChromEnd - species1_ChromStart) * (species2_ChromEnd - species2_ChromStart)
+	if !(species1_ChromStart < species1_ChromEnd && species2_ChromStart < species2_ChromEnd) {
+		pass = false
+		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
+		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
+	} else if gapSizeProduct > gapSizeLimit {
+		pass = false
+		species1_Name = "species1_gap,doNotCalculate_large"
+		species2_Name = "species2_gap,doNotCalculate_large"
+	}
+	return pass, species1_Name, species2_Name
+}
+
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf (aka anchors, or "match")
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold
 func mafToMatch(in_maf string, species1 string, species2 string) {
@@ -114,7 +132,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	chr_curr := ""
 	pos_species1 := 1 // initialize pos as 1. bed and fa both start at 1
 	pos_species2 := 1
-	var gapSizeProduct int
+	// check for gapBedPass
+	var pass bool
 	// containers for entries to write to ouput files
 	var current_species1, current_species2 bed.Bed
 
@@ -128,17 +147,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			// first finish off the previous chr
 			current_species1 = bed.Bed{Chrom: chr_prev, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
 			current_species2 = bed.Bed{Chrom: species2_match_bed[i-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[i-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-			gapSizeProduct = (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
-			if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
-				fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
-				current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
-				current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
-				bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
-				bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
-			} else if gapSizeProduct > gapSizeLimit {
-				fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
-				current_species1.Name = "species1_gap,doNotCalculate_large"
-				current_species2.Name = "species2_gap,doNotCalculate_large"
+			pass, current_species1.Name, current_species2.Name = gapBedPass(current_species1.ChromStart, current_species1.ChromEnd, current_species2.ChromStart, current_species2.ChromEnd, gapSizeLimit)
+			if !pass {
 				bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
 				bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
 			} else {
@@ -159,17 +169,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		// in each species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
 		// in each species, gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
 		// the size of the gaps are practical for our alignment algorithm. The 2 sequences' product should be <=1E10. Calculate gap size product
-		gapSizeProduct = (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
-		if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
-			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
-			current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
-			current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
-			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
-			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
-		} else if gapSizeProduct > gapSizeLimit {
-			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
-			current_species1.Name = "species1_gap,doNotCalculate_large"
-			current_species2.Name = "species2_gap,doNotCalculate_large"
+		pass, current_species1.Name, current_species2.Name = gapBedPass(current_species1.ChromStart, current_species1.ChromEnd, current_species2.ChromStart, current_species2.ChromEnd, gapSizeLimit)
+		if !pass {
 			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
 			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
 		} else {
@@ -189,24 +190,14 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	if pos_species1 < len(species1_genome_fastaMap[chr_prev]) || pos_species2 < len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]) {
 		current_species1 = bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
 		current_species2 = bed.Bed{Chrom: species2_match_bed[len(species2_match_bed)-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-		gapSizeProduct = (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
-		if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
-			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
-			current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
-			current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
-			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
-			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
-		} else if gapSizeProduct > gapSizeLimit {
-			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
-			current_species1.Name = "species1_gap,doNotCalculate_large"
-			current_species2.Name = "species2_gap,doNotCalculate_large"
+		pass, current_species1.Name, current_species2.Name = gapBedPass(current_species1.ChromStart, current_species1.ChromEnd, current_species2.ChromStart, current_species2.ChromEnd, gapSizeLimit)
+		if !pass {
 			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
 			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
 		} else {
 			bed.WriteBed(out_species1.File, current_species1)
 			bed.WriteBed(out_species2.File, current_species2)
 		}
-
 	}
 
 	// close output files and check for errors
@@ -327,6 +318,9 @@ func usage() {
 			"species1_genome, species2_genome - fasta files containing the whole genome of each species. Each fasta sequence is 1 chromosome\n" +
 			"Usage:\n" +
 			"	globalAlignmentAnchor in_maf species1 species2 species1_genome species2_genome\n" +
+			"doNotCalculate flags:\n" +
+			"	invalidChromStartOrChromEnd - This bed entry pair is discarded because ChromStart or ChromEnd is invalid\n" +
+			"	large - This bed entry pair is discarded because the product of their sizes is too large\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
