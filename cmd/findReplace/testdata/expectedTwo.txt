@@ -1,0 +1,6 @@
+Hello	GoodBye
+Yes	Maybe
+Plus	Minus
+Fast	Medium
+Red	Devils
+Up	Down

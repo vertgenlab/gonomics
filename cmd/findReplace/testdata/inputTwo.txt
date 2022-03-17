@@ -1,0 +1,6 @@
+Hello	GoodBye
+Yes	Maybe
+Plus	Minus
+Fast	Medium
+Red	Blue
+Up	Down
