@@ -9,18 +9,23 @@ import (
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
+// GetChrom grabs the chrom of the bed struct
 func (b Bed) GetChrom() string {
 	return b.Chrom
 }
 
+// GetChromStart grabs the starting coordinates of the bed struct
 func (b Bed) GetChromStart() int {
 	return b.ChromStart
 }
 
+// GetChromEnd grabs the end coordinates of the bed struct
 func (b Bed) GetChromEnd() int {
 	return b.ChromEnd
 }
 
+// UpdateCoord will change the bed struct to the user defined chrom string,
+// start int, and end int.
 func (b Bed) UpdateCoord(c string, start int, end int) interface{} {
 	b.Chrom = c
 	b.ChromStart = start
@@ -30,15 +35,22 @@ func (b Bed) UpdateCoord(c string, start int, end int) interface{} {
 
 type BedSlice []*Bed
 
+// Len returns total bed entries within the input bed slice
 func (b BedSlice) Len() int { return len(b) }
 
+// Swap will switch the values of two bed structs inside
+// the slice of beds.
 func (b BedSlice) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
+// Push and pop() satisfy the interface for the heap method
+// Push pushes to the heap.
 func (b *BedSlice) Push(x interface{}) {
 	answer := x.(*Bed)
 	*b = append(*b, answer)
 }
 
+// Pop and push() satisfy the interface for the heap method
+// Pop pushes to the heap.
 func (b *BedSlice) Pop() interface{} {
 	oldQueue := *b
 	n := len(oldQueue)
@@ -47,6 +59,8 @@ func (b *BedSlice) Pop() interface{} {
 	return answer
 }
 
+// Write will take a bed slice of bed structs and
+// write it to an input file name type string
 func (b BedSlice) Write(file string) {
 	var err error
 	f := fileio.EasyCreate(file)
@@ -57,10 +71,14 @@ func (b BedSlice) Write(file string) {
 	exception.PanicOnErr(err)
 }
 
+// WriteToFileHandle will write a bed struct to the
+// io.Writer
 func (b Bed) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, b) //adaptive field writing seems most flexible for the method
 }
 
+// NextRealRecord keeps track of if we are done reading through
+// the bed and returns a bool
 func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next Bed
@@ -74,6 +92,7 @@ func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	return done
 }
 
+// Copy will return a copy of the bed
 func (b *Bed) Copy() interface{} {
 	var answer *Bed = new(Bed)
 	*answer = *b
@@ -84,6 +103,8 @@ type ByGenomicCoordinates struct {
 	BedSlice
 }
 
+// Less sorts by genomic coordinate and satisfies the sort.Slice
+// interface.
 func (g ByGenomicCoordinates) Less(i, j int) bool {
 	// First sort criteria is chromosome
 	if g.BedSlice[i].GetChrom() < g.BedSlice[j].GetChrom() {
