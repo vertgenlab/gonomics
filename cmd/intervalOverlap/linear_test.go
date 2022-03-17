@@ -6,8 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"runtime"
 	"sync"
 	"testing"
 )
@@ -25,7 +23,7 @@ func linearOverlap(tree map[string]*interval.IntervalNode) {
 	var answer []interval.Interval
 	for currVcf, done = vcf.NextVcf(file); !done; currVcf, done = vcf.NextVcf(file) {
 		answer = interval.Query(tree, currVcf, testRelationship)
-		fmt.Sprint(answer)
+		fmt.Sprint(answer[0])
 	}
 }
 
@@ -46,7 +44,7 @@ func concurrentOverlap(tree map[string]*interval.IntervalNode, threads int) {
 	}()
 
 	for answer := range answerChan {
-		fmt.Sprint(answer)
+		fmt.Sprint(answer.answer[0])
 	}
 }
 
@@ -81,12 +79,6 @@ func BenchmarkLinearOverlap(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads1(b *testing.B) {
 	b.StopTimer()
 	var threads int = 1
-	var cores int = runtime.NumCPU()
-	//runtime.GOMAXPROCS(threads)
-	if threads > cores {
-		log.Printf("WARNING: Requested %d threads but only %d cores are available.", threads, cores)
-	}
-
 	var tree map[string]*interval.IntervalNode = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -97,12 +89,6 @@ func BenchmarkConcurrentOverlapThreads1(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads2(b *testing.B) {
 	b.StopTimer()
 	var threads int = 2
-	var cores int = runtime.NumCPU()
-	//runtime.GOMAXPROCS(threads)
-	if threads > cores {
-		log.Printf("WARNING: Requested %d threads but only %d cores are available.", threads, cores)
-	}
-
 	var tree map[string]*interval.IntervalNode = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -113,12 +99,6 @@ func BenchmarkConcurrentOverlapThreads2(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads4(b *testing.B) {
 	b.StopTimer()
 	var threads int = 4
-	var cores int = runtime.NumCPU()
-	//runtime.GOMAXPROCS(threads)
-	if threads > cores {
-		log.Printf("WARNING: Requested %d threads but only %d cores are available.", threads, cores)
-	}
-
 	var tree map[string]*interval.IntervalNode = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -128,28 +108,6 @@ func BenchmarkConcurrentOverlapThreads4(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads8(b *testing.B) {
 	b.StopTimer()
 	var threads int = 8
-	var cores int = runtime.NumCPU()
-	//runtime.GOMAXPROCS(threads)
-	if threads > cores {
-		log.Printf("WARNING: Requested %d threads but only %d cores are available.", threads, cores)
-	}
-
-	var tree map[string]*interval.IntervalNode = prepTree()
-	b.StartTimer()
-	for i := 0; i < b.N; i++ {
-		concurrentOverlap(tree, threads)
-	}
-}
-
-func BenchmarkConcurrentOverlapThreads16(b *testing.B) {
-	b.StopTimer()
-	var threads int = 16
-	var cores int = runtime.NumCPU()
-	runtime.GOMAXPROCS(threads)
-	if threads > cores {
-		log.Printf("WARNING: Requested %d threads but only %d cores are available.", threads, cores)
-	}
-
 	var tree map[string]*interval.IntervalNode = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
