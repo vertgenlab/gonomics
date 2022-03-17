@@ -88,7 +88,7 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 }
 
 // Step 2: Use match to calculate coordinates that still need to be aligned, aka "gap"
-func matchToGap(species1 string, species2 string, in_species1_match string, in_species2_match string, species1_genome string, species2_genome string) {
+func matchToGap(species1 string, species2 string, in_species1_match string, in_species2_match string, species1_genome string, species2_genome string, gapSizeLimit int) {
 	// read input files
 	species1_match_bed := bed.Read(in_species1_match)
 	species2_match_bed := bed.Read(in_species2_match)
@@ -114,6 +114,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	chr_curr := ""
 	pos_species1 := 1 // initialize pos as 1. bed and fa both start at 1
 	pos_species2 := 1
+	var gapSizeProduct int
 	// containers for entries to write to ouput files
 	var current_species1, current_species2 bed.Bed
 
@@ -127,8 +128,23 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			// first finish off the previous chr
 			current_species1 = bed.Bed{Chrom: chr_prev, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
 			current_species2 = bed.Bed{Chrom: species2_match_bed[i-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[i-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-			bed.WriteBed(out_species1.File, current_species1)
-			bed.WriteBed(out_species2.File, current_species2)
+			gapSizeProduct = (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
+			if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
+				fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
+				current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
+				current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
+				bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
+				bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
+			} else if gapSizeProduct > gapSizeLimit {
+				fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
+				current_species1.Name = "species1_gap,doNotCalculate_large"
+				current_species2.Name = "species2_gap,doNotCalculate_large"
+				bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
+				bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
+			} else {
+				bed.WriteBed(out_species1.File, current_species1)
+				bed.WriteBed(out_species2.File, current_species2)
+			}
 
 			// then start the current chr
 			pos_species1 = 1
@@ -143,14 +159,14 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 		// in each species, ChromStart is not equal to ChromEnd (e.g. a match entry starts at chr3 1, so the gap entry will be chr3 1 1, but can't be written to bed)
 		// in each species, gap sequence should progress linearly along the chromosome (e.g. alignment match sequence skips around the chromosome, causing gap entries to skip around, ChromStart > ChromEnd)
 		// the size of the gaps are practical for our alignment algorithm. The 2 sequences' product should be <=1E10. Calculate gap size product
-		gapSizeProduct := (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
+		gapSizeProduct = (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
 		if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
 			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
 			current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 			current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
 			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
 			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
-		} else if gapSizeProduct > 10000000000 {
+		} else if gapSizeProduct > gapSizeLimit {
 			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
 			current_species1.Name = "species1_gap,doNotCalculate_large"
 			current_species2.Name = "species2_gap,doNotCalculate_large"
@@ -173,8 +189,24 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	if pos_species1 < len(species1_genome_fastaMap[chr_prev]) || pos_species2 < len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]) {
 		current_species1 = bed.Bed{Chrom: chr_curr, ChromStart: pos_species1, ChromEnd: len(species1_genome_fastaMap[chr_prev]), Name: "species1_gap", FieldsInitialized: 4}
 		current_species2 = bed.Bed{Chrom: species2_match_bed[len(species2_match_bed)-1].Chrom, ChromStart: pos_species2, ChromEnd: len(species2_genome_fastaMap[species2_match_bed[len(species2_match_bed)-1].Chrom]), Name: "species2_gap", FieldsInitialized: 4}
-		bed.WriteBed(out_species1.File, current_species1)
-		bed.WriteBed(out_species2.File, current_species2)
+		gapSizeProduct = (current_species1.ChromEnd - current_species1.ChromStart) * (current_species2.ChromEnd - current_species2.ChromStart)
+		if !(current_species1.ChromStart < current_species1.ChromEnd && current_species2.ChromStart < current_species2.ChromEnd) {
+			fmt.Printf("This bed entry pair is discarded because ChromStart or ChromEnd is invalid: %v, %v \n", current_species1, current_species2)
+			current_species1.Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
+			current_species2.Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
+			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
+			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
+		} else if gapSizeProduct > gapSizeLimit {
+			fmt.Printf("This bed entry pair is discarded because their sizes are too large: %v, %v \n", current_species1, current_species2)
+			current_species1.Name = "species1_gap,doNotCalculate_large"
+			current_species2.Name = "species2_gap,doNotCalculate_large"
+			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
+			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
+		} else {
+			bed.WriteBed(out_species1.File, current_species1)
+			bed.WriteBed(out_species2.File, current_species2)
+		}
+
 	}
 
 	// close output files and check for errors
@@ -277,11 +309,11 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 }
 
 // main function: assembles all steps
-func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string) {
+func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeLimit int) {
 	mafToMatch(in_maf, species1, species2)
 	in_species1_match := strings.Replace(in_maf, path.Base(in_maf), "out_"+species1+"_match.bed", 1)
 	in_species2_match := strings.Replace(in_maf, path.Base(in_maf), "out_"+species2+"_match.bed", 1)
-	matchToGap(species1, species2, in_species1_match, in_species2_match, species1_genome, species2_genome)
+	matchToGap(species1, species2, in_species1_match, in_species2_match, species1_genome, species2_genome, gapSizeLimit)
 	in_species1_gap := strings.Replace(in_species1_match, "match", "gap", 1)
 	in_species2_gap := strings.Replace(in_species2_match, "match", "gap", 1)
 	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome)
@@ -316,6 +348,7 @@ func main() {
 	species2 := flag.Arg(2)
 	species1_genome := flag.Arg(3)
 	species2_genome := flag.Arg(4)
+	gapSizeLimit := 10000000000 // gapSizeLimit is currently hardcoded based on align/affineGap tests, 10000000000
 
-	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome)
+	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeLimit)
 }

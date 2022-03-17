@@ -15,6 +15,7 @@ var globalAlignmentAnchorTests = []struct {
 	species2                    string
 	species1_genome             string
 	species2_genome             string
+	gapSizeLimit								int
 	out_maf_expected            string
 	species1_match_bed_expected string
 	species2_match_bed_expected string
@@ -26,7 +27,8 @@ var globalAlignmentAnchorTests = []struct {
 	out_species1_alignment_expected	string
 	out_species2_alignment_expected	string
 }{
-	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.expected.bed", "testdata/out_rheMac10_gap.expected.bed", "testdata/out_hg38_gap_doNotCalculate.bed", "testdata/out_rheMac10_gap_doNotCalculate.bed", "testdata/out_alignment.expected.tsv", "testdata/out_hg38_alignment.expected.bed", "testdata/out_rheMac10_alignment.expected.bed"},
+	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", 10000000000, "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.expected.bed", "testdata/out_rheMac10_gap.expected.bed", "testdata/out_hg38_gap_doNotCalculate.expected.bed", "testdata/out_rheMac10_gap_doNotCalculate.expected.bed", "testdata/out_alignment.expected.tsv", "testdata/out_hg38_alignment.expected.bed", "testdata/out_rheMac10_alignment.expected.bed"},
+	{"testdata/in_hg38_vs_rheMac10.toy.maf", "hg38", "rheMac10", "testdata/hg38.toy.fa", "testdata/rheMac10.toy.fa", 100, "testdata/in_hg38_vs_rheMac10.toy.filtered.expected.maf", "testdata/out_hg38_match.expected.bed", "testdata/out_rheMac10_match.expected.bed", "testdata/out_hg38_gap.2.expected.bed", "testdata/out_rheMac10_gap.2.expected.bed", "testdata/out_hg38_gap_doNotCalculate.2.expected.bed", "testdata/out_rheMac10_gap_doNotCalculate.2.expected.bed", "testdata/out_alignment.2.expected.tsv", "testdata/out_hg38_alignment.2.expected.bed", "testdata/out_rheMac10_alignment.2.expected.bed"},
 }
 
 func TestGlobalAlignmentAnchorTests(t *testing.T) {
@@ -44,7 +46,7 @@ func TestGlobalAlignmentAnchorTests(t *testing.T) {
 		out_alignment = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_alignment.tsv", 1)
 		out_species1_alignment = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_"+test.species1+"_alignment.bed", 1)
 		out_species2_alignment = strings.Replace(test.in_maf, path.Base(test.in_maf), "out_"+test.species2+"_alignment.bed", 1)
-		globalAlignmentAnchor(test.in_maf, test.species1, test.species2, test.species1_genome, test.species2_genome)
+		globalAlignmentAnchor(test.in_maf, test.species1, test.species2, test.species1_genome, test.species2_genome, test.gapSizeLimit)
 
 		if !fileio.AreEqual(out_maf, test.out_maf_expected) {
 			t.Errorf("Error in out_maf")
