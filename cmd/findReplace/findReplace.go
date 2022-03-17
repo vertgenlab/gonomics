@@ -5,18 +5,20 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"strings"
 )
 
 func findReplaceOneLine(line string, find []string, replace []string) string {
+	var i int
+
 	if len(find) != len(replace) {
 		log.Panic("Error: the find and replace slices were not the same length\n")
 	}
-	for i := range find {
+
+	for i = range find {
 		line = strings.ReplaceAll(line, find[i], replace[i])
 	}
 	return line
@@ -24,8 +26,11 @@ func findReplaceOneLine(line string, find []string, replace []string) string {
 
 func findReplace(inFilename, findMe, replaceWithMe, outFilename string, findReplaceAreFiles bool) {
 	var findItems, replaceItems []string
-	var in fileio.EasyReader
-	var out fileio.EasyWriter
+	var in *fileio.EasyReader
+	var out *fileio.EasyWriter
+	var line string
+	var done bool
+	var err error
 
 	in = fileio.EasyOpen(inFilename)
 	out = fileio.EasyCreate(outFilename)
@@ -35,11 +40,11 @@ func findReplace(inFilename, findMe, replaceWithMe, outFilename string, findRepl
 		replaceItems = fileio.Read(replaceWithMe)
 	} else {
 		findItems = []string{findMe}
-		replaceItems = []string{replaceItems}
+		replaceItems = []string{replaceWithMe}
 	}
 
-	for line, done = EasyNextLine(in); !done ; line, done = EasyNextLine(in) {
-		line = findReplaceOneLine(line, find, replace)
+	for line, done = fileio.EasyNextLine(in); !done; line, done = fileio.EasyNextLine(in) {
+		line = findReplaceOneLine(line, findItems, replaceItems)
 		fmt.Fprintf(out, "%s\n", line)
 	}
 
@@ -76,5 +81,5 @@ func main() {
 	replaceWithMe := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	findAndReplace(inFile, findMe, replaceWithMe, outFile, *findReplaceAreFiles)
+	findReplace(inFile, findMe, replaceWithMe, outFile, *findReplaceAreFiles)
 }
