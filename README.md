@@ -5,7 +5,7 @@
 # gonomics
 A collection of genomics software tools written in Go (golang).
 Authors:
-* Erici Au
+* Eric Au
 * Luke C. Bartelt
 * Olivier Boivin
 * Sophie Campione
