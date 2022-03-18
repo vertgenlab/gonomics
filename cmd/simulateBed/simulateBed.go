@@ -21,7 +21,7 @@ func simulateBed(regionCount int, simLength int, noGapFile string, outFile strin
 	var err error
 
 	for i := range c {
-		bed.WriteBed(out.File, i)
+		bed.WriteBed(out, i)
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)

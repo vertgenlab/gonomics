@@ -97,8 +97,8 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 				if chrom_species2 == chrom_species1 || pT6_hg38_chr2 {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-					bed.WriteBed(out_species1.File, bed_species1)
-					bed.WriteBed(out_species2.File, bed_species2)
+					bed.WriteBed(out_species1, bed_species1)
+					bed.WriteBed(out_species2, bed_species2)
 				}
 			}
 		}
@@ -182,8 +182,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			bed.WriteBed(out_species1_doNotCalculate.File, current_species1)
 			bed.WriteBed(out_species2_doNotCalculate.File, current_species2)
 		} else {
-			bed.WriteBed(out_species1.File, current_species1)
-			bed.WriteBed(out_species2.File, current_species2)
+			bed.WriteBed(out_species1, current_species1)
+			bed.WriteBed(out_species2, current_species2)
 		}
 
 		// update variables at the end of each iteration

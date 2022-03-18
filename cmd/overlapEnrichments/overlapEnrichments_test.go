@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var BedEnrichmentsTests = []struct {
+var OverlapEnrichmentsTests = []struct {
 	method          string
 	elements1File   string
 	elements2File   string
@@ -21,12 +21,12 @@ var BedEnrichmentsTests = []struct {
 	{"exact", "testdata/elements1.bed", "testdata/elements3.bed", "testdata/tinyNoGap.bed", "testdata/elements1.elements3.enrichment.txt", true}, //elements3 is elements2 with extra elements outside the genome, should be the same answer as the previous check.
 }
 
-func TestBedEnrichments(t *testing.T) {
+func TestOverlapEnrichments(t *testing.T) {
 	var err error
-	for _, v := range BedEnrichmentsTests {
-		bedEnrichments(v.method, v.elements1File, v.elements2File, v.noGapFile, "testdata/tmp.txt", 0, v.trimToRefGenome)
+	for _, v := range OverlapEnrichmentsTests {
+		overlapEnrichments(v.method, v.elements1File, v.elements2File, v.noGapFile, "testdata/tmp.txt", 0, v.trimToRefGenome)
 		if !fileio.AreEqual("testdata/tmp.txt", v.expectedFile) {
-			t.Errorf("Error in bedEnrichments.")
+			t.Errorf("Error in overlapEnrichments.")
 		}
 		err = os.Remove("testdata/tmp.txt")
 		exception.PanicOnErr(err)

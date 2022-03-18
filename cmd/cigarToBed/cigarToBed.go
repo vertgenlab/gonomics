@@ -96,7 +96,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 			ChromStart = ChromCurrent + int(aln[i].RunLength) + 1 //RunLengths are int64, but bed fields like ChromStart are int, so need to convert RunLengths to int, get the position at which I starts
 			ChromEnd = ChromStart + int(aln[i+1].RunLength)       //get the last position that is I
 			BedEntry = bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "ins", FieldsInitialized: 4}
-			bed.WriteBed(insBed.File, BedEntry)
+			bed.WriteBed(insBed, BedEntry)
 		}
 		if aln[i].Op != align.ColD { //in insertion bed, only need to update ChromCurrent if the cigar fragment is M or I, not D
 			ChromCurrent += int(aln[i].RunLength)
@@ -116,7 +116,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 			ChromStart = ChromCurrent + int(aln[i].RunLength) //the position before I starts
 			ChromEnd = ChromStart + 1                         //add 1 so that the length of the bed entry is 1
 			BedEntry = bed.Bed{Chrom: Chrom, ChromStart: ChromStart, ChromEnd: ChromEnd, Name: "del", FieldsInitialized: 4}
-			bed.WriteBed(delBed.File, BedEntry)
+			bed.WriteBed(delBed, BedEntry)
 		}
 		if aln[i].Op != align.ColI { //in deletion bed, only update ChromCurrent if the cigar fragment is M or D, not I
 			ChromCurrent += int(aln[i].RunLength)
