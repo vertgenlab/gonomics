@@ -2,9 +2,6 @@ package sam
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
 
@@ -34,88 +31,6 @@ func (s *Sam) UpdateLift(c string, start int, end int) {
 	s.Pos = uint32(start) + 1
 }
 
-type SamSlice []*Sam
-
-func (v SamSlice) Len() int { return len(v) }
-
-func (v SamSlice) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
-
-func (v *SamSlice) Push(x interface{}) {
-	answer := x.(*Sam)
-	*v = append(*v, answer)
-}
-
-func (v *SamSlice) Pop() interface{} {
-	oldQueue := *v
-	n := len(oldQueue)
-	answer := oldQueue[n-1]
-	*v = oldQueue[:n-1]
-	return answer
-}
-
-// TODO: modify sort/mergeSort.go to look for a header and save for output
-func (s SamSlice) Write(filename string) { // Does not write header
-	file := fileio.EasyCreate(filename)
-	for i := 0; i < s.Len(); i++ {
-		s[i].WriteToFileHandle(file)
-	}
-	var err error
-	err = file.Close()
-	exception.PanicOnErr(err)
-}
-
 func (s *Sam) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, *s)
-}
-
-func (s *Sam) NextRealRecord(file *fileio.EasyReader) bool {
-	var done bool
-	var curr Sam
-	curr, done = ReadNext(file)
-	if done {
-		return true
-	}
-	*s = curr
-	return done
-}
-
-func (s *Sam) Copy() interface{} {
-	var answer *Sam = new(Sam)
-	*answer = *s
-	return answer
-}
-
-type ByGenomicCoordinates struct {
-	SamSlice
-}
-
-func (g ByGenomicCoordinates) Less(i, j int) bool {
-	// First sort criteria is chromosome
-	if g.SamSlice[i].GetChrom() < g.SamSlice[j].GetChrom() {
-		return true
-	} else if g.SamSlice[i].GetChrom() == g.SamSlice[j].GetChrom() {
-		// If chroms are equal then sort by start position
-		if g.SamSlice[i].GetChromStart() < g.SamSlice[j].GetChromStart() {
-			return true
-		} else if g.SamSlice[i].GetChromStart() == g.SamSlice[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g.SamSlice[i].GetChromEnd() < g.SamSlice[j].GetChromEnd() {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-type SingleCellBx struct {
-	SamSlice
-}
-
-func (g SingleCellBx) Less(i, j int) bool {
-	iSingle := ToSingleCellAlignment(*g.SamSlice[i])
-	jSingle := ToSingleCellAlignment(*g.SamSlice[j])
-	if dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx) {
-		return true
-	}
-	return false
 }
