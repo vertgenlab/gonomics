@@ -35,14 +35,14 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 	gapSizeMultiple := float64(species2_gapSize/species1_gapSize)
 	gapSizeMultipleLimit := 100.00 //gapSizeMultipleLimit is currently hardcoded tentatively, 100
 	gapSizeProduct := species1_gapSize * species2_gapSize
-	if gapSizeMultiple > gapSizeMultipleLimit {
-		pass = false
-		species1_Name = "species1_gap,doNotCalculate_largeGapSizeMultiple"
-		species2_Name = "species2_gap,doNotCalculate_largeGapSizeMultiple"
-	} else if !(species1_ChromStart < species1_ChromEnd && species2_ChromStart < species2_ChromEnd) {
+	if !(species1_ChromStart < species1_ChromEnd && species2_ChromStart < species2_ChromEnd) { // need to check first, otherwise may have chromEnd==chromStart, leading to gapSize==0 in the denominator of gapSizeMultiple
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
+	} else if gapSizeMultiple > gapSizeMultipleLimit {
+		pass = false
+		species1_Name = "species1_gap,doNotCalculate_largeGapSizeMultiple"
+		species2_Name = "species2_gap,doNotCalculate_largeGapSizeMultiple"
 	} else if gapSizeProduct > gapSizeProductLimit {
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_large"
@@ -327,8 +327,8 @@ func usage() {
 			"Usage:\n" +
 			"	globalAlignmentAnchor in_maf species1 species2 species1_genome species2_genome\n" +
 			"doNotCalculate flags:\n" +
-			"	largeGapSizeMultiple - This bed entry pair is discarded because the gap size of species2 >> the gap size of species1\n" +
 			"	invalidChromStartOrChromEnd - This bed entry pair is discarded because ChromStart or ChromEnd is invalid\n" +
+			"	largeGapSizeMultiple - This bed entry pair is discarded because the gap size of species2 >> the gap size of species1\n" +
 			"	large - This bed entry pair is discarded because the product of their sizes is too large\n" +
 			"options:\n")
 	flag.PrintDefaults()
