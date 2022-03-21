@@ -91,11 +91,16 @@ func mergeSort[E any](data <-chan E, less func(a, b E) bool, out chan<- E, recor
 
 	// Pop heap until all tmp files are exhausted
 	var currVal *E
+	var empty E
 	for hb.Len() > 0 {
 		// Get minimum value from the heap, recall that the memory address of this value
 		// has been keyed in the memoryAddressMap to the origin file reader
 		currVal = heap.Pop(pq).(*E)
-		out <- *currVal                                 // send popped value
+		out <- *currVal // send popped value
+		// reset E to dealloc pointer refs in E so gob reallocs instead of overwrites
+		// if this is not done then Decode will overwrite references (e.g. slices) that
+		// may be present in currVal leading to pointer errors.
+		*currVal = empty
 		err = memoryAddressMap[currVal].Decode(currVal) // read in a new value from the origin decoder
 		if err == io.EOF {
 			continue

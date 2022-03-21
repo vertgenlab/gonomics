@@ -25,6 +25,6 @@ func TestMergeSort(t *testing.T) {
 	})
 
 	for v := range out {
-		fmt.Println(v.Chr, v.Pos)
+		fmt.Println(v.Chr, v.Pos, v.Alt)
 	}
 }
