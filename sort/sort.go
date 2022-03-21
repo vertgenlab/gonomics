@@ -13,6 +13,10 @@ import (
 	"sync"
 )
 
+const (
+	maxTmpFilesAllowed = 1000
+)
+
 type priorityGiraf struct {
 	data     *giraf.Giraf
 	origin   int
