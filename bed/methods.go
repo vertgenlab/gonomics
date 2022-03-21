@@ -9,23 +9,22 @@ import (
 // Current methods satisfy requirements for the following interfaces:
 // bed.BedLike
 
-// GetChrom grabs the chrom of the bed struct
+// GetChrom returns the chrom of the bed struct
 func (b Bed) GetChrom() string {
 	return b.Chrom
 }
 
-// GetChromStart grabs the starting coordinates of the bed struct
+// GetChromStart returns the starting coordinates of the bed struct
 func (b Bed) GetChromStart() int {
 	return b.ChromStart
 }
 
-// GetChromEnd grabs the end coordinates of the bed struct
+// GetChromEnd returns the end coordinates of the bed struct
 func (b Bed) GetChromEnd() int {
 	return b.ChromEnd
 }
 
-// UpdateCoord will change the bed struct to the user defined chrom string,
-// start int, and end int.
+// UpdateCoord will return a copy of the bed with the modified coordinates.
 func (b Bed) UpdateCoord(c string, start int, end int) interface{} {
 	b.Chrom = c
 	b.ChromStart = start
@@ -42,15 +41,16 @@ func (b BedSlice) Len() int { return len(b) }
 // the slice of beds.
 func (b BedSlice) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 
-// Push and pop() satisfy the interface for the heap method
-// Push pushes to the heap.
+// Push and pop() satisfy the interface for the heap method.
+// Push pushes to the heap, adding the element to the top of the heap.
 func (b *BedSlice) Push(x interface{}) {
 	answer := x.(*Bed)
 	*b = append(*b, answer)
 }
 
-// Pop and push() satisfy the interface for the heap method
-// Pop pushes to the heap.
+// Pop and push() satisfy the interface for the heap method.
+// Pop returns the value at the top to the heap, in the process removing the
+// element from the heap.
 func (b *BedSlice) Pop() interface{} {
 	oldQueue := *b
 	n := len(oldQueue)
@@ -78,7 +78,7 @@ func (b Bed) WriteToFileHandle(file io.Writer) {
 }
 
 // NextRealRecord keeps track of if we are done reading through
-// the bed and returns a bool
+// the bed by returning a bool and sets b equal to the next bed entry in the file.
 func (b *Bed) NextRealRecord(file *fileio.EasyReader) bool {
 	var done bool
 	var next Bed
@@ -103,7 +103,8 @@ type ByGenomicCoordinates struct {
 	BedSlice
 }
 
-// Less sorts by genomic coordinate and satisfies the sort.Slice
+// Less sorts first by chromosome, then by genomic coordinates starting with the start coordinate
+// and breaking a tie with the end coordinates. Less satisfies the sort.Slice
 // interface.
 func (g ByGenomicCoordinates) Less(i, j int) bool {
 	// First sort criteria is chromosome

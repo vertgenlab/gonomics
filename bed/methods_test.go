@@ -79,8 +79,7 @@ func TestBed_UpdateCoord(t *testing.T) {
 func TestBedSlice_Len(t *testing.T) {
 	var allBed BedSlice
 	for _, v := range BedMethodTests {
-		pointer := &v.b //must create a pointer because type BedSlice is []*Bed
-		allBed = append(allBed, pointer)
+		allBed = append(allBed, &v.b)
 	}
 	if allBed.Len() != 2 {
 		t.Errorf("Error in bed methods.go Len(); Expected: %v Actual: %v.", 2, allBed.Len())
