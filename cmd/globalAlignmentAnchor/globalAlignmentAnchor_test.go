@@ -10,17 +10,17 @@ import (
 )
 
 var globalAlignmentAnchorTests = []struct {
-	in_maf                      string
-	species1                    string
-	species2                    string
-	species1_genome             string
-	species2_genome             string
-	gapSizeLimit								int
-	out_maf_expected            string
-	species1_match_bed_expected string
-	species2_match_bed_expected string
-	species1_gap_bed_expected   string
-	species2_gap_bed_expected   string
+	in_maf                                   string
+	species1                                 string
+	species2                                 string
+	species1_genome                          string
+	species2_genome                          string
+	gapSizeLimit                             int
+	out_maf_expected                         string
+	species1_match_bed_expected              string
+	species2_match_bed_expected              string
+	species1_gap_bed_expected                string
+	species2_gap_bed_expected                string
 	species1_gap_doNotCalculate_bed_expected string
 	species2_gap_doNotCalculate_bed_expected string
 	out_alignment_expected                   string
