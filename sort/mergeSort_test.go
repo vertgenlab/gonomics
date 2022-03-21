@@ -1,9 +1,9 @@
 package sort
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/vcf"
 	"math/rand"
+	"sort"
 	"testing"
 )
 
@@ -24,7 +24,19 @@ func TestMergeSort(t *testing.T) {
 		return a.Pos < b.Pos
 	})
 
+	answer := make([]vcf.Vcf, 0, len(vcfs))
 	for v := range out {
-		fmt.Println(v.Chr, v.Pos, v.Alt)
+		answer = append(answer, v)
+	}
+
+	if len(answer) != len(vcfs) {
+		t.Error("problem with mergeSort")
+	}
+
+	sort.Slice(vcfs, func(i, j int) bool {
+		return vcfs[i].Pos < vcfs[j].Pos
+	})
+	if !vcf.AllEqual(vcfs, answer) {
+		t.Error("problem with mergeSort")
 	}
 }

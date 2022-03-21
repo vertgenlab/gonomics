@@ -97,8 +97,8 @@ func mergeSort[E any](data <-chan E, less func(a, b E) bool, out chan<- E, recor
 		// has been keyed in the memoryAddressMap to the origin file reader
 		currVal = heap.Pop(pq).(*E)
 		out <- *currVal // send popped value
-		// reset E to dealloc pointer refs in E so gob reallocs instead of overwrites
-		// if this is not done then Decode will overwrite references (e.g. slices) that
+		// reset E to dealloc pointer refs in E so gob reallocs instead of overwrites.
+		// If this is not done then Decode will overwrite references (e.g. slices) that
 		// may be present in currVal leading to pointer errors.
 		*currVal = empty
 		err = memoryAddressMap[currVal].Decode(currVal) // read in a new value from the origin decoder
