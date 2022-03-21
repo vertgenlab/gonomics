@@ -130,9 +130,9 @@ func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores []
 	//and never filled in in any checkerboard,
 	//but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
 	if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
-		route, routeIdx_current = lastCigar(route, routeIdx_current, 2)
+		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 2)
 	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
-		route, routeIdx_current = lastCigar(route, routeIdx_current, 1)
+		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 1)
 	} //no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
 	//Final processing (reverse route) and return outputs

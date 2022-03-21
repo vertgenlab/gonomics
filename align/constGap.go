@@ -56,9 +56,9 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	//Step 4: write the last cigar entry
 	//This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
 	if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
-		route, routeIdx_current = lastCigar(route, routeIdx_current, 2)
+		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 2)
 	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
-		route, routeIdx_current = lastCigar(route, routeIdx_current, 1)
+		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 1)
 	} //no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
 	//Final processing (reverse route) and return outputs
@@ -113,9 +113,9 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	//Step 4: write the last cigar entry
 	//This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
 	if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
-		route, routeIdx_current = lastCigar(route, routeIdx_current, 2)
+		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 2)
 	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
-		route, routeIdx_current = lastCigar(route, routeIdx_current, 1)
+		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 1)
 	} //no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
 	//Final processing (reverse route) and return outputs
@@ -277,14 +277,36 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 }
 
 //Step 4
-//inputs: the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the ColType (M=0,I=1,D=2) of the last cigar entry
+//inputs: lengths of original sequences alpha and beta, the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the ColType (M=0,I=1,D=2) of the last cigar entry
 //outputs: the updated final route describing the collection of cigars of the entire alignment including the last cigar, the updated and index of the cigar that is currently being built
-func lastCigar(route []Cigar, routeIdx_current int, Op_end ColType) ([]Cigar, int) {
+func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int, Op_end ColType) ([]Cigar, int) {
+	//Calculate the size of final runlength
+	var TotalRunLength, LastRunLength int64
+	TotalRunLength = 0
+	switch Op_end {
+	case 1: //Op_end==1=ColI=Insertion=unique sequence in sequenceTwo beta
+		for routeIdx := range route {
+			if route[routeIdx].Op == 0 || route[routeIdx].Op == 1 {
+				TotalRunLength += route[routeIdx].RunLength
+			}
+		}
+		LastRunLength = int64(len_beta) - TotalRunLength
+	case 2: //Op_end==2=ColD=Deletion=unique seuqnece in sequenceOne alpha
+		for routeIdx := range route {
+			if route[routeIdx].Op == 0 || route[routeIdx].Op == 2 {
+				TotalRunLength += route[routeIdx].RunLength
+			}
+		}
+		LastRunLength = int64(len_alpha) - TotalRunLength
+	default:
+		log.Fatalf("Error: unexpected lastCigar traceback")
+	}
 
+	//Write the last cigar based on final runlength and second-to-last cigar Op
 	if route[routeIdx_current].Op == Op_end {
-		route[routeIdx_current].RunLength += 1
+		route[routeIdx_current].RunLength += LastRunLength
 	} else {
-		route = append(route, Cigar{RunLength: 1, Op: Op_end})
+		route = append(route, Cigar{RunLength: LastRunLength, Op: Op_end})
 		routeIdx_current++
 	}
 
