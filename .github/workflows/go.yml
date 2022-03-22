@@ -14,8 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v3
-        with:
-          go-version: '1.18'
+      with:
+        go-version: '1.18'
     - name: Build
       run:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
@@ -28,8 +28,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v3
-        with:
-          go-version: '1.18'
+      with:
+        go-version: '1.18'
     - name: Test
       run: 
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
