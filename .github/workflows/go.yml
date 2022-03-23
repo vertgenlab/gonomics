@@ -13,36 +13,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '1.18'
     - name: Build
       run:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go build ./...
-
+  
   test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '1.18'
     - name: Test
-      run:
+      run: 
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
         go test ./...
-
+        
   format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
         with:
           ref: ${{ github.head_ref }}
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
       - name: go fmt
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
-        run: gofmt -s -w ./*/*/*.go
+        run: gofmt -s -w ./cmd/*/*.go
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
@@ -61,11 +68,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '1.16'
+          go-version: '1.18'
       - name: Run coverage
-        run:
+        run: 
           mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
           cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
           cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
