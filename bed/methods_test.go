@@ -74,27 +74,3 @@ func TestBed_UpdateCoord(t *testing.T) {
 		}
 	}
 }
-
-//	Tests for methods that use: type BedSlice []*Bed
-func TestBedSlice_Len(t *testing.T) {
-	var allBed BedSlice
-	for _, v := range BedMethodTests {
-		allBed = append(allBed, &v.b)
-	}
-	if allBed.Len() != 2 {
-		t.Errorf("Error in bed methods.go Len(); Expected: %v Actual: %v.", 2, allBed.Len())
-	}
-}
-
-func TestBedSlice_Swap(t *testing.T) {
-	var allBed BedSlice
-	expectedChrom := BedMethodTests[1].b.Chrom
-	for _, v := range BedMethodTests {
-		pointer := &v.b //must create a pointer because type BedSlice is []*Bed
-		allBed = append(allBed, pointer)
-	}
-	allBed.Swap(0, 1)
-	if allBed[1].Chrom != expectedChrom {
-		t.Errorf("Error in bed methods.go Swap(); Expected: %v, Actual: %v.", expectedChrom, allBed[1].Chrom)
-	}
-}
