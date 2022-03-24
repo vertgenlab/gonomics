@@ -33,7 +33,7 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 	species1_gapSize := species1_ChromEnd - species1_ChromStart
 	species2_gapSize := species2_ChromEnd - species2_ChromStart
 	gapSizeMultiple := 0.0
-	if species2_gapSize != 0 {
+	if species1_gapSize != 0 {
 		gapSizeMultiple = float64(species2_gapSize / species1_gapSize)
 	}
 	gapSizeMultipleLimit := 100.00 //gapSizeMultipleLimit is currently hardcoded tentatively, 100
