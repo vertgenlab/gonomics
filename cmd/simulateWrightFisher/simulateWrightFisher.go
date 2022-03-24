@@ -11,9 +11,9 @@ import (
 	"math/rand"
 )
 
-func simulateAFS(popSize int, mutRate float64, genTime int, genomeSize int, outFile string, setSeed int64) {
+func simulateWrightFisher(popSize int, mutRate float64, genTime int, genomeSize int, outFile string, setSeed int64, verbose int) {
 	rand.Seed(setSeed)
-	c := simulate.GoSimulateAFS(popSize, mutRate, genTime, genomeSize)
+	c := simulate.SimulateWrightFisher(popSize, mutRate, genTime, genomeSize, verbose)
 	fasta.Write(outFile, c)
 }
 
@@ -33,6 +33,7 @@ func main() {
 	var genTime *int = flag.Int("t", 10, "Specifies the generation time in the simulation")
 	var genomeSize *int = flag.Int("g", 10, "Specifies the genome size in base-pair in the simulation")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal statements to stdout for debugging")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -46,5 +47,5 @@ func main() {
 
 	outFile := flag.Arg(0)
 
-	simulateAFS(*popSize, *mutRate, *genTime, *genomeSize, outFile, *setSeed)
+	simulateWrightFisher(*popSize, *mutRate, *genTime, *genomeSize, outFile, *setSeed, *verbose)
 }
