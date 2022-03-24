@@ -6,6 +6,7 @@
 A collection of genomics software tools written in Go (golang).
 Authors:
 * Eric Au
+* Luke C. Bartelt
 * Olivier Boivin
 * Sophie Campione
 * Christiana Fauci
@@ -34,7 +35,7 @@ Authors:
         
 </ul>
 
-[Versions of Go can be downloaded from here](https://golang.org/dl/)   - we are currently using 1.15.8
+[Versions of Go can be downloaded from here](https://golang.org/dl/)   - we are currently using 1.18
 
 <ul>
         
@@ -49,6 +50,7 @@ Authors:
 Must be familiar with “vim” to complete this. You can google around for how to use vim.<br> You will need to know how to “insert” and how to “quit and save”<br>
 Helpful “vim” commands: “i” to insert/edit doc, “esc” to exit insert mode, “:qw” to quit and write/save changes to the file. <br>
 <br>
+</ul>
 
     $ vim ~/.bashrc
             
@@ -68,22 +70,21 @@ The bash/zsh rc file should have this heading (with “zsh” and “bash” as 
             if [ -f /etc/zshrc ]; then
                 . /etc/zshrc
             fi
-<ul>
-</ul>
+
 Below that you will add a line 
 
 
     export GOROOT=/usr/local/go
 
 
-
-</ul>
 <br>
 <br>
+<br>
 
-**3. Create your Go workspace**
+**3. Create your Go workspace<br>**
 
 <ul>
+Create the necessary directory hierarchy. 
 Go to your home directory, and open your .bashrc file for editing (or .zshrc)
 
 
@@ -110,7 +111,7 @@ Below your GOROOT (accessing defined in step 2 above) you will add 2 lines
 <li>Your GOPATH is your go workspace where you will create and edit go code. </li>
 <li>Your GOBIN is where your executable go files will be stored (after running "$ go install" on a .go file) you can run these from anywhere with the command:</li>
 <ul>
-
+for example:
 <br>
 
     $ ~/go/bin/commandName commandArguments
@@ -151,21 +152,18 @@ Goal is to  get gonomics into the “src” directory of go. This path needs to 
 
 *Workspace set up for basic gonomics installation (most users):*
 <ul>
+<ul>
 
     $ cd $GOPATH/src
     $ go get
+</ul> 
+this should install gonomics and all its dependencies. 
 <ul>
 
-   
-    
-this should install gonomics and all its dependencies. 
-</ul>
-
-    
     
     $ cd /github.com/vertgenlab/gonomics/ 
     $ go test ./…
-<ul>
+</ul>
 This should print to screen a line for each test with ok printed in the left margin when something passes
 </ul>
 </ul>
@@ -181,20 +179,25 @@ This should print to screen a line for each test with ok printed in the left mar
     $ cd github.com/vertgenlab
     $ git clone https://github.com/vertgenlab/gonomics.git
 <ul>
-This should download the repository to this directory
+This will download the repository to your current directory
 </ul>
 
     $ cd gonomics
     $ go test ./…
 <ul>
-This should print to screen a line for each test with ok printed in the left margin when something passes.
+This should print to screen a line for each test with "ok" printed in the left margin when something passes.
+</ul>
+
+    $ go install ./...
+<ul>
+This will tidy up the necessary modules
+</ul>
 </ul>
 <br>
 <br>
 <br>
 <br>
 <br>
-
 
 
 

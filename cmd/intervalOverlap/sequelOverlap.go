@@ -14,9 +14,9 @@ import (
 
 func usage() {
 	fmt.Print(
-		"sequelOverlap - A tool to find non/overlapping genomic regions\n\n" +
+		"intervalOverlap - A tool to find non/overlapping genomic regions\n\n" +
 			"Usage:\n" +
-			"  sequelOverlap [options] select.file in.file out.file\n\n" +
+			"  intervalOverlap [options] select.file in.file out.file\n\n" +
 			"Options:\n\n")
 	flag.PrintDefaults()
 }
