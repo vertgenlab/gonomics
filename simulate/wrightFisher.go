@@ -22,7 +22,7 @@ func SimulateWrightFisher(popSize int, mutR float64, numGen int, genomeSize int,
 
 	//fmt.Println(byte(65) == 'A')
 	//fmt.Println(dna.ByteToBase(uint8(0)))
-	var i, t, b, p, k int
+	var i, t, b, p int
 	var r float64
 
 	// Randomly generate the initial sequence and copy to all individual in both curFasta and nextFasta
@@ -31,7 +31,9 @@ func SimulateWrightFisher(popSize int, mutR float64, numGen int, genomeSize int,
 	relFitArray := makeFitnessArray(genomeSize, rFitness, curFasta[0].Seq)
 	copy(ancestralAlleles, curFasta[0].Seq)
 
-	updateAlleleFreqArray(curFasta, b, relFitArray, aFreqArray, meanFitArray)
+	for b = 0; b < genomeSize; b++ {
+		updateAlleleFreqArray(curFasta, b, relFitArray, aFreqArray, meanFitArray)
+	}
 
 	// 1st loop through every generation
 	for t = 1; t < numGen; t++ {
@@ -39,7 +41,7 @@ func SimulateWrightFisher(popSize int, mutR float64, numGen int, genomeSize int,
 		for b = 0; b < genomeSize; b++ {
 
 			for i = 0; i < 4; i++ {
-				samplingPQRS[i] = (aFreqArray[b*i] * relFitArray[b*i]) / (meanFitArray[b])
+				samplingPQRS[i] = (aFreqArray[b*4+i] * relFitArray[b*4+1]) / (meanFitArray[b])
 			}
 
 			// 3rd loop through every individual
@@ -68,9 +70,7 @@ func SimulateWrightFisher(popSize int, mutR float64, numGen int, genomeSize int,
 		}
 
 		// Update the curFasta for the next generation to be nextFasta of this generation
-		for k = 0; k < popSize; k++ {
-			copy(curFasta, nextFasta)
-		}
+		curFasta, nextFasta = nextFasta, curFasta
 	}
 
 	if verbose == 1 {

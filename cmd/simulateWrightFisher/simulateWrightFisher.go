@@ -33,7 +33,7 @@ func main() {
 	var mutRate *float64 = flag.Float64("m", 5e-1, "Specifies the genome-wide mutation rate in the simulation.")
 	var numGen *int = flag.Int("t", 10, "Specifies the number of generations passed in the simulation")
 	var genomeSize *int = flag.Int("g", 10, "Specifies the genome size in base-pair in the simulation")
-	var rFitness *float64 = flag.Float64("w", 1, "Specifies the relative fitness of the derived allele over ancestral allele")
+	var rFitness *float64 = flag.Float64("w", 1, "Specifies the relative fitness of the derived allele over ancestral allele (how likely derived allele will survive to reproduction relative to ancestral allele)")
 	var gcContent *float64 = flag.Float64("gc", 0.5, "Specifies the GC content for the simulated ancestral sequence")
 
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
