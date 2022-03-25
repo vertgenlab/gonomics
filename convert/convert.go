@@ -177,7 +177,7 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 	var deletion bool = false
 	var insertionAlnPos int
 	var deletionAlnPos int
-	var currRefPos, currAlnPos int = 0, 0//0 based, like fasta. Add 1 to get vcf pos.
+	var currRefPos, currAlnPos int = 0, 0 //0 based, like fasta. Add 1 to get vcf pos.
 
 	for i := range f[0].Seq { //loop through alignment positions
 		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
@@ -192,7 +192,7 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
 				if !substitutionsOnly {
 					currRefPos = fasta.AlnPosToRefPosCounter(f[0], insertionAlnPos, currRefPos, currAlnPos)
-					currAlnPos = insertionAlnPos//update currAlnPos
+					currAlnPos = insertionAlnPos //update currAlnPos
 					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 				}
 			}
