@@ -74,7 +74,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 			i.WriteToFileHandle(un)
 		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
 			a, b = lift.MatchProportion(overlap[0].(*chain.Chain), i)
-			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.MinFloat64(a, b), overlap[0].(*chain.Chain).Score)
+			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(*chain.Chain).Score)
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
 		} else {

@@ -328,7 +328,7 @@ func optimizeSubtreeRight(sub *AccelSubTreeRight, allowNegative bool, verbose bo
 //a helper function of optimizeSubtree.
 //If we constrain branch lengths to be nonNegative, we apply this correction when the minimum Q is achieved at negative branch lengths for a subtree.
 func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, w1 float64, w2 float64) float64 {
-	return numbers.MaxFloat64((w1*(d1-v1)+w2*(d2-v2))/(w1+w2), 0) //ensures the estimate is non-negative
+	return numbers.Max((w1*(d1-v1)+w2*(d2-v2))/(w1+w2), 0) //ensures the estimate is non-negative
 }
 
 //CalculateQ: for a set of distances and corresponding branch lengths and weights, determine the value of Q, the Fitch-Margoliash least squares error term.

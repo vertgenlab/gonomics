@@ -31,12 +31,12 @@ func InitializeFastRejectionSampler(xLeft float64, xRight float64, f func(float6
 			firstTime = false
 			fCurrLeft = f(currLeft)
 			fCurrRight = f(currRight)
-			binHeights[i] = MaxFloat64(fCurrLeft, fCurrRight)
+			binHeights[i] = Max(fCurrLeft, fCurrRight)
 		} else {
 			fCurrLeft = fCurrRight
 			currRight += stepSize
 			fCurrRight = f(currRight)
-			binHeights[i] = MaxFloat64(fCurrLeft, fCurrRight)
+			binHeights[i] = Max(fCurrLeft, fCurrRight)
 		}
 		sumHeights += binHeights[i]
 	}

@@ -6,16 +6,6 @@ import (
 	"strconv"
 )
 
-//IntSliceContains returns true if a slice of ints a containts an int b, false otherwise.
-func IntSliceContains(a []int, b int) bool {
-	for i := 0; i < len(a); i++ {
-		if a[i] == b {
-			return true
-		}
-	}
-	return false
-}
-
 //StringToBool parses a string into a bool and will exit on error
 func StringToBool(s string) bool {
 	b, err := strconv.ParseBool(s)
