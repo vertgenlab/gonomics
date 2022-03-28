@@ -3,7 +3,6 @@ package vcf
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
 )
@@ -61,79 +60,6 @@ func (v Vcf) UpdateCoord(c string, start int, end int) interface{} {
 	return v
 }
 
-type VcfSlice []*Vcf
-
-func (v VcfSlice) Len() int { return len(v) }
-
-func (v VcfSlice) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
-
-func (v *VcfSlice) Push(x interface{}) {
-	answer := x.(*Vcf)
-	*v = append(*v, answer)
-}
-
-func (v *VcfSlice) Pop() interface{} {
-	oldQueue := *v
-	n := len(oldQueue)
-	answer := oldQueue[n-1]
-	*v = oldQueue[:n-1]
-	return answer
-}
-
-func (v VcfSlice) Write(file string) {
-	Write(file, convertToNonPtr(v))
-}
-
-//TODO remove this function once interval is updated
-func convertToNonPtr(v []*Vcf) []Vcf {
-	answer := make([]Vcf, len(v))
-	for i := range v {
-		answer[i] = *v[i]
-	}
-	return answer
-}
-
 func (v Vcf) WriteToFileHandle(file io.Writer) {
 	WriteVcf(file, v)
-}
-
-func (v *Vcf) NextRealRecord(file *fileio.EasyReader) bool {
-	var done bool
-	var next Vcf
-	for next.Chr == "" && !done {
-		next, done = NextVcf(file)
-	}
-	*v = next
-	if done {
-		return true
-	}
-	return done
-}
-
-func (v *Vcf) Copy() interface{} {
-	var answer *Vcf = new(Vcf)
-	*answer = *v
-	return answer
-}
-
-type ByGenomicCoordinates struct {
-	VcfSlice
-}
-
-func (g ByGenomicCoordinates) Less(i, j int) bool {
-	// First sort criteria is chromosome
-	if g.VcfSlice[i].GetChrom() < g.VcfSlice[j].GetChrom() {
-		return true
-	} else if g.VcfSlice[i].GetChrom() == g.VcfSlice[j].GetChrom() {
-		// If chroms are equal then sort by start position
-		if g.VcfSlice[i].GetChromStart() < g.VcfSlice[j].GetChromStart() {
-			return true
-		} else if g.VcfSlice[i].GetChromStart() == g.VcfSlice[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g.VcfSlice[i].GetChromEnd() < g.VcfSlice[j].GetChromEnd() {
-				return true
-			}
-		}
-	}
-	return false
 }

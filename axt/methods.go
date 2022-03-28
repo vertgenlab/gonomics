@@ -1,8 +1,6 @@
 package axt
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
 
@@ -24,73 +22,6 @@ func (a *Axt) UpdateLift(c string, start int, end int) {
 	a.REnd = end
 }
 
-type AxtSlice []*Axt
-
-func (a AxtSlice) Len() int { return len(a) }
-
-func (a AxtSlice) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-
-func (a *AxtSlice) Push(x interface{}) {
-	answer := x.(*Axt)
-	*a = append(*a, answer)
-}
-
-func (a *AxtSlice) Pop() interface{} {
-	oldQueue := *a
-	n := len(oldQueue)
-	answer := oldQueue[n-1]
-	*a = oldQueue[:n-1]
-	return answer
-}
-
-func (a AxtSlice) Write(file string) {
-	var err error
-	f := fileio.EasyCreate(file)
-	for i := range a {
-		WriteToFileHandle(f, *a[i], i)
-	}
-	err = f.Close()
-	exception.PanicOnErr(err)
-}
-
 func (a Axt) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, a, 0)
-}
-
-func (a *Axt) NextRealRecord(file *fileio.EasyReader) bool {
-	var done bool
-	var next Axt
-	next, done = ReadNext(file)
-	if !done {
-		*a = next
-	}
-	return done
-}
-
-func (a *Axt) Copy() interface{} {
-	var answer *Axt = new(Axt)
-	*answer = *a
-	return answer
-}
-
-type ByGenomicCoordinates struct {
-	AxtSlice
-}
-
-func (g ByGenomicCoordinates) Less(i, j int) bool {
-	// First sort criteria is chromosome
-	if g.AxtSlice[i].GetChrom() < g.AxtSlice[j].GetChrom() {
-		return true
-	} else if g.AxtSlice[i].GetChrom() == g.AxtSlice[j].GetChrom() {
-		// If chroms are equal then sort by start position
-		if g.AxtSlice[i].GetChromStart() < g.AxtSlice[j].GetChromStart() {
-			return true
-		} else if g.AxtSlice[i].GetChromStart() == g.AxtSlice[j].GetChromStart() {
-			// If start positions are equal then the shorter region wins
-			if g.AxtSlice[i].GetChromEnd() < g.AxtSlice[j].GetChromEnd() {
-				return true
-			}
-		}
-	}
-	return false
 }

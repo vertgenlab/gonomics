@@ -2,7 +2,6 @@ package giraf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 )
 
@@ -22,81 +21,6 @@ func (g *Giraf) GetChromEnd() int {
 	return g.Path.TEnd
 }
 
-type GirafSlice []*Giraf
-
-func (g GirafSlice) Len() int { return len(g) }
-
-func (g GirafSlice) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
-
-func (g *GirafSlice) Push(x interface{}) {
-	answer := x.(*Giraf)
-	*g = append(*g, answer)
-}
-
-func (g *GirafSlice) Pop() interface{} {
-	oldQueue := *g
-	n := len(oldQueue)
-	answer := oldQueue[n-1]
-	*g = oldQueue[:n-1]
-	return answer
-}
-
-func (g GirafSlice) Write(filename string) {
-	Write(filename, g)
-}
-
 func (g *Giraf) WriteToFileHandle(file io.Writer) {
 	WriteGirafToFileHandle(file, g)
-}
-
-func (g *Giraf) NextRealRecord(file *fileio.EasyReader) bool {
-	next, done := NextGiraf(file)
-	if done {
-		return true
-	}
-	*g = *next
-	return done
-}
-
-func (g *Giraf) Copy() interface{} {
-	var answer *Giraf = new(Giraf)
-	*answer = *g
-	return answer
-}
-
-type ByTopologicalNodeOrder struct {
-	GirafSlice
-}
-
-func (g ByTopologicalNodeOrder) Less(i, j int) bool {
-	// First sort criteria is node
-	if g.GirafSlice[i].GetChrom() < g.GirafSlice[j].GetChrom() {
-		return true
-	} else if g.GirafSlice[i].GetChrom() == g.GirafSlice[j].GetChrom() {
-		// If start nodes are equal then sort by start position
-		if g.GirafSlice[i].GetChromStart() < g.GirafSlice[j].GetChromStart() {
-			return true
-		} else if g.GirafSlice[i].GetChromStart() == g.GirafSlice[j].GetChromStart() {
-			// If start positions are equal then loop through nodes and see if one has priority
-			minPathLength := len(g.GirafSlice[i].Path.Nodes)
-			if len(g.GirafSlice[j].Path.Nodes) < minPathLength {
-				minPathLength = len(g.GirafSlice[j].Path.Nodes)
-			}
-			for k := 0; k < minPathLength; k++ {
-				if g.GirafSlice[i].Path.Nodes[k] < g.GirafSlice[j].Path.Nodes[k] {
-					return true
-				}
-			}
-			// If all nodes match, sort based on longest path
-			if len(g.GirafSlice[i].Path.Nodes) < len(g.GirafSlice[j].Path.Nodes) {
-				return true
-			} else if len(g.GirafSlice[i].Path.Nodes) == len(g.GirafSlice[j].Path.Nodes) {
-				// If nodes are equal length, then sort based on the ending position
-				if g.GirafSlice[i].GetChromEnd() < g.GirafSlice[j].GetChromEnd() {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }
