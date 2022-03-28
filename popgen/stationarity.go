@@ -237,7 +237,7 @@ func AfsLikelihoodFixedAlphaClosure(afs Afs, binomMap [][]float64, integralError
 
 //BuildLikelihoodCache constructs a cache of likelihood values for MLE. likelihoodCache[n][i] stores the likelihood for a segregating site of n alleles with i in the derived state for a particular selection parameter alpha.
 func BuildLikelihoodCache(allN []int) [][]float64 {
-	answer := make([][]float64, numbers.MaxIntSlice(allN)+1) //make the first dimension the output matrix large enough to hold the highest observed N.
+	answer := make([][]float64, numbers.MaxMany(allN...)+1) //make the first dimension the output matrix large enough to hold the highest observed N.
 	for n := range allN {
 		answer[allN[n]] = make([]float64, allN[n]) //for each N value in the AFS, set the second dimension to the length of possible i values.
 	}

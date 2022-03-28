@@ -29,15 +29,22 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 //AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceeding reference position.
 //0 based.
 func AlnPosToRefPos(record Fasta, AlnPos int) int {
-	var RefPos int = 0
-	for t := 0; t < AlnPos; t++ {
+	return AlnPosToRefPosCounter(record, AlnPos, 0, 0)
+}
+
+//AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
+func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int) int {
+	if alnStart > AlnPos {
+		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired postion, we reset the counters to 0.
+	}
+	for t := alnStart; t < AlnPos; t++ {
 		if t == len(record.Seq) {
 			log.Fatalf("Ran out of chromosome.")
 		} else if record.Seq[t] != dna.Gap {
-			RefPos++
+			refStart++
 		}
 	}
-	return RefPos
+	return refStart
 }
 
 //CopySubset returns a copy of a multiFa from a specified start and end position.

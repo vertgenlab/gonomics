@@ -110,7 +110,7 @@ func bedRangeMin(w []float64, start int, end int, noDataValue float64) float64 {
 				min = w[i]
 				encounteredData = true
 			}
-			min = numbers.MinFloat64(min, w[i])
+			min = numbers.Min(min, w[i])
 		}
 	}
 	if !encounteredData {
@@ -128,7 +128,7 @@ func bedRangeMax(w []float64, start int, end int, noDataValue float64) float64 {
 				max = w[i]
 				encounteredData = true
 			}
-			max = numbers.MaxFloat64(max, w[i])
+			max = numbers.Max(max, w[i])
 		}
 	}
 	if !encounteredData {
