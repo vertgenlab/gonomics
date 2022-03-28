@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/convert"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -18,7 +19,8 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 	header := vcf.NewHeader("")
 	vcf.NewWriteHeader(out, header)
 	convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
-	out.Close()
+	err := out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
