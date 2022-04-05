@@ -30,7 +30,7 @@ func singleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 	return fasta.Fasta{}
 }
 
-//BedToFasta extracts subFastas out of a reference fasta slice comprised of the sequences of input bed regions.
+//BedToFasta extracts sub-Fastas out of a reference Fasta slice comprised of the sequences of input bed regions.
 func BedToFasta(b []bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 	outlist := make([]fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
@@ -57,7 +57,8 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 	//add output to bedlist
 } */
 
-//SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
+//SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived.
+//Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
 func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
 	//fatal if fragLength is shorter than sam read length
 	if fragLength < len(s.Seq) {
@@ -83,8 +84,9 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
-//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted name
-//of an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
+//BedValuesToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is
+//equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
+//value set by Missing (default 0 in the cmd).
 func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
@@ -120,7 +122,8 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 	return wigSlice
 }
 
-//BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
+//BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that
+//overlap the position.
 func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
@@ -169,7 +172,8 @@ func getWigChromIndex(s string, wigSlice []wig.Wig) int {
 	return -1
 }
 
-//PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first entry as the reference and the second fasta entry as the alt allele.
+//PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first
+// entry as the reference and the second fasta entry as the alt allele.
 //This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
 func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
 	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
