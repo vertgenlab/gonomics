@@ -1,0 +1,6 @@
+chr1	1	10	species1_gap
+chr1	40	50	species1_Insertion
+chr1	60	700	species1_gap
+chr2	1	5	species1_gap
+chr2	20	20	species1_gap
+chr2	30	550	species1_gap

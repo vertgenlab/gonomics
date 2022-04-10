@@ -36,17 +36,15 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 	gapSizeMultipleLimit := 100.00 //gapSizeMultipleLimit is currently hardcoded tentatively, 100
 	gapSizeProduct := species1_gapSize * species2_gapSize
 
-	if (species1_gapSize > 0 && species2_gapSize == 0) { // insertion in species1, no need for alignment
-		species1_Name = "species1_Insertion"
-	} else if (species1_gapSize == 0 && species2_gapSize > 0) { // insertion in species2, no need for alignment
-		species2_Name = "species2_Insertion"
-	}
-
 	if species1_gapSize != 0 {
 		gapSizeMultiple = float64(species2_gapSize / species1_gapSize)
 	}
 
-	if !(species1_gapSize > 0 && species2_gapSize > 0) { // need to check first, otherwise may have chromEnd==chromStart, leading to gapSize==0 in the denominator of gapSizeMultiple
+	if (species1_gapSize > 0 && species2_gapSize == 0) { // insertion in species1, no need for alignment
+		species1_Name = "species1_Insertion"
+	} else if (species1_gapSize == 0 && species2_gapSize > 0) { // insertion in species2, no need for alignment
+		species2_Name = "species2_Insertion"
+	} else if !(species1_gapSize > 0 && species2_gapSize > 0) { // need to check, otherwise may have chromEnd<chromStart, leading to gapSize<0
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
@@ -137,8 +135,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	// open output files to write line-by-line and create variable for error
 	out_species1_filename := strings.Replace(in_species1_match, "match", "gap", 1)
 	out_species2_filename := strings.Replace(in_species2_match, "match", "gap", 1)
-	out_species1_doNotCalculate_filename := strings.Replace(in_species1_match, path.Base(in_species1_match), "out_"+species1+"_gap_doNotCalculate.bed", 1)
-	out_species2_doNotCalculate_filename := strings.Replace(in_species2_match, path.Base(in_species2_match), "out_"+species2+"_gap_doNotCalculate.bed", 1)
+	out_species1_doNotCalculate_filename := strings.Replace(in_species1_match, "match", "gap_doNotCalculate", 1)
+	out_species2_doNotCalculate_filename := strings.Replace(in_species2_match, "match", "gap_doNotCalculate", 1)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
 	out_species1_doNotCalculate := fileio.EasyCreate(out_species1_doNotCalculate_filename)
