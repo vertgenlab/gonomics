@@ -269,6 +269,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			// both species alignment
 			bestScore = int64(-600*1 + (-150)*(species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart - 1)) // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
 			aln = []align.Cigar{align.Cigar{RunLength: int64(species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart), Op: align.ColD}} // without calling alignment function, directly write alignment cigar
+			fmt.Printf("species1_Insertion. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species2_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
 			bed.WriteBed(out_species1, species1_gap_bed[i])
@@ -278,6 +279,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			// both species alignment
 			bestScore = int64(-600*1 + (-150)*(species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart - 1)) // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
 			aln = []align.Cigar{align.Cigar{RunLength: int64(species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart), Op: align.ColI}} // without calling alignment function, directly write alignment cigar
+			fmt.Printf("species2_Insertion. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species2_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
 			bed.WriteBed(out_species2, current_species2)
@@ -301,6 +303,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 
 			// write to output file
 			// both species alignment
+			fmt.Printf("else. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species1_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
 			chr_species1 = species1_gap_bed[i].Chrom
@@ -312,16 +315,19 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 				case align.ColM:
 					current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Match", FieldsInitialized: 4}
 					current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Match", FieldsInitialized: 4}
+					fmt.Printf("else ColM. current_species1: %v, current_species2: %v\n", current_species1, current_species2) //TODO: remove after debugging
 					bed.WriteBed(out_species1, current_species1)
 					bed.WriteBed(out_species2, current_species2)
 					pos_species1 += int(aln[j].RunLength)
 					pos_species2 += int(aln[j].RunLength)
 				case align.ColI:
 					current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Insertion", FieldsInitialized: 4}
+					fmt.Printf("else ColI. current_species1: %v, current_species2: %v\n", current_species1, current_species2) //TODO: remove after debugging
 					bed.WriteBed(out_species2, current_species2)
 					pos_species2 += int(aln[j].RunLength)
 				case align.ColD:
 					current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Insertion", FieldsInitialized: 4}
+					fmt.Printf("else ColD. current_species1: %v, current_species2: %v\n", current_species1, current_species2) //TODO: remove after debugging
 					bed.WriteBed(out_species1, current_species1)
 					pos_species1 += int(aln[j].RunLength)
 				default:
@@ -368,7 +374,8 @@ func usage() {
 }
 
 func main() {
-	var expectedNum int = 5
+	//var expectedNum int = 5 //TODO: uncomment after deugging
+	var expectedNum int = 4 //TODO: remove after debugging
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -379,12 +386,20 @@ func main() {
 		log.Fatalf("error, expecting 5 command line arguments, only found %d\n", len(flag.Args()))
 	}
 
+	/* //TODO: uncomment block after debugging
 	in_maf := flag.Arg(0)
 	species1 := flag.Arg(1)
 	species2 := flag.Arg(2)
 	species1_genome := flag.Arg(3)
 	species2_genome := flag.Arg(4)
 	gapSizeProductLimit := 10000000000 // gapSizeProductLimit is currently hardcoded based on align/affineGap tests, 10000000000
+	*/
+	//TODO: remove block after debugging
+	in_species1_gap := flag.Arg(0)
+	in_species2_gap := flag.Arg(1)
+	species1_genome := flag.Arg(2)
+	species2_genome := flag.Arg(3)
 
-	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit)
+	//globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit) //TODO: uncomment after debugging
+	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome) //TODO: remove after debugging
 }
