@@ -42,8 +42,10 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 
 	if (species1_gapSize > 0 && species2_gapSize == 0) { // insertion in species1, no need for alignment
 		species1_Name = "species1_Insertion"
+		species2_Name = "species2_gap_size0"
 	} else if (species1_gapSize == 0 && species2_gapSize > 0) { // insertion in species2, no need for alignment
 		species2_Name = "species2_Insertion"
+		species1_Name = "species1_gap_size0"
 	} else if !(species1_gapSize > 0 && species2_gapSize > 0) { // need to check, otherwise may have chromEnd<chromStart, leading to gapSize<0
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
@@ -272,7 +274,11 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			fmt.Printf("species1_Insertion. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species2_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
-			bed.WriteBed(out_species1, species1_gap_bed[i])
+			chr_species1 = species1_gap_bed[i].Chrom
+			pos_species1 = species1_gap_bed[i].ChromStart
+			current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: species1_gap_bed[i].ChromEnd, Name: species1_gap_bed[i].Name, FieldsInitialized: 4} // TODO: it seems redundant to write out current_species1 which is identical to species1_gap_bed[i], but it seems like I need to write out FieldsInitialized, otherwise will get error
+			bed.WriteBed(out_species1, current_species1)
+			pos_species1 += (species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart)
 
 		} else if species2_gap_bed[i].Name == "species2_Insertion" {
 			// directly write to output file
@@ -282,7 +288,11 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			fmt.Printf("species2_Insertion. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species2_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
+			chr_species2 = species2_gap_bed[i].Chrom
+			pos_species2 = species2_gap_bed[i].ChromStart
+			current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: species2_gap_bed[i].ChromEnd, Name: species2_gap_bed[i].Name, FieldsInitialized: 4} // TODO: it seems redundant to write out current_species1 which is identical to species1_gap_bed[i], but it seems like I need to write out FieldsInitialized, otherwise will get error
 			bed.WriteBed(out_species2, current_species2)
+			pos_species2 += (species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart)
 
 		} else {
 			// obtain sequences from the genome. To convert bed region (1-based, [closed,open)) to fasta index (0-based, [closed,closed]), subtract 1 from both ChromStart and ChromEnd.
