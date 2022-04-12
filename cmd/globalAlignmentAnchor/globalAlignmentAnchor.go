@@ -40,10 +40,10 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		gapSizeMultiple = float64(species2_gapSize / species1_gapSize)
 	}
 
-	if (species1_gapSize > 0 && species2_gapSize == 0) { // insertion in species1, no need for alignment
+	if species1_gapSize > 0 && species2_gapSize == 0 { // insertion in species1, no need for alignment
 		species1_Name = "species1_Insertion"
 		species2_Name = "species2_gap_size0"
-	} else if (species1_gapSize == 0 && species2_gapSize > 0) { // insertion in species2, no need for alignment
+	} else if species1_gapSize == 0 && species2_gapSize > 0 { // insertion in species2, no need for alignment
 		species2_Name = "species2_Insertion"
 		species1_Name = "species1_gap_size0"
 	} else if !(species1_gapSize > 0 && species2_gapSize > 0) { // need to check, otherwise may have chromEnd<chromStart, leading to gapSize<0
@@ -269,8 +269,8 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 		if species1_gap_bed[i].Name == "species1_Insertion" {
 			// directly write to output file
 			// both species alignment
-			bestScore = int64(-600*1 + (-150)*(species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart - 1)) // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
-			aln = []align.Cigar{align.Cigar{RunLength: int64(species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart), Op: align.ColD}} // without calling alignment function, directly write alignment cigar
+			bestScore = int64(-600*1 + (-150)*(species1_gap_bed[i].ChromEnd-species1_gap_bed[i].ChromStart-1))                     // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
+			aln = []align.Cigar{{RunLength: int64(species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart), Op: align.ColD}} // without calling alignment function, directly write alignment cigar
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
 			chr_species1 = species1_gap_bed[i].Chrom
@@ -281,8 +281,8 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 		} else if species2_gap_bed[i].Name == "species2_Insertion" {
 			// directly write to output file
 			// both species alignment
-			bestScore = int64(-600*1 + (-150)*(species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart - 1)) // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
-			aln = []align.Cigar{align.Cigar{RunLength: int64(species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart), Op: align.ColI}} // without calling alignment function, directly write alignment cigar
+			bestScore = int64(-600*1 + (-150)*(species2_gap_bed[i].ChromEnd-species2_gap_bed[i].ChromStart-1))                     // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
+			aln = []align.Cigar{{RunLength: int64(species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart), Op: align.ColI}} // without calling alignment function, directly write alignment cigar
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
 			chr_species2 = species2_gap_bed[i].Chrom
