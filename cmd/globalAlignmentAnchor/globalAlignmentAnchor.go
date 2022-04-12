@@ -274,9 +274,9 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			fmt.Printf("species1_Insertion. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species2_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
+			chr_species1 = species1_gap_bed[i].Chrom
+			pos_species1 = species1_gap_bed[i].ChromStart
 			//TODO: remove block below if new code works
-			//chr_species1 = species1_gap_bed[i].Chrom
-			//pos_species1 = species1_gap_bed[i].ChromStart
 			//current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: species1_gap_bed[i].ChromEnd, Name: species1_gap_bed[i].Name, FieldsInitialized: 4} // TODO: it seems redundant to write out current_species1 which is identical to species1_gap_bed[i], but it seems like I need to write out FieldsInitialized, otherwise will get error
 			//bed.WriteBed(out_species1, current_species1)
 			bed.WriteBed(out_species1, species1_gap_bed[i])
@@ -290,9 +290,9 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			fmt.Printf("species2_Insertion. species1_gap_bed[i]: %v, FieldsInitialized: %v, species2_gap_bed[i]: %v, FieldsInitialized: %v, bestScore: %v, aln: %v\n", species1_gap_bed[i], species1_gap_bed[i].FieldsInitialized, species2_gap_bed[i], species2_gap_bed[i].FieldsInitialized, bestScore, aln) //TODO: remove after debugging
 			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
 			// species1 and species2 alignment files
+			chr_species2 = species2_gap_bed[i].Chrom
+			pos_species2 = species2_gap_bed[i].ChromStart
 			//TODO: remove block below if new code works
-			//chr_species2 = species2_gap_bed[i].Chrom
-			//pos_species2 = species2_gap_bed[i].ChromStart
 			//current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: species2_gap_bed[i].ChromEnd, Name: species2_gap_bed[i].Name, FieldsInitialized: 4} // TODO: it seems redundant to write out current_species1 which is identical to species1_gap_bed[i], but it seems like I need to write out FieldsInitialized, otherwise will get error
 			//bed.WriteBed(out_species2, current_species2)
 			bed.WriteBed(out_species2, species2_gap_bed[i])
