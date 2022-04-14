@@ -13,12 +13,13 @@ import (
 
 type slurmCheckArray struct {
 	begin		string // whatever is in front of the squiggles
-	outToCheck	string // this will be what's inside the squiggles
+	outToCheck	string // this is the file to be checked
+	checkType	string // this is the code for how we check the output files
 	end			string // whatever is after the squiggles
 }
 
 
-//input is a fancy file
+//parseTheInput parses each line of the input file
 func parseTheInput (slurmArrayFancy string) [] slurmCheckArray {
 	inFancy := fileio.EasyOpen(slurmArrayFancy)
 	var slurmArray [] slurmCheckArray
@@ -27,7 +28,12 @@ func parseTheInput (slurmArrayFancy string) [] slurmCheckArray {
 	var line 		string
 
 	for line, doneReading = fileio.EasyNextLine(inFancy); !doneReading; line, doneReading = fileio.EasyNextLine(inFancy){
-		currentLine := processFancySlurmLine (line)
+
+		// fatal if there is an empty line in the file.
+		if len(line) == 0 {
+			log.Fatal("empty line in file, please remove and rerun.")
+		}
+		currentLine := processFancySlurmLine(line)
 		slurmArray = append(slurmArray, currentLine)
 	}
 
@@ -37,21 +43,84 @@ func parseTheInput (slurmArrayFancy string) [] slurmCheckArray {
 }
 
 
-
+// processFancySlurmLine is a helper function to parseTheInput
 func processFancySlurmLine(lineToProcess string) slurmCheckArray {
 	var slurmLineParsed slurmCheckArray
-	//fmt.Printf("lineToProcess is : %s \n", lineToProcess)
-	parsedFirstSquiggle := strings.Split(lineToProcess, "{")
-	// parsedFirstSquiggle = stuff + out } end
+	var parsedFirstSquiggle, parsedSecondSquiggle []string
+
+	//parse on the first squiggle into a slice of strings
+	parsedFirstSquiggle = strings.Split(lineToProcess, "{")
 	slurmLineParsed.begin = parsedFirstSquiggle[0]
-	parsedSecondSquiggle := strings.Split(parsedFirstSquiggle[1], "}")
-	// parsedSecondSquiggle = out + end
-	parsedSecondSquiggle[0] = slurmLineParsed.outToCheck
-	fmt.Printf("parsedFirstSquiggle[0] is: %s \n", parsedSecondSquiggle[0])
-	//parsedSecondSquiggle[1] = slurmLineParsed.end
+
+	//parse on the second squiggle into a slice of strings
+	parsedSecondSquiggle = strings.Split(parsedFirstSquiggle[1], "}")
+
+	//separate the string into "words" aka fields. White space defined the boundary of each field
+	fields := strings.Fields(parsedSecondSquiggle[0])
+
+	//third field will be the type of check to perform
+	slurmLineParsed.checkType = fields[2]
+
+	//fourth field is the output file we will be checking
+	slurmLineParsed.outToCheck = fields[3]
+
+	slurmLineParsed.end = parsedSecondSquiggle[1]
 
 	return slurmLineParsed
 }
+
+//TODO
+// next; parse the out in the struct to handle the "line +" ?
+// make function for creating the sbatch text file
+// make function that communicates with terminal to run the sbatch and array on slurm
+// make function that handles the line+ option; how to check that file exists? non empty? end in newline?
+//				likely these will all be separate functions.
+// make function creates a new fancy array file based on whichever didnt run properly the first time
+
+
+func usage () {
+	fmt.Print(
+		"slurmCheck - Used to check for completion of SLURM job arrays. Takes in a 'fancy' version of a job array text file.\n" +
+			"Outputs a new fancy version of a job array text file with all jobs that did NOT meet the user specified\n" +
+			"check.\n" +
+			"The four types of checks:\n" +
+			"'exists'\tfile must exist\n" +
+			"'exists+'\tfile must exist and be non-empty\n" +
+			"'line'\t\tfile must end with a complete line\n" +
+			"'line+'\t\tfile must end with a complete line and be non-empty\n" +
+			"Usage:\n" +
+				"inputFancyJobArrayFile.txt\n")
+	flag.PrintDefaults()
+}
+
+func main() {
+	var expectedNumArgs = 1
+	flag.Usage = usage
+	flag.Parse()
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+	}
+	slurmArrayFancy := flag.Arg(0)
+	var parsed []slurmCheckArray
+	parsed = parseTheInput(slurmArrayFancy)
+	begin := parsed[0].begin
+	out := parsed[0].outToCheck
+	check := parsed[0].checkType
+	end := parsed[0].end
+	fmt.Printf("begin: %s \n out: %s \n check: %s \n end: %s \n", begin, out, check, end)
+}
+
+
+// Code I'm holding:
+
+/*
+	var test string
+	asRunes := []rune(parsedSecondSquiggle[0])
+	length := len(asRunes)
+	test = string(asRunes[10:length])
+	fmt.Printf("test is: %s \n", test)
+*/
 
 /*
 // make function for creating the normal slurm array file
@@ -70,52 +139,9 @@ func makeNormalArrayFile (slurmArrayFancy string, slurmArray [] slurmCheckArray)
 	exception.PanicOnErr(err)
 }
 
-
-
 func WriteToFileHandle(file io.Writer, rec lastzArrayStruct) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)
 	exception.PanicOnErr(err)
 }
 */
-
-// make function for creating the sbatch text file
-// make function(s) that checks for the line+ in the .out field
-// make function that communicates with terminal to run the sbatch and array on slurm
-// make function that handles the line+ option; how to check that file exists? non empty? end in newline?
-//				likely these will all be separate functions.
-// make function that handles the line+ output to create a new array file and new sbatch script file. this can iterate over until the line+
-//			output is zero.
-
-
-func usage () {
-	fmt.Print(
-		"ZZZ - used to check for completion of SLURM job arrays. Takes in a fancy version of a job array text file. ZZZ")
-	flag.PrintDefaults()
-}
-
-func main() {
-	var expectedNumArgs = 1
-	flag.Usage = usage
-	flag.Parse()
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-	}
-	slurmArrayFancy := flag.Arg(0)
-	parsed := parseTheInput(slurmArrayFancy)
-	//out := parsed[0].outToCheck
-	//fmt.Printf("outFile: %s", out)
-	begin := parsed[0].begin
-	fmt.Printf("begin: %s", begin)
-}
-
-/*
-No new lines in the actual lastzWriter output
-/hpc/group/vertgenlab/softwareShared/lastz-master/src/lastz
-{check in line+ /hpc/group/vertgenlab/vertebrateConservation/pairwise/hg38.byChrom/chr10.fa}
-{check in line + /hpc/group/vertgenlab/vertebrateConservation/pairwise/mm39.byChrom/chr5.fa}
---output={check out line+ /hpc/group/vertgenlab/vertebrateConservation/pairwise/hg38.mm39/chr10/chr5.chr10.axt}
---scores=/data/lowelab/RefGenomes/hg38/lastzFiles/human_chimp_v2.mat
---format=axt O=600 E=150 T=2 M=254 K=4500 L=4500 Y=15000
- */
