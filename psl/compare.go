@@ -1,7 +1,7 @@
 package psl
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
+	"golang.org/x/exp/slices"
 )
 
 // Equal will check two psl structs and compare every single field of data to determine if they are the same.
@@ -57,13 +57,13 @@ func Equal(x, y Psl) bool {
 	if x.BlockCount != y.BlockCount {
 		return false
 	}
-	if !numbers.EqualSliceInt(x.BlockSize, y.BlockSize) {
+	if !slices.Equal(x.BlockSize, y.BlockSize) {
 		return false
 	}
-	if !numbers.EqualSliceInt(x.QList, y.QList) {
+	if !slices.Equal(x.QList, y.QList) {
 		return false
 	}
-	if !numbers.EqualSliceInt(x.TList, y.TList) {
+	if !slices.Equal(x.TList, y.TList) {
 		return false
 	}
 	return true

@@ -1,30 +1,42 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
+	"math/rand"
+	"sort"
 	"testing"
 )
 
-//TODO: add test function for each data type
-func TestExternalMergeSort(t *testing.T) {
-	ExternalMergeSort("testdata/test.vcf", 100, "tmp", "sorted.vcf", "byGenomicCoordinates")
-	sorted, _ := vcf.Read("sorted.vcf")
-	var test vcf.ByGenomicCoordinates
-	test.VcfSlice = convertToPtr(sorted)
-	for i := 1; i < len(sorted); i++ {
-		if !test.Less(i-1, i) {
-			t.Errorf("ERROR: Problem with external merge sort of vcf files: \n %v \n is not less than \n %v", sorted[i-1], sorted[i])
-		}
-	}
-	fileio.EasyRemove("sorted.vcf")
-}
+func TestMergeSort(t *testing.T) {
+	rand.Seed(1)
+	vcfs, _ := vcf.Read("testdata/test.vcf")
+	data := make(chan vcf.Vcf, len(vcfs))
+	rand.Shuffle(len(vcfs), func(i, j int) {
+		vcfs[i], vcfs[j] = vcfs[j], vcfs[i]
+	})
 
-//TODO remove this function once interval is updated
-func convertToPtr(v []vcf.Vcf) []*vcf.Vcf {
-	answer := make([]*vcf.Vcf, len(v))
-	for i := range v {
-		answer[i] = &v[i]
+	for i := range vcfs {
+		data <- vcfs[i]
 	}
-	return answer
+	close(data)
+
+	out := GoExternalMergeSort[vcf.Vcf](data, 5, func(a, b vcf.Vcf) bool {
+		return a.Pos < b.Pos
+	})
+
+	answer := make([]vcf.Vcf, 0, len(vcfs))
+	for v := range out {
+		answer = append(answer, v)
+	}
+
+	if len(answer) != len(vcfs) {
+		t.Error("problem with mergeSort")
+	}
+
+	sort.Slice(vcfs, func(i, j int) bool {
+		return vcfs[i].Pos < vcfs[j].Pos
+	})
+	if !vcf.AllEqual(vcfs, answer) {
+		t.Error("problem with mergeSort")
+	}
 }
