@@ -9,15 +9,15 @@ import (
 )
 
 var SlurmGeneralizedCheckTests = []struct {
-	inputFancyFile					string
-	actualOutputParseTheInput		string
-	expectedOutputParseTheInput		string
-} {
+	inputFancyFile              string
+	actualOutputParseTheInput   string
+	expectedOutputParseTheInput string
+}{
 	{"testdata/inputFancyFile.txt", "testdata/actualOutputParseTheInput.txt", "testdata/expectedOutputParseTheInput.txt"},
 }
 
 func TestParseTheInput(t *testing.T) {
-	for _,v := range SlurmGeneralizedCheckTests {
+	for _, v := range SlurmGeneralizedCheckTests {
 		parsed := parseTheInput(v.inputFancyFile)
 		begin := parsed[0].begin
 		out := parsed[0].outToCheck
@@ -28,7 +28,7 @@ func TestParseTheInput(t *testing.T) {
 			fmt.Println(err)
 			return
 		}
-		fmt.Fprintf(actual,"begin: %s \n out: %s \n check: %s \n end: %s \n", begin, out, check, end)
+		fmt.Fprintf(actual, "begin: %s \n out: %s \n check: %s \n end: %s \n", begin, out, check, end)
 		if !fileio.AreEqual(v.actualOutputParseTheInput, v.expectedOutputParseTheInput) {
 			t.Errorf("Error in slurmGeneralizedCheck, expected %s, actual %s", v.expectedOutputParseTheInput, v.actualOutputParseTheInput)
 		} else {

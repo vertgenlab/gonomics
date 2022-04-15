@@ -12,22 +12,21 @@ import (
 )
 
 type slurmCheckArray struct {
-	begin		string // whatever is in front of the squiggles
-	outToCheck	string // this is the file to be checked
-	checkType	string // this is the code for how we check the output files
-	end			string // whatever is after the squiggles
+	begin      string // whatever is in front of the squiggles
+	outToCheck string // this is the file to be checked
+	checkType  string // this is the code for how we check the output files
+	end        string // whatever is after the squiggles
 }
 
-
 //parseTheInput parses each line of the input file
-func parseTheInput (slurmArrayFancy string) [] slurmCheckArray {
+func parseTheInput(slurmArrayFancy string) []slurmCheckArray {
 	inFancy := fileio.EasyOpen(slurmArrayFancy)
-	var slurmArray [] slurmCheckArray
+	var slurmArray []slurmCheckArray
 	var doneReading bool
-	var err			error
-	var line 		string
+	var err error
+	var line string
 
-	for line, doneReading = fileio.EasyNextLine(inFancy); !doneReading; line, doneReading = fileio.EasyNextLine(inFancy){
+	for line, doneReading = fileio.EasyNextLine(inFancy); !doneReading; line, doneReading = fileio.EasyNextLine(inFancy) {
 
 		// fatal if there is an empty line in the file.
 		if len(line) == 0 {
@@ -41,7 +40,6 @@ func parseTheInput (slurmArrayFancy string) [] slurmCheckArray {
 	exception.PanicOnErr(err)
 	return slurmArray
 }
-
 
 // processFancySlurmLine is a helper function to parseTheInput
 func processFancySlurmLine(lineToProcess string) slurmCheckArray {
@@ -77,8 +75,7 @@ func processFancySlurmLine(lineToProcess string) slurmCheckArray {
 //				likely these will all be separate functions.
 // make function creates a new fancy array file based on whichever didnt run properly the first time
 
-
-func usage () {
+func usage() {
 	fmt.Print(
 		"slurmCheck - Used to check for completion of SLURM job arrays. Takes in a 'fancy' version of a job array text file.\n" +
 			"Outputs a new fancy version of a job array text file with all jobs that did NOT meet the user specified\n" +
@@ -89,7 +86,7 @@ func usage () {
 			"'line'\t\tfile must end with a complete line\n" +
 			"'line+'\t\tfile must end with a complete line and be non-empty\n" +
 			"Usage:\n" +
-				"inputFancyJobArrayFile.txt\n")
+			"inputFancyJobArrayFile.txt\n")
 	flag.PrintDefaults()
 }
 
@@ -110,7 +107,6 @@ func main() {
 	end := parsed[0].end
 	fmt.Printf("begin: %s \n out: %s \n check: %s \n end: %s \n", begin, out, check, end)
 }
-
 
 // Code I'm holding:
 
