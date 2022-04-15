@@ -32,10 +32,21 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 	species2_Name := "species2_gap"
 	species1_gapSize := species1_ChromEnd - species1_ChromStart
 	species2_gapSize := species2_ChromEnd - species2_ChromStart
-	gapSizeMultiple := float64(species2_gapSize / species1_gapSize)
+	gapSizeMultiple := 0.0
 	gapSizeMultipleLimit := 100.00 //gapSizeMultipleLimit is currently hardcoded tentatively, 100
 	gapSizeProduct := species1_gapSize * species2_gapSize
-	if !(species1_ChromStart < species1_ChromEnd && species2_ChromStart < species2_ChromEnd) { // need to check first, otherwise may have chromEnd==chromStart, leading to gapSize==0 in the denominator of gapSizeMultiple
+
+	if species1_gapSize != 0 {
+		gapSizeMultiple = float64(species2_gapSize / species1_gapSize)
+	}
+
+	if species1_gapSize > 0 && species2_gapSize == 0 { // insertion in species1, no need for alignment
+		species1_Name = "species1_Insertion"
+		species2_Name = "species2_gap_size0"
+	} else if species1_gapSize == 0 && species2_gapSize > 0 { // insertion in species2, no need for alignment
+		species2_Name = "species2_Insertion"
+		species1_Name = "species1_gap_size0"
+	} else if !(species1_gapSize > 0 && species2_gapSize > 0) { // need to check, otherwise may have chromEnd<chromStart, leading to gapSize<0
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
@@ -126,8 +137,8 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	// open output files to write line-by-line and create variable for error
 	out_species1_filename := strings.Replace(in_species1_match, "match", "gap", 1)
 	out_species2_filename := strings.Replace(in_species2_match, "match", "gap", 1)
-	out_species1_doNotCalculate_filename := strings.Replace(in_species1_match, path.Base(in_species1_match), "out_"+species1+"_gap_doNotCalculate.bed", 1)
-	out_species2_doNotCalculate_filename := strings.Replace(in_species2_match, path.Base(in_species2_match), "out_"+species2+"_gap_doNotCalculate.bed", 1)
+	out_species1_doNotCalculate_filename := strings.Replace(in_species1_match, "match", "gap_doNotCalculate", 1)
+	out_species2_doNotCalculate_filename := strings.Replace(in_species2_match, "match", "gap_doNotCalculate", 1)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
 	out_species1_doNotCalculate := fileio.EasyCreate(out_species1_doNotCalculate_filename)
@@ -248,52 +259,82 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	pos_species2 := 1
 	// containers for entries to write to ouput bed files
 	var current_species1, current_species2 bed.Bed
+	// containers for alignment outputs
+	var bestScore int64
+	var aln []align.Cigar
 
 	// loop through input gap beds
 	for i := range species1_gap_bed {
-		// obtain sequences from the genome. To convert bed region (1-based, [closed,open)) to fasta index (0-based, [closed,closed]), subtract 1 from both ChromStart and ChromEnd.
-		species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][(species1_gap_bed[i].ChromStart - 1):(species1_gap_bed[i].ChromEnd - 1)]
-		dna.AllToUpper(species1_seq) // convert all bases to uppercase, otherwise get index out of range error in scoring matrix
-		species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][(species2_gap_bed[i].ChromStart - 1):(species2_gap_bed[i].ChromEnd - 1)]
-		dna.AllToUpper(species2_seq)
+		// detect for insertions that don't need alignment
+		if species1_gap_bed[i].Name == "species1_Insertion" {
+			// directly write to output file
+			// both species alignment
+			bestScore = int64(-600*1 + (-150)*(species1_gap_bed[i].ChromEnd-species1_gap_bed[i].ChromStart-1))                     // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
+			aln = []align.Cigar{{RunLength: int64(species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart), Op: align.ColD}} // without calling alignment function, directly write alignment cigar
+			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
+			// species1 and species2 alignment files
+			chr_species1 = species1_gap_bed[i].Chrom
+			pos_species1 = species1_gap_bed[i].ChromStart
+			bed.WriteBed(out_species1, species1_gap_bed[i])
+			pos_species1 += (species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart)
 
-		// align with affineGap, customizeCheckersize, HumanChimpTwoScoreMatrix
-		bestScore, aln := align.AffineGap_customizeCheckersize(species1_seq, species2_seq, align.HumanChimpTwoScoreMatrix, -600, -150, 10000, 10000)
+		} else if species2_gap_bed[i].Name == "species2_Insertion" {
+			// directly write to output file
+			// both species alignment
+			bestScore = int64(-600*1 + (-150)*(species2_gap_bed[i].ChromEnd-species2_gap_bed[i].ChromStart-1))                     // without calling alignment function, directly calculate bestScore using gap Open and Extend penalties
+			aln = []align.Cigar{{RunLength: int64(species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart), Op: align.ColI}} // without calling alignment function, directly write alignment cigar
+			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
+			// species1 and species2 alignment files
+			chr_species2 = species2_gap_bed[i].Chrom
+			pos_species2 = species2_gap_bed[i].ChromStart
+			bed.WriteBed(out_species2, species2_gap_bed[i])
+			pos_species2 += (species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart)
 
-		// optional: print results to terminal
-		// print alignment score, cigar
-		//fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
-		// visualize
-		//visualize := align.View(species1_seq, species2_seq, aln)
-		//fmt.Println(visualize)
+		} else {
+			// obtain sequences from the genome. To convert bed region (1-based, [closed,open)) to fasta index (0-based, [closed,closed]), subtract 1 from both ChromStart and ChromEnd.
+			species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][(species1_gap_bed[i].ChromStart - 1):(species1_gap_bed[i].ChromEnd - 1)]
+			dna.AllToUpper(species1_seq) // convert all bases to uppercase, otherwise get index out of range error in scoring matrix
+			species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][(species2_gap_bed[i].ChromStart - 1):(species2_gap_bed[i].ChromEnd - 1)]
+			dna.AllToUpper(species2_seq)
 
-		// write to output file
-		// both species alignment
-		writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
-		// species1 and species2 algnment files
-		chr_species1 = species1_gap_bed[i].Chrom
-		chr_species2 = species2_gap_bed[i].Chrom
-		pos_species1 = species1_gap_bed[i].ChromStart
-		pos_species2 = species2_gap_bed[i].ChromStart
-		for j := 0; j < len(aln); j++ {
-			switch aln[j].Op {
-			case align.ColM:
-				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Match", FieldsInitialized: 4}
-				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Match", FieldsInitialized: 4}
-				bed.WriteBed(out_species1, current_species1)
-				bed.WriteBed(out_species2, current_species2)
-				pos_species1 += int(aln[j].RunLength)
-				pos_species2 += int(aln[j].RunLength)
-			case align.ColI:
-				current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Insertion", FieldsInitialized: 4}
-				bed.WriteBed(out_species2, current_species2)
-				pos_species2 += int(aln[j].RunLength)
-			case align.ColD:
-				current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Insertion", FieldsInitialized: 4}
-				bed.WriteBed(out_species1, current_species1)
-				pos_species1 += int(aln[j].RunLength)
-			default:
-				log.Fatalf("Unexpected cigar parsing.")
+			// align with affineGap, customizeCheckersize, HumanChimpTwoScoreMatrix
+			bestScore, aln = align.AffineGap_customizeCheckersize(species1_seq, species2_seq, align.HumanChimpTwoScoreMatrix, -600, -150, 10000, 10000)
+
+			// optional: print results to terminal
+			// print alignment score, cigar
+			//fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
+			// visualize
+			//visualize := align.View(species1_seq, species2_seq, aln)
+			//fmt.Println(visualize)
+
+			// write to output file
+			// both species alignment
+			writeToFileHandle(out_alignment, species1_gap_bed[i], species2_gap_bed[i], bestScore, aln)
+			// species1 and species2 alignment files
+			chr_species1 = species1_gap_bed[i].Chrom
+			chr_species2 = species2_gap_bed[i].Chrom
+			pos_species1 = species1_gap_bed[i].ChromStart
+			pos_species2 = species2_gap_bed[i].ChromStart
+			for j := 0; j < len(aln); j++ {
+				switch aln[j].Op {
+				case align.ColM:
+					current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Match", FieldsInitialized: 4}
+					current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Match", FieldsInitialized: 4}
+					bed.WriteBed(out_species1, current_species1)
+					bed.WriteBed(out_species2, current_species2)
+					pos_species1 += int(aln[j].RunLength)
+					pos_species2 += int(aln[j].RunLength)
+				case align.ColI:
+					current_species2 = bed.Bed{Chrom: chr_species2, ChromStart: pos_species2, ChromEnd: pos_species2 + int(aln[j].RunLength), Name: "species2_Insertion", FieldsInitialized: 4}
+					bed.WriteBed(out_species2, current_species2)
+					pos_species2 += int(aln[j].RunLength)
+				case align.ColD:
+					current_species1 = bed.Bed{Chrom: chr_species1, ChromStart: pos_species1, ChromEnd: pos_species1 + int(aln[j].RunLength), Name: "species1_Insertion", FieldsInitialized: 4}
+					bed.WriteBed(out_species1, current_species1)
+					pos_species1 += int(aln[j].RunLength)
+				default:
+					log.Fatalf("Unexpected cigar parsing.")
+				}
 			}
 		}
 	}
