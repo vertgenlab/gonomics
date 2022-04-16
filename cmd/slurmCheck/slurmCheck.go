@@ -86,7 +86,7 @@ func usage() {
 			"'line'\t\tfile must end with a complete line\n" +
 			"'line+'\t\tfile must end with a complete line and be non-empty\n" +
 			"Usage:\n" +
-			"inputFancyJobArrayFile.txt\n")
+			"slurmCheck inputFancyJobArrayFile.txt\n")
 	flag.PrintDefaults()
 }
 
