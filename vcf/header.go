@@ -95,6 +95,15 @@ func ReadHeader(er *fileio.EasyReader) Header {
 	return parseHeader(headerText)
 }
 
+// SampleNamesInOrder takes in the header and gives back the sample names in the order in which they appear in the header
+func SampleNamesInOrder(header Header) []string {
+	var answer []string = make([]string, len(header.Samples))
+	for sampleName, idx := range header.Samples {
+		answer[idx] = sampleName
+	}
+	return answer
+}
+
 // newHeader allocates memory for a new vcf Header.
 func newHeader() Header {
 	var h Header

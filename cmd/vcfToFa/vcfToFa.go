@@ -77,13 +77,19 @@ func vcfToMultiFa(inVcfFilename string, inFaFilename string, outFaFilename strin
 	}
 	if useSamples {
 		sampleSeqIdxOffset = len(seqsOrdered)
-		for sampleName = range vcfHeader.Samples {
+		for _, sampleName = range vcf.SampleNamesInOrder(vcfHeader) {
+			//fmt.Printf("%s\n", sampleName) //debug
 			seqsOrdered = addAnotherCopyOfRef(seqsOrdered, sampleName)
 			if !haploid {
 				seqsOrdered = addAnotherCopyOfRef(seqsOrdered, sampleName+"_secondAllele")
 			}
 		}
 	}
+
+	/*
+		for z := range seqsOrdered { // debug
+			fmt.Printf("%s\n", seqsOrdered[z].Name)
+		}*/
 
 	for v := range vcfRecords {
 		//first a block of code to enforce sorted order.
