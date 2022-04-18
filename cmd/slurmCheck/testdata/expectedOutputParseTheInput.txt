@@ -1,0 +1,4 @@
+begin: /hpc/group/vertgenlab/softwareShared/lastz-master/src/lastz /hpc/group/vertgenlab/vertebrateConservation/pairwise/hg38.byChrom/chr10.fa /hpc/group/vertgenlab/vertebrateConservation/pairwise/mm39.byChrom/chr5.fa --output= 
+ out: /hpc/group/vertgenlab/vertebrateConservation/pairwise/hg38.mm39/chr10/chr5.chr10.axt 
+ check: line+ 
+ end:  --scores=/data/lowelab/RefGenomes/hg38/lastzFiles/human_chimp_v2.mat --format=axt O=600 E=150 T=2 M=254 K=4500 L=4500 Y=15000 
