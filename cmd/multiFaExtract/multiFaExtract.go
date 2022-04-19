@@ -15,30 +15,27 @@ func multiFaExtract(s Settings) {
 	var ans []fasta.Fasta
 	records := fasta.Read(s.InFile)
 	if s.Bed == "" {
-		if !(s.Start < s.End) {
-			log.Fatalf("Invalid arguments, start must be lower than end")
-		}
-		ans = extractMultiHelper(records, s.Start, s.End)
-		if s.RemoveGaps {
-			ans = fasta.RemoveGaps(ans)
-		}
+		ans = extractMultiHelper(records, s.Start, s.End, s.RemoveGaps)
 		fasta.Write(s.OutFile, ans)
 	} else {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
-			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd)
-			if s.RemoveGaps {
-				ans = fasta.RemoveGaps(ans)
-			}
+			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, s.RemoveGaps)
 			fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
 		}
 	}
 }
 
-func extractMultiHelper(records []fasta.Fasta, start int, end int) []fasta.Fasta {
+func extractMultiHelper(records []fasta.Fasta, start int, end int, removeGaps bool) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
+	if !(s.Start < s.End) {
+                   log.Fatalf("Invalid arguments, start must be lower than end. start=%d end=%d\n", start, end)
+        }
 	for i := range records {
 		ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+	}
+	if removeGaps {
+		ans = fasta.RemoveGaps(ans)
 	}
 	return ans
 }
@@ -50,6 +47,8 @@ func usage() {
 			"multiFaExtract multi.fa out.fa start end\n" +
 			"OR\n" +
 			"multiFaExtract -bed regions.bed multi.fa\n" +
+			"OR\n" +
+			"multiFaExtract -genes genes.gtf out.fa\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -60,6 +59,7 @@ type Settings struct {
 	Start      int
 	End        int
 	Bed        string
+	Genes	string
 	RemoveGaps bool
 }
 
@@ -83,6 +83,9 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	if *bed != "" && *genes != "" {
+		log.Fatal("Error: you can't give both a bed and a genes file.\n")
+	} else if *bed !=
 	if *bed == "" {
 		s = Settings{
 			InFile:     flag.Arg(0),
