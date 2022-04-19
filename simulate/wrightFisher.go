@@ -2,111 +2,86 @@ package simulate
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/popgen"
 )
 
 // Main function to be called in simulateWrightFisher
-func SimulateWrightFisher(popSize int, mutR float64, numGen int, genomeSize int, rFitness float64, gcContent float64, verbose int) []fasta.Fasta {
-	curFasta := make([]fasta.Fasta, popSize)
-	nextFasta := make([]fasta.Fasta, popSize)
-
-	ancestralAlleles := make([]dna.Base, genomeSize)
-	aFreqArray := make([]float64, genomeSize*4)
-
-	sumFreqFitArray := make([]float64, genomeSize)
-
-	samplingPQRS := make([]float64, 4) // Array containing allele frequencies for each allele at sampling (after selection)
-
-	//fmt.Println(byte(65) == 'A')
-	//fmt.Println(dna.ByteToBase(uint8(0)))
-	var i, t, b, p int
-	var r float64
-
-	// Randomly generate the initial sequence and copy to all individual in both curFasta and nextFasta
-	makeInitialPop(curFasta, nextFasta, popSize, genomeSize, gcContent)
-
-	relFitArray := makeFitnessArray(genomeSize, rFitness, curFasta[0].Seq)
-	copy(ancestralAlleles, curFasta[0].Seq)
-
-	for b = 0; b < genomeSize; b++ {
-		updateAlleleFreqArray(curFasta, b, aFreqArray)
-		updateSumFreqFitArray(b, relFitArray, aFreqArray, sumFreqFitArray)
+func SimulateWrightFisher(set popgen.WrightFisherSettings) popgen.WrightFisherPopData {
+	// Check if rFitness value is valid
+	if set.RFitness < 0 {
+		log.Fatalf("rFitness value must be greater or equal than zero. Found: %v.", set.RFitness)
 	}
 
-	// 1st loop through every generation
-	for t = 1; t < numGen; t++ {
+	if set.Verbose {
+		fmt.Printf(`Population Size = %v
+Genome Size = %v
+Number of Generations = %v
+Mutation Rate = %v
+Relative Fitness = %v
+GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFitness, set.GcContent)
+	}
+	// Randomly generate the initial sequence and copy to all individual in 2 fasta slices: curFasta and nextFasta
+	curFasta, nextFasta := makeInitialPop(set)
 
-		// 2nd loop through every base
-		for b = 0; b < genomeSize; b++ {
-
-			// Calculate the allele frequency post-selection based on original frequency and relative fitness
-			// sumFreqFitArray is the denominator that normalize the weighted frequency, rendering the sum of new frequencies = 1
-			for i = 0; i < 4; i++ {
-				samplingPQRS[i] = (aFreqArray[b*4+i] * relFitArray[b*4+1]) / (sumFreqFitArray[b])
-			}
-
-			// 3rd loop through every individual
-			for p = 0; p < popSize; p++ {
-				// Which chromosome from previous generation that pth individual inherits from?
-
-				r = rand.Float64()
-				if r < samplingPQRS[0] {
-					nextFasta[p].Seq[b] = dna.A
-				} else if r < sumSlice(samplingPQRS[0:2]) {
-					nextFasta[p].Seq[b] = dna.C
-				} else if r < sumSlice(samplingPQRS[0:3]) {
-					nextFasta[p].Seq[b] = dna.G
-				} else {
-					nextFasta[p].Seq[b] = dna.T
-				}
-
-				// If random float generated is less than mutation rate (mutR), mutate the base
-				if rand.Float64() < mutR {
-					nextFasta[p].Seq[b] = changeBase(nextFasta[p].Seq[b])
-				}
-
-			}
-			// This helper function only updates one position at a time
-			updateAlleleFreqArray(nextFasta, b, aFreqArray)
-			updateSumFreqFitArray(b, relFitArray, aFreqArray, sumFreqFitArray)
-		}
-
-		// Update the curFasta for the next generation to be nextFasta of this generation
-		curFasta, nextFasta = nextFasta, curFasta
+	if set.Verbose {
+		fmt.Printf("\nInitial sequence is\n%v\n", curFasta[0].Seq)
 	}
 
-	if verbose == 1 {
-		fmt.Println("Allele Frequency")
-		fmt.Println(aFreqArray)
-		fmt.Println("Relative Fitness Array")
-		fmt.Println(relFitArray)
-		fmt.Println("Sum Frequency * Fitness")
-		fmt.Println(sumFreqFitArray)
-		fmt.Println("Output Fasta")
-		fmt.Println(curFasta)
+	// Generate predetermined/stochastic relative fitness array based on fitness input value
+	relFitArray := makeFitnessArray(curFasta[0].Seq, set)
+
+	if set.Verbose {
+		fmt.Printf("Relative fitness landscape is\n%v\n", relFitArray)
 	}
 
-	return curFasta
+	// An array keeping track of allele frequencies of all possible allelic states of all sites of all generation
+	allFreq := makeAlleleFreqArray(curFasta, set)
+
+	// Store the ancestral allele for each site
+	ancestralAlleles := makeAncestralArray(curFasta[0].Seq, set)
+
+	simulateAllGeneration(curFasta, nextFasta, relFitArray, allFreq, set)
+
+	if set.Verbose {
+		fmt.Printf("Ancestral alleles are\n%v\n", ancestralAlleles)
+		fmt.Printf("Allele frequency landscape is\n%v\n", allFreq)
+		fmt.Printf("Output Fasta is\n%v\n", curFasta)
+	}
+
+	wf := popgen.WrightFisherPopData{
+		Fasta:     curFasta,
+		Freq:      allFreq,
+		Settings:  set,
+		Ancestral: ancestralAlleles,
+	}
+
+	wf.Meta = makeMetadata(set)
+
+	return wf
 }
 
-func makeInitialPop(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, popSize int, genomeSize int, gcContent float64) {
-	var i int
+func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fasta) {
+	curFasta := make([]fasta.Fasta, set.PopSize)
+	nextFasta := make([]fasta.Fasta, set.PopSize)
+	initialSeq := RandIntergenicSeq(set.GcContent, set.GenomeSize)
 
-	initialSeq := RandIntergenicSeq(gcContent, genomeSize)
-
-	for i = 0; i < popSize; i++ {
+	for i := 0; i < set.PopSize; i++ {
 		curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
-		curFasta[i].Seq = make([]dna.Base, genomeSize)
+		curFasta[i].Seq = make([]dna.Base, set.GenomeSize)
 		copy(curFasta[i].Seq, initialSeq)
 
 		nextFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
-		nextFasta[i].Seq = make([]dna.Base, genomeSize)
+		nextFasta[i].Seq = make([]dna.Base, set.GenomeSize)
 		copy(nextFasta[i].Seq, initialSeq)
 	}
+
+	return curFasta, nextFasta
 }
 
 /*
@@ -115,57 +90,147 @@ func makeInitialPop(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, popSize int
  However, I implemented only one allocation for the slice with size nrow * ncol
  And to access relative fitness of C allele at position 3, call slice[4*3 + 1]
 */
-func makeFitnessArray(genomeSize int, rFitness float64, initSeq []dna.Base) []float64 {
-	answer := make([]float64, genomeSize*4)
+func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]float64 {
+	answer := make([][]float64, set.GenomeSize)
+	bases := [4]dna.Base{dna.A, dna.C, dna.G, dna.T}
 	var i, j int
 	//var r float64
 
-	bases := [4]dna.Base{dna.A, dna.C, dna.G, dna.T}
-
-	for i = 0; i < genomeSize; i++ {
+	for i = 0; i < set.GenomeSize; i++ {
+		answer[i] = make([]float64, 4)
 		for j = 0; j < 4; j++ {
 			if bases[j] == initSeq[i] { // check if this is ancestral allele
-				answer[i*4+j] = float64(1) // relative fitness of ancestral allele is always 1
+				answer[i][j] = float64(1) // relative fitness of ancestral allele is always 1
 			} else {
 				//r = rand.NormFloat64()*((rFitness-1)/3) + rFitness // this makes it that 3sd (99.7%) of generated fitness falls between the rFitness and 1
 				//answer[i*4+j] = r
-				answer[i*4+j] = rFitness
+				answer[i][j] = set.RFitness
 			}
 		}
 	}
 	return answer
 }
 
-/*
-This helper function updates the allele frequency array AFTER all new generation is sampled and has gone through meiosis (whether to have mutation or not)
-*/
-func updateAlleleFreqArray(curFasta []fasta.Fasta, pos int, aFreqArray []float64) {
-	var i int
-	var a, c, g, t float64
-	for i = 0; i < len(curFasta); i++ {
-		switch curFasta[i].Seq[pos] {
-		case dna.A:
-			a++
-		case dna.C:
-			c++
-		case dna.G:
-			g++
-		case dna.T:
-			t++
+func makeAlleleFreqArray(curFasta []fasta.Fasta, set popgen.WrightFisherSettings) [][][]float64 {
+	answer := make([][][]float64, set.NumGen+1)
+	var t, s int
+	for t = 0; t <= set.NumGen; t++ {
+		answer[t] = make([][]float64, set.GenomeSize)
+		for s = 0; s < set.GenomeSize; s++ {
+			answer[t][s] = make([]float64, 4)
 		}
+		updateFreqArray(curFasta, t, answer)
 	}
-
-	aFreqArray[pos*4+0] = a / float64(len(curFasta))
-	aFreqArray[pos*4+1] = c / float64(len(curFasta))
-	aFreqArray[pos*4+2] = g / float64(len(curFasta))
-	aFreqArray[pos*4+3] = t / float64(len(curFasta))
+	return answer
 }
 
-func updateSumFreqFitArray(pos int, relFitArray []float64, aFreqArray []float64, sumFreqFitArray []float64) {
-	sumFreqFitArray[pos] = aFreqArray[pos*4+0]*relFitArray[pos*4+0] +
-		aFreqArray[pos*4+1]*relFitArray[pos*4+1] +
-		aFreqArray[pos*4+2]*relFitArray[pos*4+2] +
-		aFreqArray[pos*4+3]*relFitArray[pos*4+3]
+func makeAncestralArray(initSeq []dna.Base, set popgen.WrightFisherSettings) []string {
+	answer := make([]string, set.GenomeSize)
+
+	for i := 0; i < set.GenomeSize; i++ {
+		answer[i] = dna.BaseToString(initSeq[i])
+	}
+	return answer
+}
+
+func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relFitArray [][]float64, allFreq [][][]float64, set popgen.WrightFisherSettings) {
+	var t, s, b, p int
+	var r float64
+	samplingPQRS := make([]float64, 4)
+	normFactorArray := make([]float64, set.GenomeSize)
+	updateNormFactorArray(0, relFitArray, allFreq, normFactorArray)
+
+	// The below for loop could be written in another helper function to make this function more readable
+	// 1st loop through every generation
+	for t = 1; t <= set.NumGen; t++ {
+
+		// 2nd loop through every base
+		for s = 0; s < set.GenomeSize; s++ {
+
+			// Calculate the allele frequency post-selection based on original frequency and relative fitness
+			// sumFreqFitArray is the denominator that normalize the weighted frequency, rendering the sum of new frequencies = 1
+			for b = 0; b < 4; b++ {
+				samplingPQRS[b] = (allFreq[t-1][s][b] * relFitArray[s][b]) / (normFactorArray[s])
+			}
+
+			// fmt.Printf("Before Sampling = \n%v\nAfter Sampling = \n%v\n", allFreq[t-1][s], samplingPQRS)
+
+			// 3rd loop through every individual
+			for p = 0; p < set.PopSize; p++ {
+				// Which chromosome from previous generation that pth individual inherits from?
+				r = rand.Float64()
+				if r < samplingPQRS[0] {
+					nextFasta[p].Seq[s] = dna.A
+				} else if r < sumSlice(samplingPQRS[0:2]) {
+					nextFasta[p].Seq[s] = dna.C
+				} else if r < sumSlice(samplingPQRS[0:3]) {
+					nextFasta[p].Seq[s] = dna.G
+				} else {
+					nextFasta[p].Seq[s] = dna.T
+				}
+
+				// If random float generated is less than mutation rate (mutR), mutate the base
+				if rand.Float64() < set.MutRate {
+					nextFasta[p].Seq[s] = changeBase(nextFasta[p].Seq[s])
+				}
+
+			}
+		}
+
+		// Update the curFasta for the next generation to be nextFasta of this generation
+		curFasta, nextFasta = nextFasta, curFasta
+		updateFreqArray(curFasta, t, allFreq)
+		updateNormFactorArray(t, relFitArray, allFreq, normFactorArray)
+	}
+}
+
+func updateFreqArray(curFasta []fasta.Fasta, gen int, allFreq [][][]float64) {
+	var a, c, g, t float64
+	popSize := float64(len(curFasta))
+
+	for s := 0; s < len(allFreq[gen]); s++ {
+		a, c, g, t = 0, 0, 0, 0
+		for i := 0; i < len(curFasta); i++ {
+			switch curFasta[i].Seq[s] {
+			case dna.A:
+				a++
+			case dna.C:
+				c++
+			case dna.G:
+				g++
+			case dna.T:
+				t++
+			}
+		}
+		allFreq[gen][s][0] = a / popSize
+		allFreq[gen][s][1] = c / popSize
+		allFreq[gen][s][2] = g / popSize
+		allFreq[gen][s][3] = t / popSize
+	}
+}
+
+/*
+This helper function updates the sum of weighted relative fitnesset. This value is used for updating new allele frequencies after selection.
+*/
+func updateNormFactorArray(gen int, relFitArray [][]float64, allFreq [][][]float64, normFactorArray []float64) {
+	for s := 0; s < len(normFactorArray); s++ {
+		normFactorArray[s] = allFreq[gen][s][0]*relFitArray[s][0] +
+			allFreq[gen][s][1]*relFitArray[s][1] +
+			allFreq[gen][s][2]*relFitArray[s][2] +
+			allFreq[gen][s][3]*relFitArray[s][3]
+	}
+}
+
+func makeMetadata(set popgen.WrightFisherSettings) []string {
+	meta := []string{
+		"##PopulationSize=" + fmt.Sprint(set.PopSize),
+		"NumGeneration=" + fmt.Sprint(set.NumGen),
+		"Replicates=" + fmt.Sprint(set.GenomeSize),
+		"MutationRate=" + strconv.FormatFloat(set.MutRate, 'g', 3, 64),
+		"RelativeFitness=" + strconv.FormatFloat(set.RFitness, 'f', 5, 64),
+	}
+
+	return meta
 }
 
 // Helper function that sums the elements in slice
