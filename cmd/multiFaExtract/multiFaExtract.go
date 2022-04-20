@@ -15,24 +15,28 @@ func multiFaExtract(s Settings) {
 	var ans []fasta.Fasta
 	records := fasta.Read(s.InFile)
 	if s.Bed == "" {
-		ans = extractMultiHelper(records, s.Start, s.End, s.RemoveGaps)
+		ans = extractMultiHelper(records, s.Start, s.End, s.RemoveGaps, false)
 		fasta.Write(s.OutFile, ans)
 	} else {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
-			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, s.RemoveGaps)
+			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, s.RemoveGaps, b.Strand == bed.Negative)
 			fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
 		}
 	}
 }
 
-func extractMultiHelper(records []fasta.Fasta, start int, end int, removeGaps bool) []fasta.Fasta {
+func extractMultiHelper(records []fasta.Fasta, start int, end int, removeGaps bool, revComp bool) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
-	if !(s.Start < s.End) {
-                   log.Fatalf("Invalid arguments, start must be lower than end. start=%d end=%d\n", start, end)
-        }
+	if !(start < end) {
+		log.Fatalf("Invalid arguments, start must be lower than end. start=%d end=%d\n", start, end)
+	}
 	for i := range records {
 		ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+		if revComp {
+			ans[i] = fasta.Copy(ans[i])
+			fasta.ReverseComplement(ans[i])
+		}
 	}
 	if removeGaps {
 		ans = fasta.RemoveGaps(ans)
@@ -59,7 +63,6 @@ type Settings struct {
 	Start      int
 	End        int
 	Bed        string
-	Genes	string
 	RemoveGaps bool
 }
 
@@ -83,9 +86,6 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	if *bed != "" && *genes != "" {
-		log.Fatal("Error: you can't give both a bed and a genes file.\n")
-	} else if *bed !=
 	if *bed == "" {
 		s = Settings{
 			InFile:     flag.Arg(0),

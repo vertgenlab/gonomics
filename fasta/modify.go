@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+func Copy(a Fasta) Fasta {
+	var ans Fasta
+	ans = Fasta{a.Name, make([]dna.Base, len(a.Seq))}
+	copy(ans.Seq, a.Seq)
+	return ans
+}
+
 // Remove fasta record with index i from slice of fasta.
 func Remove(slice []Fasta, i int) []Fasta {
 	return append(slice[:i], slice[i+1:]...)
