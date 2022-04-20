@@ -51,8 +51,6 @@ func usage() {
 			"multiFaExtract multi.fa out.fa start end\n" +
 			"OR\n" +
 			"multiFaExtract -bed regions.bed multi.fa\n" +
-			"OR\n" +
-			"multiFaExtract -genes genes.gtf out.fa\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
