@@ -20,8 +20,8 @@ var VcfToFaTests = []struct {
 }{
 	//{"testdata/testInput.vcf", "testdata/testInput.fa", "testdata/actual.fa", "testdata/expected.fa", true, false, ""},
 	//{"testdata/testInput.vcf", "testdata/testInput.fa", "testdata/actualNoAlt.fa", "testdata/testInput.fa", false, false, ""},//should just produce the input file.
-	//{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiNoAlt.fa", "testdata/expectedMultiNoAlt.fa", false, true, "chr1"},//should also produce the input file
-	//{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiAlt.fa", "testdata/expectedMultiAlt.fa", true, true, "chr1"},
+	{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiNoAlt.fa", "testdata/expectedMultiNoAlt.fa", false, true, true, true, "chr1"}, //should also produce the input file
+	{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiAlt.fa", "testdata/expectedMultiAlt.fa", true, false, false, true, "chr1"},
 	{"testdata/testMultiInput.vcf", "testdata/testMultiInput.fa", "testdata/actualMultiAltchr2.fa", "testdata/expectedMultiAltchr2.fa", true, false, false, true, "chr2"},
 }
 
