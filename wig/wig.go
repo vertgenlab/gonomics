@@ -139,3 +139,15 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 
 	}
 }
+
+// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name
+func ChromToSlice(w []Wig, chrom string) []float64 {
+	var output []float64
+	for _, v := range w {
+		if v.Chrom == chrom {
+			output = make([]float64, len(v.Values))
+			output = v.Values
+		}
+	}
+	return output
+}
