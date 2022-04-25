@@ -32,6 +32,7 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 	species2_Name := "species2_gap"
 	species1_gapSize := species1_ChromEnd - species1_ChromStart
 	species2_gapSize := species2_ChromEnd - species2_ChromStart
+	gapSizeLimit := 40000000 //based on chr4 implementation. When calculated gapSize>40,000,000, a significant outlier occured and caused alignment to deviate from near-diagonal
 	gapSizeMultiple := 0.0
 	gapSizeMultipleLimit := 100.00 //gapSizeMultipleLimit is currently hardcoded tentatively, 100
 	gapSizeProduct := species1_gapSize * species2_gapSize
@@ -50,6 +51,10 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
+	} else if (species1_gapSize > gapSizeLimit || species2_gapSize > gapSizeLimit) {
+		pass = false
+		species1_Name = "species1_gap,doNotCalculate_largeGapSize"
+		species2_Name = "species2_gap,doNotCalculate_largeGapSize"
 	} else if gapSizeMultiple > gapSizeMultipleLimit {
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_largeGapSizeMultiple"
