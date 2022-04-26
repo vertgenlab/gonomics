@@ -25,6 +25,22 @@ func TestRead(t *testing.T) {
 	}
 }
 
+func TestReadToString(t *testing.T) {
+	for _, test := range readWriteTests {
+		actual := ReadToString(test.filename)
+		if len(actual) != len(test.data) {
+			t.Error("problem with ReadToString")
+		}
+		for _, expected := range test.data {
+			if dna.BasesToString(expected.Seq) != actual[expected.Name] {
+				t.Errorf("problem with ReadToString\n"+
+					"expected: %s\n"+
+					"actual  : %s\n", dna.BasesToString(expected.Seq), actual[expected.Name])
+			}
+		}
+	}
+}
+
 func TestWriteAndRead(t *testing.T) {
 	var actual []Fasta
 	for _, test := range readWriteTests {
