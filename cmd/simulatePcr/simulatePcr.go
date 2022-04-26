@@ -60,7 +60,7 @@ func simulatePcr(fwdPrimers primerSeqs, ref string, out string, maxLen int) {
 	for i := 0; i < len(fwdPrimers); i++ {
 		complement = dna.StringToBases(fwdPrimers[i])
 		dna.ReverseComplement(complement)
-		revPrimers = append(revPrimers, dna.BasesToString(complement))
+		revPrimers[i] = dna.BasesToString(complement)
 	}
 
 	ans := make(chan bed.Bed, 1000)
@@ -85,7 +85,7 @@ func simulatePcr(fwdPrimers primerSeqs, ref string, out string, maxLen int) {
 	err := o.Close()
 	exception.PanicOnErr(err)
 
-	log.Printf("FOUND %d POTENITIAL PRODUCTS", recordsWritten) // prefer an explicit report rather than empty file for zero amplicons found
+	log.Printf("found %d potential products", recordsWritten) // prefer an explicit report rather than empty file for zero amplicons found
 }
 
 // findAmplicons determins the amplicons resulting from the input primers for a single given template sequence
@@ -101,21 +101,26 @@ func findAmplicons(chrom, template string, fwdPrimers, revPrimers []string, maxL
 		go findPrimingSites(template, revPrimers[i], false, revChan, primerWg)
 	}
 
+	compWg := new(sync.WaitGroup)
+	compWg.Add(2)
 	go func() { // compile fwd sites
 		for s := range fwdChan {
 			fwdSites = append(fwdSites, s)
 		}
+		compWg.Done()
 	}()
 
 	go func() { // compile rev sites
 		for s := range revChan {
 			revSites = append(revSites, s)
 		}
+		compWg.Done()
 	}()
 
 	primerWg.Wait()
 	close(fwdChan)
 	close(revChan)
+	compWg.Wait()
 
 	sort.Slice(fwdSites, func(i, j int) bool {
 		return fwdSites[i].start < fwdSites[j].start
@@ -162,7 +167,7 @@ func calcProducts(chrom string, fwdSites, revSites []primingSite, maxLen int, an
 	for i := 0; i < len(fwdSites); i++ {
 		for fwdSites[i].start >= revSites[revIdx].start {
 			revIdx++ // fwd site is after rev site, increment rev until after fwd
-			if revIdx > len(revSites) {
+			if revIdx >= len(revSites) {
 				return
 			}
 		}
@@ -184,7 +189,6 @@ func calcProducts(chrom string, fwdSites, revSites []primingSite, maxLen int, an
 				Name:              fwdSites[i].primer + "+" + dna.BasesToString(revBases),
 				FieldsInitialized: 4,
 			}
-			revIdx++
 		}
 	}
 }
