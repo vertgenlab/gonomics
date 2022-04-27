@@ -90,6 +90,7 @@ func simulatePcr(fwdPrimers primerSeqs, ref string, out string, maxLen int) {
 
 // findAmplicons determins the amplicons resulting from the input primers for a single given template sequence
 func findAmplicons(chrom, template string, fwdPrimers, revPrimers []string, maxLen int, ans chan<- bed.Bed, chromWg *sync.WaitGroup) {
+	template = strings.ToUpper(template)
 	var fwdSites, revSites []primingSite
 	fwdChan := make(chan primingSite, 100)
 	revChan := make(chan primingSite, 100)
