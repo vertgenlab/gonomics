@@ -35,6 +35,12 @@ type WrightFisherPopData struct {
 	Settings  WrightFisherSettings
 }
 
+/*
+WriteTsv() writes a .tsv file based on WrightFisherPopData, including:
+Comments starts with # that include metadata about the parameters of the simulation
+Header line: Gen	Site	Freq.A	Freq.C	Freq.G	Freq.T	Ancestral
+Frequencies table
+*/
 func WriteTSV(outFile string, wf WrightFisherPopData) {
 
 	file := fileio.EasyCreate(outFile)
@@ -48,59 +54,69 @@ func WriteTSV(outFile string, wf WrightFisherPopData) {
 		"Ancestral",
 	}
 
-	writeMeta(file, wf.Meta)
-	writeEachLine(file, header)
+	writeMeta(file, wf.Meta)                        // Write metadata
+	writeEachLine(file, header)                     // Write the header line
+	writeToFileHandle(file, floatArrayToString(wf)) // Write the main frequencies table
 
-	writeToFileHandle(file, floatArrayToString(wf))
-
-	exception.PanicOnErr(file.Close())
-
-	//fmt.Printf("%s\n", floatArrayToString(wf.AFreq))
+	exception.PanicOnErr(file.Close()) // Close the file
 }
 
+/*
+floatArrayTostring() converts the all frequency array from wf to a 2D slice of string
+2D array, zero-based, [generation and site][base]
+*/
 func floatArrayToString(wf WrightFisherPopData) [][]string {
+	// nrow = product of number of generation and number of site
 	nrow := (wf.Settings.NumGen + 1) * wf.Settings.GenomeSize
 	ncol := 7
-	str := make([][]string, nrow)
+	answer := make([][]string, nrow)
 
 	var t, s, r, b int // iterator for generation, site, row, and base
 
 	for t = 0; t <= wf.Settings.NumGen; t++ {
 		for s = 0; s < wf.Settings.GenomeSize; s++ {
-			r = (t * wf.Settings.GenomeSize) + s
-			str[r] = make([]string, ncol)
-			str[r][0] = strconv.Itoa(t)
-			str[r][1] = strconv.Itoa(s)
+			r = (t * wf.Settings.GenomeSize) + s // Keeps track of index based on generation and site
+			answer[r] = make([]string, ncol)
+			answer[r][0] = strconv.Itoa(t)
+			answer[r][1] = strconv.Itoa(s)
 			for b = 0; b < 4; b++ {
-				str[r][2+b] = strconv.FormatFloat(wf.Freq[t][s][b], 'f', 5, 64)
+				answer[r][2+b] = strconv.FormatFloat(wf.Freq[t][s][b], 'f', 5, 64)
 			}
-			str[r][6] = wf.Ancestral[s]
+			answer[r][6] = wf.Ancestral[s]
 		}
 	}
-	return str
+	return answer
 }
 
+/*
+writeToFileHandle() feeds one slice of string at a time into writeEachLine()
+*/
 func writeToFileHandle(file io.Writer, records [][]string) {
 	for _, rec := range records {
 		writeEachLine(file, rec)
 	}
 }
 
+/*
+writeEachLine() writes a tab-separated line based on elements in []string
+*/
 func writeEachLine(file io.Writer, rec []string) {
 	var err error
 	for i := 0; i < len(rec); i++ {
-		if i == len(rec)-1 {
+		if i == len(rec)-1 { // Ending of each line
 			_, err = fmt.Fprintf(file, "%s\n", rec[i])
 			exception.PanicOnErr(err)
 		} else {
 			_, err = fmt.Fprintf(file, "%s\t", rec[i])
 			exception.PanicOnErr(err)
 		}
-
 	}
-
 }
 
+/*
+writeMeta() writes metadata based on the []string of metadata
+Separate each entry with ":" instead of a tab
+*/
 func writeMeta(file io.Writer, rec []string) {
 	var err error
 	for i := 0; i < len(rec); i++ {
