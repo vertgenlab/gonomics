@@ -19,8 +19,11 @@ func TestSimPcr(t *testing.T) {
 		t.Error("problem with simulatePcr")
 	}
 
+	var err error
 	if !t.Failed() {
-		err := os.Remove("testdata/actual1.bed")
+		err = os.Remove("testdata/actual1.bed")
+		exception.PanicOnErr(err)
+		err = os.Remove("testdata/actual1.fastq")
 		exception.PanicOnErr(err)
 	}
 
@@ -34,7 +37,9 @@ func TestSimPcr(t *testing.T) {
 	}
 
 	if !t.Failed() {
-		err := os.Remove("testdata/actual2.bed")
+		err = os.Remove("testdata/actual2.bed")
+		exception.PanicOnErr(err)
+		err = os.Remove("testdata/actual2.fastq")
 		exception.PanicOnErr(err)
 	}
 }
