@@ -13,9 +13,9 @@ func TestSimPcr(t *testing.T) {
 		"GCCTCCGTGAGGCTAC",
 		"TTGAGGATCTTTTCTTCACG",
 	}
-	simulatePcr(primers, template, "testdata/actual1.bed", 1000)
+	simulatePcr(primers, template, "testdata/actual1.bed", "testdata/actual1.fastq", 1000, false)
 
-	if !fileio.AreEqual("testdata/actual1.bed", "testdata/expected1.bed") {
+	if !fileio.AreEqual("testdata/actual1.bed", "testdata/expected1.bed") || !fileio.AreEqual("testdata/actual1.fastq", "testdata/expected1.fastq") {
 		t.Error("problem with simulatePcr")
 	}
 
@@ -27,9 +27,9 @@ func TestSimPcr(t *testing.T) {
 	primers = []string{
 		"ATG",
 	}
-	simulatePcr(primers, template, "testdata/actual2.bed", 1000)
+	simulatePcr(primers, template, "testdata/actual2.bed", "testdata/actual2.fastq", 1000, true)
 
-	if !fileio.AreEqual("testdata/actual2.bed", "testdata/expected2.bed") {
+	if !fileio.AreEqual("testdata/actual2.bed", "testdata/expected2.bed") || !fileio.AreEqual("testdata/actual2.fastq", "testdata/expected2.fastq") {
 		t.Error("problem with simulatePcr")
 	}
 
