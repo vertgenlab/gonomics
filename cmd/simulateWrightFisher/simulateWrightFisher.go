@@ -28,10 +28,10 @@ func simulateWrightFisher(outFile string, set popgen.WrightFisherSettings) {
 func usage() {
 	fmt.Print(
 		"simulateWrightFisher - simulate a multiallelic, haplotic Wright-Fisher population (discrete, non-overlapping generations).\n" +
-			"By default, returns a tsv file containing allele frequencies of all alleles at all sites in all generation.\n" +
-			"Use -f or -v flag to switch the output to fasta or vcf, respectively\n" +
+			"\t\tBy default, returns a tsv file containing allele frequencies of all alleles at all sites in all generation.\n" +
+			"\t\tUse -f or -v flag to switch the output to fasta or vcf, respectively\n" +
 			"Usage:\n" +
-			" simulateWrightFisher [OPTIONS] output.tsv\n" +
+			"\tsimulateWrightFisher [OPTIONS] output.tsv\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -45,7 +45,7 @@ func main() {
 	var rFitness *float64 = flag.Float64("w", 1, "Specifies the relative fitness of the derived allele over ancestral allele. Must be greater or equal than zero. (Default 1)")
 	var gcContent *float64 = flag.Float64("gc", 0.5, "Specifies the GC content for the simulated ancestral sequence. (Default 0.5)")
 	var initFreq *string = flag.String("i", "", "Specifies the initial frequencies for all alleles for all sites, as well as ancestral allele.\n"+
-		"Accepts comma-separated string of frequencies of A,C,G,T respectively, and then an ancestral allele."+
+		"Accepts comma-separated string of frequencies of A,C,G,T respectively, and then an ancestral allele.\n"+
 		"Example: -i 0.25,0.25,0.25,0.25,A gives frequencies of A,C,G,T to be 0.25,0.25,0.25,0.25, and set A as the ancestral allele for all sites.\n"+
 		"This overrides -gc.")
 	var fitnessString *string = flag.String("W", "", "Specifies relative frequencies of each allele (A,C,G,T), and specifies ancestral allele.\n"+
