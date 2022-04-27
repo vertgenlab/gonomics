@@ -12,16 +12,18 @@ import (
 )
 
 type WrightFisherSettings struct {
-	PopSize    int
-	MutRate    float64
-	NumGen     int
-	GenomeSize int
-	RFitness   float64
-	GcContent  float64
-	SetSeed    int64
-	Verbose    bool
-	Fasta      bool
-	Vcf        bool
+	PopSize       int
+	MutRate       float64
+	NumGen        int
+	GenomeSize    int
+	RFitness      float64
+	GcContent     float64
+	InitFreq      string
+	FitnessString string
+	SetSeed       int64
+	Verbose       bool
+	Fasta         bool
+	Vcf           bool
 }
 
 type WrightFisherPopData struct {

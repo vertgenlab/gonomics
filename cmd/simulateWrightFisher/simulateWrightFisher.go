@@ -15,11 +15,12 @@ import (
 
 func simulateWrightFisher(outFile string, set popgen.WrightFisherSettings) {
 	rand.Seed(set.SetSeed)
+
 	wf := simulate.SimulateWrightFisher(set)
 	if set.Fasta {
-		popgen.WriteTSV(outFile, wf)
-	} else {
 		fasta.Write(outFile, wf.Fasta)
+	} else {
+		popgen.WriteTSV(outFile, wf)
 	}
 
 }
@@ -35,12 +36,14 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 1
-	var popSize *int = flag.Int("N", 100, "Specifies the population size in the simulation.")
+	var popSize *int = flag.Int("N", 10, "Specifies the population size in the simulation.")
 	var mutRate *float64 = flag.Float64("m", 1e-1, "Specifies the genome-wide mutation rate in the simulation.")
-	var numGen *int = flag.Int("t", 100, "Specifies the number of generations passed in the simulation")
-	var genomeSize *int = flag.Int("g", 1, "Specifies the genome size in base-pair in the simulation")
+	var numGen *int = flag.Int("t", 10, "Specifies the number of generations passed in the simulation")
+	var genomeSize *int = flag.Int("g", 10, "Specifies the genome size in base-pair in the simulation")
 	var rFitness *float64 = flag.Float64("w", 2, "Specifies the relative fitness of the derived allele over ancestral allele. Must be greater or equal than zero")
 	var gcContent *float64 = flag.Float64("gc", 0.5, "Specifies the GC content for the simulated ancestral sequence")
+	var initFreq *string = flag.String("i", "", "Specifies the initial frequencies for all alleles for all sites")
+	var fitnessString *string = flag.String("W", "", "Overrides -w, specifies relative frequencies of each allele (A,C,G,T)")
 
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var verbose *bool = flag.Bool("verbose", false, "Verbose: Use this flag for debugging purposes")
@@ -52,16 +55,18 @@ func main() {
 	flag.Parse()
 
 	s := popgen.WrightFisherSettings{
-		PopSize:    *popSize,
-		MutRate:    *mutRate,
-		NumGen:     *numGen,
-		GenomeSize: *genomeSize,
-		RFitness:   *rFitness,
-		GcContent:  *gcContent,
-		SetSeed:    *setSeed,
-		Verbose:    *verbose,
-		Fasta:      *fasta,
-		Vcf:        *vcf,
+		PopSize:       *popSize,
+		MutRate:       *mutRate,
+		NumGen:        *numGen,
+		GenomeSize:    *genomeSize,
+		RFitness:      *rFitness,
+		GcContent:     *gcContent,
+		InitFreq:      *initFreq,
+		FitnessString: *fitnessString,
+		SetSeed:       *setSeed,
+		Verbose:       *verbose,
+		Fasta:         *fasta,
+		Vcf:           *vcf,
 	}
 
 	if len(flag.Args()) != expectedNumArgs {

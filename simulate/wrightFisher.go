@@ -5,8 +5,10 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/popgen"
 )
@@ -33,18 +35,18 @@ GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFit
 		fmt.Printf("\nInitial sequence is\n%v\n", curFasta[0].Seq)
 	}
 
+	// An array keeping track of allele frequencies of all possible allelic states of all sites of all generation
+	allFreq := makeAlleleFreqArray(curFasta, set)
+
+	// Store the ancestral allele for each site
+	ancestralAlleles := makeAncestralArray(curFasta[0].Seq, set)
+
 	// Generate predetermined/stochastic relative fitness array based on fitness input value
 	relFitArray := makeFitnessArray(curFasta[0].Seq, set)
 
 	if set.Verbose {
 		fmt.Printf("Relative fitness landscape is\n%v\n", relFitArray)
 	}
-
-	// An array keeping track of allele frequencies of all possible allelic states of all sites of all generation
-	allFreq := makeAlleleFreqArray(curFasta, set)
-
-	// Store the ancestral allele for each site
-	ancestralAlleles := makeAncestralArray(curFasta[0].Seq, set)
 
 	simulateAllGeneration(curFasta, nextFasta, relFitArray, allFreq, set)
 
@@ -69,46 +71,63 @@ GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFit
 func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fasta) {
 	curFasta := make([]fasta.Fasta, set.PopSize)
 	nextFasta := make([]fasta.Fasta, set.PopSize)
-	initialSeq := RandIntergenicSeq(set.GcContent, set.GenomeSize)
+	var i, j int
 
-	for i := 0; i < set.PopSize; i++ {
-		curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
-		curFasta[i].Seq = make([]dna.Base, set.GenomeSize)
-		copy(curFasta[i].Seq, initialSeq)
+	if set.InitFreq == "" {
+		initialSeq := RandIntergenicSeq(set.GcContent, set.GenomeSize)
+		for i = 0; i < set.PopSize; i++ {
+			curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
+			curFasta[i].Seq = make([]dna.Base, set.GenomeSize)
+			copy(curFasta[i].Seq, initialSeq)
 
-		nextFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
-		nextFasta[i].Seq = make([]dna.Base, set.GenomeSize)
-		copy(nextFasta[i].Seq, initialSeq)
+			nextFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
+			nextFasta[i].Seq = make([]dna.Base, set.GenomeSize)
+			copy(nextFasta[i].Seq, initialSeq)
+		}
+	} else {
+		a := strings.Split(set.InitFreq, ",")
+		freq := make([]float64, 4)
+		var e error
+		for i = 0; i < 4; i++ {
+			freq[i], e = strconv.ParseFloat(a[i], 64)
+			if e != nil {
+				fmt.Println("Invalid initial frequencies")
+				exception.PanicOnErr(e)
+			}
+		}
+
+		if sumSlice(freq) != 1.0 {
+			log.Fatalf("The sum of initial frequencies must be 1")
+		}
+
+		var ratio float64
+		for j = 0; j < set.PopSize; j++ {
+			curFasta[j].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(j))
+			curFasta[j].Seq = make([]dna.Base, set.GenomeSize)
+			nextFasta[j].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(j))
+			nextFasta[j].Seq = make([]dna.Base, set.GenomeSize)
+			ratio = float64(j+1) / float64(set.PopSize)
+
+			if ratio <= freq[0] {
+				makeUniformSeq(curFasta, j, ratio, dna.A, set)
+			} else if ratio <= sumSlice(freq[0:2]) {
+				makeUniformSeq(curFasta, j, ratio, dna.C, set)
+			} else if ratio <= sumSlice(freq[0:3]) {
+				makeUniformSeq(curFasta, j, ratio, dna.G, set)
+			} else {
+				makeUniformSeq(curFasta, j, ratio, dna.T, set)
+			}
+			copy(nextFasta[j].Seq, curFasta[j].Seq)
+		}
+
 	}
-
 	return curFasta, nextFasta
 }
 
-/*
- Helper function that constructs a slice that stores relative fitness of derived alleles on each position
- Think of it as a 2D array where row = position, column index = 0:A, 1:C, 2:G, 3:T
- However, I implemented only one allocation for the slice with size nrow * ncol
- And to access relative fitness of C allele at position 3, call slice[4*3 + 1]
-*/
-func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]float64 {
-	answer := make([][]float64, set.GenomeSize)
-	bases := [4]dna.Base{dna.A, dna.C, dna.G, dna.T}
-	var i, j int
-	//var r float64
-
-	for i = 0; i < set.GenomeSize; i++ {
-		answer[i] = make([]float64, 4)
-		for j = 0; j < 4; j++ {
-			if bases[j] == initSeq[i] { // check if this is ancestral allele
-				answer[i][j] = float64(1) // relative fitness of ancestral allele is always 1
-			} else {
-				//r = rand.NormFloat64()*((rFitness-1)/3) + rFitness // this makes it that 3sd (99.7%) of generated fitness falls between the rFitness and 1
-				//answer[i*4+j] = r
-				answer[i][j] = set.RFitness
-			}
-		}
+func makeUniformSeq(curFasta []fasta.Fasta, j int, ratio float64, base dna.Base, set popgen.WrightFisherSettings) {
+	for k := 0; k < set.GenomeSize; k++ {
+		curFasta[j].Seq[k] = base
 	}
-	return answer
 }
 
 func makeAlleleFreqArray(curFasta []fasta.Fasta, set popgen.WrightFisherSettings) [][][]float64 {
@@ -127,9 +146,55 @@ func makeAlleleFreqArray(curFasta []fasta.Fasta, set popgen.WrightFisherSettings
 func makeAncestralArray(initSeq []dna.Base, set popgen.WrightFisherSettings) []string {
 	answer := make([]string, set.GenomeSize)
 
-	for i := 0; i < set.GenomeSize; i++ {
-		answer[i] = dna.BaseToString(initSeq[i])
+	if set.InitFreq == "" {
+		for i := 0; i < set.GenomeSize; i++ {
+			answer[i] = dna.BaseToString(initSeq[i])
+		}
+	} else {
+		for i := 0; i < set.GenomeSize; i++ {
+			answer[i] = strings.Split(set.InitFreq, ",")[4]
+		}
 	}
+
+	return answer
+}
+
+/*
+ Helper function that constructs a slice that stores relative fitness of derived alleles on each position
+ Think of it as a 2D array where row = position, column index = 0:A, 1:C, 2:G, 3:T
+ However, I implemented only one allocation for the slice with size nrow * ncol
+ And to access relative fitness of C allele at position 3, call slice[4*3 + 1]
+*/
+func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]float64 {
+	answer := make([][]float64, set.GenomeSize)
+	bases := [4]dna.Base{dna.A, dna.C, dna.G, dna.T}
+	var i, j int
+
+	if set.InitFreq == "" {
+		for i = 0; i < set.GenomeSize; i++ {
+			answer[i] = make([]float64, 4)
+			for j = 0; j < 4; j++ {
+				if bases[j] == initSeq[i] { // check if this is ancestral allele
+					answer[i][j] = float64(1) // relative fitness of ancestral allele is always 1
+				} else {
+					answer[i][j] = set.RFitness
+				}
+			}
+		}
+	} else {
+		ancestral_base := dna.StringToBase(strings.Split(set.InitFreq, ",")[4])
+		for i = 0; i < set.GenomeSize; i++ {
+			answer[i] = make([]float64, 4)
+			for j = 0; j < 4; j++ {
+				if bases[j] == ancestral_base { // check if this is ancestral allele
+					answer[i][j] = float64(1) // relative fitness of ancestral allele is always 1
+				} else {
+					answer[i][j] = set.RFitness
+				}
+			}
+		}
+	}
+
 	return answer
 }
 
