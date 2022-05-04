@@ -23,6 +23,13 @@ func bedFormat(s Settings) {
 	}
 
 	for v := range ch {
+		if s.Pad > 0 {
+			v.ChromStart -= s.Pad
+			v.ChromEnd += s.Pad
+			if v.ChromStart < 0 {
+				v.ChromStart = 0
+			}
+		}
 		if s.EnsemblToUCSC {
 			v.Chrom = convert.EnsemblToUCSC(v.Chrom)
 		}
@@ -54,6 +61,7 @@ type Settings struct {
 	UCSCToEnsembl  bool
 	EnsemblToUCSC  bool
 	ScaleNameFloat float64
+	Pad            int
 }
 
 func main() {
@@ -61,6 +69,7 @@ func main() {
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
 	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", 1, "If float values are held in the name field, scale those values by this constant multiplier.")
+	var pad *int = flag.Int("pad", 0, "Add # of bases to both ends of each bed record")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -81,6 +90,7 @@ func main() {
 		UCSCToEnsembl:  *UCSCToEnsembl,
 		EnsemblToUCSC:  *ensemblToUCSC,
 		ScaleNameFloat: *scaleNameFloat,
+		Pad:            *pad,
 	}
 
 	bedFormat(s)
