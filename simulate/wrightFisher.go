@@ -15,10 +15,8 @@ import (
 
 // Main function to be called in simulateWrightFisher.gp
 func SimulateWrightFisher(set popgen.WrightFisherSettings) popgen.WrightFisherPopData {
-	// Check if rFitness value is valid (>= 0)
-	if set.RFitness < 0 {
-		log.Fatalf("rFitness value must be greater or equal than zero. Found: %v.", set.RFitness)
-	}
+	checkValidInput(set)                          // Check various inputs
+	set.AncestralAllele = setAncestralAllele(set) // Set ancestral allele if given by input
 
 	if set.Verbose {
 		fmt.Printf(`Population Size = %v
@@ -74,6 +72,37 @@ GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFit
 }
 
 /*
+checkValidInput() checks if there are inputs from flags that are invalid (value or format), if yes, stop the program.
+*/
+func checkValidInput(set popgen.WrightFisherSettings) {
+	if set.InitFreq != "" && set.FitnessString != "" {
+		fAncestral := strings.ToUpper(strings.Split(set.FitnessString, ",")[4])
+		iAncestral := strings.ToUpper(strings.Split(set.InitFreq, ",")[4])
+		if fAncestral != iAncestral {
+			log.Fatalf("Ancestral alleles in -i and -W must be the same: %v != %v.", iAncestral, fAncestral)
+		}
+	}
+	if set.RFitness < 0 {
+		log.Fatalf("rFitness value must be greater or equal than zero. Found: %v.", set.RFitness)
+	}
+}
+
+/*
+setAncestralAllele() returns what the one ancestral allele is if given by input
+*/
+func setAncestralAllele(set popgen.WrightFisherSettings) string {
+	var answer string
+	if set.InitFreq == "" && set.FitnessString == "" {
+		answer = ""
+	} else if set.InitFreq != "" {
+		answer = strings.ToUpper(strings.Split(set.InitFreq, ",")[4])
+	} else {
+		answer = strings.ToUpper(strings.Split(set.FitnessString, ",")[4])
+	}
+	return answer
+}
+
+/*
 makeInitialPop() returns identical slices of fasta containing initial sequences
 Case I-no ancestral allele is specified: randomly generate sequences
 Case II-ancestral allele is specified: generate repeats of that allele
@@ -81,10 +110,10 @@ Case II-ancestral allele is specified: generate repeats of that allele
 func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fasta) {
 	curFasta := make([]fasta.Fasta, set.PopSize)
 	nextFasta := make([]fasta.Fasta, set.PopSize)
-	var i, j int
+	var i int
 
-	// Case I: No ancestral allele is specified.
-	if set.InitFreq == "" {
+	// Case I: No ancestral allele is specified. Random generate sequence.
+	if set.AncestralAllele == "" {
 		initialSeq := RandIntergenicSeq(set.GcContent, set.GenomeSize)
 		for i = 0; i < set.PopSize; i++ {
 			curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
@@ -114,30 +143,38 @@ func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fas
 			log.Fatalf("The sum of initial frequencies must be 1")
 		}
 
-		var ratio float64 // pointer keeps track of current ratio of population that is filled by an allele
-		for j = 0; j < set.PopSize; j++ {
-			curFasta[j].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(j))
-			curFasta[j].Seq = make([]dna.Base, set.GenomeSize)
-
-			nextFasta[j].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(j))
-			nextFasta[j].Seq = make([]dna.Base, set.GenomeSize)
-
-			ratio = float64(j+1) / float64(set.PopSize)
-
-			if ratio <= freq[0] {
-				makeUniformSeq(curFasta, j, ratio, dna.A, set)
-			} else if ratio <= sumSlice(freq[0:2]) {
-				makeUniformSeq(curFasta, j, ratio, dna.C, set)
-			} else if ratio <= sumSlice(freq[0:3]) {
-				makeUniformSeq(curFasta, j, ratio, dna.G, set)
-			} else {
-				makeUniformSeq(curFasta, j, ratio, dna.T, set)
-			}
-			copy(nextFasta[j].Seq, curFasta[j].Seq)
-		}
+		// Make fasta based on the given allele frequencies
+		makeFastaByRatio(curFasta, nextFasta, freq, set)
 
 	}
 	return curFasta, nextFasta
+}
+
+/*
+makeFastaByRatio() makes cur- and nextFasta from the given input frequencies
+*/
+func makeFastaByRatio(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, freq []float64, set popgen.WrightFisherSettings) {
+	var ratio float64 // pointer keeps track of current ratio of population that is filled by an allele
+	for j := 0; j < set.PopSize; j++ {
+		curFasta[j].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(j))
+		curFasta[j].Seq = make([]dna.Base, set.GenomeSize)
+
+		nextFasta[j].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(j))
+		nextFasta[j].Seq = make([]dna.Base, set.GenomeSize)
+
+		ratio = float64(j+1) / float64(set.PopSize)
+
+		if ratio <= freq[0] {
+			makeUniformSeq(curFasta, j, ratio, dna.A, set)
+		} else if ratio <= sumSlice(freq[0:2]) {
+			makeUniformSeq(curFasta, j, ratio, dna.C, set)
+		} else if ratio <= sumSlice(freq[0:3]) {
+			makeUniformSeq(curFasta, j, ratio, dna.G, set)
+		} else {
+			makeUniformSeq(curFasta, j, ratio, dna.T, set)
+		}
+		copy(nextFasta[j].Seq, curFasta[j].Seq)
+	}
 }
 
 /*
@@ -179,7 +216,7 @@ func makeAncestralArray(initSeq []dna.Base, set popgen.WrightFisherSettings) []s
 		}
 	} else { // Case II: Ancecstral allele is specifie
 		for i := 0; i < set.GenomeSize; i++ {
-			answer[i] = strings.Split(set.InitFreq, ",")[4]
+			answer[i] = set.AncestralAllele
 		}
 	}
 
@@ -195,7 +232,7 @@ func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]f
 	bases := [4]dna.Base{dna.A, dna.C, dna.G, dna.T}
 	var i, j int
 
-	if set.InitFreq == "" {
+	if set.FitnessString == "" {
 		for i = 0; i < set.GenomeSize; i++ {
 			answer[i] = make([]float64, 4)
 			for j = 0; j < 4; j++ {
@@ -207,15 +244,28 @@ func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]f
 			}
 		}
 	} else {
-		ancestral_base := dna.StringToBase(strings.Split(set.InitFreq, ",")[4])
+		a := strings.Split(set.FitnessString, ",")
+		fitness := make([]float64, 4)
+		var e error
+
+		// Parse all string input of fitness value into float64
+		for i = 0; i < 4; i++ {
+			fitness[i], e = strconv.ParseFloat(a[i], 64)
+			if fitness[i] < 0 {
+				log.Fatalf("Relative fitness values must be greater or equal than zero. Found: %v.", set.FitnessString)
+			}
+			if e != nil {
+				fmt.Println("Invalid relative fitness string")
+				exception.PanicOnErr(e)
+			}
+
+		}
+
+		// Make the fitness array
 		for i = 0; i < set.GenomeSize; i++ {
 			answer[i] = make([]float64, 4)
 			for j = 0; j < 4; j++ {
-				if bases[j] == ancestral_base { // check if this is ancestral allele
-					answer[i][j] = float64(1) // relative fitness of ancestral allele is always 1
-				} else {
-					answer[i][j] = set.RFitness
-				}
+				answer[i][j] = fitness[j]
 			}
 		}
 	}
@@ -252,6 +302,7 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 				// Determines which chromosome from previous generation that pth individual inherits from?
 				// The probability is based on the frequency of the corresponding allele.
 				r = rand.Float64()
+
 				if r < samplingPQRS[0] {
 					nextFasta[p].Seq[s] = dna.A
 				} else if r < sumSlice(samplingPQRS[0:2]) {
@@ -264,7 +315,7 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 
 				// If random float generated is less than the set mutation rate, mutate the base (random)
 				if rand.Float64() < set.MutRate {
-					nextFasta[p].Seq[s] = changeBase(nextFasta[p].Seq[s])
+					nextFasta[p].Seq[s] = mutate(nextFasta[p].Seq[s], set.GcContent)
 				}
 			}
 		}
@@ -346,4 +397,17 @@ func sumSlice(slice []float64) float64 {
 		answer += v
 	}
 	return answer
+}
+
+/*
+There exists the similar function in simulate.go, but that function doesn't allow
+me to choose GC content (it was set to 0.41 by default and not mutable).
+*/
+func mutate(originalBase dna.Base, GC float64) dna.Base {
+	newBase := chooseRandomBase(GC)
+
+	for newBase == originalBase {
+		newBase = chooseRandomBase(GC)
+	}
+	return newBase
 }

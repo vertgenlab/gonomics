@@ -1,13 +1,14 @@
 package simulate
 
 import (
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math/rand"
 )
 
 //CodonExt holds a slice of 3 bases and their original positions
