@@ -30,7 +30,7 @@ func singleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 	return fasta.Fasta{}
 }
 
-//BedToFasta extracts subFastas out of a reference fasta slice comprised of the sequences of input bed regions.
+//BedToFasta extracts sub-Fastas out of a reference Fasta slice comprised of the sequences of input bed regions.
 func BedToFasta(b []bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 	outlist := make([]fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
@@ -57,7 +57,8 @@ func SamToBedPaired(s *sam.Sam) []*bed.Bed {
 	//add output to bedlist
 } */
 
-//SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived. Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
+//SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived.
+//Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
 func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
 	//fatal if fragLength is shorter than sam read length
 	if fragLength < len(s.Seq) {
@@ -83,8 +84,9 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
-//BedNameToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is euqla to the float64-casted name
-//of an overlapping bed entry. Regions with no bed entries will be set to the value set by Missing (default 0 in the cmd).
+//BedValuesToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is
+//equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
+//value set by Missing (default 0 in the cmd).
 func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
@@ -120,7 +122,8 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 	return wigSlice
 }
 
-//BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that overlap the position.
+//BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that
+//overlap the position.
 func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
@@ -169,7 +172,8 @@ func getWigChromIndex(s string, wigSlice []wig.Wig) int {
 	return -1
 }
 
-//PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first entry as the reference and the second fasta entry as the alt allele.
+//PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first
+//entry as the reference and the second fasta entry as the alt allele.
 //This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
 func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
 	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
@@ -177,8 +181,9 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 	var deletion bool = false
 	var insertionAlnPos int
 	var deletionAlnPos int
+	var currRefPos, currAlnPos int = 0, 0 //0 based, like fasta. Add 1 to get vcf pos.
 
-	for i := range f[0].Seq { //loop through reference alignment positions
+	for i := range f[0].Seq { //loop through alignment positions
 		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
 			if pastStart {
 				if !insertion {
@@ -190,7 +195,9 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 			pastStart = true
 			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
 				if !substitutionsOnly {
-					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+					currRefPos = fasta.AlnPosToRefPosCounter(f[0], insertionAlnPos, currRefPos, currAlnPos)
+					currAlnPos = insertionAlnPos //update currAlnPos
+					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 				}
 			}
 			if f[1].Seq[i] == dna.Gap { //alt is gap (deletion)
@@ -201,22 +208,32 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 			} else if deletion { //snp immediately follows the end of a deletion
 				deletion = false
 				if !substitutionsOnly {
-					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //from deletion
+					currRefPos = fasta.AlnPosToRefPosCounter(f[0], deletionAlnPos, currRefPos, currAlnPos)
+					currAlnPos = deletionAlnPos
+					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //from deletion
 				}
 				if f[0].Seq[i] == dna.N || f[1].Seq[i] == dna.N {
 					if retainN {
-						vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //then add current diff
+						currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
+						currAlnPos = i
+						vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //then add current diff
 					}
 				} else {
-					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //then add current diff
+					currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
+					currAlnPos = i
+					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //then add current diff
 				}
 			} else { //this case is for normal substitutions
 				if f[0].Seq[i] == dna.N || f[1].Seq[i] == dna.N {
 					if retainN {
-						vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+						currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
+						currAlnPos = i
+						vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 					}
 				} else {
-					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], i) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+					currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
+					currAlnPos = i
+					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 				}
 			}
 			insertion = false
@@ -224,14 +241,18 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 			pastStart = true
 			insertion = false
 			if !substitutionsOnly {
-				vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], insertionAlnPos) + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+				currRefPos = fasta.AlnPosToRefPosCounter(f[0], insertionAlnPos, currRefPos, currAlnPos)
+				currAlnPos = insertionAlnPos
+				vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[insertionAlnPos]), Alt: []string{dna.BasesToString(f[1].Seq[insertionAlnPos:i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 			}
 		} else if deletion {
 			pastStart = true
 			deletion = false
 			if !substitutionsOnly && deletionAlnPos >= 0 {
 				//TODO: we do not currently save deletions if they occur at the start of an alignment.
-				vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: fasta.AlnPosToRefPos(f[0], deletionAlnPos) + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //from deletion
+				currRefPos = fasta.AlnPosToRefPosCounter(f[0], deletionAlnPos, currRefPos, currAlnPos)
+				currAlnPos = deletionAlnPos
+				vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BasesToString(f[0].Seq[deletionAlnPos:i]), Alt: []string{dna.BaseToString(f[1].Seq[deletionAlnPos])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}}) //from deletion
 			}
 		}
 	}

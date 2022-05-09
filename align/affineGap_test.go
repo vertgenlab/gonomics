@@ -49,7 +49,7 @@ func TestAffineGap(t *testing.T) {
 		_, cigar := AffineGap_highMem(basesOne, basesTwo, DefaultScoreMatrix, -400, -30)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
-			t.Errorf("The affine gap alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
+			t.Errorf("The affine gap alignment of %s and %s gave\n%s\n, but this was expected\n%s\n", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
 		}
 	}
 }
@@ -87,7 +87,7 @@ func TestAffineGapChunk(t *testing.T) {
 		_, cigar := AffineGapChunk(basesOne, basesTwo, DefaultScoreMatrix, -400, -30, 3)
 		prettyAlignment := View(basesOne, basesTwo, cigar)
 		if prettyAlignment != test.aln {
-			t.Errorf("The affine gap chunk alignment of %s and %s gave %s, but %s was expected", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
+			t.Errorf("The affine gap chunk alignment of %s and %s gave\n%s\n, but this was expected\n%s\n", test.seqOne, test.seqTwo, prettyAlignment, test.aln)
 		}
 	}
 }
@@ -102,7 +102,7 @@ func TestAffineGapMulti(t *testing.T) {
 		answer := mergeMultipleAlignments(one, two, cigar)
 		pretty := fmt.Sprintf("%s\n%s\n", dna.BasesToString(answer[0].Seq), dna.BasesToString(answer[1].Seq))
 		if pretty != test.aln {
-			t.Errorf("The affine gap alignment of %s and %s gave %s, but %s was expected.  Cigar was: %v", test.seqOne, test.seqTwo, pretty, test.aln, cigar)
+			t.Errorf("The affine gap alignment of %s and %s gave\n%s\n, but this was expected\n%s\n. Cigar was: %v", test.seqOne, test.seqTwo, pretty, test.aln, cigar)
 		}
 	}
 }

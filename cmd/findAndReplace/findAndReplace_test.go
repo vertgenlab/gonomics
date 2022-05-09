@@ -7,25 +7,32 @@ import (
 	"testing"
 )
 
-var findAndReplaceTestsColumnSpecific = []struct {
-	inFile             string
-	findAndReplaceFile string
-	outFile            string
-	expectedFile       string
-	columnNumber       int
+var findAndReplaceColumnTests = []struct {
+	inFile              string
+	inFileDelim         string
+	findAndReplaceFile  string
+	findAndReplaceDelim string
+	outFile             string
+	expectedFile        string
+	columnNumber        int
+	ignoreColumns       bool
 }{
-	{"testdata/inputFileFake.tsv", "testdata/findReplaceFake.tsv", "testdata/outputFileCreatedColumn0.tsv",
-		"testdata/outputFileExpectedColumn0.tsv", 0},
-	{"testdata/inputFileFake.tsv", "testdata/findReplaceFake.tsv", "testdata/outputFileCreatedColumn1.tsv",
-		"testdata/outputFileExpectedColumn1.tsv", 1},
-	{"testdata/inputFileFake.tsv", "testdata/findReplaceFake.tsv", "testdata/outputFileCreatedColumn2.tsv",
-		"testdata/outputFileExpectedColumn2.tsv", 2},
+	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn0.tsv",
+		"testdata/outputFileExpectedColumn0.tsv", 0, false},
+	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn1.tsv",
+		"testdata/outputFileExpectedColumn1.tsv", 1, false},
+	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn2.tsv",
+		"testdata/outputFileExpectedColumn2.tsv", 2, false},
+	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedWholeFile.tsv",
+		"testdata/outputFileExpectedWholeFile.tsv", -1, false},
+	{"testdata/inputOne.txt", "\t", "testdata/findReplaceOne.txt", "\t", "testdata/temp.txt",
+		"testdata/expectedOne.txt", -1, true},
 }
 
 func TestFindAndReplaceColumnSpecific(t *testing.T) {
 	var err error
-	for _, v := range findAndReplaceTestsColumnSpecific {
-		findAndReplace(v.inFile, v.findAndReplaceFile, v.outFile, v.columnNumber)
+	for _, v := range findAndReplaceColumnTests {
+		findAndReplace(v.inFile, v.inFileDelim, v.findAndReplaceFile, v.findAndReplaceDelim, v.outFile, v.columnNumber, v.ignoreColumns)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in findAndReplace")
 		} else {
@@ -35,6 +42,7 @@ func TestFindAndReplaceColumnSpecific(t *testing.T) {
 	}
 }
 
+/*
 var findAndReplaceTestWholeFileScan = []struct {
 	inFile              string
 	findAndReplaceFile  string
@@ -56,4 +64,4 @@ func TestFindAndReplaceWholeFileScan(t *testing.T) {
 			exception.PanicOnErr(err)
 		}
 	}
-}
+}*/

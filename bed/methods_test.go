@@ -19,6 +19,14 @@ var BedMethodTests = []struct {
 		newStart:           50,
 		newEnd:             60,
 	},
+	{b: Bed{Chrom: "chr12", ChromStart: 22, ChromEnd: 30},
+		expectedChrom:      "chr12",
+		expectedChromStart: 22,
+		expectedChromEnd:   30,
+		newChrom:           "chr22",
+		newStart:           52,
+		newEnd:             62,
+	},
 }
 
 //note that methods take a special style of function name for testing.
@@ -27,7 +35,7 @@ func TestBed_GetChrom(t *testing.T) {
 	for _, v := range BedMethodTests {
 		currChrom = v.b.GetChrom()
 		if currChrom != v.expectedChrom {
-			t.Errorf("Error in Bed method GetChrom.")
+			t.Errorf("Error in Bed method GetChrom. Expected chrom: %v. Actual chrom: %v.", v.expectedChrom, currChrom)
 		}
 	}
 }
@@ -37,7 +45,7 @@ func TestBed_GetChromStart(t *testing.T) {
 	for _, v := range BedMethodTests {
 		currChromStart = v.b.GetChromStart()
 		if currChromStart != v.expectedChromStart {
-			t.Errorf("Error in Bed method GetChromStart.")
+			t.Errorf("Error in Bed method GetChromStart. Expected: %v, Actual: %v", v.expectedChromStart, currChromStart)
 		}
 	}
 }
@@ -47,7 +55,7 @@ func TestBed_GetChromEnd(t *testing.T) {
 	for _, v := range BedMethodTests {
 		currChromEnd = v.b.GetChromEnd()
 		if currChromEnd != v.expectedChromEnd {
-			t.Errorf("Error in Bed method GetChromEnd.")
+			t.Errorf("Error in Bed method GetChromEnd. Expected: %v, Actual %v", v.expectedChromEnd, currChromEnd)
 		}
 	}
 }

@@ -23,8 +23,8 @@ const Ln4 float64 = 1.38629436112
 func RandBeta(a float64, b float64) float64 {
 	var alpha float64 = a + b
 	var beta, gamma, u1, u2, w, v float64
-	if MinFloat64(a, b) <= 1 {
-		beta = MaxFloat64(1.0/a, 1.0/b)
+	if Min(a, b) <= 1 {
+		beta = Max(1.0/a, 1.0/b)
 	} else {
 		beta = math.Sqrt((alpha - 2.0) / (2*a*b - alpha))
 	}

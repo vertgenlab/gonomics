@@ -1,3 +1,7 @@
+@HD	VN:1.6	SO:coordinate	GO:reference
+@SQ	SN:ref	LN:45
+@TS	SS:this is a test	XQ:777
+@CO	this is a comment line and	may	have	tabs
 rUnalign	4	*	0	0	*	*	0	0	CAGCGGCAT	*	NM:i:1
 r001	99	ref	7	30	8M2I4M1D3M	=	37	39	TTAGATAAAGGATACTG	*\
 r003	0	ref	9	30	5S6M	*	0	0	GCCTAAGCTAA	*	SA:Z:ref,29,-,6H5M,17,0;
