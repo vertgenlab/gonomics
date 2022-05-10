@@ -23,10 +23,10 @@ var LiftTests = []struct {
 
 func TestLift(t *testing.T) {
 	for _, v := range LiftTests {
-		liftCoordinates(v.chainFile, v.inputFile, "tmp.vcf", v.faFile, "tmp.unmapped", 0.95, 0)
+		liftCoordinates(v.chainFile, v.inputFile, "tmp.vcf", v.faFile, "tmp.unmapped", 0.95, false, 0)
 
 		if vcf.IsVcfFile(v.inputFile) {
-			liftCoordinates(v.chainFile, v.inputFile, "tmp.vcf", v.faFile, "tmp.unmapped", 0.95, 0)
+			liftCoordinates(v.chainFile, v.inputFile, "tmp.vcf", v.faFile, "tmp.unmapped", 0.95, false, 0)
 			records, _ := vcf.Read("tmp.vcf")
 			expected, _ := vcf.Read(v.expectedOutputFile)
 			if !vcf.AllEqual(records, expected) {
@@ -44,7 +44,7 @@ func TestLift(t *testing.T) {
 				common.ExitIfError(err)
 			}
 		} else {
-			liftCoordinates(v.chainFile, v.inputFile, "tmp.bed", v.faFile, "tmp.unmapped", 0.95, 0)
+			liftCoordinates(v.chainFile, v.inputFile, "tmp.bed", v.faFile, "tmp.unmapped", 0.95, false, 0)
 			records := bed.Read("tmp.bed")
 			expected := bed.Read(v.expectedOutputFile)
 			if !bed.AllAreEqual(records, expected) {
