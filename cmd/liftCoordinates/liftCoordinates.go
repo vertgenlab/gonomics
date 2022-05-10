@@ -38,7 +38,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	out := fileio.EasyCreate(outFile)
 	un := fileio.EasyCreate(unMapped)
 
-	var records []fasta.Fasta
+	var ref *fasta.Seeker
 	var currVcf vcf.Vcf
 	var a, b float64
 
@@ -46,10 +46,8 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 		if !vcf.IsVcfFile(inFile) {
 			log.Fatalf("Fasta file is provided but lift file is not a VCF file.")
 		}
-		records = fasta.Read(faFile)
+		ref = fasta.NewSeeker(faFile, "")
 	}
-
-	faMap := fasta.ToMap(records)
 
 	if vcf.IsVcfFile(inFile) {
 		tmpOpen := fileio.EasyOpen(inFile)
@@ -92,15 +90,15 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 					_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
-				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
+				} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-					if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
+					if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
 						_, err = fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 						exception.PanicOnErr(err)
 					}
 					i.(fileWriter).WriteToFileHandle(out)
 					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
-				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
+				} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
 					_, err = fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
@@ -123,13 +121,15 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	exception.PanicOnErr(err)
 }
 
-// QuerySeq takes in a slice of Fasta and a position (name and index) and returns true if a query
+// QuerySeq takes in a fasta seeker and a position (name and index) and returns true if a query
 // sequence of bases matches the fasta at this position.
 // Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta
 // as the reference, but if you are querying from alignment Fasta, you'll want to get the alnIndex
 // before calling this function
-func QuerySeq(faMap map[string][]dna.Base, chr string, index int, query []dna.Base) bool {
-	return dna.CompareSeqsIgnoreCaseAndGaps(query, faMap[chr][index:index+len(query)]) == 0
+func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
+	fetchSeq, err := fasta.SeekByName(ref, chr, index, index+len(query))
+	exception.PanicOnErr(err)
+	return dna.CompareSeqsIgnoreCaseAndGaps(query, fetchSeq) == 0
 }
 
 //minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
