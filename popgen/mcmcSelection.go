@@ -2,16 +2,16 @@ package popgen
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"golang.org/x/exp/slices"
 	"log"
 	"math"
 	"math/rand"
 	"os"
 	"runtime/pprof"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 //To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
