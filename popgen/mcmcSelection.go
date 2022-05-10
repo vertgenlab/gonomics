@@ -8,8 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"runtime/pprof"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
