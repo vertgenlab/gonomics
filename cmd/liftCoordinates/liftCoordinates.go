@@ -16,6 +16,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"log"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -23,7 +24,7 @@ type fileWriter interface {
 	WriteToFileHandle(io.Writer)
 }
 
-func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, verbose int) {
+func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, swapAlleleAB bool, verbose int) {
 	var err error
 	if minMatch < 0.0 || minMatch > 1.0 {
 		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", minMatch)
@@ -103,6 +104,9 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
 					currVcf = vcf.InvertVcf(currVcf)
+					if swapAlleleAB {
+						swapInfoAlleles(&currVcf)
+					}
 					i = &currVcf
 					i.(fileWriter).WriteToFileHandle(out)
 				} else {
@@ -144,6 +148,25 @@ func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) b
 	return true
 }
 
+// swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field
+func swapInfoAlleles(v *vcf.Vcf) {
+	newInfo := []byte(v.Info)
+	alleleAidx := strings.Index(v.Info, "ALLELE_A=")
+	if alleleAidx == -1 {
+		return
+	}
+	alleleAidx += len("ALLELE_A=")
+
+	alleleBidx := strings.Index(v.Info, "ALLELE_B=")
+	if alleleBidx == -1 {
+		return
+	}
+	alleleBidx += len("ALLELE_B=")
+
+	newInfo[alleleAidx], newInfo[alleleBidx] = newInfo[alleleBidx], newInfo[alleleAidx]
+	v.Info = string(newInfo)
+}
+
 func usage() {
 	fmt.Print(
 		"liftCoordinates - Lifts a compatible file format between assembly coordinates.\n" +
@@ -162,6 +185,7 @@ func main() {
 	var faFile *string = flag.String("faFile", "", "Specify a fasta file for Lifting VCF format files. This fasta should correspond to the destination assembly.")
 	var minMatch *float64 = flag.Float64("minMatch", 0.95, "Specify the minimum proportion of matching bases required for a successful lift operation.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable debug prints.")
+	var swapAlleleAB *bool = flag.Bool("swapAlleleAB", false, "Swap 'Allele_A' and 'Allele_B' designations in the INFO field if ref/alt are inverted during lift.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -177,5 +201,5 @@ func main() {
 	inFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 	unMapped := flag.Arg(3)
-	liftCoordinates(chainFile, inFile, outFile, *faFile, unMapped, *minMatch, *verbose)
+	liftCoordinates(chainFile, inFile, outFile, *faFile, unMapped, *minMatch, *swapAlleleAB, *verbose)
 }
