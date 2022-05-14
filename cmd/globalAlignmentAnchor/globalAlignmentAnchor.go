@@ -61,8 +61,8 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		species2_Name = "species2_gap,doNotCalculate_largeGapSizeMultiple"
 	} else if gapSizeProduct > gapSizeProductLimit { // the product of the gap sizes needs to be practical for our alignment algorithm. The 2 sequences' product should be <=1E10
 		pass = false
-		species1_Name = "species1_gap,doNotCalculate_large" //TODO: change this label to largeGapSizeMultiple
-		species2_Name = "species2_gap,doNotCalculate_large"
+		species1_Name = "species1_gap,doNotCalculate_largeGapSizeProduct"
+		species2_Name = "species2_gap,doNotCalculate_largeGapSizeProduct"
 	}
 	return pass, species1_Name, species2_Name
 }
