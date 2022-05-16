@@ -51,16 +51,6 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
-	} else if (species1_gapSize > gapSizeLimit || species2_gapSize > gapSizeLimit) {
-		// still check for diagonal. If diagonal, can accept, but add label
-		if (float64(species2_ChromStart) >= 0.95*float64(species1_ChromStart) && float64(species2_ChromStart) <= 1.05*float64(species1_ChromStart) && float64(species2_ChromEnd) >= 0.95*float64(species1_ChromEnd) && float64(species2_ChromEnd) <= 1.05*float64(species2_ChromEnd)) {
-			species1_Name = "species1_gap_largeGapSize_diagonal"
-			species2_Name = "species2_gap_largeGapSize_diagonal"
-		} else {
-			pass = false
-			species1_Name = "species1_gap,doNotCalculate_largeGapSize"
-			species2_Name = "species2_gap,doNotCalculate_largeGapSize"
-		}
 	} else if gapSizeMultiple > gapSizeMultipleLimit { // This is one way to make sure in each species esp the non-reference, gap sequence should progress linearly along the chromosome
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_largeGapSizeMultiple"
@@ -69,7 +59,19 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_largeGapSizeProduct"
 		species2_Name = "species2_gap,doNotCalculate_largeGapSizeProduct"
+	} else if (species1_gapSize > gapSizeLimit || species2_gapSize > gapSizeLimit) {
+		// still check for diagonal. If diagonal, can accept, but add label
+		// this step should come last, after initially accepting some gaps (without aligning), rejecting other gaps, and finally in this step rescuing some rejected gaps to accept them again
+		if (float64(species2_ChromStart) >= 0.95*float64(species1_ChromStart) && float64(species2_ChromStart) <= 1.05*float64(species1_ChromStart) && float64(species2_ChromEnd) >= 0.95*float64(species1_ChromEnd) && float64(species2_ChromEnd) <= 1.05*float64(species2_ChromEnd)) {
+			species1_Name = "species1_gap_largeGapSize_diagonal"
+			species2_Name = "species2_gap_largeGapSize_diagonal"
+		} else {
+			pass = false
+			species1_Name = "species1_gap,doNotCalculate_largeGapSize"
+			species2_Name = "species2_gap,doNotCalculate_largeGapSize"
+		}
 	}
+
 	return pass, species1_Name, species2_Name
 }
 
