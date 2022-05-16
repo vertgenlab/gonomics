@@ -150,18 +150,24 @@ func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) b
 
 // swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field
 func swapInfoAlleles(v *vcf.Vcf) {
+	var foundA, foundB bool
 	newInfo := []byte(v.Info)
 	alleleAidx := strings.Index(v.Info, "ALLELE_A=")
 	if alleleAidx == -1 {
-		return
+		foundA = true
 	}
 	alleleAidx += len("ALLELE_A=")
 
 	alleleBidx := strings.Index(v.Info, "ALLELE_B=")
 	if alleleBidx == -1 {
-		return
+		foundB = true
 	}
 	alleleBidx += len("ALLELE_B=")
+
+	if foundA != foundB {
+		log.Printf("WARNING: Found ALLELE_A or ALLELE_B in the following record, but not both. Record may be malformed\n%s\n", v)
+		return
+	}
 
 	newInfo[alleleAidx], newInfo[alleleBidx] = newInfo[alleleBidx], newInfo[alleleAidx]
 	v.Info = string(newInfo)
