@@ -57,8 +57,12 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		species2_Name = "species2_gap,doNotCalculate_largeGapSizeMultiple"
 		// still check for diagonal. If diagonal, can accept, but add label
 		// this step should come last, after initially accepting some gaps (without aligning), rejecting other gaps, and finally in this step rescuing some rejected gaps to accept them again
+<<<<<<< HEAD
 		if (float64(species2_ChromStart) >= 0.95*float64(species1_ChromStart) && float64(species2_ChromStart) <= 1.05*float64(species1_ChromStart) && float64(species2_ChromEnd) >= 0.95*float64(species1_ChromEnd) && float64(species2_ChromEnd) <= 1.05*float64(species2_ChromEnd)) {
 			pass = true
+=======
+		if float64(species2_ChromStart) >= 0.95*float64(species1_ChromStart) && float64(species2_ChromStart) <= 1.05*float64(species1_ChromStart) && float64(species2_ChromEnd) >= 0.95*float64(species1_ChromEnd) && float64(species2_ChromEnd) <= 1.05*float64(species2_ChromEnd) {
+>>>>>>> e601b63f64ad3e1cb307b714830bf462e0cfd919
 			species1_Name = "species1_gap_largeGapSize_diagonal"
 			species2_Name = "species2_gap_largeGapSize_diagonal"
 		}
