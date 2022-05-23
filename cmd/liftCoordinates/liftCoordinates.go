@@ -16,6 +16,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"log"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -23,7 +24,7 @@ type fileWriter interface {
 	WriteToFileHandle(io.Writer)
 }
 
-func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, verbose int) {
+func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, swapAlleleAB bool, verbose int) {
 	var err error
 	if minMatch < 0.0 || minMatch > 1.0 {
 		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", minMatch)
@@ -38,7 +39,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	out := fileio.EasyCreate(outFile)
 	un := fileio.EasyCreate(unMapped)
 
-	var records []fasta.Fasta
+	var ref *fasta.Seeker
 	var currVcf vcf.Vcf
 	var a, b float64
 
@@ -46,10 +47,8 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 		if !vcf.IsVcfFile(inFile) {
 			log.Fatalf("Fasta file is provided but lift file is not a VCF file.")
 		}
-		records = fasta.Read(faFile)
+		ref = fasta.NewSeeker(faFile, "")
 	}
-
-	faMap := fasta.ToMap(records)
 
 	if vcf.IsVcfFile(inFile) {
 		tmpOpen := fileio.EasyOpen(inFile)
@@ -92,19 +91,22 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 					_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
-				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
+				} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-					if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
+					if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
 						_, err = fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 						exception.PanicOnErr(err)
 					}
 					i.(fileWriter).WriteToFileHandle(out)
 					//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
-				} else if QuerySeq(faMap, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
+				} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
 					_, err = fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
 					currVcf = vcf.InvertVcf(currVcf)
+					if swapAlleleAB {
+						swapInfoAlleles(&currVcf)
+					}
 					i = &currVcf
 					i.(fileWriter).WriteToFileHandle(out)
 				} else {
@@ -123,13 +125,15 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	exception.PanicOnErr(err)
 }
 
-// QuerySeq takes in a slice of Fasta and a position (name and index) and returns true if a query
+// QuerySeq takes in a fasta seeker and a position (name and index) and returns true if a query
 // sequence of bases matches the fasta at this position.
 // Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta
 // as the reference, but if you are querying from alignment Fasta, you'll want to get the alnIndex
 // before calling this function
-func QuerySeq(faMap map[string][]dna.Base, chr string, index int, query []dna.Base) bool {
-	return dna.CompareSeqsIgnoreCaseAndGaps(query, faMap[chr][index:index+len(query)]) == 0
+func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
+	fetchSeq, err := fasta.SeekByName(ref, chr, index, index+len(query))
+	exception.PanicOnErr(err)
+	return dna.CompareSeqsIgnoreCaseAndGaps(query, fetchSeq) == 0
 }
 
 //minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
@@ -142,6 +146,31 @@ func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) b
 		return false
 	}
 	return true
+}
+
+// swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field
+func swapInfoAlleles(v *vcf.Vcf) {
+	var foundA, foundB bool
+	newInfo := []byte(v.Info)
+	alleleAidx := strings.Index(v.Info, "ALLELE_A=")
+	if alleleAidx == -1 {
+		foundA = true
+	}
+	alleleAidx += len("ALLELE_A=")
+
+	alleleBidx := strings.Index(v.Info, "ALLELE_B=")
+	if alleleBidx == -1 {
+		foundB = true
+	}
+	alleleBidx += len("ALLELE_B=")
+
+	if foundA != foundB {
+		log.Printf("WARNING: Found ALLELE_A or ALLELE_B in the following record, but not both. Record may be malformed\n%s\n", v)
+		return
+	}
+
+	newInfo[alleleAidx], newInfo[alleleBidx] = newInfo[alleleBidx], newInfo[alleleAidx]
+	v.Info = string(newInfo)
 }
 
 func usage() {
@@ -162,6 +191,7 @@ func main() {
 	var faFile *string = flag.String("faFile", "", "Specify a fasta file for Lifting VCF format files. This fasta should correspond to the destination assembly.")
 	var minMatch *float64 = flag.Float64("minMatch", 0.95, "Specify the minimum proportion of matching bases required for a successful lift operation.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable debug prints.")
+	var swapAlleleAB *bool = flag.Bool("swapAlleleAB", false, "Swap 'Allele_A' and 'Allele_B' designations in the INFO field if ref/alt are inverted during lift.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -177,5 +207,5 @@ func main() {
 	inFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 	unMapped := flag.Arg(3)
-	liftCoordinates(chainFile, inFile, outFile, *faFile, unMapped, *minMatch, *verbose)
+	liftCoordinates(chainFile, inFile, outFile, *faFile, unMapped, *minMatch, *swapAlleleAB, *verbose)
 }
