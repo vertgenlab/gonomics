@@ -26,20 +26,28 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 }
 
 // helper function: check if gap bed entry passes checks
-func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, gapSizeProductLimit int) (bool, string, string) {
+// need both pos_species (most recently updated alignment position)
+// and species1_ChromStart (the start of the current bed entry)
+func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int, pos_species2 int, species2_ChromStart int, species2_ChromEnd int, gapSizeProductLimit int) (bool, string, string) {
 	pass := true
 	species1_Name := "species1_gap"
 	species2_Name := "species2_gap"
+	// calculate gap size of current bed entry, based on species1_ChromStart
 	species1_gapSize := species1_ChromEnd - species1_ChromStart
 	species2_gapSize := species2_ChromEnd - species2_ChromStart
-	gapSizeLimit := 40000000 //based on chr4 implementation. When calculated gapSize>40,000,000, a significant outlier occured and caused alignment to deviate from near-diagonal
-	gapSizeMultiple := 0.0
-	gapSizeMultipleLimit := 100.00 //gapSizeMultipleLimit is currently hardcoded tentatively, 100
+	// calculate gap size since the most recently updated alignment position, based on pos_species
+	species1_gapSizeBig := species1_ChromEnd - pos_species1
+	species2_gapSizeBig := species2_ChromEnd - pos_species2
+	// define limits and necessary calculations to evaluate limit
+	// gap size limit and gap size product limit should be evaluted based on gapSize
+	gapSizeLimit := 40000000 // based on chr4 implementation. When calculated gapSize>40,000,000, a significant outlier occured and caused alignment to deviate from near-diagonal
 	gapSizeProduct := species1_gapSize * species2_gapSize
-
-	if species1_gapSize != 0 {
-		gapSizeMultiple = float64(species2_gapSize / species1_gapSize)
+	// gap size multiple should be evaluated based on gapSizeBig
+	gapSizeBigMultiple := 0.0
+	if species1_gapSizeBig != 0 {
+		gapSizeBigMultiple = float64(species2_gapSizeBig / species1_gapSizeBig)
 	}
+	gapSizeBigMultipleLimit := 100.00 // gapSizeBigMultipleLimit is currently hardcoded tentatively, 100
 
 	if species1_gapSize > 0 && species2_gapSize == 0 { // insertion in species1, no need for alignment
 		species1_Name = "species1_Insertion"
@@ -55,7 +63,7 @@ func gapBedPass(species1_ChromStart int, species1_ChromEnd int, species2_ChromSt
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_largeGapSizeProduct"
 		species2_Name = "species2_gap,doNotCalculate_largeGapSizeProduct"
-	} else if gapSizeMultiple > gapSizeMultipleLimit { // This is one way to make sure in each species esp the non-reference, gap sequence should progress linearly along the chromosome
+	} else if gapSizeBigMultiple > gapSizeBigMultipleLimit { // This is one way to make sure in each species esp the non-reference, gap sequence should progress linearly along the chromosome
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_largeGapSizeMultiple"
 		species2_Name = "species2_gap,doNotCalculate_largeGapSizeMultiple"
@@ -182,7 +190,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	current_species1 = bed.Bed{Chrom: chr_curr_species1, ChromStart: pos_species1, ChromEnd: species1_match_bed[0].ChromStart, Name: "species1_gap", FieldsInitialized: 4}
 	current_species2 = bed.Bed{Chrom: chr_curr_species2, ChromStart: pos_species2, ChromEnd: species2_match_bed[0].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
 	// before writing bed, test if the bed entries pass filtering criteria
-	pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromEnd, pos_species2, current_species2.ChromEnd, gapSizeProductLimit)
+	pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromStart, current_species1.ChromEnd, pos_species2, current_species2.ChromStart, current_species2.ChromEnd, gapSizeProductLimit)
 	if !pass {
 		bed.WriteBed(out_species1_doNotCalculate, current_species1)
 		bed.WriteBed(out_species2_doNotCalculate, current_species2)
@@ -207,7 +215,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			// first finish off the previous chr
 			current_species1 = bed.Bed{Chrom: chr_prev_species1, ChromStart: species1_match_bed[i-1].ChromEnd, ChromEnd: len(species1_genome_fastaMap[chr_prev_species1]), Name: "species1_gap", FieldsInitialized: 4}
 			current_species2 = bed.Bed{Chrom: chr_prev_species2, ChromStart: species2_match_bed[i-1].ChromEnd, ChromEnd: len(species2_genome_fastaMap[chr_prev_species2]), Name: "species2_gap", FieldsInitialized: 4}
-			pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromEnd, pos_species2, current_species2.ChromEnd, gapSizeProductLimit)
+			pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromStart, current_species1.ChromEnd, pos_species2, current_species2.ChromStart, current_species2.ChromEnd, gapSizeProductLimit)
 			if !pass {
 				bed.WriteBed(out_species1_doNotCalculate, current_species1)
 				bed.WriteBed(out_species2_doNotCalculate, current_species2)
@@ -227,7 +235,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			current_species2 = bed.Bed{Chrom: chr_curr_species2, ChromStart: pos_species2, ChromEnd: species2_match_bed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
 
 			// before writing bed, test if the bed entries pass filtering criteria
-			pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromEnd, pos_species2, current_species2.ChromEnd, gapSizeProductLimit)
+			pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromStart, current_species1.ChromEnd, pos_species2, current_species2.ChromStart, current_species2.ChromEnd, gapSizeProductLimit)
 			if !pass {
 				bed.WriteBed(out_species1_doNotCalculate, current_species1)
 				bed.WriteBed(out_species2_doNotCalculate, current_species2)
@@ -246,7 +254,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 			current_species2 = bed.Bed{Chrom: chr_curr_species2, ChromStart: species2_match_bed[i-1].ChromEnd, ChromEnd: species2_match_bed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
 
 			// before writing bed, test if the bed entries pass filtering criteria
-			pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromEnd, pos_species2, current_species2.ChromEnd, gapSizeProductLimit)
+			pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromStart, current_species1.ChromEnd, pos_species2, current_species2.ChromStart, current_species2.ChromEnd, gapSizeProductLimit)
 			if !pass {
 				bed.WriteBed(out_species1_doNotCalculate, current_species1)
 				bed.WriteBed(out_species2_doNotCalculate, current_species2)
@@ -267,7 +275,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	if pos_species1 < len(species1_genome_fastaMap[chr_prev_species1]) || pos_species2 < len(species2_genome_fastaMap[chr_prev_species2]) {
 		current_species1 = bed.Bed{Chrom: chr_curr_species1, ChromStart: species1_match_bed[len(species1_match_bed)-1].ChromEnd, ChromEnd: len(species1_genome_fastaMap[chr_curr_species1]), Name: "species1_gap", FieldsInitialized: 4}
 		current_species2 = bed.Bed{Chrom: chr_curr_species2, ChromStart: species2_match_bed[len(species2_match_bed)-1].ChromEnd, ChromEnd: len(species2_genome_fastaMap[chr_curr_species2]), Name: "species2_gap", FieldsInitialized: 4}
-		pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromEnd, pos_species2, current_species2.ChromEnd, gapSizeProductLimit)
+		pass, current_species1.Name, current_species2.Name = gapBedPass(pos_species1, current_species1.ChromStart, current_species1.ChromEnd, pos_species2, current_species2.ChromStart, current_species2.ChromEnd, gapSizeProductLimit)
 		if !pass {
 			bed.WriteBed(out_species1_doNotCalculate, current_species1)
 			bed.WriteBed(out_species2_doNotCalculate, current_species2)
