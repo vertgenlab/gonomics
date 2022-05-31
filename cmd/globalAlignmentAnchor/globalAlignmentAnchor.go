@@ -26,7 +26,7 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 }
 
 // helper function: check if maf entry passes checks
-func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int) (bool) {
+func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int) bool {
 	pass := true
 
 	// chrom should be the same between species1 and species2 (special case: panTro6 chr2A, chr2B both count as a match to hg38 chr2)
