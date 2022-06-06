@@ -76,9 +76,17 @@ func overlapEnrichments(method string, inFile string, secondFile string, noGapFi
 		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", inFile)
 	}
 
-	if lift.IsSelfOverlapping(elementsTwo, verbose) {
-		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
-	}
+	// Check below removed to enable overlapping elements for second bed region.
+	// The first file is viewed as elements/annotations of the human genome that are labels on the genomic coordinates.
+	// The idea of a region being labeled multiple times does not fit cleanly into the math because it is a little vague
+	// how a single element from list two overlapping multiple elements from list 1 should be counted.
+	// Right now we count it as a single "success" where the maximum number of "successes" is the number of elements in file2.
+	// File2 really represents sampling from this genome that has been annotated with file1, so there it is easier
+	// to have them overlapping, since they are treated as independent draws
+	//
+	//if lift.IsSelfOverlapping(elementsTwo, verbose) {
+	//	log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
+	//}
 
 	var summarySlice []float64
 	overlapCount := lift.OverlapCount(elementsTwo, elementsOne)
