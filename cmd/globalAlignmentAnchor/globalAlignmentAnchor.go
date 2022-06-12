@@ -106,7 +106,7 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 	mafRecords := maf.Read(in_maf) // read input maf
 
 	// open output files to write line-by-line and create variable for error
-	out_maf_filename := strings.Replace(in_maf, ".maf", ".filtered.maf", 1)
+	out_maf_filename := strings.Replace(in_maf, ".maf", ".filtered.maf", 1) // this means the in_maf path name should not contain .maf, otherwise the string renaming will be triggered in the pathname instead of in the filename
 	out_species1_filename := strings.Replace(in_maf, path.Base(in_maf), "out_"+species1+"_match.bed", 1)
 	out_species2_filename := strings.Replace(in_maf, path.Base(in_maf), "out_"+species2+"_match.bed", 1)
 	out_maf := fileio.EasyCreate(out_maf_filename)
