@@ -14,7 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/maf"
 	"io"
 	"log"
-	"path"
+	//"path"
 	"strings"
 )
 
