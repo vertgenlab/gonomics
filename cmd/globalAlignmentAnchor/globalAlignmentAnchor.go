@@ -14,7 +14,6 @@ import (
 	"github.com/vertgenlab/gonomics/maf"
 	"io"
 	"log"
-	//"path"
 	"strings"
 )
 
@@ -79,6 +78,11 @@ func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int
 		species1_Name = "species1_gap,doNotCalculate_invalidChromStartOrChromEnd"
 		species2_Name = "species2_gap,doNotCalculate_invalidChromStartOrChromEnd"
 	} else if gapSizeBigMultiple > gapSizeBigMultipleLimit { // This is one way to make sure in each species esp the non-reference, gap sequence should progress linearly along the chromosome
+		// If the currently aligned sequence in species2 is really far away from the previously aligned sequence in species2,
+		// 100 times further than the currently aligned sequence in species1 is from the previously aligned sequence in species1,
+		// then the current alignment should be discarded and not "trusted" to be a true alignment,
+		// because the currently aligned sequence in species2 is probably a random region further downstream on the chromosome, which breaks synteny.
+		// This is only a concern for species2 because species1 is always progressing linearly (has synteny) and a big gap in species1 might just mean a big insertion in species1.
 		pass = false
 		species1_Name = "species1_gap,doNotCalculate_largeGapSizeMultiple"
 		species2_Name = "species2_gap,doNotCalculate_largeGapSizeMultiple"
@@ -102,13 +106,13 @@ func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int
 
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf (aka anchors, or "match")
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold
-func mafToMatch(in_maf string, species1 string, species2 string) {
+func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string) (string, string) {
 	mafRecords := maf.Read(in_maf) // read input maf
 
 	// open output files to write line-by-line and create variable for error
-	out_maf_filename := strings.Replace(in_maf, ".maf", ".filtered.maf", 1) // this means the in_maf path name should not contain .maf, otherwise the string renaming will be triggered in the pathname instead of in the filename
-	out_species1_filename := strings.Replace(in_maf, ".maf", "_"+species1+"_match.bed", 1)
-	out_species2_filename := strings.Replace(in_maf, ".maf", "_"+species2+"_match.bed", 1)
+	out_maf_filename := out_filename_prefix + ".filtered.maf"
+	out_species1_filename := out_filename_prefix + "_"+species1+"_match.bed"
+	out_species2_filename := out_filename_prefix + "_"+species2+"_match.bed"
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
@@ -160,10 +164,13 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 	exception.PanicOnErr(err)
 	err = out_species2.Close()
 	exception.PanicOnErr(err)
+
+	// return output filenames
+	return out_species1_filename, out_species2_filename
 }
 
 // Step 2: Use match to calculate coordinates that still need to be aligned, aka "gap"
-func matchToGap(species1 string, species2 string, in_species1_match string, in_species2_match string, species1_genome string, species2_genome string, gapSizeProductLimit int) {
+func matchToGap(in_species1_match string, in_species2_match string, species1_genome string, species2_genome string, species1 string, species2 string, gapSizeProductLimit int, out_filename_prefix string) (string, string) {
 	// read input files
 	species1_match_bed := bed.Read(in_species1_match)
 	species2_match_bed := bed.Read(in_species2_match)
@@ -173,10 +180,10 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_species1_filename := strings.Replace(in_species1_match, "match", "gap", 1)
-	out_species2_filename := strings.Replace(in_species2_match, "match", "gap", 1)
-	out_species1_doNotCalculate_filename := strings.Replace(in_species1_match, "match", "gap_doNotCalculate", 1)
-	out_species2_doNotCalculate_filename := strings.Replace(in_species2_match, "match", "gap_doNotCalculate", 1)
+	out_species1_filename := out_filename_prefix + "_"+species1+"_gap.bed"
+	out_species2_filename := out_filename_prefix + "_"+species2+"_gap.bed"
+	out_species1_doNotCalculate_filename := out_filename_prefix + "_"+species1+"_gap_doNotCalculate.bed"
+	out_species2_doNotCalculate_filename := out_filename_prefix + "_"+species2+"_gap_doNotCalculate.bed"
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
 	out_species1_doNotCalculate := fileio.EasyCreate(out_species1_doNotCalculate_filename)
@@ -304,10 +311,13 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 	exception.PanicOnErr(err)
 	err = out_species2_doNotCalculate.Close()
 	exception.PanicOnErr(err)
+
+	// return output filenames
+	return out_species1_filename, out_species2_filename
 }
 
 // Step 3: align "gap" sequences
-func gapToAlignment(in_maf string, in_species1_gap string, in_species2_gap string, species1_genome string, species2_genome string) {
+func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_genome string, species2_genome string, species1 string, species2 string, out_filename_prefix string) {
 	// read input files
 	species1_gap_bed := bed.Read(in_species1_gap)
 	species2_gap_bed := bed.Read(in_species2_gap)
@@ -317,9 +327,9 @@ func gapToAlignment(in_maf string, in_species1_gap string, in_species2_gap strin
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_alignment_filename := strings.Replace(in_maf, ".maf", ".alignment.tsv", 1)
-	out_species1_filename := strings.Replace(in_species1_gap, "gap", "alignment", 1)
-	out_species2_filename := strings.Replace(in_species2_gap, "gap", "alignment", 1)
+	out_alignment_filename := out_filename_prefix + ".alignment.tsv"
+	out_species1_filename := out_filename_prefix + "_"+species1+"_alignment.bed"
+	out_species2_filename := out_filename_prefix + "_"+species2+"_alignment.bed"
 	out_alignment := fileio.EasyCreate(out_alignment_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
@@ -425,14 +435,16 @@ func gapToAlignment(in_maf string, in_species1_gap string, in_species2_gap strin
 }
 
 // main function: assembles all steps
-func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int) {
-	mafToMatch(in_maf, species1, species2)
-	in_species1_match := strings.Replace(in_maf, ".maf", "_"+species1+"_match.bed", 1)
-	in_species2_match := strings.Replace(in_maf, ".maf", "_"+species2+"_match.bed", 1)
-	matchToGap(species1, species2, in_species1_match, in_species2_match, species1_genome, species2_genome, gapSizeProductLimit)
-	in_species1_gap := strings.Replace(in_species1_match, "match", "gap", 1)
-	in_species2_gap := strings.Replace(in_species2_match, "match", "gap", 1)
-	gapToAlignment(in_maf, in_species1_gap, in_species2_gap, species1_genome, species2_genome)
+func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, out_filename_prefix string) {
+	// process input from out_filename_prefix flag
+	// about TrimSuffix: if the suffix string is at the end of the substrate string, then it is trimmed. If the suffix stirng is not at the end of the substrate string, then the substrate string is returned without any change
+	if out_filename_prefix == "" {
+		out_filename_prefix = strings.TrimSuffix(in_maf, ".maf")
+	}
+
+	in_species1_match, in_species2_match := mafToMatch(in_maf, species1, species2, out_filename_prefix)
+	in_species1_gap, in_species2_gap := matchToGap(in_species1_match, in_species2_match, species1_genome, species2_genome, species1, species2, gapSizeProductLimit, out_filename_prefix)
+	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome, species1, species2, out_filename_prefix)
 }
 
 func usage() {
@@ -456,6 +468,7 @@ func main() {
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	out_filename_prefix := flag.String("out_filename_prefix", "", "prefix for output filenames")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
@@ -470,5 +483,5 @@ func main() {
 	species2_genome := flag.Arg(4)
 	gapSizeProductLimit := 10000000000 // gapSizeProductLimit is currently hardcoded based on align/affineGap tests, 10000000000
 
-	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit)
+	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, *out_filename_prefix)
 }
