@@ -317,7 +317,7 @@ func gapToAlignment(in_maf string, in_species1_gap string, in_species2_gap strin
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_alignment_filename := strings.Replace(in_maf, ".maf",".alignment.tsv", 1)
+	out_alignment_filename := strings.Replace(in_maf, ".maf", ".alignment.tsv", 1)
 	out_species1_filename := strings.Replace(in_species1_gap, "gap", "alignment", 1)
 	out_species2_filename := strings.Replace(in_species2_gap, "gap", "alignment", 1)
 	out_alignment := fileio.EasyCreate(out_alignment_filename)
