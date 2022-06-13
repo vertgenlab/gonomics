@@ -107,8 +107,8 @@ func mafToMatch(in_maf string, species1 string, species2 string) {
 
 	// open output files to write line-by-line and create variable for error
 	out_maf_filename := strings.Replace(in_maf, ".maf", ".filtered.maf", 1) // this means the in_maf path name should not contain .maf, otherwise the string renaming will be triggered in the pathname instead of in the filename
-	out_species1_filename := strings.Replace(in_maf, path.Base(in_maf), "out_"+species1+"_match.bed", 1)
-	out_species2_filename := strings.Replace(in_maf, path.Base(in_maf), "out_"+species2+"_match.bed", 1)
+	out_species1_filename := strings.Replace(in_maf, ".maf", "_"+species1+"_match.bed", 1)
+	out_species2_filename := strings.Replace(in_maf, ".maf", "_"+species2+"_match.bed", 1)
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
@@ -307,7 +307,7 @@ func matchToGap(species1 string, species2 string, in_species1_match string, in_s
 }
 
 // Step 3: align "gap" sequences
-func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_genome string, species2_genome string) {
+func gapToAlignment(in_maf string, in_species1_gap string, in_species2_gap string, species1_genome string, species2_genome string) {
 	// read input files
 	species1_gap_bed := bed.Read(in_species1_gap)
 	species2_gap_bed := bed.Read(in_species2_gap)
@@ -317,7 +317,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_alignment_filename := strings.Replace(in_species1_gap, path.Base(in_species1_gap), "out_alignment.tsv", 1)
+	out_alignment_filename := strings.Replace(in_maf, ".maf",".alignment.tsv", 1)
 	out_species1_filename := strings.Replace(in_species1_gap, "gap", "alignment", 1)
 	out_species2_filename := strings.Replace(in_species2_gap, "gap", "alignment", 1)
 	out_alignment := fileio.EasyCreate(out_alignment_filename)
@@ -427,12 +427,12 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 // main function: assembles all steps
 func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int) {
 	mafToMatch(in_maf, species1, species2)
-	in_species1_match := strings.Replace(in_maf, path.Base(in_maf), "out_"+species1+"_match.bed", 1)
-	in_species2_match := strings.Replace(in_maf, path.Base(in_maf), "out_"+species2+"_match.bed", 1)
+	in_species1_match := strings.Replace(in_maf, ".maf", "_"+species1+"_match.bed", 1)
+	in_species2_match := strings.Replace(in_maf, ".maf", "_"+species2+"_match.bed", 1)
 	matchToGap(species1, species2, in_species1_match, in_species2_match, species1_genome, species2_genome, gapSizeProductLimit)
 	in_species1_gap := strings.Replace(in_species1_match, "match", "gap", 1)
 	in_species2_gap := strings.Replace(in_species2_match, "match", "gap", 1)
-	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome)
+	gapToAlignment(in_maf, in_species1_gap, in_species2_gap, species1_genome, species2_genome)
 }
 
 func usage() {
