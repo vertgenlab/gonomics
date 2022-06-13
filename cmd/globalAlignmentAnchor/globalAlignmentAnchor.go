@@ -111,8 +111,8 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 
 	// open output files to write line-by-line and create variable for error
 	out_maf_filename := out_filename_prefix + ".filtered.maf"
-	out_species1_filename := out_filename_prefix + "_"+species1+"_match.bed"
-	out_species2_filename := out_filename_prefix + "_"+species2+"_match.bed"
+	out_species1_filename := out_filename_prefix + "_" + species1 + "_match.bed"
+	out_species2_filename := out_filename_prefix + "_" + species2 + "_match.bed"
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
@@ -180,10 +180,10 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
 
 	// open output files to write line-by-line and create variable for error
-	out_species1_filename := out_filename_prefix + "_"+species1+"_gap.bed"
-	out_species2_filename := out_filename_prefix + "_"+species2+"_gap.bed"
-	out_species1_doNotCalculate_filename := out_filename_prefix + "_"+species1+"_gap_doNotCalculate.bed"
-	out_species2_doNotCalculate_filename := out_filename_prefix + "_"+species2+"_gap_doNotCalculate.bed"
+	out_species1_filename := out_filename_prefix + "_" + species1 + "_gap.bed"
+	out_species2_filename := out_filename_prefix + "_" + species2 + "_gap.bed"
+	out_species1_doNotCalculate_filename := out_filename_prefix + "_" + species1 + "_gap_doNotCalculate.bed"
+	out_species2_doNotCalculate_filename := out_filename_prefix + "_" + species2 + "_gap_doNotCalculate.bed"
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
 	out_species1_doNotCalculate := fileio.EasyCreate(out_species1_doNotCalculate_filename)
@@ -328,8 +328,8 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 
 	// open output files to write line-by-line and create variable for error
 	out_alignment_filename := out_filename_prefix + ".alignment.tsv"
-	out_species1_filename := out_filename_prefix + "_"+species1+"_alignment.bed"
-	out_species2_filename := out_filename_prefix + "_"+species2+"_alignment.bed"
+	out_species1_filename := out_filename_prefix + "_" + species1 + "_alignment.bed"
+	out_species2_filename := out_filename_prefix + "_" + species2 + "_alignment.bed"
 	out_alignment := fileio.EasyCreate(out_alignment_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)

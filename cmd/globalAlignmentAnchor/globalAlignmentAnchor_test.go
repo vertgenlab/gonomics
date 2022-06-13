@@ -14,7 +14,7 @@ var globalAlignmentAnchorTests = []struct {
 	species1_genome                          string
 	species2_genome                          string
 	gapSizeProductLimit                      int
-	out_filename_prefix											 string
+	out_filename_prefix                      string
 	out_maf_expected                         string
 	species1_match_bed_expected              string
 	species2_match_bed_expected              string
@@ -39,11 +39,11 @@ func TestGlobalAlignmentAnchorTests(t *testing.T) {
 
 		if test.in_maf == "" {
 
-			species1_gap_doNotCalculate = test.out_filename_prefix + "_"+test.species1+"_gap_doNotCalculate.bed"
-			species2_gap_doNotCalculate = test.out_filename_prefix + "_"+test.species2+"_gap_doNotCalculate.bed"
+			species1_gap_doNotCalculate = test.out_filename_prefix + "_" + test.species1 + "_gap_doNotCalculate.bed"
+			species2_gap_doNotCalculate = test.out_filename_prefix + "_" + test.species2 + "_gap_doNotCalculate.bed"
 			out_alignment = test.out_filename_prefix + ".alignment.tsv"
-			out_species1_alignment = test.out_filename_prefix + "_"+test.species1+"_alignment.bed"
-			out_species2_alignment = test.out_filename_prefix + "_"+test.species2+"_alignment.bed"
+			out_species1_alignment = test.out_filename_prefix + "_" + test.species1 + "_alignment.bed"
+			out_species2_alignment = test.out_filename_prefix + "_" + test.species2 + "_alignment.bed"
 
 			species1_gap, species2_gap = matchToGap(test.species1_match_bed_expected, test.species2_match_bed_expected, test.species1_genome, test.species2_genome, test.species1, test.species2, test.gapSizeProductLimit, test.out_filename_prefix)
 			gapToAlignment(species1_gap, species2_gap, test.species1_genome, test.species2_genome, test.species1, test.species2, test.out_filename_prefix)
@@ -51,15 +51,15 @@ func TestGlobalAlignmentAnchorTests(t *testing.T) {
 		} else {
 
 			out_maf = test.out_filename_prefix + ".filtered.maf"
-			species1_match = test.out_filename_prefix + "_"+test.species1+"_match.bed"
-			species2_match = test.out_filename_prefix + "_"+test.species2+"_match.bed"
-			species1_gap = test.out_filename_prefix + "_"+test.species1+"_gap.bed"
-			species2_gap = test.out_filename_prefix + "_"+test.species2+"_gap.bed"
-			species1_gap_doNotCalculate = test.out_filename_prefix + "_"+test.species1+"_gap_doNotCalculate.bed"
-			species2_gap_doNotCalculate = test.out_filename_prefix + "_"+test.species2+"_gap_doNotCalculate.bed"
+			species1_match = test.out_filename_prefix + "_" + test.species1 + "_match.bed"
+			species2_match = test.out_filename_prefix + "_" + test.species2 + "_match.bed"
+			species1_gap = test.out_filename_prefix + "_" + test.species1 + "_gap.bed"
+			species2_gap = test.out_filename_prefix + "_" + test.species2 + "_gap.bed"
+			species1_gap_doNotCalculate = test.out_filename_prefix + "_" + test.species1 + "_gap_doNotCalculate.bed"
+			species2_gap_doNotCalculate = test.out_filename_prefix + "_" + test.species2 + "_gap_doNotCalculate.bed"
 			out_alignment = test.out_filename_prefix + ".alignment.tsv"
-			out_species1_alignment = test.out_filename_prefix + "_"+test.species1+"_alignment.bed"
-			out_species2_alignment = test.out_filename_prefix + "_"+test.species2+"_alignment.bed"
+			out_species1_alignment = test.out_filename_prefix + "_" + test.species1 + "_alignment.bed"
+			out_species2_alignment = test.out_filename_prefix + "_" + test.species2 + "_alignment.bed"
 
 			globalAlignmentAnchor(test.in_maf, test.species1, test.species2, test.species1_genome, test.species2_genome, test.gapSizeProductLimit, test.out_filename_prefix)
 
