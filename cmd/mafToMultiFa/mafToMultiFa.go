@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func mafToFa(inMaf string, inFa string, inSpeciesList string, outFa string, noMask bool) {
+func mafToMultiFa(inMaf string, inFa string, inSpeciesList string, outMultiFa string, noMask bool) {
 	mafRecords := maf.Read(inMaf)
 
 	refFasta := fasta.Read(inFa)
@@ -27,14 +27,14 @@ func mafToFa(inMaf string, inFa string, inSpeciesList string, outFa string, noMa
 		fasta.AllToUpper(aln)
 	}
 
-	fasta.Write(outFa, aln)
+	fasta.Write(outMultiFa, aln)
 }
 
 func usage() {
 	fmt.Print(
-		"mafToFa - convert a maf alignment into a fasta alignment\n" +
+		"mafToMultiFa - convert a maf alignment into a multiple fasta alignment\n" +
 			"Usage:\n" +
-			" mafToFa input.maf reference.fa species.list output.fa\n" +
+			" mafToMultiFa input.maf reference.fa species.list output.fa\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -54,7 +54,7 @@ func main() {
 	mafFile := flag.Arg(0)
 	refFile := flag.Arg(1)
 	speciesFile := flag.Arg(2)
-	outFile := flag.Arg(3)
+	outMultiFaFile := flag.Arg(3)
 
-	mafToFa(mafFile, refFile, speciesFile, outFile, *noMask)
+	mafToMultiFa(mafFile, refFile, speciesFile, outMultiFaFile, *noMask)
 }

@@ -7,23 +7,23 @@ import (
 	"testing"
 )
 
-var mafToFaTests = []struct {
-	mafFile          string
-	refFile          string
-	speciesFile      string
-	outFile_expected string
-	noMask           bool
+var mafToMultiFaTests = []struct {
+	mafFile                string
+	refFile                string
+	speciesFile            string
+	outMultiFaFileExpected string
+	noMask                 bool
 }{
 	{"testdata/test1.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.out.fa", false},
 	{"testdata/test2.maf", "testdata/test.ref.fa", "testdata/test.species.list", "testdata/test.out.fa", true},
 }
 
-func TestMafToFa(t *testing.T) {
+func TestMafToMultiFa(t *testing.T) {
 	var err error
-	for _, v := range mafToFaTests {
-		mafToFa(v.mafFile, v.refFile, v.speciesFile, "outFile_tmp.fa", v.noMask)
+	for _, v := range mafToMultiFaTests {
+		mafToMultiFa(v.mafFile, v.refFile, v.speciesFile, "outFile_tmp.fa", v.noMask)
 
-		if !fileio.AreEqual("outFile_tmp.fa", v.outFile_expected) {
+		if !fileio.AreEqual("outFile_tmp.fa", v.outMultiFaFileExpected) {
 			t.Errorf("Error in mafToFa")
 		} else {
 			err = os.Remove("outFile_tmp.fa")
