@@ -15,7 +15,7 @@ func (s Sam) GetChromStart() int {
 
 func (s Sam) GetChromEnd() int {
 	var runLength int = 0
-	if s.Cigar[0].Op == '*' {
+	if s.Cigar == nil || s.Cigar[0].Op == '*' {
 		return s.GetChromStart()
 	}
 	for i := 0; i < len(s.Cigar); i++ {
