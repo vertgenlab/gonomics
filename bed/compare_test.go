@@ -149,3 +149,45 @@ func TestSortByChromEndByChrom(t *testing.T) {
 		}
 	}
 }
+
+var Equal1 Bed = Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, Name: "First", Score: 1, Strand: '+', FieldsInitialized: 6}
+var Equal2 Bed = Bed{Chrom: "chr2", ChromStart: 400, ChromEnd: 900, Name: "Second", Score: 5, Strand: '-', FieldsInitialized: 6}
+
+var EqualTests = []struct {
+	a Bed
+	b Bed
+	Expected bool
+}{
+	{a: Equal1, b: Equal2, Expected: false},
+	{a: Equal1, b: Equal1, Expected: true},
+}
+
+func TestEqual(t *testing.T) {
+	var actual bool
+	for _, v := range EqualTests {
+		actual = Equal(v.a, v.b)
+		if actual != v.Expected {
+			t.Errorf("Error in bed package Equal function.")
+		}
+	}
+}
+
+var AllEqualTests = []struct {
+	a []Bed
+	b []Bed
+	Expected bool
+}{
+	{a: []Bed{Equal1, Equal2, Equal2}, b: []Bed{Equal1}, Expected: false},
+	{a: []Bed{Equal2, Equal1}, b: []Bed{Equal2, Equal1}, Expected: true},
+	{a: []Bed{Equal2, Equal2, Equal1, Equal1}, b: []Bed{Equal2, Equal1, Equal1, Equal1}, Expected: false},
+}
+
+func TestAllAreEqual(t *testing.T) {
+	var actual bool
+	for _, v := range AllEqualTests {
+		actual = AllAreEqual(v.a, v.b)
+		if actual != v.Expected {
+			t.Errorf("Error in bed package AllAreEqual function.")
+		}
+	}
+}
