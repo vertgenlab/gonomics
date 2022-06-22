@@ -154,8 +154,8 @@ var Equal1 Bed = Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, Name: "First
 var Equal2 Bed = Bed{Chrom: "chr2", ChromStart: 400, ChromEnd: 900, Name: "Second", Score: 5, Strand: '-', FieldsInitialized: 6}
 
 var EqualTests = []struct {
-	a Bed
-	b Bed
+	a        Bed
+	b        Bed
 	Expected bool
 }{
 	{a: Equal1, b: Equal2, Expected: false},
@@ -173,8 +173,8 @@ func TestEqual(t *testing.T) {
 }
 
 var AllEqualTests = []struct {
-	a []Bed
-	b []Bed
+	a        []Bed
+	b        []Bed
 	Expected bool
 }{
 	{a: []Bed{Equal1, Equal2, Equal2}, b: []Bed{Equal1}, Expected: false},
