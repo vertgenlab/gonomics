@@ -264,6 +264,9 @@ var ErrNonStdBase error = errors.New("sequence contains bases other than A,C,G,T
 // readSeq reads bytes from r to fill the len of s with bases.
 // Data in r are expected to be encoded with 4 bits per base.
 func readSeq(r *BamReader, s []dna.Base) error {
+	if len(s) == 0 {
+		return nil
+	}
 	var err error
 	var b byte
 	var i int
