@@ -1,36 +1,53 @@
 package bedpe
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
 )
 
-var b1 BedPe = BedPe{ChromA: "chr2",
-	ChromStartA:       200,
-	ChromEndA:         240,
-	ChromB:            "chr2",
-	ChromStartB:       4500,
-	ChromEndB:         4600,
-	Name:              "First",
-	Score:             40,
-	StrandA:           '+',
-	StrandB:           '-',
-	FieldsInitialized: 9,
+var b1 BedPe = BedPe{
+	A: bed.Bed {
+		Chrom: "chr2",
+		ChromStart: 200,
+		ChromEnd: 240,
+		Name:              "First",
+		Score:             40,
+		Strand: '+',
+		FieldsInitialized: 9,
+	},
+	B: bed.Bed {
+		Chrom: "chr2",
+		ChromStart: 4500,
+		ChromEnd: 4600,
+		Name:              "First",
+		Score:             40,
+		Strand: '-',
+		FieldsInitialized: 9,
+	},
 }
 
-var b2 BedPe = BedPe{ChromA: "chr9",
-	ChromStartA: 3400,
-	ChromEndA: 3500,
-	ChromB: "chr9",
-	ChromStartB: 6700,
-	ChromEndB: 6780,
-	Name: "Second",
-	Score: 2,
-	StrandA: '-',
-	StrandB: '-',
-	FieldsInitialized: 9,
-	}
+var b2 BedPe = BedPe{
+	A: bed.Bed {
+		Chrom: "chr9",
+		ChromStart: 3400,
+		ChromEnd: 3500,
+		Name: "Second",
+		Score: 2,
+		Strand: '-',
+		FieldsInitialized: 9,
+	},
+	B: bed.Bed {
+		Chrom: "chr9",
+		ChromStart: 6700,
+		ChromEnd: 6780,
+		Name: "Second",
+		Score: 2,
+		Strand: '-',
+		FieldsInitialized: 9,
+	},
+}
 
 var beds []BedPe = []BedPe{b1, b2}
 

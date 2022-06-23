@@ -16,42 +16,32 @@ import (
 )
 
 type BedPe struct {
-	ChromA            string
-	ChromStartA       int
-	ChromEndA         int
-	ChromB            string
-	ChromStartB       int
-	ChromEndB         int
-	Name              string
-	Score             int
-	StrandA           bed.Strand
-	StrandB           bed.Strand
-	FieldsInitialized int      //number of fields that are initialized, used for smart writing.
-	Annotation        []string //long form for extra fields
+	A bed.Bed
+	B bed.Bed
 }
 
 // String converts a BedPe struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b BedPe) String() string {
-	return ToString(b, b.FieldsInitialized)
+	return ToString(b, b.A.FieldsInitialized)
 }
 
 // ToString converts a BedPe struct into a BedPe file format string. Useful for writing to files or printing.
 func ToString(bunk BedPe, fields int) string {
 	switch {
 	case fields == 6:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d", bunk.A.Chrom, bunk.A.ChromStart, bunk.A.ChromEnd, bunk.B.Chrom, bunk.B.ChromStart, bunk.B.ChromEnd)
 	case fields == 7:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s", bunk.A.Chrom, bunk.A.ChromStart, bunk.A.ChromEnd, bunk.B.Chrom, bunk.B.ChromStart, bunk.B.ChromEnd, bunk.A.Name)
 	case fields == 8:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d", bunk.A.Chrom, bunk.A.ChromStart, bunk.A.ChromEnd, bunk.B.Chrom, bunk.B.ChromStart, bunk.B.ChromEnd, bunk.A.Name, bunk.A.Score)
 	case fields == 9:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score, bunk.StrandA)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c", bunk.A.Chrom, bunk.A.ChromStart, bunk.A.ChromEnd, bunk.B.Chrom, bunk.B.ChromStart, bunk.B.ChromEnd, bunk.A.Name, bunk.A.Score, bunk.A.Strand)
 	case fields == 10:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score, bunk.StrandA, bunk.StrandB)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.A.Chrom, bunk.A.ChromStart, bunk.A.ChromEnd, bunk.B.Chrom, bunk.B.ChromStart, bunk.B.ChromEnd, bunk.A.Name, bunk.A.Score, bunk.A.Strand, bunk.B.Strand)
 	case fields >= 11:
-		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score, bunk.StrandA, bunk.StrandB)
-		for i := range bunk.Annotation {
-			out = fmt.Sprintf("%s\t%s", out, bunk.Annotation[i])
+		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.A.Chrom, bunk.A.ChromStart, bunk.A.ChromEnd, bunk.B.Chrom, bunk.B.ChromStart, bunk.B.ChromEnd, bunk.A.Name, bunk.A.Score, bunk.A.Strand, bunk.B.Strand)
+		for i := range bunk.A.Annotation {
+			out = fmt.Sprintf("%s\t%s", out, bunk.A.Annotation[i])
 		}
 		return out
 	default:
@@ -99,38 +89,44 @@ func Read(filename string) []BedPe {
 
 //processBedPeLine is a helper function of Read that returns a BedPe struct from an input line of a file.
 func processBedPeLine(line string) BedPe {
-	var start1Num, end1Num, start2Num, end2Num int
+	var startANum, endANum, startBNum, endBNum int
 	words := strings.Split(line, "\t")
-	start1Num = common.StringToInt(words[1])
-	end1Num = common.StringToInt(words[2])
-	start2Num = common.StringToInt(words[4])
-	end2Num = common.StringToInt(words[5])
+	startANum = common.StringToInt(words[1])
+	endANum = common.StringToInt(words[2])
+	startBNum = common.StringToInt(words[4])
+	endBNum = common.StringToInt(words[5])
 
-	current := BedPe{ChromA: words[0],
-		ChromStartA:       start1Num,
-		ChromEndA:         end1Num,
-		ChromB:            words[3],
-		ChromStartB:       start2Num,
-		ChromEndB:         end2Num,
-		StrandA:           bed.None,
-		StrandB:           bed.None,
+	current := BedPe{A: bed.Bed{
+		Chrom: words[0],
+		ChromStart: startANum,
+		ChromEnd: endANum,
+		Strand: bed.None,
 		FieldsInitialized: len(words),
+		},
+		B: bed.Bed{
+		Chrom: words[3],
+		ChromStart: startBNum,
+		ChromEnd: endBNum,
+		Strand: bed.None,
+		FieldsInitialized: len(words),
+		},
 	}
 	if len(words) >= 7 {
-		current.Name = words[6]
+		current.A.Name, current.B.Name = words[6], words[6]
 	}
 	if len(words) >= 8 {
-		current.Score = common.StringToInt(words[7])
+		current.A.Score, current.B.Score = common.StringToInt(words[7]), common.StringToInt(words[7])
 	}
 	if len(words) >= 9 {
-		current.StrandA = bed.StringToStrand(words[8])
+		current.A.Strand = bed.StringToStrand(words[8])
 	}
 	if len(words) >= 10 {
-		current.StrandB = bed.StringToStrand(words[9])
+		current.B.Strand = bed.StringToStrand(words[9])
 	}
 	if len(words) >= 11 {
 		for i := 10; i < len(words); i++ {
-			current.Annotation = append(current.Annotation, words[i])
+			current.A.Annotation = append(current.A.Annotation, words[i])
+			current.B.Annotation = append(current.B.Annotation, words[i])
 		}
 	}
 

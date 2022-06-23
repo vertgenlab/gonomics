@@ -1,11 +1,12 @@
 package bedpe
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
 	"testing"
 )
 
-var Equal1 BedPe = BedPe{ChromA: "chr9", ChromStartA: 60, ChromEndA: 75, ChromB: "chr9", ChromStartB: 7500, ChromEndB: 7900}
-var Equal2 BedPe = BedPe{ChromA: "chr12", ChromStartA: 86500, ChromEndA: 86540, ChromB: "chr12", ChromStartB: 975340, ChromEndB: 975550}
+var Equal1 BedPe = BedPe{A: bed.Bed{Chrom: "chr9", ChromStart: 60, ChromEnd: 75,}, B: bed.Bed{Chrom: "chr9", ChromStart: 7500, ChromEnd: 7900}}
+var Equal2 BedPe = BedPe{A: bed.Bed{Chrom: "chr12", ChromStart: 86500, ChromEnd: 86540,}, B: bed.Bed{Chrom: "chr12", ChromStart: 975340, ChromEnd: 975550}}
 
 var EqualTests = []struct {
 	a BedPe
