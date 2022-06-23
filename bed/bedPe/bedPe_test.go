@@ -1,4 +1,4 @@
-package bedPe
+package bedpe
 
 import (
 	"github.com/vertgenlab/gonomics/exception"

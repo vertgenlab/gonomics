@@ -1,7 +1,7 @@
-// Package bedPe provides functions for handling Bed Paired End format files, used for
+// Package bedpe provides functions for handling Bed Paired End format files, used for
 // handling pairs of genomic regions.
 
-package bedPe
+package bedpe
 
 import (
 	"fmt"
