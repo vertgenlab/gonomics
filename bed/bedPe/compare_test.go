@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-var Equal1 BedPe = BedPe{Chrom1: "chr9", ChromStart1: 60, ChromEnd1: 75, Chrom2: "chr9", ChromStart2: 7500, ChromEnd2: 7900}
-var Equal2 BedPe = BedPe{Chrom1: "chr12", ChromStart1: 86500, ChromEnd1: 86540, Chrom2: "chr12", ChromStart2: 975340, ChromEnd2: 975550}
+var Equal1 BedPe = BedPe{ChromA: "chr9", ChromStartA: 60, ChromEndA: 75, ChromB: "chr9", ChromStartB: 7500, ChromEndB: 7900}
+var Equal2 BedPe = BedPe{ChromA: "chr12", ChromStartA: 86500, ChromEndA: 86540, ChromB: "chr12", ChromStartB: 975340, ChromEndB: 975550}
 
 var EqualTests = []struct {
 	a BedPe

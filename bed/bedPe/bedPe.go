@@ -6,26 +6,26 @@ package bedpe
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 )
 
 type BedPe struct {
-	Chrom1            string
-	ChromStart1       int
-	ChromEnd1         int
-	Chrom2            string
-	ChromStart2       int
-	ChromEnd2         int
+	ChromA            string
+	ChromStartA       int
+	ChromEndA         int
+	ChromB            string
+	ChromStartB       int
+	ChromEndB         int
 	Name              string
 	Score             int
-	Strand1           bed.Strand
-	Strand2           bed.Strand
+	StrandA           bed.Strand
+	StrandB           bed.Strand
 	FieldsInitialized int      //number of fields that are initialized, used for smart writing.
 	Annotation        []string //long form for extra fields
 }
@@ -39,17 +39,17 @@ func (b BedPe) String() string {
 func ToString(bunk BedPe, fields int) string {
 	switch {
 	case fields == 6:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d", bunk.Chrom1, bunk.ChromStart1, bunk.ChromEnd1, bunk.Chrom2, bunk.ChromStart2, bunk.ChromEnd2)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB)
 	case fields == 7:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s", bunk.Chrom1, bunk.ChromStart1, bunk.ChromEnd1, bunk.Chrom2, bunk.ChromStart2, bunk.ChromEnd2, bunk.Name)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name)
 	case fields == 8:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d", bunk.Chrom1, bunk.ChromStart1, bunk.ChromEnd1, bunk.Chrom2, bunk.ChromStart2, bunk.ChromEnd2, bunk.Name, bunk.Score)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score)
 	case fields == 9:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom1, bunk.ChromStart1, bunk.ChromEnd1, bunk.Chrom2, bunk.ChromStart2, bunk.ChromEnd2, bunk.Name, bunk.Score, bunk.Strand1)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score, bunk.StrandA)
 	case fields == 10:
-		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.Chrom1, bunk.ChromStart1, bunk.ChromEnd1, bunk.Chrom2, bunk.ChromStart2, bunk.ChromEnd2, bunk.Name, bunk.Score, bunk.Strand1, bunk.Strand2)
+		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score, bunk.StrandA, bunk.StrandB)
 	case fields >= 11:
-		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.Chrom1, bunk.ChromStart1, bunk.ChromEnd1, bunk.Chrom2, bunk.ChromStart2, bunk.ChromEnd2, bunk.Name, bunk.Score, bunk.Strand1, bunk.Strand2)
+		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%c\t%c", bunk.ChromA, bunk.ChromStartA, bunk.ChromEndA, bunk.ChromB, bunk.ChromStartB, bunk.ChromEndB, bunk.Name, bunk.Score, bunk.StrandA, bunk.StrandB)
 		for i := range bunk.Annotation {
 			out = fmt.Sprintf("%s\t%s", out, bunk.Annotation[i])
 		}
@@ -58,13 +58,6 @@ func ToString(bunk BedPe, fields int) string {
 		log.Fatalf("Error: expecting a request to print at least 6 bedPe fields, but got: %d\n", fields)
 	}
 	return ""
-}
-
-// WriteBed writes an input BedPe struct to an io.Writer.
-func WriteBedPe(file io.Writer, input BedPe) {
-	var err error
-	_, err = fmt.Fprintf(file, "%s\n", input)
-	exception.PanicOnErr(err)
 }
 
 // WriteToFileHandle writes an input BedPe struct to an io.Writer
@@ -106,39 +99,34 @@ func Read(filename string) []BedPe {
 
 //processBedPeLine is a helper function of Read that returns a BedPe struct from an input line of a file.
 func processBedPeLine(line string) BedPe {
-	var err error
 	var start1Num, end1Num, start2Num, end2Num int
 	words := strings.Split(line, "\t")
-	start1Num, err = strconv.Atoi(words[1])
-	exception.PanicOnErr(err)
-	end1Num, err = strconv.Atoi(words[2])
-	exception.PanicOnErr(err)
-	start2Num, err = strconv.Atoi(words[4])
-	exception.PanicOnErr(err)
-	end2Num, err = strconv.Atoi(words[5])
-	exception.PanicOnErr(err)
-	current := BedPe{Chrom1: words[0],
-		ChromStart1:       start1Num,
-		ChromEnd1:         end1Num,
-		Chrom2:            words[3],
-		ChromStart2:       start2Num,
-		ChromEnd2:         end2Num,
-		Strand1:           bed.None,
-		Strand2:           bed.None,
+	start1Num = common.StringToInt(words[1])
+	end1Num = common.StringToInt(words[2])
+	start2Num = common.StringToInt(words[4])
+	end2Num = common.StringToInt(words[5])
+
+	current := BedPe{ChromA: words[0],
+		ChromStartA:       start1Num,
+		ChromEndA:         end1Num,
+		ChromB:            words[3],
+		ChromStartB:       start2Num,
+		ChromEndB:         end2Num,
+		StrandA:           bed.None,
+		StrandB:           bed.None,
 		FieldsInitialized: len(words),
 	}
 	if len(words) >= 7 {
 		current.Name = words[6]
 	}
 	if len(words) >= 8 {
-		current.Score, err = strconv.Atoi(words[7])
-		exception.PanicOnErr(err)
+		current.Score = common.StringToInt(words[7])
 	}
 	if len(words) >= 9 {
-		current.Strand1 = bed.StringToStrand(words[8])
+		current.StrandA = bed.StringToStrand(words[8])
 	}
 	if len(words) >= 10 {
-		current.Strand2 = bed.StringToStrand(words[9])
+		current.StrandB = bed.StringToStrand(words[9])
 	}
 	if len(words) >= 11 {
 		for i := 10; i < len(words); i++ {

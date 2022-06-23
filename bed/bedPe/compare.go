@@ -18,22 +18,22 @@ func AllAreEqual(a []BedPe, b []BedPe) bool {
 
 // Equal returns true if two input BedPe entries have the same coordinates for both regions. False otherwise.
 func Equal(a BedPe, b BedPe) bool {
-	if strings.Compare(a.Chrom1, b.Chrom1) != 0 {
+	if strings.Compare(a.ChromA, b.ChromB) != 0 {
 		return false
 	}
-	if strings.Compare(a.Chrom2, b.Chrom2) != 0 {
+	if strings.Compare(a.ChromB, b.ChromB) != 0 {
 		return false
 	}
-	if a.ChromStart1 != b.ChromStart1 {
+	if a.ChromStartA != b.ChromStartA {
 		return false
 	}
-	if a.ChromStart2 != b.ChromStart2 {
+	if a.ChromStartB != b.ChromStartB {
 		return false
 	}
-	if a.ChromEnd1 != b.ChromEnd1 {
+	if a.ChromEndA != b.ChromEndA {
 		return false
 	}
-	if a.ChromEnd2 != b.ChromEnd2 {
+	if a.ChromEndB != b.ChromEndB {
 		return false
 	}
 	return true
