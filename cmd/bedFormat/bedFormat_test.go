@@ -14,8 +14,8 @@ var BedFormatTests = []struct {
 	UCSCToEnsembl  bool
 	EnsemblToUCSC  bool
 	ScaleNameFloat float64
-	PadLength int
-	ChromSizeFile string
+	PadLength      int
+	ChromSizeFile  string
 }{
 	{"testdata/test.bed", //this test is for scaleNameFloat
 		"testdata/test.outFloat.bed",
@@ -65,8 +65,8 @@ func TestBedFormat(t *testing.T) {
 			UCSCToEnsembl:  v.UCSCToEnsembl,
 			EnsemblToUCSC:  v.EnsemblToUCSC,
 			ScaleNameFloat: v.ScaleNameFloat,
-			ChromSizeFile: v.ChromSizeFile,
-			PadLength: v.PadLength,
+			ChromSizeFile:  v.ChromSizeFile,
+			PadLength:      v.PadLength,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

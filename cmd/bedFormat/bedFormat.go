@@ -6,9 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/convert"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -37,8 +37,8 @@ func bedFormat(s Settings) {
 			if _, inMap = sizes[v.Chrom]; !inMap {
 				log.Fatalf("Chrom for current bed entry not found in chromSizes file. BedChrom: %s.", v.Chrom)
 			}
-			v.ChromStart = numbers.Max(v.ChromStart - s.PadLength, 0)
-			v.ChromEnd = numbers.Min(v.ChromEnd + s.PadLength, sizes[v.Chrom].Size)
+			v.ChromStart = numbers.Max(v.ChromStart-s.PadLength, 0)
+			v.ChromEnd = numbers.Min(v.ChromEnd+s.PadLength, sizes[v.Chrom].Size)
 		}
 		if s.EnsemblToUCSC {
 			v.Chrom = convert.EnsemblToUCSC(v.Chrom)
@@ -71,8 +71,8 @@ type Settings struct {
 	UCSCToEnsembl  bool
 	EnsemblToUCSC  bool
 	ScaleNameFloat float64
-	PadLength int
-	ChromSizeFile string
+	PadLength      int
+	ChromSizeFile  string
 }
 
 func main() {
@@ -82,7 +82,6 @@ func main() {
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
 	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", 1, "If float values are held in the name field, scale those values by this constant multiplier.")
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specify a .chrom.sizes file for use with the padLength option. Ensures padding is truncated at chromosome ends.")
-
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -103,8 +102,8 @@ func main() {
 		UCSCToEnsembl:  *UCSCToEnsembl,
 		EnsemblToUCSC:  *ensemblToUCSC,
 		ScaleNameFloat: *scaleNameFloat,
-		PadLength: *padLength,
-		ChromSizeFile: *chromSizeFile,
+		PadLength:      *padLength,
+		ChromSizeFile:  *chromSizeFile,
 	}
 
 	bedFormat(s)
