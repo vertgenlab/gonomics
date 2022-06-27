@@ -71,16 +71,13 @@ func Write(filename string, records []BedPe) {
 
 // Read returns a slice of BedPe structs from an input filename.
 func Read(filename string) []BedPe {
-	var line string
 	var answer []BedPe
 	var err error
-	var doneReading bool
 
 	file := fileio.EasyOpen(filename)
 
-	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
-		current := processBedPeLine(line)
-		answer = append(answer, current)
+	for curr, done := NextBedPe(file); !done; curr, done = NextBedPe(file) {
+		answer = append(answer, curr)
 	}
 	err = file.Close()
 	exception.PanicOnErr(err)
