@@ -4,11 +4,11 @@ package bed
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -109,18 +109,15 @@ func Read(filename string) []Bed {
 //processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
-	startNum, err := strconv.Atoi(words[1])
-	exception.PanicOnErr(err)
-	endNum, err := strconv.Atoi(words[2])
-	exception.PanicOnErr(err)
+	startNum := common.StringToInt(words[1])
+	endNum := common.StringToInt(words[2])
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score, err = strconv.Atoi(words[4])
-		exception.PanicOnErr(err)
+		current.Score = common.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
 		current.Strand = StringToStrand(words[5])
