@@ -77,7 +77,6 @@ func makeTargetSubDir(path string, outDir string, s string) {
 			}
 			parentDir := outDir + "/" + trName
 			makeQuerySubDir(qDir, parentDir)
-			//TODO: return all returns for the larger function, may have to make a return section in filepath.WalkDir func
 		}
 		return nil
 	})
