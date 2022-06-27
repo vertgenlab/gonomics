@@ -11,6 +11,7 @@ import (
 )
 
 //TODO: makeArray should be the cmd, needs to go back and find the target and query dirs, recover tName and qName
+//TODO: makeArray needs to use the findParameters return (AlignSetUp return) to make the tsv with a helper in the cmd file, rather than just returning them. This function doesnt need a return.
 
 func makeArray(speciesListFile string, refListFile string, allDists string) (par []string, mat string) { //returns for each ref and spec pairing that it is given, the targetDir, the queryDir, t, q, outDir, tName, qName, matrix, paramters
 	speciesList := fileio.EasyOpen(speciesListFile)
@@ -30,11 +31,80 @@ func makeArray(speciesListFile string, refListFile string, allDists string) (par
 	return
 }
 
+//AlignSetUp takes in a single aligning species and reference species, as well as a text file that describes the
+//distance between all species in the alignment from all other species in the alignment. This file is make with
+//Phylogenetic Analysis with Space/Time Models or PHAST all_dists function. AlignSetUp then calls its helper functions
+//and returns the results of findParameters.
 func AlignSetUp(species string, reference string, allDists string) (par []string, mat string) {
 	outDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + reference + "." + species
-	output, t, q, tName, qName := makeOutDir(outDir, reference, species)
+	makeOutDir(outDir, reference, species)
 	parameters, matrix := findParameters(reference, species, allDists)
 	return parameters, matrix
+}
+
+//makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
+//the directory labelled with the name of the reference and the species being aligned. It then passes off to a
+//helper function makeTargetSubDir
+func makeOutDir(outDir string, r string, s string) {
+	tDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + r + ".byChrom"
+	if _, e := os.Stat(outDir); os.IsNotExist(e) {
+		err := os.Mkdir(outDir, 666)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	makeTargetSubDir(tDir, outDir, s)
+}
+
+//makeTargetSubDir creates the next directory layer below makeOutDir which contains all alingments to a
+//single reference against any other species.
+func makeTargetSubDir(path string, outDir string, s string) {
+	var tr, trName string
+	qDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + s + ".byChrom"
+	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
+		if err != nil {
+			log.Fatal(err)
+		}
+		matched, err := filepath.Match("*.fa", f)
+		if err != nil {
+			return err
+		} else if matched {
+			tr = f
+			trName = strings.TrimSuffix(tr, ".fa")
+			err1 := os.Mkdir(outDir+"/"+trName, 666)
+			if err1 != nil {
+				log.Fatal(err1)
+			}
+			parentDir := outDir + "/" + trName
+			makeQuerySubDir(qDir, parentDir)
+			//TODO: return all returns for the larger function, may have to make a return section in filepath.WalkDir func
+		}
+		return nil
+	})
+}
+
+//makeQuerySubDir makes the second layer of subdirectories within both outDir and targetDir which holds the
+//alignment output of a reference (it's parent directory name) against a species (the directory name).
+//These directories will remain empty until the array created by these functions is run.
+func makeQuerySubDir(path string, pDir string) {
+	var qu, quName string
+	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
+		if err != nil {
+			log.Fatal(err)
+		}
+		matched, err := filepath.Match("*.fa", f)
+		if err != nil {
+			return err
+		} else if matched {
+			qu = f
+			quName = strings.TrimSuffix(qu, ".fa")
+			err := os.Mkdir(pDir+"/"+quName, 666)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		return nil
+	})
 }
 
 //findParameters takes in one pair of species to be alignment (one of them the ref and the other not) and determines
@@ -67,78 +137,3 @@ func findParameters(reference string, species string, distsFile string) (par []s
 	}
 	return answer, mat
 }
-
-func makeOutDir(outDir string, r string, s string) (out string, target string, query string, tName string, qName string) {
-	tDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + r + ".byChrom"
-	//TODO: make a variable that stores the majority of the path
-	err := os.Chdir("/hpc/group/vertgenlab/vertebrateConservation/pairwise/")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, e := os.Stat(outDir); os.IsNotExist(e) {
-		err2 := os.Mkdir(outDir, 666)
-		if err2 != nil {
-			log.Fatal(err2)
-		}
-	}
-	tr, qu, trName, quName := makeTargetSubDir(tDir, outDir, s)
-
-	return out, tr, qu, trName, quName
-}
-func makeTargetSubDir(path string, outDir string, s string) (target string, query string, tName string, qName string) {
-	var tr, qu, trName, quName string
-	qDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + s + ".byChrom"
-	err := os.Chdir(outDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
-		if err != nil {
-			log.Fatal(err)
-		}
-		matched, err := filepath.Match("*.fa", f)
-		if err != nil {
-			return err
-		} else if matched {
-			tr = f
-			trName = strings.TrimSuffix(tr, ".fa")
-			err := os.Mkdir(tName, 666)
-			if err != nil {
-				log.Fatal(err)
-			}
-			qu, quName = makeQuerySubDir(qDir, tName, outDir)
-			//TODO: return all returns for the larger function, may have to make a return section in filepath.WalkDir func
-		}
-		return nil
-	})
-	return tr, qu, trName, quName
-}
-
-func makeQuerySubDir(path string, tName string, outDir string) (q string, qName string) {
-	var qu, quName string
-	err := os.Chdir(outDir + "/" + tName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
-		if err != nil {
-			log.Fatal(err)
-		}
-		matched, err := filepath.Match("*.fa", f)
-		if err != nil {
-			return err
-		} else if matched {
-			qu = f
-			quName = strings.TrimSuffix(q, ".fa")
-			err := os.Mkdir(qName, 666)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-		return nil
-	})
-
-	return qu, quName
-}
-
-//TODO:I could return nothing and just create the directory tree and in the command I could access them and build each line that way
