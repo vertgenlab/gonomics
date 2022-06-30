@@ -232,7 +232,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	// ******
 	// Safe String Conversion
 	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
-	if qual[0]-33 == 0xff {
+	if len(qual) > 0 && qual[0]-33 == 0xff {
 		s.Qual = "*"
 	}
 	// ******
