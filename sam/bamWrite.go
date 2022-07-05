@@ -242,6 +242,15 @@ func opToUint32(r rune) uint32 {
 	}
 }
 
+// UpdatedExtra must be called if a record was read in from a bam file
+// and the text representation of extra field was updated. UpdatedExtra
+// deletes the unparsed binary representation of the extra field such that
+// when writing, a new binary representation will be encoded that includes
+// the added text.
+func UpdatedExtra(s *Sam) {
+	s.unparsedExtra = nil
+}
+
 // writeExtra writes the Extra field of a sam to a BamWriter.
 func writeExtra(bw *BamWriter, s Sam) {
 	// write from unparsed Extra if present
