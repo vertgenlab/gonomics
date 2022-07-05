@@ -43,6 +43,9 @@ func ParseExtra(s *Sam) error {
 		var tmp Sam
 		tmp, err = parseExtra(*s)
 		s.parsedExtra = tmp.parsedExtra
+		s.parsedExtraIdx = tmp.parsedExtraIdx
+		s.parsedExtraTags = tmp.parsedExtraTags
+		s.parsedExtraTypes = tmp.parsedExtraTypes
 	}
 	s.Extra = parsedExtraToString(s)
 	s.unparsedExtra = nil
