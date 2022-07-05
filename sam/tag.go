@@ -45,6 +45,7 @@ func ParseExtra(s *Sam) error {
 		s.parsedExtra = tmp.parsedExtra
 	}
 	s.Extra = parsedExtraToString(s)
+	s.unparsedExtra = nil
 	return err
 }
 
