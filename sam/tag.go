@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"math"
 	"strings"
@@ -37,13 +38,15 @@ func QueryTag(s Sam, t string) (value interface{}, found bool, error error) {
 // ParseExtra generates the text representation of the Extra field.
 // This is required if the file was read from a bam file and the Extra
 // field is going to be modified.
-func ParseExtra(s Sam) (Sam, error) {
+func ParseExtra(s *Sam) error {
 	var err error
 	if s.parsedExtra == nil {
-		s, err = parseExtra(s)
+		var tmp sam.Sam
+		tmp, err = parseExtra(*s)
+		s.parsedExtra = tmp.parsedExtra
 	}
-	s.Extra = parsedExtraToString(&s)
-	return s, err
+	s.Extra = parsedExtraToString(s)
+	return err
 }
 
 func parseExtra(s Sam) (Sam, error) {
