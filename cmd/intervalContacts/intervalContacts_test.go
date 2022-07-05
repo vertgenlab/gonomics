@@ -8,9 +8,9 @@ import (
 )
 
 var IntervalContactsTests = []struct {
-	BedPeFile string
-	InFile string
-	OutFile string
+	BedPeFile    string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/contacts.bedpe", "testdata/input.bed", "testdata/test.out.bed", "testdata/expected.out.bed"},
