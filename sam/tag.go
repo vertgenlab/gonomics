@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"math"
 	"strings"
@@ -41,7 +40,7 @@ func QueryTag(s Sam, t string) (value interface{}, found bool, error error) {
 func ParseExtra(s *Sam) error {
 	var err error
 	if s.parsedExtra == nil {
-		var tmp sam.Sam
+		var tmp Sam
 		tmp, err = parseExtra(*s)
 		s.parsedExtra = tmp.parsedExtra
 	}
