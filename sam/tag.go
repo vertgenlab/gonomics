@@ -34,6 +34,18 @@ func QueryTag(s Sam, t string) (value interface{}, found bool, error error) {
 	return
 }
 
+// ParseExtra generates the text representation of the Extra field.
+// This is required if the file was read from a bam file and the Extra
+// field is going to be modified.
+func ParseExtra(s Sam) (Sam, error) {
+	var err error
+	if s.parsedExtra == nil {
+		s, err = parseExtra(s)
+	}
+	s.Extra = parsedExtraToString(&s)
+	return s, err
+}
+
 func parseExtra(s Sam) (Sam, error) {
 	if s.unparsedExtra == nil {
 		return s, errors.New("no tags present, or record was not parsed from a bam file")
