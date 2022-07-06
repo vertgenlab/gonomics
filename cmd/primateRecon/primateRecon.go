@@ -270,7 +270,7 @@ func main() {
 	if *nonBiasProbThreshold != 0 && *mleHcaUnbiased {
 		log.Fatalf("Error: Can not do a nonBiasProbThreshold when also doing an unbiased estimate\n")
 	}
-	if *mleHgaGorillaBiased && (*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased)  {
+	if *mleHgaGorillaBiased && (*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased) {
 		log.Fatalf("Error: cannot estimate both the HCA and the HGA at once\n")
 	}
 
