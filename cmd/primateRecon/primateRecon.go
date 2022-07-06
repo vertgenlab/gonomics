@@ -264,7 +264,7 @@ func main() {
 	if *mleHcaUnbiased && (*mleHcaHumanBiased || *mleHcaChimpBiased) {
 		log.Fatalf("Error: Can not do both a biased and unbiased mle estimate\n")
 	}
-	if (*probThreshold != 0 || *nonBiasProbThreshold != 0) && !(*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased) {
+	if (*probThreshold != 0 || *nonBiasProbThreshold != 0) && !(*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased || *mleHgaGorillaBiased) {
 		log.Fatalf("Error: Can not use probability threshold flags without also using an mle estimate\n")
 	}
 	if *nonBiasProbThreshold != 0 && *mleHcaUnbiased {
