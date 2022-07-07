@@ -28,9 +28,9 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string)
 	}
 	unionTree := interval.BuildTree(unionIntervals)
 
-	var mat = make(map[string][]int)//this will be our output feature matrix. mat[row] => col, where rows are genomic regions, cols are files.
+	var mat = make(map[string][]int) //this will be our output feature matrix. mat[row] => col, where rows are genomic regions, cols are files.
 	for _, u := range unionIntervals {
-		mat[interval.CoordsToString(u)] = make([]int, len(files))//initialize all rows to zeros based on the number of files. Map is indexed by coords of regions.
+		mat[interval.CoordsToString(u)] = make([]int, len(files)) //initialize all rows to zeros based on the number of files. Map is indexed by coords of regions.
 	}
 
 	for i = range files {
@@ -53,8 +53,7 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string)
 	for k := range mat {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)//jusst alphanumeric sort, might change to coordinate sort, though order doesn't matter.
-
+	sort.Strings(keys) //jusst alphanumeric sort, might change to coordinate sort, though order doesn't matter.
 
 	for x := range keys {
 		currLineString = keys[x]
@@ -75,7 +74,7 @@ func usage() {
 		"Usage:\n" +
 		"intervalSubsetMatrix union.interval files.list out.txt\n" +
 		"options:\n",
-		)
+	)
 	flag.PrintDefaults()
 }
 
