@@ -7,9 +7,10 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"log"
+	"sort"
 )
 
-func bedSubsetMatrix(unionFile string, fileListFile string, outFile string) {
+func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string) {
 	var err error
 	var i int
 	var j interval.Interval
@@ -48,10 +49,17 @@ func bedSubsetMatrix(unionFile string, fileListFile string, outFile string) {
 	_, err = fmt.Fprintln(out, headerString)
 	exception.PanicOnErr(err)
 
-	for x := range mat {
-		currLineString = x
-		for y := range mat[x] {
-			currLineString = fmt.Sprintf("%s\t%v", currLineString, mat[x][y])
+	keys := make([]string, 0, len(mat))
+	for k := range mat {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)//jusst alphanumeric sort, might change to coordinate sort, though order doesn't matter.
+
+
+	for x := range keys {
+		currLineString = keys[x]
+		for y := range mat[keys[x]] {
+			currLineString = fmt.Sprintf("%s\t%v", currLineString, mat[keys[x]][y])
 		}
 		_, err = fmt.Fprintln(out, currLineString)
 		exception.PanicOnErr(err)
@@ -62,10 +70,10 @@ func bedSubsetMatrix(unionFile string, fileListFile string, outFile string) {
 }
 
 func usage() {
-	fmt.Print("bedSubsetMatrix - Produces a binary matrix for accessibility breadth analysis.\n" +
-		"Rows correspond to genomic regions. Columns correspond to queried bed files.\n" +
+	fmt.Print("intervalSubsetMatrix - Produces a binary matrix for accessibility breadth analysis.\n" +
+		"Rows correspond to genomic regions. Columns correspond to queried interval files.\n" +
 		"Usage:\n" +
-		"bedSubsetMatrix union.bed files.list out.txt\n" +
+		"intervalSubsetMatrix union.interval files.list out.txt\n" +
 		"options:\n",
 		)
 	flag.PrintDefaults()
@@ -86,5 +94,5 @@ func main() {
 	fileListFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	bedSubsetMatrix(unionFile, fileListFile, outFile)
+	intervalSubsetMatrix(unionFile, fileListFile, outFile)
 }
