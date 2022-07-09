@@ -27,9 +27,9 @@ func bedSubsetMatrix(unionFile string, fileListFile string, outFile string) {
 	}
 	unionTree := interval.BuildTree(unionIntervals)
 
-	var mat = make(map[string][]int)//this will be our output feature matrix. mat[row] => col, where rows are genomic regions, cols are files.
+	var mat = make(map[string][]int) //this will be our output feature matrix. mat[row] => col, where rows are genomic regions, cols are files.
 	for _, u := range unionIntervals {
-		mat[interval.CoordsToString(u)] = make([]int, len(files))//initialize all rows to zeros based on the number of files. Map is indexed by coords of regions.
+		mat[interval.CoordsToString(u)] = make([]int, len(files)) //initialize all rows to zeros based on the number of files. Map is indexed by coords of regions.
 	}
 
 	for i = range files {
@@ -67,7 +67,7 @@ func usage() {
 		"Usage:\n" +
 		"bedSubsetMatrix union.bed files.list out.txt\n" +
 		"options:\n",
-		)
+	)
 	flag.PrintDefaults()
 }
 

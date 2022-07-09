@@ -6,7 +6,7 @@ import (
 )
 
 var CoordsToStringTests = []struct {
-	I Interval
+	I        Interval
 	Expected string
 }{
 	{I: bed.Bed{Chrom: "chr1", ChromStart: 2900, ChromEnd: 3100}, Expected: "chr1:2900-3100"},
