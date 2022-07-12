@@ -13,18 +13,19 @@ import (
 //TODO: makeArray should be the cmd, needs to go back and find the target and query dirs, recover tName and qName
 //TODO: makeArray needs to use the findParameters return (AlignSetUp return) to make the tsv with a helper in the cmd file, rather than just returning them. This function doesnt need a return.
 
-func makeArray(speciesListFile string, refListFile string, allDists string) (par []string, mat string) { //returns for each ref and spec pairing that it is given, the targetDir, the queryDir, t, q, outDir, tName, qName, matrix, paramters
+func makeArray(speciesListFile string, refListFile string, allDists string) (par []string, mat string, dis int) { //returns for each ref and spec pairing that it is given, the targetDir, the queryDir, t, q, outDir, tName, qName, matrix, paramters
 	speciesList := fileio.EasyOpen(speciesListFile)
 	refList := fileio.EasyOpen(refListFile)
 	var spec, ref string
 	var speciesDone, refDone bool
 	var parameters []string
 	var matrix string
+	var dist int
 	for ref, refDone = fileio.EasyNextRealLine(refList); !refDone; ref, refDone = fileio.EasyNextRealLine(refList) {
 		for spec, speciesDone = fileio.EasyNextRealLine(speciesList); !speciesDone; spec, speciesDone = fileio.EasyNextRealLine(speciesList) {
 			if spec != ref {
-				parameters, matrix = AlignSetUp(spec, ref, allDists)
-				return parameters, matrix
+				parameters, matrix, dist = AlignSetUp(spec, ref, allDists)
+				return parameters, matrix, dist
 			}
 		}
 	}
@@ -35,11 +36,11 @@ func makeArray(speciesListFile string, refListFile string, allDists string) (par
 //distance between all species in the alignment from all other species in the alignment. This file is make with
 //Phylogenetic Analysis with Space/Time Models or PHAST all_dists function. AlignSetUp then calls its helper functions
 //and returns the results of findParameters.
-func AlignSetUp(species string, reference string, allDists string) (par []string, mat string) {
+func AlignSetUp(species string, reference string, allDists string) (par []string, mat string, dis int) {
 	outDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + reference + "." + species
 	makeOutDir(outDir, reference, species)
-	parameters, matrix := findParameters(reference, species, allDists)
-	return parameters, matrix
+	parameters, matrix, dist := findParameters(reference, species, allDists)
+	return parameters, matrix, dist
 }
 
 //makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
@@ -111,9 +112,10 @@ func makeQuerySubDir(path string, pDir string) {
 //a species can be classified into three categories, closest, where the matrix and parameters will match those used
 //for a chimp to human alignment with lastZ, middle, where the parameters will be default for lastZ and the matrix and
 //far, where the parameters will be set to the most distant alignment parameters and the matrix will be set to HoxD55.
-func findParameters(reference string, species string, distsFile string) (par []string, matrix string) {
+func findParameters(reference string, species string, distsFile string) (par []string, matrix string, dis int) {
 	var words []string
 	var answer []string
+	var dist int
 	var mat string
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
@@ -121,6 +123,7 @@ func findParameters(reference string, species string, distsFile string) (par []s
 		//TODO: is it more efficient to do if words[0] == reference and then nest another if of words[1] == species?
 		if words[0] == reference && words[1] == species {
 			d := common.StringToFloat64(words[2])
+			dist = d
 			switch {
 			case d <= 0.2: //closest
 				answer = append(answer, "600", "150", "2", "254", "4500", "3000", "15000")
@@ -134,5 +137,5 @@ func findParameters(reference string, species string, distsFile string) (par []s
 			} //TODO: hard code matrices and give an option of reading in a matrix
 		}
 	}
-	return answer, mat
+	return answer, mat, dist
 }

@@ -1,29 +1,39 @@
 package main
 
 import (
+	"encoding/csv"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/lastZWriter"
 )
 
-func main(speciesListFile string, refListFile string, allDists string, outText string, outTsv string) {
+func main(speciesListFile string, refListFile string, allDists string, outText string, outCsv string) {
 	speciesList := fileio.EasyOpen(speciesListFile)
 	refList := fileio.EasyOpen(refListFile)
+	csvFile := fileio.EasyCreate(outCsv)
+	textFile := fileio.EasyCreate(outText)
 	var spec, ref string
 	var speciesDone, refDone bool
 	var parameters []string
 	var matrix string
+	var dist int
 	for ref, refDone = fileio.EasyNextRealLine(refList); !refDone; ref, refDone = fileio.EasyNextRealLine(refList) {
 		for spec, speciesDone = fileio.EasyNextRealLine(speciesList); !speciesDone; spec, speciesDone = fileio.EasyNextRealLine(speciesList) {
 			if spec != ref {
-				parameters, matrix = lastZWriter.AlignSetUp(spec, ref, allDists)
-				writeFiles(ref, spec, parameters, matrix)
+				parameters, matrix, dist = lastZWriter.AlignSetUp(spec, ref, allDists)
+				writeFiles(ref, spec, parameters, matrix, dist, textFile, csvFile)
 			}
 		}
 	}
 }
 
-func writeFiles(referece string, species string, parameters []string, matrix string, outText string, outTsv string) {
-	//TODO: write TSV with directories involved?
+func writeFiles(reference string, species string, parameters []string, matrix string, dist int, text *fileio.EasyWriter, csvFile *fileio.EasyWriter) {
+	//TODO: write CSV with directories involved?
 	//TODO: write into text file
+	allVars := []string{
+		reference, species, string(dist), matrix}
+
+	csvOut := csv.NewWriter(csvFile)
+	csvOut.Write(allVars)
+	csvOut.Write(parameters)
 
 }
