@@ -8,9 +8,9 @@ import (
 )
 
 var BedSubsetMatrixTests = []struct {
-	UnionFile string
+	UnionFile    string
 	FileListFile string
-	OutFile string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/union.bed", "testdata/files.list", "testdata/out.txt", "testdata/expected.txt"},
@@ -29,4 +29,3 @@ func TestBedSubsetMatrix(t *testing.T) {
 		}
 	}
 }
-
