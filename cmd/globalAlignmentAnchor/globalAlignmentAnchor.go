@@ -154,6 +154,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 					bed.WriteBed(out_species2, bed_species2)
 				}
 			}
+			fmt.Printf("step 1: mafToMatch. i: %v. k: %v. bed_species1: %v. bed_species2: %v. pass: %v\n", i, k, bed_species1, bed_species2, pass) //TODO: delete after debugging
 		}
 	}
 
@@ -219,6 +220,7 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 		pos_species1 = species1_match_bed[0].ChromEnd
 		pos_species2 = species2_match_bed[0].ChromEnd
 	}
+	fmt.Printf("step 2: matchToGap. i: 0. current_species1: %v. current_species2: %v. pass: %v. \n", current_species1, current_species2, pass) //TODO: delete after debugging
 
 	// starting from i==1
 	// loop through input match beds
@@ -284,6 +286,7 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 				pos_species2 = species2_match_bed[i].ChromEnd
 			}
 		}
+		fmt.Printf("step 2: matchToGap. i: %v. current_species1: %v. current_species2: %v. pass: %v. \n", i, current_species1, current_species2, pass) //TODO: delete after debugging
 	}
 
 	// after loop, need to write the last entry to output files
@@ -300,6 +303,7 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 			bed.WriteBed(out_species1, current_species1)
 			bed.WriteBed(out_species2, current_species2)
 		}
+		fmt.Printf("step 2: matchToGap. i: after loop final. current_species1: %v. current_species2: %v. pass: %v. \n", current_species1, current_species2, pass) //TODO: delete after debugging
 	}
 
 	// close output files and check for errors
