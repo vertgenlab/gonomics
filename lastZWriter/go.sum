@@ -1,0 +1,4 @@
+github.com/vertgenlab/gonomics v0.0.0-20220316174546-fd2e75ecf407 h1:KAAe8KYzcgVX9XmBlOpaIcyl6Mseqs0HpTa3HWWXkLk=
+github.com/vertgenlab/gonomics v0.0.0-20220316174546-fd2e75ecf407/go.mod h1:b1q4JOBTWMNbk+rS29O2hF3gWWLGpksvjN3pQhktAzY=
+golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
