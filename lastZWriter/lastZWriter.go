@@ -32,13 +32,15 @@ func makeArray(speciesListFile string, refListFile string, allDists string) (par
 	return
 }
 
-//AlignSetUp takes in a single aligning species and reference species, as well as a text file that describes the
+//AlignSetUp takes in a the path to the parent directory where all the individual fastas for alignment are being held.
+//In this context the directory below "pairwise" is labelled by a species name, which then contains all the fastas for
+//alignment. It also takes a single aligning species and reference species, as well as a text file that describes the
 //distance between all species in the alignment from all other species in the alignment. This file is make with
 //Phylogenetic Analysis with Space/Time Models or PHAST all_dists function. AlignSetUp then calls its helper functions
 //and returns the results of findParameters.
-func AlignSetUp(species string, reference string, allDists string) (par []string, mat string, dis int) {
-	outDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + reference + "." + species
-	makeOutDir(outDir, reference, species)
+func AlignSetUp(pairwise string, species string, reference string, allDists string) (par []string, mat string, dis int) {
+	outDir := pairwise + "/" + reference + "." + species
+	makeOutDir(pairwise, outDir, reference, species)
 	parameters, matrix, dist := findParameters(reference, species, allDists)
 	return parameters, matrix, dist
 }
@@ -46,22 +48,24 @@ func AlignSetUp(species string, reference string, allDists string) (par []string
 //makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
 //the directory labelled with the name of the reference and the species being aligned. It then passes off to a
 //helper function makeTargetSubDir
-func makeOutDir(outDir string, r string, s string) {
-	tDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + r + ".byChrom"
+func makeOutDir(pairwise string, outDir string, r string, s string) {
+	//tDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + r + ".byChrom"
+	tDir := pairwise + "/" + r + ".byChrom"
 	if _, e := os.Stat(outDir); os.IsNotExist(e) {
 		err := os.Mkdir(outDir, 666)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	makeTargetSubDir(tDir, outDir, s)
+	makeTargetSubDir(tDir, outDir, pairwise, s)
 }
 
 //makeTargetSubDir creates the next directory layer below makeOutDir which contains all alingments to a
 //single reference against any other species.
-func makeTargetSubDir(path string, outDir string, s string) {
+func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 	var tr, trName string
-	qDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + s + ".byChrom"
+	//qDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + s + ".byChrom"
+	qDir := pairwise + "/" + s + ".byChrom"
 	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Fatal(err)
@@ -126,15 +130,15 @@ func findParameters(reference string, species string, distsFile string) (par []s
 			dist = d
 			switch {
 			case d <= 0.2: //closest
-				answer = append(answer, "600", "150", "2", "254", "4500", "3000", "15000")
+				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 			case d >= 0.7: //farthest
-				answer = append(answer, "400", "30", "1", "50", "2200", "6000", "3400")
+				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 			default: //executive decision to set M to 254
-				answer = append(answer, "400", "30", "1", "254", "3000", "3000", "9400")
+				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
-			} //TODO: hard code matrices and give an option of reading in a matrix
+			}
 		}
 	}
 	return answer, mat, dist
