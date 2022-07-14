@@ -11,6 +11,7 @@ import (
 )
 
 //TODO: hardcode matrices in the lastZWriter package
+//TODO: write main function with options etc.
 func MakeArray(pairwise string, speciesListFile string, refListFile string, allDists string, outText string, outCsv string) {
 	speciesList := fileio.EasyOpen(speciesListFile)
 	refList := fileio.EasyOpen(refListFile)
