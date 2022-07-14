@@ -123,6 +123,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	var assembly_species1, assembly_species2, chrom_species1, chrom_species2 string
 	// containers for entries to write to ouput files
 	var bed_species1, bed_species2 bed.Bed
+	var pass bool
 
 	// loop through input maf
 	// I assume pairwise alignment, not >2 species
@@ -147,7 +148,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
 				// filter out only s lines that we trust to save to filtered maf
-				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd)
+				pass = matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd)
 				if pass {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed.WriteBed(out_species1, bed_species1)
