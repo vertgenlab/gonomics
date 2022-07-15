@@ -22,7 +22,7 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 
 	}
 	if inRegion == true {
-		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq), FieldsInitialized: 3})
+		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq), Name: fmt.Sprintf("%s_%v_%v", fa.Name, startIndex, len(fa.Seq)), FieldsInitialized: 4})
 	}
 	return answer
 }

@@ -3,4 +3,4 @@ TrimName Test	0	4
 ToUpperTest	0	4
 NoGapTest	0	3
 NoGapBedTest	0	3
-NoGapBedTest	6	10
+NoGapBedTest	6	10	NoGapBedTest_6_10
