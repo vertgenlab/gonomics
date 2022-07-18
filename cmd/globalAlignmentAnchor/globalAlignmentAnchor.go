@@ -37,8 +37,10 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 	// maf entry should be roughly diagonal
 	if (float64(species2_ChromStart) <= float64(species1_ChromStart)-0.05*float64(species1_SrcSize)) || (float64(species2_ChromStart) >= float64(species1_ChromStart)+0.05*float64(species1_SrcSize)) {
 		pass = false
+		fmt.Printf("step helper: matchMafPass. species 2. ChromStart: %v. diagonal lower bound: %v. diagonal upper bound: %v. pass: %v\n", float64(species2_ChromStart), float64(species1_ChromStart)-0.05*float64(species1_SrcSize), float64(species1_ChromStart)+0.05*float64(species1_SrcSize), pass) //TODO: delete after debugging
 	} else if (float64(species1_ChromStart) <= float64(species2_ChromStart)-0.05*float64(species2_SrcSize)) || (float64(species1_ChromStart) >= float64(species2_ChromStart)+0.05*float64(species2_SrcSize)) {
 		pass = false
+		fmt.Printf("step helper: matchMafPass. species 1. ChromStart: %v. diagonal lower bound: %v. diagonal upper bound: %v. pass: %v\n", float64(species1_ChromStart), float64(species2_ChromStart)-0.05*float64(species2_SrcSize), float64(species2_ChromStart)+0.05*float64(species2_SrcSize), pass) //TODO: delete after debugging
 	}
 
 	return pass
