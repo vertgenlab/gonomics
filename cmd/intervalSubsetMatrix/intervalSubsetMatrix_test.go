@@ -20,7 +20,7 @@ func TestBedSubsetMatrix(t *testing.T) {
 	var err error
 
 	for _, v := range BedSubsetMatrixTests {
-		bedSubsetMatrix(v.UnionFile, v.FileListFile, v.OutFile)
+		intervalSubsetMatrix(v.UnionFile, v.FileListFile, v.OutFile)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in bedSubsetMatrix. Output was not as expected.")
 		} else {

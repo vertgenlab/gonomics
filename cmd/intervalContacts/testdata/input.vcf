@@ -1,0 +1,3 @@
+chr3	2350	shouldContact	G	A	29	PASS	AA=G
+chr1	75	alsoContact	T	A	29	PASS	AA=A
+chr9	20	noContact	A	T	29	PASS	AA=A
