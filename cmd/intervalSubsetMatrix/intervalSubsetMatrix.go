@@ -53,7 +53,7 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string)
 	for k := range mat {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys) //jusst alphanumeric sort, might change to coordinate sort, though order doesn't matter.
+	sort.Strings(keys) //just alphanumeric sort, might change to coordinate sort, though order doesn't matter.
 
 	for x := range keys {
 		currLineString = keys[x]
