@@ -52,9 +52,9 @@ func bedMergeLowMem(infile string, outfile string, mergeAdjacent bool) {
 func bedMergeHighMem(infile string, outfile string, mergeAdjacent bool) {
 	var records []bed.Bed = bed.Read(infile)
 	var outList []bed.Bed
-	var currentMax bed.Bed = records[0]
 
 	bed.SortByCoord(records)
+	var currentMax bed.Bed = records[0]
 
 	for i := 1; i < len(records); i++ {
 		if bed.Overlap(currentMax, records[i]) || mergeAdjacent && bed.Adjacent(currentMax, records[i]) {
