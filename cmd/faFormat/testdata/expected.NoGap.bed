@@ -1,6 +1,6 @@
-InputOutput	0	4
-TrimName Test	0	4
-ToUpperTest	0	4
-NoGapTest	0	3
-NoGapBedTest	0	3
-NoGapBedTest	6	10
+InputOutput	0	4	InputOutput_0_4
+TrimName Test	0	4	TrimName Test_0_4
+ToUpperTest	0	4	ToUpperTest_0_4
+NoGapTest	0	3	NoGapTest_0_3
+NoGapBedTest	0	3	NoGapBedTest_0_3
+NoGapBedTest	6	10	NoGapBedTest_6_10
