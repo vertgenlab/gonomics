@@ -53,6 +53,7 @@ func main() {
 	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
+	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
