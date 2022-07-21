@@ -54,7 +54,7 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 
 	for n := 0; refCounter < end; n++ {
 		endCounter++
-		if n == len(records[0].Seq) - 1 && endOfAlignment {//in this case, we've reached the end of the alignment by way of the "End" user option.
+		if n == len(records[0].Seq)-1 && endOfAlignment { //in this case, we've reached the end of the alignment by way of the "End" user option.
 			break
 		}
 		if n == len(records[0].Seq) {
