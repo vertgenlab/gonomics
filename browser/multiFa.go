@@ -13,8 +13,8 @@ import (
 
 //MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position.
 //Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
-func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int) {
-	if !(start < end) {
+func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int, endOfAlignment bool) {
+	if !(start < end) && !endOfAlignment {
 		log.Fatalf("Invalid arguments, start must be lower than end")
 	}
 	var stop int
@@ -47,12 +47,17 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 	fmt.Fprintf(out, "Start: %d. refCounter: %d. alignCounter: %d\n", start, refCounter, startCounter)
 
 	refCounter = 0
-	for n := 0; refCounter < end; n++ {
-		endCounter++
-		if n == len(records[0].Seq) {
-			log.Fatalf("Ran off the chromosome")
-		} else if records[0].Seq[n] != dna.Gap {
-			refCounter++
+
+	if endOfAlignment {
+		endCounter = len(records[0].Seq)
+	} else {
+		for n := 0; refCounter < end; n++ {
+			endCounter++
+			if n == len(records[0].Seq) {
+				log.Fatalf("Ran off the chromosome")
+			} else if records[0].Seq[n] != dna.Gap {
+				refCounter++
+			}
 		}
 	}
 
