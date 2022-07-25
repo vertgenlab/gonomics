@@ -145,20 +145,23 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 				log.Fatalf("species1 was incorrect. Please check that you have a pairwise maf file, and entered species1 and species2 correctly")
 			}
 
-			// get s lines
-			if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
+			// verify line k is indeed species 2. Condition for starting downstream maf processing
+			if assembly_species2 == species2 {
+				// get s lines
+				if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
 
-				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
+					bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
-				// filter out only s lines that we trust to save to filtered maf
-				pass = matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd)
-				if pass {
-					maf.WriteToFileHandle(out_maf, mafRecords[i])
-					bed.WriteBed(out_species1, bed_species1)
-					bed.WriteBed(out_species2, bed_species2)
+					// filter out only s lines that we trust to save to filtered maf
+					pass = matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd)
+					if pass {
+						maf.WriteToFileHandle(out_maf, mafRecords[i])
+						bed.WriteBed(out_species1, bed_species1)
+						bed.WriteBed(out_species2, bed_species2)
+					}
 				}
 			}
-			fmt.Printf("step 1: mafToMatch. i: %v. k: %v. bed_species1: %v. bed_species2: %v. pass: %v\n", i, k, bed_species1, bed_species2, pass) //TODO: delete after debugging
+			fmt.Printf("step 1: mafToMatch. i: %v. k: %v. assembly_species2: %v. chrom_species2: %v. bed_species1: %v. bed_species2: %v. pass: %v\n", i, k, assembly_species2, chrom_species2, bed_species1, bed_species2, pass) //TODO: delete after debugging
 		}
 	}
 
@@ -457,8 +460,8 @@ func globalAlignmentAnchor(in_maf string, species1 string, species2 string, spec
 
 func usage() {
 	fmt.Print(
-		"globalAlignmentAnchor - takes pairwise alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)\n" +
-			"in_maf - maf file. Pairwise alignment, not >2 species\n" +
+		"globalAlignmentAnchor - for 2 species, takes multiple alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)\n" +
+			"in_maf - maf file. Takes multiple alignment maf with >=2 species, but will only analyze data on 2 species\n" +
 			"species1, species2 - species names, e.g. hg38. Species1 is target (first line in each maf block); species2 is query (second line in each maf block)\n" +
 			"species1_genome, species2_genome - fasta files containing the whole genome of each species. Each fasta sequence is 1 chromosome\n" +
 			"Usage:\n" +
