@@ -201,8 +201,8 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 	chr_curr_species1 := species1_match_bed[0].Chrom // initialize curr chr
 	chr_prev_species2 := species2_match_bed[0].Chrom
 	chr_curr_species2 := species2_match_bed[0].Chrom
-	pos_species1 := 1 // initialize pos as 1. bed and fa both start at 1
-	pos_species2 := 1
+	pos_species1 := 0 // initialize pos as 0. bed and fa start at 0
+	pos_species2 := 0
 	// check for gapBedPass
 	var pass bool
 	// containers for entries to write to ouput files
@@ -251,10 +251,10 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 			// in the case of ending previous chr, go to start the current chr
 			chr_prev_species1 = chr_curr_species1
 			chr_prev_species2 = chr_curr_species2
-			pos_species1 = 1
-			pos_species2 = 1
+			pos_species1 = 0
+			pos_species2 = 0
 
-			current_species1 = bed.Bed{Chrom: chr_curr_species1, ChromStart: pos_species1, ChromEnd: species1_match_bed[i].ChromStart, Name: "species1_gap", FieldsInitialized: 4} // when starting a new chr is when ChromStart needs to be pos_species aka 1, and not the CHromEnd of the previous bed entry
+			current_species1 = bed.Bed{Chrom: chr_curr_species1, ChromStart: pos_species1, ChromEnd: species1_match_bed[i].ChromStart, Name: "species1_gap", FieldsInitialized: 4} // when starting a new chr is when ChromStart needs to be pos_species aka 0, and not the ChromEnd of the previous bed entry
 			current_species2 = bed.Bed{Chrom: chr_curr_species2, ChromStart: pos_species2, ChromEnd: species2_match_bed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
 
 			// before writing bed, test if the bed entries pass filtering criteria
@@ -349,8 +349,8 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	// variables to generate output bed entries
 	chr_species1 := ""
 	chr_species2 := ""
-	pos_species1 := 1
-	pos_species2 := 1
+	pos_species1 := 0
+	pos_species2 := 0
 	// containers for entries to write to ouput bed files
 	var current_species1, current_species2 bed.Bed
 	// containers for alignment outputs
@@ -385,10 +385,10 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			pos_species2 += (species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart)
 
 		} else {
-			// obtain sequences from the genome. To convert bed region (1-based, [closed,open)) to fasta index (0-based, [closed,closed]), subtract 1 from both ChromStart and ChromEnd.
-			species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][(species1_gap_bed[i].ChromStart - 1):(species1_gap_bed[i].ChromEnd - 1)]
+			// obtain sequences from the genome. bed region and fasta index are both 0-based, [closed,open), so no need to subtract 1 from ChromStart and ChromEnd.
+			species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][(species1_gap_bed[i].ChromStart):(species1_gap_bed[i].ChromEnd)]
 			dna.AllToUpper(species1_seq) // convert all bases to uppercase, otherwise get index out of range error in scoring matrix
-			species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][(species2_gap_bed[i].ChromStart - 1):(species2_gap_bed[i].ChromEnd - 1)]
+			species2_seq = species2_genome_fastaMap[species2_gap_bed[i].Chrom][(species2_gap_bed[i].ChromStart):(species2_gap_bed[i].ChromEnd)]
 			dna.AllToUpper(species2_seq)
 
 			// align with affineGap, customizeCheckersize, HumanChimpTwoScoreMatrix
