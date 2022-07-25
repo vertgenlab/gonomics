@@ -8,13 +8,13 @@ import (
 )
 
 var MultFaVisualizerTests = []struct {
-	Infile       string
-	Outfile      string
-	ExpectedFile string
-	Start        int
-	End          int
-	NoMask       bool
-	Linelength   int
+	Infile         string
+	Outfile        string
+	ExpectedFile   string
+	Start          int
+	End            int
+	NoMask         bool
+	Linelength     int
 	EndOfAlignment bool
 }{
 	{"testdata/test.fa", "testdata/tmp.txt", "testdata/expected.txt", 1, 500, false, 50, false},

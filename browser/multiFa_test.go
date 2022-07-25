@@ -6,13 +6,13 @@ import (
 )
 
 var multiFaVisualizerTests = []struct {
-	inFile       string
-	outFile      string
-	start        int
-	end          int
-	noMask       bool
-	lineLength   int
-	expectedFile string
+	inFile         string
+	outFile        string
+	start          int
+	end            int
+	noMask         bool
+	lineLength     int
+	expectedFile   string
 	endOfAlignment bool
 }{ //here the infile is the output region plus or minus 500 bp.
 	{"testdata/chr9.112139.115209.fa", "testdata/actual.chr9.112639.114709.txt", 500, 2672, true, 200, "testdata/actual.chr9.112639.114709.txt", false},

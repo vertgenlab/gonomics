@@ -17,6 +17,7 @@ func multFaVisualizer(infile string, outfile string, start int, end int, noMask 
 func usage() {
 	fmt.Print(
 		"multFaVisualizer - Provides human-readable multiple alignment from a given multiFa.\n" +
+			"Keyword 'END' for the end argument makes a visualization until the end of the fasta.\n" +
 			"Usage:\n" +
 			"multFaVisualizer mult.fa out.txt start end\n" +
 			"options:\n")

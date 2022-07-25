@@ -53,10 +53,6 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 	} else {
 		for n := 0; refCounter < end; n++ {
 			endCounter++
-			//if n == len(records[0].Seq) - 1 {
-			//	break
-			//}
-			fmt.Printf("EndCounter: %v. n: %v. refCounter: %v.\n", endCounter, n, refCounter)
 			if n == len(records[0].Seq) {
 				log.Fatalf("Ran off the chromosome")
 			} else if records[0].Seq[n] != dna.Gap {
