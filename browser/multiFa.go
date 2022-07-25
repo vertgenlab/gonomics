@@ -49,18 +49,19 @@ func MultiFaVisualizer(infile string, outfile string, start int, end int, noMask
 	refCounter = 0
 
 	if endOfAlignment {
-		end = len(records[0].Seq)
-	}
-
-	for n := 0; refCounter < end; n++ {
-		endCounter++
-		if n == len(records[0].Seq) - 1 && endOfAlignment {//in this case, we've reached the end of the alignment by way of the "End" user option.
-			break
-		}
-		if n == len(records[0].Seq) {
-			log.Fatalf("Ran off the chromosome")
-		} else if records[0].Seq[n] != dna.Gap {
-			refCounter++
+		endCounter = len(records[0].Seq)
+	} else {
+		for n := 0; refCounter < end; n++ {
+			endCounter++
+			//if n == len(records[0].Seq) - 1 {
+			//	break
+			//}
+			fmt.Printf("EndCounter: %v. n: %v. refCounter: %v.\n", endCounter, n, refCounter)
+			if n == len(records[0].Seq) {
+				log.Fatalf("Ran off the chromosome")
+			} else if records[0].Seq[n] != dna.Gap {
+				refCounter++
+			}
 		}
 	}
 
