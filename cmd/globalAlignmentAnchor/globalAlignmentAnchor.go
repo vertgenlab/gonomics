@@ -126,7 +126,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	var assembly_species1, assembly_species2, chrom_species1, chrom_species2 string
 	// containers for entries to write to ouput files
 	var bed_species1, bed_species2 bed.Bed
-	var pass bool
+	pass := false
 
 	// loop through input maf
 	// I assume pairwise alignment, not >2 species
