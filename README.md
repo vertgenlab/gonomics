@@ -144,27 +144,7 @@ Goal is to  get gonomics into the “src” directory of go. This path needs to 
 
 <br>
 
-*Workspace set up for basic gonomics installation (most users):*
-<ul>
-<ul>
-
-    cd $GOPATH/src
-    go get
-</ul>
-this should install gonomics and all its dependencies.
-<ul>
-
-    cd /github.com/vertgenlab/gonomics/ 
-    go test ./…
-</ul>
-This should print to screen a line for each test with ok printed in the left margin when something passes
-</ul>
-</ul>
-<br>
-<br>
-<br>
-
-*Gonomics with version control (for contributors of gonomics):*
+*Gonomics installation with version control (for both users and contributors of gonomics):*
 <ul>
 
     cd $GOPATH/src
@@ -182,6 +162,7 @@ This should print to screen a line for each test with "ok" printed in the left m
 </ul>
 
     go install ./...
+    go mod tidy
 <ul>
 This will tidy up the necessary modules
 </ul>
