@@ -162,7 +162,6 @@ This should print to screen a line for each test with "ok" printed in the left m
 </ul>
 
     go install ./...
-    go mod tidy
 <ul>
 This will tidy up the necessary modules
 </ul>
