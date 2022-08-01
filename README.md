@@ -52,7 +52,7 @@ Authors:
 
     
     cd /pathWhereYouWantGonomicsCloned/
-    mkdir -p /src/github.com/vertgenlab
+    mkdir -p src/github.com/vertgenlab
     cd src/github.com/vertgenlab
     git clone https://github.com/vertgenlab/gonomics.git
 <ul>
