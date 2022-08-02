@@ -135,7 +135,9 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 		// get assembly (e.g. rheMac10), chrom (e.g. chrI)
 		assembly_species1, chrom_species1 = maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src)
 		// get trusted match coordinates here as well. Output into bed file. Get chrom,start,end,name,score
+		fmt.Printf("before making bed.Bed for the first time\n") //TODO: remove after debugging
 		bed_species1 = bed.Bed{Chrom: chrom_species1, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "species1_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
+		fmt.Printf("Just made bed_species1: %v\n", bed_species1) //TODO: remove after debugging
 
 		for k := 1; k < len(mafRecords[i].Species); k++ { // each k is a line. Start loop at k=1 because that is the lowest possible index to find species2, which is query
 			assembly_species2, chrom_species2 = maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src)
@@ -147,11 +149,11 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 
 			// verify line k is indeed species 2. Condition for starting downstream maf processing
 			if assembly_species2 == species2 {
-				fmt.Printf("step 1: mafToMatch. post-if species check. assembly_species2: %v, species2: %v, should be equal\n", assembly_species2, species2)
 				// get s lines
 				if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
 
 					bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
+					fmt.Printf("Just made bed_species2: %v\n", bed_species2) //TODO: remove after debugging
 
 					// filter out only s lines that we trust to save to filtered maf
 					pass = matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd)
@@ -160,9 +162,9 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 						bed.WriteBed(out_species1, bed_species1)
 						bed.WriteBed(out_species2, bed_species2)
 					}
+					fmt.Printf("step 1: mafToMatch. post-if check. i: %v. k: %v. assembly_species2: %v. chrom_species2: %v. bed_species1: %v. bed_species2: %v. pass: %v\n",  i, k, assembly_species2, chrom_species2, bed_species1, bed_species2, pass) //TODO: delete after debugging
 				}
 			}
-			fmt.Printf("step 1: mafToMatch. i: %v. k: %v. assembly_species2: %v. chrom_species2: %v. bed_species1: %v. bed_species2: %v. pass: %v\n", i, k, assembly_species2, chrom_species2, bed_species1, bed_species2, pass) //TODO: delete after debugging
 		}
 	}
 
