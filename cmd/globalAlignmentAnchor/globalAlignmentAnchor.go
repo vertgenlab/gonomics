@@ -147,6 +147,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 
 			// verify line k is indeed species 2. Condition for starting downstream maf processing
 			if assembly_species2 == species2 {
+				fmt.Printf("step 1: mafToMatch. post-if species check. assembly_species2: %v, species2: %v, should be equal\n", assembly_species2, species2)
 				// get s lines
 				if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
 
