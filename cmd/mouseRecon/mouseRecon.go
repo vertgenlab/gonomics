@@ -97,7 +97,7 @@ func likelihoodToBaseBias(likes []float64, biasBase dna.Base, probThreshold floa
 	}
 
 	for i = range likes {
-		if likes[i]/ total >= probThreshold && likes[i] > bestProb && nonBiasTotal/total >= nonBiasProbThreshold {
+		if likes[i]/total >= probThreshold && likes[i] > bestProb && nonBiasTotal/total >= nonBiasProbThreshold {
 			bestProb = likes[i]
 			answer = dna.Base(i)
 		}
