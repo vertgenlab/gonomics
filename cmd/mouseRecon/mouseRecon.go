@@ -97,7 +97,7 @@ func likelihoodToBaseBias(likes []float64, biasBase dna.Base, probThreshold floa
 	}
 
 	for i = range likes {
-		if likes[i]/ total >= probThreshold && likes[i] > bestProb && nonBiasTotal/total >= nonBiasProbThreshold {
+		if likes[i]/total >= probThreshold && likes[i] > bestProb && nonBiasTotal/total >= nonBiasProbThreshold {
 			bestProb = likes[i]
 			answer = dna.Base(i)
 		}
@@ -110,7 +110,7 @@ func usage() {
 		"mouseRecon - Returns maximum likelihood ancestral sequences from a Mouse-Rat-ChineseHamster-Squirrel multiple alignment in multiFa format.\n" +
 			"Usage:\n" +
 			"mouseRecon input.fa output.fa\n" +
-		"options:\n")
+			"options:\n")
 }
 
 func main() {

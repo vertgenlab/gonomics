@@ -17,7 +17,7 @@ func TestAllPossible(t *testing.T) {
 	var squirrel fasta.Fasta = fasta.Fasta{Name: "speTri2"}
 	var species []fasta.Fasta
 	var m, r, h, s dna.Base //the values of the current base for each species
-	m = dna.A //mouse is fixed
+	m = dna.A               //mouse is fixed
 	var possibleBases []dna.Base = []dna.Base{dna.A, dna.C, dna.G, dna.T, dna.N, dna.Gap}
 
 	// given that mouse is A, we will now go through all possible combinations
@@ -41,7 +41,7 @@ func TestAllPossible(t *testing.T) {
 	} else {
 		err = os.Remove("testdata/test.mraMleMouseBias.fa")
 		exception.PanicOnErr(err)
-		err = os.Remove("testdata/allPossible.fa")//remove allPossible once all tests have passed.
+		err = os.Remove("testdata/allPossible.fa") //remove allPossible once all tests have passed.
 		exception.PanicOnErr(err)
 	}
 }
