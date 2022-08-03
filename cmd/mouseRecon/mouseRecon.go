@@ -110,7 +110,7 @@ func usage() {
 		"mouseRecon - Returns maximum likelihood ancestral sequences from a Mouse-Rat-ChineseHamster-Squirrel multiple alignment in multiFa format.\n" +
 			"Usage:\n" +
 			"mouseRecon input.fa output.fa\n" +
-		"options:\n")
+			"options:\n")
 	flag.PrintDefaults()
 }
 
