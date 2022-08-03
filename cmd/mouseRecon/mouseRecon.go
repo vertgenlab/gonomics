@@ -111,6 +111,7 @@ func usage() {
 			"Usage:\n" +
 			"mouseRecon input.fa output.fa\n" +
 		"options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
