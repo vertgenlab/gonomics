@@ -106,6 +106,13 @@ func ComplementSingleBase(b Base) Base {
 	}
 }
 
+//Reverse an input sequence of bases. Does not maintain 5' -> 3' orientation.
+func Reverse(bases []Base) {
+	for i, j := 0, len(bases)-1; i <= j; i, j = i+1, j-1 {
+		bases[i], bases[j] = bases[j], bases[i]
+	}
+}
+
 // ReverseComplement reverses a sequence of bases and complements each base.
 // Used to switch strands and maintain 5' -> 3' orientation.
 func ReverseComplement(bases []Base) {

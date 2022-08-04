@@ -2,6 +2,14 @@ package dna
 
 import "testing"
 
+var revTests = []struct {
+	input []Base
+	expected []Base
+}{
+	{[]Base{A, C, G, T, N, LowerA, LowerC, LowerG, LowerT, LowerN}, []Base{LowerN, LowerT, LowerG, LowerC, LowerA, N, T, G, C, A}},
+	{[]Base{A, C, G, T, N, A, C, G, T, N}, []Base{N, T, G, C, A, N, T, G, C, A}},
+}
+
 var revCompTests = []struct {
 	input    []Base // input
 	expected []Base // after applying reverseComplement
@@ -48,6 +56,18 @@ var replaceTests = []struct {
 	{[]Base{A, C, G, T, N, LowerA, LowerC, LowerG, LowerT, LowerN}, 8, 10, []Base{T, A, T, A}, []Base{A, C, G, T, N, LowerA, LowerC, LowerG, T, A, T, A}},
 	{[]Base{A, C, G, T, N, LowerA, LowerC, LowerG, LowerT, LowerN}, 0, 10, []Base{A, C, G, T}, []Base{A, C, G, T}},
 	{[]Base{A, C, G, T, N, LowerA, LowerC, LowerG, LowerT, LowerN}, 3, 4, []Base{A, C, G, T}, []Base{A, C, G, A, C, G, T, N, LowerA, LowerC, LowerG, LowerT, LowerN}},
+}
+
+func TestRev(t *testing.T) {
+	var actual []Base
+	for _, test := range revTests {
+		actual = make([]Base, len(test.input))
+		copy(actual, test.input)
+		Reverse(actual)
+		if CompareSeqsCaseSensitive(actual, test.expected) != 0 {
+			t.Errorf("Reversing %v gave %v when %v was expected.", test.input, actual, test.expected)
+		}
+	}
 }
 
 func TestRevComp(t *testing.T) {

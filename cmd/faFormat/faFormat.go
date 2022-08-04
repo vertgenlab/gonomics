@@ -19,6 +19,7 @@ type Settings struct {
 	TrimName   bool
 	ToUpper    bool
 	RevComp    bool
+	Rev bool
 	NoGaps     bool
 	NoGapBed   string
 	Index      bool
@@ -45,6 +46,9 @@ func faFormat(s Settings) {
 		}
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
+		}
+		if s.Rev {
+			fasta.Reverse(records[i])
 		}
 	}
 
@@ -78,6 +82,7 @@ func main() {
 	var trimName *bool = flag.Bool("trimName", false, "if a fasta name contains spaces, retains only the first space delimited field")
 	var toUpper *bool = flag.Bool("toUpper", false, "Convert all DNA bases to upper case.")
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
+	var rev *bool = flag.Bool("rev", false, "Return the reverse for each sequence.")
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
 	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
 	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
@@ -100,6 +105,7 @@ func main() {
 		LineLength: *lineLength,
 		TrimName:   *trimName,
 		RevComp:    *revComp,
+		Rev: *rev,
 		ToUpper:    *toUpper,
 		NoGaps:     *noGaps,
 		NoGapBed:   *noGapBed,

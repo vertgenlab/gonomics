@@ -18,6 +18,11 @@ func RemoveGaps(records []Fasta) []Fasta {
 	return records
 }
 
+// Reverse reverses the sequence in the fasta record.
+func Reverse(record Fasta) {
+	dna.Reverse(record.Seq)
+}
+
 // ReverseComplement the sequence in a fasta record.
 func ReverseComplement(record Fasta) {
 	dna.ReverseComplement(record.Seq)
