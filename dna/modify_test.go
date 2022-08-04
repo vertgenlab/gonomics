@@ -3,7 +3,7 @@ package dna
 import "testing"
 
 var revTests = []struct {
-	input []Base
+	input    []Base
 	expected []Base
 }{
 	{[]Base{A, C, G, T, N, LowerA, LowerC, LowerG, LowerT, LowerN}, []Base{LowerN, LowerT, LowerG, LowerC, LowerA, N, T, G, C, A}},

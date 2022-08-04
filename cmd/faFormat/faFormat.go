@@ -19,7 +19,7 @@ type Settings struct {
 	TrimName   bool
 	ToUpper    bool
 	RevComp    bool
-	Rev bool
+	Rev        bool
 	NoGaps     bool
 	NoGapBed   string
 	Index      bool
@@ -105,7 +105,7 @@ func main() {
 		LineLength: *lineLength,
 		TrimName:   *trimName,
 		RevComp:    *revComp,
-		Rev: *rev,
+		Rev:        *rev,
 		ToUpper:    *toUpper,
 		NoGaps:     *noGaps,
 		NoGapBed:   *noGapBed,

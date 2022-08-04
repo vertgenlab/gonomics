@@ -16,13 +16,13 @@ var FaFormatTests = []struct {
 	trimName         bool
 	toUpper          bool
 	revComp          bool
-	rev bool
+	rev              bool
 	noGaps           bool
 	noGapBed         string
 	noGapBedExpected string
 }{
-	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, true, true, false, false,true, "testdata/test.NoGap.bed", "testdata/expected.NoGap.bed"},
-	{"testdata/revCompTest.fa", "testdata/revCompOutput.fa", "testdata/revCompExpected.fa", 50, false, false, true, false,false, "", ""},
+	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, true, true, false, false, true, "testdata/test.NoGap.bed", "testdata/expected.NoGap.bed"},
+	{"testdata/revCompTest.fa", "testdata/revCompOutput.fa", "testdata/revCompExpected.fa", 50, false, false, true, false, false, "", ""},
 	{"testdata/revCompTest.fa", "testdata/revOutput.fa", "testdata/revExpected.fa", 50, false, false, false, true, false, "", ""},
 }
 
@@ -36,7 +36,7 @@ func TestFaFormat(t *testing.T) {
 			TrimName:   v.trimName,
 			ToUpper:    v.toUpper,
 			RevComp:    v.revComp,
-			Rev: v.rev,
+			Rev:        v.rev,
 			NoGaps:     v.noGaps,
 			NoGapBed:   v.noGapBed,
 		}

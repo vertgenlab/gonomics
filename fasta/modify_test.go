@@ -30,8 +30,8 @@ func TestReverseComplement(t *testing.T) {
 }
 
 var ReverseTests = []struct {
-	input string
-	output string
+	input    string
+	output   string
 	expected string
 }{
 	{"testdata/testOne.fa", "testdata/rev.testOne.fa", "testdata/expected.rev.testOne.fa"},
