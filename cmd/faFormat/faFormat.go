@@ -16,6 +16,7 @@ type Settings struct {
 	InFile     string
 	OutFile    string
 	LineLength int
+	NamesFile  string
 	TrimName   bool
 	ToUpper    bool
 	RevComp    bool
@@ -26,6 +27,9 @@ type Settings struct {
 
 func faFormat(s Settings) {
 	records := fasta.Read(s.InFile)
+	var exist bool
+	var names []string
+	namesMap := make(map[string]int)
 
 	if s.NoGapBed != "" {
 		beds := bed.UngappedRegionsAllFromFa(records)
@@ -36,16 +40,30 @@ func faFormat(s Settings) {
 		fasta.RemoveGaps(records)
 	}
 
+	if s.NamesFile != "" {
+		names = fileio.Read(s.NamesFile)
+		for i := range names {
+			namesMap[names[i]] = 1
+		}
+	}
 	for i := range records {
+		if s.NamesFile != "" {
+			if _, exist = namesMap[records[i].Name]; !exist {
+				continue
+			}
+		}
 		if s.TrimName {
 			records[i] = fasta.TrimName(records[i])
 		}
 		if s.ToUpper {
 			fasta.ToUpper(records[i])
+
 		}
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
+			records[i].Name = records[i].Name + "_RevComp"
 		}
+
 	}
 
 	file := fileio.EasyCreate(s.OutFile)
@@ -75,6 +93,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var lineLength *int = flag.Int("lineLength", 50, "wrap sequence lines after this many characters")
+	var fastaNamesFile *string = flag.String("fastaNamesFile", "", "Text file, each line of the file are the fasta records to be manipulated (trimName, toUpper, revComp). Default is all fasta entries.")
 	var trimName *bool = flag.Bool("trimName", false, "if a fasta name contains spaces, retains only the first space delimited field")
 	var toUpper *bool = flag.Bool("toUpper", false, "Convert all DNA bases to upper case.")
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
@@ -98,6 +117,7 @@ func main() {
 		InFile:     inFile,
 		OutFile:    outFile,
 		LineLength: *lineLength,
+		NamesFile:  *fastaNamesFile,
 		TrimName:   *trimName,
 		RevComp:    *revComp,
 		ToUpper:    *toUpper,
