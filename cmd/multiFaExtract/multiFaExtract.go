@@ -21,7 +21,11 @@ func multiFaExtract(s Settings) {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
 			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, s.RemoveGaps, b.Strand == bed.Negative)
-			fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
+			if b.FieldsInitialized >= 4 {
+				fasta.Write(fmt.Sprintf("%s.fa", b.Name), ans)
+			} else {
+				fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
+			}
 		}
 	}
 }
