@@ -94,8 +94,11 @@ func vcfToMultiFa(inVcfFilename string, inFaFilename string, outFaFilename strin
 			log.Fatalf("Input VCF variants must be in sorted order in multiFaMode.")
 		}
 
-		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
-			log.Fatal("Error: currently we only handle biallelic substitutions.  You can filter the vcf for these with vcfFilter.\n")
+		if !vcf.IsSubstitution(v) {
+			log.Fatal("Error: currently we only handle substitutions.  You can filter the vcf for these with vcfFilter.\n")
+		}
+		if !(vcf.IsBiallelic(v) || useSamples) {
+			log.Fatal("Error: currently we only handle biallelic sites unless running with -useSamples.  You can filter the vcf for these with vcfFilter.\n")
 		}
 		if v.Chr == chromName { //only consider variants with the correct chrom name.
 			currAlnPos = fasta.RefPosToAlnPosCounter(seqsOrdered[outIndex], v.Pos-1, prevRefPos, prevAlnPos)
