@@ -16,15 +16,6 @@ func sizeToRatio(size float64) float64 {
 	return m*size + b
 }
 
-func usage() {
-	fmt.Print(
-		"calcAmpureRatio - calculate a protocol to AMPure beads for a double size selection\n" +
-			"Usage:\n" +
-			" calcAmpureRatio minimumFragmentSize(bp) maximumFragmentSize(bp) startingSampleVolume(ul)\n" +
-			"\n")
-	flag.PrintDefaults()
-}
-
 func calcAmpureRatio(lowSize float64, highSize float64, volume float64) {
 	lowRatio := sizeToRatio(lowSize)
 	highRatio := sizeToRatio(highSize)
@@ -45,10 +36,19 @@ func calcAmpureRatio(lowSize float64, highSize float64, volume float64) {
 			"        Add 200 uL of 80% ethanol and incubate for 1 minute. Do not disturb beads.\n" +
 			"        Discard supernatant and add 200 uL of 80% ethanol and incubate for 1 minute\n" +
 			"        Remove supernatant. While the sample is still against magnet, incubate beads at RT for 3-5 minutes to air dry beads.\n" +
-			"        Remove sample from magnet and resupend beads in 25 uL of elution buffer (EB).\n" +
+			"        Remove sample from magnet and resuspend beads in 25 uL of elution buffer (EB).\n" +
 			"        Incubate at room temperature for 5 minutes.\n" +
 			"        Place samples against magnet, incubate until solution is clear, and transfer the supernatant to a new tube.\n" +
 			"        Quantify by qubit or other methods.\n")
+}
+
+func usage() {
+	fmt.Print(
+		"calcAmpureRatio - calculate a protocol to AMPure beads for a double size selection\n" +
+			"Usage:\n" +
+			" calcAmpureRatio minimumFragmentSize(bp) maximumFragmentSize(bp) startingSampleVolume(ul)\n" +
+			"\n")
+	flag.PrintDefaults()
 }
 
 func main() {
