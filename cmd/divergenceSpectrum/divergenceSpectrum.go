@@ -110,7 +110,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 2
+	var expectedNumArgs int = 3
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
