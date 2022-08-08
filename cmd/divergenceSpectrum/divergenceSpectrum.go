@@ -52,9 +52,9 @@ func mutationType(v vcf.Vcf) int {
 	case "A":
 		switch v.Alt[0] {
 		case "C":
-			return 4
+			return 5
 		case "G":
-			return 0
+			return 1
 		case "T":
 			return 2
 		default:
@@ -63,22 +63,22 @@ func mutationType(v vcf.Vcf) int {
 	case "C":
 		switch v.Alt[0] {
 		case "A":
-			return 5
+			return 4
 		case "G":
 			return 3
 		case "T":
-			return 1
+			return 0
 		default:
 			log.Fatalf("Poorly formed VCF. Ref: %s. Alt: %s.", v.Ref, v.Alt[0])
 		}
 	case "G":
 		switch v.Alt[0] {
 		case "A":
-			return 1
+			return 0
 		case "C":
 			return 3
 		case "T":
-			return 5
+			return 4
 		default:
 			log.Fatalf("Poorly formed VCF. Ref: %s. Alt: %s.", v.Ref, v.Alt[0])
 		}
@@ -87,9 +87,9 @@ func mutationType(v vcf.Vcf) int {
 		case "A":
 			return 2
 		case "C":
-			return 0
+			return 1
 		case "G":
-			return 4
+			return 5
 		default:
 			log.Fatalf("Poorly formed VCF. Ref: %s. Alt: %s.", v.Ref, v.Alt[0])
 		}
