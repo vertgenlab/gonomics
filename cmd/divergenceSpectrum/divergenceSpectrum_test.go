@@ -8,9 +8,9 @@ import (
 )
 
 var divergenceSpectrumTests = []struct {
-	InFile string
+	InFile       string
 	VariantsFile string
-	OutFile string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/test.bed", "testdata/test.vcf", "testdata/tmp.bed", "testdata/expected.bed"},
