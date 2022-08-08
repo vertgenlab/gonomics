@@ -1,0 +1,5 @@
+chr1	12	rs1	A	T	.	100.0	PASS	AA=A	GT	1|1
+chr2	30	rs2	C	G	.	100.0	PASS	AA=G	GT	0|0
+chr2	35	rs3	G	C	.	100.0	PASS	AA=C	GT	0|1
+chr2	38	rs4	A	G	.	100.0	PASS	AA=A	GT	0|0
+chr4	80	rs5	G	T	.	100.0	PASS	AA=G	GT	0|0	
