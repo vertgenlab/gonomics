@@ -33,7 +33,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 			copy(sampleHaplotypes[j], refHaplotype)
 			for k := range overlappingVariants {
 				// For each variant, update corresponding position in each sample haplotype (position = position - ChromStart - 1)
-	
+
 			}
 			fasta.WriteFasta(out, sampleHaplotypes[j], 50)
 		}
@@ -41,10 +41,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 		err := out.Close()
 		exception.PanicOnErr(err)
 
-
 	}
-	
-
 
 }
 
@@ -58,10 +55,9 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-
 func main() {
 	var expectedNumArgs int = 4
-	
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
