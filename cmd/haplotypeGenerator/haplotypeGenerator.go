@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
@@ -39,7 +39,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 		for j := range sampleHaplotypes {
 			sampleHaplotypes[j] = fasta.Copy(refHaplotype)
 			currSampleIndex := j / 2
-			if (j % 2 == 0){
+			if j%2 == 0 {
 				sampleHaplotypes[j].Name = fmt.Sprintf("%s_A", samplesNames[currSampleIndex])
 			} else {
 				sampleHaplotypes[j].Name = fmt.Sprintf("%s_B", samplesNames[currSampleIndex])
