@@ -167,6 +167,15 @@ func Extract(f Fasta, start int, end int, name string) Fasta {
 	return ans
 }
 
+// ExtractMulti extracts a subsequence from a fasta file for every entry in a multiFa alignment.
+func ExtractMulti(records []Fasta, start int, end int) []Fasta {
+	var ans = make([]Fasta, len(records))
+	for i := range records {
+		ans[i] = Extract(records[i], RefPosToAlnPos(records[0], start), RefPosToAlnPos(records[0], end), records[i].Name)
+	}
+	return ans
+}
+
 // CreateAllGaps creates a fasta record where the sequence is all gaps of length numGaps.
 func CreateAllGaps(name string, numGaps int) Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllGaps(numGaps)}

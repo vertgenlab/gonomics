@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -22,19 +23,34 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 
 	regions := bed.Read(regionFile)
 	genome := fasta.Read(genomeFile)
+	genomeMap := helperFastaIndex(genome)
+
+	samplesNames := vcf.SampleNamesInOrder(header)
 
 	for i := range regions {
 		overlappingVariants := interval.Query(tree, regions[i], "any")
-		refHaplotype := fasta.Extract(genome, regions[i].ChromStart, regions[i].ChromEnd, regions[i].Chrom)
+		currIndex := genomeMap[regions[i].Chrom]
+		refHaplotype := fasta.Extract(genome[currIndex], regions[i].ChromStart, regions[i].ChromEnd, regions[i].Chrom)
+
 		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", outdir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
 		out := fileio.EasyCreate(outputFilename)
 		sampleHaplotypes := make([]fasta.Fasta, len(header.Samples)*2)
+
 		for j := range sampleHaplotypes {
-			copy(sampleHaplotypes[j], refHaplotype)
+			sampleHaplotypes[j] = fasta.Copy(refHaplotype)
+			currSampleIndex := j / 2
+			if (j % 2 == 0){
+				sampleHaplotypes[j].Name = fmt.Sprintf("%s_A", samplesNames[currSampleIndex])
+			} else {
+				sampleHaplotypes[j].Name = fmt.Sprintf("%s_B", samplesNames[currSampleIndex])
+			}
+
 			for k := range overlappingVariants {
 				// For each variant, update corresponding position in each sample haplotype (position = position - ChromStart - 1)
-	
+				// sampleHaplotypes[j]
+				fmt.Println(k)
 			}
+
 			fasta.WriteFasta(out, sampleHaplotypes[j], 50)
 		}
 
@@ -46,6 +62,15 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 	
 
 
+}
+
+// Helper function returns a map connecting chromosome names to their index in a fasta slice
+func helperFastaIndex(genome []fasta.Fasta) map[string]int {
+	var answer = make(map[string]int)
+	for i := range genome {
+		answer[genome[i].Name] = i
+	}
+	return answer
 }
 
 func usage() {
