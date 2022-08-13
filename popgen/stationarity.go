@@ -150,6 +150,12 @@ func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized boo
 	return currentSeg, true
 }
 
+// VcfDerivedAlleleFrequency returns the derived allele frequency based on the sample columns of a VCF variant.
+func VcfSampleDerivedAlleleFrequency(v vcf.Vcf) float64 {
+	segSite, _ := VcfSampleToSegSite(v, false, false, false)
+	return float64(segSite.I) / float64(segSite.N)
+}
+
 //AfsToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
 func AfsToFrequency(a Afs) []float64 {
 	var answer []float64
