@@ -121,18 +121,30 @@ func findParameters(reference string, species string, distsFile string) (par []s
 	var answer []string
 	var dist int
 	var mat string
+	var d string
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
 		words = strings.Split(line, " ")
-		//TODO: is it more efficient to do if words[0] == reference and then nest another if of words[1] == species?
-		if words[0] == reference && words[1] == species {
-			d := common.StringToFloat64(words[2])
-			dist = d
+		if d == "close" {
+			answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
+			matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+			dist = 1
+		} else if d == "far" {
+			answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
+			matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+			dist = 3
+		} else if d == "default" {
+			answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
+			matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+			dist = 2
+		} else {
+			dist := common.StringToFloat64(words[2])
+			//dist = d
 			switch {
-			case d <= 0.2: //closest
+			case dist <= 0.2: //closest
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
-			case d >= 0.7: //farthest
+			case dist >= 0.7: //farthest
 				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 			default: //executive decision to set M to 254
@@ -141,9 +153,6 @@ func findParameters(reference string, species string, distsFile string) (par []s
 			}
 		}
 	}
+
 	return answer, mat, dist
 }
-
-var humChimpV2 = [][]int64{{90, -330, -236, -356}, {-330, 100, -318, -236}, {-236, -318, 100, -330}, {-356, -236, -330, 90}}
-var defaultMat = [][]int64{{91, -114, -31, -123}, {-114, 100, -125, -31}, {-31, -125, 100, -114}, {-123, -31, -114, 91}}
-var hoxD55 = [][]int64{{91, -90, -25, -100}, {-90, 100, -100, -25}, {-25, -100, 100, -90}, {-100, -25, -90, 91}}
