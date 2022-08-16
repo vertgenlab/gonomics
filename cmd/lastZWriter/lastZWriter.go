@@ -108,7 +108,8 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-//TODO: CSV or no?
+//TODO: write needed species file and reference file
+//TODO: write matrix in working dir while this is running and it can be accessed during that run time for the program, leave this as an option where the default is hard-coding a path
 
 func main() {
 	var expectedNumArgs int = 7
