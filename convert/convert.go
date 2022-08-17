@@ -19,8 +19,8 @@ import (
 	"sort"
 )
 
-//singleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
-func singleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
+//SingleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
+func SingleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 	for i := range ref {
 		if b.Chrom == ref[i].Name {
 			return fasta.Extract(ref[i], b.ChromStart, b.ChromEnd, b.Name)
@@ -34,7 +34,7 @@ func singleBedToFasta(b bed.Bed, ref []fasta.Fasta) fasta.Fasta {
 func BedToFasta(b []bed.Bed, ref []fasta.Fasta) []fasta.Fasta {
 	outlist := make([]fasta.Fasta, len(b))
 	for i := 0; i < len(b); i++ {
-		outlist[i] = singleBedToFasta(b[i], ref)
+		outlist[i] = SingleBedToFasta(b[i], ref)
 	}
 	return outlist
 }
