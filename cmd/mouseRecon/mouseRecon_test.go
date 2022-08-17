@@ -41,6 +41,14 @@ func TestAllPossible(t *testing.T) {
 	} else {
 		err = os.Remove("testdata/test.mraMleMouseBias.fa")
 		exception.PanicOnErr(err)
+	}
+
+	mouseReconMraMle("testdata/allPossible.fa", "testdata/test.mraMleMouseBias0.fa", "testdata/4d.mod", 0.0, 0.0)
+	if !fileio.AreEqual("testdata/test.mraMleMouseBias0.fa", "testdata/expected.mraMleMouseBias0.fa") {
+		t.Errorf("Error in mouseRecon, mouse-biased mleMra reconstruction. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/test.mraMleMouseBias0.fa")
+		exception.PanicOnErr(err)
 		err = os.Remove("testdata/allPossible.fa") //remove allPossible once all tests have passed.
 		exception.PanicOnErr(err)
 	}

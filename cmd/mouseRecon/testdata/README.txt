@@ -22,4 +22,28 @@ Position: 200
 |speTri2    | GTN-.CGTN-.CGTN-
 |mra        | ...............-
 
+Here is the expected output for when nonBiasProbThreshold = 0
+Position: 0
+|mm10       | AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+|rn7        | ....................................CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+|criGriChoV2| ......CCCCCCGGGGGGTTTTTTNNNNNN------......CCCCCCGGGGGGTTTTTTNNNNNN------......CCCCCCGGGGGGTTTTTTNNNN
+|speTri2    | .CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGT
+|mra        | ..........................................CCCCCC.CG....C.T...C.....C...........CG...GGGGGG..GT....G.
+
+
+Position: 100
+|mm10       | AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+|rn7        | GGGGGGGGTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN--------------------
+|criGriChoV2| NN------......CCCCCCGGGGGGTTTTTTNNNNNN------......CCCCCCGGGGGGTTTTTTNNNNNN------......CCCCCCGGGGGGTT
+|speTri2    | N-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.CGTN-.C
+|mra        | ....G..........C.T....GT..TTTTTT...T.....T.........C......G......T.....................C......G.....
+
+
+Position: 200
+|mm10       | AAAAAAAAAAAAAAAA
+|rn7        | ----------------
+|criGriChoV2| TTTTNNNNNN------
+|speTri2    | GTN-.CGTN-.CGTN-
+|mra        | .T.............-
+
 
