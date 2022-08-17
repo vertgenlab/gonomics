@@ -116,7 +116,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var tree *string = flag.String("mleTree", "", "Filename for newick tree with branch lengths. Must hav ethe anticipated assembly names and the desired ancestral node labeled.")
+	var tree *string = flag.String("mleTree", "", "Filename for newick tree with branch lengths. Must have the anticipated assembly names and the desired ancestral node labeled.")
 	var probThreshold *float64 = flag.Float64("probThreshold", 0.0, "The minimum probability assigned to a base required for it to be called.")
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasProbThreshold", 0.0, "The summation of all base probabilities (other than the biased species) must pass this threshold for a non-biased species base to be considered in the ancestral state.")
 	//var mleMraUnbiased *bool = flag.Bool("mleMraUnbiased", false, "Calculates the unbiased mouse-rat ancestor estimation. Currently unsupported (future feature).")
