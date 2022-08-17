@@ -12,7 +12,7 @@ import (
 
 func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string) {
 	if !m {
-		lastZWriter.buildMatrices(mPath)
+		lastZWriter.BuildMatrices(mPath)
 	}
 	speciesList := fileio.EasyOpen(speciesListFile)
 	refList := fileio.EasyOpen(refListFile)

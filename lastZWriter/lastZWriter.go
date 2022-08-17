@@ -88,10 +88,11 @@ func makeQuerySubDir(path string, pDir string) {
 	})
 }
 
-//findParameters takes in one pair of species to be alignment (one of them the ref and the other not) and determines
-//parameter values for lastZ alignment based on the distance between the species as determined by phast allDists.
+//findParameters takes in one pair of species to be aligned (one of them the ref and the other not) and determines
+//parameter values for lastZ alignment based on the distance between the species as determined by phast allDists,
+//or as specified by the user in the alternate file described in the usage statement for gonomics/cmd/lastZWriter/lastZWriter.go.
 //a species can be classified into three categories, closest, where the matrix and parameters will match those used
-//for a chimp to human alignment with lastZ, middle, where the parameters will be default for lastZ and the matrix and
+//for a chimp to human alignment with lastZ, default, where the parameters will be default for lastZ and the matrix and
 //far, where the parameters will be set to the most distant alignment parameters and the matrix will be set to HoxD55.
 func findParameters(reference string, species string, distsFile string, m bool, mPath string) (par []string, matrix string) {
 	var words []string
@@ -112,25 +113,44 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = 1
 			} else if words[2] == "far" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
-				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+				if m {
+					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+				} else {
+					matrix = mPath + "/hoxD55.mat"
+				}
 				dist = 3
 			} else if words[2] == "default" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
-				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+				if m {
+					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+				} else {
+					matrix = mPath + "/default.mat"
+				}
 				dist = 2
 			} else {
 				dist = common.StringToFloat64(words[2])
-				//dist = d
 				switch {
 				case dist <= 0.2: //closest
 					answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
-					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+					if m {
+						matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+					} else {
+						matrix = mPath + "/human_chimp_v2.mat"
+					}
 				case dist >= 0.7: //farthest
 					answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
-					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+					if m {
+						matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+					} else {
+						matrix = mPath + "/hoxD55.mat"
+					}
 				default: //executive decision to set M to 254
 					answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
-					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+					if m {
+						matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+					} else {
+						matrix = mPath + "/default.mat"
+					}
 				}
 			}
 		}
@@ -139,7 +159,8 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	return answer, mat
 }
 
-func buildMatrices(mPath string) {
+//BuildMatrices is used when the user defines m and false and wants to write each potential matrix for the lastZ alignment to a specified directory
+func BuildMatrices(mPath string) {
 	var closeRec, defaultRec, farRec []string
 	err := os.Mkdir(mPath, 666)
 	if err != nil {
