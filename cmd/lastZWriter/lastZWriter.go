@@ -88,25 +88,26 @@ func usage() {
 			"'assemblyName.byChrom'. Within the parent directory of the byChrom files, lastZWriter will build a " +
 			"directory tree for the outputs of lastZ. At the same level of the byChrom files it will create a set of " +
 			"directories with the reference species assembly name. For each species being aligned to that reference " +
-			"lastZWriter will specify that lastZ should create an axt file 'aligningSpeciesByChromName.referenceByChromName.axt' " +
+			"lastZWriter will specify that lastZ should create an axt output file 'aligningSpeciesByChromName.referenceByChromName.axt' " +
 			"that refers to the two fasta files used in the alignment. LastZWriter also requires a list of all " +
 			"species in the alignment, as well as a separate text file with a list of reference species. " +
-			"Matrices are hardcoded absolute paths in this version. Matrices are assigned based on the distance " +
-			"between the reference and aligning species from each other as calculated by the PHAST all_dists function, " +
-			"which is also a required file. This function can be used directly within the terminal, but would be " +
-			"easiest to work with in a shell wrapper where inputs can be referred to in variables. \n" +
+			"Matrices are hardcoded, absolute paths by default in this version. In the default function matrices are assigned based on the distance " +
+			"between the reference and aligning species from each other as calculated by the PHAST all_dists function." +
+			"However, the user has the option to specify a bool (option m) as false and provide a path in which they " +
+			"would like the needed matrices to be hardcoded. As an alternative to the all_dists function, or if there " +
+			"isn't an available tree of the necessary species, this function can also take a file to replace the " +
+			"specified allDists file. The first two columns of which would need to be every possible combination of " +
+			"your alignment (find an example in testdata directory). This function can be used directly within the " +
+			"terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables. \n" +
 			"Usage:\n" +
-			"lastZWriter <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
-			"bedOverlapByWindow takes a sorted bed and counts bp in bed regions within a window size. Default is 5000bp\n" +
-			"Usage:\n" +
-			"bedOverlapByWindow input.bed chrom.sizes output.bed\n" +
+			"lastZWriter [-m=<bool> -mPath=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 6
-	var m *bool = flag.Bool("m", true, "use existing matrices at hardcoded path.")
+	var m *bool = flag.Bool("m", true, "Use existing matrices at hardcoded path.")
 	var mPath *string = flag.String("mPath", "", "Path to desired location of created matrices if m = false.")
 
 	flag.Usage = usage
@@ -128,8 +129,3 @@ func main() {
 
 	MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
 }
-
-//TODO: write main function with options etc.
-//TODO: update usage to get rid of CSV and to add in that allDists can be made up of three columns, one being close, far or default
-//TODO: write needed species file and reference file
-//TODO: write matrix in working dir while this is running and it can be accessed during that run time for the program, leave this as an option where the default is hard-coding a path

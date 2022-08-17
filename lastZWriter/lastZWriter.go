@@ -10,27 +10,6 @@ import (
 	"strings"
 )
 
-//TODO: makeArray should be the cmd, needs to go back and find the target and query dirs, recover tName and qName
-//TODO: makeArray needs to use the findParameters return (AlignSetUp return) to make the tsv with a helper in the cmd file, rather than just returning them. This function doesnt need a return.
-//func makeArray(speciesListFile string, refListFile string, allDists string) (par []string, mat string, dis int) { //returns for each ref and spec pairing that it is given, the targetDir, the queryDir, t, q, outDir, tName, qName, matrix, paramters
-//	speciesList := fileio.EasyOpen(speciesListFile)
-//	refList := fileio.EasyOpen(refListFile)
-//	var spec, ref string
-//	var speciesDone, refDone bool
-//	var parameters []string
-//	var matrix string
-//	var dist int
-//	for ref, refDone = fileio.EasyNextRealLine(refList); !refDone; ref, refDone = fileio.EasyNextRealLine(refList) {
-//		for spec, speciesDone = fileio.EasyNextRealLine(speciesList); !speciesDone; spec, speciesDone = fileio.EasyNextRealLine(speciesList) {
-//			if spec != ref {
-//				parameters, matrix, dist = AlignSetUp(spec, ref, allDists)
-//				return parameters, matrix, dist
-//			}
-//		}
-//	}
-//	return
-//}
-
 //AlignSetUp takes in a the path to the parent directory where all the individual fastas for alignment are being held.
 //In this context the directory below "pairwise" is labelled by a species name, which then contains all the fastas for
 //alignment. It also takes a single aligning species and reference species, as well as a text file that describes the
@@ -128,7 +107,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				if m {
 					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 				} else {
-					matrix = mPath+"/human_chimp_v2.mat"
+					matrix = mPath + "/human_chimp_v2.mat"
 				}
 				dist = 1
 			} else if words[2] == "far" {
