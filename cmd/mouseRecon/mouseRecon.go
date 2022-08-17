@@ -136,7 +136,8 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	if *mleMraMouseBiased {
-		mouseReconMraMle(inFile, outFile, *tree, *probThreshold, *nonBiasProbThreshold)
-	}
+	mouseReconMraMle(inFile, outFile, *tree, *probThreshold, *nonBiasProbThreshold)
+	//if *mleMraMouseBiased {
+	//	mouseReconMraMle(inFile, outFile, *tree, *probThreshold, *nonBiasProbThreshold)
+	//}
 }
