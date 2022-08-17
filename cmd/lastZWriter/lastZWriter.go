@@ -11,11 +11,10 @@ import (
 	"path/filepath"
 )
 
-//TODO: write main function with options etc.
-func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, outCsv string) {
+func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string) {
 	speciesList := fileio.EasyOpen(speciesListFile)
 	refList := fileio.EasyOpen(refListFile)
-	csvFile := fileio.EasyCreate(outCsv)
+	//csvFile := fileio.EasyCreate(outCsv)
 	fileio.EasyCreate(outText)
 	var spec, ref string
 	var speciesDone, refDone bool
@@ -23,24 +22,24 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	var matrix string
 	var dist int
 	var allLines []string
-	csvOut := csv.NewWriter(csvFile)
+	//csvOut := csv.NewWriter(csvFile)
 	for ref, refDone = fileio.EasyNextRealLine(refList); !refDone; ref, refDone = fileio.EasyNextRealLine(refList) {
 		for spec, speciesDone = fileio.EasyNextRealLine(speciesList); !speciesDone; spec, speciesDone = fileio.EasyNextRealLine(speciesList) {
 			if spec != ref {
 				parameters, matrix, dist = lastZWriter.AlignSetUp(pairwise, spec, ref, allDists)
-				allLines = writeFiles(lastZ, pairwise, ref, spec, parameters, matrix, dist, allLines, csvOut)
+				allLines = writeFiles(lastZ, pairwise, ref, spec, parameters, matrix, dist, allLines)
 			}
 		}
 	}
 	fileio.Write(outText, allLines)
 }
 
-func writeFiles(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, dist int, allLines []string, csvOut *csv.Writer) (lines []string) {
+func writeFiles(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, dist int, allLines []string) (lines []string) {
 	var currLine string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6])
-	allVars := []string{
-		reference, species, string(dist), matrix, par}
-	csvOut.Write(allVars)
+	//allVars := []string{
+	//	reference, species, string(dist), matrix, par}
+	//csvOut.Write(allVars)
 
 	currLine = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
 	allLines = append(allLines, currLine)
@@ -108,13 +107,10 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-//TODO: write needed species file and reference file
-//TODO: write matrix in working dir while this is running and it can be accessed during that run time for the program, leave this as an option where the default is hard-coding a path
-
 func main() {
-	var expectedNumArgs int = 7
-	var mergeAdjacent *bool = flag.Bool("mergeAdjacent", false, "Merge non-overlapping entries with direct adjacency.")
-	var lowMem *bool = flag.Bool("lowMem", false, "Use the low memory algorithm. Requires input file to be pre-sorted.")
+	var expectedNumArgs int = 6
+	//var mergeAdjacent *bool = flag.Bool("mergeAdjacent", false, "Merge non-overlapping entries with direct adjacency.")
+	//var lowMem *bool = flag.Bool("lowMem", false, "Use the low memory algorithm. Requires input file to be pre-sorted.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -126,8 +122,18 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	infile := flag.Arg(0)
-	outfile := flag.Arg(1)
+	lastZ := flag.Arg(0)
+	pairwiseDir := flag.Arg(1)
+	speciesListFile := flag.Arg(2)
+	refListFile := flag.Arg(3)
+	allDists := flag.Arg(4)
+	outText := flag.Arg(5)
 
-	bedMerge(infile, outfile, *mergeAdjacent, *lowMem)
+	MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText)
 }
+
+//TODO: write main function with options etc.
+//TODO: remove all outCsv
+//TODO: update usage to get rid of CSV and to add in that allDists can be made up of three columns, one being close, far or default
+//TODO: write needed species file and reference file
+//TODO: write matrix in working dir while this is running and it can be accessed during that run time for the program, leave this as an option where the default is hard-coding a path
