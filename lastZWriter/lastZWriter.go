@@ -128,7 +128,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				if m {
 					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 				} else {
-					matrix = mPath+"/human_chimp_v2.mat"
+					matrix = mPath + "/human_chimp_v2.mat"
 				}
 				dist = 1
 			} else if words[2] == "far" {
