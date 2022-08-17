@@ -41,7 +41,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 		refHaplotype := fasta.Extract(genome[currIndex], regions[i].ChromStart, regions[i].ChromEnd, regions[i].Chrom)
 
 		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", outdir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
-		
+
 		fmt.Printf("output filename: \n%s", outputFilename)
 
 		out := fileio.EasyCreate(outputFilename)
