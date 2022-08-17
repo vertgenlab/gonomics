@@ -37,10 +37,10 @@ import (
 //distance between all species in the alignment from all other species in the alignment. This file is make with
 //Phylogenetic Analysis with Space/Time Models or PHAST all_dists function. AlignSetUp then calls its helper functions
 //and returns the results of findParameters.
-func AlignSetUp(pairwise string, species string, reference string, allDists string) (par []string, mat string, dis int) {
+func AlignSetUp(pairwise string, species string, reference string, allDists string, m bool, mPath string) (par []string, mat string, dis float64) {
 	outDir := pairwise + "/" + reference + "." + species
 	makeOutDir(pairwise, outDir, reference, species)
-	parameters, matrix, dist := findParameters(reference, species, allDists)
+	parameters, matrix, dist := findParameters(reference, species, allDists, m, mPath)
 	return parameters, matrix, dist
 }
 
@@ -48,7 +48,6 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 //the directory labelled with the name of the reference and the species being aligned. It then passes off to a
 //helper function makeTargetSubDir
 func makeOutDir(pairwise string, outDir string, r string, s string) {
-	//tDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + r + ".byChrom"
 	tDir := pairwise + "/" + r + ".byChrom"
 	if _, e := os.Stat(outDir); os.IsNotExist(e) {
 		err := os.Mkdir(outDir, 666)
@@ -115,43 +114,75 @@ func makeQuerySubDir(path string, pDir string) {
 //a species can be classified into three categories, closest, where the matrix and parameters will match those used
 //for a chimp to human alignment with lastZ, middle, where the parameters will be default for lastZ and the matrix and
 //far, where the parameters will be set to the most distant alignment parameters and the matrix will be set to HoxD55.
-func findParameters(reference string, species string, distsFile string) (par []string, matrix string, dis int) {
+func findParameters(reference string, species string, distsFile string, m bool, mPath string) (par []string, matrix string, dis float64) {
 	var words []string
 	var answer []string
-	var dist int
+	var dist float64
 	var mat string
-	var d string
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
 		words = strings.Split(line, " ")
-		if d == "close" {
-			answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
-			matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
-			dist = 1
-		} else if d == "far" {
-			answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
-			matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
-			dist = 3
-		} else if d == "default" {
-			answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
-			matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
-			dist = 2
-		} else {
-			dist := common.StringToFloat64(words[2])
-			//dist = d
-			switch {
-			case dist <= 0.2: //closest
+		if words[0] == reference && words[1] == species {
+			if words[2] == "close" {
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
-				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
-			case dist >= 0.7: //farthest
+				if m {
+					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+				} else {
+					matrix = mPath+"/human_chimp_v2.mat"
+				}
+				dist = 1
+			} else if words[2] == "far" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
-			default: //executive decision to set M to 254
+				dist = 3
+			} else if words[2] == "default" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 				matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+				dist = 2
+			} else {
+				dist = common.StringToFloat64(words[2])
+				//dist = d
+				switch {
+				case dist <= 0.2: //closest
+					answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
+					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+				case dist >= 0.7: //farthest
+					answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
+					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+				default: //executive decision to set M to 254
+					answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
+					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+				}
 			}
 		}
 	}
 
 	return answer, mat, dist
+}
+
+func buildMatrices(mPath string) {
+	err := os.Mkdir(mPath, 666)
+	if err != nil {
+		log.Panic(err)
+	}
+	closeRec := "A\tC\tG\tT\n" +
+		"A\t90\t-330\t-236\t-356\n" +
+		"C\t-330\t100\t-318\t-236\n" +
+		"G\t-236\t-318\t100\t-330\n" +
+		"T\t-356\t-236\t-330\t90"
+	fileio.Write(mPath+"/human_chimp_v2.mat", closeRec)
+
+	defaultRec := "A\tC\tG\tT\n" +
+		"A\t91\t-114\t-31\t-123\n" +
+		"C\t-114\t100\t-125\t-31\n" +
+		"G\t-31\t-125\t100\t-114\n" +
+		"T\t-123\t-31\t-114\t91"
+	fileio.Write(mPath+"/default.mat", defaultRec)
+
+	farRec := "A\tC\tG\tT\n" +
+		"A\t91\t-90\t-25\t-100\n" +
+		"C\t-90\t100\t-100\t-25\n" +
+		"G\t-25\t-100\t100\t-90\n" +
+		"T\t-100\t-25\t-90\t91"
+	fileio.Write(mPath+"/hoxD55.mat", farRec)
 }
