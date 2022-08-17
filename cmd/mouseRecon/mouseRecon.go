@@ -119,8 +119,9 @@ func main() {
 	var tree *string = flag.String("mleTree", "", "Filename for newick tree with branch lengths. Must have the anticipated assembly names and the desired ancestral node labeled.")
 	var probThreshold *float64 = flag.Float64("probThreshold", 0.0, "The minimum probability assigned to a base required for it to be called.")
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasProbThreshold", 0.0, "The summation of all base probabilities (other than the biased species) must pass this threshold for a non-biased species base to be considered in the ancestral state.")
+	//TODO: These optional arguments could be used if we want to generate both a biased and an unbiased version of the MRA estimate.
 	//var mleMraUnbiased *bool = flag.Bool("mleMraUnbiased", false, "Calculates the unbiased mouse-rat ancestor estimation. Currently unsupported (future feature).")
-	var mleMraMouseBiased *bool = flag.Bool("mleMraMouseBiased", true, "Calculates the mouse-biased mouse-rat ancestor estimation (default behavior, only behavior currently supported).")
+	//var mleMraMouseBiased *bool = flag.Bool("mleMraMouseBiased", true, "Calculates the mouse-biased mouse-rat ancestor estimation (default behavior, only behavior currently supported).")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
