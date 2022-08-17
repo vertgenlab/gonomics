@@ -1,4 +1,4 @@
-Start: 0. refCounter: 0. alignCounter: 0
+Here is the expected multiple alignment of all possible rodent position configurations, visualized with multFaVisualizer.
 Position: 0
 |mm10       | AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 |rn7        | ....................................CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGGGGGGGGGGGGG
