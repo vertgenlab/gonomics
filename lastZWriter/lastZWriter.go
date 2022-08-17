@@ -16,11 +16,11 @@ import (
 //distance between all species in the alignment from all other species in the alignment. This file is make with
 //Phylogenetic Analysis with Space/Time Models or PHAST all_dists function. AlignSetUp then calls its helper functions
 //and returns the results of findParameters.
-func AlignSetUp(pairwise string, species string, reference string, allDists string, m bool, mPath string) (par []string, mat string, dis float64) {
+func AlignSetUp(pairwise string, species string, reference string, allDists string, m bool, mPath string) (par []string, mat string) {
 	outDir := pairwise + "/" + reference + "." + species
 	makeOutDir(pairwise, outDir, reference, species)
-	parameters, matrix, dist := findParameters(reference, species, allDists, m, mPath)
-	return parameters, matrix, dist
+	parameters, matrix := findParameters(reference, species, allDists, m, mPath)
+	return parameters, matrix
 }
 
 //makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
@@ -93,7 +93,7 @@ func makeQuerySubDir(path string, pDir string) {
 //a species can be classified into three categories, closest, where the matrix and parameters will match those used
 //for a chimp to human alignment with lastZ, middle, where the parameters will be default for lastZ and the matrix and
 //far, where the parameters will be set to the most distant alignment parameters and the matrix will be set to HoxD55.
-func findParameters(reference string, species string, distsFile string, m bool, mPath string) (par []string, matrix string, dis float64) {
+func findParameters(reference string, species string, distsFile string, m bool, mPath string) (par []string, matrix string) {
 	var words []string
 	var answer []string
 	var dist float64
@@ -136,32 +136,33 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 		}
 	}
 
-	return answer, mat, dist
+	return answer, mat
 }
 
 func buildMatrices(mPath string) {
+	var closeRec, defaultRec, farRec []string
 	err := os.Mkdir(mPath, 666)
 	if err != nil {
 		log.Panic(err)
 	}
-	closeRec := "A\tC\tG\tT\n" +
-		"A\t90\t-330\t-236\t-356\n" +
-		"C\t-330\t100\t-318\t-236\n" +
-		"G\t-236\t-318\t100\t-330\n" +
-		"T\t-356\t-236\t-330\t90"
+	closeRec = []string{"A\tC\tG\tT",
+		"A\t90\t-330\t-236\t-356",
+		"C\t-330\t100\t-318\t-236",
+		"G\t-236\t-318\t100\t-330",
+		"T\t-356\t-236\t-330\t90"}
 	fileio.Write(mPath+"/human_chimp_v2.mat", closeRec)
 
-	defaultRec := "A\tC\tG\tT\n" +
-		"A\t91\t-114\t-31\t-123\n" +
-		"C\t-114\t100\t-125\t-31\n" +
-		"G\t-31\t-125\t100\t-114\n" +
-		"T\t-123\t-31\t-114\t91"
+	defaultRec = []string{"A\tC\tG\tT",
+		"A\t91\t-114\t-31\t-123",
+		"C\t-114\t100\t-125\t-31",
+		"G\t-31\t-125\t100\t-114",
+		"T\t-123\t-31\t-114\t91"}
 	fileio.Write(mPath+"/default.mat", defaultRec)
 
-	farRec := "A\tC\tG\tT\n" +
-		"A\t91\t-90\t-25\t-100\n" +
-		"C\t-90\t100\t-100\t-25\n" +
-		"G\t-25\t-100\t100\t-90\n" +
-		"T\t-100\t-25\t-90\t91"
+	farRec = []string{"A\tC\tG\tT",
+		"A\t91\t-90\t-25\t-100",
+		"C\t-90\t100\t-100\t-25",
+		"G\t-25\t-100\t100\t-90",
+		"T\t-100\t-25\t-90\t91"}
 	fileio.Write(mPath+"/hoxD55.mat", farRec)
 }

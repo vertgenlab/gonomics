@@ -21,20 +21,19 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	var speciesDone, refDone bool
 	var parameters []string
 	var matrix string
-	var dist int
 	var allLines []string
 	for ref, refDone = fileio.EasyNextRealLine(refList); !refDone; ref, refDone = fileio.EasyNextRealLine(refList) {
 		for spec, speciesDone = fileio.EasyNextRealLine(speciesList); !speciesDone; spec, speciesDone = fileio.EasyNextRealLine(speciesList) {
 			if spec != ref {
-				parameters, matrix, dist = lastZWriter.AlignSetUp(pairwise, spec, ref, allDists, m, mPath)
-				allLines = writeFiles(lastZ, pairwise, ref, spec, parameters, matrix, dist, allLines)
+				parameters, matrix = lastZWriter.AlignSetUp(pairwise, spec, ref, allDists, m, mPath)
+				allLines = writeFile(lastZ, pairwise, ref, spec, parameters, matrix, allLines)
 			}
 		}
 	}
 	fileio.Write(outText, allLines)
 }
 
-func writeFiles(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, dist int, allLines []string) (lines []string) {
+func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, allLines []string) (lines []string) {
 	var currLine string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6])
 
