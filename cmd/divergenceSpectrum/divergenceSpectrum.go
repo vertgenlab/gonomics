@@ -104,7 +104,9 @@ func usage() {
 	fmt.Print("divergenceSpectrum - Determine the mutation spectrum for divergent sites in each region of an input bed file.\n" +
 		"Usage:\n" +
 		"divergenceSpectrum input.bed divergentSites.vcf output.txt\n\n" +
-		"Requires an input vcf file of all divergent sites between two genomes, which can be generated with multiFaToVcf." +
+		"Requires an input vcf file of all divergent sites between two genomes, which can be generated with multiFaToVcf.\n" +
+		"Output fields are as follows:\n" +
+		"(0: A->G/T->C) (1: G->A/C->T) (2: A->T/T->A) (3: G->C/C->G) (4: A->C/T->G) (5: C->A/G->T).\n" +
 		"options:\n")
 	flag.PrintDefaults()
 }
