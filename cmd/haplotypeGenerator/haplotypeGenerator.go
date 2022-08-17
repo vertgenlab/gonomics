@@ -4,17 +4,22 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 )
 
 func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, outdir string) {
+	var currState int
 	variants, header := vcf.Read(snpFile)
 	variantIntervals := make([]interval.Interval, len(variants))
+
+	// fmt.Println("started ok")
+
 	for i := range variants {
 		variantIntervals[i] = variants[i]
 	}
@@ -28,29 +33,52 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 	samplesNames := vcf.SampleNamesInOrder(header)
 
 	for i := range regions {
+
+		// fmt.Printf("working on region index %v.\n", i)
+
 		overlappingVariants := interval.Query(tree, regions[i], "any")
 		currIndex := genomeMap[regions[i].Chrom]
 		refHaplotype := fasta.Extract(genome[currIndex], regions[i].ChromStart, regions[i].ChromEnd, regions[i].Chrom)
 
 		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", outdir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
+		
+		fmt.Printf("output filename: \n%s", outputFilename)
+
 		out := fileio.EasyCreate(outputFilename)
 		sampleHaplotypes := make([]fasta.Fasta, len(header.Samples)*2)
+
+		// fmt.Printf("last line of header: \n%s", header.Text[len(header.Text)-1])
+
+		// fmt.Printf("length of sample haplotypes: %v.\n", len(sampleHaplotypes))
+		// fmt.Printf("length of header.Samples: %v.\n", len(header.Samples))
 
 		for j := range sampleHaplotypes {
 			sampleHaplotypes[j] = fasta.Copy(refHaplotype)
 			currSampleIndex := j / 2
-			if (j % 2 == 0){
+			if j%2 == 0 {
 				sampleHaplotypes[j].Name = fmt.Sprintf("%s_A", samplesNames[currSampleIndex])
 			} else {
 				sampleHaplotypes[j].Name = fmt.Sprintf("%s_B", samplesNames[currSampleIndex])
 			}
 
+			// fmt.Printf("working on haplotype: \n%s", sampleHaplotypes[j].Name)
+
 			for k := range overlappingVariants {
-				// For each variant, update corresponding position in each sample haplotype (position = position - ChromStart - 1)
-				// sampleHaplotypes[j]
-				fmt.Println(k)
+				if j%2 == 0 {
+					currState = int(overlappingVariants[k].(vcf.Vcf).Samples[currSampleIndex].Alleles[0])
+					if currState > 0 {
+						sampleHaplotypes[j].Seq[overlappingVariants[k].(vcf.Vcf).Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].(vcf.Vcf).Alt[currState-1])
+					}
+				} else {
+					currState = int(overlappingVariants[k].(vcf.Vcf).Samples[currSampleIndex].Alleles[1])
+					if currState > 0 {
+						sampleHaplotypes[j].Seq[overlappingVariants[k].(vcf.Vcf).Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].(vcf.Vcf).Alt[currState-1])
+					}
+				}
 
 			}
+			// fmt.Println("writing haplotype")
+			// fmt.Println(sampleHaplotypes[j])
 
 			fasta.WriteFasta(out, sampleHaplotypes[j], 50)
 		}
