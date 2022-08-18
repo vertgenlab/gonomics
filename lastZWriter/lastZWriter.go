@@ -45,7 +45,7 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 	log.Print("about to check for fastas")
 	log.Print("Glob")
 
-	matches, err := filepath.Glob(path+"/*.fa")
+	matches, err := filepath.Glob(path + "/*.fa")
 
 	log.Print(matches)
 
@@ -71,7 +71,7 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 //These directories will remain empty until the array created by these functions is run.
 func makeQuerySubDir(path string, pDir string) {
 	var quName string
-	matches, err := filepath.Glob(path+"/*.fa")
+	matches, err := filepath.Glob(path + "/*.fa")
 	if err != nil {
 		log.Panic(err)
 	}
