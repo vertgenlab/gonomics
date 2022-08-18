@@ -14,6 +14,7 @@ var mClose = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 var mDefault = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 var mFar = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 
+//TODO: clear merge need
 func TestAlignSetUp(t *testing.T) {
 	pairDir := "testdata"
 	m := true
