@@ -84,7 +84,7 @@ func usage() {
 		"lastZWriter was designed to quickly write out lastZ pairwise inputs by contig where multiple references " +
 			"are being used. This function writes a text file where each line is an input for a lastZ pairwise alignment." +
 			" It requires that each genome be broken with the 'byname' option of 'faSplit' in kentutils and named in the convention " +
-			"'assemblyName.byChrom'. Within the parent directory of the byChrom files, lastZWriter will build a " +
+			"'assemblyName.byChrom'. Within the parent directory of the byChrom directories, lastZWriter will build a " +
 			"directory tree for the outputs of lastZ. At the same level of the byChrom files it will create a set of " +
 			"directories with the reference species assembly name. For each species being aligned to that reference " +
 			"lastZWriter will specify that lastZ should create an axt output file 'aligningSpeciesByChromName.referenceByChromName.axt' " +
@@ -128,3 +128,5 @@ func main() {
 
 	MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
 }
+
+//TODO: permissions error, no access granted, subdirectories of outdir not being created, refer1.refer1 directory being created

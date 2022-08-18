@@ -18,7 +18,11 @@ import (
 //and returns the results of findParameters.
 func AlignSetUp(pairwise string, species string, reference string, allDists string, m bool, mPath string) (par []string, mat string) {
 	outDir := pairwise + "/" + reference + "." + species
+
+	log.Print("hello form alignSetUp")
+
 	makeOutDir(pairwise, outDir, reference, species)
+	log.Print("sent off makeOutDir")
 	parameters, matrix := findParameters(reference, species, allDists, m, mPath)
 	return parameters, matrix
 }
@@ -29,31 +33,45 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 func makeOutDir(pairwise string, outDir string, r string, s string) {
 	tDir := pairwise + "/" + r + ".byChrom"
 	if _, e := os.Stat(outDir); os.IsNotExist(e) {
-		err := os.Mkdir(outDir, 666)
+		err := os.Mkdir(outDir, 0775)
+
+		log.Print("made outDir 0775")
+
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	makeTargetSubDir(tDir, outDir, pairwise, s)
+	log.Print("sent to makeTargetDir")
 }
 
 //makeTargetSubDir creates the next directory layer below makeOutDir which contains all alingments to a
 //single reference against any other species.
 func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 	var tr, trName string
-	//qDir := "/hpc/group/vertgenlab/vertebrateConservation/pairwise/" + s + ".byChrom"
 	qDir := pairwise + "/" + s + ".byChrom"
-	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
+
+	log.Print("about to check for fastas")
+	filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		log.Print("in walkdir")
+
 		if err != nil {
 			log.Fatal(err)
 		}
-		matched, err := filepath.Match("*.fa", f)
+		matched, err := filepath.Match("*.fa", path)
+
+		log.Print(matched)
+
 		if err != nil {
 			return err
 		} else if matched {
-			tr = f
+			//tr = f
+
+
+			log.Print(tr)
+
 			trName = strings.TrimSuffix(tr, ".fa")
-			err1 := os.Mkdir(outDir+"/"+trName, 666)
+			err1 := os.Mkdir(outDir+"/"+trName, 0775)
 			if err1 != nil {
 				log.Fatal(err1)
 			}
@@ -79,7 +97,7 @@ func makeQuerySubDir(path string, pDir string) {
 		} else if matched {
 			qu = f
 			quName = strings.TrimSuffix(qu, ".fa")
-			err := os.Mkdir(pDir+"/"+quName, 666)
+			err := os.Mkdir(pDir+"/"+quName, 0775)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -104,6 +122,10 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 		words = strings.Split(line, " ")
 		if words[0] == reference && words[1] == species {
 			if words[2] == "close" {
+
+				log.Print(reference)
+				log.Print(species)
+
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				if m {
 					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
@@ -159,10 +181,10 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	return answer, mat
 }
 
-//BuildMatrices is used when the user defines m and false and wants to write each potential matrix for the lastZ alignment to a specified directory
+//BuildMatrices is used when the user defines m as false and wants to write each potential matrix for the lastZ alignment to a specified directory (mPath)
 func BuildMatrices(mPath string) {
 	var closeRec, defaultRec, farRec []string
-	err := os.Mkdir(mPath, 666)
+	err := os.Mkdir(mPath, 0775)
 	if err != nil {
 		log.Panic(err)
 	}
