@@ -14,19 +14,18 @@ var mClose = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 var mDefault = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 var mFar = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 
-//TODO: clear merge need
 func TestAlignSetUp(t *testing.T) {
 	pairDir := "testdata"
 	m := true
-	rList := fileio.EasyOpen(pairDir + "/refList.txt")
-	specList := fileio.EasyOpen(pairDir + "/speciesList.txt")
-	for ref, rDone := fileio.EasyNextRealLine(rList); !rDone; ref, rDone = fileio.EasyNextRealLine(specList) {
-		for species, sDone := fileio.EasyNextRealLine(specList); !sDone; species, sDone = fileio.EasyNextRealLine(specList) {
-			if ref == species {
+	rList := fileio.Read(pairDir + "/refList.txt")
+	specList := fileio.Read(pairDir + "/speciesList.txt")
+	for ref := range rList {
+		for species := range specList {
+			if rList[ref] == specList[species] {
 				continue
 			}
-			par, mat := AlignSetUp(pairDir, species, ref, pairDir+"/allDistsAll.txt", m, "")
-			if ref == "refer1" && species == "refer2" || ref == "refer2" && species == "refer1" {
+			par, mat := AlignSetUp(pairDir, specList[species], rList[ref], pairDir+"/allDistsAll.txt", m, "")
+			if rList[ref] == "refer1" && specList[species] == "refer2" || rList[ref] == "refer2" && specList[species] == "refer1" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parClose[s])
 					if parMatch != 0 {
@@ -37,7 +36,7 @@ func TestAlignSetUp(t *testing.T) {
 						t.Fatal("Close matrix mismatch")
 					}
 				}
-			} else if ref == "refer1" && species == "name1" || ref == "refer2" && species == "name1" {
+			} else if rList[ref] == "refer1" && specList[species] == "name1" || rList[ref] == "refer2" && specList[species] == "name1" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parDefault[s])
 					if parMatch != 0 {
@@ -48,7 +47,7 @@ func TestAlignSetUp(t *testing.T) {
 						t.Fatal("Defualt matrix mismatch")
 					}
 				}
-			} else if ref == "refer1" && species == "name2" || ref == "refer2" && species == "name2" {
+			} else if rList[ref] == "refer1" && specList[species] == "name2" || rList[ref] == "refer2" && specList[species] == "name2" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parFar[s])
 					if parMatch != 0 {
@@ -60,7 +59,7 @@ func TestAlignSetUp(t *testing.T) {
 					}
 				}
 			} else {
-				log.Panicf("Didn't assign any matrix or parameter to this alignment, Ref: %s, Spec: %s", ref, species)
+				log.Panicf("Didn't assign any matrix or parameter to this alignment, Ref: %s, Spec: %s", rList[ref], specList[species])
 			}
 		}
 	}
