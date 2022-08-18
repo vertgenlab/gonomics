@@ -128,5 +128,3 @@ func main() {
 
 	MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
 }
-
-//TODO: permissions error, no access granted, subdirectories of outdir not being created, refer1.refer1 directory being created
