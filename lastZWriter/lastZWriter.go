@@ -41,14 +41,7 @@ func makeOutDir(pairwise string, outDir string, r string, s string) {
 func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 	var trName string
 	qDir := pairwise + "/" + s + ".byChrom"
-
-	log.Print("about to check for fastas")
-	log.Print("Glob")
-
-	matches, err := filepath.Glob(path+"/*.fa")
-
-	log.Print(matches)
-
+	matches, err := filepath.Glob(path + "/*.fa")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -58,10 +51,6 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 		trName = strings.TrimSuffix(name, ".fa")
 		os.Mkdir(outDir+"/"+trName, 0777)
 		parentDir := outDir + "/" + trName
-
-		log.Print("")
-		log.Print("sending to MakeQuerySubDir")
-
 		makeQuerySubDir(qDir, parentDir)
 	}
 }
@@ -71,18 +60,15 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 //These directories will remain empty until the array created by these functions is run.
 func makeQuerySubDir(path string, pDir string) {
 	var quName string
-	matches, err := filepath.Glob(path+"/*.fa")
+	matches, err := filepath.Glob(path + "/*.fa")
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Print(matches)
-
 	for qu := range matches {
 		var name string
 		_, name = filepath.Split(matches[qu])
 		quName = strings.TrimSuffix(name, ".fa")
 		os.Mkdir(pDir+"/"+quName, 0777)
-		log.Print("made querydir")
 	}
 }
 
@@ -99,34 +85,30 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	var mat string
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
-		words = strings.Split(line, " ")
+		words = strings.Split(line, "\t")
 		if words[0] == reference && words[1] == species {
 			if words[2] == "close" {
-
-				log.Print(reference)
-				log.Print(species)
-
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				if m {
-					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+					mat = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 				} else {
-					matrix = mPath + "/human_chimp_v2.mat"
+					mat = mPath + "/human_chimp_v2.mat"
 				}
 				dist = 1
 			} else if words[2] == "far" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				if m {
-					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+					mat = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 				} else {
-					matrix = mPath + "/hoxD55.mat"
+					mat = mPath + "/hoxD55.mat"
 				}
 				dist = 3
 			} else if words[2] == "default" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 				if m {
-					matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+					mat = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 				} else {
-					matrix = mPath + "/default.mat"
+					mat = mPath + "/default.mat"
 				}
 				dist = 2
 			} else {
@@ -135,23 +117,23 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				case dist <= 0.2: //closest
 					answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 					if m {
-						matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+						mat = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 					} else {
-						matrix = mPath + "/human_chimp_v2.mat"
+						mat = mPath + "/human_chimp_v2.mat"
 					}
 				case dist >= 0.7: //farthest
 					answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 					if m {
-						matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+						mat = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 					} else {
-						matrix = mPath + "/hoxD55.mat"
+						mat = mPath + "/hoxD55.mat"
 					}
 				default: //executive decision to set M to 254
 					answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 					if m {
-						matrix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+						mat = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 					} else {
-						matrix = mPath + "/default.mat"
+						mat = mPath + "/default.mat"
 					}
 				}
 			}

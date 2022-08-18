@@ -25,62 +25,41 @@ func TestAlignSetUp(t *testing.T) {
 				continue
 			}
 			par, mat := AlignSetUp(pairDir, species, ref, pairDir+"/allDistsAll.txt", m, "")
-
-			//log.Print(par)
-			//log.Print(mat)
-			//log.Print(ref)
-			//log.Print(species)
-
 			if ref == "refer1" && species == "refer2" || ref == "refer2" && species == "refer1" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parClose[s])
-
-					log.Print(s)
-					log.Print(par[s])
-					log.Print(parClose[s])
-
 					if parMatch != 0 {
-						t.Errorf("Close parameters mismatch: %v value didn't match", s)
+						t.Fatalf("Close parameters mismatch: %v value didn't match", s)
 					}
 					mMatch := strings.Compare(mat, mClose)
 					if mMatch != 0 {
-						t.Error("Close matrix mismatch")
+						t.Fatal("Close matrix mismatch")
 					}
 				}
 			} else if ref == "refer1" && species == "name1" || ref == "refer2" && species == "name1" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parDefault[s])
-
-					log.Print(s)
-					log.Print(par[s])
-					log.Print(parDefault[s])
-
 					if parMatch != 0 {
-						t.Errorf("Defualt parameters mismatch: %v value didn't match", s)
+						t.Fatalf("Defualt parameters mismatch: %v value didn't match", s)
 					}
 					mMatch := strings.Compare(mat, mDefault)
 					if mMatch != 0 {
-						t.Error("Defualt matrix mismatch")
+						t.Fatal("Defualt matrix mismatch")
 					}
 				}
 			} else if ref == "refer1" && species == "name2" || ref == "refer2" && species == "name2" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parFar[s])
-
-					log.Print(s)
-					log.Print(par[s])
-					log.Print(parFar[s])
-
 					if parMatch != 0 {
-						t.Errorf("Far parameters mismatch: %v value didn't match", s)
+						t.Fatalf("Far parameters mismatch: %v value didn't match", s)
 					}
 					mMatch := strings.Compare(mat, mFar)
 					if mMatch != 0 {
-						t.Error("Far matrix mismatch")
+						t.Fatal("Far matrix mismatch")
 					}
 				}
 			} else {
-				log.Print("Didn't enter any if/elses")
+				log.Panicf("Didn't assign any matrix or parameter to this alignment, Ref: %s, Spec: %s", ref, species)
 			}
 		}
 	}
