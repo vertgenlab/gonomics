@@ -2,9 +2,9 @@ package lastZWriter
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 	"strings"
 	"testing"
-	"log"
 )
 
 var parClose = []string{"O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}
@@ -54,7 +54,6 @@ func TestAlignSetUp(t *testing.T) {
 					log.Print(s)
 					log.Print(par[s])
 					log.Print(parDefault[s])
-
 
 					if parMatch != 0 {
 						t.Errorf("Defualt parameters mismatch: %v value didn't match", s)
