@@ -67,7 +67,6 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 		} else if matched {
 			//tr = f
 
-
 			log.Print(tr)
 
 			trName = strings.TrimSuffix(tr, ".fa")
