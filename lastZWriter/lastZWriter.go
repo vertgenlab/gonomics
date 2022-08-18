@@ -41,7 +41,7 @@ func makeOutDir(pairwise string, outDir string, r string, s string) {
 func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 	var trName string
 	qDir := pairwise + "/" + s + ".byChrom"
-	matches, err := filepath.Glob(path+"/*.fa")
+	matches, err := filepath.Glob(path + "/*.fa")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -60,7 +60,7 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 //These directories will remain empty until the array created by these functions is run.
 func makeQuerySubDir(path string, pDir string) {
 	var quName string
-	matches, err := filepath.Glob(path+"/*.fa")
+	matches, err := filepath.Glob(path + "/*.fa")
 	if err != nil {
 		log.Panic(err)
 	}
