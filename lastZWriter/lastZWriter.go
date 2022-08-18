@@ -3,7 +3,6 @@ package lastZWriter
 import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -18,11 +17,7 @@ import (
 //and returns the results of findParameters.
 func AlignSetUp(pairwise string, species string, reference string, allDists string, m bool, mPath string) (par []string, mat string) {
 	outDir := pairwise + "/" + reference + "." + species
-
-	log.Print("hello form alignSetUp")
-
 	makeOutDir(pairwise, outDir, reference, species)
-	log.Print("sent off makeOutDir")
 	parameters, matrix := findParameters(reference, species, allDists, m, mPath)
 	return parameters, matrix
 }
@@ -33,76 +28,62 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 func makeOutDir(pairwise string, outDir string, r string, s string) {
 	tDir := pairwise + "/" + r + ".byChrom"
 	if _, e := os.Stat(outDir); os.IsNotExist(e) {
-		err := os.Mkdir(outDir, 0775)
-
-		log.Print("made outDir 0775")
-
+		err := os.Mkdir(outDir, 0777)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	makeTargetSubDir(tDir, outDir, pairwise, s)
-	log.Print("sent to makeTargetDir")
 }
 
 //makeTargetSubDir creates the next directory layer below makeOutDir which contains all alingments to a
 //single reference against any other species.
 func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
-	var tr, trName string
+	var trName string
 	qDir := pairwise + "/" + s + ".byChrom"
 
 	log.Print("about to check for fastas")
-	filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
-		log.Print("in walkdir")
+	log.Print("Glob")
 
-		if err != nil {
-			log.Fatal(err)
-		}
-		matched, err := filepath.Match("*.fa", path)
+	matches, err := filepath.Glob(path+"/*.fa")
 
-		log.Print(matched)
+	log.Print(matches)
 
-		if err != nil {
-			return err
-		} else if matched {
-			//tr = f
+	if err != nil {
+		log.Panic(err)
+	}
+	for tr := range matches {
+		var name string
+		_, name = filepath.Split(matches[tr])
+		trName = strings.TrimSuffix(name, ".fa")
+		os.Mkdir(outDir+"/"+trName, 0777)
+		parentDir := outDir + "/" + trName
 
-			log.Print(tr)
+		log.Print("")
+		log.Print("sending to MakeQuerySubDir")
 
-			trName = strings.TrimSuffix(tr, ".fa")
-			err1 := os.Mkdir(outDir+"/"+trName, 0775)
-			if err1 != nil {
-				log.Fatal(err1)
-			}
-			parentDir := outDir + "/" + trName
-			makeQuerySubDir(qDir, parentDir)
-		}
-		return nil
-	})
+		makeQuerySubDir(qDir, parentDir)
+	}
 }
 
 //makeQuerySubDir makes the second layer of subdirectories within both outDir and targetDir which holds the
 //alignment output of a reference (it's parent directory name) against a species (the directory name).
 //These directories will remain empty until the array created by these functions is run.
 func makeQuerySubDir(path string, pDir string) {
-	var qu, quName string
-	filepath.WalkDir(path, func(f string, d fs.DirEntry, err error) error {
-		if err != nil {
-			log.Fatal(err)
-		}
-		matched, err := filepath.Match("*.fa", f)
-		if err != nil {
-			return err
-		} else if matched {
-			qu = f
-			quName = strings.TrimSuffix(qu, ".fa")
-			err := os.Mkdir(pDir+"/"+quName, 0775)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-		return nil
-	})
+	var quName string
+	matches, err := filepath.Glob(path+"/*.fa")
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Print(matches)
+
+	for qu := range matches {
+		var name string
+		_, name = filepath.Split(matches[qu])
+		quName = strings.TrimSuffix(name, ".fa")
+		os.Mkdir(pDir+"/"+quName, 0777)
+		log.Print("made querydir")
+	}
 }
 
 //findParameters takes in one pair of species to be aligned (one of them the ref and the other not) and determines
@@ -183,7 +164,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 //BuildMatrices is used when the user defines m as false and wants to write each potential matrix for the lastZ alignment to a specified directory (mPath)
 func BuildMatrices(mPath string) {
 	var closeRec, defaultRec, farRec []string
-	err := os.Mkdir(mPath, 0775)
+	err := os.Mkdir(mPath, 0777)
 	if err != nil {
 		log.Panic(err)
 	}

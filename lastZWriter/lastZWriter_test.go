@@ -85,3 +85,5 @@ func TestAlignSetUp(t *testing.T) {
 		}
 	}
 }
+
+//TODO: do an os.IsExist for the paths that the directory tree should have
