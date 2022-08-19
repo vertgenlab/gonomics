@@ -82,33 +82,33 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	var words []string
 	var answer []string
 	var dist float64
-	var mat string
+	var trix string
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
-		words = strings.Split(line, " ")
+		words = strings.Split(line, "\t")
 		if words[0] == reference && words[1] == species {
 			if words[2] == "close" {
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				if m {
-					mat = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+					trix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 				} else {
-					mat = mPath + "/human_chimp_v2.mat"
+					trix = mPath + "/human_chimp_v2.mat"
 				}
 				dist = 1
 			} else if words[2] == "far" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				if m {
-					mat = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+					trix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 				} else {
-					mat = mPath + "/hoxD55.mat"
+					trix = mPath + "/hoxD55.mat"
 				}
 				dist = 3
 			} else if words[2] == "default" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 				if m {
-					mat = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+					trix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 				} else {
-					mat = mPath + "/default.mat"
+					trix = mPath + "/default.mat"
 				}
 				dist = 2
 			} else {
@@ -117,39 +117,47 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				case dist <= 0.2: //closest
 					answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 					if m {
-						mat = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
+						trix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 					} else {
-						mat = mPath + "/human_chimp_v2.mat"
+						trix = mPath + "/human_chimp_v2.mat"
 					}
 				case dist >= 0.7: //farthest
 					answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 					if m {
-						mat = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
+						trix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 					} else {
-						mat = mPath + "/hoxD55.mat"
+						trix = mPath + "/hoxD55.mat"
 					}
 				default: //executive decision to set M to 254
 					answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 					if m {
-						mat = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
+						trix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 					} else {
-						mat = mPath + "/default.mat"
+						trix = mPath + "/default.mat"
 					}
 				}
 			}
 		}
 	}
-
-	return answer, mat
+	return answer, trix
 }
 
 //BuildMatrices is used when the user defines m as false and wants to write each potential matrix for the lastZ alignment to a specified directory (mPath)
 func BuildMatrices(mPath string) {
 	var closeRec, defaultRec, farRec []string
-	err := os.Mkdir(mPath, 0777)
-	if err != nil {
-		log.Panic(err)
+	if _, e := os.Stat(mPath); os.IsNotExist(e) {
+		err := os.Mkdir(mPath, 0777)
+		if err != nil {
+			log.Panic(err)
+		}
 	}
+	//
+	//if _, e := os.Stat(outDir); os.IsNotExist(e) {
+	//	err := os.Mkdir(outDir, 0777)
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//}
 	closeRec = []string{"A\tC\tG\tT",
 		"A\t90\t-330\t-236\t-356",
 		"C\t-330\t100\t-318\t-236",
