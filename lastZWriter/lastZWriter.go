@@ -40,7 +40,7 @@ func makeOutDir(pairwise string, outDir string, r string, s string) {
 //single reference against any other species.
 func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 	var trName string
-	qDir := pairwise + "/" + s + ".byChrom"
+	//qDir := pairwise + "/" + s + ".byChrom"
 	matches, err := filepath.Glob(path + "/*.fa")
 	if err != nil {
 		log.Panic(err)
@@ -50,25 +50,8 @@ func makeTargetSubDir(path string, outDir string, pairwise string, s string) {
 		_, name = filepath.Split(matches[tr])
 		trName = strings.TrimSuffix(name, ".fa")
 		os.Mkdir(outDir+"/"+trName, 0777)
-		parentDir := outDir + "/" + trName
-		makeQuerySubDir(qDir, parentDir)
-	}
-}
-
-//makeQuerySubDir makes the second layer of subdirectories within both outDir and targetDir which holds the
-//alignment output of a reference (it's parent directory name) against a species (the directory name).
-//These directories will remain empty until the array created by these functions is run.
-func makeQuerySubDir(path string, pDir string) {
-	var quName string
-	matches, err := filepath.Glob(path + "/*.fa")
-	if err != nil {
-		log.Panic(err)
-	}
-	for qu := range matches {
-		var name string
-		_, name = filepath.Split(matches[qu])
-		quName = strings.TrimSuffix(name, ".fa")
-		os.Mkdir(pDir+"/"+quName, 0777)
+		//parentDir := outDir + "/" + trName
+		//makeQuerySubDir(qDir, parentDir)
 	}
 }
 

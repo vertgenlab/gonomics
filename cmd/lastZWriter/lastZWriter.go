@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/lastZWriter"
-	"io/fs"
 	"log"
 	"path/filepath"
 	"strings"
@@ -34,49 +33,43 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 }
 
 func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, allLines []string) (lines []string) {
-	var currLine string
+	var currLines []string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6])
 
-	currLine = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
-	allLines = append(allLines, currLine)
+	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
+	allLines = append(allLines, currLines...)
 
 	return allLines
 }
 
-func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string) (line string) {
+func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string) (lines []string) {
 	var currLine string
+	var theseLines []string
+	var tMatches, qMatches, tFiles, qFiles []string
 	tPath := pairwise + "/" + reference + ".byChrom"
 	qPath := pairwise + "/" + species + ".byChrom"
 
-	filepath.WalkDir(tPath, func(f string, d fs.DirEntry, err error) error {
-		if err != nil {
-			log.Fatal(err)
+	tMatches, _ = filepath.Glob(tPath + "/*.fa")
+	qMatches, _ = filepath.Glob(qPath + "/*.fa")
+
+	for tF := range tMatches {
+		_, tName := filepath.Split(tMatches[tF])
+		tFiles = append(tFiles, tName)
+	}
+	for qF := range qMatches {
+		_, qName := filepath.Split(qMatches[qF])
+		qFiles = append(qFiles, qName)
+	}
+	for t := range tFiles {
+		tName := strings.TrimSuffix(tFiles[t], ".fa")
+		for q := range qFiles {
+			qName := strings.TrimSuffix(qFiles[q], ".fa")
+			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --format=axt " + par
+			theseLines = append(theseLines, currLine)
 		}
-		matched, err := filepath.Match("*.fa", f)
-		if err != nil {
-			return err
-		} else if matched {
-			tFasta := f
+	}
 
-			filepath.WalkDir(qPath, func(f string, d fs.DirEntry, err error) error {
-				if err != nil {
-					log.Fatal(err)
-				}
-				correct, err := filepath.Match("*.fa", f)
-				if err != nil {
-					return err
-				} else if correct {
-					qFasta := f
-
-					currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFasta + " " + pairwise + "/" + species + ".byChrom" + "/" + qFasta + " --output=" + pairwise + "/" + reference + "/" + species + "." + reference + ".axt --scores=" + matrix + " --format=axt " + par
-				}
-				return nil
-			})
-
-		}
-		return nil
-	})
-	return currLine
+	return theseLines
 }
 
 func usage() {
@@ -103,6 +96,8 @@ func usage() {
 			"options:\n")
 	flag.PrintDefaults()
 }
+
+//TODO: edit usage after editing out make query subdir function
 
 func main() {
 	var expectedNumArgs int = 6
