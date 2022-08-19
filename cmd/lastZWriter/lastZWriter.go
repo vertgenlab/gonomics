@@ -8,25 +8,25 @@ import (
 	"io/fs"
 	"log"
 	"path/filepath"
+	"strings"
 )
 
 func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string) {
 	if !m {
 		lastZWriter.BuildMatrices(mPath)
 	}
-	speciesList := fileio.EasyOpen(speciesListFile)
-	refList := fileio.EasyOpen(refListFile)
+	speciesList := fileio.Read(speciesListFile)
+	refList := fileio.Read(refListFile)
 	fileio.EasyCreate(outText)
-	var spec, ref string
-	var speciesDone, refDone bool
 	var parameters []string
 	var matrix string
 	var allLines []string
-	for ref, refDone = fileio.EasyNextRealLine(refList); !refDone; ref, refDone = fileio.EasyNextRealLine(refList) {
-		for spec, speciesDone = fileio.EasyNextRealLine(speciesList); !speciesDone; spec, speciesDone = fileio.EasyNextRealLine(speciesList) {
-			if spec != ref {
-				parameters, matrix = lastZWriter.AlignSetUp(pairwise, spec, ref, allDists, m, mPath)
-				allLines = writeFile(lastZ, pairwise, ref, spec, parameters, matrix, allLines)
+	for ref := range refList {
+		for spec := range speciesList {
+			match := strings.Compare(speciesList[spec], refList[ref])
+			if match != 0 {
+				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
+				allLines = writeFile(lastZ, pairwise, refList[ref], speciesList[spec], parameters, matrix, allLines)
 			}
 		}
 	}
@@ -45,8 +45,8 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 
 func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string) (line string) {
 	var currLine string
-	tPath := pairwise + "/" + reference
-	qPath := pairwise + "/" + species
+	tPath := pairwise + "/" + reference + ".byChrom"
+	qPath := pairwise + "/" + species + ".byChrom"
 
 	filepath.WalkDir(tPath, func(f string, d fs.DirEntry, err error) error {
 		if err != nil {
