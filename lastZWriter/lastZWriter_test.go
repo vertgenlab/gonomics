@@ -3,6 +3,7 @@ package lastZWriter
 import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"os"
 	"strings"
 	"testing"
 )
@@ -16,6 +17,18 @@ var mFar = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 var mClosePath = "testdata/human_chimp_v2.mat"
 var mDefaultPath = "testdata/default.mat"
 var mFarPath = "testdata/hoxD55.mat"
+
+var expectedPaths = []string{
+	"testdata/refer1.refer2/chr10", "testdata/refer1.refer2/chr11", "testdata/refer1.name1/chr10",
+	"testdata/refer1.name1/chr11", "testdata/refer1.name2/chr10", "testdata/refer1.name2/chr11",
+	"testdata/refer2.refer1/chr12", "testdata/refer2.refer1/chr13", "testdata/refer2.name1/chr12",
+	"testdata/refer2.name1/chr13", "testdata/refer2.name2/chr12", "testdata/refer2.name2/chr13",
+}
+
+var parentDirs = []string{
+	"testdata/refer1.refer2", "testdata/refer1.name1", "testdata/refer1.name2",
+	"testdata/refer2.refer1", "testdata/refer2.name1", "testdata/refer2.name2",
+}
 
 func TestAlignSetUp(t *testing.T) {
 	pairDir := "testdata"
@@ -67,6 +80,13 @@ func TestAlignSetUp(t *testing.T) {
 			}
 		}
 	}
+	for p := range expectedPaths {
+		_, e := os.Stat(expectedPaths[p])
+		if e != nil {
+			t.Fatalf("Expected path check returned error %e", e)
+		}
+	}
+	removeDirectories()
 }
 
 func TestAlignSetUp2(t *testing.T) {
@@ -121,5 +141,18 @@ func TestAlignSetUp2(t *testing.T) {
 				log.Panicf("Didn't assign any matrix or parameter to this alignment, Ref: %s, Spec: %s", rList[ref], specList[species])
 			}
 		}
+	}
+	for p := range expectedPaths {
+		_, e := os.Stat(expectedPaths[p])
+		if e != nil {
+			t.Fatalf("Expected path check returned error %e", e)
+		}
+	}
+	removeDirectories()
+}
+
+func removeDirectories() {
+	for r := range parentDirs {
+		os.RemoveAll(parentDirs[r])
 	}
 }
