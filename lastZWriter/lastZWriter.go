@@ -151,13 +151,7 @@ func BuildMatrices(mPath string) {
 			log.Panic(err)
 		}
 	}
-	//
-	//if _, e := os.Stat(outDir); os.IsNotExist(e) {
-	//	err := os.Mkdir(outDir, 0777)
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}
+
 	closeRec = []string{"A\tC\tG\tT",
 		"A\t90\t-330\t-236\t-356",
 		"C\t-330\t100\t-318\t-236",
