@@ -18,6 +18,7 @@ import (
 func AlignSetUp(pairwise string, species string, reference string, allDists string, m bool, mPath string) (par []string, mat string) {
 	outDir := pairwise + "/" + reference + "." + species
 	makeOutDir(pairwise, outDir, reference, species)
+	log.Print("in alignSetUp sending to Find Pars")
 	parameters, matrix := findParameters(reference, species, allDists, m, mPath)
 	return parameters, matrix
 }
@@ -69,6 +70,9 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
 		words = strings.Split(line, "\t")
+		log.Print(words)
+		log.Print(reference)
+		log.Print(species)
 		if words[0] == reference && words[1] == species {
 			if words[2] == "close" {
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
