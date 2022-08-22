@@ -77,8 +77,8 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 				}
 
 			}
-			 // fmt.Println("writing haplotype")
-			 // fmt.Println(sampleHaplotypes[j])
+			// fmt.Println("writing haplotype")
+			// fmt.Println(sampleHaplotypes[j])
 
 			fasta.WriteFasta(out, sampleHaplotypes[j], 50)
 		}
