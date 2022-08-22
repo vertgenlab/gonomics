@@ -26,10 +26,8 @@ func TestHaplotypeGenerator(t *testing.T) {
 			if !fileio.AreEqual(v.outputFiles[i], v.expectedFiles[i]) {
 				t.Errorf("Error in haplotypeGenerator, output was not as expected.")
 			} else {
-				for i := range v.outputFiles {
-					err = os.Remove(v.outputFiles[i])
-					exception.PanicOnErr(err)
-				}
+				err = os.Remove(v.outputFiles[i])
+				exception.PanicOnErr(err)
 			}
 		}
 

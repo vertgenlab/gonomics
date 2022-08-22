@@ -42,7 +42,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 
 		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", outdir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
 
-		fmt.Printf("output filename: \n%s", outputFilename)
+		// fmt.Printf("output filename: %s\n", outputFilename)
 
 		out := fileio.EasyCreate(outputFilename)
 		sampleHaplotypes := make([]fasta.Fasta, len(header.Samples)*2)
@@ -77,8 +77,8 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 				}
 
 			}
-			// fmt.Println("writing haplotype")
-			// fmt.Println(sampleHaplotypes[j])
+			 // fmt.Println("writing haplotype")
+			 // fmt.Println(sampleHaplotypes[j])
 
 			fasta.WriteFasta(out, sampleHaplotypes[j], 50)
 		}
