@@ -128,7 +128,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				}
 			}
 		}
-		if done && len(answer) == 0{
+		if done && len(answer) == 0 {
 			log.Panicf("Did not find a match in allDists file for referece %s and species %s", reference, species)
 		}
 	}
