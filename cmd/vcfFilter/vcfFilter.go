@@ -215,6 +215,9 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	}
 
 	if c.minDaf != 0 {
+		if c.minDaf < 0 || c.minDaf > 1 {
+			log.Fatalf("minDaf must be between 0 and 1.")
+		}
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
 				return popgen.VcfSampleDerivedAlleleFrequency(v) > c.minDaf
@@ -222,10 +225,17 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	}
 
 	if c.maxDaf != 1 {
+		if c.maxDaf < 0 || c.maxDaf > 1 {
+			log.Fatalf("maxDaf must be between 0 and 1.")
+		}
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
 				return popgen.VcfSampleDerivedAlleleFrequency(v) < c.maxDaf
 			})
+	}
+
+	if c.maxDaf < c.minDaf {
+		log.Fatalf("maxDaf must be less than minDaf.")
 	}
 
 	if c.minQual != 0 {
