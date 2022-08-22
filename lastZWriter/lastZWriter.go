@@ -73,7 +73,10 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 		log.Print(words)
 		log.Print(reference)
 		log.Print(species)
-		if words[0] == reference && words[1] == species {
+
+		a := strings.Compare(words[0], reference)
+		b := strings.Compare(words[1], species)
+		if a == 0 && b == 0 {
 			if words[2] == "close" {
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				if m {
