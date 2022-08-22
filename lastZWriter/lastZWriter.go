@@ -124,8 +124,6 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					}
 				}
 			}
-		} else {
-			log.Panicf("No allDists records found for %s vs %s.", reference, species)
 		}
 	}
 	return answer, trix
