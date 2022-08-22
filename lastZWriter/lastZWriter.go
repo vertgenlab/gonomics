@@ -70,13 +70,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	dists := fileio.EasyOpen(distsFile)
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
 		words = strings.Split(line, "\t")
-		log.Print(words)
-		log.Print(reference)
-		log.Print(species)
-
-		a := strings.Compare(words[0], reference)
-		b := strings.Compare(words[1], species)
-		if a == 0 && b == 0 {
+		if words[0] == reference && words[1] == species || words[0] == species && words[1] == reference {
 			if words[2] == "close" {
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				if m {
@@ -85,6 +79,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					trix = mPath + "/human_chimp_v2.mat"
 				}
 				dist = 1
+				done = true
 			} else if words[2] == "far" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				if m {
@@ -93,6 +88,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					trix = mPath + "/hoxD55.mat"
 				}
 				dist = 3
+				done = true
 			} else if words[2] == "default" {
 				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 				if m {
@@ -101,6 +97,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					trix = mPath + "/default.mat"
 				}
 				dist = 2
+				done = true
 			} else {
 				dist = common.StringToFloat64(words[2])
 				switch {
@@ -111,6 +108,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					} else {
 						trix = mPath + "/human_chimp_v2.mat"
 					}
+					done = true
 				case dist >= 0.7: //farthest
 					answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 					if m {
@@ -118,6 +116,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					} else {
 						trix = mPath + "/hoxD55.mat"
 					}
+					done = true
 				default: //executive decision to set M to 254
 					answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 					if m {
@@ -125,10 +124,11 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					} else {
 						trix = mPath + "/default.mat"
 					}
+					done = true
 				}
 			}
 		}
-		if done && len(answer) == 0{
+		if done && len(answer) == 0 {
 			log.Panicf("Did not find a match in allDists file for referece %s and species %s", reference, species)
 		}
 	}
