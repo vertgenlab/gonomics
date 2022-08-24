@@ -34,7 +34,6 @@ func faUniq(inFile string, outFile string) {
 	fasta.Write(outFile, uniqueSeqs)
 }
 
-
 func usage() {
 	fmt.Print(
 		"faUniq - Pull unique sequences from a fasta file.\n" +
