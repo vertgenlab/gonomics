@@ -8,9 +8,9 @@ import (
 )
 
 func TestFaUniq(t *testing.T) {
-	inputFile := "test_in.fa"
-	outputFile := "test_out.fa"
-	expectedFile := "expected_out.fa"
+	inputFile := "testdata/test_in.fa"
+	outputFile := "testdata/test_out.fa"
+	expectedFile := "testdata/expected_out.fa"
 
 	var err error
 	faUniq(inputFile, outputFile)
