@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-inputFile := test_in.fa
-outputFile := test_out.fa
-expectedFile := expected_out.fa
-
 func TestFaUniq(t *testing.T) {
+	inputFile := "test_in.fa"
+	outputFile := "test_out.fa"
+	expectedFile := "expected_out.fa"
+
 	var err error
 	faUniq(inputFile, outputFile)
 	if !fileio.AreEqual(outputFile, expectedFile) {
