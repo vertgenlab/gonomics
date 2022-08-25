@@ -41,7 +41,6 @@ func TestAlignSetUp(t *testing.T) {
 				continue
 			}
 			par, mat := AlignSetUp(pairDir, specList[species], rList[ref], pairDir+"/allDistsAll.txt", m, "")
-			log.Print(par)
 			if rList[ref] == "refer1" && specList[species] == "refer2" || rList[ref] == "refer2" && specList[species] == "refer1" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parClose[s])
