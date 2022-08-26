@@ -6,31 +6,39 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"path/filepath"
 )
 
 func FileBreaker(inFile string, chunkSize string, outFiles string) {
 	var lineNum int
 	var chunkNum string //zero-based number of chunks in inFile, and number of outFiles that will be made
-	chunk := common.StringToInt(chunkSize)
-	lines := make([]string, chunk)
+	chunkLen := common.StringToInt(chunkSize)
+	lines := make([]string, chunkLen)
+	path, name := filepath.Split(outFiles)
 	file := fileio.EasyOpen(inFile)
 
 	for line, done := fileio.EasyNextRealLine(file); !done; line, done = fileio.EasyNextRealLine(file) {
 		lineNum++
-		quo := lineNum / chunk
-		rem := lineNum % chunk
+		quo := lineNum / chunkLen
+		rem := lineNum % chunkLen
 
 		if rem == 0 {
-			lines = append(lines, line)
+			lines[chunkLen-1] = line
 			chunkNum = fileio.IntToString(quo)
-			fileio.Write(chunkNum+outFiles, lines)
-			lines = make([]string, chunk)
+			fileio.Write(path+chunkNum+name, lines)
+			lines = make([]string, chunkLen)
 		} else if rem != 0 && !done {
-			lines = append(lines, line)
-		} else if done {
-			lines = append(lines, line)
+			lines[rem-1] = line
+		} else if done { //TODO: never entering this else statement, everything else seems functional
+			log.Print("in done else")
+			if rem == 0 {
+				lines[chunkLen-1] = line
+			} else {
+				lines[rem-1] = line
+				log.Print("writing Oranges")
+			}
 			chunkNum = fileio.IntToString(quo)
-			fileio.Write(chunkNum+outFiles, lines)
+			fileio.Write(path+chunkNum+name, lines)
 		}
 	}
 }
