@@ -21,11 +21,16 @@ func FileBreaker(inFile string, chunkSize string, outFiles string) {
 		rem := lineNum % chunk
 
 		if rem == 0 {
+			lines = append(lines, line)
 			chunkNum = fileio.IntToString(quo)
 			fileio.Write(chunkNum+outFiles, lines)
 			lines = make([]string, chunk)
-		} else {
+		} else if rem != 0 && !done {
 			lines = append(lines, line)
+		} else if done {
+			lines = append(lines, line)
+			chunkNum = fileio.IntToString(quo)
+			fileio.Write(chunkNum+outFiles, lines)
 		}
 	}
 }
@@ -42,7 +47,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 3
+	var expectedNumArgs = 3
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
