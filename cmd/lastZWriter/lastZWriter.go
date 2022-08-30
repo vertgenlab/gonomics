@@ -74,22 +74,23 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 
 func usage() {
 	fmt.Print(
-		"lastZWriter was designed to quickly write out lastZ pairwise inputs by contig where multiple references " +
+		"lastZWriter was designed to write out lastZ pairwise inputs by contig where multiple references " +
 			"are being used. This function writes a text file where each line is an input for a lastZ pairwise alignment." +
 			" It requires that each genome be broken with the 'byname' option of 'faSplit' in kentutils and named in the convention " +
 			"'assemblyName.byChrom'. Within the parent directory of the byChrom directories, lastZWriter will build a " +
 			"directory tree for the outputs of lastZ. At the same level of the byChrom files it will create a set of " +
-			"directories with the reference species assembly name. For each species being aligned to that reference " +
-			"lastZWriter will specify that lastZ should create an axt output file 'aligningSpeciesByChromName.referenceByChromName.axt' " +
+			"directories with the naming convention reference.aligned within which will be directories for each contig " +
+			"of the reference genome. For each species being aligned to that reference lastZWriter will specify that " +
+			"lastZ should create an axt output file 'pairwiseDir/ref.species/referenceContig/aligningSpeciesByChromName.referenceByChromName.axt' " +
 			"that refers to the two fasta files used in the alignment. LastZWriter also requires a list of all " +
 			"species in the alignment, as well as a separate text file with a list of reference species. " +
-			"Matrices are hardcoded, absolute paths by default in this version. In the default function matrices are assigned based on the distance " +
+			"Matrices are hardcoded absolute paths by default in this version. In the default function matrices are assigned based on the distance " +
 			"between the reference and aligning species from each other as calculated by the PHAST all_dists function." +
 			"However, the user has the option to specify a bool (option m) as false and provide a path in which they " +
 			"would like the needed matrices to be hardcoded. As an alternative to the all_dists function, or if there " +
 			"isn't an available tree of the necessary species, this function can also take a file to replace the " +
 			"specified allDists file. The first two columns of which would need to be every possible combination of " +
-			"your alignment (find an example in testdata directory). This function can be used directly within the " +
+			"your alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the " +
 			"terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables. \n" +
 			"Usage:\n" +
 			"lastZWriter [-m=<bool> -mPath=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
