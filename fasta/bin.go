@@ -42,13 +42,17 @@ func fewerContigsThanBins(genome []Fasta, binNum int) map[int][]Fasta {
 	//	could do a check to see if remainder is super large and then handle as necessary
 	equalBinNum := binNum - 1
 	baseCap := totalBases / equalBinNum
-	leftOver := totalBases % equalBinNum
 
 	for j := range answer {
-		//TODO: have a check for when we are finished with all equal bins
 		for i := range genome {
+			var done int
 			var currFa Fasta
 			var currBases []dna.Base
+			if j == binNum { //we have finished making all bins but the last bin which will hold the remainder of bases
+				answer[j], done = fillLastBin(genome, i)
+				i = done
+			}
+
 			value, exists := answer[j]
 			if value != nil { //old bin
 				filledBases := calcNumBasesInBin(answer[j])
@@ -114,4 +118,16 @@ func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	}
 
 	return answer
+}
+
+func fillLastBin(f []Fasta, currRec int) (ans []Fasta, final int) {
+	var answer []Fasta
+	var bases []dna.Base
+	var i int
+
+	for i = currRec; i < len(f); i++ {
+		bases = appendRangeOfBases(bases, 0, len(f[i].Seq))
+	}
+
+	return answer, i
 }
