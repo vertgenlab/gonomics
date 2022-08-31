@@ -4,13 +4,13 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-func BinFasta(fa []Fasta, binNum int) {
+func BinFasta(fa []Fasta, binNum int) map[int][]Fasta {
 	var totalBases int
 	bins := make(map[int][]Fasta, binNum)
 	contigs := len(fa)
 
 	if contigs < binNum {
-		answer := fewerContigsThanBins(fa, binNum)
+		bins = fewerContigsThanBins(fa, binNum)
 		totalBases = 0
 		for f := range fa {
 			totalBases = totalBases + len(fa[f].Seq)
@@ -27,7 +27,7 @@ func BinFasta(fa []Fasta, binNum int) {
 	} else if contigs > binNum {
 
 	}
-
+	return bins
 }
 
 func fewerContigsThanBins(genome []Fasta, binNum int) map[int][]Fasta {
