@@ -2,7 +2,6 @@ package fasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func BinFasta(fa []Fasta, binNum int) {
@@ -77,50 +76,6 @@ func fewerContigsThanBins(genome []Fasta, binNum int) map[int][]Fasta {
 			}
 		}
 	}
-
-	//for k := range answer {
-	//	existingBases := 0
-	//	if answer[k] != nil {
-	//		existingBases = calcNumBasesInBin(answer[k])
-	//		if existingBases < baseCap {
-	//			remainingBases = baseCap - existingBases
-	//			lastName, lastPos = findLastBinnedPos(answer[k])
-	//
-	//			for f := range genome {
-	//				var currBases []dna.Base
-	//				var currFa Fasta
-	//
-	//				if genome[f].Name == lastName {
-	//					contigBases := len(genome[f].Seq) - lastPos
-	//					if contigBases <= remainingBases { //TODO: this wouldn't ever happen?
-	//						currBases = append(currBases, genome[f].Seq[lastPos+1:])
-	//						currFa.Name = lastName
-	//						currFa.Seq = currBases
-	//						answer[k] = append(answer[k], currFa)
-	//					} else if contigBases > remainingBases {
-	//						currBases = append(currBases, genome[f].Seq[lastPos+1:lastPos+remainingBases])
-	//						currFa.Name = lastName
-	//						currFa.Seq = currBases
-	//						answer[k] = append(answer[k], currFa)
-	//					}
-	//				}
-	//				lenOfContig := len(genome[f].Seq)
-	//				if lenOfContig > remainingBases {
-	//
-	//					currFa.Name = genome[f].Name + "0-" + fileio.IntToString(baseCap-1) //-1 since bases are zero-based
-	//					currBases = append(currBases, genome[f].Seq[0:remainingBases-1])
-	//					//TODO: make the above line into helper fucntion
-	//					currFa.Seq = currBases
-	//				} else if lenOfContig == remainingBases {
-	//
-	//				} else if lenOfContig < remainingBases {
-	//
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-
 	return answer
 }
 
