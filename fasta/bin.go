@@ -51,10 +51,7 @@ func fewerContigsThanBins(genome []Fasta, binNum int) map[int][]Fasta {
 			var currBases []dna.Base
 			value, exists := answer[j]
 			if value != nil { //old bin
-				var filledBases int
-				for s := range answer[j] {
-					filledBases = filledBases + len(answer[j][s].Seq)
-				}
+				filledBases := calcNumBasesInBin(answer[j])
 				if filledBases < baseCap { //bin not full
 					remainingBases = baseCap - filledBases
 					currBases = appendRangeOfBases(genome[i].Seq, 0, remainingBases-1)
