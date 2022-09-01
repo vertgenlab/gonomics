@@ -4,33 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-func BinFasta(fa []Fasta, binNum int) map[int][]Fasta {
-	var totalBases int
-	bins := make(map[int][]Fasta, binNum)
-	contigs := len(fa)
-
-	if contigs < binNum {
-		bins = fewerContigsThanBins(fa, binNum)
-		totalBases = 0
-		for f := range fa {
-			totalBases = totalBases + len(fa[f].Seq)
-		}
-		//TODO: chance that there's a situation where the final bin with leftOvers is empty or very small, what I have with bases per equal bin,
-		//	or chance that the last bin could be almost double the size of everything else (totalBases/BinNum and remainder goes in last bin)
-		//	could do a check to see if remainder is super large and then handle as necessary
-		equalBinNum := binNum - 1
-		basesPerEqualBin := totalBases / equalBinNum
-		leftOvers := totalBases % equalBinNum
-
-	} else if contigs == binNum {
-		//TODO: split first 10-15 in half and add to last 10-15
-	} else if contigs > binNum {
-
-	}
-	return bins
-}
-
-func fewerContigsThanBins(genome []Fasta, binNum int) map[int][]Fasta {
+func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 	var remainingBases, totalBases, lastPos int
 	var lastName string
 	var answer map[int][]Fasta
