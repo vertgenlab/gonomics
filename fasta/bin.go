@@ -12,7 +12,7 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 		log.Panic("Number of bins must be greater than zero.")
 	}
 
-	var totalBases, lastPos int
+	var totalBases, lastPos, baseCap, remainder, splitBases, equalBinNum int
 	var lastName string
 	answer := make(map[int][]Fasta, binNum)
 	for c := range genome {
@@ -22,10 +22,14 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 	//TODO: chance that there's a situation where the final bin with leftOvers is empty or very small, what I have with baseCap,
 	//	or chance that the last bin could be almost double the size of everything else (totalBases/BinNum and remainder goes in last bin)
 	//	could do a check to see if remainder is super large and then handle as necessary
-	equalBinNum := binNum - 1
-	remainder := totalBases % binNum
-	splitBases := totalBases - remainder //number of bases to split between equalBins
-	baseCap := splitBases / equalBinNum
+	equalBinNum = binNum - 1
+	remainder = totalBases % binNum
+	if remainder == 0 {
+		baseCap = totalBases / binNum
+	} else {
+		splitBases = totalBases - remainder //number of bases to split between equalBins
+		baseCap = splitBases / equalBinNum
+	}
 
 	for j := 0; j < binNum; j++ {
 		for i := 0; i < len(genome); i++ {
@@ -124,7 +128,7 @@ func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	return answer
 }
 
-//fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all int he final bin regardless of sequence length
+//fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all in the final bin regardless of sequence length
 func fillLastBin(f []Fasta, currRec int) (ans []Fasta, final int) {
 	var answer []Fasta
 	var bases []dna.Base
