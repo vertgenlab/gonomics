@@ -2,11 +2,6 @@ package fasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -24,15 +19,11 @@ var (
 	expNames3 = "chr3"
 	expNames4 = "chr4"
 	expNames5 = "chr5"
-	outName   = "testdata/bin.fa"
-	outNames  = []string{"testdata/bin.0.fa", "testdata/bin.1.fa", "testdata/bin.2.fa", "testdata/bin.3.fa", "testdata/bin.4.fa"}
 )
 
 func TestBinFasta(t *testing.T) {
 	gen := Read(genome)
 	out := BinFasta(gen, 5)
-
-	log.Print("HELLO")
 
 	for m := range out {
 		if m == 0 {
@@ -68,13 +59,5 @@ func TestBinFasta(t *testing.T) {
 		} else {
 			t.Fatal("Map does not contain expected values")
 		}
-		dir, file := filepath.Split(outName)
-		outFile := strings.TrimSuffix(file, ".fa")
-		outFileName := dir + outFile + "." + fileio.IntToString(m) + ".fa"
-		log.Print(outFileName)
-		Write(outFileName, out[m])
-	}
-	for r := range outNames {
-		os.Remove(outNames[r])
 	}
 }

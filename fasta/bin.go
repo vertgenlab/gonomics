@@ -5,7 +5,13 @@ import (
 	"log"
 )
 
+//BinFasta takes in a slice of fastas and breaks it up into x number of fastas with relatively
+//equal sequence in each, where x equals the number of bins specified
 func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
+	if binNum == 0 {
+		log.Panic("Number of bins must be greater than zero.")
+	}
+
 	var totalBases, lastPos int
 	var lastName string
 	answer := make(map[int][]Fasta, binNum)
@@ -23,22 +29,17 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 
 	for j := 0; j < binNum; j++ {
 		for i := 0; i < len(genome); i++ {
-
-			log.Print(answer)
 			var remainingBases int
 			var done int
 			var currFa Fasta
 			var currBases []dna.Base
+
 			if j == binNum { //we have finished making all bins but the last bin which will hold the remainder of bases
 				answer[j], done = fillLastBin(genome, i)
 				i = done
 			}
 
 			value, exists := answer[j]
-
-			log.Printf("evaluating answer[%d]", j)
-			log.Print(value, exists)
-
 			if j == 0 && i == 0 {
 				currBases = appendRangeOfBases(genome[i].Seq, 0, baseCap)
 				currFa.Name = genome[i].Name
@@ -47,39 +48,20 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 				lastPos = baseCap
 				continue
 			} else if value != nil { //old bin
-
-				log.Print("old bin new contig")
-
 				filledBases := calcNumBasesInBin(answer[j])
 				if filledBases < baseCap { //bin not full
 					remainingBases = baseCap - filledBases
-
-					log.Print(remainingBases)
-
 					currBases = appendRangeOfBases(genome[i].Seq, 0, remainingBases)
 					currFa.Name = genome[i].Name
 					currFa.Seq = currBases
 					answer[j] = append(answer[j], currFa)
 					lastPos = len(currBases)
-
-					log.Print("bin not full", lastPos)
-
 				} else {
 					continue
 				}
 			} else if !exists || value == nil { //new bin
-
-				log.Print("making new bin")
-				log.Print(i)
-
 				lastName = findLastBinnedName(answer[j-1])
-
-				log.Print(lastPos, len(genome[i].Seq))
-
 				if lastName == genome[i].Name && lastPos < len(genome[i].Seq) { //new bin and old contig
-
-					log.Print("new bin old contig")
-
 					remainingBases = len(genome[i].Seq) - lastPos
 					currBases = appendRangeOfBases(genome[i].Seq, lastPos, lastPos+remainingBases)
 					currFa.Name = genome[i].Name
@@ -87,14 +69,7 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 					answer[j] = append(answer[j], currFa)
 					lastPos = lastPos + len(currBases)
 				} else if lastName == genome[i].Name && lastPos == len(genome[i].Seq) { //new bin and new contig
-
-					log.Print("new bin new contig")
 					lastPos = 0
-
-					//currBases = appendRangeOfBases(genome[i].Seq, 0, baseCap)
-					//currFa.Name = genome[i].Name
-					//currFa.Seq = currBases
-					//answer[j] = append(answer[j], currFa)
 				} else if lastName != "" && lastPos == 0 {
 					currBases = appendRangeOfBases(genome[i].Seq, 0, baseCap)
 					currFa.Name = genome[i].Name
@@ -105,12 +80,10 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 			}
 		}
 	}
-
-	log.Print(answer)
-
 	return answer
 }
 
+//calcNumBasesInBin will determine the number of bases that already exist in any given bin
 func calcNumBasesInBin(f []Fasta) int {
 	totalBases := 0
 	for i := range f {
@@ -119,6 +92,7 @@ func calcNumBasesInBin(f []Fasta) int {
 	return totalBases
 }
 
+//findLastBinnedName determines the last contig that was handled in the given bin (f)
 func findLastBinnedName(f []Fasta) string {
 	var lastFasta string
 
@@ -129,6 +103,7 @@ func findLastBinnedName(f []Fasta) string {
 	return lastFasta
 }
 
+//appendRangeOfBases will create a slice of bases ranging from the start to stop positions in the records given (bases)
 func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	var answer []dna.Base
 
@@ -149,6 +124,7 @@ func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	return answer
 }
 
+//fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all int he final bin regardless of sequence length
 func fillLastBin(f []Fasta, currRec int) (ans []Fasta, final int) {
 	var answer []Fasta
 	var bases []dna.Base
