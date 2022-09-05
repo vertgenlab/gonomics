@@ -50,7 +50,8 @@ func wigStats(inFile string, noGapFile string, outFile string, missingDataValue 
 func usage() {
 	fmt.Print(
 		"wigStats - provide coverage histogram for WIG format visualization files.\n" +
-			"wig values must be non-negative integers.\n" +
+			"wig values must be non-negative, unless the negative value is the missing data value.\n" +
+			"Float values will be truncated to integers\n" +
 			"Wigs must be fixed step of step size 1.\n" +
 			"Usage:\n" +
 			"wigStats in.wig noGap.bed output.tsv\n" +
