@@ -35,6 +35,7 @@ type reference struct {
 	sliceIdx    uint32 // index in Bai.refs
 	head        bin    // a dummy bin at the top of tree to organize otherwise unlinked bins.
 	bins        []bin
+	binIdIdx    map[int]int // binIdIdx[bin.Id] == bin.sliceIdx
 	intervalOff []uint64
 	noCoord     noCoordBin
 }
@@ -99,6 +100,10 @@ func ReadBai(filename string) Bai {
 	for i := range bai.refs {
 		bai.refs[i] = annotateBinRanges(bai.refs[i])
 		bai.refs[i] = assembleTree(bai.refs[i])
+		bai.refs[i].binIdIdx = make(map[int]int)
+		for j := range bai.refs[i].bins {
+			bai.refs[i].binIdIdx[int(bai.refs[i].bins[j].id)] = j
+		}
 	}
 	return bai
 }
