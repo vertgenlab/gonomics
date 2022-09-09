@@ -6,6 +6,56 @@ import (
 	"log"
 )
 
+//BinGenomeNoBreaks takes in an entire genome which is sorted largest to smallest contig and breaks up the fasta so
+//that smaller contigs get combined into a single fasta, while large contigs become a single fasta on their own. The user
+//must specify the number of bins for the genome to be broken into, the genome must have more contigs than bins in order
+//to combine any contigs and equal number bins to contigs if each contig gets its own record. The bins will all be
+//filled with the first contig encountered when it's empty, and then the smallest of those bins will be filled when the contig is equal to binNum+1.
+func BinGenomeNoBreaks(genome []fasta.Fasta, binNum int) map[int][]fasta.Fasta {
+	bins := make(map[int][]fasta.Fasta, binNum)
+	if len(genome) > binNum {
+		for n := 0; n < binNum; n++ {
+			bins[n] = append(bins[n], genome[n])
+		}
+		bins = fillSmallestBin(bins, genome)
+	} else if len(genome) == binNum {
+		for n := 0; n < binNum; n++ {
+			bins[n] = append(bins[n], genome[n])
+		}
+	} else {
+		log.Fatal("Number of bins is greater than the number of contigs in the given genome. Reduce bin number.")
+	}
+
+	return bins
+}
+
+func fillSmallestBin(bins map[int][]fasta.Fasta, genome []fasta.Fasta) map[int][]fasta.Fasta {
+
+	for i := len(bins); i < len(genome); i++ {
+		b := findSmallestBin(bins)
+		bins[b] = append(bins[b], genome[i])
+	}
+
+	return bins
+}
+
+func findSmallestBin(bins map[int][]fasta.Fasta) int {
+	var smallest int
+	var sizeSmallest int
+	for i := range bins {
+		rec, exists := bins[i]
+		if !exists {
+			log.Panic("Map was not filled properly in BinGenomeNoBreaks.")
+		}
+		size := calcNumBasesInBin(rec)
+		if size < sizeSmallest {
+			sizeSmallest = size
+			smallest = i
+		}
+	}
+	return smallest
+}
+
 //TODO: change all logic below here to break a single chrom into whatever number of bins
 
 //BinFasta takes in a slice of fastas and breaks it up into x number of fastas with relatively
