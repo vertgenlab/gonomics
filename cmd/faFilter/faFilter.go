@@ -6,13 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
-	"path/filepath"
-	"strings"
 )
 
-func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int, minSize int, binFasta int, keepWhole bool) {
+func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int, minSize int) {
 	records := fasta.Read(infile)
 	var outlist []fasta.Fasta
 	var pass bool = true
@@ -46,18 +43,7 @@ func faFilter(infile string, outfile string, name string, notName string, refPos
 			outlist = append(outlist, records[i])
 		}
 	}
-	if binFasta == 0 || keepWhole {
-		fasta.Write(outfile, outlist)
-	}
-	if binFasta != 0 {
-		bins := fasta.BinFasta(outlist, binFasta)
-		for a := range bins {
-			dir, file := filepath.Split(outfile)
-			out := strings.TrimSuffix(file, ".fa")
-			outName := dir + out + "." + fileio.IntToString(a) + ".fa"
-			fasta.Write(outName, bins[a])
-		}
-	}
+	fasta.Write(outfile, outlist)
 }
 
 func usage() {
@@ -77,8 +63,6 @@ func main() {
 	var name *string = flag.String("name", "", "Specifies the fasta record name.")
 	var notName *string = flag.String("notName", "", "Returns all fasta records except for this input.")
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
-	var binFasta *int = flag.Int("binFasta", 0, "Makes specified number of bins from given fasta where all output files will contain similar amounts of sequence.")
-	var keepWhole *bool = flag.Bool("keepWhole", false, "Keep the output of faFilter before and after binning.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -93,5 +77,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFilter(inFile, outFile, *name, *notName, *refPositions, *start, *end, *minSize, *binFasta, *keepWhole)
+	faFilter(inFile, outFile, *name, *notName, *refPositions, *start, *end, *minSize)
 }
