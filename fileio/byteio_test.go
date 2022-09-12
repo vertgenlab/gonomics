@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestSimpleReader(t *testing.T) {
+func TestByteioReader(t *testing.T) {
 	answer := ezReaderTest("testdata/big.fa.gz")
 	reader := NewByteReader("testdata/big.fa.gz")
 	var i int = 0
@@ -24,12 +24,12 @@ func TestLineExceedsDefaultBufferSize(t *testing.T) {
 		if line.String() == answer[i] {
 			i++
 		} else {
-			t.Errorf("Error: simpleReader did not process bytes into buffer beyond the default buffer size...\n")
+			t.Errorf("Error: byteio reader did not process bytes into buffer beyond the default buffer size %s != %s ...\n", line.String(), answer[i])
 		}
 	}
 }
 
-func BenchmarkSimpleReader(b *testing.B) {
+func BenchmarkByteioReader(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -40,7 +40,7 @@ func BenchmarkSimpleReader(b *testing.B) {
 	}
 }
 
-func BenchmarkSimpleReaderGz(b *testing.B) {
+func BenchmarkByteioReaderGz(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -89,11 +89,11 @@ func TestStringToIntSlice(t *testing.T) {
 	expected := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	answer := StringToIntSlice(data)
 	if len(answer) != 10 {
-		t.Errorf("problem converting string to int slice")
+		t.Errorf("Error: problem converting string to int slice")
 	}
 	for i := range answer {
 		if answer[i] != expected[i] {
-			t.Errorf("problem converting string to int slice")
+			t.Errorf("Error: problem converting string to int slice, %d != %d...\n", answer[i], expected[i])
 		}
 	}
 }
@@ -103,6 +103,6 @@ func TestIntSliceToString(t *testing.T) {
 	data := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	answer := IntSliceToString(data)
 	if answer != expected {
-		t.Errorf("problem converting int slice to string")
+		t.Errorf("Error: problem converting int slice to string")
 	}
 }

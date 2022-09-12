@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/exception" //raven added this line for file Close, exception.PanicOnErr
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
@@ -21,12 +22,13 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
 	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
 	var doneReading bool = false
-	defer inputFile.Close()
 	for line, doneReading = fileio.EasyNextRealLine(inputFile); !doneReading; line, doneReading = fileio.EasyNextRealLine(inputFile) {
 		if strings.HasPrefix(line, ">") {
 			seqIdx++
 		}
 	}
+	err := inputFile.Close()
+	exception.PanicOnErr(err)
 	return seqIdx
 }
 
@@ -47,10 +49,10 @@ func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *gen
 	for i := 1; i < len(aln); i++ {
 		curr, targetEnd, queryEnd = genomeGraph.FaSeqToNode(target, query, targetEnd, queryEnd, aln[i], i)
 		curr = genomeGraph.AddNode(answer, curr)
-		if aln[i].Op == 0 {
+		if aln[i].Op == align.ColM {
 			genomeGraph.AddEdge(&answer.Nodes[i-1], curr, 1)
 			genomeGraph.AddEdge(&answer.Nodes[i-2], curr, 0.5)
-		} else if aln[i].Op == 1 || aln[i].Op == 2 {
+		} else if aln[i].Op == align.ColI || aln[i].Op == align.ColD {
 			genomeGraph.AddEdge(&answer.Nodes[i-1], curr, 0.5)
 		} else {
 			log.Fatalf("Error: cigar.Op = %d is unrecognized...\n", aln[i].Op)
@@ -72,10 +74,6 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	if numSeqOne > 1 || numSeqTwo > 1 {
 		log.Fatalf("multiple sequnces detected in .fa files: %v sequences in the first .fa file and %v sequences in the second .fa file. This program is designed for .fa files with only 1 sequence in them\n", numSeqOne, numSeqTwo)
 	}
-	//attempt at Dan's len(faOne) suggestion
-	//if len(string(faOne)) != 1 || len(string(faTwo)) != 1 {
-	//log.Fatalf("multiple sequnces detected in .fa files. This program is designed for .fa files with only 1 sequence in them.\n")
-	//}
 
 	//needleman wunsch (global alignment)
 	bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
@@ -111,8 +109,7 @@ func usage() {
 			" Align 2 .fasta files, each with only 1 sequence\n" +
 			"Usage:\n" +
 			"	globalAlignment target.fasta query.fasta\n" +
-			"options:\n" +
-			"	-faOut=fasta MSA output filename\n")
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -121,7 +118,7 @@ func main() {
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	faOut := flag.String("faOut", "", "name of the MSA output file") //raven added this line
+	faOut := flag.String("faOut", "", "fasta MSA output filename")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
@@ -133,7 +130,6 @@ func main() {
 	//raven edited this block to save fileio.EasyOpen as file handles, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
 	inputFileOne := fileio.EasyOpen(flag.Arg(0)) //raven's note: EasyOpen returns the type EasyReader
 	inputFileTwo := fileio.EasyOpen(flag.Arg(1))
-	outFileName := *faOut
 
-	globalAlignment(inputFileOne, inputFileTwo, outFileName)
+	globalAlignment(inputFileOne, inputFileTwo, *faOut)
 }

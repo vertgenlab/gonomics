@@ -20,6 +20,7 @@ type Wig struct {
 	Chrom    string
 	Start    int
 	Step     int
+	Span     int
 	Values   []float64
 }
 
@@ -33,11 +34,13 @@ func Read(filename string) []Wig {
 	var doneReading bool = false
 
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 
 	for curr, doneReading = NextWig(file); !doneReading; curr, doneReading = NextWig(file) { //TODO: use channels here instead of appending. Line 44 would be changed
 		finalWig = append(finalWig, curr)
 	}
+	var err error
+	err = file.Close()
+	exception.PanicOnErr(err)
 	return finalWig
 }
 
@@ -47,13 +50,13 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	var doneReading bool
 	var peek []byte
 	var err error
-	var lineFields, chromList, startList, stepList []string
+	var lineFields, chromList, startList, stepList, spanList []string
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		if strings.HasPrefix(line, "fixedStep") {
 			lineFields = strings.Fields(line)
-			if len(lineFields) != 4 {
-				log.Fatalf("Invalid number of arguments, expecting 4, received %d\n", len(lineFields))
+			if len(lineFields) > 5 || len(lineFields) < 4 {
+				log.Fatalf("Invalid number of arguments, expecting 4 or 5, received %d\n", len(lineFields))
 			}
 			currentWig.StepType = "fixedStep"
 			chromList = strings.Split(lineFields[1], "=")
@@ -62,7 +65,12 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 			currentWig.Start = common.StringToInt(startList[1])
 			stepList = strings.Split(lineFields[3], "=")
 			currentWig.Step = common.StringToInt(stepList[1])
-
+			if len(lineFields) == 5 {
+				spanList = strings.Split(lineFields[4], "=")
+				currentWig.Span = common.StringToInt(spanList[1])
+			} else {
+				currentWig.Span = -1 //signify missing
+			}
 		} else if strings.HasPrefix(line, "variableStep") {
 			log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", file.File.Name())
 		} else {
@@ -103,20 +111,26 @@ func PrintFirst(rec []Wig) {
 // Write writes a Wig data structure to a WIG format file at the input filename
 func Write(filename string, rec []Wig) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 	for i := range rec {
-		log.Printf("Printing wig object: %d\n", i)
+		//log.Printf("Printing wig object: %d\n", i)
 		WriteToFileHandle(file, rec[i])
 	}
+	var err error
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
 // WriteToFileHandle is an helper function for Write that writes the Wig data structure to a file.
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
-		fmt.Println("Printing header")
-		_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
-			rec.Start, rec.Step)
+		if rec.Span != -1 { //if there was a span in the header line
+			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d span=%d\n", rec.StepType, rec.Chrom,
+				rec.Start, rec.Step, rec.Span)
+		} else {
+			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
+				rec.Start, rec.Step)
+		}
 		common.ExitIfError(err)
 	} else if rec.StepType == "variableStep" {
 		log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", rec.StepType)
@@ -125,7 +139,6 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 	}
 
 	for i := range rec.Values {
-
 		if rec.StepType == "fixedStep" {
 			if rec.Values[i] == 0 {
 				_, err = fmt.Fprintf(file, "0\n") //will turn a 0.000000 to a 0 to save mem

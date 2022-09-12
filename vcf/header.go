@@ -9,7 +9,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Header contains all of the information present in the header section of a VCF.
@@ -20,7 +19,7 @@ type Header struct {
 	Filter     map[string]FilterHeader        // key=ID
 	Format     map[string]FormatHeader        // key=ID
 	Chroms     map[string]chromInfo.ChromInfo // key=chrom name
-	Samples    map[string]int                 // key=samplename val=index in GenomeSample
+	Samples    map[string]int                 // key=samplename val=index in Sample
 	Text       []string                       // raw text
 }
 
@@ -94,6 +93,15 @@ func ReadHeader(er *fileio.EasyReader) Header {
 		headerText = append(headerText, line)
 	}
 	return parseHeader(headerText)
+}
+
+// SampleNamesInOrder takes in the header and gives back the sample names in the order in which they appear in the header
+func SampleNamesInOrder(header Header) []string {
+	var answer []string = make([]string, len(header.Samples))
+	for sampleName, idx := range header.Samples {
+		answer[idx] = sampleName
+	}
+	return answer
 }
 
 // newHeader allocates memory for a new vcf Header.
@@ -270,6 +278,8 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 				Type = Character
 			case "String":
 				Type = String
+			default:
+				log.Panicf("Unrecognized type in vcf header: %s", fields[i][5:])
 			}
 
 		case strings.HasPrefix(fields[i], "Description="):
@@ -299,16 +309,8 @@ func processHeader(header Header, line string) Header {
 
 func NewHeader(name string) Header {
 	var header Header
-	t := time.Now()
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
-	header.Text = append(header.Text, "##fileDate="+t.Format("20060102"))
-	header.Text = append(header.Text, "##source=github.com/vertgenlab/gonomics")
-	header.Text = append(header.Text, "##phasing=none")
-	header.Text = append(header.Text, "##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">")
-	header.Text = append(header.Text, "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">")
-	header.Text = append(header.Text, "##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">")
-	header.Text = append(header.Text, "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
-	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s", name))
+	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT"))
 	return header
 }
 

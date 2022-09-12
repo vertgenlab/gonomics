@@ -160,15 +160,17 @@ func WriteToGraphHandle(file io.Writer, gg *GenomeGraph, lineLength int) {
 		}
 	}
 	for i = 0; i < len(gg.Nodes); i++ {
-		_, err = fmt.Fprintf(file, "%d", gg.Nodes[i].Id)
-		exception.PanicOnErr(err)
 		near := gg.Nodes[i].Next
-		for j = 0; j < len(near); j++ {
-			_, err = fmt.Fprintf(file, "\t%v\t%d", near[j].Prob, near[j].Dest.Id)
+		if len(near) > 0 {
+			_, err = fmt.Fprintf(file, "%d", gg.Nodes[i].Id)
+			exception.PanicOnErr(err)
+			for j = 0; j < len(near); j++ {
+				_, err = fmt.Fprintf(file, "\t%v\t%d", near[j].Prob, near[j].Dest.Id)
+				exception.PanicOnErr(err)
+			}
+			_, err = fmt.Fprintf(file, "\n")
 			exception.PanicOnErr(err)
 		}
-		_, err = fmt.Fprintf(file, "\n")
-		exception.PanicOnErr(err)
 	}
 }
 

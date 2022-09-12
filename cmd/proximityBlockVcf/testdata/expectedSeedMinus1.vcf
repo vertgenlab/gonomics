@@ -1,0 +1,5 @@
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	First	Second	Third	Fourth
+chr3	115	SometimesRetain	G	T	100	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr9	120	SamePosDifferentChrom	G	T	100	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr3	125	Within10	G	T	100	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr3	180	ShouldRetain	G	T	100	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0

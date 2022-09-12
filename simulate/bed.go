@@ -5,6 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
+//GoSimulateBed takes a searchSpace (represented by a noGap.bed input file, here as a parsed struct) and generates a
+//number of regions (regionCount) of a specified length (regionLength) and sends the simulated regions to an output chan.
 func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
 	var Length, tmp, chromWindows int
 	var totalWindows int
@@ -19,18 +21,13 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 		}
 	}
 
-	// DEBUG fmt.Printf("totalWindows: %d\n", totalWindows)
 	//this function generates new bed regions and sends them to a channel.
 	go func() {
 		for i := 0; i < regionCount; i++ {
 			tmp = numbers.RandIntInRange(0, totalWindows)
-			// DEBUG fmt.Printf("Random number is %d\n", tmp)
 			for j := 0; j < len(searchSpace); j++ {
-				// DEBUG fmt.Printf("ChromEnd:%v ChromStart:%v \n",noGap[j].ChromEnd,noGap[j].ChromStart)
 				Length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
-				// DEBUG fmt.Printf("Length; %v.\n", Length)
 				chromWindows = Length - regionLength + 1
-				// DEBUG fmt.Printf("j; %v.\n", j)
 				//is chrom big enough?
 				if chromWindows < 1 {
 					continue
@@ -38,8 +35,7 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 				if tmp-chromWindows > 0 {
 					tmp = tmp - chromWindows
 				} else {
-					// DEBUG fmt.Printf("Got one\n")
-					c <- bed.Bed{Chrom: searchSpace[j].Chrom, ChromStart: searchSpace[j].ChromStart + tmp - 1, ChromEnd: searchSpace[j].ChromStart + tmp - 1 + regionLength, Name: searchSpace[j].Name}
+					c <- bed.Bed{Chrom: searchSpace[j].Chrom, ChromStart: searchSpace[j].ChromStart + tmp - 1, ChromEnd: searchSpace[j].ChromStart + tmp - 1 + regionLength, Name: searchSpace[j].Name, FieldsInitialized: 4}
 					break
 				}
 			}

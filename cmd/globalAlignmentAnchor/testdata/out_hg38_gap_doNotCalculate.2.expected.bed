@@ -1,0 +1,4 @@
+chr1	1	10	species1_gap,doNotCalculate_largeGapSizeProduct
+chr1	20	30	species1_gap,doNotCalculate_largeGapSizeProduct
+chr1	40	700	species1_gap,doNotCalculate_largeGapSizeProduct
+chr2	35	550	species1_gap,doNotCalculate_largeGapSizeProduct

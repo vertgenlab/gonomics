@@ -1,0 +1,8 @@
+InputOutput	0	4	InputOutput_0_4
+TrimName1 Test	0	4	TrimName1 Test_0_4
+TrimName2 Test	0	6	TrimName2 Test_0_6
+ToUpperTest1	0	4	ToUpperTest1_0_4
+ToUpperTest2	0	6	ToUpperTest2_0_6
+NoGapTest	0	3	NoGapTest_0_3
+NoGapBedTest	0	3	NoGapBedTest_0_3
+NoGapBedTest	6	10	NoGapBedTest_6_10

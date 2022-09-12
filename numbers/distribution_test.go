@@ -14,11 +14,11 @@ func ExplicitBinomialDist(n int, k int, p float64) float64 {
 
 func TestBinomialDist(t *testing.T) {
 	input1 := ExplicitBinomialDist(20, 4, 0.6)
-	expected1 := BinomialDist(20, 4, 0.6)
+	expected1, _ := BinomialDist(20, 4, 0.6)
 	input2 := ExplicitBinomialDist(20, 20, 0.6)
-	expected2 := BinomialDist(20, 20, 0.6)
+	expected2, _ := BinomialDist(20, 20, 0.6)
 	input3 := ExplicitBinomialDist(20, 0, 0.6)
-	expected3 := BinomialDist(20, 0, 0.6)
+	expected3, _ := BinomialDist(20, 0, 0.6)
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}

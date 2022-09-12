@@ -1,8 +1,14 @@
 >InputOutput
 ACGTN
->TrimName
+>TrimName1
 ACGTN
->ToUpperTest
+>TrimName2
+AGGTTC
+>ToUpperTest1
 ACCTN
+>ToUpperTest2
+GGGCCC
 >NoGapTest
 ACTN
+>NoGapBedTest
+ACTCATT

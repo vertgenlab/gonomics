@@ -20,7 +20,7 @@ func reverseCigar(alpha []align.Cigar) {
 	}
 }
 
-func reverseCigarPointer(alpha []*cigar.Cigar) {
+func reverseCigarPointer(alpha []cigar.Cigar) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
 		alpha[i], alpha[j] = alpha[j], alpha[i]
 	}
@@ -54,7 +54,7 @@ func initialTraceMatrix(trace [][]rune, alphaLen int, betaLen int) {
 	}
 }
 
-func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int64, int64, int64, int64) {
+func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar, int64, int64, int64, int64) {
 	//check if size of alpha is larger than m
 	var currMax int64
 	var maxI int64
@@ -78,8 +78,8 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	}
 	var minI, minJ int64
 	var curr cigar.Cigar
-	var route []*cigar.Cigar
-	route = append(route, &cigar.Cigar{RunLength: 0, Op: trace[maxI][maxJ]})
+	var route []cigar.Cigar
+	route = append(route, cigar.Cigar{RunLength: 0, Op: trace[maxI][maxJ]})
 	for i, j, routeIdx = maxI, maxJ, 0; m[i][j] > 0; {
 		if route[routeIdx].RunLength == 0 {
 			route[routeIdx].RunLength = 1
@@ -88,7 +88,7 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 			route[routeIdx].RunLength += 1
 		} else {
 			curr = cigar.Cigar{RunLength: 0, Op: trace[i][j]}
-			route = append(route, &curr)
+			route = append(route, curr)
 			routeIdx++
 		}
 		switch trace[i][j] {
@@ -126,7 +126,7 @@ func tripleMaxTrace(prev int64, a int64, b int64, c int64) (int64, rune) {
 	}
 }
 
-func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int, int, int, int) {
+func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var i, j, routeIdx int
 	initialZeroMatrix(m, len(alpha), len(beta))
@@ -139,18 +139,18 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 		}
 	}
 	var minI, minJ = len(alpha), len(beta)
-	var route []*cigar.Cigar
+	var route []cigar.Cigar
 	//traceback starts in top corner
 	for i, j, routeIdx = len(alpha), len(beta), 0; m[i][j] > 0; {
 		//if route[routeIdx].RunLength == 0 {
 		if len(route) == 0 {
 			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, &curr)
+			route = append(route, curr)
 		} else if route[routeIdx].Op == trace[i][j] {
 			route[routeIdx].RunLength += 1
 		} else {
 			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, &curr)
+			route = append(route, curr)
 			routeIdx++
 		}
 		switch trace[i][j] {
@@ -173,7 +173,7 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
 }
 
-func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int, int, int, int) {
+func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var currMax int64
 	var maxI int
@@ -201,18 +201,18 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 			}
 		}
 	}
-	var route []*cigar.Cigar
+	var route []cigar.Cigar
 	//traceback starts in top corner
 	for i, j, routeIdx = maxI, maxJ, 0; i > 0 || j > 0; {
 		//if route[routeIdx].RunLength == 0 {
 		if len(route) == 0 {
 			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, &curr)
+			route = append(route, curr)
 		} else if route[routeIdx].Op == trace[i][j] {
 			route[routeIdx].RunLength += 1
 		} else {
 			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, &curr)
+			route = append(route, curr)
 			routeIdx++
 		}
 		switch trace[i][j] {

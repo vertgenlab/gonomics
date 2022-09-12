@@ -3,32 +3,8 @@ package common
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
-	"time"
 )
-
-//RngSeed sets the rand seed global variable using the randSeed and setSeed arguments
-func RngSeed(randSeed bool, setSeed int64) {
-	if randSeed && setSeed != -1 {
-		log.Fatalf("Cannot use a set seed and also a random seed.")
-	}
-	if randSeed {
-		rand.Seed(time.Now().UnixNano())
-	} else if setSeed != -1 {
-		rand.Seed(setSeed)
-	}
-}
-
-//IntSliceContains returns true if a slice of ints a containts an int b, false otherwise.
-func IntSliceContains(a []int, b int) bool {
-	for i := 0; i < len(a); i++ {
-		if a[i] == b {
-			return true
-		}
-	}
-	return false
-}
 
 //StringToBool parses a string into a bool and will exit on error
 func StringToBool(s string) bool {

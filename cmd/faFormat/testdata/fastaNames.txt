@@ -1,0 +1,3 @@
+RevCompTest1
+TrimName1 Test
+ToUpperTest1

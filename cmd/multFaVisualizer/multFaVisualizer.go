@@ -10,14 +10,14 @@ import (
 	"log"
 )
 
-func multFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int) {
-	browser.MultiFaVisualizer(infile, outfile, start, end, noMask, lineLength)
+func multFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int, endOfAlignment bool) {
+	browser.MultiFaVisualizer(infile, outfile, start, end, noMask, lineLength, endOfAlignment)
 }
 
-//TODO: reorder this command line to be inputs first and outputs second
 func usage() {
 	fmt.Print(
 		"multFaVisualizer - Provides human-readable multiple alignment from a given multiFa.\n" +
+			"Keyword 'END' for the end argument makes a visualization until the end of the fasta.\n" +
 			"Usage:\n" +
 			"multFaVisualizer mult.fa out.txt start end\n" +
 			"options:\n")
@@ -28,6 +28,8 @@ func main() {
 	var expectedNumArgs int = 4
 	var noMask *bool = flag.Bool("noMask", false, "Converts all bases to upper case.")
 	var lineLength *int = flag.Int("lineLength", 100, "Sets to length of each alignment line.")
+	var endOfAlignment bool = false
+	var endPos int
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -41,7 +43,11 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 	start := common.StringToInt(flag.Arg(2))
-	end := common.StringToInt(flag.Arg(3))
+	if flag.Arg(3) == "END" || flag.Arg(3) == "end" || flag.Arg(3) == "End" {
+		endOfAlignment = true
+	} else {
+		endPos = common.StringToInt(flag.Arg(3))
+	}
 
-	multFaVisualizer(infile, outfile, start, end, *noMask, *lineLength)
+	multFaVisualizer(infile, outfile, start, endPos, *noMask, *lineLength, endOfAlignment)
 }

@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"strings"
-	"unsafe"
 )
 
 // bam is a binary version of sam compressed as a bgzf file
@@ -20,9 +19,9 @@ import (
 // magicBam is a 4 byte sequence at the start of a bam file
 const magicBam string = "BAM\u0001"
 
-// BamReader wraps a bgzf.Reader with a fully allocated bgzf.Block.
+// BamReader wraps a bgzf.BlockReader with a fully allocated bgzf.Block.
 type BamReader struct {
-	zr           bgzf.Reader
+	zr           *bgzf.BlockReader
 	blk          *bgzf.Block
 	intermediate bytes.Buffer
 	refs         []chromInfo.ChromInfo
@@ -54,14 +53,18 @@ func (r *BamReader) next(n int) []byte {
 	}
 
 	// not enough bytes in the currently stored block
-	_, err := r.intermediate.ReadFrom(r.blk)
-	if err != nil {
-		log.Panic(err)
-	}
+	// read from multiple blocks if needed
+	for r.intermediate.Len()+r.blk.Len() < n {
+		_, err := r.intermediate.ReadFrom(r.blk)
+		if err != nil {
+			log.Panic(err)
+		}
 
-	err = r.zr.ReadBlock(r.blk)
-	if err == io.EOF {
-		r.eof = true
+		err = r.zr.ReadBlock(r.blk)
+		if err == io.EOF {
+			r.eof = true
+			break
+		}
 	}
 
 	// return with fewest appends possible
@@ -80,7 +83,7 @@ func (r *BamReader) next(n int) []byte {
 // in the bam file.
 func OpenBam(filename string) (*BamReader, Header) {
 	r := new(BamReader)
-	r.zr = bgzf.NewReader(filename)
+	r.zr = bgzf.NewBlockReader(filename)
 	r.blk = bgzf.NewBlock()
 	err := r.zr.ReadBlock(r.blk)
 	if err != nil && err != io.EOF { // EOF handled downstream
@@ -168,6 +171,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	s.Flag = le.Uint16(r.next(2))
 	lenSeq := int(le.Uint32(r.next(4)))
 	refIdx = int32(le.Uint32(r.next(4)))
+	s.RNext = "*"
 	if refIdx != -1 {
 		s.RNext = r.refs[refIdx].Name
 	}
@@ -177,16 +181,26 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	s.PNext = le.Uint32(r.next(4)) + 1 // sam is 1 based
 	s.TLen = int32(le.Uint32(r.next(4)))
 
-	//s.QName = trimNulOrPanic(unsafeByteToString(r.next(lenReadName))) // unsafe version
+	// ******
+	// Unsafe String Conversion
+	/*
+		qnameBytes := r.next(lenReadName)
+		if qnameBytes[len(qnameBytes)-1] != 0 {
+			log.Panicf("NUL byte not detected in QNAME\nBytes:%v", qnameBytes)
+		}
+		s.QName = unsafeByteToString(s.QName, qnameBytes[:len(qnameBytes)-1])
+	*/
+	// ******
+
+	// ******
+	// Safe String Conversion
 	s.QName = trimNulOrPanic(string(r.next(lenReadName))) // safe version
+	// ******
 
 	if cap(s.Cigar) >= numCigarOps {
 		s.Cigar = s.Cigar[:numCigarOps]
 	} else {
-		s.Cigar = make([]*cigar.Cigar, numCigarOps)
-		for i := 0; i < len(s.Cigar); i++ {
-			s.Cigar[i] = new(cigar.Cigar)
-		}
+		s.Cigar = make([]cigar.Cigar, numCigarOps)
 	}
 	var cigint uint32
 	for i := 0; i < numCigarOps; i++ {
@@ -207,17 +221,34 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 		qual[i] += 33 // ascii offset for printable characters
 	}
 
-	// s.Qual = unsafeByteToString(qual) // unsafe version
+	// ******
+	// Unsafe String Conversion
+	//s.Qual = unsafeByteToString(s.Qual, qual) // unsafe version
+	//if s.Qual[0] == 0xff {
+	//	s.Qual = "*"
+	//}
+	// ******
+
+	// ******
+	// Safe String Conversion
 	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
+	if len(qual) > 0 && qual[0]-33 == 0xff {
+		s.Qual = "*"
+	}
+	// ******
 
 	// The sam.Extra field is not parsed here as it would require parsing tags to their value, then
 	// casting that value to a string. That would be excessively wasteful, so instead the bytes are
 	// saved in the unparsedExtra field of sam, such that a user may call a function to parse these
 	// bytes if and only if they need access to the tag fields. This should also make bam reading a
 	// fair bit faster.
-	s.unparsedExtra = r.next(blkSize - (staticBamAlnSize +
+	ex := r.next(blkSize - (staticBamAlnSize +
 		lenReadName + (4 * numCigarOps) + (((lenSeq) + 1) / 2) + lenSeq)) // to get remaining bytes in alignment
-
+	if cap(s.unparsedExtra) < len(ex) {
+		s.unparsedExtra = make([]byte, len(ex))
+	}
+	s.unparsedExtra = s.unparsedExtra[:len(ex)]
+	copy(s.unparsedExtra, ex)
 	return
 }
 
@@ -233,6 +264,9 @@ var ErrNonStdBase error = errors.New("sequence contains bases other than A,C,G,T
 // readSeq reads bytes from r to fill the len of s with bases.
 // Data in r are expected to be encoded with 4 bits per base.
 func readSeq(r *BamReader, s []dna.Base) error {
+	if len(s) == 0 {
+		return nil
+	}
 	var err error
 	var b byte
 	var i int
@@ -263,10 +297,24 @@ func trimNulOrPanic(s string) string {
 	return strings.TrimRight(s, "\u0000")
 }
 
-// unsafeByteToString provides a copy-free conversion of a []byte to
-// a string. This functions uses the unsafe package and should be
-// removed if/when the sam struct is changed. Note that this code
-// is lifted directly from strings.Builder.String().
-func unsafeByteToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
+// Uncomment to use unsafe string conversion
+// unsafeByteToString mutates the input string s to the string formed by
+// calling `string(toCopy)`. This makes s unsafe for use between calls to
+// DecodeBam unless s is copied to a new variable.
+//func unsafeByteToString(s string, toCopy []byte) string {
+//	header := (*reflect.StringHeader)(unsafe.Pointer(&s)) // get the header from s
+//	bytesHeader := &reflect.SliceHeader{                  // convert to a byte slice header
+//		Data: header.Data,
+//		Len:  header.Len,
+//		Cap:  header.Len,
+//	}
+//	if bytesHeader.Cap < len(toCopy) { // make a new slice if existing one is not big enough
+//		return string(toCopy)
+//	}
+//
+//	b := *(*[]byte)(unsafe.Pointer(bytesHeader)) // convert byte slice header to a literal []byte
+//	header.Len = len(toCopy)                     // reduce len of slice header to actual len of toCopy
+//	b = b[:len(toCopy)]                          // reduce len of literal byte slice conversion to len of toCopy
+//	copy(b, toCopy)                              // mutate s
+//	return s
+//}

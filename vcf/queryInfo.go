@@ -81,6 +81,10 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 		for i := range s {
 			stringValues = strings.Split(s[i], ",")
 			for j := range stringValues {
+				if stringValues[j] == "." {
+					data[i] = append(data[i], 0) // TODO not ideal
+					continue
+				}
 				val, err = strconv.Atoi(stringValues[j])
 				exception.PanicOnErr(err)
 				data[i] = append(data[i], val)
@@ -88,8 +92,12 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 		}
 
 		for i := range data {
+			if len(data[i]) == 1 && data[i][0] == 0 { // handles . value case
+				data[i] = make([]int, getNumber(v, k)) // set to whatever the correct number is
+				continue
+			}
 			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected Number of values")
+				log.Panicf("unexpected number of values")
 			}
 		}
 
@@ -101,6 +109,10 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 		for i := range s {
 			stringValues = strings.Split(s[i], ",")
 			for j := range stringValues {
+				if stringValues[j] == "." {
+					data[i] = append(data[i], 0) // TODO not ideal
+					continue
+				}
 				val, err = strconv.ParseFloat(stringValues[j], 64)
 				exception.PanicOnErr(err)
 				data[i] = append(data[i], val)
@@ -108,8 +120,12 @@ func parseValue(v Vcf, s []string, k Key) interface{} {
 		}
 
 		for i := range data {
+			if len(data[i]) == 1 && data[i][0] == 0 { // handles . value case
+				data[i] = make([]float64, getNumber(v, k)) // set to whatever the correct number is
+				continue
+			}
 			if !checkNumber(v, k, len(data[i])) {
-				log.Panicf("unexpected Number of values")
+				log.Panicf("unexpected number of values")
 			}
 		}
 
@@ -187,6 +203,30 @@ func checkNumber(v Vcf, k Key, length int) bool {
 		}
 	}
 	return true
+}
+
+func getNumber(v Vcf, k Key) int {
+	switch k.Number {
+	case "A": // == num alt alleles
+		return len(v.Alt)
+
+	case "R": // == num ref + alt alleles
+		return len(v.Alt) + 1
+
+	case "G": // one value for each possible genotype
+		// TODO I think changes to the way GT is parsed is needed before ploidy can be determined
+		return 1
+
+	case ".": // wildcard. they never make it easy do they...
+		return 0
+
+	default:
+		num, err := strconv.Atoi(k.Number)
+		if err != nil {
+			log.Panicf("'%s' is not a valid Number for header info", k.Number)
+		}
+		return num
+	}
 }
 
 // QueryInt retrieves integer values stored in the Info or Format fields of a vcf record.

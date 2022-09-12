@@ -11,24 +11,36 @@ import (
 	"log"
 )
 
-func bedToFasta(fastaFile string, bedFile string, outfile string) {
+func bedToFasta(fastaFile string, bedFile string, outfile string, revComp bool) {
 	var records []bed.Bed = bed.Read(bedFile)
 	var reference []fasta.Fasta = fasta.Read(fastaFile)
-	var outlist []fasta.Fasta = convert.BedToFasta(records, reference)
+	var fastaEntry fasta.Fasta
+	var outlist []fasta.Fasta
+
+	for i := range records {
+		fastaEntry = convert.SingleBedToFasta(records[i], reference)
+		if (revComp == true) && (records[i].Strand == bed.Negative) {
+			fasta.ReverseComplement(fastaEntry)
+			fastaEntry.Name = fastaEntry.Name + "_RevComp"
+		}
+		outlist = append(outlist, fastaEntry)
+	}
 	fasta.Write(outfile, outlist)
 }
 
 func usage() {
 	fmt.Print(
-		"bedToFasta - Combines overlapping bed entries, keeping max score. Must be sorted.\n" +
+		"bedToFasta - Extracts sequences from a fasta file from regions specified by an input bed.\n" +
 			"Usage:\n" +
-			"bedToFasta reference.fa intput.bed output.fa\n" +
+			"bedToFasta reference.fa input.bed output.fa\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 3
+	var revComp *bool = flag.Bool("revComp", false, "Reverse complement fasta output if the bed strand is negative. Will append '_RevComp' to fasta name.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -43,5 +55,5 @@ func main() {
 	infile := flag.Arg(1)
 	outfile := flag.Arg(2)
 
-	bedToFasta(reference, infile, outfile)
+	bedToFasta(reference, infile, outfile, *revComp)
 }

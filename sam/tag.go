@@ -34,6 +34,24 @@ func QueryTag(s Sam, t string) (value interface{}, found bool, error error) {
 	return
 }
 
+// ParseExtra generates the text representation of the Extra field.
+// This is required if the file was read from a bam file and the Extra
+// field is going to be modified.
+func ParseExtra(s *Sam) error {
+	var err error
+	if s.parsedExtra == nil {
+		var tmp Sam
+		tmp, err = parseExtra(*s)
+		s.parsedExtra = tmp.parsedExtra
+		s.parsedExtraIdx = tmp.parsedExtraIdx
+		s.parsedExtraTags = tmp.parsedExtraTags
+		s.parsedExtraTypes = tmp.parsedExtraTypes
+	}
+	s.Extra = parsedExtraToString(s)
+	s.unparsedExtra = nil
+	return err
+}
+
 func parseExtra(s Sam) (Sam, error) {
 	if s.unparsedExtra == nil {
 		return s, errors.New("no tags present, or record was not parsed from a bam file")
@@ -194,7 +212,7 @@ func getVals(typ byte, r *bytes.Buffer, count int) interface{} {
 		}
 
 	default:
-		log.Panic("unrecognized value type in bam file")
+		log.Panicf("unrecognized value type in bam file '%s'", string(typ))
 		return nil
 	}
 }

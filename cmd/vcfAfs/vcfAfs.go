@@ -11,14 +11,33 @@ import (
 	"log"
 )
 
-func vcfAfs(vcfFile string, outFile string, UnPolarized bool) {
-	g, err := popgen.VcfToAfs(vcfFile, UnPolarized, false) //hardcoded DivergenceAscertainment to false
+type Settings struct {
+	UnPolarized             bool
+	PlotSelectionLikelihood string
+	LeftBound               float64
+	RightBound              float64
+	NumberOfPoints          int
+	IntegralError           float64
+	DivergenceAscertainment bool
+	D                       int  //size of the ascertainment subset
+	IncludeRef              bool //Includes the reference genome allele as a datapoint in the derived allele frequency spectrum. Incompatable with "UnPolarized".
+}
+
+func vcfAfs(vcfFile string, outFile string, s Settings) {
+	var err error
+	genotypes, err := popgen.VcfToAfs(vcfFile, s.UnPolarized, s.DivergenceAscertainment, s.IncludeRef)
 	exception.FatalOnErr(err)
-	f := popgen.AfsToFrequency(*g)
+	f := popgen.AfsToFrequency(*genotypes)
 	out := fileio.EasyCreate(outFile)
-	defer out.Close()
 	for i := 0; i < len(f); i++ {
-		fmt.Fprintf(out, "%f\n", f[i])
+		_, err = fmt.Fprintf(out, "%f\n", f[i])
+		exception.PanicOnErr(err)
+	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+
+	if s.PlotSelectionLikelihood != "" {
+		popgen.PlotAfsLikelihood(*genotypes, s.PlotSelectionLikelihood, s.LeftBound, s.RightBound, s.NumberOfPoints, s.IntegralError, s.DivergenceAscertainment, s.D)
 	}
 }
 
@@ -26,12 +45,20 @@ func usage() {
 	fmt.Print(
 		"vcfAfs - Returns allele frequency spectrum information in a text file for graphing.\n" +
 			"vcfAfs - vcfFile.vcf outFile.txt\n")
+	flag.PrintDefaults()
 }
 
 func main() {
-	var unPolarized *bool = flag.Bool("unPolarized", false, "vcfAfs creates polarized derived frequency spectra by default. When true, the cmd returns unpolarized site frequency spectra.")
-
 	var expectedNumArgs int = 2
+	var unPolarized *bool = flag.Bool("unPolarized", false, "vcfAfs creates polarized derived frequency spectra by default. When true, the cmd returns unpolarized site frequency spectra.")
+	var plotSelectionLikelihood *string = flag.String("plotSelectionLikelihood", "", "Plots the likelihood function for the selection parameter from this VCF to a specified output file.")
+	var leftBound *float64 = flag.Float64("leftBound", -10.0, "Left bound for plotting of the likelihood function.")
+	var rightBound *float64 = flag.Float64("rightBound", 10.0, "Right bound for plotting of the likelihood function.")
+	var numberOfPoints *int = flag.Int("numberOfPoints", 99, "Set the number of points at which to evaluate the likelihood function.")
+	var integralError *float64 = flag.Float64("integralError", 1e-7, "Sets the error threshold for integral calculations in the likelihood calculation.")
+	var divergenceAscertainment *bool = flag.Bool("divergenceAscertainment", false, "Corrects for divergence-based ascertainment bias in the likelihood calculation.")
+	var includeRef *bool = flag.Bool("includeRef", false, "Includes the reference genome allele as a datapoint in the derived allele frequency spectrum.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -42,7 +69,19 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	s := Settings{
+		UnPolarized:             *unPolarized,
+		PlotSelectionLikelihood: *plotSelectionLikelihood,
+		LeftBound:               *leftBound,
+		RightBound:              *rightBound,
+		NumberOfPoints:          *numberOfPoints,
+		IntegralError:           *integralError,
+		DivergenceAscertainment: *divergenceAscertainment,
+		D:                       1, //hardcoded for now
+		IncludeRef:              *includeRef,
+	}
+
 	vcfFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	vcfAfs(vcfFile, outFile, *unPolarized)
+	vcfAfs(vcfFile, outFile, s)
 }

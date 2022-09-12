@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
@@ -17,14 +18,17 @@ func fastqFormat(s Settings) {
 		scPairChan := make(chan fastq.SingleCellPair)
 		go fastq.ReadToChanSingleCellPair(s.R1InFile, s.R2InFile, s.BarcodeLength, s.UmiLength, scPairChan)
 		outR1 := fileio.EasyCreate(s.R1OutFile)
-		defer outR1.Close()
 		outR2 := fileio.EasyCreate(s.R2OutFile)
-		defer outR2.Close()
 
 		for i := range scPairChan {
 			fastq.WriteToFileHandle(outR1, i.Reads.Fwd)
 			fastq.WriteToFileHandle(outR2, i.Reads.Rev)
 		}
+		var err error
+		err = outR1.Close()
+		exception.PanicOnErr(err)
+		err = outR2.Close()
+		exception.PanicOnErr(err)
 	} else {
 		log.Fatalf("fastqFormat is still under development. Currently, the only formatting option available is to convert regular fastq reads into 10x formatted fastqs. Selected 'singleCell' from options.")
 	}

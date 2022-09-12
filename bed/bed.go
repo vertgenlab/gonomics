@@ -1,14 +1,14 @@
-//package bed provides functions for reading, writing, and manipulating Browser Extinsible Data (BED) format files.
+//Package bed provides functions for reading, writing, and manipulating Browser Extensible Data (BED) format files.
 //More information on the BED file format can be found at https://genome.ucsc.edu/FAQ/FAQformat.html#format1
 package bed
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -41,23 +41,23 @@ func (b Bed) String() string {
 
 // ToString converts a Bed struct into a BED file format string. Useful for writing to files or printing.
 func ToString(bunk Bed, fields int) string {
-	switch fields {
-	case 3:
+	switch {
+	case fields == 3:
 		return fmt.Sprintf("%s\t%d\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd)
-	case 4:
+	case fields == 4:
 		return fmt.Sprintf("%s\t%d\t%d\t%s", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name)
-	case 5:
+	case fields == 5:
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score)
-	case 6:
+	case fields == 6:
 		return fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, bunk.Strand)
-	case 7:
+	case fields >= 7:
 		var out string = fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%c", bunk.Chrom, bunk.ChromStart, bunk.ChromEnd, bunk.Name, bunk.Score, bunk.Strand)
 		for i := 0; i < len(bunk.Annotation); i++ {
 			out = fmt.Sprintf("%s\t%s", out, bunk.Annotation[i])
 		}
 		return out
 	default:
-		log.Fatalf("Error: expecting a request to print 3 to 7 bed fields, but got: %d\n", fields)
+		log.Fatalf("Error: expecting a request to print at least 3 bed fields, but got: %d\n", fields)
 	}
 	return ""
 }
@@ -109,18 +109,15 @@ func Read(filename string) []Bed {
 //processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
-	startNum, err := strconv.Atoi(words[1])
-	exception.PanicOnErr(err)
-	endNum, err := strconv.Atoi(words[2])
-	exception.PanicOnErr(err)
+	startNum := common.StringToInt(words[1])
+	endNum := common.StringToInt(words[2])
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score, err = strconv.Atoi(words[4])
-		exception.PanicOnErr(err)
+		current.Score = common.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
 		current.Strand = StringToStrand(words[5])
@@ -167,7 +164,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Bed entries from an input filename to a <-chan *Bed.
+//GoReadToChan reads Bed entries from an input filename to a <-chan Bed.
 func GoReadToChan(filename string) <-chan Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup

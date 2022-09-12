@@ -1,0 +1,19 @@
+Start: 350. refCounter: 350. alignCounter: 391
+Position: 350
+|STR010_D1_FOXD4L1_chr2:113503030-113503529| CGCC-TTTCCCGCCTGGGCCTCTCGCGGGTCGCAGGGGTGGAAGCC-CGA
+|panTro6                                   | .A........T............T.......A...............T..
+|HCA_STR010                                | ..........T............T.......................T..
+|Altai_Neanderthal                         | ..................................................
+|Vindija_Neanderthal                       | ..................................................
+|Denisova                                  | ..................................................
+
+
+Position: 398
+|STR010_D1_FOXD4L1_chr2:113503030-113503529| CC
+|panTro6                                   | ..
+|HCA_STR010                                | ..
+|Altai_Neanderthal                         | ..
+|Vindija_Neanderthal                       | ..
+|Denisova                                  | ..
+
+

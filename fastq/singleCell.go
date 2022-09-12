@@ -3,6 +3,7 @@ package fastq
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -20,8 +21,11 @@ func ReadToChanSingleCellPair(fileOne string, fileTwo string, barcodeLength int,
 	for curr, done := NextFastqPair(fwd, rev); !done; curr, done = NextFastqPair(fwd, rev) {
 		tenXg <- PairedEndToSingleCellPair(curr, barcodeLength, umiLength)
 	}
-	fwd.Close()
-	rev.Close()
+	var err error
+	err = fwd.Close()
+	exception.PanicOnErr(err)
+	err = rev.Close()
+	exception.PanicOnErr(err)
 	close(tenXg)
 }
 

@@ -2,6 +2,7 @@
 package fasta
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
@@ -44,6 +45,36 @@ func Read(filename string) []Fasta {
 
 	exception.PanicOnErr(file.Close())
 	return answer
+}
+
+// ReadToString reads a fasta file to a map of sequence strings keyed by the record name.
+func ReadToString(filename string) map[string]string {
+	ans := make(map[string]string)
+	buf := new(bytes.Buffer)
+	file := fileio.EasyOpen(filename)
+
+	var line, currName string
+	var done bool
+	for line, done = fileio.EasyNextRealLine(file); !done; line, done = fileio.EasyNextRealLine(file) {
+		if strings.HasPrefix(line, ">") {
+			if buf.Len() > 0 {
+				ans[currName] = buf.String()
+				buf.Reset()
+			}
+			currName = line[1:]
+			continue
+		}
+
+		buf.WriteString(line)
+	}
+
+	if buf.Len() > 0 {
+		ans[currName] = buf.String()
+	}
+
+	err := file.Close()
+	exception.PanicOnErr(err)
+	return ans
 }
 
 // NextFasta reads a single fasta record from an input EasyReader. Returns true when the file is fully read.
@@ -133,6 +164,15 @@ func Extract(f Fasta, start int, end int, name string) Fasta {
 	var ans Fasta
 	ans.Seq = dna.Extract(f.Seq, start, end)
 	ans.Name = name
+	return ans
+}
+
+// ExtractMulti extracts a subsequence from a fasta file for every entry in a multiFa alignment.
+func ExtractMulti(records []Fasta, start int, end int) []Fasta {
+	var ans = make([]Fasta, len(records))
+	for i := range records {
+		ans[i] = Extract(records[i], RefPosToAlnPos(records[0], start), RefPosToAlnPos(records[0], end), records[i].Name)
+	}
 	return ans
 }
 

@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -15,27 +15,53 @@ import (
 )
 
 type Settings struct {
-	InFile        string
-	OutFile       string
-	R1InFile      string
-	R2InFile      string
-	R1OutFile     string
-	R2OutFile     string
-	PairedEnd     bool
-	SubSet        float64
-	RandSeed      bool
-	SetSeed       int64
-	MinSize       int
-	MaxSize       int
-	CollapseUmi   bool
-	BarcodeLength int
-	UmiLength     int
+	InFile           string
+	OutFile          string
+	R1InFile         string
+	R2InFile         string
+	R1OutFile        string
+	R2OutFile        string
+	PairedEnd        bool
+	SubSet           float64
+	SetSeed          int64
+	MinSize          int
+	MaxSize          int
+	RetainNamesList  string
+	DiscardNamesList string
+	CollapseUmi      bool
+	BarcodeLength    int
+	UmiLength        int
 }
 
 func fastqFilter(s Settings) {
-	common.RngSeed(s.RandSeed, s.SetSeed)
+	rand.Seed(s.SetSeed)
 	var r float64
+	var err error
+	var doneReading, FwdInMap, RevInMap, NameInMap bool
+	var line string
 	var currSc fastq.SingleCellPair
+	namesMap := make(map[string]bool)
+
+	if s.RetainNamesList != "" && s.DiscardNamesList != "" {
+		log.Fatalf("fastqFilter cannot accept arguments for both a discard names list and retain names list simultaneously. Perform these operations in steps.")
+	}
+
+	if s.RetainNamesList != "" {
+		names := fileio.EasyOpen(s.RetainNamesList)
+		for line, doneReading = fileio.EasyNextRealLine(names); !doneReading; line, doneReading = fileio.EasyNextRealLine(names) {
+			namesMap[line] = true
+		}
+		err = names.Close()
+		exception.PanicOnErr(err)
+	}
+	if s.DiscardNamesList != "" {
+		discardNames := fileio.EasyOpen(s.DiscardNamesList)
+		for line, doneReading = fileio.EasyNextRealLine(discardNames); !doneReading; line, doneReading = fileio.EasyNextRealLine(discardNames) {
+			namesMap[line] = true
+		}
+		err = discardNames.Close()
+		exception.PanicOnErr(err)
+	}
 
 	if s.PairedEnd {
 		umiMap := make(map[string]int)
@@ -64,6 +90,21 @@ func fastqFilter(s Settings) {
 					continue
 				}
 			}
+			if s.RetainNamesList != "" {
+				if _, FwdInMap = namesMap[i.Fwd.Name]; !FwdInMap {
+					if _, RevInMap = namesMap[i.Rev.Name]; !RevInMap {
+						continue //continue if neither the forward or reverse read is in the map
+					}
+				}
+			}
+			if s.DiscardNamesList != "" {
+				if _, FwdInMap = namesMap[i.Fwd.Name]; FwdInMap {
+					continue
+				}
+				if _, RevInMap = namesMap[i.Rev.Name]; RevInMap {
+					continue
+				}
+			}
 			if s.CollapseUmi {
 				currSc = fastq.PairedEndToSingleCellPair(i, s.BarcodeLength, s.UmiLength)
 				if fastq.UmiCollision(currSc, umiMap) {
@@ -77,7 +118,6 @@ func fastqFilter(s Settings) {
 	} else {
 		f := fastq.GoReadToChan(s.InFile)
 		out := fileio.EasyCreate(s.OutFile)
-		defer out.Close()
 
 		for i := range f {
 			r = rand.Float64()
@@ -90,8 +130,20 @@ func fastqFilter(s Settings) {
 			if len(i.Seq) > s.MaxSize {
 				continue
 			}
+			if s.RetainNamesList != "" {
+				if _, NameInMap = namesMap[i.Name]; !NameInMap {
+					continue
+				}
+			}
+			if s.DiscardNamesList != "" {
+				if _, NameInMap = namesMap[i.Name]; NameInMap {
+					continue
+				}
+			}
 			fastq.WriteToFileHandle(out, i)
 		}
+		err = out.Close()
+		exception.PanicOnErr(err)
 	}
 }
 
@@ -110,10 +162,11 @@ func main() {
 	var expectedNumArgs int = 2
 	var pairedEnd *bool = flag.Bool("pairedEnd", false, "Paired end reads, use two input and output fastq files.")
 	var subSet *float64 = flag.Float64("subSet", 1.0, "Proportion of reads to retain in output.")
-	var randSeed *bool = flag.Bool("randSeed", false, "Uses a random seed for the RNG.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var minSize *int = flag.Int("minSize", 0, "Retain fastq reads above this size.")
 	var maxSize *int = flag.Int("maxSize", numbers.MaxInt, "Retain fastq reads below this size.")
+	var retainNamesList *string = flag.String("retainNamesList", "", "Specifies a file name for a line-delimited file of read names. Only reads with names matching the names in this file will be retained. For paired end reads, the read will be retained if either the forward or reverse read has a matching read name.")
+	var discardNamesList *string = flag.String("discardNamesList", "", "Specifies a file name for a line-delimited file of read names. All reads with names matching the names in this file will be discarded. For paired end reads, the read will be discarded if either the forward or reverse read has a matching read name.")
 	var collapseUmi *bool = flag.Bool("collapseUmi", false, "Removes UMI duplicates from single-cell format reads. R1: barcode and UMI. R2: mRNA sequence.")
 	var barcodeLength *int = flag.Int("barcodeLength", 16, "Sets the length of the barcode for single-cell reads.")
 	var umiLength *int = flag.Int("umiLength", 12, "Sets the UMI length for single-cell reads.")
@@ -141,21 +194,22 @@ func main() {
 	}
 
 	s := Settings{
-		InFile:        "",
-		OutFile:       "",
-		R1InFile:      "",
-		R2InFile:      "",
-		R1OutFile:     "",
-		R2OutFile:     "",
-		PairedEnd:     *pairedEnd,
-		SubSet:        *subSet,
-		RandSeed:      *randSeed,
-		SetSeed:       *setSeed,
-		MinSize:       *minSize,
-		MaxSize:       *maxSize,
-		CollapseUmi:   *collapseUmi,
-		BarcodeLength: *barcodeLength,
-		UmiLength:     *umiLength,
+		InFile:           "",
+		OutFile:          "",
+		R1InFile:         "",
+		R2InFile:         "",
+		R1OutFile:        "",
+		R2OutFile:        "",
+		PairedEnd:        *pairedEnd,
+		SubSet:           *subSet,
+		SetSeed:          *setSeed,
+		MinSize:          *minSize,
+		MaxSize:          *maxSize,
+		RetainNamesList:  *retainNamesList,
+		DiscardNamesList: *discardNamesList,
+		CollapseUmi:      *collapseUmi,
+		BarcodeLength:    *barcodeLength,
+		UmiLength:        *umiLength,
 	}
 
 	if *pairedEnd {

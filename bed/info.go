@@ -1,6 +1,7 @@
 package bed
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 )
@@ -15,13 +16,13 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion == true {
-			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index})
+			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index, Name: fmt.Sprintf("%s_%d_%d", fa.Name, startIndex, index), FieldsInitialized: 4})
 			inRegion = false
 		}
 
 	}
 	if inRegion == true {
-		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq)})
+		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq), Name: fmt.Sprintf("%s_%d_%d", fa.Name, startIndex, len(fa.Seq)), FieldsInitialized: 4})
 	}
 	return answer
 }
@@ -46,15 +47,17 @@ func TotalSize(b []Bed) int {
 	return ans
 }
 
-//Splits fasta regions by using bed regions and concatenate fasta sequences by filling 100 Ns in between
-func MakeContigFromBed(fa *fasta.Fasta, beds []Bed) *fasta.Fasta {
-	var ans *fasta.Fasta = &fasta.Fasta{Name: fa.Name, Seq: make([]dna.Base, 0)}
-	for i, b := range beds {
-		ans.Seq = append(ans.Seq, fa.Seq[b.ChromStart:b.ChromEnd]...)
-		//adds 100n in between bed regions
-		if i < len(beds)-2 {
-			ans.Seq = append(ans.Seq, dna.CreateAllNs(100)...)
+//IsNonOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
+//b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
+func IsSelfOverlapping(b []Bed, verbose int) bool {
+	for i := 0; i < len(b)-1; i++ {
+		if Overlap(b[i], b[i+1]) {
+			if verbose > 0 {
+				fmt.Printf("first bed: %v\n", b[i])
+				fmt.Printf("second bed: %v\n", b[i+1])
+			}
+			return true
 		}
 	}
-	return ans
+	return false
 }

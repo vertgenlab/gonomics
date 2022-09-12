@@ -9,49 +9,64 @@ import (
 )
 
 //SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
-func SimulateSegSite(alpha float64, n int) *SegSite {
+//the second returns true if the site is divergent.
+func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) (*SegSite, bool) {
 	var fatalCount int = 1000000
-	var maxIteration int = 10000
-	var r, x float64
+	var maxIteration int = 10000000
+	var r, derivedFrequency float64
+	var divergent bool
 	var count, i int
 
-	bound := numbers.ScaledBetaSampler(0.001, 0.5, 5000)
+	bound := numbers.ScaledBetaSampler(boundAlpha, boundBeta, boundMultiplier)
 	f := AfsStationarityClosure(alpha)
 
 	for i = 0; i < fatalCount; i++ {
 		count = 0
-		x, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration)
+		derivedFrequency, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration)
 		for j := 0; j < n; j++ {
 			r = rand.Float64()
-			if r < x {
+			if r < derivedFrequency {
 				count++
 			}
 		}
-		if count < 1 || count == n {
+		if count < 1 || count == n { //if the simulated site was not segregating, try again.
 			continue
 		}
-		return &SegSite{count, n, Uncorrected}
+
+		r = rand.Float64()
+		if r < derivedFrequency {
+			divergent = true
+		} else {
+			divergent = false
+		}
+		return &SegSite{count, n, Uncorrected}, divergent
 	}
 	log.Fatalf("Error in simulateSegSite: unable to produce non-zero allele frequency for alpha:%f and %v alleles in 10000 iterations.", alpha, n)
-	return &SegSite{0, 0, Uncorrected}
+	return &SegSite{0, 0, Uncorrected}, false
 }
 
 //SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
-func SimulateGenotype(alpha float64, n int) []vcf.GenomeSample {
-	var answer []vcf.GenomeSample = make([]vcf.GenomeSample, 0)
-	s := SimulateSegSite(alpha, n)
+//Second return is true if the current genotype is a divergent base.
+func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) ([]vcf.Sample, bool) {
+	var answer []vcf.Sample = make([]vcf.Sample, 0)
+	var s *SegSite
+	var divergent bool
+	s, divergent = SimulateSegSite(alpha, n, boundAlpha, boundBeta, boundMultiplier)
+	if divergent {
+		InvertSegSite(s)
+	}
 	alleleArray := SegSiteToAlleleArray(s)
 	var d int
 	for c := 0; c < n; c += 2 {
 		d = c + 1
 		//if we have an odd number of alleles, we make one haploid entry
 		if d >= n {
-			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: -1, Phased: false})
+			answer = append(answer, vcf.Sample{Alleles: []int16{alleleArray[c], -1}, Phase: []bool{false, false}, FormatData: make([]string, 1)})
 		} else {
-			answer = append(answer, vcf.GenomeSample{AlleleOne: alleleArray[c], AlleleTwo: alleleArray[d], Phased: false})
+			answer = append(answer, vcf.Sample{Alleles: []int16{alleleArray[c], alleleArray[d]}, Phase: []bool{false, false}, FormatData: make([]string, 1)})
 		}
 	}
-	return answer
+	return answer, divergent
 }
 
 //SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i values set to 1 and n-i values set to 0.

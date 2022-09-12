@@ -1,10 +1,10 @@
 package popgen
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
@@ -40,6 +40,19 @@ type SegSite struct {
 	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
 }
 
+func segSitesAreEqual(a SegSite, b SegSite) bool {
+	if a.I != b.I {
+		return false
+	}
+	if a.N != b.N {
+		return false
+	}
+	if a.L != b.L {
+		return false
+	}
+	return true
+}
+
 //InvertSegSite reverses the polarity of a segregating site.
 func InvertSegSite(s *SegSite) {
 	s.I = s.N - s.I
@@ -67,54 +80,74 @@ func MultiFaToAfs(aln []fasta.Fasta) Afs {
 
 //VcfToAfs reads in a vcf file, parses the genotype information, and constructs an AFS struct.
 //Polarized flag, when true, returns only variants with the ancestor annotated in terms of polarized, derived allele frequencies.
-func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool) (*Afs, error) {
+//IncludeRef, when true, uses the reference genome as an additional data point for the output AFS.
+func VcfToAfs(filename string, UnPolarized bool, DivergenceAscertainment bool, IncludeRef bool) (*Afs, error) {
 	var answer Afs
 	answer.Sites = make([]*SegSite, 0)
 	alpha, _ := vcf.GoReadToChan(filename)
 	var currentSeg *SegSite
-	var j int
+	var pass bool
 	for i := range alpha {
-		currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
-		//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
-		if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
-			for j = 0; j < len(i.Samples); j++ {
-				if i.Samples[j].AlleleOne != -1 && i.Samples[j].AlleleTwo != -1 { //check data for both alleles exist for sample.
-					currentSeg.N = currentSeg.N + 2
-					if i.Samples[j].AlleleOne > 0 {
-						currentSeg.I++
-					}
-					if i.Samples[j].AlleleTwo > 0 {
-						currentSeg.I++
-					}
-				}
-			}
-
-			if currentSeg.N == 0 {
-				return nil, fmt.Errorf("error in VcfToAFS: variant had no sample data")
-			}
-			if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
-				return nil, fmt.Errorf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
-			}
-			if !UnPolarized && vcf.HasAncestor(i) {
-				if vcf.IsRefAncestor(i) && DivergenceAscertainment {
-					currentSeg.L = Ancestral
-				}
-				if vcf.IsAltAncestor(i) {
-					InvertSegSite(currentSeg)
-					if DivergenceAscertainment {
-						currentSeg.L = Derived
-					}
-				} else if !vcf.IsRefAncestor(i) {
-					continue //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. For now they are not represented in the output AFS.
-				}
-			}
-			if !UnPolarized && !vcf.HasAncestor(i) {
-				log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
-			}
+		currentSeg, pass = VcfSampleToSegSite(i, DivergenceAscertainment, UnPolarized, IncludeRef)
+		if pass {
 			answer.Sites = append(answer.Sites, currentSeg)
 		}
 	}
 	return &answer, nil
+}
+
+//VcfSampleToSegSite returns a SegSite struct from an input Vcf entry. Enables flag for divergenceBasedAscertainment correction conditions and the unPolarized condition.
+//Two returns: a pointer to the SegSite struct, and a bool that is true if the SegSite was made without issue, false for soft errors.
+//If IncludeRef is true, adds the reference allele as an extra data point to the SegSite.
+func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized bool, IncludeRef bool) (*SegSite, bool) {
+	var currentSeg = &SegSite{I: 0, N: 0, L: Uncorrected}
+	var j int
+	//gVCF converts the alt and ref to []DNA.base, so structural variants with <CN0> notation will fail to convert. This check allows us to ignore these cases.
+	if !strings.ContainsAny(i.Alt[0], "<>") { //By definition, segregating sites are biallelic, so we only check the first entry in Alt.
+		for j = 0; j < len(i.Samples); j++ {
+			if len(i.Samples[j].Alleles) == 2 && i.Samples[j].Alleles[0] != -1 && i.Samples[j].Alleles[1] != -1 { //check data for both alleles exist for sample.
+				currentSeg.N = currentSeg.N + 2
+				if i.Samples[j].Alleles[0] > 0 {
+					currentSeg.I++
+				}
+				if i.Samples[j].Alleles[1] > 0 {
+					currentSeg.I++
+				}
+			}
+		}
+
+		if IncludeRef {
+			if vcf.IsAltAncestor(i) { //if the reference base is in the derived state.
+				currentSeg.I++
+			}
+			currentSeg.N++
+		}
+
+		if currentSeg.N == 0 {
+			log.Fatalf("error in VcfToAFS: variant had no sample data")
+		}
+		if currentSeg.I == 0 || currentSeg.N == currentSeg.I {
+			log.Fatalf("error in VcfToAFS: variant is nonsegregating and has an allele frequency of 0 or 1")
+		}
+		if !UnPolarized && vcf.HasAncestor(i) {
+			if vcf.IsRefAncestor(i) && DivergenceAscertainment {
+				currentSeg.L = Ancestral
+			}
+			if vcf.IsAltAncestor(i) {
+				InvertSegSite(currentSeg)
+				if DivergenceAscertainment {
+					currentSeg.L = Derived
+				}
+			} else if !vcf.IsRefAncestor(i) {
+				return nil, false //this special case arises when neither the alt or ref allele is ancestral, can occur with multiallelic positions. In VcfAfs, these positions are not represented in the output.
+			}
+		}
+		if !UnPolarized && !vcf.HasAncestor(i) {
+			log.Fatalf("To make a polarized AFS, ancestral alleles must be annotated. Run vcfAncestorAnnotation, filter out variants without ancestral alleles annotated with vcfFilter, or mark unPolarized in options.")
+		}
+	}
+
+	return currentSeg, true
 }
 
 //AfsToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
@@ -145,16 +178,19 @@ func FIntegralComponent(n int, k int, alpha float64, binomMap [][]float64) func(
 	return func(p float64) float64 {
 		expression := numbers.BinomialExpressionLog(n-2, k-1, p)
 		logPart := math.Log((1 - math.Exp(-alpha*(1.0-p))) * 2 / (1 - math.Exp(-alpha)))
-		return numbers.MultiplyLog(binomCoeff, numbers.MultiplyLog(expression, logPart))
+		return logspace.Multiply(binomCoeff, logspace.Multiply(expression, logPart))
 	}
 }
 
 //AfsSampleDensity (also referred to as the F function) is the product of the stationarity and binomial distributions integrated over p, the allele frequency.
 func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integralError float64) float64 {
+	if alpha == 0 {
+		log.Fatalf("The stationarity distribution cannot be evaluated with an alpha parameter of exactly zero.")
+	}
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponent(n, k, alpha, binomMap)
 	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
-	return numbers.AddLog(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
+	return logspace.Add(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
 }
 
 //AlleleFrequencyProbability returns the probability of observing i out of n alleles from a stationarity distribution with selection parameter alpha.
@@ -162,9 +198,9 @@ func AlleleFrequencyProbability(i int, n int, alpha float64, binomMap [][]float6
 	var denominator float64 = math.Inf(-1) //denominator begins at -Inf when in log space
 	// j loops over all possible values of i
 	for j := 1; j < n; j++ {
-		denominator = numbers.AddLog(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
+		denominator = logspace.Add(denominator, AfsSampleDensity(n, j, alpha, binomMap, integralError))
 	}
-	return numbers.DivideLog(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
+	return logspace.Divide(AfsSampleDensity(n, i, alpha, binomMap, integralError), denominator)
 }
 
 //AfsLikelihood returns P(Data|alpha), or the likelihood of observing a particular allele frequency spectrum given alpha, a vector of selection parameters.
@@ -172,7 +208,7 @@ func AfsLikelihood(afs Afs, alpha []float64, binomMap [][]float64, integralError
 	var answer float64 = 0.0
 	// loop over all segregating sites
 	for j := range afs.Sites {
-		answer = numbers.MultiplyLog(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
+		answer = logspace.Multiply(answer, AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha[j], binomMap, integralError))
 	}
 	return answer
 }
@@ -187,7 +223,7 @@ func AfsLikelihoodFixedAlpha(afs Afs, alpha float64, binomMap [][]float64, integ
 		if likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] == 0.0 { //if this particular segregating site has not already had its likelihood value cached, we want to calculate and cache it.
 			likelihoodCache[afs.Sites[j].N][afs.Sites[j].I] = AlleleFrequencyProbability(afs.Sites[j].I, afs.Sites[j].N, alpha, binomMap, integralError)
 		}
-		answer = numbers.MultiplyLog(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
+		answer = logspace.Multiply(answer, likelihoodCache[afs.Sites[j].N][afs.Sites[j].I])
 	}
 	return answer
 }
@@ -201,7 +237,7 @@ func AfsLikelihoodFixedAlphaClosure(afs Afs, binomMap [][]float64, integralError
 
 //BuildLikelihoodCache constructs a cache of likelihood values for MLE. likelihoodCache[n][i] stores the likelihood for a segregating site of n alleles with i in the derived state for a particular selection parameter alpha.
 func BuildLikelihoodCache(allN []int) [][]float64 {
-	answer := make([][]float64, numbers.MaxIntSlice(allN)+1) //make the first dimension the output matrix large enough to hold the highest observed N.
+	answer := make([][]float64, numbers.MaxMany(allN...)+1) //make the first dimension the output matrix large enough to hold the highest observed N.
 	for n := range allN {
 		answer[allN[n]] = make([]float64, allN[n]) //for each N value in the AFS, set the second dimension to the length of possible i values.
 	}

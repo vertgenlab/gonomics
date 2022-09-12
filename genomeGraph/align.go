@@ -9,8 +9,8 @@ import (
 )
 
 func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Sam {
-	var currBest sam.Sam = sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []*cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
-	var leftAlignment, rightAlignment []*cigar.Cigar = []*cigar.Cigar{}, []*cigar.Cigar{}
+	var currBest sam.Sam = sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
+	var leftAlignment, rightAlignment []cigar.Cigar
 	var minTarget int
 	var minQuery int
 	var leftScore, rightScore int64
@@ -66,7 +66,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
 				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
 			}*/
-			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, &cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
+			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
 		}
 	}
@@ -129,16 +129,16 @@ var HumanChimpTwoScoreMatrix = [][]int64{
 	{-208, -196, -196, -208, -202},
 }
 
-func AddSClip(front int, lengthOfRead int, cig []*cigar.Cigar) []*cigar.Cigar {
+func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	var runLen int = cigar.QueryLength(cig)
 	if runLen < lengthOfRead {
-		answer := make([]*cigar.Cigar, 0, len(cig)+2)
+		answer := make([]cigar.Cigar, 0, len(cig)+2)
 		if front > 0 {
-			answer = append(answer, &cigar.Cigar{RunLength: front, Op: 'S'})
+			answer = append(answer, cigar.Cigar{RunLength: front, Op: 'S'})
 		}
 		answer = append(answer, cig...)
 		if front+int(cigar.QueryLength(cig)) < lengthOfRead {
-			answer = append(answer, &cigar.Cigar{RunLength: lengthOfRead - front - runLen, Op: 'S'})
+			answer = append(answer, cigar.Cigar{RunLength: lengthOfRead - front - runLen, Op: 'S'})
 		}
 		return answer
 	} else {

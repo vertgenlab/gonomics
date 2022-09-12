@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-//TODO: The careless option should eventually be removed, but I need it for now for debugging.
-
 func plotContinuousFunctions(function string, functionArgs string, left float64, right float64, bins int, outFile string) {
 	if function == "AfsStationarity" {
 		words := strings.Split(functionArgs, ",")
@@ -51,7 +49,7 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 		f := numbers.NormalClosure(mu, sigma)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else { //here you can add more else ifs to add additional functions for plotting
-		fmt.Printf("Unrecognized function: %s.\n", function)
+		log.Fatalf("Unrecognized function: %s.\n", function)
 	}
 }
 
@@ -63,7 +61,6 @@ func usage() {
 			" plotFunctions functionKeyWord functionArgs leftBound rightBound steps outFile\n" +
 			"For AfsStationarity: defined by one parameter (called alpha). ex usage: plotFunctions AfsStationarity 0.001 0.001 0.999 1000 afsPlot.txt\n" +
 			"For AfsF: defined by three parameters (alpha, n, and integralError: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsF 0.5,200,1e-7 afsFPlot.txt\n" +
-			"For AfsFCareless: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsFCareless 0.5,200 afsFCarelessPlot.txt\n" +
 			"For AfsProbabilityAncestral: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsProbabilityAncestral 0.5,200 afsProbAncestralPlot.txt\n" +
 			"For AfsProbabilityDerived: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsProbabilityDerived 0.5,200 afsProbDerivedPlot.txt\n" +
 			"For AfsProbability: defined by two parameters (alpha and n: where alpha is the selection parameter and n is the total number of individuals. ex. Usage: AfsProbability 0.5,200,1e-7 afsProbabilityPlot.txt\n" +
@@ -106,7 +103,7 @@ func main() {
 		alpha := common.StringToFloat64(words[0])
 		n := common.StringToInt(words[1])
 		integralError := common.StringToFloat64(words[2])
-		popgen.PlotAfsPmf(alpha, n, outFile, integralError)
+		popgen.PlotAfsPmf(alpha, n, outFile, integralError, false, false)
 	} else if flag.Arg(0) == "AfsProbabilityAncestral" {
 		expectedNumArgs = 3
 		if len(flag.Args()) != 3 {
@@ -122,7 +119,7 @@ func main() {
 		alpha := common.StringToFloat64(words[0])
 		n := common.StringToInt(words[1])
 		integralError := common.StringToFloat64(words[2])
-		popgen.PlotAfsPmfAncestral(alpha, n, outFile, integralError)
+		popgen.PlotAfsPmf(alpha, n, outFile, integralError, false, true)
 	} else if flag.Arg(0) == "AfsProbabilityDerived" {
 		expectedNumArgs = 3
 		if len(flag.Args()) != expectedNumArgs {
@@ -138,7 +135,7 @@ func main() {
 		alpha := common.StringToFloat64(words[0])
 		n := common.StringToInt(words[1])
 		integralError := common.StringToFloat64(words[2])
-		popgen.PlotAfsPmfDerived(alpha, n, outFile, integralError)
+		popgen.PlotAfsPmf(alpha, n, outFile, integralError, true, false)
 	} else if flag.Arg(0) == "AscertainmentProbabilityDerived" {
 		expectedNumArgs = 3
 		if len(flag.Args()) != expectedNumArgs {
@@ -229,21 +226,6 @@ func main() {
 		n := common.StringToInt(words[1])
 		error := common.StringToFloat64(words[2])
 		popgen.PlotAfsF(alpha, n, outFile, error)
-	} else if flag.Arg(0) == "AfsFCareless" {
-		expectedNumArgs = 3
-		if len(flag.Args()) != expectedNumArgs {
-			flag.Usage()
-			log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-		}
-		functionArgs := flag.Arg(1)
-		outFile := flag.Arg(2)
-		words := strings.Split(functionArgs, ",")
-		if len(words) != 2 {
-			log.Fatalf("An allele frequency F function is defined by two parameters, received %d.", len(words))
-		}
-		alpha := common.StringToFloat64(words[0])
-		n := common.StringToInt(words[1])
-		popgen.PlotAfsFCareless(alpha, n, outFile)
 	} else {
 		expectedNumArgs = 6
 		if len(flag.Args()) != expectedNumArgs {
