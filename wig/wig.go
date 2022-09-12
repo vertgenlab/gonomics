@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-//Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
+// Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
 type Wig struct {
 	StepType string
 	Chrom    string
@@ -27,7 +27,7 @@ type Wig struct {
 //TODO: ReadToChan() and GoReadToChan () ; write these. Check out fastq or bed or sam for examples of these ReadToChan and GoReadToChan(), these are the memory
 //efficient ways to read things in. Funny things with weight groups (which handle the order of things) (concurrency in Go youtube).
 
-//Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
+// Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
 func Read(filename string) []Wig {
 	var curr Wig
 	var finalWig []Wig
@@ -93,7 +93,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	return currentWig, doneReading
 }
 
-//Prints the first record in a Wig struct. Mainly used for debugging.
+// Prints the first record in a Wig struct. Mainly used for debugging.
 func PrintFirst(rec []Wig) {
 	if len(rec) == 0 {
 		fmt.Println("Empty Wig; length of input was zero.")
@@ -108,7 +108,7 @@ func PrintFirst(rec []Wig) {
 	}
 }
 
-//Write writes a Wig data structure to a WIG format file at the input filename
+// Write writes a Wig data structure to a WIG format file at the input filename
 func Write(filename string, rec []Wig) {
 	file := fileio.EasyCreate(filename)
 	for i := range rec {
@@ -120,7 +120,7 @@ func Write(filename string, rec []Wig) {
 	exception.PanicOnErr(err)
 }
 
-//WriteToFileHandle is an helper function for Write that writes the Wig data structure to a file.
+// WriteToFileHandle is an helper function for Write that writes the Wig data structure to a file.
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
@@ -151,4 +151,24 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 		}
 
 	}
+}
+
+// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name
+func ChromToSlice(w []Wig, chrom string) []float64 {
+	var output []float64
+	for _, v := range w {
+		if v.Chrom == chrom {
+			if v.Step == 1 {
+				if v.Start == 1 {
+					output = make([]float64, len(v.Values))
+					output = v.Values
+				} else {
+					log.Fatalf("Invalid start coordinate.")
+				}
+			} else {
+				log.Fatalf("invalid step size, step size must be 1.")
+			}
+		}
+	}
+	return output
 }
