@@ -97,12 +97,14 @@ func ReadBai(filename string) Bai {
 		log.Fatalf("ERROR: extra '%d' bytes found in bai file.\nfile may be malformed: '%s'\n", r.Len(), filename)
 	}
 
+	var currBinId int
 	for i := range bai.refs {
 		bai.refs[i] = annotateBinRanges(bai.refs[i])
 		bai.refs[i] = assembleTree(bai.refs[i])
 		bai.refs[i].binIdIdx = make(map[int]int)
 		for j := range bai.refs[i].bins {
-			bai.refs[i].binIdIdx[int(bai.refs[i].bins[j].id)] = j
+			currBinId = int(bai.refs[i].bins[j].id)
+			bai.refs[i].binIdIdx[currBinId] = j
 		}
 	}
 	return bai
