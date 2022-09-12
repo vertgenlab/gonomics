@@ -1,0 +1,6 @@
+refer1	refer2	close
+refer1	name1	default
+refer1	name2	far
+refer2	name1	0.4
+refer2	name2	0.8
+name1	name2	0.70
