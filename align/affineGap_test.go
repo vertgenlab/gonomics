@@ -190,3 +190,22 @@ func TestGoAffineGapLocalEngine(t *testing.T) {
 		t.Error("problem with AffineGapLocal")
 	}
 }
+
+func BenchmarkAffineGapLocal(b *testing.B) {
+	tgt := dna.StringToBases("CACACACACACACACATTTGACATAGACATA")
+	qry := dna.StringToBases("CTTTTGA")
+	for i := 0; i < b.N; i++ {
+		AffineGapLocal(tgt, qry, DefaultScoreMatrix, -600, -150)
+	}
+}
+
+func BenchmarkAffineGapLocalEngine(b *testing.B) {
+	var test TargetQueryPair
+	test.Target = dna.StringToBases("CACACACACACACACATTTGACATAGACATA")
+	test.Query = dna.StringToBases("CTTTTGA")
+	input, output := GoAffineGapLocalEngine(DefaultScoreMatrix, -600, -150)
+	for i := 0; i < b.N; i++ {
+		input <- test
+		_ = <-output
+	}
+}
