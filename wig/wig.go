@@ -146,7 +146,7 @@ func ChromToSlice(w []Wig, chrom string) []float64 {
 	for _, v := range w {
 		if v.Chrom == chrom {
 			if v.Step == 1 {
-				if v.Start == 0 {
+				if v.Start == 1 {
 					output = make([]float64, len(v.Values))
 					output = v.Values
 				} else {
