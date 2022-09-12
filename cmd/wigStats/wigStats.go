@@ -28,7 +28,7 @@ func wigStats(inFile string, noGapFile string, outFile string, missingDataValue 
 			if wigValues[j] == missingDataValue {
 				continue
 			}
-			if int(wigValues[j]) > len(statValues) {
+			if int(wigValues[j]) >= len(statValues) {
 				tmpValues = make([]int, int(wigValues[j])-len(statValues)+1)
 				statValues = append(statValues, tmpValues...) // concatenate two slices together
 			}
