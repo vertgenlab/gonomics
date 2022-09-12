@@ -4,16 +4,20 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
 	"io"
+	"log"
 )
 
 // SeekBamRegion returns a slice of reads that overlap the input region. SeekBamRegion will advance the
 // reader as necessary so beware continuing linear reading after a call to SeekBamRegion.
-func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end int) []Sam {
+func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sam {
+	if start > end {
+		log.Panicf("ERROR: SeekBamRegion input start > end. %d > %d\n", start, end)
+	}
 	var err error
 	var coffset, uoffset uint64
 	var ans []Sam
 	refIdx := chromInfo.SliceToMap(br.refs)[chrom].Order
-	bins := regionToBins(start, end)
+	bins := regionToBins(int(start), int(end))
 	ref := bai.refs[refIdx]
 	var i, j int
 	var ok bool
@@ -36,10 +40,10 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end int) []Sam {
 				if err == io.EOF {
 					break
 				}
-				if curr.RName == chrom && curr.GetChromEnd() > start && curr.GetChromStart() < end {
+				if curr.RName == chrom && curr.GetChromEnd() > int(start) && curr.GetChromStart() < int(end) {
 					ans = append(ans, curr)
 				}
-				if curr.RName == chrom && curr.GetChromStart() >= end {
+				if (curr.RName == chrom && curr.GetChromStart() >= int(end)) || curr.RName != chrom {
 					break
 				}
 			}
@@ -50,7 +54,7 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end int) []Sam {
 
 // regionToBins returns all bins in which reads overlapping the input region may exist.
 // Adapted from C code in SAM file specifications.
-func regionToBins(beg int, end int) []int {
+func regionToBins(beg, end int) []int {
 	if beg == -1 && end == 0 {
 		return []int{0, 0, 8, 72, 584, 4680}
 	}
