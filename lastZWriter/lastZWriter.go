@@ -70,12 +70,6 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 
 	for line, done := fileio.EasyNextRealLine(dists); !done; line, done = fileio.EasyNextRealLine(dists) {
 		words = strings.Split(line, "\t")
-
-		log.Printf("reference=%s", reference)
-		log.Printf("species=%s", species)
-		log.Print(words)
-
-
 		if words[0] == reference && words[1] == species || words[0] == species && words[1] == reference {
 			if words[2] == "close" {
 				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
@@ -105,9 +99,6 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = 2
 				done = true
 			} else {
-
-				log.Print("in the numeric dist calculator")
-
 				dist = common.StringToFloat64(words[2])
 				switch {
 				case dist <= 0.2: //closest
