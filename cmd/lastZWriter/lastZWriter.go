@@ -25,6 +25,9 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
 				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
+				if parameters == nil || matrix == "" {
+					log.Fatalf("Reference %s and species %s returned no parameters or matrix.", refList[ref], speciesList[spec])
+				}
 				allLines = writeFile(lastZ, pairwise, refList[ref], speciesList[spec], parameters, matrix, allLines)
 			}
 		}
