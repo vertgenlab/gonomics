@@ -361,8 +361,8 @@ func main() {
 		"can be tested by including just the flag ID in the expression. E.g. To select all records with the flag 'GG' you would use the expression \"GG\".")
 	var includeMissingInfo *bool = flag.Bool("includeMissingInfo", false, "When querying the records using the \"-info\" tag, include records where the queried tags are not present.")
 	var subSet *float64 = flag.Float64("subSet", 1, "Proportion of variants to retain in output. Value must be between 0 and 1.")
-	var minDaf *float64 = flag.Float64("minDaf", 0, "Set the minimum derived allele frequency for retained variants.")
-	var maxDaf *float64 = flag.Float64("maxDaf", 1, "Set the maximum derived allele frequency for retained variants.")
+	var minDaf *float64 = flag.Float64("minDaf", 0, "Set the minimum derived allele frequency for retained variants. Ancestral allele must be defined in INFO.")
+	var maxDaf *float64 = flag.Float64("maxDaf", 1, "Set the maximum derived allele frequency for retained variants. Ancestral allele must be defined in INFO.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
