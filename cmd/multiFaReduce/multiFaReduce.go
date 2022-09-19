@@ -5,49 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
-func makeEmptyFastas(records []fasta.Fasta) []fasta.Fasta {
-	var answer []fasta.Fasta = make([]fasta.Fasta, len(records))
-	for i := range records {
-		answer[i].Name = records[i].Name
-	}
-	return answer
-}
-
-func colVariable(records []fasta.Fasta, colIdx int) bool {
-	var i int
-	var firstBase dna.Base
-
-	firstBase = records[0].Seq[colIdx]
-	for i = 1; i < len(records); i++ {
-		if records[i].Seq[colIdx] != firstBase {
-			return true
-		}
-	}
-	return false
-}
-
-func addCopyOfCol(from []fasta.Fasta, alnIdx int, to []fasta.Fasta) {
-	for i := range from {
-		to[i].Seq = append(to[i].Seq, from[i].Seq[alnIdx])
-	}
-}
-
 func mfaReduce(inFilename, outFilename string) {
-	records := fasta.Read(inFilename)
-
-	answer := makeEmptyFastas(records)
-
-	for i := range records[0].Seq {
-		if colVariable(records, i) {
-			addCopyOfCol(records, i, answer)
-		}
-	}
-
+	aln := fasta.Read(inFilename)
+	answer := fasta.SegregatingSites(aln)
 	fasta.Write(outFilename, answer)
 }
 
