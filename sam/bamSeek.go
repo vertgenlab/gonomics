@@ -19,15 +19,16 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 	refIdx := chromInfo.SliceToMap(br.refs)[chrom].Order
 	bins := regionToBins(int(start), int(end))
 	ref := bai.refs[refIdx]
-	var i, j int
+	var i, j, binIdx int
 	var ok bool
 	for i = range bins { // retrieve bins that may contain overlapping reads
 		if _, ok = ref.binIdIdx[bins[i]]; !ok {
 			continue
 		}
-		for j = range ref.bins[ref.binIdIdx[i]].chunks { // check all chunks with each bin
-			uoffset = ref.bins[ref.binIdIdx[i]].chunks[j].start & 0xFFFF // byte offset into uncompressed data stream
-			coffset = ref.bins[ref.binIdIdx[i]].chunks[j].start >> 16    // byte offset from start to bgzf block
+		binIdx = ref.binIdIdx[bins[i]]
+		for j = range ref.bins[binIdx].chunks { // check all chunks with each bin
+			uoffset = ref.bins[binIdx].chunks[j].start & 0xFFFF // byte offset into uncompressed data stream
+			coffset = ref.bins[binIdx].chunks[j].start >> 16    // byte offset from start to bgzf block
 			_, err = br.zr.Seek(int64(coffset), io.SeekStart)
 			exception.PanicOnErr(err)
 			err = br.zr.ReadBlock(br.blk)
