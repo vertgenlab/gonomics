@@ -106,6 +106,8 @@ func DistColumn(records []Fasta) []Fasta {
 	return subFa
 }
 
+// emptyCopy returns a new alignment where the sequences have the same names as the input
+// alignment, but empty sequences.
 func emptyCopy(aln []Fasta) []Fasta {
 	var answer []Fasta = make([]Fasta, len(aln))
 	for i := range aln {
@@ -114,6 +116,8 @@ func emptyCopy(aln []Fasta) []Fasta {
 	return answer
 }
 
+// isSegregating returns false if the value of all bases in the column (colIdx) are of
+// equal value, and true otherwise.
 func isSegregating(aln []Fasta, colIdx int) bool {
 	var i int
 	var firstBase dna.Base
@@ -127,7 +131,7 @@ func isSegregating(aln []Fasta, colIdx int) bool {
 	return false
 }
 
-//This function takes in a multiFa alignment block and returns only the columns that contain segregating sites.
+// SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites.
 func SegregatingSites(aln []Fasta) []Fasta {
 	var answer []Fasta = emptyCopy(aln)
 	var i, k int
