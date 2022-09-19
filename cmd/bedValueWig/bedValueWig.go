@@ -164,7 +164,7 @@ func main() {
 	var expectedNumArgs int = 4
 	var min *bool = flag.Bool("min", false, "Annotate bed entries with the minimum wig value instead of the maximum.")
 	var average *bool = flag.Bool("average", false, "Annotate bed entries with the average wig value instead of the maximum.")
-	var norm *bool = flag.Bool("normalize", false, "When true, will normalize the bedMaxWig output by dividing value by total wig hits.")
+	var norm *bool = flag.Bool("normalize", false, "When true, will normalize the bedValueWig output by dividing value by total wig hits.")
 	var trimLeft *int = flag.Int("trimLeft", 0, "Exclude values on the left most edge of the bed region for consideration.")
 	var trimRight *int = flag.Int("trimRight", 0, "Exclude values on the right most edge of the bed region for consideration.")
 	var noDataValue *float64 = flag.Float64("noDataValue", math.MaxFloat64, "Exclude positions marked with the noData value, provided by the user, from consideration for value calculations.")

@@ -35,30 +35,30 @@ func likelihoodsToBaseUnbiased(likes []float64, probThreshold float64) dna.Base 
 	return answer
 }
 
-// likelihoodsToBaseHumanBias takes the un-normalized likelihoods for A, C, G, T as well
-// as the index of the human base (0 for A, 1 for C, etc), and the probability
-// threshold for when we will call it the mle base instead of the human base
-// and gives back the reconstructed base for the hca
-func likelihoodsToBaseHumanBias(likes []float64, humanBase dna.Base, probThreshold float64, nonHumanProbThreshold float64) dna.Base {
+// likelihoodsToBaseBias takes the un-normalized likelihoods for A, C, G, T as well
+// as the index of the biased base (0 for A, 1 for C, etc), and the probability
+// threshold for when we will call it the mle base instead of the biased base
+// and gives back the reconstructed base for the hca/hga
+func likelihoodsToBaseBias(likes []float64, biasBase dna.Base, probThreshold float64, nonBiasProbThreshold float64) dna.Base {
 	var total, nonHumanTotal, bestProb float64
 	var i int
 	var answer dna.Base
 
-	if humanBase == dna.Gap {
+	if biasBase == dna.Gap {
 		answer = dna.N
 	} else {
-		answer = humanBase
+		answer = biasBase
 	}
 
 	for i = range likes {
 		total += likes[i]
-		if i != int(humanBase) {
+		if i != int(biasBase) {
 			nonHumanTotal += likes[i]
 		}
 	}
 
 	for i = range likes {
-		if likes[i]/total >= probThreshold && likes[i] > bestProb && nonHumanTotal/total >= nonHumanProbThreshold {
+		if likes[i]/total >= probThreshold && likes[i] > bestProb && nonHumanTotal/total >= nonBiasProbThreshold {
 			bestProb = likes[i]
 			answer = dna.Base(i)
 		}
@@ -83,28 +83,47 @@ func hcaIsPresent(human, bonobo, chimp, gorilla, organutan dna.Base) bool {
 	return false
 }
 
-func reconHcaBase(root, humanNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonHumanProbThreshold float64, humanBias bool) {
+func hgaIsPresent(human, bonobo, chimp, gorilla, orangutan dna.Base) bool {
+	if baseIsPresent(gorilla) && (baseIsPresent(human) || baseIsPresent(chimp) || baseIsPresent(bonobo)) {
+		return true
+	}
+	if baseIsPresent(orangutan) && (baseIsPresent(gorilla) || baseIsPresent(human) || baseIsPresent(chimp) || baseIsPresent(bonobo)) {
+		return true
+	}
+	return false
+}
+
+func reconHcaBase(root, humanNode, chimpNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonBiasProbThreshold float64, humanBias bool, chimpBias bool) {
 	var likelihoods []float64
 	var nextBase dna.Base
 	reconstruct.SetState(root, position)
 	likelihoods = reconstruct.FixFc(root, nodeToRecon)
 	if humanBias {
-		nextBase = likelihoodsToBaseHumanBias(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonHumanProbThreshold)
+		nextBase = likelihoodsToBaseBias(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonBiasProbThreshold)
+	} else if chimpBias {
+		nextBase = likelihoodsToBaseBias(likelihoods, chimpNode.Fasta.Seq[position], probThreshold, nonBiasProbThreshold)
 	} else {
 		nextBase = likelihoodsToBaseUnbiased(likelihoods, probThreshold)
 	}
 	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, nextBase)
 }
 
-func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string) {
+func reconHgaBase(root, gorillaNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonBiasProbThreshold float64) {
+	var likelihoods []float64
+	var nextBase dna.Base
+	reconstruct.SetState(root, position)
+	likelihoods = reconstruct.FixFc(root, nodeToRecon)
+	nextBase = likelihoodsToBaseBias(likelihoods, gorillaNode.Fasta.Seq[position], probThreshold, nonBiasProbThreshold)
+	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, nextBase)
+}
+
+func primateReconHcaMle(inFastaFilename string, inTreeFilename string, humanBias bool, chimpBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string) {
 	var tree, humanNode, humanAltNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hcaNode *expandedTree.ETree
 	var err error
 	var i int
 
 	tree, err = expandedTree.ReadTree(inTreeFilename, inFastaFilename)
 	exception.FatalOnErr(err)
-
-	// roll call to make sure everyone is here and will need them later
 	humanNode = expandedTree.FindNodeName(tree, "hg38")
 	if humanNode == nil {
 		log.Fatalf("Didn't find hg38 in the tree\n")
@@ -130,7 +149,7 @@ func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bo
 		log.Fatalf("Didn't find hca in the tree\n")
 	}
 
-	if !humanBias {
+	if !(humanBias || chimpBias) {
 		humanAltNode = expandedTree.FindNodeName(tree, "hg38alt")
 		if humanAltNode == nil {
 			log.Fatalf("Didn't find hg38alt in the tree\n")
@@ -139,16 +158,59 @@ func primateReconMle(inFastaFilename string, inTreeFilename string, humanBias bo
 
 	for i = range humanNode.Fasta.Seq {
 		if hcaIsPresent(humanNode.Fasta.Seq[i], bonoboNode.Fasta.Seq[i], chimpNode.Fasta.Seq[i], gorillaNode.Fasta.Seq[i], orangutanNode.Fasta.Seq[i]) {
-			reconHcaBase(tree, humanNode, hcaNode, i, probThreshold, nonHumanProbThreshold, humanBias)
+			reconHcaBase(tree, humanNode, chimpNode, hcaNode, i, probThreshold, nonHumanProbThreshold, humanBias, chimpBias)
 		} else {
 			hcaNode.Fasta.Seq = append(hcaNode.Fasta.Seq, dna.Gap)
 		}
 	}
-	if humanBias {
+	if humanBias || chimpBias {
 		fasta.Write(outputFastaFilename, []fasta.Fasta{*humanNode.Fasta, *chimpNode.Fasta, *bonoboNode.Fasta, *gorillaNode.Fasta, *orangutanNode.Fasta, *hcaNode.Fasta})
 	} else {
 		fasta.Write(outputFastaFilename, []fasta.Fasta{*humanNode.Fasta, *humanAltNode.Fasta, *chimpNode.Fasta, *bonoboNode.Fasta, *gorillaNode.Fasta, *orangutanNode.Fasta, *hcaNode.Fasta})
 	}
+}
+
+func primateReconHgaMle(inFile string, inTreeFileName string, probThreshold float64, nonBiasProbThreshold float64, outFile string) {
+	var tree, humanNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hgaNode *expandedTree.ETree
+	var err error
+	var i int
+
+	tree, err = expandedTree.ReadTree(inTreeFileName, inFile)
+	exception.FatalOnErr(err)
+	humanNode = expandedTree.FindNodeName(tree, "hg38")
+	if humanNode == nil {
+		log.Fatalf("Didn't find hg38 in the tree\n")
+	}
+	bonoboNode = expandedTree.FindNodeName(tree, "panPan2")
+	if bonoboNode == nil {
+		log.Fatalf("Didn't find panPan2 in the tree\n")
+	}
+	chimpNode = expandedTree.FindNodeName(tree, "panTro6")
+	if chimpNode == nil {
+		log.Fatalf("Didn't find panTro6 in the tree\n")
+	}
+	gorillaNode = expandedTree.FindNodeName(tree, "gorGor5")
+	if gorillaNode == nil {
+		log.Fatalf("Didn't find gorGor5 in the tree\n")
+	}
+	orangutanNode = expandedTree.FindNodeName(tree, "ponAbe3")
+	if orangutanNode == nil {
+		log.Fatalf("Didn't find ponAbe3 in the tree\n")
+	}
+	hgaNode = expandedTree.FindNodeName(tree, "hga")
+	if hgaNode == nil {
+		log.Fatalf("Didn't find hca in the tree\n")
+	}
+
+	for i = range humanNode.Fasta.Seq {
+		if hgaIsPresent(humanNode.Fasta.Seq[i], bonoboNode.Fasta.Seq[i], chimpNode.Fasta.Seq[i], gorillaNode.Fasta.Seq[i], orangutanNode.Fasta.Seq[i]) {
+			reconHgaBase(tree, gorillaNode, hgaNode, i, probThreshold, nonBiasProbThreshold)
+		} else {
+			hgaNode.Fasta.Seq = append(hgaNode.Fasta.Seq, dna.Gap)
+		}
+	}
+	fasta.Write(outFile, []fasta.Fasta{*humanNode.Fasta, *chimpNode.Fasta, *bonoboNode.Fasta, *gorillaNode.Fasta, *orangutanNode.Fasta, *hgaNode.Fasta})
+
 }
 
 func primateRecon(infile string, outfile string, messyToN bool) {
@@ -169,11 +231,13 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var messyToN *bool = flag.Bool("messyToN", false, "Sets messy bases to Ns in the output file.")
-	var mleUnbiased *bool = flag.Bool("mleUnbiased", false, "Default is an N, unless a base passes the probThreshold threshold.")
-	var mleHumanBiased *bool = flag.Bool("mleHumanBiased", false, "Default is the human base, unless the non-human bases, collectively and individually, pass nonHumanProbThreshold and probThreshold.")
+	var mleHcaUnbiased *bool = flag.Bool("mleHcaUnbiased", false, "Estimates the human-chimpanzee ancestor. Default is an N, unless a base passes the probThreshold threshold.")
+	var mleHcaHumanBiased *bool = flag.Bool("mleHcaHumanBiased", false, "Estimates the human-chimpanzee ancestor. Default is the human base, unless the non-human bases, collectively and individually, pass nonBiasProbThreshold and probThreshold.")
+	var mleHcaChimpBiased *bool = flag.Bool("mleHcaChimpBiased", false, "Estimates the human-chimpanzee ancestor. Default is the chimp base, unless the non-chimp bases, collectively and individually, pass nonBiasPropThreshold and probThreshold.")
+	var mleHgaGorillaBiased *bool = flag.Bool("mleHgaGorillaBiased", false, "Estimates the human-gorilla ancestor. Default is the gorilla base, unless the non-gorilla bases, collectively and individually, pass nonBiasPropThreshold and probThreshold.")
 	var tree *string = flag.String("mle", "", "Filename for newick tree with branch lengths.  Must have the anticipated assembly names and the hca.")
 	var probThreshold *float64 = flag.Float64("probThreshold", 0.0, "The probability that a base other than human must pass to be considered a true change in the hca.")
-	var nonHumanProbThreshold *float64 = flag.Float64("nonHumanProbThreshold", 0.0, "The sumation of all non-human bases must pass this threshold for a non-human base to be considered in the hca.")
+	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasProbThreshold", 0.0, "The summation of all bases (other than the biased species) must pass this threshold for a non-biased species base to be considered in the hca.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -188,25 +252,33 @@ func main() {
 	outFile := flag.Arg(1)
 
 	// some error check on flags provided
-	if *messyToN && (*mleUnbiased || *mleHumanBiased) {
-		log.Fatal("Error: -messyToN can not be used with mle estimates\n")
+	if *mleHcaHumanBiased && *mleHcaChimpBiased {
+		log.Fatalf("Error: cannot be biased for both the human and the chimp base\n")
 	}
-	if (*tree == "") && (*mleUnbiased || *mleHumanBiased) {
-		log.Fatal("Error: you need to provide a tree when using an mle estimate\n")
+	if *messyToN && (*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased) {
+		log.Fatalf("Error: -messyToN can not be used with mle estimates\n")
 	}
-	if *mleUnbiased && *mleHumanBiased {
-		log.Fatal("Error: Can not do both a biased and unbiased mle estimate\n")
+	if (*tree == "") && (*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased) {
+		log.Fatalf("Error: you need to provide a tree when using an mle estimate\n")
 	}
-	if (*probThreshold != 0 || *nonHumanProbThreshold != 0) && !(*mleUnbiased || *mleHumanBiased) {
-		log.Fatal("Error: Can not use probability threshold flags without also using an mle estimate\n")
+	if *mleHcaUnbiased && (*mleHcaHumanBiased || *mleHcaChimpBiased) {
+		log.Fatalf("Error: Can not do both a biased and unbiased mle estimate\n")
 	}
-	if *nonHumanProbThreshold != 0 && *mleUnbiased {
-		log.Fatal("Error: Can not do a nonHumanProbThreshold when also doing an unbiased estimate\n")
+	if (*probThreshold != 0 || *nonBiasProbThreshold != 0) && !(*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased || *mleHgaGorillaBiased) {
+		log.Fatalf("Error: Can not use probability threshold flags without also using an mle estimate\n")
+	}
+	if *nonBiasProbThreshold != 0 && *mleHcaUnbiased {
+		log.Fatalf("Error: Can not do a nonBiasProbThreshold when also doing an unbiased estimate\n")
+	}
+	if *mleHgaGorillaBiased && (*mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased) {
+		log.Fatalf("Error: cannot estimate both the HCA and the HGA at once\n")
 	}
 
-	if *mleUnbiased || *mleHumanBiased {
-		// at this point we know that xor of the two mle flags is true, so we only pass one
-		primateReconMle(inFile, *tree, *mleHumanBiased, *probThreshold, *nonHumanProbThreshold, outFile)
+	if *mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased {
+		// at this point we know that xor of the mleFlags is true, so we only pass mleHumanBiased and mleChimpBiased
+		primateReconHcaMle(inFile, *tree, *mleHcaHumanBiased, *mleHcaChimpBiased, *probThreshold, *nonBiasProbThreshold, outFile)
+	} else if *mleHgaGorillaBiased {
+		primateReconHgaMle(inFile, *tree, *probThreshold, *nonBiasProbThreshold, outFile)
 	} else {
 		primateRecon(inFile, outFile, *messyToN)
 	}

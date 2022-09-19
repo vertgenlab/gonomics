@@ -13,6 +13,7 @@ var FaFormatTests = []struct {
 	outputFile       string
 	expectedFile     string
 	lineLength       int
+	nameFile         string
 	trimName         bool
 	toUpper          bool
 	revComp          bool
@@ -20,8 +21,10 @@ var FaFormatTests = []struct {
 	noGapBed         string
 	noGapBedExpected string
 }{
-	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, true, true, false, true, "testdata/test.NoGap.bed", "testdata/expected.NoGap.bed"},
-	{"testdata/revCompTest.fa", "testdata/revCompOutput.fa", "testdata/revCompExpected.fa", 50, false, false, true, false, "", ""},
+	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, "", true, true, false, true, "testdata/test.NoGap.bed", "testdata/expected.NoGap.bed"},
+	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatNamesExpected.fa", 50, "testdata/fastaNames.txt", true, true, false, false, "", ""},
+	{"testdata/revCompTest.fa", "testdata/revCompOutput.fa", "testdata/revCompExpected.fa", 50, "", false, false, true, false, "", ""},
+	{"testdata/revCompTest.fa", "testdata/revCompNamesOutput.fa", "testdata/revCompNamesExpected.fa", 50, "testdata/fastaNames.txt", false, false, true, false, "", ""},
 }
 
 func TestFaFormat(t *testing.T) {
@@ -31,6 +34,7 @@ func TestFaFormat(t *testing.T) {
 			InFile:     v.inputFile,
 			OutFile:    v.outputFile,
 			LineLength: v.lineLength,
+			NamesFile:  v.nameFile,
 			TrimName:   v.trimName,
 			ToUpper:    v.toUpper,
 			RevComp:    v.revComp,

@@ -20,7 +20,7 @@ func multFaVisualizeBeds(bedFile string, alnFile string, outFormat bool, noMask 
 		} else {
 			outFile = fmt.Sprintf("%s%s_%d_%d.txt", outDir, b[i].Chrom, b[i].ChromStart, b[i].ChromEnd)
 		}
-		browser.MultiFaVisualizer(alnFile, outFile, b[i].ChromStart, b[i].ChromEnd, noMask, lineLength)
+		browser.MultiFaVisualizer(alnFile, outFile, b[i].ChromStart, b[i].ChromEnd, noMask, lineLength, false) //hard code endOfAlignment as false, as we are getting end positions from the beds.
 	}
 }
 

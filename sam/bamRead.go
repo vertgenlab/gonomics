@@ -232,7 +232,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	// ******
 	// Safe String Conversion
 	s.Qual = string(qual) // TODO this is 1 alloc per read, should change to []byte and remove unsafe ref above
-	if qual[0]-33 == 0xff {
+	if len(qual) > 0 && qual[0]-33 == 0xff {
 		s.Qual = "*"
 	}
 	// ******
@@ -264,6 +264,9 @@ var ErrNonStdBase error = errors.New("sequence contains bases other than A,C,G,T
 // readSeq reads bytes from r to fill the len of s with bases.
 // Data in r are expected to be encoded with 4 bits per base.
 func readSeq(r *BamReader, s []dna.Base) error {
+	if len(s) == 0 {
+		return nil
+	}
 	var err error
 	var b byte
 	var i int

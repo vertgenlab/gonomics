@@ -1,0 +1,3 @@
+chr1New	5	rs100	T	A	100	PASS	NoSwap;ALLELE_B=1;ALLELE_A=0	GT	0|0	1|0	1|1
+chr1New	7	rs101	C	T	100	PASS	InvertAndSwap;ALLELE_A=0;ALLELE_B=1	GT	1|0	1|1	0|0
+chr1New	75	rs102	T	A	100	PASS	InvertAndPosChange	GT	1|1	1|1	0|0

@@ -1,0 +1,14 @@
+>InputOutput
+ACGTN
+>TrimName1
+ACGTN
+>TrimName2 Test
+AGGTTC
+>ToUpperTest1
+ACCTN
+>ToUpperTest2
+gggccC
+>NoGapTest
+ACT---N
+>NoGapBedTest
+ACT---CATT

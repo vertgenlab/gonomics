@@ -116,3 +116,96 @@ func TestAffineScore(t *testing.T) {
 		fmt.Printf("Score of alignment in %s is: %d\n", test.filename, score)
 	}
 }
+
+func TestAffineGapLocal(t *testing.T) {
+	tgt := dna.StringToBases("TCACTTTCGCACGTT")
+	qry := dna.StringToBases("CACACG")
+	score, cig := AffineGapLocal(tgt, qry, DefaultScoreMatrix, -600, -150)
+	if score != 460 || PrintCigar(cig) != "7D6M2D" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	tgt = dna.StringToBases("CACACACACACACACATTTGACATAGACATA")
+	qry = dna.StringToBases("CTTTTGA")
+	score, cig = AffineGapLocal(tgt, qry, DefaultScoreMatrix, -600, -150)
+	if score != 441 || PrintCigar(cig) != "14D7M10D" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	tgt = dna.StringToBases("GACTTTT")
+	qry = dna.StringToBases("GAC")
+	score, cig = AffineGapLocal(tgt, qry, DefaultScoreMatrix, -600, -150)
+	if score != 291 || PrintCigar(cig) != "3M4D" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	tgt = dna.StringToBases("TTTTGAC")
+	qry = dna.StringToBases("GAC")
+	score, cig = AffineGapLocal(tgt, qry, DefaultScoreMatrix, -600, -150)
+	if score != 291 || PrintCigar(cig) != "4D3M" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	tgt = dna.StringToBases("TTTTATGCCCAAAAGGGATGTTTT")
+	qry = dna.StringToBases("ATGCCCGGGATG")
+	score, cig = AffineGapLocal(tgt, qry, DefaultScoreMatrix, -200, -50)
+	if score != 764 || PrintCigar(cig) != "4D6M4D6M4D" {
+		t.Error("problem with AffineGapLocal")
+	}
+}
+
+func TestGoAffineGapLocalEngine(t *testing.T) {
+	inputs, outputs := GoAffineGapLocalEngine(DefaultScoreMatrix, -600, -150)
+	var test TargetQueryPair
+
+	test.Target = dna.StringToBases("TCACTTTCGCACGTT")
+	test.Query = dna.StringToBases("CACACG")
+	inputs <- test
+	test = <-outputs
+	if test.Score != 460 || PrintCigar(test.Cigar) != "7D6M2D" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	test.Target = dna.StringToBases("CACACACACACACACATTTGACATAGACATA")
+	test.Query = dna.StringToBases("CTTTTGA")
+	inputs <- test
+	test = <-outputs
+	if test.Score != 441 || PrintCigar(test.Cigar) != "14D7M10D" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	test.Target = dna.StringToBases("GACTTTT")
+	test.Query = dna.StringToBases("GAC")
+	inputs <- test
+	test = <-outputs
+	if test.Score != 291 || PrintCigar(test.Cigar) != "3M4D" {
+		t.Error("problem with AffineGapLocal")
+	}
+
+	test.Target = dna.StringToBases("TTTTGAC")
+	test.Query = dna.StringToBases("GAC")
+	inputs <- test
+	test = <-outputs
+	if test.Score != 291 || PrintCigar(test.Cigar) != "4D3M" {
+		t.Error("problem with AffineGapLocal")
+	}
+}
+
+func BenchmarkAffineGapLocal(b *testing.B) {
+	tgt := dna.StringToBases("CACACACACACACACATTTGACATAGACATA")
+	qry := dna.StringToBases("CTTTTGA")
+	for i := 0; i < b.N; i++ {
+		AffineGapLocal(tgt, qry, DefaultScoreMatrix, -600, -150)
+	}
+}
+
+func BenchmarkAffineGapLocalEngine(b *testing.B) {
+	var test TargetQueryPair
+	test.Target = dna.StringToBases("CACACACACACACACATTTGACATAGACATA")
+	test.Query = dna.StringToBases("CTTTTGA")
+	input, output := GoAffineGapLocalEngine(DefaultScoreMatrix, -600, -150)
+	for i := 0; i < b.N; i++ {
+		input <- test
+		_ = <-output
+	}
+}

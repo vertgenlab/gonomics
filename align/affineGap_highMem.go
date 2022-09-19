@@ -25,6 +25,34 @@ func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, []
 	return mRowCurrent, mRowPrevious, mColumn, trace
 }
 
+func initAffineScoringAndTraceRecycle(firstSeqLen int, secondSeqLen int, mRowCurrent, mRowPrevious [][]int64, trace [][][]ColType) ([][]int64, [][]int64, int, [][][]ColType) {
+	mRowCurrent = setSliceSize(mRowCurrent, 3)
+	mRowPrevious = setSliceSize(mRowPrevious, 3)
+	var mColumn int = firstSeqLen + 1
+	trace = setSliceSize(trace, 3)
+	for k := range trace { //k ranges through 3 numbers (0,1,2)
+		trace[k] = setSliceSize(trace[k], firstSeqLen+1)
+		mRowCurrent[k] = setSliceSize(mRowCurrent[k], secondSeqLen+1)
+		mRowPrevious[k] = setSliceSize(mRowPrevious[k], secondSeqLen+1)
+		for i := range trace[0] {
+			trace[k][i] = setSliceSize(trace[k][i], secondSeqLen+1)
+		}
+	}
+	return mRowCurrent, mRowPrevious, mColumn, trace
+}
+
+func setSliceSize[t any](s []t, size int) []t {
+	if len(s) == size {
+		return s
+	}
+
+	if cap(s) >= size {
+		return s[:size]
+	}
+
+	return make([]t, size)
+}
+
 func affineTrace(mRowCurrent [][]int64, mColumn int, trace [][][]ColType) (int64, []Cigar) {
 	route := make([]Cigar, 1)
 	lastI := mColumn - 1             //the last I
@@ -66,23 +94,113 @@ func expandCigarRunLength(route []Cigar, chunkSize int64) {
 }
 
 func AffineGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
+	return affineGap_highMem(alpha, beta, scores, gapOpen, gapExtend, false)
+}
+
+// AffineGapLocal functions identically to AffineGap_highMem, but it does not penalize for gaps placed at the beginning or end of the alignment.
+// This property enables AffineGap to be used for local alignment, such as aligning a 150bp sequencing read to a 1kb reference sequence.
+func AffineGapLocal(target []dna.Base, query []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
+	return affineGap_highMem(target, query, scores, gapOpen, gapExtend, true)
+}
+
+type TargetQueryPair struct {
+	Target []dna.Base
+	Query  []dna.Base
+	Score  int64
+	Cigar  []Cigar
+}
+
+func GoAffineGapLocalEngine(scores [][]int64, gapOpen int64, gapExtend int64) (inputs chan<- TargetQueryPair, outputs <-chan TargetQueryPair) {
+	i := make(chan TargetQueryPair, 1000)
+	o := make(chan TargetQueryPair, 1000)
+	go goAffineGap_highMem(i, o, scores, gapOpen, gapExtend, true)
+	return i, o
+}
+
+func goAffineGap_highMem(inputs <-chan TargetQueryPair, outputs chan<- TargetQueryPair, scores [][]int64, gapOpen int64, gapExtend int64, freeEndGaps bool) {
+	var mRowCurrent, mRowPrevious [][]int64
+	var mColumn int
+	var trace [][][]ColType
+	var alpha, beta []dna.Base
+	for in := range inputs {
+		alpha = in.Target
+		beta = in.Query
+		mRowCurrent, mRowPrevious, mColumn, trace = initAffineScoringAndTraceRecycle(len(alpha), len(beta), mRowCurrent, mRowPrevious, trace)
+		for i := 0; i < mColumn; i++ {
+			for j := range mRowCurrent[0] {
+				if i == 0 && j == 0 {
+					mRowCurrent[0][j] = 0
+					mRowCurrent[1][j] = gapOpen
+					if freeEndGaps {
+						mRowCurrent[2][j] = 0
+					} else {
+						mRowCurrent[2][j] = gapOpen
+					}
+				} else if i == 0 {
+					mRowCurrent[0][j] = veryNegNum
+					mRowCurrent[1][j] = gapExtend + mRowCurrent[1][j-1]
+					trace[1][i][j] = ColI
+					mRowCurrent[2][j] = veryNegNum
+				} else if j == 0 {
+					mRowCurrent[0][j] = veryNegNum
+					mRowCurrent[1][j] = veryNegNum
+					if freeEndGaps {
+						mRowCurrent[2][j] = 0 + mRowPrevious[2][j]
+					} else {
+						mRowCurrent[2][j] = gapExtend + mRowPrevious[2][j]
+					}
+					trace[2][i][j] = ColD
+				} else if freeEndGaps && j == len(mRowCurrent[0])-1 {
+					mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
+					mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+					mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(0+0+mRowPrevious[0][j], 0+0+mRowPrevious[1][j], 0+mRowPrevious[2][j])
+				} else {
+					mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
+					mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+					mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
+				}
+			}
+			if i < mColumn-1 {
+				mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
+			}
+		}
+		maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
+		in.Score, in.Cigar = maxScore, route
+		outputs <- in
+	}
+	close(outputs)
+}
+
+func affineGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, freeEndGaps bool) (int64, []Cigar) {
 	mRowCurrent, mRowPrevious, mColumn, trace := initAffineScoringAndTrace(len(alpha), len(beta))
 	for i := 0; i < mColumn; i++ {
 		for j := range mRowCurrent[0] {
 			if i == 0 && j == 0 {
 				mRowCurrent[0][j] = 0
 				mRowCurrent[1][j] = gapOpen
-				mRowCurrent[2][j] = gapOpen
+				if freeEndGaps {
+					mRowCurrent[2][j] = 0
+				} else {
+					mRowCurrent[2][j] = gapOpen
+				}
 			} else if i == 0 {
 				mRowCurrent[0][j] = veryNegNum
 				mRowCurrent[1][j] = gapExtend + mRowCurrent[1][j-1]
-				trace[1][i][j] = ColI /*new*/
+				trace[1][i][j] = ColI
 				mRowCurrent[2][j] = veryNegNum
 			} else if j == 0 {
 				mRowCurrent[0][j] = veryNegNum
 				mRowCurrent[1][j] = veryNegNum
-				mRowCurrent[2][j] = gapExtend + mRowPrevious[2][j]
-				trace[2][i][j] = ColD /*new*/
+				if freeEndGaps {
+					mRowCurrent[2][j] = 0 + mRowPrevious[2][j]
+				} else {
+					mRowCurrent[2][j] = gapExtend + mRowPrevious[2][j]
+				}
+				trace[2][i][j] = ColD
+			} else if freeEndGaps && j == len(mRowCurrent[0])-1 {
+				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
+				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+				mRowCurrent[2][j], trace[2][i][j] = tripleMaxTrace(0+0+mRowPrevious[0][j], 0+0+mRowPrevious[1][j], 0+mRowPrevious[2][j])
 			} else {
 				mRowCurrent[0][j], trace[0][i][j] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
 				mRowCurrent[1][j], trace[1][i][j] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
@@ -94,7 +212,6 @@ func AffineGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapO
 		}
 	}
 	maxScore, route := affineTrace(mRowCurrent, mColumn, trace)
-
 	return maxScore, route
 }
 

@@ -14,6 +14,8 @@ var BedFormatTests = []struct {
 	UCSCToEnsembl  bool
 	EnsemblToUCSC  bool
 	ScaleNameFloat float64
+	PadLength      int
+	ChromSizeFile  string
 }{
 	{"testdata/test.bed", //this test is for scaleNameFloat
 		"testdata/test.outFloat.bed",
@@ -21,6 +23,8 @@ var BedFormatTests = []struct {
 		false,
 		false,
 		10,
+		0,
+		"",
 	},
 	{"testdata/test.bed", //this test is for UCSCToEnsembl
 		"testdata/test.outEnsembl.bed",
@@ -28,6 +32,8 @@ var BedFormatTests = []struct {
 		true,
 		false,
 		1,
+		0,
+		"",
 	},
 	{"testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
 		"testdata/test.outUCSC.bed",
@@ -35,6 +41,17 @@ var BedFormatTests = []struct {
 		false,
 		true,
 		1,
+		0,
+		"",
+	},
+	{"testdata/test.pad.bed",
+		"testdata/out.pad.bed",
+		"testdata/expected.pad.bed",
+		false,
+		false,
+		1,
+		91,
+		"testdata/test.chrom.sizes",
 	},
 }
 
@@ -48,6 +65,8 @@ func TestBedFormat(t *testing.T) {
 			UCSCToEnsembl:  v.UCSCToEnsembl,
 			EnsemblToUCSC:  v.EnsemblToUCSC,
 			ScaleNameFloat: v.ScaleNameFloat,
+			ChromSizeFile:  v.ChromSizeFile,
+			PadLength:      v.PadLength,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
