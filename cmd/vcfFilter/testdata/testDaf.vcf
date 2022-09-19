@@ -1,0 +1,8 @@
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	First	Second	Third	Fourth
+chr3	120	TestingSamples	G	T	100.0	PASS	AA=T	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr9	120	TestingChrom	C	A	100.0	PASS	AA=C	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr3	250	TestingMultiAlt	A	T,A	100.0	PASS	AA=A	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr3	200000	TestingMaxPos	A	T	100.0	PASS	AA=A	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr3	200001	TestingSubstitution	A	ATT	100.0	PASS	AA=A	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr3	200002	TestingZeroAlleleFrequency	A	T	100.0	PASS	AA=A	GT:DP	1|0:10	0|0:250	0|0:3	0|0:0
+chr3	200003	TestingOneAlleleFrequency	A	T	100.0	PASS	AA=A	GT:DP	1|1:10	0|1:250	1|1:3	1|1:0
