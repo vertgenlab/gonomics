@@ -31,7 +31,7 @@ func TestSeekBamRegion(t *testing.T) {
 	}
 
 	reads = SeekBamRegion(br, bai, "chr9", 0, math.MaxUint32)
-	if len(reads) != 40 {
+	if len(reads) != 12 {
 		t.Error("problem with SeekBamRegion")
 	}
 
