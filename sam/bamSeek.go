@@ -53,6 +53,9 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 		}
 		break // TODO to improve efficiency this break should be removed in favor of tracking the
 		// current file offset in DecodeBam and breaking after passing cEndOffset and uEndOffset.
+		// We are currently only using the first bin to seek reads which works, but is not at optimal
+		// efficiency since we need to read-in more reads than necessary. Tracking the byte offset will
+		// allow us to read from multiple smaller bins which are more focused on the region of interest.
 	}
 	return ans
 }
