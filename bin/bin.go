@@ -10,25 +10,31 @@ import (
 //that smaller contigs get combined into a single fasta, while large contigs become a single fasta on their own. The user
 //must specify the number of bins for the genome to be broken into, the genome must have more contigs than bins in order
 //to combine any contigs and equal number bins to contigs if each contig gets its own record. The bins will all be
-//filled with the first contig encountered when it's empty, and then the smallest of those bins will be filled when the contig is equal to binNum+1.
-func BinGenomeNoBreaks(genome []fasta.Fasta, binNum int) map[int][]fasta.Fasta {
+//filled with the first contig encountered when it's empty, and then the smallest of those bins will be filled when the
+//contig is equal to binNum+1. The minSize option allows for a user to specify a minimum length of sequence to go into
+//each bin and in this case the number of bins returned depends on the minSize and the binNum will be ignored.
+func BinGenomeNoBreaks(genome []fasta.Fasta, binNum int, minSize int) map[int][]fasta.Fasta {
 	bins := make(map[int][]fasta.Fasta, binNum)
-	if len(genome) > binNum {
-		for n := 0; n < binNum; n++ {
-			bins[n] = append(bins[n], genome[n])
-		}
-		bins = fillSmallestBin(bins, genome)
-	} else if len(genome) == binNum {
-		for n := 0; n < binNum; n++ {
-			bins[n] = append(bins[n], genome[n])
-		}
+	if minSize != -1 {
+		bins = binMinSize(genome, minSize)
 	} else {
-		log.Fatal("Number of bins is greater than the number of contigs in the given genome. Reduce bin number.")
+		if len(genome) > binNum {
+			for n := 0; n < binNum; n++ {
+				bins[n] = append(bins[n], genome[n])
+			}
+			bins = fillSmallestBin(bins, genome)
+		} else if len(genome) == binNum {
+			for n := 0; n < binNum; n++ {
+				bins[n] = append(bins[n], genome[n])
+			}
+		} else {
+			log.Fatal("Number of bins is greater than the number of contigs in the given genome. Reduce bin number.")
+		}
 	}
-
 	return bins
 }
 
+//fillSmallestBin fills the bin found by findSmallestBin and adds the next contig to it.
 func fillSmallestBin(bins map[int][]fasta.Fasta, genome []fasta.Fasta) map[int][]fasta.Fasta {
 
 	for i := len(bins); i < len(genome); i++ {
@@ -39,6 +45,7 @@ func fillSmallestBin(bins map[int][]fasta.Fasta, genome []fasta.Fasta) map[int][
 	return bins
 }
 
+//findSmallestBin finds the bin with the least sequence and returns which bin it is so that it can be filled with the next contig.
 func findSmallestBin(bins map[int][]fasta.Fasta) int {
 	var smallest int
 	var sizeSmallest int
@@ -54,6 +61,53 @@ func findSmallestBin(bins map[int][]fasta.Fasta) int {
 		}
 	}
 	return smallest
+}
+
+//binMinSize fills bins to a minimum length of sequence as specified by the user and returns whatever number of bins it may make.
+func binMinSize(genome []fasta.Fasta, min int) map[int][]fasta.Fasta {
+	var bins map[int][]fasta.Fasta
+
+	for i, chr := range genome {
+		if len(chr.Seq) > min {
+			for j := range bins {
+				value, ok := bins[i]
+				if !ok || value == nil {
+					bins[j] = append(bins[j], chr)
+				}
+			}
+		} else {
+			k := findBinBelowMin(bins, min)
+			if k < 0 {
+				for j := range bins {
+					value, ok := bins[i]
+					if !ok || value == nil {
+						bins[j] = append(bins[j], chr)
+					}
+				}
+			} else {
+				bins[k] = append(bins[k], chr)
+			}
+		}
+	}
+
+	return bins
+}
+
+//findBinBelowMin finds the first bin that is filled below the minimum length of sequence and returns which bin it is
+//so that it can be filled with the next contig below the minimum length
+func findBinBelowMin(bins map[int][]fasta.Fasta, min int) int {
+	answer := -1
+
+	for i := range bins {
+		fast, _ := bins[i]
+		for f := range fast {
+			if len(fast[f].Seq) < min {
+				answer = i
+				return answer
+			}
+		}
+	}
+	return answer
 }
 
 //TODO: change all logic below here to break a single chrom into whatever number of bins
