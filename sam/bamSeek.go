@@ -29,6 +29,8 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 		for j = range ref.bins[binIdx].chunks { // check all chunks with each bin
 			uoffset = ref.bins[binIdx].chunks[j].start & 0xFFFF // byte offset into uncompressed data stream
 			coffset = ref.bins[binIdx].chunks[j].start >> 16    // byte offset from start to bgzf block
+			//uEndOffset = ref.bins[binIdx].chunks[j].end & 0xFFFF
+			//cEndOffset = ref.bins[binIdx].chunks[j].end >> 16
 			_, err = br.zr.Seek(int64(coffset), io.SeekStart)
 			exception.PanicOnErr(err)
 			err = br.zr.ReadBlock(br.blk)
@@ -49,6 +51,11 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 				}
 			}
 		}
+		break // TODO to improve efficiency this break should be removed in favor of tracking the
+		// current file offset in DecodeBam and breaking after passing cEndOffset and uEndOffset.
+		// We are currently only using the first bin to seek reads which works, but is not at optimal
+		// efficiency since we need to read-in more reads than necessary. Tracking the byte offset will
+		// allow us to read from multiple smaller bins which are more focused on the region of interest.
 	}
 	return ans
 }
