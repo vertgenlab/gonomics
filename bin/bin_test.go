@@ -69,7 +69,6 @@ func TestBinFasta(t *testing.T) {
 	}
 }
 
-//expectation: 2 bins, min 4, chr1 ACGTACGT, chr2-4, ACGTACGT, name convention will be chr2_0chr3_4chr4_7.fa
 func TestBinGenomeNoBreaks(t *testing.T) {
 	records := fasta.Read(genome2)
 	bins := BinGenomeNoBreaks(records, 2, -1)
