@@ -14,10 +14,12 @@ import (
 //contig is equal to binNum+1. The minSize option allows for a user to specify a minimum length of sequence to go into
 //each bin and in this case the number of bins returned depends on the minSize and the binNum will be ignored.
 func BinGenomeNoBreaks(genome []fasta.Fasta, binNum int, minSize int) map[int][]fasta.Fasta {
-	bins := make(map[int][]fasta.Fasta, binNum)
+	var bins map[int][]fasta.Fasta
+
 	if minSize != -1 {
 		bins = binMinSize(genome, minSize)
 	} else {
+		bins = make(map[int][]fasta.Fasta, binNum)
 		if len(genome) > binNum {
 			for n := 0; n < binNum; n++ {
 				bins[n] = append(bins[n], genome[n])
@@ -58,6 +60,8 @@ func findSmallestBin(bins map[int][]fasta.Fasta) int {
 		if size < sizeSmallest {
 			sizeSmallest = size
 			smallest = i
+		} else if sizeSmallest == 0 {
+			sizeSmallest = size
 		}
 	}
 	return smallest
@@ -65,27 +69,31 @@ func findSmallestBin(bins map[int][]fasta.Fasta) int {
 
 //binMinSize fills bins to a minimum length of sequence as specified by the user and returns whatever number of bins it may make.
 func binMinSize(genome []fasta.Fasta, min int) map[int][]fasta.Fasta {
-	var bins map[int][]fasta.Fasta
+	bins := make(map[int][]fasta.Fasta, len(genome))
 
 	for i, chr := range genome {
-		if len(chr.Seq) > min {
-			for j := range bins {
-				value, ok := bins[i]
-				if !ok || value == nil {
-					bins[j] = append(bins[j], chr)
-				}
-			}
+		if len(bins) == 0 {
+			bins[0] = append(bins[0], chr)
 		} else {
-			k := findBinBelowMin(bins, min)
-			if k < 0 {
+
+			if len(chr.Seq) > min {
 				for j := range bins {
 					value, ok := bins[i]
+
 					if !ok || value == nil {
 						bins[j] = append(bins[j], chr)
 					}
 				}
 			} else {
-				bins[k] = append(bins[k], chr)
+				k := findBinBelowMin(bins, min)
+				if k < 0 {
+					value, _ := bins[len(bins)]
+					if value == nil {
+						bins[len(bins)] = append(bins[len(bins)], chr)
+					}
+				} else {
+					bins[k] = append(bins[k], chr)
+				}
 			}
 		}
 	}
@@ -98,7 +106,7 @@ func binMinSize(genome []fasta.Fasta, min int) map[int][]fasta.Fasta {
 func findBinBelowMin(bins map[int][]fasta.Fasta, min int) int {
 	answer := -1
 
-	for i := range bins {
+	for i := 0; i < len(bins); i++ {
 		fast, _ := bins[i]
 		for f := range fast {
 			if len(fast[f].Seq) < min {
