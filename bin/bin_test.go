@@ -3,27 +3,33 @@ package bin
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 	"testing"
 )
 
 var (
-	genome    = "testdata/testContigs.fa"
-	expBases1 = dna.StringToBases("ACGTA")
-	expBases2 = dna.StringToBases("CGT")
-	expBases3 = dna.StringToBases("AC")
-	expBases4 = dna.StringToBases("GTACG")
-	expBases5 = dna.StringToBases("ACGTA")
-	expBases6 = dna.StringToBases("AC")
-	expBases7 = dna.StringToBases("AC")
-	expNames1 = "chr1"
-	expNames2 = "chr2"
-	expNames3 = "chr3"
-	expNames4 = "chr4"
-	expNames5 = "chr5"
+	genome1     = "testdata/testBreakBinning.fa"
+	expBases1   = dna.StringToBases("ACGTA")
+	expBases2   = dna.StringToBases("CGT")
+	expBases3   = dna.StringToBases("AC")
+	expBases4   = dna.StringToBases("GTACG")
+	expBases5   = dna.StringToBases("ACGTA")
+	expBases6   = dna.StringToBases("AC")
+	expBases7   = dna.StringToBases("AC")
+	expNames1   = "chr1"
+	expNames2   = "chr2"
+	expNames3   = "chr3"
+	expNames4   = "chr4"
+	expNames5   = "chr5"
+	genome2     = "testdata/testContigs.fa"
+	expNoBreak1 = fasta.Fasta{"chr1", dna.StringToBases("ACGTACGT")}
+	expNoBreak2 = fasta.Fasta{"chr2", dna.StringToBases("ACGT")}
+	expNoBreak3 = fasta.Fasta{"chr3", dna.StringToBases("ACG")}
+	expNoBreak4 = fasta.Fasta{"chr4", dna.StringToBases("T")}
 )
 
 func TestBinFasta(t *testing.T) {
-	gen := fasta.Read(genome)
+	gen := fasta.Read(genome1)
 	out := BinFasta(gen, 5)
 
 	for m := range out {
@@ -59,6 +65,37 @@ func TestBinFasta(t *testing.T) {
 			}
 		} else {
 			t.Fatal("Map does not contain expected values")
+		}
+	}
+}
+
+//expectation: 2 bins, min 4, chr1 ACGTACGT, chr2-4, ACGTACGT, name convention will be chr2_0chr3_4chr4_7.fa
+func TestBinGenomeNoBreaks(t *testing.T) {
+	records := fasta.Read(genome2)
+	bins := BinGenomeNoBreaks(records, 2, -1)
+	binsMin := BinGenomeNoBreaks(records, 0, 4)
+
+	log.Print(bins)
+	log.Print(binsMin)
+	if len(bins) != 2 || len(binsMin) != 2 {
+		log.Fatalf("wrong number of bins created. bins: %v, binsMin: %v.", len(bins), len(binsMin))
+	}
+
+	for i := range bins {
+		value, _ := bins[i]
+		minValue, _ := binsMin[i]
+		if i == 0 {
+			if !fasta.IsEqual(value[0], expNoBreak1) || !fasta.IsEqual(minValue[0], expNoBreak1) {
+				log.Fatalf("First fasta in bin: %s %s or first fasta in binsMin: %s %s didn't match expected value: %s %s.", value[0].Name, value[0].Seq, minValue[0].Name, minValue[0].Seq, expNoBreak1.Name, expNoBreak1.Seq)
+			}
+		} else {
+			if !fasta.IsEqual(value[0], expNoBreak2) || !fasta.IsEqual(minValue[0], expNoBreak2) {
+				log.Fatalf("Fasta in bin: %s %s or fasta in binsMin: %s %s didn't match expected value: %s %s.", value[0].Name, value[0].Seq, minValue[0].Name, minValue[0].Seq, expNoBreak2.Name, expNoBreak2.Seq)
+			} else if !fasta.IsEqual(value[1], expNoBreak3) || !fasta.IsEqual(minValue[1], expNoBreak3) {
+				log.Fatalf("Fasta in bin: %s %s or fasta in binsMin: %s %s didn't match expected value: %s %s.", value[1].Name, value[1].Seq, minValue[1].Name, minValue[1].Seq, expNoBreak3.Name, expNoBreak3.Seq)
+			} else if !fasta.IsEqual(value[2], expNoBreak4) || !fasta.IsEqual(minValue[2], expNoBreak4) {
+				log.Fatalf("Fasta in bin: %s %s or fasta in binsMin: %s %s didn't match expected value: %s %s.", value[2].Name, value[2].Seq, minValue[2].Name, minValue[2].Seq, expNoBreak4.Name, expNoBreak4.Seq)
+			}
 		}
 	}
 }
