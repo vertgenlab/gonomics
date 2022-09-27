@@ -43,7 +43,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 3
+	var expectedNumArgs int = 2
 	var minSize *int = flag.Int("minSize", -1, "Minimum number of bases that will be in a returned fasta. Cannot be used with binNum option.")
 	var binNum *int = flag.Int("binNum", 1, "Number of fasta files that will be returned containing all records of input fasta. Cannot be used with minSize option.")
 
