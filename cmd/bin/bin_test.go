@@ -1,23 +1,33 @@
 package main
 
 import (
-	"testing"
-	"os"
 	"log"
+	"os"
+	"testing"
 )
 
 var (
 	genome = "testdata/testGenome.fa"
 )
 
-func TestBinGenome(t *testing.T){
-	binGenome(genome, 0, "testdata", 6)
+func TestBinGenome(t *testing.T) {
+	binGenome(genome, "testdata", 0,6)
 
 	err1 := os.Remove("testdata/chr1.fa")
-	err2 := os.Remove("testdata/_chr2_chr3.fa")
-	err3 := os.Remove("testdata/chr4.fa")
+	err2 := os.Remove("testdata/_chr2_chr3_chr4.fa")
 
-	if err1 != nil || err2 != nil || err3 != nil {
-		log.Panic(err1, err2, err3)
+	if err1 != nil || err2 != nil {
+		log.Panic(err1, err2)
 	}
+
+	binGenome(genome, "testdata",2,  -1)
+
+	err4 := os.Remove("testdata/_chr1_chr4.fa")
+	err5 := os.Remove("testdata/_chr2_chr3.fa")
+
+	if err4 != nil || err5 != nil {
+		log.Panic(err4, err5)
+	}
+
+
 }

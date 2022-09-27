@@ -85,7 +85,9 @@ func binMinSize(genome []fasta.Fasta, min int) map[int][]fasta.Fasta {
 				}
 			} else {
 				k := findBinBelowMin(bins, min)
-				if k < 0 {
+				if k < 0 && i+1 == len(genome) {
+					bins[len(bins)-1] = append(bins[len(bins)-1], chr)
+				} else if k < 0 {
 					value, _ := bins[len(bins)]
 					if value == nil {
 						bins[len(bins)] = append(bins[len(bins)], chr)
