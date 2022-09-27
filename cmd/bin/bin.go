@@ -32,12 +32,12 @@ func binGenome(genome string, path string, binNum int, minSize int) {
 
 func usage() {
 	fmt.Print(
-		"binGenome - takes a descending size ordered fasta and returns a specified number of fastas that are " +
-			"either an entire fasta entry from the input or multiple records from the input. The number of bins " +
-			"specified must be at most equal to the number of entries in the input fasta. " +
-			"faFilter - Returns a filtered fasta based on option parameters.\n" +
+		"binGenome - takes a descending size ordered fasta and returns either a specified number of fastas that are " +
+			"either an entire fasta entry from the input or multiple records from the input (binNum option)" +
+			" or multiple fastas which have a minimum sequence size of specified length (minSize). The number of bins " +
+			"specified must be at most equal to the number of entries in the input fasta. These options cannot be combined.\n" +
 			"Usage:\n" +
-			"faFilter input.fa output.fa\n" +
+			"binGenome <options=int> inFile.fa path\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
