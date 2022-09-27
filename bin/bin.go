@@ -75,7 +75,6 @@ func binMinSize(genome []fasta.Fasta, min int) map[int][]fasta.Fasta {
 		if len(bins) == 0 {
 			bins[0] = append(bins[0], chr)
 		} else {
-
 			if len(chr.Seq) > min {
 				for j := range bins {
 					value, ok := bins[i]
@@ -107,18 +106,22 @@ func findBinBelowMin(bins map[int][]fasta.Fasta, min int) int {
 	answer := -1
 
 	for i := 0; i < len(bins); i++ {
-		fast, _ := bins[i]
-		for f := range fast {
-			if len(fast[f].Seq) < min {
-				answer = i
-				return answer
-			}
+		bases := calcNumBasesInBin(bins[i])
+		if bases < min {
+			answer = i
 		}
 	}
 	return answer
 }
 
-//TODO: change all logic below here to break a single chrom into whatever number of bins
+//calcNumBasesInBin will determine the number of bases that already exist in any given bin
+func calcNumBasesInBin(f []fasta.Fasta) int {
+	totalBases := 0
+	for i := range f {
+		totalBases = totalBases + len(f[i].Seq)
+	}
+	return totalBases
+}
 
 //BinFasta takes in a slice of fastas and breaks it up into x number of fastas with relatively
 //equal sequence in each, where x equals the number of bins specified
@@ -134,9 +137,6 @@ func BinFasta(genome []fasta.Fasta, binNum int) map[int][]fasta.Fasta {
 		totalBases = totalBases + len(genome[c].Seq)
 	}
 
-	//TODO: chance that there's a situation where the final bin with leftOvers is empty or very small, what I have with baseCap,
-	//	or chance that the last bin could be almost double the size of everything else (totalBases/BinNum and remainder goes in last bin)
-	//	could do a check to see if remainder is super large and then handle as necessary
 	equalBinNum = binNum - 1
 	remainder = totalBases % binNum
 	if remainder == 0 {
@@ -200,15 +200,6 @@ func BinFasta(genome []fasta.Fasta, binNum int) map[int][]fasta.Fasta {
 		}
 	}
 	return answer
-}
-
-//calcNumBasesInBin will determine the number of bases that already exist in any given bin
-func calcNumBasesInBin(f []fasta.Fasta) int {
-	totalBases := 0
-	for i := range f {
-		totalBases = totalBases + len(f[i].Seq)
-	}
-	return totalBases
 }
 
 //findLastBinnedName determines the last contig that was handled in the given bin (f)

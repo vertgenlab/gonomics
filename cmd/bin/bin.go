@@ -3,13 +3,11 @@ package main
 import(
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/bin"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
-func binGenome(genome string, binNum int, minSize int){
+func binGenome(genome string, binNum int, path string, minSize int){
 	records := fasta.Read(genome)
 	var bins map[int][]fasta.Fasta
-
 	bins = bin.BinGenomeNoBreaks(records, binNum, minSize)
 
 	for i := range bins {
@@ -24,7 +22,7 @@ func binGenome(genome string, binNum int, minSize int){
 			}
 			thisContig = bins[i]
 		}
-		fasta.Write(name, thisContig)
+		namePath := path + "/" + name + ".fa"
+		fasta.Write(namePath, thisContig)
 	}
-
 }
