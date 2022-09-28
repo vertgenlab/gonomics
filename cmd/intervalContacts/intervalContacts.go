@@ -45,7 +45,7 @@ func usage() {
 	fmt.Print("intervalContacts - Returns all regions that contact input genomic regions. " +
 		"Contacts are specified by an input bedpe file.\n" +
 		"Usage:\n" +
-		"	intervalContacts [options] contacts.bedpe in.interval out.bed")
+		"	intervalContacts [options] contacts.bedpe in.interval out.bed\n\n")
 	flag.PrintDefaults()
 }
 
