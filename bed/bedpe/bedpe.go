@@ -20,6 +20,13 @@ type BedPe struct {
 	B bed.Bed
 }
 
+type BedPeHalf struct {
+	Chrom      string
+	ChromStart int
+	ChromEnd   int
+	Home       *BedPe
+}
+
 // String converts a BedPe struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b BedPe) String() string {
 	return ToString(b, b.A.FieldsInitialized)
@@ -57,7 +64,7 @@ func WriteToFileHandle(file io.Writer, rec BedPe) {
 	exception.PanicOnErr(err)
 }
 
-//Write writes a slice of BedPe structs to a specified filename.
+// Write writes a slice of BedPe structs to a specified filename.
 func Write(filename string, records []BedPe) {
 	var err error
 	file := fileio.EasyCreate(filename)
@@ -84,7 +91,7 @@ func Read(filename string) []BedPe {
 	return answer
 }
 
-//processBedPeLine is a helper function of Read that returns a BedPe struct from an input line of a file.
+// processBedPeLine is a helper function of Read that returns a BedPe struct from an input line of a file.
 func processBedPeLine(line string) BedPe {
 	var startANum, endANum, startBNum, endBNum int
 	words := strings.Split(line, "\t")
@@ -94,18 +101,18 @@ func processBedPeLine(line string) BedPe {
 	endBNum = common.StringToInt(words[5])
 
 	current := BedPe{A: bed.Bed{
-		Chrom: words[0],
-		ChromStart: startANum,
-		ChromEnd: endANum,
-		Strand: bed.None,
+		Chrom:             words[0],
+		ChromStart:        startANum,
+		ChromEnd:          endANum,
+		Strand:            bed.None,
 		FieldsInitialized: len(words),
-		},
+	},
 		B: bed.Bed{
-		Chrom: words[3],
-		ChromStart: startBNum,
-		ChromEnd: endBNum,
-		Strand: bed.None,
-		FieldsInitialized: len(words),
+			Chrom:             words[3],
+			ChromStart:        startBNum,
+			ChromEnd:          endBNum,
+			Strand:            bed.None,
+			FieldsInitialized: len(words),
 		},
 	}
 	if len(words) >= 7 {
@@ -139,7 +146,7 @@ func NextBedPe(reader *fileio.EasyReader) (BedPe, bool) {
 	return processBedPeLine(line), false
 }
 
-//ReadToChan reads from a fileio.EasyReader to send BedPe structs to a chan<- BedPe.
+// ReadToChan reads from a fileio.EasyReader to send BedPe structs to a chan<- BedPe.
 func ReadToChan(file *fileio.EasyReader, data chan<- BedPe, wg *sync.WaitGroup) {
 	for curr, done := NextBedPe(file); !done; curr, done = NextBedPe(file) {
 		data <- curr
@@ -149,7 +156,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- BedPe, wg *sync.WaitGroup) 
 	wg.Done()
 }
 
-//GoReadToChan reads BedPe entries from an input filename to a <-chan BedPe.
+// GoReadToChan reads BedPe entries from an input filename to a <-chan BedPe.
 func GoReadToChan(filename string) <-chan BedPe {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
@@ -163,4 +170,22 @@ func GoReadToChan(filename string) <-chan BedPe {
 	}()
 
 	return data
+}
+
+//SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
+func SplitBedPe(in BedPe) (BedPeHalf, BedPeHalf) {
+	left := BedPeHalf{
+		Chrom:      in.A.Chrom,
+		ChromStart: in.A.ChromStart,
+		ChromEnd:   in.A.ChromEnd,
+		Home:       &in,
+	}
+	right := BedPeHalf{
+		Chrom:      in.B.Chrom,
+		ChromStart: in.B.ChromStart,
+		ChromEnd:   in.B.ChromEnd,
+		Home:       &in,
+	}
+
+	return left, right
 }
