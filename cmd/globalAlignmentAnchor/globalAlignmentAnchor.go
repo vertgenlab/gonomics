@@ -142,12 +142,12 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 			}
 
 			// check species2. TODO: remove after debugging
-			fmt.Printf("assembly_species2: %v, chrom_species2: %v", assembly_species2, chrom_species2)
+			fmt.Printf("assembly_species2: %v, chrom_species2: %v\n", assembly_species2, chrom_species2)
 
 			// get s lines
 			if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
 
-				fmt.Printf("species 2 matched. got s line") // TODO: remove after debugging
+				fmt.Printf("species 2 matched. got s line\n") // TODO: remove after debugging
 
 				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
@@ -158,10 +158,11 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 					bed.WriteBed(out_species1, bed_species1)
 					bed.WriteBed(out_species2, bed_species2)
 				}
-				fmt.Printf("pass? %v", pass) //TODO: remove after debugging
+				fmt.Printf("pass? %v\n", pass) //TODO: remove after debugging
 			}
-			fmt.Printf("end of k loop. k: %v", k) //TODO: remove after debugging
+			fmt.Printf("end of k loop. k: %v\n", k) //TODO: remove after debugging
 		}
+		fmt.Printf("ks have finished looping. will advance i. current i: %v\n", i) //TODO: remove after debugging
 	}
 
 	// close output files and check for errors
