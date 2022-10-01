@@ -141,8 +141,13 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 				log.Fatalf("species1 was incorrect. Please check that you have a pairwise maf file, and entered species1 and species2 correctly")
 			}
 
+			// check species2. TODO: remove after debugging
+			fmt.Printf("assembly_species2: %v, chrom_species2: %v", assembly_species2, chrom_species2)
+
 			// get s lines
 			if mafRecords[i].Species[k].SLine != nil && assembly_species2 == species2 && mafRecords[i].Species[0].SLine != nil {
+
+				fmt.Printf("species 2 matched. got s line") // TODO: remove after debugging
 
 				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
@@ -153,7 +158,9 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 					bed.WriteBed(out_species1, bed_species1)
 					bed.WriteBed(out_species2, bed_species2)
 				}
+				fmt.Printf("pass? %v", pass) //TODO: remove after debugging
 			}
+			fmt.Printf("end of k loop. k: %v", k) //TODO: remove after debugging
 		}
 	}
 
