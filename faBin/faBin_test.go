@@ -1,4 +1,4 @@
-package bin
+package faBin
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
