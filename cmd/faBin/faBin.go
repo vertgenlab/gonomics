@@ -4,7 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"path/filepath"
+	"strings"
 )
 
 func faBin(genome string, path string, binNum int, minSize int) {
@@ -18,10 +21,10 @@ func faBin(genome string, path string, binNum int, minSize int) {
 		if len(bins[i]) == 1 {
 			name = bins[i][0].Name
 			thisContig = bins[i]
-		} else { //file name = first_second_...
-			for j := range bins[i] {
-				name = name + "_" + bins[i][j].Name
-			}
+		} else { //file name = genomeName.binNum.fa
+			_, assemblyFile := filepath.Split(genome)
+			assembly := strings.TrimSuffix(assemblyFile, ".fa")
+			name = assembly + ".bin" + fileio.IntToString(i)
 			thisContig = bins[i]
 		}
 		namePath := path + "/" + name + ".fa"
