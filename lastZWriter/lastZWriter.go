@@ -72,7 +72,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 		words = strings.Split(line, "\t")
 		if words[0] == reference && words[1] == species || words[0] == species && words[1] == reference {
 			if words[2] == "close" {
-				answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
+				answer = append(answer, "O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 				if m {
 					trix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 				} else {
@@ -81,7 +81,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = 1
 				done = true
 			} else if words[2] == "far" {
-				answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
+				answer = append(answer, "O=400", "E=30", "H=2000", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 				if m {
 					trix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 				} else {
@@ -90,7 +90,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = 3
 				done = true
 			} else if words[2] == "default" {
-				answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
+				answer = append(answer, "O=400", "E=30", "H=2000", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 				if m {
 					trix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 				} else {
@@ -102,7 +102,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = common.StringToFloat64(words[2])
 				switch {
 				case dist <= 0.2: //closest
-					answer = append(answer, "O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
+					answer = append(answer, "O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")
 					if m {
 						trix = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 					} else {
@@ -110,7 +110,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					}
 					done = true
 				case dist >= 0.7: //farthest
-					answer = append(answer, "O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
+					answer = append(answer, "O=400", "E=30", "H=2000", "T=1", "M=50", "K=2200", "L=6000", "Y=3400")
 					if m {
 						trix = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
 					} else {
@@ -118,7 +118,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 					}
 					done = true
 				default: //executive decision to set M to 254
-					answer = append(answer, "O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
+					answer = append(answer, "O=400", "E=30", "H=2000", "T=1", "M=254", "K=3000", "L=3000", "Y=9400")
 					if m {
 						trix = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 					} else {

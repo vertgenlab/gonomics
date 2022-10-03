@@ -8,9 +8,9 @@ import (
 	"testing"
 )
 
-var parClose = []string{"O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}
-var parDefault = []string{"O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400"}
-var parFar = []string{"O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400"}
+var parClose = []string{"O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}
+var parDefault = []string{"O=400", "E=30", "H=2000", "T=1", "M=254", "K=3000", "L=3000", "Y=9400"}
+var parFar = []string{"O=400", "E=30", "H=2000", "T=1", "M=50", "K=2200", "L=6000", "Y=3400"}
 var mClose = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 var mDefault = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 var mFar = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"

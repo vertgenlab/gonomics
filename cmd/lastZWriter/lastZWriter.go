@@ -37,7 +37,7 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 
 func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, allLines []string) (lines []string) {
 	var currLines []string
-	par := fmt.Sprintf("%s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6])
+	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
 
 	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
 	allLines = append(allLines, currLines...)
