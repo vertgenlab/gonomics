@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bin"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
@@ -11,7 +10,7 @@ import (
 func binGenome(genome string, path string, binNum int, minSize int) {
 	records := fasta.Read(genome)
 	var bins map[int][]fasta.Fasta
-	bins = bin.BinGenomeNoBreaks(records, binNum, minSize)
+	bins = faBin.BinGenomeNoBreaks(records, binNum, minSize)
 
 	for i := range bins {
 		var name string
@@ -32,12 +31,12 @@ func binGenome(genome string, path string, binNum int, minSize int) {
 
 func usage() {
 	fmt.Print(
-		"binGenome - takes a descending size ordered fasta and returns either a specified number of fastas that are " +
+		"faBin - takes a descending size ordered fasta and returns either a specified number of fastas that are " +
 			"either an entire fasta entry from the input or multiple records from the input (binNum option)" +
 			" or multiple fastas which have a minimum sequence size of specified length (minSize). The number of bins " +
 			"specified must be at most equal to the number of entries in the input fasta. These options cannot be combined.\n" +
 			"Usage:\n" +
-			"binGenome <options=int> inFile.fa path\n" +
+			"faBin <options=int> inFile.fa path\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
