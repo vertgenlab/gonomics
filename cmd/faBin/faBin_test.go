@@ -11,7 +11,7 @@ var (
 )
 
 func TestBinGenome(t *testing.T) {
-	binGenome(genome, "testdata", 0, 6)
+	faBin(genome, "testdata", 0, 6)
 
 	err1 := os.Remove("testdata/chr1.fa")
 	err2 := os.Remove("testdata/_chr2_chr3_chr4.fa")
@@ -20,7 +20,7 @@ func TestBinGenome(t *testing.T) {
 		log.Panic(err1, err2)
 	}
 
-	binGenome(genome, "testdata", 2, -1)
+	faBin(genome, "testdata", 2, -1)
 
 	err4 := os.Remove("testdata/_chr1_chr4.fa")
 	err5 := os.Remove("testdata/_chr2_chr3.fa")

@@ -7,10 +7,10 @@ import (
 	"log"
 )
 
-func binGenome(genome string, path string, binNum int, minSize int) {
+func faBin(genome string, path string, binNum int, minSize int) {
 	records := fasta.Read(genome)
 	var bins map[int][]fasta.Fasta
-	bins = faBin.BinGenomeNoBreaks(records, binNum, minSize)
+	bins = fasta.BinGenomeNoBreaks(records, binNum, minSize)
 
 	for i := range bins {
 		var name string
@@ -59,5 +59,5 @@ func main() {
 	inFile := flag.Arg(0)
 	path := flag.Arg(1)
 
-	binGenome(inFile, path, *binNum, *minSize)
+	faBin(inFile, path, *binNum, *minSize)
 }
