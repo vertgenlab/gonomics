@@ -15,6 +15,8 @@ func faBin(genome string, path string, binNum int, minSize int, assemblyName str
 	var bins map[int][]fasta.Fasta
 	bins = fasta.BinGenomeNoBreaks(records, binNum, minSize)
 
+	log.Print(minSize)
+
 	for i := range bins {
 		var name string
 		var thisContig []fasta.Fasta
