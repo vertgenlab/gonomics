@@ -16,10 +16,6 @@ func faBin(genome string, path string, binNum int, minSize int, assemblyName str
 	bins = fasta.BinGenomeNoBreaks(records, binNum, minSize)
 
 	for i := 0; i < len(bins); i++ {
-
-		log.Printf("bin %d:", i)
-		log.Print(bins[i][0].Name)
-
 		var name string
 		var thisContig []fasta.Fasta
 		if len(bins[i]) == 0 {
