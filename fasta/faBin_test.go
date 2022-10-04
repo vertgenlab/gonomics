@@ -72,7 +72,6 @@ func TestBinGenomeNoBreaks(t *testing.T) {
 	records := Read(genome2)
 	bins := BinGenomeNoBreaks(records, 2, -1)
 	binsMin := BinGenomeNoBreaks(records, 0, 8)
-
 	if len(bins) != 2 || len(binsMin) != 2 {
 		log.Fatalf("wrong number of bins created. bins: %v, binsMin: %v.", len(bins), len(binsMin))
 	}

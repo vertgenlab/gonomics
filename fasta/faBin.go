@@ -50,7 +50,7 @@ func fillSmallestBin(bins map[int][]Fasta, genome []Fasta) map[int][]Fasta {
 func findSmallestBin(bins map[int][]Fasta) int {
 	var smallest int
 	var sizeSmallest int
-	for i := range bins {
+	for i := 0; i < len(bins); i++ {
 		rec, exists := bins[i]
 		if !exists {
 			log.Panic("Map was not filled properly in BinGenomeNoBreaks.")
