@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func faBin(genome string, path string, binNum int, minSize int) {
+func faBin(genome string, path string, binNum int, minSize int, assemblyName string) {
 	records := fasta.Read(genome)
 	var bins map[int][]fasta.Fasta
 	bins = fasta.BinGenomeNoBreaks(records, binNum, minSize)
@@ -24,7 +24,11 @@ func faBin(genome string, path string, binNum int, minSize int) {
 		} else { //file name = genomeName.binNum.fa
 			_, assemblyFile := filepath.Split(genome)
 			assembly := strings.TrimSuffix(assemblyFile, ".fa")
-			name = assembly + ".bin" + fileio.IntToString(i)
+			if assembly == "stdin" {
+				name = assemblyName + ".bin" + fileio.IntToString(i)
+			} else {
+				name = assembly + ".bin" + fileio.IntToString(i)
+			}
 			thisContig = bins[i]
 		}
 		namePath := path + "/" + name + ".fa"
@@ -48,6 +52,7 @@ func main() {
 	var expectedNumArgs int = 2
 	var minSize *int = flag.Int("minSize", -1, "Minimum number of bases that will be in a returned fasta. Cannot be used with binNum option.")
 	var binNum *int = flag.Int("binNum", 1, "Number of fasta files that will be returned containing all records of input fasta. Cannot be used with minSize option.")
+	var assembly *string = flag.String("assembly", "", "use this option with either binNum or minSize if your input will be through standard in so that the binned files will be named for the assembly used.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -62,5 +67,5 @@ func main() {
 	inFile := flag.Arg(0)
 	path := flag.Arg(1)
 
-	faBin(inFile, path, *binNum, *minSize)
+	faBin(inFile, path, *binNum, *minSize, *assembly)
 }
