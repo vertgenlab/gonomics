@@ -116,6 +116,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
+	fmt.Printf("out_species1_filename: %s, out_species2_filename: %s\n", out_species1_filename, out_species2_filename)
 	var err error
 
 	// initialize variables before loop
@@ -172,6 +173,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	exception.PanicOnErr(err)
 	err = out_species2.Close()
 	exception.PanicOnErr(err)
+	fmt.Printf("I closed all the files") //TODO: remove after debugging
 
 	// return output filenames
 	return out_species1_filename, out_species2_filename
