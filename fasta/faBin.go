@@ -70,29 +70,29 @@ func findSmallestBin(bins map[int][]Fasta) int {
 func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 	bins := make(map[int][]Fasta, len(genome))
 
-	for i, chr := range genome {
+	for i := range genome {
 		if len(bins) == 0 {
-			bins[0] = append(bins[0], chr)
+			bins[0] = append(bins[0], genome[i])
 		} else {
-			if len(chr.Seq) > min {
+			if len(genome[i].Seq) > min {
 				for j := range bins {
 					value, ok := bins[i]
 
 					if !ok || value == nil {
-						bins[j] = append(bins[j], chr)
+						bins[j] = append(bins[j], genome[i])
 					}
 				}
 			} else {
 				k := findBinBelowMin(bins, min)
 				if k < 0 && i+1 == len(genome) {
-					bins[len(bins)-1] = append(bins[len(bins)-1], chr)
+					bins[len(bins)-1] = append(bins[len(bins)-1], genome[i])
 				} else if k < 0 {
 					value, _ := bins[len(bins)]
 					if value == nil {
-						bins[len(bins)] = append(bins[len(bins)], chr)
+						bins[len(bins)] = append(bins[len(bins)], genome[i])
 					}
 				} else {
-					bins[k] = append(bins[k], chr)
+					bins[k] = append(bins[k], genome[i])
 				}
 			}
 		}
