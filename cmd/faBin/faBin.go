@@ -15,10 +15,12 @@ func faBin(genome string, path string, binNum int, minSize int, assemblyName str
 	var bins map[int][]fasta.Fasta
 	bins = fasta.BinGenomeNoBreaks(records, binNum, minSize)
 
-	for i := range bins {
+	for i := 0; i < len(bins); i++ {
 		var name string
 		var thisContig []fasta.Fasta
-		if len(bins[i]) == 1 {
+		if len(bins[i]) == 0 {
+			continue
+		} else if len(bins[i]) == 1 {
 			name = bins[i][0].Name
 			thisContig = bins[i]
 		} else { //file name = genomeName.binNum.fa
