@@ -68,6 +68,7 @@ func findSmallestBin(bins map[int][]Fasta) int {
 
 //binMinSize fills bins to a minimum length of sequence as specified by the user and returns whatever number of bins it may make.
 func binMinSize(genome []Fasta, min int) map[int][]Fasta {
+	var length int
 	bins := make(map[int][]Fasta, len(genome))
 
 	for i := range genome {
@@ -80,8 +81,8 @@ func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 			if len(genome[i].Seq) > min {
 
 				log.Print(genome[i].Name)
-
-				for j := len(bins); j < len(bins)+1; j++ {
+				length = len(bins)
+				for j := len(bins); j < length+1; j++ {
 					value, ok := bins[j]
 					if !ok || value == nil {
 						bins[j] = append(bins[j], genome[i])
