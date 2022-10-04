@@ -73,11 +73,10 @@ func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 	for i := range genome {
 		if len(bins) == 0 {
 			bins[0] = append(bins[0], genome[i])
-		} else {
+		} else if len(bins) > 0 {
 			if len(genome[i].Seq) > min {
 				for j := range bins {
-					value, ok := bins[i]
-
+					value, ok := bins[j]
 					if !ok || value == nil {
 						bins[j] = append(bins[j], genome[i])
 					}
