@@ -81,7 +81,7 @@ func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 
 				log.Print(genome[i].Name)
 
-				for j := range bins {
+				for j := 0; j < len(bins); j++ {
 					value, ok := bins[j]
 					if !ok || value == nil {
 						bins[j] = append(bins[j], genome[i])
