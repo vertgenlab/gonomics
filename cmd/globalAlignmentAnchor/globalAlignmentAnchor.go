@@ -35,11 +35,13 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 	}
 
 	// maf entry should be roughly diagonal
+	/* TODO: uncomment after debugging
 	if (float64(species2_ChromStart) <= float64(species1_ChromStart)-0.05*float64(species1_SrcSize)) || (float64(species2_ChromStart) >= float64(species1_ChromStart)+0.05*float64(species1_SrcSize)) {
 		pass = false
 	} else if (float64(species1_ChromStart) <= float64(species2_ChromStart)-0.05*float64(species2_SrcSize)) || (float64(species1_ChromStart) >= float64(species2_ChromStart)+0.05*float64(species2_SrcSize)) {
 		pass = false
 	}
+	*/
 
 	return pass
 }
@@ -116,7 +118,6 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	out_maf := fileio.EasyCreate(out_maf_filename)
 	out_species1 := fileio.EasyCreate(out_species1_filename)
 	out_species2 := fileio.EasyCreate(out_species2_filename)
-	fmt.Printf("out_species1_filename: %s, out_species2_filename: %s\n", out_species1_filename, out_species2_filename)
 	var err error
 
 	// initialize variables before loop
@@ -173,7 +174,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	exception.PanicOnErr(err)
 	err = out_species2.Close()
 	exception.PanicOnErr(err)
-	fmt.Printf("I closed all the files") //TODO: remove after debugging
+	fmt.Printf("I closed all the files\n") //TODO: remove after debugging
 
 	// return output filenames
 	return out_species1_filename, out_species2_filename
