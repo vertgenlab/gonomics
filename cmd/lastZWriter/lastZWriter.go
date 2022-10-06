@@ -67,7 +67,7 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --format=axt " + par
+			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}

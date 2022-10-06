@@ -30,6 +30,10 @@ var parentDirs = []string{
 	"testdata/refer2.refer1", "testdata/refer2.name1", "testdata/refer2.name2",
 }
 
+var matrices = []string{
+	"testdata/default.mat", "testdata/hoxD55.mat", "testdata/human_chimp_v2.mat",
+}
+
 func TestAlignSetUp(t *testing.T) {
 	pairDir := "testdata"
 	m := true
@@ -86,7 +90,7 @@ func TestAlignSetUp(t *testing.T) {
 			t.Fatalf("Expected path check returned error %e", e)
 		}
 	}
-	removeDirectories()
+	removeThings()
 }
 
 func TestAlignSetUp2(t *testing.T) {
@@ -148,11 +152,16 @@ func TestAlignSetUp2(t *testing.T) {
 			t.Fatalf("Expected path check returned error %e", e)
 		}
 	}
-	removeDirectories()
+	removeThings()
 }
 
-func removeDirectories() {
+func removeThings() {
 	for r := range parentDirs {
 		os.RemoveAll(parentDirs[r])
 	}
+
+	for m := range matrices {
+		os.RemoveAll(matrices[m])
+	}
+
 }
