@@ -8,9 +8,9 @@ import (
 	"testing"
 )
 
-var parClose = []string{"O=600", "E=150", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}
-var parDefault = []string{"O=400", "E=30", "T=1", "M=254", "K=3000", "L=3000", "Y=9400"}
-var parFar = []string{"O=400", "E=30", "T=1", "M=50", "K=2200", "L=6000", "Y=3400"}
+var parClose = []string{"O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}
+var parDefault = []string{"O=400", "E=30", "H=2000", "T=1", "M=254", "K=3000", "L=3000", "Y=9400"}
+var parFar = []string{"O=400", "E=30", "H=2000", "T=1", "M=50", "K=2200", "L=6000", "Y=3400"}
 var mClose = "/hpc/group/vertgenlab/alignmentSupportFiles/human_chimp_v2.mat"
 var mDefault = "/hpc/group/vertgenlab/alignmentSupportFiles/default.mat"
 var mFar = "/hpc/group/vertgenlab/alignmentSupportFiles/hoxD55.mat"
@@ -28,6 +28,10 @@ var expectedPaths = []string{
 var parentDirs = []string{
 	"testdata/refer1.refer2", "testdata/refer1.name1", "testdata/refer1.name2",
 	"testdata/refer2.refer1", "testdata/refer2.name1", "testdata/refer2.name2",
+}
+
+var matrices = []string{
+	"testdata/default.mat", "testdata/hoxD55.mat", "testdata/human_chimp_v2.mat",
 }
 
 func TestAlignSetUp(t *testing.T) {
@@ -86,7 +90,7 @@ func TestAlignSetUp(t *testing.T) {
 			t.Fatalf("Expected path check returned error %e", e)
 		}
 	}
-	removeDirectories()
+	removeThings()
 }
 
 func TestAlignSetUp2(t *testing.T) {
@@ -148,11 +152,16 @@ func TestAlignSetUp2(t *testing.T) {
 			t.Fatalf("Expected path check returned error %e", e)
 		}
 	}
-	removeDirectories()
+	removeThings()
 }
 
-func removeDirectories() {
+func removeThings() {
 	for r := range parentDirs {
 		os.RemoveAll(parentDirs[r])
 	}
+
+	for m := range matrices {
+		os.RemoveAll(matrices[m])
+	}
+
 }

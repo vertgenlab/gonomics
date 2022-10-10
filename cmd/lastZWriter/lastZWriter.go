@@ -25,6 +25,9 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
 				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
+				if parameters == nil || matrix == "" {
+					log.Fatalf("Reference %s and species %s returned no parameters or matrix.", refList[ref], speciesList[spec])
+				}
 				allLines = writeFile(lastZ, pairwise, refList[ref], speciesList[spec], parameters, matrix, allLines)
 			}
 		}
@@ -34,7 +37,7 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 
 func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, allLines []string) (lines []string) {
 	var currLines []string
-	par := fmt.Sprintf("%s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6])
+	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
 
 	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
 	allLines = append(allLines, currLines...)
@@ -64,7 +67,7 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --format=axt " + par
+			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}
