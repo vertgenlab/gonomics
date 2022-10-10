@@ -68,12 +68,15 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 		}
 	}
 
+	// comment out diagonal again. TODO: remove after debugging
+	/*
 	// maf entry should be roughly diagonal
 	if (float64(species2_ChromStart) <= float64(species1_ChromStart)-0.05*float64(species1_SrcSize)) || (float64(species2_ChromStart) >= float64(species1_ChromStart)+0.05*float64(species1_SrcSize)) {
 		pass = false
 	} else if (float64(species1_ChromStart) <= float64(species2_ChromStart)-0.05*float64(species2_SrcSize)) || (float64(species1_ChromStart) >= float64(species2_ChromStart)+0.05*float64(species2_SrcSize)) {
 		pass = false
 	}
+	*/
 
 	return pass
 }
