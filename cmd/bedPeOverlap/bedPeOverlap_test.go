@@ -8,13 +8,13 @@ import (
 )
 
 var BedPeOverlapTests = []struct {
-	selectFile  string
+	selectFile   string
 	inBedPe      string
 	outBedPe     string
-	bedSelect bool
+	bedSelect    bool
 	expectedFile string
 }{
-	{"testdata/selectBedPe.bedpe", "testdata/inBedPe.bedpe", "testdata/tmp.bedpe", false,"testdata/expected.bedpe"},
+	{"testdata/selectBedPe.bedpe", "testdata/inBedPe.bedpe", "testdata/tmp.bedpe", false, "testdata/expected.bedpe"},
 	{"testdata/select.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelect.bedpe", true, "testdata/expected.bedSelect.bedpe"},
 }
 
