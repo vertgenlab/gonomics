@@ -102,7 +102,7 @@ func usage() {
 }
 
 func main() {
-	var bedSelect *bool = flag.Bool("bedInput", false, "Set select file to be a BED file instead of a bedpe.")
+	var bedSelect *bool = flag.Bool("bedSelect", false, "Set select file to be a BED file instead of a bedpe.")
 
 	var expectedNumArgs int = 3
 	flag.Usage = usage
