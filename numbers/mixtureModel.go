@@ -1,23 +1,23 @@
 package numbers
 
 import (
-	"fmt"
 	"math"
+	"math/rand"
 )
 
 const logProbEpsilon = 1e-08
 
 type MixtureModel struct {
-	Data              []float64 // 1d data slice
-	K                 int       // number of component distributions
-	Means             []float64 // means for each component. len(means) == k
-	Stdev             []float64 // variances for each component. len(stdev) == k
-	Weights           []float64
-	MaxIter           int         // maximum number of iterations for EM step. 0 is until convergence
-	NLogLikelihood    float64     // negative likelihood to be minimized
-	responsibility    [][]float64 // first index is component, second index is data point
-	responsibilitySum []float64   // sum of responsibilities above. len(responsibilitySum) == k
-	posteriors        [][]float64
+	Data           []float64 // 1d data slice
+	K              int       // number of component distributions
+	Means          []float64 // means for each component. len(means) == k
+	Stdev          []float64 // variances for each component. len(stdev) == k
+	Weights        []float64
+	MaxIter        int         // maximum number of iterations for EM step. 0 is until convergence
+	NLogLikelihood float64     // negative likelihood to be minimized
+	responsibility [][]float64 // first index is component, second index is data point
+	posteriorsSum  []float64   // sum of responsibilities above. len(posteriorsSum) == k
+	posteriors     [][]float64
 
 	lamSigRatio    []float64
 	logLamSigRatio []float64
@@ -59,12 +59,12 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 	}
 
 	// TODO smarter initial guess for mean and variance (k-means/PCA)
-	mm.Means[0] = 0
-	mm.Means[1] = 1000
 	for i := range mm.Means {
-		//mm.Means[i] = rand.Float64() * 100
+		mm.Means[i] = rand.Float64() * 100
 		mm.Stdev[i] = 10
 	}
+	//mm.Means[0] = 31
+	//mm.Means[1] = 54
 
 	if cap(mm.responsibility) >= k {
 		mm.responsibility = mm.responsibility[0:k]
@@ -84,10 +84,10 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 		}
 	}
 
-	if cap(mm.responsibilitySum) >= k {
-		mm.responsibilitySum = mm.responsibilitySum[0:k]
+	if cap(mm.posteriorsSum) >= k {
+		mm.posteriorsSum = mm.posteriorsSum[0:k]
 	} else {
-		mm.responsibilitySum = make([]float64, k)
+		mm.posteriorsSum = make([]float64, k)
 	}
 
 	if cap(mm.Weights) >= k {
@@ -111,89 +111,20 @@ func RunMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel)
 		// E step
 		prevLogLikelihood = mm.NLogLikelihood
 		expectation(mm)
-		if iter > 1 && mm.NLogLikelihood-prevLogLikelihood < logProbEpsilon {
+		if iter > 2 && mm.NLogLikelihood-prevLogLikelihood < logProbEpsilon {
 			converged = true
-			fmt.Println("Converged on iteration:", iter)
+			//fmt.Println("Converged on iteration:", iter)
 		}
-		/*
-			var model float64
-			for i := range mm.Data {
-				var totalProb float64
-				for j := 0; j < mm.K; j++ {
-					var prob float64
-					prob = mm.Weights[j] * calculate1dProb(mm.Data[i], mm.Means[j], mm.Stdev[j])
-					totalProb += prob
-					mm.responsibility[j][i] = prob
-				}
-
-				if totalProb > 0 { // normalize responsibilities for each datapoint
-					for j := 0; j < mm.K; j++ {
-						mm.responsibility[j][i] /= totalProb
-					}
-				}
-				model -= math.Log(totalProb)
-			}
-
-			// Check that model negative log likelihood is decreasing
-			// (negative log likelihood is guaranteed to be non-increasing).
-			// If the current value does not differ from the previous,
-			// the algorithm has converged (possibly to a local minimum).
-			if mm.NLogLikelihood-model < logProbEpsilon {
-				converged = true
-				fmt.Println("Converged on iteration:", iter)
-			}
-			mm.NLogLikelihood = model
-		*/
 
 		// M step
 		// sum responsibilities of each data point to each component
-		resetResSum(mm)
-		for i := range mm.Data {
-			for j := 0; j < mm.K; j++ {
-				mm.responsibilitySum[j] += mm.responsibility[j][i]
-			}
-		}
-
-		// normalize weights to 0-1
-		for j := 0; j < mm.K; j++ {
-			mm.Weights[j] = mm.responsibilitySum[j] / float64(len(mm.Data))
-		}
-
-		for j := 0; j < mm.K; j++ {
-			mm.Means[j] = 0 // we will calculate a new one
-			for i := range mm.Data {
-				mm.Means[j] += mm.responsibility[j][i] * mm.Data[i]
-			}
-
-			if mm.responsibilitySum[j] > 0 {
-				mm.Means[j] /= mm.responsibilitySum[j]
-			}
-
-			for i := range mm.Data {
-				var diff float64
-				diff = mm.Data[i] - mm.Means[j]
-				mm.Stdev[j] += mm.responsibility[j][i] * diff * diff
-			}
-
-			if mm.responsibilitySum[j] > 0 {
-				mm.Stdev[j] /= mm.responsibilitySum[j]
-			}
-
-			mm.Stdev[j] = math.Sqrt(mm.Stdev[j])
-		}
+		maximization(mm)
 	}
 }
 
-//func calculate1dProb(val, mean, std float64) float64 {
-//	var frac, power float64
-//	frac = 1 / (std * math.Sqrt(2*math.Pi))
-//	power = -0.5 * math.Pow((val-mean)/std, 2)
-//	return frac * math.Exp(power)
-//}
-
 func resetResSum(mm *MixtureModel) {
-	for i := range mm.responsibilitySum {
-		mm.responsibilitySum[i] = 0
+	for i := range mm.posteriorsSum {
+		mm.posteriorsSum[i] = 0
 	}
 }
 
@@ -246,4 +177,103 @@ func expectation(mm *MixtureModel) {
 		/* Finally, adjust the loglikelihood correctly */
 		mm.NLogLikelihood += math.Log(rowsum) - min + mm.logLamSigRatio[minj]
 	}
+}
+
+func maximization(mm *MixtureModel) {
+	resetResSum(mm)
+	for i := range mm.Data {
+		for j := 0; j < mm.K; j++ {
+			mm.posteriorsSum[j] += mm.posteriors[j][i]
+		}
+	}
+
+	// normalize weights to 0-1
+	for j := 0; j < mm.K; j++ {
+		mm.Weights[j] = mm.posteriorsSum[j] / float64(len(mm.Data))
+	}
+
+	for j := 0; j < mm.K; j++ {
+		mm.Means[j] = 0
+		for i := range mm.Data {
+			mm.Means[j] += mm.posteriors[j][i] * mm.Data[i]
+		}
+
+		if mm.posteriorsSum[j] > 0 {
+			mm.Means[j] /= mm.posteriorsSum[j]
+		}
+
+		for i := range mm.Data {
+			mm.Stdev[j] += mm.posteriors[j][i] * mm.responsibility[j][i]
+		}
+
+		if mm.posteriorsSum[j] > 0 {
+			mm.Stdev[j] /= mm.posteriorsSum[j]
+		}
+
+		mm.Stdev[j] = math.Sqrt(mm.Stdev[j])
+	}
+}
+
+func oldExpectation(mm *MixtureModel) {
+	var model float64
+	for i := range mm.Data {
+		var totalProb float64
+		for j := 0; j < mm.K; j++ {
+			var prob float64
+			prob = mm.Weights[j] * calculate1dProb(mm.Data[i], mm.Means[j], mm.Stdev[j])
+			totalProb += prob
+			mm.responsibility[j][i] = prob
+		}
+
+		if totalProb > 0 { // normalize responsibilities for each datapoint
+			for j := 0; j < mm.K; j++ {
+				mm.responsibility[j][i] /= totalProb
+			}
+		}
+		model -= math.Log(totalProb)
+	}
+}
+
+func oldMaximization(mm *MixtureModel) {
+	resetResSum(mm)
+	for i := range mm.Data {
+		for j := 0; j < mm.K; j++ {
+			mm.posteriorsSum[j] += mm.responsibility[j][i]
+		}
+	}
+
+	// normalize weights to 0-1
+	for j := 0; j < mm.K; j++ {
+		mm.Weights[j] = mm.posteriorsSum[j] / float64(len(mm.Data))
+	}
+
+	for j := 0; j < mm.K; j++ {
+		mm.Means[j] = 0 // we will calculate a new one
+		for i := range mm.Data {
+			mm.Means[j] += mm.responsibility[j][i] * mm.Data[i]
+		}
+
+		if mm.posteriorsSum[j] > 0 {
+			mm.Means[j] /= mm.posteriorsSum[j]
+		}
+
+		for i := range mm.Data {
+			var diff float64
+			diff = mm.Data[i] - mm.Means[j]
+			mm.Stdev[j] += mm.responsibility[j][i] * diff * diff
+		}
+
+		if mm.posteriorsSum[j] > 0 {
+			mm.Stdev[j] /= mm.posteriorsSum[j]
+		}
+
+		mm.Stdev[j] = math.Sqrt(mm.Stdev[j])
+	}
+}
+
+func calculate1dProb(val, mean, std float64) float64 {
+	var frac, power float64
+	frac = 1 / (std * math.Sqrt(2*math.Pi))
+	power = -0.5 * math.Pow((val-mean)/std, 2)
+	return frac * math.Exp(power)
 }
