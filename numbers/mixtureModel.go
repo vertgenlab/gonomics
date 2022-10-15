@@ -14,7 +14,7 @@ type MixtureModel struct {
 	Stdev          []float64 // variances for each component. len(stdev) == k
 	Weights        []float64
 	MaxIter        int         // maximum number of iterations for EM step. 0 is until convergence
-	NLogLikelihood float64     // negative likelihood to be minimized
+	LogLikelihood  float64     // negative likelihood to be minimized
 	responsibility [][]float64 // first index is component, second index is data point
 	posteriorsSum  []float64   // sum of responsibilities above. len(posteriorsSum) == k
 	posteriors     [][]float64
@@ -31,7 +31,7 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 	mm.MaxIter = maxIterations
 	mm.Data = data
 	mm.K = k
-	mm.NLogLikelihood = math.MaxFloat64
+	mm.LogLikelihood = math.MaxFloat64
 	if cap(mm.Means) >= k {
 		mm.Means = mm.Means[0:k]
 	} else {
@@ -63,8 +63,8 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 		mm.Means[i] = rand.Float64() * 100
 		mm.Stdev[i] = 10
 	}
-	//mm.Means[0] = 31
-	//mm.Means[1] = 54
+	mm.Means[0] = 0
+	mm.Means[1] = 100
 
 	if cap(mm.responsibility) >= k {
 		mm.responsibility = mm.responsibility[0:k]
@@ -109,9 +109,10 @@ func RunMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel)
 	for iter := 0; !converged && iter < mm.MaxIter; iter++ {
 
 		// E step
-		prevLogLikelihood = mm.NLogLikelihood
+		prevLogLikelihood = mm.LogLikelihood
 		expectation(mm)
-		if iter > 2 && mm.NLogLikelihood-prevLogLikelihood < logProbEpsilon {
+		//fmt.Println(mm.Means, mm.LogLikelihood, mm.Stdev)
+		if iter > 2 && mm.LogLikelihood-prevLogLikelihood < logProbEpsilon {
 			converged = true
 			//fmt.Println("Converged on iteration:", iter)
 		}
@@ -132,7 +133,7 @@ func resetResSum(mm *MixtureModel) {
 func expectation(mm *MixtureModel) {
 	var r, x, min, rowsum float64
 	var i, j, minj int
-	mm.NLogLikelihood = -float64(len(mm.Data)/2) * 0.91893853320467274178 // -n/2 * log(2pi)
+	mm.LogLikelihood = -float64(len(mm.Data)/2) * 0.91893853320467274178 // -n/2 * log(2pi)
 	for i = 0; i < mm.K; i++ {
 		mm.lamSigRatio[i] = mm.Weights[i] / mm.Stdev[i]
 		mm.logLamSigRatio[i] = math.Log(mm.lamSigRatio[i])
@@ -175,7 +176,7 @@ func expectation(mm *MixtureModel) {
 			mm.posteriors[j][i] = mm.work[j] / rowsum
 		}
 		/* Finally, adjust the loglikelihood correctly */
-		mm.NLogLikelihood += math.Log(rowsum) - min + mm.logLamSigRatio[minj]
+		mm.LogLikelihood += math.Log(rowsum) - min + mm.logLamSigRatio[minj]
 	}
 }
 

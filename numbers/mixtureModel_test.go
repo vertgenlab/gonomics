@@ -28,15 +28,15 @@ func TestRunMixtureModel(t *testing.T) {
 
 	maxIterations := 200
 	mm := new(MixtureModel)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		RunMixtureModel(data, 2, maxIterations, mm)
-		fmt.Println(mm.Means, math.Abs(mm.Means[0]-mm.Means[1]))
+		fmt.Println(mm.Means, math.Abs(mm.Means[0]-mm.Means[1]), mm.LogLikelihood)
 		//for j := range mm.Data {
 		//	fmt.Println(mm.Data[j], mm.posteriors[0][j], mm.posteriors[1][j])
 		//}
-		fmt.Println(mm.Weights)
-		//fmt.Println(mm.NLogLikelihood)
-		fmt.Println(mm.Stdev)
+		//fmt.Println(mm.Weights)
+		//fmt.Println(mm.LogLikelihood)
+		//fmt.Println(mm.Stdev)
 		//fmt.Println()
 	}
 }
