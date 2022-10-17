@@ -17,6 +17,15 @@ import (
 	"strings"
 )
 
+// TODO: decide if struct?
+// define chrMap struct
+// can potentially expand to include more species
+type chrMatch struct {
+	species1 string
+	species2 string
+}
+//var chrMatch chrMatch
+
 // helper function: write to tsv file
 func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score int64, cigar []align.Cigar) {
 	var err error
@@ -27,6 +36,21 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 // helper function: check if maf entry passes checks
 func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int) bool {
 	pass := true
+
+	//TODO: use chrMap_file
+	if chrMap_filename != "" {
+		chrMap_string := fileio.Read(chrMap_filename) //[]string
+		var chrMap map[string]string
+		for i := range chrMap_string {
+			chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") //stringToSlice
+			_, exists := chrMap[chrMap_stringSplit[0]] // sliceToMap (bypass struct), so names are [0] for species1 and [1] for species2
+			if !ok {
+				chrMap[chrMap_stringSplit[0]] = chrMap_stringSplit[1]
+			} else {
+				log.Panicf("%s used for multiple fasta records. record names must be unique.", ref[i].Name)
+			}
+		}
+	}
 
 	// chrom should match between species1 and species2
 	if assembly_species2 == "panTro6" {
@@ -143,7 +167,7 @@ func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int
 
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf (aka anchors, or "match")
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold
-func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string) (string, string) {
+func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string, chrMap_filename string) (string, string) {
 	mafRecords := maf.Read(in_maf) // read input maf
 
 	// open output files to write line-by-line and create variable for error
@@ -189,7 +213,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
 				// filter out only s lines that we trust to save to filtered maf
-				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd)
+				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd, chrMap_filename)
 				if pass {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed.WriteBed(out_species1, bed_species1)
@@ -481,22 +505,22 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 }
 
 // main function: assembles all steps
-func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, out_filename_prefix string) {
+func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, out_filename_prefix string, chrMap_filename string) {
 	// process input from out_filename_prefix flag
 	// about TrimSuffix: if the suffix string is at the end of the substrate string, then it is trimmed. If the suffix stirng is not at the end of the substrate string, then the substrate string is returned without any change
 	if out_filename_prefix == "" {
 		out_filename_prefix = strings.TrimSuffix(in_maf, ".maf")
 	}
 
-	in_species1_match, in_species2_match := mafToMatch(in_maf, species1, species2, out_filename_prefix)
+	in_species1_match, in_species2_match := mafToMatch(in_maf, species1, species2, out_filename_prefix, chrMap_filename)
 	in_species1_gap, in_species2_gap := matchToGap(in_species1_match, in_species2_match, species1_genome, species2_genome, species1, species2, gapSizeProductLimit, out_filename_prefix)
 	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome, species1, species2, out_filename_prefix)
 }
 
 func usage() {
 	fmt.Print(
-		"globalAlignmentAnchor - takes pairwise alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)\n" +
-			"in_maf - maf file. Pairwise alignment, not >2 species\n" +
+		"globalAlignmentAnchor - operates on 2 species, takes alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)\n" +
+			"in_maf - maf file. Can accept maf describing >2 species, but alignment will be pairwise, aka operating on 2 species\n" +
 			"species1, species2 - species names, e.g. hg38. Species1 is target (first line in each maf block); species2 is query (second line in each maf block)\n" +
 			"species1_genome, species2_genome - fasta files containing the whole genome of each species. Each fasta sequence is 1 chromosome\n" +
 			"Usage:\n" +
@@ -515,6 +539,7 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	out_filename_prefix := flag.String("out_filename_prefix", "", "prefix for output filenames")
+	chrMap_filename := flag.String("chrMap_filename", "", "the name of the file that is the map describing how chromosome names match between species")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
@@ -529,5 +554,5 @@ func main() {
 	species2_genome := flag.Arg(4)
 	gapSizeProductLimit := 10000000000 // gapSizeProductLimit is currently hardcoded based on align/affineGap tests, 10000000000
 
-	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, *out_filename_prefix)
+	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, *out_filename_prefix, *chrMap_filename)
 }
