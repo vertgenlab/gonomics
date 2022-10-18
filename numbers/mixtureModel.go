@@ -5,25 +5,84 @@ import (
 	"math/rand"
 )
 
+// logProbEpsilon is the arbitrary set point for convergence. When the model likelihood is
+// increasing by < logProbEpsilon, we say the model has converged, possibly to a local minimum.
 const logProbEpsilon = 1e-08
 
+// MixtureModel holds data, results, and working memory for running the EM algorithm.
 type MixtureModel struct {
-	Data           []float64 // 1d data slice
-	K              int       // number of component distributions
-	Means          []float64 // means for each component. len(means) == k
-	Stdev          []float64 // variances for each component. len(stdev) == k
-	Weights        []float64
+	Data           []float64   // 1d data slice
+	K              int         // number of component distributions
+	Means          []float64   // means for each component. len(means) == k
+	Stdev          []float64   // variances for each component. len(stdev) == k
+	Weights        []float64   // contribution of each gaussian to the model
 	MaxIter        int         // maximum number of iterations for EM step. 0 is until convergence
 	LogLikelihood  float64     // negative likelihood to be minimized
-	responsibility [][]float64 // first index is component, second index is data point
-	posteriorsSum  []float64   // sum of responsibilities above. len(posteriorsSum) == k
-	posteriors     [][]float64
-
-	lamSigRatio    []float64
-	logLamSigRatio []float64
-	work           []float64
+	residuals      [][]float64 // first index is component, second index is data point
+	posteriors     [][]float64 // posterior values for each data point for each gaussian
+	posteriorsSum  []float64   // sum of posteriors above. len(posteriorsSum) == k
+	lamSigRatio    []float64   // holds the ratio of Weights to Stdev
+	logLamSigRatio []float64   // holds the natural log of lamSigRatio
+	work           []float64   // holds intermediate values for calculating LogLikelihood
 }
 
+// RunMixtureModel uses the expectation-maximization (EM) algorithm to find a mixture of k gaussian distributions that fit the input data slice.
+// Note that this version of RunMixtureModel only works on 1d data. The EM algorithm works by iteratively refining the model until the performance
+// of the model is no longer improving (i.e. it has converged). RunMixtureModel will iterate a maximum of maxIterations until retrying with new
+// starting values until convergence or maxResets. RunMixtureModel will store the results of the model in mm and will return whether the model
+// converged, and how many iterations it took to converge. If converged == false, the results in mm are meaningless.
+//
+// To reduce the number of allocations required for repeated use of RunMixtureModel, the input mixture model 'mm' can be reused between calls
+// with no modifications necessary.
+func RunMixtureModel(data []float64, k int, maxIterations int, maxResets int, mm *MixtureModel) (converged bool, iterationsRun int) {
+	if len(data) == 0 {
+		return
+	}
+	initMixtureModel(data, k, maxIterations, mm)
+	var resets int
+	var prevLogLikelihood float64
+
+	for iterationsRun = 0; resets < maxResets && !converged; iterationsRun++ {
+
+		// E step
+		prevLogLikelihood = mm.LogLikelihood
+		expectation(mm)
+		if iterationsRun > 2 && math.Abs(mm.LogLikelihood-prevLogLikelihood) < logProbEpsilon {
+			converged = true
+		}
+
+		// M step
+		maximization(mm)
+
+		// check to see if variance or weights are going to zero which is undesirable as it indicates that
+		// the model is stuck overfitting or trying to fit the data to fewer gaussians than intended.
+		for i := 0; i < mm.K; i++ {
+			switch {
+			case mm.Stdev[i] < 1e-04: // most likely caused by overfit of gaussian to a single data point
+				fallthrough
+			case mm.Weights[i] < 1e-02: // they asked for 2 gaussians, reset and see if you can get better answer
+				resets++
+				initMixtureModel(data, k, maxIterations, mm)
+				iterationsRun = 0
+				prevLogLikelihood = 0
+				converged = false
+				break
+			}
+		}
+
+		// if max iterations reached, reset with new values and try again
+		if iterationsRun == mm.MaxIter {
+			resets++
+			initMixtureModel(data, k, maxIterations, mm)
+			iterationsRun = 0
+			prevLogLikelihood = 0
+			converged = false
+		}
+	}
+	return
+}
+
+// initMixtureModel allocates and fills the MixtureModel struct. Avoids allocation if enough space is already present in input struct.
 func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel) {
 	if mm == nil {
 		mm = new(MixtureModel)
@@ -61,25 +120,23 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 	// TODO smarter initial guess for mean and variance (k-means/PCA)
 	for i := range mm.Means {
 		mm.Means[i] = rand.Float64() * 100
-		mm.Stdev[i] = 10
+		mm.Stdev[i] = 1
 	}
-	mm.Means[0] = 0
-	mm.Means[1] = 100
 
-	if cap(mm.responsibility) >= k {
-		mm.responsibility = mm.responsibility[0:k]
+	if cap(mm.residuals) >= k {
+		mm.residuals = mm.residuals[0:k]
 		mm.posteriors = mm.posteriors[0:k]
 	} else {
-		mm.responsibility = make([][]float64, k)
+		mm.residuals = make([][]float64, k)
 		mm.posteriors = make([][]float64, k)
 	}
 
-	for i := range mm.responsibility {
-		if cap(mm.responsibility[i]) >= len(data) {
-			mm.responsibility[i] = mm.responsibility[i][0:len(data)]
+	for i := range mm.residuals {
+		if cap(mm.residuals[i]) >= len(data) {
+			mm.residuals[i] = mm.residuals[i][0:len(data)]
 			mm.posteriors[i] = mm.posteriors[i][0:len(data)]
 		} else {
-			mm.responsibility[i] = make([]float64, len(data))
+			mm.residuals[i] = make([]float64, len(data))
 			mm.posteriors[i] = make([]float64, len(data))
 		}
 	}
@@ -101,34 +158,14 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 	}
 }
 
-func RunMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel) {
-	initMixtureModel(data, k, maxIterations, mm)
-
-	var converged bool
-	var prevLogLikelihood float64
-	for iter := 0; !converged && iter < mm.MaxIter; iter++ {
-
-		// E step
-		prevLogLikelihood = mm.LogLikelihood
-		expectation(mm)
-		//fmt.Println(mm.Means, mm.LogLikelihood, mm.Stdev)
-		if iter > 2 && mm.LogLikelihood-prevLogLikelihood < logProbEpsilon {
-			converged = true
-			//fmt.Println("Converged on iteration:", iter)
-		}
-
-		// M step
-		// sum responsibilities of each data point to each component
-		maximization(mm)
-	}
-}
-
+// resetResSum zeros the posteriorSum slice
 func resetResSum(mm *MixtureModel) {
 	for i := range mm.posteriorsSum {
 		mm.posteriorsSum[i] = 0
 	}
 }
 
+// expectation is the first half of the EM algorithm and determines how well the observed data fit the current model
 // adapted from https://github.com/cran/mixtools/blob/master/src/normpost.c
 func expectation(mm *MixtureModel) {
 	var r, x, min, rowsum float64
@@ -143,8 +180,8 @@ func expectation(mm *MixtureModel) {
 		x = mm.Data[i]
 		for j = 0; j < mm.K; j++ {
 			r = x - mm.Means[j]
-			r *= r
-			mm.responsibility[j][i] = r
+			r = r * r
+			mm.residuals[j][i] = r
 			r = r / (2 * mm.Stdev[j] * mm.Stdev[j])
 			mm.work[j] = r
 
@@ -180,6 +217,7 @@ func expectation(mm *MixtureModel) {
 	}
 }
 
+// maximization is the second half of the EM algorithm and generates a new model based on the performance of the previous model
 func maximization(mm *MixtureModel) {
 	resetResSum(mm)
 	for i := range mm.Data {
@@ -193,88 +231,26 @@ func maximization(mm *MixtureModel) {
 		mm.Weights[j] = mm.posteriorsSum[j] / float64(len(mm.Data))
 	}
 
+	var std, mu float64
 	for j := 0; j < mm.K; j++ {
-		mm.Means[j] = 0
+		mu = 0
+		std = 0
 		for i := range mm.Data {
-			mm.Means[j] += mm.posteriors[j][i] * mm.Data[i]
+			mu += mm.posteriors[j][i] * mm.Data[i]
 		}
 
 		if mm.posteriorsSum[j] > 0 {
-			mm.Means[j] /= mm.posteriorsSum[j]
+			mm.Means[j] = mu / mm.posteriorsSum[j]
 		}
 
 		for i := range mm.Data {
-			mm.Stdev[j] += mm.posteriors[j][i] * mm.responsibility[j][i]
+			std += mm.posteriors[j][i] * mm.residuals[j][i]
 		}
 
 		if mm.posteriorsSum[j] > 0 {
-			mm.Stdev[j] /= mm.posteriorsSum[j]
+			std = std / mm.posteriorsSum[j]
 		}
 
-		mm.Stdev[j] = math.Sqrt(mm.Stdev[j])
+		mm.Stdev[j] = math.Sqrt(std)
 	}
-}
-
-func oldExpectation(mm *MixtureModel) {
-	var model float64
-	for i := range mm.Data {
-		var totalProb float64
-		for j := 0; j < mm.K; j++ {
-			var prob float64
-			prob = mm.Weights[j] * calculate1dProb(mm.Data[i], mm.Means[j], mm.Stdev[j])
-			totalProb += prob
-			mm.responsibility[j][i] = prob
-		}
-
-		if totalProb > 0 { // normalize responsibilities for each datapoint
-			for j := 0; j < mm.K; j++ {
-				mm.responsibility[j][i] /= totalProb
-			}
-		}
-		model -= math.Log(totalProb)
-	}
-}
-
-func oldMaximization(mm *MixtureModel) {
-	resetResSum(mm)
-	for i := range mm.Data {
-		for j := 0; j < mm.K; j++ {
-			mm.posteriorsSum[j] += mm.responsibility[j][i]
-		}
-	}
-
-	// normalize weights to 0-1
-	for j := 0; j < mm.K; j++ {
-		mm.Weights[j] = mm.posteriorsSum[j] / float64(len(mm.Data))
-	}
-
-	for j := 0; j < mm.K; j++ {
-		mm.Means[j] = 0 // we will calculate a new one
-		for i := range mm.Data {
-			mm.Means[j] += mm.responsibility[j][i] * mm.Data[i]
-		}
-
-		if mm.posteriorsSum[j] > 0 {
-			mm.Means[j] /= mm.posteriorsSum[j]
-		}
-
-		for i := range mm.Data {
-			var diff float64
-			diff = mm.Data[i] - mm.Means[j]
-			mm.Stdev[j] += mm.responsibility[j][i] * diff * diff
-		}
-
-		if mm.posteriorsSum[j] > 0 {
-			mm.Stdev[j] /= mm.posteriorsSum[j]
-		}
-
-		mm.Stdev[j] = math.Sqrt(mm.Stdev[j])
-	}
-}
-
-func calculate1dProb(val, mean, std float64) float64 {
-	var frac, power float64
-	frac = 1 / (std * math.Sqrt(2*math.Pi))
-	power = -0.5 * math.Pow((val-mean)/std, 2)
-	return frac * math.Exp(power)
 }

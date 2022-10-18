@@ -2,69 +2,59 @@ package numbers
 
 import (
 	"fmt"
+	"golang.org/x/exp/slices"
 	"math"
 	"math/rand"
 	"testing"
-	"time"
 )
 
 func TestRunMixtureModel(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-	data := []float64{16, 27, 28, 29, 29, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 33, 39, 52, 52, 52, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 55}
-
-	//data := []float64{15, 23, 23, 25, 25, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 33, 35, 35, 35, 35, 37, 37, 37, 37, 37, 37, 37, 37, 37, 40}
-	//for i := 0; i < 5; i++ {
-	//	data = append(data, data...)
-	//}
-
-	//numComponents := 2
-	//countPerComponent := 100
-	//means := []float64{120, 480, 240, 360, 320}
-	//std := []float64{20, 30, 10, 40, 5}
-	//data := make([]float64, 0, 200)
-	//for i := 0; i < numComponents; i++ {
-	//	data = append(data, generateData(countPerComponent, means[i], std[i])...)
-	//}
-
 	maxIterations := 200
+	maxResets := 10
+	countPerComponent := 300
+	acceptableError := 0.05
+	var meanA, meanB, stdA, stdB float64
 	mm := new(MixtureModel)
-	for i := 0; i < 20; i++ {
-		RunMixtureModel(data, 2, maxIterations, mm)
-		fmt.Println(mm.Means, math.Abs(mm.Means[0]-mm.Means[1]), mm.LogLikelihood)
-		//for j := range mm.Data {
-		//	fmt.Println(mm.Data[j], mm.posteriors[0][j], mm.posteriors[1][j])
-		//}
-		//fmt.Println(mm.Weights)
-		//fmt.Println(mm.LogLikelihood)
-		//fmt.Println(mm.Stdev)
-		//fmt.Println()
+	var converged bool
+	data := make([]float64, 0, countPerComponent*2)
+	for i := 0; i < 100; i++ {
+		meanA = (rand.Float64() * 100) + 20        // min mean of 20
+		meanB = meanA + 20 + (rand.Float64() * 20) // at least 20 apart
+		stdA = rand.Float64() * 10
+		stdB = rand.Float64() * 10
+		data = append(generateData(countPerComponent, meanA, stdA), generateData(countPerComponent, meanB, stdB)...)
+		converged, _ = RunMixtureModel(data, 2, maxIterations, maxResets, mm)
+		if !converged {
+			continue
+		}
+		slices.Sort(mm.Means)
+		if math.Abs(1-mm.Means[0]/meanA) > acceptableError || math.Abs(1-mm.Means[1]/meanB) > acceptableError {
+			t.Errorf("problem with RunMixtureModel")
+			fmt.Println(mm.Means, meanA, meanB, mm.Weights, converged)
+		}
 	}
 }
 
 func BenchmarkRunMixtureModel(b *testing.B) {
-	numComponents := 2
 	countPerComponent := 100
-	means := []float64{120, 480, 240, 360, 320}
-	std := []float64{20, 30, 10, 40, 5}
+	means := []float64{120, 480}
+	std := []float64{20, 30}
 	data := make([]float64, 0, 200)
-	for i := 0; i < numComponents; i++ {
+	for i := range means {
 		data = append(data, generateData(countPerComponent, means[i], std[i])...)
 	}
 	mm := new(MixtureModel)
-	RunMixtureModel(data, 2, 200, mm) // outside loop for initial memory allocation
+	RunMixtureModel(data, 2, 200, 5, mm) // outside loop for initial memory allocation
 	for i := 0; i < b.N; i++ {
-		RunMixtureModel(data, 2, 200, mm)
+		RunMixtureModel(data, 2, 200, 5, mm)
 	}
 }
 
 // generate data from a normal distribution with noise
 func generateData(num int, mean, std float64) []float64 {
 	ans := make([]float64, num)
-	var noise float64
 	for i := range ans {
-		noise = 2 * std * rand.Float64()
-		noise -= 10
-		ans[i] = ((rand.NormFloat64() * std) + mean) + noise
+		ans[i] = (rand.NormFloat64() * std) + mean
 	}
 	return ans
 }
