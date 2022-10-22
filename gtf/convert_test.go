@@ -10,11 +10,11 @@ import (
 )
 
 var GenesToPromoterBedTests = []struct {
-	gFile string
-	cFile string
-	upstream int
-	downstream int
-	outFile string
+	gFile        string
+	cFile        string
+	upstream     int
+	downstream   int
+	outFile      string
 	expectedFile string
 }{
 	{"testdata/CFTR.test.gtf", "testdata/chr7.chrom.sizes", 500, 2000, "testdata/tmp.bed", "testdata/GenesToPromoter.expected.bed"},
@@ -41,9 +41,9 @@ func TestGenesToPromoterBed(t *testing.T) {
 }
 
 var GenesToTssBedTests = []struct {
-	gFile string
-	cFile string
-	outFile string
+	gFile        string
+	cFile        string
+	outFile      string
 	expectedFile string
 }{
 	{"testdata/CFTR.test.gtf", "testdata/chr7.chrom.sizes", "testdata/tmp.Tss.bed", "testdata/GenesToTss.expected.bed"},

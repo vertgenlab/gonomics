@@ -26,19 +26,18 @@ func TestTrim(t *testing.T) {
 	}
 }
 
-var inB []Bed = []Bed{Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Score: 10}, Bed{Chrom: "chr1", ChromStart: 15, ChromEnd: 25, Score: 40}, Bed{Chrom: "chr1", ChromStart:25, ChromEnd:45, Score: 500}}
-var expectedBfalse []Bed = []Bed{Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 25, Score: 40}, Bed{Chrom: "chr1", ChromStart:25, ChromEnd:45, Score: 500}}
-var expectedBtrue []Bed = []Bed{Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 45, Score: 500}}
+var inB []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Score: 10}, {Chrom: "chr1", ChromStart: 15, ChromEnd: 25, Score: 40}, {Chrom: "chr1", ChromStart: 25, ChromEnd: 45, Score: 500}}
+var expectedBfalse []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 25, Score: 40}, {Chrom: "chr1", ChromStart: 25, ChromEnd: 45, Score: 500}}
+var expectedBtrue []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 45, Score: 500}}
 
 var MergeHighMemTests = []struct {
-	InBed []Bed
-	ExpectedBed []Bed
+	InBed         []Bed
+	ExpectedBed   []Bed
 	MergeAdjacent bool
 }{
 	{InBed: inB, ExpectedBed: expectedBfalse, MergeAdjacent: false},
 	{InBed: inB, ExpectedBed: expectedBtrue, MergeAdjacent: true},
 }
-
 
 func TestMergeHighMem(t *testing.T) {
 	var outB []Bed
