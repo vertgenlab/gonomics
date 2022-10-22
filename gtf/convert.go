@@ -8,7 +8,7 @@ import (
 
 // GeneToTssBed returns the positions of all TSSs from a Gene as a slice of single base-pair bed entries.
 func GeneToTssBed(g Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
-	return GeneToPromoterBed(g, c, 0 ,0)
+	return GeneToPromoterBed(g, c, 0, 0)
 }
 
 //GenesToTssBed returns the position of all TSSs from a Gene map as a slice of single base-pair bed entries.
@@ -33,9 +33,9 @@ func GeneToPromoterBed(g Gene, c map[string]chromInfo.ChromInfo, upstream int, d
 	var tBed bed.Bed
 	for _, t := range g.Transcripts {
 		if t.Strand {
-			tBed = bed.Bed{Chrom: t.Chr, ChromStart:  numbers.Max(t.Start - upstream - 1, 0), ChromEnd: numbers.Min(t.Start + downstream, c[t.Chr].Size), Name: g.GeneName, FieldsInitialized: 4}
+			tBed = bed.Bed{Chrom: t.Chr, ChromStart: numbers.Max(t.Start-upstream-1, 0), ChromEnd: numbers.Min(t.Start+downstream, c[t.Chr].Size), Name: g.GeneName, FieldsInitialized: 4}
 		} else {
-			tBed = bed.Bed{Chrom: t.Chr, ChromStart: numbers.Max(t.End - downstream - 1, 0), ChromEnd: numbers.Min(t.End + upstream, c[t.Chr].Size), Name: g.GeneName, FieldsInitialized: 4}
+			tBed = bed.Bed{Chrom: t.Chr, ChromStart: numbers.Max(t.End-downstream-1, 0), ChromEnd: numbers.Min(t.End+upstream, c[t.Chr].Size), Name: g.GeneName, FieldsInitialized: 4}
 		}
 		answer = append(answer, tBed)
 	}
