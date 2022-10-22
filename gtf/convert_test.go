@@ -29,6 +29,7 @@ func TestGenesToPromoterBed(t *testing.T) {
 		genes = Read(v.gFile)
 		c = chromInfo.ReadToMap(v.cFile)
 		answer = GenesToPromoterBed(genes, c, v.upstream, v.downstream)
+		bed.SortByCoord(answer)
 		bed.Write(v.outFile, answer)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in GenesToPromoterBed, output did not match expected.")
@@ -57,6 +58,7 @@ func TestGenesToTssBed(t *testing.T) {
 		genes = Read(v.gFile)
 		c = chromInfo.ReadToMap(v.cFile)
 		answer = GenesToTssBed(genes, c)
+		bed.SortByCoord(answer)
 		bed.Write(v.outFile, answer)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in GenesToPromoterBed, output did not match expected.")
