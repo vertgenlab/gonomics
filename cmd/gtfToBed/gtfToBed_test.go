@@ -8,10 +8,10 @@ import (
 )
 
 var GtfToBedTests = []struct {
-	inFile       string
-	outFile string
-	expectedFile string
-	tss bool
+	inFile        string
+	outFile       string
+	expectedFile  string
+	tss           bool
 	chromSizeFile string
 }{
 	{"testdata/test.gtf", "testdata/tmp.bed", "testdata/testOut.bed", false, ""},
