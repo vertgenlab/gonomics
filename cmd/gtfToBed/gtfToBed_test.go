@@ -15,7 +15,7 @@ var GtfToBedTests = []struct {
 	chromSizeFile string
 }{
 	{"testdata/test.gtf", "testdata/tmp.bed", "testdata/testOut.bed", false, ""},
-	{"testdata/test.gtf", "testdata/tmp.tss.bed", "testdata/expeted.tss.bed", true, "testdata/chr1.chrom.sizes"},
+	{"testdata/test.gtf", "testdata/tmp.tss.bed", "testdata/expected.tss.bed", true, "testdata/chr1.chrom.sizes"},
 }
 
 func TestGtfToBed(t *testing.T) {
