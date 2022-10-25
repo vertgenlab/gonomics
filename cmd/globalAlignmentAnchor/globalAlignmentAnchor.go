@@ -20,6 +20,8 @@ import (
 // TODO: decide if struct?
 // define chrMap struct
 // can potentially expand to include more species
+// if intermediate, not worth it
+// struct can be key/value of map
 type chrMatch struct {
 	species1 string
 	species2 string
@@ -40,14 +42,14 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 	//TODO: use chrMap_file
 	if chrMap_filename != "" {
 		chrMap_string := fileio.Read(chrMap_filename) //[]string
-		var chrMap map[string]string
+		var chrMap map[string][]string //maybe string to []string would be better to allow chr2 to match chr2A, chr2B. If key has value, append to []string
 		for i := range chrMap_string {
 			chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") //stringToSlice
 			_, exists := chrMap[chrMap_stringSplit[0]] // sliceToMap (bypass struct), so names are [0] for species1 and [1] for species2
 			if !ok {
-				chrMap[chrMap_stringSplit[0]] = chrMap_stringSplit[1]
+				chrMap[chrMap_stringSplit[0]][0] = chrMap_stringSplit[1]
 			} else {
-				log.Panicf("%s used for multiple fasta records. record names must be unique.", ref[i].Name)
+				chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1])
 			}
 		}
 	}
