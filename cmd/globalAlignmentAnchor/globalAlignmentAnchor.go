@@ -17,17 +17,6 @@ import (
 	"strings"
 )
 
-// TODO: decide if struct?
-// define chrMap struct
-// can potentially expand to include more species
-// if intermediate, not worth it
-// struct can be key/value of map
-type chrMatch struct {
-	species1 string
-	species2 string
-}
-//var chrMatch chrMatch
-
 // helper function: write to tsv file
 func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score int64, cigar []align.Cigar) {
 	var err error
