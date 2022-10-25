@@ -30,11 +30,11 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 
 	//TODO: use chrMap_file
 	if chrMap_filename != "" {
-		chrMap_string := fileio.Read(chrMap_filename) //[]string
-		var chrMap map[string][]string //maybe string to []string would be better to allow chr2 to match chr2A, chr2B. If key has value, append to []string
+		chrMap_string := fileio.Read(chrMap_filename) // read file so each line is 1 string
+		var chrMap map[string][]string
 		for i := range chrMap_string {
-			chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") //stringToSlice
-			_, exists := chrMap[chrMap_stringSplit[0]] // sliceToMap (bypass struct), so names are [0] for species1 and [1] for species2
+			chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab)
+			_, exists := chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
 			if !ok {
 				chrMap[chrMap_stringSplit[0]][0] = chrMap_stringSplit[1]
 			} else {
