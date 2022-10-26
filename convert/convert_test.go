@@ -6,8 +6,8 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/wig"
 	"os"
 	"strings"
 	"testing"
@@ -72,14 +72,14 @@ func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 }
 
 var BedValuesToWigTests = []struct {
-	inFile string
+	inFile        string
 	chromSizeFile string
-	Missing float64
-	OutFile string
-	ExpectedFile string
-	Method string
+	Missing       float64
+	OutFile       string
+	ExpectedFile  string
+	Method        string
 }{
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0,"testdata/name.tmp.wig", "testdata/name.Expected.wig", "Name"},
+	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0, "testdata/name.tmp.wig", "testdata/name.Expected.wig", "Name"},
 	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0, "testdata/score.tmp.wig", "testdata/score.Expected.wig", "Score"},
 	{"testdata/test.bed", "testdata/ref.chrom.sizes", -1, "testdata/name.missing.tmp.wig", "testdata/name.missing.Expected.wig", "Name"},
 }
@@ -102,11 +102,11 @@ func TestBedValuesToWig(t *testing.T) {
 }
 
 var BedGraphToWigTests = []struct {
-	InFile string
+	InFile        string
 	ChromSizeFile string
-	Missing float64
-	OutFile string
-	ExpectedFile string
+	Missing       float64
+	OutFile       string
+	ExpectedFile  string
 }{
 	{"testdata/test.bedGraph", "testdata/ref.chrom.sizes", -10, "testdata/bedGraphToWig.tmp.wig", "testdata/bedGraphToWig.expected.wig"},
 }
