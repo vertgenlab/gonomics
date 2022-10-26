@@ -28,33 +28,31 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap_filename string) bool {
 	pass := true
 
-	//TODO: use chrMap_file. Should be mandatory
-	if chrMap_filename != "" {
-		chrMap := make(map[string][]string) // map to hold species1 species2 chr name matches
-		chrMap_string := fileio.Read(chrMap_filename) // read file so each line is 1 string
-		for i := range chrMap_string {
-			chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab). Note that Notepad generates proper tab, but not Atom
-			_, exists := chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
-			if !exists {
-				chrMap_species2 := make([]string, 1) // slice to hold just 1 species2 chr name the first time its species1 chr name appears
-				chrMap_species2[0] = chrMap_stringSplit[1] // use species2 chr name to populate slice of length 1 in preparation for [string][]string key-value pair. This slice will be overwritten each time there is a new species2 chr name
-				//copy(chrMap[chrMap_stringSplit[0]], chrMap_species2) // TODO: this does not work. Therefore, I moved chrMap_Species2 []string definition into loop. Otherwise, map will be updated with each slice update due to pointers, and can't use copy to resolve this issue
-				chrMap[chrMap_stringSplit[0]] = chrMap_species2
-			} else {
-				chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1]) // if species1 chr name already exists, append to the exisitng species2 chr name slice the new species2 chr name
-			}
-			fmt.Printf("chrMap: %v\n", chrMap) //TODO: remove after debugging
+	//TODO: after making chrMap_file mandatory, make this its own function
+	chrMap := make(map[string][]string) // map to hold species1 species2 chr name matches
+	chrMap_string := fileio.Read(chrMap_filename) // read file so each line is 1 string
+	for i := range chrMap_string {
+		chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab). Note that Notepad generates proper tab, but not Atom
+		_, exists := chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
+		if !exists {
+			chrMap_species2 := make([]string, 1) // slice to hold just 1 species2 chr name the first time its species1 chr name appears
+			chrMap_species2[0] = chrMap_stringSplit[1] // use species2 chr name to populate slice of length 1 in preparation for [string][]string key-value pair. This slice will be overwritten each time there is a new species2 chr name
+			//copy(chrMap[chrMap_stringSplit[0]], chrMap_species2) // TODO: this does not work. Therefore, I moved chrMap_Species2 []string definition into loop. Otherwise, map will be updated with each slice update due to pointers, and can't use copy to resolve this issue
+			chrMap[chrMap_stringSplit[0]] = chrMap_species2
+		} else {
+			chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1]) // if species1 chr name already exists, append to the exisitng species2 chr name slice the new species2 chr name
 		}
-		// for each chrom_species2, go through chrMap to see if it's contained within chrom_species1's matching species2 chr names
-		for _, s := range chrMap[chrom_species1] {
-		 if chrom_species2 == s {
-				 return true
-		 }
- 		}
- 		return false
-		//if chrom_species2 != chrMap[chrom_species1] { //TODO: change this to check if chrom_species1 is in chrom_species1 slice
-		//	pass = false
-		//} //TODO: remove after debugging
+		fmt.Printf("chrMap: %v\n", chrMap) //TODO: remove after debugging
+	}
+	// for each chrom_species2, go through chrMap to see if it's contained within chrom_species1's matching species2 chr names
+	chrMatch := false // separate bool is needed for chrMatch, start out as false
+	for _, s := range chrMap[chrom_species1] {
+	 if chrom_species2 == s {
+		 chrMatch = true // only become true if chrMatch
+	 }
+ 	}
+	if !chrMatch { // if chrMatch == false, then pass must be set to false
+		pass = false
 	}
 
 	// chrom should match between species1 and species2
@@ -512,7 +510,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 }
 
 // main function: assembles all steps
-func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, out_filename_prefix string, chrMap_filename string) {
+func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, chrMap_filename string, out_filename_prefix string) {
 	// process input from out_filename_prefix flag
 	// about TrimSuffix: if the suffix string is at the end of the substrate string, then it is trimmed. If the suffix stirng is not at the end of the substrate string, then the substrate string is returned without any change
 	if out_filename_prefix == "" {
@@ -530,8 +528,9 @@ func usage() {
 			"in_maf - maf file. Can accept maf describing >2 species, but alignment will be pairwise, aka operating on 2 species\n" +
 			"species1, species2 - species names, e.g. hg38. Species1 is target (first line in each maf block); species2 is query (second line in each maf block)\n" +
 			"species1_genome, species2_genome - fasta files containing the whole genome of each species. Each fasta sequence is 1 chromosome\n" +
+			"chrMap_filename - the name of the file that is the map describing how chromosome names match between species. Each line should be formatted this way: 'species1 chr name'(tab)'species2 chr name'\n" +
 			"Usage:\n" +
-			"	globalAlignmentAnchor in_maf species1 species2 species1_genome species2_genome\n" +
+			"	globalAlignmentAnchor in_maf species1 species2 species1_genome species2_genome chrMap_filename\n" +
 			"doNotCalculate flags:\n" +
 			"	invalidChromStartOrChromEnd - This bed entry pair is discarded because ChromStart or ChromEnd is invalid\n" +
 			"	largeGapSizeMultiple - This bed entry pair is discarded because the gap size of species2 >> the gap size of species1\n" +
@@ -541,12 +540,11 @@ func usage() {
 }
 
 func main() {
-	var expectedNum int = 5
+	var expectedNum int = 6
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	out_filename_prefix := flag.String("out_filename_prefix", "", "prefix for output filenames")
-	chrMap_filename := flag.String("chrMap_filename", "", "the name of the file that is the map describing how chromosome names match between species")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
@@ -559,7 +557,8 @@ func main() {
 	species2 := flag.Arg(2)
 	species1_genome := flag.Arg(3)
 	species2_genome := flag.Arg(4)
+	chrMap_filename := flag.Arg(5)
 	gapSizeProductLimit := 10000000000 // gapSizeProductLimit is currently hardcoded based on align/affineGap tests, 10000000000
 
-	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, *out_filename_prefix, *chrMap_filename)
+	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, chrMap_filename, *out_filename_prefix)
 }
