@@ -28,7 +28,7 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap_filename string) bool {
 	pass := true
 
-	//TODO: use chrMap_file
+	//TODO: use chrMap_file. Should be mandatory
 	if chrMap_filename != "" {
 		chrMap := make(map[string][]string) // map to hold species1 species2 chr name matches
 		chrMap_string := fileio.Read(chrMap_filename) // read file so each line is 1 string
@@ -45,16 +45,30 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 			}
 			fmt.Printf("chrMap: %v\n", chrMap) //TODO: remove after debugging
 		}
+		// for each chrom_species2, go through chrMap to see if it's contained within chrom_species1's matching species2 chr names
+		for _, s := range chrMap[chrom_species1] {
+		 if chrom_species2 == s {
+				 return true
+		 }
+ 		}
+ 		return false
+		//if chrom_species2 != chrMap[chrom_species1] { //TODO: change this to check if chrom_species1 is in chrom_species1 slice
+		//	pass = false
+		//} //TODO: remove after debugging
 	}
 
 	// chrom should match between species1 and species2
+	//TODO: remove after debugging
+	/*
 	if assembly_species2 == "panTro6" {
 		// panTro6 special case: panTro6 chr2A, chr2B both count as a match to hg38 chr2
 		pT6_hg38_chr2 := ((assembly_species1 == "hg38" && assembly_species2 == "panTro6" && chrom_species1 == "chr2" && ((chrom_species2 == "chr2A") || (chrom_species2 == "chr2B"))) || (assembly_species1 == "panTro6" && assembly_species2 == "hg38" && ((chrom_species1 == "chr2A") || (chrom_species1 == "chr2B")) && chrom_species2 == "chr2")) // the special case written as a bool variable
 		if chrom_species2 != chrom_species1 || pT6_hg38_chr2 {
 			pass = false
 		}
-	} else if assembly_species2 == "gorGor5" {
+	}
+	*/
+	if assembly_species2 == "gorGor5" {
 		gG5_hg38_chr := map[string]string{
 					 "CYUI01014905v1": "chr1",
 					 "CYUI01000001v1": "chr2",
@@ -87,15 +101,13 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 		}
 	}
 
-	// comment out diagonal again. TODO: remove after debugging
-	/*
+	// comment out diagonal again for hg38 vs gorGor5. But need to uncomment for test. TODO: remove after debugging
 	// maf entry should be roughly diagonal
 	if (float64(species2_ChromStart) <= float64(species1_ChromStart)-0.05*float64(species1_SrcSize)) || (float64(species2_ChromStart) >= float64(species1_ChromStart)+0.05*float64(species1_SrcSize)) {
 		pass = false
 	} else if (float64(species1_ChromStart) <= float64(species2_ChromStart)-0.05*float64(species2_SrcSize)) || (float64(species1_ChromStart) >= float64(species2_ChromStart)+0.05*float64(species2_SrcSize)) {
 		pass = false
 	}
-	*/
 
 	return pass
 }
