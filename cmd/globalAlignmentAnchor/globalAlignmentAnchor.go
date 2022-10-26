@@ -53,6 +53,7 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap map[string][]string) bool {
 	pass := true
 
+	// chrom should match between species1 and species2
 	// for each chrom_species2, go through chrMap to see if it's contained within chrom_species1's matching species2 chr names
 	chrMatch := false // separate bool is needed for chrMatch, start out as false
 	for _, s := range chrMap[chrom_species1] {
@@ -62,50 +63,6 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
  	}
 	if !chrMatch { // if chrMatch == false, then pass must be set to false
 		pass = false
-	}
-
-	// chrom should match between species1 and species2
-	//TODO: remove after debugging
-	/*
-	if assembly_species2 == "panTro6" {
-		// panTro6 special case: panTro6 chr2A, chr2B both count as a match to hg38 chr2
-		pT6_hg38_chr2 := ((assembly_species1 == "hg38" && assembly_species2 == "panTro6" && chrom_species1 == "chr2" && ((chrom_species2 == "chr2A") || (chrom_species2 == "chr2B"))) || (assembly_species1 == "panTro6" && assembly_species2 == "hg38" && ((chrom_species1 == "chr2A") || (chrom_species1 == "chr2B")) && chrom_species2 == "chr2")) // the special case written as a bool variable
-		if chrom_species2 != chrom_species1 || pT6_hg38_chr2 {
-			pass = false
-		}
-	}
-	*/
-	if assembly_species2 == "gorGor5" {
-		gG5_hg38_chr := map[string]string{
-					 "CYUI01014905v1": "chr1",
-					 "CYUI01000001v1": "chr2",
-					 "CYUI01014906v1": "chr3",
-					 "CYUI01000005v1": "chr4",
-					 "CYUI01014923v1": "chr5",
-					 "CYUI01014917v1": "chr6",
-					 "CYUI01014945v1": "chr7",
-					 "CYUI01014904v1": "chr8",
-					 "CYUI01014950v1": "chr9",
-					 "CYUI01014933v1": "chr10",
-					 "CYUI01014944v1": "chr11",
-					 "CYUI01014962v1": "chr12",
-					 "CYUI01014953v1": "chr13",
-					 "CYUI01014949v1": "chr14",
-					 "CYUI01014992v1": "chr15",
-					 "CYUI01015009v1": "chr16",
-					 "CYUI01015056v1": "chr17",
-					 "CYUI01014913v1": "chr18",
-					 "CYUI01015110v1": "chr19",
-					 "CYUI01014934v1": "chr20",
-					 "CYUI01014994v1": "chr21",
-					 "CYUI01015239v1": "chr22",
-					 "CYUI01014915v1": "chrX",
-					 "CYUI01015925v1": "chrY",
-	 	}
-		fmt.Printf("gG5_hg38_chr[chrom_species2]: %s, chrom_species1: %s\n", gG5_hg38_chr[chrom_species2], chrom_species1) //TODO: remove after debugging
-		if gG5_hg38_chr[chrom_species2] != chrom_species1 {
-			pass = false
-		}
 	}
 
 	// comment out diagonal again for hg38 vs gorGor5. But need to uncomment for test. TODO: remove after debugging
@@ -248,7 +205,6 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	exception.PanicOnErr(err)
 	err = out_species2.Close()
 	exception.PanicOnErr(err)
-	fmt.Printf("I closed all the files\n") //TODO: remove after debugging
 
 	// return output filenames
 	return out_species1_filename, out_species2_filename
