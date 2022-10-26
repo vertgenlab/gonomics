@@ -8,13 +8,13 @@ import (
 )
 
 var BedGraphToWigTests = []struct {
-	InFile string
-	ChromFile string
-	OutFile string
-	Missing float64
+	InFile       string
+	ChromFile    string
+	OutFile      string
+	Missing      float64
 	ExpectedFile string
 }{
-	{"testdata/test.bedGraph", "testdata/ref.chrom.sizes", "testdata/bedGraphToWig.tmp.wig", -10,"testdata/bedGraphToWig.expected.wig"},
+	{"testdata/test.bedGraph", "testdata/ref.chrom.sizes", "testdata/bedGraphToWig.tmp.wig", -10, "testdata/bedGraphToWig.expected.wig"},
 }
 
 func TestBedGraphToWig(t *testing.T) {

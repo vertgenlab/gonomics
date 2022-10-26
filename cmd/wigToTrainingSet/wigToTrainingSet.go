@@ -29,7 +29,7 @@ func wigToTrainingSet(s Settings) {
 	fmt.Fprintf(testOut, "name\tseq\tvalue\n")
 	fmt.Fprintf(validateOut, "name\tseq\tvalue\n")
 
-	if s.ValidationProp + s.TestingProp > 1 {
+	if s.ValidationProp+s.TestingProp > 1 {
 		log.Fatalf("pVAlidation + pTesting should sum to less than one.")
 	}
 
@@ -38,20 +38,20 @@ func wigToTrainingSet(s Settings) {
 
 	for i := range wigs {
 		chromIndex = getChromIndex(genome, i.Chrom)
-		for start = 0; start < len(i.Values) - s.WindowSize; start += s.Stride {
-			if i.Values[(start + start + s.WindowSize) / 2] == s.Missing {
+		for start = 0; start < len(i.Values)-s.WindowSize; start += s.Stride {
+			if i.Values[(start+start+s.WindowSize)/2] == s.Missing {
 				continue //skip regions where there is no data in the wig.
 			}
 			currName = fmt.Sprintf("%s:%v-%v", i.Chrom, start, start+s.WindowSize)
-			currFa = fasta.Extract(genome[chromIndex], start, start + s.WindowSize, currName)
+			currFa = fasta.Extract(genome[chromIndex], start, start+s.WindowSize, currName)
 			dna.AllToUpper(currFa.Seq)
-			lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), i.Values[(start + start + s.WindowSize) / 2]) //start+window / 2 is the midpoint of the window.
+			lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), i.Values[(start+start+s.WindowSize)/2]) //start+window / 2 is the midpoint of the window.
 			//now we shard the training example into either the testing, training, or validation set.
 			currRand = rand.Float64()
 			if currRand < s.TestingProp {
 				_, err = fmt.Fprintf(testOut, lineToWrite)
 				exception.PanicOnErr(err)
-			} else if currRand < s.TestingProp + s.ValidationProp {
+			} else if currRand < s.TestingProp+s.ValidationProp {
 				_, err = fmt.Fprintf(validateOut, lineToWrite)
 				exception.PanicOnErr(err)
 			} else {
@@ -88,17 +88,17 @@ func usage() {
 }
 
 type Settings struct {
-	InWigFile string
-	InFastaFile string
-	TrainFile string
-	ValidateFile string
-	TestFile string
-	WindowSize int
-	Stride int
+	InWigFile      string
+	InFastaFile    string
+	TrainFile      string
+	ValidateFile   string
+	TestFile       string
+	WindowSize     int
+	Stride         int
 	ValidationProp float64
-	TestingProp float64
-	SetSeed int64
-	Missing float64
+	TestingProp    float64
+	SetSeed        int64
+	Missing        float64
 }
 
 func main() {
@@ -126,20 +126,18 @@ func main() {
 	testFile := flag.Arg(4)
 
 	s := Settings{
-		InWigFile: inWigFile,
-		InFastaFile: inFastaFile,
-		TrainFile: trainFile,
-		ValidateFile: validateFile,
-		TestFile: testFile,
-		WindowSize: *windowSize,
-		Stride: *stride,
+		InWigFile:      inWigFile,
+		InFastaFile:    inFastaFile,
+		TrainFile:      trainFile,
+		ValidateFile:   validateFile,
+		TestFile:       testFile,
+		WindowSize:     *windowSize,
+		Stride:         *stride,
 		ValidationProp: *validationProp,
-		TestingProp: *testingProp,
-		SetSeed: *setSeed,
-		Missing: *missing,
+		TestingProp:    *testingProp,
+		SetSeed:        *setSeed,
+		Missing:        *missing,
 	}
 
 	wigToTrainingSet(s)
 }
-
-
