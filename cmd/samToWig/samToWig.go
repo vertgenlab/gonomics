@@ -50,7 +50,7 @@ func samToWig(samFileName string, reference string, outfile string, fragLength i
 	exception.PanicOnErr(err)
 
 	outWig = convert.BedReadsToWig(outBed, ref)
-	log.Printf("Length of outWig: %d", len(outWig))
+	//log.Printf("Length of outWig: %d", len(outWig))
 	wig.Write(outfile, outWig)
 }
 

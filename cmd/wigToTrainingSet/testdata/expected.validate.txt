@@ -1,0 +1,3 @@
+Name	Seq	Value
+chr1:48-51	GTT	96
+chr1:63-66	AGA	3

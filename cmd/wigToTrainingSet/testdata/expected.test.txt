@@ -1,0 +1,2 @@
+Name	Seq	Value
+chr1:39-42	GTA	2
