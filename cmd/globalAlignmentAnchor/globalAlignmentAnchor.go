@@ -24,13 +24,13 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 	exception.PanicOnErr(err)
 }
 
-// helper function: check if maf entry passes checks
-func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap_filename string) bool {
-	pass := true
+// helper function: make chr name match map
+func makeChrMap(chrMap_filename string) map[string][]string {
 
-	//TODO: after making chrMap_file mandatory, make this its own function
 	chrMap := make(map[string][]string) // map to hold species1 species2 chr name matches
+
 	chrMap_string := fileio.Read(chrMap_filename) // read file so each line is 1 string
+
 	for i := range chrMap_string {
 		chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab). Note that Notepad generates proper tab, but not Atom
 		_, exists := chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
@@ -43,7 +43,16 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 			chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1]) // if species1 chr name already exists, append to the exisitng species2 chr name slice the new species2 chr name
 		}
 		fmt.Printf("chrMap: %v\n", chrMap) //TODO: remove after debugging
+		//TODO: make code more efficient, without initializing variables in loop
 	}
+
+	return chrMap
+}
+
+// helper function: check if maf entry passes checks
+func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap map[string][]string) bool {
+	pass := true
+
 	// for each chrom_species2, go through chrMap to see if it's contained within chrom_species1's matching species2 chr names
 	chrMatch := false // separate bool is needed for chrMatch, start out as false
 	for _, s := range chrMap[chrom_species1] {
@@ -174,6 +183,7 @@ func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold
 func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string, chrMap_filename string) (string, string) {
 	mafRecords := maf.Read(in_maf) // read input maf
+	chrMap := makeChrMap(chrMap_filename)
 
 	// open output files to write line-by-line and create variable for error
 	out_maf_filename := out_filename_prefix + ".filtered.maf"
@@ -218,7 +228,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
 				// filter out only s lines that we trust to save to filtered maf
-				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd, chrMap_filename)
+				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd, chrMap)
 				if pass {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed.WriteBed(out_species1, bed_species1)
