@@ -1,4 +1,4 @@
-Name	Seq	Value
+name	seq	value
 chr1:9-12	GGG	4
 chr1:12-15	GGG	7
 chr1:15-18	GCC	8
