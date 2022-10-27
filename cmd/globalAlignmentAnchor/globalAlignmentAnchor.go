@@ -52,7 +52,8 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 }
 
 // helper function: check if maf entry passes checks
-func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap map[string][]string) bool {
+func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap map[string][]string, diagonal bool) bool {
+
 	pass := true
 
 	// chrom should match between species1 and species2
@@ -67,12 +68,14 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 		pass = false
 	}
 
-	// comment out diagonal again for hg38 vs gorGor5. But need to uncomment for test. TODO: remove after debugging
 	// maf entry should be roughly diagonal
-	if (float64(species2_ChromStart) <= float64(species1_ChromStart)-0.05*float64(species1_SrcSize)) || (float64(species2_ChromStart) >= float64(species1_ChromStart)+0.05*float64(species1_SrcSize)) {
-		pass = false
-	} else if (float64(species1_ChromStart) <= float64(species2_ChromStart)-0.05*float64(species2_SrcSize)) || (float64(species1_ChromStart) >= float64(species2_ChromStart)+0.05*float64(species2_SrcSize)) {
-		pass = false
+	// unless user specifies that they do not want the diagonal check
+	if diagonal {
+		if (float64(species2_ChromStart) <= float64(species1_ChromStart)-0.05*float64(species1_SrcSize)) || (float64(species2_ChromStart) >= float64(species1_ChromStart)+0.05*float64(species1_SrcSize)) {
+			pass = false
+		} else if (float64(species1_ChromStart) <= float64(species2_ChromStart)-0.05*float64(species2_SrcSize)) || (float64(species1_ChromStart) >= float64(species2_ChromStart)+0.05*float64(species2_SrcSize)) {
+			pass = false
+		}
 	}
 
 	return pass
@@ -140,7 +143,7 @@ func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int
 
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf (aka anchors, or "match")
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold
-func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string, chrMap_filename string) (string, string) {
+func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string, chrMap_filename string, diagonal bool) (string, string) {
 	mafRecords := maf.Read(in_maf) // read input maf
 	chrMap := makeChrMap(chrMap_filename)
 
@@ -187,7 +190,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 				bed_species2 = bed.Bed{Chrom: chrom_species2, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
 				// filter out only s lines that we trust to save to filtered maf
-				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd, chrMap)
+				pass := matchMafPass(assembly_species1, assembly_species2, chrom_species1, chrom_species2, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bed_species1.ChromStart, bed_species1.ChromEnd, bed_species2.ChromStart, bed_species2.ChromEnd, chrMap, diagonal)
 				if pass {
 					maf.WriteToFileHandle(out_maf, mafRecords[i])
 					bed.WriteBed(out_species1, bed_species1)
@@ -478,14 +481,14 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 }
 
 // main function: assembles all steps
-func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, chrMap_filename string, out_filename_prefix string) {
+func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, chrMap_filename string, out_filename_prefix string, diagonal bool) {
 	// process input from out_filename_prefix flag
 	// about TrimSuffix: if the suffix string is at the end of the substrate string, then it is trimmed. If the suffix stirng is not at the end of the substrate string, then the substrate string is returned without any change
 	if out_filename_prefix == "" {
 		out_filename_prefix = strings.TrimSuffix(in_maf, ".maf")
 	}
 
-	in_species1_match, in_species2_match := mafToMatch(in_maf, species1, species2, out_filename_prefix, chrMap_filename)
+	in_species1_match, in_species2_match := mafToMatch(in_maf, species1, species2, out_filename_prefix, chrMap_filename, diagonal)
 	in_species1_gap, in_species2_gap := matchToGap(in_species1_match, in_species2_match, species1_genome, species2_genome, species1, species2, gapSizeProductLimit, out_filename_prefix)
 	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome, species1, species2, out_filename_prefix)
 }
@@ -513,6 +516,7 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	out_filename_prefix := flag.String("out_filename_prefix", "", "prefix for output filenames")
+	diagonal := flag.Bool("diagonal", true, "only allow maf matches close to the chromosome coodrinate diagonal to pass")
 	flag.Parse()
 
 	if len(flag.Args()) != expectedNum {
@@ -528,5 +532,5 @@ func main() {
 	chrMap_filename := flag.Arg(5)
 	gapSizeProductLimit := 10000000000 // gapSizeProductLimit is currently hardcoded based on align/affineGap tests, 10000000000
 
-	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, chrMap_filename, *out_filename_prefix)
+	globalAlignmentAnchor(in_maf, species1, species2, species1_genome, species2_genome, gapSizeProductLimit, chrMap_filename, *out_filename_prefix, *diagonal)
 }
