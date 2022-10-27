@@ -35,9 +35,9 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 
 	for i := range chrMap_string {
 		chrMap_stringSplit = strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab). Note that Notepad generates proper tab, but not Atom
-		_, exists = chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
+		_, exists = chrMap[chrMap_stringSplit[0]]                  // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
 		if !exists {
-			chrMap_species2 := make([]string, 1) // slice to hold just 1 species2 chr name the first time its species1 chr name appears
+			chrMap_species2 := make([]string, 1)       // slice to hold just 1 species2 chr name the first time its species1 chr name appears
 			chrMap_species2[0] = chrMap_stringSplit[1] // use species2 chr name to populate slice of length 1 in preparation for [string][]string key-value pair. This slice will be overwritten each time there is a new species2 chr name
 			//TODO: Can I define chrMap_species2 []string outside of for loop? The below line doesn't work. Because of this, if I define chrMap_species2 []string outside of for loop, I can't use "copy" to prevent the chrMap map from always pointing to the chrMap_species2 []string when chrMap_species2 gets updated
 			//copy(chrMap[chrMap_stringSplit[0]], chrMap_species2)
@@ -59,10 +59,10 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 	// for each chrom_species2, go through chrMap to see if it's contained within chrom_species1's matching species2 chr names
 	chrMatch := false // separate bool is needed for chrMatch, start out as false
 	for _, s := range chrMap[chrom_species1] {
-	 if chrom_species2 == s {
-		 chrMatch = true // only become true if chrMatch
-	 }
- 	}
+		if chrom_species2 == s {
+			chrMatch = true // only become true if chrMatch
+		}
+	}
 	if !chrMatch { // if chrMatch == false, then pass must be set to false
 		pass = false
 	}

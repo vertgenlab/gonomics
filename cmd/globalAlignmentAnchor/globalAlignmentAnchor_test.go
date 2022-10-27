@@ -14,9 +14,9 @@ var globalAlignmentAnchorTests = []struct {
 	species1_genome                          string
 	species2_genome                          string
 	gapSizeProductLimit                      int
-	chrMap_filename													 string
+	chrMap_filename                          string
 	out_filename_prefix                      string
-	diagonal																 bool
+	diagonal                                 bool
 	out_maf_expected                         string
 	species1_match_bed_expected              string
 	species2_match_bed_expected              string
