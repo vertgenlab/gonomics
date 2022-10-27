@@ -28,22 +28,24 @@ func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score
 func makeChrMap(chrMap_filename string) map[string][]string {
 
 	chrMap := make(map[string][]string) // map to hold species1 species2 chr name matches
+	var chrMap_stringSplit []string
+	var exists bool
 
 	chrMap_string := fileio.Read(chrMap_filename) // read file so each line is 1 string
 
 	for i := range chrMap_string {
-		chrMap_stringSplit := strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab). Note that Notepad generates proper tab, but not Atom
-		_, exists := chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
+		chrMap_stringSplit = strings.Split(chrMap_string[i], "\t") // convert each line = 1 string into a slice of 2 strings (assumption: each line only has 2 columns separated by 1 tab). Note that Notepad generates proper tab, but not Atom
+		_, exists = chrMap[chrMap_stringSplit[0]] // convert each line = 1 slice of 2 strings into map (bypass struct), so key is species1 chr name = slice[0] and value is a slice with all matching species2 chr name = slice[1] in >=1 lines
 		if !exists {
 			chrMap_species2 := make([]string, 1) // slice to hold just 1 species2 chr name the first time its species1 chr name appears
 			chrMap_species2[0] = chrMap_stringSplit[1] // use species2 chr name to populate slice of length 1 in preparation for [string][]string key-value pair. This slice will be overwritten each time there is a new species2 chr name
-			//copy(chrMap[chrMap_stringSplit[0]], chrMap_species2) // TODO: this does not work. Therefore, I moved chrMap_Species2 []string definition into loop. Otherwise, map will be updated with each slice update due to pointers, and can't use copy to resolve this issue
+			//TODO: Can I define chrMap_species2 []string outside of for loop? The below line doesn't work. Because of this, if I define chrMap_species2 []string outside of for loop, I can't use "copy" to prevent the chrMap map from always pointing to the chrMap_species2 []string when chrMap_species2 gets updated
+			//copy(chrMap[chrMap_stringSplit[0]], chrMap_species2)
 			chrMap[chrMap_stringSplit[0]] = chrMap_species2
 		} else {
 			chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1]) // if species1 chr name already exists, append to the exisitng species2 chr name slice the new species2 chr name
 		}
 		fmt.Printf("chrMap: %v\n", chrMap) //TODO: remove after debugging
-		//TODO: make code more efficient, without initializing variables in loop
 	}
 
 	return chrMap
