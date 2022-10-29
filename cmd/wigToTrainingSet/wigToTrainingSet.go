@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
+	"math"
 	"math/rand"
 )
 
@@ -25,9 +26,9 @@ func wigToTrainingSet(s Settings) {
 	validateOut := fileio.EasyCreate(s.ValidateFile)
 
 	// write headers to all three output files
-	fmt.Fprintf(trainOut, "name\tseq\tvalue\n")
-	fmt.Fprintf(testOut, "name\tseq\tvalue\n")
-	fmt.Fprintf(validateOut, "name\tseq\tvalue\n")
+	_, err = fmt.Fprintf(trainOut, "name\tseq\tvalue\n")
+	_, err = fmt.Fprintf(testOut, "name\tseq\tvalue\n")
+	_, err = fmt.Fprintf(validateOut, "name\tseq\tvalue\n")
 
 	if s.ValidationProp+s.TestingProp > 1 {
 		log.Fatalf("pVAlidation + pTesting should sum to less than one.")
@@ -45,7 +46,11 @@ func wigToTrainingSet(s Settings) {
 			currName = fmt.Sprintf("%s:%v-%v", i.Chrom, start, start+s.WindowSize)
 			currFa = fasta.Extract(genome[chromIndex], start, start+s.WindowSize, currName)
 			dna.AllToUpper(currFa.Seq)
-			lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), i.Values[(start+start+s.WindowSize)/2]) //start+window / 2 is the midpoint of the window.
+			if s.LogTransform {
+				lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), math.Log(i.Values[(start+start+s.WindowSize)/2]))
+			} else {
+				lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), i.Values[(start+start+s.WindowSize)/2]) //start+window / 2 is the midpoint of the window.
+			}
 			//now we shard the training example into either the testing, training, or validation set.
 			currRand = rand.Float64()
 			if currRand < s.TestingProp {
@@ -99,6 +104,7 @@ type Settings struct {
 	TestingProp    float64
 	SetSeed        int64
 	Missing        float64
+	LogTransform bool
 }
 
 func main() {
@@ -109,6 +115,7 @@ func main() {
 	var validationProp *float64 = flag.Float64("validationProp", 0.1, "Sets the proportion of the validation set. pValidate + pTesting + pTraining = 1.")
 	var testingProp *float64 = flag.Float64("testingProp", 0.1, "Sets the proportion of the testing set. pValidate + pTesting + pTraining = 1.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Sets a seed for the random number generator.")
+	var logTransform *bool = flag.Bool("logTransform", false, "Log transform the wig values in the output files.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -137,6 +144,7 @@ func main() {
 		TestingProp:    *testingProp,
 		SetSeed:        *setSeed,
 		Missing:        *missing,
+		LogTransform: *logTransform,
 	}
 
 	wigToTrainingSet(s)
