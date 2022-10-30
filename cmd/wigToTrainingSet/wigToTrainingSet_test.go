@@ -22,7 +22,8 @@ var WigToTrainingSetTests = []struct {
 	ExpectedTrainFile    string
 	ExpectedValidateFile string
 	ExpectedTestFile     string
-	LogTransform bool
+	LogTransform         bool
+	IncludeRevComp bool
 }{
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -38,7 +39,8 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTrainFile:    "testdata/expected.train.txt",
 		ExpectedValidateFile: "testdata/expected.validate.txt",
 		ExpectedTestFile:     "testdata/expected.test.txt",
-		LogTransform: false,
+		LogTransform:         false,
+		IncludeRevComp: false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -54,7 +56,25 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTrainFile:    "testdata/expected.log.train.txt",
 		ExpectedValidateFile: "testdata/expected.log.validate.txt",
 		ExpectedTestFile:     "testdata/expected.log.test.txt",
-		LogTransform: true,
+		LogTransform:         true,
+		IncludeRevComp: false,
+	},
+	{InWigFile: "testdata/in.wig",
+		InFastaFile:          "testdata/genome.fa",
+		TrainFile:            "testdata/tmp.revComp.train.txt",
+		ValidateFile:         "testdata/tmp.revComp.validate.txt",
+		TestFile:             "testdata/tmp.revComp.test.txt",
+		WindowSize:           3,
+		Stride:               3,
+		ValidationProp:       0.1,
+		TestingProp:          0.1,
+		SetSeed:              5,
+		Missing:              -10,
+		ExpectedTrainFile:    "testdata/expected.revComp.train.txt",
+		ExpectedValidateFile: "testdata/expected.revComp.validate.txt",
+		ExpectedTestFile:     "testdata/expected.revComp.test.txt",
+		LogTransform:         false,
+		IncludeRevComp: true,
 	},
 }
 
@@ -74,7 +94,8 @@ func TestWigToTrainingSet(t *testing.T) {
 			TestingProp:    v.TestingProp,
 			SetSeed:        v.SetSeed,
 			Missing:        v.Missing,
-			LogTransform: v.LogTransform,
+			LogTransform:   v.LogTransform,
+			IncludeRevComp: v.IncludeRevComp,
 		}
 		wigToTrainingSet(s)
 		if !fileio.AreEqual(v.TrainFile, v.ExpectedTrainFile) {

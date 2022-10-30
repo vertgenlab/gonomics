@@ -63,6 +63,26 @@ func wigToTrainingSet(s Settings) {
 				_, err = fmt.Fprintf(trainOut, lineToWrite)
 				exception.PanicOnErr(err)
 			}
+
+			if s.IncludeRevComp {
+				dna.ReverseComplement(currFa.Seq)
+				if s.LogTransform {
+					lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", fmt.Sprintf("%s_rev", currFa.Name), dna.BasesToString(currFa.Seq), math.Log(i.Values[(start+start+s.WindowSize)/2]))
+				} else {
+					lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", fmt.Sprintf("%s_rev", currFa.Name), dna.BasesToString(currFa.Seq), i.Values[(start+start+s.WindowSize)/2])
+				}
+				//we don't regenerate currRand, for and rev for same sequence both land in the same shard.
+				if currRand < s.TestingProp {
+					_, err = fmt.Fprintf(testOut, lineToWrite)
+					exception.PanicOnErr(err)
+				} else if currRand < s.TestingProp+s.ValidationProp {
+					_, err = fmt.Fprintf(validateOut, lineToWrite)
+					exception.PanicOnErr(err)
+				} else {
+					_, err = fmt.Fprintf(trainOut, lineToWrite)
+					exception.PanicOnErr(err)
+				}
+			}
 		}
 	}
 	err = trainOut.Close()
@@ -104,7 +124,8 @@ type Settings struct {
 	TestingProp    float64
 	SetSeed        int64
 	Missing        float64
-	LogTransform bool
+	LogTransform   bool
+	IncludeRevComp bool
 }
 
 func main() {
@@ -116,6 +137,7 @@ func main() {
 	var testingProp *float64 = flag.Float64("testingProp", 0.1, "Sets the proportion of the testing set. pValidate + pTesting + pTraining = 1.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Sets a seed for the random number generator.")
 	var logTransform *bool = flag.Bool("logTransform", false, "Log transform the wig values in the output files.")
+	var includeRevComp *bool = flag.Bool("includeRevComp", false, "Includes the rev comp for each sequence as an additional training/validation/testing example.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -144,7 +166,8 @@ func main() {
 		TestingProp:    *testingProp,
 		SetSeed:        *setSeed,
 		Missing:        *missing,
-		LogTransform: *logTransform,
+		LogTransform:   *logTransform,
+		IncludeRevComp: *includeRevComp,
 	}
 
 	wigToTrainingSet(s)
