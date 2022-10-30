@@ -23,7 +23,7 @@ var WigToTrainingSetTests = []struct {
 	ExpectedValidateFile string
 	ExpectedTestFile     string
 	LogTransform         bool
-	IncludeRevComp bool
+	IncludeRevComp       bool
 }{
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -40,7 +40,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedValidateFile: "testdata/expected.validate.txt",
 		ExpectedTestFile:     "testdata/expected.test.txt",
 		LogTransform:         false,
-		IncludeRevComp: false,
+		IncludeRevComp:       false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -57,7 +57,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedValidateFile: "testdata/expected.log.validate.txt",
 		ExpectedTestFile:     "testdata/expected.log.test.txt",
 		LogTransform:         true,
-		IncludeRevComp: false,
+		IncludeRevComp:       false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -74,7 +74,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedValidateFile: "testdata/expected.revComp.validate.txt",
 		ExpectedTestFile:     "testdata/expected.revComp.test.txt",
 		LogTransform:         false,
-		IncludeRevComp: true,
+		IncludeRevComp:       true,
 	},
 }
 
