@@ -11,6 +11,7 @@ var DunnTests = []struct {
 	B                    bed.Bed
 	Aln                  []fasta.Fasta
 	G                    []*Group
+	Realign bool
 	ExpectedDunnValue    float64
 	ExpectedSegSiteCount int
 	ExpectedMissing      string
@@ -18,6 +19,7 @@ var DunnTests = []struct {
 	{B: bed.Bed{Chrom: "chr1", ChromStart: 1, ChromEnd: 5, Name: "FirstTest"},
 		Aln:                  myAln,
 		G:                    myGroups,
+		Realign: false,
 		ExpectedDunnValue:    0.5,
 		ExpectedSegSiteCount: 3,
 		ExpectedMissing:      "Missing: Apple: Tomato: ",
@@ -25,6 +27,7 @@ var DunnTests = []struct {
 	{B: bed.Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: "SecondTest"},
 		Aln:                  myAln,
 		G:                    myGroups,
+		Realign: false,
 		ExpectedDunnValue:    2,
 		ExpectedSegSiteCount: 5,
 		ExpectedMissing:      "Missing: Apple: Tomato: ",
@@ -50,7 +53,7 @@ func TestDunn(t *testing.T) {
 	var testSegSiteCount int
 	var testMissing string
 	for _, v := range DunnTests {
-		testDunnValue, testSegSiteCount, testMissing = Dunn(v.B, v.Aln, v.G)
+		testDunnValue, testSegSiteCount, testMissing = Dunn(v.B, v.Aln, v.G, v.Realign)
 		if testDunnValue != v.ExpectedDunnValue {
 			t.Errorf("Error in Dunn. Output Dunn index value was not as expected.")
 		}

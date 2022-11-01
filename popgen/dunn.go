@@ -1,7 +1,7 @@
 package popgen
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -48,7 +48,7 @@ func Dunn(b bed.Bed, aln []fasta.Fasta, g []*Group, realign bool) (float64, int,
 	}
 
 	minInter = findMinInter(g, subFa)
-	fmt.Printf("%d\t%d\t%d\t%d\t%g\n", b.ChromStart, fasta.NumSegregatingSites(subFa), minInter, maxIntra, float64(minInter)/float64(maxIntra))
+	//fmt.Printf("%d\t%d\t%d\t%d\t%g\n", b.ChromStart, fasta.NumSegregatingSites(subFa), minInter, maxIntra, float64(minInter)/float64(maxIntra))
 	return float64(minInter) / float64(maxIntra), fasta.NumSegregatingSites(subFa), missing
 }
 

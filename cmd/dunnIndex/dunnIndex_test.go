@@ -13,14 +13,15 @@ var DunnIndexTests = []struct {
 	InputGroup   string
 	OutFile      string
 	ExpectedFile string
+	Realign bool
 }{
-	{"testdata/test.bed", "testdata/test.fa", "testdata/groups.list", "testdata/tmp.bed", "testdata/expected.bed"},
+	{"testdata/test.bed", "testdata/test.fa", "testdata/groups.list", "testdata/tmp.bed", "testdata/expected.bed", false},
 }
 
 func TestDunnIndex(t *testing.T) {
 	var err error
 	for _, v := range DunnIndexTests {
-		dunnIndex(v.InputBed, v.InputFa, v.InputGroup, v.OutFile)
+		dunnIndex(v.InputBed, v.InputFa, v.InputGroup, v.Realign, v.OutFile)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in dunnIndex. Output did not match expected.")
 		} else {
