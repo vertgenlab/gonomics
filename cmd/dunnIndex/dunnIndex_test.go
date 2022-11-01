@@ -13,7 +13,7 @@ var DunnIndexTests = []struct {
 	InputGroup   string
 	OutFile      string
 	ExpectedFile string
-	Realign bool
+	Realign      bool
 }{
 	{"testdata/test.bed", "testdata/test.fa", "testdata/groups.list", "testdata/tmp.bed", "testdata/expected.bed", false},
 	{"testdata/test.realign.bed", "testdata/test.realign.fa", "testdata/groups.list", "testdata/tmp.realign.bed", "testdata/expected.realign.bed", true},

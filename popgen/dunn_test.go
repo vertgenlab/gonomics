@@ -11,7 +11,7 @@ var DunnTests = []struct {
 	B                    bed.Bed
 	Aln                  []fasta.Fasta
 	G                    []*Group
-	Realign bool
+	Realign              bool
 	ExpectedDunnValue    float64
 	ExpectedSegSiteCount int
 	ExpectedMissing      string
@@ -19,7 +19,7 @@ var DunnTests = []struct {
 	{B: bed.Bed{Chrom: "chr1", ChromStart: 1, ChromEnd: 5, Name: "FirstTest"},
 		Aln:                  myAln,
 		G:                    myGroups,
-		Realign: false,
+		Realign:              false,
 		ExpectedDunnValue:    0.5,
 		ExpectedSegSiteCount: 3,
 		ExpectedMissing:      "Missing: Apple: Tomato: ",
@@ -27,7 +27,7 @@ var DunnTests = []struct {
 	{B: bed.Bed{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: "SecondTest"},
 		Aln:                  myAln,
 		G:                    myGroups,
-		Realign: false,
+		Realign:              false,
 		ExpectedDunnValue:    2,
 		ExpectedSegSiteCount: 5,
 		ExpectedMissing:      "Missing: Apple: Tomato: ",
