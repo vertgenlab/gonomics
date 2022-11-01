@@ -23,6 +23,7 @@ func faToPredictSet(s Settings) {
 	for i = range records {
 		for j = 0; j < len(records[i].Seq)-s.WindowSize; j += s.Stride {
 			currFa = fasta.Extract(records[i], j, j+s.WindowSize, fmt.Sprintf("%s:%v-%v", records[i].Name, j, j+s.WindowSize))
+			dna.AllToUpper(currFa.Seq)
 			lineToWrite = fmt.Sprintf("%s\t%s\n", currFa.Name, dna.BasesToString(currFa.Seq))
 			_, err = fmt.Fprintf(out, lineToWrite)
 			exception.PanicOnErr(err)
