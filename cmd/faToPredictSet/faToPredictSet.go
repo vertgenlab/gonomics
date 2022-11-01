@@ -35,7 +35,7 @@ func faToPredictSet(s Settings) {
 
 func usage() {
 	fmt.Print(
-		"faToPredictSet - Make deep learning prediction CSV files from input fasta format data.\n" +
+		"faToPredictSet - Make deep learning prediction TSV files from input fasta format data.\n" +
 			"Usage:\n" +
 			" faToPredictSet input.fa output.txt\n" +
 			"options:\n")
