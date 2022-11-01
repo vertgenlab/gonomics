@@ -20,7 +20,7 @@ func faToPredictSet(s Settings) {
 	var currFa fasta.Fasta
 	var lineToWrite string
 
-	for i, _ = range records {
+	for i = range records {
 		for j = 0; j < len(records[i].Seq)-s.WindowSize; j += s.Stride {
 			currFa = fasta.Extract(records[i], j, j+s.WindowSize, fmt.Sprintf("%s:%v-%v", records[i].Name, j, j+s.WindowSize))
 			lineToWrite = fmt.Sprintf("%s\t%s\n", currFa.Name, dna.BasesToString(currFa.Seq))

@@ -104,7 +104,7 @@ type Settings struct {
 	TestingProp    float64
 	SetSeed        int64
 	Missing        float64
-	LogTransform bool
+	LogTransform   bool
 }
 
 func main() {
@@ -144,7 +144,7 @@ func main() {
 		TestingProp:    *testingProp,
 		SetSeed:        *setSeed,
 		Missing:        *missing,
-		LogTransform: *logTransform,
+		LogTransform:   *logTransform,
 	}
 
 	wigToTrainingSet(s)

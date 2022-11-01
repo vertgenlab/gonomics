@@ -22,7 +22,7 @@ var WigToTrainingSetTests = []struct {
 	ExpectedTrainFile    string
 	ExpectedValidateFile string
 	ExpectedTestFile     string
-	LogTransform bool
+	LogTransform         bool
 }{
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -38,7 +38,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTrainFile:    "testdata/expected.train.txt",
 		ExpectedValidateFile: "testdata/expected.validate.txt",
 		ExpectedTestFile:     "testdata/expected.test.txt",
-		LogTransform: false,
+		LogTransform:         false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -54,7 +54,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTrainFile:    "testdata/expected.log.train.txt",
 		ExpectedValidateFile: "testdata/expected.log.validate.txt",
 		ExpectedTestFile:     "testdata/expected.log.test.txt",
-		LogTransform: true,
+		LogTransform:         true,
 	},
 }
 
@@ -74,7 +74,7 @@ func TestWigToTrainingSet(t *testing.T) {
 			TestingProp:    v.TestingProp,
 			SetSeed:        v.SetSeed,
 			Missing:        v.Missing,
-			LogTransform: v.LogTransform,
+			LogTransform:   v.LogTransform,
 		}
 		wigToTrainingSet(s)
 		if !fileio.AreEqual(v.TrainFile, v.ExpectedTrainFile) {
