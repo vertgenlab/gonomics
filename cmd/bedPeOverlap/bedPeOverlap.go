@@ -12,6 +12,7 @@ import (
 )
 
 func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool) {
+	//bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
 	if bedSelect {
 		SelectIsBed(selectFile, bedpeInFile, contactOutFile)
 	} else {
@@ -19,6 +20,8 @@ func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, 
 	}
 }
 
+//This function is for the case where the select file is a bed.
+//input bedpe entries are retained if either end overlaps one of the bedSelectFile entries.
 func SelectIsBed(bedSelectFile string, bedpeInFile string, contactOutFile string) {
 	var selectIntervals = make([]interval.Interval, 0)
 	var currOverlaps []interval.Interval
@@ -49,6 +52,8 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, contactOutFile string
 	exception.PanicOnErr(err)
 }
 
+//This is the case where the select file is a bedpe. Input bedpe entries will be retained
+//in the output if both ends of the bedpe overlap both ends of a bedpe entry in the select file.
 func SelectIsBedPe(bedpeSelectFile string, bedpeInFile string, contactOutFile string) {
 	var inIntervals = make([]interval.Interval, 0)
 	var leftOverlaps, rightOverlaps []interval.Interval
@@ -96,6 +101,9 @@ func usage() {
 	fmt.Print("bedpeOverlap - Filters bedpe entries based on overlaps from the select file.\n" +
 		"Default behavior expects a bedpe select file and returns entries where both ends of a bedpe entry from the input file" +
 		"overlap both ends of a bedpe entry from the select file.\n" +
+		"When the select file is a bed, as specified in the option 'bedSelect',\n" +
+		"entries are retained if at least one end of an input bedpe overlaps a bed entry\n" +
+		"in the select file.\n" +
 		"Usage:\n" +
 		"bedpeOverlap [options] selectFile inputFile.bedPe out.bedpe\n\n")
 	flag.PrintDefaults()
