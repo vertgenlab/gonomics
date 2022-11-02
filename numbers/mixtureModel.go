@@ -2,7 +2,6 @@ package numbers
 
 import (
 	"math"
-	"math/rand"
 )
 
 // logProbEpsilon is the arbitrary set point for convergence. When the model likelihood is
@@ -26,7 +25,7 @@ type MixtureModel struct {
 	work           []float64   // holds intermediate values for calculating LogLikelihood
 }
 
-// RunMixtureModel uses the expectation-maximization (EM) algorithm to find a mixture of k gaussian distributions that fit the input data slice.
+// RunMixtureModel1D uses the expectation-maximization (EM) algorithm to find a mixture of k gaussian distributions that fit the input data slice.
 // Note that this version of RunMixtureModel only works on 1d data. The EM algorithm works by iteratively refining the model until the performance
 // of the model is no longer improving (i.e. it has converged). RunMixtureModel will iterate a maximum of maxIterations until retrying with new
 // starting values until convergence or maxResets. RunMixtureModel will store the results of the model in mm and will return whether the model
@@ -34,7 +33,7 @@ type MixtureModel struct {
 //
 // To reduce the number of allocations required for repeated use of RunMixtureModel, the input mixture model 'mm' can be reused between calls
 // with no modifications necessary.
-func RunMixtureModel(data []float64, k int, maxIterations int, maxResets int, mm *MixtureModel) (converged bool, iterationsRun int) {
+func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, mm *MixtureModel) (converged bool, iterationsRun int) {
 	if len(data) == 0 {
 		return
 	}
@@ -119,7 +118,7 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 
 	// TODO smarter initial guess for mean and variance (k-means/PCA)
 	for i := range mm.Means {
-		mm.Means[i] = rand.Float64() * 100
+		mm.Means[i] = data[RandIntInRange(0, len(data)-1)]
 		mm.Stdev[i] = 1
 	}
 
