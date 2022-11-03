@@ -25,10 +25,15 @@ func wigToTrainingSet(s Settings) {
 	testOut := fileio.EasyCreate(s.TestFile)
 	validateOut := fileio.EasyCreate(s.ValidateFile)
 
-	// write headers to all three output files
-	_, err = fmt.Fprintf(trainOut, "name\tseq\tvalue\n")
-	_, err = fmt.Fprintf(testOut, "name\tseq\tvalue\n")
-	_, err = fmt.Fprintf(validateOut, "name\tseq\tvalue\n")
+	if !s.NoHeader {
+		// write headers to all three output files
+		_, err = fmt.Fprintf(trainOut, "name\tseq\tvalue\n")
+		exception.PanicOnErr(err)
+		_, err = fmt.Fprintf(testOut, "name\tseq\tvalue\n")
+		exception.PanicOnErr(err)
+		_, err = fmt.Fprintf(validateOut, "name\tseq\tvalue\n")
+		exception.PanicOnErr(err)
+	}
 
 	if s.ValidationProp+s.TestingProp > 1 {
 		log.Fatalf("pVAlidation + pTesting should sum to less than one.")
@@ -126,6 +131,7 @@ type Settings struct {
 	Missing        float64
 	LogTransform   bool
 	IncludeRevComp bool
+	NoHeader bool
 }
 
 func main() {
@@ -138,6 +144,7 @@ func main() {
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Sets a seed for the random number generator.")
 	var logTransform *bool = flag.Bool("logTransform", false, "Log transform the wig values in the output files.")
 	var includeRevComp *bool = flag.Bool("includeRevComp", false, "Includes the rev comp for each sequence as an additional training/validation/testing example.")
+	var noHeader *bool = flag.Bool("noHeader", false, "Do not include a header line in output data. Useful if subsetting or shuffling output.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -168,6 +175,7 @@ func main() {
 		Missing:        *missing,
 		LogTransform:   *logTransform,
 		IncludeRevComp: *includeRevComp,
+		NoHeader: *noHeader,
 	}
 
 	wigToTrainingSet(s)
