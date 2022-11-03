@@ -131,7 +131,7 @@ type Settings struct {
 	Missing        float64
 	LogTransform   bool
 	IncludeRevComp bool
-	NoHeader bool
+	NoHeader       bool
 }
 
 func main() {
@@ -175,7 +175,7 @@ func main() {
 		Missing:        *missing,
 		LogTransform:   *logTransform,
 		IncludeRevComp: *includeRevComp,
-		NoHeader: *noHeader,
+		NoHeader:       *noHeader,
 	}
 
 	wigToTrainingSet(s)

@@ -24,7 +24,7 @@ var WigToTrainingSetTests = []struct {
 	ExpectedTestFile     string
 	LogTransform         bool
 	IncludeRevComp       bool
-	NoHeader bool
+	NoHeader             bool
 }{
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -42,7 +42,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTestFile:     "testdata/expected.test.txt",
 		LogTransform:         false,
 		IncludeRevComp:       false,
-		NoHeader: false,
+		NoHeader:             false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -60,7 +60,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTestFile:     "testdata/expected.log.test.txt",
 		LogTransform:         true,
 		IncludeRevComp:       false,
-		NoHeader: false,
+		NoHeader:             false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -78,7 +78,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTestFile:     "testdata/expected.revComp.test.txt",
 		LogTransform:         false,
 		IncludeRevComp:       true,
-		NoHeader: false,
+		NoHeader:             false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -96,7 +96,7 @@ var WigToTrainingSetTests = []struct {
 		ExpectedTestFile:     "testdata/expected.noHeader.test.txt",
 		LogTransform:         false,
 		IncludeRevComp:       true,
-		NoHeader: true,
+		NoHeader:             true,
 	},
 }
 
@@ -118,7 +118,7 @@ func TestWigToTrainingSet(t *testing.T) {
 			Missing:        v.Missing,
 			LogTransform:   v.LogTransform,
 			IncludeRevComp: v.IncludeRevComp,
-			NoHeader: v.NoHeader,
+			NoHeader:       v.NoHeader,
 		}
 		wigToTrainingSet(s)
 		if !fileio.AreEqual(v.TrainFile, v.ExpectedTrainFile) {
