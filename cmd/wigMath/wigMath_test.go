@@ -13,6 +13,8 @@ var WigMathTests = []struct {
 	ExpectedFile string
 	SubtractFile string
 	MovingAverageSmoothing int
+	AbsoluteError string
+	AbsolutePercentError string
 }{
 	{
 		InFile: "testdata/in.wig",
@@ -20,6 +22,8 @@ var WigMathTests = []struct {
 		ExpectedFile: "testdata/expected.subtract.wig",
 		SubtractFile: "testdata/subtract.wig",
 		MovingAverageSmoothing: 1,
+		AbsoluteError: "",
+		AbsolutePercentError: "",
 	},
 	{
 		InFile: "testdata/unsmooth.wig",
@@ -27,6 +31,26 @@ var WigMathTests = []struct {
 		ExpectedFile: "testdata/expected.smooth.wig",
 		SubtractFile: "",
 		MovingAverageSmoothing: 5,
+		AbsoluteError: "",
+		AbsolutePercentError: "",
+	},
+	{
+		InFile: "testdata/in.wig",
+		OutFile: "testdata/tmp.absError.wig",
+		ExpectedFile: "testdata/expected.absError.wig",
+		SubtractFile: "",
+		MovingAverageSmoothing: 1,
+		AbsoluteError: "testdata/subtract.wig",
+		AbsolutePercentError: "",
+	},
+	{
+		InFile: "testdata/in.wig",
+		OutFile: "testdata/tmp.absPercentError.wig",
+		ExpectedFile: "testdata/expected.absPercentError.wig",
+		SubtractFile: "",
+		MovingAverageSmoothing: 1,
+		AbsoluteError: "",
+		AbsolutePercentError: "testdata/subtract.wig",
 	},
 }
 
@@ -39,6 +63,8 @@ func TestWigMath(t *testing.T) {
 			OutFile: v.OutFile,
 			ElementWiseSubtract: v.SubtractFile,
 			MovingAverageSmoothing: v.MovingAverageSmoothing,
+			AbsoluteError: v.AbsoluteError,
+			AbsolutePercentError: v.AbsolutePercentError,
 		}
 		wigMath(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
