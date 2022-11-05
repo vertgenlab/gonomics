@@ -8,24 +8,24 @@ import (
 )
 
 var WigMathTests = []struct {
-	InFile string
-	OutFile string
-	ExpectedFile string
-	SubtractFile string
+	InFile                 string
+	OutFile                string
+	ExpectedFile           string
+	SubtractFile           string
 	MovingAverageSmoothing int
 }{
 	{
-		InFile: "testdata/in.wig",
-		OutFile: "testdata/tmp.wig",
-		ExpectedFile: "testdata/expected.subtract.wig",
-		SubtractFile: "testdata/subtract.wig",
+		InFile:                 "testdata/in.wig",
+		OutFile:                "testdata/tmp.wig",
+		ExpectedFile:           "testdata/expected.subtract.wig",
+		SubtractFile:           "testdata/subtract.wig",
 		MovingAverageSmoothing: 1,
 	},
 	{
-		InFile: "testdata/unsmooth.wig",
-		OutFile: "testdata/tmp.smooth.wig",
-		ExpectedFile: "testdata/expected.smooth.wig",
-		SubtractFile: "",
+		InFile:                 "testdata/unsmooth.wig",
+		OutFile:                "testdata/tmp.smooth.wig",
+		ExpectedFile:           "testdata/expected.smooth.wig",
+		SubtractFile:           "",
 		MovingAverageSmoothing: 5,
 	},
 }
@@ -35,9 +35,9 @@ func TestWigMath(t *testing.T) {
 	var s Settings
 	for _, v := range WigMathTests {
 		s = Settings{
-			InFile: v.InFile,
-			OutFile: v.OutFile,
-			ElementWiseSubtract: v.SubtractFile,
+			InFile:                 v.InFile,
+			OutFile:                v.OutFile,
+			ElementWiseSubtract:    v.SubtractFile,
 			MovingAverageSmoothing: v.MovingAverageSmoothing,
 		}
 		wigMath(s)

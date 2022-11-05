@@ -52,18 +52,18 @@ func getChromIndex(w []wig.Wig, chrom string) int {
 
 func usage() {
 	fmt.Print(
-	"wigMath - Perform mathematical operations on wig format data.\n" +
-		"Mathematical operations must be performed as single operations.\n" +
-	"Usage:\n" +
-	"wigMath in.wig out.wig" +
-	"options:\n")
+		"wigMath - Perform mathematical operations on wig format data.\n" +
+			"Mathematical operations must be performed as single operations.\n" +
+			"Usage:\n" +
+			"wigMath in.wig out.wig" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
 type Settings struct {
-	InFile string
-	OutFile string
-	ElementWiseSubtract string
+	InFile                 string
+	OutFile                string
+	ElementWiseSubtract    string
 	MovingAverageSmoothing int
 }
 
@@ -83,10 +83,10 @@ func main() {
 
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	s := Settings {
-		InFile: inFile,
-		OutFile: outFile,
-		ElementWiseSubtract: *elementWiseSubtract,
+	s := Settings{
+		InFile:                 inFile,
+		OutFile:                outFile,
+		ElementWiseSubtract:    *elementWiseSubtract,
 		MovingAverageSmoothing: *movingAverageSmoothing,
 	}
 	wigMath(s)
