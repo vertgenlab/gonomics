@@ -40,9 +40,9 @@ func wigMath(s Settings) {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
 				if records[i].Values[j] != 0 {
-					records[i].Values[j] = math.Abs((records[i].Values[j] - second[chromIndex].Values[j]) / records[i].Values[j])*100
+					records[i].Values[j] = math.Abs((records[i].Values[j]-second[chromIndex].Values[j])/records[i].Values[j]) * 100
 				} else {
-					records[i].Values[j] = 0//placeholder, these positions are undefined.
+					records[i].Values[j] = 0 //placeholder, these positions are undefined.
 				}
 			}
 		}
@@ -94,8 +94,8 @@ type Settings struct {
 	OutFile                string
 	ElementWiseSubtract    string
 	MovingAverageSmoothing int
-	AbsoluteError string
-	AbsolutePercentError string
+	AbsoluteError          string
+	AbsolutePercentError   string
 }
 
 func main() {
@@ -121,8 +121,8 @@ func main() {
 		OutFile:                outFile,
 		ElementWiseSubtract:    *elementWiseSubtract,
 		MovingAverageSmoothing: *movingAverageSmoothing,
-		AbsoluteError: *absoluteError,
-		AbsolutePercentError: *absolutePercentError,
+		AbsoluteError:          *absoluteError,
+		AbsolutePercentError:   *absolutePercentError,
 	}
 	wigMath(s)
 }
