@@ -48,9 +48,9 @@ func wigMath(s Settings) {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
 				if records[i].Values[j] != 0 {
-					records[i].Values[j] = math.Abs((records[i].Values[j] - second[chromIndex].Values[j]) / records[i].Values[j])*100
+					records[i].Values[j] = math.Abs((records[i].Values[j]-second[chromIndex].Values[j])/records[i].Values[j]) * 100
 				} else {
-					records[i].Values[j] = 0//placeholder, these positions are undefined.
+					records[i].Values[j] = 0 //placeholder, these positions are undefined.
 				}
 			}
 		}
