@@ -18,7 +18,33 @@ func wigMath(s Settings) {
 	var i, j, chromIndex int
 	records := wig.Read(s.InFile)
 	multipleOptionCheck(s)
-	if s.ElementWiseSubtract != "" {
+	if s.ScalarMultiply != 1 {
+		for i = range records {
+			for j = range records[i].Values {
+				records[i].Values[j] *= s.ScalarMultiply
+			}
+		}
+		wig.Write(s.OutFile, records)
+	} else if s.ScalarDivide != 1 {
+		if s.ScalarDivide == 0 {
+			log.Fatalf("You cannot divide wig values by zero, please input another value. I'm not mad but I'm a bit disappointed.")
+		}
+		for i = range records {
+			for j = range records[i].Values {
+				records[i].Values[j] /= s.ScalarDivide
+			}
+		}
+		wig.Write(s.OutFile, records)
+	} else if s.ElementWiseAdd != "" {
+		second = wig.Read(s.ElementWiseAdd)
+		for i = range records {
+			chromIndex = getChromIndex(second, records[i].Chrom)
+			for j = range records[i].Values {
+				records[i].Values[j] += second[chromIndex].Values[j]
+			}
+		}
+		wig.Write(s.OutFile, records)
+	} else if s.ElementWiseSubtract != "" {
 		second = wig.Read(s.ElementWiseSubtract)
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
@@ -27,12 +53,10 @@ func wigMath(s Settings) {
 			}
 		}
 		wig.Write(s.OutFile, records)
-	}
-	if s.MovingAverageSmoothing > 1 {
+	} else if s.MovingAverageSmoothing > 1 {
 		records = wig.SmoothSlice(records, s.MovingAverageSmoothing)
 		wig.Write(s.OutFile, records)
-	}
-	if s.AbsoluteError != "" {
+	} else if s.AbsoluteError != "" {
 		second = wig.Read(s.AbsoluteError)
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
@@ -41,8 +65,7 @@ func wigMath(s Settings) {
 			}
 		}
 		wig.Write(s.OutFile, records)
-	}
-	if s.AbsolutePercentError != "" {
+	} else if s.AbsolutePercentError != "" {
 		second = wig.Read(s.AbsolutePercentError)
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
@@ -55,8 +78,7 @@ func wigMath(s Settings) {
 			}
 		}
 		wig.Write(s.OutFile, records)
-	}
-	if s.Pearson != "" {
+	} else if s.Pearson != "" {
 		second = wig.Read(s.Pearson)
 		answer := wig.Pearson(records, second, s.Missing, s.SamplingFrequency)
 		out := fileio.EasyCreate(s.OutFile)
@@ -68,6 +90,12 @@ func wigMath(s Settings) {
 
 func multipleOptionCheck(s Settings) {
 	var optionCount = 0
+	if s.ScalarMultiply != 1 {
+		optionCount++
+	}
+	if s.ElementWiseAdd != "" {
+		optionCount++
+	}
 	if s.ElementWiseSubtract != "" {
 		optionCount++
 	}
@@ -111,6 +139,9 @@ func usage() {
 type Settings struct {
 	InFile                 string
 	OutFile                string
+	ScalarMultiply float64
+	ScalarDivide float64
+	ElementWiseAdd string
 	ElementWiseSubtract    string
 	MovingAverageSmoothing int
 	AbsoluteError string
@@ -123,6 +154,9 @@ type Settings struct {
 
 func main() {
 	var expectedNumArgs = 2
+	var scalarMultiply *float64 = flag.Float64("scalarMultiply", 1, "Multiply all entries in the input wig by the user-specified value.")
+	var scalarDivide *float64 = flag.Float64("scalarDivide", 1, "Divide all entries in the input wig by the user-specified value (cannot divide by zero).")
+	var elementWiseAdd *string = flag.String("elementWiseAdd", "", "Specify a second wig file to add (element-wise) from the first. Returns a wig file.")
 	var elementWiseSubtract *string = flag.String("elementWiseSubtract", "", "Specify a second wig file to subtract (element-wise) from the first. Returns a wig file.")
 	var movingAverageSmoothing *int = flag.Int("movingAverageSmoothing", 1, "Set to a number greater than 1 to perform moving average smoothing on input wig data. Returns a wig file.")
 	var absoluteError *string = flag.String("absoluteError", "", "Specify a second wig file to determine the absolute error (element-wise) from the first. Returns a wig file.")
@@ -147,6 +181,9 @@ func main() {
 	s := Settings{
 		InFile:                 inFile,
 		OutFile:                outFile,
+		ScalarMultiply: *scalarMultiply,
+		ScalarDivide: *scalarDivide,
+		ElementWiseAdd: *elementWiseAdd,
 		ElementWiseSubtract:    *elementWiseSubtract,
 		MovingAverageSmoothing: *movingAverageSmoothing,
 		AbsoluteError: *absoluteError,

@@ -3,7 +3,7 @@ package wig
 import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
-	"fmt"
+	//DEBUG: "fmt"
 	"math/rand"
 	"sort"
 	"strings"
@@ -85,7 +85,7 @@ func Pearson(alpha []Wig, beta []Wig, missing float64, samplingFrequency float64
 	}
 	for i = range alpha {
 		chromIndex = getChromIndex(beta, alpha[i].Chrom)
-		fmt.Printf("ChromIndex: %v.\n", chromIndex)
+		//DEBUG: fmt.Printf("ChromIndex: %v.\n", chromIndex)
 		if len(alpha[i].Values) != len(beta[chromIndex].Values) {
 			log.Fatalf("Error in wig.Pearson. Entries with the same chr name have a different number of values. Len(a): %v. Len(b): %v.", len(alpha[i].Values), len(beta[chromIndex].Values))
 		}
