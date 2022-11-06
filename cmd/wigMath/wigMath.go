@@ -139,9 +139,9 @@ func usage() {
 type Settings struct {
 	InFile                 string
 	OutFile                string
-	ScalarMultiply float64
-	ScalarDivide float64
-	ElementWiseAdd string
+	ScalarMultiply         float64
+	ScalarDivide           float64
+	ElementWiseAdd         string
 	ElementWiseSubtract    string
 	MovingAverageSmoothing int
 	AbsoluteError          string
@@ -181,9 +181,9 @@ func main() {
 	s := Settings{
 		InFile:                 inFile,
 		OutFile:                outFile,
-		ScalarMultiply: *scalarMultiply,
-		ScalarDivide: *scalarDivide,
-		ElementWiseAdd: *elementWiseAdd,
+		ScalarMultiply:         *scalarMultiply,
+		ScalarDivide:           *scalarDivide,
+		ElementWiseAdd:         *elementWiseAdd,
 		ElementWiseSubtract:    *elementWiseSubtract,
 		MovingAverageSmoothing: *movingAverageSmoothing,
 		AbsoluteError:          *absoluteError,
