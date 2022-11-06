@@ -60,7 +60,7 @@ func wigMath(s Settings) {
 		second = wig.Read(s.Pearson)
 		answer := wig.Pearson(records, second, s.Missing, s.SamplingFrequency)
 		out := fileio.EasyCreate(s.OutFile)
-		_, err = fmt.Fprintf(out,"PCC:\t%f\n", answer)
+		_, err = fmt.Fprintf(out, "PCC:\t%f\n", answer)
 		err = out.Close()
 		exception.PanicOnErr(err)
 	}
@@ -113,12 +113,12 @@ type Settings struct {
 	OutFile                string
 	ElementWiseSubtract    string
 	MovingAverageSmoothing int
-	AbsoluteError string
-	AbsolutePercentError string
-	Missing float64
-	Pearson string
-	SamplingFrequency float64
-	SetSeed int64
+	AbsoluteError          string
+	AbsolutePercentError   string
+	Missing                float64
+	Pearson                string
+	SamplingFrequency      float64
+	SetSeed                int64
 }
 
 func main() {
@@ -149,12 +149,12 @@ func main() {
 		OutFile:                outFile,
 		ElementWiseSubtract:    *elementWiseSubtract,
 		MovingAverageSmoothing: *movingAverageSmoothing,
-		AbsoluteError: *absoluteError,
-		AbsolutePercentError: *absolutePercentError,
-		Missing: *missing,
-		Pearson: *pearson,
-		SamplingFrequency: *samplingFrequency,
-		SetSeed: *setSeed,
+		AbsoluteError:          *absoluteError,
+		AbsolutePercentError:   *absolutePercentError,
+		Missing:                *missing,
+		Pearson:                *pearson,
+		SamplingFrequency:      *samplingFrequency,
+		SetSeed:                *setSeed,
 	}
 	wigMath(s)
 }

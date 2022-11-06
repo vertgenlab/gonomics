@@ -13,11 +13,11 @@ var WigMathTests = []struct {
 	ExpectedFile           string
 	SubtractFile           string
 	MovingAverageSmoothing int
-	AbsoluteError string
-	AbsolutePercentError string
-	Missing float64
-	Pearson string
-	SamplingFrequency float64
+	AbsoluteError          string
+	AbsolutePercentError   string
+	Missing                float64
+	Pearson                string
+	SamplingFrequency      float64
 }{
 	{
 		InFile:                 "testdata/in.wig",
@@ -25,11 +25,11 @@ var WigMathTests = []struct {
 		ExpectedFile:           "testdata/expected.subtract.wig",
 		SubtractFile:           "testdata/subtract.wig",
 		MovingAverageSmoothing: 1,
-		AbsoluteError: "",
-		AbsolutePercentError: "",
-		Missing: -10,
-		Pearson: "",
-		SamplingFrequency: 1,
+		AbsoluteError:          "",
+		AbsolutePercentError:   "",
+		Missing:                -10,
+		Pearson:                "",
+		SamplingFrequency:      1,
 	},
 	{
 		InFile:                 "testdata/unsmooth.wig",
@@ -37,11 +37,11 @@ var WigMathTests = []struct {
 		ExpectedFile:           "testdata/expected.smooth.wig",
 		SubtractFile:           "",
 		MovingAverageSmoothing: 5,
-		AbsoluteError: "",
-		AbsolutePercentError: "",
-		Missing: -10,
-		Pearson: "",
-		SamplingFrequency: 1,
+		AbsoluteError:          "",
+		AbsolutePercentError:   "",
+		Missing:                -10,
+		Pearson:                "",
+		SamplingFrequency:      1,
 	},
 	{
 		InFile:                 "testdata/in.wig",
@@ -49,11 +49,11 @@ var WigMathTests = []struct {
 		ExpectedFile:           "testdata/expected.absError.wig",
 		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
-		AbsoluteError: "testdata/subtract.wig",
-		AbsolutePercentError: "",
-		Missing: -10,
-		Pearson: "",
-		SamplingFrequency: 1,
+		AbsoluteError:          "testdata/subtract.wig",
+		AbsolutePercentError:   "",
+		Missing:                -10,
+		Pearson:                "",
+		SamplingFrequency:      1,
 	},
 	{
 		InFile:                 "testdata/in.wig",
@@ -61,23 +61,23 @@ var WigMathTests = []struct {
 		ExpectedFile:           "testdata/expected.absPercentError.wig",
 		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
-		AbsoluteError: "",
-		AbsolutePercentError: "testdata/subtract.wig",
-		Missing: -10,
-		Pearson: "",
-		SamplingFrequency: 1,
+		AbsoluteError:          "",
+		AbsolutePercentError:   "testdata/subtract.wig",
+		Missing:                -10,
+		Pearson:                "",
+		SamplingFrequency:      1,
 	},
 	{
-		InFile: "testdata/in.wig",
-		OutFile: "testdata/tmp.Pearson.txt",
-		ExpectedFile: "testdata/expected.Pearson.txt",
-		SubtractFile: "",
+		InFile:                 "testdata/in.wig",
+		OutFile:                "testdata/tmp.Pearson.txt",
+		ExpectedFile:           "testdata/expected.Pearson.txt",
+		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
-		AbsoluteError: "",
-		AbsolutePercentError: "",
-		Missing: -10,
-		Pearson: "testdata/subtract.wig",
-		SamplingFrequency: 1,
+		AbsoluteError:          "",
+		AbsolutePercentError:   "",
+		Missing:                -10,
+		Pearson:                "testdata/subtract.wig",
+		SamplingFrequency:      1,
 	},
 }
 
@@ -90,11 +90,11 @@ func TestWigMath(t *testing.T) {
 			OutFile:                v.OutFile,
 			ElementWiseSubtract:    v.SubtractFile,
 			MovingAverageSmoothing: v.MovingAverageSmoothing,
-			AbsoluteError: v.AbsoluteError,
-			AbsolutePercentError: v.AbsolutePercentError,
-			Missing: v.Missing,
-			Pearson: v.Pearson,
-			SamplingFrequency: v.SamplingFrequency,
+			AbsoluteError:          v.AbsoluteError,
+			AbsolutePercentError:   v.AbsolutePercentError,
+			Missing:                v.Missing,
+			Pearson:                v.Pearson,
+			SamplingFrequency:      v.SamplingFrequency,
 		}
 		wigMath(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

@@ -1,9 +1,9 @@
 package wig
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
-	"fmt"
 	"math/rand"
 	"sort"
 	"strings"
