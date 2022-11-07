@@ -114,4 +114,3 @@ func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 
 	return answer
 }
-
