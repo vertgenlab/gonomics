@@ -84,7 +84,7 @@ func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 		return records // return slice as is if it is empty or nil.
 	}
 
-	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, Score: records[0].ChromStart,FieldsInitialized: 5}
+	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, Score: records[0].ChromStart, FieldsInitialized: 5}
 	var midpoint int
 
 	//when a position is equidistant from two features, it is assigned to the left feature.
