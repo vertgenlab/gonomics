@@ -12,6 +12,13 @@ import (
 	"log"
 )
 
+type Settings struct {
+	InFile     string
+	OutFile    string
+	WindowSize int
+	Stride     int
+}
+
 func faToPredictSet(s Settings) {
 	var err error
 	var i, j int
@@ -22,7 +29,7 @@ func faToPredictSet(s Settings) {
 
 	for i = range records {
 		for j = 0; j < len(records[i].Seq)-s.WindowSize; j += s.Stride {
-			currFa = fasta.Extract(records[i], j, j+s.WindowSize, fmt.Sprintf("%s:%v-%v", records[i].Name, j, j+s.WindowSize))
+			currFa = fasta.Extract(records[i], j, j+s.WindowSize, fmt.Sprintf("%s:%d-%d", records[i].Name, j, j+s.WindowSize))
 			dna.AllToUpper(currFa.Seq)
 			lineToWrite = fmt.Sprintf("%s\t%s\n", currFa.Name, dna.BasesToString(currFa.Seq))
 			_, err = fmt.Fprintf(out, lineToWrite)
@@ -41,13 +48,6 @@ func usage() {
 			" faToPredictSet input.fa output.txt\n" +
 			"options:\n")
 	flag.PrintDefaults()
-}
-
-type Settings struct {
-	InFile     string
-	OutFile    string
-	WindowSize int
-	Stride     int
 }
 
 func main() {
