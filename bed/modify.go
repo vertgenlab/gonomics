@@ -51,7 +51,7 @@ func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
 func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 	var outList []Bed
 	if records == nil || len(records) == 0 {
-		return records//empty and nil slices are returned as is.
+		return records //empty and nil slices are returned as is.
 	}
 	SortByCoord(records)
 	var currentMax Bed = records[0]
