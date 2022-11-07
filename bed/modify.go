@@ -74,6 +74,7 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 
 // FillSpace accepts a bed and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
 // that assigns each genomic position to the nearest feature in the input bed using the Name field in the input bed.
+// Start positions of the original input bed entries are stored in the Score field of the output bed entries.
 func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	SortByCoord(records)
 	MergeHighMem(records, true) // possible silent errors if two features are directly adjacent. We chose to discard.
@@ -83,7 +84,7 @@ func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 		return records // return slice as is if it is empty or nil.
 	}
 
-	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, FieldsInitialized: 4}
+	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, Score: records[0].ChromStart,FieldsInitialized: 5}
 	var midpoint int
 
 	//when a position is equidistant from two features, it is assigned to the left feature.
@@ -95,6 +96,7 @@ func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 			currAnswer.ChromStart = 0
 			currAnswer.ChromEnd = records[i].ChromEnd
 			currAnswer.Name = records[i].Name
+			currAnswer.Score = records[i].ChromStart
 		} else {
 			midpoint = (records[i].ChromStart + currAnswer.ChromEnd) / 2
 			currAnswer.ChromEnd = midpoint + 1
@@ -103,6 +105,7 @@ func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 			currAnswer.ChromStart = midpoint + 1
 			currAnswer.ChromEnd = records[i].ChromEnd
 			currAnswer.Name = records[i].Name
+			currAnswer.Score = records[i].ChromStart
 		}
 	}
 
