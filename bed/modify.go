@@ -1,6 +1,7 @@
 package bed
 
 import (
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
@@ -70,3 +71,44 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 	outList = append(outList, currentMax)
 	return outList
 }
+
+// FillSpace accepts a bed and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
+// that assigns each genomic position to the nearest feature in the input bed using the Name field in the input bed.
+func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
+	SortByCoord(records)
+	MergeHighMem(records, true) // possible silent errors if two features are directly adjacent. We chose to discard.
+	var answer = make([]Bed, 0)
+
+	if records == nil || len(records) == 0 {
+		return records // return slice as is if it is empty or nil.
+	}
+
+	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, FieldsInitialized: 4}
+	var midpoint int
+
+	//when a position is equidistant from two features, it is assigned to the left feature.
+	for i := 1; i < len(records); i++ {
+		if records[i].Chrom != currAnswer.Chrom {
+			currAnswer.ChromEnd = genome[currAnswer.Chrom].Size
+			answer = append(answer, currAnswer)
+			currAnswer.Chrom = records[i].Chrom
+			currAnswer.ChromStart = 0
+			currAnswer.ChromEnd = records[i].ChromEnd
+			currAnswer.Name = records[i].Name
+		} else {
+			midpoint = (records[i].ChromStart + currAnswer.ChromEnd) / 2
+			currAnswer.ChromEnd = midpoint + 1
+			answer = append(answer, currAnswer)
+			currAnswer.Chrom = records[i].Chrom
+			currAnswer.ChromStart = midpoint + 1
+			currAnswer.ChromEnd = records[i].ChromEnd
+			currAnswer.Name = records[i].Name
+		}
+	}
+
+	currAnswer.ChromEnd = genome[currAnswer.Chrom].Size
+	answer = append(answer, currAnswer)
+
+	return answer
+}
+
