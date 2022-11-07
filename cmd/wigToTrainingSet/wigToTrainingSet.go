@@ -62,7 +62,7 @@ func wigToTrainingSet(s Settings) {
 	for i := range wigs {
 		chromIndex = getChromIndex(genome, i.Chrom)
 		for start = 0; start < len(i.Values)-s.WindowSize; start += s.Stride {
-			midpoint = (start+start+s.WindowSize)/2
+			midpoint = (start + start + s.WindowSize) / 2
 			if i.Values[midpoint] == s.Missing {
 				continue //skip regions where there is no data in the wig.
 			}
