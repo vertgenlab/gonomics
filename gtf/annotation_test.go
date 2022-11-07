@@ -1,7 +1,7 @@
 package gtf
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
@@ -51,9 +51,9 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 		}
 
 		errorCount++
-		fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
-		fmt.Printf("EXPECTED: %s|%s\n", correctCDNA, correctProt)
-		fmt.Printf("RECEIVED: %s\n", annotation)
+		// fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
+		// fmt.Printf("EXPECTED: %s|%s\n", correctCDNA, correctProt)
+		// fmt.Printf("RECEIVED: %s\n", annotation)
 
 	}
 	if errorCount > 7 { // from known issue

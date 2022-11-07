@@ -25,9 +25,6 @@ type Wig struct {
 	Values   []float64
 }
 
-//TODO: ReadToChan() and GoReadToChan () ; write these. Check out fastq or bed or sam for examples of these ReadToChan and GoReadToChan(), these are the memory
-//efficient ways to read things in. Funny things with weight groups (which handle the order of things) (concurrency in Go youtube).
-
 // Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
 func Read(filename string) []Wig {
 	var curr Wig
@@ -95,7 +92,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	return currentWig, doneReading
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- Bed.
+//ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
 func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	for curr, done := NextWig(file); !done; curr, done = NextWig(file) {
 		data <- curr
@@ -105,7 +102,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Bed entries from an input filename to a <-chan Bed.
+//GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
 func GoReadToChan(filename string) <-chan Wig {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup

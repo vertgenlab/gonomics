@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -10,7 +11,50 @@ import (
 	"log"
 )
 
-func bedpeOverlap(bedpeSelectFile string, bedpeInFile string, contactOutFile string) {
+func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool) {
+	//bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
+	if bedSelect {
+		SelectIsBed(selectFile, bedpeInFile, contactOutFile)
+	} else {
+		SelectIsBedPe(selectFile, bedpeInFile, contactOutFile)
+	}
+}
+
+//This function is for the case where the select file is a bed.
+//input bedpe entries are retained if either end overlaps one of the bedSelectFile entries.
+func SelectIsBed(bedSelectFile string, bedpeInFile string, contactOutFile string) {
+	var selectIntervals = make([]interval.Interval, 0)
+	var currOverlaps []interval.Interval
+	var err error
+
+	selectRecords := bed.Read(bedSelectFile)
+	inBedPe := bedpe.Read(bedpeInFile)
+	out := fileio.EasyCreate(contactOutFile)
+
+	for _, i := range selectRecords {
+		selectIntervals = append(selectIntervals, i)
+	}
+	selectTree := interval.BuildTree(selectIntervals)
+
+	for _, i := range inBedPe {
+		currOverlaps = interval.Query(selectTree, i.A, "any")
+		if len(currOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
+			bedpe.WriteToFileHandle(out, i)
+		} else { //otherwise check the right side (B)
+			currOverlaps = interval.Query(selectTree, i.B, "any")
+			if len(currOverlaps) > 0 {
+				bedpe.WriteToFileHandle(out, i)
+			}
+		}
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+//This is the case where the select file is a bedpe. Input bedpe entries will be retained
+//in the output if both ends of the bedpe overlap both ends of a bedpe entry in the select file.
+func SelectIsBedPe(bedpeSelectFile string, bedpeInFile string, contactOutFile string) {
 	var inIntervals = make([]interval.Interval, 0)
 	var leftOverlaps, rightOverlaps []interval.Interval
 	var rightHalf, leftHalf bedpe.BedPeHalf
@@ -51,18 +95,23 @@ func bedpeOverlap(bedpeSelectFile string, bedpeInFile string, contactOutFile str
 
 	err = out.Close()
 	exception.PanicOnErr(err)
-
 }
 
 func usage() {
-	fmt.Print("bedpeOverlap - Returns all bedpe entries where both bed region pairs overlap a bedpe entry in the selectFile \n" +
-		"bedpe entries from in the inFile will be selected based on overlaps with the selectFile.\n" +
+	fmt.Print("bedpeOverlap - Filters bedpe entries based on overlaps from the select file.\n" +
+		"Default behavior expects a bedpe select file and returns entries where both ends of a bedpe entry from the input file" +
+		"overlap both ends of a bedpe entry from the select file.\n" +
+		"When the select file is a bed, as specified in the option 'bedSelect',\n" +
+		"entries are retained if at least one end of an input bedpe overlaps a bed entry\n" +
+		"in the select file.\n" +
 		"Usage:\n" +
-		"	bedpeOverlap [options] selectFile.bedpe inFile.bedPe out.bedpe\n\n")
+		"bedpeOverlap [options] selectFile inputFile.bedPe out.bedpe\n\n")
 	flag.PrintDefaults()
 }
 
 func main() {
+	var bedSelect *bool = flag.Bool("bedSelect", false, "Set select file to be a BED file instead of a bedpe.")
+
 	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -73,9 +122,9 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	bedpeSelectFile := flag.Arg(0)
+	SelectFile := flag.Arg(0)
 	bedpeInFile := flag.Arg(1)
 	contactOutFile := flag.Arg(2)
 
-	bedpeOverlap(bedpeSelectFile, bedpeInFile, contactOutFile)
+	bedpeOverlap(SelectFile, bedpeInFile, contactOutFile, *bedSelect)
 }

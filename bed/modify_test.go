@@ -1,6 +1,9 @@
 package bed
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 var TrimTests = []struct {
 	InFile       string
@@ -19,6 +22,34 @@ func TestTrim(t *testing.T) {
 		Trim(b, v.TrimLeft, v.TrimRight)
 		if !AllAreEqual(b, expected) {
 			t.Errorf("Error in Trim.")
+		}
+	}
+}
+
+var inB []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Score: 10}, {Chrom: "chr1", ChromStart: 15, ChromEnd: 25, Score: 40}, {Chrom: "chr1", ChromStart: 25, ChromEnd: 45, Score: 500}}
+var expectedBfalse []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 25, Score: 40}, {Chrom: "chr1", ChromStart: 25, ChromEnd: 45, Score: 500}}
+var expectedBtrue []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 45, Score: 500}}
+
+var MergeHighMemTests = []struct {
+	InBed         []Bed
+	ExpectedBed   []Bed
+	MergeAdjacent bool
+}{
+	{InBed: inB, ExpectedBed: expectedBfalse, MergeAdjacent: false},
+	{InBed: inB, ExpectedBed: expectedBtrue, MergeAdjacent: true},
+}
+
+func TestMergeHighMem(t *testing.T) {
+	var outB []Bed
+	for _, v := range MergeHighMemTests {
+		outB = MergeHighMem(v.InBed, v.MergeAdjacent)
+		if !AllAreEqual(outB, v.ExpectedBed) {
+			fmt.Printf("MergeAdjacent: %v.\n", v.MergeAdjacent)
+			for i := range outB {
+				fmt.Printf("%s\n", ToString(outB[i], 5))
+			}
+
+			t.Errorf("Error in MergeHighMem. Output was not as expected.")
 		}
 	}
 }

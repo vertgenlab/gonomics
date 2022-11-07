@@ -113,6 +113,9 @@ func BedGraphToWig(inFile string, reference map[string]chromInfo.ChromInfo, miss
 	for b := range bedChan {
 		chromIndex = getWigChromIndex(b.Chrom, wigSlice)
 		for i = b.ChromStart; i < b.ChromEnd; i++ {
+			if wigSlice[chromIndex].Values[i] != missing {
+				log.Fatalf("Error in BedGraphToWig. Multiple bed entries map to the same position.")
+			}
 			wigSlice[chromIndex].Values[i] = b.DataValue
 		}
 	}

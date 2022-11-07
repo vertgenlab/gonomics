@@ -77,10 +77,19 @@ func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int
 //maybe there should be a small penalty for gaps so that gaps will tend to be in the same location
 func scoreColumnMatch(alpha []fasta.Fasta, beta []fasta.Fasta, alphaCol int, betaCol int, scores [][]int64) int64 {
 	var sum, count int64 = 0, 0
+	var alphaBase, betaBase dna.Base
 	for alphaSeqIdx := range alpha {
+		alphaBase = alpha[alphaSeqIdx].Seq[alphaCol]
+		if alphaBase >= 5 && alphaBase <= 9 { // converts to uppercase base
+			alphaBase -= 5
+		}
 		for betaSeqIdx := range beta {
-			if alpha[alphaSeqIdx].Seq[alphaCol] != dna.Gap && beta[betaSeqIdx].Seq[betaCol] != dna.Gap {
-				sum += scores[alpha[alphaSeqIdx].Seq[alphaCol]][beta[betaSeqIdx].Seq[betaCol]]
+			betaBase = beta[betaSeqIdx].Seq[betaCol]
+			if betaBase >= 5 && betaBase <= 9 { // converts to uppercase base
+				betaBase -= 5
+			}
+			if alphaBase != dna.Gap && betaBase != dna.Gap {
+				sum += scores[alphaBase][betaBase]
 				count++
 			}
 		}

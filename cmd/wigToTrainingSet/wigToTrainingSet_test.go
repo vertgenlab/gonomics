@@ -23,6 +23,8 @@ var WigToTrainingSetTests = []struct {
 	ExpectedValidateFile string
 	ExpectedTestFile     string
 	LogTransform         bool
+	IncludeRevComp       bool
+	NoHeader             bool
 }{
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -39,6 +41,8 @@ var WigToTrainingSetTests = []struct {
 		ExpectedValidateFile: "testdata/expected.validate.txt",
 		ExpectedTestFile:     "testdata/expected.test.txt",
 		LogTransform:         false,
+		IncludeRevComp:       false,
+		NoHeader:             false,
 	},
 	{InWigFile: "testdata/in.wig",
 		InFastaFile:          "testdata/genome.fa",
@@ -55,6 +59,44 @@ var WigToTrainingSetTests = []struct {
 		ExpectedValidateFile: "testdata/expected.log.validate.txt",
 		ExpectedTestFile:     "testdata/expected.log.test.txt",
 		LogTransform:         true,
+		IncludeRevComp:       false,
+		NoHeader:             false,
+	},
+	{InWigFile: "testdata/in.wig",
+		InFastaFile:          "testdata/genome.fa",
+		TrainFile:            "testdata/tmp.revComp.train.txt",
+		ValidateFile:         "testdata/tmp.revComp.validate.txt",
+		TestFile:             "testdata/tmp.revComp.test.txt",
+		WindowSize:           3,
+		Stride:               3,
+		ValidationProp:       0.1,
+		TestingProp:          0.1,
+		SetSeed:              5,
+		Missing:              -10,
+		ExpectedTrainFile:    "testdata/expected.revComp.train.txt",
+		ExpectedValidateFile: "testdata/expected.revComp.validate.txt",
+		ExpectedTestFile:     "testdata/expected.revComp.test.txt",
+		LogTransform:         false,
+		IncludeRevComp:       true,
+		NoHeader:             false,
+	},
+	{InWigFile: "testdata/in.wig",
+		InFastaFile:          "testdata/genome.fa",
+		TrainFile:            "testdata/tmp.noHeader.train.txt",
+		ValidateFile:         "testdata/tmp.noHeader.validate.txt",
+		TestFile:             "testdata/tmp.noHeader.test.txt",
+		WindowSize:           3,
+		Stride:               3,
+		ValidationProp:       0.1,
+		TestingProp:          0.1,
+		SetSeed:              5,
+		Missing:              -10,
+		ExpectedTrainFile:    "testdata/expected.noHeader.train.txt",
+		ExpectedValidateFile: "testdata/expected.noHeader.validate.txt",
+		ExpectedTestFile:     "testdata/expected.noHeader.test.txt",
+		LogTransform:         false,
+		IncludeRevComp:       true,
+		NoHeader:             true,
 	},
 }
 
@@ -75,6 +117,8 @@ func TestWigToTrainingSet(t *testing.T) {
 			SetSeed:        v.SetSeed,
 			Missing:        v.Missing,
 			LogTransform:   v.LogTransform,
+			IncludeRevComp: v.IncludeRevComp,
+			NoHeader:       v.NoHeader,
 		}
 		wigToTrainingSet(s)
 		if !fileio.AreEqual(v.TrainFile, v.ExpectedTrainFile) {
