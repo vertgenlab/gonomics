@@ -19,20 +19,9 @@ type BedGraph struct {
 	DataValue float64
 }
 
-// String converts a BedGraph struct to a string.
-func (b BedGraph) String() string {
-	return ToString(b)
-}
-
 // ToString converts a BedGraph struct into a bedGraph file format string. Useful for writing to files or printing.
 func ToString(b BedGraph) string {
 	return fmt.Sprintf("%s\t%d\t%d\t%g", b.Chrom, b.ChromStart, b.ChromEnd, b.DataValue)
-}
-
-func WriteBedGraph(file io.Writer, input BedGraph) {
-	var err error
-	_, err = fmt.Fprintf(file, "%s\n", input)
-	exception.PanicOnErr(err)
 }
 
 //Write writes a slice of BedGraph structs to a specified filename.

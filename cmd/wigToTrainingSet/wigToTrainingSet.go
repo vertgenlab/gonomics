@@ -13,9 +13,26 @@ import (
 	"math/rand"
 )
 
+type Settings struct {
+	InWigFile      string
+	InFastaFile    string
+	TrainFile      string
+	ValidateFile   string
+	TestFile       string
+	WindowSize     int
+	Stride         int
+	ValidationProp float64
+	TestingProp    float64
+	SetSeed        int64
+	Missing        float64
+	LogTransform   bool
+	IncludeRevComp bool
+	NoHeader       bool
+}
+
 func wigToTrainingSet(s Settings) {
 	rand.Seed(s.SetSeed)
-	var start, chromIndex int
+	var start, chromIndex, midpoint int
 	var currName, lineToWrite string
 	var currFa fasta.Fasta
 	var currRand float64
@@ -35,7 +52,7 @@ func wigToTrainingSet(s Settings) {
 		exception.PanicOnErr(err)
 	}
 
-	if s.ValidationProp+s.TestingProp > 1 {
+	if s.ValidationProp+s.TestingProp >= 1 {
 		log.Fatalf("pVAlidation + pTesting should sum to less than one.")
 	}
 
@@ -45,16 +62,17 @@ func wigToTrainingSet(s Settings) {
 	for i := range wigs {
 		chromIndex = getChromIndex(genome, i.Chrom)
 		for start = 0; start < len(i.Values)-s.WindowSize; start += s.Stride {
-			if i.Values[(start+start+s.WindowSize)/2] == s.Missing {
+			midpoint = (start+start+s.WindowSize)/2
+			if i.Values[midpoint] == s.Missing {
 				continue //skip regions where there is no data in the wig.
 			}
-			currName = fmt.Sprintf("%s:%v-%v", i.Chrom, start, start+s.WindowSize)
+			currName = fmt.Sprintf("%s:%d-%d", i.Chrom, start, start+s.WindowSize)
 			currFa = fasta.Extract(genome[chromIndex], start, start+s.WindowSize, currName)
 			dna.AllToUpper(currFa.Seq)
 			if s.LogTransform {
-				lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), math.Log(i.Values[(start+start+s.WindowSize)/2]))
+				lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), math.Log(i.Values[midpoint]))
 			} else {
-				lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), i.Values[(start+start+s.WindowSize)/2]) //start+window / 2 is the midpoint of the window.
+				lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", currFa.Name, dna.BasesToString(currFa.Seq), i.Values[midpoint]) //start+window / 2 is the midpoint of the window.
 			}
 			//now we shard the training example into either the testing, training, or validation set.
 			currRand = rand.Float64()
@@ -72,9 +90,9 @@ func wigToTrainingSet(s Settings) {
 			if s.IncludeRevComp {
 				dna.ReverseComplement(currFa.Seq)
 				if s.LogTransform {
-					lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", fmt.Sprintf("%s_rev", currFa.Name), dna.BasesToString(currFa.Seq), math.Log(i.Values[(start+start+s.WindowSize)/2]))
+					lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", fmt.Sprintf("%s_rev", currFa.Name), dna.BasesToString(currFa.Seq), math.Log(i.Values[midpoint]))
 				} else {
-					lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", fmt.Sprintf("%s_rev", currFa.Name), dna.BasesToString(currFa.Seq), i.Values[(start+start+s.WindowSize)/2])
+					lineToWrite = fmt.Sprintf("%s\t%s\t%g\n", fmt.Sprintf("%s_rev", currFa.Name), dna.BasesToString(currFa.Seq), i.Values[midpoint])
 				}
 				//we don't regenerate currRand, for and rev for same sequence both land in the same shard.
 				if currRand < s.TestingProp {
@@ -104,7 +122,7 @@ func getChromIndex(genome []fasta.Fasta, chrom string) int {
 			return i
 		}
 	}
-	log.Fatalf("Wig chromosome name: %v not found in target genome.", chrom)
+	log.Fatalf("Wig chromosome name: %s not found in target genome.", chrom)
 	return -1
 }
 
@@ -115,23 +133,6 @@ func usage() {
 			"wigToTrainingSet input.wig genome.fa train.txt validate.txt test.txt\n" +
 			"options:\n")
 	flag.PrintDefaults()
-}
-
-type Settings struct {
-	InWigFile      string
-	InFastaFile    string
-	TrainFile      string
-	ValidateFile   string
-	TestFile       string
-	WindowSize     int
-	Stride         int
-	ValidationProp float64
-	TestingProp    float64
-	SetSeed        int64
-	Missing        float64
-	LogTransform   bool
-	IncludeRevComp bool
-	NoHeader       bool
 }
 
 func main() {
