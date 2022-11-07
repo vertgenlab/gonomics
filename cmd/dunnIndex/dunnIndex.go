@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile string) {
+func dunnIndex(bedFile string, alnFile string, groupFileName string, realign bool, outFile string) {
 	b := bed.Read(bedFile)
 	aln := fasta.Read(alnFile)
 	g := popgen.ReadGroups(groupFileName)
@@ -22,7 +22,7 @@ func dunnIndex(bedFile string, alnFile string, groupFileName string, outFile str
 		}
 		b[i].FieldsInitialized = 7 //set FieldsInitialized to append annotations.
 		b[i].Annotation = make([]string, 3)
-		dunn, S, missing := popgen.Dunn(b[i], aln, g)
+		dunn, S, missing := popgen.Dunn(b[i], aln, g, realign)
 		b[i].Annotation[0] = fmt.Sprintf("%f", dunn)
 		b[i].Annotation[1] = fmt.Sprintf("%v", S)
 		b[i].Annotation[2] = missing
@@ -42,6 +42,7 @@ func usage() {
 }
 
 func main() {
+	var realign *bool = flag.Bool("realign", false, "Perform a local realignment in the bed region before calculating the Dunn Index")
 	var expectedNumArgs int = 4
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -58,5 +59,5 @@ func main() {
 	groupFile := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	dunnIndex(bedFile, alnFile, groupFile, outFile)
+	dunnIndex(bedFile, alnFile, groupFile, *realign, outFile)
 }
