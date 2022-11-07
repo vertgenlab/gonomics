@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"sync"
 )
 
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
@@ -23,9 +24,6 @@ type Wig struct {
 	Span     int
 	Values   []float64
 }
-
-//TODO: ReadToChan() and GoReadToChan () ; write these. Check out fastq or bed or sam for examples of these ReadToChan and GoReadToChan(), these are the memory
-//efficient ways to read things in. Funny things with weight groups (which handle the order of things) (concurrency in Go youtube).
 
 // Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
 func Read(filename string) []Wig {
@@ -44,6 +42,7 @@ func Read(filename string) []Wig {
 	return finalWig
 }
 
+// NextWig returns a Wig struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
 func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	var line string
 	var currentWig Wig
@@ -91,6 +90,32 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 		}
 	}
 	return currentWig, doneReading
+}
+
+//ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
+func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
+	for curr, done := NextWig(file); !done; curr, done = NextWig(file) {
+		data <- curr
+	}
+	err := file.Close()
+	exception.PanicOnErr(err)
+	wg.Done()
+}
+
+//GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
+func GoReadToChan(filename string) <-chan Wig {
+	file := fileio.EasyOpen(filename)
+	var wg sync.WaitGroup
+	data := make(chan Wig)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
 }
 
 // Prints the first record in a Wig struct. Mainly used for debugging.

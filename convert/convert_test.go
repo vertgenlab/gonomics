@@ -1,11 +1,13 @@
 package convert
 
 import (
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
+	"github.com/vertgenlab/gonomics/wig"
 	"os"
 	"strings"
 	"testing"
@@ -66,5 +68,62 @@ func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 	err = os.Remove("tmpSub.txt")
 	if err != nil {
 		exception.PanicOnErr(err)
+	}
+}
+
+var BedValuesToWigTests = []struct {
+	inFile        string
+	chromSizeFile string
+	Missing       float64
+	OutFile       string
+	ExpectedFile  string
+	Method        string
+}{
+	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0, "testdata/name.tmp.wig", "testdata/name.Expected.wig", "Name"},
+	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0, "testdata/score.tmp.wig", "testdata/score.Expected.wig", "Score"},
+	{"testdata/test.bed", "testdata/ref.chrom.sizes", -1, "testdata/name.missing.tmp.wig", "testdata/name.missing.Expected.wig", "Name"},
+}
+
+func TestBedValuesToWig(t *testing.T) {
+	var err error
+	var reference map[string]chromInfo.ChromInfo
+	var wigs []wig.Wig
+	for _, v := range BedValuesToWigTests {
+		reference = chromInfo.ReadToMap(v.chromSizeFile)
+		wigs = BedValuesToWig(v.inFile, reference, v.Missing, v.Method)
+		wig.Write(v.OutFile, wigs)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error in BedValuesToWig. Output was not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
+var BedGraphToWigTests = []struct {
+	InFile        string
+	ChromSizeFile string
+	Missing       float64
+	OutFile       string
+	ExpectedFile  string
+}{
+	{"testdata/test.bedGraph", "testdata/ref.chrom.sizes", -10, "testdata/bedGraphToWig.tmp.wig", "testdata/bedGraphToWig.expected.wig"},
+}
+
+func TestBedGraphToWig(t *testing.T) {
+	var err error
+	var reference map[string]chromInfo.ChromInfo
+	var wigs []wig.Wig
+	for _, v := range BedGraphToWigTests {
+		reference = chromInfo.ReadToMap(v.ChromSizeFile)
+		wigs = BedGraphToWig(v.InFile, reference, v.Missing)
+		wig.Write(v.OutFile, wigs)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error in BedGraphToWig. Output was not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
 	}
 }

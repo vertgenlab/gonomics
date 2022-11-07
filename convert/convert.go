@@ -5,6 +5,7 @@ package convert
 import (
 	//"fmt" //DEBUG
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
@@ -84,26 +85,55 @@ func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.Chro
 	}
 }
 
-//BedValuesToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is
-//equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
-//value set by Missing (default 0 in the cmd).
-func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
+func makeWigSkeleton(reference map[string]chromInfo.ChromInfo, defaultValue float64) []wig.Wig {
 	wigSlice := make([]wig.Wig, len(reference))
-	var chromIndex int
-	var midpoint int
-	var x int
-	var i int = 0
 	var currentWig wig.Wig
-	//generate Wig skeleton from reference
+	var x int
+	var i int
+
 	for _, v := range reference {
 		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1}
 		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = Missing
+			currentWig.Values[x] = defaultValue
 		}
 		wigSlice[i] = currentWig
 		i++
 	}
+	return wigSlice
+}
+
+// BedGraphToWig uses bedGraph entries to construct a slice of Wig data structures where the Wig value is equal to the
+// DataValue for the range of the bedGraph entry. Regions with no bedGraph entries will be set to the
+// value set by Missing (default 0 in cmd).
+func BedGraphToWig(inFile string, reference map[string]chromInfo.ChromInfo, missing float64) []wig.Wig {
+	wigSlice := makeWigSkeleton(reference, missing)
+	var chromIndex, i int
+	bedChan := bedGraph.GoReadToChan(inFile)
+	for b := range bedChan {
+		chromIndex = getWigChromIndex(b.Chrom, wigSlice)
+		for i = b.ChromStart; i < b.ChromEnd; i++ {
+			if wigSlice[chromIndex].Values[i] != missing {
+				log.Fatalf("Error in BedGraphToWig. Multiple bed entries map to the same position.")
+			}
+			wigSlice[chromIndex].Values[i] = b.DataValue
+		}
+	}
+	//stable sort the wigSlice by Chrom
+	//so that each wig output will be the same as long as input is the same
+	//otherwise wig output will shift even if input is the same, due to the reference map
+	sort.SliceStable(wigSlice, func(i, j int) bool { return wigSlice[i].Chrom < wigSlice[j].Chrom })
+
+	return wigSlice
+}
+
+// BedValuesToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is
+//equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
+//value set by Missing (default 0 in the cmd).
+func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
+	wigSlice := makeWigSkeleton(reference, Missing)
+	var chromIndex int
+	var midpoint int
 	bedChan := bed.GoReadToChan(inFile)
 	for b := range bedChan {
 		chromIndex = getWigChromIndex(b.Chrom, wigSlice)
@@ -119,28 +149,19 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 			log.Fatalf("Unrecognized method.")
 		}
 	}
+	//stable sort the wigSlice by Chrom
+	//so that each wig output will be the same as long as input is the same
+	//otherwise wig output will shift even if input is the same, due to the reference map
+	sort.SliceStable(wigSlice, func(i, j int) bool { return wigSlice[i].Chrom < wigSlice[j].Chrom })
+
 	return wigSlice
 }
 
 //BedReadsToWig returns a slice of Wig structs where the wig scores correspond to the number of input bed entries that
 //overlap the position.
 func BedReadsToWig(b []bed.Bed, reference map[string]chromInfo.ChromInfo) []wig.Wig {
-	wigSlice := make([]wig.Wig, len(reference))
 	var chromIndex int
-	var i, x int = 0, 0
-	var currentWig wig.Wig
-
-	//generate Wig skeleton from reference
-	for _, v := range reference {
-		currentWig = wig.Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1}
-		currentWig.Values = make([]float64, v.Size)
-		for x = 0; x < v.Size; x++ {
-			currentWig.Values[x] = 0
-		}
-		wigSlice[i] = currentWig
-		i++
-	}
-
+	wigSlice := makeWigSkeleton(reference, 0)
 	for j := range b {
 		chromIndex = getWigChromIndex(b[j].Chrom, wigSlice)
 		for k := b[j].ChromStart; k < b[j].ChromEnd; k++ {
