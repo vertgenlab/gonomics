@@ -74,6 +74,7 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 	return ans
 }
 
+// deduplicate removes duplicated sam records in a slice
 func deduplicate(s []Sam) []Sam {
 	ans := make([]Sam, 0, len(s))
 	sort.Slice(s, func(i, j int) bool {
