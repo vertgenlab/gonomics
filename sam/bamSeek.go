@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
 	"io"
@@ -60,7 +59,6 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 				}
 				if curr.RName == chrom && curr.GetChromEnd() > int(start) && curr.GetChromStart() < int(end) {
 					ans = append(ans, curr)
-					fmt.Println(bins[i], curr.QName)
 				}
 				if (curr.RName == chrom && curr.GetChromStart() >= int(end)) || curr.RName != chrom {
 					break
