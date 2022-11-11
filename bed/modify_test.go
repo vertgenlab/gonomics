@@ -72,12 +72,12 @@ var FillSpaceTests = []struct {
 	},
 }
 
-func TestFillSpace(t *testing.T) {
+func TestFillSpaceNoHiddenValue(t *testing.T) {
 	var err error
 	var records, answer []Bed
 	for _, v := range FillSpaceTests {
 		records = Read(v.InputFile)
-		answer = FillSpace(records, v.Genome)
+		answer = FillSpaceNoHiddenValue(records, v.Genome)
 		Write(v.OutFile, answer)
 		if !fileio.AreEqual(v.OutFile, v.Expected) {
 			t.Errorf("Error in FillSpace. Output was not as expected.")

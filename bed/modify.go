@@ -72,10 +72,10 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 	return outList
 }
 
-// FillSpace accepts a bed and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
+// FillSpaceNoHiddenValue accepts a bed and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
 // that assigns each genomic position to the nearest feature in the input bed using the Name field in the input bed.
-// Start positions of the original input bed entries are stored in the Score field of the output bed entries.
-func FillSpace(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
+// Absolute start positions of the original input bed entries are stored in the Score field of the output bed entries.
+func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	SortByCoord(records)
 	MergeHighMem(records, true) // possible silent errors if two features are directly adjacent. We chose to discard.
 	var answer = make([]Bed, 0)
