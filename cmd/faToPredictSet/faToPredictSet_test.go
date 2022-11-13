@@ -13,12 +13,21 @@ var FaToPredictSetTests = []struct {
 	ExpectedFile string
 	WindowSize   int
 	Stride       int
+	WithRevComp bool
 }{
 	{InFile: "testdata/test.fa",
 		OutFile:      "testdata/tmp.txt",
 		ExpectedFile: "testdata/expected.txt",
 		WindowSize:   10,
 		Stride:       1,
+		WithRevComp: false,
+	},
+	{InFile: "testdata/test.fa",
+		OutFile:      "testdata/tmp.withRevComp.txt",
+		ExpectedFile: "testdata/expected.withRevComp.txt",
+		WindowSize:   10,
+		Stride:       1,
+		WithRevComp: true,
 	},
 }
 
@@ -30,6 +39,7 @@ func TestFaToPredictSet(t *testing.T) {
 			OutFile:    v.OutFile,
 			WindowSize: v.WindowSize,
 			Stride:     v.Stride,
+			WithRevComp: v.WithRevComp,
 		}
 		faToPredictSet(s)
 		if !fileio.AreEqual(v.ExpectedFile, v.OutFile) {
