@@ -13,10 +13,10 @@ import (
 )
 
 type Settings struct {
-	InFile     string
-	OutFile    string
-	WindowSize int
-	Stride     int
+	InFile      string
+	OutFile     string
+	WindowSize  int
+	Stride      int
 	WithRevComp bool
 }
 
@@ -77,10 +77,10 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile:     inFile,
-		OutFile:    outFile,
-		WindowSize: *windowSize,
-		Stride:     *stride,
+		InFile:      inFile,
+		OutFile:     outFile,
+		WindowSize:  *windowSize,
+		Stride:      *stride,
 		WithRevComp: *withRevComp,
 	}
 
