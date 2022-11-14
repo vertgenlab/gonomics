@@ -23,7 +23,7 @@ func TestRunMixtureModel(t *testing.T) {
 		stdA = rand.Float64() * 10
 		stdB = rand.Float64() * 10
 		data = append(generateData(countPerComponent, meanA, stdA), generateData(countPerComponent, meanB, stdB)...)
-		converged, _ = RunMixtureModel1D(data, 2, maxIterations, maxResets, mm)
+		converged, _ = RunMixtureModel1D(data, 2, maxIterations, maxResets, 1e-10, mm)
 		if !converged {
 			continue
 		}
@@ -44,9 +44,9 @@ func BenchmarkRunMixtureModel(b *testing.B) {
 		data = append(data, generateData(countPerComponent, means[i], std[i])...)
 	}
 	mm := new(MixtureModel)
-	RunMixtureModel1D(data, 2, 200, 5, mm) // outside loop for initial memory allocation
+	RunMixtureModel1D(data, 2, 200, 5, 1e-10, mm) // outside loop for initial memory allocation
 	for i := 0; i < b.N; i++ {
-		RunMixtureModel1D(data, 2, 200, 5, mm)
+		RunMixtureModel1D(data, 2, 200, 5, 1e-10, mm)
 	}
 }
 

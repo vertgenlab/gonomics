@@ -1,12 +1,10 @@
 package numbers
 
 import (
+	"log"
 	"math"
+	"math/rand"
 )
-
-// logProbEpsilon is the arbitrary set point for convergence. When the model likelihood is
-// increasing by < logProbEpsilon, we say the model has converged, possibly to a local minimum.
-const logProbEpsilon = 1e-08
 
 // MixtureModel holds data, results, and working memory for running the EM algorithm.
 type MixtureModel struct {
@@ -23,6 +21,10 @@ type MixtureModel struct {
 	lamSigRatio    []float64   // holds the ratio of Weights to Stdev
 	logLamSigRatio []float64   // holds the natural log of lamSigRatio
 	work           []float64   // holds intermediate values for calculating LogLikelihood
+
+	// logProbEpsilon is the arbitrary set point for convergence. When the model likelihood is
+	// increasing by < logProbEpsilon, we say the model has converged, possibly to a local minimum.
+	logProbEpsilon float64
 }
 
 // RunMixtureModel1D uses the expectation-maximization (EM) algorithm to find a mixture of k gaussian distributions that fit the input data slice.
@@ -33,11 +35,13 @@ type MixtureModel struct {
 //
 // To reduce the number of allocations required for repeated use of RunMixtureModel, the input mixture model 'mm' can be reused between calls
 // with no modifications necessary.
-func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, mm *MixtureModel) (converged bool, iterationsRun int) {
+//
+// The order of input data may be changed.
+func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, logProbEpsilon float64, mm *MixtureModel) (converged bool, iterationsRun int) {
 	if len(data) == 0 {
 		return
 	}
-	initMixtureModel(data, k, maxIterations, mm)
+	initMixtureModel(data, k, maxIterations, logProbEpsilon, mm)
 	var resets int
 	var prevLogLikelihood float64
 
@@ -46,7 +50,7 @@ func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, 
 		// E step
 		prevLogLikelihood = mm.LogLikelihood
 		expectation(mm)
-		if iterationsRun > 2 && math.Abs(mm.LogLikelihood-prevLogLikelihood) < logProbEpsilon {
+		if math.Abs(mm.LogLikelihood-prevLogLikelihood) < mm.logProbEpsilon {
 			converged = true
 		}
 
@@ -61,9 +65,9 @@ func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, 
 				fallthrough
 			case mm.Weights[i] < 1e-02: // they asked for 2 gaussians, reset and see if you can get better answer
 				resets++
-				initMixtureModel(data, k, maxIterations, mm)
+				initMixtureModel(data, k, maxIterations, logProbEpsilon, mm)
 				iterationsRun = 0
-				prevLogLikelihood = 0
+				prevLogLikelihood = -math.MaxFloat64
 				converged = false
 				break
 			}
@@ -72,7 +76,7 @@ func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, 
 		// if max iterations reached, reset with new values and try again
 		if iterationsRun == mm.MaxIter {
 			resets++
-			initMixtureModel(data, k, maxIterations, mm)
+			initMixtureModel(data, k, maxIterations, logProbEpsilon, mm)
 			iterationsRun = 0
 			prevLogLikelihood = 0
 			converged = false
@@ -82,10 +86,14 @@ func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, 
 }
 
 // initMixtureModel allocates and fills the MixtureModel struct. Avoids allocation if enough space is already present in input struct.
-func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel) {
+func initMixtureModel(data []float64, k int, maxIterations int, logProbEpsilon float64, mm *MixtureModel) {
 	if mm == nil {
 		mm = new(MixtureModel)
 	}
+	if logProbEpsilon == 0 {
+		logProbEpsilon = 1e-08
+	}
+	mm.logProbEpsilon = logProbEpsilon
 	mm.MaxIter = maxIterations
 	mm.Data = data
 	mm.K = k
@@ -117,8 +125,8 @@ func initMixtureModel(data []float64, k int, maxIterations int, mm *MixtureModel
 	}
 
 	// TODO smarter initial guess for mean and variance (k-means/PCA)
-	for i := range mm.Means {
-		mm.Means[i] = data[RandIntInRange(0, len(data)-1)]
+	mm.Means = sampleWithoutReplacement(data, mm.K)
+	for i := range mm.Stdev {
 		mm.Stdev[i] = 1
 	}
 
@@ -252,4 +260,27 @@ func maximization(mm *MixtureModel) {
 
 		mm.Stdev[j] = math.Sqrt(std)
 	}
+}
+
+// sampleWithoutReplacement returns k values sampled from data without replacement.
+// Fisher-Yates shuffle
+func sampleWithoutReplacement(data []float64, k int) []float64 {
+	if k > len(data) {
+		log.Panic("ERROR: requested more gaussians than data points")
+	}
+	ans := make([]float64, k)
+	origSize := len(data)
+	rand.Shuffle(origSize, func(i, j int) {
+		data[i], data[j] = data[j], data[i]
+	})
+	var max int = origSize
+	var idx int
+	for i := range ans {
+		idx = RandIntInRange(0, max)
+		ans[i] = data[idx]
+		data[idx], data[len(data)-1] = data[len(data)-1], data[idx]
+		max--
+	}
+	data = data[:origSize]
+	return ans
 }
