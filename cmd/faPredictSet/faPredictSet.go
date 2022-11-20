@@ -26,6 +26,35 @@ type Settings struct {
 	WithRevComp bool
 	SatMutagenesisBeds string
 	DivergentSitesFile string
+	MidpointBed bool
+}
+
+func PredictSetToBed(s Settings) {
+	var err error
+	var line string
+	var midpoint int
+	var words, nameFields []string
+	var currBed bed.Bed
+	var doneReading bool
+	in := fileio.EasyOpen(s.InFile)
+	out := fileio.EasyCreate(s.OutFile)
+
+	for line, doneReading = fileio.EasyNextRealLine(in); !doneReading; line, doneReading = fileio.EasyNextRealLine(in) {
+		words = strings.Split(line, "\t")
+		if words[1] != "name" {//this skips the header line
+			nameFields = strings.Split(words[1], ".")
+			currBed = bed.Bed{Chrom: nameFields[0], ChromStart: common.StringToInt(nameFields[1]), ChromEnd: common.StringToInt(nameFields[2]), Name: words[2], FieldsInitialized: 4}
+			if s.MidpointBed {
+				midpoint = (currBed.ChromStart + currBed.ChromEnd) / 2
+				currBed.ChromStart = midpoint
+				currBed.ChromEnd = midpoint + 1
+			}
+			bed.WriteToFileHandle(out, currBed)
+		}
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func PredictSetToEvolvabilityVector(s Settings) {
@@ -284,6 +313,8 @@ func usage() {
 			"faPredictSet PredictSetToHeatmaps predicted.txt\n" +
 			"OR\n" +
 			"faPredictSet PredictSetToEvolvabilityVector predicted.txt\n" +
+			"OR\n" +
+			"faPredictSet PredictSetToBed predicted.txt midpointPredictions.bed" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -295,6 +326,7 @@ func main() {
 	var withRevComp *bool = flag.Bool("withRevComp", false, "Include the reverse complement sequence in the output file as an extra column in ToPredictSet.")
 	var satMutagenesisBeds *string = flag.String("satMutagenesisBeds", "", "Specify a file to perform saturation mutagenesis on a set of genomic regions in ToPredictSet.")
 	var DivergentSitesFile *string = flag.String("DivergentSitesFile", "", "Specify a VCF file of divergent sites to split the evolvability vector into divergent sites and all other mutations.")
+	var midpointBed *bool = flag.Bool("midpointBed", false, "In mode: PredictSetToBed, return a bed of length 1 representing the midpoint of the prediction window.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -364,6 +396,21 @@ func main() {
 			DivergentSitesFile: *DivergentSitesFile,
 		}
 		PredictSetToEvolvabilityVector(s)
+	} else if mode == "PredictSetToBed"	{
+		expectedNumArgs = 3
+		if len(flag.Args()) != expectedNumArgs {
+			flag.Usage()
+			log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
+		}
+		inFile = flag.Arg(1)
+		outFile = flag.Arg(2)
+		s = Settings {
+			Mode:               mode,
+			InFile:             inFile,
+			OutFile: outFile,
+			MidpointBed: *midpointBed,
+		}
+		PredictSetToBed(s)
 	} else {
 		log.Fatalf("Error: Unrecognized mode. See usage.")
 	}
