@@ -18,15 +18,15 @@ import (
 )
 
 type Settings struct {
-	Mode string
-	InFile      string
-	OutFile     string
-	WindowSize  int
-	Stride      int
-	WithRevComp bool
+	Mode               string
+	InFile             string
+	OutFile            string
+	WindowSize         int
+	Stride             int
+	WithRevComp        bool
 	SatMutagenesisBeds string
 	DivergentSitesFile string
-	MidpointBed bool
+	MidpointBed        bool
 }
 
 func PredictSetToBed(s Settings) {
@@ -41,7 +41,7 @@ func PredictSetToBed(s Settings) {
 
 	for line, doneReading = fileio.EasyNextRealLine(in); !doneReading; line, doneReading = fileio.EasyNextRealLine(in) {
 		words = strings.Split(line, "\t")
-		if words[1] != "name" {//this skips the header line
+		if words[1] != "name" { //this skips the header line
 			nameFields = strings.Split(words[1], ".")
 			currBed = bed.Bed{Chrom: nameFields[0], ChromStart: common.StringToInt(nameFields[1]), ChromEnd: common.StringToInt(nameFields[2]), Name: words[2], FieldsInitialized: 4}
 			if s.MidpointBed {
@@ -86,12 +86,11 @@ func PredictSetToEvolvabilityVector(s Settings) {
 	}
 
 	for line, doneReading = fileio.EasyNextRealLine(in); !doneReading; line, doneReading = fileio.EasyNextRealLine(in) {
-		words = strings.Split(line, "\t")//parse the first line of the file
+		words = strings.Split(line, "\t") //parse the first line of the file
 		nameFields = strings.Split(words[1], ".")
 		currValue = common.StringToFloat64(words[2])
 		currPos = common.StringToInt(nameFields[3])
 		currMut = nameFields[4]
-
 
 		if firstTime && currMut != "WT" {
 			log.Fatalf("Error. First line of predict file must specify the WT value for a region of interest.")
@@ -122,17 +121,17 @@ func PredictSetToEvolvabilityVector(s Settings) {
 				}
 			}
 		} else if s.DivergentSitesFile != "" {
-			if _, inMap = currDivSites[currPos]; inMap {// if the current site is a divergent site.
-				if currMut == currDivSites[currPos] {//if this is true, we have found the divergent mutation
-					_, err = fmt.Fprintf(out, "%s\t%d\t%f\tDivSite\n", currRegion.Name, currPos, currValue - wildTypeValue)
+			if _, inMap = currDivSites[currPos]; inMap { // if the current site is a divergent site.
+				if currMut == currDivSites[currPos] { //if this is true, we have found the divergent mutation
+					_, err = fmt.Fprintf(out, "%s\t%d\t%f\tDivSite\n", currRegion.Name, currPos, currValue-wildTypeValue)
 				} else {
-					_, err = fmt.Fprintf(out, "%s\t%d\t%f\tAllOthers\n", currRegion.Name, currPos, currValue - wildTypeValue)
+					_, err = fmt.Fprintf(out, "%s\t%d\t%f\tAllOthers\n", currRegion.Name, currPos, currValue-wildTypeValue)
 				}
 			} else {
-				_, err = fmt.Fprintf(out, "%s\t%d\t%f\tAllOthers\n", currRegion.Name, currPos, currValue - wildTypeValue)
+				_, err = fmt.Fprintf(out, "%s\t%d\t%f\tAllOthers\n", currRegion.Name, currPos, currValue-wildTypeValue)
 			}
 		} else {
-			_, err = fmt.Fprintf(out, "%s\t%d\t%f\tAllSites\n", currRegion.Name, currPos, currValue - wildTypeValue)
+			_, err = fmt.Fprintf(out, "%s\t%d\t%f\tAllSites\n", currRegion.Name, currPos, currValue-wildTypeValue)
 		}
 		firstTime = false
 	}
@@ -155,7 +154,7 @@ func PredictSetToHeatmap(s Settings) {
 
 	for line, doneReading = fileio.EasyNextRealLine(in); !doneReading; line, doneReading = fileio.EasyNextRealLine(in) {
 		//parse the first line and set the value of the wild type allele
-		words = strings.Split(line, "\t")//parse the first line of the file
+		words = strings.Split(line, "\t") //parse the first line of the file
 		nameFields = strings.Split(words[1], ".")
 		currMut = nameFields[4]
 		currPos = common.StringToInt(nameFields[3])
@@ -212,9 +211,9 @@ func writeMatrixToFile(answer [][]float64, outFileName string) {
 func initializeNewHeatmap(regionLength int) [][]float64 {
 	var i int
 	//initialize output matrix as zeros
-	var answer = make([][]float64, regionLength)//length of matrix is length of region (typically 400)
+	var answer = make([][]float64, regionLength) //length of matrix is length of region (typically 400)
 	for i = range answer {
-		answer[i] = make([]float64, 4)//matrix of depth 4, for the four base identities
+		answer[i] = make([]float64, 4) //matrix of depth 4, for the four base identities
 	}
 
 	return answer
@@ -233,7 +232,7 @@ func FaToSatMutagenesisPredictSet(s Settings) {
 	beds := bed.Read(s.SatMutagenesisBeds)
 
 	for i = range beds {
-		currIndex = fasta.GetChromIndex(chroms,  beds[i].Chrom)
+		currIndex = fasta.GetChromIndex(chroms, beds[i].Chrom)
 		currFa = fasta.Extract(chroms[currIndex], beds[i].ChromStart, beds[i].ChromEnd, fmt.Sprintf("%s.%d.%d", beds[i].Chrom, beds[i].ChromStart, beds[i].ChromEnd))
 		dna.AllToUpper(currFa.Seq)
 		lineToWrite = fmt.Sprintf("%s.0.WT\t%s\n", currFa.Name, dna.BasesToString(currFa.Seq))
@@ -244,28 +243,28 @@ func FaToSatMutagenesisPredictSet(s Settings) {
 			if currFa.Seq[j] != dna.A {
 				copy(currMutant, currFa.Seq)
 				currMutant[j] = dna.A
-				lineToWrite  =fmt.Sprintf("%s.%d.A\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
+				lineToWrite = fmt.Sprintf("%s.%d.A\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
 				_, err = fmt.Fprintf(out, lineToWrite)
 				exception.PanicOnErr(err)
 			}
 			if currFa.Seq[j] != dna.C {
 				copy(currMutant, currFa.Seq)
 				currMutant[j] = dna.C
-				lineToWrite  =fmt.Sprintf("%s.%d.C\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
+				lineToWrite = fmt.Sprintf("%s.%d.C\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
 				_, err = fmt.Fprintf(out, lineToWrite)
 				exception.PanicOnErr(err)
 			}
 			if currFa.Seq[j] != dna.G {
 				copy(currMutant, currFa.Seq)
 				currMutant[j] = dna.G
-				lineToWrite  =fmt.Sprintf("%s.%d.G\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
+				lineToWrite = fmt.Sprintf("%s.%d.G\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
 				_, err = fmt.Fprintf(out, lineToWrite)
 				exception.PanicOnErr(err)
 			}
 			if currFa.Seq[j] != dna.T {
 				copy(currMutant, currFa.Seq)
 				currMutant[j] = dna.T
-				lineToWrite  =fmt.Sprintf("%s.%d.T\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
+				lineToWrite = fmt.Sprintf("%s.%d.T\t%s\n", currFa.Name, j, dna.BasesToString(currMutant))
 				_, err = fmt.Fprintf(out, lineToWrite)
 				exception.PanicOnErr(err)
 			}
@@ -350,12 +349,12 @@ func main() {
 		inFile = flag.Arg(1)
 		outFile = flag.Arg(2)
 		s = Settings{
-			Mode: mode,
-			InFile:      inFile,
-			OutFile:     outFile,
-			WindowSize:  *windowSize,
-			Stride:      *stride,
-			WithRevComp: *withRevComp,
+			Mode:               mode,
+			InFile:             inFile,
+			OutFile:            outFile,
+			WindowSize:         *windowSize,
+			Stride:             *stride,
+			WithRevComp:        *withRevComp,
 			SatMutagenesisBeds: *satMutagenesisBeds,
 		}
 		if s.SatMutagenesisBeds != "" {
@@ -396,7 +395,7 @@ func main() {
 			DivergentSitesFile: *DivergentSitesFile,
 		}
 		PredictSetToEvolvabilityVector(s)
-	} else if mode == "PredictSetToBed"	{
+	} else if mode == "PredictSetToBed" {
 		expectedNumArgs = 3
 		if len(flag.Args()) != expectedNumArgs {
 			flag.Usage()
@@ -404,10 +403,10 @@ func main() {
 		}
 		inFile = flag.Arg(1)
 		outFile = flag.Arg(2)
-		s = Settings {
-			Mode:               mode,
-			InFile:             inFile,
-			OutFile: outFile,
+		s = Settings{
+			Mode:        mode,
+			InFile:      inFile,
+			OutFile:     outFile,
 			MidpointBed: *midpointBed,
 		}
 		PredictSetToBed(s)

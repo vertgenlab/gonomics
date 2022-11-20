@@ -30,7 +30,6 @@ func ToChromInfo(records []Fasta) []chromInfo.ChromInfo {
 	return answer
 }
 
-
 // GetChromIndex returns the index of a Fasta record whose name matches an input string
 func GetChromIndex(f []Fasta, chrom string) int {
 	for i := range f {
