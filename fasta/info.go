@@ -2,6 +2,7 @@ package fasta
 
 import (
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"log"
 	"strings"
 )
 
@@ -27,4 +28,16 @@ func ToChromInfo(records []Fasta) []chromInfo.ChromInfo {
 		answer[i] = chromInfo.ChromInfo{Name: records[i].Name, Size: len(records[i].Seq), Order: i}
 	}
 	return answer
+}
+
+
+// GetChromIndex returns the index of a Fasta record whose name matches an input string
+func GetChromIndex(f []Fasta, chrom string) int {
+	for i := range f {
+		if f[i].Name == chrom {
+			return i
+		}
+	}
+	log.Fatalf("Error. Chromosome name: %s not found in fasta.", chrom)
+	return -1
 }
