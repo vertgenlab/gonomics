@@ -15,15 +15,17 @@ func multiFaToAxt(inFile string, rName string, qName string, outFile string) {
 	if len(records) != 2 {
 		log.Fatalf("multiFaToAxt accepts only a pairwise multiFa alignment. Expected 2 entries, found %d.\n", len(records))
 	}
-	var recordsCopy []fasta.Fasta = fasta.RemoveGaps(records)
+	//var recordsCopy []fasta.Fasta = fasta.RemoveGaps(records)
 
 	currAxt = axt.Axt{
 		RName:      rName,
 		RStart:     0,
-		REnd:       len(recordsCopy[0].Seq),
+		//REnd:       len(recordsCopy[0].Seq),
+		REnd:       len(records[0].Seq),
 		QName:      qName,
 		QStart:     0,
-		QEnd:       len(recordsCopy[1].Seq),
+		//QEnd:       len(recordsCopy[1].Seq),
+		QEnd:       len(records[1].Seq),
 		QStrandPos: true,
 		Score:      100, //dummy value, hardcoded
 		RSeq:       records[0].Seq,
