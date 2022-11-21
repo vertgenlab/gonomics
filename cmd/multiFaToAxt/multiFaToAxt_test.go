@@ -8,10 +8,10 @@ import (
 )
 
 var MultiFaToAxtTests = []struct {
-	InFile string
-	RName string
-	QName string
-	OutFile string
+	InFile        string
+	RName         string
+	QName         string
+	OutFile       string
 	ExpecctedFile string
 }{
 	{"testdata/test.fa", "chr1", "chr1", "testdata/tmp.axt", "testdata/expected.axt"},
