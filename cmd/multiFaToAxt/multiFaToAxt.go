@@ -18,12 +18,12 @@ func multiFaToAxt(inFile string, rName string, qName string, outFile string) {
 	//var recordsCopy []fasta.Fasta = fasta.RemoveGaps(records)
 
 	currAxt = axt.Axt{
-		RName:      rName,
-		RStart:     0,
+		RName:  rName,
+		RStart: 0,
 		//REnd:       len(recordsCopy[0].Seq),
-		REnd:       len(records[0].Seq),
-		QName:      qName,
-		QStart:     0,
+		REnd:   len(records[0].Seq),
+		QName:  qName,
+		QStart: 0,
 		//QEnd:       len(recordsCopy[1].Seq),
 		QEnd:       len(records[1].Seq),
 		QStrandPos: true,
