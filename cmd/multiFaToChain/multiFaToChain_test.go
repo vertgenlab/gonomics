@@ -8,17 +8,17 @@ import (
 )
 
 var MultiFaToChainTests = []struct {
-	InFile string
-	tName string
-	qName string
-	OutFile string
+	InFile       string
+	tName        string
+	qName        string
+	OutFile      string
 	ExpectedFile string
 }{
 	{InFile: "testdata/test.fa",
-		tName: "chr22",
-	qName: "chr22",
-	OutFile: "testdata/tmp.chain",
-	ExpectedFile: "testdata/expected.chain",},
+		tName:        "chr22",
+		qName:        "chr22",
+		OutFile:      "testdata/tmp.chain",
+		ExpectedFile: "testdata/expected.chain"},
 }
 
 func TestMultiFaToChain(t *testing.T) {
@@ -33,4 +33,3 @@ func TestMultiFaToChain(t *testing.T) {
 		}
 	}
 }
-

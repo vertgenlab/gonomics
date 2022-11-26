@@ -63,7 +63,7 @@ func Read(filename string) ([]Chain, HeaderComments) {
 }
 
 //ReadToChan processes a chain text file to a channel of chains.
-func ReadToChan(file *fileio.EasyReader, data chan<-Chain, wg *sync.WaitGroup) {
+func ReadToChan(file *fileio.EasyReader, data chan<- Chain, wg *sync.WaitGroup) {
 	for curr, done := NextChain(file); !done; curr, done = NextChain(file) {
 		data <- curr
 	}
@@ -154,7 +154,7 @@ func WriteChain(file *fileio.EasyWriter, ch Chain) {
 		_, err = fmt.Fprintf(file, "%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TBases, ch.Alignment[i].QBases)
 		exception.PanicOnErr(err)
 	}
-	_, err = fmt.Fprintf(file,"%d\n\n", ch.Alignment[len(ch.Alignment)-1].Size)
+	_, err = fmt.Fprintf(file, "%d\n\n", ch.Alignment[len(ch.Alignment)-1].Size)
 	exception.PanicOnErr(err)
 }
 

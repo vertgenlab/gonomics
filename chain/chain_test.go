@@ -9,7 +9,7 @@ import (
 
 var dir []string = []string{"testdata/big.chain", "testdata/twoChainZ.chain"}
 
-func TestReadAndWrite(t*testing.T) {
+func TestReadAndWrite(t *testing.T) {
 	var tmpFile string
 	var err error
 	for _, v := range dir {
