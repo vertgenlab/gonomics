@@ -5,7 +5,7 @@ import (
 )
 
 //TPosToQPos converts a target position in a chain to the corresponding query position.
-func TPosToQPos(c *Chain, TPos int) int {
+func TPosToQPos(c Chain, TPos int) int {
 	var currT, currQ int
 
 	//if target is negative strand, we convert TStart to the reverse complement position.
