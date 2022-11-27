@@ -17,7 +17,7 @@ const (
 	InQGap State = 2
 )
 
-func multiFaToChain(inFile string, tName string, qName string, outFile string) {
+func multiFaToChain(inFile string, tName string, qName string, outFile string, swapTandQ bool) {
 	var records []fasta.Fasta = fasta.Read(inFile)
 
 	//preflight checks
@@ -29,6 +29,10 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string) {
 	}
 	if len(records[0].Seq) < 1 {
 		log.Fatalf("MultiFaToChain expects non-empty DNA sequences.")
+	}
+
+	if swapTandQ {
+		records[0], records[1] = records[1], records[0]
 	}
 
 	var answer []chain.Chain = make([]chain.Chain, 0)
@@ -138,7 +142,7 @@ func queryState(records []fasta.Fasta, index int, prevState State) State {
 
 func usage() {
 	fmt.Print(
-		"multiFaToChain - Convert a pairwise multiFa format alignment to a chain file.\n" +
+		"multiFaToChain - Convert a pairwise multiFa format alignment to a chain file. First species is the target by default.\n" +
 			"Usage:\n" +
 			" multiFaToChain input.fa tName qName output.chain\n" +
 			"options:\n")
@@ -147,6 +151,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
+	var swapTandQ *bool = flag.Bool("swapTandQ", false, "Swap the target and query in the output chain file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -162,5 +167,5 @@ func main() {
 	qName := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	multiFaToChain(inFile, tName, qName, outFile)
+	multiFaToChain(inFile, tName, qName, outFile, *swapTandQ)
 }
