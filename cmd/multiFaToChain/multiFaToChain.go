@@ -43,14 +43,18 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 	var currBaseStats chain.BaseStats
 	var prevState State
 	var currState State
+	var doubleGap bool
 
 	//initialize state and first baseStats struct
-	prevState = queryState(records, 0, 3) //previous state hardcoded to 3.
+	prevState, doubleGap = queryState(records, 0) //previous state hardcoded to 3.
 	currBaseStats = chain.BaseStats{Size: 0, TBases: 0, QBases: 0}
 
 	for i := range records[0].Seq {
-		currState = queryState(records, i, prevState)
-		if prevState == queryState(records, i, prevState) { //if our state is the same at this position
+		currState, doubleGap = queryState(records, i)
+		if doubleGap {
+			continue
+		}
+		if prevState == currState { //if our state is the same at this position
 			switch prevState {
 			case InAln:
 				currBaseStats.Size++
@@ -98,18 +102,30 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 	}
 	currAlignment = append(currAlignment, currBaseStats)
 
+	var TEnd = len(recordsCopy[0].Seq)
+	var QEnd = len(recordsCopy[1].Seq)
+	//if there are trailing Tbases or Qbases after the last alignment, we trim them away from the header
+	//both T and Q are obligately positive stranded, so no need to check for strand.
+	if currAlignment[len(currAlignment)-1].TBases > 0 {
+		TEnd -= currAlignment[len(currAlignment)-1].TBases
+	}
+
+	if currAlignment[len(currAlignment)-1].QBases > 0 {
+		QEnd -= currAlignment[len(currAlignment)-1].QBases
+	}
+
 	var currAnswer chain.Chain = chain.Chain{
 		Score:     100, //dummy value
 		TName:     tName,
 		TSize:     len(recordsCopy[0].Seq),
 		TStrand:   true,
 		TStart:    0,
-		TEnd:      len(recordsCopy[0].Seq),
+		TEnd:      TEnd,
 		QName:     qName,
 		QSize:     len(recordsCopy[1].Seq),
 		QStrand:   true,
 		QStart:    0,
-		QEnd:      len(recordsCopy[1].Seq),
+		QEnd:      QEnd,
 		Alignment: currAlignment,
 		Id:        1,
 	}
@@ -118,26 +134,26 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 	chain.Write(outFile, answer, header)
 }
 
-func queryState(records []fasta.Fasta, index int, prevState State) State {
+func queryState(records []fasta.Fasta, index int) (State, bool) {
 	if dna.DefineBase(records[0].Seq[index]) || records[0].Seq[index] == dna.N || records[0].Seq[index] == dna.LowerN {
 		if dna.DefineBase(records[1].Seq[index]) || records[1].Seq[index] == dna.N || records[1].Seq[index] == dna.LowerN {
-			return InAln
+			return InAln, false
 		} else if records[1].Seq[index] == dna.Gap {
-			return InQGap
+			return InQGap, false
 		} else {
 			log.Fatalf("Unrecognized dna base in the query sequence: %s.", dna.BaseToString(records[1].Seq[index]))
 		}
 	} else if records[0].Seq[index] == dna.Gap {
 		if dna.DefineBase(records[1].Seq[index]) || records[1].Seq[index] == dna.N || records[1].Seq[index] == dna.LowerN {
-			return InTGap
+			return InTGap, false
 		} else if records[1].Seq[index] == dna.Gap {
-			return prevState
+			return InAln, true//inAln is a dummy here, we care about the bool return signaling a doubleGap in the alignment.
 		}
 	} else {
 		log.Fatalf("Unrecognized dna base in the reference sequence: %s.", dna.BaseToString(records[0].Seq[index]))
-		return 3
+		return 3, true
 	}
-	return 3
+	return 3, true
 }
 
 func usage() {
