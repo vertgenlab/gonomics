@@ -23,7 +23,7 @@ type Settings struct {
 	ScaleNameFloat float64
 	PadLength      int
 	ChromSizeFile  string
-	ToMidpoint bool
+	ToMidpoint     bool
 }
 
 func bedFormat(s Settings) {
@@ -109,7 +109,7 @@ func main() {
 		ScaleNameFloat: *scaleNameFloat,
 		PadLength:      *padLength,
 		ChromSizeFile:  *chromSizeFile,
-		ToMidpoint: *ToMidpoint,
+		ToMidpoint:     *ToMidpoint,
 	}
 
 	bedFormat(s)

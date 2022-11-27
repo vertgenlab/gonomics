@@ -147,7 +147,7 @@ func queryState(records []fasta.Fasta, index int) (State, bool) {
 		if dna.DefineBase(records[1].Seq[index]) || records[1].Seq[index] == dna.N || records[1].Seq[index] == dna.LowerN {
 			return InTGap, false
 		} else if records[1].Seq[index] == dna.Gap {
-			return InAln, true//inAln is a dummy here, we care about the bool return signaling a doubleGap in the alignment.
+			return InAln, true //inAln is a dummy here, we care about the bool return signaling a doubleGap in the alignment.
 		}
 	} else {
 		log.Fatalf("Unrecognized dna base in the reference sequence: %s.", dna.BaseToString(records[0].Seq[index]))

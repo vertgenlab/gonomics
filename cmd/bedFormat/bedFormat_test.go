@@ -16,7 +16,7 @@ var BedFormatTests = []struct {
 	ScaleNameFloat float64
 	PadLength      int
 	ChromSizeFile  string
-	ToMidpoint bool
+	ToMidpoint     bool
 }{
 	{"testdata/test.bed", //this test is for scaleNameFloat
 		"testdata/test.outFloat.bed",
@@ -82,7 +82,7 @@ func TestBedFormat(t *testing.T) {
 			ScaleNameFloat: v.ScaleNameFloat,
 			ChromSizeFile:  v.ChromSizeFile,
 			PadLength:      v.PadLength,
-			ToMidpoint: v.ToMidpoint,
+			ToMidpoint:     v.ToMidpoint,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
