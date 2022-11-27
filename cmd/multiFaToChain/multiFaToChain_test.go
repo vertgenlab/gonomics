@@ -12,20 +12,20 @@ var MultiFaToChainTests = []struct {
 	tName        string
 	qName        string
 	OutFile      string
-	SwapTandQ bool
+	SwapTandQ    bool
 	ExpectedFile string
 }{
 	{InFile: "testdata/test.fa",
 		tName:        "chr22",
 		qName:        "chr22",
 		OutFile:      "testdata/tmp.chain",
-		SwapTandQ: false,
+		SwapTandQ:    false,
 		ExpectedFile: "testdata/expected.chain"},
 	{InFile: "testdata/test.fa",
 		tName:        "chr22",
 		qName:        "chr22",
 		OutFile:      "testdata/tmp.swap.chain",
-		SwapTandQ: true,
+		SwapTandQ:    true,
 		ExpectedFile: "testdata/expected.swap.chain"},
 }
 
