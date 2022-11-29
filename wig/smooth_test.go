@@ -11,13 +11,13 @@ var SmoothTests = []struct {
 	InFile       string
 	OutFile      string
 	WindowSize   int
-	Missing float64
+	Missing      float64
 	ExpectedFile string
 }{
 	{InFile: "testdata/unsmooth.wig",
 		OutFile:      "testdata/tmp.smooth.wig",
 		WindowSize:   5,
-		Missing: -10,
+		Missing:      -10,
 		ExpectedFile: "testdata/expected.smooth.wig"},
 }
 
