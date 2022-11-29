@@ -81,7 +81,8 @@ func wigMath(s Settings) {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
 				if records[i].Values[j] == s.Missing || second[chromIndex].Values[j] == s.Missing {
-				}else if records[i].Values[j] != 0 {
+					records[i].Values[j] = s.Missing
+				} else if records[i].Values[j] != 0 {
 					records[i].Values[j] = math.Abs((records[i].Values[j]-second[chromIndex].Values[j])/records[i].Values[j]) * 100
 				} else {
 					records[i].Values[j] = s.Missing //these positions are undefined.
@@ -96,11 +97,35 @@ func wigMath(s Settings) {
 		_, err = fmt.Fprintf(out, "PCC:\t%f\n", answer)
 		err = out.Close()
 		exception.PanicOnErr(err)
+	} else if s.MinValue > -1 * math.MaxFloat64 {
+		for i = range records {
+			for j = range records[i].Values {
+				if records[i].Values[j] != s.Missing && records[i].Values[j] < s.MinValue {
+					records[i].Values[j] = s.Missing
+				}
+			}
+		}
+		wig.Write(s.OutFile, records)
+	} else if s.MaxValue < math.MaxFloat64 {
+		for i = range records {
+			for j = range records[i].Values {
+				if records[i].Values[j] != s.Missing && records[i].Values[j] > s.MaxValue {
+					records[i].Values[j] = s.Missing
+				}
+			}
+		}
+		wig.Write(s.OutFile, records)
 	}
 }
 
 func multipleOptionCheck(s Settings) {
 	var optionCount = 0
+	if s.MinValue > -1*math.MaxFloat64 {
+		optionCount++
+	}
+	if s.MaxValue < math.MaxFloat64 {
+		optionCount++
+	}
 	if s.ScalarMultiply != 1 {
 		optionCount++
 	}
@@ -150,6 +175,8 @@ func usage() {
 type Settings struct {
 	InFile                 string
 	OutFile                string
+	MinValue               float64
+	MaxValue               float64
 	ScalarMultiply         float64
 	ScalarDivide           float64
 	ElementWiseAdd         string
@@ -165,6 +192,8 @@ type Settings struct {
 
 func main() {
 	var expectedNumArgs = 2
+	var minValue *float64 = flag.Float64("minValue", math.MaxFloat64*-1, "Mask values in the output wig as 'missing' if they are below this value.")
+	var maxValue *float64 = flag.Float64("maxValue", math.MaxFloat64, "Mask values in the output wig as 'missing' if they are above this value.")
 	var scalarMultiply *float64 = flag.Float64("scalarMultiply", 1, "Multiply all entries in the input wig by the user-specified value.")
 	var scalarDivide *float64 = flag.Float64("scalarDivide", 1, "Divide all entries in the input wig by the user-specified value (cannot divide by zero).")
 	var elementWiseAdd *string = flag.String("elementWiseAdd", "", "Specify a second wig file to add (element-wise) from the first. Returns a wig file.")
@@ -192,6 +221,8 @@ func main() {
 	s := Settings{
 		InFile:                 inFile,
 		OutFile:                outFile,
+		MinValue:               *minValue,
+		MaxValue:               *maxValue,
 		ScalarMultiply:         *scalarMultiply,
 		ScalarDivide:           *scalarDivide,
 		ElementWiseAdd:         *elementWiseAdd,
