@@ -97,7 +97,7 @@ func wigMath(s Settings) {
 		_, err = fmt.Fprintf(out, "PCC:\t%f\n", answer)
 		err = out.Close()
 		exception.PanicOnErr(err)
-	} else if s.MinValue > -1 * math.MaxFloat64 {
+	} else if s.MinValue > -1*math.MaxFloat64 {
 		for i = range records {
 			for j = range records[i].Values {
 				if records[i].Values[j] != s.Missing && records[i].Values[j] < s.MinValue {
