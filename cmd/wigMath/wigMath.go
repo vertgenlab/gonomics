@@ -21,7 +21,9 @@ func wigMath(s Settings) {
 	if s.ScalarMultiply != 1 {
 		for i = range records {
 			for j = range records[i].Values {
-				records[i].Values[j] *= s.ScalarMultiply
+				if records[i].Values[j] != s.Missing {
+					records[i].Values[j] *= s.ScalarMultiply
+				}
 			}
 		}
 		wig.Write(s.OutFile, records)
@@ -31,7 +33,9 @@ func wigMath(s Settings) {
 		}
 		for i = range records {
 			for j = range records[i].Values {
-				records[i].Values[j] /= s.ScalarDivide
+				if records[i].Values[j] != s.Missing {
+					records[i].Values[j] /= s.ScalarDivide
+				}
 			}
 		}
 		wig.Write(s.OutFile, records)
@@ -40,7 +44,9 @@ func wigMath(s Settings) {
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
-				records[i].Values[j] += second[chromIndex].Values[j]
+				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
+					records[i].Values[j] += second[chromIndex].Values[j]
+				}
 			}
 		}
 		wig.Write(s.OutFile, records)
@@ -49,19 +55,23 @@ func wigMath(s Settings) {
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
-				records[i].Values[j] -= second[chromIndex].Values[j]
+				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
+					records[i].Values[j] -= second[chromIndex].Values[j]
+				}
 			}
 		}
 		wig.Write(s.OutFile, records)
 	} else if s.MovingAverageSmoothing > 1 {
-		records = wig.SmoothSlice(records, s.MovingAverageSmoothing)
+		records = wig.SmoothSlice(records, s.MovingAverageSmoothing, s.Missing)
 		wig.Write(s.OutFile, records)
 	} else if s.AbsoluteError != "" {
 		second = wig.Read(s.AbsoluteError)
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
-				records[i].Values[j] = math.Abs(records[i].Values[j] - second[chromIndex].Values[j])
+				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
+					records[i].Values[j] = math.Abs(records[i].Values[j] - second[chromIndex].Values[j])
+				}
 			}
 		}
 		wig.Write(s.OutFile, records)
@@ -70,10 +80,11 @@ func wigMath(s Settings) {
 		for i = range records {
 			chromIndex = getChromIndex(second, records[i].Chrom)
 			for j = range records[i].Values {
-				if records[i].Values[j] != 0 {
+				if records[i].Values[j] == s.Missing || second[chromIndex].Values[j] == s.Missing {
+				}else if records[i].Values[j] != 0 {
 					records[i].Values[j] = math.Abs((records[i].Values[j]-second[chromIndex].Values[j])/records[i].Values[j]) * 100
 				} else {
-					records[i].Values[j] = 0 //placeholder, these positions are undefined.
+					records[i].Values[j] = s.Missing //these positions are undefined.
 				}
 			}
 		}
