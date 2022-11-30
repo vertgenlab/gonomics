@@ -19,6 +19,9 @@ Authors:
 * Daniel A. Snellings
 * Seth Weaver
 
+### Complete Gonomics Documentation
+<p>The complete documentation for Gonomics can be found at the following website. https://pkg.go.dev/github.com/vertgenlab/gonomics </p>
+
 ### Instructions for installing Golang (Go)
 
 <p>Instructions are written for bash (common for Linux/masOS). Windows users can follow directions on this website. https://golangdocs.com/install-go-windows </p>
