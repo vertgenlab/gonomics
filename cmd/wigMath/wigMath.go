@@ -46,6 +46,8 @@ func wigMath(s Settings) {
 			for j = range records[i].Values {
 				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
 					records[i].Values[j] += second[chromIndex].Values[j]
+				} else {
+					records[i].Values[j] = s.Missing
 				}
 			}
 		}
@@ -57,6 +59,8 @@ func wigMath(s Settings) {
 			for j = range records[i].Values {
 				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
 					records[i].Values[j] -= second[chromIndex].Values[j]
+				} else {
+					records[i].Values[j] = s.Missing
 				}
 			}
 		}
@@ -71,6 +75,8 @@ func wigMath(s Settings) {
 			for j = range records[i].Values {
 				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
 					records[i].Values[j] = math.Abs(records[i].Values[j] - second[chromIndex].Values[j])
+				} else {
+					records[i].Values[j] = s.Missing
 				}
 			}
 		}

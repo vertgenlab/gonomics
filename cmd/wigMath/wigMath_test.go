@@ -130,7 +130,7 @@ var WigMathTests = []struct {
 	{
 		InFile:                 "testdata/in.wig",
 		OutFile:                "testdata/tmp.Mult55.wig",
-		ExpectedFile:           "testdata/expected.Mult55.wig",
+		ExpectedFile:           "testdata/expected.mult55.wig",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
 		ScalarMultiply:         55,
