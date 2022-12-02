@@ -26,14 +26,12 @@ func wigPeaks(inWig string, outBed string, threshold float64, findMinima bool) {
 		inPeak = false //when entering a new wig struct, set inPeak to false
 		var wigPosition = v1.Start
 		for _, v2 = range v1.Values { //each v1 is a wig struct, whose Values is a []float64 which contains the value at each position. Each i2 is index which we don't use, and each v2 is a float64.
-			fmt.Println(v2)
 			if passThreshold(v2, threshold, findMinima) { //either (from outside of a peak) start a new peak or inside of a peak
 				if !inPeak { //this means start a new peak if this is currently set to false.
 					inPeak = true                                                                                                                          //must remember to set inPeak to reflect Peak status
 					current = bed.Bed{Chrom: v1.Chrom, ChromStart: wigPosition, ChromEnd: wigPosition + 1, Name: "", Score: int(v2), FieldsInitialized: 5} //ChromEnd is +1 because bed has [open,closed) interval (note: in this program, the position that ends the peak is still >threshold, not the first position that dips <threshold), Score is the max Wig of the bed region, will update when inside the peak
 				} else { //this means already inside peak
 					current.ChromEnd = wigPosition + 1 //Update ChromEnd
-					fmt.Printf("Comparison time: v2: %v. current.Score: %v.\n", v2, current.Score)
 					if findMinima && v2 < float64(current.Score) {
 						current.Score = int(v2)
 					} else if !findMinima && v2 > float64(current.Score) { //Update Score if found new max wig score
