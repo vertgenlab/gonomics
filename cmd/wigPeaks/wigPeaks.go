@@ -17,10 +17,9 @@ func wigPeaks(inWig string, outBed string, threshold float64, findMinima bool) {
 	records := wig.Read(inWig) //type is []Wig, aka slice of Wig structs
 	var inPeak bool = false
 	var err error
-	var current bed.Bed               //to store the current peak as a bed entry
+	var current bed.Bed              //to store the current peak as a bed entry
 	out := fileio.EasyCreate(outBed) //instead of answer, use "chan" method to write as we go. out has type EasyCreate defined as a gonomics struct, one of the fields is File which has type *os.File, needed for bed.WriteBed
 	var v2 float64
-
 
 	for _, v1 := range records { //in range for loop, i is index (0,1,2..) which we don't use in this instance, v is value (content of slice). Record is slice of wig struct, each iteration is slice/object of wig struct, which looks like a block and is often organized by chromosomes (or part of chromosome), and each wig struct will produce independent peaks. The v1 iteration has chr=chrom3,step=100, and a list of WigValues where there are positions+values, values like 11 22 100 etc.
 		inPeak = false //when entering a new wig struct, set inPeak to false
@@ -40,7 +39,7 @@ func wigPeaks(inWig string, outBed string, threshold float64, findMinima bool) {
 				}
 			} else { //either (from inside of a peak) ending a peak or outside of a peak
 				if inPeak { //if inside of a peak ending a peak
-					inPeak = false //must remember to set inPeak to reflect Peak status
+					inPeak = false             //must remember to set inPeak to reflect Peak status
 					bed.WriteBed(out, current) //instead of answer, use "chan" method to write as we go
 				}
 				//if outside of a peak, nothing to do
@@ -48,7 +47,7 @@ func wigPeaks(inWig string, outBed string, threshold float64, findMinima bool) {
 			wigPosition = wigPosition + v1.Step
 		}
 		if inPeak { //after wig struct ends, if inPeak is still true (i.e. ended on a value>threshold), should end peak and append current
-			inPeak = false //redundant since this will happen when enter a new wig struct
+			inPeak = false             //redundant since this will happen when enter a new wig struct
 			bed.WriteBed(out, current) //instead of answer, use "chan" method to write as we go
 		}
 	}
@@ -77,7 +76,6 @@ func main() {
 	var expectedNumArgs int = 2
 	var peakThreshold *float64 = flag.Float64("threshold", 20, "if number of reads >= threshold, start calling peak")
 	var findMinima *bool = flag.Bool("findMinima", false, "Report local minima peaks instead of maxima past the threshold. ")
-
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
