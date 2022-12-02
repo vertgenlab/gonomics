@@ -8,9 +8,9 @@ import (
 )
 
 type Settings struct {
-	InFile string
+	InFile  string
 	OutFile string
-	Chrom string
+	Chrom   string
 }
 
 func wigFilter(s Settings) {
@@ -54,10 +54,10 @@ func main() {
 
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	var s Settings = Settings {
-		InFile: inFile,
+	var s Settings = Settings{
+		InFile:  inFile,
 		OutFile: outFile,
-		Chrom: *chrom,
+		Chrom:   *chrom,
 	}
 
 	wigFilter(s)
