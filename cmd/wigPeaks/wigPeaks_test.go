@@ -9,11 +9,11 @@ import (
 
 //use struct to specify testdata
 var wigPeaksTests = []struct {
-	inWig    string
-	outBed string
-	expectedBed   string
-	threshold float64
-	findMinima bool
+	inWig       string
+	outBed      string
+	expectedBed string
+	threshold   float64
+	findMinima  bool
 }{
 	//{"testdata/in_wig_1.wig", "testdata/out_bed_tmp.bed", "testdata/out_bed_1.bed", 20, false},
 	//{"testdata/in_wig_2.wig", "testdata/out_bed_tmp.bed", "testdata/out_bed_2.bed", 50, false},
