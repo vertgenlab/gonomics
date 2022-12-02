@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
@@ -121,11 +122,55 @@ func wigMath(s Settings) {
 			}
 		}
 		wig.Write(s.OutFile, records)
+	} else if s.MissingBed {
+		var inMissingRegion = false
+		out := fileio.EasyCreate(s.OutFile)
+		var currentBed = bed.Bed{Chrom: "dummyPlaceHolder", ChromStart: -1, ChromEnd: -1, FieldsInitialized: 3}
+		for i = range records {
+			for j = range records[i].Values {
+				if records[i].Values[j] == s.Missing {
+					if records[i].Chrom != currentBed.Chrom && currentBed.Chrom != "dummyPlaceHolder" { //case where previous chrom ended in missing,
+						// so we write the bed entry, but new chrom also starts with missing.
+						bed.WriteBed(out, currentBed)
+						currentBed = bed.Bed{Chrom: records[i].Chrom, ChromStart: j, ChromEnd: j + 1, FieldsInitialized: 3}
+					} else if inMissingRegion {
+						currentBed.ChromEnd = j + 1 //include currentPos in currentBed.
+					} else {
+						currentBed = bed.Bed{Chrom: records[i].Chrom, ChromStart: j, ChromEnd: j + 1, FieldsInitialized: 3}
+						inMissingRegion = true
+					}
+				} else {
+					if inMissingRegion {
+						inMissingRegion = false
+						bed.WriteBed(out, currentBed)
+					}
+				}
+			}
+		}
+		//if we found a valid bed, we write the last one out
+		if currentBed.ChromStart >= 0 {
+			bed.WriteBed(out, currentBed)
+		}
+		err = out.Close()
+		exception.PanicOnErr(err)
+	} else if s.BedMask != "" {
+		bedRegions := bed.Read(s.BedMask)
+		var currChromIndex int
+		for i = range bedRegions {
+			currChromIndex = getChromIndex(records, bedRegions[i].Chrom)
+			for j = bedRegions[i].ChromStart; j < bedRegions[i].ChromEnd; j++ {
+				records[currChromIndex].Values[j] = s.Missing
+			}
+		}
+		wig.Write(s.OutFile, records)
 	}
 }
 
 func multipleOptionCheck(s Settings) {
 	var optionCount = 0
+	if s.BedMask != "" {
+		optionCount++
+	}
 	if s.MinValue > -1*math.MaxFloat64 {
 		optionCount++
 	}
@@ -139,6 +184,9 @@ func multipleOptionCheck(s Settings) {
 		optionCount++
 	}
 	if s.ElementWiseSubtract != "" {
+		optionCount++
+	}
+	if s.MissingBed {
 		optionCount++
 	}
 	if s.MovingAverageSmoothing > 1 {
@@ -181,35 +229,39 @@ func usage() {
 type Settings struct {
 	InFile                 string
 	OutFile                string
-	MinValue               float64
-	MaxValue               float64
-	ScalarMultiply         float64
-	ScalarDivide           float64
-	ElementWiseAdd         string
-	ElementWiseSubtract    string
-	MovingAverageSmoothing int
 	AbsoluteError          string
 	AbsolutePercentError   string
+	BedMask                string
+	ElementWiseAdd         string
+	ElementWiseSubtract    string
+	MaxValue               float64
+	MinValue               float64
+	MovingAverageSmoothing int
 	Missing                float64
+	MissingBed             bool
 	Pearson                string
 	SamplingFrequency      float64
+	ScalarMultiply         float64
+	ScalarDivide           float64
 	SetSeed                int64
 }
 
 func main() {
 	var expectedNumArgs = 2
-	var minValue *float64 = flag.Float64("minValue", math.MaxFloat64*-1, "Mask values in the output wig as 'missing' if they are below this value.")
-	var maxValue *float64 = flag.Float64("maxValue", math.MaxFloat64, "Mask values in the output wig as 'missing' if they are above this value.")
-	var scalarMultiply *float64 = flag.Float64("scalarMultiply", 1, "Multiply all entries in the input wig by the user-specified value.")
-	var scalarDivide *float64 = flag.Float64("scalarDivide", 1, "Divide all entries in the input wig by the user-specified value (cannot divide by zero).")
-	var elementWiseAdd *string = flag.String("elementWiseAdd", "", "Specify a second wig file to add (element-wise) from the first. Returns a wig file.")
-	var elementWiseSubtract *string = flag.String("elementWiseSubtract", "", "Specify a second wig file to subtract (element-wise) from the first. Returns a wig file.")
-	var movingAverageSmoothing *int = flag.Int("movingAverageSmoothing", 1, "Set to a number greater than 1 to perform moving average smoothing on input wig data. Returns a wig file.")
 	var absoluteError *string = flag.String("absoluteError", "", "Specify a second wig file to determine the absolute error (element-wise) from the first. Returns a wig file.")
 	var absolutePercentError *string = flag.String("absolutePercentError", "", "Specify a second wig file to determine the absolute percent error (element-wise) from the first. Returns a wig file.")
+	var bedMask *string = flag.String("bedMask", "", "Specify a bed file, and mask all wig regions overlapping these bed regions to missing.")
+	var elementWiseAdd *string = flag.String("elementWiseAdd", "", "Specify a second wig file to add (element-wise) from the first. Returns a wig file.")
+	var elementWiseSubtract *string = flag.String("elementWiseSubtract", "", "Specify a second wig file to subtract (element-wise) from the first. Returns a wig file.")
+	var maxValue *float64 = flag.Float64("maxValue", math.MaxFloat64, "Mask values in the output wig as 'missing' if they are above this value.")
+	var minValue *float64 = flag.Float64("minValue", math.MaxFloat64*-1, "Mask values in the output wig as 'missing' if they are below this value.")
 	var missing *float64 = flag.Float64("missing", 0, "Specify the value associated with missing data in the wig. These values are excluded from summary statistic calculations like Pearson.")
+	var missingBed *bool = flag.Bool("missingBed", false, "Create a bed file as the output file of all contiguous regions of the input wig with the missing value.")
+	var movingAverageSmoothing *int = flag.Int("movingAverageSmoothing", 1, "Set to a number greater than 1 to perform moving average smoothing on input wig data. Returns a wig file.")
 	var pearson *string = flag.String("pearson", "", "Specify a second wig file to determine the Pearson Correlation Coefficient between this wig and the first wig. Returns a text file.")
 	var samplingFrequency *float64 = flag.Float64("sampleFrequency", 0.001, "When calculating the Pearson correlation coefficient between two wigs, set the sampling frequency, or the proportion of positions in the wigs that will be evaluated in the calculation.")
+	var scalarDivide *float64 = flag.Float64("scalarDivide", 1, "Divide all entries in the input wig by the user-specified value (cannot divide by zero).")
+	var scalarMultiply *float64 = flag.Float64("scalarMultiply", 1, "Multiply all entries in the input wig by the user-specified value.")
 	var setSeed *int64 = flag.Int64("setSeed", 1, "Set the seed for the random number generator.")
 
 	flag.Usage = usage
@@ -227,18 +279,20 @@ func main() {
 	s := Settings{
 		InFile:                 inFile,
 		OutFile:                outFile,
-		MinValue:               *minValue,
-		MaxValue:               *maxValue,
-		ScalarMultiply:         *scalarMultiply,
-		ScalarDivide:           *scalarDivide,
-		ElementWiseAdd:         *elementWiseAdd,
-		ElementWiseSubtract:    *elementWiseSubtract,
-		MovingAverageSmoothing: *movingAverageSmoothing,
 		AbsoluteError:          *absoluteError,
 		AbsolutePercentError:   *absolutePercentError,
+		BedMask:                *bedMask,
+		ElementWiseAdd:         *elementWiseAdd,
+		ElementWiseSubtract:    *elementWiseSubtract,
+		MinValue:               *minValue,
+		MaxValue:               *maxValue,
+		MovingAverageSmoothing: *movingAverageSmoothing,
 		Missing:                *missing,
+		MissingBed:             *missingBed,
 		Pearson:                *pearson,
 		SamplingFrequency:      *samplingFrequency,
+		ScalarMultiply:         *scalarMultiply,
+		ScalarDivide:           *scalarDivide,
 		SetSeed:                *setSeed,
 	}
 	wigMath(s)
