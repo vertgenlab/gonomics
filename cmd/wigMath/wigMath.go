@@ -20,7 +20,7 @@ type Settings struct {
 	AbsolutePercentError   string
 	BedMask                string
 	ElementWiseAdd         string
-	ElementWiseMax string
+	ElementWiseMax         string
 	ElementWiseSubtract    string
 	MaxValue               float64
 	MinValue               float64
@@ -302,7 +302,7 @@ func main() {
 		AbsolutePercentError:   *absolutePercentError,
 		BedMask:                *bedMask,
 		ElementWiseAdd:         *elementWiseAdd,
-		ElementWiseMax: *elementWiseMax,
+		ElementWiseMax:         *elementWiseMax,
 		ElementWiseSubtract:    *elementWiseSubtract,
 		MinValue:               *minValue,
 		MaxValue:               *maxValue,
