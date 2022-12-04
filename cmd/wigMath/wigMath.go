@@ -6,11 +6,33 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"math"
 	"math/rand"
 )
+
+type Settings struct {
+	InFile                 string
+	OutFile                string
+	AbsoluteError          string
+	AbsolutePercentError   string
+	BedMask                string
+	ElementWiseAdd         string
+	ElementWiseMax string
+	ElementWiseSubtract    string
+	MaxValue               float64
+	MinValue               float64
+	MovingAverageSmoothing int
+	Missing                float64
+	MissingBed             bool
+	Pearson                string
+	SamplingFrequency      float64
+	ScalarMultiply         float64
+	ScalarDivide           float64
+	SetSeed                int64
+}
 
 func wigMath(s Settings) {
 	rand.Seed(s.SetSeed)
@@ -47,6 +69,19 @@ func wigMath(s Settings) {
 			for j = range records[i].Values {
 				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
 					records[i].Values[j] += second[chromIndex].Values[j]
+				} else {
+					records[i].Values[j] = s.Missing
+				}
+			}
+		}
+		wig.Write(s.OutFile, records)
+	} else if s.ElementWiseMax != "" {
+		second = wig.Read(s.ElementWiseMax)
+		for i = range records {
+			chromIndex = getChromIndex(second, records[i].Chrom)
+			for j = range records[i].Values {
+				if records[i].Values[j] != s.Missing && second[chromIndex].Values[j] != s.Missing {
+					records[i].Values[j] = numbers.Max(records[i].Values[j], second[chromIndex].Values[j])
 				} else {
 					records[i].Values[j] = s.Missing
 				}
@@ -183,6 +218,9 @@ func multipleOptionCheck(s Settings) {
 	if s.ElementWiseAdd != "" {
 		optionCount++
 	}
+	if s.ElementWiseMax != "" {
+		optionCount++
+	}
 	if s.ElementWiseSubtract != "" {
 		optionCount++
 	}
@@ -226,32 +264,13 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-type Settings struct {
-	InFile                 string
-	OutFile                string
-	AbsoluteError          string
-	AbsolutePercentError   string
-	BedMask                string
-	ElementWiseAdd         string
-	ElementWiseSubtract    string
-	MaxValue               float64
-	MinValue               float64
-	MovingAverageSmoothing int
-	Missing                float64
-	MissingBed             bool
-	Pearson                string
-	SamplingFrequency      float64
-	ScalarMultiply         float64
-	ScalarDivide           float64
-	SetSeed                int64
-}
-
 func main() {
 	var expectedNumArgs = 2
 	var absoluteError *string = flag.String("absoluteError", "", "Specify a second wig file to determine the absolute error (element-wise) from the first. Returns a wig file.")
 	var absolutePercentError *string = flag.String("absolutePercentError", "", "Specify a second wig file to determine the absolute percent error (element-wise) from the first. Returns a wig file.")
 	var bedMask *string = flag.String("bedMask", "", "Specify a bed file, and mask all wig regions overlapping these bed regions to missing.")
 	var elementWiseAdd *string = flag.String("elementWiseAdd", "", "Specify a second wig file to add (element-wise) from the first. Returns a wig file.")
+	var elementWiseMax *string = flag.String("elementWiseMax", "", "Specify a second wig file to calculate the element-wise max value between the two wigs. Returns a wig file.")
 	var elementWiseSubtract *string = flag.String("elementWiseSubtract", "", "Specify a second wig file to subtract (element-wise) from the first. Returns a wig file.")
 	var maxValue *float64 = flag.Float64("maxValue", math.MaxFloat64, "Mask values in the output wig as 'missing' if they are above this value.")
 	var minValue *float64 = flag.Float64("minValue", math.MaxFloat64*-1, "Mask values in the output wig as 'missing' if they are below this value.")
@@ -283,6 +302,7 @@ func main() {
 		AbsolutePercentError:   *absolutePercentError,
 		BedMask:                *bedMask,
 		ElementWiseAdd:         *elementWiseAdd,
+		ElementWiseMax: *elementWiseMax,
 		ElementWiseSubtract:    *elementWiseSubtract,
 		MinValue:               *minValue,
 		MaxValue:               *maxValue,
