@@ -10,7 +10,7 @@ type Node struct {
 	Name         string
 	OnlyTopology bool
 	BranchLength float64
-	Children         []*Node
+	Children     []*Node
 }
 
 func toStringHelper(buffer *bytes.Buffer, node *Node) {
@@ -23,7 +23,7 @@ func toStringHelper(buffer *bytes.Buffer, node *Node) {
 	} else {
 		buffer.WriteRune('(')
 		toStringHelper(buffer, node.Children[0])
-		for i:=1 ; i<len(node.Children); i++ {
+		for i := 1; i < len(node.Children); i++ {
 			buffer.WriteRune(',')
 			toStringHelper(buffer, node.Children[i])
 		}
