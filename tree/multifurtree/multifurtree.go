@@ -1,4 +1,4 @@
-package tree
+package multifurtree
 
 import (
 	"bytes"

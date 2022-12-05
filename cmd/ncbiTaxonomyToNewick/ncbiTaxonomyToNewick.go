@@ -6,14 +6,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/tree"
-	"image"
-	"image/png"
+	"github.com/vertgenlab/gonomics/tree/multifurtree"
 	"log"
-	"os"
 )
 
-func prune(node *Node) *Node {
+func prune(node *multifurtree.Node) *multifurtree.Node {
 	var rank = map[string]int{
 "superkingdom":1,
 "kingdom":2,
@@ -57,14 +54,30 @@ func prune(node *Node) *Node {
 "strain":40,
 "isolate":41,
 	}
+	 minRank(
 	return node
 }
+
+func minRank(node multifurtree.Node) int {
+	var answer int = math.MaxInt32
+	answer = numbers.Min(answer, node.BranchLength)
+	for i := range node.Children {
+		answer = numbers.Min(answer, minRank(node.Children[i]))
+	}
+	return answer
+}
+
+
 
 // ncbiTaxonomyToNewick takes in a nodes.dmp file and writes a newick file
 func ncbiTaxonomyToNewick(nodesFilename string, newickFilename string) {
 	var node multifurtree.Node
+	var err error
 	tree = multifurtree.ReadNewick(nodesFilename)
-	
+	err = multifurtree.WriteNewick(newickFilename, tree)
+	if err != nil {
+		log.Fatalf(err)
+	}
 }
 
 func usage() {
