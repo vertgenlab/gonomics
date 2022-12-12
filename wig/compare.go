@@ -1,6 +1,10 @@
 package wig
 
 import (
+	"github.com/vertgenlab/gonomics/numbers"
+	"log"
+	//DEBUG: "fmt"
+	"math/rand"
 	"sort"
 	"strings"
 )
@@ -66,4 +70,44 @@ func compare(alpha Wig, beta Wig) int {
 //SortByCoord sorts in place a slice of Wig structs by their genomic position with secondary sorting by the number of values.
 func SortByCoord(w []Wig) {
 	sort.Slice(w, func(i, j int) bool { return compare(w[i], w[j]) == -1 })
+}
+
+// Pearson calculates the Pearson Correlation Coefficient between two input wig slices. Data values equal to the 'missing' value are ignored.
+// samplingFrequency is a number between 0 and 1. This represents the proportion of bases that are considered for evaulating the PCC.
+func Pearson(alpha []Wig, beta []Wig, missing float64, samplingFrequency float64) float64 {
+	var a = make([]float64, 0)
+	var b = make([]float64, 0)
+	var i, j int
+	var r float64
+	var chromIndex int
+	if samplingFrequency < 0 || samplingFrequency > 1 {
+		log.Fatalf("Error in wig.Pearson. samplingFrequency must be a value between 0 and 1.")
+	}
+	for i = range alpha {
+		chromIndex = getChromIndex(beta, alpha[i].Chrom)
+		//DEBUG: fmt.Printf("ChromIndex: %v.\n", chromIndex)
+		if len(alpha[i].Values) != len(beta[chromIndex].Values) {
+			log.Fatalf("Error in wig.Pearson. Entries with the same chr name have a different number of values. Len(a): %v. Len(b): %v.", len(alpha[i].Values), len(beta[chromIndex].Values))
+		}
+		for j = range alpha[i].Values {
+			if alpha[i].Values[j] != missing && beta[chromIndex].Values[j] != missing { //if neither wig has the missing value at this position.
+				r = rand.Float64()
+				if r < samplingFrequency {
+					a = append(a, alpha[i].Values[j])
+					b = append(b, beta[chromIndex].Values[j])
+				}
+			}
+		}
+	}
+	return numbers.Pearson(a, b)
+}
+
+func getChromIndex(w []Wig, chrom string) int {
+	for i := range w {
+		if w[i].Chrom == chrom {
+			return i
+		}
+	}
+	log.Fatalf("Error. Chromosome %v not found in wig.", chrom)
+	return -1
 }
