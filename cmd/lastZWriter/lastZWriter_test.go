@@ -14,7 +14,6 @@ var allDists = pairwise + "/allDistsAll.txt"
 var out = "testdata/out.txt"
 
 func TestMakeArray(t *testing.T) {
-	//fileio.EasyCreate(out)
 	MakeArray(lastZ, pairwise, speciesListFile, refListFile, allDists, out, true, "")
 	outRecords := fileio.EasyOpen(out)
 	expected := fileio.Read("testdata/expected.txt")
