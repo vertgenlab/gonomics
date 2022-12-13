@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/lastZWriter"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -40,9 +41,6 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
 
 	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
-
-	log.Print(currLines)
-
 	allLines = append(allLines, currLines...)
 	return allLines
 }
@@ -54,8 +52,12 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	tPath := pairwise + "/" + reference + ".byChrom"
 	qPath := pairwise + "/" + species + ".byChrom"
 
-	log.Print(tPath)
-	log.Print(qPath)
+	if _, e := os.Stat(tPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
+	}
+	if _, e := os.Stat(qPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the query species.")
+	}
 
 	tMatches, _ = filepath.Glob(tPath + "/*.fa")
 	qMatches, _ = filepath.Glob(qPath + "/*.fa")
@@ -72,20 +74,14 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-
-			log.Print(qName)
-			log.Print(tName)
-
 			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
-			log.Print(currLine)
-
 			theseLines = append(theseLines, currLine)
 		}
 	}
 
-	//if theseLines == nil {
-	//	log.Fatal("No lines to write to file")
-	//}
+	if theseLines == nil {
+		log.Fatal("No lines to write to file")
+	}
 
 	return theseLines
 }
