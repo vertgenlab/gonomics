@@ -73,6 +73,7 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 			theseLines = append(theseLines, currLine)
 		}
 	}
+	log.Print(currLine)
 
 	return theseLines
 }
