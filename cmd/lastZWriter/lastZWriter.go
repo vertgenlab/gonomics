@@ -42,6 +42,8 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
 	allLines = append(allLines, currLines...)
 
+	log.Print(allLines)
+
 	return allLines
 }
 
