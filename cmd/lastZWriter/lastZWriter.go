@@ -74,6 +74,10 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		}
 	}
 
+	if theseLines == nil {
+		log.Fatal("No lines to write to file")
+	}
+
 	return theseLines
 }
 
