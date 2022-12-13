@@ -44,9 +44,6 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	log.Print(currLines)
 
 	allLines = append(allLines, currLines...)
-
-	log.Print(allLines)
-
 	return allLines
 }
 
