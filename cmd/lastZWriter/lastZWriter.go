@@ -54,6 +54,9 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	tPath := pairwise + "/" + reference + ".byChrom"
 	qPath := pairwise + "/" + species + ".byChrom"
 
+	log.Print(tPath)
+	log.Print(qPath)
+
 	tMatches, _ = filepath.Glob(tPath + "/*.fa")
 	qMatches, _ = filepath.Glob(qPath + "/*.fa")
 
