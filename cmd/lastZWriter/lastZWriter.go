@@ -25,6 +25,10 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
 				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
+
+				log.Print(parameters)
+				log.Print(matrix)
+
 				if parameters == nil || matrix == "" {
 					log.Fatalf("Reference %s and species %s returned no parameters or matrix.", refList[ref], speciesList[spec])
 				}
@@ -74,8 +78,6 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		}
 	}
 
-	log.Print(reference)
-	log.Print(species)
 	return theseLines
 }
 
