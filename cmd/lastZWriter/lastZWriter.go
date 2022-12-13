@@ -25,10 +25,6 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
 				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
-
-				log.Print(parameters)
-				log.Print(matrix)
-
 				if parameters == nil || matrix == "" {
 					log.Fatalf("Reference %s and species %s returned no parameters or matrix.", refList[ref], speciesList[spec])
 				}
@@ -44,6 +40,9 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
 
 	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
+
+	log.Print(currLines)
+
 	allLines = append(allLines, currLines...)
 
 	log.Print(allLines)
