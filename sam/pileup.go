@@ -169,6 +169,7 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 		if !passesReadFilters(read, readFilters) {
 			continue
 		}
+		sclipTerminalIns(&read)
 		start, lastSentRefIdx, lastSentPos = sendPassedLinked(start, read, includeNoData, refmap, send, pileFilters, lastSentRefIdx, lastSentPos)
 		updateLinkedPile(start, read, refmap)
 	}
@@ -416,6 +417,19 @@ func resetPile(p *Pile) {
 	p.DelCountF = nil
 	p.DelCountR = nil
 	p.touched = false
+}
+
+// sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip
+func sclipTerminalIns(s *Sam) {
+	if len(s.Cigar) == 0 || s.Cigar[0].Op == '*' {
+		return
+	}
+	if s.Cigar[0].Op == 'I' {
+		s.Cigar[0].Op = 'S'
+	}
+	if s.Cigar[len(s.Cigar)-1].Op == 'I' {
+		s.Cigar[len(s.Cigar)-1].Op = 'S'
+	}
 }
 
 // String for debug

@@ -166,8 +166,8 @@ var p6 = Sam{
 	RName: "ref",
 	Pos:   20,
 	Flag:  161, // paired + mate reverse strand + second in pair
-	Cigar: cigar.FromString("5M"),
-	Seq:   dna.StringToBases("GCCCG"),
+	Cigar: cigar.FromString("5I5M5I"),
+	Seq:   dna.StringToBases("AAAAAGCCCGAAAAA"),
 }
 
 var pHeader = Header{
