@@ -8,13 +8,13 @@ import (
 )
 
 var ReadWritePfmTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/jaspar.vertebrate.txt",
 		"testdata/tmp.jaspar.txt",
-	"testdata/expected.jaspar.txt"},
+		"testdata/expected.jaspar.txt"},
 }
 
 func TestReadAndWritePfm(t *testing.T) {

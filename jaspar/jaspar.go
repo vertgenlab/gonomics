@@ -11,16 +11,16 @@ import (
 
 //Pfm is a struct encoding a position frequency matrix.
 type Pfm struct {
-	Id string
+	Id   string
 	Name string
-	Mat [][]float64
+	Mat  [][]float64
 }
 
 //Ppm is a struct encoding a position probability matrix.
 type Ppm struct {
-	Id string
+	Id   string
 	Name string
-	Mat [][]float64
+	Mat  [][]float64
 }
 
 func WritePfm(filename string, records []Pfm) {
@@ -115,7 +115,7 @@ func NextPfm(file *fileio.EasyReader) (Pfm, bool) {
 	}
 
 	//parse header line
-	header = line1[1:]//trim '>' symbol
+	header = line1[1:]              //trim '>' symbol
 	fields = strings.Fields(header) //split fields by whitespace ' ' or '\t', etc.
 	if len(fields) == 0 {
 		log.Fatalf("Error: Pfm has empty header.")
@@ -125,7 +125,7 @@ func NextPfm(file *fileio.EasyReader) (Pfm, bool) {
 		answer.Name = fields[1]
 	}
 
-	answer.Mat = make([][]float64, 4)//make 4 matrix rows, one for each nucleotide.
+	answer.Mat = make([][]float64, 4) //make 4 matrix rows, one for each nucleotide.
 	motifLen = getMotifLen(line2)
 	if motifLen < 1 {
 		log.Fatalf("Error: Motif length must be at least 1.")
@@ -149,14 +149,13 @@ func parseMotifLine(answer Pfm, line string, motifLen int, index int) {
 	line = strings.Replace(line, "[", " ", 1)
 	line = strings.Replace(line, "]", "", 1)
 	fields := strings.Fields(line)
-	if len(fields) - 1 != motifLen {
-		fmt.Printf("LineMotifLength: %v. MotifLen: %v.\n", len(fields) - 1, motifLen)
+	if len(fields)-1 != motifLen {
+		fmt.Printf("LineMotifLength: %v. MotifLen: %v.\n", len(fields)-1, motifLen)
 		log.Fatalf("Error: motif length is not equal to other lines in pfm record.")
 	}
 	answer.Mat[index] = make([]float64, motifLen)
-	fields = fields[1:]//trim first field, which corresponds to nucleotide id.
-	for i := 0; i < len(fields); i ++ {
+	fields = fields[1:] //trim first field, which corresponds to nucleotide id.
+	for i := 0; i < len(fields); i++ {
 		answer.Mat[index][i] = common.StringToFloat64(fields[i])
 	}
 }
-
