@@ -8,15 +8,15 @@ import (
 )
 
 var PfmToPpmTests = []struct {
-	PfmFile string
-	OutputFile string
+	PfmFile      string
+	OutputFile   string
 	ExpectedFile string
-	Pseudocount float64
+	Pseudocount  float64
 }{
 	{"testdata/expected.jaspar.txt",
 		"testdata/tmp.Ppm.txt",
-	"testdata/expected.Ppm.txt",
-	0.1},
+		"testdata/expected.Ppm.txt",
+		0.1},
 }
 
 func TestPfmSliceToPpmSlice(t *testing.T) {

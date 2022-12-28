@@ -6,7 +6,7 @@ package jaspar
 func PfmToPpm(input Pfm, pseudocount float64) Ppm {
 	var answer = Ppm{Id: input.Id, Name: input.Name, Mat: make([][]float64, 4)}
 	var columnSum float64
-	for i := 0; i < 4; i ++ {
+	for i := 0; i < 4; i++ {
 		answer.Mat[i] = make([]float64, len(input.Mat[0]))
 	}
 
