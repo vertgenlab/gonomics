@@ -8,13 +8,13 @@ import (
 )
 
 var ReadWritePfmTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
 }{
 	{"testdata/jaspar.vertebrate.txt",
 		"testdata/tmp.jaspar.txt",
-	"testdata/expected.jaspar.txt"},
+		"testdata/expected.jaspar.txt"},
 }
 
 func TestReadAndWritePfm(t *testing.T) {
@@ -22,7 +22,7 @@ func TestReadAndWritePfm(t *testing.T) {
 	var records []Pfm
 	for _, v := range ReadWritePfmTests {
 		records = ReadPfm(v.InFile)
-		WritePfm(v.OutFile, records)
+		WritePfmSlice(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in ReadWritePfm. Output not as expected.")
 		} else {
