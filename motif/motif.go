@@ -1,4 +1,4 @@
-package jaspar
+package motif
 
 import (
 	"fmt"
@@ -9,58 +9,38 @@ import (
 	"strings"
 )
 
-//Pfm is a struct encoding a position frequency matrix.
-type Pfm struct {
+type PositionMatrixType byte
+
+const (
+	Frequency PositionMatrixType = 0
+	Probability PositionMatrixType = 1
+	Weight PositionMatrixType = 2
+	None PositionMatrixType = 3
+)
+
+//Pfm is a struct encoding a position frequency/probability/weight matrix.
+type PositionMatrix struct {
 	Id   string
 	Name string
+	Type PositionMatrixType
 	Mat  [][]float64
 }
 
-//Ppm is a struct encoding a position probability matrix.
-// While we could use one struct for both objects, I think two different structs
-// will help us avoid silent errors downstream.
-type Ppm struct {
-	Id   string
-	Name string
-	Mat  [][]float64
-}
-
-// WritePfmSlice writes a slice of Pfm structs to an output filename.
-func WritePfmSlice(filename string, records []Pfm) {
-	var err error
-
-	file := fileio.EasyCreate(filename)
-
-	for _, pfm := range records {
-		WritePfm(file, pfm)
-	}
-
-	err = file.Close()
-	exception.PanicOnErr(err)
-}
-
-// WritePfm writes an individual Pfm struct to a fileio.EasyWriter.
-func WritePfm(file *fileio.EasyWriter, pfm Pfm) {
-	var err error
-	_, err = fmt.Fprintf(file, ">%s\t%s\n%s", pfm.Id, pfm.Name, matToString(pfm.Mat))
-	exception.PanicOnErr(err)
-}
-
-// WritePpmSlice writes a slice of Ppm structs to an output filename.
-func WritePpmSlice(filename string, records []Ppm) {
+// Write writes a slice of PositionMatrix structs to an output filename.
+func Write(filename string, records []PositionMatrix) {
 	var err error
 	file := fileio.EasyCreate(filename)
-	for _, ppm := range records {
-		WritePpm(file, ppm)
+	for _, m := range records {
+		WritePositionMatrix(file, m)
 	}
 	err = file.Close()
 	exception.PanicOnErr(err)
 }
 
-// WritePpm writes an individual Ppm struct to a fileio.EasyWriter.
-func WritePpm(file *fileio.EasyWriter, ppm Ppm) {
+// WritePositionMatrix writes an individual PositionMatrix struct to a fileio.EasyWriter.
+func WritePositionMatrix(file *fileio.EasyWriter, m PositionMatrix) {
 	var err error
-	_, err = fmt.Fprintf(file, ">%s\t%s\n%s", ppm.Id, ppm.Name, matToString(ppm.Mat))
+	_, err = fmt.Fprintf(file, ">%s\t%s\n%s", m.Id, m.Name, matToString(m.Mat))
 	exception.PanicOnErr(err)
 }
 
@@ -89,17 +69,32 @@ func matToString(mat [][]float64) string {
 	return answer
 }
 
-//ReadPfm parses a slice of Pfm structs from an input file in JASPAR PFM format.
-func ReadPfm(filename string) []Pfm {
+//StringToPositionMatrixType parses a jaspar.PositionMatrixType type from an input string.
+func StringToPositionMatrixType(s string) PositionMatrixType {
+	switch s {
+	case "Frequency":
+		return Frequency
+	case "Probability":
+		return Probability
+	case "Weight":
+		return Weight
+	default:
+		log.Fatalf("Error: expected %s to be a position matrix type that is either 'Frequency', 'Probability', or 'Weight'.\n", s)
+		return None
+	}
+}
+
+//Read parses a slice of PositionMatrix structs from an input file in JASPAR format.
+func Read(filename string, Type string) []PositionMatrix {
 	var err error
-	var curr Pfm
-	var answer []Pfm
+	var curr PositionMatrix
+	var answer []PositionMatrix
 	var doneReading bool
 	usedMotifIds := make(map[string]bool)
 
 	file := fileio.EasyOpen(filename)
 
-	for curr, doneReading = NextPfm(file); !doneReading; curr, doneReading = NextPfm(file) {
+	for curr, doneReading = NextPfm(file, StringToPositionMatrixType(Type)); !doneReading; curr, doneReading = NextPfm(file, StringToPositionMatrixType(Type)) {
 		if usedMotifIds[curr.Id] {
 			log.Fatalf("Error: %s is used as the ID for multiple records. IDs must be unique.", curr.Id)
 		} else {
@@ -113,11 +108,11 @@ func ReadPfm(filename string) []Pfm {
 }
 
 // NextPfm reads and parses a single Pfm record from an input EasyReader. Returns true when the file is fully read.
-func NextPfm(file *fileio.EasyReader) (Pfm, bool) {
+func NextPfm(file *fileio.EasyReader, t PositionMatrixType) (PositionMatrix, bool) {
 	var header string
 	var fields []string
 	var motifLen int
-	var answer Pfm
+	var answer PositionMatrix
 
 	line1, done1 := fileio.EasyNextRealLine(file)
 	line2, done2 := fileio.EasyNextRealLine(file)
@@ -126,7 +121,7 @@ func NextPfm(file *fileio.EasyReader) (Pfm, bool) {
 	line5, done5 := fileio.EasyNextRealLine(file)
 
 	if done1 {
-		return Pfm{}, true
+		return PositionMatrix{}, true
 	}
 	if done2 || done3 || done4 || done5 {
 		log.Fatalf("Error: There is an empty line in this Pfm record.")
@@ -142,7 +137,7 @@ func NextPfm(file *fileio.EasyReader) (Pfm, bool) {
 	if len(fields) == 0 {
 		log.Fatalf("Error: Pfm has empty header.")
 	}
-	answer = Pfm{Id: fields[0]}
+	answer = PositionMatrix{Id: fields[0], Type: t}
 	if len(fields) > 1 {
 		answer.Name = fields[1]
 	}
@@ -160,7 +155,7 @@ func NextPfm(file *fileio.EasyReader) (Pfm, bool) {
 	return answer, false
 }
 
-// getMotifLen takes in a line from a JASPAR PFM file and determines the length of the motif.
+// getMotifLen takes in a line from a JASPAR position matrix file and determines the length of the motif.
 func getMotifLen(line string) int {
 	line = strings.Replace(line, "[", " ", 1)
 	line = strings.Replace(line, "]", " ", 1)
@@ -168,9 +163,9 @@ func getMotifLen(line string) int {
 	return len(fields) - 1
 }
 
-// parseMotifLine is a helper function of ReadPfm that parses a line of a PFM file into.
-// a line of the Pfm.Mat data structure.
-func parseMotifLine(answer Pfm, line string, motifLen int, index int) {
+// parseMotifLine is a helper function of ReadPositionMatrix that parses a line of a position matrix file into.
+// a line of the PositionMatrix.Mat data structure.
+func parseMotifLine(answer PositionMatrix, line string, motifLen int, index int) {
 	line = strings.Replace(line, "[", " ", 1)
 	line = strings.Replace(line, "]", "", 1)
 	fields := strings.Fields(line)
