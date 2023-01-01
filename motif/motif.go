@@ -18,7 +18,7 @@ const (
 	None PositionMatrixType = 3
 )
 
-//Pfm is a struct encoding a position frequency/probability/weight matrix.
+//PositionMatrix is a struct encoding a position frequency/probability/weight matrix.
 type PositionMatrix struct {
 	Id   string
 	Name string
@@ -94,7 +94,7 @@ func Read(filename string, Type string) []PositionMatrix {
 
 	file := fileio.EasyOpen(filename)
 
-	for curr, doneReading = NextPfm(file, StringToPositionMatrixType(Type)); !doneReading; curr, doneReading = NextPfm(file, StringToPositionMatrixType(Type)) {
+	for curr, doneReading = NextPositionMatrix(file, StringToPositionMatrixType(Type)); !doneReading; curr, doneReading = NextPositionMatrix(file, StringToPositionMatrixType(Type)) {
 		if usedMotifIds[curr.Id] {
 			log.Fatalf("Error: %s is used as the ID for multiple records. IDs must be unique.", curr.Id)
 		} else {
@@ -107,8 +107,8 @@ func Read(filename string, Type string) []PositionMatrix {
 	return answer
 }
 
-// NextPfm reads and parses a single Pfm record from an input EasyReader. Returns true when the file is fully read.
-func NextPfm(file *fileio.EasyReader, t PositionMatrixType) (PositionMatrix, bool) {
+// NextPositionMatrix reads and parses a single PositionMatrix record from an input EasyReader. Returns true when the file is fully read.
+func NextPositionMatrix(file *fileio.EasyReader, t PositionMatrixType) (PositionMatrix, bool) {
 	var header string
 	var fields []string
 	var motifLen int

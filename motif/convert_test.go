@@ -69,11 +69,12 @@ var ConsensusSequencesTests = []struct {
 	OutFile string
 	ExpectedFile string
 	Type string
+	TieBreak bool
 }{
 	{"testdata/expected.jaspar.txt",
 		"testdata/tmp.jasparPFM.consensus.fa",
 	"testdata/expected.jasparPFM.consensus.fa",
-	"Frequency"},
+	"Frequency", true},
 }
 
 func TestConsensusSequences(t *testing.T) {
@@ -82,12 +83,41 @@ func TestConsensusSequences(t *testing.T) {
 	var records []fasta.Fasta
 	for _, v := range ConsensusSequencesTests {
 		input = Read(v.InFile, v.Type)
-		records = ConsensusSequences(input)
+		records = ConsensusSequences(input, v.TieBreak)
 		fasta.Write(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("ERror in Concensus Sequences. Output not as expected.")
+			t.Errorf("Error in Consensus Sequences. Output not as expected.")
 		} else {
 			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
+var ReverseComplementTests = []struct {
+	InFile string
+	RevCompOutFile string
+	RevCompExpectedFile string
+}{
+	{"testdata/jaspar.vertebrate.txt",
+		"testdata/tmp.RevCompConsensus.txt",
+	"testdata/expected.RevCompConsensus.txt"},
+}
+
+func TestReverseComplement(t *testing.T) {
+	var err error
+	var input []PositionMatrix
+	var reversed []PositionMatrix
+	var reverseSequences []fasta.Fasta
+	for _, v := range ReverseComplementTests {
+		input = Read(v.InFile, "Frequency")
+		reversed = ReverseComplementAll(input)
+		reverseSequences = ConsensusSequences(reversed, false)
+		fasta.Write(v.RevCompOutFile, reverseSequences)
+		if !fileio.AreEqual(v.RevCompOutFile, v.RevCompExpectedFile) {
+			t.Errorf("Error in ReverseComplement. Output was not as expected.")
+		} else {
+			err = os.Remove(v.RevCompOutFile)
 			exception.PanicOnErr(err)
 		}
 	}

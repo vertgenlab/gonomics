@@ -71,7 +71,8 @@ func PpmSliceToPwmSlice(input []PositionMatrix) []PositionMatrix {
 // ConsensusSequence takes in a PositionMatrix and returns the consensus motif sequence as a fasta.
 // works for PFM, PPM, and PWM, as for all three, the consensus base is represented by the
 // max column.
-func ConsensusSequence(input PositionMatrix) fasta.Fasta {
+// if tieBreak is true, a tie in the PositionMatrix will produce a random output tied base.
+func ConsensusSequence(input PositionMatrix, tieBreak bool) fasta.Fasta {
 	var answer = make([]dna.Base, 0)
 	var currMax int
 	var currValue float64
@@ -82,7 +83,7 @@ func ConsensusSequence(input PositionMatrix) fasta.Fasta {
 			if input.Mat[j][i] > currValue {
 				currMax = j
 				currValue = input.Mat[j][i]
-			} else if input.Mat[j][i] == currValue && rand.Float64() > 0.5 { //in the case of a tie, we have a 50% chace of replacing the consensus output with the current base.
+			} else if tieBreak && input.Mat[j][i] == currValue && rand.Float64() > 0.5 { //in the case of a tie, we have a 50% chace of replacing the consensus output with the current base.
 				currMax = j
 			}
 		}
@@ -102,10 +103,47 @@ func ConsensusSequence(input PositionMatrix) fasta.Fasta {
 	return fasta.Fasta{Name: input.Name, Seq: answer}
 }
 
-func ConsensusSequences(input []PositionMatrix) []fasta.Fasta {
+// ConsensusSequences converts a slice of PositionMatrix structs into a slice of Fasta structs representing the consensus sequences for each matrix.
+func ConsensusSequences(input []PositionMatrix, tieBreak bool) []fasta.Fasta {
 	var answer = make([]fasta.Fasta, 0)
 	for i := range input {
-		answer = append(answer, ConsensusSequence(input[i]))
+		answer = append(answer, ConsensusSequence(input[i], tieBreak))
+	}
+	return answer
+}
+
+// ReverseComplement creates a new PositionMatrix representing the reverse complement
+// position matrix of the input matrix.
+func ReverseComplement(input PositionMatrix) PositionMatrix {
+	//start by making a memory copy of the input array
+	var answer = PositionMatrix{Id: input.Id, Name: input.Name, Mat: make([][]float64, 4)}
+	for i := 0; i < 4; i++ {
+		answer.Mat[i] = make([]float64, len(input.Mat[i]))
+		copy(answer.Mat[i], input.Mat[i])
+	}
+
+	//now reverse the columns in every row
+	var m, n int
+	for row := 0; row < 4; row++ {
+		for m, n = 0, len(answer.Mat[row]) - 1; m < n; m, n = m + 1, n - 1 {
+			answer.Mat[row][m], answer.Mat[row][n] = answer.Mat[row][n], answer.Mat[row][m]
+		}
+	}
+
+	//now complement the matrix
+	answer.Mat[0], answer.Mat[3] = answer.Mat[3], answer.Mat[0]
+	answer.Mat[1], answer.Mat[2] = answer.Mat[2], answer.Mat[1]
+
+	return answer
+}
+
+// ReverseComplementAll creates a new slice of PositionMatrix structs, where each entry
+// is the reverse complement position matrix of the corresponding index of the input slice
+// of PositionMatrix structs.
+func ReverseComplementAll(input []PositionMatrix) []PositionMatrix {
+	var answer = make([]PositionMatrix, 0)
+	for i := range input {
+		answer = append(answer, ReverseComplement(input[i]))
 	}
 	return answer
 }
