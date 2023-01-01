@@ -12,10 +12,10 @@ import (
 type PositionMatrixType byte
 
 const (
-	Frequency PositionMatrixType = 0
+	Frequency   PositionMatrixType = 0
 	Probability PositionMatrixType = 1
-	Weight PositionMatrixType = 2
-	None PositionMatrixType = 3
+	Weight      PositionMatrixType = 2
+	None        PositionMatrixType = 3
 )
 
 //PositionMatrix is a struct encoding a position frequency/probability/weight matrix.
