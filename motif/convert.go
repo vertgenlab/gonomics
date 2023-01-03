@@ -17,7 +17,7 @@ func PfmToPpm(input PositionMatrix, pseudocount float64) PositionMatrix {
 	}
 	var answer = PositionMatrix{Id: input.Id, Name: input.Name, Type: Probability, Mat: make([][]float64, 4)}
 	var columnSum float64
-	for i := 0; i < 4; i ++ {
+	for i := 0; i < 4; i++ {
 		answer.Mat[i] = make([]float64, len(input.Mat[0]))
 	}
 
@@ -47,7 +47,7 @@ func PpmToPwm(input PositionMatrix) PositionMatrix {
 		log.Fatalf("Input PositionMatrix must be of type 'Probability' to be converted to a PWM.")
 	}
 	var answer = PositionMatrix{Id: input.Id, Name: input.Name, Type: Weight, Mat: make([][]float64, 4)}
-	for i := 0; i < 4; i ++ {
+	for i := 0; i < 4; i++ {
 		answer.Mat[i] = make([]float64, len(input.Mat[0]))
 	}
 	for i := 0; i < len(input.Mat[0]); i++ {
@@ -125,7 +125,7 @@ func ReverseComplement(input PositionMatrix) PositionMatrix {
 	//now reverse the columns in every row
 	var m, n int
 	for row := 0; row < 4; row++ {
-		for m, n = 0, len(answer.Mat[row]) - 1; m < n; m, n = m + 1, n - 1 {
+		for m, n = 0, len(answer.Mat[row])-1; m < n; m, n = m+1, n-1 {
 			answer.Mat[row][m], answer.Mat[row][n] = answer.Mat[row][n], answer.Mat[row][m]
 		}
 	}

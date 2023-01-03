@@ -9,15 +9,15 @@ import (
 )
 
 var PfmToPpmTests = []struct {
-	PfmFile string
-	OutputFile string
+	PfmFile      string
+	OutputFile   string
 	ExpectedFile string
-	Pseudocount float64
+	Pseudocount  float64
 }{
 	{"testdata/expected.jaspar.txt",
 		"testdata/tmp.Ppm.txt",
-	"testdata/expected.Ppm.txt",
-	0.1},
+		"testdata/expected.Ppm.txt",
+		0.1},
 }
 
 func TestPfmSliceToPpmSlice(t *testing.T) {
@@ -38,13 +38,13 @@ func TestPfmSliceToPpmSlice(t *testing.T) {
 }
 
 var PpmTests = []struct {
-	PpmFile string
-	OutputFile string
+	PpmFile      string
+	OutputFile   string
 	ExpectedFile string
 }{
 	{"testdata/expected.Ppm.txt",
 		"testdata/tmp.Pwm.txt",
-	"testdata/expected.Pwm.txt"},
+		"testdata/expected.Pwm.txt"},
 }
 
 func TestPpmSliceToPwmSlice(t *testing.T) {
@@ -65,16 +65,16 @@ func TestPpmSliceToPwmSlice(t *testing.T) {
 }
 
 var ConsensusSequencesTests = []struct {
-	InFile string
-	OutFile string
+	InFile       string
+	OutFile      string
 	ExpectedFile string
-	Type string
-	TieBreak bool
+	Type         string
+	TieBreak     bool
 }{
 	{"testdata/expected.jaspar.txt",
 		"testdata/tmp.jasparPFM.consensus.fa",
-	"testdata/expected.jasparPFM.consensus.fa",
-	"Frequency", true},
+		"testdata/expected.jasparPFM.consensus.fa",
+		"Frequency", true},
 }
 
 func TestConsensusSequences(t *testing.T) {
@@ -95,13 +95,13 @@ func TestConsensusSequences(t *testing.T) {
 }
 
 var ReverseComplementTests = []struct {
-	InFile string
-	RevCompOutFile string
+	InFile              string
+	RevCompOutFile      string
 	RevCompExpectedFile string
 }{
 	{"testdata/jaspar.vertebrate.txt",
 		"testdata/tmp.RevCompConsensus.txt",
-	"testdata/expected.RevCompConsensus.txt"},
+		"testdata/expected.RevCompConsensus.txt"},
 }
 
 func TestReverseComplement(t *testing.T) {
