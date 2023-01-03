@@ -46,14 +46,14 @@ func TestTfMatchComp(t *testing.T) {
 	var s Settings
 	for _, v := range TfMatchCompTests {
 		s = Settings{
-			InFile:         v.InFile,
-			MatrixFile:     v.MatrixFile,
-			ChromName:      v.ChromName,
-			OutFile:        v.OutFile,
-			PropMatch:      v.PropMatch,
-			MatrixFileType: v.MatrixFileType,
-			Pseudocounts:   v.Pseudocounts,
-			RefStart:       v.RefStart,
+			InFile:             v.InFile,
+			MatrixFile:         v.MatrixFile,
+			ChromName:          v.ChromName,
+			OutFile:            v.OutFile,
+			PropMatch:          v.PropMatch,
+			MatrixFileType:     v.MatrixFileType,
+			Pseudocounts:       v.Pseudocounts,
+			RefStart:           v.RefStart,
 			OutputAsProportion: v.OutputAsProportion,
 		}
 		tfMatchComp(s)
