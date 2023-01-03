@@ -21,7 +21,9 @@ type Settings struct {
 	UCSCToEnsembl  bool
 	EnsemblToUCSC  bool
 	ScaleNameFloat float64
-	PadLength      int
+	EvenPadLength  int
+	LeftPadLength  int
+	RightPadLength int
 	ChromSizeFile  string
 	ToMidpoint     bool
 }
@@ -36,10 +38,10 @@ func bedFormat(s Settings) {
 	if s.EnsemblToUCSC && s.UCSCToEnsembl {
 		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
 	}
-	if s.ChromSizeFile == "" && s.PadLength > 0 {
-		log.Fatalf("Must specify a chromFile to use the padLength option.")
+	if s.ChromSizeFile == "" && (s.EvenPadLength > 0 || s.LeftPadLength > 0 || s.RightPadLength > 0) {
+		log.Fatalf("Must specify a chromFile to use a padLength option.")
 	}
-	if s.ChromSizeFile != "" && s.PadLength > 0 {
+	if s.ChromSizeFile != "" && (s.EvenPadLength > 0 || s.LeftPadLength > 0 || s.RightPadLength > 0) {
 		sizes = chromInfo.ReadToMap(s.ChromSizeFile)
 	}
 
@@ -47,12 +49,24 @@ func bedFormat(s Settings) {
 		if s.ToMidpoint {
 			v = bed.ToMidpoint(v)
 		}
-		if s.PadLength > 0 {
+		if s.EvenPadLength > 0 {
 			if _, inMap = sizes[v.Chrom]; !inMap {
 				log.Fatalf("Chrom for current bed entry not found in chromSizes file. BedChrom: %s.", v.Chrom)
 			}
-			v.ChromStart = numbers.Max(v.ChromStart-s.PadLength, 0)
-			v.ChromEnd = numbers.Min(v.ChromEnd+s.PadLength, sizes[v.Chrom].Size)
+			v.ChromStart = numbers.Max(v.ChromStart-s.EvenPadLength, 0)
+			v.ChromEnd = numbers.Min(v.ChromEnd+s.EvenPadLength, sizes[v.Chrom].Size)
+		}
+		if s.LeftPadLength > 0 {
+			if _, inMap = sizes[v.Chrom]; !inMap {
+				log.Fatalf("Chrom for current bed entry not found in chromSizes file. BedChrom: %s.", v.Chrom)
+			}
+			v.ChromStart = numbers.Max(v.ChromStart-s.LeftPadLength, 0)
+		}
+		if s.RightPadLength > 0 {
+			if _, inMap = sizes[v.Chrom]; !inMap {
+				log.Fatalf("Chrom for current bed entry not found in chromSizes file. BedChrom: %s.", v.Chrom)
+			}
+			v.ChromEnd = numbers.Min(v.ChromEnd+s.RightPadLength, sizes[v.Chrom].Size)
 		}
 		if s.EnsemblToUCSC {
 			v.Chrom = convert.EnsemblToUCSC(v.Chrom)
@@ -81,7 +95,9 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var padLength *int = flag.Int("padLength", 0, "Add # of bases to both ends of each bed record. Requires noGapFile.")
+	var evenPadLength *int = flag.Int("evenPadLength", 0, "Add # of bases to both ends of each bed record. Requires chromSizeFile.")
+	var leftPadLength *int = flag.Int("leftPadLength", 0, "Add # of bases to the left end of the bed record. Requires chromSizeFile.")
+	var rightPadLength *int = flag.Int("rightPadLength", 0, "Add # of bases to the right end of the bed record. Requires chromSizeFile.")
 	var ensemblToUCSC *bool = flag.Bool("ensemblToUCSC", false, "Changes chromosome format type.")
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
 	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", 1, "If float values are held in the name field, scale those values by this constant multiplier.")
@@ -107,7 +123,9 @@ func main() {
 		UCSCToEnsembl:  *UCSCToEnsembl,
 		EnsemblToUCSC:  *ensemblToUCSC,
 		ScaleNameFloat: *scaleNameFloat,
-		PadLength:      *padLength,
+		EvenPadLength:  *evenPadLength,
+		LeftPadLength:  *leftPadLength,
+		RightPadLength: *rightPadLength,
 		ChromSizeFile:  *chromSizeFile,
 		ToMidpoint:     *ToMidpoint,
 	}
