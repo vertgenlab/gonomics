@@ -147,14 +147,7 @@ func WriteHeaderComments(file *fileio.EasyWriter, comments HeaderComments) {
 
 //WriteChain processes a chain struct and writes the data to a file.
 func WriteChain(file *fileio.EasyWriter, ch Chain) {
-	var err error
-	_, err = fmt.Fprintf(file, "chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
-	exception.PanicOnErr(err)
-	for i := 0; i < len(ch.Alignment)-1; i++ {
-		_, err = fmt.Fprintf(file, "%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TBases, ch.Alignment[i].QBases)
-		exception.PanicOnErr(err)
-	}
-	_, err = fmt.Fprintf(file, "%d\n\n", ch.Alignment[len(ch.Alignment)-1].Size)
+	_, err := fmt.Fprintf(file, "%s\n", ToString(ch))
 	exception.PanicOnErr(err)
 }
 

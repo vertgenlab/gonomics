@@ -46,7 +46,7 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 	var doubleGap bool
 
 	//initialize state and first baseStats struct
-	prevState, doubleGap = queryState(records, 0) //previous state hardcoded to 3.
+	prevState, doubleGap = queryState(records, 0)
 	currBaseStats = chain.BaseStats{Size: 0, TBases: 0, QBases: 0}
 
 	for i := range records[0].Seq {
@@ -134,6 +134,8 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 	chain.Write(outFile, answer, header)
 }
 
+// queryState determines the State of a multiFa alignment at a particular input index position. Second bool returns true
+// if a doubleGap is observed.
 func queryState(records []fasta.Fasta, index int) (State, bool) {
 	if dna.DefineBase(records[0].Seq[index]) || records[0].Seq[index] == dna.N || records[0].Seq[index] == dna.LowerN {
 		if dna.DefineBase(records[1].Seq[index]) || records[1].Seq[index] == dna.N || records[1].Seq[index] == dna.LowerN {
