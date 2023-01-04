@@ -15,6 +15,17 @@ import (
 	"log"
 )
 
+type Settings struct {
+	InFile         string
+	OutFile        string
+	UCSCToEnsembl  bool
+	EnsemblToUCSC  bool
+	ScaleNameFloat float64
+	PadLength      int
+	ChromSizeFile  string
+	ToMidpoint     bool
+}
+
 func bedFormat(s Settings) {
 	var err error
 	var inMap bool
@@ -33,6 +44,9 @@ func bedFormat(s Settings) {
 	}
 
 	for v := range ch {
+		if s.ToMidpoint {
+			v = bed.ToMidpoint(v)
+		}
 		if s.PadLength > 0 {
 			if _, inMap = sizes[v.Chrom]; !inMap {
 				log.Fatalf("Chrom for current bed entry not found in chromSizes file. BedChrom: %s.", v.Chrom)
@@ -65,16 +79,6 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-type Settings struct {
-	InFile         string
-	OutFile        string
-	UCSCToEnsembl  bool
-	EnsemblToUCSC  bool
-	ScaleNameFloat float64
-	PadLength      int
-	ChromSizeFile  string
-}
-
 func main() {
 	var expectedNumArgs int = 2
 	var padLength *int = flag.Int("padLength", 0, "Add # of bases to both ends of each bed record. Requires noGapFile.")
@@ -82,6 +86,7 @@ func main() {
 	var UCSCToEnsembl *bool = flag.Bool("UCSCToEnsembl", false, "Changes chromosome format type.")
 	var scaleNameFloat *float64 = flag.Float64("scaleNameFloat", 1, "If float values are held in the name field, scale those values by this constant multiplier.")
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specify a .chrom.sizes file for use with the padLength option. Ensures padding is truncated at chromosome ends.")
+	var ToMidpoint *bool = flag.Bool("ToMidpoint", false, "Trim the output bed to single-base pair ranges at the midpoint of the input bed ranges.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -104,6 +109,7 @@ func main() {
 		ScaleNameFloat: *scaleNameFloat,
 		PadLength:      *padLength,
 		ChromSizeFile:  *chromSizeFile,
+		ToMidpoint:     *ToMidpoint,
 	}
 
 	bedFormat(s)

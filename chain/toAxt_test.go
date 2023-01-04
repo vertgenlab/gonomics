@@ -2,20 +2,25 @@ package chain
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
+	"github.com/vertgenlab/gonomics/fileio"
+	"os"
 	"testing"
 )
 
-func TestConvertAxt(t *testing.T) {
+func TestToAxt(t *testing.T) {
+	var err error
 	chainfile, _ := Read("testdata/axtTest.chain")
 	SortByCoordinates(chainfile, true)
 	target := fasta.ToMap(fasta.Read("testdata/target.fa"))
 	query := fasta.ToMap(fasta.Read("testdata/query.fa"))
-	for i := 0; i < len(chainfile); i++ {
-		log.Print("chain format:\n")
-		log.Printf("%s\n", ToString(chainfile[i]))
-		log.Print("axt format:\n")
-		log.Printf("%s\n", axt.ToString(ToAxt(chainfile[i], target[chainfile[i].TName], query[chainfile[i].QName]), i))
+	answer := AllToAxt(chainfile, target, query)
+	axt.Write("testdata/tmp.AxtTest.axt", answer)
+	if !fileio.AreEqual("testdata/tmp.AxtTest.axt", "testdata/expected.ToAxt.axt") {
+		t.Errorf("Error in ToAxt. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/tmp.AxtTest.axt")
+		exception.PanicOnErr(err)
 	}
 }

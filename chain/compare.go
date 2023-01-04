@@ -8,7 +8,7 @@ import (
 
 //Uses bool to compare target or query coordinates as one function
 //true is for target, false is for query
-func compareStartCoord(a *Chain, b *Chain, checkTarget bool) int {
+func compareStartCoord(a Chain, b Chain, checkTarget bool) int {
 	if checkTarget {
 		return compareTargetCoord(a, b)
 	} else {
@@ -16,7 +16,7 @@ func compareStartCoord(a *Chain, b *Chain, checkTarget bool) int {
 	}
 }
 
-func compareTargetCoord(a *Chain, b *Chain) int {
+func compareTargetCoord(a Chain, b Chain) int {
 	sameChr := strings.Compare(a.TName, b.TName)
 	if sameChr != 0 {
 		return sameChr
@@ -44,7 +44,7 @@ func compareTargetCoord(a *Chain, b *Chain) int {
 	return 0
 }
 
-func compareQueryCoord(a *Chain, b *Chain) int {
+func compareQueryCoord(a Chain, b Chain) int {
 	sameChr := strings.Compare(a.QName, b.QName)
 	if sameChr != 0 {
 		return sameChr
@@ -75,11 +75,11 @@ func compareQueryCoord(a *Chain, b *Chain) int {
 
 //true/false bool to either sort by target or query
 //true=target, false=query
-func SortByCoordinates(align []*Chain, whichGenome bool) {
+func SortByCoordinates(align []Chain, whichGenome bool) {
 	sort.Slice(align, func(i, j int) bool { return compareStartCoord(align[i], align[j], whichGenome) == -1 })
 }
 
-func compareScores(a *Chain, b *Chain) int {
+func compareScores(a Chain, b Chain) int {
 	if a.Score < b.Score {
 		return -1
 	}
@@ -89,7 +89,7 @@ func compareScores(a *Chain, b *Chain) int {
 	return 0
 }
 
-func Equal(a []*Chain, b []*Chain) bool {
+func Equal(a []Chain, b []Chain) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -101,7 +101,7 @@ func Equal(a []*Chain, b []*Chain) bool {
 	return true
 }
 
-func isEqual(a *Chain, b *Chain) bool {
+func isEqual(a Chain, b Chain) bool {
 	if strings.Compare(a.TName, b.TName) != 0 {
 		return false
 	}
@@ -139,7 +139,7 @@ func isEqual(a *Chain, b *Chain) bool {
 }
 
 //set start true if you want to adjust the start or end to be true to adjust for the negative stand on the end
-func getSwapTCoord(ch *Chain, start bool, end bool) int {
+func getSwapTCoord(ch Chain, start bool, end bool) int {
 	if !ch.TStrand {
 		if start {
 			return ch.TSize - ch.TEnd
@@ -157,7 +157,7 @@ func getSwapTCoord(ch *Chain, start bool, end bool) int {
 }
 
 //Could have one function that performs on both query and target
-func getSwapQCoord(ch *Chain, start bool, end bool) int {
+func getSwapQCoord(ch Chain, start bool, end bool) int {
 	if !ch.QStrand {
 		if start {
 			return ch.QSize - ch.QEnd

@@ -70,7 +70,7 @@ func chainToGenomeGraph(chainFile, targetFa, queryFa string) *genomeGraph.Genome
 	return genomeGraph.VariantGraph(ref, chrVcfMap)
 }
 
-func workThreadChainAxt(chFa *chain.SeqChain, ans chan<- axt.Axt) {
+func workThreadChainAxt(chFa chain.SeqChain, ans chan<- axt.Axt) {
 	for i := range chFa.Chains {
 		ans <- chain.ToAxt(i, chFa.TSeq[i.TName], chFa.QSeq[i.QName])
 	}
