@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"testing"
