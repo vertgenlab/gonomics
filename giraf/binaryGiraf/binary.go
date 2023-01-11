@@ -4,7 +4,7 @@ package binaryGiraf
 
 import (
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/dnaThreeBit"
+	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
 )
 
 // The structs in this file are only present for documentation and should not be used
