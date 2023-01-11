@@ -23,8 +23,8 @@ func TestReadAndWrite(t *testing.T) {
 	var err error
 	var records []PositionMatrix
 	for _, v := range ReadWritePfmTests {
-		records = Read(v.InFile, v.Type)
-		Write(v.OutFile, records)
+		records = ReadJaspar(v.InFile, v.Type)
+		WriteJaspar(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in Read/Write PositionMatrix. Output not as expected.")
 		} else {

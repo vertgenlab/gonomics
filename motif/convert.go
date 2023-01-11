@@ -8,62 +8,60 @@ import (
 	"math/rand"
 )
 
-// PfmToPpm converts an input position frequency matrix to a position probability matrix.
-// Pseudocounts may be applied for laplace smoothing. The input float represents the value added
+// PfmToPpm creates a position probability matrix from an input position frequency matrix.
+// Pseudocounts may be applied for Laplace smoothing. The input float represents the value added
 // to each cell of the Pfm. More info on pseudocounts; https://doi.org/10.1093/nar/gkn1019
 func PfmToPpm(input PositionMatrix, pseudocount float64) PositionMatrix {
 	if input.Type != Frequency {
 		log.Fatalf("Input PositionMatrix must be of type 'Frequency' to be converted to a PPM.")
 	}
-	var answer = PositionMatrix{Id: input.Id, Name: input.Name, Type: Probability, Mat: make([][]float64, 4)}
+	var row, column int
 	var columnSum float64
-	for i := 0; i < 4; i++ {
-		answer.Mat[i] = make([]float64, len(input.Mat[0]))
-	}
+	var answer = CopyPositionMatrix(input)
+	answer.Type = Probability
 
 	//for every column of the motif matrix
-	for i := 0; i < len(input.Mat[0]); i++ {
-		columnSum = input.Mat[0][i] + input.Mat[1][i] + input.Mat[2][i] + input.Mat[3][i] + (pseudocount * 4)
-		for j := 0; j < 4; j++ { //for every row of that column of the motif matrix
-			answer.Mat[j][i] = (input.Mat[j][i] + pseudocount) / columnSum
+	for column = 0; column < len(input.Mat[0]); column++ {
+		columnSum = input.Mat[0][column] + input.Mat[1][column] + input.Mat[2][column] + input.Mat[3][column] + (pseudocount * 4)
+		for row = 0; row < 4; row++ { //for every row of that column of the motif matrix
+			answer.Mat[row][column] = (input.Mat[row][column] + pseudocount) / columnSum
 		}
 	}
 	return answer
 }
 
-// PfmSliceToPpmSlice converts a slice of position frequency matrices to
-// a slice of position probability matrices.
+// PfmSliceToPpmSlice creates a slice of position probabilty matrices
+// from a slice of position frequency matrices.
 func PfmSliceToPpmSlice(input []PositionMatrix, pseudocount float64) []PositionMatrix {
-	var answer = make([]PositionMatrix, 0)
+	var answer = make([]PositionMatrix, len(input))
 	for i := range input {
-		answer = append(answer, PfmToPpm(input[i], pseudocount))
+		answer[i] = PfmToPpm(input[i], pseudocount)
 	}
 	return answer
 }
 
-// PpmToPwm converts an input position probability matrix to a position weight matrix.
+// PpmToPwm creates a position weight matrix from an input position probability matrix.
 func PpmToPwm(input PositionMatrix) PositionMatrix {
 	if input.Type != Probability {
 		log.Fatalf("Input PositionMatrix must be of type 'Probability' to be converted to a PWM.")
 	}
-	var answer = PositionMatrix{Id: input.Id, Name: input.Name, Type: Weight, Mat: make([][]float64, 4)}
-	for i := 0; i < 4; i++ {
-		answer.Mat[i] = make([]float64, len(input.Mat[0]))
-	}
-	for i := 0; i < len(input.Mat[0]); i++ {
-		for j := 0; j < 4; j++ {
-			answer.Mat[j][i] = math.Log2(input.Mat[j][i] * 4)
+	var row, column int
+	var answer = CopyPositionMatrix(input)
+	answer.Type = Weight
+	for column = 0; column < len(input.Mat[0]); column++ {
+		for row = 0; row < 4; row++ {
+			answer.Mat[row][column] = math.Log2(input.Mat[row][column] * 4)
 		}
 	}
 	return answer
 }
 
-// PpmSliceToPwmSlice converts a slice of position probability matrices to
-// a slice of position weight matrices.
+// PpmSliceToPwmSlice creates a slice of position weight matrices from
+// a slice of position probability matrices.
 func PpmSliceToPwmSlice(input []PositionMatrix) []PositionMatrix {
-	var answer = make([]PositionMatrix, 0)
+	var answer = make([]PositionMatrix, len(input))
 	for i := range input {
-		answer = append(answer, PpmToPwm(input[i]))
+		answer[i] = PpmToPwm(input[i])
 	}
 	return answer
 }
@@ -73,29 +71,30 @@ func PpmSliceToPwmSlice(input []PositionMatrix) []PositionMatrix {
 // max column.
 // if tieBreak is true, a tie in the PositionMatrix will produce a random output tied base.
 func ConsensusSequence(input PositionMatrix, tieBreak bool) fasta.Fasta {
-	var answer = make([]dna.Base, 0)
+	var answer = make([]dna.Base, len(input.Mat[0]))
 	var currMax int
 	var currValue float64
-	for i := range input.Mat[0] {
+	var row, column int
+	for column = range input.Mat[0] {
 		currMax = 0
-		currValue = input.Mat[0][i]
-		for j := 1; j < 4; j++ {
-			if input.Mat[j][i] > currValue {
-				currMax = j
-				currValue = input.Mat[j][i]
-			} else if tieBreak && input.Mat[j][i] == currValue && rand.Float64() > 0.5 { //in the case of a tie, we have a 50% chace of replacing the consensus output with the current base.
-				currMax = j
+		currValue = input.Mat[0][column]
+		for row = 1; row < 4; row++ {
+			if input.Mat[row][column] > currValue {
+				currMax = row
+				currValue = input.Mat[row][column]
+			} else if tieBreak && input.Mat[row][column] == currValue && rand.Float64() > 0.5 { //in the case of a tie, we have a 50% chace of replacing the consensus output with the current base.
+				currMax = row
 			}
 		}
 		switch currMax {
 		case 0:
-			answer = append(answer, dna.A)
+			answer[column] = dna.A
 		case 1:
-			answer = append(answer, dna.C)
+			answer[column] = dna.C
 		case 2:
-			answer = append(answer, dna.G)
+			answer[column] = dna.G
 		case 3:
-			answer = append(answer, dna.T)
+			answer[column] = dna.T
 		default:
 			log.Fatalf("Error in ConsensusSequence. CurrMax value not recotnized.")
 		}
@@ -105,9 +104,9 @@ func ConsensusSequence(input PositionMatrix, tieBreak bool) fasta.Fasta {
 
 // ConsensusSequences converts a slice of PositionMatrix structs into a slice of Fasta structs representing the consensus sequences for each matrix.
 func ConsensusSequences(input []PositionMatrix, tieBreak bool) []fasta.Fasta {
-	var answer = make([]fasta.Fasta, 0)
+	var answer = make([]fasta.Fasta, len(input))
 	for i := range input {
-		answer = append(answer, ConsensusSequence(input[i], tieBreak))
+		answer[i] = ConsensusSequence(input[i], tieBreak)
 	}
 	return answer
 }
@@ -141,9 +140,23 @@ func ReverseComplement(input PositionMatrix) PositionMatrix {
 // is the reverse complement position matrix of the corresponding index of the input slice
 // of PositionMatrix structs.
 func ReverseComplementAll(input []PositionMatrix) []PositionMatrix {
-	var answer = make([]PositionMatrix, 0)
+	var answer = make([]PositionMatrix, len(input))
 	for i := range input {
-		answer = append(answer, ReverseComplement(input[i]))
+		answer[i] = ReverseComplement(input[i])
 	}
+	return answer
+}
+
+// CopyPositionMatrix provides a memory copy of an input PositionMatrix struct.
+func CopyPositionMatrix(input PositionMatrix) PositionMatrix {
+	var row, column int
+	var answer = PositionMatrix{Id: input.Id, Name: input.Name, Type: Probability, Mat: make([][]float64, 4)}
+	for row = 0; row < 4; row++ {
+		answer.Mat[row] = make([]float64, len(input.Mat[0]))
+		for column = range answer.Mat[row] {
+			answer.Mat[row][column] = input.Mat[row][column]
+		}
+	}
+
 	return answer
 }
