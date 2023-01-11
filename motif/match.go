@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -123,3 +124,46 @@ func ScoreWindow(pm PositionMatrix, seq []dna.Base, alnStart int) (float64, bool
 	}
 	return answer, true
 }
+
+/*
+func pseudocode() {
+	var hash = map[uint64]float64
+
+	var currKmer uint64
+
+	// update kMer
+	// 1. bitshift currKmer 2 to left
+	// 2. update 2 right most positions with new bases
+	// 3. get rid of old base (AND with constant number that is 0s except for the bits we need at the right end, which are ones.
+
+
+}
+
+func buildKmerHash(p PositionMatrix, seq []dna.Base, threshold float64) map[uint64]float64 {
+	var answer = make(map[uint64]float64, 0)
+
+	recur(p, seq, threshold, answer)
+
+	return answer
+}
+
+func recur(p PositionMatrix, seq []dna.Base, threshold float64, answer map[uint64]float64) {
+	//make uint64 encoding from current seq
+	//check if current uint64 is in answer
+	//if so, return
+	currScore, couldScore := ScoreWindow(p, seq, 0)
+	if currScore > threshold {
+		answer
+	}
+	add current to map
+	for range motifLen
+		make seq child+9
+		recur(p seq answer)
+}
+
+func kMerToUint64(seq []dna.Base) uint64 {
+	return dnaTwoBit.BasesToUint64RightAln(seq, 0, len(seq))
+}
+*/
+
+
