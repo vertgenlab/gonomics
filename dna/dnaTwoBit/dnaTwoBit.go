@@ -31,8 +31,8 @@ func BasesToUint64LeftAln(seq []dna.Base, start int, end int) uint64 {
 	var answer uint64 = 0
 	var i int = start
 	for ; i < end; i++ {
-		answer = answer << 2
-		answer = answer | uint64(seq[i])
+		answer = answer << 2//left shift two positions
+		answer = answer | uint64(seq[i])//bitwise OR, appends base to right end of answer.
 	}
 	for ; i < start+32; i++ {
 		answer = answer << 2
