@@ -27,6 +27,19 @@ func ToMidpoint(b Bed) Bed {
 	return b
 }
 
+// ToTss edits an input bed struct so that its coordinates corresponds to the start position, strand-sensitive.
+func ToTss(b Bed) Bed {
+	switch b.Strand {
+	case Positive:
+		b.ChromEnd = b.ChromStart + 1
+	case Negative:
+		b.ChromStart = b.ChromEnd - 1
+	default:
+		log.Fatalf("Input bed must have an annotated positive or negative strand to trim to Tss.")
+	}
+	return b
+}
+
 /*
 //input must be sorted. incomplete function, does not work.
 func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
