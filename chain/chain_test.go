@@ -1,51 +1,26 @@
 package chain
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 	"os"
-	"strings"
-	"sync"
 	"testing"
 )
 
 var dir []string = []string{"testdata/big.chain", "testdata/twoChainZ.chain"}
 
-func TestReaderAndWriter(t *testing.T) {
-	for _, readFile := range dir {
-		//1st pass, test standard read and write (non-channel) functuions
-		writeToFile := readFile + ".tmp"
-		readerChains, nil := Read(readFile)
-		Write(writeToFile, readerChains, nil)
-
-		//2nd pass: read back and write using goroutines
-		file := fileio.EasyOpen(writeToFile)
-		reader := make(chan *Chain)
-		goHashTags := ReadHeaderComments(file)
-
-		var wg2 sync.WaitGroup
-		wg2.Add(1)
-		go ReadToChan(file, reader, &wg2)
-
-		go func() {
-			wg2.Wait()
-			close(reader)
-		}()
-
-		testGoRoutines := "testdata/goReaderWriter.chain"
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go WriteToFile(testGoRoutines, reader, goHashTags, &wg)
-		wg.Wait()
-
-		//Read back in file that was processeds with goroutines using the standard version. Could read back in using goroutines, but this was faster to set-up
-		testData, _ := Read(testGoRoutines)
-		if !Equal(readerChains, testData) {
-			t.Errorf("Error: File read in did not match the file writing out")
+func TestReadAndWrite(t *testing.T) {
+	var tmpFile string
+	var err error
+	for _, v := range dir {
+		tmpFile = v + ".tmp"
+		records, header := Read(v)
+		Write(tmpFile, records, header)
+		if !fileio.AreEqual(tmpFile, v) {
+			t.Errorf("Error in chain package read and write.")
 		} else {
-			log.Printf("%s: Passed simple read and write test!\n", strings.Split(readFile, "/")[1])
+			err = os.Remove(tmpFile)
+			exception.PanicOnErr(err)
 		}
-		os.Remove(writeToFile)
-		os.Remove(testGoRoutines)
 	}
 }

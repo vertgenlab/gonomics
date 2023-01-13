@@ -25,9 +25,9 @@ func TestPfmSliceToPpmSlice(t *testing.T) {
 	var records []PositionMatrix
 	var answer []PositionMatrix
 	for _, v := range PfmToPpmTests {
-		records = Read(v.PfmFile, "Frequency")
+		records = ReadJaspar(v.PfmFile, "Frequency")
 		answer = PfmSliceToPpmSlice(records, v.Pseudocount)
-		Write(v.OutputFile, answer)
+		WriteJaspar(v.OutputFile, answer)
 		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
 			t.Errorf("Error in PfmSliceToPpmSlice. Output was not as expected.")
 		} else {
@@ -52,9 +52,9 @@ func TestPpmSliceToPwmSlice(t *testing.T) {
 	var records []PositionMatrix
 	var answer []PositionMatrix
 	for _, v := range PpmTests {
-		records = Read(v.PpmFile, "Probability")
+		records = ReadJaspar(v.PpmFile, "Probability")
 		answer = PpmSliceToPwmSlice(records)
-		Write(v.OutputFile, answer)
+		WriteJaspar(v.OutputFile, answer)
 		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
 			t.Errorf("Error in PpmSliceToPwmSlice. Output was not as expected.")
 		} else {
@@ -82,7 +82,7 @@ func TestConsensusSequences(t *testing.T) {
 	var input []PositionMatrix
 	var records []fasta.Fasta
 	for _, v := range ConsensusSequencesTests {
-		input = Read(v.InFile, v.Type)
+		input = ReadJaspar(v.InFile, v.Type)
 		records = ConsensusSequences(input, v.TieBreak)
 		fasta.Write(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -110,7 +110,7 @@ func TestReverseComplement(t *testing.T) {
 	var reversed []PositionMatrix
 	var reverseSequences []fasta.Fasta
 	for _, v := range ReverseComplementTests {
-		input = Read(v.InFile, "Frequency")
+		input = ReadJaspar(v.InFile, "Frequency")
 		reversed = ReverseComplementAll(input)
 		reverseSequences = ConsensusSequences(reversed, false)
 		fasta.Write(v.RevCompOutFile, reverseSequences)

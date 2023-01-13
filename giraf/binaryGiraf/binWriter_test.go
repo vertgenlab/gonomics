@@ -3,7 +3,7 @@ package binaryGiraf
 import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dnaThreeBit"
+	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"io"

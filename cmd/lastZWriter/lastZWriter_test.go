@@ -11,7 +11,7 @@ var pairwise = "../../lastZWriter/testdata"
 var speciesListFile = pairwise + "/speciesList.txt"
 var refListFile = pairwise + "/refList.txt"
 var allDists = pairwise + "/allDistsAll.txt"
-var out = "out.txt"
+var out = "testdata/out.txt"
 
 func TestMakeArray(t *testing.T) {
 	MakeArray(lastZ, pairwise, speciesListFile, refListFile, allDists, out, true, "")
@@ -29,5 +29,6 @@ func TestMakeArray(t *testing.T) {
 			}
 		}
 	}
+
 	fileio.EasyRemove(out)
 }

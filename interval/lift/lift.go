@@ -67,7 +67,7 @@ func ReadToChan(inputFile string, send chan<- Lift) {
 }
 
 //LiftCoordinatesWithChain returns the update coordinates for an input Lift interface based on an input chain.
-func LiftCoordinatesWithChain(c *chain.Chain, i Lift) (string, int, int) {
+func LiftCoordinatesWithChain(c chain.Chain, i Lift) (string, int, int) {
 	var newStart, newEnd int
 	newStart = chain.TPosToQPos(c, i.GetChromStart())
 	/* The minus one/plus one handles when a region ends
@@ -96,7 +96,7 @@ func matchOverlapLen(start1 int, end1 int, start2 int, end2 int) int {
 }
 
 //MatchProportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ)
-func MatchProportion(c *chain.Chain, i interval.Interval) (float64, float64) {
+func MatchProportion(c chain.Chain, i interval.Interval) (float64, float64) {
 	var match, dT, dQ int = 0, 0, 0
 	var currPos int = c.TStart //starting with strand +/+ case for now.
 	if !c.TStrand {

@@ -1,3 +1,5 @@
+//Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
+
 package motif
 
 import (
@@ -18,7 +20,10 @@ const (
 	None        PositionMatrixType = 3
 )
 
-//PositionMatrix is a struct encoding a position frequency/probability/weight matrix.
+// PositionMatrix is a struct encoding a position frequency/probability/weight matrix.
+//Mat[row][column]. Mat rows 0, 1, 2, and 3 correspond to base identities A, C, G, and T, respectively.
+// Mat columns correspond to position in a motif. So Mat[2][4] in a PPM would correspond to the
+// probability of a G in the 5th position of a motif.
 type PositionMatrix struct {
 	Id   string
 	Name string
@@ -26,26 +31,26 @@ type PositionMatrix struct {
 	Mat  [][]float64
 }
 
-// Write writes a slice of PositionMatrix structs to an output filename.
-func Write(filename string, records []PositionMatrix) {
+// WriteJaspar writes a slice of PositionMatrix structs to an output filename in JASPAR format.
+func WriteJaspar(filename string, records []PositionMatrix) {
 	var err error
 	file := fileio.EasyCreate(filename)
 	for _, m := range records {
-		WritePositionMatrix(file, m)
+		WritePositionMatrixJaspar(file, m)
 	}
 	err = file.Close()
 	exception.PanicOnErr(err)
 }
 
-// WritePositionMatrix writes an individual PositionMatrix struct to a fileio.EasyWriter.
-func WritePositionMatrix(file *fileio.EasyWriter, m PositionMatrix) {
+// WritePositionMatrixJaspar writes an individual PositionMatrix struct to a fileio.EasyWriter in JASPAR format.
+func WritePositionMatrixJaspar(file *fileio.EasyWriter, m PositionMatrix) {
 	var err error
-	_, err = fmt.Fprintf(file, ">%s\t%s\n%s", m.Id, m.Name, matToString(m.Mat))
+	_, err = fmt.Fprintf(file, ">%s\t%s\n%s", m.Id, m.Name, matToJasparString(m.Mat))
 	exception.PanicOnErr(err)
 }
 
-//matToString is a helper function of matToString that converts a Pfm/Ppm matrix to a string.
-func matToString(mat [][]float64) string {
+// matToJasparString is a helper function of WritePOsitionMatrixJaspar that converts a Pfm/Ppm/Pwm matrix to a JASPAR format string.
+func matToJasparString(mat [][]float64) string {
 	var answer string = "A\t[\t"
 	if len(mat) != 4 {
 		log.Fatalf("Error: Input PFM must have 4 rows, one for each nucleotide.")
@@ -69,7 +74,7 @@ func matToString(mat [][]float64) string {
 	return answer
 }
 
-//StringToPositionMatrixType parses a jaspar.PositionMatrixType type from an input string.
+// StringToPositionMatrixType parses a motif.PositionMatrixType type from an input string.
 func StringToPositionMatrixType(s string) PositionMatrixType {
 	switch s {
 	case "Frequency":
@@ -84,8 +89,8 @@ func StringToPositionMatrixType(s string) PositionMatrixType {
 	}
 }
 
-//Read parses a slice of PositionMatrix structs from an input file in JASPAR format.
-func Read(filename string, Type string) []PositionMatrix {
+// ReadJaspar parses a slice of PositionMatrix structs from an input file in JASPAR format.
+func ReadJaspar(filename string, Type string) []PositionMatrix {
 	var err error
 	var curr PositionMatrix
 	var answer []PositionMatrix
@@ -97,10 +102,9 @@ func Read(filename string, Type string) []PositionMatrix {
 	for curr, doneReading = NextPositionMatrix(file, StringToPositionMatrixType(Type)); !doneReading; curr, doneReading = NextPositionMatrix(file, StringToPositionMatrixType(Type)) {
 		if usedMotifIds[curr.Id] {
 			log.Fatalf("Error: %s is used as the ID for multiple records. IDs must be unique.", curr.Id)
-		} else {
-			usedMotifIds[curr.Id] = true
-			answer = append(answer, curr)
 		}
+		usedMotifIds[curr.Id] = true
+		answer = append(answer, curr)
 	}
 	err = file.Close()
 	exception.PanicOnErr(err)
@@ -124,7 +128,7 @@ func NextPositionMatrix(file *fileio.EasyReader, t PositionMatrixType) (Position
 		return PositionMatrix{}, true
 	}
 	if done2 || done3 || done4 || done5 {
-		log.Fatalf("Error: There is an empty line in this Pfm record.")
+		log.Fatalf("Error: The number of non-comment lines in a JASPAR format file should be a multiple of 5.")
 	}
 
 	if !strings.HasPrefix(line1, ">") {
@@ -163,7 +167,7 @@ func getMotifLen(line string) int {
 	return len(fields) - 1
 }
 
-// parseMotifLine is a helper function of ReadPositionMatrix that parses a line of a position matrix file into.
+// parseMotifLine is a helper function of ReadPositionMatrix that parses a line of a position matrix file into
 // a line of the PositionMatrix.Mat data structure.
 func parseMotifLine(answer PositionMatrix, line string, motifLen int, index int) {
 	line = strings.Replace(line, "[", " ", 1)

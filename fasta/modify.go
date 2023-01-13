@@ -56,3 +56,12 @@ func Copy(f Fasta) Fasta {
 	copy(answerSeq, f.Seq)
 	return Fasta{Name: f.Name, Seq: answerSeq}
 }
+
+// CopyAll returns a memory copy of a slice of input fasta structs
+func CopyAll(f []Fasta) []Fasta {
+	var answer = make([]Fasta, len(f))
+	for i := range f {
+		answer[i] = Copy(f[i])
+	}
+	return answer
+}

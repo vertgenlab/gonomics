@@ -2,7 +2,7 @@ package genomeGraph
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"testing"
 )
 

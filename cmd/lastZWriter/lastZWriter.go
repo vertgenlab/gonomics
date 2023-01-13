@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/lastZWriter"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -41,7 +42,6 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 
 	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
 	allLines = append(allLines, currLines...)
-
 	return allLines
 }
 
@@ -51,6 +51,13 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	var tMatches, qMatches, tFiles, qFiles []string
 	tPath := pairwise + "/" + reference + ".byChrom"
 	qPath := pairwise + "/" + species + ".byChrom"
+
+	if _, e := os.Stat(tPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
+	}
+	if _, e := os.Stat(qPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the query species.")
+	}
 
 	tMatches, _ = filepath.Glob(tPath + "/*.fa")
 	qMatches, _ = filepath.Glob(qPath + "/*.fa")
@@ -70,6 +77,10 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
+	}
+
+	if theseLines == nil {
+		log.Fatal("No lines to write to file")
 	}
 
 	return theseLines

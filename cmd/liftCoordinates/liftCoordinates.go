@@ -71,13 +71,13 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 			_, err = fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
-		} else if !minMatchPass(overlap[0].(*chain.Chain), i, minMatch) {
-			a, b = lift.MatchProportion(overlap[0].(*chain.Chain), i)
-			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(*chain.Chain).Score)
+		} else if !minMatchPass(overlap[0].(chain.Chain), i, minMatch) {
+			a, b = lift.MatchProportion(overlap[0].(chain.Chain), i)
+			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(chain.Chain).Score)
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
 		} else {
-			i = i.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(*chain.Chain), i)).(lift.Lift) //now i is 1-based and we can assert VCF.
+			i = i.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(chain.Chain), i)).(lift.Lift) //now i is 1-based and we can assert VCF.
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
@@ -137,7 +137,7 @@ func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
 }
 
 //minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
-func minMatchPass(overlap *chain.Chain, i interval.Interval, minMatch float64) bool {
+func minMatchPass(overlap chain.Chain, i interval.Interval, minMatch float64) bool {
 	a, b := lift.MatchProportion(overlap, i)
 	if a < minMatch {
 		return false

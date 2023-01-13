@@ -6,12 +6,12 @@ import (
 
 //Perform operations on target, chains are one based
 
-func (ch *Chain) GetChrom() string {
+func (ch Chain) GetChrom() string {
 	return ch.TName
 }
 
 // Chains are 0-base, half open
-func (ch *Chain) GetChromStart() int {
+func (ch Chain) GetChromStart() int {
 	if ch.TStrand {
 		return ch.TStart
 	} else {
@@ -19,7 +19,7 @@ func (ch *Chain) GetChromStart() int {
 	}
 }
 
-func (ch *Chain) GetChromEnd() int {
+func (ch Chain) GetChromEnd() int {
 	if ch.TStrand {
 		return ch.TEnd
 	} else {
@@ -41,7 +41,7 @@ func (ch *Chain) UpdateLift(c string, start int, end int) {
 }*/
 
 //WriteToFileHandle was added in order to implement the Interval and Lift interfaces.
-func (ch *Chain) WriteToFileHandle(file io.Writer) {
+func (ch Chain) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, ch)
 }
 
@@ -52,6 +52,6 @@ func (ch *Chain) WriteToFileHandle(file io.Writer, comments *HeaderComments) {
 }
 */
 
-func (ch *Chain) SwapBoth() *Chain {
+func (ch Chain) SwapBoth() Chain {
 	return SwapBoth(ch)
 }
