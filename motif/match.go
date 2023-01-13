@@ -165,5 +165,3 @@ func kMerToUint64(seq []dna.Base) uint64 {
 	return dnaTwoBit.BasesToUint64RightAln(seq, 0, len(seq))
 }
 */
-
-
