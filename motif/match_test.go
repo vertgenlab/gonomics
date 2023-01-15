@@ -92,14 +92,14 @@ func TestMatchComp(t *testing.T) {
 }
 
 var RankMatrixTests = []struct {
-	PwmFile string
-	OutFile string
+	PwmFile      string
+	OutFile      string
 	ExpectedFile string
 }{
 	{PwmFile: "testdata/expected.Pwm.txt",
-		OutFile: "testdata/tmp.RankMatrix.txt",
+		OutFile:      "testdata/tmp.RankMatrix.txt",
 		ExpectedFile: "testdata/expected.RankMatrix.txt",
-		},
+	},
 }
 
 func TestRankTensors(t *testing.T) {
@@ -128,20 +128,20 @@ func TestRankTensors(t *testing.T) {
 }
 
 var BuildKmerHashTests = []struct {
-	PwmFile string
+	PwmFile             string
 	ThresholdProportion float64
-	OutFile string
-	ExpectedLengths []int
+	OutFile             string
+	ExpectedLengths     []int
 }{
 	{PwmFile: "testdata/pwm.small.txt",
 		ThresholdProportion: 0.95,
-		ExpectedLengths: []int{6, 30}},
+		ExpectedLengths:     []int{6, 30}},
 	{PwmFile: "testdata/pwm.small.txt",
 		ThresholdProportion: 0.8,
-	ExpectedLengths: []int{104, 1705}},
+		ExpectedLengths:     []int{104, 1705}},
 	{PwmFile: "testdata/pwm.small.txt",
 		ThresholdProportion: 0.5,
-		ExpectedLengths: []int{1658, 123496}},
+		ExpectedLengths:     []int{1658, 123496}},
 }
 
 func TestBuildKmerHash(t *testing.T) {
