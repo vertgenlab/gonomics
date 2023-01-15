@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
-	//"github.com/vertgenlab/gonomics/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -125,43 +125,106 @@ func ScoreWindow(pm PositionMatrix, seq []dna.Base, alnStart int) (float64, bool
 	return answer, true
 }
 
-/*
-func pseudocode() {
-	var hash = map[uint64]float64
-
-	var currKmer uint64
-
-	// update kMer
-	// 1. bitshift currKmer 2 to left
-	// 2. update 2 right most positions with new bases
-	// 3. get rid of old base (AND with constant number that is 0s except for the bits we need at the right end, which are ones.
-
-
+// RankTensorElement encodes the value and base for a RankTensor at a particular row and column.
+// In three dimensions, it is useful to consider the Value and Base as two layers of the RankTensor.
+type RankTensorElement struct {
+	Value float64
+	Base dna.Base
 }
 
-func buildKmerHash(p PositionMatrix, seq []dna.Base, threshold float64) map[uint64]float64 {
-	var answer = make(map[uint64]float64, 0)
+func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
+	var row, column int
+	var currMaxRow, currRank int
+	var currMaxValue float64
+	var answer = make([][]RankTensorElement, 4)
+	for row = 0; row < 4; row ++ {
+		answer[row] = make([]RankTensorElement, len(p.Mat[row]))
+		for column = 0; column < len(p.Mat[row]); column++ {
+			answer[row][column] = RankTensorElement{Value: p.Mat[row][column], Base: dna.Base(row)}//cast row to dna.Base (0 -> A, 1 -> C, 2 -> G, 3 -> T)
+		}
+	}
+	//sort matrix columns by rank
+	for column = 0; column < len(p.Mat[0]); column++ {
+		for currRank = 0; currRank < 3; currRank++ {
+			currMaxRow = currRank
+			currMaxValue = answer[currRank][column].Value
+			for row = currRank+1; row < 4; row++ {
+				if answer[row][column].Value > currMaxValue {
+					currMaxRow = row
+					currMaxValue = answer[row][column].Value
+				}
+			}
+			//swap max value with value in current rank row
+			answer[currMaxRow][column], answer[currRank][column] = answer[currRank][column], answer[currMaxRow][column]
+		}
+	}
+	return answer
+}
 
-	recur(p, seq, threshold, answer)
+// rankTensorToString formats a RankTensor as a string for debugging and visualization.
+func rankTensorToString(m [][]RankTensorElement) string {
+	var row, column int
+	var answer,currBaseString string
+	for row = 0; row < len(m); row++ {
+		answer = answer + "[\t"
+		for column = 0; column < len(m[row]); column++ {
+			currBaseString = dna.BaseToString(m[row][column].Base)
+			answer = answer + fmt.Sprintf("%f:%s\t", m[row][column].Value, currBaseString)
+		}
+		answer = answer + "]\n"
+	}
+	answer = answer + "\n"
 
 	return answer
 }
 
-func recur(p PositionMatrix, seq []dna.Base, threshold float64, answer map[uint64]float64) {
-	//make uint64 encoding from current seq
-	//check if current uint64 is in answer
-	//if so, return
-	currScore, couldScore := ScoreWindow(p, seq, 0)
-	if currScore > threshold {
-		answer
+// buildKmerHas produces a hash mapping 2bit encoded kmer sequences to their corresponding motif score for a PositionMatrix.
+// Only kmers with a motif score above an input thresholdProportion are stored in the
+func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]float64 {
+	var answer = make(map[uint64]float64)
+	var currSeq = ConsensusSequence(p, false)
+	consensusValue, couldScoreConsensus := ScoreWindow(p, currSeq.Seq, 0)
+	if !couldScoreConsensus {
+		log.Fatalf("Error in buildKmerHash. Could not score consensus sequence.")
 	}
-	add current to map
-	for range motifLen
-		make seq child+9
-		recur(p seq answer)
+	var threshold float64 = thresholdProportion * consensusValue
+	var rankMatrix [][]RankTensorElement = initializeRankTensor(p)
+	var currRankVector = make([]int, len(p.Mat[0]))//intialize to all zeros, representing the consensus sequence.
+	var consensusKey uint64 = dnaTwoBit.BasesToUint64RightAln(currSeq.Seq, 0, len(currSeq.Seq))
+	answer[consensusKey] = consensusValue
+
+	for column := 0; column < len(rankMatrix[0]); column++ {
+		//make child sequence and rank vector
+		currSeq.Seq[column] = rankMatrix[1][column].Base
+		currRankVector[column] = 1
+		//call recursive part
+		recursiveCheckKmers(answer, currSeq.Seq, rankMatrix, consensusValue, currRankVector, column, threshold)
+		//revert child sequence to parent before next recursive call
+		currSeq.Seq[column] = rankMatrix[0][column].Base
+		currRankVector[column] = 0
+	}
+
+	return answer
 }
 
-func kMerToUint64(seq []dna.Base) uint64 {
-	return dnaTwoBit.BasesToUint64RightAln(seq, 0, len(seq))
+func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatrix [][]RankTensorElement, parentValue float64, rankVector []int, index int, threshold float64) {
+	//first score sequence
+	//we look at parent score, and we look at changed base.
+	currValue := parentValue + rankMatrix[rankVector[index]][index].Value - rankMatrix[rankVector[index]-1][index].Value
+	// if we pass threshold. Everything else is in this if, so if we fail threshold, we just return
+	if currValue >= threshold {
+		//if we've passed, we add current sequence to the map
+		var currKey uint64 = dnaTwoBit.BasesToUint64RightAln(currSeq, 0, len(currSeq))
+		answer[currKey] = currValue
+		for i := index; i < len(rankMatrix[0]); i++ {//generate children to the right of the current index.
+			if rankVector[i] < 3 { //we only have to generate children if the rank vector is less than 3 at this position (only 4 base identities)
+				currSeq[i] = rankMatrix[rankVector[i]][i].Base
+				rankVector[i]++
+				recursiveCheckKmers(answer, currSeq, rankMatrix, currValue, rankVector, i, threshold)
+				//decrement before we do next recursive call
+				rankVector[i]--
+				currSeq[i] = rankMatrix[rankVector[i]][i].Base//this will decrement because we just decremented rankVector.
+			}
+		}
+	}
 }
-*/
