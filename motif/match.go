@@ -129,7 +129,7 @@ func ScoreWindow(pm PositionMatrix, seq []dna.Base, alnStart int) (float64, bool
 // In three dimensions, it is useful to consider the Value and Base as two layers of the RankTensor.
 type RankTensorElement struct {
 	Value float64
-	Base dna.Base
+	Base  dna.Base
 }
 
 func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
@@ -137,10 +137,10 @@ func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
 	var currMaxRow, currRank int
 	var currMaxValue float64
 	var answer = make([][]RankTensorElement, 4)
-	for row = 0; row < 4; row ++ {
+	for row = 0; row < 4; row++ {
 		answer[row] = make([]RankTensorElement, len(p.Mat[row]))
 		for column = 0; column < len(p.Mat[row]); column++ {
-			answer[row][column] = RankTensorElement{Value: p.Mat[row][column], Base: dna.Base(row)}//cast row to dna.Base (0 -> A, 1 -> C, 2 -> G, 3 -> T)
+			answer[row][column] = RankTensorElement{Value: p.Mat[row][column], Base: dna.Base(row)} //cast row to dna.Base (0 -> A, 1 -> C, 2 -> G, 3 -> T)
 		}
 	}
 	//sort matrix columns by rank
@@ -148,7 +148,7 @@ func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
 		for currRank = 0; currRank < 3; currRank++ {
 			currMaxRow = currRank
 			currMaxValue = answer[currRank][column].Value
-			for row = currRank+1; row < 4; row++ {
+			for row = currRank + 1; row < 4; row++ {
 				if answer[row][column].Value > currMaxValue {
 					currMaxRow = row
 					currMaxValue = answer[row][column].Value
@@ -164,7 +164,7 @@ func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
 // rankTensorToString formats a RankTensor as a string for debugging and visualization.
 func rankTensorToString(m [][]RankTensorElement) string {
 	var row, column int
-	var answer,currBaseString string
+	var answer, currBaseString string
 	for row = 0; row < len(m); row++ {
 		answer = answer + "[\t"
 		for column = 0; column < len(m[row]); column++ {
@@ -189,7 +189,7 @@ func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]flo
 	}
 	var threshold float64 = thresholdProportion * consensusValue
 	var rankMatrix [][]RankTensorElement = initializeRankTensor(p)
-	var currRankVector = make([]int, len(p.Mat[0]))//intialize to all zeros, representing the consensus sequence.
+	var currRankVector = make([]int, len(p.Mat[0])) //intialize to all zeros, representing the consensus sequence.
 	var consensusKey uint64 = dnaTwoBit.BasesToUint64RightAln(currSeq.Seq, 0, len(currSeq.Seq))
 	answer[consensusKey] = consensusValue
 
@@ -216,14 +216,14 @@ func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatr
 		//if we've passed, we add current sequence to the map
 		var currKey uint64 = dnaTwoBit.BasesToUint64RightAln(currSeq, 0, len(currSeq))
 		answer[currKey] = currValue
-		for i := index; i < len(rankMatrix[0]); i++ {//generate children to the right of the current index.
+		for i := index; i < len(rankMatrix[0]); i++ { //generate children to the right of the current index.
 			if rankVector[i] < 3 { //we only have to generate children if the rank vector is less than 3 at this position (only 4 base identities)
 				currSeq[i] = rankMatrix[rankVector[i]][i].Base
 				rankVector[i]++
 				recursiveCheckKmers(answer, currSeq, rankMatrix, currValue, rankVector, i, threshold)
 				//decrement before we do next recursive call
 				rankVector[i]--
-				currSeq[i] = rankMatrix[rankVector[i]][i].Base//this will decrement because we just decremented rankVector.
+				currSeq[i] = rankMatrix[rankVector[i]][i].Base //this will decrement because we just decremented rankVector.
 			}
 		}
 	}
