@@ -29,14 +29,14 @@ func tfMatchComp(s Settings) {
 	var motifs []motif.PositionMatrix
 	switch s.MatrixFileType {
 	case "Frequency":
-		motifs = motif.Read(s.MatrixFile, "Frequency")
+		motifs = motif.ReadJaspar(s.MatrixFile, "Frequency")
 		motifs = motif.PfmSliceToPpmSlice(motifs, s.Pseudocounts)
 		motifs = motif.PpmSliceToPwmSlice(motifs)
 	case "Probability":
-		motifs = motif.Read(s.MatrixFile, "Probability")
+		motifs = motif.ReadJaspar(s.MatrixFile, "Probability")
 		motifs = motif.PpmSliceToPwmSlice(motifs)
 	case "Weight":
-		motifs = motif.Read(s.MatrixFile, "Weight")
+		motifs = motif.ReadJaspar(s.MatrixFile, "Weight")
 	default:
 		log.Fatalf("Error. Unexpected motif file format. Options are 'Frequency', 'Probability', and 'Weight'.")
 	}
