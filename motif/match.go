@@ -363,13 +363,13 @@ func scanGenome(records []fasta.Fasta, kmerHash map[uint64]float64, consensusSco
 					currScore = currScore / consensusScore
 				}
 				currBed = bed.Bed{Chrom: records[currChrom].Name,
-					ChromStart: currPos - motifLen,
-					ChromEnd:   currPos,
-					Name:       motifName,
-					Score:      0,
-					Strand:     strand,
+					ChromStart:        currPos - motifLen,
+					ChromEnd:          currPos,
+					Name:              motifName,
+					Score:             0,
+					Strand:            strand,
 					FieldsInitialized: 7,
-					Annotation: []string{fmt.Sprintf("%f", currScore)}}
+					Annotation:        []string{fmt.Sprintf("%f", currScore)}}
 				bed.WriteBed(out, currBed)
 			}
 		}

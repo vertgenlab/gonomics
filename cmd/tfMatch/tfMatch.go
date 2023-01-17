@@ -9,12 +9,12 @@ import (
 )
 
 type Settings struct {
-	InFile string
-	MatrixFile string
-	OutFile string
-	MatrixFileType string
-	PropMatch float64
-	Pseudocounts float64
+	InFile             string
+	MatrixFile         string
+	OutFile            string
+	MatrixFileType     string
+	PropMatch          float64
+	Pseudocounts       float64
 	OutputasProportion bool
 }
 
@@ -42,11 +42,11 @@ func tfMatch(s Settings) {
 
 func usage() {
 	fmt.Print(
-			"tfMatch - Genome-wide scanning of TFBS occurrences." +
-				"Input DNA sequences must be upper case.\n" +
-				"Usage:\n" +
-				"tfMatch input.fa matrices.pfm output.bed\n" +
-				"options:\n")
+		"tfMatch - Genome-wide scanning of TFBS occurrences." +
+			"Input DNA sequences must be upper case.\n" +
+			"Usage:\n" +
+			"tfMatch input.fa matrices.pfm output.bed\n" +
+			"options:\n")
 	flag.PrintDefaults()
 }
 
@@ -70,18 +70,15 @@ func main() {
 	matrixFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	s := Settings {
-		InFile: inFile,
-		MatrixFile: matrixFile,
-		OutFile: outFile,
-		MatrixFileType: *matrixFileType,
-		PropMatch: *propMatch,
-		Pseudocounts: *pfmPseudocounts,
+	s := Settings{
+		InFile:             inFile,
+		MatrixFile:         matrixFile,
+		OutFile:            outFile,
+		MatrixFileType:     *matrixFileType,
+		PropMatch:          *propMatch,
+		Pseudocounts:       *pfmPseudocounts,
 		OutputasProportion: *outputAsProportion,
 	}
 
 	tfMatch(s)
 }
-
-
-
