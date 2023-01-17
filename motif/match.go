@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"math"
 )
 
 // MatchComp computes all TFBS matches in a pairwise multiFa alignment for all motifs defined in a []PositionMatrix
@@ -132,6 +133,7 @@ type RankTensorElement struct {
 	Base  dna.Base
 }
 
+// initializeRankTensor turns a PositionMatrix into a rank-ordered position weight tensor.
 func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
 	var row, column int
 	var currMaxRow, currRank int
@@ -178,7 +180,7 @@ func rankTensorToString(m [][]RankTensorElement) string {
 	return answer
 }
 
-// buildKmerHas produces a hash mapping 2bit encoded kmer sequences to their corresponding motif score for a PositionMatrix.
+// buildKmerHash produces a hash mapping 2bit encoded kmer sequences to their corresponding motif score for a PositionMatrix.
 // Only kmers with a motif score above an input thresholdProportion are stored in the
 func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]float64 {
 	var answer = make(map[uint64]float64)
@@ -207,6 +209,8 @@ func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]flo
 	return answer
 }
 
+// recursiveCheckKmers is a helper function of buildKmerHash, which searches for all kmer permutations of a PostionMatrix consensus sequence
+// and adds all kmers with a motif score above an input threshold to a map. This implementation uses dynamic programming to search all kmers efficiently.
 func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatrix [][]RankTensorElement, parentValue float64, rankVector []int, index int, threshold float64) {
 	//first score sequence
 	//we look at parent score, and we look at changed base.
@@ -227,4 +231,188 @@ func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatr
 			}
 		}
 	}
+}
+
+/*
+func RapidMatchComp(motifs []PositionMatrix, records []fasta.Fasta, chromName string, propMatch float64, outFile string, refStart int, outputAsProportion bool) {
+	var err error
+	var refPos, alnPos int
+	var kmerHash map[uint64]float64
+	var currTargetKey, currQueryKey uint64
+	var bitMask uint64
+	var motifLen int
+	var needNewTargetKey, needNewQueryKey bool
+	out := fileio.EasyCreate(outFile)
+
+	for i := range motifs {
+		motifLen = len(motifs[i].Mat[0])
+		if motifLen > 32 {
+			log.Fatalf("MatchComp cannot accommodate Position Matrices with a motif length greater than 32. Please filter out the matrix with this ID: %s.\n", motifs[i].Id)
+		}
+		kmerHash = buildKmerHash(motifs[i], propMatch)
+		bitMask = uint64(math.Pow(2, float64(2*motifLen)) - 1) //bitmask formula: B_n = 2^{2n} - 1
+		refPos = refStart
+		needNewTargetKey, needNewQueryKey = true, true //we'll have no keys when we start the sequence.
+		for alnPos = 0; alnPos < len(records[0].Seq); alnPos++ {
+			if needNewTargetKey {
+				getNewKey(records, 0, alnPos, motifLen)
+				needNewTargetKey = false
+			}
+			if needNewQueryKey {
+				getNewKey(records, 1, alnPos, motifLen)
+				needNewQueryKey = false
+			}
+			if records[0].Seq[alnPos] == dna.N || records[1].Seq[alnPos] == dna.N {
+				needNewTargetKey, needNewQueryKey = true, true
+			} else {
+
+			}
+
+		}
+
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+*/
+
+// RapidMatch performs genome-wide scans for TF motif occurrences from an input genome in fasta format.
+// propMatch specifies the motif score threshold for a match, as a proportion of the consensus score.
+// outputAsProportion formats the output score reporting as match proportion of consensus score.
+func RapidMatch(motifs []PositionMatrix, records []fasta.Fasta, propMatch float64, outFile string, outputAsProportion bool) {
+	var err error
+	var motifLen int
+	var kmerHash map[uint64]float64
+	var consensusScore float64
+	var couldScoreConsensus bool
+	var revCompMotif PositionMatrix
+	out := fileio.EasyCreate(outFile)
+
+	for i := range motifs {
+		motifLen = len(motifs[i].Mat[0])
+		if motifLen > 32 {
+			log.Fatalf("RapidMatch cannot accommodate Position Matrices with a motif length greater than 32. Plese filter out the matrix with this ID: %v.\n", motifs[i].Id)
+		}
+		var currSeq = ConsensusSequence(motifs[i], false)
+		consensusScore, couldScoreConsensus = ScoreWindow(motifs[i], currSeq.Seq, 0)
+		if !couldScoreConsensus {
+			log.Fatalf("Error in buildKmerHash. Could not score consensus sequence.")
+		}
+		kmerHash = buildKmerHash(motifs[i], propMatch)
+		scanGenome(records, kmerHash, consensusScore, motifs[i].Name, motifLen, out, bed.Positive, outputAsProportion)
+		revCompMotif = ReverseComplement(motifs[i])
+		kmerHash = buildKmerHash(revCompMotif, propMatch)
+		scanGenome(records, kmerHash, consensusScore, motifs[i].Name, motifLen, out, bed.Negative, outputAsProportion)
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+// scanGenome is a elper function of rapid match that scans the genome for motif occurrences for an individual motif,
+// whose kmer match scores are embedded in an input hash.
+func scanGenome(records []fasta.Fasta, kmerHash map[uint64]float64, consensusScore float64, motifName string, motifLen int, out *fileio.EasyWriter, strand bed.Strand, outputAsProportion bool) {
+	var currChrom, currPos, newKeyPos int
+	var needNewKey, couldGetNewKey, inKmerHash bool
+	var currBed bed.Bed
+	var currKey uint64
+	var currScore float64
+	var bitMask uint64 = uint64(math.Pow(2, float64(2*motifLen)) - 1) //bitmask formula: B_n = 2^{2n} - 1
+
+	for currChrom = range records {
+		needNewKey = true //we'll need a new key when we start each chromosome
+		for currPos = 0; currPos < len(records[currChrom].Seq); currPos++ {
+			if needNewKey {
+				currKey, newKeyPos, couldGetNewKey = getNewKey(records, currChrom, currPos, motifLen)
+				currPos = newKeyPos
+				if !couldGetNewKey {
+					break //this means we've run out of windows on the current chrom and we should move to the next chrom.
+				}
+				needNewKey = false
+			}
+
+			switch records[currChrom].Seq[currPos] {
+			case dna.N:
+				needNewKey = true
+				continue
+			case dna.Gap:
+				continue
+			case dna.A:
+				currKey = currKey << 2
+				currKey = currKey | 0
+				currKey = currKey & bitMask
+			case dna.C:
+				currKey = currKey << 2
+				currKey = currKey | 1
+				currKey = currKey & bitMask
+			case dna.G:
+				currKey = currKey << 2
+				currKey = currKey | 2
+				currKey = currKey & bitMask
+			case dna.T:
+				currKey = currKey << 2
+				currKey = currKey | 3
+				currKey = currKey & bitMask
+			default:
+				log.Fatalf("Unrecognized base.")
+			}
+
+			if currScore, inKmerHash = kmerHash[currKey]; inKmerHash { //if we get a hit from the current key in the kmer hash.
+				if outputAsProportion {
+					currScore = currScore / consensusScore
+				}
+				currBed = bed.Bed{Chrom: records[currChrom].Name,
+					ChromStart: currPos - motifLen,
+					ChromEnd:   currPos,
+					Name:       motifName,
+					Score:      0,
+					Strand:     strand,
+					FieldsInitialized: 7,
+					Annotation: []string{fmt.Sprintf("%f", currScore)}}
+				bed.WriteBed(out, currBed)
+			}
+		}
+	}
+}
+
+// getNewKey generates a 2bit encoded kmer sequence as a uint64 from a multiple alignment starting at an input alnPos.
+// for a pairwise alignment, index should be 0 for target and 1 for query.
+// returns the uint64 seq, an int corresponding to the ending alnPos, and a bool that returns true if a key was generated without
+// reaching the end of the alignment.
+func getNewKey(records []fasta.Fasta, index int, alnPos int, motifLen int) (uint64, int, bool) {
+	var answer uint64
+	var motifPos = 0
+	for motifPos < motifLen {
+		if alnPos >= len(records[index].Seq) {
+			return 0, 0, false
+		}
+		switch records[index].Seq[alnPos] {
+		case dna.N: //if we see an N, we skip this base and clear out answer and the partial key.
+			alnPos++
+			motifPos = 0
+			answer = 0
+		case dna.Gap: //keep searching, motifs can span gaps, which are ignored.
+			alnPos++
+		case dna.A:
+			answer = answer << 2 //left shift two bases, clearing a space for the new base.
+			answer = answer | 0  //append 00 in last two spots with bitwise OR.
+			motifPos++
+		case dna.C:
+			answer = answer << 2
+			answer = answer | 1
+			motifPos++
+		case dna.G:
+			answer = answer << 2
+			answer = answer | 2
+			motifPos++
+		case dna.T:
+			answer = answer << 2
+			answer = answer | 3
+			motifPos++
+		default:
+			log.Fatalf("Unrecognized base.")
+		}
+	}
+	return answer, alnPos, true
 }

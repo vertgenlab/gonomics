@@ -58,7 +58,8 @@ func tfMatchComp(s Settings) {
 
 func usage() {
 	fmt.Print(
-		"tfMatchComp - Compare the TFBS profiles between two input aligned genomic sequences.\n" +
+		"tfMatchComp - Compare the TFBS profiles between two input aligned genomic sequences." +
+			"Input fasta sequences must be uppercase, which can be achieved with faFormat.\n" +
 			"Usage:\n" +
 			"tfMatchComp input.fa matrices.pfm chromName output.bed\n" +
 			"options:\n")
