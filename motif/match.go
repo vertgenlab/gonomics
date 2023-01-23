@@ -321,23 +321,21 @@ func scanSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, motifN
 		if currScore, inKmerHash = kmerHash[currKey]; inKmerHash {
 			needNewAltKey = true
 			minResidual = math.MaxFloat64
-			for i = alnPos - residualWindowSize; i < alnPos + residualWindowSize; i++ {
+			for i = alnPos - residualWindowSize; i < alnPos+residualWindowSize; i++ {
 				if needNewAltKey {
 					currAltKey, currAltPos, couldGetNewKey = getNewKey(records, altIndex, i, motifLen)
 					if !couldGetNewKey {
 						break
 					}
 					i = currAltPos
-					if i < alnPos + residualWindowSize {//while this is the same as the loop check, this can become false when generating new keys.
+					if i < alnPos+residualWindowSize { //while this is the same as the loop check, this can become false when generating new keys.
 
 					}
 				}
 			}
-			if !couldGetNewKey {//if we ran out of sequence for the alt strand, we don't report a difference and break away.
+			if !couldGetNewKey { //if we ran out of sequence for the alt strand, we don't report a difference and break away.
 				break
 			}
-
-
 
 			if outputAsProportion {
 				currScore = currScore / consensusScore
