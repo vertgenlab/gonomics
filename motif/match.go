@@ -233,49 +233,120 @@ func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatr
 	}
 }
 
-/*
-func RapidMatchComp(motifs []PositionMatrix, records []fasta.Fasta, chromName string, propMatch float64, outFile string, refStart int, outputAsProportion bool) {
+func RapidMatchComp(motifs []PositionMatrix, records []fasta.Fasta, propMatch float64, chromName string, outFile string, residualWindow int, outputAsProportion bool) {
 	var err error
-	var refPos, alnPos int
-	var kmerHash map[uint64]float64
-	var currTargetKey, currQueryKey uint64
-	var bitMask uint64
 	var motifLen int
-	var needNewTargetKey, needNewQueryKey bool
+	var kmerHash map[uint64]float64
+	var consensusScore float64
+	var couldScoreConsensus bool
+	var revCompMotif PositionMatrix
+
 	out := fileio.EasyCreate(outFile)
 
 	for i := range motifs {
 		motifLen = len(motifs[i].Mat[0])
 		if motifLen > 32 {
-			log.Fatalf("MatchComp cannot accommodate Position Matrices with a motif length greater than 32. Please filter out the matrix with this ID: %s.\n", motifs[i].Id)
+			log.Fatalf("RapidMatch cannot accommodate Position Matrices with a motif length greater than 32. Plese filter out the matrix with this ID: %v.\n", motifs[i].Id)
+		}
+		var currSeq = ConsensusSequence(motifs[i], false)
+		consensusScore, couldScoreConsensus = ScoreWindow(motifs[i], currSeq.Seq, 0)
+		if !couldScoreConsensus {
+			log.Fatalf("Error in buildKmerHash. Could not score consensus sequence.")
 		}
 		kmerHash = buildKmerHash(motifs[i], propMatch)
-		bitMask = uint64(math.Pow(2, float64(2*motifLen)) - 1) //bitmask formula: B_n = 2^{2n} - 1
-		refPos = refStart
-		needNewTargetKey, needNewQueryKey = true, true //we'll have no keys when we start the sequence.
-		for alnPos = 0; alnPos < len(records[0].Seq); alnPos++ {
-			if needNewTargetKey {
-				getNewKey(records, 0, alnPos, motifLen)
-				needNewTargetKey = false
-			}
-			if needNewQueryKey {
-				getNewKey(records, 1, alnPos, motifLen)
-				needNewQueryKey = false
-			}
-			if records[0].Seq[alnPos] == dna.N || records[1].Seq[alnPos] == dna.N {
-				needNewTargetKey, needNewQueryKey = true, true
-			} else {
+		scanSequenceComp(records, kmerHash, motifs[i].Name, motifLen, chromName, out, 0, residualWindow, consensusScore, bed.Positive, outputAsProportion)
 
-			}
-
-		}
-
+		revCompMotif = ReverseComplement(motifs[i])
+		kmerHash = buildKmerHash(revCompMotif, propMatch)
+		scanSequenceComp(records, kmerHash, motifs[i].Name, motifLen, chromName, out, 0, residualWindow, consensusScore, bed.Negative, outputAsProportion)
 	}
 
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
-*/
+
+func scanSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, motifName string, motifLen int, chromName string, out *fileio.EasyWriter, index int, residualWindowSize int, consensusScore float64, strand bed.Strand, outputAsProportion bool) {
+	var couldGetNewKey, inKmerHash, needNewAltKey bool
+	var bitMask uint64 = uint64(math.Pow(2, float64(2*motifLen)) - 1) //bitmask formula: B_n = 2^{2n} - 1
+	var currKey, currAltKey uint64
+	var newKeyPos, currAltPos, refPos, i int
+	var lastRefPos, lastAlnPos int = 0, 0
+	var currScore, currAltScore, minResidual float64
+	var needNewKey bool = true
+	var altIndex int
+	if index == 0 {
+		altIndex = 1
+	} else {
+		altIndex = 0
+	}
+
+	for alnPos := 0; alnPos < len(records[index].Seq); alnPos++ {
+		if needNewKey {
+			currKey, newKeyPos, couldGetNewKey = getNewKey(records, index, alnPos, motifLen)
+			alnPos = newKeyPos
+			refPos = fasta.AlnPosToRefPosCounter(records[0], alnPos, lastRefPos, lastAlnPos)
+			lastRefPos, lastAlnPos = refPos, alnPos
+			if !couldGetNewKey {
+				break //this means we've run out of windows on the current chrom and we should move to the next chrom.
+			}
+			needNewKey = false
+		} else {
+			switch records[index].Seq[alnPos] {
+			case dna.N:
+				needNewKey = true
+				continue
+			case dna.Gap:
+				continue
+			case dna.A:
+				currKey = currKey << 2
+				currKey = currKey | 0
+				currKey = currKey & bitMask
+			case dna.C:
+				currKey = currKey << 2
+				currKey = currKey | 1
+				currKey = currKey & bitMask
+			case dna.G:
+				currKey = currKey << 2
+				currKey = currKey | 2
+				currKey = currKey & bitMask
+			case dna.T:
+				currKey = currKey << 2
+				currKey = currKey | 3
+				currKey = currKey & bitMask
+			default:
+				log.Fatalf("Unrecognized base.")
+			}
+		}
+
+		if currScore, inKmerHash = kmerHash[currKey]; inKmerHash {
+			needNewAltKey = true
+			minResidual = math.MaxFloat64
+			for i = alnPos - residualWindowSize; i < alnPos + residualWindowSize; i++ {
+				if needNewAltKey {
+					currAltKey, currAltPos, couldGetNewKey = getNewKey(records, altIndex, i, motifLen)
+					if !couldGetNewKey {
+						break
+					}
+					i = currAltPos
+					if i < alnPos + residualWindowSize {//while this is the same as the loop check, this can become false when generating new keys.
+
+					}
+				}
+			}
+			if !couldGetNewKey {//if we ran out of sequence for the alt strand, we don't report a difference and break away.
+				break
+			}
+
+
+
+			if outputAsProportion {
+				currScore = currScore / consensusScore
+			}
+
+		}
+
+	}
+}
 
 // RapidMatch performs genome-wide scans for TF motif occurrences from an input genome in fasta format.
 // propMatch specifies the motif score threshold for a match, as a proportion of the consensus score.
@@ -330,32 +401,32 @@ func scanGenome(records []fasta.Fasta, kmerHash map[uint64]float64, consensusSco
 					break //this means we've run out of windows on the current chrom and we should move to the next chrom.
 				}
 				needNewKey = false
-			}
-
-			switch records[currChrom].Seq[currPos] {
-			case dna.N:
-				needNewKey = true
-				continue
-			case dna.Gap:
-				continue
-			case dna.A:
-				currKey = currKey << 2
-				currKey = currKey | 0
-				currKey = currKey & bitMask
-			case dna.C:
-				currKey = currKey << 2
-				currKey = currKey | 1
-				currKey = currKey & bitMask
-			case dna.G:
-				currKey = currKey << 2
-				currKey = currKey | 2
-				currKey = currKey & bitMask
-			case dna.T:
-				currKey = currKey << 2
-				currKey = currKey | 3
-				currKey = currKey & bitMask
-			default:
-				log.Fatalf("Unrecognized base.")
+			} else {
+				switch records[currChrom].Seq[currPos] {
+				case dna.N:
+					needNewKey = true
+					continue
+				case dna.Gap:
+					continue
+				case dna.A:
+					currKey = currKey << 2
+					currKey = currKey | 0
+					currKey = currKey & bitMask
+				case dna.C:
+					currKey = currKey << 2
+					currKey = currKey | 1
+					currKey = currKey & bitMask
+				case dna.G:
+					currKey = currKey << 2
+					currKey = currKey | 2
+					currKey = currKey & bitMask
+				case dna.T:
+					currKey = currKey << 2
+					currKey = currKey | 3
+					currKey = currKey & bitMask
+				default:
+					log.Fatalf("Unrecognized base.")
+				}
 			}
 
 			if currScore, inKmerHash = kmerHash[currKey]; inKmerHash { //if we get a hit from the current key in the kmer hash.
