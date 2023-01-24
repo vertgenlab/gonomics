@@ -14,17 +14,56 @@ var bedToWigTests = []struct {
 	expectedFile string
 	method       string
 	missing      float64
+	useRange bool
 }{
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", "testdata/test.Score.wig", "testdata/score.Expected.wig", "Score", 0},
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", "testdata/test.Reads.wig", "testdata/reads.Expected.wig", "Reads", 0},
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", "testdata/test.Name.wig", "testdata/name.Expected.wig", "Name", 0},
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", "testdata/test.missing.Name.wig", "testdata/name.missing.Expected.wig", "Name", -1.0},
+	{inFile: "testdata/test.bed",
+		refFile: "testdata/ref.chrom.sizes",
+		outFile: "testdata/test.Score.wig",
+		expectedFile: "testdata/score.Expected.wig",
+		method: "Score",
+		missing: 0,
+		useRange: false},
+	{inFile: "testdata/test.bed",
+		refFile: "testdata/ref.chrom.sizes",
+		outFile: "testdata/test.Reads.wig",
+		expectedFile: "testdata/reads.Expected.wig",
+		method: "Reads",
+		missing: 0,
+		useRange: false},
+	{inFile: "testdata/test.bed",
+		refFile: "testdata/ref.chrom.sizes",
+		outFile: "testdata/test.Name.wig",
+		expectedFile: "testdata/name.Expected.wig",
+		method: "Name",
+		missing: 0,
+		useRange: false},
+	{inFile: "testdata/test.bed",
+		refFile: "testdata/ref.chrom.sizes",
+		outFile: "testdata/test.missing.Name.wig",
+		expectedFile: "testdata/name.missing.Expected.wig",
+		method: "Name",
+		missing: -1.0,
+		useRange: false},
+	{inFile: "testdata/test.range.bed",
+		refFile: "testdata/ref.chrom.sizes",
+		outFile: "testdata/test.range.Name.wig",
+		expectedFile: "testdata/name.range.Expected.wig",
+		method: "Name",
+		missing: -1.0,
+		useRange: true},
+	{inFile: "testdata/test.range.bed",
+		refFile: "testdata/ref.chrom.sizes",
+		outFile: "testdata/test.range.Score.wig",
+		expectedFile: "testdata/score.range.Expected.wig",
+		method: "Score",
+		missing: -1.0,
+		useRange: true},
 }
 
 func TestBedToWig(t *testing.T) {
 	var err error
 	for _, v := range bedToWigTests {
-		bedToWig(v.method, v.inFile, v.refFile, v.outFile, v.missing)
+		bedToWig(v.method, v.inFile, v.refFile, v.outFile, v.missing, v.useRange)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in BedToWig.")
 		} else {

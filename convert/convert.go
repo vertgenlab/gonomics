@@ -128,25 +128,38 @@ func BedGraphToWig(inFile string, reference map[string]chromInfo.ChromInfo, miss
 }
 
 // BedValuesToWig uses bed entries from an input file to construct a Wig data structure where the Wig value is
-//equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
-//value set by Missing (default 0 in the cmd).
-func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string) []wig.Wig {
+// equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
+// value set by Missing (default 0 in the cmd).
+// useRange sets the wig value to the bed value across the range of the bed region, not just at the midpoint, as is default.
+func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string, useRange bool) []wig.Wig {
 	wigSlice := makeWigSkeleton(reference, Missing)
-	var chromIndex int
-	var midpoint int
+	var chromIndex, midpoint, i int
 	bedChan := bed.GoReadToChan(inFile)
 	for b := range bedChan {
 		chromIndex = getWigChromIndex(b.Chrom, wigSlice)
 		midpoint = bedMidpoint(b)
-		if wigSlice[chromIndex].Values[midpoint] != Missing {
+		if !useRange && wigSlice[chromIndex].Values[midpoint] != Missing {
 			log.Fatalf("Two bed entries share the same midpoint. Unable to resolve ambiguous value assignment.")
 		}
-		if method == "Name" {
-			wigSlice[chromIndex].Values[midpoint] = common.StringToFloat64(b.Name)
-		} else if method == "Score" {
-			wigSlice[chromIndex].Values[midpoint] = float64(b.Score)
+
+		if useRange {
+			for i = b.ChromStart; i < b.ChromEnd; i++ {
+				if method == "Name" {
+					wigSlice[chromIndex].Values[i] = common.StringToFloat64(b.Name)
+				} else if method == "Score" {
+					wigSlice[chromIndex].Values[i] = float64(b.Score)
+				} else {
+					log.Fatalf("Unrecognized method.")
+				}
+			}
 		} else {
-			log.Fatalf("Unrecognized method.")
+			if method == "Name" {
+				wigSlice[chromIndex].Values[midpoint] = common.StringToFloat64(b.Name)
+			} else if method == "Score" {
+				wigSlice[chromIndex].Values[midpoint] = float64(b.Score)
+			} else {
+				log.Fatalf("Unrecognized method.")
+			}
 		}
 	}
 	//stable sort the wigSlice by Chrom

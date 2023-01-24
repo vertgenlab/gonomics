@@ -12,14 +12,14 @@ import (
 	"log"
 )
 
-func bedToWig(method string, inFile string, refFile string, outFile string, missing float64) {
+func bedToWig(method string, inFile string, refFile string, outFile string, missing float64, useRange bool) {
 	ref := chromInfo.ReadToMap(refFile)
 	var outWig []wig.Wig
 	if method == "Reads" {
 		rec := bed.Read(inFile)
 		outWig = convert.BedReadsToWig(rec, ref)
 	} else if method == "Name" || method == "Score" {
-		outWig = convert.BedValuesToWig(inFile, ref, missing, method)
+		outWig = convert.BedValuesToWig(inFile, ref, missing, method, useRange)
 	} else {
 		log.Fatalf("Unrecognized method.")
 	}
@@ -43,6 +43,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 4
 	var missing *float64 = flag.Float64("missingData", 0, "For BedNameToWig, sets the value of the output wig in regions where there is no bed data.")
+	var useRange *bool = flag.Bool("useRange", false, "For Name or Score method, set the wig value across the whole bed range instead of the midpoint.")
 
 	flag.Usage = usage
 
@@ -59,5 +60,5 @@ func main() {
 	reference := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	bedToWig(method, inFile, reference, outFile, *missing)
+	bedToWig(method, inFile, reference, outFile, *missing, *useRange)
 }
