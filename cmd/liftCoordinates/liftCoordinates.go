@@ -21,14 +21,14 @@ import (
 )
 
 type Settings struct {
-	InFile          string
-	OutFile string
-	UnmappedFile string
-	ChainFile          string
-	FaFile             string
-	MinMatch float64
-	Verbose            int
-	SwapAB             bool
+	InFile        string
+	OutFile       string
+	UnmappedFile  string
+	ChainFile     string
+	FaFile        string
+	MinMatch      float64
+	Verbose       int
+	SwapAB        bool
 	StrictBorders bool
 }
 
@@ -88,7 +88,7 @@ func liftCoordinates(s Settings) {
 			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(chain.Chain).Score)
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
-		} else if s.StrictBorders && !lift.StrictBorderCheck(overlap[0].(chain.Chain), i){
+		} else if s.StrictBorders && !lift.StrictBorderCheck(overlap[0].(chain.Chain), i) {
 			_, err = fmt.Fprintf(un, "Record below failed the strict border check:\n")
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
@@ -227,14 +227,14 @@ func main() {
 	unMapped := flag.Arg(3)
 
 	s := Settings{
-		InFile: inFile,
-		OutFile: outFile,
-		UnmappedFile: unMapped,
-		ChainFile:          chainFile,
-		FaFile:             *faFile,
-		MinMatch: *minMatch,
-		Verbose:            *verbose,
-		SwapAB:             *swapAlleleAB,
+		InFile:        inFile,
+		OutFile:       outFile,
+		UnmappedFile:  unMapped,
+		ChainFile:     chainFile,
+		FaFile:        *faFile,
+		MinMatch:      *minMatch,
+		Verbose:       *verbose,
+		SwapAB:        *swapAlleleAB,
 		StrictBorders: *strictBorders,
 	}
 

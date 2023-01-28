@@ -10,26 +10,26 @@ import (
 
 var LiftTests = []struct {
 	inputFile          string
-	outFile string
+	outFile            string
 	expectedOutputFile string
-	unmappedFile string
+	unmappedFile       string
 	chainFile          string
-	minMatch float64
+	minMatch           float64
 	faFile             string
 	verbose            int
 	swapAB             bool
-	strictBorders bool
+	strictBorders      bool
 }{
 	{inputFile: "testdata/input.vcf",
-		outFile: "testdata/tmp.vcf",
+		outFile:            "testdata/tmp.vcf",
 		expectedOutputFile: "testdata/expected.vcf",
-		unmappedFile: "testdata/unmapped.txt",
-		chainFile: "testdata/test.chain",
-		minMatch: 0.95,
-		faFile: "testdata/test.fa",
-		verbose: 0,
-		swapAB: false,
-	strictBorders: false},
+		unmappedFile:       "testdata/unmapped.txt",
+		chainFile:          "testdata/test.chain",
+		minMatch:           0.95,
+		faFile:             "testdata/test.fa",
+		verbose:            0,
+		swapAB:             false,
+		strictBorders:      false},
 	{"testdata/input_swapAB.vcf",
 		"testdata/testSwap.vcf",
 		"testdata/expected_swapAB.vcf",
@@ -39,7 +39,7 @@ var LiftTests = []struct {
 		"testdata/test.fa",
 		0,
 		true,
-	false},
+		false},
 }
 
 func TestLift(t *testing.T) {
@@ -47,15 +47,15 @@ func TestLift(t *testing.T) {
 	var s Settings
 
 	for _, v := range LiftTests {
-		s = Settings {
-			InFile:          v.inputFile,
-			OutFile: v.outFile,
-			UnmappedFile: v.unmappedFile,
-			ChainFile:          v.chainFile,
-			FaFile:             v.faFile,
-			MinMatch: v.minMatch,
-			Verbose:           v.verbose,
-			SwapAB:             v.swapAB,
+		s = Settings{
+			InFile:        v.inputFile,
+			OutFile:       v.outFile,
+			UnmappedFile:  v.unmappedFile,
+			ChainFile:     v.chainFile,
+			FaFile:        v.faFile,
+			MinMatch:      v.minMatch,
+			Verbose:       v.verbose,
+			SwapAB:        v.swapAB,
 			StrictBorders: v.strictBorders,
 		}
 		liftCoordinates(s)
