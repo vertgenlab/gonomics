@@ -20,38 +20,50 @@ import (
 	"unicode/utf8"
 )
 
+type Settings struct {
+	InFile          string
+	OutFile string
+	UnmappedFile string
+	ChainFile          string
+	FaFile             string
+	MinMatch float64
+	Verbose            int
+	SwapAB             bool
+	StrictBorders bool
+}
+
 type fileWriter interface {
 	WriteToFileHandle(io.Writer)
 }
 
-func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, swapAlleleAB bool, verbose int) {
+func liftCoordinates(s Settings) {
 	var err error
-	if minMatch < 0.0 || minMatch > 1.0 {
-		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", minMatch)
+	if s.MinMatch < 0.0 || s.MinMatch > 1.0 {
+		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", s.MinMatch)
 	}
 	//first task, make tree from chainFile
-	chainChan, _ := chain.GoReadToChan(chainFile)
+	chainChan, _ := chain.GoReadToChan(s.ChainFile)
 	var chainIntervals []interval.Interval
 	for val := range chainChan {
 		chainIntervals = append(chainIntervals, val)
 	}
 	tree := interval.BuildTree(chainIntervals)
-	out := fileio.EasyCreate(outFile)
-	un := fileio.EasyCreate(unMapped)
+	out := fileio.EasyCreate(s.OutFile)
+	un := fileio.EasyCreate(s.UnmappedFile)
 
 	var ref *fasta.Seeker
 	var currVcf vcf.Vcf
 	var a, b float64
 
-	if faFile != "" {
-		if !vcf.IsVcfFile(inFile) {
+	if s.FaFile != "" {
+		if !vcf.IsVcfFile(s.InFile) {
 			log.Fatalf("Fasta file is provided but lift file is not a VCF file.")
 		}
-		ref = fasta.NewSeeker(faFile, "")
+		ref = fasta.NewSeeker(s.FaFile, "")
 	}
 
-	if vcf.IsVcfFile(inFile) {
-		tmpOpen := fileio.EasyOpen(inFile)
+	if vcf.IsVcfFile(s.InFile) {
+		tmpOpen := fileio.EasyOpen(s.InFile)
 		header := vcf.ReadHeader(tmpOpen)
 		vcf.NewWriteHeader(out, header)
 		err = tmpOpen.Close()
@@ -59,7 +71,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	}
 
 	//second task, read in intervals, find chain, and convert to new interval
-	inChan := lift.GoReadToChan(inFile)
+	inChan := lift.GoReadToChan(s.InFile)
 	var overlap []interval.Interval
 	for i := range inChan {
 		overlap = interval.Query(tree, i, "any")
@@ -71,15 +83,20 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 			_, err = fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
-		} else if !minMatchPass(overlap[0].(chain.Chain), i, minMatch) {
+		} else if !minMatchPass(overlap[0].(chain.Chain), i, s.MinMatch) {
 			a, b = lift.MatchProportion(overlap[0].(chain.Chain), i)
 			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(chain.Chain).Score)
 			exception.PanicOnErr(err)
 			i.WriteToFileHandle(un)
+		} else if s.StrictBorders && !lift.StrictBorderCheck(overlap[0].(chain.Chain), i){
+			_, err = fmt.Fprintf(un, "Record below failed the strict border check:\n")
+			exception.PanicOnErr(err)
+			i.WriteToFileHandle(un)
 		} else {
 			i = i.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(chain.Chain), i)).(lift.Lift) //now i is 1-based and we can assert VCF.
+
 			//special check for lifting over VCF files
-			if faFile != "" {
+			if s.FaFile != "" {
 				//faFile will be given if we are lifting over VCF data.
 				currVcf = i.(vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
@@ -93,7 +110,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 					i.WriteToFileHandle(un)
 				} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
 					//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
-					if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
+					if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && s.Verbose > 0 {
 						_, err = fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
 						exception.PanicOnErr(err)
 					}
@@ -104,7 +121,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 					exception.PanicOnErr(err)
 					i.WriteToFileHandle(un)
 					currVcf = vcf.InvertVcf(currVcf)
-					if swapAlleleAB {
+					if s.SwapAB {
 						swapInfoAlleles(&currVcf)
 					}
 					i = &currVcf
@@ -192,6 +209,7 @@ func main() {
 	var minMatch *float64 = flag.Float64("minMatch", 0.95, "Specify the minimum proportion of matching bases required for a successful lift operation.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable debug prints.")
 	var swapAlleleAB *bool = flag.Bool("swapAlleleAB", false, "Swap 'Allele_A' and 'Allele_B' designations in the INFO field if ref/alt are inverted during lift.")
+	var strictBorders *bool = flag.Bool("strictBorders", false, "When true, intervals with ChromStart or ChromEnd in TBases (gaps in the query) will be unmapped. Recommended.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -207,5 +225,18 @@ func main() {
 	inFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 	unMapped := flag.Arg(3)
-	liftCoordinates(chainFile, inFile, outFile, *faFile, unMapped, *minMatch, *swapAlleleAB, *verbose)
+
+	s := Settings{
+		InFile: inFile,
+		OutFile: outFile,
+		UnmappedFile: unMapped,
+		ChainFile:          chainFile,
+		FaFile:             *faFile,
+		MinMatch: *minMatch,
+		Verbose:            *verbose,
+		SwapAB:             *swapAlleleAB,
+		StrictBorders: *strictBorders,
+	}
+
+	liftCoordinates(s)
 }
