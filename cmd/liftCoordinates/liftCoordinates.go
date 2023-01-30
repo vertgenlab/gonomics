@@ -209,7 +209,7 @@ func main() {
 	var minMatch *float64 = flag.Float64("minMatch", 0.95, "Specify the minimum proportion of matching bases required for a successful lift operation.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable debug prints.")
 	var swapAlleleAB *bool = flag.Bool("swapAlleleAB", false, "Swap 'Allele_A' and 'Allele_B' designations in the INFO field if ref/alt are inverted during lift.")
-	var strictBorders *bool = flag.Bool("strictBorders", false, "When true, intervals with ChromStart or ChromEnd in TBases (gaps in the query) will be unmapped. Recommended.")
+	var strictBorders *bool = flag.Bool("strictBorders", false, "When true, intervals with ChromStart or ChromEnd in TBases (gaps in the query) will be unmapped. Recommended for vcfs.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

@@ -127,6 +127,6 @@ func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 	if !border {//only return if false, otherwise we have to check chromEnd.
 		return false
 	}
-	_, border = chain.TPosToQPos(c, i.GetChromEnd())
+	_, border = chain.TPosToQPos(c, i.GetChromEnd() - 1)//interval ranges are open right so we want ChromEnd - 1
 	return border
 }
