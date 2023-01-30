@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"testing"
@@ -11,54 +10,79 @@ import (
 
 var LiftTests = []struct {
 	inputFile          string
+	outFile            string
 	expectedOutputFile string
+	unmappedFile       string
 	chainFile          string
+	minMatch           float64
 	faFile             string
 	verbose            int
 	swapAB             bool
+	strictBorders      bool
 }{
-	//{"testdata/input.bed", "testdata/expected.bed", "testdata/test.chain", ""},
-	//{"testdata/Pollard.HARs.hg19.trimmed.bed", "testdata/Pollard.HARs.hg38.UCSC.trimmed.bed", "testdata/hg19ToHg38.over.chain", ""},
-	{"testdata/input.vcf", "testdata/expected.vcf", "testdata/test.chain", "testdata/test.fa", 0, false},
-	{"testdata/input_swapAB.vcf", "testdata/expected_swapAB.vcf", "testdata/test.chain", "testdata/test.fa", 0, true},
+	{inputFile: "testdata/input.vcf",
+		outFile:            "testdata/tmp.vcf",
+		expectedOutputFile: "testdata/expected.vcf",
+		unmappedFile:       "testdata/unmapped.txt",
+		chainFile:          "testdata/test.chain",
+		minMatch:           0.95,
+		faFile:             "testdata/test.fa",
+		verbose:            0,
+		swapAB:             false,
+		strictBorders:      false},
+	{"testdata/input_swapAB.vcf",
+		"testdata/testSwap.vcf",
+		"testdata/expected_swapAB.vcf",
+		"testdata/swap.unmapped.txt",
+		"testdata/test.chain",
+		0.95,
+		"testdata/test.fa",
+		0,
+		true,
+		false},
 }
 
 func TestLift(t *testing.T) {
+	var err error
+	var s Settings
+
 	for _, v := range LiftTests {
-		liftCoordinates(v.chainFile, v.inputFile, "tmp.vcf", v.faFile, "tmp.unmapped", 0.95, v.swapAB, 0)
+		s = Settings{
+			InFile:        v.inputFile,
+			OutFile:       v.outFile,
+			UnmappedFile:  v.unmappedFile,
+			ChainFile:     v.chainFile,
+			FaFile:        v.faFile,
+			MinMatch:      v.minMatch,
+			Verbose:       v.verbose,
+			SwapAB:        v.swapAB,
+			StrictBorders: v.strictBorders,
+		}
+		liftCoordinates(s)
 
 		if vcf.IsVcfFile(v.inputFile) {
-			liftCoordinates(v.chainFile, v.inputFile, "tmp.vcf", v.faFile, "tmp.unmapped", 0.95, v.swapAB, 0)
-			records, _ := vcf.Read("tmp.vcf")
+			liftCoordinates(s)
+			records, _ := vcf.Read(v.outFile)
 			expected, _ := vcf.Read(v.expectedOutputFile)
 			if !vcf.AllEqual(records, expected) {
-				fmt.Println("TEST VALUES")
-				fmt.Println(records)
-				fmt.Println(expected)
 				t.Errorf("Error in Lift for vcf.")
-			}
-			err := os.Remove("tmp.vcf")
-			if err != nil {
-				common.ExitIfError(err)
-			}
-			err = os.Remove("tmp.unmapped")
-			if err != nil {
-				common.ExitIfError(err)
+			} else {
+				err = os.Remove(v.outFile)
+				exception.PanicOnErr(err)
+				err = os.Remove(v.unmappedFile)
+				exception.PanicOnErr(err)
 			}
 		} else {
-			liftCoordinates(v.chainFile, v.inputFile, "tmp.bed", v.faFile, "tmp.unmapped", 0.95, v.swapAB, 0)
+			liftCoordinates(s)
 			records := bed.Read("tmp.bed")
 			expected := bed.Read(v.expectedOutputFile)
 			if !bed.AllAreEqual(records, expected) {
 				t.Errorf("Error in Lift for bed.")
-			}
-			err := os.Remove("tmp.bed")
-			if err != nil {
-				common.ExitIfError(err)
-			}
-			err = os.Remove("tmp.unmapped")
-			if err != nil {
-				common.ExitIfError(err)
+			} else {
+				err = os.Remove("tmp.bed")
+				exception.PanicOnErr(err)
+				err = os.Remove("tmp.unmapped")
+				exception.PanicOnErr(err)
 			}
 		}
 	}

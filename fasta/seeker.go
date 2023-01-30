@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 // Seeker enables random access of fasta sequences using a pre-computed index.
@@ -44,6 +45,9 @@ func NewSeeker(fasta, index string) *Seeker {
 	exception.FatalOnErr(err)
 
 	if index == "" {
+		if strings.HasSuffix(fasta, ".gz") {
+			log.Fatalf("Fasta seeker is not compatible with gzipped files. Please unzip the fasta file.")
+		}
 		index = fasta + ".fai"
 	}
 	sr.idx = readIndex(index)

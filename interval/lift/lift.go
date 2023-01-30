@@ -69,10 +69,11 @@ func ReadToChan(inputFile string, send chan<- Lift) {
 //LiftCoordinatesWithChain returns the update coordinates for an input Lift interface based on an input chain.
 func LiftCoordinatesWithChain(c chain.Chain, i Lift) (string, int, int) {
 	var newStart, newEnd int
-	newStart = chain.TPosToQPos(c, i.GetChromStart())
+	newStart, _ = chain.TPosToQPos(c, i.GetChromStart())
 	/* The minus one/plus one handles when a region ends
 	with a structural variant and ensures correct placement of the end in the new assembly. */
-	newEnd = chain.TPosToQPos(c, i.GetChromEnd()-1) + 1
+	newEnd, _ = chain.TPosToQPos(c, i.GetChromEnd()-1)
+	newEnd++ //correction for the GetChromEnd -1 on the line above
 	if !c.QStrand { //valid bed formats must have start < end. So this correction is made for intervals lifted to the negative strand.
 		newStart, newEnd = newEnd, newStart
 		newStart += 1 //these lines are corrections for the open/closed interval start and end.
@@ -117,4 +118,15 @@ func MatchProportion(c chain.Chain, i interval.Interval) (float64, float64) {
 		return 0, 0
 	}
 	return float64(match) / float64(match+dT), float64(match) / float64(match+dQ)
+}
+
+//StrictBorderCheck returns true if the TPos of both the ChromStart and ChromEnd of an interval fall within the chain Size, not TBases.
+func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
+	var border bool
+	_, border = chain.TPosToQPos(c, i.GetChromStart())
+	if !border {//only return if false, otherwise we have to check chromEnd.
+		return false
+	}
+	_, border = chain.TPosToQPos(c, i.GetChromEnd() - 1)//interval ranges are open right so we want ChromEnd - 1
+	return border
 }
