@@ -144,6 +144,9 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 
 		if useRange {
 			for i = b.ChromStart; i < b.ChromEnd; i++ {
+				if wigSlice[chromIndex].Values[i] != Missing {
+					log.Fatalf("Error: overlapping bed elements detected in bed file. Run bedMerge and rerun.")
+				}
 				if method == "Name" {
 					wigSlice[chromIndex].Values[i] = common.StringToFloat64(b.Name)
 				} else if method == "Score" {
