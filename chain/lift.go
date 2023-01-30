@@ -45,7 +45,7 @@ func TPosToQPos(c Chain, TPos int) (int, bool) {
 			}
 			currT += c.Alignment[i].Size
 			currQ -= c.Alignment[i].Size
-			if currT+c.Alignment[i].Size > TPos {
+			if currT+c.Alignment[i].TBases > TPos {
 				return currQ, false
 			}
 			currT += c.Alignment[i].TBases
