@@ -10,20 +10,20 @@ import (
 )
 
 var GenesToPromoterBedTests = []struct {
-	gFile        string
-	cFile        string
-	upstream     int
-	downstream   int
-	outFile      string
-	expectedFile string
+	gFile             string
+	cFile             string
+	upstream          int
+	downstream        int
+	outFile           string
+	expectedFile      string
 	expectedCanonFile string
 }{
 	{gFile: "testdata/CFTR.test.gtf",
-		cFile: "testdata/chr7.chrom.sizes",
-		upstream: 500,
-		downstream: 2000,
-		outFile: "testdata/tmp.bed",
-		expectedFile: "testdata/GenesToPromoter.expected.bed",
+		cFile:             "testdata/chr7.chrom.sizes",
+		upstream:          500,
+		downstream:        2000,
+		outFile:           "testdata/tmp.bed",
+		expectedFile:      "testdata/GenesToPromoter.expected.bed",
 		expectedCanonFile: "testdata/GenesToPromoter.expected.bed"},
 }
 
@@ -68,17 +68,17 @@ func TestGenesToPromoterBed(t *testing.T) {
 }
 
 var GenesToTssBedTests = []struct {
-	gFile        string
-	cFile        string
-	outFile      string
-	expectedFile string
+	gFile             string
+	cFile             string
+	outFile           string
+	expectedFile      string
 	expectedCanonFile string
 }{
 	{gFile: "testdata/CFTR.test.gtf",
-		cFile: "testdata/chr7.chrom.sizes",
-		outFile: "testdata/tmp.Tss.bed",
-		expectedFile: "testdata/GenesToTss.expected.bed",
-	expectedCanonFile: "testdata/GenesToTss.expected.bed"},
+		cFile:             "testdata/chr7.chrom.sizes",
+		outFile:           "testdata/tmp.Tss.bed",
+		expectedFile:      "testdata/GenesToTss.expected.bed",
+		expectedCanonFile: "testdata/GenesToTss.expected.bed"},
 }
 
 func TestGenesToTssBed(t *testing.T) {
