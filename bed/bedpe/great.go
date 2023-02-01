@@ -57,7 +57,7 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 			Name:              currNearestBed.Name,
 			Score:             0,
 			FieldsInitialized: 5}
-		if currNearestBed.Score < midpointBedpe[j].B.ChromStart {
+		if currNearestBed.Score < midpointBedpe[j].B.ChromStart { // currNearestBed.Score is the abolute position of the TSS
 			currAnswerB.Score = midpointBedpe[j].B.ChromStart - currNearestBed.Score
 		} else {
 			currAnswerB.Score = currNearestBed.Score - midpointBedpe[j].B.ChromStart
