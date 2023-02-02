@@ -255,8 +255,8 @@ func copyPile(p Pile) Pile {
 }
 
 var PileConsensusTests = []struct {
-	p Pile
-	c Consensus
+	p                 Pile
+	c                 Consensus
 	substitutionsOnly bool
 }{
 	{p: Pile{
