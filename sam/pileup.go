@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
 
@@ -436,4 +437,133 @@ func sclipTerminalIns(s *Sam) {
 func (p *Pile) String() string {
 	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCountF: %v\tCountR: %v\tInsCountF: %v\tInsCountR: %v\tDelCountF: %v\tDelCountR: %v\tNext: %p\tPrev: %p",
 		p.RefIdx, p.Pos, p.CountF, p.CountR, p.InsCountF, p.InsCountR, p.DelCountF, p.DelCountR, p.next, p.prev)
+}
+
+type consensusType byte
+
+const (
+	Base consensusType = 0
+	Insertion consensusType = 1
+	Deletion consensusType = 2
+	Undefined consensusType = 3
+)
+
+type Consensus struct {
+	Base dna.Base
+	Insertion []dna.Base
+	Deletion int
+	Type consensusType
+}
+
+
+func PileConsensus(p Pile) Consensus {
+	// first we check if consensus is a base
+	var max int = p.CountF[dna.A] + p.CountR[dna.A]
+	tiedConsensus := make([]Consensus, 1)
+	tiedConsensus[0] = Consensus{Base: dna.A, Type: Base}
+
+	max, tiedConsensus = getMaxBase(p, max, dna.C, tiedConsensus)
+	max, tiedConsensus = getMaxBase(p, max, dna.G, tiedConsensus)
+	max, tiedConsensus = getMaxBase(p, max, dna.T, tiedConsensus)
+	//question for Dan: main version checks dna.Gap here, is that necessary if we check the deletion field?
+	max, tiedConsensus = getMaxInsertion(p, max, tiedConsensus)
+	max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
+
+	if max < 1 {
+		return Consensus{Type: Undefined}
+	}
+	if len(tiedConsensus) == 1 {
+		return tiedConsensus[0]
+	}
+	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
+}
+
+func getMaxDeletion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Consensus) {
+	var count, i int
+	var inMap bool
+	var seenOnPosStrand = make(map[int]int, 0)
+	for i = range p.DelCountF {
+		seenOnPosStrand[i] = 1
+		count = p.DelCountF[i]
+		if _, inMap = p.DelCountR[i]; inMap {
+			count += p.DelCountR[i]
+		}
+		if count > currMax {
+			tiedConsensus = tiedConsensus[:1]
+			tiedConsensus[0] = Consensus{Deletion: i, Type: Deletion}
+			currMax = count
+		}
+		if count == currMax {
+			tiedConsensus = append(tiedConsensus, Consensus{Deletion: i, Type: Deletion})
+		}
+	}
+
+	for i = range p.DelCountR {
+		if _, inMap = seenOnPosStrand[i]; !inMap {
+			count = p.DelCountR[i]
+			if count > currMax {
+				tiedConsensus = tiedConsensus[:1]
+				tiedConsensus[0] = Consensus{Deletion: i, Type: Deletion}
+				currMax = count
+			}
+			if count == currMax {
+				tiedConsensus = append(tiedConsensus, Consensus{Deletion:i, Type: Deletion})
+			}
+		}
+	}
+	return currMax, tiedConsensus
+}
+
+
+func getMaxInsertion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Consensus) {
+	var count int
+	var inMap bool
+	var seenOnPosStrand = make(map[string]int, 0)
+	for i := range p.InsCountF {
+		seenOnPosStrand[i] = 1
+		count = p.InsCountF[i]
+		if _, inMap = p.InsCountR[i]; inMap {
+			count += p.InsCountR[i]
+		}
+		if count > currMax {
+			tiedConsensus = tiedConsensus[:1]
+			tiedConsensus[0] = Consensus{Insertion: dna.StringToBases(i), Type: Insertion}
+			currMax = count
+		}
+		if count == currMax {
+			tiedConsensus = append(tiedConsensus, Consensus{Insertion: dna.StringToBases(i), Type: Insertion})
+		}
+	}
+
+	//we have to check the p.InsCountR map for any insertions observed only on the minus strand.
+	for i := range p.InsCountR {
+		if _, inMap = seenOnPosStrand[i]; !inMap {
+			count = p.InsCountR[i] //we don't have to sum since we are guaranteed not to have seen this insertion on the positive strand.
+			if count > currMax {
+				tiedConsensus = tiedConsensus[:1]
+				tiedConsensus[0] = Consensus{Insertion: dna.StringToBases(i), Type: Insertion}
+				currMax = count
+			}
+			if count == currMax {
+				tiedConsensus = append(tiedConsensus, Consensus{Insertion: dna.StringToBases(i), Type: Insertion})
+			}
+		}
+	}
+
+	return currMax, tiedConsensus
+}
+
+func getMaxBase(p Pile, currMax int, testBase dna.Base, tiedConsensus []Consensus) (int, []Consensus) {
+	var count int = p.CountF[testBase] + p.CountR[testBase]
+	if count > currMax {
+		tiedConsensus = tiedConsensus[:1] // reset tied bases
+		tiedConsensus[0] = Consensus{Base: testBase, Type: Base}
+		return count, tiedConsensus
+	}
+
+	if count == currMax {
+		tiedConsensus = append(tiedConsensus, Consensus{Base: testBase, Type: Base})
+	}
+
+	return currMax, tiedConsensus
 }
