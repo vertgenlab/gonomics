@@ -258,34 +258,34 @@ var PileConsensusTests = []struct {
 	p Pile
 	c Consensus
 }{
-	{p: Pile {
-		CountF: [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		CountR: [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{p: Pile{
+		CountF:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		CountR:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		InsCountF: map[string]int{"AAT": 2, "AC": 1},
 		InsCountR: map[string]int{"AAT": 1, "AC": 3},
 		DelCountF: map[int]int{6: 16, 5: 2},
 		DelCountR: map[int]int{6: 19, 5: 1},
 	},
-	c: Consensus {
-		Base: 0,
-		Insertion: []dna.Base{},
-		Deletion: 6,
-		Type: Deletion,
+		c: Consensus{
+			Base:      0,
+			Insertion: []dna.Base{},
+			Deletion:  6,
+			Type:      Deletion,
+		},
 	},
-	},
-	{p: Pile {
-		CountF: [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		CountR: [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{p: Pile{
+		CountF:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		CountR:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		InsCountF: map[string]int{},
 		InsCountR: map[string]int{},
 		DelCountF: map[int]int{},
 		DelCountR: map[int]int{},
 	},
-		c: Consensus {
-			Base: 0,
+		c: Consensus{
+			Base:      0,
 			Insertion: []dna.Base{},
-			Deletion: 0,
-			Type: Undefined,
+			Deletion:  0,
+			Type:      Undefined,
 		},
 	},
 	{p: Pile{
@@ -340,13 +340,7 @@ func TestPileConsensus(t *testing.T) {
 			if v.c.Deletion != answer.Deletion {
 				t.Errorf("Error in PileConsensus. Observed consensus deletion did not match expected.")
 			}
-		// we already checked type so no need to check anything else for undefined consensus.
+			// we already checked type so no need to check anything else for undefined consensus.
 		}
 	}
 }
-
-
-
-
-
-

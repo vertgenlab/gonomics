@@ -442,19 +442,18 @@ func (p *Pile) String() string {
 type consensusType byte
 
 const (
-	Base consensusType = 0
+	Base      consensusType = 0
 	Insertion consensusType = 1
-	Deletion consensusType = 2
+	Deletion  consensusType = 2
 	Undefined consensusType = 3
 )
 
 type Consensus struct {
-	Base dna.Base
+	Base      dna.Base
 	Insertion []dna.Base
-	Deletion int
-	Type consensusType
+	Deletion  int
+	Type      consensusType
 }
-
 
 func PileConsensus(p Pile) Consensus {
 	// first we check if consensus is a base
@@ -507,13 +506,12 @@ func getMaxDeletion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Cons
 				currMax = count
 			}
 			if count == currMax {
-				tiedConsensus = append(tiedConsensus, Consensus{Deletion:i, Type: Deletion})
+				tiedConsensus = append(tiedConsensus, Consensus{Deletion: i, Type: Deletion})
 			}
 		}
 	}
 	return currMax, tiedConsensus
 }
-
 
 func getMaxInsertion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Consensus) {
 	var count int
