@@ -439,6 +439,8 @@ func (p *Pile) String() string {
 		p.RefIdx, p.Pos, p.CountF, p.CountR, p.InsCountF, p.InsCountR, p.DelCountF, p.DelCountR, p.next, p.prev)
 }
 
+// consensusType represents the possible types of consensus variants in a Pile,
+// which includes Bases, INDELs, or undefined (in the case where the Pile contains no data).
 type consensusType byte
 
 const (
@@ -448,6 +450,7 @@ const (
 	Undefined consensusType = 3
 )
 
+// Consensus contains information on the most observed variant in a Pile struct.
 type Consensus struct {
 	Base      dna.Base
 	Insertion []dna.Base
@@ -455,6 +458,8 @@ type Consensus struct {
 	Type      consensusType
 }
 
+// PileConsensus returns a Consensus struct from an input Pile struct
+// representing information about the consensus variant observed in that Pile.
 func PileConsensus(p Pile) Consensus {
 	// first we check if consensus is a base
 	var max int = p.CountF[dna.A] + p.CountR[dna.A]
@@ -477,6 +482,7 @@ func PileConsensus(p Pile) Consensus {
 	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
 }
 
+// helper function of PileConsensus, finds the max deletion in a Pile struct.
 func getMaxDeletion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Consensus) {
 	var count, i int
 	var inMap bool
@@ -513,6 +519,7 @@ func getMaxDeletion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Cons
 	return currMax, tiedConsensus
 }
 
+// helper function of PileConsensus, finds the max insertion in a Pile struct.
 func getMaxInsertion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Consensus) {
 	var count int
 	var inMap bool
@@ -551,6 +558,7 @@ func getMaxInsertion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Con
 	return currMax, tiedConsensus
 }
 
+// getMaxBase is a helper function of PileConsensus, finds the consensus base in a Pile struct.
 func getMaxBase(p Pile, currMax int, testBase dna.Base, tiedConsensus []Consensus) (int, []Consensus) {
 	var count int = p.CountF[testBase] + p.CountR[testBase]
 	if count > currMax {
