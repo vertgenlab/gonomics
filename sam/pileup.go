@@ -460,7 +460,7 @@ type Consensus struct {
 
 // PileConsensus returns a Consensus struct from an input Pile struct
 // representing information about the consensus variant observed in that Pile.
-func PileConsensus(p Pile) Consensus {
+func PileConsensus(p Pile, substitutionsOnly bool) Consensus {
 	// first we check if consensus is a base
 	var max int = p.CountF[dna.A] + p.CountR[dna.A]
 	tiedConsensus := make([]Consensus, 1)
@@ -470,8 +470,10 @@ func PileConsensus(p Pile) Consensus {
 	max, tiedConsensus = getMaxBase(p, max, dna.G, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.T, tiedConsensus)
 	//question for Dan: main version checks dna.Gap here, is that necessary if we check the deletion field?
-	max, tiedConsensus = getMaxInsertion(p, max, tiedConsensus)
-	max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
+	if !substitutionsOnly {
+		max, tiedConsensus = getMaxInsertion(p, max, tiedConsensus)
+		max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
+	}
 
 	if max < 1 {
 		return Consensus{Type: Undefined}

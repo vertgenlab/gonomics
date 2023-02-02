@@ -257,6 +257,7 @@ func copyPile(p Pile) Pile {
 var PileConsensusTests = []struct {
 	p Pile
 	c Consensus
+	substitutionsOnly bool
 }{
 	{p: Pile{
 		CountF:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -272,6 +273,7 @@ var PileConsensusTests = []struct {
 			Deletion:  6,
 			Type:      Deletion,
 		},
+		substitutionsOnly: false,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -287,6 +289,7 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Undefined,
 		},
+		substitutionsOnly: false,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -302,6 +305,7 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Base,
 		},
+		substitutionsOnly: false,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -317,13 +321,30 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Insertion,
 		},
+		substitutionsOnly: false,
+	},
+	{p: Pile{
+		CountF:    [13]int{0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		CountR:    [13]int{0, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		InsCountF: map[string]int{"AACTT": 42, "AC": 1},
+		InsCountR: map[string]int{"AACTT": 49, "AC": 3},
+		DelCountF: map[int]int{6: 2, 5: 2},
+		DelCountR: map[int]int{6: 4, 5: 1},
+	},
+		c: Consensus{
+			Base:      1,
+			Insertion: []dna.Base{},
+			Deletion:  0,
+			Type:      Base,
+		},
+		substitutionsOnly: true,
 	},
 }
 
 func TestPileConsensus(t *testing.T) {
 	var answer Consensus
 	for _, v := range PileConsensusTests {
-		answer = PileConsensus(v.p)
+		answer = PileConsensus(v.p, v.substitutionsOnly)
 		if answer.Type != v.c.Type {
 			t.Errorf("Error in PileConsensus. Observed consensus type was not as expected.")
 		}
