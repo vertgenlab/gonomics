@@ -16,12 +16,12 @@ import (
 )
 
 type Settings struct {
-	SamFileName string
-	RefFile string
-	OutFile string
-	VcfFile string
-	ChainFile string
-	SubstitutionsOnly bool
+	SamFileName        string
+	RefFile            string
+	OutFile            string
+	VcfFile            string
+	ChainFile          string
+	SubstitutionsOnly  bool
 	InsertionThreshold float64
 }
 
@@ -32,7 +32,7 @@ func samConsensus(s Settings) {
 	var outVcfFile *fileio.EasyWriter
 	var currConsensus sam.Consensus
 	var currChrom string
-	var answerPos int//position in the currChrom of the answer
+	var answerPos int //position in the currChrom of the answer
 	var firstTime bool = true
 	var emptyRoomInBuffer, refPos, i int
 	var newBufferRoom []dna.Base = make([]dna.Base, bufferSize)
@@ -77,7 +77,7 @@ func samConsensus(s Settings) {
 			answerPos, refPos = 0, 0
 			firstTime = false
 		}
-		if currChrom != header.Chroms[p.RefIdx].Name {//if we've moved onto a new chromosome.
+		if currChrom != header.Chroms[p.RefIdx].Name { //if we've moved onto a new chromosome.
 			for refPos < len(refMap[currChrom]) {
 				answer[currFaIndex].Seq[answerPos] = refMap[currChrom][refPos]
 				refPos++
@@ -88,7 +88,7 @@ func samConsensus(s Settings) {
 					emptyRoomInBuffer += bufferSize
 				}
 			}
-			answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq) - emptyRoomInBuffer]//clear out empty buffer positions
+			answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq)-emptyRoomInBuffer] //clear out empty buffer positions
 			//now we set up the new chromosome
 			currChrom = header.Chroms[p.RefIdx].Name
 			currFaIndex = getIndexForName(answer, currChrom)
@@ -97,8 +97,8 @@ func samConsensus(s Settings) {
 		}
 
 		//catch up to the current pile position, handles reference positions with no Pile coverage.
-		for refPos < int(p.Pos - 1) {
-			answer[currFaIndex].Seq[answerPos] = refMap[currChrom][refPos]//refMap is lower case
+		for refPos < int(p.Pos-1) {
+			answer[currFaIndex].Seq[answerPos] = refMap[currChrom][refPos] //refMap is lower case
 			emptyRoomInBuffer--
 			answerPos++
 			refPos++
@@ -111,12 +111,12 @@ func samConsensus(s Settings) {
 		currConsensus = sam.PileConsensus(p, s.SubstitutionsOnly, s.InsertionThreshold)
 
 		//now refPos should equal p.Pos - 1, because of our for loop before
-		if refPos != int(p.Pos - 1) {
+		if refPos != int(p.Pos-1) {
 			log.Fatalf("Something went wrong. RefPos is not equal to p.Pos -1.")
 		}
 		switch currConsensus.Type {
 		case sam.Undefined:
-			answer[currFaIndex].Seq[answerPos] = refMap[currChrom][refPos]//refMap is lowercase so we'll get lower case in the answer
+			answer[currFaIndex].Seq[answerPos] = refMap[currChrom][refPos] //refMap is lowercase so we'll get lower case in the answer
 			emptyRoomInBuffer--
 			if emptyRoomInBuffer < 1 {
 				answer[currFaIndex].Seq = append(answer[currFaIndex].Seq, newBufferRoom...)
@@ -159,12 +159,12 @@ func samConsensus(s Settings) {
 				exception.PanicOnErr(err)
 			}
 			refPos++
-		case sam.Deletion://this pile corresponds to the deleted position, so nothing is written here, we skip for the duration of the deletion.
+		case sam.Deletion: //this pile corresponds to the deleted position, so nothing is written here, we skip for the duration of the deletion.
 			positionsToSkip = currConsensus.Deletion - 1
 			if s.VcfFile != "" {
-				refAllele = make([]dna.Base, currConsensus.Deletion + 1) // make a dna.Base slice the length of the deletion + 1 (to include base before deletion)
+				refAllele = make([]dna.Base, currConsensus.Deletion+1) // make a dna.Base slice the length of the deletion + 1 (to include base before deletion)
 				for i = range refAllele {
-					refAllele[i] = dna.ToUpper(refMap[currChrom][refPos + i])//starts with refPos (p.Pos - 1) to include the position before the deletion in the VCF
+					refAllele[i] = dna.ToUpper(refMap[currChrom][refPos+i]) //starts with refPos (p.Pos - 1) to include the position before the deletion in the VCF
 				}
 				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BasesToString(refAllele), dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), ".", ".", ".", ".")
 				exception.PanicOnErr(err)
@@ -179,7 +179,7 @@ func samConsensus(s Settings) {
 		answerPos++
 		emptyRoomInBuffer--
 	}
-	answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq) - emptyRoomInBuffer]
+	answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq)-emptyRoomInBuffer]
 
 	if s.VcfFile != "" {
 		err = outVcfFile.Close()
@@ -229,13 +229,13 @@ func main() {
 	refFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	s := Settings {
-		SamFileName: inFile,
-		RefFile: refFile,
-		OutFile: outFile,
-		VcfFile: *vcfOutFile,
-		SubstitutionsOnly: *substitutionsOnly,
-		ChainFile: *chainOutFile,
+	s := Settings{
+		SamFileName:        inFile,
+		RefFile:            refFile,
+		OutFile:            outFile,
+		VcfFile:            *vcfOutFile,
+		SubstitutionsOnly:  *substitutionsOnly,
+		ChainFile:          *chainOutFile,
 		InsertionThreshold: *insertionThreshold,
 	}
 

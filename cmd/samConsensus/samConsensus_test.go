@@ -9,34 +9,34 @@ import (
 )
 
 var samConsensusTests = []struct {
-	inFile           string
-	refFile          string
-	outFile string
-	vcfFile string
-	chainFile string
-	substitutionsOnly bool
+	inFile             string
+	refFile            string
+	outFile            string
+	vcfFile            string
+	chainFile          string
+	substitutionsOnly  bool
 	insertionThreshold float64
-	outFile_expected string
-	vcfFile_expected string
+	outFile_expected   string
+	vcfFile_expected   string
 }{
 	{inFile: "testdata/test.sam",
-		refFile: "testdata/test.ref.fa",
-		outFile: "testdata/tmpOutFile.fa",
-		vcfFile: "testdata/tmpVcfFile.vcf",
-		chainFile: "",
-		substitutionsOnly: true,
+		refFile:            "testdata/test.ref.fa",
+		outFile:            "testdata/tmpOutFile.fa",
+		vcfFile:            "testdata/tmpVcfFile.vcf",
+		chainFile:          "",
+		substitutionsOnly:  true,
 		insertionThreshold: 0.9,
-		outFile_expected: "testdata/test.out.fa",
-		vcfFile_expected: "testdata/test.out.vcf"},
+		outFile_expected:   "testdata/test.out.fa",
+		vcfFile_expected:   "testdata/test.out.vcf"},
 	{inFile: "testdata/test.sam",
-		refFile: "testdata/test.ref.fa",
-		outFile: "testdata/tmpOutFile.indel.fa",
-		vcfFile: "testdata/tmpVcfFile.indel.vcf",
-		chainFile: "",
-		substitutionsOnly: false,
+		refFile:            "testdata/test.ref.fa",
+		outFile:            "testdata/tmpOutFile.indel.fa",
+		vcfFile:            "testdata/tmpVcfFile.indel.vcf",
+		chainFile:          "",
+		substitutionsOnly:  false,
 		insertionThreshold: 0.9,
-		outFile_expected: "testdata/test.out.indel.fa",
-		vcfFile_expected: "testdata/test.out.indel.vcf"},
+		outFile_expected:   "testdata/test.out.indel.fa",
+		vcfFile_expected:   "testdata/test.out.indel.vcf"},
 }
 
 func TestSamConsensus(t *testing.T) {
@@ -44,13 +44,13 @@ func TestSamConsensus(t *testing.T) {
 	var err error
 	var s Settings
 	for _, v := range samConsensusTests {
-		s = Settings {
-			SamFileName: v.inFile,
-			RefFile: v.refFile,
-			OutFile: v.outFile,
-			VcfFile: v.vcfFile,
-			ChainFile: v.chainFile,
-			SubstitutionsOnly: v.substitutionsOnly,
+		s = Settings{
+			SamFileName:        v.inFile,
+			RefFile:            v.refFile,
+			OutFile:            v.outFile,
+			VcfFile:            v.vcfFile,
+			ChainFile:          v.chainFile,
+			SubstitutionsOnly:  v.substitutionsOnly,
 			InsertionThreshold: v.insertionThreshold,
 		}
 		samConsensus(s)

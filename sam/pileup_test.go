@@ -255,9 +255,9 @@ func copyPile(p Pile) Pile {
 }
 
 var PileConsensusTests = []struct {
-	p                 Pile
-	c                 Consensus
-	substitutionsOnly bool
+	p                  Pile
+	c                  Consensus
+	substitutionsOnly  bool
 	insertionThreshold float64
 }{
 	{p: Pile{
@@ -274,7 +274,7 @@ var PileConsensusTests = []struct {
 			Deletion:  6,
 			Type:      Deletion,
 		},
-		substitutionsOnly: false,
+		substitutionsOnly:  false,
 		insertionThreshold: 0.1,
 	},
 	{p: Pile{
@@ -291,7 +291,7 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Undefined,
 		},
-		substitutionsOnly: false,
+		substitutionsOnly:  false,
 		insertionThreshold: 0.1,
 	},
 	{p: Pile{
@@ -308,7 +308,7 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Base,
 		},
-		substitutionsOnly: false,
+		substitutionsOnly:  false,
 		insertionThreshold: 0.1,
 	},
 	{p: Pile{
@@ -325,7 +325,7 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Insertion,
 		},
-		substitutionsOnly: false,
+		substitutionsOnly:  false,
 		insertionThreshold: 0.1,
 	},
 	{p: Pile{
@@ -342,7 +342,7 @@ var PileConsensusTests = []struct {
 			Deletion:  0,
 			Type:      Base,
 		},
-		substitutionsOnly: true,
+		substitutionsOnly:  true,
 		insertionThreshold: 0.1,
 	},
 }
@@ -371,11 +371,3 @@ func TestPileConsensus(t *testing.T) {
 		}
 	}
 }
-
-
-
-
-
-
-
-

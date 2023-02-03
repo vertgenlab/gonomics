@@ -488,19 +488,18 @@ func PileConsensus(p Pile, substitutionsOnly bool, insertionThreshold float64) C
 	max, tiedConsensus = getMaxBase(p, max, dna.C, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.G, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.T, tiedConsensus)
-	if substitutionsOnly {//legacy feature
+	if substitutionsOnly { //legacy feature
 		//max, tiedConsensus = getMaxBase(p, max, dna.Gap, tiedConsensus) Dan I know that this is a legacy featuer but it's not technically substitutionsOnly, coordinates will change in the output
 		if max < 1 {
 			return Consensus{Type: Undefined}
 		}
-		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]//we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
+		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))] //we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
 	} else {
 		max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
 		consensusBeforeDeletion = tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
 		return getMaxInsertion(p, consensusBeforeDeletion, insertionThreshold)
 	}
 }
-
 
 // helper function of PileConsensus, finds the max insertion in a Pile struct.
 // InsThreshold is the proportion of Base reads for which an insertion needs to be observed to be called.
