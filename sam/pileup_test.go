@@ -258,6 +258,7 @@ var PileConsensusTests = []struct {
 	p                 Pile
 	c                 Consensus
 	substitutionsOnly bool
+	insertionThreshold float64
 }{
 	{p: Pile{
 		CountF:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -274,6 +275,7 @@ var PileConsensusTests = []struct {
 			Type:      Deletion,
 		},
 		substitutionsOnly: false,
+		insertionThreshold: 0.1,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -290,6 +292,7 @@ var PileConsensusTests = []struct {
 			Type:      Undefined,
 		},
 		substitutionsOnly: false,
+		insertionThreshold: 0.1,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -306,6 +309,7 @@ var PileConsensusTests = []struct {
 			Type:      Base,
 		},
 		substitutionsOnly: false,
+		insertionThreshold: 0.1,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -322,6 +326,7 @@ var PileConsensusTests = []struct {
 			Type:      Insertion,
 		},
 		substitutionsOnly: false,
+		insertionThreshold: 0.1,
 	},
 	{p: Pile{
 		CountF:    [13]int{0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -338,13 +343,14 @@ var PileConsensusTests = []struct {
 			Type:      Base,
 		},
 		substitutionsOnly: true,
+		insertionThreshold: 0.1,
 	},
 }
 
 func TestPileConsensus(t *testing.T) {
 	var answer Consensus
 	for _, v := range PileConsensusTests {
-		answer = PileConsensus(v.p, v.substitutionsOnly)
+		answer = PileConsensus(v.p, v.substitutionsOnly, v.insertionThreshold)
 		if answer.Type != v.c.Type {
 			t.Errorf("Error in PileConsensus. Observed consensus type was not as expected.")
 		}
@@ -365,3 +371,11 @@ func TestPileConsensus(t *testing.T) {
 		}
 	}
 }
+
+
+
+
+
+
+
+

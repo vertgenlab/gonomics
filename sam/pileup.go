@@ -25,8 +25,8 @@ type Pile struct {
 	Pos       uint32         // 1-base (like Sam)
 	CountF    [13]int        // Count[dna.Base] == Number of observed dna.Base, forward reads
 	CountR    [13]int        // Count[dna.Base] == Number of observed dna.Base
-	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads
-	InsCountR map[string]int // key is insertion sequence as string, value is number of observations
+	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads. Real base appears to be before insert sequence.
+	InsCountR map[string]int // key is insertion sequence as string, value is number of observations. Note that key is forward strand sequence.
 
 	// Note that DelCountF/R DO NOT contribute to the total depth of a particular base.
 	// They are only included to preserve multi-base deletion structure for downstream use.
@@ -458,28 +458,91 @@ type Consensus struct {
 	Type      consensusType
 }
 
+// String for debug
+func (c Consensus) String() string {
+	var typeString string
+	switch c.Type {
+	case 0:
+		typeString = "Base"
+	case 1:
+		typeString = "Insertion"
+	case 2:
+		typeString = "Deletion"
+	case 3:
+		typeString = "Undefined"
+	}
+	return fmt.Sprintf("Base: %s. Insertion: %s. Deletion: %v. Type: %s.", dna.BaseToString(c.Base), dna.BasesToString(c.Insertion), c.Deletion, typeString)
+}
+
 // PileConsensus returns a Consensus struct from an input Pile struct
 // representing information about the consensus variant observed in that Pile.
-func PileConsensus(p Pile, substitutionsOnly bool) Consensus {
+// An insertion is called as the consensus if the count number for the max insertion if
+// maxCount > insertionThreshold * (total counts to bases)
+func PileConsensus(p Pile, substitutionsOnly bool, insertionThreshold float64) Consensus {
 	// first we check if consensus is a base
 	var max int = p.CountF[dna.A] + p.CountR[dna.A]
+	var consensusBeforeDeletion Consensus
 	tiedConsensus := make([]Consensus, 1)
 	tiedConsensus[0] = Consensus{Base: dna.A, Type: Base}
 
 	max, tiedConsensus = getMaxBase(p, max, dna.C, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.G, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.T, tiedConsensus)
-	//question for Dan: main version checks dna.Gap here, is that necessary if we check the deletion field?
-	if !substitutionsOnly {
-		max, tiedConsensus = getMaxInsertion(p, max, tiedConsensus)
+	if substitutionsOnly {//legacy feature
+		//max, tiedConsensus = getMaxBase(p, max, dna.Gap, tiedConsensus) Dan I know that this is a legacy featuer but it's not technically substitutionsOnly, coordinates will change in the output
+		if max < 1 {
+			return Consensus{Type: Undefined}
+		}
+		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]//we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
+	} else {
 		max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
+		consensusBeforeDeletion = tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
+		return getMaxInsertion(p, consensusBeforeDeletion, insertionThreshold)
+	}
+}
+
+
+// helper function of PileConsensus, finds the max insertion in a Pile struct.
+// InsThreshold is the proportion of Base reads for which an insertion needs to be observed to be called.
+func getMaxInsertion(p Pile, con Consensus, InsThreshold float64) Consensus {
+	var count int
+	var inMap bool
+	var seenOnPosStrand = make(map[string]int, 0)
+	var maxBase = con.Base
+	var totalBaseCounts = p.CountF[0] + p.CountF[1] + p.CountF[2] + p.CountF[3] + p.CountR[0] + p.CountR[1] + p.CountR[2] + p.CountR[3]
+	var insertionThreshold = int(InsThreshold * float64(totalBaseCounts))
+	var maxInsertionScore = 0
+	var tiedConsensus = []Consensus{con}
+
+	for i := range p.InsCountF {
+		seenOnPosStrand[i] = 1
+		count = p.InsCountF[i]
+		if _, inMap = p.InsCountR[i]; inMap {
+			count += p.InsCountR[i]
+		}
+		if count > insertionThreshold && count > maxInsertionScore {
+			if con.Type == Base {
+				con.Type = Insertion
+				con.Insertion = dna.StringToBases(i)
+			}
+			maxInsertionScore = count
+		} else if count == maxInsertionScore {
+			tiedConsensus = append(tiedConsensus, Consensus{Insertion: dna.StringToBases(i), Base: maxBase, Type: Insertion})
+		}
 	}
 
-	if max < 1 {
-		return Consensus{Type: Undefined}
-	}
-	if len(tiedConsensus) == 1 {
-		return tiedConsensus[0]
+	//we have to check the p.InsCountR map for any insertions observed only on the minus strand.
+	for i := range p.InsCountR {
+		if _, inMap = seenOnPosStrand[i]; !inMap {
+			count = p.InsCountR[i] //we don't have to sum since we are guaranteed not to have seen this insertion on the positive strand.
+			if count > insertionThreshold && count > maxInsertionScore {
+				tiedConsensus = tiedConsensus[:1]
+				tiedConsensus[0] = Consensus{Insertion: dna.StringToBases(i), Base: maxBase, Type: Insertion}
+				maxInsertionScore = count
+			} else if count == maxInsertionScore {
+				tiedConsensus = append(tiedConsensus, Consensus{Insertion: dna.StringToBases(i), Base: maxBase, Type: Insertion})
+			}
+		}
 	}
 	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
 }
@@ -518,45 +581,6 @@ func getMaxDeletion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Cons
 			}
 		}
 	}
-	return currMax, tiedConsensus
-}
-
-// helper function of PileConsensus, finds the max insertion in a Pile struct.
-func getMaxInsertion(p Pile, currMax int, tiedConsensus []Consensus) (int, []Consensus) {
-	var count int
-	var inMap bool
-	var seenOnPosStrand = make(map[string]int, 0)
-	for i := range p.InsCountF {
-		seenOnPosStrand[i] = 1
-		count = p.InsCountF[i]
-		if _, inMap = p.InsCountR[i]; inMap {
-			count += p.InsCountR[i]
-		}
-		if count > currMax {
-			tiedConsensus = tiedConsensus[:1]
-			tiedConsensus[0] = Consensus{Insertion: dna.StringToBases(i), Type: Insertion}
-			currMax = count
-		}
-		if count == currMax {
-			tiedConsensus = append(tiedConsensus, Consensus{Insertion: dna.StringToBases(i), Type: Insertion})
-		}
-	}
-
-	//we have to check the p.InsCountR map for any insertions observed only on the minus strand.
-	for i := range p.InsCountR {
-		if _, inMap = seenOnPosStrand[i]; !inMap {
-			count = p.InsCountR[i] //we don't have to sum since we are guaranteed not to have seen this insertion on the positive strand.
-			if count > currMax {
-				tiedConsensus = tiedConsensus[:1]
-				tiedConsensus[0] = Consensus{Insertion: dna.StringToBases(i), Type: Insertion}
-				currMax = count
-			}
-			if count == currMax {
-				tiedConsensus = append(tiedConsensus, Consensus{Insertion: dna.StringToBases(i), Type: Insertion})
-			}
-		}
-	}
-
 	return currMax, tiedConsensus
 }
 
