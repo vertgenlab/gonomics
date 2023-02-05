@@ -298,7 +298,7 @@ var PileConsensusTests = []struct {
 		CountF:    [13]int{0, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		CountR:    [13]int{0, 17, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		InsCountF: map[string]int{"AAT": 2, "AC": 1},
-		InsCountR: map[string]int{"AAT": 1, "AC": 3},
+		InsCountR: map[string]int{"AAT": 1, "AC": 1},
 		DelCountF: map[int]int{6: 2, 5: 2},
 		DelCountR: map[int]int{6: 4, 5: 1},
 	},
@@ -307,6 +307,23 @@ var PileConsensusTests = []struct {
 			Insertion: []dna.Base{},
 			Deletion:  0,
 			Type:      Base,
+		},
+		substitutionsOnly:  false,
+		insertionThreshold: 0.1,
+	},
+	{p: Pile{
+		CountF:    [13]int{0, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		CountR:    [13]int{0, 17, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		InsCountF: map[string]int{"AAT": 2, "AC": 1},
+		InsCountR: map[string]int{"AAT": 1, "AC": 4},
+		DelCountF: map[int]int{6: 2, 5: 2},
+		DelCountR: map[int]int{6: 4, 5: 1},
+	},
+		c: Consensus{
+			Base:      1,
+			Insertion: dna.StringToBases("AC"),
+			Deletion:  0,
+			Type:      Insertion,
 		},
 		substitutionsOnly:  false,
 		insertionThreshold: 0.1,
@@ -352,7 +369,7 @@ func TestPileConsensus(t *testing.T) {
 	for _, v := range PileConsensusTests {
 		answer = PileConsensus(v.p, v.substitutionsOnly, v.insertionThreshold)
 		if answer.Type != v.c.Type {
-			t.Errorf("Error in PileConsensus. Observed consensus type was not as expected.")
+			t.Errorf("Error in PileConsensus. Observed consensus type: %v. was not as expected: %v.", answer.Type, v.c.Type)
 		}
 		switch v.c.Type {
 		case Base:
