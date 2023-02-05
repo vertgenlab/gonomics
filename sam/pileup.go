@@ -525,7 +525,7 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 				tiedConsensus[0].Type = Insertion
 				tiedConsensus[0].Insertion = dna.StringToBases(i)
 				maxInsertionScore = count
-			}//note no ties for insertions. If the insertion is equal to the insertionThreshold, it is not called
+			} //note no ties for insertions. If the insertion is equal to the insertionThreshold, it is not called
 		case Deletion:
 			deletionScore = p.DelCountF[tiedConsensus[0].Deletion] + p.DelCountR[tiedConsensus[0].Deletion]
 			if count > deletionScore {
@@ -533,7 +533,7 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 				tiedConsensus[0].Type = Insertion
 				tiedConsensus[0].Insertion = dna.StringToBases(i)
 				maxInsertionScore = count
-			}//note no ties for insertions. If the insertion is equal to the insertionThreshold, it is not called
+			} //note no ties for insertions. If the insertion is equal to the insertionThreshold, it is not called
 		case Insertion:
 			if count > maxInsertionScore {
 				tiedConsensus = tiedConsensus[:1]
