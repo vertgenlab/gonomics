@@ -20,11 +20,11 @@ type Settings struct {
 	RefFile            string
 	OutFile            string
 	VcfFile            string
-	MultiFaDir          string
+	MultiFaDir         string
 	SubstitutionsOnly  bool
 	InsertionThreshold float64
-	tName string
-	qName string
+	tName              string
+	qName              string
 }
 
 const bufferSize = 10_000_000
@@ -67,7 +67,7 @@ func samConsensus(s Settings) {
 	}
 
 	for p := range piles {
-		if positionsToSkip > 0 {//this is the deletion case, where the current pile is deleted in query.
+		if positionsToSkip > 0 { //this is the deletion case, where the current pile is deleted in query.
 			positionsToSkip--
 			if s.MultiFaDir != "" {
 				currMultiFa[0].Seq[multiFaPos] = dna.ToUpper(refMap[currChrom][refPos])
@@ -96,7 +96,7 @@ func samConsensus(s Settings) {
 			}
 		}
 		if currChrom != header.Chroms[p.RefIdx].Name { //if we've moved onto a new chromosome.
-			for refPos < len(refMap[currChrom]) {//write out the rest of the current reference
+			for refPos < len(refMap[currChrom]) { //write out the rest of the current reference
 				answer[currFaIndex].Seq[answerPos] = refMap[currChrom][refPos]
 				if s.MultiFaDir != "" {
 					currMultiFa[0].Seq[multiFaPos] = dna.ToUpper(refMap[currChrom][refPos])
@@ -119,8 +119,8 @@ func samConsensus(s Settings) {
 			}
 			answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq)-emptyRoomInAnswerBuffer] //clear out empty buffer positions
 			if s.MultiFaDir != "" {
-				currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq) - emptyRoomInMultiFaBuffer]
-				currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq) - emptyRoomInMultiFaBuffer]
+				currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq)-emptyRoomInMultiFaBuffer]
+				currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq)-emptyRoomInMultiFaBuffer]
 				fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), currMultiFa)
 				currMultiFa = []fasta.Fasta{{Name: s.tName, Seq: make([]dna.Base, bufferSize)}, {Name: s.qName, Seq: make([]dna.Base, bufferSize)}}
 				emptyRoomInMultiFaBuffer = bufferSize
@@ -301,8 +301,8 @@ func samConsensus(s Settings) {
 		exception.PanicOnErr(err)
 	}
 	if s.MultiFaDir != "" {
-		currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq) - emptyRoomInMultiFaBuffer]
-		currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq) - emptyRoomInMultiFaBuffer]
+		currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq)-emptyRoomInMultiFaBuffer]
+		currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq)-emptyRoomInMultiFaBuffer]
 		fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), currMultiFa)
 	}
 
@@ -357,10 +357,10 @@ func main() {
 		OutFile:            outFile,
 		VcfFile:            *vcfOutFile,
 		SubstitutionsOnly:  *substitutionsOnly,
-		MultiFaDir:          *multiFaDir,
+		MultiFaDir:         *multiFaDir,
 		InsertionThreshold: *insertionThreshold,
-		tName: *tName,
-		qName: *qName,
+		tName:              *tName,
+		qName:              *qName,
 	}
 
 	samConsensus(s)

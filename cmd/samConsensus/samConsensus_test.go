@@ -9,18 +9,18 @@ import (
 )
 
 var samConsensusTests = []struct {
-	inFile             string
-	refFile            string
-	outFile            string
-	vcfFile            string
-	multiFaDir          string
-	substitutionsOnly  bool
-	insertionThreshold float64
-	tName string
-	qName string
-	outFile_expected   string
-	vcfFile_expected   string
-	multiFaOutAndExpectedFiles map[string]string//maps output file names to the expected file names
+	inFile                     string
+	refFile                    string
+	outFile                    string
+	vcfFile                    string
+	multiFaDir                 string
+	substitutionsOnly          bool
+	insertionThreshold         float64
+	tName                      string
+	qName                      string
+	outFile_expected           string
+	vcfFile_expected           string
+	multiFaOutAndExpectedFiles map[string]string //maps output file names to the expected file names
 }{
 	{inFile: "testdata/test.sam",
 		refFile:            "testdata/test.ref.fa",
@@ -29,21 +29,21 @@ var samConsensusTests = []struct {
 		multiFaDir:         "",
 		substitutionsOnly:  true,
 		insertionThreshold: 0.9,
-		tName: "target",
-		qName: "query",
+		tName:              "target",
+		qName:              "query",
 		outFile_expected:   "testdata/test.out.fa",
 		vcfFile_expected:   "testdata/test.out.vcf"},
 	{inFile: "testdata/test.sam",
-		refFile:            "testdata/test.ref.fa",
-		outFile:            "testdata/tmpOutFile.indel.fa",
-		vcfFile:            "testdata/tmpVcfFile.indel.vcf",
-		multiFaDir:          "testdata/multiFa",
-		substitutionsOnly:  false,
-		insertionThreshold: 0.9,
-		tName: "target",
-		qName: "query",
-		outFile_expected:   "testdata/test.out.indel.fa",
-		vcfFile_expected:   "testdata/test.out.indel.vcf",
+		refFile:                    "testdata/test.ref.fa",
+		outFile:                    "testdata/tmpOutFile.indel.fa",
+		vcfFile:                    "testdata/tmpVcfFile.indel.vcf",
+		multiFaDir:                 "testdata/multiFa",
+		substitutionsOnly:          false,
+		insertionThreshold:         0.9,
+		tName:                      "target",
+		qName:                      "query",
+		outFile_expected:           "testdata/test.out.indel.fa",
+		vcfFile_expected:           "testdata/test.out.indel.vcf",
 		multiFaOutAndExpectedFiles: map[string]string{"testdata/multiFa/chr1.fa": "testdata/multiFa/expected.chr1.fa", "testdata/multiFa/chr2.fa": "testdata/multiFa/expected.chr2.fa"},
 	},
 }
@@ -58,11 +58,11 @@ func TestSamConsensus(t *testing.T) {
 			RefFile:            v.refFile,
 			OutFile:            v.outFile,
 			VcfFile:            v.vcfFile,
-			MultiFaDir:          v.multiFaDir,
+			MultiFaDir:         v.multiFaDir,
 			SubstitutionsOnly:  v.substitutionsOnly,
 			InsertionThreshold: v.insertionThreshold,
-			tName: v.tName,
-			qName: v.qName,
+			tName:              v.tName,
+			qName:              v.qName,
 		}
 		samConsensus(s)
 
