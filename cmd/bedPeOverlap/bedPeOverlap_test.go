@@ -12,18 +12,21 @@ var BedPeOverlapTests = []struct {
 	inBedPe          string
 	outBedPe         string
 	bedSelect        bool
+	overlapBoth      bool
 	overlapThreshold float64
 	expectedFile     string
 }{
-	{"testdata/selectBedPe.bedpe", "testdata/inBedPe.bedpe", "testdata/tmp.bedpe", false, 0, "testdata/expected.bedpe"},
-	{"testdata/select.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelect.bedpe", true, 0, "testdata/expected.bedSelect.bedpe"},
-	{"testdata/select.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelectOverlapThresh.bedpe", true, 0.5, "testdata/expected.bedSelect.overlapThresh.bedpe"},
+	{"testdata/selectBedPe.bedpe", "testdata/inBedPe.bedpe", "testdata/tmp.bedpe", false, false, 0, "testdata/expected.bedpe"},
+	{"testdata/select.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelect.bedpe", true, false, 0, "testdata/expected.bedSelect.bedpe"},
+	{"testdata/select.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelectOverlapThresh.bedpe", true, false, 0.5, "testdata/expected.bedSelect.overlapThresh.bedpe"},
+	{"testdata/selectBedBoth.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelectOverlapBoth.bedpe", true, true, 0, "testdata/expected.bedSelect.both.bedpe"},
+	{"testdata/selectBedBothThresh.bed", "testdata/inBedPe.bedpe", "testdata/tmp.bedSelectOverlapThreshOverlapBoth.bedpe", true, true, 0.5, "testdata/expected.bedSelect.both.bedpe"},
 }
 
 func TestBedPeOverlap(t *testing.T) {
 	var err error
 	for _, v := range BedPeOverlapTests {
-		bedpeOverlap(v.selectFile, v.inBedPe, v.outBedPe, v.bedSelect, v.overlapThreshold)
+		bedpeOverlap(v.selectFile, v.inBedPe, v.outBedPe, v.bedSelect, v.overlapThreshold, v.overlapBoth)
 		if !fileio.AreEqual(v.outBedPe, v.expectedFile) {
 			t.Errorf("Error in bedPeOverlap.")
 		} else {

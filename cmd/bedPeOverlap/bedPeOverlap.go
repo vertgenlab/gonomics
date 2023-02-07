@@ -12,9 +12,11 @@ import (
 	"log"
 )
 
-func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64) {
+func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool) {
 	//bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
-	if bedSelect {
+	if bedSelect && overlapBoth {
+		SelectIsBedBoth(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
+	} else if bedSelect {
 		SelectIsBed(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
 	} else {
 		SelectIsBedPe(selectFile, bedpeInFile, contactOutFile)
@@ -125,6 +127,51 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 	exception.PanicOnErr(err)
 }
 
+func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string) {
+	var selectIntervals = make([]interval.Interval, 0)
+	var currOverlaps []interval.Interval
+	var bothOverlap []interval.Interval
+	var err error
+	var found bool
+
+	selectRecords := bed.Read(bedSelectFile)
+	inBedPe := bedpe.Read(bedpeInFile)
+	out := fileio.EasyCreate(contactOutFile)
+
+	for _, i := range selectRecords {
+		selectIntervals = append(selectIntervals, i)
+	}
+	selectTree := interval.BuildTree(selectIntervals)
+
+	for _, i := range inBedPe {
+		currOverlaps = interval.Query(selectTree, i.A, "any")
+		if len(currOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
+			if overlapThreshold == 0 {
+				bothOverlap = interval.Query(selectTree, i.B, "any")
+				if len(bothOverlap) > 0 {
+					bedpe.WriteToFileHandle(out, i)
+				}
+			} else {
+				found = false
+				for _, j := range currOverlaps {
+					if !found && overlapPercent(j, i.A) >= overlapThreshold {
+						bothOverlap = interval.Query(selectTree, i.B, "any")
+						for _, k := range bothOverlap {
+							if !found && overlapPercent(k, i.B) >= overlapThreshold {
+								found = true
+								bedpe.WriteToFileHandle(out, i)
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
 // This is the case where the select file is a bedpe. Input bedpe entries will be retained
 // in the output if both ends of the bedpe overlap both ends of a bedpe entry in the select file.
 func SelectIsBedPe(bedpeSelectFile string, bedpeInFile string, contactOutFile string) {
@@ -188,6 +235,7 @@ func usage() {
 func main() {
 	var bedSelect *bool = flag.Bool("bedSelect", false, "Set select file to be a BED file instead of a bedpe.")
 	var overlapThreshold *float64 = flag.Float64("overlapThreshold", 0, "threshold that the percent overlap of a bedpe half to the select bed must satisfy. Must be a value between 0 and 1.")
+	var overlapBoth *bool = flag.Bool("overlapBoth", false, "restricts outputs of -bedSelect to bedpe entries where both ends overlap a selectBed entry")
 
 	var expectedNumArgs int = 3
 	flag.Usage = usage
@@ -208,9 +256,13 @@ func main() {
 	}
 
 	//should no longer be needed when overlapThresholdBedpe is implimented
-	//	if *overlapThreshold != 0 && *bedSelect == false {
-	//		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
-	//	}
+	if *overlapThreshold != 0 && *bedSelect == false {
+		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
+	}
 
-	bedpeOverlap(SelectFile, bedpeInFile, contactOutFile, *bedSelect, *overlapThreshold)
+	if *overlapBoth == true && *bedSelect == false {
+		log.Fatalf("Error: overlapBoth must be used with bedSelect")
+	}
+
+	bedpeOverlap(SelectFile, bedpeInFile, contactOutFile, *bedSelect, *overlapThreshold, *overlapBoth)
 }
