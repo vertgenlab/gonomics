@@ -114,3 +114,45 @@ func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo
 
 	return answer
 }
+
+// FillSpaceHiddenValue accepts a slice of Bed structs and a reference genome as a map[string]chromInfo.ChromInfo and returns a
+// slice of Bed structs that assigns each genomic position to the nearest feature in 3D space from the input bed, using
+// the input bed scores to represent "hidden values", or the distance from that position to its nearest TSS in 3D space.
+func FillSpaceHiddenValue(records[]Bed, genome map[string]chromInfo.ChromInfo) []Bed {
+	SortByCoord(records)
+	MergeHighMem(records, true)
+	var answer = make([]Bed, 0)
+	var threeDMidpoint int
+	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, FieldsInitialized: 4}
+
+	for i := 1; i < len(records); i++ {
+		if records[i].Chrom != currAnswer.Chrom {
+			currAnswer.ChromEnd = genome[records[i-1].Chrom].Size
+			answer = append(answer, currAnswer)
+			currAnswer.Chrom = records[i].Chrom
+			currAnswer.ChromStart = 0
+		} else {
+			threeDMidpoint = (currAnswer.ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
+			currAnswer.ChromEnd = threeDMidpoint + 1
+			currAnswer.Name = records[i-1].Name
+			answer = append(answer, currAnswer)
+			currAnswer.ChromStart = threeDMidpoint + 1
+		}
+		currAnswer.ChromEnd = records[1].ChromEnd
+		currAnswer.Name = records[i].Name
+	}
+	currAnswer.ChromEnd = genome[records[len(records)-1].Chrom].Size
+	answer = append(answer, currAnswer)
+	var mergedAnswer = make([]Bed, 0)
+	currAnswer = answer[0]
+	for i := 1; i < len(answer); i++ {
+		if answer[i-1].Name == answer[i].Name {
+			currAnswer.ChromEnd = answer[i].ChromEnd
+		} else {
+			mergedAnswer = append(mergedAnswer, currAnswer)
+			currAnswer = answer[i]
+		}
+	}
+	mergedAnswer = append(mergedAnswer, currAnswer)
+	return mergedAnswer
+}

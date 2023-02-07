@@ -87,3 +87,35 @@ func TestFillSpaceNoHiddenValue(t *testing.T) {
 		}
 	}
 }
+
+var FillThreeDSpaceTests = []struct {
+	InputFile string
+	Genome    map[string]chromInfo.ChromInfo
+	OutFile   string
+	Expected  string
+}{
+	{
+		InputFile: "testdata/FillSpace.Hidden.Input.bed",
+		Genome:    map[string]chromInfo.ChromInfo{"chr1": {Name: "chr1", Size: 600}, "chr2": {Name: "chr2", Size: 60}},
+		OutFile:   "testdata/tmp.Hidden.FillSpace.bed",
+		Expected:  "testdata/FillSpace.Hidden.Expected.bed",
+	},
+}
+
+func TestFillSpaceHiddenValue(t *testing.T) {
+	var err error
+	var records, answer []Bed
+	for _, v := range FillThreeDSpaceTests {
+		records = Read(v.InputFile)
+		answer = FillSpaceHiddenValue(records, v.Genome)
+		Write(v.OutFile, answer)
+		if !fileio.AreEqual(v.OutFile, v.Expected) {
+			t.Errorf("Error in FillSpace. Output was not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
+
