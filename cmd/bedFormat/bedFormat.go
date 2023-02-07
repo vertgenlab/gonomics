@@ -16,17 +16,17 @@ import (
 )
 
 type Settings struct {
-	InFile         string
-	OutFile        string
-	UCSCToEnsembl  bool
-	EnsemblToUCSC  bool
-	ScaleNameFloat float64
-	EvenPadLength  int
-	UpstreamPadLength int
+	InFile              string
+	OutFile             string
+	UCSCToEnsembl       bool
+	EnsemblToUCSC       bool
+	ScaleNameFloat      float64
+	EvenPadLength       int
+	UpstreamPadLength   int
 	DownstreamPadLength int
-	ChromSizeFile  string
-	ToMidpoint     bool
-	ToTss bool
+	ChromSizeFile       string
+	ToMidpoint          bool
+	ToTss               bool
 }
 
 func bedFormat(s Settings) {
@@ -69,9 +69,9 @@ func bedFormat(s Settings) {
 			}
 			switch v.Strand {
 			case bed.Positive:
-				v.ChromStart = numbers.Max(v.ChromStart - s.UpstreamPadLength, 0)
+				v.ChromStart = numbers.Max(v.ChromStart-s.UpstreamPadLength, 0)
 			case bed.Negative:
-				v.ChromEnd = numbers.Min(v.ChromEnd + s.UpstreamPadLength, sizes[v.Chrom].Size)
+				v.ChromEnd = numbers.Min(v.ChromEnd+s.UpstreamPadLength, sizes[v.Chrom].Size)
 			default:
 				log.Fatalf("Bed entries must have annotated strand information to perform upstream padding.")
 			}
@@ -82,9 +82,9 @@ func bedFormat(s Settings) {
 			}
 			switch v.Strand {
 			case bed.Positive:
-				v.ChromEnd = numbers.Min(v.ChromEnd + s.DownstreamPadLength, sizes[v.Chrom].Size)
+				v.ChromEnd = numbers.Min(v.ChromEnd+s.DownstreamPadLength, sizes[v.Chrom].Size)
 			case bed.Negative:
-				v.ChromStart = numbers.Max(v.ChromStart - s.DownstreamPadLength, 0)
+				v.ChromStart = numbers.Max(v.ChromStart-s.DownstreamPadLength, 0)
 			default:
 				log.Fatalf("Bed entries must have annotated strand information to perform downstream padding.")
 			}
@@ -140,17 +140,17 @@ func main() {
 	outfile := flag.Arg(1)
 
 	s := Settings{
-		InFile:         infile,
-		OutFile:        outfile,
-		UCSCToEnsembl:  *UCSCToEnsembl,
-		EnsemblToUCSC:  *ensemblToUCSC,
-		ScaleNameFloat: *scaleNameFloat,
-		EvenPadLength:  *evenPadLength,
-		UpstreamPadLength: *upstreamPadLength,
+		InFile:              infile,
+		OutFile:             outfile,
+		UCSCToEnsembl:       *UCSCToEnsembl,
+		EnsemblToUCSC:       *ensemblToUCSC,
+		ScaleNameFloat:      *scaleNameFloat,
+		EvenPadLength:       *evenPadLength,
+		UpstreamPadLength:   *upstreamPadLength,
 		DownstreamPadLength: *downstreamPadLength,
-		ChromSizeFile:  *chromSizeFile,
-		ToMidpoint:     *ToMidpoint,
-		ToTss: *ToTss,
+		ChromSizeFile:       *chromSizeFile,
+		ToMidpoint:          *ToMidpoint,
+		ToTss:               *ToTss,
 	}
 
 	bedFormat(s)
