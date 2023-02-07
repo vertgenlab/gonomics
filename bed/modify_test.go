@@ -117,5 +117,3 @@ func TestFillSpaceHiddenValue(t *testing.T) {
 		}
 	}
 }
-
-

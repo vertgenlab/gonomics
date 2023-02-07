@@ -11,9 +11,9 @@ import (
 )
 
 type Settings struct {
-	GtfFile string
-	ContactFile string
-	SizesFile string
+	GtfFile        string
+	ContactFile    string
+	SizesFile      string
 	NearestGeneBed string
 }
 
@@ -54,10 +54,10 @@ func main() {
 	sizesFile := flag.Arg(2)
 	//TODO other args
 
-	s := Settings {
-		GtfFile: gtfFile,
-		ContactFile: contactFile,
-		SizesFile: sizesFile,
+	s := Settings{
+		GtfFile:        gtfFile,
+		ContactFile:    contactFile,
+		SizesFile:      sizesFile,
 		NearestGeneBed: *nearestGeneBed,
 	}
 

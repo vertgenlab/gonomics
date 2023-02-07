@@ -118,7 +118,7 @@ func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo
 // FillSpaceHiddenValue accepts a slice of Bed structs and a reference genome as a map[string]chromInfo.ChromInfo and returns a
 // slice of Bed structs that assigns each genomic position to the nearest feature in 3D space from the input bed, using
 // the input bed scores to represent "hidden values", or the distance from that position to its nearest TSS in 3D space.
-func FillSpaceHiddenValue(records[]Bed, genome map[string]chromInfo.ChromInfo) []Bed {
+func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	SortByCoord(records)
 	MergeHighMem(records, true)
 	var answer = make([]Bed, 0)
