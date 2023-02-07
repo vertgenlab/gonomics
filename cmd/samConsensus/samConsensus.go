@@ -333,7 +333,7 @@ func main() {
 	var expectedNumArgs int = 3
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "This option ignores insertions and deletions and only edits substitutions in the output file.")
 	var vcfOutFile *string = flag.String("vcfOutFile", "", "Also write a vcf file of called variants from the reads.")
-	var multiFaDir *string = flag.String("multiFaDir", "", "TODO: Output the reference and generated sequence as an aligned multiFa, each file by chrom.")
+	var multiFaDir *string = flag.String("multiFaDir", "", "Output the reference and generated sequence as an aligned multiFa, each file by chrom.")
 	var insertionThreshold *float64 = flag.Float64("insertionThreshold", 0.1, "Requires the number of observations of an insertion relative to read depth required to call an insertion.")
 	var tName *string = flag.String("tName", "Target", "Set the tName in the optional multiFa output.")
 	var qName *string = flag.String("qName", "Query", "Set the qName in the optional multiFa output.")
