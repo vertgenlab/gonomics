@@ -122,15 +122,14 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 			}
 		}
 	}
-
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
 
 func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string) {
 	var selectIntervals = make([]interval.Interval, 0)
-	var currOverlaps []interval.Interval
-	var bothOverlap []interval.Interval
+	var aOverlaps []interval.Interval
+	var bOverlaps []interval.Interval
 	var err error
 	var found bool
 
@@ -143,20 +142,23 @@ func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold 
 	}
 	selectTree := interval.BuildTree(selectIntervals)
 
-	for _, i := range inBedPe {
-		currOverlaps = interval.Query(selectTree, i.A, "any")
-		if len(currOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
+	var j, k interval.Interval
+	var i bedpe.BedPe
+
+	for _, i = range inBedPe {
+		aOverlaps = interval.Query(selectTree, i.A, "any")
+		if len(aOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
 			if overlapThreshold == 0 {
-				bothOverlap = interval.Query(selectTree, i.B, "any")
-				if len(bothOverlap) > 0 {
+				bOverlaps = interval.Query(selectTree, i.B, "any")
+				if len(bOverlaps) > 0 {
 					bedpe.WriteToFileHandle(out, i)
 				}
 			} else {
 				found = false
-				for _, j := range currOverlaps {
+				for _, j = range aOverlaps {
 					if !found && overlapPercent(j, i.A) >= overlapThreshold {
-						bothOverlap = interval.Query(selectTree, i.B, "any")
-						for _, k := range bothOverlap {
+						bOverlaps = interval.Query(selectTree, i.B, "any")
+						for _, k = range bOverlaps {
 							if !found && overlapPercent(k, i.B) >= overlapThreshold {
 								found = true
 								bedpe.WriteToFileHandle(out, i)
@@ -166,7 +168,6 @@ func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold 
 				}
 			}
 		}
-
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)
