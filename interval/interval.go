@@ -7,6 +7,7 @@ package interval
 
 import (
 	"fmt"
+	"golang.org/x/exp/slices"
 	"sort"
 )
 
@@ -182,6 +183,10 @@ func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []
 		}
 	}
 
+	if len(answer) > 1 && q.GetChromEnd()-q.GetChromStart() == 1 {
+		answer = sortAndDeduplicate(answer)
+	}
+
 	return answer
 }
 
@@ -348,4 +353,40 @@ func findSplit(x1, x2 float64, node *IntervalNode) *IntervalNode {
 		}
 	}
 	return node
+}
+
+func sortAndDeduplicate(a []Interval) []Interval {
+	sort.Slice(a, func(i, j int) bool {
+		switch {
+		case a[i].GetChromStart() < a[j].GetChromStart():
+			return true
+		case a[i].GetChromStart() > a[j].GetChromStart():
+			return false
+		case a[i].GetChromEnd() < a[j].GetChromEnd():
+			return true
+		default:
+			return false
+		}
+	})
+
+	for i := 1; i < len(a); i++ {
+		if equal(a[i], a[i-1]) {
+			a = slices.Delete(a, i-1, i)
+			i--
+		}
+	}
+	return a
+}
+
+func equal(a, b Interval) bool {
+	if a.GetChrom() != b.GetChrom() {
+		return false
+	}
+	if a.GetChromStart() != b.GetChromStart() {
+		return false
+	}
+	if a.GetChromEnd() != b.GetChromEnd() {
+		return false
+	}
+	return true
 }

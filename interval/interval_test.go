@@ -172,6 +172,18 @@ func TestBuildFCIndex(t *testing.T) {
 	}
 }
 
+func TestSingleBpQuery(t *testing.T) {
+	tgt := bed.Bed{Chrom: "chr1", ChromStart: 220272500, ChromEnd: 220272515, FieldsInitialized: 3}
+	qry := bed.Bed{Chrom: "chr1", ChromStart: 220272500, ChromEnd: 220272501, FieldsInitialized: 3}
+
+	tree := BuildTree([]Interval{tgt})
+
+	ans := Query(tree, qry, "any")
+	if len(ans) != 1 {
+		t.Errorf("ERROR: Problem with single bp queries")
+	}
+}
+
 const (
 	numIntervals = 10000
 	rangeLow     = 0
