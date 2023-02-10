@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
+	"fmt"
 )
 
 //Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
@@ -72,12 +73,28 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 	return outList
 }
 
+func mergeKeepLowNameAndScore(records []Bed) []Bed {
+	var outList []Bed = make([]Bed, 0)
+	SortByCoord(records)
+	var curr = records[0]
+	for i := 1; i < len(records); i++ {
+		if Overlap(curr, records[i]) {
+			if records[i].Score < curr.Score {
+				curr = records[i]
+			}
+		} else {
+			outList = append(outList, curr)
+			curr = records[i]
+		}
+	}
+	return outList
+}
+
 // FillSpaceNoHiddenValue accepts a bed and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
 // that assigns each genomic position to the nearest feature in the input bed using the Name field in the input bed.
 // Absolute start positions of the original input bed entries are stored in the Score field of the output bed entries.
 func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
-	SortByCoord(records)
-	MergeHighMem(records, true) // possible silent errors if two features are directly adjacent. We chose to discard.
+	records = mergeKeepLowNameAndScore(records)
 	var answer = make([]Bed, 0)
 
 	if records == nil || len(records) == 0 {
@@ -115,12 +132,42 @@ func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo
 	return answer
 }
 
+//helper fucntion of FillSpaceHiddenValue. Define the 3dMidpoint between bed entries A and B (with hidden values
+//Ha and Hb) as (A.ChromEnd-Ha + B.ChromStart+Hb) / 2 s.t. A.ChromEnd < B.ChromStart.
+// if 3dMidpoint(A, B) < A.ChromEnd, then entry A can never have an entry in the output bed of FillSpaceHiddenValue,
+// and should be removed.
+func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
+	var answer []Bed
+	var threeDmidpoint int
+	var violation = false
+
+	fmt.Printf("LenRecords: %v.\n", len(records))
+	for i := 1; i < len(records); i++ {
+		if records[i-1].Chrom == records[i].Chrom {
+			threeDmidpoint = (records[i-1].ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
+			if threeDmidpoint < records[i-1].ChromEnd {
+				violation = true
+			} else {
+				answer = append(answer, records[i-1])
+			}
+		} else {
+			answer = append(answer, records[i-1])
+		}
+	}
+	answer = append(answer, records[len(records)-1])
+
+	return answer, violation
+}
+
 // FillSpaceHiddenValue accepts a slice of Bed structs and a reference genome as a map[string]chromInfo.ChromInfo and returns a
 // slice of Bed structs that assigns each genomic position to the nearest feature in 3D space from the input bed, using
 // the input bed scores to represent "hidden values", or the distance from that position to its nearest TSS in 3D space.
 func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
-	SortByCoord(records)
-	MergeHighMem(records, true)
+	records = mergeKeepLowNameAndScore(records)
+	var violation bool = true
+	for violation {
+		records, violation = removeBedsWithNoTerritory(records)
+	}
 	var answer = make([]Bed, 0)
 	var threeDMidpoint int
 	var currAnswer Bed = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, FieldsInitialized: 4}
@@ -128,20 +175,39 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 	for i := 1; i < len(records); i++ {
 		if records[i].Chrom != currAnswer.Chrom {
 			currAnswer.ChromEnd = genome[records[i-1].Chrom].Size
+			if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
+				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+				log.Fatalf("Died on new chrom.")
+			}
 			answer = append(answer, currAnswer)
 			currAnswer.Chrom = records[i].Chrom
 			currAnswer.ChromStart = 0
+		} else if currAnswer.Name == records[i].Name {
+			currAnswer.ChromEnd = records[i].ChromEnd
 		} else {
+			fmt.Printf("CurrAnswer: %v.\n", currAnswer)
 			threeDMidpoint = (currAnswer.ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
 			currAnswer.ChromEnd = threeDMidpoint + 1
 			currAnswer.Name = records[i-1].Name
+			if currAnswer.ChromEnd - currAnswer.ChromStart < 0 {
+				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+				fmt.Printf("Records[i-2]: %v.\n", records[i-2])
+				fmt.Printf("Records[i-1]: %v.\n", records[i-1])
+				fmt.Printf("Records[i]: %v.\n", records[i])
+				fmt.Printf("Midpoint: %v.\n", threeDMidpoint)
+				log.Fatalf("Died in loop.")
+			}
 			answer = append(answer, currAnswer)
 			currAnswer.ChromStart = threeDMidpoint + 1
 		}
-		currAnswer.ChromEnd = records[1].ChromEnd
+		currAnswer.ChromEnd = records[i].ChromEnd
 		currAnswer.Name = records[i].Name
 	}
 	currAnswer.ChromEnd = genome[records[len(records)-1].Chrom].Size
+	if currAnswer.ChromEnd - currAnswer.ChromStart < 0 {
+		fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+		log.Fatalf("Died after loop.")
+	}
 	answer = append(answer, currAnswer)
 	var mergedAnswer = make([]Bed, 0)
 	currAnswer = answer[0]
