@@ -293,6 +293,10 @@ func samConsensus(s Settings) {
 		refPos++
 		answerPos++
 		emptyRoomInAnswerBuffer--
+		if emptyRoomInAnswerBuffer < 1 {
+			answer[currFaIndex].Seq = append(answer[currFaIndex].Seq, newBufferRoom...)
+			emptyRoomInAnswerBuffer += bufferSize
+		}
 	}
 	answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq)-emptyRoomInAnswerBuffer]
 
