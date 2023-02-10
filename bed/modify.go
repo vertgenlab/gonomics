@@ -1,10 +1,10 @@
 package bed
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
-	"fmt"
 )
 
 //Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
@@ -189,7 +189,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 			threeDMidpoint = (currAnswer.ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
 			currAnswer.ChromEnd = threeDMidpoint + 1
 			currAnswer.Name = records[i-1].Name
-			if currAnswer.ChromEnd - currAnswer.ChromStart < 0 {
+			if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
 				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
 				fmt.Printf("Records[i-2]: %v.\n", records[i-2])
 				fmt.Printf("Records[i-1]: %v.\n", records[i-1])
@@ -204,7 +204,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 		currAnswer.Name = records[i].Name
 	}
 	currAnswer.ChromEnd = genome[records[len(records)-1].Chrom].Size
-	if currAnswer.ChromEnd - currAnswer.ChromStart < 0 {
+	if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
 		fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
 		log.Fatalf("Died after loop.")
 	}
