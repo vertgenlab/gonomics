@@ -5,11 +5,11 @@ chr1	8	.	A	T	.	.	.	.
 chr1	9	.	T	A	.	.	.	.
 chr1	10	.	T	G	.	.	.	.
 chr1	12	.	A	T	.	.	.	.
-chr1	14	.	T	AGAG	.	.	.	.
+chr1	14	.	T	TAGAG	.	.	.	.
 chr1	15	.	T	G	.	.	.	.
 chr1	16	.	T	A	.	.	.	.
 chr1	18	.	T	A	.	.	.	.
-chr1	19	.	AA	A	.	.	.	.
+chr1	19	.	TA	T	.	.	.	.
 chr1	20	.	A	C	.	.	.	.
 chr1	22	.	T	G	.	.	.	.
 chr2	29	.	G	T	.	.	.	.

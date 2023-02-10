@@ -216,7 +216,7 @@ func samConsensus(s Settings) {
 				emptyRoomInAnswerBuffer += bufferSize
 			}
 			if s.MultiFaDir != "" {
-				currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
+				currMultiFa[0].Seq[multiFaPos] = dna.ToUpper(refMap[currChrom][refPos])
 				currMultiFa[1].Seq[multiFaPos] = currConsensus.Base
 				multiFaPos++
 				emptyRoomInMultiFaBuffer--
@@ -248,7 +248,7 @@ func samConsensus(s Settings) {
 				answerPos++
 			}
 			if s.VcfFile != "" {
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BasesToString(currConsensus.Insertion), ".", ".", ".", ".")
+				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), fmt.Sprintf("%s%s", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BasesToString(currConsensus.Insertion)), ".", ".", ".", ".")
 				exception.PanicOnErr(err)
 			}
 			refPos++
@@ -257,13 +257,13 @@ func samConsensus(s Settings) {
 			if s.VcfFile != "" {
 				refAllele = make([]dna.Base, currConsensus.Deletion+1) // make a dna.Base slice the length of the deletion + 1 (to include base before deletion)
 				for i = range refAllele {
-					refAllele[i] = dna.ToUpper(refMap[currChrom][refPos+i]) //starts with refPos (p.Pos - 1) to include the position before the deletion in the VCF
+					refAllele[i] = dna.ToUpper(refMap[currChrom][refPos+i-1])
 				}
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BasesToString(refAllele), dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), ".", ".", ".", ".")
+				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BasesToString(refAllele), dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos-1])), ".", ".", ".", ".")
 				exception.PanicOnErr(err)
 			}
 			if s.MultiFaDir != "" {
-				currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
+				currMultiFa[0].Seq[multiFaPos] = dna.ToUpper(refMap[currChrom][refPos])
 				currMultiFa[1].Seq[multiFaPos] = dna.Gap
 				multiFaPos++
 				emptyRoomInMultiFaBuffer--
