@@ -1,13 +1,13 @@
 package simulate
 
 import (
-	"math/rand"
-	"log"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
+	"math/rand"
 )
 
 //CodonExt holds a slice of 3 bases and their original positions
@@ -537,4 +537,3 @@ func deleteBase(seq []dna.Base) []dna.Base {
 	seq[delPos] = dna.Gap                           // replace base at randomized position with gap symbol
 	return seq
 }
-

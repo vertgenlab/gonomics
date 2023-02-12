@@ -10,24 +10,24 @@ import (
 )
 
 var SimulateWithIndelsTests = []struct {
-	FastaFile string
-	BranchLength float64
-	PropIndel float64
-	Lambda float64
-	GcContent float64
-	VcfOutFile string
-	OutFastaFile string
+	FastaFile         string
+	BranchLength      float64
+	PropIndel         float64
+	Lambda            float64
+	GcContent         float64
+	VcfOutFile        string
+	OutFastaFile      string
 	ExpectedFastaFile string
-	ExpectedVcfFile string
+	ExpectedVcfFile   string
 }{
 	{FastaFile: "testdata/rand.fa",
-		BranchLength: 0.1,
-		PropIndel: 0.2,
-		Lambda: 1,
-		GcContent: 0.42,
-		VcfOutFile: "testdata/tmp.vcf",
-		OutFastaFile: "testdata/tmp.rand.fa",
-		ExpectedVcfFile: "testdata/expected.rand.vcf",
+		BranchLength:      0.1,
+		PropIndel:         0.2,
+		Lambda:            1,
+		GcContent:         0.42,
+		VcfOutFile:        "testdata/tmp.vcf",
+		OutFastaFile:      "testdata/tmp.rand.fa",
+		ExpectedVcfFile:   "testdata/expected.rand.vcf",
 		ExpectedFastaFile: "testdata/expected.rand.fa",
 	},
 }

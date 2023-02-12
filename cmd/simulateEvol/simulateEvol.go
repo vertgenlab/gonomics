@@ -14,17 +14,17 @@ import (
 )
 
 type Settings struct {
-	FastaFile string
-	TreeFile string
-	LeafOutFile string
+	FastaFile    string
+	TreeFile     string
+	LeafOutFile  string
 	GenePredFile string
-	SimOutFile string
-	Lambda float64
-	PropIndel float64
+	SimOutFile   string
+	Lambda       float64
+	PropIndel    float64
 	BranchLength float64
-	SetSeed int64
-	GcContent float64
-	VcfOutFile string
+	SetSeed      int64
+	GcContent    float64
+	VcfOutFile   string
 }
 
 func SimulateEvol(s Settings) {
@@ -67,7 +67,6 @@ func SimulateEvol(s Settings) {
 	}
 	fasta.Write(s.LeafOutFile, leafFastas)
 
-
 }
 
 func usage() {
@@ -109,18 +108,18 @@ func main() {
 	rootFasta := flag.Arg(0)
 	leafOutFile := flag.Arg(1)
 
-	s := Settings {
-		FastaFile: rootFasta,
-		TreeFile: *newickTree,
-		LeafOutFile: leafOutFile,
-		SimOutFile: *completeSimOutputFile,
+	s := Settings{
+		FastaFile:    rootFasta,
+		TreeFile:     *newickTree,
+		LeafOutFile:  leafOutFile,
+		SimOutFile:   *completeSimOutputFile,
 		GenePredFile: *genePredFile,
 		BranchLength: *branchLength,
-		Lambda: *lambda,
-		PropIndel: *propIndel,
-		GcContent: *gcContent,
-		SetSeed: *setSeed,
-		VcfOutFile: *vcfOutFile,
+		Lambda:       *lambda,
+		PropIndel:    *propIndel,
+		GcContent:    *gcContent,
+		SetSeed:      *setSeed,
+		VcfOutFile:   *vcfOutFile,
 	}
 
 	SimulateEvol(s)

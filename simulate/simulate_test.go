@@ -1,13 +1,13 @@
 package simulate
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"math/rand"
-	"testing"
-	"fmt"
 	"os"
+	"testing"
 )
 
 var GCcontent = 0.42
@@ -53,8 +53,8 @@ func TestMutateGene(t *testing.T) {
 }
 
 var IndelLengthTests = []struct {
-	Lambda float64
-	OutFile string
+	Lambda       float64
+	OutFile      string
 	ExpectedFile string
 }{
 	{1, "testdata/test.IndelLength.Lambda1.txt", "testdata/expected.IndelLength.Lambda1.txt"},
@@ -84,4 +84,3 @@ func TestIndelLength(t *testing.T) {
 		}
 	}
 }
-

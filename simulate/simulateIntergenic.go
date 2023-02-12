@@ -21,7 +21,6 @@ func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	return answer
 }
 
-
 func indelLength(lambda float64) int {
 	expFloat, _ := numbers.RandExp()
 	return int(math.Ceil(expFloat / lambda))
@@ -61,13 +60,13 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 	}
 
 	for inputPos < len(records[0].Seq) {
-		if inputPos % 100_000 == 0 {
+		if inputPos%100_000 == 0 {
 			fmt.Printf("CurrentPos: %v.\n", inputPos)
 		}
-		currRand = rand.Float64()//this rand determines if there will be a mutation
+		currRand = rand.Float64() //this rand determines if there will be a mutation
 		if currRand < branchLength {
-			currRand2 = rand.Float64()//this rand determines the mutation type
-			if currRand2 < (propIndel/2.0) {//this half of INDELs will be deletions
+			currRand2 = rand.Float64()         //this rand determines the mutation type
+			if currRand2 < (propIndel / 2.0) { //this half of INDELs will be deletions
 				indelStartPos = inputPos + 1
 				currRand3 = rand.Float64() //one more rand for the case where a substitution immediately precedes a deletion
 				if currRand3 < branchLength {
@@ -112,18 +111,18 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 						break
 					}
 				}
-				inputPos--//avoids double skipping after indel
-				if outOfChrom {//double break needed if we run out of chromosome in the inner loop
+				inputPos--      //avoids double skipping after indel
+				if outOfChrom { //double break needed if we run out of chromosome in the inner loop
 					break
 				}
 				//if we didn't run off the chrom, we'll report the variant
 				if vcfOutFile != "" {
 					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString((currAlt)), "100", "PASS", ".", ".")
 				}
-			} else if currRand2 < propIndel {//the other half will be insertions
+			} else if currRand2 < propIndel { //the other half will be insertions
 				indelStartPos = inputPos + 1
 				currRand2 = rand.Float64()
-				if currRand2 < branchLength {//case where a substitution immediately precedes an insertion
+				if currRand2 < branchLength { //case where a substitution immediately precedes an insertion
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 					currRef = []dna.Base{records[0].Seq[inputPos]}
 					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
@@ -160,11 +159,11 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 					}
 					indelPos++
 				}
-				inputPos--//avoid double skipping for the main loop iterator
+				inputPos-- //avoid double skipping for the main loop iterator
 				if vcfOutFile != "" {
 					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString(currAlt), "100", "PASS", ".", ".")
 				}
-			} else {//this section handles the substitution case
+			} else { //this section handles the substitution case
 				answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 				answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
 				currRef = []dna.Base{records[0].Seq[inputPos]}
