@@ -61,6 +61,9 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 	}
 
 	for inputPos < len(records[0].Seq) {
+		if inputPos % 100_000 == 0 {
+			fmt.Printf("CurrentPos: %v.\n", inputPos)
+		}
 		currRand = rand.Float64()//this rand determines if there will be a mutation
 		if currRand < branchLength {
 			currRand2 = rand.Float64()//this rand determines the mutation type
@@ -87,6 +90,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 				if emptyRoomInBuffer < 1 {
 					answer[0].Seq = append(answer[0].Seq, newBufferRoom...)
 					answer[1].Seq = append(answer[1].Seq, newBufferRoom...)
+					emptyRoomInBuffer += bufferSize
 				}
 				length = indelLength(lambda)
 				indelPos = 0
@@ -99,6 +103,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 					if emptyRoomInBuffer < 1 {
 						answer[0].Seq = append(answer[0].Seq, newBufferRoom...)
 						answer[1].Seq = append(answer[1].Seq, newBufferRoom...)
+						emptyRoomInBuffer += bufferSize
 					}
 					indelPos++
 					inputPos++
@@ -112,7 +117,9 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 					break
 				}
 				//if we didn't run off the chrom, we'll report the variant
-				_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString((currAlt)), "100", "PASS", ".", ".")
+				if vcfOutFile != "" {
+					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString((currAlt)), "100", "PASS", ".", ".")
+				}
 			} else if currRand2 < propIndel {//the other half will be insertions
 				indelStartPos = inputPos + 1
 				currRand2 = rand.Float64()
@@ -136,6 +143,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 				if emptyRoomInBuffer < 1 {
 					answer[0].Seq = append(answer[0].Seq, newBufferRoom...)
 					answer[1].Seq = append(answer[1].Seq, newBufferRoom...)
+					emptyRoomInBuffer += bufferSize
 				}
 				length = indelLength(lambda)
 				indelPos = 0
@@ -148,22 +156,28 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 					if emptyRoomInBuffer < 1 {
 						answer[0].Seq = append(answer[0].Seq, newBufferRoom...)
 						answer[1].Seq = append(answer[1].Seq, newBufferRoom...)
+						emptyRoomInBuffer += bufferSize
 					}
 					indelPos++
 				}
 				inputPos--//avoid double skipping for the main loop iterator
-				_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString((currAlt)), "100", "PASS", ".", ".")
+				if vcfOutFile != "" {
+					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString(currAlt), "100", "PASS", ".", ".")
+				}
 			} else {//this section handles the substitution case
 				answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 				answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
 				currRef = []dna.Base{records[0].Seq[inputPos]}
-				currAlt =[]dna.Base{answer[1].Seq[outputPos]}
-				_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, inputPos+1, ".", dna.BasesToString(currRef), dna.BasesToString((currAlt)), "100", "PASS", ".", ".")
+				currAlt = []dna.Base{answer[1].Seq[outputPos]}
+				if vcfOutFile != "" {
+					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, inputPos+1, ".", dna.BasesToString(currRef), dna.BasesToString(currAlt), "100", "PASS", ".", ".")
+				}
 				outputPos++
 				emptyRoomInBuffer--
 				if emptyRoomInBuffer < 1 {
 					answer[0].Seq = append(answer[0].Seq, newBufferRoom...)
 					answer[1].Seq = append(answer[1].Seq, newBufferRoom...)
+					emptyRoomInBuffer += bufferSize
 				}
 			}
 		} else {
@@ -174,6 +188,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 			if emptyRoomInBuffer < 1 {
 				answer[0].Seq = append(answer[0].Seq, newBufferRoom...)
 				answer[1].Seq = append(answer[1].Seq, newBufferRoom...)
+				emptyRoomInBuffer += bufferSize
 			}
 		}
 		inputPos++
