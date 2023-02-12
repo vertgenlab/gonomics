@@ -10,38 +10,91 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"math/rand"
 )
 
-//TODO: option for seeded or unseeded random numbers (include in simulate.go)
-func SimulateEvol(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
-	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
-	exception.FatalOnErr(err)
-	var fastas []fasta.Fasta
-	var leafFastas []fasta.Fasta
-	simulate.Simulate(rootFastaFile, tree, gp, true)
-	nodes := expandedTree.GetTree(tree)
+type Settings struct {
+	FastaFile string
+	TreeFile string
+	LeafOutFile string
+	GenePredFile string
+	SimOutFile string
+	Lambda float64
+	PropIndel float64
+	BranchLength float64
+	SetSeed int64
+	GcContent float64
+	VcfOutFile string
+}
 
-	for i := 0; i < len(nodes); i++ {
-		fastas = append(fastas, *nodes[i].Fasta)
-		if nodes[i].Left == nil && nodes[i].Right == nil {
-			leafFastas = append(leafFastas, *nodes[i].Fasta)
-		}
+func SimulateEvol(s Settings) {
+	rand.Seed(s.SetSeed)
+	var fastas, leafFastas []fasta.Fasta
+
+	if s.BranchLength < 0 || s.BranchLength > 1 {
+		log.Fatalf("The branchLength argument must be a value between 0 and 1.")
 	}
-	fasta.Write(simOutFile, fastas)
-	fasta.Write(leafOutFile, leafFastas)
+	if s.BranchLength != 0 && s.TreeFile != "" {
+		log.Fatalf("The user must choose either branchLength mode or newick mode, both cannot be selected at once.")
+	}
+	if s.BranchLength == 0 && s.TreeFile == "" {
+		log.Fatalf("The user must choose either branchLength mode or newick mode, neither option has been selected.")
+	}
+	if s.PropIndel < 0 || s.PropIndel > 1 {
+		log.Fatalf("The propIndel option must be a value between 0 and 1.")
+	}
+	if s.GcContent < 0 || s.GcContent > 1 {
+		log.Fatalf("GcContent must be a value between 0 and 1.")
+	}
+
+	if s.TreeFile != "" {
+		tree, err := expandedTree.ReadTree(s.TreeFile, s.FastaFile)
+		exception.PanicOnErr(err)
+		simulate.Simulate(s.FastaFile, tree, s.GenePredFile, true)
+		nodes := expandedTree.GetTree(tree)
+
+		for i := 0; i < len(nodes); i++ {
+			fastas = append(fastas, *nodes[i].Fasta)
+			if nodes[i].Left == nil && nodes[i].Right == nil {
+				leafFastas = append(leafFastas, *nodes[i].Fasta)
+			}
+		}
+		if s.SimOutFile != "" {
+			fasta.Write(s.SimOutFile, fastas)
+		}
+	} else {
+		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.VcfOutFile)
+	}
+	fasta.Write(s.LeafOutFile, leafFastas)
+
+
 }
 
 func usage() {
 	fmt.Print(
-		"simulateEvol takes in a root fasta, the sequence's genePred file, and a newick formatted tree with branch lengths and simulates evolution along the tree. It returns a list of fastas for the whole tree for reference and a list of fastas from leaves for reconstruction.\n" +
+		"simulateEvol simulates sequence evolution on an input fasta.\n" +
+			"The user can provide one of two options.\n" +
+			"First, a user may use the branchLength option to generate a single simulated sequence from the input fasta.\n" +
+			"Second, a user may use the newickTree option to simulate sequences across the tree, treating the input sequence as the root node.\n" +
+			"Note that the newickTree mode does not support insertions, but may introduce deletions." +
+			"By default, newickTree mode returns only the leaf sequences in fasta format.\n" +
 			"Usage:\n" +
-			"simulateEvol <rootFasta.fasta> <newickTree.txt> <genePred filename> <outFile.fasta> <leafOutputFile.fasta> \n" +
+			"simulateEvol <rootFasta.fasta> <outputFile.fasta> \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs = 5
+	var expectedNumArgs = 2
+	var newickTree *string = flag.String("newickTree", "", "Specify a newick tree filename to simulate evolution for each node.")
+	var completeSimOutputFile *string = flag.String("simOutFile", "", "Also return a fasta file containing the sequence for every node in the tree, including internal nodes.")
+	var genePredFile *string = flag.String("genePredFile", "", "Specify gene features. Sequence evolution in gene features will follow the BLOSOM matrix.")
+	var lambda *float64 = flag.Float64("lambda", 1, "Define the rate parameter for the exponential distribution used to generate simulated INDEL lengths.")
+	var propIndel *float64 = flag.Float64("propIndel", 0, "Proportion of simulated variants that should be insertions or deletions.")
+	var branchLength *float64 = flag.Float64("branchLength", 0, "For a single descendent sequence, specify the divergence rate (must be between 0 and 1).")
+	var gcContent *float64 = flag.Float64("gcContent", 0.42, "Set the GC content for simulated insertion sequences.")
+	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var vcfOutFile *string = flag.String("vcfOutFile", "", "For branchLength mode, specify a vcf filename to record simulated mutations.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -54,10 +107,21 @@ func main() {
 	}
 
 	rootFasta := flag.Arg(0)
-	newickTree := flag.Arg(1)
-	gene := flag.Arg(2)
-	outFile := flag.Arg(3)
-	leafOutFile := flag.Arg(4)
+	leafOutFile := flag.Arg(1)
 
-	SimulateEvol(rootFasta, newickTree, gene, outFile, leafOutFile)
+	s := Settings {
+		FastaFile: rootFasta,
+		TreeFile: *newickTree,
+		LeafOutFile: leafOutFile,
+		SimOutFile: *completeSimOutputFile,
+		GenePredFile: *genePredFile,
+		BranchLength: *branchLength,
+		Lambda: *lambda,
+		PropIndel: *propIndel,
+		GcContent: *gcContent,
+		SetSeed: *setSeed,
+		VcfOutFile: *vcfOutFile,
+	}
+
+	SimulateEvol(s)
 }
