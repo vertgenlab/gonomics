@@ -273,6 +273,8 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 					if i < len(f[0].Seq) - 1 {//if there is a next base to look at
 						if f[0].Seq[i+1] != dna.Gap && f[1].Seq[i+1] != dna.Gap {//if neither alt nor ref is a gap in the next pos.
 							vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+						} else if substitutionsOnly {//we would also write the subsitution in the case where we don't care if the substitution precedes an INDEL because we are only reporting substitutions
+							vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
 						}
 						// Otherwise we won't report this substitution because it wil be part of the INDEL reporting.
 					} else {//for a substitution in the final position, we need not check for subsequent INDELs
