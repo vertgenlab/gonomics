@@ -145,7 +145,7 @@ func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
 	for i := 1; i < len(records); i++ {
 		if records[i-1].Chrom == records[i].Chrom {
 			threeDmidpoint = (records[i-1].ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
-			if threeDmidpoint < records[i-1].ChromEnd {
+			if threeDmidpoint < records[i-1].ChromEnd || threeDmidpoint+1 < records[i-1].ChromStart {
 				violation = true
 			} else {
 				answer = append(answer, records[i-1])
