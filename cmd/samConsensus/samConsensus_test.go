@@ -28,7 +28,7 @@ var samConsensusTests = []struct {
 		insertionThreshold: 0.9,
 		tName:              "target",
 		qName:              "query",
-		outFile_expected:   "testdata/test.out.fa",},
+		outFile_expected:   "testdata/test.out.fa"},
 	{inFile: "testdata/test.sam",
 		refFile:                    "testdata/test.ref.fa",
 		outFile:                    "testdata/tmpOutFile.indel.fa",
