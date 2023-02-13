@@ -213,12 +213,12 @@ func getWigChromIndex(s string, wigSlice []wig.Wig) int {
 //entry as the reference and the second fasta entry as the alt allele.
 //This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
 func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionsOnly bool, retainN bool) {
-	var pastStart bool = false //bool check to see if we have an insertion at the start of an alignment.
-	var insertion bool = false
-	var deletion bool = false
-	var insertionAlnPos int
-	var deletionAlnPos int
+	var pastStart, insertion, deletion bool = false, false, false //first bool checks to see if we have an insertion at the start of an alignment.
+	var insertionAlnPos, deletionAlnPos int
 	var currRefPos, currAlnPos int = 0, 0 //0 based, like fasta. Add 1 to get vcf pos.
+	if len(f) != 2 {
+		log.Fatalf("PairwiseFaToVcf expects a fasta input with two entries.")
+	}
 
 	for i := range f[0].Seq { //loop through alignment positions
 		if f[0].Seq[i] == dna.Gap { //reference is gap (insertion)
@@ -270,7 +270,14 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 				} else {
 					currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
 					currAlnPos = i
-					vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+					if i < len(f[0].Seq) - 1 {//if there is a next base to look at
+						if f[0].Seq[i+1] != dna.Gap && f[1].Seq[i+1] != dna.Gap {//if neither alt nor ref is a gap in the next pos.
+							vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+						}
+						// Otherwise we won't report this substitution because it wil be part of the INDEL reporting.
+					} else {//for a substitution in the final position, we need not check for subsequent INDELs
+						vcf.WriteVcf(out, vcf.Vcf{Chr: chr, Pos: currRefPos + 1, Id: ".", Ref: dna.BaseToString(f[0].Seq[i]), Alt: []string{dna.BaseToString(f[1].Seq[i])}, Qual: 100.0, Filter: "PASS", Info: ".", Format: []string{"."}})
+					}
 				}
 			}
 			insertion = false
