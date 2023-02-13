@@ -187,7 +187,7 @@ func samConsensus(s Settings) {
 		case sam.Base:
 			answer[currFaIndex].Seq[answerPos] = currConsensus.Base
 			if s.VcfFile != "" && currConsensus.Base != dna.ToUpper(refMap[currChrom][refPos]) {
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int64(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BaseToString(currConsensus.Base), ".", ".", ".", ".")
+				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", currChrom, int64(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BaseToString(currConsensus.Base), "100", "PASS", ".", ".")
 				exception.PanicOnErr(err)
 			}
 			emptyRoomInAnswerBuffer--
@@ -248,7 +248,8 @@ func samConsensus(s Settings) {
 				answerPos++
 			}
 			if s.VcfFile != "" {
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), fmt.Sprintf("%s%s", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BasesToString(currConsensus.Insertion)), ".", ".", ".", ".")
+				//TODO: Not catch substitution immediately preceding insertion!!!
+				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", currChrom, int(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), fmt.Sprintf("%s%s", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BasesToString(currConsensus.Insertion)), "100", "PASS", ".", ".")
 				exception.PanicOnErr(err)
 			}
 			refPos++
@@ -259,7 +260,7 @@ func samConsensus(s Settings) {
 				for i = range refAllele {
 					refAllele[i] = dna.ToUpper(refMap[currChrom][refPos+i-1])
 				}
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", currChrom, int(p.Pos), ".", dna.BasesToString(refAllele), dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos-1])), ".", ".", ".", ".")
+				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", currChrom, int(p.Pos-1), ".", dna.BasesToString(refAllele), dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos-1])), "100", "PASS", ".", ".")
 				exception.PanicOnErr(err)
 			}
 			if s.MultiFaDir != "" {
