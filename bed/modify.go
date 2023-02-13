@@ -182,10 +182,12 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 			answer = append(answer, currAnswer)
 			currAnswer.Chrom = records[i].Chrom
 			currAnswer.ChromStart = 0
-		} else if currAnswer.Name == records[i].Name {
-			currAnswer.ChromStart = numbers.Min(currAnswer.ChromStart, records[i].ChromStart)
-			currAnswer.ChromEnd = numbers.Max(currAnswer.ChromEnd, records[i].ChromEnd)
-			fmt.Printf("CurrAnswer: %v\n", currAnswer)
+
+			//else if currAnswer.Name == records[i].Name {
+			//currAnswer.ChromStart = numbers.Min(currAnswer.ChromStart, records[i].ChromStart)
+			//currAnswer.ChromEnd = numbers.Max(currAnswer.ChromEnd, records[i].ChromEnd)
+			//fmt.Printf("CurrAnswer: %v\n", currAnswer)
+			//}
 		} else {
 			fmt.Printf("CurrAnswer: %v.\n", currAnswer)
 			threeDMidpoint = (currAnswer.ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
