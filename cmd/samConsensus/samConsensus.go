@@ -6,20 +6,15 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
-	"strings"
 )
 
 type Settings struct {
 	SamFileName        string
 	RefFile            string
 	OutFile            string
-	VcfFile            string
 	MultiFaDir         string
 	SubstitutionsOnly  bool
 	InsertionThreshold float64
@@ -30,8 +25,6 @@ type Settings struct {
 const bufferSize = 10_000_000
 
 func samConsensus(s Settings) {
-	var err error
-	var outVcfFile *fileio.EasyWriter
 	var currConsensus sam.Consensus
 	var currChrom string
 	var answerPos int //position in the currChrom of the answer
@@ -40,7 +33,6 @@ func samConsensus(s Settings) {
 	var newBufferRoom []dna.Base = make([]dna.Base, bufferSize)
 	var currFaIndex int
 	var positionsToSkip int
-	var refAllele []dna.Base
 	var currMultiFa []fasta.Fasta = make([]fasta.Fasta, 2)
 
 	if s.InsertionThreshold < 0 || s.InsertionThreshold > 1 {
@@ -55,11 +47,6 @@ func samConsensus(s Settings) {
 
 	reads, header := sam.GoReadToChan(s.SamFileName)
 	piles := sam.GoPileup(reads, header, false, nil, nil)
-	if s.VcfFile != "" {
-		outVcfFile = fileio.EasyCreate(s.VcfFile)
-		_, err = fmt.Fprintf(outVcfFile, "%s\n", strings.Join(vcf.NewHeader(s.SamFileName).Text, "\n"))
-		exception.PanicOnErr(err)
-	}
 
 	var answer []fasta.Fasta = make([]fasta.Fasta, len(ref))
 	for i = range ref {
@@ -186,10 +173,6 @@ func samConsensus(s Settings) {
 			refPos++
 		case sam.Base:
 			answer[currFaIndex].Seq[answerPos] = currConsensus.Base
-			if s.VcfFile != "" && currConsensus.Base != dna.ToUpper(refMap[currChrom][refPos]) {
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", currChrom, int64(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BaseToString(currConsensus.Base), "100", "PASS", ".", ".")
-				exception.PanicOnErr(err)
-			}
 			emptyRoomInAnswerBuffer--
 			if emptyRoomInAnswerBuffer < 1 {
 				answer[currFaIndex].Seq = append(answer[currFaIndex].Seq, newBufferRoom...)
@@ -247,22 +230,9 @@ func samConsensus(s Settings) {
 				}
 				answerPos++
 			}
-			if s.VcfFile != "" {
-				//TODO: Not catch substitution immediately preceding insertion!!!
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", currChrom, int(p.Pos), ".", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), fmt.Sprintf("%s%s", dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos])), dna.BasesToString(currConsensus.Insertion)), "100", "PASS", ".", ".")
-				exception.PanicOnErr(err)
-			}
 			refPos++
 		case sam.Deletion: //this pile corresponds to the deleted position, so nothing is written here, we skip for the duration of the deletion.
 			positionsToSkip = currConsensus.Deletion - 1
-			if s.VcfFile != "" {
-				refAllele = make([]dna.Base, currConsensus.Deletion+1) // make a dna.Base slice the length of the deletion + 1 (to include base before deletion)
-				for i = range refAllele {
-					refAllele[i] = dna.ToUpper(refMap[currChrom][refPos+i-1])
-				}
-				_, err = fmt.Fprintf(outVcfFile, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", currChrom, int(p.Pos-1), ".", dna.BasesToString(refAllele), dna.BaseToString(dna.ToUpper(refMap[currChrom][refPos-1])), "100", "PASS", ".", ".")
-				exception.PanicOnErr(err)
-			}
 			if s.MultiFaDir != "" {
 				currMultiFa[0].Seq[multiFaPos] = dna.ToUpper(refMap[currChrom][refPos])
 				currMultiFa[1].Seq[multiFaPos] = dna.Gap
@@ -301,10 +271,6 @@ func samConsensus(s Settings) {
 	}
 	answer[currFaIndex].Seq = answer[currFaIndex].Seq[:len(answer[currFaIndex].Seq)-emptyRoomInAnswerBuffer]
 
-	if s.VcfFile != "" {
-		err = outVcfFile.Close()
-		exception.PanicOnErr(err)
-	}
 	if s.MultiFaDir != "" {
 		currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq)-emptyRoomInMultiFaBuffer]
 		currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq)-emptyRoomInMultiFaBuffer]
@@ -337,7 +303,6 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 3
 	var substitutionsOnly *bool = flag.Bool("substitutionsOnly", false, "This option ignores insertions and deletions and only edits substitutions in the output file.")
-	var vcfOutFile *string = flag.String("vcfOutFile", "", "Also write a vcf file of called variants from the reads.")
 	var multiFaDir *string = flag.String("multiFaDir", "", "Output the reference and generated sequence as an aligned multiFa, each file by chrom.")
 	var insertionThreshold *float64 = flag.Float64("insertionThreshold", 0.1, "Requires the number of observations of an insertion relative to read depth required to call an insertion.")
 	var tName *string = flag.String("tName", "Target", "Set the tName in the optional multiFa output.")
@@ -360,7 +325,6 @@ func main() {
 		SamFileName:        inFile,
 		RefFile:            refFile,
 		OutFile:            outFile,
-		VcfFile:            *vcfOutFile,
 		SubstitutionsOnly:  *substitutionsOnly,
 		MultiFaDir:         *multiFaDir,
 		InsertionThreshold: *insertionThreshold,
