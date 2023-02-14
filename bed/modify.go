@@ -145,7 +145,7 @@ func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
 	for i := 1; i < len(records); i++ {
 		if records[i-1].Chrom == records[i].Chrom {
 			threeDmidpoint = (records[i-1].ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
-			if threeDmidpoint+1 < records[i-1].ChromStart { //threeDmidpoint < records[i-1].ChromEnd ||
+			if threeDmidpoint < records[i-1].ChromEnd {
 				violation = true
 			} else {
 				answer = append(answer, records[i-1])
@@ -185,7 +185,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 		} else if currAnswer.Name == records[i].Name {
 			currAnswer.ChromStart = numbers.Min(currAnswer.ChromStart, records[i].ChromStart)
 			currAnswer.ChromEnd = numbers.Max(currAnswer.ChromEnd, records[i].ChromEnd)
-			fmt.Printf("CurrAnswer: %v\n", currAnswer)
+			currAnswer.Score = numbers.Min(currAnswer.Score, records[i].Score)
 		} else {
 			fmt.Printf("CurrAnswer: %v.\n", currAnswer)
 			threeDMidpoint = (currAnswer.ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
