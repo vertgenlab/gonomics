@@ -84,7 +84,6 @@ func mergeKeepLowNameAndScore(records []Bed) []Bed {
 				curr = records[i]
 			}
 		} else if curr.Chrom == records[i].Chrom {
-			fmt.Printf("curr.Chrom: %s \n records[i].Chrom: %s\n", curr.Chrom, records[i].Chrom)
 			dist = records[i].ChromStart - curr.ChromEnd
 			if (curr.Score + dist) < records[i].Score { //if the distance to the record on the left plus its hidden score
 				// is less than the hidden score stores for the right record, the right record will be reassigned the
@@ -203,13 +202,14 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 
 	for i := 1; i < len(records); i++ {
 		if records[i].Chrom != currAnswer.Chrom {
+			fmt.Printf("Here's the record in question: %v\n", currAnswer)
 			currAnswer.ChromEnd = genome[records[i-1].Chrom].Size
 			if currAnswer.ChromEnd < currAnswer.ChromStart {
-				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
-				fmt.Printf("Records[i-2]: %v.\n", records[i-2])
-				fmt.Printf("Records[i-1]: %v.\n", records[i-1])
-				fmt.Printf("Records[i]: %v.\n", records[i])
-				fmt.Printf("Midpoint: %v.\n", threeDMidpoint)
+				//fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+				//fmt.Printf("Records[i-2]: %v.\n", records[i-2])
+				//fmt.Printf("Records[i-1]: %v.\n", records[i-1])
+				//fmt.Printf("Records[i]: %v.\n", records[i])
+				//fmt.Printf("Midpoint: %v.\n", threeDMidpoint)
 				log.Fatalf("Died on new chrom.")
 			}
 			answer = append(answer, currAnswer)
@@ -220,16 +220,16 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 			currAnswer.ChromEnd = numbers.Max(currAnswer.ChromEnd, records[i].ChromEnd)
 			currAnswer.Score = numbers.Min(currAnswer.Score, records[i].Score)
 		} else {
-			fmt.Printf("CurrAnswer: %v.\n", currAnswer)
+			//fmt.Printf("CurrAnswer: %v.\n", currAnswer)
 			threeDMidpoint = (currAnswer.ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
 			currAnswer.ChromEnd = threeDMidpoint + 1
 			currAnswer.Name = records[i-1].Name
 			if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
-				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
-				fmt.Printf("Records[i-2]: %v.\n", records[i-2])
-				fmt.Printf("Records[i-1]: %v.\n", records[i-1])
-				fmt.Printf("Records[i]: %v.\n", records[i])
-				fmt.Printf("Midpoint: %v.\n", threeDMidpoint)
+				//fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+				//fmt.Printf("Records[i-2]: %v.\n", records[i-2])
+				//fmt.Printf("Records[i-1]: %v.\n", records[i-1])
+				//fmt.Printf("Records[i]: %v.\n", records[i])
+				//fmt.Printf("Midpoint: %v.\n", threeDMidpoint)
 				log.Fatalf("Died in loop.")
 			}
 			answer = append(answer, currAnswer)
@@ -240,7 +240,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 	}
 	currAnswer.ChromEnd = genome[records[len(records)-1].Chrom].Size
 	if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
-		fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+		//fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
 		log.Fatalf("Died after loop.")
 	}
 	answer = append(answer, currAnswer)
