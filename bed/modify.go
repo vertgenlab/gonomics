@@ -1,7 +1,6 @@
 package bed
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
@@ -168,7 +167,7 @@ func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
 	var threeDmidpoint int
 	var violation = false
 
-	fmt.Printf("LenRecords: %v.\n", len(records))
+	//fmt.Printf("LenRecords: %v.\n", len(records))
 	for i := 1; i < len(records); i++ {
 		if records[i-1].Chrom == records[i].Chrom {
 			threeDmidpoint = (records[i-1].ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
@@ -245,18 +244,4 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 	answer = append(answer, currAnswer)
 
 	return answer
-	//var mergedAnswer = make([]Bed, 0)
-	//currAnswer = answer[0]
-	//for i := 1; i < len(answer); i++ {
-	//	if answer[i-1].Chrom == answer[i].Chrom {
-	//		if answer[i-1].Name == answer[i].Name {
-	//			currAnswer.ChromEnd = answer[i].ChromEnd
-	//		} else {
-	//			mergedAnswer = append(mergedAnswer, currAnswer)
-	//			currAnswer = answer[i]
-	//		}
-	//	}
-	//}
-	//mergedAnswer = append(mergedAnswer, currAnswer)
-	//return mergedAnswer
 }
