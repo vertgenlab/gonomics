@@ -112,7 +112,7 @@ func removeRecordsOnEmptyChrom(records []Bed, genome map[string]chromInfo.ChromI
 	for i := range records {
 		v, _ = genome[records[i].Chrom]
 		if v.Size != 0 {
-			fmt.Printf("Check Passed: %s", v.Name)
+			//fmt.Printf("Check Passed: %s", v.Name)
 			out = append(out, records[i])
 		}
 		//if exist {
@@ -196,6 +196,7 @@ func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
 // the input bed scores to represent "hidden values", or the distance from that position to its nearest TSS in 3D space.
 func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	records = mergeKeepLowNameAndScore(records)
+	records = removeRecordsOnEmptyChrom(records, genome)
 	var violation bool = true
 	for violation {
 		records, violation = removeBedsWithNoTerritory(records)
