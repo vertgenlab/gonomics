@@ -213,6 +213,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 				log.Fatalf("Died on new chrom.")
 			}
 			answer = append(answer, currAnswer)
+			fmt.Printf("Last record on Chrom as written: %v\n", answer[len(answer)-1])
 			currAnswer.Chrom = records[i].Chrom
 			currAnswer.ChromStart = 0
 		} else if currAnswer.Name == records[i].Name && currAnswer.Chrom == records[i].Chrom {
