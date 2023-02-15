@@ -84,6 +84,7 @@ func mergeKeepLowNameAndScore(records []Bed) []Bed {
 				curr = records[i]
 			}
 		} else if curr.Chrom == records[i].Chrom {
+			fmt.Printf("curr.Chrom: %s \n records[i].Chrom: %s\n", curr.Chrom, records[i].Chrom)
 			dist = records[i].ChromStart - curr.ChromEnd
 			if (curr.Score + dist) < records[i].Score { //if the distance to the record on the left plus its hidden score
 				// is less than the hidden score stores for the right record, the right record will be reassigned the
