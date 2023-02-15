@@ -74,6 +74,7 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 }
 
 func mergeKeepLowNameAndScore(records []Bed) []Bed {
+	var dist int
 	var outList []Bed = make([]Bed, 0)
 	SortByCoord(records)
 	var curr = records[0]
@@ -82,6 +83,19 @@ func mergeKeepLowNameAndScore(records []Bed) []Bed {
 			if records[i].Score < curr.Score {
 				curr = records[i]
 			}
+		} else if curr.Chrom == records[i].Chrom {
+			dist = records[i].ChromStart - curr.ChromEnd
+			if (curr.Score + dist) < records[i].Score { //if the distance to the record on the left plus its hidden score
+				// is less than the hidden score stores for the right record, the right record will be reassigned the
+				//hidden that is equal to the dist to the left record plus it's hidden value and the gene name stored on the left record
+				records[i].Score = curr.Score + dist
+				records[i].Name = curr.Name
+			} else if (records[i].Score + dist) < curr.Score {
+				curr.Score = records[i].Score + dist
+				curr.Name = records[i].Name
+			}
+			outList = append(outList, curr)
+			curr = records[i]
 		} else {
 			outList = append(outList, curr)
 			curr = records[i]
