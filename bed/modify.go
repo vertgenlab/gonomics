@@ -112,6 +112,7 @@ func removeRecordsOnEmptyChrom(records []Bed, genome map[string]chromInfo.ChromI
 	for i := range records {
 		v, _ = genome[records[i].Chrom]
 		if v.Size != 0 {
+			fmt.Printf("Check Passed: %s", v.Name)
 			out = append(out, records[i])
 		}
 		//if exist {
