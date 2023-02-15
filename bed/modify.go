@@ -104,13 +104,27 @@ func mergeKeepLowNameAndScore(records []Bed) []Bed {
 	return outList
 }
 
+func removeRecordsOnEmptyChrom(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
+	var out = make([]Bed, 0)
+	var exist bool
+
+	for i := range records {
+		_, exist = genome[records[i].Chrom]
+		if exist {
+			out = append(out, records[i])
+		}
+	}
+
+	return out
+}
+
 // FillSpaceNoHiddenValue accepts a bed and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
 // that assigns each genomic position to the nearest feature in the input bed using the Name field in the input bed.
 // Absolute start positions of the original input bed entries are stored in the Score field of the output bed entries.
 func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	records = mergeKeepLowNameAndScore(records)
+	records = removeRecordsOnEmptyChrom(records, genome)
 	var answer = make([]Bed, 0)
-
 	if records == nil || len(records) == 0 {
 		return records // return slice as is if it is empty or nil.
 	}
