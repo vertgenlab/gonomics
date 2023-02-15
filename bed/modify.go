@@ -106,18 +106,17 @@ func mergeKeepLowNameAndScore(records []Bed) []Bed {
 
 func removeRecordsOnEmptyChrom(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	var out = make([]Bed, 0)
-	//var exist bool
-	var v chromInfo.ChromInfo
+	var exist bool
+	//var v chromInfo.ChromInfo
 
 	for i := range records {
-		v, _ = genome[records[i].Chrom]
-		if v.Size != 0 {
-			//fmt.Printf("Check Passed: %s", v.Name)
-			out = append(out, records[i])
-		}
-		//if exist {
+		_, exist = genome[records[i].Chrom]
+		//if v.Size != 0 {
 		//	out = append(out, records[i])
 		//}
+		if exist {
+			out = append(out, records[i])
+		}
 	}
 	return out
 }
