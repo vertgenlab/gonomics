@@ -191,6 +191,10 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 			currAnswer.ChromEnd = genome[records[i-1].Chrom].Size
 			if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
 				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
+				fmt.Printf("Records[i-2]: %v.\n", records[i-2])
+				fmt.Printf("Records[i-1]: %v.\n", records[i-1])
+				fmt.Printf("Records[i]: %v.\n", records[i])
+				fmt.Printf("Midpoint: %v.\n", threeDMidpoint)
 				log.Fatalf("Died on new chrom.")
 			}
 			answer = append(answer, currAnswer)
