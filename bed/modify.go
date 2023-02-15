@@ -203,7 +203,6 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 	for i := 1; i < len(records); i++ {
 		if records[i].Chrom != currAnswer.Chrom {
 			currAnswer.ChromEnd = genome[records[i-1].Chrom].Size
-			fmt.Printf("Last record on Chrom: %v\n", currAnswer)
 			if currAnswer.ChromEnd < currAnswer.ChromStart {
 				//fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
 				//fmt.Printf("Records[i-2]: %v.\n", records[i-2])
@@ -213,7 +212,6 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 				log.Fatalf("Died on new chrom.")
 			}
 			answer = append(answer, currAnswer)
-			fmt.Printf("Last record on Chrom as written: %v\n", answer[len(answer)-1])
 			currAnswer.Chrom = records[i].Chrom
 			currAnswer.ChromStart = 0
 		} else if currAnswer.Name == records[i].Name && currAnswer.Chrom == records[i].Chrom {
@@ -245,16 +243,20 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 		log.Fatalf("Died after loop.")
 	}
 	answer = append(answer, currAnswer)
-	var mergedAnswer = make([]Bed, 0)
-	currAnswer = answer[0]
-	for i := 1; i < len(answer); i++ {
-		if answer[i-1].Name == answer[i].Name {
-			currAnswer.ChromEnd = answer[i].ChromEnd
-		} else {
-			mergedAnswer = append(mergedAnswer, currAnswer)
-			currAnswer = answer[i]
-		}
-	}
-	mergedAnswer = append(mergedAnswer, currAnswer)
-	return mergedAnswer
+
+	return answer
+	//var mergedAnswer = make([]Bed, 0)
+	//currAnswer = answer[0]
+	//for i := 1; i < len(answer); i++ {
+	//	if answer[i-1].Chrom == answer[i].Chrom {
+	//		if answer[i-1].Name == answer[i].Name {
+	//			currAnswer.ChromEnd = answer[i].ChromEnd
+	//		} else {
+	//			mergedAnswer = append(mergedAnswer, currAnswer)
+	//			currAnswer = answer[i]
+	//		}
+	//	}
+	//}
+	//mergedAnswer = append(mergedAnswer, currAnswer)
+	//return mergedAnswer
 }
