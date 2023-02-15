@@ -107,13 +107,9 @@ func mergeKeepLowNameAndScore(records []Bed) []Bed {
 func removeRecordsOnEmptyChrom(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	var out = make([]Bed, 0)
 	var exist bool
-	//var v chromInfo.ChromInfo
 
 	for i := range records {
 		_, exist = genome[records[i].Chrom]
-		//if v.Size != 0 {
-		//	out = append(out, records[i])
-		//}
 		if exist {
 			out = append(out, records[i])
 		}
@@ -207,7 +203,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 	for i := 1; i < len(records); i++ {
 		if records[i].Chrom != currAnswer.Chrom {
 			currAnswer.ChromEnd = genome[records[i-1].Chrom].Size
-			if currAnswer.ChromEnd-currAnswer.ChromStart < 0 {
+			if currAnswer.ChromEnd < currAnswer.ChromStart {
 				fmt.Printf("Here's the record in question.\n%v\n", currAnswer)
 				fmt.Printf("Records[i-2]: %v.\n", records[i-2])
 				fmt.Printf("Records[i-1]: %v.\n", records[i-1])
@@ -218,7 +214,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 			answer = append(answer, currAnswer)
 			currAnswer.Chrom = records[i].Chrom
 			currAnswer.ChromStart = 0
-		} else if currAnswer.Name == records[i].Name {
+		} else if currAnswer.Name == records[i].Name && currAnswer.Chrom == records[i].Chrom {
 			currAnswer.ChromStart = numbers.Min(currAnswer.ChromStart, records[i].ChromStart)
 			currAnswer.ChromEnd = numbers.Max(currAnswer.ChromEnd, records[i].ChromEnd)
 			currAnswer.Score = numbers.Min(currAnswer.Score, records[i].Score)
