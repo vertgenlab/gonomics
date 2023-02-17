@@ -13,44 +13,38 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"strings"
 )
 
-func usage() {
-	fmt.Print(
-		"simulateSam - Simulate alignments to a reference sequence\n\n" +
-			"Currently only generates illumina-style paired sequencing data" +
-			"Read Length : 150bp, Average Insert Size: 50bp" +
-			"Usage:\n" +
-			" simulateSam [options] -i ref.fasta\n" +
-			"options:\n")
-	flag.PrintDefaults()
+type Settings struct {
+	OutFile string
+	RefFile string
+	NumReads int
+	ReadLength int
+	InsertLength int
+	InsertStdDev float64
+	SetSeed int64
 }
 
-func simulateSam(refFile, outFile string, numReads int, bamOutput bool) {
-	ref := fasta.Read(refFile)
-	out := fileio.EasyCreate(outFile)
+func simulateSam(s Settings) {
+	rand.Seed(s.SetSeed)
+	ref := fasta.Read(s.RefFile)
+	out := fileio.EasyCreate(s.OutFile)
 	header := sam.GenerateHeader(fasta.ToChromInfo(ref), nil, sam.Unsorted, sam.None)
 
 	var bw *sam.BamWriter
-	if bamOutput {
+	var bamOutput bool
+	if strings.HasSuffix(s.OutFile, ".bam") {
 		bw = sam.NewBamWriter(out, header)
+		bamOutput = true
 	} else {
 		sam.WriteHeaderToFileHandle(out, header)
+		bamOutput = false
 	}
 
-	var readsPerContig []int = getReadsPerContig(ref, numReads)
-	var reads []sam.Sam
+	var readsPerContig []int = getReadsPerContig(ref, s.NumReads)
 	for i := range ref {
-		reads = simulate.IlluminaSam(ref[i].Name, ref[i].Seq, readsPerContig[i])
-		if bamOutput {
-			for i := range reads {
-				sam.WriteToBamFileHandle(bw, reads[i], 0)
-			}
-		} else {
-			for i := range reads {
-				sam.WriteToFileHandle(out, reads[i])
-			}
-		}
+		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.InsertLength, s.InsertStdDev, out, bw, bamOutput)
 	}
 
 	var err error
@@ -62,13 +56,12 @@ func simulateSam(refFile, outFile string, numReads int, bamOutput bool) {
 	exception.PanicOnErr(err)
 }
 
+// get probability weights for each contig based on length
 func getReadsPerContig(ref []fasta.Fasta, numReads int) []int {
-	// get probability weights for each contig based on length
 	var totalLen int
 	for i := range ref {
 		totalLen += len(ref[i].Seq)
 	}
-
 	contigWeights := make([]float64, len(ref))
 	for i := range ref {
 		contigWeights[i] = float64(len(ref[i].Seq)) / float64(totalLen)
@@ -94,20 +87,45 @@ func getReadsPerContig(ref []fasta.Fasta, numReads int) []int {
 	return readsPerContig
 }
 
+func usage() {
+	fmt.Print(
+		"simulateSam - Simulate alignments to a reference sequence\n\n" +
+			"Currently only generates illumina-style paired sequencing data" +
+			"Read Length : 150bp, Average Insert Size: 50bp" +
+			"Usage:\n" +
+			" simulateSam [options] ref.fasta out.sam/bam\n" +
+			"options:\n")
+	flag.PrintDefaults()
+}
+
 func main() {
-	outFile := flag.String("o", "stdout", "output file")
-	refFile := flag.String("r", "", "reference fasta file")
+	var expectedNumArgs int = 2
 	numReads := flag.Int("n", 100, "number of read pairs to generate")
-	bamOutput := flag.Bool("b", false, "output file as .bam instead of .sam")
-	seed := flag.Int64("seed", 1, "set the seed for the simulation")
+	setSeed := flag.Int64("setSeed", 1, "set the seed for the simulation")
+	readLength := flag.Int("readLength", 150, "Set the read length for each paired end.")
+	insertLength := flag.Int("insertLength", 50, "Set the average insert size.")
+	insertStdDev := flag.Float64("insertStdDev", 50, "Set the insertLength standard deviation.")
 	flag.Usage = usage
 	flag.Parse()
 
-	if *refFile == "" {
+	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
-		log.Fatal("ERROR: must input a reference fasta file (-r)")
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(flag.Args()))
 	}
 
-	rand.Seed(*seed)
-	simulateSam(*refFile, *outFile, *numReads, *bamOutput)
+	refFile := flag.Arg(0)
+	outFile := flag.Arg(1)
+
+	s := Settings {
+		RefFile: refFile,
+		OutFile: outFile,
+		NumReads: *numReads,
+		ReadLength: *readLength,
+		InsertLength: *insertLength,
+		InsertStdDev: *insertStdDev,
+		SetSeed: *setSeed,
+	}
+
+	simulateSam(s)
 }

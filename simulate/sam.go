@@ -4,50 +4,49 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 	"math/rand"
 	"strings"
 )
 
-// IlluminaSam generates pseudorandom paired reads evenly distributed along the input ref sequence using typical illumina parameters.
-func IlluminaSam(refName string, ref []dna.Base, numPairs int) []sam.Sam {
-	return simulatePairedSam(refName, ref, numPairs, 150, 50, 50)
-}
-
 // simulatePairedSam generates a pair of sam reads randomly distributed across the input ref.
-func simulatePairedSam(refName string, ref []dna.Base, numPairs, readLen, avgInsertSize int, avgInsertSizeStdDev float64) []sam.Sam {
-	reads := make([]sam.Sam, numPairs*2)
-
+func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgInsertSize int, avgInsertSizeStdDev float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
 	var insertSize, midpoint, startFor, startRev, endFor, endRev int
-	for i := 0; i < len(reads); i += 2 {
+	var currFor, currRev sam.Sam
+	for i := 0; i < numPairs; i++ {
 		insertSize = int(numbers.SampleInverseNormal(float64(avgInsertSize), avgInsertSizeStdDev))
-		midpoint = numbers.RandIntInRange(0, len(ref)) // tapered coverage at ends of contig
-		//midpoint = numbers.RandIntInRange(-2*readLen, len(ref)+(2*readLen)) // even coverage across entire contig
+		midpoint = numbers.RandIntInRange(0, len(ref))
 		startFor = midpoint - (readLen + (insertSize / 2))
 		endFor = startFor + readLen
 		startRev = midpoint + (insertSize / 2)
 		endRev = startRev + readLen
-
-		reads[i] = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i/2), refName, ref, startFor, endFor)
-		reads[i+1] = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i/2), refName, ref, startRev, endRev)
-		if reads[i].Cigar == nil && reads[i+1].Cigar == nil {
-			i -= 2 // retry
+		currFor = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor)
+		currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev)
+		if currFor.Cigar == nil && currRev.Cigar == nil {
+			i -= 1 // retry
 			continue
 		}
-		addPairedFlags(&reads[i], &reads[i+1])
-		if reads[i].Cigar != nil && reads[i+1].Cigar != nil {
-			reads[i].RNext = "="
-			reads[i+1].RNext = "="
+		addPairedFlags(&currFor, &currRev)
+		if currFor.Cigar != nil && currRev.Cigar != nil {
+			currFor.RNext = "="
+			currRev.RNext = "="
 		} else {
-			reads[i].RNext = reads[i+1].RName
-			reads[i+1].RNext = reads[i].RName
+			currFor.RNext = currRev.RName
+			currRev.RNext = currFor.RName
 		}
 
-		reads[i].PNext = reads[i+1].Pos
-		reads[i+1].PNext = reads[i].Pos
+		currFor.PNext = currRev.Pos
+		currRev.PNext = currFor.Pos
+		if bamOutput {
+			sam.WriteToBamFileHandle(bw, currFor, 0)
+			sam.WriteToBamFileHandle(bw, currRev, 0)
+		} else {
+			sam.WriteToFileHandle(out, currFor)
+			sam.WriteToFileHandle(out, currRev)
+		}
 	}
-	return reads
 }
 
 // generateSamReadNoFlag generates a sam record for the input position.
