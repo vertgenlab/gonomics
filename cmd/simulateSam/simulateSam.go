@@ -21,8 +21,8 @@ type Settings struct {
 	RefFile      string
 	NumReads     int
 	ReadLength   int
-	InsertLength int
-	InsertStdDev float64
+	FragmentLength int
+	FragmentStdDev float64
 	SetSeed      int64
 }
 
@@ -42,9 +42,9 @@ func simulateSam(s Settings) {
 		bamOutput = false
 	}
 
-	var readsPerContig []int = getReadsPerContig(ref, s.NumReads)
+	var readsPerContig = getReadsPerContig(ref, s.NumReads)
 	for i := range ref {
-		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.InsertLength, s.InsertStdDev, out, bw, bamOutput)
+		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, out, bw, bamOutput)
 	}
 
 	var err error
@@ -103,8 +103,8 @@ func main() {
 	numReads := flag.Int("n", 100, "number of read pairs to generate")
 	setSeed := flag.Int64("setSeed", 1, "set the seed for the simulation")
 	readLength := flag.Int("readLength", 150, "Set the read length for each paired end.")
-	insertLength := flag.Int("insertLength", 50, "Set the average insert size.")
-	insertStdDev := flag.Float64("insertStdDev", 50, "Set the insertLength standard deviation.")
+	fragmentLength := flag.Int("fragmentLength", 400, "Set the average library fragment size.")
+	fragmentStdDev := flag.Float64("fragmentStdDev", 50, "Set the library fragment size standard deviation.")
 	flag.Usage = usage
 	flag.Parse()
 
@@ -122,8 +122,8 @@ func main() {
 		OutFile:      outFile,
 		NumReads:     *numReads,
 		ReadLength:   *readLength,
-		InsertLength: *insertLength,
-		InsertStdDev: *insertStdDev,
+		FragmentLength: *fragmentLength,
+		FragmentStdDev: *fragmentStdDev,
 		SetSeed:      *setSeed,
 	}
 

@@ -24,7 +24,7 @@ var SimulateSamTests = []struct {
 		RefFile:      "testdata/test.fa",
 		NumReads:     100,
 		ReadLength:   150,
-		InsertLength: 50,
+		InsertLength: 500,
 		InsertStdDev: 50,
 		SetSeed:      1,
 		ExpectedFile: "testdata/expected.sam"},
@@ -32,7 +32,7 @@ var SimulateSamTests = []struct {
 		RefFile:      "testdata/test.fa",
 		NumReads:     100,
 		ReadLength:   150,
-		InsertLength: 50,
+		InsertLength: 500,
 		InsertStdDev: 50,
 		SetSeed:      1,
 		ExpectedFile: "testdata/expected.bam"},
@@ -48,8 +48,8 @@ func TestSimulateSam(t *testing.T) {
 			RefFile:      v.RefFile,
 			NumReads:     v.NumReads,
 			ReadLength:   v.ReadLength,
-			InsertLength: v.InsertLength,
-			InsertStdDev: v.InsertStdDev,
+			FragmentLength: v.InsertLength,
+			FragmentStdDev: v.InsertStdDev,
 			SetSeed:      v.SetSeed,
 		}
 		simulateSam(s)

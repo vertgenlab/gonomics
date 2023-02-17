@@ -12,16 +12,17 @@ import (
 )
 
 // simulatePairedSam generates a pair of sam reads randomly distributed across the input ref.
-func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgInsertSize int, avgInsertSizeStdDev float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
-	var insertSize, midpoint, startFor, startRev, endFor, endRev int
+func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
+	var fragmentSize, midpoint, startFor, startRev, endFor, endRev int
 	var currFor, currRev sam.Sam
 	for i := 0; i < numPairs; i++ {
-		insertSize = int(numbers.SampleInverseNormal(float64(avgInsertSize), avgInsertSizeStdDev))
+		fragmentSize = int(numbers.SampleInverseNormal(float64(avgFragmentSize), avgFragmentStdDev))
 		midpoint = numbers.RandIntInRange(0, len(ref))
-		startFor = midpoint - (readLen + (insertSize / 2))
+		startFor = midpoint - (fragmentSize / 2)
 		endFor = startFor + readLen
-		startRev = midpoint + (insertSize / 2)
-		endRev = startRev + readLen
+		endRev = midpoint + (fragmentSize / 2)
+		startRev = endRev - readLen
+
 		currFor = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor)
 		currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev)
 		if currFor.Cigar == nil && currRev.Cigar == nil {
