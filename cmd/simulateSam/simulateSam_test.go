@@ -1,41 +1,41 @@
 package main
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
 )
 
 var SimulateSamTests = []struct {
-	OutFile string
-	RefFile string
-	NumReads int
-	ReadLength int
+	OutFile      string
+	RefFile      string
+	NumReads     int
+	ReadLength   int
 	InsertLength int
 	InsertStdDev float64
-	SetSeed int64
+	SetSeed      int64
 	ExpectedFile string
 }{
 	{OutFile: "testdata/actual.sam",
-		RefFile: "testdata/test.fa",
-	NumReads: 100,
-	ReadLength: 150,
-	InsertLength: 50,
-	InsertStdDev: 50,
-	SetSeed: 1,
-	ExpectedFile: "testdata/expected.sam",},
+		RefFile:      "testdata/test.fa",
+		NumReads:     100,
+		ReadLength:   150,
+		InsertLength: 50,
+		InsertStdDev: 50,
+		SetSeed:      1,
+		ExpectedFile: "testdata/expected.sam"},
 	{OutFile: "testdata/actual.bam",
-		RefFile: "testdata/test.fa",
-	NumReads: 100,
-	ReadLength: 150,
-	InsertLength: 50,
-	InsertStdDev: 50,
-	SetSeed: 1,
-	ExpectedFile: "testdata/expected.bam",},
+		RefFile:      "testdata/test.fa",
+		NumReads:     100,
+		ReadLength:   150,
+		InsertLength: 50,
+		InsertStdDev: 50,
+		SetSeed:      1,
+		ExpectedFile: "testdata/expected.bam"},
 }
 
 func TestSimulateSam(t *testing.T) {
@@ -44,13 +44,13 @@ func TestSimulateSam(t *testing.T) {
 	var bamA, bamB []sam.Sam
 	for _, v := range SimulateSamTests {
 		s = Settings{
-			OutFile: v.OutFile,
-			RefFile: v.RefFile,
-			NumReads: v.NumReads,
-			ReadLength: v.ReadLength,
+			OutFile:      v.OutFile,
+			RefFile:      v.RefFile,
+			NumReads:     v.NumReads,
+			ReadLength:   v.ReadLength,
 			InsertLength: v.InsertLength,
 			InsertStdDev: v.InsertStdDev,
-			SetSeed: v.SetSeed,
+			SetSeed:      v.SetSeed,
 		}
 		simulateSam(s)
 		if strings.HasSuffix(s.OutFile, ".bam") {

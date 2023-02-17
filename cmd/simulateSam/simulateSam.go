@@ -17,13 +17,13 @@ import (
 )
 
 type Settings struct {
-	OutFile string
-	RefFile string
-	NumReads int
-	ReadLength int
+	OutFile      string
+	RefFile      string
+	NumReads     int
+	ReadLength   int
 	InsertLength int
 	InsertStdDev float64
-	SetSeed int64
+	SetSeed      int64
 }
 
 func simulateSam(s Settings) {
@@ -117,14 +117,14 @@ func main() {
 	refFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	s := Settings {
-		RefFile: refFile,
-		OutFile: outFile,
-		NumReads: *numReads,
-		ReadLength: *readLength,
+	s := Settings{
+		RefFile:      refFile,
+		OutFile:      outFile,
+		NumReads:     *numReads,
+		ReadLength:   *readLength,
 		InsertLength: *insertLength,
 		InsertStdDev: *insertStdDev,
-		SetSeed: *setSeed,
+		SetSeed:      *setSeed,
 	}
 
 	simulateSam(s)
