@@ -44,13 +44,13 @@ func TestSimulateSam(t *testing.T) {
 	var bamA, bamB []sam.Sam
 	for _, v := range SimulateSamTests {
 		s = Settings{
-			OutFile:      v.OutFile,
-			RefFile:      v.RefFile,
-			NumReads:     v.NumReads,
-			ReadLength:   v.ReadLength,
+			OutFile:        v.OutFile,
+			RefFile:        v.RefFile,
+			NumReads:       v.NumReads,
+			ReadLength:     v.ReadLength,
 			FragmentLength: v.InsertLength,
 			FragmentStdDev: v.InsertStdDev,
-			SetSeed:      v.SetSeed,
+			SetSeed:        v.SetSeed,
 		}
 		simulateSam(s)
 		if strings.HasSuffix(s.OutFile, ".bam") {

@@ -17,13 +17,13 @@ import (
 )
 
 type Settings struct {
-	OutFile      string
-	RefFile      string
-	NumReads     int
-	ReadLength   int
+	OutFile        string
+	RefFile        string
+	NumReads       int
+	ReadLength     int
 	FragmentLength int
 	FragmentStdDev float64
-	SetSeed      int64
+	SetSeed        int64
 }
 
 func simulateSam(s Settings) {
@@ -118,13 +118,13 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		RefFile:      refFile,
-		OutFile:      outFile,
-		NumReads:     *numReads,
-		ReadLength:   *readLength,
+		RefFile:        refFile,
+		OutFile:        outFile,
+		NumReads:       *numReads,
+		ReadLength:     *readLength,
 		FragmentLength: *fragmentLength,
 		FragmentStdDev: *fragmentStdDev,
-		SetSeed:      *setSeed,
+		SetSeed:        *setSeed,
 	}
 
 	simulateSam(s)
