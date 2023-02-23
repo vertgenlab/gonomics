@@ -11,12 +11,20 @@ import (
 // SeekBamRegion returns a slice of reads that overlap the input region. SeekBamRegion will advance the
 // reader as necessary so beware continuing linear reading after a call to SeekBamRegion.
 func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sam {
+	return SeekBamRegionRecycle(br, bai, chrom, start, end, nil)
+}
+
+// SeekBamRegionRecycle functions identially to SeekBamRegion, but inputs a slice of Sam structs that
+// which will be reused. Avoids excessive memory allocations on repeat seek calls.
+func SeekBamRegionRecycle(br *BamReader, bai Bai, chrom string, start, end uint32, recycledSams []Sam) []Sam {
 	if start > end {
 		log.Panicf("ERROR: SeekBamRegion input start > end. %d > %d\n", start, end)
 	}
 	var err error
 	var coffset, uoffset, cEndOffset, linearIndexMinCOffset uint64
-	var ans []Sam
+	var ans []Sam = recycledSams[0:cap(recycledSams)] // expand recycledSams to cap
+	var ansIdx int = 0
+
 	refIdx := chromInfo.SliceToMap(br.refs)[chrom].Order
 	bins := regionToBins(int(start), int(end))
 	ref := bai.refs[refIdx]
@@ -32,6 +40,8 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 	//call.
 	linearIndexMinCOffset = ref.intervalOff[start/16384] >> 16
 
+	var curr *Sam
+	var madeNewSam bool
 	for i = range bins { // retrieve bins that may contain overlapping reads
 		if _, ok = ref.binIdIdx[bins[i]]; !ok {
 			continue
@@ -52,25 +62,36 @@ func SeekBamRegion(br *BamReader, bai Bai, chrom string, start, end uint32) []Sa
 			br.blk.Next(int(uoffset)) // advance in block
 			br.intermediate.Reset()
 			for { // read sam records and append to answer until past the query region
-				var curr Sam
-				_, err = DecodeBam(br, &curr)
+				madeNewSam = false
+				// check to see if we have any recycled structs available
+				if ansIdx < len(ans) {
+					curr = &ans[ansIdx]
+				} else { // if none available make a new one
+					curr = new(Sam)
+					madeNewSam = true
+				}
+				_, err = DecodeBam(br, curr)
 				if err == io.EOF {
 					break
 				}
 				if curr.RName == chrom && curr.GetChromEnd() > int(start) && curr.GetChromStart() < int(end) {
-					ans = append(ans, curr)
+					if madeNewSam { // if we used a recycled sam, it is already is the ans slice. Only need to append if it is new
+						ans = append(ans, *curr)
+					}
+					ansIdx++
 				}
 				if (curr.RName == chrom && curr.GetChromStart() >= int(end)) || curr.RName != chrom {
 					break
 				}
 			}
 		}
-		ans = deduplicate(ans) // TODO to improve efficiency this deduplication should be removed in favor of tracking the
-		// current file offset in DecodeBam and breaking after passing cEndOffset and uEndOffset.
-		// We are currently reading past the end of the designated chunk; this gives duplicate values
-		// but gives a correct answer after deduplication. By stopping the read at uEndOffset we can
-		// avoid deduplication.
 	}
+	ans = ans[:ansIdx]
+	ans = deduplicate(ans) // TODO to improve efficiency this deduplication should be removed in favor of tracking the
+	// current file offset in DecodeBam and breaking after passing cEndOffset and uEndOffset.
+	// We are currently reading past the end of the designated chunk; this gives duplicate values
+	// but gives a correct answer after deduplication. By stopping the read at uEndOffset we can
+	// avoid deduplication.
 	return ans
 }
 
