@@ -24,8 +24,8 @@ type Pile struct {
 	Pos       uint32         // 1-base (like Sam)
 	CountF    [13]int        // Count[dna.Base] == Number of observed dna.Base, forward reads
 	CountR    [13]int        // Count[dna.Base] == Number of observed dna.Base
-	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads
-	InsCountR map[string]int // key is insertion sequence as string, value is number of observations
+	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads. Real base appears to be before insert sequence.
+	InsCountR map[string]int // key is insertion sequence as string, value is number of observations. Note that key is forward strand sequence.
 
 	// Note that DelCountF/R DO NOT contribute to the total depth of a particular base.
 	// They are only included to preserve multi-base deletion structure for downstream use.
