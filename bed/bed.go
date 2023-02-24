@@ -147,7 +147,7 @@ func StringToStrand(s string) Strand {
 
 //NextBed returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
 func NextBed(reader *fileio.EasyReader) (Bed, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return Bed{}, true
 	}
