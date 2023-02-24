@@ -430,6 +430,19 @@ func sclipTerminalIns(s *Sam) {
 	if s.Cigar[len(s.Cigar)-1].Op == 'I' {
 		s.Cigar[len(s.Cigar)-1].Op = 'S'
 	}
+
+	// catch case where beginning/end of read is already soft clipped
+	if len(s.Cigar) >= 2 && s.Cigar[0].Op == 'S' && s.Cigar[1].Op == 'I' {
+		s.Cigar[1].Op = 'S'
+		s.Cigar[1].RunLength += s.Cigar[0].RunLength
+		s.Cigar = s.Cigar[1:]
+	}
+
+	if len(s.Cigar) >= 2 && s.Cigar[len(s.Cigar)-1].Op == 'S' && s.Cigar[len(s.Cigar)-2].Op == 'I' {
+		s.Cigar[len(s.Cigar)-2].Op = 'S'
+		s.Cigar[len(s.Cigar)-2].RunLength += s.Cigar[len(s.Cigar)-1].RunLength
+		s.Cigar = s.Cigar[:len(s.Cigar)-1]
+	}
 }
 
 // String for debug
