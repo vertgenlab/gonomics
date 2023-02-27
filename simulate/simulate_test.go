@@ -1,10 +1,13 @@
 package simulate
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"math/rand"
+	"os"
 	"testing"
-	//"fmt"
 )
 
 var GCcontent = 0.42
@@ -37,35 +40,6 @@ var MutateSeqTests = []struct {
 	{"testdata/longDebug.fasta", 0.5, "testdata/longDebug.gp"}, //branch length of 1 gives higher chance of returning a new base so you can see a difference even with a short sequence
 }
 
-//func TestBaseConversions(t *testing.T) {
-//	for _, test := range MutateSeqTests {
-//		seq := fasta.Read(test.sequence)
-//		bases := seq[0].Seq
-//		intermediate := BasesToBaseExt(bases)
-//		answer := BaseExtToBases(intermediate)
-//		for i := 0; i < len(intermediate); i++ {
-//			if intermediate[i].Base != answer[i] {
-//				log.Fatal("bases are not in the right order")
-//			}
-//		}
-//		if len(answer) != len(bases) {
-//			log.Fatal("Test Base Conversion: answer not written properly")
-//		}
-//	}
-//}
-
-//func TestCodonExtConversions(t *testing.T) {
-//	for _, test := range MutateSeqTests {
-//		fasta := fasta.Read(test.sequence)
-//		seq := BasesToBaseExt(fasta[0].Seq)
-//		gene := genePred.Read(test.gp)
-//		a := CodonExtsToCodons(CreateCodons(seq, gene[0], 0))
-//		log.Print(a)
-//		b := CodonExtToBaseExt(CreateCodons(seq, gene[0], 0))
-//		log.Print(b)
-//	}
-//}
-
 func TestMutateGene(t *testing.T) {
 	rand.Seed(1)
 	for _, test := range MutateSeqTests {
@@ -78,36 +52,35 @@ func TestMutateGene(t *testing.T) {
 	}
 }
 
-//tests for functions that MutateSeq is dependent on
-//var base = dna.G
-//var changeBaseTests = []struct {
-//	originalBase dna.Base
-//}{
-//	{base},
-//}
-//
-//func TestChangeBase(t *testing.T) {
-//	for _, test := range changeBaseTests {
-//		a := changeBase(test.originalBase)
-//		if a == 2 {
-//			t.Errorf("Function should have changed base, and didn't.")
-//		}
-//		fmt.Print(a, "\n")
-//	}
-//}
-//
-//var originalBase = dna.G
-//var mutateBaseTests = []struct {
-//	base         dna.Base
-//	branchLength float64
-//	position	int
-//}{
-//	{originalBase, 1.0, 0},
-//}
-//
-//func TestMutateBase(t *testing.T) {
-//	for _, test := range mutateBaseTests {
-//		a := mutateBase(test.base, test.branchLength, test.position)
-//		fmt.Print(a, "\n")
-//	}
-//}
+var IndelLengthTests = []struct {
+	Lambda       float64
+	OutFile      string
+	ExpectedFile string
+}{
+	{1, "testdata/test.IndelLength.Lambda1.txt", "testdata/expected.IndelLength.Lambda1.txt"},
+	{0.5, "testdata/test.IndelLength.LambdaPoint5.txt", "testdata/expected.IndelLength.LambdaPoint5.txt"},
+	{3, "testdata/test.IndelLength.Lambda3.txt", "testdata/expected.IndelLength.Lambda3.txt"},
+}
+
+func TestIndelLength(t *testing.T) {
+	var variateCount = 10000
+	var err error
+	rand.Seed(23)
+	var lengths = make([]string, variateCount)
+	var i int
+
+	for _, v := range IndelLengthTests {
+		i = 0
+		for i < variateCount {
+			lengths[i] = fmt.Sprintf("%v", indelLength(v.Lambda))
+			i++
+		}
+		fileio.Write(v.OutFile, lengths)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Stability error in IndelLengths.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}

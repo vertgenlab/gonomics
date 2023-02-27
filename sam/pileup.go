@@ -24,8 +24,8 @@ type Pile struct {
 	Pos       uint32         // 1-base (like Sam)
 	CountF    [13]int        // Count[dna.Base] == Number of observed dna.Base, forward reads
 	CountR    [13]int        // Count[dna.Base] == Number of observed dna.Base
-	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads
-	InsCountR map[string]int // key is insertion sequence as string, value is number of observations
+	InsCountF map[string]int // key is insertion sequence as string, value is number of observations, forward reads. Real base appears to be before insert sequence.
+	InsCountR map[string]int // key is insertion sequence as string, value is number of observations. Note that key is forward strand sequence.
 
 	// Note that DelCountF/R DO NOT contribute to the total depth of a particular base.
 	// They are only included to preserve multi-base deletion structure for downstream use.
@@ -429,6 +429,19 @@ func sclipTerminalIns(s *Sam) {
 	}
 	if s.Cigar[len(s.Cigar)-1].Op == 'I' {
 		s.Cigar[len(s.Cigar)-1].Op = 'S'
+	}
+
+	// catch case where beginning/end of read is already soft clipped
+	if len(s.Cigar) >= 2 && s.Cigar[0].Op == 'S' && s.Cigar[1].Op == 'I' {
+		s.Cigar[1].Op = 'S'
+		s.Cigar[1].RunLength += s.Cigar[0].RunLength
+		s.Cigar = s.Cigar[1:]
+	}
+
+	if len(s.Cigar) >= 2 && s.Cigar[len(s.Cigar)-1].Op == 'S' && s.Cigar[len(s.Cigar)-2].Op == 'I' {
+		s.Cigar[len(s.Cigar)-2].Op = 'S'
+		s.Cigar[len(s.Cigar)-2].RunLength += s.Cigar[len(s.Cigar)-1].RunLength
+		s.Cigar = s.Cigar[:len(s.Cigar)-1]
 	}
 }
 
