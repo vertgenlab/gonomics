@@ -48,38 +48,38 @@ func TestSeekBamRegionRecycle(t *testing.T) {
 	reads = SeekBamRegionRecycle(br, bai, "chr7", 45000000, 45200000, reads)
 	for i := range reads {
 		if reads[i].RName != "chr7" || !(reads[i].GetChromStart() < 45200000 && reads[i].GetChromEnd() > 45000000) {
-			t.Error("problem with SeekBamRegion")
+			t.Error("problem with SeekBamRegionRecycle")
 		}
 	}
 
 	reads = SeekBamRegionRecycle(br, bai, "chr9", 130590067, 130591448, reads)
 	if len(reads) > 0 {
-		t.Error("problem with SeekBamRegion")
+		t.Error("problem with SeekBamRegionRecycle")
 	}
 
 	reads = SeekBamRegionRecycle(br, bai, "chr9", 130591894, 130592016, reads)
 	if len(reads) != 1 {
-		t.Error("problem with SeekBamRegion")
+		t.Error("problem with SeekBamRegionRecycle")
 	}
 
 	reads = SeekBamRegionRecycle(br, bai, "chr9", 130592026, 130592027, reads)
 	if len(reads) != 2 {
-		t.Error("problem with SeekBamRegion")
+		t.Error("problem with SeekBamRegionRecycle")
 	}
 	for i := range reads {
 		if reads[i].RName != "chr9" || !(reads[i].GetChromStart() < 130592026 && reads[i].GetChromEnd() > 130592027) {
-			t.Error("problem with SeekBamRegion")
+			t.Error("problem with SeekBamRegionRecycle")
 		}
 	}
 
 	reads = SeekBamRegionRecycle(br, bai, "chr9", 0, math.MaxUint32, reads)
 	if len(reads) != 12 {
-		t.Error("problem with SeekBamRegion")
+		t.Error("problem with SeekBamRegionRecycle")
 	}
 
 	reads = SeekBamRegionRecycle(br, bai, "chrX", 0, 0, reads)
 	if len(reads) > 0 {
-		t.Error("problem with SeekBamRegion")
+		t.Error("problem with SeekBamRegionRecycle")
 	}
 }
 
