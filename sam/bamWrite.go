@@ -259,9 +259,27 @@ func writeExtra(bw *BamWriter, s Sam) {
 	tagSets := strings.Split(s.Extra, "\t")
 	var triplet []string
 	for i := range tagSets {
-		triplet = strings.Split(tagSets[i], ":")
+		triplet = retrieveTriplet(tagSets[i])
 		writeTriplet(bw, triplet)
 	}
+}
+
+// retrieveTriplet splits a tag string into type, number, and value.
+func retrieveTriplet(tag string) []string {
+	comp := strings.Split(tag, ":")
+	if len(comp) == 3 {
+		return comp
+	}
+	if len(comp) < 3 {
+		log.Panicf("malformed auxilliary data '%s'", tag)
+	}
+	// len is >3 so tag value likely has ":"
+	if len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
+		log.Panicf("malformed auxilliary data '%s'", tag)
+	}
+	comp[2] = strings.Join(comp[2:], ":") // rejoin value component of tag
+	comp = comp[:3]
+	return comp
 }
 
 // writeTriplet accepts a []string of len 3 that follows the format
