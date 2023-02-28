@@ -39,7 +39,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 4
+	var expectedNumArgs = 4
 	var nearestGeneBed *string = flag.String("nearestGeneBed", "", "Write a bed representing the nearest genes in 3d space to every position in the genome.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

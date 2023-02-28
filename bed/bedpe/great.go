@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/interval"
+	"log"
 	//TODO: Reintroduce when bug is fixed "log"
 	//"fmt"
 )
@@ -30,10 +31,9 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	// this for loop finds the nearest gene and hidden value for each bedpe foot midpoint
 	for j := range midpointBedpe {
 		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].A, "any")
-		/* TODO: Put this back in once interval bug is found and destroyed
 		if len(currNearest) > 1 {
 			log.Fatal("Space Filled bed should only return one nearest bed entry.")
-		}*/
+		}
 		currNearestBed = currNearest[0].(bed.Bed)
 		currAnswerA = bed.Bed{Chrom: midpointBedpe[j].A.Chrom,
 			ChromStart:        midpointBedpe[j].A.ChromStart,
@@ -48,10 +48,9 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 		}
 
 		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].B, "any")
-		/* TODO: Put this back in once interval bug is found and destroyed
 		if len(currNearest) > 1 {
 			log.Fatal("Space Filled bed should only return one nearest bed entry.")
-		}*/
+		}
 		currNearestBed = currNearest[0].(bed.Bed)
 		currAnswerB = bed.Bed{Chrom: midpointBedpe[j].B.Chrom,
 			ChromStart:        midpointBedpe[j].B.ChromStart,

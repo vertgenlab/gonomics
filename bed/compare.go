@@ -63,7 +63,7 @@ func Overlap(alpha Bed, beta Bed) bool {
 //OverlapCount returns the number of elements from list one that have any overlap with list two. Answers range from 0 to len(a).
 //Input bed slices must be presorted with SortByCoord.
 func OverlapCount(a []Bed, b []Bed) int {
-	var count int = 0
+	var count = 0
 	var aIndex, bIndex int
 
 	for aIndex < len(a) && bIndex < len(b) {
@@ -82,7 +82,7 @@ func OverlapCount(a []Bed, b []Bed) int {
 //OverlapLengthSum calculates the total number of overlapping bases between two sets of bed elements.
 //Input bed slices must be presorted with SortByCoord
 func OverlapLengthSum(a []Bed, b []Bed) int {
-	var sum int = 0
+	var sum = 0
 	var aIndex, bIndex, oLen int
 	for aIndex < len(a) && bIndex < len(b) {
 		oLen = OverlapLength(a[aIndex], b[bIndex])
