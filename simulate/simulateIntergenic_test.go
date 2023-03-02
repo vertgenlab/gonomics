@@ -32,6 +32,17 @@ var SimulateWithIndelsTests = []struct {
 		ExpectedVcfFile:   "testdata/expected.rand.vcf",
 		ExpectedFastaFile: "testdata/expected.rand.fa",
 	},
+	{FastaFile: "testdata/rand.fa",
+		BranchLength:      0.1,
+		PropIndel:         0.2,
+		Lambda:            1,
+		GcContent:         0.42,
+		TransitionBias:    5,
+		VcfOutFile:        "testdata/tmp.transition5.vcf",
+		OutFastaFile:      "testdata/tmp.rand.transition5.fa",
+		ExpectedVcfFile:   "testdata/expected.transition5.rand.vcf",
+		ExpectedFastaFile: "testdata/expected.transition5.rand.fa",
+	},
 }
 
 func TestSimulateWithIndels(t *testing.T) {
