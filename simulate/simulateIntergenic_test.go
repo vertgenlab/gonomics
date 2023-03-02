@@ -15,7 +15,7 @@ var SimulateWithIndelsTests = []struct {
 	PropIndel         float64
 	Lambda            float64
 	GcContent         float64
-	TransitionBias float64
+	TransitionBias    float64
 	VcfOutFile        string
 	OutFastaFile      string
 	ExpectedFastaFile string
@@ -26,7 +26,7 @@ var SimulateWithIndelsTests = []struct {
 		PropIndel:         0.2,
 		Lambda:            1,
 		GcContent:         0.42,
-		TransitionBias: 1,
+		TransitionBias:    1,
 		VcfOutFile:        "testdata/tmp.vcf",
 		OutFastaFile:      "testdata/tmp.rand.fa",
 		ExpectedVcfFile:   "testdata/expected.rand.vcf",
