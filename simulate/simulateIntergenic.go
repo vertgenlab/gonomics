@@ -220,36 +220,36 @@ func changeBaseTransitionBias(b dna.Base, gamma float64) dna.Base {
 	var rand = rand.Float64()
 	switch dna.ToUpper(b) {
 	case dna.A:
-		if rand < 1.0 / (2.0 + gamma) {//p(a -> c) = 1 / (2 + gamma) (transversion)
+		if rand < 1.0/(2.0+gamma) { //p(a -> c) = 1 / (2 + gamma) (transversion)
 			return dna.C
-		} else if rand < 2.0 / (2.0 + gamma) { //p(a -> t) = 1 / (2+gamma) (transversion)
+		} else if rand < 2.0/(2.0+gamma) { //p(a -> t) = 1 / (2+gamma) (transversion)
 			return dna.T
-		} else {//that leaves p(a -> g) = gamma / (2+gamma) of probability left, (transition) and p(a -> g) = gamma * p(a -> c) = gamma* p(a -> t)
+		} else { //that leaves p(a -> g) = gamma / (2+gamma) of probability left, (transition) and p(a -> g) = gamma * p(a -> c) = gamma* p(a -> t)
 			return dna.G
 		}
 	case dna.C:
-		if rand < 1.0 / (2.0 + gamma) {
-			return dna.A//transversion
-		} else if rand < 2.0 / (2.0 + gamma) {
-			return dna.G//transversion
+		if rand < 1.0/(2.0+gamma) {
+			return dna.A //transversion
+		} else if rand < 2.0/(2.0+gamma) {
+			return dna.G //transversion
 		} else {
-			return dna.T//transition
+			return dna.T //transition
 		}
 	case dna.G:
-		if rand < 1.0 / (2.0 + gamma) {
-			return dna.C//transversion
-		} else if rand < 2.0 / (2.0 + gamma) {
-			return dna.T//transversion
+		if rand < 1.0/(2.0+gamma) {
+			return dna.C //transversion
+		} else if rand < 2.0/(2.0+gamma) {
+			return dna.T //transversion
 		} else {
-			return dna.A//transition
+			return dna.A //transition
 		}
 	case dna.T:
-		if rand < 1.0 / (2.0 + gamma) {
-			return dna.A//transversion
-		} else if rand < 2.0 / (2.0 + gamma) {
-			return dna.G//transversion
+		if rand < 1.0/(2.0+gamma) {
+			return dna.A //transversion
+		} else if rand < 2.0/(2.0+gamma) {
+			return dna.G //transversion
 		} else {
-			return dna.C//transition
+			return dna.C //transition
 		}
 	case dna.N:
 		return dna.N

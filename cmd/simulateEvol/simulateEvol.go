@@ -14,17 +14,17 @@ import (
 )
 
 type Settings struct {
-	FastaFile    string
-	TreeFile     string
-	LeafOutFile  string
-	GenePredFile string
-	SimOutFile   string
-	Lambda       float64
-	PropIndel    float64
-	BranchLength float64
-	SetSeed      int64
-	GcContent    float64
-	VcfOutFile   string
+	FastaFile      string
+	TreeFile       string
+	LeafOutFile    string
+	GenePredFile   string
+	SimOutFile     string
+	Lambda         float64
+	PropIndel      float64
+	BranchLength   float64
+	SetSeed        int64
+	GcContent      float64
+	VcfOutFile     string
 	TransitionBias float64
 }
 
@@ -114,17 +114,17 @@ func main() {
 	leafOutFile := flag.Arg(1)
 
 	s := Settings{
-		FastaFile:    rootFasta,
-		TreeFile:     *newickTree,
-		LeafOutFile:  leafOutFile,
-		SimOutFile:   *completeSimOutputFile,
-		GenePredFile: *genePredFile,
-		BranchLength: *branchLength,
-		Lambda:       *lambda,
-		PropIndel:    *propIndel,
-		GcContent:    *gcContent,
-		SetSeed:      *setSeed,
-		VcfOutFile:   *vcfOutFile,
+		FastaFile:      rootFasta,
+		TreeFile:       *newickTree,
+		LeafOutFile:    leafOutFile,
+		SimOutFile:     *completeSimOutputFile,
+		GenePredFile:   *genePredFile,
+		BranchLength:   *branchLength,
+		Lambda:         *lambda,
+		PropIndel:      *propIndel,
+		GcContent:      *gcContent,
+		SetSeed:        *setSeed,
+		VcfOutFile:     *vcfOutFile,
 		TransitionBias: *transitionBias,
 	}
 

@@ -18,7 +18,7 @@ var SimulateEvolTests = []struct {
 	PropIndel       float64
 	GcContent       float64
 	SetSeed         int64
-	TransitionBias float64
+	TransitionBias  float64
 	VcfOutFile      string
 	ExpectedOutFile string
 	ExpectedVcfFile string
@@ -33,7 +33,7 @@ var SimulateEvolTests = []struct {
 		PropIndel:       0.2,
 		GcContent:       0.42,
 		SetSeed:         -1,
-		TransitionBias: 1,
+		TransitionBias:  1,
 		VcfOutFile:      "testdata/tmp.vcf",
 		ExpectedVcfFile: "testdata/expected.branchLength.vcf",
 		ExpectedOutFile: "testdata/expected.branchLength.fa"},
@@ -44,17 +44,17 @@ func TestSimulateEvol(t *testing.T) {
 	var s Settings
 	for _, v := range SimulateEvolTests {
 		s = Settings{
-			FastaFile:    v.InputFastaFile,
-			TreeFile:     v.TreeFile,
-			LeafOutFile:  v.OutFile,
-			SimOutFile:   v.SimOutFile,
-			GenePredFile: v.GenePredFile,
-			BranchLength: v.BranchLength,
-			Lambda:       v.Lambda,
-			PropIndel:    v.PropIndel,
-			GcContent:    v.GcContent,
-			SetSeed:      v.SetSeed,
-			VcfOutFile:   v.VcfOutFile,
+			FastaFile:      v.InputFastaFile,
+			TreeFile:       v.TreeFile,
+			LeafOutFile:    v.OutFile,
+			SimOutFile:     v.SimOutFile,
+			GenePredFile:   v.GenePredFile,
+			BranchLength:   v.BranchLength,
+			Lambda:         v.Lambda,
+			PropIndel:      v.PropIndel,
+			GcContent:      v.GcContent,
+			SetSeed:        v.SetSeed,
+			VcfOutFile:     v.VcfOutFile,
 			TransitionBias: v.TransitionBias,
 		}
 		SimulateEvol(s)
