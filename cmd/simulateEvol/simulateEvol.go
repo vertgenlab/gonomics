@@ -25,6 +25,7 @@ type Settings struct {
 	SetSeed      int64
 	GcContent    float64
 	VcfOutFile   string
+	TransitionBias float64
 }
 
 func SimulateEvol(s Settings) {
@@ -46,6 +47,9 @@ func SimulateEvol(s Settings) {
 	if s.GcContent < 0 || s.GcContent > 1 {
 		log.Fatalf("GcContent must be a value between 0 and 1.")
 	}
+	if s.TransitionBias < 0 {
+		log.Fatalf("TransitionBias must be a nonnegative number.")
+	}
 
 	if s.TreeFile != "" {
 		tree, err := expandedTree.ReadTree(s.TreeFile, s.FastaFile)
@@ -63,7 +67,7 @@ func SimulateEvol(s Settings) {
 			fasta.Write(s.SimOutFile, fastas)
 		}
 	} else {
-		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.VcfOutFile)
+		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.VcfOutFile, s.TransitionBias)
 	}
 	fasta.Write(s.LeafOutFile, leafFastas)
 
@@ -94,6 +98,7 @@ func main() {
 	var gcContent *float64 = flag.Float64("gcContent", 0.42, "Set the GC content for simulated insertion sequences.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var vcfOutFile *string = flag.String("vcfOutFile", "", "For branchLength mode, specify a vcf filename to record simulated mutations.")
+	var transitionBias *float64 = flag.Float64("transitionBias", 1, "Set a bias for transitions over transversions during sequence evolution. Defaults to the Jukes-Cantor model, where the transition bias is 1 (even with transversion frequency).")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -120,6 +125,7 @@ func main() {
 		GcContent:    *gcContent,
 		SetSeed:      *setSeed,
 		VcfOutFile:   *vcfOutFile,
+		TransitionBias: *transitionBias,
 	}
 
 	SimulateEvol(s)
