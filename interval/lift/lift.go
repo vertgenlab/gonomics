@@ -2,6 +2,7 @@ package lift
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -60,6 +61,15 @@ func ReadToChan(inputFile string, send chan<- Lift) {
 			curr := val
 			send <- curr
 		}
+
+	case ".bedpe":
+		receive := bedpe.GoReadToChan(inputFile)
+		for val := range receive {
+			a, b := bedpe.SplitBedPe(val)
+			send <- a
+			send <- b
+		}
+
 	default:
 		log.Fatalf("Filetype does not satisfy Lift interface: %v.", inputFile)
 	}

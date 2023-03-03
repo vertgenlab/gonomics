@@ -124,7 +124,26 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	err = un.Close()
 	exception.PanicOnErr(err)
 }
-
+//bedpe lift?
+	inChan := lift.GoReadToChan(inFile)
+	var overlapA, overlapB []interval.Interval
+	for i := range(inFile) {
+		if len(inChan) > 0 {
+			overlapA = interval.Query(tree, inChan, "any")
+			overlapB = interval.Query(tree, inChan, "any")
+			if len(overlapA) > 1 || len(overlapB > 1){
+			_, err = fmt.Fprintf(un, "One or more bedpe half record below maps to multiple chains:\n")
+			exception.PanicOnErr(err)
+			i.WriteToFileHandle(un)
+			} else if len(overlapA) == 0 || len(overlapB) {
+				_, err = fmt.Fprintf(un, "One or more bedpe half record below has no ortholog in new assembly:\n")
+				exception.PanicOnErr(err)
+				i.WriteToFileHandle(un)
+				} else {
+				break
+			}
+		}
+	}
 // QuerySeq takes in a fasta seeker and a position (name and index) and returns true if a query
 // sequence of bases matches the fasta at this position.
 // Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta

@@ -27,6 +27,18 @@ type BedPeHalf struct {
 	Home       *BedPe
 }
 
+func (b BedPeHalf) WriteToFileHandle(writer io.Writer) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b BedPeHalf) UpdateCoord(s string, i int, i2 int) interface{} {
+	b.Chrom = s
+	b.ChromStart = i
+	b.ChromEnd = i2
+	return b
+}
+
 // String converts a BedPe struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b BedPe) String() string {
 	return ToString(b, b.A.FieldsInitialized)
@@ -172,7 +184,7 @@ func GoReadToChan(filename string) <-chan BedPe {
 	return data
 }
 
-//SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
+// SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
 func SplitBedPe(in BedPe) (BedPeHalf, BedPeHalf) {
 	left := BedPeHalf{
 		Chrom:      in.A.Chrom,
