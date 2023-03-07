@@ -5,6 +5,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	bedpe2 "github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -24,7 +26,7 @@ type fileWriter interface {
 	WriteToFileHandle(io.Writer)
 }
 
-func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, swapAlleleAB bool, verbose int) {
+func liftCoordinates(chainFile string, inFile string, outFile string, faFile string, unMapped string, minMatch float64, swapAlleleAB bool, verbose int, bedpe bool) {
 	var err error
 	if minMatch < 0.0 || minMatch > 1.0 {
 		log.Fatalf("minMatch must be between 0 and 1. User input: %f.\n", minMatch)
@@ -62,26 +64,175 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 	inChan := lift.GoReadToChan(inFile)
 	var overlap []interval.Interval
 	for i := range inChan {
-		overlap = interval.Query(tree, i, "any")
-		if len(overlap) > 1 {
-			_, err = fmt.Fprintf(un, "Record below maps to multiple chains:\n")
-			exception.PanicOnErr(err)
-			i.WriteToFileHandle(un)
-		} else if len(overlap) == 0 {
-			_, err = fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
-			exception.PanicOnErr(err)
-			i.WriteToFileHandle(un)
-		} else if !minMatchPass(overlap[0].(chain.Chain), i, minMatch) {
-			a, b = lift.MatchProportion(overlap[0].(chain.Chain), i)
-			_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(chain.Chain).Score)
-			exception.PanicOnErr(err)
-			i.WriteToFileHandle(un)
+		if bedpe {
+			j := <-inChan
+			iOut, mappedI := liftAndCheck(i, tree, faFile, minMatch)
+			jOut, mappedJ := liftAndCheck(j, tree, faFile, minMatch)
+			bedpeEntry := bedpe2.BedPe{bed.Bed{iOut.GetChrom(), iOut.GetChromStart(), iOut.GetChromEnd()}, bed.Bed{jOut.GetChrom(), jOut.GetChromStart(), jOut.GetChromEnd()}}
+
+			//TO DO: make these nested if statements, so it will only print out each non-lifted bedpe entry once
+			if mappedI == 1 && mappedJ == 1 {
+				bedpeEntry.(fileWriter).WriteToFileHandle(out)
+			} else if mappedI == 0 {
+				_, err = fmt.Fprintf(un, "Foot A record below has no ortholog in new assembly:\n")
+				exception.PanicOnErr(err)
+				bedpeEntry.(fileWriter).WriteToFileHandle(out)
+			} else if mappedJ == 0 {
+				_, err = fmt.Fprintf(un, "Foot B record below has no ortholog in new assembly:\n")
+				exception.PanicOnErr(err)
+				bedpeEntry.(fileWriter).WriteToFileHandle(out)
+			} else if mappedI > 1 {
+				_, err = fmt.Fprintf(un, "FootA record below maps to multiple chains:\n")
+				exception.PanicOnErr(err)
+				bedpeEntry.(fileWriter).WriteToFileHandle(out)
+			} else if mappedJ > 1 {
+				_, err = fmt.Fprintf(un, "FootB record below maps to multiple chains:\n")
+				exception.PanicOnErr(err)
+				bedpeEntry.(fileWriter).WriteToFileHandle(out)
+			} else if mappedI == -1 {
+				_, err = fmt.Fprintf(un, "FootA record below maps to multiple chains:\n")
+				exception.PanicOnErr(err)
+				bedpeEntry.(fileWriter).WriteToFileHandle(out)
+			} else if mappedJ == -1 { //how to get this error message to print out? With the correct percentages.
+				_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), iOut.(chain.Chain).Score)
+			}
+
+			overlap = interval.Query(tree, i, "any")
+
+			if len(overlap) > 1 {
+				_, err = fmt.Fprintf(un, "Record below maps to multiple chains:\n")
+				exception.PanicOnErr(err)
+				i.WriteToFileHandle(un)
+			} else if len(overlap) == 0 {
+				_, err = fmt.Fprintf(un, "Record below has no ortholog in new assembly:\n")
+				exception.PanicOnErr(err)
+				i.WriteToFileHandle(un)
+			} else if !minMatchPass(overlap[0].(chain.Chain), i, minMatch) {
+				a, b = lift.MatchProportion(overlap[0].(chain.Chain), i)
+				_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), overlap[0].(chain.Chain).Score)
+				exception.PanicOnErr(err)
+				i.WriteToFileHandle(un)
+			} else {
+				i = i.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(chain.Chain), i)).(lift.Lift) //now i is 1-based and we can assert VCF.
+				//special check for lifting over VCF files
+				if faFile != "" {
+					//faFile will be given if we are lifting over VCF data.
+					currVcf = i.(vcf.Vcf)
+					if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
+						_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
+						exception.PanicOnErr(err)
+						i.WriteToFileHandle(un)
+						//log.Fatalf("VCF liftOver is currently not supported for INDEL records. Please filter the input VCF for substitutions and try again.") //Currently we're causing INDEL records to fatal.
+					} else if len(currVcf.Alt) > 1 {
+						_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for multiallelic sites.\n")
+						exception.PanicOnErr(err)
+						i.WriteToFileHandle(un)
+					} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Ref)) { //first question: does the "Ref" match the destination fa at this position.
+						//second question: does the "Alt" also match. Can occur in corner cases such as Ref=A, Alt=AAA. Currently we don't invert but write a verbose log print.
+						if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) && verbose > 0 {
+							_, err = fmt.Fprintf(un, "For VCF on %s at position %d, Alt and Ref both match the fasta. Ref: %s. Alt: %s.", currVcf.Chr, currVcf.Pos, currVcf.Ref, currVcf.Alt)
+							exception.PanicOnErr(err)
+						}
+						i.(fileWriter).WriteToFileHandle(out)
+						//the third case handles when the alt matches but not the ref, in which case we invert the VCF.
+					} else if QuerySeq(ref, currVcf.Chr, int(currVcf.Pos-1), dna.StringToBases(currVcf.Alt[0])) {
+						_, err = fmt.Fprintf(un, "Record below was lifted, but the ref and alt alleles are inverted:\n")
+						exception.PanicOnErr(err)
+						i.WriteToFileHandle(un)
+						currVcf = vcf.InvertVcf(currVcf)
+						if swapAlleleAB {
+							swapInfoAlleles(&currVcf)
+						}
+						i = &currVcf
+						i.(fileWriter).WriteToFileHandle(out)
+					} else {
+						_, err = fmt.Fprintf(un, "For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.\n")
+						exception.PanicOnErr(err)
+						i.WriteToFileHandle(un)
+					}
+				} else {
+					i.(fileWriter).WriteToFileHandle(out)
+				}
+			}
+		}
+		err = out.Close()
+		exception.PanicOnErr(err)
+		err = un.Close()
+		exception.PanicOnErr(err)
+	}
+}
+
+// QuerySeq takes in a fasta seeker and a position (name and index) and returns true if a query
+// sequence of bases matches the fasta at this position.
+// Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta
+// as the reference, but if you are querying from alignment Fasta, you'll want to get the alnIndex
+// before calling this function
+func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
+	fetchSeq, err := fasta.SeekByName(ref, chr, index, index+len(query))
+	exception.PanicOnErr(err)
+	return dna.CompareSeqsIgnoreCaseAndGaps(query, fetchSeq) == 0
+}
+
+// minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
+func minMatchPass(overlap chain.Chain, i interval.Interval, minMatch float64) bool {
+	a, b := lift.MatchProportion(overlap, i)
+	if a < minMatch {
+		return false
+	}
+	if b < minMatch {
+		return false
+	}
+	return true
+}
+
+// swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field
+func swapInfoAlleles(v *vcf.Vcf) {
+	var foundA, foundB bool
+	newInfo := []byte(v.Info)
+	alleleAidx := strings.Index(v.Info, "ALLELE_A=")
+	if alleleAidx == -1 {
+		foundA = true
+	}
+	alleleAidx += len("ALLELE_A=")
+
+	alleleBidx := strings.Index(v.Info, "ALLELE_B=")
+	if alleleBidx == -1 {
+		foundB = true
+	}
+	alleleBidx += len("ALLELE_B=")
+
+	if foundA != foundB {
+		log.Printf("WARNING: Found ALLELE_A or ALLELE_B in the following record, but not both. Record may be malformed\n%s\n", v)
+		return
+	}
+
+	newInfo[alleleAidx], newInfo[alleleBidx] = newInfo[alleleBidx], newInfo[alleleAidx]
+	v.Info = string(newInfo)
+}
+
+func liftAndCheck(in lift.Lift, inChain map[string]*interval.IntervalNode, faFile string, matchPerc float64) (lift.Lift, int) {
+	var overlap []interval.Interval
+	var a, b float64
+	var currVcf vcf.Vcf
+
+	overlap = interval.Query(inChain, in, "any")
+	mapped := len(overlap)
+
+	if len(overlap) == 1 {
+		if !minMatchPass(overlap[0].(chain.Chain), in, matchPerc) {
+			mapped = -1
+			a, b = lift.MatchProportion(overlap[0].(chain.Chain), in)
 		} else {
-			i = i.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(chain.Chain), i)).(lift.Lift) //now i is 1-based and we can assert VCF.
+			in = in.UpdateCoord(lift.LiftCoordinatesWithChain(overlap[0].(chain.Chain), in)).(lift.Lift)
 			//special check for lifting over VCF files
 			if faFile != "" {
 				//faFile will be given if we are lifting over VCF data.
-				currVcf = i.(vcf.Vcf)
+				currVcf = in.(vcf.Vcf)
+			}
+			//special check for lifting over VCF files
+			if faFile != "" {
+				//faFile will be given if we are lifting over VCF data.
+				currVcf = in.(vcf.Vcf)
 				if utf8.RuneCountInString(currVcf.Ref) > 1 || utf8.RuneCountInString(currVcf.Alt[0]) > 1 {
 					_, err = fmt.Fprintf(un, "The following record did not lift as VCF lift is not currently supported for INDEL records.\n")
 					exception.PanicOnErr(err)
@@ -119,77 +270,7 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 			}
 		}
 	}
-	err = out.Close()
-	exception.PanicOnErr(err)
-	err = un.Close()
-	exception.PanicOnErr(err)
-}
-//bedpe lift?
-	inChan := lift.GoReadToChan(inFile)
-	var overlapA, overlapB []interval.Interval
-	for i := range(inFile) {
-		if len(inChan) > 0 {
-			overlapA = interval.Query(tree, inChan, "any")
-			overlapB = interval.Query(tree, inChan, "any")
-			if len(overlapA) > 1 || len(overlapB > 1){
-			_, err = fmt.Fprintf(un, "One or more bedpe half record below maps to multiple chains:\n")
-			exception.PanicOnErr(err)
-			i.WriteToFileHandle(un)
-			} else if len(overlapA) == 0 || len(overlapB) {
-				_, err = fmt.Fprintf(un, "One or more bedpe half record below has no ortholog in new assembly:\n")
-				exception.PanicOnErr(err)
-				i.WriteToFileHandle(un)
-				} else {
-				break
-			}
-		}
-	}
-// QuerySeq takes in a fasta seeker and a position (name and index) and returns true if a query
-// sequence of bases matches the fasta at this position.
-// Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta
-// as the reference, but if you are querying from alignment Fasta, you'll want to get the alnIndex
-// before calling this function
-func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
-	fetchSeq, err := fasta.SeekByName(ref, chr, index, index+len(query))
-	exception.PanicOnErr(err)
-	return dna.CompareSeqsIgnoreCaseAndGaps(query, fetchSeq) == 0
-}
-
-//minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
-func minMatchPass(overlap chain.Chain, i interval.Interval, minMatch float64) bool {
-	a, b := lift.MatchProportion(overlap, i)
-	if a < minMatch {
-		return false
-	}
-	if b < minMatch {
-		return false
-	}
-	return true
-}
-
-// swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field
-func swapInfoAlleles(v *vcf.Vcf) {
-	var foundA, foundB bool
-	newInfo := []byte(v.Info)
-	alleleAidx := strings.Index(v.Info, "ALLELE_A=")
-	if alleleAidx == -1 {
-		foundA = true
-	}
-	alleleAidx += len("ALLELE_A=")
-
-	alleleBidx := strings.Index(v.Info, "ALLELE_B=")
-	if alleleBidx == -1 {
-		foundB = true
-	}
-	alleleBidx += len("ALLELE_B=")
-
-	if foundA != foundB {
-		log.Printf("WARNING: Found ALLELE_A or ALLELE_B in the following record, but not both. Record may be malformed\n%s\n", v)
-		return
-	}
-
-	newInfo[alleleAidx], newInfo[alleleBidx] = newInfo[alleleBidx], newInfo[alleleAidx]
-	v.Info = string(newInfo)
+	return in, mapped
 }
 
 func usage() {
