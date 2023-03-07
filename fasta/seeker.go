@@ -115,6 +115,7 @@ func seek(sr *Seeker, off chrOffset, nextChrStartByte, start, end int) ([]dna.Ba
 
 	answer := make([]dna.Base, end-start)
 	var j int
+	var b dna.Base
 	for i := range data {
 		if data[i] == '>' { // in case of read into next fasta record
 			err = ErrSeekEndOutsideChr
@@ -123,7 +124,9 @@ func seek(sr *Seeker, off chrOffset, nextChrStartByte, start, end int) ([]dna.Ba
 		if data[i] == '\r' || data[i] == '\n' {
 			continue
 		}
-		answer[j] = dna.ByteToBase(data[i])
+		b, err = dna.ByteToBase(data[i])
+		exception.PanicOnErr(err)
+		answer[j] = b
 		j++
 	}
 	return answer[:j], err // trim off any extra bases in case EOF
