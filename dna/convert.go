@@ -1,81 +1,86 @@
 package dna
 
 import (
+	"errors"
+	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"strings"
+	"unicode"
 )
 
 // RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
 // Note: '*', used by VCF to denote deleted alleles becomes Nil
-func RuneToBase(r rune) Base {
+func RuneToBase(r rune) (Base, error) {
 	switch r {
 	case 'A':
-		return A
+		return A, nil
 	case 'C':
-		return C
+		return C, nil
 	case 'G':
-		return G
+		return G, nil
 	case 'T':
-		return T
+		return T, nil
 	case 'N':
-		return N
+		return N, nil
 	case 'a':
-		return LowerA
+		return LowerA, nil
 	case 'c':
-		return LowerC
+		return LowerC, nil
 	case 'g':
-		return LowerG
+		return LowerG, nil
 	case 't':
-		return LowerT
+		return LowerT, nil
 	case 'n':
-		return LowerN
+		return LowerN, nil
 	case '-':
-		return Gap
-	// VCF uses star to denote a deleted allele
+		return Gap, nil
 	case '*':
-		return Nil
+		return Nil, nil
 	case '.':
-		return Dot
+		return Dot, nil
 	default:
-		log.Panicf("error converting rune %v into a base", r)
-		return N
+		return N, errors.New(fmt.Sprintf("ERROR: '%s' is an invalid base. This error is caused by invalid characters in a DNA sequence. "+
+			"Note that gonomics does not support extended IUPAC nucleotide codes (only AaCcGgTtNn-). If you input a fasta file, "+
+			"check to make sure the sequences only use valid characters. Invalid characters can be masked with Ns using the faFormat command in gonomics.", string(r)))
 	}
 }
 
-// ByteToBaseToBase converts a byte into a dna.Base if it matches one of the acceptable DNA characters.
+// ByteToBase converts a byte into a dna.Base if it matches one of the acceptable DNA characters.
 // Notes: It will also mask the lower case values and return dna.Base as uppercase bases.
 // Note: '*', used by VCF to denote deleted alleles, becomes a Gap in DNA.
-func ByteToBase(b byte) Base {
+func ByteToBase(b byte) (Base, error) {
 	switch b {
 	case 'A':
-		return A
+		return A, nil
 	case 'C':
-		return C
+		return C, nil
 	case 'G':
-		return G
+		return G, nil
 	case 'T':
-		return T
+		return T, nil
 	case 'N':
-		return N
+		return N, nil
 	case 'a':
-		return LowerA
+		return LowerA, nil
 	case 'c':
-		return LowerC
+		return LowerC, nil
 	case 'g':
-		return LowerG
+		return LowerG, nil
 	case 't':
-		return LowerT
+		return LowerT, nil
 	case 'n':
-		return LowerN
+		return LowerN, nil
 	case '-':
-		return Gap
+		return Gap, nil
 	case '*':
-		return Nil
+		return Nil, nil
 	case '.':
-		return Dot
+		return Dot, nil
 	default:
-		log.Panicf("error converting byte %v into a base", b)
-		return N
+		return N, errors.New(fmt.Sprintf("ERROR: '%s' is an invalid base. This error is caused by invalid characters in a DNA sequence. "+
+			"Note that gonomics does not support extended IUPAC nucleotide codes (only AaCcGgTtNn-). If you input a fasta file, "+
+			"check to make sure the sequences only use valid characters. Invalid characters can be masked with Ns using the faFormat command in gonomics.", string(b)))
 	}
 }
 
@@ -127,15 +132,41 @@ func StringToBase(s string) Base {
 	if len(s) != 1 {
 		log.Panic("String with a length other than 1 can not be turned into a dna.Base\n")
 	}
-	return ByteToBase(s[0])
+	var b Base
+	var err error
+	b, err = ByteToBase(s[0])
+	exception.PanicOnErr(err)
+	return b
 }
 
 // StringToBases parses a string into a slice of DNA bases
 func StringToBases(s string) []Base {
 	answer := make([]Base, len(s))
+	var b Base
+	var err error
 	for index := range s {
-		answer[index] = ByteToBase(s[index])
+		b, err = ByteToBase(s[index])
+		exception.PanicOnErr(err)
+		answer[index] = b
+	}
+	return answer
+}
 
+// StringToBasesForced parses a string into a slice of DNA bases and N-masks any invalid characters.
+func StringToBasesForced(s string) []Base {
+	answer := make([]Base, len(s))
+	var b Base
+	var err error
+	for index := range s {
+		b, err = ByteToBase(s[index])
+		if err != nil {
+			if unicode.IsUpper(rune(s[index])) {
+				b = N
+			} else {
+				b = LowerN
+			}
+		}
+		answer[index] = b
 	}
 	return answer
 }
@@ -163,8 +194,12 @@ func BasesToString(bases []Base) string {
 // ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases.
 func ByteSliceToDnaBases(b []byte) []Base {
 	var answer []Base = make([]Base, len(b))
+	var d Base
+	var err error
 	for i := range b {
-		answer[i] = ByteToBase(b[i])
+		d, err = ByteToBase(b[i])
+		exception.PanicOnErr(err)
+		answer[i] = d
 	}
 	return answer
 }
