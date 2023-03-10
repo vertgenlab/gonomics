@@ -67,7 +67,7 @@ func SimulateEvol(s Settings) {
 			fasta.Write(s.SimOutFile, fastas)
 		}
 	} else {
-		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.VcfOutFile, s.TransitionBias)
+		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile)
 	}
 	fasta.Write(s.LeafOutFile, leafFastas)
 
