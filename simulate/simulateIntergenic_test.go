@@ -50,7 +50,7 @@ func TestSimulateWithIndels(t *testing.T) {
 	var err error
 	var records []fasta.Fasta
 	for _, v := range SimulateWithIndelsTests {
-		records = SimulateWithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.VcfOutFile, v.TransitionBias)
+		records = SimulateWithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile)
 		fasta.Write(v.OutFastaFile, records)
 		if !fileio.AreEqual(v.OutFastaFile, v.ExpectedFastaFile) {
 			t.Errorf("Error in SimulateWithIndels. Output fasta was not as expected.")
