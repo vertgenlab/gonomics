@@ -50,7 +50,10 @@ func main() {
 
 func vcfContext(fastaFile, vcfFile, output string, pad int, includeComplements bool, verbose int) {
 	var err error
-	ref := fasta.NewSeeker(fastaFile, "")
+	var ref *fasta.Seeker
+	if pad > 0 {
+		ref = fasta.NewSeeker(fastaFile, "")
+	}
 	out := fileio.EasyCreate(output)
 
 	// MAP STRUCTURE:
@@ -83,7 +86,11 @@ func vcfContext(fastaFile, vcfFile, output string, pad int, includeComplements b
 			continue
 		}
 
-		seq, err = fasta.SeekByName(ref, v.Chr, (v.Pos-1)-pad, (v.Pos-1)+pad+1)
+		if pad > 0 {
+			seq, err = fasta.SeekByName(ref, v.Chr, (v.Pos-1)-pad, (v.Pos-1)+pad+1)
+		} else {
+			seq = dna.StringToBases(v.Ref)
+		}
 		// exclude if ref sequence does not match
 		if err != nil || seq[pad] != dna.StringToBase(v.Ref) {
 			if verbose > 1 {
@@ -115,8 +122,10 @@ func vcfContext(fastaFile, vcfFile, output string, pad int, includeComplements b
 		log.Printf("Processed %d variants\n", numIncluded)
 	}
 
-	err = ref.Close()
-	exception.PanicOnErr(err)
+	if pad > 0 {
+		err = ref.Close()
+		exception.PanicOnErr(err)
+	}
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
