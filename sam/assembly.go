@@ -122,9 +122,12 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 		}
 	}
 
-	return maxDiploid[numbers.RandIntInRange(0, len(maxDiploid))]
+	return maxDiploid[numbers.RandIntInRange(0, len(maxDiploid))] //if two genotypes have the same posterior density, pick one at random.
 }
 
+// baseLikelihood is a helper function of DiploidBaseCallFromPile. For a given genotype (geno), and given counts for the
+// four bases, and a given epsilon (misclassification rate), it calculates the genotype likelihood.
+// The two caches store values for homozygous and heterozygous genotype pile counts already observed to savce on computation.
 func baseLikelihood(aCount int, cCount int, gCount int, tCount int, geno DiploidBase, epsilon float64, homozygousCache [][]float64, heterozygousCache [][]float64) float64 {
 	switch geno {
 	case AA:
@@ -152,6 +155,10 @@ func baseLikelihood(aCount int, cCount int, gCount int, tCount int, geno Diploid
 	return 0
 }
 
+// homozygousLikelihoodExpression is a helper function o baseLikelihood that evaluates the likelihood function for a
+// homozygous genotype. CorrectCount is the number of bases observed from the correct base. IncorrectCount is the sum of
+// counts from the other three bases.  Epsilon represents the misclassification rate.
+// homozygousCache is a [][]float64 that stores the output values for correctCount/incorrectCount pairs already observed.
 func homozygousLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, homozygousCache [][]float64) float64 {
 	if correctCount < len(homozygousCache) && incorrectCount < len(homozygousCache[correctCount]) { //if the coverage is within the cache bounds
 		if homozygousCache[correctCount][incorrectCount] != 0 { //if this pile has been seen in the cache already
@@ -169,6 +176,10 @@ func homozygousLikelihoodExpression(correctCount int, incorrectCount int, epsilo
 	}
 }
 
+// heterozygousLikelihoodExpression is a helper function of baseLikelihood that evaluates the likelihood function for a
+// heterozygous genotype. CorrectCount is the number of bases observed from the correct two bases.
+// IncorrectCount is the count for the other two bases. Epsilon represents the misclassification rate.
+// heterozygousCache is a [][]float64 that stores the output values for correctCount/incorrectCount pairs already observed.
 func heterozygousLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, heterozygousCache [][]float64) float64 {
 	if correctCount < len(heterozygousCache) && incorrectCount < len(heterozygousCache[correctCount]) { //if the coverage is within the cache bounds
 		if heterozygousCache[correctCount][incorrectCount] != 0 { //if this pile has been seen in the cache already
@@ -186,9 +197,10 @@ func heterozygousLikelihoodExpression(correctCount int, incorrectCount int, epsi
 	}
 }
 
-//answer is [][]float64 of form answer[refBase][outGenotype], where index of refBase: 0=a, 1=c, 2=g, 3=t.
-//index of outGenotype follows the indices of the DiploidBase type.
-//answers are log transformed
+// makePriorCache is a helper function used in samAssembler before running DiploidBaseCallFromPile.
+// Constructs a matrix ([][]float64) of form answer[refBase][outGenotype], where index of refBase: 0=a, 1=c, 2=g, 3=t.
+// Index of outGenotype follows the indices of the DiploidBase type.
+// Answers are log transformed.
 func makePriorCache(delta float64, gamma float64) [][]float64 {
 	Tv := delta / (2.0 + gamma) //the probability of transversions
 	Tr := gamma * Tv            //the probability of transitions
