@@ -59,8 +59,17 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 		err = tmpOpen.Close()
 		exception.PanicOnErr(err)
 	}
+	// bedpe error message map
+	mp := map[int]string{
+		0:  "Record below has no ortholog in new assembly.",
+		1:  "Record below mapped correctly",
+		-1: "Record below falls below min-match threshold.",
+	}
 
 	//second task, read in intervals, find chain, and convert to new interval
+	var A, B string
+	var found1, found2 bool
+	var halfA, halfB bed.Bed
 	inChan := lift.GoReadToChan(inFile)
 	var overlap []interval.Interval
 	for i := range inChan {
@@ -68,33 +77,29 @@ func liftCoordinates(chainFile string, inFile string, outFile string, faFile str
 			j := <-inChan
 			iOut, mappedI := liftAndCheck(i, tree, faFile, minMatch)
 			jOut, mappedJ := liftAndCheck(j, tree, faFile, minMatch)
-			bedpeEntry := bedpe2.BedPe{bed.Bed{iOut.GetChrom(), iOut.GetChromStart(), iOut.GetChromEnd()}, bed.Bed{jOut.GetChrom(), jOut.GetChromStart(), jOut.GetChromEnd()}}
+			halfA = bed.Bed{iOut.GetChrom(), iOut.GetChromStart(), iOut.GetChromEnd()}
+			halfB = bed.Bed{jOut.GetChrom(), jOut.GetChromStart(), jOut.GetChromEnd()}
+			bedpeEntry := bedpe2.BedPe{halfA, halfB}
 
-			//TO DO: make these nested if statements, so it will only print out each non-lifted bedpe entry once
 			if mappedI == 1 && mappedJ == 1 {
 				bedpeEntry.(fileWriter).WriteToFileHandle(out)
-			} else if mappedI == 0 {
-				_, err = fmt.Fprintf(un, "Foot A record below has no ortholog in new assembly:\n")
-				exception.PanicOnErr(err)
-				bedpeEntry.(fileWriter).WriteToFileHandle(out)
-			} else if mappedJ == 0 {
-				_, err = fmt.Fprintf(un, "Foot B record below has no ortholog in new assembly:\n")
-				exception.PanicOnErr(err)
-				bedpeEntry.(fileWriter).WriteToFileHandle(out)
-			} else if mappedI > 1 {
-				_, err = fmt.Fprintf(un, "FootA record below maps to multiple chains:\n")
-				exception.PanicOnErr(err)
-				bedpeEntry.(fileWriter).WriteToFileHandle(out)
-			} else if mappedJ > 1 {
-				_, err = fmt.Fprintf(un, "FootB record below maps to multiple chains:\n")
-				exception.PanicOnErr(err)
-				bedpeEntry.(fileWriter).WriteToFileHandle(out)
-			} else if mappedI == -1 {
-				_, err = fmt.Fprintf(un, "FootA record below maps to multiple chains:\n")
-				exception.PanicOnErr(err)
-				bedpeEntry.(fileWriter).WriteToFileHandle(out)
-			} else if mappedJ == -1 { //how to get this error message to print out? With the correct percentages.
-				_, err = fmt.Fprintf(un, "Record below fails minMatch with a proportion of %f. Here's the corresponding chain: %d.\n", numbers.Min(a, b), iOut.(chain.Chain).Score)
+			} else {
+				A, found1 = mp[mappedI]
+				B, found2 = mp[mappedJ]
+				if found1 && found2 {
+					_, err = fmt.Fprintf(un, "A: %s  B: %s\n", A, B)
+					exception.PanicOnErr(err)
+					bedpeEntry.(fileWriter).WriteToFileHandle(out)
+				} else if found1 && !found2 {
+					_, err = fmt.Fprintf(un, "A: %s  B: Record below maps to multiple chains\n", A)
+					exception.PanicOnErr(err)
+					bedpeEntry.(fileWriter).WriteToFileHandle(out)
+				} else if !found1 && found2 {
+					_, err = fmt.Fprintf(un, "A: Record below maps to multiple chains  B: %s\n", B)
+					exception.PanicOnErr(err)
+					bedpeEntry.(fileWriter).WriteToFileHandle(out)
+				}
+
 			}
 
 			overlap = interval.Query(tree, i, "any")
