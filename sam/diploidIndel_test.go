@@ -64,6 +64,24 @@ var DiploidIndelCallFromPileTests = []struct {
 		ExpectedInsertion: DiploidInsertion{Type: IaIa, Ia: "AAT", Ib: ""},
 		ExpectedDeletion:  DiploidDeletion{Type: BBNoDel, Da: 0, Db: 0},
 	},
+	{P: Pile{CountF: [13]int{30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //high coverage, clear complex het deletion
+		DelCountF: map[int]int{3: 7, 2: 6},
+		DelCountR: map[int]int{3: 6, 2: 5}},
+		Delta:             0.01,
+		Epsilon:           0.01,
+		Kappa:             0.05,
+		ExpectedInsertion: DiploidInsertion{Type: BBnoIns, Ia: "", Ib: ""},
+		ExpectedDeletion:  DiploidDeletion{Type: DaDb, Da: 3, Db: 2},
+	},
+	{P: Pile{CountF: [13]int{30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //high coverage, het simple deletion (DaB)
+		DelCountF: map[int]int{3: 7, 2: 1},
+		DelCountR: map[int]int{3: 6}},
+		Delta:             0.01,
+		Epsilon:           0.01,
+		Kappa:             0.05,
+		ExpectedInsertion: DiploidInsertion{Type: BBnoIns, Ia: "", Ib: ""},
+		ExpectedDeletion:  DiploidDeletion{Type: DaB, Da: 3, Db: 2},
+	},
 }
 
 func TestDiploidIndelCallFromPile(t *testing.T) {
@@ -73,11 +91,11 @@ func TestDiploidIndelCallFromPile(t *testing.T) {
 	var actualDeletion DiploidDeletion
 	for _, v := range DiploidIndelCallFromPileTests {
 		priorCache = makeDiploidIndelPriorCache(v.Kappa, v.Delta)
-		actualInsertion = DiploidInsertionCallFromPile(v.P, priorCache, emptyCache, emptyCache, emptyCache, v.Epsilon)
+		actualInsertion = DiploidInsertionCallFromPile(v.P, priorCache, emptyCache, emptyCache, v.Epsilon)
 		if actualInsertion != v.ExpectedInsertion {
 			t.Errorf("Error in DiploidInsertionCallFromPile. Expected: %s. Found: %s.\n", diploidInsertionString(v.ExpectedInsertion), diploidInsertionString(actualInsertion))
 		}
-		actualDeletion = DiploidDeletionCallFromPile(v.P, priorCache, emptyCache, emptyCache, emptyCache, v.Epsilon)
+		actualDeletion = DiploidDeletionCallFromPile(v.P, priorCache, emptyCache, emptyCache, v.Epsilon)
 		if actualDeletion != v.ExpectedDeletion {
 			t.Errorf("Error in DiploidDeletionCallFromPile. Expected: %s. Found: %s.\n", diploidDeletionString(v.ExpectedDeletion), diploidDeletionString(actualDeletion))
 		}

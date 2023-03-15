@@ -9,7 +9,7 @@ import (
 	"math"
 )
 
-// InsertionType encodes the genotype state, which can be one of the four constant values explained below.
+// InsertionType encodes the insertion genotype state, which can be one of the four constant values explained below.
 type InsertionType byte
 
 const (
@@ -42,7 +42,10 @@ func diploidInsertionString(i DiploidInsertion) string {
 	return ""
 }
 
-func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelCache [][]float64, complexIndelCache [][]float64, heterozygousIndelCache [][]float64, epsilon float64) DiploidInsertion {
+// DiploidInsertionCallFromPile returns a DiploidInsertion struct from an input Pile after making an insertion variant call.
+// Takes in a cache for the prior distribution values, and two likelihood caches.
+// Epsilon defines the misclassification rate parameter.
+func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelCache [][]float64, heterozygousIndelCache [][]float64, epsilon float64) DiploidInsertion {
 	var iTot int
 
 	var aCount = p.CountF[dna.A] + p.CountR[dna.A]
@@ -104,7 +107,7 @@ func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelC
 		answer = append(answer, DiploidInsertion{Type: IaIa, Ia: IaKey, Ib: IbKey})
 	}
 	//IaIb
-	currentPosterior = logspace.Multiply(heterozygousIndelLikelihoodExpression(IaValue+IbValue, B, epsilon, complexIndelCache), priorCache[IaIb])
+	currentPosterior = logspace.Multiply(heterozygousIndelLikelihoodExpression(IaValue+IbValue, B, epsilon, heterozygousIndelCache), priorCache[IaIb])
 	//DEBUG: fmt.Printf("IaIb Insertion Posterior: %v.\n", currentPosterior)
 	if currentPosterior > answerPosterior {
 		answer = answer[:1] //clear ties
@@ -127,6 +130,7 @@ func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelC
 	return answer[numbers.RandIntInRange(0, len(answer))] //if two insertion genotypes have the same posterior probability, pick one at random
 }
 
+// DeletionType encodes the deletion genotype state, which can be one of the four constant values explained below.
 type DeletionType byte
 
 const (
@@ -136,6 +140,7 @@ const (
 	BBNoDel DeletionType = 3
 )
 
+// DiploidDeletion is a minimal internal format to encode Deletion variant genotypes
 type DiploidDeletion struct {
 	Type DeletionType
 	Da   int
@@ -158,7 +163,10 @@ func diploidDeletionString(i DiploidDeletion) string {
 	return ""
 }
 
-func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCache [][]float64, complexIndelCache [][]float64, heterozygousIndelCache [][]float64, epsilon float64) DiploidDeletion {
+// DiploidDeletionCallFromPile returns a DiploidDeletion struct from an input Pile after making a deletion variant call.
+// Takes in a cache for the prior distribution values, and two likelihood caches.
+// Epsilon defines the misclassification rate parameter.
+func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCache [][]float64, heterozygousIndelCache [][]float64, epsilon float64) DiploidDeletion {
 	var dTot int
 
 	var aCount = p.CountF[dna.A] + p.CountR[dna.A]
@@ -219,7 +227,7 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 		answer = append(answer, DiploidDeletion{Type: DaDa, Da: DaKey, Db: DbKey})
 	}
 	//DaDb
-	currentPosterior = logspace.Multiply(heterozygousIndelLikelihoodExpression(DaValue+DbValue, B, epsilon, complexIndelCache), priorCache[DaDb])
+	currentPosterior = logspace.Multiply(heterozygousIndelLikelihoodExpression(DaValue+DbValue, B, epsilon, heterozygousIndelCache), priorCache[DaDb])
 	if currentPosterior > answerPosterior {
 		answer = answer[:1] //clear ties
 		answer[0].Type = DaDb
@@ -240,6 +248,8 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 	return answer[numbers.RandIntInRange(0, len(answer))] //if two insertion genotypes have the same posterior probability, pick one at random
 }
 
+// homozygousIndelLikelihoodExpression is a helper function of DiploidInsertionCallFromPile and DiploidDeletionCallFromPile
+// and calculates the multinomial expression for homozygous INDEL genotypes.
 func homozygousIndelLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, homozygousIndelCache [][]float64) float64 {
 	//DEBUG: fmt.Printf("Correct: %v. Incorrect: %v.\n", correctCount, incorrectCount)
 	if correctCount < len(homozygousIndelCache) && incorrectCount < len(homozygousIndelCache[correctCount]) { //if the indel coverage is within the cache bounds
@@ -258,6 +268,8 @@ func homozygousIndelLikelihoodExpression(correctCount int, incorrectCount int, e
 	}
 }
 
+// heterozygousIndelLikelihoodExpression is a helper function of DiploidInsertionCallFromPile and DiploidDeletionCallFromPile
+// and calculates the multinomial expression for heterozygous INDEL genotypes.
 func heterozygousIndelLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, heterozygousIndelCache [][]float64) float64 {
 	//DEBUG: fmt.Printf("Correct: %v. Incorrect: %v.\n", correctCount, incorrectCount)
 	if correctCount < len(heterozygousIndelCache) && incorrectCount < len(heterozygousIndelCache[correctCount]) { //if the indel coverage is within the cache bounds
