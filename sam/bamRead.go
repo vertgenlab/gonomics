@@ -209,6 +209,19 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 		s.Cigar[i].RunLength = int(cigint >> 4)
 	}
 
+	// handle case where we are using a recycled sam struct.
+	// in this case we don't want to waste memory and set the cigar to nil
+	// for unaligned, so we use cig[0].Op = '*' which is how it is done when
+	// reading from a sam file.
+	if numCigarOps == 0 {
+		if cap(s.Cigar) >= 1 {
+			s.Cigar = s.Cigar[:1]
+		} else {
+			s.Cigar = make([]cigar.Cigar, 1)
+		}
+		s.Cigar[0].Op = '*'
+	}
+
 	if cap(s.Seq) >= lenSeq {
 		s.Seq = s.Seq[:lenSeq]
 	} else {
