@@ -166,6 +166,9 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 	refmap := chromInfo.SliceToMap(header.Chroms)
 	var read Sam
 	for read = range reads {
+		if read.Cigar == nil || read.Cigar[0].Op == '*' {
+			continue // skip unmapped reads
+		}
 		if !passesReadFilters(read, readFilters) {
 			continue
 		}
