@@ -21,12 +21,12 @@ func equalEffects(a, b CodingChange) bool {
 	case a.ProteinPos != b.ProteinPos:
 		return false
 
-	case dna.PolypeptideToString(a.AddedAa) !=
-		dna.PolypeptideToString(b.AddedAa):
+	case dna.PeptideToString(a.AddedAa) !=
+		dna.PeptideToString(b.AddedAa):
 		return false
 
-	case dna.PolypeptideToString(a.RemovedAa) !=
-		dna.PolypeptideToString(b.RemovedAa):
+	case dna.PeptideToString(a.RemovedAa) !=
+		dna.PeptideToString(b.RemovedAa):
 		return false
 
 	default:

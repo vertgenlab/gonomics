@@ -328,8 +328,8 @@ func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	}
 
 	if v.Info == "c.38753_38784del|p.Leu12918CysfsTer2" {
-		fmt.Println(dna.PolypeptideToString(v.AaRef))
-		fmt.Println(dna.PolypeptideToString(v.AaAlt))
+		fmt.Println(dna.PeptideToString(v.AaRef))
+		fmt.Println(dna.PeptideToString(v.AaAlt))
 	}
 
 	v.AaAlt = truncateOnTer(v.AaAlt)
