@@ -21,7 +21,7 @@ jobs:
         mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
         cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
         cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go build ./...
+        go install ./...
   
   test:
     runs-on: ubuntu-latest
