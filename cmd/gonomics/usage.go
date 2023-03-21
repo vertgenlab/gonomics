@@ -102,7 +102,7 @@ func printCmdList(cache *os.File) {
 }
 
 // buildCmdCache creates a cache file listing the cmd usage statements.
-// TODO find a way to store cache in gonomics binary file
+// TODO find a way to store cache in gonomics binary file.
 func buildCmdCache(binPath string) {
 	fmt.Println("...Building Cache...")
 	cmdMap := getGonomicsCmds()
