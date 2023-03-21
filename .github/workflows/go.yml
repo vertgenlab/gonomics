@@ -77,6 +77,7 @@ jobs:
           mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
           cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
           cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go install ./... &&
           go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
