@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestGonomics(t *testing.T) {
 	binPath, _ := getBin()
