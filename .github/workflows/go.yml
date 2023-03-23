@@ -52,8 +52,11 @@ jobs:
       - name: go fmt cmd
         run: gofmt -s -w ./cmd/*/*.go
       - name: go test gonomics cmd
-        run: |
-          go test ./cmd/gonomics/*.go
+        run:
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go test ./...
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
