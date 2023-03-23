@@ -51,6 +51,9 @@ jobs:
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
         run: gofmt -s -w ./cmd/*/*.go
+      - name: go test gonomics cmd
+        run: |
+          go test ./cmd/gonomics/*.go
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
