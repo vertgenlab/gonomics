@@ -5,7 +5,6 @@ import (
 )
 
 func TestGonomics(t *testing.T) {
-	binPath, _ := getBin()
-	buildCmdCache(binPath)
+	buildCmdCache("") // tests everything is formatted correctly and updates cache file
 	getCache()
 }

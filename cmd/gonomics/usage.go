@@ -97,9 +97,9 @@ func buildCmdCache(altSrcPath string) {
 		cmds = append(cmds, key)
 	}
 	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
-
 	// get location of binary and source files
 	binPath, _ := getBin()
+
 	var srcPath string
 	if altSrcPath != "" {
 		srcPath = altSrcPath
@@ -118,11 +118,9 @@ func buildCmdCache(altSrcPath string) {
 
 		// Open source file and parse gonomics cmd tags
 		cmdGroup, cmdUsage = parseTagsFromSource(srcPath + cmdName + "/" + cmdName + ".go")
-
 		if cmdGroup == "" { // TODO grouping map
 			cmdGroup = "Uncategorized"
 		}
-
 		if cmdUsage == "" {
 			cmdUsage = getUsageFromRunningCmd(binPath + "/" + cmdName)
 		}
@@ -131,6 +129,7 @@ func buildCmdCache(altSrcPath string) {
 
 		groupMap[info.Group] = append(groupMap[info.Group], info)
 	}
+
 	writeCache(groupMap, srcPath)
 }
 
