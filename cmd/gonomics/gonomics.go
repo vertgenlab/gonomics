@@ -97,7 +97,13 @@ func getSrc() string {
 // tryPathFile tests a path for the presence of intervalOverlap (arbitrary chosen command)
 // and returns true if the intervalOverlap executable is found in the input path.
 func tryPathFile(path string) bool {
-	dir, err := ioutil.ReadDir(path)
+	var err error
+	var dir []fs.FileInfo
+	_, err = os.Stat(path)
+	if err != nil {
+		return false
+	}
+	dir, err = ioutil.ReadDir(path)
 	if err != nil {
 		log.Printf("ERROR: could not access %s\n", path)
 		log.Fatal(err)
@@ -113,7 +119,13 @@ func tryPathFile(path string) bool {
 // tryPathDir tests a path for the presence of intervalOverlap source code directory
 // and returns true if the intervalOverlap directory is found in the input path.
 func tryPathDir(path string) bool {
-	dir, err := ioutil.ReadDir(path)
+	var err error
+	var dir []fs.FileInfo
+	_, err = os.Stat(path)
+	if err != nil {
+		return false
+	}
+	dir, err = ioutil.ReadDir(path)
 	if err != nil {
 		log.Printf("ERROR: could not access %s\n", path)
 		log.Fatal(err)
