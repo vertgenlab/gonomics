@@ -188,7 +188,7 @@ func main() {
 	flag.Parse()
 
 	if *gonomicsPath != "" {
-		buildCmdCache("")
+		buildCmdCache(*gonomicsPath)
 		return
 	}
 
