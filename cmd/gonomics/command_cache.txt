@@ -93,7 +93,6 @@
 ##CmdName:slurmCheck
 ##CmdName:sortGraph
 ##CmdName:statCalc
-##CmdName:testCmd
 ##CmdName:vcfAfs
 ##CmdName:vcfAncestorAnnotation
 ##CmdName:vcfEffectPrediction
@@ -107,9 +106,6 @@
 ##CmdName:wigPeaks
 ##CmdName:wigStats
 ##CmdName:wigToTrainingSet
-                                            
-[31m42[0m                                     
-     [32mtestCmd[0m                       [36mHello world![0m
                                             
 [31mBED Tools[0m                              
      [32mbedDistanceFromChrEnds[0m        [36mReturns a bed file with the Score field containing the minimum[0m
