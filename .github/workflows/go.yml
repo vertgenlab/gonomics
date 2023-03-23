@@ -47,8 +47,13 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '1.18'
-      - name: update gonomics cmd cache
-        run: go test ./cmd/gonomics/*.go
+      - name: Test
+        run:
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go install ./... &&
+          go test ./...
       - name: go fmt
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
