@@ -1,4 +1,4 @@
-##SourceDir:/Users/danielsnellings/go/src/github.com/vertgenlab/gonomics/cmd/
+##SourceDir:/home/runner/work/gonomics/gonomics/cmd/
 ##CmdName:alleleSplit
 ##CmdName:assemblyStats
 ##CmdName:axTools
@@ -93,7 +93,8 @@
 ##CmdName:slurmCheck
 ##CmdName:sortGraph
 ##CmdName:statCalc
-##CmdName:vcfAFS
+##CmdName:testCmd
+##CmdName:vcfAfs
 ##CmdName:vcfAncestorAnnotation
 ##CmdName:vcfEffectPrediction
 ##CmdName:vcfFilter
@@ -106,6 +107,9 @@
 ##CmdName:wigPeaks
 ##CmdName:wigStats
 ##CmdName:wigToTrainingSet
+                                            
+[31m42[0m                                     
+     [32mtestCmd[0m                       [36mHello world![0m
                                             
 [31mBED Tools[0m                              
      [32mbedDistanceFromChrEnds[0m        [36mReturns a bed file with the Score field containing the minimum[0m
@@ -202,7 +206,7 @@
      [32mprcompFormat[0m                  [36mGenerates a binary input matrix for PCA.[0m
      [32mselectionMcmc[0m                 [36mReturns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions.[0m
      [32mstatCalc[0m                      [36mCommand line statistics calculator.[0m
-     [32mvcfAFS[0m                        [36mReturns allele frequency spectrum information in a text file for graphing.[0m
+     [32mvcfAfs[0m                        [36mReturns allele frequency spectrum information in a text file for graphing.[0m
                                             
 [31mVCF Tools[0m                              
      [32mfilterGenotypes[0m               [36mfilter genotyped Vcfs containing at leaste 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents[0m
