@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"github.com/vertgenlab/gonomics/exception"
 	"io/fs"
@@ -12,6 +13,10 @@ import (
 	"strings"
 )
 
+//go:embed command_cache.txt
+var cache string
+
+// getBin returns the path to binary executables and a map of existing executables
 func getBin() (path string, binExists map[string]bool) {
 	// Find binary location. Preference is gonomics exec path > GOBIN > GOPATH > Default go install location
 	execPath, err := os.Executable() // path to gonomics executable
@@ -26,16 +31,16 @@ func getBin() (path string, binExists map[string]bool) {
 	godefault := os.Getenv("HOME") + "/go/bin" // default install directory
 
 	switch {
-	case tryPath(execPath):
+	case tryPathFile(execPath):
 		path = execPath
 
-	case gobin != "" && tryPath(gobin):
+	case gobin != "" && tryPathFile(gobin):
 		path = gobin
 
-	case gopath != "" && tryPath(gopath):
+	case gopath != "" && tryPathFile(gopath):
 		path = gopath
 
-	case godefault != "" && tryPath(godefault):
+	case godefault != "" && tryPathFile(godefault):
 		path = godefault
 
 	default:
@@ -64,9 +69,34 @@ func getBin() (path string, binExists map[string]bool) {
 	return path, binExists
 }
 
-// tryPath tests a path for the presence of intervalOverlap (arbitrary chosen command)
+// getSrc returns the path to the source code files for commands
+func getSrc() string {
+	var expectedPath string
+	var cachedSrcPath string = getCachedSrcDir()
+	gopath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
+	godefault := os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
+
+	switch {
+	case cachedSrcPath != "" && tryPathDir(cachedSrcPath):
+		expectedPath = cachedSrcPath
+
+	case os.Getenv("GOPATH") != "" && tryPathDir(gopath):
+		expectedPath = gopath
+
+	case os.Getenv("HOME") != "" && tryPathDir(godefault):
+		expectedPath = godefault
+
+	default:
+		log.Fatalf("ERROR: could not find gonomics cmd folder\n" +
+			"Please use the '-setpath' flag followed by the path to the gonomics directory\n" +
+			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n")
+	}
+	return expectedPath
+}
+
+// tryPathFile tests a path for the presence of intervalOverlap (arbitrary chosen command)
 // and returns true if the intervalOverlap executable is found in the input path.
-func tryPath(path string) bool {
+func tryPathFile(path string) bool {
 	dir, err := ioutil.ReadDir(path)
 	if err != nil {
 		log.Printf("ERROR: could not access %s\n", path)
@@ -80,25 +110,37 @@ func tryPath(path string) bool {
 	return false
 }
 
+// tryPathDir tests a path for the presence of intervalOverlap source code directory
+// and returns true if the intervalOverlap directory is found in the input path.
+func tryPathDir(path string) bool {
+	dir, err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Printf("ERROR: could not access %s\n", path)
+		log.Fatal(err)
+	}
+	for _, file := range dir {
+		if file.Name() == "intervalOverlap" && file.IsDir() {
+			return true
+		}
+	}
+	return false
+}
+
 // getGonomicsCmds parses the gonomics source code to return a set of cmd names
 // path input pointing to gonomics directory overrides autodetection
 func getGonomicsCmds() map[string]bool {
-	var expectedPath string
-	binPath, _ := getBin()
-	var cachedSrcPath string = getCachedSrcDir(binPath + "/.cmdcache")
-	switch {
-	case cachedSrcPath != "":
-		expectedPath = cachedSrcPath
-	case os.Getenv("GOPATH") != "":
-		expectedPath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
-	default:
-		expectedPath = os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
-	}
+	if cache != "" {
+		ans := getCmdsFromCache()
+		if ans["gonomics"] { // check that the directory for this cmd was found
+			return ans
+		}
+	} // else try to parse from src files
 
+	expectedPath := getSrc()
 	cmds, err := ioutil.ReadDir(expectedPath)
 	if err != nil {
 		log.Fatalf("ERROR: could not find gonomics cmd folder in expected path: %s\n"+
-			"Please use the '-setpath' followed by the path to the gonomics directory\n"+
+			"Please use the '-setpath' flag followed by the path to the gonomics directory\n"+
 			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n", expectedPath)
 	}
 
@@ -115,6 +157,18 @@ func getGonomicsCmds() map[string]bool {
 	return funcNames
 }
 
+// getCmdsFromCache parses the cached file in and returns the cmd map.
+func getCmdsFromCache() map[string]bool {
+	funcNames := make(map[string]bool)
+	lines := strings.Split(cache, "\n")
+	for i := range lines {
+		if strings.HasPrefix(lines[i], "##CmdName:") {
+			funcNames[strings.TrimPrefix(lines[i], "##CmdName:")] = true
+		}
+	}
+	return funcNames
+}
+
 func main() {
 	gonomicsPath := flag.String("setpath", "", "path to gonomics directory")
 	flag.Usage = usage
@@ -122,8 +176,7 @@ func main() {
 	flag.Parse()
 
 	if *gonomicsPath != "" {
-		binPath, _ := getBin()
-		buildFromPath(*gonomicsPath, binPath)
+		buildCmdCache("")
 		return
 	}
 
@@ -135,7 +188,7 @@ func main() {
 	cmdCalled := flag.Arg(0) // command called by the user (e.g. 'gonomics faFormat')
 
 	binPath, binExists := getBin()
-	isGonomicsCmd := getGonomicsCmds() // TODO change this so that gonomics cmd can be run without source code
+	isGonomicsCmd := getGonomicsCmds()
 
 	switch { // Error checks. verbose for clarity
 	case isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:
