@@ -49,6 +49,7 @@ jobs:
           go-version: '1.18'
       - name: update gonomics cmd cache
         run:
+          go install ./... &&
           go build ./cmd/gonomics/*.go &&
           ./gonomics -setpath $(realpath ./cmd)/ &&
           rm ./gonomics
