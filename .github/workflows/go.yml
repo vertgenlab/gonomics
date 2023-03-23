@@ -47,6 +47,8 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '1.18'
+      - name: update gonomics cmd cache
+        run: go test ./cmd/gonomics/*.go
       - name: go fmt
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
