@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"golang.org/x/exp/slices"
 	"log"
 	"os"
 	"os/exec"
@@ -148,13 +149,16 @@ func writeCache(groupMap map[string][]CmdInfo, srcPath string) {
 	}
 
 	// write command names
+	var cmdNames []string
 	for _, group := range groupMap {
 		for i := range group {
-			_, err = fmt.Fprintf(cacheWriter, "##CmdName:%s\n", group[i].Name)
-			if err != nil {
-				log.Panic(err)
-			}
+			cmdNames = append(cmdNames, fmt.Sprintf("##CmdName:%s\n", group[i].Name))
 		}
+	}
+	slices.Sort(cmdNames) // so file is not updated on PRs with no cmd changes
+	for i := range cmdNames {
+		_, err = fmt.Fprintf(cacheWriter, cmdNames[i])
+		exception.PanicOnErr(err)
 	}
 
 	// initialize tabwriter
