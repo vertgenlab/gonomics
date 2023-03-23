@@ -87,9 +87,9 @@ func getSrc() string {
 		expectedPath = godefault
 
 	default:
-		log.Fatalf("ERROR: could not find gonomics cmd folder\n" +
-			"Please use the '-setpath' flag followed by the path to the gonomics directory\n" +
-			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n")
+		log.Fatalf("ERROR: could not find gonomics cmd folder in any of the following locations\n%s\n%s\n%s\n"+
+			"Please use the '-setpath' flag followed by the path to the gonomics directory\n"+
+			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n", cachedSrcPath, gopath, godefault)
 	}
 	return expectedPath
 }
@@ -140,7 +140,7 @@ func tryPathDir(path string) bool {
 
 // getGonomicsCmds parses the gonomics source code to return a set of cmd names
 // path input pointing to gonomics directory overrides autodetection
-func getGonomicsCmds() map[string]bool {
+func getGonomicsCmds(altSrcPath string) map[string]bool {
 	if cache != "" {
 		ans := getCmdsFromCache()
 		if ans["gonomics"] { // check that the directory for this cmd was found
@@ -148,12 +148,17 @@ func getGonomicsCmds() map[string]bool {
 		}
 	} // else try to parse from src files
 
-	expectedPath := getSrc()
-	cmds, err := ioutil.ReadDir(expectedPath)
+	var srcPath string
+	if altSrcPath != "" {
+		srcPath = altSrcPath
+	} else {
+		srcPath = getSrc()
+	}
+	cmds, err := ioutil.ReadDir(srcPath)
 	if err != nil {
 		log.Fatalf("ERROR: could not find gonomics cmd folder in expected path: %s\n"+
 			"Please use the '-setpath' flag followed by the path to the gonomics directory\n"+
-			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n", expectedPath)
+			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n", srcPath)
 	}
 
 	funcNames := make(map[string]bool)
@@ -163,7 +168,7 @@ func getGonomicsCmds() map[string]bool {
 	}
 
 	if !funcNames["gonomics"] { // check that the directory for this cmd was found
-		log.Fatalf("ERROR: gonomics cmd folder was not found in %s\n", expectedPath)
+		log.Fatalf("ERROR: gonomics cmd folder was not found in %s\n", srcPath)
 	}
 
 	return funcNames
@@ -200,7 +205,7 @@ func main() {
 	cmdCalled := flag.Arg(0) // command called by the user (e.g. 'gonomics faFormat')
 
 	binPath, binExists := getBin()
-	isGonomicsCmd := getGonomicsCmds()
+	isGonomicsCmd := getGonomicsCmds(*gonomicsPath)
 
 	switch { // Error checks. verbose for clarity
 	case isGonomicsCmd[cmdCalled] && binExists[cmdCalled]:
