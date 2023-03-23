@@ -52,7 +52,7 @@ jobs:
           mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
           cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
           cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-          go test ./cmd/gonomics/*.go
+          go test ./...
       - name: go fmt
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
