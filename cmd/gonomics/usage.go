@@ -92,7 +92,7 @@ func buildCmdCache(altSrcPath string) {
 	log.Println("...Building Cache...")
 
 	// get cmd names and manipulate to sorted slice
-	cmdMap := getGonomicsCmds()
+	cmdMap := getGonomicsCmds(altSrcPath)
 	cmds := make([]string, 0, len(cmdMap))
 	for key := range cmdMap {
 		cmds = append(cmds, key)
