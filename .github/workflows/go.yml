@@ -50,7 +50,8 @@ jobs:
       - name: update gonomics cmd cache
         run:
           go build ./cmd/gonomics/*.go &&
-          gonomics -setpath $(realpath ./cmd)/
+          ./gonomics -setpath $(realpath ./cmd)/ &&
+          rm ./gonomics
       - name: go fmt
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
