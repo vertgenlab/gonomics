@@ -33,7 +33,7 @@ func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount i
 			gapCount++
 		}
 	}
-	return ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, NCount, gapCount
+	return ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount
 }
 
 // CountMask returns the number of bases that are masked/unmasked (lowercase/uppercase) in the input sequence.
