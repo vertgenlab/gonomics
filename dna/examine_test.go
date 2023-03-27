@@ -11,12 +11,24 @@ func TestCount(t *testing.T) {
 		gCount != 3 || tCount != 2 || nCount != 3 || gapCount != 2 {
 		t.Errorf("problem with Count")
 	}
+
+	ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount = Count(beta)
+	if ACount != 4 || CCount != 6 || GCount != 2 || TCount != 1 || NCount != 2 ||
+		aCount != 3 || cCount != 2 || gCount != 3 || tCount != 2 || nCount != 3 ||
+		gapCount != 2 {
+		t.Errorf("problem with Count")
+	}
 }
 
 func TestCountMask(t *testing.T) {
 	umC, mC, gC := CountMask(alpha)
 	if umC != 14 || mC != 14 || gC != 2 {
-		t.Errorf("problem with CountMask")
+		t.Error("problem with CountMask(alpha)")
+	}
+
+	umC, mC, gC = CountMask(beta)
+	if umC != 15 || mC != 13 || gC != 2 {
+		t.Error("problem with CountMask(beta)")
 	}
 }
 
