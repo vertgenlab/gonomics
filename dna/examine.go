@@ -79,13 +79,7 @@ func Dist(a []Base, b []Base) int {
 // IsLower returns true if the input base is lowercase.
 func IsLower(b Base) bool {
 	switch b {
-	case LowerA:
-		return true
-	case LowerG:
-		return true
-	case LowerC:
-		return true
-	case LowerT:
+	case LowerA, LowerG, LowerC, LowerT:
 		return true
 	default:
 		return false
@@ -95,32 +89,8 @@ func IsLower(b Base) bool {
 // DefineBase returns false if the input base is an N, Gap, Dot, or Nil.
 func DefineBase(b Base) bool {
 	switch b {
-	case A:
+	case A, C, G, T, LowerA, LowerC, LowerG, LowerT:
 		return true
-	case C:
-		return true
-	case G:
-		return true
-	case T:
-		return true
-	case N:
-		return false
-	case LowerA:
-		return true
-	case LowerC:
-		return true
-	case LowerG:
-		return true
-	case LowerT:
-		return true
-	case LowerN:
-		return false
-	case Gap:
-		return false
-	case Dot:
-		return false
-	case Nil:
-		return false
 	default:
 		return false
 	}
