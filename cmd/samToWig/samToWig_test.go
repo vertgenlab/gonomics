@@ -16,6 +16,8 @@ var SamToWigTests = []struct {
 }{
 	{"testdata/test1.sam", "testdata/test.chrom.sizes", "testdata/test1.wig", -1},
 	{"testdata/test2.sam", "testdata/test.chrom.sizes", "testdata/test2.wig", 30},
+	{"testdata/test1.bam", "testdata/test.chrom.sizes", "testdata/test1.wig", -1},
+	{"testdata/test2.bam", "testdata/test.chrom.sizes", "testdata/test2.wig", 30},
 }
 
 func TestSamToWig(t *testing.T) {
