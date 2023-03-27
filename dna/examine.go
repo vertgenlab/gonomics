@@ -6,7 +6,6 @@ import (
 
 // Count returns the number of each base present in the input sequence.
 func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount int, aCount int, cCount int, gCount int, tCount int, nCount int, gapCount int) {
-	ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	for _, b := range seq {
 		switch b {
 		case A:
@@ -33,7 +32,7 @@ func Count(seq []Base) (ACount int, CCount int, GCount int, TCount int, NCount i
 			gapCount++
 		}
 	}
-	return ACount, CCount, GCount, TCount, NCount, aCount, cCount, gCount, tCount, nCount, gapCount
+	return
 }
 
 // CountMask returns the number of bases that are masked/unmasked (lowercase/uppercase) in the input sequence.
