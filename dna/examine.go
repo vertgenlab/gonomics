@@ -55,25 +55,18 @@ func CountGaps(seq []Base) int {
 	return gapCount
 }
 
-// baseDist is a helper function for Dist that returns 1 if input bases do not match.
-func baseDist(a Base, b Base) int {
-	if a == b {
-		return 0
-	}
-	return 1
-}
-
 // Dist returns the number of bases that do not match between the input sequences.
 // Input sequences must be the same length.
-func Dist(a []Base, b []Base) int {
+func Dist(a []Base, b []Base) (dist int) {
 	if len(a) != len(b) {
 		log.Panicf("input sequence lengths are different")
 	}
-	var sum int
 	for i := range a {
-		sum = sum + baseDist(a[i], b[i])
+		if a[i] != b[i] {
+			dist++
+		}
 	}
-	return sum
+	return
 }
 
 // IsLower returns true if the input base is lowercase.
