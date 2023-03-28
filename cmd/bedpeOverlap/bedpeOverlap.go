@@ -94,7 +94,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 
 	for _, i := range inBedPe {
 		currOverlaps = interval.Query(selectTree, i.A, "any")
-		if len(currOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
+		if len(currOverlaps) > 0 { //if A, the left side of the input bedpe, overlaps any of the select beds, write the bedPe to output.
 			if overlapThreshold == 0 {
 				bedpe.WriteToFileHandle(out, i)
 			} else {
