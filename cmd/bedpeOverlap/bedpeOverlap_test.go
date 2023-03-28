@@ -28,7 +28,7 @@ func TestBedPeOverlap(t *testing.T) {
 	for _, v := range BedPeOverlapTests {
 		bedpeOverlap(v.selectFile, v.inBedPe, v.outBedPe, v.bedSelect, v.overlapThreshold, v.overlapBoth)
 		if !fileio.AreEqual(v.outBedPe, v.expectedFile) {
-			t.Errorf("Error in bedPeOverlap.")
+			t.Errorf("Error in bedpeOverlap.")
 		} else {
 			err = os.Remove(v.outBedPe)
 			exception.PanicOnErr(err)
