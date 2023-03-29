@@ -102,7 +102,7 @@ func printCmdList(cache *os.File) {
 }
 
 // buildCmdCache creates a cache file listing the cmd usage statements.
-// TODO find a way to store cache in gonomics binary file
+// TODO find a way to store cache in gonomics binary file.
 func buildCmdCache(binPath string) {
 	fmt.Println("...Building Cache...")
 	cmdMap := getGonomicsCmds()
@@ -208,6 +208,12 @@ func writeCache(binPath string, groupMap map[string][]CmdInfo, srcPath string) {
 func parseTagsFromSource(filepath string) (group string, usage string) {
 	tagLines := getHeaderCommentLines(filepath)
 
+	// ATTENTION //
+	// If your PR is failing tests due to the gonomics command tests, please ensure that if you declare a
+	// command group for your cmd, you do so in the following format (ignore first // on each line):
+	// // Command Group: "Deep Learning"
+	//
+	// package main
 	for _, line := range tagLines {
 		switch {
 		case strings.Contains(line, "Command Group:"):
@@ -216,7 +222,6 @@ func parseTagsFromSource(filepath string) (group string, usage string) {
 			usage = strings.FieldsFunc(line, func(c rune) bool { return c == '"' })[1]
 		}
 	}
-
 	return
 }
 
