@@ -3,25 +3,48 @@ package main
 import (
 	"flag"
 	"github.com/vertgenlab/gonomics/exception"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
 func getBin() (path string, binExists map[string]bool) {
-	switch { // Find binary location. Preference is GOBIN > GOPATH > Default go install location
-	case os.Getenv("GOBIN") != "":
-		path = os.Getenv("GOBIN")
+	// Find binary location. Preference is gonomics exec path > GOBIN > GOPATH > Default go install location
+	execPath, err := os.Executable() // path to gonomics executable
+	exception.PanicOnErr(err)
+	execPath, err = filepath.EvalSymlinks(execPath) // follow any symlinks to get true executable location
 
-	case os.Getenv("GOPATH") != "":
-		path = os.Getenv("GOPATH") + "/bin" // default to $GOPATH/bin
+	// options to choose from
+	execPath = strings.TrimSuffix(execPath, ".test") // avoid errors when testing function
+	execPath = strings.TrimSuffix(execPath, "/gonomics")
+	gobin := os.Getenv("GOBIN")
+	gopath := os.Getenv("GOPATH") + "/bin"     // default to $GOPATH/bin
+	godefault := os.Getenv("HOME") + "/go/bin" // default install directory
+
+	switch {
+	case tryPath(execPath):
+		path = execPath
+
+	case gobin != "" && tryPath(gobin):
+		path = gobin
+
+	case gopath != "" && tryPath(gopath):
+		path = gopath
+
+	case godefault != "" && tryPath(godefault):
+		path = godefault
 
 	default:
-		path = os.Getenv("HOME") + "/go/bin" // default install directory
+		log.Fatalf("ERROR: could not find executables for gonomics in any of the following paths:"+
+			"\n'%s'\n'%s'\n'%s'\n'%s'\n", execPath, gobin, gopath, godefault)
 	}
 
-	dir, err := ioutil.ReadDir(path)
+	var dir []fs.FileInfo
+	dir, err = ioutil.ReadDir(path)
 	if err != nil {
 		log.Printf("ERROR: could not access %s\n", path)
 		log.Fatal(err)
@@ -39,6 +62,22 @@ func getBin() (path string, binExists map[string]bool) {
 	}
 
 	return path, binExists
+}
+
+// tryPath tests a path for the presence of intervalOverlap (arbitrary chosen command)
+// and returns true if the intervalOverlap executable is found in the input path.
+func tryPath(path string) bool {
+	dir, err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Printf("ERROR: could not access %s\n", path)
+		log.Fatal(err)
+	}
+	for _, file := range dir {
+		if file.Name() == "intervalOverlap" && !file.IsDir() {
+			return true
+		}
+	}
+	return false
 }
 
 // getGonomicsCmds parses the gonomics source code to return a set of cmd names

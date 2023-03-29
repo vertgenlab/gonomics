@@ -3,10 +3,11 @@ package dna
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"strings"
 	"unicode"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
@@ -119,7 +120,8 @@ func BaseToRune(base Base) rune {
 
 // Extract returns a subsequence of an input slice of DNA bases from an input start and end point.
 func Extract(rec []Base, start int, end int) []Base {
-	return rec[start:end]
+	// Use the 3-arg slicing for safety: any append will force a copy instead of overwriting rec
+	return rec[start:end:end]
 }
 
 // BaseToString converts a DNA base to a string by casting a BaseToRune result to a string.
