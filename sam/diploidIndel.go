@@ -90,7 +90,7 @@ func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelC
 	//DEBUG: fmt.Printf("N: %v. dTot: %v. DaValue: %v. DbValue: %v.\n", N, iTot, IaValue, IbValue)
 
 	var B int = N - iTot
-	var answer []DiploidInsertion = []DiploidInsertion{DiploidInsertion{Type: BBnoIns, Ia: IaKey, Ib: IbKey}}
+	var answer []DiploidInsertion = []DiploidInsertion{{Type: BBnoIns, Ia: IaKey, Ib: IbKey}}
 	answerPosterior := logspace.Multiply(homozygousIndelLikelihoodExpression(B, IaValue+IbValue, epsilon, homozygousIndelCache), priorCache[BBnoIns])
 	//DEBUG: fmt.Printf("BB Insertion Posterior: %v.\n", answerPosterior)
 
@@ -212,7 +212,7 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 	var B int = N - dTot
 
 	//set default return to no deletion
-	var answer []DiploidDeletion = []DiploidDeletion{DiploidDeletion{Type: BBNoDel, Da: DaKey, Db: DbKey}}
+	var answer []DiploidDeletion = []DiploidDeletion{{Type: BBNoDel, Da: DaKey, Db: DbKey}}
 	answerPosterior := logspace.Multiply(homozygousIndelLikelihoodExpression(B, DaValue+DbValue, epsilon, homozygousIndelCache), priorCache[BBNoDel])
 
 	var currentPosterior float64
