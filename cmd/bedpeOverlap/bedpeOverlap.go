@@ -24,22 +24,22 @@ func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, 
 }
 
 // function to calculate what percent of a bedpeHalf overlaps the selectBed
-func overlapPercent(possOverlaps interval.Interval, halfBedpe bed.Bed) float64 {
-	var overlapEntryStart, overlapEntryEnd, halfBedpeStart, halfBedpeEnd, overlapSize int
+func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
+	var overlapEntryStart, overlapEntryEnd, halfBedPeStart, halfBedPeEnd, overlapSize int
 	var answer float64
 
 	overlapEntryStart = possOverlaps.GetChromStart()
 	overlapEntryEnd = possOverlaps.GetChromEnd()
-	halfBedpeStart = halfBedpe.ChromStart
-	halfBedpeEnd = halfBedpe.ChromEnd
+	halfBedPeStart = halfBedPe.ChromStart
+	halfBedPeEnd = halfBedPe.ChromEnd
 
-	overlapSize = lift.MatchOverlapLen(overlapEntryStart, overlapEntryEnd, halfBedpeStart, halfBedpeEnd)
+	overlapSize = lift.MatchOverlapLen(overlapEntryStart, overlapEntryEnd, halfBedPeStart, halfBedPeEnd)
 
-	answer = float64(overlapSize) / float64(halfBedpeEnd-halfBedpeStart)
+	answer = float64(overlapSize) / float64(halfBedPeEnd-halfBedPeStart)
 	return answer
 }
 
-///func overlapPercentBedpeSelect (leftSideA interval.Interval, leftSideB interval.Interval, rightSideA interval.Interval, rightSideB interval.Interval) float64 {
+///func overlapPercentBedPeSelect (leftSideA interval.Interval, leftSideB interval.Interval, rightSideA interval.Interval, rightSideB interval.Interval) float64 {
 //	var rightSideStartA int
 //	var rightSideEndA int
 //	var rightSideStartB int
@@ -94,7 +94,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 
 	for _, i := range inBedPe {
 		currOverlaps = interval.Query(selectTree, i.A, "any")
-		if len(currOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
+		if len(currOverlaps) > 0 { //if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
 			if overlapThreshold == 0 {
 				bedpe.WriteToFileHandle(out, i)
 			} else {
@@ -147,7 +147,7 @@ func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold 
 
 	for _, i = range inBedPe {
 		aOverlaps = interval.Query(selectTree, i.A, "any")
-		if len(aOverlaps) > 0 { //if A, the left side of the input bedPe, overlaps any of the select beds, write the bedPe to output.
+		if len(aOverlaps) > 0 { //if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
 			if overlapThreshold == 0 {
 				bOverlaps = interval.Query(selectTree, i.B, "any")
 				if len(bOverlaps) > 0 {
@@ -229,7 +229,7 @@ func usage() {
 		"by default every overlap regardless of overlap percentage will be reported\n" +
 		"overlapThreshold is only compatible with -bedSelect\n" +
 		"Usage:\n" +
-		"bedpeOverlap [options] selectFile inputFile.bedPe out.bedpe\n\n")
+		"bedpeOverlap [options] selectFile inputFile.bedpe out.bedpe\n\n")
 	flag.PrintDefaults()
 }
 
@@ -256,7 +256,7 @@ func main() {
 		log.Fatalf("Error: overlap threshold must be between 0 and 1")
 	}
 
-	//should no longer be needed when overlapThresholdBedpe is implimented
+	//should no longer be needed when overlapThresholdBedPe is implimented
 	if *overlapThreshold != 0 && *bedSelect == false {
 		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
 	}
