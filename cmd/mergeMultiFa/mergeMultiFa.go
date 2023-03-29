@@ -49,6 +49,9 @@ func mergeMultiFa(inAFile string, inBFile string, outFile string) {
 
 	for alnPosA < len(inA[0].Seq) && alnPosB < len(inB[0].Seq) {
 		if (inA[0].Seq[alnPosA] != dna.Gap && inB[0].Seq[alnPosB] != dna.Gap) || (inA[0].Seq[alnPosA] == dna.Gap && inB[0].Seq[alnPosB] == dna.Gap) {
+			if inA[0].Seq[alnPosA] != inB[0].Seq[alnPosB] {
+				log.Fatalf("Error in mergeMultiFa. Reference sequences at alignment position %v of the first file showed different bases between the two files. Found in first file: %s. Found in second file: %s.\n", alnPosA, dna.BaseToString(inA[0].Seq[alnPosA]), dna.BaseToString(inB[0].Seq[alnPosB]))
+			}
 			for i = range inA {
 				answer[i].Seq = append(answer[i].Seq, inA[i].Seq[alnPosA])
 			}
