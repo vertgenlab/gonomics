@@ -12,47 +12,40 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v3
-      with:
-        go-version: '1.18'
-    - name: Build
-      run:
-        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go build ./...
-  
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.18'
+      - name: Build
+        run:
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go build ./...
+
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v3
-      with:
-        go-version: '1.18'
-    - name: Test
-      run: 
-        mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-        cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-        cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-        go install ./... &&
-        go test ./...
-        
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.18'
+      - name: Test
+        run: |
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go install ./... &&
+          go test ./...
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.18'
-      - name: update gonomics cmd cache
-        run:
-          go install ./... &&
-          go build ./cmd/gonomics/*.go &&
-          ./gonomics -setpath $(realpath ./cmd)/ &&
-          rm ./gonomics
       - name: go fmt
         run: gofmt -s -w ./*/*.go
       - name: go fmt cmd
@@ -68,28 +61,26 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git commit -am "Automated go fmt"
           git push
-
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 2
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.18'
       - name: Run coverage
-        run: 
+        run:
           mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
           cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
           cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
           go install ./... &&
           go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           files: /home/runner/go/src/github.com/vertgenlab/gonomics/coverage.txt
           verbose: true
-
