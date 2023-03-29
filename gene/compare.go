@@ -131,8 +131,8 @@ func printEffPred(pred EffectPrediction) {
 	fmt.Printf("Consequence: %s\n", consequence)
 	fmt.Printf("cDNA Pos: %d%+d\n", pred.CdnaPos, pred.CdnaDist)
 	fmt.Printf("AAPos: %d\n", pred.AaPos)
-	fmt.Printf("AaRef: %s\n", dna.PolypeptideToString(pred.AaRef))
-	fmt.Printf("AaAlt: %s\n", dna.PolypeptideToString(pred.AaAlt))
+	fmt.Printf("AaRef: %s\n", dna.PeptideToString(pred.AaRef))
+	fmt.Printf("AaAlt: %s\n", dna.PeptideToString(pred.AaAlt))
 	fmt.Printf("StopDist: %d\n", pred.StopDist)
 }
 

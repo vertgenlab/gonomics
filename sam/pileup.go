@@ -31,7 +31,7 @@ type Pile struct {
 	// They are only included to preserve multi-base deletion structure for downstream use.
 	// Further note that DelCount is only recorded for the 5'-most base in the deletion.
 	DelCountF map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, forward reads
-	DelCountR map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, forward reads
+	DelCountR map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, reverse reads
 
 	touched bool // true if Count or InsCount has been modified
 	// touched is used as a quick check to see whether a pile struct
@@ -166,6 +166,9 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 	refmap := chromInfo.SliceToMap(header.Chroms)
 	var read Sam
 	for read = range reads {
+		if read.Cigar == nil || read.Cigar[0].Op == '*' {
+			continue // skip unmapped reads
+		}
 		if !passesReadFilters(read, readFilters) {
 			continue
 		}

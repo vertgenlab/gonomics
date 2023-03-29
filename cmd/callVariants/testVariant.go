@@ -101,11 +101,13 @@ func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAlt
 
 	// add ref to altcounts
 	alleleCounts = append(alleleCounts, s.CountF[int(ref)]+s.CountR[int(ref)])
-
+	var b dna.Base
 	for i := range alts {
 		switch passingVarType[i] {
 		case singleNucleotide:
-			alleleCounts = append(alleleCounts, s.CountF[int(dna.RuneToBase(rune(alts[i][0])))]+s.CountR[int(dna.RuneToBase(rune(alts[i][0])))])
+			b, err = dna.RuneToBase(rune(alts[i][0]))
+			exception.PanicOnErr(err)
+			alleleCounts = append(alleleCounts, s.CountF[int(b)]+s.CountR[int(b)])
 
 		case insertion:
 			alleleCounts = append(alleleCounts, s.InsCountF[alts[i]]+s.InsCountR[alts[i]])
@@ -312,11 +314,15 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	// d = Background Alt Allele Count
 
 	var a, b, c, d int
+	var base dna.Base
+	var err error
 	var fwdStrandBias float64
 
 	switch varType {
 	case singleNucleotide: // alt is single base
-		alt := int(dna.RuneToBase(rune(altString[0])))
+		base, err = dna.RuneToBase(rune(altString[0]))
+		exception.PanicOnErr(err)
+		alt := int(base)
 		c = exp.CountF[alt] + exp.CountR[alt]
 		d = bkgd.CountF[alt] + bkgd.CountR[alt]
 		fwdStrandBias = float64(exp.CountF[alt]) / float64(c)
