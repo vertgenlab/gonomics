@@ -1,11 +1,13 @@
+// Package sketch provides utilities and collor palettes for plotting graphs and images
 package sketch
 
 import (
+	"image"
+	"image/color"
+
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/color"
 	//"golang.org/x/image/font/inconsolata"
 )
 
