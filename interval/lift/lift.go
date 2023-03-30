@@ -73,7 +73,7 @@ func LiftCoordinatesWithChain(c chain.Chain, i Lift) (string, int, int) {
 	/* The minus one/plus one handles when a region ends
 	with a structural variant and ensures correct placement of the end in the new assembly. */
 	newEnd, _ = chain.TPosToQPos(c, i.GetChromEnd()-1)
-	newEnd++ //correction for the GetChromEnd -1 on the line above
+	newEnd++        //correction for the GetChromEnd -1 on the line above
 	if !c.QStrand { //valid bed formats must have start < end. So this correction is made for intervals lifted to the negative strand.
 		newStart, newEnd = newEnd, newStart
 		newStart += 1 //these lines are corrections for the open/closed interval start and end.
@@ -124,9 +124,9 @@ func MatchProportion(c chain.Chain, i interval.Interval) (float64, float64) {
 func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 	var border bool
 	_, border = chain.TPosToQPos(c, i.GetChromStart())
-	if !border {//only return if false, otherwise we have to check chromEnd.
+	if !border { //only return if false, otherwise we have to check chromEnd.
 		return false
 	}
-	_, border = chain.TPosToQPos(c, i.GetChromEnd() - 1)//interval ranges are open right so we want ChromEnd - 1
+	_, border = chain.TPosToQPos(c, i.GetChromEnd()-1) //interval ranges are open right so we want ChromEnd - 1
 	return border
 }

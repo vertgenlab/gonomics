@@ -13,10 +13,10 @@ import (
 // BedGraph stores information about genomic regions, including their location and an associated float DataValue.
 // As with Bed, coordinates are 0-based, half-open.
 type BedGraph struct {
-	Chrom string
+	Chrom      string
 	ChromStart int
-	ChromEnd int
-	DataValue float64
+	ChromEnd   int
+	DataValue  float64
 }
 
 // ToString converts a BedGraph struct into a bedGraph file format string. Useful for writing to files or printing.
@@ -104,4 +104,3 @@ func GoReadToChan(filename string) <-chan BedGraph {
 
 	return data
 }
-
