@@ -1,7 +1,5 @@
 # Description
-<!-- Please add a summary for this PR. Summary should scale with the size of the PR!  -->
-<!-- Why is this change required? What problem does it solve? -->
-<!-- If it fixes an open issue, please link to the issue here. -->
+<!-- Please add a summary for this PR. Summary should scale w/ PR size!  -->
 - Adding in this template will auto generate a template for opening PRs
 
 ## Relevant Links
