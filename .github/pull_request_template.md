@@ -11,7 +11,6 @@
 - [ ] I performed a self-review of my code
 - [ ] If it this a core feature, I have added thorough tests
 - [ ] The command `go fmt` was used on all files included
-- [ ] Send PR link to the #computation slack channel
 
 ### Testing
 <!-- if relevant, document how you tested this code, and how someone else might also test it -->
