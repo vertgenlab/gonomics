@@ -33,9 +33,9 @@ func DiploidInsertionToSeqs(i DiploidInsertion) [][]dna.Base {
 	case IaIb:
 		return [][]dna.Base{dna.StringToBases(i.Ia), dna.StringToBases(i.Ib)}
 	case IaB:
-		return [][]dna.Base{dna.StringToBases(i.Ia), []dna.Base{}}
+		return [][]dna.Base{dna.StringToBases(i.Ia), {}}
 	case BBnoIns:
-		return [][]dna.Base{[]dna.Base{}, []dna.Base{}}
+		return [][]dna.Base{{}, {}}
 	}
 	log.Fatalf("DiploidInsertion type: %v not recognized.\n", i.Type)
 	return [][]dna.Base{}
