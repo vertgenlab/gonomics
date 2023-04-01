@@ -56,8 +56,8 @@ func TestHaploidCallFromPile(t *testing.T) {
 	var haploidIndelPriorCache []float64
 	var observed HaploidCall
 	for _, v := range HaploidCallFromPileTests {
-		haploidBasePriorCache = makeHaploidBasePriorCache(v.Delta, v.Gamma)
-		haploidIndelPriorCache = makeHaploidIndelPriorCache(v.Delta, v.Kappa)
+		haploidBasePriorCache = MakeHaploidBasePriorCache(v.Delta, v.Gamma)
+		haploidIndelPriorCache = MakeHaploidIndelPriorCache(v.Delta, v.Kappa)
 		observed = HaploidCallFromPile(v.P, v.RefBase, v.Epsilon, haploidBasePriorCache, haploidIndelPriorCache, homoBaseCache, heteroBaseCache, homoIndelCache)
 		if observed.Base != v.Expected.Base {
 			t.Errorf("Error in HaploidCallFromPile. Observed base: %v not equal to expected base: %v.\n", dna.BaseToString(observed.Base), dna.BaseToString(v.Expected.Base))

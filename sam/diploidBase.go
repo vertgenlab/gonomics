@@ -24,6 +24,35 @@ const (
 	NN DiploidBase = 10
 )
 
+func DiploidBaseToBases(base DiploidBase) []dna.Base {
+	switch base {
+	case AA:
+		return []dna.Base{dna.A, dna.A}
+	case AC:
+		return []dna.Base{dna.A, dna.C}
+	case AG:
+		return []dna.Base{dna.A, dna.G}
+	case AT:
+		return []dna.Base{dna.A, dna.T}
+	case CC:
+		return []dna.Base{dna.C, dna.C}
+	case CG:
+		return []dna.Base{dna.C, dna.G}
+	case CT:
+		return []dna.Base{dna.C, dna.T}
+	case GG:
+		return []dna.Base{dna.G, dna.G}
+	case GT:
+		return []dna.Base{dna.G, dna.T}
+	case TT:
+		return []dna.Base{dna.T, dna.T}
+	case NN:
+		return []dna.Base{dna.N, dna.N}
+	}
+	log.Fatalf("Unrecognized DiploidBase: %v.\n", base)
+	return []dna.Base{}
+}
+
 // diploidBaseString formats a DiploidBase type as a string for debugging.
 func diploidBaseString(base DiploidBase) string {
 	switch base {
@@ -196,11 +225,11 @@ func heterozygousLikelihoodExpression(correctCount int, incorrectCount int, epsi
 	}
 }
 
-// makePriorCache is a helper function used in samAssembler before running DiploidBaseCallFromPile.
+// MakeDiploidBasePriorCache is a helper function used in samAssembler before running DiploidBaseCallFromPile.
 // Constructs a matrix ([][]float64) of form answer[refBase][outGenotype], where index of refBase: 0=a, 1=c, 2=g, 3=t.
 // Index of outGenotype follows the indices of the DiploidBase type.
 // Answers are log transformed.
-func makeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
+func MakeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 	Tv := delta / (2.0 + gamma) //the probability of transversions
 	Tr := gamma * Tv            //the probability of transitions
 	oneMinusDeltaSquared := math.Log(math.Pow(1-delta, 2))

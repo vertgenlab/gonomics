@@ -71,7 +71,7 @@ func TestDiploidBaseCallFromPile(t *testing.T) {
 	var homozygousCache = make([][]float64, 0)
 
 	for _, v := range DiploidBaseCallFromPileTests {
-		priorCache = makeDiploidBasePriorCache(v.Delta, v.Gamma)
+		priorCache = MakeDiploidBasePriorCache(v.Delta, v.Gamma)
 		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, v.Epsilon)
 		if actual != v.Expected {
 			t.Errorf("Error in DiploidBaseCallFromPile. Expected: %s. Observed: %s.", diploidBaseString(v.Expected), diploidBaseString(actual))
@@ -134,7 +134,7 @@ var MakePileDiploidPriorProbabilityCacheTests = []struct {
 func TestMakeDiploidBasePriorCache(t *testing.T) {
 	var current [][]float64
 	for _, v := range MakePileDiploidPriorProbabilityCacheTests {
-		current = makeDiploidBasePriorCache(v.BranchLength, v.TransitionBias)
+		current = MakeDiploidBasePriorCache(v.BranchLength, v.TransitionBias)
 		if !equalMatrix(current, v.Expected) {
 			fmt.Println(current)
 			t.Errorf("Error in generating pileup DiploidBase prior probability cache.")
