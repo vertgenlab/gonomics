@@ -26,13 +26,14 @@ var SamAssemblerTests = []struct {
 	ExpectedOutFileB     string
 	OutMultiFaFileNames  []string
 	ExpectedMultiFaFiles []string
+	Verbose              int
 }{
 	{SamFileName: "testdata/diverged.RefAln.sorted.bam",
 		RefFile:              "testdata/ref.fa",
 		OutFileA:             "testdata/tmp.OutFileA.fa",
 		OutFileB:             "testdata/tmp.OutFileB.fa",
 		MultiFaDir:           "testdata/multiFa",
-		tName:                "Rand",
+		tName:                "Sequence_0",
 		qNameA:               "Rand_Con_A",
 		qNameB:               "Rand_Con_B",
 		Delta:                0.01,
@@ -45,6 +46,7 @@ var SamAssemblerTests = []struct {
 		ExpectedOutFileB:     "testdata/expected.OutFileB.fa",
 		OutMultiFaFileNames:  []string{},
 		ExpectedMultiFaFiles: []string{},
+		Verbose:              0,
 	},
 }
 
@@ -68,6 +70,7 @@ func TestSamAssembler(t *testing.T) {
 			Kappa:               v.Kappa,
 			LikelihoodCacheSize: v.LikelihoodCacheSize,
 			SetSeed:             v.SetSeed,
+			Verbose:             v.Verbose,
 		}
 		samAssembler(s)
 		if !fileio.AreEqual(v.OutFileA, v.ExpectedOutFileA) {

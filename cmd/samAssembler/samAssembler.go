@@ -28,6 +28,7 @@ type Settings struct {
 	Kappa               float64
 	LikelihoodCacheSize int
 	SetSeed             int64
+	Verbose             int
 }
 
 const bufferSize = 10_000_000
@@ -93,6 +94,9 @@ func samAssembler(s Settings) {
 
 	//now time for the main loop, we look through each pile
 	for p := range piles {
+		if s.Verbose > 0 && !firstTime && p.Pos&1_000_000 == 0 {
+			fmt.Printf("Current Chrom: %s. Current Position: %v.\n", currChrom, p.Pos)
+		}
 		if positionsToSkip > 0 {
 			if s.MultiFaDir != "" {
 				currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
@@ -100,7 +104,9 @@ func samAssembler(s Settings) {
 				currMultiFa[2].Seq[multiFaPos] = dna.Gap
 				multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
 			}
+			refPos++
 			positionsToSkip--
+			continue
 		}
 		if firstTime {
 			firstTime = false
@@ -576,6 +582,7 @@ func main() {
 	var qNameB *string = flag.String("qNameB", "QueryB", "Set the qName for the second generated chromosome in the optional multiFa output.")
 	var likelihoodCacheSize *int = flag.Int("likelihoodCacheSize", 100, "Set the maximum dimension of the likelihood caches. Should be slightly larger than highest expected pile depth.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable additional debug prints.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -606,6 +613,7 @@ func main() {
 		Kappa:               *kappa,
 		LikelihoodCacheSize: *likelihoodCacheSize,
 		SetSeed:             *setSeed,
+		Verbose:             *verbose,
 	}
 
 	samAssembler(s)
