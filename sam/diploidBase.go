@@ -53,8 +53,8 @@ func DiploidBaseToBases(base DiploidBase) []dna.Base {
 	return []dna.Base{}
 }
 
-// diploidBaseString formats a DiploidBase type as a string for debugging.
-func diploidBaseString(base DiploidBase) string {
+// DiploidBaseString formats a DiploidBase type as a string.
+func DiploidBaseString(base DiploidBase) string {
 	switch base {
 	case AA:
 		return "AA"

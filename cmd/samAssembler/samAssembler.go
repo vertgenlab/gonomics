@@ -565,14 +565,18 @@ func getIndexForName(f []fasta.Fasta, name string) int {
 
 func usage() {
 	fmt.Print(
-		"samAssembler - Reference-based diploid assembly of aligned short reads.\n" +
+		"samAssembler - Reference-based diploid assembly of aligned short reads." +
+			"Can be used in two modes: 'build' generates diploid assemblies." +
+			"'score' validates assembly accuracy with a five way alignment including the known divergent sequences" +
+			"In 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome).\n" +
 			"Usage:\n" +
-			"samAssembler individual.sam ref.fa outputA.fa outputB.fa\n" +
+			"samAssembler build individual.sam ref.fa outputA.fa outputB.fa\n" +
+			"OR\n" +
+			"samAssembler score inFileList outFile.txt\n" +
 			"options:\n")
 }
 
 func main() {
-	var expectedNumArgs int = 4
 	var delta *float64 = flag.Float64("delta", 0.01, "Set the expected divergence frequency.")
 	var gamma *float64 = flag.Float64("gamma", 3, "Set the expected transition bias.")
 	var epsilon *float64 = flag.Float64("epsilon", 0.01, "Set the expected misclassification error rate.")
@@ -587,33 +591,57 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if len(flag.Args()) != expectedNumArgs {
+	if len(flag.Args()) < 1 {
 		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(flag.Args()))
+		log.Fatalf("Expecting at least one argument, received 0.")
 	}
 
-	inFile := flag.Arg(0)
-	refFile := flag.Arg(1)
-	outFileA := flag.Arg(2)
-	outFileB := flag.Arg(3)
+	var mode = flag.Arg(0)
 
-	s := Settings{
-		SamFileName:         inFile,
-		RefFile:             refFile,
-		OutFileA:            outFileA,
-		OutFileB:            outFileB,
-		MultiFaDir:          *multiFaDir,
-		qNameA:              *qNameA,
-		qNameB:              *qNameB,
-		Delta:               *delta,
-		Gamma:               *gamma,
-		Epsilon:             *epsilon,
-		Kappa:               *kappa,
-		LikelihoodCacheSize: *likelihoodCacheSize,
-		SetSeed:             *setSeed,
-		Verbose:             *verbose,
+	switch mode {
+	case "build":
+		var expectedNumArgs int = 5
+		if len(flag.Args()) != expectedNumArgs {
+			flag.Usage()
+			log.Fatalf("Error: expecting %d arguments, but got %d\n",
+				expectedNumArgs, len(flag.Args()))
+		}
+
+		inFile := flag.Arg(1)
+		refFile := flag.Arg(2)
+		outFileA := flag.Arg(3)
+		outFileB := flag.Arg(4)
+
+		s := Settings{
+			SamFileName:         inFile,
+			RefFile:             refFile,
+			OutFileA:            outFileA,
+			OutFileB:            outFileB,
+			MultiFaDir:          *multiFaDir,
+			qNameA:              *qNameA,
+			qNameB:              *qNameB,
+			Delta:               *delta,
+			Gamma:               *gamma,
+			Epsilon:             *epsilon,
+			Kappa:               *kappa,
+			LikelihoodCacheSize: *likelihoodCacheSize,
+			SetSeed:             *setSeed,
+			Verbose:             *verbose,
+		}
+
+		samAssembler(s)
+	case "score":
+		var expectedNumArgs int = 4
+		if len(flag.Args()) != expectedNumArgs {
+			flag.Usage()
+			log.Fatalf("Error: expecting %d arguments, but got %d\n",
+				expectedNumArgs, len(flag.Args()))
+		}
+		scoreType := flag.Arg(1)
+		inDir := flag.Arg(2)
+		outFile := flag.Arg(3)
+		samAssemblerScore(scoreType, inDir, outFile)
+	default:
+		log.Fatalf("Unknown mode. samAssembler can be run with the first argument as 'build' or 'score'.")
 	}
-
-	samAssembler(s)
 }

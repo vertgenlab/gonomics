@@ -89,3 +89,32 @@ func TestSamAssembler(t *testing.T) {
 		}
 	}
 }
+
+var ScoreTests = []struct {
+	ScoreType    string
+	InFileList   string
+	OutFile      string
+	ExpectedFile string
+}{
+	{ScoreType: "smallBaseMatrix",
+		InFileList:   "testdata/score/fileList.txt",
+		OutFile:      "testdata/score/test.smallBaseMatrix.txt",
+		ExpectedFile: "testdata/score/expected.smallBaseMatrix.txt"},
+	{ScoreType: "baseMatrixByRefBase",
+		InFileList:   "testdata/score/fileList.txt",
+		OutFile:      "testdata/score/test.baseMatrixByRefBase.txt",
+		ExpectedFile: "testdata/score/expected.baseMatrixByRefBase.txt"},
+}
+
+func TestScore(t *testing.T) {
+	var err error
+	for _, v := range ScoreTests {
+		samAssemblerScore(v.ScoreType, v.InFileList, v.OutFile)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error in samAssemblerScore. Output did not match expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
