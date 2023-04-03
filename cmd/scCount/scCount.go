@@ -135,6 +135,7 @@ func usage() {
 			"Accepts sam reads aligned to a reference genome that have first been processed with fastqFormat -singleCell -collapseUmi and sorted with mergeSort -singleCellBx\n" +
 			"Usage:\n" +
 			"scCount reads.sam genes.gtf out.csv\n" +
+			"genes.gtf must contain transcript lines, where field 3 (feature) is 'transcript'\n" +
 			"scCount also accepts a tab-separated optional input to declare expression normalization multipliers for each gene using the expNormalizationFile option.\n" +
 			"options:\n")
 	flag.PrintDefaults()
