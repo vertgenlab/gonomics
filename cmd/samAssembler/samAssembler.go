@@ -19,7 +19,6 @@ type Settings struct {
 	OutFileA            string
 	OutFileB            string
 	MultiFaDir          string
-	tName               string
 	qNameA              string
 	qNameB              string
 	Delta               float64
@@ -115,7 +114,7 @@ func samAssembler(s Settings) {
 			answerAPos, answerBPos, refPos = 0, 0, 0
 			emptyRoomInBufferA, emptyRoomInBufferB = bufferSize, bufferSize
 			if s.MultiFaDir != "" {
-				currMultiFa = []fasta.Fasta{{Name: s.tName, Seq: make([]dna.Base, bufferSize)},
+				currMultiFa = []fasta.Fasta{{Name: currChrom, Seq: make([]dna.Base, bufferSize)},
 					{Name: s.qNameA, Seq: make([]dna.Base, bufferSize)},
 					{Name: s.qNameB, Seq: make([]dna.Base, bufferSize)}}
 				emptyRoomInMultiFaBuffer = bufferSize
@@ -143,14 +142,16 @@ func samAssembler(s Settings) {
 				currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq)-emptyRoomInMultiFaBuffer]
 				currMultiFa[2].Seq = currMultiFa[2].Seq[:len(currMultiFa[2].Seq)-emptyRoomInMultiFaBuffer]
 				fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), currMultiFa)
-				currMultiFa = []fasta.Fasta{{Name: s.tName, Seq: make([]dna.Base, bufferSize)},
+			}
+			//now we set up the new chromosome
+			currChrom = header.Chroms[p.RefIdx].Name
+			if s.MultiFaDir != "" {
+				currMultiFa = []fasta.Fasta{{Name: currChrom, Seq: make([]dna.Base, bufferSize)},
 					{Name: s.qNameA, Seq: make([]dna.Base, bufferSize)},
 					{Name: s.qNameB, Seq: make([]dna.Base, bufferSize)}}
 				emptyRoomInMultiFaBuffer = bufferSize
 				multiFaPos = 0
 			}
-			//now we set up the new chromosome
-			currChrom = header.Chroms[p.RefIdx].Name
 			currFaIndex = getIndexForName(answerA, currChrom)
 			emptyRoomInBufferA, emptyRoomInBufferB = bufferSize, bufferSize
 			answerAPos, answerBPos, refPos = 0, 0, 0
@@ -577,7 +578,6 @@ func main() {
 	var epsilon *float64 = flag.Float64("epsilon", 0.01, "Set the expected misclassification error rate.")
 	var kappa *float64 = flag.Float64("kappa", 0.1, "Set the expected proportion of divergent sites that are INDELs.")
 	var multiFaDir *string = flag.String("multiFaDir", "", "Output the reference and generated sequences as an aligned multiFa, each file by chrom.")
-	var tName *string = flag.String("tName", "Target", "Set the tName in the optional multiFa output.")
 	var qNameA *string = flag.String("qNameA", "QueryA", "Set the qName for the first generated chromosome in the optional multiFa output.")
 	var qNameB *string = flag.String("qNameB", "QueryB", "Set the qName for the second generated chromosome in the optional multiFa output.")
 	var likelihoodCacheSize *int = flag.Int("likelihoodCacheSize", 100, "Set the maximum dimension of the likelihood caches. Should be slightly larger than highest expected pile depth.")
@@ -604,7 +604,6 @@ func main() {
 		OutFileA:            outFileA,
 		OutFileB:            outFileB,
 		MultiFaDir:          *multiFaDir,
-		tName:               *tName,
 		qNameA:              *qNameA,
 		qNameB:              *qNameB,
 		Delta:               *delta,

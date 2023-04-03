@@ -13,7 +13,6 @@ var SamAssemblerTests = []struct {
 	OutFileA             string
 	OutFileB             string
 	MultiFaDir           string
-	tName                string
 	qNameA               string
 	qNameB               string
 	Delta                float64
@@ -33,7 +32,6 @@ var SamAssemblerTests = []struct {
 		OutFileA:             "testdata/tmp.OutFileA.fa",
 		OutFileB:             "testdata/tmp.OutFileB.fa",
 		MultiFaDir:           "testdata/multiFa",
-		tName:                "Sequence_0",
 		qNameA:               "Rand_Con_A",
 		qNameB:               "Rand_Con_B",
 		Delta:                0.01,
@@ -44,8 +42,8 @@ var SamAssemblerTests = []struct {
 		SetSeed:              19,
 		ExpectedOutFileA:     "testdata/expected.OutFileA.fa",
 		ExpectedOutFileB:     "testdata/expected.OutFileB.fa",
-		OutMultiFaFileNames:  []string{},
-		ExpectedMultiFaFiles: []string{},
+		OutMultiFaFileNames:  []string{"testdata/multiFa/Sequence_0.fa", "testdata/multiFa/Sequence_1.fa"},
+		ExpectedMultiFaFiles: []string{"testdata/multiFa/expected.Sequence_0.fa", "testdata/multiFa/expected.Sequence_1.fa"},
 		Verbose:              0,
 	},
 }
@@ -61,7 +59,6 @@ func TestSamAssembler(t *testing.T) {
 			OutFileA:            v.OutFileA,
 			OutFileB:            v.OutFileB,
 			MultiFaDir:          v.MultiFaDir,
-			tName:               v.tName,
 			qNameA:              v.qNameA,
 			qNameB:              v.qNameB,
 			Delta:               v.Delta,
