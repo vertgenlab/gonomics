@@ -74,7 +74,7 @@ func TestDiploidBaseCallFromPile(t *testing.T) {
 		priorCache = MakeDiploidBasePriorCache(v.Delta, v.Gamma)
 		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, v.Epsilon)
 		if actual != v.Expected {
-			t.Errorf("Error in DiploidBaseCallFromPile. Expected: %s. Observed: %s.", diploidBaseString(v.Expected), diploidBaseString(actual))
+			t.Errorf("Error in DiploidBaseCallFromPile. Expected: %s. Observed: %s.", DiploidBaseString(v.Expected), DiploidBaseString(actual))
 		}
 	}
 }
