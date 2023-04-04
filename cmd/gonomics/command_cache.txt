@@ -1,0 +1,255 @@
+##SourceDir:/home/runner/work/gonomics/gonomics/cmd/
+##CmdName:alleleSplit
+##CmdName:assemblyStats
+##CmdName:axTools
+##CmdName:axtSam
+##CmdName:bedDistanceFromChrEnds
+##CmdName:bedFilter
+##CmdName:bedFormat
+##CmdName:bedGraphToWig
+##CmdName:bedMath
+##CmdName:bedMerge
+##CmdName:bedMinimumDistanceName
+##CmdName:bedOverlapByWindow
+##CmdName:bedPeOverlap
+##CmdName:bedToFasta
+##CmdName:bedToWig
+##CmdName:bedValueWig
+##CmdName:branchLengthsMultiFaBed
+##CmdName:callVariants
+##CmdName:catMultiFa
+##CmdName:cigarToBed
+##CmdName:divergenceSpectrum
+##CmdName:dotToNewick
+##CmdName:drawNewickTree
+##CmdName:dunnIndex
+##CmdName:faBin
+##CmdName:faChunkAlign
+##CmdName:faDrawAlnChunks
+##CmdName:faFilter
+##CmdName:faFindFast
+##CmdName:faFormat
+##CmdName:faInfo
+##CmdName:faToPredictSet
+##CmdName:faUniq
+##CmdName:fastqFilter
+##CmdName:fastqFormat
+##CmdName:filterGenotypes
+##CmdName:findAndReplace
+##CmdName:formatIdeogram
+##CmdName:girafCompress
+##CmdName:girafSimulate
+##CmdName:girafSort
+##CmdName:globalAlignment
+##CmdName:globalAlignmentAnchor
+##CmdName:goFetchCat
+##CmdName:gsw
+##CmdName:gtfToBed
+##CmdName:haplotypeGenerator
+##CmdName:intervalContacts
+##CmdName:intervalOverlap
+##CmdName:intervalSubsetMatrix
+##CmdName:lastZWriter
+##CmdName:liftCoordinates
+##CmdName:mafFilter
+##CmdName:mafIndels
+##CmdName:mafToBed
+##CmdName:mafToMultiFa
+##CmdName:mcmcTraceStats
+##CmdName:mergesort
+##CmdName:mouseRecon
+##CmdName:multFaVisualizeBeds
+##CmdName:multFaVisualizer
+##CmdName:multiFaAcceleration
+##CmdName:multiFaExtract
+##CmdName:multiFaReduce
+##CmdName:multiFaToChain
+##CmdName:multiFaToVcf
+##CmdName:overlapEnrichments
+##CmdName:pileup
+##CmdName:plotFunctions
+##CmdName:prcompFormat
+##CmdName:primateRecon
+##CmdName:proximityBlockVcf
+##CmdName:quickOrthologs
+##CmdName:randSeq
+##CmdName:reconstructSeq
+##CmdName:samConsensus
+##CmdName:samCoverage
+##CmdName:samToBed
+##CmdName:samToWig
+##CmdName:sampleVcf
+##CmdName:scCount
+##CmdName:selectionMcmc
+##CmdName:selectionMle
+##CmdName:simRecon
+##CmdName:simulateBed
+##CmdName:simulateDivergentWindowsVcf
+##CmdName:simulateEvol
+##CmdName:simulatePcr
+##CmdName:simulateSam
+##CmdName:simulateVcf
+##CmdName:simulateWrightFisher
+##CmdName:slurmCheck
+##CmdName:sortGraph
+##CmdName:statCalc
+##CmdName:testCmd
+##CmdName:vcfAfs
+##CmdName:vcfAncestorAnnotation
+##CmdName:vcfEffectPrediction
+##CmdName:vcfFilter
+##CmdName:vcfFormat
+##CmdName:vcfInfo
+##CmdName:vcfToFa
+##CmdName:vcfWebAnnotate
+##CmdName:wigFilter
+##CmdName:wigMath
+##CmdName:wigPeaks
+##CmdName:wigStats
+##CmdName:wigToTrainingSet
+                                            
+[31m42[0m                                     
+     [32mtestCmd[0m                       [36mHello world![0m
+                                            
+[31mBED Tools[0m                              
+     [32mbedDistanceFromChrEnds[0m        [36mReturns a bed file with the Score field containing the minimum[0m
+     [32mbedFilter[0m                     [36mbedFilter[0m
+     [32mbedFormat[0m                     [36mOptions alter bed formatting.[0m
+     [32mbedMerge[0m                      [36mCombines overlapping bed entries, keeping max score. Output will be sorted by genome coordinate.[0m
+     [32mbedOverlapByWindow[0m            [36mbedOverlapByWindow takes a sorted bed and counts bp in bed regions within a window size. Default is 5000bp[0m
+     [32mbedValueWig[0m                   [36mReturns bed file with entries annotated based on the values corresponding to the region in a wig file. Currently can only handle fixedStep, Start = 1, Step =1 wig files.[0m
+     [32mformatIdeogram[0m                [36mGenerates ideogram txt file from a bed.[0m
+                                            
+[31mData Conversion[0m                        
+     [32maxtSam[0m                        [36mconvert axt alignments to sam format[0m
+     [32mbedToFasta[0m                    [36mExtracts sequences from a fasta file from regions specified by an input bed.[0m
+     [32mbedToWig[0m                      [36mConverts bed score to wig[0m
+     [32mgtfToBed[0m                      [36mConverts a gtf file into bed format.[0m
+     [32mmafToBed[0m                      [36mconvert a maf alignment into a bed, where the bed score is the alignment score. The Bed Name field will include a semicolon delimited list of references found in that maf block.[0m
+     [32mmafToMultiFa[0m                  [36mconvert a maf alignment into a multiple fasta alignment[0m
+     [32mmultiFaToVcf[0m                  [36mGenerates a VCF file from an input pairwise multiFa alignment with the first entry as the reference.Note that deletions in the first position of an alignment will not appear in the output Vcf.[0m
+     [32msamConsensus[0m                  [36mGenerates a fasta file from a sam over a reference sequence.[0m
+     [32msamToBed[0m                      [36mConverts sam to bed[0m
+     [32msamToWig[0m                      [36mConverts sam to wig[0m
+                                            
+[31mData Simulation[0m                        
+     [32mgirafSimulate[0m                 [36mReturns a file of giraf alignments for a input genome graph.[0m
+     [32mrandSeq[0m                       [36mreturns pseudorandomly generated DNA sequences in fasta format.[0m
+     [32msimulateBed[0m                   [36mReturns a file of random bed regions of an input bed file.[0m
+     [32msimulatePcr[0m                   [36mpredict amplicon products generated from PCR.[0m
+     [32msimulateSam[0m                   [36mSimulate alignments to a reference sequence[0m
+     [32msimulateVcf[0m                   [36mContains functions for simulating VCF data.[0m
+     [32msimulateWrightFisher[0m          [36msimulate a multiallelic, haplotic Wright-Fisher population (discrete, non-overlapping generations).[0m
+                                            
+[31mDeep Learning[0m                          
+     [32mfaToPredictSet[0m                [36mMake deep learning prediction TSV files from input fasta format data.[0m
+                                            
+[31mFASTA and Multi-FASTA Tools[0m            
+     [32mcatMultiFa[0m                    [36mConcatenate multiFa alignment files by sequence. Accepts an arbitrary number of input fasta files. Input multiFa files must have the same number and order of records. Additional sequence from each file is appended onto the sequence of each entry.For large number of files, use the list option to avoid the command character limit. Default to standard output.[0m
+     [32mfaChunkAlign[0m                  [36m[0m
+     [32mfaDrawAlnChunks[0m               [36m[0m
+     [32mfaFilter[0m                      [36mReturns a filtered fasta based on option parameters.[0m
+     [32mfaFormat[0m                      [36mreformat the sequences in a fasta file[0m
+     [32mfaInfo[0m                        [36mReturns summary statistics to standard out for an[0m
+     [32mmafFilter[0m                     [36mFilter a maf file to remove entries below a score threshold[0m
+     [32mmafIndels[0m                     [36mtakes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments[0m
+     [32mmultFaVisualizeBeds[0m           [36mProvides human-readable multiple alignments for all entries in a bed file.[0m
+     [32mmultFaVisualizer[0m              [36mProvides human-readable multiple alignment from a given multiFa.[0m
+     [32mmultiFaExtract[0m                [36mPull sub-sequence from multiple Fasta alignment for each entry. Uses reference indices, treating the first sequence as the reference.[0m
+     [32mmultiFaReduce[0m                 [36mmfaReduce removes all columns in an multi fasta alignment that are not variable[0m
+                                            
+[31mFASTQ Tools[0m                            
+     [32mfastqFilter[0m                   [36mReturns a filtered fastq based on option parameters.[0m
+     [32mfastqFormat[0m                   [36mOptions alter fastq file formatting.[0m
+                                            
+[31mGeneral Tools[0m                          
+     [32maxTools[0m                       [36mutilities for axt alignments[0m
+     [32mfindAndReplace[0m                [36mfinds values in a file and replaces them, processes the input as a string.[0m
+     [32mgoFetchCat[0m                    [36mview http url links and print data stream to stdout[0m
+     [32mintervalOverlap[0m               [36mA tool to find non/overlapping genomic regions[0m
+     [32mliftCoordinates[0m               [36mLifts a compatible file format between assembly coordinates.[0m
+                                            
+[31mGenome Graph Tools[0m                     
+     [32mgirafCompress[0m                 [36mGIRAF <-> GIRAF.FE conversion[0m
+     [32mgsw[0m                           [36mGenome Graph Creation, Alignment, and Manipulation[0m
+                                            
+[31mLinear Alignment Tools[0m                 
+     [32mglobalAlignment[0m               [36mchelsea's global alignment[0m
+     [32mglobalAlignmentAnchor[0m         [36moperates on 2 species, takes alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)[0m
+                                            
+[31mSAM Tools[0m                              
+     [32mpileup[0m                        [36mCount bases from sequencing data[0m
+     [32msamCoverage[0m                   [36mCalculates genome coverage as the quotient of aligned bases in a sequencing dataset to the total length of ungapped genomic regions in the reference genome.[0m
+     [32mscCount[0m                       [36mGenerate count matrix from single-cell sequencing data.[0m
+                                            
+[31mSequence Evolution & Reconstruction[0m    
+     [32mdivergenceSpectrum[0m            [36mDetermine the mutation spectrum for divergent sites in each region of an input bed file.[0m
+     [32mdotToNewick[0m                   [36mGenerates a newick tree file from an input dot format tree.[0m
+     [32mdrawNewickTree[0m                [36mCreate PNG of Newick tree[0m
+     [32mfaFindFast[0m                    [36mReturns number of mutations that separate two sequences for a given window size[0m
+     [32mprimateRecon[0m                  [36mReturns maximum likelihood sequence from an HBCGO primate alignment[0m
+     [32mreconstructSeq[0m                [36mreconstructSeq takes in a newick tree file and a fasta file containing fastas for all leaf nodes and returns a fasta file containing fastas for all nodes of the tree[0m
+     [32msimRecon[0m                      [36mSimulate evolution along a tree and perform ancestral reconstruction[0m
+     [32msimulateEvol[0m                  [36msimulateEvol simulates sequence evolution on an input fasta.[0m
+                                            
+[31mSorting[0m                                
+     [32mgirafSort[0m                     [36mExternal sort of giraf records based on topological ordering of nodes in input graph.[0m
+     [32mmergesort[0m                     [36mExecutes an external merge sort of the input file based on desired sort criteria.[0m
+     [32msortGraph[0m                     [36mTopologically sorts nodes in a genome graph (.gg) file.[0m
+                                            
+[31mStatistics & Population Genetics[0m       
+     [32massemblyStats[0m                 [36mProvides information about the number of scaffolds, including the N50, number of scaffolds, and distribution of lengths of assembled scaffolds.[0m
+     [32mdunnIndex[0m                     [36mComputes the Dunn Index based on variable SNPs for each input bed region of a multiple alignment.[0m
+     [32mmcmcTraceStats[0m                [36mReturns summary statistics on an MCMC trace file produced by selectionMCMC.[0m
+     [32mmultiFaAcceleration[0m           [36mPerforms velocity and acceleration on a four way multiple alignment in multiFa format.A four way multiple alignment must contain four species (index 0 to 3) in the topology that aln[0] is the most derived and species 1 to 3 are successive outgroups.[0m
+     [32mplotFunctions[0m                 [36mreturns a tab separated list of function evaluations for plotting functions. f(x) is printed in logSpace unless stated otherwise.[0m
+     [32mprcompFormat[0m                  [36mGenerates a binary input matrix for PCA.[0m
+     [32mselectionMcmc[0m                 [36mReturns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions.[0m
+     [32mstatCalc[0m                      [36mCommand line statistics calculator.[0m
+     [32mvcfAfs[0m                        [36mReturns allele frequency spectrum information in a text file for graphing.[0m
+                                            
+[31mVCF Tools[0m                              
+     [32mfilterGenotypes[0m               [36mfilter genotyped Vcfs containing at leaste 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents[0m
+     [32msampleVcf[0m                     [36mReturns a sample from a VCF file with a specified number of results.[0m
+     [32mvcfFilter[0m                     [36mFilter vcf records.[0m
+     [32mvcfFormat[0m                     [36mOptions alter VCF formatting.[0m
+     [32mvcfInfo[0m                       [36mProvides summary statistics on an input VCF file.[0m
+     [32mvcfToFa[0m                       [36mUse the variant data in the vcf to edit an input fasta of the reference.  Assumes diploid organisms unless the haploid flag is given..[0m
+                                            
+[31mVariant Calling & Annotation[0m           
+     [32malleleSplit[0m                   [36mseparates a sam alignment from a heterozygous individual[0m
+     [32mcallVariants[0m                  [36mA tool to find variation between multiple alignment files.[0m
+     [32mvcfAncestorAnnotation[0m         [36mAdds ancestral allele to the INFO column of entries in a VCF file.[0m
+     [32mvcfEffectPrediction[0m           [36mAnnotate Vcf records with cDNA and protein effect predictions.[0m
+     [32mvcfWebAnnotate[0m                [36mAnnotate a vcf file by querying various databases via CellBase.[0m
+                                            
+[31mWIG Tools[0m                              
+     [32mwigPeaks[0m                      [36mIdentifies peaks in a WIG file[0m
+                                            
+[31mWig Tools[0m                              
+     [32mwigStats[0m                      [36mprovide coverage histogram for WIG format visualization files.[0m
+                                            
+[31mUncategorized[0m                          
+     [32mbedGraphToWig[0m                 [36mConverts bedGraph to wig. Wig scores will be equal to the bedGraph dataValue field across the range of the bedGraph entry.[0m
+     [32mbedMath[0m                       [36mPerforms comparative arithmetic operations on float values in bed files.[0m
+     [32mbedMinimumDistanceName[0m        [36mFor all entries in bed A (inputBed), look at the Name field and[0m
+     [32mbedPeOverlap[0m                  [36mFilters bedpe entries based on overlaps from the select file.[0m
+     [32mbranchLengthsMultiFaBed[0m       [36mUsing a four-way multiple alignment (including the reference species followed by three successive outgroups),[0m
+     [32mcigarToBed[0m                    [36m./cigarToBed[0m
+     [32mfaBin[0m                         [36mtakes a descending size ordered fasta and returns either a specified number of fastas that are either an entire fasta entry from the input or multiple records from the input (binNum option) or multiple fastas which have a minimum sequence size of specified length (minSize). The number of bins specified must be at most equal to the number of entries in the input fasta. These options cannot be combined.[0m
+     [32mfaUniq[0m                        [36mPull unique sequences from a fasta file.[0m
+     [32mhaplotypeGenerator[0m            [36mGenerate unique haplotypes for provided regions from genetic variation data.[0m
+     [32mintervalContacts[0m              [36mReturns all regions that contact input genomic regions. Contacts are specified by an input bedpe file.[0m
+     [32mintervalSubsetMatrix[0m          [36mProduces a binary matrix for accessibility breadth analysis.[0m
+     [32mlastZWriter[0m                   [36mastZWriter was designed to write out lastZ pairwise inputs by contig where multiple references are being used. This function writes a text file where each line is an input for a lastZ pairwise alignment. It requires that each genome be broken with the 'byname' option of 'faSplit' in kentutils and named in the convention 'assemblyName.byChrom'. Within the parent directory of the byChrom directories, lastZWriter will build a directory tree for the outputs of lastZ. At the same level of the byChrom files it will create a set of directories with the naming convention reference.aligned within which will be directories for each contig of the reference genome. For each species being aligned to that reference lastZWriter will specify that lastZ should create an axt output file 'pairwiseDir/ref.species/referenceContig/aligningSpeciesByChromName.referenceByChromName.axt' that refers to the two fasta files used in the alignment. LastZWriter also requires a list of all species in the alignment, as well as a separate text file with a list of reference species. Matrices are hardcoded absolute paths by default in this version. In the default function matrices are assigned based on the distance between the reference and aligning species from each other as calculated by the PHAST all_dists function.However, the user has the option to specify a bool (option m) as false and provide a path in which they would like the needed matrices to be hardcoded. As an alternative to the all_dists function, or if there isn't an available tree of the necessary species, this function can also take a file to replace the specified allDists file. The first two columns of which would need to be every possible combination of your alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables.[0m
+     [32mmouseRecon[0m                    [36mReturns maximum likelihood ancestral sequences from a Mouse-Rat-ChineseHamster-Squirrel multiple alignment in multiFa format.[0m
+     [32mmultiFaToChain[0m                [36mConvert a pairwise multiFa format alignment to a chain file. First species is the target by default.[0m
+     [32moverlapEnrichments[0m            [36mReturns the p-value of enrichment and depletion for overlaps between the elements in two input files.[0m
+     [32mproximityBlockVcf[0m             [36mPseudorandomly selects variantsfrom an input VCF file and retains variants in the outputthat do not fall within a user-specified distanceof variants already chosen. Output is returned in a shuffled order.[0m
+     [32mquickOrthologs[0m                [36mFind corresponding orthologous transcription startsites.[0m
+     [32mselectionMle[0m                  [36mPerforms maximum likelihood estimation of selection on variants from an input VCF format file.[0m
+     [32msimulateDivergentWindowsVcf[0m   [36mSimulates Vcf data, partitioned by divergence-based ascertainment.[0m
+     [32mslurmCheck[0m                    [36mUsed to check for completion of SLURM job arrays. Takes in a 'fancy' version of a job array text file.[0m
+     [32mwigFilter[0m                     [36mReturns a filtered wig based on option parameters.[0m
+     [32mwigMath[0m                       [36mPerform mathematical operations on wig format data.[0m
+     [32mwigToTrainingSet[0m              [36mConverts a wig to a training, validation, and testing set for the GenomeSequenceConvNet.[0m
