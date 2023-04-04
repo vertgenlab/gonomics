@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
@@ -25,7 +24,7 @@ const (
 	NN DiploidBase = 10
 )
 
-// diploidBaseString formats a DiploidBase struct as a string for debugging.
+// diploidBaseString formats a DiploidBase type as a string for debugging.
 func diploidBaseString(base DiploidBase) string {
 	switch base {
 	case AA:
@@ -112,7 +111,7 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 	var currPosterior float64
 	for geno = 0; geno < 10; geno++ { //for each genotype, encoded as a DiploidBase byte ranging from 0 to 9, inclusive
 		currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, geno, epsilon, homozygousCache, heterozygousCache), priorCache[refBase][geno])
-		fmt.Printf("CurrGeno: %s. CurrPosterior: %v.\n", diploidBaseString(geno), currPosterior)
+		//DEBUG: fmt.Printf("CurrGeno: %s. CurrPosterior: %v.\n", diploidBaseString(geno), currPosterior)
 		if currPosterior > maxPosterior {
 			maxPosterior = currPosterior
 			maxDiploid = maxDiploid[:1] //clear ties
@@ -201,7 +200,7 @@ func heterozygousLikelihoodExpression(correctCount int, incorrectCount int, epsi
 // Constructs a matrix ([][]float64) of form answer[refBase][outGenotype], where index of refBase: 0=a, 1=c, 2=g, 3=t.
 // Index of outGenotype follows the indices of the DiploidBase type.
 // Answers are log transformed.
-func makePriorCache(delta float64, gamma float64) [][]float64 {
+func makeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 	Tv := delta / (2.0 + gamma) //the probability of transversions
 	Tr := gamma * Tv            //the probability of transitions
 	oneMinusDeltaSquared := math.Log(math.Pow(1-delta, 2))
