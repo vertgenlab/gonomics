@@ -67,12 +67,12 @@ var DiploidBaseCallFromPileTests = []struct {
 func TestDiploidBaseCallFromPile(t *testing.T) {
 	var actual DiploidBase
 	var priorCache [][]float64
-	var heterozycousCache = make([][]float64, 0)
+	var heterozygousCache = make([][]float64, 0)
 	var homozygousCache = make([][]float64, 0)
 
 	for _, v := range DiploidBaseCallFromPileTests {
-		priorCache = makePriorCache(v.Delta, v.Gamma)
-		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozycousCache, v.Epsilon)
+		priorCache = makeDiploidBasePriorCache(v.Delta, v.Gamma)
+		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, v.Epsilon)
 		if actual != v.Expected {
 			t.Errorf("Error in DiploidBaseCallFromPile. Expected: %s. Observed: %s.", diploidBaseString(v.Expected), diploidBaseString(actual))
 		}
@@ -83,7 +83,6 @@ var LikelihoodExpressionTests = []struct {
 	CorrectCount   int
 	IncorrectCount int
 	Epsilon        float64
-	Cache          [][]float64 //this will always be o dimension 0x0 in testing so we calculate by hand
 	ExpectedHomo   float64
 	ExpectedHetero float64
 }{
@@ -91,7 +90,6 @@ var LikelihoodExpressionTests = []struct {
 		CorrectCount:   26,
 		IncorrectCount: 3,
 		Epsilon:        0.01,
-		Cache:          [][]float64{},
 		ExpectedHomo:   -17.37265615615964,
 		ExpectedHetero: -35.3070878104479,
 	},
@@ -99,20 +97,20 @@ var LikelihoodExpressionTests = []struct {
 		CorrectCount:   14,
 		IncorrectCount: 16,
 		Epsilon:        0.01,
-		Cache:          [][]float64{},
 		ExpectedHomo:   -91.40122429644823,
 		ExpectedHetero: -101.0582259564496,
 	},
 }
 
-func TestLikelihoodExpressions(t *testing.T) {
+func TestBaseLikelihoodExpressions(t *testing.T) {
 	var actual float64
+	var cache = make([][]float64, 0) //this will always be of dimension 0x0 in testing so we calculate by hand
 	for _, v := range LikelihoodExpressionTests {
-		actual = homozygousLikelihoodExpression(v.CorrectCount, v.IncorrectCount, v.Epsilon, v.Cache)
+		actual = homozygousLikelihoodExpression(v.CorrectCount, v.IncorrectCount, v.Epsilon, cache)
 		if actual != v.ExpectedHomo {
 			t.Errorf("Error in homozygousLikelihoodExpression. Expected: %v. Found:%v.", v.ExpectedHomo, actual)
 		}
-		actual = heterozygousLikelihoodExpression(v.CorrectCount, v.IncorrectCount, v.Epsilon, v.Cache)
+		actual = heterozygousLikelihoodExpression(v.CorrectCount, v.IncorrectCount, v.Epsilon, cache)
 		if actual != v.ExpectedHetero {
 			t.Errorf("Error in heterozygousLikelihoodExpression. Expected: %v. Found: %v.", v.ExpectedHetero, actual)
 		}
@@ -133,10 +131,10 @@ var MakePileDiploidPriorProbabilityCacheTests = []struct {
 	},
 }
 
-func TestMakePileDiploidPriorProbabilityCache(t *testing.T) {
+func TestMakeDiploidBasePriorCache(t *testing.T) {
 	var current [][]float64
 	for _, v := range MakePileDiploidPriorProbabilityCacheTests {
-		current = makePriorCache(v.BranchLength, v.TransitionBias)
+		current = makeDiploidBasePriorCache(v.BranchLength, v.TransitionBias)
 		if !equalMatrix(current, v.Expected) {
 			fmt.Println(current)
 			t.Errorf("Error in generating pileup DiploidBase prior probability cache.")
