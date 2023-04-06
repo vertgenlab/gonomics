@@ -262,6 +262,10 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	}
 	s.unparsedExtra = s.unparsedExtra[:len(ex)]
 	copy(s.unparsedExtra, ex)
+	s.parsedExtra = nil
+	s.parsedExtraIdx = nil
+	s.parsedExtraTags = nil
+	s.parsedExtraTypes = nil
 	return
 }
 
