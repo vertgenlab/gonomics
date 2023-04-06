@@ -20,7 +20,7 @@ func usage() {
 	fmt.Print(
 		"vcfInfo - Provides summary statistics on an input VCF file.\n" +
 			"Usage:\n" +
-			"vcfInfo file.vcf out.txt\n" +
+			"vcfInfo -i file.vcf -types output1.txt -divergence output2.txt -context output3.txt -r reference.fasta\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
