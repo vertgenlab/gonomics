@@ -46,9 +46,7 @@ jobs:
         with:
           go-version: '1.18'
       - name: go fmt
-        run: gofmt -s -w ./*/*.go
-      - name: go fmt cmd
-        run: gofmt -s -w ./cmd/*/*.go
+        run: gofmt -s -w ./...
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
