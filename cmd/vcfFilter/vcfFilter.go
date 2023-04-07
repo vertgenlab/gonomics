@@ -34,10 +34,12 @@ func getSitesSeen(filename string) map[coordinate]uint8 {
 	return sitesSeen
 }
 
-func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int) {
+func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int, totalChan, removedChan chan<- int) {
 	var prev vcf.Vcf
 	var canSend bool
+	var total, removed int
 	for v := range input {
+		total++
 		if prev.Chr == "" {
 			prev = v
 			canSend = true
@@ -52,7 +54,10 @@ func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int
 		if v.Chr != prev.Chr {
 			if canSend {
 				output <- prev
+			} else {
+				removed++
 			}
+			canSend = true
 			prev = v
 			continue
 		}
@@ -60,12 +65,15 @@ func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int
 		if v.Pos-prev.Pos < minDist { // too close, don't send
 			canSend = false
 			prev = v
+			removed++
 			continue
 		}
 
 		// if we reach this point prev is clear to send and v is ok to send in the next loop if the subsequent variant is not too close
 		if canSend {
 			output <- prev
+		} else {
+			removed++
 		}
 		prev = v
 		canSend = true
@@ -74,13 +82,22 @@ func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int
 	// send final record if passing
 	if canSend {
 		output <- prev
+	} else {
+		removed++
 	}
+
+	totalChan <- total
+	removedChan <- removed
+
+	close(totalChan)
+	close(removedChan)
 	close(output)
 }
 
 func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
 	rand.Seed(setSeed)
 	var records <-chan vcf.Vcf
+	var totalChan, removedChan chan int
 	var header vcf.Header
 	var err error
 	var currentCoord coordinate
@@ -96,8 +113,10 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 
 	if c.minDist > 0 {
 		// hijack input channel so only sites passing the minDist filter are passed to the rest of the function
-		passedRecords := make(chan vcf.Vcf)
-		go rmClusteredRecords(records, passedRecords, c.minDist)
+		passedRecords := make(chan vcf.Vcf, 100)
+		totalChan = make(chan int, 1)   // to get accurate total count
+		removedChan = make(chan int, 1) // to get accurate removed count
+		go rmClusteredRecords(records, passedRecords, c.minDist, totalChan, removedChan)
 		records = passedRecords
 	}
 
@@ -147,6 +166,11 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		}
 
 		vcf.WriteVcf(out, v)
+	}
+
+	if c.minDist > 0 {
+		total = <-totalChan
+		removed += <-removedChan
 	}
 
 	err = out.Close()
