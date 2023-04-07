@@ -20,6 +20,7 @@ var SimulateWithIndelsTests = []struct {
 	OutFastaFile      string
 	ExpectedFastaFile string
 	ExpectedVcfFile   string
+	QName             string
 }{
 	{FastaFile: "testdata/rand.fa",
 		BranchLength:      0.1,
@@ -31,6 +32,7 @@ var SimulateWithIndelsTests = []struct {
 		OutFastaFile:      "testdata/tmp.rand.fa",
 		ExpectedVcfFile:   "testdata/expected.rand.vcf",
 		ExpectedFastaFile: "testdata/expected.rand.fa",
+		QName:             "sim",
 	},
 	{FastaFile: "testdata/rand.fa",
 		BranchLength:      0.1,
@@ -42,6 +44,7 @@ var SimulateWithIndelsTests = []struct {
 		OutFastaFile:      "testdata/tmp.rand.transition5.fa",
 		ExpectedVcfFile:   "testdata/expected.transition5.rand.vcf",
 		ExpectedFastaFile: "testdata/expected.transition5.rand.fa",
+		QName:             "sim",
 	},
 }
 
@@ -50,7 +53,7 @@ func TestSimulateWithIndels(t *testing.T) {
 	var err error
 	var records []fasta.Fasta
 	for _, v := range SimulateWithIndelsTests {
-		records = SimulateWithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile)
+		records = SimulateWithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName)
 		fasta.Write(v.OutFastaFile, records)
 		if !fileio.AreEqual(v.OutFastaFile, v.ExpectedFastaFile) {
 			t.Errorf("Error in SimulateWithIndels. Output fasta was not as expected.")
