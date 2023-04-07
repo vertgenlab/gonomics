@@ -20,6 +20,10 @@ func samAssemblerScore(scoreType string, inFileList string, outFile string) {
 	}
 }
 
+func smallBaseMatrixWithIndels(inFileList string, outFile string) {
+
+}
+
 func smallBaseMatrix(inFileList string, outFile string) {
 	var err error
 	var i, j, alnPos int

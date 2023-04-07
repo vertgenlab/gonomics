@@ -568,12 +568,14 @@ func usage() {
 		"samAssembler - Reference-based diploid assembly of aligned short reads." +
 			"Can be used in two modes: 'build' generates diploid assemblies." +
 			"'score' validates assembly accuracy with a five way alignment including the known divergent sequences" +
-			"In 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome).\n" +
+			"In 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome)." +
+			"For score, type may be chosen from the following: smallBaseMatrix, baseMatrixByRefBase\n" +
 			"Usage:\n" +
 			"samAssembler build individual.sam ref.fa outputA.fa outputB.fa\n" +
 			"OR\n" +
-			"samAssembler score inFileList outFile.txt\n" +
+			"samAssembler score scoreType inFileList outFile.txt\n" +
 			"options:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
