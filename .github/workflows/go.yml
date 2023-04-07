@@ -23,7 +23,11 @@ jobs:
           go build ./...
 
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.18]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
