@@ -13,9 +13,9 @@ var b3 BedGraph = BedGraph{Chrom: "chr3", ChromStart: 945, ChromEnd: 1000, DataV
 var bedGraphs []BedGraph = []BedGraph{b1, b2, b3}
 
 var readWriteTests = []struct {
-	testFileName string
+	testFileName     string
 	expectedFilename string
-	data     []BedGraph
+	data             []BedGraph
 }{
 	{"testdata/tmp.bedGraph", "testdata/bedGraphFileTest.bedGraph", bedGraphs},
 }

@@ -8,43 +8,43 @@ import (
 )
 
 var b1 BedPe = BedPe{
-	A: bed.Bed {
-		Chrom: "chr2",
-		ChromStart: 200,
-		ChromEnd: 240,
+	A: bed.Bed{
+		Chrom:             "chr2",
+		ChromStart:        200,
+		ChromEnd:          240,
 		Name:              "First",
 		Score:             40,
-		Strand: '+',
+		Strand:            '+',
 		FieldsInitialized: 9,
 	},
-	B: bed.Bed {
-		Chrom: "chr2",
-		ChromStart: 4500,
-		ChromEnd: 4600,
+	B: bed.Bed{
+		Chrom:             "chr2",
+		ChromStart:        4500,
+		ChromEnd:          4600,
 		Name:              "First",
 		Score:             40,
-		Strand: '-',
+		Strand:            '-',
 		FieldsInitialized: 9,
 	},
 }
 
 var b2 BedPe = BedPe{
-	A: bed.Bed {
-		Chrom: "chr9",
-		ChromStart: 3400,
-		ChromEnd: 3500,
-		Name: "Second",
-		Score: 2,
-		Strand: '-',
+	A: bed.Bed{
+		Chrom:             "chr9",
+		ChromStart:        3400,
+		ChromEnd:          3500,
+		Name:              "Second",
+		Score:             2,
+		Strand:            '-',
 		FieldsInitialized: 9,
 	},
-	B: bed.Bed {
-		Chrom: "chr9",
-		ChromStart: 6700,
-		ChromEnd: 6780,
-		Name: "Second",
-		Score: 2,
-		Strand: '-',
+	B: bed.Bed{
+		Chrom:             "chr9",
+		ChromStart:        6700,
+		ChromEnd:          6780,
+		Name:              "Second",
+		Score:             2,
+		Strand:            '-',
 		FieldsInitialized: 9,
 	},
 }

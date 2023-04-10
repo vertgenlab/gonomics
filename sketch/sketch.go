@@ -1,12 +1,14 @@
+// Package sketch provides utilities and color palettes for plotting graphs and images
 package sketch
 
 import (
+	"image"
+	"image/color"
+
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/color"
-	//"golang.org/x/image/font/inconsolata"
+	// "golang.org/x/image/font/inconsolata"
 )
 
 func HLine(img *image.RGBA, xStart int, xEnd int, y int, col color.Color) {
@@ -43,7 +45,7 @@ func Text(img *image.RGBA, label string, xStart int, yStart int) {
 		Dst:  img,
 		Src:  image.NewUniform(color.Black),
 		Face: basicfont.Face7x13,
-		//Face: inconsolata.Regular8x16,
+		// Face: inconsolata.Regular8x16,
 		Dot: point,
 	}
 	d.DrawString(label)
