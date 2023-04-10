@@ -1,3 +1,4 @@
+// Package align provides basic struct(s), gap scoring matrices, and dynamical approaches to aligning sequences
 package align
 
 import (
