@@ -171,7 +171,7 @@ func samAssembler(s Settings) {
 			refPos++
 		}
 
-		//now refPos should equal p.Pos - 1, because of our for loop before
+		// now refPos should equal p.Pos - 1, because of our for loop before
 		if refPos != int(p.Pos-1) {
 			log.Fatalf("Something went wrong. RefPos is not equal to p.Pos -1.")
 		}
