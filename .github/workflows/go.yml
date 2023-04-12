@@ -8,34 +8,6 @@ on:
 
 jobs:
 
-  cicd:
-    strategy:
-      matrix:
-        go-version: [1.18]
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-
-      - name: Verify dependencies
-        run: go mod verify
-
-      - name: Install
-        run: go install ./...
-
-      - name: Build
-        run: go build ./...
-
-      - name: Test
-        run: |
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-          go install ./... &&
-          go test ./...
-
   format:
     runs-on: ubuntu-latest
     steps:
@@ -65,7 +37,37 @@ jobs:
           git commit -am "Automated go fmt"
           git push
 
+  cicd:
+    strategy:
+      matrix:
+        go-version: [1.18]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Build
+        run:
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go build ./...
+
+      - name: Test
+        run: |
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go install ./... &&
+          go test ./...
+
   coverage:
+    needs: cicd
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
