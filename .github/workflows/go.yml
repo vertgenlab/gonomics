@@ -29,7 +29,12 @@ jobs:
         run: go build ./...
 
       - name: Test
-        run: go test ./...
+        run: |
+          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
+          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
+          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
+          go install ./... &&
+          go test ./...
 
   format:
     runs-on: ubuntu-latest
