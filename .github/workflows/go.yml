@@ -47,16 +47,14 @@ jobs:
     runs-on: ${{ matrix.OS }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          path: src/github.com/${{ github.repository }}
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - name: Setup env variables
-        run: |
-          echo "::set-env name=GOPATH::$(go env GOPATH)"
-          echo "::add-path::$(go env GOPATH)/bin"
-        shell: bash
+        env:
+          GOPATH: ${{ github.workspace }}
+          GOBIN: ${{ env.GOPATH }}/bin
+      - name: go root
+        run: echo $GOROOT
       - name: Download and verify all gonomics dependencies and modules
         run: go mod download && go mod verify
       - name: Building binaries executables
