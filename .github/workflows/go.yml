@@ -39,7 +39,7 @@ jobs:
           git commit -am "fix: automated go fmt ./..."
           git push
 
-  gonomics:
+  gitactions:
     needs: format
     strategy:
       matrix:
@@ -52,6 +52,11 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
+      - name: Setup env variables
+        run: |
+          echo "::set-env name=GOPATH::$(go env GOPATH)"
+          echo "::add-path::$(go env GOPATH)/bin"
+        shell: bash
       - name: Download and verify all gonomics dependencies and modules
         run: go mod download && go mod verify
       - name: Building binaries executables
@@ -62,3 +67,10 @@ jobs:
         run: go test ./...
       - name: Coverage
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          files: coverage.txt
+          verbose: true
