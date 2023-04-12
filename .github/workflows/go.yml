@@ -52,13 +52,14 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-
       - name: Verify dependencies
         run: go mod verify
       - name: Build Binaries
         run: go build ./...
-      - name: Install compiled binaries into GOBIN
+      - name: Install binaries into $GOBIN
         run: go install ./...
+      - name: Go Testing
+        run: go test ./...
 
   test:
     needs: [build]
@@ -70,7 +71,7 @@ jobs:
           go-version: ${{ env.GOLANG }}
       - name: Build Binaries
         run: go build ./...
-      - name: Install compiled binaries into GOBIN
+      - name: Install binaries into $GOBIN
         run: go install ./...
       - name: Test
         run: go test ./...
