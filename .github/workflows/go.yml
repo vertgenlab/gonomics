@@ -31,16 +31,16 @@ jobs:
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
       - name: Lint and automate clean
         run: golangci-lint run ./... --fix
-      - name: Check for modified files
-        id: git-check
-        run: if git diff-index --quiet HEAD --; then echo "false"; else echo "true" && git add -A; fi
-      - name: Push changes
+      - name: Check and push changes
         run: |
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "style: automated go lint ./... && go fmt ./..."
-          git push
+          if ![[ git diff-index --quiet HEAD -- ]]; then
+            git add -A
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git commit -am "style: automated go lint ./... && go fmt ./..."
+            git push
+          fi
 
   gitactions:
     needs: format
