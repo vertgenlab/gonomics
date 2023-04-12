@@ -1,9 +1,10 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //SingleCellAlignment includes a Sam struct along with the parsed barcode and UMI for single-cell reads.

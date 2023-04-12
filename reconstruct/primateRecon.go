@@ -1,9 +1,10 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 	//DEBUG: "fmt"
 )
 

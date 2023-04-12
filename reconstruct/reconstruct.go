@@ -1,12 +1,13 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
 )
 
 // ReconAccuracy returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.

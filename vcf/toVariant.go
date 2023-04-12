@@ -1,9 +1,10 @@
 package vcf
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/variant"
-	"log"
 )
 
 // SmallVariantChans wraps channels for all of the small variants that

@@ -2,6 +2,7 @@ package numbers
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/fileio"
 )
 

@@ -1,8 +1,9 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Interface for generic merge sort of file types

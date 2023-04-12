@@ -5,14 +5,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
-	"log"
-	"math/rand"
-	"strings"
 )
 
 func statCalc(s Settings) {
@@ -257,7 +258,7 @@ func usage() {
 			" -normal=mu,sigma. Defines a normal distribution with mean mu and standard deviation sigma. Ex Usage: -normal=0,1 1 or -normal=0,1 2 inf\n" +
 			" -binomial=n,p. Defines a binomial distribution with n experiments and success probability p. Ex Usage: -binomial=10,0.5 3 or -binomial=10, 0.5 6 n\n" +
 			" -poisson=lambda. Defines a poisson distribution with rate parameter lambda. Ex Usage: -poisson=4 4\n" +
-			" -beta=alpha,beta. Defines a beta dsitribution with paramters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
+			" -beta=alpha,beta. Defines a beta dsitribution with parameters alpha and beta. Ex Usage: -beta=5,5 0.2\n" +
 			" -gamma=alpha,beta. Defines a gamma distribution with parameters alpha and beta. Ex Usage: -gamma=4,4 6\n" +
 			" -sampleAfs=alpha,numSamples,maxSampleDepth,bins,xLeft,xRight. Provides a list of values sampled from an allele frequency spectrum with selection parameter alpha.\n" +
 			"\tsampleAFS will return numSamples many values between xLeft and xRight. Bins and maxSampleDepth are performance and accuracy options, suggested values are 1000 and 1000, respectively.\n" +

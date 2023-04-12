@@ -2,6 +2,7 @@ package bed
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 )

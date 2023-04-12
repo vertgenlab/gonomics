@@ -5,13 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math/rand"
-	"sync"
 )
 
 type Settings struct {

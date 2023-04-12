@@ -2,9 +2,10 @@
 package popgen
 
 import (
+	"strings"
+
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"strings"
 	//DEBUG:"log"
 )
 

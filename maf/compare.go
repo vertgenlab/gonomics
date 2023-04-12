@@ -1,9 +1,10 @@
 package maf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {

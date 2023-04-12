@@ -7,8 +7,9 @@ package interval
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"sort"
+
+	"golang.org/x/exp/slices"
 )
 
 type Interval interface {

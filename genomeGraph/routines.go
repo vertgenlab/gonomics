@@ -1,10 +1,11 @@
 package genomeGraph
 
 import (
+	"sync"
+
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-	"sync"
 )
 
 //Goroutine worker functions

@@ -1,10 +1,11 @@
 package sam
 
 import (
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"math"
 )
 
 // HaploidCall is a struct to represent the data of a haploid genotype called

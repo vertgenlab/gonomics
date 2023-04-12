@@ -2,11 +2,11 @@ package vcf
 
 import (
 	"fmt"
-	//"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-
 	//"strconv"
 	"strings"
+
+	//"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 	//"sync"
 )
 

@@ -2,9 +2,6 @@ package genomeGraph
 
 import (
 	"flag"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"os"
 	"runtime"
@@ -13,6 +10,10 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")

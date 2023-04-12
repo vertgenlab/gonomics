@@ -1,12 +1,13 @@
 package graphReconstruct
 
 import (
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"log"
-	"testing"
 )
 
 var (

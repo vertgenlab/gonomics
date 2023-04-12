@@ -6,13 +6,14 @@ package wig
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.

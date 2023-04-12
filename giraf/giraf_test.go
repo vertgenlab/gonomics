@@ -2,11 +2,12 @@ package giraf
 
 import (
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"testing"
 )
 
 //TODO: Will write a better high throughput test when random generator is working

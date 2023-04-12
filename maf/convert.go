@@ -1,9 +1,10 @@
 package maf
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 func setupBlankAln(ref fasta.Fasta, species []string) []fasta.Fasta {

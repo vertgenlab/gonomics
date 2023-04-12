@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
 )
 
 type Operation byte

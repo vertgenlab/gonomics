@@ -2,10 +2,11 @@ package numbers
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"math"
 	"math/rand"
 	"testing"
+
+	"golang.org/x/exp/slices"
 )
 
 func TestRunMixtureModel(t *testing.T) {

@@ -3,12 +3,13 @@ package browser
 
 import (
 	"fmt"
+	"log"
+	"unicode/utf8"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"unicode/utf8"
 )
 
 //MultiFaVisualizer produces command line visualizations of multiFa format alignments from a specified start and end position.

@@ -1,9 +1,10 @@
 package gtf
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/vcf"
-	"testing"
 )
 
 func TestVcfToVariant(t *testing.T) {

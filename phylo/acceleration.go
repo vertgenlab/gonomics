@@ -1,11 +1,12 @@
 package phylo
 
 import (
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math"
 )
 
 //AccelDistancesAndWeights represents a set of all observed pairwise distances between the four species used for acceleration analysis.
@@ -26,7 +27,7 @@ type AccelDistancesAndWeights struct {
 	WgorOrang   float64
 }
 
-//AccelBranchLengths represents the set of branch lengths corresponding to a particular distance matrix used for acceleration analysis on a 4-species alingment.
+//AccelBranchLengths represents the set of branch lengths corresponding to a particular distance matrix used for acceleration analysis on a 4-species alignment.
 type AccelBranchLengths struct {
 	BhumHca   float64
 	BchimpHca float64

@@ -7,6 +7,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"sort"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -14,10 +19,6 @@ import (
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
-	"log"
-	"sort"
-	"strings"
 )
 
 func scCount(s Settings) {

@@ -1,10 +1,11 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 	//DEBUG: "fmt"
 )
 

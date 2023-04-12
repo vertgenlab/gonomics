@@ -1,9 +1,10 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // IsHeterozygous returns true if more than 1 allele is present in the sample

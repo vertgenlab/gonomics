@@ -2,14 +2,15 @@ package maf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"log"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // pointers are retained in the maf package because they are needed for null checks

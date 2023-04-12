@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
@@ -26,7 +27,7 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 	return alnStart
 }
 
-//AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceeding reference position.
+//AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceding reference position.
 //0 based.
 func AlnPosToRefPos(record Fasta, AlnPos int) int {
 	return AlnPosToRefPosCounter(record, AlnPos, 0, 0)
@@ -35,7 +36,7 @@ func AlnPosToRefPos(record Fasta, AlnPos int) int {
 //AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
 func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int) int {
 	if alnStart > AlnPos {
-		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired postion, we reset the counters to 0.
+		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
 	}
 	for t := alnStart; t < AlnPos; t++ {
 		if t == len(record.Seq) {

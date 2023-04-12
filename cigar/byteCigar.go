@@ -1,10 +1,11 @@
 package cigar
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
 )
 
 // ByteCigar struct encodes sequence comparison operations and includes run length info.

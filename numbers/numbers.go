@@ -2,9 +2,10 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // carefulMultDivFloat tries to gracefully handle the case when you have a
@@ -80,7 +81,7 @@ func fisherExactLess(a, b, c, d int) float64 {
 		b = b + 1
 		c = c + 1
 		d = d - 1
-		//currProb = fisherProbLess(a, b, c, d) // this way may be more resistant to propogation of error, but slower
+		//currProb = fisherProbLess(a, b, c, d) // this way may be more resistant to propagation of error, but slower
 		currProb = currProb * float64(a+1) / float64(c) * float64(d+1) / float64(b)
 		runningTotal += currProb
 	}

@@ -1,12 +1,13 @@
 package binaryGiraf
 
 import (
+	"io"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io"
-	"sync"
 )
 
 // Read will input a giraf.fe file and will decompress into a slice of giraf.Giraf.

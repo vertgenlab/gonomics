@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 type operator string

@@ -5,18 +5,19 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func usage() {
@@ -114,7 +115,7 @@ func simulatePcr(fwdPrimers primerSeqs, ref string, outBed, outFastq string, max
 	log.Printf("found %d potential products", recordsWritten) // prefer an explicit report rather than empty file for zero amplicons found
 }
 
-// findAmplicons determins the amplicons resulting from the input primers for a single given template sequence
+// findAmplicons determines the amplicons resulting from the input primers for a single given template sequence
 func findAmplicons(chrom, template string, fwdPrimers, revPrimers []string, maxLen int, includePrimer bool, ans chan<- bed.Bed, chromWg *sync.WaitGroup) {
 	template = strings.ToUpper(template)
 	var fwdSites, revSites []primingSite

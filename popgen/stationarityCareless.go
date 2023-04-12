@@ -1,9 +1,10 @@
 package popgen
 
 import (
+	"math"
+
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"math"
 )
 
 //TODO: (Riley) This file has a few old versions of functions that I'm keeping around while debugging. Will eventually delete.

@@ -1,13 +1,14 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func TestSortOrder(t *testing.T) {

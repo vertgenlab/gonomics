@@ -3,11 +3,12 @@ package genePred
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // GenePred is a data struct which defines information about a gene. It's based on the format listed by UCSC Genome Browser.

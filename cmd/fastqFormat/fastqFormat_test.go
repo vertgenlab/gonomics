@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var FastqFormatTests = []struct {

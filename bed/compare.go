@@ -2,10 +2,11 @@ package bed
 
 import (
 	"errors"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 //SortByCoord sorts in place a slice of Bed structs by their genomic position.

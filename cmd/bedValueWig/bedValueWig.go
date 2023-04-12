@@ -5,12 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"math"
 )
 
 func bedValueWig(s Settings) {

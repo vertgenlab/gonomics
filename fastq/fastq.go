@@ -3,11 +3,12 @@ package fastq
 
 import (
 	"fmt"
+	"log"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"sync"
 )
 
 //Fastq stores the name, sequence, and quality scores for each 4 line record of a Fastq file.

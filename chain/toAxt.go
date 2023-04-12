@@ -1,10 +1,11 @@
 package chain
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // AllToAxt converts a slice of chain structs into a slice of axt structs, taking in the target and query faMaps.

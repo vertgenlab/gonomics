@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func TestSeek(t *testing.T) {

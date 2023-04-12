@@ -1,8 +1,9 @@
 package browser
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var multiFaVisualizerTests = []struct {

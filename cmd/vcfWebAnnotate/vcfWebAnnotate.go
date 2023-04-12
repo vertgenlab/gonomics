@@ -8,14 +8,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var errNoData error = errors.New("NA")

@@ -1,9 +1,10 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"math"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
 )
 
 // SAM format uses ascii offset of 33 to make everything start with individual characters

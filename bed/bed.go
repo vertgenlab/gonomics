@@ -4,13 +4,14 @@ package bed
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.

@@ -5,13 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"sync"
 )
 
 func usage() {
@@ -21,7 +22,7 @@ func usage() {
 			"  axtSam [options] in.axt out.sam\n\n" +
 			"Options:\n\n")
 	flag.PrintDefaults()
-	fmt.Print("Comming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
+	fmt.Print("Coming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
 }
 
 func main() {

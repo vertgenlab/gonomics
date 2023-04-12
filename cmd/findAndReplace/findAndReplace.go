@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func readFindReplacePairs(filename string, delim string) map[string]string {

@@ -1,8 +1,9 @@
 package bedpe
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
 )
 
 var Equal1 BedPe = BedPe{A: bed.Bed{Chrom: "chr9", ChromStart: 60, ChromEnd: 75}, B: bed.Bed{Chrom: "chr9", ChromStart: 7500, ChromEnd: 7900}}

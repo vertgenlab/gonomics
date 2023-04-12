@@ -1,11 +1,12 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var PlotTests = []struct {

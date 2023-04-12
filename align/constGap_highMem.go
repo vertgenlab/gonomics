@@ -1,8 +1,9 @@
 package align
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {

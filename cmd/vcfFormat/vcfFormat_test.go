@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/csv"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var VcfFormatTests = []struct {

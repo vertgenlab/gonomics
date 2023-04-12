@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/genomeGraph"
-	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
 //TODO: View feature needs some work

@@ -6,13 +6,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
 )
 
 //SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction

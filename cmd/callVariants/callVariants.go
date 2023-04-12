@@ -6,16 +6,17 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func usage() {

@@ -5,15 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"golang.org/x/exp/slices"
-	"io"
-	"log"
-	"strings"
 )
 
 func usage() {

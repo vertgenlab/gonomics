@@ -1,13 +1,14 @@
 package binaryGiraf
 
 import (
+	"io"
+	"reflect"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io"
-	"reflect"
-	"testing"
 )
 
 var nodeSeq []dna.Base = dna.StringToBases("ATGCGATGCG" +

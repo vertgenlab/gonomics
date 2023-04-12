@@ -1,12 +1,13 @@
 package lastZWriter
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 //AlignSetUp takes in a the path to the parent directory where all the individual fastas for alignment are being held.

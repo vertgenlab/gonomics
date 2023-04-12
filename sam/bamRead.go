@@ -3,13 +3,14 @@ package sam
 import (
 	"bytes"
 	"errors"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"io"
-	"log"
-	"strings"
 )
 
 // bam is a binary version of sam compressed as a bgzf file

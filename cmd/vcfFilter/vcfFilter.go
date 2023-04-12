@@ -5,17 +5,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/popgen"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math"
 	"math/rand"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/popgen"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
-//coordinate is a chrom/pos pair, refering to a specific place in the genome.
+//coordinate is a chrom/pos pair, referring to a specific place in the genome.
 type coordinate struct {
 	Chr string
 	Pos int

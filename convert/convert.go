@@ -3,6 +3,9 @@
 package convert
 
 import (
+	"log"
+	"sort"
+
 	//"fmt" //DEBUG
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
@@ -16,8 +19,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"sort"
 )
 
 //SingleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
