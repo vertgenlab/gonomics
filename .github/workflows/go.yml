@@ -50,19 +50,19 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - name: go root
-        run: echo $GOROOT && echo $GOPATH
-      - name: Download and verify all gonomics dependencies and modules
-        run: go mod download && go mod verify
-      - name: Building binaries executables
+      - name: Download
+        run: go mod download
+      - name: Verify
+        run: go mod verify
+      - name: Build
         run: go build ./...
-      - name: Installing binaries into GOBIN
+      - name: Install
         run: go install ./...
       - name: Test
         run: go test ./...
       - name: Coverage
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
-      - name: Upload coverage to Codecov
+      - name: Upload
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
