@@ -1,17 +1,3 @@
-linters-settings:
-  errcheck:
-    # do not report about not checking errors in type assertions: `a :=
-    # b.(MyStruct)`
-    check-type-assertions: false
-
-    # do not report about assignment of errors to blank identifier: `num, _ :=
-    # strconv.Atoi(numStr)`
-    check-blank: false
-
-    # path to a file containing a list of functions to exclude from checking
-    # see https://github.com/kisielk/errcheck#excluding-functions for details
-    exclude: .errcheck-excludes
-
 linters:
   disable-all: true
   fast: false
@@ -24,4 +10,3 @@ linters:
     - staticcheck
     - typecheck
     - unused
-
