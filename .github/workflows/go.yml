@@ -48,9 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         env:
-          GOPATH: ${{ github.workspace }}
-          run:
-          working-directory: ${{ env.GOPATH }}/src/github.com/${{ github.repository }}
+          GOBIN: ${{ github.workspace }}/bin
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
