@@ -39,7 +39,7 @@ jobs:
           git commit -am "fix: automated go fmt ./..."
           git push
 
-  build:
+  gonomics:
     needs: format
     strategy:
       matrix:
@@ -47,20 +47,18 @@ jobs:
     runs-on: ${{ matrix.OS }}
     steps:
       - uses: actions/checkout@v3
-        env:
-          GOBIN: ${{ github.workspace }}/bin
+        with:
+          path: src/github.com/${{ github.repository }}
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - name: Download and verift all gonomics dependencies and modules
+      - name: Download and verify all gonomics dependencies and modules
         run: go mod download && go mod verify
       - name: Building binaries executables
         run: go build ./...
       - name: Installing binaries into GOBIN
         run: go install ./...
       - name: Test
-        if: ${{ matrix.OS }} == ubuntu-latest
         run: go test ./...
       - name: Coverage
-        if: ${{ matrix.OS }} == ubuntu-latest
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
