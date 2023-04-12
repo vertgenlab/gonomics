@@ -28,7 +28,7 @@ jobs:
       - name: go fmt simplify cmd
         run: gofmt -s -w ./cmd/*/*.go
       - name: Setup lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
       - name: Lint and automate clean
         run: golangci-lint run ./... --fix
       - name: Check for modified files
