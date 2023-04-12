@@ -77,7 +77,7 @@ func getSrc() string {
 	godefault := os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
 	currwd, err := os.Getwd()
 	exception.PanicOnErr(err)
-	currwdBase := strings.Split(currwd, "/gonomics/")[0] + "/gonomics/"
+	currwdBase := strings.Split(currwd, "/gonomics/cmd")[0] + "/gonomics/cmd/"
 
 	switch {
 	case cachedSrcPath != "" && tryPathDir(cachedSrcPath):
@@ -95,12 +95,9 @@ func getSrc() string {
 	case tryPathDir(currwdBase):
 		expectedPath = currwdBase
 
-	case tryPathDir(currwdBase + "gonomics/"): // for github ci filesystem
-		expectedPath = currwdBase + "gonomics/"
-
 	default:
 		files := new(strings.Builder)
-		dir, _ := ioutil.ReadDir(currwdBase + "gonomics/")
+		dir, _ := ioutil.ReadDir(currwdBase)
 		for _, file := range dir {
 			files.WriteString(file.Name() + "\n")
 		}
