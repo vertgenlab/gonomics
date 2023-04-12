@@ -7,7 +7,6 @@ on:
     branches: main
 
 env:
-  IMAGE_REPO_ROOT: ${{ github.event.repository.name }}
   GOLANG: 1.18
 
 jobs:
@@ -48,6 +47,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
+        env:
+          GOPATH: ${{ github.workspace }}
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
@@ -57,6 +58,10 @@ jobs:
         run: go build ./...
       - name: Installing binaries into $GOBIN
         run: go install ./...
+      - name: Test
+        run: go test ./...
+      - name: Coverage
+        run: go test -coverprofile=coverage.txt -covermode=atomic ./...
 
   test:
     needs: build
