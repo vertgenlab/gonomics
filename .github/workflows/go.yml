@@ -33,9 +33,9 @@ jobs:
         run: golangci-lint run ./... --fix
       - name: Check and push changes
         run: |
-          git config user.name "$(git log -n 1 --pretty=format:%an)"
-          git config user.email "$(git log -n 1 --pretty=format:%ae)"
-          if [[ $(git diff-index --quiet HEAD --) == "" ]]; then
+          git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
+          git config --global user.name "AutoFmt Bot"
+          if git diff-index --quiet HEAD --; then; else
             git add -A
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
             git commit -am "style: automated go lint ./... && go fmt ./..."
