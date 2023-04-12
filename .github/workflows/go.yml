@@ -33,9 +33,8 @@ jobs:
         run: golangci-lint run ./... --fix
       - name: Check for modified files
         id: git-check
-        run: echo "::set-output name={modified}::{$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)}"
+        run: if git diff-index --quiet HEAD --; then echo "false"; else echo "true" && git add -A; fi
       - name: Push changes
-        if: steps.git-check.outputs.modified == 'true'
         run: |
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
