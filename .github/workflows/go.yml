@@ -56,13 +56,11 @@ jobs:
         run: go mod verify
       - name: Build Binaries
         run: go build ./...
-      - name: Install binaries into $GOBIN
+      - name: Installing binaries into $GOBIN
         run: go install ./...
-      - name: Go Testing
-        run: go test ./...
 
   test:
-    needs: [build]
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -71,7 +69,7 @@ jobs:
           go-version: ${{ env.GOLANG }}
       - name: Build Binaries
         run: go build ./...
-      - name: Install binaries into $GOBIN
+      - name: Installing binaries into $GOBIN
         run: go install ./...
       - name: Test
         run: go test ./...
