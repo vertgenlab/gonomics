@@ -40,7 +40,7 @@ jobs:
   cicd:
     strategy:
       matrix:
-        platform: [ubuntu-latest]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
 
     steps:
@@ -56,13 +56,12 @@ jobs:
         run:
           go build ./...
 
+      - name: Install
+        run:
+          go build ./...
+
       - name: Test
-        run: |
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-          go install ./... &&
-          go test ./...
+        run: go test ./...
 
   coverage:
     needs: cicd
@@ -75,9 +74,7 @@ jobs:
         with:
           go-version: '1.18'
       - name: Run coverage
-        run:
-          go install ./... &&
-          go test -coverprofile=coverage.txt -covermode=atomic ./...
+        run: go install ./... && go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
