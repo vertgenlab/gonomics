@@ -33,14 +33,15 @@ jobs:
         run: golangci-lint run ./... --fix
       - name: Check for modified files
         id: git-check
-        run: echo "{modified}={$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)}" >> $GITHUB_OUTPUT
+        run: echo "::set-output name={modified}::{$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)}"
       - name: Push changes
+        if: steps.git-check.outputs.modified == 'true'
         run: |
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
           git add -A
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "style: automated go fmt ./..."
+          git commit -am "style: automated go lint ./... && go fmt ./..."
           git push
 
   gitactions:
