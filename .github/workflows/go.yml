@@ -52,7 +52,6 @@ jobs:
           go-version: ${{ env.GOLANG }}
         env:
           GOPATH: ${{ github.workspace }}
-          GOBIN: ${{ env.GOPATH }}/bin
       - name: go root
         run: echo $GOROOT
       - name: Download and verify all gonomics dependencies and modules
