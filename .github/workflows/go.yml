@@ -34,7 +34,7 @@ jobs:
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "fix: automated go fmt on all files"
+          git commit -am "fix: automated go fmt ./..."
           git push
 
   cicd:
@@ -42,11 +42,11 @@ jobs:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
+    env:
+      GOPATH: ${{ github.repository }}
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          path: ${{ github.workspace }}/src/github.com/vertgenlab/${{ github.repository }}
       - uses: actions/setup-go@v4
         with:
           go-version: '1.18'
@@ -63,6 +63,7 @@ jobs:
 
       - name: Test
         run:  go test ./...
+        shell: bash
 
   coverage:
     needs: cicd
