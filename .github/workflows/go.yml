@@ -38,7 +38,6 @@ jobs:
         run: |
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
-          git add -A
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git commit -am "style: automated go lint ./... && go fmt ./..."
           git push
