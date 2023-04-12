@@ -9,5 +9,3 @@ linters:
     - decorder
     - gci
     - godox
-    - misspell
-    - typecheck
