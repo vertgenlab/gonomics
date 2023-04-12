@@ -75,6 +75,8 @@ func getSrc() string {
 	var cachedSrcPath string = getCachedSrcDir()
 	gopath := os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
 	godefault := os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
+	currwd, err := os.Getwd()
+	exception.PanicOnErr(err)
 
 	switch {
 	case cachedSrcPath != "" && tryPathDir(cachedSrcPath):
@@ -85,6 +87,9 @@ func getSrc() string {
 
 	case os.Getenv("HOME") != "" && tryPathDir(godefault):
 		expectedPath = godefault
+
+	case tryPathDir(currwd):
+		expectedPath = currwd
 
 	default:
 		log.Fatalf("ERROR: could not find gonomics cmd folder in any of the following locations\n%s\n%s\n%s\n"+

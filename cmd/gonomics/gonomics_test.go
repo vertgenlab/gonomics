@@ -1,9 +1,9 @@
 package main
 
-// import (
-// 	"testing"
-// )
+import (
+	"testing"
+)
 
-// func TestGonomics(t *testing.T) {
-// 	buildCmdCache("") // tests everything is formatted correctly and updates cache file
-// }
+func TestGonomics(t *testing.T) {
+	buildCmdCache("") // tests everything is formatted correctly and updates cache file
+}
