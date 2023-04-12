@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"math"
-	"math/rand"
 )
 
 type Settings struct {

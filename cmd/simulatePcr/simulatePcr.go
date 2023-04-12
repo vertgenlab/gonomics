@@ -5,18 +5,19 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func usage() {

@@ -2,9 +2,10 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // carefulMultDivFloat tries to gracefully handle the case when you have a
@@ -157,8 +158,8 @@ func BinomCoefficient(n int, k int) int {
 	return carefulMultDivInt(numer, denom)
 }
 
-//BinomCoefficientLog returns log(n choose k), where log is the natural logarithm.
-//Ideal for large numbers as this raises the overflow ceiling considerably.
+// BinomCoefficientLog returns log(n choose k), where log is the natural logarithm.
+// Ideal for large numbers as this raises the overflow ceiling considerably.
 func BinomCoefficientLog(n int, k int) float64 {
 	if n < 0 || k < 0 || k > n {
 		log.Fatalf("The binomial coefficient call could not be handled: n=%d and k=%d\n", n, k)
@@ -181,12 +182,12 @@ func BinomCoefficientLog(n int, k int) float64 {
 	return logspace.Divide(numer, denom)
 }
 
-//Factorial returns n! in normal space.
+// Factorial returns n! in normal space.
 func Factorial(n int) int {
 	return int(math.Gamma(float64(n + 1)))
 }
 
-//DigitsBaseTen returns the
+// DigitsBaseTen returns the
 func DigitsBaseTen(x int) int {
 	var count int = 1
 	if x < 0 {
@@ -200,7 +201,7 @@ func DigitsBaseTen(x int) int {
 	return count
 }
 
-//AbsInt returns the absolute value of an input of type int.
+// AbsInt returns the absolute value of an input of type int.
 func AbsInt(x int) int {
 	if x < 0 {
 		return -x

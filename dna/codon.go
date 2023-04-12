@@ -313,7 +313,7 @@ func CodonsToBases(c []Codon) []Base {
 	return answer
 }
 
-//TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
+// TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
 func TranslateCodon(c Codon) AminoAcid {
 	value, found := GeneticCode[c]
 	if !found {

@@ -1,9 +1,10 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/fastq"
 )
 
 func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, left bool, right bool) {

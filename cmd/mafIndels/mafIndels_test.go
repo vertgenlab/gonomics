@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
 )
 
-//use struct to specify testdata
+// use struct to specify testdata
 var mafIndelsTests = []struct {
 	in_maf      string
 	species_ins string

@@ -1,12 +1,13 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/dna"
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func BenchmarkPileupLinkedList(b *testing.B) {

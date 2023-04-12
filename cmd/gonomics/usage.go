@@ -5,9 +5,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"golang.org/x/exp/slices"
 	"log"
 	"os"
 	"os/exec"
@@ -15,6 +12,10 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"golang.org/x/exp/slices"
 )
 
 var Reset = "\033[0m"

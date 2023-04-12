@@ -1,16 +1,17 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
-//RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
+// RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
 func RefPosToAlnPos(record Fasta, RefPos int) int {
 	return RefPosToAlnPosCounter(record, RefPos, 0, 0)
 }
 
-//RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	if refStart > RefPos {
 		refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
@@ -26,13 +27,13 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 	return alnStart
 }
 
-//AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceding reference position.
-//0 based.
+// AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceding reference position.
+// 0 based.
 func AlnPosToRefPos(record Fasta, AlnPos int) int {
 	return AlnPosToRefPosCounter(record, AlnPos, 0, 0)
 }
 
-//AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
+// AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
 func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int) int {
 	if alnStart > AlnPos {
 		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
@@ -47,7 +48,7 @@ func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int)
 	return refStart
 }
 
-//CopySubset returns a copy of a multiFa from a specified start and end position.
+// CopySubset returns a copy of a multiFa from a specified start and end position.
 func CopySubset(records []Fasta, start int, end int) []Fasta {
 	c := make([]Fasta, len(records))
 	length := end - start
@@ -59,7 +60,7 @@ func CopySubset(records []Fasta, start int, end int) []Fasta {
 	return c
 }
 
-//RemoveMissingMult removes any entries comprised only of gaps in a multiple alignment block,.
+// RemoveMissingMult removes any entries comprised only of gaps in a multiple alignment block,.
 func RemoveMissingMult(records []Fasta) []Fasta {
 	var answer []Fasta
 	var missing bool = true
@@ -78,7 +79,7 @@ func RemoveMissingMult(records []Fasta) []Fasta {
 	return answer
 }
 
-//returns alignment columns with no gaps or lowercase letters
+// returns alignment columns with no gaps or lowercase letters
 func DistColumn(records []Fasta) []Fasta {
 	var subFa = make([]Fasta, len(records))
 	for i := 0; i < len(records); i++ {
@@ -145,7 +146,7 @@ func SegregatingSites(aln []Fasta) []Fasta {
 	return answer
 }
 
-//NumSegregatingSites returns the number of sites in an alignment block that are segregating.
+// NumSegregatingSites returns the number of sites in an alignment block that are segregating.
 func NumSegregatingSites(aln []Fasta) int {
 	if len(SegregatingSites(aln)) == 0 {
 		return 0
@@ -153,9 +154,9 @@ func NumSegregatingSites(aln []Fasta) int {
 	return len(SegregatingSites(aln)[0].Seq)
 }
 
-//PairwiseMutationDistanceReferenceWindow takes two input fasta sequences and calculates the number of mutations in a reference window of a given size. Segregating sites are counted as 1, as are INDELs regardless of length.
-//alnStart indicates the beginning alignment column for distance evaluation, and windowSize is the number of references bases to compare.
-//Three returns, first is the pairwise mutation distance, second is reachedEnd, a bool that is true for incomplete windows. The third return is alignmentEnd, or the last alignment column evaluated.
+// PairwiseMutationDistanceReferenceWindow takes two input fasta sequences and calculates the number of mutations in a reference window of a given size. Segregating sites are counted as 1, as are INDELs regardless of length.
+// alnStart indicates the beginning alignment column for distance evaluation, and windowSize is the number of references bases to compare.
+// Three returns, first is the pairwise mutation distance, second is reachedEnd, a bool that is true for incomplete windows. The third return is alignmentEnd, or the last alignment column evaluated.
 func PairwiseMutationDistanceReferenceWindow(seq1 Fasta, seq2 Fasta, alnStart int, windowSize int) (int, bool, int) {
 	diff := 0
 	baseCount := 0
@@ -200,8 +201,8 @@ func PairwiseMutationDistanceReferenceWindow(seq1 Fasta, seq2 Fasta, alnStart in
 	return diff, reachedEnd, i
 }
 
-//PairwiseMutationDistanceInRange calculates the number of mutations between two Fasta sequences from a specified
-//start and end alignment column. Segregating sites are counted as 1, as are INDELs regardless of length.
+// PairwiseMutationDistanceInRange calculates the number of mutations between two Fasta sequences from a specified
+// start and end alignment column. Segregating sites are counted as 1, as are INDELs regardless of length.
 func PairwiseMutationDistanceInRange(seq1 Fasta, seq2 Fasta, alnStart int, alnEnd int) int {
 	diff := 0
 	var seq1Indel bool = false

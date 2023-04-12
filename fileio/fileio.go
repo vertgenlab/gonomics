@@ -5,11 +5,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // MustCreate creates a file with the input name.
@@ -173,7 +174,7 @@ func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }
 
-//ReadFileToSingleLineString reads in any file type and returns contents without any \n
+// ReadFileToSingleLineString reads in any file type and returns contents without any \n
 func ReadFileToSingleLineString(filename string) string {
 	var catInput string
 	var line string

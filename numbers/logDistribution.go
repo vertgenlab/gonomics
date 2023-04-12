@@ -1,8 +1,9 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // BinomialDistLog returns log(BinomialDist), where log is the natural logarithm.

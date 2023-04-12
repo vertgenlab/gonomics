@@ -1,13 +1,14 @@
 package reconstruct
 
 import (
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"testing"
 )
 
 var GCcontent = 0.42

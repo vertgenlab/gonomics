@@ -3,11 +3,12 @@ package genePred
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // GenePred is a data struct which defines information about a gene. It's based on the format listed by UCSC Genome Browser.
@@ -126,7 +127,7 @@ func StringToIntSlice(text string) []int {
 }
 
 // CaclExonFame calculates the frame of each exon in a genePred based on the information in the fields for exonStarts, exonStops and cdsStarts
-//TODO: May not work with - strand transcripts
+// TODO: May not work with - strand transcripts
 func CalcExonFrame(gene GenePred) []int {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds

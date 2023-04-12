@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var VcfFilterTests = []struct {

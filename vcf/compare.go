@@ -1,16 +1,17 @@
 package vcf
 
 import (
-	//"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 	"strings"
+
+	//"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 const debugMode = 0 //set debugMode to 1 to enable prints
 
-//CompareCoord compares two VCF structs by Pos for sorting or equality testing.
+// CompareCoord compares two VCF structs by Pos for sorting or equality testing.
 func CompareCoord(alpha Vcf, beta Vcf) int {
 	if alpha.Pos < beta.Pos {
 		return -1
@@ -21,7 +22,7 @@ func CompareCoord(alpha Vcf, beta Vcf) int {
 	return 0
 }
 
-//compareVcf compares two Vcf structs for sorting or equality testing.
+// compareVcf compares two Vcf structs for sorting or equality testing.
 func compareVcf(alpha Vcf, beta Vcf) int {
 	compareStorage := strings.Compare(alpha.Chr, beta.Chr)
 	if compareStorage != 0 {
@@ -30,7 +31,7 @@ func compareVcf(alpha Vcf, beta Vcf) int {
 	return CompareCoord(alpha, beta) //TODO: should we also compare genotypes? Would we want to sort more than chr and coord?
 }
 
-//CompareHeader compares two Header structs for sorting or equality testing.
+// CompareHeader compares two Header structs for sorting or equality testing.
 func CompareHeader(alpha Header, beta Header) int {
 	if len(alpha.Text) > len(beta.Text) {
 		return 1
@@ -47,7 +48,7 @@ func CompareHeader(alpha Header, beta Header) int {
 	return 0
 }
 
-//CompareAlt compares the two slice of string Alt fields from a VCF lexicographically.
+// CompareAlt compares the two slice of string Alt fields from a VCF lexicographically.
 func CompareAlt(alpha []string, beta []string) int {
 	var res int
 	stop := numbers.Min(len(alpha), len(beta))
@@ -65,12 +66,12 @@ func CompareAlt(alpha []string, beta []string) int {
 	return 0
 }
 
-//Sort sorts a slice of Vcf structs in place.
+// Sort sorts a slice of Vcf structs in place.
 func Sort(vcfFile []Vcf) {
 	sort.Slice(vcfFile, func(i, j int) bool { return compareVcf(vcfFile[i], vcfFile[j]) == -1 })
 }
 
-//isEqual returns true if two input Vcf structs contain identical information, false otherwise.
+// isEqual returns true if two input Vcf structs contain identical information, false otherwise.
 func isEqual(alpha Vcf, beta Vcf) bool {
 	if alpha.Chr != beta.Chr {
 		return false
@@ -137,7 +138,7 @@ func equalSamples(alpha, beta []Sample) bool {
 	return true
 }
 
-//AllEqual returns true if each Vcf in a slice of Vcf structs contain identical information.
+// AllEqual returns true if each Vcf in a slice of Vcf structs contain identical information.
 func AllEqual(alpha []Vcf, beta []Vcf) bool {
 	if len(alpha) != len(beta) {
 		if debugMode > 0 {

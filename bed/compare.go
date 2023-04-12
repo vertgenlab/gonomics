@@ -2,23 +2,24 @@ package bed
 
 import (
 	"errors"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
-//SortByCoord sorts in place a slice of Bed structs by their genomic position.
+// SortByCoord sorts in place a slice of Bed structs by their genomic position.
 func SortByCoord(bedFile []Bed) {
 	sort.Slice(bedFile, func(i, j int) bool { return Compare(bedFile[i], bedFile[j]) == -1 })
 }
 
-//SortBySize sorts in place a slice of Bed structs by their size from low to high.
+// SortBySize sorts in place a slice of Bed structs by their size from low to high.
 func SortBySize(bedFile []Bed) {
 	sort.Slice(bedFile, func(i, j int) bool { return CompareSize(bedFile[i], bedFile[j]) == -1 })
 }
 
-//SortByChromEndByChrom sorts in place a slice of Bed structs by their chrom, and then by chromEnd, but not by chromStart.
+// SortByChromEndByChrom sorts in place a slice of Bed structs by their chrom, and then by chromEnd, but not by chromStart.
 func SortByChromEndByChrom(bedFile []Bed) {
 	sort.Slice(bedFile, func(i, j int) bool { return CompareChromEndByChrom(bedFile[i], bedFile[j]) == -1 })
 }
@@ -40,7 +41,7 @@ func MergeBeds(bedFile []Bed) []Bed {
 	return bedFile
 }
 
-//Adjacent returns true if two input Bed entries are adjacent (one immediately follows the other).
+// Adjacent returns true if two input Bed entries are adjacent (one immediately follows the other).
 func Adjacent(alpha Bed, beta Bed) bool {
 	if alpha.Chrom != beta.Chrom {
 		return false
@@ -51,7 +52,7 @@ func Adjacent(alpha Bed, beta Bed) bool {
 	return false
 }
 
-//Overlap returns true if two input Bed entries have an overlap of any kind.
+// Overlap returns true if two input Bed entries have an overlap of any kind.
 func Overlap(alpha Bed, beta Bed) bool {
 	if (numbers.Max(alpha.ChromStart, beta.ChromStart) < numbers.Min(alpha.ChromEnd, beta.ChromEnd)) && strings.Compare(alpha.Chrom, beta.Chrom) == 0 {
 		return true
@@ -60,8 +61,8 @@ func Overlap(alpha Bed, beta Bed) bool {
 	}
 }
 
-//OverlapCount returns the number of elements from list one that have any overlap with list two. Answers range from 0 to len(a).
-//Input bed slices must be presorted with SortByCoord.
+// OverlapCount returns the number of elements from list one that have any overlap with list two. Answers range from 0 to len(a).
+// Input bed slices must be presorted with SortByCoord.
 func OverlapCount(a []Bed, b []Bed) int {
 	var count int = 0
 	var aIndex, bIndex int
@@ -79,8 +80,8 @@ func OverlapCount(a []Bed, b []Bed) int {
 	return count
 }
 
-//OverlapLengthSum calculates the total number of overlapping bases between two sets of bed elements.
-//Input bed slices must be presorted with SortByCoord
+// OverlapLengthSum calculates the total number of overlapping bases between two sets of bed elements.
+// Input bed slices must be presorted with SortByCoord
 func OverlapLengthSum(a []Bed, b []Bed) int {
 	var sum int = 0
 	var aIndex, bIndex, oLen int
@@ -98,7 +99,7 @@ func OverlapLengthSum(a []Bed, b []Bed) int {
 	return sum
 }
 
-//OverlapLength returns the number of bases for which two Bed entries overlap.
+// OverlapLength returns the number of bases for which two Bed entries overlap.
 func OverlapLength(a Bed, b Bed) int {
 	if !Overlap(a, b) {
 		return 0
@@ -108,7 +109,7 @@ func OverlapLength(a Bed, b Bed) int {
 	return end - start
 }
 
-//Compare returns zero for equal beds and otherwise returns the ordering of the two Bed entries. Used for SortByCoord.
+// Compare returns zero for equal beds and otherwise returns the ordering of the two Bed entries. Used for SortByCoord.
 func Compare(a Bed, b Bed) int {
 	chromComp := strings.Compare(a.Chrom, b.Chrom)
 	if chromComp != 0 {
@@ -129,7 +130,7 @@ func Compare(a Bed, b Bed) int {
 	return 0
 }
 
-//CompareSize returns zero for beds with an equal length (ChromEnd - ChromStart) and otherwise returns the ordering of the two Bed structs.
+// CompareSize returns zero for beds with an equal length (ChromEnd - ChromStart) and otherwise returns the ordering of the two Bed structs.
 func CompareSize(a Bed, b Bed) int {
 	sizeA := a.ChromEnd - a.ChromStart
 	sizeB := b.ChromEnd - b.ChromStart
@@ -142,7 +143,7 @@ func CompareSize(a Bed, b Bed) int {
 	return 0
 }
 
-//CompareChromEnd returns zero for beds with an equal ChromEnd position and otherwise returns the ordering of the two Bed entries by chromEnd.
+// CompareChromEnd returns zero for beds with an equal ChromEnd position and otherwise returns the ordering of the two Bed entries by chromEnd.
 func CompareChromEnd(a Bed, b Bed) int {
 	if a.ChromEnd < b.ChromEnd {
 		return -1
@@ -153,7 +154,7 @@ func CompareChromEnd(a Bed, b Bed) int {
 	return 0
 }
 
-//CompareChromEndByChrom compares beds by chromosome and then by chromEnd, but not by chromStart.
+// CompareChromEndByChrom compares beds by chromosome and then by chromEnd, but not by chromStart.
 func CompareChromEndByChrom(a Bed, b Bed) int {
 	chromComp := strings.Compare(a.Chrom, b.Chrom)
 	if chromComp != 0 {
@@ -162,9 +163,9 @@ func CompareChromEndByChrom(a Bed, b Bed) int {
 	return CompareChromEnd(a, b)
 }
 
-//MinimumDistance compares beds by chromStart and chromEnd and returns the minimum distance between
-//the two beds. return options; -1 (different chromosomes, no distance calculated),
-//0 (overlap, minimum distance is 0), >=0 is the minimum distance.
+// MinimumDistance compares beds by chromStart and chromEnd and returns the minimum distance between
+// the two beds. return options; -1 (different chromosomes, no distance calculated),
+// 0 (overlap, minimum distance is 0), >=0 is the minimum distance.
 func MinimumDistance(a Bed, b Bed) (n int, err error) {
 	if a.Chrom != b.Chrom {
 		diffChromError := errors.New("Could not calculate distance, different chromosomes")
@@ -184,7 +185,7 @@ func MinimumDistance(a Bed, b Bed) (n int, err error) {
 	return -1, nil
 }
 
-//AllAreEqual returns true if two input slices of Beds contain Bed entries that all return true for Equal.
+// AllAreEqual returns true if two input slices of Beds contain Bed entries that all return true for Equal.
 func AllAreEqual(a []Bed, b []Bed) bool {
 	if len(a) != len(b) {
 		return false
@@ -197,7 +198,7 @@ func AllAreEqual(a []Bed, b []Bed) bool {
 	return true
 }
 
-//Equal returns true if two input Bed entries have the same Chrom, ChromStart, and ChromEnd. False otherwise.
+// Equal returns true if two input Bed entries have the same Chrom, ChromStart, and ChromEnd. False otherwise.
 func Equal(a Bed, b Bed) bool {
 	if strings.Compare(a.Chrom, b.Chrom) != 0 {
 		return false

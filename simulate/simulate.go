@@ -1,21 +1,22 @@
 package simulate
 
 import (
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math/rand"
 )
 
-//CodonExt holds a slice of 3 bases and their original positions
+// CodonExt holds a slice of 3 bases and their original positions
 type CodonExt struct {
 	Seq []BaseExt
 }
 
-//BaseExt holds the original position of a base in the starting Seq and the base at that position
+// BaseExt holds the original position of a base in the starting Seq and the base at that position
 type BaseExt struct {
 	Base   dna.Base
 	SeqPos int
@@ -69,7 +70,7 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	return answer
 }
 
-//final function to run to simulate based off of the random gene and the tree
+// final function to run to simulate based off of the random gene and the tree
 func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
 	var rand1 []fasta.Fasta
 
@@ -101,7 +102,7 @@ var BLOSUM = [][]float64{{0.288590604, 0.03087248322, 0.03087248322, 0.029530201
 	{0.06995884774, 0.0219478738, 0.01646090535, 0.01783264746, 0.01920438957, 0.01646090535, 0.02331961591, 0.02469135802, 0.008230452675, 0.1646090535, 0.1303155007, 0.02606310014, 0.03155006859, 0.03566529492, 0.01646090535, 0.0329218107, 0.04938271605, 0.00548696845, 0.02057613169, 0.268861454, 0.0},
 	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}
 
-//choose base based off of random float, takes in GC content
+// choose base based off of random float, takes in GC content
 func chooseRandomBase(GCcontent float64) dna.Base {
 	var base dna.Base
 	var AT float64
@@ -122,7 +123,7 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 	return base
 }
 
-//calls chooseRandomBase and loops until a different base than the original is found
+// calls chooseRandomBase and loops until a different base than the original is found
 func changeBase(originalBase dna.Base) dna.Base {
 	newBase := chooseRandomBase(GC)
 
@@ -132,7 +133,7 @@ func changeBase(originalBase dna.Base) dna.Base {
 	return newBase
 }
 
-//mutate base given random float, whether it's mutated is dependent on branchLength
+// mutate base given random float, whether it's mutated is dependent on branchLength
 func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	r := rand.Float64()
 
@@ -151,7 +152,7 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	return base
 }
 
-//MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths
+// MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths
 func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool) []dna.Base {
 	//TODO: make sure a genePred can be updated as we go through the tree
 	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
@@ -252,7 +253,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	return finalSequence
 }
 
-//CreateCodons takes a sequence and it's gene structure in genePred format, compensates for non-zero exon frame and returns all codons that correspond to a single exon
+// CreateCodons takes a sequence and it's gene structure in genePred format, compensates for non-zero exon frame and returns all codons that correspond to a single exon
 func CreateCodons(seq []BaseExt, gene genePred.GenePred, exon int) []CodonExt {
 	var codon CodonExt
 	codon.Seq = make([]BaseExt, 3)
@@ -336,7 +337,7 @@ func CreateCodons(seq []BaseExt, gene genePred.GenePred, exon int) []CodonExt {
 	return allCodons
 }
 
-//BasesToBaseExt converts a slice of dna.Base to a slice of BaseExt
+// BasesToBaseExt converts a slice of dna.Base to a slice of BaseExt
 func BasesToBaseExt(seq []dna.Base) []BaseExt {
 	Sequence := make([]BaseExt, len(seq))
 	for i := 0; i < len(seq); i++ {
@@ -346,14 +347,14 @@ func BasesToBaseExt(seq []dna.Base) []BaseExt {
 	return Sequence
 }
 
-//BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
+// BaseExtToBases converts a slice of BaseExt to a slice of dna.Base
 func BaseExtToBases(seq []BaseExt) []dna.Base {
 	var newSequence []dna.Base
 	newSequence = OrderBaseExtBySeqPos(seq)
 	return newSequence
 }
 
-//SortBaseExtBySeqPos orders a string of BaseExt by seq position
+// SortBaseExtBySeqPos orders a string of BaseExt by seq position
 func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
 	var ordered = make([]dna.Base, len(unordered))
 
@@ -377,7 +378,7 @@ func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
 //	}
 //}
 
-//CodonExtToBaseExt converts a slice of CodonExt to a slice of BaseExt
+// CodonExtToBaseExt converts a slice of CodonExt to a slice of BaseExt
 func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 	var base BaseExt
 	var seq []BaseExt
@@ -390,7 +391,7 @@ func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 	return seq
 }
 
-//CodonExtToCodon converts a since CodonExt to a pointer to a single dna.Codon
+// CodonExtToCodon converts a since CodonExt to a pointer to a single dna.Codon
 func CodonExtToCodon(cE CodonExt) dna.Codon {
 	var codon dna.Codon
 
@@ -400,7 +401,7 @@ func CodonExtToCodon(cE CodonExt) dna.Codon {
 	return codon
 }
 
-//CodonExtsToCodons converts a slice of CodonExt to a slice of dna.Codon
+// CodonExtsToCodons converts a slice of CodonExt to a slice of dna.Codon
 func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
 	var codons []dna.Codon
 	var codon dna.Codon
@@ -414,7 +415,7 @@ func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
 	return codons
 }
 
-//CheckExon takes in a genePred and a position and determines if the base at that position is in an exon. It returns a bool and the int that refers to the exon the base is in
+// CheckExon takes in a genePred and a position and determines if the base at that position is in an exon. It returns a bool and the int that refers to the exon the base is in
 func CheckExon(gene genePred.GenePred, position int) (bool, int) {
 	var answer bool
 	var exonNum int
@@ -428,7 +429,7 @@ func CheckExon(gene genePred.GenePred, position int) (bool, int) {
 	return false, -1
 }
 
-//CheckStart determines if a base is the beginning of a start codon by comparing it to the start position of the genePred CDS
+// CheckStart determines if a base is the beginning of a start codon by comparing it to the start position of the genePred CDS
 func CheckStart(gene genePred.GenePred, codon CodonExt) bool {
 
 	if codon.Seq[0].SeqPos == gene.CdsStart {
@@ -438,7 +439,7 @@ func CheckStart(gene genePred.GenePred, codon CodonExt) bool {
 	return false
 }
 
-//CheckStop determines if a base is the beginning of a stop codon by comparing it to the end position of the genePred CDS
+// CheckStop determines if a base is the beginning of a stop codon by comparing it to the end position of the genePred CDS
 func CheckStop(gene genePred.GenePred, codon CodonExt) bool {
 
 	if codon.Seq[0].SeqPos == (gene.CdsEnd - 3) {
@@ -447,7 +448,7 @@ func CheckStop(gene genePred.GenePred, codon CodonExt) bool {
 	return false
 }
 
-//PickStop randomly selects one of the three stop codons to be used in the MutateGene output
+// PickStop randomly selects one of the three stop codons to be used in the MutateGene output
 func PickStop(codon CodonExt) CodonExt {
 	r := rand.Float64()
 	codon.Seq[0].Base = dna.T
@@ -468,14 +469,14 @@ func PickStop(codon CodonExt) CodonExt {
 	return codon
 }
 
-//make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
+// make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated
 func copySeq(seq []dna.Base) []dna.Base {
 	original := make([]dna.Base, len(seq))
 	copy(original, seq)
 	return original
 }
 
-//make fastas based off of node and random sequence
+// make fastas based off of node and random sequence
 func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string, deletions bool) {
 	var length float64
 	var seq []dna.Base

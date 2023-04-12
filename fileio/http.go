@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"net/http"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // EasyHttp will fetch data from files uploaded to an internet server and stream data into EasyReader

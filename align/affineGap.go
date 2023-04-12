@@ -1,17 +1,18 @@
 package align
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 //reminder that unlike constGap, affineGap is an alignment algorithm that favors having a long gap compared to multiple gaps. In the code, affineGap data structures have an additional "k" dimension, which can take on values 0,1,2 and represent the "alternative universes" of scores where the correct alignment produces Match(0), Insertion(1) and Deletion(2)
 
-//"Step 0"
-//make data structures for scoring
+// "Step 0"
+// make data structures for scoring
 // the trace data structure is a 3d slice where the first index is 0,1,2 and represents the match,
-//gap in x (first seq), and gap in y (second seq).
+// gap in x (first seq), and gap in y (second seq).
 // m used to have the same data structure as trace, but has been simplified into a 2d slice,
 // where the second index for mColumn is removed in order to recycle memory by rows
 // for lowMem4 checkerboard implementation, have 2 functions initialize Scoring
@@ -37,8 +38,8 @@ func initAffineScoring(firstSeqLen int, secondSeqLen int, checkersize_i int, che
 	return mRowCurrent, mRowPrevious, mColumn, trace_prep_i, trace_prep_j
 }
 
-//"Step 0"
-//make data structures for tracing
+// "Step 0"
+// make data structures for tracing
 func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) [][][]ColType {
 	trace_size_i := numbers.Min(firstSeqLen, checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(secondSeqLen, checkersize_j)
@@ -52,7 +53,7 @@ func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, check
 	return trace
 }
 
-//This version of AffineGap has a fixed checkersize of 10000*10000
+// This version of AffineGap has a fixed checkersize of 10000*10000
 func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	var checkersize_i, checkersize_j int
 	checkersize_i = 10000
@@ -64,7 +65,7 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 	return score_highest, route
 }
 
-//This version of AffineGap needs additional inputs and allows customization of checkersize_i and checkersize_j
+// This version of AffineGap needs additional inputs and allows customization of checkersize_i and checkersize_j
 func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int) (int64, []Cigar) { //input=same as AffineGap_step1 for now, output=route
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score,
 	//and materials needed to fill traceback and write cigar in checkerboards
@@ -140,11 +141,11 @@ func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores []
 	return score_highest, route
 }
 
-//Step 1
-//inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches,
-//penalty for opening and extending gaps in alignment, checkerboard size for row (i) and column (j)
-//outputs: highest score from the alignment, row (i) and column (j) positions of the highest score,
-//trace_prep matrices for rows (i) and columns (j)
+// Step 1
+// inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches,
+// penalty for opening and extending gaps in alignment, checkerboard size for row (i) and column (j)
+// outputs: highest score from the alignment, row (i) and column (j) positions of the highest score,
+// trace_prep matrices for rows (i) and columns (j)
 func highestScore_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int) (int64, int, int, [][][]int64, [][][]int64) {
 	//initialize data structures for getting highest score
 	mRowCurrent, mRowPrevious, mColumn, trace_prep_i, trace_prep_j := initAffineScoring(len(alpha), len(beta), checkersize_i, checkersize_j)
@@ -204,16 +205,16 @@ func highestScore_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64,
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
 
-//Step 2
-//inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches,
-//penalty for opening and extending gaps in alignment,
+// Step 2
+// inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches,
+// penalty for opening and extending gaps in alignment,
 // checkerboard size for row (i) and column (j), row (i) and column (j) positions of the highest score,
-//trace prep matrices for rows (i) and columns (j)
-//coordinates specifying the current checkerboard in rows (k1) and columns (k2), row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
-//trace matrix which was initialized in the main ConstGap function and passed back and forth to be recycled
-//outputs: trace matrix to be recycled, row (i),
-//column (j) and dimension (k) positions of inChecker_max which describe where Step 2 (fillTraceback)
-//stopped in the current checkerboard that just went through Step 2 (fillTraceback)
+// trace prep matrices for rows (i) and columns (j)
+// coordinates specifying the current checkerboard in rows (k1) and columns (k2), row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
+// trace matrix which was initialized in the main ConstGap function and passed back and forth to be recycled
+// outputs: trace matrix to be recycled, row (i),
+// column (j) and dimension (k) positions of inChecker_max which describe where Step 2 (fillTraceback)
+// stopped in the current checkerboard that just went through Step 2 (fillTraceback)
 func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][][]int64, trace_prep_j [][][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][][]ColType) ([][][]ColType, int, int, ColType) {
 	mRowCurrent := make([][]int64, 3)
 	mRowPrevious := make([][]int64, 3)
@@ -270,18 +271,18 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 	return trace, i_inChecker_max, j_inChecker_max, k_inChecker_max
 }
 
-//Step 3
-//inputs: trace matrix, row (i), column (j) and dimension (k) positions of inChecker_max_Previous
-//which describe where Step 2 (fillTraceback) stopped in the previous checkerboard that
-//just went through Step 2 (fillTraceback)
-//the growing route describing the collection of cigars of the entire alignment,
-//the index of the cigar that is currently being built, row (i), column (j)
-//and dimension (k) positions of inChecker_min_Previous which describe where Step 3 (writeCigar)
-//stopped in the previous checkerboard that just went through Step 3 (writeCigar)
-//outputs: the updated grown route describe the collection of cigars of the entire alignment,
-//the updated index of the cigar that is currently being built, row (i), column (j) and
-//dimension (k) positions of inChecker_min which describe where Step 3 (writeCigar)
-//stopped in the current checkerboard that just went through Step 3 (writeCigar)
+// Step 3
+// inputs: trace matrix, row (i), column (j) and dimension (k) positions of inChecker_max_Previous
+// which describe where Step 2 (fillTraceback) stopped in the previous checkerboard that
+// just went through Step 2 (fillTraceback)
+// the growing route describing the collection of cigars of the entire alignment,
+// the index of the cigar that is currently being built, row (i), column (j)
+// and dimension (k) positions of inChecker_min_Previous which describe where Step 3 (writeCigar)
+// stopped in the previous checkerboard that just went through Step 3 (writeCigar)
+// outputs: the updated grown route describe the collection of cigars of the entire alignment,
+// the updated index of the cigar that is currently being built, row (i), column (j) and
+// dimension (k) positions of inChecker_min which describe where Step 3 (writeCigar)
+// stopped in the current checkerboard that just went through Step 3 (writeCigar)
 func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, k_inChecker_max_Previous ColType, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, k_inChecker_min_Previous ColType) ([]Cigar, int, int, int, ColType) {
 
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int

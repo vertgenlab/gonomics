@@ -2,9 +2,10 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package.

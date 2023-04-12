@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/csv"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var VcfFormatTests = []struct {
@@ -38,7 +39,7 @@ func TestVcfFormat(t *testing.T) {
 	}
 }
 
-//TODO: better table tests
+// TODO: better table tests
 func TestVcfTable(t *testing.T) {
 	infile := "testdata/test_table.vcf"
 	outfile := "testdata/actual_table.csv"

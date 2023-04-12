@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	//"io"
 	"log"
 	"strings"
-	//"time"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type slurmCheckArray struct {
@@ -18,7 +18,7 @@ type slurmCheckArray struct {
 	end        string // whatever is after the squiggles
 }
 
-//parseTheInput parses each line of the input file
+// parseTheInput parses each line of the input file
 func parseTheInput(slurmArrayFancy string) []slurmCheckArray {
 	inFancy := fileio.EasyOpen(slurmArrayFancy)
 	var slurmArray []slurmCheckArray

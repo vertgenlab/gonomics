@@ -5,11 +5,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"math/rand"
 )
 
 func randSeq(outFile string, GC float64, numSeq int, lenSeq int, setSeed int64) {

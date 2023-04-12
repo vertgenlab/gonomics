@@ -2,10 +2,11 @@ package fileio
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // example going straight to file

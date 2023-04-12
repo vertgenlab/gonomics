@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
 )
 
 func TestIsFasta(t *testing.T) {

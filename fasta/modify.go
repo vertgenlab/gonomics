@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // Remove fasta record with index i from slice of fasta.

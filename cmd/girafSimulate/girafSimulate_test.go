@@ -1,14 +1,15 @@
 package main
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io/ioutil"
-	"testing"
 )
 
 func TestGirafSimulate(t *testing.T) {

@@ -3,9 +3,10 @@
 package dnaTwoBit
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // TwoBit is a struct that encodes DNA sequences in two-bit compressed format.

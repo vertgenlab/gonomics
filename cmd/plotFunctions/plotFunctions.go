@@ -5,11 +5,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
-	"log"
-	"strings"
 )
 
 func plotContinuousFunctions(function string, functionArgs string, left float64, right float64, bins int, outFile string) {

@@ -1,11 +1,12 @@
 package lastZWriter
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var parClose = []string{"O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}

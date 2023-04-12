@@ -2,10 +2,11 @@ package align
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"testing"
 )
 
 var affineAlignTests = []struct {

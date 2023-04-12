@@ -1,9 +1,10 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func TestFixVcf(t *testing.T) {

@@ -2,6 +2,12 @@ package genomeGraph
 
 import (
 	"bytes"
+	"io"
+	"log"
+	"math"
+	"sort"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -10,11 +16,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
-	"io"
-	"log"
-	"math"
-	"sort"
-	"sync"
 )
 
 const (
@@ -547,7 +548,7 @@ func restartSeedHelper(helper *seedHelper) {
 	helper.leftMatches = 0
 }
 
-//seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0
+// seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0
 func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
 	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)

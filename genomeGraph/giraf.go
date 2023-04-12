@@ -2,13 +2,14 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math/rand"
 )
 
 func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
@@ -95,7 +96,7 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 	return answer, alnScore, mapQ
 }
 
-//TODO: simulate indels
+// TODO: simulate indels
 func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
 	var totalBases = BasesInGraph(graph)
 	var mutationNode, mutationPos []uint32

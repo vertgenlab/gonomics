@@ -1,20 +1,21 @@
 package popgen
 
 import (
+	//"log"
+	"math"
+
 	//"fmt"
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	//"log"
-	"math"
 )
 
-//Dunn takes a region of the genome, a multiple alignment, a set of groups, and an option to realign
-//the bed region of the alignment before calculating the Dunn Index.
-//The returns are the dunn index as a float64, the number of segregating sites considered, and missing group members as a string.
-//Mathematical details of the Dunn Index are described at https://en.wikipedia.org/wiki/Dunn_index.
+// Dunn takes a region of the genome, a multiple alignment, a set of groups, and an option to realign
+// the bed region of the alignment before calculating the Dunn Index.
+// The returns are the dunn index as a float64, the number of segregating sites considered, and missing group members as a string.
+// Mathematical details of the Dunn Index are described at https://en.wikipedia.org/wiki/Dunn_index.
 func Dunn(b bed.Bed, aln []fasta.Fasta, g []*Group, realign bool) (float64, int, string) {
 	var maxIntra int = 0
 	var minInter int = 0
@@ -52,7 +53,7 @@ func Dunn(b bed.Bed, aln []fasta.Fasta, g []*Group, realign bool) (float64, int,
 	return float64(minInter) / float64(maxIntra), fasta.NumSegregatingSites(subFa), missing
 }
 
-//findMaxIntra is a helper function of Dunn that calculates the Max pairwise sequence distance between two sequences of a multiFa alignment that are part of the same Group.
+// findMaxIntra is a helper function of Dunn that calculates the Max pairwise sequence distance between two sequences of a multiFa alignment that are part of the same Group.
 func findMaxIntra(subFa []fasta.Fasta, g *Group) int {
 	var answer int = 0
 	var faI, faJ []dna.Base
@@ -70,7 +71,7 @@ func findMaxIntra(subFa []fasta.Fasta, g *Group) int {
 	return answer
 }
 
-//findMinInter is a helper function of Dunn that calculates the minimum pairwise sequence distance between two sequences of a multiFa alignment that are part of different groups.
+// findMinInter is a helper function of Dunn that calculates the minimum pairwise sequence distance between two sequences of a multiFa alignment that are part of different groups.
 func findMinInter(g []*Group, subFa []fasta.Fasta) int {
 	var answer int = math.MaxInt64
 	faMap := fasta.ToMap(subFa)

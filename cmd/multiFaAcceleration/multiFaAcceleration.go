@@ -5,16 +5,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/phylo"
-	"log"
 )
 
-//Settings contains all program arguments and options, and is passed throughout helper functions to aid readability.
+// Settings contains all program arguments and options, and is passed throughout helper functions to aid readability.
 type Settings struct {
 	InFile                     string
 	ChromName                  string
@@ -34,7 +35,7 @@ type Settings struct {
 	CavalliSforzaQ             bool
 }
 
-//Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
+// Once we have branch lengths for each valid window, we will need to normalize the values relative to each other. Thus, we store the branch lengths in this intermediate cache before writing to file.
 type BranchCache struct {
 	ChromStart int
 	ChromEnd   int
@@ -154,9 +155,9 @@ func multiFaAcceleration(s Settings) {
 	}
 }
 
-//this helper function returns true if a sufficient number of positions in the candidate window overlap the search space, as measured by non-zero values in the bitArray.
-//bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
-//the first return corresponds to the number of positions that overlap the search space.
+// this helper function returns true if a sufficient number of positions in the candidate window overlap the search space, as measured by non-zero values in the bitArray.
+// bitArray is on reference coordinates, not alignment coordinates, so the window is simply equal to windowSize.
+// the first return corresponds to the number of positions that overlap the search space.
 func thresholdCheckPasses(s Settings, currCount int, threshold int, bitArray []bool, referenceCounter int) (int, bool) {
 	if s.SearchSpaceBed == "" { //no search space file, no need to look further
 		return 0, true

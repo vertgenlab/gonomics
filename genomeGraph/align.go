@@ -2,6 +2,7 @@ package genomeGraph
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -76,7 +77,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	return currBest
 }
 
-//TODO: what about neg strand?
+// TODO: what about neg strand?
 func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {
@@ -146,7 +147,7 @@ func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	}
 }
 
-//perfect match
+// perfect match
 func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {

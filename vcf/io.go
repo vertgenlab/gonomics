@@ -2,13 +2,14 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Read parses a slice of VCF structs from an input filename. Does not store or return the header.
@@ -196,7 +197,7 @@ func FormatToString(format []string) string {
 	return answer
 }
 
-//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
+// TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
 func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {

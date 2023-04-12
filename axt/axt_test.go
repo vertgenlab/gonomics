@@ -48,7 +48,7 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
-//TODO: Finish rev. comp sequences for testing swap
+// TODO: Finish rev. comp sequences for testing swap
 func TestAxtSwap(t *testing.T) {
 	var targetLen int = 10
 	var queryLen int = 10

@@ -1,10 +1,11 @@
 package cigar
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
 )
 
 // ByteCigar struct encodes sequence comparison operations and includes run length info.
@@ -165,7 +166,7 @@ func ReverseBytesCigar(alpha []ByteCigar) {
 	}
 }
 
-//QueryLength calculates the length of the query read from a slice of Cigar structs.
+// QueryLength calculates the length of the query read from a slice of Cigar structs.
 func QueryRunLen(c []ByteCigar) int {
 	if c == nil {
 		return 0

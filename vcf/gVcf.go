@@ -2,12 +2,11 @@ package vcf
 
 import (
 	"fmt"
-	//"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-
 	//"strconv"
 	"strings"
-	//"sync"
+
+	//"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 type GVcf struct { //TODO: Uncommented for now, but this struct needs to be removed soon.
@@ -30,8 +29,8 @@ func BuildGenotypeMap(v Vcf, names map[string]int16, mapToVcf map[uint64]Vcf) ma
 	return mapToVcf
 }
 
-//tmp , this functions lives in simple graph, but import cycles are not allowed...
-//need to find a new package for this function
+// tmp , this functions lives in simple graph, but import cycles are not allowed...
+// need to find a new package for this function
 func ChromPosToUInt64(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
@@ -39,7 +38,7 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 	return answer
 }
 
-//Parse Vcf header to quickly print sample names that appear inside Vcf
+// Parse Vcf header to quickly print sample names that appear inside Vcf
 func PrintSampleNames(header Header) string {
 	var ans string = ""
 	for _, line := range header.Text {
@@ -71,7 +70,7 @@ func PhasedToString(phased bool) string {
 	}
 }
 
-//ReorderSampleColumns reorganizes the Samples slice based on a samples []int16 specification list.
+// ReorderSampleColumns reorganizes the Samples slice based on a samples []int16 specification list.
 func ReorderSampleColumns(input Vcf, samples []int16) Vcf {
 	outSamples := make([]Sample, 0, len(samples))
 	for i := 0; i < len(samples); i++ {

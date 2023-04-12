@@ -1,8 +1,9 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 var singleCellTests = []struct {

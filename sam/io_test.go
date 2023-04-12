@@ -1,13 +1,14 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var r001 = Sam{

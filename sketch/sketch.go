@@ -8,7 +8,6 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
-	// "golang.org/x/image/font/inconsolata"
 )
 
 func HLine(img *image.RGBA, xStart int, xEnd int, y int, col color.Color) {

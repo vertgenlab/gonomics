@@ -1,12 +1,13 @@
 package align
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
-//This version of ConstGap has a fixed checkersize of 10000*10000
+// This version of ConstGap has a fixed checkersize of 10000*10000
 func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	var checkersize_i, checkersize_j int
 	checkersize_i = 10000
@@ -66,7 +67,7 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	return score_highest, route
 }
 
-//This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j
+// This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j
 func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, []Cigar) {
 
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
@@ -123,9 +124,9 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	return score_highest, route
 }
 
-//Step 1
-//inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches, penalty for gaps in alignment, checkerboard size for row (i) and column (j)
-//outputs: highest score from the alignment, row (i) and column (j) positions of the highest score, trace_prep matrices for rows (i) and columns (j)
+// Step 1
+// inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches, penalty for gaps in alignment, checkerboard size for row (i) and column (j)
+// outputs: highest score from the alignment, row (i) and column (j) positions of the highest score, trace_prep matrices for rows (i) and columns (j)
 func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, int, int, [][]int64, [][]int64) {
 
 	mRowCurrent := make([]int64, len(beta)+1)
@@ -177,11 +178,13 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
 
-//Step 2
-//inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches, penalty for gaps in alignment, checkerboard size for row (i) and column (j), row (i) and column (j) positions of the highest score, trace prep matrices for rows (i) and columns (j)
-//				coordinates specifying the current checkerboard in rows (k1) and columns (k2), row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
-//				trace matrix which was initialized in the main ConstGap function and passed back and forth to be recycled
-//outputs: trace matrix to be recycled, row (i) and column (j) positions of inChecker_max which describe where Step 2 (fillTraceback) stopped in the current checkerboard that just went through Step 2 (fillTraceback)
+// Step 2
+// inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches, penalty for gaps in alignment, checkerboard size for row (i) and column (j), row (i) and column (j) positions of the highest score, trace prep matrices for rows (i) and columns (j)
+//
+//	coordinates specifying the current checkerboard in rows (k1) and columns (k2), row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
+//	trace matrix which was initialized in the main ConstGap function and passed back and forth to be recycled
+//
+// outputs: trace matrix to be recycled, row (i) and column (j) positions of inChecker_max which describe where Step 2 (fillTraceback) stopped in the current checkerboard that just went through Step 2 (fillTraceback)
 func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][]ColType) ([][]ColType, int, int) {
 
 	mRowCurrent := make([]int64, len(beta)+1)
@@ -222,10 +225,12 @@ func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	return trace, i_inChecker_max, j_inChecker_max
 }
 
-//Step 3
-//inputs: trace matrix, row (i) and column (j) positions of inChecker_max_Previous which describe where Step 2 (fillTraceback) stopped in the previous checkerboard that just went through Step 2 (fillTraceback)
-//				the growing route describing the collection of cigars of the entire alignment, the index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
-//outputs: the updated grown route describine the collection of cigars of the entire alignment, the updated index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min which describe where Step 3 (writeCigar) stopped in the current checkerboard that just went through Step 3 (writeCigar)
+// Step 3
+// inputs: trace matrix, row (i) and column (j) positions of inChecker_max_Previous which describe where Step 2 (fillTraceback) stopped in the previous checkerboard that just went through Step 2 (fillTraceback)
+//
+//	the growing route describing the collection of cigars of the entire alignment, the index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
+//
+// outputs: the updated grown route describine the collection of cigars of the entire alignment, the updated index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min which describe where Step 3 (writeCigar) stopped in the current checkerboard that just went through Step 3 (writeCigar)
 func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int) ([]Cigar, int, int, int) {
 
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int
@@ -276,9 +281,9 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 	return route_updated, routeIdx, i_inChecker_min, j_inChecker_min //return the routeIdx that was updated in the loop, not the function input "routeIdx_current"
 }
 
-//Step 4
-//inputs: lengths of original sequences alpha and beta, the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the ColType (M=0,I=1,D=2) of the last cigar entry
-//outputs: the updated final route describing the collection of cigars of the entire alignment including the last cigar, the updated and index of the cigar that is currently being built
+// Step 4
+// inputs: lengths of original sequences alpha and beta, the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the ColType (M=0,I=1,D=2) of the last cigar entry
+// outputs: the updated final route describing the collection of cigars of the entire alignment including the last cigar, the updated and index of the cigar that is currently being built
 func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int, Op_end ColType) ([]Cigar, int) {
 	//Calculate the size of final runlength
 	var TotalRunLength, LastRunLength int64

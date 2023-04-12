@@ -2,11 +2,12 @@ package sam
 
 import (
 	"fmt"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"log"
-	"math"
 )
 
 // InsertionType encodes the insertion genotype state, which can be one of the four constant values explained below.

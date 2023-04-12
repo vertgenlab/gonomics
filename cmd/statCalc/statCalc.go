@@ -5,14 +5,15 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/popgen"
-	"log"
-	"math/rand"
-	"strings"
 )
 
 func statCalc(s Settings) {
@@ -211,7 +212,7 @@ func statCalc(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-//kills the program if multiple options are selected.
+// kills the program if multiple options are selected.
 func MultipleOptionErrorCheck(Normal string, Binomial string, Poisson string, Beta string, Gamma string, SampleAfs string, SampleBeta string, SampleGamma string, SampleNormal string) {
 	var count int = 0
 	if Normal != "" {

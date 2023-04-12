@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"flag"
-	"github.com/vertgenlab/gonomics/exception"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -11,6 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 //go:embed command_cache.txt

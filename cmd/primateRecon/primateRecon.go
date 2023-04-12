@@ -5,12 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
-	"log"
 )
 
 // likelihoodsToBaseUnbiased takes the un-normalized likelihoods for A, C, G, T as well

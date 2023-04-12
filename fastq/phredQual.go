@@ -1,9 +1,10 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"math"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
 )
 
 // SAM format uses ascii offset of 33 to make everything start with individual characters
@@ -27,7 +28,7 @@ func ToQual(qual []byte) []uint8 {
 	return answer
 }
 
-//qualScore
+// qualScore
 func ReverseQualUint8Record(qualScore []uint8) {
 	var i, off int
 	for i = len(qualScore)/2 - 1; i >= 0; i-- {

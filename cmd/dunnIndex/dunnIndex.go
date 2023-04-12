@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/popgen"
-	"log"
 )
 
 func dunnIndex(bedFile string, alnFile string, groupFileName string, realign bool, outFile string) {

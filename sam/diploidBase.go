@@ -1,11 +1,12 @@
 package sam
 
 import (
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"log"
-	"math"
 )
 
 type DiploidBase byte
@@ -54,7 +55,7 @@ func diploidBaseString(base DiploidBase) string {
 	return ""
 }
 
-//DiploidBaseCallFromPile determines which of 10 DiploidBase genotypes
+// DiploidBaseCallFromPile determines which of 10 DiploidBase genotypes
 // are present at the position of an input Pile, preconditioned on the assumption of
 // a diploid base at that position (in other words, not considering INDELs).
 // epsilon represents the error rate, a parameter for the likelihood function.

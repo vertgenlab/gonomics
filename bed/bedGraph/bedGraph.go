@@ -2,12 +2,13 @@ package bedGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // BedGraph stores information about genomic regions, including their location and an associated float DataValue.
@@ -24,7 +25,7 @@ func ToString(b BedGraph) string {
 	return fmt.Sprintf("%s\t%d\t%d\t%g", b.Chrom, b.ChromStart, b.ChromEnd, b.DataValue)
 }
 
-//Write writes a slice of BedGraph structs to a specified filename.
+// Write writes a slice of BedGraph structs to a specified filename.
 func Write(filename string, records []BedGraph) {
 	var err error
 	file := fileio.EasyCreate(filename)
@@ -70,7 +71,7 @@ func processBedGraphLine(line string) BedGraph {
 	return BedGraph{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, DataValue: dataValue}
 }
 
-//NextBedGraph returns a BedGraph struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
+// NextBedGraph returns a BedGraph struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
 func NextBedGraph(reader *fileio.EasyReader) (BedGraph, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	if done {
@@ -79,7 +80,7 @@ func NextBedGraph(reader *fileio.EasyReader) (BedGraph, bool) {
 	return processBedGraphLine(line), false
 }
 
-//ReadToChan reads from a fileio.EasyReader to send BedGraph structs to a chan<- BedGraph.
+// ReadToChan reads from a fileio.EasyReader to send BedGraph structs to a chan<- BedGraph.
 func ReadToChan(file *fileio.EasyReader, data chan<- BedGraph, wg *sync.WaitGroup) {
 	for curr, done := NextBedGraph(file); !done; curr, done = NextBedGraph(file) {
 		data <- curr
@@ -89,7 +90,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- BedGraph, wg *sync.WaitGrou
 	wg.Done()
 }
 
-//GoReadToChan reads BedGraph entries from an input filename to a <-chan BedGraph.
+// GoReadToChan reads BedGraph entries from an input filename to a <-chan BedGraph.
 func GoReadToChan(filename string) <-chan BedGraph {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup

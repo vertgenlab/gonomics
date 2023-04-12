@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func writeTableHeader(outfile io.Writer, header vcf.Header, maxAlts int) (infoOrder []vcf.InfoHeader, formatOrder []vcf.FormatHeader) {

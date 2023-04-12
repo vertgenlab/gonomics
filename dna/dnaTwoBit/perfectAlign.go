@@ -1,9 +1,10 @@
 package dnaTwoBit
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/bits"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int {
