@@ -19,9 +19,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - uses: ./.github/workflows/lint.yml
-        with:
-          GOLANG: ${{ env.GOLANG }}
       - name: go fmt
         run: go fmt ./...
       - name: go fmt simplify
@@ -30,6 +27,10 @@ jobs:
         run: gofmt -s -w ./*/*/*.go
       - name: go fmt simplify cmd
         run: gofmt -s -w ./cmd/*/*.go
+      - name: Setup lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+      - name: Lint and automate clean
+        run: golangci-lint run ./... --fix
       - name: Check for modified files
         id: git-check
         run: echo "{modified}={$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)}" >> $GITHUB_OUTPUT
