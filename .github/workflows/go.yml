@@ -36,6 +36,7 @@ jobs:
           git config user.name "$(git log -n 1 --pretty=format:%an)"
           git config user.email "$(git log -n 1 --pretty=format:%ae)"
           if [[ $(git diff-index --quiet HEAD --) == "" ]]; then
+            go test ./...
             git add -A
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
             git commit -am "style: automated go lint ./... && go fmt ./..."
