@@ -77,6 +77,7 @@ func getSrc() string {
 	godefault := os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
 	currwd, err := os.Getwd()
 	exception.PanicOnErr(err)
+	currwdBase := strings.Split(currwd, "/gonomics/")[0] + "/gonomics"
 
 	switch {
 	case cachedSrcPath != "" && tryPathDir(cachedSrcPath):
@@ -91,16 +92,19 @@ func getSrc() string {
 	case tryPathDir(currwd):
 		expectedPath = currwd
 
+	case tryPathDir(currwdBase):
+		expectedPath = currwdBase
+
 	default:
 		files := new(strings.Builder)
-		dir, _ := ioutil.ReadDir(currwd)
+		dir, _ := ioutil.ReadDir(currwdBase)
 		for _, file := range dir {
 			files.WriteString(file.Name() + "\n")
 		}
-		log.Fatalf("ERROR: could not find gonomics cmd folder in any of the following locations\n%s\n%s\n%s\n%s\n"+
+		log.Fatalf("ERROR: could not find gonomics cmd folder in any of the following locations\n%s\n%s\n%s\n%s\n%s\n"+
 			"Please use the '-setpath' flag followed by the path to the gonomics directory\n"+
 			"Subsequent calls of the gonomics command will not require the '-setpath' flag\n"+
-			"\n\nDEBUG ONLY: FILES IN WD\n%s", cachedSrcPath, gopath, godefault, currwd, files.String())
+			"\n\nDEBUG ONLY: FILES IN WD\n%s", cachedSrcPath, gopath, godefault, currwd, currwdBase, files.String())
 	}
 	return expectedPath
 }
