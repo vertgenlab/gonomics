@@ -50,10 +50,8 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-        env:
-          GOPATH: ${{ github.workspace }}
       - name: go root
-        run: echo $GOROOT
+        run: echo $GOROOT && echo $GOPATH
       - name: Download and verify all gonomics dependencies and modules
         run: go mod download && go mod verify
       - name: Building binaries executables
