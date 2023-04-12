@@ -40,13 +40,14 @@ jobs:
   cicd:
     strategy:
       matrix:
-        go-version: [1.18]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
+        with:
+          go-version: '1.18'
 
       - name: Verify dependencies
         run: go mod verify
