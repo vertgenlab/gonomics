@@ -8,38 +8,29 @@ on:
 
 jobs:
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.18'
-      - name: Build
-        run:
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-          go build ./...
-
-  test:
+  cicd:
     strategy:
       matrix:
         go-version: [1.18]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
-        with:
-          go-version: '1.18'
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Install
+        run: go install ./...
+
+      - name: Build
+        run: go build ./...
+
       - name: Test
-        run: |
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
-          go install ./... &&
-          go test ./...
+        run: go test ./...
+
   format:
     runs-on: ubuntu-latest
     steps:
@@ -64,6 +55,7 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git commit -am "Automated go fmt"
           git push
+
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -75,9 +67,6 @@ jobs:
           go-version: '1.18'
       - name: Run coverage
         run:
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
           go install ./... &&
           go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage to Codecov
