@@ -19,6 +19,9 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
+      - uses: ./.github/workflows/lint.yml
+        with:
+          GOLANG: ${{ env.GOLANG }}
       - name: go fmt
         run: go fmt ./...
       - name: go fmt simplify
