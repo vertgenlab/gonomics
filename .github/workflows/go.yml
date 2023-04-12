@@ -36,7 +36,7 @@ jobs:
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "fix: automated go fmt ./..."
+          git commit -am "style: automated go fmt ./..."
           git push
 
   gitactions:
@@ -62,7 +62,7 @@ jobs:
         if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
         run: go test ./...
       - name: Coverage
-        if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
+        if: matrix.OS == 'ubuntu-latest'
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload
         if: matrix.OS == 'ubuntu-latest'
