@@ -52,37 +52,15 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - name: Verify dependencies
-        run: go mod verify
-      - name: Build Binaries
+      - name: Download and verift all gonomics dependencies and modules
+        run: go mod download && go mod verify
+      - name: Building binaries executables
         run: go build ./...
-      - name: Installing binaries into $GOBIN
+      - name: Installing binaries into GOBIN
         run: go install ./...
       - name: Test
+        if: ${{ matrix.OS }} == ubuntu-latest
         run: go test ./...
       - name: Coverage
+        if: ${{ matrix.OS }} == ubuntu-latest
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
-
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GOLANG }}
-      - name: Build Binaries
-        run: go build ./...
-      - name: Installing binaries into $GOBIN
-        run: go install ./...
-      - name: Test
-        run: go test ./...
-      - name: coverage
-        run: go test -coverprofile=coverage.txt -covermode=atomic ./...
-      - name: Upload
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-          files: coverage.txt
-          verbose: true
