@@ -6,17 +6,23 @@ on:
   pull_request:
     branches: main
 
+env:
+  IMAGE_REPO_ROOT: ${{ github.event.repository.name }}
+  GOLANG: 1.18
+  GO_SETUP: actions/setup-go@v4
+  GIT_CHECKOUT: actions/checkout@v3
+
 jobs:
 
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: ${{ env.GIT_CHECKOUT }}
         with:
           ref: ${{ github.head_ref }}
-      - uses: actions/setup-go@v4
+      - uses: ${{ env.GO_SETUP }}
         with:
-          go-version: '1.18'
+          go-version: ${{ env.GOLANG }}
       - name: go fmt
         run: go fmt ./...
       - name: go fmt simplify
@@ -44,30 +50,29 @@ jobs:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: ${{ env.GIT_CHECKOUT }}
+      - uses: ${{ env.GO_SETUP }}
         with:
-          go-version: '1.18'
+          go-version: ${{ env.GOLANG }}
+
       - name: Verify dependencies
         run: go mod verify
-      - name: Build
+      - name: Build Binaries
         run: go build ./...
-      - name: Install
+      - name: Install compiled binaries into GOBIN
         run: go install ./...
 
   test:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: ${{ env.GIT_CHECKOUT }}
+      - uses: ${{ env.GO_SETUP }}
         with:
-          go-version: '1.18'
-      - name: Build
+          go-version: ${{ env.GOLANG }}
+      - name: Build Binaries
         run: go build ./...
-      - name: Install
-        run: go install ./...
-      - name: Install
+      - name: Install compiled binaries into GOBIN
         run: go install ./...
       - name: Test
         run: go test ./...
@@ -78,5 +83,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
-          files: /home/runner/go/src/github.com/vertgenlab/gonomics/coverage.txt
+          files: coverage.txt
           verbose: true
