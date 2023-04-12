@@ -59,13 +59,10 @@ jobs:
       - name: Install
         run: go install ./...
       - name: Test
-        if: matrix.OS == 'ubuntu-latest'
         run: go test ./...
       - name: Coverage
-        if: matrix.OS == 'ubuntu-latest'
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload
-        if: matrix.OS == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
