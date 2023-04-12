@@ -9,6 +9,7 @@ on:
 env:
   IMAGE_REPO_ROOT: ${{ github.event.repository.name }}
   GOLANG: 1.18
+  GIT_SETUP: go@v4
 
 jobs:
 
@@ -18,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-${{ env.GIT_SETUP }}
         with:
           go-version: ${{ env.GOLANG }}
       - name: go fmt
@@ -51,7 +52,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: actions/setup-go@v4
+          go-version: ${{ env.GOLANG }}
 
       - name: Verify dependencies
         run: go mod verify
@@ -67,7 +68,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: actions/setup-go@v4
+          go-version: ${{ env.GOLANG }}
       - name: Build Binaries
         run: go build ./...
       - name: Install compiled binaries into GOBIN
