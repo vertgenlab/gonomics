@@ -42,16 +42,11 @@ jobs:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
-    env:
-      GOPATH: ${{ github.workspace }}
-    defaults:
-      run:
-        working-directory: ${{ env.GOPATH }}/src/github.com/vertgenlab/${{ github.repository }}
 
     steps:
       - uses: actions/checkout@v3
         with:
-          path: ${{ env.GOPATH }}/src/github.com/vertgenlab/${{ github.repository }}
+          path: ${{ github.workspace }}/src/github.com/vertgenlab/${{ github.repository }}
       - uses: actions/setup-go@v4
         with:
           go-version: '1.18'
