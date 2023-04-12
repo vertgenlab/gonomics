@@ -71,20 +71,9 @@ jobs:
         run: go install ./...
       - name: Test
         run: go test ./...
-
-  coverage:
-    needs: [build, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.18'
-      - name: Run coverage
-        run: go install ./... && go test -coverprofile=coverage.txt -covermode=atomic ./...
-      - name: Upload coverage to Codecov
+      - name: coverage
+        run: go test -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Upload
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
