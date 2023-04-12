@@ -56,7 +56,7 @@ jobs:
         run: go install ./...
 
   test:
-    needs: [format, build]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -73,7 +73,7 @@ jobs:
         run: go test ./...
 
   coverage:
-    needs: [format, build, test]
+    needs: [build, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
