@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
@@ -8,7 +10,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
 )
 
 func convertChains(chainFile, targetFa, queryFa, format, output string) {

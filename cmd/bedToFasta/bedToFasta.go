@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 func bedToFasta(fastaFile string, bedFile string, outfile string, revComp bool) {

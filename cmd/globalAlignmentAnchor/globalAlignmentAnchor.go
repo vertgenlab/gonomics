@@ -5,6 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -12,9 +16,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/maf"
-	"io"
-	"log"
-	"strings"
 )
 
 // helper function: write to tsv file

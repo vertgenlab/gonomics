@@ -1,10 +1,11 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
 )
 
 // Metadata stores semi-parsed header data with several explicitly

@@ -1,12 +1,13 @@
 package wig
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	//DEBUG: "fmt"
 	"math/rand"
 	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 //isEqual returns true if two Wig data structures contain the exact same data and returns false otherwise.

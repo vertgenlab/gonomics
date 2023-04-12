@@ -1,12 +1,13 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math"
 	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 //McmcTrace is a general struct for Mcmc trace output. Used for discarding burn-in and calculating the mean and credible interval.

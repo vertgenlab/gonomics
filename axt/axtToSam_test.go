@@ -2,10 +2,11 @@ package axt
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	"testing"
 )
 
 func TestSamFileConvert(t *testing.T) {

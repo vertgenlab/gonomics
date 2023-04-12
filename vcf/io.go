@@ -2,13 +2,14 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Read parses a slice of VCF structs from an input filename. Does not store or return the header.

@@ -1,14 +1,15 @@
 package popgen
 
 import (
+	"log"
+	"math"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"math"
-	"strings"
 )
 
 /*

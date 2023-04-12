@@ -1,9 +1,10 @@
 package genomeGraph
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
-	"testing"
 )
 
 func TestGetSortOrder(t *testing.T) {

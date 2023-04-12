@@ -6,11 +6,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/tree"
 	"image"
 	"image/png"
 	"log"
 	"os"
+
+	"github.com/vertgenlab/gonomics/tree"
 )
 
 //drawNewickTree takes in a newick file and returns a png of the newick tree, where the image's width and height are as specified, or default to 1500

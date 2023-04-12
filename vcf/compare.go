@@ -1,11 +1,12 @@
 package vcf
 
 import (
-	//"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"sort"
 	"strings"
+
+	//"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 const debugMode = 0 //set debugMode to 1 to enable prints

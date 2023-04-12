@@ -1,12 +1,13 @@
 package interval
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 func TestQuery(t *testing.T) {

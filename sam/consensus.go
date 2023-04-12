@@ -2,6 +2,7 @@ package sam
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 )

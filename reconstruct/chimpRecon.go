@@ -1,9 +1,10 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 //ChimpRecon is like QuickPrimateRecon but returns a chimp-biased ancestor estimate from an input multiFa in the order Human-Bonobo-Chimp-Orangutan-Gorilla.

@@ -1,9 +1,10 @@
 package align
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 //This version of ConstGap has a fixed checkersize of 10000*10000

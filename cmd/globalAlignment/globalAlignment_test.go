@@ -1,11 +1,12 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"testing"
 )
 
 //initiate fake fasta files for testing the graph function

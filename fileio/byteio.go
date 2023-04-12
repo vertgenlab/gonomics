@@ -6,12 +6,13 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 const (

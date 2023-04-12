@@ -1,10 +1,11 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	//	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 type SeedDev struct {

@@ -2,6 +2,12 @@ package genomeGraph
 
 import (
 	"bytes"
+	"io"
+	"log"
+	"math"
+	"sort"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
@@ -10,11 +16,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
-	"io"
-	"log"
-	"math"
-	"sort"
-	"sync"
 )
 
 const (

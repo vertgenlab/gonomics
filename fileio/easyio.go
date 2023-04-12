@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // EasyReader provides a simplified wrapper of the builtin golang io functions.

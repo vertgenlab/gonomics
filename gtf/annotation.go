@@ -2,10 +2,11 @@ package gtf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // VariantToAnnotation generates an annotation which can be appended to the INFO field of a VCF

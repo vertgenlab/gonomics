@@ -3,13 +3,14 @@ package sam
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/vertgenlab/gonomics/bgzf"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/bgzf"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // BamWriter wraps a bgzf.BlockWriter and provides functions to write

@@ -5,13 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"sync"
 )
 
 func usage() {

@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //BinGenomeNoBreaks takes in an entire genome which is sorted largest to smallest contig and breaks up the fasta so

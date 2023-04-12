@@ -5,11 +5,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // MustCreate creates a file with the input name.

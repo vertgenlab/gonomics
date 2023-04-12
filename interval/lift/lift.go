@@ -1,14 +1,15 @@
 package lift
 
 import (
+	"io"
+	"log"
+	"path"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"io"
-	"log"
-	"path"
 )
 
 // Lift is an interface for genomic regions. Unlike interval, Lifts can be edited in place.

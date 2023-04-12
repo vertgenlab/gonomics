@@ -1,9 +1,10 @@
 package vcf
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"testing"
 	//DEBUG: "fmt"
 )
 

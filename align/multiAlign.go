@@ -2,9 +2,10 @@ package align
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"math"
 )
 
 func fastaListToIndividualGroups(records []fasta.Fasta) [][]fasta.Fasta {

@@ -5,9 +5,10 @@ package cigar
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"log"
 	"unicode"
+
+	"github.com/vertgenlab/gonomics/common"
 )
 
 // Cigar contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.

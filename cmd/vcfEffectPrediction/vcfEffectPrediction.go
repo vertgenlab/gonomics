@@ -5,15 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"strings"
-	"sync"
 )
 
 type Settings struct {

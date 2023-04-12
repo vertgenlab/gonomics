@@ -1,12 +1,13 @@
 package interval
 
 import (
+	"path"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"path"
 )
 
 func GoReadToChan(inputFile string) <-chan Interval {

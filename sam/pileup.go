@@ -2,10 +2,11 @@ package sam
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
 )
 
 // Pile stores the number of each base observed across multiple reads.

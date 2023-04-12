@@ -3,10 +3,11 @@ package sort
 import (
 	"container/heap"
 	"encoding/gob"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 type heapBuf []any

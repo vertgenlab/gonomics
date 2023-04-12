@@ -2,10 +2,11 @@ package axt
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
 )
 
 // ToVcfFile takes a

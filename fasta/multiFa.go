@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.

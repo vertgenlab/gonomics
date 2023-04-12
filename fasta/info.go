@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
 )
 
 // IsFasta returns true if the input filename has a fasta file extension.

@@ -1,9 +1,10 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 const debugMode = 0 //set debugMode to 1 to enable prints

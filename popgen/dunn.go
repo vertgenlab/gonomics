@@ -1,14 +1,15 @@
 package popgen
 
 import (
+	//"log"
+	"math"
+
 	//"fmt"
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	//"log"
-	"math"
 )
 
 //Dunn takes a region of the genome, a multiple alignment, a set of groups, and an option to realign

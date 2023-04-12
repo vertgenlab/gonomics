@@ -2,8 +2,9 @@ package lift
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 //OverlapCount returns the number of elements from list one that have any overlap with list two. Answers range from 0 to len(a).

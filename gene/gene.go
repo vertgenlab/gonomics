@@ -2,6 +2,7 @@ package gene
 
 import (
 	"errors"
+
 	"github.com/vertgenlab/gonomics/dna"
 )
 

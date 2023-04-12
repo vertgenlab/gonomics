@@ -3,11 +3,12 @@ package expandedTree
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"strconv"
-	"strings"
 )
 
 //Tree structure for simulation and reconstruction

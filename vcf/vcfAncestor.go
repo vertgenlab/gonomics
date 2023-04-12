@@ -2,9 +2,10 @@ package vcf
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"strings"
 )
 
 //AppendAncestor adds the ancestral allele state (defined by input bases) to the INFO column of a vcf entry.

@@ -2,6 +2,7 @@ package fastq
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"io"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // incrementWindowEdge takes two aligned fasta sequences and a current index into the alignment.

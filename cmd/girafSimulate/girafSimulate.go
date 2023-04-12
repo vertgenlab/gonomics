@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 )
 
 func girafSimulate(graph *genomeGraph.GenomeGraph, numReads int, readLen int, randSeed int64, numSomaticSNV int, AlleleFrequency float64, outFile string, outputSam bool) {

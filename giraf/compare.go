@@ -1,9 +1,10 @@
 package giraf
 
 import (
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"strings"
 )
 
 func isEqual(a *Giraf, b *Giraf) bool {

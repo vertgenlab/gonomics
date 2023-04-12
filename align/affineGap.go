@@ -1,9 +1,10 @@
 package align
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 //reminder that unlike constGap, affineGap is an alignment algorithm that favors having a long gap compared to multiple gaps. In the code, affineGap data structures have an additional "k" dimension, which can take on values 0,1,2 and represent the "alternative universes" of scores where the correct alignment produces Match(0), Insertion(1) and Deletion(2)

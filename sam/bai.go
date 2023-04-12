@@ -3,11 +3,12 @@ package sam
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // bai files are an index format for bam files

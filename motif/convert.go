@@ -1,11 +1,12 @@
 package motif
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"math"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 // PfmToPpm creates a position probability matrix from an input position frequency matrix.

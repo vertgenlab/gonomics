@@ -3,15 +3,16 @@ package chain
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"strings"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
-	"log"
-	"strings"
-	"sync"
 )
 
 //Chain alignment fields.

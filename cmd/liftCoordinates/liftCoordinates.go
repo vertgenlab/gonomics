@@ -5,6 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"strings"
+	"unicode/utf8"
+
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -14,10 +19,6 @@ import (
 	"github.com/vertgenlab/gonomics/interval/lift"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"io"
-	"log"
-	"strings"
-	"unicode/utf8"
 )
 
 type Settings struct {

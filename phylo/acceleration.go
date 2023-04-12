@@ -1,11 +1,12 @@
 package phylo
 
 import (
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math"
 )
 
 //AccelDistancesAndWeights represents a set of all observed pairwise distances between the four species used for acceleration analysis.

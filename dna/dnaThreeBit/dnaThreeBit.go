@@ -1,9 +1,10 @@
 package dnaThreeBit
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // ThreeBit is a struct to represent long DNA sequences in a memory efficient format

@@ -1,10 +1,11 @@
 package chain
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 //TODO: Will move to the overlap interface once we have that set up, essentially all the functions

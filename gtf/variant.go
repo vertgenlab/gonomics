@@ -3,11 +3,12 @@ package gtf
 import (
 	"errors"
 	"fmt"
+	"math"
+	"reflect"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
-	"math"
-	"reflect"
 )
 
 type vcfEffectPrediction struct {

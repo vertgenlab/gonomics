@@ -1,8 +1,9 @@
 package numbers
 
 import (
-	"golang.org/x/exp/constraints"
 	"log"
+
+	"golang.org/x/exp/constraints"
 )
 
 // Max returns the maximum of two input values of an ordered type

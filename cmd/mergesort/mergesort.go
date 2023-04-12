@@ -5,6 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"path"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -13,9 +17,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/sort"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"path"
-	"strings"
 )
 
 func usage() {

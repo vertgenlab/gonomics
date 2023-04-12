@@ -2,12 +2,13 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/giraf"
-	"log"
-	"testing"
 )
 
 // TestGraph Structure
