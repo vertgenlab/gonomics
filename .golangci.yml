@@ -1,0 +1,15 @@
+linters:
+  disable-all: true
+  fast: false
+  enable:
+    - decorder
+    - errcheck
+    - gci
+    - godox
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - typecheck
+    - unused
