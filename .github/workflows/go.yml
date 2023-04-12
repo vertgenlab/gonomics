@@ -34,7 +34,7 @@ jobs:
           git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
           git config --global user.name "AutoFmt Bot"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "Automated go fmt"
+          git commit -am "fix: automated go fmt on all files"
           git push
 
   cicd:
@@ -53,16 +53,10 @@ jobs:
 
       - name: Build
         run:
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
           go build ./...
 
       - name: Test
         run: |
-          mkdir --parents /home/runner/go/src/github.com/vertgenlab/ &&
-          cp -r ../gonomics /home/runner/go/src/github.com/vertgenlab/ &&
-          cd /home/runner/go/src/github.com/vertgenlab/gonomics &&
           go install ./... &&
           go test ./...
 
