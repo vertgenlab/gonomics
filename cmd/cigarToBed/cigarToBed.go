@@ -79,7 +79,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	//raven's note: ConstGap is a function in align/linearGap.go, with only constant gapPen (gap penalty)
 	//bestScore, aln := align.ConstGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -430)
 	//fmt.Printf("Alignment score is %d, cigar is %v \n", bestScore, aln)
-	//raven's edit: try AffineGap in align/affineGap.go, with diffrent gapOpen and gapExtend penalty, since gapExtend<gapOpen, encourages big gap in order to align better in unbroken chunks
+	//raven's edit: try AffineGap in align/affineGap.go, with different gapOpen and gapExtend penalty, since gapExtend<gapOpen, encourages big gap in order to align better in unbroken chunks
 	bestScore, aln := align.AffineGap(faOne.Seq, faTwo.Seq, align.HumanChimpTwoScoreMatrix, -600, -150)
 	fmt.Printf("Using AffineGap, Alignment score is %d, cigar is %v \n", bestScore, aln)
 

@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-//coordinate is a chrom/pos pair, refering to a specific place in the genome.
+//coordinate is a chrom/pos pair, referring to a specific place in the genome.
 type coordinate struct {
 	Chr string
 	Pos int

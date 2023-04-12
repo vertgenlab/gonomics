@@ -8,7 +8,7 @@ import (
 
 func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, left bool, right bool) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
-	//check to see if begining is at index zero, if so do something like SeedDev.Prev
+	//check to see if beginning is at index zero, if so do something like SeedDev.Prev
 	//if newStart < 0
 	if left {
 		for ; newTStart >= 0 && newQStart >= 0 && (gg.Nodes[seed.TargetId].Seq[newTStart] == read.Seq[newQStart]); newTStart, newQStart = newTStart-1, newQStart-1 {

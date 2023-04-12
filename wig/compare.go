@@ -73,7 +73,7 @@ func SortByCoord(w []Wig) {
 }
 
 // Pearson calculates the Pearson Correlation Coefficient between two input wig slices. Data values equal to the 'missing' value are ignored.
-// samplingFrequency is a number between 0 and 1. This represents the proportion of bases that are considered for evaulating the PCC.
+// samplingFrequency is a number between 0 and 1. This represents the proportion of bases that are considered for evaluating the PCC.
 func Pearson(alpha []Wig, beta []Wig, missing float64, samplingFrequency float64) float64 {
 	var a = make([]float64, 0)
 	var b = make([]float64, 0)

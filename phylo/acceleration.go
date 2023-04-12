@@ -26,7 +26,7 @@ type AccelDistancesAndWeights struct {
 	WgorOrang   float64
 }
 
-//AccelBranchLengths represents the set of branch lengths corresponding to a particular distance matrix used for acceleration analysis on a 4-species alingment.
+//AccelBranchLengths represents the set of branch lengths corresponding to a particular distance matrix used for acceleration analysis on a 4-species alignment.
 type AccelBranchLengths struct {
 	BhumHca   float64
 	BchimpHca float64

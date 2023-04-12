@@ -37,7 +37,7 @@ func bedFormat(s Settings) {
 	out := fileio.EasyCreate(s.OutFile)
 
 	if s.EnsemblToUCSC && s.UCSCToEnsembl {
-		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
+		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatible.")
 	}
 	if s.ChromSizeFile == "" && (s.EvenPadLength > 0 || s.UpstreamPadLength > 0 || s.DownstreamPadLength > 0) {
 		log.Fatalf("Must specify a chromFile to use a padLength option.")

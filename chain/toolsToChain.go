@@ -8,7 +8,7 @@ import (
 )
 
 //TODO: Will move to the overlap interface once we have that set up, essentially all the functions
-//if target bool is true, we select the target/refernce regions, if target bool is false we use the query
+//if target bool is true, we select the target/references regions, if target bool is false we use the query
 func OverlapChainBed(alpha Chain, beta bed.Bed, checkTarget bool) bool {
 	if checkTarget {
 		return targetOverlap(alpha, beta)

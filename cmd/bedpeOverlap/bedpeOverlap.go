@@ -256,7 +256,7 @@ func main() {
 		log.Fatalf("Error: overlap threshold must be between 0 and 1")
 	}
 
-	//should no longer be needed when overlapThresholdBedPe is implimented
+	//should no longer be needed when overlapThresholdBedPe is implemented
 	if *overlapThreshold != 0 && *bedSelect == false {
 		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
 	}

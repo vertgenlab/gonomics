@@ -94,7 +94,7 @@ func main() {
 	var gtf *string = flag.String("gtf", "", "Gtf/Gff file with coordinates corresponding to the input Fasta file. \nNote: Row order of Gtf file must match UCSC Genome Browser style.")
 	var threads *int = flag.Int("threads", 1, "Number of threads to use. \nNote: if >1 thread is used, the order of output Vcf may not match the input Vcf.")
 	var allTranscripts *bool = flag.Bool("allTranscripts", false, "Generate annotation for each transcript isoform. Default only annotates for the canonical transcript.\n"+
-		"Note: Cannonical transcript will always be reported first, predictions for additional transcripts are appended to the \"GoEP\" Info field with repeating \"| HGVS.c | HGVS.p | VariantType\"")
+		"Note: Canonical transcript will always be reported first, predictions for additional transcripts are appended to the \"GoEP\" Info field with repeating \"| HGVS.c | HGVS.p | VariantType\"")
 	flag.Parse()
 
 	var expectedNumArgs int = 2

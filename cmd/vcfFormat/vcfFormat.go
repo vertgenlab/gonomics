@@ -17,7 +17,7 @@ import (
 
 func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string, clearInfo bool, tableOutput bool) {
 	if ensemblToUCSC && UCSCToEnsembl {
-		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
+		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatible.")
 	}
 
 	var maxAlts int

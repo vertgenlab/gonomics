@@ -164,7 +164,7 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 
 func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	//if len(seq) >= extension {
-	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
+	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
 	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
@@ -200,7 +200,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 
 func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	//if len(seq) >= extension {
-	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
+	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
 	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]

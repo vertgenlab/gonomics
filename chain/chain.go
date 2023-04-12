@@ -154,12 +154,12 @@ func WriteChain(file *fileio.EasyWriter, ch Chain) {
 //ReadHeaderComments will process header comments that sometimes appear at the beginning of chain file and returns a struct.
 func ReadHeaderComments(er *fileio.EasyReader) HeaderComments {
 	var line string
-	var commments HeaderComments
+	var comments HeaderComments
 	for nextBytes, done := er.Peek(1); nextBytes[0] == '#' && done == nil; nextBytes, done = er.Peek(1) {
 		line, _ = fileio.EasyNextLine(er)
 		commments.HashTag = append(commments.HashTag, line)
 	}
-	return commments
+	return comments
 }
 
 //ToString will convert a chain struct to original string format.

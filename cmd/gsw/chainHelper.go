@@ -92,7 +92,7 @@ func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- vcf.Vcf) {
 	close(ans)
 }
 
-//FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
+//FilterVcfPos will filter out records that appear as the same position more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
 func filterVcfPos(vcfs []vcf.Vcf) []vcf.Vcf {
 	vcf.Sort(vcfs)
 	var answer []vcf.Vcf

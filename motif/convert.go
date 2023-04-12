@@ -30,7 +30,7 @@ func PfmToPpm(input PositionMatrix, pseudocount float64) PositionMatrix {
 	return answer
 }
 
-// PfmSliceToPpmSlice creates a slice of position probabilty matrices
+// PfmSliceToPpmSlice creates a slice of position probability matrices
 // from a slice of position frequency matrices.
 func PfmSliceToPpmSlice(input []PositionMatrix, pseudocount float64) []PositionMatrix {
 	var answer = make([]PositionMatrix, len(input))

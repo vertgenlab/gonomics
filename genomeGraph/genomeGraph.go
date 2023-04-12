@@ -29,7 +29,7 @@ type Node struct {
 	Next      []Edge
 } // used to have Name (string) and Info (Annotation)
 
-// Edge describes the neighboring nodes and a weighted probabilty
+// Edge describes the neighboring nodes and a weighted probability
 // of the of the more likely path
 type Edge struct {
 	Dest *Node
@@ -37,7 +37,7 @@ type Edge struct {
 }
 
 // Annotation struct is an uint64 encoding of allele id, starting position on linear reference and variant on node
-// a single byte will represent what allele the node came from, uint32 will be used for starting postion of chromosome of the linear reference
+// a single byte will represent what allele the node came from, uint32 will be used for starting position of chromosome of the linear reference
 // uint8 are variants are represented as follows: 0=match, 1=mismatch, 2=insert, 3=deletion, 4=hap
 /*type Annotation struct {
 	Start   uint32

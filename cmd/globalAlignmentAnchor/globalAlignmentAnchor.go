@@ -38,7 +38,7 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 			log.Fatalf("chrMap did not have 2 columns. Please check that in your chrMap file, each line should be formatted this way: 'species1 chr name'(tab)'species2 chr name")
 		}
 
-		chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1]) // whether or not species1 chr name already exists, append to nil or the exisitng species2 chr name slice the new species2 chr name
+		chrMap[chrMap_stringSplit[0]] = append(chrMap[chrMap_stringSplit[0]], chrMap_stringSplit[1]) // whether or not species1 chr name already exists, append to nil or the existing species2 chr name slice the new species2 chr name
 
 	}
 
@@ -153,7 +153,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	// initialize variables before loop
 	// keep track of assembly, chromosome
 	var assembly_species1, assembly_species2, chrom_species1, chrom_species2 string
-	// containers for entries to write to ouput files
+	// containers for entries to write to output files
 	var bed_species1, bed_species2 bed.Bed
 
 	// loop through input maf
@@ -232,7 +232,7 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 	pos_species2 := 1
 	// check for gapBedPass
 	var pass bool
-	// containers for entries to write to ouput files
+	// containers for entries to write to output files
 	var current_species1, current_species2 bed.Bed
 
 	// write i==0 case outside of loop to avoid checking for i==0 in each iteration
@@ -375,7 +375,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	chr_species2 := ""
 	pos_species1 := 1
 	pos_species2 := 1
-	// containers for entries to write to ouput bed files
+	// containers for entries to write to output bed files
 	var current_species1, current_species2 bed.Bed
 	// containers for alignment outputs
 	var bestScore int64

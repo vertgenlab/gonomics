@@ -23,7 +23,7 @@ func TestReadToChan(t *testing.T) {
 		index = 0
 		for each := range reader {
 			if !isEqual(each, file[index]) {
-				t.Errorf("Error: Read to chan function does not equal standard read funtion\n")
+				t.Errorf("Error: Read to chan function does not equal standard read function\n")
 			}
 			index++
 		}

@@ -21,7 +21,7 @@ func usage() {
 			"  axtSam [options] in.axt out.sam\n\n" +
 			"Options:\n\n")
 	flag.PrintDefaults()
-	fmt.Print("Comming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
+	fmt.Print("Coming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
 }
 
 func main() {

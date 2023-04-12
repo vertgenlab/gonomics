@@ -314,7 +314,7 @@ func NewHeader(name string) Header {
 	return header
 }
 
-//The other option is add everything as one string, so we don';t have to keep appending, parsing will in general be the same, but append is more consistant with how we read in line, by line.
+//The other option is add everything as one string, so we don';t have to keep appending, parsing will in general be the same, but append is more consistent with how we read in line, by line.
 /*
 var text string =
 		"##fileformat=VCFv4.2\n"+

@@ -179,7 +179,7 @@ func GoReadToChanRecycle(filename string, bufferSize int) (parsedRecords <-chan 
 		recycledStructsInit <- new(Sam)
 	}
 
-	// these values are initiated as a seperate variable so that we can have
+	// these values are initiated as a separate variable so that we can have
 	// both named return values and send/receive protected channels as the
 	// channels need to be input to the readToChan functions with reverse
 	// polarity as the returned channels.

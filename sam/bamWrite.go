@@ -271,11 +271,11 @@ func retrieveTriplet(tag string) []string {
 		return comp
 	}
 	if len(comp) < 3 {
-		log.Panicf("malformed auxilliary data '%s'", tag)
+		log.Panicf("malformed auxiliary data '%s'", tag)
 	}
 	// len is >3 so tag value likely has ":"
 	if len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
-		log.Panicf("malformed auxilliary data '%s'", tag)
+		log.Panicf("malformed auxiliary data '%s'", tag)
 	}
 	comp[2] = strings.Join(comp[2:], ":") // rejoin value component of tag
 	comp = comp[:3]
@@ -287,13 +287,13 @@ func retrieveTriplet(tag string) []string {
 // data to the input BamWriter per the Sam specifications.
 func writeTriplet(bw *BamWriter, triplet []string) {
 	if len(triplet) != 3 {
-		log.Panicf("malformed auxilliary data '%s'", strings.Join(triplet, ":"))
+		log.Panicf("malformed auxiliary data '%s'", strings.Join(triplet, ":"))
 	}
 
 	// write tag bytes
 	tag := triplet[0]
 	if len(tag) != 2 {
-		log.Panicf("auxilliary data tag must be exactly 2 characters offender:'%s'", tag)
+		log.Panicf("auxiliary data tag must be exactly 2 characters offender:'%s'", tag)
 	}
 	bw.recordBuf.WriteString(tag)
 
@@ -362,6 +362,6 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 		bw.recordBuf.WriteByte(nul)
 
 	default:
-		log.Panicf("unrecognized auxilliary data type '%s'", typ)
+		log.Panicf("unrecognized auxiliary data type '%s'", typ)
 	}
 }
