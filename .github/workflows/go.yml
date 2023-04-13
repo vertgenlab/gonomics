@@ -35,10 +35,12 @@ jobs:
         run: |
           git config user.name "$(git log -n 1 --pretty=format:%an)"
           git config user.email "$(git log -n 1 --pretty=format:%ae)"
-          git add -A
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "style: automated go lint ./... && go fmt ./..."
-          git push
+          if [[ $(git diff-index --quiet HEAD --) == "" ]]; then
+            git add -A
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git commit -am "style: automated go lint ./... && go fmt ./..."
+            git push
+          fi
   gitactions:
     needs: format
     strategy:
@@ -57,10 +59,10 @@ jobs:
       - name: Build
         run: go build ./...
       - name: Install
-        run: go install ./...
+        run: make install
       - name: Test
         if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
-        run: go test ./...
+        run: make test
       - name: Coverage
         if: matrix.OS == 'ubuntu-latest'
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
