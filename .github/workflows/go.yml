@@ -30,18 +30,15 @@ jobs:
       - name: Setup lint
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
       - name: Lint and automate clean
-        run: golangci-lint run ./... --fix
+        run: golangci-lint run ./... --fix && go test ./...
       - name: Check and push changes
         run: |
           git config user.name "$(git log -n 1 --pretty=format:%an)"
           git config user.email "$(git log -n 1 --pretty=format:%ae)"
-          if [[ $(git diff-index --quiet HEAD --) == "" ]]; then
-            go test ./...
-            git add -A
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-            git commit -am "style: automated go lint ./... && go fmt ./..."
-            git push
-          fi
+          git add -A
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git commit -am "style: automated go lint ./... && go fmt ./..."
+          git push
   gitactions:
     needs: format
     strategy:
