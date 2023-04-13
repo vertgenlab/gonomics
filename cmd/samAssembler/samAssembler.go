@@ -356,7 +356,7 @@ func usage() {
 			"Can be used in two modes: 'build' generates diploid assemblies." +
 			"'score' validates assembly accuracy with a five way alignment including the known divergent sequences" +
 			"In 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome)." +
-			"For score, type may be chosen from the following: smallBaseMatrix, baseMatrixByRefBase\n" +
+			"For score, type may be chosen from the following: baseMatrix, baseMatrixByRefBase\n" +
 			"Usage:\n" +
 			"samAssembler build individual.sam ref.fa outputA.fa outputB.fa\n" +
 			"OR\n" +

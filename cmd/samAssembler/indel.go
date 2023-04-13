@@ -8,6 +8,10 @@ import (
 	"math/rand"
 )
 
+// diploidInsertion performs insertion variant calling on an input pile. If an insertion is found, it is added to
+// the answer structs, ans and mlt.
+// The cacheStruct contains cached values for the prior and likelihood functions, and refPos is required to update the
+// appropriate positions in mlt.
 func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refPos int, s Settings) (AnswerStruct, MultiFaStruct, CacheStruct, int) {
 	var currRand = rand.Float64()
 	var i int
@@ -91,6 +95,15 @@ func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStru
 	return ans, mlt, cacheStruct, refPos
 }
 
+// diploidDeletion performs deletion variant calling on an input pile. If a deletion is found, it is added to
+// the answer mlt. The returns are in order: mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip.
+// If we have a homozygous deletion "type DaDa", we need to skip the next few piles, depending on the length of the deletion.
+// This information is returned in the variable "positionsToSkip".
+// If we have a heterozygous deletion "type DaB", we will need to treat the next few piles as haploid, depending on the deletion length.
+// This information is returned in the variable "haploidBases".
+// If we have changed from diploid to haploid for the next pile, we communicate this with the return "currPloidy"
+// The cacheStruct contains cached values for the prior and likelihood functions, and refPos is required to update the
+// appropriate positions in mlt.
 func diploidDeletion(mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refMap map[string][]dna.Base, refPos int, currChrom string, s Settings) (MultiFaStruct, CacheStruct, int, bool, int, int, int) {
 	var currDeletion = sam.DiploidDeletionCallFromPile(p, cacheStruct.DiploidIndelPriorCache, cacheStruct.HomozygousIndelCache, cacheStruct.HeterozygousIndelCache, s.Epsilon)
 	var i, currPloidy, haploidBases, positionsToSkip int
