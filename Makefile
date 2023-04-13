@@ -4,6 +4,7 @@ build:
 	docker build . -t gonomics
 
 clean: test
+	go fmt ./...
 	golangci-lint run ./... --fix
 
 install:
@@ -13,6 +14,9 @@ install:
 
 lint: test
 	golangci-lint run ./...
+
+list:
+	@grep '^[^#[:space:]].*:' Makefile
 
 test:
 	go test ./...
