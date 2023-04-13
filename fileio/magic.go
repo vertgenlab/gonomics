@@ -2,9 +2,10 @@ package fileio
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // magic number that identifies a gzip file

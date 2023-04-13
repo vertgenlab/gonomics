@@ -1,11 +1,12 @@
 package lastZWriter
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var parClose = []string{"O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000"}
@@ -61,12 +62,12 @@ func TestAlignSetUp(t *testing.T) {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parDefault[s])
 					if parMatch != 0 {
-						t.Fatalf("Defualt parameters mismatch: %v value didn't match", s)
+						t.Fatalf("Default parameters mismatch: %v value didn't match", s)
 					}
 				}
 				mMatch := strings.Compare(mat, mDefault)
 				if mMatch != 0 {
-					t.Fatal("Defualt matrix mismatch")
+					t.Fatal("Default matrix mismatch")
 				}
 			} else if rList[ref] == "refer1" && specList[species] == "name2" || rList[ref] == "refer2" && specList[species] == "name2" {
 				for s := range par {
@@ -123,12 +124,12 @@ func TestAlignSetUp2(t *testing.T) {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parDefault[s])
 					if parMatch != 0 {
-						t.Fatalf("Defualt parameters mismatch: %v value didn't match", s)
+						t.Fatalf("Default parameters mismatch: %v value didn't match", s)
 					}
 				}
 				mMatch := strings.Compare(mat, mDefaultPath)
 				if mMatch != 0 {
-					t.Fatal("Defualt matrix mismatch")
+					t.Fatal("Default matrix mismatch")
 				}
 			} else if rList[ref] == "refer1" && specList[species] == "name2" || rList[ref] == "refer2" && specList[species] == "name2" {
 				for s := range par {

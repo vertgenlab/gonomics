@@ -2,8 +2,9 @@ package sam
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 var DiploidBaseCallFromPileTests = []struct {

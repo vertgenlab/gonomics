@@ -2,9 +2,10 @@ package gene
 
 import (
 	"errors"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // Insertion adds bases to the Gene, predicts the effect, and updates the Gene struct to reflect the change.

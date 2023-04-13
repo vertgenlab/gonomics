@@ -2,10 +2,11 @@ package axt
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 )
 
 // ToSam converts an Axt record into a Sam (sam.SamAln) record

@@ -1,13 +1,14 @@
 package genomeGraph
 
 import (
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"strings"
 )
 
 func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]vcf.Vcf) *GenomeGraph {
@@ -209,8 +210,8 @@ func FaSplitByNs(fa []fasta.Fasta) []fasta.Fasta {
 }
 */
 
-//TODO move these vcf helper functions to vcf
-//new nodes are treated as insertion
+// TODO move these vcf helper functions to vcf
+// new nodes are treated as insertion
 func isINV(v vcf.Vcf) bool {
 	var truth bool = false
 	data := strings.Split(v.Info, ";")

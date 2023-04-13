@@ -1,9 +1,10 @@
 package common
 
 import (
+	"testing"
+
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
-	"testing"
 )
 
 func intContains(s []int, v int) bool {

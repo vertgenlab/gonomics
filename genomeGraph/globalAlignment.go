@@ -1,11 +1,12 @@
 package genomeGraph
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 func nmMatrixSetup(size int64) ([][]int64, [][]rune) {

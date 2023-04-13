@@ -1,11 +1,12 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // SeekBamRegion returns a slice of reads that overlap the input region. SeekBamRegion will advance the

@@ -1,8 +1,9 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // IsEqual returns true if two input Fasta structs have an equal name and sequence.

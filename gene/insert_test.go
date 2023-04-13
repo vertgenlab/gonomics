@@ -1,10 +1,11 @@
 package gene
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/gtf"
-	"testing"
 )
 
 func TestInsertion(t *testing.T) {
@@ -269,7 +270,7 @@ func TestUndoInsertion(t *testing.T) {
 	}
 }
 
-//TODO WIP
+// TODO WIP
 func TestInsertionEffectPrediction(t *testing.T) {
 	g := gtf.Read("testdata/test.gtf")
 	f := fasta.Read("testdata/test.fasta")

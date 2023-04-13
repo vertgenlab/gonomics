@@ -1,9 +1,10 @@
 package dnaThreeBit
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // RuneToThreeBitBase returns a single bases in ThreeBitBase format that corresponds to the given rune

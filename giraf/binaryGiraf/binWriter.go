@@ -3,6 +3,10 @@ package binaryGiraf
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
@@ -10,9 +14,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io"
-	"log"
-	"math"
 )
 
 // The BinWriter struct wraps the bgzf writer from the biogo repository with a bytes buffer to store encoded giraf records

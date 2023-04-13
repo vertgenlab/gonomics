@@ -3,7 +3,6 @@ package numbers
 import (
 	"math"
 	"testing"
-	//DEBUG: "fmt"
 )
 
 var definiteIntegralTests = []struct {
@@ -83,7 +82,7 @@ func BenchmarkSimpsonsLogIntegral(b *testing.B) {
 	}
 }
 
-//answer from WolframAlpha
+// answer from WolframAlpha
 var logIntegralTests = []struct {
 	f      func(float64) float64
 	a      float64
@@ -95,7 +94,7 @@ var logIntegralTests = []struct {
 	{func(x float64) float64 { return math.Log(x * x) }, 2, 11, 6.089044875},
 }
 
-//TODO: The following two functions should be deleted when LogIntegrate is phased out in favor of the adaptive simpson's implementation.
+// TODO: The following two functions should be deleted when LogIntegrate is phased out in favor of the adaptive simpson's implementation.
 func TestLogIntegral(t *testing.T) {
 	for _, test := range logIntegralTests {
 		calculated := LogIntegrate(test.f, test.a, test.b, 1000)

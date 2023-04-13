@@ -1,11 +1,12 @@
 package main
 
 import (
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/vcf"
-	"os"
-	"testing"
 )
 
 var LiftTests = []struct {

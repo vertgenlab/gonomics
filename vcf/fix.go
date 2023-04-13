@@ -1,8 +1,9 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func FixAllVcf(query []Vcf, ref map[string][]dna.Base) {

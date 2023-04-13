@@ -1,10 +1,11 @@
 package genomeGraph
 
 import (
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/sam"
-	"sync"
 )
 
 // this is just for speed testing to see how much of the speed slowdown is due to alignment time

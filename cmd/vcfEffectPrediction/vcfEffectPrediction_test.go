@@ -1,13 +1,14 @@
 package main
 
 import (
+	"strings"
+	"sync"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
-	"sync"
-	"testing"
 )
 
 func TestVcfEffectPrediction(t *testing.T) {

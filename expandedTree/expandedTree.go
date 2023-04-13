@@ -3,14 +3,15 @@ package expandedTree
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"strconv"
-	"strings"
 )
 
-//Tree structure for simulation and reconstruction
+// Tree structure for simulation and reconstruction
 type ETree struct {
 	Name         string
 	BranchLength float64
@@ -24,7 +25,7 @@ type ETree struct {
 	Up           *ETree //traversing the tree for reconstruction
 }
 
-//read tree from filename and add fastas and up pointers to the tree
+// read tree from filename and add fastas and up pointers to the tree
 func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	tr, err := ReadNewick(newickFilename)
 	if err != nil {
@@ -34,7 +35,7 @@ func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	return tr, nil
 }
 
-//read in tree from filename
+// read in tree from filename
 func ReadNewick(filename string) (*ETree, error) {
 	var singleLineTree string
 	singleLineTree = fileio.ReadFileToSingleLineString(filename)
@@ -190,7 +191,7 @@ func parseNewick(input string) (*ETree, error) {
 	return parseNewickHelper(input[:len(input)-1])
 }
 
-//tell tree what "up" is
+// tell tree what "up" is
 func SetUp(root *ETree, prevNode *ETree) {
 	if prevNode != nil {
 		root.Up = prevNode
@@ -203,7 +204,7 @@ func SetUp(root *ETree, prevNode *ETree) {
 	}
 }
 
-//set up tree with fastas
+// set up tree with fastas
 func AssignFastas(root *ETree, fastaFilename string) {
 	fastas := fasta.Read(fastaFilename)
 	SetUp(root, nil)

@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/genomeGraph"
-	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
-//TODO: View feature needs some work
+// TODO: View feature needs some work
 type ViewExe struct {
 	Cmd       *flag.FlagSet
 	GirafFile string
@@ -25,8 +26,8 @@ func helpMessage() {
 		"  help\t\tDetailed help message for any command\n")
 }
 
-//TODO: finish implementing view function.
-//it works, but we need to figure out an easy way to run the command
+// TODO: finish implementing view function.
+// it works, but we need to figure out an easy way to run the command
 func viewUsage() {
 	fmt.Printf(
 		"  view\t\tVisualize graph generated alignment\n")

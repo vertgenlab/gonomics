@@ -6,13 +6,14 @@ package wig
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
@@ -92,7 +93,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	return currentWig, doneReading
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
+// ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
 func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	for curr, done := NextWig(file); !done; curr, done = NextWig(file) {
 		data <- curr
@@ -102,7 +103,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
+// GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
 func GoReadToChan(filename string) <-chan Wig {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup

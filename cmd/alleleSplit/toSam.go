@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
 )
 
 func ASFilter(v vcf.Vcf, parentOne int16, parentTwo int16, F1 int16) bool {

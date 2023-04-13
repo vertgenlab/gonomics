@@ -1,8 +1,9 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
 )
 
 func expectedHeader() Header {

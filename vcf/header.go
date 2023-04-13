@@ -2,13 +2,14 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Header contains all of the information present in the header section of a VCF.
@@ -314,7 +315,7 @@ func NewHeader(name string) Header {
 	return header
 }
 
-//The other option is add everything as one string, so we don';t have to keep appending, parsing will in general be the same, but append is more consistant with how we read in line, by line.
+//The other option is add everything as one string, so we don';t have to keep appending, parsing will in general be the same, but append is more consistent with how we read in line, by line.
 /*
 var text string =
 		"##fileformat=VCFv4.2\n"+
@@ -351,7 +352,7 @@ func WriteMultiSamplesHeader(file io.Writer, header Header, listNames []string) 
 	}
 }
 
-//Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
+// Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
 func HeaderToMaps(header Header) *SampleHash {
 	var name string
 	var index, hapIdx int16
@@ -374,7 +375,7 @@ func HeaderToMaps(header Header) *SampleHash {
 	return hash
 }
 
-//HeaderGetSampleList returns an ordered list of the samples present in the header of a Vcf file. Useful when adding or removing samples from a VCF.
+// HeaderGetSampleList returns an ordered list of the samples present in the header of a Vcf file. Useful when adding or removing samples from a VCF.
 func HeaderGetSampleList(header Header) []string {
 	var answer []string
 	for _, line := range header.Text {
@@ -386,7 +387,7 @@ func HeaderGetSampleList(header Header) []string {
 	return answer
 }
 
-//HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a Header.
+// HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a Header.
 func HeaderUpdateSampleList(header Header, newSamples []string) Header {
 	var line string
 	for i := 0; i < len(header.Text); i++ {

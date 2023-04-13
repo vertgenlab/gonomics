@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
 )
 
 var SimulateSamTests = []struct {

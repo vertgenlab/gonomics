@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
-//Checks if two accuracy files match, even when order is not matching
+// Checks if two accuracy files match, even when order is not matching
 func accEqual(a string, b string) bool {
 	var ok = false
 	fileA := fileio.Read(a)

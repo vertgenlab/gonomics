@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-//Uses bool to compare target or query coordinates as one function
-//true is for target, false is for query
+// Uses bool to compare target or query coordinates as one function
+// true is for target, false is for query
 func compareStartCoord(a Chain, b Chain, checkTarget bool) int {
 	if checkTarget {
 		return compareTargetCoord(a, b)
@@ -73,8 +73,8 @@ func compareQueryCoord(a Chain, b Chain) int {
 	return 0
 }
 
-//true/false bool to either sort by target or query
-//true=target, false=query
+// true/false bool to either sort by target or query
+// true=target, false=query
 func SortByCoordinates(align []Chain, whichGenome bool) {
 	sort.Slice(align, func(i, j int) bool { return compareStartCoord(align[i], align[j], whichGenome) == -1 })
 }
@@ -138,7 +138,7 @@ func isEqual(a Chain, b Chain) bool {
 	return true
 }
 
-//set start true if you want to adjust the start or end to be true to adjust for the negative stand on the end
+// set start true if you want to adjust the start or end to be true to adjust for the negative stand on the end
 func getSwapTCoord(ch Chain, start bool, end bool) int {
 	if !ch.TStrand {
 		if start {
@@ -156,7 +156,7 @@ func getSwapTCoord(ch Chain, start bool, end bool) int {
 	return -1
 }
 
-//Could have one function that performs on both query and target
+// Could have one function that performs on both query and target
 func getSwapQCoord(ch Chain, start bool, end bool) int {
 	if !ch.QStrand {
 		if start {

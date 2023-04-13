@@ -1,12 +1,13 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
 )
 
 // ReconAccuracy returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
@@ -104,7 +105,7 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 }
 
 // ReconAccuracyByBase will run if the calcBaseAcc argument of ReconAccuracy = true.
-//This function calculates the percentage of first, second and third bases in codons that were correct.
+// This function calculates the percentage of first, second and third bases in codons that were correct.
 func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename string) map[string][]float64 {
 	sim := fasta.Read(simFilename)
 	rec := fasta.Read(reconFilename)
@@ -288,11 +289,11 @@ func SetState(node *expandedTree.ETree, position int) {
 	}
 }
 
-//BubbleUp calculates the final probabilities of all states in every position of the sequence at each internal node.
-//using the stored values (initial probabilities from SetState) BubbleUp recursively calculates the
-//probability on a child node based on both of the descendents of it's ancestor. If a child node is a left child,
-//BubbleUp uses the parent and right child's sequence information in Stored to compute a final probability
-//of each of the base states at the left child, then passes those new probabilities up the tree to the root
+// BubbleUp calculates the final probabilities of all states in every position of the sequence at each internal node.
+// using the stored values (initial probabilities from SetState) BubbleUp recursively calculates the
+// probability on a child node based on both of the descendents of it's ancestor. If a child node is a left child,
+// BubbleUp uses the parent and right child's sequence information in Stored to compute a final probability
+// of each of the base states at the left child, then passes those new probabilities up the tree to the root
 func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
 	tot := 0.0
 	scrapNew := []float64{0, 0, 0, 0}
@@ -322,7 +323,7 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 }
 
 // FixFc passes a node to BubbleUp so that final base probabilities can be calculated from
-//the initial values calculated in SetState
+// the initial values calculated in SetState
 func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	ans := []float64{0, 0, 0, 0}
 
@@ -342,7 +343,7 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 }
 
 // LoopNodes is called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree
-//to return most probable base at any given position for every node of the tree
+// to return most probable base at any given position for every node of the tree
 func LoopNodes(root *expandedTree.ETree, position int) {
 	internalNodes := expandedTree.GetBranch(root)
 	SetState(root, position)

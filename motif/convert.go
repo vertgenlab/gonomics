@@ -1,11 +1,12 @@
 package motif
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"math"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 // PfmToPpm creates a position probability matrix from an input position frequency matrix.
@@ -30,7 +31,7 @@ func PfmToPpm(input PositionMatrix, pseudocount float64) PositionMatrix {
 	return answer
 }
 
-// PfmSliceToPpmSlice creates a slice of position probabilty matrices
+// PfmSliceToPpmSlice creates a slice of position probability matrices
 // from a slice of position frequency matrices.
 func PfmSliceToPpmSlice(input []PositionMatrix, pseudocount float64) []PositionMatrix {
 	var answer = make([]PositionMatrix, len(input))

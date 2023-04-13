@@ -5,6 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"strings"
+	"unicode/utf8"
+
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -14,10 +19,6 @@ import (
 	"github.com/vertgenlab/gonomics/interval/lift"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"io"
-	"log"
-	"strings"
-	"unicode/utf8"
 )
 
 type Settings struct {
@@ -153,7 +154,7 @@ func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
 	return dna.CompareSeqsIgnoreCaseAndGaps(query, fetchSeq) == 0
 }
 
-//minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
+// minMatchPass returns true if the interval/chain has over a certain percent base match (minMatch argument is the proportion, default 0.95), false otherwise.
 func minMatchPass(overlap chain.Chain, i interval.Interval, minMatch float64) bool {
 	a, b := lift.MatchProportion(overlap, i)
 	if a < minMatch {

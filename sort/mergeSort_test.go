@@ -1,10 +1,11 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
 	"math/rand"
 	"sort"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func TestMergeSort(t *testing.T) {

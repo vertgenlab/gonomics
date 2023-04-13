@@ -1,12 +1,13 @@
 package gtf
 
 import (
+	"strings"
+	"testing"
+
 	// "fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
-	"testing"
 )
 
 func TestVariantToAnnotationLarge(t *testing.T) {

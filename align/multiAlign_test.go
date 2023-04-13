@@ -1,8 +1,9 @@
 package align
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 var multiAlignTests = []struct {

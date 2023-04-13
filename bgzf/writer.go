@@ -46,8 +46,7 @@ func NewWriter(w io.Writer) *Writer {
 func (w *BlockWriter) Write(p []byte) (n int, err error) {
 	w.compressor.Reset(w.zipBlock)
 
-	// ******
-	// TODO better way around this?
+	// TODO: better way around this?
 	// The gzip writer tries to write a header smartly at the time of
 	// data write, however bgzf requires custom header fields which
 	// require knowing the compressed size of the block, which can only
@@ -61,7 +60,6 @@ func (w *BlockWriter) Write(p []byte) (n int, err error) {
 	}
 	w.zipBlock.Reset() // reset written trashed header
 	// end of code block for discarding default gzip header
-	// ******
 
 	n, err = w.compressor.Write(p) // compress p into write buffer
 	if n != len(p) || err != nil {

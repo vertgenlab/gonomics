@@ -1,8 +1,9 @@
 package gene
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 var isEqualTest Gene = Gene{

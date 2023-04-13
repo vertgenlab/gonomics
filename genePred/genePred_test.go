@@ -1,8 +1,9 @@
 package genePred
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var genePred1 = GenePred{Id: "test", Chrom: "0", Strand: '+', TxStart: 0, TxEnd: 1001, CdsStart: 0, CdsEnd: 901, ExonNum: 4, ExonStarts: []int{0, 18, 500, 800}, ExonEnds: []int{3, 21, 503, 803}}

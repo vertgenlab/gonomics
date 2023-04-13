@@ -1,10 +1,11 @@
 package bedGraph
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var b1 BedGraph = BedGraph{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, DataValue: 40.5}

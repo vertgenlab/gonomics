@@ -1,12 +1,13 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
-//LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
+// LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
 func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 {
 	if a >= b {
 		log.Fatalf("logIntegrate failed, left bound must be smaller than right bound.")
@@ -109,8 +110,8 @@ func DefiniteIntegral(f func(float64) float64, start float64, end float64) float
 	return rombergsMethod(f, start, end, 1e-8, 1e-8, 30)
 }
 
-//DefiniteSmallIntegral is like DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
-//slower than DefiniteIntegral, but more accurate for small values.
+// DefiniteSmallIntegral is like DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
+// slower than DefiniteIntegral, but more accurate for small values.
 func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 0, 1e-6, 30)
 }

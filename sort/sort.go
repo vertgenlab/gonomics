@@ -3,14 +3,15 @@ package sort
 import (
 	"container/heap"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"os"
 	"sort"
 	"strconv"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
 const (
@@ -207,7 +208,7 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 	close(outputChan)
 }
 
-//TODO: should really come up with a better index format than this
+// TODO: should really come up with a better index format than this
 func writeIdx(filename string, sortOrder []uint32) {
 	idxName := filename + ".idx"
 	file := fileio.MustCreate(idxName)

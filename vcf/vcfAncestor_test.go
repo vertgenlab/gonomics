@@ -1,10 +1,10 @@
 package vcf
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"testing"
-	//DEBUG: "fmt"
 )
 
 var AncestorAlleles []dna.Base = []dna.Base{dna.A, dna.T, dna.G, dna.C, dna.A, dna.A, dna.C}
@@ -39,8 +39,8 @@ func TestVcfAppendAncestor(t *testing.T) {
 	}
 }
 
-//This test just checks whether or not a line has been added. The print statements commented out allowed me to see that it was written in the right location.
-//Although it seems like the header line order is not especially standardized, so I don't know if that part is important.
+// This test just checks whether or not a line has been added. The print statements commented out allowed me to see that it was written in the right location.
+// Although it seems like the header line order is not especially standardized, so I don't know if that part is important.
 func TestAncestorFlagToHeader(t *testing.T) {
 	_, header := GoReadToChan("testdata/Ancestor_No_Annotation.vcf")
 	before := len(header.Text)

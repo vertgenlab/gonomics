@@ -1,10 +1,11 @@
 package maf
 
 import (
+	"testing"
+
 	//"os"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 )
 
 var readWriteTests = []struct {

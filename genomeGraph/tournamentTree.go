@@ -1,11 +1,12 @@
 package genomeGraph
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 func extendToTheRight(node *Node, read fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []*SeedDev {

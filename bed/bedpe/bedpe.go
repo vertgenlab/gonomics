@@ -5,14 +5,15 @@ package bedpe
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type BedPe struct {
@@ -172,7 +173,7 @@ func GoReadToChan(filename string) <-chan BedPe {
 	return data
 }
 
-//SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
+// SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
 func SplitBedPe(in BedPe) (BedPeHalf, BedPeHalf) {
 	left := BedPeHalf{
 		Chrom:      in.A.Chrom,

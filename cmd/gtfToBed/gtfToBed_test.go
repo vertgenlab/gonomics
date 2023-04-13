@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var GtfToBedTests = []struct {

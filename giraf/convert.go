@@ -2,13 +2,14 @@ package giraf
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
-	"log"
-	"strconv"
-	"strings"
 )
 
 func GirafToString(g *Giraf) string {

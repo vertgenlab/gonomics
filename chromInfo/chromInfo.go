@@ -2,11 +2,12 @@
 package chromInfo
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // ChromInfo stores the chromosome name and size of each chromosome as well as the order they appear in the file

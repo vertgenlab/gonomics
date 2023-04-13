@@ -2,6 +2,7 @@ package genomeGraph
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -18,7 +19,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	var leftPath, rightPath, bestPath []uint32
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
-	//extension := int(perfectScore/600) + len(read.Seq)
+
 	var seeds []*SeedDev
 	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
 	SortSeedDevByLen(seeds)
@@ -26,9 +27,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	var seedScore int64
 	var currSeq []dna.Base
 	var currSeed *SeedDev
-	//fmt.Printf("Extention: %v\n", extension)
-	//printSeedDev(seeds)
-	//for currSeed = seeds; currSeed != nil && seedCouldBeBetter(int64(currSeed.TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); currSeed = currSeed.Next {
+
 	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
@@ -43,9 +42,6 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			minTarget = int(currSeed.TargetStart)
 			minQuery = int(currSeed.QueryStart)
 			rightScore = 0
-		} else {
-			//leftAlignment, leftScore, minTarget, minQuery, leftPath = AlignReverseGraphTraversal(gg.Nodes[currSeed.TargetId], []dna.Base{}, int(currSeed.TargetStart), []uint32{}, extension-int(currSeed.TotalLength), currSeq[:currSeed.QueryStart], m, trace)
-			//rightAlignment, rightScore, _, _, rightPath = AlignTraversalFwd(gg.Nodes[tailSeed.TargetId], []dna.Base{}, int(tailSeed.TargetStart+tailSeed.Length), []uint32{}, extension-int(tailSeed.TotalLength), currSeq[tailSeed.QueryStart+tailSeed.Length:], m, trace)
 		}
 		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		currScore = leftScore + seedScore + rightScore
@@ -62,10 +58,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.RName = fmt.Sprintf("%d", bestPath[0])
 			currBest.Pos = uint32(minTarget + 1)
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
-			/*if &gg.Nodes[bestPath[0]].Info != nil {
-				currBest.Extra += fmt.Sprintf("\tXO:i:%d", gg.Nodes[bestPath[0]].Info.Start-1)
-				//currBest.Pos += int64(gg.Nodes[bestPath[0]].Info.Start) - 1
-			}*/
+
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
 		}
@@ -76,7 +69,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	return currBest
 }
 
-//TODO: what about neg strand?
+// TODO: what about neg strand?
 func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {
@@ -146,7 +139,7 @@ func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	}
 }
 
-//perfect match
+// perfect match
 func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {

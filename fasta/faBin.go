@@ -1,17 +1,18 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
-//BinGenomeNoBreaks takes in an entire genome which is sorted largest to smallest contig and breaks up the fasta so
-//that smaller contigs get combined into a single fasta, while large contigs become a single fasta on their own. The user
-//must specify the number of bins for the genome to be broken into, the genome must have more contigs than bins in order
-//to combine any contigs and equal number bins to contigs if each contig gets its own record. The bins will all be
-//filled with the first contig encountered when it's empty, and then the smallest of those bins will be filled when the
-//contig is equal to binNum+1. The minSize option allows for a user to specify a minimum length of sequence to go into
-//each bin and in this case the number of bins returned depends on the minSize and the binNum will be ignored.
+// BinGenomeNoBreaks takes in an entire genome which is sorted largest to smallest contig and breaks up the fasta so
+// that smaller contigs get combined into a single fasta, while large contigs become a single fasta on their own. The user
+// must specify the number of bins for the genome to be broken into, the genome must have more contigs than bins in order
+// to combine any contigs and equal number bins to contigs if each contig gets its own record. The bins will all be
+// filled with the first contig encountered when it's empty, and then the smallest of those bins will be filled when the
+// contig is equal to binNum+1. The minSize option allows for a user to specify a minimum length of sequence to go into
+// each bin and in this case the number of bins returned depends on the minSize and the binNum will be ignored.
 func BinGenomeNoBreaks(genome []Fasta, binNum int, minSize int) map[int][]Fasta {
 	var bins map[int][]Fasta
 
@@ -35,7 +36,7 @@ func BinGenomeNoBreaks(genome []Fasta, binNum int, minSize int) map[int][]Fasta 
 	return bins
 }
 
-//fillSmallestBin fills the bin found by findSmallestBin and adds the next contig to it.
+// fillSmallestBin fills the bin found by findSmallestBin and adds the next contig to it.
 func fillSmallestBin(bins map[int][]Fasta, genome []Fasta) map[int][]Fasta {
 
 	for i := len(bins); i < len(genome); i++ {
@@ -46,7 +47,7 @@ func fillSmallestBin(bins map[int][]Fasta, genome []Fasta) map[int][]Fasta {
 	return bins
 }
 
-//findSmallestBin finds the bin with the least sequence and returns which bin it is so that it can be filled with the next contig.
+// findSmallestBin finds the bin with the least sequence and returns which bin it is so that it can be filled with the next contig.
 func findSmallestBin(bins map[int][]Fasta) int {
 	var smallest int
 	var sizeSmallest int
@@ -66,7 +67,7 @@ func findSmallestBin(bins map[int][]Fasta) int {
 	return smallest
 }
 
-//binMinSize fills bins to a minimum length of sequence as specified by the user and returns whatever number of bins it may make.
+// binMinSize fills bins to a minimum length of sequence as specified by the user and returns whatever number of bins it may make.
 func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 	var length int
 	bins := make(map[int][]Fasta, len(genome))
@@ -102,8 +103,8 @@ func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 	return bins
 }
 
-//findBinBelowMin finds the first bin that is filled below the minimum length of sequence and returns which bin it is
-//so that it can be filled with the next contig below the minimum length
+// findBinBelowMin finds the first bin that is filled below the minimum length of sequence and returns which bin it is
+// so that it can be filled with the next contig below the minimum length
 func findBinBelowMin(bins map[int][]Fasta, min int) int {
 	answer := -1
 
@@ -116,7 +117,7 @@ func findBinBelowMin(bins map[int][]Fasta, min int) int {
 	return answer
 }
 
-//calcNumBasesInBin will determine the number of bases that already exist in any given bin
+// calcNumBasesInBin will determine the number of bases that already exist in any given bin
 func calcNumBasesInBin(f []Fasta) int {
 	totalBases := 0
 	for i := range f {
@@ -125,8 +126,8 @@ func calcNumBasesInBin(f []Fasta) int {
 	return totalBases
 }
 
-//BinFasta takes in a slice of fastas and breaks it up into x number of fastas with relatively
-//equal sequence in each, where x equals the number of bins specified
+// BinFasta takes in a slice of fastas and breaks it up into x number of fastas with relatively
+// equal sequence in each, where x equals the number of bins specified
 func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 	if binNum == 0 {
 		log.Panic("Number of bins must be greater than zero.")
@@ -204,7 +205,7 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 	return answer
 }
 
-//findLastBinnedName determines the last contig that was handled in the given bin (f)
+// findLastBinnedName determines the last contig that was handled in the given bin (f)
 func findLastBinnedName(f []Fasta) string {
 	var lastFasta string
 
@@ -215,7 +216,7 @@ func findLastBinnedName(f []Fasta) string {
 	return lastFasta
 }
 
-//appendRangeOfBases will create a slice of bases ranging from the start to stop positions in the records given (bases)
+// appendRangeOfBases will create a slice of bases ranging from the start to stop positions in the records given (bases)
 func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	var answer []dna.Base
 
@@ -236,7 +237,7 @@ func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	return answer
 }
 
-//fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all in the final bin regardless of sequence length
+// fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all in the final bin regardless of sequence length
 func fillLastBin(f []Fasta, currRec int) (ans []Fasta, final int) {
 	var answer []Fasta
 	var bases []dna.Base

@@ -1,8 +1,9 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func TestTrimmingBarcodes(t *testing.T) {

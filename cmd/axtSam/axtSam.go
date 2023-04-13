@@ -5,13 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"sync"
 )
 
 func usage() {
@@ -21,7 +22,7 @@ func usage() {
 			"  axtSam [options] in.axt out.sam\n\n" +
 			"Options:\n\n")
 	flag.PrintDefaults()
-	fmt.Print("Comming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
+	fmt.Print("Coming Soon: hard clip included sam cigar to represent entire query sequence\n\n")
 }
 
 func main() {
@@ -83,8 +84,8 @@ func chromInfoSamHeader(filename string) sam.Header {
 	return sam.GenerateHeader(chromInfo.ReadToSlice(filename), nil, sam.Unsorted, sam.None)
 }
 
-//Not sure if this is a potiential speed up, but i have fairly large axt files that come out of chain merge
-//The idea is to provide at least 3 threads with some work, reading, axtToSam, writing
+// Not sure if this is a potiential speed up, but i have fairly large axt files that come out of chain merge
+// The idea is to provide at least 3 threads with some work, reading, axtToSam, writing
 func routineWorker(readChannel <-chan axt.Axt, writingChannel chan<- sam.Sam, wg *sync.WaitGroup) {
 	var numberComplete int = 0
 	for eachAxt := range readChannel {

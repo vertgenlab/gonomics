@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/maf"
-	"log"
 )
 
 func mafIndels(in_maf string, species_ins string, species_del string, threshold float64, outIns_bed string, outDel_bed string) {

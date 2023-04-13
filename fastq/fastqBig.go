@@ -1,11 +1,12 @@
 package fastq
 
 import (
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
 )
 
 type FastqBig struct {

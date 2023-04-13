@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -10,7 +12,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 )
 
 func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, outdir string) {

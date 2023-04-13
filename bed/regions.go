@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-//negatePrevBed is a helper function to get regions as a bed that comes prev this bed
+// negatePrevBed is a helper function to get regions as a bed that comes prev this bed
 func negatePrevBed(curr Bed, prev int) (int, Bed) {
 	if curr.ChromStart == 0 {
 		log.Fatalf("Error: this helper function does not deal with the 0th base...\n")
@@ -15,7 +15,7 @@ func negatePrevBed(curr Bed, prev int) (int, Bed) {
 	}
 }
 
-//InvertRegions uses a set of bed regions, to return bed regions that are inverted, negated, and/or not covered by the given input. Bed entries should be sorted by chromosome position and cannot contain overlaps.
+// InvertRegions uses a set of bed regions, to return bed regions that are inverted, negated, and/or not covered by the given input. Bed entries should be sorted by chromosome position and cannot contain overlaps.
 func InvertRegions(beds []Bed, chromLen int) []Bed {
 	var ans []Bed
 	if len(beds) < 1 {
