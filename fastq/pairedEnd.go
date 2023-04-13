@@ -51,7 +51,7 @@ func PairedEndToChan(readOne string, readTwo string, output chan<- PairedEnd) {
 	close(output)
 }
 
-// ReadPairBigToChan is an analogue of PairEndToChan for producing input channels of PairedEndBig structs.
+// ReadPairBigToChan is an analog of PairEndToChan for producing input channels of PairedEndBig structs.
 func ReadPairBigToChan(fileOne string, fileTwo string, answer chan<- PairedEndBig) {
 	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
 	for fq, done := ReadFqBigPair(readOne, readTwo); !done; fq, done = ReadFqBigPair(readOne, readTwo) {

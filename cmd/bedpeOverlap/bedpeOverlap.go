@@ -262,7 +262,7 @@ func main() {
 		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
 	}
 
-	if *overlapBoth == true && *bedSelect == false {
+	if *overlapBoth {
 		log.Fatalf("Error: overlapBoth must be used with bedSelect")
 	}
 
