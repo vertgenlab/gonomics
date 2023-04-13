@@ -10,9 +10,8 @@ import (
 func IsEqual(alpha Fasta, beta Fasta) bool {
 	if alpha.Name == beta.Name && dna.CompareSeqsCaseSensitive(alpha.Seq, beta.Seq) == 0 {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // allEqual determines if two slices of fasta records are equivalent.

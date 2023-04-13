@@ -1,5 +1,5 @@
 // Package cigar contains functions to manipulate cigar data in the SAM file format.
-//More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
+// More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
 
 package cigar
 

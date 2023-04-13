@@ -13,20 +13,20 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	checkersize_i = 10000
 	checkersize_j = 10000
 
-	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
+	// Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
 	score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j := highestScore(alpha, beta, scores, gapPen, checkersize_i, checkersize_j)
 
-	//Make variables needed for checkerboards
-	//k1: the i-index (row-index) of the current checkerboard
-	//k2: the j-index (column-index) of the current checkerboard
-	//i_inChecker_max: the max i-index (row-index) in the current checkerboard during Step 2 (fillTraceback), either checkersize-1 or a smaller number, e.g. if the alpha/beta sequence to be aligned is not divisible into perfect checkerboards, and the remainder checkerboard is not completely filled
-	//j_inChecker_max: the max j-index (column-index) in the current checkerboard during Step 2 (fillTraceback)
-	//i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
-	//j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
+	// Make variables needed for checkerboards
+	// k1: the i-index (row-index) of the current checkerboard
+	// k2: the j-index (column-index) of the current checkerboard
+	// i_inChecker_max: the max i-index (row-index) in the current checkerboard during Step 2 (fillTraceback), either checkersize-1 or a smaller number, e.g. if the alpha/beta sequence to be aligned is not divisible into perfect checkerboards, and the remainder checkerboard is not completely filled
+	// j_inChecker_max: the max j-index (column-index) in the current checkerboard during Step 2 (fillTraceback)
+	// i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
+	// j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2                                   //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2                                   //ditto for j
-	trace_size_i := numbers.Min(len(alpha), checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
+	i_inChecker_min = -2                                   // initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                   // ditto for j
+	trace_size_i := numbers.Min(len(alpha), checkersize_i) // make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(len(beta), checkersize_j)
 	trace := make([][]ColType, trace_size_i)
 	for idx := 0; idx < len(trace); idx++ {
@@ -37,32 +37,32 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
 
-		//Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
+		// Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
 		trace, i_inChecker_max, j_inChecker_max = fillTraceback(alpha, beta, scores, gapPen, checkersize_i, checkersize_j, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2, i_inChecker_min, j_inChecker_min, trace)
 
-		//Step 3: for a checkerboard, use traceback to write cigar (update route and routeIdx), as well as find the min i and j when the checkerboard cigar ends
+		// Step 3: for a checkerboard, use traceback to write cigar (update route and routeIdx), as well as find the min i and j when the checkerboard cigar ends
 		route, routeIdx_current, i_inChecker_min, j_inChecker_min = writeCigar(trace, i_inChecker_max, j_inChecker_max, route, routeIdx_current, i_inChecker_min, j_inChecker_min)
 
-		//Use Step 3's i_inChecker_min and j_inChecker_min to find the next checkerboard to go to and where to start in that checkerboard (update k1, k2)
+		// Use Step 3's i_inChecker_min and j_inChecker_min to find the next checkerboard to go to and where to start in that checkerboard (update k1, k2)
 		if i_inChecker_min < 0 && j_inChecker_min < 0 {
-			k1, k2 = k1-1, k2-1 //go to the next checkerboard with lower i, lower j
-		} else if i_inChecker_min < 0 { //but j_inChecker != 0
-			k1 -= 1 //go to the next checkerboard with lower i, same j
-		} else if j_inChecker_min < 0 { //but i_inChecker != 0
-			k2 -= 1 //go to the next checkerboard with lower j, same i
+			k1, k2 = k1-1, k2-1 // go to the next checkerboard with lower i, lower j
+		} else if i_inChecker_min < 0 { // but j_inChecker != 0
+			k1 -= 1 // go to the next checkerboard with lower i, same j
+		} else if j_inChecker_min < 0 { // but i_inChecker != 0
+			k2 -= 1 // go to the next checkerboard with lower j, same i
 		}
 
 	}
 
-	//Step 4: write the last cigar entry
-	//This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
-	if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
+	// Step 4: write the last cigar entry
+	// This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
+	if i_inChecker_min != -1 && j_inChecker_min == -1 { // indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
 		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 2)
-	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
+	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { // indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
 		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 1)
-	} //no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
+	} // no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
-	//Final processing (reverse route) and return outputs
+	// Final processing (reverse route) and return outputs
 	reverseCigar(route)
 	return score_highest, route
 }
@@ -73,53 +73,53 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
 	score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j := highestScore(alpha, beta, scores, gapPen, checkersize_i, checkersize_j)
 
-	//Make variables needed for checkerboards
-	//k1: the i-index (row-index) of the current checkerboard
-	//k2: the j-index (column-index) of the current checkerboard
-	//i_inChecker_max: the max i-index (row-index) in the current checkerboard during Step 2 (fillTraceback), either checkersize-1 or a smaller number, e.g. if the alpha/beta sequence to be aligned is not divisible into perfect checkerboards, and the remainder checkerboard is not completely filled
-	//j_inChecker_max: the max j-index (column-index) in the current checkerboard during Step 2 (fillTraceback)
-	//i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
-	//j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
+	// Make variables needed for checkerboards
+	// k1: the i-index (row-index) of the current checkerboard
+	// k2: the j-index (column-index) of the current checkerboard
+	// i_inChecker_max: the max i-index (row-index) in the current checkerboard during Step 2 (fillTraceback), either checkersize-1 or a smaller number, e.g. if the alpha/beta sequence to be aligned is not divisible into perfect checkerboards, and the remainder checkerboard is not completely filled
+	// j_inChecker_max: the max j-index (column-index) in the current checkerboard during Step 2 (fillTraceback)
+	// i_inChecker_min: the min i-index (row-index) in the current checkerboard during Step 3 (writeCigar), either 0 or another number, e.g. if cigar route leaves the checkerboard at a position that is not i_inChecker==0, j_inChecker==0
+	// j_inChecker_min: the min j-index (column-index) in the current checkerboard during Step 3 (writeCigar)
 	var k1, k2, i_inChecker_max, j_inChecker_max, i_inChecker_min, j_inChecker_min int
-	i_inChecker_min = -2                                   //initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
-	j_inChecker_min = -2                                   //ditto for j
-	trace_size_i := numbers.Min(len(alpha), checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
+	i_inChecker_min = -2                                   // initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
+	j_inChecker_min = -2                                   // ditto for j
+	trace_size_i := numbers.Min(len(alpha), checkersize_i) // make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(len(beta), checkersize_j)
 	trace := make([][]ColType, trace_size_i)
 	for idx := 0; idx < len(trace); idx++ {
 		trace[idx] = make([]ColType, trace_size_j)
 	}
-	route := make([]Cigar, 1) //initialie cigar route and routeIdx
+	route := make([]Cigar, 1) // initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
 
-		//Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
+		// Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
 		trace, i_inChecker_max, j_inChecker_max = fillTraceback(alpha, beta, scores, gapPen, checkersize_i, checkersize_j, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2, i_inChecker_min, j_inChecker_min, trace)
 
-		//Step 3: for a checkerboard, use traceback to write cigar (update route and routeIdx), as well as find the min i and j when the checkerboard cigar ends
+		// Step 3: for a checkerboard, use traceback to write cigar (update route and routeIdx), as well as find the min i and j when the checkerboard cigar ends
 		route, routeIdx_current, i_inChecker_min, j_inChecker_min = writeCigar(trace, i_inChecker_max, j_inChecker_max, route, routeIdx_current, i_inChecker_min, j_inChecker_min)
 
-		//Use Step 3's i_inChecker_min and j_inChecker_min to find the next checkerboard to go to and where to start in that checkerboard (update k1, k2)
+		// Use Step 3's i_inChecker_min and j_inChecker_min to find the next checkerboard to go to and where to start in that checkerboard (update k1, k2)
 		if i_inChecker_min < 0 && j_inChecker_min < 0 {
-			k1, k2 = k1-1, k2-1 //go to the next checkerboard with lower i, lower j
-		} else if i_inChecker_min < 0 { //but j_inChecker != 0
-			k1 -= 1 //go to the next checkerboard with lower i, same j
-		} else if j_inChecker_min < 0 { //but i_inChecker != 0
-			k2 -= 1 //go to the next checkerboard with lower j, same i
+			k1, k2 = k1-1, k2-1 // go to the next checkerboard with lower i, lower j
+		} else if i_inChecker_min < 0 { // but j_inChecker != 0
+			k1 -= 1 // go to the next checkerboard with lower i, same j
+		} else if j_inChecker_min < 0 { // but i_inChecker != 0
+			k2 -= 1 // go to the next checkerboard with lower j, same i
 		}
 
 	}
 
-	//Step 4: write the last cigar entry
-	//This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
-	if i_inChecker_min != -1 && j_inChecker_min == -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
+	// Step 4: write the last cigar entry
+	// This step is necessary because the row i=0 and the column j=0 are always stored in trace_prep, and never filled in in any checkerboard, but the cigar ends by the route going into 1 box/entry in either the row i=0 or the column j=0
+	if i_inChecker_min != -1 && j_inChecker_min == -1 { // indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached j=0, so the last cigar is a "2", e.g. if last cigar entry is the i=1, j=0 square
 		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 2)
-	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { //indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
+	} else if i_inChecker_min == -1 && j_inChecker_min != -1 { // indicating that Step 3 ended when k1 and k2 reached the smallest combination, and reached i=0, so the last cigar is a "1", e.g. if last cigar entry is the i=0, j=1 square
 		route, routeIdx_current = lastCigar(len(alpha), len(beta), route, routeIdx_current, 1)
-	} //no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
+	} // no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
-	//Final processing (reverse route) and return outputs
+	// Final processing (reverse route) and return outputs
 	reverseCigar(route)
 	return score_highest, route
 }
@@ -132,8 +132,8 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	var mColumn int = len(alpha) + 1
-	trace_prep_i := make([][]int64, int(len(alpha)/checkersize_i)+1) //trace_prep_i saves all rows (i) that are needed to initialize checkerboard tracebacks
-	trace_prep_j := make([][]int64, int(len(beta)/checkersize_j)+1)  //trace_prep_j saves all columns (j) that are needed to initialize checkerboard tracebacks
+	trace_prep_i := make([][]int64, int(len(alpha)/checkersize_i)+1) // trace_prep_i saves all rows (i) that are needed to initialize checkerboard tracebacks
+	trace_prep_j := make([][]int64, int(len(beta)/checkersize_j)+1)  // trace_prep_j saves all columns (j) that are needed to initialize checkerboard tracebacks
 	for idx := 0; idx < len(trace_prep_i); idx++ {
 		trace_prep_i[idx] = make([]int64, len(beta)+1)
 	}
@@ -147,7 +147,7 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 		for j = range mRowCurrent {
 			if i == 0 && j == 0 {
 				mRowCurrent[j] = 0
-				trace_prep_j[j/checkersize_j][i] = mRowCurrent[j] //it is implied here that j%checkersize_j==0. It must be saved in trace_prep_j
+				trace_prep_j[j/checkersize_j][i] = mRowCurrent[j] // it is implied here that j%checkersize_j==0. It must be saved in trace_prep_j
 			} else if i == 0 {
 				mRowCurrent[j] = mRowCurrent[j-1] + gapPen
 				if j%checkersize_j == 0 {
@@ -155,7 +155,7 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 				}
 			} else if j == 0 {
 				mRowCurrent[j] = mRowPrevious[j] + gapPen
-				trace_prep_j[j/checkersize_j][i] = mRowCurrent[j] //it is implied that j%checkersize_j==0. It must be saved in trace_prep_j
+				trace_prep_j[j/checkersize_j][i] = mRowCurrent[j] // it is implied that j%checkersize_j==0. It must be saved in trace_prep_j
 			} else {
 				mRowCurrent[j], _ = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
 				if j%checkersize_j == 0 {
@@ -165,10 +165,10 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 		}
 
 		if i%checkersize_i == 0 && i < mColumn-1 {
-			copy(trace_prep_i[i/checkersize_i], mRowCurrent) //copy instead of assign values to avoid pointers automatically updating/synchronizing the 2 matrices
+			copy(trace_prep_i[i/checkersize_i], mRowCurrent) // copy instead of assign values to avoid pointers automatically updating/synchronizing the 2 matrices
 			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious
 		} else if i < mColumn-1 {
-			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious //reuse mRow variables to save memory, but only up until the second to last row
+			mRowPrevious, mRowCurrent = mRowCurrent, mRowPrevious // reuse mRow variables to save memory, but only up until the second to last row
 		}
 	}
 
@@ -190,14 +190,14 @@ func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	copy(mRowPrevious, trace_prep_i[k1])
-	//i_inChecker and j_inChecker are internal (within checkerboard) versions of i and j, e.g. for checkersize=3, i_inChecker can take on the values 0, 1, 2
-	//i_max and j_max are external (non-inChecker) versions of i_inChecker_max and j_inChecker_max
+	// i_inChecker and j_inChecker are internal (within checkerboard) versions of i and j, e.g. for checkersize=3, i_inChecker can take on the values 0, 1, 2
+	// i_max and j_max are external (non-inChecker) versions of i_inChecker_max and j_inChecker_max
 	var i, j, i_inChecker, j_inChecker, i_inChecker_max, j_inChecker_max, i_max, j_max int
 	if i_inChecker_min_Previous >= 0 {
-		//use the i_inChecker_min_Previous from the previous k1/k2 loop iteration's Step 3 writeCigar to find the i_max at which to stop filling the trace matrix
+		// use the i_inChecker_min_Previous from the previous k1/k2 loop iteration's Step 3 writeCigar to find the i_max at which to stop filling the trace matrix
 		i_max = checkersize_i*k1 + 1 + i_inChecker_min_Previous
 	} else {
-		//otherwise, since no restriction from previous k1/k2 loop Step 3 writeCigar, find the minimum value between "where the next checkerboard starts" and "the i of the highest score", and that is where to stop filing the trace matrix
+		// otherwise, since no restriction from previous k1/k2 loop Step 3 writeCigar, find the minimum value between "where the next checkerboard starts" and "the i of the highest score", and that is where to stop filing the trace matrix
 		i_max = numbers.Min(checkersize_i*(k1+1), score_highest_i)
 	}
 	if j_inChecker_min_Previous >= 0 {
@@ -236,7 +236,7 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int
 	route_updated := route
 
-	//use the i_inChecker_min_Previous from the previous k1/k2 loop iteration's Step 3 writeCigar to find the i_inChecker_max at which to start writing cigar
+	// use the i_inChecker_min_Previous from the previous k1/k2 loop iteration's Step 3 writeCigar to find the i_inChecker_max at which to start writing cigar
 	if i_inChecker_min_Previous >= 0 {
 		i_inChecker_max = i_inChecker_min_Previous
 	} else {
@@ -250,7 +250,7 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 
 	for i_inChecker, j_inChecker, routeIdx = i_inChecker_max, j_inChecker_max, routeIdx_current; i_inChecker >= 0 && j_inChecker >= 0; {
 
-		//write cigar segment
+		// write cigar segment
 		if route_updated[routeIdx].RunLength == 0 {
 			route_updated[routeIdx].RunLength = 1
 			route_updated[routeIdx].Op = trace[i_inChecker][j_inChecker]
@@ -261,7 +261,7 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 			routeIdx++
 		}
 
-		//update i_inChecker and j_inChecker
+		// update i_inChecker and j_inChecker
 		switch trace[i_inChecker][j_inChecker] {
 		case 0:
 			i_inChecker, j_inChecker = i_inChecker-1, j_inChecker-1
@@ -285,18 +285,18 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 // inputs: lengths of original sequences alpha and beta, the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the ColType (M=0,I=1,D=2) of the last cigar entry
 // outputs: the updated final route describing the collection of cigars of the entire alignment including the last cigar, the updated and index of the cigar that is currently being built
 func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int, Op_end ColType) ([]Cigar, int) {
-	//Calculate the size of final runlength
+	// Calculate the size of final runlength
 	var TotalRunLength, LastRunLength int64
 	TotalRunLength = 0
 	switch Op_end {
-	case 1: //Op_end==1=ColI=Insertion=unique sequence in sequenceTwo beta
+	case 1: // Op_end==1=ColI=Insertion=unique sequence in sequenceTwo beta
 		for routeIdx := range route {
 			if route[routeIdx].Op == 0 || route[routeIdx].Op == 1 {
 				TotalRunLength += route[routeIdx].RunLength
 			}
 		}
 		LastRunLength = int64(len_beta) - TotalRunLength
-	case 2: //Op_end==2=ColD=Deletion=unique seuqnece in sequenceOne alpha
+	case 2: // Op_end==2=ColD=Deletion=unique seuqnece in sequenceOne alpha
 		for routeIdx := range route {
 			if route[routeIdx].Op == 0 || route[routeIdx].Op == 2 {
 				TotalRunLength += route[routeIdx].RunLength
@@ -307,13 +307,12 @@ func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int,
 		log.Fatalf("Error: unexpected lastCigar traceback")
 	}
 
-	//Write the last cigar based on final runlength and second-to-last cigar Op
+	// Write the last cigar based on final runlength and second-to-last cigar Op
 	if route[routeIdx_current].Op == Op_end {
 		route[routeIdx_current].RunLength += LastRunLength
 	} else {
 		route = append(route, Cigar{RunLength: LastRunLength, Op: Op_end})
 		routeIdx_current++
 	}
-
 	return route, routeIdx_current
 }
