@@ -13,6 +13,7 @@ import (
 	"math/rand"
 )
 
+// Settings specifies all user options and arguments.
 type Settings struct {
 	SamFileName         string
 	RefFile             string
@@ -28,21 +29,45 @@ type Settings struct {
 	LikelihoodCacheSize int
 	SetSeed             int64
 	Verbose             int
+	FlatPrior           bool
+}
+
+// AnswerStruct contains all variables related to the two output assembled sequences, here labeled A and B.
+// This includes the []fasta.Fasta sequences, their current positions, the remaining buffer room for the
+// sequence slice, the index for the current chromosome string, and an empty slice of []dna.Base to resupply
+// empty buffer room.
+type AnswerStruct struct {
+	AnswerA            []fasta.Fasta
+	AnswerB            []fasta.Fasta
+	AnswerAPos         int
+	AnswerBPos         int
+	EmptyRoomInBufferA int
+	EmptyRoomInBufferB int
+	CurrFaIndex        int
+	NewBufferRoom      []dna.Base
+}
+
+// MultiFaStruct houses all variables related to the optional multiFa output, including
+// the multiFa struct itself (CurrMultiFa), the current position, remaining room
+// in the sequence buffer, and an empty slice of []dna.Base to resupply empty buffer room.
+type MultiFaStruct struct {
+	CurrMultiFa              []fasta.Fasta
+	MultiFaPos               int
+	EmptyRoomInMultiFaBuffer int
+	NewBufferRoom            []dna.Base
 }
 
 const bufferSize = 10_000_000
 
 func samAssembler(s Settings) {
 	rand.Seed(s.SetSeed)
-	var i, currFaIndex, emptyRoomInBufferA, emptyRoomInBufferB, multiFaPos int
-	var emptyRoomInMultiFaBuffer, answerAPos, answerBPos, refPos, positionsToSkip int
-	var haploidBases int
-	var haploidStrand bool //haploidStrand is true when the haploid bases are on the first strand (deletion on second strand)
+	var i, refPos, positionsToSkip, haploidBases int
+	var haploidStrand bool // haploidStrand is true when the haploid bases are on the first strand (deletion on second strand)
 	var currChrom string
-	var currMultiFa []fasta.Fasta
 	var newBufferRoom = make([]dna.Base, bufferSize)
 	var firstTime = true
 	var currPloidy = 2
+	var diploidBaseCall sam.DiploidBase
 	var currDiploidBases, currHaploidBases []dna.Base
 	var currInsertion sam.DiploidInsertion
 	var currInsertionSeqs [][]dna.Base
@@ -51,26 +76,7 @@ func samAssembler(s Settings) {
 	var currRand float64
 
 	// initialize caches for likelihood and priors
-	var diploidBasePriorCache [][]float64 = sam.MakeDiploidBasePriorCache(s.Delta, s.Gamma)
-	var diploidIndelPriorCache []float64 = sam.MakeDiploidIndelPriorCache(s.Kappa, s.Delta)
-	var haploidBasePriorCache [][]float64 = sam.MakeHaploidBasePriorCache(s.Delta, s.Gamma)
-	var haploidIndelPriorCache []float64 = sam.MakeHaploidIndelPriorCache(s.Delta, s.Kappa)
-	var homozygousBaseCache [][]float64 = make([][]float64, s.LikelihoodCacheSize)
-	for i = range homozygousBaseCache {
-		homozygousBaseCache[i] = make([]float64, s.LikelihoodCacheSize)
-	}
-	var heterozygousBaseCache = make([][]float64, s.LikelihoodCacheSize)
-	for i = range heterozygousBaseCache {
-		heterozygousBaseCache[i] = make([]float64, s.LikelihoodCacheSize)
-	}
-	var homozygousIndelCache = make([][]float64, s.LikelihoodCacheSize)
-	for i = range homozygousIndelCache {
-		homozygousIndelCache[i] = make([]float64, s.LikelihoodCacheSize)
-	}
-	var heterozygousIndelCache = make([][]float64, s.LikelihoodCacheSize)
-	for i = range heterozygousIndelCache {
-		heterozygousIndelCache[i] = make([]float64, s.LikelihoodCacheSize)
-	}
+	cacheStruct := cacheSetup(s)
 
 	// initialize reference genome
 	ref := fasta.Read(s.RefFile)
@@ -83,26 +89,25 @@ func samAssembler(s Settings) {
 	reads, header := sam.GoReadToChan(s.SamFileName)
 	piles := sam.GoPileup(reads, header, false, nil, nil)
 
-	//initialize output
-	var answerA []fasta.Fasta = make([]fasta.Fasta, len(ref))
-	var answerB []fasta.Fasta = make([]fasta.Fasta, len(ref))
-	for i = range ref {
-		answerA[i] = fasta.Fasta{Name: ref[i].Name, Seq: make([]dna.Base, bufferSize)}
-		answerB[i] = fasta.Fasta{Name: ref[i].Name, Seq: make([]dna.Base, bufferSize)}
+	// initialize output
+	ans := AnswerStruct{
+		AnswerA:       make([]fasta.Fasta, len(ref)),
+		AnswerB:       make([]fasta.Fasta, len(ref)),
+		NewBufferRoom: newBufferRoom,
 	}
+	for i = range ref {
+		ans.AnswerA[i] = fasta.Fasta{Name: ref[i].Name, Seq: make([]dna.Base, bufferSize)}
+		ans.AnswerB[i] = fasta.Fasta{Name: ref[i].Name, Seq: make([]dna.Base, bufferSize)}
+	}
+	var mlt MultiFaStruct
 
-	//now time for the main loop, we look through each pile
+	// now time for the main loop, we look through each pile
 	for p := range piles {
-		if s.Verbose > 0 && !firstTime && p.Pos&1_000_000 == 0 {
+		if s.Verbose > 0 && !firstTime && p.Pos%1_000_000 == 0 {
 			fmt.Printf("Current Chrom: %s. Current Position: %v.\n", currChrom, p.Pos)
 		}
 		if positionsToSkip > 0 {
-			if s.MultiFaDir != "" {
-				currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-				currMultiFa[1].Seq[multiFaPos] = dna.Gap
-				currMultiFa[2].Seq[multiFaPos] = dna.Gap
-				multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-			}
+			mlt = updateMultiFa(refMap[currChrom][refPos], dna.Gap, dna.Gap, mlt)
 			refPos++
 			positionsToSkip--
 			continue
@@ -110,239 +115,157 @@ func samAssembler(s Settings) {
 		if firstTime {
 			firstTime = false
 			currChrom = header.Chroms[p.RefIdx].Name
-			currFaIndex = getIndexForName(answerA, currChrom)
-			answerAPos, answerBPos, refPos = 0, 0, 0
-			emptyRoomInBufferA, emptyRoomInBufferB = bufferSize, bufferSize
-			if s.MultiFaDir != "" {
-				currMultiFa = []fasta.Fasta{{Name: currChrom, Seq: make([]dna.Base, bufferSize)},
+			ans.CurrFaIndex = getIndexForName(ans.AnswerA, currChrom)
+			ans.AnswerAPos, ans.AnswerBPos, refPos = 0, 0, 0
+			ans.EmptyRoomInBufferA, ans.EmptyRoomInBufferB = bufferSize, bufferSize
+			mlt = MultiFaStruct{
+				CurrMultiFa: []fasta.Fasta{{Name: currChrom, Seq: make([]dna.Base, bufferSize)},
 					{Name: s.qNameA, Seq: make([]dna.Base, bufferSize)},
-					{Name: s.qNameB, Seq: make([]dna.Base, bufferSize)}}
-				emptyRoomInMultiFaBuffer = bufferSize
-				multiFaPos = 0
+					{Name: s.qNameB, Seq: make([]dna.Base, bufferSize)}},
+				EmptyRoomInMultiFaBuffer: bufferSize,
+				NewBufferRoom:            newBufferRoom,
+				MultiFaPos:               0,
 			}
 		}
-		if currChrom != header.Chroms[p.RefIdx].Name { //if we've moved onto a new chromosome.
-			for refPos < len(refMap[currChrom]) { //write out the rest of the current reference
-				answerA[currFaIndex].Seq[answerAPos] = refMap[currChrom][refPos]
-				answerB[currFaIndex].Seq[answerBPos] = refMap[currChrom][refPos]
-				if s.MultiFaDir != "" {
-					currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-					currMultiFa[1].Seq[multiFaPos] = refMap[currChrom][refPos]
-					currMultiFa[2].Seq[multiFaPos] = refMap[currChrom][refPos]
-					multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-				}
+		if currChrom != header.Chroms[p.RefIdx].Name { // if we've moved onto a new chromosome.
+			for refPos < len(refMap[currChrom]) { // write out the rest of the current reference
+				ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = refMap[currChrom][refPos]
+				ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = refMap[currChrom][refPos]
+				ans = advanceAnswerPos(ans)
+				mlt = updateMultiFa(refMap[currChrom][refPos], refMap[currChrom][refPos], refMap[currChrom][refPos], mlt)
 				refPos++
-				answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB = advanceAnswerPos(answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB, newBufferRoom)
 			}
-			//write out current chromosome
-			answerA[currFaIndex].Seq = answerA[currFaIndex].Seq[:len(answerA[currFaIndex].Seq)-emptyRoomInBufferA] //clear out empty buffer positions
-			answerB[currFaIndex].Seq = answerB[currFaIndex].Seq[:len(answerB[currFaIndex].Seq)-emptyRoomInBufferB]
+			// write out current chromosome multiFa
+			ans = clearAnswerBuffer(ans)
+			mlt = clearMultiFaBuffer(mlt)
 			if s.MultiFaDir != "" {
-				currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq)-emptyRoomInMultiFaBuffer]
-				currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq)-emptyRoomInMultiFaBuffer]
-				currMultiFa[2].Seq = currMultiFa[2].Seq[:len(currMultiFa[2].Seq)-emptyRoomInMultiFaBuffer]
-				fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), currMultiFa)
+				fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), mlt.CurrMultiFa)
 			}
-			//now we set up the new chromosome
+			// now we set up the new chromosome
 			currChrom = header.Chroms[p.RefIdx].Name
-			if s.MultiFaDir != "" {
-				currMultiFa = []fasta.Fasta{{Name: currChrom, Seq: make([]dna.Base, bufferSize)},
-					{Name: s.qNameA, Seq: make([]dna.Base, bufferSize)},
-					{Name: s.qNameB, Seq: make([]dna.Base, bufferSize)}}
-				emptyRoomInMultiFaBuffer = bufferSize
-				multiFaPos = 0
-			}
-			currFaIndex = getIndexForName(answerA, currChrom)
-			emptyRoomInBufferA, emptyRoomInBufferB = bufferSize, bufferSize
-			answerAPos, answerBPos, refPos = 0, 0, 0
+			mlt.CurrMultiFa = []fasta.Fasta{{Name: currChrom, Seq: make([]dna.Base, bufferSize)},
+				{Name: s.qNameA, Seq: make([]dna.Base, bufferSize)},
+				{Name: s.qNameB, Seq: make([]dna.Base, bufferSize)}}
+			mlt.EmptyRoomInMultiFaBuffer = bufferSize
+			mlt.MultiFaPos = 0
+			ans.CurrFaIndex = getIndexForName(ans.AnswerA, currChrom)
+			ans.EmptyRoomInBufferA, ans.EmptyRoomInBufferB = bufferSize, bufferSize
+			ans.AnswerAPos, ans.AnswerBPos, refPos = 0, 0, 0
 		}
 
-		//catch up to the current pile position, handles reference positions with no Pile coverage.
+		// catch up to the current pile position, handles reference positions with no Pile coverage.
 		for refPos < int(p.Pos-1) {
-			answerA[currFaIndex].Seq[answerAPos] = refMap[currChrom][refPos]
-			answerB[currFaIndex].Seq[answerBPos] = refMap[currChrom][refPos]
-			if s.MultiFaDir != "" {
-				currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-				currMultiFa[1].Seq[multiFaPos] = refMap[currChrom][refPos]
-				currMultiFa[2].Seq[multiFaPos] = refMap[currChrom][refPos]
-				multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-			}
-			answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB = advanceAnswerPos(answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB, newBufferRoom)
+			ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = refMap[currChrom][refPos]
+			ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = refMap[currChrom][refPos]
+			mlt = updateMultiFa(refMap[currChrom][refPos], refMap[currChrom][refPos], refMap[currChrom][refPos], mlt)
+			ans = advanceAnswerPos(ans)
 			refPos++
 		}
 
-		//now refPos should equal p.Pos - 1, because of our for loop before
+		// now refPos should equal p.Pos - 1, because of our for loop before
 		if refPos != int(p.Pos-1) {
 			log.Fatalf("Something went wrong. RefPos is not equal to p.Pos -1.")
 		}
 
 		if currPloidy == 2 {
-			//First we handle the base call for the current pile
-			currDiploidBases = sam.DiploidBaseToBases(sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], diploidBasePriorCache, homozygousBaseCache, heterozygousBaseCache, s.Epsilon))
+			// First we handle the base call for the current pile
+			diploidBaseCall = sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], cacheStruct.DiploidBasePriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, s.Epsilon)
+			currDiploidBases = sam.DiploidBaseToBases(diploidBaseCall)
 			currRand = rand.Float64()
 			if currRand < 0.5 {
-				answerA[currFaIndex].Seq[answerAPos] = currDiploidBases[0]
-				answerB[currFaIndex].Seq[answerBPos] = currDiploidBases[1]
-				if s.MultiFaDir != "" {
-					currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-					currMultiFa[1].Seq[multiFaPos] = currDiploidBases[0]
-					currMultiFa[2].Seq[multiFaPos] = currDiploidBases[1]
-					multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-				}
+				ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = currDiploidBases[0]
+				ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = currDiploidBases[1]
+				mlt = updateMultiFa(refMap[currChrom][refPos], currDiploidBases[0], currDiploidBases[1], mlt)
 			} else {
-				answerA[currFaIndex].Seq[answerAPos] = currDiploidBases[1]
-				answerB[currFaIndex].Seq[answerBPos] = currDiploidBases[0]
-				if s.MultiFaDir != "" {
-					currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-					currMultiFa[1].Seq[multiFaPos] = currDiploidBases[1]
-					currMultiFa[2].Seq[multiFaPos] = currDiploidBases[0]
-					multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-				}
+				ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = currDiploidBases[1]
+				ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = currDiploidBases[0]
+				mlt = updateMultiFa(refMap[currChrom][refPos], currDiploidBases[1], currDiploidBases[0], mlt)
 			}
-			answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB = advanceAnswerPos(answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB, newBufferRoom)
+			ans = advanceAnswerPos(ans)
 
 			// now we call diploid insertions and add the insertions to the output sequences
-			currInsertion = sam.DiploidInsertionCallFromPile(p, diploidIndelPriorCache, homozygousIndelCache, heterozygousIndelCache, s.Epsilon)
+			currInsertion = sam.DiploidInsertionCallFromPile(p, cacheStruct.DiploidIndelPriorCache, cacheStruct.HomozygousIndelCache, cacheStruct.HeterozygousIndelCache, s.Epsilon)
 			currInsertionSeqs = sam.DiploidInsertionToSeqs(currInsertion)
 			refPos++
 
 			switch currInsertion.Type {
 			case sam.BBnoIns:
-				//nothing to do, no insertion
+				// nothing to do, no insertion
 			case sam.IaIa:
 				for i = range currInsertionSeqs[0] {
-					answerA[currFaIndex].Seq[answerAPos] = currInsertionSeqs[0][i]
-					answerB[currFaIndex].Seq[answerBPos] = currInsertionSeqs[0][i]
-					answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB = advanceAnswerPos(answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB, newBufferRoom)
+					ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = currInsertionSeqs[0][i]
+					ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = currInsertionSeqs[0][i]
+					ans = advanceAnswerPos(ans)
 				}
-				if s.MultiFaDir != "" {
-					for i = range currInsertionSeqs[0] {
-						currMultiFa[0].Seq[multiFaPos] = dna.Gap
-						currMultiFa[1].Seq[multiFaPos] = currInsertionSeqs[0][i]
-						currMultiFa[2].Seq[multiFaPos] = currInsertionSeqs[0][i]
-						multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-					}
+				for i = range currInsertionSeqs[0] {
+					mlt = updateMultiFa(dna.Gap, currInsertionSeqs[0][i], currInsertionSeqs[0][i], mlt)
 				}
 			case sam.IaB:
 				currRand = rand.Float64()
-				if currRand < 0.5 {
-					for i = range currInsertionSeqs[0] {
-						answerA[currFaIndex].Seq[answerAPos] = currInsertionSeqs[0][i]
-						answerAPos++
-						emptyRoomInBufferA--
-						if emptyRoomInBufferA < 1 {
-							answerA[currFaIndex].Seq = append(answerA[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferA += bufferSize
-						}
-					}
-					if s.MultiFaDir != "" {
-						for i = range currInsertionSeqs[0] {
-							currMultiFa[0].Seq[multiFaPos] = dna.Gap
-							currMultiFa[1].Seq[multiFaPos] = currInsertionSeqs[0][i]
-							currMultiFa[2].Seq[multiFaPos] = dna.Gap
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-						}
-					}
-				} else {
-					for i = range currInsertionSeqs[0] {
-						answerB[currFaIndex].Seq[answerBPos] = currInsertionSeqs[0][i]
-						answerBPos++
-						emptyRoomInBufferB--
-						if emptyRoomInBufferB < 1 {
-							answerB[currFaIndex].Seq = append(answerB[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferB += bufferSize
-						}
-						if s.MultiFaDir != "" {
-							currMultiFa[0].Seq[multiFaPos] = dna.Gap
-							currMultiFa[1].Seq[multiFaPos] = dna.Gap
-							currMultiFa[2].Seq[multiFaPos] = currInsertionSeqs[0][i]
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-						}
+				for i = range currInsertionSeqs[0] {
+					if currRand < 0.5 {
+						ans = advanceAPos(ans)
+						mlt = updateMultiFa(dna.Gap, currInsertionSeqs[0][i], dna.Gap, mlt)
+					} else {
+						ans = advanceBPos(ans)
+						mlt = updateMultiFa(dna.Gap, dna.Gap, currInsertionSeqs[0][i], mlt)
 					}
 				}
 			case sam.IaIb:
 				currRand = rand.Float64()
 				if currRand < 0.5 {
 					for i = range currInsertionSeqs[0] {
-						answerA[currFaIndex].Seq[answerAPos] = currInsertionSeqs[0][i]
-						answerAPos++
-						emptyRoomInBufferA--
-						if emptyRoomInBufferA < 1 {
-							answerA[currFaIndex].Seq = append(answerA[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferA += bufferSize
-						}
+						ans = advanceAPos(ans)
 					}
 					for i = range currInsertionSeqs[1] {
-						answerB[currFaIndex].Seq[answerBPos] = currInsertionSeqs[1][i]
-						answerBPos++
-						emptyRoomInBufferB--
-						if emptyRoomInBufferB < 1 {
-							answerB[currFaIndex].Seq = append(answerB[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferB += bufferSize
-						}
+						ans = advanceBPos(ans)
 					}
-					if s.MultiFaDir != "" {
-						for i = 0; i < numbers.Max(len(currInsertionSeqs[0]), len(currInsertionSeqs[1])); i++ { //for the length of the longer insertion
-							currMultiFa[0].Seq[multiFaPos] = dna.Gap
-							if i < len(currInsertionSeqs[0]) {
-								currMultiFa[1].Seq[multiFaPos] = currInsertionSeqs[0][i]
-							} else {
-								currMultiFa[1].Seq[multiFaPos] = dna.Gap
-							}
-							if i < len(currInsertionSeqs[1]) {
-								currMultiFa[2].Seq[multiFaPos] = currInsertionSeqs[1][i]
-							} else {
-								currMultiFa[2].Seq[multiFaPos] = dna.Gap
-							}
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
+					for i = 0; i < numbers.Max(len(currInsertionSeqs[0]), len(currInsertionSeqs[1])); i++ { // for the length of the longer insertion
+						mlt.CurrMultiFa[0].Seq[mlt.MultiFaPos] = dna.Gap
+						if i < len(currInsertionSeqs[0]) {
+							mlt.CurrMultiFa[1].Seq[mlt.MultiFaPos] = currInsertionSeqs[0][i]
+						} else {
+							mlt.CurrMultiFa[1].Seq[mlt.MultiFaPos] = dna.Gap
 						}
+						if i < len(currInsertionSeqs[1]) {
+							mlt.CurrMultiFa[2].Seq[mlt.MultiFaPos] = currInsertionSeqs[1][i]
+						} else {
+							mlt.CurrMultiFa[2].Seq[mlt.MultiFaPos] = dna.Gap
+						}
+						mlt = advanceMultiFaPos(mlt)
 					}
 				} else {
 					for i = range currInsertionSeqs[0] {
-						answerB[currFaIndex].Seq[answerBPos] = currInsertionSeqs[0][i]
-						answerBPos++
-						emptyRoomInBufferB--
-						if emptyRoomInBufferB < 1 {
-							answerB[currFaIndex].Seq = append(answerB[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferB += bufferSize
-						}
+						ans = advanceBPos(ans)
 					}
 					for i = range currInsertionSeqs[1] {
-						answerA[currFaIndex].Seq[answerAPos] = currInsertionSeqs[1][i]
-						answerAPos++
-						emptyRoomInBufferA--
-						if emptyRoomInBufferA < 1 {
-							answerA[currFaIndex].Seq = append(answerA[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferA += bufferSize
-						}
+						ans = advanceAPos(ans)
 					}
-					if s.MultiFaDir != "" {
-						for i = 0; i < numbers.Max(len(currInsertionSeqs[0]), len(currInsertionSeqs[1])); i++ { //for the length of the longer insertion
-							currMultiFa[0].Seq[multiFaPos] = dna.Gap
-							if i < len(currInsertionSeqs[0]) {
-								currMultiFa[2].Seq[multiFaPos] = currInsertionSeqs[0][i]
-							} else {
-								currMultiFa[2].Seq[multiFaPos] = dna.Gap
-							}
-							if i < len(currInsertionSeqs[1]) {
-								currMultiFa[1].Seq[multiFaPos] = currInsertionSeqs[1][i]
-							} else {
-								currMultiFa[1].Seq[multiFaPos] = dna.Gap
-							}
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
+					for i = 0; i < numbers.Max(len(currInsertionSeqs[0]), len(currInsertionSeqs[1])); i++ { // for the length of the longer insertion
+						mlt.CurrMultiFa[0].Seq[mlt.MultiFaPos] = dna.Gap
+						if i < len(currInsertionSeqs[0]) {
+							mlt.CurrMultiFa[2].Seq[mlt.MultiFaPos] = currInsertionSeqs[0][i]
+						} else {
+							mlt.CurrMultiFa[2].Seq[mlt.MultiFaPos] = dna.Gap
 						}
+						if i < len(currInsertionSeqs[1]) {
+							mlt.CurrMultiFa[1].Seq[mlt.MultiFaPos] = currInsertionSeqs[1][i]
+						} else {
+							mlt.CurrMultiFa[1].Seq[mlt.MultiFaPos] = dna.Gap
+						}
+						mlt = advanceMultiFaPos(mlt)
 					}
 				}
 			}
 
-			//Now we handle diploid deletion calls
-			currDeletion = sam.DiploidDeletionCallFromPile(p, diploidIndelPriorCache, homozygousIndelCache, heterozygousIndelCache, s.Epsilon)
+			// Now we handle diploid deletion calls
+			currDeletion = sam.DiploidDeletionCallFromPile(p, cacheStruct.DiploidIndelPriorCache, cacheStruct.HomozygousIndelCache, cacheStruct.HeterozygousIndelCache, s.Epsilon)
 
 			switch currDeletion.Type {
 			case sam.BBNoDel:
-				//no deletion, nothing to do
+				// no deletion, nothing to do
 			case sam.DaDa:
-				//we'll skip the next piles corresponding to the number of homozygous deleted bases
+				// we'll skip the next piles corresponding to the number of homozygous deleted bases
 				positionsToSkip = currDeletion.Da
 			case sam.DaB:
 				currPloidy = 1
@@ -355,19 +278,15 @@ func samAssembler(s Settings) {
 				}
 			case sam.DaDb:
 				currPloidy = 1
-				//we first advance through the shared part of the deletion (the length of the shorter deletion)
+				// we first advance through the shared part of the deletion (the length of the shorter deletion)
 				for i = 0; i < numbers.Min(currDeletion.Da, currDeletion.Db); i++ {
-					if s.MultiFaDir != "" {
-						currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-						currMultiFa[1].Seq[multiFaPos] = dna.Gap
-						currMultiFa[2].Seq[multiFaPos] = dna.Gap
-					}
+					mlt = updateMultiFa(refMap[currChrom][refPos], dna.Gap, dna.Gap, mlt)
 					refPos++
 				}
 				// determine the haploid bases to be the difference in length between the two deletions
 				haploidBases = numbers.Max(currDeletion.Da-currDeletion.Db, currDeletion.Db-currDeletion.Da)
 				currRand = rand.Float64()
-				if currRand < 0.5 { //we randomly assign the haploid bases to a strand
+				if currRand < 0.5 { // we randomly assign the haploid bases to a strand
 					haploidStrand = true
 				} else {
 					haploidStrand = false
@@ -377,48 +296,21 @@ func samAssembler(s Settings) {
 			}
 
 		} else if currPloidy == 1 {
-			currHaploidCall = sam.HaploidCallFromPile(p, refMap[currChrom][refPos], s.Epsilon, haploidBasePriorCache, haploidIndelPriorCache, homozygousBaseCache, heterozygousBaseCache, homozygousIndelCache)
+			currHaploidCall = sam.HaploidCallFromPile(p, refMap[currChrom][refPos], s.Epsilon, cacheStruct.HaploidBasePriorCache, cacheStruct.HaploidIndelPriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.HomozygousIndelCache)
 
 			if haploidStrand {
-				answerA[currFaIndex].Seq[answerAPos] = currHaploidCall.Base
-				answerAPos++
-				emptyRoomInBufferA--
-				if emptyRoomInBufferA < 1 {
-					answerA[currFaIndex].Seq = append(answerA[currFaIndex].Seq, newBufferRoom...)
-					emptyRoomInBufferA += bufferSize
-				}
-				if s.MultiFaDir != "" {
-					currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-					currMultiFa[1].Seq[multiFaPos] = currHaploidCall.Base
-					currMultiFa[2].Seq[multiFaPos] = dna.Gap
-					multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-				}
+				ans = advanceAPos(ans)
+				mlt = updateMultiFa(refMap[currChrom][refPos], currHaploidCall.Base, dna.Gap, mlt)
 				if currHaploidCall.Insertion != "" {
 					currHaploidBases = dna.StringToBases(currHaploidCall.Insertion)
 					for i = 0; i < len(currHaploidBases); i++ {
-						answerA[currFaIndex].Seq[answerAPos] = currHaploidBases[i]
-						answerAPos++
-						emptyRoomInBufferA--
-						if emptyRoomInBufferA < 1 {
-							answerA[currFaIndex].Seq = append(answerA[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferA += bufferSize
-						}
-						if s.MultiFaDir != "" {
-							currMultiFa[0].Seq[multiFaPos] = dna.Gap
-							currMultiFa[1].Seq[multiFaPos] = currHaploidBases[i]
-							currMultiFa[2].Seq[multiFaPos] = dna.Gap
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-						}
+						ans = advanceAPos(ans)
+						mlt = updateMultiFa(dna.Gap, currHaploidBases[i], dna.Gap, mlt)
 					}
 				}
 				if currHaploidCall.Deletion != 0 {
 					for i = 0; i < currHaploidCall.Deletion; i++ {
-						if s.MultiFaDir != "" {
-							currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-							currMultiFa[1].Seq[multiFaPos] = dna.Gap
-							currMultiFa[2].Seq[multiFaPos] = dna.Gap
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-						}
+						mlt = updateMultiFa(refMap[currChrom][refPos], dna.Gap, dna.Gap, mlt)
 						refPos++
 						if refPos >= len(refMap[currChrom]) {
 							currPloidy = 2
@@ -432,46 +324,19 @@ func samAssembler(s Settings) {
 					}
 				}
 			} else {
-				answerB[currFaIndex].Seq[answerBPos] = currHaploidCall.Base
-				answerBPos++
-				emptyRoomInBufferB--
-				if emptyRoomInBufferB < 1 {
-					answerB[currFaIndex].Seq = append(answerB[currFaIndex].Seq, newBufferRoom...)
-					emptyRoomInBufferB += bufferSize
-				}
-				if s.MultiFaDir != "" {
-					currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-					currMultiFa[1].Seq[multiFaPos] = dna.Gap
-					currMultiFa[2].Seq[multiFaPos] = currHaploidCall.Base
-					multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-				}
+				ans = advanceBPos(ans)
+				mlt = updateMultiFa(refMap[currChrom][refPos], dna.Gap, currHaploidCall.Base, mlt)
 
 				if currHaploidCall.Insertion != "" {
 					currHaploidBases = dna.StringToBases(currHaploidCall.Insertion)
 					for i = 0; i < len(currHaploidBases); i++ {
-						answerB[currFaIndex].Seq[answerBPos] = currHaploidBases[i]
-						answerBPos++
-						emptyRoomInBufferB--
-						if emptyRoomInBufferB < 1 {
-							answerB[currFaIndex].Seq = append(answerB[currFaIndex].Seq, newBufferRoom...)
-							emptyRoomInBufferB += bufferSize
-						}
-						if s.MultiFaDir != "" {
-							currMultiFa[0].Seq[multiFaPos] = dna.Gap
-							currMultiFa[1].Seq[multiFaPos] = dna.Gap
-							currMultiFa[2].Seq[multiFaPos] = currHaploidBases[i]
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-						}
+						ans = advanceBPos(ans)
+						mlt = updateMultiFa(dna.Gap, dna.Gap, currHaploidBases[i], mlt)
 					}
 				}
 				if currHaploidCall.Deletion != 0 {
 					for i = 0; i < currHaploidCall.Deletion; i++ {
-						if s.MultiFaDir != "" {
-							currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-							currMultiFa[1].Seq[multiFaPos] = dna.Gap
-							currMultiFa[2].Seq[multiFaPos] = dna.Gap
-							multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-						}
+						mlt = updateMultiFa(refMap[currChrom][refPos], dna.Gap, dna.Gap, mlt)
 						refPos++
 						if refPos >= len(refMap[currChrom]) {
 							currPloidy = 2
@@ -486,73 +351,89 @@ func samAssembler(s Settings) {
 				}
 			}
 
-			if haploidBases < 2 { //if we are on the last haploidBase, we re-enter diploid mode
+			if haploidBases < 2 { // if we are on the last haploidBase, we re-enter diploid mode
 				currPloidy = 2
 			}
 			refPos++
 			haploidBases--
 		} else {
-			log.Fatalf("Error in samAssembly. Unrecognized ploidy: %v.\n", currPloidy)
+			log.Fatalf("Error: Unrecognized ploidy: %v.\n", currPloidy)
 		}
 	}
 
-	//once we're done with the piles we have to add the trailing ref bases and clear the buffer for the last chrom
+	// once we're done with the piles we have to add the trailing ref bases and clear the buffer for the last chrom
 	for refPos < len(refMap[currChrom]) {
-		answerA[currFaIndex].Seq[answerAPos] = refMap[currChrom][refPos]
-		answerB[currFaIndex].Seq[answerBPos] = refMap[currChrom][refPos]
-		if s.MultiFaDir != "" {
-			currMultiFa[0].Seq[multiFaPos] = refMap[currChrom][refPos]
-			currMultiFa[1].Seq[multiFaPos] = refMap[currChrom][refPos]
-			currMultiFa[2].Seq[multiFaPos] = refMap[currChrom][refPos]
-			multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa = advanceMultiFaPos(multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa, newBufferRoom)
-		}
-		answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB = advanceAnswerPos(answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB, newBufferRoom)
+		ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = refMap[currChrom][refPos]
+		ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = refMap[currChrom][refPos]
+		mlt = updateMultiFa(refMap[currChrom][refPos], refMap[currChrom][refPos], refMap[currChrom][refPos], mlt)
+		mlt = advanceMultiFaPos(mlt)
+		ans = advanceAnswerPos(ans)
 		refPos++
 	}
 
-	//write last multiFa entry
+	// write last multiFa entry
 	if s.MultiFaDir != "" {
-		currMultiFa[0].Seq = currMultiFa[0].Seq[:len(currMultiFa[0].Seq)-emptyRoomInMultiFaBuffer]
-		currMultiFa[1].Seq = currMultiFa[1].Seq[:len(currMultiFa[1].Seq)-emptyRoomInMultiFaBuffer]
-		currMultiFa[2].Seq = currMultiFa[2].Seq[:len(currMultiFa[2].Seq)-emptyRoomInMultiFaBuffer]
-		fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), currMultiFa)
+		mlt = clearMultiFaBuffer(mlt)
+		fasta.Write(fmt.Sprintf("%s/%s.fa", s.MultiFaDir, currChrom), mlt.CurrMultiFa)
 	}
 
-	//write answer
-	answerA[currFaIndex].Seq = answerA[currFaIndex].Seq[:len(answerA[currFaIndex].Seq)-emptyRoomInBufferA]
-	answerB[currFaIndex].Seq = answerB[currFaIndex].Seq[:len(answerB[currFaIndex].Seq)-emptyRoomInBufferB]
-	fasta.Write(s.OutFileA, answerA)
-	fasta.Write(s.OutFileB, answerB)
+	// write answer
+	ans = clearAnswerBuffer(ans)
+	fasta.Write(s.OutFileA, ans.AnswerA)
+	fasta.Write(s.OutFileB, ans.AnswerB)
 }
 
-func advanceAnswerPos(answerAPos int, answerBPos int, emptyRoomInBufferA int, emptyRoomInBufferB int, currFaIndex int, answerA []fasta.Fasta, answerB []fasta.Fasta, newBufferRoom []dna.Base) (int, int, int, int, int, []fasta.Fasta, []fasta.Fasta) {
-	answerAPos++
-	answerBPos++
-	emptyRoomInBufferA--
-	emptyRoomInBufferB--
-	if emptyRoomInBufferA < 1 {
-		answerA[currFaIndex].Seq = append(answerA[currFaIndex].Seq, newBufferRoom...)
-		emptyRoomInBufferA += bufferSize
-	}
-	if emptyRoomInBufferB < 1 {
-		answerB[currFaIndex].Seq = append(answerB[currFaIndex].Seq, newBufferRoom...)
-		emptyRoomInBufferB += bufferSize
-	}
-	return answerAPos, answerBPos, emptyRoomInBufferA, emptyRoomInBufferB, currFaIndex, answerA, answerB
+// advanceAnswerPos advances the position of both haplotypes in the AnswerStruct.
+func advanceAnswerPos(ans AnswerStruct) AnswerStruct {
+	ans = advanceAPos(ans)
+	return advanceBPos(ans)
 }
 
-func advanceMultiFaPos(multiFaPos int, emptyRoomInMultiFaBuffer int, currMultiFa []fasta.Fasta, newBufferRoom []dna.Base) (int, int, []fasta.Fasta) {
-	multiFaPos++
-	emptyRoomInMultiFaBuffer--
-	if emptyRoomInMultiFaBuffer < 1 {
-		currMultiFa[0].Seq = append(currMultiFa[0].Seq, newBufferRoom...)
-		currMultiFa[1].Seq = append(currMultiFa[1].Seq, newBufferRoom...)
-		currMultiFa[2].Seq = append(currMultiFa[2].Seq, newBufferRoom...)
-		emptyRoomInMultiFaBuffer += bufferSize
+// advanceAPos advances the position of haplotype A in the AnswerStruct, allocating additional buffer room if required.
+func advanceAPos(ans AnswerStruct) AnswerStruct {
+	ans.AnswerAPos++
+	ans.EmptyRoomInBufferA--
+	if ans.EmptyRoomInBufferA < 1 {
+		ans.AnswerA[ans.CurrFaIndex].Seq = append(ans.AnswerA[ans.CurrFaIndex].Seq, ans.NewBufferRoom...)
+		ans.EmptyRoomInBufferA += bufferSize
 	}
-	return multiFaPos, emptyRoomInMultiFaBuffer, currMultiFa
+	return ans
 }
 
+// advanceBPos advances the position of haplotype B in the AnswerStruct, allocating additional buffer room if required.
+func advanceBPos(ans AnswerStruct) AnswerStruct {
+	ans.AnswerBPos++
+	ans.EmptyRoomInBufferB--
+	if ans.EmptyRoomInBufferB < 1 {
+		ans.AnswerB[ans.CurrFaIndex].Seq = append(ans.AnswerB[ans.CurrFaIndex].Seq, ans.NewBufferRoom...)
+		ans.EmptyRoomInBufferB += bufferSize
+	}
+	return ans
+}
+
+// updateMultiFa assigns bases to the three sequences in the MultiFaStruct, and advances the multiFa position.
+func updateMultiFa(zero dna.Base, first dna.Base, second dna.Base, mlt MultiFaStruct) MultiFaStruct {
+	mlt.CurrMultiFa[0].Seq[mlt.MultiFaPos] = zero
+	mlt.CurrMultiFa[1].Seq[mlt.MultiFaPos] = first
+	mlt.CurrMultiFa[2].Seq[mlt.MultiFaPos] = second
+	return advanceMultiFaPos(mlt)
+}
+
+// advanceMultiFaPos marches the position of the MultiFaStruct forward by one.
+// We therefore adjust the remaining room in the buffer and allocate additional buffer room if required.
+func advanceMultiFaPos(mlt MultiFaStruct) MultiFaStruct {
+	mlt.MultiFaPos++
+	mlt.EmptyRoomInMultiFaBuffer--
+	if mlt.EmptyRoomInMultiFaBuffer < 1 {
+		mlt.CurrMultiFa[0].Seq = append(mlt.CurrMultiFa[0].Seq, mlt.NewBufferRoom...)
+		mlt.CurrMultiFa[1].Seq = append(mlt.CurrMultiFa[1].Seq, mlt.NewBufferRoom...)
+		mlt.CurrMultiFa[2].Seq = append(mlt.CurrMultiFa[2].Seq, mlt.NewBufferRoom...)
+		mlt.EmptyRoomInMultiFaBuffer += bufferSize
+	}
+	return mlt
+}
+
+// getIndexForName finds the index of a []fasta.Fasta with a specified input name.
 func getIndexForName(f []fasta.Fasta, name string) int {
 	for i := range f {
 		if f[i].Name == name {
@@ -561,6 +442,22 @@ func getIndexForName(f []fasta.Fasta, name string) int {
 	}
 	log.Fatalf("Name: %s not found in fasta.", name)
 	return -1
+}
+
+// clearMultiFaBuffer removes trailing bases from the end of the fasta seqeunces, based on the remaining room
+// in the multiFa buffer.
+func clearMultiFaBuffer(mlt MultiFaStruct) MultiFaStruct {
+	mlt.CurrMultiFa[0].Seq = mlt.CurrMultiFa[0].Seq[:len(mlt.CurrMultiFa[0].Seq)-mlt.EmptyRoomInMultiFaBuffer]
+	mlt.CurrMultiFa[1].Seq = mlt.CurrMultiFa[1].Seq[:len(mlt.CurrMultiFa[1].Seq)-mlt.EmptyRoomInMultiFaBuffer]
+	mlt.CurrMultiFa[2].Seq = mlt.CurrMultiFa[2].Seq[:len(mlt.CurrMultiFa[2].Seq)-mlt.EmptyRoomInMultiFaBuffer]
+	return mlt
+}
+
+// clearAnswerBuffer removes trailing bases at the end of the fasta sequence, based on the remaining room in each buffer.
+func clearAnswerBuffer(ans AnswerStruct) AnswerStruct {
+	ans.AnswerA[ans.CurrFaIndex].Seq = ans.AnswerA[ans.CurrFaIndex].Seq[:len(ans.AnswerA[ans.CurrFaIndex].Seq)-ans.EmptyRoomInBufferA]
+	ans.AnswerB[ans.CurrFaIndex].Seq = ans.AnswerB[ans.CurrFaIndex].Seq[:len(ans.AnswerB[ans.CurrFaIndex].Seq)-ans.EmptyRoomInBufferB]
+	return ans
 }
 
 func usage() {
@@ -589,6 +486,7 @@ func main() {
 	var likelihoodCacheSize *int = flag.Int("likelihoodCacheSize", 100, "Set the maximum dimension of the likelihood caches. Should be slightly larger than highest expected pile depth.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to enable additional debug prints.")
+	var flatPrior *bool = flag.Bool("flatPrior", false, "Use a flat prior instead of the default informative prior distribution.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -629,6 +527,7 @@ func main() {
 			LikelihoodCacheSize: *likelihoodCacheSize,
 			SetSeed:             *setSeed,
 			Verbose:             *verbose,
+			FlatPrior:           *flatPrior,
 		}
 
 		samAssembler(s)

@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"testing"
 )
@@ -62,6 +61,12 @@ var DiploidBaseCallFromPileTests = []struct {
 		Gamma:    3,
 		Epsilon:  0.01,
 		Expected: AT},
+	{P: Pile{CountF: [13]int{0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //homo transversion
+		RefBase:  dna.T,
+		Delta:    0.1,
+		Gamma:    3,
+		Epsilon:  0.01,
+		Expected: CC},
 }
 
 func TestDiploidBaseCallFromPile(t *testing.T) {
@@ -136,7 +141,6 @@ func TestMakeDiploidBasePriorCache(t *testing.T) {
 	for _, v := range MakePileDiploidPriorProbabilityCacheTests {
 		current = MakeDiploidBasePriorCache(v.BranchLength, v.TransitionBias)
 		if !equalMatrix(current, v.Expected) {
-			fmt.Println(current)
 			t.Errorf("Error in generating pileup DiploidBase prior probability cache.")
 		}
 	}

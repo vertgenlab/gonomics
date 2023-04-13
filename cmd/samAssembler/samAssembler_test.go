@@ -96,10 +96,10 @@ var ScoreTests = []struct {
 	OutFile      string
 	ExpectedFile string
 }{
-	{ScoreType: "smallBaseMatrix",
+	{ScoreType: "baseMatrix",
 		InFileList:   "testdata/score/fileList.txt",
-		OutFile:      "testdata/score/test.smallBaseMatrix.txt",
-		ExpectedFile: "testdata/score/expected.smallBaseMatrix.txt"},
+		OutFile:      "testdata/score/test.baseMatrix.txt",
+		ExpectedFile: "testdata/score/expected.baseMatrix.txt"},
 	{ScoreType: "baseMatrixByRefBase",
 		InFileList:   "testdata/score/fileList.txt",
 		OutFile:      "testdata/score/test.baseMatrixByRefBase.txt",
