@@ -2,10 +2,11 @@ package gtf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // VariantToAnnotation generates an annotation which can be appended to the INFO field of a VCF
@@ -22,12 +23,12 @@ func VariantToAnnotation(variant *vcfEffectPrediction, seq map[string][]dna.Base
 	return answer
 }
 
-// genomicToString adds the genotype portion of the annotation
+// genomicToString adds the genotype portion of the annotation.
 func genomicToString(v *vcfEffectPrediction) string {
 	return fmt.Sprintf("g.%s:%d%s>%s", v.Chr, v.Vcf.Pos, v.Vcf.Ref, v.Vcf.Alt)
 }
 
-// cDnaToString adds the cDNA portion of the annotation and makes several adjustments for standard variant nomenclature
+// cDnaToString adds the cDNA portion of the annotation and makes several adjustments for standard variant nomenclature.
 func cDnaToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	if v.VariantType == "Intronic" || v.VariantType == "Splice" || v.VariantType == "FarSplice" {
 		return nonCodingToString(v, seq)
@@ -36,7 +37,7 @@ func cDnaToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	}
 }
 
-// nonCodingToString inputs intronic variants and generates a cDNA annotation
+// nonCodingToString inputs intronic variants and generates a cDNA annotation.
 func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
 	ref := dna.StringToBases(v.Ref)
@@ -179,7 +180,7 @@ func nonCodingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string
 	return answer
 }
 
-// codingToString inputs variants inside the Cds and generates a cDNA annotation
+// codingToString inputs variants inside the Cds and generates a cDNA annotation.
 func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	var answer string = v.RefId + ":c."
 	ref := dna.StringToBases(v.Ref)
@@ -258,7 +259,7 @@ func codingToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	return answer
 }
 
-// isDuplication returns true if the variant is likely a duplication of surrounding sequence
+// isDuplication returns true if the variant is likely a duplication of surrounding sequence.
 func isDuplication(v *vcfEffectPrediction, seq map[string][]dna.Base) bool {
 	ref := dna.StringToBases(v.Ref)
 	alt := dna.StringToBases(v.Alt[0]) //TODO: (riley) see previous TODO about polyallelic bases.
@@ -274,7 +275,7 @@ func isDuplication(v *vcfEffectPrediction, seq map[string][]dna.Base) bool {
 	return true
 }
 
-// truncateOnTer inputs a slice of amino acids and truncates the slice at the first stop codon
+// truncateOnTer inputs a slice of amino acids and truncates the slice at the first stop codon.
 func truncateOnTer(a []dna.AminoAcid) []dna.AminoAcid {
 	for i := 0; i < len(a); i++ {
 		if a[i] == dna.Stop {
@@ -284,7 +285,7 @@ func truncateOnTer(a []dna.AminoAcid) []dna.AminoAcid {
 	return a
 }
 
-// trimSynonymous removes identical amino acids that are present in the ref and alt amino acid slices
+// trimSynonymous removes identical amino acids that are present in the ref and alt amino acid slices.
 func trimSynonymous(alpha []dna.AminoAcid, beta []dna.AminoAcid) (a, b []dna.AminoAcid) {
 	if len(alpha) > 1 && len(beta) > 1 {
 		for i := 0; i < numbers.Min(len(alpha), len(beta)); i++ {
@@ -296,7 +297,7 @@ func trimSynonymous(alpha []dna.AminoAcid, beta []dna.AminoAcid) (a, b []dna.Ami
 	return alpha, beta
 }
 
-// proteinToString adds the protein portion of the annotation and makes several adjustments for standard variant nomenclature
+// proteinToString adds the protein portion of the annotation and makes several adjustments for standard variant nomenclature.
 func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 	if v.VariantType == "Silent" || v.VariantType == "Missense" || v.VariantType == "Nonsense" || v.VariantType == "Frameshift" {
 	} else {
@@ -382,7 +383,7 @@ func proteinToString(v *vcfEffectPrediction, seq map[string][]dna.Base) string {
 }
 
 // getNearestCdsPos determines the cDNA position of the nearest Cds end and whether the reported end is the 5' or 3' end
-// Used for reporting intronic variants
+// Used for reporting intronic variants.
 func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
 	var currCDS *Cds = v.NearestCds
 	if v.PosStrand {
@@ -413,7 +414,7 @@ func getNearestCdsPos(v *vcfEffectPrediction) (pos int, start bool) {
 }
 
 // distToNextTer determines the distance to the nearest stop codon
-// Used for annotating frameshift variants
+// Used for annotating frameshift variants.
 func distToNextTer(v *vcfEffectPrediction, seq map[string][]dna.Base) int {
 	var answer int = 1
 	currSeq := seq[v.Chr]

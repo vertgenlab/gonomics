@@ -2,17 +2,18 @@ package simulate
 
 import (
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math"
-	"math/rand"
 )
 
-//RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
+// RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
 func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
 	for i := range answer {
@@ -36,7 +37,8 @@ const bufferSize = 10_000_000
 // gcContent specifies the expected value of GC content for inserted sequences.
 // vcfOutFile specifies an optional return, which records all variants made during the simulated mutation process.
 // transitionBias specifies the expected value of the ratio of transitions to transversions in the output sequence.
-func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string) []fasta.Fasta {
+// qName sets the suffix for the output query fasta name.
+func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
 	var answer = make([]fasta.Fasta, 2)
 	var emptyRoomInBuffer = bufferSize
 	var currRand, currRand2, currRand3 float64
@@ -52,7 +54,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 		log.Fatalf("SimulateWithIndels expects a single fasta record in the input file.")
 	}
 	answer[0] = fasta.Fasta{Name: records[0].Name, Seq: make([]dna.Base, bufferSize)}
-	answer[1] = fasta.Fasta{Name: fmt.Sprintf("%v_sim", records[0].Name), Seq: make([]dna.Base, bufferSize)}
+	answer[1] = fasta.Fasta{Name: fmt.Sprintf("%s_%s", records[0].Name, qName), Seq: make([]dna.Base, bufferSize)}
 
 	if vcfOutFile != "" {
 		vcfOut = fileio.EasyCreate(vcfOutFile)

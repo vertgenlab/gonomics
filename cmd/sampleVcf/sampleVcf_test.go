@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var SampleVcfTests = []struct {

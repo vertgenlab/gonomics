@@ -1,11 +1,12 @@
 package main
 
 import (
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"os"
-	"testing"
 )
 
 var FastqFilterTests = []struct {

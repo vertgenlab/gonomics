@@ -4,12 +4,7 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -17,6 +12,10 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"golang.org/x/exp/slices"
 )
 
 var Reset = "\033[0m"
@@ -36,7 +35,6 @@ const hline = "━━━━━━━━━━━━━━━━━━━━━�
 // default so it just adds a bunch of characters to
 // the print statements.
 func init() {
-
 	if runtime.GOOS == "windows" {
 		Reset = ""
 		Red = ""
@@ -57,75 +55,61 @@ type CmdInfo struct {
 }
 
 func usage() {
-	cache := getCache()
+	getCache()
 
 	fmt.Print(
 		Yellow + "gonomics - A collection of tools that use the gonomics core library.\n\n" +
 			"Usage: gonomics <command> [options]\n\n" + Reset)
 	fmt.Println(Red + "Commands:" + Reset)
 	fmt.Print(hline)
-	printCmdList(cache)
+	printCmdList()
 	fmt.Println(hline)
 }
 
-// getCache returns a cache file ('go bin path'/.cmdcache) listing the cmd usage statements.
-// Retrieves the file if it exists, else builds a new cache.
-func getCache() (cache *os.File) {
-	binPath, _ := getBin()
-	cmdStat, _ := os.Stat(binPath + "/gonomics")               // stat binary for this file
-	cacheStat, cacheStatErr := os.Stat(binPath + "/.cmdcache") // stat cache file
+// getCache makes sure the cache is present, and builds a new cache if it is not.
+func getCache() {
+	if cache != "" {
+		return // cache is already present
+	}
 
-	// Build a cache if cache does not exist OR if the cache is older than the gonomics cmd binary
-	if os.IsNotExist(cacheStatErr) || cmdStat.ModTime().After(cacheStat.ModTime()) {
-		buildCmdCache(binPath)
-	}
-	file, err := os.Open(binPath + "/.cmdcache")
-	if err != nil {
-		log.Panic(err)
-	}
-	return file
+	buildCmdCache("")
 }
 
-// printCmdList prints the cache file
-func printCmdList(cache *os.File) {
-	toPrint, err := ioutil.ReadAll(cache)
-	cache.Close()
-	if err != nil {
-		log.Panic(err)
+// printCmdList prints the cache file.
+func printCmdList() {
+	lines := strings.Split(cache, "\n")
+	var lastIdx int
+	for i := range lines {
+		if strings.HasPrefix(lines[i], "##") {
+			lastIdx = i
+		}
 	}
-
-	if bytes.HasPrefix(toPrint, []byte("##SourceDir:")) {
-		toPrint = bytes.SplitN(toPrint, []byte("\n"), 2)[1]
-	}
-
-	fmt.Print(string(toPrint))
+	fmt.Print(strings.Join(lines[lastIdx+1:], "\n"))
 }
 
-// buildCmdCache creates a cache file listing the cmd usage statements.
-// TODO find a way to store cache in gonomics binary file.
-func buildCmdCache(binPath string) {
-	fmt.Println("...Building Cache...")
-	cmdMap := getGonomicsCmds()
+// buildCmdCache builds the cache listing the cmd usage statements.
+func buildCmdCache(altSrcPath string) {
+	log.Println("...Building Cache...")
 
+	// get cmd names and manipulate to sorted slice
+	cmdMap := getGonomicsCmds(altSrcPath)
 	cmds := make([]string, 0, len(cmdMap))
 	for key := range cmdMap {
 		cmds = append(cmds, key)
 	}
 	sort.Slice(cmds, func(i, j int) bool { return cmds[i] < cmds[j] })
+	// get location of binary and source files
+	binPath, _ := getBin()
 
-	var cmdSourcePath string
-	var cachedSrcPath string = getCachedSrcDir(binPath + "/.cmdcache")
-	switch {
-	case cachedSrcPath != "":
-		cmdSourcePath = cachedSrcPath
-	case os.Getenv("GOPATH") != "":
-		cmdSourcePath = os.Getenv("GOPATH") + "/src/github.com/vertgenlab/gonomics/cmd/"
-	default:
-		cmdSourcePath = os.Getenv("HOME") + "/go/src/github.com/vertgenlab/gonomics/cmd/"
+	var srcPath string
+	if altSrcPath != "" {
+		srcPath = altSrcPath
+	} else {
+		srcPath = getSrc()
 	}
 
+	// sort cmds into command groups
 	var cmdGroup, cmdUsage string
-
 	groupMap := make(map[string][]CmdInfo) // key: group, value: all cmds in group
 
 	for _, cmdName := range cmds {
@@ -134,12 +118,10 @@ func buildCmdCache(binPath string) {
 		}
 
 		// Open source file and parse gonomics cmd tags
-		cmdGroup, cmdUsage = parseTagsFromSource(cmdSourcePath + cmdName + "/" + cmdName + ".go")
-
+		cmdGroup, cmdUsage = parseTagsFromSource(srcPath + cmdName + "/" + cmdName + ".go")
 		if cmdGroup == "" { // TODO grouping map
 			cmdGroup = "Uncategorized"
 		}
-
 		if cmdUsage == "" {
 			cmdUsage = getUsageFromRunningCmd(binPath + "/" + cmdName)
 		}
@@ -148,14 +130,14 @@ func buildCmdCache(binPath string) {
 
 		groupMap[info.Group] = append(groupMap[info.Group], info)
 	}
-	writeCache(binPath, groupMap, cmdSourcePath)
+
+	writeCache(groupMap, srcPath)
 }
 
-// writeCache writes a groupMap to file
-// TODO change so cache is added to gonomics cmd binary
-func writeCache(binPath string, groupMap map[string][]CmdInfo, srcPath string) {
-	cacheWriter, err := os.Create(binPath + "/.cmdcache")
-	defer cacheWriter.Close()
+// writeCache writes a groupMap to file.
+func writeCache(groupMap map[string][]CmdInfo, srcPath string) {
+	outfile := srcPath + "/gonomics/command_cache.txt"
+	cacheWriter, err := os.Create(outfile)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -166,13 +148,24 @@ func writeCache(binPath string, groupMap map[string][]CmdInfo, srcPath string) {
 		log.Panic(err)
 	}
 
+	// write command names
+	var cmdNames []string
+	for _, group := range groupMap {
+		for i := range group {
+			cmdNames = append(cmdNames, fmt.Sprintf("##CmdName:%s\n", group[i].Name))
+		}
+	}
+	slices.Sort(cmdNames) // so file is not updated on PRs with no cmd changes
+	for i := range cmdNames {
+		_, err = fmt.Fprintf(cacheWriter, cmdNames[i])
+		exception.PanicOnErr(err)
+	}
+
 	// initialize tabwriter
 	w := new(tabwriter.Writer)
 
 	// minwidth, tabwidth, padding, padchar, flags
 	w.Init(cacheWriter, 4, 8, 0, ' ', 0)
-
-	defer w.Flush()
 
 	var allGroups [][]CmdInfo
 	for _, cmds := range groupMap {
@@ -202,6 +195,13 @@ func writeCache(binPath string, groupMap map[string][]CmdInfo, srcPath string) {
 			}
 		}
 	}
+
+	err = w.Flush()
+	exception.PanicOnErr(err)
+	err = cacheWriter.Close()
+	exception.PanicOnErr(err)
+
+	cache = strings.Join(fileio.Read(outfile), "\n") + "\n"
 }
 
 // parseTagsFromSource parses gonomics cmd tags from source files.
@@ -271,33 +271,13 @@ func getHeaderCommentLines(filepath string) []string {
 	return answer
 }
 
-// getCachedSrcDir retrieves the source code directory stored in the first line of the cache file
-func getCachedSrcDir(cacheFile string) string {
-	file, err := os.Open(cacheFile)
-	defer file.Close()
-	if err != nil {
-		return ""
+// getCachedSrcDir retrieves the source code directory stored in the first line of the cache.
+func getCachedSrcDir() string {
+	lines := strings.Split(cache, "\n")
+	for i := range lines {
+		if strings.HasPrefix(lines[i], "##SourceDir:") {
+			return strings.TrimPrefix(lines[i], "##SourceDir:")
+		}
 	}
-
-	s := bufio.NewScanner(file)
-	s.Scan()
-	line := s.Text()
-	if strings.HasPrefix(line, "##SourceDir:") {
-		return strings.TrimPrefix(line, "##SourceDir:")
-	}
-	exception.PanicOnErr(err)
 	return ""
-}
-
-// buildFromPath is run when setpath is called and write a new cache file with specified gonomicsPath
-func buildFromPath(gonomicsPath, binPath string) {
-	gonomicsPath = strings.TrimRight(gonomicsPath, "/") + "/cmd/"
-	file, err := os.Create(binPath + "/.cmdcache")
-	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(file, "##SourceDir:%s\n", gonomicsPath)
-	if err != nil {
-		log.Panic(err)
-	}
-	file.Close()
-	buildCmdCache(binPath)
 }

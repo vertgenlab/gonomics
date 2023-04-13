@@ -3,12 +3,13 @@ package genomeGraph
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-	"strings"
 )
 
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
@@ -28,7 +29,6 @@ func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
 }
 
 func ViewGraphAlignment(g *giraf.Giraf, genome *GenomeGraph) string {
-
 	var seqOne, seqTwo bytes.Buffer
 	var i int = g.Path.TStart
 	var j int = g.QStart

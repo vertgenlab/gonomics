@@ -1,8 +1,9 @@
 package lift
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
 )
 
 var OverlapTests = []struct {

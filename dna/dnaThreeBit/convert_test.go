@@ -2,9 +2,10 @@ package dnaThreeBit
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/dna"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //func RuneToThreeBitBase(r rune) ThreeBitBase {

@@ -1,6 +1,9 @@
 package dna
 
 import (
+	"fmt"
+	"log"
+	"strings"
 	"testing"
 )
 
@@ -189,4 +192,75 @@ func BenchmarkRange(b *testing.B) {
 			dummySlice[j] = dummyVal
 		}
 	}
+}
+
+func BenchmarkBasesToStringBuilder(b *testing.B) {
+	bases := StringToBases("AaCcGgTtNn")
+	for i := 0; i < b.N; i++ {
+		basesToStringBuild(bases)
+	}
+}
+
+func BenchmarkBasesToStringCast(b *testing.B) {
+	bases := StringToBases("AaCcGgTtNn")
+	for i := 0; i < b.N; i++ {
+		basesToStringCast(bases)
+	}
+}
+
+func BenchmarkBasesToStringBuilderAssign(b *testing.B) {
+	bases := StringToBases("AaCcGgTtNn")
+	var s string
+	for i := 0; i < b.N; i++ {
+		s = basesToStringBuild(bases)
+	}
+	fmt.Sprint(s)
+}
+
+func BenchmarkBasesToStringCastAssign(b *testing.B) {
+	bases := StringToBases("AaCcGgTtNn")
+	var s string
+	for i := 0; i < b.N; i++ {
+		s = basesToStringCast(bases)
+	}
+	fmt.Sprint(s)
+}
+
+func BenchmarkBasesToStringBuilderAssignLong(b *testing.B) {
+	bases := make([]Base, 10000000)
+	var s string
+	for i := 0; i < b.N; i++ {
+		s = basesToStringBuild(bases)
+	}
+	fmt.Sprint(s)
+}
+
+func BenchmarkBasesToStringCastAssignLong(b *testing.B) {
+	bases := make([]Base, 10000000)
+	var s string
+	for i := 0; i < b.N; i++ {
+		s = basesToStringCast(bases)
+	}
+	fmt.Sprint(s)
+}
+
+func basesToStringBuild(bases []Base) string {
+	var buffer strings.Builder
+	buffer.Grow(len(bases))
+	var err error
+	for i := range bases {
+		err = buffer.WriteByte(baseToByteArray[bases[i]])
+		if err != nil {
+			log.Panicf("problem writing byte")
+		}
+	}
+	return buffer.String()
+}
+
+func basesToStringCast(bases []Base) string {
+	buf := make([]byte, len(bases))
+	for i, b := range bases {
+		buf[i] = baseToByteArray[b]
+	}
+	return string(buf)
 }

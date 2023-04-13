@@ -1,32 +1,33 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"testing"
 )
 
-//initiate fake fasta files for testing the graph function
+// initiate fake fasta files for testing the graph function.
 var toad = fasta.Fasta{Name: "toad", Seq: dna.StringToBases("TTGTTATTC")}
 var ahsoka = fasta.Fasta{Name: "ahsoka", Seq: dna.StringToBases("TTGTTC")}
 
-//make needed cigar and graph using the graph function being tested
+// make needed cigar and graph using the graph function being tested.
 var _, aln = align.ConstGap(toad.Seq, ahsoka.Seq, align.HumanChimpTwoScoreMatrix, -430)
 var graph = cigarToGraph(toad, ahsoka, aln)
 
-//make a manual graph using the fake fastas
+// make a manual graph using the fake fastas.
 var manual = buildManualGraph(toad, ahsoka)
 
-//Did graph and manual end up with the same number of nodes?
+// Did graph and manual end up with the same number of nodes?
 func TestAddNode(t *testing.T) {
 	if len(graph.Nodes) != len(aln) {
 		t.Errorf("Number of nodes does not match with the cigar: %d %d", len(graph.Nodes), len(aln))
 	}
 }
 
-//test if graph and manual are equivalent.
+// test if graph and manual are equivalent.
 func TestCigarToGraphMatchManual(t *testing.T) {
 	compareScore := 0
 	seqCounter := compareSeq(manual, graph)
@@ -40,7 +41,7 @@ func TestCigarToGraphMatchManual(t *testing.T) {
 
 //functions below this line were used to execute test functions
 
-//this function makes the manually created graph (called 'manual')
+// this function makes the manually created graph (called 'manual').
 func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *genomeGraph.GenomeGraph {
 	manual := genomeGraph.EmptyGraph()
 	nodeOne := &genomeGraph.Node{
@@ -63,7 +64,7 @@ func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *genomeGraph.GenomeG
 	return manual
 }
 
-//this function compares the sequences at each node, going base by base.
+// this function compares the sequences at each node, going base by base.
 func compareSeq(manual *genomeGraph.GenomeGraph, graph *genomeGraph.GenomeGraph) int {
 	var seqCounter int = 0
 	for i := 0; i < len(manual.Nodes); i++ {
@@ -78,9 +79,9 @@ func compareSeq(manual *genomeGraph.GenomeGraph, graph *genomeGraph.GenomeGraph)
 	return seqCounter
 }
 
-//this function compares the edges (both previous and next) by comparing the name of the node within the prev[] and next[] for each node. As a reminder, the prev[] and next[] are type *Node, so they have all the information of the connecting nodes.
-//TODO: Compare the sequences within each edge between the 'graph' and 'manual'.
-//TODO: Compare the probability of each edge between the 'graph' and 'manual'.
+// this function compares the edges (both previous and next) by comparing the name of the node within the prev[] and next[] for each node. As a reminder, the prev[] and next[] are type *Node, so they have all the information of the connecting nodes.
+// TODO: Compare the sequences within each edge between the 'graph' and 'manual'.
+// TODO: Compare the probability of each edge between the 'graph' and 'manual'.
 func compareEdges(manual *genomeGraph.GenomeGraph, graph *genomeGraph.GenomeGraph) int {
 	totalManualPrevEdges := 0
 	totalManualNextEdges := 0

@@ -2,9 +2,10 @@ package sam
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 )
 
 func TestReadHeaderBytes(t *testing.T) {

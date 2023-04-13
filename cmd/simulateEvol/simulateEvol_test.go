@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var SimulateEvolTests = []struct {
@@ -22,6 +23,7 @@ var SimulateEvolTests = []struct {
 	VcfOutFile      string
 	ExpectedOutFile string
 	ExpectedVcfFile string
+	QName           string
 }{
 	{InputFastaFile: "testdata/rand.fa",
 		OutFile:         "testdata/tmp.out.fa",
@@ -36,7 +38,8 @@ var SimulateEvolTests = []struct {
 		TransitionBias:  1,
 		VcfOutFile:      "testdata/tmp.vcf",
 		ExpectedVcfFile: "testdata/expected.branchLength.vcf",
-		ExpectedOutFile: "testdata/expected.branchLength.fa"},
+		ExpectedOutFile: "testdata/expected.branchLength.fa",
+		QName:           "sim"},
 }
 
 func TestSimulateEvol(t *testing.T) {
@@ -56,6 +59,7 @@ func TestSimulateEvol(t *testing.T) {
 			SetSeed:        v.SetSeed,
 			VcfOutFile:     v.VcfOutFile,
 			TransitionBias: v.TransitionBias,
+			QName:          v.QName,
 		}
 		SimulateEvol(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedOutFile) {

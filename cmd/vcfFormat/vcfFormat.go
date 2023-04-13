@@ -5,19 +5,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"strings"
 )
 
 func vcfFormat(infile string, outfile string, ensemblToUCSC bool, UCSCToEnsembl bool, fixVcfRecords bool, ref string, clearInfo bool, tableOutput bool) {
 	if ensemblToUCSC && UCSCToEnsembl {
-		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
+		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatible.")
 	}
 
 	var maxAlts int

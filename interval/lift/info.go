@@ -2,12 +2,13 @@ package lift
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
-//OverlapCount returns the number of elements from list one that have any overlap with list two. Answers range from 0 to len(a).
-//Input Lift slices must be presorted with SortByCoord.
+// OverlapCount returns the number of elements from list one that have any overlap with list two. Answers range from 0 to len(a).
+// Input Lift slices must be presorted with SortByCoord.
 func OverlapCount(a []Lift, b []Lift) int {
 	var count int = 0
 	var aIndex, bIndex int
@@ -33,7 +34,7 @@ func overlapProbability(elements []Lift, tempElements []Lift, length int, noGapR
 	return float64(overlapLengthSum(tempElements, tempNoGap)) / float64(totalSize(tempNoGap))
 }
 
-//overlapLength returns the number of bases for which two Lift entries overlap.
+// overlapLength returns the number of bases for which two Lift entries overlap.
 func overlapLength(a Lift, b Lift) int {
 	if !overlap(a, b) {
 		return 0
@@ -43,8 +44,8 @@ func overlapLength(a Lift, b Lift) int {
 	return end - start
 }
 
-//overlapLengthSum calculates the total number of overlapping bases between two sets of Lift elements.
-//Input Lift slices must be presorted with sortByCoord
+// overlapLengthSum calculates the total number of overlapping bases between two sets of Lift elements.
+// Input Lift slices must be presorted with sortByCoord.
 func overlapLengthSum(a []Lift, b []Lift) int {
 	var sum int = 0
 	var aIndex, bIndex, oLen int
@@ -62,7 +63,7 @@ func overlapLengthSum(a []Lift, b []Lift) int {
 	return sum
 }
 
-//totalSize returns the total length covered in a slice of Lift entries.
+// totalSize returns the total length covered in a slice of Lift entries.
 func totalSize(b []Lift) int {
 	var ans, curLen int
 	for i := 0; i < len(b); i++ {
@@ -94,8 +95,8 @@ func findLargestLength(b []Lift) int {
 	return maxLength
 }
 
-//IsSelfOverlapping returns true if any elements in a Lift slice overlap another element in the same slice. False otherwise.
-//b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
+// IsSelfOverlapping returns true if any elements in a Lift slice overlap another element in the same slice. False otherwise.
+// b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
 func IsSelfOverlapping(b []Lift, verbose int) bool {
 	for i := 0; i < len(b)-1; i++ {
 		if overlap(b[i], b[i+1]) {

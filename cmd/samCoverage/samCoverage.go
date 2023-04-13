@@ -5,13 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/sam"
-	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
+	"github.com/vertgenlab/gonomics/sam"
 )
 
 func totalAlignedBases(filename string) int {

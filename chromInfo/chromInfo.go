@@ -2,21 +2,22 @@
 package chromInfo
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// ChromInfo stores the chromosome name and size of each chromosome as well as the order they appear in the file
+// ChromInfo stores the chromosome name and size of each chromosome as well as the order they appear in the file.
 type ChromInfo struct {
 	Name  string
 	Size  int
 	Order int
 }
 
-// SliceToMap converts a slice of chromInfo structs into a map[Name]ChromInfo
+// SliceToMap converts a slice of chromInfo structs into a map[Name]ChromInfo.
 func SliceToMap(chroms []ChromInfo) map[string]ChromInfo {
 	answer := make(map[string]ChromInfo)
 	for i := 0; i < len(chroms); i++ {
@@ -26,7 +27,7 @@ func SliceToMap(chroms []ChromInfo) map[string]ChromInfo {
 	return answer
 }
 
-// ReadToSlice reads a chromInfo file into a slice where the index corresponds to the order of appearance in the file
+// ReadToSlice reads a chromInfo file into a slice where the index corresponds to the order of appearance in the file.
 func ReadToSlice(filename string) []ChromInfo {
 	var line string
 	var answer []ChromInfo
@@ -46,7 +47,7 @@ func ReadToSlice(filename string) []ChromInfo {
 	return answer
 }
 
-// SliceToMap reads a chromInfo file into a map[Name]ChromInfo
+// SliceToMap reads a chromInfo file into a map[Name]ChromInfo.
 func ReadToMap(filename string) map[string]ChromInfo {
 	data := ReadToSlice(filename)
 	return SliceToMap(data)

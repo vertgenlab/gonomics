@@ -11,7 +11,7 @@ func GeneToTssBed(g Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
 	return GeneToPromoterBed(g, c, 0, 0)
 }
 
-//GenesToTssBed returns the position of all TSSs from a Gene map as a slice of single base-pair bed entries.
+// GenesToTssBed returns the position of all TSSs from a Gene map as a slice of single base-pair bed entries.
 func GenesToTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
 	var answer = make([]bed.Bed, 0)
 	var currPromoters []bed.Bed
@@ -27,7 +27,7 @@ func GenesToTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo) []bed.B
 
 // GenesToCanonicalTrancriptsTssBed turns an input map of [geneId]*Gene structs, finds the canonical
 // transcript (defined as the longest coding sequence), and turns the TSS of this trancript into a Bed
-//struct.
+// struct.
 func GenesToCanonicalTranscriptsTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
 	var answer []bed.Bed
 	for _, i := range g {

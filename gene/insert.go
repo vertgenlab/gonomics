@@ -2,9 +2,10 @@ package gene
 
 import (
 	"errors"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // Insertion adds bases to the Gene, predicts the effect, and updates the Gene struct to reflect the change.
@@ -105,7 +106,6 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 			answer.AaAlt = []dna.AminoAcid{newProtSeq[j]}
 
 			g.protSeq = newProtSeq //TODO append new prot seq to existing seq at point of insertion
-
 		} else { // In-Frame
 			newProtSeq = dna.TranslateSeqToTer(g.codingSeq.seq) //TODO this can be much more efficient
 			answer.Consequence = InFrameInsertion
@@ -269,7 +269,7 @@ func insertAdjust(g *Gene, destSeq *[]dna.Base, insPos int, insSeq []dna.Base) e
 }
 
 // insertStable is identical to Insert, but conserves the
-// underlying memory of the input destSeq slice if possible
+// underlying memory of the input destSeq slice if possible.
 func insertStable(destSeq *[]dna.Base, insPos int, insSeq []dna.Base) error {
 	if insPos < 0 || insPos > len(*destSeq) {
 		return errInvalidPosition
@@ -285,7 +285,7 @@ func insertStable(destSeq *[]dna.Base, insPos int, insSeq []dna.Base) error {
 }
 
 // frameshiftTranslate translates the result of a frameshift going into the 3'UTR sequence if necessary.
-// Returns a stop-terminated sequence of amino acids
+// Returns a stop-terminated sequence of amino acids.
 func frameshiftTranslate(shiftedCds []dna.Base, utrThree []dna.Base) []dna.AminoAcid {
 	answer := make([]dna.AminoAcid, 0, (len(shiftedCds)+len(utrThree))/3)
 

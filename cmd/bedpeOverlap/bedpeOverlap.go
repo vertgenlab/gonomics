@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
-	"log"
 )
 
 func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool) {
@@ -23,7 +24,7 @@ func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, 
 	}
 }
 
-// function to calculate what percent of a bedpeHalf overlaps the selectBed
+// function to calculate what percent of a bedpeHalf overlaps the selectBed.
 func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 	var overlapEntryStart, overlapEntryEnd, halfBedPeStart, halfBedPeEnd, overlapSize int
 	var answer float64
@@ -256,7 +257,7 @@ func main() {
 		log.Fatalf("Error: overlap threshold must be between 0 and 1")
 	}
 
-	//should no longer be needed when overlapThresholdBedPe is implimented
+	//should no longer be needed when overlapThresholdBedPe is implemented
 	if *overlapThreshold != 0 && *bedSelect == false {
 		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
 	}

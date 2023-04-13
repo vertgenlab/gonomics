@@ -228,7 +228,7 @@ func OneLetterToAminoAcid(b byte) AminoAcid {
 	}
 }
 
-// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type
+// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type.
 func ThreeLetterToAminoAcid(s string) AminoAcid {
 	switch s {
 	case "Ala":
@@ -313,7 +313,7 @@ func CodonsToBases(c []Codon) []Base {
 	return answer
 }
 
-//TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
+// TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
 func TranslateCodon(c Codon) AminoAcid {
 	value, found := GeneticCode[c]
 	if !found {

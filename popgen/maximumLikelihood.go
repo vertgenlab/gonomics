@@ -4,7 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-//MleSettings delineates the experimental parameters for running maximum likelihood estimation on a set of variants using selectionMLE.
+// MleSettings delineates the experimental parameters for running maximum likelihood estimation on a set of variants using selectionMLE.
 type MleSettings struct {
 	Left                    float64 //left bound of MLE search space
 	Right                   float64 //right bound of MLE search space
@@ -17,7 +17,7 @@ type MleSettings struct {
 	IncludeRef              bool    //Includes the reference genome allele state in the derived allele frequency spectrum.
 }
 
-//SelectionMaximumLikelihoodEstimate performs MLE on an input allele frequency spectrum and writes the result to an output file.
+// SelectionMaximumLikelihoodEstimate performs MLE on an input allele frequency spectrum and writes the result to an output file.
 func SelectionMaximumLikelihoodEstimate(data Afs, s MleSettings) float64 {
 	allN := findAllN(data)
 	binomCache := BuildBinomCache(allN)
