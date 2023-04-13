@@ -106,7 +106,6 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 			answer.AaAlt = []dna.AminoAcid{newProtSeq[j]}
 
 			g.protSeq = newProtSeq //TODO append new prot seq to existing seq at point of insertion
-
 		} else { // In-Frame
 			newProtSeq = dna.TranslateSeqToTer(g.codingSeq.seq) //TODO this can be much more efficient
 			answer.Consequence = InFrameInsertion

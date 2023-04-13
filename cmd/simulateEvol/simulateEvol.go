@@ -72,7 +72,6 @@ func SimulateEvol(s Settings) {
 		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName)
 	}
 	fasta.Write(s.LeafOutFile, leafFastas)
-
 }
 
 func usage() {

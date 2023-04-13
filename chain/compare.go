@@ -168,7 +168,6 @@ func getSwapQCoord(ch Chain, start bool, end bool) int {
 		}
 	} else {
 		log.Fatalf("Error: Positive strand chain record detected, This function is primarily used only to swap coordinates on the negative strand ...\n")
-
 	}
 	return -1
 }

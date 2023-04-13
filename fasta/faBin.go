@@ -38,7 +38,6 @@ func BinGenomeNoBreaks(genome []Fasta, binNum int, minSize int) map[int][]Fasta 
 
 // fillSmallestBin fills the bin found by findSmallestBin and adds the next contig to it.
 func fillSmallestBin(bins map[int][]Fasta, genome []Fasta) map[int][]Fasta {
-
 	for i := len(bins); i < len(genome); i++ {
 		b := findSmallestBin(bins)
 		bins[b] = append(bins[b], genome[i])

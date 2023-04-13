@@ -94,7 +94,6 @@ func TestAllPossibleOneHuman(t *testing.T) {
 		err = os.Remove("testdata/allPossible.oneHuman.fa") //we delete allPossible only if all the tests have passed.
 		exception.PanicOnErr(err)
 	}
-
 }
 
 func TestAllPossibleTwoHumans(t *testing.T) {

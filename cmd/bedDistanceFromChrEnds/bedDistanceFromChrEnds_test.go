@@ -33,6 +33,5 @@ func TestBedDistanceFromChrEnds(t *testing.T) {
 			err = os.Remove(v.outBed)
 			exception.PanicOnErr(err)
 		}
-
 	}
 }

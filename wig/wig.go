@@ -175,7 +175,6 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 			// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
 			common.ExitIfError(err)
 		}
-
 	}
 }
 

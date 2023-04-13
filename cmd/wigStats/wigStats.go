@@ -45,7 +45,6 @@ func wigStats(inFile string, noGapFile string, outFile string, missingDataValue 
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)
-
 }
 
 func usage() {

@@ -29,7 +29,6 @@ func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
 }
 
 func ViewGraphAlignment(g *giraf.Giraf, genome *GenomeGraph) string {
-
 	var seqOne, seqTwo bytes.Buffer
 	var i int = g.Path.TStart
 	var j int = g.QStart

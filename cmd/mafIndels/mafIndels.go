@@ -25,7 +25,6 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 	//go through each line
 	for i := range mafRecords { //each i is a block
 		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
-
 			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
 			//here I assume only pairwise alignment, not >2 species
 			//here I assume species_ins is target (the 1st line in the block is a line but not included in mafRecords[i].Species, target is 2nd line in the block but 1st line in mafRecords[i].Species, index 0); species_del is query (3rd line in the block but 2nd line in mafRecords[i].Species, index 1 or higher)
@@ -41,7 +40,6 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 			//get eC species_del lines
 			if mafRecords[i].Species[k].ELine != nil && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil { //common checks for both eC and eI lines
 				if mafRecords[i].Species[k].ELine.Status == 'C' { //Check for ELine Status here
-
 					//convert maf to bed, continued
 					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
 					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
@@ -52,11 +50,9 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 
 					//get eI species_del lines
 				} else if mafRecords[i].Species[k].ELine.Status == 'I' {
-
 					//test if species_del eI fragment size < 10% corresponding s fragment size
 					//make sure arithmetic is all on float64
 					if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
-
 						//convert maf to bed, continued
 						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
 						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5}

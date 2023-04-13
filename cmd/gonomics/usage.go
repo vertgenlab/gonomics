@@ -35,7 +35,6 @@ const hline = "━━━━━━━━━━━━━━━━━━━━━�
 // default so it just adds a bunch of characters to
 // the print statements.
 func init() {
-
 	if runtime.GOOS == "windows" {
 		Reset = ""
 		Red = ""

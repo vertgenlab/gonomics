@@ -50,7 +50,6 @@ func mouseReconMraMle(inFile string, outFile string, treeFileName string, probTh
 		}
 	}
 	fasta.Write(outFile, []fasta.Fasta{*mouseNode.Fasta, *ratNode.Fasta, *hamsterNode.Fasta, *squirrelNode.Fasta, *mraNode.Fasta})
-
 }
 
 func mraIsPresent(mouse, rat, hamster, squirrel dna.Base) bool {

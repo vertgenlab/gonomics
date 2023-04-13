@@ -162,5 +162,4 @@ func TestRandGiraf(t *testing.T) {
 			fmt.Println(reads[i].Path, reads[i].Aln[0])
 		}
 	*/
-
 }

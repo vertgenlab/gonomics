@@ -92,7 +92,6 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 							parentAllele2++
 						}
 					}
-
 				}
 				target += read.Cigar[i].RunLength
 				query += read.Cigar[i].RunLength

@@ -108,7 +108,6 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 					leastSevereMismatch = scoreMatrix[i][j]
 				}
 			}
-
 		}
 	}
 	var leastSevereMatchMismatchChange int64 = leastSevereMismatch - maxMatch

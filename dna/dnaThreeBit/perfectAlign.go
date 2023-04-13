@@ -52,7 +52,6 @@ func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint6
 // and in register with each other.  The first comparison is startOne vs startTwo, and then to decreasing
 // positions.
 func countLeftMatches(seqOne []uint64, startOne int, seqTwo []uint64, startTwo int) int {
-
 	const bitsPerBase int = 3
 	const bitsPerInt int = 64
 	const basesPerInt int = bitsPerInt / bitsPerBase

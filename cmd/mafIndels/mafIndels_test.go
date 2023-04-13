@@ -44,6 +44,5 @@ func TestMafIndels(t *testing.T) {
 		if err != nil {
 			common.ExitIfError(err)
 		}
-
 	}
 }

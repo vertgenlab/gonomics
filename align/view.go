@@ -69,7 +69,6 @@ func LocalView(alpha []dna.Base, beta []dna.Base, operations []Cigar, maxI int64
 	endCig = int64(len(alpha)) - int64(maxI)
 	startCig = int64(len(alpha)) - alignLen - endCig
 	if startCig != 0 {
-
 		operations = append([]Cigar{{RunLength: startCig, Op: ColD}}, operations...)
 	}
 	if endCig != 0 {

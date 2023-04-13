@@ -94,5 +94,4 @@ func routineWorker(readChannel <-chan axt.Axt, writingChannel chan<- sam.Sam, wg
 	}
 	wg.Done()
 	log.Printf("Processed %d axt alignment into sam format\n", numberComplete)
-
 }

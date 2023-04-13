@@ -179,7 +179,6 @@ func MinimumDistance(a Bed, b Bed) (n int, err error) {
 	}
 	if b.ChromStart-a.ChromEnd >= 0 { //only positive if bed "b" is downstream of "a" bed.
 		return (b.ChromStart - a.ChromEnd + 1), nil
-
 	}
 	log.Panic("something went wrong with CompareDistance")
 	return -1, nil

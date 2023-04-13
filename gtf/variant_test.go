@@ -55,5 +55,4 @@ func TestVcfToVariant(t *testing.T) {
 		variant.CdnaPos != 2 {
 		t.Errorf("ERROR: Problem converting vcf to variant")
 	}
-
 }

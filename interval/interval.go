@@ -263,11 +263,8 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			} // 17. end while
 
 			i, v = v.iLeft[i], v.lChild // 18. i = v.lfc[i], v = v.lchild
-
 		} else { // 19. else
-
 			i, v = v.iRight[i], v.rChild //20. i=v.rfc[i], v=v.rchild
-
 		} // 21. end if
 	} // 22. end while
 
@@ -305,7 +302,6 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			} // 33. end while
 
 			i, v = v.iRight[i], v.rChild // 34. i=v. rfc[i], v=v. rchild
-
 		} else { // 35. else
 			i, v = v.iLeft[i], v.lChild // 36. i = v. lfc[i], v = v. lchild
 		} // 37. end if

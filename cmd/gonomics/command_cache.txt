@@ -1,4 +1,4 @@
-##SourceDir:/home/runner/work/gonomics/gonomics/cmd/
+##SourceDir:/Users/eau/src/github.com/vertgenlab/gonomics/cmd/
 ##CmdName:alleleSplit
 ##CmdName:assemblyStats
 ##CmdName:axTools

@@ -59,7 +59,6 @@ func testFlags(toTest []int) bool {
 }
 
 func TestFlagFuncs(t *testing.T) {
-
 	if !testFlags([]int{paired, properlyAligned, unmapped, mateUnmapped,
 		posStrand, mateIsPosStrand, forwardRead, reverseRead, notPrimaryAlign, readFailsQc,
 		isDuplicate, suppAlign}) {

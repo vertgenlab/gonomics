@@ -69,7 +69,6 @@ func substitutionPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
 	}
 
 	if !dna.IsSeqOfACGT([]dna.Base{*alt}) {
-
 		return ErrNonACGTBase
 	}
 

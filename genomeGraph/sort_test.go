@@ -28,7 +28,6 @@ func TestGetSortOrder(t *testing.T) {
 	if len(brokenGraph) != 2 {
 		t.Errorf("ERROR: Problem with breaking up discontigous graph into subgraphs")
 	}
-
 }
 
 // TestGraph Structure

@@ -43,7 +43,6 @@ Header line: Gen	Site	Freq.A	Freq.C	Freq.G	Freq.T	Ancestral
 Frequencies table.
 */
 func WriteTSV(outFile string, wf WrightFisherPopData) {
-
 	file := fileio.EasyCreate(outFile)
 	header := []string{
 		"Gen",
@@ -128,6 +127,5 @@ func writeMeta(file io.Writer, rec []string) {
 			_, err = fmt.Fprintf(file, "%s:", rec[i])
 			exception.PanicOnErr(err)
 		}
-
 	}
 }

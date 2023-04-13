@@ -358,7 +358,6 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	// Check exclusion cases to avoid actually doing the test
 	var p float64
 	switch {
-
 	// If alternate allele is less than minimum reads then p is 1
 	case c < minAltReads:
 		p = 1

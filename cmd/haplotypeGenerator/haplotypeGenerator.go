@@ -34,7 +34,6 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 	samplesNames := vcf.SampleNamesInOrder(header)
 
 	for i := range regions {
-
 		// fmt.Printf("working on region index %v.\n", i)
 
 		overlappingVariants := interval.Query(tree, regions[i], "any")
@@ -76,7 +75,6 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 						sampleHaplotypes[j].Seq[overlappingVariants[k].(vcf.Vcf).Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].(vcf.Vcf).Alt[currState-1])
 					}
 				}
-
 			}
 			// fmt.Println("writing haplotype")
 			// fmt.Println(sampleHaplotypes[j])
@@ -86,9 +84,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 
 		err := out.Close()
 		exception.PanicOnErr(err)
-
 	}
-
 }
 
 // Helper function returns a map connecting chromosome names to their index in a fasta slice.

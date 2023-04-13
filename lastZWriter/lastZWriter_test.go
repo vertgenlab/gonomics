@@ -57,7 +57,6 @@ func TestAlignSetUp(t *testing.T) {
 				if mMatch != 0 {
 					t.Fatal("Close matrix mismatch")
 				}
-
 			} else if rList[ref] == "refer1" && specList[species] == "name1" || rList[ref] == "refer2" && specList[species] == "name1" {
 				for s := range par {
 					parMatch := strings.Compare(par[s], parDefault[s])
@@ -164,5 +163,4 @@ func removeThings() {
 	for m := range matrices {
 		os.RemoveAll(matrices[m])
 	}
-
 }

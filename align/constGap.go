@@ -36,7 +36,6 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	var routeIdx_current int = 0
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
-
 		// Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
 		trace, i_inChecker_max, j_inChecker_max = fillTraceback(alpha, beta, scores, gapPen, checkersize_i, checkersize_j, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2, i_inChecker_min, j_inChecker_min, trace)
 
@@ -51,7 +50,6 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 		} else if j_inChecker_min < 0 { // but i_inChecker != 0
 			k2 -= 1 // go to the next checkerboard with lower j, same i
 		}
-
 	}
 
 	// Step 4: write the last cigar entry
@@ -69,7 +67,6 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 
 // This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j.
 func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, []Cigar) {
-
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
 	score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j := highestScore(alpha, beta, scores, gapPen, checkersize_i, checkersize_j)
 
@@ -93,7 +90,6 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	var routeIdx_current int = 0
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
-
 		// Step 2: for a checkerboard, fill traceback, as well as find the max i and j when the checkerboard traceback ends. Since the trace matrix was initialized above, pass it back and forth to recycle the memory instead of creating another trace in Step 2 in every iteration
 		trace, i_inChecker_max, j_inChecker_max = fillTraceback(alpha, beta, scores, gapPen, checkersize_i, checkersize_j, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j, k1, k2, i_inChecker_min, j_inChecker_min, trace)
 
@@ -108,7 +104,6 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 		} else if j_inChecker_min < 0 { // but i_inChecker != 0
 			k2 -= 1 // go to the next checkerboard with lower j, same i
 		}
-
 	}
 
 	// Step 4: write the last cigar entry
@@ -128,7 +123,6 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 // inputs: the sequences to be aligned alpha and beta, scoring matrix for base matches, penalty for gaps in alignment, checkerboard size for row (i) and column (j)
 // outputs: highest score from the alignment, row (i) and column (j) positions of the highest score, trace_prep matrices for rows (i) and columns (j)
 func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, int, int, [][]int64, [][]int64) {
-
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	var mColumn int = len(alpha) + 1
@@ -143,7 +137,6 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 	var i, j int
 
 	for i = 0; i < mColumn; i++ {
-
 		for j = range mRowCurrent {
 			if i == 0 && j == 0 {
 				mRowCurrent[j] = 0
@@ -186,7 +179,6 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 //
 // outputs: trace matrix to be recycled, row (i) and column (j) positions of inChecker_max which describe where Step 2 (fillTraceback) stopped in the current checkerboard that just went through Step 2 (fillTraceback)
 func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][]ColType) ([][]ColType, int, int) {
-
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	copy(mRowPrevious, trace_prep_i[k1])
@@ -232,7 +224,6 @@ func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 //
 // outputs: the updated grown route describine the collection of cigars of the entire alignment, the updated index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min which describe where Step 3 (writeCigar) stopped in the current checkerboard that just went through Step 3 (writeCigar)
 func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int) ([]Cigar, int, int, int) {
-
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int
 	route_updated := route
 
@@ -249,7 +240,6 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 	}
 
 	for i_inChecker, j_inChecker, routeIdx = i_inChecker_max, j_inChecker_max, routeIdx_current; i_inChecker >= 0 && j_inChecker >= 0; {
-
 		// write cigar segment
 		if route_updated[routeIdx].RunLength == 0 {
 			route_updated[routeIdx].RunLength = 1
@@ -275,7 +265,6 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 
 		i_inChecker_min = i_inChecker
 		j_inChecker_min = j_inChecker
-
 	}
 
 	return route_updated, routeIdx, i_inChecker_min, j_inChecker_min //return the routeIdx that was updated in the loop, not the function input "routeIdx_current"

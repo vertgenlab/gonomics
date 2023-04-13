@@ -26,7 +26,6 @@ func parseTheInput(slurmArrayFancy string) []slurmCheckArray {
 	var line string
 
 	for line, doneReading = fileio.EasyNextLine(inFancy); !doneReading; line, doneReading = fileio.EasyNextLine(inFancy) {
-
 		// fatal if there is an empty line in the file.
 		if len(line) == 0 {
 			log.Fatal("empty line in file, please remove and rerun.")

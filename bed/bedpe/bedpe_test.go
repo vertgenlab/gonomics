@@ -81,5 +81,4 @@ func TestWriteAndRead(t *testing.T) {
 		err = os.Remove(tempFile)
 		exception.PanicOnErr(err)
 	}
-
 }

@@ -41,7 +41,6 @@ func ToVcf(axtFile Axt) []vcf.Vcf {
 		}
 		//insertion in VCF record
 		if axtFile.RSeq[i] == dna.Gap {
-
 			qCount++
 			curr = vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d;SVTYPE=SNP;%s", qCount, info(axtFile))}
 

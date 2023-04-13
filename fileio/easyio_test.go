@@ -163,5 +163,4 @@ func TestWrite(t *testing.T) {
 		err = os.Remove("test.txt")
 		exception.PanicOnErr(err)
 	}
-
 }

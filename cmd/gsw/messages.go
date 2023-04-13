@@ -91,7 +91,6 @@ func viewAlignmentStdOut(ref string, g string) {
 	}
 	gg := genomeGraph.Read(ref)
 	if strings.HasSuffix(g, ".giraf") {
-
 		file := fileio.EasyOpen(g)
 		defer file.Close()
 		for curr, done := giraf.NextGiraf(file); !done; curr, done = giraf.NextGiraf(file) {

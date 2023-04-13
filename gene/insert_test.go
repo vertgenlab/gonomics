@@ -199,7 +199,6 @@ func TestInsertion(t *testing.T) {
 	if ok, diff := equal(negGene, &correctNeg1); !ok {
 		t.Errorf("trouble making insertion. Error is in %s", diff)
 	}
-
 }
 
 func TestUndoInsertion(t *testing.T) {

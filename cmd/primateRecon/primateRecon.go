@@ -211,7 +211,6 @@ func primateReconHgaMle(inFile string, inTreeFileName string, probThreshold floa
 		}
 	}
 	fasta.Write(outFile, []fasta.Fasta{*humanNode.Fasta, *chimpNode.Fasta, *bonoboNode.Fasta, *gorillaNode.Fasta, *orangutanNode.Fasta, *hgaNode.Fasta})
-
 }
 
 func primateRecon(infile string, outfile string, messyToN bool) {

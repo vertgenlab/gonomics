@@ -209,7 +209,6 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 			log.Fatalf("ERROR: Unrecognized cigar operation: %v", cigar.Op)
 		}
 	}
-
 }
 
 // appendNotes parses the encoded notes at the end of the alignment record and appends them to the output giraf record.

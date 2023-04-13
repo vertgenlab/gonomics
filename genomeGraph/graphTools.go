@@ -110,7 +110,6 @@ func vChrGraph(genome *GenomeGraph, chr fasta.Fasta, vcfsChr []vcf.Vcf) *GenomeG
 					SetEvenWeights(lastMatch)
 				}
 				if vcf.Snp(vcfsChr[i]) {
-
 					refAllele = &Node{Id: uint32(len(genome.Nodes)), Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil}
 					refAllele = AddNode(genome, refAllele)
 					AddEdge(currMatch, refAllele, 0.5)

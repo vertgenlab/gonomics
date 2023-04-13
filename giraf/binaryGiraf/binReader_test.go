@@ -73,7 +73,6 @@ func TestRead(t *testing.T) {
 		t.Error(err)
 	}
 	fileio.EasyRemove("testdata/readtest.giraf")
-
 }
 
 func TestReadAndWrite(t *testing.T) {

@@ -98,7 +98,6 @@ func isEqual(alpha Vcf, beta Vcf) bool {
 		return false
 	}
 	return true
-
 }
 
 // equalSamples returns true if input samples are equivalent.

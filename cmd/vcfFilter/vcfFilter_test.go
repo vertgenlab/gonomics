@@ -54,7 +54,6 @@ var VcfFilterTests = []struct {
 func TestVcfFilter(t *testing.T) {
 	var err error
 	for _, v := range VcfFilterTests {
-
 		var altSlice []string
 		if v.alt != "" {
 			altSlice = strings.Split(v.alt, ",")

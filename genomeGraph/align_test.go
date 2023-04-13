@@ -20,7 +20,6 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
 var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
 func BenchmarkGsw(b *testing.B) {
-
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -92,7 +91,6 @@ func BenchmarkGsw(b *testing.B) {
 			log.Fatal("could not write memory profile: ", err)
 		}
 	}
-
 }
 
 func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
@@ -115,10 +113,8 @@ func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLen)
 
 		//}
-
 	}
 	if common.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && common.StringToInt(qName[1]) == targetStart && targetEnd == common.StringToInt(qName[3]) {
-
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
 		//	log.Printf("%s\n", giraf.GirafToString(aln))
@@ -131,7 +127,6 @@ func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 	return false
 }
 func percentOfFloat(part int, total int) float64 {
-
 	return (float64(part) * float64(100)) / float64(total)
 }
 
@@ -152,7 +147,6 @@ func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *s
 			//log.Printf("%s\n", buf.String())
 			unmapped++
 		}
-
 	}
 
 	log.Printf("Mapped %d out of %d\n", numReads-unmapped, numReads)

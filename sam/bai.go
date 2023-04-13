@@ -222,7 +222,6 @@ func annotateBinRanges(r reference) reference {
 		case r.bins[i].id == 0: // size is 512Mbp
 			r.bins[i].refStart = 0
 			r.bins[i].refEnd = 512 * million
-
 		}
 	}
 	return r

@@ -27,7 +27,6 @@ func TestReadToChan(t *testing.T) {
 			}
 			index++
 		}
-
 	}
 }
 

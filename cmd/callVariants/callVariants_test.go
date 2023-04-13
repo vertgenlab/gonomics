@@ -50,7 +50,6 @@ func TestCallVariants(t *testing.T) {
 // V6 (SNV):       T
 
 func TestMultiAlleleComplexity(t *testing.T) {
-
 	v := vcf.Vcf{
 		Chr: "chrM",
 		Pos: 4,

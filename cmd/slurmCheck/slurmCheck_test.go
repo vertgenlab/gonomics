@@ -36,7 +36,5 @@ func TestParseTheInput(t *testing.T) {
 			err = os.Remove(v.actualOutputParseTheInput)
 			exception.PanicOnErr(err)
 		}
-
 	}
-
 }

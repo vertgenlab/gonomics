@@ -10,7 +10,6 @@ import (
 )
 
 func TestSamFileConvert(t *testing.T) {
-
 	//chr19 3001012 3001075 chr11 70568380 70568443 - 3500
 	var testAxt = Axt{
 		RName:      "chr19",
@@ -43,5 +42,4 @@ func TestSamFileConvert(t *testing.T) {
 	if !sam.Equal(samFromAxt, answerSam) {
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
-
 }

@@ -31,6 +31,5 @@ func TestHaplotypeGenerator(t *testing.T) {
 				exception.PanicOnErr(err)
 			}
 		}
-
 	}
 }

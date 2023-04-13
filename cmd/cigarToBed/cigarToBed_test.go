@@ -50,6 +50,5 @@ func TestCigarToBed(t *testing.T) {
 		if err != nil {
 			common.ExitIfError(err)
 		}
-
 	}
 }

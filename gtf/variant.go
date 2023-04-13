@@ -142,7 +142,6 @@ func vcfCdsIntersect(v vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcr
 			}
 		}
 	}
-
 }
 
 // findAAChange annotates the Variant struct with the amino acids changed by a given variant.

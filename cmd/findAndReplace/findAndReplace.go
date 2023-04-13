@@ -140,5 +140,4 @@ func main() {
 	outFile := flag.Arg(2)
 
 	findAndReplace(inFile, *inDelim, findReplaceFile, *replaceDelim, outFile, *columnNumber, *ignoreColumns)
-
 }

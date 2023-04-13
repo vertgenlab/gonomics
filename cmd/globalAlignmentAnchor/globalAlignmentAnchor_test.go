@@ -39,9 +39,7 @@ func TestGlobalAlignmentAnchorTests(t *testing.T) {
 	var err error
 
 	for i, test := range globalAlignmentAnchorTests {
-
 		if test.in_maf == "" {
-
 			species1_gap_doNotCalculate = test.out_filename_prefix + "_" + test.species1 + "_gap_doNotCalculate.bed"
 			species2_gap_doNotCalculate = test.out_filename_prefix + "_" + test.species2 + "_gap_doNotCalculate.bed"
 			out_alignment = test.out_filename_prefix + ".alignment.tsv"
@@ -50,9 +48,7 @@ func TestGlobalAlignmentAnchorTests(t *testing.T) {
 
 			species1_gap, species2_gap = matchToGap(test.species1_match_bed_expected, test.species2_match_bed_expected, test.species1_genome, test.species2_genome, test.species1, test.species2, test.gapSizeProductLimit, test.out_filename_prefix)
 			gapToAlignment(species1_gap, species2_gap, test.species1_genome, test.species2_genome, test.species1, test.species2, test.out_filename_prefix)
-
 		} else {
-
 			out_maf = test.out_filename_prefix + ".filtered.maf"
 			species1_match = test.out_filename_prefix + "_" + test.species1 + "_match.bed"
 			species2_match = test.out_filename_prefix + "_" + test.species2 + "_match.bed"

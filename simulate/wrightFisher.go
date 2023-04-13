@@ -145,7 +145,6 @@ func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fas
 
 		// Make fasta based on the given allele frequencies
 		makeFastaByRatio(curFasta, nextFasta, freq, set)
-
 	}
 	return curFasta, nextFasta
 }
@@ -258,7 +257,6 @@ func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]f
 				fmt.Println("Invalid relative fitness string")
 				exception.PanicOnErr(e)
 			}
-
 		}
 
 		// Make the fitness array
@@ -287,10 +285,8 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 
 	// 1st loop through every generation
 	for t = 1; t <= set.NumGen; t++ {
-
 		// 2nd loop through every base
 		for s = 0; s < set.GenomeSize; s++ {
-
 			// Calculate the allele frequency post-selection based on original frequency and relative fitness
 			// normFactorArray stores the denominator that normalize the weighted frequency, rendering the sum of new frequencies = 1
 			for b = 0; b < 4; b++ {

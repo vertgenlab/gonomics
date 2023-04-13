@@ -67,7 +67,6 @@ func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 						contigLen++
 					}
 				}
-
 			} else {
 				if !(records[i].Seq[k] == dna.N) {
 					if countLowerAsGaps {

@@ -89,7 +89,6 @@ func main() {
 	}
 
 	if flag.Arg(0) == "AfsProbability" {
-
 		expectedNumArgs = 3
 		if len(flag.Args()) != expectedNumArgs {
 			flag.Usage()

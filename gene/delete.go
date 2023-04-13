@@ -226,7 +226,6 @@ func deleteUpdateCds(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int) (d
 	var codingDelStart, codingDelEnd int = -1, -1
 	deletionLen := genomeIndexEndPos - genomeIndexStartPos
 	for i := 0; i < len(g.cdsStarts); i++ {
-
 		switch {
 		// if cds is before deletion
 		case genomeIndexStartPos > g.cdsEnds[i]:
@@ -326,7 +325,6 @@ func deleteUpdateUtr(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int, or
 	var utrFiveDelStart, utrFiveDelEnd int = -1, -1
 	var utrThreeDelStart, utrThreeDelEnd int = -1, -1
 	if genomeIndexStartPos < origCdsStart || genomeIndexEndPos > origCdsEnd {
-
 		var utrFiveStartOffset, utrFiveEndOffset int = 0, 0
 		var utrThreeStartOffset, utrThreeEndOffset int = 0, 0
 
@@ -385,7 +383,6 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 	if deletedCodingBases == 0 { // Intronic or UTR (CDS unchanged)
 		answer.Consequence = checkSplice(answer.CdnaDist)
 		return answer, err
-
 	} else { // Deletion affects CDS
 		answer.Consequence = InFrameDeletion // until otherwise noted
 		answer.AaPos = answer.CdnaPos / 3
@@ -425,7 +422,6 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 			}
 
 			answer.AaAlt = frameshiftProtSeq[j : j+1]
-
 		} else if startFrame != 0 { // In-frame deletion does not fall on codon boundaries
 			newCodonStart := answer.CdnaPos - startFrame
 			answer.AaAlt = dna.TranslateSeq(g.codingSeq.seq[newCodonStart : newCodonStart+3])

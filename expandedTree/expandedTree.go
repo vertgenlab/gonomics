@@ -215,7 +215,6 @@ func AssignFastas(root *ETree, fastaFilename string) {
 				leaves[i].Fasta = &fastas[j]
 				leaves[i].State = int(leaves[i].Fasta.Seq[0])
 			}
-
 		}
 	}
 	branches := GetBranch(root)

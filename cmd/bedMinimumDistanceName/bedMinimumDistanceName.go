@@ -124,5 +124,4 @@ func main() {
 	outBed := flag.Arg(2)
 
 	bedMinimumDistanceName(inputBed, genomeBed, outBed)
-
 }

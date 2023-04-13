@@ -161,7 +161,6 @@ func writeChunk(g []*priorityGiraf, chunkNum int) string {
 	defer file.Close()
 	for i := 0; i < len(g); i++ {
 		giraf.WriteGirafToFileHandle(file, g[i].data)
-
 	}
 	return chunkName
 }

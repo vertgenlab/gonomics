@@ -8,7 +8,6 @@ import (
 )
 
 func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int {
-
 	const bitsPerBase int = 2
 	const bitsPerInt int = 64
 	const basesPerInt int = bitsPerInt / bitsPerBase

@@ -64,13 +64,11 @@ func faFormat(s Settings) {
 		}
 		if s.ToUpper {
 			fasta.ToUpper(records[i])
-
 		}
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
 			records[i].Name = records[i].Name + "_RevComp"
 		}
-
 	}
 
 	file := fileio.EasyCreate(s.OutFile)

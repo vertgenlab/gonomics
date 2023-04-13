@@ -22,7 +22,6 @@ func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
 	data := strings.SplitN(line, "\t", 12)
 	if len(data) > 10 {
-
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),

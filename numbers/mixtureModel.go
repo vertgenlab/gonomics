@@ -46,7 +46,6 @@ func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, 
 	var prevLogLikelihood float64
 
 	for iterationsRun = 0; resets < maxResets && !converged; iterationsRun++ {
-
 		// E step
 		prevLogLikelihood = mm.LogLikelihood
 		expectation(mm)

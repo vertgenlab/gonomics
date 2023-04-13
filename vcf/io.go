@@ -141,7 +141,6 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 				log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
 			}
 			alleles = append(alleles, int16(alleleId))
-
 		} else { // is phase info
 			phase = append(phase, text[i] == "|")
 		}

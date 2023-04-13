@@ -32,11 +32,8 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	randLength := length - 6
 
 	if length%3 != 0 {
-
 		log.Fatal("length must be divisible by three")
-
 	} else {
-
 		for i := 0; i < randLength; i++ {
 			r := rand.Float64()
 
@@ -50,7 +47,6 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 			} else {
 				seq = append(seq, dna.A)
 			}
-
 		}
 	}
 
@@ -234,7 +230,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 				p += increment - 1
 			}
 		}
-
 	}
 	mutatedSequence := BaseExtToBases(newSequence)
 	delFound := seqContainsDels(mutatedSequence)
@@ -246,7 +241,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 		default:
 			finalSequence = mutatedSequence
 		}
-
 	} else {
 		finalSequence = mutatedSequence
 	}
@@ -431,7 +425,6 @@ func CheckExon(gene genePred.GenePred, position int) (bool, int) {
 
 // CheckStart determines if a base is the beginning of a start codon by comparing it to the start position of the genePred CDS.
 func CheckStart(gene genePred.GenePred, codon CodonExt) bool {
-
 	if codon.Seq[0].SeqPos == gene.CdsStart {
 		return true
 	}
@@ -441,7 +434,6 @@ func CheckStart(gene genePred.GenePred, codon CodonExt) bool {
 
 // CheckStop determines if a base is the beginning of a stop codon by comparing it to the end position of the genePred CDS.
 func CheckStop(gene genePred.GenePred, codon CodonExt) bool {
-
 	if codon.Seq[0].SeqPos == (gene.CdsEnd - 3) {
 		return true
 	}

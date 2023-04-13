@@ -27,7 +27,6 @@ func writeToFileHandle(file io.Writer, speciesOne bed.Bed, speciesTwo bed.Bed, s
 
 // helper function: make chr name match map.
 func makeChrMap(chrMap_filename string) map[string][]string {
-
 	chrMap := make(map[string][]string) // map to hold speciesOne speciesTwo chr name matches
 	var chrMapStringSplit []string
 
@@ -40,7 +39,6 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 		}
 
 		chrMap[chrMapStringSplit[0]] = append(chrMap[chrMapStringSplit[0]], chrMapStringSplit[1]) // whether or not speciesOne chr name already exists, append to nil or the existing speciesTwo chr name slice the new speciesTwo chr name
-
 	}
 
 	return chrMap
@@ -48,7 +46,6 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 
 // helper function: check if maf entry passes checks.
 func matchMafPass(assemblySpeciesOne string, assemblySpeciesTwo string, chromSpeciesOne string, chromSpeciesTwo string, speciesOneSrcSize int, species2_SrcSize int, speciesOneChromStart int, speciesOneChromEnd int, speciesTwoChromStart int, speciesTwoChromEnd int, chrMap map[string][]string, diagonal bool) bool {
-
 	pass := true
 
 	// chrom should match between speciesOne and speciesTwo
@@ -176,7 +173,6 @@ func mafToMatch(in_maf string, speciesOne string, speciesTwo string, outFilename
 
 			// get s lines
 			if mafRecords[i].Species[k].SLine != nil && assemblySpeciesTwo == speciesTwo && mafRecords[i].Species[0].SLine != nil {
-
 				bedSpeciesTwo = bed.Bed{Chrom: chromSpeciesTwo, ChromStart: mafRecords[i].Species[k].SLine.Start, ChromEnd: mafRecords[i].Species[k].SLine.Start + mafRecords[i].Species[k].SLine.Size, Name: "species2_s_filtered_match", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
 
 				// filter out only s lines that we trust to save to filtered maf
@@ -297,9 +293,7 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 				posSpeciesOne = speciesOneMatchBed[i].ChromEnd
 				pos_species2 = speciesTwoMatchBed[i].ChromEnd
 			}
-
 		} else { // if there is an existing chr
-
 			currentSpeciesOne = bed.Bed{Chrom: chrCurrSpeciesOne, ChromStart: speciesOneMatchBed[i-1].ChromEnd, ChromEnd: speciesOneMatchBed[i].ChromStart, Name: "species1_gap", FieldsInitialized: 4}
 			currentSpeciesTwo = bed.Bed{Chrom: chrCurrSpeciesTwo, ChromStart: speciesTwoMatchBed[i-1].ChromEnd, ChromEnd: speciesTwoMatchBed[i].ChromStart, Name: "species2_gap", FieldsInitialized: 4}
 
@@ -396,7 +390,6 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			posSpeciesOne = species1_gap_bed[i].ChromStart
 			bed.WriteBed(outSpeciesOne, species1_gap_bed[i])
 			posSpeciesOne += (species1_gap_bed[i].ChromEnd - species1_gap_bed[i].ChromStart)
-
 		} else if species2_gap_bed[i].Name == "species2_Insertion" {
 			// directly write to output file
 			// both species alignment
@@ -408,7 +401,6 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 			pos_species2 = species2_gap_bed[i].ChromStart
 			bed.WriteBed(outSpeciesTwo, species2_gap_bed[i])
 			pos_species2 += (species2_gap_bed[i].ChromEnd - species2_gap_bed[i].ChromStart)
-
 		} else {
 			// obtain sequences from the genome. To convert bed region (1-based, [closed,open)) to fasta index (0-based, [closed,closed]), subtract 1 from both ChromStart and ChromEnd.
 			species1_seq = species1_genome_fastaMap[species1_gap_bed[i].Chrom][(species1_gap_bed[i].ChromStart - 1):(species1_gap_bed[i].ChromEnd - 1)]
