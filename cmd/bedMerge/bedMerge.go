@@ -5,11 +5,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 func bedMerge(infile string, outfile string, mergeAdjacent bool, lowMem bool) {

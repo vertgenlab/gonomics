@@ -2,11 +2,12 @@ package fasta
 
 import (
 	"fmt"
+	"log"
+	"sort"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"sort"
 )
 
 func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, int) {
@@ -66,7 +67,6 @@ func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 						contigLen++
 					}
 				}
-
 			} else {
 				if !(records[i].Seq[k] == dna.N) {
 					if countLowerAsGaps {

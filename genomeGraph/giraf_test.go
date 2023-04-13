@@ -2,12 +2,13 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/giraf"
-	"log"
-	"testing"
 )
 
 // TestGraph Structure
@@ -35,7 +36,7 @@ import (
 //@SQ     SN:n3 LN:1
 //@SQ     SN:n4 LN:3
 
-// Test Functions
+// Test Functions.
 func MakeTestGraph() *GenomeGraph {
 	graph := EmptyGraph()
 
@@ -107,7 +108,7 @@ func MakeTestGraph() *GenomeGraph {
 	return graph
 }
 
-// check struct generated with parameters reads := RandGiraf(MakeTestGraph(), 1, 4, seed)
+// check struct generated with parameters reads := RandGiraf(MakeTestGraph(), 1, 4, seed).
 var check = giraf.Giraf{
 	QName:     "0_3_2_2_-",
 	QStart:    0,
@@ -161,5 +162,4 @@ func TestRandGiraf(t *testing.T) {
 			fmt.Println(reads[i].Path, reads[i].Aln[0])
 		}
 	*/
-
 }

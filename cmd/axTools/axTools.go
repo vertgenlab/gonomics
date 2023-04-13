@@ -5,12 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 func usage() {
@@ -31,7 +32,7 @@ func main() {
 	var tLen *string = flag.String("tLen", "", "target `chrom.sizes` file containing target sequence lengths")
 	var qLen *string = flag.String("qLen", "", "query `chrom.sizes` file containing query sequence lengths")
 
-	var concensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
+	var consensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	var minScore *int = flag.Int("minScore", 0, "filter axt alignments by minimum score")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -40,8 +41,8 @@ func main() {
 
 	if *targetGaps {
 		filterAxt(input, output)
-	} else if fasta.IsFasta(*concensus) {
-		axtToFa(input, output, *concensus)
+	} else if fasta.IsFasta(*consensus) {
+		axtToFa(input, output, *consensus)
 	} else if *querySwap {
 		QuerySwapAll(input, output, *tLen, *qLen)
 	} else if *minScore != 0 {
@@ -106,25 +107,25 @@ func filterAxtScore(input string, output string, minScore int) {
 	}
 }
 
-//if target sequence contains Ns, uses query non N bases to fill Ns
+// if target sequence contains Ns, uses query non N bases to fill Ns.
 func axtSeq(axtRecord axt.Axt, faSeq []dna.Base) fasta.Fasta {
-	concensus := fasta.Fasta{
+	consensus := fasta.Fasta{
 		Name: fmt.Sprintf("%s", axtRecord.RName),
 		Seq:  make([]dna.Base, 0, len(faSeq)),
 	}
-	concensus.Seq = append(concensus.Seq, faSeq[:axtRecord.RStart-1]...)
+	consensus.Seq = append(consensus.Seq, faSeq[:axtRecord.RStart-1]...)
 	for i := 0; i < len(axtRecord.RSeq); i++ {
 		if axtRecord.RSeq[i] == dna.N && axtRecord.QSeq[i] != dna.N {
-			concensus.Seq = append(concensus.Seq, axtRecord.QSeq[i])
+			consensus.Seq = append(consensus.Seq, axtRecord.QSeq[i])
 		} else {
-			concensus.Seq = append(concensus.Seq, axtRecord.RSeq[i])
+			consensus.Seq = append(consensus.Seq, axtRecord.RSeq[i])
 		}
 	}
-	concensus.Seq = append(concensus.Seq, faSeq[axtRecord.REnd:]...)
-	if len(concensus.Seq) != len(faSeq) {
+	consensus.Seq = append(consensus.Seq, faSeq[axtRecord.REnd:]...)
+	if len(consensus.Seq) != len(faSeq) {
 		log.Fatalf("Error: Sequence length is not the same...\n")
 	}
-	return concensus
+	return consensus
 }
 
 func QuerySwapAll(input string, output string, targetLen string, queryLen string) {

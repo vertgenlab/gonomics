@@ -2,12 +2,13 @@ package fasta
 
 import (
 	"errors"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // Seeker enables random access of fasta sequences using a pre-computed index.

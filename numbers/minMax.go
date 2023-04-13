@@ -1,11 +1,12 @@
 package numbers
 
 import (
-	"golang.org/x/exp/constraints"
 	"log"
+
+	"golang.org/x/exp/constraints"
 )
 
-// Max returns the maximum of two input values of an ordered type
+// Max returns the maximum of two input values of an ordered type.
 func Max[E constraints.Ordered](a, b E) E {
 	if a > b {
 		return a
@@ -13,7 +14,7 @@ func Max[E constraints.Ordered](a, b E) E {
 	return b
 }
 
-// Min returns the minimum of two input values of an ordered type
+// Min returns the minimum of two input values of an ordered type.
 func Min[E constraints.Ordered](a, b E) E {
 	if a < b {
 		return a

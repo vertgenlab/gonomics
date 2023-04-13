@@ -27,18 +27,22 @@ jobs:
         run: gofmt -s -w ./*/*/*.go
       - name: go fmt simplify cmd
         run: gofmt -s -w ./cmd/*/*.go
-      - name: Check for modified files
-        id: git-check
-        run: echo "{modified}={$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)}" >> $GITHUB_OUTPUT
-      - name: Push changes
-        if: steps.git-check.outputs.modified == 'true'
+      - name: Setup lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
+      - name: Lint and automate clean
+        run: golangci-lint run ./... --fix && go install ./... && go test ./...
+      - name: Check and push changes
         run: |
-          git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
-          git config --global user.name "AutoFmt Bot"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "style: automated go fmt ./..."
-          git push
-
+          export NAME=$(git log -n 1 --pretty=format:%an)
+          export EMAIL=$(git log -n 1 --pretty=format:%ae)
+          git config user.name "NAME"
+          git config user.email "$EMAIL"
+          if git diff-index --quiet HEAD --; then
+            git add -A
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git commit -am "style: automated go lint ./... && go fmt ./..."
+            git push
+          fi
   gitactions:
     needs: format
     strategy:
@@ -57,10 +61,10 @@ jobs:
       - name: Build
         run: go build ./...
       - name: Install
-        run: go install ./...
+        run: make install
       - name: Test
         if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
-        run: go test ./...
+        run: make test
       - name: Coverage
         if: matrix.OS == 'ubuntu-latest'
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...

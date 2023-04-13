@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 var BedFilterTests = []struct {

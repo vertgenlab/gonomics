@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"math/rand"
 )
 
 func proximityBlockVcf(inFile string, outFile string, distance int, setSeed int64) {

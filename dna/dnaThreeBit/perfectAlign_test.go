@@ -1,8 +1,9 @@
 package dnaThreeBit
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 type seedTest struct {

@@ -1,6 +1,10 @@
 package convert
 
 import (
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -8,9 +12,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
-	"os"
-	"strings"
-	"testing"
 )
 
 var seqA []dna.Base = dna.StringToBases("--TTTC--ATGAATAATCA")

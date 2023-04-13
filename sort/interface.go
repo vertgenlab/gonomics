@@ -1,11 +1,12 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// Interface for generic merge sort of file types
+// Interface for generic merge sort of file types.
 type MergeSort interface {
 	Len() int
 	Swap(i, j int)

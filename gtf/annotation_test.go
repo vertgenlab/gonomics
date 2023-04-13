@@ -1,12 +1,13 @@
 package gtf
 
 import (
-	// "fmt"
+	"strings"
+	"testing"
+
+	// "fmt".
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
-	"testing"
 )
 
 func TestVariantToAnnotationLarge(t *testing.T) {
@@ -54,7 +55,6 @@ func TestVariantToAnnotationLarge(t *testing.T) {
 		// fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
 		// fmt.Printf("EXPECTED: %s|%s\n", correctCDNA, correctProt)
 		// fmt.Printf("RECEIVED: %s\n", annotation)
-
 	}
 	if errorCount > 7 { // from known issue
 		t.Errorf("ERROR: %d variants were misannotated", errorCount)

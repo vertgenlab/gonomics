@@ -1,13 +1,14 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
 	"log"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
 func TestWorkerWithWriting(t *testing.T) {

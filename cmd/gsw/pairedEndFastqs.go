@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/genomeGraph"
-	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/sam"
 )
 
 func GswToGirafPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, output string, threads int, seedLen int, stepSize int, scoreMatrix [][]int64) {

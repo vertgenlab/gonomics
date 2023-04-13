@@ -3,21 +3,22 @@ package sam
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // bai files are an index format for bam files
 // Specs for bai can be found in section 5.2 on page 19 of:
 // https://raw.githubusercontent.com/samtools/hts-specs/master/SAMv1.pdf
 
-// magicBai is a 4 byte sequence at the start of a bai file
+// magicBai is a 4 byte sequence at the start of a bai file.
 const magicBai string = "BAI\u0001"
 
-// alias for ease of use and readability
+// alias for ease of use and readability.
 var le = binary.LittleEndian
 
 // Bai is an index of the BAM format that allows for efficient
@@ -187,7 +188,7 @@ func parseIntervalOffset(r *bytes.Buffer) uint64 {
 	return le.Uint64(r.Next(8)) // note le is an alias for binary.LittleEndian
 }
 
-// to reduce chance of errors in the following function
+// to reduce chance of errors in the following function.
 const million uint32 = 1000000
 const thousand uint32 = 1000
 
@@ -221,7 +222,6 @@ func annotateBinRanges(r reference) reference {
 		case r.bins[i].id == 0: // size is 512Mbp
 			r.bins[i].refStart = 0
 			r.bins[i].refEnd = 512 * million
-
 		}
 	}
 	return r

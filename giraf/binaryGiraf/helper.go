@@ -1,16 +1,17 @@
 package binaryGiraf
 
 import (
+	"io"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io"
-	"sync"
 )
 
 // Read will input a giraf.fe file and will decompress into a slice of giraf.Giraf.
-// Requires the graph (.gg) file used to generate the giraf for decompression
+// Requires the graph (.gg) file used to generate the giraf for decompression.
 func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 	var answer []giraf.Giraf
 	graph := genomeGraph.Read(graphFile)
@@ -72,7 +73,7 @@ func GoReadToChan(giraffeFile string, graphFile string) <-chan giraf.Giraf {
 	return data
 }
 
-//TODO: move GoReadToChan functions in the giraf package from *Giraf to Giraf.
+// TODO: move GoReadToChan functions in the giraf package from *Giraf to Giraf.
 // GirafChanToBinary inputs a channel of *giraf.Giraf and compresses records from the stream into a output giraf.fe file.
 func GirafChanToBinary(filename string, input <-chan *giraf.Giraf, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)

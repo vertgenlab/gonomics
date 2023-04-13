@@ -5,15 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"sort"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"math/rand"
-	"sort"
-	"strings"
 )
 
 type Settings struct {
@@ -56,7 +57,7 @@ func simulateSam(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-// get probability weights for each contig based on length
+// get probability weights for each contig based on length.
 func getReadsPerContig(ref []fasta.Fasta, numReads int) []int {
 	var totalLen int
 	for i := range ref {

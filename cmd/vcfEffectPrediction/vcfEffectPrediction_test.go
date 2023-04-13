@@ -1,13 +1,14 @@
 package main
 
 import (
+	"strings"
+	"sync"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
-	"sync"
-	"testing"
 )
 
 func TestVcfEffectPrediction(t *testing.T) {
@@ -72,7 +73,6 @@ func TestVcfEffectPrediction(t *testing.T) {
 		//fmt.Printf("\nWARNING: ANNOTATION MISMATCH\n")
 		//fmt.Printf("EXPECTED: %s|%s\n", correctCDNA, correctProt)
 		//fmt.Printf("RECEIVED: %s\n", annotation)
-
 	}
 	if errorCount > 7 { // from known issue
 		t.Errorf("ERROR: %d variants were misannotated", errorCount)

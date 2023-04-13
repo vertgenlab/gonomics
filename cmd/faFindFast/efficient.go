@@ -2,23 +2,24 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
 	"io"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // incrementWindowEdge takes two aligned fasta sequences and a current index into the alignment.
 // the current index can be -1 for when we want to "increment" to the first position in the alignment.
 // the sequences are assumed to be all uppercase DNA
 // the function returns:
-// 1) the next alignment position with a reference base, which is usually alignmentIndex+1, but can be greater due to gaps
-//        this value will be equal to len(seqOne) if we were unable to find another reference base
-// 2) gaps opened in ref (0 or 1)
-// 3) gaps opened in the (query) second sequence (0 or 1)
-// 4) gaps closed in the (query) second sequence (0 or 1)
-// 5) int that is the number of Ns in the reference after this increment (0 or 1)
-// 6) int that is the number of Ns in the query (second) sequence after this increment from matches
-// 7) int that is the number of Ns in the query (second) sequence after this increment from gaps in the reference
-// 8) int that is the number of substitutions/mismatches (0 or 1)
+//  1. the next alignment position with a reference base, which is usually alignmentIndex+1, but can be greater due to gaps
+//     this value will be equal to len(seqOne) if we were unable to find another reference base
+//  2. gaps opened in ref (0 or 1)
+//  3. gaps opened in the (query) second sequence (0 or 1)
+//  4. gaps closed in the (query) second sequence (0 or 1)
+//  5. int that is the number of Ns in the reference after this increment (0 or 1)
+//  6. int that is the number of Ns in the query (second) sequence after this increment from matches
+//  7. int that is the number of Ns in the query (second) sequence after this increment from gaps in the reference
+//  8. int that is the number of substitutions/mismatches (0 or 1)
 func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int) {
 	alnIdx = alnIdxOrig
 

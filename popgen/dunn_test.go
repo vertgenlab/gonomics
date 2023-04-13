@@ -1,10 +1,11 @@
 package popgen
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"testing"
 )
 
 var DunnTests = []struct {

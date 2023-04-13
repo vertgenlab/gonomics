@@ -5,8 +5,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func usage() {

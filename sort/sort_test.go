@@ -1,10 +1,11 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/genomeGraph"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 )
 
 func TestGirafExternalMergeSort(t *testing.T) {

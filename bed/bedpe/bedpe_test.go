@@ -1,10 +1,11 @@
 package bedpe
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var b1 BedPe = BedPe{
@@ -80,5 +81,4 @@ func TestWriteAndRead(t *testing.T) {
 		err = os.Remove(tempFile)
 		exception.PanicOnErr(err)
 	}
-
 }

@@ -1,8 +1,9 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var MaximumLikelihoodTests = []struct {

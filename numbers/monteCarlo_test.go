@@ -25,7 +25,7 @@ func TestRandExp(t *testing.T) {
 	}
 }
 
-//pulls 100000 values from a gamma distribution and passes if the mean and variance of the values is within 10 percent of the expected values.
+// pulls 100000 values from a gamma distribution and passes if the mean and variance of the values is within 10 percent of the expected values.
 func TestRandGamma(t *testing.T) {
 	alpha1 := 1.0
 	beta1 := 1.0

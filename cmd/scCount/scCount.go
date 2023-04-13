@@ -7,6 +7,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"sort"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -14,10 +19,6 @@ import (
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
-	"log"
-	"sort"
-	"strings"
 )
 
 func scCount(s Settings) {
@@ -104,7 +105,7 @@ func normAndPrintRow(out io.Writer, r Row, normalizationMap map[string]float64, 
 	exception.PanicOnErr(err)
 }
 
-//Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
+// Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
 type Row struct {
 	Bx     string
 	Counts []float64

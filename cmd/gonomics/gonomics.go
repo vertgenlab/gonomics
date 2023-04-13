@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"flag"
-	"github.com/vertgenlab/gonomics/exception"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -11,12 +10,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 //go:embed command_cache.txt
 var cache string
 
-// getBin returns the path to binary executables and a map of existing executables
+// getBin returns the path to binary executables and a map of existing executables.
 func getBin() (path string, binExists map[string]bool) {
 	// Find binary location. Preference is gonomics exec path > GOBIN > GOPATH > Default go install location
 	execPath, err := os.Executable() // path to gonomics executable
@@ -69,7 +70,7 @@ func getBin() (path string, binExists map[string]bool) {
 	return path, binExists
 }
 
-// getSrc returns the path to the source code files for commands
+// getSrc returns the path to the source code files for commands.
 func getSrc() string {
 	var expectedPath string
 	var cachedSrcPath string = getCachedSrcDir()
@@ -149,7 +150,7 @@ func tryPathDir(path string) bool {
 }
 
 // getGonomicsCmds parses the gonomics source code to return a set of cmd names
-// path input pointing to gonomics directory overrides autodetection
+// path input pointing to gonomics directory overrides autodetection.
 func getGonomicsCmds(altSrcPath string) map[string]bool {
 	if cache != "" {
 		ans := getCmdsFromCache()

@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/lastZWriter"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/lastZWriter"
 )
 
 func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string) {

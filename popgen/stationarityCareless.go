@@ -1,14 +1,15 @@
 package popgen
 
 import (
+	"math"
+
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"math"
 )
 
 //TODO: (Riley) This file has a few old versions of functions that I'm keeping around while debugging. Will eventually delete.
 
-//FIntegralComponentCareless is an outdated version of FIntegralComponent. As the new version does a "careful" calculation, this one is "careless". Used for plotting and presentation figures.
+// FIntegralComponentCareless is an outdated version of FIntegralComponent. As the new version does a "careful" calculation, this one is "careless". Used for plotting and presentation figures.
 func FIntegralComponentCareless(n int, k int, alpha float64) func(float64) float64 {
 	var binomCoeff float64 = numbers.BinomCoefficientLog(n, k)
 	return func(p float64) float64 {
@@ -18,7 +19,7 @@ func FIntegralComponentCareless(n int, k int, alpha float64) func(float64) float
 	}
 }
 
-//AfsSampleDensityCareless is an outdated version of AfsSampleDensity. As the new version does a "careful" calculation, this one is "careless". Used for plotting and presentation figures.
+// AfsSampleDensityCareless is an outdated version of AfsSampleDensity. As the new version does a "careful" calculation, this one is "careless". Used for plotting and presentation figures.
 func AfsSampleDensityCareless(n int, k int, alpha float64) float64 {
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponentCareless(n, k, alpha)

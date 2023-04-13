@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var VcfFilterTests = []struct {
@@ -53,7 +54,6 @@ var VcfFilterTests = []struct {
 func TestVcfFilter(t *testing.T) {
 	var err error
 	for _, v := range VcfFilterTests {
-
 		var altSlice []string
 		if v.alt != "" {
 			altSlice = strings.Split(v.alt, ",")

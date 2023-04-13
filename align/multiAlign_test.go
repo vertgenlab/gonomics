@@ -1,8 +1,9 @@
 package align
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 var multiAlignTests = []struct {
@@ -33,6 +34,5 @@ func TestMultiAlignGap(t *testing.T) {
 			fasta.Write("testdata/multiAlignTest.tmp", alignedChunk)
 			t.Errorf("Alignment not as expected: testdata/multiAlignTest.tmp does not equal %s", test.expected)
 		}
-
 	}
 }

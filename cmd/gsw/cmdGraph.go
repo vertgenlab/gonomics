@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-//Genome Graph Gonomics
+// Genome Graph Gonomics.
 func usage() {
 	fmt.Print(
 		"GSW - Graph Smith Waterman:\n\nGenome Graph Software\n" +

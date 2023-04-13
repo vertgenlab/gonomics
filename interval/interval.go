@@ -7,8 +7,9 @@ package interval
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"sort"
+
+	"golang.org/x/exp/slices"
 )
 
 type Interval interface {
@@ -262,11 +263,8 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			} // 17. end while
 
 			i, v = v.iLeft[i], v.lChild // 18. i = v.lfc[i], v = v.lchild
-
 		} else { // 19. else
-
 			i, v = v.iRight[i], v.rChild //20. i=v.rfc[i], v=v.rchild
-
 		} // 21. end if
 	} // 22. end while
 
@@ -304,7 +302,6 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			} // 33. end while
 
 			i, v = v.iRight[i], v.rChild // 34. i=v. rfc[i], v=v. rchild
-
 		} else { // 35. else
 			i, v = v.iLeft[i], v.lChild // 36. i = v. lfc[i], v = v. lchild
 		} // 37. end if
@@ -322,7 +319,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	return answer // 42. return S
 }
 
-//PrettyPrint displays the chrom, chromstart, and chromend on a line as a print for debugging.
+// PrettyPrint displays the chrom, chromstart, and chromend on a line as a print for debugging.
 func PrettyPrint(q Interval) {
 	fmt.Printf("Interval. Chrom: %s. ChromStart: %d. ChromEnd: %d.\n", q.GetChrom(), q.GetChromStart(), q.GetChromEnd())
 }

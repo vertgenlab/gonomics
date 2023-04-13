@@ -5,11 +5,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 type Settings struct {
@@ -63,13 +64,11 @@ func faFormat(s Settings) {
 		}
 		if s.ToUpper {
 			fasta.ToUpper(records[i])
-
 		}
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
 			records[i].Name = records[i].Name + "_RevComp"
 		}
-
 	}
 
 	file := fileio.EasyCreate(s.OutFile)

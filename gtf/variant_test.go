@@ -1,9 +1,10 @@
 package gtf
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/vcf"
-	"testing"
 )
 
 func TestVcfToVariant(t *testing.T) {
@@ -54,5 +55,4 @@ func TestVcfToVariant(t *testing.T) {
 		variant.CdnaPos != 2 {
 		t.Errorf("ERROR: Problem converting vcf to variant")
 	}
-
 }
