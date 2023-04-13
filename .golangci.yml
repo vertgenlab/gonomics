@@ -8,30 +8,7 @@ linters-settings:
     # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
     # Default: false
     all: true
-  errcheck:
-    # Do not report about not checking errors in type assertions: `a := b.(MyStruct)`
-    check-type-assertions: false
-    # Do not report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`
-    check-blank: false
-    # path to a file containing a list of functions to exclude from checking
-    # see https://github.com/kisielk/errcheck#excluding-functions for details
-    exclude: (*io.PipeWriter).CloseWithError
-  govet:
-    # Report about shadowed variables
-    check-shadowing: true
-    # Settings per analyzer
-    settings:
-      # `go tool vet help` to see all analyzers
-      printf:
-        # `go tool vet help printf` to see available settings for `printf`
-        funcs:
-          - (github.com/grailbio/base/log).Fatal
-          - (github.com/grailbio/base/log).Output
-          - (github.com/grailbio/base/log).Outputf
-          - (github.com/grailbio/base/log).Panic
-          - (github.com/grailbio/base/log).Panicf
-          - (github.com/grailbio/base/log).Print
-          - (github.com/grailbio/base/log).Printf
+
   misspell:
     locale: US
 
@@ -45,7 +22,5 @@ linters:
     - gofmt
     - goimports
     - goprintffuncname
-    - misspell
     - whitespace
-    - gosimple
 

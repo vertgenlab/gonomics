@@ -88,9 +88,6 @@ func ReadFastqPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []PairedEnd {
 
 // WritingHelper is a helper function of PairedEnd write functions, and converts PairedEnd structs to strings and sends them to the respective writers.
 func WritingHelper(fileOne *fileio.EasyWriter, fileTwo *fileio.EasyWriter, fq PairedEnd) {
-	//TODO: figure out why this seems a little slower
-	//WriteToFileHandle(fileOne, fq.Fwd)
-	//WriteToFileHandle(fileTwo, fq.Rev)
 	var err error
 	_, err = fmt.Fprintf(fileOne, "@%s\n%s\n+\n%s\n", fq.Fwd.Name, dna.BasesToString(fq.Fwd.Seq), QualString(fq.Fwd.Qual))
 	common.ExitIfError(err)
