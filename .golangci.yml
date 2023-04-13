@@ -22,5 +22,6 @@ linters:
     - gofmt
     - goimports
     - goprintffuncname
+    - misspell
     - whitespace
 

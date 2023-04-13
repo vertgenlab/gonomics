@@ -19,18 +19,10 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - name: go fmt
-        run: go fmt ./...
-      - name: go fmt simplify
-        run: gofmt -s -w ./*/*.go
-      - name: go fmt simplify 2-deep
-        run: gofmt -s -w ./*/*/*.go
-      - name: go fmt simplify cmd
-        run: gofmt -s -w ./cmd/*/*.go
       - name: Setup lint
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
-      - name: Lint and automate clean
-        run: golangci-lint run ./... --fix && go install ./... && go test ./...
+      - name: Lint and automate clean up
+        run: make clean && go install ./... && go test ./...
       - name: Check and push changes
         run: |
           export NAME=$(git log -n 1 --pretty=format:%an)
@@ -54,12 +46,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - name: Download
-        run: go mod download
-      - name: Verify
-        run: go mod verify
-      - name: Build
-        run: go build ./...
       - name: Install
         run: make install
       - name: Test
