@@ -3,7 +3,7 @@ all: install test lint
 build:
 	docker build . -t gonomics
 
-clean: test
+clean:
 	go fmt ./...
 	golangci-lint run ./... --fix
 
