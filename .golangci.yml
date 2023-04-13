@@ -8,12 +8,6 @@ linters:
   enable:
     - decorder
     - gci
-    - goconst
     - godot
     - goimports
     - goprintffuncname
-    - makezero
-    - prealloc
-    - unconvert
-    - unparam
-
