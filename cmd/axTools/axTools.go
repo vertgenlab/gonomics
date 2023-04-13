@@ -107,7 +107,7 @@ func filterAxtScore(input string, output string, minScore int) {
 	}
 }
 
-// if target sequence contains Ns, uses query non N bases to fill Ns
+// if target sequence contains Ns, uses query non N bases to fill Ns.
 func axtSeq(axtRecord axt.Axt, faSeq []dna.Base) fasta.Fasta {
 	consensus := fasta.Fasta{
 		Name: fmt.Sprintf("%s", axtRecord.RName),

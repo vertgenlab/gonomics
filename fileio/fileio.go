@@ -115,7 +115,7 @@ func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
 
 // ReadHeader will advance a reader past initial lines that begin with '#',
 // returning a slice of these comments lines and leaving the reader at
-// the first non-comment line
+// the first non-comment line.
 func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	var peek []byte
 	var peekErr error
@@ -132,7 +132,7 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	return header, peekErr
 }
 
-// equal returns true if two input files are identical
+// equal returns true if two input files are identical.
 func equal(a string, b string, commentsMatter bool) bool {
 	var fileADone, fileBDone = false, false
 	var lineA, lineB string
@@ -174,7 +174,7 @@ func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }
 
-// ReadFileToSingleLineString reads in any file type and returns contents without any \n
+// ReadFileToSingleLineString reads in any file type and returns contents without any \n.
 func ReadFileToSingleLineString(filename string) string {
 	var catInput string
 	var line string

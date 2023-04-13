@@ -57,7 +57,7 @@ func simulateSam(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-// get probability weights for each contig based on length
+// get probability weights for each contig based on length.
 func getReadsPerContig(ref []fasta.Fasta, numReads int) []int {
 	var totalLen int
 	for i := range ref {

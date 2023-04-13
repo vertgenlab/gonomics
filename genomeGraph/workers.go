@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// this is just for speed testing to see how much of the speed slowdown is due to alignment time
+// this is just for speed testing to see how much of the speed slowdown is due to alignment time.
 func gswNothingWorker(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, incomingFastqs <-chan fastq.FastqBig, outgoingSams chan<- *sam.Sam, wg *sync.WaitGroup) {
 	var curr *sam.Sam
 	for read := range incomingFastqs {

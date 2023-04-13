@@ -100,7 +100,7 @@ func equalSubSeq(alpha subSeq, beta subSeq) bool {
 	return true
 }
 
-// for manual testing
+// for manual testing.
 func printEffPred(pred EffectPrediction) {
 	var consequence string
 	switch pred.Consequence {

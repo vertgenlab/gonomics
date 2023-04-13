@@ -115,7 +115,7 @@ func deletionPreRunChecks(g *Gene, genomeStartPos int, genomeEndPos int) (int, i
 	return genomeIndexStartPos, genomeIndexEndPos, nil
 }
 
-// safeDelete performs a deletion using the deleteStable function and adjust slide coordinates for all affected slices
+// safeDelete performs a deletion using the deleteStable function and adjust slide coordinates for all affected slices.
 func safeDelete(g *Gene, seq *[]dna.Base, delStart int, delEnd int, offset int) error {
 	var err error
 	if delStart == delEnd {
@@ -208,7 +208,7 @@ func deleteStable(seq *[]dna.Base, delStart int, delEnd int) error {
 	return nil
 }
 
-// deleteUpdateGenome updates the genomic sequence upon deletion
+// deleteUpdateGenome updates the genomic sequence upon deletion.
 func deleteUpdateGenome(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int) {
 	deletionLen := genomeIndexEndPos - genomeIndexStartPos
 	copy(g.genomeSeq[genomeIndexStartPos:], g.genomeSeq[genomeIndexEndPos:])
@@ -220,7 +220,7 @@ func deleteUpdateGenome(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int)
 	}
 }
 
-// deleteUpdateCds updates the coding sequence upon deletion
+// deleteUpdateCds updates the coding sequence upon deletion.
 func deleteUpdateCds(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int) (deletedCodingBases int, err error) {
 	var cdsIndexesToDelete []int
 	var codingDelStart, codingDelEnd int = -1, -1
@@ -435,7 +435,7 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 	return answer, err
 }
 
-// deleteGetCdnaDist determines the nearest CDS from both the start and end of the deletion and fills the EffectPrediction struct
+// deleteGetCdnaDist determines the nearest CDS from both the start and end of the deletion and fills the EffectPrediction struct.
 func deleteGetCdnaDist(g *Gene, genomeStartPos int, genomeEndPos int, genomeIndexStartPos int, answer EffectPrediction) (EffectPrediction, error) {
 	var err error
 	var cdnaDistFromDelStart, cdnaDistFromDelEnd int                   // for effect prediction later

@@ -108,7 +108,7 @@ func sendVariant(sendChans SmallVariantChans, chr string, pos int, refSeq []dna.
 }
 
 // trimMatchingBases removed all left-aligned matching bases in ref and alt fields.
-// returns the trimmed slices and the Number of bases trimmed
+// returns the trimmed slices and the Number of bases trimmed.
 func trimMatchingBases(a, b []dna.Base) ([]dna.Base, []dna.Base, int) {
 	var offset int
 	for len(a) > 0 && len(b) > 0 {
@@ -126,7 +126,7 @@ func trimMatchingBases(a, b []dna.Base) ([]dna.Base, []dna.Base, int) {
 	return a, b, offset
 }
 
-// canParseToBases determines if a given string from a vcf file can be parsed to a []dna.Base
+// canParseToBases determines if a given string from a vcf file can be parsed to a []dna.Base.
 func canParseToBases(s string) bool {
 	for i := range s {
 		if !validBase(s[i]) {
@@ -136,7 +136,7 @@ func canParseToBases(s string) bool {
 	return true
 }
 
-// validBase checks if a byte can be parsed to a dna.Base
+// validBase checks if a byte can be parsed to a dna.Base.
 func validBase(b byte) bool {
 	switch b {
 	case 'A':
@@ -160,7 +160,7 @@ func validBase(b byte) bool {
 	}
 }
 
-// closeSmallVariantChans closes all channels wrapped by SmallVariantChans
+// closeSmallVariantChans closes all channels wrapped by SmallVariantChans.
 func closeSmallVariantChans(c SmallVariantChans) {
 	close(c.Substitutions)
 	close(c.Insertions)

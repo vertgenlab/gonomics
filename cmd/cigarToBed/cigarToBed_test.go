@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	//"github.com/vertgenlab/gonomics/bed" //only needed for bed.AllAreEqual
+	//"github.com/vertgenlab/gonomics/bed" //only needed for bed.AllAreEqual.
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 )

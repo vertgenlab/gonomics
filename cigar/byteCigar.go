@@ -14,7 +14,7 @@ type ByteCigar struct {
 	Op     byte
 }
 
-// Defined const for byte cigar
+// Defined const for byte cigar.
 const (
 	Match     byte = 'M'
 	Insertion byte = 'I'
@@ -29,7 +29,7 @@ const (
 )
 
 // LookUpCigByte is a helper function decode uint32 into a byte cigar struct.
-// In the sam/bam specs: CIGAR: op len<<4|op. Hash is as follows: ‘MIDNSHP=X’→‘012345678’
+// In the sam/bam specs: CIGAR: op len<<4|op. Hash is as follows: ‘MIDNSHP=X’→‘012345678’.
 func lookUpCigByte(op uint32) byte {
 	switch op {
 	case 0:
@@ -83,7 +83,7 @@ func lookUpUint32(op byte) uint32 {
 	}
 }
 
-// ReadToBytesCigar will process a byte slice and define a small
+// ReadToBytesCigar will process a byte slice and define a small.
 func ReadToBytesCigar(cigar []byte) []ByteCigar {
 	if cigar[0] == '*' {
 		return nil
@@ -128,7 +128,7 @@ func IsValidCigar(op byte) bool {
 	return false
 }
 
-// ByteCigarToString will process the cigar byte struct and parse and/or convert the data into a string
+// ByteCigarToString will process the cigar byte struct and parse and/or convert the data into a string.
 func ByteCigarToString(cigar []ByteCigar) string {
 	if len(cigar) == 0 || cigar == nil {
 		return "*"
@@ -180,7 +180,7 @@ func QueryRunLen(c []ByteCigar) int {
 	return int(ans)
 }
 
-// CatByteCigar will concatenate two cigar slices into one merged
+// CatByteCigar will concatenate two cigar slices into one merged.
 func CatByteCigar(cigs []ByteCigar, newCigs []ByteCigar) []ByteCigar {
 	if len(newCigs) == 0 || newCigs == nil {
 		return cigs
@@ -219,7 +219,7 @@ func MatrixSetup(size int) ([][]int64, [][]byte) {
 }
 
 // Uint32ToByteCigar will process a uint32 slice and decode each number into a byte cigar struct.
-// CIGAR operation lengths are limited to 2^28-1 in the current sam/bam formats
+// CIGAR operation lengths are limited to 2^28-1 in the current sam/bam formats.
 func Uint32ToByteCigar(cigar []uint32) []ByteCigar {
 	var answer []ByteCigar = make([]ByteCigar, len(cigar))
 	for i := 0; i < len(cigar); i++ {
@@ -228,7 +228,7 @@ func Uint32ToByteCigar(cigar []uint32) []ByteCigar {
 	return answer
 }
 
-// ByteCigarToUint32 will convert a slice of []ByteCigar to a slice of []uint32
+// ByteCigarToUint32 will convert a slice of []ByteCigar to a slice of []uint32.
 func ByteCigarToUint32(cigar []ByteCigar) []uint32 {
 	var answer []uint32 = make([]uint32, len(cigar))
 	for i := 0; i < len(cigar); i++ {

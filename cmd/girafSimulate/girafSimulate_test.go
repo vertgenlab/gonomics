@@ -56,7 +56,7 @@ func TestGirafSimulate(t *testing.T) {
 //@SQ     SN:n3 LN:1
 //@SQ     SN:n4 LN:3
 
-// Test Functions
+// Test Functions.
 func MakeTestGraph() *genomeGraph.GenomeGraph {
 	graph := genomeGraph.EmptyGraph()
 

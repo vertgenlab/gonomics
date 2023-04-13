@@ -165,7 +165,7 @@ func initMixtureModel(data []float64, k int, maxIterations int, logProbEpsilon f
 	}
 }
 
-// resetResSum zeros the posteriorSum slice
+// resetResSum zeros the posteriorSum slice.
 func resetResSum(mm *MixtureModel) {
 	for i := range mm.posteriorsSum {
 		mm.posteriorsSum[i] = 0
@@ -224,7 +224,7 @@ func expectation(mm *MixtureModel) {
 	}
 }
 
-// maximization is the second half of the EM algorithm and generates a new model based on the performance of the previous model
+// maximization is the second half of the EM algorithm and generates a new model based on the performance of the previous model.
 func maximization(mm *MixtureModel) {
 	resetResSum(mm)
 	for i := range mm.Data {
@@ -263,7 +263,7 @@ func maximization(mm *MixtureModel) {
 }
 
 // sampleWithoutReplacement returns k values sampled from data without replacement.
-// Fisher-Yates shuffle
+// Fisher-Yates shuffle.
 func sampleWithoutReplacement(data []float64, k int) []float64 {
 	if k > len(data) {
 		log.Panic("ERROR: requested more gaussians than data points")

@@ -76,7 +76,7 @@ func getCache() {
 	buildCmdCache("")
 }
 
-// printCmdList prints the cache file
+// printCmdList prints the cache file.
 func printCmdList() {
 	lines := strings.Split(cache, "\n")
 	var lastIdx int
@@ -135,7 +135,7 @@ func buildCmdCache(altSrcPath string) {
 	writeCache(groupMap, srcPath)
 }
 
-// writeCache writes a groupMap to file
+// writeCache writes a groupMap to file.
 func writeCache(groupMap map[string][]CmdInfo, srcPath string) {
 	outfile := srcPath + "/gonomics/command_cache.txt"
 	cacheWriter, err := os.Create(outfile)
@@ -272,7 +272,7 @@ func getHeaderCommentLines(filepath string) []string {
 	return answer
 }
 
-// getCachedSrcDir retrieves the source code directory stored in the first line of the cache
+// getCachedSrcDir retrieves the source code directory stored in the first line of the cache.
 func getCachedSrcDir() string {
 	lines := strings.Split(cache, "\n")
 	for i := range lines {

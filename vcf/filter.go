@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-// IsHeterozygous returns true if more than 1 allele is present in the sample
+// IsHeterozygous returns true if more than 1 allele is present in the sample.
 func IsHeterozygous(s Sample) bool {
 	if len(s.Alleles) == 0 {
 		return false
@@ -148,7 +148,7 @@ func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
 	return IsNotRefWeakAltStrong(v) && IsNotRefStrongAltWeak(v)
 }
 
-// SampleVcf takes a set of Vcf records and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
+// SampleVcf takes a set of Vcf records and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs).
 func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([]Vcf, Header) {
 	var sampleList []string
 	if len(header.Text) > 0 {
@@ -194,7 +194,7 @@ func getSampleKeepList(n int, numSamples int) []int {
 	return sequentialSlice
 }
 
-// returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]
+// returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3].
 func getSequentialSlice(n int) []int {
 	var answer []int = make([]int, n)
 	for i := 0; i < n; i++ {

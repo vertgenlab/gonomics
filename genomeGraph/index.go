@@ -98,7 +98,7 @@ func indexGenomeIntoSliceHelper(prevSeq []dna.Base, currNode *Node, locationCode
 }
 
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
-// similar calculations could also be used as the parameters to a banded alignment
+// similar calculations could also be used as the parameters to a banded alignment.
 func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
 	seeds := queryLen / (seedLen + 1)
 	remainder := queryLen % (seedLen + 1)

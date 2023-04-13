@@ -17,7 +17,7 @@ import (
 
 // raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
 // raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
-// raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
+// raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx.
 func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
 	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
@@ -33,7 +33,7 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 }
 
 // raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
-// faONe is target, faTwo is query
+// faONe is target, faTwo is query.
 func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *genomeGraph.GenomeGraph {
 	answer := genomeGraph.EmptyGraph()
 	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
@@ -59,7 +59,7 @@ func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *gen
 	return answer
 }
 
-// raven moved helper functions from main and non-usage functions into this function
+// raven moved helper functions from main and non-usage functions into this function.
 func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyReader, outFa string, outIns_bed string, outDel_bed string, FirstPos_InsBed int, FirstPos_DelBed int, Chrom string) {
 	//make sure files meet the usage requirements of globalAlignment.go
 	faOne, faDoneOne := fasta.NextFasta(inputFileOne)
@@ -149,7 +149,7 @@ func GlobalAlignment_CigarToBed(inputFileOne *fileio.EasyReader, inputFileTwo *f
 	//genomeGraph.PrintGraph(genomeGraph)
 }
 
-// raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
+// raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options.
 func usage() {
 	fmt.Print(
 		"./cigarToBed\n" +

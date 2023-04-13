@@ -404,7 +404,7 @@ func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]
 	return start, lastRefIdx, lastPos
 }
 
-// resetPile sets a Pile to the default state
+// resetPile sets a Pile to the default state.
 func resetPile(p *Pile) {
 	p.RefIdx = -1
 	p.Pos = 0
@@ -423,7 +423,7 @@ func resetPile(p *Pile) {
 	p.touched = false
 }
 
-// sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip
+// sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip.
 func sclipTerminalIns(s *Sam) {
 	if len(s.Cigar) == 0 || s.Cigar[0].Op == '*' {
 		return
@@ -449,7 +449,7 @@ func sclipTerminalIns(s *Sam) {
 	}
 }
 
-// String for debug
+// String for debug.
 func (p *Pile) String() string {
 	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCountF: %v\tCountR: %v\tInsCountF: %v\tInsCountR: %v\tDelCountF: %v\tDelCountR: %v\tNext: %p\tPrev: %p",
 		p.RefIdx, p.Pos, p.CountF, p.CountR, p.InsCountF, p.InsCountR, p.DelCountF, p.DelCountR, p.next, p.prev)

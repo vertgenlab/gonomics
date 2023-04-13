@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// negatePrevBed is a helper function to get regions as a bed that comes prev this bed
+// negatePrevBed is a helper function to get regions as a bed that comes prev this bed.
 func negatePrevBed(curr Bed, prev int) (int, Bed) {
 	if curr.ChromStart == 0 {
 		log.Fatalf("Error: this helper function does not deal with the 0th base...\n")

@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 )
 
-// use struct to specify testdata
+// use struct to specify testdata.
 var wigPeaksTests = []struct {
 	inWig       string
 	outBed      string

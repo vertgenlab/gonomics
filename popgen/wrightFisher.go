@@ -40,7 +40,7 @@ type WrightFisherPopData struct {
 WriteTsv() writes a .tsv file based on WrightFisherPopData, including:
 Comments starts with # that include metadata about the parameters of the simulation
 Header line: Gen	Site	Freq.A	Freq.C	Freq.G	Freq.T	Ancestral
-Frequencies table
+Frequencies table.
 */
 func WriteTSV(outFile string, wf WrightFisherPopData) {
 
@@ -64,7 +64,7 @@ func WriteTSV(outFile string, wf WrightFisherPopData) {
 
 /*
 floatArrayTostring() converts the all frequency array from wf to a 2D slice of string
-2D array, zero-based, [generation and site][base]
+2D array, zero-based, [generation and site][base].
 */
 func floatArrayToString(wf WrightFisherPopData) [][]string {
 	// nrow = product of number of generation and number of site
@@ -90,7 +90,7 @@ func floatArrayToString(wf WrightFisherPopData) [][]string {
 }
 
 /*
-writeToFileHandle() feeds one slice of string at a time into writeEachLine()
+writeToFileHandle() feeds one slice of string at a time into writeEachLine().
 */
 func writeToFileHandle(file io.Writer, records [][]string) {
 	for _, rec := range records {
@@ -99,7 +99,7 @@ func writeToFileHandle(file io.Writer, records [][]string) {
 }
 
 /*
-writeEachLine() writes a tab-separated line based on elements in []string
+writeEachLine() writes a tab-separated line based on elements in []string.
 */
 func writeEachLine(file io.Writer, rec []string) {
 	var err error
@@ -116,7 +116,7 @@ func writeEachLine(file io.Writer, rec []string) {
 
 /*
 writeMeta() writes metadata based on the []string of metadata
-Separate each entry with ":" instead of a tab
+Separate each entry with ":" instead of a tab.
 */
 func writeMeta(file io.Writer, rec []string) {
 	var err error

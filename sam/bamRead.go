@@ -17,7 +17,7 @@ import (
 // specs can be found in the sam documentation at:
 // https://raw.githubusercontent.com/samtools/hts-specs/master/SAMv1.pdf
 
-// magicBam is a 4 byte sequence at the start of a bam file
+// magicBam is a 4 byte sequence at the start of a bam file.
 const magicBam string = "BAM\u0001"
 
 // BamReader wraps a bgzf.BlockReader with a fully allocated bgzf.Block.
@@ -270,12 +270,12 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	return
 }
 
-// integer to cigar look quick lookup
+// integer to cigar look quick lookup.
 var cigLookup = []rune{'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', '*'}
 
 // baseDecoder is for 4-bit to dna.Base decoding.
 // gonomics does not support all 16 options in bam.
-// options are: =ACMGRSVTWYHKDBN
+// options are: =ACMGRSVTWYHKDBN.
 var baseDecoder = [16]dna.Base{dna.Nil, dna.A, dna.C, dna.Nil, dna.G, dna.Nil, dna.Nil, dna.Nil, dna.T, dna.Nil, dna.Nil, dna.Nil, dna.Nil, dna.Nil, dna.Nil, dna.N}
 var ErrNonStdBase error = errors.New("sequence contains bases other than A,C,G,T,N. Other bases are not supported in gonomics")
 

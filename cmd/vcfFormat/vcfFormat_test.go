@@ -39,7 +39,7 @@ func TestVcfFormat(t *testing.T) {
 	}
 }
 
-// TODO: better table tests
+// TODO: better table tests.
 func TestVcfTable(t *testing.T) {
 	infile := "testdata/test_table.vcf"
 	outfile := "testdata/actual_table.csv"

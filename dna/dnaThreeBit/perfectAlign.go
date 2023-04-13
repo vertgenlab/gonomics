@@ -8,7 +8,7 @@ import (
 // countRightMatches counts the number of perfectly matching bases between seqOne and seqTwo, starting
 // a position startOne in seqOne and startTwo in seqTwo.  The slices must be encoded with the threeBit format
 // and in register with each other.  The first comparison is startOne vs startTwo, and then to increasing
-// positions
+// positions.
 func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint64, startTwo int, lenTwo int) int {
 	const bitsPerBase int = 3
 	const bitsPerInt int = 64
@@ -43,16 +43,14 @@ func countRightMatches(seqOne []uint64, startOne int, lenOne int, seqTwo []uint6
 		matches += bitMatches / bitsPerBase
 	}
 
-	// TODO: I am not sure what to do here.  I am currently assuming that the "padding"
-	// on the end of the two sequences is different so that it will not match
-	//return numbers.Min(numbers.Min(matches, lenOne-startOne), lenTwo-startTwo)
+	// TODO: I am not sure what to do here. I am currently assuming that the "padding" on the end of the two sequences is different so that it will not match return numbers.Min(numbers.Min(matches, lenOne-startOne), lenTwo-startTwo)
 	return matches
 }
 
 // countLeftMatches counts the number of perfectly matching bases between seqOne and seqTwo, starting
 // a position startOne in seqOne and startTwo in seqTwo.  The slices must be encoded with the threeBit format
 // and in register with each other.  The first comparison is startOne vs startTwo, and then to decreasing
-// positions
+// positions.
 func countLeftMatches(seqOne []uint64, startOne int, seqTwo []uint64, startTwo int) int {
 
 	const bitsPerBase int = 3

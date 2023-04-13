@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	//"io"
+	//"io".
 	"log"
 	"strings"
 
@@ -18,7 +18,7 @@ type slurmCheckArray struct {
 	end        string // whatever is after the squiggles
 }
 
-// parseTheInput parses each line of the input file
+// parseTheInput parses each line of the input file.
 func parseTheInput(slurmArrayFancy string) []slurmCheckArray {
 	inFancy := fileio.EasyOpen(slurmArrayFancy)
 	var slurmArray []slurmCheckArray
@@ -41,7 +41,7 @@ func parseTheInput(slurmArrayFancy string) []slurmCheckArray {
 	return slurmArray
 }
 
-// processFancySlurmLine is a helper function to parseTheInput
+// processFancySlurmLine is a helper function to parseTheInput.
 func processFancySlurmLine(lineToProcess string) slurmCheckArray {
 	var slurmLineParsed slurmCheckArray
 	var parsedFirstSquiggle, parsedSecondSquiggle []string

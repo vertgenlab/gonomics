@@ -70,7 +70,7 @@ func WriteBed(file io.Writer, input Bed) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle writes an input Bed struct to an io.Writer
+// WriteToFileHandle writes an input Bed struct to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec Bed) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)

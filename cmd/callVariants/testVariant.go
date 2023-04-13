@@ -57,7 +57,7 @@ func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, m
 	return makeVcf(exp, norm, bkgd, chrName, warnings, refBases, alts, altPvalues, altVarTypes, ref), true
 }
 
-// addFmtField assembles the piles and p values into the format field of the vcf
+// addFmtField assembles the piles and p values into the format field of the vcf.
 func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, passingAltPvalues [][]float64, passingVarType []variantType) vcf.Vcf {
 	var genotypeAlleles []int16
 	var depth int
@@ -77,7 +77,7 @@ func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, p
 	return v
 }
 
-// calcDepth returns the number of reads in the input pile
+// calcDepth returns the number of reads in the input pile.
 func calcDepth(s sam.Pile) int {
 	var depth int
 	for i := range s.CountF {
@@ -135,7 +135,7 @@ func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAlt
 	return
 }
 
-// sprintAD prints the allele depth (AD) field to a string
+// sprintAD prints the allele depth (AD) field to a string.
 func sprintAD(ad []int) string {
 	var s strings.Builder
 	for i := range ad {
@@ -147,7 +147,7 @@ func sprintAD(ad []int) string {
 	return s.String()
 }
 
-// sprintPV prints the p values (PV) field to a string
+// sprintPV prints the p values (PV) field to a string.
 func sprintPV(pv []float64) string {
 	if len(pv) == 1 && pv[0] == -1 {
 		return "."
@@ -386,7 +386,7 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	return p
 }
 
-// dataPresent returns true if any of the input []Pile contain a non-nil value
+// dataPresent returns true if any of the input []Pile contain a non-nil value.
 func dataPresent(p []sam.Pile) bool {
 	for i := range p {
 		if p[i].RefIdx != -1 { // RefIdx == -1 is mark for no data
@@ -443,7 +443,7 @@ func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []str
 	return v
 }
 
-// adjustAlts alters the ref and alt fields depending on the variant type
+// adjustAlts alters the ref and alt fields depending on the variant type.
 func adjustAlts(v vcf.Vcf, deletionIndexes []int, varTypes []variantType, ref *fasta.Seeker) vcf.Vcf {
 	var longestDeletion int
 	delLens := make([]int, len(deletionIndexes))

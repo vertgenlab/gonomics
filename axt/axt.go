@@ -84,7 +84,7 @@ func GoReadToChan(filename string) (<-chan Axt, []string) {
 // ReadNext takes an EasyReader and returns the next Axt record as well as a boolean flag
 // indicating if we are done reading the file.  If there
 // is an Axt record left in the file, it will be returned along with "false."  If we are done reading the file
-// a blank Axt record will be returned along with "true."
+// a blank Axt record will be returned along with "true.".
 func ReadNext(reader *fileio.EasyReader) (Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
 	if hDone {
@@ -169,7 +169,7 @@ func Swap(in *Axt, tLen int, qLen int) {
 	in.RSeq, in.QSeq = in.QSeq, in.RSeq
 }
 
-// IsAxtFile returns true of filename ends in .axt or .axt.gz
+// IsAxtFile returns true of filename ends in .axt or .axt.gz.
 func IsAxtFile(filename string) bool {
 	if strings.HasSuffix(filename, ".axt") || strings.HasSuffix(filename, ".axt.gz") {
 		return true

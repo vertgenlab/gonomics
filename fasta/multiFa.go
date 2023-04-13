@@ -79,7 +79,7 @@ func RemoveMissingMult(records []Fasta) []Fasta {
 	return answer
 }
 
-// returns alignment columns with no gaps or lowercase letters
+// returns alignment columns with no gaps or lowercase letters.
 func DistColumn(records []Fasta) []Fasta {
 	var subFa = make([]Fasta, len(records))
 	for i := 0; i < len(records); i++ {
@@ -163,8 +163,7 @@ func PairwiseMutationDistanceReferenceWindow(seq1 Fasta, seq2 Fasta, alnStart in
 	var seq1Indel bool = false
 	var seq2Indel bool = false
 	var reachedEnd bool = false
-	var i int = 0
-
+	var i int
 	for i = alnStart; baseCount < windowSize && i < len(seq1.Seq); i++ {
 		if seq1.Seq[i] == seq2.Seq[i] {
 			if seq1.Seq[i] != dna.Gap {

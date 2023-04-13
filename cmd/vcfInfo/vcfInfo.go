@@ -291,7 +291,7 @@ func vcfContext(v vcf.Vcf, m map[string]map[string]int, ref *fasta.Seeker, pad i
 	m[topKey][botKey]++
 }
 
-// initialize map with all valid permutations of nucleotides for given pad size
+// initialize map with all valid permutations of nucleotides for given pad size.
 func initMap(pad int) map[string]map[string]int {
 	m := make(map[string]map[string]int)
 
@@ -320,7 +320,7 @@ func initMap(pad int) map[string]map[string]int {
 	return m
 }
 
-// permute generates all possible permutations of characters present in b of length k and stores them in ans
+// permute generates all possible permutations of characters present in b of length k and stores them in ans.
 func permute(b string, s string, k int, ans *[]string) {
 	if k == 0 {
 		*ans = append(*ans, s)

@@ -26,7 +26,7 @@ type Fasta struct {
 type FastaMap map[string][]dna.Base
 
 // Read in a fasta file to a []Fasta struct. All sequence records must be preceded by a name line starting with '>'.
-// Each record must have a unique sequence name
+// Each record must have a unique sequence name.
 func Read(filename string) []Fasta {
 	return read(filename, NextFasta)
 }
@@ -36,7 +36,7 @@ func ReadForced(filename string) []Fasta {
 	return read(filename, NextFastaForced)
 }
 
-// read is a helper function for Read and ReadForced to reduce duplication
+// read is a helper function for Read and ReadForced to reduce duplication.
 func read(filename string, nextFunc func(*fileio.EasyReader) (Fasta, bool)) []Fasta {
 	var curr Fasta
 	var answer []Fasta
@@ -98,7 +98,7 @@ func NextFastaForced(file *fileio.EasyReader) (Fasta, bool) {
 	return nextFasta(file, dna.StringToBasesForced)
 }
 
-// nextFasta is a helper function for NextFasta and NextFastaForced to reduce code duplication
+// nextFasta is a helper function for NextFasta and NextFastaForced to reduce code duplication.
 func nextFasta(file *fileio.EasyReader, convFunc func(string) []dna.Base) (Fasta, bool) {
 	var line string
 	var name string
@@ -203,7 +203,7 @@ func CreateAllGaps(name string, numGaps int) Fasta {
 	return answer
 }
 
-// CreateAllNs creates a fasta record where the sequence is all Ns of length numN
+// CreateAllNs creates a fasta record where the sequence is all Ns of length numN.
 func CreateAllNs(name string, numN int) Fasta {
 	answer := Fasta{Name: name, Seq: dna.CreateAllNs(numN)}
 	return answer

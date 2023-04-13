@@ -28,7 +28,7 @@ type GenePred struct {
 	Score      int
 }
 
-// GenePredToString formats the data held in the genePred struct into a string so it can be written to a file
+// GenePredToString formats the data held in the genePred struct into a string so it can be written to a file.
 func GenePredToString(g GenePred) string {
 	var answer string
 
@@ -36,7 +36,7 @@ func GenePredToString(g GenePred) string {
 	return answer
 }
 
-// WriteToFileHandle writes an input GenePred struct with a specified number of fields to an io.Writer
+// WriteToFileHandle writes an input GenePred struct with a specified number of fields to an io.Writer.
 func WriteToFileHandle(file io.Writer, records []GenePred) {
 	for _, rec := range records { //take out if we need writeSliceToFileHandle
 		var err error
@@ -54,7 +54,7 @@ func Write(filename string, records []GenePred) {
 	WriteToFileHandle(file, records)
 }
 
-// Read reads a file and processes it into a genePred
+// Read reads a file and processes it into a genePred.
 func Read(filename string) []GenePred {
 	var line string
 	var answer []GenePred
@@ -70,7 +70,7 @@ func Read(filename string) []GenePred {
 	return answer
 }
 
-// processGenePredLine is a helper function that takes the content of a .gp file and processes the strings into values in the genePred struct
+// processGenePredLine is a helper function that takes the content of a .gp file and processes the strings into values in the genePred struct.
 func processGenePredLine(line string) GenePred {
 	current := GenePred{}
 
@@ -115,7 +115,7 @@ func processGenePredLine(line string) GenePred {
 	return current
 }
 
-// StringToIntSlice is used to processes the string that is provided for multiple exon stops, starts and frames into slices of ints for the corresponding genePred fields
+// StringToIntSlice is used to processes the string that is provided for multiple exon stops, starts and frames into slices of ints for the corresponding genePred fields.
 func StringToIntSlice(text string) []int {
 	values := strings.Split(text, ",")
 	var answer = make([]int, len(values)-1)
@@ -127,7 +127,7 @@ func StringToIntSlice(text string) []int {
 }
 
 // CaclExonFame calculates the frame of each exon in a genePred based on the information in the fields for exonStarts, exonStops and cdsStarts
-// TODO: May not work with - strand transcripts
+// TODO: May not work with - strand transcripts.
 func CalcExonFrame(gene GenePred) []int {
 	exonStarts := gene.ExonStarts
 	exonEnds := gene.ExonEnds
@@ -173,7 +173,7 @@ func CalcExonFrame(gene GenePred) []int {
 	return exonFrames
 }
 
-// SliceIntToString is the reverse of StringToIntSlice and is used for writing a slice of ints to a string for writing genePred files
+// SliceIntToString is the reverse of StringToIntSlice and is used for writing a slice of ints to a string for writing genePred files.
 func SliceIntToString(slice []int) string {
 	var buffer strings.Builder
 	for i := 0; i < len(slice); i++ {

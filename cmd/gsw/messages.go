@@ -12,7 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 )
 
-// TODO: View feature needs some work
+// TODO: View feature needs some work.
 type ViewExe struct {
 	Cmd       *flag.FlagSet
 	GirafFile string
@@ -27,7 +27,7 @@ func helpMessage() {
 }
 
 // TODO: finish implementing view function.
-// it works, but we need to figure out an easy way to run the command
+// it works, but we need to figure out an easy way to run the command.
 func viewUsage() {
 	fmt.Printf(
 		"  view\t\tVisualize graph generated alignment\n")

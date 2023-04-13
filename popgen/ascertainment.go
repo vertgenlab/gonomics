@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
-// BuildFCache builds a slice of len(n) where each index i contains log(F(i | n, alpha)), where F is popgen.AFSSampleDensity
+// BuildFCache builds a slice of len(n) where each index i contains log(F(i | n, alpha)), where F is popgen.AFSSampleDensity.
 func BuildFCache(n int, alpha float64, binomCache [][]float64, integralError float64) []float64 {
 	var answer []float64 = make([]float64, n, n)
 	for j := 1; j < n; j++ {
@@ -17,7 +17,7 @@ func BuildFCache(n int, alpha float64, binomCache [][]float64, integralError flo
 	return answer
 }
 
-// GetFCacheSum uses the fCAche built in BuildFCache and calculates the sum from j=1 to n-1
+// GetFCacheSum uses the fCAche built in BuildFCache and calculates the sum from j=1 to n-1.
 func GetFCacheSum(fCache []float64) float64 {
 	var answer float64 = math.Inf(-1)
 	for j := 1; j < len(fCache); j++ {

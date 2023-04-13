@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
+// UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record.
 func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 	var answer []Bed
 	var inRegion bool = false

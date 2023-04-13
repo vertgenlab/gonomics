@@ -13,7 +13,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// Giraf struct contains data fields that describes query sequences aligned to a genome graph reference
+// Giraf struct contains data fields that describes query sequences aligned to a genome graph reference.
 type Giraf struct {
 	QName     string
 	QStart    int
@@ -34,14 +34,14 @@ type Giraf struct {
 	// An example would be "BZ:i:4000
 }
 
-// Path describes an alignment using a traversal slice of Node Ids as well as a start and end coordinate
+// Path describes an alignment using a traversal slice of Node Ids as well as a start and end coordinate.
 type Path struct {
 	TStart int      // The path starts on the TStart base (0-based, closed) of Nodes[0]
 	Nodes  []uint32 // The node Id/Index of all the nodes in the path
 	TEnd   int      // The path ends on the TEnd base (0-based, open) of Nodes[len(Nodes)-1]
 }
 
-// Note is a scruct containing additional information from the graph alignment
+// Note is a scruct containing additional information from the graph alignment.
 type Note struct {
 	Tag   []byte
 	Type  byte
@@ -49,13 +49,13 @@ type Note struct {
 }
 
 // GirafPair is a paired end giraf alignment with pointers to
-// forward (readOne alignment) and reverse (readTwo alignment)
+// forward (readOne alignment) and reverse (readTwo alignment).
 type GirafPair struct {
 	Fwd Giraf
 	Rev Giraf
 }
 
-// Read will process a text file, parse the data fields and assign values to the appropriate giraf data fields
+// Read will process a text file, parse the data fields and assign values to the appropriate giraf data fields.
 func Read(filename string) []*Giraf {
 	var answer []*Giraf
 	var err error
@@ -72,7 +72,7 @@ func Read(filename string) []*Giraf {
 	return answer
 }
 
-// ReadToChan will read a giraf format file to a goroutine channel containing giraf pointers
+// ReadToChan will read a giraf format file to a goroutine channel containing giraf pointers.
 func ReadToChan(file *fileio.EasyReader, data chan<- *Giraf, wg *sync.WaitGroup) {
 	for curr, done := NextGiraf(file); !done; curr, done = NextGiraf(file) {
 		data <- curr
@@ -82,7 +82,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- *Giraf, wg *sync.WaitGroup)
 }
 
 // GoReadToChan is a wrapper function which will set up a wait group to ensure the giraf channel is close properly.
-// User does not need to worry about closing the channel when process is finished
+// User does not need to worry about closing the channel when process is finished.
 func GoReadToChan(filename string) <-chan *Giraf {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
@@ -123,7 +123,7 @@ func Write(filename string, gfs []*Giraf) {
 	exception.PanicOnErr(err)
 }
 
-// GirafChanToFile will write a giraf channel to a file
+// GirafChanToFile will write a giraf channel to a file.
 func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
 	var curr *Giraf
 	var file *fileio.EasyWriter
@@ -138,7 +138,7 @@ func GirafChanToFile(filename string, input <-chan *Giraf, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-// GirafPairChanToFile will write a giraf pair end alignment channel to a file
+// GirafPairChanToFile will write a giraf pair end alignment channel to a file.
 func GirafPairChanToFile(filename string, input <-chan GirafPair, wg *sync.WaitGroup) {
 	var err error
 	var file *fileio.EasyWriter
@@ -154,7 +154,7 @@ func GirafPairChanToFile(filename string, input <-chan GirafPair, wg *sync.WaitG
 	wg.Done()
 }
 
-// WriteGirafToFileHandle will write giraf to a io.Writer
+// WriteGirafToFileHandle will write giraf to a io.Writer.
 func WriteGirafToFileHandle(file io.Writer, gf *Giraf) {
 	_, err := fmt.Fprintf(file, "%s\n", GirafToString(gf))
 	common.ExitIfError(err)

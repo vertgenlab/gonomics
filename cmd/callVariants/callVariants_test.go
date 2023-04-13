@@ -11,7 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-// TODO add better testing once sam simulation code is done
+// TODO add better testing once sam simulation code is done.
 func TestCallVariants(t *testing.T) {
 	var err error
 	ref := "testdata/human_chrM.fasta"

@@ -96,7 +96,7 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 	return answer, alnScore, mapQ
 }
 
-// TODO: simulate indels
+// TODO: simulate indels.
 func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSNV int, AlleleFrequency float64, randSeed int64) ([]uint32, []uint32) {
 	var totalBases = BasesInGraph(graph)
 	var mutationNode, mutationPos []uint32

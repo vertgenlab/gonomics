@@ -29,7 +29,7 @@ const (
 	Derived
 )
 
-// k is len(sites)
+// k is len(sites).
 type Afs struct {
 	Sites []*SegSite
 }

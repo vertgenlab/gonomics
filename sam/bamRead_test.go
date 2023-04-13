@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	//bgBam "github.com/biogo/hts/bam"
-	//bgSam "github.com/biogo/hts/sam"
+	//bgSam "github.com/biogo/hts/sam".
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 )

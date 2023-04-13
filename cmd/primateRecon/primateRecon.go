@@ -17,7 +17,7 @@ import (
 // likelihoodsToBaseUnbiased takes the un-normalized likelihoods for A, C, G, T as well
 // and the probability
 // threshold for when we will call it the mle base instead of N
-// and gives back the reconstructed base for the hca
+// and gives back the reconstructed base for the hca.
 func likelihoodsToBaseUnbiased(likes []float64, probThreshold float64) dna.Base {
 	var total, bestProb float64
 	var i int
@@ -39,7 +39,7 @@ func likelihoodsToBaseUnbiased(likes []float64, probThreshold float64) dna.Base 
 // likelihoodsToBaseBias takes the un-normalized likelihoods for A, C, G, T as well
 // as the index of the biased base (0 for A, 1 for C, etc), and the probability
 // threshold for when we will call it the mle base instead of the biased base
-// and gives back the reconstructed base for the hca/hga
+// and gives back the reconstructed base for the hca/hga.
 func likelihoodsToBaseBias(likes []float64, biasBase dna.Base, probThreshold float64, nonBiasProbThreshold float64) dna.Base {
 	var total, nonHumanTotal, bestProb float64
 	var i int

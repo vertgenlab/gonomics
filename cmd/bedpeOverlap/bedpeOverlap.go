@@ -24,7 +24,7 @@ func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, 
 	}
 }
 
-// function to calculate what percent of a bedpeHalf overlaps the selectBed
+// function to calculate what percent of a bedpeHalf overlaps the selectBed.
 func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 	var overlapEntryStart, overlapEntryEnd, halfBedPeStart, halfBedPeEnd, overlapSize int
 	var answer float64

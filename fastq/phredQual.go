@@ -8,7 +8,7 @@ import (
 )
 
 // SAM format uses ascii offset of 33 to make everything start with individual characters
-// without adding 33 you get values like spaces and newlines
+// without adding 33 you get values like spaces and newlines.
 const asciiOffset uint8 = 33
 
 func ToQualUint8(qual []rune) []uint8 {
@@ -19,7 +19,7 @@ func ToQualUint8(qual []rune) []uint8 {
 	return answer
 }
 
-// ToQual will convert a slice of bytes to uint8 and subtracting a 33 offset to the values
+// ToQual will convert a slice of bytes to uint8 and subtracting a 33 offset to the values.
 func ToQual(qual []byte) []uint8 {
 	var answer []uint8 = make([]uint8, len(qual))
 	for i := 0; i < len(qual); i++ {
@@ -28,7 +28,7 @@ func ToQual(qual []byte) []uint8 {
 	return answer
 }
 
-// qualScore
+// qualScore.
 func ReverseQualUint8Record(qualScore []uint8) {
 	var i, off int
 	for i = len(qualScore)/2 - 1; i >= 0; i-- {

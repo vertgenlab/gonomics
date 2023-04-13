@@ -97,7 +97,7 @@ func MatchOverlapLen(start1 int, end1 int, start2 int, end2 int) int {
 	return numbers.Max(0, numbers.Min(end1, end2)-numbers.Max(start1, start2))
 }
 
-// MatchProportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ)
+// MatchProportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ).
 func MatchProportion(c chain.Chain, i interval.Interval) (float64, float64) {
 	var match, dT, dQ int = 0, 0, 0
 	var currPos int = c.TStart //starting with strand +/+ case for now.

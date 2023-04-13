@@ -139,7 +139,7 @@ func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	}
 }
 
-// perfect match
+// perfect match.
 func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
 	for i := 0; i < len(read.Seq); i++ {

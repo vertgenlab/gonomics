@@ -2,7 +2,7 @@ package wig
 
 import (
 	"log"
-	//DEBUG: "fmt"
+	//DEBUG: "fmt".
 	"math/rand"
 	"sort"
 	"strings"

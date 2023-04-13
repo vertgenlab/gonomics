@@ -1,7 +1,7 @@
 package dna
 
 // compareBases returns an integer related to the lexographical order of nucleotides.
-// i.e. A < C < a < c < Dot < Gap
+// i.e. A < C < a < c < Dot < Gap.
 func compareBases(alpha Base, beta Base, ignoreCase bool) int {
 	if ignoreCase {
 		alpha = ToUpper(alpha)

@@ -14,7 +14,7 @@ func BinomialDistLog(n int, k int, p float64) float64 {
 	return logspace.Multiply(coefficient, expression)
 }
 
-// BinomialExpressionLog returns p^n * (1 - p)^n-k, which is also referred to as the binomial expression. The answer is provided in logSpace (
+// BinomialExpressionLog returns p^n * (1 - p)^n-k, which is also referred to as the binomial expression. The answer is provided in logSpace (.
 func BinomialExpressionLog(n int, k int, p float64) float64 {
 	s := logspace.Pow(math.Log(p), float64(k))
 	f := logspace.Pow(math.Log(1.0-p), float64(n-k))

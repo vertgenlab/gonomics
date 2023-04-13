@@ -96,7 +96,7 @@ func substitutionPreRunChecks(g *Gene, genomePos int, alt *dna.Base) error {
 	return nil
 }
 
-// substitutionNonCoding determines the effects of a non-coding point mutation
+// substitutionNonCoding determines the effects of a non-coding point mutation.
 func substitutionNonCoding(g *Gene, genomePos int, answer *EffectPrediction) error {
 	var err error
 	answer.CdnaPos, answer.CdnaDist, err = GenomicPosToCdna(g, genomePos)
@@ -104,7 +104,7 @@ func substitutionNonCoding(g *Gene, genomePos int, answer *EffectPrediction) err
 	return err
 }
 
-// substitutionCoding determines the effects of a coding point mutation
+// substitutionCoding determines the effects of a coding point mutation.
 func substitutionCoding(g *Gene, cdnaIndexPos int, alt dna.Base, answer *EffectPrediction) error {
 	answer.CdnaPos = cdnaIndexPos
 	answer.AaPos = cdnaIndexPos / 3

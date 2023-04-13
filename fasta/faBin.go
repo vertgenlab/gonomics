@@ -104,7 +104,7 @@ func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 }
 
 // findBinBelowMin finds the first bin that is filled below the minimum length of sequence and returns which bin it is
-// so that it can be filled with the next contig below the minimum length
+// so that it can be filled with the next contig below the minimum length.
 func findBinBelowMin(bins map[int][]Fasta, min int) int {
 	answer := -1
 
@@ -117,7 +117,7 @@ func findBinBelowMin(bins map[int][]Fasta, min int) int {
 	return answer
 }
 
-// calcNumBasesInBin will determine the number of bases that already exist in any given bin
+// calcNumBasesInBin will determine the number of bases that already exist in any given bin.
 func calcNumBasesInBin(f []Fasta) int {
 	totalBases := 0
 	for i := range f {
@@ -127,7 +127,7 @@ func calcNumBasesInBin(f []Fasta) int {
 }
 
 // BinFasta takes in a slice of fastas and breaks it up into x number of fastas with relatively
-// equal sequence in each, where x equals the number of bins specified
+// equal sequence in each, where x equals the number of bins specified.
 func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 	if binNum == 0 {
 		log.Panic("Number of bins must be greater than zero.")
@@ -205,7 +205,7 @@ func BinFasta(genome []Fasta, binNum int) map[int][]Fasta {
 	return answer
 }
 
-// findLastBinnedName determines the last contig that was handled in the given bin (f)
+// findLastBinnedName determines the last contig that was handled in the given bin (f).
 func findLastBinnedName(f []Fasta) string {
 	var lastFasta string
 
@@ -216,7 +216,7 @@ func findLastBinnedName(f []Fasta) string {
 	return lastFasta
 }
 
-// appendRangeOfBases will create a slice of bases ranging from the start to stop positions in the records given (bases)
+// appendRangeOfBases will create a slice of bases ranging from the start to stop positions in the records given (bases).
 func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	var answer []dna.Base
 
@@ -237,7 +237,7 @@ func appendRangeOfBases(bases []dna.Base, start int, stop int) []dna.Base {
 	return answer
 }
 
-// fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all in the final bin regardless of sequence length
+// fillLastBin takes all remaining contigs once BinFasta has reached the last bin and puts them all in the final bin regardless of sequence length.
 func fillLastBin(f []Fasta, currRec int) (ans []Fasta, final int) {
 	var answer []Fasta
 	var bases []dna.Base

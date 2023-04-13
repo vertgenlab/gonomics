@@ -58,7 +58,7 @@ func ToString(bunk BedPe, fields int) string {
 	return ""
 }
 
-// WriteToFileHandle writes an input BedPe struct to an io.Writer
+// WriteToFileHandle writes an input BedPe struct to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec BedPe) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)
@@ -173,7 +173,7 @@ func GoReadToChan(filename string) <-chan BedPe {
 	return data
 }
 
-// SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
+// SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe.
 func SplitBedPe(in BedPe) (BedPeHalf, BedPeHalf) {
 	left := BedPeHalf{
 		Chrom:      in.A.Chrom,

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	//"github.com/vertgenlab/gonomics/dna"
+	//"github.com/vertgenlab/gonomics/dna".
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
@@ -101,7 +101,7 @@ func isEqual(alpha Vcf, beta Vcf) bool {
 
 }
 
-// equalSamples returns true if input samples are equivalent
+// equalSamples returns true if input samples are equivalent.
 func equalSamples(alpha, beta []Sample) bool {
 	if len(alpha) != len(beta) {
 		return false

@@ -6,7 +6,7 @@ import (
 	"log"
 	"sort"
 
-	//"fmt" //DEBUG
+	//"fmt" //DEBUG.
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"

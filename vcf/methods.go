@@ -36,7 +36,7 @@ func (v Vcf) GetChrom() string {
 // vcf is read in as 1-base so subtract 1 from v.pos
 // for indels, vcf records the startpos as the base prior to the change
 // to find the region actually being changed we need to check if it is indel
-// and adjust accordingly
+// and adjust accordingly.
 func (v Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {

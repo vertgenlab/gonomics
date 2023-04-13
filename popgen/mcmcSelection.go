@@ -18,7 +18,7 @@ import (
 // To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
 const verbose int = 0
 
-// The McmcSettings type stores settings for the various Mcmc helper functions.`
+// The McmcSettings type stores settings for the various Mcmc helper functions.`.
 type McmcSettings struct {
 	Iterations              int
 	MuStep                  float64
@@ -77,7 +77,7 @@ func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
 
 // priorProb returns log(probability) of having meanAlpha and sigma as mean
 // and standard deviation of the function that will be generating the individual
-// alpha values
+// alpha values.
 func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
 	var sigmaPrior, muPrior float64
 
@@ -92,7 +92,7 @@ func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
 
 // GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of
 // parameters based on the state of the current parameter set t.
-// TODO: We could avoid some memory allocations by passing in an "old" theta and overwriting the values
+// TODO: We could avoid some memory allocations by passing in an "old" theta and overwriting the values.
 func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s McmcSettings) Theta {
 	var alphaPrime []float64
 	var prior, likelihood, muPrime, sigmaPrime float64

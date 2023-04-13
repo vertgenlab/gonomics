@@ -85,7 +85,7 @@ func chromInfoSamHeader(filename string) sam.Header {
 }
 
 // Not sure if this is a potiential speed up, but i have fairly large axt files that come out of chain merge
-// The idea is to provide at least 3 threads with some work, reading, axtToSam, writing
+// The idea is to provide at least 3 threads with some work, reading, axtToSam, writing.
 func routineWorker(readChannel <-chan axt.Axt, writingChannel chan<- sam.Sam, wg *sync.WaitGroup) {
 	var numberComplete int = 0
 	for eachAxt := range readChannel {

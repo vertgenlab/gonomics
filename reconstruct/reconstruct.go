@@ -157,7 +157,7 @@ func ReconAccuracyByBase(simFilename string, reconFilename string, gpFilename st
 	return answer
 }
 
-// calcLocationInCodon returns what position in a codon a given base inhabits (0, 1, 2)
+// calcLocationInCodon returns what position in a codon a given base inhabits (0, 1, 2).
 func calcLocationInCodon(gene genePred.GenePred, exon int, position int) int {
 	var positionInCodon int
 
@@ -166,7 +166,7 @@ func calcLocationInCodon(gene genePred.GenePred, exon int, position int) int {
 	return positionInCodon
 }
 
-// WriteTreeToFasta writes assigned sequences at all nodes to a fasta file
+// WriteTreeToFasta writes assigned sequences at all nodes to a fasta file.
 func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
 	var fastas []fasta.Fasta
 	nodes := expandedTree.GetTree(tree)
@@ -177,7 +177,7 @@ func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
 	fasta.Write(outFile, fastas)
 }
 
-// WriteLeavesToFasta writes assigned sequences at leaf nodes to a fasta file
+// WriteLeavesToFasta writes assigned sequences at leaf nodes to a fasta file.
 func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
 	var leafFastas []fasta.Fasta
 	nodes := expandedTree.GetLeaves(tree)
@@ -188,7 +188,7 @@ func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
 	fasta.Write(leafFile, leafFastas)
 }
 
-// Prob calculate probability of switching from one base (a) to another (b) over branch length (t)
+// Prob calculate probability of switching from one base (a) to another (b) over branch length (t).
 func Prob(a int, b int, t float64) float64 {
 	var p float64
 	switch {
@@ -202,7 +202,7 @@ func Prob(a int, b int, t float64) float64 {
 	return p
 }
 
-// Yhat returns the index of the most likely base for each position of a sequence. That position refers to a specific base
+// Yhat returns the index of the most likely base for each position of a sequence. That position refers to a specific base.
 func Yhat(r []float64) int {
 	var n float64
 	n = 0
@@ -216,7 +216,7 @@ func Yhat(r []float64) int {
 	return pos
 }
 
-// allZero checks if all values in a slice = 0 and returns a bool
+// allZero checks if all values in a slice = 0 and returns a bool.
 func allZero(r []float64) bool {
 	for _, v := range r {
 		if v != 0 {
@@ -226,7 +226,7 @@ func allZero(r []float64) bool {
 	return true
 }
 
-// SetState calculates initial probabilities for all bases of the sequences for all nodes of the tree
+// SetState calculates initial probabilities for all bases of the sequences for all nodes of the tree.
 func SetState(node *expandedTree.ETree, position int) {
 	if node.Left != nil && node.Right != nil {
 		SetState(node.Left, position)
@@ -293,7 +293,7 @@ func SetState(node *expandedTree.ETree, position int) {
 // using the stored values (initial probabilities from SetState) BubbleUp recursively calculates the
 // probability on a child node based on both of the descendents of it's ancestor. If a child node is a left child,
 // BubbleUp uses the parent and right child's sequence information in Stored to compute a final probability
-// of each of the base states at the left child, then passes those new probabilities up the tree to the root
+// of each of the base states at the left child, then passes those new probabilities up the tree to the root.
 func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
 	tot := 0.0
 	scrapNew := []float64{0, 0, 0, 0}
@@ -323,7 +323,7 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 }
 
 // FixFc passes a node to BubbleUp so that final base probabilities can be calculated from
-// the initial values calculated in SetState
+// the initial values calculated in SetState.
 func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	ans := []float64{0, 0, 0, 0}
 
@@ -343,7 +343,7 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 }
 
 // LoopNodes is called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree
-// to return most probable base at any given position for every node of the tree
+// to return most probable base at any given position for every node of the tree.
 func LoopNodes(root *expandedTree.ETree, position int) {
 	internalNodes := expandedTree.GetBranch(root)
 	SetState(root, position)

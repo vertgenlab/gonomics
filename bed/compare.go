@@ -81,7 +81,7 @@ func OverlapCount(a []Bed, b []Bed) int {
 }
 
 // OverlapLengthSum calculates the total number of overlapping bases between two sets of bed elements.
-// Input bed slices must be presorted with SortByCoord
+// Input bed slices must be presorted with SortByCoord.
 func OverlapLengthSum(a []Bed, b []Bed) int {
 	var sum int = 0
 	var aIndex, bIndex, oLen int

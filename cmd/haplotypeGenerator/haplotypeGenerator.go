@@ -91,7 +91,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 
 }
 
-// Helper function returns a map connecting chromosome names to their index in a fasta slice
+// Helper function returns a map connecting chromosome names to their index in a fasta slice.
 func helperFastaIndex(genome []fasta.Fasta) map[string]int {
 	var answer = make(map[string]int)
 	for i := range genome {

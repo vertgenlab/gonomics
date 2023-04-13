@@ -167,7 +167,7 @@ func parseMafELine(line string) *MafELine {
 	return (&curr)
 }
 
-// returns nil if not found
+// returns nil if not found.
 func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].Src == src {
@@ -177,7 +177,7 @@ func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	return nil
 }
 
-// returns nil if not found
+// returns nil if not found.
 func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		currAssembly, _ := SrcToAssemblyAndChrom(m.Species[i].Src)
@@ -188,7 +188,7 @@ func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	return nil
 }
 
-// would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line
+// would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line.
 func Read(filename string) []*Maf {
 	var answer []*Maf
 	var line, prevLine string

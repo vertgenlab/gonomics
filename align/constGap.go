@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// This version of ConstGap has a fixed checkersize of 10000*10000
+// This version of ConstGap has a fixed checkersize of 10000*10000.
 func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	var checkersize_i, checkersize_j int
 	checkersize_i = 10000
@@ -67,7 +67,7 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	return score_highest, route
 }
 
-// This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j
+// This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j.
 func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, []Cigar) {
 
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards

@@ -228,7 +228,7 @@ func OneLetterToAminoAcid(b byte) AminoAcid {
 	}
 }
 
-// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type
+// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type.
 func ThreeLetterToAminoAcid(s string) AminoAcid {
 	switch s {
 	case "Ala":

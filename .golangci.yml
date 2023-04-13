@@ -8,10 +8,12 @@ linters:
   enable:
     - decorder
     - gci
-    - godox
-    - gosimple
-    - govet
-    - ineffassign
-    - misspell
-    - typecheck
-    - unused
+    - goconst
+    - godot
+    - goimports
+    - goprintffuncname
+    - makezero
+    - prealloc
+    - unconvert
+    - unparam
+

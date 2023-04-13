@@ -205,10 +205,10 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 // base        : =  A  C  M  G  R  S  V  T  W  Y  H  K  D  B  N
 // bam specs   : 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
 // gonomics val: 11 0  1  -1 2  -1 -1 -1 3  -1 -1 -1 -1 -1 -1 4
-// lowercase converted to uppercase and all non-spec bases converted to 'N'
+// lowercase converted to uppercase and all non-spec bases converted to 'N'.
 var baseEncoder = []uint8{1, 2, 4, 8, 15, 1, 2, 4, 8, 15, 15, 15, 15, 15, 15, 15}
 
-// getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op
+// getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
 func getCigUint32(c cigar.Cigar) uint32 {
 	var cigint uint32
 	cigint = uint32(c.RunLength) << 4  // move 4 bits to the left

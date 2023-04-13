@@ -15,10 +15,10 @@ import (
 // Specs for bai can be found in section 5.2 on page 19 of:
 // https://raw.githubusercontent.com/samtools/hts-specs/master/SAMv1.pdf
 
-// magicBai is a 4 byte sequence at the start of a bai file
+// magicBai is a 4 byte sequence at the start of a bai file.
 const magicBai string = "BAI\u0001"
 
-// alias for ease of use and readability
+// alias for ease of use and readability.
 var le = binary.LittleEndian
 
 // Bai is an index of the BAM format that allows for efficient
@@ -188,7 +188,7 @@ func parseIntervalOffset(r *bytes.Buffer) uint64 {
 	return le.Uint64(r.Next(8)) // note le is an alias for binary.LittleEndian
 }
 
-// to reduce chance of errors in the following function
+// to reduce chance of errors in the following function.
 const million uint32 = 1000000
 const thousand uint32 = 1000
 

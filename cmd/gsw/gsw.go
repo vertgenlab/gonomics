@@ -83,7 +83,7 @@ func RunAlignExe() {
 	}
 }
 
-// TODO: add check for too many args or an implementation for multiple fastq pairs
+// TODO: add check for too many args or an implementation for multiple fastq pairs.
 func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out string, liftover string, args []string) {
 	//should be at most 3 args to add to the input, reference, readOne and/or readTwo
 	var genomeGraph *genomeGraph.GenomeGraph = genomeGraph.Read(args[0])

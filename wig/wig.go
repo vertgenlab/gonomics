@@ -134,7 +134,7 @@ func PrintFirst(rec []Wig) {
 	}
 }
 
-// Write writes a Wig data structure to a WIG format file at the input filename
+// Write writes a Wig data structure to a WIG format file at the input filename.
 func Write(filename string, rec []Wig) {
 	file := fileio.EasyCreate(filename)
 	for i := range rec {
@@ -179,7 +179,7 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 	}
 }
 
-// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name
+// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name.
 func ChromToSlice(w []Wig, chrom string) []float64 {
 	var output []float64
 	for _, v := range w {

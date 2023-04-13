@@ -8,7 +8,7 @@ import (
 
 // Plot returns the values of a function(float64) float64 between a left and right bound for a specified number of bins.
 // the answer is written to a file as a CSV for subsequent visualization.
-// Half-closed interval [left, right)
+// Half-closed interval [left, right).
 func Plot(f func(float64) float64, left float64, right float64, bins int, outFile string) {
 	out := fileio.EasyCreate(outFile)
 	var step float64 = (right - left) / float64(bins)

@@ -14,13 +14,13 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// GenomeGraph struct contains a slice of Nodes
+// GenomeGraph struct contains a slice of Nodes.
 type GenomeGraph struct {
 	Nodes []Node
 }
 
 // Node is uniquely definded by Id and is encoded with information
-// describing sequence order and orientation and annotated variance
+// describing sequence order and orientation and annotated variance.
 type Node struct {
 	Id        uint32
 	ColumnId  uint32
@@ -31,7 +31,7 @@ type Node struct {
 } // used to have Name (string) and Info (Annotation)
 
 // Edge describes the neighboring nodes and a weighted probability
-// of the of the more likely path
+// of the of the more likely path.
 type Edge struct {
 	Dest *Node
 	Prob float32
@@ -46,7 +46,7 @@ type Edge struct {
 	Variant uint8
 }*/
 
-// Read will process a simple graph formated text file and parse the data into graph fields
+// Read will process a simple graph formated text file and parse the data into graph fields.
 func Read(filename string) *GenomeGraph {
 	simpleReader := fileio.NewByteReader(filename)
 	genome := EmptyGraph()
@@ -109,7 +109,7 @@ func AddNode(g *GenomeGraph, n *Node) *Node {
 
 // AddEdge will append two edges one forward and one backwards for any two
 // given node. Provide a probability float32 to specify a weight for an edge
-// to describe the more likely path through the graph
+// to describe the more likely path through the graph.
 func AddEdge(u, v *Node, p float32) {
 	u.Next = append(u.Next, Edge{Dest: v, Prob: p})
 	v.Prev = append(v.Prev, Edge{Dest: u, Prob: p})
@@ -125,7 +125,7 @@ func SetEvenWeights(u *Node) {
 	}
 }
 
-// Write function will process GenomeGraph and write the data to a file
+// Write function will process GenomeGraph and write the data to a file.
 func Write(filename string, sg *GenomeGraph) {
 	lineLength := 50
 	file := fileio.EasyCreate(filename)
@@ -133,12 +133,12 @@ func Write(filename string, sg *GenomeGraph) {
 	WriteToGraphHandle(file, sg, lineLength)
 }
 
-// EmptyGraph will allocate a new zero pointer to a simple graph and will allocate memory for the Nodes of the graph
+// EmptyGraph will allocate a new zero pointer to a simple graph and will allocate memory for the Nodes of the graph.
 func EmptyGraph() *GenomeGraph {
 	return &GenomeGraph{Nodes: make([]Node, 0)}
 }
 
-// PrintGraph will quickly print simpleGraph to standard out
+// PrintGraph will quickly print simpleGraph to standard out.
 func PrintGraph(gg *GenomeGraph) {
 	Write("/dev/stdout", gg)
 }
@@ -175,7 +175,7 @@ func WriteToGraphHandle(file io.Writer, gg *GenomeGraph, lineLength int) {
 	}
 }
 
-// BasesInGraph will calculate the number of bases contained in GenomeGraph using dnaTwoBit
+// BasesInGraph will calculate the number of bases contained in GenomeGraph using dnaTwoBit.
 func BasesInGraph(g *GenomeGraph) int {
 	var i, baseCount int = 0, 0
 	for i = 0; i < len(g.Nodes); i++ {

@@ -51,14 +51,14 @@ func AllToUpper(records []Fasta) {
 	}
 }
 
-// Copy returns a memory copy of an input fasta struct
+// Copy returns a memory copy of an input fasta struct.
 func Copy(f Fasta) Fasta {
 	var answerSeq = make([]dna.Base, len(f.Seq))
 	copy(answerSeq, f.Seq)
 	return Fasta{Name: f.Name, Seq: answerSeq}
 }
 
-// CopyAll returns a memory copy of a slice of input fasta structs
+// CopyAll returns a memory copy of a slice of input fasta structs.
 func CopyAll(f []Fasta) []Fasta {
 	var answer = make([]Fasta, len(f))
 	for i := range f {

@@ -270,7 +270,7 @@ func TestUndoInsertion(t *testing.T) {
 	}
 }
 
-// TODO WIP
+// TODO WIP.
 func TestInsertionEffectPrediction(t *testing.T) {
 	g := gtf.Read("testdata/test.gtf")
 	f := fasta.Read("testdata/test.fasta")

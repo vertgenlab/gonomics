@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/vertgenlab/gonomics/exception"
-	//"github.com/vertgenlab/gonomics/exception"
+	//"github.com/vertgenlab/gonomics/exception".
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 )

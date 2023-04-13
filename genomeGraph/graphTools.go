@@ -211,7 +211,7 @@ func FaSplitByNs(fa []fasta.Fasta) []fasta.Fasta {
 */
 
 // TODO move these vcf helper functions to vcf
-// new nodes are treated as insertion
+// new nodes are treated as insertion.
 func isINV(v vcf.Vcf) bool {
 	var truth bool = false
 	data := strings.Split(v.Info, ";")

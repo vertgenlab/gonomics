@@ -1,10 +1,10 @@
 package popgen
 
 import (
-	//"log"
+	//"log".
 	"math"
 
-	//"fmt"
+	//"fmt".
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"

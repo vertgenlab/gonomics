@@ -14,7 +14,7 @@ import (
 // magicHexEOF is a particular empty bgzf block that marks the true EOF.
 var magicEOF []byte = makeMagicEOF()
 
-// BlockWriter moves data -> compressor -> zipBlock -> file writer
+// BlockWriter moves data -> compressor -> zipBlock -> file writer.
 type BlockWriter struct {
 	w          io.Writer
 	compressor *gzip.Writer
@@ -35,7 +35,7 @@ func NewBlockWriter(w io.Writer) *BlockWriter {
 	return &zw
 }
 
-// NewWriter creates a bgzf writer that writes bytes instead of blocks
+// NewWriter creates a bgzf writer that writes bytes instead of blocks.
 func NewWriter(w io.Writer) *Writer {
 	var bw Writer
 	bw.bw = NewBlockWriter(w)

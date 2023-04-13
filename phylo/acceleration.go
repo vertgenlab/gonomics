@@ -11,7 +11,7 @@ import (
 
 // AccelDistancesAndWeights represents a set of all observed pairwise distances between the four species used for acceleration analysis.
 // While distances are integers, we store them as float64 to avoid casting in other functions as a way to improve readability.
-// The six weight fields are the corresponding weights for each distance (w = 1/ (D^2))
+// The six weight fields are the corresponding weights for each distance (w = 1/ (D^2)).
 type AccelDistancesAndWeights struct {
 	DhumChimp   float64
 	DhumGor     float64
@@ -38,7 +38,7 @@ type AccelBranchLengths struct {
 
 // AccelSubTreeLeft is a tree with three leaves and three branches, joined at the single internal node.
 // Dij represent the observed pairwise distances between two species. vi represents the length of the branch between a species i and the internal node at the current stage of optimization.
-// Wij are the weight constants corresponding to each distance Dij such that Wij = 1 / (Dij^2)
+// Wij are the weight constants corresponding to each distance Dij such that Wij = 1 / (Dij^2).
 type AccelSubTreeLeft struct {
 	DhumChimp float64
 	DhumHga   float64
@@ -53,7 +53,7 @@ type AccelSubTreeLeft struct {
 
 // AccelSubTreeRight is a tree with three leaves and three branches, joined at the single internal node.
 // Dij represent the observed pairwise distances between two species. vi represents the length of the branch between a species i and the internal node at the current stage of optimization.
-// Wij are the weight constants corresponding to each distance Dij such that Wij = 1 / (Dij^2)
+// Wij are the weight constants corresponding to each distance Dij such that Wij = 1 / (Dij^2).
 type AccelSubTreeRight struct {
 	DgorOrang float64
 	DhcaGor   float64
@@ -102,7 +102,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 }
 
 // AccelFourWaySnpDistancesAndweights generates an AccelDistancesAndWeights struct from SNP distance, which includes only SNPs.
-// Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang
+// Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang.
 func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) bool {
 	//first we clear the values in d.
 	d.DhumChimp, d.DhumGor, d.DhumOrang, d.DchimpGor, d.DchimpOrang, d.DgorOrang = 0, 0, 0, 0, 0, 0
@@ -145,7 +145,7 @@ func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter 
 }
 
 // AccelFourWayMutationDistancesAndWeights generates an AccelDistancesAndWeights struct from mutation distances, which includes SNPs and INDELs, where each INDEL counts as one mutation regardless of length.
-// Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang
+// Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang.
 func AccelFourWayMutationDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) bool {
 	//first we clear the values in D.
 	d.DhumChimp, d.DhumGor, d.DhumOrang, d.DchimpGor, d.DchimpOrang, d.DgorOrang = 0, 0, 0, 0, 0, 0

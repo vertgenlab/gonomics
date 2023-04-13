@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"github.com/vertgenlab/gonomics/bed" //will only use when bed.AllAreEqual can accommodate comparing not just the first 3 fields in the future
+	//"github.com/vertgenlab/gonomics/bed" //will only use when bed.AllAreEqual can accommodate comparing not just the first 3 fields in the future.
 	"os"
 	"testing"
 

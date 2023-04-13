@@ -82,7 +82,7 @@ func BenchmarkSimpsonsLogIntegral(b *testing.B) {
 	}
 }
 
-// answer from WolframAlpha
+// answer from WolframAlpha.
 var logIntegralTests = []struct {
 	f      func(float64) float64
 	a      float64

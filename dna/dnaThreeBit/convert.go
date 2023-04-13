@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-// RuneToThreeBitBase returns a single bases in ThreeBitBase format that corresponds to the given rune
+// RuneToThreeBitBase returns a single bases in ThreeBitBase format that corresponds to the given rune.
 func RuneToThreeBitBase(r rune) ThreeBitBase {
 	switch r {
 	case 'A':
@@ -36,7 +36,7 @@ func RuneToThreeBitBase(r rune) ThreeBitBase {
 	}
 }
 
-// ThreeBitBaseToRune returns a rune that corresponds to the single base in ThreeBitBase format
+// ThreeBitBaseToRune returns a rune that corresponds to the single base in ThreeBitBase format.
 func ThreeBitBaseToRune(base ThreeBitBase) rune {
 	switch base {
 	case A:
@@ -55,12 +55,12 @@ func ThreeBitBaseToRune(base ThreeBitBase) rune {
 	}
 }
 
-// ThreeBitBaseToString returns a string that corresponds to the single base give as a ThreeBitBase
+// ThreeBitBaseToString returns a string that corresponds to the single base give as a ThreeBitBase.
 func ThreeBitBaseToString(b ThreeBitBase) string {
 	return string(ThreeBitBaseToRune(b))
 }
 
-// FromString creates a new ThreeBit from a string of DNA characters {A,C,G,T,N}
+// FromString creates a new ThreeBit from a string of DNA characters {A,C,G,T,N}.
 func FromString(s string) *ThreeBit {
 	answer := &ThreeBit{Seq: []uint64{}, Len: 0}
 	for _, runeValue := range s {
@@ -69,7 +69,7 @@ func FromString(s string) *ThreeBit {
 	return answer
 }
 
-// ToString returns a string representation of the ThreeBit passed in
+// ToString returns a string representation of the ThreeBit passed in.
 func ToString(fragment *ThreeBit) string {
 	var buffer strings.Builder
 	buffer.Grow(fragment.Len)
@@ -80,7 +80,7 @@ func ToString(fragment *ThreeBit) string {
 }
 
 // RangeToDnaBases returns a slice of dna.Base that represents the bases from
-// start to end (left-closed, right-open) of fragment
+// start to end (left-closed, right-open) of fragment.
 func RangeToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
 	if end > fragment.Len || start >= end {
 		log.Fatalf("Error: unable to extract bases from %d to %d from a sequence of length %d\n", start, end, fragment.Len)
@@ -93,7 +93,7 @@ func RangeToDnaBases(fragment *ThreeBit, start int, end int) []dna.Base {
 }
 
 // ToDnaBases returns a slice of dna.Base that represents the same sequence
-// of bases present in fragment
+// of bases present in fragment.
 func ToDnaBases(fragment *ThreeBit) []dna.Base {
 	return RangeToDnaBases(fragment, 0, fragment.Len)
 }

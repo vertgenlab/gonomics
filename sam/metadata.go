@@ -22,7 +22,7 @@ type Metadata struct {
 
 // Tag is a 2 byte identifier of data encoded in a sam header.
 // Tags occur in sets where each header line begins with a tag
-// which is further split into subtags. e.g. @SQ SN:ref LN:45
+// which is further split into subtags. e.g. @SQ SN:ref LN:45.
 type Tag [2]byte
 
 // HeaderTagMap organizes all tags into a map where the line tag (e.g. SQ)
@@ -42,7 +42,7 @@ type Tag [2]byte
 // Note that comment lines (line tag 'CO') are not stored in HeaderTagMap.
 type HeaderTagMap map[Tag][]map[Tag]string
 
-// Sort order defines whether the file is sorted and if so, how it was sorted
+// Sort order defines whether the file is sorted and if so, how it was sorted.
 type SortOrder string
 
 const (
@@ -55,7 +55,7 @@ const (
 	Umi             SortOrder = "umi"
 )
 
-// sortOrderMap provides easy lookup of string to SortOrder
+// sortOrderMap provides easy lookup of string to SortOrder.
 var sortOrderMap = map[string]SortOrder{
 	"unknown":         Unknown,
 	"unsorted":        Unsorted,
@@ -66,7 +66,7 @@ var sortOrderMap = map[string]SortOrder{
 	"umi":             Umi,
 }
 
-// Grouping defines how the reads are grouped, if they are not sorted
+// Grouping defines how the reads are grouped, if they are not sorted.
 type Grouping string
 
 const (
@@ -75,7 +75,7 @@ const (
 	Reference Grouping = "reference"
 )
 
-// groupingMap provides easy lookup of string to Grouping
+// groupingMap provides easy lookup of string to Grouping.
 var groupingMap = map[string]Grouping{
 	"none":      None,
 	"query":     Query,
@@ -97,7 +97,7 @@ func ParseHeaderText(h Header) Header {
 	return h
 }
 
-// parseTagsAndComments parses header text into a HeaderTagMap and a slice of comment lines
+// parseTagsAndComments parses header text into a HeaderTagMap and a slice of comment lines.
 func parseTagsAndComments(text []string) (tags HeaderTagMap, comments []string) {
 	var currTag Tag
 	tags = make(HeaderTagMap)
@@ -121,7 +121,7 @@ func parseTagsAndComments(text []string) (tags HeaderTagMap, comments []string) 
 	return
 }
 
-// parseSubTags parses a single line of tab delimited tagsets
+// parseSubTags parses a single line of tab delimited tagsets.
 func parseSubTags(tagsets []string) map[Tag]string {
 	var currTag Tag
 	var alreadyUsed bool
@@ -143,7 +143,7 @@ func parseSubTags(tagsets []string) map[Tag]string {
 	return answer
 }
 
-// getChromInfo further parses tags stored in a HeaderTagMap to extract ChromInfo
+// getChromInfo further parses tags stored in a HeaderTagMap to extract ChromInfo.
 func getChromInfo(tags HeaderTagMap) []chromInfo.ChromInfo {
 	chroms := tags[[2]byte{'S', 'Q'}]
 	answer := make([]chromInfo.ChromInfo, len(chroms))
@@ -161,12 +161,12 @@ func getChromInfo(tags HeaderTagMap) []chromInfo.ChromInfo {
 	return answer
 }
 
-// getVersion pulls the version number from a HeaderTagMap
+// getVersion pulls the version number from a HeaderTagMap.
 func getVersion(tags HeaderTagMap) string {
 	return tags[[2]byte{'H', 'D'}][0][[2]byte{'V', 'N'}]
 }
 
-// getSortOrder pulls the sort order from a HeaderTagMap
+// getSortOrder pulls the sort order from a HeaderTagMap.
 func getSortOrder(tags HeaderTagMap) []SortOrder {
 	var answer []SortOrder
 	order := tags[[2]byte{'H', 'D'}][0][[2]byte{'S', 'O'}]
@@ -185,7 +185,7 @@ func getSortOrder(tags HeaderTagMap) []SortOrder {
 	return answer
 }
 
-// getGrouping pulls the grouping from a HeaderTagMap
+// getGrouping pulls the grouping from a HeaderTagMap.
 func getGrouping(tags HeaderTagMap) Grouping {
 	return groupingMap[tags[[2]byte{'H', 'D'}][0][[2]byte{'G', 'O'}]]
 }

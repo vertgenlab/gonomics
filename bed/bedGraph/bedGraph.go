@@ -37,7 +37,7 @@ func Write(filename string, records []BedGraph) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle writes an input BedGraph struct to an io.Writer
+// WriteToFileHandle writes an input BedGraph struct to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec BedGraph) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)

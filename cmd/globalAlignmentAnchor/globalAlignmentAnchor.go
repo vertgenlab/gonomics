@@ -18,14 +18,14 @@ import (
 	"github.com/vertgenlab/gonomics/maf"
 )
 
-// helper function: write to tsv file
+// helper function: write to tsv file.
 func writeToFileHandle(file io.Writer, species1 bed.Bed, species2 bed.Bed, score int64, cigar []align.Cigar) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\t%s\t%d\t%v\n", species1, species2, score, cigar)
 	exception.PanicOnErr(err)
 }
 
-// helper function: make chr name match map
+// helper function: make chr name match map.
 func makeChrMap(chrMap_filename string) map[string][]string {
 
 	chrMap := make(map[string][]string) // map to hold species1 species2 chr name matches
@@ -46,7 +46,7 @@ func makeChrMap(chrMap_filename string) map[string][]string {
 	return chrMap
 }
 
-// helper function: check if maf entry passes checks
+// helper function: check if maf entry passes checks.
 func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_species1 string, chrom_species2 string, species1_SrcSize int, species2_SrcSize int, species1_ChromStart int, species1_ChromEnd int, species2_ChromStart int, species2_ChromEnd int, chrMap map[string][]string, diagonal bool) bool {
 
 	pass := true
@@ -78,7 +78,7 @@ func matchMafPass(assembly_species1 string, assembly_species2 string, chrom_spec
 
 // helper function: check if gap bed entry passes checks
 // need both pos_species (most recently updated alignment position)
-// and species1_ChromStart (the start of the current bed entry)
+// and species1_ChromStart (the start of the current bed entry).
 func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int, pos_species2 int, species2_ChromStart int, species2_ChromEnd int, gapSizeProductLimit int) (bool, string, string) {
 	pass := true
 	species1_Name := "species1_gap"
@@ -137,7 +137,7 @@ func gapBedPass(pos_species1 int, species1_ChromStart int, species1_ChromEnd int
 }
 
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf (aka anchors, or "match")
-// not to be confused with cmd/mafFilter, which filters for scores above a threshold
+// not to be confused with cmd/mafFilter, which filters for scores above a threshold.
 func mafToMatch(in_maf string, species1 string, species2 string, out_filename_prefix string, chrMap_filename string, diagonal bool) (string, string) {
 	mafRecords := maf.Read(in_maf) // read input maf
 	chrMap := makeChrMap(chrMap_filename)
@@ -202,7 +202,7 @@ func mafToMatch(in_maf string, species1 string, species2 string, out_filename_pr
 	return out_species1_filename, out_species2_filename
 }
 
-// Step 2: Use match to calculate coordinates that still need to be aligned, aka "gap"
+// Step 2: Use match to calculate coordinates that still need to be aligned, aka "gap".
 func matchToGap(in_species1_match string, in_species2_match string, species1_genome string, species2_genome string, species1 string, species2 string, gapSizeProductLimit int, out_filename_prefix string) (string, string) {
 	// read input files
 	species1_match_bed := bed.Read(in_species1_match)
@@ -349,7 +349,7 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 	return out_species1_filename, out_species2_filename
 }
 
-// Step 3: align "gap" sequences
+// Step 3: align "gap" sequences.
 func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_genome string, species2_genome string, species1 string, species2 string, out_filename_prefix string) {
 	// read input files
 	species1_gap_bed := bed.Read(in_species1_gap)
@@ -467,7 +467,7 @@ func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_gen
 	exception.PanicOnErr(err)
 }
 
-// main function: assembles all steps
+// main function: assembles all steps.
 func globalAlignmentAnchor(in_maf string, species1 string, species2 string, species1_genome string, species2_genome string, gapSizeProductLimit int, chrMap_filename string, out_filename_prefix string, diagonal bool) {
 	// process input from out_filename_prefix flag
 	// about TrimSuffix: if the suffix string is at the end of the substrate string, then it is trimmed. If the suffix stirng is not at the end of the substrate string, then the substrate string is returned without any change

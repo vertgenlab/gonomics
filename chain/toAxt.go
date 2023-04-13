@@ -77,7 +77,7 @@ func ToAxt(ch Chain, target []dna.Base, query []dna.Base) axt.Axt {
 	return answer
 }
 
-// helper function to quickly get sequence at a starting pos plus length this way i dont have to keep doing start:start+length everytime
+// helper function to quickly get sequence at a starting pos plus length this way i dont have to keep doing start:start+length everytime.
 func getSequence(seq []dna.Base, start int, length int) []dna.Base {
 	return seq[start : start+length]
 }

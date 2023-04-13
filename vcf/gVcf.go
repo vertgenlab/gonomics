@@ -2,10 +2,10 @@ package vcf
 
 import (
 	"fmt"
-	//"strconv"
+	//"strconv".
 	"strings"
 
-	//"github.com/vertgenlab/gonomics/common"
+	//"github.com/vertgenlab/gonomics/common".
 	"github.com/vertgenlab/gonomics/dna"
 )
 
@@ -30,7 +30,7 @@ func BuildGenotypeMap(v Vcf, names map[string]int16, mapToVcf map[uint64]Vcf) ma
 }
 
 // tmp , this functions lives in simple graph, but import cycles are not allowed...
-// need to find a new package for this function
+// need to find a new package for this function.
 func ChromPosToUInt64(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
@@ -38,7 +38,7 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 	return answer
 }
 
-// Parse Vcf header to quickly print sample names that appear inside Vcf
+// Parse Vcf header to quickly print sample names that appear inside Vcf.
 func PrintSampleNames(header Header) string {
 	var ans string = ""
 	for _, line := range header.Text {

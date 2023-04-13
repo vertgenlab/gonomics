@@ -13,7 +13,7 @@ const (
 	Intron   Feature = -1
 	UtrThree Feature = -3
 	UtrFive  Feature = -5
-	// All positive values refer to cDNA position
+	// All positive values refer to cDNA position.
 
 	Silent           MutationType = 0
 	Missense         MutationType = 1
@@ -49,7 +49,7 @@ type Gene struct {
 	changeLog    []diff          // Log of any mutations that have been performed on the Gene to enable the Reset() function.
 }
 
-// subSeq stores a pointer to a portion of a larger sequence with defined start and end points
+// subSeq stores a pointer to a portion of a larger sequence with defined start and end points.
 type subSeq struct {
 	start int        // base zero, closed start position in cdnaSeq
 	end   int        // base zero, open end position in cdnaSeq
@@ -98,7 +98,7 @@ var (
 // The first int return is the nearest position in the coding sequence in cDNA coordinates.
 // The second int return is the distance from the nearest coding exon
 // (>0 if 5' of cds; <0 if 3' of cds, ==0 if inside coding sequence, ties break to <0).
-// Input and output positions are zero-based
+// Input and output positions are zero-based.
 func GenomicPosToCdna(g *Gene, genomePos int) (int, int, error) {
 	var queryPos int
 	if g.posStrand { // Positive Strand
@@ -153,7 +153,7 @@ func GenomicPosToCdna(g *Gene, genomePos int) (int, int, error) {
 }
 
 // CodingPosToGenomic converts cDna coordinates to genomic coordinates
-// Input and output positions are zero-based
+// Input and output positions are zero-based.
 func CodingPosToGenomic(g *Gene, cdnaPos int) (int, error) {
 	if cdnaPos < 0 {
 		return 0, errors.New("input CDS position must be positive")

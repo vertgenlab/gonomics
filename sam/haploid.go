@@ -146,7 +146,7 @@ func makeHaploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 }
 
 // makeHaploidIndelPriorCache is a helper function used in before calling HaploidCallFromPile.
-// Stores two values: answer[0] = p(Base), answer[1] = p(Indel)
+// Stores two values: answer[0] = p(Base), answer[1] = p(Indel).
 func makeHaploidIndelPriorCache(delta float64, kappa float64) []float64 {
 	return []float64{math.Log(1.0 - delta*kappa), math.Log(delta * kappa)}
 }

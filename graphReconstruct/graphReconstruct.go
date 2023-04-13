@@ -14,7 +14,7 @@ type graphColumn struct {
 	AlignNodes map[string][]*genomeGraph.Node //string keys refer to species that key to a slice of pointers to the nodes of that species that fall into a single slignment column
 }
 
-// BuildNodes uses a graphColumn to create nodes for an ancestor's graph seq that represents all the unique sequences in an aligned graph
+// BuildNodes uses a graphColumn to create nodes for an ancestor's graph seq that represents all the unique sequences in an aligned graph.
 func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 {
 	var nodeInfo = make(map[string]bool)
 	for _, nodes := range column.AlignNodes { //nodes is all nodes for an individual species
@@ -43,7 +43,7 @@ func BuildNodes(root *expandedTree.ETree, column graphColumn, id uint32) uint32 
 //func FindAncSeq will loop through aligncolumns and build a single graph of all of the nodes that belong to the ancestor species after edges are created
 //run PathFinder on the graph for the anc, run seqOfPath, then turn that to a fasta for that node of the tree
 
-// seqOfPath takes in a graph and a path specified by the Node IDs and returns the seq of the path through the graph
+// seqOfPath takes in a graph and a path specified by the Node IDs and returns the seq of the path through the graph.
 func seqOfPath(g *genomeGraph.GenomeGraph, path []uint32) []dna.Base {
 	var seq []dna.Base
 	var foundInGraph = false
@@ -63,7 +63,7 @@ func seqOfPath(g *genomeGraph.GenomeGraph, path []uint32) []dna.Base {
 	return seq
 }
 
-// PathFinder takes a graph and returns the most likely path through that graph after checking all possible paths from the first node to the last
+// PathFinder takes a graph and returns the most likely path through that graph after checking all possible paths from the first node to the last.
 func PathFinder(g *genomeGraph.GenomeGraph) ([]uint32, float32) {
 	var finalPath []uint32
 	var finalProb float32
@@ -77,7 +77,7 @@ func PathFinder(g *genomeGraph.GenomeGraph) ([]uint32, float32) {
 	return finalPath, finalProb
 }
 
-// bestPath is the helper function for PathFinder, and recursively traverses the graph depth first to determine the most likely path from start to finish
+// bestPath is the helper function for PathFinder, and recursively traverses the graph depth first to determine the most likely path from start to finish.
 func bestPath(node *genomeGraph.Node, prevProb float32, path []uint32) (prob float32, pathOut []uint32) {
 	var tempProb float32 = 0
 	var finalProb float32

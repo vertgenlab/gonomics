@@ -25,7 +25,7 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 
 // makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
 // the directory labelled with the name of the reference and the species being aligned. It then passes off to a
-// helper function makeTargetSubDir
+// helper function makeTargetSubDir.
 func makeOutDir(pairwise string, outDir string, r string, s string) {
 	tDir := pairwise + "/" + r + ".byChrom"
 	if _, e := os.Stat(outDir); os.IsNotExist(e) {
@@ -136,7 +136,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 	return answer, trix
 }
 
-// BuildMatrices is used when the user defines m as false and wants to write each potential matrix for the lastZ alignment to a specified directory (mPath)
+// BuildMatrices is used when the user defines m as false and wants to write each potential matrix for the lastZ alignment to a specified directory (mPath).
 func BuildMatrices(mPath string) {
 	var closeRec, defaultRec, farRec []string
 	if _, e := os.Stat(mPath); os.IsNotExist(e) {

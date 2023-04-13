@@ -1,11 +1,9 @@
 package genomeGraph
 
-import (
 //"github.com/vertgenlab/gonomics/dna"
 //"github.com/vertgenlab/gonomics/fastq"
 //"log"
 //"testing"
-)
 
 //TODO: consider dot format to graph
 //     --> node_1            --> node_4

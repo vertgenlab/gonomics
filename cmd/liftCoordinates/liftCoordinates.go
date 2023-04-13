@@ -147,7 +147,7 @@ func liftCoordinates(s Settings) {
 // sequence of bases matches the fasta at this position.
 // Note: for QuerySeq, RefPosToAlnPos is probably not required if you are using an assembly fasta
 // as the reference, but if you are querying from alignment Fasta, you'll want to get the alnIndex
-// before calling this function
+// before calling this function.
 func QuerySeq(ref *fasta.Seeker, chr string, index int, query []dna.Base) bool {
 	fetchSeq, err := fasta.SeekByName(ref, chr, index, index+len(query))
 	exception.PanicOnErr(err)
@@ -166,7 +166,7 @@ func minMatchPass(overlap chain.Chain, i interval.Interval, minMatch float64) bo
 	return true
 }
 
-// swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field
+// swapInfoAlelles switches the values of ALLELE_A and ALLELE_B in the info field.
 func swapInfoAlleles(v *vcf.Vcf) {
 	var foundA, foundB bool
 	newInfo := []byte(v.Info)

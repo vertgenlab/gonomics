@@ -8,7 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// Goroutine worker functions
+// Goroutine worker functions.
 func RoutineFqToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, inputChan <-chan fastq.FastqBig, outputChan chan<- giraf.Giraf, wg *sync.WaitGroup) {
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()

@@ -13,7 +13,7 @@ import (
 	"github.com/vertgenlab/gonomics/popgen"
 )
 
-// Main function to be called in simulateWrightFisher.gp
+// Main function to be called in simulateWrightFisher.gp.
 func SimulateWrightFisher(set popgen.WrightFisherSettings) popgen.WrightFisherPopData {
 	checkValidInput(set)                          // Check various inputs
 	set.AncestralAllele = setAncestralAllele(set) // Set ancestral allele if given by input
@@ -88,7 +88,7 @@ func checkValidInput(set popgen.WrightFisherSettings) {
 }
 
 /*
-setAncestralAllele() returns what the one ancestral allele is if given by input
+setAncestralAllele() returns what the one ancestral allele is if given by input.
 */
 func setAncestralAllele(set popgen.WrightFisherSettings) string {
 	var answer string
@@ -105,7 +105,7 @@ func setAncestralAllele(set popgen.WrightFisherSettings) string {
 /*
 makeInitialPop() returns identical slices of fasta containing initial sequences
 Case I-no ancestral allele is specified: randomly generate sequences
-Case II-ancestral allele is specified: generate repeats of that allele
+Case II-ancestral allele is specified: generate repeats of that allele.
 */
 func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fasta) {
 	curFasta := make([]fasta.Fasta, set.PopSize)
@@ -151,7 +151,7 @@ func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fas
 }
 
 /*
-makeFastaByRatio() makes cur- and nextFasta from the given input frequencies
+makeFastaByRatio() makes cur- and nextFasta from the given input frequencies.
 */
 func makeFastaByRatio(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, freq []float64, set popgen.WrightFisherSettings) {
 	var ratio float64 // pointer keeps track of current ratio of population that is filled by an allele
@@ -178,7 +178,7 @@ func makeFastaByRatio(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, freq []fl
 }
 
 /*
-makeUniformSeq() makes a sequence of uniform repeats of one allele
+makeUniformSeq() makes a sequence of uniform repeats of one allele.
 */
 func makeUniformSeq(curFasta []fasta.Fasta, j int, ratio float64, base dna.Base, set popgen.WrightFisherSettings) {
 	for k := 0; k < set.GenomeSize; k++ {
@@ -188,7 +188,7 @@ func makeUniformSeq(curFasta []fasta.Fasta, j int, ratio float64, base dna.Base,
 
 /*
 makeAlleleFreqArray() makes an allele frequency array
-3D array, zero-based, [generation][site][base]
+3D array, zero-based, [generation][site][base].
 */
 func makeAlleleFreqArray(curFasta []fasta.Fasta, set popgen.WrightFisherSettings) [][][]float64 {
 	answer := make([][][]float64, set.NumGen+1)
@@ -204,7 +204,7 @@ func makeAlleleFreqArray(curFasta []fasta.Fasta, set popgen.WrightFisherSettings
 }
 
 /*
-makeAncestralArray() makes a slice that stores the ancestral alleles of every site
+makeAncestralArray() makes a slice that stores the ancestral alleles of every site.
 */
 func makeAncestralArray(initSeq []dna.Base, set popgen.WrightFisherSettings) []string {
 	answer := make([]string, set.GenomeSize)
@@ -225,7 +225,7 @@ func makeAncestralArray(initSeq []dna.Base, set popgen.WrightFisherSettings) []s
 
 /*
 makeFitnessArray() constructs a slice that stores relative fitness of derived alleles on each position
-2D array, zero-based, row = site, column = 0:A, 1:C, 2:G, 3:T
+2D array, zero-based, row = site, column = 0:A, 1:C, 2:G, 3:T.
 */
 func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]float64 {
 	answer := make([][]float64, set.GenomeSize)
@@ -274,7 +274,7 @@ func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]f
 }
 
 /*
-simulateAllGeneration() simulates the changes in allele frequencies through all generation, all individual, and all site
+simulateAllGeneration() simulates the changes in allele frequencies through all generation, all individual, and all site.
 */
 func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relFitArray [][]float64, allFreq [][][]float64, set popgen.WrightFisherSettings) {
 	var t, s, b, p int
@@ -361,7 +361,7 @@ func updateFreqArray(curFasta []fasta.Fasta, gen int, allFreq [][][]float64) {
 
 /*
 updateNormFactorArray() calculates and updates the normalizing factor
-based on the original frequencies before sampling and relative fitness
+based on the original frequencies before sampling and relative fitness.
 */
 func updateNormFactorArray(gen int, relFitArray [][]float64, allFreq [][][]float64, normFactorArray []float64) {
 	for s := 0; s < len(normFactorArray); s++ {
@@ -389,7 +389,7 @@ func makeMetadata(set popgen.WrightFisherSettings) []string {
 }
 
 /*
-sumSlice() sums the values inside a []float64
+sumSlice() sums the values inside a []float64.
 */
 func sumSlice(slice []float64) float64 {
 	var answer float64

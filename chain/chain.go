@@ -245,7 +245,7 @@ func printHeader(ch Chain) string {
 	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
 
-// Simple swaping of target and query fields
+// Simple swaping of target and query fields.
 func SwapBoth(ch Chain) Chain {
 	ch.TName, ch.QName = ch.QName, ch.TName
 	ch.TSize, ch.QSize = ch.QSize, ch.TSize

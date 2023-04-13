@@ -28,7 +28,7 @@ func BenchmarkFmtPrint(b *testing.B) {
 	}
 }
 
-// Moved to benchmark after much improved performance in QualString
+// Moved to benchmark after much improved performance in QualString.
 func Uint8QualToString(qual []uint8) string {
 	var answer []rune = make([]rune, len(qual))
 	for i := 0; i < len(qual); i++ {

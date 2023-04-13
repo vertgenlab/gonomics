@@ -49,7 +49,7 @@ func TrimFastq(fq Fastq, start int, end int) Fastq {
 }
 
 // GetBarcode copies a subset of the given fastq record, at start and and end sites, zero base
-// could be a UMI or 10x barcode
+// could be a UMI or 10x barcode.
 func GetBarcode(fq Fastq, start int, end int) []dna.Base {
 	answer := make([]dna.Base, end-start)
 	copy(answer, fq.Seq[start:end])

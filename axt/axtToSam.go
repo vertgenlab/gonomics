@@ -10,7 +10,7 @@ import (
 )
 
 // ToSam converts an Axt record into a Sam (sam.SamAln) record
-// TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment
+// TODO: Add logic to add hard clip on ends of axt that contain no sequence alignment.
 func ToSam(axtFmt Axt) sam.Sam {
 	var answer sam.Sam = sam.Sam{
 		QName: axtFmt.QName,
@@ -62,7 +62,7 @@ func PairSeqToCigar(a []dna.Base, b []dna.Base) []cigar.Cigar {
 	return align
 }
 
-// equalMatchCigar is a helper function for PairSeqToCigar
+// equalMatchCigar is a helper function for PairSeqToCigar.
 func equalMatchCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	match := cigar.Cigar{Op: '=', RunLength: 1}
 	var i int
@@ -76,7 +76,7 @@ func equalMatchCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	return match
 }
 
-// diffMatchCigar is a helper function for PairSeqToCigar
+// diffMatchCigar is a helper function for PairSeqToCigar.
 func diffMatchCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	match := cigar.Cigar{Op: 'X', RunLength: 1}
 	var i int
@@ -90,7 +90,7 @@ func diffMatchCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	return match
 }
 
-// insertCigar is a helper function for PairSeqToCigar
+// insertCigar is a helper function for PairSeqToCigar.
 func insertCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	insertion := cigar.Cigar{Op: 'I', RunLength: 1}
 	var i int
@@ -105,7 +105,7 @@ func insertCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	return insertion
 }
 
-// deletionCigar is a helper function for PairSeqToCigar
+// deletionCigar is a helper function for PairSeqToCigar.
 func deletionCigar(a []dna.Base, b []dna.Base, index int) cigar.Cigar {
 	deletion := cigar.Cigar{Op: 'D', RunLength: 1}
 	var i int

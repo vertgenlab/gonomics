@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	// "fmt"
+	// "fmt".
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"

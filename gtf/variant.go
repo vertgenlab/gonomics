@@ -25,7 +25,7 @@ type vcfEffectPrediction struct {
 	NextTranscript *vcfEffectPrediction
 }
 
-// GenesToIntervalTree builds a fractionally cascaded 2d interval tree for efficiently identifying genes that overlap a variant
+// GenesToIntervalTree builds a fractionally cascaded 2d interval tree for efficiently identifying genes that overlap a variant.
 func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNode {
 	MoveAllCanonicalToZero(genes)
 	intervals := make([]interval.Interval, len(genes))
@@ -40,7 +40,7 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 
 // VcfToVariant determines the effects of a variant on the cDNA and amino acid sequence by querying genes in the tree made by GenesToIntervalTree
 // Note that if multiple genes are found to overlap a variant this function will return the variant based on the first queried gene and throw an error
-// All bases in fasta record must be uppercase
+// All bases in fasta record must be uppercase.
 func VcfToVariant(v vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
 	var answer *vcfEffectPrediction
 	var err error
@@ -61,7 +61,7 @@ func VcfToVariant(v vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[str
 	return answer, err
 }
 
-// vcfToVariant is a helper function that annotates the Variant struct with information from the Vcf and Gtf input
+// vcfToVariant is a helper function that annotates the Variant struct with information from the Vcf and Gtf input.
 func vcfToVariant(v vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscripts bool) *vcfEffectPrediction {
 	answer := new(vcfEffectPrediction)
 	answer.Vcf = v
@@ -95,7 +95,7 @@ func vcfToVariant(v vcf.Vcf, gene *Gene, seq map[string][]dna.Base, allTranscrip
 	return answer
 }
 
-// vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the Cds nearest to the vcf
+// vcfCdsIntersect annotates the Variant struct with the cDNA position of the vcf as well as the Cds nearest to the vcf.
 func vcfCdsIntersect(v vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcriptPosInSlice int) {
 	var cdsPos int
 	var exon *Exon
@@ -145,7 +145,7 @@ func vcfCdsIntersect(v vcf.Vcf, gene *Gene, answer *vcfEffectPrediction, transcr
 
 }
 
-// findAAChange annotates the Variant struct with the amino acids changed by a given variant
+// findAAChange annotates the Variant struct with the amino acids changed by a given variant.
 func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 	ref := dna.StringToBases(variant.Ref)
 	alt := dna.StringToBases(variant.Alt[0]) //TODO: does not handle polyallelic bases.
@@ -435,7 +435,7 @@ func findAAChange(variant *vcfEffectPrediction, seq map[string][]dna.Base) {
 
 // addVariantType annotates the Variant struct with the VariantType
 // Valid types include: Silent, Missense, Nonsense, Frameshift, Intergenic, Intronic, Splice, FarSplice
-// Splice is defined as 1-2 bases away from intron-exon border, Farsplice is 3-10 bases away from intron-exon border
+// Splice is defined as 1-2 bases away from intron-exon border, Farsplice is 3-10 bases away from intron-exon border.
 func addVariantType(v *vcfEffectPrediction) {
 	cdsDist := getCdsDist(v)
 	switch {
@@ -461,7 +461,7 @@ func addVariantType(v *vcfEffectPrediction) {
 }
 
 // reverse reverses the order of a slice of dna.Base
-// e.g. [0 1 2] -> [2 1 0]
+// e.g. [0 1 2] -> [2 1 0].
 func reverse(s []dna.Base) []dna.Base {
 	for i := 0; i < len(s)/2; i++ {
 		s[i], s[len(s)-1-i] = s[len(s)-1-i], s[i]
@@ -470,7 +470,7 @@ func reverse(s []dna.Base) []dna.Base {
 }
 
 // determineFrame will determine the position of the variant in a codon
-// This is used to determine how many bases before the variant must be retrieved to get the full codon
+// This is used to determine how many bases before the variant must be retrieved to get the full codon.
 func determineFrame(v *vcfEffectPrediction) int {
 	if v.PosStrand {
 		return ((int(v.Pos)-v.NearestCds.Start)%3 + ((3 - v.NearestCds.Frame) % 3)) % 3
@@ -480,7 +480,7 @@ func determineFrame(v *vcfEffectPrediction) int {
 }
 
 // getCdsDist determines the distance of the variant from the nearest Cds
-// Returns 0 if the variant is inside the Cds
+// Returns 0 if the variant is inside the Cds.
 func getCdsDist(v *vcfEffectPrediction) int {
 	switch {
 	case int(v.Pos) >= v.NearestCds.Start && int(v.Pos) <= v.NearestCds.End: // Variant is in Cds
@@ -494,7 +494,7 @@ func getCdsDist(v *vcfEffectPrediction) int {
 	}
 }
 
-// isFrameshift returns true if the variant shifts the reading frame
+// isFrameshift returns true if the variant shifts the reading frame.
 func isFrameshift(v *vcfEffectPrediction) bool {
 	refBases := dna.StringToBases(v.Ref)
 	altBases := dna.StringToBases(v.Alt[0]) //TODO: does not handle polyallelic bases.
@@ -520,7 +520,7 @@ func isFrameshift(v *vcfEffectPrediction) bool {
 	return shift%3 != 0
 }
 
-// isNonsense returns true if the variant creates a premature stop codon
+// isNonsense returns true if the variant creates a premature stop codon.
 func isNonsense(v *vcfEffectPrediction) bool {
 	for _, val := range v.AaAlt {
 		if val == dna.Stop {
@@ -530,7 +530,7 @@ func isNonsense(v *vcfEffectPrediction) bool {
 	return false
 }
 
-// isSynonymous returns true if the variant does not change the amino acid sequence
+// isSynonymous returns true if the variant does not change the amino acid sequence.
 func isSynonymous(v *vcfEffectPrediction) bool {
 	var answer bool = true
 	if len(v.AaAlt) != len(v.AaRef) || len(dna.StringToBases(v.Ref)) != len(dna.StringToBases(v.Alt[0])) {

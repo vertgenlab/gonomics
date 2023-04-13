@@ -9,7 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-// ToVcfFile takes a
+// ToVcfFile takes a.
 func ToVcfFile(filename string, axtList []Axt, fa []fasta.Fasta) {
 	var records []vcf.Vcf
 	for i := range axtList {

@@ -9,15 +9,15 @@ import (
 	"github.com/vertgenlab/gonomics/genomeGraph"
 )
 
-// initiate fake fasta files for testing the graph function
+// initiate fake fasta files for testing the graph function.
 var toad = fasta.Fasta{Name: "toad", Seq: dna.StringToBases("TTGTTATTC")}
 var ahsoka = fasta.Fasta{Name: "ahsoka", Seq: dna.StringToBases("TTGTTC")}
 
-// make needed cigar and graph using the graph function being tested
+// make needed cigar and graph using the graph function being tested.
 var _, aln = align.ConstGap(toad.Seq, ahsoka.Seq, align.HumanChimpTwoScoreMatrix, -430)
 var graph = cigarToGraph(toad, ahsoka, aln)
 
-// make a manual graph using the fake fastas
+// make a manual graph using the fake fastas.
 var manual = buildManualGraph(toad, ahsoka)
 
 // Did graph and manual end up with the same number of nodes?
@@ -41,7 +41,7 @@ func TestCigarToGraphMatchManual(t *testing.T) {
 
 //functions below this line were used to execute test functions
 
-// this function makes the manually created graph (called 'manual')
+// this function makes the manually created graph (called 'manual').
 func buildManualGraph(toad fasta.Fasta, ahsoka fasta.Fasta) *genomeGraph.GenomeGraph {
 	manual := genomeGraph.EmptyGraph()
 	nodeOne := &genomeGraph.Node{

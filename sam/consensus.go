@@ -26,7 +26,7 @@ type Consensus struct {
 	Type      consensusType
 }
 
-// String for debug
+// String for debug.
 func (c Consensus) String() string {
 	var typeString string
 	switch c.Type {
@@ -45,7 +45,7 @@ func (c Consensus) String() string {
 // PileConsensus returns a Consensus struct from an input Pile struct
 // representing information about the consensus variant observed in that Pile.
 // An insertion is called as the consensus if the count number for the max insertion if
-// maxCount > insertionThreshold * (total counts to bases)
+// maxCount > insertionThreshold * (total counts to bases).
 func PileConsensus(p Pile, substitutionsOnly bool, insertionThreshold float64) Consensus {
 	// first we check if consensus is a base
 	var max int = p.CountF[dna.A] + p.CountR[dna.A]

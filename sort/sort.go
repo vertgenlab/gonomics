@@ -24,7 +24,7 @@ type priorityGiraf struct {
 	sortPath []uint32
 }
 
-// Implements sort.Interface based on Breadth-First topological ordering of a SimpleGraph
+// Implements sort.Interface based on Breadth-First topological ordering of a SimpleGraph.
 type byTopologicalOrder []*priorityGiraf
 
 func (g byTopologicalOrder) Len() int { return len(g) }
@@ -71,7 +71,7 @@ func (g byTopologicalOrder) Less(i, j int) bool {
 	return false
 }
 
-// Implements methods required for heap.Interface
+// Implements methods required for heap.Interface.
 func (g *byTopologicalOrder) Push(x interface{}) {
 	giraf := x.(*priorityGiraf)
 	*g = append(*g, giraf)
@@ -89,7 +89,7 @@ func (g *byTopologicalOrder) Pop() interface{} {
 // Sorts giraf by startposition and startnode given the node order defined in nodeIdSortOrder
 // This was intended to be paired with a list of sorted nodes such as simpleGraph.GetSortOrder()
 // so that the file result would be a topologically sorted giraf file, however this can be used with
-// any given node sort order
+// any given node sort order.
 func GirafExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk int, outFile string) {
 	file := fileio.EasyOpen(girafFile)
 	var done bool
@@ -208,7 +208,7 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 	close(outputChan)
 }
 
-// TODO: should really come up with a better index format than this
+// TODO: should really come up with a better index format than this.
 func writeIdx(filename string, sortOrder []uint32) {
 	idxName := filename + ".idx"
 	file := fileio.MustCreate(idxName)

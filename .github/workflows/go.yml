@@ -27,18 +27,21 @@ jobs:
         run: gofmt -s -w ./*/*/*.go
       - name: go fmt simplify cmd
         run: gofmt -s -w ./cmd/*/*.go
-      - name: Check for modified files
-        id: git-check
-        run: echo "{modified}={$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)}" >> $GITHUB_OUTPUT
-      - name: Push changes
-        if: steps.git-check.outputs.modified == 'true'
+      - name: Setup lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.3
+      - name: Lint and automate clean
+        run: golangci-lint run ./... --fix
+      - name: Check and push changes
         run: |
-          git config --global user.email "AutoFmtBot@fmtyacodeffs.com"
-          git config --global user.name "AutoFmt Bot"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "style: automated go fmt ./..."
-          git push
-
+          git config user.name "$(git log -n 1 --pretty=format:%an)"
+          git config user.email "$(git log -n 1 --pretty=format:%ae)"
+          if [[ $(git diff-index --quiet HEAD --) == "" ]]; then
+            go test ./...
+            git add -A
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+            git commit -am "style: automated go lint ./... && go fmt ./..."
+            git push
+          fi
   gitactions:
     needs: format
     strategy:

@@ -53,7 +53,7 @@ var BinomialDistLogSliceTests = []struct {
 	{30, 14, 0.6, -3.01706},
 }
 
-// tests if all of the values are correct and tests the number of entries in the binomMap at the end
+// tests if all of the values are correct and tests the number of entries in the binomMap at the end.
 func TestBinomalDistLogSlice(t *testing.T) {
 	binomMap := make([][]float64, 31)
 	for _, test := range BinomialDistLogSliceTests {

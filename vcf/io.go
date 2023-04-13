@@ -113,7 +113,7 @@ func parseSamples(samples []string, format []string, line string) []Sample {
 	return answer
 }
 
-// parseGenotype returns the alleles and phase parsed from the GT field in Samples
+// parseGenotype returns the alleles and phase parsed from the GT field in Samples.
 func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	var alleleId int64
 	var err error
@@ -161,7 +161,7 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	return
 }
 
-// splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1")
+// splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1").
 func splitGenotype(gt string) []string {
 	answer := make([]string, 0, len(gt))
 	for i := 0; i < len(gt); i++ {
@@ -242,7 +242,7 @@ func PrintSingleLine(data Vcf) {
 	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, SamplesToString(data.Samples))
 }
 
-// IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file
+// IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file.
 func IsVcfFile(filename string) bool {
 	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
 		return true

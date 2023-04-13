@@ -4,7 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 )
 
-//MakeBitArrayFromSearchSpaceBed
+// MakeBitArrayFromSearchSpaceBed.
 func MakeBitArrayFromSearchSpaceBed(searchSpaceFile string, referenceLength int, Chrom string) []bool {
 	searchSpace := bed.Read(searchSpaceFile)
 	bitArray := make([]bool, referenceLength)

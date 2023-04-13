@@ -45,7 +45,7 @@ func overlapLength(a Lift, b Lift) int {
 }
 
 // overlapLengthSum calculates the total number of overlapping bases between two sets of Lift elements.
-// Input Lift slices must be presorted with sortByCoord
+// Input Lift slices must be presorted with sortByCoord.
 func overlapLengthSum(a []Lift, b []Lift) int {
 	var sum int = 0
 	var aIndex, bIndex, oLen int

@@ -11,7 +11,7 @@ import (
 )
 
 // Read will input a giraf.fe file and will decompress into a slice of giraf.Giraf.
-// Requires the graph (.gg) file used to generate the giraf for decompression
+// Requires the graph (.gg) file used to generate the giraf for decompression.
 func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 	var answer []giraf.Giraf
 	graph := genomeGraph.Read(graphFile)
