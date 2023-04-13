@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"unicode"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -181,16 +180,11 @@ var baseToByteArray = []byte{'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n', '
 
 // BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
 func BasesToString(bases []Base) string {
-	var buffer strings.Builder
-	buffer.Grow(len(bases))
-	var err error
-	for i := range bases {
-		err = buffer.WriteByte(baseToByteArray[bases[i]])
-		if err != nil {
-			log.Panicf("problem writing byte")
-		}
+	buf := make([]byte, len(bases))
+	for i, b := range bases {
+		buf[i] = baseToByteArray[b]
 	}
-	return buffer.String()
+	return string(buf)
 }
 
 // ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases.
