@@ -33,9 +33,13 @@ jobs:
         run: golangci-lint run ./... --fix && go install ./... && go test ./...
       - name: Check and push changes
         run: |
-          git config user.name "$(git log -n 1 --pretty=format:%an)"
-          git config user.email "$(git log -n 1 --pretty=format:%ae)"
-          if [[ $(git diff-index HEAD --) != "" ]]; then
+          export NAME=$(git log -n 1 --pretty=format:%an)
+          export EMAIL=$(git log -n 1 --pretty=format:%ae)
+          git config user.name "NAME"
+          git config user.email "$EMAIL"
+          if git diff-index --quiet HEAD --; then
+            echo "$NAME $EMAIL"
+          else
             git add -A
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
             git commit -am "style: automated go lint ./... && go fmt ./..."
