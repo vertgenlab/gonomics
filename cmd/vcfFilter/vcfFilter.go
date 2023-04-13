@@ -34,9 +34,70 @@ func getSitesSeen(filename string) map[coordinate]uint8 {
 	return sitesSeen
 }
 
+func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int, totalChan, removedChan chan<- int) {
+	var prev vcf.Vcf
+	var canSend bool
+	var total, removed int
+	for v := range input {
+		total++
+		if prev.Chr == "" {
+			prev = v
+			canSend = true
+			continue
+		}
+
+		if v.Pos < prev.Pos && v.Chr == prev.Chr {
+			log.Fatalf("ERROR: input vcf is not sorted. Offending records:\n%s\n%s", prev, v)
+		}
+
+		// if onto a new chrom, send previous if applicable, set v as prev, and move on to next record
+		if v.Chr != prev.Chr {
+			if canSend {
+				output <- prev
+			} else {
+				removed++
+			}
+			canSend = true
+			prev = v
+			continue
+		}
+
+		if v.Pos-prev.Pos < minDist { // too close, don't send
+			canSend = false
+			prev = v
+			removed++
+			continue
+		}
+
+		// if we reach this point prev is clear to send and v is ok to send in the next loop if the subsequent variant is not too close
+		if canSend {
+			output <- prev
+		} else {
+			removed++
+		}
+		prev = v
+		canSend = true
+	}
+
+	// send final record if passing
+	if canSend {
+		output <- prev
+	} else {
+		removed++
+	}
+
+	totalChan <- total
+	removedChan <- removed
+
+	close(totalChan)
+	close(removedChan)
+	close(output)
+}
+
 func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
 	rand.Seed(setSeed)
 	var records <-chan vcf.Vcf
+	var totalChan, removedChan chan int
 	var header vcf.Header
 	var err error
 	var currentCoord coordinate
@@ -49,6 +110,15 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 	records, header = vcf.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	tests := getTests(c, header)
+
+	if c.minDist > 0 {
+		// hijack input channel so only sites passing the minDist filter are passed to the rest of the function
+		passedRecords := make(chan vcf.Vcf, 100)
+		totalChan = make(chan int, 1)   // to get accurate total count
+		removedChan = make(chan int, 1) // to get accurate removed count
+		go rmClusteredRecords(records, passedRecords, c.minDist, totalChan, removedChan)
+		records = passedRecords
+	}
 
 	var samplesToKeep []int = make([]int, 0) //this var holds all of the indices from samples (defined below as the sample list in the header) that we want to keep in the output file.
 
@@ -96,6 +166,11 @@ func vcfFilter(infile string, outfile string, c criteria, groupFile string, pars
 		}
 
 		vcf.WriteVcf(out, v)
+	}
+
+	if c.minDist > 0 {
+		total = <-totalChan
+		removed += <-removedChan
 	}
 
 	err = out.Close()
@@ -157,6 +232,7 @@ type criteria struct {
 	subSet                         float64
 	minDaf                         float64
 	maxDaf                         float64
+	minDist                        int
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -363,6 +439,7 @@ func main() {
 	var subSet *float64 = flag.Float64("subSet", 1, "Proportion of variants to retain in output. Value must be between 0 and 1.")
 	var minDaf *float64 = flag.Float64("minDaf", 0, "Set the minimum derived allele frequency for retained variants. Ancestral allele must be defined in INFO.")
 	var maxDaf *float64 = flag.Float64("maxDaf", 1, "Set the maximum derived allele frequency for retained variants. Ancestral allele must be defined in INFO.")
+	var minDist *int = flag.Int("minDistance", 0, "Remove variants that are within minDistance of another variant. File must be sorted by position.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -398,6 +475,7 @@ func main() {
 		subSet:                         *subSet,
 		minDaf:                         *minDaf,
 		maxDaf:                         *maxDaf,
+		minDist:                        *minDist,
 	}
 
 	var parseFormat, parseInfo bool
