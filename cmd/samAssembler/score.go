@@ -77,7 +77,7 @@ func baseMatrixByRefBase(inFileList string, outFile string, byRefBase bool) {
 				case dna.T:
 					answerT[refPhasedIndexMapping(predGeno, dna.T)][refPhasedIndexMapping(actualGeno, dna.T)]++
 				default:
-					log.Fatalf("Unrecognized refBase: %v.\n", records[0].Seq[alnPos])
+					log.Fatalf("Error: Unrecognized refBase: %v.\n", records[0].Seq[alnPos])
 				}
 			}
 		}
