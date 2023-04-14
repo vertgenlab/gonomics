@@ -13,8 +13,9 @@ import (
 	"github.com/vertgenlab/gonomics/interval/lift"
 )
 
+// bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
 func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool) {
-	// bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
+
 	if bedSelect && overlapBoth {
 		SelectIsBedBoth(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
 	} else if bedSelect {
@@ -24,7 +25,7 @@ func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, 
 	}
 }
 
-// verlapPercent calculates the percent of a bedpeHalf overlaps the selectBed.
+// overlapPercent calculates the percent of a bedpeHalf overlaps the selectBed.
 func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 	var overlapEntryStart, overlapEntryEnd, halfBedPeStart, halfBedPeEnd, overlapSize int
 	var answer float64
@@ -177,7 +178,7 @@ func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold 
 	exception.PanicOnErr(err)
 }
 
-// This is the case where the select file is a bedpe. Input bedpe entries will be retained
+// SelectIsBedPe checks the case where the select file is a bedpe. Input bedpe entries will be retained
 // in the output if both ends of the bedpe overlap both ends of a bedpe entry in the select file.
 func SelectIsBedPe(bedpeSelectFile string, bedpeInFile string, contactOutFile string) {
 	var inIntervals = make([]interval.Interval, 0)
