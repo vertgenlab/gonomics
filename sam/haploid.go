@@ -1,10 +1,11 @@
 package sam
 
 import (
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"math"
 )
 
 // HaploidCall is a struct to represent the data of a haploid genotype called
@@ -145,7 +146,7 @@ func MakeHaploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 }
 
 // MakeHaploidIndelPriorCache is a helper function used in before calling HaploidCallFromPile.
-// Stores two values: answer[0] = p(Base), answer[1] = p(Indel)
+// Stores two values: answer[0] = p(Base), answer[1] = p(Indel).
 func MakeHaploidIndelPriorCache(delta float64, kappa float64) []float64 {
 	return []float64{math.Log(1.0 - delta*kappa), math.Log(delta * kappa)}
 }

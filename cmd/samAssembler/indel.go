@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"math/rand"
 )
 
 // diploidInsertion performs insertion variant calling on an input pile. If an insertion is found, it is added to

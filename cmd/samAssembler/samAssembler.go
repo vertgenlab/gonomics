@@ -5,11 +5,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"math/rand"
 )
 
 // Settings specifies all user options and arguments.
@@ -184,7 +185,6 @@ func samAssembler(s Settings) {
 
 			// Now we handle diploid deletion calls
 			mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip = diploidDeletion(mlt, cacheStruct, p, refMap, refPos, currChrom, s)
-
 		} else if currPloidy == 1 {
 			currHaploidCall = sam.HaploidCallFromPile(p, refMap[currChrom][refPos], s.Epsilon, cacheStruct.HaploidBasePriorCache, cacheStruct.HaploidIndelPriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.HomozygousIndelCache)
 

@@ -2,11 +2,12 @@ package sam
 
 import (
 	"fmt"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"log"
-	"math"
 )
 
 // InsertionType encodes the insertion genotype state, which can be one of the four constant values explained below.
@@ -19,7 +20,7 @@ const (
 	BBnoIns InsertionType = 3 // for base base, or no insertion
 )
 
-// DiploidInsertion is a minimal internal format to encode Insertion variant genotypes
+// DiploidInsertion is a minimal internal format to encode Insertion variant genotypes.
 type DiploidInsertion struct {
 	Type InsertionType
 	Ia   string
@@ -155,7 +156,7 @@ const (
 	BBNoDel DeletionType = 3
 )
 
-// DiploidDeletion is a minimal internal format to encode Deletion variant genotypes
+// DiploidDeletion is a minimal internal format to encode Deletion variant genotypes.
 type DiploidDeletion struct {
 	Type DeletionType
 	Da   int

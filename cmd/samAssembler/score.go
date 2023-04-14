@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
 )
 
 // samAssemblerScore provides tools for scoring diploid assembly results from samAssembler.
@@ -146,7 +147,7 @@ func writeMatrix(out *fileio.EasyWriter, data [][]float64, rowNames []string, he
 // 6 - heterozygous transition/ transversion 2
 // 7 - heterozygous transversion 1
 // 8 - heterozygous transversion 1 / transversion 2
-// 9 - homozygous transversion 2
+// 9 - homozygous transversion 2.
 func refPhasedIndexMapping(geno sam.DiploidBase, refBase dna.Base) int {
 	switch refBase {
 	case dna.A:
