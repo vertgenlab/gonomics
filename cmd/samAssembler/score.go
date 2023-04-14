@@ -251,7 +251,7 @@ func refPhasedIndexMapping(geno sam.DiploidBase, refBase dna.Base) int {
 		case sam.GG:
 			return 9
 		default:
-			log.Fatalf("Unrecognized genotype: %v.\n", geno)
+			log.Fatalf("Error: Unrecognized genotype: %v.\n", geno)
 			return -1
 		}
 	default:
