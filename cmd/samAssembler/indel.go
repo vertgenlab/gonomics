@@ -143,7 +143,7 @@ func diploidDeletion(mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, ref
 			haploidStrand = false
 		}
 	default:
-		log.Fatalf("Unrecognized deletion type: %v.\n", currDeletion.Type)
+		log.Fatalf("Error: Unrecognized deletion type: %v.\n", currDeletion.Type)
 	}
 	return mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip
 }
