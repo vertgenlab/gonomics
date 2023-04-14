@@ -112,7 +112,7 @@ func TestScore(t *testing.T) {
 	for _, v := range ScoreTests {
 		samAssemblerScore(v.ScoreType, v.InFileList, v.OutFile)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error in samAssemblerScore. Output did not match expected.")
+			t.Errorf("Error: samAssemblerScore. Output did not match expected.")
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
