@@ -173,7 +173,7 @@ func refPhasedIndexMapping(geno sam.DiploidBase, refBase dna.Base) int {
 		case sam.TT:
 			return 9
 		default:
-			log.Fatalf("Unrecognized genotype: %v.\n", geno)
+			log.Fatalf("Error: Unrecognized genotype: %v.\n", geno)
 			return -1
 		}
 	case dna.C:
@@ -255,10 +255,9 @@ func refPhasedIndexMapping(geno sam.DiploidBase, refBase dna.Base) int {
 			return -1
 		}
 	default:
-		log.Fatalf("Unrecognized refBase: %v.\n", refBase)
+		log.Fatalf("Error: Unrecognized refBase: %v.\n", refBase)
 		return -1
 	}
-	return -1
 }
 
 // basesToDiploidBase converts two input dna.Base variables into a sam.DiploidBase variable.
@@ -279,7 +278,7 @@ func basesToDiploidBase(base1 dna.Base, base2 dna.Base) sam.DiploidBase {
 		case dna.Gap:
 			return sam.NN
 		default:
-			log.Fatalf("Unrecognized base: %v.\n", base2)
+			log.Fatalf("Error: Unrecognized base: %v.\n", base2)
 		}
 	case dna.C:
 		switch base2 {
@@ -296,7 +295,7 @@ func basesToDiploidBase(base1 dna.Base, base2 dna.Base) sam.DiploidBase {
 		case dna.Gap:
 			return sam.NN
 		default:
-			log.Fatalf("Unrecognized base: %v.\n", base2)
+			log.Fatalf("Error: Unrecognized base: %v.\n", base2)
 		}
 	case dna.G:
 		switch base2 {
@@ -313,7 +312,7 @@ func basesToDiploidBase(base1 dna.Base, base2 dna.Base) sam.DiploidBase {
 		case dna.Gap:
 			return sam.NN
 		default:
-			log.Fatalf("Unrecognized base: %v.\n", base2)
+			log.Fatalf("Error: Unrecognized base: %v.\n", base2)
 		}
 	case dna.T:
 		switch base2 {
@@ -335,10 +334,10 @@ func basesToDiploidBase(base1 dna.Base, base2 dna.Base) sam.DiploidBase {
 	case dna.Gap:
 		return sam.NN
 	default:
-		log.Fatalf("Unrecognized base: %v.\n", base1)
+		log.Fatalf("Error: Unrecognized base: %v.\n", base1)
 		return sam.NN
 	}
-	log.Fatalf("Something went wrong.")
+	log.Fatalf("Error: Something went wrong.")
 	return sam.NN
 }
 
