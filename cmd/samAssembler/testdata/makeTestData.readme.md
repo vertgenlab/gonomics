@@ -45,7 +45,7 @@ cat Sequence_0.evol2.diverge.noGaps.fa Sequence_1.evol2.diverge.noGaps.fa > evol
 ```
 
 We'll merge the diverged sequences and place them in the multiFa folder for validation later
-```
+```bash
 ~/go/bin/mergeMultiFa Sequence_0.evol1.fa Sequence_0.evol2.fa multiFa/Sequence_0.evol.fa
 ~/go/bin/mergeMultiFa Sequence_1.evol1.fa Sequence_1.evol2.fa multiFa/Sequence_1.evol.fa
 ```
