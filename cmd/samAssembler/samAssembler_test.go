@@ -85,7 +85,7 @@ func TestSamAssembler(t *testing.T) {
 		}
 		for i = range v.OutMultiFaFileNames {
 			if !fileio.AreEqual(v.OutMultiFaFileNames[i], v.ExpectedMultiFaFiles[i]) {
-				t.Errorf("Error in samAssembler. MultiFaFile: %v did not match expected: %v.\n", v.OutMultiFaFileNames[i], v.ExpectedMultiFaFiles[i])
+				t.Errorf("Error: samAssembler. MultiFaFile: %v did not match expected: %v.\n", v.OutMultiFaFileNames[i], v.ExpectedMultiFaFiles[i])
 			}
 		}
 	}
