@@ -52,7 +52,7 @@ func (w *BlockWriter) Write(p []byte) (n int, err error) {
 	// data write, however bgzf requires custom header fields which
 	// require knowing the compressed size of the block, which can only
 	// be determined after compression. Therefore we cannot use the
-	// default gzip header behavior. The code below performs an empty
+	// default gzip header behavior. The line above performs an empty
 	// write to make the gzip writer 'think' it has written a header.
 	// We then trash the default header and write a custom header below.
 	if err != nil {
