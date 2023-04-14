@@ -70,7 +70,7 @@ cat evol1.readB.fastq evol2.readB.fastq > merged.readB.fastq
   
 After this, I aligned these reads to the reference genome and sorted the reads
 
- ```
+ ```bash
 ~/Software/bwa-0.7.17/bwa index ref.fa
 ~/Software/bwa-0.7.17/bwa mem -t 8 ref.fa merged.readA.fastq merged.readB.fastq | ~/Software/samtools-1.9/samtools view -bh - > diverged.RefAln.bam
 ~/Software/samtools-1.9/samtools sort diverged.RefAln.bam -o diverged.RefAln.sorted.bam
