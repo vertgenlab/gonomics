@@ -15,7 +15,6 @@ import (
 
 // bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
 func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool) {
-
 	if bedSelect && overlapBoth {
 		SelectIsBedBoth(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
 	} else if bedSelect {
@@ -262,11 +261,11 @@ func main() {
 	}
 
 	// should no longer be needed when overlapThresholdBedPe is implemented
-	if *overlapThreshold != 0 && *bedSelect {
+	if *overlapThreshold != 0 && !*bedSelect {
 		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
 	}
 
-	if *overlapBoth && *bedSelect {
+	if *overlapBoth && !*bedSelect {
 		log.Fatalf("Error: overlapBoth must be used with bedSelect")
 	}
 
