@@ -123,7 +123,7 @@ func Insertion(g *Gene, genomePos int, alt []dna.Base) (EffectPrediction, error)
 		g.protSeq = newProtSeq
 	} else { // NonCoding
 		// Update featureArray for noncoding
-		// figure out how the inserted bases should be labelled in the feature array. Priority: 5'UTR=3'Utr>Intron
+		// figure out how the inserted bases should be labeled in the feature array. Priority: 5'UTR=3'Utr>Intron
 		fillVal := Feature(numbers.Min(int(g.featureArray[genomeIndexPos]), int(g.featureArray[genomeIndexPos+1])))
 
 		switch fillVal {

@@ -51,7 +51,7 @@ func PairedEndToChan(readOne string, readTwo string, output chan<- PairedEnd) {
 	close(output)
 }
 
-// ReadPairBigToChan is an analogue of PairEndToChan for producing input channels of PairedEndBig structs.
+// ReadPairBigToChan is an analog of PairEndToChan for producing input channels of PairedEndBig structs.
 func ReadPairBigToChan(fileOne string, fileTwo string, answer chan<- PairedEndBig) {
 	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
 	for fq, done := ReadFqBigPair(readOne, readTwo); !done; fq, done = ReadFqBigPair(readOne, readTwo) {
@@ -88,9 +88,6 @@ func ReadFastqPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []PairedEnd {
 
 // WritingHelper is a helper function of PairedEnd write functions, and converts PairedEnd structs to strings and sends them to the respective writers.
 func WritingHelper(fileOne *fileio.EasyWriter, fileTwo *fileio.EasyWriter, fq PairedEnd) {
-	//TODO: figure out why this seems a little slower
-	//WriteToFileHandle(fileOne, fq.Fwd)
-	//WriteToFileHandle(fileTwo, fq.Rev)
 	var err error
 	_, err = fmt.Fprintf(fileOne, "@%s\n%s\n+\n%s\n", fq.Fwd.Name, dna.BasesToString(fq.Fwd.Seq), QualString(fq.Fwd.Qual))
 	common.ExitIfError(err)

@@ -68,7 +68,6 @@ func RunMixtureModel1D(data []float64, k int, maxIterations int, maxResets int, 
 				iterationsRun = 0
 				prevLogLikelihood = -math.MaxFloat64
 				converged = false
-				break
 			}
 		}
 

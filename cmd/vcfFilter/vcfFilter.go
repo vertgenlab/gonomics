@@ -264,10 +264,7 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.chrom != "" {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
-				if v.Chr != c.chrom {
-					return false
-				}
-				return true
+				return v.Chr == c.chrom
 			})
 	}
 
@@ -400,10 +397,7 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
 				r := rand.Float64()
-				if r > c.subSet {
-					return false
-				}
-				return true
+				return r <= c.subSet
 			})
 	}
 	return answer
