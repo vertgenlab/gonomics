@@ -125,6 +125,11 @@ func (br *GunzipReader) Close() error {
 	}
 }
 
+func (r zipio) Close() {
+	r.Unzip.(io.ReadCloser).Close()
+	r.Cmd.Wait()
+}
+
 func NewWriter(filename string) *ZipWriter {
 	ans := ZipWriter{}
 	file := MustCreate(filename)
