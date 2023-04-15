@@ -30,8 +30,8 @@ type ZipWriter struct {
 
 // zipio uncompress text using native system's gzip which out performs golang implementation.
 type zipio struct {
-	Unzip io.Reader
-	Cmd   *exec.Cmd
+	io.ReadCloser
+	Cmd *exec.Cmd
 }
 
 // newZipReader takes a file name and returns an implementation of io.Reader.
@@ -40,7 +40,7 @@ func newZipReader(filename string) (*zipio, error) {
 	stdout, err := cmd.StdoutPipe()
 	exception.PanicOnErr(err)
 	err = cmd.Start()
-	return &zipio{Unzip: stdout, Cmd: cmd}, err
+	return &zipio{ReadCloser: stdout, Cmd: cmd}, err
 }
 
 // NewGunzipReader will process a given file and performs error handling if an error occurs.
@@ -54,8 +54,8 @@ func NewGunzipReader(filename string) *GunzipReader {
 		var err error
 		answer.Gunzip, err = newZipReader(filename)
 		exception.PanicOnErr(err)
-		answer.close = answer.Gunzip.Unzip.(io.ReadCloser).Close
-		answer.Reader = bufio.NewReader(answer.Gunzip.Unzip)
+		answer.close = answer.Gunzip.ReadCloser.Close
+		answer.Reader = bufio.NewReader(answer.Gunzip)
 	default:
 		answer.Gunzip = nil
 		file := MustOpen(filename)
@@ -109,7 +109,7 @@ func GunzipToBuffer(reader *GunzipReader) *bytes.Buffer {
 	return reader.Buffer
 }
 
-func (br *GunzipReader) Close() error {
+func (br GunzipReader) Close() error {
 	var gzErr, fileErr error
 	if br.Gunzip != nil {
 		exception.PanicOnErr(br.close())
@@ -118,16 +118,16 @@ func (br *GunzipReader) Close() error {
 	case gzErr != nil:
 		return gzErr
 	case fileErr != nil:
-		log.Println("WARNING: attempted to close file, but file already closed")
+		log.Println("Warning: attempted to close file, but file already closed")
 		return nil
 	default:
 		return nil
 	}
 }
 
-func (r zipio) Close() {
-	r.Unzip.(io.ReadCloser).Close()
-	r.Cmd.Wait()
+func (unzip zipio) Close() {
+	unzip.Close()
+	unzip.Cmd.Wait()
 }
 
 func NewWriter(filename string) *ZipWriter {
