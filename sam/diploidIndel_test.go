@@ -90,7 +90,7 @@ func TestDiploidIndelCallFromPile(t *testing.T) {
 	var actualInsertion DiploidInsertion
 	var actualDeletion DiploidDeletion
 	for _, v := range DiploidIndelCallFromPileTests {
-		priorCache = makeDiploidIndelPriorCache(v.Kappa, v.Delta)
+		priorCache = MakeDiploidIndelPriorCache(v.Kappa, v.Delta)
 		actualInsertion = DiploidInsertionCallFromPile(v.P, priorCache, emptyCache, emptyCache, v.Epsilon)
 		if actualInsertion != v.ExpectedInsertion {
 			t.Errorf("Error in DiploidInsertionCallFromPile. Expected: %s. Found: %s.\n", diploidInsertionString(v.ExpectedInsertion), diploidInsertionString(actualInsertion))
@@ -150,7 +150,7 @@ func TestMakeDiploidIndelPriorCache(t *testing.T) {
 	var current []float64
 	var i int
 	for _, v := range MakeDiploidIndelPriorCacheTests {
-		current = makeDiploidIndelPriorCache(v.Kappa, v.Delta)
+		current = MakeDiploidIndelPriorCache(v.Kappa, v.Delta)
 		if len(current) != len(v.Expected) {
 			t.Errorf("Error in makeDiploidIndelPriorCache. Answer was the wrong length.")
 		}
