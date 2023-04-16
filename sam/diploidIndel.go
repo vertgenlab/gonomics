@@ -27,6 +27,21 @@ type DiploidInsertion struct {
 	Ib   string
 }
 
+func DiploidInsertionToSeqs(i DiploidInsertion) [][]dna.Base {
+	switch i.Type {
+	case IaIa:
+		return [][]dna.Base{dna.StringToBases(i.Ia), dna.StringToBases(i.Ia)}
+	case IaIb:
+		return [][]dna.Base{dna.StringToBases(i.Ia), dna.StringToBases(i.Ib)}
+	case IaB:
+		return [][]dna.Base{dna.StringToBases(i.Ia), {}}
+	case BBnoIns:
+		return [][]dna.Base{{}, {}}
+	}
+	log.Fatalf("DiploidInsertion type: %v not recognized.\n", i.Type)
+	return [][]dna.Base{}
+}
+
 // diploidInsertionString formats a DiploidInsertion struct as a string for debugging.
 func diploidInsertionString(i DiploidInsertion) string {
 	switch i.Type {
@@ -208,17 +223,15 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 		return DiploidDeletion{Type: BBNoDel, Da: 0, Db: 0}
 	}
 
-	//DEBUG: fmt.Printf("N: %v. dTot: %v. DaValue: %v. DbValue: %v.\n", N, dTot, DaValue, DbValue)
-
-	var B int = N - dTot
+	var B int = numbers.Max(N-dTot, 0)
 
 	//set default return to no deletion
 	var answer []DiploidDeletion = []DiploidDeletion{{Type: BBNoDel, Da: DaKey, Db: DbKey}}
 	answerPosterior := logspace.Multiply(homozygousIndelLikelihoodExpression(B, DaValue+DbValue, epsilon, homozygousIndelCache), priorCache[BBNoDel])
 
 	var currentPosterior float64
-	//now we check the other genotypes
-	//DaDa
+	// now we check the other genotypes
+	// DaDa
 	currentPosterior = logspace.Multiply(homozygousIndelLikelihoodExpression(DaValue, B+DbValue, epsilon, homozygousIndelCache), priorCache[DaDa])
 	if currentPosterior > answerPosterior {
 		answer = answer[:1] //clear ties
@@ -227,7 +240,7 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 	} else if currentPosterior == answerPosterior {
 		answer = append(answer, DiploidDeletion{Type: DaDa, Da: DaKey, Db: DbKey})
 	}
-	//DaDb
+	// DaDb
 	currentPosterior = logspace.Multiply(heterozygousIndelLikelihoodExpression(DaValue+DbValue, B, epsilon, heterozygousIndelCache), priorCache[DaDb])
 	if currentPosterior > answerPosterior {
 		answer = answer[:1] //clear ties
@@ -236,7 +249,7 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 	} else if currentPosterior == answerPosterior {
 		answer = append(answer, DiploidDeletion{Type: DaDb, Da: DaKey, Db: DbKey})
 	}
-	//IaBase
+	// IaBase
 	currentPosterior = logspace.Multiply(heterozygousIndelLikelihoodExpression(DaValue+B, DbValue, epsilon, heterozygousIndelCache), priorCache[DaB])
 	if currentPosterior > answerPosterior {
 		answer = answer[:1] //clear ties
@@ -252,7 +265,6 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 // homozygousIndelLikelihoodExpression is a helper function of DiploidInsertionCallFromPile and DiploidDeletionCallFromPile
 // and calculates the multinomial expression for homozygous INDEL genotypes.
 func homozygousIndelLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, homozygousIndelCache [][]float64) float64 {
-	//DEBUG: fmt.Printf("Correct: %v. Incorrect: %v.\n", correctCount, incorrectCount)
 	if correctCount < len(homozygousIndelCache) && incorrectCount < len(homozygousIndelCache[correctCount]) { //if the indel coverage is within the cache bounds
 		if homozygousIndelCache[correctCount][incorrectCount] != 0 {
 			return homozygousIndelCache[correctCount][incorrectCount]
@@ -272,7 +284,6 @@ func homozygousIndelLikelihoodExpression(correctCount int, incorrectCount int, e
 // heterozygousIndelLikelihoodExpression is a helper function of DiploidInsertionCallFromPile and DiploidDeletionCallFromPile
 // and calculates the multinomial expression for heterozygous INDEL genotypes.
 func heterozygousIndelLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, heterozygousIndelCache [][]float64) float64 {
-	//DEBUG: fmt.Printf("Correct: %v. Incorrect: %v.\n", correctCount, incorrectCount)
 	if correctCount < len(heterozygousIndelCache) && incorrectCount < len(heterozygousIndelCache[correctCount]) { //if the indel coverage is within the cache bounds
 		if heterozygousIndelCache[correctCount][incorrectCount] != 0 {
 			return heterozygousIndelCache[correctCount][incorrectCount]
@@ -289,11 +300,11 @@ func heterozygousIndelLikelihoodExpression(correctCount int, incorrectCount int,
 	}
 }
 
-// makeDiploidIndelPriorCache is a helper function used in samAssembler before running
+// MakeDiploidIndelPriorCache is a helper function used in samAssembler before running
 // DiploidInsertionCallFromPile and DiploidDeletionCallFromPile. Constructs a []float64, where the index corresponds to InsertionType / DeletionType,
 // and the value refers to the log transformed prior probability density.
 // parameterized on delta, the expected divergence rate, and kappa, the proportion of mutations expected to be INDELs.
-func makeDiploidIndelPriorCache(kappa float64, delta float64) []float64 {
+func MakeDiploidIndelPriorCache(kappa float64, delta float64) []float64 {
 	kd := logspace.Multiply(math.Log(kappa), math.Log(delta))
 	kdSquared := logspace.Pow(kd, 2)
 	pBaseBase := math.Log(1 - 4*kappa*delta - 3*(kappa*kappa*delta*delta))

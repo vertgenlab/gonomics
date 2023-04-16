@@ -323,9 +323,11 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 			start.Pos = start.prev.Pos + 1
 
 		case start.Pos < start.prev.Pos: // looped to start of buffer. need to expand
-			start = start.prev                 // back up to end of buffer
-			expandLinkedPileBuffer(start, 300) // TODO: POTENTIAL MEMORY LEAK. HARD CAP???
-			start = start.next                 // move into start of newly added buffer
+			start = start.prev // back up to end of buffer
+			// TODO: POTENTIAL MEMORY LEAK. HARD CAP???
+			expandLinkedPileBuffer(start, 300)
+			// move into start of newly added buffer
+			start = start.next
 
 		default:
 			start = start.next

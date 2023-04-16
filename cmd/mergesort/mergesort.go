@@ -120,10 +120,7 @@ func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string
 		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b sam.Sam) bool {
 			iSingle := sam.ToSingleCellAlignment(a)
 			jSingle := sam.ToSingleCellAlignment(b)
-			if dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx) {
-				return true
-			}
-			return false
+			return dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx)
 		})
 	} else {
 		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b sam.Sam) bool {
@@ -232,7 +229,7 @@ func main() {
 	expectedNumArgs := 2
 	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "The number of records to read into memory before writing to a tmp file.``")
 	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort single-cell sam records by barcode.")
-	var sortCriteria string = "byGenomicCoordinates" //default the genomicCoordinates criteria.
+	var sortCriteria string = "byGenomicCoordinates" // default the genomicCoordinates criteria.
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
