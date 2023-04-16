@@ -38,7 +38,8 @@ type ByteReader struct {
 // GunzipReader is implements the io.ReadCloser interface, which is a golang buildin interface that groups the basic Read and Close methods.
 type GunzipReader struct {
 	io.ReadCloser
-	Cmd *exec.Cmd
+	close func() error
+	Cmd   *exec.Cmd
 }
 
 // Read reads data into p and is a method required by ByteReader implement the io.Reader interface.
@@ -53,15 +54,13 @@ func (reader GunzipReader) Read(b []byte) (n int, err error) {
 
 // NewByteReader will process a given file and performs error handling if an error occurs and process gzipped files accordingly by suffix of the provided file.
 func NewByteReader(filename string) *ByteReader {
-	var err error
 	var answer ByteReader = ByteReader{
 		Buffer: &bytes.Buffer{},
 		line:   make([]byte, defaultBufSize),
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		answer.internalGzip, err = NewGunzipReader(filename)
-		exception.PanicOnErr(err)
+		answer.internalGzip = NewGunzipReader(filename)
 		answer.Reader = bufio.NewReader(answer.internalGzip)
 		answer.close = answer.internalGzip.ReadCloser.Close
 	default:
@@ -73,12 +72,15 @@ func NewByteReader(filename string) *ByteReader {
 }
 
 // NewGunzipReader takes a file name and returns an implementation of io.Reader.
-func NewGunzipReader(filename string) (*GunzipReader, error) {
-	cmd := exec.Command("gunzip", "-c", filename)
-	stdout, err := cmd.StdoutPipe()
+func NewGunzipReader(filename string) *GunzipReader {
+	var answer GunzipReader = GunzipReader{
+		Cmd: exec.Command("gunzip", "-c", filename),
+	}
+	stdout, err := answer.Cmd.StdoutPipe()
 	exception.PanicOnErr(err)
-	err = cmd.Start()
-	return &GunzipReader{ReadCloser: stdout, Cmd: cmd}, err
+	answer.ReadCloser = stdout
+	exception.PanicOnErr(answer.Cmd.Start())
+	return &answer
 }
 
 // ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
@@ -147,7 +149,7 @@ func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 // Close is called by ByteReader to closes files and render unusable for I/O. On files that support SetDeadline, any pending I/O operations will be canceled and return immediately with an error.
 func (br *ByteReader) Close() error {
 	if br.internalGzip != nil {
-		exception.PanicOnErr(br.internalGzip.ReadCloser.Close())
+		exception.PanicOnErr(br.internalGzip.Close())
 	} else {
 		exception.PanicOnErr(br.close())
 	}
@@ -155,9 +157,10 @@ func (br *ByteReader) Close() error {
 }
 
 // Close is called by GunzipReader to closes files and render unusable for I/O. On files that support SetDeadline, any pending I/O operations will be canceled and return immediately with an error.
-func (unzip *GunzipReader) Close() {
-	unzip.ReadCloser.Close()
-	unzip.Cmd.Wait()
+func (unzip *GunzipReader) Close() error {
+	exception.PanicOnErr(unzip.ReadCloser.Close())
+	exception.PanicOnErr(unzip.Cmd.Wait())
+	return nil
 }
 
 // StringToIntSlice will process a row of data separated by commas, convert the slice into a slice of type int. PSL and genePred formats have a trailing comma we need to account for and the check at the beginning will adjust the length of the working slice.
