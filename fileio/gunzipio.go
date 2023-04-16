@@ -133,9 +133,7 @@ func (unzip zipio) Close() {
 func NewWriter(filename string) *ZipWriter {
 	ans := ZipWriter{}
 	file := MustCreate(filename)
-
 	ans.Writer = bufio.NewWriter(file)
-
 	ans.Buffer = &bytes.Buffer{}
 	if strings.HasSuffix(filename, ".gz") {
 		ans.Gzip = gzip.NewWriter(ans.Writer)
