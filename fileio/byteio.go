@@ -17,16 +17,15 @@ const (
 	defaultBufSize = 4096
 )
 
-/*
-	ByteReader implements the io.Reader interface by providing the Read(b []byte) method.
-	- The primary advantage of ByteReader is data read into a shared bytes.Buffer rather than allocating memory.
-	- The drawback is that ByteReader is not as easy to use as EasyReader nd should be reserved for performance intensive tasks.
-
-	The struct contains:
-	- *bufio.Reader, embedded
-	- close function from os.File
-	- io.ReadCloser, a builtin interface that implements io.Reader.
-*/
+// ByteReader implements the io.Reader interface by providing the Read(b []byte) method.
+// - The primary advantage of ByteReader is data read into a shared bytes.Buffer rather than allocating memory.
+// - The drawback is that ByteReader is not as easy to use as EasyReader nd should be reserved for performance intensive tasks.
+// The struct contains:
+// - *bufio.Reader, embedded
+// - GunzipReader which implements io.ReadCloser, a builtin io.Reader and io.Closer interface.
+// - []byte
+// - *bytes.Buffer
+// - close function from os.File
 type ByteReader struct {
 	*bufio.Reader
 	internalGzip *GunzipReader
@@ -82,12 +81,10 @@ func NewGunzipReader(filename string) *GunzipReader {
 	return &answer
 }
 
-/*
-	ReadLine will return a bytes.Buffer pointing to the internal slice of bytes.
-	Important to note:
-	- Provided this function is called within a loop, the function will read one line at a time, and return bool to continue reading.
-	- the buffer return points to the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
-*/
+// ReadLine will return a bytes.Buffer pointing to the internal slice of bytes.
+// Important to note:
+// - Provided this function is called within a loop, the function will read one line at a time, and return bool to continue reading.
+// - the buffer return points to the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
 func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	var err error
 	reader.line, err = reader.ReadSlice('\n')
@@ -181,10 +178,8 @@ func StringToIntSlice(line string) []int {
 	return answer
 }
 
-/*
-IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
-	- Important Note: string will include a trailing comma to satisfy UCSC's anomalies.
-*/
+// IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
+// - Important Note: string will include a trailing comma to satisfy UCSC's anomalies.
 func IntSliceToString(nums []int) string {
 	ans := strings.Builder{}
 	ans.Grow(2 * len(nums))
