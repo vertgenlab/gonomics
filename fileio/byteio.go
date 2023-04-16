@@ -83,9 +83,12 @@ func NewGunzipReader(filename string) *GunzipReader {
 	return &answer
 }
 
-// ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
-// the function will read one line at a time, and return bool to continue reading. Important to note the buffer return points to
-// the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
+/*
+ReadLine will return a bytes.Buffer pointing to the internal slice of bytes.
+	Important to note:
+	- Provided this function is called within a loop, the function will read one line at a time, and return bool to continue reading.
+	- the buffer return points to the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
+*/
 func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	var err error
 	reader.line, err = reader.ReadSlice('\n')
