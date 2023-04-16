@@ -148,8 +148,11 @@ func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 func (br *ByteReader) Close() error {
 	var gzErr, fileErr error
 	if br.internalGzip != nil {
+		exception.PanicOnErr(br.internalGzip.ReadCloser.Close())
+	} else {
 		exception.PanicOnErr(br.close())
 	}
+
 	switch {
 	case gzErr != nil:
 		return gzErr
