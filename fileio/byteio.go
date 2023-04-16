@@ -17,17 +17,16 @@ const (
 	defaultBufSize = 4096
 )
 
-// ByteReader implements the io.Reader interface by providing
-// the Read(b []byte) method. The struct contains an embedded *bufio.Reader
-// and a pointer to os.File for closure when reading is complete.
-// The primary advantage of ByteReader over EasyReader is that data
-// is read into a shared bytes.Buffer instead of allocating memory for a
-// string as is done with EasyReader.
-// ByteReader can be be used to efficiently parse files on the byte level
-// which may be significantly faster and require less memory than using
-// strings.Split on a string derived from EasyReader.
-// The drawback is that ByteReader is not as easy to use as EasyReader
-// and should generally be reserved for performance intensive tasks.
+/*
+ByteReader implements the io.Reader interface by providing the Read(b []byte) method.
+- The primary advantage of ByteReader is data read into a shared bytes.Buffer rather than allocating memory
+- The drawback is that ByteReader is not as easy to use as EasyReader nd should be reserved for performance intensive tasks.
+
+The struct contains:
+- *bufio.Reader, embedded
+- close function from os.File
+- io.ReadCloser, a builtin interface that implements io.Reader.
+*/
 type ByteReader struct {
 	*bufio.Reader
 	internalGzip *GunzipReader
@@ -36,20 +35,23 @@ type ByteReader struct {
 	close        func() error
 }
 
+// GunzipReader is implements the io.ReadCloser interface, which is a golang buildin interface that groups the basic Read and Close methods.
 type GunzipReader struct {
 	io.ReadCloser
 	Cmd *exec.Cmd
 }
 
-// Read reads data into p and is a method required to implement the io.Reader interface.
-// It returns the number of bytes read into p.
+// Read reads data into p and is a method required by ByteReader implement the io.Reader interface.
 func (reader *ByteReader) Read(b []byte) (n int, err error) {
 	return reader.Read(b)
 }
 
-// NewByteReader will process a given file and performs error handling if an error occurs.
-// ByteReader will process gzipped files accordingly by performing a check on the suffix
-// of the provided file.
+// Read reads data into p and is a method required by GunzipReader implement the io.Reader interface.
+func (reader GunzipReader) Read(b []byte) (n int, err error) {
+	return reader.ReadCloser.Read(b)
+}
+
+// NewByteReader will process a given file and performs error handling if an error occurs and process gzipped files accordingly by suffix of the provided file.
 func NewByteReader(filename string) *ByteReader {
 	var err error
 	var answer ByteReader = ByteReader{
@@ -94,7 +96,7 @@ func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 		}
 	} else {
 		if err == bufio.ErrBufferFull {
-			reader.line = readMore(reader)
+			reader.line = recursiveRead(reader)
 			return bytesToBuffer(reader), false
 		} else {
 			CatchErrThrowEOF(err)
@@ -103,10 +105,8 @@ func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	return nil, true
 }
 
-// readMore is a private helper function to deal with very long lines to
-// avoid alocating too much memory upfront and only resize the size of the buffer
-// only when necessary.
-func readMore(reader *ByteReader) []byte {
+// recursiveRead is a private helper function to deal with very long lines to in an effort to avoid alocating too much memory upfront and only resize the size of the buffer when necessary.
+func recursiveRead(reader *ByteReader) []byte {
 	_, err := reader.Buffer.Write(reader.line)
 	exception.PanicOnErr(err)
 	reader.line, err = reader.ReadSlice('\n')
@@ -117,7 +117,7 @@ func readMore(reader *ByteReader) []byte {
 		_, err = reader.Buffer.Write(reader.line)
 		exception.PanicOnErr(err)
 		// recursive call to read next bytes until reaching end of line character
-		return readMore(reader)
+		return recursiveRead(reader)
 	}
 	exception.PanicOnErr(err)
 	return reader.line
@@ -144,36 +144,23 @@ func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	return reader.Buffer
 }
 
-// Close closes the File, rendering it unusable for I/O. On files that support SetDeadline,
-// any pending I/O operations will be canceled and return immediately with an error.
-// Close will return an error if it has already been called.
+// Close is called by ByteReader to closes files and render unusable for I/O. On files that support SetDeadline, any pending I/O operations will be canceled and return immediately with an error.
 func (br *ByteReader) Close() error {
-	var gzErr, fileErr error
 	if br.internalGzip != nil {
 		exception.PanicOnErr(br.internalGzip.ReadCloser.Close())
 	} else {
 		exception.PanicOnErr(br.close())
 	}
-
-	switch {
-	case gzErr != nil:
-		return gzErr
-	case fileErr != nil:
-		log.Println("Warning: attempted to close file, but file already closed")
-		return nil
-	default:
-		return nil
-	}
+	return nil
 }
 
+// Close is called by GunzipReader to closes files and render unusable for I/O. On files that support SetDeadline, any pending I/O operations will be canceled and return immediately with an error.
 func (unzip *GunzipReader) Close() {
 	unzip.ReadCloser.Close()
 	unzip.Cmd.Wait()
 }
 
-// StringToIntSlice will process a row of data separated by commas, convert the slice into a slice of type int.
-// PSL and genePred formats have a trailing comma we need to account for and the check at the beginning will adjust
-// the length of the working slice.
+// StringToIntSlice will process a row of data separated by commas, convert the slice into a slice of type int. PSL and genePred formats have a trailing comma we need to account for and the check at the beginning will adjust the length of the working slice.
 func StringToIntSlice(line string) []int {
 	work := strings.Split(line, ",")
 	var sliceSize int = len(work)
@@ -189,8 +176,10 @@ func StringToIntSlice(line string) []int {
 	return answer
 }
 
-// IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
-// Important Note: string will include a trailing comma to satisfy UCSC's anomalies.
+/*
+IntListToString will process a slice of type int as an input and return a each value separated by a comma as a string.
+	- Important Note: string will include a trailing comma to satisfy UCSC's anomalies.
+*/
 func IntSliceToString(nums []int) string {
 	ans := strings.Builder{}
 	ans.Grow(2 * len(nums))
