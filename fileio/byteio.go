@@ -3,12 +3,10 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"log"
-	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -32,10 +30,15 @@ const (
 // and should generally be reserved for performance intensive tasks.
 type ByteReader struct {
 	*bufio.Reader
-	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *GunzipReader
 	line         []byte
 	Buffer       *bytes.Buffer
+	close        func() error
+}
+
+type GunzipReader struct {
+	io.ReadCloser
+	Cmd *exec.Cmd
 }
 
 // Read reads data into p and is a method required to implement the io.Reader interface.
@@ -49,20 +52,29 @@ func (reader *ByteReader) Read(b []byte) (n int, err error) {
 // of the provided file.
 func NewByteReader(filename string) *ByteReader {
 	var err error
-	file := MustOpen(filename)
 	var answer ByteReader = ByteReader{
-		File:   file,
 		Buffer: &bytes.Buffer{},
+		line:   make([]byte, defaultBufSize),
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		answer.internalGzip, err = gzip.NewReader(file)
+		answer.internalGzip, err = NewGunzipReader(filename)
 		exception.PanicOnErr(err)
 		answer.Reader = bufio.NewReader(answer.internalGzip)
 	default:
+		file := MustOpen(filename)
 		answer.Reader = bufio.NewReader(file)
 	}
 	return &answer
+}
+
+// NewGunzipReader takes a file name and returns an implementation of io.Reader.
+func NewGunzipReader(filename string) (*GunzipReader, error) {
+	cmd := exec.Command("gunzip", "-c", filename)
+	stdout, err := cmd.StdoutPipe()
+	exception.PanicOnErr(err)
+	err = cmd.Start()
+	return &GunzipReader{ReadCloser: stdout, Cmd: cmd}, err
 }
 
 // ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
@@ -136,25 +148,22 @@ func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 func (br *ByteReader) Close() error {
 	var gzErr, fileErr error
 	if br.internalGzip != nil {
-		gzErr = br.internalGzip.Close()
+		exception.PanicOnErr(br.close())
 	}
-	if br.File != nil {
-		fileErr = br.File.Close()
-	} else {
-		return errors.New("no file found")
-	}
-
-	switch { // Handle error returns. Priority is gzErr > fileErr
+	switch {
 	case gzErr != nil:
 		return gzErr
-
 	case fileErr != nil:
-		log.Println("WARNING: attempted to close file, but file already closed")
+		log.Println("Warning: attempted to close file, but file already closed")
 		return nil
-
 	default:
 		return nil
 	}
+}
+
+func (unzip *GunzipReader) Close() {
+	unzip.Close()
+	unzip.Cmd.Wait()
 }
 
 // StringToIntSlice will process a row of data separated by commas, convert the slice into a slice of type int.
