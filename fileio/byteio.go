@@ -18,14 +18,14 @@ const (
 )
 
 /*
-ByteReader implements the io.Reader interface by providing the Read(b []byte) method.
-- The primary advantage of ByteReader is data read into a shared bytes.Buffer rather than allocating memory
-- The drawback is that ByteReader is not as easy to use as EasyReader nd should be reserved for performance intensive tasks.
+	ByteReader implements the io.Reader interface by providing the Read(b []byte) method.
+	- The primary advantage of ByteReader is data read into a shared bytes.Buffer rather than allocating memory.
+	- The drawback is that ByteReader is not as easy to use as EasyReader nd should be reserved for performance intensive tasks.
 
-The struct contains:
-- *bufio.Reader, embedded
-- close function from os.File
-- io.ReadCloser, a builtin interface that implements io.Reader.
+	The struct contains:
+	- *bufio.Reader, embedded
+	- close function from os.File
+	- io.ReadCloser, a builtin interface that implements io.Reader.
 */
 type ByteReader struct {
 	*bufio.Reader
@@ -38,8 +38,7 @@ type ByteReader struct {
 // GunzipReader is implements the io.ReadCloser interface, which is a golang buildin interface that groups the basic Read and Close methods.
 type GunzipReader struct {
 	io.ReadCloser
-	close func() error
-	Cmd   *exec.Cmd
+	Cmd *exec.Cmd
 }
 
 // Read reads data into p and is a method required by ByteReader implement the io.Reader interface.
