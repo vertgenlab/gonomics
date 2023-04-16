@@ -11,7 +11,7 @@ import (
 )
 
 // AlignSetUp takes in a the path to the parent directory where all the individual fastas for alignment are being held.
-// In this context the directory below "pairwise" is labelled by a species name, which then contains all the fastas for
+// In this context the directory below "pairwise" is labeled by a species name, which then contains all the fastas for
 // alignment. It also takes a single aligning species and reference species, as well as a text file that describes the
 // distance between all species in the alignment from all other species in the alignment. This file is make with
 // Phylogenetic Analysis with Space/Time Models or PHAST all_dists function. AlignSetUp then calls its helper functions
@@ -24,7 +24,7 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 }
 
 // makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
-// the directory labelled with the name of the reference and the species being aligned. It then passes off to a
+// the directory labeled with the name of the reference and the species being aligned. It then passes off to a
 // helper function makeTargetSubDir.
 func makeOutDir(pairwise string, outDir string, r string, s string) {
 	tDir := pairwise + "/" + r + ".byChrom"

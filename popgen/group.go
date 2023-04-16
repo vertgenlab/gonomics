@@ -20,8 +20,8 @@ func ReadGroups(filename string) []*Group {
 	var doneReading bool = false
 	var index int64 = -1
 	answer := make([]*Group, 0)
-	//answer[0] = &Group{Name: "", Members: make([]string, 0)}
-	//answer[1] = &Group{Name: "", Members: make([]string, 0)}
+	// answer[0] = &Group{Name: "", Members: make([]string, 0)}
+	// answer[1] = &Group{Name: "", Members: make([]string, 0)}
 
 	groupFile := fileio.EasyOpen(filename)
 
@@ -40,10 +40,7 @@ func ReadGroups(filename string) []*Group {
 
 // GroupListsAreEqual returns true if all the groups in a list of groups are equal to another list of groups, false otherwise.
 func GroupListsAreEqual(a []*Group, b []*Group) bool {
-	if GroupListsCompare(a, b) != 0 {
-		return false
-	}
-	return true
+	return GroupListsCompare(a, b) == 0
 }
 
 // GroupListsCompare compares two slices of Groups a and b for sorting and equality testing.
@@ -67,7 +64,7 @@ func GroupListsCompare(a []*Group, b []*Group) int {
 // GroupCompare compares two Groups a and b for sorting or equality testing.
 func GroupCompare(a *Group, b *Group) int {
 	if strings.Compare(a.Name, b.Name) != 0 {
-		//DEBUG:log.Printf("It was the names. a: %s. b: %s.", a.Name, b.Name)
+		// DEBUG:log.Printf("It was the names. a: %s. b: %s.", a.Name, b.Name)
 		return strings.Compare(a.Name, b.Name)
 	}
 	var res int
@@ -75,7 +72,7 @@ func GroupCompare(a *Group, b *Group) int {
 	for i := 0; i < stop; i++ {
 		res = strings.Compare(a.Members[i], b.Members[i])
 		if res != 0 {
-			//DEBUG:log.Printf("It was the members. a: %s. b: %s.", a.Members[i], b.Members[i])
+			// DEBUG:log.Printf("It was the members. a: %s. b: %s.", a.Members[i], b.Members[i])
 			return res
 		}
 	}

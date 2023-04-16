@@ -5,6 +5,9 @@ build:
 
 clean:
 	go fmt ./...
+	gofmt -s -w ./*/*.go
+	gofmt -s -w ./*/*/*.go
+	gofmt -s -w ./cmd/*/*.go
 	golangci-lint run ./... --fix
 
 install:
