@@ -61,9 +61,11 @@ func NewByteReader(filename string) *ByteReader {
 		answer.internalGzip, err = NewGunzipReader(filename)
 		exception.PanicOnErr(err)
 		answer.Reader = bufio.NewReader(answer.internalGzip)
+		answer.close = answer.internalGzip.ReadCloser.Close
 	default:
 		file := MustOpen(filename)
 		answer.Reader = bufio.NewReader(file)
+		answer.close = file.Close
 	}
 	return &answer
 }
@@ -165,7 +167,7 @@ func (br *ByteReader) Close() error {
 }
 
 func (unzip *GunzipReader) Close() {
-	unzip.Close()
+	unzip.ReadCloser.Close()
 	unzip.Cmd.Wait()
 }
 
