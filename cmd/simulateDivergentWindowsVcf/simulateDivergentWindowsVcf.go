@@ -9,37 +9,8 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math/rand"
-	"os"
 	"sort"
-	"strings"
 )
-
-func init() {
-	dbgVar := os.Getenv("GODEBUG")
-
-	if dbgVar == "" {
-		err := os.Setenv("GODEBUG", "randautoseed=0")
-		exception.PanicOnErr(err)
-		return
-	}
-
-	variables := strings.Split(dbgVar, ",")
-	var found bool
-	for i := range variables {
-		if strings.HasPrefix(variables[i], "randautoseed=") {
-			variables[i] = "randautoseed=0"
-			found = true
-		}
-	}
-
-	if !found {
-		variables = append(variables, "randautoseed=0")
-	}
-
-	err := os.Setenv("GODEBUG", strings.Join(variables, ","))
-	exception.PanicOnErr(err)
-	rand.Seed(0)
-}
 
 type Window struct {
 	NumDivergent int
