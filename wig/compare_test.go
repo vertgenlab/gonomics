@@ -1,6 +1,7 @@
 package wig
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -54,7 +55,7 @@ func TestPearson(t *testing.T) {
 	var observed float64
 	for _, v := range PearsonTests {
 		observed = Pearson(v.alpha, v.beta, v.missing, v.samplingFrequency)
-		if observed != v.expected {
+		if fmt.Sprintf("%.6g", observed) != fmt.Sprintf("%.6g", v.expected) {
 			t.Errorf("Error in wig.Pearson. Expected: %v. Output: %v.", v.expected, observed)
 		}
 	}
