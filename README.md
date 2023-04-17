@@ -19,6 +19,12 @@ Authors:
 * Daniel A. Snellings
 * Seth Weaver
 
+### Known Issues with Go 1.20
+<p>The latest version of Golang 1.20 has made substantial changes to random number generation that affect much of the testing infrastructure
+of Gonomics. As such, many tests will fail with the latest version of Golang, but will pass with Go version 1.19. We are working to address this issue
+and believe it will be resolved soon.</p>
+
+
 ### Complete Gonomics Documentation
 <p>The complete documentation for Gonomics can be found at the following website. https://pkg.go.dev/github.com/vertgenlab/gonomics </p>
 
