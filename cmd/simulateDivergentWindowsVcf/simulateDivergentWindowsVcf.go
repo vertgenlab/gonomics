@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"sort"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -103,6 +104,11 @@ type Settings struct {
 	BoundMultiplier float64
 	UpperPercentile float64
 	LowerPercentile float64
+}
+
+func init() {
+	err := os.Setenv("GODEBUG", "randautoseed=0")
+	exception.PanicOnErr(err)
 }
 
 func main() {
