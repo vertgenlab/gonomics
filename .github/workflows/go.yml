@@ -7,7 +7,7 @@ on:
     branches: main
 
 env:
-  GOLANG: 1.18
+  GOLANG: 1.20
 
 jobs:
   format:
