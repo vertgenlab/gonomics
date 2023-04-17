@@ -57,19 +57,19 @@ func matToJasparString(mat [][]float64) string {
 		log.Fatalf("Error: Input PFM must have 4 rows, one for each nucleotide.")
 	}
 	for i := range mat[0] {
-		answer = answer + fmt.Sprintf("\t%g", mat[0][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[0][i])
 	}
 	answer = answer + "\t]\nC [ "
 	for i := range mat[1] {
-		answer = answer + fmt.Sprintf("\t%g", mat[1][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[1][i])
 	}
 	answer = answer + "\t]\nG [ "
 	for i := range mat[2] {
-		answer = answer + fmt.Sprintf("\t%g", mat[2][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[2][i])
 	}
 	answer = answer + "\t]\nT [ "
 	for i := range mat[3] {
-		answer = answer + fmt.Sprintf("\t%g", mat[3][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[3][i])
 	}
 	answer = answer + "\t]\n"
 	return answer
