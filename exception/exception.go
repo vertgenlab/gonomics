@@ -3,6 +3,7 @@ package exception
 
 import (
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 )
@@ -34,6 +35,7 @@ func init() {
 
 	err := os.Setenv("GODEBUG", strings.Join(variables, ","))
 	PanicOnErr(err)
+	rand.Seed(0)
 }
 
 // PanicOnErr will panic if input error is not nil.
