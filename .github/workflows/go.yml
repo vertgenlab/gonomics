@@ -7,7 +7,7 @@ on:
     branches: main
 
 env:
-  GOLANG: 1.19.8
+  GOLANG: 1.20.3
 
 jobs:
   format:
@@ -19,9 +19,8 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.52.2
+      - name: Setup lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
       - name: Lint and automate clean up
         run: make clean && go install ./... && go test ./...
       - name: Check and push changes
