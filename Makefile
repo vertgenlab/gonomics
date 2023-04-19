@@ -13,7 +13,7 @@ clean:
 install:
 	go mod download && go mod verify
 	go install ./...
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.52.2
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 lint: test
 	golangci-lint run ./...
