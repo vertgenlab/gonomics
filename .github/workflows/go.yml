@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - uses: golangci/golangci-lint-action@v3
+      - uses: golangci/golangci-lint-action@v2
         with:
           version: v1.52.2
       - name: Lint and automate clean up
