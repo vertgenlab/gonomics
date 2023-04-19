@@ -25,6 +25,7 @@ jobs:
       - uses: golangci/golangci-lint-action@v3
         with:
           version: v1.52.2
+          only-new-issues: true
       - name: Lint and automate clean up
         run: make clean && go install ./... && go test ./...
       - name: Check and push changes
