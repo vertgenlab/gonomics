@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
 )
 
 func bedGraphToWig(inFile string, chromFile string, outFile string, missing float64) {

@@ -5,17 +5,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/maf"
-	"log"
 )
 
 func mafIndels(in_maf string, species_ins string, species_del string, threshold float64, outIns_bed string, outDel_bed string) {
-	//initialize variables
+	// initialize variables
 	mafRecords := maf.Read(in_maf) //Read entire in_maf. mafRecords has type Maf. Maf has no ReadToChan function for now
-	//var bedList_ins []*bed.Bed     //initialize 2 bed files
-	//var bedList_del []*bed.Bed     //1 bed file for ins, 1 bed file for del
+	// var bedList_ins []*bed.Bed     //initialize 2 bed files
+	// var bedList_del []*bed.Bed     //1 bed file for ins, 1 bed file for del
 	out_ins := fileio.EasyCreate(outIns_bed) //rather than bedlist, write bed line by line, 1 bed for ins, 1 bed for del
 	defer out_ins.Close()
 	out_del := fileio.EasyCreate(outDel_bed)
@@ -24,43 +25,39 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 	//go through each line
 	for i := range mafRecords { //each i is a block
 		for k := 1; k < len(mafRecords[i].Species); k++ { //each k is a line. Start loop at k=1 because that is the lowest possible index to find species_del, which is query
-
-			//convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
-			//here I assume only pairwise alignment, not >2 species
-			//here I assume species_ins is target (the 1st line in the block is a line but not included in mafRecords[i].Species, target is 2nd line in the block but 1st line in mafRecords[i].Species, index 0); species_del is query (3rd line in the block but 2nd line in mafRecords[i].Species, index 1 or higher)
+			// convert maf to bed, start with getting assembly because it is needed to verify species_ins and species_del
+			// here I assume only pairwise alignment, not >2 species
+			// here I assume species_ins is target (the 1st line in the block is a line but not included in mafRecords[i].Species, target is 2nd line in the block but 1st line in mafRecords[i].Species, index 0); species_del is query (3rd line in the block but 2nd line in mafRecords[i].Species, index 1 or higher)
 			assembly_del, chrom_del := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[k].Src) //start with species_del, get assembly (e.g. rheMac10), chrom (e.g. chrI)
 			assembly_ins, chrom_ins := maf.SrcToAssemblyAndChrom(mafRecords[i].Species[0].Src) //then find corresponding species_ins line, which is target, index 0
-			//TODO: to improve clarity, consider using assembly_k first, and then setting assembly_del:=assembly_k if in fact the k line is a del line
+			// TODO: to improve clarity, consider using assembly_k first, and then setting assembly_del:=assembly_k if in fact the k line is a del line
 
-			//verify line 0 is indeed species_ins
+			// verify line 0 is indeed species_ins
 			if assembly_ins != species_ins {
 				log.Fatalf("species_ins was incorrect. Please check you have a pairwise maf file, and entered species_ins and species_del correctly") //otherwise fatal
 			}
 
-			//get eC species_del lines
+			// get eC species_del lines
 			if mafRecords[i].Species[k].ELine != nil && assembly_del == species_del && mafRecords[i].Species[0].SLine != nil { //common checks for both eC and eI lines
 				if mafRecords[i].Species[k].ELine.Status == 'C' { //Check for ELine Status here
-
 					//convert maf to bed, continued
 					current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
 					current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eC", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-					//bedList_del = append(bedList_del, &current_del) //append to growing bed
-					//bedList_ins = append(bedList_ins, &current_ins)
+					// bedList_del = append(bedList_del, &current_del) //append to growing bed
+					// bedList_ins = append(bedList_ins, &current_ins)
 					bed.WriteBed(out_ins, current_ins)
 					bed.WriteBed(out_del, current_del)
 
-					//get eI species_del lines
+					// get eI species_del lines
 				} else if mafRecords[i].Species[k].ELine.Status == 'I' {
-
-					//test if species_del eI fragment size < 10% corresponding s fragment size
-					//make sure arithmetic is all on float64
+					// test if species_del eI fragment size < 10% corresponding s fragment size
+					// make sure arithmetic is all on float64
 					if float64(mafRecords[i].Species[k].ELine.Size) < threshold*float64(mafRecords[i].Species[0].SLine.Size) {
-
-						//convert maf to bed, continued
+						// convert maf to bed, continued
 						current_del := bed.Bed{Chrom: chrom_del, ChromStart: mafRecords[i].Species[k].ELine.Start, ChromEnd: mafRecords[i].Species[k].ELine.Start + mafRecords[i].Species[k].ELine.Size, Name: "del_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5} //get chrom,start,end,name,score
 						current_ins := bed.Bed{Chrom: chrom_ins, ChromStart: mafRecords[i].Species[0].SLine.Start, ChromEnd: mafRecords[i].Species[0].SLine.Start + mafRecords[i].Species[0].SLine.Size, Name: "ins_eI", Score: int(mafRecords[i].Score), FieldsInitialized: 5}
-						//bedList_del = append(bedList_del, &current_del) //append to growing bed
-						//bedList_ins = append(bedList_ins, &current_ins)
+						// bedList_del = append(bedList_del, &current_del) //append to growing bed
+						// bedList_ins = append(bedList_ins, &current_ins)
 						bed.WriteBed(out_ins, current_ins)
 						bed.WriteBed(out_del, current_del)
 					}
@@ -68,9 +65,9 @@ func mafIndels(in_maf string, species_ins string, species_del string, threshold 
 			}
 		}
 	}
-	//write out bed files
-	//bed.Write(outDel_bed, bedList_del, 5) //bed file has 5 fields
-	//bed.Write(outIns_bed, bedList_ins, 5)
+	// write out bed files
+	// bed.Write(outDel_bed, bedList_del, 5) //bed file has 5 fields
+	// bed.Write(outIns_bed, bedList_ins, 5)
 }
 
 func usage() {
@@ -99,8 +96,8 @@ func main() {
 	}
 
 	in_maf := flag.Arg(0)
-	species_ins := flag.Arg(1) //e.g. hg38
-	species_del := flag.Arg(2) //e.g. rheMac10
+	species_ins := flag.Arg(1) // e.g. hg38
+	species_del := flag.Arg(2) // e.g. rheMac10
 	outIns_bed := flag.Arg(3)
 	outDel_bed := flag.Arg(4)
 	threshold := *eiThreshold

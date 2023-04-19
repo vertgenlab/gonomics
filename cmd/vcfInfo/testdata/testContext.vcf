@@ -1,0 +1,10 @@
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	First	Second	Third	Fourth
+chr1	1	.	A	T	100.0	PASS	cannot_retrieve_full_context	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	2	.	A	T	100.0	PASS	AAA_show_as_T>A_TTT	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	3	.	A	TA	100.0	PASS	exclude_indel	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	4	.	C	G,A	100.0	PASS	exclude_biallelic	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	5	.	C	G	100.0	PASS	CCC	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	8	.	T	C	100.0	PASS	TTT	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	9	.	A	C	100.0	PASS	ref_seq_mismatch	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	11	.	G	C	100.0	PASS	GGG_merge_with_C>G_CCC	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	14	.	N	T	100.0	PASS	invalid_char	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0

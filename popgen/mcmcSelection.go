@@ -2,22 +2,23 @@ package popgen
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"golang.org/x/exp/slices"
 	"log"
 	"math"
 	"math/rand"
 	"os"
 	"runtime/pprof"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"golang.org/x/exp/slices"
 )
 
-//To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
+// To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
 const verbose int = 0
 
-//The McmcSettings type stores settings for the various Mcmc helper functions.`
+// The McmcSettings type stores settings for the various Mcmc helper functions.`.
 type McmcSettings struct {
 	Iterations              int
 	MuStep                  float64
@@ -76,7 +77,7 @@ func PosteriorOdds(old Theta, thetaPrime Theta) float64 {
 
 // priorProb returns log(probability) of having meanAlpha and sigma as mean
 // and standard deviation of the function that will be generating the individual
-// alpha values
+// alpha values.
 func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
 	var sigmaPrior, muPrior float64
 
@@ -91,7 +92,7 @@ func priorProb(mu float64, sigma float64, s McmcSettings) float64 {
 
 // GenerateCandidateThetaPrime is a helper function of Metropolis Hastings that picks a new set of
 // parameters based on the state of the current parameter set t.
-// TODO: We could avoid some memory allocations by passing in an "old" theta and overwriting the values
+// TODO: We could avoid some memory allocations by passing in an "old" theta and overwriting the values.
 func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s McmcSettings) Theta {
 	var alphaPrime []float64
 	var prior, likelihood, muPrime, sigmaPrime float64
@@ -123,7 +124,7 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 	return Theta{alphaPrime, muPrime, sigmaPrime, prior, likelihood}
 }
 
-//InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
+// InitializeTheta is a helper function of Metropolis Hastings that generates the initial value of theta based on argument values.
 func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s McmcSettings) Theta {
 	answer := Theta{mu: m, sigma: sig}
 	answer.alpha = make([]float64, len(data.Sites))
@@ -142,8 +143,8 @@ func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s
 	return answer
 }
 
-//MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
-//muZero and sigmaZero represent the starting hyperparameter values.
+// MetropolisHastings implements the MH algorithm for Markov Chain Monte Carlo approximation of the posterior distribution for selection based on an input allele frequency spectrum.
+// muZero and sigmaZero represent the starting hyperparameter values.
 func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 	var err error
 	if s.Verbose > 1 {
@@ -191,7 +192,7 @@ func MetropolisHastings(data Afs, outFile string, s McmcSettings) {
 	exception.PanicOnErr(err)
 }
 
-//BuildBinomCache makes a 2D matrix where each entry binomCache[n][k] is equal to [n choose k] in logSpace.
+// BuildBinomCache makes a 2D matrix where each entry binomCache[n][k] is equal to [n choose k] in logSpace.
 func BuildBinomCache(allN []int) [][]float64 {
 	binomCache := make([][]float64, numbers.MaxMany(allN...)+1)
 
@@ -205,7 +206,7 @@ func BuildBinomCache(allN []int) [][]float64 {
 	return binomCache
 }
 
-//findAllN is a helper function of Metropolis Hastings that returns all the unique values of N present in an input Afs struct.
+// findAllN is a helper function of Metropolis Hastings that returns all the unique values of N present in an input Afs struct.
 func findAllN(data Afs) []int {
 	var answer = make([]int, 0)
 	for i := 0; i < len(data.Sites); i++ {

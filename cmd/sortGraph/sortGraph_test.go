@@ -1,13 +1,14 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func TestSortOrder(t *testing.T) {
@@ -66,7 +67,7 @@ func test(graph *genomeGraph.GenomeGraph) (sortedGraph *genomeGraph.GenomeGraph)
 //@SQ     SN:n3 LN:1
 //@SQ     SN:n4 LN:3
 
-// Test Functions
+// Test Functions.
 func MakeTestGraph() *genomeGraph.GenomeGraph {
 	graph := genomeGraph.EmptyGraph()
 

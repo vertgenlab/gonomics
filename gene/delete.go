@@ -2,6 +2,7 @@ package gene
 
 import (
 	"errors"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -114,7 +115,7 @@ func deletionPreRunChecks(g *Gene, genomeStartPos int, genomeEndPos int) (int, i
 	return genomeIndexStartPos, genomeIndexEndPos, nil
 }
 
-// safeDelete performs a deletion using the deleteStable function and adjust slide coordinates for all affected slices
+// safeDelete performs a deletion using the deleteStable function and adjust slide coordinates for all affected slices.
 func safeDelete(g *Gene, seq *[]dna.Base, delStart int, delEnd int, offset int) error {
 	var err error
 	if delStart == delEnd {
@@ -207,7 +208,7 @@ func deleteStable(seq *[]dna.Base, delStart int, delEnd int) error {
 	return nil
 }
 
-// deleteUpdateGenome updates the genomic sequence upon deletion
+// deleteUpdateGenome updates the genomic sequence upon deletion.
 func deleteUpdateGenome(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int) {
 	deletionLen := genomeIndexEndPos - genomeIndexStartPos
 	copy(g.genomeSeq[genomeIndexStartPos:], g.genomeSeq[genomeIndexEndPos:])
@@ -219,13 +220,12 @@ func deleteUpdateGenome(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int)
 	}
 }
 
-// deleteUpdateCds updates the coding sequence upon deletion
+// deleteUpdateCds updates the coding sequence upon deletion.
 func deleteUpdateCds(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int) (deletedCodingBases int, err error) {
 	var cdsIndexesToDelete []int
 	var codingDelStart, codingDelEnd int = -1, -1
 	deletionLen := genomeIndexEndPos - genomeIndexStartPos
 	for i := 0; i < len(g.cdsStarts); i++ {
-
 		switch {
 		// if cds is before deletion
 		case genomeIndexStartPos > g.cdsEnds[i]:
@@ -325,7 +325,6 @@ func deleteUpdateUtr(g *Gene, genomeIndexStartPos int, genomeIndexEndPos int, or
 	var utrFiveDelStart, utrFiveDelEnd int = -1, -1
 	var utrThreeDelStart, utrThreeDelEnd int = -1, -1
 	if genomeIndexStartPos < origCdsStart || genomeIndexEndPos > origCdsEnd {
-
 		var utrFiveStartOffset, utrFiveEndOffset int = 0, 0
 		var utrThreeStartOffset, utrThreeEndOffset int = 0, 0
 
@@ -384,7 +383,6 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 	if deletedCodingBases == 0 { // Intronic or UTR (CDS unchanged)
 		answer.Consequence = checkSplice(answer.CdnaDist)
 		return answer, err
-
 	} else { // Deletion affects CDS
 		answer.Consequence = InFrameDeletion // until otherwise noted
 		answer.AaPos = answer.CdnaPos / 3
@@ -424,7 +422,6 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 			}
 
 			answer.AaAlt = frameshiftProtSeq[j : j+1]
-
 		} else if startFrame != 0 { // In-frame deletion does not fall on codon boundaries
 			newCodonStart := answer.CdnaPos - startFrame
 			answer.AaAlt = dna.TranslateSeq(g.codingSeq.seq[newCodonStart : newCodonStart+3])
@@ -434,7 +431,7 @@ func deleteEffectPrediction(g *Gene, deletedCodingBases int, answer EffectPredic
 	return answer, err
 }
 
-// deleteGetCdnaDist determines the nearest CDS from both the start and end of the deletion and fills the EffectPrediction struct
+// deleteGetCdnaDist determines the nearest CDS from both the start and end of the deletion and fills the EffectPrediction struct.
 func deleteGetCdnaDist(g *Gene, genomeStartPos int, genomeEndPos int, genomeIndexStartPos int, answer EffectPrediction) (EffectPrediction, error) {
 	var err error
 	var cdnaDistFromDelStart, cdnaDistFromDelEnd int                   // for effect prediction later

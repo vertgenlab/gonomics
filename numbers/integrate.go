@@ -1,12 +1,13 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
-//LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
+// LogIntegrate evaluates log(int_a^b f(x)dx) in cases where f returns log(f(x)). Uses the rectangle rule.
 func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 {
 	if a >= b {
 		log.Fatalf("logIntegrate failed, left bound must be smaller than right bound.")
@@ -104,18 +105,18 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 	return (0)
 }
 
-// DefiniteIntegral computes the definite integral of f(x) dx from start to end
+// DefiniteIntegral computes the definite integral of f(x) dx from start to end.
 func DefiniteIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 1e-8, 1e-8, 30)
 }
 
-//DefiniteSmallIntegral is like DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
-//slower than DefiniteIntegral, but more accurate for small values.
+// DefiniteSmallIntegral is like DefiniteIntegral with absolute error set to zero, so only relative error defines convergence conditions.
+// slower than DefiniteIntegral, but more accurate for small values.
 func DefiniteSmallIntegral(f func(float64) float64, start float64, end float64) float64 {
 	return rombergsMethod(f, start, end, 0, 1e-6, 30)
 }
 
-// adaptiveSimponsHelper is the recursive core function for AdaptiveSimpsons
+// adaptiveSimponsHelper is the recursive core function for AdaptiveSimpsons.
 func adaptiveSimpsonsHelper(f func(float64) float64, a, b, midpoint, fa, fb, fMidpoint, wholeEstimate, errorThresh float64, maxDepth int) float64 {
 	var h, leftMidpoint, rightMidpoint, fLeftMidpoint, fRightMidpoint, leftEstimate, rightEstimate, delta float64
 	h = (b - a) / 2
@@ -158,7 +159,7 @@ func AdaptiveSimpsons(f func(float64) float64, a float64, b float64, errorThresh
 	return adaptiveSimpsonsHelper(f, a, b, midpoint, fa, fb, fMidpoint, s, errorThreshold, maxDepth)
 }
 
-// adaptiveSimponsLogHelper is the recursive core function for AdaptiveSimpsonsLog
+// adaptiveSimponsLogHelper is the recursive core function for AdaptiveSimpsonsLog.
 func adaptiveSimpsonsLogHelper(f func(float64) float64, a, b, midpoint, fa, fb, fMidpoint, wholeEstimate, errorThresh float64, maxDepth int) float64 {
 	const logFour float64 = 1.386294
 	const logFifteen float64 = 2.70805

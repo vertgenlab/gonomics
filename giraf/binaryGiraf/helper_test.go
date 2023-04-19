@@ -1,10 +1,11 @@
 package binaryGiraf
 
 import (
-	"github.com/vertgenlab/gonomics/giraf"
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
 const (

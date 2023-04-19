@@ -28,5 +28,4 @@ func TestBinGenome(t *testing.T) {
 	if err4 != nil || err5 != nil {
 		log.Panic(err4, err5)
 	}
-
 }

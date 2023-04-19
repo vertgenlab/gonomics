@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/popgen"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/popgen"
 )
 
 func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {

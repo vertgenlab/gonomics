@@ -2,14 +2,15 @@ package align
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sketch"
 	"image"
 	"image/color"
 	"image/draw"
 	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/sketch"
 )
 
 type keyValue struct {

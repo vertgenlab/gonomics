@@ -5,14 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
 )
 
 func samToWig(samFileName string, reference string, outfile string, fragLength int) {
@@ -20,34 +19,26 @@ func samToWig(samFileName string, reference string, outfile string, fragLength i
 
 	ref := chromInfo.ReadToMap(reference)
 
-	samFile := fileio.EasyOpen(samFileName)
-	var err error
+	inChan, _ := sam.GoReadToChan(samFileName)
 
-	var done bool = false
-	sam.ReadHeader(samFile)
 	var outBed []bed.Bed
-	var aln sam.Sam
 
 	var outWig []wig.Wig
 	var currentBed bed.Bed
 
-	if fragLength != -1 {
-		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
-			currentBed = convert.SamToBedFrag(aln, fragLength, ref)
+	for i := range inChan {
+		if fragLength != -1 {
+			currentBed = convert.SamToBedFrag(i, fragLength, ref)
 			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
 			}
-		}
-	} else {
-		for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
-			currentBed = convert.SamToBed(aln)
+		} else {
+			currentBed = convert.SamToBed(i)
 			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
 			}
 		}
 	}
-	err = samFile.Close()
-	exception.PanicOnErr(err)
 
 	outWig = convert.BedReadsToWig(outBed, ref)
 	//log.Printf("Length of outWig: %d", len(outWig))
@@ -56,7 +47,7 @@ func samToWig(samFileName string, reference string, outfile string, fragLength i
 
 func usage() {
 	fmt.Print(
-		"samToWig - Converts sam to wig\n" +
+		"samToWig - Converts sam or bam to wig\n" +
 			"Usage:\n" +
 			" samToWig input.sam reference.chrom.sizes output.wig\n" +
 			" Currently fills in Wig values over deletions.\n" +

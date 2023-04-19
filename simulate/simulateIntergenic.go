@@ -2,17 +2,18 @@ package simulate
 
 import (
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math"
-	"math/rand"
 )
 
-//RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
+// RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
 func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
 	for i := range answer {
@@ -35,7 +36,9 @@ const bufferSize = 10_000_000
 // lambda specifies the rate parameter for an exponential distribution, from which simulated INDEL sizes will be sampled.
 // gcContent specifies the expected value of GC content for inserted sequences.
 // vcfOutFile specifies an optional return, which records all variants made during the simulated mutation process.
-func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, vcfOutFile string) []fasta.Fasta {
+// transitionBias specifies the expected value of the ratio of transitions to transversions in the output sequence.
+// qName sets the suffix for the output query fasta name.
+func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
 	var answer = make([]fasta.Fasta, 2)
 	var emptyRoomInBuffer = bufferSize
 	var currRand, currRand2, currRand3 float64
@@ -51,7 +54,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 		log.Fatalf("SimulateWithIndels expects a single fasta record in the input file.")
 	}
 	answer[0] = fasta.Fasta{Name: records[0].Name, Seq: make([]dna.Base, bufferSize)}
-	answer[1] = fasta.Fasta{Name: fmt.Sprintf("%v_sim", records[0].Name), Seq: make([]dna.Base, bufferSize)}
+	answer[1] = fasta.Fasta{Name: fmt.Sprintf("%s_%s", records[0].Name, qName), Seq: make([]dna.Base, bufferSize)}
 
 	if vcfOutFile != "" {
 		vcfOut = fileio.EasyCreate(vcfOutFile)
@@ -60,9 +63,6 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 	}
 
 	for inputPos < len(records[0].Seq) {
-		if inputPos%100_000 == 0 {
-			fmt.Printf("CurrentPos: %v.\n", inputPos)
-		}
 		currRand = rand.Float64() //this rand determines if there will be a mutation
 		if currRand < branchLength {
 			currRand2 = rand.Float64()         //this rand determines the mutation type
@@ -72,7 +72,11 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 				if currRand3 < branchLength {
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 					currRef = []dna.Base{records[0].Seq[inputPos]}
-					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+					if transitionBias != 1 {
+						answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
+					} else {
+						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+					}
 					currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				} else {
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
@@ -125,7 +129,11 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 				if currRand2 < branchLength { //case where a substitution immediately precedes an insertion
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 					currRef = []dna.Base{records[0].Seq[inputPos]}
-					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+					if transitionBias != 1 {
+						answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
+					} else {
+						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+					}
 					currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				} else {
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
@@ -165,7 +173,11 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 				}
 			} else { //this section handles the substitution case
 				answer[0].Seq[outputPos] = records[0].Seq[inputPos]
-				answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+				if transitionBias != 1 {
+					answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
+				} else {
+					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+				}
 				currRef = []dna.Base{records[0].Seq[inputPos]}
 				currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				if vcfOutFile != "" {
@@ -203,4 +215,48 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 	answer[1].Seq = answer[1].Seq[:len(answer[1].Seq)-emptyRoomInBuffer]
 
 	return answer
+}
+
+// changeBaseTransitionBias substitutes an input base b following the K80 model with a transitionBias parameter gamma.
+func changeBaseTransitionBias(b dna.Base, gamma float64) dna.Base {
+	var rand = rand.Float64()
+	var TvProb float64 = 1.0 / (2.0 + gamma) //p(a -> c) = 1 / (2 + gamma) (transversion)
+	switch dna.ToUpper(b) {
+	case dna.A:
+		if rand < TvProb { //p(a -> c) = 1 / (2 + gamma) (transversion)
+			return dna.C
+		} else if rand < 2.0*TvProb { //p(a -> t) = 1 / (2+gamma) (transversion)
+			return dna.T
+		} else { //that leaves p(a -> g) = gamma / (2+gamma) of probability left, (transition) and p(a -> g) = gamma * p(a -> c) = gamma* p(a -> t)
+			return dna.G
+		}
+	case dna.C:
+		if rand < 1.0/(2.0+gamma) {
+			return dna.A //transversion
+		} else if rand < 2.0/(2.0+gamma) {
+			return dna.G //transversion
+		} else {
+			return dna.T //transition
+		}
+	case dna.G:
+		if rand < 1.0/(2.0+gamma) {
+			return dna.C //transversion
+		} else if rand < 2.0/(2.0+gamma) {
+			return dna.T //transversion
+		} else {
+			return dna.A //transition
+		}
+	case dna.T:
+		if rand < 1.0/(2.0+gamma) {
+			return dna.A //transversion
+		} else if rand < 2.0/(2.0+gamma) {
+			return dna.G //transversion
+		} else {
+			return dna.C //transition
+		}
+	case dna.N:
+		return dna.N
+	}
+	log.Fatalf("Unrecognized base: %v.\n", dna.BaseToString(b))
+	return dna.N
 }

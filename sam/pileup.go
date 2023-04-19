@@ -2,10 +2,11 @@ package sam
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
 )
 
 // Pile stores the number of each base observed across multiple reads.
@@ -31,7 +32,7 @@ type Pile struct {
 	// They are only included to preserve multi-base deletion structure for downstream use.
 	// Further note that DelCount is only recorded for the 5'-most base in the deletion.
 	DelCountF map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, forward reads
-	DelCountR map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, forward reads
+	DelCountR map[int]int // key is the number of contiguous bases that are deleted, value is number of observations, reverse reads
 
 	touched bool // true if Count or InsCount has been modified
 	// touched is used as a quick check to see whether a pile struct
@@ -166,6 +167,9 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 	refmap := chromInfo.SliceToMap(header.Chroms)
 	var read Sam
 	for read = range reads {
+		if read.Cigar == nil || read.Cigar[0].Op == '*' {
+			continue // skip unmapped reads
+		}
 		if !passesReadFilters(read, readFilters) {
 			continue
 		}
@@ -319,9 +323,11 @@ func getPile(start *Pile, refidx int, pos uint32) *Pile {
 			start.Pos = start.prev.Pos + 1
 
 		case start.Pos < start.prev.Pos: // looped to start of buffer. need to expand
-			start = start.prev                 // back up to end of buffer
-			expandLinkedPileBuffer(start, 300) // TODO: POTENTIAL MEMORY LEAK. HARD CAP???
-			start = start.next                 // move into start of newly added buffer
+			start = start.prev // back up to end of buffer
+			// TODO: POTENTIAL MEMORY LEAK. HARD CAP???
+			expandLinkedPileBuffer(start, 300)
+			// move into start of newly added buffer
+			start = start.next
 
 		default:
 			start = start.next
@@ -400,7 +406,7 @@ func sendPassedLinked(start *Pile, s Sam, includeNoData bool, refmap map[string]
 	return start, lastRefIdx, lastPos
 }
 
-// resetPile sets a Pile to the default state
+// resetPile sets a Pile to the default state.
 func resetPile(p *Pile) {
 	p.RefIdx = -1
 	p.Pos = 0
@@ -419,7 +425,7 @@ func resetPile(p *Pile) {
 	p.touched = false
 }
 
-// sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip
+// sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip.
 func sclipTerminalIns(s *Sam) {
 	if len(s.Cigar) == 0 || s.Cigar[0].Op == '*' {
 		return
@@ -445,7 +451,7 @@ func sclipTerminalIns(s *Sam) {
 	}
 }
 
-// String for debug
+// String for debug.
 func (p *Pile) String() string {
 	return fmt.Sprintf("RefIdx: %d\tPos: %d\tCountF: %v\tCountR: %v\tInsCountF: %v\tInsCountR: %v\tDelCountF: %v\tDelCountR: %v\tNext: %p\tPrev: %p",
 		p.RefIdx, p.Pos, p.CountF, p.CountR, p.InsCountF, p.InsCountR, p.DelCountF, p.DelCountR, p.next, p.prev)

@@ -10,7 +10,7 @@ func CanConvert(x float64) bool {
 	return x < 709.4 && x > -745.1
 }
 
-// Average returns a log number that is the average of two input logSpace numbers
+// Average returns a log number that is the average of two input logSpace numbers.
 func Average(x float64, y float64) float64 {
 	return Divide(Add(x, y), math.Log(2.0))
 }
@@ -75,7 +75,7 @@ func Divide(x float64, y float64) float64 {
 
 // Pow returns log(exp(x)**y) where log is the natural logarithm.
 // This function returns the log-space answer to x**y where x is already in log-space
-// y is NOT in log-space
+// y is NOT in log-space.
 func Pow(x float64, y float64) float64 {
 	// anything to the zero power is 1, so we return 0 == log(1).  0^0 is what this catches
 	if y == 0.0 {

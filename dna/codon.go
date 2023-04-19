@@ -228,7 +228,7 @@ func OneLetterToAminoAcid(b byte) AminoAcid {
 	}
 }
 
-// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type
+// ThreeLetterToAminoAcid converts a three letter amino acid string into an AminoAcid type.
 func ThreeLetterToAminoAcid(s string) AminoAcid {
 	switch s {
 	case "Ala":
@@ -313,7 +313,7 @@ func CodonsToBases(c []Codon) []Base {
 	return answer
 }
 
-//TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
+// TranslateCodon converts an individual Codon into the corresponding AminoAcid type.
 func TranslateCodon(c Codon) AminoAcid {
 	value, found := GeneticCode[c]
 	if !found {
@@ -365,8 +365,8 @@ func TranslateSeqToTer(b []Base) []AminoAcid {
 	return answer
 }
 
-// PolypeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
-func PolypeptideToShortString(a []AminoAcid) string {
+// PeptideToShortString converts a slice of amino acid into a string of one character amino acid symbols.
+func PeptideToShortString(a []AminoAcid) string {
 	var s strings.Builder
 	s.Grow(len(a))
 	for i := range a {
@@ -375,8 +375,8 @@ func PolypeptideToShortString(a []AminoAcid) string {
 	return s.String()
 }
 
-// PolypeptideToString converts a slice of AminoAcids into a string of three character amino acid symbols.
-func PolypeptideToString(a []AminoAcid) string {
+// PeptideToString converts a slice of AminoAcids into a string of three character amino acid symbols.
+func PeptideToString(a []AminoAcid) string {
 	var s strings.Builder
 	s.Grow(len(a) * 3)
 	for i := range a {
@@ -393,7 +393,7 @@ func TranslateToShortString(b []Base) string {
 	copy(bCopy, b)
 	AllToUpper(bCopy)
 	a := TranslateSeq(bCopy)
-	return PolypeptideToShortString(a)
+	return PeptideToShortString(a)
 }
 
 // TranslateToString converts a sequence of DNA bases into a string of three character amino acid symbols.
@@ -404,7 +404,7 @@ func TranslateToString(b []Base) string {
 	copy(bCopy, b)
 	AllToUpper(bCopy)
 	a := TranslateSeq(bCopy)
-	answer := PolypeptideToString(a)
+	answer := PeptideToString(a)
 	return answer
 }
 

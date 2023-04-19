@@ -2,13 +2,14 @@ package axt
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
 )
 
-// ToVcfFile takes a
+// ToVcfFile takes a.
 func ToVcfFile(filename string, axtList []Axt, fa []fasta.Fasta) {
 	var records []vcf.Vcf
 	for i := range axtList {
@@ -40,7 +41,6 @@ func ToVcf(axtFile Axt) []vcf.Vcf {
 		}
 		//insertion in VCF record
 		if axtFile.RSeq[i] == dna.Gap {
-
 			qCount++
 			curr = vcf.Vcf{Chr: axtFile.RName, Pos: rCount, Id: axtFile.QName, Ref: dna.BaseToString(dna.ToUpper(axtFile.RSeq[i-1])), Alt: []string{dna.BaseToString(dna.ToUpper(axtFile.QSeq[i-1]))}, Qual: 24, Filter: "PASS", Info: fmt.Sprintf("query=%d;SVTYPE=SNP;%s", qCount, info(axtFile))}
 

@@ -2,13 +2,14 @@ package simulate
 
 import (
 	"fmt"
+	"math/rand"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
-	"math/rand"
-	"strings"
 )
 
 // simulatePairedSam generates a pair of sam reads randomly distributed across the input ref.

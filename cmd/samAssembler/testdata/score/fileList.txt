@@ -1,0 +1,2 @@
+testdata/score/Sequence_0.validate.fa
+testdata/score/Sequence_1.validate.fa

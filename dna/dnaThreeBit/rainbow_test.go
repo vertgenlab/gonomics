@@ -1,8 +1,9 @@
 package dnaThreeBit
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //func NewThreeBitRainbow(inSeq []dna.Base, padding ThreeBitBase) []*ThreeBit {

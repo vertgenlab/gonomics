@@ -2,11 +2,12 @@ package bed
 
 import (
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-//UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record
+// UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record.
 func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 	var answer []Bed
 	var inRegion bool = false
@@ -19,7 +20,6 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 			answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: index, Name: fmt.Sprintf("%s_%d_%d", fa.Name, startIndex, index), FieldsInitialized: 4})
 			inRegion = false
 		}
-
 	}
 	if inRegion == true {
 		answer = append(answer, Bed{Chrom: fa.Name, ChromStart: startIndex, ChromEnd: len(fa.Seq), Name: fmt.Sprintf("%s_%d_%d", fa.Name, startIndex, len(fa.Seq)), FieldsInitialized: 4})
@@ -27,7 +27,7 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 	return answer
 }
 
-//UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
+// UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
 func UngappedRegionsAllFromFa(records []fasta.Fasta) []Bed {
 	var answer []Bed
 	var idx int = 0
@@ -37,7 +37,7 @@ func UngappedRegionsAllFromFa(records []fasta.Fasta) []Bed {
 	return answer
 }
 
-//TotalSize gives back to total region covered by bed entry.
+// TotalSize gives back to total region covered by bed entry.
 func TotalSize(b []Bed) int {
 	var ans, curLen int
 	for i := 0; i < len(b); i++ {
@@ -47,8 +47,8 @@ func TotalSize(b []Bed) int {
 	return ans
 }
 
-//IsNonOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
-//b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
+// IsNonOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
+// b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
 func IsSelfOverlapping(b []Bed, verbose int) bool {
 	for i := 0; i < len(b)-1; i++ {
 		if Overlap(b[i], b[i+1]) {

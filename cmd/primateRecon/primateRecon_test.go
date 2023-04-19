@@ -1,12 +1,13 @@
 package main
 
 import (
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
-	"testing"
 )
 
 func TestAllPossibleOneHuman(t *testing.T) {
@@ -93,7 +94,6 @@ func TestAllPossibleOneHuman(t *testing.T) {
 		err = os.Remove("testdata/allPossible.oneHuman.fa") //we delete allPossible only if all the tests have passed.
 		exception.PanicOnErr(err)
 	}
-
 }
 
 func TestAllPossibleTwoHumans(t *testing.T) {

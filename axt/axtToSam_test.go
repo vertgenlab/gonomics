@@ -2,14 +2,14 @@ package axt
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/sam"
-	"testing"
 )
 
 func TestSamFileConvert(t *testing.T) {
-
 	//chr19 3001012 3001075 chr11 70568380 70568443 - 3500
 	var testAxt = Axt{
 		RName:      "chr19",
@@ -42,5 +42,4 @@ func TestSamFileConvert(t *testing.T) {
 	if !sam.Equal(samFromAxt, answerSam) {
 		t.Errorf("Error: Axt to sam is not converting the correct sam file...\n")
 	}
-
 }

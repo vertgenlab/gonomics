@@ -1,11 +1,12 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var PlotTests = []struct {
@@ -20,8 +21,8 @@ var PlotTests = []struct {
 	{func(x float64) float64 { return x }, 0.0, 3.0, 3, "test1.txt", []float64{0.0, 1.0, 2.0}, []float64{0.0, 1.0, 2.0}},
 }
 
-//TestPlot writes Plot results to a file, but then reads the file back in to confirm that they match expectations.
-//Then it deletes the testing output temp file.
+// TestPlot writes Plot results to a file, but then reads the file back in to confirm that they match expectations.
+// Then it deletes the testing output temp file.
 func TestPlot(t *testing.T) {
 	var i int
 	for _, test := range PlotTests {

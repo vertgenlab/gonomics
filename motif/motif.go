@@ -4,11 +4,12 @@ package motif
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
 )
 
 type PositionMatrixType byte
@@ -21,7 +22,7 @@ const (
 )
 
 // PositionMatrix is a struct encoding a position frequency/probability/weight matrix.
-//Mat[row][column]. Mat rows 0, 1, 2, and 3 correspond to base identities A, C, G, and T, respectively.
+// Mat[row][column]. Mat rows 0, 1, 2, and 3 correspond to base identities A, C, G, and T, respectively.
 // Mat columns correspond to position in a motif. So Mat[2][4] in a PPM would correspond to the
 // probability of a G in the 5th position of a motif.
 type PositionMatrix struct {

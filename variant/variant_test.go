@@ -22,7 +22,7 @@ func ref() []dna.Base {
 // ChangeTo:                            T
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var subTest1 = Substitution{
 	Pos: 8,
 	Ref: dna.G,
@@ -44,7 +44,7 @@ var subTest1ExpEff = CodingChange{
 // ChangeTo:                                                                C
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var subTest2 = Substitution{
 	Pos: 19,
 	Ref: dna.A,
@@ -66,7 +66,7 @@ var subTest2ExpEff = CodingChange{
 // ChangeTo:        T
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var subTest3 = Substitution{
 	Pos: 2,
 	Ref: dna.A,
@@ -88,7 +88,7 @@ var subTest3ExpEff = CodingChange{
 // ChangeTo:                  T
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var subTest4 = Substitution{
 	Pos: 5,
 	Ref: dna.C,
@@ -110,7 +110,7 @@ var subTest4ExpEff = CodingChange{
 // ChangeTo:                                            T
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var subTest5 = Substitution{
 	Pos: 13,
 	Ref: dna.C,
@@ -133,7 +133,7 @@ var subTest5ExpEff = CodingChange{
 // Ins Seq :                         AGG
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var insTest1 = Insertion{
 	Pos: 8,
 	Seq: dna.StringToBases("AGG"),
@@ -155,7 +155,7 @@ var insTest1ExpEff = CodingChange{
 // Ins Seq :                                                  GT
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var insTest2 = Insertion{
 	Pos: 15,
 	Seq: dna.StringToBases("GT"),
@@ -177,7 +177,7 @@ var insTest2ExpEff = CodingChange{
 // Ins Seq :                          A
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var insTest3 = Insertion{
 	Pos: 8,
 	Seq: dna.StringToBases("A"),
@@ -199,7 +199,7 @@ var insTest3ExpEff = CodingChange{
 // Ins Seq :                         TAG
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var insTest4 = Insertion{
 	Pos: 8,
 	Seq: dna.StringToBases("TAG"),
@@ -221,7 +221,7 @@ var insTest4ExpEff = CodingChange{
 // Ins Seq :           CTACCC
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var insTest5 = Insertion{
 	Pos: 4,
 	Seq: dna.StringToBases("CTACCC"),
@@ -242,7 +242,7 @@ var insTest5ExpEff = CodingChange{
 // Deleted :												   *
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delTest1 = Deletion{
 	Start: 15,
 	End:   16,
@@ -263,7 +263,7 @@ var delTest1ExpEff = CodingChange{
 // Deleted :                                                   ****
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delTest2 = Deletion{
 	Start: 15,
 	End:   17,
@@ -284,7 +284,7 @@ var delTest2ExpEff = CodingChange{
 // Deleted :                  *******
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delTest3 = Deletion{
 	Start: 5,
 	End:   8,
@@ -305,7 +305,7 @@ var delTest3ExpEff = CodingChange{
 // Deleted :                        ********
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delTest4 = Deletion{
 	Start: 7,
 	End:   10,
@@ -326,7 +326,7 @@ var delTest4ExpEff = CodingChange{
 // Deleted :                               ******************
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delTest5 = Deletion{
 	Start: 9,
 	End:   15,
@@ -348,7 +348,7 @@ var delTest5ExpEff = CodingChange{
 // Inserted:                            C  A  T
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delinsTest1 = Delins{
 	Start:  8,
 	End:    11,
@@ -371,7 +371,7 @@ var delinsTest1ExpEff = CodingChange{
 // Inserted:                        G
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delinsTest2 = Delins{
 	Start:  7,
 	End:    11,
@@ -394,7 +394,7 @@ var delinsTest2ExpEff = CodingChange{
 // Inserted:           ACAGT
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delinsTest3 = Delins{
 	Start:  3,
 	End:    5,
@@ -417,7 +417,7 @@ var delinsTest3ExpEff = CodingChange{
 // Inserted:                                      GTG
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delinsTest4 = Delins{
 	Start:  10,
 	End:    14,
@@ -440,7 +440,7 @@ var delinsTest4ExpEff = CodingChange{
 // Inserted:                                         ATAA
 // Codons  :        -------   -------   -------   -------   -------   -------
 // Protein :          Met       Gln       Val       Phe       Ser       Ter
-// Prot Idx:           0         1         2         3         4         5
+// Prot Idx:           0         1         2         3         4         5.
 var delinsTest5 = Delins{
 	Start:  12,
 	End:    14,

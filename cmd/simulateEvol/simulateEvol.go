@@ -5,26 +5,29 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"math/rand"
 )
 
 type Settings struct {
-	FastaFile    string
-	TreeFile     string
-	LeafOutFile  string
-	GenePredFile string
-	SimOutFile   string
-	Lambda       float64
-	PropIndel    float64
-	BranchLength float64
-	SetSeed      int64
-	GcContent    float64
-	VcfOutFile   string
+	FastaFile      string
+	TreeFile       string
+	LeafOutFile    string
+	GenePredFile   string
+	SimOutFile     string
+	Lambda         float64
+	PropIndel      float64
+	BranchLength   float64
+	SetSeed        int64
+	GcContent      float64
+	VcfOutFile     string
+	TransitionBias float64
+	QName          string
 }
 
 func SimulateEvol(s Settings) {
@@ -46,6 +49,9 @@ func SimulateEvol(s Settings) {
 	if s.GcContent < 0 || s.GcContent > 1 {
 		log.Fatalf("GcContent must be a value between 0 and 1.")
 	}
+	if s.TransitionBias < 0 {
+		log.Fatalf("TransitionBias must be a nonnegative number.")
+	}
 
 	if s.TreeFile != "" {
 		tree, err := expandedTree.ReadTree(s.TreeFile, s.FastaFile)
@@ -63,10 +69,9 @@ func SimulateEvol(s Settings) {
 			fasta.Write(s.SimOutFile, fastas)
 		}
 	} else {
-		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.VcfOutFile)
+		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName)
 	}
 	fasta.Write(s.LeafOutFile, leafFastas)
-
 }
 
 func usage() {
@@ -94,6 +99,8 @@ func main() {
 	var gcContent *float64 = flag.Float64("gcContent", 0.42, "Set the GC content for simulated insertion sequences.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var vcfOutFile *string = flag.String("vcfOutFile", "", "For branchLength mode, specify a vcf filename to record simulated mutations.")
+	var transitionBias *float64 = flag.Float64("transitionBias", 1, "Set a bias for transitions over transversions during sequence evolution. Defaults to the Jukes-Cantor model, where the transition bias is 1 (even with transversion frequency).")
+	var qName *string = flag.String("qName", "evol", "Set the suffix for the output sequence fasta name. Default suffix evol for an example chr1 will appear as chr1_evol.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -109,17 +116,19 @@ func main() {
 	leafOutFile := flag.Arg(1)
 
 	s := Settings{
-		FastaFile:    rootFasta,
-		TreeFile:     *newickTree,
-		LeafOutFile:  leafOutFile,
-		SimOutFile:   *completeSimOutputFile,
-		GenePredFile: *genePredFile,
-		BranchLength: *branchLength,
-		Lambda:       *lambda,
-		PropIndel:    *propIndel,
-		GcContent:    *gcContent,
-		SetSeed:      *setSeed,
-		VcfOutFile:   *vcfOutFile,
+		FastaFile:      rootFasta,
+		TreeFile:       *newickTree,
+		LeafOutFile:    leafOutFile,
+		SimOutFile:     *completeSimOutputFile,
+		GenePredFile:   *genePredFile,
+		BranchLength:   *branchLength,
+		Lambda:         *lambda,
+		PropIndel:      *propIndel,
+		GcContent:      *gcContent,
+		SetSeed:        *setSeed,
+		VcfOutFile:     *vcfOutFile,
+		TransitionBias: *transitionBias,
+		QName:          *qName,
 	}
 
 	SimulateEvol(s)

@@ -3,9 +3,10 @@
 package dnaTwoBit
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // TwoBit is a struct that encodes DNA sequences in two-bit compressed format.
@@ -31,8 +32,8 @@ func BasesToUint64LeftAln(seq []dna.Base, start int, end int) uint64 {
 	var answer uint64 = 0
 	var i int = start
 	for ; i < end; i++ {
-		answer = answer << 2//left shift two positions
-		answer = answer | uint64(seq[i])//bitwise OR, appends base to right end of answer.
+		answer = answer << 2             //left shift two positions
+		answer = answer | uint64(seq[i]) //bitwise OR, appends base to right end of answer.
 	}
 	for ; i < start+32; i++ {
 		answer = answer << 2

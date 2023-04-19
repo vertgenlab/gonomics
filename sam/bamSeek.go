@@ -1,11 +1,12 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // SeekBamRegion returns a slice of reads that overlap the input region. SeekBamRegion will advance the
@@ -95,7 +96,7 @@ func SeekBamRegionRecycle(br *BamReader, bai Bai, chrom string, start, end uint3
 	return ans
 }
 
-// deduplicate removes duplicated sam records in a slice
+// deduplicate removes duplicated sam records in a slice.
 func deduplicate(s []Sam) []Sam {
 	ans := make([]Sam, 0, len(s))
 	sort.Slice(s, func(i, j int) bool {

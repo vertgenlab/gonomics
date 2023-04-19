@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var BedPeOverlapTests = []struct {
@@ -28,7 +29,7 @@ func TestBedPeOverlap(t *testing.T) {
 	for _, v := range BedPeOverlapTests {
 		bedpeOverlap(v.selectFile, v.inBedPe, v.outBedPe, v.bedSelect, v.overlapThreshold, v.overlapBoth)
 		if !fileio.AreEqual(v.outBedPe, v.expectedFile) {
-			t.Errorf("Error in bedPeOverlap.")
+			t.Errorf("Error: bedpeOverlap files %s and %s are not equal to one another...", v.outBedPe, v.expectedFile)
 		} else {
 			err = os.Remove(v.outBedPe)
 			exception.PanicOnErr(err)

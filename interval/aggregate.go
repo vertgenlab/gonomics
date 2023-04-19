@@ -25,7 +25,6 @@ func MergeIntervals(intervals []Interval) []Interval {
 		var curr *AggregateInterval
 		var currComponents []Interval
 		for i := 0; i < len(input); i++ {
-
 			if i+1 < len(input)-1 && input[i+1].GetChromStart() <= input[i].GetChromEnd() {
 				currComponents = nil
 				currComponents = append(currComponents, input[i])

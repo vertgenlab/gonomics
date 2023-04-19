@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"sort"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"math/rand"
-	"sort"
 )
 
 type Window struct {
@@ -68,7 +69,7 @@ func simulateDivergentWindowsVcf(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-//countDivergent returns the number of variants in a slice of Vcf structs that are in the divergent state
+// countDivergent returns the number of variants in a slice of Vcf structs that are in the divergent state.
 func countDivergent(v []vcf.Vcf) int {
 	var answer int = 0
 	for i := range v {

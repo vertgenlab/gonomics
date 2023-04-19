@@ -2,12 +2,13 @@ package fileio
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
-// magic number that identifies a gzip file
+// magic number that identifies a gzip file.
 var magicGzip = []byte{0x1f, 0x8b}
 
 // IsGzip checks if the magic gzip number is
