@@ -3,14 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"math/rand"
-	"sort"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"math/rand"
+	"sort"
 )
 
 type Window struct {
