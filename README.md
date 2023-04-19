@@ -21,7 +21,7 @@ Authors:
 
 ### Compatibility with Previous Golang Versions
 <p>Gonomics is compatible with Golang version 1.18 and above. Please note that due to changes in random number generation since Golang v1.20,
-many cmd tests will fail if run on 1.18 or 1.19, including cmds that use random numbers, including the simulate commands and MCMC sampling.
+many cmd tests will fail if run on 1.18 or 1.19, including cmds that use random numbers, such as the simulate commands and MCMC sampling.
 However, we expect these programs to function as intended in these older versions.</p>
 
 
