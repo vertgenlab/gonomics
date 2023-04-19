@@ -7,8 +7,7 @@ on:
     branches: main
 
 env:
-  GOLANG: 1.19
-  GOPATH: /home/runner/go
+  GOLANG: 1.20.3
 
 jobs:
   format:
@@ -20,7 +19,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-          cache: false
       - uses: golangci/golangci-lint-action@v3
         with:
           version: v1.52.2
