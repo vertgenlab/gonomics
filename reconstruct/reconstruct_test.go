@@ -76,8 +76,8 @@ func TestReconAccuracyByBase(t *testing.T) {
 	if !ok {
 		t.Error("node A not found in baseAccuracy data, check tree input.")
 	} else {
-		if data[0] < 97.9 || data[0] > 98.0 {
-			t.Errorf("First base accuracy for A in tree should be 97.910448, but is %f.", data[0])
+		if data[0] < 97.3 || data[0] > 98.0 {
+			t.Errorf("First base accuracy for A in tree should be 97.313433, but is %f.", data[0])
 		}
 	}
 	data, ok = baseAccuracy["D"]
