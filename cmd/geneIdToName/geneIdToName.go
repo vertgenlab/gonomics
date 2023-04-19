@@ -21,6 +21,8 @@ func makeCustomMap(gnt string) map[string]string {
 	return mp
 }
 
+//moved preset maps to presets/ for readability of the program
+
 func geneIdToName(geneNameTable string, inFile string, outFile string, ncbi bool, ensembl bool, keepMatching bool) {
 	var found, write bool
 	var a, name string
