@@ -19,9 +19,10 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GOLANG }}
-      - uses: golangci/golangci-lint-action@v3
+      - uses: golangci/golangci-lint-action@v3.4.0
         with:
           version: v1.52.2
+          skip-cache: true
       - name: Lint and automate clean up
         run: make clean && go install ./... && go test ./...
       - name: Check and push changes
