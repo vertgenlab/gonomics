@@ -3,7 +3,7 @@ package gtf
 import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	//"github.com/vertgenlab/gonomics/dna"
-	//"github.com/vertgenlab/gonomics/fasta"
+	//"github.com/vertgenlab/gonomics/fasta".
 	"github.com/vertgenlab/gonomics/vcf"
 )
 

@@ -4,14 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"unicode"
 
 	"github.com/vertgenlab/gonomics/exception"
 )
 
 // RuneToBase converts a rune into a dna.Base if it matches one of the acceptable DNA characters.
-// Note: '*', used by VCF to denote deleted alleles becomes Nil
+// Note: '*', used by VCF to denote deleted alleles becomes Nil.
 func RuneToBase(r rune) (Base, error) {
 	switch r {
 	case 'A':
@@ -129,7 +128,7 @@ func BaseToString(b Base) string {
 	return string(baseToByteArray[b])
 }
 
-// StringToBase parses a string into a single DNA base
+// StringToBase parses a string into a single DNA base.
 func StringToBase(s string) Base {
 	if len(s) != 1 {
 		log.Panic("String with a length other than 1 can not be turned into a dna.Base\n")
@@ -141,7 +140,7 @@ func StringToBase(s string) Base {
 	return b
 }
 
-// StringToBases parses a string into a slice of DNA bases
+// StringToBases parses a string into a slice of DNA bases.
 func StringToBases(s string) []Base {
 	answer := make([]Base, len(s))
 	var b Base
@@ -176,21 +175,16 @@ func StringToBasesForced(s string) []Base {
 // baseToByte is an efficient lookup for the rune corresponding to a given dna.Base.
 // intended to remain as a private array to help the BasesToString function.
 // panics if value input is not a valid Base.
-// quicker than BaseToByte by ~5x
+// quicker than BaseToByte by ~5x.
 var baseToByteArray = []byte{'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n', '-', '.', '*'}
 
 // BasesToString converts a slice of DNA bases into a string. Useful for writing to files.
 func BasesToString(bases []Base) string {
-	var buffer strings.Builder
-	buffer.Grow(len(bases))
-	var err error
-	for i := range bases {
-		err = buffer.WriteByte(baseToByteArray[bases[i]])
-		if err != nil {
-			log.Panicf("problem writing byte")
-		}
+	buf := make([]byte, len(bases))
+	for i, b := range bases {
+		buf[i] = baseToByteArray[b]
 	}
-	return buffer.String()
+	return string(buf)
 }
 
 // ByteSliceToDnaBases will convert a slice of bytes into a slice of Bases.

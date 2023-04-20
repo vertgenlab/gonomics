@@ -29,7 +29,7 @@ var BedMethodTests = []struct {
 	},
 }
 
-//note that methods take a special style of function name for testing.
+// note that methods take a special style of function name for testing.
 func TestBed_GetChrom(t *testing.T) {
 	var currChrom string
 	for _, v := range BedMethodTests {

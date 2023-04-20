@@ -1,11 +1,12 @@
 package sam
 
 import (
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"log"
-	"math"
 )
 
 type DiploidBase byte
@@ -24,8 +25,37 @@ const (
 	NN DiploidBase = 10
 )
 
-// diploidBaseString formats a DiploidBase type as a string for debugging.
-func diploidBaseString(base DiploidBase) string {
+func DiploidBaseToBases(base DiploidBase) []dna.Base {
+	switch base {
+	case AA:
+		return []dna.Base{dna.A, dna.A}
+	case AC:
+		return []dna.Base{dna.A, dna.C}
+	case AG:
+		return []dna.Base{dna.A, dna.G}
+	case AT:
+		return []dna.Base{dna.A, dna.T}
+	case CC:
+		return []dna.Base{dna.C, dna.C}
+	case CG:
+		return []dna.Base{dna.C, dna.G}
+	case CT:
+		return []dna.Base{dna.C, dna.T}
+	case GG:
+		return []dna.Base{dna.G, dna.G}
+	case GT:
+		return []dna.Base{dna.G, dna.T}
+	case TT:
+		return []dna.Base{dna.T, dna.T}
+	case NN:
+		return []dna.Base{dna.N, dna.N}
+	}
+	log.Fatalf("Error: Unrecognized DiploidBase: %v.\n", base)
+	return []dna.Base{}
+}
+
+// DiploidBaseString formats a DiploidBase type as a string.
+func DiploidBaseString(base DiploidBase) string {
 	switch base {
 	case AA:
 		return "AA"
@@ -50,16 +80,16 @@ func diploidBaseString(base DiploidBase) string {
 	case NN:
 		return "NN"
 	}
-	log.Fatalf("Unrecognized DiploidBase: %v.", base)
+	log.Fatalf("Error: Unrecognized DiploidBase: %v.", base)
 	return ""
 }
 
-//DiploidBaseCallFromPile determines which of 10 DiploidBase genotypes
+// DiploidBaseCallFromPile determines which of 10 DiploidBase genotypes
 // are present at the position of an input Pile, preconditioned on the assumption of
 // a diploid base at that position (in other words, not considering INDELs).
 // epsilon represents the error rate, a parameter for the likelihood function.
 func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, homozygousCache [][]float64, heterozygousCache [][]float64, epsilon float64) DiploidBase {
-	if refBase == dna.N { //we will force a return of diploid NN whenever an N is found in the reference.
+	if refBase == dna.N { // we will force a return of diploid NN whenever an N is found in the reference.
 		return NN
 	}
 	var aCount = p.CountF[dna.A] + p.CountR[dna.A]
@@ -78,10 +108,10 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 			return GG
 		case dna.T:
 			return TT
-		case dna.N: //should be redundant with catch above
+		case dna.N: // should be redundant with catch above
 			return NN
 		default:
-			log.Fatalf("Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
+			log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
 		}
 	}
 
@@ -102,26 +132,22 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 		maxDiploid = []DiploidBase{TT}
 		maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, homozygousCache, heterozygousCache), priorCache[dna.T][TT])
 	default:
-		log.Fatalf("Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
+		log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
 	}
-
-	//DEBUG: fmt.Printf("HomoRefBase: %s. Posterior: %v.\n", diploidBaseString(maxDiploid[0]), maxPosterior)
-
 	var geno DiploidBase
 	var currPosterior float64
-	for geno = 0; geno < 10; geno++ { //for each genotype, encoded as a DiploidBase byte ranging from 0 to 9, inclusive
+	for geno = 0; geno < 10; geno++ { // for each genotype, encoded as a DiploidBase byte ranging from 0 to 9, inclusive
 		currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, geno, epsilon, homozygousCache, heterozygousCache), priorCache[refBase][geno])
-		//DEBUG: fmt.Printf("CurrGeno: %s. CurrPosterior: %v.\n", diploidBaseString(geno), currPosterior)
 		if currPosterior > maxPosterior {
 			maxPosterior = currPosterior
-			maxDiploid = maxDiploid[:1] //clear ties
+			maxDiploid = maxDiploid[:1] // clear ties
 			maxDiploid[0] = geno
 		} else if currPosterior == maxPosterior {
 			maxDiploid = append(maxDiploid, geno)
 		}
 	}
 
-	return maxDiploid[numbers.RandIntInRange(0, len(maxDiploid))] //if two genotypes have the same posterior density, pick one at random.
+	return maxDiploid[numbers.RandIntInRange(0, len(maxDiploid))] // if two genotypes have the same posterior density, pick one at random.
 }
 
 // baseLikelihood is a helper function of DiploidBaseCallFromPile. For a given genotype (geno), and given counts for the
@@ -150,7 +176,7 @@ func baseLikelihood(aCount int, cCount int, gCount int, tCount int, geno Diploid
 	case TT:
 		return homozygousLikelihoodExpression(tCount, aCount+cCount+gCount, epsilon, homozygousCache)
 	}
-	log.Fatalf("Genotype unknown. Found: %v.\n", geno)
+	log.Fatalf("Error: Genotype unknown. Found: %v.\n", geno)
 	return 0
 }
 
@@ -159,7 +185,7 @@ func baseLikelihood(aCount int, cCount int, gCount int, tCount int, geno Diploid
 // counts from the other three bases.  Epsilon represents the misclassification rate.
 // homozygousCache is a [][]float64 that stores the output values for correctCount/incorrectCount pairs already observed.
 func homozygousLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, homozygousCache [][]float64) float64 {
-	if correctCount < len(homozygousCache) && incorrectCount < len(homozygousCache[correctCount]) { //if the coverage is within the cache bounds
+	if correctCount < len(homozygousCache) && incorrectCount < len(homozygousCache[correctCount]) { // if the coverage is within the cache bounds
 		if homozygousCache[correctCount][incorrectCount] != 0 { //if this pile has been seen in the cache already
 			return homozygousCache[correctCount][incorrectCount]
 		} else {
@@ -180,11 +206,11 @@ func homozygousLikelihoodExpression(correctCount int, incorrectCount int, epsilo
 // IncorrectCount is the count for the other two bases. Epsilon represents the misclassification rate.
 // heterozygousCache is a [][]float64 that stores the output values for correctCount/incorrectCount pairs already observed.
 func heterozygousLikelihoodExpression(correctCount int, incorrectCount int, epsilon float64, heterozygousCache [][]float64) float64 {
-	if correctCount < len(heterozygousCache) && incorrectCount < len(heterozygousCache[correctCount]) { //if the coverage is within the cache bounds
+	if correctCount < len(heterozygousCache) && incorrectCount < len(heterozygousCache[correctCount]) { // if the coverage is within the cache bounds
 		if heterozygousCache[correctCount][incorrectCount] != 0 { //if this pile has been seen in the cache already
 			return heterozygousCache[correctCount][incorrectCount]
 		} else {
-			s := logspace.Pow(math.Log(1.0-epsilon), float64(correctCount))
+			s := logspace.Pow(math.Log(0.5-epsilon), float64(correctCount))
 			f := logspace.Pow(math.Log(epsilon/3.0), float64(incorrectCount))
 			heterozygousCache[correctCount][incorrectCount] = logspace.Multiply(s, f)
 			return heterozygousCache[correctCount][incorrectCount]
@@ -196,13 +222,13 @@ func heterozygousLikelihoodExpression(correctCount int, incorrectCount int, epsi
 	}
 }
 
-// makePriorCache is a helper function used in samAssembler before running DiploidBaseCallFromPile.
+// MakeDiploidBasePriorCache is a helper function used in samAssembler before running DiploidBaseCallFromPile.
 // Constructs a matrix ([][]float64) of form answer[refBase][outGenotype], where index of refBase: 0=a, 1=c, 2=g, 3=t.
 // Index of outGenotype follows the indices of the DiploidBase type.
 // Answers are log transformed.
-func makeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
-	Tv := delta / (2.0 + gamma) //the probability of transversions
-	Tr := gamma * Tv            //the probability of transitions
+func MakeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
+	Tv := delta / (2.0 + gamma) // the probability of transversions
+	Tr := gamma * Tv            // the probability of transitions
 	oneMinusDeltaSquared := math.Log(math.Pow(1-delta, 2))
 	tvSquared := math.Log(Tv * Tv)
 	trSquared := math.Log(Tr * Tr)
@@ -215,4 +241,16 @@ func makeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 		{tvSquared, twoOneMinusDeltaTv, twoTvSquared, twoTvTr, oneMinusDeltaSquared, twoOneMinusDeltaTv, twoOneMinusDeltaTr, tvSquared, twoTvTr, trSquared},
 		{trSquared, twoTvTr, twoOneMinusDeltaTr, twoTvTr, tvSquared, twoOneMinusDeltaTv, twoTvSquared, oneMinusDeltaSquared, twoOneMinusDeltaTv, tvSquared},
 		{tvSquared, twoTvTr, twoTvSquared, twoOneMinusDeltaTv, trSquared, twoTvTr, twoOneMinusDeltaTr, twoTvSquared, twoOneMinusDeltaTv, oneMinusDeltaSquared}}
+}
+
+// MakeDiploidBaseFlatPriorCache returns an uninformative prior distribution for genotypes.
+// With 10 genotypes, each genotype has an equal prior probability of 0.1.
+// Answers are log transformed.
+func MakeDiploidBaseFlatPriorCache() [][]float64 {
+	value := math.Log(0.1)
+
+	return [][]float64{{value, value, value, value, value, value, value, value, value, value},
+		{value, value, value, value, value, value, value, value, value, value},
+		{value, value, value, value, value, value, value, value, value, value},
+		{value, value, value, value, value, value, value, value, value, value}}
 }

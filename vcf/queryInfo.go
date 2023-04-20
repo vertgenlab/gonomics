@@ -1,10 +1,11 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // ParseInfo parses the data stored in vcf.Info.

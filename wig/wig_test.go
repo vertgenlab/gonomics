@@ -11,7 +11,7 @@ var readWriteTests = []struct {
 	{"testdata/in_test.wig"},
 }
 
-func TestWriteAndRead(t *testing.T) { //TODO: Write for test to check that a zero wig value is "0" and not "0.000000" because this saves memory and is the goal of how wig was written.
+func TestWriteAndRead(t *testing.T) { // TODO: Write for test to check that a zero wig value is "0" and not "0.000000" because this saves memory and is the goal of how wig was written.
 	var actual []Wig
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"

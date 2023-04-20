@@ -22,7 +22,7 @@ func AllAreEqual(a []GenePred, b []GenePred) (bool, []int) {
 }
 
 // Equal checks if two genePred entires are identical. This will return a bool of whether the whole entries are identical, and a slice of ints that refer to which fields did not match.
-//Ex: if one or more exonStart positions do not match fields will contain a 9.
+// Ex: if one or more exonStart positions do not match fields will contain a 9.
 func Equal(a GenePred, b GenePred) (bool, []int) {
 	var isEqual = true
 	var fields []int

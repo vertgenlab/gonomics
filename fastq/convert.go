@@ -4,13 +4,13 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-//ReverseComplement produces the reverse complement sequence and corresponding Quals for an input Fastq record.
+// ReverseComplement produces the reverse complement sequence and corresponding Quals for an input Fastq record.
 func ReverseComplement(record Fastq) {
 	dna.ReverseComplement(record.Seq)
 	ReverseQualUint8Record(record.Qual)
 }
 
-//ReverseComplementAll reverses each sequence and quality score for an input slice of Fastq records.
+// ReverseComplementAll reverses each sequence and quality score for an input slice of Fastq records.
 func ReverseComplementAll(records []Fastq) {
 	for idx := range records {
 		ReverseComplement(records[idx])

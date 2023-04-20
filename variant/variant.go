@@ -6,7 +6,7 @@ import (
 
 // Substitution describes a single base change.
 // Pos is the 0-base position of the changed base.
-// (e.g. ATG sub 1 T>C -> ACG)
+// (e.g. ATG sub 1 T>C -> ACG).
 type Substitution struct {
 	Chr string
 	Pos int
@@ -16,7 +16,7 @@ type Substitution struct {
 
 // Insertion describes an insertion into a sequence.
 // Pos is the 0-base position of the base after the insertion.
-// (e.g. ATG ins 1 C -> ACTG)
+// (e.g. ATG ins 1 C -> ACTG).
 type Insertion struct {
 	Chr string
 	Pos int

@@ -1,0 +1,27 @@
+run:
+  concurrency: 4
+  issues-exit-code: 1
+
+linters-settings:
+  tenv:
+    # The option `all` will run against whole test files (`_test.go`) regardless of method/function signatures.
+    # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
+    # Default: false
+    all: true
+
+  misspell:
+    locale: US
+
+linters:
+  disable-all: true
+  fast: false
+  enable:
+    - decorder
+    - gci
+    - godot
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - misspell
+    - whitespace
+

@@ -10,7 +10,7 @@ func (ch Chain) GetChrom() string {
 	return ch.TName
 }
 
-// Chains are 0-base, half open
+// Chains are 0-base, half open.
 func (ch Chain) GetChromStart() int {
 	if ch.TStrand {
 		return ch.TStart
@@ -40,7 +40,7 @@ func (ch *Chain) UpdateLift(c string, start int, end int) {
 	}
 }*/
 
-//WriteToFileHandle was added in order to implement the Interval and Lift interfaces.
+// WriteToFileHandle was added in order to implement the Interval and Lift interfaces.
 func (ch Chain) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, ch)
 }

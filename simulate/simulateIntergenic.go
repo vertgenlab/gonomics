@@ -2,17 +2,18 @@ package simulate
 
 import (
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
-	"math"
-	"math/rand"
 )
 
-//RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
+// RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
 func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
 	for i := range answer {

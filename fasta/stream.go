@@ -1,9 +1,10 @@
 package fasta
 
 import (
+	"sync"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"sync"
 )
 
 // ReadToChan is a helper function of GoReadToChan.

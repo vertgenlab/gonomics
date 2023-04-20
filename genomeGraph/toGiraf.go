@@ -2,15 +2,16 @@ package genomeGraph
 
 import (
 	"fmt"
+	"math"
+	"strings"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
-	"math"
-	"strings"
-	"sync"
 )
 
 func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) *giraf.Giraf {
@@ -107,7 +108,6 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 					leastSevereMismatch = scoreMatrix[i][j]
 				}
 			}
-
 		}
 	}
 	var leastSevereMatchMismatchChange int64 = leastSevereMismatch - maxMatch
@@ -123,7 +123,7 @@ func WrapPairGiraf(gg *GenomeGraph, fq fastq.PairedEndBig, seedHash map[uint64][
 	return mappedPair
 }
 
-// setGirafFlags generates the appropriate flags for each giraf in a pair
+// setGirafFlags generates the appropriate flags for each giraf in a pair.
 func setGirafFlags(pair *giraf.GirafPair) {
 	pair.Fwd.Flag = getGirafFlags(&pair.Fwd)
 	pair.Rev.Flag = getGirafFlags(&pair.Rev)

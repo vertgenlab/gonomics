@@ -1,14 +1,15 @@
 package lift
 
 import (
+	"io"
+	"log"
+	"path"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
-	"io"
-	"log"
-	"path"
 )
 
 // Lift is an interface for genomic regions. Unlike interval, Lifts can be edited in place.
@@ -73,7 +74,7 @@ func LiftCoordinatesWithChain(c chain.Chain, i Lift) (string, int, int) {
 	/* The minus one/plus one handles when a region ends
 	with a structural variant and ensures correct placement of the end in the new assembly. */
 	newEnd, _ = chain.TPosToQPos(c, i.GetChromEnd()-1)
-	newEnd++ //correction for the GetChromEnd -1 on the line above
+	newEnd++        //correction for the GetChromEnd -1 on the line above
 	if !c.QStrand { //valid bed formats must have start < end. So this correction is made for intervals lifted to the negative strand.
 		newStart, newEnd = newEnd, newStart
 		newStart += 1 //these lines are corrections for the open/closed interval start and end.
@@ -96,7 +97,7 @@ func MatchOverlapLen(start1 int, end1 int, start2 int, end2 int) int {
 	return numbers.Max(0, numbers.Min(end1, end2)-numbers.Max(start1, start2))
 }
 
-// MatchProportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ)
+// MatchProportion returns the proportion of bases in the target and query that can be lifted for a particular interval as a pair of floats (propT, propQ).
 func MatchProportion(c chain.Chain, i interval.Interval) (float64, float64) {
 	var match, dT, dQ int = 0, 0, 0
 	var currPos int = c.TStart //starting with strand +/+ case for now.
@@ -120,13 +121,13 @@ func MatchProportion(c chain.Chain, i interval.Interval) (float64, float64) {
 	return float64(match) / float64(match+dT), float64(match) / float64(match+dQ)
 }
 
-//StrictBorderCheck returns true if the TPos of both the ChromStart and ChromEnd of an interval fall within the chain Size, not TBases.
+// StrictBorderCheck returns true if the TPos of both the ChromStart and ChromEnd of an interval fall within the chain Size, not TBases.
 func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 	var border bool
 	_, border = chain.TPosToQPos(c, i.GetChromStart())
-	if !border {//only return if false, otherwise we have to check chromEnd.
+	if !border { //only return if false, otherwise we have to check chromEnd.
 		return false
 	}
-	_, border = chain.TPosToQPos(c, i.GetChromEnd() - 1)//interval ranges are open right so we want ChromEnd - 1
+	_, border = chain.TPosToQPos(c, i.GetChromEnd()-1) //interval ranges are open right so we want ChromEnd - 1
 	return border
 }

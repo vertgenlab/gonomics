@@ -6,16 +6,17 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func usage() {
@@ -84,7 +85,7 @@ func startWorker(wg *sync.WaitGroup, writeChan chan<- vcf.Vcf, synced <-chan []s
 	wg.Done()
 }
 
-// startPileup for each input file
+// startPileup for each input file.
 func startPileup(files []string, readFilters []func(s sam.Sam) bool, pileFilters []func(p sam.Pile) bool) (headers []sam.Header, piles []<-chan sam.Pile) {
 	headers = make([]sam.Header, len(files))
 	piles = make([]<-chan sam.Pile, len(files))
@@ -100,7 +101,7 @@ func startPileup(files []string, readFilters []func(s sam.Sam) bool, pileFilters
 	return
 }
 
-// checkHeadersMatch verifies that all input files use the same reference
+// checkHeadersMatch verifies that all input files use the same reference.
 func checkHeadersMatch(headers []sam.Header) error {
 	ref := headers[0].Chroms
 	for i := 1; i < len(headers); i++ {
@@ -116,7 +117,7 @@ func checkHeadersMatch(headers []sam.Header) error {
 	return nil
 }
 
-// makeOutputHeader produces a header for the output vcf file
+// makeOutputHeader produces a header for the output vcf file.
 func makeOutputHeader(filenames []string) vcf.Header {
 	var header vcf.Header
 	sampleNames := make([]string, len(filenames))
@@ -136,15 +137,15 @@ func makeOutputHeader(filenames []string) vcf.Header {
 	return header
 }
 
-// inputFiles is a custom type that gets filled by flag.Parse()
+// inputFiles is a custom type that gets filled by flag.Parse().
 type inputFiles []string
 
-// String to satisfy flag.Value interface
+// String to satisfy flag.Value interface.
 func (i *inputFiles) String() string {
 	return strings.Join(*i, " ")
 }
 
-// Set to satisfy flag.Value interface
+// Set to satisfy flag.Value interface.
 func (i *inputFiles) Set(value string) error {
 	*i = append(*i, value)
 	return nil

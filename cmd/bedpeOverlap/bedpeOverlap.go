@@ -3,17 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
-	"log"
 )
 
+// bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
 func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool) {
-	//bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
 	if bedSelect && overlapBoth {
 		SelectIsBedBoth(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
 	} else if bedSelect {
@@ -23,7 +24,7 @@ func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, 
 	}
 }
 
-// function to calculate what percent of a bedpeHalf overlaps the selectBed
+// overlapPercent calculates the percent of a bedpeHalf overlaps the selectBed.
 func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 	var overlapEntryStart, overlapEntryEnd, halfBedPeStart, halfBedPeEnd, overlapSize int
 	var answer float64
@@ -39,7 +40,7 @@ func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 	return answer
 }
 
-///func overlapPercentBedPeSelect (leftSideA interval.Interval, leftSideB interval.Interval, rightSideA interval.Interval, rightSideB interval.Interval) float64 {
+// func overlapPercentBedPeSelect (leftSideA interval.Interval, leftSideB interval.Interval, rightSideA interval.Interval, rightSideB interval.Interval) float64 {
 //	var rightSideStartA int
 //	var rightSideEndA int
 //	var rightSideStartB int
@@ -75,7 +76,7 @@ func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 //}
 ///
 
-// This function is for the case where the select file is a bed.
+// SelectIsBed checks for the case where the select file is a bed.
 // input bedpe entries are retained if either end overlaps one of the bedSelectFile entries.
 func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string) {
 	var selectIntervals = make([]interval.Interval, 0)
@@ -94,7 +95,8 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 
 	for _, i := range inBedPe {
 		currOverlaps = interval.Query(selectTree, i.A, "any")
-		if len(currOverlaps) > 0 { //if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
+		// if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
+		if len(currOverlaps) > 0 {
 			if overlapThreshold == 0 {
 				bedpe.WriteToFileHandle(out, i)
 			} else {
@@ -106,7 +108,8 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 					}
 				}
 			}
-		} else { //otherwise check the right side (B)
+		} else {
+			// otherwise check the right side (B)
 			currOverlaps = interval.Query(selectTree, i.B, "any")
 			if len(currOverlaps) > 0 {
 				if overlapThreshold == 0 {
@@ -147,7 +150,8 @@ func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold 
 
 	for _, i = range inBedPe {
 		aOverlaps = interval.Query(selectTree, i.A, "any")
-		if len(aOverlaps) > 0 { //if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
+		// if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
+		if len(aOverlaps) > 0 {
 			if overlapThreshold == 0 {
 				bOverlaps = interval.Query(selectTree, i.B, "any")
 				if len(bOverlaps) > 0 {
@@ -173,7 +177,7 @@ func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold 
 	exception.PanicOnErr(err)
 }
 
-// This is the case where the select file is a bedpe. Input bedpe entries will be retained
+// SelectIsBedPe checks the case where the select file is a bedpe. Input bedpe entries will be retained
 // in the output if both ends of the bedpe overlap both ends of a bedpe entry in the select file.
 func SelectIsBedPe(bedpeSelectFile string, bedpeInFile string, contactOutFile string) {
 	var inIntervals = make([]interval.Interval, 0)
@@ -256,12 +260,12 @@ func main() {
 		log.Fatalf("Error: overlap threshold must be between 0 and 1")
 	}
 
-	//should no longer be needed when overlapThresholdBedPe is implimented
-	if *overlapThreshold != 0 && *bedSelect == false {
+	// should no longer be needed when overlapThresholdBedPe is implemented
+	if *overlapThreshold != 0 && !*bedSelect {
 		log.Fatalf("Error: overlapThreshold must be used with bedSelect")
 	}
 
-	if *overlapBoth == true && *bedSelect == false {
+	if *overlapBoth && !*bedSelect {
 		log.Fatalf("Error: overlapBoth must be used with bedSelect")
 	}
 

@@ -81,7 +81,7 @@ var BinomCoefficientTests = []struct {
 	{11, 5, 462},
 }
 
-//answers from WolframAlpha, which can handle large choose inputs
+// answers from WolframAlpha, which can handle large choose inputs.
 var BinomCoefficientLogTests = []struct {
 	n      int
 	k      int

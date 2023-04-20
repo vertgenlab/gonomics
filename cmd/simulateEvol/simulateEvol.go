@@ -5,12 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"math/rand"
 )
 
 type Settings struct {
@@ -71,7 +72,6 @@ func SimulateEvol(s Settings) {
 		leafFastas = simulate.SimulateWithIndels(s.FastaFile, s.BranchLength, s.PropIndel, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName)
 	}
 	fasta.Write(s.LeafOutFile, leafFastas)
-
 }
 
 func usage() {

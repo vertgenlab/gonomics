@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func usage() {
@@ -83,7 +84,6 @@ func main() {
 			ByNames(gvcf, header, samples, writer)
 
 			writer.Close()
-
 		} else if *parentOne == "" || *parentTwo == "" || *f1Genome == "" {
 			log.Fatalf("Error: Must provide exactly 2 parents and 1 F1 sample...\n")
 		} else {

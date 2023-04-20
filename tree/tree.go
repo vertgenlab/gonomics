@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type Tree struct {

@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 func faFindFast(inFile string, outFile string, windowSize int, chromName string, removeN bool, verbose bool) {

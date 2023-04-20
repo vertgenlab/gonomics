@@ -5,6 +5,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/common"
@@ -12,7 +14,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 type Settings struct {
@@ -37,7 +38,7 @@ func bedFormat(s Settings) {
 	out := fileio.EasyCreate(s.OutFile)
 
 	if s.EnsemblToUCSC && s.UCSCToEnsembl {
-		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatable.")
+		log.Fatalf("Both conversions (UCSCToEnsembl and EnsemblToUCSC) are incompatible.")
 	}
 	if s.ChromSizeFile == "" && (s.EvenPadLength > 0 || s.UpstreamPadLength > 0 || s.DownstreamPadLength > 0) {
 		log.Fatalf("Must specify a chromFile to use a padLength option.")

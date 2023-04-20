@@ -1,9 +1,10 @@
 package giraf
 
 import (
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"strings"
 )
 
 func isEqual(a *Giraf, b *Giraf) bool {
@@ -34,8 +35,8 @@ func isEqual(a *Giraf, b *Giraf) bool {
 	if dna.CompareSeqsIgnoreCase(a.Seq, b.Seq) != 0 {
 		return false
 	}
-	//TODO: write a check for qual
-	//if a.Qual != b.Qual
+	// TODO: write a check for qual
+	// if a.Qual != b.Qual
 	if strings.Compare(NotesToString(a.Notes), NotesToString(b.Notes)) != 0 {
 		return false
 	}

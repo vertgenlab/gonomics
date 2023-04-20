@@ -1,15 +1,15 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math/rand"
-	//DEBUG: "fmt"
+
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
-//SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
-//the second returns true if the site is divergent.
+// SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
+// the second returns true if the site is divergent.
 func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) (*SegSite, bool) {
 	var fatalCount int = 1000000
 	var maxIteration int = 10000000
@@ -45,8 +45,8 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 	return &SegSite{0, 0, Uncorrected}, false
 }
 
-//SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
-//Second return is true if the current genotype is a divergent base.
+// SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
+// Second return is true if the current genotype is a divergent base.
 func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) ([]vcf.Sample, bool) {
 	var answer []vcf.Sample = make([]vcf.Sample, 0)
 	var s *SegSite
@@ -69,8 +69,8 @@ func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float6
 	return answer, divergent
 }
 
-//SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i values set to 1 and n-i values set to 0.
-//The array is then shuffled and returned.
+// SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i values set to 1 and n-i values set to 0.
+// The array is then shuffled and returned.
 func SegSiteToAlleleArray(s *SegSite) []int16 {
 	var answer []int16 = make([]int16, s.N)
 	for j := 0; j < s.I; j++ {
@@ -80,8 +80,8 @@ func SegSiteToAlleleArray(s *SegSite) []int16 {
 	return answer
 }
 
-//StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity
-//distribution with selection parameter alpha.
+// StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity
+// distribution with selection parameter alpha.
 func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64) []float64 {
 	f := AfsStationarityClosure(alpha)
 	return numbers.FastRejectionSampler(xLeft, xRight, f, bins, maxSampleDepth, samples)

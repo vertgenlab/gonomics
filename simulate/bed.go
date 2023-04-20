@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-//GoSimulateBed takes a searchSpace (represented by a noGap.bed input file, here as a parsed struct) and generates a
-//number of regions (regionCount) of a specified length (regionLength) and sends the simulated regions to an output chan.
+// GoSimulateBed takes a searchSpace (represented by a noGap.bed input file, here as a parsed struct) and generates a
+// number of regions (regionCount) of a specified length (regionLength) and sends the simulated regions to an output chan.
 func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
 	var Length, tmp, chromWindows int
 	var totalWindows int

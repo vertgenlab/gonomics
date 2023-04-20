@@ -1,10 +1,11 @@
 package sam
 
 import (
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"math"
 )
 
 // HaploidCall is a struct to represent the data of a haploid genotype called
@@ -129,10 +130,10 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, haploidBaseP
 	return answer
 }
 
-// makeHaploidBasePriorCAche is a helper function used in samAssembler before running HaploidCallFromPile.
+// MakeHaploidBasePriorCache is a helper function used in samAssembler before running HaploidCallFromPile.
 // Constructs a matrix ([][]float64) of form answer[refBase][outputBase], where the index of both bases 0=a, 1=c, 2=g, 3=t.
 // Values are log transformed.
-func makeHaploidBasePriorCache(delta float64, gamma float64) [][]float64 {
+func MakeHaploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 	Tv := math.Log(delta / (2.0 + gamma))         //the probability of transversions
 	Tr := math.Log(gamma * delta / (2.0 + gamma)) //the probability of transitions
 	oneMinusDelta := math.Log(1.0 - delta)
@@ -144,8 +145,8 @@ func makeHaploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 		{Tv, Tr, Tv, oneMinusDelta}}
 }
 
-// makeHaploidIndelPriorCache is a helper function used in before calling HaploidCallFromPile.
-// Stores two values: answer[0] = p(Base), answer[1] = p(Indel)
-func makeHaploidIndelPriorCache(delta float64, kappa float64) []float64 {
+// MakeHaploidIndelPriorCache is a helper function used in before calling HaploidCallFromPile.
+// Stores two values: answer[0] = p(Base), answer[1] = p(Indel).
+func MakeHaploidIndelPriorCache(delta float64, kappa float64) []float64 {
 	return []float64{math.Log(1.0 - delta*kappa), math.Log(delta * kappa)}
 }

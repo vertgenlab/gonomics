@@ -1,11 +1,12 @@
 package fastq
 
 import (
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
 )
 
 type FastqBig struct {
@@ -51,18 +52,18 @@ func ReadFqBig(reader *fileio.ByteReader) (FastqBig, bool) {
 	if done {
 		return FastqBig{}, true
 	}
-	answer.Name = strings.Split(string(line.String()[1:]), " ")[0]
+	answer.Name = strings.Split(line.String()[1:], " ")[0]
 	line, done = fileio.ReadLine(reader)
 	if done {
 		return FastqBig{}, true
 	}
-	//set up sequence and reverse comp
+	// set up sequence and reverse comp
 	answer.Seq = dna.ByteSliceToDnaBases(line.Bytes())
 	answer.SeqRc = make([]dna.Base, len(answer.Seq))
 	copy(answer.SeqRc, answer.Seq)
 	dna.ReverseComplement(answer.SeqRc)
 
-	//performs two bit conversion
+	// performs two bit conversion
 	answer.Rainbow = dnaTwoBit.TwoBitRainbowDeReference(answer.Seq)
 	answer.RainbowRc = dnaTwoBit.TwoBitRainbowDeReference(answer.SeqRc)
 

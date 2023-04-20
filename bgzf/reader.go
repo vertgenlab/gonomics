@@ -99,13 +99,13 @@ func NewBlock() *Block {
 // offset (the number of bytes before the beginning of the desired block
 // starting from the beginning of the file), and and the uncompressed
 // offset (the number of bytes from the desired record starting from the
-// beginning of the uncompressed block)
+// beginning of the uncompressed block).
 type Offset struct {
 	Compressed   int64  // offset in compressed file
 	Uncompressed uint16 // offset in uncompressed block
 }
 
-// NewBlockReader opens a new BGZF reader for the input file
+// NewBlockReader opens a new BGZF reader for the input file.
 func NewBlockReader(filename string) *BlockReader {
 	var r BlockReader
 	var err error
@@ -124,7 +124,7 @@ func NewBlockReader(filename string) *BlockReader {
 	return &r
 }
 
-// NewReader opens a new BGZF reader that reads bytes instead of blocks
+// NewReader opens a new BGZF reader that reads bytes instead of blocks.
 func NewReader(filename string) *Reader {
 	var r Reader
 	r.br = NewBlockReader(filename)

@@ -4,15 +4,14 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	//DEBUG: "fmt"
 )
 
-//Sample InverseNormal returns a simulated value from a normal distribution.
+// Sample InverseNormal returns a simulated value from a normal distribution.
 func SampleInverseNormal(mu float64, sigma float64) float64 {
 	return rand.NormFloat64()*sigma + mu
 }
 
-//InitializeFastRejectionSampler takes in the parameters of a rejection sampler and returns the binHeights and sumHeights variables.
+// InitializeFastRejectionSampler takes in the parameters of a rejection sampler and returns the binHeights and sumHeights variables.
 func InitializeFastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int) ([]float64, float64) {
 	if xLeft >= xRight {
 		log.Fatalf("Error in FastRejectionSample: xRight must be greater than xLeft.")
@@ -43,9 +42,9 @@ func InitializeFastRejectionSampler(xLeft float64, xRight float64, f func(float6
 	return binHeights, sumHeights
 }
 
-//FastRejectionSampler returns simulated values from an a func(float64) float64 between a left and right value using an optimized rejection sampler
-//that divides the function support into discrete bins with optimized sampling heights.
-//maxSampleDepth triggers the log.Fatalf in the RejectionSample func, and samples is the number of values to be returned.
+// FastRejectionSampler returns simulated values from an a func(float64) float64 between a left and right value using an optimized rejection sampler
+// that divides the function support into discrete bins with optimized sampling heights.
+// maxSampleDepth triggers the log.Fatalf in the RejectionSample func, and samples is the number of values to be returned.
 func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int, maxSampleDepth int, samples int) []float64 {
 	var answer []float64 = make([]float64, samples)
 	var stepSize float64 = (xRight - xLeft) / float64(bins)
@@ -56,7 +55,7 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 	return answer
 }
 
-//RejectionSampleChooseBin is a helper function of FAstRejectionSampler.
+// RejectionSampleChooseBin is a helper function of FAstRejectionSampler.
 func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64) float64 {
 	var x, y float64
 	var currBin int
@@ -75,7 +74,7 @@ func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f
 	return -1.0
 }
 
-//chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
+// chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
 func chooseBin(sumHeights float64, binHeights []float64) int {
 	var rand float64 = rand.Float64()
 	var cumulative float64 = 0.0
@@ -89,7 +88,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 	return -1
 }
 
-//RejectionSample returns simulated values from an arbitrary function between a specified left and right bound using a simple rejection sampling method.
+// RejectionSample returns simulated values from an arbitrary function between a specified left and right bound using a simple rejection sampling method.
 func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
@@ -103,7 +102,7 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 	return -1.0
 }
 
-//BoundedRejectionSample returns a rejection sample of a function f using a bounding function boundingSampler between a specified left and right bound.
+// BoundedRejectionSample returns a rejection sample of a function f using a bounding function boundingSampler between a specified left and right bound.
 func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64, float64) {
 	var xSampler, ySampler, y float64
 	for i := 0; i < maxIteration; i++ {
@@ -120,8 +119,8 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 	return -1.0, -1.0
 }
 
-//RandExp Returns a random variable as a float64 from a standard exponential distribution. f(x)=e**-x.
-//Algorithm from Ahrens, J.H. and Dieter, U. (1972). Computer methods for sampling from the exponential and normal distributions. Comm. ACM, 15, 873-882.
+// RandExp Returns a random variable as a float64 from a standard exponential distribution. f(x)=e**-x.
+// Algorithm from Ahrens, J.H. and Dieter, U. (1972). Computer methods for sampling from the exponential and normal distributions. Comm. ACM, 15, 873-882.
 func RandExp() (float64, float64) {
 	//q series where q[k-1] = sum(log(2)^k / k!) for k=1,2,...n
 	q := [16]float64{0.6931471805599453, 0.9333736875190459, 0.9888777961838675, 0.9984959252914960, 0.9998292811061389, 0.9999833164100727, 0.9999985691438767, 0.9999998906925558, 0.9999999924734159, 0.9999999995283275, 0.9999999999728814, 0.9999999999985598, 0.9999999999999289, 0.9999999999999968, 0.9999999999999999, 1.0000000000000000}
@@ -158,7 +157,7 @@ func RandExp() (float64, float64) {
 	return a + umin*q[0], ExpDist(a + umin*q[0])
 }
 
-//ScaledBetaSampler returns an instatiation of RandBeta where the returned density has been scaled by the input variable 'multiplier'.
+// ScaledBetaSampler returns an instatiation of RandBeta where the returned density has been scaled by the input variable 'multiplier'.
 func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		answer := RandBeta(a, b)
@@ -166,7 +165,7 @@ func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64
 	}
 }
 
-//BetaSampler returns an instantiation of RandBeta for a specified a and b parameter.
+// BetaSampler returns an instantiation of RandBeta for a specified a and b parameter.
 func BetaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		answer := RandBeta(a, b)
@@ -174,9 +173,9 @@ func BetaSampler(a float64, b float64) func() (float64, float64) {
 	}
 }
 
-//RandGamma returns a random x,y point drawn from a gamma distribution with parameters alpha and beta. y corresponds to the function density at that x value.
-//a > 1 uses the method from Marsaglia and Tsang 2000. Written for k, theta parameters, so the first step converts b to 1 / b to evaluate gamma in terms of alpha and beta parameters.
-//a < 1 uses the method from Ahrens, J.H. and Dieter, U. (1974). Computer methods for sampling from gamma, beta, poisson and binomial distributions. Computing, 12, 223-246.
+// RandGamma returns a random x,y point drawn from a gamma distribution with parameters alpha and beta. y corresponds to the function density at that x value.
+// a > 1 uses the method from Marsaglia and Tsang 2000. Written for k, theta parameters, so the first step converts b to 1 / b to evaluate gamma in terms of alpha and beta parameters.
+// a < 1 uses the method from Ahrens, J.H. and Dieter, U. (1974). Computer methods for sampling from gamma, beta, poisson and binomial distributions. Computing, 12, 223-246.
 func RandGamma(a float64, b float64) (float64, float64) {
 	if a < 0 || b < 0 {
 		log.Fatalf("Error: The gamma distribution is defined with alpha and beta parameters greater than zero.")
@@ -229,7 +228,7 @@ func RandGamma(a float64, b float64) (float64, float64) {
 	return b * d * v, GammaDist(a, b, b*d*v)
 }
 
-//GammaSampler returns an instantiation of RandGamma for specified a and b parameters.
+// GammaSampler returns an instantiation of RandGamma for specified a and b parameters.
 func GammaSampler(a float64, b float64) func() (float64, float64) {
 	return func() (float64, float64) {
 		return RandGamma(a, b)
