@@ -1,15 +1,14 @@
 package simulate
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
-	"math/rand"
-	"os"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
+	"math/rand"
+	"os"
+	"testing"
 )
 
 func TestSam(t *testing.T) {
