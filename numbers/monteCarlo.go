@@ -6,7 +6,7 @@ import (
 	"math/rand"
 )
 
-// Sample InverseNormal returns a simulated value from a normal distribution.
+// SampleInverseNormal returns a simulated value from a normal distribution.
 func SampleInverseNormal(mu float64, sigma float64) float64 {
 	return rand.NormFloat64()*sigma + mu
 }
@@ -79,7 +79,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 	var rand float64 = rand.Float64()
 	var cumulative float64 = 0.0
 	for i := 0; i < len(binHeights); i++ {
-		cumulative += (binHeights[i] / sumHeights)
+		cumulative += binHeights[i] / sumHeights
 		if cumulative > rand {
 			return i
 		}

@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"github.com/vertgenlab/gonomics/numbers"
 	"math/rand"
 	"os"
 	"testing"
@@ -19,7 +20,7 @@ func TestSam(t *testing.T) {
 	var bw *sam.BamWriter
 	header := sam.GenerateHeader(fasta.ToChromInfo(ref), nil, sam.Unsorted, sam.None)
 	sam.WriteHeaderToFileHandle(out, header)
-	IlluminaPairedSam(ref[0].Name, ref[0].Seq, 100, 150, 50, 50, 0, out, bw, false)
+	IlluminaPairedSam(ref[0].Name, ref[0].Seq, 100, 150, 50, 50, 0, numbers.BinomialAlias{}, out, bw, false)
 	err = out.Close()
 	exception.PanicOnErr(err)
 	if !fileio.AreEqual("testdata/actual.sam", "testdata/expected.sam") {

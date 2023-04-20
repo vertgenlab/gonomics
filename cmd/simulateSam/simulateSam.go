@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
 	"sort"
@@ -45,9 +46,11 @@ func simulateSam(s Settings) {
 		bamOutput = false
 	}
 
+	binomialAlias := numbers.MakeBinomialAlias(s.ReadLength, s.FlatError)
+
 	var readsPerContig = getReadsPerContig(ref, s.NumReads, s.Coverage, s.ReadLength)
 	for i := range ref {
-		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, s.FlatError, out, bw, bamOutput)
+		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, s.FlatError, binomialAlias, out, bw, bamOutput)
 	}
 
 	var err error

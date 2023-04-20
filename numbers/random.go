@@ -5,11 +5,13 @@ import (
 )
 
 // RandIntInRange returns a pseudorandom value of type int between x and y.
+// Output includes x, but not y.
 func RandIntInRange(x int, y int) int {
 	return int(rand.Float64()*float64(y-x)) + x
 }
 
 // RandInt64InRange returns a pseudorandom value of type int64 between x and y.
+// Output includes x, but not y.
 func RandInt64InRange(x int64, y int64) int64 {
 	return int64(rand.Float64()*float64(y-x)) + x
 }

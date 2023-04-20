@@ -13,7 +13,7 @@ import (
 )
 
 // IlluminaPairedSam generates a pair of sam reads randomly distributed across the input ref.
-func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
+func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, binomialAlias numbers.BinomialAlias, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
 	var fragmentSize, midpoint, startFor, startRev, endFor, endRev int
 	var currFor, currRev sam.Sam
 	for i := 0; i < numPairs; i++ {
@@ -24,8 +24,8 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 		endRev = midpoint + (fragmentSize / 2)
 		startRev = endRev - readLen
 
-		currFor = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor, flatErrorRate)
-		currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev, flatErrorRate)
+		currFor = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor, flatErrorRate, binomialAlias)
+		currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev, flatErrorRate, binomialAlias)
 		if currFor.Cigar == nil && currRev.Cigar == nil {
 			i -= 1 // retry
 			continue
@@ -53,9 +53,8 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 
 // generateSamReadNoFlag generates a sam record for the input position.
 // Soft clips sequence that is off template and does not generate Flag, RNext, or PNext.
-func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, flatErrorRate float64) sam.Sam {
+func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, flatErrorRate float64, alias numbers.BinomialAlias) sam.Sam {
 	var currSam sam.Sam
-	var currRand float64
 	currSam.QName = readName
 	currSam.Seq = make([]dna.Base, end-start)
 	// generate qual
@@ -87,14 +86,22 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 	}
 	copy(currSam.Seq[realSeqStartIdx-start:len(currSam.Seq)-(end-realSeqEndIdx)], ref[realSeqStartIdx:realSeqEndIdx])
 
+	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		for currBase := range currSam.Seq {
-			currRand = rand.Float64()
-			if currRand < flatErrorRate {
-				currSam.Seq[currBase] = changeBase(currSam.Seq[currBase])
+		mutatedPositions := make(map[int]int)        // store positions we've mutated so we can sample without replacement
+		numFlatErrors := numbers.RandBinomial(alias) // sample a binomial distribution to get the number of sequencing errors
+		var foundInMap bool
+		var currRandInt int
+		var currError int = 0
+
+		for currError < numFlatErrors {
+			currRandInt = numbers.RandIntInRange(0, end-start) // sample a base on the read
+			if _, foundInMap = mutatedPositions[currRandInt]; !foundInMap {
+				mutatedPositions[currRandInt] = 1
+				currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt])
+				currError++
 			}
 		}
-
 	}
 
 	// generate other values
