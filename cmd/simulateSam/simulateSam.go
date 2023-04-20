@@ -5,17 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"math/rand"
 	"sort"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/simulate"
 )
 
 type Settings struct {
