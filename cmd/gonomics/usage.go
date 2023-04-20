@@ -113,7 +113,7 @@ func buildCmdCache(altSrcPath string) {
 	groupMap := make(map[string][]CmdInfo) // key: group, value: all cmds in group
 
 	for _, cmdName := range cmds {
-		if cmdName == "gonomics" { // avoid recursive call of the gonomics cmd
+		if cmdName == "gonomics" || cmdName == ".DS_Store" { // avoid recursive call of the gonomics cmd or .DS_Store file
 			continue
 		}
 
