@@ -22,7 +22,7 @@ jobs:
       - name: Setup lint
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
       - name: Lint and automate clean up
-        run: make clean && go install ./... && go test ./...
+        run: make clean && go test ./... && go install ./...
       - name: Check and push changes
         run: |
           export NAME=$(git log -n 1 --pretty=format:%an)
