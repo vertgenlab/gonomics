@@ -29,7 +29,7 @@ func TestGonomics(t *testing.T) {
 	case gopath != "" && tryPathFile(gopath):
 	case godefault != "" && tryPathFile(godefault):
 	default:
-		return // exit test if binary not found
+		t.SkipNow()
 	}
 	buildCmdCache("") // tests everything is formatted correctly and updates cache file
 }
