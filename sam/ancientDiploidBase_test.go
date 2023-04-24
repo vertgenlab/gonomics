@@ -5,6 +5,49 @@ import (
 	"testing"
 )
 
+var AncientBaseLikelihoodTests = []struct {
+	aCount         int
+	cCount         int
+	gCount         int
+	tCount         int
+	epsilon        float64
+	lambda         float64
+	ExpectedValues []float64
+}{
+	{
+		aCount:         13,
+		cCount:         5,
+		gCount:         0,
+		tCount:         2,
+		epsilon:        0.01,
+		lambda:         0.05,
+		ExpectedValues: []float64{-40.057131688688926, -19.982716603424052, -48.38592136338132, -39.01645490394213, -80.3209366939539, -57.213158455263496, -79.20803888774715, -78.03199610400686, -76.24689675578159, -102.68818521551862},
+	},
+}
+
+func TestAncientBaseLikelihood(t *testing.T) {
+	var actual float64
+	var cache = make([]float64, 0)
+	var ancientCache = AncientLikelihoodCache{
+		EpsilonOverThree:                                 cache,
+		OneMinusEpsilon:                                  cache,
+		OneMinusEpsilonMinusLambda:                       cache,
+		EpsilonOverThreePlusLambda:                       cache,
+		PointFiveMinusEpsilonOverThree:                   cache,
+		EpsilonOverThreePlusLambdaOverTwo:                cache,
+		PointFiveMinusEpsilonOverThreePlusLambdaOverTwo:  cache,
+		PointFiveMinusEpsilonOverThreeMinusLambdaOverTwo: cache,
+	}
+	for _, v := range AncientBaseLikelihoodTests {
+		for geno := 0; geno < 10; geno++ {
+			actual = ancientBaseLikelihood(v.aCount, v.cCount, v.gCount, v.tCount, DiploidBase(geno), v.epsilon, v.lambda, ancientCache)
+			if math.Abs(actual-v.ExpectedValues[geno])/v.ExpectedValues[geno] > 1e-6 {
+				t.Errorf("Error: ancientBaseLikelihood. Expected: %v. Found: %v.\n", v.ExpectedValues[geno], actual)
+			}
+		}
+	}
+}
+
 var AncientLikelihoodExpressionTests = []struct {
 	Count                                                    int
 	Epsilon                                                  float64

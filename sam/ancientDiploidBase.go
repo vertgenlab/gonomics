@@ -37,7 +37,7 @@ func ancientBaseLikelihood(aCount int, cCount int, gCount int, tCount int, geno 
 		fourthTerm = epsilonOverThreePlusLambdaOverTwoLikelihoodExpression(tCount, epsilon, lambda, cache)
 	case AG:
 		firstTerm = pointFiveMinusEpsilonOverThreePlusLambdaOverTwoLikelihoodExpression(aCount, epsilon, lambda, cache)
-		secondTerm = epsilonOverThreeLikelihoodExpression(cCount+gCount, epsilon, cache)
+		secondTerm = epsilonOverThreeLikelihoodExpression(cCount+tCount, epsilon, cache)
 		thirdTerm = pointFiveMinusEpsilonOverThreeMinusLambdaOverTwoLikelihoodExpression(gCount, epsilon, lambda, cache)
 	case AT:
 		firstTerm = pointFiveMinusEpsilonOverThreeLikelihoodExpression(aCount+tCount, epsilon, cache)
