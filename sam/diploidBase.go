@@ -25,6 +25,7 @@ const (
 	NN DiploidBase = 10
 )
 
+// DiploidBaseToBases converts a DiploidBase type into a slice of two dna.Bases.
 func DiploidBaseToBases(base DiploidBase) []dna.Base {
 	switch base {
 	case AA:

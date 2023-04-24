@@ -19,7 +19,11 @@ type AncientLikelihoodCache struct {
 	PointFiveMinusEpsilonOverThreeMinusLambdaOverTwo []float64 // 0.5 - \frac{\epsilon}{3} - \frac{\lambda}{2}
 }
 
-// ancientBaseLikelihood returns the likelihood
+// ancientBaseLikelihood is a helper function of DiploidBaseCallFromPile. For a given genotype (geno), and counts
+// for the four bases, a PCR/sequencing error rate epsilon, and a cytosine deamination rate lambda, this function
+// calculates the genotype likelihood.
+// Individual terms of the likelihood expression are calculated using an AncientLikelihoodCache struct to save on
+// repeated logspace.Pow calls.
 func ancientBaseLikelihood(aCount int, cCount int, gCount int, tCount int, geno DiploidBase, epsilon float64, lambda float64, cache AncientLikelihoodCache) float64 {
 	var firstTerm, secondTerm, thirdTerm, fourthTerm float64 = 0, 0, 0, 0 //default to 1 in logspace
 	switch geno {
@@ -68,6 +72,9 @@ func ancientBaseLikelihood(aCount int, cCount int, gCount int, tCount int, geno 
 	return logspace.Multiply(firstTerm, logspace.Multiply(secondTerm, logspace.Multiply(thirdTerm, fourthTerm)))
 }
 
+// epsilonOverThreeLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (epsilon/3.0)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func epsilonOverThreeLikelihoodExpression(count int, epsilon float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.EpsilonOverThree) { // if the coverage is within the cache bounds
 		if cache.EpsilonOverThree[count] != 0 {
@@ -81,6 +88,9 @@ func epsilonOverThreeLikelihoodExpression(count int, epsilon float64, cache Anci
 	}
 }
 
+// oneMinusEpsilonLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (1-epsilon)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func oneMinusEpsilonLikelihoodExpression(count int, epsilon float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.OneMinusEpsilon) { // if the coverage is within the cache bounds
 		if cache.OneMinusEpsilon[count] != 0 {
@@ -94,6 +104,9 @@ func oneMinusEpsilonLikelihoodExpression(count int, epsilon float64, cache Ancie
 	}
 }
 
+// oneMinusEpsilonMinusLambdaLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (1-epsilon-lambda)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func oneMinusEpsilonMinusLambdaLikelihoodExpression(count int, epsilon float64, lambda float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.OneMinusEpsilonMinusLambda) { // if the coverage is within the cache bounds
 		if cache.OneMinusEpsilonMinusLambda[count] != 0 {
@@ -107,6 +120,9 @@ func oneMinusEpsilonMinusLambdaLikelihoodExpression(count int, epsilon float64, 
 	}
 }
 
+// epsilonOverThreePlusLambdaLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (epsilon/3 + lambda)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func epsilonOverThreePlusLambdaLikelihoodExpression(count int, epsilon float64, lambda float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.EpsilonOverThreePlusLambda) { // if the coverage is within the cache bounds
 		if cache.EpsilonOverThreePlusLambda[count] != 0 {
@@ -120,6 +136,9 @@ func epsilonOverThreePlusLambdaLikelihoodExpression(count int, epsilon float64, 
 	}
 }
 
+// pointFiveMinusEpsilonOverThreeLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (0.5 - epsilon/3.0)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func pointFiveMinusEpsilonOverThreeLikelihoodExpression(count int, epsilon float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.PointFiveMinusEpsilonOverThree) { // if the coverage is within the cache bounds
 		if cache.PointFiveMinusEpsilonOverThree[count] != 0 {
@@ -133,6 +152,9 @@ func pointFiveMinusEpsilonOverThreeLikelihoodExpression(count int, epsilon float
 	}
 }
 
+// epsilonOverThreePlusLambdaOverTwoLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (epsilon/3.0 + lambda/2.0)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func epsilonOverThreePlusLambdaOverTwoLikelihoodExpression(count int, epsilon float64, lambda float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.EpsilonOverThreePlusLambdaOverTwo) {
 		if cache.EpsilonOverThreePlusLambdaOverTwo[count] != 0 {
@@ -146,6 +168,9 @@ func epsilonOverThreePlusLambdaOverTwoLikelihoodExpression(count int, epsilon fl
 	}
 }
 
+// pointFiveMinusEpsilonOverThreePlusLambdaOverTwoLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (0.5 - epsilon/3.0 + lambda/2.0)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func pointFiveMinusEpsilonOverThreePlusLambdaOverTwoLikelihoodExpression(count int, epsilon float64, lambda float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.PointFiveMinusEpsilonOverThreePlusLambdaOverTwo) {
 		if cache.PointFiveMinusEpsilonOverThreePlusLambdaOverTwo[count] != 0 {
@@ -159,6 +184,9 @@ func pointFiveMinusEpsilonOverThreePlusLambdaOverTwoLikelihoodExpression(count i
 	}
 }
 
+// pointFiveMinusEpsilonOverThreeMinusLambdaOverTwoLikelihoodExpression is a helper function of ancientBaseLikelihood that calculates the expression
+// (0.5 - epsilon/3.0 - lambda/2.0)^count.
+// Checks the cache to see if this expression has already been calculated. Otherwise, updates the cache.
 func pointFiveMinusEpsilonOverThreeMinusLambdaOverTwoLikelihoodExpression(count int, epsilon float64, lambda float64, cache AncientLikelihoodCache) float64 {
 	if count < len(cache.PointFiveMinusEpsilonOverThreeMinusLambdaOverTwo) {
 		if cache.PointFiveMinusEpsilonOverThreeMinusLambdaOverTwo[count] != 0 {

@@ -20,55 +20,78 @@ var DiploidBaseCallFromPileTests = []struct {
 		Delta:    0.01,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: AC},
 	{P: Pile{CountF: [13]int{4, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //little data, only confident enough to call one mutation
 		RefBase:  dna.G,
 		Delta:    0.01,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: AG},
 	{P: Pile{CountF: [13]int{4, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //changing expected divergence rate changes pile outcome
 		RefBase:  dna.G,
 		Delta:    0.5,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: AT},
 	{P: Pile{CountF: [13]int{4, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //changing expected error rate changes pile outcome.
 		RefBase:  dna.G,
 		Delta:    0.01,
 		Gamma:    3,
 		Epsilon:  0.0001,
+		Lambda:   0,
 		Expected: AT},
 	{P: Pile{CountF: [13]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //test empty pile, returns homozygous reference
 		RefBase:  dna.G,
 		Delta:    0.01,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: GG},
 	{P: Pile{CountF: [13]int{16, 450, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //stress test, huge pile
 		RefBase:  dna.G,
 		Delta:    0.01,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: CC},
 	{P: Pile{CountF: [13]int{16, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //reference N returns NN.
 		RefBase:  dna.N,
 		Delta:    0.01,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: NN},
 	{P: Pile{CountF: [13]int{16, 1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //messy pile, high error rate
 		RefBase:  dna.C,
 		Delta:    0.1,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: AT},
 	{P: Pile{CountF: [13]int{0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //homo transversion
 		RefBase:  dna.T,
 		Delta:    0.1,
 		Gamma:    3,
 		Epsilon:  0.01,
+		Lambda:   0,
 		Expected: CC},
+	{P: Pile{CountF: [13]int{16, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //first lambda test
+		RefBase:  dna.G,
+		Delta:    0.01,
+		Gamma:    3,
+		Epsilon:  0.01,
+		Lambda:   0.05,
+		Expected: AC},
+	{P: Pile{CountF: [13]int{16, 4, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //messy pile, high lambda
+		RefBase:  dna.C,
+		Delta:    0.1,
+		Gamma:    3,
+		Epsilon:  0.01,
+		Lambda:   0.2,
+		Expected: AC},
 }
 
 func TestDiploidBaseCallFromPile(t *testing.T) {
@@ -76,10 +99,21 @@ func TestDiploidBaseCallFromPile(t *testing.T) {
 	var priorCache [][]float64
 	var heterozygousCache = make([][]float64, 0)
 	var homozygousCache = make([][]float64, 0)
+	var cache = make([]float64, 0) // this will serve as an empty cache for all expression tests
+	var ancientCache = AncientLikelihoodCache{
+		EpsilonOverThree:                                 cache,
+		OneMinusEpsilon:                                  cache,
+		OneMinusEpsilonMinusLambda:                       cache,
+		EpsilonOverThreePlusLambda:                       cache,
+		PointFiveMinusEpsilonOverThree:                   cache,
+		EpsilonOverThreePlusLambdaOverTwo:                cache,
+		PointFiveMinusEpsilonOverThreePlusLambdaOverTwo:  cache,
+		PointFiveMinusEpsilonOverThreeMinusLambdaOverTwo: cache,
+	}
 
 	for _, v := range DiploidBaseCallFromPileTests {
 		priorCache = MakeDiploidBasePriorCache(v.Delta, v.Gamma)
-		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, AncientLikelihoodCache{}, v.Epsilon, v.Lambda)
+		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, ancientCache, v.Epsilon, v.Lambda)
 		if actual != v.Expected {
 			t.Errorf("Error in DiploidBaseCallFromPile. Expected: %s. Observed: %s.", DiploidBaseString(v.Expected), DiploidBaseString(actual))
 		}
@@ -111,7 +145,7 @@ var LikelihoodExpressionTests = []struct {
 
 func TestBaseLikelihoodExpressions(t *testing.T) {
 	var actual float64
-	var cache = make([][]float64, 0) //this will always be of dimension 0x0 in testing so we calculate by hand
+	var cache = make([][]float64, 0) //this will always be of dimension 0x0 in testing such that we calculate by hand
 	for _, v := range LikelihoodExpressionTests {
 		actual = homozygousLikelihoodExpression(v.CorrectCount, v.IncorrectCount, v.Epsilon, cache)
 		if actual != v.ExpectedHomo {
