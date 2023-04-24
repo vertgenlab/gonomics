@@ -88,8 +88,8 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 
 	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		mutatedPositions := make(map[int]int)        // store positions we've mutated so we can sample without replacement
 		numFlatErrors := numbers.RandBinomial(alias) // sample a binomial distribution to get the number of sequencing errors
+		mutatedPositions := make(map[int]int, numFlatErrors)        // store positions we've mutated so we can sample without replacement
 		var foundInMap bool
 		var currRandInt int
 		var currError int = 0
