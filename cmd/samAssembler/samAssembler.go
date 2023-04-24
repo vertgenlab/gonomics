@@ -22,10 +22,11 @@ type Settings struct {
 	MultiFaDir          string
 	qNameA              string
 	qNameB              string
-	Delta               float64
-	Gamma               float64
-	Epsilon             float64
-	Kappa               float64
+	Delta               float64 // expected divergence rate
+	Gamma               float64 // expected transition bias
+	Epsilon             float64 // expected PCR/sequencing error rate
+	Kappa               float64 // expected proportion of divergent sites that are INDELs
+	Lambda              float64 // expected rate of cytosine deamination
 	LikelihoodCacheSize int
 	SetSeed             int64
 	Verbose             int
@@ -71,6 +72,8 @@ func samAssembler(s Settings) {
 	var currDiploidBases, currHaploidBases []dna.Base
 	var currHaploidCall sam.HaploidCall
 	var currRand float64
+
+	preCheck(s)
 
 	// initialize caches for likelihood and priors
 	cacheStruct := cacheSetup(s)
@@ -166,7 +169,7 @@ func samAssembler(s Settings) {
 
 		if currPloidy == 2 {
 			// First we handle the base call for the current pile
-			diploidBaseCall = sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], cacheStruct.DiploidBasePriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, s.Epsilon)
+			diploidBaseCall = sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], cacheStruct.DiploidBasePriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.AncientLikelihoodCache, s.Epsilon, s.Lambda)
 			currDiploidBases = sam.DiploidBaseToBases(diploidBaseCall)
 			currRand = rand.Float64()
 			if currRand < 0.5 {
@@ -350,6 +353,25 @@ func clearAnswerBuffer(ans AnswerStruct) AnswerStruct {
 	return ans
 }
 
+// preCheck is a helper function that confirms the settings are within valid ranges.
+func preCheck(s Settings) {
+	if s.Delta < 0 || s.Delta > 1 {
+		log.Fatalf("Error: Delta must be a value between 0 and 1. Found: %v.\n", s.Delta)
+	}
+	if s.Epsilon < 0 || s.Epsilon > 1 {
+		log.Fatalf("Error: Epsilon must be a value between 0 and 1. Found: %v.\n", s.Epsilon)
+	}
+	if s.Kappa < 0 || s.Kappa > 1 {
+		log.Fatalf("Error: Kappa must be a value between 0 and 1. Found: %v.\n", s.Kappa)
+	}
+	if s.Lambda < 0 || s.Lambda > 1 {
+		log.Fatalf("Error: Lambda must be a value between 0 and 1. Found: %v.\n", s.Lambda)
+	}
+	if s.Lambda+s.Epsilon > 1 {
+		log.Fatalf("Error: Lambda + Epsilon must be less than 1. Found: %v.\n", s.Lambda+s.Epsilon)
+	}
+}
+
 func usage() {
 	fmt.Print(
 		"samAssembler - Reference-based diploid assembly of aligned short reads." +
@@ -370,6 +392,7 @@ func main() {
 	var gamma *float64 = flag.Float64("gamma", 3, "Set the expected transition bias.")
 	var epsilon *float64 = flag.Float64("epsilon", 0.01, "Set the expected misclassification error rate.")
 	var kappa *float64 = flag.Float64("kappa", 0.1, "Set the expected proportion of divergent sites that are INDELs.")
+	var lambda *float64 = flag.Float64("lambda", 0, "Set the expected rate of cytosine deamination.")
 	var multiFaDir *string = flag.String("multiFaDir", "", "Output the reference and generated sequences as an aligned multiFa, each file by chrom.")
 	var qNameA *string = flag.String("qNameA", "QueryA", "Set the qName for the first generated chromosome in the optional multiFa output.")
 	var qNameB *string = flag.String("qNameB", "QueryB", "Set the qName for the second generated chromosome in the optional multiFa output.")
@@ -414,6 +437,7 @@ func main() {
 			Gamma:               *gamma,
 			Epsilon:             *epsilon,
 			Kappa:               *kappa,
+			Lambda:              *lambda,
 			LikelihoodCacheSize: *likelihoodCacheSize,
 			SetSeed:             *setSeed,
 			Verbose:             *verbose,

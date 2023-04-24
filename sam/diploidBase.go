@@ -88,7 +88,8 @@ func DiploidBaseString(base DiploidBase) string {
 // are present at the position of an input Pile, preconditioned on the assumption of
 // a diploid base at that position (in other words, not considering INDELs).
 // epsilon represents the error rate, a parameter for the likelihood function.
-func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, homozygousCache [][]float64, heterozygousCache [][]float64, epsilon float64) DiploidBase {
+// lambda represents the rate of cytosine deamination from postmortem hydrolytic degradation.
+func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, homozygousCache [][]float64, heterozygousCache [][]float64, ancientCache AncientLikelihoodCache, epsilon float64, lambda float64) DiploidBase {
 	if refBase == dna.N { // we will force a return of diploid NN whenever an N is found in the reference.
 		return NN
 	}
@@ -121,23 +122,43 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 	switch refBase {
 	case dna.A:
 		maxDiploid = []DiploidBase{AA}
-		maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, AA, epsilon, homozygousCache, heterozygousCache), priorCache[dna.A][AA])
+		if lambda > 0 {
+			maxPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, AA, epsilon, lambda, ancientCache), priorCache[dna.A][AA])
+		} else {
+			maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, AA, epsilon, homozygousCache, heterozygousCache), priorCache[dna.A][AA])
+		}
 	case dna.C:
 		maxDiploid = []DiploidBase{CC}
-		maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, CC, epsilon, homozygousCache, heterozygousCache), priorCache[dna.C][CC])
+		if lambda > 0 {
+			maxPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, CC, epsilon, lambda, ancientCache), priorCache[dna.C][CC])
+		} else {
+			maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, CC, epsilon, homozygousCache, heterozygousCache), priorCache[dna.C][CC])
+		}
 	case dna.G:
 		maxDiploid = []DiploidBase{GG}
-		maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, GG, epsilon, homozygousCache, heterozygousCache), priorCache[dna.G][GG])
+		if lambda > 0 {
+			maxPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, GG, epsilon, lambda, ancientCache), priorCache[dna.G][GG])
+		} else {
+			maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, GG, epsilon, homozygousCache, heterozygousCache), priorCache[dna.G][GG])
+		}
 	case dna.T:
 		maxDiploid = []DiploidBase{TT}
-		maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, homozygousCache, heterozygousCache), priorCache[dna.T][TT])
+		if lambda > 0 {
+			maxPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, lambda, ancientCache), priorCache[dna.T][TT])
+		} else {
+			maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, homozygousCache, heterozygousCache), priorCache[dna.T][TT])
+		}
 	default:
 		log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
 	}
 	var geno DiploidBase
 	var currPosterior float64
 	for geno = 0; geno < 10; geno++ { // for each genotype, encoded as a DiploidBase byte ranging from 0 to 9, inclusive
-		currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, geno, epsilon, homozygousCache, heterozygousCache), priorCache[refBase][geno])
+		if lambda > 0 {
+			currPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, geno, epsilon, lambda, ancientCache), priorCache[refBase][geno])
+		} else {
+			currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, geno, epsilon, homozygousCache, heterozygousCache), priorCache[refBase][geno])
+		}
 		if currPosterior > maxPosterior {
 			maxPosterior = currPosterior
 			maxDiploid = maxDiploid[:1] // clear ties

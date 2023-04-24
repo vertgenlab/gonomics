@@ -12,6 +12,7 @@ var DiploidBaseCallFromPileTests = []struct {
 	Delta    float64
 	Gamma    float64
 	Epsilon  float64
+	Lambda   float64
 	Expected DiploidBase
 }{
 	{P: Pile{CountF: [13]int{16, 14, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, //good coverage heterozygous double mutation
@@ -78,7 +79,7 @@ func TestDiploidBaseCallFromPile(t *testing.T) {
 
 	for _, v := range DiploidBaseCallFromPileTests {
 		priorCache = MakeDiploidBasePriorCache(v.Delta, v.Gamma)
-		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, v.Epsilon)
+		actual = DiploidBaseCallFromPile(v.P, v.RefBase, priorCache, homozygousCache, heterozygousCache, AncientLikelihoodCache{}, v.Epsilon, v.Lambda)
 		if actual != v.Expected {
 			t.Errorf("Error in DiploidBaseCallFromPile. Expected: %s. Observed: %s.", DiploidBaseString(v.Expected), DiploidBaseString(actual))
 		}
