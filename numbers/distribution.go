@@ -28,6 +28,12 @@ func BinomialDist(n int, k int, p float64) (float64, bool) {
 	return 0, true
 }
 
+// GeometricDist returns the density of the geometric for k failures with success probability p.
+// Note that this is the version of the geometric distribution with support from 0 to +INF.
+func GeometricDist(k int, p float64) float64 {
+	return math.Pow(1.0-p, float64(k)) * p
+}
+
 // ExpDist returns the density of the standard exponential distribution y=e^-x.
 func ExpDist(x float64) float64 {
 	return math.Exp(-x)
