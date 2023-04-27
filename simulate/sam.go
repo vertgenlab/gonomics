@@ -2,6 +2,7 @@ package simulate
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 
@@ -13,9 +14,10 @@ import (
 )
 
 // IlluminaPairedSam generates a pair of sam reads randomly distributed across the input ref.
-func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, binomialAlias numbers.BinomialAlias, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
+func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, ancientErrorRate float64, flatBinomialAlias numbers.BinomialAlias, ancientBinomialAlias numbers.BinomialAlias, geometricParam float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool, deaminationDistributionSlice []int) {
 	var fragmentSize, midpoint, startFor, startRev, endFor, endRev int
 	var currFor, currRev sam.Sam
+
 	for i := 0; i < numPairs; i++ {
 		fragmentSize = numbers.Max(readLen, int(numbers.SampleInverseNormal(float64(avgFragmentSize), avgFragmentStdDev)))
 		midpoint = numbers.RandIntInRange(0, len(ref))
@@ -24,8 +26,8 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 		endRev = midpoint + (fragmentSize / 2)
 		startRev = endRev - readLen
 
-		currFor = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor, flatErrorRate, binomialAlias)
-		currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev, flatErrorRate, binomialAlias)
+		currFor, deaminationDistributionSlice = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor, flatErrorRate, ancientErrorRate, flatBinomialAlias, ancientBinomialAlias, geometricParam, true, deaminationDistributionSlice)
+		currRev, deaminationDistributionSlice = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev, flatErrorRate, ancientErrorRate, flatBinomialAlias, ancientBinomialAlias, geometricParam, false, deaminationDistributionSlice)
 		if currFor.Cigar == nil && currRev.Cigar == nil {
 			i -= 1 // retry
 			continue
@@ -53,7 +55,7 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 
 // generateSamReadNoFlag generates a sam record for the input position.
 // Soft clips sequence that is off template and does not generate Flag, RNext, or PNext.
-func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, flatErrorRate float64, alias numbers.BinomialAlias) sam.Sam {
+func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, flatErrorRate float64, ancientErrorRate float64, flatAlias numbers.BinomialAlias, ancientAlias numbers.BinomialAlias, geometricParam float64, forward bool, deaminationDistributionSlice []int) (sam.Sam, []int) {
 	var currSam sam.Sam
 	currSam.QName = readName
 	currSam.Seq = make([]dna.Base, end-start)
@@ -70,7 +72,7 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 		for i := range currSam.Seq {
 			currSam.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4))
 		}
-		return currSam
+		return currSam, deaminationDistributionSlice
 	}
 
 	currSam.MapQ = uint8(numbers.RandIntInRange(30, 40))
@@ -86,10 +88,49 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 	}
 	copy(currSam.Seq[realSeqStartIdx-start:len(currSam.Seq)-(end-realSeqEndIdx)], ref[realSeqStartIdx:realSeqEndIdx])
 
+	// If ancient DNA, we simulate cytosine deamination error
+	if ancientErrorRate > 0 {
+		var currRandPos int
+		var distanceToEnd int
+		var foundInMap bool
+		numAncientErrorAttempts := numbers.RandBinomial(ancientAlias)
+		damagedPositions := make(map[int]int, numAncientErrorAttempts)
+		var currError int = 0
+		for currError < numAncientErrorAttempts {
+			distanceToEnd = numbers.RandGeometric(geometricParam)
+			for distanceToEnd >= (end - start) {
+				distanceToEnd = numbers.RandGeometric(geometricParam)
+			}
+			if !forward {
+				currRandPos = (end - start) - distanceToEnd - 1 // distance from end, instead of distance from start
+			} else {
+				currRandPos = distanceToEnd // distance from start of read
+			}
+			if _, foundInMap = damagedPositions[currRandPos]; !foundInMap {
+				damagedPositions[currRandPos] = 1
+				switch currSam.Seq[currRandPos] {
+				case dna.A:
+					// nothing to do
+				case dna.C:
+					currSam.Seq[currRandPos] = dna.T
+					deaminationDistributionSlice[distanceToEnd]++
+				case dna.G:
+					currSam.Seq[currRandPos] = dna.A
+					deaminationDistributionSlice[distanceToEnd]++
+				case dna.T:
+					// nothing to do
+				default:
+					log.Fatalf("Error: Unrecognized base: %v.\n", currSam.Seq[currRandPos])
+				}
+				currError++
+			}
+		}
+	}
+
 	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		numFlatErrors := numbers.RandBinomial(alias) // sample a binomial distribution to get the number of sequencing errors
-		mutatedPositions := make(map[int]int, numFlatErrors)        // store positions we've mutated so we can sample without replacement
+		numFlatErrors := numbers.RandBinomial(flatAlias)     // sample a binomial distribution to get the number of sequencing errors
+		mutatedPositions := make(map[int]int, numFlatErrors) // store positions we've mutated so we can sample without replacement
 		var foundInMap bool
 		var currRandInt int
 		var currError int = 0
@@ -117,7 +158,7 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 		currSam.Cigar = append(currSam.Cigar, cigar.Cigar{RunLength: end - realSeqEndIdx, Op: 'S'})
 	}
 
-	return currSam
+	return currSam, deaminationDistributionSlice
 }
 
 // addPairedFlags adds the flag for a pair of sam records.

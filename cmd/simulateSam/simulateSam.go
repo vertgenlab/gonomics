@@ -18,15 +18,18 @@ import (
 )
 
 type Settings struct {
-	OutFile        string
-	RefFile        string
-	NumReads       int
-	Coverage       float64
-	ReadLength     int
-	FlatError      float64
-	FragmentLength int
-	FragmentStdDev float64
-	SetSeed        int64
+	OutFile                 string
+	RefFile                 string
+	NumReads                int
+	Coverage                float64
+	ReadLength              int
+	FlatError               float64
+	FragmentLength          int
+	FragmentStdDev          float64
+	AncientErrorRate        float64
+	GeometricParam          float64
+	SetSeed                 int64
+	DeaminationDistribution string
 }
 
 func simulateSam(s Settings) {
@@ -45,14 +48,29 @@ func simulateSam(s Settings) {
 		bamOutput = false
 	}
 
-	binomialAlias := numbers.MakeBinomialAlias(s.ReadLength, s.FlatError)
+	flatBinomialAlias := numbers.MakeBinomialAlias(s.ReadLength, s.FlatError)
+	ancientBinomialAlias := numbers.MakeBinomialAlias(s.ReadLength, s.AncientErrorRate)
+
+	var deaminationDistributionSlice []int = make([]int, s.ReadLength)
 
 	var readsPerContig = getReadsPerContig(ref, s.NumReads, s.Coverage, s.ReadLength)
 	for i := range ref {
-		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, s.FlatError, binomialAlias, out, bw, bamOutput)
+		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, s.FlatError, s.AncientErrorRate, flatBinomialAlias, ancientBinomialAlias, s.GeometricParam, out, bw, bamOutput, deaminationDistributionSlice)
 	}
 
 	var err error
+
+	if s.DeaminationDistribution != "" {
+		deaminationOut := fileio.EasyCreate(s.DeaminationDistribution)
+		_, err = fmt.Fprintf(deaminationOut, "Position\tCount\n")
+		for i := range deaminationDistributionSlice {
+			_, err = fmt.Fprintf(deaminationOut, "%v\t%v\n", i, deaminationDistributionSlice[i])
+			exception.PanicOnErr(err)
+		}
+		err = deaminationOut.Close()
+		exception.PanicOnErr(err)
+	}
+
 	if bamOutput {
 		err = bw.Close()
 		exception.PanicOnErr(err)
@@ -101,12 +119,38 @@ func getReadsPerContig(ref []fasta.Fasta, numReads int, coverage float64, readLe
 func usage() {
 	fmt.Print(
 		"simulateSam - Simulate alignments to a reference sequence\n\n" +
-			"Currently only generates illumina-style paired sequencing data" +
-			"Read Length : 150bp, Average Insert Size: 50bp" +
+			"Currently only generates Illumina-style paired sequencing data" +
 			"Usage:\n" +
-			" simulateSam [options] ref.fasta out.sam/bam\n" +
+			"simulateSam [options] ref.fasta out.sam/bam\n" +
 			"options:\n")
 	flag.PrintDefaults()
+}
+
+func preCheck(s Settings) {
+	if s.Coverage <= 0 {
+		log.Fatalf("Error: coverage must be a value greater than 0. Found: %v.\n", s.Coverage)
+	}
+	if s.NumReads < 1 {
+		log.Fatalf("Error: number of reads must be greater than 0. Found: %v.\n", s.NumReads)
+	}
+	if s.ReadLength < 1 {
+		log.Fatalf("Error: read length must be greater than 0. Found: %v.\n", s.ReadLength)
+	}
+	if s.FragmentLength < 1 {
+		log.Fatalf("Error: fragment length must be greater than 0. Found: %v.\n", s.FragmentLength)
+	}
+	if s.FragmentStdDev <= 0 {
+		log.Fatalf("Error: fragment standard deviation must be greater than 0. Found: %v.\n", s.FragmentStdDev)
+	}
+	if s.FlatError < 0 || s.FlatError > 1 {
+		log.Fatalf("Error: flat error rate must be a value between 0 and 1. Found: %v.\n", s.FlatError)
+	}
+	if s.GeometricParam < 0 || s.GeometricParam > 1 {
+		log.Fatalf("Error: geometric distribution parameter must be a value between 0 and 1. Found: %v.\n", s.GeometricParam)
+	}
+	if s.AncientErrorRate < 0 || s.AncientErrorRate > 1 {
+		log.Fatalf("Error: ancient error rate must be a value between 0 and 1. Found: %v.\n", s.AncientErrorRate)
+	}
 }
 
 func main() {
@@ -118,6 +162,9 @@ func main() {
 	fragmentLength := flag.Int("fragmentLength", 400, "Set the average library fragment size.")
 	fragmentStdDev := flag.Float64("fragmentStdDev", 50, "Set the library fragment size standard deviation.")
 	flatError := flag.Float64("flatErrorRate", 0, "Sets an error rate for bases in synthetic reads. Each base will appear as one of the three other bases in the generated read with this probability.")
+	geometricParam := flag.Float64("geometricParam", 0.25, "For ancient DNA libraries, set the success probability parameter for the geometric distribution defining the spatial distribution of cytosine deamination.")
+	ancientErrorRate := flag.Float64("ancientErrorRate", 0, "Sets the expected rate of cytosine deamination. p(C->T|C or G->A|G).")
+	deaminationDistribution := flag.String("deaminationDistribution", "", "Specify a file in which to print the spatial distribution of cytosine deamination events.")
 	flag.Usage = usage
 	flag.Parse()
 
@@ -131,16 +178,21 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		RefFile:        refFile,
-		OutFile:        outFile,
-		NumReads:       *numReads,
-		Coverage:       *coverage,
-		ReadLength:     *readLength,
-		FlatError:      *flatError,
-		FragmentLength: *fragmentLength,
-		FragmentStdDev: *fragmentStdDev,
-		SetSeed:        *setSeed,
+		RefFile:                 refFile,
+		OutFile:                 outFile,
+		NumReads:                *numReads,
+		Coverage:                *coverage,
+		ReadLength:              *readLength,
+		FlatError:               *flatError,
+		FragmentLength:          *fragmentLength,
+		FragmentStdDev:          *fragmentStdDev,
+		GeometricParam:          *geometricParam,
+		AncientErrorRate:        *ancientErrorRate,
+		SetSeed:                 *setSeed,
+		DeaminationDistribution: *deaminationDistribution,
 	}
+
+	preCheck(s)
 
 	simulateSam(s)
 }
