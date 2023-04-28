@@ -119,7 +119,7 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 	return base
 }
 
-// calls chooseRandomBase and loops until a different base than the original is found.
+// changeBase takes an input base (A,C, G, or T) and replaces it with a one of the three possible substitutions.
 func changeBase(originalBase dna.Base) dna.Base {
 	newBase := chooseRandomBase(GC)
 

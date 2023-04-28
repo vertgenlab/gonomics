@@ -5,10 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math/rand"
 	"sync"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -29,6 +29,7 @@ type Settings struct {
 	MaxSize          int
 	RetainNamesList  string
 	DiscardNamesList string
+	KeepCellsList    string
 	CollapseUmi      bool
 	BarcodeLength    int
 	UmiLength        int
@@ -42,6 +43,7 @@ func fastqFilter(s Settings) {
 	var line string
 	var currSc fastq.SingleCellPair
 	namesMap := make(map[string]bool)
+	cbcMap := make(map[string]bool)
 
 	if s.RetainNamesList != "" && s.DiscardNamesList != "" {
 		log.Fatalf("fastqFilter cannot accept arguments for both a discard names list and retain names list simultaneously. Perform these operations in steps.")
@@ -61,6 +63,14 @@ func fastqFilter(s Settings) {
 			namesMap[line] = true
 		}
 		err = discardNames.Close()
+		exception.PanicOnErr(err)
+	}
+	if s.KeepCellsList != "" {
+		keepCells := fileio.EasyOpen(s.KeepCellsList)
+		for line, doneReading = fileio.EasyNextRealLine(keepCells); !doneReading; line, doneReading = fileio.EasyNextRealLine(keepCells) {
+			cbcMap[line] = true
+		}
+		err = keepCells.Close()
 		exception.PanicOnErr(err)
 	}
 
@@ -109,6 +119,13 @@ func fastqFilter(s Settings) {
 			if s.CollapseUmi {
 				currSc = fastq.PairedEndToSingleCellPair(i, s.BarcodeLength, s.UmiLength)
 				if fastq.UmiCollision(currSc, umiMap) {
+					continue
+				}
+			}
+			if s.KeepCellsList != "" {
+				currSc = fastq.PairedEndToSingleCellPair(i, s.BarcodeLength, s.UmiLength)
+				barcode := dna.BasesToString(currSc.Bx)
+				if _, cbcFound := cbcMap[barcode]; !cbcFound {
 					continue
 				}
 			}
@@ -168,6 +185,7 @@ func main() {
 	var maxSize *int = flag.Int("maxSize", numbers.MaxInt, "Retain fastq reads below this size.")
 	var retainNamesList *string = flag.String("retainNamesList", "", "Specifies a file name for a line-delimited file of read names. Only reads with names matching the names in this file will be retained. For paired end reads, the read will be retained if either the forward or reverse read has a matching read name.")
 	var discardNamesList *string = flag.String("discardNamesList", "", "Specifies a file name for a line-delimited file of read names. All reads with names matching the names in this file will be discarded. For paired end reads, the read will be discarded if either the forward or reverse read has a matching read name.")
+	var keepCellsList *string = flag.String("keepCellsList", "", "Specifies a file name for a line-delimited file of cell barcodes to keep. All reads with a matching cell barcode will be retained. Both R1 and R2 will be retained if the cell barcode matches.\nCell barcodes can be extracted from a Seurat object with the WhichCells() command.")
 	var collapseUmi *bool = flag.Bool("collapseUmi", false, "Removes UMI duplicates from single-cell format reads. R1: barcode and UMI. R2: mRNA sequence.")
 	var barcodeLength *int = flag.Int("barcodeLength", 16, "Sets the length of the barcode for single-cell reads.")
 	var umiLength *int = flag.Int("umiLength", 12, "Sets the UMI length for single-cell reads.")
@@ -186,6 +204,9 @@ func main() {
 
 	if *collapseUmi && !*pairedEnd {
 		log.Fatalf("To collapse UMIs from single-cell reads, select pairedEnd AND collapseUmi.")
+	}
+	if *keepCellsList != "" && !*pairedEnd {
+		log.Fatalf("keepCellsList must be used in paired end mode")
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -208,6 +229,7 @@ func main() {
 		MaxSize:          *maxSize,
 		RetainNamesList:  *retainNamesList,
 		DiscardNamesList: *discardNamesList,
+		KeepCellsList:    *keepCellsList,
 		CollapseUmi:      *collapseUmi,
 		BarcodeLength:    *barcodeLength,
 		UmiLength:        *umiLength,

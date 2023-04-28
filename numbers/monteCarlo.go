@@ -6,7 +6,7 @@ import (
 	"math/rand"
 )
 
-// Sample InverseNormal returns a simulated value from a normal distribution.
+// SampleInverseNormal returns a simulated value from a normal distribution.
 func SampleInverseNormal(mu float64, sigma float64) float64 {
 	return rand.NormFloat64()*sigma + mu
 }
@@ -79,7 +79,7 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 	var rand float64 = rand.Float64()
 	var cumulative float64 = 0.0
 	for i := 0; i < len(binHeights); i++ {
-		cumulative += (binHeights[i] / sumHeights)
+		cumulative += binHeights[i] / sumHeights
 		if cumulative > rand {
 			return i
 		}
@@ -117,44 +117,6 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 	}
 	log.Fatalf("BoundedRejectionSample: Exceeded max iteration.")
 	return -1.0, -1.0
-}
-
-// RandExp Returns a random variable as a float64 from a standard exponential distribution. f(x)=e**-x.
-// Algorithm from Ahrens, J.H. and Dieter, U. (1972). Computer methods for sampling from the exponential and normal distributions. Comm. ACM, 15, 873-882.
-func RandExp() (float64, float64) {
-	//q series where q[k-1] = sum(log(2)^k / k!) for k=1,2,...n
-	q := [16]float64{0.6931471805599453, 0.9333736875190459, 0.9888777961838675, 0.9984959252914960, 0.9998292811061389, 0.9999833164100727, 0.9999985691438767, 0.9999998906925558, 0.9999999924734159, 0.9999999995283275, 0.9999999999728814, 0.9999999999985598, 0.9999999999999289, 0.9999999999999968, 0.9999999999999999, 1.0000000000000000}
-
-	var a float64 = 0.0
-	var r float64 = rand.Float64()
-	for r <= 0.0 || r >= 1.0 { //prevents the case where u is exactly 0 or 1, which breaks the code.
-		r = rand.Float64()
-	}
-
-	for 1 > 0 {
-		r += r
-		if r > 1.0 {
-			break
-		}
-		a += q[0]
-	}
-	r -= 1
-	if r <= q[0] {
-		return a + r, ExpDist(a + r)
-	}
-
-	var i int = 0
-	ustart := rand.Float64()
-	umin := ustart
-
-	for r > q[i] {
-		ustart = rand.Float64()
-		if umin > ustart {
-			umin = ustart
-		}
-		i++
-	}
-	return a + umin*q[0], ExpDist(a + umin*q[0])
 }
 
 // ScaledBetaSampler returns an instatiation of RandBeta where the returned density has been scaled by the input variable 'multiplier'.
