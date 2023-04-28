@@ -12,31 +12,77 @@ import (
 )
 
 var SimulateSamTests = []struct {
-	OutFile      string
-	RefFile      string
-	NumReads     int
-	ReadLength   int
-	InsertLength int
-	InsertStdDev float64
-	SetSeed      int64
-	ExpectedFile string
+	OutFile       string
+	RefFile       string
+	NumReads      int
+	Coverage      float64
+	ReadLength    int
+	FlatErrorRate float64
+	InsertLength  int
+	InsertStdDev  float64
+	SetSeed       int64
+	ExpectedFile  string
 }{
 	{OutFile: "testdata/actual.sam",
-		RefFile:      "testdata/test.fa",
-		NumReads:     100,
-		ReadLength:   150,
-		InsertLength: 500,
-		InsertStdDev: 50,
-		SetSeed:      1,
-		ExpectedFile: "testdata/expected.sam"},
+		RefFile:       "testdata/test.fa",
+		NumReads:      100,
+		Coverage:      0,
+		ReadLength:    150,
+		FlatErrorRate: 0,
+		InsertLength:  500,
+		InsertStdDev:  50,
+		SetSeed:       1,
+		ExpectedFile:  "testdata/expected.sam"},
 	{OutFile: "testdata/actual.bam",
-		RefFile:      "testdata/test.fa",
-		NumReads:     100,
-		ReadLength:   150,
-		InsertLength: 500,
-		InsertStdDev: 50,
-		SetSeed:      1,
-		ExpectedFile: "testdata/expected.bam"},
+		RefFile:       "testdata/test.fa",
+		NumReads:      100,
+		Coverage:      0,
+		ReadLength:    150,
+		FlatErrorRate: 0,
+		InsertLength:  500,
+		InsertStdDev:  50,
+		SetSeed:       1,
+		ExpectedFile:  "testdata/expected.bam"},
+	{OutFile: "testdata/10xCoverage.sam",
+		RefFile:       "testdata/test.fa",
+		NumReads:      100, // this value will be ignored
+		Coverage:      10,
+		ReadLength:    150,
+		FlatErrorRate: 0,
+		InsertLength:  50,
+		InsertStdDev:  10,
+		SetSeed:       1,
+		ExpectedFile:  "testdata/expected.10xCoverage.sam"},
+	{OutFile: "testdata/100xCoverage.sam",
+		RefFile:       "testdata/test.fa",
+		NumReads:      100, // this value will be ignored
+		Coverage:      100,
+		ReadLength:    150,
+		FlatErrorRate: 0,
+		InsertLength:  50,
+		InsertStdDev:  10,
+		SetSeed:       1,
+		ExpectedFile:  "testdata/expected.100xCoverage.sam"},
+	{OutFile: "testdata/errorTest.LowRate.sam",
+		RefFile:       "testdata/errorTest.fa",
+		NumReads:      100, // this value will be ignored
+		Coverage:      10,
+		ReadLength:    50,
+		FlatErrorRate: 0.01,
+		InsertLength:  100,
+		InsertStdDev:  10,
+		SetSeed:       1,
+		ExpectedFile:  "testdata/expected.errorTest.LowRate.sam"},
+	{OutFile: "testdata/errorTest.HighRate.sam",
+		RefFile:       "testdata/errorTest.fa",
+		NumReads:      100, // this value will be ignored
+		Coverage:      10,
+		ReadLength:    50,
+		FlatErrorRate: 0.1,
+		InsertLength:  100,
+		InsertStdDev:  10,
+		SetSeed:       1,
+		ExpectedFile:  "testdata/expected.errorTest.HighRate.sam"},
 }
 
 func TestSimulateSam(t *testing.T) {
@@ -48,7 +94,9 @@ func TestSimulateSam(t *testing.T) {
 			OutFile:        v.OutFile,
 			RefFile:        v.RefFile,
 			NumReads:       v.NumReads,
+			Coverage:       v.Coverage,
 			ReadLength:     v.ReadLength,
+			FlatError:      v.FlatErrorRate,
 			FragmentLength: v.InsertLength,
 			FragmentStdDev: v.InsertStdDev,
 			SetSeed:        v.SetSeed,
