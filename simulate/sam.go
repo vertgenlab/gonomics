@@ -149,6 +149,9 @@ func addPairedFlags(f, r *sam.Sam) {
 	}
 }
 
+// sequencingError takes in a sam.Sam record, start and end positions, and a BinomialAlias to
+// edit bases randomly across the read to simulate PCR/sequencing error. Errors are made with no
+// positional dependence and with a flat error spectrum.
 func sequencingError(currSam sam.Sam, start int, end int, alias numbers.BinomialAlias) sam.Sam {
 	numFlatErrors := numbers.RandBinomial(alias)         // sample a binomial distribution to get the number of sequencing errors
 	mutatedPositions := make(map[int]int, numFlatErrors) // store positions we've mutated so that we can sample without replacement
