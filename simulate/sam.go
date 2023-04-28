@@ -88,20 +88,7 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 
 	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		numFlatErrors := numbers.RandBinomial(alias) // sample a binomial distribution to get the number of sequencing errors
-		mutatedPositions := make(map[int]int, numFlatErrors)        // store positions we've mutated so we can sample without replacement
-		var foundInMap bool
-		var currRandInt int
-		var currError int = 0
-
-		for currError < numFlatErrors {
-			currRandInt = numbers.RandIntInRange(0, end-start) // sample a base on the read
-			if _, foundInMap = mutatedPositions[currRandInt]; !foundInMap {
-				mutatedPositions[currRandInt] = 1
-				currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt])
-				currError++
-			}
-		}
+		currSam = sequencingError(currSam, start, end, alias)
 	}
 
 	// generate other values
@@ -160,4 +147,22 @@ func addPairedFlags(f, r *sam.Sam) {
 			r.Flag += 16
 		}
 	}
+}
+
+func sequencingError(currSam sam.Sam, start int, end int, alias numbers.BinomialAlias) sam.Sam {
+	numFlatErrors := numbers.RandBinomial(alias)         // sample a binomial distribution to get the number of sequencing errors
+	mutatedPositions := make(map[int]int, numFlatErrors) // store positions we've mutated so that we can sample without replacement
+	var foundInMap bool
+	var currRandInt int
+	var currError int = 0
+
+	for currError < numFlatErrors {
+		currRandInt = numbers.RandIntInRange(0, end-start) // sample a base on the read
+		if _, foundInMap = mutatedPositions[currRandInt]; !foundInMap {
+			mutatedPositions[currRandInt] = 1
+			currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt])
+			currError++
+		}
+	}
+	return currSam
 }

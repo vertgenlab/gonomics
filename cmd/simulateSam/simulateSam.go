@@ -101,8 +101,7 @@ func getReadsPerContig(ref []fasta.Fasta, numReads int, coverage float64, readLe
 func usage() {
 	fmt.Print(
 		"simulateSam - Simulate alignments to a reference sequence\n\n" +
-			"Currently only generates illumina-style paired sequencing data" +
-			"Read Length : 150bp, Average Insert Size: 50bp" +
+			"Generates illumina-style paired sequencing data." +
 			"Usage:\n" +
 			" simulateSam [options] ref.fasta out.sam/bam\n" +
 			"options:\n")
@@ -111,11 +110,11 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	numReads := flag.Int("n", 100, "number of read pairs to generate")
+	numReads := flag.Int("n", 0, "number of read pairs to generate")
 	coverage := flag.Float64("coverage", 0, "Set an expected coverage value instead of specifying the number of reads.")
 	setSeed := flag.Int64("setSeed", 1, "set the seed for the simulation")
 	readLength := flag.Int("readLength", 150, "Set the read length for each paired end.")
-	fragmentLength := flag.Int("fragmentLength", 400, "Set the average library fragment size.")
+	fragmentLength := flag.Int("fragmentLength", 400, "Set the average library fragment size. Note that the minimum fragment length will be forced to be equal to readLength.")
 	fragmentStdDev := flag.Float64("fragmentStdDev", 50, "Set the library fragment size standard deviation.")
 	flatError := flag.Float64("flatErrorRate", 0, "Sets an error rate for bases in synthetic reads. Each base will appear as one of the three other bases in the generated read with this probability.")
 	flag.Usage = usage
@@ -140,6 +139,10 @@ func main() {
 		FragmentLength: *fragmentLength,
 		FragmentStdDev: *fragmentStdDev,
 		SetSeed:        *setSeed,
+	}
+
+	if s.Coverage > 0 && s.NumReads > 0 {
+		log.Fatalf("Error: User must specify either -coverage or -n, not both.")
 	}
 
 	simulateSam(s)
