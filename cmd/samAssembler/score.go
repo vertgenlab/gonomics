@@ -36,25 +36,25 @@ func baseMatrixByRefBase(inFileList string, outFile string, byRefBase bool) {
 	var actualGeno, predGeno sam.DiploidBase
 	var records []fasta.Fasta
 	//initialize answer matrices
-	var answerA = make([][]float64, 10)
+	var answerA = make([][]int, 10)
 	for i = range answerA {
-		answerA[i] = make([]float64, 10)
+		answerA[i] = make([]int, 10)
 	}
-	var answerC = make([][]float64, 10)
+	var answerC = make([][]int, 10)
 	for i = range answerC {
-		answerC[i] = make([]float64, 10)
+		answerC[i] = make([]int, 10)
 	}
-	var answerG = make([][]float64, 10)
+	var answerG = make([][]int, 10)
 	for i = range answerG {
-		answerG[i] = make([]float64, 10)
+		answerG[i] = make([]int, 10)
 	}
-	var answerT = make([][]float64, 10)
+	var answerT = make([][]int, 10)
 	for i = range answerT {
-		answerT[i] = make([]float64, 10)
+		answerT[i] = make([]int, 10)
 	}
-	var answerMerged = make([][]float64, 10)
+	var answerMerged = make([][]int, 10)
 	for i = range answerMerged {
-		answerMerged[i] = make([]float64, 10)
+		answerMerged[i] = make([]int, 10)
 	}
 
 	//fill matrix from fasta files
@@ -103,14 +103,102 @@ func baseMatrixByRefBase(inFileList string, outFile string, byRefBase bool) {
 		writeMatrix(out, answerT, rowNames, currHeader)
 	}
 
+	writeSummaryStatistics(out, answerMerged)
+
 	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+// writeSummaryStatistics is a helpr function of baseMatrixByRefBase that writes some summary statistics to the output file.
+func writeSummaryStatistics(out *fileio.EasyWriter, dataMerged [][]int) {
+	var row, column int
+	var matrixTotal int = 0
+	for row = 0; row < len(dataMerged); row++ {
+		for column = 0; column < len(dataMerged[row]); column++ {
+			matrixTotal += dataMerged[row][column]
+		}
+	}
+	// the number of correct predictions is the sum of diagonal elements
+	var correctTotal int = 0
+	for row = 0; row < len(dataMerged); row++ {
+		correctTotal += dataMerged[row][row]
+	}
+
+	// trueNegative is the number of true homoRef predicted as homoRef
+	var trueNegative = dataMerged[0][0]
+
+	// falseNegative is the number of true mutations misclassified as homoRef
+	var falseNegative int
+	for column = 1; column < len(dataMerged); column++ {
+		falseNegative += dataMerged[0][column]
+	}
+
+	// falsePositive is the number of trueHomoRef classified as a mutation
+	var falsePositive int
+	for row = 1; row < len(dataMerged); row++ {
+		falsePositive += dataMerged[row][0]
+	}
+
+	// misclassified is the number of mutations (!homoRef) misclassified as a different mutation
+	var misclassified int
+	for row = 1; row < len(dataMerged); row++ {
+		for column = 1; column < len(dataMerged); column++ {
+			if row != column {
+				misclassified += dataMerged[row][column]
+			}
+		}
+	}
+
+	// actual negative is all positions with homoref genome, or first column
+	var actualNegative int
+	for row = 0; row < len(dataMerged); row++ {
+		actualNegative += dataMerged[row][0]
+	}
+	var actualPositive = matrixTotal - actualNegative
+
+	// predicted negative is all positions with homoref prediction, or first row
+	var predNegative int
+	for column = 0; column < len(dataMerged); column++ {
+		predNegative += dataMerged[0][column]
+	}
+	var predPositive = matrixTotal - predNegative
+	var accuracy = float64(correctTotal) / float64(matrixTotal)
+	var recall = float64(correctTotal-dataMerged[0][0]) / float64(actualPositive)
+	var precision = float64(correctTotal-dataMerged[0][0]) / float64(predPositive)
+
+	var err error
+	_, err = fmt.Fprintf(out, "matrixTotal\t%v\n", matrixTotal)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "correctTotal\t%v\n", correctTotal)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "trueNegative\t%v\n", trueNegative)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "falseNegative\t%v\n", falseNegative)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "falsePositive\t%v\n", falsePositive)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "misclassified\t%v\n", misclassified)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "Accuracy\t%e\n", accuracy)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "Inaccuracy\t%e\n", 1-accuracy)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "Recall\t%e\n", recall)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "Precision\t%e\n", precision)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "MisclassificationRate\t%e\n", float64(misclassified)/float64(misclassified+correctTotal-dataMerged[0][0]))
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "FalseVariantRate\t%e\n", float64(falsePositive)/float64(falsePositive+dataMerged[0][0]))
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "FalseReferenceRate\t%e\n", float64(falseNegative)/float64(falseNegative+dataMerged[0][0]))
 	exception.PanicOnErr(err)
 }
 
 // writeMatrix writes a two-dimensional data matrix of type [][]float64 to a file, with
 // a header specified by an input string and rowNames specified by a []string. The data matrix must be of dimensions
 // 10x10, and the program thus expects 10 rowNames.
-func writeMatrix(out *fileio.EasyWriter, data [][]float64, rowNames []string, header string) {
+func writeMatrix(out *fileio.EasyWriter, data [][]int, rowNames []string, header string) {
 	var i, j int
 	var err error
 
