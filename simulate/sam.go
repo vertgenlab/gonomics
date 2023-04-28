@@ -90,59 +90,12 @@ func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, star
 
 	// If ancient DNA, we simulate cytosine deamination error
 	if ancientErrorRate > 0 {
-		var currRandPos int
-		var distanceToEnd int
-		var foundInMap bool
-		numAncientErrorAttempts := numbers.RandBinomial(ancientAlias)
-		damagedPositions := make(map[int]int, numAncientErrorAttempts)
-		var currError int = 0
-		for currError < numAncientErrorAttempts {
-			distanceToEnd = numbers.RandGeometric(geometricParam)
-			for distanceToEnd >= (end - start) {
-				distanceToEnd = numbers.RandGeometric(geometricParam)
-			}
-			if !forward {
-				currRandPos = (end - start) - distanceToEnd - 1 // distance from end, instead of distance from start
-			} else {
-				currRandPos = distanceToEnd // distance from start of read
-			}
-			if _, foundInMap = damagedPositions[currRandPos]; !foundInMap {
-				damagedPositions[currRandPos] = 1
-				switch currSam.Seq[currRandPos] {
-				case dna.A:
-					// nothing to do
-				case dna.C:
-					currSam.Seq[currRandPos] = dna.T
-					deaminationDistributionSlice[distanceToEnd]++
-				case dna.G:
-					currSam.Seq[currRandPos] = dna.A
-					deaminationDistributionSlice[distanceToEnd]++
-				case dna.T:
-					// nothing to do
-				default:
-					log.Fatalf("Error: Unrecognized base: %v.\n", currSam.Seq[currRandPos])
-				}
-				currError++
-			}
-		}
+		currSam = ancientDamage(currSam, ancientAlias, geometricParam, forward, deaminationDistributionSlice)
 	}
 
 	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		numFlatErrors := numbers.RandBinomial(flatAlias)     // sample a binomial distribution to get the number of sequencing errors
-		mutatedPositions := make(map[int]int, numFlatErrors) // store positions we've mutated so we can sample without replacement
-		var foundInMap bool
-		var currRandInt int
-		var currError int = 0
-
-		for currError < numFlatErrors {
-			currRandInt = numbers.RandIntInRange(0, end-start) // sample a base on the read
-			if _, foundInMap = mutatedPositions[currRandInt]; !foundInMap {
-				mutatedPositions[currRandInt] = 1
-				currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt])
-				currError++
-			}
-		}
+		currSam = sequencingError(currSam, flatAlias)
 	}
 
 	// generate other values
@@ -201,4 +154,64 @@ func addPairedFlags(f, r *sam.Sam) {
 			r.Flag += 16
 		}
 	}
+}
+
+// sequencingError takes in a sam.Sam record and a BinomialAlias to
+// edit bases randomly across the read to simulate PCR/sequencing error. Errors are made with no
+// positional dependence and with a flat error spectrum.
+func sequencingError(currSam sam.Sam, alias numbers.BinomialAlias) sam.Sam {
+	numFlatErrors := numbers.RandBinomial(alias)         // sample a binomial distribution to get the number of sequencing errors
+	mutatedPositions := make(map[int]int, numFlatErrors) // store positions we've mutated so that we can sample without replacement
+	var foundInMap bool
+	var currRandInt int
+	var currError int = 0
+
+	for currError < numFlatErrors {
+		currRandInt = numbers.RandIntInRange(0, len(currSam.Seq)) // sample a base on the read
+		if _, foundInMap = mutatedPositions[currRandInt]; !foundInMap {
+			mutatedPositions[currRandInt] = 1
+			currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt])
+			currError++
+		}
+	}
+	return currSam
+}
+
+func ancientDamage(currSam sam.Sam, ancientAlias numbers.BinomialAlias, geometricParam float64, forward bool, deaminationDistributionSlice []int) sam.Sam {
+	var currRandPos int
+	var distanceToEnd int
+	var foundInMap bool
+	numAncientErrorAttempts := numbers.RandBinomial(ancientAlias)
+	damagedPositions := make(map[int]int, numAncientErrorAttempts)
+	var currError int = 0
+	for currError < numAncientErrorAttempts {
+		distanceToEnd = numbers.RandGeometric(geometricParam)
+		for distanceToEnd >= len(currSam.Seq) {
+			distanceToEnd = numbers.RandGeometric(geometricParam)
+		}
+		if !forward {
+			currRandPos = len(currSam.Seq) - distanceToEnd - 1 // distance from end, instead of distance from start
+		} else {
+			currRandPos = distanceToEnd // distance from start of read
+		}
+		if _, foundInMap = damagedPositions[currRandPos]; !foundInMap {
+			damagedPositions[currRandPos] = 1
+			switch currSam.Seq[currRandPos] {
+			case dna.A:
+				// nothing to do
+			case dna.C:
+				currSam.Seq[currRandPos] = dna.T
+				deaminationDistributionSlice[distanceToEnd]++
+			case dna.G:
+				currSam.Seq[currRandPos] = dna.A
+				deaminationDistributionSlice[distanceToEnd]++
+			case dna.T:
+				// nothing to do
+			default:
+				log.Fatalf("Error: Unrecognized base: %v.\n", currSam.Seq[currRandPos])
+			}
+			currError++
+		}
+	}
+	return currSam
 }
