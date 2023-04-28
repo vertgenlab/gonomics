@@ -1,0 +1,4 @@
+NR_024540.1	test
+NR_036051.1	test
+NR_036051.1	test	test
+NR_036010	test
