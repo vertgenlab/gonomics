@@ -20,6 +20,8 @@ func samAssemblerScore(scoreType string, inFileList string, outFile string) {
 		baseMatrixByRefBase(inFileList, outFile, false)
 	case "baseMatrixByRefBase":
 		baseMatrixByRefBase(inFileList, outFile, true)
+	default:
+		log.Fatalf("Error: Unrecognized score mode: %s.\n", scoreType)
 	}
 }
 
