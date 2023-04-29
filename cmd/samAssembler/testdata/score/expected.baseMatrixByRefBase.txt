@@ -42,16 +42,6 @@ HetTsTv2	0	0	0	0	0	0	2	0	0	0
 HomoTv1	0	0	0	0	0	0	0	0	0	0	
 HetTv1Tv2	0	0	0	0	0	0	0	0	1	0	
 HomoTv2	0	0	0	0	0	0	0	0	0	0	
-matrixTotal	19765
-correctTotal	19701
-trueNegative	17964
-falseNegative	9
-falsePositive	37
-misclassified	18
-Accuracy	9.967620e-01
-Inaccuracy	3.238047e-03
-Recall	9.846939e-01
-Precision	9.693080e-01
-MisclassificationRate	1.025641e-02
-FalseVariantRate	2.055441e-03
-FalseReferenceRate	5.007511e-04
+
+matrixTotal	correctTotal	trueNegative	falseNegative	falsePositive	misclassified	Accuracy	Inaccuracy	Recall	Precision	MisclassificaitonRate	FalseVariantRate	falseReferenceRate
+19765	19701	17964	9	37	18	9.967620e-01	3.238047e-03	9.846939e-01	9.693080e-01	1.025641e-02	2.055441e-03	5.007511e-04
