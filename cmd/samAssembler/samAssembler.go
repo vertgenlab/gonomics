@@ -259,7 +259,6 @@ func samAssembler(s Settings) {
 		ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = refMap[currChrom][refPos]
 		ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = refMap[currChrom][refPos]
 		mlt = updateMultiFa(refMap[currChrom][refPos], refMap[currChrom][refPos], refMap[currChrom][refPos], mlt)
-		mlt = advanceMultiFaPos(mlt)
 		ans = advanceAnswerPos(ans)
 		refPos++
 	}
