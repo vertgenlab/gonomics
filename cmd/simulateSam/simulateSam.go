@@ -127,10 +127,10 @@ func usage() {
 }
 
 func preCheck(s Settings) {
-	if s.Coverage <= 0 {
+	if s.Coverage < 0 {
 		log.Fatalf("Error: coverage must be a value greater than 0. Found: %v.\n", s.Coverage)
 	}
-	if s.NumReads < 1 {
+	if s.NumReads < 1 && s.Coverage <= 0 {
 		log.Fatalf("Error: number of reads must be greater than 0. Found: %v.\n", s.NumReads)
 	}
 	if s.ReadLength < 1 {
