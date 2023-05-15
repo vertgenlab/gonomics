@@ -18,21 +18,29 @@ type HaploidCall struct {
 
 // HaploidCallFromPile calls a haploid variant (including Base identity at the Pile position, and INDELs immediately after the position),
 // for an input Pile.
-func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, haploidBasePriorCache [][]float64, haploidIndelPriorCache []float64, homoBaseCache [][]float64, heteroBaseCache [][]float64, homoIndelCache [][]float64) HaploidCall {
+func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, lambda float64, haploidBasePriorCache [][]float64, haploidIndelPriorCache []float64, homoBaseCache [][]float64, heteroBaseCache [][]float64, homoIndelCache [][]float64, ancientCache AncientLikelihoodCache) HaploidCall {
 	var answer HaploidCall = HaploidCall{Base: refBase, Insertion: "", Deletion: 0}
 	var aCount = p.CountF[dna.A] + p.CountR[dna.A]
 	var cCount = p.CountF[dna.C] + p.CountR[dna.C]
 	var gCount = p.CountF[dna.G] + p.CountR[dna.G]
 	var tCount = p.CountF[dna.T] + p.CountR[dna.T]
 	var N = aCount + cCount + gCount + tCount
+	var maxPosterior, currPosterior float64
 
 	if refBase != dna.N { //if we have a real base, we'll calculate posteriors.
 		var maxBase = []dna.Base{dna.A}
-		var maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, AA, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.A])
-		var currPosterior float64
+		if lambda > 0 {
+			maxPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, AA, epsilon, lambda, ancientCache), haploidBasePriorCache[refBase][dna.A])
+		} else {
+			maxPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, AA, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.A])
+		}
 
 		//CC
-		currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, CC, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.C])
+		if lambda > 0 {
+			currPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, CC, epsilon, lambda, ancientCache), haploidBasePriorCache[refBase][dna.C])
+		} else {
+			currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, CC, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.C])
+		}
 		if currPosterior > maxPosterior {
 			maxBase = maxBase[:1] //clear ties
 			maxBase[0] = dna.C
@@ -41,7 +49,11 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, haploidBaseP
 			maxBase = append(maxBase, dna.C)
 		}
 		//GG
-		currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, GG, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.G])
+		if lambda > 0 {
+			currPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, GG, epsilon, lambda, ancientCache), haploidBasePriorCache[refBase][dna.G])
+		} else {
+			currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, GG, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.G])
+		}
 		if currPosterior > maxPosterior {
 			maxBase = maxBase[:1] //clear ties
 			maxBase[0] = dna.G
@@ -50,7 +62,11 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, haploidBaseP
 			maxBase = append(maxBase, dna.G)
 		}
 		//TT
-		currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.T])
+		if lambda > 0 {
+			currPosterior = logspace.Multiply(ancientBaseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, lambda, ancientCache), haploidBasePriorCache[refBase][dna.T])
+		} else {
+			currPosterior = logspace.Multiply(baseLikelihood(aCount, cCount, gCount, tCount, TT, epsilon, homoBaseCache, heteroBaseCache), haploidBasePriorCache[refBase][dna.T])
+		}
 		if currPosterior > maxPosterior {
 			maxBase = maxBase[:1] //clear ties
 			maxBase[0] = dna.T
