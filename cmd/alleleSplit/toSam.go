@@ -45,7 +45,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 
 	var gV vcf.Vcf
 	var alleles [][]dna.Base
-	for read, done := sam.ReadNext(samFile); done != true; read, done = sam.ReadNext(samFile) {
+	for read, done := sam.ReadNext(samFile); !done; read, done = sam.ReadNext(samFile) {
 		parentAllele1, parentAllele2 = 0, 0
 		target = int(read.Pos - 1)
 		query = 0

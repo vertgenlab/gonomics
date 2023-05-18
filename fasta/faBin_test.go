@@ -78,8 +78,8 @@ func TestBinGenomeNoBreaks(t *testing.T) {
 	}
 
 	for i := range bins {
-		value, _ := bins[i]
-		minValue, _ := binsMin[i]
+		value := bins[i]
+		minValue := binsMin[i]
 		if i == 0 {
 			if !IsEqual(value[0], expNoBreak1) || !IsEqual(minValue[0], expNoBreak1) {
 				log.Fatalf("First fasta in bin: %s %s or first fasta in binsMin: %s %s didn't match expected value: %s %s.", value[0].Name, value[0].Seq, minValue[0].Name, minValue[0].Seq, expNoBreak1.Name, expNoBreak1.Seq)

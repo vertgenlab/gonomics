@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 func TestGonomics(t *testing.T) {

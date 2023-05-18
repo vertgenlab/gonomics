@@ -271,20 +271,14 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.minPos != 0 {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
-				if v.Pos < c.minPos {
-					return false
-				}
-				return true
+				return v.Pos >= c.minPos
 			})
 	}
 
 	if c.maxPos != math.MaxInt64 {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
-				if v.Pos > c.maxPos {
-					return false
-				}
-				return true
+				return v.Pos <= c.maxPos
 			})
 	}
 
@@ -315,20 +309,14 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.minQual != 0 {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
-				if v.Qual < c.minQual {
-					return false
-				}
-				return true
+				return v.Qual >= c.minQual
 			})
 	}
 
 	if c.ref != "" {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
-				if v.Ref != c.ref {
-					return false
-				}
-				return true
+				return v.Ref == c.ref
 			})
 	}
 
@@ -387,10 +375,7 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 	if c.id != "" {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
-				if v.Id != c.id {
-					return false
-				}
-				return true
+				return v.Id == c.id
 			})
 	}
 	if c.subSet < 1 {

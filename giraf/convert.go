@@ -126,9 +126,8 @@ func qualToString(qual []uint8) string {
 }
 
 func fromStringToQual(s string) []uint8 {
-	words := []rune(s)
 	answer := make([]uint8, 0)
-	for _, v := range words {
+	for _, v := range s {
 		answer = append(answer, uint8(v))
 	}
 	return answer

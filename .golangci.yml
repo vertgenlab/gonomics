@@ -24,4 +24,5 @@ linters:
     - goprintffuncname
     - misspell
     - whitespace
+    - gosimple
 

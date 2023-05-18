@@ -15,7 +15,7 @@ install:
 	go install ./...
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
-lint: test
+lint:
 	golangci-lint run ./...
 
 list:

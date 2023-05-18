@@ -171,7 +171,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	for p := 0; p < len(seqExt); p++ {
 		for g := 0; g < len(geneRecord); g++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
-			if overlapExon == false {
+			if !overlapExon {
 				newBase = mutateBase(seq[p], branchLength, p)
 				newSequence = append(newSequence, newBase)
 			} else {
@@ -233,7 +233,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	}
 	mutatedSequence := BaseExtToBases(newSequence)
 	delFound := seqContainsDels(mutatedSequence)
-	if delFound == false && deletions == true {
+	if !delFound {
 		delEvent := rand.Float64()
 		switch {
 		case delEvent <= branchLength:
@@ -425,19 +425,12 @@ func CheckExon(gene genePred.GenePred, position int) (bool, int) {
 
 // CheckStart determines if a base is the beginning of a start codon by comparing it to the start position of the genePred CDS.
 func CheckStart(gene genePred.GenePred, codon CodonExt) bool {
-	if codon.Seq[0].SeqPos == gene.CdsStart {
-		return true
-	}
-
-	return false
+	return codon.Seq[0].SeqPos == gene.CdsStart
 }
 
 // CheckStop determines if a base is the beginning of a stop codon by comparing it to the end position of the genePred CDS.
 func CheckStop(gene genePred.GenePred, codon CodonExt) bool {
-	if codon.Seq[0].SeqPos == (gene.CdsEnd - 3) {
-		return true
-	}
-	return false
+	return codon.Seq[0].SeqPos == (gene.CdsEnd - 3)
 }
 
 // PickStop randomly selects one of the three stop codons to be used in the MutateGene output.

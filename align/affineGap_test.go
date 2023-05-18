@@ -207,6 +207,6 @@ func BenchmarkAffineGapLocalEngine(b *testing.B) {
 	input, output := GoAffineGapLocalEngine(DefaultScoreMatrix, -600, -150)
 	for i := 0; i < b.N; i++ {
 		input <- test
-		_ = <-output
+		<-output
 	}
 }

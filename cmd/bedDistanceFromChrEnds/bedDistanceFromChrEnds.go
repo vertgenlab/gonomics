@@ -20,7 +20,7 @@ func bedDistanceFromChrEnds(inFile string, chromFile string, outFile string) {
 
 	for i := range records {
 		_, found = ref[records[i].Chrom]
-		if found != true {
+		if !found {
 			log.Fatalf("Did not find '%s' in the chrom.sizes file", records[i].Chrom)
 		}
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd
