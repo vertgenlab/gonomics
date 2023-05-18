@@ -8,6 +8,9 @@ linters-settings:
     # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
     # Default: false
     all: true
+  gosimple:
+    checks: ["-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1022"]
+
 
   misspell:
     locale: US
@@ -20,9 +23,7 @@ linters:
     - gci
     - godot
     - gofmt
-    - goimports
     - goprintffuncname
+    - gosimple
     - misspell
     - whitespace
-    - gosimple
-

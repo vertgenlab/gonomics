@@ -46,9 +46,7 @@ func overlapEnrichments(method string, inFile string, secondFile string, noGapFi
 			overlap1 = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], "within"))
 			trimmedE1 = append(trimmedE1, overlap1...)
 			overlap2 = lift.IntervalSliceToLift(interval.Query(tree2, noGapRegions[i], "within"))
-			for j := range overlap2 {
-				trimmedE2 = append(trimmedE2, overlap2[j])
-			}
+			trimmedE2 = append(trimmedE2, overlap2...)
 		}
 		elementsOne = trimmedE1
 		elementsTwo = trimmedE2

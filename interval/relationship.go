@@ -88,19 +88,19 @@ func transform(query Interval, op string) (x1, x2, y1, y2 float64) {
 }
 
 func PrintRelationships() {
-	o := fmt.Sprintf("\t*------*\n\t    *------*\n\n\n")
-	oi := fmt.Sprintf("\t    *------*\n\t*------*\n\n\n")
-	d := fmt.Sprintf("\t  *--*\n\t*------*\n\n\n")
-	di := fmt.Sprintf("\t*------*\n\t  *--*\n\n\n")
-	m := fmt.Sprintf("\t*------*\n\t       *------*\n\n\n")
-	mi := fmt.Sprintf("\t       *------*\n\t*------*\n\n\n")
-	s := fmt.Sprintf("\t*---*\n\t*------*\n\n\n")
-	si := fmt.Sprintf("\t*------*\n\t*---*\n\n\n")
-	f := fmt.Sprintf("\t   *---*\n\t*------*\n\n\n")
-	fi := fmt.Sprintf("\t*------*\n\t   *---*\n\n\n")
-	gt := fmt.Sprintf("\t*---*\n\t        *---*\n\n\n")
-	lt := fmt.Sprintf("\t        *---*\n\t*---*\n\n\n")
-	e := fmt.Sprintf("\t*------*\n\t*------*\n\n\n")
+	o := "\t*------*\n\t    *------*\n\n\n"
+	oi := "\t    *------*\n\t*------*\n\n\n"
+	d := "\t  *--*\n\t*------*\n\n\n"
+	di := "\t*------*\n\t  *--*\n\n\n"
+	m := "\t*------*\n\t       *------*\n\n\n"
+	mi := "\t       *------*\n\t*------*\n\n\n"
+	s := "\t*---*\n\t*------*\n\n\n"
+	si := "\t*------*\n\t*---*\n\n\n"
+	f := "\t   *---*\n\t*------*\n\n\n"
+	fi := "\t*------*\n\t   *---*\n\n\n"
+	gt := "\t*---*\n\t        *---*\n\n\n"
+	lt := "\t        *---*\n\t*---*\n\n\n"
+	e := "\t*------*\n\t*------*\n\n\n"
 
 	fmt.Println("Valid relationships are as follows")
 	fmt.Println("Top line:    target")

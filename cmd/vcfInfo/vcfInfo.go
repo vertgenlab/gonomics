@@ -236,8 +236,7 @@ func vcfInfo(inputFile string, inputChan <-chan vcf.Vcf, typesOut, divergenceOut
 }
 
 func cleanup(f io.Closer) {
-	var err error
-	err = f.Close()
+	err := f.Close()
 	exception.PanicOnErr(err)
 }
 

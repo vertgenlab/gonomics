@@ -162,8 +162,7 @@ func VcfSampleDerivedAlleleFrequency(v vcf.Vcf) float64 {
 
 // AfsToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
 func AfsToFrequency(a Afs) []float64 {
-	var answer []float64
-	answer = make([]float64, len(a.Sites))
+	answer := make([]float64, len(a.Sites))
 	for x := 0; x < len(a.Sites); x++ {
 		answer[x] = float64(a.Sites[x].I) / float64(a.Sites[x].N)
 	}

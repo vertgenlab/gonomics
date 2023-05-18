@@ -311,7 +311,7 @@ func processHeader(header Header, line string) Header {
 func NewHeader(name string) Header {
 	var header Header
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
-	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT"))
+	header.Text = append(header.Text, "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT")
 	return header
 }
 

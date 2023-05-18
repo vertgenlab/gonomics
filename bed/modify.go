@@ -72,7 +72,7 @@ func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
 // Merged bed entries will retain the maximum score in the output.
 func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 	var outList []Bed
-	if records == nil || len(records) == 0 {
+	if len(records) == 0 {
 		return records //empty and nil slices are returned as is.
 	}
 	SortByCoord(records)

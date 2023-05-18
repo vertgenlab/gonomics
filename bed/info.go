@@ -13,7 +13,7 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 	var inRegion bool = false
 	var startIndex, index int = 0, 0
 	for index = range fa.Seq {
-		if dna.DefineBase(fa.Seq[index]) && inRegion == false {
+		if dna.DefineBase(fa.Seq[index]) && !inRegion {
 			inRegion = true
 			startIndex = index
 		} else if !(dna.DefineBase(fa.Seq[index])) && inRegion {

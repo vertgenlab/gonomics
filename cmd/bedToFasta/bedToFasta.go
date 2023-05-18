@@ -20,7 +20,7 @@ func bedToFasta(fastaFile string, bedFile string, outfile string, revComp bool) 
 
 	for i := range records {
 		fastaEntry = convert.SingleBedToFasta(records[i], reference)
-		if (revComp == true) && (records[i].Strand == bed.Negative) {
+		if revComp && (records[i].Strand == bed.Negative) {
 			fastaEntry.Name = fmt.Sprintf("%s_RevComp", fastaEntry.Name)
 			fasta.ReverseComplement(fastaEntry)
 		}
