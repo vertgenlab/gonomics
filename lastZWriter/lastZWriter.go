@@ -23,6 +23,14 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 	return parameters, matrix
 }
 
+// AlignSetup_Simple creates a different output file name structure: ref.species/qName/tName.qName.axt
+// AlignSetup_Simple does not generate parameter, matrix
+func AlignSetUp_Simple(pairwise string, species string, reference string) {
+	outDir := pairwise + "/" + reference + "." + species
+	// AlignSetUp_Simple makeOutDir input is (species,reference), unlike AlignSetUp makeOutDir (reference,species)
+	makeOutDir(pairwise, outDir, species, reference)
+}
+
 // makeOutDir creates the file directory tree where the output of all of the alignments will go by first creating
 // the directory labeled with the name of the reference and the species being aligned. It then passes off to a
 // helper function makeTargetSubDir.
