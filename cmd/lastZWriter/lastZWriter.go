@@ -37,6 +37,24 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	fileio.Write(outText, allLines)
 }
 
+func MakeArray_Simple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string) {
+	speciesList := fileio.Read(speciesListFile)
+	refList := fileio.Read(refListFile)
+	fileio.EasyCreate(outText)
+	var parameters []string
+	var allLines []string
+	for ref := range refList {
+		for spec := range speciesList {
+			match := strings.Compare(speciesList[spec], refList[ref])
+			if match != 0 {
+				// did not use AlignSetUp in Simple, so will not makeOutDir or return parameters, matrix 
+				allLines = writeFile_Simple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, allLines)
+			}
+		}
+	}
+	fileio.Write(outText, allLines)
+}
+
 func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, allLines []string) (lines []string) {
 	var currLines []string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
@@ -46,7 +64,55 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	return allLines
 }
 
+func writeFile_Simple(lastZ string, pairwise string, reference string, species string, parameters string, allLines []string) (lines []string) {
+	var currLines []string
+	currLines = fastaFinder_Simple(lastZ, pairwise, reference, species, parameters)
+	allLines = append(allLines, currLines...)
+	return allLines
+}
+
 func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string) (lines []string) {
+	var currLine string
+	var theseLines []string
+	var tMatches, qMatches, tFiles, qFiles []string
+	tPath := pairwise + "/" + reference + ".byChrom"
+	qPath := pairwise + "/" + species + ".byChrom"
+
+	if _, e := os.Stat(tPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
+	}
+	if _, e := os.Stat(qPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the query species.")
+	}
+
+	tMatches, _ = filepath.Glob(tPath + "/*.fa")
+	qMatches, _ = filepath.Glob(qPath + "/*.fa")
+
+	for tF := range tMatches {
+		_, tName := filepath.Split(tMatches[tF])
+		tFiles = append(tFiles, tName)
+	}
+	for qF := range qMatches {
+		_, qName := filepath.Split(qMatches[qF])
+		qFiles = append(qFiles, qName)
+	}
+	for t := range tFiles {
+		tName := strings.TrimSuffix(tFiles[t], ".fa")
+		for q := range qFiles {
+			qName := strings.TrimSuffix(qFiles[q], ".fa")
+			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
+			theseLines = append(theseLines, currLine)
+		}
+	}
+
+	if theseLines == nil {
+		log.Fatal("No lines to write to file")
+	}
+
+	return theseLines
+}
+
+func fastaFinder_Simple(lastZ string, pairwise string, reference string, species string, par string, matrix string) (lines []string) {
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
