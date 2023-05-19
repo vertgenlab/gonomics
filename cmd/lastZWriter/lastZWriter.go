@@ -186,7 +186,7 @@ func usage() {
 			"For simple lastZWriter, allDists is still a required input but will not be used, so it can be a dummy input, e.g. 'allDists.txt'. \n" +
 		"\n" +
 			"Usage:\n" +
-			"lastZWriter [-m=<bool> -mPath=<string> -simple=<bool> -parameters=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
+			"lastZWriter [-m=<bool> -mPath=<string> -simple=<bool> -parameters=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt> \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
