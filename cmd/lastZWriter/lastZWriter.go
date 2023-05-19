@@ -47,7 +47,7 @@ func MakeArray_Simple(lastZ string, pairwise string, speciesListFile string, ref
 		for spec := range speciesList {
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
-				// did not use AlignSetUp in Simple, so will not makeOutDir or return parameters, matrix 
+				// did not use AlignSetUp in Simple, so will not makeOutDir or return parameters, matrix
 				allLines = writeFile_Simple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, allLines)
 			}
 		}
@@ -112,7 +112,9 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	return theseLines
 }
 
-func fastaFinder_Simple(lastZ string, pairwise string, reference string, species string, par string, matrix string) (lines []string) {
+// fastaFinder_Simple has no matrix string
+// fastaFinder_Simple has a different output file name structure: ref.species/qName/tName.qName.axt
+func fastaFinder_Simple(lastZ string, pairwise string, reference string, species string, par string) (lines []string) {
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
@@ -141,7 +143,9 @@ func fastaFinder_Simple(lastZ string, pairwise string, reference string, species
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
+			// currLine reflects that fastaFinder_Simple has no matrix string
+			// currLine also reflects that fastaFinder_Simple has a different output file name structure: ref.species/qName/tName.qName.axt
+			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + qName + "/" + tName + "." + qName + ".axt" + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}
