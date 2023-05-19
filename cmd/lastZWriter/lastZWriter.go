@@ -37,17 +37,17 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	fileio.Write(outText, allLines)
 }
 
+// MakeArray_Simple has no allDists, m, or mPath (will not generate matrix), and parameters is directly input as 1 string not generated as []string
 func MakeArray_Simple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string) {
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
 	fileio.EasyCreate(outText)
-	var parameters []string
 	var allLines []string
 	for ref := range refList {
 		for spec := range speciesList {
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
-				// did not use AlignSetUp in Simple, so will not makeOutDir or return parameters, matrix
+				lastZWriter.AlignSetUp_Simple(pairwise, speciesList[spec], refList[ref])
 				allLines = writeFile_Simple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, allLines)
 			}
 		}
@@ -64,6 +64,7 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	return allLines
 }
 
+// writeFile_Simple has no matrix string, and parameters is 1 string not []string
 func writeFile_Simple(lastZ string, pairwise string, reference string, species string, parameters string, allLines []string) (lines []string) {
 	var currLines []string
 	currLines = fastaFinder_Simple(lastZ, pairwise, reference, species, parameters)
