@@ -219,7 +219,7 @@ func main() {
 	outText := flag.Arg(5)
 
 	if *simple {
-		MakeArray_Simple(lastZ, pairwise, speciesListFile, refListFile, *parameters, outText)
+		MakeArray_Simple(lastZ, pairwiseDir, speciesListFile, refListFile, *parameters, outText)
 	} else {
 		MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
 	}
