@@ -176,10 +176,17 @@ func usage() {
 			"would like the needed matrices to be hardcoded. As an alternative to the all_dists function, or if there " +
 			"isn't an available tree of the necessary species, this function can also take a file to replace the " +
 			"specified allDists file. The first two columns of which would need to be every possible combination of " +
-			"your alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the " +
+			"their alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the " +
 			"terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables. \n" +
+		"\n" +
+		"Instead of regular lastZWriter, the user has the option to run simple lastZWriter, " +
+			"which accepts a parameter string directly and does not generate matrices. " +
+			"One usage simple lastZWriter is appropriate for is aligning relatively short sequences with whole chromosomes from the same species. " +
+			"To run simple lastZWriter, set option simple to true, and provide the parameter string in the option parameters if needed. " +
+			"For simple lastZWriter, allDists is still a required input but will not be used, so it can be a dummy input, e.g. 'allDists.txt'. \n" +
+		"\n" +
 			"Usage:\n" +
-			"lastZWriter [-m=<bool> -mPath=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
+			"lastZWriter [-m=<bool> -mPath=<string> -simple=<bool> -parameters=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -190,6 +197,9 @@ func main() {
 	var expectedNumArgs int = 6
 	var m *bool = flag.Bool("m", true, "Use existing matrices at hardcoded path.")
 	var mPath *string = flag.String("mPath", "", "Path to desired location of created matrices if m = false.")
+	// to run simple lastZWriter, need 2 options (simple *bool, parameters *string). Do not combine the 2 options because want empty ("") parameters to work too
+	var simple *bool = flag.Bool("simple", false, "Instead of regular lastZWriter, run simple lastZWriter.")
+	var parameters *string = flag.String("parameters", "", "Instead of regular lastZWriter, run simple lastZWriter with the specified parameter string.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -208,5 +218,10 @@ func main() {
 	allDists := flag.Arg(4)
 	outText := flag.Arg(5)
 
-	MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
+	if *simple {
+		MakeArray_Simple(lastZ, pairwise, speciesListFile, refListFile, *parameters, outText)
+	} else {
+		MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
+	}
+
 }
