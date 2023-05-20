@@ -126,7 +126,7 @@ func fastaFinder_Simple(lastZ string, pairwise string, reference string, species
 		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
 	}
 	if _, e := os.Stat(qPath); os.IsNotExist(e) {
-		log.Fatalf("There is no .byChrom directory for the query species.")
+		log.Fatalf("Error: There is no .byChrom directory for the query species.")
 	}
 
 	tMatches, _ = filepath.Glob(tPath + "/*.fa")
