@@ -34,14 +34,14 @@ func TestMakeArray(t *testing.T) {
 	fileio.EasyRemove(out)
 }
 
-var speciesListFile_simple = pairwise + "/speciesList_simple.txt"
-var refListFile_simple = pairwise + "/refList_simple.txt"
+var speciesListFileSimple = pairwise + "/speciesList_simple.txt"
+var refListFileSimple = pairwise + "/refList_simple.txt"
 var parameters = "M=50 K=2200"
-var out_simple = "testdata/out_simple.txt"
+var outSimple = "testdata/out_simple.txt"
 
-func TestMakeArray_Simple(t *testing.T) {
-	MakeArray_Simple(lastZ, pairwise, speciesListFile_simple, refListFile_simple, parameters, out_simple)
-	outRecords := fileio.EasyOpen(out_simple)
+func TestMakeArraySimple(t *testing.T) {
+	MakeArraySimple(lastZ, pairwise, speciesListFileSimple, refListFileSimple, parameters, outSimple)
+	outRecords := fileio.EasyOpen(outSimple)
 	expected := fileio.Read("testdata/expected_simple.txt")
 	lineNum := 0
 	for l, done := fileio.EasyNextRealLine(outRecords); !done; l, done = fileio.EasyNextRealLine(outRecords) {
@@ -56,5 +56,5 @@ func TestMakeArray_Simple(t *testing.T) {
 		}
 	}
 
-	fileio.EasyRemove(out_simple)
+	fileio.EasyRemove(outSimple)
 }

@@ -37,8 +37,8 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	fileio.Write(outText, allLines)
 }
 
-// MakeArray_Simple has no allDists, m, or mPath (will not generate matrix), and parameters is directly input as 1 string not generated as []string
-func MakeArray_Simple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string) {
+// MakeArraySimple has no allDists, m, or mPath (will not generate matrix), and parameters is directly input as 1 string not generated as []string
+func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string) {
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
 	fileio.EasyCreate(outText)
@@ -64,10 +64,10 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	return allLines
 }
 
-// writeFile_Simple has no matrix string, and parameters is 1 string not []string
-func writeFile_Simple(lastZ string, pairwise string, reference string, species string, parameters string, allLines []string) (lines []string) {
+// writeFileSimple has no matrix string, and parameters is 1 string not []string
+func writeFileSimple(lastZ string, pairwise string, reference string, species string, parameters string, allLines []string) (lines []string) {
 	var currLines []string
-	currLines = fastaFinder_Simple(lastZ, pairwise, reference, species, parameters)
+	currLines = fastaFinderSimple(lastZ, pairwise, reference, species, parameters)
 	allLines = append(allLines, currLines...)
 	return allLines
 }
@@ -113,9 +113,9 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	return theseLines
 }
 
-// fastaFinder_Simple has no matrix string
-// fastaFinder_Simple has a different output file name structure: ref.species/qName/tName.qName.axt
-func fastaFinder_Simple(lastZ string, pairwise string, reference string, species string, par string) (lines []string) {
+// fastaFinderSimple has no matrix string
+// fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
+func fastaFinderSimple(lastZ string, pairwise string, reference string, species string, par string) (lines []string) {
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
@@ -150,8 +150,8 @@ func fastaFinder_Simple(lastZ string, pairwise string, reference string, species
 		}
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			// currLine reflects that fastaFinder_Simple has no matrix string
-			// currLine also reflects that fastaFinder_Simple has a different output file name structure: ref.species/qName/tName.qName.axt
+			// currLine reflects that fastaFinderSimple has no matrix string
+			// currLine also reflects that fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
 			currLine := filepath.Join(
 				lastZ,
 				pairwise,
@@ -242,7 +242,7 @@ func main() {
 	outText := flag.Arg(5)
 
 	if *simple {
-		MakeArray_Simple(lastZ, pairwiseDir, speciesListFile, refListFile, *parameters, outText)
+		MakeArraySimple(lastZ, pairwiseDir, speciesListFile, refListFile, *parameters, outText)
 	} else {
 		MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
 	}
