@@ -23,7 +23,8 @@ linters:
     - gci
     - godot
     - gofmt
-    - goprintffuncname
+    - goimports
     - gosimple
+    - goprintffuncname
     - misspell
     - whitespace
