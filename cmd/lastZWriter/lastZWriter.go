@@ -152,7 +152,24 @@ func fastaFinder_Simple(lastZ string, pairwise string, reference string, species
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
 			// currLine reflects that fastaFinder_Simple has no matrix string
 			// currLine also reflects that fastaFinder_Simple has a different output file name structure: ref.species/qName/tName.qName.axt
-			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + qName + "/" + tName + "." + qName + ".axt" + " --action:target=multiple" + " --format=axt " + par
+			currLine := filepath.Join(
+				lastZ,
+				pairwise,
+				reference+".byChrom",
+				tFiles[t],
+				pairwise,
+				species+".byChrom",
+				qFiles[q],
+				"--output="+filepath.Join(
+					pairwise,
+					reference+"."+species,
+					qName,
+					tName+"."+qName+".axt",
+				),
+				"--action:target=multiple",
+				"--format=axt",
+				par,
+			)
 			theseLines = append(theseLines, currLine)
 		}
 	}
