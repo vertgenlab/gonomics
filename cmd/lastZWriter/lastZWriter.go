@@ -151,13 +151,7 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 		qFiles = append(qFiles, qName)
 	}
 	for t := range tFiles {
-		if strings.HasSuffix(tFiles[t], ".fa") {
-			tName = strings.TrimSuffix(tFiles[t], ".fa")
-		} else if strings.HasSuffix(tFiles[t], ".fasta") {
-			tName = strings.TrimSuffix(tFiles[t], ".fasta")
-		} else {
-			log.Fatalf("Error: there is a bug in the glob command, we found files of other suffixes!!")
-		}
+		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
 			// currLine reflects that fastaFinderSimple has no matrix string
