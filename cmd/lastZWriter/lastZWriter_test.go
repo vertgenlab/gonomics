@@ -51,7 +51,7 @@ func TestMakeArray_Simple(t *testing.T) {
 		for i := range inputs {
 			match := strings.Compare(inputs[i], exp[i])
 			if match != 0 {
-				t.Fatalf("Output line %d: %s, did not match expected value: %s", lineNum, inputs[i], expected[i])
+				t.Fatalf("Error: Output line %d: %s, did not match expected value: %s", lineNum, inputs[i], expected[i])
 			}
 		}
 	}
