@@ -178,13 +178,13 @@ func usage() {
 			"specified allDists file. The first two columns of which would need to be every possible combination of " +
 			"their alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the " +
 			"terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables. \n" +
-		"\n" +
-		"Instead of regular lastZWriter, the user has the option to run simple lastZWriter, " +
+			"\n" +
+			"Instead of regular lastZWriter, the user has the option to run simple lastZWriter, " +
 			"which accepts a parameter string directly and does not generate matrices. " +
 			"One usage simple lastZWriter is appropriate for is aligning relatively short sequences with whole chromosomes from the same species. " +
 			"To run simple lastZWriter, set option simple to true, and provide the parameter string in the option parameters if needed. " +
 			"For simple lastZWriter, allDists is still a required input but will not be used, so it can be a dummy input, e.g. 'allDists.txt'. \n" +
-		"\n" +
+			"\n" +
 			"Usage:\n" +
 			"lastZWriter [-m=<bool> -mPath=<string> -simple=<bool> -parameters=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt> \n" +
 			"options:\n")
