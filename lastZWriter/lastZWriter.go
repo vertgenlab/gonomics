@@ -25,7 +25,7 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 
 // AlignSetup_Simple creates a different output file name structure: ref.species/qName/tName.qName.axt
 // AlignSetup_Simple does not generate parameter, matrix
-func AlignSetUp_Simple(pairwise string, species string, reference string) {
+func AlignSetUpSimple(pairwise string, species string, reference string) {
 	outDir := pairwise + "/" + reference + "." + species
 	// AlignSetUp_Simple makeOutDir input is (species,reference), unlike AlignSetUp makeOutDir (reference,species)
 	makeOutDir(pairwise, outDir, species, reference)
