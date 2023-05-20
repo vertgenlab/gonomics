@@ -48,7 +48,7 @@ func MakeArray_Simple(lastZ string, pairwise string, speciesListFile string, ref
 			match := strings.Compare(speciesList[spec], refList[ref])
 			if match != 0 {
 				lastZWriter.AlignSetUp_Simple(pairwise, speciesList[spec], refList[ref])
-				allLines = writeFile_Simple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, allLines)
+				allLines = writeFileSimple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, allLines)
 			}
 		}
 	}
