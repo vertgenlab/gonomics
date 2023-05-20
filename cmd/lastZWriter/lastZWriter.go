@@ -111,8 +111,7 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 				pairwise,
 				reference + "." + species,
 				tName,
-				qName + "." + tName + ".axt"
-				) + " --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
+				qName + "." + tName + ".axt") + " --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}
@@ -154,7 +153,7 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 	for t := range tFiles {
 		if strings.HasSuffix(tFiles[t], ".fa") {
 			tName := strings.TrimSuffix(tFiles[t], ".fa")
-		} else if (strings.HasSuffix(tFiles[t], ".fasta") {
+		} else if strings.HasSuffix(tFiles[t], ".fasta" {
 			tName := strings.TrimSuffix(tFiles[t], ".fasta")
 		} else {
 			log.Errorf("Error: there is a bug in the glob command, we found files of other suffixes!!")
