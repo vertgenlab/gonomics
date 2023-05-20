@@ -76,8 +76,8 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
-	tPath := pairwise + "/" + reference + ".byChrom"
-	qPath := pairwise + "/" + species + ".byChrom"
+	tPath := filepath.Join(pairwise, reference + ".byChrom")
+	qPath := filepath.Join(pairwise, species + ".byChrom")
 
 	if _, e := os.Stat(tPath); os.IsNotExist(e) {
 		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
@@ -101,7 +101,18 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
+			currLine := lastZ + " " + filepath.Join(
+				pairwise,
+				reference + ".byChrom",
+				tFiles[t]) + " " + filepath.Join(
+				pairwise,
+				species + ".byChrom",
+				qFiles[q]) + " --output=" + filepath.Join(
+				pairwise,
+				reference + "." + species,
+				tName,
+				qName + "." + tName + ".axt"
+				) + " --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}
@@ -119,8 +130,8 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
-	tPath := pairwise + "/" + reference + ".byChrom"
-	qPath := pairwise + "/" + species + ".byChrom"
+	tPath := filepath.Join(pairwise, reference + ".byChrom")
+	qPath := filepath.Join(pairwise, species + ".byChrom")
 
 	if _, e := os.Stat(tPath); os.IsNotExist(e) {
 		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
@@ -152,24 +163,17 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
 			// currLine reflects that fastaFinderSimple has no matrix string
 			// currLine also reflects that fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
-			currLine := filepath.Join(
-				lastZ,
+			currLine := lastZ + " " + filepath.Join(
 				pairwise,
-				reference+".byChrom",
-				tFiles[t],
+				reference + ".byChrom",
+				tFiles[t]) + " " + filepath.Join(
 				pairwise,
-				species+".byChrom",
-				qFiles[q],
-				"--output="+filepath.Join(
-					pairwise,
-					reference+"."+species,
-					qName,
-					tName+"."+qName+".axt",
-				),
-				"--action:target=multiple",
-				"--format=axt",
-				par,
-			)
+				species + ".byChrom",
+				qFiles[q]) + " --output=" + filepath.Join(
+				pairwise,
+				reference + "." + species,
+				qName,
+				tName + "." + qName + ".axt") + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}
