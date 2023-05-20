@@ -56,5 +56,5 @@ func TestMakeArray_Simple(t *testing.T) {
 		}
 	}
 
-	fileio.EasyRemove(out)
+	fileio.EasyRemove(out_simple)
 }
