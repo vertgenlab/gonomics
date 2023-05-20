@@ -33,3 +33,28 @@ func TestMakeArray(t *testing.T) {
 
 	fileio.EasyRemove(out)
 }
+
+var speciesListFile_simple = pairwise + "/speciesList_simple.txt"
+var refListFile_simple = pairwise + "/refList_simple.txt"
+var parameters = "M=50 K=2200"
+var out_simple = "testdata/out_simple.txt"
+
+func TestMakeArray_Simple(t *testing.T) {
+	MakeArray_Simple(lastZ, pairwise, speciesListFile_simple, refListFile_simple, parameters, out_simple)
+	outRecords := fileio.EasyOpen(out)
+	expected := fileio.Read("testdata/expected_simple.txt")
+	lineNum := 0
+	for l, done := fileio.EasyNextRealLine(outRecords); !done; l, done = fileio.EasyNextRealLine(outRecords) {
+		lineNum++
+		inputs := strings.Split(l, " ")
+		exp := strings.Split(expected[lineNum-1], " ")
+		for i := range inputs {
+			match := strings.Compare(inputs[i], exp[i])
+			if match != 0 {
+				t.Fatalf("Output line %d: %s, did not match expected value: %s", lineNum, inputs[i], expected[i])
+			}
+		}
+	}
+
+	fileio.EasyRemove(out)
+}

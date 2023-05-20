@@ -223,5 +223,4 @@ func main() {
 	} else {
 		MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
 	}
-
 }
