@@ -156,7 +156,7 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 		} else if strings.HasSuffix(tFiles[t], ".fasta") {
 			tName := strings.TrimSuffix(tFiles[t], ".fasta")
 		} else {
-			log.Errorf("Error: there is a bug in the glob command, we found files of other suffixes!!")
+			log.Fatalf("Error: there is a bug in the glob command, we found files of other suffixes!!")
 		}
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
