@@ -63,8 +63,8 @@ func UmiCollision(sc SingleCellPair, umiMap map[string]int) bool {
 	count, found := umiMap[currUmi]
 	if !found {
 		umiMap[currUmi] = 1
-	} else {
-		umiMap[currUmi] = count + 1
+	//} else {
+		//umiMap[currUmi] = count + 1
 	}
 	return found
 }
