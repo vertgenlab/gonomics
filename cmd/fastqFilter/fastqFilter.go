@@ -14,6 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	// for go profiler cpu
+	"os"
 	"runtime/pprof"
 )
 
