@@ -13,6 +13,8 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	// for go profiler cpu
+	"runtime/pprof"
 )
 
 type Settings struct {
@@ -189,10 +191,22 @@ func main() {
 	var collapseUmi *bool = flag.Bool("collapseUmi", false, "Removes UMI duplicates from single-cell format reads. R1: barcode and UMI. R2: mRNA sequence.")
 	var barcodeLength *int = flag.Int("barcodeLength", 16, "Sets the length of the barcode for single-cell reads.")
 	var umiLength *int = flag.Int("umiLength", 12, "Sets the UMI length for single-cell reads.")
+	// for go proflier cpu
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	// for go profiler cpu
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+				log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+}
 
 	if *subSet < 0 || *subSet > 1 {
 		log.Fatalf(fmt.Sprintf("The subSet option must be between 0 and 1, received %v.", *subSet))
