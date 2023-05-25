@@ -15,7 +15,7 @@ var allDists = pairwise + "/allDistsAll.txt"
 var out = "testdata/out.txt"
 
 func TestMakeArray(t *testing.T) {
-	MakeArray(lastZ, pairwise, speciesListFile, refListFile, allDists, out, true, "")
+	MakeArray(lastZ, pairwise, speciesListFile, refListFile, allDists, out, true, "", "")
 	outRecords := fileio.EasyOpen(out)
 	expected := fileio.Read("testdata/expected.txt")
 	lineNum := 0
@@ -38,9 +38,10 @@ var speciesListFileSimple = pairwise + "/speciesList_simple.txt"
 var refListFileSimple = pairwise + "/refList_simple.txt"
 var parameters = "M=50 K=2200"
 var outSimple = "testdata/out_simple.txt"
+var targetModifier = "[unmask]"
 
 func TestMakeArraySimple(t *testing.T) {
-	MakeArraySimple(lastZ, pairwise, speciesListFileSimple, refListFileSimple, parameters, outSimple)
+	MakeArraySimple(lastZ, pairwise, speciesListFileSimple, refListFileSimple, parameters, outSimple, targetModifier)
 	outRecords := fileio.EasyOpen(outSimple)
 	expected := fileio.Read("testdata/expected_simple.txt")
 	lineNum := 0
