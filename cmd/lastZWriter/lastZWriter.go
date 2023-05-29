@@ -12,6 +12,8 @@ import (
 	"github.com/vertgenlab/gonomics/lastZWriter"
 )
 
+// MakeArray generates a lastZ alignment scoring matrix from user-specified path if needed,
+// and calls helper functions (lastZWriter.AlignSetUp, writeFile) to build the lastZ output directory tree and write all lastZ commands
 func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string, targetModifier string) {
 	if !m {
 		lastZWriter.BuildMatrices(mPath)
@@ -24,8 +26,7 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	var allLines []string
 	for ref := range refList {
 		for spec := range speciesList {
-			match := strings.Compare(speciesList[spec], refList[ref])
-			if match != 0 {
+			if speciesList[spec] != refList[ref] {
 				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
 				if parameters == nil || matrix == "" {
 					log.Fatalf("Reference %s and species %s returned no parameters or matrix.", refList[ref], speciesList[spec])
@@ -45,8 +46,7 @@ func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refL
 	var allLines []string
 	for ref := range refList {
 		for spec := range speciesList {
-			match := strings.Compare(speciesList[spec], refList[ref])
-			if match != 0 {
+			if speciesList[spec] != refList[ref] {
 				lastZWriter.AlignSetUpSimple(pairwise, speciesList[spec], refList[ref])
 				allLines = writeFileSimple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, targetModifier, allLines)
 			}
@@ -55,6 +55,13 @@ func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refL
 	fileio.Write(outText, allLines)
 }
 
+// writeFile writes all lastZ commands
+// required inputs:
+// lastZ: path to lastZ install, pariwise: path to input and output directory trees
+// reference: target in lastZ alignment, species: query in lastZ alignment
+// parameters: lastZ alignment parameters, e.g. masking score M=254
+// matrix: lastZ alignment scoring matrix
+// targetModifier: modifier on the target in lastZ alignment, e.g. [unmask]
 func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, targetModifier string, allLines []string) (lines []string) {
 	var currLines []string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
@@ -72,6 +79,7 @@ func writeFileSimple(lastZ string, pairwise string, reference string, species st
 	return allLines
 }
 
+// fastaFinder writes each individual lastZ command
 func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string, targetModifier string) (lines []string) {
 	var currLine string
 	var theseLines []string
