@@ -222,7 +222,6 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 			log.Fatalln("ERROR: Merge sort methods have not been implemented for file type:", filetype)
 		}
 	}
-	return
 }
 
 func main() {

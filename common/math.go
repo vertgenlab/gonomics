@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 )
@@ -10,7 +9,7 @@ import (
 func StringToBool(s string) bool {
 	b, err := strconv.ParseBool(s)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a bool", s))
+		log.Panicf("Error: trouble converting \"%s\" to a bool", s)
 	}
 	return b
 }
@@ -19,7 +18,7 @@ func StringToBool(s string) bool {
 func StringToInt(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int", s))
+		log.Panicf("Error: trouble converting \"%s\" to a int", s)
 	}
 	return n
 }
@@ -28,7 +27,7 @@ func StringToInt(s string) int {
 func StringToFloat32(s string) float32 {
 	n, err := strconv.ParseFloat(s, 32)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a float32\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a float32\n", s)
 	}
 	return float32(n)
 }
@@ -37,7 +36,7 @@ func StringToFloat32(s string) float32 {
 func StringToFloat64(s string) float64 {
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a float64\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a float64\n", s)
 	}
 	return n
 }
@@ -46,7 +45,7 @@ func StringToFloat64(s string) float64 {
 func StringToInt8(s string) int8 {
 	n, err := strconv.ParseInt(s, 10, 8)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int8\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a int8\n", s)
 	}
 	return int8(n)
 }
@@ -55,7 +54,7 @@ func StringToInt8(s string) int8 {
 func StringToInt16(s string) int16 {
 	n, err := strconv.ParseInt(s, 10, 16)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int16\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a int16\n", s)
 	}
 	return int16(n)
 }
@@ -64,7 +63,7 @@ func StringToInt16(s string) int16 {
 func StringToInt32(s string) int32 {
 	n, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int32\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a int32\n", s)
 	}
 	return int32(n)
 }
@@ -73,7 +72,7 @@ func StringToInt32(s string) int32 {
 func StringToInt64(s string) int64 {
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a int64\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a int64\n", s)
 	}
 	return n
 }
@@ -82,7 +81,7 @@ func StringToInt64(s string) int64 {
 func StringToUint64(s string) uint64 {
 	n, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a uint64\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a uint64\n", s)
 	}
 	return n
 }
@@ -91,7 +90,7 @@ func StringToUint64(s string) uint64 {
 func StringToUint32(s string) uint32 {
 	n, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a uint32\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a uint32\n", s)
 	}
 	return uint32(n)
 }
@@ -100,7 +99,7 @@ func StringToUint32(s string) uint32 {
 func StringToUint16(s string) uint16 {
 	n, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a uint16\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a uint16\n", s)
 	}
 	return uint16(n)
 }
@@ -109,7 +108,7 @@ func StringToUint16(s string) uint16 {
 func StringToUint8(s string) uint8 {
 	n, err := strconv.ParseUint(s, 10, 8)
 	if err != nil {
-		log.Panic(fmt.Sprintf("Error: trouble converting \"%s\" to a uint8\n", s))
+		log.Panicf("Error: trouble converting \"%s\" to a uint8\n", s)
 	}
 	return uint8(n)
 }

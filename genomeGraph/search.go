@@ -374,10 +374,7 @@ func heapSortSeeds(a []SeedDev) {
 
 func quickSort(arr []*SeedDev) []*SeedDev {
 	newArr := make([]*SeedDev, len(arr))
-
-	for i, v := range arr {
-		newArr[i] = v
-	}
+	copy(newArr, arr)
 	recursiveSort(newArr, 0, len(arr)-1)
 	return newArr
 }
@@ -391,8 +388,8 @@ func recursiveSort(arr []*SeedDev, start, end int) {
 	splitIndex := start
 
 	// Iterate sub array to find values less than pivot
-	//   and move them to the beginning of the array
-	//   keeping splitIndex denoting less-value array size
+	// and move them to the beginning of the array
+	// keeping splitIndex denoting less-value array size
 	for i := start; i < end; i++ {
 		if arr[i].TotalLength > pivot.TotalLength {
 			if splitIndex != i {

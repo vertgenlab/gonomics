@@ -369,7 +369,6 @@ func (t *testInterval) GetChromEnd() int {
 	return t.end
 }
 func (t *testInterval) WriteToFileHandle(file io.Writer) {
-	return
 }
 
 func generateIntervals(num int, rangeLow int, rangeHigh int) []Interval {

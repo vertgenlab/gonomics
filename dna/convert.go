@@ -1,7 +1,6 @@
 package dna
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"unicode"
@@ -40,9 +39,9 @@ func RuneToBase(r rune) (Base, error) {
 	case '.':
 		return Dot, nil
 	default:
-		return N, errors.New(fmt.Sprintf("ERROR: '%s' is an invalid base. This error is caused by invalid characters in a DNA sequence. "+
+		return N, fmt.Errorf("Error: '%s' is an invalid base. This error is caused by invalid characters in a DNA sequence. "+
 			"Note that gonomics does not support extended IUPAC nucleotide codes (only AaCcGgTtNn-). If you input a fasta file, "+
-			"check to make sure the sequences only use valid characters. Invalid characters can be masked with Ns using the faFormat command in gonomics.", string(r)))
+			"check to make sure the sequences only use valid characters. Invalid characters can be masked with Ns using the faFormat command in gonomics.", string(r))
 	}
 }
 
@@ -78,9 +77,9 @@ func ByteToBase(b byte) (Base, error) {
 	case '.':
 		return Dot, nil
 	default:
-		return N, errors.New(fmt.Sprintf("ERROR: '%s' is an invalid base. This error is caused by invalid characters in a DNA sequence. "+
+		return N, fmt.Errorf("Error: '%s' is an invalid base. This error is caused by invalid characters in a DNA sequence. "+
 			"Note that gonomics does not support extended IUPAC nucleotide codes (only AaCcGgTtNn-). If you input a fasta file, "+
-			"check to make sure the sequences only use valid characters. Invalid characters can be masked with Ns using the faFormat command in gonomics.", string(b)))
+			"check to make sure the sequences only use valid characters. Invalid characters can be masked with Ns using the faFormat command in gonomics.", string(b))
 	}
 }
 

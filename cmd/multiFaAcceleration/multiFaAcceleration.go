@@ -75,7 +75,7 @@ func multiFaAcceleration(s Settings) {
 	var velSum, initialSum float64 = 0, 0
 	var branchCacheSlice = make([]BranchCache, 0)
 
-	for alignmentCounter := 0; reachedEnd == false && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
+	for alignmentCounter := 0; !reachedEnd && referenceCounter < referenceLength-s.WindowSize; alignmentCounter++ {
 		if s.Verbose && alignmentCounter%1000000 == 0 {
 			log.Printf("alignmentCounter: %v\n", alignmentCounter)
 		}

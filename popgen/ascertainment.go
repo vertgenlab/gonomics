@@ -10,7 +10,7 @@ import (
 
 // BuildFCache builds a slice of len(n) where each index i contains log(F(i | n, alpha)), where F is popgen.AFSSampleDensity.
 func BuildFCache(n int, alpha float64, binomCache [][]float64, integralError float64) []float64 {
-	var answer []float64 = make([]float64, n, n)
+	var answer []float64 = make([]float64, n)
 	for j := 1; j < n; j++ {
 		answer[j] = AfsSampleDensity(n, j, alpha, binomCache, integralError)
 	}

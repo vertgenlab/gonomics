@@ -1,9 +1,10 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // AncientLikelihoodCache stores the following short expressions from the likelihood functions to

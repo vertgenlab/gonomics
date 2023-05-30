@@ -150,13 +150,13 @@ func pathPrettyString(graphPath string) string {
 	for i = 0; i < len(words); i += 8 {
 		var line string = ""
 		if i+8 > len(words) {
-			line += fmt.Sprintf("%s", words[i])
+			line += words[i]
 			for j = i + 1; j < len(words)-1; j++ {
-				line += fmt.Sprintf(":%s", words[j])
+				line += words[j]
 			}
 			s += fmt.Sprintf("%s\n", line)
 		} else {
-			line += fmt.Sprintf("%s", words[i])
+			line += words[i]
 			for j = i + 1; j < i+8; j++ {
 				line += fmt.Sprintf(":%s", words[j])
 			}

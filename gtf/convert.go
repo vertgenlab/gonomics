@@ -15,12 +15,9 @@ func GeneToTssBed(g Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
 func GenesToTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
 	var answer = make([]bed.Bed, 0)
 	var currPromoters []bed.Bed
-	var j int
 	for _, i := range g {
 		currPromoters = GeneToTssBed(*i, c)
-		for j = range currPromoters {
-			answer = append(answer, currPromoters[j])
-		}
+		answer = append(answer, currPromoters...)
 	}
 	return answer
 }
@@ -87,14 +84,10 @@ func GeneToPromoterBed(g Gene, c map[string]chromInfo.ChromInfo, upstream int, d
 func GenesToPromoterBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo, upstream int, downstream int) []bed.Bed {
 	var answer = make([]bed.Bed, 0)
 	var currPromoters []bed.Bed
-	var j int
 
 	for _, i := range g {
 		currPromoters = GeneToPromoterBed(*i, c, upstream, downstream)
-
-		for j = range currPromoters {
-			answer = append(answer, currPromoters[j])
-		}
+		answer = append(answer, currPromoters...)
 	}
 
 	return answer

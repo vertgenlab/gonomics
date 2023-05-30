@@ -36,7 +36,7 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 
 	for i = range input { //range over the inputBed
 		genomeBedMatchingNameField, found = genomeMap[input[i].Name] //grab the genomeBed entry that matches on the "Name" field.
-		if found != true {
+		if !found {
 			log.Fatalf("Did not find genomeBed match for: %s", input[i].Name)
 		}
 		if len(genomeBedMatchingNameField) > 1 { //check that there is only one genomeBed entry that matches the current inputBed[i].Name
