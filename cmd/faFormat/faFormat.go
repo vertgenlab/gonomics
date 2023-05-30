@@ -66,8 +66,8 @@ func faFormat(s Settings) {
 			fasta.ToUpper(records[i])
 		}
 		if s.RevComp {
-			fasta.ReverseComplement(records[i])
 			records[i].Name = records[i].Name + "_RevComp"
+			fasta.ReverseComplement(records[i])
 		}
 	}
 
