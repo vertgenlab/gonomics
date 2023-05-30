@@ -233,7 +233,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	}
 	mutatedSequence := BaseExtToBases(newSequence)
 	delFound := seqContainsDels(mutatedSequence)
-	if !delFound {
+	if !delFound && deletions {
 		delEvent := rand.Float64()
 		switch {
 		case delEvent <= branchLength:
