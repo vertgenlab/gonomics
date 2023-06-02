@@ -75,25 +75,27 @@ func filterByRegion(a sam.Sam, filter bed.Bed) bool {
 	}
 }
 
-func collapseUMI(a sam.Sam) map[string]sam.Sam {
+func collapseUMI(in []sam.Sam) map[string]sam.Sam {
 	var umiMap = make(map[string]sam.Sam)
-	sc := sam.ToSingleCellAlignment(a)
-	umiBxString := fmt.Sprintf("%s%s", dna.BasesToString(sc.Bx), dna.BasesToString(sc.Umi))
-	_, found := umiMap[umiBxString]
-	if !found { //if the UMI isn't in the map, add it.
-		umiMap[umiBxString] = a
-	} else {
-		if umiMap[umiBxString].MapQ > a.MapQ {
-			//if the UMI is in the map and the UMI in the map has a better alignment score -- do nothing.
-		} else if umiMap[umiBxString].MapQ == a.MapQ {
-			if umiMap[umiBxString].Pos >= a.Pos { //if the UMIs are tied on alignment score, prioritize the one with a higher start position since GWAS STARR-seq construct barcodes are on the end of constructs,
-				//higher chance that the read contains the construct barcode.
-				//do nothing
-			} else if umiMap[umiBxString].Pos < a.Pos { //if the UMI in the map has a lower position than the query, replace it.
-				umiMap[umiBxString] = a
+	for _, i := range in {
+		sc := sam.ToSingleCellAlignment(i)
+		umiBxString := fmt.Sprintf("%s%s", dna.BasesToString(sc.Bx), dna.BasesToString(sc.Umi))
+		_, found := umiMap[umiBxString]
+		if !found { //if the UMI isn't in the map, add it.
+			umiMap[umiBxString] = i
+		} else {
+			if umiMap[umiBxString].MapQ > i.MapQ {
+				//if the UMI is in the map and the UMI in the map has a better alignment score -- do nothing.
+			} else if umiMap[umiBxString].MapQ == i.MapQ {
+				if umiMap[umiBxString].Pos >= i.Pos { //if the UMIs are tied on alignment score, prioritize the one with a higher start position since GWAS STARR-seq construct barcodes are on the end of constructs,
+					//higher chance that the read contains the construct barcode.
+					//do nothing
+				} else if umiMap[umiBxString].Pos < i.Pos { //if the UMI in the map has a lower position than the query, replace it.
+					umiMap[umiBxString] = i
+				}
+			} else if umiMap[umiBxString].MapQ < i.MapQ { //if the UMI in the map has a lower alignment score than the query, replace it.
+				umiMap[umiBxString] = i
 			}
-		} else if umiMap[umiBxString].MapQ < a.MapQ { //if the UMI in the map has a lower alignment score than the query, replace it.
-			umiMap[umiBxString] = a
 		}
 	}
 	return umiMap
@@ -128,6 +130,7 @@ func runFilter(s Settings) {
 	var chrom string
 	var start, end int
 	var bedRegion bed.Bed
+	var preCollapseSlice []sam.Sam
 
 	if s.FilterByRegion != "" {
 		words = strings.Split(s.FilterByRegion, ":")
@@ -148,53 +151,54 @@ func runFilter(s Settings) {
 				ChromEnd:   numbers.MaxInt,
 			}
 		}
+	}
 
-		for i := range samChan {
-			if s.AlignQualFilter > 0 {
-				passQual = filterByQuality(i, s.AlignQualFilter)
-				if !passQual {
-					continue
-				}
-			}
-			if s.AlignLenFilter > 0 {
-				passLen = filterByLength(i, s.AlignLenFilter)
-				if !passLen {
-					continue
-				}
-			}
-			if s.FilterCigar != "" {
-				passCigar = filterByCigar(i, s.FilterCigar)
-				if !passCigar {
-					continue
-				}
-			}
-			if s.FilterByFlag > 0 {
-				passFlag = filterByFlag(i, s.FilterByFlag)
-				if !passFlag {
-					continue
-				}
-			}
-			if s.FilterByRegion != "" {
-				passLocation = filterByRegion(i, bedRegion)
-				if !passLocation {
-					continue
-				}
-			}
-			if s.SingleCellFormat {
-				i, foundUMI = appendUmiCbc(i)
-				if !foundUMI {
-					continue
-				}
-			}
-			if s.CollapseByUmi {
-				newSamMap = collapseUMI(i)
-				for _, j := range newSamMap {
-					sam.WriteToFileHandle(out, j)
-				}
-			} else {
-				sam.WriteToFileHandle(out, i)
+	for i := range samChan {
+		if s.AlignQualFilter > 0 {
+			passQual = filterByQuality(i, s.AlignQualFilter)
+			if !passQual {
+				continue
 			}
 		}
+		if s.AlignLenFilter > 0 {
+			passLen = filterByLength(i, s.AlignLenFilter)
+			if !passLen {
+				continue
+			}
+		}
+		if s.FilterCigar != "" {
+			passCigar = filterByCigar(i, s.FilterCigar)
+			if !passCigar {
+				continue
+			}
+		}
+		if s.FilterByFlag > 0 {
+			passFlag = filterByFlag(i, s.FilterByFlag)
+			if !passFlag {
+				continue
+			}
+		}
+		if s.FilterByRegion != "" {
+			passLocation = filterByRegion(i, bedRegion)
+			if !passLocation {
+				continue
+			}
+		}
+		if s.SingleCellFormat {
+			i, foundUMI = appendUmiCbc(i)
+			if !foundUMI {
+				continue
+			}
+		}
+		if s.CollapseByUmi {
+			preCollapseSlice = append(preCollapseSlice, i)
+		} else {
+			sam.WriteToFileHandle(out, i)
+		}
+	}
+	newSamMap = collapseUMI(preCollapseSlice)
+	for _, i := range newSamMap {
+		sam.WriteToFileHandle(out, i)
 	}
 }
 
