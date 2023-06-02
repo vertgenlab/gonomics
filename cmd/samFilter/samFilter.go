@@ -200,9 +200,9 @@ func runFilter(s Settings) {
 
 func usage() {
 	fmt.Print("\nsamFilter -- Filters in a input SAM or BAM file based on input filters\n" +
-		"Visit https://samtools.github.io/hts-specs/SAMv1.pdf for more info on SAM file specifications" +
+		"Visit https://samtools.github.io/hts-specs/SAMv1.pdf for more info on SAM file specifications\n\n" +
 		"Usage:\n" +
-		"samFilter [options] in.sam out.sam\n")
+		"samFilter [options] in.sam out.sam\n\noptions:\n")
 	flag.PrintDefaults()
 }
 
