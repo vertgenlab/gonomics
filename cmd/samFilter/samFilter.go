@@ -27,6 +27,7 @@ type Settings struct {
 	FilterByRegion   string
 	FilterByFlag     int
 	SortByPosition   bool
+	//OutBam	bool
 }
 
 func filterByQuality(a sam.Sam, filter int) bool {
@@ -244,6 +245,7 @@ func main() {
 		"options:\n\tchr\n\tchr:start-end")
 	var flagFilter *int = flag.Int("flag", -1, "Filters the input sam/bam file by SAM Flag. Only alignments with matching Flags will be kept")
 	var sortByPosition *bool = flag.Bool("sort", false, "Sorts the output sam/bam file by position")
+	//var outBam *bool = flag.Bool("bam", false, "")
 
 	if *alignQualityFilter < 0 || *alignLengthFilter < 0 {
 		log.Fatalf("the input for alingment qualtiy and length filters must be a positive intiger")
@@ -269,6 +271,7 @@ func main() {
 		FilterByRegion:   *location,
 		FilterByFlag:     *flagFilter,
 		SortByPosition:   *sortByPosition,
+		//OutBam:	*outBam,
 	}
 	runFilter(s)
 }

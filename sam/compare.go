@@ -62,7 +62,7 @@ func Compare(a Sam, b Sam) int {
 	}
 	if a.Pos > b.Pos {
 		return 1
-	} //do I need to add anything about alignment lengths to break start position ties?
+	} //do I need to add anything about alignment lengths to break start position ties? Look at how samtools sorts exactly.
 	return 0
 
 }
