@@ -86,10 +86,10 @@ func collapseUMI(a sam.Sam) map[string]sam.Sam {
 		if umiMap[umiBxString].MapQ > a.MapQ {
 			//if the UMI is in the map and the UMI in the map has a better alignment score -- do nothing.
 		} else if umiMap[umiBxString].MapQ == a.MapQ {
-			if umiMap[umiBxString].Pos >= a.Pos { //if the UMIs are tied on alignment score, prioritize the one with a higher start position since the construct barcodes are on the end of constructs,
+			if umiMap[umiBxString].Pos >= a.Pos { //if the UMIs are tied on alignment score, prioritize the one with a higher start position since GWAS STARR-seq construct barcodes are on the end of constructs,
 				//higher chance that the read contains the construct barcode.
 				//do nothing
-			} else if umiMap[umiBxString].Pos < a.Pos {
+			} else if umiMap[umiBxString].Pos < a.Pos { //if the UMI in the map has a lower position than the query, replace it.
 				umiMap[umiBxString] = a
 			}
 		} else if umiMap[umiBxString].MapQ < a.MapQ { //if the UMI in the map has a lower alignment score than the query, replace it.
