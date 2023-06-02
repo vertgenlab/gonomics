@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
@@ -127,6 +128,7 @@ func runFilter(s Settings) {
 	var start, end int
 	var bedRegion bed.Bed
 	var outSlice, outSliceUmiCollapse []sam.Sam
+	var err error
 
 	samChan, header := sam.GoReadToChan(s.InFile)
 	out := fileio.EasyCreate(s.OutFile)
@@ -136,21 +138,13 @@ func runFilter(s Settings) {
 	if s.FilterByRegion != "" {
 		words = strings.Split(s.FilterByRegion, ":")
 		chrom = words[0]
-		p = strings.Split(words[1], "-")
-		if len(p) == 2 {
+		if len(words) == 1 {
+			bedRegion = bed.Bed{Chrom: chrom, ChromStart: 0, ChromEnd: numbers.MaxInt}
+		} else {
+			p = strings.Split(words[1], "-")
 			start = common.StringToInt(p[0])
 			end = common.StringToInt(p[1])
-			bedRegion = bed.Bed{
-				Chrom:      chrom,
-				ChromStart: start,
-				ChromEnd:   end,
-			}
-		} else {
-			bedRegion = bed.Bed{
-				Chrom:      chrom,
-				ChromStart: 0,
-				ChromEnd:   numbers.MaxInt,
-			}
+			bedRegion = bed.Bed{Chrom: chrom, ChromStart: start, ChromEnd: end}
 		}
 	}
 
@@ -173,7 +167,7 @@ func runFilter(s Settings) {
 				continue
 			}
 		}
-		if s.FilterByFlag > 0 {
+		if s.FilterByFlag > -1 {
 			passFlag = filterByFlag(i, s.FilterByFlag)
 			if !passFlag {
 				continue
@@ -222,6 +216,9 @@ func runFilter(s Settings) {
 			}
 		}
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+
 }
 
 func usage() {
@@ -245,11 +242,20 @@ func main() {
 	var scFormat *bool = flag.Bool("scFormat", false, "Appends the corrected/filtered UMI and BX to the readname from a sam/bam processed by the 10X Cellranger Count software.")
 	var location *string = flag.String("coordinates", "", "Filters the input sam/bam by the input corrdinates. Only alignments that fall within the input coordinates will be kept\n"+
 		"options:\n\tchr\n\tchr:start-end")
-	var flagFilter *int = flag.Int("flag", 0, "Filters the input sam/bam file by SAM Flag. Only alignments with matching Flags will be kept")
+	var flagFilter *int = flag.Int("flag", -1, "Filters the input sam/bam file by SAM Flag. Only alignments with matching Flags will be kept")
 	var sortByPosition *bool = flag.Bool("sort", false, "Sorts the output sam/bam file by position")
 
 	if *alignQualityFilter < 0 || *alignLengthFilter < 0 {
 		log.Fatalf("the input for alingment qualtiy and length filters must be a positive intiger")
+	}
+
+	var expectedNumArgs int = 2
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
 	s := Settings{
@@ -263,15 +269,6 @@ func main() {
 		FilterByRegion:   *location,
 		FilterByFlag:     *flagFilter,
 		SortByPosition:   *sortByPosition,
-	}
-
-	var expectedNumArgs int = 2
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 	runFilter(s)
 }
