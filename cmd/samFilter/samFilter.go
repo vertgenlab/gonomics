@@ -25,6 +25,7 @@ type Settings struct {
 	SingleCellFormat bool
 	FilterByRegion   string
 	FilterByFlag     int
+	SortByPosition   bool
 }
 
 func filterByQuality(a sam.Sam, filter int) bool {
@@ -121,16 +122,16 @@ func appendUmiCbc(a sam.Sam) (sam.Sam, bool) {
 func runFilter(s Settings) {
 	var passQual, passLen, passCigar, foundUMI, passFlag, passLocation bool
 	var newSamMap = make(map[string]sam.Sam)
-
-	samChan, header := sam.GoReadToChan(s.InFile)
-	out := fileio.EasyCreate(s.OutFile)
-	sam.WriteHeaderToFileHandle(out, header)
-
 	var words, p []string
 	var chrom string
 	var start, end int
 	var bedRegion bed.Bed
-	var preCollapseSlice []sam.Sam
+	var outSlice, outSliceUmiCollapse []sam.Sam
+
+	samChan, header := sam.GoReadToChan(s.InFile)
+	out := fileio.EasyCreate(s.OutFile)
+	//TODO: add a bam writer function
+	sam.WriteHeaderToFileHandle(out, header)
 
 	if s.FilterByRegion != "" {
 		words = strings.Split(s.FilterByRegion, ":")
@@ -190,15 +191,36 @@ func runFilter(s Settings) {
 				continue
 			}
 		}
-		if s.CollapseByUmi {
-			preCollapseSlice = append(preCollapseSlice, i)
+		if s.CollapseByUmi || s.SortByPosition {
+			outSlice = append(outSlice, i)
 		} else {
 			sam.WriteToFileHandle(out, i)
 		}
 	}
-	newSamMap = collapseUMI(preCollapseSlice)
-	for _, i := range newSamMap {
-		sam.WriteToFileHandle(out, i)
+	if s.CollapseByUmi {
+		newSamMap = collapseUMI(outSlice)
+		if s.SortByPosition {
+			for _, i := range newSamMap {
+				outSliceUmiCollapse = append(outSliceUmiCollapse, i)
+			}
+		} else {
+			for _, i := range newSamMap {
+				sam.WriteToFileHandle(out, i)
+			}
+		}
+	}
+	if s.SortByPosition {
+		if s.CollapseByUmi {
+			sam.SortByCoord(outSliceUmiCollapse)
+			for _, i := range outSliceUmiCollapse {
+				sam.WriteToFileHandle(out, i)
+			}
+		} else {
+			sam.SortByCoord(outSlice)
+			for _, i := range outSlice {
+				sam.WriteToFileHandle(out, i)
+			}
+		}
 	}
 }
 
@@ -224,14 +246,15 @@ func main() {
 	var location *string = flag.String("coordinates", "", "Filters the input sam/bam by the input corrdinates. Only alignments that fall within the input coordinates will be kept\n"+
 		"options:\n\tchr\n\tchr:start-end")
 	var flagFilter *int = flag.Int("flag", 0, "Filters the input sam/bam file by SAM Flag. Only alignments with matching Flags will be kept")
+	var sortByPosition *bool = flag.Bool("sort", false, "Sorts the output sam/bam file by position")
 
 	if *alignQualityFilter < 0 || *alignLengthFilter < 0 {
 		log.Fatalf("the input for alingment qualtiy and length filters must be a positive intiger")
 	}
 
 	s := Settings{
-		InFile:           "",
-		OutFile:          "",
+		InFile:           flag.Arg(0),
+		OutFile:          flag.Arg(1),
 		AlignQualFilter:  *alignQualityFilter,
 		AlignLenFilter:   *alignLengthFilter,
 		FilterCigar:      *filterCigar,
@@ -239,6 +262,7 @@ func main() {
 		SingleCellFormat: *scFormat,
 		FilterByRegion:   *location,
 		FilterByFlag:     *flagFilter,
+		SortByPosition:   *sortByPosition,
 	}
 
 	var expectedNumArgs int = 2
