@@ -14,7 +14,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"strings"
-	"sync"
 )
 
 type Settings struct {
@@ -29,6 +28,7 @@ type Settings struct {
 	FilterByFlag     int
 	SortByPosition   bool
 	OutBam           bool
+	NoHeader         bool
 }
 
 func filterByQuality(a sam.Sam, filter int) bool {
@@ -130,18 +130,14 @@ func runFilter(s Settings) {
 	var outSlice []sam.Sam
 	var err error
 	var bw *sam.BamWriter
-	var wg sync.WaitGroup
-	wg.Add(1)
 
 	inChan, header := sam.GoReadToChan(s.InFile)
 	out := fileio.EasyCreate(s.OutFile)
-
 	if s.OutBam {
 		bw = sam.NewBamWriter(out, header)
-	} else {
+	} else if s.OutFile != "stdout" && s.NoHeader == false {
 		sam.WriteHeaderToFileHandle(out, header)
 	}
-
 	if s.FilterByRegion != "" {
 		words = strings.Split(s.FilterByRegion, ":")
 		chrom = words[0]
@@ -240,7 +236,8 @@ func runFilter(s Settings) {
 
 func usage() {
 	fmt.Print("\nsamFilter -- Filters in a input SAM or BAM file based on input filters\n" +
-		"Visit https://samtools.github.io/hts-specs/SAMv1.pdf for more info on SAM file specifications\n\n" +
+		"Visit https://samtools.github.io/hts-specs/SAMv1.pdf for more info on SAM file specifications\n" +
+		"The output filename can be replaced with stdout and the sam file without a header will be printed to the screen.\n\n" +
 		"Usage:\n" +
 		"samFilter [options] in.sam out.sam\n\noptions:\n")
 	flag.PrintDefaults()
@@ -263,6 +260,7 @@ func main() {
 	var flagFilter *int = flag.Int("flag", 0, "Filters the input sam/bam file by SAM Flag. Only alignments with matching Flags will be kept")
 	var sortByPosition *bool = flag.Bool("sort", false, "Sorts the output sam/bam file by position")
 	var outBam *bool = flag.Bool("bam", false, "Write the output in BAM format")
+	var noHeader *bool = flag.Bool("noHeader", false, "Sam header isn't included in the output file. This option is only compatible with the Sam output type")
 
 	if *alignQualityFilter < 0 || *alignLengthFilter < 0 {
 		log.Fatalf("the input for alignment qualtiy and length filters must be a positive intiger")
@@ -292,6 +290,7 @@ func main() {
 		FilterByFlag:     *flagFilter,
 		SortByPosition:   *sortByPosition,
 		OutBam:           *outBam,
+		NoHeader:         *noHeader,
 	}
 	runFilter(s)
 }
