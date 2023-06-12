@@ -1,12 +1,13 @@
 package interval
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 func TestQuery(t *testing.T) {
@@ -169,6 +170,18 @@ func TestBuildFCIndex(t *testing.T) {
 		answer[3] != 2 || answer[4] != 3 || answer[5] != -1 ||
 		answer[6] != -1 || answer[7] != -1 {
 		t.Errorf("ERROR: Problem creating FC index")
+	}
+}
+
+func TestSingleBpQuery(t *testing.T) {
+	tgt := bed.Bed{Chrom: "chr1", ChromStart: 220272500, ChromEnd: 220272515, FieldsInitialized: 3}
+	qry := bed.Bed{Chrom: "chr1", ChromStart: 220272500, ChromEnd: 220272501, FieldsInitialized: 3}
+
+	tree := BuildTree([]Interval{tgt})
+
+	ans := Query(tree, qry, "any")
+	if len(ans) != 1 {
+		t.Errorf("ERROR: Problem with single bp queries")
 	}
 }
 
@@ -356,7 +369,6 @@ func (t *testInterval) GetChromEnd() int {
 	return t.end
 }
 func (t *testInterval) WriteToFileHandle(file io.Writer) {
-	return
 }
 
 func generateIntervals(num int, rangeLow int, rangeHigh int) []Interval {

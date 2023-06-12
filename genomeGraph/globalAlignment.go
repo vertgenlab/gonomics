@@ -1,11 +1,12 @@
 package genomeGraph
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 func nmMatrixSetup(size int64) ([][]int64, [][]rune) {
@@ -66,7 +67,7 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 
 // FaSeqToNode is a general function used create a new node based on a target fasta, query fasta and a cigar operation.
 // In addition, given two indices, it will update start/end for the subset of bases used to create the new Node.
-// TODO: Add logic for correct node name annotation convention
+// TODO: Add logic for correct node name annotation convention.
 func FaSeqToNode(target fasta.Fasta, query fasta.Fasta, tStart int, qStart int, cigar align.Cigar, index int) (*Node, int, int) {
 	switch cigar.Op {
 	case align.ColM:

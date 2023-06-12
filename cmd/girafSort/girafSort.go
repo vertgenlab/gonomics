@@ -5,9 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/sort"
-	"log"
 )
 
 func usage() {

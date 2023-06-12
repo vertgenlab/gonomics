@@ -1,10 +1,11 @@
 package gene
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/gtf"
-	"testing"
 )
 
 func TestGtfToGoGene(t *testing.T) {

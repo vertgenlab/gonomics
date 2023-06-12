@@ -2,19 +2,20 @@ package genomeGraph
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dnaTwoBit"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"log"
 	"math"
 	"sort"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 const (
@@ -164,7 +165,7 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 
 func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	//if len(seq) >= extension {
-	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
+	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
 	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
@@ -200,7 +201,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 
 func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	//if len(seq) >= extension {
-	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extenion=%d.\n", len(seq), extension)
+	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
 	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
@@ -373,10 +374,7 @@ func heapSortSeeds(a []SeedDev) {
 
 func quickSort(arr []*SeedDev) []*SeedDev {
 	newArr := make([]*SeedDev, len(arr))
-
-	for i, v := range arr {
-		newArr[i] = v
-	}
+	copy(newArr, arr)
 	recursiveSort(newArr, 0, len(arr)-1)
 	return newArr
 }
@@ -390,8 +388,8 @@ func recursiveSort(arr []*SeedDev, start, end int) {
 	splitIndex := start
 
 	// Iterate sub array to find values less than pivot
-	//   and move them to the beginning of the array
-	//   keeping splitIndex denoting less-value array size
+	// and move them to the beginning of the array
+	// keeping splitIndex denoting less-value array size
 	for i := start; i < end; i++ {
 		if arr[i].TotalLength > pivot.TotalLength {
 			if splitIndex != i {
@@ -547,7 +545,7 @@ func restartSeedHelper(helper *seedHelper) {
 	helper.leftMatches = 0
 }
 
-//seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0
+// seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0.
 func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
 	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)

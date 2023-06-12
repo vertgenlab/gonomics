@@ -2,8 +2,9 @@ package popgen
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/vcf"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var VcfSampleToSegSiteTests = []struct {

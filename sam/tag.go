@@ -286,7 +286,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(fmt.Sprintf("%s:B:H:", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([][]byte) {
-					vals = append(vals, fmt.Sprintf("%s", hex.EncodeToString(val)))
+					vals = append(vals, hex.EncodeToString(val))
 				}
 				s.WriteString(strings.Join(vals, ",") + "\t")
 			}

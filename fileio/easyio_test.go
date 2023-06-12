@@ -2,13 +2,14 @@ package fileio
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
-// example going straight to file
+// example going straight to file.
 func writeDnaFile(file *os.File) {
 	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
 	var err error
@@ -16,7 +17,7 @@ func writeDnaFile(file *os.File) {
 	exception.PanicOnErr(err)
 }
 
-// example using io.Writer
+// example using io.Writer.
 func writeDnaIo(file io.Writer) {
 	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
 	var err error
@@ -24,7 +25,7 @@ func writeDnaIo(file io.Writer) {
 	exception.PanicOnErr(err)
 }
 
-// example using fileio.EasyWriter
+// example using fileio.EasyWriter.
 func writeDnaFileio(file *EasyWriter) {
 	var fakeDna string = "ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT"
 	var err error
@@ -32,7 +33,7 @@ func writeDnaFileio(file *EasyWriter) {
 	exception.PanicOnErr(err)
 }
 
-// used to uncompress the file in the repo
+// used to uncompress the file in the repo.
 func copyFile(inputFilename string, outputFilename string) {
 	var er *EasyReader
 	var ew *EasyWriter
@@ -162,5 +163,4 @@ func TestWrite(t *testing.T) {
 		err = os.Remove("test.txt")
 		exception.PanicOnErr(err)
 	}
-
 }

@@ -2,13 +2,14 @@ package giraf
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
-	"log"
-	"strconv"
-	"strings"
 )
 
 func GirafToString(g *Giraf) string {
@@ -21,7 +22,6 @@ func stringToGiraf(line string) *Giraf {
 	var curr *Giraf
 	data := strings.SplitN(line, "\t", 12)
 	if len(data) > 10 {
-
 		curr = &Giraf{
 			QName:     data[0],
 			QStart:    common.StringToInt(data[1]),
@@ -126,9 +126,8 @@ func qualToString(qual []uint8) string {
 }
 
 func fromStringToQual(s string) []uint8 {
-	words := []rune(s)
 	answer := make([]uint8, 0)
-	for _, v := range words {
+	for _, v := range s {
 		answer = append(answer, uint8(v))
 	}
 	return answer

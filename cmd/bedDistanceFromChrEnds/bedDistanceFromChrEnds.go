@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 func bedDistanceFromChrEnds(inFile string, chromFile string, outFile string) {
@@ -19,7 +20,7 @@ func bedDistanceFromChrEnds(inFile string, chromFile string, outFile string) {
 
 	for i := range records {
 		_, found = ref[records[i].Chrom]
-		if found != true {
+		if !found {
 			log.Fatalf("Did not find '%s' in the chrom.sizes file", records[i].Chrom)
 		}
 		lengthFromEnd = ref[records[i].Chrom].Size - records[i].ChromEnd

@@ -1,8 +1,9 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func FixAllVcf(query []Vcf, ref map[string][]dna.Base) {
@@ -17,7 +18,7 @@ func FixVcf(query Vcf, ref map[string][]dna.Base) Vcf {
 
 // According to VCF specs, the alt field should never contain a "-"
 // to represent a deletion. This function will reformat the vcf record
-// according to VCF specs
+// according to VCF specs.
 func fixDash(query Vcf, ref map[string][]dna.Base) Vcf {
 	for i := 0; i < len(query.Alt); i++ {
 		if strings.Compare(query.Alt[i], "-") == 0 {

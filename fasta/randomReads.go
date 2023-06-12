@@ -1,9 +1,10 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"math/rand"
 	"strconv"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func randIntInRange(x int, y int) int {

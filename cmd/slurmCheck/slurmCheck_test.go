@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var SlurmGeneralizedCheckTests = []struct {
@@ -35,7 +36,5 @@ func TestParseTheInput(t *testing.T) {
 			err = os.Remove(v.actualOutputParseTheInput)
 			exception.PanicOnErr(err)
 		}
-
 	}
-
 }

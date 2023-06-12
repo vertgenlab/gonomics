@@ -7,7 +7,7 @@ import (
 )
 
 // GtfToGene converts a gtf record into a Gene data structure
-// WARNING: If multiple isoforms are present, only the isoform the longest CDS is used
+// WARNING: If multiple isoforms are present, only the isoform the longest CDS is used.
 func GtfToGene(g *gtf.Gene, ref []fasta.Fasta) *Gene {
 	answer := new(Gene)
 	gtf.MoveCanonicalToZero(g)

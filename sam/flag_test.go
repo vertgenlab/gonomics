@@ -36,8 +36,14 @@ var testMap = map[int]func(sam Sam) bool{
 
 func flagPasses(r Sam, trueBits map[int]bool) bool {
 	for testedBit, testFunc := range testMap {
-		if testFunc(r) != trueBits[testedBit] {
-			return false
+		if testedBit == 16 || testedBit == 32 {
+			if testFunc(r) == trueBits[testedBit] {
+				return false
+			}
+		} else {
+			if testFunc(r) != trueBits[testedBit] {
+				return false
+			}
 		}
 	}
 	return true
@@ -59,7 +65,6 @@ func testFlags(toTest []int) bool {
 }
 
 func TestFlagFuncs(t *testing.T) {
-
 	if !testFlags([]int{paired, properlyAligned, unmapped, mateUnmapped,
 		posStrand, mateIsPosStrand, forwardRead, reverseRead, notPrimaryAlign, readFailsQc,
 		isDuplicate, suppAlign}) {

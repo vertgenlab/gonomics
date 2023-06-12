@@ -31,13 +31,13 @@ func MateIsUnmapped(sam Sam) bool {
 // IsPosStrand returns true if the input record aligns to the
 // positive strand.
 func IsPosStrand(sam Sam) bool {
-	return flagTestBit(sam.Flag, 16)
+	return !flagTestBit(sam.Flag, 16)
 }
 
 // MateIsPosStrand returns true if the input records mate pair
 // aligns to the positive strand.
 func MateIsPosStrand(sam Sam) bool {
-	return flagTestBit(sam.Flag, 32)
+	return !flagTestBit(sam.Flag, 32)
 }
 
 // IsForwardRead returns true if the input record is the forward

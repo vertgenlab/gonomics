@@ -7,6 +7,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"sort"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -14,10 +19,6 @@ import (
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
-	"log"
-	"sort"
-	"strings"
 )
 
 func scCount(s Settings) {
@@ -104,7 +105,7 @@ func normAndPrintRow(out io.Writer, r Row, normalizationMap map[string]float64, 
 	exception.PanicOnErr(err)
 }
 
-//Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
+// Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
 type Row struct {
 	Bx     string
 	Counts []float64
@@ -135,6 +136,7 @@ func usage() {
 			"Accepts sam reads aligned to a reference genome that have first been processed with fastqFormat -singleCell -collapseUmi and sorted with mergeSort -singleCellBx\n" +
 			"Usage:\n" +
 			"scCount reads.sam genes.gtf out.csv\n" +
+			"genes.gtf must contain transcript lines, where field 3 (feature) is 'transcript'\n" +
 			"scCount also accepts a tab-separated optional input to declare expression normalization multipliers for each gene using the expNormalizationFile option.\n" +
 			"options:\n")
 	flag.PrintDefaults()

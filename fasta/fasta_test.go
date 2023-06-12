@@ -1,9 +1,10 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 var seqOneA = dna.StringToBases("ACGTacgTCATCATCATTACTACTAC")

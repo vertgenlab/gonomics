@@ -5,8 +5,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func mfaReduce(inFilename, outFilename string) {

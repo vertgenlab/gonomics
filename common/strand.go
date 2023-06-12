@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-// true if '+', false if '-', and fatal error otherwise
+// true if '+', false if '-', and fatal error otherwise.
 func StringToStrand(s string) bool {
 	switch s {
 	case "+":

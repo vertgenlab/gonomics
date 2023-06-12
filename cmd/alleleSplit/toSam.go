@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
 )
 
 func ASFilter(v vcf.Vcf, parentOne int16, parentTwo int16, F1 int16) bool {
@@ -44,7 +45,7 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 
 	var gV vcf.Vcf
 	var alleles [][]dna.Base
-	for read, done := sam.ReadNext(samFile); done != true; read, done = sam.ReadNext(samFile) {
+	for read, done := sam.ReadNext(samFile); !done; read, done = sam.ReadNext(samFile) {
 		parentAllele1, parentAllele2 = 0, 0
 		target = int(read.Pos - 1)
 		query = 0
@@ -91,7 +92,6 @@ func SnpSearch(samfile string, genotypeVcf string, fOne string, parentOne string
 							parentAllele2++
 						}
 					}
-
 				}
 				target += read.Cigar[i].RunLength
 				query += read.Cigar[i].RunLength

@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // EasyReader provides a simplified wrapper of the builtin golang io functions.
@@ -146,7 +147,7 @@ func WriteToFileHandle(file io.Writer, rec string) {
 	exception.PanicOnErr(err)
 }
 
-//Write writes a file
+// Write writes a file.
 func Write(filename string, records []string) {
 	var err error
 	file := EasyCreate(filename)

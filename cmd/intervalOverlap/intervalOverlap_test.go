@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
 	"io/ioutil"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
 )
 
 func TestSequelOverlap(t *testing.T) {

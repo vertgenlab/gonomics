@@ -2,9 +2,10 @@ package popgen
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 // PlotAfsF writes the Allele Frequency F function (AfsSampleDensity) to an output file for downstream visualization.

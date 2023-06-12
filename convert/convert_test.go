@@ -1,6 +1,10 @@
 package convert
 
 import (
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -8,9 +12,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
-	"os"
-	"strings"
-	"testing"
 )
 
 var seqA []dna.Base = dna.StringToBases("--TTTC--ATGAATAATCA")
@@ -78,10 +79,29 @@ var BedValuesToWigTests = []struct {
 	OutFile       string
 	ExpectedFile  string
 	Method        string
+	UseRange      bool
 }{
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0, "testdata/name.tmp.wig", "testdata/name.Expected.wig", "Name"},
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", 0, "testdata/score.tmp.wig", "testdata/score.Expected.wig", "Score"},
-	{"testdata/test.bed", "testdata/ref.chrom.sizes", -1, "testdata/name.missing.tmp.wig", "testdata/name.missing.Expected.wig", "Name"},
+	{"testdata/test.bed",
+		"testdata/ref.chrom.sizes",
+		0,
+		"testdata/name.tmp.wig",
+		"testdata/name.Expected.wig",
+		"Name",
+		false},
+	{"testdata/test.bed",
+		"testdata/ref.chrom.sizes",
+		0,
+		"testdata/score.tmp.wig",
+		"testdata/score.Expected.wig",
+		"Score",
+		false},
+	{"testdata/test.bed",
+		"testdata/ref.chrom.sizes",
+		-1,
+		"testdata/name.missing.tmp.wig",
+		"testdata/name.missing.Expected.wig",
+		"Name",
+		false},
 }
 
 func TestBedValuesToWig(t *testing.T) {
@@ -90,7 +110,7 @@ func TestBedValuesToWig(t *testing.T) {
 	var wigs []wig.Wig
 	for _, v := range BedValuesToWigTests {
 		reference = chromInfo.ReadToMap(v.chromSizeFile)
-		wigs = BedValuesToWig(v.inFile, reference, v.Missing, v.Method)
+		wigs = BedValuesToWig(v.inFile, reference, v.Missing, v.Method, v.UseRange)
 		wig.Write(v.OutFile, wigs)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in BedValuesToWig. Output was not as expected.")

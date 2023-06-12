@@ -8,6 +8,8 @@ package interval
 import (
 	"fmt"
 	"sort"
+
+	"golang.org/x/exp/slices"
 )
 
 type Interval interface {
@@ -193,6 +195,10 @@ func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []
 		}
 	}
 
+	if len(answer) > 1 && q.GetChromEnd()-q.GetChromStart() == 1 {
+		answer = sortAndDeduplicate(answer)
+	}
+
 	return answer
 }
 
@@ -268,11 +274,8 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			} // 17. end while
 
 			i, v = v.iLeft[i], v.lChild // 18. i = v.lfc[i], v = v.lchild
-
 		} else { // 19. else
-
 			i, v = v.iRight[i], v.rChild //20. i=v.rfc[i], v=v.rchild
-
 		} // 21. end if
 	} // 22. end while
 
@@ -310,7 +313,6 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			} // 33. end while
 
 			i, v = v.iRight[i], v.rChild // 34. i=v. rfc[i], v=v. rchild
-
 		} else { // 35. else
 			i, v = v.iLeft[i], v.lChild // 36. i = v. lfc[i], v = v. lchild
 		} // 37. end if
@@ -328,7 +330,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	return answer // 42. return S
 }
 
-//PrettyPrint displays the chrom, chromstart, and chromend on a line as a print for debugging.
+// PrettyPrint displays the chrom, chromstart, and chromend on a line as a print for debugging.
 func PrettyPrint(q Interval) {
 	fmt.Printf("Interval. Chrom: %s. ChromStart: %d. ChromEnd: %d.\n", q.GetChrom(), q.GetChromStart(), q.GetChromEnd())
 }
@@ -359,4 +361,40 @@ func findSplit(x1, x2 float64, node *IntervalNode) *IntervalNode {
 		}
 	}
 	return node
+}
+
+func sortAndDeduplicate(a []Interval) []Interval {
+	sort.Slice(a, func(i, j int) bool {
+		switch {
+		case a[i].GetChromStart() < a[j].GetChromStart():
+			return true
+		case a[i].GetChromStart() > a[j].GetChromStart():
+			return false
+		case a[i].GetChromEnd() < a[j].GetChromEnd():
+			return true
+		default:
+			return false
+		}
+	})
+
+	for i := 1; i < len(a); i++ {
+		if equal(a[i], a[i-1]) {
+			a = slices.Delete(a, i-1, i)
+			i--
+		}
+	}
+	return a
+}
+
+func equal(a, b Interval) bool {
+	if a.GetChrom() != b.GetChrom() {
+		return false
+	}
+	if a.GetChromStart() != b.GetChromStart() {
+		return false
+	}
+	if a.GetChromEnd() != b.GetChromEnd() {
+		return false
+	}
+	return true
 }

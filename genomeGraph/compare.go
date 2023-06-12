@@ -1,8 +1,9 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 func compareId(alpha *Node, beta *Node) int {

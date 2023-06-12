@@ -5,8 +5,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func faFilter(infile string, outfile string, name string, notName string, refPositions bool, start int, end int, minSize int) {

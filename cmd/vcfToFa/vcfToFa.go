@@ -5,14 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 )
 
 // addAnotherCopyOfRef takes an alignment and a name.  The function will copy the reference (first sequence
-//  in the alignment and place this copy at the end of the alignment with the name that is given.
+//
+//	in the alignment and place this copy at the end of the alignment with the name that is given.
 func addAnotherCopyOfRef(aln []fasta.Fasta, nameOfCopy string) []fasta.Fasta {
 	var refSeqCopy []dna.Base
 	if len(aln) == 0 {
@@ -25,10 +27,11 @@ func addAnotherCopyOfRef(aln []fasta.Fasta, nameOfCopy string) []fasta.Fasta {
 }
 
 // updateSeq takes an alignment, seqsOrdered, and a vcf record, v, and then loops through all the sample sequences to update
-//  their sequences in the alignment if they have any alt alleles.  currAlnPos is the index in the alignment that corresponds
-//  to the reference position in the vcf record.  The header of the vcf file is needed to loop through the samples.  We also
-//  need to know sampleSeqIdxOffset, which is the index of the first sequences in the alignment that corresponds to a sample,
-//  instead of an original sequence in the alignment.  Haploid is true if each sample provides only one new sequence for the alignment
+//
+//	their sequences in the alignment if they have any alt alleles.  currAlnPos is the index in the alignment that corresponds
+//	to the reference position in the vcf record.  The header of the vcf file is needed to loop through the samples.  We also
+//	need to know sampleSeqIdxOffset, which is the index of the first sequences in the alignment that corresponds to a sample,
+//	instead of an original sequence in the alignment.  Haploid is true if each sample provides only one new sequence for the alignment
 func updateSeq(seqsOrdered []fasta.Fasta, currAlnPos int, header vcf.Header, v vcf.Vcf, sampleSeqIdxOffset int, haploid bool) {
 	var alleleNumber int16
 	var sampleIdx, sampleSeqIdx int

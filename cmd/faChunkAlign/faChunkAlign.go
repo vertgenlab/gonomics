@@ -5,12 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func faChunkAlign(inFile string, chunkSize int, gapOpen int64, gapExtend int64, outFile string) {

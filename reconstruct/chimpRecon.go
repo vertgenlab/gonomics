@@ -1,13 +1,14 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
-//ChimpRecon is like QuickPrimateRecon but returns a chimp-biased ancestor estimate from an input multiFa in the order Human-Bonobo-Chimp-Orangutan-Gorilla.
-//This is the same alignment used for the human-biased HCA estimate. However, bonobo is not used in this estimation.
+// ChimpRecon is like QuickPrimateRecon but returns a chimp-biased ancestor estimate from an input multiFa in the order Human-Bonobo-Chimp-Orangutan-Gorilla.
+// This is the same alignment used for the human-biased HCA estimate. However, bonobo is not used in this estimation.
 func ChimpAncestorRecon(records []fasta.Fasta, messyToN bool) fasta.Fasta {
 	answer := fasta.Fasta{Name: "Human_Chimp_Ancestor"}
 	var outputBase dna.Base
@@ -96,7 +97,7 @@ func ChimpAncestorRecon(records []fasta.Fasta, messyToN bool) fasta.Fasta {
 	return answer
 }
 
-//like humanInsertion, determines if the chimp base in the alignment is part of an insertion. Bool return.
+// like humanInsertion, determines if the chimp base in the alignment is part of an insertion. Bool return.
 func chimpInsertion(records []fasta.Fasta, j int) bool {
 	human := records[0]
 	chimp := records[2]

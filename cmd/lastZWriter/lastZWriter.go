@@ -3,14 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/lastZWriter"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/lastZWriter"
 )
 
-func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string) {
+// MakeArray generates a lastZ alignment scoring matrix from user-specified path if needed,
+// and calls helper functions (lastZWriter.AlignSetUp, writeFile) to build the lastZ output directory tree and write all lastZ commands
+func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string, targetModifier string) {
 	if !m {
 		lastZWriter.BuildMatrices(mPath)
 	}
@@ -22,35 +26,73 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	var allLines []string
 	for ref := range refList {
 		for spec := range speciesList {
-			match := strings.Compare(speciesList[spec], refList[ref])
-			if match != 0 {
+			if speciesList[spec] != refList[ref] {
 				parameters, matrix = lastZWriter.AlignSetUp(pairwise, speciesList[spec], refList[ref], allDists, m, mPath)
 				if parameters == nil || matrix == "" {
 					log.Fatalf("Reference %s and species %s returned no parameters or matrix.", refList[ref], speciesList[spec])
 				}
-				allLines = writeFile(lastZ, pairwise, refList[ref], speciesList[spec], parameters, matrix, allLines)
+				allLines = writeFile(lastZ, pairwise, refList[ref], speciesList[spec], parameters, matrix, targetModifier, allLines)
 			}
 		}
 	}
 	fileio.Write(outText, allLines)
 }
 
-func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, allLines []string) (lines []string) {
+// MakeArraySimple has no allDists, m, or mPath (will not generate matrix), and parameters is directly input as 1 string not generated as []string
+func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string, targetModifier string) {
+	speciesList := fileio.Read(speciesListFile)
+	refList := fileio.Read(refListFile)
+	fileio.EasyCreate(outText)
+	var allLines []string
+	for ref := range refList {
+		for spec := range speciesList {
+			if speciesList[spec] != refList[ref] {
+				lastZWriter.AlignSetUpSimple(pairwise, speciesList[spec], refList[ref])
+				allLines = writeFileSimple(lastZ, pairwise, refList[ref], speciesList[spec], parameters, targetModifier, allLines)
+			}
+		}
+	}
+	fileio.Write(outText, allLines)
+}
+
+// writeFile writes all lastZ commands
+// required inputs:
+// lastZ: path to lastZ install, pariwise: path to input and output directory trees
+// reference: target in lastZ alignment, species: query in lastZ alignment
+// parameters: lastZ alignment parameters, e.g. masking score M=254
+// matrix: lastZ alignment scoring matrix
+// targetModifier: modifier on the target in lastZ alignment, e.g. [unmask]
+func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, targetModifier string, allLines []string) (lines []string) {
 	var currLines []string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
 
-	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix)
+	currLines = fastaFinder(lastZ, pairwise, reference, species, par, matrix, targetModifier)
 	allLines = append(allLines, currLines...)
-
 	return allLines
 }
 
-func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string) (lines []string) {
+// writeFileSimple has no matrix string, and parameters is 1 string not []string
+func writeFileSimple(lastZ string, pairwise string, reference string, species string, parameters string, targetModifier string, allLines []string) (lines []string) {
+	var currLines []string
+	currLines = fastaFinderSimple(lastZ, pairwise, reference, species, parameters, targetModifier)
+	allLines = append(allLines, currLines...)
+	return allLines
+}
+
+// fastaFinder writes each individual lastZ command
+func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string, targetModifier string) (lines []string) {
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
-	tPath := pairwise + "/" + reference + ".byChrom"
-	qPath := pairwise + "/" + species + ".byChrom"
+	tPath := filepath.Join(pairwise, reference + ".byChrom")
+	qPath := filepath.Join(pairwise, species + ".byChrom")
+
+	if _, e := os.Stat(tPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
+	}
+	if _, e := os.Stat(qPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the query species.")
+	}
 
 	tMatches, _ = filepath.Glob(tPath + "/*.fa")
 	qMatches, _ = filepath.Glob(qPath + "/*.fa")
@@ -67,9 +109,79 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			currLine = lastZ + " " + pairwise + "/" + reference + ".byChrom" + "/" + tFiles[t] + " " + pairwise + "/" + species + ".byChrom" + "/" + qFiles[q] + " --output=" + pairwise + "/" + reference + "." + species + "/" + tName + "/" + qName + "." + tName + ".axt --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
+			// note that because of filepath.Join, different systems (e.g. Windows) will write different paths (e.g. "/" vs "\"), and may cause tests to fail
+			currLine = lastZ + " " + filepath.Join(
+				pairwise,
+				reference + ".byChrom",
+				tFiles[t]) + targetModifier + " " + filepath.Join(
+				pairwise,
+				species + ".byChrom",
+				qFiles[q]) + " --output=" + filepath.Join(
+				pairwise,
+				reference + "." + species,
+				tName,
+				qName + "." + tName + ".axt") + " --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
+	}
+
+	if theseLines == nil {
+		log.Fatal("No lines to write to file")
+	}
+
+	return theseLines
+}
+
+// fastaFinderSimple has no matrix string
+// fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
+func fastaFinderSimple(lastZ string, pairwise string, reference string, species string, par string, targetModifier string) (lines []string) {
+	var currLine string
+	var theseLines []string
+	var tMatches, qMatches, tFiles, qFiles []string
+	tPath := filepath.Join(pairwise, reference + ".byChrom")
+	qPath := filepath.Join(pairwise, species + ".byChrom")
+
+	if _, e := os.Stat(tPath); os.IsNotExist(e) {
+		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
+	}
+	if _, e := os.Stat(qPath); os.IsNotExist(e) {
+		log.Fatalf("Error: There is no .byChrom directory for the query species.")
+	}
+
+	tMatches, _ = filepath.Glob(tPath + "/*.fa")
+	qMatches, _ = filepath.Glob(qPath + "/*.fa")
+
+	for tF := range tMatches {
+		_, tName := filepath.Split(tMatches[tF])
+		tFiles = append(tFiles, tName)
+	}
+	for qF := range qMatches {
+		_, qName := filepath.Split(qMatches[qF])
+		qFiles = append(qFiles, qName)
+	}
+	for t := range tFiles {
+		tName := strings.TrimSuffix(tFiles[t], ".fa")
+		for q := range qFiles {
+			qName := strings.TrimSuffix(qFiles[q], ".fa")
+			// currLine reflects that fastaFinderSimple has no matrix string
+			// currLine also reflects that fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
+			currLine = lastZ + " " + filepath.Join(
+				pairwise,
+				reference + ".byChrom",
+				tFiles[t]) + targetModifier + " " + filepath.Join(
+				pairwise,
+				species + ".byChrom",
+				qFiles[q]) + " --output=" + filepath.Join(
+				pairwise,
+				reference + "." + species,
+				qName,
+				tName + "." + qName + ".axt") + " --action:target=multiple" + " --format=axt " + par
+			theseLines = append(theseLines, currLine)
+		}
+	}
+
+	if theseLines == nil {
+		log.Fatal("Error: No lines to write to file")
 	}
 
 	return theseLines
@@ -93,10 +205,17 @@ func usage() {
 			"would like the needed matrices to be hardcoded. As an alternative to the all_dists function, or if there " +
 			"isn't an available tree of the necessary species, this function can also take a file to replace the " +
 			"specified allDists file. The first two columns of which would need to be every possible combination of " +
-			"your alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the " +
+			"their alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the " +
 			"terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables. \n" +
+			"\n" +
+			"Instead of regular lastZWriter, the user has the option to run simple lastZWriter, " +
+			"which accepts a parameter string directly and does not generate matrices. " +
+			"One usage simple lastZWriter is appropriate for is aligning relatively short sequences with whole chromosomes from the same species. " +
+			"To run simple lastZWriter, set option simple to true, and provide the parameter string in the option parameters if needed. " +
+			"For simple lastZWriter, allDists is still a required input but will not be used, so it can be a dummy input, e.g. 'allDists.txt'. \n" +
+			"\n" +
 			"Usage:\n" +
-			"lastZWriter [-m=<bool> -mPath=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt>" +
+			"lastZWriter [-m=<bool> -mPath=<string> -simple=<bool> -parameters=<string> -targetModifier=<string>] <lastZ install> <path to parent of .byChrom> <speciesList.txt> <referenceList.txt> <allDists.txt> <outFile.txt> \n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -107,6 +226,10 @@ func main() {
 	var expectedNumArgs int = 6
 	var m *bool = flag.Bool("m", true, "Use existing matrices at hardcoded path.")
 	var mPath *string = flag.String("mPath", "", "Path to desired location of created matrices if m = false.")
+	// to run simple lastZWriter, need 2 options (simple *bool, parameters *string). Do not combine the 2 options because want empty ("") parameters to work too
+	var simple *bool = flag.Bool("simple", false, "Instead of regular lastZWriter, run simple lastZWriter.")
+	var parameters *string = flag.String("parameters", "", "Instead of regular lastZWriter, run simple lastZWriter with the specified parameter string, e.g. M=0")
+	var targetModifier *string = flag.String("targetModifier", "", "Run lastz on target with modifier, e.g. [unmask]")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -125,5 +248,9 @@ func main() {
 	allDists := flag.Arg(4)
 	outText := flag.Arg(5)
 
-	MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath)
+	if *simple {
+		MakeArraySimple(lastZ, pairwiseDir, speciesListFile, refListFile, *parameters, outText, *targetModifier)
+	} else {
+		MakeArray(lastZ, pairwiseDir, speciesListFile, refListFile, allDists, outText, *m, *mPath, *targetModifier)
+	}
 }

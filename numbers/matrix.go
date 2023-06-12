@@ -1,6 +1,6 @@
 package numbers
 
-//Rref returns an input matrix in row reduced echelon form using Gaussian elimination.
+// Rref returns an input matrix in row reduced echelon form using Gaussian elimination.
 func Rref(m [][]float64) [][]float64 {
 	//first we make a copy of the input matrix to serve as our answer. This preserves the input matrix in its original form.
 	mCopy := make([][]float64, len(m))

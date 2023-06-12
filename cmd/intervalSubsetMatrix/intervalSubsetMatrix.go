@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"sort"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
-	"log"
-	"sort"
 )
 
 func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string) {

@@ -22,7 +22,6 @@ func simulateWrightFisher(outFile string, set popgen.WrightFisherSettings) {
 	} else {
 		popgen.WriteTSV(outFile, wf)
 	}
-
 }
 
 func usage() {

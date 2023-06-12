@@ -3,13 +3,14 @@ package sam
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/vertgenlab/gonomics/bgzf"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/bgzf"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // BamWriter wraps a bgzf.BlockWriter and provides functions to write
@@ -108,7 +109,11 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.Write(bw.u32[:2])
 
 	// num cigar op
-	le.PutUint16(bw.u32[:2], uint16(len(s.Cigar)))
+	if len(s.Cigar) > 0 && s.Cigar[0].Op == '*' {
+		le.PutUint16(bw.u32[:2], 0)
+	} else {
+		le.PutUint16(bw.u32[:2], uint16(len(s.Cigar)))
+	}
 	bw.recordBuf.Write(bw.u32[:2])
 
 	// flag
@@ -152,6 +157,9 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 
 	// cigar
 	for i := range s.Cigar {
+		if i == 0 && s.Cigar[0].Op == '*' {
+			break
+		}
 		le.PutUint32(bw.u32[:4], getCigUint32(s.Cigar[i]))
 		bw.recordBuf.Write(bw.u32[:4])
 	}
@@ -204,10 +212,10 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 // base        : =  A  C  M  G  R  S  V  T  W  Y  H  K  D  B  N
 // bam specs   : 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
 // gonomics val: 11 0  1  -1 2  -1 -1 -1 3  -1 -1 -1 -1 -1 -1 4
-// lowercase converted to uppercase and all non-spec bases converted to 'N'
+// lowercase converted to uppercase and all non-spec bases converted to 'N'.
 var baseEncoder = []uint8{1, 2, 4, 8, 15, 1, 2, 4, 8, 15, 15, 15, 15, 15, 15, 15}
 
-// getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op
+// getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
 func getCigUint32(c cigar.Cigar) uint32 {
 	var cigint uint32
 	cigint = uint32(c.RunLength) << 4  // move 4 bits to the left
@@ -259,9 +267,27 @@ func writeExtra(bw *BamWriter, s Sam) {
 	tagSets := strings.Split(s.Extra, "\t")
 	var triplet []string
 	for i := range tagSets {
-		triplet = strings.Split(tagSets[i], ":")
+		triplet = retrieveTriplet(tagSets[i])
 		writeTriplet(bw, triplet)
 	}
+}
+
+// retrieveTriplet splits a tag string into type, number, and value.
+func retrieveTriplet(tag string) []string {
+	comp := strings.Split(tag, ":")
+	if len(comp) == 3 {
+		return comp
+	}
+	if len(comp) < 3 {
+		log.Panicf("malformed auxiliary data '%s'", tag)
+	}
+	// len is >3 so tag value likely has ":"
+	if len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
+		log.Panicf("malformed auxiliary data '%s'", tag)
+	}
+	comp[2] = strings.Join(comp[2:], ":") // rejoin value component of tag
+	comp = comp[:3]
+	return comp
 }
 
 // writeTriplet accepts a []string of len 3 that follows the format
@@ -269,13 +295,13 @@ func writeExtra(bw *BamWriter, s Sam) {
 // data to the input BamWriter per the Sam specifications.
 func writeTriplet(bw *BamWriter, triplet []string) {
 	if len(triplet) != 3 {
-		log.Panicf("malformed auxilliary data '%s'", strings.Join(triplet, ":"))
+		log.Panicf("malformed auxiliary data '%s'", strings.Join(triplet, ":"))
 	}
 
 	// write tag bytes
 	tag := triplet[0]
 	if len(tag) != 2 {
-		log.Panicf("auxilliary data tag must be exactly 2 characters offender:'%s'", tag)
+		log.Panicf("auxiliary data tag must be exactly 2 characters offender:'%s'", tag)
 	}
 	bw.recordBuf.WriteString(tag)
 
@@ -344,6 +370,6 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 		bw.recordBuf.WriteByte(nul)
 
 	default:
-		log.Panicf("unrecognized auxilliary data type '%s'", typ)
+		log.Panicf("unrecognized auxiliary data type '%s'", typ)
 	}
 }

@@ -1,8 +1,9 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/cigar"
 	"io"
+
+	"github.com/vertgenlab/gonomics/cigar"
 )
 
 func (s Sam) GetChrom() string {

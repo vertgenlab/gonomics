@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"sync"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
-	"sync"
-	"testing"
 )
 
 const (

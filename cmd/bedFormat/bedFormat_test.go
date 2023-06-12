@@ -1,57 +1,130 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var BedFormatTests = []struct {
-	InFile         string
-	OutFile        string
-	ExpectedFile   string
-	UCSCToEnsembl  bool
-	EnsemblToUCSC  bool
-	ScaleNameFloat float64
-	PadLength      int
-	ChromSizeFile  string
+	InFile              string
+	OutFile             string
+	ExpectedFile        string
+	UCSCToEnsembl       bool
+	EnsemblToUCSC       bool
+	ScaleNameFloat      float64
+	PadLength           int
+	UpstreamPadLength   int
+	DownstreamPadLength int
+	ChromSizeFile       string
+	ToMidpoint          bool
+	ToTss               bool
 }{
-	{"testdata/test.bed", //this test is for scaleNameFloat
-		"testdata/test.outFloat.bed",
-		"testdata/expected.NameFloat.bed",
-		false,
-		false,
-		10,
-		0,
-		"",
+	{InFile: "testdata/test.bed", //this test is for scaleNameFloat
+		OutFile:             "testdata/test.outFloat.bed",
+		ExpectedFile:        "testdata/expected.NameFloat.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      10,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "",
+		ToMidpoint:          false,
+		ToTss:               false,
 	},
-	{"testdata/test.bed", //this test is for UCSCToEnsembl
-		"testdata/test.outEnsembl.bed",
-		"testdata/expected.Ensembl.bed",
-		true,
-		false,
-		1,
-		0,
-		"",
+	{InFile: "testdata/test.bed", //this test is for UCSCToEnsembl
+		OutFile:             "testdata/test.outEnsembl.bed",
+		ExpectedFile:        "testdata/expected.Ensembl.bed",
+		UCSCToEnsembl:       true,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "",
+		ToMidpoint:          false,
+		ToTss:               false,
 	},
-	{"testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
-		"testdata/test.outUCSC.bed",
-		"testdata/expected.UCSC.bed",
-		false,
-		true,
-		1,
-		0,
-		"",
+	{InFile: "testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
+		OutFile:             "testdata/test.outUCSC.bed",
+		ExpectedFile:        "testdata/expected.UCSC.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       true,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "",
+		ToMidpoint:          false,
+		ToTss:               false,
 	},
-	{"testdata/test.pad.bed",
-		"testdata/out.pad.bed",
-		"testdata/expected.pad.bed",
-		false,
-		false,
-		1,
-		91,
-		"testdata/test.chrom.sizes",
+	{InFile: "testdata/pad.bed",
+		OutFile:             "testdata/out.pad.bed",
+		ExpectedFile:        "testdata/expected.pad.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           91,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "testdata/test.chrom.sizes",
+		ToMidpoint:          false,
+		ToTss:               false,
+	},
+	{InFile: "testdata/test.bed",
+		OutFile:             "testdata/test.midpoint.bed",
+		ExpectedFile:        "testdata/expected.midpoint.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "testdata/test.chrom.sizes",
+		ToMidpoint:          true,
+		ToTss:               false,
+	},
+	{InFile: "testdata/test.strand.bed",
+		OutFile:             "testdata/test.tss.bed",
+		ExpectedFile:        "testdata/expected.tss.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "testdata/test.chrom.sizes",
+		ToMidpoint:          false,
+		ToTss:               true,
+	},
+	{InFile: "testdata/test.strand.bed",
+		OutFile:             "testdata/test.upstream.bed",
+		ExpectedFile:        "testdata/expected.upstream.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   23,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "testdata/test.chrom.sizes",
+		ToMidpoint:          false,
+		ToTss:               false,
+	},
+	{InFile: "testdata/test.strand.bed",
+		OutFile:             "testdata/test.downstream.bed",
+		ExpectedFile:        "testdata/expected.downstream.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 13,
+		ChromSizeFile:       "testdata/test.chrom.sizes",
+		ToMidpoint:          false,
+		ToTss:               false,
 	},
 }
 
@@ -60,13 +133,17 @@ func TestBedFormat(t *testing.T) {
 	var s Settings
 	for _, v := range BedFormatTests {
 		s = Settings{
-			InFile:         v.InFile,
-			OutFile:        v.OutFile,
-			UCSCToEnsembl:  v.UCSCToEnsembl,
-			EnsemblToUCSC:  v.EnsemblToUCSC,
-			ScaleNameFloat: v.ScaleNameFloat,
-			ChromSizeFile:  v.ChromSizeFile,
-			PadLength:      v.PadLength,
+			InFile:              v.InFile,
+			OutFile:             v.OutFile,
+			UCSCToEnsembl:       v.UCSCToEnsembl,
+			EnsemblToUCSC:       v.EnsemblToUCSC,
+			ScaleNameFloat:      v.ScaleNameFloat,
+			ChromSizeFile:       v.ChromSizeFile,
+			EvenPadLength:       v.PadLength,
+			UpstreamPadLength:   v.UpstreamPadLength,
+			DownstreamPadLength: v.DownstreamPadLength,
+			ToMidpoint:          v.ToMidpoint,
+			ToTss:               v.ToTss,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

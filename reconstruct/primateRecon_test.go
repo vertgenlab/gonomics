@@ -1,9 +1,10 @@
 package reconstruct
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"testing"
 )
 
 var hum1 = dna.StringToBases("AATNAAATTTCGTATC")

@@ -5,9 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/maf"
-	"log"
 )
 
 func mafToBed(mafFile string, outBed string, reference string) {

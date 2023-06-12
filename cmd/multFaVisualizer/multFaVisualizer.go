@@ -5,9 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/browser"
 	"github.com/vertgenlab/gonomics/common"
-	"log"
 )
 
 func multFaVisualizer(infile string, outfile string, start int, end int, noMask bool, lineLength int, endOfAlignment bool) {

@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-//Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
+// Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
 func Trim(b []Bed, trimLeft int, trimRight int) {
 	if trimLeft < 0 || trimRight < 0 {
 		log.Fatalf("Error in bed/Trim. Must trim bed values by a value greater or equal to zero.")
@@ -18,6 +18,27 @@ func Trim(b []Bed, trimLeft int, trimRight int) {
 			log.Fatalf("Error in Trim. Attempted to remove too much from bed entry. Please select a lower trim value or exclude the bed entry as position %v\t%v.\n", b[i].Chrom, b[i].ChromStart)
 		}
 	}
+}
+
+// ToMidpoint edits an input bed struct so that its coordinates correspond to its midpoint.
+func ToMidpoint(b Bed) Bed {
+	midpoint := (b.ChromStart + b.ChromEnd) / 2
+	b.ChromStart = midpoint
+	b.ChromEnd = midpoint + 1
+	return b
+}
+
+// ToTss edits an input bed struct so that its coordinates corresponds to the start position, strand-sensitive.
+func ToTss(b Bed) Bed {
+	switch b.Strand {
+	case Positive:
+		b.ChromEnd = b.ChromStart + 1
+	case Negative:
+		b.ChromStart = b.ChromEnd - 1
+	default:
+		log.Fatalf("Input bed must have an annotated positive or negative strand to trim to Tss.")
+	}
+	return b
 }
 
 /*
@@ -51,7 +72,7 @@ func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
 // Merged bed entries will retain the maximum score in the output.
 func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 	var outList []Bed
-	if records == nil || len(records) == 0 {
+	if len(records) == 0 {
 		return records //empty and nil slices are returned as is.
 	}
 	SortByCoord(records)

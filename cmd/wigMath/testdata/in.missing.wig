@@ -1,0 +1,30 @@
+fixedStep chrom=chr3 start=400601 step=1
+-10
+-10
+-10
+11
+22
+33
+-10
+-10
+365
+389
+-10
+-10
+fixedStep chrom=chr5 start=1 step=1
+-10
+-10
+-10
+5
+65
+6
+5
+4
+-10
+-10
+4
+5
+6
+7
+5
+4

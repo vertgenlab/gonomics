@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/axt"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"testing"
 
+	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func TestAxtToFasta(t *testing.T) {

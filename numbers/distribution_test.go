@@ -97,7 +97,7 @@ func TestNormalDist(t *testing.T) {
 	}
 }
 
-//TODO: Romberg's method fails when evaluating large probability regions.
+// TODO: Romberg's method fails when evaluating large probability regions.
 func TestNormalIntegral(t *testing.T) {
 	f := NormalClosure(0, 1)
 	input1 := DefiniteIntegral(f, 3, 200)
@@ -151,7 +151,7 @@ func TestGammaDist(t *testing.T) {
 	}
 }
 
-//TODO: Similar romberg's problems: integrating over large ranges leads to failure of convergence.
+// TODO: Similar romberg's problems: integrating over large ranges leads to failure of convergence.
 func TestGammaIntegral(t *testing.T) {
 	input1 := GammaLeftIntegral(3, 4, 2)
 	expected1 := 8.487961e-01
@@ -165,8 +165,8 @@ func TestGammaIntegral(t *testing.T) {
 	}
 }
 
-//TODO: Testing for KL Divergence is incomplete
-//Expected values are calculated with the R package LaplacesDemon using the KLD function.
+// TODO: Testing for KL Divergence is incomplete
+// Expected values are calculated with the R package LaplacesDemon using the KLD function.
 func TestKullbackLeiblerDivergence(t *testing.T) {
 	//input1 := ContinuousKullbackLeiblerDivergence(NormalClosure(0, 1), NormalClosure(1, 1), -100, 100)
 	//fmt.Printf("%v\n", input1)

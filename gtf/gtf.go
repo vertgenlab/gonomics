@@ -5,12 +5,13 @@ package gtf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // The Gene struct organizes all underlying data on a gene feature in a GTF file.
@@ -80,7 +81,7 @@ func parseFrame(s string) int {
 	return answer
 }
 
-// getIds parses identifying lines from a gtfLine
+// getIds parses identifying lines from a gtfLine.
 func getIds(words []string) (currGeneID, currGeneName, currT, currEID, currENumber string) {
 	att := strings.Split(words[8], ";")
 	for i := 0; i < len(att); i++ {
@@ -106,7 +107,7 @@ func getIds(words []string) (currGeneID, currGeneName, currT, currEID, currENumb
 	return
 }
 
-// findTranscript finds the transcript with a given ID in a slice of transcripts
+// findTranscript finds the transcript with a given ID in a slice of transcripts.
 func findTranscript(query string, transcripts []*Transcript) *Transcript {
 	for i := range transcripts {
 		if transcripts[i].TranscriptID == query {
@@ -116,7 +117,7 @@ func findTranscript(query string, transcripts []*Transcript) *Transcript {
 	return nil
 }
 
-// findExon finds the exon witha given ID in a Transcript
+// findExon finds the exon witha given ID in a Transcript.
 func findExon(query string, transcript *Transcript) *Exon {
 	for i := range transcript.Exons {
 		if transcript.Exons[i].ExonID == query {
@@ -126,7 +127,7 @@ func findExon(query string, transcript *Transcript) *Exon {
 	return nil
 }
 
-// parseGtfLine processes a single line of a GTF file and fills in the appropriate data in a Gene struct
+// parseGtfLine processes a single line of a GTF file and fills in the appropriate data in a Gene struct.
 func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answer map[string]*Gene) (*Transcript, *Cds) {
 	words := strings.Split(line, "\t")
 

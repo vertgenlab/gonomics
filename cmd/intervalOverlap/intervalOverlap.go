@@ -5,11 +5,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
-	"log"
-	"sync"
 )
 
 func usage() {
@@ -32,7 +33,8 @@ func sequelOverlap(options *Settings) chan *queryAnswer {
 	tree := buildTree(intervals, options.Aggregate)
 
 	queryChan := interval.GoReadToChan(options.Input)
-	answerChan := make(chan *queryAnswer, 1000) // TODO: benchmark buffer size
+	// TODO: benchmark buffer size
+	answerChan := make(chan *queryAnswer, 1000)
 
 	var wg sync.WaitGroup
 	for i := 0; i < options.Threads; i++ {

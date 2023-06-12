@@ -2,10 +2,11 @@ package align
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"testing"
 )
 
 var affineAlignTests = []struct {
@@ -206,6 +207,6 @@ func BenchmarkAffineGapLocalEngine(b *testing.B) {
 	input, output := GoAffineGapLocalEngine(DefaultScoreMatrix, -600, -150)
 	for i := 0; i < b.N; i++ {
 		input <- test
-		_ = <-output
+		<-output
 	}
 }

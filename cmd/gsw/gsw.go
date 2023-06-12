@@ -6,12 +6,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/sam"
-	"os"
-	"strings"
 )
 
 type GswSettings struct {
@@ -35,7 +36,7 @@ func extendedAlignUsage() {
 		"Usage:\n" +
 			"  gsw align [options] ref.gg R1.fastq.gz R2.fastq.gz\n\n" +
 			"Required:\n" +
-			"  ref[.gg/.fa]\t\tReference genome: acceptes both fasta and graph formats\n\n" +
+			"  ref[.gg/.fa]\t\tReference genome: accepts both fasta and graph formats\n\n" +
 			"Options:\n" +
 			"  -i, --index\t\tKmer length for index hash look up  (default: 32)\n" +
 			"  -s, --step\t\tOffset sliding window step size for hash set up (default 32)\n" +
@@ -82,7 +83,7 @@ func RunAlignExe() {
 	}
 }
 
-//TODO: add check for too many args or an implementation for multiple fastq pairs
+// TODO: add check for too many args or an implementation for multiple fastq pairs.
 func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out string, liftover string, args []string) {
 	//should be at most 3 args to add to the input, reference, readOne and/or readTwo
 	var genomeGraph *genomeGraph.GenomeGraph = genomeGraph.Read(args[0])

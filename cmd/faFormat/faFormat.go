@@ -5,28 +5,35 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 type Settings struct {
-	InFile     string
-	OutFile    string
-	LineLength int
-	NamesFile  string
-	TrimName   bool
-	ToUpper    bool
-	RevComp    bool
-	NoGaps     bool
-	NoGapBed   string
-	Index      bool
+	InFile      string
+	OutFile     string
+	LineLength  int
+	NamesFile   string
+	TrimName    bool
+	ToUpper     bool
+	RevComp     bool
+	NoGaps      bool
+	NoGapBed    string
+	Index       bool
+	MaskInvalid bool
 }
 
 func faFormat(s Settings) {
-	records := fasta.Read(s.InFile)
+	var records []fasta.Fasta
+	if s.MaskInvalid {
+		records = fasta.ReadForced(s.InFile)
+	} else {
+		records = fasta.Read(s.InFile)
+	}
 	var exist bool
 	var names []string
 	namesMap := make(map[string]int)
@@ -57,13 +64,11 @@ func faFormat(s Settings) {
 		}
 		if s.ToUpper {
 			fasta.ToUpper(records[i])
-
 		}
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
 			records[i].Name = records[i].Name + "_RevComp"
 		}
-
 	}
 
 	file := fileio.EasyCreate(s.OutFile)
@@ -100,6 +105,7 @@ func main() {
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
 	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
 	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
+	var maskInvalid *bool = flag.Bool("maskInvalid", false, "N-mask extended IUPAC nucleotides (includes UWSMKRYBDHV).")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -114,16 +120,17 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile:     inFile,
-		OutFile:    outFile,
-		LineLength: *lineLength,
-		NamesFile:  *fastaNamesFile,
-		TrimName:   *trimName,
-		RevComp:    *revComp,
-		ToUpper:    *toUpper,
-		NoGaps:     *noGaps,
-		NoGapBed:   *noGapBed,
-		Index:      *createIndex,
+		InFile:      inFile,
+		OutFile:     outFile,
+		LineLength:  *lineLength,
+		NamesFile:   *fastaNamesFile,
+		TrimName:    *trimName,
+		RevComp:     *revComp,
+		ToUpper:     *toUpper,
+		NoGaps:      *noGaps,
+		NoGapBed:    *noGapBed,
+		Index:       *createIndex,
+		MaskInvalid: *maskInvalid,
 	}
 
 	faFormat(s)

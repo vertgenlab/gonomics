@@ -1,14 +1,15 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 const debugMode = 0 //set debugMode to 1 to enable prints
 
-//AllAreEqual returns true if each Fastq entry in a slice of Fastq structs contains identical information, false otherwise.
+// AllAreEqual returns true if each Fastq entry in a slice of Fastq structs contains identical information, false otherwise.
 func AllAreEqual(alpha []Fastq, beta []Fastq) bool {
 	if len(alpha) != len(beta) {
 		if debugMode > 0 {
@@ -27,7 +28,7 @@ func AllAreEqual(alpha []Fastq, beta []Fastq) bool {
 	return true
 }
 
-//IsEqual returns true if two input Fastq structs contain identical information, false otherwise.
+// IsEqual returns true if two input Fastq structs contain identical information, false otherwise.
 func IsEqual(alpha Fastq, beta Fastq) bool {
 	if CompareName(alpha, beta) != 0 {
 		if debugMode == 1 {
@@ -47,17 +48,17 @@ func IsEqual(alpha Fastq, beta Fastq) bool {
 	return true
 }
 
-//CompareName compares two Fastq names for sorting or equality testing.
+// CompareName compares two Fastq names for sorting or equality testing.
 func CompareName(alpha Fastq, beta Fastq) int {
 	return strings.Compare(alpha.Name, beta.Name)
 }
 
-//CompareSeq compares two Fastq sequences for sorting or equality testing.
+// CompareSeq compares two Fastq sequences for sorting or equality testing.
 func CompareSeq(alpha Fastq, beta Fastq) int {
 	return dna.CompareSeqsCaseSensitive(alpha.Seq, beta.Seq)
 }
 
-//CompareQuals compares two Fastq quality score slices for sorting or equality testing.
+// CompareQuals compares two Fastq quality score slices for sorting or equality testing.
 func CompareQuals(alpha Fastq, beta Fastq) int {
 	var result int
 	stop := min(len(alpha.Qual), len(beta.Qual))
@@ -75,7 +76,7 @@ func CompareQuals(alpha Fastq, beta Fastq) int {
 	return 0
 }
 
-//CompareQual compares two Fastq quality scores for sorting or equality testing.
+// CompareQual compares two Fastq quality scores for sorting or equality testing.
 func CompareQual(alpha uint8, beta uint8) int {
 	if alpha < beta {
 		return -1
@@ -85,7 +86,7 @@ func CompareQual(alpha uint8, beta uint8) int {
 	return 0
 }
 
-//min helper function to avoid dependencies.
+// min helper function to avoid dependencies.
 func min(a int, b int) int {
 	if a <= b {
 		return a
@@ -94,7 +95,7 @@ func min(a int, b int) int {
 	}
 }
 
-//PairedEndIsEqual returns true if two input PairedEnd structs contain identical information, false otherwise.
+// PairedEndIsEqual returns true if two input PairedEnd structs contain identical information, false otherwise.
 func PairedEndIsEqual(alpha PairedEnd, beta PairedEnd) bool {
 	if !IsEqual(alpha.Fwd, beta.Fwd) {
 		if debugMode == 1 {
@@ -111,7 +112,7 @@ func PairedEndIsEqual(alpha PairedEnd, beta PairedEnd) bool {
 	return true
 }
 
-//SingleCellIsEqual returns true if two input SingleCellPair structs are equal, false otherwise.
+// SingleCellIsEqual returns true if two input SingleCellPair structs are equal, false otherwise.
 func SingleCellIsEqual(alpha SingleCellPair, beta SingleCellPair) bool {
 	if !PairedEndIsEqual(alpha.Reads, beta.Reads) {
 		if debugMode == 1 {

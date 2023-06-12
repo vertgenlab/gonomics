@@ -5,13 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
 	"image/png"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func faDrawAlnChunks(faAlnFilename string, chunkSize int, imageOutFilename string) {

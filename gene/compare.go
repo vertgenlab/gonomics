@@ -3,6 +3,7 @@ package gene
 import (
 	"errors"
 	"fmt"
+
 	"github.com/vertgenlab/gonomics/dna"
 )
 
@@ -99,7 +100,7 @@ func equalSubSeq(alpha subSeq, beta subSeq) bool {
 	return true
 }
 
-// for manual testing
+// for manual testing.
 func printEffPred(pred EffectPrediction) {
 	var consequence string
 	switch pred.Consequence {
@@ -131,8 +132,8 @@ func printEffPred(pred EffectPrediction) {
 	fmt.Printf("Consequence: %s\n", consequence)
 	fmt.Printf("cDNA Pos: %d%+d\n", pred.CdnaPos, pred.CdnaDist)
 	fmt.Printf("AAPos: %d\n", pred.AaPos)
-	fmt.Printf("AaRef: %s\n", dna.PolypeptideToString(pred.AaRef))
-	fmt.Printf("AaAlt: %s\n", dna.PolypeptideToString(pred.AaAlt))
+	fmt.Printf("AaRef: %s\n", dna.PeptideToString(pred.AaRef))
+	fmt.Printf("AaAlt: %s\n", dna.PeptideToString(pred.AaAlt))
 	fmt.Printf("StopDist: %d\n", pred.StopDist)
 }
 

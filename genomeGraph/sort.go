@@ -1,6 +1,6 @@
 package genomeGraph
 
-// SortGraph will reorder nodes in a graph such that the order and Ids of the output graph are topologically sorted
+// SortGraph will reorder nodes in a graph such that the order and Ids of the output graph are topologically sorted.
 func SortGraph(g *GenomeGraph) *GenomeGraph {
 	answer := &GenomeGraph{}
 	answer.Nodes = make([]Node, len(g.Nodes))
@@ -12,13 +12,13 @@ func SortGraph(g *GenomeGraph) *GenomeGraph {
 	return answer
 }
 
-// GetSortOrder will perform a breadth first search (BFS) on a graph and return an output slice where output[sortedIdx] = originalIdx
+// GetSortOrder will perform a breadth first search (BFS) on a graph and return an output slice where output[sortedIdx] = originalIdx.
 func GetSortOrder(g *GenomeGraph) []uint32 {
 	return breadthFirstSearch(g.Nodes)
 }
 
 // TODO: design function to get start positions only
-// breadthFirstSearch performs a breadth first search on a graph and returns a slice correlating the sort order to the original order
+// breadthFirstSearch performs a breadth first search on a graph and returns a slice correlating the sort order to the original order.
 func breadthFirstSearch(nodes []Node) []uint32 {
 	answer := make([]uint32, 0)
 	var inDegree int
@@ -59,7 +59,7 @@ func breadthFirstSearch(nodes []Node) []uint32 {
 	return answer
 }
 
-// updateTable updates the table of node in degrees
+// updateTable updates the table of node in degrees.
 func updateTable(inDegreeTable map[uint32]int, node *Node, updatedNodes *[]*Node) {
 	for i := 0; i < len(node.Next); i++ {
 		inDegreeTable[node.Next[i].Dest.Id]--
@@ -70,7 +70,7 @@ func updateTable(inDegreeTable map[uint32]int, node *Node, updatedNodes *[]*Node
 }
 
 // TODO: possible to order nodes while breaking discontiguous graphs???
-// BreakNonContiguousGraph will return a slice of graphs ([]*Node) such that each graph in the slice is contiguous
+// BreakNonContiguousGraph will return a slice of graphs ([]*Node) such that each graph in the slice is contiguous.
 func BreakNonContiguousGraph(g []Node) [][]*Node {
 	answer := make([][]*Node, 0)
 	var contiguousGraph []*Node
@@ -96,7 +96,7 @@ func BreakNonContiguousGraph(g []Node) [][]*Node {
 	return answer
 }
 
-// traceGraph is a helper function that traverses graph and keeps track of which nodes have been visited
+// traceGraph is a helper function that traverses graph and keeps track of which nodes have been visited.
 func traceGraph(startNode *Node, visited []bool, answer *[]*Node) {
 	var i int = 0
 

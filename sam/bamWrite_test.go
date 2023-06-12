@@ -2,6 +2,7 @@ package sam
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,7 +13,23 @@ import (
 
 func TestBamWriter(t *testing.T) {
 	var err error
-	data, header := Read("testdata/small.sam")
+	err = testFile("testdata/small.sam")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBamWriterAuxTags(t *testing.T) {
+	var err error
+	err = testFile("testdata/auxTagTest.sam")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func testFile(file string) error {
+	var err error
+	data, header := Read(file)
 
 	actual := new(bytes.Buffer)
 	bw := NewBamWriter(actual, header)
@@ -23,12 +40,12 @@ func TestBamWriter(t *testing.T) {
 
 	err = bw.Close()
 	if err != nil {
-		t.Error(err)
+		return err
 	}
 
 	f, err := ioutil.TempFile("testdata", "tmp*.bam")
 	if err != nil {
-		t.Error(err)
+		return err
 	}
 	io.Copy(f, actual)
 	f.Close()
@@ -36,7 +53,7 @@ func TestBamWriter(t *testing.T) {
 	actualData, actualHeader := GoReadToChan(f.Name())
 
 	if strings.Join(actualHeader.Text, "\n") != strings.Join(header.Text, "\n") {
-		t.Error("issue with writing header")
+		return errors.New("issue with writing header")
 	}
 
 	var i int
@@ -45,10 +62,11 @@ func TestBamWriter(t *testing.T) {
 			fmt.Println(actualRecord)
 			fmt.Println(data[i])
 			fmt.Println()
-			t.Error("issue with writing sam as bam")
+			return errors.New("issue with writing sam as bam")
 		}
 		i++
 	}
 
 	os.Remove(f.Name())
+	return nil
 }

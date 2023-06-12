@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
@@ -35,7 +36,7 @@ func bedMinimumDistanceName(inputBed string, genomeBed string, outBed string) {
 
 	for i = range input { //range over the inputBed
 		genomeBedMatchingNameField, found = genomeMap[input[i].Name] //grab the genomeBed entry that matches on the "Name" field.
-		if found != true {
+		if !found {
 			log.Fatalf("Did not find genomeBed match for: %s", input[i].Name)
 		}
 		if len(genomeBedMatchingNameField) > 1 { //check that there is only one genomeBed entry that matches the current inputBed[i].Name
@@ -80,7 +81,7 @@ func determineUpstreamDownstream(inputBed bed.Bed, genomeBed bed.Bed) bed.Strand
 	return outputStrand
 }
 
-//TODO: update usage statement. Explain that genomeBed needs strand.
+// TODO: update usage statement. Explain that genomeBed needs strand.
 func usage() {
 	fmt.Print(
 		"bedMinimumDistanceName - For all entries in bed A (inputBed), look at the Name field and\n" +
@@ -123,5 +124,4 @@ func main() {
 	outBed := flag.Arg(2)
 
 	bedMinimumDistanceName(inputBed, genomeBed, outBed)
-
 }

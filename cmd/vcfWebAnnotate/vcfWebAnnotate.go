@@ -8,14 +8,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var errNoData error = errors.New("NA")
@@ -46,7 +47,7 @@ func vcfWebAnnotate(data <-chan vcf.Vcf, header vcf.Header, outfile io.Writer, b
 
 	// queryWorker reads vcfs from filledBufChan and returns the slice to emptyBufChan
 	// to be reused. queryWorker also currently handles annotation and writing.
-	// TODO delegate annotation and writing to maximize query throughput
+	// TODO: delegate annotation and writing to maximize query throughput
 	go queryWorker(filledBufChan, emptyBufChan, outfile)
 
 	for v := range data { // read vcfs until you have a full batch then send for annotation
@@ -212,10 +213,10 @@ func main() {
 	var batchSize *int = flag.Int("batchSize", 1000, "number of variants to pool before querying web")
 	var numBuffer *int = flag.Int("bufferSize", 2, "number of batchSize buffers to keep in memory")
 	var resume *bool = flag.Bool("resume", false, "resume a partially completed annotation. -o must be specified.")
-	//TODO species
-	//TODO assembly
-	//TODO desired annotation fields
-	//TODO data for all transcripts
+	// TODO: species
+	// TODO: assembly
+	// TODO: desired annotation fields
+	// TODO: data for all transcripts
 	flag.Parse()
 	flag.Usage = usage
 

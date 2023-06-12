@@ -2,13 +2,14 @@ package align
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 // the trace data structure is a 3d slice where the first index is 0,1,2 and represents the match, gap in x (first seq), and gap in y (second seq).
-// m used to have the same data structure as trace, but has been simplified into a 2d slice, where the second index for mColumn is removed in order to recycle memory by rows
+// m used to have the same data structure as trace, but has been simplified into a 2d slice, where the second index for mColumn is removed in order to recycle memory by rows.
 func initAffineScoringAndTrace(firstSeqLen int, secondSeqLen int) ([][]int64, [][]int64, int, [][][]ColType) {
 	mRowCurrent := make([][]int64, 3)
 	mRowPrevious := make([][]int64, 3)

@@ -1,10 +1,11 @@
 package bedGraph
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var b1 BedGraph = BedGraph{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, DataValue: 40.5}
@@ -13,9 +14,9 @@ var b3 BedGraph = BedGraph{Chrom: "chr3", ChromStart: 945, ChromEnd: 1000, DataV
 var bedGraphs []BedGraph = []BedGraph{b1, b2, b3}
 
 var readWriteTests = []struct {
-	testFileName string
+	testFileName     string
 	expectedFilename string
-	data     []BedGraph
+	data             []BedGraph
 }{
 	{"testdata/tmp.bedGraph", "testdata/bedGraphFileTest.bedGraph", bedGraphs},
 }

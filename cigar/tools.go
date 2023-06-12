@@ -1,11 +1,5 @@
 package cigar
 
-import (
-//"github.com/vertgenlab/gonomics/dna"
-//"github.com/vertgenlab/gonomics/sam"
-//"github.com/vertgenlab/gonomics/fasta"
-)
-
 func AddCigar(cigs []Cigar, newCig Cigar) []Cigar {
 	if len(cigs) == 0 {
 		cigs = append(cigs, newCig)

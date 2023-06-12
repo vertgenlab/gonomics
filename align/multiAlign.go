@@ -2,9 +2,10 @@ package align
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"math"
 )
 
 func fastaListToIndividualGroups(records []fasta.Fasta) [][]fasta.Fasta {
@@ -62,7 +63,7 @@ func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, g
 	return groups[0]
 }
 
-//align sequences
+// align sequences.
 func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {
@@ -73,8 +74,8 @@ func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int
 	return groups[0]
 }
 
-//average of pairs scoring scheme where gaps are ignored
-//maybe there should be a small penalty for gaps so that gaps will tend to be in the same location
+// average of pairs scoring scheme where gaps are ignored
+// maybe there should be a small penalty for gaps so that gaps will tend to be in the same location.
 func scoreColumnMatch(alpha []fasta.Fasta, beta []fasta.Fasta, alphaCol int, betaCol int, scores [][]int64) int64 {
 	var sum, count int64 = 0, 0
 	var alphaBase, betaBase dna.Base

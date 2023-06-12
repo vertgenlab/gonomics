@@ -2,14 +2,15 @@ package giraf
 
 import (
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"testing"
 )
 
-//TODO: Will write a better high throughput test when random generator is working
+// TODO: Will write a better high throughput test when random generator is working.
 func TestReadAndWrite(t *testing.T) {
 	var numGiraf int = 1
 	girafPath := Path{TStart: 2008, Nodes: []uint32{2015, 2017, 2018}, TEnd: 2020}

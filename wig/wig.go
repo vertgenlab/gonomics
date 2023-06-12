@@ -6,13 +6,14 @@ package wig
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
@@ -92,7 +93,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	return currentWig, doneReading
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
+// ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
 func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	for curr, done := NextWig(file); !done; curr, done = NextWig(file) {
 		data <- curr
@@ -102,7 +103,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
+// GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
 func GoReadToChan(filename string) <-chan Wig {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
@@ -133,7 +134,7 @@ func PrintFirst(rec []Wig) {
 	}
 }
 
-// Write writes a Wig data structure to a WIG format file at the input filename
+// Write writes a Wig data structure to a WIG format file at the input filename.
 func Write(filename string, rec []Wig) {
 	file := fileio.EasyCreate(filename)
 	for i := range rec {
@@ -174,11 +175,10 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 			// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
 			common.ExitIfError(err)
 		}
-
 	}
 }
 
-// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name
+// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name.
 func ChromToSlice(w []Wig, chrom string) []float64 {
 	var output []float64
 	for _, v := range w {

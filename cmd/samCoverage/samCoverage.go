@@ -5,13 +5,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/sam"
-	//"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
+	"github.com/vertgenlab/gonomics/sam"
 )
 
 func totalAlignedBases(filename string) int {
@@ -22,7 +22,7 @@ func totalAlignedBases(filename string) int {
 
 	sam.ReadHeader(samFile)
 
-	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
+	for aln, done = sam.ReadNext(samFile); !done; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			alignedBases += cigar.MatchLength(aln.Cigar)
 		}

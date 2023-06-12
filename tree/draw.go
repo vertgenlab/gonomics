@@ -2,13 +2,13 @@ package tree
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+
 	"github.com/vertgenlab/gonomics/sketch"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/color"
-	//"golang.org/x/image/font/inconsolata"
 )
 
 func addLabel(img *image.RGBA, label string, xStart int, yStart int) {
