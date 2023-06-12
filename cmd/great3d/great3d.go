@@ -52,7 +52,7 @@ func usage() {
 func main() {
 	var expectedNumArgs = 4
 	var nearestGeneBed *string = flag.String("nearestGeneBed", "", "Write a bed representing the nearest genes in 3d space to every position in the genome.")
-	var geneBed *bool = flag.Bool("geneBed", false, "User has provided a bed in place of a gtf for te first argument that contains information about a gene TSS already spanning a single bp distance, and therefore GTF processing can be skipped.")
+	var geneBed *bool = flag.Bool("geneBed", false, "If set to true user has provided a bed in place of a gtf for te first argument that contains information about a gene TSS already spanning a single bp distance, and therefore GTF processing can be skipped.")
 	var proximityFile *string = flag.String("proximity", "", "If given a file name the program will output a file that contains the closest gene to a bp based only on proximity as well as any other file requested.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
