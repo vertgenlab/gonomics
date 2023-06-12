@@ -11,19 +11,19 @@ import (
 )
 
 type Settings struct {
-	GeneFile           string
-	ContactFile        string
-	SizesFile          string
-	NearestGeneBed     string
-	SinglePointGeneBed bool
-	Output1d           string
+	GeneFile       string
+	ContactFile    string
+	SizesFile      string
+	NearestGeneBed string
+	GeneBed        bool
+	Output1d       string
 }
 
 func great3d(s Settings) {
 	var tss []bed.Bed
 	contacts := bedpe.Read(s.ContactFile)
 	sizes := chromInfo.ReadToMap(s.SizesFile)
-	if s.SinglePointGeneBed {
+	if s.GeneBed {
 		tss = bed.Read(s.GeneFile)
 	} else {
 		genes := gtf.Read(s.GeneFile)
@@ -67,12 +67,12 @@ func main() {
 	sizesFile := flag.Arg(2)
 
 	s := Settings{
-		GeneFile:           geneFile,
-		ContactFile:        contactFile,
-		SizesFile:          sizesFile,
-		NearestGeneBed:     *nearestGeneBed,
-		SinglePointGeneBed: *geneBed,
-		Output1d:           *proximityFile,
+		GeneFile:       geneFile,
+		ContactFile:    contactFile,
+		SizesFile:      sizesFile,
+		NearestGeneBed: *nearestGeneBed,
+		GeneBed:        *geneBed,
+		Output1d:       *proximityFile,
 	}
 
 	great3d(s)
