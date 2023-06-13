@@ -33,7 +33,12 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	// this for loop finds the nearest gene and hidden value for each bedpe foot midpoint
 	for j := range midpointBedpe {
 		//this is just a check to make sure that for any new chromosomes we encounter that they exist in the gene file, so we don't throw an error.
-		if midpointBedpe[j].A.Chrom != midpointBedpe[j-1].A.Chrom {
+		if j == 0 {
+			chromInFile = checkGeneFileForChrom(midpointBedpe[j], geneChroms)
+			if !chromInFile {
+				continue
+			}
+		} else if midpointBedpe[j].A.Chrom != midpointBedpe[j-1].A.Chrom {
 			chromInFile = checkGeneFileForChrom(midpointBedpe[j], geneChroms)
 			if !chromInFile {
 				continue
