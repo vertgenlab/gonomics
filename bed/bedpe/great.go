@@ -16,6 +16,7 @@ import (
 // Note that the input TSS must have 0 in score fields.
 func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.ChromInfo) []bed.Bed {
 	var chromInFile bool
+	geneChroms := makeChromSlice(tss) //makes a list of the chroms in the gene file
 	answer := make([]bed.Bed, len(tss))
 	copy(answer, tss)
 	var currNearestBed, currAnswerA, currAnswerB bed.Bed
@@ -31,13 +32,15 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 
 	// this for loop finds the nearest gene and hidden value for each bedpe foot midpoint
 	for j := range midpointBedpe {
-		chromInFile = checkGeneFileForChrom(midpointBedpe[j], tss)
-		if !chromInFile {
-			continue
+		//this is just a check to make sure that for any new chromosomes we encounter that they exist in the gene file, so we don't throw an error.
+		if midpointBedpe[j].A.Chrom != midpointBedpe[j-1].A.Chrom {
+			chromInFile = checkGeneFileForChrom(midpointBedpe[j], geneChroms)
+			if !chromInFile {
+				continue
+			}
 		}
 		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].A, "any")
 		if len(currNearest) > 1 || len(currNearest) == 0 {
-			//TODO:git commit and push on dcc to update this
 			log.Fatal("Space Filled bed should return one nearest bed entry.")
 		}
 		currNearestBed = currNearest[0].(bed.Bed)
@@ -84,14 +87,35 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	return bed.FillSpaceHiddenValue(answer, sizes)
 }
 
-func checkGeneFileForChrom(a BedPe, b []bed.Bed) bool {
+func makeChromSlice(records []bed.Bed) []string {
+	var chroms []string
+	var inChroms bool
+
+	for r := range records {
+		if r == 0 {
+			chroms = append(chroms, records[r].Chrom)
+		} else {
+			inChroms = false
+			for n := range chroms {
+				if records[r].Chrom == chroms[n] {
+					inChroms = true
+				}
+			}
+			if !inChroms {
+				chroms = append(chroms, records[r].Chrom)
+			}
+		}
+	}
+	return chroms
+}
+
+func checkGeneFileForChrom(a BedPe, b []string) bool {
 	chromInFile := false
 
 	for r := range b {
-		if b[r].Chrom == a.A.Chrom {
+		if b[r] == a.A.Chrom {
 			chromInFile = true
 		}
 	}
-
 	return chromInFile
 }
