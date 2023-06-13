@@ -15,6 +15,7 @@ import (
 // using the BedPe contacts to determine the closest TSS in 3D space.
 // Note that the input TSS must have 0 in score fields.
 func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.ChromInfo) []bed.Bed {
+	var chromInFile bool
 	answer := make([]bed.Bed, len(tss))
 	copy(answer, tss)
 	var currNearestBed, currAnswerA, currAnswerB bed.Bed
@@ -30,8 +31,13 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 
 	// this for loop finds the nearest gene and hidden value for each bedpe foot midpoint
 	for j := range midpointBedpe {
+		chromInFile = checkGeneFileForChrom(midpointBedpe[j], tss)
+		if !chromInFile {
+			continue
+		}
 		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].A, "any")
 		if len(currNearest) > 1 || len(currNearest) == 0 {
+			//TODO:git commit and push on dcc to update this
 			log.Fatal("Space Filled bed should return one nearest bed entry.")
 		}
 		currNearestBed = currNearest[0].(bed.Bed)
@@ -76,4 +82,16 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	}
 
 	return bed.FillSpaceHiddenValue(answer, sizes)
+}
+
+func checkGeneFileForChrom(a BedPe, b []bed.Bed) bool {
+	chromInFile := false
+
+	for r := range b {
+		if b[r].Chrom == a.A.Chrom {
+			chromInFile = true
+		}
+	}
+
+	return chromInFile
 }
