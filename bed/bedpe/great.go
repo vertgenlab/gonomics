@@ -31,8 +31,8 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	// this for loop finds the nearest gene and hidden value for each bedpe foot midpoint
 	for j := range midpointBedpe {
 		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].A, "any")
-		if len(currNearest) > 1 {
-			log.Fatal("Space Filled bed should only return one nearest bed entry.")
+		if len(currNearest) > 1 || len(currNearest) == 0 {
+			log.Fatal("Space Filled bed should return one nearest bed entry.")
 		}
 		currNearestBed = currNearest[0].(bed.Bed)
 		currAnswerA = bed.Bed{Chrom: midpointBedpe[j].A.Chrom,
