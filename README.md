@@ -3,84 +3,32 @@
 [![codecov](https://codecov.io/gh/vertgenlab/gonomics/branch/main/graph/badge.svg?token=SLasptsu7B)](https://codecov.io/gh/vertgenlab/gonomics)
 
 # gonomics
-
 A collection of genomics software tools written in Go (golang).
-Authors:
-
-* Eric Au
-* Luke C. Bartelt
-* Olivier Boivin
-* Sophie Campione
-* Christiana Fauci
-* Craig B. Lowe
-* Yanting Luo
-* Riley J. Mangan
-* Chelsea R. Shoben
-* Daniel A. Snellings
-* Seth Weaver
-
-### Compatibility with Previous Golang Versions
-<p>Gonomics is compatible with Golang version 1.18 and above. Please note that due to changes in random number generation since Golang v1.20,
-many cmd tests will fail if run on 1.18 or 1.19, including cmds that use random numbers, such as the simulate commands and MCMC sampling.
-However, we expect these programs to function as intended in these older versions.</p>
-
 
 ### Complete Gonomics Documentation
-<p>The complete documentation for Gonomics can be found at the following website. https://pkg.go.dev/github.com/vertgenlab/gonomics </p>
+The complete documentation for Gonomics can be found [here](https://pkg.go.dev/github.com/vertgenlab/gonomics).
 
-### Instructions for installing Golang (Go)
+### Installation
 
-<p>Instructions are written for bash (common for Linux/masOS). Windows users can follow directions on this website. https://golangdocs.com/install-go-windows </p>
-<br>
+**1. [Install go.](https://go.dev/doc/install)**
 
-**1. Download Go**
+**2. Install gonomics**
 
-<ul>
-    Determine where you want the go program to install. <br>
-    This will be separate from your directory for storing and working on go code (aka your go workspace). <br>
-    Recommended: /usr/local <br>
+*Option 1: Executables only* - `go install github.com/vertgenlab/gonomics/...@latest`  
 
-    cd /pathWhereYouWantGoInstalled/
-    wget <link for go version of choice> 
+*Option 2: Complete library & executables*  
+```
+## Clone gonomics repository  
+git clone https://github.com/vertgenlab/gonomics.git && cd gonomics
 
-</ul>
+## Run gonomics tests
+go test ./...
 
-[Versions of Go can be downloaded from here](https://golang.org/dl/)   - we are currently using 1.18
+## Install executables
+go install  ./...
+```
 
-<ul>
-
-    tar -xzf [version of go you downloaded]
-</ul>
-<br>
-<br>
-
-**2. Clone gonomics into Go/set up Go workspace**
-
-*Gonomics installation with version control (for both users and contributors of gonomics):*
-<ul>
-
-    
-    cd /pathWhereYouWantGonomicsCloned/
-    mkdir -p src/github.com/vertgenlab
-    cd src/github.com/vertgenlab
-    git clone https://github.com/vertgenlab/gonomics.git
-<ul>
-This will download the repository to your current directory
-</ul>
-
-    cd gonomics
-    go test ./…
-<ul>
-This should print to screen a line for each test with "ok" printed in the left margin when something passes.
-</ul>
-
-    go install ./...
-<ul>
-This will tidy up the necessary modules
-</ul>
-</ul>
-<br>
-<br>
+Executables will be present in Go binary folder (`~/go/bin` by default)
 
 ---
 
@@ -129,3 +77,26 @@ docker run -v $(pwd):/mnt gonomics go run $script.go
 ```
 
 * this command will mount your local file system into the `/mnt` directory of your container.
+
+---
+
+### Compatibility with Previous Golang Versions
+<p>Gonomics is compatible with Golang version 1.18 and above. Please note that due to changes in random number generation since Golang v1.20,
+many cmd tests will fail if run on 1.18 or 1.19, including cmds that use random numbers, such as the simulate commands and MCMC sampling.
+However, we expect these programs to function as intended in these older versions.</p>
+
+---
+
+### Authors:
+
+* Eric Au
+* Luke C. Bartelt
+* Olivier Boivin
+* Sophie Campione
+* Christiana Fauci
+* Craig B. Lowe
+* Yanting Luo
+* Riley J. Mangan
+* Chelsea R. Shoben
+* Daniel A. Snellings
+* Seth Weaver
