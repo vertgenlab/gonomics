@@ -69,7 +69,7 @@ This will download the repository to your current directory
 </ul>
 
     cd gonomics
-    go test ./…
+    go test …
 <ul>
 This should print to screen a line for each test with "ok" printed in the left margin when something passes.
 </ul>
