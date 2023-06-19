@@ -25,7 +25,7 @@ type Settings struct {
 	CollapseByUmi    bool
 	SingleCellFormat bool
 	FilterByRegion   string
-	FilterByFlag     int
+	FilterByFlag     uint16
 	SortByPosition   bool
 	OutBam           bool
 	NoHeader         bool
@@ -59,11 +59,8 @@ func filterByCigar(a sam.Sam, filter string) bool {
 	return true
 }
 
-func filterByFlag(a sam.Sam, filter int) bool { // combinatorial flag checks. confused a bit on this one
-	if int(a.Flag) != filter {
-		return false
-	}
-	return true
+func filterByFlag(a sam.Sam, filter uint16) bool { // combinatorial flag checks. confused a bit on this one
+	return a.Flag&filter == filter
 }
 
 func filterByRegion(a sam.Sam, filter bed.Bed) bool {
@@ -261,8 +258,15 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
+	var flagFilterBit uint16
+	if *flagFilter >= 0 && *flagFilter <= 65535 {
+		flagFilterBit = uint16(*flagFilter)
+	} else {
+		log.Fatalf("Flag filter must be used with a uint16 compatable integer.")
+	}
+
 	if strings.HasSuffix(flag.Arg(0), ".sam") && *scFormat {
-		log.Fatalf("-scFormat is only compatable with a BAM input")
+		log.Fatalf("-scFormat is only compatable with a BAM input.")
 	}
 	s := Settings{
 		InFile:           flag.Arg(0),
@@ -273,7 +277,7 @@ func main() {
 		CollapseByUmi:    *collapseByUmi,
 		SingleCellFormat: *scFormat,
 		FilterByRegion:   *location,
-		FilterByFlag:     *flagFilter,
+		FilterByFlag:     flagFilterBit,
 		SortByPosition:   *sortByPosition,
 		OutBam:           *outBam,
 		NoHeader:         *noHeader,

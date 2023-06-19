@@ -17,7 +17,7 @@ var SamFilterTests = []struct {
 	CollapseByUmi    bool
 	SingleCellFormat bool
 	FilterByRegion   string
-	FilterByFlag     int
+	FilterByFlag     uint16
 	SortByPosition   bool
 	OutBam           bool
 	NoHeader         bool
