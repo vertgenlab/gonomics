@@ -15,6 +15,7 @@ The complete documentation for Gonomics can be found [here](https://pkg.go.dev/g
 **2. Install gonomics**
 
 *Option 1: Executables only* - `go install github.com/vertgenlab/gonomics/...@latest`  
+- Run in your `~/go/src` workspace
 
 *Option 2: Complete library & executables*  
 ```
@@ -29,6 +30,8 @@ go install  ./...
 ```
 
 Executables will be present in Go binary folder (`~/go/bin` by default)
+
+The command line tools' code is located in `/gonomics/cmd/`
 
 ---
 
