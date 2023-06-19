@@ -33,6 +33,35 @@ Executables will be present in Go binary folder (`~/go/bin` by default)
 
 The command line tools' code is located in `/gonomics/cmd/`
 
+**3. Running gonomics command line tools*
+
+To see usage statements simply run the tool with no arguments.
+- `~/go/bin/command`
+
+The output will give details about options available for that tool and the syntax that it expects for arguments. All option names must follow a dash to be recognized.
+- `~/go/bin/command -option input output`
+
+Some options will require a specified input from the user, such as a file path or a bool.
+- `~/go/bin/command -option=true -option=filepath input output`
+
+If multiple commands need to be used in conjunction for a pipeline they can be piped together like bash commands with a small change if the file has an argument dedicated to an output file.
+- `~/go/bin/command -option=true input stdout | ~/go/bin/command2 -option=filepath input output`
+
+**EX:**
+
+```
+ ./gtfToBed 
+gtfToBed - Converts a gtf file into bed format.
+Usage:
+gtfToBed in.gtf out.bed
+options:
+  -chromSizeFile string
+    	Specifies the name of a chrom.sizes file.
+  -tss
+    	Return a bed of tss positions annotated only with the geneName. Must provide chrom sizes file.
+2023/06/19 14:01:01 gtfToBed.go:72: Error: expecting 2 arguments, but got 0
+```
+
 ---
 
 ### To create a docker container of Gonomics
