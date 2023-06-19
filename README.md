@@ -33,7 +33,7 @@ Executables will be present in Go binary folder (`~/go/bin` by default)
 
 The command line tools' code is located in `/gonomics/cmd/`
 
-**3. Running gonomics command line tools*
+**3. Running gonomics command line tools**
 
 To see usage statements simply run the tool with no arguments.
 - `~/go/bin/command`
@@ -60,6 +60,32 @@ options:
   -tss
     	Return a bed of tss positions annotated only with the geneName. Must provide chrom sizes file.
 2023/06/19 14:01:01 gtfToBed.go:72: Error: expecting 2 arguments, but got 0
+```
+
+**4. Building new command line tools with gonomics packages**
+
+Go syntax requires that any function that will be used outside of a single package must begin with a capitalized letter. If there is a function you would like to utilize differently than any of our current tools, first make sure that it would be accessible to the cmd directory by checking its capitalization. 
+
+- `FuncToDoThings` not `funcToDoThings` in its package
+
+Generally, in gonomics we have a package for a file type where we have an implementation as a struct in our code base. So if you plan to read in a file, look for a package in gonomics with that file type as its name. 
+
+- `gonomics/bed` if you wanted to use in a bed file.
+
+These packages will have read and write functions as well as some other useful tools within them. All you would have to do from there to read in a bed file is import the package into your newTool.go file in the command directory.
+
+```
+##gonomics/cmd/newTool.go
+
+package main
+
+import (
+"github.com/vertgenlab/gonomics/bed"
+)
+
+functionForTheTool(arguments){
+ bedRecords := bed.Read(bedFileFromArguments)
+}
 ```
 
 ---
