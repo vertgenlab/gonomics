@@ -88,6 +88,48 @@ functionForTheTool(arguments){
 }
 ```
 
+Let's say you wanted to use this command to read in a bed file and create an amino acide code from each of its regions. That function may look something like this:
+
+```
+##gonomics/cmd/newTool.go
+
+package main
+
+import (
+"github.com/vertgenlab/gonomics/bed"
+"github.com/vertgenlab/gonomics/dna"
+"github.com/vertgenlab/gonomics/fasta"
+"github.com/vertgenlab/gonomics/fileio"
+)
+
+functionForTheTool(bed String, fasta String, output String){
+bedSeq := []dna.Base
+aaSeq := []dna.AminoAcid
+outRecord := []string
+
+ bedRecords := bed.Read(bed)
+ fastaRecord := fasta.Read(fasta)
+ 
+ for i := range bedRecords {
+  for j := range fastaRecord.Seq {
+   if bedRecords[i].ChromStart <= j < bedRecords[i].ChromEnd{
+     bedSeq= append(bedSeq, fastaRecords.Seq[j])
+   }
+  }
+  aaSeq = append(aaSeq, dna.TranslateSeq(bedSeq))
+ }
+ 
+ for k := range aaSeq {
+  * for l := range aaSeq[k] {
+   outRecord = append(outRecord, dna.AminoAcidToString(aaSeq[k][l])
+  } * //I'm not sure this is the right syntax for this job
+ }
+ 
+ fileio.Write(output, outRecord)
+ 
+}
+```
+
 ---
 
 ### To create a docker container of Gonomics
