@@ -32,27 +32,22 @@ type Settings struct {
 }
 
 func filterByQuality(a sam.Sam, filter int) bool {
-	if int(a.MapQ) >= filter {
-		return true
-	} else {
-		return false
-	}
+	return int(a.MapQ) >= filter
 }
 
 func filterByLength(a sam.Sam, filter int) bool {
-	var pass bool = false
 	for _, k := range a.Cigar {
-		if k.Op == 77 && k.RunLength >= filter {
-			pass = true
+		if k.Op == 'M' && k.RunLength >= filter {
+			return true
 		}
 	}
-	return pass
+	return false
 }
 
 func filterByCigar(a sam.Sam, filter string) bool {
 	if filter == "starrSeqIntrons" {
 		for _, k := range a.Cigar { //filter out introns longer than 500bp (the length of 1 standard STARR-seq construct)
-			if k.Op == 78 && k.RunLength > 500 {
+			if k.Op == 'N' && k.RunLength > 500 {
 				return false
 			}
 		}
@@ -64,7 +59,7 @@ func filterByCigar(a sam.Sam, filter string) bool {
 	return true
 }
 
-func filterByFlag(a sam.Sam, filter int) bool {
+func filterByFlag(a sam.Sam, filter int) bool { // combinatorial flag checks. confused a bit on this one
 	if int(a.Flag) != filter {
 		return false
 	}
@@ -72,11 +67,7 @@ func filterByFlag(a sam.Sam, filter int) bool {
 }
 
 func filterByRegion(a sam.Sam, filter bed.Bed) bool {
-	if bed.Overlap(filter, convert.SamToBed(a)) {
-		return true
-	} else {
-		return false
-	}
+	return bed.Overlap(filter, convert.SamToBed(a))
 }
 
 func collapseUMI(inMap map[string]sam.Sam, inRead sam.Sam) map[string]sam.Sam {
@@ -121,7 +112,7 @@ func appendUmiCbc(a sam.Sam) (sam.Sam, bool) {
 }
 
 func runFilter(s Settings) {
-	var passQual, passLen, passCigar, foundUMI, passFlag, passLocation bool
+	var foundUMI bool
 	var umiMap = make(map[string]sam.Sam)
 	var words, p []string
 	var chrom string
@@ -135,7 +126,7 @@ func runFilter(s Settings) {
 	out := fileio.EasyCreate(s.OutFile)
 	if s.OutBam {
 		bw = sam.NewBamWriter(out, header)
-	} else if s.OutFile != "stdout" && s.NoHeader == false {
+	} else if !s.NoHeader {
 		sam.WriteHeaderToFileHandle(out, header)
 	}
 	if s.FilterByRegion != "" {
@@ -152,32 +143,27 @@ func runFilter(s Settings) {
 	}
 	for i := range inChan {
 		if s.AlignQualFilter > 0 {
-			passQual = filterByQuality(i, s.AlignQualFilter)
-			if !passQual {
+			if !filterByQuality(i, s.AlignQualFilter) {
 				continue
 			}
 		}
 		if s.AlignLenFilter > 0 {
-			passLen = filterByLength(i, s.AlignLenFilter)
-			if !passLen {
+			if !filterByLength(i, s.AlignLenFilter) {
 				continue
 			}
 		}
 		if s.FilterCigar != "" {
-			passCigar = filterByCigar(i, s.FilterCigar)
-			if !passCigar {
+			if !filterByCigar(i, s.FilterCigar) {
 				continue
 			}
 		}
 		if s.FilterByFlag > 0 {
-			passFlag = filterByFlag(i, s.FilterByFlag)
-			if !passFlag {
+			if !filterByFlag(i, s.FilterByFlag) {
 				continue
 			}
 		}
 		if s.FilterByRegion != "" {
-			passLocation = filterByRegion(i, bedRegion)
-			if !passLocation {
+			if !filterByRegion(i, bedRegion) {
 				continue
 			}
 		}
@@ -216,7 +202,7 @@ func runFilter(s Settings) {
 		}
 	}
 	if s.SortByPosition {
-		sam.SortByCoord(outSlice)
+		sam.SortByCoord(outSlice, header)
 		for _, i := range outSlice {
 			if s.OutBam {
 				sam.WriteToBamFileHandle(bw, i, 0)
@@ -237,7 +223,7 @@ func runFilter(s Settings) {
 func usage() {
 	fmt.Print("\nsamFilter -- Filters in a input SAM or BAM file based on input filters\n" +
 		"Visit https://samtools.github.io/hts-specs/SAMv1.pdf for more info on SAM file specifications\n" +
-		"The output filename can be replaced with stdout and the sam file without a header will be printed to the screen.\n\n" +
+		"The output filename can be replaced with stdout and the sam file will be printed to the screen.\n\n" +
 		"Usage:\n" +
 		"samFilter [options] in.sam out.sam\n\noptions:\n")
 	flag.PrintDefaults()
