@@ -64,6 +64,8 @@ options:
 
 **4. Building new command line tools with gonomics packages**
 
+*An example of this code and testing structure can be found in `gonomics/cmd/newTool`*
+
 Go syntax requires that any function that will be used outside of a single package must begin with a capitalized letter. If there is a function you would like to utilize differently than any of our current tools, first make sure that it would be accessible to the cmd directory by checking its capitalization. 
 
 - `FuncToDoThings` not `funcToDoThings` in its package
