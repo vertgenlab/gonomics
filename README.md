@@ -88,7 +88,7 @@ functionForTheTool(arguments){
 }
 ```
 
-Let's say you wanted to use this command to read in a bed file and create an amino acide code from each of its regions. That function may look something like this:
+Let's say you wanted to use this command to read in a bed file and create an amino acid code from each of its regions. That function may look something like this:
 
 ```
 ##gonomics/cmd/newTool.go
@@ -121,7 +121,7 @@ func functionForTheTool(b string, f string, output string) {
 
 func usage() {
 	fmt.Print(
-		"newTool - takes a bed and fasta and converts the bed sequences into amino acide sequences\n" +
+		"newTool - takes a bed and fasta and converts the bed sequences into amino acid sequences\n" +
 			"Usage:\n" +
 			"newTool bedFile fastaFile\n" +
 			"options:\n")
