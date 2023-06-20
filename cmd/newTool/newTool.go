@@ -10,6 +10,7 @@ import (
 	"log"
 )
 
+// funtionForTheTool is  complete function made from gonomics pakages, it takes a bed and a fasta and returns the amino acid sequence of all the beds together.
 func functionForTheTool(b string, f string, output string) {
 	bedSeq := make([][]dna.Base, len(b))
 	aaSeq := make([][]dna.AminoAcid, len(b))
@@ -36,6 +37,7 @@ func functionForTheTool(b string, f string, output string) {
 
 }
 
+// example of usage functions for commands in the gonomics/cmd directory
 func usage() {
 	fmt.Print(
 		"newTool - takes a bed and fasta and converts the bed sequences into amino acide sequences\n" +
@@ -45,6 +47,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+//example main function for gonomics/cmd directory
 func main() {
 	var expectedNumArgs int = 3
 
