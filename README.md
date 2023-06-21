@@ -15,7 +15,6 @@ The complete documentation for Gonomics can be found [here](https://pkg.go.dev/g
 **2. Install gonomics**
 
 *Option 1: Executables only* - `go install github.com/vertgenlab/gonomics/...@latest`  
-- Run in your `~/go/src` workspace
 
 *Option 2: Complete library & executables*  
 ```
@@ -33,123 +32,7 @@ Executables will be present in Go binary folder (`~/go/bin` by default)
 
 The command line tools' code is located in `/gonomics/cmd/`
 
-**3. Running gonomics command line tools**
-
-To see usage statements simply run the tool with no arguments.
-- `~/go/bin/command`
-
-The output will give details about options available for that tool and the syntax that it expects for arguments. All option names must follow a dash to be recognized.
-- `~/go/bin/command -option input output`
-
-Some options will require a specified input from the user, such as a file path or a bool.
-- `~/go/bin/command -option=true -option=filepath input output`
-
-If multiple commands need to be used in conjunction for a pipeline they can be piped together like bash commands with a small change if the file has an argument dedicated to an output file.
-- `~/go/bin/command -option=true input stdout | ~/go/bin/command2 -option=filepath input output`
-
-**EX:**
-
-```
- ./gtfToBed 
-gtfToBed - Converts a gtf file into bed format.
-Usage:
-gtfToBed in.gtf out.bed
-options:
-  -chromSizeFile string
-    	Specifies the name of a chrom.sizes file.
-  -tss
-    	Return a bed of tss positions annotated only with the geneName. Must provide chrom sizes file.
-2023/06/19 14:01:01 gtfToBed.go:72: Error: expecting 2 arguments, but got 0
-```
-
-**4. Building new command line tools with gonomics packages**
-
-*An example of this code and testing structure can be found in `gonomics/cmd/newTool`*
-
-Go syntax requires that any function that will be used outside of a single package must begin with a capitalized letter. If there is a function you would like to utilize differently than any of our current tools, first make sure that it would be accessible to the cmd directory by checking its capitalization. 
-
-- `FuncToDoThings` not `funcToDoThings` in its package
-
-Generally, in gonomics we have a package for a file type where we have an implementation as a struct in our code base. So if you plan to read in a file, look for a package in gonomics with that file type as its name. 
-
-- `gonomics/bed` if you wanted to use in a bed file.
-
-These packages will have read and write functions as well as some other useful tools within them. All you would have to do from there to read in a bed file is import the package into your newTool.go file in the command directory.
-
-```
-##gonomics/cmd/newTool.go
-
-package main
-
-import (
-"github.com/vertgenlab/gonomics/bed"
-)
-
-functionForTheTool(arguments){
- bedRecords := bed.Read(bedFileFromArguments)
-}
-```
-
-Let's say you wanted to use this command to read in a bed file and create an amino acid code from each of its regions. That function may look something like this:
-
-```
-##gonomics/cmd/newTool.go
-
-func functionForTheTool(b string, f string, output string) {
-	bedSeq := make([][]dna.Base, len(b))
-	aaSeq := make([][]dna.AminoAcid, len(b))
-	var outRecord []string
-	bedRecords := bed.Read(b)
-	fastaRecord := fasta.Read(f)
-
-	for i := range bedRecords {
-		for j := range fastaRecord[0].Seq { //this assumes one fasta record in the file
-			if bedRecords[i].ChromStart <= j && j < bedRecords[i].ChromEnd {
-				bedSeq[i] = append(bedSeq[i], fastaRecord[0].Seq[j])
-			}
-		}
-		aaSeq[i] = append(aaSeq[i], dna.TranslateSeq(bedSeq[i])...)
-	}
-
-	for k := range aaSeq {
-		for l := range aaSeq[k] {
-			outRecord = append(outRecord, dna.AminoAcidToString(aaSeq[k][l]))
-		}
-	}
-
-	fileio.Write(output, outRecord)
-
-}
-
-func usage() {
-	fmt.Print(
-		"newTool - takes a bed and fasta and converts the bed sequences into amino acid sequences\n" +
-			"Usage:\n" +
-			"newTool bedFile fastaFile\n" +
-			"options:\n")
-	flag.PrintDefaults()
-}
-
-func main() {
-	var expectedNumArgs int = 3
-
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
-
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(flag.Args()))
-	}
-
-	bedFile := flag.Arg(0)
-	fastaFile := flag.Arg(1)
-	outFile := flag.Arg(2)
-
-	functionForTheTool(bedFile, fastaFile, outFile)
-}
-```
+* More information about using our tools and making your own can befound on our wiki page here: [gonomics cmd directory](https://github.com/vertgenlab/gonomics/wiki/gonomics-cmd-directory) *
 
 ---
 
