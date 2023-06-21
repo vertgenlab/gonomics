@@ -32,7 +32,7 @@ Executables will be present in Go binary folder (`~/go/bin` by default)
 
 The command line tools' code is located in `/gonomics/cmd/`
 
-* More information about using our tools and making your own can be found on our wiki page here: [gonomics cmd directory](https://github.com/vertgenlab/gonomics/wiki/gonomics-cmd-directory) 
+* More information about using our tools and making your own can be found on our wiki page here: [Using gonomics commands and packages](https://github.com/vertgenlab/gonomics/wiki/Using-gonomics-commands-and-packages) 
 
 ---
 
