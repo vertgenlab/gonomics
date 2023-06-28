@@ -148,40 +148,44 @@ func buildTree(intervals []Interval) *IntervalNode {
 	return answer
 }
 
+// Query searches the input treeMap and returns all intervals satisfying the input relationship relative to the input interval q
 func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
-	if treeMap[q.GetChrom()] != nil {
-		switch relationship {
-		case "any":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "o")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "oi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "di")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "m")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "mi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "within":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "start":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "end":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "equal":
-			answer = query(treeMap[q.GetChrom()], q, "e")
-		default:
-			answer = query(treeMap[q.GetChrom()], q, relationship)
-		}
+	m := treeMap[q.GetChrom()]
+	if m == nil {
+		return nil
+	}
+
+	switch relationship {
+	case "any":
+		answer = append(answer, query(m, q, "o")...)
+		answer = append(answer, query(m, q, "oi")...)
+		answer = append(answer, query(m, q, "d")...)
+		answer = append(answer, query(m, q, "di")...)
+		answer = append(answer, query(m, q, "m")...)
+		answer = append(answer, query(m, q, "mi")...)
+		answer = append(answer, query(m, q, "s")...)
+		answer = append(answer, query(m, q, "si")...)
+		answer = append(answer, query(m, q, "f")...)
+		answer = append(answer, query(m, q, "fi")...)
+		answer = append(answer, query(m, q, "e")...)
+	case "within":
+		answer = append(answer, query(m, q, "d")...)
+		answer = append(answer, query(m, q, "s")...)
+		answer = append(answer, query(m, q, "f")...)
+		answer = append(answer, query(m, q, "e")...)
+	case "start":
+		answer = append(answer, query(m, q, "s")...)
+		answer = append(answer, query(m, q, "si")...)
+		answer = append(answer, query(m, q, "e")...)
+	case "end":
+		answer = append(answer, query(m, q, "f")...)
+		answer = append(answer, query(m, q, "fi")...)
+		answer = append(answer, query(m, q, "e")...)
+	case "equal":
+		answer = query(m, q, "e")
+	default:
+		answer = query(m, q, relationship)
 	}
 
 	if len(answer) > 1 && q.GetChromEnd()-q.GetChromStart() == 1 {
@@ -189,6 +193,56 @@ func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []
 	}
 
 	return answer
+}
+
+// QueryBool searches the input treeMap and returns true if any interval satisfies the input relationship relative to the input interval q.
+// QueryBool is faster than Query and is preferred when simply checking if the input q does or does not overlap the tree.
+func QueryBool(treeMap map[string]*IntervalNode, q Interval, relationship string) bool {
+	m := treeMap[q.GetChrom()]
+	if m == nil {
+		return false
+	}
+
+	switch relationship {
+	case "any":
+		return checkQuery(m, q, "o") ||
+			checkQuery(m, q, "oi") ||
+			checkQuery(m, q, "d") ||
+			checkQuery(m, q, "di") ||
+			checkQuery(m, q, "s") ||
+			checkQuery(m, q, "si") ||
+			checkQuery(m, q, "f") ||
+			checkQuery(m, q, "fi") ||
+			checkQuery(m, q, "m") ||
+			checkQuery(m, q, "mi") ||
+			checkQuery(m, q, "e")
+
+	case "within":
+		return checkQuery(m, q, "d") ||
+			checkQuery(m, q, "s") ||
+			checkQuery(m, q, "f") ||
+			checkQuery(m, q, "e")
+
+	case "start":
+		return checkQuery(m, q, "s") ||
+			checkQuery(m, q, "si") ||
+			checkQuery(m, q, "e")
+
+	case "end":
+		return checkQuery(m, q, "f") ||
+			checkQuery(m, q, "fi") ||
+			checkQuery(m, q, "e")
+
+	case "equal":
+		return checkQuery(m, q, "e")
+
+	default:
+		return checkQuery(m, q, relationship)
+	}
+}
+
+func checkQuery(tree *IntervalNode, q Interval, relationship string) bool {
+	return len(query(tree, q, relationship)) > 0
 }
 
 func query(tree *IntervalNode, q Interval, relationship string) []Interval {
