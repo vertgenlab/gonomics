@@ -54,6 +54,7 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 		// else if no merged output
 		if interval.QueryBool(tree, query, relationship, buf) {
 			answer = answerTrue
+			answerChan <- &queryAnswer{query, answer}
 		} else {
 			answer = nil
 		}
