@@ -58,13 +58,13 @@ func processVcfLine(line string) Vcf {
 	var err error
 	data := strings.Split(line, "\t")
 	if len(data) < 8 {
-		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
+		log.Panicf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
 	}
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
 	if err != nil {
-		log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
 	}
 	curr.Id = data[2]
 	curr.Ref = data[3]
@@ -73,7 +73,7 @@ func processVcfLine(line string) Vcf {
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
 		if err != nil {
-			log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
 		}
 	}
 	curr.Filter = data[6]
