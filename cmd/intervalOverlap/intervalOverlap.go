@@ -6,6 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"runtime/pprof"
+	"runtime/trace"
 	"sync"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -33,7 +36,6 @@ func sequelOverlap(options *Settings) chan *queryAnswer {
 	tree := buildTree(intervals, options.Aggregate)
 
 	queryChan := interval.GoReadToChan(options.Input)
-	// TODO: benchmark buffer size
 	answerChan := make(chan *queryAnswer, 1000)
 
 	var wg sync.WaitGroup
@@ -62,11 +64,23 @@ func main() {
 	var mergedOutput *bool = flag.Bool("mergedOutput", false, "Print the input line followed by the corresponding select lines in the outfile.")
 	//var swapTargetQuery *bool = flag.Bool("swapTargetQuery", false, "WIP") //TODO
 	var helpRelationships *bool = flag.Bool("printRelationships", false, "Show a diagram of the valid interval relationships that can be tested for.")
+	cpuprof := flag.String("cpuprof", "", "DEBUG: cpu profile output for use with go tool pprof")
+	memprof := flag.String("memprof", "", "DEBUG: mem profile output for use with go tool pprof")
+	exectrace := flag.String("exectrace", "", "DEBUG: execution trace output for use with go tool trace")
 	flag.Parse()
 
 	if *helpRelationships {
 		interval.PrintRelationships()
 		return
+	}
+
+	if *cpuprof != "" {
+		cpu, err := os.Create(*cpuprof)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(cpu)
+		defer pprof.StopCPUProfile()
 	}
 
 	if !interval.TestValidRelationship(*relationship) {
@@ -79,33 +93,54 @@ func main() {
 	}
 
 	var expectedNumArgs int = 3
+	var err error
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
-	} else {
-		selectFile, inFile, outFile := flag.Arg(0), flag.Arg(1), flag.Arg(2)
-		options := &Settings{
-			Input:      inFile,
-			Output:     outFile,
-			SelectFile: selectFile,
-			//Extend:          *extend,
-			NonOverlap: *nonOverlap,
-			Threads:    *threads,
-			//PercentOverlap:  *percentOverlap,
-			//BaseOverlap:     *baseOverlap,
-			Aggregate:    *aggregate,
-			Relationship: *relationship,
-			MergedOutput: *mergedOutput,
-			//SwapTargetQuery: *swapTargetQuery,
-		}
-		answerChan := sequelOverlap(options)
+		return
+	}
 
-		output := fileio.EasyCreate(options.Output)
-		writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
-		err := output.Close()
+	selectFile, inFile, outFile := flag.Arg(0), flag.Arg(1), flag.Arg(2)
+	options := &Settings{
+		Input:      inFile,
+		Output:     outFile,
+		SelectFile: selectFile,
+		//Extend:          *extend,
+		NonOverlap: *nonOverlap,
+		Threads:    *threads,
+		//PercentOverlap:  *percentOverlap,
+		//BaseOverlap:     *baseOverlap,
+		Aggregate:    *aggregate,
+		Relationship: *relationship,
+		MergedOutput: *mergedOutput,
+		//SwapTargetQuery: *swapTargetQuery,
+	}
+
+	if *exectrace != "" {
+		runtrace := fileio.EasyCreate(*exectrace)
+		err = trace.Start(runtrace)
 		exception.PanicOnErr(err)
+	}
+
+	answerChan := sequelOverlap(options)
+	output := fileio.EasyCreate(options.Output)
+	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
+	err = output.Close()
+	exception.PanicOnErr(err)
+
+	if *exectrace != "" {
+		trace.Stop()
+	}
+
+	if *memprof != "" {
+		mem, err := os.Create(*memprof)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.WriteHeapProfile(mem)
+		mem.Close()
 	}
 }

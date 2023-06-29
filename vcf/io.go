@@ -40,7 +40,7 @@ func GoReadToChan(filename string) (<-chan Vcf, Header) {
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 	var wg sync.WaitGroup
-	data := make(chan Vcf)
+	data := make(chan Vcf, 1000)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 

@@ -41,7 +41,10 @@ func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interv
 func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup, mergedOutput bool) {
 	var answer []interval.Interval
 	answerTrue := make([]interval.Interval, 1)
+	buf := make([]interval.Interval, 1000)
+	numSeen := 0
 	for query := range queryChan {
+		numSeen++
 		if mergedOutput {
 			answer = interval.Query(tree, query, relationship)
 			answerChan <- &queryAnswer{query, answer}
@@ -49,7 +52,7 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 		}
 
 		// else if no merged output
-		if interval.QueryBool(tree, query, relationship) {
+		if interval.QueryBool(tree, query, relationship, buf) {
 			answer = answerTrue
 		} else {
 			answer = nil
