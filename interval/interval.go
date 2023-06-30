@@ -148,40 +148,44 @@ func buildTree(intervals []Interval) *IntervalNode {
 	return answer
 }
 
+// Query searches the input treeMap and returns all intervals satisfying the input relationship relative to the input interval q
 func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
-	if treeMap[q.GetChrom()] != nil {
-		switch relationship {
-		case "any":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "o")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "oi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "di")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "m")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "mi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "within":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "d")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "start":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "s")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "si")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "end":
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "f")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "fi")...)
-			answer = append(answer, query(treeMap[q.GetChrom()], q, "e")...)
-		case "equal":
-			answer = query(treeMap[q.GetChrom()], q, "e")
-		default:
-			answer = query(treeMap[q.GetChrom()], q, relationship)
-		}
+	m := treeMap[q.GetChrom()]
+	if m == nil {
+		return nil
+	}
+
+	switch relationship {
+	case "any":
+		answer = append(answer, query(m, q, "o", nil)...)
+		answer = append(answer, query(m, q, "oi", nil)...)
+		answer = append(answer, query(m, q, "d", nil)...)
+		answer = append(answer, query(m, q, "di", nil)...)
+		answer = append(answer, query(m, q, "m", nil)...)
+		answer = append(answer, query(m, q, "mi", nil)...)
+		answer = append(answer, query(m, q, "s", nil)...)
+		answer = append(answer, query(m, q, "si", nil)...)
+		answer = append(answer, query(m, q, "f", nil)...)
+		answer = append(answer, query(m, q, "fi", nil)...)
+		answer = append(answer, query(m, q, "e", nil)...)
+	case "within":
+		answer = append(answer, query(m, q, "d", nil)...)
+		answer = append(answer, query(m, q, "s", nil)...)
+		answer = append(answer, query(m, q, "f", nil)...)
+		answer = append(answer, query(m, q, "e", nil)...)
+	case "start":
+		answer = append(answer, query(m, q, "s", nil)...)
+		answer = append(answer, query(m, q, "si", nil)...)
+		answer = append(answer, query(m, q, "e", nil)...)
+	case "end":
+		answer = append(answer, query(m, q, "f", nil)...)
+		answer = append(answer, query(m, q, "fi", nil)...)
+		answer = append(answer, query(m, q, "e", nil)...)
+	case "equal":
+		answer = query(m, q, "e", nil)
+	default:
+		answer = query(m, q, relationship, nil)
 	}
 
 	if len(answer) > 1 && q.GetChromEnd()-q.GetChromStart() == 1 {
@@ -191,12 +195,62 @@ func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []
 	return answer
 }
 
-func query(tree *IntervalNode, q Interval, relationship string) []Interval {
+// QueryBool searches the input treeMap and returns true if any interval satisfies the input relationship relative to the input interval q.
+// QueryBool is faster than Query and is preferred when simply checking if the input q does or does not overlap the tree.
+func QueryBool(treeMap map[string]*IntervalNode, q Interval, relationship string, ans []Interval) bool {
+	m := treeMap[q.GetChrom()]
+	if m == nil {
+		return false
+	}
+
+	switch relationship {
+	case "any":
+		return checkQuery(m, q, "o", ans) ||
+			checkQuery(m, q, "oi", ans) ||
+			checkQuery(m, q, "d", ans) ||
+			checkQuery(m, q, "di", ans) ||
+			checkQuery(m, q, "s", ans) ||
+			checkQuery(m, q, "si", ans) ||
+			checkQuery(m, q, "f", ans) ||
+			checkQuery(m, q, "fi", ans) ||
+			checkQuery(m, q, "m", ans) ||
+			checkQuery(m, q, "mi", ans) ||
+			checkQuery(m, q, "e", ans)
+
+	case "within":
+		return checkQuery(m, q, "d", ans) ||
+			checkQuery(m, q, "s", ans) ||
+			checkQuery(m, q, "f", ans) ||
+			checkQuery(m, q, "e", ans)
+
+	case "start":
+		return checkQuery(m, q, "s", ans) ||
+			checkQuery(m, q, "si", ans) ||
+			checkQuery(m, q, "e", ans)
+
+	case "end":
+		return checkQuery(m, q, "f", ans) ||
+			checkQuery(m, q, "fi", ans) ||
+			checkQuery(m, q, "e", ans)
+
+	case "equal":
+		return checkQuery(m, q, "e", ans)
+
+	default:
+		return checkQuery(m, q, relationship, ans)
+	}
+}
+
+func checkQuery(tree *IntervalNode, q Interval, relationship string, answer []Interval) bool {
+	return len(query(tree, q, relationship, answer)) > 0
+}
+
+func query(tree *IntervalNode, q Interval, relationship string, answer []Interval) []Interval {
 	// 1. Transform interval query with respect to interval I and relationship R
 	// to range query with x range [x1, x2] and y range [y1, y2] according to Table 1.
 	x1, x2, y1, y2 := transform(q, relationship)
 
-	var answer []Interval // 2. Initialize the result set S = {}
+	answer = answer[:0] // 2. Initialize the result set S = {}
 
 	// 3. Find the split node vsplit in range tree T where the paths
 	// to x1 and x2 split, or the leaf where both paths end.
@@ -212,7 +266,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 			// 6. Report the interval in vsplit, S = S ∪ {vsplit. interval}
 			switch z := vSplit.val.(type) {
 			case *AggregateInterval:
-				answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+				answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 			default:
 				answer = append(answer, z)
 			}
@@ -245,7 +299,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 					if v.rChild.data[j].GetChromStart() != v.rChild.data[j].GetChromEnd()-1 {
 						switch z := v.rChild.data[j].(type) {
 						case *AggregateInterval:
-							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 						default:
 							answer = append(answer, z)
 						}
@@ -254,7 +308,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 					// 15. Report interval, S = S ∪ {v. rchild. data[j]}
 					switch z := v.rChild.data[j].(type) {
 					case *AggregateInterval:
-						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 					default:
 						answer = append(answer, z)
 					}
@@ -285,7 +339,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 					if v.lChild.data[j].GetChromStart() != v.lChild.data[j].GetChromEnd()-1 {
 						switch z := v.lChild.data[j].(type) {
 						case *AggregateInterval:
-							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 						default:
 							answer = append(answer, z)
 						}
@@ -293,7 +347,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 				} else {
 					switch z := v.lChild.data[j].(type) {
 					case *AggregateInterval:
-						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 					default:
 						answer = append(answer, z)
 					}
@@ -311,7 +365,7 @@ func query(tree *IntervalNode, q Interval, relationship string) []Interval {
 	if v.val != nil && withinRange(v.val, relationship, x1, x2, y1, y2) {
 		switch z := v.val.(type) {
 		case *AggregateInterval:
-			answer = append(answer, query(z.tree[q.GetChrom()], q, relationship)...)
+			answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 		default:
 			answer = append(answer, z)
 		} // 40. Report the interval in v, S = S ∪ {v. interval}
