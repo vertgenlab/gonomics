@@ -19,7 +19,6 @@ type Interval interface {
 	GetChromEnd() int
 }
 
-// IntervalNode is a
 type IntervalNode struct {
 	val    Interval // only stored in leaf nodes
 	data   []Interval

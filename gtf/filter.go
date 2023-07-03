@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-// FilterVariantGtf
 func FilterVariantGtf(v *vcf.Vcf, g map[string]*Gene, c map[string]*chromInfo.ChromInfo, exon bool, code bool, five bool, three bool) bool {
 	if exon {
 		if !FilterVariantExon(v, g, c) {
@@ -42,7 +41,6 @@ func FilterVariantCds(v *vcf.Vcf, g map[string]*Gene, c map[string]*chromInfo.Ch
 	return VariantArrayOverlap(v, a)
 }
 
-//
 func FilterVariantThreeUtr(v *vcf.Vcf, g map[string]*Gene, c map[string]*chromInfo.ChromInfo) bool {
 	a := ThreeUtrBoolArray(g, c)
 	return VariantArrayOverlap(v, a)
