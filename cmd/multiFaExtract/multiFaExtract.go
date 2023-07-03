@@ -5,11 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers/cast"
+	"log"
 )
 
 func multiFaExtract(s Settings) {
@@ -88,8 +87,8 @@ func main() {
 		s = Settings{
 			InFile:     flag.Arg(0),
 			OutFile:    flag.Arg(1),
-			Start:      common.StringToInt(flag.Arg(2)),
-			End:        common.StringToInt(flag.Arg(3)),
+			Start:      cast.StringToInt(flag.Arg(2)),
+			End:        cast.StringToInt(flag.Arg(3)),
 			Bed:        *bed,
 			RemoveGaps: *removeGaps,
 		}

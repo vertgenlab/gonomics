@@ -2,13 +2,12 @@ package genomeGraph
 
 import (
 	"fmt"
-	"log"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/cast"
+	"log"
 )
 
 func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []fastq.PairedEnd {
@@ -27,12 +26,12 @@ func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numCha
 
 		if (len(seq) == fragLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLength) == 0) {
 			curr := fastq.PairedEnd{Fwd: fastq.Fastq{}, Rev: fastq.Fastq{}}
-			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 1", path[0], start1, path[len(path)-1], start1+uint32(readLength), common.StrandToRune(strand))
+			curr.Fwd.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 1", path[0], start1, path[len(path)-1], start1+uint32(readLength), cast.StrandToRune(strand))
 			curr.Fwd.Seq = make([]dna.Base, readLength)
 			copy(curr.Fwd.Seq, seq[:readLength])
 
 			curr.Fwd.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
-			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 2", path[0], start1+uint32(fragLen-readLength), path[len(path)-1], endPos, common.StrandToRune(strand))
+			curr.Rev.Name = fmt.Sprintf("%d_%d_%d_%d_%c_R: 2", path[0], start1+uint32(fragLen-readLength), path[len(path)-1], endPos, cast.StrandToRune(strand))
 			curr.Rev.Seq = make([]dna.Base, readLength)
 			copy(curr.Rev.Seq, seq[uint32(fragLen-readLength):])
 			curr.Rev.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
@@ -108,7 +107,7 @@ func RandomReads(genome *GenomeGraph, readLength int, numReads int, numChanges i
 		strand = numbers.RandIntInRange(0, 2) == 0
 		if (len(seq) == readLength) && (dna.CountBaseInterval(seq, dna.N, 0, readLength) == 0) {
 			curr := fastq.Fastq{}
-			curr.Name = fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, common.StrandToRune(strand))
+			curr.Name = fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, cast.StrandToRune(strand))
 			curr.Seq = seq
 			curr.Qual = fastq.ToQualUint8(generateDiverseFakeQual(readLength))
 			if !strand {

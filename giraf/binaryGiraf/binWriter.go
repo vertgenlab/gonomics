@@ -3,13 +3,14 @@ package binaryGiraf
 import (
 	"bytes"
 	"encoding/binary"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/cast"
 	"io"
 	"log"
 	"math"
 
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -41,12 +42,12 @@ func CompressGiraf(infilename string, outfilename string) {
 	// Write info from all girafs in inputStream
 	for record := range inputStream {
 		err = WriteGiraf(writer, record)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 
 	// Close writer
 	err = writer.bg.Close()
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // Byte size of BinGiraf fixed size fields excluding blockSize.
@@ -211,47 +212,47 @@ func noteToBytes(n giraf.Note) []byte {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'c': // int8
-		val := common.StringToInt8(n.Value)
+		val := cast.StringToInt8(n.Value)
 		answer = append(answer, byte(val))
 		if len(answer) != 4 {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'C': // uint8
-		val := common.StringToUint8(n.Value)
+		val := cast.StringToUint8(n.Value)
 		answer = append(answer, byte(val))
 		if len(answer) != 4 {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 's': // int16
-		val := common.StringToInt16(n.Value)
+		val := cast.StringToInt16(n.Value)
 		binary.LittleEndian.PutUint16(currBuf[:2], uint16(val))
 		answer = append(answer, currBuf[:2]...)
 		if len(answer) != 5 {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'S': // uint16
-		val := common.StringToUint16(n.Value)
+		val := cast.StringToUint16(n.Value)
 		binary.LittleEndian.PutUint16(currBuf[:2], val)
 		answer = append(answer, currBuf[:2]...)
 		if len(answer) != 5 {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'i': // int32
-		val := common.StringToInt32(n.Value)
+		val := cast.StringToInt32(n.Value)
 		binary.LittleEndian.PutUint32(currBuf[:4], uint32(val))
 		answer = append(answer, currBuf[:4]...)
 		if len(answer) != 7 {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'I': // uint32
-		val := common.StringToUint32(n.Value)
+		val := cast.StringToUint32(n.Value)
 		binary.LittleEndian.PutUint32(currBuf[:4], val)
 		answer = append(answer, currBuf[:4]...)
 		if len(answer) != 7 {
 			log.Fatalf("ERROR: Improperly formatted note: %+v", n)
 		}
 	case 'f': // float32
-		val := uint32(common.StringToFloat64(n.Value))
+		val := uint32(cast.StringToFloat64(n.Value))
 		binary.LittleEndian.PutUint32(currBuf[:4], val)
 		answer = append(answer, currBuf[:4]...)
 		if len(answer) != 7 {

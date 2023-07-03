@@ -1,16 +1,14 @@
-// giraf package contains utilities and software to operate genome graph alignments in giraf format
+// Package giraf contains utilities and software to operate genome graph alignments in giraf format
 package giraf
 
 import (
 	"fmt"
-	"io"
-	"sync"
-
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"io"
+	"sync"
 )
 
 // Giraf struct contains data fields that describes query sequences aligned to a genome graph reference.
@@ -157,5 +155,5 @@ func GirafPairChanToFile(filename string, input <-chan GirafPair, wg *sync.WaitG
 // WriteGirafToFileHandle will write giraf to a io.Writer.
 func WriteGirafToFileHandle(file io.Writer, gf *Giraf) {
 	_, err := fmt.Fprintf(file, "%s\n", GirafToString(gf))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }

@@ -5,13 +5,13 @@ package bedpe
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/numbers/cast"
 	"io"
 	"log"
 	"strings"
 	"sync"
 
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -96,10 +96,10 @@ func Read(filename string) []BedPe {
 func processBedPeLine(line string) BedPe {
 	var startANum, endANum, startBNum, endBNum int
 	words := strings.Split(line, "\t")
-	startANum = common.StringToInt(words[1])
-	endANum = common.StringToInt(words[2])
-	startBNum = common.StringToInt(words[4])
-	endBNum = common.StringToInt(words[5])
+	startANum = cast.StringToInt(words[1])
+	endANum = cast.StringToInt(words[2])
+	startBNum = cast.StringToInt(words[4])
+	endBNum = cast.StringToInt(words[5])
 
 	current := BedPe{A: bed.Bed{
 		Chrom:             words[0],
@@ -120,7 +120,7 @@ func processBedPeLine(line string) BedPe {
 		current.A.Name, current.B.Name = words[6], words[6]
 	}
 	if len(words) >= 8 {
-		current.A.Score, current.B.Score = common.StringToInt(words[7]), common.StringToInt(words[7])
+		current.A.Score, current.B.Score = cast.StringToInt(words[7]), cast.StringToInt(words[7])
 	}
 	if len(words) >= 9 {
 		current.A.Strand = bed.StringToStrand(words[8])

@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var SampleVcfTests = []struct {
@@ -32,8 +31,6 @@ func TestSampleVcf(t *testing.T) {
 			t.Errorf("Error in sampleVcf headers.")
 		}
 		err := os.Remove("tmp.vcf")
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }

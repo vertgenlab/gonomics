@@ -1,14 +1,13 @@
 package genomeGraph
 
 import (
-	"log"
-	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/cast"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"strings"
 )
 
 func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]vcf.Vcf) *GenomeGraph {
@@ -244,7 +243,7 @@ func getSvEnd(v vcf.Vcf) int {
 		for i := 0; i < len(words); i++ {
 			if strings.Contains(words[i], "END=") {
 				text := strings.Split(words[i], "END=")
-				return common.StringToInt(text[1])
+				return cast.StringToInt(text[1])
 			}
 		}
 	}

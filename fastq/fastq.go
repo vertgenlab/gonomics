@@ -3,12 +3,11 @@ package fastq
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"sync"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Fastq stores the name, sequence, and quality scores for each 4 line record of a Fastq file.
@@ -65,7 +64,7 @@ func Write(filename string, records []Fastq) {
 func WriteToFileHandle(file *fileio.EasyWriter, fq Fastq) {
 	var err error
 	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // processFastqRecord is a helper function of NextFastq that parses a fastq struct from an input line of a fastq file provided as a string.

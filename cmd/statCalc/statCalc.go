@@ -5,15 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"math/rand"
-	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/cast"
 	"github.com/vertgenlab/gonomics/popgen"
+	"log"
+	"math/rand"
+	"strings"
 )
 
 func statCalc(s Settings) {
@@ -26,14 +25,14 @@ func statCalc(s Settings) {
 		if len(words) != 2 {
 			log.Fatalf("Error: A normal distribution is defined by two parameters. Received %v.\n", len(words))
 		}
-		mu := common.StringToFloat64(words[0])
-		sigma := common.StringToFloat64(words[1])
+		mu := cast.StringToFloat64(words[0])
+		sigma := cast.StringToFloat64(words[1])
 		if len(s.Args) > 2 || len(s.Args) < 1 {
 			flag.Usage()
 			log.Fatalf("Error: expected one or two arguments, but got %d\n", len(s.Args))
 		}
 		if len(s.Args) == 1 {
-			x := common.StringToFloat64(s.Args[0])
+			x := cast.StringToFloat64(s.Args[0])
 			_, err = fmt.Fprintf(out, "%e\n", numbers.NormalDist(x, mu, sigma))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
@@ -45,19 +44,19 @@ func statCalc(s Settings) {
 		if len(words) != 2 {
 			log.Fatalf("Error: a binomial distribution is defined by two parameters. Received %v.\n", len(words))
 		}
-		n := common.StringToInt(words[0])
-		p := common.StringToFloat64(words[1])
+		n := cast.StringToInt(words[0])
+		p := cast.StringToFloat64(words[1])
 		if len(s.Args) > 2 || len(s.Args) < 1 {
 			flag.Usage()
 			log.Fatalf("Error: expected one or two arguments, but got %d\n", len(s.Args))
 		}
 		if len(s.Args) == 1 {
-			i := common.StringToInt(s.Args[0])
+			i := cast.StringToInt(s.Args[0])
 			answer, _ := numbers.BinomialDist(n, i, p)
 			_, err = fmt.Fprintf(out, "%e\n", answer)
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
-			left := common.StringToInt(s.Args[0])
+			left := cast.StringToInt(s.Args[0])
 			if s.Args[1] == "N" || s.Args[1] == "n" {
 				if left == 0 {
 					_, err = fmt.Fprintf(out, "%e\n", 1.00000)
@@ -67,33 +66,33 @@ func statCalc(s Settings) {
 					exception.PanicOnErr(err)
 				}
 			} else if left == 0 {
-				right := common.StringToInt(s.Args[1])
+				right := cast.StringToInt(s.Args[1])
 				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialLeftSummation(n, right, p))
 				exception.PanicOnErr(err)
 			} else {
-				right := common.StringToInt(s.Args[1])
+				right := cast.StringToInt(s.Args[1])
 				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialSum(left, right, n, p))
 				exception.PanicOnErr(err)
 			}
 		}
 	} else if s.Poisson != "" {
-		lambda := common.StringToFloat64(s.Poisson)
+		lambda := cast.StringToFloat64(s.Poisson)
 		if len(s.Args) > 2 || len(s.Args) < 1 {
 			flag.Usage()
 			log.Fatalf("Error: expected one or two arguments, but got %d\n", len(flag.Args()))
 		}
 		if len(s.Args) == 1 {
-			k := common.StringToInt(s.Args[0])
+			k := cast.StringToInt(s.Args[0])
 			_, err = fmt.Fprintf(out, "%e\n", numbers.PoissonDist(k, lambda))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
 			if s.Args[1] == "INF" || s.Args[1] == "inf" || s.Args[1] == "Inf" {
-				k := common.StringToInt(s.Args[0])
+				k := cast.StringToInt(s.Args[0])
 				_, err = fmt.Fprintf(out, "%e\n", numbers.PoissonRightSummation(k, lambda))
 				exception.PanicOnErr(err)
 			} else {
-				left := common.StringToInt(s.Args[0])
-				right := common.StringToInt(s.Args[1])
+				left := cast.StringToInt(s.Args[0])
+				right := cast.StringToInt(s.Args[1])
 				_, err = fmt.Fprintf(out, "%e\n", numbers.PoissonSum(left, right, lambda))
 				exception.PanicOnErr(err)
 			}
@@ -103,20 +102,20 @@ func statCalc(s Settings) {
 		if len(words) != 2 {
 			log.Fatalf("Error: a beta distribution is defined by two parameters. Received %v.\n", len(words))
 		}
-		alpha := common.StringToFloat64(words[0])
-		beta := common.StringToFloat64(words[1])
+		alpha := cast.StringToFloat64(words[0])
+		beta := cast.StringToFloat64(words[1])
 
 		if len(s.Args) > 2 || len(s.Args) < 1 {
 			flag.Usage()
 			log.Fatalf("Error: expected one or two arguments, but got %d\n", len(flag.Args()))
 		}
 		if len(s.Args) == 1 {
-			x := common.StringToFloat64(s.Args[0])
+			x := cast.StringToFloat64(s.Args[0])
 			_, err = fmt.Fprintf(out, "%e\n", numbers.BetaDist(x, alpha, beta))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
-			left := common.StringToFloat64(s.Args[0])
-			right := common.StringToFloat64(s.Args[1])
+			left := cast.StringToFloat64(s.Args[0])
+			right := cast.StringToFloat64(s.Args[1])
 			_, err = fmt.Fprintf(out, "%e\n", numbers.BetaIntegral(left, right, alpha, beta))
 			exception.PanicOnErr(err)
 		}
@@ -125,23 +124,23 @@ func statCalc(s Settings) {
 		if len(words) != 2 {
 			log.Fatalf("Error: a gamma distribution is defined by two parameters. Received %v.\n", len(words))
 		}
-		alpha := common.StringToFloat64(words[0])
-		beta := common.StringToFloat64(words[1])
+		alpha := cast.StringToFloat64(words[0])
+		beta := cast.StringToFloat64(words[1])
 		if len(s.Args) > 2 || len(s.Args) < 1 {
 			flag.Usage()
 			log.Fatalf("Error: expected one or two arguments, but got %d\n", len(s.Args))
 		}
 		if len(s.Args) == 1 {
-			x := common.StringToFloat64(s.Args[0])
+			x := cast.StringToFloat64(s.Args[0])
 			_, err = fmt.Fprintf(out, "%e\n", numbers.GammaDist(x, alpha, beta))
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
-			left := common.StringToFloat64(s.Args[0])
+			left := cast.StringToFloat64(s.Args[0])
 			if s.Args[1] == "INF" || s.Args[1] == "inf" || s.Args[1] == "Inf" {
 				_, err = fmt.Fprintf(out, "%e\n", numbers.GammaRightIntegral(left, alpha, beta))
 				exception.PanicOnErr(err)
 			} else {
-				right := common.StringToFloat64(s.Args[1])
+				right := cast.StringToFloat64(s.Args[1])
 				_, err = fmt.Fprintf(out, "%e\n", numbers.GammaIntegral(left, right, alpha, beta))
 				exception.PanicOnErr(err)
 			}
@@ -151,12 +150,12 @@ func statCalc(s Settings) {
 		if len(words) != 6 {
 			log.Fatalf("Error: sampleAFS expected six parameters, received: %v.\n", len(words))
 		}
-		alpha := common.StringToFloat64(words[0])
-		numSamples := common.StringToInt(words[1])
-		maxSampleDepth := common.StringToInt(words[2])
-		bins := common.StringToInt(words[3])
-		xLeft := common.StringToFloat64(words[4])
-		xRight := common.StringToFloat64(words[5])
+		alpha := cast.StringToFloat64(words[0])
+		numSamples := cast.StringToInt(words[1])
+		maxSampleDepth := cast.StringToInt(words[2])
+		bins := cast.StringToInt(words[3])
+		xLeft := cast.StringToFloat64(words[4])
+		xRight := cast.StringToFloat64(words[5])
 		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight)
 		for i := 0; i < len(answer); i++ {
 			_, err = fmt.Fprintf(out, "%e\n", answer[i])
@@ -167,9 +166,9 @@ func statCalc(s Settings) {
 		if len(words) != 3 {
 			log.Fatalf("Error: sampleBeta expected four parameters, received: %v.\n", len(words))
 		}
-		alpha := common.StringToFloat64(words[0])
-		beta := common.StringToFloat64(words[1])
-		numSamples := common.StringToInt(words[2])
+		alpha := cast.StringToFloat64(words[0])
+		beta := cast.StringToFloat64(words[1])
+		numSamples := cast.StringToInt(words[2])
 		sampler := numbers.BetaSampler(alpha, beta)
 		var current float64
 		for i := 0; i < numSamples; i++ {
@@ -182,9 +181,9 @@ func statCalc(s Settings) {
 		if len(words) != 3 {
 			log.Fatalf("Error: sampleGamma expected four parameters, received: %v.\n", len(words))
 		}
-		alpha := common.StringToFloat64(words[0])
-		beta := common.StringToFloat64(words[1])
-		numSamples := common.StringToInt(words[2])
+		alpha := cast.StringToFloat64(words[0])
+		beta := cast.StringToFloat64(words[1])
+		numSamples := cast.StringToInt(words[2])
 		sampler := numbers.GammaSampler(alpha, beta)
 		var current float64
 		for i := 0; i < numSamples; i++ {
@@ -197,9 +196,9 @@ func statCalc(s Settings) {
 		if len(words) != 3 {
 			log.Fatalf("Error: sampleNormal expected four parameters, received: %v.\n", len(words))
 		}
-		mu := common.StringToFloat64(words[0])
-		sigma := common.StringToFloat64(words[1])
-		numSamples := common.StringToInt(words[2])
+		mu := cast.StringToFloat64(words[0])
+		sigma := cast.StringToFloat64(words[1])
+		numSamples := cast.StringToInt(words[2])
 		for i := 0; i < numSamples; i++ {
 			_, err = fmt.Fprintf(out, "%e\n", numbers.SampleInverseNormal(mu, sigma))
 			exception.PanicOnErr(err)

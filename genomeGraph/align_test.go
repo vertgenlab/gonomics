@@ -2,6 +2,9 @@ package genomeGraph
 
 import (
 	"flag"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/cast"
 	"log"
 	"os"
 	"runtime"
@@ -10,10 +13,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/giraf"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
@@ -114,7 +113,7 @@ func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 
 		//}
 	}
-	if common.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && common.StringToInt(qName[1]) == targetStart && targetEnd == common.StringToInt(qName[3]) {
+	if cast.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && cast.StringToInt(qName[1]) == targetStart && targetEnd == cast.StringToInt(qName[3]) {
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
 		//	log.Printf("%s\n", giraf.GirafToString(aln))

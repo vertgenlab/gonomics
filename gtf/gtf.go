@@ -5,11 +5,11 @@ package gtf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/numbers/cast"
 	"io"
 	"log"
 	"strings"
 
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -74,7 +74,7 @@ func parseFrame(s string) int {
 	if s == "." {
 		return -1
 	}
-	answer := common.StringToInt(s)
+	answer := cast.StringToInt(s)
 	if answer > 2 || answer < 0 {
 		log.Fatalf("Frame for GTF entries must be either dot, 0, 1, or 2.")
 	}
@@ -144,8 +144,8 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 	switch words[2] {
 	case "transcript":
 		prevCds = nil
-		currentTranscript = &Transcript{Chr: words[0], Source: words[1], Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), TranscriptID: currT}
-		currentTranscript.Strand = common.StringToStrand(words[6])
+		currentTranscript = &Transcript{Chr: words[0], Source: words[1], Start: cast.StringToInt(words[3]), End: cast.StringToInt(words[4]), Score: cast.StringToFloat64(words[5]), TranscriptID: currT}
+		currentTranscript.Strand = cast.StringToStrand(words[6])
 		currentTranscript.Exons = make([]*Exon, 0)
 
 		if _, ok := answer[currGeneID]; ok {
@@ -157,11 +157,11 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 		}
 	case "exon":
 		t := findTranscript(currT, answer[currGeneID].Transcripts)
-		t.Exons = append(t.Exons, &Exon{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), ExonNumber: currENumber, ExonID: currEID, Score: common.StringToFloat64(words[5])})
+		t.Exons = append(t.Exons, &Exon{Start: cast.StringToInt(words[3]), End: cast.StringToInt(words[4]), ExonNumber: currENumber, ExonID: currEID, Score: cast.StringToFloat64(words[5])})
 
 	case "CDS":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
-		currentCDS := Cds{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), Frame: parseFrame(words[7])}
+		currentCDS := Cds{Start: cast.StringToInt(words[3]), End: cast.StringToInt(words[4]), Score: cast.StringToFloat64(words[5]), Frame: parseFrame(words[7])}
 		currentCDS.Prev = prevCds
 		if prevCds != nil {
 			prevCds.Next = &currentCDS
@@ -171,12 +171,12 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 
 	case "5UTR":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
-		current5Utr := FiveUtr{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
+		current5Utr := FiveUtr{Start: cast.StringToInt(words[3]), End: cast.StringToInt(words[4]), Score: cast.StringToFloat64(words[5])}
 		e.FiveUtr = &current5Utr
 
 	case "3UTR":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
-		current3Utr := ThreeUtr{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
+		current3Utr := ThreeUtr{Start: cast.StringToInt(words[3]), End: cast.StringToInt(words[4]), Score: cast.StringToFloat64(words[5])}
 		e.ThreeUtr = &current3Utr
 
 	default:

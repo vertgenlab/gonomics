@@ -2,17 +2,16 @@ package vcf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strconv"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// Header contains all of the information present in the header section of a VCF.
+// Header contains all information present in the header section of a VCF.
 // Info, Filter, Format, and Contig lines are parsed into maps keyed by ID.
 type Header struct {
 	FileFormat string                         // ##fileformat=VCFv4.3
@@ -296,19 +295,9 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 	return
 }
 
-func processHeader(header Header, line string) Header {
-	if strings.HasPrefix(line, "#") {
-		header.Text = append(header.Text, line)
-	} else {
-		log.Fatal("There was an error reading the header line")
-	}
-	return header
-}
-
-//If you have multiple samples to add to the header, use strings.Join(samples[], "\t") as an argument that combines multiple samples by tabs
-//Name input is strictly used to push in a name for the sample column.
-
-func NewHeader(name string) Header {
+// NewHeader If you have multiple samples to add to the header, use strings.Join(samples[], "\t") as an argument that combines multiple samples by tabs
+// Name input is strictly used to push in a name for the sample column.
+func NewHeader() Header {
 	var header Header
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
 	header.Text = append(header.Text, "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT")
@@ -334,7 +323,7 @@ func NewWriteHeader(file io.Writer, header Header) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
-		common.ExitIfError(err)
+		exception.FatalOnErr(err)
 	}
 }
 
@@ -344,10 +333,10 @@ func WriteMultiSamplesHeader(file io.Writer, header Header, listNames []string) 
 		if strings.Contains(header.Text[h], "#CHROM\t") {
 			name := strings.Join(listNames, "\t")
 			_, err = fmt.Fprintf(file, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n", name))
-			common.ExitIfError(err)
+			exception.FatalOnErr(err)
 		} else {
 			_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
-			common.ExitIfError(err)
+			exception.FatalOnErr(err)
 		}
 	}
 }

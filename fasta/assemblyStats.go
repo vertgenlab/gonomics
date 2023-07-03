@@ -2,12 +2,11 @@ package fasta
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"sort"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, int) {
@@ -92,19 +91,20 @@ func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 
 func WriteAssemblyStats(infile string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
 	file := fileio.EasyCreate(outfile)
-	defer file.Close()
-
 	var err error
 	_, err = fmt.Fprintf(file, "Assembly Name: %s\n", infile)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "halfGenome: %d\n", halfGenome)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "genomeLength: %d\n", genomeLength)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "Number of contigs: %d\n", numContigs)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "Largest Contig: %d\n", largestContig)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "N50: %d\n", N50)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
+
+	err = file.Close()
+	exception.FatalOnErr(err)
 }

@@ -5,15 +5,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/cast"
+	"log"
 )
 
 type Settings struct {
@@ -97,7 +96,7 @@ func bedFormat(s Settings) {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
 		}
 		if s.ScaleNameFloat != 1 {
-			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*common.StringToFloat64(v.Name))
+			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*cast.StringToFloat64(v.Name))
 		}
 		bed.WriteBed(out, v)
 	}

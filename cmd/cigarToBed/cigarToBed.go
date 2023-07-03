@@ -3,16 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"      //raven added this line for MSA Fasta output
-	"strings" //raven added this line for CountSeqIdx
-
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/exception" //raven added this line for file Close, exception.PanicOnErr
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
+	"log"
+	"os"
+	"strings"
 )
 
 // raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
