@@ -10,7 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-// GoReadToChan reads Lift interfaces to a channel from an input file (bed, axt, vcf, sam, chain).
+// GoReadToChan reads Interval interfaces to a channel from an input file (bed, axt, vcf, sam, chain).
 func GoReadToChan(inputFile string) <-chan Interval {
 	answer := make(chan Interval, 1000)
 	go ReadToChan(inputFile, answer)
