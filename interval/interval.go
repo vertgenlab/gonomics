@@ -150,8 +150,8 @@ func buildTree(intervals []Interval) *IntervalNode {
 	return answer
 }
 
-// Query takes a map (built with BuildTree), a query interval, and a relationship and returns a slice of interval
-// of treeMap that overlapped the input interval.
+// Query takes a map (built with BuildTree), a query interval, and a relationship and returns a slice of type Interval
+// of treeMap entries that overlapped the query interval.
 func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
 	if treeMap[q.GetChrom()] != nil {
