@@ -4,10 +4,8 @@ import (
 	"image/color"
 )
 
-/*
-K. Kelly (1965): Twenty-two colors of maximum contrast. Color Eng., 3(6)
-*/
-
+// KellyPalette contains a set of high-contrast colors from:
+// K. Kelly (1965): Twenty-two colors of maximum contrast. Color Eng., 3(6)
 var KellyPalette = color.Palette{
 	color.RGBA{0xF2, 0xF3, 0xF4, 0xff},
 	color.RGBA{0x22, 0x22, 0x22, 0xff},
@@ -33,10 +31,8 @@ var KellyPalette = color.Palette{
 	color.RGBA{0x2B, 0x3D, 0x26, 0xff},
 }
 
-/*
-https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
-*/
-
+// TrubetskoyPalette contains a set of high-contrast colors from:
+// https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors
 var TrubetskoyPalette = color.Palette{
 	color.RGBA{0xe6, 0x19, 0x4b, 0xff}, /* 0  red */
 	color.RGBA{0x3c, 0xb4, 0x4b, 0xff}, /* 1  green */
