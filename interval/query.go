@@ -10,12 +10,14 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
+// GoReadToChan reads Lift interfaces to a channel from an input file (bed, axt, vcf, sam, chain).
 func GoReadToChan(inputFile string) <-chan Interval {
 	answer := make(chan Interval, 1000)
 	go ReadToChan(inputFile, answer)
 	return answer
 }
 
+// ReadToChan reads from a file (bed, axt, vcf, sam, chain) to send interval interfaces to a chan<- interval.
 func ReadToChan(inputFile string, send chan<- Interval) {
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(inputFile)
