@@ -18,6 +18,7 @@ func (s Sample) String() string {
 	return sampleToString(s)
 }
 
+// GetChrom returns the chromosome that the variant is on.
 func (v Vcf) GetChrom() string {
 	return v.Chr
 }
@@ -37,6 +38,9 @@ func (v Vcf) GetChrom() string {
 // for indels, vcf records the startpos as the base prior to the change
 // to find the region actually being changed we need to check if it is indel
 // and adjust accordingly.
+
+// GetChromStart returns the start position of a variant. Since VCF is 1-base, GetChromStart of a SNP variant will return v.Pos - 1.
+// VCF format defines the first base of an indel as the base prior to the change, so for indels, GetChromStart will simply return v.Pos
 func (v Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
@@ -46,6 +50,8 @@ func (v Vcf) GetChromStart() int {
 	}
 }
 
+// GetChromEnd returns the end position of a variant. Since VCF is 1-base, GetChromEnd of a SNP variant will rerun v.Pos.
+// For indels, GetChromEnd will return v.Pos + the length of the indel - 1.
 func (v Vcf) GetChromEnd() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {
@@ -55,12 +61,14 @@ func (v Vcf) GetChromEnd() int {
 	}
 }
 
+// UpdateCoord modifies the position data in a VCF struct based on input values.
 func (v Vcf) UpdateCoord(c string, start int, end int) interface{} {
 	v.Chr = c
 	v.Pos = start + 1
 	return v
 }
 
+// WriteToFileHandle writes a VCF struct to an io.Writer.
 func (v Vcf) WriteToFileHandle(file io.Writer) {
 	WriteVcf(file, v)
 }
