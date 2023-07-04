@@ -4,7 +4,7 @@ package cigar
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"unicode"
 )
@@ -73,7 +73,7 @@ func FromString(input string) []Cigar {
 		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)
 		} else if validOp(v) {
-			currentCigar := Cigar{RunLength: cast.StringToInt(currentNumber), Op: v}
+			currentCigar := Cigar{RunLength: parse.StringToInt(currentNumber), Op: v}
 			output = append(output, currentCigar)
 			currentNumber = ""
 		} else {

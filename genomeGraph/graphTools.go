@@ -4,7 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
@@ -243,7 +243,7 @@ func getSvEnd(v vcf.Vcf) int {
 		for i := 0; i < len(words); i++ {
 			if strings.Contains(words[i], "END=") {
 				text := strings.Split(words[i], "END=")
-				return cast.StringToInt(text[1])
+				return parse.StringToInt(text[1])
 			}
 		}
 	}

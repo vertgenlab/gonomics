@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math/rand"
@@ -81,6 +81,6 @@ func main() {
 	}
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	distance := cast.StringToInt(flag.Arg(2))
+	distance := parse.StringToInt(flag.Arg(2))
 	proximityBlockVcf(inFile, outFile, distance, *setSeed)
 }

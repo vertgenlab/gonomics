@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -61,12 +61,12 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 			chromList = strings.Split(lineFields[1], "=")
 			currentWig.Chrom = chromList[1]
 			startList = strings.Split(lineFields[2], "=")
-			currentWig.Start = cast.StringToInt(startList[1])
+			currentWig.Start = parse.StringToInt(startList[1])
 			stepList = strings.Split(lineFields[3], "=")
-			currentWig.Step = cast.StringToInt(stepList[1])
+			currentWig.Step = parse.StringToInt(stepList[1])
 			if len(lineFields) == 5 {
 				spanList = strings.Split(lineFields[4], "=")
-				currentWig.Span = cast.StringToInt(spanList[1])
+				currentWig.Span = parse.StringToInt(spanList[1])
 			} else {
 				currentWig.Span = -1 //signify missing
 			}
@@ -76,7 +76,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 			if currentWig.StepType == "" {
 				log.Fatalf("ERROR: %s is missing a wig header (e.g. fixedStep chrom=chr...)", file.File.Name())
 			}
-			currentWig.Values = append(currentWig.Values, cast.StringToFloat64(line))
+			currentWig.Values = append(currentWig.Values, parse.StringToFloat64(line))
 		}
 
 		peek, err = fileio.EasyPeekReal(file, 1)

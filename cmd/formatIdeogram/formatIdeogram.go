@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 
@@ -31,15 +31,15 @@ func formatIdeogram(inBed string, outTxt string, noScore bool) {
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
 		chrom = words[0]
-		startNum = cast.StringToInt(words[1])
-		endNum = cast.StringToInt(words[2])
+		startNum = parse.StringToInt(words[1])
+		endNum = parse.StringToInt(words[2])
 		midpoint = (startNum + endNum) / 2
 
 		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint - 1, Score: 1})
 		if noScore {
 			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: 10})
 		} else {
-			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: cast.StringToInt(words[4])})
+			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: parse.StringToInt(words[4])})
 		}
 		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint + 1, Score: 1})
 	}

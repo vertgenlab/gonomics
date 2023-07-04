@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math/rand"
 )
@@ -35,7 +35,7 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 			qual, alnScore, mapQ := generateDiverseQuals(readLen)
 
 			curr = &giraf.Giraf{
-				QName:     fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, cast.StrandToRune(strand)),
+				QName:     fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, parse.StrandToRune(strand)),
 				QStart:    0,
 				QEnd:      readLen,
 				PosStrand: strand,

@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/popgen"
 	"log"
 	"strings"
@@ -18,7 +18,7 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 		if len(words) != 1 {
 			log.Fatalf("A stationarity distribution is defined by one parameter, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
+		alpha := parse.StringToFloat64(words[0])
 		f := popgen.AfsStationarityClosure(alpha)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Beta" {
@@ -26,8 +26,8 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 		if len(words) != 2 {
 			log.Fatalf("A beta distribution is defined by two parameters, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
-		beta := cast.StringToFloat64(words[1])
+		alpha := parse.StringToFloat64(words[0])
+		beta := parse.StringToFloat64(words[1])
 		f := numbers.BetaClosure(alpha, beta)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Gamma" {
@@ -35,8 +35,8 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 		if len(words) != 2 {
 			log.Fatalf("A gamma distribution is defined by two parameters, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
-		beta := cast.StringToFloat64(words[1])
+		alpha := parse.StringToFloat64(words[0])
+		beta := parse.StringToFloat64(words[1])
 		f := numbers.GammaClosure(alpha, beta)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else if function == "Normal" {
@@ -44,8 +44,8 @@ func plotContinuousFunctions(function string, functionArgs string, left float64,
 		if len(words) != 2 {
 			log.Fatalf("a normal distribution is defined by two parameters, received %d.", len(words))
 		}
-		mu := cast.StringToFloat64(words[0])
-		sigma := cast.StringToFloat64(words[1])
+		mu := parse.StringToFloat64(words[0])
+		sigma := parse.StringToFloat64(words[1])
 		f := numbers.NormalClosure(mu, sigma)
 		numbers.Plot(f, left, right, bins, outFile)
 	} else { //here you can add more else ifs to add additional functions for plotting
@@ -99,9 +99,9 @@ func main() {
 		if len(words) != 3 {
 			log.Fatalf("An allele frequency probability mass function is defined by three parameters, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
-		n := cast.StringToInt(words[1])
-		integralError := cast.StringToFloat64(words[2])
+		alpha := parse.StringToFloat64(words[0])
+		n := parse.StringToInt(words[1])
+		integralError := parse.StringToFloat64(words[2])
 		popgen.PlotAfsPmf(alpha, n, outFile, integralError, false, false)
 	} else if flag.Arg(0) == "AfsProbabilityAncestral" {
 		expectedNumArgs = 3
@@ -115,9 +115,9 @@ func main() {
 		if len(words) != expectedNumArgs {
 			log.Fatalf("An allele frequency probability mass function is defined by three parameters, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
-		n := cast.StringToInt(words[1])
-		integralError := cast.StringToFloat64(words[2])
+		alpha := parse.StringToFloat64(words[0])
+		n := parse.StringToInt(words[1])
+		integralError := parse.StringToFloat64(words[2])
 		popgen.PlotAfsPmf(alpha, n, outFile, integralError, false, true)
 	} else if flag.Arg(0) == "AfsProbabilityDerived" {
 		expectedNumArgs = 3
@@ -131,9 +131,9 @@ func main() {
 		if len(words) != 3 {
 			log.Fatalf("An allele frequency probability mass function is defined by three parameters, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
-		n := cast.StringToInt(words[1])
-		integralError := cast.StringToFloat64(words[2])
+		alpha := parse.StringToFloat64(words[0])
+		n := parse.StringToInt(words[1])
+		integralError := parse.StringToFloat64(words[2])
 		popgen.PlotAfsPmf(alpha, n, outFile, integralError, true, false)
 	} else if flag.Arg(0) == "AscertainmentProbabilityDerived" {
 		expectedNumArgs = 3
@@ -147,8 +147,8 @@ func main() {
 		if len(words) != 2 {
 			log.Fatalf("An ascertainment probability function is defined by two parameters, received %d.", len(words))
 		}
-		n := cast.StringToInt(words[0])
-		d := cast.StringToInt(words[1])
+		n := parse.StringToInt(words[0])
+		d := parse.StringToInt(words[1])
 		popgen.PlotDerivedAscertainmentProbability(outFile, n, d)
 	} else if flag.Arg(0) == "AscertainmentProbabilityAncestral" {
 		expectedNumArgs = 3
@@ -162,8 +162,8 @@ func main() {
 		if len(words) != 2 {
 			log.Fatalf("An allele frequency probability mass function is defined by two parameters, received %d.", len(words))
 		}
-		n := cast.StringToInt(words[0])
-		d := cast.StringToInt(words[1])
+		n := parse.StringToInt(words[0])
+		d := parse.StringToInt(words[1])
 		popgen.PlotAncestralAscertainmentProbability(outFile, n, d)
 	} else if flag.Arg(0) == "AncestralAscertainmentDenominator" {
 		expectedNumArgs = 3
@@ -177,10 +177,10 @@ func main() {
 		if len(words) != 4 {
 			log.Fatalf("An ascertainment denominator is defined by four parameters, received %d.", len(words))
 		}
-		n := cast.StringToInt(words[0])
-		d := cast.StringToInt(words[1])
-		alpha := cast.StringToFloat64(words[2])
-		integralError := cast.StringToFloat64(words[3])
+		n := parse.StringToInt(words[0])
+		d := parse.StringToInt(words[1])
+		alpha := parse.StringToFloat64(words[2])
+		integralError := parse.StringToFloat64(words[3])
 		popgen.PlotAncestralAscertainmentDenominator(outFile, n, d, alpha, integralError)
 	} else if flag.Arg(0) == "DerivedAscertainmentDenominator" {
 		expectedNumArgs = 3
@@ -194,10 +194,10 @@ func main() {
 		if len(words) != 4 {
 			log.Fatalf("An ascertainment denominator is defined by four parameters, received %d.", len(words))
 		}
-		n := cast.StringToInt(words[0])
-		d := cast.StringToInt(words[1])
-		alpha := cast.StringToFloat64(words[2])
-		integralError := cast.StringToFloat64(words[3])
+		n := parse.StringToInt(words[0])
+		d := parse.StringToInt(words[1])
+		alpha := parse.StringToFloat64(words[2])
+		integralError := parse.StringToFloat64(words[3])
 		popgen.PlotDerivedAscertainmentDenominator(outFile, n, d, alpha, integralError)
 	} else if flag.Arg(0) == "ChooseN" {
 		expectedNumArgs = 3
@@ -207,7 +207,7 @@ func main() {
 		}
 		functionArgs := flag.Arg(1)
 		outFile := flag.Arg(2)
-		n := cast.StringToInt(functionArgs)
+		n := parse.StringToInt(functionArgs)
 		numbers.PlotBinomCoefficient(n, outFile)
 	} else if flag.Arg(0) == "AfsF" {
 		expectedNumArgs = 3
@@ -221,9 +221,9 @@ func main() {
 		if len(words) != 3 {
 			log.Fatalf("An allele frequency F function is defined by three parameters, received %d.", len(words))
 		}
-		alpha := cast.StringToFloat64(words[0])
-		n := cast.StringToInt(words[1])
-		err := cast.StringToFloat64(words[2])
+		alpha := parse.StringToFloat64(words[0])
+		n := parse.StringToInt(words[1])
+		err := parse.StringToFloat64(words[2])
 		popgen.PlotAfsF(alpha, n, outFile, err)
 	} else {
 		expectedNumArgs = 6
@@ -235,9 +235,9 @@ func main() {
 
 		function := flag.Arg(0)
 		functionArgs := flag.Arg(1)
-		left := cast.StringToFloat64(flag.Arg(2))
-		right := cast.StringToFloat64(flag.Arg(3))
-		bins := cast.StringToInt(flag.Arg(4))
+		left := parse.StringToFloat64(flag.Arg(2))
+		right := parse.StringToFloat64(flag.Arg(3))
+		bins := parse.StringToInt(flag.Arg(4))
 		outFile := flag.Arg(5)
 
 		plotContinuousFunctions(function, functionArgs, left, right, bins, outFile)

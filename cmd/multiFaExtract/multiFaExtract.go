@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 )
 
@@ -87,8 +87,8 @@ func main() {
 		s = Settings{
 			InFile:     flag.Arg(0),
 			OutFile:    flag.Arg(1),
-			Start:      cast.StringToInt(flag.Arg(2)),
-			End:        cast.StringToInt(flag.Arg(3)),
+			Start:      parse.StringToInt(flag.Arg(2)),
+			End:        parse.StringToInt(flag.Arg(3)),
 			Bed:        *bed,
 			RemoveGaps: *removeGaps,
 		}

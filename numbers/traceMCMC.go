@@ -2,7 +2,7 @@ package numbers
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
 	"sort"
@@ -26,7 +26,7 @@ func ReadMcmcTrace(inFile string, parameterName string) McmcTrace {
 
 	for curr, doneReading = fileio.EasyNextLine(in); !doneReading; curr, doneReading = fileio.EasyNextLine(in) {
 		words = strings.Split(curr, "\t")
-		currParam = cast.StringToFloat64(words[ParameterIndex])
+		currParam = parse.StringToFloat64(words[ParameterIndex])
 		t.Parameter = append(t.Parameter, currParam)
 	}
 

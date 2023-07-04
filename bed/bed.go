@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -109,15 +109,15 @@ func Read(filename string) []Bed {
 // processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
-	startNum := cast.StringToInt(words[1])
-	endNum := cast.StringToInt(words[2])
+	startNum := parse.StringToInt(words[1])
+	endNum := parse.StringToInt(words[2])
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score = cast.StringToInt(words[4])
+		current.Score = parse.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
 		current.Strand = StringToStrand(words[5])

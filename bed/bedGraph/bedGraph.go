@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"strings"
 	"sync"
@@ -64,9 +64,9 @@ func Read(filename string) []BedGraph {
 // processBedGraphLine is a helper function of Read that returns a BedGraph struct from an input string.
 func processBedGraphLine(line string) BedGraph {
 	words := strings.Split(line, "\t")
-	startNum := cast.StringToInt(words[1])
-	endNum := cast.StringToInt(words[2])
-	dataValue := cast.StringToFloat64(words[3])
+	startNum := parse.StringToInt(words[1])
+	endNum := parse.StringToInt(words[2])
+	dataValue := parse.StringToFloat64(words[3])
 	return BedGraph{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, DataValue: dataValue}
 }
 

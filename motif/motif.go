@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 )
@@ -180,6 +180,6 @@ func parseMotifLine(answer PositionMatrix, line string, motifLen int, index int)
 	answer.Mat[index] = make([]float64, motifLen)
 	fields = fields[1:] //trim first field, which corresponds to nucleotide id.
 	for i := 0; i < len(fields); i++ {
-		answer.Mat[index][i] = cast.StringToFloat64(fields[i])
+		answer.Mat[index][i] = parse.StringToFloat64(fields[i])
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 )
@@ -36,7 +36,7 @@ func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string) {
 			for i := 5; i < len(words); i++ {
 				nameString = nameString + ":" + words[i]
 			}
-			currBed = bed.Bed{Chrom: words[0], ChromStart: cast.StringToInt(words[3]) - 1, ChromEnd: cast.StringToInt(words[4]), Name: nameString, Score: 0, Strand: bed.Positive, FieldsInitialized: 6}
+			currBed = bed.Bed{Chrom: words[0], ChromStart: parse.StringToInt(words[3]) - 1, ChromEnd: parse.StringToInt(words[4]), Name: nameString, Score: 0, Strand: bed.Positive, FieldsInitialized: 6}
 			if words[6] == "-" {
 				currBed.Strand = bed.Negative
 			}

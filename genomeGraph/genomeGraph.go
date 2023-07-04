@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -60,16 +60,16 @@ func Read(filename string) *GenomeGraph {
 		line = reader.String()
 		switch true {
 		case strings.HasPrefix(line, ">"):
-			nodeId = cast.StringToUint32(line[1:])
+			nodeId = parse.StringToUint32(line[1:])
 			AddNode(genome, &Node{Id: nodeId})
 		case strings.Contains(line, "\t"):
 			words = strings.Split(line, "\t")
-			homeNodeIdx = cast.StringToUint32(words[0])
+			homeNodeIdx = parse.StringToUint32(words[0])
 			homeNode = &genome.Nodes[homeNodeIdx]
 			if len(words) > 2 {
 				for i = 1; i < len(words); i += 2 {
-					weight = cast.StringToFloat32(words[i])
-					destNodeIdx = cast.StringToUint32(words[i+1])
+					weight = parse.StringToFloat32(words[i])
+					destNodeIdx = parse.StringToUint32(words[i+1])
 					destNode = &genome.Nodes[destNodeIdx]
 					AddEdge(homeNode, destNode, weight)
 				}

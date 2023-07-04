@@ -3,7 +3,7 @@ package maf
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -77,7 +77,7 @@ func parseMafALine(line string) *Maf {
 	for i := 1; i < len(words); i++ {
 		parts := strings.Split(words[i], "=")
 		if parts[0] == "score" {
-			curr.Score = cast.StringToFloat64(parts[1])
+			curr.Score = parse.StringToFloat64(parts[1])
 		}
 	}
 	return (&curr)
@@ -90,10 +90,10 @@ func parseMafSLine(line string) *MafSLine {
 	}
 	curr := MafSLine{
 		Src:     words[1],
-		Start:   cast.StringToInt(words[2]),
-		Size:    cast.StringToInt(words[3]),
-		Strand:  cast.StringToStrand(words[4]),
-		SrcSize: cast.StringToInt(words[5]),
+		Start:   parse.StringToInt(words[2]),
+		Size:    parse.StringToInt(words[3]),
+		Strand:  parse.StringToStrand(words[4]),
+		SrcSize: parse.StringToInt(words[5]),
 		Seq:     dna.StringToBases(words[6]),
 	}
 	return (&curr)
@@ -127,9 +127,9 @@ func parseMafILine(line string) *MafILine {
 	curr := MafILine{
 		Src:         words[1],
 		LeftStatus:  parseMafIStatus(words[2]),
-		LeftCount:   cast.StringToInt(words[3]),
+		LeftCount:   parse.StringToInt(words[3]),
 		RightStatus: parseMafIStatus(words[4]),
-		RightCount:  cast.StringToInt(words[5]),
+		RightCount:  parse.StringToInt(words[5]),
 	}
 	return (&curr)
 }
@@ -159,10 +159,10 @@ func parseMafELine(line string) *MafELine {
 	}
 	curr := MafELine{
 		Src:     words[1],
-		Start:   cast.StringToInt(words[2]),
-		Size:    cast.StringToInt(words[3]),
-		Strand:  cast.StringToStrand(words[4]),
-		SrcSize: cast.StringToInt(words[5]),
+		Start:   parse.StringToInt(words[2]),
+		Size:    parse.StringToInt(words[3]),
+		Strand:  parse.StringToStrand(words[4]),
+		SrcSize: parse.StringToInt(words[5]),
 		Status:  parseMafEStatus(words[6]),
 	}
 	return (&curr)
@@ -309,7 +309,7 @@ func WriteToFileHandle(file io.Writer, m *Maf) {
 				srcChars, m.Species[i].SLine.Src,
 				startChars, m.Species[i].SLine.Start,
 				sizeChars, m.Species[i].SLine.Size,
-				cast.StrandToRune(m.Species[i].SLine.Strand),
+				parse.StrandToRune(m.Species[i].SLine.Strand),
 				srcSizeChars, m.Species[i].SLine.SrcSize,
 				dna.BasesToString(m.Species[i].SLine.Seq))
 			exception.PanicOnErr(err)

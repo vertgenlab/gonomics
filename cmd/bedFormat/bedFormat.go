@@ -11,7 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 )
 
@@ -96,7 +96,7 @@ func bedFormat(s Settings) {
 			v.Chrom = convert.UCSCToEnsembl(v.Chrom)
 		}
 		if s.ScaleNameFloat != 1 {
-			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*cast.StringToFloat64(v.Name))
+			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*parse.StringToFloat64(v.Name))
 		}
 		bed.WriteBed(out, v)
 	}

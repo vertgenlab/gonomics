@@ -2,7 +2,7 @@ package numbers
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"os"
 	"strings"
 	"testing"
@@ -33,11 +33,11 @@ func TestPlot(t *testing.T) {
 		for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 			if !firstTime {
 				words := strings.Split(line, "\t")
-				if cast.StringToFloat64(words[0]) != test.answerX[i] {
-					t.Errorf("TestPlot for X: %f returned: %f.", test.answerX[i], cast.StringToFloat64(words[0]))
+				if parse.StringToFloat64(words[0]) != test.answerX[i] {
+					t.Errorf("TestPlot for X: %f returned: %f.", test.answerX[i], parse.StringToFloat64(words[0]))
 				}
-				if cast.StringToFloat64(words[1]) != test.answerFofX[i] {
-					t.Errorf("TestPlot for f(X): %f returned: %f.", test.answerFofX[i], cast.StringToFloat64(words[1]))
+				if parse.StringToFloat64(words[1]) != test.answerFofX[i] {
+					t.Errorf("TestPlot for f(X): %f returned: %f.", test.answerFofX[i], parse.StringToFloat64(words[1]))
 				}
 				i++
 			} else {

@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"math"
 	"strings"
@@ -143,7 +143,7 @@ func GirafToSam(ag *giraf.Giraf) sam.Sam {
 	} else {
 		target := strings.Split(ag.Notes[0].Value, "=")
 		curr.RName = target[0]
-		curr.Pos = uint32(ag.Path.TStart + cast.StringToInt(target[1]))
+		curr.Pos = uint32(ag.Path.TStart + parse.StringToInt(target[1]))
 		curr.Flag = getSamFlags(ag)
 		if len(ag.Notes) == 2 {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:i:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))

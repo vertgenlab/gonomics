@@ -4,7 +4,7 @@ package genePred
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -90,11 +90,11 @@ func processGenePredLine(line string) GenePred {
 	} else {
 		log.Fatal("no strand specified")
 	}
-	current.TxStart = cast.StringToInt(words[3])
-	current.TxEnd = cast.StringToInt(words[4])
-	current.CdsStart = cast.StringToInt(words[5])
-	current.CdsEnd = cast.StringToInt(words[6])
-	current.ExonNum = cast.StringToInt(words[7])
+	current.TxStart = parse.StringToInt(words[3])
+	current.TxEnd = parse.StringToInt(words[4])
+	current.CdsStart = parse.StringToInt(words[5])
+	current.CdsEnd = parse.StringToInt(words[6])
+	current.ExonNum = parse.StringToInt(words[7])
 	if !strings.HasSuffix(words[8], ",") {
 		log.Fatal("Exon Starts slice doesn't end in empty string.")
 	}
@@ -124,7 +124,7 @@ func StringToIntSlice(text string) []int {
 	var answer = make([]int, len(values)-1)
 
 	for i := 0; i < len(values)-1; i++ {
-		answer[i] = cast.StringToInt(values[i])
+		answer[i] = parse.StringToInt(values[i])
 	}
 	return answer
 }

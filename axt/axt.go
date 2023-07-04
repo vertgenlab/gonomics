@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -112,13 +112,13 @@ func axtHelper(header string, rSeq string, qSeq string) Axt {
 	}
 	var answer Axt = Axt{
 		RName:      words[1],
-		RStart:     cast.StringToInt(words[2]),
-		REnd:       cast.StringToInt(words[3]),
+		RStart:     parse.StringToInt(words[2]),
+		REnd:       parse.StringToInt(words[3]),
 		QName:      words[4],
-		QStart:     cast.StringToInt(words[5]),
-		QEnd:       cast.StringToInt(words[6]),
-		QStrandPos: cast.StringToStrand(words[7]),
-		Score:      cast.StringToInt(words[8]),
+		QStart:     parse.StringToInt(words[5]),
+		QEnd:       parse.StringToInt(words[6]),
+		QStrandPos: parse.StringToStrand(words[7]),
+		Score:      parse.StringToInt(words[8]),
 		RSeq:       dna.StringToBases(rSeq),
 		QSeq:       dna.StringToBases(qSeq),
 	}
@@ -135,7 +135,7 @@ func WriteToFileHandle(file io.Writer, input Axt, alnNumber int) {
 // ToString converts an Axt alignment struct into a string.  Axt records are numbered in files, so
 // a number must be provided that will be used as this id.
 func ToString(input Axt, id int) string {
-	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, cast.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
+	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, parse.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 }
 
 // Write is a wrapper function that will loop over a slice of axt alignments and writes each record to a file.

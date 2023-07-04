@@ -11,7 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
@@ -147,7 +147,7 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 					log.Fatalf("Error: overlapping bed elements detected in bed file. Run bedMerge and rerun.")
 				}
 				if method == "Name" {
-					wigSlice[chromIndex].Values[i] = cast.StringToFloat64(b.Name)
+					wigSlice[chromIndex].Values[i] = parse.StringToFloat64(b.Name)
 				} else if method == "Score" {
 					wigSlice[chromIndex].Values[i] = float64(b.Score)
 				} else {
@@ -156,7 +156,7 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 			}
 		} else {
 			if method == "Name" {
-				wigSlice[chromIndex].Values[midpoint] = cast.StringToFloat64(b.Name)
+				wigSlice[chromIndex].Values[midpoint] = parse.StringToFloat64(b.Name)
 			} else if method == "Score" {
 				wigSlice[chromIndex].Values[midpoint] = float64(b.Score)
 			} else {

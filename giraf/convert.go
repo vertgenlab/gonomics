@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strconv"
 	"strings"
@@ -24,14 +24,14 @@ func stringToGiraf(line string) *Giraf {
 	if len(data) > 10 {
 		curr = &Giraf{
 			QName:     data[0],
-			QStart:    cast.StringToInt(data[1]),
-			QEnd:      cast.StringToInt(data[2]),
-			Flag:      cast.StringToUint8(data[3]),
+			QStart:    parse.StringToInt(data[1]),
+			QEnd:      parse.StringToInt(data[2]),
+			Flag:      parse.StringToUint8(data[3]),
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
 			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
-			AlnScore:  cast.StringToInt(data[7]),
-			MapQ:      uint8(cast.StringToInt(data[8])),
+			AlnScore:  parse.StringToInt(data[7]),
+			MapQ:      uint8(parse.StringToInt(data[8])),
 			Seq:       dna.StringToBases(data[9]),
 			Qual:      fastq.ToQualUint8([]rune(data[10]))}
 
@@ -58,11 +58,11 @@ func FromStringToPath(column string) Path {
 		log.Fatalf("Error: Needs exact 3 values, only found %d", len(words))
 	}
 	nodes := strings.Split(words[1], ">")
-	answer := Path{TStart: cast.StringToInt(words[0]), Nodes: make([]uint32, len(nodes)), TEnd: cast.StringToInt(words[2])}
+	answer := Path{TStart: parse.StringToInt(words[0]), Nodes: make([]uint32, len(nodes)), TEnd: parse.StringToInt(words[2])}
 
 	if nodes[0] != "" { // catch unaligned reads
 		for i, v := range nodes {
-			answer.Nodes[i] = cast.StringToUint32(v)
+			answer.Nodes[i] = parse.StringToUint32(v)
 		}
 	}
 
@@ -153,7 +153,7 @@ func ToString(g *Giraf) string {
 	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
 	exception.PanicOnErr(err)
-	_, err = buf.WriteRune(cast.StrandToRune(g.PosStrand))
+	_, err = buf.WriteRune(parse.StrandToRune(g.PosStrand))
 	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
 	exception.PanicOnErr(err)

@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/browser"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 )
 
@@ -42,11 +42,11 @@ func main() {
 
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
-	start := cast.StringToInt(flag.Arg(2))
+	start := parse.StringToInt(flag.Arg(2))
 	if flag.Arg(3) == "END" || flag.Arg(3) == "end" || flag.Arg(3) == "End" {
 		endOfAlignment = true
 	} else {
-		endPos = cast.StringToInt(flag.Arg(3))
+		endPos = parse.StringToInt(flag.Arg(3))
 	}
 
 	multFaVisualizer(infile, outfile, start, endPos, *noMask, *lineLength, endOfAlignment)

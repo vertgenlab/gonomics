@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -164,7 +164,7 @@ func ReadHeaderComments(er *fileio.EasyReader) HeaderComments {
 
 // ToString will convert a chain struct to original string format.
 func ToString(ch Chain) string {
-	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, cast.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, cast.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, parse.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, parse.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 	//minus one in the loop because last line contains 2 zeros and we do not want to print those
 	for i := 0; i < len(ch.Alignment)-1; i++ {
 		answer += fmt.Sprintf("%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TBases, ch.Alignment[i].QBases)
@@ -189,19 +189,19 @@ func NewChain(text string, reader *fileio.EasyReader) Chain {
 		log.Fatalf("Error: header line needs to contain 13 data fields\n")
 	}
 	curr := Chain{
-		Score:     cast.StringToInt(data[1]),
+		Score:     parse.StringToInt(data[1]),
 		TName:     data[2],
-		TSize:     cast.StringToInt(data[3]),
-		TStrand:   cast.StringToStrand(data[4]),
-		TStart:    cast.StringToInt(data[5]),
-		TEnd:      cast.StringToInt(data[6]),
+		TSize:     parse.StringToInt(data[3]),
+		TStrand:   parse.StringToStrand(data[4]),
+		TStart:    parse.StringToInt(data[5]),
+		TEnd:      parse.StringToInt(data[6]),
 		QName:     data[7],
-		QSize:     cast.StringToInt(data[8]),
-		QStrand:   cast.StringToStrand(data[9]),
-		QStart:    cast.StringToInt(data[10]),
-		QEnd:      cast.StringToInt(data[11]),
+		QSize:     parse.StringToInt(data[8]),
+		QStrand:   parse.StringToStrand(data[9]),
+		QStart:    parse.StringToInt(data[10]),
+		QEnd:      parse.StringToInt(data[11]),
 		Alignment: chainingHelper(reader),
-		Id:        cast.StringToInt(data[12]),
+		Id:        parse.StringToInt(data[12]),
 	}
 	return curr
 }
@@ -217,7 +217,7 @@ func chainingHelper(reader *fileio.EasyReader) []BaseStats {
 		data = strings.Split(line, "\t")
 		if len(data) == 1 {
 			curr = BaseStats{
-				Size:   cast.StringToInt(data[0]),
+				Size:   parse.StringToInt(data[0]),
 				TBases: 0,
 				QBases: 0,
 			}
@@ -227,9 +227,9 @@ func chainingHelper(reader *fileio.EasyReader) []BaseStats {
 			return answer
 		} else if len(data) == 3 {
 			curr = BaseStats{
-				Size:   cast.StringToInt(data[0]),
-				TBases: cast.StringToInt(data[1]),
-				QBases: cast.StringToInt(data[2]),
+				Size:   parse.StringToInt(data[0]),
+				TBases: parse.StringToInt(data[1]),
+				QBases: parse.StringToInt(data[2]),
 			}
 			answer = append(answer, curr)
 		} else {
@@ -241,7 +241,7 @@ func chainingHelper(reader *fileio.EasyReader) []BaseStats {
 
 // printHeader is a pretty print that will return a string containing chain alignment fields without the alignment stats columns.
 func printHeader(ch Chain) string {
-	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, cast.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, cast.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, parse.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, parse.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
 
 // Simple swaping of target and query fields.

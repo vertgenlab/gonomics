@@ -2,7 +2,7 @@ package lastZWriter
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"path/filepath"
@@ -107,7 +107,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = 2
 				done = true
 			} else {
-				dist = cast.StringToFloat64(words[2])
+				dist = parse.StringToFloat64(words[2])
 				switch {
 				case dist <= 0.2: //closest
 					answer = append(answer, "O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")

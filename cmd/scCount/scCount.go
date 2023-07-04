@@ -12,7 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"io"
 	"log"
@@ -122,7 +122,7 @@ func parseNormMap(normFile string) map[string]float64 {
 		if len(words) != 2 {
 			log.Fatalf("Expression normalization input file must be a tab-separated file with two columns per line.")
 		}
-		normalizationMap[words[0]] = cast.StringToFloat64(words[1])
+		normalizationMap[words[0]] = parse.StringToFloat64(words[1])
 	}
 	err = exp.Close()
 	exception.PanicOnErr(err)

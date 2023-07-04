@@ -9,7 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
 	"math/rand"
@@ -55,12 +55,12 @@ func bedFilter(s Settings) {
 			pass = false
 		}
 		if s.MinNameFloat != -1*math.MaxFloat64 {
-			if cast.StringToFloat64(curr.Name) < s.MinNameFloat {
+			if parse.StringToFloat64(curr.Name) < s.MinNameFloat {
 				pass = false
 			}
 		}
 		if s.MaxNameFloat != math.MaxFloat64 {
-			if cast.StringToFloat64(curr.Name) > s.MaxNameFloat {
+			if parse.StringToFloat64(curr.Name) > s.MaxNameFloat {
 				pass = false
 			}
 		}

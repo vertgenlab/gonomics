@@ -4,7 +4,7 @@ import (
 	"flag"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"runtime"
@@ -113,7 +113,7 @@ func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 
 		//}
 	}
-	if cast.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && cast.StringToInt(qName[1]) == targetStart && targetEnd == cast.StringToInt(qName[3]) {
+	if parse.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && parse.StringToInt(qName[1]) == targetStart && targetEnd == parse.StringToInt(qName[3]) {
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
 		//	log.Printf("%s\n", giraf.GirafToString(aln))

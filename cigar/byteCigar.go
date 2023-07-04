@@ -2,7 +2,7 @@ package cigar
 
 import (
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/cast"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strconv"
 	"strings"
@@ -92,7 +92,7 @@ func ReadToBytesCigar(cigar []byte) []ByteCigar {
 	var lastNum int = 0
 	for i := 0; i < len(cigar); i++ {
 		if IsValidCigar(cigar[i]) {
-			ans = append(ans, ByteCigar{RunLen: cast.StringToUint16(string(cigar[lastNum:i])), Op: cigar[i]})
+			ans = append(ans, ByteCigar{RunLen: parse.StringToUint16(string(cigar[lastNum:i])), Op: cigar[i]})
 			lastNum = i + 1
 		}
 	}
