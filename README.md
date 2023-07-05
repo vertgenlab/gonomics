@@ -28,7 +28,12 @@ go test ./...
 go install  ./...
 ```
 
-Executables will be present in Go binary folder (`~/go/bin` by default)
+Executables will be present in the Go binary folder (`~/go/bin` by default)
+- Running a command with no arguments will print the usage statement for that command: `~/go/bin/commandName`
+
+The command line tools' code is located in `/gonomics/cmd/`
+
+* More information about using our tools and making your own can be found on our wiki page here: [Using gonomics commands and packages](https://github.com/vertgenlab/gonomics/wiki/Using-gonomics-commands-and-packages) 
 
 ---
 

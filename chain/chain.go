@@ -75,7 +75,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Chain, wg *sync.WaitGroup) 
 func GoReadToChan(filename string) (<-chan Chain, HeaderComments) {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
-	data := make(chan Chain)
+	data := make(chan Chain, 1000)
 	header := ReadHeaderComments(file)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)

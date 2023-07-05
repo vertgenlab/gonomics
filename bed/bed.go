@@ -169,7 +169,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 func GoReadToChan(filename string) <-chan Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
-	data := make(chan Bed)
+	data := make(chan Bed, 1000)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 

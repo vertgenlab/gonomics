@@ -10,7 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// isEqual returns true if two Wig data structures contain the exact same data and returns false otherwise.
+// isEqual returns true if two Wig data structures contain the exact same data values and returns false otherwise.
 func isEqual(alpha Wig, beta Wig) bool {
 	if strings.Compare(alpha.StepType, beta.StepType) != 0 {
 		return false
@@ -34,7 +34,7 @@ func isEqual(alpha Wig, beta Wig) bool {
 	return true
 }
 
-// AllEqual returns true if two input arrays of wig data structures contain all the same data, false otherwise.
+// AllEqual returns true if two slices of Wig data structures contain all the same data vales in the same order, false otherwise.
 func AllEqual(alpha []Wig, beta []Wig) bool {
 	if len(alpha) != len(beta) {
 		return false
@@ -47,7 +47,8 @@ func AllEqual(alpha []Wig, beta []Wig) bool {
 	return true
 }
 
-// compare returns zero for equal wigs and otherwise returns the ordering of the two wig entries. Order is based on start position and then by length of values. Used for SortByCoord.
+// compare returns zero for equal wigs and otherwise returns the ordering of the two wig entries.
+// Order is based on start position and then by length of values. Used for SortByCoord.
 func compare(alpha Wig, beta Wig) int {
 	chromComp := strings.Compare(alpha.Chrom, beta.Chrom)
 	if chromComp != 0 {
@@ -103,6 +104,9 @@ func Pearson(alpha []Wig, beta []Wig, missing float64, samplingFrequency float64
 	return numbers.Pearson(a, b)
 }
 
+// getChromIndex takes a slice of Wig structs and the name of a chromosome.  The function
+// returns the index in the first Wig struct in the slice with a chromosome name equal to the
+// search string provided
 func getChromIndex(w []Wig, chrom string) int {
 	for i := range w {
 		if w[i].Chrom == chrom {
