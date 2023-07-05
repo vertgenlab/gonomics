@@ -12,7 +12,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// Interval is a type interface for any genomic datatype that has chromosomal coordinate info (chromosome, start, end)
+// Interval is a type interface for any genomic datatype that has chromosomal coordinate info (chromosome, start, end).
+// In order to satisfy this interface, a type must have GetChrom(), GetChromStart(), and GetChromEnd() methods.
+// Note that the these methods must return positions for a 0-base half-closed interval [start - end).
 type Interval interface {
 	GetChrom() string
 	GetChromStart() int
