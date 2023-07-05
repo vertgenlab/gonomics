@@ -12,6 +12,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// Interval is a type interface for any genomic datatype that has chromosomal coordinate info (chromosome, start, end).
+// In order to satisfy this interface, a type must have GetChrom(), GetChromStart(), and GetChromEnd() methods.
+// Note that the these methods must return positions for a 0-base half-closed interval [start - end).
 type Interval interface {
 	GetChrom() string
 	GetChromStart() int
@@ -73,6 +76,7 @@ func splitIntervalsByChr(intervals []Interval) map[string][]Interval {
 	return answer
 }
 
+// BuildTree takes a slice of intervals and returns a map that can be used for Querying overlaps.
 func BuildTree(intervals []Interval) map[string]*IntervalNode {
 	answer := make(map[string]*IntervalNode)
 	chrMap := splitIntervalsByChr(intervals)
@@ -148,7 +152,8 @@ func buildTree(intervals []Interval) *IntervalNode {
 	return answer
 }
 
-// Query searches the input treeMap and returns all intervals satisfying the input relationship relative to the input interval q
+// Query takes a map (built with BuildTree), a query interval, and a relationship and returns a slice of type Interval
+// of treeMap entries that overlapped the query interval.
 func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
 	m := treeMap[q.GetChrom()]
